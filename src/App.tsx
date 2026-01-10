@@ -18,8 +18,33 @@ const App = () => {
     return (
         <MetaProvider>
             <Router>
-                <Route path="/" component={withAppShell(() => <h1>Root Page</h1>)} />
+                {/* 仮 */}
+                <Route path="/" component={() => <h1>Root Page</h1>} />
+
+                {/* 認証系 */}
+                <Route path="/login" component={() => <h1>Login Page</h1>} />
+                <Route path="/register" component={() => <h1>Register Page</h1>} />
+
+                {/* ユーザ */}
+                <Route path="/users" component={withAppShell(() => <h1>Users List Page</h1>)} />
                 <Route path="/users/:username" component={withAppShell(UserPage)} />
+                <Route path="/users/:username/records" component={withAppShell(() => <h1>User Records Page</h1>)} />
+
+                {/* 楽曲 */}
+                <Route path="/songs" component={withAppShell(() => <h1>Songs List Page</h1>)} />
+                <Route path="/songs/:displayid" component={withAppShell(() => <h1>Song Detail Page</h1>)} />
+
+                {/* その他 */}
+                <Route path="/tools" component={withAppShell(() => <h1>Tools Page</h1>)} />
+                <Route path="/settings" component={withAppShell(() => <h1>Settings Page</h1>)} />
+
+                {/* 管理系 */}
+                <Route path="/admin" component={() => <h1>Admin Page</h1>} />
+                <Route path="/admin/users" component={() => <h1>Admin Users Management Page</h1>} />
+                <Route path="/admin/songs" component={() => <h1>Admin Songs Management Page</h1>} />
+                <Route path="/editor" component={() => <h1>Editor Page</h1>} />
+                <Route path="/editor/songs" component={() => <h1>Editor Songs Management Page</h1>} />
+
             </Router>
         </MetaProvider>
     );
