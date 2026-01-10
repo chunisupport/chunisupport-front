@@ -62,6 +62,7 @@ const navItems: NavItem[] = [
     {
         label: "その他",
         path: "#",
+        matchPattern: /a^/, // マッチしないダミーパターン
         icon: () => <Ellipsis class="h-6 w-6" aria-hidden="true" />,
         dropdown: [
             {
