@@ -120,7 +120,6 @@ export interface PlayerDTO {
 export interface HonorDTO {
     slot: 1 | 2 | 3;
     name: string;
-    // normal, copper, silver, gold, platina, rainbow, staff, ongeki, maimai, sp, phoenix_g, phoenix_p, phoenix_r
     type_name:
         "normal"
         | "copper"
