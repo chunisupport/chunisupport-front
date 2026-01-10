@@ -21,7 +21,7 @@ type NavItem = {
     dropdown?: DropdownItem[];
 };
 
-// TODO: usernameの部分を動的に扱う
+// TODO: ":username"を GET /internal/me から取得したユーザー名で置換する
 const navItems: NavItem[] = [
     {
         label: "ホーム",
