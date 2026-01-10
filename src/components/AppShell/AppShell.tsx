@@ -48,9 +48,9 @@ const navItems: NavItem[] = [
     },
     {
         label: "統計",
-        path: "/users/:username/hogehoge",
+        path: "/users/:username/stats",
         icon: () => <ChartNoAxesCombined class="h-6 w-6" aria-hidden="true" />,
-        matchPattern: /^\/users\/[^/]+\/records/,
+        matchPattern: /^\/users\/[^/]+\/stats/,
     },
     {
         label: "ツール",
