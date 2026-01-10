@@ -29,6 +29,7 @@ const App = () => {
                 <Route path="/users" component={withNavBar(() => <h1>Users List Page</h1>)} />
                 <Route path="/users/:username" component={withNavBar(UserPage)} />
                 <Route path="/users/:username/records" component={withNavBar(() => <h1>User Records Page</h1>)} />
+                <Route path="/users/:username/stats" component={withNavBar(() => <h1>User Stats Page</h1>)} />
 
                 {/* 楽曲 */}
                 <Route path="/songs" component={withNavBar(() => <h1>Songs List Page</h1>)} />
