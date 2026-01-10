@@ -1,1 +1,1 @@
-export { NavBar } from "./AppShell";
+export { NavBar } from "./NavBar";
