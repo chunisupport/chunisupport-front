@@ -125,7 +125,7 @@ const NavBar = (props: NavBarProps) => {
                                     <span>{item.label}</span>
                                 </DropdownMenu.Trigger>
                                 <DropdownMenu.Portal>
-                                    <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-[180px] rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
+                                    <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
                                         {item.dropdown?.map((d) => (
                                             <DropdownMenu.Item
                                                 onSelect={() => handleDropdownSelect(d.path)}
@@ -159,7 +159,7 @@ const NavBar = (props: NavBarProps) => {
                 </main>
 
                 {/* スマホ用nav-bar 768px未満 */}
-                <nav class="md:hidden flex-shrink-0 flex items-center justify-between border-t border-gray-200 bg-white p-3 shadow-sm">
+                <nav class="md:hidden shrink-0 flex items-center justify-between border-t border-gray-200 bg-white p-3 shadow-sm">
                     {navItems.map((item) =>
                         item.dropdown ? (
                             <DropdownMenu>
@@ -168,7 +168,7 @@ const NavBar = (props: NavBarProps) => {
                                     <span>{item.label}</span>
                                 </DropdownMenu.Trigger>
                                 <DropdownMenu.Portal>
-                                    <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-[180px] rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
+                                    <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
                                         {item.dropdown?.map((d) => (
                                             <DropdownMenu.Item
                                                 onSelect={() => handleDropdownSelect(d.path)}
