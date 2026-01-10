@@ -82,3 +82,98 @@ export const errorMessages: Record<ErrorCode, string> = {
 export const getErrorMessage = (code: string): string => {
     return errorMessages[code as ErrorCode] || "エラーが発生しました";
 }
+
+// --------------------------------
+
+export interface UserDTO {
+    username: string;
+    player: PlayerDTO | null;
+    account_type?: "PLAYER" | "EDITOR" | "ADMIN";
+}
+
+export interface UserProfileWithRecordsDTO {
+    username: string;
+    player: PlayerDTO;
+    records: UserRecordResponseDTO;
+    updated_at: string;
+}
+
+export interface PlayerDTO {
+    name: string;
+    level: number;
+    rating: number;
+    class_emblem_id: number | null;
+    class_emblem_base_id: number | null;
+    last_played_at: string | null;
+    overpower_value: number | null;
+    overpower_percent: number | null;
+    team_name: string | null;
+    team_color: string | null;
+    honors: HonorDTO[];
+    created_at: string;
+    updated_at: string;
+}
+
+export interface HonorDTO {
+    slot: 1 | 2 | 3;
+    name: string;
+    // normal, copper, silver, gold, platina, rainbow, staff, ongeki, maimai, sp, phoenix_g, phoenix_p, phoenix_r
+    type_name:
+        "normal"
+        | "copper"
+        | "silver"
+        | "gold"
+        | "platina"
+        | "rainbow"
+        | "staff"
+        | "ongeki"
+        | "maimai"
+        | "sp"
+        | "phoenix_g"
+        | "phoenix_p"
+        | "phoenix_r";
+    image_url: string | null;
+}
+
+export interface UserRecordResponseDTO {
+    updated_at: string;
+    best: PlayerRecordDTO[];
+    best_candidate: PlayerRecordDTO[];
+    new: PlayerRecordDTO[];
+    new_candidate: PlayerRecordDTO[];
+    all: PlayerRecordDTO[];
+    worldsend?: WorldsendRecordDTO[];
+}
+
+export interface PlayerRecordDTO {
+    updated_at: string;
+    difficulty: string;
+    id: string;
+    title: string;
+    artist: string;
+    const: number;
+    is_const_unknown: boolean;
+    score: number;
+    rating: number;
+    overpower: number;
+    img: string;
+    clear_lamp: string;
+    combo_lamp: string | null;
+    full_chain: string | null;
+    slot: string | null;
+}
+
+export interface WorldsendRecordDTO {
+    updated_at: string;
+    id: string;
+    title: string;
+    artist: string;
+    we_star: number | null;         // WORLD'S END 星の数（1～5）
+    we_kanji: string | null;        // WORLD'S END カテゴリ漢字
+    notes: number | null;
+    score: number;
+    img: string;
+    clear_lamp: string;
+    combo_lamp: string | null;
+    full_chain: string | null;
+}
