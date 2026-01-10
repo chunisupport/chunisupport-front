@@ -79,8 +79,11 @@ export const errorMessages: Record<ErrorCode, string> = {
 };
 
 // エラーコードからメッセージを取得するヘルパー関数
-export const getErrorMessage = (code: string): string => {
-    return errorMessages[code as ErrorCode] || "エラーが発生しました";
+export const getErrorMessage = (error: ErrorResponse): string => {
+    if ( error.error?.code) {
+        return errorMessages[error.error.code as ErrorCode] || "エラーが発生しました";
+    }
+    return "エラーが発生しました";
 }
 
 // --------------------------------
