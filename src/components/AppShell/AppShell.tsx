@@ -1,13 +1,13 @@
 import type { JSX } from "solid-js";
 
-type AppShellProps = {
+type NavBarProps = {
     children: JSX.Element;
 };
 
-const AppShell = (props: AppShellProps) => {
+const NavBar = (props: NavBarProps) => {
     return (
         <main>{props.children}</main>
     );
 };
 
-export default AppShell;
+export default NavBar;

@@ -1,16 +1,16 @@
 import type { JSX } from "solid-js";
 import { A, Route, Router } from "@solidjs/router";
 import { MetaProvider } from "@solidjs/meta";
-import { AppShell } from "./components";
+import { NavBar } from "./components";
 import {
     UserPage
 } from "./pages";
 
-const withAppShell = (Component: () => JSX.Element) => {
+const withNavBar = (Component: () => JSX.Element) => {
     return () => (
-        <AppShell>
+        <NavBar>
             <Component />
-        </AppShell>
+        </NavBar>
     );
 };
 
@@ -26,17 +26,17 @@ const App = () => {
                 <Route path="/register" component={() => <h1>Register Page</h1>} />
 
                 {/* ユーザ */}
-                <Route path="/users" component={withAppShell(() => <h1>Users List Page</h1>)} />
-                <Route path="/users/:username" component={withAppShell(UserPage)} />
-                <Route path="/users/:username/records" component={withAppShell(() => <h1>User Records Page</h1>)} />
+                <Route path="/users" component={withNavBar(() => <h1>Users List Page</h1>)} />
+                <Route path="/users/:username" component={withNavBar(UserPage)} />
+                <Route path="/users/:username/records" component={withNavBar(() => <h1>User Records Page</h1>)} />
 
                 {/* 楽曲 */}
-                <Route path="/songs" component={withAppShell(() => <h1>Songs List Page</h1>)} />
-                <Route path="/songs/:displayid" component={withAppShell(() => <h1>Song Detail Page</h1>)} />
+                <Route path="/songs" component={withNavBar(() => <h1>Songs List Page</h1>)} />
+                <Route path="/songs/:displayid" component={withNavBar(() => <h1>Song Detail Page</h1>)} />
 
                 {/* その他 */}
-                <Route path="/tools" component={withAppShell(() => <h1>Tools Page</h1>)} />
-                <Route path="/settings" component={withAppShell(() => <h1>Settings Page</h1>)} />
+                <Route path="/tools" component={withNavBar(() => <h1>Tools Page</h1>)} />
+                <Route path="/settings" component={withNavBar(() => <h1>Settings Page</h1>)} />
 
                 {/* 管理系 */}
                 <Route path="/admin" component={() => <h1>Admin Page</h1>} />
