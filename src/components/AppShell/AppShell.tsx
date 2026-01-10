@@ -10,6 +10,7 @@ import {
     ListMusic,
     Settings,
     BadgeQuestionMark,
+    ChartNoAxesCombined,
 } from "lucide-solid";
 
 type AppShellProps = {
@@ -18,14 +19,14 @@ type AppShellProps = {
 
 type DropdownItem = {
     label: string;
-    icon: JSX.Element;
+    icon: () => JSX.Element;
     path: string;
 };
 
 type NavItem = {
     label: string;
     path: string;
-    icon: JSX.Element;
+    icon: () => JSX.Element;
     matchPattern?: RegExp;
     matchPrefix?: boolean;
     dropdown?: DropdownItem[];
@@ -36,44 +37,44 @@ const navItems: NavItem[] = [
     {
         label: "ホーム",
         path: "/users/:username",
-        icon: <House class="h-6 w-6" aria-hidden="true" />,
+        icon: () => <House class="h-6 w-6" aria-hidden="true" />,
         matchPattern: /^\/users\/[^/]+$/,
     },
     {
         label: "レコード",
         path: "/users/:username/records",
-        icon: <ListMusic class="h-6 w-6" aria-hidden="true" />,
+        icon: () => <ListMusic class="h-6 w-6" aria-hidden="true" />,
         matchPattern: /^\/users\/[^/]+\/records/,
     },
     {
         label: "ツール",
         path: "/tools",
-        icon: <Toolbox class="h-6 w-6" aria-hidden="true" />,
+        icon: () => <Toolbox class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
     },
     {
         label: "その他",
         path: "#",
-        icon: <Ellipsis class="h-6 w-6" aria-hidden="true" />,
+        icon: () => <Ellipsis class="h-6 w-6" aria-hidden="true" />,
         dropdown: [
             {
                 label: "ユーザー一覧",
-                icon: <UsersRound class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+                icon: () => <UsersRound class="inline h-4 w-4 mr-1" aria-hidden="true" />,
                 path: "/users"
             },
             {
                 label: "楽曲データベース",
-                icon: <Music class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+                icon: () => <Music class="inline h-4 w-4 mr-1" aria-hidden="true" />,
                 path: "/songs"
             },
             {
                 label: "設定",
-                icon: <Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+                icon: () => <Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />,
                 path: "/settings"
             },
             {
                 label: "ヘルプ",
-                icon: <BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+                icon: () => <BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />,
                 path: "https://example.com"
             },
         ],
@@ -97,9 +98,44 @@ const AppShell = (props: AppShellProps) => {
     return (
         <div class="min-h-screen md:flex">
             {/* PC用nav-bar 768px以上 */}
-            {/* <aside class="hidden md:flex md:w-64 md:flex-col md:border-r md:border-slate-200 md:bg-white">
-                    まだ作ってないよ〜
-            </aside> */}
+            <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-slate-200 md:bg-white">
+                <nav class="flex flex-1 flex-col px-2 py-6">
+                    {navItems.map((item) =>
+                        item.dropdown ? (
+                            <div class="relative group">
+                                <button
+                                    type="button"
+                                    class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none"
+                                >
+                                    <span class="text-lg">{item.icon()}</span>
+                                    <span>{item.label}</span>
+                                </button>
+                                <div class="absolute left-full top-0 ml-2 hidden min-w-[180px] rounded-lg border border-slate-200 bg-white shadow-sm py-2 group-hover:block">
+                                    {item.dropdown?.map((d) => (
+                                        <A
+                                            href={d.path}
+                                            class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                                        >
+                                            <span class="pr-2">{d.icon()}</span>{d.label}
+                                        </A>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <A
+                                href={item.path}
+                                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                                classList={{
+                                    "bg-slate-100 text-slate-900": isActive(item),
+                                }}
+                            >
+                                <span class="text-lg">{item.icon()}</span>
+                                <span>{item.label}</span>
+                            </A>
+                        )
+                    )}
+                </nav>
+            </aside>
 
             <main class="flex-1 pb-24 md:pb-0">
                 {props.children}
@@ -118,7 +154,7 @@ const AppShell = (props: AppShellProps) => {
                                 "text-slate-900 underline": isActive(item),
                             }}
                         >
-                            <span class="text-lg">{item.icon}</span>
+                            <span class="text-lg">{item.icon()}</span>
                             <span>{item.label}</span>
                         </A>
                     )
@@ -179,7 +215,7 @@ const DropdownNavItem = (props: { item: NavItem }) => {
                 class="flex flex-col items-center gap-1 text-xs font-semibold text-slate-500 focus:outline-none"
                 onClick={toggleOpen}
             >
-                <span class="text-lg">{props.item.icon}</span>
+                <span class="text-lg">{props.item.icon()}</span>
                 <span>{props.item.label}</span>
             </button>
             <Show when={open()}>
@@ -193,7 +229,7 @@ const DropdownNavItem = (props: { item: NavItem }) => {
                             class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
                             onClick={() => setOpen(false)}
                         >
-                            <span class="pr-2">{d.icon}</span>{d.label}
+                            <span class="pr-2">{d.icon()}</span>{d.label}
                         </A>
                     ))}
                 </div>
