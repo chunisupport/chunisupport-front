@@ -148,16 +148,18 @@ const AppShell = (props: AppShellProps) => {
             </main>
 
             {/* スマホ用nav-bar 768px未満 */}
-            <nav class="fixed bottom-0 left-0 right-0 z-10 flex items-center justify-around border-t border-slate-200 bg-white px-3 py-5 shadow-sm md:hidden">
+            <nav class="fixed bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t border-slate-200 bg-white p-3 shadow-sm md:hidden">
                 {navItems.map((item) =>
                     item.dropdown ? (
-                        <DropdownNavItem item={item} />
+                        <div class="flex-1 flex justify-center">
+                            <DropdownNavItem item={item} />
+                        </div>
                     ) : (
                         <A
                             href={item.path}
-                            class="flex flex-col items-center gap-1 text-xs font-semibold text-slate-500"
+                            class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-slate-500 justify-center"
                             classList={{
-                                "text-slate-900 underline": isActive(item),
+                                "bg-slate-100 text-slate-900": isActive(item),
                             }}
                         >
                             <span class="text-lg">{item.icon()}</span>
