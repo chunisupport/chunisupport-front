@@ -115,21 +115,21 @@ const NavBar = (props: NavBarProps) => {
         <div class="h-dvh flex md:flex-row flex-col">
             {/* PC用nav-bar 768px以上 */}
             {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
-            <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-slate-200 md:bg-white">
+            <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-gray-200 md:bg-white">
                 <nav class="flex flex-1 flex-col px-2 py-6">
                     {navItems.map((item) =>
                         item.dropdown ? (
                             <DropdownMenu>
-                                <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none">
+                                <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none">
                                     <span class="text-lg">{item.icon()}</span>
                                     <span>{item.label}</span>
                                 </DropdownMenu.Trigger>
                                 <DropdownMenu.Portal>
-                                    <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-[180px] rounded-lg border border-slate-200 bg-white shadow-sm py-2 z-50">
+                                    <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-[180px] rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
                                         {item.dropdown?.map((d) => (
                                             <DropdownMenu.Item
                                                 onSelect={() => handleDropdownSelect(d.path)}
-                                                class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 focus:bg-slate-100 outline-none cursor-pointer"
+                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 outline-none cursor-pointer"
                                             >
                                                 <span class="pr-2">{d.icon()}</span>{d.label}
                                             </DropdownMenu.Item>
@@ -140,9 +140,9 @@ const NavBar = (props: NavBarProps) => {
                         ) : (
                             <A
                                 href={item.path}
-                                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                                 classList={{
-                                    "bg-slate-100 text-slate-900": isActive(item),
+                                    "bg-gray-100 text-gray-900": isActive(item),
                                 }}
                             >
                                 <span class="text-lg">{item.icon()}</span>
@@ -159,20 +159,20 @@ const NavBar = (props: NavBarProps) => {
                 </main>
 
                 {/* スマホ用nav-bar 768px未満 */}
-                <nav class="md:hidden flex-shrink-0 flex items-center justify-between border-t border-slate-200 bg-white p-3 shadow-sm">
+                <nav class="md:hidden flex-shrink-0 flex items-center justify-between border-t border-gray-200 bg-white p-3 shadow-sm">
                     {navItems.map((item) =>
                         item.dropdown ? (
                             <DropdownMenu>
-                                <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-slate-500 justify-center">
+                                <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 justify-center">
                                     <span class="text-lg">{item.icon()}</span>
                                     <span>{item.label}</span>
                                 </DropdownMenu.Trigger>
                                 <DropdownMenu.Portal>
-                                    <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-[180px] rounded-lg border border-slate-200 bg-white shadow-sm py-2 z-50">
+                                    <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-[180px] rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
                                         {item.dropdown?.map((d) => (
                                             <DropdownMenu.Item
                                                 onSelect={() => handleDropdownSelect(d.path)}
-                                                class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 focus:bg-slate-100 outline-none cursor-pointer"
+                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 outline-none cursor-pointer"
                                             >
                                                 <span class="pr-2">{d.icon()}</span>{d.label}
                                             </DropdownMenu.Item>
@@ -183,9 +183,9 @@ const NavBar = (props: NavBarProps) => {
                         ) : (
                             <A
                                 href={item.path}
-                                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-slate-500 justify-center"
+                                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 justify-center"
                                 classList={{
-                                    "bg-slate-100 text-slate-900": isActive(item),
+                                    "bg-gray-100 text-gray-900": isActive(item),
                                 }}
                             >
                                 <span class="text-lg">{item.icon()}</span>
