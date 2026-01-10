@@ -102,7 +102,7 @@ const AppShell = (props: AppShellProps) => {
 };
 
 const DropdownNavItem = (props: { item: NavItem }) => {
-    const [open, setOpen] = createSignal(true);
+    const [open, setOpen] = createSignal(false);
 
     // メニュー外クリックで閉じる
     const handleClickOutside = (e: MouseEvent) => {
@@ -127,7 +127,7 @@ const DropdownNavItem = (props: { item: NavItem }) => {
             <Show when={open()}>
                 <div
                     id="dropdown-menu"
-                    class="absolute bottom-17 left-1/2 -translate-x-2/3 z-20 min-w-[200px] rounded-lg border border-slate-200 bg-white shadow-sm py-2"
+                    class="absolute bottom-14 left-0 -translate-x-2/3 z-20 min-w-[180px] rounded-lg border border-slate-200 bg-white shadow-sm py-2"
                 >
                     {props.item.dropdown?.map((d) => (
                         <A
