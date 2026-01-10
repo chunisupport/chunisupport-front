@@ -105,6 +105,7 @@ const AppShell = (props: AppShellProps) => {
     return (
         <div class="h-dvh flex md:flex-row flex-col">
             {/* PC用nav-bar 768px以上 */}
+            {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
             <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-slate-200 md:bg-white">
                 <nav class="flex flex-1 flex-col px-2 py-6">
                     {navItems.map((item) =>
@@ -150,13 +151,12 @@ const AppShell = (props: AppShellProps) => {
                 </nav>
             </aside>
 
-            {/* 右側（または下側）の「コンテンツ＋ボトムナビ」領域 */}
             <div class="flex flex-col min-h-0 h-full md:flex-1">
-                <main class="flex-1 overflow-y-auto overscroll-contain pb-4 md:pb-0">
+                <main class="flex-1 overflow-y-auto pb-4 md:pb-0">
                     {props.children}
                 </main>
 
-                {/* スマホ用nav-bar 768px未満（常に表示） */}
+                {/* スマホ用nav-bar 768px未満 */}
                 <nav class="md:hidden flex-shrink-0 flex items-center justify-between border-t border-slate-200 bg-white p-3 shadow-sm">
                     {navItems.map((item) =>
                         item.dropdown ? (
