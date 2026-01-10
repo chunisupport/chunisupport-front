@@ -103,23 +103,54 @@ const AppShell = (props: AppShellProps) => {
 
 const DropdownNavItem = (props: { item: NavItem }) => {
     const [open, setOpen] = createSignal(false);
+    let buttonRef: HTMLButtonElement | undefined;
 
     // メニュー外クリックで閉じる
     const handleClickOutside = (e: MouseEvent) => {
         const menu = document.getElementById("dropdown-menu");
-        if (open() && menu && !menu.contains(e.target as Node)) {
+        const target = e.target as Node;
+
+        // ボタン自身のクリックは無視
+        if (buttonRef?.contains(target)) {
+            return;
+        }
+
+        if (open() && menu && !menu.contains(target)) {
             setOpen(false);
         }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    onCleanup(() => document.removeEventListener("mousedown", handleClickOutside));
+
+    // openの状態が変わったときだけイベントリスナーを登録/削除
+    const cleanup = () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+    };
+
+    const setupListener = () => {
+        if (open()) {
+            // 次のイベントループで登録（現在のクリックイベントが終わった後）
+            setTimeout(() => {
+                document.addEventListener("mousedown", handleClickOutside);
+            }, 0);
+        } else {
+            cleanup();
+        }
+    };
+
+    // openの変更を監視
+    const toggleOpen = () => {
+        setOpen((v) => !v);
+        setupListener();
+    };
+
+    onCleanup(cleanup);
 
     return (
         <div class="relative">
             <button
+                ref={buttonRef}
                 type="button"
                 class="flex flex-col items-center gap-1 text-xs font-semibold text-slate-500 focus:outline-none"
-                onClick={() => setOpen((v) => !v)}
+                onClick={toggleOpen}
             >
                 <span class="text-lg">{props.item.icon}</span>
                 <span>{props.item.label}</span>
