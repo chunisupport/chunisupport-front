@@ -17,25 +17,25 @@ const navItems: NavItem[] = [
     {
         label: "ホーム",
         path: "/users",
-        icon: <House class="h-5 w-5" aria-hidden="true" />,
+        icon: <House class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
     },
     {
         label: "レコード",
         path: "/users", // /users/*/records に変更
-        icon: <Music class="h-5 w-5" aria-hidden="true" />,
+        icon: <Music class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
     },
     {
         label: "ツール",
         path: "/tools",
-        icon: <Toolbox class="h-5 w-5" aria-hidden="true" />,
+        icon: <Toolbox class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
     },
     {
         label: "その他",
         path: "a",
-        icon: <Ellipsis class="h-5 w-5" aria-hidden="true" />,
+        icon: <Ellipsis class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
     },
 
@@ -64,7 +64,7 @@ const AppShell = (props: AppShellProps) => {
             </main>
 
             {/* スマホ用nav-bar 768px未満 */}
-            <nav class="fixed bottom-0 left-0 right-0 z-10 flex items-center justify-around border-t border-slate-200 bg-white px-4 py-3 shadow-sm md:hidden">
+            <nav class="fixed bottom-0 left-0 right-0 z-10 flex items-center justify-around border-t border-slate-200 bg-white px-3 py-5 shadow-sm md:hidden">
                 {navItems.map((item) => (
                     <A
                         href={item.path}
