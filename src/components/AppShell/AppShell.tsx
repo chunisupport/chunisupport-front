@@ -103,9 +103,8 @@ const AppShell = (props: AppShellProps) => {
     };
 
     return (
-        <div class="min-h-screen md:flex">
+        <div class="h-dvh flex md:flex-row flex-col">
             {/* PC用nav-bar 768px以上 */}
-            {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
             <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-slate-200 md:bg-white">
                 <nav class="flex flex-1 flex-col px-2 py-6">
                     {navItems.map((item) =>
@@ -151,31 +150,34 @@ const AppShell = (props: AppShellProps) => {
                 </nav>
             </aside>
 
-            <main class="flex-1 pb-24 md:pb-0">
-                {props.children}
-            </main>
+            {/* 右側（または下側）の「コンテンツ＋ボトムナビ」領域 */}
+            <div class="flex flex-col min-h-0 h-full md:flex-1">
+                <main class="flex-1 overflow-y-auto overscroll-contain pb-4 md:pb-0">
+                    {props.children}
+                </main>
 
-            {/* スマホ用nav-bar 768px未満 */}
-            <nav class="fixed bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t border-slate-200 bg-white p-3 shadow-sm md:hidden">
-                {navItems.map((item) =>
-                    item.dropdown ? (
-                        <div class="flex-1 flex justify-center">
-                            <DropdownNavItem item={item} />
-                        </div>
-                    ) : (
-                        <A
-                            href={item.path}
-                            class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-slate-500 justify-center"
-                            classList={{
-                                "bg-slate-100 text-slate-900": isActive(item),
-                            }}
-                        >
-                            <span class="text-lg">{item.icon()}</span>
-                            <span>{item.label}</span>
-                        </A>
-                    )
-                )}
-            </nav>
+                {/* スマホ用nav-bar 768px未満（常に表示） */}
+                <nav class="md:hidden flex-shrink-0 flex items-center justify-between border-t border-slate-200 bg-white p-3 shadow-sm">
+                    {navItems.map((item) =>
+                        item.dropdown ? (
+                            <div class="flex-1 flex justify-center">
+                                <DropdownNavItem item={item} />
+                            </div>
+                        ) : (
+                            <A
+                                href={item.path}
+                                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-slate-500 justify-center"
+                                classList={{
+                                    "bg-slate-100 text-slate-900": isActive(item),
+                                }}
+                            >
+                                <span class="text-lg">{item.icon()}</span>
+                                <span>{item.label}</span>
+                            </A>
+                        )
+                    )}
+                </nav>
+            </div>
         </div>
     );
 };
