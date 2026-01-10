@@ -1,7 +1,16 @@
 import type { JSX } from "solid-js";
 import { createSignal, Show, onCleanup } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
-import { House, Music, Toolbox, Ellipsis } from "lucide-solid";
+import {
+    House,
+    Music,
+    Toolbox,
+    Ellipsis,
+    UsersRound,
+    ListMusic,
+    Settings,
+    BadgeQuestionMark,
+} from "lucide-solid";
 
 type AppShellProps = {
     children: JSX.Element;
@@ -9,6 +18,7 @@ type AppShellProps = {
 
 type DropdownItem = {
     label: string;
+    icon: JSX.Element;
     path: string;
 };
 
@@ -32,7 +42,7 @@ const navItems: NavItem[] = [
     {
         label: "レコード",
         path: "/users/:username/records",
-        icon: <Music class="h-6 w-6" aria-hidden="true" />,
+        icon: <ListMusic class="h-6 w-6" aria-hidden="true" />,
         matchPattern: /^\/users\/[^/]+\/records/,
     },
     {
@@ -46,9 +56,26 @@ const navItems: NavItem[] = [
         path: "#",
         icon: <Ellipsis class="h-6 w-6" aria-hidden="true" />,
         dropdown: [
-            { label: "ユーザー一覧", path: "/users" },
-            { label: "楽曲データベース", path: "/songs" },
-            { label: "設定", path: "/settings" },
+            {
+                label: "ユーザー一覧",
+                icon: <UsersRound class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+                path: "/users"
+            },
+            {
+                label: "楽曲データベース",
+                icon: <Music class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+                path: "/songs"
+            },
+            {
+                label: "設定",
+                icon: <Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+                path: "/settings"
+            },
+            {
+                label: "ヘルプ",
+                icon: <BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+                path: "https://example.com"
+            },
         ],
     },
 ];
@@ -166,7 +193,7 @@ const DropdownNavItem = (props: { item: NavItem }) => {
                             class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
                             onClick={() => setOpen(false)}
                         >
-                            {d.label}
+                            <span class="pr-2">{d.icon}</span>{d.label}
                         </A>
                     ))}
                 </div>
