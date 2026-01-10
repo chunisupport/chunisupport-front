@@ -1,6 +1,7 @@
 import type { JSX } from "solid-js";
-import { createSignal, Show, onCleanup } from "solid-js";
+import { createSignal, Show, onCleanup, createEffect } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
+import { DropdownMenu } from "@kobalte/core/dropdown-menu";
 import {
     House,
     Music,
@@ -104,29 +105,36 @@ const AppShell = (props: AppShellProps) => {
     return (
         <div class="min-h-screen md:flex">
             {/* PC用nav-bar 768px以上 */}
+            {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
             <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-slate-200 md:bg-white">
                 <nav class="flex flex-1 flex-col px-2 py-6">
                     {navItems.map((item) =>
                         item.dropdown ? (
-                            <div class="relative group">
-                                <button
-                                    type="button"
-                                    class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none"
-                                >
+                            <DropdownMenu>
+                                <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none">
                                     <span class="text-lg">{item.icon()}</span>
                                     <span>{item.label}</span>
-                                </button>
-                                <div class="absolute left-full top-0 ml-2 hidden min-w-[180px] rounded-lg border border-slate-200 bg-white shadow-sm py-2 group-hover:block">
-                                    {item.dropdown?.map((d) => (
-                                        <A
-                                            href={d.path}
-                                            class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                                        >
-                                            <span class="pr-2">{d.icon()}</span>{d.label}
-                                        </A>
-                                    ))}
-                                </div>
-                            </div>
+                                </DropdownMenu.Trigger>
+                                <DropdownMenu.Portal>
+                                    <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-[180px] rounded-lg border border-slate-200 bg-white shadow-sm py-2 z-50">
+                                        {item.dropdown?.map((d) =>
+                                            d.path.startsWith("http") ? (
+                                                <DropdownMenu.Item as="a" href={d.path} target="_blank" rel="noopener noreferrer"
+                                                    class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 focus:bg-slate-100 outline-none"
+                                                >
+                                                    <span class="pr-2">{d.icon()}</span>{d.label}
+                                                </DropdownMenu.Item>
+                                            ) : (
+                                                <DropdownMenu.Item as={A} href={d.path}
+                                                    class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 focus:bg-slate-100 outline-none"
+                                                >
+                                                    <span class="pr-2">{d.icon()}</span>{d.label}
+                                                </DropdownMenu.Item>
+                                            )
+                                        )}
+                                    </DropdownMenu.Content>
+                                </DropdownMenu.Portal>
+                            </DropdownMenu>
                         ) : (
                             <A
                                 href={item.path}
@@ -174,54 +182,29 @@ const AppShell = (props: AppShellProps) => {
 
 const DropdownNavItem = (props: { item: NavItem }) => {
     const [open, setOpen] = createSignal(false);
-    let buttonRef: HTMLButtonElement | undefined;
+    let containerRef: HTMLDivElement | undefined;
 
-    // メニュー外クリックで閉じる
-    const handleClickOutside = (e: MouseEvent) => {
-        const menu = document.getElementById("dropdown-menu");
-        const target = e.target as Node;
+    createEffect(() => {
+        if (!open()) return;
 
-        // ボタン自身のクリックは無視
-        if (buttonRef?.contains(target)) {
-            return;
-        }
+        const handleClickOutside = (e: MouseEvent) => {
+            if (containerRef && !containerRef.contains(e.target as Node)) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
 
-        if (open() && menu && !menu.contains(target)) {
-            setOpen(false);
-        }
-    };
-
-    // openの状態が変わったときだけイベントリスナーを登録/削除
-    const cleanup = () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-    };
-
-    const setupListener = () => {
-        if (open()) {
-            // 次のイベントループで登録（現在のクリックイベントが終わった後）
-            setTimeout(() => {
-                document.addEventListener("mousedown", handleClickOutside);
-            }, 0);
-        } else {
-            cleanup();
-        }
-    };
-
-    // openの変更を監視
-    const toggleOpen = () => {
-        setOpen((v) => !v);
-        setupListener();
-    };
-
-    onCleanup(cleanup);
+        onCleanup(() => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        });
+    });
 
     return (
-        <div class="relative">
+        <div class="relative" ref={containerRef}>
             <button
-                ref={buttonRef}
                 type="button"
                 class="flex flex-col items-center gap-1 text-xs font-semibold text-slate-500 focus:outline-none"
-                onClick={toggleOpen}
+                onClick={() => setOpen((v) => !v)}
             >
                 <span class="text-lg">{props.item.icon()}</span>
                 <span>{props.item.label}</span>
