@@ -22,7 +22,7 @@ const UserPage: Component = () => {
       <Suspense fallback={<Loading />}>
         <ErrorBoundary
           fallback={(err) => (
-            <p style={{ color: "red" }}>エラー: {err.message}</p>
+            <p class="text-red-500">ERROR: {err.message}</p>
           )}
         >
           <Show when={userProfile()}>
