@@ -1,5 +1,5 @@
 import type { JSX } from "solid-js";
-import { Route, Router } from "@solidjs/router";
+import { A, Route, Router } from "@solidjs/router";
 import { MetaProvider } from "@solidjs/meta";
 import { AppShell } from "./components";
 import {
@@ -18,8 +18,8 @@ const App = () => {
     return (
         <MetaProvider>
             <Router>
-                {/* 仮 */}
-                <Route path="/" component={() => <h1>Root Page</h1>} />
+                {/* ランディングページ */}
+                <Route path="/" component={() => <><h1>Welcome!</h1><A href="/login">Login</A></>} />
 
                 {/* 認証系 */}
                 <Route path="/login" component={() => <h1>Login Page</h1>} />
