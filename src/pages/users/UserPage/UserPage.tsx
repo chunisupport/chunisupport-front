@@ -6,6 +6,7 @@ import { createResource } from "solid-js";
 
 import { fetchUserProfile } from "../../../api/users";
 import { UserProfileView } from "./UserProfileView";
+import { Loading } from "../../../components";
 
 const UserPage: Component = () => {
   const params = useParams<{ username: string }>();
@@ -18,8 +19,7 @@ const UserPage: Component = () => {
   return (
     <>
       <Title>{params.username}さんのページ - Chunisupport</Title>
-
-      <Suspense fallback={<p>プロファイルを読み込み中...</p>}>
+      <Suspense fallback={<Loading />}>
         <ErrorBoundary
           fallback={(err) => (
             <p style={{ color: "red" }}>エラー: {err.message}</p>
