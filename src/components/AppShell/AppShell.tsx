@@ -47,6 +47,12 @@ const navItems: NavItem[] = [
         matchPattern: /^\/users\/[^/]+\/records/,
     },
     {
+        label: "統計",
+        path: "/users/:username/hogehoge",
+        icon: () => <ChartNoAxesCombined class="h-6 w-6" aria-hidden="true" />,
+        matchPattern: /^\/users\/[^/]+\/records/,
+    },
+    {
         label: "ツール",
         path: "/tools",
         icon: () => <Toolbox class="h-6 w-6" aria-hidden="true" />,
