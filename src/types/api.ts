@@ -149,7 +149,7 @@ export interface UserRecordResponseDTO {
 
 export interface PlayerRecordDTO {
     updated_at: string;
-    difficulty: string;
+    difficulty: "BASIC" | "ADVANCED" | "EXPERT" | "MASTER" | "ULTIMA";
     id: string;
     title: string;
     artist: string;
@@ -159,9 +159,9 @@ export interface PlayerRecordDTO {
     rating: number;
     overpower: number;
     img: string;
-    clear_lamp: string;
-    combo_lamp: string | null;
-    full_chain: string | null;
+    clear_lamp: "FAILED" | "CLEAR" | "HARD" | "BRAVE" | "ABSOLUTE" | "CATASTROPHY";
+    combo_lamp: "FULL COMBO" | "ALL JUSTICE" | null;
+    full_chain: "FULL CHAIN GOLD" | "FULL CHAIN PLATINUM" | null;
     slot: string | null;
 }
 
