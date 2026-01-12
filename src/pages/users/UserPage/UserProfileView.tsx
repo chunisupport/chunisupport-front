@@ -28,6 +28,23 @@ export const UserProfileView: Component<Props> = (props) => {
 		(sumRating(bestRecords) + sumRating(newRecords)) /
 		(bestRecords.length + newRecords.length);
 
+	const getDifficultyColors = (difficulty: string) => {
+		switch (difficulty) {
+			case "BASIC":
+				return "border-green-500 bg-green-200";
+			case "ADVANCED":
+				return "border-orange-500 bg-orange-200";
+			case "EXPERT":
+				return "border-red-500 bg-red-200";
+			case "ULTIMA":
+				return "border-red-500 bg-black text-white";
+			case "MASTER":
+				return "border-purple-500 bg-purple-200";
+			default:
+				return "border-gray-500 bg-gray-200";
+		}
+	};
+
 	return (
 		<div class="m-4">
 			{/* ネームプレート */}
@@ -60,16 +77,17 @@ export const UserProfileView: Component<Props> = (props) => {
 			{/* BEST枠一覧 */}
 			<div class="">
 				{bestRecords.map((record, i) => (
-                    // TODO: 難易度によって色を変更する
-					<div class="mb-2 p-3 border border-purple-400 bg-purple-100 rounded-md ">
+					<div
+						class={`mb-2 p-3 rounded-md border ${getDifficultyColors(record.difficulty)}`}
+					>
 						<div class="flex gap-3">
 							<div class="flex flex-col">
-								<p># {i+1}</p>
-								<p>{record.rating.toFixed(2)}</p>
+								<p># {i + 1}</p>
+								<p class="text-sm">{record.rating.toFixed(2)}</p>
 							</div>
 							<div>
 								<p class="font-medium">{record.title}</p>
-								<p>
+								<p class="text-sm">
 									{record.const} / {record.score}
 								</p>
 							</div>
