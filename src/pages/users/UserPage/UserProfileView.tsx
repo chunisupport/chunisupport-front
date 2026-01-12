@@ -50,7 +50,7 @@ export const UserProfileView: Component<Props> = (props) => {
 	return (
 		<div class="my-4">
 			{/* ネームプレート */}
-			<div class="mb-4 mx-4 px-3 py-3 border border-gray-200 shadow-sm rounded-md ">
+			<div class="mb-2 mx-4 px-3 py-3 border border-gray-200 shadow-sm rounded-md ">
 				{/* <p class="mb-1 text-gray-400 text-xs">Chunisupport v1.0.0</p> */}
 				{/* TODO: 称号の背景画像を表示 */}
 				<p class="mb-3 p-1 bg-yellow-200 rounded-md text-sm text-center">
@@ -73,9 +73,8 @@ export const UserProfileView: Component<Props> = (props) => {
 				<p>OP {playerInfo.overpower_percent}%</p>
 			</div>
 
-			{/* タブ切り替え */}
-			<Tabs.Root defaultValue="best" class="mb-4">
-				<Tabs.List class="flex gap-2 mb-4 px-4 border-b border-gray-300">
+			<Tabs.Root class="mb-4">
+				<Tabs.List class="sticky top-0 z-10 bg-white flex gap-2 mb-4 px-4 pt-2 border-b border-gray-300">
 					<Tabs.Trigger
 						value="best"
 						class="px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-blue-500"
@@ -89,7 +88,6 @@ export const UserProfileView: Component<Props> = (props) => {
 						新曲枠
 					</Tabs.Trigger>
 					<div class="flex-1"></div>
-					{/* 画像化ボタン */}
 					<button
 						type="button"
 						class="px-3 py-1 mb-1 bg-blue-500 text-white rounded-md"
