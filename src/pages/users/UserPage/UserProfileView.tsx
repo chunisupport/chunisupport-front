@@ -35,6 +35,9 @@ export const UserProfileView: Component<Props> = (props) => {
 			? (sumRating(bestRecords) + sumRating(newRecords)) / totalRecordsLength
 			: 0;
 
+	// ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
+	const NAMEPLATE_SCROLL_OFFSET = 183;
+
 	const getDifficultyColors = (difficulty: string) => {
 		switch (difficulty) {
 			case "BASIC":
@@ -84,9 +87,12 @@ export const UserProfileView: Component<Props> = (props) => {
 					class="mb-4"
 					// タブを切り替えた際に1曲目の位置までスクロールする
 					onChange={() => {
-						const main = document.querySelector("#root > div > div > main");
-						if (main && main.scrollTop > 183) {
-							main.scrollTo({ top: 183, behavior: "smooth" });
+						const main = document.querySelector("main");
+						if (main && main.scrollTop > NAMEPLATE_SCROLL_OFFSET) {
+							main.scrollTo({
+								top: NAMEPLATE_SCROLL_OFFSET,
+								behavior: "smooth",
+							});
 						}
 					}}
 				>

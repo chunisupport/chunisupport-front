@@ -8,8 +8,7 @@ type Props = {
 };
 
 export const ScrollToTop = (props: Props) => {
-	const selector: string =
-		props.scrollContainerSelector ?? "#root > div > div > main";
+	const selector: string = props.scrollContainerSelector ?? "main";
 	const threshold: number = props.showThreshold ?? 200;
 	const [show, setShow] = createSignal(true);
 	let container: HTMLElement | null = null;
