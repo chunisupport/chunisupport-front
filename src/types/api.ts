@@ -80,8 +80,9 @@ export const errorMessages: Record<ErrorCode, string> = {
 
 // エラーコードからメッセージを取得するヘルパー関数
 export const getErrorMessage = (error: ErrorResponse): string => {
-    if ( error.error?.code) {
-        return errorMessages[error.error.code as ErrorCode] || "エラーが発生しました";
+    const code = error.error?.code;
+    if (code && code in errorMessages) {
+        return errorMessages[code as ErrorCode];
     }
     return "エラーが発生しました";
 }
