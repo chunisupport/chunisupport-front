@@ -176,7 +176,7 @@ export interface WorldsendRecordDTO {
     notes: number | null;
     score: number;
     img: string;
-    clear_lamp: string;
-    combo_lamp: string | null;
-    full_chain: string | null;
+    clear_lamp: "FAILED" | "CLEAR" | "HARD" | "BRAVE" | "ABSOLUTE" | "CATASTROPHY";
+    combo_lamp: "FULL COMBO" | "ALL JUSTICE" | null;
+    full_chain: "FULL CHAIN GOLD" | "FULL CHAIN PLATINUM" | null;
 }
