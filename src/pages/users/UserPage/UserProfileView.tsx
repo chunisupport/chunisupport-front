@@ -26,7 +26,7 @@ export const UserProfileView: Component<Props> = (props) => {
 	};
 
 	const bestRating = sumRating(bestRecords) / bestRecords.length;
-	const newRating = sumRating(bestRecords) / newRecords.length;
+	const newRating = sumRating(newRecords) / newRecords.length;
 	const playerRating =
 		(sumRating(bestRecords) + sumRating(newRecords)) /
 		(bestRecords.length + newRecords.length);
