@@ -12,10 +12,13 @@ import {
 	UsersRound,
 } from "lucide-solid";
 import type { JSX } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 
 type NavBarProps = {
 	children: JSX.Element;
 };
+
+import { fetchMe } from "../../api/users";
 
 type DropdownItem = {
 	label: string;
@@ -32,65 +35,85 @@ type NavItem = {
 	dropdown?: DropdownItem[];
 };
 
-// TODO: ":username"を GET /internal/me から取得したユーザー名で置換する
-const navItems: NavItem[] = [
-	{
-		label: "ホーム",
-		path: "/users/:username",
-		icon: () => <House class="h-6 w-6" aria-hidden="true" />,
-		matchPattern: /^\/users\/[^/]+$/,
-	},
-	{
-		label: "レコード",
-		path: "/users/:username/records",
-		icon: () => <ListMusic class="h-6 w-6" aria-hidden="true" />,
-		matchPattern: /^\/users\/[^/]+\/records/,
-	},
-	{
-		label: "統計",
-		path: "/users/:username/stats",
-		icon: () => <ChartNoAxesCombined class="h-6 w-6" aria-hidden="true" />,
-		matchPattern: /^\/users\/[^/]+\/stats/,
-	},
-	{
-		label: "ツール",
-		path: "/tools",
-		icon: () => <Toolbox class="h-6 w-6" aria-hidden="true" />,
-		matchPrefix: true,
-	},
-	{
-		label: "その他",
-		path: "#",
-		matchPattern: /a^/, // マッチしないダミーパターン
-		icon: () => <Ellipsis class="h-6 w-6" aria-hidden="true" />,
-		dropdown: [
-			{
-				label: "ユーザー一覧",
-				icon: () => (
-					<UsersRound class="inline h-4 w-4 mr-1" aria-hidden="true" />
-				),
-				path: "/users",
-			},
-			{
-				label: "楽曲データベース",
-				icon: () => <Music class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-				path: "/songs",
-			},
-			{
-				label: "設定",
-				icon: () => <Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-				path: "/settings",
-			},
-			{
-				label: "ヘルプ",
-				icon: () => (
-					<BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />
-				),
-				path: "https://example.com",
-			},
-		],
-	},
-];
+const [username, setUsername] = createSignal<string | null>(null);
+
+onMount(async () => {
+	try {
+		const user = await fetchMe();
+		setUsername(user.username);
+	} catch (error) {
+		// 未認証やAPIエラー時はnullのまま
+		console.error("Failed to fetch user info:", error);
+	}
+});
+
+// TODO: ログイン画面の仮実装
+// TODO: 未ログイン時はログインページへのリンクを表示する(モーダルで飛ばすか〜)
+
+const getNavItems = (): NavItem[] => {
+	const uname = username();
+	const userPath = uname ? `/users/${uname}` : "/users/:username";
+	return [
+		{
+			label: "ホーム",
+			path: userPath,
+			icon: () => <House class="h-6 w-6" aria-hidden="true" />,
+			matchPattern: /^\/users\/[^/]+$/,
+		},
+		{
+			label: "レコード",
+			path: `${userPath}/records`,
+			icon: () => <ListMusic class="h-6 w-6" aria-hidden="true" />,
+			matchPattern: /^\/users\/[^/]+\/records/,
+		},
+		{
+			label: "統計",
+			path: `${userPath}/stats`,
+			icon: () => <ChartNoAxesCombined class="h-6 w-6" aria-hidden="true" />,
+			matchPattern: /^\/users\/[^/]+\/stats/,
+		},
+		{
+			label: "ツール",
+			path: "/tools",
+			icon: () => <Toolbox class="h-6 w-6" aria-hidden="true" />,
+			matchPrefix: true,
+		},
+		{
+			label: "その他",
+			path: "#",
+			matchPattern: /a^/, // マッチしないダミーパターン
+			icon: () => <Ellipsis class="h-6 w-6" aria-hidden="true" />,
+			dropdown: [
+				{
+					label: "ユーザー一覧",
+					icon: () => (
+						<UsersRound class="inline h-4 w-4 mr-1" aria-hidden="true" />
+					),
+					path: "/users",
+				},
+				{
+					label: "楽曲データベース",
+					icon: () => <Music class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+					path: "/songs",
+				},
+				{
+					label: "設定",
+					icon: () => (
+						<Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />
+					),
+					path: "/settings",
+				},
+				{
+					label: "ヘルプ",
+					icon: () => (
+						<BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />
+					),
+					path: "https://example.com",
+				},
+			],
+		},
+	];
+};
 
 const NavBar = (props: NavBarProps) => {
 	const location = useLocation();
@@ -120,7 +143,7 @@ const NavBar = (props: NavBarProps) => {
 			{/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
 			<aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-gray-200 md:bg-white">
 				<nav class="flex flex-1 flex-col px-2 py-6">
-					{navItems.map((item) =>
+					{getNavItems().map((item) =>
 						item.dropdown ? (
 							<DropdownMenu>
 								<DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none">
@@ -164,7 +187,7 @@ const NavBar = (props: NavBarProps) => {
 
 				{/* スマホ用nav-bar 768px未満 */}
 				<nav class="md:hidden shrink-0 flex items-center justify-between border-t border-gray-200 bg-white p-3 shadow-sm">
-					{navItems.map((item) =>
+					{getNavItems().map((item) =>
 						item.dropdown ? (
 							<DropdownMenu>
 								<DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 justify-center">
