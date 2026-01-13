@@ -1,6 +1,7 @@
 import * as Tabs from "@kobalte/core/tabs";
 import { Image } from "lucide-solid";
 import type { Component } from "solid-js";
+import { ScrollToTop } from "../../../components";
 import type {
 	HonorDTO,
 	PlayerDTO,
@@ -51,7 +52,6 @@ export const UserProfileView: Component<Props> = (props) => {
 		<div class="my-4">
 			{/* ネームプレート */}
 			<div class="mb-2 mx-4 px-3 py-3 border border-gray-200 shadow-sm rounded-md ">
-				{/* <p class="mb-1 text-gray-400 text-xs">Chunisupport v1.0.0</p> */}
 				{/* TODO: 称号の背景画像を表示 */}
 				<p class="mb-3 p-1 bg-yellow-200 rounded-md text-sm text-center">
 					{honors[0].name}
@@ -73,7 +73,16 @@ export const UserProfileView: Component<Props> = (props) => {
 				<p>OP {playerInfo.overpower_percent}%</p>
 			</div>
 
-			<Tabs.Root class="mb-4">
+			<Tabs.Root
+				class="mb-4"
+				// タブを切り替えた際に1曲目の位置までスクロールする
+				onChange={() => {
+					const main = document.querySelector("#root > div > div > main");
+					if (main && main.scrollTop > 183) {
+						main.scrollTo({ top: 183, behavior: "smooth" });
+					}
+				}}
+			>
 				<Tabs.List class="sticky top-0 z-10 bg-white flex gap-2 mb-4 px-4 pt-2 border-b border-gray-300">
 					<Tabs.Trigger
 						value="best"
@@ -141,6 +150,7 @@ export const UserProfileView: Component<Props> = (props) => {
 					</div>
 				</Tabs.Content>
 			</Tabs.Root>
+			<ScrollToTop />
 		</div>
 	);
 };
