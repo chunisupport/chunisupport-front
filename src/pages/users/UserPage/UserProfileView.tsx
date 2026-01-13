@@ -1,6 +1,7 @@
 import * as Tabs from "@kobalte/core/tabs";
 import { Image } from "lucide-solid";
 import type { Component } from "solid-js";
+import { For } from "solid-js";
 import { ScrollToTop } from "../../../components";
 import type {
 	HonorDTO,
@@ -120,46 +121,50 @@ export const UserProfileView: Component<Props> = (props) => {
 					</Tabs.List>
 					<Tabs.Content value="best">
 						<div class="mx-4">
-							{bestRecords.map((record, i) => (
-								<div
-									class={`mb-2 p-3 rounded-md border ${getDifficultyColors(record.difficulty)}`}
-								>
-									<div class="flex gap-3">
-										<div class="flex flex-col">
-											<p># {i + 1}</p>
-											<p class="text-sm">{record.rating.toFixed(2)}</p>
-										</div>
-										<div>
-											<p class="font-medium">{record.title}</p>
-											<p class="text-sm">
-												{record.const} / {record.score}
-											</p>
+							<For each={bestRecords}>
+								{(record, i) => (
+									<div
+										class={`mb-2 p-3 rounded-md border ${getDifficultyColors(record.difficulty)}`}
+									>
+										<div class="flex gap-3">
+											<div class="flex flex-col">
+												<p># {i() + 1}</p>
+												<p class="text-sm">{record.rating.toFixed(2)}</p>
+											</div>
+											<div>
+												<p class="font-medium">{record.title}</p>
+												<p class="text-sm">
+													{record.const} / {record.score}
+												</p>
+											</div>
 										</div>
 									</div>
-								</div>
-							))}
+								)}
+							</For>
 						</div>
 					</Tabs.Content>
 					<Tabs.Content value="new">
 						<div class="mx-4">
-							{newRecords.map((record, i) => (
-								<div
-									class={`mb-2 p-3 rounded-md border ${getDifficultyColors(record.difficulty)}`}
-								>
-									<div class="flex gap-3">
-										<div class="flex flex-col">
-											<p># {i + 1}</p>
-											<p class="text-sm">{record.rating.toFixed(2)}</p>
-										</div>
-										<div>
-											<p class="font-medium">{record.title}</p>
-											<p class="text-sm">
-												{record.const} / {record.score}
-											</p>
+							<For each={newRecords}>
+								{(record, i) => (
+									<div
+										class={`mb-2 p-3 rounded-md border ${getDifficultyColors(record.difficulty)}`}
+									>
+										<div class="flex gap-3">
+											<div class="flex flex-col">
+												<p># {i() + 1}</p>
+												<p class="text-sm">{record.rating.toFixed(2)}</p>
+											</div>
+											<div>
+												<p class="font-medium">{record.title}</p>
+												<p class="text-sm">
+													{record.const} / {record.score}
+												</p>
+											</div>
 										</div>
 									</div>
-								</div>
-							))}
+								)}
+							</For>
 						</div>
 					</Tabs.Content>
 				</Tabs.Root>
