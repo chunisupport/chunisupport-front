@@ -25,11 +25,15 @@ export const UserProfileView: Component<Props> = (props) => {
 		return records.reduce((sum, record) => sum + record.rating, 0);
 	};
 
-	const bestRating = sumRating(bestRecords) / bestRecords.length;
-	const newRating = sumRating(newRecords) / newRecords.length;
+	const bestRating =
+		bestRecords.length > 0 ? sumRating(bestRecords) / bestRecords.length : 0;
+	const newRating =
+		newRecords.length > 0 ? sumRating(newRecords) / newRecords.length : 0;
+	const totalRecordsLength = bestRecords.length + newRecords.length;
 	const playerRating =
-		(sumRating(bestRecords) + sumRating(newRecords)) /
-		(bestRecords.length + newRecords.length);
+		totalRecordsLength > 0
+			? (sumRating(bestRecords) + sumRating(newRecords)) / totalRecordsLength
+			: 0;
 
 	const getDifficultyColors = (difficulty: string) => {
 		switch (difficulty) {
@@ -51,7 +55,6 @@ export const UserProfileView: Component<Props> = (props) => {
 	return (
 		// 2カラムレイアウト(PCのみ)
 		<div class="md:flex md:gap-0 md:divide-x-4 md:divide-gray-300 md:h-screen">
-
 			{/* 左側 */}
 			<div class="py-4 md:min-w-106.25 md:shrink-0 md:h-full md:overflow-y-auto">
 				{/* ネームプレート */}
