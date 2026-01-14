@@ -1,9 +1,47 @@
 import { Collapsible } from "@kobalte/core/collapsible";
 import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
+import { useNavigate } from "@solidjs/router";
+import { createSignal, onMount } from "solid-js";
+
+import { postLogin } from "../../../api/auth";
+import { fetchMe } from "../../../api/users";
 
 const Login = () => {
-	// TODO: アクセス時にログイン済みなら /user/{username} へリダイレクトする処理を追加
+	const navigate = useNavigate();
+	const [username, setUsername] = createSignal("");
+	const [password, setPassword] = createSignal("");
+	const [errorMessage, setErrorMessage] = createSignal("");
+	const [isSubmitting, setIsSubmitting] = createSignal(false);
+
+	onMount(async () => {
+		try {
+			const user = await fetchMe();
+			navigate(`/users/${user.username}`);
+		} catch (error) {
+			console.error("Failed to fetch user info:", error);
+		}
+	});
+
+	const handleLogin = async () => {
+		if (!username() || !password()) {
+			setErrorMessage("データ1とデータ2を入力してください。");
+			return;
+		}
+
+		setIsSubmitting(true);
+		setErrorMessage("");
+		try {
+			await postLogin({ username: username(), password: password() });
+			navigate(`/users/${username()}`);
+		} catch (error) {
+			setErrorMessage(
+				error instanceof Error ? error.message : "ログインに失敗しました。",
+			);
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
 
 	return (
 		<div class="min-h-screen flex px-4 py-10">
@@ -34,17 +72,31 @@ const Login = () => {
 								<TextField.Input
 									class="mb-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 									placeholder="データ1"
+									value={username()}
+									onInput={(event) =>
+										setUsername(event.currentTarget.value)
+									}
 								/>
 								<TextField.Input
 									class="mb-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 									placeholder="データ2"
+									type="password"
+									value={password()}
+									onInput={(event) =>
+										setPassword(event.currentTarget.value)
+									}
 								/>
 							</TextField>
+							{errorMessage() && (
+								<p class="text-sm text-red-600 mb-2">{errorMessage()}</p>
+							)}
 							<button
 								type="button"
-								class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+								class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+								onClick={handleLogin}
+								disabled={isSubmitting()}
 							>
-								実行
+								{isSubmitting() ? "実行中..." : "実行"}
 							</button>
 						</Collapsible.Content>
 					</Collapsible>
