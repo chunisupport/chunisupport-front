@@ -30,6 +30,4 @@ export const postLogout = async (): Promise<void> => {
 		const error = await response.json();
 		throw new Error(getErrorMessage(error));
 	}
-
-	console.log("Logged out successfully");
 }

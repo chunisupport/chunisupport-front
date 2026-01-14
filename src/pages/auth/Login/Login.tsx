@@ -18,7 +18,7 @@ const Login = () => {
 	onMount(async () => {
 		try {
 			const user = await fetchMe();
-			navigate(`/users/${user.username}`);
+			navigate(`/users/${encodeURIComponent(user.username)}`);
 		} catch (error) {
 			console.error("Failed to fetch user info:", error);
 		}

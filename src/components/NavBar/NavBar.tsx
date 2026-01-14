@@ -51,7 +51,9 @@ const NavBar = (props: NavBarProps) => {
 	// ナビゲーション項目の定義
 	const getNavItems = (): NavItem[] => {
 		const uname = username();
-		const userPath = uname ? `/users/${uname}` : "/users/:username";
+		const userPath = uname
+			? `/users/${encodeURIComponent(uname)}`
+			: "/users/:username";
 		const dropdownBase = [
 			{
 				label: "ユーザー一覧",
@@ -134,18 +136,14 @@ const NavBar = (props: NavBarProps) => {
 
 	// コンポーネントマウント時にユーザー情報を取得
 	onMount(async () => {
-		console.log("[NavBar] onMount: start, isLoading=true, username=null");
 		setIsLoading(true);
 		try {
 			const user = await fetchMe();
 			setUsername(user.username);
-			console.log("[NavBar] fetchMe success, username=", user.username);
-		} catch (error) {
-			// 未認証やAPIエラー時はnullのまま
-			console.error("[NavBar] Failed to fetch user info:", error);
+		} catch {
+			setUsername(null);
 		} finally {
 			setIsLoading(false);
-			console.log("[NavBar] onMount: isLoading=false, username=", username());
 		}
 	});
 
