@@ -65,6 +65,10 @@ const App = () => {
 					path="/settings"
 					component={withNavBar(() => <h1>Settings Page</h1>)}
 				/>
+				<Route
+					path="/terms"
+					component={withNavBar(() => <h1>Terms of Service Page</h1>)}
+				/>
 
 				{/* 管理系 */}
 				<Route path="/admin" component={() => <h1>Admin Page</h1>} />
