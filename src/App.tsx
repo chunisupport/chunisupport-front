@@ -4,12 +4,12 @@ import type { JSX } from "solid-js";
 import { NavBar } from "./components";
 import { UserPage } from "./pages";
 
-const withNavBar = (Component: () => JSX.Element) => {
-	return () => (
-		<NavBar>
-			<Component />
-		</NavBar>
-	);
+const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
+  return (props: P) => (
+    <NavBar>
+      <Component {...props} />
+    </NavBar>
+  );
 };
 
 const App = () => {
