@@ -13,20 +13,21 @@ const sumRating = (records: PlayerRecordDTO[]): number => {
 };
 
 export const UserNameplate: Component<Props> = (props) => {
+	const bestSum = sumRating(props.bestRecords);
+	const newSum = sumRating(props.newRecords);
 	const bestRating =
 		props.bestRecords.length > 0
-			? sumRating(props.bestRecords) / props.bestRecords.length
+			? bestSum / props.bestRecords.length
 			: 0;
 	const newRating =
 		props.newRecords.length > 0
-			? sumRating(props.newRecords) / props.newRecords.length
+			? newSum / props.newRecords.length
 			: 0;
 	const totalRecordsLength =
 		props.bestRecords.length + props.newRecords.length;
 	const playerRating =
 		totalRecordsLength > 0
-			? (sumRating(props.bestRecords) + sumRating(props.newRecords)) /
-				totalRecordsLength
+			? (bestSum + newSum) / totalRecordsLength
 			: 0;
 
 	return (
