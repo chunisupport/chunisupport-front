@@ -3,6 +3,8 @@ import { Image } from "lucide-solid";
 import type { Component } from "solid-js";
 import { For } from "solid-js";
 import { ScrollToTop } from "../../../components";
+import { UserNameplate } from "./components/UserNameplate";
+import { UserRecordCard } from "./components/UserRecordCard";
 import type {
 	HonorDTO,
 	PlayerDTO,
@@ -22,39 +24,8 @@ export const UserProfileView: Component<Props> = (props) => {
 	const bestRecords: PlayerRecordDTO[] = profile.records.best;
 	const newRecords: PlayerRecordDTO[] = profile.records.new;
 
-	const sumRating = (records: PlayerRecordDTO[]): number => {
-		return records.reduce((sum, record) => sum + record.rating, 0);
-	};
-
-	const bestRating =
-		bestRecords.length > 0 ? sumRating(bestRecords) / bestRecords.length : 0;
-	const newRating =
-		newRecords.length > 0 ? sumRating(newRecords) / newRecords.length : 0;
-	const totalRecordsLength = bestRecords.length + newRecords.length;
-	const playerRating =
-		totalRecordsLength > 0
-			? (sumRating(bestRecords) + sumRating(newRecords)) / totalRecordsLength
-			: 0;
-
 	// ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
 	const NAMEPLATE_SCROLL_OFFSET = 183;
-
-	const getDifficultyColors = (difficulty: string) => {
-		switch (difficulty) {
-			case "BASIC":
-				return "border-green-500 bg-green-200";
-			case "ADVANCED":
-				return "border-orange-500 bg-orange-200";
-			case "EXPERT":
-				return "border-red-500 bg-red-200";
-			case "ULTIMA":
-				return "border-red-500 bg-black text-white";
-			case "MASTER":
-				return "border-purple-500 bg-purple-200";
-			default:
-				return "border-gray-500 bg-gray-200";
-		}
-	};
 
 	return (
 		// 2カラムレイアウト(PCのみ)
@@ -62,27 +33,12 @@ export const UserProfileView: Component<Props> = (props) => {
 			{/* 左側 */}
 			<div class="py-4 md:min-w-106.25 md:shrink-0 md:h-full md:overflow-y-auto">
 				{/* ネームプレート */}
-				<div class="mb-2 mx-4 px-3 py-3 border border-gray-200 shadow-sm rounded-md ">
-					{/* TODO: 称号の背景画像を表示 */}
-					<p class="mb-3 p-1 bg-yellow-200 rounded-md text-sm text-center">
-						{honors[0].name}
-					</p>
-					<div class="mb-2 flex flex-row items-end justify-between">
-						<p class="">Lv. {playerInfo.level}</p>
-						<h1 class="flex-1 text-xl font-medium text-center">
-							{playerInfo.name}
-						</h1>
-					</div>
-					<hr class="mb-2 border-t border-gray-200" />
-					<p>
-						Rating {playerRating.toFixed(4)}{" "}
-						<span class="text-gray-500">
-							(Best {bestRating.toFixed(4)} / New {newRating.toFixed(4)})
-						</span>
-					</p>
-					{/* TODO: OverPowerのゲージみたいなのあるといいよね */}
-					<p>OP {playerInfo.overpower_percent}%</p>
-				</div>
+				<UserNameplate
+					playerInfo={playerInfo}
+					honors={honors}
+					bestRecords={bestRecords}
+					newRecords={newRecords}
+				/>
 
 				<Tabs.Root
 					class="mb-4"
@@ -123,22 +79,7 @@ export const UserProfileView: Component<Props> = (props) => {
 						<div class="mx-4">
 							<For each={bestRecords}>
 								{(record, i) => (
-									<div
-										class={`mb-2 p-3 rounded-md border ${getDifficultyColors(record.difficulty)}`}
-									>
-										<div class="flex gap-3">
-											<div class="flex flex-col">
-												<p># {i() + 1}</p>
-												<p class="text-sm">{record.rating.toFixed(2)}</p>
-											</div>
-											<div>
-												<p class="font-medium">{record.title}</p>
-												<p class="text-sm">
-													{record.const} / {record.score}
-												</p>
-											</div>
-										</div>
-									</div>
+									<UserRecordCard record={record} index={i()} />
 								)}
 							</For>
 						</div>
@@ -147,22 +88,7 @@ export const UserProfileView: Component<Props> = (props) => {
 						<div class="mx-4">
 							<For each={newRecords}>
 								{(record, i) => (
-									<div
-										class={`mb-2 p-3 rounded-md border ${getDifficultyColors(record.difficulty)}`}
-									>
-										<div class="flex gap-3">
-											<div class="flex flex-col">
-												<p># {i() + 1}</p>
-												<p class="text-sm">{record.rating.toFixed(2)}</p>
-											</div>
-											<div>
-												<p class="font-medium">{record.title}</p>
-												<p class="text-sm">
-													{record.const} / {record.score}
-												</p>
-											</div>
-										</div>
-									</div>
+									<UserRecordCard record={record} index={i()} />
 								)}
 							</For>
 						</div>
