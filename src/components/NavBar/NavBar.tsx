@@ -1,3 +1,5 @@
+import { AlertDialog } from "@kobalte/core/alert-dialog";
+import { Dialog } from "@kobalte/core/dialog";
 import { DropdownMenu } from "@kobalte/core/dropdown-menu";
 import { A, useLocation, useNavigate } from "@solidjs/router";
 import {
@@ -19,6 +21,7 @@ type NavBarProps = {
 	children: JSX.Element;
 };
 
+import { postLogout } from "../../api/auth";
 import { fetchMe } from "../../api/users";
 
 type DropdownItem = {
@@ -37,20 +40,75 @@ type NavItem = {
 };
 
 const [username, setUsername] = createSignal<string | null>(null);
+// ローディング状態
+const [isLoading, setIsLoading] = createSignal(true);
 
+// 未ログイン時の警告ダイアログ状態
+const [showLoginDialog, setShowLoginDialog] = createSignal(false);
+// ログアウト確認ダイアログ状態
+const [showLogoutDialog, setShowLogoutDialog] = createSignal(false);
+
+// アクセス時にユーザー情報を取得
 onMount(async () => {
+	setIsLoading(true);
 	try {
 		const user = await fetchMe();
 		setUsername(user.username);
 	} catch (error) {
 		// 未認証やAPIエラー時はnullのまま
 		console.error("Failed to fetch user info:", error);
+	} finally {
+		setIsLoading(false);
 	}
 });
 
 const getNavItems = (): NavItem[] => {
 	const uname = username();
 	const userPath = uname ? `/users/${uname}` : "/users/:username";
+	// ドロップダウンのフィルタリング
+	const dropdownBase = [
+		{
+			label: "ユーザー一覧",
+			icon: () => <UsersRound class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+			path: "/users",
+		},
+		{
+			label: "楽曲データベース",
+			icon: () => <Music class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+			path: "/songs",
+		},
+		// 設定・ログアウトはログイン時のみ
+		...(uname
+			? [
+					{
+						label: "設定",
+						icon: () => (
+							<Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />
+						),
+						path: "/settings",
+					},
+				]
+			: []),
+		{
+			label: "ヘルプ",
+			icon: () => (
+				<BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />
+			),
+			path: "https://example.com",
+		},
+		...(uname
+			? [
+					{
+						label: "ログアウト",
+						icon: () => (
+							<LogOut class="inline h-4 w-4 mr-1" aria-hidden="true" />
+						),
+						path: "/logout",
+					},
+				]
+			: []),
+	];
+
 	return [
 		{
 			label: "ホーム",
@@ -81,39 +139,7 @@ const getNavItems = (): NavItem[] => {
 			path: "#",
 			matchPattern: /a^/, // マッチしないダミーパターン
 			icon: () => <Ellipsis class="h-6 w-6" aria-hidden="true" />,
-			dropdown: [
-				{
-					label: "ユーザー一覧",
-					icon: () => (
-						<UsersRound class="inline h-4 w-4 mr-1" aria-hidden="true" />
-					),
-					path: "/users",
-				},
-				{
-					label: "楽曲データベース",
-					icon: () => <Music class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-					path: "/songs",
-				},
-				{
-					label: "設定",
-					icon: () => (
-						<Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />
-					),
-					path: "/settings",
-				},
-				{
-					label: "ヘルプ",
-					icon: () => (
-						<BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />
-					),
-					path: "https://example.com",
-				},
-				{
-					label: "ログアウト",
-					icon: () => <LogOut class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-					path: "/logout",
-				},
-			],
+			dropdown: dropdownBase,
 		},
 	];
 };
@@ -155,18 +181,40 @@ const NavBar = (props: NavBarProps) => {
 								</DropdownMenu.Trigger>
 								<DropdownMenu.Portal>
 									<DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
-										{item.dropdown?.map((d) => (
-											<DropdownMenu.Item
-												onSelect={() => handleDropdownSelect(d.path)}
-												class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 outline-none cursor-pointer"
-											>
-												<span class="pr-2">{d.icon()}</span>
-												{d.label}
-											</DropdownMenu.Item>
-										))}
+										{item.dropdown?.map((d) =>
+											d.label === "ログアウト" ? (
+												<DropdownMenu.Item
+													onSelect={() => setShowLogoutDialog(true)}
+													class="block px-4 py-2 text-sm text-red-600 hover:bg-red-100 focus:bg-red-100 outline-none cursor-pointer font-semibold"
+												>
+													<span class="pr-2">{d.icon()}</span>
+													{d.label}
+												</DropdownMenu.Item>
+											) : (
+												<DropdownMenu.Item
+													onSelect={() => handleDropdownSelect(d.path)}
+													class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 outline-none cursor-pointer"
+												>
+													<span class="pr-2">{d.icon()}</span>
+													{d.label}
+												</DropdownMenu.Item>
+											),
+										)}
 									</DropdownMenu.Content>
 								</DropdownMenu.Portal>
 							</DropdownMenu>
+						) : // ホーム・レコード・統計は未ログイン時にDialog表示
+						["ホーム", "レコード", "統計"].includes(item.label) &&
+							!isLoading() &&
+							username() === null ? (
+							<button
+								type="button"
+								class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900 w-full"
+								onClick={() => setShowLoginDialog(true)}
+							>
+								<span class="text-lg">{item.icon()}</span>
+								<span>{item.label}</span>
+							</button>
 						) : (
 							<A
 								href={item.path}
@@ -199,18 +247,39 @@ const NavBar = (props: NavBarProps) => {
 								</DropdownMenu.Trigger>
 								<DropdownMenu.Portal>
 									<DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
-										{item.dropdown?.map((d) => (
-											<DropdownMenu.Item
-												onSelect={() => handleDropdownSelect(d.path)}
-												class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 outline-none cursor-pointer"
-											>
-												<span class="pr-2">{d.icon()}</span>
-												{d.label}
-											</DropdownMenu.Item>
-										))}
+										{item.dropdown?.map((d) =>
+											d.label === "ログアウト" ? (
+												<DropdownMenu.Item
+													onSelect={() => setShowLogoutDialog(true)}
+													class="block px-4 py-2 text-sm text-red-600 hover:bg-red-100 focus:bg-red-100 outline-none cursor-pointer font-semibold"
+												>
+													<span class="pr-2">{d.icon()}</span>
+													{d.label}
+												</DropdownMenu.Item>
+											) : (
+												<DropdownMenu.Item
+													onSelect={() => handleDropdownSelect(d.path)}
+													class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 outline-none cursor-pointer"
+												>
+													<span class="pr-2">{d.icon()}</span>
+													{d.label}
+												</DropdownMenu.Item>
+											),
+										)}
 									</DropdownMenu.Content>
 								</DropdownMenu.Portal>
 							</DropdownMenu>
+						) : ["ホーム", "レコード", "統計"].includes(item.label) &&
+							!isLoading() &&
+							username() === null ? (
+							<button
+								type="button"
+								class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 justify-center"
+								onClick={() => setShowLoginDialog(true)}
+							>
+								<span class="text-lg">{item.icon()}</span>
+								<span>{item.label}</span>
+							</button>
 						) : (
 							<A
 								href={item.path}
@@ -225,6 +294,77 @@ const NavBar = (props: NavBarProps) => {
 						),
 					)}
 				</nav>
+				{/* 未ログイン警告ダイアログ */}
+				<Dialog open={showLoginDialog()} onOpenChange={setShowLoginDialog}>
+					<Dialog.Portal>
+						<Dialog.Overlay class="fixed inset-0 bg-black/30 z-50" />
+						<Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg flex flex-col items-center">
+							<Dialog.Title class="text-lg font-bold mb-2">
+								ログインが必要です
+							</Dialog.Title>
+							<Dialog.Description class="mb-4 text-sm text-gray-700">
+								この機能を利用するにはログインが必要です。
+							</Dialog.Description>
+							<div class="flex gap-4 mt-2">
+								<button
+									type="button"
+									class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+									onClick={() => setShowLoginDialog(false)}
+								>
+									戻る
+								</button>
+								<button
+									type="button"
+									class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+									onClick={() => {
+										setShowLoginDialog(false);
+										navigate("/login");
+									}}
+								>
+									ログイン画面へ
+								</button>
+							</div>
+						</Dialog.Content>
+					</Dialog.Portal>
+				</Dialog>
+				{/* ログアウト確認AlertDialog */}
+				<AlertDialog
+					open={showLogoutDialog()}
+					onOpenChange={setShowLogoutDialog}
+				>
+					<AlertDialog.Portal>
+						<AlertDialog.Overlay class="fixed inset-0 bg-black/30 z-50" />
+						<AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg flex flex-col items-center">
+							<AlertDialog.Title class="text-lg font-bold mb-2">
+								ログアウトしますか？
+							</AlertDialog.Title>
+							<AlertDialog.Description class="mb-4 text-sm text-gray-700">
+								本当にログアウトしますか？
+							</AlertDialog.Description>
+							<div class="flex gap-4 mt-2">
+								<button
+									type="button"
+									class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+									onClick={() => setShowLogoutDialog(false)}
+								>
+									キャンセル
+								</button>
+								<button
+									type="button"
+									class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+									onClick={async () => {
+										await postLogout();
+										setUsername(null);
+										setShowLogoutDialog(false);
+										navigate("/login");
+									}}
+								>
+									ログアウト
+								</button>
+							</div>
+						</AlertDialog.Content>
+					</AlertDialog.Portal>
+				</AlertDialog>
 			</div>
 		</div>
 	);
