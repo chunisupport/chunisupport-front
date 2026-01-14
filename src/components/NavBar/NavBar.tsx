@@ -211,11 +211,7 @@ const NavBar = (props: NavBarProps) => {
 							username() === null ? (
 							<button
 								type="button"
-								class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold hover:bg-gray-100 hover:text-gray-900 w-full"
-								classList={{
-									"bg-gray-100 text-gray-900": isActive(item),
-									"text-gray-500": true,
-								}}
+								class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-300 w-full"
 								onClick={() => setShowLoginDialog(true)}
 							>
 								<span class="text-lg">{item.icon()}</span>
@@ -282,11 +278,7 @@ const NavBar = (props: NavBarProps) => {
 							username() === null ? (
 							<button
 								type="button"
-								class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold justify-center hover:bg-gray-100 hover:text-gray-900"
-								classList={{
-									"bg-gray-100 text-gray-900": isActive(item),
-									"text-gray-500": true,
-								}}
+								class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-300 justify-center"
 								onClick={() => setShowLoginDialog(true)}
 							>
 								<span class="text-lg">{item.icon()}</span>
