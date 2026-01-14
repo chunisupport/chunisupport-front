@@ -91,7 +91,7 @@ const NavBar = (props: NavBarProps) => {
 							icon: () => (
 								<LogOut class="inline h-4 w-4 mr-1" aria-hidden="true" />
 							),
-							path: "/logout",
+							path: "#", // ページ遷移しない
 						},
 					]
 				: []),
@@ -379,7 +379,6 @@ const NavBar = (props: NavBarProps) => {
 						</AlertDialog.Content>
 					</AlertDialog.Portal>
 				</AlertDialog>
-
 			</div>
 		</div>
 	);

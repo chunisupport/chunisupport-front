@@ -1,2 +1,2 @@
-export { Login, Logout, Register } from "./auth";
+export { Login, Register } from "./auth";
 export { UserPage } from "./users";
