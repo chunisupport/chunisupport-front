@@ -3,8 +3,8 @@ import { Image } from "lucide-solid";
 import type { Component } from "solid-js";
 import { For } from "solid-js";
 import { ScrollToTop } from "../../../components";
-import { UserNameplate } from "./UserNameplate";
-import { UserRecordCard } from "./UserRecordCard";
+import { UserNameplate } from "./components/UserNameplate";
+import { UserRecordCard } from "./components/UserRecordCard";
 import type {
 	HonorDTO,
 	PlayerDTO,
