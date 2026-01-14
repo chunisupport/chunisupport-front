@@ -47,9 +47,6 @@ onMount(async () => {
 	}
 });
 
-// TODO: ログイン画面の仮実装
-// TODO: 未ログイン時はログインページへのリンクを表示する(モーダルで飛ばすか〜)
-
 const getNavItems = (): NavItem[] => {
 	const uname = username();
 	const userPath = uname ? `/users/${uname}` : "/users/:username";
