@@ -2,10 +2,10 @@ import { Collapsible } from "@kobalte/core/collapsible";
 import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
-import { createSignal, onMount } from "solid-js";
+import { createSignal } from "solid-js";
 
 import { postLogin } from "../../../api/auth";
-import { fetchMe } from "../../../api/users";
+import useRedirectIfAuthenticated from "../../../hooks/useRedirectIfAuthenticated";
 
 const Login = () => {
 	const navigate = useNavigate();
@@ -15,14 +15,7 @@ const Login = () => {
 	const [isSubmitting, setIsSubmitting] = createSignal(false);
 
 	// すでにログインしている場合はユーザーページへリダイレクト
-	onMount(async () => {
-		try {
-			const user = await fetchMe();
-			navigate(`/users/${encodeURIComponent(user.username)}`);
-		} catch (error) {
-			console.error("Failed to fetch user info:", error);
-		}
-	});
+	useRedirectIfAuthenticated();
 
 	// 管理者ログイン処理
 	const handleLogin = async () => {

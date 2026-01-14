@@ -1,22 +1,12 @@
 import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
-import { useNavigate } from "@solidjs/router";
-import { onMount } from "solid-js";
 
-import { fetchMe } from "../../../api/users";
+import useRedirectIfAuthenticated from "../../../hooks/useRedirectIfAuthenticated";
 
 const Register = () => {
-	const navigate = useNavigate();
 
 	// すでにログインしている場合はユーザーページへリダイレクト
-	onMount(async () => {
-		try {
-			const user = await fetchMe();
-			navigate(`/users/${encodeURIComponent(user.username)}`);
-		} catch (error) {
-			console.error("Failed to fetch user info:", error);
-		}
-	});
+	useRedirectIfAuthenticated();
 
 	// TODO: Google対応の登録処理を実装(API実装待ち？)
 
