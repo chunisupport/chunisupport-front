@@ -21,7 +21,7 @@ const Register = () => {
 	// TODO: Google対応の登録処理を実装(API実装待ち？)
 
 	return (
-		<div class="min-h-screen flex px-4 py-10">
+		<div class="min-h-screen flex justify-center px-4 py-10">
 			<Title>新規登録 - ChuniSupport</Title>
 			<div class="w-full max-w-md">
 				<div class="text-center">

@@ -46,7 +46,7 @@ const Login = () => {
 	};
 
 	return (
-		<div class="min-h-screen flex px-4 py-10">
+		<div class="min-h-screen flex justify-center px-4 py-10">
 			<Title>ログイン - ChuniSupport</Title>
 			<div class="w-full max-w-md">
 				<div class="text-center mb-6">
