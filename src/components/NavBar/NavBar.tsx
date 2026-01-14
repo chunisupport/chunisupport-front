@@ -39,114 +39,115 @@ type NavItem = {
 	dropdown?: DropdownItem[];
 };
 
-const [username, setUsername] = createSignal<string | null>(null);
-// ローディング状態
-const [isLoading, setIsLoading] = createSignal(true);
-
-// 未ログイン時の警告ダイアログ状態
-const [showLoginDialog, setShowLoginDialog] = createSignal(false);
-// ログアウト確認ダイアログ状態
-const [showLogoutDialog, setShowLogoutDialog] = createSignal(false);
-
-// アクセス時にユーザー情報を取得
-onMount(async () => {
-	setIsLoading(true);
-	try {
-		const user = await fetchMe();
-		setUsername(user.username);
-	} catch (error) {
-		// 未認証やAPIエラー時はnullのまま
-		console.error("Failed to fetch user info:", error);
-	} finally {
-		setIsLoading(false);
-	}
-});
-
-const getNavItems = (): NavItem[] => {
-	const uname = username();
-	const userPath = uname ? `/users/${uname}` : "/users/:username";
-	// ドロップダウンのフィルタリング
-	const dropdownBase = [
-		{
-			label: "ユーザー一覧",
-			icon: () => <UsersRound class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-			path: "/users",
-		},
-		{
-			label: "楽曲データベース",
-			icon: () => <Music class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-			path: "/songs",
-		},
-		// 設定・ログアウトはログイン時のみ
-		...(uname
-			? [
-					{
-						label: "設定",
-						icon: () => (
-							<Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />
-						),
-						path: "/settings",
-					},
-				]
-			: []),
-		{
-			label: "ヘルプ",
-			icon: () => (
-				<BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />
-			),
-			path: "https://example.com",
-		},
-		...(uname
-			? [
-					{
-						label: "ログアウト",
-						icon: () => (
-							<LogOut class="inline h-4 w-4 mr-1" aria-hidden="true" />
-						),
-						path: "/logout",
-					},
-				]
-			: []),
-	];
-
-	return [
-		{
-			label: "ホーム",
-			path: userPath,
-			icon: () => <House class="h-6 w-6" aria-hidden="true" />,
-			matchPattern: /^\/users\/[^/]+$/,
-		},
-		{
-			label: "レコード",
-			path: `${userPath}/records`,
-			icon: () => <ListMusic class="h-6 w-6" aria-hidden="true" />,
-			matchPattern: /^\/users\/[^/]+\/records/,
-		},
-		{
-			label: "統計",
-			path: `${userPath}/stats`,
-			icon: () => <ChartNoAxesCombined class="h-6 w-6" aria-hidden="true" />,
-			matchPattern: /^\/users\/[^/]+\/stats/,
-		},
-		{
-			label: "ツール",
-			path: "/tools",
-			icon: () => <Toolbox class="h-6 w-6" aria-hidden="true" />,
-			matchPrefix: true,
-		},
-		{
-			label: "その他",
-			path: "#",
-			matchPattern: /a^/, // マッチしないダミーパターン
-			icon: () => <Ellipsis class="h-6 w-6" aria-hidden="true" />,
-			dropdown: dropdownBase,
-		},
-	];
-};
-
 const NavBar = (props: NavBarProps) => {
+	const [username, setUsername] = createSignal<string | null>(null);
+	const [isLoading, setIsLoading] = createSignal(true);
+	const [showLoginDialog, setShowLoginDialog] = createSignal(false);
+	const [showLogoutDialog, setShowLogoutDialog] = createSignal(false);
+
 	const location = useLocation();
 	const navigate = useNavigate();
+
+	// ナビゲーション項目の定義
+	const getNavItems = (): NavItem[] => {
+		const uname = username();
+		const userPath = uname ? `/users/${uname}` : "/users/:username";
+		const dropdownBase = [
+			{
+				label: "ユーザー一覧",
+				icon: () => (
+					<UsersRound class="inline h-4 w-4 mr-1" aria-hidden="true" />
+				),
+				path: "/users",
+			},
+			{
+				label: "楽曲データベース",
+				icon: () => <Music class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+				path: "/songs",
+			},
+			// 設定・ログアウトはログイン時のみ
+			...(uname
+				? [
+						{
+							label: "設定",
+							icon: () => (
+								<Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />
+							),
+							path: "/settings",
+						},
+					]
+				: []),
+			{
+				label: "ヘルプ",
+				icon: () => (
+					<BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />
+				),
+				path: "https://example.com",
+			},
+			...(uname
+				? [
+						{
+							label: "ログアウト",
+							icon: () => (
+								<LogOut class="inline h-4 w-4 mr-1" aria-hidden="true" />
+							),
+							path: "/logout",
+						},
+					]
+				: []),
+		];
+
+		return [
+			{
+				label: "ホーム",
+				path: userPath,
+				icon: () => <House class="h-6 w-6" aria-hidden="true" />,
+				matchPattern: /^\/users\/[^/]+$/,
+			},
+			{
+				label: "レコード",
+				path: `${userPath}/records`,
+				icon: () => <ListMusic class="h-6 w-6" aria-hidden="true" />,
+				matchPattern: /^\/users\/[^/]+\/records/,
+			},
+			{
+				label: "統計",
+				path: `${userPath}/stats`,
+				icon: () => <ChartNoAxesCombined class="h-6 w-6" aria-hidden="true" />,
+				matchPattern: /^\/users\/[^/]+\/stats/,
+			},
+			{
+				label: "ツール",
+				path: "/tools",
+				icon: () => <Toolbox class="h-6 w-6" aria-hidden="true" />,
+				matchPrefix: true,
+			},
+			{
+				label: "その他",
+				path: "#",
+				matchPattern: /a^/, // マッチしないダミーパターン
+				icon: () => <Ellipsis class="h-6 w-6" aria-hidden="true" />,
+				dropdown: dropdownBase,
+			},
+		];
+	};
+
+	// コンポーネントマウント時にユーザー情報を取得
+	onMount(async () => {
+		console.log("[NavBar] onMount: start, isLoading=true, username=null");
+		setIsLoading(true);
+		try {
+			const user = await fetchMe();
+			setUsername(user.username);
+			console.log("[NavBar] fetchMe success, username=", user.username);
+		} catch (error) {
+			// 未認証やAPIエラー時はnullのまま
+			console.error("[NavBar] Failed to fetch user info:", error);
+		} finally {
+			setIsLoading(false);
+			console.log("[NavBar] onMount: isLoading=false, username=", username());
+		}
+	});
 
 	const isActive = (item: NavItem) => {
 		if (item.matchPattern) {
@@ -182,10 +183,11 @@ const NavBar = (props: NavBarProps) => {
 								<DropdownMenu.Portal>
 									<DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
 										{item.dropdown?.map((d) =>
+											// ログアウト項目は赤色で表示
 											d.label === "ログアウト" ? (
 												<DropdownMenu.Item
 													onSelect={() => setShowLogoutDialog(true)}
-													class="block px-4 py-2 text-sm text-red-600 hover:bg-red-100 focus:bg-red-100 outline-none cursor-pointer font-semibold"
+													class="block px-4 py-2 text-sm text-red-600 hover:bg-red-100 focus:bg-red-100 outline-none cursor-pointer"
 												>
 													<span class="pr-2">{d.icon()}</span>
 													{d.label}
@@ -203,13 +205,17 @@ const NavBar = (props: NavBarProps) => {
 									</DropdownMenu.Content>
 								</DropdownMenu.Portal>
 							</DropdownMenu>
-						) : // ホーム・レコード・統計は未ログイン時にDialog表示
+						) : // 未ログイン時はホーム・レコード・統計を押すと警告ダイアログを表示
 						["ホーム", "レコード", "統計"].includes(item.label) &&
 							!isLoading() &&
 							username() === null ? (
 							<button
 								type="button"
-								class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900 w-full"
+								class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold hover:bg-gray-100 hover:text-gray-900 w-full"
+								classList={{
+									"bg-gray-100 text-gray-900": isActive(item),
+									"text-gray-500": true,
+								}}
 								onClick={() => setShowLoginDialog(true)}
 							>
 								<span class="text-lg">{item.icon()}</span>
@@ -248,6 +254,7 @@ const NavBar = (props: NavBarProps) => {
 								<DropdownMenu.Portal>
 									<DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
 										{item.dropdown?.map((d) =>
+											// ログアウト項目は赤色で表示
 											d.label === "ログアウト" ? (
 												<DropdownMenu.Item
 													onSelect={() => setShowLogoutDialog(true)}
@@ -269,12 +276,17 @@ const NavBar = (props: NavBarProps) => {
 									</DropdownMenu.Content>
 								</DropdownMenu.Portal>
 							</DropdownMenu>
-						) : ["ホーム", "レコード", "統計"].includes(item.label) &&
+						) : // 未ログイン時はホーム・レコード・統計を押すと警告ダイアログを表示
+						["ホーム", "レコード", "統計"].includes(item.label) &&
 							!isLoading() &&
 							username() === null ? (
 							<button
 								type="button"
-								class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 justify-center"
+								class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold justify-center hover:bg-gray-100 hover:text-gray-900"
+								classList={{
+									"bg-gray-100 text-gray-900": isActive(item),
+									"text-gray-500": true,
+								}}
 								onClick={() => setShowLoginDialog(true)}
 							>
 								<span class="text-lg">{item.icon()}</span>
@@ -294,6 +306,7 @@ const NavBar = (props: NavBarProps) => {
 						),
 					)}
 				</nav>
+
 				{/* 未ログイン警告ダイアログ */}
 				<Dialog open={showLoginDialog()} onOpenChange={setShowLoginDialog}>
 					<Dialog.Portal>
@@ -327,6 +340,7 @@ const NavBar = (props: NavBarProps) => {
 						</Dialog.Content>
 					</Dialog.Portal>
 				</Dialog>
+
 				{/* ログアウト確認AlertDialog */}
 				<AlertDialog
 					open={showLogoutDialog()}
@@ -365,6 +379,7 @@ const NavBar = (props: NavBarProps) => {
 						</AlertDialog.Content>
 					</AlertDialog.Portal>
 				</AlertDialog>
+
 			</div>
 		</div>
 	);
