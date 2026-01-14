@@ -14,6 +14,7 @@ const Login = () => {
 	const [errorMessage, setErrorMessage] = createSignal("");
 	const [isSubmitting, setIsSubmitting] = createSignal(false);
 
+	// すでにログインしている場合はユーザーページへリダイレクト
 	onMount(async () => {
 		try {
 			const user = await fetchMe();
@@ -23,6 +24,7 @@ const Login = () => {
 		}
 	});
 
+	// 管理者ログイン処理
 	const handleLogin = async () => {
 		if (!username() || !password()) {
 			setErrorMessage("データ1とデータ2を入力してください。");
@@ -33,7 +35,7 @@ const Login = () => {
 		setErrorMessage("");
 		try {
 			await postLogin({ username: username(), password: password() });
-			navigate(`/users/${username()}`);
+			navigate(`/users/${encodeURIComponent(username())}`);
 		} catch (error) {
 			setErrorMessage(
 				error instanceof Error ? error.message : "ログインに失敗しました。",
@@ -73,18 +75,14 @@ const Login = () => {
 									class="mb-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 									placeholder="データ1"
 									value={username()}
-									onInput={(event) =>
-										setUsername(event.currentTarget.value)
-									}
+									onInput={(event) => setUsername(event.currentTarget.value)}
 								/>
 								<TextField.Input
 									class="mb-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 									placeholder="データ2"
 									type="password"
 									value={password()}
-									onInput={(event) =>
-										setPassword(event.currentTarget.value)
-									}
+									onInput={(event) => setPassword(event.currentTarget.value)}
 								/>
 							</TextField>
 							{errorMessage() && (

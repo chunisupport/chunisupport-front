@@ -8,10 +8,11 @@ import { fetchMe } from "../../../api/users";
 const Register = () => {
 	const navigate = useNavigate();
 
+	// すでにログインしている場合はユーザーページへリダイレクト
 	onMount(async () => {
 		try {
 			const user = await fetchMe();
-			navigate(`/users/${user.username}`);
+			navigate(`/users/${encodeURIComponent(user.username)}`);
 		} catch (error) {
 			console.error("Failed to fetch user info:", error);
 		}
@@ -58,7 +59,6 @@ const Register = () => {
 						登録
 					</button>
 				</div>
-
 			</div>
 		</div>
 	);
