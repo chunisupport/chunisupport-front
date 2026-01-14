@@ -6,6 +6,7 @@ import {
 	Ellipsis,
 	House,
 	ListMusic,
+	LogOut,
 	Music,
 	Settings,
 	Toolbox,
@@ -106,6 +107,11 @@ const getNavItems = (): NavItem[] => {
 						<BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />
 					),
 					path: "https://example.com",
+				},
+				{
+					label: "ログアウト",
+					icon: () => <LogOut class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+					path: "/logout",
 				},
 			],
 		},

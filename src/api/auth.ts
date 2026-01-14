@@ -19,3 +19,17 @@ export const postLogin = async (payload: LoginPayload): Promise<void> => {
 		throw new Error(getErrorMessage(error));
 	}
 };
+
+export const postLogout = async (): Promise<void> => {
+	const response = await fetch(`${API_BASE_URL}/internal/auth/logout`, {
+		method: "POST",
+		credentials: "include",
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(getErrorMessage(error));
+	}
+
+	console.log("Logged out successfully");
+}
