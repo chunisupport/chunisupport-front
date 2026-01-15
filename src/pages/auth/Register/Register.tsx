@@ -1,7 +1,7 @@
 import { Checkbox } from "@kobalte/core/checkbox";
 import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
-import { useNavigate } from "@solidjs/router";
+import { A, useNavigate } from "@solidjs/router";
 import { Check, Dot, Loader, X } from "lucide-solid";
 import { createEffect, createSignal } from "solid-js";
 
@@ -234,9 +234,9 @@ const Register = () => {
 							</Checkbox.Indicator>
 						</Checkbox.Control>
 						<Checkbox.Label class="ml-2 text-gray-900 text-sm select-none">
-							<a href="/terms" class="text-blue-500 underline mr-1">
+							<A href="/terms" class="text-blue-500 underline mr-1">
 								利用規約
-							</a>
+							</A>
 							に同意します
 						</Checkbox.Label>
 					</Checkbox>
@@ -269,14 +269,14 @@ const Register = () => {
 				<div class="text-center">
 					<p class="mb-5 text-sm text-gray-600">
 						すでにアカウントをお持ちの方は
-						<a href="/login" class="text-blue-500 underline ml-1">
+						<A href="/login" class="text-blue-500 underline ml-1">
 							こちら
-						</a>
+						</A>
 					</p>
 					<p class="text-sm text-gray-600">
-						<a href="/" class="text-blue-500 underline ml-1">
+						<A href="/" class="text-blue-500 underline ml-1">
 							トップページへ戻る
-						</a>
+						</A>
 					</p>
 				</div>
 			</div>

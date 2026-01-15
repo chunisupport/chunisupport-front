@@ -1,6 +1,6 @@
 import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
-import { useNavigate } from "@solidjs/router";
+import { A, useNavigate } from "@solidjs/router";
 import { createSignal } from "solid-js";
 
 import { postLogin } from "../../../api/auth";
@@ -79,14 +79,14 @@ const Login = () => {
 				<div class="text-center">
 					<p class="mb-5 text-sm text-gray-600">
 						新規アカウント作成は
-						<a href="/register" class="text-blue-500 underline ml-1">
+						<A href="/register" class="text-blue-500 underline ml-1">
 							こちら
-						</a>
+						</A>
 					</p>
 					<p class="text-sm text-gray-600">
-						<a href="/" class="text-blue-500 underline ml-1">
+						<A href="/" class="text-blue-500 underline ml-1">
 							トップページへ戻る
-						</a>
+						</A>
 					</p>
 				</div>
 			</div>
