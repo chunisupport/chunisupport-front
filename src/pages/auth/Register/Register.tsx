@@ -2,7 +2,7 @@ import { Checkbox } from "@kobalte/core/checkbox";
 import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
-import { Check } from "lucide-solid";
+import { Check, Dot, Loader, X } from "lucide-solid";
 import { createEffect, createSignal, onCleanup } from "solid-js";
 import { checkUsernameAvailability } from "../../../api/auth";
 
@@ -65,7 +65,10 @@ const Register = () => {
 					setIsCheckingUsername(false);
 				}
 			}, 500);
-			onCleanup(() => clearTimeout(timer));
+			onCleanup(() => {
+				clearTimeout(timer);
+				setIsCheckingUsername(false);
+			});
 		} else {
 			setUsernameAvailable(null);
 		}
@@ -132,9 +135,14 @@ const Register = () => {
 		text: string;
 	}) => {
 		const getIcon = () => {
-			if (props.isChecking) return "⏳";
-			if (props.status === null) return "・";
-			return props.status ? "✓" : "✗";
+			if (props.isChecking)
+				return <Loader class="inline w-4 h-4 animate-spin" />;
+			if (props.status === null) return <Dot class="inline w-4 h-4" />;
+			return props.status ? (
+				<Check class="inline w-4 h-4 text-green-600" />
+			) : (
+				<X class="inline w-4 h-4 text-red-600" />
+			);
 		};
 		const getColor = () => {
 			if (props.isChecking) return "text-gray-500";
