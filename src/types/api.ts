@@ -55,7 +55,7 @@ export const errorMessages: Record<ErrorCode, string> = {
     missing_token: "認証トークンが必要です",
     invalid_session: "セッションが無効または期限切れです",
     forbidden: "アクセス権限がありません",
-    registration_failed: "ユーザー登録に失敗しました",
+    registration_failed: "このユーザーIDは使用できません",
     user_not_found: "ユーザーが見つかりません",
     operation_failed: "操作に失敗しました",
     player_not_found: "プレイヤーが見つかりません",

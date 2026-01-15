@@ -3,8 +3,7 @@ import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
 import { Check, Dot, Loader, X } from "lucide-solid";
-import { createEffect, createSignal, onCleanup } from "solid-js";
-import { checkUsernameAvailability } from "../../../api/auth";
+import { createEffect, createSignal } from "solid-js";
 
 import useRedirectIfAuthenticated from "../../../hooks/useRedirectIfAuthenticated";
 
@@ -20,10 +19,6 @@ const Register = () => {
 	// バリデーション・重複チェック用Signal
 	const [passwordError, setPasswordError] = createSignal("");
 	const [passwordConfirmError, setPasswordConfirmError] = createSignal("");
-	const [usernameAvailable, setUsernameAvailable] = createSignal<
-		boolean | null
-	>(null);
-	const [isCheckingUsername, setIsCheckingUsername] = createSignal(false);
 	const [isAlphanumeric, setIsAlphanumeric] = createSignal<boolean | null>(
 		null,
 	);
@@ -40,7 +35,6 @@ const Register = () => {
 		if (!user) {
 			setIsAlphanumeric(null);
 			setIsValidLength(null);
-			setUsernameAvailable(null);
 			return;
 		}
 
@@ -51,27 +45,6 @@ const Register = () => {
 		// 条件2: 5〜50文字
 		const len = user.length >= 5 && user.length <= 50;
 		setIsValidLength(len);
-
-		// 条件3: 重複チェック（条件1,2がOKの場合のみ実行）
-		if (alnum && len) {
-			setIsCheckingUsername(true);
-			const timer = setTimeout(async () => {
-				try {
-					const available = await checkUsernameAvailability(user);
-					setUsernameAvailable(available);
-				} catch {
-					setUsernameAvailable(null);
-				} finally {
-					setIsCheckingUsername(false);
-				}
-			}, 500);
-			onCleanup(() => {
-				clearTimeout(timer);
-				setIsCheckingUsername(false);
-			});
-		} else {
-			setUsernameAvailable(null);
-		}
 	});
 
 	// パスワードのバリデーション
@@ -121,7 +94,7 @@ const Register = () => {
 			navigate(`/users/${encodeURIComponent(username())}`);
 		} catch (error) {
 			setErrorMessage(
-				error instanceof Error ? error.message : "登録に失敗しました。",
+				error instanceof Error ? error.message : "予期せぬエラーで登録に失敗しました。",
 			);
 		} finally {
 			setIsSubmitting(false);
@@ -159,8 +132,7 @@ const Register = () => {
 	const isUsernameValid = () => {
 		return (
 			isAlphanumeric() === true &&
-			isValidLength() === true &&
-			usernameAvailable() === true
+			isValidLength() === true
 		);
 	};
 
@@ -209,8 +181,7 @@ const Register = () => {
 							/>
 							<ValidationItem status={isValidLength()} text="5文字〜50文字" />
 							<ValidationItem
-								status={usernameAvailable()}
-								isChecking={isCheckingUsername()}
+								status={null}
 								text="他ユーザーと重複しないもの"
 							/>
 						</TextField.Description>

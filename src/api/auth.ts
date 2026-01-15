@@ -51,15 +51,3 @@ export const postRegister = async (payload: RegisterPayload): Promise<void> => {
 		throw new Error(getErrorMessage(error));
 	}
 };
-
-// ユーザー名重複チェック
-export const checkUsernameAvailability = async (
-	username: string,
-): Promise<boolean> => {
-	const response = await fetch(
-		`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}`,
-		{ credentials: "include" },
-	);
-	// 404 = 未使用, 200 = 使用済み
-	return response.status === 404;
-};
