@@ -221,7 +221,7 @@ const Register = () => {
 						</TextField.Description>
 					</TextField>
 					<TextField
-						class="mb-2"
+						class="mb-4"
 						validationState={passwordConfirmError() ? "invalid" : "valid"}
 					>
 						<TextField.Input
@@ -259,14 +259,16 @@ const Register = () => {
 					{errorMessage() && (
 						<p class="text-sm text-red-600 mb-2">{errorMessage()}</p>
 					)}
-					<button
-						type="button"
-						class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-						onClick={handleRegister}
-						disabled={isSubmitting()}
-					>
-						{isSubmitting() ? "処理中..." : "登録"}
-					</button>
+					<div class="flex justify-center">
+						<button
+							type="button"
+							class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+							onClick={handleRegister}
+							disabled={isSubmitting()}
+						>
+							{isSubmitting() ? "処理中..." : "登録"}
+						</button>
+					</div>
 				</div>
 
 				<div class="text-center">
