@@ -37,6 +37,7 @@ type NavItem = {
 	matchPattern?: RegExp;
 	matchPrefix?: boolean;
 	dropdown?: DropdownItem[];
+	requiresAuth?: boolean;
 };
 
 const NavBar = (props: NavBarProps) => {
@@ -105,18 +106,21 @@ const NavBar = (props: NavBarProps) => {
 				path: userPath,
 				icon: () => <House class="h-6 w-6" aria-hidden="true" />,
 				matchPattern: /^\/users\/[^/]+$/,
+				requiresAuth: true,
 			},
 			{
 				label: "レコード",
 				path: `${userPath}/records`,
 				icon: () => <ListMusic class="h-6 w-6" aria-hidden="true" />,
 				matchPattern: /^\/users\/[^/]+\/records/,
+				requiresAuth: true,
 			},
 			{
 				label: "統計",
 				path: `${userPath}/stats`,
 				icon: () => <ChartNoAxesCombined class="h-6 w-6" aria-hidden="true" />,
 				matchPattern: /^\/users\/[^/]+\/stats/,
+				requiresAuth: true,
 			},
 			{
 				label: "ツール",
@@ -203,10 +207,8 @@ const NavBar = (props: NavBarProps) => {
 									</DropdownMenu.Content>
 								</DropdownMenu.Portal>
 							</DropdownMenu>
-						) : // 未ログイン時はホーム・レコード・統計を押すと警告ダイアログを表示
-						["ホーム", "レコード", "統計"].includes(item.label) &&
-							!isLoading() &&
-							username() === null ? (
+						) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
+						item.requiresAuth && !isLoading() && username() === null ? (
 							<button
 								type="button"
 								class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-300 w-full"
@@ -270,10 +272,8 @@ const NavBar = (props: NavBarProps) => {
 									</DropdownMenu.Content>
 								</DropdownMenu.Portal>
 							</DropdownMenu>
-						) : // 未ログイン時はホーム・レコード・統計を押すと警告ダイアログを表示
-						["ホーム", "レコード", "統計"].includes(item.label) &&
-							!isLoading() &&
-							username() === null ? (
+						) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
+						item.requiresAuth && !isLoading() && username() === null ? (
 							<button
 								type="button"
 								class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-300 justify-center"
