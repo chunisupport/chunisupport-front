@@ -18,7 +18,6 @@ const Register = () => {
 	const [agreedToTerms, setAgreedToTerms] = createSignal(false);
 
 	// バリデーション・重複チェック用Signal
-	const [usernameError, setUsernameError] = createSignal("");
 	const [passwordError, setPasswordError] = createSignal("");
 	const [passwordConfirmError, setPasswordConfirmError] = createSignal("");
 	const [usernameAvailable, setUsernameAvailable] = createSignal<
@@ -26,65 +25,71 @@ const Register = () => {
 	>(null);
 	const [isCheckingUsername, setIsCheckingUsername] = createSignal(false);
 
-	// ユーザー名のリアルタイムバリデーション＆重複チェック（デバウンス付き）
+	// チェックリスト用状態
+	const [isAlphanumeric, setIsAlphanumeric] = createSignal<boolean | null>(
+		null,
+	);
+	const [isValidLength, setIsValidLength] = createSignal<boolean | null>(null);
+	const [isPasswordValidLength, setIsPasswordValidLength] = createSignal<
+		boolean | null
+	>(null);
+
+	// ユーザー名のバリデーション
 	createEffect(() => {
 		const user = username();
+
 		if (!user) {
-			setUsernameError("");
+			setIsAlphanumeric(null);
+			setIsValidLength(null);
 			setUsernameAvailable(null);
 			return;
 		}
-		// バリデーション
-		if (user.length < 5) {
-			setUsernameError("ユーザーIDは5文字以上で入力してください。");
-			setUsernameAvailable(null);
-			return;
-		}
-		if (user.length > 50) {
-			setUsernameError("ユーザーIDは50文字以内で入力してください。");
-			setUsernameAvailable(null);
-			return;
-		}
-		if (!/^[a-z0-9]+$/.test(user)) {
-			setUsernameError("ユーザーIDは小文字の英数字のみ使用できます。");
-			setUsernameAvailable(null);
-			return;
-		}
-		setUsernameError("");
-		setIsCheckingUsername(true);
-		const timer = setTimeout(async () => {
-			try {
-				const available = await checkUsernameAvailability(user);
-				setUsernameAvailable(available);
-				if (!available) {
-					setUsernameError("このユーザーIDは既に使用されています。");
+
+		// 条件1: 小文字英数字のみ
+		const alnum = /^[a-z0-9]+$/.test(user);
+		setIsAlphanumeric(alnum);
+
+		// 条件2: 5〜50文字
+		const len = user.length >= 5 && user.length <= 50;
+		setIsValidLength(len);
+
+		// 条件3: 重複チェック（条件1,2がOKの場合のみ実行）
+		if (alnum && len) {
+			setIsCheckingUsername(true);
+			const timer = setTimeout(async () => {
+				try {
+					const available = await checkUsernameAvailability(user);
+					setUsernameAvailable(available);
+				} catch {
+					setUsernameAvailable(null);
+				} finally {
+					setIsCheckingUsername(false);
 				}
-			} catch {
-				setUsernameAvailable(null);
-			} finally {
-				setIsCheckingUsername(false);
-			}
-		}, 500);
-		onCleanup(() => clearTimeout(timer));
+			}, 500);
+			onCleanup(() => clearTimeout(timer));
+		} else {
+			setUsernameAvailable(null);
+		}
 	});
 
-	// パスワードのリアルタイムバリデーション
+	// パスワードのバリデーション
 	createEffect(() => {
 		const pass = password();
 		if (!pass) {
 			setPasswordError("");
+			setIsPasswordValidLength(null);
 			return;
 		}
-		if (pass.length < 8) {
-			setPasswordError("パスワードは8文字以上で入力してください。");
-		} else if (pass.length > 128) {
-			setPasswordError("パスワードは128文字以内で入力してください。");
+		const valid = pass.length >= 8 && pass.length <= 128;
+		setIsPasswordValidLength(valid);
+		if (!valid) {
+			setPasswordError("パスワードは8文字以上128文字以内で入力してください。");
 		} else {
 			setPasswordError("");
 		}
 	});
 
-	// パスワード確認のリアルタイムバリデーション
+	// パスワード確認のバリデーション
 	createEffect(() => {
 		const pass = password();
 		const confirm = passwordConfirm();
@@ -102,33 +107,8 @@ const Register = () => {
 	// すでにログインしている場合はユーザーページへリダイレクト
 	useRedirectIfAuthenticated();
 
-	// バリデーション
-	const validate = () => {
-		if (!username()) return "ユーザーIDを入力してください。";
-		if (username().length < 5)
-			return "ユーザーIDは5文字以上で入力してください。";
-		if (username().length > 50)
-			return "ユーザーIDは50文字以内で入力してください。";
-		if (!/^[a-z0-9]+$/.test(username()))
-			return "ユーザーIDは小文字の英数字のみ使用できます。";
-		if (!password()) return "パスワードを入力してください。";
-		if (password().length < 8)
-			return "パスワードは8文字以上で入力してください。";
-		if (password().length > 128)
-			return "パスワードは128文字以内で入力してください。";
-		if (password() !== passwordConfirm()) return "パスワードが一致しません。";
-		if (!agreedToTerms()) return "利用規約に同意してください。";
-		return "";
-	};
-
 	// 新規登録処理
 	const handleRegister = async () => {
-		const err = validate();
-		if (err) {
-			setErrorMessage(err);
-			return;
-		}
-
 		setIsSubmitting(true);
 		setErrorMessage("");
 		try {
@@ -144,6 +124,36 @@ const Register = () => {
 		} finally {
 			setIsSubmitting(false);
 		}
+	};
+
+	const ValidationItem = (props: {
+		status: boolean | null;
+		isChecking?: boolean;
+		text: string;
+	}) => {
+		const getIcon = () => {
+			if (props.isChecking) return "⏳";
+			if (props.status === null) return "⏳";
+			return props.status ? "✓" : "✗";
+		};
+		const getColor = () => {
+			if (props.isChecking) return "text-gray-500";
+			if (props.status === null) return "text-gray-500";
+			return props.status ? "text-green-600" : "text-red-600";
+		};
+		return (
+			<div class={`text-xs ${getColor()}`}>
+				{getIcon()} {props.text}
+			</div>
+		);
+	};
+
+	const isUsernameValid = () => {
+		return (
+			isAlphanumeric() === true &&
+			isValidLength() === true &&
+			usernameAvailable() === true
+		);
 	};
 
 	return (
@@ -164,33 +174,33 @@ const Register = () => {
 
 				{/* 入力フォーム */}
 				<div class="mb-6 text-left">
-					<TextField class="mb-2" validationState={usernameError() ? "invalid" : "valid"}>
+					<TextField
+						class="mb-2"
+						validationState={isUsernameValid() ? "valid" : "invalid"}
+					>
 						<TextField.Input
 							class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 data-invalid:border-red-500"
 							placeholder="ユーザーID"
 							value={username()}
 							onInput={(event) => setUsername(event.currentTarget.value)}
 						/>
-						{usernameError() && (
-							<TextField.ErrorMessage class="text-sm text-red-600">
-								{usernameError()}
-							</TextField.ErrorMessage>
-						)}
-						{isCheckingUsername() && (
-							<TextField.Description class="text-sm text-gray-500">
-								⏳ 確認中...
-							</TextField.Description>
-						)}
-						{usernameAvailable() === true && (
-							<TextField.Description class="text-sm text-green-600">
-								✓ 利用可能です
-							</TextField.Description>
-						)}
-						<TextField.Description class="text-xs text-gray-500">
-							小文字の英数字のみ 5文字〜50文字
+						<TextField.Description class="mt-1">
+							<ValidationItem
+								status={isAlphanumeric()}
+								text="小文字の英数字のみ"
+							/>
+							<ValidationItem status={isValidLength()} text="5文字〜50文字" />
+							<ValidationItem
+								status={usernameAvailable()}
+								isChecking={isCheckingUsername()}
+								text="他ユーザーと重複しないもの"
+							/>
 						</TextField.Description>
 					</TextField>
-					<TextField class="mb-2" validationState={passwordError() ? "invalid" : "valid"}>
+					<TextField
+						class="mb-2"
+						validationState={passwordError() ? "invalid" : "valid"}
+					>
 						<TextField.Input
 							class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 data-invalid:border-red-500"
 							placeholder="パスワード"
@@ -198,16 +208,20 @@ const Register = () => {
 							value={password()}
 							onInput={(event) => setPassword(event.currentTarget.value)}
 						/>
-						{passwordError() && (
+						{/* {passwordError() && (
 							<TextField.ErrorMessage class="text-sm text-red-600">
 								{passwordError()}
 							</TextField.ErrorMessage>
-						)}
-						<TextField.Description class="text-xs text-gray-500">
-							8文字〜128文字
+						)} */}
+						<TextField.Description class="mt-1">
+							<ValidationItem
+								status={isPasswordValidLength()}
+								text="8文字〜128文字"
+							/>
 						</TextField.Description>
 					</TextField>
-					<TextField class="mb-2"
+					<TextField
+						class="mb-2"
 						validationState={passwordConfirmError() ? "invalid" : "valid"}
 					>
 						<TextField.Input
@@ -218,7 +232,7 @@ const Register = () => {
 							onInput={(event) => setPasswordConfirm(event.currentTarget.value)}
 						/>
 						{passwordConfirmError() && (
-							<TextField.ErrorMessage class="text-sm text-red-600">
+							<TextField.ErrorMessage class="text-xs text-red-600">
 								{passwordConfirmError()}
 							</TextField.ErrorMessage>
 						)}
