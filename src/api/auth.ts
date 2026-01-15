@@ -30,4 +30,24 @@ export const postLogout = async (): Promise<void> => {
 		const error = await response.json();
 		throw new Error(getErrorMessage(error));
 	}
-}
+};
+
+// 新規登録
+type RegisterPayload = {
+	username: string;
+	password: string;
+};
+
+export const postRegister = async (payload: RegisterPayload): Promise<void> => {
+	const response = await fetch(`${API_BASE_URL}/internal/auth/register`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		credentials: "include",
+		body: JSON.stringify(payload),
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(getErrorMessage(error));
+	}
+};
