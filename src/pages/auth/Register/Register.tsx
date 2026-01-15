@@ -197,11 +197,6 @@ const Register = () => {
 							value={password()}
 							onInput={(event) => setPassword(event.currentTarget.value)}
 						/>
-						{/* {passwordError() && (
-							<TextField.ErrorMessage class="text-sm text-red-600">
-								{passwordError()}
-							</TextField.ErrorMessage>
-						)} */}
 						<TextField.Description class="mt-1">
 							<ValidationItem
 								status={isPasswordValidLength()}
@@ -246,7 +241,10 @@ const Register = () => {
 						</Checkbox.Label>
 					</Checkbox>
 					{errorMessage() && (
-						<p class="text-sm text-red-600 mb-2">{errorMessage()}</p>
+						<div class="mb-4 p-3 bg-red-100 border border-red-400 rounded-md flex items-center">
+							<X class="w-5 h-5 text-red-600 mr-2" />
+							<p class="text-sm text-red-700">{errorMessage()}</p>
+						</div>
 					)}
 					<div class="flex justify-center">
 						<button
