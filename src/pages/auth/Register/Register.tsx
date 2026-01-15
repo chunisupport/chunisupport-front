@@ -3,7 +3,8 @@ import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
 import { Check } from "lucide-solid";
-import { createSignal } from "solid-js";
+import { createEffect, createSignal, onCleanup } from "solid-js";
+import { checkUsernameAvailability } from "../../../api/auth";
 
 import useRedirectIfAuthenticated from "../../../hooks/useRedirectIfAuthenticated";
 
@@ -15,6 +16,88 @@ const Register = () => {
 	const [errorMessage, setErrorMessage] = createSignal("");
 	const [isSubmitting, setIsSubmitting] = createSignal(false);
 	const [agreedToTerms, setAgreedToTerms] = createSignal(false);
+
+	// バリデーション・重複チェック用Signal
+	const [usernameError, setUsernameError] = createSignal("");
+	const [passwordError, setPasswordError] = createSignal("");
+	const [passwordConfirmError, setPasswordConfirmError] = createSignal("");
+	const [usernameAvailable, setUsernameAvailable] = createSignal<
+		boolean | null
+	>(null);
+	const [isCheckingUsername, setIsCheckingUsername] = createSignal(false);
+
+	// ユーザー名のリアルタイムバリデーション＆重複チェック（デバウンス付き）
+	createEffect(() => {
+		const user = username();
+		if (!user) {
+			setUsernameError("");
+			setUsernameAvailable(null);
+			return;
+		}
+		// バリデーション
+		if (user.length < 5) {
+			setUsernameError("ユーザーIDは5文字以上で入力してください。");
+			setUsernameAvailable(null);
+			return;
+		}
+		if (user.length > 50) {
+			setUsernameError("ユーザーIDは50文字以内で入力してください。");
+			setUsernameAvailable(null);
+			return;
+		}
+		if (!/^[a-z0-9]+$/.test(user)) {
+			setUsernameError("ユーザーIDは小文字の英数字のみ使用できます。");
+			setUsernameAvailable(null);
+			return;
+		}
+		setUsernameError("");
+		setIsCheckingUsername(true);
+		const timer = setTimeout(async () => {
+			try {
+				const available = await checkUsernameAvailability(user);
+				setUsernameAvailable(available);
+				if (!available) {
+					setUsernameError("このユーザーIDは既に使用されています。");
+				}
+			} catch {
+				setUsernameAvailable(null);
+			} finally {
+				setIsCheckingUsername(false);
+			}
+		}, 500);
+		onCleanup(() => clearTimeout(timer));
+	});
+
+	// パスワードのリアルタイムバリデーション
+	createEffect(() => {
+		const pass = password();
+		if (!pass) {
+			setPasswordError("");
+			return;
+		}
+		if (pass.length < 8) {
+			setPasswordError("パスワードは8文字以上で入力してください。");
+		} else if (pass.length > 128) {
+			setPasswordError("パスワードは128文字以内で入力してください。");
+		} else {
+			setPasswordError("");
+		}
+	});
+
+	// パスワード確認のリアルタイムバリデーション
+	createEffect(() => {
+		const pass = password();
+		const confirm = passwordConfirm();
+		if (!confirm) {
+			setPasswordConfirmError("");
+			return;
+		}
+		if (pass !== confirm) {
+			setPasswordConfirmError("パスワードが一致しません。");
+		} else {
+			setPasswordConfirmError("");
+		}
+	});
 
 	// すでにログインしている場合はユーザーページへリダイレクト
 	useRedirectIfAuthenticated();
@@ -49,10 +132,10 @@ const Register = () => {
 		setIsSubmitting(true);
 		setErrorMessage("");
 		try {
-			// postRegisterは自動でログイン状態になる
 			await import("../../../api/auth").then(({ postRegister }) =>
 				postRegister({ username: username(), password: password() }),
 			);
+			// 登録成功後は自動でログイン状態になるのでユーザーページへ遷移
 			navigate(`/users/${encodeURIComponent(username())}`);
 		} catch (error) {
 			setErrorMessage(
@@ -80,28 +163,65 @@ const Register = () => {
 				</div>
 
 				{/* 入力フォーム */}
-				<div class="mb-6 text-center">
-					<TextField>
+				<div class="mb-6 text-left">
+					<TextField class="mb-2" validationState={usernameError() ? "invalid" : "valid"}>
 						<TextField.Input
-							class="mb-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-							placeholder="新規ユーザーID (英数字)"
+							class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 data-invalid:border-red-500"
+							placeholder="ユーザーID"
 							value={username()}
 							onInput={(event) => setUsername(event.currentTarget.value)}
 						/>
+						{usernameError() && (
+							<TextField.ErrorMessage class="text-sm text-red-600">
+								{usernameError()}
+							</TextField.ErrorMessage>
+						)}
+						{isCheckingUsername() && (
+							<TextField.Description class="text-sm text-gray-500">
+								⏳ 確認中...
+							</TextField.Description>
+						)}
+						{usernameAvailable() === true && (
+							<TextField.Description class="text-sm text-green-600">
+								✓ 利用可能です
+							</TextField.Description>
+						)}
+						<TextField.Description class="text-xs text-gray-500">
+							小文字の英数字のみ 5文字〜50文字
+						</TextField.Description>
+					</TextField>
+					<TextField class="mb-2" validationState={passwordError() ? "invalid" : "valid"}>
 						<TextField.Input
-							class="mb-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+							class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 data-invalid:border-red-500"
 							placeholder="パスワード"
 							type="password"
 							value={password()}
 							onInput={(event) => setPassword(event.currentTarget.value)}
 						/>
+						{passwordError() && (
+							<TextField.ErrorMessage class="text-sm text-red-600">
+								{passwordError()}
+							</TextField.ErrorMessage>
+						)}
+						<TextField.Description class="text-xs text-gray-500">
+							8文字〜128文字
+						</TextField.Description>
+					</TextField>
+					<TextField class="mb-2"
+						validationState={passwordConfirmError() ? "invalid" : "valid"}
+					>
 						<TextField.Input
-							class="mb-4 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+							class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 data-invalid:border-red-500"
 							placeholder="パスワード（確認）"
 							type="password"
 							value={passwordConfirm()}
 							onInput={(event) => setPasswordConfirm(event.currentTarget.value)}
 						/>
+						{passwordConfirmError() && (
+							<TextField.ErrorMessage class="text-sm text-red-600">
+								{passwordConfirmError()}
+							</TextField.ErrorMessage>
+						)}
 					</TextField>
 					{/* 利用規約 */}
 					<Checkbox class="flex items-center mb-3">
