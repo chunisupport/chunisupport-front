@@ -167,7 +167,7 @@ const Register = () => {
 					>
 						<TextField.Input
 							class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 data-invalid:border-red-500"
-							placeholder="ユーザーID"
+							placeholder="ユーザー名"
 							value={username()}
 							onInput={(event) => {
 								setUsername(event.currentTarget.value);

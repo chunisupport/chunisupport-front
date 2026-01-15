@@ -19,7 +19,7 @@ const Login = () => {
 	// ログイン処理
 	const handleLogin = async () => {
 		if (!username() || !password()) {
-			setErrorMessage("ユーザーIDとパスワードを入力してください。");
+			setErrorMessage("ユーザー名とパスワードを入力してください。");
 			return;
 		}
 
@@ -50,7 +50,7 @@ const Login = () => {
 					<TextField>
 						<TextField.Input
 							class="mb-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-							placeholder="ユーザーID"
+							placeholder="ユーザー名"
 							value={username()}
 							onInput={(event) => setUsername(event.currentTarget.value)}
 						/>
