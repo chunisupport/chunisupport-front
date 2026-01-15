@@ -176,7 +176,7 @@ const Register = () => {
 				{/* 注意事項 */}
 				<div class="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded-md">
 					<p class="text-yellow-800 text-sm">
-						スコアデータの登録には ゲキチュウマイ-NET利用権が必要です。
+						スコアデータの登録には<span class="font-bold">ゲキチュウマイ-NET利用権</span>が必要です。
 					</p>
 				</div>
 
