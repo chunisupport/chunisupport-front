@@ -2,12 +2,12 @@ import { MetaProvider } from "@solidjs/meta";
 import { A, Route, Router } from "@solidjs/router";
 import type { JSX } from "solid-js";
 import { NavBar } from "./components";
-import { UserPage } from "./pages";
+import { Login, Register, UserPage } from "./pages";
 
-const withNavBar = (Component: () => JSX.Element) => {
-	return () => (
+const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
+	return (props: P) => (
 		<NavBar>
-			<Component />
+			<Component {...props} />
 		</NavBar>
 	);
 };
@@ -28,8 +28,8 @@ const App = () => {
 				/>
 
 				{/* 認証系 */}
-				<Route path="/login" component={() => <h1>Login Page</h1>} />
-				<Route path="/register" component={() => <h1>Register Page</h1>} />
+				<Route path="/login" component={Login} />
+				<Route path="/register" component={Register} />
 
 				{/* ユーザ */}
 				<Route
@@ -64,6 +64,10 @@ const App = () => {
 				<Route
 					path="/settings"
 					component={withNavBar(() => <h1>Settings Page</h1>)}
+				/>
+				<Route
+					path="/terms"
+					component={withNavBar(() => <h1>Terms of Service Page</h1>)}
 				/>
 
 				{/* 管理系 */}
