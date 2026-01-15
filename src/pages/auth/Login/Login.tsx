@@ -1,4 +1,3 @@
-import { Collapsible } from "@kobalte/core/collapsible";
 import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
 import { useNavigate } from "@solidjs/router";
@@ -17,10 +16,10 @@ const Login = () => {
 	// すでにログインしている場合はユーザーページへリダイレクト
 	useRedirectIfAuthenticated();
 
-	// 管理者ログイン処理
+	// ログイン処理
 	const handleLogin = async () => {
 		if (!username() || !password()) {
-			setErrorMessage("データ1とデータ2を入力してください。");
+			setErrorMessage("ユーザーIDとパスワードを入力してください。");
 			return;
 		}
 
@@ -43,54 +42,52 @@ const Login = () => {
 			<Title>ログイン - ChuniSupport</Title>
 			<div class="w-full max-w-md">
 				<div class="text-center mb-6">
+					<p class="text-gray-600 mb-2">Chunisupport</p>
 					<h1 class="text-2xl font-semibold">ログイン</h1>
 				</div>
 
-				{/* TODO: Googleログインを実装 */}
-				<div class="mb-6">
+				<div class="mb-6 text-center">
+					<TextField>
+						<TextField.Input
+							class="mb-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+							placeholder="ユーザーID"
+							value={username()}
+							onInput={(event) => setUsername(event.currentTarget.value)}
+						/>
+						<TextField.Input
+							class="mb-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+							placeholder="パスワード"
+							type="password"
+							value={password()}
+							onInput={(event) => setPassword(event.currentTarget.value)}
+						/>
+					</TextField>
+					{errorMessage() && (
+						<p class="text-sm text-red-600 mb-2">{errorMessage()}</p>
+					)}
+					{/* TODO: パスワードを忘れた場合の文言やリンクなど */}
 					<button
 						type="button"
-						class="w-full px-4 py-2 rounded-md border border-gray-300"
+						class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+						onClick={handleLogin}
+						disabled={isSubmitting()}
 					>
-						ぐーぐるでろぐいんするぼたん
+						{isSubmitting() ? "ログイン中..." : "ログイン"}
 					</button>
 				</div>
 
-				{/* 管理者用 */}
-				<div class="mb-6">
-					<Collapsible>
-						<Collapsible.Trigger class="text-sm text-blue-500 underline">
-							管理者用ログイン
-						</Collapsible.Trigger>
-						<Collapsible.Content class="mt-4">
-							<TextField>
-								<TextField.Input
-									class="mb-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-									placeholder="データ1"
-									value={username()}
-									onInput={(event) => setUsername(event.currentTarget.value)}
-								/>
-								<TextField.Input
-									class="mb-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-									placeholder="データ2"
-									type="password"
-									value={password()}
-									onInput={(event) => setPassword(event.currentTarget.value)}
-								/>
-							</TextField>
-							{errorMessage() && (
-								<p class="text-sm text-red-600 mb-2">{errorMessage()}</p>
-							)}
-							<button
-								type="button"
-								class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-								onClick={handleLogin}
-								disabled={isSubmitting()}
-							>
-								{isSubmitting() ? "実行中..." : "実行"}
-							</button>
-						</Collapsible.Content>
-					</Collapsible>
+				<div class="text-center">
+					<p class="mb-5 text-sm text-gray-600">
+						新規アカウント作成は
+						<a href="/register" class="text-blue-500 underline ml-1">
+							こちら
+						</a>
+					</p>
+					<p class="text-sm text-gray-600">
+						<a href="/" class="text-blue-500 underline ml-1">
+							トップページへ戻る
+						</a>
+					</p>
 				</div>
 			</div>
 		</div>
