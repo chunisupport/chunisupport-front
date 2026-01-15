@@ -24,8 +24,6 @@ const Register = () => {
 		boolean | null
 	>(null);
 	const [isCheckingUsername, setIsCheckingUsername] = createSignal(false);
-
-	// チェックリスト用状態
 	const [isAlphanumeric, setIsAlphanumeric] = createSignal<boolean | null>(
 		null,
 	);
@@ -33,6 +31,7 @@ const Register = () => {
 	const [isPasswordValidLength, setIsPasswordValidLength] = createSignal<
 		boolean | null
 	>(null);
+	const [hasUsernameTouched, setHasUsernameTouched] = createSignal(false);
 
 	// ユーザー名のバリデーション
 	createEffect(() => {
@@ -126,6 +125,7 @@ const Register = () => {
 		}
 	};
 
+	// バリデーション表示用コンポーネント
 	const ValidationItem = (props: {
 		status: boolean | null;
 		isChecking?: boolean;
@@ -133,7 +133,7 @@ const Register = () => {
 	}) => {
 		const getIcon = () => {
 			if (props.isChecking) return "⏳";
-			if (props.status === null) return "⏳";
+			if (props.status === null) return "・";
 			return props.status ? "✓" : "✗";
 		};
 		const getColor = () => {
@@ -176,13 +176,22 @@ const Register = () => {
 				<div class="mb-6 text-left">
 					<TextField
 						class="mb-2"
-						validationState={isUsernameValid() ? "valid" : "invalid"}
+						validationState={
+							!hasUsernameTouched()
+								? undefined
+								: isUsernameValid()
+									? "valid"
+									: "invalid"
+						}
 					>
 						<TextField.Input
 							class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 data-invalid:border-red-500"
 							placeholder="ユーザーID"
 							value={username()}
-							onInput={(event) => setUsername(event.currentTarget.value)}
+							onInput={(event) => {
+								setUsername(event.currentTarget.value);
+								setHasUsernameTouched(true);
+							}}
 						/>
 						<TextField.Description class="mt-1">
 							<ValidationItem
@@ -264,7 +273,15 @@ const Register = () => {
 							type="button"
 							class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
 							onClick={handleRegister}
-							disabled={isSubmitting()}
+							disabled={
+								!(
+									isUsernameValid() &&
+									isPasswordValidLength() === true &&
+									!passwordError() &&
+									!passwordConfirmError() &&
+									agreedToTerms()
+								) || isSubmitting()
+							}
 						>
 							{isSubmitting() ? "処理中..." : "登録"}
 						</button>
