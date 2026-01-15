@@ -1,12 +1,12 @@
 import { API_BASE_URL } from "../config";
 import { getErrorMessage } from "../types/api";
 
-type LoginPayload = {
+type AuthPayload = {
 	username: string;
 	password: string;
 };
 
-export const postLogin = async (payload: LoginPayload): Promise<void> => {
+export const postLogin = async (payload: AuthPayload): Promise<void> => {
 	const response = await fetch(`${API_BASE_URL}/internal/auth/login`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
@@ -33,12 +33,7 @@ export const postLogout = async (): Promise<void> => {
 };
 
 // 新規登録
-type RegisterPayload = {
-	username: string;
-	password: string;
-};
-
-export const postRegister = async (payload: RegisterPayload): Promise<void> => {
+export const postRegister = async (payload: AuthPayload): Promise<void> => {
 	const response = await fetch(`${API_BASE_URL}/internal/auth/register`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
