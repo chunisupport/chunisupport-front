@@ -176,7 +176,8 @@ const Register = () => {
 				{/* 注意事項 */}
 				<div class="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded-md">
 					<p class="text-yellow-800 text-sm">
-						スコアデータの登録には<span class="font-bold">ゲキチュウマイ-NET利用権</span>が必要です。
+						スコアデータの登録には
+						<span class="font-bold">ゲキチュウマイ-NET利用権</span>が必要です。
 					</p>
 				</div>
 
@@ -255,12 +256,12 @@ const Register = () => {
 						)}
 					</TextField>
 					{/* 利用規約 */}
-					<Checkbox class="flex items-center mb-3">
-						<Checkbox.Input
-							class="sr-only"
-							checked={agreedToTerms()}
-							onChange={(e) => setAgreedToTerms(e.currentTarget.checked)}
-						/>
+					<Checkbox
+						class="flex items-center mb-3"
+						checked={agreedToTerms()}
+						onChange={setAgreedToTerms}
+					>
+						<Checkbox.Input class="sr-only" />
 						<Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50  data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center">
 							<Checkbox.Indicator>
 								<Check class="h-4 w-4" />
