@@ -1,4 +1,4 @@
-import { Checkbox, Dialog, TextField } from "@kobalte/core";
+import { Checkbox, Dialog, NumberField } from "@kobalte/core";
 import { Check } from "lucide-solid";
 import type { Component } from "solid-js";
 import { createSignal, For } from "solid-js";
@@ -93,115 +93,103 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 						{/* 定数 */}
 						<div class="flex gap-2">
 							<div class="flex-1">
-								<label
-									for="filter-const-min"
-									class="block text-sm font-medium mb-1"
-								>
-									定数(最小)
-								</label>
-								<TextField.Root
-									value={
-										filters().constMin !== null
-											? String(filters().constMin)
-											: ""
-									}
-									onChange={(v) =>
+								<NumberField.Root
+									value={String(filters().constMin ?? "")}
+									onChange={(v: string) =>
 										setFilters((prev) => ({
 											...prev,
 											constMin: Number(v),
 										}))
 									}
+									class="w-full"
 								>
-									<TextField.Input
+									<NumberField.Label class="block text-sm font-medium mb-1">
+										定数(最小)
+									</NumberField.Label>
+									<NumberField.Input
 										id="filter-const-min"
-										type="number"
+										min={0}
+										max={15.9}
+										step={0.1}
 										class="w-full border rounded px-2 py-1"
+										onFocus={(e) => e.currentTarget.select()}
 									/>
-								</TextField.Root>
+								</NumberField.Root>
 							</div>
 							<div class="flex-1">
-								<label
-									for="filter-const-max"
-									class="block text-sm font-medium mb-1"
-								>
-									定数(最大)
-								</label>
-								<TextField.Root
-									value={
-										filters().constMax !== null
-											? String(filters().constMax)
-											: ""
-									}
-									onChange={(v) =>
+								<NumberField.Root
+									value={String(filters().constMax ?? "")}
+									onChange={(v: string) =>
 										setFilters((prev) => ({
 											...prev,
 											constMax: Number(v),
 										}))
 									}
+									class="w-full"
 								>
-									<TextField.Input
+									<NumberField.Label class="block text-sm font-medium mb-1">
+										定数(最大)
+									</NumberField.Label>
+									<NumberField.Input
 										id="filter-const-max"
-										type="number"
+										min={0}
+										max={15.9}
+										step={0.1}
 										class="w-full border rounded px-2 py-1"
+										onFocus={(e) => e.currentTarget.select()}
 									/>
-								</TextField.Root>
+								</NumberField.Root>
 							</div>
 						</div>
 						{/* スコア */}
 						<div class="flex gap-2">
 							<div class="flex-1">
-								<label
-									for="filter-score-min"
-									class="block text-sm font-medium mb-1"
-								>
-									スコア(最小)
-								</label>
-								<TextField.Root
-									value={
-										filters().scoreMin !== null
-											? String(filters().scoreMin)
-											: ""
-									}
-									onChange={(v) =>
+								<NumberField.Root
+									value={String(filters().scoreMin ?? "")}
+									onChange={(v: string) =>
 										setFilters((prev) => ({
 											...prev,
 											scoreMin: Number(v),
 										}))
 									}
+									class="w-full"
 								>
-									<TextField.Input
+									<NumberField.Label class="block text-sm font-medium mb-1">
+										スコア(最小)
+									</NumberField.Label>
+									<NumberField.Input
 										id="filter-score-min"
-										type="number"
+										min={0}
+										max={1010000}
+										step={1}
 										class="w-full border rounded px-2 py-1"
+										onFocus={(e) => e.currentTarget.select()}
 									/>
-								</TextField.Root>
+								</NumberField.Root>
 							</div>
 							<div class="flex-1">
-								<label
-									for="filter-score-max"
-									class="block text-sm font-medium mb-1"
-								>
-									スコア(最大)
-								</label>
-								<TextField.Root
-									value={
-										filters().scoreMax !== null
-											? String(filters().scoreMax)
-											: ""
-									}
-									onChange={(v) =>
+								<NumberField.Root
+									value={String(filters().scoreMax ?? "")}
+									onChange={(v: string) =>
 										setFilters((prev) => ({
 											...prev,
 											scoreMax: Number(v),
 										}))
 									}
+									class="w-full"
 								>
-									<TextField.Input
+									<NumberField.Label class="block text-sm font-medium mb-1">
+										スコア(最大)
+									</NumberField.Label>
+									<NumberField.Input
 										id="filter-score-max"
-										type="number"
+										min={0}
+										max={1010000}
+										step={1}
 										class="w-full border rounded px-2 py-1"
+										onFocus={(e) => e.currentTarget.select()}
 									/>
-								</TextField.Root>
+								</NumberField.Root>
 							</div>
 						</div>
 						{/* ランプ */}
