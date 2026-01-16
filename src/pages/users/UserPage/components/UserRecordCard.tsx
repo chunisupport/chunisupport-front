@@ -1,5 +1,5 @@
 import type { Component } from "solid-js";
-import type { PlayerRecordDTO } from "../../../types/api";
+import type { PlayerRecordDTO } from "../../../../types/api";
 
 type Props = {
 	record: PlayerRecordDTO;

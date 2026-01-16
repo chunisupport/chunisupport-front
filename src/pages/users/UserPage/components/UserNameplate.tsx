@@ -1,5 +1,5 @@
 import type { Component } from "solid-js";
-import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from "../../../types/api";
+import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from "../../../../types/api";
 
 type Props = {
 	playerInfo: PlayerDTO;
