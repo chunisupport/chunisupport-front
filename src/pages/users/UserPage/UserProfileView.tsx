@@ -3,14 +3,14 @@ import { Image } from "lucide-solid";
 import type { Component } from "solid-js";
 import { For } from "solid-js";
 import { ScrollToTop } from "../../../components";
-import { UserNameplate } from "./components/UserNameplate";
-import { UserRecordCard } from "./components/UserRecordCard";
 import type {
 	HonorDTO,
 	PlayerDTO,
 	PlayerRecordDTO,
 	UserProfileWithRecordsDTO,
 } from "../../../types/api";
+import { UserNameplate } from "./components/UserNameplate";
+import { UserRecordCard } from "./components/UserRecordCard";
 
 type Props = {
 	profile: UserProfileWithRecordsDTO;
@@ -31,14 +31,18 @@ export const UserProfileView: Component<Props> = (props) => {
 		// 2カラムレイアウト(PCのみ)
 		<div class="md:flex md:gap-0 md:divide-x-4 md:divide-gray-300 md:h-screen">
 			{/* 左側 */}
-			<div class="py-4 md:min-w-106.25 md:shrink-0 md:h-full md:overflow-y-auto">
-				{/* ネームプレート */}
-				<UserNameplate
-					playerInfo={playerInfo}
-					honors={honors}
-					bestRecords={bestRecords}
-					newRecords={newRecords}
-				/>
+			{/* sticy scrollの関係でmb-4とmt-4の付与位置を分けています */}
+			<div class="mb-4 md:min-w-106.25 md:shrink-0 md:h-full md:overflow-y-auto">
+
+				<div class="mt-4">
+					{/* ネームプレート */}
+					<UserNameplate
+						playerInfo={playerInfo}
+						honors={honors}
+						bestRecords={bestRecords}
+						newRecords={newRecords}
+					/>
+				</div>
 
 				<Tabs.Root
 					class="mb-4"
@@ -78,18 +82,14 @@ export const UserProfileView: Component<Props> = (props) => {
 					<Tabs.Content value="best">
 						<div class="mx-4">
 							<For each={bestRecords}>
-								{(record, i) => (
-									<UserRecordCard record={record} index={i()} />
-								)}
+								{(record, i) => <UserRecordCard record={record} index={i()} />}
 							</For>
 						</div>
 					</Tabs.Content>
 					<Tabs.Content value="new">
 						<div class="mx-4">
 							<For each={newRecords}>
-								{(record, i) => (
-									<UserRecordCard record={record} index={i()} />
-								)}
+								{(record, i) => <UserRecordCard record={record} index={i()} />}
 							</For>
 						</div>
 					</Tabs.Content>
