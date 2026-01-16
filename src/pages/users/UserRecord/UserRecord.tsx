@@ -1,3 +1,4 @@
+import { Collapsible } from "@kobalte/core/collapsible";
 import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
 import { useParams } from "@solidjs/router";
@@ -13,6 +14,7 @@ import {
 
 import { fetchUserProfile } from "../../../api/users";
 import { Loading } from "../../../components";
+import type { PlayerRecordDTO } from "../../../types/api";
 import FilterDialog from "./components/FilterDialog";
 import RecordTable from "./components/RecordTable";
 import type { ComboLamp, Difficulty, FilterState } from "./types/types";
@@ -73,6 +75,86 @@ const UserRecord: Component = () => {
 	const totalCount = () => userProfile()?.records.all.length ?? 0;
 	const filteredCount = () => filteredRecords().length;
 
+	// ランク分類関数
+	function getRank(score: number): string {
+		if (score === 1010000) return "MAX";
+		if (score >= 1009000) return "SSS+";
+		if (score >= 1007500) return "SSS";
+		if (score >= 1005000) return "SS+";
+		if (score >= 1000000) return "SS";
+		if (score >= 990000) return "S+";
+		if (score >= 975000) return "S";
+		return "OTHERS";
+	}
+
+	// 統計計算ヘルパー
+	function getStats(records: PlayerRecordDTO[]) {
+		const total = records.length;
+		// ランク分布
+		const rankMap: Record<string, { count: number; percent: number }> = {};
+		// コンボ分布
+		const comboMap: Record<string, { count: number; percent: number }> = {};
+		// クリア分布
+		const clearMap: Record<string, { count: number; percent: number }> = {};
+		// スコア配列
+		const scores = records.map((r) => r.score).sort((a, b) => a - b);
+
+		for (const r of records) {
+			// ランク
+			const rank = getRank(r.score);
+			rankMap[rank] = rankMap[rank] || { count: 0, percent: 0 };
+			rankMap[rank].count++;
+			// コンボ
+			const combo = r.combo_lamp ?? "NONE";
+			comboMap[combo] = comboMap[combo] || { count: 0, percent: 0 };
+			comboMap[combo].count++;
+			// クリア
+			const clear = r.clear_lamp ?? "NONE";
+			clearMap[clear] = clearMap[clear] || { count: 0, percent: 0 };
+			clearMap[clear].count++;
+		}
+		// 割合計算
+		Object.values(rankMap).forEach((obj) => {
+			obj.percent = total ? (obj.count / total) * 100 : 0;
+		});
+		Object.values(comboMap).forEach((obj) => {
+			obj.percent = total ? (obj.count / total) * 100 : 0;
+		});
+		Object.values(clearMap).forEach((obj) => {
+			obj.percent = total ? (obj.count / total) * 100 : 0;
+		});
+
+		// スコア統計
+		const min = scores[0] ?? 0;
+		const max = scores[scores.length - 1] ?? 0;
+		const avg = scores.length
+			? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+			: 0;
+		const median = scores.length
+			? scores.length % 2 === 1
+				? scores[(scores.length - 1) / 2]
+				: Math.round(
+						(scores[scores.length / 2 - 1] + scores[scores.length / 2]) / 2,
+					)
+			: 0;
+		const q1 = scores.length
+			? scores[Math.floor((scores.length - 1) * 0.25)]
+			: 0;
+		const q3 = scores.length
+			? scores[Math.floor((scores.length - 1) * 0.75)]
+			: 0;
+
+		return {
+			rankDist: rankMap,
+			comboDist: comboMap,
+			clearDist: clearMap,
+			scoreStats: { min, max, avg, median, q1, q3 },
+		};
+	}
+
+	// 統計データ
+	const stats = createMemo(() => getStats(filteredRecords()));
+
 	return (
 		<>
 			<Title>{params.username}さんのページ - Chunisupport</Title>
@@ -80,19 +162,19 @@ const UserRecord: Component = () => {
 				<ErrorBoundary
 					fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}
 				>
-					<div class="my-4 mx-2">
-
-						<div class="flex items-center mb-4 gap-2">
-								<TextField class="flex-1">
-									<TextField.Input
-										class="w-full rounded border border-gray-300 px-2 py-1 focus:border-blue-500"
-										placeholder="曲名で検索..."
-										value={filters().title}
-										onInput={(e) =>
-											setFilters({ ...filters(), title: e.currentTarget.value })
-										}
-									/>
-								</TextField>
+					<div class="my-4 mx-2 text-sm">
+						{/* 検索・フィルター */}
+						<div class="flex items-center mb-2 gap-2">
+							<TextField class="flex-1">
+								<TextField.Input
+									class="w-full rounded border border-gray-300 px-2 py-1 focus:border-blue-500"
+									placeholder="曲名で検索..."
+									value={filters().title}
+									onInput={(e) =>
+										setFilters({ ...filters(), title: e.currentTarget.value })
+									}
+								/>
+							</TextField>
 							<button
 								class="px-2 py-1 rounded border border-gray-500 flex items-center gap-2 hover:bg-gray-100"
 								onClick={() => setFilterOpen(true)}
@@ -101,6 +183,71 @@ const UserRecord: Component = () => {
 								<Funnel class="text-gray-700" size={16} /> フィルター
 							</button>
 						</div>
+						{/* フィルター統計 */}
+						<Collapsible class="mb-2 px-2 py-1 border border-gray-500 rounded-sm">
+							<Collapsible.Trigger class="flex w-full gap-1">
+								{/* TODO: 回転する三角形を追加 */}
+								<p class="flex-1 text-left">フィルター統計</p>
+								<p>平均スコア: {stats().scoreStats.avg.toLocaleString()}</p>
+							</Collapsible.Trigger>
+							<Collapsible.Content>
+								<div class="text-xs space-y-1">
+									<div>
+										<b>ランク割合:</b>
+										<ul>
+											{Object.entries(stats().rankDist).map(
+												([rank, { count, percent }]) => (
+													<li>
+														{rank}: {count}件 ({percent.toFixed(1)}%)
+													</li>
+												),
+											)}
+										</ul>
+									</div>
+									<div>
+										<b>コンボランプ割合:</b>
+										<ul>
+											{Object.entries(stats().comboDist).map(
+												([lamp, { count, percent }]) => (
+													<li>
+														{lamp}: {count}件 ({percent.toFixed(1)}%)
+													</li>
+												),
+											)}
+										</ul>
+									</div>
+									<div>
+										<b>クリアランプ割合:</b>
+										<ul>
+											{Object.entries(stats().clearDist).map(
+												([lamp, { count, percent }]) => (
+													<li>
+														{lamp}: {count}件 ({percent.toFixed(1)}%)
+													</li>
+												),
+											)}
+										</ul>
+									</div>
+									<div>
+										<b>スコア分布:</b>
+										<ul>
+											<li>最小: {stats().scoreStats.min.toLocaleString()}</li>
+											<li>最大: {stats().scoreStats.max.toLocaleString()}</li>
+											<li>平均: {stats().scoreStats.avg.toLocaleString()}</li>
+											<li>
+												中央値: {stats().scoreStats.median.toLocaleString()}
+											</li>
+											<li>
+												第1四分位数: {stats().scoreStats.q1.toLocaleString()}
+											</li>
+											<li>
+												第3四分位数: {stats().scoreStats.q3.toLocaleString()}
+											</li>
+										</ul>
+									</div>
+								</div>
+							</Collapsible.Content>
+						</Collapsible>
 						{/* 仮の表示 */}
 						<p class="mb-2 text-sm text-gray-600">
 							全 {totalCount()} 件中 {filteredCount()} 件を表示
