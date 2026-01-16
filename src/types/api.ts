@@ -104,6 +104,28 @@ export interface AdminUserListResponse {
     is_deleted: boolean;
 }
 
+export interface ChartDTO {
+    const: number;
+    is_const_unknown: boolean;
+    notes?: number | null;
+}
+
+export interface SongDTO {
+    id: string;
+    title: string;
+    artist: string;
+    genre: string;
+    bpm: number | null;
+    release: string | null;
+    jacket: string | null;
+    charts: Record<string, ChartDTO | null>;
+    is_deleted?: boolean;
+}
+
+export interface SongsResponse {
+    songs: SongDTO[];
+}
+
 export interface UserProfileWithRecordsDTO {
     username: string;
     player: PlayerDTO;
