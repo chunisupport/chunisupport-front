@@ -95,13 +95,11 @@ export interface UserDTO {
     account_type?: "PLAYER" | "EDITOR" | "ADMIN";
 }
 
-export interface AdminUserListResponse {
+export interface UserListResponse {
     username: string;
     player_name: string;
     rating: number | null;
     overpower_value: number | null;
-    is_private: boolean;
-    is_deleted: boolean;
 }
 
 export interface ChartDTO {

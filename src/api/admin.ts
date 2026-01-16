@@ -1,23 +1,21 @@
 import { API_BASE_URL } from "../config";
-import type { AdminUserListResponse } from "../types/api";
+import type { UserListResponse } from "../types/api";
 import { getErrorMessage } from "../types/api";
 
 type AdminUserListParams = {
-	page?: number;
 	name?: string;
 };
 
 export const fetchAdminUsers = async (
 	params: AdminUserListParams,
-): Promise<AdminUserListResponse[]> => {
+): Promise<UserListResponse[]> => {
 	const searchParams = new URLSearchParams();
-	searchParams.set("page", String(params.page ?? 1));
 	if (params.name) {
 		searchParams.set("name", params.name);
 	}
 
 	const response = await fetch(
-		`${API_BASE_URL}/admin/users?${searchParams.toString()}`,
+		`${API_BASE_URL}/internal/users/?${searchParams.toString()}`,
 		{
 			credentials: "include",
 		},

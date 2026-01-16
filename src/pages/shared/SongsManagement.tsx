@@ -1,3 +1,5 @@
+import { AlertDialog } from "@kobalte/core/alert-dialog";
+import { Dialog } from "@kobalte/core/dialog";
 import { For, Show, createMemo, createResource, createSignal } from "solid-js";
 
 import { deleteSong, fetchSongs, restoreSong } from "../../api/songs";
@@ -20,6 +22,12 @@ const SongsManagement = (props: SongsManagementProps) => {
 	const [includeDeleted, setIncludeDeleted] = createSignal(false);
 	const [actionSong, setActionSong] = createSignal<string | null>(null);
 	const [selectedSong, setSelectedSong] = createSignal<SongDTO | null>(null);
+	const [detailOpen, setDetailOpen] = createSignal(false);
+	const [confirmOpen, setConfirmOpen] = createSignal(false);
+	const [confirmAction, setConfirmAction] = createSignal<{
+		type: "delete" | "restore";
+		song: SongDTO;
+	} | null>(null);
 	const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
 
 	const [songs, { refetch }] = createResource(includeDeleted, (include) =>
@@ -37,51 +45,35 @@ const SongsManagement = (props: SongsManagementProps) => {
 		);
 	});
 
-	const handleDelete = async (song: SongDTO) => {
-		if (actionSong()) return;
-		const ok = window.confirm(
-			`${song.title} (${song.id}) を削除します。よろしいですか？`,
-		);
-		if (!ok) return;
-
-		setActionSong(song.id);
+	const runAction = async () => {
+		const action = confirmAction();
+		if (!action || actionSong()) return;
+		setActionSong(action.song.id);
 		setErrorMessage(null);
 		try {
-			await deleteSong(song.id);
+			if (action.type === "delete") {
+				await deleteSong(action.song.id);
+			} else {
+				await restoreSong(action.song.id);
+			}
 			await refetch();
-			if (selectedSong()?.id === song.id) {
-				setSelectedSong({ ...song, is_deleted: true });
+			if (selectedSong()?.id === action.song.id) {
+				setSelectedSong({
+					...action.song,
+					is_deleted: action.type === "delete",
+				});
 			}
 		} catch (error) {
 			setErrorMessage(
-				error instanceof Error ? error.message : "削除に失敗しました。",
+				error instanceof Error
+					? error.message
+					: action.type === "delete"
+						? "削除に失敗しました。"
+						: "復活に失敗しました。",
 			);
 		} finally {
 			setActionSong(null);
-		}
-	};
-
-	const handleRestore = async (song: SongDTO) => {
-		if (actionSong()) return;
-		const ok = window.confirm(
-			`${song.title} (${song.id}) を復活します。よろしいですか？`,
-		);
-		if (!ok) return;
-
-		setActionSong(song.id);
-		setErrorMessage(null);
-		try {
-			await restoreSong(song.id);
-			await refetch();
-			if (selectedSong()?.id === song.id) {
-				setSelectedSong({ ...song, is_deleted: false });
-			}
-		} catch (error) {
-			setErrorMessage(
-				error instanceof Error ? error.message : "復活に失敗しました。",
-			);
-		} finally {
-			setActionSong(null);
+			setConfirmOpen(false);
 		}
 	};
 
@@ -216,7 +208,10 @@ const SongsManagement = (props: SongsManagementProps) => {
 													<button
 														type="button"
 														class="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-														onClick={() => setSelectedSong(song)}
+														onClick={() => {
+															setSelectedSong(song);
+															setDetailOpen(true);
+														}}
 													>
 														詳細
 													</button>
@@ -225,7 +220,13 @@ const SongsManagement = (props: SongsManagementProps) => {
 															type="button"
 															class="rounded-md bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700"
 															disabled={actionSong() === song.id}
-															onClick={() => handleRestore(song)}
+															onClick={() => {
+																setConfirmAction({
+																	type: "restore",
+																	song,
+																});
+																setConfirmOpen(true);
+															}}
 														>
 															復活
 														</button>
@@ -234,7 +235,13 @@ const SongsManagement = (props: SongsManagementProps) => {
 															type="button"
 															class="rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
 															disabled={actionSong() === song.id}
-															onClick={() => handleDelete(song)}
+															onClick={() => {
+																setConfirmAction({
+																	type: "delete",
+																	song,
+																});
+																setConfirmOpen(true);
+															}}
 														>
 															削除
 														</button>
@@ -250,47 +257,93 @@ const SongsManagement = (props: SongsManagementProps) => {
 				</div>
 			</Show>
 
-			<Show when={selectedSong()}>
-				<div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-					<div class="flex flex-wrap items-center justify-between gap-3">
-						<div>
-							<h2 class="text-lg font-semibold text-gray-900">
-								{selectedSong()!.title} の詳細
-							</h2>
-							<p class="text-sm text-gray-600">ID: {selectedSong()!.id}</p>
+			<Dialog open={detailOpen()} onOpenChange={setDetailOpen}>
+				<Dialog.Portal>
+					<Dialog.Overlay class="fixed inset-0 bg-black/40" />
+					<Dialog.Content class="fixed left-1/2 top-1/2 w-[min(90vw,520px)] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg">
+						<Show when={selectedSong()}>
+							<div class="space-y-4">
+								<header class="space-y-1">
+									<Dialog.Title class="text-lg font-semibold text-gray-900">
+										{selectedSong()!.title} の詳細
+									</Dialog.Title>
+									<p class="text-sm text-gray-600">
+										ID: {selectedSong()!.id}
+									</p>
+								</header>
+								<div class="grid gap-2 text-sm text-gray-700">
+									<p>アーティスト: {formatValue(selectedSong()!.artist)}</p>
+									<p>ジャンル: {formatValue(selectedSong()!.genre)}</p>
+									<p>BPM: {formatValue(selectedSong()!.bpm)}</p>
+									<p>リリース: {formatValue(selectedSong()!.release)}</p>
+									<p>譜面数: {getChartCount(selectedSong()!.charts)}</p>
+								</div>
+								<div>
+									<h3 class="text-sm font-semibold text-gray-700">譜面情報</h3>
+									<ul class="mt-2 space-y-2 text-sm text-gray-700">
+										<For each={Object.entries(selectedSong()!.charts || {})}>
+											{([difficulty, chart]) => (
+												<li class="rounded-md border border-gray-200 px-3 py-2">
+													<strong class="mr-2">{difficulty}</strong>
+													{chart
+														? `定数 ${chart.const} / ノーツ ${formatValue(chart.notes)}`
+														: "譜面なし"}
+												</li>
+											)}
+										</For>
+									</ul>
+								</div>
+								<div class="flex justify-end">
+									<Dialog.CloseButton class="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+										閉じる
+									</Dialog.CloseButton>
+								</div>
+							</div>
+						</Show>
+					</Dialog.Content>
+				</Dialog.Portal>
+			</Dialog>
+
+			<AlertDialog open={confirmOpen()} onOpenChange={setConfirmOpen}>
+				<AlertDialog.Portal>
+					<AlertDialog.Overlay class="fixed inset-0 bg-black/40" />
+					<AlertDialog.Content class="fixed left-1/2 top-1/2 w-[min(90vw,420px)] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg">
+						<div class="space-y-4">
+							<header class="space-y-1">
+								<AlertDialog.Title class="text-lg font-semibold text-gray-900">
+									{confirmAction()?.type === "delete"
+										? "楽曲削除の確認"
+										: "楽曲復活の確認"}
+								</AlertDialog.Title>
+								<AlertDialog.Description class="text-sm text-gray-600">
+									{confirmAction()
+										? `${confirmAction()!.song.title} (${confirmAction()!.song.id}) を${
+												confirmAction()!.type === "delete" ? "削除" : "復活"
+										  }します。`
+										: "対象の楽曲を確認してください。"}
+								</AlertDialog.Description>
+							</header>
+							<div class="flex justify-end gap-2">
+								<AlertDialog.CloseButton class="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+									キャンセル
+								</AlertDialog.CloseButton>
+								<button
+									type="button"
+									class={`rounded-md px-4 py-2 text-sm font-semibold text-white ${
+										confirmAction()?.type === "delete"
+											? "bg-red-600 hover:bg-red-700"
+											: "bg-green-600 hover:bg-green-700"
+									}`}
+									onClick={runAction}
+									disabled={!confirmAction() || actionSong() !== null}
+								>
+									{confirmAction()?.type === "delete" ? "削除する" : "復活する"}
+								</button>
+							</div>
 						</div>
-						<button
-							type="button"
-							class="rounded-md border border-gray-200 px-3 py-1 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-							onClick={() => setSelectedSong(null)}
-						>
-							閉じる
-						</button>
-					</div>
-					<div class="mt-4 grid gap-3 text-sm text-gray-700">
-						<p>アーティスト: {formatValue(selectedSong()!.artist)}</p>
-						<p>ジャンル: {formatValue(selectedSong()!.genre)}</p>
-						<p>BPM: {formatValue(selectedSong()!.bpm)}</p>
-						<p>リリース: {formatValue(selectedSong()!.release)}</p>
-						<p>譜面数: {getChartCount(selectedSong()!.charts)}</p>
-					</div>
-					<div class="mt-4">
-						<h3 class="text-sm font-semibold text-gray-700">譜面情報</h3>
-						<ul class="mt-2 space-y-2 text-sm text-gray-700">
-							<For each={Object.entries(selectedSong()!.charts || {})}>
-								{([difficulty, chart]) => (
-									<li class="rounded-md border border-gray-200 px-3 py-2">
-										<strong class="mr-2">{difficulty}</strong>
-										{chart
-											? `定数 ${chart.const} / ノーツ ${formatValue(chart.notes)}`
-											: "譜面なし"}
-									</li>
-								)}
-							</For>
-						</ul>
-					</div>
-				</div>
-			</Show>
+					</AlertDialog.Content>
+				</AlertDialog.Portal>
+			</AlertDialog>
 		</section>
 	);
 };
