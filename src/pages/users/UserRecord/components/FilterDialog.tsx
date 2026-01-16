@@ -27,6 +27,37 @@ const LAMPS: ComboLamp[] = ["FULL COMBO", "ALL JUSTICE", null];
 export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	const [filters, setFilters] = createSignal<FilterState>({ ...props.filters });
 
+	// 入力中の値（string）を保持するSignal
+	const [constMinInput, setConstMinInput] = createSignal(
+		props.filters.constMin !== undefined && props.filters.constMin !== null
+			? String(props.filters.constMin)
+			: "",
+	);
+	const [constMaxInput, setConstMaxInput] = createSignal(
+		props.filters.constMax !== undefined && props.filters.constMax !== null
+			? String(props.filters.constMax)
+			: "",
+	);
+	const [scoreMinInput, setScoreMinInput] = createSignal(
+		props.filters.scoreMin !== undefined && props.filters.scoreMin !== null
+			? String(props.filters.scoreMin)
+			: "",
+	);
+	const [scoreMaxInput, setScoreMaxInput] = createSignal(
+		props.filters.scoreMax !== undefined && props.filters.scoreMax !== null
+			? String(props.filters.scoreMax)
+			: "",
+	);
+
+	// string→number|undefined 変換
+	const parseNumberInput = (v: string): number | undefined => {
+		if (v === "" || v === ".") return undefined;
+		if (/^\.\d+$/.test(v)) return parseFloat(`0${v}`);
+		if (/^\d+\.$/.test(v)) return undefined; // 末尾ドットは未確定
+		const n = Number(v);
+		return Number.isNaN(n) ? undefined : n;
+	};
+
 	// スコアランク定義
 	type ScoreRank = "SSS+" | "SSS" | "SS+" | "SS" | "S+" | "S" | "0点" | "MAX";
 	const SCORE_RANKS: ScoreRank[] = [
@@ -60,7 +91,29 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	// Dialogが開かれた時にフィルター状態をリセット
 	const handleOpenChange = (open: boolean) => {
 		props.onOpenChange(open);
-		if (open) setFilters({ ...props.filters });
+		if (open) {
+			setFilters({ ...props.filters });
+			setConstMinInput(
+				props.filters.constMin !== undefined && props.filters.constMin !== null
+					? String(props.filters.constMin)
+					: "",
+			);
+			setConstMaxInput(
+				props.filters.constMax !== undefined && props.filters.constMax !== null
+					? String(props.filters.constMax)
+					: "",
+			);
+			setScoreMinInput(
+				props.filters.scoreMin !== undefined && props.filters.scoreMin !== null
+					? String(props.filters.scoreMin)
+					: "",
+			);
+			setScoreMaxInput(
+				props.filters.scoreMax !== undefined && props.filters.scoreMax !== null
+					? String(props.filters.scoreMax)
+					: "",
+			);
+		}
 	};
 
 	const handleApply = () => {
@@ -78,6 +131,10 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 			scoreMax: 1010000,
 			lamps: ["ALL JUSTICE", "FULL COMBO", null],
 		});
+		setConstMinInput("0.0");
+		setConstMaxInput("15.9");
+		setScoreMinInput("0");
+		setScoreMaxInput("1010000");
 		setScoreFilterMode("rank");
 		setScoreRankMin("0点");
 		setScoreRankMax("MAX");
@@ -167,39 +224,43 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 						<div class="flex gap-2">
 							<div class="flex-1">
 								<NumberField
-									value={String(filters().constMin ?? "")}
-									onChange={(v: string) =>
-										setFilters((prev) => ({
-											...prev,
-											constMin: Number(v),
-										}))
-									}
+									value={constMinInput()}
+									onChange={(v: string) => {
+										setConstMinInput(v);
+									}}
 									class="w-full"
+									format={false}
+									allowedInput={/[0-9.]/}
+									step={0.1}
 								>
 									<NumberField.Label class="block text-sm font-medium mb-1">
 										定数(最小)
 									</NumberField.Label>
 									<NumberField.Input
 										id="filter-const-min"
-										min={0}
-										max={15.9}
-										step={0.1}
-										focus-visible:outline
 										class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400  focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
 										onFocus={(e) => e.currentTarget.select()}
+										onBlur={(e) => {
+											const v = e.currentTarget.value;
+											setConstMinInput(v);
+											setFilters((prev) => ({
+												...prev,
+												constMin: parseNumberInput(v) ?? 0.0,
+											}));
+										}}
 									/>
 								</NumberField>
 							</div>
 							<div class="flex-1">
 								<NumberField
-									value={String(filters().constMax ?? "")}
-									onChange={(v: string) =>
-										setFilters((prev) => ({
-											...prev,
-											constMax: Number(v),
-										}))
-									}
+									value={constMaxInput()}
+									onChange={(v: string) => {
+										setConstMaxInput(v);
+									}}
 									class="w-full"
+									format={false}
+									allowedInput={/[0-9.]/}
+									step={0.1}
 								>
 									<NumberField.Label class="block text-sm font-medium mb-1">
 										定数(最大)
@@ -211,6 +272,14 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 										step={0.1}
 										class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
 										onFocus={(e) => e.currentTarget.select()}
+										onBlur={(e) => {
+											const v = e.currentTarget.value;
+											setConstMaxInput(v);
+											setFilters((prev) => ({
+												...prev,
+												constMax: parseNumberInput(v) ?? 15.9,
+											}));
+										}}
 									/>
 								</NumberField>
 							</div>
@@ -221,14 +290,14 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 								<div class="flex gap-2">
 									<div class="flex-1">
 										<NumberField
-											value={String(filters().scoreMin ?? "")}
-											onChange={(v: string) =>
-												setFilters((prev) => ({
-													...prev,
-													scoreMin: Number(v),
-												}))
-											}
+											value={scoreMinInput()}
+											onChange={(v: string) => {
+												setScoreMinInput(v);
+											}}
 											class="w-full"
+											format={false}
+											allowedInput={/[0-9.]/}
+											step={1}
 										>
 											<NumberField.Label class="block text-sm font-medium mb-1">
 												スコア(最小)
@@ -240,19 +309,27 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 												step={1}
 												class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
 												onFocus={(e) => e.currentTarget.select()}
+												onBlur={(e) => {
+													const v = e.currentTarget.value;
+													setScoreMinInput(v);
+													setFilters((prev) => ({
+														...prev,
+														scoreMin: parseNumberInput(v) ?? 0,
+													}));
+												}}
 											/>
 										</NumberField>
 									</div>
 									<div class="flex-1">
 										<NumberField
-											value={String(filters().scoreMax ?? "")}
-											onChange={(v: string) =>
-												setFilters((prev) => ({
-													...prev,
-													scoreMax: Number(v),
-												}))
-											}
+											value={scoreMaxInput()}
+											onChange={(v: string) => {
+												setScoreMaxInput(v);
+											}}
 											class="w-full"
+											format={false}
+											allowedInput={/[0-9.]/}
+											step={1}
 										>
 											<NumberField.Label class="block text-sm font-medium mb-1">
 												スコア(最大)
@@ -264,6 +341,14 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 												step={1}
 												class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
 												onFocus={(e) => e.currentTarget.select()}
+												onBlur={(e) => {
+													const v = e.currentTarget.value;
+													setScoreMaxInput(v);
+													setFilters((prev) => ({
+														...prev,
+														scoreMax: parseNumberInput(v) ?? 1010000,
+													}));
+												}}
 											/>
 										</NumberField>
 									</div>
