@@ -2,7 +2,16 @@ import { MetaProvider } from "@solidjs/meta";
 import { A, Route, Router } from "@solidjs/router";
 import type { JSX } from "solid-js";
 import { NavBar } from "./components";
-import { Login, Register, UserPage } from "./pages";
+import {
+	AdminPage,
+	AdminSongsPage,
+	AdminUsersPage,
+	EditorPage,
+	EditorSongsPage,
+	Login,
+	Register,
+	UserPage,
+} from "./pages";
 
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
 	return (props: P) => (
@@ -67,19 +76,19 @@ const App = () => {
 				/>
 
 				{/* 管理系 */}
-				<Route path="/admin" component={() => <h1>Admin Page</h1>} />
+				<Route path="/admin" component={withNavBar(AdminPage)} />
 				<Route
 					path="/admin/users"
-					component={() => <h1>Admin Users Management Page</h1>}
+					component={withNavBar(AdminUsersPage)}
 				/>
 				<Route
 					path="/admin/songs"
-					component={() => <h1>Admin Songs Management Page</h1>}
+					component={withNavBar(AdminSongsPage)}
 				/>
-				<Route path="/editor" component={() => <h1>Editor Page</h1>} />
+				<Route path="/editor" component={withNavBar(EditorPage)} />
 				<Route
 					path="/editor/songs"
-					component={() => <h1>Editor Songs Management Page</h1>}
+					component={withNavBar(EditorSongsPage)}
 				/>
 			</Router>
 		</MetaProvider>
