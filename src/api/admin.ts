@@ -15,7 +15,7 @@ export const fetchAdminUsers = async (
 	}
 
 	const response = await fetch(
-		`${API_BASE_URL}/admin/users?${searchParams.toString()}`,
+		`${API_BASE_URL}/internal/users?${searchParams.toString()}`,
 		{
 			credentials: "include",
 		},

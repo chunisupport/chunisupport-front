@@ -253,15 +253,26 @@ const SongsManagement = (props: SongsManagementProps) => {
 											</td>
 											<td class="px-4 py-3 text-right">
 												<div class="flex flex-wrap justify-end gap-2">
-														<button
-															type="button"
-															class="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-															onClick={() => openEditor(song)}
-														>
-															編集
-														</button>
-													</div>
-												</td>
+													<button
+														type="button"
+														class="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+														onClick={() => openEditor(song)}
+													>
+														編集
+													</button>
+													<button
+														type="button"
+														class="rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+														disabled={song.is_deleted || actionSong() === song.id}
+														onClick={() => {
+															setConfirmAction(song);
+															setConfirmOpen(true);
+														}}
+													>
+														削除
+													</button>
+												</div>
+											</td>
 										</tr>
 									);
 								}}

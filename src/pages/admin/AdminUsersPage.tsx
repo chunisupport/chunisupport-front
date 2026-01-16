@@ -1,5 +1,4 @@
 import { AlertDialog } from "@kobalte/core/alert-dialog";
-import { Dialog } from "@kobalte/core/dialog";
 import { Title } from "@solidjs/meta";
 import { A } from "@solidjs/router";
 import { For, Show, createMemo, createResource, createSignal } from "solid-js";
@@ -12,13 +11,7 @@ const AdminUsersPage = () => {
 	const [searchText, setSearchText] = createSignal("");
 	const [filters, setFilters] = createSignal({ name: "" });
 	const [actionUser, setActionUser] = createSignal<string | null>(null);
-	const [selectedUser, setSelectedUser] = createSignal<UserListResponse | null>(null);
-	const [detailOpen, setDetailOpen] = createSignal(false);
-	const [editUsername, setEditUsername] = createSignal("");
 	const [showDeletedOnly, setShowDeletedOnly] = createSignal(false);
-	const [userEdits, setUserEdits] = createSignal<
-		Record<string, Partial<UserListResponse>>
-	>({});
 	const [deleteTarget, setDeleteTarget] = createSignal<UserListResponse | null>(null);
 	const [deleteOpen, setDeleteOpen] = createSignal(false);
 	const [restoreUsername, setRestoreUsername] = createSignal("");
@@ -31,10 +24,8 @@ const AdminUsersPage = () => {
 	const hasActiveSearch = createMemo(() => Boolean(filters().name));
 	const displayUsers = createMemo(() => {
 		const list = users() ?? [];
-		const edits = userEdits();
-		const merged = list.map((user) => ({ ...user, ...edits[user.username] }));
-		if (!showDeletedOnly()) return merged;
-		return merged.filter((user) => user.is_deleted);
+		if (!showDeletedOnly()) return list;
+		return list.filter((user) => user.is_deleted);
 	});
 
 	const handleSearch = (event: SubmitEvent) => {
@@ -55,10 +46,6 @@ const AdminUsersPage = () => {
 		try {
 			await deleteAdminUser(target.username);
 			await refetch();
-			if (selectedUser()?.username === target.username) {
-				setSelectedUser(null);
-				setDetailOpen(false);
-			}
 		} catch (error) {
 			setErrorMessage(
 				error instanceof Error ? error.message : "削除に失敗しました。",
@@ -86,27 +73,6 @@ const AdminUsersPage = () => {
 		} finally {
 			setActionUser(null);
 		}
-	};
-
-	const openEditor = (user: UserListResponse) => {
-		setSelectedUser(user);
-		setEditUsername(user.username);
-		setDetailOpen(true);
-	};
-
-	const handleSave = () => {
-		const target = selectedUser();
-		if (!target) return;
-		setUserEdits((prev) => ({
-			...prev,
-			[target.username]: {
-				username: editUsername().trim(),
-			},
-		}));
-		setSelectedUser({
-			...target,
-			username: editUsername().trim(),
-		});
 	};
 
 	return (
@@ -282,10 +248,14 @@ const AdminUsersPage = () => {
 												<div class="flex flex-wrap justify-end gap-2">
 													<button
 														type="button"
-														class="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-														onClick={() => openEditor(user)}
+														class="rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
+														disabled={actionUser() === user.username}
+														onClick={() => {
+															setDeleteTarget(user);
+															setDeleteOpen(true);
+														}}
 													>
-														編集
+														削除
 													</button>
 												</div>
 											</td>
@@ -296,64 +266,6 @@ const AdminUsersPage = () => {
 						</table>
 					</div>
 				</Show>
-
-				<Dialog open={detailOpen()} onOpenChange={setDetailOpen}>
-					<Dialog.Portal>
-						<Dialog.Overlay class="fixed inset-0 bg-black/40" />
-						<Dialog.Content class="fixed left-1/2 top-1/2 w-[min(90vw,420px)] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg">
-							<Show when={selectedUser()}>
-								<div class="space-y-4">
-									<header class="space-y-1">
-										<Dialog.Title class="text-lg font-semibold text-gray-900">
-											{selectedUser()!.username} の編集
-										</Dialog.Title>
-										<p class="text-sm text-gray-600">
-											APIで取得できる情報を表示しています。
-										</p>
-										</header>
-										<div class="grid gap-3 text-sm text-gray-700">
-											<label class="grid gap-1">
-												<span class="text-xs text-gray-500">ユーザー名</span>
-												<input
-													type="text"
-													class="rounded-md border border-gray-200 px-3 py-2"
-													value={editUsername()}
-													onInput={(event) =>
-														setEditUsername(event.currentTarget.value)
-													}
-												/>
-											</label>
-										</div>
-										<div class="flex flex-wrap justify-between gap-2">
-											<button
-												type="button"
-												class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
-												onClick={() => {
-													setDeleteTarget(selectedUser());
-													setDeleteOpen(true);
-												}}
-												disabled={actionUser() === selectedUser()!.username}
-											>
-												削除
-											</button>
-											<div class="flex gap-2">
-												<Dialog.CloseButton class="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-													閉じる
-												</Dialog.CloseButton>
-												<button
-													type="button"
-													class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-													onClick={handleSave}
-												>
-													保存
-												</button>
-											</div>
-										</div>
-									</div>
-								</Show>
-						</Dialog.Content>
-					</Dialog.Portal>
-				</Dialog>
 
 				<AlertDialog open={deleteOpen()} onOpenChange={setDeleteOpen}>
 					<AlertDialog.Portal>
