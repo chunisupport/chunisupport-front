@@ -194,6 +194,29 @@ const UserRecord: Component = () => {
 								<div class="text-xs space-y-1">
 									<div>
 										<b>ランク割合:</b>
+										<div class="flex w-full h-4 rounded overflow-hidden mb-1">
+											{Object.entries(stats().rankDist).map(
+												([rank, { percent }]) => {
+													const colorMap: Record<string, string> = {
+														MAX: "bg-yellow-400",
+														"SSS+": "bg-purple-400",
+														SSS: "bg-blue-400",
+														"SS+": "bg-green-400",
+														SS: "bg-lime-300",
+														"S+": "bg-yellow-300",
+														S: "bg-orange-400",
+														OTHERS: "bg-gray-300",
+													};
+													return (
+														<div
+															class={`${colorMap[rank]} h-full`}
+															style={{ width: `${percent}%` }}
+															title={rank}
+														></div>
+													);
+												},
+											)}
+										</div>
 										<ul>
 											{Object.entries(stats().rankDist).map(
 												([rank, { count, percent }]) => (
@@ -206,6 +229,24 @@ const UserRecord: Component = () => {
 									</div>
 									<div>
 										<b>コンボランプ割合:</b>
+										<div class="flex w-full h-4 rounded overflow-hidden mb-1">
+											{Object.entries(stats().comboDist).map(
+												([lamp, { percent }]) => {
+													const colorMap: Record<string, string> = {
+														"ALL JUSTICE": "bg-yellow-400",
+														"FULL COMBO": "bg-green-400",
+														NONE: "bg-gray-300",
+													};
+													return (
+														<div
+															class={`${colorMap[lamp]} h-full`}
+															style={{ width: `${percent}%` }}
+															title={lamp}
+														></div>
+													);
+												},
+											)}
+										</div>
 										<ul>
 											{Object.entries(stats().comboDist).map(
 												([lamp, { count, percent }]) => (
@@ -218,6 +259,28 @@ const UserRecord: Component = () => {
 									</div>
 									<div>
 										<b>クリアランプ割合:</b>
+										<div class="flex w-full h-4 rounded overflow-hidden mb-1">
+											{Object.entries(stats().clearDist).map(
+												([lamp, { percent }]) => {
+													const colorMap: Record<string, string> = {
+														CATASTROPHY: "bg-purple-400",
+														ABSOLUTE: "bg-red-400",
+														BRAVE: "bg-blue-400",
+														HARD: "bg-green-400",
+														CLEAR: "bg-yellow-300",
+														FAILED: "bg-gray-300",
+														NONE: "bg-gray-200",
+													};
+													return (
+														<div
+															class={`${colorMap[lamp]} h-full`}
+															style={{ width: `${percent}%` }}
+															title={lamp}
+														></div>
+													);
+												},
+											)}
+										</div>
 										<ul>
 											{Object.entries(stats().clearDist).map(
 												([lamp, { count, percent }]) => (
