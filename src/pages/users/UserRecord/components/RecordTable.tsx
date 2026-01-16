@@ -42,34 +42,34 @@ const difficultyColor = (difficulty: PlayerRecordDTO["difficulty"]) => {
 const lampBadge = (lamp: PlayerRecordDTO["combo_lamp"]) => {
 	if (lamp === "FULL COMBO")
 		return (
-			<span class="px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs">
-				FULL COMBO
+			<span class="px-2 py-1 rounded-lg bg-orange-200 text-orange-900 text-xs font-bold">
+				FC
 			</span>
 		);
 	if (lamp === "ALL JUSTICE")
 		return (
-			<span class="px-2 py-1 rounded bg-yellow-200 text-yellow-900 text-xs">
-				ALL JUSTICE
+			<span class="px-2 py-1 rounded-lg bg-yellow-200 text-yellow-900 text-xs font-bold">
+				AJ
 			</span>
 		);
 	return (
-		<span class="px-2 py-1 rounded bg-gray-100 text-gray-500 text-xs">-</span>
+		<span class="px-2 py-1 text-xs">-</span>
 	);
 };
 
 export const RecordTable: Component<RecordTableProps> = (props) => {
 	return (
-		<div class="overflow-x-auto w-full">
-			<table class="min-w-full max-w-full border border-gray-300 bg-white rounded-lg text-xs table-auto">
-				<thead>
-					<tr class="bg-gray-100">
-						<th class="px-2 py-1 text-left w-[40%]">曲名</th>
+		<div class="w-full">
+			<table class="min-w-full max-w-full text-xs table-auto">
+				{/* <thead>
+					<tr class="text-xs">
+						<th class="px-2 py-1 text-center w-[40%]">曲名</th>
 						<th class="px-2 py-1 text-center w-[10%]">難易度</th>
-						<th class="px-2 py-1 text-right w-[15%]">定数</th>
-						<th class="px-2 py-1 text-right w-[20%]">スコア</th>
+						<th class="px-2 py-1 text-center w-[15%]">定数</th>
+						<th class="px-2 py-1 text-center w-[20%]">スコア</th>
 						<th class="px-2 py-1 text-center w-[15%]">ランプ</th>
 					</tr>
-				</thead>
+				</thead> */}
 				<tbody>
 					{props.records.length === 0 ? (
 						<tr>
@@ -79,18 +79,18 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
 						</tr>
 					) : (
 						props.records.map((record) => (
-							<tr class="border-t">
+							<tr class="border-t border-gray-200 hover:bg-gray-100">
 								<td class="px-2 py-1 truncate max-w-48" title={record.title}>
 									{record.title}
 								</td>
-								<td class="px-2 py-1 text-center font-bold">
+								<td class="px-2 py-1 text-center">
 									<span
-										class={`px-2 py-1 rounded ${difficultyColor(record.difficulty)} text-xs font-bold`}
+										class={`px-2 py-1 rounded-lg ${difficultyColor(record.difficulty)} text-xs font-bold`}
 									>
 										{difficultyShort(record.difficulty)}
 									</span>
 								</td>
-								<td class="px-2 py-1 text-right">{record.const}</td>
+								<td class="px-2 py-1 text-right">{record.const.toFixed(1)}</td>
 								<td class="px-2 py-1 text-right">{record.score}</td>
 								<td class="px-2 py-1 text-center">
 									{lampBadge(record.combo_lamp)}

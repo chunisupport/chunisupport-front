@@ -78,7 +78,7 @@ const UserRecord: Component = () => {
 				<ErrorBoundary
 					fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}
 				>
-					<div class="m-4">
+					<div class="my-4 mx-2">
 						<div class="flex items-center mb-4 gap-4">
 							<div>
 								{filteredCount() === totalCount()
