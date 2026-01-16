@@ -11,8 +11,7 @@ import {
 	LogOut,
 	Music,
 	Settings,
-	Toolbox,
-	UsersRound,
+	Toolbox
 } from "lucide-solid";
 import type { JSX } from "solid-js";
 import { createSignal, onMount } from "solid-js";
@@ -56,13 +55,6 @@ const NavBar = (props: NavBarProps) => {
 			? `/users/${encodeURIComponent(uname)}`
 			: "/users/:username";
 		const dropdownBase = [
-			{
-				label: "ユーザー一覧",
-				icon: () => (
-					<UsersRound class="inline h-4 w-4 mr-1" aria-hidden="true" />
-				),
-				path: "/users",
-			},
 			{
 				label: "楽曲データベース",
 				icon: () => <Music class="inline h-4 w-4 mr-1" aria-hidden="true" />,

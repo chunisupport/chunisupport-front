@@ -32,10 +32,6 @@ const App = () => {
 				<Route path="/register" component={Register} />
 
 				{/* ユーザ */}
-				<Route
-					path="/users"
-					component={withNavBar(() => <h1>Users List Page</h1>)}
-				/>
 				<Route path="/users/:username" component={withNavBar(UserPage)} />
 				<Route
 					path="/users/:username/records"
