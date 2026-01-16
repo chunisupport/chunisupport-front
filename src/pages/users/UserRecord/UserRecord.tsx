@@ -293,6 +293,35 @@ const UserRecord: Component = () => {
 									</div>
 									<div>
 										<b>スコア分布:</b>
+										<div class="relative w-full h-6 my-2">
+											{(() => {
+												const { min, q1, median, q3, max } = stats().scoreStats;
+												const toPct = (v: number) =>
+													((v - min) / (max - min)) * 100;
+												const q1Pct = toPct(q1);
+												const medianPct = toPct(median);
+												const q3Pct = toPct(q3);
+												return (
+													<div class="absolute left-0 top-1/2 w-full h-3 -translate-y-1/2 bg-gray-200 rounded">
+														{/* 箱 */}
+														<div
+															class="absolute h-3 bg-blue-400 rounded"
+															style={{
+																left: `${q1Pct}%`,
+																width: `${q3Pct - q1Pct}%`,
+															}}
+														></div>
+														{/* 中央値 */}
+														<div
+															class="absolute w-1 bg-blue-900 h-3 rounded"
+															style={{
+																left: `${medianPct}%`,
+															}}
+														></div>
+													</div>
+												);
+											})()}
+										</div>
 										<ul>
 											<li>最小: {stats().scoreStats.min.toLocaleString()}</li>
 											<li>最大: {stats().scoreStats.max.toLocaleString()}</li>
