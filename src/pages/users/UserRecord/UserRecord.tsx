@@ -1,5 +1,7 @@
+import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
 import { useParams } from "@solidjs/router";
+import { Funnel } from "lucide-solid";
 import type { Component } from "solid-js";
 import {
 	createMemo,
@@ -22,7 +24,7 @@ const defaultFilter: FilterState = {
 	constMax: 15.9,
 	scoreMin: 0,
 	scoreMax: 1010000,
-	lamps: ["ALL JUSTICE", "FULL COMBO",null],
+	lamps: ["ALL JUSTICE", "FULL COMBO", null],
 };
 
 const UserRecord: Component = () => {
@@ -79,20 +81,30 @@ const UserRecord: Component = () => {
 					fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}
 				>
 					<div class="my-4 mx-2">
-						<div class="flex items-center mb-4 gap-4">
-							<div>
-								{filteredCount() === totalCount()
-									? `全${totalCount()}件`
-									: `${totalCount()}件中${filteredCount()}件を表示`}
-							</div>
+
+						<div class="flex items-center mb-4 gap-2">
+								<TextField class="flex-1">
+									<TextField.Input
+										class="w-full rounded border border-gray-300 px-2 py-1 focus:border-blue-500"
+										placeholder="曲名で検索..."
+										value={filters().title}
+										onInput={(e) =>
+											setFilters({ ...filters(), title: e.currentTarget.value })
+										}
+									/>
+								</TextField>
 							<button
-								class="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+								class="px-2 py-1 rounded border border-gray-500 flex items-center gap-2 hover:bg-gray-100"
 								onClick={() => setFilterOpen(true)}
 								type="button"
 							>
-								フィルター
+								<Funnel class="text-gray-700" size={16} /> フィルター
 							</button>
 						</div>
+						{/* 仮の表示 */}
+						<p class="mb-2 text-sm text-gray-600">
+							全 {totalCount()} 件中 {filteredCount()} 件を表示
+						</p>
 						<RecordTable records={filteredRecords()} />
 						<FilterDialog
 							open={filterOpen()}
