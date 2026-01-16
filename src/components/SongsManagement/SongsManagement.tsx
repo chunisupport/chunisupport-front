@@ -4,7 +4,7 @@ import { For, Show, createMemo, createResource, createSignal } from "solid-js";
 
 import { deleteSong, fetchSongs } from "../../api/songs";
 import { Loading } from "../../components";
-import type { SongDTO } from "../../types/api";
+import type { ChartDTO, SongDTO } from "../../types/api";
 
 type SongsManagementProps = {
 	pageTitle: string;
@@ -19,6 +19,7 @@ const getChartCount = (charts: SongDTO["charts"]) =>
 
 const SongsManagement = (props: SongsManagementProps) => {
 	const [searchText, setSearchText] = createSignal("");
+	const [showDeletedOnly, setShowDeletedOnly] = createSignal(false);
 	const [actionSong, setActionSong] = createSignal<string | null>(null);
 	const [selectedSong, setSelectedSong] = createSignal<SongDTO | null>(null);
 	const [detailOpen, setDetailOpen] = createSignal(false);
@@ -29,6 +30,8 @@ const SongsManagement = (props: SongsManagementProps) => {
 	const [editGenre, setEditGenre] = createSignal("");
 	const [editBpm, setEditBpm] = createSignal("");
 	const [editRelease, setEditRelease] = createSignal("");
+	const [editJacket, setEditJacket] = createSignal("");
+	const [chartEdits, setChartEdits] = createSignal<Record<string, ChartDTO>>({});
 	const [songEdits, setSongEdits] = createSignal<Record<string, Partial<SongDTO>>>(
 		{},
 	);
@@ -41,9 +44,12 @@ const SongsManagement = (props: SongsManagementProps) => {
 			...song,
 			...songEdits()[song.id],
 		}));
+		const filteredByDeleted = showDeletedOnly()
+			? list.filter((song) => song.is_deleted)
+			: list;
 		const query = searchText().trim().toLowerCase();
-		if (!query) return list;
-		return list.filter((song) =>
+		if (!query) return filteredByDeleted;
+		return filteredByDeleted.filter((song) =>
 			[song.id, song.title, song.artist, song.genre]
 				.filter(Boolean)
 				.some((value) => value.toLowerCase().includes(query)),
@@ -79,6 +85,16 @@ const SongsManagement = (props: SongsManagementProps) => {
 		setEditGenre(song.genre);
 		setEditBpm(song.bpm?.toString() ?? "");
 		setEditRelease(song.release ?? "");
+		setEditJacket(song.jacket ?? "");
+		const nextCharts: Record<string, ChartDTO> = {};
+		for (const [key, chart] of Object.entries(song.charts || {})) {
+			nextCharts[key] = chart ?? {
+				const: 0,
+				is_const_unknown: false,
+				notes: null,
+			};
+		}
+		setChartEdits(nextCharts);
 		setDetailOpen(true);
 	};
 
@@ -94,6 +110,8 @@ const SongsManagement = (props: SongsManagementProps) => {
 				genre: editGenre().trim(),
 				bpm: bpmValue ? Number(bpmValue) : null,
 				release: editRelease().trim(),
+				jacket: editJacket().trim(),
+				charts: { ...chartEdits() },
 			},
 		}));
 		setSelectedSong({
@@ -103,6 +121,8 @@ const SongsManagement = (props: SongsManagementProps) => {
 			genre: editGenre().trim(),
 			bpm: bpmValue ? Number(bpmValue) : null,
 			release: editRelease().trim(),
+			jacket: editJacket().trim(),
+			charts: { ...chartEdits() },
 		});
 	};
 
@@ -127,6 +147,15 @@ const SongsManagement = (props: SongsManagementProps) => {
 						onInput={(event) => setSearchText(event.currentTarget.value)}
 					/>
 				</div>
+				<label class="flex items-center gap-2 text-sm text-gray-700">
+					<input
+						type="checkbox"
+						class="h-4 w-4 rounded border-gray-300"
+						checked={showDeletedOnly()}
+						onChange={(event) => setShowDeletedOnly(event.currentTarget.checked)}
+					/>
+					削除済みのみ表示
+				</label>
 			</div>
 
 			<Show when={errorMessage()}>
@@ -162,6 +191,9 @@ const SongsManagement = (props: SongsManagementProps) => {
 								<th class="px-4 py-3 text-right font-semibold text-gray-700">
 									譜面数
 								</th>
+								<th class="px-4 py-3 text-center font-semibold text-gray-700">
+									状態
+								</th>
 								<th class="px-4 py-3 text-right font-semibold text-gray-700">
 									操作
 								</th>
@@ -174,7 +206,7 @@ const SongsManagement = (props: SongsManagementProps) => {
 									<tr>
 										<td
 											class="px-4 py-6 text-center text-gray-500"
-											colSpan={6}
+											colSpan={7}
 										>
 											{searchText().trim()
 												? "検索結果がありません。"
@@ -208,8 +240,19 @@ const SongsManagement = (props: SongsManagementProps) => {
 											<td class="px-4 py-3 text-right text-gray-700">
 												{getChartCount(song.charts)}
 											</td>
-												<td class="px-4 py-3 text-right">
-													<div class="flex flex-wrap justify-end gap-2">
+											<td class="px-4 py-3 text-center">
+												<span
+													class={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+														song.is_deleted
+															? "bg-red-100 text-red-700"
+															: "bg-green-100 text-green-700"
+													}`}
+												>
+													{song.is_deleted ? "削除済み" : "有効"}
+												</span>
+											</td>
+											<td class="px-4 py-3 text-right">
+												<div class="flex flex-wrap justify-end gap-2">
 														<button
 															type="button"
 															class="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
@@ -270,6 +313,15 @@ const SongsManagement = (props: SongsManagementProps) => {
 											onInput={(event) => setEditGenre(event.currentTarget.value)}
 										/>
 									</label>
+									<label class="grid gap-1">
+										<span class="text-xs text-gray-500">ジャケット</span>
+										<input
+											type="text"
+											class="rounded-md border border-gray-200 px-3 py-2"
+											value={editJacket()}
+											onInput={(event) => setEditJacket(event.currentTarget.value)}
+										/>
+									</label>
 									<div class="grid grid-cols-2 gap-3">
 										<label class="grid gap-1">
 											<span class="text-xs text-gray-500">BPM</span>
@@ -299,13 +351,66 @@ const SongsManagement = (props: SongsManagementProps) => {
 								<div>
 									<h3 class="text-sm font-semibold text-gray-700">譜面情報</h3>
 									<ul class="mt-2 space-y-2 text-sm text-gray-700">
-										<For each={Object.entries(selectedSong()!.charts || {})}>
+										<For each={Object.entries(chartEdits())}>
 											{([difficulty, chart]) => (
 												<li class="rounded-md border border-gray-200 px-3 py-2">
-													<strong class="mr-2">{difficulty}</strong>
-													{chart
-														? `定数 ${chart.const} / ノーツ ${formatValue(chart.notes)}`
-														: "譜面なし"}
+													<div class="flex flex-wrap items-center gap-3">
+														<strong class="min-w-[90px]">{difficulty}</strong>
+														<label class="flex items-center gap-2 text-xs text-gray-600">
+															<input
+																type="checkbox"
+																class="h-4 w-4 rounded border-gray-300"
+																checked={chart.is_const_unknown}
+																onChange={(event) =>
+																	setChartEdits((prev) => ({
+																		...prev,
+																		[difficulty]: {
+																			...prev[difficulty],
+																			is_const_unknown:
+																				event.currentTarget.checked,
+																		},
+																	}))
+																}
+															/>
+															定数未確定
+														</label>
+														<label class="flex flex-col gap-1 text-xs text-gray-600">
+															<span>定数</span>
+															<input
+																type="number"
+																class="w-24 rounded-md border border-gray-200 px-2 py-1 text-sm"
+																value={chart.const}
+																onInput={(event) =>
+																	setChartEdits((prev) => ({
+																		...prev,
+																		[difficulty]: {
+																			...prev[difficulty],
+																			const: Number(event.currentTarget.value),
+																		},
+																	}))
+																}
+															/>
+														</label>
+														<label class="flex flex-col gap-1 text-xs text-gray-600">
+															<span>ノーツ</span>
+															<input
+																type="number"
+																class="w-24 rounded-md border border-gray-200 px-2 py-1 text-sm"
+																value={chart.notes ?? ""}
+																onInput={(event) =>
+																	setChartEdits((prev) => ({
+																		...prev,
+																		[difficulty]: {
+																			...prev[difficulty],
+																			notes: event.currentTarget.value
+																				? Number(event.currentTarget.value)
+																				: null,
+																		},
+																	}))
+																}
+															/>
+														</label>
+													</div>
 												</li>
 											)}
 										</For>

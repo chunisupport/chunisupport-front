@@ -100,6 +100,8 @@ export interface UserListResponse {
     player_name: string;
     rating: number | null;
     overpower_value: number | null;
+    is_private?: boolean;
+    is_deleted?: boolean;
 }
 
 export interface ChartDTO {

@@ -14,9 +14,8 @@ const AdminUsersPage = () => {
 	const [actionUser, setActionUser] = createSignal<string | null>(null);
 	const [selectedUser, setSelectedUser] = createSignal<UserListResponse | null>(null);
 	const [detailOpen, setDetailOpen] = createSignal(false);
-	const [editPlayerName, setEditPlayerName] = createSignal("");
-	const [editRating, setEditRating] = createSignal("");
-	const [editOverpower, setEditOverpower] = createSignal("");
+	const [editUsername, setEditUsername] = createSignal("");
+	const [showDeletedOnly, setShowDeletedOnly] = createSignal(false);
 	const [userEdits, setUserEdits] = createSignal<
 		Record<string, Partial<UserListResponse>>
 	>({});
@@ -33,7 +32,9 @@ const AdminUsersPage = () => {
 	const displayUsers = createMemo(() => {
 		const list = users() ?? [];
 		const edits = userEdits();
-		return list.map((user) => ({ ...user, ...edits[user.username] }));
+		const merged = list.map((user) => ({ ...user, ...edits[user.username] }));
+		if (!showDeletedOnly()) return merged;
+		return merged.filter((user) => user.is_deleted);
 	});
 
 	const handleSearch = (event: SubmitEvent) => {
@@ -89,30 +90,22 @@ const AdminUsersPage = () => {
 
 	const openEditor = (user: UserListResponse) => {
 		setSelectedUser(user);
-		setEditPlayerName(user.player_name || "");
-		setEditRating(user.rating?.toString() ?? "");
-		setEditOverpower(user.overpower_value?.toString() ?? "");
+		setEditUsername(user.username);
 		setDetailOpen(true);
 	};
 
 	const handleSave = () => {
 		const target = selectedUser();
 		if (!target) return;
-		const rating = editRating().trim();
-		const overpower = editOverpower().trim();
 		setUserEdits((prev) => ({
 			...prev,
 			[target.username]: {
-				player_name: editPlayerName().trim(),
-				rating: rating ? Number(rating) : null,
-				overpower_value: overpower ? Number(overpower) : null,
+				username: editUsername().trim(),
 			},
 		}));
 		setSelectedUser({
 			...target,
-			player_name: editPlayerName().trim(),
-			rating: rating ? Number(rating) : null,
-			overpower_value: overpower ? Number(overpower) : null,
+			username: editUsername().trim(),
 		});
 	};
 
@@ -144,6 +137,15 @@ const AdminUsersPage = () => {
 							onInput={(event) => setSearchText(event.currentTarget.value)}
 						/>
 					</div>
+					<label class="flex items-center gap-2 text-sm text-gray-700">
+						<input
+							type="checkbox"
+							class="h-4 w-4 rounded border-gray-300"
+							checked={showDeletedOnly()}
+							onChange={(event) => setShowDeletedOnly(event.currentTarget.checked)}
+						/>
+						削除済みのみ表示
+					</label>
 					<div class="flex gap-2">
 						<button
 							type="submit"
@@ -220,63 +222,77 @@ const AdminUsersPage = () => {
 									<th class="px-4 py-3 text-right font-semibold text-gray-700">
 										OVERPOWER
 									</th>
+									<th class="px-4 py-3 text-center font-semibold text-gray-700">
+										状態
+									</th>
 									<th class="px-4 py-3 text-right font-semibold text-gray-700">
 										操作
 									</th>
 								</tr>
 							</thead>
-								<tbody class="divide-y divide-gray-200">
-									<For
-										each={displayUsers()}
-										fallback={
-											<tr>
-												<td
-													class="px-4 py-6 text-center text-gray-500"
-													colSpan={5}
+							<tbody class="divide-y divide-gray-200">
+								<For
+									each={displayUsers()}
+									fallback={
+										<tr>
+											<td
+												class="px-4 py-6 text-center text-gray-500"
+												colSpan={6}
+											>
+												{hasActiveSearch()
+													? "検索結果がありません。"
+													: "ユーザーが存在しません。"}
+											</td>
+										</tr>
+									}
+								>
+									{(user) => (
+										<tr>
+											<td class="px-4 py-3">
+												<div class="flex flex-col">
+													<A
+														href={`/users/${encodeURIComponent(user.username)}`}
+														class="font-semibold text-blue-600 hover:underline"
+													>
+														{user.username}
+													</A>
+												</div>
+											</td>
+											<td class="px-4 py-3 text-gray-700">
+												{user.player_name || "未連携"}
+											</td>
+											<td class="px-4 py-3 text-right text-gray-700">
+												{user.rating?.toFixed(2) ?? "-"}
+											</td>
+											<td class="px-4 py-3 text-right text-gray-700">
+												{user.overpower_value?.toFixed(2) ?? "-"}
+											</td>
+											<td class="px-4 py-3 text-center">
+												<span
+													class={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+														user.is_deleted
+															? "bg-red-100 text-red-700"
+															: "bg-green-100 text-green-700"
+													}`}
 												>
-													{hasActiveSearch()
-														? "検索結果がありません。"
-														: "ユーザーが存在しません。"}
-												</td>
-											</tr>
-										}
-									>
-										{(user) => (
-											<tr>
-												<td class="px-4 py-3">
-													<div class="flex flex-col">
-														<A
-															href={`/users/${encodeURIComponent(user.username)}`}
-															class="font-semibold text-blue-600 hover:underline"
-														>
-															{user.username}
-														</A>
-													</div>
-												</td>
-												<td class="px-4 py-3 text-gray-700">
-													{user.player_name || "未連携"}
-												</td>
-												<td class="px-4 py-3 text-right text-gray-700">
-													{user.rating?.toFixed(2) ?? "-"}
-												</td>
-												<td class="px-4 py-3 text-right text-gray-700">
-													{user.overpower_value?.toFixed(2) ?? "-"}
-												</td>
-												<td class="px-4 py-3 text-right">
-													<div class="flex flex-wrap justify-end gap-2">
-														<button
-															type="button"
-															class="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-															onClick={() => openEditor(user)}
-														>
-															編集
-														</button>
-													</div>
-												</td>
-											</tr>
-										)}
-									</For>
-								</tbody>
+													{user.is_deleted ? "削除済み" : "有効"}
+												</span>
+											</td>
+											<td class="px-4 py-3 text-right">
+												<div class="flex flex-wrap justify-end gap-2">
+													<button
+														type="button"
+														class="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+														onClick={() => openEditor(user)}
+													>
+														編集
+													</button>
+												</div>
+											</td>
+										</tr>
+									)}
+								</For>
+							</tbody>
 						</table>
 					</div>
 				</Show>
@@ -297,40 +313,16 @@ const AdminUsersPage = () => {
 										</header>
 										<div class="grid gap-3 text-sm text-gray-700">
 											<label class="grid gap-1">
-												<span class="text-xs text-gray-500">プレイヤー名</span>
+												<span class="text-xs text-gray-500">ユーザー名</span>
 												<input
 													type="text"
 													class="rounded-md border border-gray-200 px-3 py-2"
-													value={editPlayerName()}
+													value={editUsername()}
 													onInput={(event) =>
-														setEditPlayerName(event.currentTarget.value)
+														setEditUsername(event.currentTarget.value)
 													}
 												/>
 											</label>
-											<div class="grid grid-cols-2 gap-3">
-												<label class="grid gap-1">
-													<span class="text-xs text-gray-500">レーティング</span>
-													<input
-														type="number"
-														class="rounded-md border border-gray-200 px-3 py-2"
-														value={editRating()}
-														onInput={(event) =>
-															setEditRating(event.currentTarget.value)
-														}
-													/>
-												</label>
-												<label class="grid gap-1">
-													<span class="text-xs text-gray-500">OVERPOWER</span>
-													<input
-														type="number"
-														class="rounded-md border border-gray-200 px-3 py-2"
-														value={editOverpower()}
-														onInput={(event) =>
-															setEditOverpower(event.currentTarget.value)
-														}
-													/>
-												</label>
-											</div>
 										</div>
 										<div class="flex flex-wrap justify-between gap-2">
 											<button

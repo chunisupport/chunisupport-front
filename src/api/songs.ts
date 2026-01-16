@@ -2,17 +2,9 @@ import { API_BASE_URL } from "../config";
 import type { SongsResponse } from "../types/api";
 import { getErrorMessage } from "../types/api";
 
-type FetchSongsParams = {
-	includeDeleted?: boolean;
-};
-
-export const fetchSongs = async (
-	params: FetchSongsParams = {},
-): Promise<SongsResponse> => {
+export const fetchSongs = async (): Promise<SongsResponse> => {
 	const searchParams = new URLSearchParams();
-	if (params.includeDeleted) {
-		searchParams.set("include_deleted", "true");
-	}
+	searchParams.set("include_deleted", "true");
 
 	const response = await fetch(
 		`${API_BASE_URL}/internal/songs?${searchParams.toString()}`,
