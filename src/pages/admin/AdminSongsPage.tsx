@@ -1,7 +1,6 @@
 import { Title } from "@solidjs/meta";
 
-import { RoleGate } from "../../components";
-import SongsManagement from "../shared/SongsManagement";
+import { RoleGate, SongsManagement } from "../../components";
 
 const AdminSongsPage = () => {
 	return (

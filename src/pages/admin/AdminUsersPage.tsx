@@ -14,6 +14,12 @@ const AdminUsersPage = () => {
 	const [actionUser, setActionUser] = createSignal<string | null>(null);
 	const [selectedUser, setSelectedUser] = createSignal<UserListResponse | null>(null);
 	const [detailOpen, setDetailOpen] = createSignal(false);
+	const [editPlayerName, setEditPlayerName] = createSignal("");
+	const [editRating, setEditRating] = createSignal("");
+	const [editOverpower, setEditOverpower] = createSignal("");
+	const [userEdits, setUserEdits] = createSignal<
+		Record<string, Partial<UserListResponse>>
+	>({});
 	const [deleteTarget, setDeleteTarget] = createSignal<UserListResponse | null>(null);
 	const [deleteOpen, setDeleteOpen] = createSignal(false);
 	const [restoreUsername, setRestoreUsername] = createSignal("");
@@ -24,6 +30,11 @@ const AdminUsersPage = () => {
 	);
 
 	const hasActiveSearch = createMemo(() => Boolean(filters().name));
+	const displayUsers = createMemo(() => {
+		const list = users() ?? [];
+		const edits = userEdits();
+		return list.map((user) => ({ ...user, ...edits[user.username] }));
+	});
 
 	const handleSearch = (event: SubmitEvent) => {
 		event.preventDefault();
@@ -74,6 +85,35 @@ const AdminUsersPage = () => {
 		} finally {
 			setActionUser(null);
 		}
+	};
+
+	const openEditor = (user: UserListResponse) => {
+		setSelectedUser(user);
+		setEditPlayerName(user.player_name || "");
+		setEditRating(user.rating?.toString() ?? "");
+		setEditOverpower(user.overpower_value?.toString() ?? "");
+		setDetailOpen(true);
+	};
+
+	const handleSave = () => {
+		const target = selectedUser();
+		if (!target) return;
+		const rating = editRating().trim();
+		const overpower = editOverpower().trim();
+		setUserEdits((prev) => ({
+			...prev,
+			[target.username]: {
+				player_name: editPlayerName().trim(),
+				rating: rating ? Number(rating) : null,
+				overpower_value: overpower ? Number(overpower) : null,
+			},
+		}));
+		setSelectedUser({
+			...target,
+			player_name: editPlayerName().trim(),
+			rating: rating ? Number(rating) : null,
+			overpower_value: overpower ? Number(overpower) : null,
+		});
 	};
 
 	return (
@@ -185,72 +225,58 @@ const AdminUsersPage = () => {
 									</th>
 								</tr>
 							</thead>
-							<tbody class="divide-y divide-gray-200">
-								<For
-									each={users()}
-									fallback={
-										<tr>
-											<td
-												class="px-4 py-6 text-center text-gray-500"
-												colSpan={5}
-											>
-												{hasActiveSearch()
-													? "検索結果がありません。"
-													: "ユーザーが存在しません。"}
-											</td>
-										</tr>
-									}
-								>
-									{(user) => (
-										<tr>
-											<td class="px-4 py-3">
-												<div class="flex flex-col">
-													<A
-														href={`/users/${encodeURIComponent(user.username)}`}
-														class="font-semibold text-blue-600 hover:underline"
-													>
-														{user.username}
-													</A>
-												</div>
-											</td>
-											<td class="px-4 py-3 text-gray-700">
-												{user.player_name || "未連携"}
-											</td>
-											<td class="px-4 py-3 text-right text-gray-700">
-												{user.rating?.toFixed(2) ?? "-"}
-											</td>
-											<td class="px-4 py-3 text-right text-gray-700">
-												{user.overpower_value?.toFixed(2) ?? "-"}
-											</td>
-											<td class="px-4 py-3 text-right">
-												<div class="flex flex-wrap justify-end gap-2">
-													<button
-														type="button"
-														class="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-														onClick={() => {
-															setSelectedUser(user);
-															setDetailOpen(true);
-														}}
-													>
-														詳細
-													</button>
-													<button
-														type="button"
-														class="rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
-														disabled={actionUser() === user.username}
-														onClick={() => {
-															setDeleteTarget(user);
-															setDeleteOpen(true);
-														}}
-													>
-														削除
-													</button>
-												</div>
-											</td>
-										</tr>
-									)}
-								</For>
-							</tbody>
+								<tbody class="divide-y divide-gray-200">
+									<For
+										each={displayUsers()}
+										fallback={
+											<tr>
+												<td
+													class="px-4 py-6 text-center text-gray-500"
+													colSpan={5}
+												>
+													{hasActiveSearch()
+														? "検索結果がありません。"
+														: "ユーザーが存在しません。"}
+												</td>
+											</tr>
+										}
+									>
+										{(user) => (
+											<tr>
+												<td class="px-4 py-3">
+													<div class="flex flex-col">
+														<A
+															href={`/users/${encodeURIComponent(user.username)}`}
+															class="font-semibold text-blue-600 hover:underline"
+														>
+															{user.username}
+														</A>
+													</div>
+												</td>
+												<td class="px-4 py-3 text-gray-700">
+													{user.player_name || "未連携"}
+												</td>
+												<td class="px-4 py-3 text-right text-gray-700">
+													{user.rating?.toFixed(2) ?? "-"}
+												</td>
+												<td class="px-4 py-3 text-right text-gray-700">
+													{user.overpower_value?.toFixed(2) ?? "-"}
+												</td>
+												<td class="px-4 py-3 text-right">
+													<div class="flex flex-wrap justify-end gap-2">
+														<button
+															type="button"
+															class="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+															onClick={() => openEditor(user)}
+														>
+															編集
+														</button>
+													</div>
+												</td>
+											</tr>
+										)}
+									</For>
+								</tbody>
 						</table>
 					</div>
 				</Show>
@@ -263,28 +289,76 @@ const AdminUsersPage = () => {
 								<div class="space-y-4">
 									<header class="space-y-1">
 										<Dialog.Title class="text-lg font-semibold text-gray-900">
-											{selectedUser()!.username} の詳細
+											{selectedUser()!.username} の編集
 										</Dialog.Title>
 										<p class="text-sm text-gray-600">
 											APIで取得できる情報を表示しています。
 										</p>
-									</header>
-									<div class="space-y-2 text-sm text-gray-700">
-										<p>
-											プレイヤー名: {selectedUser()!.player_name || "未連携"}
-										</p>
-										<p>レーティング: {selectedUser()!.rating ?? "-"}</p>
-										<p>
-											OVERPOWER: {selectedUser()!.overpower_value ?? "-"}
-										</p>
+										</header>
+										<div class="grid gap-3 text-sm text-gray-700">
+											<label class="grid gap-1">
+												<span class="text-xs text-gray-500">プレイヤー名</span>
+												<input
+													type="text"
+													class="rounded-md border border-gray-200 px-3 py-2"
+													value={editPlayerName()}
+													onInput={(event) =>
+														setEditPlayerName(event.currentTarget.value)
+													}
+												/>
+											</label>
+											<div class="grid grid-cols-2 gap-3">
+												<label class="grid gap-1">
+													<span class="text-xs text-gray-500">レーティング</span>
+													<input
+														type="number"
+														class="rounded-md border border-gray-200 px-3 py-2"
+														value={editRating()}
+														onInput={(event) =>
+															setEditRating(event.currentTarget.value)
+														}
+													/>
+												</label>
+												<label class="grid gap-1">
+													<span class="text-xs text-gray-500">OVERPOWER</span>
+													<input
+														type="number"
+														class="rounded-md border border-gray-200 px-3 py-2"
+														value={editOverpower()}
+														onInput={(event) =>
+															setEditOverpower(event.currentTarget.value)
+														}
+													/>
+												</label>
+											</div>
+										</div>
+										<div class="flex flex-wrap justify-between gap-2">
+											<button
+												type="button"
+												class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+												onClick={() => {
+													setDeleteTarget(selectedUser());
+													setDeleteOpen(true);
+												}}
+												disabled={actionUser() === selectedUser()!.username}
+											>
+												削除
+											</button>
+											<div class="flex gap-2">
+												<Dialog.CloseButton class="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+													閉じる
+												</Dialog.CloseButton>
+												<button
+													type="button"
+													class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+													onClick={handleSave}
+												>
+													保存
+												</button>
+											</div>
+										</div>
 									</div>
-									<div class="flex justify-end gap-2">
-										<Dialog.CloseButton class="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-											閉じる
-										</Dialog.CloseButton>
-									</div>
-								</div>
-							</Show>
+								</Show>
 						</Dialog.Content>
 					</Dialog.Portal>
 				</Dialog>

@@ -2,7 +2,7 @@ import { AlertDialog } from "@kobalte/core/alert-dialog";
 import { Dialog } from "@kobalte/core/dialog";
 import { For, Show, createMemo, createResource, createSignal } from "solid-js";
 
-import { deleteSong, fetchSongs, restoreSong } from "../../api/songs";
+import { deleteSong, fetchSongs } from "../../api/songs";
 import { Loading } from "../../components";
 import type { SongDTO } from "../../types/api";
 
@@ -19,23 +19,28 @@ const getChartCount = (charts: SongDTO["charts"]) =>
 
 const SongsManagement = (props: SongsManagementProps) => {
 	const [searchText, setSearchText] = createSignal("");
-	const [includeDeleted, setIncludeDeleted] = createSignal(false);
 	const [actionSong, setActionSong] = createSignal<string | null>(null);
 	const [selectedSong, setSelectedSong] = createSignal<SongDTO | null>(null);
 	const [detailOpen, setDetailOpen] = createSignal(false);
 	const [confirmOpen, setConfirmOpen] = createSignal(false);
-	const [confirmAction, setConfirmAction] = createSignal<{
-		type: "delete" | "restore";
-		song: SongDTO;
-	} | null>(null);
+	const [confirmAction, setConfirmAction] = createSignal<SongDTO | null>(null);
+	const [editTitle, setEditTitle] = createSignal("");
+	const [editArtist, setEditArtist] = createSignal("");
+	const [editGenre, setEditGenre] = createSignal("");
+	const [editBpm, setEditBpm] = createSignal("");
+	const [editRelease, setEditRelease] = createSignal("");
+	const [songEdits, setSongEdits] = createSignal<Record<string, Partial<SongDTO>>>(
+		{},
+	);
 	const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
 
-	const [songs, { refetch }] = createResource(includeDeleted, (include) =>
-		fetchSongs({ includeDeleted: include }),
-	);
+	const [songs, { refetch }] = createResource(fetchSongs);
 
 	const filteredSongs = createMemo(() => {
-		const list = songs()?.songs ?? [];
+		const list = (songs()?.songs ?? []).map((song) => ({
+			...song,
+			...songEdits()[song.id],
+		}));
 		const query = searchText().trim().toLowerCase();
 		if (!query) return list;
 		return list.filter((song) =>
@@ -48,33 +53,57 @@ const SongsManagement = (props: SongsManagementProps) => {
 	const runAction = async () => {
 		const action = confirmAction();
 		if (!action || actionSong()) return;
-		setActionSong(action.song.id);
+		setActionSong(action.id);
 		setErrorMessage(null);
 		try {
-			if (action.type === "delete") {
-				await deleteSong(action.song.id);
-			} else {
-				await restoreSong(action.song.id);
-			}
+			await deleteSong(action.id);
 			await refetch();
-			if (selectedSong()?.id === action.song.id) {
+			if (selectedSong()?.id === action.id) {
 				setSelectedSong({
-					...action.song,
-					is_deleted: action.type === "delete",
+					...action,
+					is_deleted: true,
 				});
 			}
 		} catch (error) {
-			setErrorMessage(
-				error instanceof Error
-					? error.message
-					: action.type === "delete"
-						? "削除に失敗しました。"
-						: "復活に失敗しました。",
-			);
+			setErrorMessage(error instanceof Error ? error.message : "削除に失敗しました。");
 		} finally {
 			setActionSong(null);
 			setConfirmOpen(false);
 		}
+	};
+
+	const openEditor = (song: SongDTO) => {
+		setSelectedSong(song);
+		setEditTitle(song.title);
+		setEditArtist(song.artist);
+		setEditGenre(song.genre);
+		setEditBpm(song.bpm?.toString() ?? "");
+		setEditRelease(song.release ?? "");
+		setDetailOpen(true);
+	};
+
+	const handleSave = () => {
+		const target = selectedSong();
+		if (!target) return;
+		const bpmValue = editBpm().trim();
+		setSongEdits((prev) => ({
+			...prev,
+			[target.id]: {
+				title: editTitle().trim(),
+				artist: editArtist().trim(),
+				genre: editGenre().trim(),
+				bpm: bpmValue ? Number(bpmValue) : null,
+				release: editRelease().trim(),
+			},
+		}));
+		setSelectedSong({
+			...target,
+			title: editTitle().trim(),
+			artist: editArtist().trim(),
+			genre: editGenre().trim(),
+			bpm: bpmValue ? Number(bpmValue) : null,
+			release: editRelease().trim(),
+		});
 	};
 
 	return (
@@ -98,15 +127,6 @@ const SongsManagement = (props: SongsManagementProps) => {
 						onInput={(event) => setSearchText(event.currentTarget.value)}
 					/>
 				</div>
-				<label class="flex items-center gap-2 text-sm text-gray-700">
-					<input
-						type="checkbox"
-						class="h-4 w-4 rounded border-gray-300"
-						checked={includeDeleted()}
-						onChange={(event) => setIncludeDeleted(event.currentTarget.checked)}
-					/>
-					削除済みを含める
-				</label>
 			</div>
 
 			<Show when={errorMessage()}>
@@ -142,9 +162,6 @@ const SongsManagement = (props: SongsManagementProps) => {
 								<th class="px-4 py-3 text-right font-semibold text-gray-700">
 									譜面数
 								</th>
-								<th class="px-4 py-3 text-center font-semibold text-gray-700">
-									状態
-								</th>
 								<th class="px-4 py-3 text-right font-semibold text-gray-700">
 									操作
 								</th>
@@ -157,7 +174,7 @@ const SongsManagement = (props: SongsManagementProps) => {
 									<tr>
 										<td
 											class="px-4 py-6 text-center text-gray-500"
-											colSpan={7}
+											colSpan={6}
 										>
 											{searchText().trim()
 												? "検索結果がありません。"
@@ -167,7 +184,6 @@ const SongsManagement = (props: SongsManagementProps) => {
 								}
 							>
 								{(song) => {
-									const isDeleted = song.is_deleted ?? false;
 									return (
 										<tr>
 											<td class="px-4 py-3">
@@ -192,62 +208,17 @@ const SongsManagement = (props: SongsManagementProps) => {
 											<td class="px-4 py-3 text-right text-gray-700">
 												{getChartCount(song.charts)}
 											</td>
-											<td class="px-4 py-3 text-center">
-												<span
-													class={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-														isDeleted
-															? "bg-red-100 text-red-700"
-															: "bg-green-100 text-green-700"
-													}`}
-												>
-													{isDeleted ? "削除済み" : "有効"}
-												</span>
-											</td>
-											<td class="px-4 py-3 text-right">
-												<div class="flex flex-wrap justify-end gap-2">
-													<button
-														type="button"
-														class="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-														onClick={() => {
-															setSelectedSong(song);
-															setDetailOpen(true);
-														}}
-													>
-														詳細
-													</button>
-													{isDeleted ? (
+												<td class="px-4 py-3 text-right">
+													<div class="flex flex-wrap justify-end gap-2">
 														<button
 															type="button"
-															class="rounded-md bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700"
-															disabled={actionSong() === song.id}
-															onClick={() => {
-																setConfirmAction({
-																	type: "restore",
-																	song,
-																});
-																setConfirmOpen(true);
-															}}
+															class="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+															onClick={() => openEditor(song)}
 														>
-															復活
+															編集
 														</button>
-													) : (
-														<button
-															type="button"
-															class="rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
-															disabled={actionSong() === song.id}
-															onClick={() => {
-																setConfirmAction({
-																	type: "delete",
-																	song,
-																});
-																setConfirmOpen(true);
-															}}
-														>
-															削除
-														</button>
-													)}
-												</div>
-											</td>
+													</div>
+												</td>
 										</tr>
 									);
 								}}
@@ -265,18 +236,65 @@ const SongsManagement = (props: SongsManagementProps) => {
 							<div class="space-y-4">
 								<header class="space-y-1">
 									<Dialog.Title class="text-lg font-semibold text-gray-900">
-										{selectedSong()!.title} の詳細
+										{selectedSong()!.title} の編集
 									</Dialog.Title>
 									<p class="text-sm text-gray-600">
 										ID: {selectedSong()!.id}
 									</p>
 								</header>
-								<div class="grid gap-2 text-sm text-gray-700">
-									<p>アーティスト: {formatValue(selectedSong()!.artist)}</p>
-									<p>ジャンル: {formatValue(selectedSong()!.genre)}</p>
-									<p>BPM: {formatValue(selectedSong()!.bpm)}</p>
-									<p>リリース: {formatValue(selectedSong()!.release)}</p>
-									<p>譜面数: {getChartCount(selectedSong()!.charts)}</p>
+								<div class="grid gap-3 text-sm text-gray-700">
+									<label class="grid gap-1">
+										<span class="text-xs text-gray-500">楽曲名</span>
+										<input
+											type="text"
+											class="rounded-md border border-gray-200 px-3 py-2"
+											value={editTitle()}
+											onInput={(event) => setEditTitle(event.currentTarget.value)}
+										/>
+									</label>
+									<label class="grid gap-1">
+										<span class="text-xs text-gray-500">アーティスト</span>
+										<input
+											type="text"
+											class="rounded-md border border-gray-200 px-3 py-2"
+											value={editArtist()}
+											onInput={(event) => setEditArtist(event.currentTarget.value)}
+										/>
+									</label>
+									<label class="grid gap-1">
+										<span class="text-xs text-gray-500">ジャンル</span>
+										<input
+											type="text"
+											class="rounded-md border border-gray-200 px-3 py-2"
+											value={editGenre()}
+											onInput={(event) => setEditGenre(event.currentTarget.value)}
+										/>
+									</label>
+									<div class="grid grid-cols-2 gap-3">
+										<label class="grid gap-1">
+											<span class="text-xs text-gray-500">BPM</span>
+											<input
+												type="number"
+												class="rounded-md border border-gray-200 px-3 py-2"
+												value={editBpm()}
+												onInput={(event) => setEditBpm(event.currentTarget.value)}
+											/>
+										</label>
+										<label class="grid gap-1">
+											<span class="text-xs text-gray-500">リリース</span>
+											<input
+												type="text"
+												class="rounded-md border border-gray-200 px-3 py-2"
+												value={editRelease()}
+												onInput={(event) =>
+													setEditRelease(event.currentTarget.value)
+												}
+											/>
+										</label>
+									</div>
+									<p class="text-xs text-gray-500">
+										譜面数: {getChartCount(selectedSong()!.charts)}
+									</p>
 								</div>
 								<div>
 									<h3 class="text-sm font-semibold text-gray-700">譜面情報</h3>
@@ -293,10 +311,30 @@ const SongsManagement = (props: SongsManagementProps) => {
 										</For>
 									</ul>
 								</div>
-								<div class="flex justify-end">
-									<Dialog.CloseButton class="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-										閉じる
-									</Dialog.CloseButton>
+								<div class="flex flex-wrap justify-between gap-2">
+									<button
+										type="button"
+										class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+										onClick={() => {
+											setConfirmAction(selectedSong());
+											setConfirmOpen(true);
+										}}
+										disabled={actionSong() === selectedSong()!.id}
+									>
+										削除
+									</button>
+									<div class="flex gap-2">
+										<Dialog.CloseButton class="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+											閉じる
+										</Dialog.CloseButton>
+										<button
+											type="button"
+											class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+											onClick={handleSave}
+										>
+											保存
+										</button>
+									</div>
 								</div>
 							</div>
 						</Show>
@@ -311,15 +349,11 @@ const SongsManagement = (props: SongsManagementProps) => {
 						<div class="space-y-4">
 							<header class="space-y-1">
 								<AlertDialog.Title class="text-lg font-semibold text-gray-900">
-									{confirmAction()?.type === "delete"
-										? "楽曲削除の確認"
-										: "楽曲復活の確認"}
+									楽曲削除の確認
 								</AlertDialog.Title>
 								<AlertDialog.Description class="text-sm text-gray-600">
 									{confirmAction()
-										? `${confirmAction()!.song.title} (${confirmAction()!.song.id}) を${
-												confirmAction()!.type === "delete" ? "削除" : "復活"
-										  }します。`
+										? `${confirmAction()!.title} (${confirmAction()!.id}) を削除します。`
 										: "対象の楽曲を確認してください。"}
 								</AlertDialog.Description>
 							</header>
@@ -329,15 +363,11 @@ const SongsManagement = (props: SongsManagementProps) => {
 								</AlertDialog.CloseButton>
 								<button
 									type="button"
-									class={`rounded-md px-4 py-2 text-sm font-semibold text-white ${
-										confirmAction()?.type === "delete"
-											? "bg-red-600 hover:bg-red-700"
-											: "bg-green-600 hover:bg-green-700"
-									}`}
+									class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
 									onClick={runAction}
 									disabled={!confirmAction() || actionSong() !== null}
 								>
-									{confirmAction()?.type === "delete" ? "削除する" : "復活する"}
+									削除する
 								</button>
 							</div>
 						</div>
