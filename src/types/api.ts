@@ -134,7 +134,10 @@ export interface HonorDTO {
         | "sp"
         | "phoenix_g"
         | "phoenix_p"
-        | "phoenix_r";
+        | "phoenix_r"
+        | "expert"
+        | "master"
+        | "ultima";
     image_url: string | null;
 }
 
