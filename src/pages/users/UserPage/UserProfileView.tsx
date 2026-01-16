@@ -32,7 +32,7 @@ export const UserProfileView: Component<Props> = (props) => {
 		<div class="md:flex md:gap-0 md:divide-x-4 md:divide-gray-300 md:h-screen">
 			{/* 左側 */}
 			{/* sticy scrollの関係でmb-4とmt-4の付与位置を分けています */}
-			<div class="mb-4 md:min-w-106.25 md:shrink-0 md:h-full md:overflow-y-auto">
+			<div class="mb-4 md:min-w-106.25 md:shrink-0 md:h-full md:overflow-y-auto" id="user-profile">
 
 				<div class="mt-4">
 					{/* ネームプレート */}
@@ -48,9 +48,14 @@ export const UserProfileView: Component<Props> = (props) => {
 					class="mb-4"
 					// タブを切り替えた際に1曲目の位置までスクロールする
 					onChange={() => {
-						const main = document.querySelector("main");
-						if (main && main.scrollTop > NAMEPLATE_SCROLL_OFFSET) {
-							main.scrollTo({
+						let scrollTarget: HTMLElement | null = null;
+						if (window.matchMedia("(min-width: 768px)").matches) {
+							scrollTarget = document.getElementById("user-profile");
+						} else {
+							scrollTarget = document.querySelector("main");
+						}
+						if (scrollTarget && scrollTarget.scrollTop > NAMEPLATE_SCROLL_OFFSET) {
+							scrollTarget.scrollTo({
 								top: NAMEPLATE_SCROLL_OFFSET,
 								behavior: "smooth",
 							});
