@@ -1,4 +1,5 @@
 import type { Component } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import type { PlayerRecordDTO } from "../../../../types/api";
 
 type Props = {
@@ -24,17 +25,31 @@ const getDifficultyColors = (difficulty: string) => {
 };
 
 export const UserRecordCard: Component<Props> = (props) => {
+	const [shouldAnimate, setShouldAnimate] = createSignal(false);
+	let titleRef: HTMLParagraphElement | undefined;
+
+	onMount(() => {
+		if (titleRef && titleRef.scrollWidth > titleRef.clientWidth) {
+			setShouldAnimate(true);
+		}
+	});
+
 	return (
 		<div
 			class={`mb-2 p-3 rounded-md border ${getDifficultyColors(props.record.difficulty)}`}
 		>
 			<div class="flex gap-3">
 				<div class="flex flex-col">
-					<p># {props.index + 1}</p>
+					 <p># {props.index + 1}</p>
 					<p class="text-sm">{props.record.rating.toFixed(2)}</p>
 				</div>
-				<div>
-					<p class="font-medium">{props.record.title}</p>
+				<div class="flex-1 min-w-0 overflow-hidden">
+					<p
+						ref={titleRef}
+						class={`font-medium whitespace-nowrap ${shouldAnimate() ? "animate-marquee" : ""}`}
+					>
+						{props.record.title}
+					</p>
 					<p class="text-sm">
 						{props.record.const} / {props.record.score}
 					</p>
