@@ -22,29 +22,28 @@ const DIFFICULTIES: Difficulty[] = [
 const LAMPS: ComboLamp[] = ["FULL COMBO", "ALL JUSTICE", null];
 
 export const FilterDialog: Component<FilterDialogProps> = (props) => {
-	// ローカルコピーで編集し、適用時にonChange
-	const [local, setLocal] = createSignal<FilterState>({ ...props.filters });
+	const [filters, setFilters] = createSignal<FilterState>({ ...props.filters });
 
 	// Dialogが開かれた時にフィルター状態をリセット
 	const handleOpenChange = (open: boolean) => {
 		props.onOpenChange(open);
-		if (open) setLocal({ ...props.filters });
+		if (open) setFilters({ ...props.filters });
 	};
 
 	const handleApply = () => {
-		props.onChange(local());
+		props.onChange(filters());
 		props.onOpenChange(false);
 	};
 
 	const handleReset = () => {
-		setLocal({
+		setFilters({
 			title: "",
-			difficulties: [],
-			constMin: null,
-			constMax: null,
-			scoreMin: null,
-			scoreMax: null,
-			lamps: [],
+			difficulties: ["MASTER", "ULTIMA"],
+			constMin: 0.0,
+			constMax: 15.9,
+			scoreMin: 0,
+			scoreMax: 1010000,
+			lamps: ["ALL JUSTICE", "FULL COMBO", null],
 		});
 		props.onReset();
 	};
@@ -60,37 +59,23 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 				<Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md">
 					<Dialog.Title class="text-lg font-bold mb-4">フィルター</Dialog.Title>
 					<div class="space-y-4">
-						{/* 曲名 */}
-						<div>
-							<label for="filter-title" class="block text-sm font-medium mb-1">
-								曲名
-							</label>
-							<TextField.Root
-								value={local().title}
-								onChange={(v) => setLocal((prev) => ({ ...prev, title: v }))}
-							>
-								<TextField.Input
-									id="filter-title"
-									class="w-full border rounded px-2 py-1"
-								/>
-							</TextField.Root>
-						</div>
 						{/* 難易度 */}
 						<div>
 							<span class="block text-sm font-medium mb-1">難易度</span>
-							<div class="flex flex-wrap gap-2">
+							<div class="flex flex-col gap-2">
 								<For each={DIFFICULTIES}>
 									{(diff, i) => {
 										const id = `filter-difficulty-${i()}`;
 										return (
 											<Checkbox.Root
-												checked={local().difficulties.includes(diff)}
+												checked={filters().difficulties.includes(diff)}
 												onChange={() =>
-													setLocal((prev) => ({
+													setFilters((prev) => ({
 														...prev,
 														difficulties: toggleArray(prev.difficulties, diff),
 													}))
 												}
+												class="flex"
 											>
 												<Checkbox.Input id={id} />
 												<Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center mr-2">
@@ -116,12 +101,14 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 								</label>
 								<TextField.Root
 									value={
-										local().constMin !== null ? String(local().constMin) : ""
+										filters().constMin !== null
+											? String(filters().constMin)
+											: ""
 									}
 									onChange={(v) =>
-										setLocal((prev) => ({
+										setFilters((prev) => ({
 											...prev,
-											constMin: v === "" ? null : Number(v),
+											constMin: Number(v),
 										}))
 									}
 								>
@@ -141,12 +128,14 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 								</label>
 								<TextField.Root
 									value={
-										local().constMax !== null ? String(local().constMax) : ""
+										filters().constMax !== null
+											? String(filters().constMax)
+											: ""
 									}
 									onChange={(v) =>
-										setLocal((prev) => ({
+										setFilters((prev) => ({
 											...prev,
-											constMax: v === "" ? null : Number(v),
+											constMax: Number(v),
 										}))
 									}
 								>
@@ -169,12 +158,14 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 								</label>
 								<TextField.Root
 									value={
-										local().scoreMin !== null ? String(local().scoreMin) : ""
+										filters().scoreMin !== null
+											? String(filters().scoreMin)
+											: ""
 									}
 									onChange={(v) =>
-										setLocal((prev) => ({
+										setFilters((prev) => ({
 											...prev,
-											scoreMin: v === "" ? null : Number(v),
+											scoreMin: Number(v),
 										}))
 									}
 								>
@@ -194,12 +185,14 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 								</label>
 								<TextField.Root
 									value={
-										local().scoreMax !== null ? String(local().scoreMax) : ""
+										filters().scoreMax !== null
+											? String(filters().scoreMax)
+											: ""
 									}
 									onChange={(v) =>
-										setLocal((prev) => ({
+										setFilters((prev) => ({
 											...prev,
-											scoreMax: v === "" ? null : Number(v),
+											scoreMax: Number(v),
 										}))
 									}
 								>
@@ -214,19 +207,20 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 						{/* ランプ */}
 						<div>
 							<span class="block text-sm font-medium mb-1">ランプ</span>
-							<div class="flex flex-wrap gap-2">
+							<div class="flex flex-col gap-2">
 								<For each={LAMPS}>
 									{(lamp, i) => {
 										const id = `filter-lamp-${i()}`;
 										return (
 											<Checkbox.Root
-												checked={local().lamps.includes(lamp)}
+												checked={filters().lamps.includes(lamp)}
 												onChange={() =>
-													setLocal((prev) => ({
+													setFilters((prev) => ({
 														...prev,
 														lamps: toggleArray(prev.lamps, lamp),
 													}))
 												}
+												class="flex"
 											>
 												<Checkbox.Input id={id} />
 												<Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center mr-2">

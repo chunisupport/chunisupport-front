@@ -17,12 +17,12 @@ import type { ComboLamp, Difficulty, FilterState } from "./types/types";
 
 const defaultFilter: FilterState = {
 	title: "",
-	difficulties: [],
-	constMin: null,
-	constMax: null,
-	scoreMin: null,
-	scoreMax: null,
-	lamps: [],
+	difficulties: ["MASTER", "ULTIMA"],
+	constMin: 0.0,
+	constMax: 15.9,
+	scoreMin: 0,
+	scoreMax: 1010000,
+	lamps: ["ALL JUSTICE", "FULL COMBO",null],
 };
 
 const UserRecord: Component = () => {
