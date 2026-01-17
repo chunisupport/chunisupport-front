@@ -51,19 +51,17 @@ const UserRecord: Component = () => {
 				return false;
 			// 難易度
 			if (
-				f.difficulties.length > 0 &&
 				!f.difficulties.includes(record.difficulty as Difficulty)
 			)
 				return false;
 			// 定数
-			if (f.constMin !== null && record.const < f.constMin) return false;
-			if (f.constMax !== null && record.const > f.constMax) return false;
+			if ( record.const < f.constMin) return false;
+			if ( record.const > f.constMax) return false;
 			// スコア
-			if (f.scoreMin !== null && record.score < f.scoreMin) return false;
-			if (f.scoreMax !== null && record.score > f.scoreMax) return false;
+			if ( record.score < f.scoreMin) return false;
+			if ( record.score > f.scoreMax) return false;
 			// ランプ
 			if (
-				f.lamps.length > 0 &&
 				!f.lamps.includes(record.combo_lamp as ComboLamp)
 			)
 				return false;
