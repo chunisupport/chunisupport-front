@@ -91,7 +91,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
 									</span>
 								</td>
 								<td class="px-2 py-1 text-right">{record.const.toFixed(1)}</td>
-								<td class="px-2 py-1 text-right">{record.score}</td>
+								<td class="px-2 py-1 text-right">{record.score.toLocaleString()}</td>
 								<td class="px-2 py-1 text-center">
 									{lampBadge(record.combo_lamp)}
 								</td>
