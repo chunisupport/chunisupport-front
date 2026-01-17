@@ -5,8 +5,13 @@ import { NumberField } from "@kobalte/core/number-field";
 import { Select } from "@kobalte/core/select";
 import { Check, ChevronDown } from "lucide-solid";
 import type { Component } from "solid-js";
-import { createSignal, For } from "solid-js";
-import type { ComboLamp, Difficulty, FilterState } from "../types/types";
+import { createEffect, createSignal, For } from "solid-js";
+import {
+	DEFAULT_FILTER,
+	DIFFICULTY_OPTIONS,
+	LAMP_OPTIONS,
+} from "../types/filterDefaults";
+import type { FilterState } from "../types/types";
 
 interface FilterDialogProps {
 	open: boolean;
@@ -15,20 +20,42 @@ interface FilterDialogProps {
 	onChange: (filters: FilterState) => void;
 }
 
-const DIFFICULTIES: Difficulty[] = [
-	"BASIC",
-	"ADVANCED",
-	"EXPERT",
-	"MASTER",
-	"ULTIMA",
-];
-const LAMPS: ComboLamp[] = ["ALL JUSTICE", "FULL COMBO", null];
-
 export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	const [filters, setFilters] = createSignal<FilterState>({ ...props.filters });
 
 	// リセット確認ダイアログの開閉状態
 	const [resetDialogOpen, setResetDialogOpen] = createSignal(false);
+
+	// props.filters同期
+	createEffect(() => {
+		if (props.open) {
+			setFilters({ ...props.filters });
+			setConstMinInput(
+				props.filters.constMin !== undefined && props.filters.constMin !== null
+					? String(props.filters.constMin)
+					: "",
+			);
+			setConstMaxInput(
+				props.filters.constMax !== undefined && props.filters.constMax !== null
+					? String(props.filters.constMax)
+					: "",
+			);
+			setScoreMinInput(
+				props.filters.scoreMin !== undefined && props.filters.scoreMin !== null
+					? String(props.filters.scoreMin)
+					: "",
+			);
+			setScoreMaxInput(
+				props.filters.scoreMax !== undefined && props.filters.scoreMax !== null
+					? String(props.filters.scoreMax)
+					: "",
+			);
+			// スコアフィルターモード・ランク同期（必要なら）
+			setScoreFilterMode("rank");
+			setScoreRankMin("0点");
+			setScoreRankMax("MAX");
+		}
+	});
 
 	// 入力中の値（string）を保持するSignal
 	const [constMinInput, setConstMinInput] = createSignal(
@@ -125,19 +152,11 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	};
 
 	const handleReset = () => {
-		setFilters({
-			title: "",
-			difficulties: ["MASTER", "ULTIMA"],
-			constMin: 0.0,
-			constMax: 15.9,
-			scoreMin: 0,
-			scoreMax: 1010000,
-			lamps: ["ALL JUSTICE", "FULL COMBO", null],
-		});
-		setConstMinInput("0.0");
-		setConstMaxInput("15.9");
-		setScoreMinInput("0");
-		setScoreMaxInput("1010000");
+		setFilters({ ...DEFAULT_FILTER });
+		setConstMinInput(String(DEFAULT_FILTER.constMin));
+		setConstMaxInput(String(DEFAULT_FILTER.constMax));
+		setScoreMinInput(String(DEFAULT_FILTER.scoreMin));
+		setScoreMaxInput(String(DEFAULT_FILTER.scoreMax));
 		setScoreFilterMode("rank");
 		setScoreRankMin("0点");
 		setScoreRankMax("MAX");
@@ -195,7 +214,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 						<div>
 							<span class="block text-sm font-medium mb-1">難易度</span>
 							<div class="flex flex-col gap-2">
-								<For each={DIFFICULTIES}>
+								<For each={DIFFICULTY_OPTIONS}>
 									{(diff, i) => {
 										const id = `filter-difficulty-${i()}`;
 										return (
@@ -467,7 +486,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 						<div>
 							<span class="block text-sm font-medium mb-1">ランプ</span>
 							<div class="flex flex-col gap-2">
-								<For each={LAMPS}>
+								<For each={LAMP_OPTIONS}>
 									{(lamp, i) => {
 										const id = `filter-lamp-${i()}`;
 										return (
