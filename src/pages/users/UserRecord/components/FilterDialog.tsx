@@ -22,7 +22,7 @@ const DIFFICULTIES: Difficulty[] = [
 	"MASTER",
 	"ULTIMA",
 ];
-const LAMPS: ComboLamp[] = ["FULL COMBO", "ALL JUSTICE", null];
+const LAMPS: ComboLamp[] = ["ALL JUSTICE", "FULL COMBO", null];
 
 export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	const [filters, setFilters] = createSignal<FilterState>({ ...props.filters });
