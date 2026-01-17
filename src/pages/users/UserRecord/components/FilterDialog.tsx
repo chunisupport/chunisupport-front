@@ -26,7 +26,12 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	// リセット確認ダイアログの開閉状態
 	const [resetDialogOpen, setResetDialogOpen] = createSignal(false);
 
-	// props.filters同期
+	/**
+	 * props.filters同期
+	 * - props.openがtrueかつfilters値が変化したときのみ同期
+	 * - scoreFilterMode/scoreRankMin/scoreRankMaxはprops.filtersの値から推定
+	 * - handleOpenChangeでは初期化しない
+	 */
 	createEffect(() => {
 		if (props.open) {
 			setFilters({ ...props.filters });
@@ -50,12 +55,17 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 					? String(props.filters.scoreMax)
 					: "",
 			);
-			// スコアフィルターモード・ランク同期（必要なら）
-			setScoreFilterMode("rank");
-			setScoreRankMin("0点");
-			setScoreRankMax("MAX");
+			// スコアフィルターモード・ランクはprops.filtersの値から復元
+			if (props.filters.scoreMin === 0 && props.filters.scoreMax === 1010000) {
+				setScoreFilterMode("rank");
+				setScoreRankMin("0点");
+				setScoreRankMax("MAX");
+			}
+			// それ以外は現状維持（ユーザー操作を上書きしない）
 		}
 	});
+
+	// handleOpenChangeは同期処理を行わず、open状態のみ伝播
 
 	// 入力中の値（string）を保持するSignal
 	const [constMinInput, setConstMinInput] = createSignal(
@@ -121,29 +131,6 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	// Dialogが開かれた時にフィルター状態をリセット
 	const handleOpenChange = (open: boolean) => {
 		props.onOpenChange(open);
-		if (open) {
-			setFilters({ ...props.filters });
-			setConstMinInput(
-				props.filters.constMin !== undefined && props.filters.constMin !== null
-					? String(props.filters.constMin)
-					: "",
-			);
-			setConstMaxInput(
-				props.filters.constMax !== undefined && props.filters.constMax !== null
-					? String(props.filters.constMax)
-					: "",
-			);
-			setScoreMinInput(
-				props.filters.scoreMin !== undefined && props.filters.scoreMin !== null
-					? String(props.filters.scoreMin)
-					: "",
-			);
-			setScoreMaxInput(
-				props.filters.scoreMax !== undefined && props.filters.scoreMax !== null
-					? String(props.filters.scoreMax)
-					: "",
-			);
-		}
 	};
 
 	const handleApply = () => {

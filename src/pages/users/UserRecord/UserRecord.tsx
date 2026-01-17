@@ -249,28 +249,16 @@ const UserRecord: Component = () => {
 												rankColorMap,
 											)}
 											<ul>
-												{(() => {
-													const order = [
-														"MAX",
-														"SSS+",
-														"SSS",
-														"SS+",
-														"SS",
-														"S+",
-														"S",
-														"OTHERS",
-													];
-													return order
-														.filter((rank) => stats().rankDist[rank])
-														.map((rank) => {
-															const { count, percent } = stats().rankDist[rank];
-															return (
-																<li>
-																	{rank}: {count}件 ({percent.toFixed(1)}%)
-																</li>
-															);
-														});
-												})()}
+												{rankOrder
+													.filter((rank) => stats().rankDist[rank])
+													.map((rank) => {
+														const { count, percent } = stats().rankDist[rank];
+														return (
+															<li>
+																{rank}: {count}件 ({percent.toFixed(1)}%)
+															</li>
+														);
+													})}
 											</ul>
 										</div>
 										<div>
@@ -281,20 +269,16 @@ const UserRecord: Component = () => {
 												comboColorMap,
 											)}
 											<ul>
-												{(() => {
-													const order = ["ALL JUSTICE", "FULL COMBO", "NONE"];
-													return order
-														.filter((lamp) => stats().comboDist[lamp])
-														.map((lamp) => {
-															const { count, percent } =
-																stats().comboDist[lamp];
-															return (
-																<li>
-																	{lamp}: {count}件 ({percent.toFixed(1)}%)
-																</li>
-															);
-														});
-												})()}
+												{comboOrder
+													.filter((lamp) => stats().comboDist[lamp])
+													.map((lamp) => {
+														const { count, percent } = stats().comboDist[lamp];
+														return (
+															<li>
+																{lamp}: {count}件 ({percent.toFixed(1)}%)
+															</li>
+														);
+													})}
 											</ul>
 										</div>
 										<div>
@@ -305,28 +289,16 @@ const UserRecord: Component = () => {
 												clearColorMap,
 											)}
 											<ul>
-												{(() => {
-													const order = [
-														"CATASTROPHY",
-														"ABSOLUTE",
-														"BRAVE",
-														"HARD",
-														"CLEAR",
-														"FAILED",
-														"NONE",
-													];
-													return order
-														.filter((lamp) => stats().clearDist[lamp])
-														.map((lamp) => {
-															const { count, percent } =
-																stats().clearDist[lamp];
-															return (
-																<li>
-																	{lamp}: {count}件 ({percent.toFixed(1)}%)
-																</li>
-															);
-														});
-												})()}
+												{clearOrder
+													.filter((lamp) => stats().clearDist[lamp])
+													.map((lamp) => {
+														const { count, percent } = stats().clearDist[lamp];
+														return (
+															<li>
+																{lamp}: {count}件 ({percent.toFixed(1)}%)
+															</li>
+														);
+													})}
 											</ul>
 										</div>
 										{stats().scoreStats.max !== stats().scoreStats.min ? (
