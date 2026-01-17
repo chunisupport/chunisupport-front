@@ -1,3 +1,4 @@
+import { AlertDialog } from "@kobalte/core/alert-dialog";
 import { Checkbox } from "@kobalte/core/checkbox";
 import { Dialog } from "@kobalte/core/dialog";
 import { NumberField } from "@kobalte/core/number-field";
@@ -12,7 +13,6 @@ interface FilterDialogProps {
 	onOpenChange: (open: boolean) => void;
 	filters: FilterState;
 	onChange: (filters: FilterState) => void;
-	onReset: () => void;
 }
 
 const DIFFICULTIES: Difficulty[] = [
@@ -26,6 +26,9 @@ const LAMPS: ComboLamp[] = ["ALL JUSTICE", "FULL COMBO", null];
 
 export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	const [filters, setFilters] = createSignal<FilterState>({ ...props.filters });
+
+	// リセット確認ダイアログの開閉状態
+	const [resetDialogOpen, setResetDialogOpen] = createSignal(false);
 
 	// 入力中の値（string）を保持するSignal
 	const [constMinInput, setConstMinInput] = createSignal(
@@ -138,7 +141,6 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		setScoreFilterMode("rank");
 		setScoreRankMin("0点");
 		setScoreRankMax("MAX");
-		props.onReset();
 	};
 
 	// チェックボックスのトグル
@@ -496,13 +498,49 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 						</div>
 					</div>
 					<div class="flex justify-between mt-6">
-						<button
-							type="button"
-							class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
-							onClick={handleReset}
+						{/* リセット確認用AlertDialog */}
+						<AlertDialog
+							open={resetDialogOpen()}
+							onOpenChange={setResetDialogOpen}
 						>
-							リセット
-						</button>
+							<AlertDialog.Trigger>
+								<button
+									type="button"
+									class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+								>
+									リセット
+								</button>
+							</AlertDialog.Trigger>
+							<AlertDialog.Portal>
+								<AlertDialog.Overlay class="fixed inset-0 bg-black/30 z-50" />
+								<AlertDialog.Content class="fixed z-60 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md">
+									<AlertDialog.Title class="text-lg font-bold mb-2">
+										フィルターをリセットしますか？
+									</AlertDialog.Title>
+									<AlertDialog.Description class="mb-4 text-sm text-gray-600">
+										すべてのフィルター設定が初期値に戻ります。
+									</AlertDialog.Description>
+									<div class="flex justify-end gap-2">
+										<AlertDialog.CloseButton
+											as="button"
+											class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+										>
+											キャンセル
+										</AlertDialog.CloseButton>
+										<button
+											type="button"
+											class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+											onClick={() => {
+												handleReset();
+												setResetDialogOpen(false);
+											}}
+										>
+											リセット
+										</button>
+									</div>
+								</AlertDialog.Content>
+							</AlertDialog.Portal>
+						</AlertDialog>
 						<div class="flex gap-2">
 							<button
 								type="button"

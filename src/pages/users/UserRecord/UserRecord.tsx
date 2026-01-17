@@ -412,7 +412,6 @@ const UserRecord: Component = () => {
 							onOpenChange={setFilterOpen}
 							filters={filters()}
 							onChange={setFilters}
-							onReset={() => setFilters({ ...defaultFilter })}
 						/>
 					</div>
 				</ErrorBoundary>
