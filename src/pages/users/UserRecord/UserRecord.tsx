@@ -50,21 +50,16 @@ const UserRecord: Component = () => {
 			)
 				return false;
 			// 難易度
-			if (
-				!f.difficulties.includes(record.difficulty as Difficulty)
-			)
+			if (!f.difficulties.includes(record.difficulty as Difficulty))
 				return false;
 			// 定数
-			if ( record.const < f.constMin) return false;
-			if ( record.const > f.constMax) return false;
+			if (record.const < f.constMin) return false;
+			if (record.const > f.constMax) return false;
 			// スコア
-			if ( record.score < f.scoreMin) return false;
-			if ( record.score > f.scoreMax) return false;
+			if (record.score < f.scoreMin) return false;
+			if (record.score > f.scoreMax) return false;
 			// ランプ
-			if (
-				!f.lamps.includes(record.combo_lamp as ComboLamp)
-			)
-				return false;
+			if (!f.lamps.includes(record.combo_lamp as ComboLamp)) return false;
 			return true;
 		});
 	});
@@ -183,13 +178,16 @@ const UserRecord: Component = () => {
 						</div>
 						{/* フィルター統計 */}
 						<Collapsible class="mb-2 px-2 py-1 border border-gray-500 rounded-sm">
-							<Collapsible.Trigger class="flex w-full gap-1">
-								{/* TODO: 回転する三角形を追加 */}
+							<Collapsible.Trigger class="flex w-full gap-1 group">
+								<span class="mr-1 group-data-expanded:rotate-90">
+									▶
+								</span>
 								<p class="flex-1 text-left">フィルター統計</p>
 								<p>平均スコア: {stats().scoreStats.avg.toLocaleString()}</p>
 							</Collapsible.Trigger>
+
 							<Collapsible.Content>
-								<div class="text-xs space-y-1">
+								<div class="text-xs space-y-2 py-2">
 									<div>
 										<b>ランク割合:</b>
 										<div class="flex w-full h-4 rounded overflow-hidden mb-1 divide-x divide-gray-100">
@@ -355,7 +353,7 @@ const UserRecord: Component = () => {
 									</div>
 									<div>
 										<b>スコア分布:</b>
-										<div class="relative w-full h-6 my-2">
+										<div class="relative w-full h-4 rounded mb-1">
 											{(() => {
 												const { min, q1, median, q3, max } = stats().scoreStats;
 												const toPct = (v: number) =>
@@ -364,10 +362,10 @@ const UserRecord: Component = () => {
 												const medianPct = toPct(median);
 												const q3Pct = toPct(q3);
 												return (
-													<div class="absolute left-0 top-1/2 w-full h-3 -translate-y-1/2 bg-gray-200 rounded">
+													<div class="absolute left-0 top-1/2 w-full h-full -translate-y-1/2 bg-gray-200 rounded">
 														{/* 箱 */}
 														<div
-															class="absolute h-3 bg-blue-400 rounded"
+															class="absolute h-full bg-blue-400 rounded"
 															style={{
 																left: `${q1Pct}%`,
 																width: `${q3Pct - q1Pct}%`,
@@ -375,7 +373,7 @@ const UserRecord: Component = () => {
 														></div>
 														{/* 中央値 */}
 														<div
-															class="absolute w-1 bg-blue-900 h-3 rounded"
+															class="absolute w-1 bg-blue-900 h-full rounded"
 															style={{
 																left: `${medianPct}%`,
 															}}
@@ -389,10 +387,10 @@ const UserRecord: Component = () => {
 											<li>最大: {stats().scoreStats.max.toLocaleString()}</li>
 											<li>平均: {stats().scoreStats.avg.toLocaleString()}</li>
 											<li>
-												中央値: {stats().scoreStats.median.toLocaleString()}
+												第1四分位数: {stats().scoreStats.q1.toLocaleString()}
 											</li>
 											<li>
-												第1四分位数: {stats().scoreStats.q1.toLocaleString()}
+												中央値: {stats().scoreStats.median.toLocaleString()}
 											</li>
 											<li>
 												第3四分位数: {stats().scoreStats.q3.toLocaleString()}
