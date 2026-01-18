@@ -26,4 +26,5 @@ export const DEFAULT_FILTER: FilterState = {
 	scoreMin: 0,
 	scoreMax: 1010000,
 	lamps: ["ALL JUSTICE", "FULL COMBO", null],
+	excludeNoPlay: false,
 };

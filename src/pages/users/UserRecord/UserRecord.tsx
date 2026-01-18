@@ -110,27 +110,39 @@ const UserRecord: Component = () => {
 		const records = mergedRecords();
 		const f = filters();
 		return records.filter((record) => {
+
+			// 未プレイ除外
+			if (f.excludeNoPlay && !record.is_played) {
+				return false;
+			}
+
 			// 曲名
 			if (
 				f.title &&
 				!record.title.toLowerCase().includes(f.title.toLowerCase())
 			)
 				return false;
+
 			// 難易度
 			if (!f.difficulties.includes(record.difficulty as Difficulty))
 				return false;
+
 			// 定数
 			if (record.const < f.constMin) return false;
 			if (record.const > f.constMax) return false;
-			// スコア（未プレイ譜面も含める場合）
-			if (record.score !== null) {
+
+			// スコア
+			if (record.is_played && record.score !== null) {
 				if (record.score < f.scoreMin) return false;
 				if (record.score > f.scoreMax) return false;
 			}
-			// ランプ（未プレイ譜面の扱い）
-			if (record.combo_lamp) {
-				if (!f.lamps.includes(record.combo_lamp as ComboLamp)) return false;
+
+			// ランプ
+			if (record.is_played) {
+				const lamp = record.combo_lamp;
+				if (!f.lamps.includes(lamp as ComboLamp)) return false;
 			}
+
 			return true;
 		});
 	});

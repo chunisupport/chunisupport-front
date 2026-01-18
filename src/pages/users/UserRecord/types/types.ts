@@ -13,4 +13,5 @@ export interface FilterState {
 	scoreMin: number;
 	scoreMax: number;
 	lamps: ComboLamp[];
+	excludeNoPlay: boolean;
 }

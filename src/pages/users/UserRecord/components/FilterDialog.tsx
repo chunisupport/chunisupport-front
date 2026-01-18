@@ -468,6 +468,28 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 									</Checkbox.Label>
 								</Checkbox>
 							</div>
+							<div class="mt-2">
+								<Checkbox
+									checked={filters().excludeNoPlay}
+									onChange={(checked) =>
+										setFilters((prev) => ({
+											...prev,
+											excludeNoPlay: checked,
+										}))
+									}
+									class="flex items-center"
+								>
+									<Checkbox.Input id="filter-exclude-noplay" />
+									<Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center mr-2">
+										<Checkbox.Indicator>
+											<Check class="h-4 w-4" />
+										</Checkbox.Indicator>
+									</Checkbox.Control>
+									<Checkbox.Label for="filter-exclude-noplay">
+										未プレイ譜面を除外する
+									</Checkbox.Label>
+								</Checkbox>
+							</div>
 						</div>
 						{/* ランプ */}
 						<div>
