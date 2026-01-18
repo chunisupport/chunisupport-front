@@ -4,6 +4,11 @@ import { pluginSolid } from '@rsbuild/plugin-solid';
 
 // Docs: https://rsbuild.rs/config/
 export default defineConfig({
+  html: {
+    meta: {
+      robots: 'noindex',
+    },
+  },
   plugins: [
     pluginBabel({
       include: /\.(?:jsx|tsx)$/,
