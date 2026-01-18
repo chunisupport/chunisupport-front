@@ -1,11 +1,11 @@
 import type { Component } from "solid-js";
-import type { PlayerRecordDTO } from "../../../../types/api";
+import type { MergedRecordDTO } from "../../../../utils/recordMerger";
 
 interface RecordTableProps {
-	records: PlayerRecordDTO[];
+	records: MergedRecordDTO[];
 }
 
-const difficultyShort = (difficulty: PlayerRecordDTO["difficulty"]) => {
+const difficultyShort = (difficulty: string) => {
 	switch (difficulty) {
 		case "BASIC":
 			return "B";
@@ -22,7 +22,7 @@ const difficultyShort = (difficulty: PlayerRecordDTO["difficulty"]) => {
 	}
 };
 
-const difficultyColor = (difficulty: PlayerRecordDTO["difficulty"]) => {
+const difficultyColor = (difficulty: string) => {
 	switch (difficulty) {
 		case "BASIC":
 			return "bg-green-100 text-green-800";
@@ -39,7 +39,7 @@ const difficultyColor = (difficulty: PlayerRecordDTO["difficulty"]) => {
 	}
 };
 
-const lampBadge = (lamp: PlayerRecordDTO["combo_lamp"]) => {
+const lampBadge = (lamp: string | null) => {
 	if (lamp === "FULL COMBO")
 		return (
 			<span class="px-2 py-1 rounded-lg bg-orange-200 text-orange-900 text-xs font-bold">
@@ -52,10 +52,14 @@ const lampBadge = (lamp: PlayerRecordDTO["combo_lamp"]) => {
 				AJ
 			</span>
 		);
-	return (
-		<span class="px-2 py-1 text-xs">-</span>
-	);
+	return <span class="px-2 py-1 text-xs">-</span>;
 };
+
+const unplayedBadge = () => (
+	<span class="px-2 py-1 rounded-lg bg-gray-100 text-gray-400 text-xs">
+		NoPlay
+	</span>
+);
 
 export const RecordTable: Component<RecordTableProps> = (props) => {
 	return (
@@ -91,9 +95,17 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
 									</span>
 								</td>
 								<td class="px-2 py-1 text-right">{record.const.toFixed(1)}</td>
-								<td class="px-2 py-1 text-right">{record.score.toLocaleString()}</td>
+								<td class="px-2 py-1 text-right">
+									{"is_played" in record && !record.is_played
+										? unplayedBadge()
+										: record.score?.toLocaleString()}
+								</td>
 								<td class="px-2 py-1 text-center">
-									{lampBadge(record.combo_lamp)}
+									{"is_played" in record && !record.is_played ? (
+										<span class="px-2 py-1 text-xs">-</span>
+									) : (
+										lampBadge(record.combo_lamp)
+									)}
 								</td>
 							</tr>
 						))

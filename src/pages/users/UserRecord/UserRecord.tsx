@@ -11,10 +11,14 @@ import {
 	ErrorBoundary,
 	Suspense,
 } from "solid-js";
-
+import { fetchAllSongs } from "../../../api/songs";
 import { fetchUserProfile } from "../../../api/users";
 import { Loading } from "../../../components";
 import type { PlayerRecordDTO } from "../../../types/api";
+import {
+	type MergedRecordDTO,
+	mergeAllRecords,
+} from "../../../utils/recordMerger";
 import FilterDialog from "./components/FilterDialog";
 import RecordTable from "./components/RecordTable";
 import { DEFAULT_FILTER } from "./types/filterDefaults";
@@ -84,6 +88,7 @@ function renderDistributionBar(
 const UserRecord: Component = () => {
 	const params = useParams<{ username: string }>();
 	const [userProfile] = createResource(() => params.username, fetchUserProfile);
+	const [allSongs] = createResource(fetchAllSongs);
 
 	// フィルター状態
 	const [filters, setFilters] = createSignal<FilterState>({
@@ -92,9 +97,17 @@ const UserRecord: Component = () => {
 	// ダイアログ開閉
 	const [filterOpen, setFilterOpen] = createSignal(false);
 
+	// 楽曲＋プレイ済みマージ
+	const mergedRecords = createMemo(() => {
+		const profile = userProfile();
+		const songs = allSongs();
+		if (!profile || !songs) return [];
+		return mergeAllRecords(songs.songs, profile.records.all);
+	});
+
 	// フィルター適用
 	const filteredRecords = createMemo(() => {
-		const records = userProfile()?.records.all ?? [];
+		const records = mergedRecords();
 		const f = filters();
 		return records.filter((record) => {
 			// 曲名
@@ -109,17 +122,21 @@ const UserRecord: Component = () => {
 			// 定数
 			if (record.const < f.constMin) return false;
 			if (record.const > f.constMax) return false;
-			// スコア
-			if (record.score < f.scoreMin) return false;
-			if (record.score > f.scoreMax) return false;
-			// ランプ
-			if (!f.lamps.includes(record.combo_lamp as ComboLamp)) return false;
+			// スコア（未プレイ譜面も含める場合）
+			if (record.score !== null) {
+				if (record.score < f.scoreMin) return false;
+				if (record.score > f.scoreMax) return false;
+			}
+			// ランプ（未プレイ譜面の扱い）
+			if (record.combo_lamp) {
+				if (!f.lamps.includes(record.combo_lamp as ComboLamp)) return false;
+			}
 			return true;
 		});
 	});
 
 	// 件数表示
-	const totalCount = () => userProfile()?.records.all.length ?? 0;
+	const totalCount = () => mergedRecords().length;
 	const filteredCount = () => filteredRecords().length;
 
 	// ランク分類関数
@@ -134,8 +151,11 @@ const UserRecord: Component = () => {
 		return "OTHERS";
 	}
 
-	// 統計計算ヘルパー
-	function getStats(records: PlayerRecordDTO[]) {
+	/**
+	 * 統計計算ヘルパー
+	 * プレイ済み譜面のみ集計
+	 */
+	function getStats(records: PlayerRecordDTO[] | MergedRecordDTO[]) {
 		const total = records.length;
 		// ランク分布
 		const rankMap: Record<string, { count: number; percent: number }> = {};
@@ -144,11 +164,14 @@ const UserRecord: Component = () => {
 		// クリア分布
 		const clearMap: Record<string, { count: number; percent: number }> = {};
 		// スコア配列
-		const scores = records.map((r) => r.score).sort((a, b) => a - b);
+		const scores = records
+			.map((r) => r.score)
+			.filter((v): v is number => v !== null && v !== undefined)
+			.sort((a, b) => a - b);
 
 		for (const r of records) {
 			// ランク
-			const rank = getRank(r.score);
+			const rank = getRank(r.score ?? 0);
 			rankMap[rank] = rankMap[rank] || { count: 0, percent: 0 };
 			rankMap[rank].count++;
 			// コンボ
@@ -199,8 +222,18 @@ const UserRecord: Component = () => {
 		};
 	}
 
-	// 統計データ
-	const stats = createMemo(() => getStats(filteredRecords()));
+	/**
+	 * 統計データ
+	 * プレイ済み譜面のみ集計
+	 */
+	const stats = createMemo(() => {
+		// is_playedかつscoreがあるもののみ
+		const played = filteredRecords().filter(
+			(r): r is MergedRecordDTO =>
+				r.is_played && r.score !== null && typeof r.score === "number",
+		);
+		return getStats(played);
+	});
 
 	return (
 		<>
