@@ -14,7 +14,6 @@ import {
 import { fetchAllSongs } from "../../../api/songs";
 import { fetchUserProfile } from "../../../api/users";
 import { Loading } from "../../../components";
-import type { PlayerRecordDTO } from "../../../types/api";
 import {
 	type MergedRecordDTO,
 	mergeAllRecords,
@@ -25,7 +24,17 @@ import { DEFAULT_FILTER } from "./types/filterDefaults";
 import type { ComboLamp, Difficulty, FilterState } from "./types/types";
 
 // 統計表示用定数
-const rankOrder = ["MAX", "SSS+", "SSS", "SS+", "SS", "S+", "S", "OTHERS"];
+const rankOrder = [
+	"MAX",
+	"SSS+",
+	"SSS",
+	"SS+",
+	"SS",
+	"S+",
+	"S",
+	"OTHERS",
+	"未プレイ",
+];
 const rankColorMap: Record<string, string> = {
 	MAX: "bg-red-300",
 	"SSS+": "bg-lime-300",
@@ -35,12 +44,14 @@ const rankColorMap: Record<string, string> = {
 	"S+": "bg-blue-300",
 	S: "bg-cyan-300",
 	OTHERS: "bg-gray-300",
+	未プレイ: "bg-gray-200",
 };
-const comboOrder = ["ALL JUSTICE", "FULL COMBO", "NONE"];
+const comboOrder = ["ALL JUSTICE", "FULL COMBO", "なし", "未プレイ"];
 const comboColorMap: Record<string, string> = {
 	"ALL JUSTICE": "bg-yellow-300",
 	"FULL COMBO": "bg-orange-300",
-	NONE: "bg-gray-300",
+	なし: "bg-gray-300",
+	未プレイ: "bg-gray-200",
 };
 const clearOrder = [
 	"CATASTROPHY",
@@ -49,7 +60,7 @@ const clearOrder = [
 	"HARD",
 	"CLEAR",
 	"FAILED",
-	"NONE",
+	"未プレイ",
 ];
 const clearColorMap: Record<string, string> = {
 	CATASTROPHY: "bg-red-300",
@@ -58,7 +69,7 @@ const clearColorMap: Record<string, string> = {
 	HARD: "bg-amber-300",
 	CLEAR: "bg-blue-300",
 	FAILED: "bg-gray-300",
-	NONE: "bg-gray-200",
+	未プレイ: "bg-gray-200",
 };
 
 // 分布バー描画ヘルパー
@@ -110,7 +121,6 @@ const UserRecord: Component = () => {
 		const records = mergedRecords();
 		const f = filters();
 		return records.filter((record) => {
-
 			// 未プレイ除外
 			if (f.excludeNoPlay && !record.is_played) {
 				return false;
@@ -163,11 +173,8 @@ const UserRecord: Component = () => {
 		return "OTHERS";
 	}
 
-	/**
-	 * 統計計算ヘルパー
-	 * プレイ済み譜面のみ集計
-	 */
-	function getStats(records: PlayerRecordDTO[] | MergedRecordDTO[]) {
+	// 統計計算関数
+	function getStats(records: MergedRecordDTO[]) {
 		const total = records.length;
 		// ランク分布
 		const rankMap: Record<string, { count: number; percent: number }> = {};
@@ -175,23 +182,24 @@ const UserRecord: Component = () => {
 		const comboMap: Record<string, { count: number; percent: number }> = {};
 		// クリア分布
 		const clearMap: Record<string, { count: number; percent: number }> = {};
-		// スコア配列
+		// スコア配列（プレイ済みのみ）
 		const scores = records
-			.map((r) => r.score)
-			.filter((v): v is number => v !== null && v !== undefined)
+			.filter((r) => r.is_played && r.score !== null)
+			.map((r) => r.score as number)
 			.sort((a, b) => a - b);
 
 		for (const r of records) {
 			// ランク
-			const rank = getRank(r.score ?? 0);
+			const rank =
+				r.is_played && r.score !== null ? getRank(r.score) : "未プレイ";
 			rankMap[rank] = rankMap[rank] || { count: 0, percent: 0 };
 			rankMap[rank].count++;
 			// コンボ
-			const combo = r.combo_lamp ?? "NONE";
+			const combo = r.is_played ? (r.combo_lamp ?? "なし") : "未プレイ";
 			comboMap[combo] = comboMap[combo] || { count: 0, percent: 0 };
 			comboMap[combo].count++;
 			// クリア
-			const clear = r.clear_lamp ?? "NONE";
+			const clear = r.is_played ? (r.clear_lamp ?? "FAILED") : "未プレイ";
 			clearMap[clear] = clearMap[clear] || { count: 0, percent: 0 };
 			clearMap[clear].count++;
 		}
@@ -206,7 +214,7 @@ const UserRecord: Component = () => {
 			obj.percent = total ? (obj.count / total) * 100 : 0;
 		});
 
-		// スコア統計
+		// スコア統計（プレイ済みのみ）
 		const min = scores[0] ?? 0;
 		const max = scores[scores.length - 1] ?? 0;
 		const avg = scores.length
@@ -234,17 +242,8 @@ const UserRecord: Component = () => {
 		};
 	}
 
-	/**
-	 * 統計データ
-	 * プレイ済み譜面のみ集計
-	 */
 	const stats = createMemo(() => {
-		// is_playedかつscoreがあるもののみ
-		const played = filteredRecords().filter(
-			(r): r is MergedRecordDTO =>
-				r.is_played && r.score !== null && typeof r.score === "number",
-		);
-		return getStats(played);
+		return getStats(filteredRecords());
 	});
 
 	return (
@@ -287,7 +286,7 @@ const UserRecord: Component = () => {
 								<Collapsible.Content>
 									<div class="text-xs space-y-2 py-2">
 										<div>
-											<b>ランク割合:</b>
+											<b>スコアランク割合:</b>
 											{renderDistributionBar(
 												stats().rankDist,
 												rankOrder,
@@ -348,7 +347,7 @@ const UserRecord: Component = () => {
 										</div>
 										{stats().scoreStats.max !== stats().scoreStats.min ? (
 											<div>
-												<b>スコア分布:</b>
+												<b>スコア分布(既プレイのみ):</b>
 												<div class="relative w-full h-4 rounded mb-1">
 													{(() => {
 														const { min, q1, median, q3, max } =
