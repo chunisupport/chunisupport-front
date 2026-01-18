@@ -15,8 +15,8 @@ import { fetchAllSongs } from "../../../api/songs";
 import { fetchUserProfile } from "../../../api/users";
 import { Loading } from "../../../components";
 import {
-	type MergedRecordDTO,
 	mergeAllRecords,
+	type PlayerRecordIncludeNoPlay,
 } from "../../../utils/recordMerger";
 import FilterDialog from "./components/FilterDialog";
 import RecordTable from "./components/RecordTable";
@@ -174,7 +174,7 @@ const UserRecord: Component = () => {
 	}
 
 	// 統計計算関数
-	function getStats(records: MergedRecordDTO[]) {
+	function getStats(records: PlayerRecordIncludeNoPlay[]) {
 		const total = records.length;
 		// ランク分布
 		const rankMap: Record<string, { count: number; percent: number }> = {};

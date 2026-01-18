@@ -1,8 +1,8 @@
 import type { Component } from "solid-js";
-import type { MergedRecordDTO } from "../../../../utils/recordMerger";
+import type { PlayerRecordIncludeNoPlay } from "../../../../utils/recordMerger";
 
 interface RecordTableProps {
-	records: MergedRecordDTO[];
+	records: PlayerRecordIncludeNoPlay[];
 }
 
 const difficultyShort = (difficulty: string) => {

@@ -1,6 +1,6 @@
 import type { PlayerRecordDTO, SongDTO } from "../types/api";
 
-export interface MergedRecordDTO {
+export interface PlayerRecordIncludeNoPlay {
 	updated_at: string | null;
 	difficulty: string;
 	id: string;
@@ -24,8 +24,8 @@ export interface MergedRecordDTO {
 export function mergeAllRecords(
 	songs: SongDTO[],
 	playedRecords: PlayerRecordDTO[],
-): MergedRecordDTO[] {
-	const result: MergedRecordDTO[] = [];
+): PlayerRecordIncludeNoPlay[] {
+	const result: PlayerRecordIncludeNoPlay[] = [];
 
 	// プレイ済みレコードをMapに変換（高速検索用）
 	const playedMap = new Map<string, PlayerRecordDTO>();
