@@ -8,6 +8,7 @@ export interface PlayerRecordIncludeNoPlay {
 	artist: string;
 	genre: string;
 	release: string | null;
+	release_version: string;
 	const: number;
 	is_const_unknown: boolean;
 	score: number | null;
@@ -20,6 +21,8 @@ export interface PlayerRecordIncludeNoPlay {
 	slot: string | null;
 	is_played: boolean;
 }
+
+import { dateToChunithmVersion } from "./versionConverter";
 
 export function mergeAllRecords(
 	songs: SongDTO[],
@@ -58,6 +61,7 @@ export function mergeAllRecords(
 					...playedRecord,
 					genre: song.genre,
 					release: song.release,
+					release_version: dateToChunithmVersion(song.release),
 					is_played: true,
 				});
 			} else {
@@ -69,6 +73,7 @@ export function mergeAllRecords(
 					artist: song.artist,
 					genre: song.genre,
 					release: song.release,
+					release_version: dateToChunithmVersion(song.release),
 					const: chart.const,
 					is_const_unknown: chart.is_const_unknown,
 					score: null,
