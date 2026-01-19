@@ -3,9 +3,10 @@ import { Checkbox } from "@kobalte/core/checkbox";
 import { Dialog } from "@kobalte/core/dialog";
 import { NumberField } from "@kobalte/core/number-field";
 import { Select } from "@kobalte/core/select";
-import { Check, ChevronDown } from "lucide-solid";
+import { TextField } from "@kobalte/core/text-field";
+import { Check, ChevronDown, EllipsisVertical, RotateCcw } from "lucide-solid";
 import type { Component } from "solid-js";
-import { createEffect, createSignal, For, Show } from "solid-js";
+import { createEffect, createSignal, For } from "solid-js";
 import type { MasterDataDTO } from "../../../../types/api";
 import { CHUNITHM_VERSIONS } from "../../../../utils/versionConverter";
 import { DEFAULT_FILTER, LAMP_OPTIONS } from "../types/filterDefaults";
@@ -69,6 +70,10 @@ interface FilterDialogProps {
 
 export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	const [filters, setFilters] = createSignal<FilterState>({ ...props.filters });
+	const [saveName, setSaveName] = createSignal("");
+	const [filtersList, setFiltersList] = createSignal<SavedFilter[]>(
+		loadSavedFilters(),
+	);
 
 	// リセット確認ダイアログの開閉状態
 	const [resetDialogOpen, setResetDialogOpen] = createSignal(false);
@@ -247,91 +252,46 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 				<Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md max-h-[80vh] flex flex-col">
 					<div class="flex items-center justify-between mb-4 shrink-0">
 						<Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
-						<button
-							type="button"
-							class="ml-2 px-2 py-1 rounded bg-gray-100 text-gray-700 hover:bg-blue-100 text-xs border border-gray-300"
-							onClick={() => setSaveDialogOpen(true)}
+						<AlertDialog
+							open={resetDialogOpen()}
+							onOpenChange={setResetDialogOpen}
 						>
-							条件の保存・呼出
-						</button>
-					</div>
-					<Show when={saveDialogOpen()}>
-						<div class="fixed z-60 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md border border-gray-300">
-							<div class="flex justify-between items-center mb-2">
-								<div class="font-bold">条件の保存・呼出</div>
-								<button
-									type="button"
-									class="text-gray-500 hover:text-gray-700"
-									onClick={() => setSaveDialogOpen(false)}
-								>
-									×
-								</button>
-							</div>
-							<div class="mb-2">
-								<div class="text-xs text-gray-500 mb-1">現在の条件</div>
-								<div class="text-sm border rounded px-2 py-1 bg-gray-50 mb-2">
-									{formatFilterSummary(filters())}
+							<AlertDialog.Trigger>
+								<div class="p-2 rounded bg-red-100 border border-red-500">
+									<RotateCcw class="w-5 h-5  text-gray-600 cursor-pointer" />
 								</div>
-								<button
-									type="button"
-									class="px-2 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700"
-									onClick={() => {
-										const name = window.prompt("保存名を入力してください", "");
-										if (name?.trim()) {
-											saveNewFilter(name.trim(), filters());
-											setSaveDialogOpen(false);
-										}
-									}}
-								>
-									この条件を保存
-								</button>
-							</div>
-							<div class="mt-4">
-								<div class="text-xs text-gray-500 mb-1">保存済み条件</div>
-								<For each={loadSavedFilters()}>
-									{(item) => (
-										<div class="flex items-center justify-between border-b py-1">
-											<div class="flex-1 min-w-0">
-												<div class="font-bold text-sm truncate">
-													{item.name}
-												</div>
-												<div class="text-xs text-gray-500 truncate">
-													{formatFilterSummary(item.filter)}
-												</div>
-											</div>
-											<button
-												type="button"
-												class="ml-2 px-2 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-700"
-												onClick={() => {
-													props.onChange(item.filter);
-													setSaveDialogOpen(false);
-													props.onOpenChange(false);
-												}}
-											>
-												呼出
-											</button>
-											<button
-												type="button"
-												class="ml-1 px-2 py-1 rounded bg-red-500 text-white text-xs hover:bg-red-700"
-												onClick={() => {
-													deleteFilter(item.id);
-													setSaveDialogOpen(false);
-													setTimeout(() => setSaveDialogOpen(true), 0); // 再表示でリスト更新
-												}}
-											>
-												削除
-											</button>
-										</div>
-									)}
-								</For>
-								<Show when={loadSavedFilters().length === 0}>
-									<div class="text-xs text-gray-400 mt-2">
-										保存された条件はありません
+							</AlertDialog.Trigger>
+							<AlertDialog.Portal>
+								<AlertDialog.Overlay class="fixed inset-0 bg-black/30 z-50" />
+								<AlertDialog.Content class="fixed z-60 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md">
+									<AlertDialog.Title class="text-lg font-bold mb-2">
+										フィルターをリセットしますか？
+									</AlertDialog.Title>
+									<AlertDialog.Description class="mb-4 text-sm text-gray-600">
+										すべてのフィルター設定が初期値に戻ります。
+									</AlertDialog.Description>
+									<div class="flex justify-end gap-2">
+										<AlertDialog.CloseButton
+											as="button"
+											class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+										>
+											キャンセル
+										</AlertDialog.CloseButton>
+										<button
+											type="button"
+											class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+											onClick={() => {
+												handleReset();
+												setResetDialogOpen(false);
+											}}
+										>
+											リセット
+										</button>
 									</div>
-								</Show>
-							</div>
-						</div>
-					</Show>
+								</AlertDialog.Content>
+							</AlertDialog.Portal>
+						</AlertDialog>
+					</div>
 					<div class="space-y-4 overflow-y-auto flex-1 min-h-0">
 						{/* 難易度 */}
 						<div>
@@ -786,49 +746,99 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 						</div>
 					</div>
 					<div class="flex justify-between mt-6">
-						{/* リセット確認用AlertDialog */}
-						<AlertDialog
-							open={resetDialogOpen()}
-							onOpenChange={setResetDialogOpen}
+						<button
+							type="button"
+							class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+							onClick={() => setSaveDialogOpen(true)}
 						>
-							<AlertDialog.Trigger>
-								<button
-									type="button"
-									class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
-								>
-									リセット
-								</button>
-							</AlertDialog.Trigger>
-							<AlertDialog.Portal>
-								<AlertDialog.Overlay class="fixed inset-0 bg-black/30 z-50" />
-								<AlertDialog.Content class="fixed z-60 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md">
-									<AlertDialog.Title class="text-lg font-bold mb-2">
-										フィルターをリセットしますか？
-									</AlertDialog.Title>
-									<AlertDialog.Description class="mb-4 text-sm text-gray-600">
-										すべてのフィルター設定が初期値に戻ります。
-									</AlertDialog.Description>
-									<div class="flex justify-end gap-2">
-										<AlertDialog.CloseButton
-											as="button"
-											class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
-										>
-											キャンセル
-										</AlertDialog.CloseButton>
+							保存・呼出
+						</button>
+						<Dialog open={saveDialogOpen()} onOpenChange={setSaveDialogOpen}>
+							<Dialog.Portal>
+								<Dialog.Overlay class="fixed inset-0 bg-black/30 z-60" />
+								<Dialog.Content class="fixed z-70 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md border border-gray-300">
+									<div class="flex justify-between items-center mb-4">
+										<div class="font-bold">フィルター条件の保存・呼出</div>
+									</div>
+									<div class="mb-4">
+										<div class="text-xs text-gray-500 mb-1">保存した条件</div>
+										<div class="border border-gray-300 rounded bg-gray-50 px-3 py-2 min-h-80 max-h-80 overflow-y-auto">
+											<For each={filtersList()}>
+												{(item) => (
+													<div class="flex items-center justify-between border-b border-gray-300 py-1">
+														<div class="flex-1 min-w-0">
+															<div class="font-bold truncate">{item.name}</div>
+															{/* <div class="text-xs text-gray-500 truncate">
+																{formatFilterSummary(item.filter)}
+															</div> */}
+														</div>
+														<div>
+															<EllipsisVertical class="w-5 h-5 text-gray-400 cursor-pointer" />
+															{/* TODO: 詳細を見れる、追跡、削除(確認なし) */}
+														</div>
+														<button
+															type="button"
+															class="ml-2 px-2 py-1 rounded bg-blue-500 text-white text hover:bg-blue-700"
+															onClick={() => {
+																props.onChange(item.filter);
+																setSaveDialogOpen(false);
+																props.onOpenChange(false);
+															}}
+														>
+															呼出
+														</button>
+													</div>
+												)}
+											</For>
+										</div>
+										{filtersList().length === 0 && (
+											<div class="text-xs text-gray-400 mt-2">
+												保存された条件はありません
+											</div>
+										)}
+									</div>
+									<div class="mb-4">
+										<div class="text-xs text-gray-500 mb-1">
+											現在の条件を保存
+										</div>
+										<div class="flex space-x-2">
+											<TextField class="flex-1">
+												<TextField.Input
+													class="w-full rounded border border-gray-300 px-2 py-1 focus:border-blue-500"
+													placeholder="フィルターの名前を入力..."
+													value={saveName()}
+													onInput={(e) => setSaveName(e.currentTarget.value)}
+												/>
+											</TextField>
+											<button
+												type="button"
+												class="px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+												onClick={() => {
+													const name = saveName().trim();
+													if (name) {
+														saveNewFilter(name, filters());
+														setSaveName("");
+														setFiltersList(loadSavedFilters());
+													}
+												}}
+												disabled={!saveName().trim()}
+											>
+												保存
+											</button>
+										</div>
+									</div>
+									<div class="text-right">
 										<button
 											type="button"
-											class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
-											onClick={() => {
-												handleReset();
-												setResetDialogOpen(false);
-											}}
+											class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+											onClick={() => setSaveDialogOpen(false)}
 										>
-											リセット
+											戻る
 										</button>
 									</div>
-								</AlertDialog.Content>
-							</AlertDialog.Portal>
-						</AlertDialog>
+								</Dialog.Content>
+							</Dialog.Portal>
+						</Dialog>
 						<div class="flex gap-2">
 							<button
 								type="button"
