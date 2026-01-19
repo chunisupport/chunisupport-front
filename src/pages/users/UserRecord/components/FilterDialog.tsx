@@ -193,9 +193,11 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		<Dialog open={props.open} onOpenChange={handleOpenChange}>
 			<Dialog.Portal>
 				<Dialog.Overlay class="fixed inset-0 bg-black/30 z-40" />
-				<Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md">
-					<Dialog.Title class="text-lg font-bold mb-4">フィルター</Dialog.Title>
-					<div class="space-y-4">
+				<Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md max-h-[80vh] flex flex-col">
+					<Dialog.Title class="text-lg font-bold mb-4 shrink-0">
+						フィルター
+					</Dialog.Title>
+					<div class="space-y-4 overflow-y-auto flex-1 min-h-0">
 						{/* 難易度 */}
 						<div>
 							<span class="block text-sm font-medium mb-1">難易度</span>
@@ -502,6 +504,33 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 						{/* ジャンル */}
 						<div>
 							<span class="block text-sm font-medium mb-1">ジャンル</span>
+							<div class="flex gap-2 mb-1">
+								<button
+									type="button"
+									class="px-2 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 text-xs"
+									onClick={() =>
+										setFilters((prev) => ({
+											...prev,
+											genres:
+												props.masterData?.genres?.map((g) => g.name) ?? [],
+										}))
+									}
+								>
+									すべて選択
+								</button>
+								<button
+									type="button"
+									class="px-2 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 text-xs"
+									onClick={() =>
+										setFilters((prev) => ({
+											...prev,
+											genres: [],
+										}))
+									}
+								>
+									すべて解除
+								</button>
+							</div>
 							<div class="flex flex-col gap-2">
 								<For each={props.masterData?.genres?.map((g) => g.name) ?? []}>
 									{(genre, i) => {
@@ -533,6 +562,32 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 						{/* バージョン */}
 						<div>
 							<span class="block text-sm font-medium mb-1">バージョン</span>
+							<div class="flex gap-2 mb-1">
+								<button
+									type="button"
+									class="px-2 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 text-xs"
+									onClick={() =>
+										setFilters((prev) => ({
+											...prev,
+											versions: [...CHUNITHM_VERSIONS],
+										}))
+									}
+								>
+									すべて選択
+								</button>
+								<button
+									type="button"
+									class="px-2 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 text-xs"
+									onClick={() =>
+										setFilters((prev) => ({
+											...prev,
+											versions: [],
+										}))
+									}
+								>
+									すべて解除
+								</button>
+							</div>
 							<div class="flex flex-col gap-2">
 								<For each={CHUNITHM_VERSIONS}>
 									{(ver, i) => {

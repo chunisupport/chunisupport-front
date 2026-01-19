@@ -5,6 +5,7 @@ import { useParams } from "@solidjs/router";
 import { Funnel } from "lucide-solid";
 import type { Component } from "solid-js";
 import {
+	createEffect,
 	createMemo,
 	createResource,
 	createSignal,
@@ -18,6 +19,7 @@ import {
 	mergeAllRecords,
 	type PlayerRecordIncludeNoPlay,
 } from "../../../utils/recordMerger";
+import { CHUNITHM_VERSIONS } from "../../../utils/versionConverter";
 import FilterDialog from "./components/FilterDialog";
 import RecordTable from "./components/RecordTable";
 import { DEFAULT_FILTER } from "./types/filterDefaults";
@@ -100,11 +102,22 @@ const UserRecord: Component = () => {
 	const params = useParams<{ username: string }>();
 	const [userProfile] = createResource(() => params.username, fetchUserProfile);
 	const [allSongs] = createResource(fetchAllSongs);
-const [masterData] = createResource(fetchMasterData);
+	const [masterData] = createResource(fetchMasterData);
 
 	// フィルター状態
 	const [filters, setFilters] = createSignal<FilterState>({
 		...DEFAULT_FILTER,
+	});
+
+	// masterData取得後にgenres/versionsを全選択で初期化
+	createEffect(() => {
+		const md = masterData();
+		if (!md) return;
+		setFilters((prev) => ({
+			...prev,
+			genres: md.genres.map((g) => g.name),
+			versions: [...CHUNITHM_VERSIONS],
+		}));
 	});
 	// ダイアログ開閉
 	const [filterOpen, setFilterOpen] = createSignal(false);
@@ -134,17 +147,16 @@ const [masterData] = createResource(fetchMasterData);
 			)
 				return false;
 
-    // 難易度
-    if (!f.difficulties.includes(record.difficulty as Difficulty))
-      return false;
+			// 難易度
+			if (!f.difficulties.includes(record.difficulty as Difficulty))
+				return false;
 
-    // ジャンル
-    if (f.genres.length > 0 && !f.genres.includes(record.genre))
-      return false;
+			// ジャンル
+			if (f.genres.length > 0 && !f.genres.includes(record.genre)) return false;
 
-    // バージョン
-    if (f.versions.length > 0 && !f.versions.includes(record.release_version))
-      return false;
+			// バージョン
+			if (f.versions.length > 0 && !f.versions.includes(record.release_version))
+				return false;
 
 			// 定数
 			if (record.const < f.constMin) return false;
@@ -419,14 +431,14 @@ const [masterData] = createResource(fetchMasterData);
 						<p class="mb-2 text-sm text-gray-600">
 							全 {totalCount()} 件中 {filteredCount()} 件を表示
 						</p>
-<RecordTable records={filteredRecords()} />
-<FilterDialog
-  open={filterOpen()}
-  onOpenChange={setFilterOpen}
-  filters={filters()}
-  onChange={setFilters}
-  masterData={masterData()}
-/>
+						<RecordTable records={filteredRecords()} />
+						<FilterDialog
+							open={filterOpen()}
+							onOpenChange={setFilterOpen}
+							filters={filters()}
+							onChange={setFilters}
+							masterData={masterData()}
+						/>
 					</div>
 				</ErrorBoundary>
 			</Suspense>
