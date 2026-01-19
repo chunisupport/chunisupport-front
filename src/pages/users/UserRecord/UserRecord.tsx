@@ -15,6 +15,7 @@ import {
 import { fetchAllSongs, fetchMasterData } from "../../../api/songs";
 import { fetchUserProfile } from "../../../api/users";
 import { Loading } from "../../../components";
+import type { MasterDataDTO, MasterItemDTO } from "../../../types/api";
 import {
 	mergeAllRecords,
 	type PlayerRecordIncludeNoPlay,
@@ -22,7 +23,7 @@ import {
 import { CHUNITHM_VERSIONS } from "../../../utils/versionConverter";
 import FilterDialog from "./components/FilterDialog";
 import RecordTable from "./components/RecordTable";
-import { DEFAULT_FILTER } from "./types/filterDefaults";
+import { DEFAULT_FILTER, LAMP_OPTIONS } from "./types/filterDefaults";
 import type { ComboLamp, Difficulty, FilterState } from "./types/types";
 
 // 統計表示用定数
@@ -96,6 +97,16 @@ function renderDistributionBar(
 				})}
 		</div>
 	);
+}
+
+function getDefaultFilter(masterData?: MasterDataDTO): FilterState {
+	return {
+		...DEFAULT_FILTER,
+		// ジャンル・バージョン全選択(上書き)
+		genres: masterData?.genres?.map((g: MasterItemDTO) => g.name) ?? [],
+		versions: [...CHUNITHM_VERSIONS],
+		lamps: [...LAMP_OPTIONS],
+	};
 }
 
 const UserRecord: Component = () => {
@@ -438,6 +449,7 @@ const UserRecord: Component = () => {
 							filters={filters()}
 							onChange={setFilters}
 							masterData={masterData()}
+							defaultFilter={getDefaultFilter(masterData())}
 						/>
 					</div>
 				</ErrorBoundary>

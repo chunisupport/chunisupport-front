@@ -9,7 +9,7 @@ import type { Component } from "solid-js";
 import { createEffect, createSignal, For } from "solid-js";
 import type { MasterDataDTO } from "../../../../types/api";
 import { CHUNITHM_VERSIONS } from "../../../../utils/versionConverter";
-import { DEFAULT_FILTER, LAMP_OPTIONS } from "../types/filterDefaults";
+import { LAMP_OPTIONS } from "../types/filterDefaults";
 import type { Difficulty, FilterState } from "../types/types";
 
 interface SavedFilter {
@@ -66,6 +66,7 @@ interface FilterDialogProps {
 	filters: FilterState;
 	onChange: (filters: FilterState) => void;
 	masterData?: MasterDataDTO;
+	defaultFilter: FilterState;
 }
 
 export const FilterDialog: Component<FilterDialogProps> = (props) => {
@@ -194,11 +195,12 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	};
 
 	const handleReset = () => {
-		setFilters({ ...DEFAULT_FILTER });
-		setConstMinInput(String(DEFAULT_FILTER.constMin));
-		setConstMaxInput(String(DEFAULT_FILTER.constMax));
-		setScoreMinInput(String(DEFAULT_FILTER.scoreMin));
-		setScoreMaxInput(String(DEFAULT_FILTER.scoreMax));
+		const def = props.defaultFilter;
+		setFilters({ ...def });
+		setConstMinInput(String(def.constMin));
+		setConstMaxInput(String(def.constMax));
+		setScoreMinInput(String(def.scoreMin));
+		setScoreMaxInput(String(def.scoreMax));
 		setScoreFilterMode("rank");
 		setScoreRankMin("0点");
 		setScoreRankMax("MAX");
