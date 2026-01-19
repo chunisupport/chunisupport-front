@@ -8,6 +8,8 @@ export type ComboLamp = PlayerRecordDTO["combo_lamp"];
 export interface FilterState {
 	title: string;
 	difficulties: Difficulty[];
+	genres: string[];
+	versions: string[];
 	constMin: number;
 	constMax: number;
 	scoreMin: number;

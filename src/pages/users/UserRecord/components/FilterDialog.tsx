@@ -6,18 +6,17 @@ import { Select } from "@kobalte/core/select";
 import { Check, ChevronDown } from "lucide-solid";
 import type { Component } from "solid-js";
 import { createEffect, createSignal, For } from "solid-js";
-import {
-	DEFAULT_FILTER,
-	DIFFICULTY_OPTIONS,
-	LAMP_OPTIONS,
-} from "../types/filterDefaults";
-import type { FilterState } from "../types/types";
+import type { MasterDataDTO } from "../../../../types/api";
+import { CHUNITHM_VERSIONS } from "../../../../utils/versionConverter";
+import { DEFAULT_FILTER, LAMP_OPTIONS } from "../types/filterDefaults";
+import type { Difficulty, FilterState } from "../types/types";
 
 interface FilterDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	filters: FilterState;
 	onChange: (filters: FilterState) => void;
+	masterData?: MasterDataDTO;
 }
 
 export const FilterDialog: Component<FilterDialogProps> = (props) => {
@@ -201,7 +200,13 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 						<div>
 							<span class="block text-sm font-medium mb-1">難易度</span>
 							<div class="flex flex-col gap-2">
-								<For each={DIFFICULTY_OPTIONS}>
+								<For
+									each={
+										props.masterData?.difficulties?.map(
+											(d) => d.name as Difficulty,
+										) ?? []
+									}
+								>
 									{(diff, i) => {
 										const id = `filter-difficulty-${i()}`;
 										return (
@@ -210,7 +215,10 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 												onChange={() =>
 													setFilters((prev) => ({
 														...prev,
-														difficulties: toggleArray(prev.difficulties, diff),
+														difficulties: toggleArray(
+															prev.difficulties,
+															diff as Difficulty,
+														),
 													}))
 												}
 												class="flex"
@@ -489,6 +497,68 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 										未プレイ譜面を除外する
 									</Checkbox.Label>
 								</Checkbox>
+							</div>
+						</div>
+						{/* ジャンル */}
+						<div>
+							<span class="block text-sm font-medium mb-1">ジャンル</span>
+							<div class="flex flex-col gap-2">
+								<For each={props.masterData?.genres?.map((g) => g.name) ?? []}>
+									{(genre, i) => {
+										const id = `filter-genre-${i()}`;
+										return (
+											<Checkbox
+												checked={filters().genres.includes(genre)}
+												onChange={() =>
+													setFilters((prev) => ({
+														...prev,
+														genres: toggleArray(prev.genres, genre),
+													}))
+												}
+												class="flex"
+											>
+												<Checkbox.Input id={id} />
+												<Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center mr-2">
+													<Checkbox.Indicator>
+														<Check class="h-4 w-4" />
+													</Checkbox.Indicator>
+												</Checkbox.Control>
+												<Checkbox.Label for={id}>{genre}</Checkbox.Label>
+											</Checkbox>
+										);
+									}}
+								</For>
+							</div>
+						</div>
+						{/* バージョン */}
+						<div>
+							<span class="block text-sm font-medium mb-1">バージョン</span>
+							<div class="flex flex-col gap-2">
+								<For each={CHUNITHM_VERSIONS}>
+									{(ver, i) => {
+										const id = `filter-version-${i()}`;
+										return (
+											<Checkbox
+												checked={filters().versions.includes(ver)}
+												onChange={() =>
+													setFilters((prev) => ({
+														...prev,
+														versions: toggleArray(prev.versions, ver),
+													}))
+												}
+												class="flex"
+											>
+												<Checkbox.Input id={id} />
+												<Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center mr-2">
+													<Checkbox.Indicator>
+														<Check class="h-4 w-4" />
+													</Checkbox.Indicator>
+												</Checkbox.Control>
+												<Checkbox.Label for={id}>{ver}</Checkbox.Label>
+											</Checkbox>
+										);
+									}}
+								</For>
 							</div>
 						</div>
 						{/* ランプ */}

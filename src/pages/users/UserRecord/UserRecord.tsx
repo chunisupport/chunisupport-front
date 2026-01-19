@@ -11,7 +11,7 @@ import {
 	ErrorBoundary,
 	Suspense,
 } from "solid-js";
-import { fetchAllSongs } from "../../../api/songs";
+import { fetchAllSongs, fetchMasterData } from "../../../api/songs";
 import { fetchUserProfile } from "../../../api/users";
 import { Loading } from "../../../components";
 import {
@@ -100,6 +100,7 @@ const UserRecord: Component = () => {
 	const params = useParams<{ username: string }>();
 	const [userProfile] = createResource(() => params.username, fetchUserProfile);
 	const [allSongs] = createResource(fetchAllSongs);
+const [masterData] = createResource(fetchMasterData);
 
 	// フィルター状態
 	const [filters, setFilters] = createSignal<FilterState>({
@@ -133,9 +134,17 @@ const UserRecord: Component = () => {
 			)
 				return false;
 
-			// 難易度
-			if (!f.difficulties.includes(record.difficulty as Difficulty))
-				return false;
+    // 難易度
+    if (!f.difficulties.includes(record.difficulty as Difficulty))
+      return false;
+
+    // ジャンル
+    if (f.genres.length > 0 && !f.genres.includes(record.genre))
+      return false;
+
+    // バージョン
+    if (f.versions.length > 0 && !f.versions.includes(record.release_version))
+      return false;
 
 			// 定数
 			if (record.const < f.constMin) return false;
@@ -410,13 +419,14 @@ const UserRecord: Component = () => {
 						<p class="mb-2 text-sm text-gray-600">
 							全 {totalCount()} 件中 {filteredCount()} 件を表示
 						</p>
-						<RecordTable records={filteredRecords()} />
-						<FilterDialog
-							open={filterOpen()}
-							onOpenChange={setFilterOpen}
-							filters={filters()}
-							onChange={setFilters}
-						/>
+<RecordTable records={filteredRecords()} />
+<FilterDialog
+  open={filterOpen()}
+  onOpenChange={setFilterOpen}
+  filters={filters()}
+  onChange={setFilters}
+  masterData={masterData()}
+/>
 					</div>
 				</ErrorBoundary>
 			</Suspense>

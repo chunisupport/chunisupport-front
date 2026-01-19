@@ -21,6 +21,8 @@ export const LAMP_OPTIONS: (ComboLamp | null)[] = [
 export const DEFAULT_FILTER: FilterState = {
 	title: "",
 	difficulties: ["MASTER", "ULTIMA"],
+	genres: [],
+	versions: [],
 	constMin: 0.0,
 	constMax: 15.9,
 	scoreMin: 0,
