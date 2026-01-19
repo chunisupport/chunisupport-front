@@ -111,6 +111,24 @@ export interface SongDTO {
 	};
 }
 
+// --- マスターデータ用型定義 ---
+export interface MasterItemDTO {
+	id: number;
+	name: string;
+}
+
+export interface BooleanChoiceDTO {
+	value: boolean;
+	label: string;
+}
+
+export interface MasterDataDTO {
+	genres: MasterItemDTO[];
+	difficulties: MasterItemDTO[];
+	is_const_unknown: BooleanChoiceDTO[];
+	account_types: MasterItemDTO[];
+}
+
 // --------------------------------
 
 export interface UserDTO {
