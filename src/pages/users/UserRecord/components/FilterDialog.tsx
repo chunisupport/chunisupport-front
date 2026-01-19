@@ -5,11 +5,59 @@ import { NumberField } from "@kobalte/core/number-field";
 import { Select } from "@kobalte/core/select";
 import { Check, ChevronDown } from "lucide-solid";
 import type { Component } from "solid-js";
-import { createEffect, createSignal, For } from "solid-js";
+import { createEffect, createSignal, For, Show } from "solid-js";
 import type { MasterDataDTO } from "../../../../types/api";
 import { CHUNITHM_VERSIONS } from "../../../../utils/versionConverter";
 import { DEFAULT_FILTER, LAMP_OPTIONS } from "../types/filterDefaults";
 import type { Difficulty, FilterState } from "../types/types";
+
+interface SavedFilter {
+	id: string;
+	name: string;
+	filter: FilterState;
+	savedAt: number;
+}
+
+// LocalStorage操作
+const SAVED_FILTERS_KEY = "chunisup_saved_filters";
+function loadSavedFilters(): SavedFilter[] {
+	try {
+		const raw = localStorage.getItem(SAVED_FILTERS_KEY);
+		if (!raw) return [];
+		return JSON.parse(raw);
+	} catch {
+		return [];
+	}
+}
+function saveNewFilter(name: string, filter: FilterState) {
+	const filters = loadSavedFilters();
+	const id = Date.now().toString();
+	filters.push({ id, name, filter, savedAt: Date.now() });
+	localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(filters));
+}
+function deleteFilter(id: string) {
+	const filters = loadSavedFilters().filter((f) => f.id !== id);
+	localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(filters));
+}
+
+// フィルター要約
+function formatFilterSummary(filter: FilterState): string {
+	const parts: string[] = [];
+	if (filter.difficulties.length > 0)
+		parts.push(`難易度: ${filter.difficulties.join(",")}`);
+	if (filter.constMin !== 0.0 || filter.constMax !== 15.9)
+		parts.push(`定数: ${filter.constMin}-${filter.constMax}`);
+	if (filter.scoreMin !== 0 || filter.scoreMax !== 1010000)
+		parts.push(`スコア: ${filter.scoreMin}-${filter.scoreMax}`);
+	if (filter.genres.length > 0)
+		parts.push(`ジャンル: ${filter.genres.join(",")}`);
+	if (filter.versions.length > 0)
+		parts.push(`バージョン: ${filter.versions.join(",")}`);
+	if (filter.lamps.length > 0)
+		parts.push(`ランプ: ${filter.lamps.map((l) => l ?? "なし").join(",")}`);
+	if (filter.excludeNoPlay) parts.push("未プレイ除外");
+	return parts.join(" / ");
+}
 
 interface FilterDialogProps {
 	open: boolean;
@@ -24,6 +72,9 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 
 	// リセット確認ダイアログの開閉状態
 	const [resetDialogOpen, setResetDialogOpen] = createSignal(false);
+
+	// 保存・呼出ダイアログの開閉状態
+	const [saveDialogOpen, setSaveDialogOpen] = createSignal(false);
 
 	/**
 	 * props.filters同期
@@ -194,9 +245,93 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 			<Dialog.Portal>
 				<Dialog.Overlay class="fixed inset-0 bg-black/30 z-40" />
 				<Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md max-h-[80vh] flex flex-col">
-					<Dialog.Title class="text-lg font-bold mb-4 shrink-0">
-						フィルター
-					</Dialog.Title>
+					<div class="flex items-center justify-between mb-4 shrink-0">
+						<Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
+						<button
+							type="button"
+							class="ml-2 px-2 py-1 rounded bg-gray-100 text-gray-700 hover:bg-blue-100 text-xs border border-gray-300"
+							onClick={() => setSaveDialogOpen(true)}
+						>
+							条件の保存・呼出
+						</button>
+					</div>
+					<Show when={saveDialogOpen()}>
+						<div class="fixed z-60 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md border border-gray-300">
+							<div class="flex justify-between items-center mb-2">
+								<div class="font-bold">条件の保存・呼出</div>
+								<button
+									type="button"
+									class="text-gray-500 hover:text-gray-700"
+									onClick={() => setSaveDialogOpen(false)}
+								>
+									×
+								</button>
+							</div>
+							<div class="mb-2">
+								<div class="text-xs text-gray-500 mb-1">現在の条件</div>
+								<div class="text-sm border rounded px-2 py-1 bg-gray-50 mb-2">
+									{formatFilterSummary(filters())}
+								</div>
+								<button
+									type="button"
+									class="px-2 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700"
+									onClick={() => {
+										const name = window.prompt("保存名を入力してください", "");
+										if (name?.trim()) {
+											saveNewFilter(name.trim(), filters());
+											setSaveDialogOpen(false);
+										}
+									}}
+								>
+									この条件を保存
+								</button>
+							</div>
+							<div class="mt-4">
+								<div class="text-xs text-gray-500 mb-1">保存済み条件</div>
+								<For each={loadSavedFilters()}>
+									{(item) => (
+										<div class="flex items-center justify-between border-b py-1">
+											<div class="flex-1 min-w-0">
+												<div class="font-bold text-sm truncate">
+													{item.name}
+												</div>
+												<div class="text-xs text-gray-500 truncate">
+													{formatFilterSummary(item.filter)}
+												</div>
+											</div>
+											<button
+												type="button"
+												class="ml-2 px-2 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-700"
+												onClick={() => {
+													props.onChange(item.filter);
+													setSaveDialogOpen(false);
+													props.onOpenChange(false);
+												}}
+											>
+												呼出
+											</button>
+											<button
+												type="button"
+												class="ml-1 px-2 py-1 rounded bg-red-500 text-white text-xs hover:bg-red-700"
+												onClick={() => {
+													deleteFilter(item.id);
+													setSaveDialogOpen(false);
+													setTimeout(() => setSaveDialogOpen(true), 0); // 再表示でリスト更新
+												}}
+											>
+												削除
+											</button>
+										</div>
+									)}
+								</For>
+								<Show when={loadSavedFilters().length === 0}>
+									<div class="text-xs text-gray-400 mt-2">
+										保存された条件はありません
+									</div>
+								</Show>
+							</div>
+						</div>
+					</Show>
 					<div class="space-y-4 overflow-y-auto flex-1 min-h-0">
 						{/* 難易度 */}
 						<div>
