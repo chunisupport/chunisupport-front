@@ -1,7 +1,6 @@
-// 共通定数・型定義
 import type { ComboLamp, Difficulty, FilterState } from "../types/types";
 
-// 難易度選択肢
+/** 難易度の選択肢 */
 export const DIFFICULTY_OPTIONS: Difficulty[] = [
 	"BASIC",
 	"ADVANCED",
@@ -10,14 +9,14 @@ export const DIFFICULTY_OPTIONS: Difficulty[] = [
 	"ULTIMA",
 ];
 
-// ランプ選択肢
+/** ランプの選択肢 */
 export const LAMP_OPTIONS: (ComboLamp | null)[] = [
 	"ALL JUSTICE",
 	"FULL COMBO",
 	null,
 ];
 
-// フィルター初期値
+/** フィルターのデフォルト値 */
 export const DEFAULT_FILTER: FilterState = {
 	title: "",
 	difficulties: ["MASTER", "ULTIMA"],

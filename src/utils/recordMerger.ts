@@ -1,5 +1,7 @@
 import type { PlayerRecordDTO, SongDTO } from "../types/api";
+import { dateToChunithmVersion } from "./versionConverter";
 
+/** プレイ済み・未プレイを含むレコードの型定義 */
 export interface PlayerRecordIncludeNoPlay {
 	updated_at: string | null;
 	difficulty: string;
@@ -22,8 +24,12 @@ export interface PlayerRecordIncludeNoPlay {
 	is_played: boolean;
 }
 
-import { dateToChunithmVersion } from "./versionConverter";
-
+/**
+ * 未プレイを含む全曲のレコードを作成する
+ * @param songs 全楽曲データ
+ * @param playedRecords プレイ済みレコードデータ
+ * @returns 未プレイを含む全曲のレコード配列
+ */
 export function mergeAllRecords(
 	songs: SongDTO[],
 	playedRecords: PlayerRecordDTO[],

@@ -1,4 +1,4 @@
-// CHUNITHMバージョンの定義
+/** CHUNITHMバージョンの一覧 */
 export const CHUNITHM_VERSIONS = [
 	"ORIGIN",
 	"ORIGIN PLUS",
@@ -23,6 +23,7 @@ export const CHUNITHM_VERSIONS = [
 	"X-VERSE-X",
 ] as const;
 
+/** CHUNITHMバージョンの開始日一覧 */
 const VERSION_START_DATES = [
 	"2015-07-16",
 	"2016-02-04",
@@ -48,7 +49,7 @@ const VERSION_START_DATES = [
 	"9999-12-31",
 ];
 
-
+/** 指定された日付から対応するCHUNITHMバージョンを取得する */
 export function dateToChunithmVersion(releaseDate: string | null): string {
 	if (!releaseDate) {
 		return "不明";

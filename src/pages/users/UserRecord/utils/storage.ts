@@ -1,5 +1,6 @@
 import type { ComboLamp, FilterState } from "../types/types";
 
+/** 保存されたフィルター情報 */
 export interface SavedFilter {
 	id: string;
 	name: string;
@@ -7,6 +8,7 @@ export interface SavedFilter {
 	savedAt: number;
 }
 
+/** 追跡中のフィルター情報 */
 export interface TrackingCondition {
 	filterId: string;
 	filterName: string;
@@ -18,6 +20,7 @@ export interface TrackingCondition {
 const SAVED_FILTERS_KEY = "chunisup_saved_filters";
 const TRACKING_CONDITION_KEY = "chunisup_tracking_condition";
 
+/** 保存されたフィルター一覧をlocalStrageから取得 */
 export function loadSavedFilters(): SavedFilter[] {
 	try {
 		const raw = localStorage.getItem(SAVED_FILTERS_KEY);
@@ -28,6 +31,7 @@ export function loadSavedFilters(): SavedFilter[] {
 	}
 }
 
+/** 新しいフィルターを保存 */
 export function saveNewFilter(name: string, filter: FilterState): string {
 	const filters = loadSavedFilters();
 	const id = Date.now().toString();
@@ -36,11 +40,14 @@ export function saveNewFilter(name: string, filter: FilterState): string {
 	return id;
 }
 
+/** フィルターを削除 */
 export function deleteFilter(id: string) {
+	// 指定ID以外のフィルターを保存し直すことで削除を実現
 	const filters = loadSavedFilters().filter((f) => f.id !== id);
 	localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(filters));
 }
 
+/** 追跡中のフィルター情報をlocalStorageから取得 */
 export function loadTrackingCondition(): TrackingCondition | null {
 	try {
 		const raw = localStorage.getItem(TRACKING_CONDITION_KEY);
@@ -51,10 +58,12 @@ export function loadTrackingCondition(): TrackingCondition | null {
 	}
 }
 
+/** 追跡中のフィルター情報を保存 */
 export function saveTrackingCondition(condition: TrackingCondition) {
 	localStorage.setItem(TRACKING_CONDITION_KEY, JSON.stringify(condition));
 }
 
+/** 追跡中のフィルター情報を削除 */
 export function clearTrackingCondition() {
 	localStorage.removeItem(TRACKING_CONDITION_KEY);
 }
