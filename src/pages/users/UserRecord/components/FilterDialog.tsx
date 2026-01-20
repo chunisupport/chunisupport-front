@@ -244,11 +244,11 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		const current = loadTrackingCondition();
 		if (current && current.filterId === item.id) {
 			setTrackingScoreEnabled(typeof current.scoreRankMin !== "undefined");
-			setTrackingRankMin(current.scoreRankMin ?? "0点");
+			setTrackingRankMin(current.scoreRankMin ?? "SSS");
 			setTrackingLamps(current.lamps ?? []);
 		} else {
 			setTrackingScoreEnabled(false);
-			setTrackingRankMin("0点");
+			setTrackingRankMin("SSS");
 			setTrackingLamps([]);
 		}
 		setTrackingDialogOpen(true);
