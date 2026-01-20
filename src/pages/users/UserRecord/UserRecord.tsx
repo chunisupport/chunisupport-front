@@ -26,6 +26,13 @@ import FilterDialog from "./components/FilterDialog";
 import RecordTable from "./components/RecordTable";
 import { DEFAULT_FILTER, LAMP_OPTIONS } from "./types/filterDefaults";
 import type { ComboLamp, Difficulty, FilterState } from "./types/types";
+import { SCORE_RANK_VALUES } from "./utils/scoreRank";
+import {
+	clearTrackingCondition,
+	loadSavedFilters,
+	loadTrackingCondition,
+	type TrackingCondition,
+} from "./utils/storage";
 
 // 統計表示用定数
 const rankOrder = [
@@ -120,6 +127,8 @@ const UserRecord: Component = () => {
 	const [filters, setFilters] = createSignal<FilterState>({
 		...DEFAULT_FILTER,
 	});
+	const [trackingCondition, setTrackingCondition] =
+		createSignal<TrackingCondition | null>(loadTrackingCondition());
 
 	// masterData取得後にgenres/versionsを全選択で初期化
 	createEffect(() => {
@@ -143,51 +152,126 @@ const UserRecord: Component = () => {
 	});
 
 	// フィルター適用
+	const isRecordMatched = (
+		record: PlayerRecordIncludeNoPlay,
+		f: FilterState,
+	) => {
+		// 未プレイ除外
+		if (f.excludeNoPlay && !record.is_played) {
+			return false;
+		}
+
+		// 曲名
+		if (f.title && !record.title.toLowerCase().includes(f.title.toLowerCase()))
+			return false;
+
+		// 難易度
+		if (!f.difficulties.includes(record.difficulty as Difficulty)) return false;
+
+		// ジャンル
+		if (f.genres.length > 0 && !f.genres.includes(record.genre)) return false;
+
+		// バージョン
+		if (f.versions.length > 0 && !f.versions.includes(record.release_version))
+			return false;
+
+		// 定数
+		if (record.const < f.constMin) return false;
+		if (record.const > f.constMax) return false;
+
+		// スコア
+		if (record.is_played && record.score !== null) {
+			if (record.score < f.scoreMin) return false;
+			if (record.score > f.scoreMax) return false;
+		}
+
+		// ランプ
+		if (record.is_played) {
+			const lamp = record.combo_lamp;
+			if (!f.lamps.includes(lamp as ComboLamp)) return false;
+		}
+
+		return true;
+	};
+
 	const filteredRecords = createMemo(() => {
 		const records = mergedRecords();
 		const f = filters();
-		return records.filter((record) => {
-			// 未プレイ除外
-			if (f.excludeNoPlay && !record.is_played) {
-				return false;
-			}
+		return records.filter((record) => isRecordMatched(record, f));
+	});
 
-			// 曲名
-			if (
-				f.title &&
-				!record.title.toLowerCase().includes(f.title.toLowerCase())
-			)
-				return false;
+	const trackingTargetFilter = createMemo(() => {
+		const condition = trackingCondition();
+		if (!condition) return null;
+		const saved = loadSavedFilters();
+		return saved.find((item) => item.id === condition.filterId) ?? null;
+	});
 
-			// 難易度
-			if (!f.difficulties.includes(record.difficulty as Difficulty))
-				return false;
+	const trackingBaseRecords = createMemo(() => {
+		const records = mergedRecords();
+		const target = trackingTargetFilter();
+		if (!target) return [];
+		return records.filter((record) => isRecordMatched(record, target.filter));
+	});
 
-			// ジャンル
-			if (f.genres.length > 0 && !f.genres.includes(record.genre)) return false;
+	const isRecordAchieved = (
+		record: PlayerRecordIncludeNoPlay,
+		condition: TrackingCondition,
+	) => {
+		const hasScore = typeof condition.scoreRankMin !== "undefined";
+		const hasLamp = (condition.lamps ?? []).length > 0;
+		if (!hasScore && !hasLamp) return false;
+		if (!record.is_played) return false;
 
-			// バージョン
-			if (f.versions.length > 0 && !f.versions.includes(record.release_version))
-				return false;
+		if (hasScore) {
+			const minScore = SCORE_RANK_VALUES[condition.scoreRankMin ?? "0点"];
+			if (record.score === null) return false;
+			if (record.score < minScore) return false;
+		}
 
-			// 定数
-			if (record.const < f.constMin) return false;
-			if (record.const > f.constMax) return false;
+		if (hasLamp) {
+			const lamp = record.combo_lamp ?? null;
+			if (!condition.lamps?.includes(lamp as ComboLamp)) return false;
+		}
 
-			// スコア
-			if (record.is_played && record.score !== null) {
-				if (record.score < f.scoreMin) return false;
-				if (record.score > f.scoreMax) return false;
-			}
+		return true;
+	};
 
-			// ランプ
-			if (record.is_played) {
-				const lamp = record.combo_lamp;
-				if (!f.lamps.includes(lamp as ComboLamp)) return false;
-			}
+	const trackingStats = createMemo(() => {
+		const condition = trackingCondition();
+		const baseRecords = trackingBaseRecords();
+		if (!condition || baseRecords.length === 0) {
+			return {
+				achieved: 0,
+				total: baseRecords.length,
+				remaining: baseRecords.length,
+				percent: 0,
+			};
+		}
+		const achieved = baseRecords.filter((record) =>
+			isRecordAchieved(record, condition),
+		).length;
+		const total = baseRecords.length;
+		const percent = total ? (achieved / total) * 100 : 0;
+		return {
+			achieved,
+			total,
+			remaining: total - achieved,
+			percent,
+		};
+	});
 
-			return true;
-		});
+	const trackingGoalLabel = createMemo(() => {
+		const condition = trackingCondition();
+		if (!condition) return "";
+		const parts: string[] = [];
+		if (typeof condition.scoreRankMin !== "undefined") {
+			parts.push(`スコアランク ${condition.scoreRankMin}`);
+		}
+		if (condition.lamps && condition.lamps.length > 0) {
+			parts.push(`ランプ ${condition.lamps.join(", ")}`);
+		}
+		return parts.join(" / ");
 	});
 
 	// 件数表示
@@ -288,21 +372,43 @@ const UserRecord: Component = () => {
 				>
 					<div class="my-4 mx-2 text-sm">
 						{/* 追跡表示 */}
-						<div class="mb-2 p-2 border border-lime-600 rounded-sm text-lime-600">
-							<div class="flex justify-between mb-1">
-								<p class="text-base font-bold">追跡中の条件</p>
-								<p>達成: <span class="text-base">12</span></p>
+						{trackingCondition() && trackingTargetFilter() && (
+							<div class="mb-2 p-2 border border-lime-600 rounded-sm text-lime-600">
+								<div class="flex justify-between mb-1 items-center">
+									<p class="text-base font-bold">追跡中の条件</p>
+									<div class="flex items-center gap-2">
+										<p>
+											達成:{" "}
+											<span class="text-base">{trackingStats().achieved}</span>
+										</p>
+										<button
+											type="button"
+											class="px-2 py-1 rounded border border-lime-600 text-lime-600 hover:bg-lime-50"
+											onClick={() => {
+												clearTrackingCondition();
+												setTrackingCondition(null);
+											}}
+										>
+											解除
+										</button>
+									</div>
+								</div>
+								<div class="flex justify-between mb-2">
+									<p class="">
+										「{trackingTargetFilter()?.name}」 {trackingGoalLabel()}
+									</p>
+									<p class="">
+										残り: {trackingStats().remaining}, 総数:{" "}
+										{trackingStats().total}
+									</p>
+								</div>
+								<Progress value={trackingStats().percent} class="w-full">
+									<Progress.Track class="h-3 rounded bg-gray-200">
+										<Progress.Fill class="h-full rounded w-(--kb-progress-fill-width) bg-lime-500" />
+									</Progress.Track>
+								</Progress>
 							</div>
-							<div class="flex justify-between mb-2">
-								<p class="">「テスト」SSS</p>
-								<p class="">残り: 22, 総数: 34</p>
-							</div>
-							<Progress value={80} class="w-full">
-								<Progress.Track class="h-3 rounded bg-gray-200">
-									<Progress.Fill class="h-full rounded w-(--kb-progress-fill-width) bg-lime-500" />
-								</Progress.Track>
-							</Progress>
-						</div>
+						)}
 						{/* 検索・フィルター */}
 						<div class="flex items-center mb-2 gap-2">
 							<TextField class="flex-1">
@@ -467,6 +573,9 @@ const UserRecord: Component = () => {
 							onChange={setFilters}
 							masterData={masterData()}
 							defaultFilter={getDefaultFilter(masterData())}
+							onTrackingChange={() =>
+								setTrackingCondition(loadTrackingCondition())
+							}
 						/>
 					</div>
 				</ErrorBoundary>

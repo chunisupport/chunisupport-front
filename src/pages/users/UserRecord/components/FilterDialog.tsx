@@ -12,35 +12,20 @@ import type { MasterDataDTO } from "../../../../types/api";
 import { CHUNITHM_VERSIONS } from "../../../../utils/versionConverter";
 import { LAMP_OPTIONS } from "../types/filterDefaults";
 import type { Difficulty, FilterState } from "../types/types";
-
-interface SavedFilter {
-	id: string;
-	name: string;
-	filter: FilterState;
-	savedAt: number;
-}
-
-// LocalStorage操作
-const SAVED_FILTERS_KEY = "chunisup_saved_filters";
-function loadSavedFilters(): SavedFilter[] {
-	try {
-		const raw = localStorage.getItem(SAVED_FILTERS_KEY);
-		if (!raw) return [];
-		return JSON.parse(raw);
-	} catch {
-		return [];
-	}
-}
-function saveNewFilter(name: string, filter: FilterState) {
-	const filters = loadSavedFilters();
-	const id = Date.now().toString();
-	filters.push({ id, name, filter, savedAt: Date.now() });
-	localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(filters));
-}
-function deleteFilter(id: string) {
-	const filters = loadSavedFilters().filter((f) => f.id !== id);
-	localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(filters));
-}
+import {
+	SCORE_RANK_VALUES,
+	SCORE_RANKS,
+	type ScoreRank,
+} from "../utils/scoreRank";
+import {
+	clearTrackingCondition,
+	deleteFilter,
+	loadSavedFilters,
+	loadTrackingCondition,
+	type SavedFilter,
+	saveNewFilter,
+	saveTrackingCondition,
+} from "../utils/storage";
 
 // フィルター要約
 function formatFilterSummary(filter: FilterState): string {
@@ -68,6 +53,7 @@ interface FilterDialogProps {
 	onChange: (filters: FilterState) => void;
 	masterData?: MasterDataDTO;
 	defaultFilter: FilterState;
+	onTrackingChange?: () => void;
 }
 
 export const FilterDialog: Component<FilterDialogProps> = (props) => {
@@ -76,12 +62,31 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	const [filtersList, setFiltersList] = createSignal<SavedFilter[]>(
 		loadSavedFilters(),
 	);
+	const [trackingCondition, setTrackingCondition] = createSignal(
+		loadTrackingCondition(),
+	);
+	const [trackingDialogOpen, setTrackingDialogOpen] = createSignal(false);
+	const [trackingTargetFilter, setTrackingTargetFilter] =
+		createSignal<SavedFilter | null>(null);
+	const [trackingScoreEnabled, setTrackingScoreEnabled] = createSignal(false);
+	const [trackingLampEnabled, setTrackingLampEnabled] = createSignal(false);
+
+	const [trackingRankMin, setTrackingRankMin] = createSignal<ScoreRank>("SSS");
+	const [trackingLamps, setTrackingLamps] = createSignal<
+		(typeof LAMP_OPTIONS)[number][]
+	>([]);
 
 	// リセット確認ダイアログの開閉状態
 	const [resetDialogOpen, setResetDialogOpen] = createSignal(false);
 
 	// 保存・呼出ダイアログの開閉状態
 	const [saveDialogOpen, setSaveDialogOpen] = createSignal(false);
+
+	createEffect(() => {
+		if (saveDialogOpen()) {
+			setTrackingCondition(loadTrackingCondition());
+		}
+	});
 
 	/**
 	 * props.filters同期
@@ -156,27 +161,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	};
 
 	// スコアランク定義
-	type ScoreRank = "SSS+" | "SSS" | "SS+" | "SS" | "S+" | "S" | "0点" | "MAX";
-	const SCORE_RANKS: ScoreRank[] = [
-		"0点",
-		"S",
-		"S+",
-		"SS",
-		"SS+",
-		"SSS",
-		"SSS+",
-		"MAX",
-	];
-	const SCORE_RANK_VALUES: Record<ScoreRank, number> = {
-		"SSS+": 1009000,
-		SSS: 1007500,
-		"SS+": 1005000,
-		SS: 1000000,
-		"S+": 990000,
-		S: 975000,
-		"0点": 0,
-		MAX: 1010000,
-	};
+	// スコアランク定義（共通定数を利用）
 
 	// スコアフィルターモード
 	const [scoreFilterMode, setScoreFilterMode] = createSignal<"number" | "rank">(
@@ -246,6 +231,59 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 			setScoreRankMin(minRank);
 			setScoreRankMax(maxRank);
 		}
+	};
+
+	const syncTrackingState = () => {
+		const current = loadTrackingCondition();
+		setTrackingCondition(current);
+		props.onTrackingChange?.();
+	};
+
+	const openTrackingDialog = (item: SavedFilter) => {
+		setTrackingTargetFilter(item);
+		const current = loadTrackingCondition();
+		if (current && current.filterId === item.id) {
+			setTrackingScoreEnabled(typeof current.scoreRankMin !== "undefined");
+			setTrackingRankMin(current.scoreRankMin ?? "0点");
+			setTrackingLamps(current.lamps ?? []);
+		} else {
+			setTrackingScoreEnabled(false);
+			setTrackingRankMin("0点");
+			setTrackingLamps([]);
+		}
+		setTrackingDialogOpen(true);
+	};
+
+	const handleSaveTracking = () => {
+		const target = trackingTargetFilter();
+		if (!target) return;
+		const hasScore = trackingScoreEnabled();
+		const hasLamp = trackingLampEnabled();
+		const selectedLamps = trackingLamps();
+		if (!hasScore && !hasLamp) return;
+		saveTrackingCondition({
+			filterId: target.id,
+			filterName: target.name,
+			scoreRankMin: hasScore ? trackingRankMin() : undefined,
+			lamps: hasLamp ? selectedLamps : undefined,
+			savedAt: Date.now(),
+		});
+		setTrackingDialogOpen(false);
+		syncTrackingState();
+	};
+
+	const handleClearTracking = () => {
+		clearTrackingCondition();
+		syncTrackingState();
+	};
+
+	const isTrackingActiveFor = (id: string) =>
+		trackingCondition()?.filterId === id;
+
+	const toggleTrackingLamp = (lamp: (typeof LAMP_OPTIONS)[number]) => {
+		setTrackingLamps((prev) =>
+			prev.includes(lamp) ? prev.filter((v) => v !== lamp) : [...prev, lamp],
+		);
 	};
 
 	return (
@@ -796,6 +834,9 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 																			onClick={() => {
 																				deleteFilter(item.id);
 																				setFiltersList(loadSavedFilters());
+																				if (isTrackingActiveFor(item.id)) {
+																					handleClearTracking();
+																				}
 																			}}
 																		>
 																			フィルターを削除
@@ -807,9 +848,13 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 														<button
 															type="button"
 															class="ml-2 px-2 py-1 rounded text-lime-500 border border-lime-600 hover:bg-lime-100"
-															// onClick={}
+															onClick={() =>
+																isTrackingActiveFor(item.id)
+																	? handleClearTracking()
+																	: openTrackingDialog(item)
+															}
 														>
-															追跡
+															{isTrackingActiveFor(item.id) ? "解除" : "追跡"}
 														</button>
 														<button
 															type="button"
@@ -818,6 +863,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 																props.onChange(item.filter);
 																setSaveDialogOpen(false);
 																props.onOpenChange(false);
+																syncTrackingState();
 															}}
 														>
 															呼出
@@ -854,6 +900,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 														saveNewFilter(name, filters());
 														setSaveName("");
 														setFiltersList(loadSavedFilters());
+														syncTrackingState();
 													}
 												}}
 												disabled={!saveName().trim()}
@@ -869,6 +916,150 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 											onClick={() => setSaveDialogOpen(false)}
 										>
 											戻る
+										</button>
+									</div>
+								</Dialog.Content>
+							</Dialog.Portal>
+						</Dialog>
+						<Dialog
+							open={trackingDialogOpen()}
+							onOpenChange={setTrackingDialogOpen}
+						>
+							<Dialog.Portal>
+								<Dialog.Overlay class="fixed inset-0 bg-black/30 z-70" />
+								<Dialog.Content class="fixed z-80 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md border border-gray-300">
+									<div class="font-bold mb-2">追跡条件の設定</div>
+									<div class="text-xs text-gray-500 mb-4">
+										目標とするスコアもしくはランプ(AJ/FC)を設定してください。
+										対象フィルター: {trackingTargetFilter()?.name ?? "-"}
+									</div>
+									<div class="space-y-4">
+										<div>
+											<Checkbox
+												checked={trackingScoreEnabled()}
+												onChange={(checked) => setTrackingScoreEnabled(checked)}
+												class="flex items-center"
+											>
+												<Checkbox.Input id="tracking-score-enabled" />
+												<Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center mr-2">
+													<Checkbox.Indicator>
+														<Check class="h-4 w-4" />
+													</Checkbox.Indicator>
+												</Checkbox.Control>
+												<Checkbox.Label for="tracking-score-enabled">
+													目標スコアを有効化
+												</Checkbox.Label>
+											</Checkbox>
+											<div class="flex gap-2 mt-2">
+												<div class="flex-1">
+													<Select
+														options={SCORE_RANKS}
+														value={trackingRankMin()}
+														onChange={(v) => {
+															if (v !== null)
+																setTrackingRankMin(v as ScoreRank);
+														}}
+														class="w-full"
+														placeholder="選択…"
+														itemComponent={(props) =>
+															props.item.rawValue === "0点" ? null : (
+																<Select.Item
+																	item={props.item}
+																	class="text-sm rounded flex items-center justify-between h-8 px-2 outline-none cursor-pointer data-disabled:opacity-50 data-disabled:pointer-events-none data-highlighted:bg-blue-500 data-highlighted:text-white"
+																>
+																	<Select.ItemLabel>
+																		{props.item.rawValue}
+																	</Select.ItemLabel>
+																	<Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
+																		<Check />
+																	</Select.ItemIndicator>
+																</Select.Item>
+															)
+														}
+														disabled={!trackingScoreEnabled()}
+													>
+														<Select.Label class="block text-sm font-medium mb-1">
+															スコアランク(最小)
+														</Select.Label>
+														<Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 disabled:bg-gray-100 disabled:text-gray-400">
+															<Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-gray-400">
+																{(state) => state.selectedOption()}
+															</Select.Value>
+															<Select.Icon class="h-5 w-5 flex items-center justify-center">
+																<ChevronDown />
+															</Select.Icon>
+														</Select.Trigger>
+														<Select.Portal>
+															<Select.Content class="z-80 bg-white rounded-md border border-gray-300 shadow-lg">
+																<Select.Listbox class="overflow-y-auto max-h-90 p-2" />
+															</Select.Content>
+														</Select.Portal>
+													</Select>
+												</div>
+												{/* TODO: 数値で入力させる */}
+											</div>
+										</div>
+										<div>
+											<div class="block text-sm font-medium mb-1">ランプ</div>
+											<Checkbox
+												checked={trackingLampEnabled()}
+												onChange={(checked) => setTrackingLampEnabled(checked)}
+												class="flex items-center"
+											>
+												<Checkbox.Input id="tracking-lamp-enabled" />
+												<Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center mr-2">
+													<Checkbox.Indicator>
+														<Check class="h-4 w-4" />
+													</Checkbox.Indicator>
+												</Checkbox.Control>
+												<Checkbox.Label for="tracking-lamp-enabled">
+													目標ランプを有効化
+												</Checkbox.Label>
+											</Checkbox>
+											<div class="flex flex-col mt-2 gap-2">
+												<For
+													each={LAMP_OPTIONS.filter((lamp) => lamp !== null)}
+												>
+													{(lamp, i) => {
+														const id = `tracking-lamp-${i()}`;
+														return (
+															<Checkbox
+																checked={trackingLamps().includes(lamp)}
+																onChange={() => toggleTrackingLamp(lamp)}
+																class="flex"
+																disabled={!trackingLampEnabled()}
+															>
+																<Checkbox.Input id={id} />
+																<Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center mr-2">
+																	<Checkbox.Indicator>
+																		<Check class="h-4 w-4" />
+																	</Checkbox.Indicator>
+																</Checkbox.Control>
+																<Checkbox.Label for={id}>{lamp}</Checkbox.Label>
+															</Checkbox>
+														);
+													}}
+												</For>
+											</div>
+										</div>
+									</div>
+									<div class="flex justify-end gap-2 mt-6">
+										<button
+											type="button"
+											class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+											onClick={() => setTrackingDialogOpen(false)}
+										>
+											キャンセル
+										</button>
+										<button
+											type="button"
+											class="px-4 py-2 rounded bg-lime-600 text-white hover:bg-lime-700 disabled:opacity-60"
+											onClick={handleSaveTracking}
+											disabled={
+												!trackingScoreEnabled() && !trackingLampEnabled()
+											}
+										>
+											決定
 										</button>
 									</div>
 								</Dialog.Content>
