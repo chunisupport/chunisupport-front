@@ -215,25 +215,6 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		}
 	};
 
-	// モード切り替え時の値同期
-	const handleScoreFilterModeChange = (mode: "number" | "rank") => {
-		setScoreFilterMode(mode);
-		if (mode === "rank") {
-			// 現在のscoreMin/scoreMaxから最も近いランクを選択
-			const minRank = SCORE_RANKS.reduce(
-				(acc, cur) =>
-					SCORE_RANK_VALUES[cur] <= filters().scoreMin ? cur : acc,
-				"0点",
-			);
-			const maxRank = SCORE_RANKS.reduce(
-				(acc, cur) =>
-					SCORE_RANK_VALUES[cur] >= filters().scoreMax ? cur : acc,
-				"MAX",
-			);
-			setScoreRankMin(minRank);
-			setScoreRankMax(maxRank);
-		}
-	};
 
 	const syncTrackingState = () => {
 		const current = loadTrackingCondition();
@@ -597,7 +578,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 								<Checkbox
 									checked={scoreFilterMode() === "number"}
 									onChange={(checked) =>
-										handleScoreFilterModeChange(checked ? "number" : "rank")
+										setScoreFilterMode(checked ? "number" : "rank")
 									}
 									class="flex items-center"
 								>
