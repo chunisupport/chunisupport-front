@@ -241,36 +241,15 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		props.onTrackingChange?.();
 	};
 
-	// TODO: 追跡状態で再度開くことを想定している……？
 	const openTrackingDialog = (item: SavedFilter) => {
+		clearTrackingCondition();
 		setTrackingTargetFilter(item);
-		const current = loadTrackingCondition();
-		if (current && current.filterId === item.id) {
-			setTrackingScoreEnabled(typeof current.scoreMin !== "undefined");
-			setTrackingScoreMin(current.scoreMin ?? 1007500);
-			setTrackingLamps(current.lamps ?? []);
-			// スコアモード初期化
-			if (typeof current.scoreMin === "number") {
-				// 既存値がランク値ならランクモード、それ以外は数値モード
-				const foundRank = SCORE_RANKS.filter((r) => r !== "0点").find(
-					(r) =>
-						SCORE_RANK_VALUES[r as keyof typeof SCORE_RANK_VALUES] ===
-						current.scoreMin,
-				);
-				if (foundRank) {
-					setTrackingScoreMode("rank");
-					setTrackingScoreRank(foundRank);
-				} else {
-					setTrackingScoreMode("number");
-				}
-			}
-		} else {
-			setTrackingScoreEnabled(false);
-			setTrackingScoreMin(1007500);
-			setTrackingLamps([]);
-			setTrackingScoreMode("rank");
-			setTrackingScoreRank("SSS");
-		}
+		setTrackingScoreEnabled(false);
+		setTrackingScoreMode("rank");
+		setTrackingScoreMin(1007500);
+		setTrackingScoreRank("SSS");
+		setTrackingLampEnabled(false);
+		setTrackingLamps([]);
 		setTrackingDialogOpen(true);
 	};
 
