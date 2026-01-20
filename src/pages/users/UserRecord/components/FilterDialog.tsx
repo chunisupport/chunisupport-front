@@ -2,6 +2,7 @@ import { AlertDialog } from "@kobalte/core/alert-dialog";
 import { Checkbox } from "@kobalte/core/checkbox";
 import { Dialog } from "@kobalte/core/dialog";
 import { NumberField } from "@kobalte/core/number-field";
+import { Popover } from "@kobalte/core/popover";
 import { Select } from "@kobalte/core/select";
 import { TextField } from "@kobalte/core/text-field";
 import { Check, ChevronDown, EllipsisVertical, RotateCcw } from "lucide-solid";
@@ -44,6 +45,7 @@ function deleteFilter(id: string) {
 // フィルター要約
 function formatFilterSummary(filter: FilterState): string {
 	const parts: string[] = [];
+	if (filter.excludeNoPlay) parts.push("未プレイ除外");
 	if (filter.difficulties.length > 0)
 		parts.push(`難易度: ${filter.difficulties.join(",")}`);
 	if (filter.constMin !== 0.0 || filter.constMax !== 15.9)
@@ -52,12 +54,11 @@ function formatFilterSummary(filter: FilterState): string {
 		parts.push(`スコア: ${filter.scoreMin}-${filter.scoreMax}`);
 	if (filter.genres.length > 0)
 		parts.push(`ジャンル: ${filter.genres.join(",")}`);
-	if (filter.versions.length > 0)
-		parts.push(`バージョン: ${filter.versions.join(",")}`);
 	if (filter.lamps.length > 0)
 		parts.push(`ランプ: ${filter.lamps.map((l) => l ?? "なし").join(",")}`);
-	if (filter.excludeNoPlay) parts.push("未プレイ除外");
-	return parts.join(" / ");
+	if (filter.versions.length > 0)
+		parts.push(`バージョン: ${filter.versions.join(",")}`);
+	return parts.join("\n");
 }
 
 interface FilterDialogProps {
@@ -769,15 +770,47 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 												{(item) => (
 													<div class="flex items-center justify-between border-b border-gray-300 py-1">
 														<div class="flex-1 min-w-0">
-															<div class="font-bold truncate">{item.name}</div>
-															{/* <div class="text-xs text-gray-500 truncate">
-																{formatFilterSummary(item.filter)}
-															</div> */}
+															<div class="truncate">{item.name}</div>
 														</div>
-														<div>
-															<EllipsisVertical class="w-5 h-5 text-gray-400 cursor-pointer" />
-															{/* TODO: 詳細を見れる、追跡、削除(確認なし) */}
-														</div>
+
+														<Popover>
+															<Popover.Trigger>
+																<EllipsisVertical class="w-5 h-5 text-gray-400 cursor-pointer" />
+															</Popover.Trigger>
+															<Popover.Portal>
+																<Popover.Content class="z-80 border border-gray-300 rounded bg-white shadow p-4">
+																	<Popover.Arrow />
+																	<div class="mb-4">
+																		<div class="text-sm font-sm text-gray-600 mb-2">
+																			フィルターの詳細
+																		</div>
+																		<div class="text-xs text-gray-600 max-w-xs whitespace-pre-line">
+																			{formatFilterSummary(item.filter) ||
+																				"（条件なし）"}
+																		</div>
+																	</div>
+																	<div class="flex justify-end">
+																		<button
+																			type="button"
+																			class="text-red-600 hover:bg-red-100 px-2 py-1 rounded"
+																			onClick={() => {
+																				deleteFilter(item.id);
+																				setFiltersList(loadSavedFilters());
+																			}}
+																		>
+																			フィルターを削除
+																		</button>
+																	</div>
+																</Popover.Content>
+															</Popover.Portal>
+														</Popover>
+														<button
+															type="button"
+															class="ml-2 px-2 py-1 rounded text-lime-500 border border-lime-500 hover:bg-lime-100"
+															// onClick={}
+														>
+															追跡
+														</button>
 														<button
 															type="button"
 															class="ml-2 px-2 py-1 rounded bg-blue-500 text-white text hover:bg-blue-700"
@@ -792,12 +825,12 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 													</div>
 												)}
 											</For>
+											{filtersList().length === 0 && (
+												<div class="w-full text-center text-xs text-gray-400 mt-2">
+													保存された条件はありません
+												</div>
+											)}
 										</div>
-										{filtersList().length === 0 && (
-											<div class="text-xs text-gray-400 mt-2">
-												保存された条件はありません
-											</div>
-										)}
 									</div>
 									<div class="mb-4">
 										<div class="text-xs text-gray-500 mb-1">
