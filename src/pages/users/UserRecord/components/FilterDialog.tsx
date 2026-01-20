@@ -806,7 +806,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 														</Popover>
 														<button
 															type="button"
-															class="ml-2 px-2 py-1 rounded text-lime-500 border border-lime-500 hover:bg-lime-100"
+															class="ml-2 px-2 py-1 rounded text-lime-500 border border-lime-600 hover:bg-lime-100"
 															// onClick={}
 														>
 															追跡

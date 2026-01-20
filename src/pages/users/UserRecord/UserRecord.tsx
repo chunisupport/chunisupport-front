@@ -1,4 +1,5 @@
 import { Collapsible } from "@kobalte/core/collapsible";
+import { Progress } from "@kobalte/core/progress";
 import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
 import { useParams } from "@solidjs/router";
@@ -286,6 +287,22 @@ const UserRecord: Component = () => {
 					fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}
 				>
 					<div class="my-4 mx-2 text-sm">
+						{/* 追跡表示 */}
+						<div class="mb-2 p-2 border border-lime-600 rounded-sm text-lime-600">
+							<div class="flex justify-between mb-1">
+								<p class="text-base font-bold">追跡中の条件</p>
+								<p>達成: <span class="text-base">12</span></p>
+							</div>
+							<div class="flex justify-between mb-2">
+								<p class="">「テスト」SSS</p>
+								<p class="">残り: 22, 総数: 34</p>
+							</div>
+							<Progress value={80} class="w-full">
+								<Progress.Track class="h-3 rounded bg-gray-200">
+									<Progress.Fill class="h-full rounded w-(--kb-progress-fill-width) bg-lime-500" />
+								</Progress.Track>
+							</Progress>
+						</div>
 						{/* 検索・フィルター */}
 						<div class="flex items-center mb-2 gap-2">
 							<TextField class="flex-1">
