@@ -833,7 +833,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 																	<div class="flex justify-end">
 																		<button
 																			type="button"
-																			class="text-red-600 hover:bg-red-100 px-2 py-1 rounded"
+																			class="text-red-600 hover:bg-red-100 px-2 py-1 underline"
 																			onClick={() => {
 																				deleteFilter(item.id);
 																				setFiltersList(loadSavedFilters());
@@ -885,19 +885,41 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 											)}
 										</div>
 									</div>
-									<div class="mb-4">
+									<div class="mb-6">
 										<div class="text-xs text-gray-500 mb-1">
 											現在の条件を保存
 										</div>
-										<div class="flex space-x-2">
-											<TextField class="flex-1">
-												<TextField.Input
-													class="w-full rounded border border-gray-300 px-2 py-1 focus:border-blue-500"
-													placeholder="フィルターの名前を入力..."
-													value={saveName()}
-													onInput={(e) => setSaveName(e.currentTarget.value)}
-												/>
-											</TextField>
+										<TextField class="mb-2">
+											<TextField.Input
+												class="w-full rounded border border-gray-300 px-2 py-1 focus:border-blue-500"
+												placeholder="フィルターの名前を入力..."
+												value={saveName()}
+												onInput={(e) => setSaveName(e.currentTarget.value)}
+											/>
+										</TextField>
+										<div class="flex space-x-2 justify-end">
+											<button
+												type="button"
+												class="px-2 py-1 rounded bg-lime-600 text-white hover:bg-lime-700"
+												onClick={() => {
+													const name = saveName().trim();
+													if (name) {
+														const id = saveNewFilter(name, filters());
+														setSaveName("");
+														setFiltersList(loadSavedFilters());
+														syncTrackingState();
+														const newFilter = loadSavedFilters().find(
+															(f) => f.id === id,
+														);
+														if (newFilter) {
+															openTrackingDialog(newFilter);
+														}
+													}
+												}}
+												disabled={!saveName().trim()}
+											>
+												保存して追跡
+											</button>
 											<button
 												type="button"
 												class="px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
@@ -935,10 +957,9 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 							<Dialog.Portal>
 								<Dialog.Overlay class="fixed inset-0 bg-black/30 z-70" />
 								<Dialog.Content class="fixed z-80 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md border border-gray-300">
-									<div class="font-bold mb-2">追跡条件の設定</div>
+									<div class="font-bold mb-2">追跡条件の設定「{trackingTargetFilter()?.name ?? "-"}」</div>
 									<div class="text-xs text-gray-500 mb-4">
 										目標とするスコアもしくはランプ(AJ/FC)を設定してください。
-										対象フィルター: {trackingTargetFilter()?.name ?? "-"}
 									</div>
 									<div class="space-y-4">
 										<div>

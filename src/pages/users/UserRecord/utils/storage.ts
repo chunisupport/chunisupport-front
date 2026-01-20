@@ -29,11 +29,12 @@ export function loadSavedFilters(): SavedFilter[] {
 	}
 }
 
-export function saveNewFilter(name: string, filter: FilterState) {
+export function saveNewFilter(name: string, filter: FilterState): string {
 	const filters = loadSavedFilters();
 	const id = Date.now().toString();
 	filters.push({ id, name, filter, savedAt: Date.now() });
 	localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(filters));
+	return id;
 }
 
 export function deleteFilter(id: string) {
