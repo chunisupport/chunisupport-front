@@ -129,8 +129,6 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		}
 	});
 
-	// handleOpenChangeは同期処理を行わず、open状態のみ伝播
-
 	// 入力中の値（string）を保持するSignal
 	const [constMinInput, setConstMinInput] = createSignal(
 		props.filters.constMin !== undefined && props.filters.constMin !== null
@@ -161,9 +159,6 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		const n = Number(v);
 		return Number.isNaN(n) ? undefined : n;
 	};
-
-	// スコアランク定義
-	// スコアランク定義（共通定数を利用）
 
 	// スコアフィルターモード
 	const [scoreFilterMode, setScoreFilterMode] = createSignal<"number" | "rank">(
@@ -257,6 +252,9 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		});
 		setTrackingDialogOpen(false);
 		syncTrackingState();
+		// TODO: 追跡決定時にすべて閉じる？どうする？
+		// setSaveDialogOpen(false);
+		// props.onOpenChange(false);
 	};
 
 	const handleClearTracking = () => {
