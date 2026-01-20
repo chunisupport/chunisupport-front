@@ -3,6 +3,7 @@ import { Checkbox } from "@kobalte/core/checkbox";
 import { Dialog } from "@kobalte/core/dialog";
 import { NumberField } from "@kobalte/core/number-field";
 import { Popover } from "@kobalte/core/popover";
+import { RadioGroup } from "@kobalte/core/radio-group";
 import { Select } from "@kobalte/core/select";
 import { TextField } from "@kobalte/core/text-field";
 import { Check, ChevronDown, EllipsisVertical, RotateCcw } from "lucide-solid";
@@ -75,6 +76,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	const [trackingLamps, setTrackingLamps] = createSignal<
 		(typeof LAMP_OPTIONS)[number][]
 	>([]);
+	const [trackingLampsRadio, setTrackingLampsRadio] = createSignal<string>("");
 
 	// リセット確認ダイアログの開閉状態
 	const [resetDialogOpen, setResetDialogOpen] = createSignal(false);
@@ -259,6 +261,13 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		if (!target) return;
 		const hasScore = trackingScoreEnabled();
 		const hasLamp = trackingLampEnabled();
+
+		// trackingLampsRadioからselectedLampsを決定する
+		if (trackingLampsRadio() === "ALL JUSTICE") {
+			setTrackingLamps(["ALL JUSTICE"]);
+		} else if (trackingLampsRadio() === "FULL COMBO") {
+			setTrackingLamps(["ALL JUSTICE", "FULL COMBO"]);
+		}
 		const selectedLamps = trackingLamps();
 		if (!hasScore && !hasLamp) return;
 		saveTrackingCondition({
@@ -279,12 +288,6 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 
 	const isTrackingActiveFor = (id: string) =>
 		trackingCondition()?.filterId === id;
-
-	const toggleTrackingLamp = (lamp: (typeof LAMP_OPTIONS)[number]) => {
-		setTrackingLamps((prev) =>
-			prev.includes(lamp) ? prev.filter((v) => v !== lamp) : [...prev, lamp],
-		);
-	};
 
 	return (
 		<Dialog open={props.open} onOpenChange={handleOpenChange}>
@@ -982,9 +985,6 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 														}
 														disabled={!trackingScoreEnabled()}
 													>
-														<Select.Label class="block text-sm font-medium mb-1">
-															スコアランク(最小)
-														</Select.Label>
 														<Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 disabled:bg-gray-100 disabled:text-gray-400">
 															<Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-gray-400">
 																{(state) => state.selectedOption()}
@@ -1020,31 +1020,43 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 													目標ランプを有効化
 												</Checkbox.Label>
 											</Checkbox>
-											<div class="flex flex-col mt-2 gap-2">
+											<RadioGroup
+												value={trackingLampsRadio()}
+												onChange={(v) => {
+													setTrackingLampsRadio(v);
+												}}
+												class="flex flex-col mt-2 gap-2"
+												disabled={!trackingLampEnabled()}
+											>
 												<For
 													each={LAMP_OPTIONS.filter((lamp) => lamp !== null)}
 												>
 													{(lamp, i) => {
 														const id = `tracking-lamp-${i()}`;
 														return (
-															<Checkbox
-																checked={trackingLamps().includes(lamp)}
-																onChange={() => toggleTrackingLamp(lamp)}
-																class="flex"
-																disabled={!trackingLampEnabled()}
+															<RadioGroup.Item
+																value={lamp}
+																class="flex items-center"
 															>
-																<Checkbox.Input id={id} />
-																<Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center mr-2">
-																	<Checkbox.Indicator>
-																		<Check class="h-4 w-4" />
-																	</Checkbox.Indicator>
-																</Checkbox.Control>
-																<Checkbox.Label for={id}>{lamp}</Checkbox.Label>
-															</Checkbox>
+																<RadioGroup.ItemInput id={id} />
+																<RadioGroup.ItemControl class="h-5 w-5 rounded-full border border-gray-300 bg-gray-50 data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center mr-2">
+																	<RadioGroup.ItemIndicator>
+																		<Check class="h-4 w-4 " />
+																	</RadioGroup.ItemIndicator>
+																</RadioGroup.ItemControl>
+																<RadioGroup.ItemLabel
+																	for={id}
+																	class={
+																		trackingLampEnabled() ? "" : "text-gray-400"
+																	}
+																>
+																	{lamp}
+																</RadioGroup.ItemLabel>
+															</RadioGroup.Item>
 														);
 													}}
 												</For>
-											</div>
+											</RadioGroup>
 										</div>
 									</div>
 									<div class="flex justify-end gap-2 mt-6">

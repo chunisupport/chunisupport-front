@@ -268,8 +268,16 @@ const UserRecord: Component = () => {
 		if (typeof condition.scoreRankMin !== "undefined") {
 			parts.push(`${condition.scoreRankMin}`);
 		}
-		if (condition.lamps && condition.lamps.length > 0) {
-			parts.push(`${condition.lamps.join(", ")}`);
+		if (condition.lamps) {
+			const lamps = condition.lamps;
+			if (
+				lamps.includes("ALL JUSTICE") &&
+				lamps.includes("FULL COMBO")
+			) {
+				parts.push("FULL COMBO");
+			} else if (lamps.includes("ALL JUSTICE")) {
+				parts.push("ALL JUSTICE");
+			}
 		}
 		return parts.join(" & ");
 	});
