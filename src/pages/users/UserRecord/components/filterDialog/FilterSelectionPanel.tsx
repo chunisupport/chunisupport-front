@@ -155,6 +155,19 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 					}))
 				}
 			/>
+			<LampSection
+				lamps={LAMP_OPTIONS}
+				selected={props.filters.lamps}
+				onToggle={(lamp) =>
+					props.setFilters((prev) => ({
+						...prev,
+						lamps: toggleArray(prev.lamps, lamp).filter(
+							(l): l is "FULL COMBO" | "ALL JUSTICE" | null =>
+								l === "FULL COMBO" || l === "ALL JUSTICE" || l === null,
+						),
+					}))
+				}
+			/>
 			<GenreSection
 				genres={genres()}
 				selected={props.filters.genres}
@@ -196,19 +209,6 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 					props.setFilters((prev) => ({
 						...prev,
 						versions: toggleArray(prev.versions, version),
-					}))
-				}
-			/>
-			<LampSection
-				lamps={LAMP_OPTIONS}
-				selected={props.filters.lamps}
-				onToggle={(lamp) =>
-					props.setFilters((prev) => ({
-						...prev,
-						lamps: toggleArray(prev.lamps, lamp).filter(
-							(l): l is "FULL COMBO" | "ALL JUSTICE" | null =>
-								l === "FULL COMBO" || l === "ALL JUSTICE" || l === null,
-						),
 					}))
 				}
 			/>
