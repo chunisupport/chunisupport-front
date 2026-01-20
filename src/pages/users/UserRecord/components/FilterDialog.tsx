@@ -847,7 +847,11 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 														</Popover>
 														<button
 															type="button"
-															class="ml-2 px-2 py-1 rounded text-lime-500 border border-lime-600 hover:bg-lime-100"
+															class={
+																isTrackingActiveFor(item.id)
+																	? "ml-2 px-2 py-1 rounded border border-lime-600 text-lime-600 hover:bg-lime-100"
+																	: "ml-2 px-2 py-1 rounded bg-lime-600 border text-white"
+															}
 															onClick={() =>
 																isTrackingActiveFor(item.id)
 																	? handleClearTracking()

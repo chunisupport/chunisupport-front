@@ -3,7 +3,7 @@ import { Progress } from "@kobalte/core/progress";
 import { TextField } from "@kobalte/core/text-field";
 import { Title } from "@solidjs/meta";
 import { useParams } from "@solidjs/router";
-import { Funnel } from "lucide-solid";
+import { CircleX, Funnel } from "lucide-solid";
 import type { Component } from "solid-js";
 import {
 	createEffect,
@@ -266,12 +266,12 @@ const UserRecord: Component = () => {
 		if (!condition) return "";
 		const parts: string[] = [];
 		if (typeof condition.scoreRankMin !== "undefined") {
-			parts.push(`スコアランク ${condition.scoreRankMin}`);
+			parts.push(`${condition.scoreRankMin}`);
 		}
 		if (condition.lamps && condition.lamps.length > 0) {
-			parts.push(`ランプ ${condition.lamps.join(", ")}`);
+			parts.push(`${condition.lamps.join(", ")}`);
 		}
-		return parts.join(" / ");
+		return parts.join(" & ");
 	});
 
 	// 件数表示
@@ -375,22 +375,22 @@ const UserRecord: Component = () => {
 						{trackingCondition() && trackingTargetFilter() && (
 							<div class="mb-2 p-2 border border-lime-600 rounded-sm text-lime-600">
 								<div class="flex justify-between mb-1 items-center">
-									<p class="text-base font-bold">追跡中の条件</p>
+									<div class="flex items-center gap-2">
+										<p class="text-base font-bold">追跡中の条件</p>
+										<CircleX
+											class="text-red-500 cursor-pointer hover:bg-lime-100"
+											size={16}
+											onClick={() => {
+												clearTrackingCondition();
+												setTrackingCondition(null);
+											}}
+										/>
+									</div>
 									<div class="flex items-center gap-2">
 										<p>
 											達成:{" "}
 											<span class="text-base">{trackingStats().achieved}</span>
 										</p>
-										<button
-											type="button"
-											class="px-2 py-1 rounded border border-lime-600 text-lime-600 hover:bg-lime-50"
-											onClick={() => {
-												clearTrackingCondition();
-												setTrackingCondition(null);
-											}}
-										>
-											解除
-										</button>
 									</div>
 								</div>
 								<div class="flex justify-between mb-2">
