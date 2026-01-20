@@ -13,11 +13,7 @@ import type { MasterDataDTO } from "../../../../types/api";
 import { CHUNITHM_VERSIONS } from "../../../../utils/versionConverter";
 import { LAMP_OPTIONS } from "../types/filterDefaults";
 import type { Difficulty, FilterState } from "../types/types";
-import {
-	SCORE_RANK_VALUES,
-	SCORE_RANKS,
-	type ScoreRank,
-} from "../utils/scoreRank";
+import { SCORE_RANK_VALUES, SCORE_RANKS } from "../utils/scoreRank";
 import {
 	clearTrackingCondition,
 	deleteFilter,
@@ -72,7 +68,11 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	const [trackingScoreEnabled, setTrackingScoreEnabled] = createSignal(false);
 	const [trackingLampEnabled, setTrackingLampEnabled] = createSignal(false);
 
-	const [trackingRankMin, setTrackingRankMin] = createSignal<ScoreRank>("SSS");
+	const [trackingScoreMode, setTrackingScoreMode] = createSignal<
+		"number" | "rank"
+	>("rank");
+	const [trackingScoreRank, setTrackingScoreRank] = createSignal("SSS");
+	const [trackingScoreMin, setTrackingScoreMin] = createSignal<number>(1007500);
 	const [trackingLamps, setTrackingLamps] = createSignal<
 		(typeof LAMP_OPTIONS)[number][]
 	>([]);
@@ -169,8 +169,8 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	const [scoreFilterMode, setScoreFilterMode] = createSignal<"number" | "rank">(
 		"rank",
 	);
-	const [scoreRankMin, setScoreRankMin] = createSignal<ScoreRank>("0点");
-	const [scoreRankMax, setScoreRankMax] = createSignal<ScoreRank>("MAX");
+	const [scoreRankMin, setScoreRankMin] = createSignal("0点");
+	const [scoreRankMax, setScoreRankMax] = createSignal("MAX");
 
 	// Dialogが開かれた時にフィルター状態をリセット
 	const handleOpenChange = (open: boolean) => {
@@ -199,18 +199,18 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
 
 	// スコアランク選択時の反映
-	const handleScoreRankChange = (type: "min" | "max", value: ScoreRank) => {
+	const handleScoreRankChange = (type: "min" | "max", value: string) => {
 		if (type === "min") {
 			setScoreRankMin(value);
 			setFilters((prev) => ({
 				...prev,
-				scoreMin: SCORE_RANK_VALUES[value],
+				scoreMin: SCORE_RANK_VALUES[value as keyof typeof SCORE_RANK_VALUES],
 			}));
 		} else {
 			setScoreRankMax(value);
 			setFilters((prev) => ({
 				...prev,
-				scoreMax: SCORE_RANK_VALUES[value],
+				scoreMax: SCORE_RANK_VALUES[value as keyof typeof SCORE_RANK_VALUES],
 			}));
 		}
 	};
@@ -223,12 +223,12 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 			const minRank = SCORE_RANKS.reduce(
 				(acc, cur) =>
 					SCORE_RANK_VALUES[cur] <= filters().scoreMin ? cur : acc,
-				"0点" as ScoreRank,
+				"0点",
 			);
 			const maxRank = SCORE_RANKS.reduce(
 				(acc, cur) =>
 					SCORE_RANK_VALUES[cur] >= filters().scoreMax ? cur : acc,
-				"MAX" as ScoreRank,
+				"MAX",
 			);
 			setScoreRankMin(minRank);
 			setScoreRankMax(maxRank);
@@ -241,17 +241,35 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		props.onTrackingChange?.();
 	};
 
+	// TODO: 追跡状態で再度開くことを想定している……？
 	const openTrackingDialog = (item: SavedFilter) => {
 		setTrackingTargetFilter(item);
 		const current = loadTrackingCondition();
 		if (current && current.filterId === item.id) {
-			setTrackingScoreEnabled(typeof current.scoreRankMin !== "undefined");
-			setTrackingRankMin(current.scoreRankMin ?? "SSS");
+			setTrackingScoreEnabled(typeof current.scoreMin !== "undefined");
+			setTrackingScoreMin(current.scoreMin ?? 1007500);
 			setTrackingLamps(current.lamps ?? []);
+			// スコアモード初期化
+			if (typeof current.scoreMin === "number") {
+				// 既存値がランク値ならランクモード、それ以外は数値モード
+				const foundRank = SCORE_RANKS.filter((r) => r !== "0点").find(
+					(r) =>
+						SCORE_RANK_VALUES[r as keyof typeof SCORE_RANK_VALUES] ===
+						current.scoreMin,
+				);
+				if (foundRank) {
+					setTrackingScoreMode("rank");
+					setTrackingScoreRank(foundRank);
+				} else {
+					setTrackingScoreMode("number");
+				}
+			}
 		} else {
 			setTrackingScoreEnabled(false);
-			setTrackingRankMin("SSS");
+			setTrackingScoreMin(1007500);
 			setTrackingLamps([]);
+			setTrackingScoreMode("rank");
+			setTrackingScoreRank("SSS");
 		}
 		setTrackingDialogOpen(true);
 	};
@@ -273,7 +291,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		saveTrackingCondition({
 			filterId: target.id,
 			filterName: target.name,
-			scoreRankMin: hasScore ? trackingRankMin() : undefined,
+			scoreMin: hasScore ? trackingScoreMin() : undefined,
 			lamps: hasLamp ? selectedLamps : undefined,
 			savedAt: Date.now(),
 		});
@@ -517,8 +535,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 											options={SCORE_RANKS}
 											value={scoreRankMin()}
 											onChange={(v) => {
-												if (v !== null)
-													handleScoreRankChange("min", v as ScoreRank);
+												if (v !== null) handleScoreRankChange("min", v);
 											}}
 											class="w-full"
 											placeholder="選択…"
@@ -559,8 +576,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 											options={SCORE_RANKS}
 											value={scoreRankMax()}
 											onChange={(v) => {
-												if (v !== null)
-													handleScoreRankChange("max", v as ScoreRank);
+												if (v !== null) handleScoreRankChange("max", v);
 											}}
 											class="w-full"
 											placeholder="選択…"
@@ -957,7 +973,9 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 							<Dialog.Portal>
 								<Dialog.Overlay class="fixed inset-0 bg-black/30 z-70" />
 								<Dialog.Content class="fixed z-80 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md border border-gray-300">
-									<div class="font-bold mb-2">追跡条件の設定「{trackingTargetFilter()?.name ?? "-"}」</div>
+									<div class="font-bold mb-2">
+										追跡条件の設定「{trackingTargetFilter()?.name ?? "-"}」
+									</div>
 									<div class="text-xs text-gray-500 mb-4">
 										目標とするスコアもしくはランプ(AJ/FC)を設定してください。
 									</div>
@@ -980,17 +998,50 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 											</Checkbox>
 											<div class="flex gap-2 mt-2">
 												<div class="flex-1">
-													<Select
-														options={SCORE_RANKS}
-														value={trackingRankMin()}
-														onChange={(v) => {
-															if (v !== null)
-																setTrackingRankMin(v as ScoreRank);
-														}}
-														class="w-full"
-														placeholder="選択…"
-														itemComponent={(props) =>
-															props.item.rawValue === "0点" ? null : (
+													{trackingScoreMode() === "number" ? (
+														<NumberField
+															value={String(trackingScoreMin())}
+															onChange={(v: string) => {
+																setTrackingScoreMin(Number(v));
+															}}
+															class="w-full"
+															format={false}
+															allowedInput={/[0-9.]/}
+															step={1}
+															disabled={!trackingScoreEnabled()}
+														>
+															<NumberField.Input
+																id="tracking-score-min"
+																min={0}
+																max={1010000}
+																step={1}
+																class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 disabled:bg-gray-100 disabled:text-gray-400"
+																onFocus={(e) => e.currentTarget.select()}
+																onBlur={(e) => {
+																	const v = e.currentTarget.value;
+																	setTrackingScoreMin(Number(v));
+																}}
+																disabled={!trackingScoreEnabled()}
+															/>
+														</NumberField>
+													) : (
+														<Select
+															options={SCORE_RANKS.filter((r) => r !== "0点")}
+															value={trackingScoreRank()}
+															onChange={(v) => {
+																if (v !== null) {
+																	setTrackingScoreRank(v);
+																	setTrackingScoreMin(
+																		SCORE_RANK_VALUES[
+																			v as keyof typeof SCORE_RANK_VALUES
+																		],
+																	);
+																}
+															}}
+															class="w-full"
+															placeholder="選択…"
+															disabled={!trackingScoreEnabled()}
+															itemComponent={(props) => (
 																<Select.Item
 																	item={props.item}
 																	class="text-sm rounded flex items-center justify-between h-8 px-2 outline-none cursor-pointer data-disabled:opacity-50 data-disabled:pointer-events-none data-highlighted:bg-blue-500 data-highlighted:text-white"
@@ -1002,26 +1053,47 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 																		<Check />
 																	</Select.ItemIndicator>
 																</Select.Item>
-															)
-														}
-														disabled={!trackingScoreEnabled()}
-													>
-														<Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 disabled:bg-gray-100 disabled:text-gray-400">
-															<Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-gray-400">
-																{(state) => state.selectedOption()}
-															</Select.Value>
-															<Select.Icon class="h-5 w-5 flex items-center justify-center">
-																<ChevronDown />
-															</Select.Icon>
-														</Select.Trigger>
-														<Select.Portal>
-															<Select.Content class="z-80 bg-white rounded-md border border-gray-300 shadow-lg">
-																<Select.Listbox class="overflow-y-auto max-h-90 p-2" />
-															</Select.Content>
-														</Select.Portal>
-													</Select>
+															)}
+														>
+															<Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 disabled:bg-gray-100 disabled:text-gray-400">
+																<Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-gray-400">
+																	{(state) => state.selectedOption()}
+																</Select.Value>
+																<Select.Icon class="h-5 w-5 flex items-center justify-center">
+																	<ChevronDown />
+																</Select.Icon>
+															</Select.Trigger>
+															<Select.Portal>
+																<Select.Content class="z-80 bg-white rounded-md border border-gray-300 shadow-lg">
+																	<Select.Listbox class="overflow-y-auto max-h-90 p-2" />
+																</Select.Content>
+															</Select.Portal>
+														</Select>
+													)}
 												</div>
-												{/* TODO: 数値で入力させる */}
+											</div>
+											<div class="mt-2">
+												<Checkbox
+													checked={trackingScoreMode() === "number"}
+													onChange={(checked) =>
+														setTrackingScoreMode(checked ? "number" : "rank")
+													}
+													class="flex items-center"
+													disabled={!trackingScoreEnabled()}
+												>
+													<Checkbox.Input id="tracing-score-mode" />
+													<Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center mr-2">
+														<Checkbox.Indicator>
+															<Check class="h-4 w-4" />
+														</Checkbox.Indicator>
+													</Checkbox.Control>
+													<Checkbox.Label
+														for="tracing-score-mode"
+														class={trackingScoreEnabled() ? "" : "text-gray-400"}
+													>
+														数値で指定する
+													</Checkbox.Label>
+												</Checkbox>
 											</div>
 										</div>
 										<div>

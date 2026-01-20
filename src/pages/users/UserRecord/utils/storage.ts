@@ -1,5 +1,4 @@
 import type { ComboLamp, FilterState } from "../types/types";
-import type { ScoreRank } from "./scoreRank";
 
 export interface SavedFilter {
 	id: string;
@@ -11,7 +10,7 @@ export interface SavedFilter {
 export interface TrackingCondition {
 	filterId: string;
 	filterName: string;
-	scoreRankMin?: ScoreRank;
+	scoreMin?: number;
 	lamps?: (ComboLamp | null)[];
 	savedAt: number;
 }

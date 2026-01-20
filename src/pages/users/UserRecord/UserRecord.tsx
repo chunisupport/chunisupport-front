@@ -26,7 +26,6 @@ import FilterDialog from "./components/FilterDialog";
 import RecordTable from "./components/RecordTable";
 import { DEFAULT_FILTER, LAMP_OPTIONS } from "./types/filterDefaults";
 import type { ComboLamp, Difficulty, FilterState } from "./types/types";
-import { SCORE_RANK_VALUES } from "./utils/scoreRank";
 import {
 	clearTrackingCondition,
 	loadSavedFilters,
@@ -218,13 +217,13 @@ const UserRecord: Component = () => {
 		record: PlayerRecordIncludeNoPlay,
 		condition: TrackingCondition,
 	) => {
-		const hasScore = typeof condition.scoreRankMin !== "undefined";
+		const hasScore = typeof condition.scoreMin !== "undefined";
 		const hasLamp = (condition.lamps ?? []).length > 0;
 		if (!hasScore && !hasLamp) return false;
 		if (!record.is_played) return false;
 
 		if (hasScore) {
-			const minScore = SCORE_RANK_VALUES[condition.scoreRankMin ?? "0点"];
+			const minScore = condition.scoreMin ?? 0;
 			if (record.score === null) return false;
 			if (record.score < minScore) return false;
 		}
@@ -265,15 +264,12 @@ const UserRecord: Component = () => {
 		const condition = trackingCondition();
 		if (!condition) return "";
 		const parts: string[] = [];
-		if (typeof condition.scoreRankMin !== "undefined") {
-			parts.push(`${condition.scoreRankMin}`);
+		if (typeof condition.scoreMin !== "undefined") {
+			parts.push(`${condition.scoreMin.toLocaleString()}点以上`);
 		}
 		if (condition.lamps) {
 			const lamps = condition.lamps;
-			if (
-				lamps.includes("ALL JUSTICE") &&
-				lamps.includes("FULL COMBO")
-			) {
+			if (lamps.includes("ALL JUSTICE") && lamps.includes("FULL COMBO")) {
 				parts.push("FULL COMBO");
 			} else if (lamps.includes("ALL JUSTICE")) {
 				parts.push("ALL JUSTICE");
