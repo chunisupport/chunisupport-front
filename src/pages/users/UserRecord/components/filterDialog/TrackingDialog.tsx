@@ -21,8 +21,15 @@ type TrackingDialogProps = {
 	onTrackingSaved: () => void;
 };
 
-const TrackingDialog: Component<TrackingDialogProps> = (props) => {
+/** 追跡ランプの選択肢を返す(nullを除外) */
+type LampOption = Exclude<(typeof LAMP_OPTIONS)[number], null>;
+type LampOptions = LampOption[];
+const lampOptionsNotNull = (): LampOptions =>
+	LAMP_OPTIONS.filter(
+		(lamp): lamp is Exclude<typeof lamp, null> => lamp !== null,
+	) as LampOptions;
 
+const TrackingDialog: Component<TrackingDialogProps> = (props) => {
 	// 入力値の状態管理
 	const [trackingScoreEnabled, setTrackingScoreEnabled] = createSignal(false);
 	const [trackingLampEnabled, setTrackingLampEnabled] = createSignal(false);
@@ -31,10 +38,11 @@ const TrackingDialog: Component<TrackingDialogProps> = (props) => {
 	>("rank");
 	const [trackingScoreRank, setTrackingScoreRank] = createSignal("SSS");
 	const [trackingScoreMin, setTrackingScoreMin] = createSignal<number>(1007500);
-	const [trackingLamps, setTrackingLamps] = createSignal<
-		(typeof LAMP_OPTIONS)[number][]
-	>([]);
-	const [trackingLampsRadio, setTrackingLampsRadio] = createSignal<string>("");
+	const [trackingLamps, setTrackingLamps] = createSignal<LampOption[]>(
+		lampOptionsNotNull(),
+	);
+	const [trackingLampsRadio, setTrackingLampsRadio] =
+		createSignal<LampOption>("ALL JUSTICE");
 
 	// ダイアログが開かれた時に状態を初期化
 	createEffect(() => {
@@ -45,8 +53,8 @@ const TrackingDialog: Component<TrackingDialogProps> = (props) => {
 		setTrackingScoreMin(1007500);
 		setTrackingScoreRank("SSS");
 		setTrackingLampEnabled(false);
-		setTrackingLamps([]);
-		setTrackingLampsRadio("");
+		setTrackingLamps(["ALL JUSTICE", "FULL COMBO"]);
+		setTrackingLampsRadio("ALL JUSTICE");
 	});
 
 	/** 追跡条件保存処理 */
@@ -76,12 +84,6 @@ const TrackingDialog: Component<TrackingDialogProps> = (props) => {
 
 	const targetName = () => props.targetFilter?.name ?? "-";
 	const canSave = () => trackingScoreEnabled() || trackingLampEnabled();
-
-	/** 追跡ランプの選択肢を返す(nullを除外) */
-	const lampOptions = () =>
-		LAMP_OPTIONS.filter(
-			(lamp): lamp is Exclude<typeof lamp, null> => lamp !== null,
-		);
 
 	return (
 		<Dialog open={props.open} onOpenChange={props.onOpenChange}>
@@ -227,11 +229,11 @@ const TrackingDialog: Component<TrackingDialogProps> = (props) => {
 							</Checkbox>
 							<RadioGroup
 								value={trackingLampsRadio()}
-								onChange={(value) => setTrackingLampsRadio(value)}
+								onChange={(value) => setTrackingLampsRadio(value as LampOption)}
 								class="flex flex-col mt-2 gap-2"
 								disabled={!trackingLampEnabled()}
 							>
-								<For each={lampOptions()}>
+								<For each={lampOptionsNotNull()}>
 									{(lamp, index) => {
 										const id = `tracking-lamp-${index()}`;
 										return (
