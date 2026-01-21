@@ -1,13 +1,4 @@
-import type { ComboLamp, Difficulty, FilterState } from "../types/types";
-
-/** 難易度の選択肢 */
-export const DIFFICULTY_OPTIONS: Difficulty[] = [
-	"BASIC",
-	"ADVANCED",
-	"EXPERT",
-	"MASTER",
-	"ULTIMA",
-];
+import type { ComboLamp, FilterState } from "../types/types";
 
 /** ランプの選択肢 */
 export const LAMP_OPTIONS: (ComboLamp | null)[] = [

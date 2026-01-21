@@ -33,6 +33,7 @@ export interface PlayerRecordIncludeNoPlay {
 export function mergeAllRecords(
 	songs: SongDTO[],
 	playedRecords: PlayerRecordDTO[],
+	difficulties: string[],
 ): PlayerRecordIncludeNoPlay[] {
 	const result: PlayerRecordIncludeNoPlay[] = [];
 
@@ -45,16 +46,7 @@ export function mergeAllRecords(
 
 	// 全楽曲を走査
 	for (const song of songs) {
-		const difficulties: Array<keyof typeof song.charts> = [
-			"BASIC",
-			"ADVANCED",
-			"EXPERT",
-			"MASTER",
-			"ULTIMA",
-		];
-
 		for (const diff of difficulties) {
-			// diffはsymbol型の可能性があるためstring化
 			const diffStr = String(diff);
 			const chart = song.charts[diffStr as keyof typeof song.charts];
 			if (!chart) continue;

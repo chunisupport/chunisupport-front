@@ -65,8 +65,10 @@ const UserRecord: Component = () => {
 	const mergedRecords = createMemo(() => {
 		const profile = userProfile();
 		const songs = allSongs();
-		if (!profile || !songs) return [];
-		return mergeAllRecords(songs.songs, profile.records.all);
+		const md = masterData();
+		if (!profile || !songs || !md) return [];
+		const difficulties = md.difficulties.map((d) => d.name);
+		return mergeAllRecords(songs.songs, profile.records.all, difficulties);
 	});
 
 	/** フィルター適用後のレコード */
