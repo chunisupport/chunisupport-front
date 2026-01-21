@@ -3,7 +3,7 @@ import { NumberField } from "@kobalte/core/number-field";
 import { Select } from "@kobalte/core/select";
 import { Check, ChevronDown } from "lucide-solid";
 import type { Component } from "solid-js";
-import { SCORE_RANKS } from "../../utils/scoreRank";
+import { SCORE_RANKS } from "../../../utils/scoreRank";
 
 type ScoreSectionProps = {
 	scoreFilterMode: "number" | "rank";

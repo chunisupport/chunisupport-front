@@ -6,13 +6,13 @@ import { Select } from "@kobalte/core/select";
 import { Check, ChevronDown } from "lucide-solid";
 import type { Component } from "solid-js";
 import { createEffect, createSignal, For } from "solid-js";
-import { LAMP_OPTIONS } from "../../types/filterDefaults";
-import { SCORE_RANK_VALUES, SCORE_RANKS } from "../../utils/scoreRank";
+import { LAMP_OPTIONS } from "../../../types/filterDefaults";
+import { SCORE_RANK_VALUES, SCORE_RANKS } from "../../../utils/scoreRank";
 import {
 	clearTrackingCondition,
 	type SavedFilter,
 	saveTrackingCondition,
-} from "../../utils/storage";
+} from "../../../utils/storage";
 
 type TrackingDialogProps = {
 	open: boolean;

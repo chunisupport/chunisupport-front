@@ -2,7 +2,7 @@ import { Checkbox } from "@kobalte/core/checkbox";
 import { Check } from "lucide-solid";
 import type { Component } from "solid-js";
 import { For } from "solid-js";
-import type { Difficulty } from "../../types/types";
+import type { Difficulty } from "../../../types/types";
 
 type DifficultySectionProps = {
 	difficulties: Difficulty[];

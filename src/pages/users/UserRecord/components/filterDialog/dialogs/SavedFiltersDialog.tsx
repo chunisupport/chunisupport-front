@@ -4,8 +4,8 @@ import { TextField } from "@kobalte/core/text-field";
 import { EllipsisVertical } from "lucide-solid";
 import type { Component } from "solid-js";
 import { createEffect, createSignal, For } from "solid-js";
-import type { FilterState } from "../../types/types";
-import { formatFilterSummary } from "../../utils/filterDialog";
+import type { FilterState } from "../../../types/types";
+import { formatFilterSummary } from "../../../utils/filterDialog";
 import {
 	clearTrackingCondition,
 	deleteFilter,
@@ -13,7 +13,7 @@ import {
 	loadTrackingCondition,
 	type SavedFilter,
 	saveNewFilter,
-} from "../../utils/storage";
+} from "../../../utils/storage";
 import TrackingDialog from "./TrackingDialog";
 
 type SavedFiltersDialogProps = {

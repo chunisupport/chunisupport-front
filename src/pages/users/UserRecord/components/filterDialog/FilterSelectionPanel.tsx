@@ -6,12 +6,12 @@ import { LAMP_OPTIONS } from "../../types/filterDefaults";
 import type { Difficulty, FilterState } from "../../types/types";
 import { parseNumberInput, toggleArray } from "../../utils/filterDialog";
 import { SCORE_RANK_VALUES } from "../../utils/scoreRank";
-import ConstRangeSection from "./ConstRangeSection";
-import DifficultySection from "./DifficultySection";
-import GenreSection from "./GenreSection";
-import LampSection from "./LampSection";
-import ScoreSection from "./ScoreSection";
-import VersionSection from "./VersionSection";
+import ConstRangeSection from "./sections/ConstRangeSection";
+import DifficultySection from "./sections/DifficultySection";
+import GenreSection from "./sections/GenreSection";
+import LampSection from "./sections/LampSection";
+import ScoreSection from "./sections/ScoreSection";
+import VersionSection from "./sections/VersionSection";
 
 type FilterSelectionPanelProps = {
 	open: boolean;

@@ -3,9 +3,9 @@ import type { Component } from "solid-js";
 import { createEffect, createSignal } from "solid-js";
 import type { MasterDataDTO } from "../../../../types/api";
 import type { FilterState } from "../types/types";
-import FilterResetDialog from "./filterDialog/FilterResetDialog";
+import FilterResetDialog from "./filterDialog/dialogs/FilterResetDialog";
+import SavedFiltersDialog from "./filterDialog/dialogs/SavedFiltersDialog";
 import FilterSelectionPanel from "./filterDialog/FilterSelectionPanel";
-import SavedFiltersDialog from "./filterDialog/SavedFiltersDialog";
 
 interface FilterDialogProps {
 	open: boolean;
@@ -59,9 +59,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 				<Dialog.Overlay class="fixed inset-0 bg-black/30 z-40" />
 				<Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md max-h-[80vh] flex flex-col">
 					<div class="flex items-center justify-between mb-4 shrink-0">
-						<Dialog.Title class="text-lg font-bold">
-							フィルター
-						</Dialog.Title>
+						<Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
 						<FilterResetDialog onReset={handleReset} />
 					</div>
 					{/* メインのフィルター選択部分 */}
