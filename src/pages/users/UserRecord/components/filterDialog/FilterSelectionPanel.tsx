@@ -17,6 +17,8 @@ type FilterSelectionPanelProps = {
 	open: boolean;
 	filters: FilterState;
 	setFilters: Setter<FilterState>;
+	constFilterMode: "level" | "number";
+	setConstFilterMode: Setter<"level" | "number">;
 	masterData?: MasterDataDTO;
 	defaultFilter: FilterState;
 	resetKey: number;
@@ -31,10 +33,11 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 	const [scoreFilterMode, setScoreFilterMode] = createSignal<"number" | "rank">(
 		"rank",
 	);
-
 	// 入力値の状態管理
 	const [scoreRankMin, setScoreRankMin] = createSignal("0点");
 	const [scoreRankMax, setScoreRankMax] = createSignal("MAX");
+	const [constLevelMin, setConstLevelMin] = createSignal("1");
+	const [constLevelMax, setConstLevelMax] = createSignal("15+");
 	const [constMinInput, setConstMinInput] = createSignal(
 		toInputValue(props.filters.constMin),
 	);
@@ -48,6 +51,33 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 		toInputValue(props.filters.scoreMax),
 	);
 
+	const toConstLevel = (value: number) => {
+		const normalized = Math.max(1, Math.min(value, 15.9));
+		if (normalized <= 6.9) {
+			return String(Math.floor(normalized));
+		}
+		const base = Math.floor(normalized);
+		const decimal = normalized - base;
+		if (decimal >= 0.5) {
+			return `${base}+`;
+		}
+		return String(base);
+	};
+
+	const toConstValue = (level: string, type: "min" | "max") => {
+		const isPlus = level.endsWith("+");
+		const base = Number.parseInt(level.replace("+", ""), 10);
+		if (base <= 6) {
+			return type === "min" ? base : Number((base + 0.9).toFixed(1));
+		}
+		if (isPlus) {
+			return type === "min"
+				? Number((base + 0.5).toFixed(1))
+				: Number((base + 0.9).toFixed(1));
+		}
+		return type === "min" ? base : Number((base + 0.4).toFixed(1));
+	};
+
 	// フィルターダイアログが開かれた時にフィルター状態を同期
 	createEffect(() => {
 		if (!props.open) return;
@@ -55,19 +85,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 		setConstMaxInput(toInputValue(props.filters.constMax));
 		setScoreMinInput(toInputValue(props.filters.scoreMin));
 		setScoreMaxInput(toInputValue(props.filters.scoreMax));
-	});
-
-	// フィルターリセット時に入力欄の状態をリセット
-	createEffect(() => {
-		props.resetKey;
-		const def = props.defaultFilter;
-		setConstMinInput(toInputValue(def.constMin));
-		setConstMaxInput(toInputValue(def.constMax));
-		setScoreMinInput(toInputValue(def.scoreMin));
-		setScoreMaxInput(toInputValue(def.scoreMax));
-		setScoreFilterMode("rank");
-		setScoreRankMin("0点");
-		setScoreRankMax("MAX");
+		setConstLevelMin(toConstLevel(props.filters.constMin));
+		setConstLevelMax(toConstLevel(props.filters.constMax));
 	});
 
 	/** スコアランク変更時の処理(ランクからスコアへの変換と適応) */
@@ -104,8 +123,11 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 				}
 			/>
 			<ConstRangeSection
+				constFilterMode={props.constFilterMode}
 				minValue={constMinInput()}
 				maxValue={constMaxInput()}
+				constLevelMin={constLevelMin()}
+				constLevelMax={constLevelMax()}
 				onMinInput={setConstMinInput}
 				onMaxInput={setConstMaxInput}
 				onMinCommit={(value) => {
@@ -120,6 +142,46 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 					props.setFilters((prev) => ({
 						...prev,
 						constMax: parseNumberInput(value) ?? 15.9,
+					}));
+				}}
+				onConstFilterModeChange={(mode) => {
+					props.setConstFilterMode(mode);
+					if (mode === "number") {
+						setConstMinInput(toInputValue(props.filters.constMin));
+						setConstMaxInput(toInputValue(props.filters.constMax));
+						return;
+					}
+					const nextMinLevel = toConstLevel(props.filters.constMin);
+					const nextMaxLevel = toConstLevel(props.filters.constMax);
+					const nextMinValue = toConstValue(nextMinLevel, "min");
+					const nextMaxValue = toConstValue(nextMaxLevel, "max");
+					setConstLevelMin(nextMinLevel);
+					setConstLevelMax(nextMaxLevel);
+					setConstMinInput(toInputValue(nextMinValue));
+					setConstMaxInput(toInputValue(nextMaxValue));
+					props.setFilters((prev) => ({
+						...prev,
+						constMin: nextMinValue,
+						constMax: nextMaxValue,
+					}));
+				}}
+				onConstLevelChange={(type, value) => {
+					if (type === "min") {
+						setConstLevelMin(value);
+						const nextValue = toConstValue(value, "min");
+						setConstMinInput(toInputValue(nextValue));
+						props.setFilters((prev) => ({
+							...prev,
+							constMin: nextValue,
+						}));
+						return;
+					}
+					setConstLevelMax(value);
+					const nextValue = toConstValue(value, "max");
+					setConstMaxInput(toInputValue(nextValue));
+					props.setFilters((prev) => ({
+						...prev,
+						constMax: nextValue,
 					}));
 				}}
 			/>
