@@ -65,9 +65,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
 							id="filter-const-min"
 							class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400  focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
 							onFocus={(event) => event.currentTarget.select()}
-							onBlur={(event) =>
-								props.onMinCommit(event.currentTarget.value)
-							}
+							onBlur={(event) => props.onMinCommit(event.currentTarget.value)}
 						/>
 					</NumberField>
 				</div>
@@ -90,9 +88,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
 							step={0.1}
 							class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
 							onFocus={(event) => event.currentTarget.select()}
-							onBlur={(event) =>
-								props.onMaxCommit(event.currentTarget.value)
-							}
+							onBlur={(event) => props.onMaxCommit(event.currentTarget.value)}
 						/>
 					</NumberField>
 				</div>
@@ -193,9 +189,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
 						<Check class="h-4 w-4" />
 					</Checkbox.Indicator>
 				</Checkbox.Control>
-				<Checkbox.Label for="filter-const-mode">
-					譜面定数で指定
-				</Checkbox.Label>
+				<Checkbox.Label for="filter-const-mode">譜面定数で指定</Checkbox.Label>
 			</Checkbox>
 		</div>
 	</div>
