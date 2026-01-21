@@ -1,7 +1,7 @@
 import { Dialog } from "@kobalte/core/dialog";
 import { Popover } from "@kobalte/core/popover";
 import { TextField } from "@kobalte/core/text-field";
-import { EllipsisVertical } from "lucide-solid";
+import { EllipsisVertical, Save } from "lucide-solid";
 import type { Component } from "solid-js";
 import { createEffect, createSignal, For } from "solid-js";
 import type { FilterState } from "../../../types/types";
@@ -111,7 +111,10 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
 				class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
 				onClick={() => setOpen(true)}
 			>
-				保存・呼出
+				<div class="flex justify-center items-center text-sm mb-0.5">
+					<Save class="w-4 h-4 mr-1" />
+					<div>保存・追跡</div>
+				</div>
 			</button>
 			<Dialog open={open()} onOpenChange={setOpen}>
 				<Dialog.Portal>
