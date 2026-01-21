@@ -13,7 +13,7 @@ export const DEFAULT_FILTER: FilterState = {
 	difficulties: ["MASTER", "ULTIMA"],
 	genres: [],
 	versions: [],
-	constMin: 0.0,
+	constMin: 1.0,
 	constMax: 15.9,
 	scoreMin: 0,
 	scoreMax: 1010000,
