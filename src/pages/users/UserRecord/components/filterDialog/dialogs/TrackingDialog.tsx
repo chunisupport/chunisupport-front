@@ -147,16 +147,23 @@ const TrackingDialog: Component<TrackingDialogProps> = (props) => {
 										</NumberField>
 									) : (
 										<Select
-											options={SCORE_RANKS.filter((rank) => rank !== "0点")}
+											options={[
+												"1点",
+												...SCORE_RANKS.filter((rank) => rank !== "0点"),
+											]}
 											value={trackingScoreRank()}
 											onChange={(value) => {
 												if (value !== null) {
 													setTrackingScoreRank(value);
-													setTrackingScoreMin(
-														SCORE_RANK_VALUES[
-															value as keyof typeof SCORE_RANK_VALUES
-														],
-													);
+													if (value === "1点") {
+														setTrackingScoreMin(1);
+													} else {
+														setTrackingScoreMin(
+															SCORE_RANK_VALUES[
+																value as keyof typeof SCORE_RANK_VALUES
+															],
+														);
+													}
 												}
 											}}
 											class="w-full"
