@@ -117,9 +117,10 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
 				<Dialog.Portal>
 					<Dialog.Overlay class="fixed inset-0 bg-black/30 z-60" />
 					<Dialog.Content class="fixed z-70 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md border border-gray-300">
-						<div class="flex justify-between items-center mb-4">
-							<div class="font-bold">フィルター条件の保存・呼出</div>
-						</div>
+						<Dialog.Title class="font-bold mb-2">
+							フィルター条件の保存・呼出
+						</Dialog.Title>
+						{/* 保存済みフィルター一覧 */}
 						<div class="mb-4">
 							<div class="text-xs text-gray-500 mb-1">保存した条件</div>
 							<div class="border border-gray-300 rounded bg-gray-50 px-3 py-2 min-h-80 max-h-80 overflow-y-auto">
@@ -218,10 +219,13 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
 								</button>
 							</div>
 						</div>
-						<div class="text-right">
+						<div class="flex items-center justify-between space-x-2">
+							<Dialog.Description class="flex-1 text-xs text-gray-500">
+								フィルター条件はブラウザに保存されます。
+							</Dialog.Description>
 							<button
 								type="button"
-								class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+								class="shrink-0 px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
 								onClick={() => setOpen(false)}
 							>
 								戻る

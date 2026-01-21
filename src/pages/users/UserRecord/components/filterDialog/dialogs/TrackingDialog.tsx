@@ -3,7 +3,7 @@ import { Dialog } from "@kobalte/core/dialog";
 import { NumberField } from "@kobalte/core/number-field";
 import { RadioGroup } from "@kobalte/core/radio-group";
 import { Select } from "@kobalte/core/select";
-import { Check, ChevronDown } from "lucide-solid";
+import { Check, ChevronDown, Info } from "lucide-solid";
 import type { Component } from "solid-js";
 import { createEffect, createSignal, For } from "solid-js";
 import { LAMP_OPTIONS } from "../../../types/filterDefaults";
@@ -90,10 +90,17 @@ const TrackingDialog: Component<TrackingDialogProps> = (props) => {
 			<Dialog.Portal>
 				<Dialog.Overlay class="fixed inset-0 bg-black/30 z-70" />
 				<Dialog.Content class="fixed z-80 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md border border-gray-300">
-					<div class="font-bold mb-2">追跡条件の設定「{targetName()}」</div>
-					<div class="text-xs text-gray-500 mb-4">
-						目標とするスコアもしくはランプ(AJ/FC)を設定してください。
-					</div>
+					<Dialog.Title class="font-bold mb-2">
+						追跡条件の設定「{targetName()}」
+					</Dialog.Title>
+					<Dialog.Description class="text-xs text-gray-500 mb-4">
+						<div class="flex items-center p-2 mt-2 border border-lime-400 bg-lime-50 rounded text-lime-800">
+							<Info class="w-4 h-4 mr-2 shrink-0" />
+							<div class="flex-1">
+								目標のスコアやランプ(AJ/FC)を設定することで、レコード画面上部に進捗を表示できます。
+							</div>
+						</div>
+					</Dialog.Description>
 					<div class="space-y-4">
 						<div>
 							<Checkbox
@@ -257,7 +264,10 @@ const TrackingDialog: Component<TrackingDialogProps> = (props) => {
 							</RadioGroup>
 						</div>
 					</div>
-					<div class="flex justify-end gap-2 mt-6">
+					<div class="text-xs text-gray-500 mt-4">
+						追跡設定はブラウザに保存されます。
+					</div>
+					<div class="flex justify-end gap-2 mt-2">
 						<button
 							type="button"
 							class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
