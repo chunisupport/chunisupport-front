@@ -11,7 +11,7 @@ import {
 } from "solid-js";
 import { fetchAllSongs, fetchMasterData } from "../../../api/songs";
 import { fetchUserProfile } from "../../../api/users";
-import { Loading } from "../../../components";
+import { Loading, ScrollToTop } from "../../../components";
 import {
 	mergeAllRecords,
 	type PlayerRecordIncludeNoPlay,
@@ -223,6 +223,7 @@ const UserRecord: Component = () => {
 							}
 						/>
 					</div>
+					<ScrollToTop />
 				</ErrorBoundary>
 			</Suspense>
 		</>
