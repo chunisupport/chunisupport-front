@@ -49,7 +49,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 		toInputValue(props.filters.scoreMax),
 	);
 
-	const toConstLevel = (value: number) => {
+	const Const2Level = (value: number) => {
 		const normalized = Math.max(1, Math.min(value, 15.9));
 		if (normalized <= 6.9) {
 			return String(Math.floor(normalized));
@@ -62,7 +62,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 		return String(base);
 	};
 
-	const toConstValue = (level: string, type: "min" | "max") => {
+	const Level2Const = (level: string, type: "min" | "max") => {
 		const isPlus = level.endsWith("+");
 		const base = Number.parseInt(level.replace("+", ""), 10);
 		if (base <= 6) {
@@ -76,7 +76,21 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 		return type === "min" ? base : Number((base + 0.4).toFixed(1));
 	};
 
-	const toScoreValue = (rank: ScoreRank, type: "min" | "max") => {
+	const Score2Rank = (value: number) => {
+		const normalized = Math.max(
+			SCORE_RANK_VALUES["0点"],
+			Math.min(value, SCORE_RANK_VALUES.MAX),
+		);
+		for (const rank of SCORE_RANKS) {
+			const maxValue = Rank2Score(rank, "max");
+			if (normalized <= maxValue) {
+				return rank;
+			}
+		}
+		return "MAX";
+	};
+
+	const Rank2Score = (rank: ScoreRank, type: "min" | "max") => {
 		const rankIndex = SCORE_RANKS.indexOf(rank);
 		const minValue = SCORE_RANK_VALUES[rank];
 		if (type === "min" || rank === "MAX") {
@@ -87,20 +101,6 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 		return Math.max(0, nextValue - 1);
 	};
 
-	const toScoreRank = (value: number) => {
-		const normalized = Math.max(
-			SCORE_RANK_VALUES["0点"],
-			Math.min(value, SCORE_RANK_VALUES.MAX),
-		);
-		for (const rank of SCORE_RANKS) {
-			const maxValue = toScoreValue(rank, "max");
-			if (normalized <= maxValue) {
-				return rank;
-			}
-		}
-		return "MAX";
-	};
-
 	// フィルターダイアログが開かれた時にフィルター状態を同期
 	createEffect(() => {
 		if (!props.open) return;
@@ -108,10 +108,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 		setConstMaxInput(toInputValue(props.filters.constMax));
 		setScoreMinInput(toInputValue(props.filters.scoreMin));
 		setScoreMaxInput(toInputValue(props.filters.scoreMax));
-		setConstLevelMin(toConstLevel(props.filters.constMin));
-		setConstLevelMax(toConstLevel(props.filters.constMax));
-		setScoreRankMin(toScoreRank(props.filters.scoreMin));
-		setScoreRankMax(toScoreRank(props.filters.scoreMax));
+		setConstLevelMin(Const2Level(props.filters.constMin));
+		setConstLevelMax(Const2Level(props.filters.constMax));
+		setScoreRankMin(Score2Rank(props.filters.scoreMin));
+		setScoreRankMax(Score2Rank(props.filters.scoreMax));
 	});
 
 	/** 定数入力モードの変更時に内部値を同期 */
@@ -130,10 +130,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 		}
 		// 定数->レベルの場合
 		// 内部の保持値を変換してセット
-		const nextMinLevel = toConstLevel(props.filters.constMin);
-		const nextMaxLevel = toConstLevel(props.filters.constMax);
-		const nextMinValue = toConstValue(nextMinLevel, "min");
-		const nextMaxValue = toConstValue(nextMaxLevel, "max");
+		const nextMinLevel = Const2Level(props.filters.constMin);
+		const nextMaxLevel = Const2Level(props.filters.constMax);
+		const nextMinValue = Level2Const(nextMinLevel, "min");
+		const nextMaxValue = Level2Const(nextMaxLevel, "max");
 		setConstLevelMin(nextMinLevel);
 		setConstLevelMax(nextMaxLevel);
 		// フィルター状態を更新
@@ -161,10 +161,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 		}
 		// 数値->ランクの場合
 		// 内部の保持値を変換してセット
-		const nextMinRank = toScoreRank(props.filters.scoreMin);
-		const nextMaxRank = toScoreRank(props.filters.scoreMax);
-		const nextMinValue = toScoreValue(nextMinRank, "min");
-		const nextMaxValue = toScoreValue(nextMaxRank, "max");
+		const nextMinRank = Score2Rank(props.filters.scoreMin);
+		const nextMaxRank = Score2Rank(props.filters.scoreMax);
+		const nextMinValue = Rank2Score(nextMinRank, "min");
+		const nextMaxValue = Rank2Score(nextMaxRank, "max");
 		setScoreRankMin(nextMinRank);
 		setScoreRankMax(nextMaxRank);
 		// setScoreMinInput(toInputValue(nextMinValue));
@@ -182,7 +182,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 	const handleConstLevelChange = (type: "min" | "max", value: string) => {
 		if (type === "min") {
 			setConstLevelMin(value);
-			const nextValue = toConstValue(value, "min");
+			const nextValue = Level2Const(value, "min");
 			setConstMinInput(toInputValue(nextValue));
 			props.setFilters((prev) => ({
 				...prev,
@@ -191,7 +191,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 			return;
 		}
 		setConstLevelMax(value);
-		const nextValue = toConstValue(value, "max");
+		const nextValue = Level2Const(value, "max");
 		setConstMaxInput(toInputValue(nextValue));
 		props.setFilters((prev) => ({
 			...prev,
@@ -201,7 +201,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 
 	/** スコアランク変更時に適切なスコアをフィルターにセット */
 	const handleScoreRankChange = (type: "min" | "max", value: string) => {
-		const nextValue = toScoreValue(value as ScoreRank, type);
+		const nextValue = Rank2Score(value as ScoreRank, type);
 		if (type === "min") {
 			setScoreRankMin(value);
 			setScoreMinInput(toInputValue(nextValue));
