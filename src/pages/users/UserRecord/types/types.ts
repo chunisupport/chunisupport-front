@@ -11,8 +11,10 @@ export interface FilterState {
 	versions: string[];
 	constMin: number;
 	constMax: number;
+	constFilterMode: "level" | "number";
 	scoreMin: number;
 	scoreMax: number;
+	scoreFilterMode: "number" | "rank";
 	lamps: ComboLamp[];
 	excludeNoPlay: boolean;
 }

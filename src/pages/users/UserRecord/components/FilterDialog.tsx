@@ -20,10 +20,6 @@ interface FilterDialogProps {
 export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	// 現在のフィルター状態
 	const [filters, setFilters] = createSignal<FilterState>({ ...props.filters });
-	const [constFilterMode, setConstFilterMode] = createSignal<
-		"level" | "number"
-	>("level");
-
 	const [resetKey, setResetKey] = createSignal(0);
 
 	// フィルターダイアログが開かれた時にフィルター状態を同期
@@ -48,7 +44,6 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 	const handleReset = () => {
 		const def = props.defaultFilter;
 		setFilters({ ...def });
-		setConstFilterMode("level");
 		setResetKey((prev) => prev + 1);
 	};
 
@@ -71,8 +66,6 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 						open={props.open}
 						filters={filters()}
 						setFilters={setFilters}
-						constFilterMode={constFilterMode()}
-						setConstFilterMode={setConstFilterMode}
 						masterData={props.masterData}
 						defaultFilter={props.defaultFilter}
 						resetKey={resetKey()}

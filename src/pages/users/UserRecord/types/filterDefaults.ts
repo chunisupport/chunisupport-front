@@ -15,8 +15,10 @@ export const DEFAULT_FILTER: FilterState = {
 	versions: [],
 	constMin: 1.0,
 	constMax: 15.9,
+	constFilterMode: "level",
 	scoreMin: 0,
 	scoreMax: 1010000,
+	scoreFilterMode: "rank",
 	lamps: ["ALL JUSTICE", "FULL COMBO", null],
 	excludeNoPlay: false,
 };

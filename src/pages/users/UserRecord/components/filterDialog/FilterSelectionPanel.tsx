@@ -17,8 +17,6 @@ type FilterSelectionPanelProps = {
 	open: boolean;
 	filters: FilterState;
 	setFilters: Setter<FilterState>;
-	constFilterMode: "level" | "number";
-	setConstFilterMode: Setter<"level" | "number">;
 	masterData?: MasterDataDTO;
 	defaultFilter: FilterState;
 	resetKey: number;
@@ -29,10 +27,6 @@ const toInputValue = (value?: number | null) =>
 	value === undefined || value === null ? "" : String(value);
 
 const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
-	// スコアフィルターモード
-	const [scoreFilterMode, setScoreFilterMode] = createSignal<"number" | "rank">(
-		"rank",
-	);
 	// 入力値の状態管理
 	const [scoreRankMin, setScoreRankMin] = createSignal("0点");
 	const [scoreRankMax, setScoreRankMax] = createSignal("MAX");
@@ -123,7 +117,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 				}
 			/>
 			<ConstRangeSection
-				constFilterMode={props.constFilterMode}
+				constFilterMode={props.filters.constFilterMode}
 				minValue={constMinInput()}
 				maxValue={constMaxInput()}
 				constLevelMin={constLevelMin()}
@@ -145,8 +139,11 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 					}));
 				}}
 				onConstFilterModeChange={(mode) => {
-					props.setConstFilterMode(mode);
 					if (mode === "number") {
+						props.setFilters((prev) => ({
+							...prev,
+							constFilterMode: mode,
+						}));
 						setConstMinInput(toInputValue(props.filters.constMin));
 						setConstMaxInput(toInputValue(props.filters.constMax));
 						return;
@@ -161,6 +158,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 					setConstMaxInput(toInputValue(nextMaxValue));
 					props.setFilters((prev) => ({
 						...prev,
+						constFilterMode: mode,
 						constMin: nextMinValue,
 						constMax: nextMaxValue,
 					}));
@@ -186,13 +184,18 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 				}}
 			/>
 			<ScoreSection
-				scoreFilterMode={scoreFilterMode()}
+				scoreFilterMode={props.filters.scoreFilterMode}
 				scoreMinInput={scoreMinInput()}
 				scoreMaxInput={scoreMaxInput()}
 				scoreRankMin={scoreRankMin()}
 				scoreRankMax={scoreRankMax()}
 				excludeNoPlay={props.filters.excludeNoPlay}
-				onScoreFilterModeChange={setScoreFilterMode}
+				onScoreFilterModeChange={(mode) => {
+					props.setFilters((prev) => ({
+						...prev,
+						scoreFilterMode: mode,
+					}));
+				}}
 				onScoreMinInput={setScoreMinInput}
 				onScoreMaxInput={setScoreMaxInput}
 				onScoreMinCommit={(value) => {
