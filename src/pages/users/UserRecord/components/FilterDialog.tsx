@@ -48,6 +48,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 		setResetKey((prev) => prev + 1);
 	};
 
+	/** 保存済みフィルター適用処理 */
 	const handleApplySavedFilter = (filter: FilterState) => {
 		props.onChange(filter);
 		props.onOpenChange(false);
