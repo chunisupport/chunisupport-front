@@ -229,6 +229,12 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 						),
 					}))
 				}
+				onExcludeNoPlayChange={(checked) =>
+					props.setFilters((prev) => ({
+						...prev,
+						excludeNoPlay: checked,
+					}))
+				}
 			/>
 			<GenreSection
 				genres={genres()}

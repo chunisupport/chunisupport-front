@@ -3,6 +3,7 @@ import { NumberField } from "@kobalte/core/number-field";
 import { Select } from "@kobalte/core/select";
 import { Check, ChevronDown } from "lucide-solid";
 import type { Component } from "solid-js";
+import { parseNumberInput } from "../../../utils/filterDialog";
 import { SCORE_RANKS } from "../../../utils/scoreRank";
 
 type ScoreSectionProps = {
@@ -28,7 +29,18 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
 				<div class="flex-1">
 					<NumberField
 						value={props.scoreMinInput}
-						onChange={(value: string) => props.onScoreMinInput(value)}
+						onChange={(value: string) => {
+							const prevValue = parseNumberInput(props.scoreMinInput);
+							const nextValue = parseNumberInput(value);
+							if (
+								prevValue === 0 &&
+								nextValue !== undefined &&
+								nextValue >= 1
+							) {
+								props.onExcludeNoPlayChange(true);
+							}
+							props.onScoreMinInput(value);
+						}}
 						class="w-full"
 						format={false}
 						allowedInput={/[0-9.]/}
@@ -44,7 +56,9 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
 							step={1}
 							class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
 							onFocus={(event) => event.currentTarget.select()}
-							onBlur={(event) => props.onScoreMinCommit(event.currentTarget.value)}
+							onBlur={(event) =>
+								props.onScoreMinCommit(event.currentTarget.value)
+							}
 						/>
 					</NumberField>
 				</div>
@@ -67,7 +81,9 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
 							step={1}
 							class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
 							onFocus={(event) => event.currentTarget.select()}
-							onBlur={(event) => props.onScoreMaxCommit(event.currentTarget.value)}
+							onBlur={(event) =>
+								props.onScoreMaxCommit(event.currentTarget.value)
+							}
 						/>
 					</NumberField>
 				</div>
@@ -79,7 +95,12 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
 						options={SCORE_RANKS}
 						value={props.scoreRankMin}
 						onChange={(value) => {
-							if (value !== null) props.onScoreRankChange("min", value);
+							if (value !== null) {
+								if (props.scoreRankMin === "0点" && value !== "0点") {
+									props.onExcludeNoPlayChange(true);
+								}
+								props.onScoreRankChange("min", value);
+							}
 						}}
 						class="w-full"
 						placeholder="選択…"
@@ -118,7 +139,12 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
 						options={SCORE_RANKS}
 						value={props.scoreRankMax}
 						onChange={(value) => {
-							if (value !== null) props.onScoreRankChange("max", value);
+							if (value !== null) {
+								if (props.scoreRankMax === "0点" && value !== "0点") {
+									props.onExcludeNoPlayChange(true);
+								}
+								props.onScoreRankChange("max", value);
+							}
 						}}
 						class="w-full"
 						placeholder="選択…"
@@ -168,9 +194,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
 						<Check class="h-4 w-4" />
 					</Checkbox.Indicator>
 				</Checkbox.Control>
-				<Checkbox.Label for="filter-score-mode">
-					数値で指定する
-				</Checkbox.Label>
+				<Checkbox.Label for="filter-score-mode">数値で指定する</Checkbox.Label>
 			</Checkbox>
 		</div>
 		<div class="mt-2">

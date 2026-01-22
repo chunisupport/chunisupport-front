@@ -7,6 +7,7 @@ type LampSectionProps = {
 	lamps: (string | null)[];
 	selected: (string | null)[];
 	onToggle: (lamp: string | null) => void;
+	onExcludeNoPlayChange: (value: boolean) => void;
 };
 
 const LampSection: Component<LampSectionProps> = (props) => (
@@ -19,7 +20,12 @@ const LampSection: Component<LampSectionProps> = (props) => (
 					return (
 						<Checkbox
 							checked={props.selected.includes(lamp)}
-							onChange={() => props.onToggle(lamp)}
+							onChange={() => {
+								if (lamp === null && props.selected.includes(lamp)) {
+									props.onExcludeNoPlayChange(true);
+								}
+								props.onToggle(lamp);
+							}}
 							class="flex"
 						>
 							<Checkbox.Input id={id} />
