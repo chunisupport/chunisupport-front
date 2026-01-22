@@ -3,6 +3,8 @@ import { createSignal, Show } from "solid-js";
 
 import { postRegisterData } from "../../api/register-data";
 
+type RegisterDataFormat = "json" | "text";
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 type UploadFormat = "json" | "text";
@@ -18,6 +20,7 @@ const RegisterScoreTempPage = () => {
 	const [errorMessage, setErrorMessage] = createSignal("");
 	const [successMessage, setSuccessMessage] = createSignal("");
 	const [isSubmitting, setIsSubmitting] = createSignal(false);
+	const [copied, setCopied] = createSignal(false);
 
 	const resetMessages = () => {
 		setErrorMessage("");
@@ -73,14 +76,14 @@ const RegisterScoreTempPage = () => {
 			return;
 		}
 
+		const uploadFormat = format();
 		setIsSubmitting(true);
 		try {
-			const fileText = await selectedFile()!.text();
-			const uploadFormat = format()!;
+			const fileText = await selectedFile()?.text();
 
 			if (uploadFormat === "json") {
 				try {
-					JSON.parse(fileText);
+					JSON.parse(fileText ?? "");
 				} catch {
 					setErrorMessage("JSONの形式が正しくありません。");
 					return;
@@ -88,15 +91,13 @@ const RegisterScoreTempPage = () => {
 			}
 
 			await postRegisterData({
-				data: fileText,
-				format: uploadFormat,
+				data: fileText ?? "",
+				format: uploadFormat as RegisterDataFormat,
 			});
 			setSuccessMessage("スコアデータを送信しました。");
 		} catch (error) {
 			setErrorMessage(
-				error instanceof Error
-					? error.message
-					: "アップロードに失敗しました。",
+				error instanceof Error ? error.message : "アップロードに失敗しました。",
 			);
 		} finally {
 			setIsSubmitting(false);
@@ -110,15 +111,19 @@ const RegisterScoreTempPage = () => {
 				<div>
 					<h1 class="text-2xl font-semibold">スコア情報アップロード</h1>
 					<p class="mt-2 text-sm text-gray-600">
-						.txt (base64+gzip) もしくは .json (デバッグ用) をアップロードできます。
-						JSONは送信時に <span class="font-semibold">?format=json</span>
-						 を付与します。
+						.txt (base64+gzip) もしくは .json (デバッグ用)
+						をアップロードできます。 JSONは送信時に{" "}
+						<span class="font-semibold">?format=json</span>
+						を付与します。
 					</p>
 				</div>
 
 				<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
 					<div class="space-y-3">
-						<label class="block text-sm font-medium text-gray-700" for="score-file">
+						<label
+							class="block text-sm font-medium text-gray-700"
+							for="score-file"
+						>
 							アップロードファイル
 						</label>
 						<input
@@ -135,7 +140,9 @@ const RegisterScoreTempPage = () => {
 									<p>
 										形式:
 										<span class="ml-1 font-semibold">
-											{format() ? formatLabelMap[format()!] : "未判定"}
+											{format() !== null
+												? formatLabelMap[format() as UploadFormat]
+												: "未判定"}
 										</span>
 									</p>
 									<p>サイズ: {(file().size / 1024).toFixed(1)} KB</p>
@@ -163,6 +170,52 @@ const RegisterScoreTempPage = () => {
 				>
 					{isSubmitting() ? "送信中..." : "アップロードする"}
 				</button>
+			</div>
+			<div class="mt-8">
+				<h2 class="text-lg font-semibold mb-2">ブックマークレットコード</h2>
+				<div>
+					<pre class="bg-gray-100 rounded-md p-4 overflow-x-auto text-sm">
+						{`javascript:(function(){var e=document.createElement("script");e.src="<https://reiwa.f5.si/bookmarklets/chunisupport_test.js?"+Math.floor(Date.now()/1000>);document.body.appendChild(e)})();`}
+					</pre>
+				</div>
+				<div class="mt-2 flex items-center justify-end gap-2">
+					<Show when={copied()}>
+						<span class="text-green-600 text-xs">コピーしました！</span>
+					</Show>
+					<button
+						type="button"
+						class="bg-blue-500 text-white p-3 rounded hover:bg-blue-600"
+						onClick={() => {
+							const code =
+								'javascript:(function(){var e=document.createElement("script");e.src="<https://reiwa.f5.si/bookmarklets/chunisupport_test.js?"+Math.floor(Date.now()/1000>);document.body.appendChild(e)})();';
+							if (
+								navigator.clipboard &&
+								typeof navigator.clipboard.writeText === "function"
+							) {
+								navigator.clipboard.writeText(code).then(() => {
+									setCopied(true);
+									setTimeout(() => setCopied(false), 2000);
+								});
+							} else {
+								// フォールバック: テキストエリアを使ってコピー
+								const textarea = document.createElement("textarea");
+								textarea.value = code;
+								document.body.appendChild(textarea);
+								textarea.select();
+								try {
+									document.execCommand("copy");
+									setCopied(true);
+									setTimeout(() => setCopied(false), 2000);
+								} catch (e) {
+									alert("コピーに失敗しました。手動でコピーしてください。");
+								}
+								document.body.removeChild(textarea);
+							}
+						}}
+					>
+						コピー
+					</button>
+				</div>
 			</div>
 		</div>
 	);
