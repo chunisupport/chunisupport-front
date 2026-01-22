@@ -38,9 +38,6 @@ const TrackingDialog: Component<TrackingDialogProps> = (props) => {
 	>("rank");
 	const [trackingScoreRank, setTrackingScoreRank] = createSignal("SSS");
 	const [trackingScoreMin, setTrackingScoreMin] = createSignal<number>(1007500);
-	const [trackingLamps, setTrackingLamps] = createSignal<LampOption[]>(
-		lampOptionsNotNull(),
-	);
 	const [trackingLampsRadio, setTrackingLampsRadio] =
 		createSignal<LampOption>("ALL JUSTICE");
 
@@ -53,7 +50,6 @@ const TrackingDialog: Component<TrackingDialogProps> = (props) => {
 		setTrackingScoreMin(1007500);
 		setTrackingScoreRank("SSS");
 		setTrackingLampEnabled(false);
-		setTrackingLamps(["ALL JUSTICE", "FULL COMBO"]);
 		setTrackingLampsRadio("ALL JUSTICE");
 	});
 
@@ -64,12 +60,10 @@ const TrackingDialog: Component<TrackingDialogProps> = (props) => {
 		const hasScore = trackingScoreEnabled();
 		const hasLamp = trackingLampEnabled();
 
-		if (trackingLampsRadio() === "ALL JUSTICE") {
-			setTrackingLamps(["ALL JUSTICE"]);
-		} else if (trackingLampsRadio() === "FULL COMBO") {
-			setTrackingLamps(["ALL JUSTICE", "FULL COMBO"]);
-		}
-		const selectedLamps = trackingLamps();
+		const selectedLamps =
+			trackingLampsRadio() === "FULL COMBO"
+				? (["ALL JUSTICE", "FULL COMBO"] as LampOption[])
+				: (["ALL JUSTICE"] as LampOption[]);
 		if (!hasScore && !hasLamp) return;
 		saveTrackingCondition({
 			filterId: target.id,
