@@ -2,7 +2,7 @@ import { MetaProvider } from "@solidjs/meta";
 import { A, Route, Router } from "@solidjs/router";
 import type { JSX } from "solid-js";
 import { NavBar } from "./components";
-import { Login, Register, RegisterScoreTempPage, UserPage } from "./pages";
+import { Login, Register, RegisterScoreTempPage, UserPage, UserRecord } from "./pages";
 
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
 	return (props: P) => (
@@ -35,7 +35,7 @@ const App = () => {
 				<Route path="/users/:username" component={withNavBar(UserPage)} />
 				<Route
 					path="/users/:username/records"
-					component={withNavBar(() => <h1>User Records Page</h1>)}
+					component={withNavBar(UserRecord)}
 				/>
 				<Route
 					path="/users/:username/stats"

@@ -7,22 +7,7 @@ type Props = {
 	index: number;
 };
 
-const getDifficultyColors = (difficulty: string) => {
-	switch (difficulty) {
-		case "BASIC":
-			return "border-green-500 bg-green-200";
-		case "ADVANCED":
-			return "border-orange-500 bg-orange-200";
-		case "EXPERT":
-			return "border-red-500 bg-red-200";
-		case "ULTIMA":
-			return "border-red-500 bg-black text-white";
-		case "MASTER":
-			return "border-purple-500 bg-purple-200";
-		default:
-			return "border-gray-500 bg-gray-200";
-	}
-};
+import { difficultyCardColor } from "../../../../utils/difficultyUtils";
 
 export const UserRecordCard: Component<Props> = (props) => {
 	const [shouldAnimate, setShouldAnimate] = createSignal(false);
@@ -42,7 +27,7 @@ export const UserRecordCard: Component<Props> = (props) => {
 
 	return (
 		<div
-			class={`mb-2 p-3 rounded-md border ${getDifficultyColors(props.record.difficulty)}`}
+			class={`mb-2 p-3 rounded-md border ${difficultyCardColor(props.record.difficulty)}`}
 		>
 			<div class="flex gap-3">
 				<div class="flex flex-col">
