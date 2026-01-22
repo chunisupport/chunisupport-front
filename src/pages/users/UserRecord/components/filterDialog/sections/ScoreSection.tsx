@@ -30,10 +30,11 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
 					<NumberField
 						value={props.scoreMinInput}
 						onChange={(value: string) => {
+							// 0点から1点以上に変更された時、「未プレイ譜面を除外する」をONする
 							const prevValue = parseNumberInput(props.scoreMinInput);
 							const nextValue = parseNumberInput(value);
 							if (
-								prevValue === 0 &&
+								(prevValue === undefined || prevValue === 0) &&
 								nextValue !== undefined &&
 								nextValue >= 1
 							) {
