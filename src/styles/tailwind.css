@@ -21,4 +21,8 @@
 	* {
 		overscroll-behavior: none;
 	}
+
+	main{
+		overscroll-behavior-y: auto;
+	}
 }
