@@ -1,19 +1,9 @@
-import type { MasterDataDTO, MasterItemDTO } from "../../../../types/api";
 import type { PlayerRecordIncludeNoPlay } from "../../../../utils/recordMerger";
-import { CHUNITHM_VERSIONS } from "../../../../utils/versionConverter";
-import { DEFAULT_FILTER, LAMP_OPTIONS } from "../types/filterDefaults";
+import { buildDefaultFilter } from "../types/filterDefaults";
 import type { ComboLamp, Difficulty, FilterState } from "../types/types";
 
 /** フィルターのデフォルト値を取得する */
-export function getDefaultFilter(masterData?: MasterDataDTO): FilterState {
-	return {
-		...DEFAULT_FILTER,
-		// ジャンル・バージョンを全選択する(上書き)
-		genres: masterData?.genres?.map((g: MasterItemDTO) => g.name) ?? [],
-		versions: [...CHUNITHM_VERSIONS],
-		lamps: [...LAMP_OPTIONS],
-	};
-}
+export const getDefaultFilter = buildDefaultFilter;
 
 /** レコードがフィルター条件にマッチするか判定する */
 export function isRecordMatched(

@@ -1,3 +1,5 @@
+import type { MasterDataDTO, MasterItemDTO } from "../../../../types/api";
+import { CHUNITHM_VERSIONS } from "../../../../utils/versionConverter";
 import type { ComboLamp, FilterState } from "../types/types";
 
 /** ランプの選択肢 */
@@ -22,3 +24,18 @@ export const DEFAULT_FILTER: FilterState = {
 	lamps: ["ALL JUSTICE", "FULL COMBO", null],
 	excludeNoPlay: false,
 };
+
+/** マスタデータに依存するデフォルト値 */
+export const getMasterDataDefaults = (masterData?: MasterDataDTO) => ({
+	genres: masterData?.genres?.map((g: MasterItemDTO) => g.name) ?? [],
+	versions: [...CHUNITHM_VERSIONS],
+});
+
+/** フィルターのデフォルト値を取得する */
+export const buildDefaultFilter = (
+	masterData?: MasterDataDTO,
+): FilterState => ({
+	...DEFAULT_FILTER,
+	...getMasterDataDefaults(masterData),
+	lamps: [...LAMP_OPTIONS],
+});

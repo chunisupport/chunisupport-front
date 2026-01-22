@@ -16,13 +16,12 @@ import {
 	mergeAllRecords,
 	type PlayerRecordIncludeNoPlay,
 } from "../../../utils/recordMerger";
-import { CHUNITHM_VERSIONS } from "../../../utils/versionConverter";
 import FilterDialog from "./components/FilterDialog";
 import FilterStats from "./components/FilterStats";
 import FilterToolbar from "./components/FilterToolbar";
 import RecordTable from "./components/RecordTable";
 import TrackingSummary from "./components/TrackingSummary";
-import { DEFAULT_FILTER } from "./types/filterDefaults";
+import { DEFAULT_FILTER, getMasterDataDefaults } from "./types/filterDefaults";
 import type { ComboLamp, FilterState } from "./types/types";
 import { getDefaultFilter, isRecordMatched } from "./utils/filtering";
 import { getRecordStats } from "./utils/recordStats";
@@ -47,6 +46,7 @@ const UserRecord: Component = () => {
 
 	// フィルター・追跡の状態
 	const [filters, setFilters] = createSignal<FilterState>({
+		// createEffect内で初期化されるので、ここでは仮の値をセット
 		...DEFAULT_FILTER,
 	});
 	const [trackingCondition, setTrackingCondition] =
@@ -62,8 +62,7 @@ const UserRecord: Component = () => {
 		if (!md) return;
 		setFilters((prev) => ({
 			...prev,
-			genres: md.genres.map((g) => g.name),
-			versions: [...CHUNITHM_VERSIONS],
+			...getMasterDataDefaults(md),
 		}));
 	});
 
