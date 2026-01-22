@@ -178,7 +178,7 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
 											</button>
 											<button
 												type="button"
-												class="ml-2 px-2 py-1 rounded bg-blue-500 text-white text hover:bg-blue-700"
+												class="ml-2 px-2 py-1 rounded bg-blue-500 text-white hover:bg-blue-700"
 												onClick={() => handleApplySavedFilter(item.filter)}
 											>
 												呼出
