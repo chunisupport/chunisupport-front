@@ -30,6 +30,7 @@ import {
 	clearTrackingCondition,
 	loadSavedFilters,
 	loadTrackingCondition,
+	type SavedFilter,
 	type TrackingCondition,
 } from "./utils/storage";
 
@@ -38,6 +39,11 @@ const UserRecord: Component = () => {
 	const [userProfile] = createResource(() => params.username, fetchUserProfile);
 	const [allSongs] = createResource(fetchAllSongs);
 	const [masterData] = createResource(fetchMasterData);
+
+	// 保存済みフィルター一覧
+	const [savedFilters, setSavedFilters] = createSignal<SavedFilter[]>(
+		loadSavedFilters(),
+	);
 
 	// フィルター・追跡の状態
 	const [filters, setFilters] = createSignal<FilterState>({
@@ -82,7 +88,7 @@ const UserRecord: Component = () => {
 	const trackingTargetFilter = createMemo(() => {
 		const condition = trackingCondition();
 		if (!condition) return null;
-		const saved = loadSavedFilters();
+		const saved = savedFilters();
 		return saved.find((item) => item.id === condition.filterId) ?? null;
 	});
 
@@ -221,6 +227,7 @@ const UserRecord: Component = () => {
 							onTrackingChange={() =>
 								setTrackingCondition(loadTrackingCondition())
 							}
+							setSavedFilters={setSavedFilters}
 						/>
 					</div>
 					<ScrollToTop />

@@ -20,6 +20,7 @@ type SavedFiltersDialogProps = {
 	currentFilters: FilterState;
 	onApplyFilter: (filter: FilterState) => void;
 	onTrackingChange?: () => void;
+	setSavedFilters?: (filters: SavedFilter[]) => void;
 };
 
 const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
@@ -70,7 +71,9 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
 	/** 保存済みフィルター削除処理 */
 	const handleDeleteSavedFilter = (id: string) => {
 		deleteFilter(id);
-		setFiltersList(loadSavedFilters());
+		const updated = loadSavedFilters();
+		setFiltersList(updated);
+		props.setSavedFilters?.(updated);
 		if (isTrackingActiveFor(id)) {
 			handleClearTracking();
 		}
@@ -94,10 +97,12 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
 		if (!name) return;
 		const id = saveNewFilter(name, props.currentFilters);
 		setSaveName("");
-		setFiltersList(loadSavedFilters());
+		const updated = loadSavedFilters();
+		setFiltersList(updated);
+		props.setSavedFilters?.(updated);
 		syncTrackingState();
 		if (track) {
-			const newFilter = loadSavedFilters().find((filter) => filter.id === id);
+			const newFilter = updated.find((filter) => filter.id === id);
 			if (newFilter) {
 				openTrackingDialog(newFilter);
 			}
