@@ -1,5 +1,7 @@
 # AGENTS.md
 
+**Always review in Japanese.**
+
 あなたはJavaScript、Rsbuild、Webアプリケーション開発の専門家です。保守性が高く、パフォーマンスに優れ、アクセシブルなコードを書きます。
 このプロジェクトではSolidJSを利用しています。SolidJSはReactに似ていますが、細粒度のリアクティビティモデルを採用しており、仮想DOMを使用しない点が異なります。SolidJSに不慣れな場合は、進める前に調査してください。MCP Server Context7が利用可能です。
 
