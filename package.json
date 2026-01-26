@@ -7,7 +7,13 @@
     "build": "rsbuild build",
     "dev": "rsbuild dev --open",
     "start": "rsbuild dev --open",
-    "preview": "rsbuild preview"
+    "preview": "rsbuild preview",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint --write .",
+    "lint:check": "biome lint .",
+    "check": "biome check --write .",
+    "check:ci": "biome ci ."
   },
   "dependencies": {
     "@kobalte/core": "^0.13.11",

@@ -1,48 +1,48 @@
-import { API_BASE_URL } from "../config";
-import { getErrorMessage } from "../types/api";
+import { API_BASE_URL } from '../config'
+import { getErrorMessage } from '../types/api'
 
 type AuthPayload = {
-	username: string;
-	password: string;
-};
+  username: string
+  password: string
+}
 
 export const postLogin = async (payload: AuthPayload): Promise<void> => {
-	const response = await fetch(`${API_BASE_URL}/internal/auth/login`, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		credentials: "include",
-		body: JSON.stringify(payload),
-	});
+  const response = await fetch(`${API_BASE_URL}/internal/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  })
 
-	if (!response.ok) {
-		const error = await response.json();
-		throw new Error(getErrorMessage(error));
-	}
-};
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(getErrorMessage(error))
+  }
+}
 
 export const postLogout = async (): Promise<void> => {
-	const response = await fetch(`${API_BASE_URL}/internal/auth/logout`, {
-		method: "POST",
-		credentials: "include",
-	});
+  const response = await fetch(`${API_BASE_URL}/internal/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  })
 
-	if (!response.ok) {
-		const error = await response.json();
-		throw new Error(getErrorMessage(error));
-	}
-};
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(getErrorMessage(error))
+  }
+}
 
 // 新規登録
 export const postRegister = async (payload: AuthPayload): Promise<void> => {
-	const response = await fetch(`${API_BASE_URL}/internal/auth/register`, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		credentials: "include",
-		body: JSON.stringify(payload),
-	});
+  const response = await fetch(`${API_BASE_URL}/internal/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  })
 
-	if (!response.ok) {
-		const error = await response.json();
-		throw new Error(getErrorMessage(error));
-	}
-};
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(getErrorMessage(error))
+  }
+}

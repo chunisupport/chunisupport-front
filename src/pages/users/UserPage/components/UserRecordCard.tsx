@@ -1,34 +1,31 @@
-import type { Component } from "solid-js";
-import { createSignal, onMount } from "solid-js";
-import type { PlayerRecordDTO } from "../../../../types/api";
+import type { Component } from 'solid-js'
+import { createSignal, onMount } from 'solid-js'
+import type { PlayerRecordDTO } from '../../../../types/api'
 
 type Props = {
-  record: PlayerRecordDTO;
-  index: number;
-};
+  record: PlayerRecordDTO
+  index: number
+}
 
-import { difficultyCardColor } from "../../../../utils/difficultyUtils";
+import { difficultyCardColor } from '../../../../utils/difficultyUtils'
 
 export const UserRecordCard: Component<Props> = (props) => {
-  const [shouldAnimate, setShouldAnimate] = createSignal(false);
-  let titleRef: HTMLParagraphElement | undefined;
+  const [shouldAnimate, setShouldAnimate] = createSignal(false)
+  let titleRef: HTMLParagraphElement | undefined
 
   onMount(() => {
     if (titleRef && titleRef.scrollWidth > titleRef.clientWidth) {
       // はみ出している割合を計算
       const overflowPercentage =
-        ((titleRef.scrollWidth - titleRef.clientWidth) / titleRef.clientWidth) *
-        100;
+        ((titleRef.scrollWidth - titleRef.clientWidth) / titleRef.clientWidth) * 100
       // CSS変数に設定
-      titleRef.style.setProperty("--scroll-amount", `-${overflowPercentage}%`);
-      setShouldAnimate(true);
+      titleRef.style.setProperty('--scroll-amount', `-${overflowPercentage}%`)
+      setShouldAnimate(true)
     }
-  });
+  })
 
   return (
-    <div
-      class={`p-3 rounded-md border ${difficultyCardColor(props.record.difficulty)}`}
-    >
+    <div class={`p-3 rounded-md border ${difficultyCardColor(props.record.difficulty)}`}>
       <div class="flex gap-3">
         <div class="flex flex-col">
           <p># {props.index + 1}</p>
@@ -37,7 +34,7 @@ export const UserRecordCard: Component<Props> = (props) => {
         <div class="flex-1 min-w-0 overflow-hidden">
           <p
             ref={titleRef}
-            class={`font-semibold whitespace-nowrap ${shouldAnimate() ? "animate-marquee" : ""}`}
+            class={`font-semibold whitespace-nowrap ${shouldAnimate() ? 'animate-marquee' : ''}`}
           >
             {props.record.title}
           </p>
@@ -47,5 +44,5 @@ export const UserRecordCard: Component<Props> = (props) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

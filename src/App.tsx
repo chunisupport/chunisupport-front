@@ -1,16 +1,16 @@
-import { Link, MetaProvider } from "@solidjs/meta";
-import { A, Route, Router } from "@solidjs/router";
-import type { JSX } from "solid-js";
-import { NavBar } from "./components";
-import { Login, Register, RegisterScoreTempPage, UserPage, UserRecord } from "./pages";
+import { Link, MetaProvider } from '@solidjs/meta'
+import { A, Route, Router } from '@solidjs/router'
+import type { JSX } from 'solid-js'
+import { NavBar } from './components'
+import { Login, Register, RegisterScoreTempPage, UserPage, UserRecord } from './pages'
 
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
   return (props: P) => (
     <NavBar>
       <Component {...props} />
     </NavBar>
-  );
-};
+  )
+}
 
 const App = () => {
   return (
@@ -39,61 +39,31 @@ const App = () => {
 
         {/* ユーザ */}
         <Route path="/users/:username" component={withNavBar(UserPage)} />
-        <Route
-          path="/users/:username/records"
-          component={withNavBar(UserRecord)}
-        />
+        <Route path="/users/:username/records" component={withNavBar(UserRecord)} />
         <Route
           path="/users/:username/stats"
           component={withNavBar(() => <h1>User Stats Page</h1>)}
         />
 
         {/* 楽曲 */}
-        <Route
-          path="/songs"
-          component={withNavBar(() => <h1>Songs List Page</h1>)}
-        />
-        <Route
-          path="/songs/:displayid"
-          component={withNavBar(() => <h1>Song Detail Page</h1>)}
-        />
+        <Route path="/songs" component={withNavBar(() => <h1>Songs List Page</h1>)} />
+        <Route path="/songs/:displayid" component={withNavBar(() => <h1>Song Detail Page</h1>)} />
 
         {/* その他 */}
-        <Route
-          path="/register-score-temp"
-          component={withNavBar(RegisterScoreTempPage)}
-        />
-        <Route
-          path="/tools"
-          component={withNavBar(() => <h1>Tools Page</h1>)}
-        />
-        <Route
-          path="/settings"
-          component={withNavBar(() => <h1>Settings Page</h1>)}
-        />
-        <Route
-          path="/terms"
-          component={withNavBar(() => <h1>Terms of Service Page</h1>)}
-        />
+        <Route path="/register-score-temp" component={withNavBar(RegisterScoreTempPage)} />
+        <Route path="/tools" component={withNavBar(() => <h1>Tools Page</h1>)} />
+        <Route path="/settings" component={withNavBar(() => <h1>Settings Page</h1>)} />
+        <Route path="/terms" component={withNavBar(() => <h1>Terms of Service Page</h1>)} />
 
         {/* 管理系 */}
         <Route path="/admin" component={() => <h1>Admin Page</h1>} />
-        <Route
-          path="/admin/users"
-          component={() => <h1>Admin Users Management Page</h1>}
-        />
-        <Route
-          path="/admin/songs"
-          component={() => <h1>Admin Songs Management Page</h1>}
-        />
+        <Route path="/admin/users" component={() => <h1>Admin Users Management Page</h1>} />
+        <Route path="/admin/songs" component={() => <h1>Admin Songs Management Page</h1>} />
         <Route path="/editor" component={() => <h1>Editor Page</h1>} />
-        <Route
-          path="/editor/songs"
-          component={() => <h1>Editor Songs Management Page</h1>}
-        />
+        <Route path="/editor/songs" component={() => <h1>Editor Songs Management Page</h1>} />
       </Router>
     </MetaProvider>
-  );
-};
+  )
+}
 
-export default App;
+export default App
