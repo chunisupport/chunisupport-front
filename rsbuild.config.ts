@@ -28,7 +28,7 @@ export default defineConfig({
         tag: 'link',
         attrs: {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Inter:wght@400;700&display=swap',
         },
       },
     ],
