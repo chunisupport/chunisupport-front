@@ -27,7 +27,7 @@ export const UserRecordCard: Component<Props> = (props) => {
 
   return (
     <div
-      class={`mb-2 p-3 rounded-md border ${difficultyCardColor(props.record.difficulty)}`}
+      class={`p-3 rounded-md border ${difficultyCardColor(props.record.difficulty)}`}
     >
       <div class="flex gap-3">
         <div class="flex flex-col">
@@ -37,7 +37,7 @@ export const UserRecordCard: Component<Props> = (props) => {
         <div class="flex-1 min-w-0 overflow-hidden">
           <p
             ref={titleRef}
-            class={`font-medium whitespace-nowrap ${shouldAnimate() ? "animate-marquee" : ""}`}
+            class={`font-semibold whitespace-nowrap ${shouldAnimate() ? "animate-marquee" : ""}`}
           >
             {props.record.title}
           </p>
