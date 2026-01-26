@@ -4,6 +4,35 @@ import { pluginSolid } from '@rsbuild/plugin-solid';
 
 // Docs: https://rsbuild.rs/config/
 export default defineConfig({
+  html: {
+    meta: {
+      robots: 'noindex',
+    },
+    tags: [
+      {
+        tag: 'link',
+        attrs: {
+          rel: 'preconnect',
+          href: 'https://fonts.googleapis.com',
+        },
+      },
+      {
+        tag: 'link',
+        attrs: {
+          rel: 'preconnect',
+          href: 'https://fonts.gstatic.com',
+          crossorigin: true,
+        },
+      },
+      {
+        tag: 'link',
+        attrs: {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap',
+        },
+      },
+    ],
+  },
   plugins: [
     pluginBabel({
       include: /\.(?:jsx|tsx)$/,
