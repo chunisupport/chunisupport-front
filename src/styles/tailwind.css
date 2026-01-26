@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @keyframes marquee {
+
   0%,
   25% {
     transform: translateX(0%);
@@ -19,15 +20,16 @@
 }
 
 @layer base {
-  * {
-    overscroll-behavior: none;
+  html {
+    font-family: "Noto Sans JP", "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+    overscroll-behavior-y: auto;
+  }
+
+  body {
+    overscroll-behavior-y: auto;
   }
 
   main {
     overscroll-behavior-y: auto;
-  }
-
-  html {
-    font-family: "Noto Sans JP", "Noto Sans", ui-sans-serif, system-ui, sans-serif;
   }
 }

@@ -61,12 +61,12 @@ const NavBar = (props: NavBarProps) => {
       // 設定・ログアウトはログイン時のみ
       ...(uname
         ? [
-            {
-              label: '設定',
-              icon: () => <Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-              path: '/settings',
-            },
-          ]
+          {
+            label: '設定',
+            icon: () => <Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+            path: '/settings',
+          },
+        ]
         : []),
       {
         label: 'ヘルプ',
@@ -75,12 +75,12 @@ const NavBar = (props: NavBarProps) => {
       },
       ...(uname
         ? [
-            {
-              label: 'ログアウト',
-              icon: () => <LogOut class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-              path: '#', // ページ遷移しない
-            },
-          ]
+          {
+            label: 'ログアウト',
+            icon: () => <LogOut class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+            path: '#', // ページ遷移しない
+          },
+        ]
         : []),
     ]
 
@@ -154,7 +154,7 @@ const NavBar = (props: NavBarProps) => {
   }
 
   return (
-    <div class="h-dvh flex md:flex-row flex-col">
+    <div class="min-h-screen min-h-svh flex md:flex-row flex-col">
       {/* PC用nav-bar 768px以上 */}
       {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
       <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-gray-200 md:bg-white">
@@ -192,27 +192,27 @@ const NavBar = (props: NavBarProps) => {
                 </DropdownMenu.Portal>
               </DropdownMenu>
             ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
-            item.requiresAuth && !isLoading() && username() === null ? (
-              <button
-                type="button"
-                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-300 w-full"
-                onClick={() => setShowLoginDialog(true)}
-              >
-                <span class="text-lg">{item.icon()}</span>
-                <span>{item.label}</span>
-              </button>
-            ) : (
-              <A
-                href={item.path}
-                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                classList={{
-                  'bg-gray-100 text-gray-900': isActive(item),
-                }}
-              >
-                <span class="text-lg">{item.icon()}</span>
-                <span>{item.label}</span>
-              </A>
-            )
+              item.requiresAuth && !isLoading() && username() === null ? (
+                <button
+                  type="button"
+                  class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-300 w-full"
+                  onClick={() => setShowLoginDialog(true)}
+                >
+                  <span class="text-lg">{item.icon()}</span>
+                  <span>{item.label}</span>
+                </button>
+              ) : (
+                <A
+                  href={item.path}
+                  class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                  classList={{
+                    'bg-gray-100 text-gray-900': isActive(item),
+                  }}
+                >
+                  <span class="text-lg">{item.icon()}</span>
+                  <span>{item.label}</span>
+                </A>
+              )
           )}
         </nav>
       </aside>
@@ -255,27 +255,27 @@ const NavBar = (props: NavBarProps) => {
                 </DropdownMenu.Portal>
               </DropdownMenu>
             ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
-            item.requiresAuth && !isLoading() && username() === null ? (
-              <button
-                type="button"
-                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-300 justify-center"
-                onClick={() => setShowLoginDialog(true)}
-              >
-                <span class="text-lg">{item.icon()}</span>
-                <span>{item.label}</span>
-              </button>
-            ) : (
-              <A
-                href={item.path}
-                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 justify-center"
-                classList={{
-                  'bg-gray-100 text-gray-900': isActive(item),
-                }}
-              >
-                <span class="text-lg">{item.icon()}</span>
-                <span>{item.label}</span>
-              </A>
-            )
+              item.requiresAuth && !isLoading() && username() === null ? (
+                <button
+                  type="button"
+                  class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-300 justify-center"
+                  onClick={() => setShowLoginDialog(true)}
+                >
+                  <span class="text-lg">{item.icon()}</span>
+                  <span>{item.label}</span>
+                </button>
+              ) : (
+                <A
+                  href={item.path}
+                  class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 justify-center"
+                  classList={{
+                    'bg-gray-100 text-gray-900': isActive(item),
+                  }}
+                >
+                  <span class="text-lg">{item.icon()}</span>
+                  <span>{item.label}</span>
+                </A>
+              )
           )}
         </nav>
 
