@@ -10,17 +10,15 @@ export const fetchUserProfile = async (
   username: string,
   options: FetchUserProfileOptions = {}
 ): Promise<UserProfileWithRecordsDTO> => {
-  const params = new URLSearchParams()
-  if (options.view) {
-    params.set('view', options.view)
-  }
-  const query = params.toString()
-  const response = await fetch(
-    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}${query ? `?${query}` : ''}`,
-    {
-      credentials: 'include',
-    }
+  const url = new URL(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}`
   )
+  if (options.view) {
+    url.searchParams.set('view', options.view)
+  }
+  const response = await fetch(url, {
+    credentials: 'include',
+  })
 
   if (!response.ok) {
     const error = await response.json()
