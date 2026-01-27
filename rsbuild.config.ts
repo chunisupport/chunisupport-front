@@ -5,6 +5,7 @@ import { pluginSolid } from '@rsbuild/plugin-solid'
 // Docs: https://rsbuild.rs/config/
 export default defineConfig({
   html: {
+    title: 'ChuniSupport',
     meta: {
       robots: 'noindex',
     },

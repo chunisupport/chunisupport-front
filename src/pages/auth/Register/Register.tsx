@@ -1,10 +1,10 @@
 import { Checkbox } from '@kobalte/core/checkbox'
 import { TextField } from '@kobalte/core/text-field'
-import { Title } from '@solidjs/meta'
 import { A, useNavigate } from '@solidjs/router'
 import { Check, Dot, Loader, X } from 'lucide-solid'
 import { createEffect, createSignal } from 'solid-js'
 
+import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
 
 const Register = () => {
@@ -128,12 +128,13 @@ const Register = () => {
     return isAlphanumeric() === true && isValidLength() === true
   }
 
+  useDocumentTitle('新規登録')
+
   return (
     <div class="min-h-screen flex justify-center px-4 py-10">
-      <Title>新規登録 - ChuniSupport</Title>
       <div class="w-full max-w-md">
         <div class="text-center mb-6">
-          <p class="text-gray-600 mb-2">Chunisupport</p>
+          <p class="text-gray-600 mb-2">ChuniSupport</p>
           <h1 class="text-2xl font-semibold">新規登録</h1>
         </div>
 

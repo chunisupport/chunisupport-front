@@ -1,7 +1,7 @@
-import { Title } from '@solidjs/meta'
 import { createSignal, Show } from 'solid-js'
 
 import { postRegisterData } from '../../api/register-data'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
 type RegisterDataFormat = 'json' | 'text'
 
@@ -102,9 +102,10 @@ const RegisterScoreTempPage = () => {
     }
   }
 
+  useDocumentTitle('スコア登録(一時)')
+
   return (
     <div class="mx-auto w-full max-w-3xl p-6">
-      <Title>スコア登録(一時) - Chunisupport</Title>
       <div class="space-y-4">
         <div>
           <h1 class="text-2xl font-semibold">スコア情報アップロード</h1>

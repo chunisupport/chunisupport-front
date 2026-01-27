@@ -1,4 +1,3 @@
-import { Title } from '@solidjs/meta'
 import { useParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import {
@@ -30,6 +29,7 @@ import {
   type SavedFilter,
   type TrackingCondition,
 } from './utils/storage'
+import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 
 const UserRecord: Component = () => {
   const params = useParams<{ username: string }>()
@@ -166,9 +166,10 @@ const UserRecord: Component = () => {
   /** レコード統計の集計結果 */
   const stats = createMemo(() => getRecordStats(filteredRecords()))
 
+  useDocumentTitle(() => `${params.username}さんのレコード`)
+
   return (
     <>
-      <Title>{params.username}さんのページ - Chunisupport</Title>
       <Suspense fallback={<Loading />}>
         <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
           <Show
