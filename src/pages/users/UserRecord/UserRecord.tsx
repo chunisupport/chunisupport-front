@@ -7,6 +7,7 @@ import {
   createResource,
   createSignal,
   ErrorBoundary,
+  Show,
   Suspense,
 } from 'solid-js'
 import { fetchAllSongs, fetchMasterData } from '../../../api/songs'
@@ -170,50 +171,55 @@ const UserRecord: Component = () => {
       <Title>{params.username}さんのページ - Chunisupport</Title>
       <Suspense fallback={<Loading />}>
         <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
-          <div class="my-4 mx-2 text-sm">
-            {/* 追跡表示 */}
-            {trackingCondition() && trackingTargetFilter() && (
-              <TrackingSummary
-                condition={trackingCondition() as TrackingCondition}
-                targetName={trackingTargetFilter()?.name ?? ''}
-                goalLabel={trackingGoalLabel()}
-                stats={trackingStats()}
-                onClear={() => {
-                  clearTrackingCondition()
-                  setTrackingCondition(null)
-                }}
+          <Show
+            when={userProfile() && allSongs() && masterData()}
+            fallback={<Loading />}
+          >
+            <div class="my-4 mx-2 text-sm">
+              {/* 追跡表示 */}
+              {trackingCondition() && trackingTargetFilter() && (
+                <TrackingSummary
+                  condition={trackingCondition() as TrackingCondition}
+                  targetName={trackingTargetFilter()?.name ?? ''}
+                  goalLabel={trackingGoalLabel()}
+                  stats={trackingStats()}
+                  onClear={() => {
+                    clearTrackingCondition()
+                    setTrackingCondition(null)
+                  }}
+                />
+              )}
+
+              {/* フィルター関連UI */}
+              <FilterToolbar
+                title={filters().title}
+                onTitleChange={(value) => setFilters({ ...filters(), title: value })}
+                onOpenFilter={() => setFilterOpen(true)}
               />
-            )}
 
-            {/* フィルター関連UI */}
-            <FilterToolbar
-              title={filters().title}
-              onTitleChange={(value) => setFilters({ ...filters(), title: value })}
-              onOpenFilter={() => setFilterOpen(true)}
-            />
+              {/* フィルター統計 */}
+              {filteredCount() > 0 && <FilterStats stats={stats()} />}
 
-            {/* フィルター統計 */}
-            {filteredCount() > 0 && <FilterStats stats={stats()} />}
+              <p class="mb-2 text-sm text-gray-600">
+                全 {totalCount()} 件中 {filteredCount()} 件を表示
+              </p>
 
-            <p class="mb-2 text-sm text-gray-600">
-              全 {totalCount()} 件中 {filteredCount()} 件を表示
-            </p>
+              {/* レコード一覧 */}
+              <RecordTable records={filteredRecords()} />
 
-            {/* レコード一覧 */}
-            <RecordTable records={filteredRecords()} />
-
-            {/* フィルターダイアログ */}
-            <FilterDialog
-              open={filterOpen()}
-              onOpenChange={setFilterOpen}
-              filters={filters()}
-              onChange={setFilters}
-              masterData={masterData()}
-              defaultFilter={getDefaultFilter(masterData())}
-              onTrackingChange={() => setTrackingCondition(loadTrackingCondition())}
-              setSavedFilters={setSavedFilters}
-            />
-          </div>
+              {/* フィルターダイアログ */}
+              <FilterDialog
+                open={filterOpen()}
+                onOpenChange={setFilterOpen}
+                filters={filters()}
+                onChange={setFilters}
+                masterData={masterData()}
+                defaultFilter={getDefaultFilter(masterData())}
+                onTrackingChange={() => setTrackingCondition(loadTrackingCondition())}
+                setSavedFilters={setSavedFilters}
+              />
+            </div>
+          </Show>
           <ScrollToTop />
         </ErrorBoundary>
       </Suspense>

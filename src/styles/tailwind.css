@@ -21,7 +21,7 @@
 
 @layer base {
   html {
-    font-family: "Noto Sans JP", "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+    font-family: "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
     overscroll-behavior-y: auto;
   }
 
