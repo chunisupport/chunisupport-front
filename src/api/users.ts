@@ -2,10 +2,25 @@ import { API_BASE_URL } from '../config'
 import type { UserDTO, UserProfileWithRecordsDTO } from '../types/api'
 import { getErrorMessage } from '../types/api'
 
-export const fetchUserProfile = async (username: string): Promise<UserProfileWithRecordsDTO> => {
-  const response = await fetch(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}?view=rating`, {
-    credentials: 'include',
-  })
+type FetchUserProfileOptions = {
+  view?: 'rating'
+}
+
+export const fetchUserProfile = async (
+  username: string,
+  options: FetchUserProfileOptions = {}
+): Promise<UserProfileWithRecordsDTO> => {
+  const params = new URLSearchParams()
+  if (options.view) {
+    params.set('view', options.view)
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}${query ? `?${query}` : ''}`,
+    {
+      credentials: 'include',
+    }
+  )
 
   if (!response.ok) {
     const error = await response.json()

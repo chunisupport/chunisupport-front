@@ -10,7 +10,9 @@ import { UserProfileView } from './UserProfileView'
 const UserPage: Component = () => {
   const params = useParams<{ username: string }>()
 
-  const [userProfile] = createResource(() => params.username, fetchUserProfile)
+  const [userProfile] = createResource(() => params.username, (username) =>
+    fetchUserProfile(username, { view: 'rating' })
+  )
 
   useDocumentTitle(() => `${params.username}さんのページ`)
 
