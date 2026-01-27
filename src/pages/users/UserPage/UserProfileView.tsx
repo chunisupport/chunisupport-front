@@ -16,6 +16,14 @@ type Props = {
   profile: UserProfileWithRecordsDTO
 }
 
+const RecordList: Component<{ records: PlayerRecordDTO[] }> = (props) => (
+  <div class="mx-4 flex flex-col gap-2">
+    <For each={props.records}>
+      {(record, i) => <UserRecordCard record={record} index={i()} />}
+    </For>
+  </div>
+)
+
 export const UserProfileView: Component<Props> = (props) => {
   const { profile } = props
   const playerInfo: PlayerDTO = profile.player
@@ -81,18 +89,10 @@ export const UserProfileView: Component<Props> = (props) => {
             </button>
           </Tabs.List>
           <Tabs.Content value="best">
-            <div class="mx-4 flex flex-col gap-2">
-              <For each={bestRecords}>
-                {(record, i) => <UserRecordCard record={record} index={i()} />}
-              </For>
-            </div>
+            <RecordList records={bestRecords} />
           </Tabs.Content>
           <Tabs.Content value="new">
-            <div class="mx-4">
-              <For each={newRecords}>
-                {(record, i) => <UserRecordCard record={record} index={i()} />}
-              </For>
-            </div>
+            <RecordList records={newRecords} />
           </Tabs.Content>
         </Tabs.Root>
 
