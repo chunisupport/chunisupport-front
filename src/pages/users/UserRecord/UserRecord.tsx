@@ -202,7 +202,7 @@ const UserRecord: Component = () => {
               {filteredCount() > 0 && <FilterStats stats={stats()} />}
 
               <p class="mb-2 text-sm text-gray-600">
-                全 {totalCount()} 件中 {filteredCount()} 件を表示
+                全 {totalCount()} 件中 {filteredCount()} 件を表示 ( {filteredCount()}/{totalCount()} )
               </p>
 
               {/* レコード一覧 */}
