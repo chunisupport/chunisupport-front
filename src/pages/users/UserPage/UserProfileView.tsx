@@ -40,7 +40,7 @@ export const UserProfileView: Component<Props> = (props) => {
     <div class="md:flex md:gap-0 md:divide-x-4 md:divide-gray-300 md:h-screen">
       {/* 左側 */}
       {/* sticy scrollの関係でmb-4とmt-4の付与位置を分けています */}
-      <div class="mb-4 md:w-106.25 md:shrink-0 md:h-full md:overflow-y-auto" id="user-profile">
+      <div class="mb-4 overflow-y-auto h-screen md:w-106.25 md:shrink-0 md:h-full" id="user-profile">
         <div class="mt-4">
           {/* ネームプレート */}
           <UserNameplate
