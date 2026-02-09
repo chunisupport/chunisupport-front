@@ -12,6 +12,7 @@ import {
 import { fetchAllSongs, fetchMasterData } from '../../../api/songs'
 import { fetchUserProfile } from '../../../api/users'
 import { Loading, ScrollToTop } from '../../../components'
+import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { mergeAllRecords, type PlayerRecordIncludeNoPlay } from '../../../utils/recordMerger'
 import FilterDialog from './components/FilterDialog'
 import FilterStats from './components/FilterStats'
@@ -29,11 +30,13 @@ import {
   type SavedFilter,
   type TrackingCondition,
 } from './utils/storage'
-import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 
 const UserRecord: Component = () => {
   const params = useParams<{ username: string }>()
-  const [userProfile] = createResource(() => params.username, (username) => fetchUserProfile(username))
+  const [userProfile] = createResource(
+    () => params.username,
+    (username) => fetchUserProfile(username)
+  )
   const [allSongs] = createResource(fetchAllSongs)
   const [masterData] = createResource(fetchMasterData)
 
@@ -169,62 +172,57 @@ const UserRecord: Component = () => {
   useDocumentTitle(() => `${params.username}さんのレコード`)
 
   return (
-    <>
-      <Suspense fallback={<Loading />}>
-        <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
-          <Show
-            when={userProfile() && allSongs() && masterData()}
-            fallback={<Loading />}
-          >
-            <div class="my-4 mx-2 text-sm">
-              {/* 追跡表示 */}
-              {trackingCondition() && trackingTargetFilter() && (
-                <TrackingSummary
-                  condition={trackingCondition() as TrackingCondition}
-                  targetName={trackingTargetFilter()?.name ?? ''}
-                  goalLabel={trackingGoalLabel()}
-                  stats={trackingStats()}
-                  onClear={() => {
-                    clearTrackingCondition()
-                    setTrackingCondition(null)
-                  }}
-                />
-              )}
-
-              {/* フィルター関連UI */}
-              <FilterToolbar
-                title={filters().title}
-                onTitleChange={(value) => setFilters({ ...filters(), title: value })}
-                onOpenFilter={() => setFilterOpen(true)}
+    <Suspense fallback={<Loading />}>
+      <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
+        <Show when={userProfile() && allSongs() && masterData()} fallback={<Loading />}>
+          <div class="my-4 mx-2 text-sm">
+            {/* 追跡表示 */}
+            {trackingCondition() && trackingTargetFilter() && (
+              <TrackingSummary
+                condition={trackingCondition() as TrackingCondition}
+                targetName={trackingTargetFilter()?.name ?? ''}
+                goalLabel={trackingGoalLabel()}
+                stats={trackingStats()}
+                onClear={() => {
+                  clearTrackingCondition()
+                  setTrackingCondition(null)
+                }}
               />
+            )}
 
-              {/* フィルター統計 */}
-              {filteredCount() > 0 && <FilterStats stats={stats()} />}
+            {/* フィルター関連UI */}
+            <FilterToolbar
+              title={filters().title}
+              onTitleChange={(value) => setFilters({ ...filters(), title: value })}
+              onOpenFilter={() => setFilterOpen(true)}
+            />
 
-              <p class="mb-2 text-sm text-gray-600">
-                全 {totalCount()} 件中 {filteredCount()} 件を表示 ( {filteredCount()}/{totalCount()} )
-              </p>
+            {/* フィルター統計 */}
+            {filteredCount() > 0 && <FilterStats stats={stats()} />}
 
-              {/* レコード一覧 */}
-              <RecordTable records={filteredRecords()} />
+            <p class="mb-2 text-sm text-gray-600">
+              全 {totalCount()} 件中 {filteredCount()} 件を表示 ( {filteredCount()}/{totalCount()} )
+            </p>
 
-              {/* フィルターダイアログ */}
-              <FilterDialog
-                open={filterOpen()}
-                onOpenChange={setFilterOpen}
-                filters={filters()}
-                onChange={setFilters}
-                masterData={masterData()}
-                defaultFilter={getDefaultFilter(masterData())}
-                onTrackingChange={() => setTrackingCondition(loadTrackingCondition())}
-                setSavedFilters={setSavedFilters}
-              />
-            </div>
-          </Show>
-          <ScrollToTop />
-        </ErrorBoundary>
-      </Suspense>
-    </>
+            {/* レコード一覧 */}
+            <RecordTable records={filteredRecords()} />
+
+            {/* フィルターダイアログ */}
+            <FilterDialog
+              open={filterOpen()}
+              onOpenChange={setFilterOpen}
+              filters={filters()}
+              onChange={setFilters}
+              masterData={masterData()}
+              defaultFilter={getDefaultFilter(masterData())}
+              onTrackingChange={() => setTrackingCondition(loadTrackingCondition())}
+              setSavedFilters={setSavedFilters}
+            />
+          </div>
+        </Show>
+        <ScrollToTop />
+      </ErrorBoundary>
+    </Suspense>
   )
 }
 

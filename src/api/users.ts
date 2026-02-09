@@ -10,9 +10,7 @@ export const fetchUserProfile = async (
   username: string,
   options: FetchUserProfileOptions = {}
 ): Promise<UserProfileWithRecordsDTO> => {
-  const url = new URL(
-    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}`
-  )
+  const url = new URL(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}`)
   if (options.view) {
     url.searchParams.set('view', options.view)
   }
