@@ -168,7 +168,7 @@ const RegisterScoreTempPage = () => {
         <h2 class="text-lg font-semibold mb-2">ブックマークレットコード</h2>
         <div>
           <pre class="bg-gray-100 rounded-md p-4 overflow-x-auto text-sm">
-            {`javascript:(function(){var e=document.createElement("script");e.src="<https://reiwa.f5.si/bookmarklets/chunisupport_test.js?"+Math.floor(Date.now()/1000>);document.body.appendChild(e)})();`}
+            {`javascript:(function(){var e=document.createElement("script");e.src="https://reiwa.f5.si/bookmarklets/chunisupport_test.js?%22+Math.floor(Date.now()/1000);document.body.appendChild(e)})();`}
           </pre>
         </div>
         <div class="mt-2 flex items-center justify-end gap-2">
@@ -180,7 +180,7 @@ const RegisterScoreTempPage = () => {
             class="bg-blue-500 text-white p-3 rounded hover:bg-blue-600"
             onClick={() => {
               const code =
-                'javascript:(function(){var e=document.createElement("script");e.src="<https://reiwa.f5.si/bookmarklets/chunisupport_test.js?"+Math.floor(Date.now()/1000>);document.body.appendChild(e)})();'
+                'javascript:(function(){var e=document.createElement("script");e.src="https://reiwa.f5.si/bookmarklets/chunisupport_test.js?%22+Math.floor(Date.now()/1000);document.body.appendChild(e)})();'
               if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
                 navigator.clipboard.writeText(code).then(() => {
                   setCopied(true)
