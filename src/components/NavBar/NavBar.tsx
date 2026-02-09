@@ -154,7 +154,7 @@ const NavBar = (props: NavBarProps) => {
   }
 
   return (
-    <div class="min-h-screen min-h-svh flex md:flex-row flex-col">
+    <div class="min-h-screen flex md:flex-row flex-col">
       {/* PC用nav-bar 768px以上 */}
       {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
       <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-gray-200 md:bg-white">
