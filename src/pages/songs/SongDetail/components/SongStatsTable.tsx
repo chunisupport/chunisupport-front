@@ -1,0 +1,49 @@
+import { For } from 'solid-js'
+import type { SongStatsBandDTO } from '../../../../types/api'
+
+type Props = {
+  stats: SongStatsBandDTO[]
+}
+
+const SongStatsTable = (props: Props) => {
+  return (
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-2 py-2 text-left">帯</th>
+            <th class="px-2 py-2 text-right">人数</th>
+            <th class="px-2 py-2 text-right">平均スコア</th>
+            <th class="px-2 py-2 text-right">FC</th>
+            <th class="px-2 py-2 text-right">AJ</th>
+            <th class="px-2 py-2 text-right">CLEAR</th>
+            <th class="px-2 py-2 text-right">HARD</th>
+            <th class="px-2 py-2 text-right">ABSOLUTE</th>
+          </tr>
+        </thead>
+        <tbody>
+          <For each={props.stats}>
+            {(band) => (
+              <tr class="border-t border-gray-100">
+                <td class="px-2 py-2">{band.rating_band}</td>
+                <td class="px-2 py-2 text-right">{band.player_count.toLocaleString()}</td>
+                <td class="px-2 py-2 text-right">
+                  {band.average_score === null
+                    ? '-'
+                    : band.average_score.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                </td>
+                <td class="px-2 py-2 text-right">{band.combo.fc.toLocaleString()}</td>
+                <td class="px-2 py-2 text-right">{band.combo.aj.toLocaleString()}</td>
+                <td class="px-2 py-2 text-right">{band.clear.clear.toLocaleString()}</td>
+                <td class="px-2 py-2 text-right">{band.clear.hard.toLocaleString()}</td>
+                <td class="px-2 py-2 text-right">{band.clear.absolute.toLocaleString()}</td>
+              </tr>
+            )}
+          </For>
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+export default SongStatsTable
