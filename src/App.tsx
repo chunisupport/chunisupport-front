@@ -2,7 +2,15 @@ import { A, Route, Router } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { NavBar } from './components'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
-import { Login, Register, RegisterScoreTempPage, UserPage, UserRecord } from './pages'
+import {
+  Login,
+  Register,
+  RegisterScoreTempPage,
+  SongDetail,
+  SongsList,
+  UserPage,
+  UserRecord,
+} from './pages'
 
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
   return (props: P) => (
@@ -26,16 +34,6 @@ const LandingPage = () => {
 const UserStatsPage = () => {
   useDocumentTitle('統計')
   return <h1>User Stats Page</h1>
-}
-
-const SongsListPage = () => {
-  useDocumentTitle('楽曲一覧')
-  return <h1>Songs List Page</h1>
-}
-
-const SongDetailPage = () => {
-  useDocumentTitle('楽曲詳細')
-  return <h1>Song Detail Page</h1>
 }
 
 const ToolsPage = () => {
@@ -94,8 +92,8 @@ const App = () => {
       <Route path="/users/:username/stats" component={withNavBar(UserStatsPage)} />
 
       {/* 楽曲 */}
-      <Route path="/songs" component={withNavBar(SongsListPage)} />
-      <Route path="/songs/:displayid" component={withNavBar(SongDetailPage)} />
+      <Route path="/songs" component={withNavBar(SongsList)} />
+      <Route path="/songs/:displayid" component={withNavBar(SongDetail)} />
 
       {/* その他 */}
       <Route path="/register-score-temp" component={withNavBar(RegisterScoreTempPage)} />
