@@ -1,0 +1,7 @@
+export { default as SettingsApiTokenPage } from './SettingsApiTokenPage'
+export { default as SettingsPage } from './SettingsPage'
+export { default as SettingsPasswordPage } from './SettingsPasswordPage'
+export { default as SettingsPrivacyPage } from './SettingsPrivacyPage'
+export { default as SettingsRecoveryCodesPage } from './SettingsRecoveryCodesPage'
+export { default as SettingsRecoveryResetPage } from './SettingsRecoveryResetPage'
+export { default as SettingsSessionsPage } from './SettingsSessionsPage'
