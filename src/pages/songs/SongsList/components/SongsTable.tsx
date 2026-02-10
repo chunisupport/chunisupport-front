@@ -26,7 +26,7 @@ const SongsTable = (props: Props) => {
             {(song) => (
               <tr class="border-t border-gray-100 align-top">
                 <td class="px-3 py-2">
-                  <A href={`/songs/${song.id}`} class="text-blue-600 hover:underline">
+                  <A href={`/songs/${encodeURIComponent(song.id)}`} class="text-blue-600 hover:underline">
                     {song.title}
                   </A>
                 </td>
