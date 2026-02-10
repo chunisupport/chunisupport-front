@@ -5,7 +5,9 @@ import {
   createResource,
   createSignal,
   ErrorBoundary,
+  on,
   Show,
+  untrack,
 } from 'solid-js'
 import { fetchMasterData, fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
 import { Loading } from '../../../components'
@@ -37,13 +39,16 @@ const SongDetail = () => {
       }))
   })
 
-  createEffect(() => {
-    const options = availableDifficulties()
-    if (options.length === 0) return
-    if (!selectedDifficulty() || !options.some((option) => option.value === selectedDifficulty())) {
-      setSelectedDifficulty(options[0].value)
-    }
-  })
+  createEffect(
+    on(availableDifficulties, (options) => {
+      if (options.length === 0) return
+
+      const currentSelection = untrack(() => selectedDifficulty())
+      if (!currentSelection || !options.some((option) => option.value === currentSelection)) {
+        setSelectedDifficulty(options[0].value)
+      }
+    })
+  )
 
   const [stats] = createResource(
     () => {
