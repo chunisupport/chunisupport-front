@@ -18,11 +18,6 @@ const links = [
     description: 'アカウント用のリカバリーコードを再発行します。',
   },
   {
-    href: '/settings/recovery-reset',
-    title: 'リカバリーコードで再設定',
-    description: 'ログインできない場合に、コードでパスワードを再設定します。',
-  },
-  {
     href: '/settings/api-token',
     title: 'APIトークン管理',
     description: 'APIトークンの発行・削除を行います。',

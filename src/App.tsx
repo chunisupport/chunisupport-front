@@ -4,6 +4,7 @@ import { NavBar } from './components'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import {
   Login,
+  RecoveryReset,
   Register,
   RegisterScoreTempPage,
   SettingsApiTokenPage,
@@ -11,7 +12,6 @@ import {
   SettingsPasswordPage,
   SettingsPrivacyPage,
   SettingsRecoveryCodesPage,
-  SettingsRecoveryResetPage,
   SettingsSessionsPage,
   UserPage,
   UserRecord,
@@ -95,6 +95,7 @@ const App = () => {
       {/* 認証 */}
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/recovery" component={RecoveryReset} />
 
       {/* ユーザ */}
       <Route path="/users/:username" component={withNavBar(UserPage)} />
@@ -110,7 +111,6 @@ const App = () => {
       <Route path="/settings/privacy" component={withNavBar(SettingsPrivacyPage)} />
       <Route path="/settings/password" component={withNavBar(SettingsPasswordPage)} />
       <Route path="/settings/recovery-codes" component={withNavBar(SettingsRecoveryCodesPage)} />
-      <Route path="/settings/recovery-reset" component={withNavBar(SettingsRecoveryResetPage)} />
       <Route path="/settings/api-token" component={withNavBar(SettingsApiTokenPage)} />
       <Route path="/settings/sessions" component={withNavBar(SettingsSessionsPage)} />
 

@@ -11,11 +11,6 @@ type PasswordUpdatePayload = {
   new_password: string
 }
 
-type RecoveryResetPayload = {
-  recovery_code: string
-  new_password: string
-}
-
 const throwApiError = async (response: Response): Promise<never> => {
   let fallback = `HTTP ${response.status}`
   try {
@@ -66,21 +61,6 @@ export const issueRecoveryCodes = async (): Promise<RecoveryCodesResponse> => {
   }
 
   return response.json()
-}
-
-export const resetPasswordWithRecoveryCode = async (
-  payload: RecoveryResetPayload
-): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/internal/auth/recovery-codes`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(payload),
-  })
-
-  if (!response.ok) {
-    await throwApiError(response)
-  }
 }
 
 export const issueApiToken = async (): Promise<ApiTokenResponse> => {
