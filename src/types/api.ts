@@ -110,6 +110,47 @@ export interface SongDTO {
   }
 }
 
+// --- 楽曲統計用型定義 ---
+export interface SongStatsRankDTO {
+  aaal: number
+  s: number
+  sp: number
+  ss: number
+  ssp: number
+  sss: number
+  sssp: number
+  max: number
+}
+
+export interface SongStatsComboDTO {
+  none: number
+  fc: number
+  aj: number
+}
+
+export interface SongStatsClearDTO {
+  failed: number
+  clear: number
+  hard: number
+  brave: number
+  absolute: number
+  catastrophy: number
+}
+
+export interface SongStatsBandDTO {
+  rating_band: string
+  rank: SongStatsRankDTO
+  combo: SongStatsComboDTO
+  clear: SongStatsClearDTO
+  average_score: number | null
+  player_count: number
+}
+
+export interface SongStatsResponseDTO {
+  song_id: string
+  stats: SongStatsBandDTO[]
+}
+
 // --- マスターデータ用型定義 ---
 export interface MasterItemDTO {
   id: number
