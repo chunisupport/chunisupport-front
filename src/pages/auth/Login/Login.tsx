@@ -62,7 +62,6 @@ const Login = () => {
             />
           </TextField>
           {errorMessage() && <p class="text-sm text-red-600 mb-2">{errorMessage()}</p>}
-          {/* TODO: パスワードを忘れた場合の文言やリンクなど */}
           <button
             type="button"
             class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
@@ -74,6 +73,12 @@ const Login = () => {
         </div>
 
         <div class="text-center">
+          <p class="mb-3 text-sm text-gray-600">
+            パスワードを忘れた場合は
+            <A href="/recovery" class="text-blue-500 underline ml-1">
+              こちら
+            </A>
+          </p>
           <p class="mb-5 text-sm text-gray-600">
             新規アカウント作成は
             <A href="/register" class="text-blue-500 underline ml-1">
