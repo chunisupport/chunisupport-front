@@ -4,9 +4,11 @@ import { NavBar } from './components'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import {
   Login,
-  RecoveryReset,
   Register,
   RegisterScoreTempPage,
+  RecoveryReset,
+  SongDetail,
+  SongsList,
   SettingsApiTokenPage,
   SettingsPage,
   SettingsPasswordPage,
@@ -39,16 +41,6 @@ const LandingPage = () => {
 const UserStatsPage = () => {
   useDocumentTitle('統計')
   return <h1>User Stats Page</h1>
-}
-
-const SongsListPage = () => {
-  useDocumentTitle('楽曲一覧')
-  return <h1>Songs List Page</h1>
-}
-
-const SongDetailPage = () => {
-  useDocumentTitle('楽曲詳細')
-  return <h1>Song Detail Page</h1>
 }
 
 const ToolsPage = () => {
@@ -103,8 +95,8 @@ const App = () => {
       <Route path="/users/:username/stats" component={withNavBar(UserStatsPage)} />
 
       {/* 楽曲 */}
-      <Route path="/songs" component={withNavBar(SongsListPage)} />
-      <Route path="/songs/:displayid" component={withNavBar(SongDetailPage)} />
+      <Route path="/songs" component={withNavBar(SongsList)} />
+      <Route path="/songs/:displayid" component={withNavBar(SongDetail)} />
 
       {/* 設定 */}
       <Route path="/settings" component={withNavBar(SettingsPage)} />
