@@ -6,8 +6,15 @@ import {
   Login,
   Register,
   RegisterScoreTempPage,
+  RecoveryReset,
   SongDetail,
   SongsList,
+  SettingsApiTokenPage,
+  SettingsPage,
+  SettingsPasswordPage,
+  SettingsPrivacyPage,
+  SettingsRecoveryCodesPage,
+  SettingsSessionsPage,
   UserPage,
   UserRecord,
 } from './pages'
@@ -39,11 +46,6 @@ const UserStatsPage = () => {
 const ToolsPage = () => {
   useDocumentTitle('ツール')
   return <h1>Tools Page</h1>
-}
-
-const SettingsPage = () => {
-  useDocumentTitle('設定')
-  return <h1>Settings Page</h1>
 }
 
 const TermsPage = () => {
@@ -82,9 +84,10 @@ const App = () => {
       {/* ランディングページ */}
       <Route path="/" component={LandingPage} />
 
-      {/* 認証系 */}
+      {/* 認証 */}
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/recovery" component={RecoveryReset} />
 
       {/* ユーザ */}
       <Route path="/users/:username" component={withNavBar(UserPage)} />
@@ -95,13 +98,20 @@ const App = () => {
       <Route path="/songs" component={withNavBar(SongsList)} />
       <Route path="/songs/:displayid" component={withNavBar(SongDetail)} />
 
+      {/* 設定 */}
+      <Route path="/settings" component={withNavBar(SettingsPage)} />
+      <Route path="/settings/privacy" component={withNavBar(SettingsPrivacyPage)} />
+      <Route path="/settings/password" component={withNavBar(SettingsPasswordPage)} />
+      <Route path="/settings/recovery-codes" component={withNavBar(SettingsRecoveryCodesPage)} />
+      <Route path="/settings/api-token" component={withNavBar(SettingsApiTokenPage)} />
+      <Route path="/settings/sessions" component={withNavBar(SettingsSessionsPage)} />
+
       {/* その他 */}
       <Route path="/register-score-temp" component={withNavBar(RegisterScoreTempPage)} />
       <Route path="/tools" component={withNavBar(ToolsPage)} />
-      <Route path="/settings" component={withNavBar(SettingsPage)} />
       <Route path="/terms" component={withNavBar(TermsPage)} />
 
-      {/* 管理系 */}
+      {/* 管理 */}
       <Route path="/admin" component={AdminPage} />
       <Route path="/admin/users" component={AdminUsersPage} />
       <Route path="/admin/songs" component={AdminSongsPage} />

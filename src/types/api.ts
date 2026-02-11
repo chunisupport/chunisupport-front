@@ -12,6 +12,7 @@ export type ErrorCode =
   // 認証
   | 'unauthorized'
   | 'invalid_credentials'
+  | 'invalid_recovery_credentials'
   | 'invalid_token'
   | 'token_expired'
   | 'missing_token'
@@ -50,6 +51,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   internal_error: 'サーバーエラーが発生しました',
   unauthorized: '認証が必要です',
   invalid_credentials: 'ユーザー名またはパスワードが正しくありません',
+  invalid_recovery_credentials: 'リカバリーコードが無効または使用済みです',
   invalid_token: '認証トークンが無効です',
   token_expired: '認証トークンの有効期限が切れています',
   missing_token: '認証トークンが必要です',
@@ -264,4 +266,18 @@ export interface WorldsendRecordDTO {
   clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY'
   combo_lamp: 'FULL COMBO' | 'ALL JUSTICE' | null
   full_chain: 'FULL CHAIN GOLD' | 'FULL CHAIN PLATINUM' | null
+}
+
+// --------------------------------
+
+export interface SessionCountResponse {
+  count: number
+}
+
+export interface RecoveryCodesResponse {
+  recovery_codes: string[]
+}
+
+export interface ApiTokenResponse {
+  token: string
 }
