@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../config'
-import type { UserDTO, UserProfileWithRecordsDTO } from '../types/api'
+import type { AdminUserListResponse, UserDTO, UserProfileWithRecordsDTO } from '../types/api'
 import { getErrorMessage } from '../types/api'
 
 type FetchUserProfileOptions = {
@@ -37,4 +37,59 @@ export const fetchMe = async (): Promise<UserDTO> => {
   }
 
   return response.json()
+}
+
+type FetchAdminUsersOptions = {
+  page?: number
+  name?: string
+}
+
+export const fetchAdminUsers = async (
+  options: FetchAdminUsersOptions = {}
+): Promise<AdminUserListResponse[]> => {
+  const url = new URL(`${API_BASE_URL}/internal/users/`)
+  if (typeof options.page !== 'undefined') {
+    url.searchParams.set('page', String(options.page))
+  }
+  if (options.name) {
+    url.searchParams.set('name', options.name)
+  }
+
+  const response = await fetch(url, {
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(getErrorMessage(error))
+  }
+
+  return response.json()
+}
+
+export const deleteUserByUsername = async (username: string): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(getErrorMessage(error))
+  }
+}
+
+export const restoreUserByUsername = async (username: string): Promise<void> => {
+  const response = await fetch(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/restore`,
+    {
+      method: 'POST',
+      credentials: 'include',
+    }
+  )
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(getErrorMessage(error))
+  }
 }

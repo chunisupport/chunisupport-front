@@ -1,20 +1,26 @@
 import { A, Route, Router } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { NavBar } from './components'
+import RequireRole from './components/guards/RequireRole'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import {
+  AdminPage,
+  AdminSongsPage,
+  AdminUsersPage,
+  EditorPage,
+  EditorSongsPage,
   Login,
+  RecoveryReset,
   Register,
   RegisterScoreTempPage,
-  RecoveryReset,
-  SongDetail,
-  SongsList,
   SettingsApiTokenPage,
   SettingsPage,
   SettingsPasswordPage,
   SettingsPrivacyPage,
   SettingsRecoveryCodesPage,
   SettingsSessionsPage,
+  SongDetail,
+  SongsList,
   UserPage,
   UserRecord,
 } from './pages'
@@ -53,30 +59,35 @@ const TermsPage = () => {
   return <h1>Terms of Service Page</h1>
 }
 
-const AdminPage = () => {
-  useDocumentTitle('管理')
-  return <h1>Admin Page</h1>
-}
+const GuardedAdminPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <AdminPage />
+  </RequireRole>
+)
 
-const AdminUsersPage = () => {
-  useDocumentTitle('ユーザー管理')
-  return <h1>Admin Users Management Page</h1>
-}
+const GuardedAdminUsersPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <AdminUsersPage />
+  </RequireRole>
+)
 
-const AdminSongsPage = () => {
-  useDocumentTitle('楽曲管理')
-  return <h1>Admin Songs Management Page</h1>
-}
+const GuardedAdminSongsPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <AdminSongsPage />
+  </RequireRole>
+)
 
-const EditorPage = () => {
-  useDocumentTitle('エディター')
-  return <h1>Editor Page</h1>
-}
+const GuardedEditorPage = () => (
+  <RequireRole allowedRoles={['EDITOR', 'ADMIN']}>
+    <EditorPage />
+  </RequireRole>
+)
 
-const EditorSongsPage = () => {
-  useDocumentTitle('楽曲編集')
-  return <h1>Editor Songs Management Page</h1>
-}
+const GuardedEditorSongsPage = () => (
+  <RequireRole allowedRoles={['EDITOR', 'ADMIN']}>
+    <EditorSongsPage />
+  </RequireRole>
+)
 
 const App = () => {
   return (
@@ -112,11 +123,11 @@ const App = () => {
       <Route path="/terms" component={withNavBar(TermsPage)} />
 
       {/* 管理 */}
-      <Route path="/admin" component={AdminPage} />
-      <Route path="/admin/users" component={AdminUsersPage} />
-      <Route path="/admin/songs" component={AdminSongsPage} />
-      <Route path="/editor" component={EditorPage} />
-      <Route path="/editor/songs" component={EditorSongsPage} />
+      <Route path="/admin" component={withNavBar(GuardedAdminPage)} />
+      <Route path="/admin/users" component={withNavBar(GuardedAdminUsersPage)} />
+      <Route path="/admin/songs" component={withNavBar(GuardedAdminSongsPage)} />
+      <Route path="/editor" component={withNavBar(GuardedEditorPage)} />
+      <Route path="/editor/songs" component={withNavBar(GuardedEditorSongsPage)} />
     </Router>
   )
 }

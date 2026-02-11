@@ -176,7 +176,18 @@ export interface MasterDataDTO {
 export interface UserDTO {
   username: string
   player: PlayerDTO | null
-  account_type?: 'PLAYER' | 'EDITOR' | 'ADMIN'
+  account_type?: AccountType
+}
+
+export type AccountType = 'PLAYER' | 'EDITOR' | 'ADMIN'
+
+export interface AdminUserListResponse {
+  username: string
+  player_name: string
+  rating: number | null
+  overpower_value: number | null
+  is_private: boolean
+  is_deleted: boolean
 }
 
 export interface UserProfileWithRecordsDTO {
@@ -266,6 +277,39 @@ export interface WorldsendRecordDTO {
   clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY'
   combo_lamp: 'FULL COMBO' | 'ALL JUSTICE' | null
   full_chain: 'FULL CHAIN GOLD' | 'FULL CHAIN PLATINUM' | null
+}
+
+export interface WorldsendSongDTO {
+  id: string
+  title: string
+  artist: string
+  genre_id: number | null
+  bpm: number | null
+  released_at: string | null
+  official_idx: string | null
+  jacket: string | null
+  we_star: number | null
+  we_kanji: string | null
+  notes: number | null
+  is_deleted: boolean
+}
+
+export interface UpdateChartRequestDTO {
+  difficulty_id: number
+  const: number
+  is_const_unknown: boolean
+  notes: number | null
+}
+
+export interface UpdateSongRequestDTO {
+  id: string
+  title: string
+  artist: string
+  genre_id: number | null
+  bpm: number | null
+  released_at: string | null
+  jacket: string | null
+  charts: UpdateChartRequestDTO[]
 }
 
 // --------------------------------
