@@ -16,6 +16,34 @@ type SongManagementPageProps = {
   title: string
 }
 
+const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
+
+const toRFC3339Date = (value: string | null): string | null => {
+  if (!value) return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+
+  if (dateOnlyPattern.test(trimmed)) {
+    return `${trimmed}T00:00:00Z`
+  }
+
+  const date = new Date(trimmed)
+  if (Number.isNaN(date.getTime())) {
+    return null
+  }
+
+  return date.toISOString()
+}
+
+const toDateInputValue = (value: string | null): string => {
+  if (!value) return ''
+  if (dateOnlyPattern.test(value)) return value
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toISOString().slice(0, 10)
+}
+
 const toUpdateSongRequest = (
   song: SongDTO,
   genres: MasterItemDTO[],
@@ -27,7 +55,7 @@ const toUpdateSongRequest = (
     artist: song.artist,
     genre_id: genres.find((genre) => genre.name === song.genre)?.id ?? null,
     bpm: song.bpm ?? null,
-    released_at: song.release ?? null,
+    released_at: toRFC3339Date(song.release),
     jacket: song.jacket ?? null,
     charts: difficulties
       .map((difficulty) => {
@@ -60,8 +88,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
   const [selectedSongId, setSelectedSongId] = createSignal<string>('')
   const [draft, setDraft] = createSignal<UpdateSongRequestDTO | null>(null)
-  const [message, setMessage] = createSignal<string>('')
-  const [errorMessage, setErrorMessage] = createSignal<string>('')
+  const [message, setMessage] = createSignal('')
+  const [errorMessage, setErrorMessage] = createSignal('')
 
   const songs = createMemo(() => songsResponse()?.songs ?? [])
   const worldsendSongs = createMemo(() => worldsendResponse()?.songs ?? [])
@@ -119,11 +147,23 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const handleSave = async () => {
     const current = draft()
     if (!current) return
+
     setMessage('')
     setErrorMessage('')
 
+    const normalizedReleasedAt = toRFC3339Date(current.released_at)
+    if (current.released_at && !normalizedReleasedAt) {
+      setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
+      return
+    }
+
     try {
-      await updateSongs([current])
+      await updateSongs([
+        {
+          ...current,
+          released_at: normalizedReleasedAt,
+        },
+      ])
       setMessage('楽曲を更新しました。')
       refresh()
     } catch (error) {
@@ -189,7 +229,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
           API仕様準拠: 通常楽曲は既存データの編集・削除・復活に対応します。新規追加はAPI未対応です。
         </p>
         <p class="text-sm text-gray-600">
-          WORLD'S ENDは削除・復活のみ対応します（更新APIが未提供）。
+          WORLD&apos;S ENDは削除・復活のみ対応します（更新APIが未提供）。
         </p>
       </div>
 
@@ -295,15 +335,16 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                       />
                     </label>
                     <label class="text-sm">
-                      <span class="mb-1 block text-gray-700">リリース日（ISO8601）</span>
+                      <span class="mb-1 block text-gray-700">リリース日</span>
                       <input
-                        value={currentDraft().released_at ?? ''}
+                        type="date"
+                        value={toDateInputValue(currentDraft().released_at)}
                         onInput={(event) =>
                           updateDraftField(
                             'released_at',
                             event.currentTarget.value.trim() === ''
                               ? null
-                              : event.currentTarget.value
+                              : toRFC3339Date(event.currentTarget.value)
                           )
                         }
                         class="w-full rounded border border-gray-300 px-3 py-2"
