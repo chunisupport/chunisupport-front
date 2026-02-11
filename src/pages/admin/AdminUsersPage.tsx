@@ -5,7 +5,6 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 const AdminUsersPage = () => {
   useDocumentTitle('ユーザー管理')
 
-  const [page, setPage] = createSignal(1)
   const [searchInput, setSearchInput] = createSignal('')
   const [searchName, setSearchName] = createSignal('')
   const [refreshKey, setRefreshKey] = createSignal(0)
@@ -13,8 +12,8 @@ const AdminUsersPage = () => {
   const [errorMessage, setErrorMessage] = createSignal('')
 
   const [usersResponse] = createResource(
-    () => ({ page: page(), name: searchName(), refresh: refreshKey() }),
-    ({ page, name }) => fetchAdminUsers({ page, name })
+    () => ({ name: searchName(), refresh: refreshKey() }),
+    ({ name }) => fetchAdminUsers({ name })
   )
 
   const users = createMemo(() => usersResponse() ?? [])
@@ -23,7 +22,6 @@ const AdminUsersPage = () => {
   const refresh = () => setRefreshKey((prev) => prev + 1)
 
   const handleSearch = () => {
-    setPage(1)
     setSearchName(searchInput().trim())
   }
 
@@ -144,26 +142,6 @@ const AdminUsersPage = () => {
       <Show when={!usersResponse.loading && !hasRows()}>
         <p class="text-sm text-gray-500">一致するユーザーが見つかりません。</p>
       </Show>
-
-      <div class="flex items-center gap-2">
-        <button
-          type="button"
-          class="rounded border border-gray-300 px-3 py-1 text-sm disabled:opacity-50"
-          onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-          disabled={page() <= 1 || usersResponse.loading}
-        >
-          前へ
-        </button>
-        <p class="text-sm text-gray-700">page: {page()}</p>
-        <button
-          type="button"
-          class="rounded border border-gray-300 px-3 py-1 text-sm disabled:opacity-50"
-          onClick={() => setPage((prev) => prev + 1)}
-          disabled={usersResponse.loading || users().length === 0}
-        >
-          次へ
-        </button>
-      </div>
     </div>
   )
 }
