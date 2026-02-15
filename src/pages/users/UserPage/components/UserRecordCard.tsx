@@ -1,3 +1,4 @@
+import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createSignal, onMount } from 'solid-js'
 import type { PlayerRecordDTO } from '../../../../types/api'
@@ -32,12 +33,14 @@ export const UserRecordCard: Component<Props> = (props) => {
           <p class="text-sm">{props.record.rating.toFixed(2)}</p>
         </div>
         <div class="flex-1 min-w-0 overflow-hidden">
-          <p
-            ref={titleRef}
-            class={`font-semibold whitespace-nowrap ${shouldAnimate() ? 'animate-marquee' : ''}`}
-          >
-            {props.record.title}
-          </p>
+          <A href={`/songs/${encodeURIComponent(props.record.id)}`} class="text-inherit hover:underline">
+            <p
+              ref={titleRef}
+              class={`font-semibold whitespace-nowrap ${shouldAnimate() ? 'animate-marquee' : ''}`}
+            >
+              {props.record.title}
+            </p>
+          </A>
           <p class="text-sm">
             {props.record.const} / {props.record.score}
           </p>

@@ -1,3 +1,4 @@
+import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import type { PlayerRecordIncludeNoPlay } from '../../../../utils/recordMerger'
 
@@ -47,7 +48,9 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             props.records.map((record) => (
               <tr class="border-t border-gray-200 hover:bg-gray-100">
                 <td class="px-2 py-1 truncate max-w-48" title={record.title}>
-                  {record.title}
+                  <A href={`/songs/${encodeURIComponent(record.id)}`} class="text-inherit hover:underline">
+                    {record.title}
+                  </A>
                 </td>
                 <td class="px-2 py-1 text-center">
                   <span
