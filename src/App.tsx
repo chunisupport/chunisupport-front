@@ -9,7 +9,9 @@ import {
   AdminUsersPage,
   EditorPage,
   EditorSongsPage,
+  ForbiddenPage,
   Login,
+  NotFoundPage,
   RecoveryReset,
   Register,
   RegisterScoreTempPage,
@@ -99,6 +101,7 @@ const App = () => {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/recovery" component={RecoveryReset} />
+      <Route path="/403" component={ForbiddenPage} />
 
       {/* ユーザ */}
       <Route path="/users/:username" component={withNavBar(UserPage)} />
@@ -128,6 +131,9 @@ const App = () => {
       <Route path="/admin/songs" component={withNavBar(GuardedAdminSongsPage)} />
       <Route path="/editor" component={withNavBar(GuardedEditorPage)} />
       <Route path="/editor/songs" component={withNavBar(GuardedEditorSongsPage)} />
+
+      {/* 404 */}
+      <Route path="*" component={NotFoundPage} />
     </Router>
   )
 }

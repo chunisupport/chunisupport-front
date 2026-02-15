@@ -1,4 +1,4 @@
-import { A } from '@solidjs/router'
+import { Navigate } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { createResource, Match, Show, Switch } from 'solid-js'
 import { fetchMe } from '../../api/users'
@@ -10,7 +10,13 @@ type RequireRoleProps = {
 }
 
 const RequireRole = (props: RequireRoleProps) => {
-  const [me] = createResource(fetchMe)
+  const [me] = createResource(async () => {
+    try {
+      return await fetchMe()
+    } catch {
+      return null
+    }
+  })
 
   const isAllowed = () => {
     const accountType = me()?.account_type
@@ -25,23 +31,11 @@ const RequireRole = (props: RequireRoleProps) => {
       </Match>
 
       <Match when={!me()}>
-        <div class="mx-auto w-full max-w-3xl p-6 space-y-3">
-          <h1 class="text-2xl font-semibold">ログインが必要です</h1>
-          <p class="text-sm text-gray-600">このページを表示するにはログインしてください。</p>
-          <A href="/login" class="text-blue-600 hover:underline">
-            ログイン画面へ
-          </A>
-        </div>
+        <Navigate href="/403" />
       </Match>
 
       <Match when={!isAllowed()}>
-        <div class="mx-auto w-full max-w-3xl p-6 space-y-3">
-          <h1 class="text-2xl font-semibold">アクセス権限がありません</h1>
-          <p class="text-sm text-gray-600">このページを表示する権限が不足しています。</p>
-          <A href="/" class="text-blue-600 hover:underline">
-            トップへ戻る
-          </A>
-        </div>
+        <Navigate href="/403" />
       </Match>
 
       <Match when={isAllowed()}>
