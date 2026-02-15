@@ -1,14 +1,27 @@
-import { createSignal } from 'solid-js'
-import { updatePrivacy } from '../../api/settings'
+import { createSignal, onMount } from 'solid-js'
+import { fetchPrivacy, updatePrivacy } from '../../api/settings'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
 const SettingsPrivacyPage = () => {
   const [isPrivate, setIsPrivate] = createSignal(false)
+  const [isLoading, setIsLoading] = createSignal(true)
   const [isSubmitting, setIsSubmitting] = createSignal(false)
   const [errorMessage, setErrorMessage] = createSignal('')
   const [successMessage, setSuccessMessage] = createSignal('')
 
   useDocumentTitle('非公開設定')
+
+  onMount(async () => {
+    setErrorMessage('')
+    try {
+      const result = await fetchPrivacy()
+      setIsPrivate(result.is_private)
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '現在の設定取得に失敗しました。')
+    } finally {
+      setIsLoading(false)
+    }
+  })
 
   const handleSubmit = async () => {
     setErrorMessage('')
@@ -36,6 +49,7 @@ const SettingsPrivacyPage = () => {
             type="checkbox"
             checked={isPrivate()}
             onChange={(event) => setIsPrivate(event.currentTarget.checked)}
+            disabled={isLoading() || isSubmitting()}
             class="h-4 w-4"
           />
           <span class="text-sm text-gray-700">プロフィールを非公開にする</span>
@@ -47,10 +61,10 @@ const SettingsPrivacyPage = () => {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={isSubmitting()}
+          disabled={isLoading() || isSubmitting()}
           class="mt-4 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSubmitting() ? '更新中...' : '保存する'}
+          {isLoading() ? '読み込み中...' : isSubmitting() ? '更新中...' : '保存する'}
         </button>
       </div>
     </div>
