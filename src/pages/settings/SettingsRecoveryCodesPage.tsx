@@ -1,3 +1,4 @@
+import { A } from '@solidjs/router'
 import { createSignal, For } from 'solid-js'
 import { issueRecoveryCodes } from '../../api/settings'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -79,6 +80,12 @@ const SettingsRecoveryCodesPage = () => {
           </div>
         )}
       </div>
+      <A
+        href="/settings"
+        class="mt-4 inline-flex rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+      >
+        設定に戻る
+      </A>
     </div>
   )
 }

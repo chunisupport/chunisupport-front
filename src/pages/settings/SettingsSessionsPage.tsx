@@ -1,3 +1,4 @@
+import { A } from '@solidjs/router'
 import { createSignal, onMount } from 'solid-js'
 import { fetchSessionCount, logoutOtherSessions } from '../../api/settings'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -92,6 +93,12 @@ const SettingsSessionsPage = () => {
         {errorMessage() && <p class="mt-3 text-sm text-red-600">{errorMessage()}</p>}
         {successMessage() && <p class="mt-3 text-sm text-green-600">{successMessage()}</p>}
       </div>
+      <A
+        href="/settings"
+        class="mt-4 inline-flex rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+      >
+        設定に戻る
+      </A>
     </div>
   )
 }

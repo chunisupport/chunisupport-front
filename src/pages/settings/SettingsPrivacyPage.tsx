@@ -1,3 +1,4 @@
+import { A } from '@solidjs/router'
 import { createSignal, onMount } from 'solid-js'
 import { fetchPrivacy, updatePrivacy } from '../../api/settings'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -67,6 +68,12 @@ const SettingsPrivacyPage = () => {
           {isLoading() ? '読み込み中...' : isSubmitting() ? '更新中...' : '保存する'}
         </button>
       </div>
+      <A
+        href="/settings"
+        class="mt-4 inline-flex rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+      >
+        設定に戻る
+      </A>
     </div>
   )
 }
