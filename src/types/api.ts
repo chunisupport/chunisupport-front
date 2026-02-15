@@ -24,7 +24,14 @@ export type ErrorCode =
   | 'user_not_found'
   | 'operation_failed'
   // プレイヤー
+  | 'player_not_linked'
   | 'player_not_found'
+  // 楽曲・譜面
+  | 'song_not_found'
+  | 'chart_not_found'
+  | 'invalid_genre_id'
+  | 'invalid_difficulty_id'
+  | 'invalid_difficulty'
   // データ
   | 'validation_failed'
   | 'resource_not_found'
@@ -39,6 +46,7 @@ export type ErrorCode =
   | 'password_too_short'
   | 'password_too_long'
   | 'invalid_password'
+  | 'app_version_unsupported'
   // その他
   | 'not_found'
   | 'method_not_allowed'
@@ -60,7 +68,13 @@ export const errorMessages: Record<ErrorCode, string> = {
   registration_failed: 'このユーザー名は使用できません',
   user_not_found: 'ユーザーが見つかりません',
   operation_failed: '操作に失敗しました',
+  player_not_linked: 'プレイヤーデータが連携されていません',
   player_not_found: 'プレイヤーが見つかりません',
+  song_not_found: '楽曲が見つかりません',
+  chart_not_found: '譜面が見つかりません',
+  invalid_genre_id: 'ジャンルIDが不正です',
+  invalid_difficulty_id: '難易度IDが不正です',
+  invalid_difficulty: '難易度の指定が不正です',
   validation_failed: '入力内容に誤りがあります',
   resource_not_found: 'データが見つかりません',
   conflict: 'データが競合しています',
@@ -73,6 +87,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   password_too_short: 'パスワードは8文字以上である必要があります',
   password_too_long: 'パスワードは128文字以内である必要があります',
   invalid_password: 'パスワードが無効です',
+  app_version_unsupported: 'このアプリバージョンはサポートされていません',
   not_found: 'リソースが見つかりません',
   method_not_allowed: '許可されていない操作です',
   unsupported_media_type: 'サポートされていないメディアタイプです',
