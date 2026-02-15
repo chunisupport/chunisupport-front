@@ -87,7 +87,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   password_too_short: 'パスワードは8文字以上である必要があります',
   password_too_long: 'パスワードは128文字以内である必要があります',
   invalid_password: 'パスワードが無効です',
-  app_version_unsupported: 'このアプリバージョンはサポートされていません',
+  app_version_unsupported: 'データが古いため読み込めません',
   not_found: 'リソースが見つかりません',
   method_not_allowed: '許可されていない操作です',
   unsupported_media_type: 'サポートされていないメディアタイプです',
