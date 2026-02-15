@@ -30,9 +30,7 @@ const RequireRole = (props: RequireRoleProps) => {
         <div class="mx-auto w-full max-w-3xl p-6 text-sm text-gray-600">認証情報を確認中...</div>
       </Match>
 
-      <Match when={isAllowed()}>
-        {props.children}
-      </Match>
+      <Match when={isAllowed()}>{props.children}</Match>
 
       <Match when={true}>
         <Navigate href="/403" />
