@@ -1,6 +1,6 @@
 import { Navigate } from '@solidjs/router'
 import type { JSX } from 'solid-js'
-import { createResource, Match, Show, Switch } from 'solid-js'
+import { createResource, Match, Switch } from 'solid-js'
 import { fetchMe } from '../../api/users'
 import type { AccountType } from '../../types/api'
 
@@ -30,16 +30,12 @@ const RequireRole = (props: RequireRoleProps) => {
         <div class="mx-auto w-full max-w-3xl p-6 text-sm text-gray-600">認証情報を確認中...</div>
       </Match>
 
-      <Match when={!me()}>
-        <Navigate href="/403" />
-      </Match>
-
-      <Match when={!isAllowed()}>
-        <Navigate href="/403" />
-      </Match>
-
       <Match when={isAllowed()}>
-        <Show when={props.children}>{props.children}</Show>
+        {props.children}
+      </Match>
+
+      <Match when={true}>
+        <Navigate href="/403" />
       </Match>
     </Switch>
   )
