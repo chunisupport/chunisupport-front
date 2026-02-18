@@ -113,30 +113,25 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
   const songs = createMemo(() => songsResponse()?.songs ?? [])
   const worldsendSongs = createMemo(() => worldsendResponse()?.songs ?? [])
+  const selectedSong = createMemo(() => {
+    const selected = selectedSongId()
+    if (!selected) return null
+    return songs().find((item) => item.id === selected) ?? null
+  })
 
   createEffect(() => {
-    const list = songs()
+    const song = selectedSong()
     const md = masterData()
-    if (!list.length || !md) return
+    if (!song || !md) {
+      setDraft(null)
+      return
+    }
 
-    const selected = selectedSongId()
-    const song = list.find((item) => item.id === selected) ?? list[0]
-    if (!song) return
-
-    setSelectedSongId(song.id)
     setDraft(toSongDraft(song, md.genres, md.difficulties))
   })
 
   const handleSelectSong = (songId: string) => {
-    const list = songs()
-    const md = masterData()
-    if (!md) return
-
-    const song = list.find((item) => item.id === songId)
-    if (!song) return
-
-    setSelectedSongId(song.id)
-    setDraft(toSongDraft(song, md.genres, md.difficulties))
+    setSelectedSongId(songId)
   }
 
   const updateDraftField = <K extends keyof SongDraft>(key: K, value: SongDraft[K]) => {
