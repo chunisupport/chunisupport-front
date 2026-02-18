@@ -106,7 +106,6 @@ const UserRecord: Component = () => {
 
     if (hasScore) {
       const minScore = condition.scoreMin ?? 0
-      if (record.score === null) return false
       if (record.score < minScore) return false
     }
 

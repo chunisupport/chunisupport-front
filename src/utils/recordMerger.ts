@@ -2,11 +2,7 @@ import type { PlayerRecordDTO, SongDTO } from '../types/api'
 import { dateToChunithmVersion } from './versionConverter'
 
 /** プレイ済み・未プレイを含むレコードの型定義 */
-export interface PlayerRecordIncludeNoPlay
-  extends Omit<PlayerRecordDTO, 'score' | 'rating' | 'overpower'> {
-  score: number | null
-  rating: number | null
-  overpower: number | null
+export interface PlayerRecordIncludeNoPlay extends PlayerRecordDTO {
   genre: string
   release: string | null
   release_version: string
