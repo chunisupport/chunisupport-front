@@ -1,6 +1,6 @@
 import { API_BASE_URL } from '../config'
 import type { AdminUserListResponse, UserDTO, UserProfileWithRecordsDTO } from '../types/api'
-import { getErrorMessage } from '../types/api'
+import { fetchWithAuth } from './fetchWithAuth'
 
 type FetchUserProfileOptions = {
   view?: 'rating'
@@ -14,27 +14,13 @@ export const fetchUserProfile = async (
   if (options.view) {
     url.searchParams.set('view', options.view)
   }
-  const response = await fetch(url, {
-    credentials: 'include',
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(getErrorMessage(error))
-  }
+  const response = await fetchWithAuth(url)
 
   return response.json()
 }
 
 export const fetchMe = async (): Promise<UserDTO> => {
-  const response = await fetch(`${API_BASE_URL}/internal/me`, {
-    credentials: 'include',
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(getErrorMessage(error))
-  }
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/me`)
 
   return response.json()
 }
@@ -55,41 +41,19 @@ export const fetchAdminUsers = async (
     url.searchParams.set('name', options.name)
   }
 
-  const response = await fetch(url, {
-    credentials: 'include',
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(getErrorMessage(error))
-  }
+  const response = await fetchWithAuth(url)
 
   return response.json()
 }
 
 export const deleteUserByUsername = async (username: string): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}`, {
+  await fetchWithAuth(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}`, {
     method: 'DELETE',
-    credentials: 'include',
   })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(getErrorMessage(error))
-  }
 }
 
 export const restoreUserByUsername = async (username: string): Promise<void> => {
-  const response = await fetch(
-    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/restore`,
-    {
-      method: 'POST',
-      credentials: 'include',
-    }
-  )
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(getErrorMessage(error))
-  }
+  await fetchWithAuth(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/restore`, {
+    method: 'POST',
+  })
 }
