@@ -33,7 +33,10 @@ export const UserRecordCard: Component<Props> = (props) => {
           <p class="text-sm">{props.record.rating.toFixed(2)}</p>
         </div>
         <div class="flex-1 min-w-0 overflow-hidden">
-          <A href={`/songs/${encodeURIComponent(props.record.id)}`} class="text-inherit hover:underline">
+          <A
+            href={`/songs/${encodeURIComponent(props.record.id)}`}
+            class="text-inherit hover:underline"
+          >
             <p
               ref={titleRef}
               class={`font-semibold whitespace-nowrap ${shouldAnimate() ? 'animate-marquee' : ''}`}
