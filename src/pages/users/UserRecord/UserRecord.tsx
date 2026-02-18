@@ -35,7 +35,7 @@ const UserRecord: Component = () => {
   const params = useParams<{ username: string }>()
   const [userProfile] = createResource(
     () => params.username,
-    (username) => fetchUserProfile(username)
+    (username) => fetchUserProfile(username, { includeNoPlay: true })
   )
   const [allSongs] = createResource(fetchAllSongs)
   const [masterData] = createResource(fetchMasterData)
@@ -70,10 +70,8 @@ const UserRecord: Component = () => {
   const mergedRecords = createMemo(() => {
     const profile = userProfile()
     const songs = allSongs()
-    const md = masterData()
-    if (!profile || !songs || !md) return []
-    const difficulties = md.difficulties.map((d) => d.name)
-    return mergeAllRecords(songs.songs, profile.records.all, difficulties)
+    if (!profile || !songs) return []
+    return mergeAllRecords(songs.songs, profile.records.all)
   })
 
   /** フィルター適用後のレコード */

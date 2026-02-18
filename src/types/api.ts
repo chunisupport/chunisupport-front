@@ -251,7 +251,8 @@ export interface UserRecordResponseDTO {
 }
 
 export interface PlayerRecordDTO {
-  updated_at: string
+  is_played: boolean
+  updated_at: string | null
   difficulty: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
   id: string
   title: string
@@ -262,7 +263,7 @@ export interface PlayerRecordDTO {
   rating: number
   overpower: number
   img: string
-  clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY'
+  clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY' | null
   combo_lamp: 'FULL COMBO' | 'ALL JUSTICE' | null
   full_chain: 'FULL CHAIN GOLD' | 'FULL CHAIN PLATINUM' | null
   slot: string | null
