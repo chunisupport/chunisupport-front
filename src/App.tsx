@@ -4,17 +4,17 @@ import { NavBar } from './components'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import {
   Login,
+  RecoveryReset,
   Register,
   RegisterScoreTempPage,
-  RecoveryReset,
-  SongDetail,
-  SongsList,
   SettingsApiTokenPage,
   SettingsPage,
   SettingsPasswordPage,
   SettingsPrivacyPage,
   SettingsRecoveryCodesPage,
   SettingsSessionsPage,
+  SongDetail,
+  SongsList,
   UserPage,
   UserRecord,
 } from './pages'
