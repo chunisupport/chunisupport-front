@@ -1,9 +1,9 @@
 import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import type { PlayerRecordIncludeNoPlay } from '../../../../utils/recordMerger'
+import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 
 interface RecordTableProps {
-  records: PlayerRecordIncludeNoPlay[]
+  records: PlayerRecordWithSongMeta[]
 }
 
 import { difficultyColor, difficultyShort } from '../../../../utils/difficultyUtils'
@@ -48,7 +48,10 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             props.records.map((record) => (
               <tr class="border-t border-gray-200 hover:bg-gray-100">
                 <td class="px-2 py-1 truncate max-w-48" title={record.title}>
-                  <A href={`/songs/${encodeURIComponent(record.id)}`} class="text-inherit hover:underline">
+                  <A
+                    href={`/songs/${encodeURIComponent(record.id)}`}
+                    class="text-inherit hover:underline"
+                  >
                     {record.title}
                   </A>
                 </td>
@@ -63,7 +66,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                 <td class="px-2 py-1 text-right">
                   {'is_played' in record && !record.is_played
                     ? unplayedBadge()
-                    : record.score?.toLocaleString()}
+                    : record.score.toLocaleString()}
                 </td>
                 <td class="px-2 py-1 text-center">
                   {'is_played' in record && !record.is_played ? (

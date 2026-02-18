@@ -251,18 +251,20 @@ export interface UserRecordResponseDTO {
 }
 
 export interface PlayerRecordDTO {
-  updated_at: string
+  is_played: boolean
+  updated_at: string | null
   difficulty: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
   id: string
   title: string
   artist: string
   const: number
   is_const_unknown: boolean
+  // 補足: 未プレイデータの場合でも、score・rating・overpowerは0が返る仕様である。
   score: number
   rating: number
   overpower: number
   img: string
-  clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY'
+  clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY' | null
   combo_lamp: 'FULL COMBO' | 'ALL JUSTICE' | null
   full_chain: 'FULL CHAIN GOLD' | 'FULL CHAIN PLATINUM' | null
   slot: string | null

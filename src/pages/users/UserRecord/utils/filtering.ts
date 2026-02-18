@@ -1,4 +1,4 @@
-import type { PlayerRecordIncludeNoPlay } from '../../../../utils/recordMerger'
+import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import { buildDefaultFilter } from '../types/filterDefaults'
 import type { ComboLamp, Difficulty, FilterState } from '../types/types'
 
@@ -6,7 +6,7 @@ import type { ComboLamp, Difficulty, FilterState } from '../types/types'
 export const getDefaultFilter = buildDefaultFilter
 
 /** レコードがフィルター条件にマッチするか判定する */
-export function isRecordMatched(record: PlayerRecordIncludeNoPlay, filters: FilterState): boolean {
+export function isRecordMatched(record: PlayerRecordWithSongMeta, filters: FilterState): boolean {
   // 未プレイ除外
   if (filters.excludeNoPlay && !record.is_played) {
     return false
@@ -40,7 +40,7 @@ export function isRecordMatched(record: PlayerRecordIncludeNoPlay, filters: Filt
   if (record.const > filters.constMax) return false
 
   // スコア
-  if (record.is_played && record.score !== null) {
+  if (record.is_played) {
     if (record.score < filters.scoreMin) return false
     if (record.score > filters.scoreMax) return false
   }

@@ -4,6 +4,7 @@ import { getErrorMessage } from '../types/api'
 
 type FetchUserProfileOptions = {
   view?: 'rating'
+  includeNoPlay?: boolean
 }
 
 export const fetchUserProfile = async (
@@ -13,6 +14,9 @@ export const fetchUserProfile = async (
   const url = new URL(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}`)
   if (options.view) {
     url.searchParams.set('view', options.view)
+  }
+  if (options.includeNoPlay) {
+    url.searchParams.set('include_noplay', 'true')
   }
   const response = await fetch(url, {
     credentials: 'include',
