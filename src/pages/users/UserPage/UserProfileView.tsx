@@ -34,7 +34,7 @@ export const UserProfileView: Component<Props> = (props) => {
   const NAMEPLATE_SCROLL_OFFSET = 183
 
   return (
-    <div class="mb-4 mx-auto w-full max-w-4xl overflow-y-auto h-screen" id="user-profile">
+    <div class="mb-4 mx-auto w-full max-w-4xl">
       {/* ↑と↓について: stickyScrollの関係でmy-4を使わず、mb-4とmt-4を別の箇所で指定しています */}
       <div class="mt-4">
         {/* ネームプレート */}
@@ -50,7 +50,7 @@ export const UserProfileView: Component<Props> = (props) => {
         class="mb-4"
         // タブを切り替えた際に1曲目の位置までスクロールする
         onChange={() => {
-          const scrollTarget = document.getElementById('user-profile')
+          const scrollTarget = document.getElementById('app-main')
           if (scrollTarget && scrollTarget.scrollTop > NAMEPLATE_SCROLL_OFFSET) {
             scrollTarget.scrollTo({
               top: NAMEPLATE_SCROLL_OFFSET,
