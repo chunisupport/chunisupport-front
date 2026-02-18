@@ -295,7 +295,6 @@ export interface WorldsendSongDTO {
 }
 
 export interface UpdateChartRequestDTO {
-  difficulty_id: number
   const: number
   is_const_unknown: boolean
   notes: number | null
@@ -305,11 +304,11 @@ export interface UpdateSongRequestDTO {
   id: string
   title: string
   artist: string
-  genre_id: number | null
+  genre: string | null
   bpm: number | null
   released_at: string | null
   jacket: string | null
-  charts: UpdateChartRequestDTO[]
+  charts: Record<string, UpdateChartRequestDTO>
 }
 
 // --------------------------------

@@ -16,15 +16,39 @@ type SongManagementPageProps = {
   title: string
 }
 
+type EditableChartDraft = {
+  difficulty_id: number
+  difficulty_name: string
+  const: number
+  is_const_unknown: boolean
+  notes: number | null
+}
+
+type SongDraft = {
+  id: string
+  title: string
+  artist: string
+  genre_id: number | null
+  bpm: number | null
+  released_at: string | null
+  jacket: string | null
+  charts: EditableChartDraft[]
+}
+
 const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
 
-const toRFC3339Date = (value: string | null): string | null => {
+const toDateOnly = (value: string | null): string | null => {
   if (!value) return null
   const trimmed = value.trim()
   if (!trimmed) return null
 
   if (dateOnlyPattern.test(trimmed)) {
-    return `${trimmed}T00:00:00Z`
+    return trimmed
+  }
+
+  const datePrefixMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})/)
+  if (datePrefixMatch && dateOnlyPattern.test(datePrefixMatch[1])) {
+    return datePrefixMatch[1]
   }
 
   const date = new Date(trimmed)
@@ -32,30 +56,25 @@ const toRFC3339Date = (value: string | null): string | null => {
     return null
   }
 
-  return date.toISOString()
-}
-
-const toDateInputValue = (value: string | null): string => {
-  if (!value) return ''
-  if (dateOnlyPattern.test(value)) return value
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
   return date.toISOString().slice(0, 10)
 }
 
-const toUpdateSongRequest = (
+const toDateInputValue = (value: string | null): string => {
+  return toDateOnly(value) ?? ''
+}
+
+const toSongDraft = (
   song: SongDTO,
   genres: MasterItemDTO[],
   difficulties: MasterItemDTO[]
-): UpdateSongRequestDTO => {
+): SongDraft => {
   return {
     id: song.id,
     title: song.title,
     artist: song.artist,
     genre_id: genres.find((genre) => genre.name === song.genre)?.id ?? null,
     bpm: song.bpm ?? null,
-    released_at: toRFC3339Date(song.release),
+    released_at: toDateOnly(song.release),
     jacket: song.jacket ?? null,
     charts: difficulties
       .map((difficulty) => {
@@ -63,6 +82,7 @@ const toUpdateSongRequest = (
         if (!chart) return null
         return {
           difficulty_id: difficulty.id,
+          difficulty_name: difficulty.name,
           const: chart.const,
           is_const_unknown: chart.is_const_unknown,
           notes: chart.notes ?? null,
@@ -87,7 +107,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const [masterData] = createResource(fetchMasterData)
 
   const [selectedSongId, setSelectedSongId] = createSignal<string>('')
-  const [draft, setDraft] = createSignal<UpdateSongRequestDTO | null>(null)
+  const [draft, setDraft] = createSignal<SongDraft | null>(null)
   const [message, setMessage] = createSignal('')
   const [errorMessage, setErrorMessage] = createSignal('')
 
@@ -104,7 +124,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     if (!song) return
 
     setSelectedSongId(song.id)
-    setDraft(toUpdateSongRequest(song, md.genres, md.difficulties))
+    setDraft(toSongDraft(song, md.genres, md.difficulties))
   })
 
   const handleSelectSong = (songId: string) => {
@@ -116,13 +136,10 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     if (!song) return
 
     setSelectedSongId(song.id)
-    setDraft(toUpdateSongRequest(song, md.genres, md.difficulties))
+    setDraft(toSongDraft(song, md.genres, md.difficulties))
   }
 
-  const updateDraftField = <K extends keyof UpdateSongRequestDTO>(
-    key: K,
-    value: UpdateSongRequestDTO[K]
-  ) => {
+  const updateDraftField = <K extends keyof SongDraft>(key: K, value: SongDraft[K]) => {
     setDraft((prev) => (prev ? { ...prev, [key]: value } : prev))
   }
 
@@ -151,19 +168,40 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     setMessage('')
     setErrorMessage('')
 
-    const normalizedReleasedAt = toRFC3339Date(current.released_at)
+    const md = masterData()
+    if (!md) {
+      setErrorMessage('マスターデータの取得前のため更新できません。再読み込みしてください。')
+      return
+    }
+
+    const normalizedReleasedAt = toDateOnly(current.released_at)
     if (current.released_at && !normalizedReleasedAt) {
       setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
       return
     }
 
+    const request: UpdateSongRequestDTO = {
+      id: current.id,
+      title: current.title,
+      artist: current.artist,
+      genre: md.genres.find((genre) => genre.id === current.genre_id)?.name ?? null,
+      bpm: current.bpm,
+      released_at: normalizedReleasedAt,
+      jacket: current.jacket,
+      charts: Object.fromEntries(
+        current.charts.map((chart) => [
+          chart.difficulty_name,
+          {
+            const: chart.const,
+            is_const_unknown: chart.is_const_unknown,
+            notes: chart.notes,
+          },
+        ])
+      ),
+    }
+
     try {
-      await updateSongs([
-        {
-          ...current,
-          released_at: normalizedReleasedAt,
-        },
-      ])
+      await updateSongs([request])
       setMessage('楽曲を更新しました。')
       refresh()
     } catch (error) {
@@ -344,7 +382,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                             'released_at',
                             event.currentTarget.value.trim() === ''
                               ? null
-                              : toRFC3339Date(event.currentTarget.value)
+                              : event.currentTarget.value
                           )
                         }
                         class="w-full rounded border border-gray-300 px-3 py-2"
