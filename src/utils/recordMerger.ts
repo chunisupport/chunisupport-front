@@ -2,7 +2,7 @@ import type { PlayerRecordDTO, SongDTO } from '../types/api'
 import { dateToChunithmVersion } from './versionConverter'
 
 /** プレイ済み・未プレイを含むレコードの型定義 */
-export interface PlayerRecordIncludeNoPlay extends PlayerRecordDTO {
+export interface PlayerRecordWithSongMeta extends PlayerRecordDTO {
   genre: string
   release: string | null
   release_version: string
@@ -14,10 +14,10 @@ export interface PlayerRecordIncludeNoPlay extends PlayerRecordDTO {
  * @param records APIから取得した全レコード（未プレイ含む）
  * @returns 楽曲情報を付与したレコード配列
  */
-export function mergeAllRecords(
+export function attachSongMetaToRecords(
   songs: SongDTO[],
   records: PlayerRecordDTO[]
-): PlayerRecordIncludeNoPlay[] {
+): PlayerRecordWithSongMeta[] {
   const songMap = new Map(songs.map((song) => [song.id, song]))
 
   return records.map((record) => {

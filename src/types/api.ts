@@ -259,6 +259,7 @@ export interface PlayerRecordDTO {
   artist: string
   const: number
   is_const_unknown: boolean
+  // 補足: 未プレイデータの場合でも、score・rating・overpowerは0が返る仕様である。
   score: number
   rating: number
   overpower: number
