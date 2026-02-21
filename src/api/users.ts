@@ -2,6 +2,20 @@ import { API_BASE_URL } from '../config'
 import type { UserDTO, UserProfileWithRecordsDTO } from '../types/api'
 import { getErrorMessage } from '../types/api'
 
+const throwApiError = async (response: Response): Promise<never> => {
+  let message = `HTTP ${response.status}`
+  try {
+    const error = await response.json()
+    message = getErrorMessage(error)
+  } catch {
+    // ignore
+  }
+
+  const apiError = new Error(message) as Error & { status?: number }
+  apiError.status = response.status
+  throw apiError
+}
+
 type FetchUserProfileOptions = {
   view?: 'rating'
   includeNoPlay?: boolean
@@ -23,8 +37,7 @@ export const fetchUserProfile = async (
   })
 
   if (!response.ok) {
-    const error = await response.json()
-    throw new Error(getErrorMessage(error))
+    await throwApiError(response)
   }
 
   return response.json()
@@ -36,8 +49,7 @@ export const fetchMe = async (): Promise<UserDTO> => {
   })
 
   if (!response.ok) {
-    const error = await response.json()
-    throw new Error(getErrorMessage(error))
+    await throwApiError(response)
   }
 
   return response.json()

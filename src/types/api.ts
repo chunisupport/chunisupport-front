@@ -38,6 +38,14 @@ export type ErrorCode =
   | 'conflict'
   | 'api_token_not_found'
   | 'payload_too_large'
+  // Goals
+  | 'goal_not_found'
+  | 'goal_limit_exceeded'
+  | 'goal_invalid_title'
+  | 'goal_invalid_achievement_type'
+  | 'goal_invalid_achievement_params'
+  | 'goal_invalid_attributes'
+  | 'invalid_goal_input'
   // 入力検証
   | 'username_empty'
   | 'username_too_short'
@@ -80,6 +88,13 @@ export const errorMessages: Record<ErrorCode, string> = {
   conflict: 'データが競合しています',
   api_token_not_found: 'APIトークンが見つかりません',
   payload_too_large: 'データサイズが大きすぎます',
+  goal_not_found: '目標が見つかりません',
+  goal_limit_exceeded: '目標の上限件数に達しています',
+  goal_invalid_title: '目標タイトルが不正です',
+  goal_invalid_achievement_type: '目標種別が不正です',
+  goal_invalid_achievement_params: '目標パラメータが不正です',
+  goal_invalid_attributes: '目標条件が不正です',
+  invalid_goal_input: '目標入力が不正です',
   username_empty: 'ユーザー名が空です',
   username_too_short: 'ユーザー名は5文字以上である必要があります',
   username_too_long: 'ユーザー名は50文字以内である必要があります',
@@ -118,6 +133,8 @@ export interface SongDTO {
   bpm: number | null
   release: string | null
   jacket: string | null
+  maxop: number
+  is_maxop_unknown: boolean
   charts: {
     BASIC?: ChartDTO
     ADVANCED?: ChartDTO
@@ -182,9 +199,69 @@ export interface BooleanChoiceDTO {
 export interface MasterDataDTO {
   genres: MasterItemDTO[]
   difficulties: MasterItemDTO[]
+  versions: VersionDTO[]
   is_const_unknown: BooleanChoiceDTO[]
   account_types: MasterItemDTO[]
 }
+
+export interface VersionDTO {
+  id: number
+  name: string
+  released_at: string
+}
+
+export type GoalAchievementType =
+  | 'rank_count'
+  | 'score_count'
+  | 'avg_score'
+  | 'hardlamp_count'
+  | 'combolamp_count'
+  | 'total_score'
+  | 'overpower_value'
+  | 'overpower_percent'
+
+export interface GoalAttributes {
+  diff?: number
+  const?: {
+    min?: number
+    max?: number
+  }
+  genre?: number
+  ver?: number
+}
+
+export type GoalAchievementParams =
+  | {
+    score: number
+    count: number
+  }
+  | {
+    score: number
+  }
+  | {
+    lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'
+    count: number
+  }
+  | {
+    lamp: 'FC' | 'AJ'
+    count: number
+  }
+  | {
+    total: number
+  }
+
+export interface GoalDTO {
+  id: number
+  title: string
+  achievement_type: GoalAchievementType
+  achievement_params: GoalAchievementParams
+  attributes: GoalAttributes
+  invert: boolean
+  created_at: string
+}
+
+export type GoalCreateRequest = Omit<GoalDTO, 'id' | 'created_at'>
+export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'created_at'>
 
 // --------------------------------
 
@@ -221,22 +298,22 @@ export interface HonorDTO {
   slot: 1 | 2 | 3
   name: string
   type_name:
-    | 'normal'
-    | 'copper'
-    | 'silver'
-    | 'gold'
-    | 'platina'
-    | 'rainbow'
-    | 'staff'
-    | 'ongeki'
-    | 'maimai'
-    | 'sp'
-    | 'phoenix_g'
-    | 'phoenix_p'
-    | 'phoenix_r'
-    | 'expert'
-    | 'master'
-    | 'ultima'
+  | 'normal'
+  | 'copper'
+  | 'silver'
+  | 'gold'
+  | 'platina'
+  | 'rainbow'
+  | 'staff'
+  | 'ongeki'
+  | 'maimai'
+  | 'sp'
+  | 'phoenix_g'
+  | 'phoenix_p'
+  | 'phoenix_r'
+  | 'expert'
+  | 'master'
+  | 'ultima'
   image_url: string | null
 }
 

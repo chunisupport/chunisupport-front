@@ -3,6 +3,7 @@ import type { JSX } from 'solid-js'
 import { NavBar } from './components'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import {
+  GoalsList,
   Login,
   RecoveryReset,
   Register,
@@ -93,6 +94,7 @@ const App = () => {
       <Route path="/users/:username" component={withNavBar(UserPage)} />
       <Route path="/users/:username/records" component={withNavBar(UserRecord)} />
       <Route path="/users/:username/stats" component={withNavBar(UserStatsPage)} />
+      <Route path="/goals" component={withNavBar(GoalsList)} />
 
       {/* 楽曲 */}
       <Route path="/songs" component={withNavBar(SongsList)} />
