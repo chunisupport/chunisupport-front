@@ -8,7 +8,7 @@ type Props = {
   index: number
 }
 
-import { difficultyCardColor } from '../../../../utils/difficultyUtils'
+import { difficultyCardBorderColor } from '../../../../utils/difficultyUtils'
 
 export const UserRecordCard: Component<Props> = (props) => {
   const [shouldAnimate, setShouldAnimate] = createSignal(false)
@@ -26,7 +26,7 @@ export const UserRecordCard: Component<Props> = (props) => {
   })
 
   return (
-    <div class={`p-3 rounded-md border ${difficultyCardColor(props.record.difficulty)}`}>
+    <div class={`relative pl-4 p-2 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-2 shadow-md ${difficultyCardBorderColor(props.record.difficulty)}`}>
       <div class="flex gap-3">
         <div class="flex flex-col">
           <p># {props.index + 1}</p>
