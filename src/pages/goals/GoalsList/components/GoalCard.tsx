@@ -1,6 +1,6 @@
 ﻿import { type Component, createSignal, onCleanup } from 'solid-js'
 import { Pencil, Trash2, MoreVertical } from 'lucide-solid'
-import type { GoalDTO, MasterDataDTO } from '../../../../../types/api'
+import type { GoalDTO, MasterDataDTO } from '../../../../types/api'
 // import { formatGoalAttributesLabel, formatGoalTypeLabel } from '../../utils/goalForm'
 import type { GoalProgressResult } from '../../utils/goalProgress'
 
