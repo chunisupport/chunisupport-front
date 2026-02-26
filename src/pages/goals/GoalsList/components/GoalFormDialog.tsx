@@ -318,7 +318,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   <Show
                     when={countMode() === 'number'}
                     fallback={
-                      <p class="rounded border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
+                      <p class="rounded border border-primary-200 bg-primary-50 px-3 py-2 text-xs text-primary-700">
                         現在の対象譜面数: {props.resolveAllCount(getDraftAttributes())} 件
                       </p>
                     }
@@ -482,7 +482,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
             </button>
             <button
               type="button"
-              class="rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+              class="rounded bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
               onClick={() => {
                 void handleSave()
               }}

@@ -41,7 +41,7 @@ const SettingsPage = () => {
         {links.map((link) => (
           <A
             href={link.href}
-            class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition hover:border-green-300 hover:bg-green-50"
+            class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition hover:border-primary-300 hover:bg-primary-50"
           >
             <h2 class="text-lg font-semibold text-gray-900">{link.title}</h2>
             <p class="mt-1 text-sm text-gray-600">{link.description}</p>

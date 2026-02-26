@@ -62,7 +62,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
         </div>
         <div class="h-2 rounded bg-gray-200">
           <div
-            class="h-2 rounded bg-green-600"
+            class="h-2 rounded bg-primary-600"
             style={{ width: `${Math.max(0, Math.min(displayPercent(), 100))}%` }}
           />
         </div>
@@ -74,7 +74,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
           {formatValue(props.progress.target, props.goal.achievement_type)}
         </span>
         {props.progress.achieved && (
-          <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+          <span class="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700">
             達成
           </span>
         )}

@@ -308,7 +308,7 @@ const NavBar = (props: NavBarProps) => {
                 </button>
                 <button
                   type="button"
-                  class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+                  class="px-4 py-2 rounded bg-primary-600 text-white hover:bg-primary-700"
                   onClick={() => {
                     setShowLoginDialog(false)
                     navigate('/login')

@@ -48,13 +48,13 @@ const Login = () => {
         <div class="mb-6 text-center">
           <TextField>
             <TextField.Input
-              class="mb-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              class="mb-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="ユーザー名"
               value={username()}
               onInput={(event) => setUsername(event.currentTarget.value)}
             />
             <TextField.Input
-              class="mb-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              class="mb-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="パスワード"
               type="password"
               value={password()}
@@ -64,7 +64,7 @@ const Login = () => {
           {errorMessage() && <p class="text-sm text-red-600 mb-2">{errorMessage()}</p>}
           <button
             type="button"
-            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+            class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50"
             onClick={handleLogin}
             disabled={isSubmitting()}
           >
@@ -75,18 +75,18 @@ const Login = () => {
         <div class="text-center">
           <p class="mb-3 text-sm text-gray-600">
             パスワードを忘れた場合は
-            <A href="/recovery" class="text-green-500 underline ml-1">
+            <A href="/recovery" class="text-primary-500 underline ml-1">
               こちら
             </A>
           </p>
           <p class="mb-5 text-sm text-gray-600">
             新規アカウント作成は
-            <A href="/register" class="text-green-500 underline ml-1">
+            <A href="/register" class="text-primary-500 underline ml-1">
               こちら
             </A>
           </p>
           <p class="text-sm text-gray-600">
-            <A href="/" class="text-green-500 underline ml-1">
+            <A href="/" class="text-primary-500 underline ml-1">
               トップページへ戻る
             </A>
           </p>

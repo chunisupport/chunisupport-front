@@ -135,7 +135,7 @@ const GoalsList: Component = () => {
             </div>
             <button
               type="button"
-              class="rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+              class="rounded bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
               disabled={(resource()?.goals.length ?? 0) >= 100}
               onClick={openCreateDialog}
             >

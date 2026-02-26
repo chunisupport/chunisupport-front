@@ -1,4 +1,4 @@
-import { A } from '@solidjs/router'
+﻿import { A } from '@solidjs/router'
 import { createSignal, onMount } from 'solid-js'
 import { fetchSessionCount, logoutOtherSessions } from '../../api/settings'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -91,7 +91,7 @@ const SettingsSessionsPage = () => {
         </div>
 
         {errorMessage() && <p class="mt-3 text-sm text-red-600">{errorMessage()}</p>}
-        {successMessage() && <p class="mt-3 text-sm text-green-600">{successMessage()}</p>}
+        {successMessage() && <p class="mt-3 text-sm text-primary-600">{successMessage()}</p>}
       </div>
       <A
         href="/settings"

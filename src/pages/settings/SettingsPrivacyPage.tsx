@@ -57,13 +57,13 @@ const SettingsPrivacyPage = () => {
         </label>
 
         {errorMessage() && <p class="mt-3 text-sm text-red-600">{errorMessage()}</p>}
-        {successMessage() && <p class="mt-3 text-sm text-green-600">{successMessage()}</p>}
+        {successMessage() && <p class="mt-3 text-sm text-primary-600">{successMessage()}</p>}
 
         <button
           type="button"
           onClick={handleSubmit}
           disabled={isLoading() || isSubmitting()}
-          class="mt-4 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+          class="mt-4 rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isLoading() ? '読み込み中...' : isSubmitting() ? '更新中...' : '保存する'}
         </button>

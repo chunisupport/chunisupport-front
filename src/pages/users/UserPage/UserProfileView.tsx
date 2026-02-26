@@ -62,18 +62,18 @@ export const UserProfileView: Component<Props> = (props) => {
         <Tabs.List class="sticky top-0 z-10 bg-white flex gap-2 mb-4 px-4 pt-2 border-b border-gray-300">
           <Tabs.Trigger
             value="best"
-            class="px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-green-500"
+            class="px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-primary-500"
           >
             ベスト枠
           </Tabs.Trigger>
           <Tabs.Trigger
             value="new"
-            class="px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-green-500"
+            class="px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-primary-500"
           >
             新曲枠
           </Tabs.Trigger>
           <div class="flex-1"></div>
-          <button type="button" class="px-3 py-1 mb-1 bg-green-600 text-white rounded-md">
+          <button type="button" class="px-3 py-1 mb-1 bg-primary-600 text-white rounded-md">
             <Image class="inline-block mr-1 mb-0.5" size={16} />
             画像化
           </button>

@@ -70,7 +70,7 @@ const SettingsApiTokenPage = () => {
             type="button"
             onClick={handleIssue}
             disabled={isIssuing()}
-            class="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+            class="rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isIssuing() ? '発行中...' : 'APIトークンを発行'}
           </button>
@@ -86,7 +86,7 @@ const SettingsApiTokenPage = () => {
         </div>
 
         {errorMessage() && <p class="mt-3 text-sm text-red-600">{errorMessage()}</p>}
-        {successMessage() && <p class="mt-3 text-sm text-green-600">{successMessage()}</p>}
+        {successMessage() && <p class="mt-3 text-sm text-primary-600">{successMessage()}</p>}
 
         {token() && (
           <div class="mt-4 rounded-md bg-gray-50 p-3">
@@ -102,7 +102,7 @@ const SettingsApiTokenPage = () => {
               >
                 コピー
               </button>
-              {copied() && <span class="text-xs text-green-600">コピーしました</span>}
+              {copied() && <span class="text-xs text-primary-600">コピーしました</span>}
             </div>
           </div>
         )}

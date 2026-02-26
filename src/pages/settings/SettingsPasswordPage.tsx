@@ -51,7 +51,7 @@ const SettingsPasswordPage = () => {
           type="password"
           value={currentPassword()}
           onInput={(event) => setCurrentPassword(event.currentTarget.value)}
-          class="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+          class="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
 
         <label for="new-password" class="mb-2 block text-sm font-medium text-gray-700">
@@ -62,17 +62,17 @@ const SettingsPasswordPage = () => {
           type="password"
           value={newPassword()}
           onInput={(event) => setNewPassword(event.currentTarget.value)}
-          class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+          class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
 
         {errorMessage() && <p class="mt-3 text-sm text-red-600">{errorMessage()}</p>}
-        {successMessage() && <p class="mt-3 text-sm text-green-600">{successMessage()}</p>}
+        {successMessage() && <p class="mt-3 text-sm text-primary-600">{successMessage()}</p>}
 
         <button
           type="button"
           onClick={handleSubmit}
           disabled={isSubmitting()}
-          class="mt-4 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+          class="mt-4 rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting() ? '変更中...' : '変更する'}
         </button>
