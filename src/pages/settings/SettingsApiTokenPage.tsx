@@ -1,4 +1,4 @@
-import { A } from '@solidjs/router'
+﻿import { A } from '@solidjs/router'
 import { createSignal } from 'solid-js'
 import { deleteApiToken, issueApiToken } from '../../api/settings'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -70,7 +70,7 @@ const SettingsApiTokenPage = () => {
             type="button"
             onClick={handleIssue}
             disabled={isIssuing()}
-            class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            class="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isIssuing() ? '発行中...' : 'APIトークンを発行'}
           </button>

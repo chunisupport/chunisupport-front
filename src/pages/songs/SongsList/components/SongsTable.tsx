@@ -1,4 +1,4 @@
-import { A } from '@solidjs/router'
+﻿import { A } from '@solidjs/router'
 import { For } from 'solid-js'
 import type { SongDTO } from '../../../../types/api'
 
@@ -28,7 +28,7 @@ const SongsTable = (props: Props) => {
                 <td class="px-3 py-2">
                   <A
                     href={`/songs/${encodeURIComponent(song.id)}`}
-                    class="text-blue-600 hover:underline"
+                    class="text-green-600 hover:underline"
                   >
                     {song.title}
                   </A>

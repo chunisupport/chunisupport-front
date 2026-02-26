@@ -1,4 +1,4 @@
-import { A } from '@solidjs/router'
+﻿import { A } from '@solidjs/router'
 import { createSignal, onMount } from 'solid-js'
 import { fetchPrivacy, updatePrivacy } from '../../api/settings'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -63,7 +63,7 @@ const SettingsPrivacyPage = () => {
           type="button"
           onClick={handleSubmit}
           disabled={isLoading() || isSubmitting()}
-          class="mt-4 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          class="mt-4 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isLoading() ? '読み込み中...' : isSubmitting() ? '更新中...' : '保存する'}
         </button>

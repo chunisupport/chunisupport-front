@@ -1,4 +1,4 @@
-import { Checkbox } from '@kobalte/core/checkbox'
+﻿import { Checkbox } from '@kobalte/core/checkbox'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate } from '@solidjs/router'
 import { Check, Dot, Loader, X } from 'lucide-solid'
@@ -155,7 +155,7 @@ const Register = () => {
             }
           >
             <TextField.Input
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 data-invalid:border-red-500"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 data-invalid:border-red-500"
               placeholder="ユーザー名"
               value={username()}
               onInput={(event) => {
@@ -171,7 +171,7 @@ const Register = () => {
           </TextField>
           <TextField class="mb-2" validationState={passwordError() ? 'invalid' : 'valid'}>
             <TextField.Input
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 data-invalid:border-red-500"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 data-invalid:border-red-500"
               placeholder="パスワード"
               type="password"
               value={password()}
@@ -183,7 +183,7 @@ const Register = () => {
           </TextField>
           <TextField class="mb-4" validationState={passwordConfirmError() ? 'invalid' : 'valid'}>
             <TextField.Input
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 data-invalid:border-red-500"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 data-invalid:border-red-500"
               placeholder="パスワード（確認）"
               type="password"
               value={passwordConfirm()}
@@ -202,13 +202,13 @@ const Register = () => {
             onChange={setAgreedToTerms}
           >
             <Checkbox.Input class="sr-only" />
-            <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50  data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center">
+            <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50  data-checked:border-green-600 data-checked:bg-green-600 data-checked:text-white flex items-center justify-center">
               <Checkbox.Indicator>
                 <Check class="h-4 w-4" />
               </Checkbox.Indicator>
             </Checkbox.Control>
             <Checkbox.Label class="ml-2 text-gray-900 text-sm select-none">
-              <A href="/terms" class="text-blue-500 underline mr-1">
+              <A href="/terms" class="text-green-500 underline mr-1">
                 利用規約
               </A>
               に同意します
@@ -223,7 +223,7 @@ const Register = () => {
           <div class="flex justify-center">
             <button
               type="button"
-              class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+              class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
               onClick={handleRegister}
               disabled={
                 !(
@@ -243,12 +243,12 @@ const Register = () => {
         <div class="text-center">
           <p class="mb-5 text-sm text-gray-600">
             すでにアカウントをお持ちの方は
-            <A href="/login" class="text-blue-500 underline ml-1">
+            <A href="/login" class="text-green-500 underline ml-1">
               こちら
             </A>
           </p>
           <p class="text-sm text-gray-600">
-            <A href="/" class="text-blue-500 underline ml-1">
+            <A href="/" class="text-green-500 underline ml-1">
               トップページへ戻る
             </A>
           </p>

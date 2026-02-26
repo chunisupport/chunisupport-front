@@ -1,4 +1,4 @@
-import { AlertDialog } from '@kobalte/core/alert-dialog'
+﻿import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Dialog } from '@kobalte/core/dialog'
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { A, useLocation, useNavigate } from '@solidjs/router'
@@ -308,7 +308,7 @@ const NavBar = (props: NavBarProps) => {
                 </button>
                 <button
                   type="button"
-                  class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
                   onClick={() => {
                     setShowLoginDialog(false)
                     navigate('/login')

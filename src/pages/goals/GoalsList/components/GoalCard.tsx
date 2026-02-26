@@ -1,4 +1,4 @@
-import type { Component } from 'solid-js'
+﻿import type { Component } from 'solid-js'
 import type { GoalDTO, MasterDataDTO } from '../../../../../types/api'
 import { formatGoalAttributesLabel, formatGoalTypeLabel } from '../../utils/goalForm'
 import type { GoalProgressResult } from '../../utils/goalProgress'
@@ -62,7 +62,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
         </div>
         <div class="h-2 rounded bg-gray-200">
           <div
-            class="h-2 rounded bg-blue-600"
+            class="h-2 rounded bg-green-600"
             style={{ width: `${Math.max(0, Math.min(displayPercent(), 100))}%` }}
           />
         </div>

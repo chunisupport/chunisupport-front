@@ -1,4 +1,4 @@
-import { Collapsible } from '@kobalte/core/collapsible'
+﻿import { Collapsible } from '@kobalte/core/collapsible'
 import type { Component } from 'solid-js'
 import type { RecordStats } from '../utils/recordStats'
 import {
@@ -49,14 +49,14 @@ const ScoreBoxPlot: Component<{ stats: RecordStats['scoreStats'] }> = (props) =>
       <div class="absolute left-0 top-1/2 w-full h-full -translate-y-1/2 bg-gray-200 rounded">
         {/* 既プレイの分布をざっくり掴むための箱ひげ図 */}
         <div
-          class="absolute h-full bg-blue-400 rounded"
+          class="absolute h-full bg-green-400 rounded"
           style={{
             left: `${q1Pct}%`,
             width: `${q3Pct - q1Pct}%`,
           }}
         ></div>
         <div
-          class="absolute w-1 bg-blue-900 h-full rounded"
+          class="absolute w-1 bg-green-900 h-full rounded"
           style={{
             left: `${medianPct}%`,
           }}

@@ -1,4 +1,4 @@
-import { A } from '@solidjs/router'
+﻿import { A } from '@solidjs/router'
 import { createSignal, For } from 'solid-js'
 import { issueRecoveryCodes } from '../../api/settings'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -53,7 +53,7 @@ const SettingsRecoveryCodesPage = () => {
           type="button"
           onClick={handleIssue}
           disabled={isSubmitting()}
-          class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          class="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting() ? '発行中...' : 'リカバリーコードを発行'}
         </button>

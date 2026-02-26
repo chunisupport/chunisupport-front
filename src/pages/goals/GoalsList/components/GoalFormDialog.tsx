@@ -1,4 +1,4 @@
-import { Dialog } from '@kobalte/core/dialog'
+﻿import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
 import {
@@ -318,7 +318,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   <Show
                     when={countMode() === 'number'}
                     fallback={
-                      <p class="rounded border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                      <p class="rounded border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
                         現在の対象譜面数: {props.resolveAllCount(getDraftAttributes())} 件
                       </p>
                     }
@@ -482,7 +482,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
             </button>
             <button
               type="button"
-              class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              class="rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
               onClick={() => {
                 void handleSave()
               }}

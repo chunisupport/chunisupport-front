@@ -1,4 +1,4 @@
-import { Dialog } from '@kobalte/core/dialog'
+﻿import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import type { MasterDataDTO } from '../../../../types/api'
@@ -89,7 +89,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
               </button>
               <button
                 type="button"
-                class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
                 onClick={handleApply}
               >
                 適用
