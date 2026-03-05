@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from '@solidjs/router'
+﻿import { useNavigate, useParams } from '@solidjs/router'
 import {
   createEffect,
   createMemo,
@@ -82,7 +82,7 @@ const SongDetail = () => {
                 <button
                   type="button"
                   onClick={handleBack}
-                  class="text-blue-600 hover:underline bg-transparent border-0 p-0 cursor-pointer"
+                  class="text-primary-600 hover:underline bg-transparent border-0 p-0 cursor-pointer"
                 >
                   ← 戻る
                 </button>

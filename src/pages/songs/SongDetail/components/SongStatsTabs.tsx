@@ -1,4 +1,4 @@
-import * as Tabs from '@kobalte/core/tabs'
+﻿import * as Tabs from '@kobalte/core/tabs'
 import { For, Show } from 'solid-js'
 import type { SongStatsResponseDTO } from '../../../../types/api'
 import SongStatsTable from './SongStatsTable'
@@ -27,7 +27,7 @@ const SongStatsTabs = (props: Props) => {
             {(difficulty) => (
               <Tabs.Trigger
                 value={difficulty.value}
-                class="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 data-selected:border-blue-600 data-selected:bg-blue-50 data-selected:text-blue-700"
+                class="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 data-selected:border-primary-600 data-selected:bg-primary-50 data-selected:text-primary-700"
               >
                 {difficulty.label}
               </Tabs.Trigger>

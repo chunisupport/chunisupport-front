@@ -1,4 +1,4 @@
-import { AlertDialog } from '@kobalte/core/alert-dialog'
+﻿import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Dialog } from '@kobalte/core/dialog'
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { A, useLocation, useNavigate } from '@solidjs/router'
@@ -170,7 +170,7 @@ const NavBar = (props: NavBarProps) => {
           {getNavItems().map((item) =>
             item.dropdown ? (
               <DropdownMenu>
-                <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none">
+                <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none">
                   <span class="text-lg">{item.icon()}</span>
                   <span>{item.label}</span>
                 </DropdownMenu.Trigger>
@@ -212,9 +212,9 @@ const NavBar = (props: NavBarProps) => {
               ) : (
                 <A
                   href={item.path}
-                  class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                  class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   classList={{
-                    'bg-gray-100 text-gray-900': isActive(item),
+                    'bg-primary-600 text-white hover:bg-primary-700 hover:text-white': isActive(item),
                   }}
                 >
                   <span class="text-lg">{item.icon()}</span>
@@ -235,7 +235,7 @@ const NavBar = (props: NavBarProps) => {
           {getNavItems().map((item) =>
             item.dropdown ? (
               <DropdownMenu>
-                <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 justify-center">
+                <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-700 justify-center">
                   <span class="text-lg">{item.icon()}</span>
                   <span>{item.label}</span>
                 </DropdownMenu.Trigger>
@@ -277,9 +277,9 @@ const NavBar = (props: NavBarProps) => {
               ) : (
                 <A
                   href={item.path}
-                  class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-500 justify-center"
+                  class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-700 justify-center"
                   classList={{
-                    'bg-gray-100 text-gray-900': isActive(item),
+                    'bg-primary-600 text-white hover:bg-primary-700 hover:text-white': isActive(item),
                   }}
                 >
                   <span class="text-lg">{item.icon()}</span>
@@ -308,7 +308,7 @@ const NavBar = (props: NavBarProps) => {
                 </button>
                 <button
                   type="button"
-                  class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  class="px-4 py-2 rounded bg-primary-600 text-white hover:bg-primary-700"
                   onClick={() => {
                     setShowLoginDialog(false)
                     navigate('/login')
