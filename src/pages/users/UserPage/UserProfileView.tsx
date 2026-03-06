@@ -34,7 +34,7 @@ export const UserProfileView: Component<Props> = (props) => {
   const NAMEPLATE_SCROLL_OFFSET = 183
 
   return (
-    <div class="mb-4 mx-auto w-full max-w-4xl">
+    <div class="mb-4 mx-auto w-full max-w-3xl">
       {/* ↑と↓について: stickyScrollの関係でmy-4を使わず、mb-4とmt-4を別の箇所で指定しています */}
       <div class="mt-4">
         {/* ネームプレート */}
