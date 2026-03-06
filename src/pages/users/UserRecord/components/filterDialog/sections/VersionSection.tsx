@@ -1,4 +1,4 @@
-import { Checkbox } from '@kobalte/core/checkbox'
+﻿import { Checkbox } from '@kobalte/core/checkbox'
 import { Check } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For } from 'solid-js'
@@ -41,7 +41,7 @@ const VersionSection: Component<VersionSectionProps> = (props) => (
               class="flex"
             >
               <Checkbox.Input id={id} />
-              <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-blue-600 data-checked:bg-blue-600 data-checked:text-white flex items-center justify-center mr-2">
+              <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white flex items-center justify-center mr-2">
                 <Checkbox.Indicator>
                   <Check class="h-4 w-4" />
                 </Checkbox.Indicator>

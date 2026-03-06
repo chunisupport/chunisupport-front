@@ -13,7 +13,7 @@ import { fetchAllSongs, fetchMasterData } from '../../../api/songs'
 import { fetchUserProfile } from '../../../api/users'
 import { Loading, ScrollToTop } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { mergeAllRecords, type PlayerRecordIncludeNoPlay } from '../../../utils/recordMerger'
+import { attachSongMetaToRecords, type PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
 import FilterDialog from './components/FilterDialog'
 import FilterStats from './components/FilterStats'
 import FilterToolbar from './components/FilterToolbar'
@@ -35,7 +35,7 @@ const UserRecord: Component = () => {
   const params = useParams<{ username: string }>()
   const [userProfile] = createResource(
     () => params.username,
-    (username) => fetchUserProfile(username)
+    (username) => fetchUserProfile(username, { includeNoPlay: true })
   )
   const [allSongs] = createResource(fetchAllSongs)
   const [masterData] = createResource(fetchMasterData)
@@ -67,18 +67,16 @@ const UserRecord: Component = () => {
   })
 
   /** 未プレイを含む全曲のレコード */
-  const mergedRecords = createMemo(() => {
+  const recordsWithSongMeta = createMemo(() => {
     const profile = userProfile()
     const songs = allSongs()
-    const md = masterData()
-    if (!profile || !songs || !md) return []
-    const difficulties = md.difficulties.map((d) => d.name)
-    return mergeAllRecords(songs.songs, profile.records.all, difficulties)
+    if (!profile || !songs) return []
+    return attachSongMetaToRecords(songs.songs, profile.records.all)
   })
 
   /** フィルター適用後のレコード */
   const filteredRecords = createMemo(() => {
-    const records = mergedRecords()
+    const records = recordsWithSongMeta()
     const currentFilters = filters()
     return records.filter((record) => isRecordMatched(record, currentFilters))
   })
@@ -92,15 +90,15 @@ const UserRecord: Component = () => {
   })
 
   /** 追跡中のフィルターに該当するレコード(未達成・達成済みすべて) */
-  const trackingBaseRecords = createMemo(() => {
-    const records = mergedRecords()
+  const trackingTargetRecords = createMemo(() => {
+    const records = recordsWithSongMeta()
     const target = trackingTargetFilter()
     if (!target) return []
     return records.filter((record) => isRecordMatched(record, target.filter))
   })
 
   /** 追跡の条件達成判定 */
-  const isRecordAchieved = (record: PlayerRecordIncludeNoPlay, condition: TrackingCondition) => {
+  const isRecordAchieved = (record: PlayerRecordWithSongMeta, condition: TrackingCondition) => {
     const hasScore = typeof condition.scoreMin !== 'undefined'
     const hasLamp = (condition.lamps ?? []).length > 0
     if (!hasScore && !hasLamp) return false
@@ -108,7 +106,6 @@ const UserRecord: Component = () => {
 
     if (hasScore) {
       const minScore = condition.scoreMin ?? 0
-      if (record.score === null) return false
       if (record.score < minScore) return false
     }
 
@@ -123,7 +120,7 @@ const UserRecord: Component = () => {
   /** 追跡中の統計情報 */
   const trackingStats = createMemo(() => {
     const condition = trackingCondition()
-    const baseRecords = trackingBaseRecords()
+    const baseRecords = trackingTargetRecords()
     if (!condition || baseRecords.length === 0) {
       return {
         achieved: 0,
@@ -163,7 +160,7 @@ const UserRecord: Component = () => {
   })
 
   // 件数表示
-  const totalCount = () => mergedRecords().length
+  const totalCount = () => recordsWithSongMeta().length
   const filteredCount = () => filteredRecords().length
 
   /** レコード統計の集計結果 */

@@ -2,8 +2,23 @@ import { API_BASE_URL } from '../config'
 import type { AdminUserListResponse, UserDTO, UserProfileWithRecordsDTO } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 
+const throwApiError = async (response: Response): Promise<never> => {
+  let message = `HTTP ${response.status}`
+  try {
+    const error = await response.json()
+    message = getErrorMessage(error)
+  } catch {
+    // ignore
+  }
+
+  const apiError = new Error(message) as Error & { status?: number }
+  apiError.status = response.status
+  throw apiError
+}
+
 type FetchUserProfileOptions = {
   view?: 'rating'
+  includeNoPlay?: boolean
 }
 
 export const fetchUserProfile = async (

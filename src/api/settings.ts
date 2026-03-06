@@ -22,6 +22,20 @@ const throwApiError = async (response: Response): Promise<never> => {
   throw new Error(fallback)
 }
 
+export const fetchPrivacy = async (): Promise<{ is_private: boolean }> => {
+  const response = await fetch(`${API_BASE_URL}/internal/me`, {
+    method: 'GET',
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    await throwApiError(response)
+  }
+
+  const data = (await response.json()) as { is_private: boolean }
+  return { is_private: data.is_private }
+}
+
 export const updatePrivacy = async (isPrivate: boolean): Promise<{ is_private: boolean }> => {
   const response = await fetch(`${API_BASE_URL}/internal/me/privacy`, {
     method: 'PUT',

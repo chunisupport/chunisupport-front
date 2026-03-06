@@ -1,4 +1,4 @@
-import { Dialog } from '@kobalte/core/dialog'
+﻿import { Dialog } from '@kobalte/core/dialog'
 import { Popover } from '@kobalte/core/popover'
 import { TextField } from '@kobalte/core/text-field'
 import { EllipsisVertical, Save } from 'lucide-solid'
@@ -172,7 +172,7 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
                       </button>
                       <button
                         type="button"
-                        class="ml-2 px-2 py-1 rounded bg-blue-500 text-white hover:bg-blue-700"
+                        class="ml-2 px-2 py-1 rounded bg-primary-600 text-white hover:bg-primary-700"
                         onClick={() => handleApplySavedFilter(item.filter)}
                       >
                         呼出
@@ -191,7 +191,7 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
               <div class="text-xs text-gray-500 mb-1">現在の条件を保存</div>
               <TextField class="mb-2">
                 <TextField.Input
-                  class="w-full rounded border border-gray-300 px-2 py-1 focus:border-blue-500"
+                  class="w-full rounded border border-gray-300 px-2 py-1 focus:border-primary-500"
                   placeholder="フィルターの名前を入力..."
                   value={saveName()}
                   onInput={(event) => setSaveName(event.currentTarget.value)}
@@ -208,7 +208,7 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
                 </button>
                 <button
                   type="button"
-                  class="px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  class="px-2 py-1 rounded bg-primary-600 text-white hover:bg-primary-700"
                   onClick={() => handleSaveNewFilter({ track: false })}
                   disabled={!saveName().trim()}
                 >

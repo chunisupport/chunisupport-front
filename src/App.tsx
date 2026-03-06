@@ -10,8 +10,9 @@ import {
   EditorPage,
   EditorSongsPage,
   ForbiddenPage,
-  Login,
   NotFoundPage,
+  GoalsList,
+  Login,
   RecoveryReset,
   Register,
   RegisterScoreTempPage,
@@ -107,6 +108,7 @@ const App = () => {
       <Route path="/users/:username" component={withNavBar(UserPage)} />
       <Route path="/users/:username/records" component={withNavBar(UserRecord)} />
       <Route path="/users/:username/stats" component={withNavBar(UserStatsPage)} />
+      <Route path="/goals" component={withNavBar(GoalsList)} />
 
       {/* 楽曲 */}
       <Route path="/songs" component={withNavBar(SongsList)} />

@@ -1,4 +1,4 @@
-import type { PlayerRecordIncludeNoPlay } from '../../../../utils/recordMerger'
+import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 
 export const rankOrder = ['MAX', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'OTHERS', '未プレイ']
 export const rankColorMap: Record<string, string> = {
@@ -74,7 +74,7 @@ function getRank(score: number): string {
 }
 
 /** レコードから統計情報を取得する */
-export function getRecordStats(records: PlayerRecordIncludeNoPlay[]): RecordStats {
+export function getRecordStats(records: PlayerRecordWithSongMeta[]): RecordStats {
   const total = records.length
   // ランク分布
   const rankMap: DistributionMap = {}
@@ -84,13 +84,13 @@ export function getRecordStats(records: PlayerRecordIncludeNoPlay[]): RecordStat
   const clearMap: DistributionMap = {}
   // スコア配列（プレイ済みのみ）
   const scores = records
-    .filter((record) => record.is_played && record.score !== null)
-    .map((record) => record.score as number)
+    .filter((record) => record.is_played)
+    .map((record) => record.score)
     .sort((a, b) => a - b)
 
   for (const record of records) {
     // ランク
-    const rank = record.is_played && record.score !== null ? getRank(record.score) : '未プレイ'
+    const rank = record.is_played ? getRank(record.score) : '未プレイ'
     rankMap[rank] = rankMap[rank] || { count: 0, percent: 0 }
     rankMap[rank].count++
     // コンボ

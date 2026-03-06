@@ -1,3 +1,4 @@
+﻿import { A } from '@solidjs/router'
 import { createSignal, For } from 'solid-js'
 import { issueRecoveryCodes } from '../../api/settings'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -52,13 +53,13 @@ const SettingsRecoveryCodesPage = () => {
           type="button"
           onClick={handleIssue}
           disabled={isSubmitting()}
-          class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          class="rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting() ? '発行中...' : 'リカバリーコードを発行'}
         </button>
 
         {errorMessage() && <p class="mt-3 text-sm text-red-600">{errorMessage()}</p>}
-        {successMessage() && <p class="mt-3 text-sm text-green-600">{successMessage()}</p>}
+        {successMessage() && <p class="mt-3 text-sm text-primary-600">{successMessage()}</p>}
 
         {codes().length > 0 && (
           <div class="mt-4 rounded-md bg-gray-50 p-3">
@@ -74,11 +75,17 @@ const SettingsRecoveryCodesPage = () => {
               >
                 一括コピー
               </button>
-              {copied() && <span class="text-xs text-green-600">コピーしました</span>}
+              {copied() && <span class="text-xs text-primary-600">コピーしました</span>}
             </div>
           </div>
         )}
       </div>
+      <A
+        href="/settings"
+        class="mt-4 inline-flex rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+      >
+        設定に戻る
+      </A>
     </div>
   )
 }

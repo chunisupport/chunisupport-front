@@ -1,4 +1,4 @@
-import { createSignal, Show } from 'solid-js'
+﻿import { createSignal, Show } from 'solid-js'
 
 import { postRegisterData } from '../../api/register-data'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -126,7 +126,7 @@ const RegisterScoreTempPage = () => {
               type="file"
               accept=".json,.txt"
               onChange={handleFileChange}
-              class="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-600 hover:file:bg-blue-100"
+              class="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-primary-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-600 hover:file:bg-primary-100"
             />
             <Show when={selectedFile()}>
               {(file) => (
@@ -152,12 +152,12 @@ const RegisterScoreTempPage = () => {
           <p class="text-sm text-red-600">{errorMessage()}</p>
         </Show>
         <Show when={successMessage()}>
-          <p class="text-sm text-green-600">{successMessage()}</p>
+          <p class="text-sm text-primary-600">{successMessage()}</p>
         </Show>
 
         <button
           type="button"
-          class="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          class="inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
           onClick={handleSubmit}
           disabled={isSubmitting()}
         >
@@ -173,11 +173,11 @@ const RegisterScoreTempPage = () => {
         </div>
         <div class="mt-2 flex items-center justify-end gap-2">
           <Show when={copied()}>
-            <span class="text-green-600 text-xs">コピーしました！</span>
+            <span class="text-primary-600 text-xs">コピーしました！</span>
           </Show>
           <button
             type="button"
-            class="bg-blue-500 text-white p-3 rounded hover:bg-blue-600"
+            class="bg-primary-600 text-white p-3 rounded hover:bg-primary-700"
             onClick={() => {
               const code =
                 'javascript:(function(){var e=document.createElement("script");e.src="https://reiwa.f5.si/bookmarklets/chunisupport_test.js?%22+Math.floor(Date.now()/1000);document.body.appendChild(e)})();'

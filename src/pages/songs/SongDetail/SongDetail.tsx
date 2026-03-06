@@ -1,4 +1,4 @@
-import { A, useParams } from '@solidjs/router'
+﻿import { useNavigate, useParams } from '@solidjs/router'
 import {
   createEffect,
   createMemo,
@@ -17,6 +17,7 @@ import SongStatsTabs from './components/SongStatsTabs'
 
 const SongDetail = () => {
   const params = useParams<{ displayid: string }>()
+  const navigate = useNavigate()
 
   const [song] = createResource(() => params.displayid, fetchSongByDisplayId)
   const [masterData] = createResource(fetchMasterData)
@@ -62,6 +63,14 @@ const SongDetail = () => {
 
   useDocumentTitle(() => `${song()?.title ?? '楽曲'} - 楽曲詳細`)
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate('/songs')
+  }
+
   return (
     <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
       <Show when={!song.loading && song()} fallback={<Loading />}>
@@ -70,9 +79,13 @@ const SongDetail = () => {
           return (
             <div class="mx-auto w-full max-w-6xl p-4 space-y-4">
               <div class="text-sm">
-                <A href="/songs" class="text-blue-600 hover:underline">
-                  ← 楽曲一覧に戻る
-                </A>
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  class="text-primary-600 hover:underline bg-transparent border-0 p-0 cursor-pointer"
+                >
+                  ← 戻る
+                </button>
               </div>
 
               <h1 class="text-2xl font-semibold">{currentSong.title}</h1>

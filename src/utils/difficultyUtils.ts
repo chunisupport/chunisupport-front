@@ -35,19 +35,19 @@ export function difficultyColor(difficulty: string): string {
 }
 
 // 難易度の色クラスを返す（UserRecordCard用）
-export function difficultyCardColor(difficulty: string): string {
+export function difficultyCardBorderColor(difficulty: string): string {
   switch (difficulty) {
     case 'BASIC':
-      return 'border-green-500 bg-green-200'
+      return 'before:bg-green-500'
     case 'ADVANCED':
-      return 'border-orange-500 bg-orange-200'
+      return 'before:bg-orange-500'
     case 'EXPERT':
-      return 'border-red-500 bg-red-200'
+      return 'before:bg-red-500'
     case 'MASTER':
-      return 'border-purple-500 bg-purple-200'
+      return 'before:bg-purple-500'
     case 'ULTIMA':
-      return 'border-red-500 bg-black text-white'
+      return 'before:[background:repeating-linear-gradient(-60deg,#ff0000_0,#ff0000_6px,#000000_6px,#000000_12px)]'
     default:
-      return 'border-gray-500 bg-gray-200'
+      return 'before:bg-gray-500'
   }
 }

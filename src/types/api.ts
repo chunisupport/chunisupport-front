@@ -24,13 +24,28 @@ export type ErrorCode =
   | 'user_not_found'
   | 'operation_failed'
   // プレイヤー
+  | 'player_not_linked'
   | 'player_not_found'
+  // 楽曲・譜面
+  | 'song_not_found'
+  | 'chart_not_found'
+  | 'invalid_genre_id'
+  | 'invalid_difficulty_id'
+  | 'invalid_difficulty'
   // データ
   | 'validation_failed'
   | 'resource_not_found'
   | 'conflict'
   | 'api_token_not_found'
   | 'payload_too_large'
+  // Goals
+  | 'goal_not_found'
+  | 'goal_limit_exceeded'
+  | 'goal_invalid_title'
+  | 'goal_invalid_achievement_type'
+  | 'goal_invalid_achievement_params'
+  | 'goal_invalid_attributes'
+  | 'invalid_goal_input'
   // 入力検証
   | 'username_empty'
   | 'username_too_short'
@@ -39,6 +54,7 @@ export type ErrorCode =
   | 'password_too_short'
   | 'password_too_long'
   | 'invalid_password'
+  | 'app_version_unsupported'
   // その他
   | 'not_found'
   | 'method_not_allowed'
@@ -60,12 +76,25 @@ export const errorMessages: Record<ErrorCode, string> = {
   registration_failed: 'このユーザー名は使用できません',
   user_not_found: 'ユーザーが見つかりません',
   operation_failed: '操作に失敗しました',
+  player_not_linked: 'プレイヤーデータが連携されていません',
   player_not_found: 'プレイヤーが見つかりません',
+  song_not_found: '楽曲が見つかりません',
+  chart_not_found: '譜面が見つかりません',
+  invalid_genre_id: 'ジャンルIDが不正です',
+  invalid_difficulty_id: '難易度IDが不正です',
+  invalid_difficulty: '難易度の指定が不正です',
   validation_failed: '入力内容に誤りがあります',
   resource_not_found: 'データが見つかりません',
   conflict: 'データが競合しています',
   api_token_not_found: 'APIトークンが見つかりません',
   payload_too_large: 'データサイズが大きすぎます',
+  goal_not_found: '目標が見つかりません',
+  goal_limit_exceeded: '目標の上限件数に達しています',
+  goal_invalid_title: '目標タイトルが不正です',
+  goal_invalid_achievement_type: '目標種別が不正です',
+  goal_invalid_achievement_params: '目標パラメータが不正です',
+  goal_invalid_attributes: '目標条件が不正です',
+  invalid_goal_input: '目標入力が不正です',
   username_empty: 'ユーザー名が空です',
   username_too_short: 'ユーザー名は5文字以上である必要があります',
   username_too_long: 'ユーザー名は50文字以内である必要があります',
@@ -73,6 +102,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   password_too_short: 'パスワードは8文字以上である必要があります',
   password_too_long: 'パスワードは128文字以内である必要があります',
   invalid_password: 'パスワードが無効です',
+  app_version_unsupported: 'データが古いため読み込めません',
   not_found: 'リソースが見つかりません',
   method_not_allowed: '許可されていない操作です',
   unsupported_media_type: 'サポートされていないメディアタイプです',
@@ -103,6 +133,8 @@ export interface SongDTO {
   bpm: number | null
   release: string | null
   jacket: string | null
+  maxop: number
+  is_maxop_unknown: boolean
   charts: {
     BASIC?: ChartDTO
     ADVANCED?: ChartDTO
@@ -167,9 +199,69 @@ export interface BooleanChoiceDTO {
 export interface MasterDataDTO {
   genres: MasterItemDTO[]
   difficulties: MasterItemDTO[]
+  versions: VersionDTO[]
   is_const_unknown: BooleanChoiceDTO[]
   account_types: MasterItemDTO[]
 }
+
+export interface VersionDTO {
+  id: number
+  name: string
+  released_at: string
+}
+
+export type GoalAchievementType =
+  | 'rank_count'
+  | 'score_count'
+  | 'avg_score'
+  | 'hardlamp_count'
+  | 'combolamp_count'
+  | 'total_score'
+  | 'overpower_value'
+  | 'overpower_percent'
+
+export interface GoalAttributes {
+  diff?: number
+  const?: {
+    min?: number
+    max?: number
+  }
+  genre?: number
+  ver?: number
+}
+
+export type GoalAchievementParams =
+  | {
+    score: number
+    count: number
+  }
+  | {
+    score: number
+  }
+  | {
+    lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'
+    count: number
+  }
+  | {
+    lamp: 'FC' | 'AJ'
+    count: number
+  }
+  | {
+    total: number
+  }
+
+export interface GoalDTO {
+  id: number
+  title: string
+  achievement_type: GoalAchievementType
+  achievement_params: GoalAchievementParams
+  attributes: GoalAttributes
+  invert: boolean
+  created_at: string
+}
+
+export type GoalCreateRequest = Omit<GoalDTO, 'id' | 'created_at'>
+export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'created_at'>
 
 // --------------------------------
 
@@ -217,22 +309,22 @@ export interface HonorDTO {
   slot: 1 | 2 | 3
   name: string
   type_name:
-    | 'normal'
-    | 'copper'
-    | 'silver'
-    | 'gold'
-    | 'platina'
-    | 'rainbow'
-    | 'staff'
-    | 'ongeki'
-    | 'maimai'
-    | 'sp'
-    | 'phoenix_g'
-    | 'phoenix_p'
-    | 'phoenix_r'
-    | 'expert'
-    | 'master'
-    | 'ultima'
+  | 'normal'
+  | 'copper'
+  | 'silver'
+  | 'gold'
+  | 'platina'
+  | 'rainbow'
+  | 'staff'
+  | 'ongeki'
+  | 'maimai'
+  | 'sp'
+  | 'phoenix_g'
+  | 'phoenix_p'
+  | 'phoenix_r'
+  | 'expert'
+  | 'master'
+  | 'ultima'
   image_url: string | null
 }
 
@@ -247,18 +339,20 @@ export interface UserRecordResponseDTO {
 }
 
 export interface PlayerRecordDTO {
-  updated_at: string
+  is_played: boolean
+  updated_at: string | null
   difficulty: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
   id: string
   title: string
   artist: string
   const: number
   is_const_unknown: boolean
+  // 補足: 未プレイデータの場合でも、score・rating・overpowerは0が返る仕様である。
   score: number
   rating: number
   overpower: number
   img: string
-  clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY'
+  clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY' | null
   combo_lamp: 'FULL COMBO' | 'ALL JUSTICE' | null
   full_chain: 'FULL CHAIN GOLD' | 'FULL CHAIN PLATINUM' | null
   slot: string | null
