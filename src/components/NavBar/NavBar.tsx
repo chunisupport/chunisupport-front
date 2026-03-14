@@ -41,6 +41,7 @@ type NavItem = {
 }
 
 const NavBar = (props: NavBarProps) => {
+  // TODO: 将来的には状態管理をちゃんとやりたい
   const CACHE_KEY = 'navbar_username'
   const [username, setUsername] = createSignal<string | null>(localStorage.getItem(CACHE_KEY))
   const [isLoading, setIsLoading] = createSignal(true)
