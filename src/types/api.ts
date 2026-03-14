@@ -196,12 +196,21 @@ export interface BooleanChoiceDTO {
   label: string
 }
 
+export interface RatingBandDTO {
+  id: number
+  label: string
+  min_inclusive: number | null
+  max_exclusive: number | null
+  sort_order: number
+}
+
 export interface MasterDataDTO {
   genres: MasterItemDTO[]
   difficulties: MasterItemDTO[]
   versions: VersionDTO[]
   is_const_unknown: BooleanChoiceDTO[]
   account_types: MasterItemDTO[]
+  rating_bands: RatingBandDTO[]
 }
 
 export interface VersionDTO {
@@ -267,8 +276,9 @@ export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'created_at'>
 
 export interface UserDTO {
   username: string
-  player: PlayerDTO | null
-  account_type?: AccountType
+  account_type: AccountType
+  is_private: boolean
+  last_score_update: string | null
 }
 
 export type AccountType = 'PLAYER' | 'EDITOR' | 'ADMIN'
@@ -359,33 +369,39 @@ export interface PlayerRecordDTO {
 }
 
 export interface WorldsendRecordDTO {
-  updated_at: string
+  is_played: boolean
+  updated_at: string | null
   id: string
   title: string
   artist: string
-  we_star: number | null // WORLD'S END 星の数（1～5）
-  we_kanji: string | null // WORLD'S END カテゴリ漢字
+  level_star: number | null
+  attribute: string | null
   notes: number | null
   score: number
   img: string
-  clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY'
+  clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY' | null
   combo_lamp: 'FULL COMBO' | 'ALL JUSTICE' | null
   full_chain: 'FULL CHAIN GOLD' | 'FULL CHAIN PLATINUM' | null
+}
+
+export interface WorldsendChartDTO {
+  attribute: string | null
+  level_star: number | null
+  notes: number | null
 }
 
 export interface WorldsendSongDTO {
   id: string
   title: string
   artist: string
-  genre_id: number | null
+  genre: string | null
   bpm: number | null
-  released_at: string | null
-  official_idx: string | null
+  release: string | null
+  official_idx: string
   jacket: string | null
-  we_star: number | null
-  we_kanji: string | null
-  notes: number | null
-  is_deleted: boolean
+  charts: { WORLDSEND?: WorldsendChartDTO }
+  // API仕様書に未記載だが include_deleted=true 時に削除状態の判別に利用
+  is_deleted?: boolean
 }
 
 export interface UpdateChartRequestDTO {

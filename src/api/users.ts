@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config'
 import type { AdminUserListResponse, UserDTO, UserProfileWithRecordsDTO } from '../types/api'
+import { getErrorMessage } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 
 const throwApiError = async (response: Response): Promise<never> => {
@@ -29,13 +30,22 @@ export const fetchUserProfile = async (
   if (options.view) {
     url.searchParams.set('view', options.view)
   }
+  if (options.includeNoPlay) {
+    url.searchParams.set('include_noplay', 'true')
+  }
   const response = await fetchWithAuth(url)
+  if (!response.ok) {
+    await throwApiError(response)
+  }
 
   return response.json()
 }
 
 export const fetchMe = async (): Promise<UserDTO> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/me`)
+  if (!response.ok) {
+    await throwApiError(response)
+  }
 
   return response.json()
 }
