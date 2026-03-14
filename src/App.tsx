@@ -25,7 +25,6 @@ import {
   SongDetail,
   SongsList,
   UserPage,
-  UserRecord,
 } from './pages'
 
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
@@ -106,7 +105,6 @@ const App = () => {
 
       {/* ユーザ */}
       <Route path="/users/:username" component={withNavBar(UserPage)} />
-      <Route path="/users/:username/records" component={withNavBar(UserRecord)} />
       <Route path="/users/:username/stats" component={withNavBar(UserStatsPage)} />
       <Route path="/goals" component={withNavBar(GoalsList)} />
 

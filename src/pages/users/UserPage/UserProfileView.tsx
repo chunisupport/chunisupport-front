@@ -1,8 +1,8 @@
 ﻿import * as Tabs from '@kobalte/core/tabs'
 import { Image } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { For } from 'solid-js'
-import { ScrollToTop } from '../../../components'
+import { For, lazy, Suspense } from 'solid-js'
+import { Loading, ScrollToTop } from '../../../components'
 import type {
   HonorDTO,
   PlayerDTO,
@@ -11,6 +11,8 @@ import type {
 } from '../../../types/api'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
+
+const UserRecord = lazy(() => import('../UserRecord'))
 
 type Props = {
   profile: UserProfileWithRecordsDTO
@@ -72,6 +74,12 @@ export const UserProfileView: Component<Props> = (props) => {
           >
             新曲枠
           </Tabs.Trigger>
+          <Tabs.Trigger
+            value="records"
+            class="px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-primary-500"
+          >
+            レコード
+          </Tabs.Trigger>
           <div class="flex-1"></div>
           <button type="button" class="px-3 py-1 mb-1 bg-primary-600 text-white rounded-md">
             <Image class="inline-block mr-1 mb-0.5" size={16} />
@@ -83,6 +91,11 @@ export const UserProfileView: Component<Props> = (props) => {
         </Tabs.Content>
         <Tabs.Content value="new">
           <RecordList records={newRecords} />
+        </Tabs.Content>
+        <Tabs.Content value="records">
+          <Suspense fallback={<Loading />}>
+            <UserRecord />
+          </Suspense>
         </Tabs.Content>
       </Tabs.Root>
 

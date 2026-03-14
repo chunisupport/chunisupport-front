@@ -14,4 +14,4 @@ export {
   SettingsSessionsPage,
 } from './settings'
 export { SongDetail, SongsList } from './songs'
-export { UserPage, UserRecord } from './users'
+export { UserPage } from './users'

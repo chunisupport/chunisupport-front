@@ -7,7 +7,6 @@ import {
   ChartNoAxesCombined,
   Ellipsis,
   House,
-  ListMusic,
   LogOut,
   Music,
   Settings,
@@ -93,13 +92,6 @@ const NavBar = (props: NavBarProps) => {
         path: userPath,
         icon: () => <House class="h-6 w-6" aria-hidden="true" />,
         matchPattern: /^\/users\/[^/]+$/,
-        requiresAuth: true,
-      },
-      {
-        label: 'レコード',
-        path: `${userPath}/records`,
-        icon: () => <ListMusic class="h-6 w-6" aria-hidden="true" />,
-        matchPattern: /^\/users\/[^/]+\/records/,
         requiresAuth: true,
       },
       {
