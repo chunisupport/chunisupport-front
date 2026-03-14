@@ -41,7 +41,8 @@ type NavItem = {
 }
 
 const NavBar = (props: NavBarProps) => {
-  const [username, setUsername] = createSignal<string | null>(null)
+  const CACHE_KEY = 'navbar_username'
+  const [username, setUsername] = createSignal<string | null>(localStorage.getItem(CACHE_KEY))
   const [isLoading, setIsLoading] = createSignal(true)
   const [showLoginDialog, setShowLoginDialog] = createSignal(false)
   const [showLogoutDialog, setShowLogoutDialog] = createSignal(false)
@@ -52,7 +53,7 @@ const NavBar = (props: NavBarProps) => {
   // ナビゲーション項目の定義
   const getNavItems = (): NavItem[] => {
     const uname = username()
-    const userPath = uname ? `/users/${encodeURIComponent(uname)}` : '/users/:username'
+    const userPath = uname ? `/users/${encodeURIComponent(uname)}` : '#'
     const dropdownBase = [
       {
         label: '楽曲データベース',
@@ -136,8 +137,10 @@ const NavBar = (props: NavBarProps) => {
     try {
       const user = await fetchMe()
       setUsername(user.username)
+      localStorage.setItem(CACHE_KEY, user.username)
     } catch {
       setUsername(null)
+      localStorage.removeItem(CACHE_KEY)
     } finally {
       setIsLoading(false)
     }
@@ -200,7 +203,7 @@ const NavBar = (props: NavBarProps) => {
                 </DropdownMenu.Portal>
               </DropdownMenu>
             ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
-              item.requiresAuth && !isLoading() && username() === null ? (
+              item.requiresAuth && !isLoading() && !username() ? (
                 <button
                   type="button"
                   class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-300 w-full"
@@ -265,7 +268,7 @@ const NavBar = (props: NavBarProps) => {
                 </DropdownMenu.Portal>
               </DropdownMenu>
             ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
-              item.requiresAuth && !isLoading() && username() === null ? (
+              item.requiresAuth && !isLoading() && !username() ? (
                 <button
                   type="button"
                   class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-300 justify-center"
@@ -346,6 +349,7 @@ const NavBar = (props: NavBarProps) => {
                   onClick={async () => {
                     await postLogout()
                     setUsername(null)
+                    localStorage.removeItem(CACHE_KEY)
                     setShowLogoutDialog(false)
                     navigate('/login')
                   }}
