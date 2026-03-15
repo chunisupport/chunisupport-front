@@ -30,6 +30,33 @@ const isCountAchievementType = (type: GoalAchievementType): boolean =>
   type === 'hardlamp_count' ||
   type === 'combolamp_count'
 
+const normalizeAttributeSelection = (value: number | number[] | undefined): string[] => {
+  if (typeof value === 'number') return [String(value)]
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is number => Number.isInteger(item))
+      .map((item) => String(item))
+  }
+  return []
+}
+
+const parseAttributeSelection = (selectedValues: string[]): number | number[] | undefined => {
+  const normalized = Array.from(new Set(selectedValues))
+    .map((value) => Number(value))
+    .filter((value) => Number.isInteger(value))
+
+  if (normalized.length === 0) return undefined
+  if (normalized.length === 1) return normalized[0]
+  return normalized
+}
+
+const toggleSelection = (current: string[], value: string, checked: boolean): string[] => {
+  if (checked) {
+    return current.includes(value) ? current : [...current, value]
+  }
+  return current.filter((item) => item !== value)
+}
+
 const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [title, setTitle] = createSignal('')
   const [achievementType, setAchievementType] = createSignal<GoalAchievementType>('score_count')
@@ -41,11 +68,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [comboLamp, setComboLamp] = createSignal<'FC' | 'AJ'>('FC')
   const [invert, setInvert] = createSignal(false)
 
-  const [diff, setDiff] = createSignal<string>('')
+  const [diffs, setDiffs] = createSignal<string[]>([])
   const [constMin, setConstMin] = createSignal('')
   const [constMax, setConstMax] = createSignal('')
-  const [genre, setGenre] = createSignal<string>('')
-  const [ver, setVer] = createSignal<string>('')
+  const [genres, setGenres] = createSignal<string[]>([])
+  const [versions, setVersions] = createSignal<string[]>([])
 
   const [errorMessage, setErrorMessage] = createSignal('')
 
@@ -66,11 +93,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setHardLamp('HRD')
       setComboLamp('FC')
       setInvert(false)
-      setDiff('')
+      setDiffs([])
       setConstMin('')
       setConstMax('')
-      setGenre('')
-      setVer('')
+      setGenres([])
+      setVersions([])
       return
     }
 
@@ -95,11 +122,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setComboLamp(goal.achievement_params.lamp)
     }
     setInvert(goal.invert)
-    setDiff(typeof goal.attributes.diff === 'number' ? String(goal.attributes.diff) : '')
+    setDiffs(normalizeAttributeSelection(goal.attributes.diff))
     setConstMin(typeof goal.attributes.const?.min === 'number' ? String(goal.attributes.const.min) : '')
     setConstMax(typeof goal.attributes.const?.max === 'number' ? String(goal.attributes.const.max) : '')
-    setGenre(typeof goal.attributes.genre === 'number' ? String(goal.attributes.genre) : '')
-    setVer(typeof goal.attributes.ver === 'number' ? String(goal.attributes.ver) : '')
+    setGenres(normalizeAttributeSelection(goal.attributes.genre))
+    setVersions(normalizeAttributeSelection(goal.attributes.ver))
 
     if (hasCountParam) {
       setCountMode(allCount > 0 && goal.achievement_params.count === allCount ? 'all' : 'number')
@@ -109,7 +136,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   })
 
   const getDraftAttributes = (): GoalRequest['attributes'] => ({
-    ...(diff() ? { diff: Number(diff()) } : {}),
+    ...(parseAttributeSelection(diffs()) !== undefined ? { diff: parseAttributeSelection(diffs()) } : {}),
     ...((constMin() || constMax())
       ? {
         const: {
@@ -118,8 +145,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
         },
       }
       : {}),
-    ...(genre() ? { genre: Number(genre()) } : {}),
-    ...(ver() ? { ver: Number(ver()) } : {}),
+    ...(parseAttributeSelection(genres()) !== undefined ? { genre: parseAttributeSelection(genres()) } : {}),
+    ...(parseAttributeSelection(versions()) !== undefined ? { ver: parseAttributeSelection(versions()) } : {}),
   })
 
   const handleSave = async () => {
@@ -273,7 +300,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 class="w-full rounded border border-gray-300 px-3 py-2"
               >
                 {props.masterData.achievement_types.map((item) => (
-                  <option value={item.code}>{item.label}</option>
+                  <option value={item.code}>{item.label ?? item.name ?? item.code}</option>
                 ))}
               </select>
             </label>
@@ -379,47 +406,86 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
             <div class="rounded border border-gray-200 p-3">
               <p class="mb-2 text-sm font-semibold text-gray-700">対象条件（任意）</p>
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label class="block text-sm">
-                  <span class="mb-1 block text-gray-700">難易度</span>
-                  <select
-                    value={diff()}
-                    onChange={(event) => setDiff(event.currentTarget.value)}
-                    class="w-full rounded border border-gray-300 px-3 py-2"
-                  >
-                    <option value="">指定なし</option>
+                <fieldset class="block text-sm space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="block text-gray-700">難易度（複数可）</span>
+                    <button
+                      type="button"
+                      class="text-xs text-primary-600 hover:text-primary-700"
+                      onClick={() => setDiffs([])}
+                    >
+                      クリア
+                    </button>
+                  </div>
+                  <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
                     {props.masterData.difficulties.map((item) => (
-                      <option value={item.id}>{item.name}</option>
+                      <label class="flex items-center gap-2 text-sm text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={diffs().includes(String(item.id))}
+                          onChange={(event) =>
+                            setDiffs((prev) => toggleSelection(prev, String(item.id), event.currentTarget.checked))}
+                        />
+                        <span>{item.name}</span>
+                      </label>
                     ))}
-                  </select>
-                </label>
+                  </div>
+                  <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
+                </fieldset>
 
-                <label class="block text-sm">
-                  <span class="mb-1 block text-gray-700">ジャンル</span>
-                  <select
-                    value={genre()}
-                    onChange={(event) => setGenre(event.currentTarget.value)}
-                    class="w-full rounded border border-gray-300 px-3 py-2"
-                  >
-                    <option value="">指定なし</option>
+                <fieldset class="block text-sm space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="block text-gray-700">ジャンル（複数可）</span>
+                    <button
+                      type="button"
+                      class="text-xs text-primary-600 hover:text-primary-700"
+                      onClick={() => setGenres([])}
+                    >
+                      クリア
+                    </button>
+                  </div>
+                  <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
                     {props.masterData.genres.map((item) => (
-                      <option value={item.id}>{item.name}</option>
+                      <label class="flex items-center gap-2 text-sm text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={genres().includes(String(item.id))}
+                          onChange={(event) =>
+                            setGenres((prev) => toggleSelection(prev, String(item.id), event.currentTarget.checked))}
+                        />
+                        <span>{item.name}</span>
+                      </label>
                     ))}
-                  </select>
-                </label>
+                  </div>
+                  <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
+                </fieldset>
 
-                <label class="block text-sm">
-                  <span class="mb-1 block text-gray-700">バージョン</span>
-                  <select
-                    value={ver()}
-                    onChange={(event) => setVer(event.currentTarget.value)}
-                    class="w-full rounded border border-gray-300 px-3 py-2"
-                  >
-                    <option value="">指定なし</option>
+                <fieldset class="block text-sm space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="block text-gray-700">バージョン（複数可）</span>
+                    <button
+                      type="button"
+                      class="text-xs text-primary-600 hover:text-primary-700"
+                      onClick={() => setVersions([])}
+                    >
+                      クリア
+                    </button>
+                  </div>
+                  <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
                     {props.masterData.versions.map((item) => (
-                      <option value={item.id}>{item.name}</option>
+                      <label class="flex items-center gap-2 text-sm text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={versions().includes(String(item.id))}
+                          onChange={(event) =>
+                            setVersions((prev) => toggleSelection(prev, String(item.id), event.currentTarget.checked))}
+                        />
+                        <span>{item.name}</span>
+                      </label>
                     ))}
-                  </select>
-                </label>
+                  </div>
+                  <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
+                </fieldset>
 
                 <div class="grid grid-cols-2 gap-2">
                   <label class="block text-sm">

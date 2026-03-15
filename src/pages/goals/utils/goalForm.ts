@@ -48,23 +48,41 @@ export const formatGoalAttributesLabel = (
 ): string => {
   const parts: string[] = []
 
-  if (typeof attributes.diff === 'number') {
-    const diff = masterData.difficulties.find((item) => item.id === attributes.diff)
-    parts.push(`難易度: ${diff?.name ?? attributes.diff}`)
+  const normalizeIds = (value: number | number[] | undefined): number[] => {
+    if (typeof value === 'number') return [value]
+    if (Array.isArray(value)) {
+      return value.filter((id): id is number => Number.isInteger(id))
+    }
+    return []
+  }
+
+  const formatNames = (
+    ids: number[],
+    namesById: Map<number, string>
+  ): string => ids.map((id) => namesById.get(id) ?? String(id)).join(', ')
+
+  const diffIds = normalizeIds(attributes.diff)
+  const genreIds = normalizeIds(attributes.genre)
+  const versionIds = normalizeIds(attributes.ver)
+
+  const difficultyNameMap = new Map(masterData.difficulties.map((item) => [item.id, item.name]))
+  const genreNameMap = new Map(masterData.genres.map((item) => [item.id, item.name]))
+  const versionNameMap = new Map(masterData.versions.map((item) => [item.id, item.name]))
+
+  if (diffIds.length > 0) {
+    parts.push(`難易度: ${formatNames(diffIds, difficultyNameMap)}`)
   }
 
   if (typeof attributes.const?.min === 'number' || typeof attributes.const?.max === 'number') {
     parts.push(`定数: ${attributes.const?.min ?? '-'} ～ ${attributes.const?.max ?? '-'}`)
   }
 
-  if (typeof attributes.genre === 'number') {
-    const genre = masterData.genres.find((item) => item.id === attributes.genre)
-    parts.push(`ジャンル: ${genre?.name ?? attributes.genre}`)
+  if (genreIds.length > 0) {
+    parts.push(`ジャンル: ${formatNames(genreIds, genreNameMap)}`)
   }
 
-  if (typeof attributes.ver === 'number') {
-    const version = masterData.versions.find((item) => item.id === attributes.ver)
-    parts.push(`バージョン: ${version?.name ?? attributes.ver}`)
+  if (versionIds.length > 0) {
+    parts.push(`バージョン: ${formatNames(versionIds, versionNameMap)}`)
   }
 
   return parts.length > 0 ? parts.join(' / ') : '条件なし（全譜面）'

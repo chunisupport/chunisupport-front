@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config'
 import type {
+  AchievementTypeDTO,
   EditorSongDTO,
   EditorWorldsendSongDTO,
   MasterDataDTO,
@@ -102,5 +103,18 @@ export const restoreWorldsendSongByDisplayId = async (displayId: string): Promis
 // --- マスターデータ取得API ---
 export const fetchMasterData = async (): Promise<MasterDataDTO> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/master`)
-  return response.json()
+  const raw = (await response.json()) as Omit<MasterDataDTO, 'achievement_types'> & {
+    achievement_types?: Array<{ code: string; label?: string; name?: string }>
+  }
+
+  const achievementTypes: AchievementTypeDTO[] = (raw.achievement_types ?? []).map((item) => ({
+    code: item.code,
+    label: item.label ?? item.name ?? item.code,
+    name: item.name,
+  }))
+
+  return {
+    ...raw,
+    achievement_types: achievementTypes,
+  }
 }

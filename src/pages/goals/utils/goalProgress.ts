@@ -54,6 +54,14 @@ const VERSION_NAME_ALIAS: Record<string, string> = {
 
 const normalizeVersionName = (name: string): string => name.trim().toUpperCase()
 
+const normalizeAttributeIds = (value: number | number[] | undefined): number[] => {
+  if (typeof value === 'number') return [value]
+  if (Array.isArray(value)) {
+    return value.filter((id): id is number => Number.isInteger(id))
+  }
+  return []
+}
+
 const resolveSongVersionId = (song: SongDTO, masterData: MasterDataDTO): number | undefined => {
   const release = song.release
   if (!release) return undefined
@@ -86,17 +94,29 @@ export const filterRecordsByAttributes = (
   songs: SongDTO[]
 ): PlayerRecordDTO[] => {
   const songMap = new Map(songs.map((song) => [song.id, song]))
-  const diffName =
-    typeof attributes.diff === 'number'
-      ? masterData.difficulties.find((d) => d.id === attributes.diff)?.name
+  const diffIds = normalizeAttributeIds(attributes.diff)
+  const genreIds = normalizeAttributeIds(attributes.genre)
+  const versionIds = normalizeAttributeIds(attributes.ver)
+
+  const diffNames =
+    diffIds.length > 0
+      ? new Set(
+        masterData.difficulties
+          .filter((difficulty) => diffIds.includes(difficulty.id))
+          .map((difficulty) => difficulty.name)
+      )
       : undefined
-  const genreName =
-    typeof attributes.genre === 'number'
-      ? masterData.genres.find((g) => g.id === attributes.genre)?.name
+  const genreNames =
+    genreIds.length > 0
+      ? new Set(
+        masterData.genres
+          .filter((genre) => genreIds.includes(genre.id))
+          .map((genre) => genre.name)
+      )
       : undefined
 
   return records.filter((record) => {
-    if (diffName && record.difficulty !== diffName) return false
+    if (diffNames && !diffNames.has(record.difficulty)) return false
 
     const constMin = attributes.const?.min
     const constMax = attributes.const?.max
@@ -104,12 +124,12 @@ export const filterRecordsByAttributes = (
     if (typeof constMax === 'number' && record.const > constMax) return false
 
     const song = songMap.get(record.id)
-    if (genreName && song?.genre !== genreName) return false
+    if (genreNames && (!song?.genre || !genreNames.has(song.genre))) return false
 
-    if (typeof attributes.ver === 'number') {
+    if (versionIds.length > 0) {
       if (!song) return false
       const songVersionId = resolveSongVersionId(song, masterData)
-      if (songVersionId !== attributes.ver) return false
+      if (!songVersionId || !versionIds.includes(songVersionId)) return false
     }
 
     return true

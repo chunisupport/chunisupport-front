@@ -210,7 +210,8 @@ export interface RatingBandDTO {
 
 export interface AchievementTypeDTO {
   code: string
-  label: string
+  label?: string
+  name?: string
 }
 export interface MasterDataDTO {
   genres: MasterItemDTO[]
@@ -239,13 +240,13 @@ export type GoalAchievementType =
   | 'overpower_percent'
 
 export interface GoalAttributes {
-  diff?: number
+  diff?: number | number[]
   const?: {
     min?: number
     max?: number
   }
-  genre?: number
-  ver?: number
+  genre?: number | number[]
+  ver?: number | number[]
 }
 
 export type GoalAchievementParams =
