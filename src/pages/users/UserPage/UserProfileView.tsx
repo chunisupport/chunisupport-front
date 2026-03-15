@@ -1,5 +1,4 @@
 ﻿import * as Tabs from '@kobalte/core/tabs'
-import { Image } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For, lazy, Suspense } from 'solid-js'
 import { Loading, ScrollToTop } from '../../../components'
@@ -34,6 +33,20 @@ export const UserProfileView: Component<Props> = (props) => {
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
+  const tabTriggerClass =
+    'px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-primary-500'
+  const ratingTabTriggerClass =
+    'rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors data-selected:bg-white data-selected:text-primary-700 data-selected:shadow-sm'
+
+  const scrollToRecordList = () => {
+    const scrollTarget = document.getElementById('app-main')
+    if (scrollTarget && scrollTarget.scrollTop > NAMEPLATE_SCROLL_OFFSET) {
+      scrollTarget.scrollTo({
+        top: NAMEPLATE_SCROLL_OFFSET,
+        behavior: 'smooth',
+      })
+    }
+  }
 
   return (
     <div class="mb-4 mx-auto w-full max-w-3xl">
@@ -49,45 +62,41 @@ export const UserProfileView: Component<Props> = (props) => {
       </div>
 
       <Tabs.Root
+        defaultValue="rating"
         class="mb-4"
         // タブを切り替えた際に1曲目の位置までスクロールする
-        onChange={() => {
-          const scrollTarget = document.getElementById('app-main')
-          if (scrollTarget && scrollTarget.scrollTop > NAMEPLATE_SCROLL_OFFSET) {
-            scrollTarget.scrollTo({
-              top: NAMEPLATE_SCROLL_OFFSET,
-              behavior: 'smooth',
-            })
-          }
-        }}
+        onChange={scrollToRecordList}
       >
         <Tabs.List class="sticky top-0 z-10 bg-white flex gap-2 mb-4 px-4 pt-2 border-b border-gray-300">
-          <Tabs.Trigger
-            value="best"
-            class="px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-primary-500"
-          >
-            ベスト枠
+          <Tabs.Trigger value="rating" class={tabTriggerClass}>
+            レーティング
           </Tabs.Trigger>
-          <Tabs.Trigger
-            value="new"
-            class="px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-primary-500"
-          >
-            新曲枠
-          </Tabs.Trigger>
-          <Tabs.Trigger
-            value="records"
-            class="px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-primary-500"
-          >
+          <Tabs.Trigger value="records" class={tabTriggerClass}>
             レコード
           </Tabs.Trigger>
           <div class="flex-1"></div>
         </Tabs.List>
-        <Tabs.Content value="best">
-          <RecordList records={bestRecords} />
+
+        <Tabs.Content value="rating">
+          <Tabs.Root defaultValue="best" onChange={scrollToRecordList}>
+            <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
+              <Tabs.Trigger value="best" class={ratingTabTriggerClass}>
+                ベスト枠
+              </Tabs.Trigger>
+              <Tabs.Trigger value="new" class={ratingTabTriggerClass}>
+                新曲枠
+              </Tabs.Trigger>
+            </Tabs.List>
+
+            <Tabs.Content value="best">
+              <RecordList records={bestRecords} />
+            </Tabs.Content>
+            <Tabs.Content value="new">
+              <RecordList records={newRecords} />
+            </Tabs.Content>
+          </Tabs.Root>
         </Tabs.Content>
-        <Tabs.Content value="new">
-          <RecordList records={newRecords} />
-        </Tabs.Content>
+
         <Tabs.Content value="records">
           <Suspense fallback={<Loading />}>
             <UserRecord />
