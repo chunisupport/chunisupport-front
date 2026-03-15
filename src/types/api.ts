@@ -144,6 +144,10 @@ export interface SongDTO {
   }
 }
 
+export interface EditorSongDTO extends SongDTO {
+  is_deleted: boolean
+}
+
 // --- 楽曲統計用型定義 ---
 export interface SongStatsRankDTO {
   aaal: number
@@ -400,6 +404,10 @@ export interface WorldsendSongDTO {
   is_deleted?: boolean
 }
 
+export interface EditorWorldsendSongDTO extends WorldsendSongDTO {
+  is_deleted: boolean
+}
+
 export interface UpdateChartRequestDTO {
   const: number
   is_const_unknown: boolean
@@ -415,6 +423,25 @@ export interface UpdateSongRequestDTO {
   released_at: string | null
   jacket: string | null
   charts: Record<string, UpdateChartRequestDTO>
+}
+
+export interface UpdateWorldsendChartRequestDTO {
+  attribute: string | null
+  level_star: number | null
+  notes: number | null
+}
+
+export interface UpdateWorldsendSongRequestDTO {
+  id: string
+  title: string
+  artist: string
+  genre: string | null
+  bpm: number | null
+  released_at: string | null
+  jacket: string | null
+  charts?: {
+    WORLDSEND?: UpdateWorldsendChartRequestDTO
+  } | null
 }
 
 // --------------------------------
