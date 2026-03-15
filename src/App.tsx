@@ -1,6 +1,7 @@
 import { A, Route, Router } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { NavBar } from './components'
+import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import {
@@ -91,6 +92,12 @@ const GuardedEditorSongsPage = () => (
   </RequireRole>
 )
 
+const GuardedRegisterScoreTempPage = () => (
+  <RequireAuth>
+    <RegisterScoreTempPage />
+  </RequireAuth>
+)
+
 const App = () => {
   return (
     <Router>
@@ -121,7 +128,7 @@ const App = () => {
       <Route path="/settings/sessions" component={withNavBar(SettingsSessionsPage)} />
 
       {/* その他 */}
-      <Route path="/register-score-temp" component={withNavBar(RegisterScoreTempPage)} />
+      <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />
       <Route path="/tools" component={withNavBar(ToolsPage)} />
       <Route path="/terms" component={withNavBar(TermsPage)} />
 
