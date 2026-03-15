@@ -54,6 +54,7 @@ const UserRecord: Component = () => {
 
   // フィルターダイアログの開閉状態
   const [filterOpen, setFilterOpen] = createSignal(false)
+  const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
 
   // フィルターを初期化
   // マスタデータ取得後にgenres/versionsを全選択
@@ -195,14 +196,20 @@ const UserRecord: Component = () => {
             />
 
             {/* フィルター統計 */}
-            {filteredCount() > 0 && <FilterStats stats={stats()} />}
+            {filteredCount() > 0 && (
+              <FilterStats
+                stats={stats()}
+                open={filterStatsOpen()}
+                onOpenChange={setFilterStatsOpen}
+              />
+            )}
 
             <p class="mb-2 text-sm text-gray-600">
               全 {totalCount()} 件中 {filteredCount()} 件を表示 ( {filteredCount()}/{totalCount()} )
             </p>
 
             {/* レコード一覧 */}
-            <RecordTable records={filteredRecords()} />
+            <RecordTable records={filteredRecords()} statsOpen={filterStatsOpen()} />
 
             {/* フィルターダイアログ */}
             <FilterDialog

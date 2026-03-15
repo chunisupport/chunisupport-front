@@ -12,6 +12,8 @@ import {
 
 type FilterStatsProps = {
   stats: RecordStats
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 /** 帯グラフ */
@@ -67,7 +69,11 @@ const ScoreBoxPlot: Component<{ stats: RecordStats['scoreStats'] }> = (props) =>
 }
 
 const FilterStats: Component<FilterStatsProps> = (props) => (
-  <Collapsible class="mb-2 px-2 py-1 border border-gray-500 rounded-sm">
+  <Collapsible
+    class="mb-2 px-2 py-1 border border-gray-500 rounded-sm"
+    open={props.open}
+    onOpenChange={props.onOpenChange}
+  >
     <Collapsible.Trigger class="flex w-full gap-1 group">
       <span class="mr-1 group-data-expanded:rotate-90">▶</span>
       <p class="flex-1 text-left">フィルター統計</p>

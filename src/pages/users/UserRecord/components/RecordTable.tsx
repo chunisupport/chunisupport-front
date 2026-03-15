@@ -5,6 +5,7 @@ import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 
 interface RecordTableProps {
   records: PlayerRecordWithSongMeta[]
+  statsOpen: boolean
 }
 
 import { difficultyColor, difficultyShort } from '../../../../utils/difficultyUtils'
@@ -27,6 +28,7 @@ const unplayedBadge = () => (
 
 export const RecordTable: Component<RecordTableProps> = (props) => {
   let tableContainerRef: HTMLDivElement | undefined
+  let layoutResizeObserver: ResizeObserver | undefined
   const getScrollElement = () => document.getElementById('app-main') as HTMLDivElement | null
 
   const [scrollMargin, setScrollMargin] = createSignal(0)
@@ -58,16 +60,49 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
 
   onMount(() => {
     updateScrollMargin()
+
+    // 上部UI（折りたたみ等）の高さ変化でテーブル位置が動くため、レイアウト変化時に再計算する
+    if (tableContainerRef && typeof ResizeObserver !== 'undefined') {
+      layoutResizeObserver = new ResizeObserver(() => {
+        queueMicrotask(updateScrollMargin)
+      })
+
+      const parent = tableContainerRef.parentElement
+      if (parent) {
+        layoutResizeObserver.observe(parent)
+      }
+
+      const scrollElement = getScrollElement()
+      if (scrollElement) {
+        layoutResizeObserver.observe(scrollElement)
+      }
+    }
+
     window.addEventListener('resize', updateScrollMargin)
   })
 
   onCleanup(() => {
+    layoutResizeObserver?.disconnect()
     window.removeEventListener('resize', updateScrollMargin)
   })
 
   createEffect(() => {
     props.records.length
     queueMicrotask(updateScrollMargin)
+  })
+
+  createEffect(() => {
+    props.statsOpen
+
+    // 折りたたみ開閉後にレイアウトが確定したタイミングでも再計算する
+    queueMicrotask(() => {
+      updateScrollMargin()
+      rowVirtualizer.measure()
+    })
+    requestAnimationFrame(() => {
+      updateScrollMargin()
+      rowVirtualizer.measure()
+    })
   })
 
   const virtualRows = createMemo(() => rowVirtualizer.getVirtualItems())
