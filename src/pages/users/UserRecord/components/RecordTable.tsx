@@ -1,5 +1,6 @@
 import { A } from '@solidjs/router'
-import type { Component } from 'solid-js'
+import { createVirtualizer } from '@tanstack/solid-virtual'
+import { createEffect, For, type Component, Show } from 'solid-js'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 
 interface RecordTableProps {
@@ -25,61 +26,112 @@ const unplayedBadge = () => (
 )
 
 export const RecordTable: Component<RecordTableProps> = (props) => {
+  let scrollParentRef: HTMLDivElement | undefined
+
+  const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>({
+    get count() {
+      return props.records.length
+    },
+    getScrollElement: () => scrollParentRef ?? null,
+    estimateSize: () => 32,
+  })
+
+  createEffect(() => {
+    props.records
+
+    const scrollElement = scrollParentRef
+    if (!scrollElement) return
+
+    scrollElement.scrollTop = 0
+    if (props.records.length > 0) {
+      rowVirtualizer.scrollToIndex(0)
+    }
+  })
+
   return (
     <div class="w-full">
-      <table class="min-w-full max-w-full text-xs table-auto">
-        {/* <thead>
-					<tr class="text-xs">
-						<th class="px-2 py-1 text-center w-[40%]">曲名</th>
-						<th class="px-2 py-1 text-center w-[10%]">難易度</th>
-						<th class="px-2 py-1 text-center w-[15%]">定数</th>
-						<th class="px-2 py-1 text-center w-[20%]">スコア</th>
-						<th class="px-2 py-1 text-center w-[15%]">ランプ</th>
-					</tr>
-				</thead> */}
-        <tbody>
-          {props.records.length === 0 ? (
-            <tr>
-              <td colSpan={5} class="text-center py-6 text-gray-400">
-                データがありません
-              </td>
-            </tr>
-          ) : (
-            props.records.map((record) => (
-              <tr class="border-t border-gray-200 hover:bg-gray-100">
-                <td class="px-2 py-1 truncate max-w-48" title={record.title}>
-                  <A
-                    href={`/songs/${encodeURIComponent(record.id)}`}
-                    class="text-inherit hover:underline"
+      <Show
+        when={props.records.length > 0}
+        fallback={<p class="py-6 text-center text-gray-400">データがありません</p>}
+      >
+        <div
+          ref={scrollParentRef}
+          class="h-[60dvh] min-h-80 overflow-y-auto rounded-md border border-gray-200"
+          role="table"
+          aria-label="レコード一覧"
+        >
+          <div
+            role="row"
+            class="sticky top-0 z-10 grid grid-cols-[minmax(0,1fr)_72px_64px_120px_72px] border-b border-gray-200 bg-white text-xs font-semibold"
+          >
+            <div role="columnheader" class="px-2 py-1 text-left">
+              曲名
+            </div>
+            <div role="columnheader" class="px-2 py-1 text-center">
+              難易度
+            </div>
+            <div role="columnheader" class="px-2 py-1 text-right">
+              定数
+            </div>
+            <div role="columnheader" class="px-2 py-1 text-right">
+              スコア
+            </div>
+            <div role="columnheader" class="px-2 py-1 text-center">
+              ランプ
+            </div>
+          </div>
+
+          <div class="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+            <For each={rowVirtualizer.getVirtualItems()}>
+              {(virtualRow) => {
+                const record = props.records[virtualRow.index]
+                if (!record) return null
+
+                return (
+                  <div
+                    ref={rowVirtualizer.measureElement}
+                    data-index={virtualRow.index}
+                    role="row"
+                    class="absolute left-0 top-0 grid w-full grid-cols-[minmax(0,1fr)_72px_64px_120px_72px] border-b border-gray-200 text-xs hover:bg-gray-100"
+                    style={{ transform: `translateY(${virtualRow.start}px)` }}
                   >
-                    {record.title}
-                  </A>
-                </td>
-                <td class="px-2 py-1 text-center">
-                  <span
-                    class={`px-2 py-1 rounded-lg ${difficultyColor(record.difficulty)} text-xs font-bold`}
-                  >
-                    {difficultyShort(record.difficulty)}
-                  </span>
-                </td>
-                <td class="px-2 py-1 text-right">{record.const.toFixed(1)}</td>
-                <td class="px-2 py-1 text-right">
-                  {'is_played' in record && !record.is_played
-                    ? unplayedBadge()
-                    : record.score.toLocaleString()}
-                </td>
-                <td class="px-2 py-1 text-center">
-                  {'is_played' in record && !record.is_played ? (
-                    <span class="px-2 py-1 text-xs">-</span>
-                  ) : (
-                    lampBadge(record.combo_lamp)
-                  )}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+                    <div role="cell" class="truncate px-2 py-1" title={record.title}>
+                      <A
+                        href={`/songs/${encodeURIComponent(record.id)}`}
+                        class="text-inherit hover:underline"
+                      >
+                        {record.title}
+                      </A>
+                    </div>
+                    <div role="cell" class="px-2 py-1 text-center">
+                      <span
+                        class={`px-2 py-1 rounded-lg ${difficultyColor(record.difficulty)} text-xs font-bold`}
+                      >
+                        {difficultyShort(record.difficulty)}
+                      </span>
+                    </div>
+                    <div role="cell" class="px-2 py-1 text-right">
+                      {record.const.toFixed(1)}
+                    </div>
+                    <div role="cell" class="px-2 py-1 text-right">
+                      {'is_played' in record && !record.is_played
+                        ? unplayedBadge()
+                        : record.score.toLocaleString()}
+                    </div>
+                    <div role="cell" class="px-2 py-1 text-center">
+                      {'is_played' in record && !record.is_played ? (
+                        <span class="px-2 py-1 text-xs">-</span>
+                      ) : (
+                        lampBadge(record.combo_lamp)
+                      )}
+                    </div>
+                  </div>
+                )
+              }}
+            </For>
+          </div>
+        </div>
+      </Show>
     </div>
   )
 }
