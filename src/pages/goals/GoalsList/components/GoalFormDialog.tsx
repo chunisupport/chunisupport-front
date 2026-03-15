@@ -9,7 +9,7 @@ import {
   type GoalUpdateRequest,
   type MasterDataDTO,
 } from '../../../../../types/api'
-import { COMBO_LAMP_OPTIONS, GOAL_TYPE_LABELS, HARD_LAMP_OPTIONS } from '../../utils/goalForm'
+import { COMBO_LAMP_OPTIONS, HARD_LAMP_OPTIONS } from '../../utils/goalForm'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 
@@ -23,17 +23,6 @@ interface GoalFormDialogProps {
   onSave: (payload: GoalRequest) => Promise<void>
   resolveAllCount: (attributes: GoalAttributes) => number
 }
-
-const ACHIEVEMENT_TYPES: GoalAchievementType[] = [
-  'rank_count',
-  'score_count',
-  'avg_score',
-  'hardlamp_count',
-  'combolamp_count',
-  'total_score',
-  'overpower_value',
-  'overpower_percent',
-]
 
 const isCountAchievementType = (type: GoalAchievementType): boolean =>
   type === 'score_count' ||
@@ -283,8 +272,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 onChange={(event) => setAchievementType(event.currentTarget.value as GoalAchievementType)}
                 class="w-full rounded border border-gray-300 px-3 py-2"
               >
-                {ACHIEVEMENT_TYPES.map((type) => (
-                  <option value={type}>{GOAL_TYPE_LABELS[type]}</option>
+                {props.masterData.achievement_types.map((item) => (
+                  <option value={item.code}>{item.label}</option>
                 ))}
               </select>
             </label>

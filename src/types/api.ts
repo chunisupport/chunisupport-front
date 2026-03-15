@@ -204,6 +204,10 @@ export interface RatingBandDTO {
   sort_order: number
 }
 
+export interface AchievementTypeDTO {
+  code: string
+  label: string
+}
 export interface MasterDataDTO {
   genres: MasterItemDTO[]
   difficulties: MasterItemDTO[]
@@ -211,6 +215,7 @@ export interface MasterDataDTO {
   is_const_unknown: BooleanChoiceDTO[]
   account_types: MasterItemDTO[]
   rating_bands: RatingBandDTO[]
+  achievement_types: AchievementTypeDTO[]
 }
 
 export interface VersionDTO {
@@ -273,15 +278,6 @@ export type GoalCreateRequest = Omit<GoalDTO, 'id' | 'created_at'>
 export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'created_at'>
 
 // --------------------------------
-
-export interface UserDTO {
-  username: string
-  account_type: AccountType
-  is_private: boolean
-  last_score_update: string | null
-}
-
-export type AccountType = 'PLAYER' | 'EDITOR' | 'ADMIN'
 
 export interface AdminUserListResponse {
   username: string
