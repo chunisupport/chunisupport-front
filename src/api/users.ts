@@ -1,25 +1,14 @@
 import { API_BASE_URL } from '../config'
 import type { AdminUserListResponse, UserDTO, UserProfileWithRecordsDTO } from '../types/api'
-import { getErrorMessage } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
-
-const throwApiError = async (response: Response): Promise<never> => {
-  let message = `HTTP ${response.status}`
-  try {
-    const error = await response.json()
-    message = getErrorMessage(error)
-  } catch {
-    // ignore
-  }
-
-  const apiError = new Error(message) as Error & { status?: number }
-  apiError.status = response.status
-  throw apiError
-}
 
 type FetchUserProfileOptions = {
   view?: 'rating'
   includeNoPlay?: boolean
+}
+
+type FetchMeOptions = {
+  redirectOnUnauthorized?: boolean
 }
 
 export const fetchUserProfile = async (
@@ -34,18 +23,14 @@ export const fetchUserProfile = async (
     url.searchParams.set('include_noplay', 'true')
   }
   const response = await fetchWithAuth(url)
-  if (!response.ok) {
-    await throwApiError(response)
-  }
 
   return response.json()
 }
 
-export const fetchMe = async (): Promise<UserDTO> => {
-  const response = await fetchWithAuth(`${API_BASE_URL}/internal/me`)
-  if (!response.ok) {
-    await throwApiError(response)
-  }
+export const fetchMe = async (options: FetchMeOptions = {}): Promise<UserDTO> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/me`, {
+    redirectOnUnauthorized: options.redirectOnUnauthorized,
+  })
 
   return response.json()
 }

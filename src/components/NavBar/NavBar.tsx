@@ -22,6 +22,7 @@ type NavBarProps = {
 
 import { postLogout } from '../../api/auth'
 import { fetchMe } from '../../api/users'
+import { clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
 
 type DropdownItem = {
   label: string
@@ -128,10 +129,12 @@ const NavBar = (props: NavBarProps) => {
   onMount(async () => {
     setIsLoading(true)
     try {
-      const user = await fetchMe()
+      const user = await fetchMe({ redirectOnUnauthorized: false })
+      setAuthenticatedUser(user)
       setUsername(user.username)
       localStorage.setItem(CACHE_KEY, user.username)
     } catch {
+      clearAuthenticatedUser()
       setUsername(null)
       localStorage.removeItem(CACHE_KEY)
     } finally {
@@ -341,6 +344,7 @@ const NavBar = (props: NavBarProps) => {
                   class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
                   onClick={async () => {
                     await postLogout()
+                    clearAuthenticatedUser()
                     setUsername(null)
                     localStorage.removeItem(CACHE_KEY)
                     setShowLogoutDialog(false)

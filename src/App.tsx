@@ -36,6 +36,14 @@ const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
   )
 }
 
+const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
+  return (props: P) => (
+    <RequireAuth>
+      <Component {...props} />
+    </RequireAuth>
+  )
+}
+
 // インラインコンポーネント用のラッパー
 const LandingPage = () => {
   useDocumentTitle()
@@ -112,20 +120,23 @@ const App = () => {
 
       {/* ユーザ */}
       <Route path="/users/:username" component={withNavBar(UserPage)} />
-      <Route path="/users/:username/stats" component={withNavBar(UserStatsPage)} />
-      <Route path="/goals" component={withNavBar(GoalsList)} />
+      <Route path="/users/:username/stats" component={withNavBar(withAuth(UserStatsPage))} />
+      <Route path="/goals" component={withNavBar(withAuth(GoalsList))} />
 
       {/* 楽曲 */}
       <Route path="/songs" component={withNavBar(SongsList)} />
       <Route path="/songs/:displayid" component={withNavBar(SongDetail)} />
 
       {/* 設定 */}
-      <Route path="/settings" component={withNavBar(SettingsPage)} />
-      <Route path="/settings/privacy" component={withNavBar(SettingsPrivacyPage)} />
-      <Route path="/settings/password" component={withNavBar(SettingsPasswordPage)} />
-      <Route path="/settings/recovery-codes" component={withNavBar(SettingsRecoveryCodesPage)} />
-      <Route path="/settings/api-token" component={withNavBar(SettingsApiTokenPage)} />
-      <Route path="/settings/sessions" component={withNavBar(SettingsSessionsPage)} />
+      <Route path="/settings" component={withNavBar(withAuth(SettingsPage))} />
+      <Route path="/settings/privacy" component={withNavBar(withAuth(SettingsPrivacyPage))} />
+      <Route path="/settings/password" component={withNavBar(withAuth(SettingsPasswordPage))} />
+      <Route
+        path="/settings/recovery-codes"
+        component={withNavBar(withAuth(SettingsRecoveryCodesPage))}
+      />
+      <Route path="/settings/api-token" component={withNavBar(withAuth(SettingsApiTokenPage))} />
+      <Route path="/settings/sessions" component={withNavBar(withAuth(SettingsSessionsPage))} />
 
       {/* その他 */}
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />
