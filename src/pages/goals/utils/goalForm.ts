@@ -7,15 +7,18 @@ import type {
   MasterDataDTO,
 } from '../../../types/api'
 
-export const GOAL_TYPE_LABELS: Record<GoalAchievementType, string> = {
-  rank_count: 'ランク達成数',
-  score_count: 'スコア達成数',
-  avg_score: '平均スコア',
-  hardlamp_count: 'ハードランプ達成数',
-  combolamp_count: 'コンボランプ達成数',
-  total_score: '総スコア',
-  overpower_value: '総OVER POWER',
-  overpower_percent: 'OVER POWER達成率',
+// ID(code) -> 表示名の辞書。将来は言語キーを増やすだけでi18n対応できる。
+export const GOAL_ACHIEVEMENT_TYPE_LABELS = {
+  ja: {
+    rank_count: 'ランク達成数',
+    score_count: 'スコア達成数',
+    avg_score: '平均スコア',
+    hardlamp_count: 'ハードランプ達成数',
+    combolamp_count: 'コンボランプ達成数',
+    total_score: '総スコア',
+    overpower_value: '総OVER POWER',
+    overpower_percent: 'OVER POWER達成率',
+  } satisfies Record<GoalAchievementType, string>,
 }
 
 export const HARD_LAMP_OPTIONS = [
@@ -40,7 +43,20 @@ export const buildGoalPayload = (goal: GoalDTO): GoalRequest => ({
   invert: goal.invert,
 })
 
-export const formatGoalTypeLabel = (type: GoalAchievementType): string => GOAL_TYPE_LABELS[type] ?? type
+export const resolveGoalAchievementTypeLabel = (
+  code: string,
+  options?: {
+    locale?: keyof typeof GOAL_ACHIEVEMENT_TYPE_LABELS
+    fallbackLabel?: string
+  }
+): string => {
+  const locale = options?.locale ?? 'ja'
+  const localized = GOAL_ACHIEVEMENT_TYPE_LABELS[locale] as Record<string, string>
+  return localized[code] ?? options?.fallbackLabel ?? code
+}
+
+export const formatGoalTypeLabel = (type: GoalAchievementType): string =>
+  resolveGoalAchievementTypeLabel(type)
 
 export const formatGoalAttributesLabel = (
   attributes: GoalAttributes,

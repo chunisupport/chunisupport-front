@@ -104,14 +104,45 @@ export const restoreWorldsendSongByDisplayId = async (displayId: string): Promis
 export const fetchMasterData = async (): Promise<MasterDataDTO> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/master`)
   const raw = (await response.json()) as Omit<MasterDataDTO, 'achievement_types'> & {
-    achievement_types?: Array<{ code: string; label?: string; name?: string }>
+    achievement_types?: unknown[]
   }
 
-  const achievementTypes: AchievementTypeDTO[] = (raw.achievement_types ?? []).map((item) => ({
-    code: item.code,
-    label: item.label ?? item.name ?? item.code,
-    name: item.name,
-  }))
+  const achievementTypes: AchievementTypeDTO[] = (raw.achievement_types ?? [])
+    .map((item) => {
+      if (typeof item === 'string') {
+        const code = item.trim()
+        return code ? { code } : null
+      }
+
+      if (!item || typeof item !== 'object') return null
+
+      const obj = item as {
+        code?: unknown
+        name?: unknown
+        label?: unknown
+        value?: unknown
+        id?: unknown
+      }
+
+      const codeCandidate =
+        (typeof obj.code === 'string' ? obj.code : undefined) ??
+        (typeof obj.value === 'string' ? obj.value : undefined) ??
+        (typeof obj.id === 'string' ? obj.id : undefined) ??
+        (typeof obj.name === 'string' ? obj.name : undefined)
+
+      const code = codeCandidate?.trim()
+      if (!code) return null
+
+      const label = typeof obj.label === 'string' ? obj.label : undefined
+      const name = typeof obj.name === 'string' ? obj.name : undefined
+
+      return {
+        code,
+        label,
+        name,
+      }
+    })
+    .filter((item): item is AchievementTypeDTO => item !== null)
 
   return {
     ...raw,

@@ -9,7 +9,11 @@ import {
   type GoalUpdateRequest,
   type MasterDataDTO,
 } from '../../../../../types/api'
-import { COMBO_LAMP_OPTIONS, HARD_LAMP_OPTIONS } from '../../utils/goalForm'
+import {
+  COMBO_LAMP_OPTIONS,
+  HARD_LAMP_OPTIONS,
+  resolveGoalAchievementTypeLabel,
+} from '../../utils/goalForm'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 
@@ -300,7 +304,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 class="w-full rounded border border-gray-300 px-3 py-2"
               >
                 {props.masterData.achievement_types.map((item) => (
-                  <option value={item.code}>{item.label ?? item.name ?? item.code}</option>
+                  <option value={item.code}>
+                    {resolveGoalAchievementTypeLabel(item.code, {
+                      locale: 'ja',
+                      fallbackLabel: item.label ?? item.name,
+                    })}
+                  </option>
                 ))}
               </select>
             </label>
