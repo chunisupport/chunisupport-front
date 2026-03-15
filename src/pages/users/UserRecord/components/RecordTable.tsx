@@ -1,6 +1,6 @@
 import { A } from '@solidjs/router'
 import { createVirtualizer } from '@tanstack/solid-virtual'
-import { createEffect, For, type Component, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, type Component, Show } from 'solid-js'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 
 interface RecordTableProps {
@@ -26,26 +26,62 @@ const unplayedBadge = () => (
 )
 
 export const RecordTable: Component<RecordTableProps> = (props) => {
-  let scrollParentRef: HTMLDivElement | undefined
+  let tableContainerRef: HTMLDivElement | undefined
+  const getScrollElement = () => document.getElementById('app-main') as HTMLDivElement | null
 
-  const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>({
+  const [scrollMargin, setScrollMargin] = createSignal(0)
+
+  const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     get count() {
       return props.records.length
     },
-    getScrollElement: () => scrollParentRef ?? null,
-    estimateSize: () => 32,
+    getScrollElement,
+    estimateSize: () => 34,
+    overscan: 12,
+    get scrollMargin() {
+      return scrollMargin()
+    },
+  })
+
+  const updateScrollMargin = () => {
+    const scrollElement = getScrollElement()
+    const tableElement = tableContainerRef
+    if (!scrollElement || !tableElement) return
+
+    const scrollRect = scrollElement.getBoundingClientRect()
+    const tableRect = tableElement.getBoundingClientRect()
+    const next = tableRect.top - scrollRect.top + scrollElement.scrollTop
+    if (Math.abs(next - scrollMargin()) >= 1) {
+      setScrollMargin(next)
+    }
+  }
+
+  onMount(() => {
+    updateScrollMargin()
+    window.addEventListener('resize', updateScrollMargin)
+  })
+
+  onCleanup(() => {
+    window.removeEventListener('resize', updateScrollMargin)
   })
 
   createEffect(() => {
-    props.records
+    props.records.length
+    queueMicrotask(updateScrollMargin)
+  })
 
-    const scrollElement = scrollParentRef
-    if (!scrollElement) return
-
-    scrollElement.scrollTop = 0
-    if (props.records.length > 0) {
-      rowVirtualizer.scrollToIndex(0)
-    }
+  const virtualRows = createMemo(() => rowVirtualizer.getVirtualItems())
+  const paddingTop = createMemo(() => {
+    const firstRow = virtualRows()[0]
+    if (!firstRow) return 0
+    // scrollMargin はスクロール親内でのテーブル開始位置なので、tbody の先頭余白には含めない
+    return Math.max(firstRow.start - scrollMargin(), 0)
+  })
+  const paddingBottom = createMemo(() => {
+    const rows = virtualRows()
+    const lastRow = rows[rows.length - 1]
+    if (!lastRow) return 0
+    return rowVirtualizer.getTotalSize() - lastRow.end
   })
 
   return (
@@ -54,82 +90,73 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
         when={props.records.length > 0}
         fallback={<p class="py-6 text-center text-gray-400">データがありません</p>}
       >
-        <div
-          ref={scrollParentRef}
-          class="h-[60dvh] min-h-80 overflow-y-auto rounded-md border border-gray-200"
-          role="table"
-          aria-label="レコード一覧"
-        >
-          <div
-            role="row"
-            class="sticky top-0 z-10 grid grid-cols-[minmax(0,1fr)_72px_64px_120px_72px] border-b border-gray-200 bg-white text-xs font-semibold"
-          >
-            <div role="columnheader" class="px-2 py-1 text-left">
-              曲名
-            </div>
-            <div role="columnheader" class="px-2 py-1 text-center">
-              難易度
-            </div>
-            <div role="columnheader" class="px-2 py-1 text-right">
-              定数
-            </div>
-            <div role="columnheader" class="px-2 py-1 text-right">
-              スコア
-            </div>
-            <div role="columnheader" class="px-2 py-1 text-center">
-              ランプ
-            </div>
-          </div>
+        <div ref={tableContainerRef} class="overflow-x-auto rounded-md border border-gray-200">
+          <table class="w-full table-fixed border-collapse" aria-label="レコード一覧">
+            <thead>
+              <tr class="border-b border-gray-200 bg-white text-xs font-semibold">
+                <th class="px-2 py-1 text-left">曲名</th>
+                <th class="px-2 py-1 text-center">難易度</th>
+                <th class="px-2 py-1 text-right">定数</th>
+                <th class="px-2 py-1 text-right">スコア</th>
+                <th class="px-2 py-1 text-center">ランプ</th>
+              </tr>
+            </thead>
 
-          <div class="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-            <For each={rowVirtualizer.getVirtualItems()}>
-              {(virtualRow) => {
-                const record = props.records[virtualRow.index]
-                if (!record) return null
+            <tbody>
+              <Show when={paddingTop() > 0}>
+                <tr aria-hidden="true">
+                  <td colSpan={5} style={{ height: `${paddingTop()}px` }} />
+                </tr>
+              </Show>
 
-                return (
-                  <div
-                    ref={rowVirtualizer.measureElement}
-                    data-index={virtualRow.index}
-                    role="row"
-                    class="absolute left-0 top-0 grid w-full grid-cols-[minmax(0,1fr)_72px_64px_120px_72px] border-b border-gray-200 text-xs hover:bg-gray-100"
-                    style={{ transform: `translateY(${virtualRow.start}px)` }}
-                  >
-                    <div role="cell" class="truncate px-2 py-1" title={record.title}>
-                      <A
-                        href={`/songs/${encodeURIComponent(record.id)}`}
-                        class="text-inherit hover:underline"
-                      >
-                        {record.title}
-                      </A>
-                    </div>
-                    <div role="cell" class="px-2 py-1 text-center">
-                      <span
-                        class={`px-2 py-1 rounded-lg ${difficultyColor(record.difficulty)} text-xs font-bold`}
-                      >
-                        {difficultyShort(record.difficulty)}
-                      </span>
-                    </div>
-                    <div role="cell" class="px-2 py-1 text-right">
-                      {record.const.toFixed(1)}
-                    </div>
-                    <div role="cell" class="px-2 py-1 text-right">
-                      {'is_played' in record && !record.is_played
-                        ? unplayedBadge()
-                        : record.score.toLocaleString()}
-                    </div>
-                    <div role="cell" class="px-2 py-1 text-center">
-                      {'is_played' in record && !record.is_played ? (
-                        <span class="px-2 py-1 text-xs">-</span>
-                      ) : (
-                        lampBadge(record.combo_lamp)
-                      )}
-                    </div>
-                  </div>
-                )
-              }}
-            </For>
-          </div>
+              <For each={virtualRows()}>
+                {(virtualRow) => {
+                  const record = props.records[virtualRow.index]
+                  if (!record) return null
+
+                  return (
+                    <tr
+                      ref={rowVirtualizer.measureElement}
+                      data-index={virtualRow.index}
+                      class="border-b border-gray-200 text-xs hover:bg-gray-100"
+                    >
+                      <td class="truncate px-2 py-1" title={record.title}>
+                        <A href={`/songs/${encodeURIComponent(record.id)}`} class="text-inherit hover:underline">
+                          {record.title}
+                        </A>
+                      </td>
+                      <td class="px-2 py-1 text-center">
+                        <span
+                          class={`px-2 py-1 rounded-lg ${difficultyColor(record.difficulty)} text-xs font-bold`}
+                        >
+                          {difficultyShort(record.difficulty)}
+                        </span>
+                      </td>
+                      <td class="px-2 py-1 text-right">{record.const.toFixed(1)}</td>
+                      <td class="px-2 py-1 text-right">
+                        {'is_played' in record && !record.is_played
+                          ? unplayedBadge()
+                          : record.score.toLocaleString()}
+                      </td>
+                      <td class="px-2 py-1 text-center">
+                        {'is_played' in record && !record.is_played ? (
+                          <span class="px-2 py-1 text-xs">-</span>
+                        ) : (
+                          lampBadge(record.combo_lamp)
+                        )}
+                      </td>
+                    </tr>
+                  )
+                }}
+              </For>
+
+              <Show when={paddingBottom() > 0}>
+                <tr aria-hidden="true">
+                  <td colSpan={5} style={{ height: `${paddingBottom()}px` }} />
+                </tr>
+              </Show>
+            </tbody>
+          </table>
         </div>
       </Show>
     </div>
