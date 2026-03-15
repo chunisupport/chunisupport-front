@@ -158,7 +158,7 @@ const NavBar = (props: NavBarProps) => {
   }
 
   return (
-    <div class="min-h-dvh md:h-dvh md:overflow-hidden md:flex md:flex-row">
+    <div class="h-dvh overflow-hidden flex md:flex-row flex-col">
       {/* PC用nav-bar 768px以上 */}
       {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
       <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-gray-200 md:bg-white">
@@ -221,13 +221,13 @@ const NavBar = (props: NavBarProps) => {
         </nav>
       </aside>
 
-      <div class="md:flex md:flex-col md:min-h-0 md:flex-1">
-        <main id="app-main" class="md:flex-1 md:min-h-0 md:overflow-y-auto">
+      <div class="flex flex-col min-h-0 flex-1">
+        <main id="app-main" class="flex-1 min-h-0 overflow-y-auto">
           {props.children}
         </main>
 
         {/* スマホ用nav-bar 768px未満 */}
-        <nav class="sticky bottom-0 md:hidden z-40 flex items-center justify-between border-t border-gray-200 bg-white p-3 shadow-sm">
+        <nav class="md:hidden z-40 flex items-center justify-between border-t border-gray-200 bg-white p-3 shadow-sm">
           {getNavItems().map((item) =>
             item.dropdown ? (
               <DropdownMenu>
