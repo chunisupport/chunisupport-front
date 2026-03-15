@@ -81,10 +81,6 @@ export const UserProfileView: Component<Props> = (props) => {
             レコード
           </Tabs.Trigger>
           <div class="flex-1"></div>
-          <button type="button" class="px-3 py-1 mb-1 bg-primary-600 text-white rounded-md">
-            <Image class="inline-block mr-1 mb-0.5" size={16} />
-            画像化
-          </button>
         </Tabs.List>
         <Tabs.Content value="best">
           <RecordList records={bestRecords} />
