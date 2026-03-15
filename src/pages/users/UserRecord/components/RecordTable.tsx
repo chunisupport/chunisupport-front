@@ -126,21 +126,21 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
         fallback={<p class="py-6 text-center text-gray-400">データがありません</p>}
       >
         <div ref={tableContainerRef} class="overflow-x-auto rounded-md border border-gray-200">
-          <table class="w-full table-auto border-collapse" aria-label="レコード一覧">
+          <table class="w-full table-fixed border-collapse" aria-label="レコード一覧">
             <colgroup>
               <col />
-              <col class="w-px" />
-              <col class="w-px" />
-              <col class="w-px" />
-              <col class="w-px" />
+              <col style={{ width: '3rem' }} />
+              <col style={{ width: '3.5rem' }} />
+              <col style={{ width: '3.7rem' }} />
+              <col style={{ width: '3rem' }} />
             </colgroup>
             <thead>
               <tr class="border-b border-gray-200 bg-white text-xs font-semibold">
-                <th class="px-2 py-1 text-left">曲名</th>
-                <th class="px-2 py-1 text-right whitespace-nowrap">難易度</th>
-                <th class="px-2 py-1 text-right whitespace-nowrap">定数</th>
-                <th class="px-2 py-1 text-right whitespace-nowrap">スコア</th>
-                <th class="px-2 py-1 text-right whitespace-nowrap">ランプ</th>
+                <th class="px-2 py-1 text-center whitespace-nowrap">曲名</th>
+                <th class="px-2 py-1 text-center whitespace-nowrap">難易度</th>
+                <th class="px-2 py-1 text-center whitespace-nowrap">定数</th>
+                <th class="px-2 py-1 text-center whitespace-nowrap">スコア</th>
+                <th class="px-2 py-1 text-center whitespace-nowrap">ランプ</th>
               </tr>
             </thead>
 
@@ -162,7 +162,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                       data-index={virtualRow.index}
                       class="border-b border-gray-200 text-xs hover:bg-gray-100"
                     >
-                      <td class="px-2 py-1" title={record.title}>
+                      <td class="px-2 py-1 min-w-0 max-w-0" title={record.title}>
                         <A
                           href={`/songs/${encodeURIComponent(record.id)}`}
                           class="block truncate text-inherit hover:underline"
@@ -170,25 +170,33 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           {record.title}
                         </A>
                       </td>
-                      <td class="px-2 py-1 text-right whitespace-nowrap">
-                        <span
-                          class={`px-2 py-1 rounded-lg ${difficultyColor(record.difficulty)} text-xs font-bold`}
-                        >
-                          {difficultyShort(record.difficulty)}
-                        </span>
+                      <td class="px-2 py-1 whitespace-nowrap">
+                        <div class="flex w-full justify-center">
+                          <span
+                            class={`px-2 py-1 rounded-lg ${difficultyColor(record.difficulty)} text-xs font-bold`}
+                          >
+                            {difficultyShort(record.difficulty)}
+                          </span>
+                        </div>
                       </td>
-                      <td class="px-2 py-1 text-right whitespace-nowrap">{record.const.toFixed(1)}</td>
-                      <td class="px-2 py-1 text-right whitespace-nowrap">
-                        {'is_played' in record && !record.is_played
-                          ? unplayedBadge()
-                          : record.score.toLocaleString()}
+                      <td class="px-2 py-1 text-center whitespace-nowrap">
+                        <span class="inline-block w-full text-center">{record.const.toFixed(1)}</span>
                       </td>
-                      <td class="px-2 py-1 text-right whitespace-nowrap">
-                        {'is_played' in record && !record.is_played ? (
-                          <span class="px-2 py-1 text-xs">-</span>
-                        ) : (
-                          lampBadge(record.combo_lamp)
-                        )}
+                      <td class="px-2 py-1 whitespace-nowrap">
+                        <div class="flex w-full justify-center">
+                          {'is_played' in record && !record.is_played
+                            ? unplayedBadge()
+                            : record.score.toLocaleString()}
+                        </div>
+                      </td>
+                      <td class="px-2 py-1 whitespace-nowrap">
+                        <div class="flex w-full justify-center">
+                          {'is_played' in record && !record.is_played ? (
+                            <span class="px-2 py-1 text-xs">-</span>
+                          ) : (
+                            lampBadge(record.combo_lamp)
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )
