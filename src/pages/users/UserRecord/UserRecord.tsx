@@ -70,8 +70,8 @@ const UserRecord: Component = () => {
   // フィルターダイアログの開閉状態
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
-  const [sortKey, setSortKey] = createSignal<RecordSortKey | null>(null)
-  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
+  const [sortKey, setSortKey] = createSignal<RecordSortKey | null>('rating')
+  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>('desc')
 
   // フィルターを初期化
   // マスタデータ取得後にgenres/versionsを全選択
@@ -129,6 +129,21 @@ const UserRecord: Component = () => {
           case 'const':
             comparison = left.const - right.const
             break
+          case 'rating': {
+            const leftUnplayed = !left.is_played
+            const rightUnplayed = !right.is_played
+
+            if (leftUnplayed && rightUnplayed) {
+              comparison = 0
+            } else if (leftUnplayed) {
+              return 1
+            } else if (rightUnplayed) {
+              return -1
+            } else {
+              comparison = left.rating - right.rating
+            }
+            break
+          }
           case 'score': {
             const leftUnplayed = !left.is_played
             const rightUnplayed = !right.is_played

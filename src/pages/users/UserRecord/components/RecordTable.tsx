@@ -26,7 +26,7 @@ interface RecordTableProps {
   onSortChange: (key: RecordSortKey) => void
 }
 
-const GRID_COLUMNS = 'minmax(0,1fr) 3rem 3.5rem 3.7rem 3rem'
+const GRID_COLUMNS = 'minmax(0,1fr) 3rem 3.5rem 4.5rem 3.7rem 3rem'
 const ROW_HEIGHT = 34
 const HEADER_BUTTON_CLASS =
   'flex min-h-[34px] w-full items-center justify-center gap-1 px-2 py-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
@@ -178,6 +178,14 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                 <button
                   type="button"
                   class={HEADER_BUTTON_CLASS}
+                  onClick={() => props.onSortChange('rating')}
+                >
+                  <span>レート</span>
+                  {sortIndicator(props.sortKey === 'rating', props.sortDirection)}
+                </button>
+                <button
+                  type="button"
+                  class={HEADER_BUTTON_CLASS}
                   onClick={() => props.onSortChange('score')}
                 >
                   <span>スコア</span>
@@ -236,6 +244,11 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
                             <span class="inline-block w-full text-center leading-none">
                               {currentRecord().const.toFixed(1)}
+                            </span>
+                          </div>
+                          <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
+                            <span class="inline-block w-full text-center leading-none">
+                              {!currentRecord().is_played ? '-' : currentRecord().rating.toFixed(2)}
                             </span>
                           </div>
                           <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
