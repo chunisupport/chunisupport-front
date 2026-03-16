@@ -8,7 +8,10 @@ type Props = {
   index: number
 }
 
-import { difficultyCardBorderColor } from '../../../../utils/difficultyUtils'
+import {
+  difficultyCardBorderColor,
+  difficultyToQueryValue,
+} from '../../../../utils/difficultyUtils'
 
 export const UserRecordCard: Component<Props> = (props) => {
   const [shouldAnimate, setShouldAnimate] = createSignal(false)
@@ -34,7 +37,7 @@ export const UserRecordCard: Component<Props> = (props) => {
         </div>
         <div class="flex-1 min-w-0 overflow-hidden">
           <A
-            href={`/songs/${encodeURIComponent(props.record.id)}`}
+            href={`/songs/${encodeURIComponent(props.record.id)}?diff=${encodeURIComponent(difficultyToQueryValue(props.record.difficulty))}`}
             class="text-inherit hover:underline"
           >
             <p

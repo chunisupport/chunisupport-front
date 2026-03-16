@@ -8,7 +8,11 @@ interface RecordTableProps {
   statsOpen: boolean
 }
 
-import { difficultyColor, difficultyShort } from '../../../../utils/difficultyUtils'
+import {
+  difficultyColor,
+  difficultyShort,
+  difficultyToQueryValue,
+} from '../../../../utils/difficultyUtils'
 
 const lampBadge = (lamp: string | null) => {
   if (lamp === 'FULL COMBO')
@@ -164,7 +168,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                     >
                       <td class="px-2 py-1 min-w-0 max-w-0" title={record.title}>
                         <A
-                          href={`/songs/${encodeURIComponent(record.id)}`}
+                          href={`/songs/${encodeURIComponent(record.id)}?diff=${encodeURIComponent(difficultyToQueryValue(record.difficulty))}`}
                           class="block truncate text-inherit hover:underline"
                         >
                           {record.title}

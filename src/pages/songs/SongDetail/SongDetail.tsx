@@ -1,4 +1,4 @@
-﻿import { useNavigate, useParams } from '@solidjs/router'
+﻿import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import {
   createEffect,
   createMemo,
@@ -12,16 +12,19 @@ import {
 import { fetchMasterData, fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { normalizeDifficultyQueryValue } from '../../../utils/difficultyUtils'
 import SongInfoCard from './components/SongInfoCard'
 import SongStatsTabs from './components/SongStatsTabs'
 
 const SongDetail = () => {
   const params = useParams<{ displayid: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const [song] = createResource(() => params.displayid, fetchSongByDisplayId)
   const [masterData] = createResource(fetchMasterData)
   const [selectedDifficulty, setSelectedDifficulty] = createSignal<string>('')
+  const requestedDifficulty = createMemo(() => normalizeDifficultyQueryValue(searchParams.diff))
 
   const availableDifficulties = createMemo(() => {
     const currentSong = song()
@@ -41,12 +44,16 @@ const SongDetail = () => {
   })
 
   createEffect(
-    on(availableDifficulties, (options) => {
+    on([availableDifficulties, requestedDifficulty], ([options, requested]) => {
       if (options.length === 0) return
 
       const currentSelection = untrack(() => selectedDifficulty())
       if (!currentSelection || !options.some((option) => option.value === currentSelection)) {
-        setSelectedDifficulty(options[0].value)
+        const initialDifficulty =
+          requested && options.some((option) => option.value === requested)
+            ? requested
+            : options[0].value
+        setSelectedDifficulty(initialDifficulty)
       }
     })
   )

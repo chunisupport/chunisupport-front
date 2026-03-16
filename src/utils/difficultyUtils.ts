@@ -16,6 +16,27 @@ export function difficultyShort(difficulty: string): string {
   }
 }
 
+export function difficultyToQueryValue(difficulty: string): string {
+  switch (difficulty) {
+    case 'BASIC':
+      return 'basic'
+    case 'ADVANCED':
+      return 'advanced'
+    case 'EXPERT':
+      return 'expert'
+    case 'MASTER':
+      return 'master'
+    case 'ULTIMA':
+      return 'ultima'
+    default:
+      return difficulty.trim().toLowerCase()
+  }
+}
+
+export function normalizeDifficultyQueryValue(difficulty: string | null | undefined): string {
+  return difficulty?.trim().toLowerCase() ?? ''
+}
+
 // 難易度の色クラスを返す（RecordTable用）
 export function difficultyColor(difficulty: string): string {
   switch (difficulty) {
