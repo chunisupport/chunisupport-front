@@ -36,7 +36,7 @@ export const UserProfileView: Component<Props> = (props) => {
   const tabTriggerClass =
     'px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-primary-500'
   const ratingTabTriggerClass =
-    'rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors data-selected:bg-white data-selected:text-primary-700 data-selected:shadow-sm'
+    'rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors data-selected:bg-primary-600 data-selected:text-white data-selected:shadow-sm'
 
   const scrollToRecordList = () => {
     const scrollTarget = document.getElementById('app-main')
