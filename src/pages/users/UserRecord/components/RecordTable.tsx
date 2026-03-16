@@ -1,6 +1,15 @@
 import { A } from '@solidjs/router'
 import { createVirtualizer } from '@tanstack/solid-virtual'
-import { createEffect, createMemo, createSignal, For, onCleanup, onMount, type Component, Show } from 'solid-js'
+import {
+  type Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+} from 'solid-js'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 
 interface RecordTableProps {
@@ -14,35 +23,39 @@ import {
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
 
+const GRID_COLUMNS = 'minmax(0,1fr) 3rem 3.5rem 3.7rem 3rem'
+const ROW_HEIGHT = 34
+
 const lampBadge = (lamp: string | null) => {
   if (lamp === 'FULL COMBO')
     return (
-      <span class="px-2 py-1 rounded-lg bg-orange-200 text-orange-900 text-xs font-bold">FC</span>
+      <span class="rounded-lg bg-orange-200 px-2 py-1 text-xs font-bold text-orange-900">FC</span>
     )
   if (lamp === 'ALL JUSTICE')
     return (
-      <span class="px-2 py-1 rounded-lg bg-yellow-200 text-yellow-900 text-xs font-bold">AJ</span>
+      <span class="rounded-lg bg-yellow-200 px-2 py-1 text-xs font-bold text-yellow-900">AJ</span>
     )
   return <span class="px-2 py-1 text-xs">-</span>
 }
 
 const unplayedBadge = () => (
-  <span class="px-2 py-1 rounded-lg bg-gray-100 text-gray-400 text-xs">NoPlay</span>
+  <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">NoPlay</span>
 )
 
 export const RecordTable: Component<RecordTableProps> = (props) => {
   let tableContainerRef: HTMLDivElement | undefined
+  let tableBodyRef: HTMLDivElement | undefined
   let layoutResizeObserver: ResizeObserver | undefined
   const getScrollElement = () => document.getElementById('app-main') as HTMLDivElement | null
 
   const [scrollMargin, setScrollMargin] = createSignal(0)
 
-  const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLTableRowElement>({
+  const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>({
     get count() {
       return props.records.length
     },
     getScrollElement,
-    estimateSize: () => 34,
+    estimateSize: () => ROW_HEIGHT,
     overscan: 12,
     get scrollMargin() {
       return scrollMargin()
@@ -51,12 +64,12 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
 
   const updateScrollMargin = () => {
     const scrollElement = getScrollElement()
-    const tableElement = tableContainerRef
-    if (!scrollElement || !tableElement) return
+    const tableBodyElement = tableBodyRef
+    if (!scrollElement || !tableBodyElement) return
 
     const scrollRect = scrollElement.getBoundingClientRect()
-    const tableRect = tableElement.getBoundingClientRect()
-    const next = tableRect.top - scrollRect.top + scrollElement.scrollTop
+    const tableBodyRect = tableBodyElement.getBoundingClientRect()
+    const next = tableBodyRect.top - scrollRect.top + scrollElement.scrollTop
     if (Math.abs(next - scrollMargin()) >= 1) {
       setScrollMargin(next)
     }
@@ -65,16 +78,13 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   onMount(() => {
     updateScrollMargin()
 
-    // 上部UI（折りたたみ等）の高さ変化でテーブル位置が動くため、レイアウト変化時に再計算する
+    // レイアウト変化で本文開始位置が変わるため、親要素とスクロール要素を監視する
     if (tableContainerRef && typeof ResizeObserver !== 'undefined') {
       layoutResizeObserver = new ResizeObserver(() => {
         queueMicrotask(updateScrollMargin)
       })
 
-      const parent = tableContainerRef.parentElement
-      if (parent) {
-        layoutResizeObserver.observe(parent)
-      }
+      layoutResizeObserver.observe(tableContainerRef)
 
       const scrollElement = getScrollElement()
       if (scrollElement) {
@@ -98,30 +108,14 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   createEffect(() => {
     props.statsOpen
 
-    // 折りたたみ開閉後にレイアウトが確定したタイミングでも再計算する
-    queueMicrotask(() => {
-      updateScrollMargin()
-      rowVirtualizer.measure()
-    })
+    // 統計表示の開閉でレイアウトが動くため、次フレームでも再計測する
+    queueMicrotask(updateScrollMargin)
     requestAnimationFrame(() => {
       updateScrollMargin()
-      rowVirtualizer.measure()
     })
   })
 
   const virtualRows = createMemo(() => rowVirtualizer.getVirtualItems())
-  const paddingTop = createMemo(() => {
-    const firstRow = virtualRows()[0]
-    if (!firstRow) return 0
-    // scrollMargin はスクロール親内でのテーブル開始位置なので、tbody の先頭余白には含めない
-    return Math.max(firstRow.start - scrollMargin(), 0)
-  })
-  const paddingBottom = createMemo(() => {
-    const rows = virtualRows()
-    const lastRow = rows[rows.length - 1]
-    if (!lastRow) return 0
-    return rowVirtualizer.getTotalSize() - lastRow.end
-  })
 
   return (
     <div class="w-full">
@@ -129,71 +123,85 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
         when={props.records.length > 0}
         fallback={<p class="py-6 text-center text-gray-400">データがありません</p>}
       >
-        <div ref={tableContainerRef} class="overflow-x-auto rounded-md border border-gray-200">
-          <table class="w-full table-fixed border-collapse" aria-label="レコード一覧">
-            <colgroup>
-              <col />
-              <col style={{ width: '3rem' }} />
-              <col style={{ width: '3.5rem' }} />
-              <col style={{ width: '3.7rem' }} />
-              <col style={{ width: '3rem' }} />
-            </colgroup>
-            <thead>
-              <tr class="border-b border-gray-200 bg-white text-xs font-semibold">
-                <th class="px-2 py-1 text-center whitespace-nowrap">曲名</th>
-                <th class="px-2 py-1 text-center whitespace-nowrap">難易度</th>
-                <th class="px-2 py-1 text-center whitespace-nowrap">定数</th>
-                <th class="px-2 py-1 text-center whitespace-nowrap">スコア</th>
-                <th class="px-2 py-1 text-center whitespace-nowrap">ランプ</th>
-              </tr>
-            </thead>
+        <div
+          ref={tableContainerRef}
+          class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200"
+        >
+          <div class="min-w-[28rem]">
+            <div class="border-b border-gray-200 bg-white">
+              <div
+                class="grid text-xs font-semibold"
+                style={{ 'grid-template-columns': GRID_COLUMNS }}
+              >
+                <div class="flex min-h-[34px] items-center px-2 py-1 text-center whitespace-nowrap">
+                  曲名
+                </div>
+                <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
+                  難易度
+                </div>
+                <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
+                  定数
+                </div>
+                <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
+                  スコア
+                </div>
+                <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
+                  ランプ
+                </div>
+              </div>
+            </div>
 
-            <tbody>
-              <Show when={paddingTop() > 0}>
-                <tr aria-hidden="true">
-                  <td colSpan={5} style={{ height: `${paddingTop()}px` }} />
-                </tr>
-              </Show>
-
+            <div
+              ref={tableBodyRef}
+              class="relative"
+              style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+            >
               <For each={virtualRows()}>
                 {(virtualRow) => {
                   const record = props.records[virtualRow.index]
                   if (!record) return null
 
                   return (
-                    <tr
-                      ref={rowVirtualizer.measureElement}
-                      data-index={virtualRow.index}
-                      class="border-b border-gray-200 text-xs hover:bg-gray-100"
+                    <div
+                      class="absolute left-0 top-0 grid w-full border-b border-gray-200 text-xs hover:bg-gray-100"
+                      style={{
+                        'grid-template-columns': GRID_COLUMNS,
+                        transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
+                      }}
                     >
-                      <td class="px-2 py-1 min-w-0 max-w-0" title={record.title}>
+                      <div
+                        class="flex min-h-[34px] min-w-0 items-center px-2 py-1"
+                        title={record.title}
+                      >
                         <A
                           href={`/songs/${encodeURIComponent(record.id)}?diff=${encodeURIComponent(difficultyToQueryValue(record.difficulty))}`}
-                          class="block truncate text-inherit hover:underline"
+                          class="block w-full truncate text-inherit hover:underline"
                         >
                           {record.title}
                         </A>
-                      </td>
-                      <td class="px-2 py-1 whitespace-nowrap">
+                      </div>
+                      <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
                         <div class="flex w-full justify-center">
                           <span
-                            class={`px-2 py-1 rounded-lg ${difficultyColor(record.difficulty)} text-xs font-bold`}
+                            class={`rounded-lg px-2 py-1 text-xs font-bold ${difficultyColor(record.difficulty)}`}
                           >
                             {difficultyShort(record.difficulty)}
                           </span>
                         </div>
-                      </td>
-                      <td class="px-2 py-1 text-center whitespace-nowrap">
-                        <span class="inline-block w-full text-center">{record.const.toFixed(1)}</span>
-                      </td>
-                      <td class="px-2 py-1 whitespace-nowrap">
+                      </div>
+                      <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
+                        <span class="inline-block w-full text-center leading-none">
+                          {record.const.toFixed(1)}
+                        </span>
+                      </div>
+                      <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
                         <div class="flex w-full justify-center">
                           {'is_played' in record && !record.is_played
                             ? unplayedBadge()
                             : record.score.toLocaleString()}
                         </div>
-                      </td>
-                      <td class="px-2 py-1 whitespace-nowrap">
+                      </div>
+                      <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
                         <div class="flex w-full justify-center">
                           {'is_played' in record && !record.is_played ? (
                             <span class="px-2 py-1 text-xs">-</span>
@@ -201,19 +209,13 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                             lampBadge(record.combo_lamp)
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   )
                 }}
               </For>
-
-              <Show when={paddingBottom() > 0}>
-                <tr aria-hidden="true">
-                  <td colSpan={5} style={{ height: `${paddingBottom()}px` }} />
-                </tr>
-              </Show>
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       </Show>
     </div>
