@@ -4,6 +4,14 @@ import type { SongDTO } from '../../../../types/api'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 
+const difficultyBadgeClass: Record<(typeof chartOrder)[number], string> = {
+  BASIC: 'bg-[#00ab84] text-white',
+  ADVANCED: 'bg-[#ff7e00] text-white',
+  EXPERT: 'bg-[#f12929] text-white',
+  MASTER: 'bg-[#8e1be5] text-white',
+  ULTIMA: 'bg-[#000000] text-white',
+}
+
 type Props = {
   songs: SongDTO[]
 }
@@ -34,19 +42,22 @@ const SongsTable = (props: Props) => {
                   </A>
                 </td>
                 <td class="px-3 py-2">{song.artist}</td>
-                <td class="px-3 py-2">{song.genre}</td>
+                <td class="px-3 py-2 w-fit whitespace-nowrap">{song.genre}</td>
                 <td class="px-3 py-2">{song.bpm ?? '-'}</td>
                 <td class="px-3 py-2">
-                  <div class="flex flex-wrap gap-1">
+                  <div class="flex flex-nowrap gap-1 whitespace-nowrap">
                     <For each={chartOrder}>
                       {(difficulty) => {
                         const chart = song.charts[difficulty]
+                        if (!chart) {
+                          return null
+                        }
+
                         return (
-                          <span class="rounded border border-gray-200 px-2 py-0.5 text-xs">
-                            {difficulty.slice(0, 3)}:{' '}
-                            {chart
-                              ? `${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}`
-                              : '-'}
+                          <span
+                            class={`inline-flex w-[45px] justify-center rounded px-2 py-0.5 text-xs font-medium whitespace-nowrap ${difficultyBadgeClass[difficulty]}`}
+                          >
+                            {`${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}`}
                           </span>
                         )
                       }}
