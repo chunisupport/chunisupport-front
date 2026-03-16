@@ -22,7 +22,7 @@ type NavBarProps = {
 
 import { postLogout } from '../../api/auth'
 import { fetchMe } from '../../api/users'
-import { clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
+import { clearAuthenticatedUser, getAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
 
 type DropdownItem = {
   label: string
@@ -143,13 +143,26 @@ const NavBar = (props: NavBarProps) => {
   })
 
   const isActive = (item: NavItem) => {
+    const pathname = location.pathname
+
+    // ユーザーページ系のパス（/users/:username...）の場合は、
+    // 表示中のユーザー名が現在の認証ユーザーと一致する場合のみアクティブとする
+    const authUser = getAuthenticatedUser()
+    const userMatch = pathname.match(/^\/users\/([^/]+)/)
+    if (userMatch && authUser) {
+      const viewedUsername = decodeURIComponent(userMatch[1])
+      if (viewedUsername !== authUser.username) {
+        return false
+      }
+    }
+
     if (item.matchPattern) {
-      return item.matchPattern.test(location.pathname)
+      return item.matchPattern.test(pathname)
     }
     if (item.matchPrefix) {
-      return location.pathname.startsWith(item.path)
+      return pathname.startsWith(item.path)
     }
-    return location.pathname === item.path
+    return pathname === item.path
   }
 
   const handleDropdownSelect = (path: string) => {
