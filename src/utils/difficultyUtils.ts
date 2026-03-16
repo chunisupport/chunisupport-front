@@ -33,8 +33,9 @@ export function difficultyToQueryValue(difficulty: string): string {
   }
 }
 
-export function normalizeDifficultyQueryValue(difficulty: string | null | undefined): string {
-  return difficulty?.trim().toLowerCase() ?? ''
+export function normalizeDifficultyQueryValue(difficulty: string | string[] | null | undefined): string {
+  const value = Array.isArray(difficulty) ? difficulty[0] : difficulty
+  return value?.trim().toLowerCase() ?? ''
 }
 
 // 難易度の色クラスを返す（RecordTable用）
