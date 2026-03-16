@@ -279,12 +279,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 bg-black/30 z-40" />
-        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 max-h-[90vh] w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-white p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
           <Dialog.Title class="text-lg font-bold">
             {props.mode === 'create' ? '目標を作成' : '目標を編集'}
           </Dialog.Title>
 
-          <div class="mt-4 space-y-4">
+          <div class="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             <label class="block text-sm">
               <span class="mb-1 block text-gray-700">タイトル</span>
               <input
