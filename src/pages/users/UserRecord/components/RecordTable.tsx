@@ -246,17 +246,17 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                               {currentRecord().const.toFixed(1)}
                             </span>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
-                            <span class="inline-block w-full text-center leading-none">
-                              {!currentRecord().is_played ? '-' : currentRecord().rating.toFixed(2)}
-                            </span>
-                          </div>
                           <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
                             <div class="flex w-full justify-center">
                               {!currentRecord().is_played
                                 ? unplayedBadge()
                                 : currentRecord().score.toLocaleString()}
                             </div>
+                          </div>
+                          <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
+                            <span class="inline-block w-full text-center leading-none">
+                              {!currentRecord().is_played ? '-' : currentRecord().rating.toFixed(2)}
+                            </span>
                           </div>
                           <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
                             <div class="flex w-full justify-center">
