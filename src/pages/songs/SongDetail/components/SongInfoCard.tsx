@@ -2,6 +2,14 @@ import { For } from 'solid-js'
 import { CHUNITHM_JACKET_BASE_URL } from '../../../../config'
 import type { SongDTO } from '../../../../types/api'
 
+const difficultyRowClass: Record<string, string> = {
+  BASIC: 'bg-[#00ab84] text-white',
+  ADVANCED: 'bg-[#ff7e00] text-white',
+  EXPERT: 'bg-[#f12929] text-white',
+  MASTER: 'bg-[#8e1be5] text-white',
+  ULTIMA: 'bg-[#000000] text-white',
+}
+
 type DifficultyOption = {
   label: string
   value: string
@@ -63,24 +71,39 @@ const SongInfoCard = (props: Props) => {
         </div>
 
         <div class="rounded-md border border-gray-200 bg-white p-4">
-          <h2 class="mb-2 text-lg font-semibold">譜面情報</h2>
-          <div class="flex flex-wrap gap-2 text-sm">
-            <For each={props.availableDifficulties}>
-              {(difficulty) => {
-                const key = difficulty.label as keyof typeof props.song.charts
-                const chart = props.song.charts[key]
-                return (
-                  <div class="rounded border border-gray-200 px-3 py-2">
-                    <p class="font-semibold">{difficulty.label}</p>
-                    <p>
-                      定数:{' '}
-                      {chart ? `${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}` : '-'}
-                    </p>
-                    <p>ノーツ: {chart?.notes ?? '-'}</p>
-                  </div>
-                )
-              }}
-            </For>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-50 text-left">
+                <tr>
+                  <th class="px-3 py-2 font-medium text-gray-700"></th>
+                  <th class="px-3 py-2 font-medium text-gray-700">譜面定数</th>
+                  <th class="px-3 py-2 font-medium text-gray-700">ノーツ数</th>
+                </tr>
+              </thead>
+              <tbody>
+                <For each={props.availableDifficulties}>
+                  {(difficulty) => {
+                    const key = difficulty.label as keyof typeof props.song.charts
+                    const chart = props.song.charts[key]
+                    return (
+                      <tr class="border-t border-gray-100">
+                        <td class="px-3 py-2">
+                          <span
+                            class={`inline-flex min-w-[7rem] justify-center rounded px-3 py-1 text-xs font-semibold tracking-wide ${difficultyRowClass[difficulty.label] ?? 'bg-gray-200 text-gray-800'}`}
+                          >
+                            {difficulty.label}
+                          </span>
+                        </td>
+                        <td class="px-3 py-2 text-gray-800">
+                          {chart ? `${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}` : '-'}
+                        </td>
+                        <td class="px-3 py-2 text-gray-800">{chart?.notes ?? '-'}</td>
+                      </tr>
+                    )
+                  }}
+                </For>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
