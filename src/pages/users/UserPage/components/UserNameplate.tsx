@@ -23,7 +23,7 @@ export const UserNameplate: Component<Props> = (props) => {
   return (
     <div class="mb-2 mx-4 px-3 py-3 border border-gray-200 shadow-sm rounded-md ">
       {/* TODO: 称号の背景画像を表示 */}
-      <p class="mb-3 p-1 bg-yellow-200 rounded-md text-sm text-center">{props.honors[0].name}</p>
+      <p class="mb-3 p-1 bg-yellow-200 dark:bg-yellow-900 dark:text-yellow-100 rounded-md text-sm text-center">{props.honors[0].name}</p>
       <div class="mb-2 flex flex-row items-end justify-between">
         <p class="">Lv. {props.playerInfo.level}</p>
         <h1 class="flex-1 text-xl font-medium text-center">{props.playerInfo.name}</h1>

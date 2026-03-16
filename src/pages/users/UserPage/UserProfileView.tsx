@@ -34,9 +34,9 @@ export const UserProfileView: Component<Props> = (props) => {
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
   const tabTriggerClass =
-    'px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-primary-500'
+    'px-3 py-1 rounded-t data-selected:bg-white dark:data-selected:bg-gray-200 data-selected:border-b-2 data-selected:border-primary-500'
   const ratingTabTriggerClass =
-    'rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors data-selected:bg-white data-selected:text-primary-700 data-selected:shadow-sm'
+    'rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors data-selected:bg-white dark:data-selected:bg-gray-200 data-selected:text-primary-700 data-selected:shadow-sm'
 
   const scrollToRecordList = () => {
     const scrollTarget = document.getElementById('app-main')
@@ -67,7 +67,7 @@ export const UserProfileView: Component<Props> = (props) => {
         // タブを切り替えた際に1曲目の位置までスクロールする
         onChange={scrollToRecordList}
       >
-        <Tabs.List class="sticky top-0 z-10 bg-white flex gap-2 mb-4 px-4 pt-2 border-b border-gray-300">
+        <Tabs.List class="sticky top-0 z-10 bg-white dark:bg-gray-100 flex gap-2 mb-4 px-4 pt-2 border-b border-gray-300">
           <Tabs.Trigger value="rating" class={tabTriggerClass}>
             レーティング
           </Tabs.Trigger>

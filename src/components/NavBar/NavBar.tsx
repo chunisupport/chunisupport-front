@@ -8,8 +8,10 @@ import {
   Ellipsis,
   House,
   LogOut,
+  Moon,
   Music,
   Settings,
+  Sun,
   Target,
   Toolbox,
 } from 'lucide-solid'
@@ -23,11 +25,13 @@ type NavBarProps = {
 import { postLogout } from '../../api/auth'
 import { fetchMe } from '../../api/users'
 import { clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
+import { isDark, toggleTheme } from '../../stores/theme'
 
 type DropdownItem = {
   label: string
   icon: () => JSX.Element
   path: string
+  action?: () => void
 }
 
 type NavItem = {
@@ -75,6 +79,14 @@ const NavBar = (props: NavBarProps) => {
         label: 'ヘルプ',
         icon: () => <BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />,
         path: 'https://example.com',
+      },
+      {
+        label: isDark() ? 'ライトテーマに切替' : 'ダークテーマに切替',
+        icon: () => isDark()
+          ? <Sun class="inline h-4 w-4 mr-1" aria-hidden="true" />
+          : <Moon class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+        path: '#',
+        action: toggleTheme,
       },
       ...(uname
         ? [
@@ -164,7 +176,7 @@ const NavBar = (props: NavBarProps) => {
     <div class="h-dvh overflow-hidden flex md:flex-row flex-col">
       {/* PC用nav-bar 768px以上 */}
       {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
-      <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-gray-200 md:bg-white">
+      <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-gray-200 bg-white dark:bg-gray-100">
         <nav class="flex flex-1 flex-col px-2 py-6">
           {getNavItems().map((item) =>
             item.dropdown ? (
@@ -174,13 +186,21 @@ const NavBar = (props: NavBarProps) => {
                   <span>{item.label}</span>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
-                  <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
+                  <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-gray-200 bg-white dark:bg-gray-100 shadow-sm py-2 z-50">
                     {item.dropdown?.map((d) =>
                       // ログアウト項目は赤色で表示
                       d.label === 'ログアウト' ? (
                         <DropdownMenu.Item
                           onSelect={() => setShowLogoutDialog(true)}
                           class="block px-4 py-2 text-sm text-red-600 hover:bg-red-100 focus:bg-red-100 outline-none cursor-pointer"
+                        >
+                          <span class="pr-2">{d.icon()}</span>
+                          {d.label}
+                        </DropdownMenu.Item>
+                      ) : d.action ? (
+                        <DropdownMenu.Item
+                          onSelect={() => d.action!()}
+                          class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 outline-none cursor-pointer"
                         >
                           <span class="pr-2">{d.icon()}</span>
                           {d.label}
@@ -230,7 +250,7 @@ const NavBar = (props: NavBarProps) => {
         </main>
 
         {/* スマホ用nav-bar 768px未満 */}
-        <nav class="md:hidden z-40 flex items-center justify-between border-t border-gray-200 bg-white p-3 shadow-sm">
+        <nav class="md:hidden z-40 flex items-center justify-between border-t border-gray-200 bg-white dark:bg-gray-100 p-3 shadow-sm">
           {getNavItems().map((item) =>
             item.dropdown ? (
               <DropdownMenu>
@@ -239,13 +259,21 @@ const NavBar = (props: NavBarProps) => {
                   <span>{item.label}</span>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
-                  <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
+                  <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-gray-200 bg-white dark:bg-gray-100 shadow-sm py-2 z-50">
                     {item.dropdown?.map((d) =>
                       // ログアウト項目は赤色で表示
                       d.label === 'ログアウト' ? (
                         <DropdownMenu.Item
                           onSelect={() => setShowLogoutDialog(true)}
                           class="block px-4 py-2 text-sm text-red-600 hover:bg-red-100 focus:bg-red-100 outline-none cursor-pointer font-semibold"
+                        >
+                          <span class="pr-2">{d.icon()}</span>
+                          {d.label}
+                        </DropdownMenu.Item>
+                      ) : d.action ? (
+                        <DropdownMenu.Item
+                          onSelect={() => d.action!()}
+                          class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 outline-none cursor-pointer"
                         >
                           <span class="pr-2">{d.icon()}</span>
                           {d.label}
@@ -292,7 +320,7 @@ const NavBar = (props: NavBarProps) => {
         <Dialog open={showLoginDialog()} onOpenChange={setShowLoginDialog}>
           <Dialog.Portal>
             <Dialog.Overlay class="fixed inset-0 bg-black/30 z-50" />
-            <Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg flex flex-col items-center">
+            <Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white dark:bg-gray-100 p-6 shadow-lg flex flex-col items-center">
               <Dialog.Title class="text-lg font-bold mb-2">ログインが必要です</Dialog.Title>
               <Dialog.Description class="mb-4 text-sm text-gray-700">
                 この機能を利用するにはログインが必要です。
@@ -324,7 +352,7 @@ const NavBar = (props: NavBarProps) => {
         <AlertDialog open={showLogoutDialog()} onOpenChange={setShowLogoutDialog}>
           <AlertDialog.Portal>
             <AlertDialog.Overlay class="fixed inset-0 bg-black/30 z-50" />
-            <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg flex flex-col items-center">
+            <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white dark:bg-gray-100 p-6 shadow-lg flex flex-col items-center">
               <AlertDialog.Title class="text-lg font-bold mb-2">
                 ログアウトしますか？
               </AlertDialog.Title>
