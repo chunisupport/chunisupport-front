@@ -131,7 +131,9 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
     })
   })
 
-  const virtualRows = createMemo(() => rowVirtualizer.getVirtualItems())
+  const virtualRows = createMemo(() =>
+    rowVirtualizer.getVirtualItems().filter((virtualRow) => virtualRow.index < props.records.length)
+  )
 
   return (
     <div class="w-full">
@@ -201,58 +203,60 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                 {(virtualRow) => {
                   const record = createMemo(() => props.records[virtualRow.index])
 
-                  if (!record()) return null
-
                   return (
-                    <div
-                      class="absolute left-0 top-0 grid w-full border-b border-gray-200 text-xs hover:bg-gray-100"
-                      style={{
-                        'grid-template-columns': GRID_COLUMNS,
-                        transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
-                      }}
-                    >
-                      <div
-                        class="flex min-h-[34px] min-w-0 items-center px-2 py-1"
-                        title={record()?.title}
-                      >
-                        <A
-                          href={`/songs/${encodeURIComponent(record()!.id)}?diff=${encodeURIComponent(difficultyToQueryValue(record()!.difficulty))}`}
-                          class="block w-full truncate text-inherit hover:underline"
+                    <Show when={record()}>
+                      {(currentRecord) => (
+                        <div
+                          class="absolute left-0 top-0 grid w-full border-b border-gray-200 text-xs hover:bg-gray-100"
+                          style={{
+                            'grid-template-columns': GRID_COLUMNS,
+                            transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
+                          }}
                         >
-                          {record()?.title}
-                        </A>
-                      </div>
-                      <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
-                        <div class="flex w-full justify-center">
-                          <span
-                            class={`rounded-lg px-2 py-1 text-xs font-bold ${difficultyColor(record()!.difficulty)}`}
+                          <div
+                            class="flex min-h-[34px] min-w-0 items-center px-2 py-1"
+                            title={currentRecord().title}
                           >
-                            {difficultyShort(record()!.difficulty)}
-                          </span>
+                            <A
+                              href={`/songs/${encodeURIComponent(currentRecord().id)}?diff=${encodeURIComponent(difficultyToQueryValue(currentRecord().difficulty))}`}
+                              class="block w-full truncate text-inherit hover:underline"
+                            >
+                              {currentRecord().title}
+                            </A>
+                          </div>
+                          <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
+                            <div class="flex w-full justify-center">
+                              <span
+                                class={`rounded-lg px-2 py-1 text-xs font-bold ${difficultyColor(currentRecord().difficulty)}`}
+                              >
+                                {difficultyShort(currentRecord().difficulty)}
+                              </span>
+                            </div>
+                          </div>
+                          <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
+                            <span class="inline-block w-full text-center leading-none">
+                              {currentRecord().const.toFixed(1)}
+                            </span>
+                          </div>
+                          <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
+                            <div class="flex w-full justify-center">
+                              {!currentRecord().is_played
+                                ? unplayedBadge()
+                                : currentRecord().score.toLocaleString()}
+                            </div>
+                          </div>
+                          <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
+                            <div class="flex w-full justify-center">
+                              {!currentRecord().is_played ? (
+                                <span class="px-2 py-1 text-xs">-</span>
+                              ) : (
+                                lampBadge(currentRecord().combo_lamp)
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
-                        <span class="inline-block w-full text-center leading-none">
-                          {record()!.const.toFixed(1)}
-                        </span>
-                      </div>
-                      <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
-                        <div class="flex w-full justify-center">
-                          {'is_played' in record()! && !record()!.is_played
-                            ? unplayedBadge()
-                            : record()!.score.toLocaleString()}
-                        </div>
-                      </div>
-                      <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
-                        <div class="flex w-full justify-center">
-                          {'is_played' in record()! && !record()!.is_played ? (
-                            <span class="px-2 py-1 text-xs">-</span>
-                          ) : (
-                            lampBadge(record()!.combo_lamp)
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                      )}
+                    </Show>
                   )
                 }}
               </For>
