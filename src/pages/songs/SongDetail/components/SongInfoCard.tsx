@@ -19,24 +19,44 @@ const SongInfoCard = (props: Props) => {
   }
 
   return (
-    <div class="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
-      <div class="aspect-square overflow-hidden rounded-md border border-gray-200 bg-white">
-        {jacketUrl() ? (
-          <img
-            src={jacketUrl() ?? undefined}
-            alt={`${props.song.title}のジャケット`}
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div class="flex h-full w-full items-center justify-center bg-gray-50 p-4 text-sm text-gray-400">
-            ジャケットなし
-          </div>
-        )}
+    <div class="space-y-4 lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-4 lg:space-y-0">
+      <div class="grid items-start gap-4 grid-cols-[minmax(0,50vw)_minmax(0,1fr)] lg:block">
+        <div class="aspect-square w-full overflow-hidden rounded-md border border-gray-200 bg-white">
+          {jacketUrl() ? (
+            <img
+              src={jacketUrl() ?? undefined}
+              alt={`${props.song.title}のジャケット`}
+              class="h-full w-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div class="flex h-full w-full items-center justify-center bg-gray-50 p-4 text-sm text-gray-400">
+              ジャケットなし
+            </div>
+          )}
+        </div>
+
+        <div class="grid gap-2 rounded-md border border-gray-200 bg-white p-4 text-sm md:grid-cols-2 lg:hidden">
+          <p>
+            <span class="text-gray-500">ID:</span> {props.song.id}
+          </p>
+          <p>
+            <span class="text-gray-500">アーティスト:</span> {props.song.artist}
+          </p>
+          <p>
+            <span class="text-gray-500">ジャンル:</span> {props.song.genre}
+          </p>
+          <p>
+            <span class="text-gray-500">BPM:</span> {props.song.bpm ?? '-'}
+          </p>
+          <p>
+            <span class="text-gray-500">リリース:</span> {props.song.release ?? '-'}
+          </p>
+        </div>
       </div>
 
       <div class="space-y-4">
-        <div class="grid gap-2 rounded-md border border-gray-200 bg-white p-4 text-sm md:grid-cols-2">
+        <div class="hidden gap-2 rounded-md border border-gray-200 bg-white p-4 text-sm md:grid-cols-2 lg:grid">
           <p>
             <span class="text-gray-500">ID:</span> {props.song.id}
           </p>
@@ -66,9 +86,7 @@ const SongInfoCard = (props: Props) => {
                     <p class="font-semibold">{difficulty.label}</p>
                     <p>
                       定数:{' '}
-                      {chart
-                        ? `${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}`
-                        : '-'}
+                      {chart ? `${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}` : '-'}
                     </p>
                     <p>ノーツ: {chart?.notes ?? '-'}</p>
                   </div>
