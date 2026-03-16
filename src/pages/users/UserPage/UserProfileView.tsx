@@ -24,12 +24,10 @@ const RecordList: Component<{ records: PlayerRecordDTO[] }> = (props) => (
 )
 
 export const UserProfileView: Component<Props> = (props) => {
-  const { profile } = props
-  const playerInfo: PlayerDTO = profile.player
-  const honors: HonorDTO[] = playerInfo.honors
-
-  const bestRecords: PlayerRecordDTO[] = profile.records.best
-  const newRecords: PlayerRecordDTO[] = profile.records.new
+  const playerInfo = (): PlayerDTO => props.profile.player
+  const honors = (): HonorDTO[] => playerInfo().honors
+  const bestRecords = (): PlayerRecordDTO[] => props.profile.records.best
+  const newRecords = (): PlayerRecordDTO[] => props.profile.records.new
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
@@ -54,10 +52,10 @@ export const UserProfileView: Component<Props> = (props) => {
       <div class="mt-4">
         {/* ネームプレート */}
         <UserNameplate
-          playerInfo={playerInfo}
-          honors={honors}
-          bestRecords={bestRecords}
-          newRecords={newRecords}
+          playerInfo={playerInfo()}
+          honors={honors()}
+          bestRecords={bestRecords()}
+          newRecords={newRecords()}
         />
       </div>
 
@@ -89,10 +87,10 @@ export const UserProfileView: Component<Props> = (props) => {
             </Tabs.List>
 
             <Tabs.Content value="best">
-              <RecordList records={bestRecords} />
+              <RecordList records={bestRecords()} />
             </Tabs.Content>
             <Tabs.Content value="new">
-              <RecordList records={newRecords} />
+              <RecordList records={newRecords()} />
             </Tabs.Content>
           </Tabs.Root>
         </Tabs.Content>
