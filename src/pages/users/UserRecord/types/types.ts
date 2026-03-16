@@ -2,6 +2,8 @@ import type { PlayerRecordDTO } from '../../../../types/api'
 
 export type Difficulty = PlayerRecordDTO['difficulty']
 export type ComboLamp = PlayerRecordDTO['combo_lamp']
+export type RecordSortKey = 'title' | 'difficulty' | 'const' | 'score' | 'lamp'
+export type SortDirection = 'asc' | 'desc'
 
 /** フィルターの型定義 */
 export interface FilterState {

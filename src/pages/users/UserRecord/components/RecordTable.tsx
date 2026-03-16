@@ -10,21 +10,26 @@ import {
   onMount,
   Show,
 } from 'solid-js'
-import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
-
-interface RecordTableProps {
-  records: PlayerRecordWithSongMeta[]
-  statsOpen: boolean
-}
-
 import {
   difficultyColor,
   difficultyShort,
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
+import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import type { RecordSortKey, SortDirection } from '../types/types'
+
+interface RecordTableProps {
+  records: PlayerRecordWithSongMeta[]
+  statsOpen: boolean
+  sortKey: RecordSortKey | null
+  sortDirection: SortDirection | null
+  onSortChange: (key: RecordSortKey) => void
+}
 
 const GRID_COLUMNS = 'minmax(0,1fr) 3rem 3.5rem 3.7rem 3rem'
 const ROW_HEIGHT = 34
+const HEADER_BUTTON_CLASS =
+  'flex min-h-[34px] w-full items-center justify-center gap-1 px-2 py-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 
 const lampBadge = (lamp: string | null) => {
   if (lamp === 'FULL COMBO')
@@ -41,6 +46,14 @@ const lampBadge = (lamp: string | null) => {
 const unplayedBadge = () => (
   <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">NoPlay</span>
 )
+
+const sortIndicator = (active: boolean, direction: SortDirection | null) => {
+  if (!active || !direction) {
+    return <span class="text-[10px] text-gray-300">^</span>
+  }
+
+  return <span class="text-[10px] text-sky-600">{direction === 'asc' ? '↑' : '↓'}</span>
+}
 
 export const RecordTable: Component<RecordTableProps> = (props) => {
   let tableContainerRef: HTMLDivElement | undefined
@@ -102,7 +115,10 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
 
   createEffect(() => {
     props.records.length
-    queueMicrotask(updateScrollMargin)
+    queueMicrotask(() => {
+      updateScrollMargin()
+      rowVirtualizer.scrollToIndex(0)
+    })
   })
 
   createEffect(() => {
@@ -133,21 +149,46 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                 class="grid text-xs font-semibold"
                 style={{ 'grid-template-columns': GRID_COLUMNS }}
               >
-                <div class="flex min-h-[34px] items-center px-2 py-1 text-center whitespace-nowrap">
-                  曲名
-                </div>
-                <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
-                  難易度
-                </div>
-                <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
-                  定数
-                </div>
-                <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
-                  スコア
-                </div>
-                <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
-                  ランプ
-                </div>
+                <button
+                  type="button"
+                  class={`${HEADER_BUTTON_CLASS} justify-start`}
+                  onClick={() => props.onSortChange('title')}
+                >
+                  <span>曲名</span>
+                  {sortIndicator(props.sortKey === 'title', props.sortDirection)}
+                </button>
+                <button
+                  type="button"
+                  class={HEADER_BUTTON_CLASS}
+                  onClick={() => props.onSortChange('difficulty')}
+                >
+                  <span>難易度</span>
+                  {sortIndicator(props.sortKey === 'difficulty', props.sortDirection)}
+                </button>
+                <button
+                  type="button"
+                  class={HEADER_BUTTON_CLASS}
+                  onClick={() => props.onSortChange('const')}
+                >
+                  <span>定数</span>
+                  {sortIndicator(props.sortKey === 'const', props.sortDirection)}
+                </button>
+                <button
+                  type="button"
+                  class={HEADER_BUTTON_CLASS}
+                  onClick={() => props.onSortChange('score')}
+                >
+                  <span>スコア</span>
+                  {sortIndicator(props.sortKey === 'score', props.sortDirection)}
+                </button>
+                <button
+                  type="button"
+                  class={HEADER_BUTTON_CLASS}
+                  onClick={() => props.onSortChange('lamp')}
+                >
+                  <span>ランプ</span>
+                  {sortIndicator(props.sortKey === 'lamp', props.sortDirection)}
+                </button>
               </div>
             </div>
 
@@ -158,8 +199,9 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             >
               <For each={virtualRows()}>
                 {(virtualRow) => {
-                  const record = props.records[virtualRow.index]
-                  if (!record) return null
+                  const record = createMemo(() => props.records[virtualRow.index])
+
+                  if (!record()) return null
 
                   return (
                     <div
@@ -171,42 +213,42 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                     >
                       <div
                         class="flex min-h-[34px] min-w-0 items-center px-2 py-1"
-                        title={record.title}
+                        title={record()?.title}
                       >
                         <A
-                          href={`/songs/${encodeURIComponent(record.id)}?diff=${encodeURIComponent(difficultyToQueryValue(record.difficulty))}`}
+                          href={`/songs/${encodeURIComponent(record()!.id)}?diff=${encodeURIComponent(difficultyToQueryValue(record()!.difficulty))}`}
                           class="block w-full truncate text-inherit hover:underline"
                         >
-                          {record.title}
+                          {record()?.title}
                         </A>
                       </div>
                       <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
                         <div class="flex w-full justify-center">
                           <span
-                            class={`rounded-lg px-2 py-1 text-xs font-bold ${difficultyColor(record.difficulty)}`}
+                            class={`rounded-lg px-2 py-1 text-xs font-bold ${difficultyColor(record()!.difficulty)}`}
                           >
-                            {difficultyShort(record.difficulty)}
+                            {difficultyShort(record()!.difficulty)}
                           </span>
                         </div>
                       </div>
                       <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
                         <span class="inline-block w-full text-center leading-none">
-                          {record.const.toFixed(1)}
+                          {record()!.const.toFixed(1)}
                         </span>
                       </div>
                       <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
                         <div class="flex w-full justify-center">
-                          {'is_played' in record && !record.is_played
+                          {'is_played' in record()! && !record()!.is_played
                             ? unplayedBadge()
-                            : record.score.toLocaleString()}
+                            : record()!.score.toLocaleString()}
                         </div>
                       </div>
                       <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
                         <div class="flex w-full justify-center">
-                          {'is_played' in record && !record.is_played ? (
+                          {'is_played' in record()! && !record()!.is_played ? (
                             <span class="px-2 py-1 text-xs">-</span>
                           ) : (
-                            lampBadge(record.combo_lamp)
+                            lampBadge(record()!.combo_lamp)
                           )}
                         </div>
                       </div>
