@@ -4,6 +4,7 @@ import { createSignal } from 'solid-js'
 
 import { postLogin } from '../../../api/auth'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
 
 const Login = () => {
@@ -27,7 +28,7 @@ const Login = () => {
     setErrorMessage('')
     try {
       await postLogin({ username: username(), password: password() })
-      navigate(`/users/${encodeURIComponent(username())}`)
+      await redirectAfterAuthentication(navigate)
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'ログインに失敗しました。')
     } finally {

@@ -5,6 +5,7 @@ import { Check, Dot, Loader, X } from 'lucide-solid'
 import { createEffect, createSignal } from 'solid-js'
 
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
 
 const Register = () => {
@@ -87,7 +88,7 @@ const Register = () => {
         postRegister({ username: username(), password: password() })
       )
       // 登録成功後は自動でログイン状態になるのでユーザーページへ遷移
-      navigate(`/users/${encodeURIComponent(username())}`)
+      await redirectAfterAuthentication(navigate)
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : '予期せぬエラーで登録に失敗しました。'
