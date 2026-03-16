@@ -1,5 +1,6 @@
 import { A } from '@solidjs/router'
 import { createVirtualizer } from '@tanstack/solid-virtual'
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import {
   type Component,
   createEffect,
@@ -49,10 +50,14 @@ const unplayedBadge = () => (
 
 const sortIndicator = (active: boolean, direction: SortDirection | null) => {
   if (!active || !direction) {
-    return <span class="text-[10px] text-gray-300">^</span>
+    return <ArrowUpDown class="h-3 w-3 text-gray-300" aria-hidden="true" />
   }
 
-  return <span class="text-[10px] text-sky-600">{direction === 'asc' ? '↑' : '↓'}</span>
+  return direction === 'asc' ? (
+    <ArrowUp class="h-3 w-3 text-sky-600" aria-hidden="true" />
+  ) : (
+    <ArrowDown class="h-3 w-3 text-sky-600" aria-hidden="true" />
+  )
 }
 
 export const RecordTable: Component<RecordTableProps> = (props) => {
