@@ -178,18 +178,18 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                 <button
                   type="button"
                   class={HEADER_BUTTON_CLASS}
-                  onClick={() => props.onSortChange('rating')}
-                >
-                  <span>レート</span>
-                  {sortIndicator(props.sortKey === 'rating', props.sortDirection)}
-                </button>
-                <button
-                  type="button"
-                  class={HEADER_BUTTON_CLASS}
                   onClick={() => props.onSortChange('score')}
                 >
                   <span>スコア</span>
                   {sortIndicator(props.sortKey === 'score', props.sortDirection)}
+                </button>
+                <button
+                  type="button"
+                  class={HEADER_BUTTON_CLASS}
+                  onClick={() => props.onSortChange('rating')}
+                >
+                  <span>レート</span>
+                  {sortIndicator(props.sortKey === 'rating', props.sortDirection)}
                 </button>
                 <button
                   type="button"
