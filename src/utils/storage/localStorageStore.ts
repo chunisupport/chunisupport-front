@@ -50,16 +50,11 @@ export const localStorageStore = {
       return
     }
 
-    const keysToDelete: string[] = []
-    for (let index = 0; index < window.localStorage.length; index += 1) {
+    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
       const key = window.localStorage.key(index)
       if (key?.startsWith(prefix)) {
-        keysToDelete.push(key)
+        window.localStorage.removeItem(key)
       }
     }
-
-    keysToDelete.forEach((key) => {
-      window.localStorage.removeItem(key)
-    })
   },
 }
