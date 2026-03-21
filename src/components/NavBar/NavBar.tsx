@@ -15,6 +15,7 @@ import {
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createSignal, onMount } from 'solid-js'
+import type { ErrorCode } from '../../types/api'
 
 type NavBarProps = {
   children: JSX.Element
@@ -39,6 +40,28 @@ type NavItem = {
   matchPrefix?: boolean
   dropdown?: DropdownItem[]
   requiresAuth?: boolean
+}
+
+type ApiLikeError = Error & {
+  status?: number
+  code?: string
+}
+
+const AUTH_ERROR_CODES: ErrorCode[] = [
+  'unauthorized',
+  'invalid_token',
+  'token_expired',
+  'missing_token',
+  'invalid_session',
+]
+
+const isUnauthorizedError = (error: unknown): error is ApiLikeError => {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  const apiError = error as ApiLikeError
+  return apiError.status === 401 || AUTH_ERROR_CODES.includes(apiError.code as ErrorCode)
 }
 
 const NavBar = (props: NavBarProps) => {
@@ -134,11 +157,14 @@ const NavBar = (props: NavBarProps) => {
       setAuthenticatedUser(user)
       setUsername(user.username)
       localStorage.setItem(CACHE_KEY, user.username)
-    } catch {
-      clearAuthenticatedUser()
-      clearCachedUserProfiles()
-      setUsername(null)
-      localStorage.removeItem(CACHE_KEY)
+    } catch (error) {
+      if (isUnauthorizedError(error)) {
+        clearAuthenticatedUser()
+        setUsername(null)
+        localStorage.removeItem(CACHE_KEY)
+      } else {
+        console.error('Failed to fetch current user for NavBar:', error)
+      }
     } finally {
       setIsLoading(false)
     }
