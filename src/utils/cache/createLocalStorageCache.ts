@@ -81,7 +81,11 @@ export const createLocalStorageCache = <TArg, TData>(
           if (await policy.revalidate(entry, arg)) {
             return entry.data
           }
-        } catch {
+        } catch (error) {
+          console.error(
+            `Cache revalidation failed for key: ${getCacheKey(arg)}. Returning stale data.`,
+            error
+          )
           return entry.data
         }
       }
