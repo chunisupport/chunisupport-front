@@ -23,6 +23,7 @@ type NavBarProps = {
 import { postLogout } from '../../api/auth'
 import { fetchMe } from '../../api/users'
 import { clearAuthenticatedUser, getAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
+import { clearCachedUserProfiles } from '../../utils/userProfileCache'
 
 type DropdownItem = {
   label: string
@@ -135,6 +136,7 @@ const NavBar = (props: NavBarProps) => {
       localStorage.setItem(CACHE_KEY, user.username)
     } catch {
       clearAuthenticatedUser()
+      clearCachedUserProfiles()
       setUsername(null)
       localStorage.removeItem(CACHE_KEY)
     } finally {
@@ -356,8 +358,10 @@ const NavBar = (props: NavBarProps) => {
                   type="button"
                   class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
                   onClick={async () => {
+                    const currentUsername = username()
                     await postLogout()
                     clearAuthenticatedUser()
+                    clearCachedUserProfiles(currentUsername ?? undefined)
                     setUsername(null)
                     localStorage.removeItem(CACHE_KEY)
                     setShowLogoutDialog(false)

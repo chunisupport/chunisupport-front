@@ -1,8 +1,13 @@
 import { API_BASE_URL } from '../config'
-import type { AdminUserListResponse, UserDTO, UserProfileWithRecordsDTO } from '../types/api'
+import type {
+  AdminUserListResponse,
+  UserDTO,
+  UserProfileWithRecordsDTO,
+  UserUpdatedAtDTO,
+} from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 
-type FetchUserProfileOptions = {
+export type FetchUserProfileOptions = {
   view?: 'rating'
   includeNoPlay?: boolean
 }
@@ -23,6 +28,14 @@ export const fetchUserProfile = async (
     url.searchParams.set('include_noplay', 'true')
   }
   const response = await fetchWithAuth(url)
+
+  return response.json()
+}
+
+export const fetchUserUpdatedAt = async (username: string): Promise<UserUpdatedAtDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/updated-at`
+  )
 
   return response.json()
 }

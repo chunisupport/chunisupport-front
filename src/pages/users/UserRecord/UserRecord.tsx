@@ -10,9 +10,9 @@ import {
   Suspense,
 } from 'solid-js'
 import { fetchAllSongs, fetchMasterData } from '../../../api/songs'
-import { fetchUserProfile } from '../../../api/users'
 import { Loading, ScrollToTop } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { fetchUserProfileWithCache } from '../../../utils/userProfileCache'
 import { attachSongMetaToRecords, type PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
 import FilterDialog from './components/FilterDialog'
 import FilterStats from './components/FilterStats'
@@ -50,7 +50,7 @@ const UserRecord: Component = () => {
   const params = useParams<{ username: string }>()
   const [userProfile] = createResource(
     () => params.username,
-    (username) => fetchUserProfile(username, { includeNoPlay: true })
+    (username) => fetchUserProfileWithCache(username, { includeNoPlay: true })
   )
   const [allSongs] = createResource(fetchAllSongs)
   const [masterData] = createResource(fetchMasterData)

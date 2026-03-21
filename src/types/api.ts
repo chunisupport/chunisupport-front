@@ -284,6 +284,15 @@ export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'created_at'>
 
 // --------------------------------
 
+export type AccountType = 'PLAYER' | 'EDITOR' | 'ADMIN'
+
+export interface UserDTO {
+  username: string
+  account_type: AccountType
+  is_private: boolean
+  last_score_update: string | null
+}
+
 export interface AdminUserListResponse {
   username: string
   player_name: string
@@ -297,6 +306,10 @@ export interface UserProfileWithRecordsDTO {
   username: string
   player: PlayerDTO
   records: UserRecordResponseDTO
+  updated_at: string
+}
+
+export interface UserUpdatedAtDTO {
   updated_at: string
 }
 
