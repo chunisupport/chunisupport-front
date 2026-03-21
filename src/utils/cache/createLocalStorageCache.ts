@@ -82,7 +82,7 @@ export const createLocalStorageCache = <TArg, TData>(
             return entry.data
           }
         } catch {
-          // ignore revalidation failures and fall back to the fetcher
+          return entry.data
         }
       }
 
