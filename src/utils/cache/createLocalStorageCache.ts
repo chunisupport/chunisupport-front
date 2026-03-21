@@ -1,7 +1,7 @@
 import { localStorageStore } from '../storage/localStorageStore'
 import type { CacheEnvelope, CacheKeyPart, CachePolicy, LocalStorageCache } from './types'
 
-const encodeCacheKeyPart = (part: CacheKeyPart): string => encodeURIComponent(String(JSON.stringify(part)))
+const encodeCacheKeyPart = (part: CacheKeyPart): string => encodeURIComponent(String(part))
 
 const buildNamespacePrefix = (namespace: string, version: number): string =>
   `${namespace}:v${version}`
