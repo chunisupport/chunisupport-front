@@ -1,5 +1,6 @@
 import { getErrorMessage, type ErrorCode, type ErrorResponse } from '../types/api'
 import { clearAuthenticatedUser } from '../stores/authSession'
+import { clearAllUserProfileCacheStorage } from '../utils/userProfileCacheStorage'
 
 type FetchWithAuthOptions = RequestInit & {
   redirectOnUnauthorized?: boolean
@@ -47,6 +48,7 @@ export const fetchWithAuth = async (
 
     if (redirectOnUnauthorized && shouldRedirectToLogin(response.status, error)) {
       clearAuthenticatedUser()
+      clearAllUserProfileCacheStorage()
       redirectToLogin()
     }
 
