@@ -1,3 +1,3 @@
-export const createUserProfileFetchOptions = () => ({
-  includeNoPlay: true as const,
-})
+export const userProfileFetchOptions = {
+  includeNoPlay: true,
+} as const
