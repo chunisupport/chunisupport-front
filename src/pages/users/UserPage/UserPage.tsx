@@ -6,11 +6,15 @@ import { fetchUserProfile } from '../../../api/users'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { UserProfileView } from './UserProfileView'
+import { createUserProfileFetchOptions } from './userProfileFetchOptions'
 
 const UserPage: Component = () => {
   const params = useParams<{ username: string }>()
 
-  const [userProfile] = createResource(() => params.username, (username) => fetchUserProfile(username))
+  const [userProfile] = createResource(
+    () => params.username,
+    (username) => fetchUserProfile(username, createUserProfileFetchOptions())
+  )
 
   useDocumentTitle(() => `${params.username}さんのページ`)
 
