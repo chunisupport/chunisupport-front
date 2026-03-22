@@ -45,7 +45,6 @@ export const clearCachedUserProfiles = (username?: string): void => {
     return
   }
 
-  userProfileCache.invalidateAll()
   clearAllUserProfileCacheStorage()
 }
 
