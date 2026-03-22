@@ -23,6 +23,7 @@ const isCacheEnvelope = <T>(value: unknown, version: number): value is CacheEnve
 export const createLocalStorageCache = <TArg, TData>(
   policy: CachePolicy<TArg, TData>
 ): LocalStorageCache<TArg, TData> => {
+  // namespace と version を含めた接頭辞を作り、異なる用途や世代のキャッシュが衝突しないようにする。
   const namespacePrefix = buildNamespacePrefix(policy.namespace, policy.version)
 
   const buildCacheKeyFromParts = (parts: CacheKeyPart[]): string => {
@@ -36,6 +37,7 @@ export const createLocalStorageCache = <TArg, TData>(
     const cacheKey = getCacheKey(arg)
     const value = localStorageStore.getItem<CacheEnvelope<TData>>(cacheKey)
 
+    // 保存形式が想定と違う、または version が不一致な古いデータは破棄する。
     if (!isCacheEnvelope<TData>(value, policy.version)) {
       if (value !== null) {
         localStorageStore.removeItem(cacheKey)
@@ -47,6 +49,7 @@ export const createLocalStorageCache = <TArg, TData>(
   }
 
   const isExpired = (entry: CacheEnvelope<TData>): boolean => {
+    // ttlMs が未指定なら期限切れなしとして扱う。
     if (typeof policy.ttlMs === 'undefined') {
       return false
     }
@@ -56,6 +59,7 @@ export const createLocalStorageCache = <TArg, TData>(
 
   const writeEntry = (arg: TArg, data: TData): void => {
     const cacheKey = getCacheKey(arg)
+    // データ本体に加えて、保存時刻と version も一緒に持たせる。
     const entry: CacheEnvelope<TData> = {
       data,
       cachedAt: Date.now(),
@@ -72,6 +76,7 @@ export const createLocalStorageCache = <TArg, TData>(
     async get(arg: TArg): Promise<TData> {
       const entry = readEntry(arg)
 
+      // キャッシュが有効ならそのまま返し、必要な場合だけ revalidate で再利用可否を確認する。
       if (entry && !isExpired(entry) && (policy.shouldUseCache?.(entry, arg) ?? true)) {
         if (!policy.revalidate) {
           return entry.data
@@ -96,6 +101,7 @@ export const createLocalStorageCache = <TArg, TData>(
     },
 
     peek(arg: TArg): TData | null {
+      // peek は再取得せず、今あるキャッシュを読める場合だけ返す。
       const entry = readEntry(arg)
       if (!entry || isExpired(entry)) {
         return null
@@ -122,6 +128,7 @@ export const createLocalStorageCache = <TArg, TData>(
     },
 
     invalidateByPartialKey(parts: CacheKeyPart[]): void {
+      // 途中まで一致するキーをまとめて削除し、ユーザー単位などの無効化をしやすくする。
       if (parts.length === 0) {
         this.invalidateAll()
         return
