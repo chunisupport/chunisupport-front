@@ -59,5 +59,5 @@ export const fetchUserProfileWithCache = async (
     return fetchUserProfile(username, options)
   }
 
-  return userProfileCache.get({ authenticatedUsername, username, options })
+  return userProfileCache.get({ username, options })
 }
