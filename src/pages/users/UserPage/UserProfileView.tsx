@@ -12,6 +12,7 @@ import type {
 } from '../../../types/api'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
+import { worldsendTableWrapperClass } from './worldsendTableStyles'
 
 const UserRecord = lazy(() => import('../UserRecord'))
 
@@ -124,14 +125,14 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
                 ? 'ALL JUSTICE'
                 : left.combo_lamp === 'FULL COMBO'
                   ? 'FULL COMBO'
-                  : left.clear_lamp ?? 'NONE'
+                  : (left.clear_lamp ?? 'NONE')
             const rightLampKey = !right.is_played
               ? 'UNPLAYED'
               : right.combo_lamp === 'ALL JUSTICE'
                 ? 'ALL JUSTICE'
                 : right.combo_lamp === 'FULL COMBO'
                   ? 'FULL COMBO'
-                  : right.clear_lamp ?? 'NONE'
+                  : (right.clear_lamp ?? 'NONE')
 
             comparison =
               (worldsendLampOrder[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
@@ -174,10 +175,12 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
   }
 
   return (
-    <div class="mx-4 w-full">
+    <div class={worldsendTableWrapperClass}>
       <Show
         when={props.records.length > 0}
-        fallback={<p class="py-6 text-center text-gray-400">WORLD'S END のレコードはありません。</p>}
+        fallback={
+          <p class="py-6 text-center text-gray-400">WORLD'S END のレコードはありません。</p>
+        }
       >
         <div class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200">
           <div class="min-w-[28rem]">
@@ -236,8 +239,13 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
                     class="grid border-b border-gray-200 text-xs hover:bg-gray-100"
                     style={{ 'grid-template-columns': worldsendGridColumns }}
                   >
-                    <div class="flex min-h-[34px] min-w-0 items-center px-2 py-1" title={record.title}>
-                      <span class="block w-full truncate font-medium text-gray-900">{record.title}</span>
+                    <div
+                      class="flex min-h-[34px] min-w-0 items-center px-2 py-1"
+                      title={record.title}
+                    >
+                      <span class="block w-full truncate font-medium text-gray-900">
+                        {record.title}
+                      </span>
                     </div>
                     <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
                       <span class="inline-block w-full text-center leading-none text-gray-700">
@@ -252,7 +260,9 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
                     <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
                       <div class="flex w-full justify-center">
                         {!record.is_played ? (
-                          <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">NoPlay</span>
+                          <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">
+                            NoPlay
+                          </span>
                         ) : (
                           record.score.toLocaleString('ja-JP')
                         )}
