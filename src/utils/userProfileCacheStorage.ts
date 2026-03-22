@@ -13,7 +13,7 @@ const removeNamespace = (version: number): void => {
 }
 
 export const clearAllUserProfileCacheStorage = (): void => {
-  removeNamespace(1)
+  clearLegacyUserProfileCacheStorage()
   removeNamespace(USER_PROFILE_CACHE_VERSION)
 }
 
