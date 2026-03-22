@@ -10,27 +10,25 @@ import {
 } from './userProfileCacheStorage'
 
 type UserProfileCacheArg = {
-  authenticatedUsername: string
   username: string
   options?: FetchUserProfileOptions
 }
 
 const getUserProfileCacheKeyParts = (
-  authenticatedUsername: string,
   username: string,
   options: FetchUserProfileOptions = {}
 ): string[] => {
   const view = options.view ?? 'default'
   const includeNoPlay = options.includeNoPlay ? 'with-noplay' : 'without-noplay'
 
-  return [authenticatedUsername, 'self', username, view, includeNoPlay]
+  return [username, 'self', view, includeNoPlay]
 }
 
 const userProfileCache = createLocalStorageCache<UserProfileCacheArg, UserProfileWithRecordsDTO>({
   namespace: USER_PROFILE_CACHE_NAMESPACE,
   version: USER_PROFILE_CACHE_VERSION,
-  getKey: ({ authenticatedUsername, username, options = {} }) =>
-    getUserProfileCacheKeyParts(authenticatedUsername, username, options),
+  getKey: ({ username, options = {} }) =>
+    getUserProfileCacheKeyParts(username, options),
   fetcher: ({ username, options = {} }) => fetchUserProfile(username, options),
   shouldUseCache: (entry) => Boolean(entry.data?.updated_at),
   revalidate: async (entry, { username }) => {
