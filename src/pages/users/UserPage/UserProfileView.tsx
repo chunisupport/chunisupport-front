@@ -12,6 +12,7 @@ import type {
 } from '../../../types/api'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
+import { worldsendLampClass, worldsendLampLabel } from './worldsendLampDisplay'
 import { worldsendTableWrapperClass } from './worldsendTableStyles'
 
 const UserRecord = lazy(() => import('../UserRecord'))
@@ -45,18 +46,6 @@ const RecordList: Component<{ records: PlayerRecordDTO[] }> = (props) => (
     <For each={props.records}>{(record, i) => <UserRecordCard record={record} index={i()} />}</For>
   </div>
 )
-
-const worldsendLampLabel = (record: WorldsendRecordDTO): string => {
-  if (record.combo_lamp === 'ALL JUSTICE') return 'AJ'
-  if (record.combo_lamp === 'FULL COMBO') return 'FC'
-  return '-'
-}
-
-const worldsendLampClass = (record: WorldsendRecordDTO): string => {
-  if (record.combo_lamp === 'ALL JUSTICE') return 'bg-yellow-200 text-yellow-900'
-  if (record.combo_lamp === 'FULL COMBO') return 'bg-orange-200 text-orange-900'
-  return 'text-gray-500'
-}
 
 const worldsendSortIndicator = (active: boolean, direction: WorldsendSortDirection | null) => {
   if (!active || !direction) {
@@ -273,7 +262,7 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
                         <span
                           class={`inline-flex rounded-lg px-2 py-1 text-xs font-bold ${worldsendLampClass(record)}`}
                         >
-                          {record.is_played ? worldsendLampLabel(record) : 'NoPlay'}
+                          {worldsendLampLabel(record)}
                         </span>
                       </div>
                     </div>
