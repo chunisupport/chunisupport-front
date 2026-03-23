@@ -21,7 +21,7 @@ export const UserNameplate: Component<Props> = (props) => {
   const playerRating = totalRecordsLength > 0 ? (bestSum + newSum) / totalRecordsLength : 0
 
   return (
-    <div class="mb-2 mx-auto w-[min(100%,420px)] px-3 py-3 border border-gray-200 shadow-sm rounded-md ">
+    <div class="mb-2 mx-auto w-[min(420px,calc(100%-2rem))] px-3 py-3 border border-gray-200 shadow-sm rounded-md ">
       {/* TODO: 称号の背景画像を表示 */}
       <p class="mb-3 p-1 bg-yellow-200 rounded-md text-sm text-center">{props.honors[0].name}</p>
       <div class="mb-2 flex flex-row items-end justify-between">
