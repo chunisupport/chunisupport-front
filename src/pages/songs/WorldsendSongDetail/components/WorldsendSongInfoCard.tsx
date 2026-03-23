@@ -1,4 +1,4 @@
-import { For } from 'solid-js'
+import { For, Show } from 'solid-js'
 import { CHUNITHM_JACKET_BASE_URL } from '../../../../config'
 import type { WorldsendSongDTO } from '../../../../types/api'
 import { getWorldsendChartRows, getWorldsendSongInfoItems } from '../../worldsendDetailModel'
@@ -19,18 +19,23 @@ const WorldsendSongInfoCard = (props: Props) => {
     <div class="space-y-4 lg:grid lg:grid-cols-[240px_minmax(0,220px)_minmax(0,1fr)] lg:items-start lg:gap-4 lg:space-y-0">
       <div class="grid grid-cols-[minmax(0,42vw)_minmax(0,1fr)] items-start gap-4 lg:contents">
         <div class="aspect-square w-full overflow-hidden rounded-md border border-gray-200 bg-white">
-          {jacketUrl() ? (
-            <img
-              src={jacketUrl() ?? undefined}
-              alt={`${props.song.title}のジャケット`}
-              class="h-full w-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div class="flex h-full w-full items-center justify-center bg-gray-50 p-4 text-sm text-gray-400">
-              ジャケットなし
-            </div>
-          )}
+          <Show
+            when={jacketUrl()}
+            fallback={
+              <div class="flex h-full w-full items-center justify-center bg-gray-50 p-4 text-sm text-gray-400">
+                ジャケットなし
+              </div>
+            }
+          >
+            {(url) => (
+              <img
+                src={url()}
+                alt={`${props.song.title}のジャケット`}
+                class="h-full w-full object-cover"
+                loading="lazy"
+              />
+            )}
+          </Show>
         </div>
 
         <div class="grid gap-4 rounded-md border border-gray-200 bg-white p-4">
