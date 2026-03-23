@@ -1,6 +1,6 @@
 import { useParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createEffect, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
+import { createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
 
 import { fetchUserProfile } from '../../../api/users'
 import { Loading } from '../../../components'
@@ -10,9 +10,6 @@ import { getUserProfileFetchOptions } from './userProfileFetchOptions'
 
 const UserPage: Component = () => {
   const params = useParams<{ username: string }>()
-  const [recordProfileCache, setRecordProfileCache] = createSignal<Awaited<
-    ReturnType<typeof fetchUserProfile>
-  > | null>(null)
   const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
 
   const [userProfile] = createResource(
@@ -21,30 +18,8 @@ const UserPage: Component = () => {
   )
   const [recordProfile] = createResource(
     () => (shouldFetchRecordProfile() ? params.username : undefined),
-    (username) => {
-      const cachedProfile = recordProfileCache()
-      if (cachedProfile?.username === username) {
-        return cachedProfile
-      }
-
-      return fetchUserProfile(username, getUserProfileFetchOptions('record'))
-    }
+    (username) => fetchUserProfile(username, getUserProfileFetchOptions('record'))
   )
-
-  createEffect(() => {
-    const profile = recordProfile()
-    if (profile) {
-      setRecordProfileCache(profile)
-    }
-  })
-
-  createEffect((previousUsername?: string) => {
-    const username = params.username
-    if (previousUsername && previousUsername !== username) {
-      setRecordProfileCache(null)
-    }
-    return username
-  })
 
   useDocumentTitle(() => `${params.username}さんのページ`)
 
