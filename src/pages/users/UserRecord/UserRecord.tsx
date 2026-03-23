@@ -1,4 +1,3 @@
-import { useParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import {
   createEffect,
@@ -10,9 +9,9 @@ import {
   Suspense,
 } from 'solid-js'
 import { fetchAllSongs, fetchMasterData } from '../../../api/songs'
-import { fetchUserProfile } from '../../../api/users'
 import { Loading, ScrollToTop } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import type { UserProfileWithRecordsDTO } from '../../../types/api'
 import { attachSongMetaToRecords, type PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
 import FilterDialog from './components/FilterDialog'
 import FilterStats from './components/FilterStats'
@@ -46,12 +45,11 @@ const LAMP_ORDER: Record<string, number> = {
   UNPLAYED: 3,
 }
 
-const UserRecord: Component = () => {
-  const params = useParams<{ username: string }>()
-  const [userProfile] = createResource(
-    () => params.username,
-    (username) => fetchUserProfile(username, { includeNoPlay: true })
-  )
+type Props = {
+  profile: UserProfileWithRecordsDTO
+}
+
+const UserRecord: Component<Props> = (props) => {
   const [allSongs] = createResource(fetchAllSongs)
   const [masterData] = createResource(fetchMasterData)
 
@@ -86,7 +84,7 @@ const UserRecord: Component = () => {
 
   /** 未プレイを含む全曲のレコード */
   const recordsWithSongMeta = createMemo(() => {
-    const profile = userProfile()
+    const profile = props.profile
     const songs = allSongs()
     if (!profile || !songs) return []
     return attachSongMetaToRecords(songs.songs, profile.records.all)
@@ -296,12 +294,12 @@ const UserRecord: Component = () => {
   /** レコード統計の集計結果 */
   const stats = createMemo(() => getRecordStats(filteredRecords()))
 
-  useDocumentTitle(() => `${params.username}さんのレコード`)
+  useDocumentTitle(() => `${props.profile.username}さんのレコード`)
 
   return (
     <Suspense fallback={<Loading />}>
       <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
-        <Show when={userProfile() && allSongs() && masterData()} fallback={<Loading />}>
+        <Show when={allSongs() && masterData()} fallback={<Loading />}>
           <div class="my-4 mx-2 text-sm">
             {/* 追跡表示 */}
             {trackingCondition() && trackingTargetFilter() && (

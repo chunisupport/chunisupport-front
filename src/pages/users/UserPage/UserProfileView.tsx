@@ -1,7 +1,8 @@
 import * as Tabs from '@kobalte/core/tabs'
+import { useSearchParams } from '@solidjs/router'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { For, Show, createMemo, createSignal, lazy, Suspense } from 'solid-js'
+import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { Loading, ScrollToTop } from '../../../components'
 import type {
   HonorDTO,
@@ -12,6 +13,10 @@ import type {
 } from '../../../types/api'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
+import {
+  getUserProfilePageTabValue,
+  getUserProfileSearchParamsForTab,
+} from './userProfileViewState'
 import { worldsendLampClass, worldsendLampLabel } from './worldsendLampDisplay'
 import { worldsendTableWrapperClass } from './worldsendTableStyles'
 
@@ -19,6 +24,7 @@ const UserRecord = lazy(() => import('../UserRecord'))
 
 type Props = {
   profile: UserProfileWithRecordsDTO
+  recordProfile?: UserProfileWithRecordsDTO | null
 }
 
 type WorldsendSortKey = 'title' | 'attribute' | 'level' | 'score' | 'lamp'
@@ -278,11 +284,15 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
 }
 
 export const UserProfileView: Component<Props> = (props) => {
+  const [searchParams, setSearchParams] = useSearchParams()
   const playerInfo = (): PlayerDTO => props.profile.player
   const honors = (): HonorDTO[] => playerInfo().honors
   const bestRecords = (): PlayerRecordDTO[] => props.profile.records.best
   const newRecords = (): PlayerRecordDTO[] => props.profile.records.new
-  const worldsendRecords = (): WorldsendRecordDTO[] => props.profile.records.worldsend ?? []
+  const recordProfile = (): UserProfileWithRecordsDTO | undefined =>
+    props.recordProfile ?? undefined
+  const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
+  const selectedPageTab = createMemo(() => getUserProfilePageTabValue(searchParams.view))
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
@@ -301,6 +311,12 @@ export const UserProfileView: Component<Props> = (props) => {
     }
   }
 
+  const handlePageTabChange = (value: string) => {
+    if (value !== 'rating' && value !== 'records') return
+    setSearchParams(getUserProfileSearchParamsForTab(value))
+    scrollToRecordList()
+  }
+
   return (
     <div class="mb-4 mx-auto w-full max-w-3xl">
       {/* ↑と↓について: stickyScrollの関係でmy-4を使わず、mb-4とmt-4を別の箇所で指定しています */}
@@ -314,12 +330,7 @@ export const UserProfileView: Component<Props> = (props) => {
         />
       </div>
 
-      <Tabs.Root
-        defaultValue="rating"
-        class="mb-4"
-        // タブを切り替えた際に1曲目の位置までスクロールする
-        onChange={scrollToRecordList}
-      >
+      <Tabs.Root value={selectedPageTab()} class="mb-4" onChange={handlePageTabChange}>
         <Tabs.List class="sticky top-0 z-10 bg-white flex gap-2 mb-4 px-4 pt-2 border-b border-gray-300">
           <Tabs.Trigger value="rating" class={tabTriggerClass}>
             レーティング
@@ -330,7 +341,7 @@ export const UserProfileView: Component<Props> = (props) => {
           <div class="flex-1"></div>
         </Tabs.List>
 
-        <Tabs.Content value="rating">
+        <Tabs.Content value="rating" forceMount>
           <Tabs.Root defaultValue="best" onChange={scrollToRecordList}>
             <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
               <Tabs.Trigger value="best" class={ratingTabTriggerClass}>
@@ -350,7 +361,7 @@ export const UserProfileView: Component<Props> = (props) => {
           </Tabs.Root>
         </Tabs.Content>
 
-        <Tabs.Content value="records">
+        <Tabs.Content value="records" forceMount>
           <Tabs.Root defaultValue="standard" onChange={scrollToRecordList}>
             <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
               <Tabs.Trigger value="standard" class={ratingTabTriggerClass}>
@@ -361,9 +372,11 @@ export const UserProfileView: Component<Props> = (props) => {
               </Tabs.Trigger>
             </Tabs.List>
 
-            <Tabs.Content value="standard">
+            <Tabs.Content value="standard" forceMount>
               <Suspense fallback={<Loading />}>
-                <UserRecord />
+                <Show when={recordProfile()} fallback={<Loading />}>
+                  {(profile) => <UserRecord profile={profile()} />}
+                </Show>
               </Suspense>
             </Tabs.Content>
             <Tabs.Content value="worldsend">
