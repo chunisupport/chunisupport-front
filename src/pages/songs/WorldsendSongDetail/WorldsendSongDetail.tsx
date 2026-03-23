@@ -6,12 +6,16 @@ import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { getWorldsendTitleMeta } from '../worldsendDetailModel'
 import WorldsendChartCard from './components/WorldsendChartCard'
 import WorldsendSongInfoCard from './components/WorldsendSongInfoCard'
+import { decodeWorldsendDisplayIdParam } from './worldsendRouteParams'
 
 const WorldsendSongDetail = () => {
   const params = useParams<{ displayid: string }>()
   const navigate = useNavigate()
 
-  const [song] = createResource(() => params.displayid, fetchWorldsendSongByDisplayId)
+  const [song] = createResource(
+    () => decodeWorldsendDisplayIdParam(params.displayid),
+    fetchWorldsendSongByDisplayId
+  )
 
   useDocumentTitle(() => `${song()?.title ?? "WORLD'S END楽曲"} - WORLD'S END楽曲詳細`)
 
@@ -25,9 +29,8 @@ const WorldsendSongDetail = () => {
 
   return (
     <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
-      <Show when={!song.loading && song()} fallback={<Loading />}>
-        {(songData) => {
-          const currentSong = songData()
+      <Show when={!song.loading && song()} keyed fallback={<Loading />}>
+        {(currentSong) => {
           const titleMeta = getWorldsendTitleMeta(currentSong)
 
           return (

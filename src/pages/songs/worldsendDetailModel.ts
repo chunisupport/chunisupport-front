@@ -18,9 +18,9 @@ const fallbackText = (value: string | null | undefined) => {
 }
 
 export const getWorldsendSongInfoItems = (song: WorldsendSongDTO): WorldsendSongInfoItem[] => [
-  { label: 'ジャンル', value: song.genre ?? '-' },
+  { label: 'ジャンル', value: fallbackText(song.genre) },
   { label: 'BPM', value: song.bpm ?? '-' },
-  { label: 'リリース日', value: song.release ?? '-' },
+  { label: 'リリース日', value: fallbackText(song.release) },
   { label: '公式ID', value: fallbackText(song.official_idx) },
 ]
 
@@ -31,10 +31,7 @@ export const getWorldsendChartRows = (song: WorldsendSongDTO): WorldsendChartRow
     {
       label: "WORLD'S END",
       attribute: fallbackText(chart?.attribute),
-      level:
-        chart?.level_star === null || chart?.level_star === undefined
-          ? '-'
-          : `★${chart.level_star}`,
+      level: chart?.level_star == null ? '-' : `★${chart.level_star}`,
       notes: chart?.notes ?? '-',
     },
   ]
