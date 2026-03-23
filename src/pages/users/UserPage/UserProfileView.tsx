@@ -39,7 +39,7 @@ const worldsendLampOrder: Record<string, number> = {
   UNPLAYED: 9,
 }
 
-const worldsendGridColumns = 'minmax(0,1fr) 5rem 4.5rem 6rem 5rem'
+export const worldsendGridColumns = 'minmax(0,1fr) 3rem 3.5rem 4.5rem 3rem'
 const worldsendHeaderButtonClass =
   'flex min-h-[34px] w-full items-center justify-center gap-1 px-2 py-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 
