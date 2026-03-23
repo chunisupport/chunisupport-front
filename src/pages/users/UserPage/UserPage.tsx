@@ -22,20 +22,25 @@ const UserPage: Component = () => {
   )
   const [recordProfile] = createResource(
     () => (shouldFetchRecordProfile(searchParams.view) ? params.username : undefined),
-    async (username) => {
+    (username) => {
       const cachedProfile = recordProfileCache()
       if (cachedProfile?.username === username) {
         return cachedProfile
       }
 
-      const profile = await fetchUserProfile(username, {
+      return fetchUserProfile(username, {
         ...userProfileFetchOptions,
         view: 'record',
       })
-      setRecordProfileCache(profile)
-      return profile
     }
   )
+
+  createEffect(() => {
+    const profile = recordProfile()
+    if (profile) {
+      setRecordProfileCache(profile)
+    }
+  })
 
   createEffect((previousUsername?: string) => {
     const username = params.username
