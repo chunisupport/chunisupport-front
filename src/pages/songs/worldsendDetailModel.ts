@@ -21,7 +21,6 @@ export const getWorldsendSongInfoItems = (song: WorldsendSongDTO): WorldsendSong
   { label: 'ジャンル', value: fallbackText(song.genre) },
   { label: 'BPM', value: song.bpm ?? '-' },
   { label: 'リリース日', value: fallbackText(song.release) },
-  { label: '公式ID', value: fallbackText(song.official_idx) },
 ]
 
 export const getWorldsendChartRows = (song: WorldsendSongDTO): WorldsendChartRow[] => {

@@ -1,7 +1,9 @@
 import { For } from 'solid-js'
 import { CHUNITHM_JACKET_BASE_URL } from '../../../../config'
 import type { WorldsendSongDTO } from '../../../../types/api'
-import { getWorldsendSongInfoItems } from '../../worldsendDetailModel'
+import { getWorldsendChartRows, getWorldsendSongInfoItems } from '../../worldsendDetailModel'
+
+const badgeClass = 'bg-black text-white'
 
 type Props = {
   song: WorldsendSongDTO
@@ -44,8 +46,35 @@ const WorldsendSongInfoCard = (props: Props) => {
       </div>
 
       <div class="rounded-md border border-gray-200 bg-white p-4">
-        <div class="flex h-full items-center justify-center rounded-md border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
-          WORLD'S END は特殊譜面のため、難易度タブではなく専用の譜面情報を下部に表示しています。
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-gray-50 text-left">
+              <tr>
+                <th class="px-3 py-2 font-medium text-gray-700"></th>
+                <th class="px-3 py-2 font-medium text-gray-700">属性</th>
+                <th class="px-3 py-2 font-medium text-gray-700">レベル</th>
+                <th class="px-3 py-2 font-medium text-gray-700">ノーツ数</th>
+              </tr>
+            </thead>
+            <tbody>
+              <For each={getWorldsendChartRows(props.song)}>
+                {(chart) => (
+                  <tr class="border-t border-gray-100">
+                    <td class="px-3 py-2">
+                      <span
+                        class={`inline-flex min-w-[7rem] justify-center rounded px-3 py-1 text-xs font-semibold tracking-wide ${badgeClass}`}
+                      >
+                        {chart.label}
+                      </span>
+                    </td>
+                    <td class="px-3 py-2 text-gray-800">{chart.attribute}</td>
+                    <td class="px-3 py-2 text-gray-800">{chart.level}</td>
+                    <td class="px-3 py-2 text-gray-800">{chart.notes}</td>
+                  </tr>
+                )}
+              </For>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

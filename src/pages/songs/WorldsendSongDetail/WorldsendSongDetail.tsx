@@ -1,20 +1,24 @@
 import { useNavigate, useParams } from '@solidjs/router'
 import { createResource, ErrorBoundary, Show } from 'solid-js'
-import { fetchWorldsendSongByDisplayId } from '../../../api/songs'
+import { fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { getWorldsendTitleMeta } from '../worldsendDetailModel'
-import WorldsendChartCard from './components/WorldsendChartCard'
+import SongStatsTabs from '../SongDetail/components/SongStatsTabs'
 import WorldsendSongInfoCard from './components/WorldsendSongInfoCard'
 import { decodeWorldsendDisplayIdParam } from './worldsendRouteParams'
+
+const worldsendDifficulty = [{ label: "WORLD'S END", value: 'worldsend' }]
 
 const WorldsendSongDetail = () => {
   const params = useParams<{ displayid: string }>()
   const navigate = useNavigate()
 
-  const [song] = createResource(
-    () => decodeWorldsendDisplayIdParam(params.displayid),
-    fetchWorldsendSongByDisplayId
+  const decodedDisplayId = () => decodeWorldsendDisplayIdParam(params.displayid)
+
+  const [song] = createResource(decodedDisplayId, fetchWorldsendSongByDisplayId)
+  const [stats] = createResource(decodedDisplayId, (displayId) =>
+    fetchSongStats(displayId, worldsendDifficulty[0].value)
   )
 
   useDocumentTitle(() => `${song()?.title ?? "WORLD'S END楽曲"} - WORLD'S END楽曲詳細`)
@@ -52,7 +56,14 @@ const WorldsendSongDetail = () => {
               </div>
 
               <WorldsendSongInfoCard song={currentSong} />
-              <WorldsendChartCard song={currentSong} />
+
+              <SongStatsTabs
+                difficulties={worldsendDifficulty}
+                selectedDifficulty={worldsendDifficulty[0].value}
+                onDifficultyChange={() => undefined}
+                stats={stats()}
+                isStatsLoading={stats.loading}
+              />
             </div>
           )
         }}

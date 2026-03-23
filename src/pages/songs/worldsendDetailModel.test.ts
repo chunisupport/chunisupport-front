@@ -28,14 +28,13 @@ const createSong = (overrides: Partial<WorldsendSongDTO> = {}): WorldsendSongDTO
   ...overrides,
 })
 
-test("WORLD'S END詳細の楽曲情報は通常譜面ページと同じ基本項目に公式IDを加える", () => {
+test("WORLD'S END詳細の楽曲情報は通常譜面ページと同じ基本項目を表示する", () => {
   const song = createSong()
 
   assert.deepEqual(getWorldsendSongInfoItems(song), [
     { label: 'ジャンル', value: 'VARIETY' },
     { label: 'BPM', value: 180 },
     { label: 'リリース日', value: '2024-01-15' },
-    { label: '公式ID', value: '123' },
   ])
 })
 
@@ -70,7 +69,6 @@ test("WORLD'S END譜面情報が欠けている場合はプレースホルダを
     { label: 'ジャンル', value: '-' },
     { label: 'BPM', value: 180 },
     { label: 'リリース日', value: '-' },
-    { label: '公式ID', value: '-' },
   ])
   assert.deepEqual(getWorldsendChartRows(song), [
     {
@@ -81,6 +79,7 @@ test("WORLD'S END譜面情報が欠けている場合はプレースホルダを
     },
   ])
 })
+
 test('タイトルメタ情報はアーティスト不在でも安全に組み立てる', () => {
   const song = createSong({ artist: '' })
 
