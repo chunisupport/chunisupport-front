@@ -1,7 +1,7 @@
 import * as Tabs from '@kobalte/core/tabs'
 import { useSearchParams } from '@solidjs/router'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
-import type { Component } from 'solid-js'
+import type { Accessor, Component } from 'solid-js'
 import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { Loading, ScrollToTop } from '../../../components'
 import type {
@@ -24,7 +24,7 @@ const UserRecord = lazy(() => import('../UserRecord'))
 
 type Props = {
   profile: UserProfileWithRecordsDTO
-  recordProfile?: UserProfileWithRecordsDTO | null
+  recordProfile: Accessor<UserProfileWithRecordsDTO | undefined>
 }
 
 type WorldsendSortKey = 'title' | 'attribute' | 'level' | 'score' | 'lamp'
@@ -289,8 +289,7 @@ export const UserProfileView: Component<Props> = (props) => {
   const honors = (): HonorDTO[] => playerInfo().honors
   const bestRecords = (): PlayerRecordDTO[] => props.profile.records.best
   const newRecords = (): PlayerRecordDTO[] => props.profile.records.new
-  const recordProfile = (): UserProfileWithRecordsDTO | undefined =>
-    props.recordProfile ?? undefined
+  const recordProfile = () => props.recordProfile()
   const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
   const selectedPageTab = createMemo(() => getUserProfilePageTabValue(searchParams.view))
 

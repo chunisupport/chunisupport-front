@@ -51,12 +51,7 @@ const UserPage: Component = () => {
     <Suspense fallback={<Loading />}>
       <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
         <Show when={userProfile()}>
-          {(profile) => (
-            <UserProfileView
-              profile={profile()}
-              recordProfile={recordProfile() ?? recordProfileCache()}
-            />
-          )}
+          {(profile) => <UserProfileView profile={profile()} recordProfile={recordProfile} />}
         </Show>
       </ErrorBoundary>
     </Suspense>
