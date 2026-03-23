@@ -4,6 +4,7 @@ import { createSignal, Match, onMount, Switch } from 'solid-js'
 import { fetchMe } from '../../api/users'
 import { getAuthStatus } from '../../stores/authSession.ts'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession.ts'
+import AuthLoadingIndicator from '../AuthLoadingIndicator/AuthLoadingIndicator'
 
 type RequireAuthProps = {
   children: JSX.Element
@@ -37,7 +38,7 @@ const RequireAuth = (props: RequireAuthProps) => {
   return (
     <Switch>
       <Match when={authStatus() === 'checking'}>
-        <div class="mx-auto w-full max-w-3xl p-6 text-sm text-gray-600">認証状態を確認中...</div>
+        <AuthLoadingIndicator />
       </Match>
 
       <Match when={authStatus() === 'authenticated'}>{props.children}</Match>

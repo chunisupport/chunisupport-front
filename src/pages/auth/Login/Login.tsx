@@ -3,9 +3,10 @@ import { A, useNavigate } from '@solidjs/router'
 import { createSignal } from 'solid-js'
 
 import { postLogin } from '../../../api/auth'
+import AuthLoadingIndicator from '../../../components/AuthLoadingIndicator/AuthLoadingIndicator'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
+import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -42,7 +43,7 @@ const Login = () => {
     <div class="min-h-screen flex justify-center px-4 py-10">
       <div class="w-full max-w-md">
         {isCheckingAuth() ? (
-          <div class="text-center text-sm text-gray-600">認証状態を確認中...</div>
+          <AuthLoadingIndicator />
         ) : (
           <>
             <div class="text-center mb-6">
