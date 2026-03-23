@@ -84,10 +84,9 @@ const UserRecord: Component<Props> = (props) => {
 
   /** 未プレイを含む全曲のレコード */
   const recordsWithSongMeta = createMemo(() => {
-    const profile = props.profile
     const songs = allSongs()
-    if (!profile || !songs) return []
-    return attachSongMetaToRecords(songs.songs, profile.records.all)
+    if (!songs) return []
+    return attachSongMetaToRecords(songs.songs, props.profile.records.all)
   })
 
   /** フィルター適用後のレコード */
