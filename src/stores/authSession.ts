@@ -18,3 +18,8 @@ export const clearAuthenticatedUser = () => {
   authStatus = 'unauthenticated'
   authenticatedUser = null
 }
+
+export const resetAuthSession = () => {
+  authStatus = 'unknown'
+  authenticatedUser = null
+}
