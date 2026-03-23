@@ -1,3 +1,6 @@
-export const userProfileFetchOptions = {
+type UserProfileFetchView = 'rating' | 'record'
+
+export const getUserProfileFetchOptions = (view?: UserProfileFetchView) => ({
   includeNoPlay: true,
-} as const
+  ...(view ? { view } : {}),
+})

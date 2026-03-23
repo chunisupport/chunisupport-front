@@ -1,7 +1,7 @@
 import * as Tabs from '@kobalte/core/tabs'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
-import type { Component } from 'solid-js'
-import { For, Show, createMemo, createSignal, lazy, Suspense } from 'solid-js'
+import type { Accessor, Component } from 'solid-js'
+import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { Loading, ScrollToTop } from '../../../components'
 import type {
   HonorDTO,
@@ -19,6 +19,8 @@ const UserRecord = lazy(() => import('../UserRecord'))
 
 type Props = {
   profile: UserProfileWithRecordsDTO
+  recordProfile: Accessor<UserProfileWithRecordsDTO | undefined>
+  onShowRecords: () => void
 }
 
 type WorldsendSortKey = 'title' | 'attribute' | 'level' | 'score' | 'lamp'
@@ -282,7 +284,9 @@ export const UserProfileView: Component<Props> = (props) => {
   const honors = (): HonorDTO[] => playerInfo().honors
   const bestRecords = (): PlayerRecordDTO[] => props.profile.records.best
   const newRecords = (): PlayerRecordDTO[] => props.profile.records.new
-  const worldsendRecords = (): WorldsendRecordDTO[] => props.profile.records.worldsend ?? []
+  const recordProfile = () => props.recordProfile()
+  const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
+  const [selectedPageTab, setSelectedPageTab] = createSignal<'rating' | 'records'>('rating')
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
@@ -290,6 +294,7 @@ export const UserProfileView: Component<Props> = (props) => {
     'px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-primary-500'
   const ratingTabTriggerClass =
     'rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors data-selected:bg-primary-600 data-selected:text-white data-selected:shadow-sm'
+  const forceMountedTabContentClass = 'hidden data-selected:block'
 
   const scrollToRecordList = () => {
     const scrollTarget = document.getElementById('app-main')
@@ -299,6 +304,15 @@ export const UserProfileView: Component<Props> = (props) => {
         behavior: 'smooth',
       })
     }
+  }
+
+  const handlePageTabChange = (value: string) => {
+    if (value !== 'rating' && value !== 'records') return
+    setSelectedPageTab(value)
+    if (value === 'records') {
+      props.onShowRecords()
+    }
+    scrollToRecordList()
   }
 
   return (
@@ -314,12 +328,7 @@ export const UserProfileView: Component<Props> = (props) => {
         />
       </div>
 
-      <Tabs.Root
-        defaultValue="rating"
-        class="mb-4"
-        // タブを切り替えた際に1曲目の位置までスクロールする
-        onChange={scrollToRecordList}
-      >
+      <Tabs.Root value={selectedPageTab()} class="mb-4" onChange={handlePageTabChange}>
         <Tabs.List class="sticky top-0 z-10 bg-white flex gap-2 mb-4 px-4 pt-2 border-b border-gray-300">
           <Tabs.Trigger value="rating" class={tabTriggerClass}>
             レーティング
@@ -330,7 +339,7 @@ export const UserProfileView: Component<Props> = (props) => {
           <div class="flex-1"></div>
         </Tabs.List>
 
-        <Tabs.Content value="rating">
+        <Tabs.Content value="rating" forceMount class={forceMountedTabContentClass}>
           <Tabs.Root defaultValue="best" onChange={scrollToRecordList}>
             <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
               <Tabs.Trigger value="best" class={ratingTabTriggerClass}>
@@ -350,7 +359,7 @@ export const UserProfileView: Component<Props> = (props) => {
           </Tabs.Root>
         </Tabs.Content>
 
-        <Tabs.Content value="records">
+        <Tabs.Content value="records" forceMount class={forceMountedTabContentClass}>
           <Tabs.Root defaultValue="standard" onChange={scrollToRecordList}>
             <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
               <Tabs.Trigger value="standard" class={ratingTabTriggerClass}>
@@ -361,9 +370,11 @@ export const UserProfileView: Component<Props> = (props) => {
               </Tabs.Trigger>
             </Tabs.List>
 
-            <Tabs.Content value="standard">
+            <Tabs.Content value="standard" forceMount class={forceMountedTabContentClass}>
               <Suspense fallback={<Loading />}>
-                <UserRecord />
+                <Show when={recordProfile()} fallback={<Loading />}>
+                  {(profile) => <UserRecord profile={profile()} />}
+                </Show>
               </Suspense>
             </Tabs.Content>
             <Tabs.Content value="worldsend">
