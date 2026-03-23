@@ -2,6 +2,7 @@ import * as Tabs from '@kobalte/core/tabs'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
 import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
+import { A } from '@solidjs/router'
 import { Loading, ScrollToTop } from '../../../components'
 import type {
   HonorDTO,
@@ -14,6 +15,8 @@ import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
 import { worldsendLampClass, worldsendLampLabel } from './worldsendLampDisplay'
 import { worldsendTableWrapperClass } from './worldsendTableStyles'
+import { worldsendGridColumns } from './worldsendRecordTableLayout'
+import { buildWorldsendSongDetailPath } from './worldsendNavigation'
 
 const UserRecord = lazy(() => import('../UserRecord'))
 
@@ -39,7 +42,6 @@ const worldsendLampOrder: Record<string, number> = {
   UNPLAYED: 9,
 }
 
-export const worldsendGridColumns = 'minmax(0,1fr) 3rem 3.5rem 4.5rem 3rem'
 const worldsendHeaderButtonClass =
   'flex min-h-[34px] w-full items-center justify-center gap-1 px-2 py-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 
@@ -52,9 +54,7 @@ const RecordList: Component<{ records: PlayerRecordDTO[]; candidates?: PlayerRec
       <div class="border-t-2 border-gray-300 pt-2">
         <div class="flex flex-col gap-2">
           <For each={props.candidates}>
-            {(record, i) => (
-              <UserRecordCard record={record} index={props.records.length + i()} />
-            )}
+            {(record, i) => <UserRecordCard record={record} index={props.records.length + i()} />}
           </For>
         </div>
       </div>
@@ -247,9 +247,12 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
                       class="flex min-h-[34px] min-w-0 items-center px-2 py-1"
                       title={record.title}
                     >
-                      <span class="block w-full truncate font-medium text-gray-900">
+                      <A
+                        href={buildWorldsendSongDetailPath(record.id)}
+                        class="block w-full truncate font-medium text-gray-900 hover:underline"
+                      >
                         {record.title}
-                      </span>
+                      </A>
                     </div>
                     <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
                       <span class="inline-block w-full text-center leading-none text-gray-700">

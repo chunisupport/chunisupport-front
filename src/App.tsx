@@ -25,6 +25,7 @@ import {
   SettingsSessionsPage,
   SongDetail,
   SongsList,
+  WorldsendSongDetail,
   UserPage,
 } from './pages'
 
@@ -125,6 +126,7 @@ const App = () => {
 
       {/* 楽曲 */}
       <Route path="/songs" component={withNavBar(SongsList)} />
+      <Route path="/songs/worldsend/:displayid" component={withNavBar(WorldsendSongDetail)} />
       <Route path="/songs/:displayid" component={withNavBar(SongDetail)} />
 
       {/* 設定 */}
