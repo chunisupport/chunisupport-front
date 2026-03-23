@@ -299,6 +299,7 @@ export const UserProfileView: Component<Props> = (props) => {
     'px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-primary-500'
   const ratingTabTriggerClass =
     'rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors data-selected:bg-primary-600 data-selected:text-white data-selected:shadow-sm'
+  const forceMountedTabContentClass = 'hidden data-selected:block'
 
   const scrollToRecordList = () => {
     const scrollTarget = document.getElementById('app-main')
@@ -340,7 +341,7 @@ export const UserProfileView: Component<Props> = (props) => {
           <div class="flex-1"></div>
         </Tabs.List>
 
-        <Tabs.Content value="rating" forceMount>
+        <Tabs.Content value="rating" forceMount class={forceMountedTabContentClass}>
           <Tabs.Root defaultValue="best" onChange={scrollToRecordList}>
             <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
               <Tabs.Trigger value="best" class={ratingTabTriggerClass}>
@@ -360,7 +361,7 @@ export const UserProfileView: Component<Props> = (props) => {
           </Tabs.Root>
         </Tabs.Content>
 
-        <Tabs.Content value="records" forceMount>
+        <Tabs.Content value="records" forceMount class={forceMountedTabContentClass}>
           <Tabs.Root defaultValue="standard" onChange={scrollToRecordList}>
             <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
               <Tabs.Trigger value="standard" class={ratingTabTriggerClass}>
@@ -371,7 +372,7 @@ export const UserProfileView: Component<Props> = (props) => {
               </Tabs.Trigger>
             </Tabs.List>
 
-            <Tabs.Content value="standard" forceMount>
+            <Tabs.Content value="standard" forceMount class={forceMountedTabContentClass}>
               <Suspense fallback={<Loading />}>
                 <Show when={recordProfile()} fallback={<Loading />}>
                   {(profile) => <UserRecord profile={profile()} />}
