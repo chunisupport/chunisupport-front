@@ -4,9 +4,10 @@ import { A, useNavigate } from '@solidjs/router'
 import { Check, Dot, Loader, X } from 'lucide-solid'
 import { createEffect, createSignal } from 'solid-js'
 
+import AuthLoadingIndicator from '../../../components/AuthLoadingIndicator/AuthLoadingIndicator'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
+import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 
 const Register = () => {
   const navigate = useNavigate()
@@ -77,7 +78,7 @@ const Register = () => {
   })
 
   // すでにログインしている場合はユーザーページへリダイレクト
-  useRedirectIfAuthenticated()
+  const { isCheckingAuth } = useRedirectIfAuthenticated()
 
   // 新規登録処理
   const handleRegister = async () => {
@@ -134,126 +135,135 @@ const Register = () => {
   return (
     <div class="min-h-screen flex justify-center px-4 py-10">
       <div class="w-full max-w-md">
-        <div class="text-center mb-6">
-          <p class="text-gray-600 mb-2">ChuniSupport</p>
-          <h1 class="text-2xl font-semibold">新規登録</h1>
-        </div>
-
-        {/* 注意事項 */}
-        <div class="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded-md">
-          <p class="text-yellow-800 text-sm">
-            スコアデータの登録には
-            <span class="font-bold">ゲキチュウマイ-NET利用権</span>が必要です。
-          </p>
-        </div>
-
-        {/* 入力フォーム */}
-        <div class="mb-6 text-left">
-          <TextField
-            class="mb-2"
-            validationState={
-              !hasUsernameTouched() ? undefined : isUsernameValid() ? 'valid' : 'invalid'
-            }
-          >
-            <TextField.Input
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 data-invalid:border-red-500"
-              placeholder="ユーザー名"
-              value={username()}
-              onInput={(event) => {
-                setUsername(event.currentTarget.value)
-                setHasUsernameTouched(true)
-              }}
-            />
-            <TextField.Description class="mt-1">
-              <ValidationItem status={isAlphanumeric()} text="小文字の英数字のみ" />
-              <ValidationItem status={isValidLength()} text="5文字〜50文字" />
-              <ValidationItem status={null} text="他ユーザーと重複しないもの" />
-            </TextField.Description>
-          </TextField>
-          <TextField class="mb-2" validationState={passwordError() ? 'invalid' : 'valid'}>
-            <TextField.Input
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 data-invalid:border-red-500"
-              placeholder="パスワード"
-              type="password"
-              value={password()}
-              onInput={(event) => setPassword(event.currentTarget.value)}
-            />
-            <TextField.Description class="mt-1">
-              <ValidationItem status={isPasswordValidLength()} text="8文字〜128文字" />
-            </TextField.Description>
-          </TextField>
-          <TextField class="mb-4" validationState={passwordConfirmError() ? 'invalid' : 'valid'}>
-            <TextField.Input
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 data-invalid:border-red-500"
-              placeholder="パスワード（確認）"
-              type="password"
-              value={passwordConfirm()}
-              onInput={(event) => setPasswordConfirm(event.currentTarget.value)}
-            />
-            {passwordConfirmError() && (
-              <TextField.ErrorMessage class="text-xs text-red-600">
-                {passwordConfirmError()}
-              </TextField.ErrorMessage>
-            )}
-          </TextField>
-          {/* 利用規約 */}
-          <Checkbox
-            class="flex items-center mb-3"
-            checked={agreedToTerms()}
-            onChange={setAgreedToTerms}
-          >
-            <Checkbox.Input class="sr-only" />
-            <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50  data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white flex items-center justify-center">
-              <Checkbox.Indicator>
-                <Check class="h-4 w-4" />
-              </Checkbox.Indicator>
-            </Checkbox.Control>
-            <Checkbox.Label class="ml-2 text-gray-900 text-sm select-none">
-              <A href="/terms" class="text-primary-500 underline mr-1">
-                利用規約
-              </A>
-              に同意します
-            </Checkbox.Label>
-          </Checkbox>
-          {errorMessage() && (
-            <div class="mb-4 p-3 bg-red-100 border border-red-400 rounded-md flex items-center">
-              <X class="w-5 h-5 text-red-600 mr-2" />
-              <p class="text-sm text-red-700">{errorMessage()}</p>
+        {isCheckingAuth() ? (
+          <AuthLoadingIndicator />
+        ) : (
+          <>
+            <div class="text-center mb-6">
+              <p class="text-gray-600 mb-2">ChuniSupport</p>
+              <h1 class="text-2xl font-semibold">新規登録</h1>
             </div>
-          )}
-          <div class="flex justify-center">
-            <button
-              type="button"
-              class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50"
-              onClick={handleRegister}
-              disabled={
-                !(
-                  isUsernameValid() &&
-                  isPasswordValidLength() === true &&
-                  !passwordError() &&
-                  !passwordConfirmError() &&
-                  agreedToTerms()
-                ) || isSubmitting()
-              }
-            >
-              {isSubmitting() ? '処理中...' : '登録'}
-            </button>
-          </div>
-        </div>
 
-        <div class="text-center">
-          <p class="mb-5 text-sm text-gray-600">
-            すでにアカウントをお持ちの方は
-            <A href="/login" class="text-primary-500 underline ml-1">
-              こちら
-            </A>
-          </p>
-          <p class="text-sm text-gray-600">
-            <A href="/" class="text-primary-500 underline ml-1">
-              トップページへ戻る
-            </A>
-          </p>
-        </div>
+            {/* 注意事項 */}
+            <div class="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded-md">
+              <p class="text-yellow-800 text-sm">
+                スコアデータの登録には
+                <span class="font-bold">ゲキチュウマイ-NET利用権</span>が必要です。
+              </p>
+            </div>
+
+            {/* 入力フォーム */}
+            <div class="mb-6 text-left">
+              <TextField
+                class="mb-2"
+                validationState={
+                  !hasUsernameTouched() ? undefined : isUsernameValid() ? 'valid' : 'invalid'
+                }
+              >
+                <TextField.Input
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 data-invalid:border-red-500"
+                  placeholder="ユーザー名"
+                  value={username()}
+                  onInput={(event) => {
+                    setUsername(event.currentTarget.value)
+                    setHasUsernameTouched(true)
+                  }}
+                />
+                <TextField.Description class="mt-1">
+                  <ValidationItem status={isAlphanumeric()} text="小文字の英数字のみ" />
+                  <ValidationItem status={isValidLength()} text="5文字〜50文字" />
+                  <ValidationItem status={null} text="他ユーザーと重複しないもの" />
+                </TextField.Description>
+              </TextField>
+              <TextField class="mb-2" validationState={passwordError() ? 'invalid' : 'valid'}>
+                <TextField.Input
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 data-invalid:border-red-500"
+                  placeholder="パスワード"
+                  type="password"
+                  value={password()}
+                  onInput={(event) => setPassword(event.currentTarget.value)}
+                />
+                <TextField.Description class="mt-1">
+                  <ValidationItem status={isPasswordValidLength()} text="8文字〜128文字" />
+                </TextField.Description>
+              </TextField>
+              <TextField
+                class="mb-4"
+                validationState={passwordConfirmError() ? 'invalid' : 'valid'}
+              >
+                <TextField.Input
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 data-invalid:border-red-500"
+                  placeholder="パスワード（確認）"
+                  type="password"
+                  value={passwordConfirm()}
+                  onInput={(event) => setPasswordConfirm(event.currentTarget.value)}
+                />
+                {passwordConfirmError() && (
+                  <TextField.ErrorMessage class="text-xs text-red-600">
+                    {passwordConfirmError()}
+                  </TextField.ErrorMessage>
+                )}
+              </TextField>
+              {/* 利用規約 */}
+              <Checkbox
+                class="flex items-center mb-3"
+                checked={agreedToTerms()}
+                onChange={setAgreedToTerms}
+              >
+                <Checkbox.Input class="sr-only" />
+                <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50  data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white flex items-center justify-center">
+                  <Checkbox.Indicator>
+                    <Check class="h-4 w-4" />
+                  </Checkbox.Indicator>
+                </Checkbox.Control>
+                <Checkbox.Label class="ml-2 text-gray-900 text-sm select-none">
+                  <A href="/terms" class="text-primary-500 underline mr-1">
+                    利用規約
+                  </A>
+                  に同意します
+                </Checkbox.Label>
+              </Checkbox>
+              {errorMessage() && (
+                <div class="mb-4 p-3 bg-red-100 border border-red-400 rounded-md flex items-center">
+                  <X class="w-5 h-5 text-red-600 mr-2" />
+                  <p class="text-sm text-red-700">{errorMessage()}</p>
+                </div>
+              )}
+              <div class="flex justify-center">
+                <button
+                  type="button"
+                  class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50"
+                  onClick={handleRegister}
+                  disabled={
+                    !(
+                      isUsernameValid() &&
+                      isPasswordValidLength() === true &&
+                      !passwordError() &&
+                      !passwordConfirmError() &&
+                      agreedToTerms()
+                    ) || isSubmitting()
+                  }
+                >
+                  {isSubmitting() ? '処理中...' : '登録'}
+                </button>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <p class="mb-5 text-sm text-gray-600">
+                すでにアカウントをお持ちの方は
+                <A href="/login" class="text-primary-500 underline ml-1">
+                  こちら
+                </A>
+              </p>
+              <p class="text-sm text-gray-600">
+                <A href="/" class="text-primary-500 underline ml-1">
+                  トップページへ戻る
+                </A>
+              </p>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
