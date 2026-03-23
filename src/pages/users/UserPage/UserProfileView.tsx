@@ -1,7 +1,7 @@
 import * as Tabs from '@kobalte/core/tabs'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
-import { createEffect, createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
+import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { Loading, ScrollToTop } from '../../../components'
 import type {
   HonorDTO,
@@ -288,12 +288,6 @@ export const UserProfileView: Component<Props> = (props) => {
   const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
   const [selectedPageTab, setSelectedPageTab] = createSignal<'rating' | 'records'>('rating')
 
-  createEffect(() => {
-    if (selectedPageTab() === 'records') {
-      props.onShowRecords()
-    }
-  })
-
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
   const tabTriggerClass =
@@ -315,6 +309,9 @@ export const UserProfileView: Component<Props> = (props) => {
   const handlePageTabChange = (value: string) => {
     if (value !== 'rating' && value !== 'records') return
     setSelectedPageTab(value)
+    if (value === 'records') {
+      props.onShowRecords()
+    }
     scrollToRecordList()
   }
 
