@@ -299,7 +299,7 @@ const UserRecord: Component<Props> = (props) => {
     <Suspense fallback={<Loading />}>
       <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
         <Show when={allSongs() && masterData()} fallback={<Loading />}>
-          <div class="my-4 mx-2 text-sm">
+          <div class="mx-2 text-sm">
             {/* 追跡表示 */}
             {trackingCondition() && trackingTargetFilter() && (
               <TrackingSummary
