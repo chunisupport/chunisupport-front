@@ -21,7 +21,7 @@ export const UserNameplate: Component<Props> = (props) => {
   const playerRating = totalRecordsLength > 0 ? (bestSum + newSum) / totalRecordsLength : 0
 
   return (
-    <div class="mb-2 mx-4 px-3 py-3 border border-gray-200 shadow-sm rounded-md ">
+    <div class="mb-2 mx-auto w-[min(100%,420px)] px-3 py-3 border border-gray-200 shadow-sm rounded-md ">
       {/* TODO: 称号の背景画像を表示 */}
       <p class="mb-3 p-1 bg-yellow-200 rounded-md text-sm text-center">{props.honors[0].name}</p>
       <div class="mb-2 flex flex-row items-end justify-between">
@@ -30,13 +30,13 @@ export const UserNameplate: Component<Props> = (props) => {
       </div>
       <hr class="mb-2 border-t border-gray-200" />
       <p>
-        Rating {playerRating.toFixed(4)}{' '}
+        RATING <b>{playerRating.toFixed(4)}</b>{' '}
         <span class="text-gray-500">
-          (Best {bestRating.toFixed(4)} / New {newRating.toFixed(4)})
+          (BEST <b>{bestRating.toFixed(4)}</b> / NEW <b>{newRating.toFixed(4)}</b>)
         </span>
       </p>
-      {/* TODO: OverPowerのゲージみたいなのあるといいよね */}
-      <p>OP {props.playerInfo.overpower_percent}%</p>
+      {/* TODO: OVER POWERのゲージみたいなのあるといいよね */}
+      <p>OVER POWER <b>{props.playerInfo.overpower_value?.toFixed(3)}</b> ({props.playerInfo.overpower_percent}%)</p>
     </div>
   )
 }
