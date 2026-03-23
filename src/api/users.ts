@@ -3,7 +3,7 @@ import type { AdminUserListResponse, UserDTO, UserProfileWithRecordsDTO } from '
 import { fetchWithAuth } from './fetchWithAuth'
 
 type FetchUserProfileOptions = {
-  view?: 'rating'
+  view?: 'rating' | 'record'
   includeNoPlay?: boolean
 }
 
