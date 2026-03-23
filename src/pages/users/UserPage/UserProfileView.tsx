@@ -2,7 +2,7 @@ import * as Tabs from '@kobalte/core/tabs'
 import { useSearchParams } from '@solidjs/router'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
-import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { Loading, ScrollToTop } from '../../../components'
 import type {
   HonorDTO,
@@ -291,7 +291,13 @@ export const UserProfileView: Component<Props> = (props) => {
   const newRecords = (): PlayerRecordDTO[] => props.profile.records.new
   const recordProfile = () => props.recordProfile()
   const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
-  const selectedPageTab = createMemo(() => getUserProfilePageTabValue(searchParams.view))
+  const [selectedPageTab, setSelectedPageTab] = createSignal(
+    getUserProfilePageTabValue(searchParams.view)
+  )
+
+  createEffect(() => {
+    setSelectedPageTab(getUserProfilePageTabValue(searchParams.view))
+  })
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
@@ -313,6 +319,7 @@ export const UserProfileView: Component<Props> = (props) => {
 
   const handlePageTabChange = (value: string) => {
     if (value !== 'rating' && value !== 'records') return
+    setSelectedPageTab(value)
     setSearchParams(getUserProfileSearchParamsForTab(value))
     scrollToRecordList()
   }
