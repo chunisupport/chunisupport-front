@@ -2,18 +2,32 @@ import { Navigate } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { createSignal, Match, onMount, Switch } from 'solid-js'
 import { fetchMe } from '../../api/users'
+import { getAuthStatus } from '../../stores/authSession.ts'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession.ts'
 
 type RequireAuthProps = {
   children: JSX.Element
 }
 
+const getInitialAuthStatus = (): 'checking' | 'authenticated' | 'unauthenticated' => {
+  const authStatus = getAuthStatus()
+  if (authStatus === 'authenticated' || authStatus === 'unauthenticated') {
+    return authStatus
+  }
+
+  return 'checking'
+}
+
 const RequireAuth = (props: RequireAuthProps) => {
   const [authStatus, setAuthStatus] = createSignal<
     'checking' | 'authenticated' | 'unauthenticated'
-  >('checking')
+  >(getInitialAuthStatus())
 
   onMount(async () => {
+    if (authStatus() !== 'checking') {
+      return
+    }
+
     const resolvedAuthStatus = await resolveAuthSession(() =>
       fetchMe({ redirectOnUnauthorized: false })
     )

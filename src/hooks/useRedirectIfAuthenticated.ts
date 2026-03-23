@@ -1,23 +1,39 @@
 import { useNavigate } from '@solidjs/router'
 import { createSignal, onMount } from 'solid-js'
 
-import { fetchMe } from '../api/users'
+import { fetchMe, fetchUserProfile } from '../api/users'
+import { clearAuthenticatedUser, getAuthenticatedUser, getAuthStatus } from '../stores/authSession'
 import { resolveAuthSession } from '../usecases/auth/resolveAuthSession.ts'
-import { redirectAfterAuthentication } from '../utils/postAuthRedirect'
 
 const useRedirectIfAuthenticated = () => {
   const navigate = useNavigate()
-  const [isCheckingAuth, setIsCheckingAuth] = createSignal(true)
+  const [isCheckingAuth, setIsCheckingAuth] = createSignal(getAuthStatus() !== 'authenticated')
 
   onMount(async () => {
-    const authStatus = await resolveAuthSession(() => fetchMe({ redirectOnUnauthorized: false }))
+    const authStatus = await resolveAuthSession(() => fetchMe({ redirectOnUnauthorized: false }), {
+      forceRefresh: true,
+    })
 
     if (authStatus === 'authenticated') {
+      const user = getAuthenticatedUser()
+      if (!user) {
+        setIsCheckingAuth(false)
+        return
+      }
+
       try {
-        await redirectAfterAuthentication(navigate)
+        await fetchUserProfile(user.username, { view: 'rating' })
+        navigate(`/users/${encodeURIComponent(user.username)}`)
         return
       } catch (error) {
+        const apiError = error as Error & { code?: string }
+        if (apiError.code === 'user_not_found') {
+          navigate('/register-score-temp')
+          return
+        }
+
         console.error('Failed to redirect authenticated user:', error)
+        clearAuthenticatedUser()
       }
     }
 
