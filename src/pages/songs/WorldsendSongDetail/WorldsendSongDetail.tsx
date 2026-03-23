@@ -33,7 +33,18 @@ const WorldsendSongDetail = () => {
 
   return (
     <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
-      <Show when={!song.loading && song()} keyed fallback={<Loading />}>
+      <Show
+        when={song()}
+        keyed
+        fallback={
+          <Show
+            when={song.loading}
+            fallback={<p class="text-red-500">ERROR: {song.error?.message}</p>}
+          >
+            <Loading />
+          </Show>
+        }
+      >
         {(currentSong) => {
           const titleMeta = getWorldsendTitleMeta(currentSong)
 
@@ -57,13 +68,18 @@ const WorldsendSongDetail = () => {
 
               <WorldsendSongInfoCard song={currentSong} />
 
-              <SongStatsTabs
-                difficulties={worldsendDifficulty}
-                selectedDifficulty={worldsendDifficulty[0].value}
-                onDifficultyChange={() => undefined}
-                stats={stats()}
-                isStatsLoading={stats.loading}
-              />
+              <Show when={stats.error} keyed>
+                {(err) => <p class="text-red-500">Error loading stats: {err.message}</p>}
+              </Show>
+              <Show when={!stats.error}>
+                <SongStatsTabs
+                  difficulties={worldsendDifficulty}
+                  selectedDifficulty={worldsendDifficulty[0].value}
+                  onDifficultyChange={() => undefined}
+                  stats={stats()}
+                  isStatsLoading={stats.loading}
+                />
+              </Show>
             </div>
           )
         }}
