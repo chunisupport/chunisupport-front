@@ -43,9 +43,22 @@ export const worldsendGridColumns = 'minmax(0,1fr) 3rem 3.5rem 4.5rem 3rem'
 const worldsendHeaderButtonClass =
   'flex min-h-[34px] w-full items-center justify-center gap-1 px-2 py-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 
-const RecordList: Component<{ records: PlayerRecordDTO[] }> = (props) => (
+const RecordList: Component<{ records: PlayerRecordDTO[]; candidates?: PlayerRecordDTO[] }> = (
+  props
+) => (
   <div class="mx-4 flex flex-col gap-2">
     <For each={props.records}>{(record, i) => <UserRecordCard record={record} index={i()} />}</For>
+    <Show when={(props.candidates?.length ?? 0) > 0}>
+      <div class="border-t-2 border-gray-300 pt-2">
+        <div class="flex flex-col gap-2">
+          <For each={props.candidates}>
+            {(record, i) => (
+              <UserRecordCard record={record} index={props.records.length + i()} />
+            )}
+          </For>
+        </div>
+      </div>
+    </Show>
   </div>
 )
 
@@ -283,7 +296,9 @@ export const UserProfileView: Component<Props> = (props) => {
   const playerInfo = (): PlayerDTO => props.profile.player
   const honors = (): HonorDTO[] => playerInfo().honors
   const bestRecords = (): PlayerRecordDTO[] => props.profile.records.best
+  const bestCandidateRecords = (): PlayerRecordDTO[] => props.profile.records.best_candidate
   const newRecords = (): PlayerRecordDTO[] => props.profile.records.new
+  const newCandidateRecords = (): PlayerRecordDTO[] => props.profile.records.new_candidate
   const recordProfile = () => props.recordProfile()
   const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
   const [selectedPageTab, setSelectedPageTab] = createSignal<'rating' | 'records'>('rating')
@@ -351,10 +366,10 @@ export const UserProfileView: Component<Props> = (props) => {
             </Tabs.List>
 
             <Tabs.Content value="best">
-              <RecordList records={bestRecords()} />
+              <RecordList records={bestRecords()} candidates={bestCandidateRecords()} />
             </Tabs.Content>
             <Tabs.Content value="new">
-              <RecordList records={newRecords()} />
+              <RecordList records={newRecords()} candidates={newCandidateRecords()} />
             </Tabs.Content>
           </Tabs.Root>
         </Tabs.Content>
