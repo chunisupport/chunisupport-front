@@ -1,4 +1,4 @@
-import { useParams, useSearchParams } from '@solidjs/router'
+import { useParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createEffect, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
 
@@ -7,21 +7,24 @@ import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { UserProfileView } from './UserProfileView'
 import { userProfileFetchOptions } from './userProfileFetchOptions'
-import { shouldFetchRecordProfile } from './userProfileViewState'
 
 const UserPage: Component = () => {
   const params = useParams<{ username: string }>()
-  const [searchParams] = useSearchParams()
   const [recordProfileCache, setRecordProfileCache] = createSignal<Awaited<
     ReturnType<typeof fetchUserProfile>
   > | null>(null)
+  const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
 
   const [userProfile] = createResource(
     () => params.username,
-    (username) => fetchUserProfile(username, userProfileFetchOptions)
+    (username) =>
+      fetchUserProfile(username, {
+        ...userProfileFetchOptions,
+        view: 'rating',
+      })
   )
   const [recordProfile] = createResource(
-    () => (shouldFetchRecordProfile(searchParams.view) ? params.username : undefined),
+    () => (shouldFetchRecordProfile() ? params.username : undefined),
     (username) => {
       const cachedProfile = recordProfileCache()
       if (cachedProfile?.username === username) {
@@ -30,7 +33,6 @@ const UserPage: Component = () => {
 
       return fetchUserProfile(username, {
         ...userProfileFetchOptions,
-        view: 'record',
       })
     }
   )
@@ -56,7 +58,13 @@ const UserPage: Component = () => {
     <Suspense fallback={<Loading />}>
       <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
         <Show when={userProfile()}>
-          {(profile) => <UserProfileView profile={profile()} recordProfile={recordProfile} />}
+          {(profile) => (
+            <UserProfileView
+              profile={profile()}
+              recordProfile={recordProfile}
+              onShowRecords={() => setShouldFetchRecordProfile(true)}
+            />
+          )}
         </Show>
       </ErrorBoundary>
     </Suspense>

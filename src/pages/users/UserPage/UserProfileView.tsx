@@ -1,5 +1,4 @@
 import * as Tabs from '@kobalte/core/tabs'
-import { useSearchParams } from '@solidjs/router'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
@@ -13,10 +12,6 @@ import type {
 } from '../../../types/api'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
-import {
-  getUserProfilePageTabValue,
-  getUserProfileSearchParamsForTab,
-} from './userProfileViewState'
 import { worldsendLampClass, worldsendLampLabel } from './worldsendLampDisplay'
 import { worldsendTableWrapperClass } from './worldsendTableStyles'
 
@@ -25,6 +20,7 @@ const UserRecord = lazy(() => import('../UserRecord'))
 type Props = {
   profile: UserProfileWithRecordsDTO
   recordProfile: Accessor<UserProfileWithRecordsDTO | undefined>
+  onShowRecords: () => void
 }
 
 type WorldsendSortKey = 'title' | 'attribute' | 'level' | 'score' | 'lamp'
@@ -284,19 +280,18 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
 }
 
 export const UserProfileView: Component<Props> = (props) => {
-  const [searchParams, setSearchParams] = useSearchParams()
   const playerInfo = (): PlayerDTO => props.profile.player
   const honors = (): HonorDTO[] => playerInfo().honors
   const bestRecords = (): PlayerRecordDTO[] => props.profile.records.best
   const newRecords = (): PlayerRecordDTO[] => props.profile.records.new
   const recordProfile = () => props.recordProfile()
   const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
-  const [selectedPageTab, setSelectedPageTab] = createSignal(
-    getUserProfilePageTabValue(searchParams.view)
-  )
+  const [selectedPageTab, setSelectedPageTab] = createSignal<'rating' | 'records'>('rating')
 
   createEffect(() => {
-    setSelectedPageTab(getUserProfilePageTabValue(searchParams.view))
+    if (selectedPageTab() === 'records') {
+      props.onShowRecords()
+    }
   })
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
@@ -320,7 +315,6 @@ export const UserProfileView: Component<Props> = (props) => {
   const handlePageTabChange = (value: string) => {
     if (value !== 'rating' && value !== 'records') return
     setSelectedPageTab(value)
-    setSearchParams(getUserProfileSearchParamsForTab(value))
     scrollToRecordList()
   }
 
