@@ -12,6 +12,6 @@ export const shouldFetchRecordProfile = (view: string | undefined): boolean => {
 
 export const getUserProfileSearchParamsForTab = (
   tabValue: UserProfilePageTabValue
-): { view?: 'record' } => {
-  return tabValue === 'records' ? { view: 'record' } : {}
+): { view?: 'record' | undefined } => {
+  return tabValue === 'records' ? { view: 'record' } : { view: undefined }
 }

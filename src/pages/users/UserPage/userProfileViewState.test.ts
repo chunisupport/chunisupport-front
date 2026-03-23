@@ -20,5 +20,5 @@ test('view が未指定または不正値のときはレーティングタブを
 
 test('レコードタブ遷移時のみ view=record をクエリに反映する', () => {
   assert.deepEqual(getUserProfileSearchParamsForTab('records'), { view: 'record' })
-  assert.deepEqual(getUserProfileSearchParamsForTab('rating'), {})
+  assert.deepEqual(getUserProfileSearchParamsForTab('rating'), { view: undefined })
 })
