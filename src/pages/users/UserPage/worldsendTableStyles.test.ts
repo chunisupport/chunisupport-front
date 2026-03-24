@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { worldsendGridColumns } from './UserProfileView.tsx'
+import { worldsendGridColumns } from './worldsendRecordTableLayout.ts'
 import { worldsendTableWrapperClass } from './worldsendTableStyles.ts'
 
 test("WORLD'S ENDテーブルのラッパーは横マージン込みでビューポートを超えない", () => {

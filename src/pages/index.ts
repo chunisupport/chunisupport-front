@@ -13,5 +13,5 @@ export {
   SettingsRecoveryCodesPage,
   SettingsSessionsPage,
 } from './settings'
-export { SongDetail, SongsList } from './songs'
+export { SongDetail, SongsList, WorldsendSongDetail } from './songs'
 export { UserPage } from './users'

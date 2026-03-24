@@ -44,6 +44,16 @@ export const fetchSongByDisplayId = async (displayId: string): Promise<SongDTO> 
   return response.json()
 }
 
+export const fetchWorldsendSongByDisplayId = async (
+  displayId: string
+): Promise<WorldsendSongDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/songs/worldsend/${encodeURIComponent(displayId)}`
+  )
+
+  return response.json()
+}
+
 export const fetchSongStats = async (
   displayId: string,
   difficulty: string
