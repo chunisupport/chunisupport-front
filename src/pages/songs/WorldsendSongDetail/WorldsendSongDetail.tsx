@@ -6,7 +6,7 @@ import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { getWorldsendTitleMeta } from '../worldsendDetailModel'
 import SongStatsTabs from '../SongDetail/components/SongStatsTabs'
 import WorldsendSongInfoCard from './components/WorldsendSongInfoCard'
-import { decodeWorldsendDisplayIdParam } from './worldsendRouteParams'
+import { getWorldsendDisplayIdSource } from './worldsendRouteParams'
 
 const worldsendDifficulty = [{ label: "WORLD'S END", value: 'worldsend' }]
 
@@ -14,10 +14,10 @@ const WorldsendSongDetail = () => {
   const params = useParams<{ displayid: string }>()
   const navigate = useNavigate()
 
-  const decodedDisplayId = () => decodeWorldsendDisplayIdParam(params.displayid)
+  const displayIdSource = () => getWorldsendDisplayIdSource(params.displayid)
 
-  const [song] = createResource(decodedDisplayId, fetchWorldsendSongByDisplayId)
-  const [stats] = createResource(decodedDisplayId, (displayId) =>
+  const [song] = createResource(displayIdSource, fetchWorldsendSongByDisplayId)
+  const [stats] = createResource(displayIdSource, (displayId) =>
     fetchSongStats(displayId, worldsendDifficulty[0].value)
   )
 
