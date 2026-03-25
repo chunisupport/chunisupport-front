@@ -44,6 +44,8 @@ const worldsendLampOrder: Record<string, number> = {
 
 const worldsendHeaderButtonClass =
   'flex min-h-[34px] w-full items-center justify-center gap-1 px-2 py-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
+const worldsendSortIconClass = 'h-3 w-3 shrink-0'
+const worldsendSortIconWrapperClass = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
 
 const RecordList: Component<{ records: PlayerRecordDTO[]; candidates?: PlayerRecordDTO[] }> = (
   props
@@ -64,14 +66,30 @@ const RecordList: Component<{ records: PlayerRecordDTO[]; candidates?: PlayerRec
 
 const worldsendSortIndicator = (active: boolean, direction: WorldsendSortDirection | null) => {
   if (!active || !direction) {
-    return <ArrowUpDown class="h-3 w-3 text-gray-300" aria-hidden="true" />
+    return (
+      <span class={worldsendSortIconWrapperClass} aria-hidden="true">
+        <ArrowUpDown class={`${worldsendSortIconClass} text-gray-300`} />
+      </span>
+    )
   }
 
   return direction === 'asc' ? (
-    <ArrowUp class="h-3 w-3 text-sky-600" aria-hidden="true" />
+    <span class={worldsendSortIconWrapperClass} aria-hidden="true">
+      <ArrowUp class={`${worldsendSortIconClass} text-sky-600`} />
+    </span>
   ) : (
-    <ArrowDown class="h-3 w-3 text-sky-600" aria-hidden="true" />
+    <span class={worldsendSortIconWrapperClass} aria-hidden="true">
+      <ArrowDown class={`${worldsendSortIconClass} text-sky-600`} />
+    </span>
   )
+}
+
+const worldsendLevelLabel = (levelStar: number | null | undefined) => {
+  if (typeof levelStar !== 'number' || levelStar <= 0) {
+    return '-'
+  }
+
+  return '★'.repeat(levelStar)
 }
 
 const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (props) => {
@@ -259,9 +277,9 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
                         {record.attribute ?? '-'}
                       </span>
                     </div>
-                    <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
-                      <span class="inline-block w-full text-center leading-none text-gray-700">
-                        {typeof record.level_star === 'number' ? `${record.level_star}*` : '-'}
+                    <div class="flex min-h-[34px] items-center px-2 py-1 text-left whitespace-nowrap">
+                      <span class="inline-block w-full leading-none text-gray-700">
+                        {worldsendLevelLabel(record.level_star)}
                       </span>
                     </div>
                     <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">

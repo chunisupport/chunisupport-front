@@ -31,6 +31,8 @@ const GRID_COLUMNS = 'minmax(0,1fr) 3rem 3.5rem 4.5rem 3.7rem 3rem'
 const ROW_HEIGHT = 34
 const HEADER_BUTTON_CLASS =
   'flex min-h-[34px] w-full items-center justify-center gap-1 px-2 py-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
+const SORT_ICON_CLASS = 'h-3 w-3 shrink-0'
+const SORT_ICON_WRAPPER_CLASS = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
 
 const lampBadge = (lamp: string | null) => {
   if (lamp === 'FULL COMBO')
@@ -50,13 +52,21 @@ const unplayedBadge = () => (
 
 const sortIndicator = (active: boolean, direction: SortDirection | null) => {
   if (!active || !direction) {
-    return <ArrowUpDown class="h-3 w-3 text-gray-300" aria-hidden="true" />
+    return (
+      <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
+        <ArrowUpDown class={`${SORT_ICON_CLASS} text-gray-300`} />
+      </span>
+    )
   }
 
   return direction === 'asc' ? (
-    <ArrowUp class="h-3 w-3 text-sky-600" aria-hidden="true" />
+    <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
+      <ArrowUp class={`${SORT_ICON_CLASS} text-sky-600`} />
+    </span>
   ) : (
-    <ArrowDown class="h-3 w-3 text-sky-600" aria-hidden="true" />
+    <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
+      <ArrowDown class={`${SORT_ICON_CLASS} text-sky-600`} />
+    </span>
   )
 }
 
