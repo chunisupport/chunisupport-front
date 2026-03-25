@@ -205,7 +205,7 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
         }
       >
         <div class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200">
-          <div class="min-w-[28rem]">
+          <div class="min-w-[33.25rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
                 class="grid text-xs font-semibold"
