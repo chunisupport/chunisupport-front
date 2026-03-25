@@ -27,7 +27,7 @@ interface RecordTableProps {
   onSortChange: (key: RecordSortKey) => void
 }
 
-const GRID_COLUMNS = 'minmax(0,1fr) 3rem 3.5rem 4.5rem 3.7rem 3rem'
+const GRID_COLUMNS = 'minmax(0,1fr) 3.5rem 3.6rem 4.9rem 4.5rem 4rem'
 const ROW_HEIGHT = 34
 const HEADER_BUTTON_CLASS =
   'flex min-h-[34px] w-full items-center justify-center gap-1 px-2 py-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
