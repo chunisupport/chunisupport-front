@@ -17,12 +17,16 @@ import { worldsendLampClass, worldsendLampLabel } from './worldsendLampDisplay'
 import { worldsendTableWrapperClass } from './worldsendTableStyles'
 import { worldsendGridColumns } from './worldsendRecordTableLayout'
 import { buildWorldsendSongDetailPath } from './worldsendNavigation'
+import type { UserProfileTab } from './userProfileTab'
+import { resolvePageTab, resolveRatingTab, resolveRecordTab } from './userProfileTab'
 
 const UserRecord = lazy(() => import('../UserRecord'))
 
 type Props = {
   profile: UserProfileWithRecordsDTO
   recordProfile: Accessor<UserProfileWithRecordsDTO | undefined>
+  selectedTab: UserProfileTab
+  onTabChange: (tab: UserProfileTab) => void
   onShowRecords: () => void
 }
 
@@ -322,7 +326,6 @@ export const UserProfileView: Component<Props> = (props) => {
   const newCandidateRecords = (): PlayerRecordDTO[] => props.profile.records.new_candidate
   const recordProfile = () => props.recordProfile()
   const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
-  const [selectedPageTab, setSelectedPageTab] = createSignal<'rating' | 'records'>('rating')
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
@@ -344,10 +347,31 @@ export const UserProfileView: Component<Props> = (props) => {
 
   const handlePageTabChange = (value: string) => {
     if (value !== 'rating' && value !== 'records') return
-    setSelectedPageTab(value)
-    if (value === 'records') {
+
+    if (value === 'rating') {
+      props.onTabChange(
+        resolveRatingTab(props.selectedTab) === 'new' ? 'rating_new' : 'rating_best'
+      )
+    } else {
       props.onShowRecords()
+      props.onTabChange(
+        resolveRecordTab(props.selectedTab) === 'worldsend' ? 'record_we' : 'record'
+      )
     }
+
+    scrollToRecordList()
+  }
+
+  const handleRatingTabChange = (value: string) => {
+    if (value !== 'best' && value !== 'new') return
+    props.onTabChange(value === 'new' ? 'rating_new' : 'rating_best')
+    scrollToRecordList()
+  }
+
+  const handleRecordTabChange = (value: string) => {
+    if (value !== 'standard' && value !== 'worldsend') return
+    props.onShowRecords()
+    props.onTabChange(value === 'worldsend' ? 'record_we' : 'record')
     scrollToRecordList()
   }
 
@@ -364,7 +388,11 @@ export const UserProfileView: Component<Props> = (props) => {
         />
       </div>
 
-      <Tabs.Root value={selectedPageTab()} class="mb-4" onChange={handlePageTabChange}>
+      <Tabs.Root
+        value={resolvePageTab(props.selectedTab)}
+        class="mb-4"
+        onChange={handlePageTabChange}
+      >
         <Tabs.List class="sticky top-0 z-10 bg-white flex gap-2 mb-4 px-4 pt-2 border-b border-gray-300">
           <Tabs.Trigger value="rating" class={tabTriggerClass}>
             レーティング
@@ -376,7 +404,7 @@ export const UserProfileView: Component<Props> = (props) => {
         </Tabs.List>
 
         <Tabs.Content value="rating" forceMount class={forceMountedTabContentClass}>
-          <Tabs.Root defaultValue="best" onChange={scrollToRecordList}>
+          <Tabs.Root value={resolveRatingTab(props.selectedTab)} onChange={handleRatingTabChange}>
             <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
               <Tabs.Trigger value="best" class={ratingTabTriggerClass}>
                 ベスト枠
@@ -396,7 +424,7 @@ export const UserProfileView: Component<Props> = (props) => {
         </Tabs.Content>
 
         <Tabs.Content value="records" forceMount class={forceMountedTabContentClass}>
-          <Tabs.Root defaultValue="standard" onChange={scrollToRecordList}>
+          <Tabs.Root value={resolveRecordTab(props.selectedTab)} onChange={handleRecordTabChange}>
             <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
               <Tabs.Trigger value="standard" class={ratingTabTriggerClass}>
                 通常譜面
