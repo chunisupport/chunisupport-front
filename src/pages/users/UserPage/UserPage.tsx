@@ -7,14 +7,16 @@ import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { UserProfileView } from './UserProfileView'
 import { getUserProfileFetchOptions } from './userProfileFetchOptions'
-import { normalizeUserProfileTab } from './userProfileTab'
+import { normalizeUserProfileTab, resolvePageTab } from './userProfileTab'
 
 const UserPage: Component = () => {
   const params = useParams<{ username: string }>()
   const [searchParams, setSearchParams] = useSearchParams<{ tab?: string }>()
-  const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
 
   const selectedTab = () => normalizeUserProfileTab(searchParams.tab)
+  const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(
+    resolvePageTab(selectedTab()) === 'records'
+  )
 
   const [userProfile] = createResource(
     () => params.username,
@@ -30,10 +32,6 @@ const UserPage: Component = () => {
 
     if (searchParams.tab !== normalizedTab) {
       setSearchParams({ tab: normalizedTab }, { replace: true })
-    }
-
-    if (normalizedTab === 'record' || normalizedTab === 'record_we') {
-      setShouldFetchRecordProfile(true)
     }
   })
 

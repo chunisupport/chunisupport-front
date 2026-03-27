@@ -325,7 +325,7 @@ export const UserProfileView: Component<Props> = (props) => {
   const newRecords = (): PlayerRecordDTO[] => props.profile.records.new
   const newCandidateRecords = (): PlayerRecordDTO[] => props.profile.records.new_candidate
   const recordProfile = () => props.recordProfile()
-  const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
+  const worldsendRecords = (): WorldsendRecordDTO[] | undefined => recordProfile()?.records.worldsend
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
@@ -441,8 +441,12 @@ export const UserProfileView: Component<Props> = (props) => {
                 </Show>
               </Suspense>
             </Tabs.Content>
-            <Tabs.Content value="worldsend">
-              <WorldsendRecordTable records={worldsendRecords()} />
+            <Tabs.Content value="worldsend" forceMount class={forceMountedTabContentClass}>
+              <Suspense fallback={<Loading />}>
+                <Show when={worldsendRecords()} fallback={<Loading />}>
+                  {(records) => <WorldsendRecordTable records={records()} />}
+                </Show>
+              </Suspense>
             </Tabs.Content>
           </Tabs.Root>
         </Tabs.Content>
