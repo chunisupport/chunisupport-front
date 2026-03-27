@@ -4,9 +4,15 @@ export type UserProfileTab = (typeof userProfileTabs)[number]
 
 export const DEFAULT_USER_PROFILE_TAB: UserProfileTab = 'rating_best'
 
+const userProfileTabSet: ReadonlySet<string> = new Set(userProfileTabs)
+
+const isUserProfileTab = (value: unknown): value is UserProfileTab => {
+  return typeof value === 'string' && userProfileTabSet.has(value)
+}
+
 export const normalizeUserProfileTab = (value: string | undefined): UserProfileTab => {
-  if (value && userProfileTabs.includes(value as UserProfileTab)) {
-    return value as UserProfileTab
+  if (isUserProfileTab(value)) {
+    return value
   }
 
   return DEFAULT_USER_PROFILE_TAB
