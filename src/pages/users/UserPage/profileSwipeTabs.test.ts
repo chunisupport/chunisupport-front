@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import {
   applyProfileSwipeTab,
+  canSwipeFromHorizontalScroll,
   getSwipedProfileTab,
   PROFILE_SWIPE_THRESHOLD_PX,
   resolveProfileSwipeTab,
@@ -52,4 +53,16 @@ test('しきい値未満の移動量ではタブが変わらない', () => {
 test('先頭・末尾タブでは外側へスワイプしても端で止まる', () => {
   assert.equal(getSwipedProfileTab('best', PROFILE_SWIPE_THRESHOLD_PX + 30), 'best')
   assert.equal(getSwipedProfileTab('worldsend', -PROFILE_SWIPE_THRESHOLD_PX - 30), 'worldsend')
+})
+
+test('横スクロール要素は端まで到達した方向でのみタブスワイプを許可する', () => {
+  assert.equal(canSwipeFromHorizontalScroll(0, 300, 800, -80), false)
+  assert.equal(canSwipeFromHorizontalScroll(500, 300, 800, -80), true)
+  assert.equal(canSwipeFromHorizontalScroll(500, 300, 800, 80), false)
+  assert.equal(canSwipeFromHorizontalScroll(0, 300, 800, 80), true)
+})
+
+test('横スクロール不要な要素は常にタブスワイプできる', () => {
+  assert.equal(canSwipeFromHorizontalScroll(0, 300, 300, -80), true)
+  assert.equal(canSwipeFromHorizontalScroll(0, 300, 300, 80), true)
 })

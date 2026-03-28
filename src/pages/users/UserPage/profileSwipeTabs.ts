@@ -55,3 +55,21 @@ export const getSwipedProfileTab = (
 
   return profileSwipeTabs[Math.max(currentIndex - 1, 0)]
 }
+
+export const canSwipeFromHorizontalScroll = (
+  scrollLeft: number,
+  clientWidth: number,
+  scrollWidth: number,
+  deltaX: number,
+  edgeThresholdPx = 1
+): boolean => {
+  if (scrollWidth <= clientWidth) {
+    return true
+  }
+
+  if (deltaX < 0) {
+    return scrollLeft + clientWidth >= scrollWidth - edgeThresholdPx
+  }
+
+  return scrollLeft <= edgeThresholdPx
+}

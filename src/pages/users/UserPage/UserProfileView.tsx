@@ -15,6 +15,7 @@ import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
 import {
   applyProfileSwipeTab,
+  canSwipeFromHorizontalScroll,
   getSwipedProfileTab,
   resolveProfileSwipeTab,
 } from './profileSwipeTabs'
@@ -332,7 +333,11 @@ export const UserProfileView: Component<Props> = (props) => {
   const [selectedRecordTab, setSelectedRecordTab] = createSignal<'standard' | 'worldsend'>(
     'standard'
   )
-  const [touchStart, setTouchStart] = createSignal<{ x: number; y: number } | null>(null)
+  const [touchStart, setTouchStart] = createSignal<{
+    x: number
+    y: number
+    scrollableElement: HTMLElement | null
+  } | null>(null)
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
@@ -385,13 +390,39 @@ export const UserProfileView: Component<Props> = (props) => {
     scrollToRecordList()
   }
 
+  const findHorizontalScrollableAncestor = (
+    startElement: HTMLElement | null,
+    boundaryElement: HTMLElement
+  ): HTMLElement | null => {
+    let element = startElement
+    while (element && element !== boundaryElement) {
+      if (element.scrollWidth > element.clientWidth + 1) {
+        return element
+      }
+      element = element.parentElement
+    }
+    return null
+  }
+
   const handleTouchStart = (event: TouchEvent) => {
     if (event.touches.length !== 1) {
       setTouchStart(null)
       return
     }
+
+    const boundaryElement = event.currentTarget
+    const touchTarget = event.target instanceof HTMLElement ? event.target : null
+    const scrollableElement =
+      boundaryElement instanceof HTMLElement
+        ? findHorizontalScrollableAncestor(touchTarget, boundaryElement)
+        : null
+
     const touch = event.touches[0]
-    setTouchStart({ x: touch.clientX, y: touch.clientY })
+    setTouchStart({
+      x: touch.clientX,
+      y: touch.clientY,
+      scrollableElement,
+    })
   }
 
   const handleTouchEnd = (event: TouchEvent) => {
@@ -405,6 +436,19 @@ export const UserProfileView: Component<Props> = (props) => {
     const deltaY = touch.clientY - start.y
 
     if (Math.abs(deltaX) <= Math.abs(deltaY)) {
+      return
+    }
+
+    const scrollableElement = start.scrollableElement
+    if (
+      scrollableElement &&
+      !canSwipeFromHorizontalScroll(
+        scrollableElement.scrollLeft,
+        scrollableElement.clientWidth,
+        scrollableElement.scrollWidth,
+        deltaX
+      )
+    ) {
       return
     }
 
