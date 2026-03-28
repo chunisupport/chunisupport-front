@@ -1,8 +1,8 @@
 import * as Tabs from '@kobalte/core/tabs'
+import { A } from '@solidjs/router'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
 import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
-import { A } from '@solidjs/router'
 import { Loading, ScrollToTop } from '../../../components'
 import type {
   HonorDTO,
@@ -13,10 +13,15 @@ import type {
 } from '../../../types/api'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
+import {
+  applyProfileSwipeTab,
+  getSwipedProfileTab,
+  resolveProfileSwipeTab,
+} from './profileSwipeTabs'
 import { worldsendLampClass, worldsendLampLabel } from './worldsendLampDisplay'
-import { worldsendTableWrapperClass } from './worldsendTableStyles'
-import { worldsendGridColumns } from './worldsendRecordTableLayout'
 import { buildWorldsendSongDetailPath } from './worldsendNavigation'
+import { worldsendGridColumns } from './worldsendRecordTableLayout'
+import { worldsendTableWrapperClass } from './worldsendTableStyles'
 
 const UserRecord = lazy(() => import('../UserRecord'))
 
@@ -323,6 +328,11 @@ export const UserProfileView: Component<Props> = (props) => {
   const recordProfile = () => props.recordProfile()
   const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
   const [selectedPageTab, setSelectedPageTab] = createSignal<'rating' | 'records'>('rating')
+  const [selectedRatingTab, setSelectedRatingTab] = createSignal<'best' | 'new'>('best')
+  const [selectedRecordTab, setSelectedRecordTab] = createSignal<'standard' | 'worldsend'>(
+    'standard'
+  )
+  const [touchStart, setTouchStart] = createSignal<{ x: number; y: number } | null>(null)
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
@@ -351,6 +361,64 @@ export const UserProfileView: Component<Props> = (props) => {
     scrollToRecordList()
   }
 
+  const handleRatingTabChange = (value: string) => {
+    if (value !== 'best' && value !== 'new') return
+    setSelectedRatingTab(value)
+    scrollToRecordList()
+  }
+
+  const handleRecordTabChange = (value: string) => {
+    if (value !== 'standard' && value !== 'worldsend') return
+    setSelectedRecordTab(value)
+    scrollToRecordList()
+  }
+
+  const applySwipeTab = (swipeTab: 'best' | 'new' | 'standard' | 'worldsend') => {
+    const currentPageTab = selectedPageTab()
+    const nextTab = applyProfileSwipeTab(swipeTab)
+    setSelectedPageTab(nextTab.pageTab)
+    setSelectedRatingTab(nextTab.ratingTab)
+    setSelectedRecordTab(nextTab.recordTab)
+    if (currentPageTab !== 'records' && nextTab.pageTab === 'records') {
+      props.onShowRecords()
+    }
+    scrollToRecordList()
+  }
+
+  const handleTouchStart = (event: TouchEvent) => {
+    if (event.touches.length !== 1) {
+      setTouchStart(null)
+      return
+    }
+    const touch = event.touches[0]
+    setTouchStart({ x: touch.clientX, y: touch.clientY })
+  }
+
+  const handleTouchEnd = (event: TouchEvent) => {
+    if (event.changedTouches.length !== 1) return
+    const start = touchStart()
+    setTouchStart(null)
+    if (!start) return
+
+    const touch = event.changedTouches[0]
+    const deltaX = touch.clientX - start.x
+    const deltaY = touch.clientY - start.y
+
+    if (Math.abs(deltaX) <= Math.abs(deltaY)) {
+      return
+    }
+
+    const currentSwipeTab = resolveProfileSwipeTab(
+      selectedPageTab(),
+      selectedRatingTab(),
+      selectedRecordTab()
+    )
+    const swipedTab = getSwipedProfileTab(currentSwipeTab, deltaX)
+    if (swipedTab !== currentSwipeTab) {
+      applySwipeTab(swipedTab)
+    }
+  }
+
   return (
     <div class="mb-4 mx-auto w-full max-w-3xl">
       {/* ↑と↓について: stickyScrollの関係でmy-4を使わず、mb-4とmt-4を別の箇所で指定しています */}
@@ -375,49 +443,51 @@ export const UserProfileView: Component<Props> = (props) => {
           <div class="flex-1"></div>
         </Tabs.List>
 
-        <Tabs.Content value="rating" forceMount class={forceMountedTabContentClass}>
-          <Tabs.Root defaultValue="best" onChange={scrollToRecordList}>
-            <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
-              <Tabs.Trigger value="best" class={ratingTabTriggerClass}>
-                ベスト枠
-              </Tabs.Trigger>
-              <Tabs.Trigger value="new" class={ratingTabTriggerClass}>
-                新曲枠
-              </Tabs.Trigger>
-            </Tabs.List>
+        <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+          <Tabs.Content value="rating" forceMount class={forceMountedTabContentClass}>
+            <Tabs.Root value={selectedRatingTab()} onChange={handleRatingTabChange}>
+              <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
+                <Tabs.Trigger value="best" class={ratingTabTriggerClass}>
+                  ベスト枠
+                </Tabs.Trigger>
+                <Tabs.Trigger value="new" class={ratingTabTriggerClass}>
+                  新曲枠
+                </Tabs.Trigger>
+              </Tabs.List>
 
-            <Tabs.Content value="best">
-              <RecordList records={bestRecords()} candidates={bestCandidateRecords()} />
-            </Tabs.Content>
-            <Tabs.Content value="new">
-              <RecordList records={newRecords()} candidates={newCandidateRecords()} />
-            </Tabs.Content>
-          </Tabs.Root>
-        </Tabs.Content>
+              <Tabs.Content value="best">
+                <RecordList records={bestRecords()} candidates={bestCandidateRecords()} />
+              </Tabs.Content>
+              <Tabs.Content value="new">
+                <RecordList records={newRecords()} candidates={newCandidateRecords()} />
+              </Tabs.Content>
+            </Tabs.Root>
+          </Tabs.Content>
 
-        <Tabs.Content value="records" forceMount class={forceMountedTabContentClass}>
-          <Tabs.Root defaultValue="standard" onChange={scrollToRecordList}>
-            <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
-              <Tabs.Trigger value="standard" class={ratingTabTriggerClass}>
-                通常譜面
-              </Tabs.Trigger>
-              <Tabs.Trigger value="worldsend" class={ratingTabTriggerClass}>
-                WORLD'S END
-              </Tabs.Trigger>
-            </Tabs.List>
+          <Tabs.Content value="records" forceMount class={forceMountedTabContentClass}>
+            <Tabs.Root value={selectedRecordTab()} onChange={handleRecordTabChange}>
+              <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
+                <Tabs.Trigger value="standard" class={ratingTabTriggerClass}>
+                  通常譜面
+                </Tabs.Trigger>
+                <Tabs.Trigger value="worldsend" class={ratingTabTriggerClass}>
+                  WORLD'S END
+                </Tabs.Trigger>
+              </Tabs.List>
 
-            <Tabs.Content value="standard" forceMount class={forceMountedTabContentClass}>
-              <Suspense fallback={<Loading />}>
-                <Show when={recordProfile()} fallback={<Loading />}>
-                  {(profile) => <UserRecord profile={profile()} />}
-                </Show>
-              </Suspense>
-            </Tabs.Content>
-            <Tabs.Content value="worldsend">
-              <WorldsendRecordTable records={worldsendRecords()} />
-            </Tabs.Content>
-          </Tabs.Root>
-        </Tabs.Content>
+              <Tabs.Content value="standard" forceMount class={forceMountedTabContentClass}>
+                <Suspense fallback={<Loading />}>
+                  <Show when={recordProfile()} fallback={<Loading />}>
+                    {(profile) => <UserRecord profile={profile()} />}
+                  </Show>
+                </Suspense>
+              </Tabs.Content>
+              <Tabs.Content value="worldsend">
+                <WorldsendRecordTable records={worldsendRecords()} />
+              </Tabs.Content>
+            </Tabs.Root>
+          </Tabs.Content>
+        </div>
       </Tabs.Root>
 
       {/* スクロールトップボタン（モバイル用） */}
