@@ -12,6 +12,7 @@ type Props = {
   difficulties: DifficultyOption[]
   selectedDifficulty: string
   onDifficultyChange: (difficulty: string) => void
+  ratingBands: string[]
   stats: SongStatsResponseDTO | undefined
   isStatsLoading: boolean
 }
@@ -42,7 +43,9 @@ const SongStatsTabs = (props: Props) => {
                 when={!props.isStatsLoading && props.stats}
                 fallback={<p class="text-sm text-gray-500">統計を読み込み中...</p>}
               >
-                {(statsData) => <SongStatsTable stats={statsData().stats} />}
+                {(statsData) => (
+                  <SongStatsTable ratingBands={props.ratingBands} stats={statsData().stats} />
+                )}
               </Show>
             </Tabs.Content>
           )}

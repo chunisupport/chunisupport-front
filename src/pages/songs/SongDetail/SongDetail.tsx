@@ -105,6 +105,7 @@ const SongDetail = () => {
                 difficulties={availableDifficulties()}
                 selectedDifficulty={selectedDifficulty()}
                 onDifficultyChange={setSelectedDifficulty}
+                ratingBands={masterData()?.rating_bands.map((band) => band.label) ?? []}
                 stats={stats()}
                 isStatsLoading={stats.loading}
               />

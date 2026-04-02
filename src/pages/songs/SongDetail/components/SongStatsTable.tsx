@@ -1,11 +1,43 @@
-import { For } from 'solid-js'
+import { For, createMemo } from 'solid-js'
 import type { SongStatsBandDTO } from '../../../../types/api'
 
 type Props = {
+  ratingBands: string[]
   stats: SongStatsBandDTO[]
 }
 
 const SongStatsTable = (props: Props) => {
+  const normalizedStats = createMemo<SongStatsBandDTO[]>(() => {
+    const statsByBand = new Map(props.stats.map((band) => [band.rating_band, band]))
+
+    return props.ratingBands.map(
+      (ratingBand) =>
+        statsByBand.get(ratingBand) ?? {
+          rating_band: ratingBand,
+          rank: {
+            sss: 0,
+            sssp: 0,
+            max: 0,
+          },
+          combo: {
+            none: 0,
+            fc: 0,
+            aj: 0,
+          },
+          clear: {
+            failed: 0,
+            clear: 0,
+            hard: 0,
+            brave: 0,
+            absolute: 0,
+            catastrophy: 0,
+          },
+          average_score: null,
+          player_count: 0,
+        }
+    )
+  })
+
   return (
     <div class="overflow-x-auto">
       <table class="min-w-full text-sm">
@@ -23,7 +55,7 @@ const SongStatsTable = (props: Props) => {
           </tr>
         </thead>
         <tbody>
-          <For each={props.stats}>
+          <For each={normalizedStats()}>
             {(band) => (
               <tr class="border-t border-gray-100">
                 <td class="px-2 py-2">{band.rating_band}</td>

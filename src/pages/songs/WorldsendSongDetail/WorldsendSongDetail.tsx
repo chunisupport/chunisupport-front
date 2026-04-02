@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from '@solidjs/router'
 import { createResource, ErrorBoundary, Show } from 'solid-js'
-import { fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
+import { fetchMasterData, fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { getWorldsendTitleMeta } from '../worldsendDetailModel'
@@ -17,6 +17,7 @@ const WorldsendSongDetail = () => {
   const displayIdSource = () => getWorldsendDisplayIdSource(params.displayid)
 
   const [song] = createResource(displayIdSource, fetchWorldsendSongByDisplayId)
+  const [masterData] = createResource(fetchMasterData)
   const [stats] = createResource(displayIdSource, (displayId) =>
     fetchSongStats(displayId, worldsendDifficulty[0].value)
   )
@@ -76,6 +77,7 @@ const WorldsendSongDetail = () => {
                   difficulties={worldsendDifficulty}
                   selectedDifficulty={worldsendDifficulty[0].value}
                   onDifficultyChange={() => undefined}
+                  ratingBands={masterData()?.rating_bands.map((band) => band.label) ?? []}
                   stats={stats()}
                   isStatsLoading={stats.loading}
                 />
