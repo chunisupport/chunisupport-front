@@ -18,6 +18,7 @@ const SongStatsTable = (props: Props) => {
             <th class="px-2 py-2 text-right">AJ</th>
             <th class="px-2 py-2 text-right">CLEAR</th>
             <th class="px-2 py-2 text-right">HARD</th>
+            <th class="px-2 py-2 text-right">BRAVE</th>
             <th class="px-2 py-2 text-right">ABSOLUTE</th>
           </tr>
         </thead>
@@ -36,6 +37,7 @@ const SongStatsTable = (props: Props) => {
                 <td class="px-2 py-2 text-right">{band.combo.aj.toLocaleString()}</td>
                 <td class="px-2 py-2 text-right">{band.clear.clear.toLocaleString()}</td>
                 <td class="px-2 py-2 text-right">{band.clear.hard.toLocaleString()}</td>
+                <td class="px-2 py-2 text-right">{band.clear.brave.toLocaleString()}</td>
                 <td class="px-2 py-2 text-right">{band.clear.absolute.toLocaleString()}</td>
               </tr>
             )}
