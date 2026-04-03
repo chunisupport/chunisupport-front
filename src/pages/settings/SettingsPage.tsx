@@ -27,6 +27,11 @@ const links = [
     title: 'セッション管理',
     description: '現在のセッション数確認と、他端末ログアウトを行います。',
   },
+  {
+    href: '/settings/google-link',
+    title: 'Googleアカウント連携',
+    description: 'GoogleアカウントをこのアカウントへFirebase経由で連携します。',
+  },
 ]
 
 const SettingsPage = () => {

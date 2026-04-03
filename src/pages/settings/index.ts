@@ -1,4 +1,5 @@
 export { default as SettingsApiTokenPage } from './SettingsApiTokenPage'
+export { default as SettingsGoogleLinkPage } from './SettingsGoogleLinkPage'
 export { default as SettingsPage } from './SettingsPage'
 export { default as SettingsPasswordPage } from './SettingsPasswordPage'
 export { default as SettingsPrivacyPage } from './SettingsPrivacyPage'
