@@ -251,23 +251,23 @@ export interface GoalAttributes {
 
 export type GoalAchievementParams =
   | {
-    score: number
-    count: number
-  }
+      score: number
+      count: number
+    }
   | {
-    score: number
-  }
+      score: number
+    }
   | {
-    lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'
-    count: number
-  }
+      lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'
+      count: number
+    }
   | {
-    lamp: 'FC' | 'AJ'
-    count: number
-  }
+      lamp: 'FC' | 'AJ'
+      count: number
+    }
   | {
-    total: number
-  }
+      total: number
+    }
 
 export interface GoalDTO {
   id: number
@@ -320,22 +320,22 @@ export interface HonorDTO {
   slot: 1 | 2 | 3
   name: string
   type_name:
-  | 'normal'
-  | 'copper'
-  | 'silver'
-  | 'gold'
-  | 'platina'
-  | 'rainbow'
-  | 'staff'
-  | 'ongeki'
-  | 'maimai'
-  | 'sp'
-  | 'phoenix_g'
-  | 'phoenix_p'
-  | 'phoenix_r'
-  | 'expert'
-  | 'master'
-  | 'ultima'
+    | 'normal'
+    | 'copper'
+    | 'silver'
+    | 'gold'
+    | 'platina'
+    | 'rainbow'
+    | 'staff'
+    | 'ongeki'
+    | 'maimai'
+    | 'sp'
+    | 'phoenix_g'
+    | 'phoenix_p'
+    | 'phoenix_r'
+    | 'expert'
+    | 'master'
+    | 'ultima'
   image_url: string | null
 }
 

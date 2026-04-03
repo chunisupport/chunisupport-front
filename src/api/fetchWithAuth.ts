@@ -1,5 +1,5 @@
-import { getErrorMessage, type ErrorCode, type ErrorResponse } from '../types/api'
 import { clearAuthenticatedUser } from '../stores/authSession'
+import { type ErrorCode, type ErrorResponse, getErrorMessage } from '../types/api'
 
 type FetchWithAuthOptions = RequestInit & {
   redirectOnUnauthorized?: boolean

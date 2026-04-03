@@ -1,13 +1,13 @@
 ﻿import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
-import {
-  type GoalAchievementType,
-  type GoalAttributes,
-  type GoalCreateRequest,
-  type GoalDTO,
-  type GoalUpdateRequest,
-  type MasterDataDTO,
+import type {
+  GoalAchievementType,
+  GoalAttributes,
+  GoalCreateRequest,
+  GoalDTO,
+  GoalUpdateRequest,
+  MasterDataDTO,
 } from '../../../../../types/api'
 import {
   COMBO_LAMP_OPTIONS,
@@ -119,7 +119,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     if ('total' in goal.achievement_params) {
       setTotal(String(goal.achievement_params.total))
     }
-    if ('lamp' in goal.achievement_params && ['HRD', 'BRV', 'ABS', 'CTS'].includes(goal.achievement_params.lamp)) {
+    if (
+      'lamp' in goal.achievement_params &&
+      ['HRD', 'BRV', 'ABS', 'CTS'].includes(goal.achievement_params.lamp)
+    ) {
       setHardLamp(goal.achievement_params.lamp)
     }
     if ('lamp' in goal.achievement_params && ['FC', 'AJ'].includes(goal.achievement_params.lamp)) {
@@ -127,8 +130,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     }
     setInvert(goal.invert)
     setDiffs(normalizeAttributeSelection(goal.attributes.diff))
-    setConstMin(typeof goal.attributes.const?.min === 'number' ? String(goal.attributes.const.min) : '')
-    setConstMax(typeof goal.attributes.const?.max === 'number' ? String(goal.attributes.const.max) : '')
+    setConstMin(
+      typeof goal.attributes.const?.min === 'number' ? String(goal.attributes.const.min) : ''
+    )
+    setConstMax(
+      typeof goal.attributes.const?.max === 'number' ? String(goal.attributes.const.max) : ''
+    )
     setGenres(normalizeAttributeSelection(goal.attributes.genre))
     setVersions(normalizeAttributeSelection(goal.attributes.ver))
 
@@ -140,17 +147,23 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   })
 
   const getDraftAttributes = (): GoalRequest['attributes'] => ({
-    ...(parseAttributeSelection(diffs()) !== undefined ? { diff: parseAttributeSelection(diffs()) } : {}),
-    ...((constMin() || constMax())
-      ? {
-        const: {
-          ...(constMin() ? { min: Number(constMin()) } : {}),
-          ...(constMax() ? { max: Number(constMax()) } : {}),
-        },
-      }
+    ...(parseAttributeSelection(diffs()) !== undefined
+      ? { diff: parseAttributeSelection(diffs()) }
       : {}),
-    ...(parseAttributeSelection(genres()) !== undefined ? { genre: parseAttributeSelection(genres()) } : {}),
-    ...(parseAttributeSelection(versions()) !== undefined ? { ver: parseAttributeSelection(versions()) } : {}),
+    ...(constMin() || constMax()
+      ? {
+          const: {
+            ...(constMin() ? { min: Number(constMin()) } : {}),
+            ...(constMax() ? { max: Number(constMax()) } : {}),
+          },
+        }
+      : {}),
+    ...(parseAttributeSelection(genres()) !== undefined
+      ? { genre: parseAttributeSelection(genres()) }
+      : {}),
+    ...(parseAttributeSelection(versions()) !== undefined
+      ? { ver: parseAttributeSelection(versions()) }
+      : {}),
   })
 
   const handleSave = async () => {
@@ -173,7 +186,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const parsedConstMax = constMax() === '' ? undefined : Number(constMax())
 
     if (
-      (currentType === 'score_count' || currentType === 'rank_count' || currentType === 'avg_score') &&
+      (currentType === 'score_count' ||
+        currentType === 'rank_count' ||
+        currentType === 'avg_score') &&
       (!Number.isFinite(parsedScore) || parsedScore < 0 || parsedScore > 1010000)
     ) {
       setErrorMessage('スコアは 0 ～ 1,010,000 の範囲で入力してください。')
@@ -211,7 +226,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     if (currentType === 'total_score') {
       const maxTotalScore = getTotalScoreMax()
       if (parsedTotal > maxTotalScore) {
-        setErrorMessage(`総スコア目標は最大 ${maxTotalScore.toLocaleString('ja-JP')} 以下で入力してください。`)
+        setErrorMessage(
+          `総スコア目標は最大 ${maxTotalScore.toLocaleString('ja-JP')} 以下で入力してください。`
+        )
         return
       }
     }
@@ -300,7 +317,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               <span class="mb-1 block text-gray-700">目標種別</span>
               <select
                 value={achievementType()}
-                onChange={(event) => setAchievementType(event.currentTarget.value as GoalAchievementType)}
+                onChange={(event) =>
+                  setAchievementType(event.currentTarget.value as GoalAchievementType)
+                }
                 class="w-full rounded border border-gray-300 px-3 py-2"
               >
                 {props.masterData.achievement_types.map((item) => (
@@ -314,7 +333,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               </select>
             </label>
 
-            <Show when={achievementType() === 'score_count' || achievementType() === 'rank_count' || achievementType() === 'avg_score'}>
+            <Show
+              when={
+                achievementType() === 'score_count' ||
+                achievementType() === 'rank_count' ||
+                achievementType() === 'avg_score'
+              }
+            >
               <label class="block text-sm">
                 <span class="mb-1 block text-gray-700">スコア目標</span>
                 <input
@@ -326,7 +351,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               </label>
             </Show>
 
-            <Show when={achievementType() === 'score_count' || achievementType() === 'rank_count' || achievementType() === 'hardlamp_count' || achievementType() === 'combolamp_count'}>
+            <Show
+              when={
+                achievementType() === 'score_count' ||
+                achievementType() === 'rank_count' ||
+                achievementType() === 'hardlamp_count' ||
+                achievementType() === 'combolamp_count'
+              }
+            >
               <label class="block text-sm">
                 <span class="mb-1 block text-gray-700">
                   {invert() ? '未達成件数目標' : '件数目標'}
@@ -334,7 +366,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 <div class="space-y-2">
                   <select
                     value={countMode()}
-                    onChange={(event) => setCountMode(event.currentTarget.value as 'number' | 'all')}
+                    onChange={(event) =>
+                      setCountMode(event.currentTarget.value as 'number' | 'all')
+                    }
                     class="w-full rounded border border-gray-300 px-3 py-2"
                   >
                     <option value="number">数値を指定</option>
@@ -370,7 +404,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 <span class="mb-1 block text-gray-700">ハードランプ</span>
                 <select
                   value={hardLamp()}
-                  onChange={(event) => setHardLamp(event.currentTarget.value as 'HRD' | 'BRV' | 'ABS' | 'CTS')}
+                  onChange={(event) =>
+                    setHardLamp(event.currentTarget.value as 'HRD' | 'BRV' | 'ABS' | 'CTS')
+                  }
                   class="w-full rounded border border-gray-300 px-3 py-2"
                 >
                   {HARD_LAMP_OPTIONS.map((lamp) => (
@@ -395,7 +431,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               </label>
             </Show>
 
-            <Show when={achievementType() === 'total_score' || achievementType() === 'overpower_value' || achievementType() === 'overpower_percent'}>
+            <Show
+              when={
+                achievementType() === 'total_score' ||
+                achievementType() === 'overpower_value' ||
+                achievementType() === 'overpower_percent'
+              }
+            >
               <label class="block text-sm">
                 <span class="mb-1 block text-gray-700">合計/割合目標</span>
                 <input
@@ -433,7 +475,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                           type="checkbox"
                           checked={diffs().includes(String(item.id))}
                           onChange={(event) =>
-                            setDiffs((prev) => toggleSelection(prev, String(item.id), event.currentTarget.checked))}
+                            setDiffs((prev) =>
+                              toggleSelection(prev, String(item.id), event.currentTarget.checked)
+                            )
+                          }
                         />
                         <span>{item.name}</span>
                       </label>
@@ -460,7 +505,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                           type="checkbox"
                           checked={genres().includes(String(item.id))}
                           onChange={(event) =>
-                            setGenres((prev) => toggleSelection(prev, String(item.id), event.currentTarget.checked))}
+                            setGenres((prev) =>
+                              toggleSelection(prev, String(item.id), event.currentTarget.checked)
+                            )
+                          }
                         />
                         <span>{item.name}</span>
                       </label>
@@ -487,7 +535,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                           type="checkbox"
                           checked={versions().includes(String(item.id))}
                           onChange={(event) =>
-                            setVersions((prev) => toggleSelection(prev, String(item.id), event.currentTarget.checked))}
+                            setVersions((prev) =>
+                              toggleSelection(prev, String(item.id), event.currentTarget.checked)
+                            )
+                          }
                         />
                         <span>{item.name}</span>
                       </label>

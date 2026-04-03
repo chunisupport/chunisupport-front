@@ -49,7 +49,8 @@ const SongDetail = () => {
 
       const currentSelection = untrack(() => selectedDifficulty())
       if (!currentSelection || !options.some((option) => option.value === currentSelection)) {
-        const defaultDifficulty = options.find((option) => option.value === 'master')?.value ?? options[0].value
+        const defaultDifficulty =
+          options.find((option) => option.value === 'master')?.value ?? options[0].value
         const initialDifficulty =
           requested && options.some((option) => option.value === requested)
             ? requested

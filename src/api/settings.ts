@@ -1,9 +1,5 @@
 import { API_BASE_URL } from '../config'
-import {
-  type ApiTokenResponse,
-  type RecoveryCodesResponse,
-  type SessionCountResponse,
-} from '../types/api'
+import type { ApiTokenResponse, RecoveryCodesResponse, SessionCountResponse } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 
 type PasswordUpdatePayload = {

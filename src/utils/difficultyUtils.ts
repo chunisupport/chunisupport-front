@@ -33,7 +33,9 @@ export function difficultyToQueryValue(difficulty: string): string {
   }
 }
 
-export function normalizeDifficultyQueryValue(difficulty: string | string[] | null | undefined): string {
+export function normalizeDifficultyQueryValue(
+  difficulty: string | string[] | null | undefined
+): string {
   const value = Array.isArray(difficulty) ? difficulty[0] : difficulty
   return value?.trim().toLowerCase() ?? ''
 }

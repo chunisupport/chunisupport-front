@@ -36,7 +36,10 @@ export const UserNameplate: Component<Props> = (props) => {
         </span>
       </p>
       {/* TODO: OVER POWERのゲージみたいなのあるといいよね */}
-      <p>OVER POWER <b>{props.playerInfo.overpower_value?.toFixed(3)}</b> ({props.playerInfo.overpower_percent}%)</p>
+      <p>
+        OVER POWER <b>{props.playerInfo.overpower_value?.toFixed(3)}</b> (
+        {props.playerInfo.overpower_percent}%)
+      </p>
     </div>
   )
 }

@@ -72,10 +72,8 @@ export const formatGoalAttributesLabel = (
     return []
   }
 
-  const formatNames = (
-    ids: number[],
-    namesById: Map<number, string>
-  ): string => ids.map((id) => namesById.get(id) ?? String(id)).join(', ')
+  const formatNames = (ids: number[], namesById: Map<number, string>): string =>
+    ids.map((id) => namesById.get(id) ?? String(id)).join(', ')
 
   const diffIds = normalizeIds(attributes.diff)
   const genreIds = normalizeIds(attributes.genre)

@@ -87,7 +87,9 @@ const SongInfoCard = (props: Props) => {
                         </span>
                       </td>
                       <td class="px-3 py-2 text-gray-800">
-                        {chart ? `${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}` : '-'}
+                        {chart
+                          ? `${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}`
+                          : '-'}
                       </td>
                       <td class="px-3 py-2 text-gray-800">{chart?.notes ?? '-'}</td>
                     </tr>

@@ -196,7 +196,7 @@ const RegisterScoreTempPage = () => {
                   document.execCommand('copy')
                   setCopied(true)
                   setTimeout(() => setCopied(false), 2000)
-                } catch (e) {
+                } catch (_e) {
                   alert('コピーに失敗しました。手動でコピーしてください。')
                 }
                 document.body.removeChild(textarea)

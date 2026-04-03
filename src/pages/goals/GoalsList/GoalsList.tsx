@@ -7,10 +7,10 @@ import { fetchMe, fetchUserProfile } from '../../../api/users'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../types/api'
+import { calculateGoalProgress, filterRecordsByAttributes } from '../utils/goalProgress'
 import GoalCard from './components/GoalCard'
 import GoalDeleteDialog from './components/GoalDeleteDialog'
 import GoalFormDialog from './components/GoalFormDialog'
-import { calculateGoalProgress, filterRecordsByAttributes } from '../utils/goalProgress'
 
 const GoalsList: Component = () => {
   const navigate = useNavigate()
@@ -55,7 +55,12 @@ const GoalsList: Component = () => {
     if (!data) return []
 
     return data.goals.map((goal) => {
-      const filtered = filterRecordsByAttributes(data.records, goal.attributes, data.masterData, data.songs)
+      const filtered = filterRecordsByAttributes(
+        data.records,
+        goal.attributes,
+        data.masterData,
+        data.songs
+      )
       const progress = calculateGoalProgress(goal, filtered, data.songs)
       return { goal, progress }
     })
@@ -91,8 +96,9 @@ const GoalsList: Component = () => {
     setActionError('')
     setIsSaving(true)
     try {
-      if (editingGoal()) {
-        await updateGoal(editingGoal()!.id, payload)
+      const goal = editingGoal()
+      if (goal) {
+        await updateGoal(goal.id, payload)
       } else {
         await createGoal(payload)
       }
@@ -150,23 +156,34 @@ const GoalsList: Component = () => {
           </Show>
 
           <Show when={actionError()}>
-            <p class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600">{actionError()}</p>
+            <p class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600">
+              {actionError()}
+            </p>
           </Show>
 
           <Show
             when={goalWithProgress().length > 0}
-            fallback={<p class="rounded border border-gray-200 bg-white p-4 text-sm text-gray-600">目標がありません。「目標を追加」から作成してください。</p>}
+            fallback={
+              <p class="rounded border border-gray-200 bg-white p-4 text-sm text-gray-600">
+                目標がありません。「目標を追加」から作成してください。
+              </p>
+            }
           >
             <div class="grid grid-cols-1 gap-3">
-              {goalWithProgress().map(({ goal, progress }) => (
-                <GoalCard
-                  goal={goal}
-                  progress={progress}
-                  masterData={resource()!.masterData}
-                  onEdit={handleEdit}
-                  onDelete={handleDeleteAsk}
-                />
-              ))}
+              {goalWithProgress().map(({ goal, progress }) => {
+                const data = resource()
+                if (!data) return null
+
+                return (
+                  <GoalCard
+                    goal={goal}
+                    progress={progress}
+                    masterData={data.masterData}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteAsk}
+                  />
+                )
+              })}
             </div>
           </Show>
         </div>

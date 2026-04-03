@@ -147,7 +147,9 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const [errorMessage, setErrorMessage] = createSignal('')
 
   const songs = createMemo<EditorSongDTO[]>(() => songsResponse()?.songs ?? [])
-  const worldsendSongs = createMemo<EditorWorldsendSongDTO[]>(() => worldsendResponse()?.songs ?? [])
+  const worldsendSongs = createMemo<EditorWorldsendSongDTO[]>(
+    () => worldsendResponse()?.songs ?? []
+  )
   const selectedSong = createMemo(() => {
     const selected = selectedSongId()
     if (!selected) return null

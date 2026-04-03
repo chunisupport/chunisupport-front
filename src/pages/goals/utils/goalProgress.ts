@@ -101,18 +101,18 @@ export const filterRecordsByAttributes = (
   const diffNames =
     diffIds.length > 0
       ? new Set(
-        masterData.difficulties
-          .filter((difficulty) => diffIds.includes(difficulty.id))
-          .map((difficulty) => difficulty.name)
-      )
+          masterData.difficulties
+            .filter((difficulty) => diffIds.includes(difficulty.id))
+            .map((difficulty) => difficulty.name)
+        )
       : undefined
   const genreNames =
     genreIds.length > 0
       ? new Set(
-        masterData.genres
-          .filter((genre) => genreIds.includes(genre.id))
-          .map((genre) => genre.name)
-      )
+          masterData.genres
+            .filter((genre) => genreIds.includes(genre.id))
+            .map((genre) => genre.name)
+        )
       : undefined
 
   return records.filter((record) => {
@@ -136,7 +136,10 @@ export const filterRecordsByAttributes = (
   })
 }
 
-const getNumberParam = (params: GoalAchievementParams, key: 'score' | 'count' | 'total'): number => {
+const getNumberParam = (
+  params: GoalAchievementParams,
+  key: 'score' | 'count' | 'total'
+): number => {
   const value = (params as Record<string, unknown>)[key]
   return typeof value === 'number' ? value : 0
 }
@@ -171,7 +174,10 @@ export const calculateGoalProgress = (
       break
     }
     case 'hardlamp_count': {
-      const params = goal.achievement_params as { lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'; count: number }
+      const params = goal.achievement_params as {
+        lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'
+        count: number
+      }
       const hardLampName =
         params.lamp === 'HRD'
           ? 'HARD'
@@ -191,7 +197,8 @@ export const calculateGoalProgress = (
     }
     case 'combolamp_count': {
       const params = goal.achievement_params as { lamp: 'FC' | 'AJ'; count: number }
-      const required = params.lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']
+      const required =
+        params.lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']
       target = params.count
       current = filteredRecords.filter((record) => {
         const lamp = record.combo_lamp

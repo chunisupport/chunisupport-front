@@ -11,9 +11,9 @@ import {
   EditorPage,
   EditorSongsPage,
   ForbiddenPage,
-  NotFoundPage,
   GoalsList,
   Login,
+  NotFoundPage,
   RecoveryReset,
   Register,
   RegisterScoreTempPage,
@@ -25,8 +25,8 @@ import {
   SettingsSessionsPage,
   SongDetail,
   SongsList,
-  WorldsendSongDetail,
   UserPage,
+  WorldsendSongDetail,
 } from './pages'
 
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {

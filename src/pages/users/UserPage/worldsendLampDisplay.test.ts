@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { worldsendLampClass, worldsendLampLabel } from './worldsendLampDisplay.ts'
 import type { WorldsendRecordDTO } from '../../../types/api'
+import { worldsendLampClass, worldsendLampLabel } from './worldsendLampDisplay.ts'
 
 const createRecord = (overrides: Partial<WorldsendRecordDTO> = {}): WorldsendRecordDTO => ({
   is_played: true,

@@ -1,5 +1,5 @@
-﻿import { type Component, createSignal, onCleanup } from 'solid-js'
-import { Pencil, Trash2, MoreVertical } from 'lucide-solid'
+﻿import { MoreVertical, Pencil, Trash2 } from 'lucide-solid'
+import { type Component, createSignal, onCleanup } from 'solid-js'
 import type { GoalDTO, MasterDataDTO } from '../../../../types/api'
 // import { formatGoalAttributesLabel, formatGoalTypeLabel } from '../../utils/goalForm'
 import type { GoalProgressResult } from '../../utils/goalProgress'
@@ -25,8 +25,11 @@ const formatValue = (value: number, type: GoalDTO['achievement_type']) => {
 
 const GoalCard: Component<GoalCardProps> = (props) => {
   const displayCurrent = () =>
-    props.goal.invert ? Math.max(props.progress.target - props.progress.current, 0) : props.progress.current
-  const displayPercent = () => (props.goal.invert ? 100 - props.progress.percent : props.progress.percent)
+    props.goal.invert
+      ? Math.max(props.progress.target - props.progress.current, 0)
+      : props.progress.current
+  const displayPercent = () =>
+    props.goal.invert ? 100 - props.progress.percent : props.progress.percent
 
   const [menuOpen, setMenuOpen] = createSignal(false)
 
