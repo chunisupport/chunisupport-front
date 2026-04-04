@@ -17,3 +17,7 @@ export const formatAdminUserDateTime = (value: string | null): string => {
 }
 
 export const formatBooleanFlag = (value: boolean): string => (value ? 'true' : 'false')
+
+export const formatAccountType = (value: 'ADMIN' | 'PLAYER'): string => value
+
+export const formatNullableText = (value: string | null): string => (value ? value : '-')

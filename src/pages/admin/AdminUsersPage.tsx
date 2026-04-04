@@ -1,7 +1,12 @@
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { deleteUserByUsername, fetchAdminUsers, restoreUserByUsername } from '../../api/users'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { formatAdminUserDateTime, formatBooleanFlag } from './adminUserDisplay'
+import {
+  formatAccountType,
+  formatAdminUserDateTime,
+  formatBooleanFlag,
+  formatNullableText,
+} from './adminUserDisplay'
 
 const AdminUsersPage = () => {
   useDocumentTitle('ユーザー管理')
@@ -97,6 +102,7 @@ const AdminUsersPage = () => {
           <thead class="bg-gray-50">
             <tr>
               <th class="px-3 py-2 text-left">username</th>
+              <th class="px-3 py-2 text-left">account_type</th>
               <th class="px-3 py-2 text-left">created_at</th>
               <th class="px-3 py-2 text-left">updated_at</th>
               <th class="px-3 py-2 text-left">player_name</th>
@@ -113,9 +119,10 @@ const AdminUsersPage = () => {
               {(user) => (
                 <tr class="border-t border-gray-100">
                   <td class="px-3 py-2 font-mono text-xs">{user.username}</td>
+                  <td class="px-3 py-2">{formatAccountType(user.account_type)}</td>
                   <td class="px-3 py-2">{formatAdminUserDateTime(user.created_at)}</td>
                   <td class="px-3 py-2">{formatAdminUserDateTime(user.updated_at)}</td>
-                  <td class="px-3 py-2">{user.player_name || '-'}</td>
+                  <td class="px-3 py-2">{formatNullableText(user.player_name)}</td>
                   <td class="px-3 py-2">{user.rating ?? '-'}</td>
                   <td class="px-3 py-2">{user.overpower_value ?? '-'}</td>
                   <td class="px-3 py-2">{formatBooleanFlag(user.is_suspicious)}</td>

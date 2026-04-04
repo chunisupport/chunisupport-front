@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { formatAdminUserDateTime, formatBooleanFlag } from './adminUserDisplay.ts'
+import {
+  formatAccountType,
+  formatAdminUserDateTime,
+  formatBooleanFlag,
+  formatNullableText,
+} from './adminUserDisplay.ts'
 
 test('管理ユーザー日時が null の場合はハイフンを返す', () => {
   assert.equal(formatAdminUserDateTime(null), '-')
@@ -20,4 +25,15 @@ test('不正な日時文字列はハイフンを返す', () => {
 test('boolean フラグは true/false 文字列に変換する', () => {
   assert.equal(formatBooleanFlag(true), 'true')
   assert.equal(formatBooleanFlag(false), 'false')
+})
+
+test('account_type は定義済み値をそのまま表示する', () => {
+  assert.equal(formatAccountType('ADMIN'), 'ADMIN')
+  assert.equal(formatAccountType('PLAYER'), 'PLAYER')
+})
+
+test('nullable text は null と空文字でハイフンを返す', () => {
+  assert.equal(formatNullableText(null), '-')
+  assert.equal(formatNullableText(''), '-')
+  assert.equal(formatNullableText('るなぁぁ'), 'るなぁぁ')
 })
