@@ -287,6 +287,7 @@ export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'created_at'>
 export interface AdminUserListResponse {
   username: string
   player_name: string
+  player_updated_at: string | null
   rating: number | null
   overpower_value: number | null
   is_private: boolean

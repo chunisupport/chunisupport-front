@@ -1,6 +1,7 @@
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { deleteUserByUsername, fetchAdminUsers, restoreUserByUsername } from '../../api/users'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { formatPlayerUpdatedAt } from './adminUserDisplay'
 
 const AdminUsersPage = () => {
   useDocumentTitle('ユーザー管理')
@@ -97,6 +98,7 @@ const AdminUsersPage = () => {
             <tr>
               <th class="px-3 py-2 text-left">username</th>
               <th class="px-3 py-2 text-left">player_name</th>
+              <th class="px-3 py-2 text-left">player_updated_at</th>
               <th class="px-3 py-2 text-left">rating</th>
               <th class="px-3 py-2 text-left">overpower</th>
               <th class="px-3 py-2 text-left">private</th>
@@ -110,6 +112,7 @@ const AdminUsersPage = () => {
                 <tr class="border-t border-gray-100">
                   <td class="px-3 py-2 font-mono text-xs">{user.username}</td>
                   <td class="px-3 py-2">{user.player_name || '-'}</td>
+                  <td class="px-3 py-2">{formatPlayerUpdatedAt(user.player_updated_at)}</td>
                   <td class="px-3 py-2">{user.rating ?? '-'}</td>
                   <td class="px-3 py-2">{user.overpower_value ?? '-'}</td>
                   <td class="px-3 py-2">{user.is_private ? 'true' : 'false'}</td>
