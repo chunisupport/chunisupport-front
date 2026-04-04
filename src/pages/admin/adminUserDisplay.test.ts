@@ -6,7 +6,7 @@ import {
   formatAdminUserDateTime,
   formatBooleanFlag,
   formatNullableText,
-} from './adminUserDisplay.ts'
+} from './adminUserDisplay'
 
 test('管理ユーザー日時が null の場合はハイフンを返す', () => {
   assert.equal(formatAdminUserDateTime(null), '-')
