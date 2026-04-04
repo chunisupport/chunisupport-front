@@ -13,5 +13,5 @@ test("WORLD'S ENDテーブルのラッパーは横マージン込みでビュー
 })
 
 test("WORLD'S ENDの列幅は通常譜面と同等のコンパクトさを維持する", () => {
-  assert.equal(worldsendGridColumns, 'minmax(0,1fr) 3rem 3.5rem 4.5rem 3rem')
+  assert.equal(worldsendGridColumns, 'minmax(15.75rem,1fr) 3.25rem 5.25rem 4.9rem 4.1rem')
 })

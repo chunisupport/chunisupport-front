@@ -1,7 +1,7 @@
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { deleteUserByUsername, fetchAdminUsers, restoreUserByUsername } from '../../api/users'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { formatPlayerUpdatedAt } from './adminUserDisplay'
+import { formatAdminUserDateTime, formatBooleanFlag } from './adminUserDisplay'
 
 const AdminUsersPage = () => {
   useDocumentTitle('ユーザー管理')
@@ -97,12 +97,14 @@ const AdminUsersPage = () => {
           <thead class="bg-gray-50">
             <tr>
               <th class="px-3 py-2 text-left">username</th>
+              <th class="px-3 py-2 text-left">created_at</th>
+              <th class="px-3 py-2 text-left">updated_at</th>
               <th class="px-3 py-2 text-left">player_name</th>
-              <th class="px-3 py-2 text-left">player_updated_at</th>
               <th class="px-3 py-2 text-left">rating</th>
-              <th class="px-3 py-2 text-left">overpower</th>
-              <th class="px-3 py-2 text-left">private</th>
-              <th class="px-3 py-2 text-left">deleted</th>
+              <th class="px-3 py-2 text-left">overpower_value</th>
+              <th class="px-3 py-2 text-left">is_suspicious</th>
+              <th class="px-3 py-2 text-left">is_private</th>
+              <th class="px-3 py-2 text-left">is_deleted</th>
               <th class="px-3 py-2 text-left">操作</th>
             </tr>
           </thead>
@@ -111,12 +113,14 @@ const AdminUsersPage = () => {
               {(user) => (
                 <tr class="border-t border-gray-100">
                   <td class="px-3 py-2 font-mono text-xs">{user.username}</td>
+                  <td class="px-3 py-2">{formatAdminUserDateTime(user.created_at)}</td>
+                  <td class="px-3 py-2">{formatAdminUserDateTime(user.updated_at)}</td>
                   <td class="px-3 py-2">{user.player_name || '-'}</td>
-                  <td class="px-3 py-2">{formatPlayerUpdatedAt(user.player_updated_at)}</td>
                   <td class="px-3 py-2">{user.rating ?? '-'}</td>
                   <td class="px-3 py-2">{user.overpower_value ?? '-'}</td>
-                  <td class="px-3 py-2">{user.is_private ? 'true' : 'false'}</td>
-                  <td class="px-3 py-2">{user.is_deleted ? 'true' : 'false'}</td>
+                  <td class="px-3 py-2">{formatBooleanFlag(user.is_suspicious)}</td>
+                  <td class="px-3 py-2">{formatBooleanFlag(user.is_private)}</td>
+                  <td class="px-3 py-2">{formatBooleanFlag(user.is_deleted)}</td>
                   <td class="px-3 py-2">
                     <div class="flex flex-wrap gap-2">
                       <button

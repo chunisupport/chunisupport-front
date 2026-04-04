@@ -1,7 +1,7 @@
-export const formatPlayerUpdatedAt = (playerUpdatedAt: string | null): string => {
-  if (!playerUpdatedAt) return '-'
+export const formatAdminUserDateTime = (value: string | null): string => {
+  if (!value) return '-'
 
-  const date = new Date(playerUpdatedAt)
+  const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '-'
 
   return date.toLocaleString('ja-JP', {
@@ -15,3 +15,5 @@ export const formatPlayerUpdatedAt = (playerUpdatedAt: string | null): string =>
     timeZone: 'Asia/Tokyo',
   })
 }
+
+export const formatBooleanFlag = (value: boolean): string => (value ? 'true' : 'false')
