@@ -52,6 +52,20 @@ export const postRegister = async (payload: AuthPayload): Promise<void> => {
   }
 }
 
+export const postFirebaseLogin = async (idToken: string): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/internal/auth/firebase/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ id_token: idToken }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(getErrorMessage(error))
+  }
+}
+
 export const postRecoveryReset = async (payload: RecoveryResetPayload): Promise<void> => {
   const response = await fetch(`${API_BASE_URL}/internal/auth/recovery-codes`, {
     method: 'POST',

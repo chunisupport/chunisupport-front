@@ -7,6 +7,7 @@ export { default as NotFoundPage } from './NotFoundPage'
 export { RegisterScoreTempPage } from './register-score-temp'
 export {
   SettingsApiTokenPage,
+  SettingsGoogleLinkPage,
   SettingsPage,
   SettingsPasswordPage,
   SettingsPrivacyPage,

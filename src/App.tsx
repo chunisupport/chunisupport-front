@@ -18,6 +18,7 @@ import {
   Register,
   RegisterScoreTempPage,
   SettingsApiTokenPage,
+  SettingsGoogleLinkPage,
   SettingsPage,
   SettingsPasswordPage,
   SettingsPrivacyPage,
@@ -139,6 +140,10 @@ const App = () => {
       />
       <Route path="/settings/api-token" component={withNavBar(withAuth(SettingsApiTokenPage))} />
       <Route path="/settings/sessions" component={withNavBar(withAuth(SettingsSessionsPage))} />
+      <Route
+        path="/settings/google-link"
+        component={withNavBar(withAuth(SettingsGoogleLinkPage))}
+      />
 
       {/* その他 */}
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />
