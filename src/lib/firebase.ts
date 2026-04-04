@@ -11,6 +11,7 @@ const firebaseConfig = {
   measurementId: import.meta.env.PUBLIC_FB_MEASUREMENT_ID,
 }
 
+console.log('Firebase config:', firebaseConfig)
 const app = initializeApp(firebaseConfig)
 
 export const auth = getAuth(app)
