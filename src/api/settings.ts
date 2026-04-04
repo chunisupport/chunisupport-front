@@ -71,9 +71,9 @@ export const logoutOtherSessions = async (): Promise<void> => {
 }
 
 export const linkFirebaseAccount = async (idToken: string): Promise<void> => {
-  const response = await fetchWithAuth(API_BASE_URL + "/internal/me/firebase/link", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+  const response = await fetchWithAuth(API_BASE_URL + '/internal/me/firebase/link', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id_token: idToken }),
   })
 
