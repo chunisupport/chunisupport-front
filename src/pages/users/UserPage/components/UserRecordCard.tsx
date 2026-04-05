@@ -32,11 +32,11 @@ export const UserRecordCard: Component<Props> = (props) => {
     <div
       class={`relative pl-4 p-2 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-2 shadow-md ${difficultyCardBorderColor(props.record.difficulty)}`}
     >
-      <div class="flex gap-3">
-        <div class="flex flex-col">
-          <p># {props.index + 1}</p>
-          <p class="text-sm">{props.record.rating.toFixed(2)}</p>
+      <div class="flex gap-3 items-center">
+        <div class="w-8 h-8 flex items-center justify-center rounded-full bg-red-200">
+          {props.index + 1}
         </div>
+        <p class="text-sm">{props.record.rating.toFixed(2)}</p>
         <div class="flex-1 min-w-0 overflow-hidden">
           <A
             href={`/songs/${encodeURIComponent(props.record.id)}?diff=${encodeURIComponent(difficultyToQueryValue(props.record.difficulty))}`}
