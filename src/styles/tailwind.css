@@ -12,9 +12,12 @@
   --color-primary-700: var(--color-green-700);
   --color-primary-800: var(--color-green-800);
   --color-primary-900: var(--color-green-900);
+
+  --font-oswald: "Oswald", sans-serif;
 }
 
 @keyframes marquee {
+
   0%,
   25% {
     transform: translateX(0%);

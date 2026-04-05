@@ -29,7 +29,7 @@ export default defineConfig({
         tag: 'link',
         attrs: {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Oswald:wght@200..700&display=swap',
         },
       },
     ],
