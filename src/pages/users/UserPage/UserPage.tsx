@@ -1,15 +1,17 @@
-import { useParams } from '@solidjs/router'
+import { useParams, useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
 
 import { fetchUserProfile } from '../../../api/users'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { isRecordPageQuery } from './profilePageQuery'
 import { UserProfileView } from './UserProfileView'
 import { getUserProfileFetchOptions } from './userProfileFetchOptions'
 
 const UserPage: Component = () => {
   const params = useParams<{ username: string }>()
+  const [searchParams] = useSearchParams()
   const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
 
   const [userProfile] = createResource(
@@ -17,7 +19,10 @@ const UserPage: Component = () => {
     (username) => fetchUserProfile(username, getUserProfileFetchOptions('rating'))
   )
   const [recordProfile] = createResource(
-    () => (shouldFetchRecordProfile() ? params.username : undefined),
+    () =>
+      shouldFetchRecordProfile() || isRecordPageQuery(searchParams.page)
+        ? params.username
+        : undefined,
     (username) => fetchUserProfile(username, getUserProfileFetchOptions('record'))
   )
 
