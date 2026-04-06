@@ -294,7 +294,6 @@ export interface AdminUserListResponse {
   overpower_value: number | null
   is_suspicious: boolean
   is_private: boolean
-  is_deleted: boolean
 }
 
 export interface UserProfileWithRecordsDTO {

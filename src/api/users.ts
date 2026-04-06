@@ -61,9 +61,3 @@ export const deleteUserByUsername = async (username: string): Promise<void> => {
     method: 'DELETE',
   })
 }
-
-export const restoreUserByUsername = async (username: string): Promise<void> => {
-  await fetchWithAuth(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/restore`, {
-    method: 'POST',
-  })
-}

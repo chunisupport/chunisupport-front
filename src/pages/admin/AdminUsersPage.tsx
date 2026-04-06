@@ -1,5 +1,5 @@
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
-import { deleteUserByUsername, fetchAdminUsers, restoreUserByUsername } from '../../api/users'
+import { deleteUserByUsername, fetchAdminUsers } from '../../api/users'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   formatAccountType,
@@ -32,7 +32,7 @@ const AdminUsersPage = () => {
   }
 
   const handleDelete = async (username: string) => {
-    if (!window.confirm(`ユーザー ${username} を削除しますか？`)) return
+    if (!window.confirm(`ユーザー ${username} を物理削除しますか？この操作は取り消せません。`)) return
     setMessage('')
     setErrorMessage('')
     try {
@@ -44,24 +44,12 @@ const AdminUsersPage = () => {
     }
   }
 
-  const handleRestore = async (username: string) => {
-    setMessage('')
-    setErrorMessage('')
-    try {
-      await restoreUserByUsername(username)
-      setMessage(`ユーザー ${username} を復活しました。`)
-      refresh()
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '復活に失敗しました。')
-    }
-  }
-
   return (
     <div class="mx-auto w-full max-w-6xl p-4 space-y-4">
       <div>
         <h1 class="text-2xl font-semibold">ユーザー管理</h1>
         <p class="mt-1 text-sm text-gray-600">
-          API仕様準拠: 一覧・検索・削除・復活に対応。ユーザー情報の管理者編集APIは未提供です。
+          API仕様準拠: 一覧・検索・物理削除に対応。ユーザー情報の管理者編集APIは未提供です。
         </p>
       </div>
 
@@ -110,7 +98,6 @@ const AdminUsersPage = () => {
               <th class="px-3 py-2 text-left">overpower_value</th>
               <th class="px-3 py-2 text-left">is_suspicious</th>
               <th class="px-3 py-2 text-left">is_private</th>
-              <th class="px-3 py-2 text-left">is_deleted</th>
               <th class="px-3 py-2 text-left">操作</th>
             </tr>
           </thead>
@@ -127,24 +114,14 @@ const AdminUsersPage = () => {
                   <td class="px-3 py-2">{user.overpower_value ?? '-'}</td>
                   <td class="px-3 py-2">{formatBooleanFlag(user.is_suspicious)}</td>
                   <td class="px-3 py-2">{formatBooleanFlag(user.is_private)}</td>
-                  <td class="px-3 py-2">{formatBooleanFlag(user.is_deleted)}</td>
                   <td class="px-3 py-2">
-                    <div class="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        class="rounded bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700"
-                        onClick={() => handleDelete(user.username)}
-                      >
-                        削除
-                      </button>
-                      <button
-                        type="button"
-                        class="rounded bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700"
-                        onClick={() => handleRestore(user.username)}
-                      >
-                        復活
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      class="rounded bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700"
+                      onClick={() => handleDelete(user.username)}
+                    >
+                      削除
+                    </button>
                   </td>
                 </tr>
               )}
