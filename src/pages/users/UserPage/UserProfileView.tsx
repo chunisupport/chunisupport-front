@@ -325,11 +325,17 @@ export const UserProfileView: Component<Props> = (props) => {
   const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedProfilePage = createMemo(() => resolveProfilePageQuery(searchParams.page))
-  const selectedPageTab = createMemo<'rating' | 'records'>(() =>
-    selectedProfilePage() === 'record_normal' || selectedProfilePage() === 'record_we'
-      ? 'records'
-      : 'rating'
-  )
+  const selectedPageTab = createMemo<'rating' | 'records' | 'overpower'>(() => {
+    if (selectedProfilePage() === 'record_normal' || selectedProfilePage() === 'record_we') {
+      return 'records'
+    }
+
+    if (selectedProfilePage() === 'overpower') {
+      return 'overpower'
+    }
+
+    return 'rating'
+  })
   const selectedRatingTab = createMemo<'best' | 'new'>(() =>
     selectedProfilePage() === 'rating_new' ? 'new' : 'best'
   )
@@ -356,13 +362,17 @@ export const UserProfileView: Component<Props> = (props) => {
   }
 
   const handlePageTabChange = (value: string) => {
-    if (value !== 'rating' && value !== 'records') return
+    if (value !== 'rating' && value !== 'records' && value !== 'overpower') return
+
     if (value === 'rating') {
       setSearchParams({ page: selectedRatingTab() === 'new' ? 'rating_new' : 'rating_best' })
-    } else {
+    } else if (value === 'records') {
       setSearchParams({ page: selectedRecordTab() === 'worldsend' ? 'record_we' : 'record_normal' })
       props.onShowRecords()
+    } else {
+      setSearchParams({ page: 'overpower' })
     }
+
     scrollToRecordList()
   }
 
@@ -399,6 +409,9 @@ export const UserProfileView: Component<Props> = (props) => {
           </Tabs.Trigger>
           <Tabs.Trigger value="records" class={tabTriggerClass}>
             レコード
+          </Tabs.Trigger>
+          <Tabs.Trigger value="overpower" class={tabTriggerClass}>
+            OVER POWER
           </Tabs.Trigger>
           <div class="flex-1"></div>
         </Tabs.List>
@@ -445,6 +458,10 @@ export const UserProfileView: Component<Props> = (props) => {
               <WorldsendRecordTable records={worldsendRecords()} />
             </Tabs.Content>
           </Tabs.Root>
+        </Tabs.Content>
+
+        <Tabs.Content value="overpower" forceMount class={forceMountedTabContentClass}>
+          <div class="mx-4 min-h-24 rounded-md border border-dashed border-gray-200 bg-gray-50" />
         </Tabs.Content>
       </Tabs.Root>
 

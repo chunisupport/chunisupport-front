@@ -18,11 +18,13 @@ test('page クエリが許可値ならそのまま返す', () => {
   assert.equal(resolveProfilePageQuery('rating_new'), 'rating_new')
   assert.equal(resolveProfilePageQuery('record_normal'), 'record_normal')
   assert.equal(resolveProfilePageQuery('record_we'), 'record_we')
+  assert.equal(resolveProfilePageQuery('overpower'), 'overpower')
 })
 
 test('record 系クエリかどうかを判定できる', () => {
   assert.equal(isRecordPageQuery('record_normal'), true)
   assert.equal(isRecordPageQuery('record_we'), true)
   assert.equal(isRecordPageQuery('rating_best'), false)
+  assert.equal(isRecordPageQuery('overpower'), false)
   assert.equal(isRecordPageQuery(undefined), false)
 })
