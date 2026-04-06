@@ -286,6 +286,8 @@ export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'created_at'>
 
 export interface AdminUserListResponse {
   username: string
+  email?: string | null
+  firebase_uid?: string | null
   account_type: 'ADMIN' | 'PLAYER'
   created_at: string
   updated_at: string

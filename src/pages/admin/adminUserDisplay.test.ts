@@ -3,10 +3,11 @@ import test from 'node:test'
 
 import {
   formatAccountType,
+  formatAdminUserAuthInfo,
   formatAdminUserDateTime,
   formatBooleanFlag,
   formatNullableText,
-} from './adminUserDisplay'
+} from './adminUserDisplay.ts'
 
 test('管理ユーザー日時が null の場合はハイフンを返す', () => {
   assert.equal(formatAdminUserDateTime(null), '-')
@@ -36,4 +37,10 @@ test('nullable text は null と空文字でハイフンを返す', () => {
   assert.equal(formatNullableText(null), '-')
   assert.equal(formatNullableText(''), '-')
   assert.equal(formatNullableText('るなぁぁ'), 'るなぁぁ')
+})
+
+test('認証情報は email を優先し、なければ firebase_uid を返す', () => {
+  assert.equal(formatAdminUserAuthInfo('user@example.com', 'firebase-123'), 'user@example.com')
+  assert.equal(formatAdminUserAuthInfo(null, 'firebase-123'), 'firebase-123')
+  assert.equal(formatAdminUserAuthInfo('', ''), '-')
 })
