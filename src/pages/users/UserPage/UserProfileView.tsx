@@ -461,7 +461,7 @@ export const UserProfileView: Component<Props> = (props) => {
         </Tabs.Content>
 
         <Tabs.Content value="overpower" forceMount class={forceMountedTabContentClass}>
-          <div class="mx-4 min-h-24 rounded-md border border-dashed border-gray-200 bg-gray-50" />
+          <div class="mx-4 min-h-24 rounded-md border border-dashed border-gray-200 bg-gray-50">工事中</div>
         </Tabs.Content>
       </Tabs.Root>
 
