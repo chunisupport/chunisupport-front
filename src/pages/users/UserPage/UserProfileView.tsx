@@ -56,7 +56,7 @@ const RecordList: Component<{ records: PlayerRecordDTO[]; candidates?: PlayerRec
   <div class="mx-4 flex flex-col gap-2">
     <For each={props.records}>{(record, i) => <UserRecordCard record={record} index={i()} />}</For>
     <Show when={(props.candidates?.length ?? 0) > 0}>
-      <div class="border-t-2 border-gray-300 pt-2">
+      <div class="mt-4 border-t-2 border-gray-300 pt-4">
         <div class="flex flex-col gap-2">
           <For each={props.candidates}>
             {(record, i) => <UserRecordCard record={record} index={props.records.length + i()} />}
