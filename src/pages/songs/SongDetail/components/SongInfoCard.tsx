@@ -12,7 +12,6 @@ const difficultyRowClass: Record<string, string> = {
 
 const fixedColumnClass = 'w-px whitespace-nowrap'
 const fixedCellClass = 'px-3 py-2 text-gray-800 whitespace-nowrap'
-const truncateTextClass = 'block overflow-hidden text-ellipsis whitespace-nowrap'
 
 type DifficultyOption = {
   label: string
@@ -79,7 +78,9 @@ const SongInfoCard = (props: Props) => {
                 <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}></th>
                 <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>譜面定数</th>
                 <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>ノーツ数</th>
-                <th class="px-3 py-2 font-medium text-gray-700">NOTES DESIGNER</th>
+                <th class="px-3 py-2 font-medium text-gray-700 whitespace-nowrap">
+                  NOTES DESIGNER
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -91,23 +92,23 @@ const SongInfoCard = (props: Props) => {
                     <tr class="border-t border-gray-100">
                       <td class={`${fixedCellClass} ${fixedColumnClass}`}>
                         <div
-                          class={`overflow-hidden rounded px-3 py-1 text-center text-xs font-semibold tracking-wide text-ellipsis whitespace-nowrap ${difficultyRowClass[difficulty.label] ?? 'bg-gray-200 text-gray-800'}`}
+                          class={`rounded px-3 py-1 text-center text-xs font-semibold tracking-wide whitespace-nowrap ${difficultyRowClass[difficulty.label] ?? 'bg-gray-200 text-gray-800'}`}
                         >
                           {difficulty.label}
                         </div>
                       </td>
                       <td class={`${fixedCellClass} ${fixedColumnClass}`}>
-                        <span class={truncateTextClass}>
+                        <span class="block whitespace-nowrap">
                           {chart
                             ? `${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}`
                             : '-'}
                         </span>
                       </td>
                       <td class={`${fixedCellClass} ${fixedColumnClass}`}>
-                        <span class={truncateTextClass}>{chart?.notes ?? '-'}</span>
+                        <span class="block whitespace-nowrap">{chart?.notes ?? '-'}</span>
                       </td>
                       <td class="px-3 py-2 text-gray-800">
-                        <span class={truncateTextClass}>
+                        <span class="block whitespace-nowrap">
                           {getNotesDesignerLabel(chart?.notes_designer)}
                         </span>
                       </td>

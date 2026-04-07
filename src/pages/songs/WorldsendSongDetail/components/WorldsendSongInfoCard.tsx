@@ -6,7 +6,6 @@ import { getWorldsendChartRows, getWorldsendSongInfoItems } from '../../worldsen
 const badgeClass = 'bg-black text-white'
 const fixedColumnClass = 'w-px whitespace-nowrap'
 const fixedCellClass = 'px-3 py-2 text-gray-800 whitespace-nowrap'
-const truncateTextClass = 'block overflow-hidden text-ellipsis whitespace-nowrap'
 
 type Props = {
   song: WorldsendSongDTO
@@ -62,7 +61,9 @@ const WorldsendSongInfoCard = (props: Props) => {
                 <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>属性</th>
                 <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>レベル</th>
                 <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>ノーツ数</th>
-                <th class="px-3 py-2 font-medium text-gray-700">NOTES DESIGNER</th>
+                <th class="px-3 py-2 font-medium text-gray-700 whitespace-nowrap">
+                  NOTES DESIGNER
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -71,22 +72,22 @@ const WorldsendSongInfoCard = (props: Props) => {
                   <tr class="border-t border-gray-100">
                     <td class={`${fixedCellClass} ${fixedColumnClass}`}>
                       <div
-                        class={`overflow-hidden rounded px-3 py-1 text-center text-xs font-semibold tracking-wide text-ellipsis whitespace-nowrap ${badgeClass}`}
+                        class={`rounded px-3 py-1 text-center text-xs font-semibold tracking-wide whitespace-nowrap ${badgeClass}`}
                       >
                         {chart.label}
                       </div>
                     </td>
                     <td class={`${fixedCellClass} ${fixedColumnClass}`}>
-                      <span class={truncateTextClass}>{chart.attribute}</span>
+                      <span class="block whitespace-nowrap">{chart.attribute}</span>
                     </td>
                     <td class={`${fixedCellClass} ${fixedColumnClass}`}>
-                      <span class={truncateTextClass}>{chart.level}</span>
+                      <span class="block whitespace-nowrap">{chart.level}</span>
                     </td>
                     <td class={`${fixedCellClass} ${fixedColumnClass}`}>
-                      <span class={truncateTextClass}>{chart.notes}</span>
+                      <span class="block whitespace-nowrap">{chart.notes}</span>
                     </td>
                     <td class="px-3 py-2 text-gray-800">
-                      <span class={truncateTextClass}>{chart.notesDesigner}</span>
+                      <span class="block whitespace-nowrap">{chart.notesDesigner}</span>
                     </td>
                   </tr>
                 )}
