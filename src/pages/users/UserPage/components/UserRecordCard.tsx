@@ -13,6 +13,7 @@ import {
   difficultyCardBorderColor,
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
+import { getScoreRank } from '../../../../utils/scoreRank'
 
 // FIXME: 色使いすぎ？
 const idxColor = (index: number) => {
@@ -31,6 +32,7 @@ const idxColor = (index: number) => {
 export const UserRecordCard: Component<Props> = (props) => {
   const [shouldAnimate, setShouldAnimate] = createSignal(false)
   let titleRef: HTMLParagraphElement | undefined
+  const scoreRank = () => getScoreRank(props.record.score)
 
   onMount(() => {
     if (titleRef && titleRef.scrollWidth > titleRef.clientWidth) {
@@ -71,7 +73,7 @@ export const UserRecordCard: Component<Props> = (props) => {
             </A>
             <p class="text-base font-oswald font-bold">
               {props.record.rating.toFixed(2)} &lt; {props.record.const} /{' '}
-              {props.record.score.toLocaleString('ja-JP')}
+              {props.record.score.toLocaleString('ja-JP')} {scoreRank()}
             </p>
           </div>
         </div>
