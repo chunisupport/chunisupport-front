@@ -1,12 +1,11 @@
-import { useLocation, useNavigate, useParams, useSearchParams } from '@solidjs/router'
+import { useParams, useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createEffect, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
+import { createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
 
 import { fetchUserProfile } from '../../../api/users'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import {
-  buildUserProfilePagePath,
   isRecordPageQuery,
   resolveProfilePageQuery,
 } from './profilePageQuery'
@@ -16,8 +15,6 @@ import { getUserProfileFetchOptions } from './userProfileFetchOptions'
 const UserPage: Component = () => {
   const params = useParams<{ username: string; page?: string }>()
   const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const location = useLocation()
   const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
 
   const [userProfile] = createResource(
@@ -33,17 +30,6 @@ const UserPage: Component = () => {
   )
 
   useDocumentTitle(() => `${params.username}さんのページ`)
-
-  createEffect(() => {
-    const resolvedPage = resolveProfilePageQuery(params.page, searchParams.page)
-    const currentPath = buildUserProfilePagePath(params.username, resolvedPage)
-
-    if (location.pathname === currentPath && !searchParams.page) {
-      return
-    }
-
-    navigate(currentPath, { replace: true })
-  })
 
   return (
     <Suspense fallback={<Loading />}>

@@ -1,5 +1,5 @@
 import * as Tabs from '@kobalte/core/tabs'
-import { A, useNavigate } from '@solidjs/router'
+import { A, useLocation, useNavigate } from '@solidjs/router'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
 import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
@@ -326,23 +326,23 @@ export const UserProfileView: Component<Props> = (props) => {
   const recordProfile = () => props.recordProfile()
   const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
   const navigate = useNavigate()
-  const selectedProfilePage = createMemo(() => props.selectedPage)
+  const location = useLocation()
   const selectedPageTab = createMemo<'rating' | 'records' | 'overpower'>(() => {
-    if (selectedProfilePage() === 'record_normal' || selectedProfilePage() === 'record_we') {
+    if (props.selectedPage === 'record_normal' || props.selectedPage === 'record_we') {
       return 'records'
     }
 
-    if (selectedProfilePage() === 'overpower') {
+    if (props.selectedPage === 'overpower') {
       return 'overpower'
     }
 
     return 'rating'
   })
   const selectedRatingTab = createMemo<'best' | 'new'>(() =>
-    selectedProfilePage() === 'rating_new' ? 'new' : 'best'
+    props.selectedPage === 'rating_new' ? 'new' : 'best'
   )
   const selectedRecordTab = createMemo<'standard' | 'worldsend'>(() =>
-    selectedProfilePage() === 'record_we' ? 'worldsend' : 'standard'
+    props.selectedPage === 'record_we' ? 'worldsend' : 'standard'
   )
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
@@ -363,26 +363,28 @@ export const UserProfileView: Component<Props> = (props) => {
     }
   }
 
+  const buildProfileNavigationTarget = (page: ProfilePageQuery) => {
+    const normalizedPath = buildUserProfilePagePath(props.username, page)
+    const queryParams = new URLSearchParams(location.search)
+    queryParams.delete('page')
+    const queryString = queryParams.toString()
+    return `${normalizedPath}${queryString ? `?${queryString}` : ''}${location.hash}`
+  }
+
   const handlePageTabChange = (value: string) => {
     if (value !== 'rating' && value !== 'records' && value !== 'overpower') return
 
     if (value === 'rating') {
-      navigate(
-        buildUserProfilePagePath(
-          props.username,
-          selectedRatingTab() === 'new' ? 'rating_new' : 'rating_best'
-        )
-      )
+      navigate(buildProfileNavigationTarget(selectedRatingTab() === 'new' ? 'rating_new' : 'rating_best'))
     } else if (value === 'records') {
       navigate(
-        buildUserProfilePagePath(
-          props.username,
+        buildProfileNavigationTarget(
           selectedRecordTab() === 'worldsend' ? 'record_we' : 'record_normal'
         )
       )
       props.onShowRecords()
     } else {
-      navigate(buildUserProfilePagePath(props.username, 'overpower'))
+      navigate(buildProfileNavigationTarget('overpower'))
     }
 
     scrollToRecordList()
@@ -390,20 +392,13 @@ export const UserProfileView: Component<Props> = (props) => {
 
   const handleRatingTabChange = (value: string) => {
     if (value !== 'best' && value !== 'new') return
-    navigate(
-      buildUserProfilePagePath(props.username, value === 'new' ? 'rating_new' : 'rating_best')
-    )
+    navigate(buildProfileNavigationTarget(value === 'new' ? 'rating_new' : 'rating_best'))
     scrollToRecordList()
   }
 
   const handleRecordTabChange = (value: string) => {
     if (value !== 'standard' && value !== 'worldsend') return
-    navigate(
-      buildUserProfilePagePath(
-        props.username,
-        value === 'worldsend' ? 'record_we' : 'record_normal'
-      )
-    )
+    navigate(buildProfileNavigationTarget(value === 'worldsend' ? 'record_we' : 'record_normal'))
     props.onShowRecords()
     scrollToRecordList()
   }
