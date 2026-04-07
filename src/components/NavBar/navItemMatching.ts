@@ -1,4 +1,7 @@
-export const homePathPattern =
-  /^\/users\/[^/]+(?:\/(rating_best|rating_new|record_normal|record_we|overpower))?$/
+import { profilePageQueryValues } from '../../pages/users/UserPage/profilePageQuery.ts'
+
+export const homePathPattern = new RegExp(
+  '^/users/[^/]+(?:/(' + profilePageQueryValues.join('|') + '))?$'
+)
 
 export const isHomePath = (pathname: string): boolean => homePathPattern.test(pathname)
