@@ -4,7 +4,7 @@ import { createSignal, Match, onMount, Switch } from 'solid-js'
 import { fetchMe } from '../../api/users'
 import { getAuthStatus } from '../../stores/authSession.ts'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession.ts'
-import AuthLoadingIndicator from '../AuthLoadingIndicator/AuthLoadingIndicator'
+import Loading from '../Loading/Loading'
 
 type RequireAuthProps = {
   children: JSX.Element
@@ -38,7 +38,7 @@ const RequireAuth = (props: RequireAuthProps) => {
   return (
     <Switch>
       <Match when={authStatus() === 'checking'}>
-        <AuthLoadingIndicator />
+        <Loading />
       </Match>
 
       <Match when={authStatus() === 'authenticated'}>{props.children}</Match>
