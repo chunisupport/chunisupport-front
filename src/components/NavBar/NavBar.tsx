@@ -15,6 +15,7 @@ import {
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createSignal, onMount } from 'solid-js'
+import { isHomePath } from './navItemMatching'
 
 type NavBarProps = {
   children: JSX.Element
@@ -96,7 +97,6 @@ const NavBar = (props: NavBarProps) => {
         label: 'ホーム',
         path: userPath,
         icon: () => <House class="h-6 w-6" aria-hidden="true" />,
-        matchPattern: /^\/users\/[^/]+$/,
         requiresAuth: true,
       },
       {
@@ -158,6 +158,10 @@ const NavBar = (props: NavBarProps) => {
       if (viewedUsername !== authUser.username) {
         return false
       }
+    }
+
+    if (item.label === 'ホーム') {
+      return isHomePath(pathname)
     }
 
     if (item.matchPattern) {
