@@ -14,7 +14,8 @@ import {
   Toolbox,
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createSignal, onMount } from 'solid-js'
+import { createSignal, onCleanup, onMount } from 'solid-js'
+import { resolveNavBarVisibility } from './navBarVisibility'
 import { isHomePath } from './navItemMatching'
 
 type NavBarProps = {
@@ -53,6 +54,7 @@ const NavBar = (props: NavBarProps) => {
   const [isLoading, setIsLoading] = createSignal(true)
   const [showLoginDialog, setShowLoginDialog] = createSignal(false)
   const [showLogoutDialog, setShowLogoutDialog] = createSignal(false)
+  const [isMobileNavVisible, setIsMobileNavVisible] = createSignal(true)
 
   const location = useLocation()
   const navigate = useNavigate()
@@ -150,6 +152,32 @@ const NavBar = (props: NavBarProps) => {
     } finally {
       setIsLoading(false)
     }
+  })
+
+  onMount(() => {
+    const mainElement = document.getElementById('app-main')
+    if (!mainElement) {
+      return
+    }
+
+    let previousScrollTop = mainElement.scrollTop
+
+    const handleMainScroll = () => {
+      const currentScrollTop = mainElement.scrollTop
+      setIsMobileNavVisible((currentVisibility) =>
+        resolveNavBarVisibility({
+          previousScrollTop,
+          currentScrollTop,
+          isVisible: currentVisibility,
+        })
+      )
+      previousScrollTop = currentScrollTop
+    }
+
+    mainElement.addEventListener('scroll', handleMainScroll, { passive: true })
+    onCleanup(() => {
+      mainElement.removeEventListener('scroll', handleMainScroll)
+    })
   })
 
   const isActive = (item: NavItem) => {
@@ -252,12 +280,15 @@ const NavBar = (props: NavBarProps) => {
       </aside>
 
       <div class="flex flex-col min-h-0 flex-1">
-        <main id="app-main" class="flex-1 min-h-0 overflow-y-auto">
+        <main id="app-main" class="flex-1 min-h-0 overflow-y-auto pb-24 md:pb-0">
           {props.children}
         </main>
 
         {/* スマホ用nav-bar 768px未満 */}
-        <nav class="md:hidden z-40 flex items-center justify-between border-t border-gray-200 bg-white p-3 shadow-sm">
+        <nav
+          class="md:hidden fixed bottom-4 left-1/2 z-40 flex w-[calc(100%-1.5rem)] max-w-xl -translate-x-1/2 items-center justify-between rounded-2xl border border-gray-200 bg-white/95 p-3 shadow-lg backdrop-blur transition-transform duration-200"
+          classList={{ 'translate-y-28': !isMobileNavVisible() }}
+        >
           {getNavItems().map((item) =>
             item.dropdown ? (
               <DropdownMenu>
