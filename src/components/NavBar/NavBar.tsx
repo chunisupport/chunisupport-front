@@ -155,15 +155,10 @@ const NavBar = (props: NavBarProps) => {
   })
 
   onMount(() => {
-    const mainElement = document.getElementById('app-main')
-    if (!mainElement) {
-      return
-    }
-
-    let previousScrollTop = mainElement.scrollTop
+    let previousScrollTop = window.scrollY
 
     const handleMainScroll = () => {
-      const currentScrollTop = mainElement.scrollTop
+      const currentScrollTop = window.scrollY
       setIsMobileNavVisible((currentVisibility) =>
         resolveNavBarVisibility({
           previousScrollTop,
@@ -174,9 +169,9 @@ const NavBar = (props: NavBarProps) => {
       previousScrollTop = currentScrollTop
     }
 
-    mainElement.addEventListener('scroll', handleMainScroll, { passive: true })
+    window.addEventListener('scroll', handleMainScroll, { passive: true })
     onCleanup(() => {
-      mainElement.removeEventListener('scroll', handleMainScroll)
+      window.removeEventListener('scroll', handleMainScroll)
     })
   })
 
@@ -216,7 +211,7 @@ const NavBar = (props: NavBarProps) => {
   }
 
   return (
-    <div class="h-dvh overflow-hidden flex md:flex-row flex-col">
+    <div class="min-h-screen flex md:flex-row flex-col">
       {/* PC用nav-bar 768px以上 */}
       {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
       <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-gray-200 md:bg-white">
@@ -279,14 +274,14 @@ const NavBar = (props: NavBarProps) => {
         </nav>
       </aside>
 
-      <div class="flex flex-col min-h-0 flex-1">
-        <main id="app-main" class="flex-1 min-h-0 overflow-y-auto pb-24 md:pb-0">
+      <div class="flex flex-col flex-1">
+        <main id="app-main" class="flex-1">
           {props.children}
         </main>
 
         {/* スマホ用nav-bar 768px未満 */}
         <nav
-          class="md:hidden fixed bottom-4 left-1/2 z-40 flex w-[calc(100%-1.5rem)] max-w-xl -translate-x-1/2 items-center justify-between rounded-2xl border border-gray-200 bg-white/95 p-3 shadow-lg backdrop-blur transition-transform duration-200"
+          class="md:hidden fixed inset-x-0 bottom-0 z-40 flex items-center justify-between border-t border-gray-200 bg-white p-3 shadow-sm transition-transform duration-200"
           classList={{ 'translate-y-28': !isMobileNavVisible() }}
         >
           {getNavItems().map((item) =>
