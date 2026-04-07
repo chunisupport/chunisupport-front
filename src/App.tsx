@@ -121,8 +121,8 @@ const App = () => {
       <Route path="/403" component={ForbiddenPage} />
 
       {/* ユーザ */}
-      <Route path="/users/:username" component={withNavBar(UserPage)} />
       <Route path="/users/:username/stats" component={withNavBar(withAuth(UserStatsPage))} />
+      <Route path="/users/:username/:page?" component={withNavBar(UserPage)} />
       <Route path="/goals" component={withNavBar(withAuth(GoalsList))} />
 
       {/* 楽曲 */}

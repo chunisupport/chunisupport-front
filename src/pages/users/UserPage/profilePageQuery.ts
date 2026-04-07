@@ -12,19 +12,39 @@ export type ProfilePageQuery = (typeof profilePageQueryValues)[number]
 
 const profilePageQuerySet = new Set<string>(profilePageQueryValues)
 
-export const resolveProfilePageQuery = (
-  page: string | string[] | undefined
-): ProfilePageQuery => {
-  const normalizedPage = typeof page === 'string' ? page : undefined
+const resolveSingleProfilePageQuery = (value: string | string[] | undefined): string | undefined =>
+  typeof value === 'string' && profilePageQuerySet.has(value) ? value : undefined
 
-  if (!normalizedPage || !profilePageQuerySet.has(normalizedPage)) {
-    return DEFAULT_PROFILE_PAGE_QUERY
+export const resolveProfilePageQuery = (
+  pagePathParam: string | string[] | undefined,
+  pageQueryParam?: string | string[] | undefined
+): ProfilePageQuery => {
+  const fromPath = resolveSingleProfilePageQuery(pagePathParam)
+  if (fromPath) {
+    return fromPath as ProfilePageQuery
   }
 
-  return normalizedPage as ProfilePageQuery
+  const fromQuery = resolveSingleProfilePageQuery(pageQueryParam)
+  if (fromQuery) {
+    return fromQuery as ProfilePageQuery
+  }
+
+  return DEFAULT_PROFILE_PAGE_QUERY
 }
 
-export const isRecordPageQuery = (page: string | string[] | undefined): boolean => {
-  const resolvedPage = resolveProfilePageQuery(page)
+export const isRecordPageQuery = (
+  pagePathParam: string | string[] | undefined,
+  pageQueryParam?: string | string[] | undefined
+): boolean => {
+  const resolvedPage = resolveProfilePageQuery(pagePathParam, pageQueryParam)
   return resolvedPage === 'record_normal' || resolvedPage === 'record_we'
+}
+
+export const buildUserProfilePagePath = (username: string, page: ProfilePageQuery): string => {
+  const encodedUsername = encodeURIComponent(username)
+  if (page === DEFAULT_PROFILE_PAGE_QUERY) {
+    return `/users/${encodedUsername}`
+  }
+
+  return `/users/${encodedUsername}/${page}`
 }

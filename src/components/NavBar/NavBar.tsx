@@ -15,6 +15,7 @@ import {
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createSignal, onMount } from 'solid-js'
+import { isHomePath } from './navItemMatching'
 
 type NavBarProps = {
   children: JSX.Element
@@ -35,6 +36,7 @@ type DropdownItem = {
 }
 
 type NavItem = {
+  id: 'home' | 'goals' | 'stats' | 'tools' | 'others'
   label: string
   path: string
   icon: () => JSX.Element
@@ -93,13 +95,14 @@ const NavBar = (props: NavBarProps) => {
 
     return [
       {
+        id: 'home',
         label: 'ホーム',
         path: userPath,
         icon: () => <House class="h-6 w-6" aria-hidden="true" />,
-        matchPattern: /^\/users\/[^/]+$/,
         requiresAuth: true,
       },
       {
+        id: 'goals',
         label: '目標',
         path: '/goals',
         icon: () => <Target class="h-6 w-6" aria-hidden="true" />,
@@ -107,6 +110,7 @@ const NavBar = (props: NavBarProps) => {
         requiresAuth: true,
       },
       {
+        id: 'stats',
         label: '統計',
         path: `${userPath}/stats`,
         icon: () => <ChartNoAxesCombined class="h-6 w-6" aria-hidden="true" />,
@@ -114,12 +118,14 @@ const NavBar = (props: NavBarProps) => {
         requiresAuth: true,
       },
       {
+        id: 'tools',
         label: 'ツール',
         path: '/tools',
         icon: () => <Toolbox class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
       },
       {
+        id: 'others',
         label: 'その他',
         path: '#',
         matchPattern: /a^/, // マッチしないダミーパターン
@@ -158,6 +164,10 @@ const NavBar = (props: NavBarProps) => {
       if (viewedUsername !== authUser.username) {
         return false
       }
+    }
+
+    if (item.id === 'home') {
+      return isHomePath(pathname)
     }
 
     if (item.matchPattern) {
