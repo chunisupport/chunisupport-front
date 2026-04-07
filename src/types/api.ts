@@ -395,6 +395,7 @@ export interface WorldsendChartDTO {
   attribute: string | null
   level_star: number | null
   notes: number | null
+  notes_designer?: string | null
 }
 
 export interface WorldsendSongDTO {
@@ -436,6 +437,7 @@ export interface UpdateWorldsendChartRequestDTO {
   attribute: string | null
   level_star: number | null
   notes: number | null
+  notes_designer?: string | null
 }
 
 export interface UpdateWorldsendSongRequestDTO {

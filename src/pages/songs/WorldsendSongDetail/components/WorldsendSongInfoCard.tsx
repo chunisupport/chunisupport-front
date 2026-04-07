@@ -4,6 +4,9 @@ import type { WorldsendSongDTO } from '../../../../types/api'
 import { getWorldsendChartRows, getWorldsendSongInfoItems } from '../../worldsendDetailModel'
 
 const badgeClass = 'bg-black text-white'
+const fixedColumnClass = 'w-px whitespace-nowrap'
+const fixedCellClass = 'px-3 py-2 text-gray-800 whitespace-nowrap'
+const truncateTextClass = 'block overflow-hidden text-ellipsis whitespace-nowrap'
 
 type Props = {
   song: WorldsendSongDTO
@@ -52,29 +55,39 @@ const WorldsendSongInfoCard = (props: Props) => {
 
       <div class="rounded-md border border-gray-200 bg-white p-4">
         <div class="overflow-x-auto">
-          <table class="min-w-full text-sm">
+          <table class="min-w-full table-auto text-sm">
             <thead class="bg-gray-50 text-left">
               <tr>
-                <th class="px-3 py-2 font-medium text-gray-700"></th>
-                <th class="px-3 py-2 font-medium text-gray-700">属性</th>
-                <th class="px-3 py-2 font-medium text-gray-700">レベル</th>
-                <th class="px-3 py-2 font-medium text-gray-700">ノーツ数</th>
+                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}></th>
+                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>属性</th>
+                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>レベル</th>
+                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>ノーツ数</th>
+                <th class="px-3 py-2 font-medium text-gray-700">NOTES DESIGNER</th>
               </tr>
             </thead>
             <tbody>
               <For each={getWorldsendChartRows(props.song)}>
                 {(chart) => (
                   <tr class="border-t border-gray-100">
-                    <td class="px-3 py-2">
-                      <span
-                        class={`inline-flex min-w-[7rem] justify-center rounded px-3 py-1 text-xs font-semibold tracking-wide ${badgeClass}`}
+                    <td class={`${fixedCellClass} ${fixedColumnClass}`}>
+                      <div
+                        class={`overflow-hidden rounded px-3 py-1 text-center text-xs font-semibold tracking-wide text-ellipsis whitespace-nowrap ${badgeClass}`}
                       >
                         {chart.label}
-                      </span>
+                      </div>
                     </td>
-                    <td class="px-3 py-2 text-gray-800">{chart.attribute}</td>
-                    <td class="px-3 py-2 text-gray-800">{chart.level}</td>
-                    <td class="px-3 py-2 text-gray-800">{chart.notes}</td>
+                    <td class={`${fixedCellClass} ${fixedColumnClass}`}>
+                      <span class={truncateTextClass}>{chart.attribute}</span>
+                    </td>
+                    <td class={`${fixedCellClass} ${fixedColumnClass}`}>
+                      <span class={truncateTextClass}>{chart.level}</span>
+                    </td>
+                    <td class={`${fixedCellClass} ${fixedColumnClass}`}>
+                      <span class={truncateTextClass}>{chart.notes}</span>
+                    </td>
+                    <td class="px-3 py-2 text-gray-800">
+                      <span class={truncateTextClass}>{chart.notesDesigner}</span>
+                    </td>
                   </tr>
                 )}
               </For>

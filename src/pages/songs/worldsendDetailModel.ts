@@ -10,6 +10,7 @@ export type WorldsendChartRow = {
   attribute: string
   level: string
   notes: number | string
+  notesDesigner: string
 }
 
 const fallbackText = (value: string | null | undefined) => {
@@ -32,6 +33,7 @@ export const getWorldsendChartRows = (song: WorldsendSongDTO): WorldsendChartRow
       attribute: fallbackText(chart?.attribute),
       level: chart?.level_star == null ? '-' : `★${chart.level_star}`,
       notes: chart?.notes ?? '-',
+      notesDesigner: fallbackText(chart?.notes_designer),
     },
   ]
 }
