@@ -1,6 +1,7 @@
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import type { MasterDataDTO } from '../../../../../types/api'
+import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { CHUNITHM_VERSIONS } from '../../../../../utils/versionConverter'
 import { LAMP_OPTIONS } from '../../types/filterDefaults'
 import type { Difficulty, FilterState } from '../../types/types'
@@ -27,9 +28,8 @@ const toInputValue = (value?: number | null) =>
   value === undefined || value === null ? '' : String(value)
 
 const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
-  // 入力値の状態管理
   const [scoreRankMin, setScoreRankMin] = createSignal('0点')
-  const [scoreRankMax, setScoreRankMax] = createSignal('MAX')
+  const [scoreRankMax, setScoreRankMax] = createSignal('SSS+')
   const [constLevelMin, setConstLevelMin] = createSignal('1')
   const [constLevelMax, setConstLevelMax] = createSignal('15+')
   const [constMinInput, setConstMinInput] = createSignal(toInputValue(props.filters.constMin))
@@ -63,20 +63,24 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   }
 
   const Score2Rank = (value: number) => {
-    const normalized = Math.max(SCORE_RANK_VALUES['0点'], Math.min(value, SCORE_RANK_VALUES.MAX))
+    const highestRank = SCORE_RANKS[SCORE_RANKS.length - 1]
+    const normalized = Math.max(
+      SCORE_RANK_VALUES['0点'],
+      Math.min(value, SCORE_RANK_VALUES[highestRank])
+    )
     for (const rank of SCORE_RANKS) {
       const maxValue = Rank2Score(rank, 'max')
       if (normalized <= maxValue) {
         return rank
       }
     }
-    return 'MAX'
+    return highestRank
   }
 
   const Rank2Score = (rank: ScoreRank, type: 'min' | 'max') => {
     const rankIndex = SCORE_RANKS.indexOf(rank)
     const minValue = SCORE_RANK_VALUES[rank]
-    if (type === 'min' || rank === 'MAX') {
+    if (type === 'min' || rank === SCORE_RANKS[SCORE_RANKS.length - 1]) {
       return minValue
     }
     const nextRank = SCORE_RANKS[rankIndex + 1]
@@ -192,14 +196,14 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         ...prev,
         scoreMin: nextValue,
       }))
-    } else {
-      setScoreRankMax(value)
-      setScoreMaxInput(toInputValue(nextValue))
-      props.setFilters((prev) => ({
-        ...prev,
-        scoreMax: nextValue,
-      }))
+      return
     }
+    setScoreRankMax(value)
+    setScoreMaxInput(toInputValue(nextValue))
+    props.setFilters((prev) => ({
+      ...prev,
+      scoreMax: nextValue,
+    }))
   }
 
   const difficulties = () => props.masterData?.difficulties?.map((d) => d.name as Difficulty) ?? []
@@ -263,7 +267,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           setScoreMaxInput(value)
           props.setFilters((prev) => ({
             ...prev,
-            scoreMax: parseNumberInput(value) ?? 1010000,
+            scoreMax: parseNumberInput(value) ?? MAX_SCORE,
           }))
         }}
         onScoreRankChange={handleScoreRankChange}

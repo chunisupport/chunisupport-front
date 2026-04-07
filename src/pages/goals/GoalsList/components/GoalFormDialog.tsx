@@ -9,6 +9,7 @@ import type {
   GoalUpdateRequest,
   MasterDataDTO,
 } from '../../../../../types/api'
+import { MAX_SCORE } from '../../../../utils/scoreRank'
 import {
   COMBO_LAMP_OPTIONS,
   HARD_LAMP_OPTIONS,
@@ -64,7 +65,7 @@ const toggleSelection = (current: string[], value: string, checked: boolean): st
 const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [title, setTitle] = createSignal('')
   const [achievementType, setAchievementType] = createSignal<GoalAchievementType>('score_count')
-  const [score, setScore] = createSignal('1000000')
+  const [score, setScore] = createSignal(String(MAX_SCORE - 10000))
   const [count, setCount] = createSignal('1')
   const [countMode, setCountMode] = createSignal<'number' | 'all'>('number')
   const [total, setTotal] = createSignal('100')
@@ -80,7 +81,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
   const [errorMessage, setErrorMessage] = createSignal('')
 
-  const getTotalScoreMax = (): number => props.resolveAllCount(getDraftAttributes()) * 1010000
+  const getTotalScoreMax = (): number => props.resolveAllCount(getDraftAttributes()) * MAX_SCORE
 
   createEffect(() => {
     if (!props.open) return
@@ -90,7 +91,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     if (!goal) {
       setTitle('')
       setAchievementType('score_count')
-      setScore('1000000')
+      setScore(String(MAX_SCORE - 10000))
       setCount('1')
       setCountMode('number')
       setTotal('100')
@@ -189,7 +190,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       (currentType === 'score_count' ||
         currentType === 'rank_count' ||
         currentType === 'avg_score') &&
-      (!Number.isFinite(parsedScore) || parsedScore < 0 || parsedScore > 1010000)
+      (!Number.isFinite(parsedScore) || parsedScore < 0 || parsedScore > MAX_SCORE)
     ) {
       setErrorMessage('スコアは 0 ～ 1,010,000 の範囲で入力してください。')
       return

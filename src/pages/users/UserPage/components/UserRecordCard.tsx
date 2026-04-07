@@ -64,13 +64,14 @@ export const UserRecordCard: Component<Props> = (props) => {
             >
               <p
                 ref={titleRef}
-                class={`font-semibold whitespace-nowrap ${shouldAnimate() ? 'animate-marquee' : ''}`}
+                class={`text-lg font-semibold whitespace-nowrap ${shouldAnimate() ? 'animate-marquee' : ''}`}
               >
                 {props.record.title}
               </p>
             </A>
-            <p class="text-sm font-oswald font-bold">
-              {props.record.rating.toFixed(2)} &lt; {props.record.const} / {props.record.score}
+            <p class="text-base font-oswald font-bold">
+              {props.record.rating.toFixed(2)} &lt; {props.record.const} /{' '}
+              {props.record.score.toLocaleString('ja-JP')}
             </p>
           </div>
         </div>

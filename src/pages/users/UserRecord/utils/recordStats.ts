@@ -1,8 +1,8 @@
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import { getScoreRank } from '../../../../utils/scoreRank'
 
-export const rankOrder = ['MAX', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'OTHERS', '未プレイ']
+export const rankOrder = ['SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'OTHERS', '未プレイ']
 export const rankColorMap: Record<string, string> = {
-  MAX: 'bg-red-300',
   'SSS+': 'bg-lime-300',
   SSS: 'bg-yellow-300',
   'SS+': 'bg-amber-300',
@@ -63,13 +63,13 @@ export type RecordStats = {
 
 /** スコアからランクを取得する */
 function getRank(score: number): string {
-  if (score === 1010000) return 'MAX'
-  if (score >= 1009000) return 'SSS+'
-  if (score >= 1007500) return 'SSS'
-  if (score >= 1005000) return 'SS+'
-  if (score >= 1000000) return 'SS'
-  if (score >= 990000) return 'S+'
-  if (score >= 975000) return 'S'
+  const rank = getScoreRank(score)
+  if (rank === 'SSS+') return rank
+  if (rank === 'SSS') return rank
+  if (rank === 'SS+') return rank
+  if (rank === 'SS') return rank
+  if (rank === 'S+') return rank
+  if (rank === 'S') return rank
   return 'OTHERS'
 }
 

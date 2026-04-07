@@ -1,4 +1,5 @@
 import type { MasterDataDTO, MasterItemDTO } from '../../../../types/api'
+import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { CHUNITHM_VERSIONS } from '../../../../utils/versionConverter'
 import type { ComboLamp, FilterState } from '../types/types'
 
@@ -15,7 +16,7 @@ export const DEFAULT_FILTER: FilterState = {
   constMax: 15.9,
   constFilterMode: 'level',
   scoreMin: 0,
-  scoreMax: 1010000,
+  scoreMax: MAX_SCORE,
   scoreFilterMode: 'rank',
   lamps: ['ALL JUSTICE', 'FULL COMBO', null],
   excludeNoPlay: false,

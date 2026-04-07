@@ -6,6 +6,7 @@ import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown, Info } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal, For } from 'solid-js'
+import { MAX_SCORE } from '../../../../../../utils/scoreRank'
 import { LAMP_OPTIONS } from '../../../types/filterDefaults'
 import { SCORE_RANK_VALUES, SCORE_RANKS } from '../../../utils/scoreRank'
 import {
@@ -120,7 +121,7 @@ const TrackingDialog: Component<TrackingDialogProps> = (props) => {
                       <NumberField.Input
                         id="tracking-score-min"
                         min={0}
-                        max={1010000}
+                        max={MAX_SCORE}
                         step={1}
                         class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 disabled:bg-gray-100 disabled:text-gray-400"
                         onFocus={(event) => event.currentTarget.select()}

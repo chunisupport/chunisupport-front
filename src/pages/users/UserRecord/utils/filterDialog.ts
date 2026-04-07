@@ -1,16 +1,17 @@
+import { MAX_SCORE } from '../../../../utils/scoreRank'
 import type { FilterState } from '../types/types'
 
 export function formatFilterSummary(filter: FilterState): string {
   const parts: string[] = []
-  if (filter.excludeNoPlay) parts.push('未プレイ除外')
+  if (filter.excludeNoPlay) parts.push('未プレイ譜面を除外')
   if (filter.difficulties.length > 0) parts.push(`難易度: ${filter.difficulties.join(',')}`)
   if (filter.constMin !== 0.0 || filter.constMax !== 15.9)
     parts.push(`定数: ${filter.constMin}-${filter.constMax}`)
-  if (filter.scoreMin !== 0 || filter.scoreMax !== 1010000)
+  if (filter.scoreMin !== 0 || filter.scoreMax !== MAX_SCORE)
     parts.push(`スコア: ${filter.scoreMin}-${filter.scoreMax}`)
   if (filter.genres.length > 0) parts.push(`ジャンル: ${filter.genres.join(',')}`)
   if (filter.lamps.length > 0)
-    parts.push(`ランプ: ${filter.lamps.map((l) => l ?? 'なし').join(',')}`)
+    parts.push(`ランプ: ${filter.lamps.map((lamp) => lamp ?? 'なし').join(',')}`)
   if (filter.versions.length > 0) parts.push(`バージョン: ${filter.versions.join(',')}`)
   return parts.join('\n')
 }
