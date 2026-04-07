@@ -159,14 +159,16 @@ const NavBar = (props: NavBarProps) => {
 
     const handleMainScroll = () => {
       const currentScrollTop = window.scrollY
-      setIsMobileNavVisible((currentVisibility) =>
-        resolveNavBarVisibility({
-          previousScrollTop,
-          currentScrollTop,
-          isVisible: currentVisibility,
-        })
-      )
-      previousScrollTop = currentScrollTop
+      const nextVisibility = resolveNavBarVisibility({
+        previousScrollTop,
+        currentScrollTop,
+        isVisible: isMobileNavVisible(),
+      })
+
+      if (nextVisibility !== isMobileNavVisible() || currentScrollTop <= 16) {
+        setIsMobileNavVisible(nextVisibility)
+        previousScrollTop = currentScrollTop
+      }
     }
 
     window.addEventListener('scroll', handleMainScroll, { passive: true })
