@@ -74,11 +74,11 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   let tableContainerRef: HTMLDivElement | undefined
   let tableBodyRef: HTMLDivElement | undefined
   let layoutResizeObserver: ResizeObserver | undefined
-  const getScrollElement = () => document.getElementById('app-main') as HTMLDivElement | null
+  const getScrollElement = () => window
 
   const [scrollMargin, setScrollMargin] = createSignal(0)
 
-  const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>({
+  const rowVirtualizer = createVirtualizer<Window, HTMLDivElement>({
     get count() {
       return props.records.length
     },
@@ -95,9 +95,8 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
     const tableBodyElement = tableBodyRef
     if (!scrollElement || !tableBodyElement) return
 
-    const scrollRect = scrollElement.getBoundingClientRect()
     const tableBodyRect = tableBodyElement.getBoundingClientRect()
-    const next = tableBodyRect.top - scrollRect.top + scrollElement.scrollTop
+    const next = tableBodyRect.top + window.scrollY
     if (Math.abs(next - scrollMargin()) >= 1) {
       setScrollMargin(next)
     }
@@ -113,11 +112,6 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
       })
 
       layoutResizeObserver.observe(tableContainerRef)
-
-      const scrollElement = getScrollElement()
-      if (scrollElement) {
-        layoutResizeObserver.observe(scrollElement)
-      }
     }
 
     window.addEventListener('resize', updateScrollMargin)
