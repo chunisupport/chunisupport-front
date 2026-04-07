@@ -123,6 +123,7 @@ export interface ChartDTO {
   const: number
   is_const_unknown: boolean
   notes: number | null
+  notes_designer?: string | null
 }
 
 export interface SongDTO {

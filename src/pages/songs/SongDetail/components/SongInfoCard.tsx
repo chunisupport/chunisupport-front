@@ -10,6 +10,10 @@ const difficultyRowClass: Record<string, string> = {
   ULTIMA: 'bg-[#000000] text-white',
 }
 
+const fixedColumnClass = 'w-px whitespace-nowrap'
+const fixedCellClass = 'px-3 py-2 text-gray-800 whitespace-nowrap'
+const truncateTextClass = 'block overflow-hidden text-ellipsis whitespace-nowrap'
+
 type DifficultyOption = {
   label: string
   value: string
@@ -21,6 +25,11 @@ type Props = {
 }
 
 const SongInfoCard = (props: Props) => {
+  const getNotesDesignerLabel = (notesDesigner: string | null | undefined) => {
+    const trimmed = notesDesigner?.trim()
+    return trimmed ? trimmed : '-'
+  }
+
   const songInfoItems = () => [
     { label: 'ジャンル', value: props.song.genre },
     { label: 'BPM', value: props.song.bpm ?? '-' },
@@ -64,12 +73,13 @@ const SongInfoCard = (props: Props) => {
 
       <div class="rounded-md border border-gray-200 bg-white p-4">
         <div class="overflow-x-auto">
-          <table class="min-w-full text-sm">
+          <table class="min-w-full table-auto text-sm">
             <thead class="bg-gray-50 text-left">
               <tr>
-                <th class="px-3 py-2 font-medium text-gray-700"></th>
-                <th class="px-3 py-2 font-medium text-gray-700">譜面定数</th>
-                <th class="px-3 py-2 font-medium text-gray-700">ノーツ数</th>
+                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}></th>
+                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>譜面定数</th>
+                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>ノーツ数</th>
+                <th class="px-3 py-2 font-medium text-gray-700">NOTES DESIGNER</th>
               </tr>
             </thead>
             <tbody>
@@ -79,19 +89,28 @@ const SongInfoCard = (props: Props) => {
                   const chart = props.song.charts[key]
                   return (
                     <tr class="border-t border-gray-100">
-                      <td class="px-3 py-2">
-                        <span
-                          class={`inline-flex min-w-[7rem] justify-center rounded px-3 py-1 text-xs font-semibold tracking-wide ${difficultyRowClass[difficulty.label] ?? 'bg-gray-200 text-gray-800'}`}
+                      <td class={`${fixedCellClass} ${fixedColumnClass}`}>
+                        <div
+                          class={`overflow-hidden rounded px-3 py-1 text-center text-xs font-semibold tracking-wide text-ellipsis whitespace-nowrap ${difficultyRowClass[difficulty.label] ?? 'bg-gray-200 text-gray-800'}`}
                         >
                           {difficulty.label}
+                        </div>
+                      </td>
+                      <td class={`${fixedCellClass} ${fixedColumnClass}`}>
+                        <span class={truncateTextClass}>
+                          {chart
+                            ? `${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}`
+                            : '-'}
                         </span>
                       </td>
-                      <td class="px-3 py-2 text-gray-800">
-                        {chart
-                          ? `${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}`
-                          : '-'}
+                      <td class={`${fixedCellClass} ${fixedColumnClass}`}>
+                        <span class={truncateTextClass}>{chart?.notes ?? '-'}</span>
                       </td>
-                      <td class="px-3 py-2 text-gray-800">{chart?.notes ?? '-'}</td>
+                      <td class="px-3 py-2 text-gray-800">
+                        <span class={truncateTextClass}>
+                          {getNotesDesignerLabel(chart?.notes_designer)}
+                        </span>
+                      </td>
                     </tr>
                   )
                 }}
