@@ -4,7 +4,7 @@ import { signInWithPopup } from 'firebase/auth'
 import { createSignal } from 'solid-js'
 
 import { postFirebaseLogin, postLogin } from '../../../api/auth'
-import AuthLoadingIndicator from '../../../components/AuthLoadingIndicator/AuthLoadingIndicator'
+import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
 import { auth, googleProvider } from '../../../lib/firebase'
@@ -61,7 +61,7 @@ const Login = () => {
     <div class="min-h-screen flex justify-center px-4 py-10">
       <div class="w-full max-w-md">
         {isCheckingAuth() ? (
-          <AuthLoadingIndicator />
+          <Loading />
         ) : (
           <>
             <div class="text-center mb-6">

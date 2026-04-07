@@ -6,7 +6,7 @@ import { Check, Dot, Loader, X } from 'lucide-solid'
 import { createEffect, createSignal, Show } from 'solid-js'
 
 import { postFirebaseRegister } from '../../../api/auth'
-import AuthLoadingIndicator from '../../../components/AuthLoadingIndicator/AuthLoadingIndicator'
+import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
 import { auth, googleProvider } from '../../../lib/firebase'
@@ -121,7 +121,7 @@ const Register = () => {
     <div class="min-h-screen flex justify-center px-4 py-10">
       <div class="w-full max-w-md">
         {isCheckingAuth() ? (
-          <AuthLoadingIndicator />
+          <Loading />
         ) : (
           <>
             <div class="text-center mb-6">
