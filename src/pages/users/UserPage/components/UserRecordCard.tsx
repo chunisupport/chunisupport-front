@@ -66,7 +66,7 @@ export const UserRecordCard: Component<Props> = (props) => {
             >
               <p
                 ref={titleRef}
-                class={`text-lg font-semibold whitespace-nowrap ${shouldAnimate() ? 'animate-marquee' : ''}`}
+                class={`text-base font-semibold whitespace-nowrap ${shouldAnimate() ? 'animate-marquee' : ''}`}
               >
                 {props.record.title}
               </p>
