@@ -15,7 +15,7 @@ import {
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createSignal, onCleanup, onMount } from 'solid-js'
-import { resolveNavBarVisibility } from './navBarVisibility'
+import { resolveNavBarVisibility } from './navBarVisibility.ts'
 import { isHomePath } from './navItemMatching'
 
 type NavBarProps = {
@@ -156,9 +156,24 @@ const NavBar = (props: NavBarProps) => {
 
   onMount(() => {
     let previousScrollTop = window.scrollY
+    let frameId: number | null = null
 
-    const handleMainScroll = () => {
-      const currentScrollTop = window.scrollY
+    const getEffectiveScrollTop = () => {
+      const visualViewport = window.visualViewport
+      if (!visualViewport) {
+        return window.scrollY
+      }
+
+      return Math.max(
+        window.scrollY,
+        visualViewport.pageTop,
+        window.scrollY + visualViewport.offsetTop
+      )
+    }
+
+    const syncMobileNavVisibility = () => {
+      frameId = null
+      const currentScrollTop = getEffectiveScrollTop()
       const nextVisibility = resolveNavBarVisibility({
         previousScrollTop,
         currentScrollTop,
@@ -171,9 +186,25 @@ const NavBar = (props: NavBarProps) => {
       }
     }
 
-    window.addEventListener('scroll', handleMainScroll, { passive: true })
+    const scheduleSyncMobileNavVisibility = () => {
+      if (frameId !== null) {
+        return
+      }
+
+      frameId = window.requestAnimationFrame(syncMobileNavVisibility)
+    }
+
+    const visualViewport = window.visualViewport
+    window.addEventListener('scroll', scheduleSyncMobileNavVisibility, { passive: true })
+    visualViewport?.addEventListener('scroll', scheduleSyncMobileNavVisibility, { passive: true })
+    visualViewport?.addEventListener('resize', scheduleSyncMobileNavVisibility, { passive: true })
     onCleanup(() => {
-      window.removeEventListener('scroll', handleMainScroll)
+      window.removeEventListener('scroll', scheduleSyncMobileNavVisibility)
+      visualViewport?.removeEventListener('scroll', scheduleSyncMobileNavVisibility)
+      visualViewport?.removeEventListener('resize', scheduleSyncMobileNavVisibility)
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId)
+      }
     })
   })
 
