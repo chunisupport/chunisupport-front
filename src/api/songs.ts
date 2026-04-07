@@ -8,6 +8,7 @@ import type {
   SongStatsResponseDTO,
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
+  VersionSummaryDTO,
   WorldsendSongDTO,
 } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
@@ -61,6 +62,12 @@ export const fetchSongStats = async (
   const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/songs/${encodeURIComponent(displayId)}/stats/${encodeURIComponent(difficulty)}`
   )
+
+  return response.json()
+}
+
+export const fetchVersionSummaries = async (): Promise<{ versions: VersionSummaryDTO[] }> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/master/versions`)
 
   return response.json()
 }

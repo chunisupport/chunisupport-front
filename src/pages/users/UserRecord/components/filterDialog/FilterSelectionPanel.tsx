@@ -1,8 +1,7 @@
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
-import type { MasterDataDTO } from '../../../../../types/api'
+import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
-import { CHUNITHM_VERSIONS } from '../../../../../utils/versionConverter'
 import { LAMP_OPTIONS } from '../../types/filterDefaults'
 import type { Difficulty, FilterState } from '../../types/types'
 import { parseNumberInput, toggleArray } from '../../utils/filterDialog'
@@ -19,6 +18,7 @@ type FilterSelectionPanelProps = {
   filters: FilterState
   setFilters: Setter<FilterState>
   masterData?: MasterDataDTO
+  versions?: VersionSummaryDTO[]
   defaultFilter: FilterState
   resetKey: number
 }
@@ -208,6 +208,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 
   const difficulties = () => props.masterData?.difficulties?.map((d) => d.name as Difficulty) ?? []
   const genres = () => props.masterData?.genres?.map((g) => g.name) ?? []
+  const versions = () => props.versions?.map((version) => version.name) ?? []
 
   return (
     <div class="space-y-4 overflow-y-auto flex-1 min-h-0">
@@ -320,12 +321,12 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         }
       />
       <VersionSection
-        versions={[...CHUNITHM_VERSIONS]}
+        versions={versions()}
         selected={props.filters.versions}
         onSelectAll={() =>
           props.setFilters((prev) => ({
             ...prev,
-            versions: [...CHUNITHM_VERSIONS],
+            versions: versions(),
           }))
         }
         onClear={() =>

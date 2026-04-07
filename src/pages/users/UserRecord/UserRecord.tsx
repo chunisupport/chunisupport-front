@@ -8,7 +8,7 @@ import {
   Show,
   Suspense,
 } from 'solid-js'
-import { fetchAllSongs, fetchMasterData } from '../../../api/songs'
+import { fetchAllSongs, fetchMasterData, fetchVersionSummaries } from '../../../api/songs'
 import { Loading, ScrollToTop } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { UserProfileWithRecordsDTO } from '../../../types/api'
@@ -52,6 +52,7 @@ type Props = {
 const UserRecord: Component<Props> = (props) => {
   const [allSongs] = createResource(fetchAllSongs)
   const [masterData] = createResource(fetchMasterData)
+  const [versionSummaries] = createResource(fetchVersionSummaries)
 
   // 保存済みフィルター一覧
   const [savedFilters, setSavedFilters] = createSignal<SavedFilter[]>(loadSavedFilters())
@@ -75,18 +76,20 @@ const UserRecord: Component<Props> = (props) => {
   // マスタデータ取得後にgenres/versionsを全選択
   createEffect(() => {
     const md = masterData()
-    if (!md) return
+    const versions = versionSummaries()
+    if (!md || !versions) return
     setFilters((prev) => ({
       ...prev,
-      ...getMasterDataDefaults(md),
+      ...getMasterDataDefaults(md, versions.versions),
     }))
   })
 
   /** 未プレイを含む全曲のレコード */
   const recordsWithSongMeta = createMemo(() => {
     const songs = allSongs()
-    if (!songs) return []
-    return attachSongMetaToRecords(songs.songs, props.profile.records.all)
+    const versions = versionSummaries()
+    if (!songs || !versions) return []
+    return attachSongMetaToRecords(songs.songs, props.profile.records.all, versions.versions)
   })
 
   /** フィルター適用後のレコード */
@@ -298,7 +301,7 @@ const UserRecord: Component<Props> = (props) => {
   return (
     <Suspense fallback={<Loading />}>
       <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
-        <Show when={allSongs() && masterData()} fallback={<Loading />}>
+        <Show when={allSongs() && masterData() && versionSummaries()} fallback={<Loading />}>
           <div class="mx-2 text-sm">
             {/* 追跡表示 */}
             {trackingCondition() && trackingTargetFilter() && (
@@ -350,7 +353,8 @@ const UserRecord: Component<Props> = (props) => {
               filters={filters()}
               onChange={setFilters}
               masterData={masterData()}
-              defaultFilter={getDefaultFilter(masterData())}
+              versions={versionSummaries()?.versions}
+              defaultFilter={getDefaultFilter(masterData(), versionSummaries()?.versions)}
               onTrackingChange={() => setTrackingCondition(loadTrackingCondition())}
               setSavedFilters={setSavedFilters}
             />

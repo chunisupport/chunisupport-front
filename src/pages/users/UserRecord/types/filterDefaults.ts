@@ -1,6 +1,5 @@
-import type { MasterDataDTO, MasterItemDTO } from '../../../../types/api'
+import type { MasterDataDTO, MasterItemDTO, VersionSummaryDTO } from '../../../../types/api'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { CHUNITHM_VERSIONS } from '../../../../utils/versionConverter'
 import type { ComboLamp, FilterState } from '../types/types'
 
 /** ランプの選択肢 */
@@ -23,14 +22,20 @@ export const DEFAULT_FILTER: FilterState = {
 }
 
 /** マスタデータに依存するデフォルト値 */
-export const getMasterDataDefaults = (masterData?: MasterDataDTO) => ({
+export const getMasterDataDefaults = (
+  masterData?: MasterDataDTO,
+  versions?: VersionSummaryDTO[]
+) => ({
   genres: masterData?.genres?.map((g: MasterItemDTO) => g.name) ?? [],
-  versions: [...CHUNITHM_VERSIONS],
+  versions: versions?.map((version) => version.name) ?? [],
 })
 
 /** フィルターのデフォルト値を取得する */
-export const buildDefaultFilter = (masterData?: MasterDataDTO): FilterState => ({
+export const buildDefaultFilter = (
+  masterData?: MasterDataDTO,
+  versions?: VersionSummaryDTO[]
+): FilterState => ({
   ...DEFAULT_FILTER,
-  ...getMasterDataDefaults(masterData),
+  ...getMasterDataDefaults(masterData, versions),
   lamps: [...LAMP_OPTIONS],
 })

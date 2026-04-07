@@ -1,7 +1,7 @@
 ﻿import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
-import type { MasterDataDTO } from '../../../../types/api'
+import type { MasterDataDTO, VersionSummaryDTO } from '../../../../types/api'
 import type { FilterState } from '../types/types'
 import FilterResetDialog from './filterDialog/dialogs/FilterResetDialog'
 import SavedFiltersDialog from './filterDialog/dialogs/SavedFiltersDialog'
@@ -13,6 +13,7 @@ interface FilterDialogProps {
   filters: FilterState
   onChange: (filters: FilterState) => void
   masterData?: MasterDataDTO
+  versions?: VersionSummaryDTO[]
   defaultFilter: FilterState
   onTrackingChange?: () => void
   setSavedFilters?: (filters: import('../utils/storage').SavedFilter[]) => void
@@ -69,6 +70,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
             filters={filters()}
             setFilters={setFilters}
             masterData={props.masterData}
+            versions={props.versions}
             defaultFilter={props.defaultFilter}
             resetKey={resetKey()}
           />

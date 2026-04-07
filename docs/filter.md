@@ -34,7 +34,7 @@
 | `title` | `string` | はい | 曲名の部分一致検索。判定時は大文字小文字を区別しません。空文字なら条件なしです。 |
 | `difficulties` | `string[]` | はい | 対象難易度の配列です。実装上はレコードの `difficulty` と完全一致で比較します。空配列にすると全件不一致になります。 |
 | `genres` | `string[]` | はい | 対象ジャンル名の配列です。空配列なら全ジャンル対象です。 |
-| `versions` | `string[]` | はい | 対象バージョン名の配列です。空配列なら全バージョン対象です。 |
+| `versions` | `string[]` | はい | 対象バージョン名の配列です。空配列なら全バージョン対象です。値はバージョン API (`/internal/master/versions`) の `versions[].name` を使います。 |
 | `constMin` | `number` | はい | 譜面定数の下限です。 |
 | `constMax` | `number` | はい | 譜面定数の上限です。 |
 | `constFilterMode` | `"level"` \| `"number"` | はい | UI の入力モードです。現在の絞り込み判定自体は `constMin` / `constMax` のみを参照します。 |
@@ -64,7 +64,7 @@
 - `title`: `""`
 - `difficulties`: `["MASTER", "ULTIMA"]`
 - `genres`: マスターデータ上の全ジャンル
-- `versions`: `CHUNITHM_VERSIONS` に定義された全バージョン
+- `versions`: バージョン API (`/internal/master/versions`) から取得した全バージョン名
 - `constMin`: `1.0`
 - `constMax`: `15.9`
 - `constFilterMode`: `"level"`
@@ -83,33 +83,8 @@ API の `PlayerRecordDTO["difficulty"]` と同じ値を使います。
 
 ### `versions`
 
-現在の実装で使用しているバージョン名は以下です。
-
-```json
-[
-  "ORIGIN",
-  "ORIGIN PLUS",
-  "AIR",
-  "AIR PLUS",
-  "STAR",
-  "STAR PLUS",
-  "AMAZON",
-  "AMAZON PLUS",
-  "CRYSTAL",
-  "CRYSTAL PLUS",
-  "PARADISE",
-  "PARADISE LOST",
-  "NEW",
-  "NEW PLUS",
-  "SUN",
-  "SUN PLUS",
-  "LUMINOUS",
-  "LUMINOUS PLUS",
-  "VERSE",
-  "X-VERSE",
-  "X-VERSE-X"
-]
-```
+固定配列は持たず、バージョン API (`/internal/master/versions`) が返す `versions[].name` をそのまま使います。
+配列順も API のレスポンス順に従います。
 
 ### `lamps`
 
@@ -134,7 +109,7 @@ API の `PlayerRecordDTO["difficulty"]` と同じ値を使います。
       "title": "",
       "difficulties": ["MASTER", "ULTIMA"],
       "genres": [],
-      "versions": ["VERSE", "X-VERSE", "X-VERSE-X"],
+      "versions": ["CHUNITHM VERSE", "CHUNITHM X-VERSE"],
       "constMin": 14,
       "constMax": 15.9,
       "constFilterMode": "number",

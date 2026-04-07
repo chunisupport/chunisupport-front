@@ -6,7 +6,7 @@ import type {
   PlayerRecordDTO,
   SongDTO,
 } from '../../../types/api'
-import { dateToChunithmVersion } from '../../../utils/versionConverter'
+import { resolveVersionNameByReleaseDate } from '../../../utils/versionConverter'
 
 export interface GoalProgressResult {
   current: number
@@ -28,30 +28,6 @@ const COMBO_LAMP_ORDER: Record<string, number> = {
   'ALL JUSTICE': 2,
 }
 
-const VERSION_NAME_ALIAS: Record<string, string> = {
-  ORIGIN: 'CHUNITHM',
-  'ORIGIN PLUS': 'CHUNITHM PLUS',
-  AIR: 'CHUNITHM AIR',
-  'AIR PLUS': 'CHUNITHM AIR PLUS',
-  STAR: 'CHUNITHM STAR',
-  'STAR PLUS': 'CHUNITHM STAR PLUS',
-  AMAZON: 'CHUNITHM AMAZON',
-  'AMAZON PLUS': 'CHUNITHM AMAZON PLUS',
-  CRYSTAL: 'CHUNITHM CRYSTAL',
-  'CRYSTAL PLUS': 'CHUNITHM CRYSTAL PLUS',
-  PARADISE: 'CHUNITHM PARADISE',
-  'PARADISE LOST': 'CHUNITHM PARADISE LOST',
-  NEW: 'CHUNITHM NEW',
-  'NEW PLUS': 'CHUNITHM NEW PLUS',
-  SUN: 'CHUNITHM SUN',
-  'SUN PLUS': 'CHUNITHM SUN PLUS',
-  LUMINOUS: 'CHUNITHM LUMINOUS',
-  'LUMINOUS PLUS': 'CHUNITHM LUMINOUS PLUS',
-  VERSE: 'CHUNITHM VERSE',
-  'X-VERSE': 'CHUNITHM X-VERSE',
-  'X-VERSE-X': 'CHUNITHM X-VERSE-X',
-}
-
 const normalizeVersionName = (name: string): string => name.trim().toUpperCase()
 
 const normalizeAttributeIds = (value: number | number[] | undefined): number[] => {
@@ -66,9 +42,8 @@ const resolveSongVersionId = (song: SongDTO, masterData: MasterDataDTO): number 
   const release = song.release
   if (!release) return undefined
 
-  const converted = dateToChunithmVersion(release)
-  const aliased = VERSION_NAME_ALIAS[converted] ?? converted
-  const normalized = normalizeVersionName(aliased)
+  const resolved = resolveVersionNameByReleaseDate(release, masterData.versions)
+  const normalized = normalizeVersionName(resolved)
   const byName = masterData.versions.find((v) => normalizeVersionName(v.name) === normalized)
   if (byName) {
     return byName.id

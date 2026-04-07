@@ -230,6 +230,11 @@ export interface VersionDTO {
   released_at: string
 }
 
+export interface VersionSummaryDTO {
+  name: string
+  released_at: string
+}
+
 export type GoalAchievementType =
   | 'rank_count'
   | 'score_count'
