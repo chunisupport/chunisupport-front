@@ -133,7 +133,7 @@ const GoalsList: Component = () => {
   return (
     <ErrorBoundary fallback={(err) => <p class="p-4 text-red-500">ERROR: {err.message}</p>}>
       <Show when={!resource.loading} fallback={<Loading />}>
-        <div class="mx-auto w-full max-w-5xl p-4 space-y-4">
+        <div class="mx-auto w-full max-w-3xl p-4 space-y-4">
           <div class="flex items-center justify-between gap-3">
             <div>
               <h1 class="text-2xl font-semibold">目標</h1>
