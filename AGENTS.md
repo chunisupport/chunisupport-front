@@ -15,3 +15,7 @@
 
 - Rsbuild: https://rsbuild.rs/llms.txt
 - Rspack: https://rspack.rs/llms.txt
+
+## コーディングスタイル
+
+必ず`npm run check:ci`で指摘されることがないようにしてください。コードを書いたら必ずこのコマンドを実行して、スタイルガイドに準拠していることを確認してください。
