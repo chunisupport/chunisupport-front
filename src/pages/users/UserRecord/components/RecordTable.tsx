@@ -1,5 +1,5 @@
 import { A } from '@solidjs/router'
-import { createVirtualizer } from '@tanstack/solid-virtual'
+import { createWindowVirtualizer } from '@tanstack/solid-virtual'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import {
   type Component,
@@ -74,15 +74,13 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   let tableContainerRef: HTMLDivElement | undefined
   let tableBodyRef: HTMLDivElement | undefined
   let layoutResizeObserver: ResizeObserver | undefined
-  const getScrollElement = () => window
 
   const [scrollMargin, setScrollMargin] = createSignal(0)
 
-  const rowVirtualizer = createVirtualizer<Window, HTMLDivElement>({
+  const rowVirtualizer = createWindowVirtualizer<HTMLDivElement>({
     get count() {
       return props.records.length
     },
-    getScrollElement,
     estimateSize: () => ROW_HEIGHT,
     overscan: 12,
     get scrollMargin() {
@@ -91,9 +89,8 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   })
 
   const updateScrollMargin = () => {
-    const scrollElement = getScrollElement()
     const tableBodyElement = tableBodyRef
-    if (!scrollElement || !tableBodyElement) return
+    if (!tableBodyElement) return
 
     const tableBodyRect = tableBodyElement.getBoundingClientRect()
     const next = tableBodyRect.top + window.scrollY

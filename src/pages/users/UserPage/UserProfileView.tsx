@@ -354,9 +354,8 @@ export const UserProfileView: Component<Props> = (props) => {
   const forceMountedTabContentClass = 'hidden data-selected:block'
 
   const scrollToRecordList = () => {
-    const scrollTarget = document.getElementById('app-main')
-    if (scrollTarget && scrollTarget.scrollTop > NAMEPLATE_SCROLL_OFFSET) {
-      scrollTarget.scrollTo({
+    if (window.scrollY > NAMEPLATE_SCROLL_OFFSET) {
+      window.scrollTo({
         top: NAMEPLATE_SCROLL_OFFSET,
         behavior: 'smooth',
       })
@@ -375,7 +374,9 @@ export const UserProfileView: Component<Props> = (props) => {
     if (value !== 'rating' && value !== 'records' && value !== 'overpower') return
 
     if (value === 'rating') {
-      navigate(buildProfileNavigationTarget(selectedRatingTab() === 'new' ? 'rating_new' : 'rating_best'))
+      navigate(
+        buildProfileNavigationTarget(selectedRatingTab() === 'new' ? 'rating_new' : 'rating_best')
+      )
     } else if (value === 'records') {
       navigate(
         buildProfileNavigationTarget(
