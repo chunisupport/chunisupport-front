@@ -43,8 +43,8 @@ export const isRecordPageQuery = (
 export const buildUserProfilePagePath = (username: string, page: ProfilePageQuery): string => {
   const encodedUsername = encodeURIComponent(username)
   if (page === DEFAULT_PROFILE_PAGE_QUERY) {
-    return "/users/" + encodedUsername
+    return `/users/${encodedUsername}`
   }
 
-  return "/users/" + encodedUsername + "/" + page
+  return `/users/${encodedUsername}/${page}`
 }
