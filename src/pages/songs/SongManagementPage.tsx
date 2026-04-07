@@ -31,6 +31,7 @@ type EditableChartDraft = {
   const: number
   is_const_unknown: boolean
   notes: number | null
+  notes_designer: string | null
 }
 
 type SongDraft = {
@@ -55,6 +56,7 @@ type WorldsendDraft = {
   attribute: string | null
   level_star: number | null
   notes: number | null
+  notes_designer: string | null
 }
 
 const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
@@ -108,6 +110,7 @@ const toSongDraft = (
           const: chart.const,
           is_const_unknown: chart.is_const_unknown,
           notes: chart.notes ?? null,
+          notes_designer: chart.notes_designer ?? null,
         }
       })
       .filter((chart): chart is NonNullable<typeof chart> => chart !== null),
@@ -128,6 +131,7 @@ const toWorldsendDraft = (song: WorldsendSongDTO, genres: MasterItemDTO[]): Worl
     attribute: chart?.attribute ?? null,
     level_star: chart?.level_star ?? null,
     notes: chart?.notes ?? null,
+    notes_designer: chart?.notes_designer ?? null,
   }
 }
 
@@ -204,8 +208,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
   const updateDraftChart = (
     difficultyId: number,
-    key: 'const' | 'is_const_unknown' | 'notes',
-    value: number | boolean | null
+    key: 'const' | 'is_const_unknown' | 'notes' | 'notes_designer',
+    value: number | boolean | string | null
   ) => {
     setDraft((prev) => {
       if (!prev) return prev
@@ -219,7 +223,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   }
 
   const updateWorldsendChart = (
-    key: 'attribute' | 'level_star' | 'notes',
+    key: 'attribute' | 'level_star' | 'notes' | 'notes_designer',
     value: string | number | null
   ) => {
     setWorldsendDraft((prev) => (prev ? { ...prev, [key]: value } : prev))
@@ -261,6 +265,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
             const: chart.const,
             is_const_unknown: chart.is_const_unknown,
             notes: chart.notes,
+            notes_designer: chart.notes_designer?.trim() ? chart.notes_designer.trim() : null,
           },
         ])
       ),
@@ -307,6 +312,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
           attribute: current.attribute?.trim() ? current.attribute.trim() : null,
           level_star: current.level_star,
           notes: current.notes,
+          notes_designer: current.notes_designer?.trim() ? current.notes_designer.trim() : null,
         },
       },
     }
@@ -521,6 +527,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           <th class="px-3 py-2 text-left">定数</th>
                           <th class="px-3 py-2 text-left">未確定</th>
                           <th class="px-3 py-2 text-left">ノーツ</th>
+                          <th class="px-3 py-2 text-left">NOTES DESIGNER</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -570,6 +577,21 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                     )
                                   }
                                   class="w-28 rounded border border-gray-300 px-2 py-1"
+                                />
+                              </td>
+                              <td class="px-3 py-2">
+                                <input
+                                  value={chart.notes_designer ?? ''}
+                                  onInput={(event) =>
+                                    updateDraftChart(
+                                      chart.difficulty_id,
+                                      'notes_designer',
+                                      event.currentTarget.value.trim() === ''
+                                        ? null
+                                        : event.currentTarget.value
+                                    )
+                                  }
+                                  class="w-48 rounded border border-gray-300 px-2 py-1"
                                 />
                               </td>
                             </tr>
@@ -785,6 +807,21 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                             event.currentTarget.value === ''
                               ? null
                               : Number(event.currentTarget.value)
+                          )
+                        }
+                        class="w-full rounded border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="text-sm">
+                      <span class="mb-1 block text-gray-700">NOTES DESIGNER</span>
+                      <input
+                        value={currentDraft().notes_designer ?? ''}
+                        onInput={(event) =>
+                          updateWorldsendChart(
+                            'notes_designer',
+                            event.currentTarget.value.trim() === ''
+                              ? null
+                              : event.currentTarget.value
                           )
                         }
                         class="w-full rounded border border-gray-300 px-3 py-2"
