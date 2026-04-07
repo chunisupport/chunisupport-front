@@ -375,7 +375,9 @@ export const UserProfileView: Component<Props> = (props) => {
     if (value !== 'rating' && value !== 'records' && value !== 'overpower') return
 
     if (value === 'rating') {
-      navigate(buildProfileNavigationTarget(selectedRatingTab() === 'new' ? 'rating_new' : 'rating_best'))
+      navigate(
+        buildProfileNavigationTarget(selectedRatingTab() === 'new' ? 'rating_new' : 'rating_best')
+      )
     } else if (value === 'records') {
       navigate(
         buildProfileNavigationTarget(

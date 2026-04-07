@@ -71,13 +71,13 @@ export const logoutOtherSessions = async (): Promise<void> => {
 }
 
 export const linkFirebaseAccount = async (idToken: string): Promise<void> => {
-  const response = await fetchWithAuth(API_BASE_URL + '/internal/me/firebase/link', {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/me/firebase/link`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id_token: idToken }),
   })
 
   if (!response.ok) {
-    throw new Error("Googleアカウントの連携に失敗しました。")
+    throw new Error('Googleアカウントの連携に失敗しました。')
   }
 }

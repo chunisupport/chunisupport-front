@@ -33,7 +33,8 @@ const AdminUsersPage = () => {
   }
 
   const handleDelete = async (username: string) => {
-    if (!window.confirm(`ユーザー ${username} を物理削除しますか？この操作は取り消せません。`)) return
+    if (!window.confirm(`ユーザー ${username} を物理削除しますか？この操作は取り消せません。`))
+      return
     setMessage('')
     setErrorMessage('')
     try {

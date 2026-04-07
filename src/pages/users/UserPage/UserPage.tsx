@@ -5,10 +5,7 @@ import { createResource, createSignal, ErrorBoundary, Show, Suspense } from 'sol
 import { fetchUserProfile } from '../../../api/users'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import {
-  isRecordPageQuery,
-  resolveProfilePageQuery,
-} from './profilePageQuery'
+import { isRecordPageQuery, resolveProfilePageQuery } from './profilePageQuery'
 import { UserProfileView } from './UserProfileView'
 import { getUserProfileFetchOptions } from './userProfileFetchOptions'
 

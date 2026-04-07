@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
-  DEFAULT_PROFILE_PAGE_QUERY,
   buildUserProfilePagePath,
+  DEFAULT_PROFILE_PAGE_QUERY,
   isRecordPageQuery,
   resolveProfilePageQuery,
 } from './profilePageQuery.ts'
