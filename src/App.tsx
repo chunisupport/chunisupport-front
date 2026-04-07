@@ -122,6 +122,7 @@ const App = () => {
 
       {/* ユーザ */}
       <Route path="/users/:username" component={withNavBar(UserPage)} />
+      <Route path="/users/:username/:page" component={withNavBar(UserPage)} />
       <Route path="/users/:username/stats" component={withNavBar(withAuth(UserStatsPage))} />
       <Route path="/goals" component={withNavBar(withAuth(GoalsList))} />
 

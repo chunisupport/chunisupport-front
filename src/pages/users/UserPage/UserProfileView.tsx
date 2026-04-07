@@ -1,5 +1,5 @@
 import * as Tabs from '@kobalte/core/tabs'
-import { A, useSearchParams } from '@solidjs/router'
+import { A, useNavigate } from '@solidjs/router'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
 import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
@@ -13,7 +13,7 @@ import type {
 } from '../../../types/api'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
-import { resolveProfilePageQuery } from './profilePageQuery'
+import { buildUserProfilePagePath, type ProfilePageQuery } from './profilePageQuery'
 import { worldsendLampClass, worldsendLampLabel } from './worldsendLampDisplay'
 import { buildWorldsendSongDetailPath } from './worldsendNavigation'
 import { worldsendGridColumns } from './worldsendRecordTableLayout'
@@ -25,6 +25,8 @@ type Props = {
   profile: UserProfileWithRecordsDTO
   recordProfile: Accessor<UserProfileWithRecordsDTO | undefined>
   onShowRecords: () => void
+  selectedPage: ProfilePageQuery
+  username: string
 }
 
 type WorldsendSortKey = 'title' | 'attribute' | 'level' | 'score' | 'lamp'
@@ -323,8 +325,8 @@ export const UserProfileView: Component<Props> = (props) => {
   const newCandidateRecords = (): PlayerRecordDTO[] => props.profile.records.new_candidate
   const recordProfile = () => props.recordProfile()
   const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
-  const [searchParams, setSearchParams] = useSearchParams()
-  const selectedProfilePage = createMemo(() => resolveProfilePageQuery(searchParams.page))
+  const navigate = useNavigate()
+  const selectedProfilePage = createMemo(() => props.selectedPage)
   const selectedPageTab = createMemo<'rating' | 'records' | 'overpower'>(() => {
     if (selectedProfilePage() === 'record_normal' || selectedProfilePage() === 'record_we') {
       return 'records'
@@ -365,12 +367,22 @@ export const UserProfileView: Component<Props> = (props) => {
     if (value !== 'rating' && value !== 'records' && value !== 'overpower') return
 
     if (value === 'rating') {
-      setSearchParams({ page: selectedRatingTab() === 'new' ? 'rating_new' : 'rating_best' })
+      navigate(
+        buildUserProfilePagePath(
+          props.username,
+          selectedRatingTab() === 'new' ? 'rating_new' : 'rating_best'
+        )
+      )
     } else if (value === 'records') {
-      setSearchParams({ page: selectedRecordTab() === 'worldsend' ? 'record_we' : 'record_normal' })
+      navigate(
+        buildUserProfilePagePath(
+          props.username,
+          selectedRecordTab() === 'worldsend' ? 'record_we' : 'record_normal'
+        )
+      )
       props.onShowRecords()
     } else {
-      setSearchParams({ page: 'overpower' })
+      navigate(buildUserProfilePagePath(props.username, 'overpower'))
     }
 
     scrollToRecordList()
@@ -378,13 +390,20 @@ export const UserProfileView: Component<Props> = (props) => {
 
   const handleRatingTabChange = (value: string) => {
     if (value !== 'best' && value !== 'new') return
-    setSearchParams({ page: value === 'new' ? 'rating_new' : 'rating_best' })
+    navigate(
+      buildUserProfilePagePath(props.username, value === 'new' ? 'rating_new' : 'rating_best')
+    )
     scrollToRecordList()
   }
 
   const handleRecordTabChange = (value: string) => {
     if (value !== 'standard' && value !== 'worldsend') return
-    setSearchParams({ page: value === 'worldsend' ? 'record_we' : 'record_normal' })
+    navigate(
+      buildUserProfilePagePath(
+        props.username,
+        value === 'worldsend' ? 'record_we' : 'record_normal'
+      )
+    )
     props.onShowRecords()
     scrollToRecordList()
   }
@@ -461,7 +480,9 @@ export const UserProfileView: Component<Props> = (props) => {
         </Tabs.Content>
 
         <Tabs.Content value="overpower" forceMount class={forceMountedTabContentClass}>
-          <div class="mx-4 min-h-24 rounded-md border border-dashed border-gray-200 bg-gray-50">工事中</div>
+          <div class="mx-4 min-h-24 rounded-md border border-dashed border-gray-200 bg-gray-50">
+            工事中
+          </div>
         </Tabs.Content>
       </Tabs.Root>
 

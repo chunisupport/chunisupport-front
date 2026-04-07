@@ -1,17 +1,22 @@
-import { useParams, useSearchParams } from '@solidjs/router'
+import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
+import { createEffect, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
 
 import { fetchUserProfile } from '../../../api/users'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { isRecordPageQuery } from './profilePageQuery'
+import {
+  buildUserProfilePagePath,
+  isRecordPageQuery,
+  resolveProfilePageQuery,
+} from './profilePageQuery'
 import { UserProfileView } from './UserProfileView'
 import { getUserProfileFetchOptions } from './userProfileFetchOptions'
 
 const UserPage: Component = () => {
-  const params = useParams<{ username: string }>()
+  const params = useParams<{ username: string; page?: string }>()
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
 
   const [userProfile] = createResource(
@@ -20,13 +25,24 @@ const UserPage: Component = () => {
   )
   const [recordProfile] = createResource(
     () =>
-      shouldFetchRecordProfile() || isRecordPageQuery(searchParams.page)
+      shouldFetchRecordProfile() || isRecordPageQuery(params.page, searchParams.page)
         ? params.username
         : undefined,
     (username) => fetchUserProfile(username, getUserProfileFetchOptions('record'))
   )
 
   useDocumentTitle(() => `${params.username}さんのページ`)
+
+  createEffect(() => {
+    const resolvedPage = resolveProfilePageQuery(params.page, searchParams.page)
+    const currentPath = buildUserProfilePagePath(params.username, resolvedPage)
+
+    if (window.location.pathname === currentPath && !searchParams.page) {
+      return
+    }
+
+    navigate(currentPath, { replace: true })
+  })
 
   return (
     <Suspense fallback={<Loading />}>
@@ -37,6 +53,8 @@ const UserPage: Component = () => {
               profile={profile()}
               recordProfile={recordProfile}
               onShowRecords={() => setShouldFetchRecordProfile(true)}
+              selectedPage={resolveProfilePageQuery(params.page, searchParams.page)}
+              username={params.username}
             />
           )}
         </Show>
