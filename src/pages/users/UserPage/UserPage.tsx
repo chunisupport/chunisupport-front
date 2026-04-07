@@ -1,4 +1,4 @@
-import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
+import { useLocation, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createEffect, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
 
@@ -17,6 +17,7 @@ const UserPage: Component = () => {
   const params = useParams<{ username: string; page?: string }>()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
 
   const [userProfile] = createResource(
@@ -37,7 +38,7 @@ const UserPage: Component = () => {
     const resolvedPage = resolveProfilePageQuery(params.page, searchParams.page)
     const currentPath = buildUserProfilePagePath(params.username, resolvedPage)
 
-    if (window.location.pathname === currentPath && !searchParams.page) {
+    if (location.pathname === currentPath && !searchParams.page) {
       return
     }
 
