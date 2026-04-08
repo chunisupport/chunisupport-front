@@ -13,6 +13,7 @@ import { fetchMasterData, fetchSongByDisplayId, fetchSongStats } from '../../../
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { normalizeDifficultyQueryValue } from '../../../utils/difficultyUtils'
+import { resolveVersionNameByReleaseDate } from '../../../utils/versionConverter'
 import SongInfoCard from './components/SongInfoCard'
 import SongStatsTabs from './components/SongStatsTabs'
 
@@ -41,6 +42,14 @@ const SongDetail = () => {
         label: difficultyName,
         value: difficultyName.toLowerCase(),
       }))
+  })
+
+  const songVersionName = createMemo(() => {
+    const currentSong = song()
+    const versions = masterData()?.versions
+    if (!currentSong || !versions) return '不明'
+
+    return resolveVersionNameByReleaseDate(currentSong.release, versions)
   })
 
   createEffect(
@@ -100,7 +109,11 @@ const SongDetail = () => {
               <h1 class="text-2xl font-semibold mb-1">{currentSong.title}</h1>
               <div class="text-gray-600">{currentSong.artist}</div>
 
-              <SongInfoCard song={currentSong} availableDifficulties={availableDifficulties()} />
+              <SongInfoCard
+                song={currentSong}
+                availableDifficulties={availableDifficulties()}
+                versionName={songVersionName()}
+              />
 
               <SongStatsTabs
                 difficulties={availableDifficulties()}

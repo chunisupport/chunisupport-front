@@ -21,6 +21,7 @@ type DifficultyOption = {
 type Props = {
   song: SongDTO
   availableDifficulties: DifficultyOption[]
+  versionName: string
 }
 
 const SongInfoCard = (props: Props) => {
@@ -30,9 +31,10 @@ const SongInfoCard = (props: Props) => {
   }
 
   const songInfoItems = () => [
-    { label: 'ジャンル', value: props.song.genre },
+    { label: 'GENRE', value: props.song.genre },
     { label: 'BPM', value: props.song.bpm ?? '-' },
-    { label: 'リリース日', value: props.song.release ?? '-' },
+    { label: 'RELEASE', value: props.song.release ?? '-' },
+    { label: 'VERSION', value: props.versionName },
   ]
 
   const jacketUrl = () => {
@@ -58,7 +60,7 @@ const SongInfoCard = (props: Props) => {
           )}
         </div>
 
-        <div class="grid gap-4 rounded-md border border-gray-200 bg-white p-4">
+        <div class="grid gap-2 rounded-md border border-gray-200 bg-white p-4">
           <For each={songInfoItems()}>
             {(item) => (
               <div class="space-y-1">
