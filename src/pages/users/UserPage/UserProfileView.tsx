@@ -210,7 +210,7 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
         }
       >
         <div class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200">
-          <div class="min-w-[33.25rem]">
+          <div class="min-w-[31.75rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
                 class="grid text-xs font-semibold"
@@ -272,18 +272,18 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
                     >
                       <A
                         href={buildWorldsendSongDetailPath(record.id)}
-                        class="block w-full truncate font-medium text-gray-900 hover:underline"
+                        class="block w-full truncate text-inherit hover:underline"
                       >
                         {record.title}
                       </A>
                     </div>
                     <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
-                      <span class="inline-block w-full text-center leading-none text-gray-700">
+                      <span class="inline-block w-full text-center leading-none">
                         {record.attribute ?? '-'}
                       </span>
                     </div>
-                    <div class="flex min-h-[34px] items-center px-2 py-1 text-left whitespace-nowrap">
-                      <span class="inline-block w-full leading-none text-gray-700">
+                    <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
+                      <span class="inline-block w-full text-center leading-none">
                         {worldsendLevelLabel(record.level_star)}
                       </span>
                     </div>
@@ -300,11 +300,15 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
                     </div>
                     <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
                       <div class="flex w-full justify-center">
-                        <span
-                          class={`inline-flex rounded-lg px-2 py-1 text-xs font-bold ${worldsendLampClass(record)}`}
-                        >
-                          {worldsendLampLabel(record)}
-                        </span>
+                        {worldsendLampLabel(record) === '-' ? (
+                          <span class="px-2 py-1 text-xs">-</span>
+                        ) : (
+                          <span
+                            class={`rounded-lg px-2 py-1 text-xs font-bold ${worldsendLampClass(record)}`}
+                          >
+                            {worldsendLampLabel(record)}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

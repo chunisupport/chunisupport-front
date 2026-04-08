@@ -1,1 +1,1 @@
-export const worldsendTableWrapperClass = 'mx-4 w-auto max-w-[calc(100%-2rem)]'
+export const worldsendTableWrapperClass = 'w-full'
