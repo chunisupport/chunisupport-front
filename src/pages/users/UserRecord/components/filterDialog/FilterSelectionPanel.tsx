@@ -5,7 +5,7 @@ import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { LAMP_OPTIONS } from '../../types/filterDefaults'
 import type { Difficulty, FilterState } from '../../types/types'
 import { parseNumberInput, toggleArray } from '../../utils/filterDialog'
-import { SCORE_RANK_VALUES, SCORE_RANKS, type ScoreRank } from '../../utils/scoreRank'
+import { SCORE_RANK_MAX_VALUES, SCORE_RANK_VALUES, SCORE_RANKS, type ScoreRank } from '../../utils/scoreRank'
 import ConstRangeSection from './sections/ConstRangeSection'
 import DifficultySection from './sections/DifficultySection'
 import GenreSection from './sections/GenreSection'
@@ -78,14 +78,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   }
 
   const Rank2Score = (rank: ScoreRank, type: 'min' | 'max') => {
-    const rankIndex = SCORE_RANKS.indexOf(rank)
-    const minValue = SCORE_RANK_VALUES[rank]
-    if (type === 'min' || rank === SCORE_RANKS[SCORE_RANKS.length - 1]) {
-      return minValue
+    if (type === 'max') {
+      return SCORE_RANK_MAX_VALUES[rank]
     }
-    const nextRank = SCORE_RANKS[rankIndex + 1]
-    const nextValue = SCORE_RANK_VALUES[nextRank]
-    return Math.max(0, nextValue - 1)
+    return SCORE_RANK_VALUES[rank]
   }
 
   // フィルターダイアログが開かれた時にフィルター状態を同期
