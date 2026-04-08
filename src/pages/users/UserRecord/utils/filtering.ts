@@ -40,16 +40,13 @@ export function isRecordMatched(record: PlayerRecordWithSongMeta, filters: Filte
   if (record.const > filters.constMax) return false
 
   // スコア
-  if (record.is_played) {
-    if (record.score < filters.scoreMin) return false
-    if (record.score > filters.scoreMax) return false
-  }
+  const score = record.is_played ? record.score : 0
+  if (score < filters.scoreMin) return false
+  if (score > filters.scoreMax) return false
 
   // ランプ
-  if (record.is_played) {
-    const lamp = record.combo_lamp
-    if (!filters.lamps.includes(lamp as ComboLamp)) return false
-  }
+  const lamp = record.is_played ? (record.combo_lamp ?? null) : null
+  if (!filters.lamps.includes(lamp as ComboLamp)) return false
 
   return true
 }
