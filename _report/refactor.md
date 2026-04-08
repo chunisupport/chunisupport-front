@@ -17,10 +17,9 @@
 - 型定義/エラーハンドリング: `src/types/api.ts`, `src/api/fetchWithAuth.ts`
 
 ## 全体所見
-1. 認証状態の解決責務が `NavBar`、認証ガード、ログイン後遷移、未ログイン時リダイレクトに分散しており、`fetchMe` の多重実行と判定不整合が起きやすい構造です。
-2. ユーザー画面とレコード画面で UI・取得・整形・集計・永続化が密結合しており、機能追加時の影響範囲が大きくなっています。
-3. `localStorage` と URL パラメータに対する型検証が薄く、異常値が UI ロジックへ直接流れ込みます。
-4. 純粋関数として切り出せているロジックは一部ありますが、重要なユースケースに対するテストが不足しています。
+1. ユーザー画面とレコード画面で UI・取得・整形・集計・永続化が密結合しており、機能追加時の影響範囲が大きくなっています。
+2. `localStorage` と URL パラメータに対する型検証が薄く、異常値が UI ロジックへ直接流れ込みます。
+3. 純粋関数として切り出せているロジックは一部ありますが、重要なユースケースに対するテストが不足しています。
 
 ---
 
@@ -28,7 +27,6 @@
 
 | ID | タイトル | 重大度 | 主な対象 |
 |---|---|---|---|
-| **REF-F01** | 認証セッション解決の分散と多重フェッチ | **High** | `src/components/NavBar/NavBar.tsx`, `src/components/guards/RequireAuth.tsx`, `src/hooks/useRedirectIfAuthenticated.ts`, `src/utils/postAuthRedirect.ts`, `src/usecases/auth/resolveAuthSession.ts` |
 | **REF-F02** | 権限制御と認証エラー処理の不統一 | **Critical** | `src/components/guards/RequireRole.tsx`, `src/api/fetchWithAuth.ts`, `src/utils/postAuthRedirect.ts` |
 | **REF-F03** | UserPage のプロフィール二重取得 | **Medium** | `src/pages/users/UserPage/UserPage.tsx` |
 | **REF-F04** | UserRecord コンポーネントの責務過多 | **High** | `src/pages/users/UserRecord/UserRecord.tsx` |
@@ -40,19 +38,6 @@
 ---
 
 ## 詳細
-
-### REF-F01: 認証セッション解決の分散と多重フェッチ
-- **概要**:
-  - 認証状態の解決が `NavBar` (`src/components/NavBar/NavBar.tsx:142`)、`RequireAuth` (`src/components/guards/RequireAuth.tsx:32`)、`useRedirectIfAuthenticated` (`src/hooks/useRedirectIfAuthenticated.ts:14`)、`redirectAfterAuthentication` (`src/utils/postAuthRedirect.ts:7`) に分散しています。
-  - さらに `authSession` は単なるモジュール変数 (`src/stores/authSession.ts`) で、Solid のリアクティブストアとしては扱われていません。
-- **影響**:
-  - 初期表示や画面遷移で `fetchMe` が重複実行されやすいです。
-  - 画面ごとに認証状態の同期タイミングが異なり、表示のちらつきや判定ズレの温床になります。
-  - `NavBar` だけが `localStorage` の `navbar_username` を別管理しており、状態の正本が不明瞭です。
-- **対応方針**:
-  - 認証状態は `createStore` か `createResource` ベースの単一 `authSession` サービスへ集約する。
-  - `fetchMe` を直接各コンポーネントで呼ばず、`ensureAuthSession()` のような共通入口に統一する。
-  - `NavBar` の `localStorage` キャッシュは廃止し、必要ならセッションストア側で責務を持つ。
 
 ### REF-F02: 権限制御と認証エラー処理の不統一
 - **概要**:
@@ -143,7 +128,7 @@
 ## 推奨着手順
 
 1. **認証まわりの一本化**
-   - `REF-F01`, `REF-F02` を最優先で解消し、`fetchMe` と遷移判定の入口を統一する。
+   - `REF-F02` を最優先で解消し、`fetchMe` と遷移判定のエラー分類を整理する。
 2. **UserRecord のページモデル化**
    - `REF-F04` を進め、ロジックの責務を分割する。
 3. **永続化とテストの基盤整備**
@@ -152,6 +137,6 @@
    - `REF-F07`, `REF-F08` を後追いで整理し、規律を揃える。
 
 ## まとめ
-- 最優先は **認証状態の単一化** と **権限制御/エラー制御の分離** です。
+- 最優先は **権限制御/エラー制御の分離** です。
 - 次点は **UserRecord の責務分割** で、ここを解消するとフィルタ・追跡条件・統計のテスト追加も進めやすくなります。
 - 低優先度の TODO/FIXME も、設計課題と演出課題を分けて backlog 化しておくべきです。
