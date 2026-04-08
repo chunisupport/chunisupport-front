@@ -1,4 +1,4 @@
-import { For } from 'solid-js'
+import { createEffect, createSignal, For } from 'solid-js'
 import { CHUNITHM_JACKET_BASE_URL } from '../../../../config'
 import type { SongDTO } from '../../../../types/api'
 
@@ -25,6 +25,8 @@ type Props = {
 }
 
 const SongInfoCard = (props: Props) => {
+  const [hasJacketLoadError, setHasJacketLoadError] = createSignal(false)
+
   const getNotesDesignerLabel = (notesDesigner: string | null | undefined) => {
     const trimmed = notesDesigner?.trim()
     return trimmed ? trimmed : '-'
@@ -42,16 +44,22 @@ const SongInfoCard = (props: Props) => {
     return `${CHUNITHM_JACKET_BASE_URL}/${props.song.jacket}.webp`
   }
 
+  createEffect(() => {
+    jacketUrl()
+    setHasJacketLoadError(false)
+  })
+
   return (
     <div class="space-y-4 lg:grid lg:grid-cols-[240px_minmax(0,220px)_minmax(0,1fr)] lg:items-start lg:gap-4 lg:space-y-0">
       <div class="grid grid-cols-[minmax(0,42vw)_minmax(0,1fr)] items-start gap-4 lg:contents">
         <div class="aspect-square w-full overflow-hidden rounded-md border border-gray-200 bg-white">
-          {jacketUrl() ? (
+          {jacketUrl() && !hasJacketLoadError() ? (
             <img
               src={jacketUrl() ?? undefined}
               alt={`${props.song.title}のジャケット`}
               class="h-full w-full object-cover"
               loading="lazy"
+              onError={() => setHasJacketLoadError(true)}
             />
           ) : (
             <div class="flex h-full w-full items-center justify-center bg-gray-50 p-4 text-sm text-gray-400">
