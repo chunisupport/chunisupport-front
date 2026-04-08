@@ -210,7 +210,7 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
         }
       >
         <div class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200">
-          <div class="min-w-[31.75rem]">
+          <div class="min-w-[32.9rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
                 class="grid text-xs font-semibold"
@@ -282,8 +282,8 @@ const WorldsendRecordTable: Component<{ records: WorldsendRecordDTO[] }> = (prop
                         {record.attribute ?? '-'}
                       </span>
                     </div>
-                    <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
-                      <span class="inline-block w-full text-center leading-none">
+                    <div class="flex min-h-[34px] items-center justify-start px-2 py-1 whitespace-nowrap">
+                      <span class="inline-block leading-none">
                         {worldsendLevelLabel(record.level_star)}
                       </span>
                     </div>
