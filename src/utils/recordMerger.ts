@@ -1,5 +1,5 @@
 import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../types/api'
-import { resolveVersionNameByReleaseDate } from './versionConverter'
+import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter'
 
 /** 楽曲メタ情報を付与したプレイヤーレコード */
 export interface PlayerRecordWithSongMeta extends PlayerRecordDTO {
@@ -30,7 +30,7 @@ export function attachSongMetaToRecords(
       ...record,
       genre: song?.genre ?? '不明',
       release,
-      release_version: resolveVersionNameByReleaseDate(release, versions),
+      release_version: getShortVersionName(resolveVersionNameByReleaseDate(release, versions)),
     }
   })
 }

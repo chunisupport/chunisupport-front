@@ -13,7 +13,10 @@ import { fetchMasterData, fetchSongByDisplayId, fetchSongStats } from '../../../
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { normalizeDifficultyQueryValue } from '../../../utils/difficultyUtils'
-import { resolveVersionNameByReleaseDate } from '../../../utils/versionConverter'
+import {
+  getShortVersionName,
+  resolveVersionNameByReleaseDate,
+} from '../../../utils/versionConverter'
 import SongInfoCard from './components/SongInfoCard'
 import SongStatsTabs from './components/SongStatsTabs'
 
@@ -49,7 +52,7 @@ const SongDetail = () => {
     const versions = masterData()?.versions
     if (!currentSong || !versions) return '不明'
 
-    return resolveVersionNameByReleaseDate(currentSong.release, versions)
+    return getShortVersionName(resolveVersionNameByReleaseDate(currentSong.release, versions))
   })
 
   createEffect(

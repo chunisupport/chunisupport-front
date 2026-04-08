@@ -10,6 +10,7 @@ import type {
   MasterDataDTO,
 } from '../../../../../types/api'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
+import { getShortVersionName } from '../../../../utils/versionConverter'
 import {
   COMBO_LAMP_OPTIONS,
   HARD_LAMP_OPTIONS,
@@ -541,7 +542,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                             )
                           }
                         />
-                        <span>{item.name}</span>
+                        <span>{getShortVersionName(item.name)}</span>
                       </label>
                     ))}
                   </div>

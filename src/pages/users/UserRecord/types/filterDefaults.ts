@@ -1,5 +1,6 @@
 import type { MasterDataDTO, MasterItemDTO, VersionSummaryDTO } from '../../../../types/api'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
+import { getShortVersionName } from '../../../../utils/versionConverter'
 import type { ComboLamp, FilterState } from '../types/types'
 
 /** ランプの選択肢 */
@@ -27,7 +28,7 @@ export const getMasterDataDefaults = (
   versions?: VersionSummaryDTO[]
 ) => ({
   genres: masterData?.genres?.map((g: MasterItemDTO) => g.name) ?? [],
-  versions: versions?.map((version) => version.name) ?? [],
+  versions: versions?.map((version) => getShortVersionName(version.name)) ?? [],
 })
 
 /** フィルターのデフォルト値を取得する */

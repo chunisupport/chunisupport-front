@@ -2,6 +2,7 @@ import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
+import { getShortVersionName } from '../../../../../utils/versionConverter'
 import { LAMP_OPTIONS } from '../../types/filterDefaults'
 import type { Difficulty, FilterState } from '../../types/types'
 import { parseNumberInput, toggleArray } from '../../utils/filterDialog'
@@ -209,7 +210,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 
   const difficulties = () => props.masterData?.difficulties?.map((d) => d.name as Difficulty) ?? []
   const genres = () => props.masterData?.genres?.map((g) => g.name) ?? []
-  const versions = () => props.versions?.map((version) => version.name) ?? []
+  const versions = () => props.versions?.map((version) => getShortVersionName(version.name)) ?? []
 
   return (
     <div class="space-y-4 overflow-y-auto flex-1 min-h-0">

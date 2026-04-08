@@ -2,6 +2,18 @@ import type { VersionDTO, VersionSummaryDTO } from '../types/api'
 
 type VersionLike = Pick<VersionDTO, 'name' | 'released_at'> | VersionSummaryDTO
 
+const ORIGINAL_VERSION_NAMES = new Set(['CHUNITHM', 'CHUNITHM PLUS'])
+
+/** バージョン名の短縮表示を返す */
+export function getShortVersionName(versionName: string): string {
+  const normalized = versionName.trim()
+  if (ORIGINAL_VERSION_NAMES.has(normalized)) {
+    return normalized
+  }
+
+  return normalized.replace(/^CHUNITHM\s+/, '')
+}
+
 /** リリース日から該当するバージョン名を返す */
 export function resolveVersionNameByReleaseDate(
   releaseDate: string | null,
