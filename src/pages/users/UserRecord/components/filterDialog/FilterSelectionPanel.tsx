@@ -5,7 +5,12 @@ import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { LAMP_OPTIONS } from '../../types/filterDefaults'
 import type { Difficulty, FilterState } from '../../types/types'
 import { parseNumberInput, toggleArray } from '../../utils/filterDialog'
-import { SCORE_RANK_MAX_VALUES, SCORE_RANK_VALUES, SCORE_RANKS, type ScoreRank } from '../../utils/scoreRank'
+import {
+  SCORE_RANK_MAX_VALUES,
+  SCORE_RANK_VALUES,
+  SCORE_RANKS,
+  type ScoreRank,
+} from '../../utils/scoreRank'
 import ConstRangeSection from './sections/ConstRangeSection'
 import DifficultySection from './sections/DifficultySection'
 import GenreSection from './sections/GenreSection'
