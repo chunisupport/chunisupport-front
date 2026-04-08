@@ -63,7 +63,7 @@ const SongInfoCard = (props: Props) => {
         <div class="grid gap-2 rounded-md border border-gray-200 bg-white p-4">
           <For each={songInfoItems()}>
             {(item) => (
-              <div class="space-y-1">
+              <div class="space-y-[2px]">
                 <p class="text-xs font-medium text-gray-500">{item.label}</p>
                 <p class="text-sm text-gray-900">{item.value}</p>
               </div>
