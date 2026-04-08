@@ -196,11 +196,6 @@ export interface MasterItemDTO {
   name: string
 }
 
-export interface BooleanChoiceDTO {
-  value: boolean
-  label: string
-}
-
 export interface RatingBandDTO {
   id: number
   label: string
@@ -218,7 +213,6 @@ export interface MasterDataDTO {
   genres: MasterItemDTO[]
   difficulties: MasterItemDTO[]
   versions: VersionDTO[]
-  is_const_unknown: BooleanChoiceDTO[]
   account_types: MasterItemDTO[]
   rating_bands: RatingBandDTO[]
   achievement_types: AchievementTypeDTO[]

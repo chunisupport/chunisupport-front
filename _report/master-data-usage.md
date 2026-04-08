@@ -17,7 +17,6 @@
 | `achievement_types` | `AchievementTypeDTO[]` | 成果種別一覧（code, label?, name?） |
 | `account_types` | `MasterItemDTO[]` | アカウント種別一覧（id, name） |
 | `rating_bands` | `RatingBandDTO[]` | レーティング帯一覧（id, label, min_inclusive, max_exclusive, sort_order） |
-| `is_const_unknown` | `BooleanChoiceDTO[]` | 定数不明フラグの選択肢 |
 
 型定義: `src/types/api.ts`  
 APIラッパー: `src/api/songs.ts` → `fetchMasterData()`
@@ -62,13 +61,12 @@ APIラッパー: `src/api/songs.ts` → `fetchMasterData()`
 | --- | --- |
 | `src/pages/goals/GoalsList/components/GoalFormDialog.tsx` | 目標作成・編集ダイアログの「目標種別」セレクトボックスの選択肢として表示。`api/songs.ts` の `fetchMasterData` 内で型を正規化するロジックが複雑 |
 
-### `account_types`・`rating_bands`・`is_const_unknown`
+### `account_types`・`rating_bands`
 
 | フィールド | 状況 |
 | --- | --- |
 | `account_types` | 型定義（`MasterDataDTO`）には存在するが、現在フロントエンドコード内で参照箇所なし |
 | `rating_bands` | 型定義には存在するが、現在フロントエンドコード内で参照箇所なし |
-| `is_const_unknown` | 型定義には存在するが、現在フロントエンドコード内で参照箇所なし |
 
 ---
 
@@ -97,6 +95,5 @@ APIラッパー: `src/api/songs.ts` → `fetchMasterData()`
 | `achievement_types` | `goalForm.ts` に `GOAL_ACHIEVEMENT_TYPE_LABELS` として成果種別コードと表示名の対応表が既に静的定義されている。セレクト選択肢もこちらから生成すれば依存を廃止できる |
 | `account_types` | フロントエンドでは現在未使用 |
 | `rating_bands` | フロントエンドでは現在未使用。将来使う場合もフロントエンド定数として持てる可能性が高い |
-| `is_const_unknown` | フロントエンドでは現在未使用 |
 
 最も影響範囲が大きいのは **`genres`・`versions` がIDベースで目標属性に埋め込まれている** 点。これを廃止するには `GoalAttributes.genre`・`GoalAttributes.ver` をID参照から名称文字列または他の識別子へ変更するAPIおよびDB設計の変更を伴う。
