@@ -1,9 +1,9 @@
-import type { NavigateFunction } from '@solidjs/router'
+import type { Navigator } from '@solidjs/router'
 
 import { fetchMe, fetchUserProfile } from '../api/users'
 import { clearAuthenticatedUser, setAuthenticatedUser } from '../stores/authSession'
 
-export const redirectAfterAuthentication = async (navigate: NavigateFunction): Promise<void> => {
+export const redirectAfterAuthentication = async (navigate: Navigator): Promise<void> => {
   const user = await fetchMe({ redirectOnUnauthorized: false })
   setAuthenticatedUser(user)
 

@@ -11,9 +11,10 @@ import type { UserDTO } from '../../types/api.ts'
 import { resolveAuthSession } from './resolveAuthSession.ts'
 
 const createUser = (): UserDTO => ({
-  id: '1',
   username: 'alice',
-  role: 'USER',
+  account_type: 'PLAYER',
+  is_private: false,
+  last_score_update: null,
 })
 
 test('認証済みキャッシュがあればAPIを呼ばず authenticated を返す', async () => {

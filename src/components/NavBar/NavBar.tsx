@@ -23,11 +23,8 @@ type NavBarProps = {
 
 import { postLogout } from '../../api/auth'
 import { fetchMe } from '../../api/users'
-import {
-  clearAuthenticatedUser,
-  getAuthenticatedUser,
-  setAuthenticatedUser,
-} from '../../stores/authSession'
+import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
+import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 
 type DropdownItem = {
   label: string
@@ -47,12 +44,11 @@ type NavItem = {
 }
 
 const NavBar = (props: NavBarProps) => {
-  // TODO: 将来的には状態管理をちゃんとやりたい
-  const CACHE_KEY = 'navbar_username'
-  const [username, setUsername] = createSignal<string | null>(localStorage.getItem(CACHE_KEY))
-  const [isLoading, setIsLoading] = createSignal(true)
   const [showLoginDialog, setShowLoginDialog] = createSignal(false)
   const [showLogoutDialog, setShowLogoutDialog] = createSignal(false)
+
+  const username = () => authSession.user?.username ?? null
+  const isLoading = () => authSession.status === 'unknown'
 
   const location = useLocation()
   const navigate = useNavigate()
@@ -135,21 +131,10 @@ const NavBar = (props: NavBarProps) => {
     ]
   }
 
-  // コンポーネントマウント時にユーザー情報を取得
-  onMount(async () => {
-    setIsLoading(true)
-    try {
-      const user = await fetchMe({ redirectOnUnauthorized: false })
-      setAuthenticatedUser(user)
-      setUsername(user.username)
-      localStorage.setItem(CACHE_KEY, user.username)
-    } catch {
-      clearAuthenticatedUser()
-      setUsername(null)
-      localStorage.removeItem(CACHE_KEY)
-    } finally {
-      setIsLoading(false)
-    }
+  // コンポーネントマウント時に認証セッションを解決する
+  // resolveAuthSession 内で重複フェッチが排除されるため、RequireAuth と同時にマウントされても API 呼び出しは1回のみ
+  onMount(() => {
+    resolveAuthSession(() => fetchMe({ redirectOnUnauthorized: false }))
   })
 
   const isActive = (item: NavItem) => {
@@ -157,7 +142,7 @@ const NavBar = (props: NavBarProps) => {
 
     // ユーザーページ系のパス（/users/:username...）の場合は、
     // 表示中のユーザー名が現在の認証ユーザーと一致する場合のみアクティブとする
-    const authUser = getAuthenticatedUser()
+    const authUser = authSession.user
     const userMatch = pathname.match(/^\/users\/([^/]+)/)
     if (userMatch && authUser) {
       const viewedUsername = decodeURIComponent(userMatch[1])
@@ -372,8 +357,6 @@ const NavBar = (props: NavBarProps) => {
                   onClick={async () => {
                     await postLogout()
                     clearAuthenticatedUser()
-                    setUsername(null)
-                    localStorage.removeItem(CACHE_KEY)
                     setShowLogoutDialog(false)
                     navigate('/login')
                   }}
