@@ -1,6 +1,6 @@
 import * as Tabs from '@kobalte/core/tabs'
 import { A, useLocation, useNavigate } from '@solidjs/router'
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
+import { ArrowDown, ArrowUp, ArrowUpDown, ChartColumnIncreasing } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
 import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { Loading, ScrollToTop } from '../../../components'
@@ -49,6 +49,8 @@ const worldsendHeaderButtonClass =
   'flex min-h-[34px] w-full items-center justify-center gap-1 px-2 py-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const worldsendSortIconClass = 'h-3 w-3 shrink-0'
 const worldsendSortIconWrapperClass = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
+const statsPageButtonClass =
+  'inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2'
 
 const RecordList: Component<{ records: PlayerRecordDTO[]; candidates?: PlayerRecordDTO[] }> = (
   props
@@ -377,6 +379,8 @@ export const UserProfileView: Component<Props> = (props) => {
     return `${normalizedPath}${queryString ? `?${queryString}` : ''}${location.hash}`
   }
 
+  const statsPagePath = () => `/users/${encodeURIComponent(props.username)}/stats`
+
   const handlePageTabChange = (value: string) => {
     if (value !== 'rating' && value !== 'records' && value !== 'overpower') return
 
@@ -460,14 +464,24 @@ export const UserProfileView: Component<Props> = (props) => {
 
         <Tabs.Content value="records" forceMount class={forceMountedTabContentClass}>
           <Tabs.Root value={selectedRecordTab()} onChange={handleRecordTabChange}>
-            <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
-              <Tabs.Trigger value="standard" class={ratingTabTriggerClass}>
-                通常譜面
-              </Tabs.Trigger>
-              <Tabs.Trigger value="worldsend" class={ratingTabTriggerClass}>
-                WORLD'S END
-              </Tabs.Trigger>
-            </Tabs.List>
+            <div class="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3">
+              <Tabs.List class="inline-flex gap-1 rounded-xl bg-gray-100 p-1">
+                <Tabs.Trigger value="standard" class={ratingTabTriggerClass}>
+                  通常譜面
+                </Tabs.Trigger>
+                <Tabs.Trigger value="worldsend" class={ratingTabTriggerClass}>
+                  WORLD'S END
+                </Tabs.Trigger>
+              </Tabs.List>
+              <A
+                href={statsPagePath()}
+                class={statsPageButtonClass}
+                aria-label="統計ページ"
+                title="統計ページ"
+              >
+                <ChartColumnIncreasing class="h-5 w-5" aria-hidden="true" />
+              </A>
+            </div>
 
             <Tabs.Content value="standard" forceMount class={forceMountedTabContentClass}>
               <Suspense fallback={<Loading />}>
