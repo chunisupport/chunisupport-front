@@ -15,13 +15,13 @@ const getInitialAuthStatus = (): 'checking' | 'authenticated' | 'unauthenticated
   if (authStatus === 'authenticated' || authStatus === 'unauthenticated') {
     return authStatus
   }
-
+  // 'unknown' および 'error' はいずれも再チェックを行う
   return 'checking'
 }
 
 const RequireAuth = (props: RequireAuthProps) => {
   const [authStatus, setAuthStatus] = createSignal<
-    'checking' | 'authenticated' | 'unauthenticated'
+    'checking' | 'authenticated' | 'unauthenticated' | 'error'
   >(getInitialAuthStatus())
 
   onMount(async () => {
@@ -42,6 +42,12 @@ const RequireAuth = (props: RequireAuthProps) => {
       </Match>
 
       <Match when={authStatus() === 'authenticated'}>{props.children}</Match>
+
+      <Match when={authStatus() === 'error'}>
+        <div class="mx-auto w-full max-w-3xl p-6 text-sm text-gray-600">
+          認証情報の取得に失敗しました。ページを再読み込みしてください。
+        </div>
+      </Match>
 
       <Match when={true}>
         <Navigate href="/login" />

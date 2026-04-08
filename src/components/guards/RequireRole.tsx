@@ -30,7 +30,17 @@ const RequireRole = (props: RequireRoleProps) => {
         <div class="mx-auto w-full max-w-3xl p-6 text-sm text-gray-600">認証情報を確認中...</div>
       </Match>
 
+      <Match when={authSession.status === 'error'}>
+        <div class="mx-auto w-full max-w-3xl p-6 text-sm text-gray-600">
+          認証情報の取得に失敗しました。ページを再読み込みしてください。
+        </div>
+      </Match>
+
       <Match when={isAllowed()}>{props.children}</Match>
+
+      <Match when={authSession.status === 'unauthenticated'}>
+        <Navigate href="/login" />
+      </Match>
 
       <Match when={true}>
         <Navigate href="/403" />

@@ -2,7 +2,7 @@ import { createRoot } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import type { UserDTO } from '../types/api'
 
-type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated'
+type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated' | 'error'
 
 type AuthState = {
   status: AuthStatus
@@ -23,6 +23,10 @@ export const setAuthenticatedUser = (user: UserDTO) => {
 
 export const clearAuthenticatedUser = () => {
   setAuthSession({ status: 'unauthenticated', user: null })
+}
+
+export const setAuthSessionError = () => {
+  setAuthSession({ status: 'error' })
 }
 
 export const resetAuthSession = () => {
