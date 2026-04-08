@@ -1,7 +1,7 @@
 import * as Tabs from '@kobalte/core/tabs'
 import { A, useLocation, useNavigate } from '@solidjs/router'
 import { ArrowDown, ArrowUp, ArrowUpDown, ChartColumnIncreasing } from 'lucide-solid'
-import type { Accessor, Component } from 'solid-js'
+import type { Component, Resource } from 'solid-js'
 import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { Loading, ScrollToTop } from '../../../components'
 import type {
@@ -23,7 +23,7 @@ const UserRecord = lazy(() => import('../UserRecord'))
 
 type Props = {
   profile: UserProfileWithRecordsDTO
-  recordProfile: Accessor<UserProfileWithRecordsDTO | undefined>
+  recordProfile: Resource<UserProfileWithRecordsDTO | undefined>
   onShowRecords: () => void
   selectedPage: ProfilePageQuery
   username: string
@@ -332,7 +332,9 @@ export const UserProfileView: Component<Props> = (props) => {
   const newRecords = (): PlayerRecordDTO[] => props.profile.records.new
   const newCandidateRecords = (): PlayerRecordDTO[] => props.profile.records.new_candidate
   const recordProfile = () => props.recordProfile()
-  const worldsendRecords = (): WorldsendRecordDTO[] => recordProfile()?.records.worldsend ?? []
+  const latestRecordProfile = () => props.recordProfile.latest
+  const worldsendRecords = (): WorldsendRecordDTO[] =>
+    latestRecordProfile()?.records.worldsend ?? []
   const navigate = useNavigate()
   const location = useLocation()
   const selectedPageTab = createMemo<'rating' | 'records' | 'overpower'>(() => {
@@ -490,8 +492,10 @@ export const UserProfileView: Component<Props> = (props) => {
                 </Show>
               </Suspense>
             </Tabs.Content>
-            <Tabs.Content value="worldsend">
-              <WorldsendRecordTable records={worldsendRecords()} />
+            <Tabs.Content value="worldsend" forceMount class={forceMountedTabContentClass}>
+              <Show when={latestRecordProfile()} fallback={<Loading />}>
+                <WorldsendRecordTable records={worldsendRecords()} />
+              </Show>
             </Tabs.Content>
           </Tabs.Root>
         </Tabs.Content>
