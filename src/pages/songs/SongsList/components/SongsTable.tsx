@@ -1,16 +1,9 @@
 ﻿import { A } from '@solidjs/router'
 import { For } from 'solid-js'
 import type { SongDTO } from '../../../../types/api'
+import { difficultyBadgeClass } from '../../../../utils/difficultyUtils'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
-
-const difficultyBadgeClass: Record<(typeof chartOrder)[number], string> = {
-  BASIC: 'bg-[#00ab84] text-white',
-  ADVANCED: 'bg-[#ff7e00] text-white',
-  EXPERT: 'bg-[#f12929] text-white',
-  MASTER: 'bg-[#8e1be5] text-white',
-  ULTIMA: 'bg-[#000000] text-white',
-}
 
 type Props = {
   songs: SongDTO[]
@@ -55,7 +48,7 @@ const SongsTable = (props: Props) => {
 
                         return (
                           <span
-                            class={`inline-flex w-[45px] justify-center rounded px-2 py-0.5 text-xs font-medium whitespace-nowrap ${difficultyBadgeClass[difficulty]}`}
+                            class={`inline-flex w-[45px] justify-center rounded px-2 py-0.5 text-xs font-medium whitespace-nowrap ${difficultyBadgeClass(difficulty)}`}
                           >
                             {`${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}`}
                           </span>

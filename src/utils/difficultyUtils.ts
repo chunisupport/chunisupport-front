@@ -40,7 +40,34 @@ export function normalizeDifficultyQueryValue(
   return value?.trim().toLowerCase() ?? ''
 }
 
-// 難易度の色クラスを返す（RecordTable用）
+// 難易度ごとの正規ゲームカラー（16進数）
+export const DIFFICULTY_HEX_COLORS: Record<string, string> = {
+  BASIC: '#00ab84',
+  ADVANCED: '#ff7e00',
+  EXPERT: '#f12929',
+  MASTER: '#8e1be5',
+  ULTIMA: '#000000',
+}
+
+// 難易度バッジ用のTailwindクラスを返す（ゲーム公式カラー）
+export function difficultyBadgeClass(difficulty: string): string {
+  switch (difficulty) {
+    case 'BASIC':
+      return 'bg-[#00ab84] text-white'
+    case 'ADVANCED':
+      return 'bg-[#ff7e00] text-white'
+    case 'EXPERT':
+      return 'bg-[#f12929] text-white'
+    case 'MASTER':
+      return 'bg-[#8e1be5] text-white'
+    case 'ULTIMA':
+      return 'bg-[#000000] text-white'
+    default:
+      return 'bg-gray-200 text-gray-800'
+  }
+}
+
+// 難易度のTailwindクラスを返す
 export function difficultyColor(difficulty: string): string {
   switch (difficulty) {
     case 'BASIC':
@@ -58,17 +85,22 @@ export function difficultyColor(difficulty: string): string {
   }
 }
 
+// 難易度のCSS色値を返す（インラインスタイル用）
+export function difficultyBorderColor(difficulty: string): string {
+  return DIFFICULTY_HEX_COLORS[difficulty] ?? 'transparent'
+}
+
 // 難易度の色クラスを返す（UserRecordCard用）
 export function difficultyCardBorderColor(difficulty: string): string {
   switch (difficulty) {
     case 'BASIC':
-      return 'before:bg-green-500'
+      return 'before:bg-[#00ab84]'
     case 'ADVANCED':
-      return 'before:bg-orange-500'
+      return 'before:bg-[#ff7e00]'
     case 'EXPERT':
-      return 'before:bg-red-500'
+      return 'before:bg-[#f12929]'
     case 'MASTER':
-      return 'before:bg-purple-500'
+      return 'before:bg-[#8e1be5]'
     case 'ULTIMA':
       return 'before:[background:repeating-linear-gradient(-60deg,#ff0000_0,#ff0000_6px,#000000_6px,#000000_12px)]'
     default:

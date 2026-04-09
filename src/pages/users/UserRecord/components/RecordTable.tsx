@@ -12,7 +12,7 @@ import {
   Show,
 } from 'solid-js'
 import {
-  difficultyColor,
+  difficultyBadgeClass,
   difficultyShort,
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
@@ -27,12 +27,14 @@ interface RecordTableProps {
   onSortChange: (key: RecordSortKey) => void
 }
 
-const GRID_COLUMNS = 'minmax(11.25rem,1fr) 3.5rem 3.6rem 4.9rem 4.5rem 4rem'
+const GRID_COLUMNS = 'minmax(11.25rem,1fr) 2.5rem 3.5rem 3.6rem 4.9rem 4.5rem'
 const ROW_HEIGHT = 34
 const HEADER_BUTTON_CLASS =
   'flex min-h-[34px] w-full items-center justify-center gap-1 px-2 py-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const SORT_ICON_CLASS = 'h-3 w-3 shrink-0'
 const SORT_ICON_WRAPPER_CLASS = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
+const DIFFICULTY_BADGE_CLASS =
+  'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-xs font-bold leading-none'
 
 const lampBadge = (lamp: string | null) => {
   if (lamp === 'FULL COMBO')
@@ -250,7 +252,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
                             <div class="flex w-full justify-center">
                               <span
-                                class={`rounded-lg px-2 py-1 text-xs font-bold ${difficultyColor(currentRecord().difficulty)}`}
+                                class={`${DIFFICULTY_BADGE_CLASS} ${difficultyBadgeClass(currentRecord().difficulty)}`}
                               >
                                 {difficultyShort(currentRecord().difficulty)}
                               </span>

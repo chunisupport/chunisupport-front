@@ -1,14 +1,7 @@
 import { For } from 'solid-js'
 import type { SongDTO } from '../../../../types/api'
 import SongMetaCardLayout, { type SongMetaInfoItem } from '../../components/SongMetaCardLayout'
-
-const difficultyRowClass: Record<string, string> = {
-  BASIC: 'bg-[#00ab84] text-white',
-  ADVANCED: 'bg-[#ff7e00] text-white',
-  EXPERT: 'bg-[#f12929] text-white',
-  MASTER: 'bg-[#8e1be5] text-white',
-  ULTIMA: 'bg-[#000000] text-white',
-}
+import { difficultyBadgeClass } from '../../../../utils/difficultyUtils'
 
 const fixedColumnClass = 'w-px whitespace-nowrap'
 const fixedCellClass = 'px-3 py-2 text-gray-800 whitespace-nowrap'
@@ -65,7 +58,7 @@ const SongInfoCard = (props: Props) => {
                     <tr class="border-t border-gray-100">
                       <td class={`${fixedCellClass} ${fixedColumnClass}`}>
                         <div
-                          class={`rounded px-3 py-1 text-center text-xs font-semibold tracking-wide whitespace-nowrap ${difficultyRowClass[difficulty.label] ?? 'bg-gray-200 text-gray-800'}`}
+                          class={`rounded px-3 py-1 text-center text-xs font-semibold tracking-wide whitespace-nowrap ${difficultyBadgeClass(difficulty.label)}`}
                         >
                           {difficulty.label}
                         </div>
