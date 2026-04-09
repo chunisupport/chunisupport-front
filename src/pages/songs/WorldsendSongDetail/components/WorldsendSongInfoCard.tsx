@@ -45,7 +45,7 @@ const WorldsendSongInfoCard = (props: Props) => {
                       </div>
                     </td>
                     <td class={`${fixedCellClass} ${fixedColumnClass}`}>
-                      <span class="block whitespace-nowrap">{chart.attribute}</span>
+                      <span class="block whitespace-nowrap font-bold">{chart.attribute}</span>
                     </td>
                     <td class={`${fixedCellClass} ${fixedColumnClass}`}>
                       <span class="block whitespace-nowrap">{chart.level}</span>
