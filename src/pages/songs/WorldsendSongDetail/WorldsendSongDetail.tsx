@@ -1,8 +1,12 @@
 import { useNavigate, useParams } from '@solidjs/router'
-import { createResource, ErrorBoundary, Show } from 'solid-js'
-import { fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
+import { createMemo, createResource, ErrorBoundary, Show } from 'solid-js'
+import { fetchMasterData, fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import {
+  getShortVersionName,
+  resolveVersionNameByReleaseDate,
+} from '../../../utils/versionConverter'
 import SongStatsTabs from '../SongDetail/components/SongStatsTabs'
 import { getWorldsendTitleMeta } from '../worldsendDetailModel'
 import WorldsendSongInfoCard from './components/WorldsendSongInfoCard'
@@ -17,9 +21,18 @@ const WorldsendSongDetail = () => {
   const displayIdSource = () => getWorldsendDisplayIdSource(params.displayid)
 
   const [song] = createResource(displayIdSource, fetchWorldsendSongByDisplayId)
+  const [masterData] = createResource(fetchMasterData)
   const [stats] = createResource(displayIdSource, (displayId) =>
     fetchSongStats(displayId, worldsendDifficulty[0].value)
   )
+
+  const songVersionName = createMemo(() => {
+    const currentSong = song()
+    const versions = masterData()?.versions
+    if (!currentSong || !versions) return '不明'
+
+    return getShortVersionName(resolveVersionNameByReleaseDate(currentSong.release, versions))
+  })
 
   useDocumentTitle(() => `${song()?.title ?? "WORLD'S END楽曲"} - WORLD'S END楽曲詳細`)
 
@@ -61,12 +74,11 @@ const WorldsendSongDetail = () => {
               </div>
 
               <div class="space-y-1">
-                <p class="text-sm font-medium text-primary-700">WORLD'S END</p>
                 <h1 class="mb-1 text-2xl font-semibold">{titleMeta.title}</h1>
                 <div class="text-gray-600">{titleMeta.artist}</div>
               </div>
 
-              <WorldsendSongInfoCard song={currentSong} />
+              <WorldsendSongInfoCard song={currentSong} versionName={songVersionName()} />
 
               <Show when={stats.error} keyed>
                 {(err) => <p class="text-red-500">Error loading stats: {err.message}</p>}

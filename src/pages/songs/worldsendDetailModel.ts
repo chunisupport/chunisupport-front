@@ -18,10 +18,14 @@ const fallbackText = (value: string | null | undefined) => {
   return trimmed ? trimmed : '-'
 }
 
-export const getWorldsendSongInfoItems = (song: WorldsendSongDTO): WorldsendSongInfoItem[] => [
-  { label: 'ジャンル', value: fallbackText(song.genre) },
+export const getWorldsendSongInfoItems = (
+  song: WorldsendSongDTO,
+  versionName: string
+): WorldsendSongInfoItem[] => [
+  { label: 'GENRE', value: fallbackText(song.genre) },
   { label: 'BPM', value: song.bpm ?? '-' },
-  { label: 'リリース日', value: fallbackText(song.release) },
+  { label: 'RELEASE', value: fallbackText(song.release) },
+  { label: 'VERSION', value: fallbackText(versionName) },
 ]
 
 export const getWorldsendChartRows = (song: WorldsendSongDTO): WorldsendChartRow[] => {

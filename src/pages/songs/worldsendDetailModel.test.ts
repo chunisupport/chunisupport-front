@@ -35,10 +35,11 @@ const createSong = (overrides: Partial<WorldsendSongDTO> = {}): WorldsendSongDTO
 test("WORLD'S END詳細の楽曲情報は通常譜面ページと同じ基本項目を表示する", () => {
   const song = createSong()
 
-  assert.deepEqual(getWorldsendSongInfoItems(song), [
-    { label: 'ジャンル', value: 'VARIETY' },
+  assert.deepEqual(getWorldsendSongInfoItems(song, 'VERSE'), [
+    { label: 'GENRE', value: 'VARIETY' },
     { label: 'BPM', value: 180 },
-    { label: 'リリース日', value: '2024-01-15' },
+    { label: 'RELEASE', value: '2024-01-15' },
+    { label: 'VERSION', value: 'VERSE' },
   ])
 })
 
@@ -71,10 +72,11 @@ test("WORLD'S END譜面情報が欠けている場合はプレースホルダを
     },
   })
 
-  assert.deepEqual(getWorldsendSongInfoItems(song), [
-    { label: 'ジャンル', value: '-' },
+  assert.deepEqual(getWorldsendSongInfoItems(song, ''), [
+    { label: 'GENRE', value: '-' },
     { label: 'BPM', value: 180 },
-    { label: 'リリース日', value: '-' },
+    { label: 'RELEASE', value: '-' },
+    { label: 'VERSION', value: '-' },
   ])
   assert.deepEqual(getWorldsendChartRows(song), [
     {
