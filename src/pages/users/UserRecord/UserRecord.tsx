@@ -334,7 +334,7 @@ const UserRecord: Component<Props> = (props) => {
             )}
 
             <p class="mb-2 text-sm text-gray-600">
-              全 {totalCount()} 件中 {filteredCount()} 件を表示 ( {filteredCount()}/{totalCount()} )
+              全 {totalCount()} 件中 {filteredCount()} 件を表示
             </p>
 
             {/* レコード一覧 */}

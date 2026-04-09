@@ -212,7 +212,7 @@ export const UserProfileView: Component<Props> = (props) => {
                 </Show>
               </Suspense>
             </Tabs.Content>
-            <Tabs.Content value="worldsend">
+            <Tabs.Content value="worldsend" forceMount class={forceMountedTabContentClass}>
               <Suspense fallback={<Loading />}>
                 <Show when={recordProfile()} fallback={<Loading />}>
                   {(profile) => <WorldsendRecord records={profile().records.worldsend ?? []} />}

@@ -354,8 +354,7 @@ const WorldsendRecord = (props: Props) => {
             />
 
             <p class="mb-2 text-sm text-gray-600">
-              全 {recordsWithSongMeta().length} 件中 {filteredRecords().length} 件を表示 (
-              {filteredRecords().length}/{recordsWithSongMeta().length} )
+              全 {recordsWithSongMeta().length} 件中 {filteredRecords().length} 件を表示
             </p>
 
             <WorldsendRecordTable records={filteredRecords()} />
