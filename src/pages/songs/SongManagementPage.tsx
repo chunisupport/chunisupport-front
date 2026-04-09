@@ -585,7 +585,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                       Number(event.currentTarget.value)
                                     )
                                   }
-                                  class="w-28 rounded border border-gray-300 px-2 py-1"
+                                  class="w-20 rounded border border-gray-300 px-2 py-1"
                                 />
                               </td>
                               <td class="px-3 py-2">
@@ -614,7 +614,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                         : Number(event.currentTarget.value)
                                     )
                                   }
-                                  class="w-28 rounded border border-gray-300 px-2 py-1"
+                                  class="w-20 rounded border border-gray-300 px-2 py-1"
                                 />
                               </td>
                               <td class="px-3 py-2">
@@ -635,7 +635,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                               <td class="px-3 py-2">
                                 <input
                                   value={formatUpdatedAt(chart.updated_at)}
-                                  class="w-52 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-gray-600"
+                                  class="w-40 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-gray-600"
                                   disabled
                                 />
                               </td>
