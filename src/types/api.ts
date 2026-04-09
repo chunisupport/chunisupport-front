@@ -124,6 +124,7 @@ export interface ChartDTO {
   is_const_unknown: boolean
   notes: number | null
   notes_designer?: string | null
+  updated_at?: string | null
 }
 
 export interface SongDTO {
@@ -147,6 +148,7 @@ export interface SongDTO {
 
 export interface EditorSongDTO extends SongDTO {
   is_deleted: boolean
+  updated_at: string
 }
 
 // --- 楽曲統計用型定義 ---
@@ -404,6 +406,7 @@ export interface WorldsendChartDTO {
   level_star: number | null
   notes: number | null
   notes_designer?: string | null
+  updated_at?: string | null
 }
 
 export interface WorldsendSongDTO {
@@ -422,6 +425,7 @@ export interface WorldsendSongDTO {
 
 export interface EditorWorldsendSongDTO extends WorldsendSongDTO {
   is_deleted: boolean
+  updated_at: string
 }
 
 export interface UpdateChartRequestDTO {

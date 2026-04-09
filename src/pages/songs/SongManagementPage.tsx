@@ -18,7 +18,6 @@ import type {
   SongDTO,
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
-  WorldsendSongDTO,
 } from '../../types/api'
 
 type SongManagementPageProps = {
@@ -32,6 +31,7 @@ type EditableChartDraft = {
   is_const_unknown: boolean
   notes: number | null
   notes_designer: string | null
+  updated_at: string | null
 }
 
 type SongDraft = {
@@ -42,6 +42,7 @@ type SongDraft = {
   bpm: number | null
   released_at: string | null
   jacket: string | null
+  updated_at: string
   charts: EditableChartDraft[]
 }
 
@@ -57,9 +58,21 @@ type WorldsendDraft = {
   level_star: number | null
   notes: number | null
   notes_designer: string | null
+  updated_at: string
+  chart_updated_at: string | null
 }
 
 const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
+const dateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+  timeZone: 'Asia/Tokyo',
+})
 
 const toDateOnly = (value: string | null): string | null => {
   if (!value) return null
@@ -87,8 +100,17 @@ const toDateInputValue = (value: string | null): string => {
   return toDateOnly(value) ?? ''
 }
 
+const formatUpdatedAt = (value: string | null | undefined): string => {
+  if (!value) return '-'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '-'
+
+  return dateTimeFormatter.format(date)
+}
+
 const toSongDraft = (
-  song: SongDTO,
+  song: EditorSongDTO,
   genres: MasterItemDTO[],
   difficulties: MasterItemDTO[]
 ): SongDraft => {
@@ -100,6 +122,7 @@ const toSongDraft = (
     bpm: song.bpm ?? null,
     released_at: toDateOnly(song.release),
     jacket: song.jacket ?? null,
+    updated_at: song.updated_at,
     charts: difficulties
       .map((difficulty) => {
         const chart = song.charts[difficulty.name as keyof SongDTO['charts']]
@@ -111,13 +134,17 @@ const toSongDraft = (
           is_const_unknown: chart.is_const_unknown,
           notes: chart.notes ?? null,
           notes_designer: chart.notes_designer ?? null,
+          updated_at: chart.updated_at ?? null,
         }
       })
       .filter((chart): chart is NonNullable<typeof chart> => chart !== null),
   }
 }
 
-const toWorldsendDraft = (song: WorldsendSongDTO, genres: MasterItemDTO[]): WorldsendDraft => {
+const toWorldsendDraft = (
+  song: EditorWorldsendSongDTO,
+  genres: MasterItemDTO[]
+): WorldsendDraft => {
   const chart = song.charts.WORLDSEND
 
   return {
@@ -132,6 +159,8 @@ const toWorldsendDraft = (song: WorldsendSongDTO, genres: MasterItemDTO[]): Worl
     level_star: chart?.level_star ?? null,
     notes: chart?.notes ?? null,
     notes_designer: chart?.notes_designer ?? null,
+    updated_at: song.updated_at,
+    chart_updated_at: chart?.updated_at ?? null,
   }
 }
 
@@ -435,6 +464,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                 <div class="space-y-4">
                   <div class="grid gap-3 sm:grid-cols-2">
                     <label class="text-sm">
+                      <span class="mb-1 block text-gray-700">更新日時</span>
+                      <input
+                        value={formatUpdatedAt(currentDraft().updated_at)}
+                        class="w-full rounded border border-gray-300 bg-gray-100 px-3 py-2 text-gray-600"
+                        disabled
+                      />
+                    </label>
+                    <label class="text-sm">
                       <span class="mb-1 block text-gray-700">タイトル</span>
                       <input
                         value={currentDraft().title}
@@ -528,6 +565,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           <th class="px-3 py-2 text-left">未確定</th>
                           <th class="px-3 py-2 text-left">ノーツ</th>
                           <th class="px-3 py-2 text-left">NOTES DESIGNER</th>
+                          <th class="px-3 py-2 text-left">更新日時</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -592,6 +630,13 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                     )
                                   }
                                   class="w-48 rounded border border-gray-300 px-2 py-1"
+                                />
+                              </td>
+                              <td class="px-3 py-2">
+                                <input
+                                  value={formatUpdatedAt(chart.updated_at)}
+                                  class="w-52 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-gray-600"
+                                  disabled
                                 />
                               </td>
                             </tr>
@@ -675,6 +720,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               {(currentDraft) => (
                 <div class="space-y-4">
                   <div class="grid gap-3 sm:grid-cols-2">
+                    <label class="text-sm">
+                      <span class="mb-1 block text-gray-700">更新日時</span>
+                      <input
+                        value={formatUpdatedAt(currentDraft().updated_at)}
+                        class="w-full rounded border border-gray-300 bg-gray-100 px-3 py-2 text-gray-600"
+                        disabled
+                      />
+                    </label>
                     <label class="text-sm">
                       <span class="mb-1 block text-gray-700">タイトル</span>
                       <input
@@ -810,6 +863,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           )
                         }
                         class="w-full rounded border border-gray-300 px-3 py-2"
+                      />
+                    </label>
+                    <label class="text-sm">
+                      <span class="mb-1 block text-gray-700">譜面更新日時</span>
+                      <input
+                        value={formatUpdatedAt(currentDraft().chart_updated_at)}
+                        class="w-full rounded border border-gray-300 bg-gray-100 px-3 py-2 text-gray-600"
+                        disabled
                       />
                     </label>
                     <label class="text-sm">
