@@ -49,8 +49,8 @@ const SongInfoCard = (props: Props) => {
             <thead class="bg-gray-50 text-left">
               <tr>
                 <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}></th>
-                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>譜面定数</th>
-                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>ノーツ数</th>
+                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>CONST</th>
+                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>NOTES</th>
                 <th class="px-3 py-2 font-medium text-gray-700 whitespace-nowrap">
                   NOTES DESIGNER
                 </th>
