@@ -125,9 +125,7 @@ const RegisterScoreTempPage = () => {
     } catch (error) {
       const apiError = error as Error & { status?: number }
       if (apiError.status === 404) {
-        setCommitErrorMessage(
-          'アップロードトークンが見つかりません。'
-        )
+        setCommitErrorMessage('アップロードトークンが見つかりません。')
       } else {
         setCommitErrorMessage(error instanceof Error ? error.message : '保存に失敗しました。')
       }

@@ -13,6 +13,7 @@ import type {
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
 import { buildUserProfilePagePath, type ProfilePageQuery } from './profilePageQuery'
+import { shouldShowProfileScrollToTop } from './scrollToTopVisibility'
 
 const UserRecord = lazy(() => import('../UserRecord'))
 const WorldsendRecord = lazy(() => import('../WorldsendRecord'))
@@ -230,9 +231,11 @@ export const UserProfileView: Component<Props> = (props) => {
       </Tabs.Root>
 
       {/* スクロールトップボタン（モバイル用） */}
-      <div class="md:hidden">
-        <ScrollToTop />
-      </div>
+      <Show when={shouldShowProfileScrollToTop(props.selectedPage)}>
+        <div class="md:hidden">
+          <ScrollToTop />
+        </div>
+      </Show>
     </div>
   )
 }
