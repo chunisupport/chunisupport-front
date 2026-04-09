@@ -1,6 +1,6 @@
 ﻿import { createSignal, Show } from 'solid-js'
 
-import { postRegisterData } from '../../api/register-data'
+import { postPlayerDataCommit, postRegisterData } from '../../api/register-data'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
 type RegisterDataFormat = 'json' | 'text'
@@ -21,6 +21,11 @@ const RegisterScoreTempPage = () => {
   const [successMessage, setSuccessMessage] = createSignal('')
   const [isSubmitting, setIsSubmitting] = createSignal(false)
   const [copied, setCopied] = createSignal(false)
+
+  const [uploadToken, setUploadToken] = createSignal('')
+  const [commitErrorMessage, setCommitErrorMessage] = createSignal('')
+  const [commitSuccessMessage, setCommitSuccessMessage] = createSignal('')
+  const [isCommitting, setIsCommitting] = createSignal(false)
 
   const resetMessages = () => {
     setErrorMessage('')
@@ -102,6 +107,28 @@ const RegisterScoreTempPage = () => {
     }
   }
 
+  const handleCommit = async () => {
+    setCommitErrorMessage('')
+    setCommitSuccessMessage('')
+
+    const token = uploadToken().trim()
+    if (!token) {
+      setCommitErrorMessage('uploadToken を入力してください。')
+      return
+    }
+
+    setIsCommitting(true)
+    try {
+      await postPlayerDataCommit(token)
+      setCommitSuccessMessage('スコアデータを確定保存しました。')
+      setUploadToken('')
+    } catch (error) {
+      setCommitErrorMessage(error instanceof Error ? error.message : '確定保存に失敗しました。')
+    } finally {
+      setIsCommitting(false)
+    }
+  }
+
   useDocumentTitle('スコア登録(一時)')
 
   return (
@@ -164,6 +191,41 @@ const RegisterScoreTempPage = () => {
           {isSubmitting() ? '送信中...' : 'アップロードする'}
         </button>
       </div>
+      <div class="mt-8">
+        <h2 class="text-xl font-semibold mb-4">確定保存 (commit)</h2>
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm space-y-3">
+          <p class="text-sm text-gray-600">
+            ブックマークレットが発行した <span class="font-semibold">uploadToken</span>{' '}
+            を入力して確定保存します。Cookie認証が必要なのでログイン済みで操作してください。
+          </p>
+          <label class="block text-sm font-medium text-gray-700" for="upload-token">
+            uploadToken
+          </label>
+          <input
+            id="upload-token"
+            type="text"
+            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+            value={uploadToken()}
+            onInput={(e) => setUploadToken((e.currentTarget as HTMLInputElement).value)}
+            class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          />
+          <Show when={commitErrorMessage()}>
+            <p class="text-sm text-red-600">{commitErrorMessage()}</p>
+          </Show>
+          <Show when={commitSuccessMessage()}>
+            <p class="text-sm text-primary-600">{commitSuccessMessage()}</p>
+          </Show>
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={handleCommit}
+            disabled={isCommitting()}
+          >
+            {isCommitting() ? '送信中...' : '確定保存する'}
+          </button>
+        </div>
+      </div>
+
       <div class="mt-8">
         <h2 class="text-lg font-semibold mb-2">ブックマークレットコード</h2>
         <div>

@@ -18,3 +18,13 @@ export const postRegisterData = async (payload: RegisterDataPayload): Promise<vo
     body: payload.data,
   })
 }
+
+export const postPlayerDataCommit = async (uploadToken: string): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/player-data/commit`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ uploadToken }),
+  })
+}
