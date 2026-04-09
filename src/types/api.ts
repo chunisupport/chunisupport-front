@@ -19,6 +19,7 @@ export type ErrorCode =
   | 'invalid_session'
   // 権限
   | 'forbidden'
+  | 'firebase_uid_already_linked'
   // ユーザー
   | 'registration_failed'
   | 'user_not_found'
@@ -73,6 +74,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   missing_token: '認証トークンが必要です',
   invalid_session: 'セッションが無効または期限切れです',
   forbidden: 'アクセス権限がありません',
+  firebase_uid_already_linked: 'このGoogleアカウントはすでに別のユーザーに連携されています',
   registration_failed: 'このユーザー名は使用できません',
   user_not_found: 'ユーザーが見つかりません',
   operation_failed: '操作に失敗しました',
@@ -102,7 +104,8 @@ export const errorMessages: Record<ErrorCode, string> = {
   password_too_short: 'パスワードは8文字以上である必要があります',
   password_too_long: 'パスワードは128文字以内である必要があります',
   invalid_password: 'パスワードが無効です',
-  app_version_unsupported: 'データが古いため読み込めません',
+  app_version_unsupported:
+    'データが古くなっています',
   not_found: 'リソースが見つかりません',
   method_not_allowed: '許可されていない操作です',
   unsupported_media_type: 'サポートされていないメディアタイプです',

@@ -123,7 +123,14 @@ const RegisterScoreTempPage = () => {
       setCommitSuccessMessage('スコアデータを確定保存しました。')
       setUploadToken('')
     } catch (error) {
-      setCommitErrorMessage(error instanceof Error ? error.message : '確定保存に失敗しました。')
+      const apiError = error as Error & { status?: number }
+      if (apiError.status === 404) {
+        setCommitErrorMessage(
+          'アップロードトークンが見つかりません。'
+        )
+      } else {
+        setCommitErrorMessage(error instanceof Error ? error.message : '保存に失敗しました。')
+      }
     } finally {
       setIsCommitting(false)
     }
