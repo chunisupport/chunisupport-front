@@ -45,7 +45,7 @@ const worldsendLampOrder: Record<string, number> = {
 }
 
 const worldsendHeaderButtonClass =
-  'flex min-h-[34px] w-full items-center justify-center gap-1 px-2 py-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
+  'flex min-h-[34px] w-full items-center justify-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const worldsendSortIconClass = 'h-3 w-3 shrink-0'
 const worldsendSortIconWrapperClass = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
 
@@ -74,7 +74,7 @@ const worldsendLevelLabel = (levelStar: number | null | undefined) => {
     return '-'
   }
 
-  return '★'.repeat(levelStar)
+  return `★${levelStar}`
 }
 
 const attachWorldsendSongMetaToRecords = (
@@ -215,7 +215,7 @@ const WorldsendRecordTable = (props: { records: WorldsendRecordWithSongMeta[] })
               >
                 <button
                   type="button"
-                  class={`${worldsendHeaderButtonClass} justify-start`}
+                  class={`${worldsendHeaderButtonClass} justify-start px-2`}
                   onClick={() => handleSortChange('title')}
                 >
                   <span>曲名</span>
@@ -264,7 +264,7 @@ const WorldsendRecordTable = (props: { records: WorldsendRecordWithSongMeta[] })
                     style={{ 'grid-template-columns': worldsendGridColumns }}
                   >
                     <div
-                      class="flex min-h-[34px] min-w-0 items-center px-2 py-1"
+                      class="flex min-h-[34px] min-w-0 items-center px-2"
                       title={record.title}
                     >
                       <A
@@ -274,17 +274,17 @@ const WorldsendRecordTable = (props: { records: WorldsendRecordWithSongMeta[] })
                         {record.title}
                       </A>
                     </div>
-                    <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
+                    <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
                       <span class="inline-block w-full text-center leading-none">
                         {record.attribute ?? '-'}
                       </span>
                     </div>
-                    <div class="flex min-h-[34px] items-center justify-start px-2 py-1 whitespace-nowrap">
+                    <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
                       <span class="inline-block leading-none">
                         {worldsendLevelLabel(record.level_star)}
                       </span>
                     </div>
-                    <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
+                    <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
                       <div class="flex w-full justify-center">
                         {!record.is_played ? (
                           <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">
@@ -295,7 +295,7 @@ const WorldsendRecordTable = (props: { records: WorldsendRecordWithSongMeta[] })
                         )}
                       </div>
                     </div>
-                    <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
+                    <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
                       <div class="flex w-full justify-center">
                         {worldsendLampLabel(record) === '-' ? (
                           <span class="px-2 py-1 text-xs">-</span>

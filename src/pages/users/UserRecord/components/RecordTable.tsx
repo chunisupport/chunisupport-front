@@ -27,10 +27,12 @@ interface RecordTableProps {
   onSortChange: (key: RecordSortKey) => void
 }
 
-const GRID_COLUMNS = 'minmax(11.25rem,1fr) 2.5rem 3.5rem 3.6rem 4.9rem 4.5rem'
+// 列幅は曲名以外は固定、曲名は残りスペースを全て使う
+const GRID_COLUMNS = 'minmax(11.25rem,1fr) 2.5rem 3.1rem 3.6rem 3.5rem 3.5rem'
+
 const ROW_HEIGHT = 34
 const HEADER_BUTTON_CLASS =
-  'flex min-h-[34px] w-full items-center justify-center gap-1 px-2 py-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
+  'flex min-h-[34px] w-full items-center justify-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const SORT_ICON_CLASS = 'h-3 w-3 shrink-0'
 const SORT_ICON_WRAPPER_CLASS = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
 const DIFFICULTY_BADGE_CLASS =
@@ -170,7 +172,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
               >
                 <button
                   type="button"
-                  class={`${HEADER_BUTTON_CLASS} justify-start`}
+                  class={`${HEADER_BUTTON_CLASS} justify-start pl-2`}
                   onClick={() => props.onSortChange('title')}
                 >
                   <span>曲名</span>
@@ -181,7 +183,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                   class={HEADER_BUTTON_CLASS}
                   onClick={() => props.onSortChange('difficulty')}
                 >
-                  <span>難易度</span>
+                  <span>難</span>
                   {sortIndicator(props.sortKey === 'difficulty', props.sortDirection)}
                 </button>
                 <button
@@ -239,17 +241,17 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           }}
                         >
                           <div
-                            class="flex min-h-[34px] min-w-0 items-center px-2 py-1"
+                            class="flex min-h-[34px] min-w-0 items-center"
                             title={currentRecord().title}
                           >
                             <A
                               href={`/songs/${encodeURIComponent(currentRecord().id)}?diff=${encodeURIComponent(difficultyToQueryValue(currentRecord().difficulty))}`}
-                              class="block w-full truncate text-inherit hover:underline"
+                              class="block pl-2 w-full truncate text-inherit hover:underline"
                             >
                               {currentRecord().title}
                             </A>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
+                          <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
                             <div class="flex w-full justify-center">
                               <span
                                 class={`${DIFFICULTY_BADGE_CLASS} ${difficultyBadgeClass(currentRecord().difficulty)}`}
@@ -258,24 +260,24 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                               </span>
                             </div>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
+                          <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
                             <span class="inline-block w-full text-center leading-none">
                               {currentRecord().const.toFixed(1)}
                             </span>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
+                          <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
                             <div class="flex w-full justify-center">
                               {!currentRecord().is_played
                                 ? unplayedBadge()
                                 : currentRecord().score.toLocaleString()}
                             </div>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center px-2 py-1 text-center whitespace-nowrap">
+                          <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
                             <span class="inline-block w-full text-center leading-none">
                               {!currentRecord().is_played ? '-' : currentRecord().rating.toFixed(2)}
                             </span>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center px-2 py-1 whitespace-nowrap">
+                          <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
                             <div class="flex w-full justify-center">
                               {!currentRecord().is_played ? (
                                 <span class="px-2 py-1 text-xs">-</span>
