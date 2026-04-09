@@ -25,9 +25,9 @@ const WorldsendSongInfoCard = (props: Props) => {
             <thead class="bg-gray-50 text-left">
               <tr>
                 <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}></th>
-                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>属性</th>
-                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>レベル</th>
-                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>ノーツ数</th>
+                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}></th>
+                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>LEVEL</th>
+                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>NOTES</th>
                 <th class="px-3 py-2 font-medium text-gray-700 whitespace-nowrap">
                   NOTES DESIGNER
                 </th>
