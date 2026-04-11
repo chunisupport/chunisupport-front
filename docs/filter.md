@@ -22,7 +22,9 @@
   "scoreMin": 0,
   "scoreMax": 1010000,
   "scoreFilterMode": "rank",
-  "lamps": ["ALL JUSTICE", "FULL COMBO", null],
+  "combo_lamp": ["ALL JUSTICE", "FULL COMBO", null],
+  "chain_lamp": ["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null],
+  "hard_lamp": ["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null],
   "excludeNoPlay": false
 }
 ```
@@ -41,7 +43,9 @@
 | `scoreMin` | `number` | はい | スコアの下限です。未プレイ譜面には適用されません。 |
 | `scoreMax` | `number` | はい | スコアの上限です。未プレイ譜面には適用されません。 |
 | `scoreFilterMode` | `"rank"` \| `"number"` | はい | UI の入力モードです。現在の絞り込み判定自体は `scoreMin` / `scoreMax` のみを参照します。 |
-| `lamps` | `Array<string \| null>` | はい | 許可するコンボランプの配列です。`null` はランプなしを表します。未プレイ譜面には適用されません。空配列にするとプレイ済み譜面は全件不一致になります。 |
+| `combo_lamp` | `Array<string \| null>` | はい | 許可するコンボランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
+| `chain_lamp` | `Array<string \| null>` | はい | 許可するFULL CHAINランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
+| `hard_lamp` | `Array<string \| null>` | はい | 許可するクリアランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
 | `excludeNoPlay` | `boolean` | はい | `true` の場合、未プレイ譜面を除外します。 |
 
 ## 判定ルール
@@ -55,7 +59,9 @@
 5. `versions` が空でないとき、レコードのバージョンが `versions` に含まれること。
 6. 譜面定数が `constMin` 以上かつ `constMax` 以下であること。
 7. プレイ済み譜面の場合のみ、スコアが `scoreMin` 以上かつ `scoreMax` 以下であること。
-8. プレイ済み譜面の場合のみ、コンボランプが `lamps` に含まれること。
+8. コンボランプが `combo_lamp` に含まれること。
+9. FULL CHAINランプが `chain_lamp` に含まれること。
+10. クリアランプが `hard_lamp` に含まれること。
 
 ## デフォルト値
 
@@ -71,7 +77,9 @@
 - `scoreMin`: `0`
 - `scoreMax`: `1010000`
 - `scoreFilterMode`: `"rank"`
-- `lamps`: `["ALL JUSTICE", "FULL COMBO", null]`
+- `combo_lamp`: `["ALL JUSTICE", "FULL COMBO", null]`
+- `chain_lamp`: `["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null]`
+- `hard_lamp`: `["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null]`
 - `excludeNoPlay`: `false`
 
 ## 許可値
@@ -86,12 +94,32 @@ API の `PlayerRecordDTO["difficulty"]` と同じ値を使います。
 固定配列は持たず、バージョン API (`/internal/master/versions`) が返す `versions[].name` をそのまま使います。
 配列順も API のレスポンス順に従います。
 
-### `lamps`
+### `combo_lamp`
 
 この画面で選択可能な値は以下です。
 
 ```json
 ["ALL JUSTICE", "FULL COMBO", null]
+```
+
+`null` は JSON 上で文字列ではなく null 値です。
+
+### `chain_lamp`
+
+この画面で選択可能な値は以下です。
+
+```json
+["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null]
+```
+
+`null` は JSON 上で文字列ではなく null 値です。
+
+### `hard_lamp`
+
+この画面で選択可能な値は以下です。
+
+```json
+["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null]
 ```
 
 `null` は JSON 上で文字列ではなく null 値です。
@@ -116,7 +144,9 @@ API の `PlayerRecordDTO["difficulty"]` と同じ値を使います。
       "scoreMin": 1000000,
       "scoreMax": 1010000,
       "scoreFilterMode": "number",
-      "lamps": ["FULL COMBO"],
+      "combo_lamp": ["FULL COMBO"],
+      "chain_lamp": ["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null],
+      "hard_lamp": ["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD"],
       "excludeNoPlay": true
     },
     "savedAt": 1744041600000
@@ -133,7 +163,9 @@ API の `PlayerRecordDTO["difficulty"]` と同じ値を使います。
   "filterId": "1744041600000",
   "filterName": "高難度FC狙い",
   "scoreMin": 1009000,
-  "lamps": ["ALL JUSTICE", "FULL COMBO"],
+  "combo_lamp": ["ALL JUSTICE", "FULL COMBO"],
+  "chain_lamp": ["FULL CHAIN PLATINUM"],
+  "hard_lamp": ["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD"],
   "savedAt": 1744041600000
 }
 ```

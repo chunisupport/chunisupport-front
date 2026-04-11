@@ -1,3 +1,4 @@
+import { useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import {
   createEffect,
@@ -5,6 +6,7 @@ import {
   createResource,
   createSignal,
   ErrorBoundary,
+  onMount,
   Show,
   Suspense,
 } from 'solid-js'
@@ -38,6 +40,15 @@ const LAMP_ORDER: Record<string, number> = {
   UNPLAYED: 3,
 }
 
+const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
+  title: 'title',
+  diff: 'difficulty',
+  const: 'const',
+  rating: 'rating',
+  score: 'score',
+  lamp: 'lamp',
+}
+
 type Props = {
   profile: UserProfileWithRecordsDTO
 }
@@ -59,8 +70,29 @@ const UserRecord: Component<Props> = (props) => {
   // フィルターダイアログの開閉状態
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
-  const [sortKey, setSortKey] = createSignal<RecordSortKey | null>('rating')
-  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>('desc')
+
+  // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
+  const [searchParams, setSearchParams] = useSearchParams()
+  const sortcolParam = Array.isArray(searchParams.sortcol) ? searchParams.sortcol[0] : (searchParams.sortcol ?? '')
+  const parsedSortKey = RECORD_SORT_COL_MAP[sortcolParam] ?? null
+  const parsedSortOrder =
+    searchParams.sortorder === 'asc' || searchParams.sortorder === 'desc'
+      ? (searchParams.sortorder as SortDirection)
+      : null
+  const initialSortKey: RecordSortKey | null =
+    parsedSortKey !== null && parsedSortOrder !== null ? parsedSortKey : 'rating'
+  const initialSortOrder: SortDirection | null =
+    parsedSortKey !== null && parsedSortOrder !== null ? parsedSortOrder : 'desc'
+
+  const [sortKey, setSortKey] = createSignal<RecordSortKey | null>(initialSortKey)
+  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(initialSortOrder)
+
+  // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
+  onMount(() => {
+    if (searchParams.sortcol !== undefined || searchParams.sortorder !== undefined) {
+      setSearchParams({ sortcol: undefined, sortorder: undefined }, { replace: true })
+    }
+  })
 
   // フィルターを初期化
   // マスタデータ取得後にgenres/versionsを全選択

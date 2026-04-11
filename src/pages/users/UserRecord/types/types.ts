@@ -2,6 +2,8 @@ import type { PlayerRecordDTO } from '../../../../types/api'
 
 export type Difficulty = PlayerRecordDTO['difficulty']
 export type ComboLamp = PlayerRecordDTO['combo_lamp']
+export type ChainLamp = PlayerRecordDTO['full_chain']
+export type HardLamp = PlayerRecordDTO['clear_lamp']
 export type RecordSortKey = 'title' | 'difficulty' | 'const' | 'rating' | 'score' | 'lamp'
 export type SortDirection = 'asc' | 'desc'
 
@@ -17,6 +19,8 @@ export interface FilterState {
   scoreMin: number
   scoreMax: number
   scoreFilterMode: 'number' | 'rank'
-  lamps: ComboLamp[]
+  combo_lamp: ComboLamp[]
+  chain_lamp: ChainLamp[]
+  hard_lamp: HardLamp[]
   excludeNoPlay: boolean
 }

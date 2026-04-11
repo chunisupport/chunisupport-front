@@ -1,4 +1,4 @@
-import { A } from '@solidjs/router'
+import { A, useSearchParams } from '@solidjs/router'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import {
   createMemo,
@@ -6,6 +6,7 @@ import {
   createSignal,
   ErrorBoundary,
   For,
+  onMount,
   Show,
   Suspense,
 } from 'solid-js'
@@ -25,6 +26,14 @@ type Props = {
 
 type WorldsendSortKey = 'title' | 'attribute' | 'level' | 'score' | 'lamp'
 type WorldsendSortDirection = 'asc' | 'desc'
+
+const WE_SORT_COL_MAP: Record<string, WorldsendSortKey> = {
+  title: 'title',
+  attr: 'attribute',
+  level: 'level',
+  score: 'score',
+  lamp: 'lamp',
+}
 
 type WorldsendRecordWithSongMeta = WorldsendRecordDTO & {
   genre: string | null
@@ -94,9 +103,17 @@ const attachWorldsendSongMetaToRecords = (
   })
 }
 
-const WorldsendRecordTable = (props: { records: WorldsendRecordWithSongMeta[] }) => {
-  const [sortKey, setSortKey] = createSignal<WorldsendSortKey | null>('score')
-  const [sortDirection, setSortDirection] = createSignal<WorldsendSortDirection | null>('desc')
+const WorldsendRecordTable = (props: {
+  records: WorldsendRecordWithSongMeta[]
+  initialSortKey?: WorldsendSortKey | null
+  initialSortDirection?: WorldsendSortDirection | null
+}) => {
+  const [sortKey, setSortKey] = createSignal<WorldsendSortKey | null>(
+    props.initialSortKey !== undefined ? props.initialSortKey : 'score'
+  )
+  const [sortDirection, setSortDirection] = createSignal<WorldsendSortDirection | null>(
+    props.initialSortDirection !== undefined ? props.initialSortDirection : 'desc'
+  )
 
   const sortedRecords = createMemo(() => {
     const currentSortKey = sortKey()
@@ -263,10 +280,7 @@ const WorldsendRecordTable = (props: { records: WorldsendRecordWithSongMeta[] })
                     class="grid border-b border-gray-200 text-xs hover:bg-gray-100"
                     style={{ 'grid-template-columns': worldsendGridColumns }}
                   >
-                    <div
-                      class="flex min-h-[34px] min-w-0 items-center px-2"
-                      title={record.title}
-                    >
+                    <div class="flex min-h-[34px] min-w-0 items-center px-2" title={record.title}>
                       <A
                         href={buildWorldsendSongDetailPath(record.id)}
                         class="block w-full truncate text-inherit hover:underline"
@@ -323,6 +337,25 @@ const WorldsendRecord = (props: Props) => {
   const [worldsendSongs] = createResource(fetchWorldsendSongs)
   const [title, setTitle] = createSignal('')
 
+  // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
+  const [searchParams, setSearchParams] = useSearchParams()
+  const parsedSortKey = WE_SORT_COL_MAP[searchParams.sortcol ?? ''] ?? null
+  const parsedSortOrder =
+    searchParams.sortorder === 'asc' || searchParams.sortorder === 'desc'
+      ? (searchParams.sortorder as WorldsendSortDirection)
+      : null
+  const initialSortKey: WorldsendSortKey | null =
+    parsedSortKey !== null && parsedSortOrder !== null ? parsedSortKey : 'score'
+  const initialSortDirection: WorldsendSortDirection | null =
+    parsedSortKey !== null && parsedSortOrder !== null ? parsedSortOrder : 'desc'
+
+  // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
+  onMount(() => {
+    if (searchParams.sortcol !== undefined || searchParams.sortorder !== undefined) {
+      setSearchParams({ sortcol: undefined, sortorder: undefined }, { replace: true })
+    }
+  })
+
   const recordsWithSongMeta = createMemo(() => {
     const songs = worldsendSongs()
     if (!songs) return []
@@ -357,7 +390,11 @@ const WorldsendRecord = (props: Props) => {
               全 {recordsWithSongMeta().length} 件中 {filteredRecords().length} 件を表示
             </p>
 
-            <WorldsendRecordTable records={filteredRecords()} />
+            <WorldsendRecordTable
+              records={filteredRecords()}
+              initialSortKey={initialSortKey}
+              initialSortDirection={initialSortDirection}
+            />
           </div>
         </Show>
       </ErrorBoundary>

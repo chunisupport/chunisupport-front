@@ -1,6 +1,6 @@
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import { buildDefaultFilter } from '../types/filterDefaults'
-import type { ComboLamp, Difficulty, FilterState } from '../types/types'
+import type { ChainLamp, ComboLamp, Difficulty, FilterState, HardLamp } from '../types/types'
 
 /** フィルターのデフォルト値を取得する */
 export const getDefaultFilter = buildDefaultFilter
@@ -44,9 +44,17 @@ export function isRecordMatched(record: PlayerRecordWithSongMeta, filters: Filte
   if (score < filters.scoreMin) return false
   if (score > filters.scoreMax) return false
 
-  // ランプ
-  const lamp = record.is_played ? (record.combo_lamp ?? null) : null
-  if (!filters.lamps.includes(lamp as ComboLamp)) return false
+  // コンボランプ
+  const comboLamp = record.is_played ? (record.combo_lamp ?? null) : null
+  if (!filters.combo_lamp.includes(comboLamp as ComboLamp)) return false
+
+  // FULL CHAINランプ
+  const chainLamp = record.is_played ? (record.full_chain ?? null) : null
+  if (!filters.chain_lamp.includes(chainLamp as ChainLamp)) return false
+
+  // ハードランプ
+  const hardLamp = record.is_played ? (record.clear_lamp ?? null) : null
+  if (!filters.hard_lamp.includes(hardLamp as HardLamp)) return false
 
   return true
 }

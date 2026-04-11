@@ -3,7 +3,11 @@ import { createEffect, createSignal } from 'solid-js'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
-import { LAMP_OPTIONS } from '../../types/filterDefaults'
+import {
+  CHAIN_LAMP_OPTIONS,
+  COMBO_LAMP_OPTIONS,
+  HARD_LAMP_OPTIONS,
+} from '../../types/filterDefaults'
 import type { Difficulty, FilterState } from '../../types/types'
 import { parseNumberInput, toggleArray } from '../../utils/filterDialog'
 import {
@@ -282,14 +286,64 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         }
       />
       <LampSection
-        lamps={LAMP_OPTIONS}
-        selected={props.filters.lamps}
+        title="コンボランプ"
+        idPrefix="combo-lamp"
+        lamps={COMBO_LAMP_OPTIONS}
+        selected={props.filters.combo_lamp}
         onToggle={(lamp) =>
           props.setFilters((prev) => ({
             ...prev,
-            lamps: toggleArray(prev.lamps, lamp).filter(
+            combo_lamp: toggleArray(prev.combo_lamp, lamp).filter(
               (l): l is 'FULL COMBO' | 'ALL JUSTICE' | null =>
                 l === 'FULL COMBO' || l === 'ALL JUSTICE' || l === null
+            ),
+          }))
+        }
+        onExcludeNoPlayChange={(checked) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            excludeNoPlay: checked,
+          }))
+        }
+      />
+      <LampSection
+        title="FULL CHAIN"
+        idPrefix="chain-lamp"
+        lamps={CHAIN_LAMP_OPTIONS}
+        selected={props.filters.chain_lamp}
+        onToggle={(lamp) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            chain_lamp: toggleArray(prev.chain_lamp, lamp).filter(
+              (l): l is 'FULL CHAIN GOLD' | 'FULL CHAIN PLATINUM' | null =>
+                l === 'FULL CHAIN GOLD' || l === 'FULL CHAIN PLATINUM' || l === null
+            ),
+          }))
+        }
+        onExcludeNoPlayChange={(checked) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            excludeNoPlay: checked,
+          }))
+        }
+      />
+      <LampSection
+        title="ハードランプ"
+        idPrefix="hard-lamp"
+        lamps={HARD_LAMP_OPTIONS}
+        selected={props.filters.hard_lamp}
+        onToggle={(lamp) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            hard_lamp: toggleArray(prev.hard_lamp, lamp).filter(
+              (l): l is 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY' | null =>
+                l === 'FAILED' ||
+                l === 'CLEAR' ||
+                l === 'HARD' ||
+                l === 'BRAVE' ||
+                l === 'ABSOLUTE' ||
+                l === 'CATASTROPHY' ||
+                l === null
             ),
           }))
         }

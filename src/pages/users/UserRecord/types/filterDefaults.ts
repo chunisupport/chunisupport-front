@@ -1,10 +1,22 @@
 import type { MasterDataDTO, MasterItemDTO, VersionSummaryDTO } from '../../../../types/api'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../utils/versionConverter'
-import type { ComboLamp, FilterState } from '../types/types'
+import type { ChainLamp, ComboLamp, FilterState, HardLamp } from '../types/types'
+
+// TODO: これらの定数がハードコードされていていいのか？サーバから取ってこなくていいのか？
 
 /** ランプの選択肢 */
-export const LAMP_OPTIONS: (ComboLamp | null)[] = ['ALL JUSTICE', 'FULL COMBO', null]
+export const COMBO_LAMP_OPTIONS: ComboLamp[] = ['ALL JUSTICE', 'FULL COMBO', null]
+export const CHAIN_LAMP_OPTIONS: ChainLamp[] = ['FULL CHAIN PLATINUM', 'FULL CHAIN GOLD', null]
+export const HARD_LAMP_OPTIONS: HardLamp[] = [
+  'CATASTROPHY',
+  'ABSOLUTE',
+  'BRAVE',
+  'HARD',
+  'CLEAR',
+  'FAILED',
+  null,
+]
 
 /** フィルターのデフォルト値 */
 export const DEFAULT_FILTER: FilterState = {
@@ -18,7 +30,9 @@ export const DEFAULT_FILTER: FilterState = {
   scoreMin: 0,
   scoreMax: MAX_SCORE,
   scoreFilterMode: 'rank',
-  lamps: ['ALL JUSTICE', 'FULL COMBO', null],
+  combo_lamp: [...COMBO_LAMP_OPTIONS],
+  chain_lamp: [...CHAIN_LAMP_OPTIONS],
+  hard_lamp: [...HARD_LAMP_OPTIONS],
   excludeNoPlay: false,
 }
 
@@ -38,5 +52,7 @@ export const buildDefaultFilter = (
 ): FilterState => ({
   ...DEFAULT_FILTER,
   ...getMasterDataDefaults(masterData, versions),
-  lamps: [...LAMP_OPTIONS],
+  combo_lamp: [...COMBO_LAMP_OPTIONS],
+  chain_lamp: [...CHAIN_LAMP_OPTIONS],
+  hard_lamp: [...HARD_LAMP_OPTIONS],
 })

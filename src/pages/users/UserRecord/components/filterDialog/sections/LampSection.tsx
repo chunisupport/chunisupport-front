@@ -4,6 +4,8 @@ import type { Component } from 'solid-js'
 import { For } from 'solid-js'
 
 type LampSectionProps = {
+  title: string
+  idPrefix: string
   lamps: (string | null)[]
   selected: (string | null)[]
   onToggle: (lamp: string | null) => void
@@ -12,11 +14,11 @@ type LampSectionProps = {
 
 const LampSection: Component<LampSectionProps> = (props) => (
   <div>
-    <span class="block text-sm font-medium mb-1">ランプ</span>
+    <span class="block text-sm font-medium mb-1">{props.title}</span>
     <div class="flex flex-col gap-2">
       <For each={props.lamps}>
         {(lamp, index) => {
-          const id = `filter-lamp-${index()}`
+          const id = `filter-${props.idPrefix}-${index()}`
           return (
             <Checkbox
               checked={props.selected.includes(lamp)}
