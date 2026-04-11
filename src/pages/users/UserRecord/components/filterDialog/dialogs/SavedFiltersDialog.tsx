@@ -6,7 +6,12 @@ import type { Component } from 'solid-js'
 import { createSignal, For } from 'solid-js'
 import type { FilterState } from '../../../types/types'
 import { formatFilterSummary } from '../../../utils/filterDialog'
-import { deleteFilter, loadSavedFilters, type SavedFilter, saveNewFilter } from '../../../utils/storage'
+import {
+  deleteFilter,
+  loadSavedFilters,
+  type SavedFilter,
+  saveNewFilter,
+} from '../../../utils/storage'
 
 type SavedFiltersDialogProps = {
   currentFilters: FilterState

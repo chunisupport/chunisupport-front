@@ -73,7 +73,9 @@ const UserRecord: Component<Props> = (props) => {
 
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
-  const sortcolParam = Array.isArray(searchParams.sortcol) ? searchParams.sortcol[0] : (searchParams.sortcol ?? '')
+  const sortcolParam = Array.isArray(searchParams.sortcol)
+    ? searchParams.sortcol[0]
+    : (searchParams.sortcol ?? '')
   const parsedSortKey = RECORD_SORT_COL_MAP[sortcolParam] ?? null
   const parsedSortOrder =
     searchParams.sortorder === 'asc' || searchParams.sortorder === 'desc'

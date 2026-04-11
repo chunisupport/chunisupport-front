@@ -1,7 +1,7 @@
 import { For } from 'solid-js'
 import type { SongDTO } from '../../../../types/api'
-import SongMetaCardLayout, { type SongMetaInfoItem } from '../../components/SongMetaCardLayout'
 import { difficultyBadgeClass } from '../../../../utils/difficultyUtils'
+import SongMetaCardLayout, { type SongMetaInfoItem } from '../../components/SongMetaCardLayout'
 
 const fixedColumnClass = 'w-px whitespace-nowrap'
 const fixedCellClass = 'px-3 py-2 text-gray-800 whitespace-nowrap'
