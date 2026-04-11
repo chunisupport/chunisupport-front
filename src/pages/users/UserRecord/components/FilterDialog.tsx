@@ -15,7 +15,6 @@ interface FilterDialogProps {
   masterData?: MasterDataDTO
   versions?: VersionSummaryDTO[]
   defaultFilter: FilterState
-  onTrackingChange?: () => void
   setSavedFilters?: (filters: import('../utils/storage').SavedFilter[]) => void
 }
 
@@ -78,7 +77,6 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
             <SavedFiltersDialog
               currentFilters={filters()}
               onApplyFilter={handleApplySavedFilter}
-              onTrackingChange={props.onTrackingChange}
               setSavedFilters={props.setSavedFilters}
             />
             <div class="flex gap-2">

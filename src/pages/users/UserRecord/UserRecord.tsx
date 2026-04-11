@@ -12,23 +12,16 @@ import { fetchAllSongs, fetchMasterData, fetchVersionSummaries } from '../../../
 import { Loading, ScrollToTop } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { UserProfileWithRecordsDTO } from '../../../types/api'
-import { attachSongMetaToRecords, type PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
+import { attachSongMetaToRecords } from '../../../utils/recordMerger'
 import FilterDialog from './components/FilterDialog'
 import FilterStats from './components/FilterStats'
 import FilterToolbar from './components/FilterToolbar'
 import RecordTable from './components/RecordTable'
-import TrackingSummary from './components/TrackingSummary'
 import { DEFAULT_FILTER, getMasterDataDefaults } from './types/filterDefaults'
-import type { ComboLamp, FilterState, RecordSortKey, SortDirection } from './types/types'
+import type { FilterState, RecordSortKey, SortDirection } from './types/types'
 import { getDefaultFilter, isRecordMatched } from './utils/filtering'
 import { getRecordStats } from './utils/recordStats'
-import {
-  clearTrackingCondition,
-  loadSavedFilters,
-  loadTrackingCondition,
-  type SavedFilter,
-  type TrackingCondition,
-} from './utils/storage'
+import { loadSavedFilters, type SavedFilter } from './utils/storage'
 
 const DIFFICULTY_ORDER: Record<string, number> = {
   BASIC: 0,
@@ -55,16 +48,13 @@ const UserRecord: Component<Props> = (props) => {
   const [versionSummaries] = createResource(fetchVersionSummaries)
 
   // 保存済みフィルター一覧
-  const [savedFilters, setSavedFilters] = createSignal<SavedFilter[]>(loadSavedFilters())
+  const [, setSavedFilters] = createSignal<SavedFilter[]>(loadSavedFilters())
 
-  // フィルター・追跡の状態
+  // フィルターの状態
   const [filters, setFilters] = createSignal<FilterState>({
     // createEffect内で初期化されるので、ここでは仮の値をセット
     ...DEFAULT_FILTER,
   })
-  const [trackingCondition, setTrackingCondition] = createSignal<TrackingCondition | null>(
-    loadTrackingCondition()
-  )
 
   // フィルターダイアログの開閉状態
   const [filterOpen, setFilterOpen] = createSignal(false)
@@ -211,84 +201,6 @@ const UserRecord: Component<Props> = (props) => {
     setSortDirection('asc')
   }
 
-  /** 追跡中のフィルター情報 */
-  const trackingTargetFilter = createMemo(() => {
-    const condition = trackingCondition()
-    if (!condition) return null
-    const saved = savedFilters()
-    return saved.find((item) => item.id === condition.filterId) ?? null
-  })
-
-  /** 追跡中のフィルターに該当するレコード(未達成・達成済みすべて) */
-  const trackingTargetRecords = createMemo(() => {
-    const records = recordsWithSongMeta()
-    const target = trackingTargetFilter()
-    if (!target) return []
-    return records.filter((record) => isRecordMatched(record, target.filter))
-  })
-
-  /** 追跡の条件達成判定 */
-  const isRecordAchieved = (record: PlayerRecordWithSongMeta, condition: TrackingCondition) => {
-    const hasScore = typeof condition.scoreMin !== 'undefined'
-    const hasLamp = (condition.lamps ?? []).length > 0
-    if (!hasScore && !hasLamp) return false
-    if (!record.is_played) return false
-
-    if (hasScore) {
-      const minScore = condition.scoreMin ?? 0
-      if (record.score < minScore) return false
-    }
-
-    if (hasLamp) {
-      const lamp = record.combo_lamp ?? null
-      if (!condition.lamps?.includes(lamp as ComboLamp)) return false
-    }
-
-    return true
-  }
-
-  /** 追跡中の統計情報 */
-  const trackingStats = createMemo(() => {
-    const condition = trackingCondition()
-    const baseRecords = trackingTargetRecords()
-    if (!condition || baseRecords.length === 0) {
-      return {
-        achieved: 0,
-        total: baseRecords.length,
-        remaining: baseRecords.length,
-        percent: 0,
-      }
-    }
-    const achieved = baseRecords.filter((record) => isRecordAchieved(record, condition)).length
-    const total = baseRecords.length
-    const percent = total ? (achieved / total) * 100 : 0
-    return {
-      achieved,
-      total,
-      remaining: total - achieved,
-      percent,
-    }
-  })
-
-  /** 追跡中の目標を読めるようにしたもの */
-  const trackingGoalLabel = createMemo(() => {
-    const condition = trackingCondition()
-    if (!condition) return ''
-    const parts: string[] = []
-    if (typeof condition.scoreMin !== 'undefined') {
-      parts.push(`${condition.scoreMin.toLocaleString()}点以上`)
-    }
-    if (condition.lamps) {
-      const lamps = condition.lamps
-      if (lamps.includes('ALL JUSTICE') && lamps.includes('FULL COMBO')) {
-        parts.push('FULL COMBO')
-      } else if (lamps.includes('ALL JUSTICE')) {
-        parts.push('ALL JUSTICE')
-      }
-    }
-    return parts.join(' & ')
-  })
-
   // 件数表示
   const totalCount = () => recordsWithSongMeta().length
   const filteredCount = () => filteredRecords().length
@@ -303,20 +215,6 @@ const UserRecord: Component<Props> = (props) => {
       <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
         <Show when={allSongs() && masterData() && versionSummaries()} fallback={<Loading />}>
           <div class="mx-2 text-sm">
-            {/* 追跡表示 */}
-            {trackingCondition() && trackingTargetFilter() && (
-              <TrackingSummary
-                condition={trackingCondition() as TrackingCondition}
-                targetName={trackingTargetFilter()?.name ?? ''}
-                goalLabel={trackingGoalLabel()}
-                stats={trackingStats()}
-                onClear={() => {
-                  clearTrackingCondition()
-                  setTrackingCondition(null)
-                }}
-              />
-            )}
-
             {/* フィルター関連UI */}
             <FilterToolbar
               title={filters().title}
@@ -355,7 +253,6 @@ const UserRecord: Component<Props> = (props) => {
               masterData={masterData()}
               versions={versionSummaries()?.versions}
               defaultFilter={getDefaultFilter(masterData(), versionSummaries()?.versions)}
-              onTrackingChange={() => setTrackingCondition(loadTrackingCondition())}
               setSavedFilters={setSavedFilters}
             />
           </div>

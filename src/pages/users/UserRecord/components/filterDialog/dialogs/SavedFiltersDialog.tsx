@@ -3,23 +3,14 @@ import { Popover } from '@kobalte/core/popover'
 import { TextField } from '@kobalte/core/text-field'
 import { EllipsisVertical, Save } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createEffect, createSignal, For } from 'solid-js'
+import { createSignal, For } from 'solid-js'
 import type { FilterState } from '../../../types/types'
 import { formatFilterSummary } from '../../../utils/filterDialog'
-import {
-  clearTrackingCondition,
-  deleteFilter,
-  loadSavedFilters,
-  loadTrackingCondition,
-  type SavedFilter,
-  saveNewFilter,
-} from '../../../utils/storage'
-import TrackingDialog from './TrackingDialog'
+import { deleteFilter, loadSavedFilters, type SavedFilter, saveNewFilter } from '../../../utils/storage'
 
 type SavedFiltersDialogProps = {
   currentFilters: FilterState
   onApplyFilter: (filter: FilterState) => void
-  onTrackingChange?: () => void
   setSavedFilters?: (filters: SavedFilter[]) => void
 }
 
@@ -33,33 +24,10 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
   // 保存済みフィルターの一覧
   const [filtersList, setFiltersList] = createSignal<SavedFilter[]>(loadSavedFilters())
 
-  // 追跡状態の管理
-  const [trackingCondition, setTrackingCondition] = createSignal(loadTrackingCondition())
-  const [trackingTargetFilter, setTrackingTargetFilter] = createSignal<SavedFilter | null>(null)
-  const [trackingDialogOpen, setTrackingDialogOpen] = createSignal(false)
-
-  // 保存ダイアログが開かれたときに追跡の状況を同期
-  createEffect(() => {
-    if (open()) {
-      setTrackingCondition(loadTrackingCondition())
-    }
-  })
-
-  /** 追跡状態を同期する処理 */
-  const syncTrackingState = () => {
-    const current = loadTrackingCondition()
-    setTrackingCondition(current)
-    props.onTrackingChange?.()
-  }
-
-  /** 指定のフィルターが追跡中かどうかを返す */
-  const isTrackingActiveFor = (id: string) => trackingCondition()?.filterId === id
-
   /** 保存済みフィルター適用処理 */
   const handleApplySavedFilter = (filter: FilterState) => {
     props.onApplyFilter(filter)
     setOpen(false)
-    syncTrackingState()
   }
 
   /** 保存済みフィルター削除処理 */
@@ -68,39 +36,17 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
     const updated = loadSavedFilters()
     setFiltersList(updated)
     props.setSavedFilters?.(updated)
-    if (isTrackingActiveFor(id)) {
-      handleClearTracking()
-    }
-  }
-
-  /** 追跡状態クリア処理 */
-  const handleClearTracking = () => {
-    clearTrackingCondition()
-    syncTrackingState()
-  }
-
-  /** 追跡設定ダイアログを開く処理 */
-  const openTrackingDialog = (item: SavedFilter) => {
-    setTrackingTargetFilter(item)
-    setTrackingDialogOpen(true)
   }
 
   /** 新しいフィルターを保存する処理 */
-  const handleSaveNewFilter = ({ track }: { track: boolean }) => {
+  const handleSaveNewFilter = () => {
     const name = saveName().trim()
     if (!name) return
-    const id = saveNewFilter(name, props.currentFilters)
+    saveNewFilter(name, props.currentFilters)
     setSaveName('')
     const updated = loadSavedFilters()
     setFiltersList(updated)
     props.setSavedFilters?.(updated)
-    syncTrackingState()
-    if (track) {
-      const newFilter = updated.find((filter) => filter.id === id)
-      if (newFilter) {
-        openTrackingDialog(newFilter)
-      }
-    }
   }
 
   return (
@@ -112,7 +58,7 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
       >
         <div class="flex justify-center items-center text-sm mb-0.5">
           <Save class="w-4 h-4 mr-1" />
-          <div>保存・追跡</div>
+          <div>保存</div>
         </div>
       </button>
       <Dialog open={open()} onOpenChange={setOpen}>
@@ -157,21 +103,6 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
                       </Popover>
                       <button
                         type="button"
-                        class={
-                          isTrackingActiveFor(item.id)
-                            ? 'ml-2 px-2 py-1 rounded border border-lime-600 text-lime-600 hover:bg-lime-100'
-                            : 'ml-2 px-2 py-1 rounded bg-lime-600 border text-white'
-                        }
-                        onClick={() =>
-                          isTrackingActiveFor(item.id)
-                            ? handleClearTracking()
-                            : openTrackingDialog(item)
-                        }
-                      >
-                        {isTrackingActiveFor(item.id) ? '解除' : '追跡'}
-                      </button>
-                      <button
-                        type="button"
                         class="ml-2 px-2 py-1 rounded bg-primary-600 text-white hover:bg-primary-700"
                         onClick={() => handleApplySavedFilter(item.filter)}
                       >
@@ -200,16 +131,8 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
               <div class="flex space-x-2 justify-end">
                 <button
                   type="button"
-                  class="px-2 py-1 rounded bg-lime-600 text-white hover:bg-lime-700"
-                  onClick={() => handleSaveNewFilter({ track: true })}
-                  disabled={!saveName().trim()}
-                >
-                  保存して追跡
-                </button>
-                <button
-                  type="button"
                   class="px-2 py-1 rounded bg-primary-600 text-white hover:bg-primary-700"
-                  onClick={() => handleSaveNewFilter({ track: false })}
+                  onClick={handleSaveNewFilter}
                   disabled={!saveName().trim()}
                 >
                   保存
@@ -231,13 +154,6 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog>
-      {/* 追跡設定ダイアログ */}
-      <TrackingDialog
-        open={trackingDialogOpen()}
-        onOpenChange={setTrackingDialogOpen}
-        targetFilter={trackingTargetFilter()}
-        onTrackingSaved={syncTrackingState}
-      />
     </>
   )
 }
