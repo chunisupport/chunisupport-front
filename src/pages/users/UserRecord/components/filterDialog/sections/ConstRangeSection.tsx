@@ -171,15 +171,17 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
       <Checkbox
         checked={props.constFilterMode === 'number'}
         onChange={(checked) => props.onConstFilterModeChange(checked ? 'number' : 'level')}
-        class="flex items-center"
+        class="flex items-center gap-2"
       >
         <Checkbox.Input id="filter-const-mode" />
-        <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white flex items-center justify-center mr-2">
+        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white">
           <Checkbox.Indicator>
             <Check class="h-4 w-4" />
           </Checkbox.Indicator>
         </Checkbox.Control>
-        <Checkbox.Label for="filter-const-mode">譜面定数で指定</Checkbox.Label>
+        <Checkbox.Label class="leading-5" for="filter-const-mode">
+          譜面定数で指定
+        </Checkbox.Label>
       </Checkbox>
     </div>
   </div>

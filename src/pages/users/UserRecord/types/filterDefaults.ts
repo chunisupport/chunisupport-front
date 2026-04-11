@@ -7,7 +7,7 @@ import type { ChainLamp, ComboLamp, FilterState, HardLamp } from '../types/types
 
 /** ランプの選択肢 */
 export const COMBO_LAMP_OPTIONS: ComboLamp[] = ['ALL JUSTICE', 'FULL COMBO', null]
-export const CHAIN_LAMP_OPTIONS: ChainLamp[] = ['FULL CHAIN PLATINUM', 'FULL CHAIN GOLD', null]
+export const CHAIN_LAMP_OPTIONS: ChainLamp[] = ['FULL CHAIN PLATINUM', 'FULL CHAIN GOLD', null] // TODO: 名前変える
 export const HARD_LAMP_OPTIONS: HardLamp[] = [
   'CATASTROPHY',
   'ABSOLUTE',

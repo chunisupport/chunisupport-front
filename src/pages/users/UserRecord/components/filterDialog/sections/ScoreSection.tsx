@@ -178,30 +178,34 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
       <Checkbox
         checked={props.scoreFilterMode === 'number'}
         onChange={(checked) => props.onScoreFilterModeChange(checked ? 'number' : 'rank')}
-        class="flex items-center"
+        class="flex items-center gap-2"
       >
         <Checkbox.Input id="filter-score-mode" />
-        <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white flex items-center justify-center mr-2">
+        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white">
           <Checkbox.Indicator>
             <Check class="h-4 w-4" />
           </Checkbox.Indicator>
         </Checkbox.Control>
-        <Checkbox.Label for="filter-score-mode">数値で指定する</Checkbox.Label>
+        <Checkbox.Label class="leading-5" for="filter-score-mode">
+          数値で指定する
+        </Checkbox.Label>
       </Checkbox>
     </div>
     <div class="mt-2">
       <Checkbox
         checked={props.excludeNoPlay}
         onChange={(checked) => props.onExcludeNoPlayChange(checked)}
-        class="flex items-center"
+        class="flex items-center gap-2"
       >
         <Checkbox.Input id="filter-exclude-noplay" />
-        <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white flex items-center justify-center mr-2">
+        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white">
           <Checkbox.Indicator>
             <Check class="h-4 w-4" />
           </Checkbox.Indicator>
         </Checkbox.Control>
-        <Checkbox.Label for="filter-exclude-noplay">未プレイ譜面を除外する</Checkbox.Label>
+        <Checkbox.Label class="leading-5" for="filter-exclude-noplay">
+          未プレイ譜面を除外する
+        </Checkbox.Label>
       </Checkbox>
     </div>
   </div>

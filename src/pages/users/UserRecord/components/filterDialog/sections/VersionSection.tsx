@@ -38,15 +38,17 @@ const VersionSection: Component<VersionSectionProps> = (props) => (
             <Checkbox
               checked={props.selected.includes(ver)}
               onChange={() => props.onToggle(ver)}
-              class="flex"
+              class="flex items-center gap-2"
             >
               <Checkbox.Input id={id} />
-              <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white flex items-center justify-center mr-2">
+              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white">
                 <Checkbox.Indicator>
                   <Check class="h-4 w-4" />
                 </Checkbox.Indicator>
               </Checkbox.Control>
-              <Checkbox.Label for={id}>{ver}</Checkbox.Label>
+              <Checkbox.Label class="leading-5" for={id}>
+                {ver}
+              </Checkbox.Label>
             </Checkbox>
           )
         }}
