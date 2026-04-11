@@ -1,142 +1,144 @@
-# フロントエンド リファクタリング観点整理 (Current Code Issues)
+# フロントエンド リファクタリング観点整理 (2026-04-12 現在)
 
-本ドキュメントは、`chunisupport-front` (SolidJS, Rsbuild, Tailwind CSS) の現行実装を対象に、保守性・挙動の一貫性・型安全性・テスト容易性の観点から整理したリファクタ候補をまとめたものです。
-バックエンド向けの [`_report/_sample_refactor.md`](./_sample_refactor.md) の体裁を参考にしつつ、フロントエンド特有の論点に絞って記載しています。
+本ドキュメントは、`chunisupport-front` の現行実装を確認し、`_report/refactor.md` に以前記載していた改善点が現在も有効かを棚卸しした結果をまとめたものです。
+旧レポートのうち、現状と一致しない記述は削除または書き換えを行い、必要に応じてステータスを付け直しています。
 
 ## 優先度
-- **Critical**: 誤画面遷移、権限制御の誤判定、ユーザー体験の大きな破綻につながるもの
-- **High**: 状態管理や責務分離の欠如により、変更時の不具合混入リスクが高いもの
-- **Medium**: 改修コストや仕様追加コストを押し上げる構造上の問題
-- **Low**: 品質規律、命名、未解消TODOなどの改善事項
+- **Critical**: 誤認証・誤権限制御・誤遷移につながるもの
+- **High**: 責務集中により変更時の不具合混入リスクが高いもの
+- **Medium**: 改修コストや後方互換性コストを押し上げるもの
+- **Low**: 定数整理、コメント整理、規律面の改善事項
 
 ## 対象範囲
-- ルーティング/認証ガード: `src/App.tsx`, `src/components/guards`, `src/hooks/useRedirectIfAuthenticated.ts`
-- 認証状態管理: `src/stores/authSession.ts`, `src/utils/postAuthRedirect.ts`, `src/components/NavBar/NavBar.tsx`
-- ユーザーページ/レコード画面: `src/pages/users/UserPage`, `src/pages/users/UserRecord`
-- ユーティリティ/永続化: `src/utils`, `src/pages/users/UserRecord/utils`
-- 型定義/エラーハンドリング: `src/types/api.ts`, `src/api/fetchWithAuth.ts`
+- 認証/ガード: `src/components/guards`, `src/api/fetchWithAuth.ts`, `src/utils/postAuthRedirect.ts`, `src/usecases/auth/resolveAuthSession.ts`
+- ユーザーページ: `src/pages/users/UserPage`
+- レコード画面: `src/pages/users/UserRecord`
+- 共通定数/表示ルール: `src/utils/difficultyUtils.ts`, `src/utils/scoreRank.ts`
 
 ## 全体所見
-1. ユーザー画面とレコード画面で UI・取得・整形・集計・永続化が密結合しており、機能追加時の影響範囲が大きくなっています。
-2. `localStorage` と URL パラメータに対する型検証が薄く、異常値が UI ロジックへ直接流れ込みます。
-3. 純粋関数として切り出せているロジックは一部ありますが、重要なユースケースに対するテストが不足しています。
+1. 旧レポートで最優先にしていた認証エラー処理の統一は、`resolveAuthSession` 導入によって大きく改善されています。
+2. 一方で、`UserRecord` のページロジック、`localStorage` 永続化、テスト不足は引き続き未解消です。
+3. 画面分割や純粋関数切り出しは進んでいますが、定数の散在と TODO/FIXME の残置はまだ改善余地があります。
 
 ---
 
-## 優先度順サマリ
+## ステータス付きサマリ
 
-| ID | タイトル | 重大度 | 主な対象 |
-|---|---|---|---|
-| **REF-F02** | 権限制御と認証エラー処理の不統一 | **Critical** | `src/components/guards/RequireRole.tsx`, `src/api/fetchWithAuth.ts`, `src/utils/postAuthRedirect.ts` |
-| **REF-F03** | UserPage のプロフィール二重取得 | **Medium** | `src/pages/users/UserPage/UserPage.tsx` |
-| **REF-F04** | UserRecord コンポーネントの責務過多 | **High** | `src/pages/users/UserRecord/UserRecord.tsx` |
-| **REF-F05** | フィルタ永続化データの型検証不足 | **Medium** | `src/pages/users/UserRecord/utils/storage.ts` |
-| **REF-F06** | レコード画面ロジックのテスト不足 | **Medium** | `src/pages/users/UserRecord/utils/filtering.ts`, `src/pages/users/UserRecord/utils/storage.ts`, `src/pages/users/UserRecord/UserRecord.tsx` |
-| **REF-F07** | 表示用定数/判定ロジックの分散 | **Low** | `src/utils/difficultyUtils.ts`, `src/utils/scoreRank.ts`, `src/pages/users/UserRecord/types/filterDefaults.ts`, `src/pages/users/UserRecord/utils/recordStats.ts` |
-| **REF-F08** | TODO/FIXME の残置と暫定実装の常態化 | **Low** | `src/components/NavBar/NavBar.tsx`, `src/pages/users/UserPage/components/UserNameplate.tsx`, `src/pages/users/UserPage/components/UserRecordCard.tsx` |
+| ID | タイトル | 重大度 | ステータス | 主な対象 |
+|---|---|---|---|---|
+| **REF-F02** | 権限制御と認証エラー処理の不統一 | ~~Critical~~ | **解消済み** | `src/components/guards/RequireRole.tsx`, `src/usecases/auth/resolveAuthSession.ts`, `src/utils/postAuthRedirect.ts` |
+| **REF-F03** | UserPage のプロフィール二重取得 | **Medium** | **継続** | `src/pages/users/UserPage/UserPage.tsx` |
+| **REF-F04** | UserRecord ページロジックの責務集中 | **High** | **継続** | `src/pages/users/UserRecord/UserRecord.tsx` |
+| **REF-F05** | フィルタ永続化データの型検証不足 | **Medium** | **継続** | `src/pages/users/UserRecord/utils/storage.ts` |
+| **REF-F06** | レコード画面ロジックのテスト不足 | **Medium** | **継続** | `src/pages/users/UserRecord/utils/filtering.ts`, `src/pages/users/UserRecord/utils/recordStats.ts`, `src/pages/users/UserRecord/utils/storage.ts` |
+| **REF-F07** | 表示用定数/判定ロジックの整理不足 | **Low** | **一部改善** | `src/utils/difficultyUtils.ts`, `src/utils/scoreRank.ts`, `src/pages/users/UserRecord/types/filterDefaults.ts`, `src/pages/users/UserRecord/utils/scoreRank.ts` |
+| **REF-F08** | TODO/FIXME の残置 | **Low** | **継続** | `src/components/NavBar/NavBar.tsx`, `src/pages/users/UserPage/components/UserNameplate.tsx`, `src/pages/users/UserPage/components/UserRecordCard.tsx`, `src/pages/users/UserRecord/types/filterDefaults.ts` |
 
 ---
 
 ## 詳細
 
 ### REF-F02: 権限制御と認証エラー処理の不統一
-- **概要**:
-  - `RequireRole` は `fetchMe()` の例外をすべて `null` 扱いにしており (`src/components/guards/RequireRole.tsx:15`)、通信失敗・401・500 を区別していません。
-  - `postAuthRedirect` はプロフィール取得失敗時に `user_not_found` 以外でも `clearAuthenticatedUser()` を実行します (`src/utils/postAuthRedirect.ts:20`)。
-  - `fetchWithAuth` では 401 系をログイン画面へ飛ばしますが (`src/api/fetchWithAuth.ts:39`)、各呼び出し側で `redirectOnUnauthorized` の扱いが揺れています。
-- **影響**:
-  - 本来は「再試行可能な API エラー」であるケースが、`/403` への遷移や強制ログアウトとして処理される可能性があります。
-  - 権限不足と未ログイン、通信障害が UI 上で同じ扱いになり、原因切り分けが困難です。
-- **対応方針**:
-  - `fetchMe` の失敗理由を `unauthorized` / `forbidden` / `unexpected` に分けて扱う。
-  - `RequireRole` は認証済み前提の上で権限不足のみ `403` にし、それ以外はエラー画面または再試行導線へ分離する。
-  - `postAuthRedirect` は `user_not_found` 以外で認証状態を消さず、画面エラーとして扱う。
+- **ステータス**: 解消済み
+- **現状**:
+  - `RequireRole` は `resolveAuthSession(() => fetchMe({ redirectOnUnauthorized: false }))` を使い、認証状態を `authenticated` / `unauthenticated` / `error` に分けて扱っています (`src/components/guards/RequireRole.tsx:17`, `src/components/guards/RequireRole.tsx:33`)。
+  - `resolveAuthSession` は 401 系のみ `unauthenticated` として扱い、それ以外の一時的障害は `error` に分離しています (`src/usecases/auth/resolveAuthSession.ts:21-38`)。
+  - `redirectAfterAuthentication` も `user_not_found` のときだけ `/register-score-temp` へ遷移し、それ以外は再 throw する実装に整理されています (`src/utils/postAuthRedirect.ts:11-20`)。
+- **判断**:
+  - 旧レポートにあった「`RequireRole` が例外をすべて `null` 扱いする」「`postAuthRedirect` がプロフィール取得失敗時に認証状態を消す」という記述は現状と一致しません。
+  - `fetchWithAuth` 側の `redirectOnUnauthorized` 運用は依然として呼び出し側依存ですが、少なくとも認証ガード周辺の誤判定リスクは大きく下がっています。
+- **メモ**:
+  - 今後さらに詰めるなら、`fetchWithAuth` が投げるエラー型を専用型へ寄せて `status/code` 判定を共通化すると、`resolveAuthSession` 側の型安全性が上がります。
 
 ### REF-F03: UserPage のプロフィール二重取得
-- **概要**:
-  - `UserPage` は `rating` 用 (`src/pages/users/UserPage/UserPage.tsx:17`) と `record` 用 (`src/pages/users/UserPage/UserPage.tsx:21`) の `createResource` を別々に持っています。
-  - レコード画面表示時は同一ユーザーに対して `fetchUserProfile` を2回発行する構造です。
+- **ステータス**: 継続
+- **現状**:
+  - `UserPage` は `rating` 用の `createResource` と `record` 用の `createResource` を別々に持っています (`src/pages/users/UserPage/UserPage.tsx:17-26`)。
+  - `recordProfile` は `record` 系タブへ遷移したときだけ遅延取得されるため、旧レポート時点よりは無駄な取得が抑えられています (`src/pages/users/UserPage/UserPage.tsx:23`)。
 - **影響**:
-  - 通信量と待ち時間が増えます。
-  - 片方だけ失敗した場合の整合が複雑になります。
-  - `UserProfileView` 側で「どちらが正本か」を意識した実装が必要になります。
+  - レコード画面表示時には、同一ユーザーに対して `rating` と `record` の2回取得が走る構造自体は残っています。
+  - 成功/失敗状態が 2 本のリソースに分かれるため、将来のエラーハンドリングやローディング制御が複雑化しやすいです。
 - **対応方針**:
-  - `view=record` が `rating` 表示に必要なデータを包含できるなら取得を一本化する。
-  - 取得を分ける必要がある場合も、ページ種別から単一の query model を生成し、取得戦略をコンポーネント外へ出す。
+  - `view=record` が `rating` 表示に必要な情報を包含できるなら取得を一本化する。
+  - 一本化できない場合でも、ページ単位の取得戦略を `UserPage.tsx` から分離し、UI 側が 2 系統の取得状態を直接抱えない形に寄せる。
 
-### REF-F04: UserRecord コンポーネントの責務過多
-- **概要**:
-  - `UserRecord` はデータ取得 (`createResource`)、初期化 (`createEffect`)、フィルタ、ソート、追跡条件、統計計算、ダイアログ制御までを1ファイルで担っています (`src/pages/users/UserRecord/UserRecord.tsx`)。
-  - `attachSongMetaToRecords`、`isRecordMatched`、`getRecordStats` などの純粋関数も活用していますが、最終的な画面ユースケースがコンポーネントに集約されすぎています。
+### REF-F04: UserRecord ページロジックの責務集中
+- **ステータス**: 継続
+- **現状**:
+  - 旧レポート時点から `FilterDialog`、`FilterToolbar`、`FilterStats`、`RecordTable` などへ UI 分割は進んでいます (`src/pages/users/UserRecord/UserRecord.tsx:18-21`)。
+  - ただし `UserRecord.tsx` には依然としてデータ取得、フィルタ初期化、URL ソート読取、ソート計算、統計計算、ダイアログ状態、件数表示が集約されています (`src/pages/users/UserRecord/UserRecord.tsx:57-243`)。
+  - ソート用の `DIFFICULTY_ORDER` / `LAMP_ORDER` もページ内ローカル定義のままです (`src/pages/users/UserRecord/UserRecord.tsx:28-43`)。
 - **影響**:
-  - 仕様変更時の影響範囲が広く、レビューもしづらいです。
-  - 表示とロジックが密結合なため、テストが書きにくいです。
-  - `savedFilters` / `trackingCondition` / `sort` / `dialog open` の独立した状態遷移が絡み合っています。
+  - UI 分割済みでも、ページ仕様変更時の影響範囲が `UserRecord.tsx` に集中しています。
+  - `createMemo` と `createSignal` の組み合わせが増えるほど、状態遷移の見通しが悪くなります。
 - **対応方針**:
-  - `useUserRecordPageModel` のようなページモデル層を作り、UI コンポーネントから集計・派生状態を切り離す。
-  - 「フィルタ」「並び替え」「追跡条件」「統計計算」をそれぞれ独立モジュールに分割する。
-  - `createMemo` 群の入出力を明示した純粋関数へ寄せ、コンポーネントはイベント配線に専念させる。
+  - `useUserRecordPageModel` のようなページモデル層へ、取得済みデータから導出される状態を集約する。
+  - ソート、件数、統計、初期フィルタ生成を純粋関数化して `UserRecord.tsx` から押し出す。
 
 ### REF-F05: フィルタ永続化データの型検証不足
-- **概要**:
-  - `loadSavedFilters()` と `loadTrackingCondition()` は `JSON.parse()` の結果をそのまま返しています (`src/pages/users/UserRecord/utils/storage.ts:24`, `src/pages/users/UserRecord/utils/storage.ts:51`)。
-  - 期待 shape の検証やバージョン管理がありません。
+- **ステータス**: 継続
+- **現状**:
+  - `loadSavedFilters()` は `localStorage` から取り出した JSON を `JSON.parse` した結果のまま返しています (`src/pages/users/UserRecord/utils/storage.ts:15-18`)。
+  - `saveNewFilter()` / `deleteFilter()` にも `schemaVersion` や migration はありません (`src/pages/users/UserRecord/utils/storage.ts:25-37`)。
 - **影響**:
-  - 旧フォーマットや手編集された不正 JSON が混入すると、UI ロジック側で静かに壊れます。
-  - 今後フィールド追加を行う際に後方互換コストが跳ね上がります。
+  - 不正 JSON や旧フォーマットが混入しても、破損を明示せず空配列または不正 shape のまま後段へ流れる余地があります。
+  - 将来的に `FilterState` を変更した際、保存済みデータとの互換性管理が難しくなります。
 - **対応方針**:
-  - `parseSavedFilters` / `parseTrackingCondition` を用意し、最低限の shape validation を入れる。
-  - `schemaVersion` を持たせ、必要なら migration 関数で旧データを補正する。
-  - 不正データは破棄するだけでなく、ログや復旧ポリシーを明示する。
+  - `parseSavedFilters` を追加し、配列 shape と各 `SavedFilter` の最低限の型検証を行う。
+  - `schemaVersion` を導入し、後方互換が必要になった時点で migration を追加できる構造にしておく。
 
 ### REF-F06: レコード画面ロジックのテスト不足
-- **概要**:
-  - `UserRecord` 配下には本体・ユーティリティ群が複数ありますが、同ディレクトリにはテストファイルが存在しません。
-  - 一方で `src/usecases/auth` や `src/pages/users/UserPage` には純粋関数テストが用意されています。
+- **ステータス**: 継続
+- **現状**:
+  - `UserRecord` 配下には `filtering.ts`, `recordStats.ts`, `storage.ts` がありますが、対応する `*.test.ts` は存在しません。
+  - 対照的に、認証や `UserPage` には純粋関数テストが複数追加されています (`src/usecases/auth/resolveAuthSession.test.ts`, `src/pages/users/UserPage/profilePageQuery.test.ts` など)。
 - **影響**:
-  - レコードフィルタ、追跡条件、統計計算の退行を検知できません。
-  - バグ修正時に「仕様を固定するテスト」を残しづらい状態です。
+  - フィルタ条件、統計集計、`localStorage` 復元の退行検知ができません。
+  - リファクタ時に仕様固定の足場がなく、`UserRecord.tsx` の責務分割も進めにくいです。
 - **対応方針**:
-  - まず `isRecordMatched`, `getRecordStats`, `storage` の3点に単体テストを追加する。
-  - 優先ケースは「未プレイ」「ランプ null」「スコア境界」「空配列」「不正 localStorage JSON」です。
-  - `UserRecord` 本体は view model 化した後に統合テストへ寄せる。
+  - 優先順は `isRecordMatched`、`getRecordStats`、`loadSavedFilters`。
+  - 先に純粋関数テストを置いてからページモデル化へ進むのが妥当です。
 
-### REF-F07: 表示用定数/判定ロジックの分散
-- **概要**:
-  - 難易度表示は `src/utils/difficultyUtils.ts`、スコアランクは `src/utils/scoreRank.ts`、フィルタ既定値は `src/pages/users/UserRecord/types/filterDefaults.ts`、集計カテゴリは `src/pages/users/UserRecord/utils/recordStats.ts` に分散しています。
-  - それぞれが独立に定数を持っており、画面ごとの表現差異が生まれやすい構造です。
+### REF-F07: 表示用定数/判定ロジックの整理不足
+- **ステータス**: 一部改善
+- **現状**:
+  - スコアランク定義は `src/utils/scoreRank.ts` に寄せられ、`UserRecord` 側の `utils/scoreRank.ts` はその派生値を使う形になっています。
+  - 一方で難易度の短縮名、クエリ値、バッジ色、カード境界色は `src/utils/difficultyUtils.ts` にまとまっているものの、`UserRecord.tsx` には別途 `DIFFICULTY_ORDER` が残っています (`src/pages/users/UserRecord/UserRecord.tsx:28-34`)。
+  - ランプ選択肢は `src/pages/users/UserRecord/types/filterDefaults.ts` に残っており、サーバ由来データにすべきかを迷う TODO も残っています (`src/pages/users/UserRecord/types/filterDefaults.ts:6-11`)。
 - **影響**:
-  - 難易度追加やランク仕様変更時に修正漏れが起きやすいです。
-  - UI 表示用語とビジネスルールが同期しづらくなります。
+  - 旧レポート時点よりは整理が進んだものの、「canonical な定義を 1 か所に寄せる」状態にはまだ至っていません。
+  - 表示名、ソート順、初期選択肢、色の変更時に、修正箇所の探索コストが残ります。
 - **対応方針**:
-  - 「難易度」「ランク」「ランプ」ごとに canonical な定義モジュールを作る。
-  - 色、短縮名、URL クエリ値、ソート順などを同一ソースから派生させる。
-  - 文字列リテラルを scattered に持たず、union type と定数オブジェクトを軸に揃える。
+  - 難易度は「表示名・短縮名・クエリ値・色・順序」を 1 モジュールに統合する。
+  - ランプも「表示用定義」と「フィルタ既定値」を分離し、選択肢そのものの出所を明確にする。
 
-### REF-F08: TODO/FIXME の残置と暫定実装の常態化
-- **概要**:
-  - `src/components/NavBar/NavBar.tsx:50` に状態管理の TODO、`src/components/NavBar/NavBar.tsx:193` にレイアウト TODO、`src/pages/users/UserPage/components/UserNameplate.tsx:25`, `:38` に未実装 TODO、`src/pages/users/UserPage/components/UserRecordCard.tsx:18` に FIXME が残っています。
+### REF-F08: TODO/FIXME の残置
+- **ステータス**: 継続
+- **現状**:
+  - `NavBar` にレイアウト TODO が残っています (`src/components/NavBar/NavBar.tsx:178`)。
+  - `UserNameplate` に未実装 TODO が 2 件残っています (`src/pages/users/UserPage/components/UserNameplate.tsx:25`, `src/pages/users/UserPage/components/UserNameplate.tsx:38`)。
+  - `UserRecordCard` にデザイン判断の FIXME が残っています (`src/pages/users/UserPage/components/UserRecordCard.tsx:18`)。
+  - `filterDefaults.ts` にも定数の出所や命名に関する TODO が残っています (`src/pages/users/UserRecord/types/filterDefaults.ts:6`, `src/pages/users/UserRecord/types/filterDefaults.ts:10`)。
 - **影響**:
-  - 設計上の借りと見た目調整の借りが同列に放置され、優先度判断がしにくくなります。
-  - 「暫定」が恒久化しやすく、次回改修時の判断材料も残りにくいです。
+  - UI 演出、設計課題、データソース課題が同じ TODO として混在しており、優先順位が見えにくいです。
 - **対応方針**:
-  - 設計課題は `refactor`、見た目の改善は `design backlog` のように分類して Issue 化する。
-  - コメントとして残す場合は「なぜ今やらないか」を短く補足する。
+  - `refactor` 対象と `design backlog` 対象を分けて整理する。
+  - コメントとして残す場合は、未着手理由と次の判断条件を短く添える。
 
 ---
 
 ## 推奨着手順
 
-1. **認証まわりの一本化**
-   - `REF-F02` を最優先で解消し、`fetchMe` と遷移判定のエラー分類を整理する。
+1. **UserRecord のテスト追加**
+   - `REF-F06` を先に進め、フィルタ・統計・保存データ読込の仕様を固定する。
 2. **UserRecord のページモデル化**
-   - `REF-F04` を進め、ロジックの責務を分割する。
-3. **永続化とテストの基盤整備**
-   - `REF-F05`, `REF-F06` を合わせて進め、localStorage の安全性と回帰検知を強化する。
-4. **定数/表示ルールの整理**
-   - `REF-F07`, `REF-F08` を後追いで整理し、規律を揃える。
+   - `REF-F04` を進め、ページ責務を分割する。
+3. **保存データの型安全化**
+   - `REF-F05` を進め、`localStorage` の破損耐性と将来の互換性を確保する。
+4. **取得戦略と定数整理**
+   - `REF-F03`, `REF-F07`, `REF-F08` を後追いで整える。
 
 ## まとめ
-- 最優先は **権限制御/エラー制御の分離** です。
-- 次点は **UserRecord の責務分割** で、ここを解消するとフィルタ・追跡条件・統計のテスト追加も進めやすくなります。
-- 低優先度の TODO/FIXME も、設計課題と演出課題を分けて backlog 化しておくべきです。
+- 旧レポートの最重要項目だった認証エラー処理の不統一は、現状では解消済みです。
+- 現在の主戦場は `UserRecord` 周辺で、責務集中、保存データの型検証不足、テスト不足が残っています。
+- 定数整理と TODO/FIXME 整理は低優先度ですが、`UserRecord` の構造整理と合わせて進めると効率が良いです。
