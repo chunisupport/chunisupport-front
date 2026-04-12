@@ -22,6 +22,7 @@ type NavBarProps = {
 }
 
 import { signOut } from 'firebase/auth'
+import { postLogout } from '../../api/auth'
 import { fetchMe } from '../../api/users'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
@@ -356,6 +357,7 @@ const NavBar = (props: NavBarProps) => {
                   type="button"
                   class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
                   onClick={async () => {
+                    await postLogout()
                     await signOut(auth)
                     clearAuthenticatedUser()
                     setShowLogoutDialog(false)
