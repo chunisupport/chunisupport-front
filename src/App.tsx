@@ -14,16 +14,11 @@ import {
   GoalsList,
   Login,
   NotFoundPage,
-  RecoveryReset,
   Register,
   RegisterScoreTempPage,
   SettingsApiTokenPage,
-  SettingsGoogleLinkPage,
   SettingsPage,
-  SettingsPasswordPage,
   SettingsPrivacyPage,
-  SettingsRecoveryCodesPage,
-  SettingsSessionsPage,
   SongDetail,
   SongsList,
   UserPage,
@@ -117,7 +112,6 @@ const App = () => {
       {/* 認証 */}
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
-      <Route path="/recovery" component={RecoveryReset} />
       <Route path="/403" component={ForbiddenPage} />
 
       {/* ユーザ */}
@@ -133,17 +127,7 @@ const App = () => {
       {/* 設定 */}
       <Route path="/settings" component={withNavBar(withAuth(SettingsPage))} />
       <Route path="/settings/privacy" component={withNavBar(withAuth(SettingsPrivacyPage))} />
-      <Route path="/settings/password" component={withNavBar(withAuth(SettingsPasswordPage))} />
-      <Route
-        path="/settings/recovery-codes"
-        component={withNavBar(withAuth(SettingsRecoveryCodesPage))}
-      />
       <Route path="/settings/api-token" component={withNavBar(withAuth(SettingsApiTokenPage))} />
-      <Route path="/settings/sessions" component={withNavBar(withAuth(SettingsSessionsPage))} />
-      <Route
-        path="/settings/google-link"
-        component={withNavBar(withAuth(SettingsGoogleLinkPage))}
-      />
 
       {/* その他 */}
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />

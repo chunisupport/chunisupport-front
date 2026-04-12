@@ -1,9 +1,6 @@
-﻿import { TextField } from '@kobalte/core/text-field'
-import { A, useNavigate } from '@solidjs/router'
+﻿import { A, useNavigate } from '@solidjs/router'
 import { signInWithPopup } from 'firebase/auth'
 import { createSignal } from 'solid-js'
-
-import { postFirebaseLogin, postLogin } from '../../../api/auth'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
@@ -12,8 +9,6 @@ import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 
 const Login = () => {
   const navigate = useNavigate()
-  const [username, setUsername] = createSignal('')
-  const [password, setPassword] = createSignal('')
   const [errorMessage, setErrorMessage] = createSignal('')
   const [isSubmitting, setIsSubmitting] = createSignal(false)
 
@@ -25,31 +20,16 @@ const Login = () => {
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      const result = await signInWithPopup(auth, googleProvider)
-      const idToken = await result.user.getIdToken()
-      await postFirebaseLogin(idToken)
+      await signInWithPopup(auth, googleProvider)
       await redirectAfterAuthentication(navigate)
     } catch (error) {
+      const apiError = error as Error & { code?: string }
+      if (apiError.code === 'user_not_found') {
+        // バックエンドに未登録のFirebaseユーザーは新規登録画面へ
+        navigate('/register')
+        return
+      }
       setErrorMessage(error instanceof Error ? error.message : 'Googleログインに失敗しました。')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  // ログイン処理
-  const handleLogin = async () => {
-    if (!username() || !password()) {
-      setErrorMessage('ユーザー名とパスワードを入力してください。')
-      return
-    }
-
-    setIsSubmitting(true)
-    setErrorMessage('')
-    try {
-      await postLogin({ username: username(), password: password() })
-      await redirectAfterAuthentication(navigate)
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'ログインに失敗しました。')
     } finally {
       setIsSubmitting(false)
     }
@@ -70,6 +50,7 @@ const Login = () => {
             </div>
 
             <div class="mb-6">
+              {errorMessage() && <p class="text-sm text-red-600 mb-4">{errorMessage()}</p>}
               <button
                 type="button"
                 onClick={handleGoogleLogin}
@@ -103,46 +84,7 @@ const Login = () => {
               </button>
             </div>
 
-            <div class="relative my-4 flex items-center">
-              <div class="flex-grow border-t border-gray-300" />
-              <span class="mx-3 text-sm text-gray-500">または</span>
-              <div class="flex-grow border-t border-gray-300" />
-            </div>
-
-            <div class="mb-6 text-center">
-              <TextField>
-                <TextField.Input
-                  class="mb-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="ユーザー名"
-                  value={username()}
-                  onInput={(event) => setUsername(event.currentTarget.value)}
-                />
-                <TextField.Input
-                  class="mb-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="パスワード"
-                  type="password"
-                  value={password()}
-                  onInput={(event) => setPassword(event.currentTarget.value)}
-                />
-              </TextField>
-              {errorMessage() && <p class="text-sm text-red-600 mb-2">{errorMessage()}</p>}
-              <button
-                type="button"
-                class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50"
-                onClick={handleLogin}
-                disabled={isSubmitting()}
-              >
-                {isSubmitting() ? 'ログイン中...' : 'ログイン'}
-              </button>
-            </div>
-
             <div class="text-center">
-              <p class="mb-3 text-sm text-gray-600">
-                パスワードを忘れた場合は
-                <A href="/recovery" class="text-primary-500 underline ml-1">
-                  こちら
-                </A>
-              </p>
               <p class="mb-5 text-sm text-gray-600">
                 新規アカウント作成は
                 <A href="/register" class="text-primary-500 underline ml-1">

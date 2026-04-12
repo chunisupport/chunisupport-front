@@ -3,9 +3,9 @@ import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate } from '@solidjs/router'
 import { signInWithPopup } from 'firebase/auth'
 import { Check, Dot, Loader, X } from 'lucide-solid'
-import { createEffect, createSignal, Show } from 'solid-js'
+import { createEffect, createSignal, onMount, Show } from 'solid-js'
 
-import { postFirebaseRegister } from '../../../api/auth'
+import { postSignup } from '../../../api/auth'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
@@ -15,7 +15,6 @@ import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 const Register = () => {
   const navigate = useNavigate()
   const [step, setStep] = createSignal<'google_auth' | 'fill_username'>('google_auth')
-  const [idToken, setIdToken] = createSignal('')
   const [googleEmail, setGoogleEmail] = createSignal('')
   const [username, setUsername] = createSignal('')
   const [errorMessage, setErrorMessage] = createSignal('')
@@ -49,14 +48,22 @@ const Register = () => {
   // すでにログインしている場合はユーザーページへリダイレクト
   const { isCheckingAuth } = useRedirectIfAuthenticated()
 
+  // Firebaseに既にサインイン済みの場合はStep 2へスキップ（ログインページからのリダイレクト時）
+  onMount(async () => {
+    await auth.authStateReady()
+    const firebaseUser = auth.currentUser
+    if (firebaseUser) {
+      setGoogleEmail(firebaseUser.email ?? '')
+      setStep('fill_username')
+    }
+  })
+
   // Step 1: Google認証してIDトークンを取得
   const handleGoogleAuth = async () => {
     setIsSubmitting(true)
     setErrorMessage('')
     try {
       const result = await signInWithPopup(auth, googleProvider)
-      const token = await result.user.getIdToken()
-      setIdToken(token)
       setGoogleEmail(result.user.email ?? '')
       setStep('fill_username')
     } catch (error) {
@@ -73,7 +80,7 @@ const Register = () => {
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await postFirebaseRegister(idToken(), username())
+      await postSignup({ username: username() })
       await redirectAfterAuthentication(navigate)
     } catch (error) {
       setErrorMessage(

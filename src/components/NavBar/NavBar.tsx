@@ -21,8 +21,10 @@ type NavBarProps = {
   children: JSX.Element
 }
 
+import { signOut } from 'firebase/auth'
 import { postLogout } from '../../api/auth'
 import { fetchMe } from '../../api/users'
+import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 
@@ -169,6 +171,19 @@ const NavBar = (props: NavBarProps) => {
       window.open(path, '_blank', 'noopener,noreferrer')
     } else {
       navigate(path)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await postLogout()
+    } catch (e) {
+      console.error('Logout API failed', e)
+    } finally {
+      await signOut(auth)
+      clearAuthenticatedUser()
+      setShowLogoutDialog(false)
+      navigate('/login')
     }
   }
 
@@ -354,12 +369,7 @@ const NavBar = (props: NavBarProps) => {
                 <button
                   type="button"
                   class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
-                  onClick={async () => {
-                    await postLogout()
-                    clearAuthenticatedUser()
-                    setShowLogoutDialog(false)
-                    navigate('/login')
-                  }}
+                  onClick={handleLogout}
                 >
                   ログアウト
                 </button>
