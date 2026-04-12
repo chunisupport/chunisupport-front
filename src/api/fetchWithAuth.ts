@@ -1,3 +1,4 @@
+import { auth } from '../lib/firebase'
 import { clearAuthenticatedUser } from '../stores/authSession'
 import { type ErrorCode, type ErrorResponse, getErrorMessage } from '../types/api'
 
@@ -10,7 +11,6 @@ const AUTH_ERROR_CODES: ErrorCode[] = [
   'invalid_token',
   'token_expired',
   'missing_token',
-  'invalid_session',
 ]
 
 const shouldRedirectToLogin = (status: number, error?: ErrorResponse): boolean => {
@@ -26,14 +26,28 @@ const redirectToLogin = () => {
   window.location.replace('/login')
 }
 
+const getFirebaseIdToken = async (): Promise<string | null> => {
+  await auth.authStateReady()
+  const user = auth.currentUser
+  if (!user) return null
+  return user.getIdToken()
+}
+
 export const fetchWithAuth = async (
   input: string | URL,
   init: FetchWithAuthOptions = {}
 ): Promise<Response> => {
   const { redirectOnUnauthorized = true, ...requestInit } = init
+
+  const token = await getFirebaseIdToken()
+  const headers = new Headers(requestInit.headers)
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+
   const response = await fetch(input, {
     ...requestInit,
-    credentials: 'include',
+    headers,
   })
 
   if (!response.ok) {

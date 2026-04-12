@@ -21,8 +21,9 @@ type NavBarProps = {
   children: JSX.Element
 }
 
-import { postLogout } from '../../api/auth'
+import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
+import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 
@@ -355,7 +356,7 @@ const NavBar = (props: NavBarProps) => {
                   type="button"
                   class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
                   onClick={async () => {
-                    await postLogout()
+                    await signOut(auth)
                     clearAuthenticatedUser()
                     setShowLogoutDialog(false)
                     navigate('/login')

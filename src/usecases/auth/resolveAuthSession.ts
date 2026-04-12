@@ -18,7 +18,6 @@ const AUTH_ERROR_CODES = [
   'invalid_token',
   'token_expired',
   'missing_token',
-  'invalid_session',
 ] as const
 
 const isAuthError = (error: unknown): boolean => {

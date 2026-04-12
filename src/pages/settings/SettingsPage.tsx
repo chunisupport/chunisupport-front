@@ -8,29 +8,9 @@ const links = [
     description: 'プロフィール公開/非公開を切り替えます。',
   },
   {
-    href: '/settings/password',
-    title: 'パスワード変更',
-    description: '現在のパスワードを使って新しいパスワードへ変更します。',
-  },
-  {
-    href: '/settings/recovery-codes',
-    title: 'リカバリーコード発行',
-    description: 'アカウント用のリカバリーコードを再発行します。',
-  },
-  {
     href: '/settings/api-token',
     title: 'APIトークン管理',
     description: 'APIトークンの発行・削除を行います。',
-  },
-  {
-    href: '/settings/sessions',
-    title: 'セッション管理',
-    description: '現在のセッション数確認と、他端末ログアウトを行います。',
-  },
-  {
-    href: '/settings/google-link',
-    title: 'Googleアカウント連携',
-    description: 'GoogleアカウントをこのアカウントへFirebase経由で連携します。',
   },
 ]
 
