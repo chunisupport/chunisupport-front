@@ -299,6 +299,8 @@ export interface AdminUserListResponse {
   username: string
   email?: string | null
   firebase_uid?: string | null
+  last_sign_in_time?: string | null
+  last_refresh_time?: string | null
   account_type: 'ADMIN' | 'PLAYER'
   created_at: string
   updated_at: string

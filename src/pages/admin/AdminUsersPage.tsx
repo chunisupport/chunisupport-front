@@ -126,7 +126,30 @@ const AdminUsersPage = () => {
                           <div class="font-mono text-xs break-all">{user.firebase_uid}</div>
                         </div>
                       </Show>
-                      <Show when={formatAdminUserAuthInfo(user.email, user.firebase_uid) === '-'}>
+                      <Show when={user.last_sign_in_time}>
+                        <div>
+                          <div class="text-[11px] text-gray-500">last_sign_in_time</div>
+                          <div class="font-mono text-xs break-all">
+                            {formatAdminUserDateTime(user.last_sign_in_time)}
+                          </div>
+                        </div>
+                      </Show>
+                      <Show when={user.last_refresh_time}>
+                        <div>
+                          <div class="text-[11px] text-gray-500">last_refresh_time</div>
+                          <div class="font-mono text-xs break-all">
+                            {formatAdminUserDateTime(user.last_refresh_time)}
+                          </div>
+                        </div>
+                      </Show>
+                      <Show
+                        when={
+                          !user.email &&
+                          !user.firebase_uid &&
+                          !user.last_sign_in_time &&
+                          !user.last_refresh_time
+                        }
+                      >
                         <span>-</span>
                       </Show>
                     </div>
