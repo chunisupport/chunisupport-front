@@ -1,7 +1,6 @@
 ﻿import { A, useNavigate } from '@solidjs/router'
 import { signInWithPopup } from 'firebase/auth'
 import { createSignal } from 'solid-js'
-import { fetchMe } from '../../../api/users'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'

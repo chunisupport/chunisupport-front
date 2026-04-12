@@ -174,6 +174,19 @@ const NavBar = (props: NavBarProps) => {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      await postLogout()
+    } catch (e) {
+      console.error('Logout API failed', e)
+    } finally {
+      await signOut(auth)
+      clearAuthenticatedUser()
+      setShowLogoutDialog(false)
+      navigate('/login')
+    }
+  }
+
   return (
     <div class="h-dvh overflow-hidden flex md:flex-row flex-col">
       {/* PC用nav-bar 768px以上 */}
@@ -356,13 +369,7 @@ const NavBar = (props: NavBarProps) => {
                 <button
                   type="button"
                   class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
-                  onClick={async () => {
-                    await postLogout()
-                    await signOut(auth)
-                    clearAuthenticatedUser()
-                    setShowLogoutDialog(false)
-                    navigate('/login')
-                  }}
+                  onClick={handleLogout}
                 >
                   ログアウト
                 </button>
