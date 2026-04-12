@@ -22,7 +22,6 @@ const Login = () => {
     setErrorMessage('')
     try {
       await signInWithPopup(auth, googleProvider)
-      await fetchMe()
       await redirectAfterAuthentication(navigate)
     } catch (error) {
       const apiError = error as Error & { code?: string }
