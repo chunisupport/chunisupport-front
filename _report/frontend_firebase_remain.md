@@ -1,24 +1,24 @@
-# Firebase関連フロントエンド対応計画書
+# Firebase関連フロントエンド残課題整理
 
 作成日: 2026-04-05
 最終更新日: 2026-04-13
 
 ## 目的
 
-2026-04-13 時点の Firebase 関連フロントエンド対応について、現在の実装、未実装項目、今後の実装順を整理する。
+2026-04-13 時点の Firebase 関連フロントエンド実装を現状ベースで整理し、完了済み事項と残課題を切り分ける。
 
-この文書は次の役割を持つ。
+この文書は次の用途を持つ。
 
-- 現在のフロント実装を固定する
-- 現行 API 仕様を前提にフロントの課題を整理する
-- 今すぐ着手できる項目と、API 契約待ちの項目を分ける
-- 設定画面まわりの中期実装方針を共有する
+- Firebase 認証まわりの現実装を固定する
+- 既に完了した項目と、まだ残っている項目を分ける
+- フロント単独で解消できる課題と、API 契約待ちの課題を分ける
+- 設定画面の次の実装対象を明確にする
 
 ## 前提
 
 - 内部 API 認証は Firebase ID トークン前提とする
 - フロントは `fetchWithAuth` を通じて `Authorization: Bearer <Firebase ID Token>` を付与する
-- 計画の基準は `API.md` の現行仕様と現行コードベースとする
+- 基準は現行 `API.md` と 2026-04-13 時点のコードベースとする
 
 ## 対象
 
@@ -27,13 +27,13 @@
 - `src/api/fetchWithAuth.ts`
 - `src/api/auth.ts`
 - `src/api/settings.ts`
+- `src/api/users.ts`
 - `src/components/NavBar/NavBar.tsx`
 - `src/pages/auth/Login/Login.tsx`
 - `src/pages/auth/Register/Register.tsx`
 - `src/pages/settings/SettingsPage.tsx`
 - `src/pages/settings/SettingsPrivacyPage.tsx`
 - `src/pages/settings/SettingsApiTokenPage.tsx`
-- `src/types/api.ts`
 - `src/stores/authSession.ts`
 - `src/usecases/auth/resolveAuthSession.ts`
 - `src/utils/postAuthRedirect.ts`
@@ -42,203 +42,195 @@
 
 ### 認証導線
 
-- Google ポップアップによる Firebase ログインが実装済み
-- Google ポップアップによる Firebase 新規登録導線が実装済み
-- Firebase 認証後は `GET /internal/me` でアプリ内の認証済み状態を確定している
-- `fetchWithAuth` は Firebase ID トークンを取得し、内部 API に Bearer トークンとして付与している
+- `src/lib/firebase.ts` で Firebase Auth と Google プロバイダを初期化している
+- `/login` では Google ポップアップで Firebase ログインを行っている
+- `/register` では Google 認証後にユーザー名を送信し、`POST /internal/auth/signup` でアカウント作成している
+- Firebase 認証後は `redirectAfterAuthentication()` 内で `GET /internal/me` を実行し、フロントの認証済み状態を確定している
+- `resolveAuthSession()` により `GET /internal/me` の重複実行を抑えつつ、`authSession` を解決している
+
+### 認証付き API 呼び出し
+
+- `fetchWithAuth` は Firebase ID トークンを取得して Bearer トークンを付与する
+- 401 または認証系エラーコード時は `clearAuthenticatedUser()` を実行し、必要に応じて `/login` へリダイレクトする
+- `redirectOnUnauthorized: false` を使うことで、セッション確認系処理では自動遷移を抑止できる
 
 ### 設定画面
 
-- `/settings`
-- `/settings/privacy`
-- `/settings/api-token`
-
-`SettingsPage.tsx` は現在リンク集であり、状態表示画面ではない。
+- `/settings` は存在するが、現状は設定ページへのリンク集である
+- `/settings/privacy` では `GET /internal/me` と `PUT /internal/me/privacy` を使って非公開設定を変更できる
+- `/settings/api-token` では `POST /internal/auth/api-tokens` と `DELETE /internal/auth/api-tokens` を使って API トークンを管理できる
+- 設定トップからは現在次の 2 画面に遷移できる
+  - 非公開設定
+  - APIトークン管理
 
 ### ログアウト
 
-- `NavBar.tsx` ではログアウト時に Firebase SDK の `signOut(auth)` を実行している
-- あわせて `clearAuthenticatedUser()` によりフロントの認証状態をクリアしている
-- 現行の Bearer Token 前提では、ログアウトはフロントエンドで完結する
+- `NavBar.tsx` のログアウト操作では `postLogout()` を呼び、その後 `signOut(auth)` と `clearAuthenticatedUser()` を実行している
+- ただし `postLogout()` は `POST /internal/auth/logout` を呼んでおり、現行 `API.md` にはこのエンドポイントが存在しない
+- 実際のセッション破棄は Firebase SDK 側の `signOut(auth)` とフロント状態クリアで成立している
 
 ### エラーコード
 
-- `src/types/api.ts` には `firebase_uid_already_linked` が定義済み
-- `firebase_uid_already_linked` に対応する UI メッセージも定義済み
+- `src/types/api.ts` に `firebase_uid_already_linked` が定義されている
+- 同コードに対する UI 表示文言も実装済みである
 
-## 現在の API 状況
+## API 契約の現状
 
-### フロントで利用中または利用可能な API
+### フロントで利用中の API
 
 - `POST /internal/auth/signup`
 - `POST /internal/auth/api-tokens`
 - `DELETE /internal/auth/api-tokens`
 - `GET /internal/me`
 - `PUT /internal/me/privacy`
+
+### API.md には存在するが、Firebase 関連画面では未利用の API
+
 - `DELETE /internal/me`
+- `DELETE /internal/me/player-data`
+- `POST /internal/me/register-data`
 
 ### まだ API 契約が存在しない項目
 
 - `GET /internal/me/auth-methods`
 - `DELETE /internal/me/firebase/link`
-- `POST /internal/me/firebase/unlink`
 - `POST /internal/me/password/setup`
 - `recent_login_required`
 - `last_auth_method_cannot_be_removed`
 - `password_already_configured`
 
-## 現在の問題
+## 完了済み事項
+
+### 1. Firebase ログインと新規登録導線
+
+- Google ログイン導線は稼働している
+- Google 認証を起点にした新規登録導線も稼働している
+- 登録後とログイン後のリダイレクト導線も実装済みである
+
+### 2. Bearer トークン前提の内部 API 呼び出し
+
+- `fetchWithAuth` に Bearer トークン付与が集約されている
+- 未認証時のフロント状態クリアとログイン画面遷移も共通化されている
+
+### 3. 設定配下の個別機能
+
+- 非公開設定変更は画面・API クライアントともに実装済みである
+- API トークンの発行・削除も画面・API クライアントともに実装済みである
+
+## 残課題
 
 ### 1. 旧 logout API 依存が残っている
 
-`src/api/auth.ts` には `POST /internal/auth/logout` を呼ぶ `postLogout()` がある。  
-一方で、現行 `API.md` にこのエンドポイントは存在しない。
+`src/api/auth.ts` には `POST /internal/auth/logout` を呼ぶ `postLogout()` が残っている。  
+`NavBar.tsx` もこの API 呼び出しを前提にしている。
 
-現行のログアウト自体は Firebase SDK 側の `signOut(auth)` とフロントの認証状態クリアで完結する。  
-そのため、存在しない API 呼び出しは不要な旧依存として整理対象である。
+しかし、2026-04-13 時点の `API.md` にはこのエンドポイントが存在しない。  
+現行仕様では、ログアウトは `signOut(auth)` と `clearAuthenticatedUser()` で完結させるべきである。
 
-### 2. 設定トップが Firebase 関連状態を持っていない
+### 2. 設定トップがリンク集のまま
 
-`SettingsPage.tsx` はリンク集であり、次の情報を表示できない。
+`SettingsPage.tsx` は現在も 2 件のリンクを並べるだけの構成であり、アカウント管理の入口としては情報量が不足している。
 
-- 認証まわりの現在状態
-- 退会可能であること
-- 今後追加される認証手段管理の配置先
+不足している要素:
 
-### 3. 退会 API はあるが、フロント導線がない
+- 認証状態の概要
+- 危険操作の導線
+- プレイヤーデータ管理への導線
+- 将来の認証手段管理を置くスペース
 
-`DELETE /internal/me` は API として存在するが、設定画面から実行できない。
+### 3. 退会 API は存在するが、フロント導線がない
 
-### 4. 認証手段管理に必要な API 契約が未定義
+`API.md` には `DELETE /internal/me` が定義されているが、フロントから呼ぶ API クライアントも設定画面 UI も存在しない。
 
-次の機能は、現時点ではフロント単独で着手できない。
+そのため、アカウント削除はバックエンド仕様上は可能でも、ユーザー操作としては未提供である。
+
+### 4. プレイヤーデータ解除 API はあるが、設定導線がない
+
+`API.md` には `DELETE /internal/me/player-data` がある一方で、設定画面にはプレイヤーデータ連携解除の導線がない。
+
+`/register-score-temp` は登録処理の導線として存在するが、設定画面からデータ管理を完結できる構造にはなっていない。
+
+### 5. 認証手段管理に必要な API 契約が未定義
+
+次の機能は現時点ではフロント単独で完結できない。
 
 - 認証手段一覧 UI
 - Firebase unlink UI
 - パスワード初回設定 UI
 - recent login を伴う危険操作 UI
 
-## 実装方針
+## 優先度つき対応方針
 
-### 方針 1
+### 優先度 A: フロント単独で解消できる項目
 
-短期では、現行 API とフロントだけで完結する範囲を先に整える。
+### A-1. ログアウト処理の整理
 
-対象:
+対応内容:
 
-- ログアウト処理の整理
-- 設定トップ再設計
-- 退会 UI
+- `postLogout()` の利用を廃止する
+- `POST /internal/auth/logout` 依存を削除する
+- ログアウトの正本を `signOut(auth)` と `clearAuthenticatedUser()` に寄せる
 
-### 方針 2
+完了条件:
 
-認証手段管理系は、API 契約が定義されるまで土台だけ整える。
+- ログアウト処理が現行 API 仕様に依存せず動作する
+- ログアウト後に Firebase と `authSession` の両方が未認証になる
 
-対象:
+### A-2. 設定トップの再設計
 
-- 認証セクションの配置余地
-- 状態表示用の view model 設計
-- 追加エラーコードへの UI 文言変換方針
+対応内容:
 
-## 実装順
-
-## フェーズ 1: ログアウト処理の整合
-
-### ゴール
-
-ログアウト処理をフロントエンド完結の実装として整理する。
-
-### 対応内容
-
-- `postLogout()` の利用継続可否を見直す
-- `POST /internal/auth/logout` 依存を除去する
-- ログアウトの正本を `signOut(auth)` とフロント状態クリアに寄せる
-
-### 完了条件
-
-- ログアウト処理がフロントエンドだけで完結している
-
-## フェーズ 2: 設定トップ再設計
-
-### ゴール
-
-`SettingsPage.tsx` をアカウント管理の入口として拡張できる構造にする。
-
-### 対応内容
-
-- 既存のリンク集構成を見直す
-- 次のブロックを置けるレイアウトにする
-  - 認証
-  - プライバシー
+- リンク集から、アカウント管理の入口として意味のあるトップへ変更する
+- 少なくとも次のブロックを配置できる構成にする
+  - アカウント
+  - 非公開設定
   - API トークン
   - プレイヤーデータ
   - 退会
 
-### このフェーズでやらないこと
+完了条件:
 
-- 認証手段 API の実データ表示
-- Firebase unlink
-- password setup
+- 設定トップが今後の機能追加に耐えられる構造になる
 
-### 完了条件
+### A-3. 退会 UI の実装
 
-- 設定トップが今後の Firebase 関連機能を受け入れられる
+対応対象:
 
-## フェーズ 3: 退会 UI
-
-### ゴール
-
-`DELETE /internal/me` を設定画面から実行できるようにする。
-
-### 追加対象
-
-- `src/api/settings.ts`
+- `src/api/settings.ts` または適切な API モジュール
 - `src/pages/settings/SettingsPage.tsx`
 
-### 実装内容
+対応内容:
 
-- 退会 API クライアントの追加
-- 危険操作確認 UI の追加
-- 成功後の `signOut(auth)` 実行
-- 認証状態クリア
-- `/login` または `/` への遷移
+- `DELETE /internal/me` を呼ぶクライアントを追加する
+- 危険操作確認 UI を追加する
+- 成功後に `signOut(auth)` と `clearAuthenticatedUser()` を実行する
+- ログイン画面またはトップへ遷移させる
 
-### 注意
+注意:
 
-現行 `API.md` では recent login を伴う再認証は未実装である。  
-したがって現時点では、再認証付き退会ではなく、現行 API に合わせた退会 UI として実装する。
+2026-04-13 時点の `API.md` には recent login 前提の再認証仕様はない。  
+したがって当面は、現行 API に合わせたシンプルな退会導線として実装する。
 
-### 完了条件
+完了条件:
 
 - 設定画面から退会できる
-- 退会後にフロント認証状態が残らない
+- 退会後に保護ページへ再入場できない
 
-## フェーズ 4: 認証手段管理の受け皿整備
+### A-4. プレイヤーデータ管理導線の追加
 
-### ゴール
+対応内容:
 
-将来の認証手段管理機能を設定トップへ自然に追加できる状態にする。
+- `DELETE /internal/me/player-data` を設定画面から実行できるようにする
+- プレイヤーデータ削除の影響範囲を説明する UI を用意する
+- 再登録導線として `/register-score-temp` との関係を整理する
 
-### 準備内容
+完了条件:
 
-- 認証セクションの配置余地を作る
-- 表示用 state / view model の置き場を決める
-- 将来追加されるエラーコードを UI メッセージへ変換する方針を整理する
+- プレイヤーデータ連携の追加と解除の導線が設定画面側で把握できる
 
-### まだ前提にしないもの
+### 優先度 B: API 契約待ちの項目
 
-- `GET /internal/me/auth-methods`
-- Firebase unlink API
-- password setup API
-- recent login 必須仕様
-
-### 完了条件
-
-- API 契約追加後に無理なく実装へ進める
-
-## 将来 API 追加後の実装候補
-
-### 認証手段一覧
+### B-1. 認証手段一覧
 
 必要 API 候補:
 
@@ -246,11 +238,11 @@
 
 表示候補:
 
-- Firebase 連携状態
+- Google 連携状態
 - パスワード設定状態
-- 実行可能な操作
+- 利用可能な認証手段変更操作
 
-### Firebase unlink
+### B-2. Firebase unlink
 
 必要 API 候補:
 
@@ -262,7 +254,7 @@
 - 制約時のエラーコード
 - recent login 要否
 
-### パスワード初回設定
+### B-3. パスワード初回設定
 
 必要 API 候補:
 
@@ -273,7 +265,7 @@
 - Firebase 専用ユーザーの判定方法
 - 既存パスワードユーザーへの扱い
 
-### recent login 必須の危険操作
+### B-4. recent login 必須の危険操作
 
 必要仕様候補:
 
@@ -282,15 +274,16 @@
 
 ## 推奨画面構成
 
-### 短期構成
+### 短期
 
 - `/settings`
-  - アカウント
+  - アカウント概要
   - 非公開設定
   - API トークン
+  - プレイヤーデータ
   - 退会
 
-### 中期構成
+### 中期
 
 - `/settings`
   - 認証手段
@@ -298,23 +291,25 @@
   - API トークン
   - プレイヤーデータ
   - 退会
-- 必要に応じて詳細ページ
+- 必要に応じた個別ページ
   - `/settings/privacy`
   - `/settings/api-token`
   - `/settings/password`
 
 ## テスト観点
 
-### 現時点で必須
+### フロント単独対応で必須
 
 - ログアウト後に Firebase SDK と `authSession` がともに未認証になること
+- ログアウト後に `POST /internal/auth/logout` 不要でも正常動作すること
 - 退会後にログイン画面またはトップへ遷移すること
 - 退会後に保護ページへ再入場できないこと
-- 設定トップ再設計後も既存リンクが壊れないこと
+- 設定トップ再設計後も既存の設定導線が壊れないこと
+- プレイヤーデータ解除後に再登録導線が破綻しないこと
 
 ### API 契約追加後に必須
 
-- Firebase 連携済み / 未連携表示
+- Google 連携済み / 未連携表示
 - パスワード設定済み / 未設定表示
 - Firebase unlink 不可理由の表示
 - recent login required の案内
@@ -322,19 +317,29 @@
 
 ## 受け入れ条件
 
-- 文書上の前提が現行 API 仕様と一致している
-- ログアウト処理がフロントエンド完結の実装として整理されている
-- 設定トップがアカウント管理画面へ拡張できる構造になっている
-- `DELETE /internal/me` を使った退会 UI がフロントで完結する
-- 認証手段管理機能が API 契約待ちであることが明確になっている
+- 文書上の前提が 2026-04-13 時点の `API.md` とコード実装に一致している
+- 完了済み事項と残課題が明確に分かれている
+- フロント単独で着手できる項目と API 契約待ち項目が分離されている
+- 次に着手すべき対象が `logout` 整理、設定トップ再設計、退会、プレイヤーデータ管理導線であると読める
 
 ## まとめ
 
-現在の Firebase 関連フロントエンド対応で優先すべきなのは次の 4 点である。
+2026-04-13 時点で Firebase 関連の基礎導線は概ね実装済みである。
 
-- 旧 logout API 依存を除去する
-- 設定トップをアカウント管理画面として再設計する
-- `DELETE /internal/me` を使った退会導線を実装する
-- 将来の認証手段管理機能を受け入れる土台を整える
+実装済み:
 
-認証手段一覧、Firebase unlink、password setup、recent login 必須フローは、API 契約が追加されてから着手する。
+- Google ログイン
+- Google 認証を使った新規登録
+- Bearer トークン付き内部 API 呼び出し
+- 非公開設定
+- API トークン管理
+
+残っている主な課題:
+
+- 旧 logout API 依存の除去
+- 設定トップの再設計
+- 退会導線の追加
+- プレイヤーデータ管理導線の追加
+- 認証手段管理 API 契約の整備待ち
+
+特にフロント単独で進められるのは、`POST /internal/auth/logout` 依存の解消と、設定画面をアカウント管理の入口として成立させる作業である。
