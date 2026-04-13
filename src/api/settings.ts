@@ -41,6 +41,6 @@ export const deleteAccount = async (): Promise<void> => {
   await fetchWithAuth(`${API_BASE_URL}/internal/me`, {
     method: 'DELETE',
     headers: { 'X-Reauth-Token': reauthToken },
-    redirectOnUnauthorized: false,
+    suppressUnauthorizedRedirectForCodes: ['recent_sign_in_required'],
   })
 }
