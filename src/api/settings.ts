@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config'
 import type { ApiTokenResponse } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
+import { reauthenticateAndGetToken } from './reauthenticate'
 
 export const fetchPrivacy = async (): Promise<{ is_private: boolean }> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/me`, {
@@ -32,5 +33,14 @@ export const issueApiToken = async (): Promise<ApiTokenResponse> => {
 export const deleteApiToken = async (): Promise<void> => {
   await fetchWithAuth(`${API_BASE_URL}/internal/auth/api-tokens`, {
     method: 'DELETE',
+  })
+}
+
+export const deleteAccount = async (): Promise<void> => {
+  const reauthToken = await reauthenticateAndGetToken()
+  await fetchWithAuth(`${API_BASE_URL}/internal/me`, {
+    method: 'DELETE',
+    headers: { 'X-Reauth-Token': reauthToken },
+    suppressUnauthorizedRedirectForCodes: ['recent_sign_in_required'],
   })
 }

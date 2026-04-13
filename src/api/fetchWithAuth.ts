@@ -4,6 +4,7 @@ import { type ErrorCode, type ErrorResponse, getErrorMessage } from '../types/ap
 
 type FetchWithAuthOptions = RequestInit & {
   redirectOnUnauthorized?: boolean
+  suppressUnauthorizedRedirectForCodes?: readonly ErrorCode[]
 }
 
 const AUTH_ERROR_CODES: ErrorCode[] = [
@@ -16,6 +17,26 @@ const AUTH_ERROR_CODES: ErrorCode[] = [
 const shouldRedirectToLogin = (status: number, error?: ErrorResponse): boolean => {
   const code = error?.error?.code as ErrorCode | undefined
   return status === 401 || (typeof code !== 'undefined' && AUTH_ERROR_CODES.includes(code))
+}
+
+export const shouldClearSessionOnUnauthorized = (
+  status: number,
+  error?: ErrorResponse,
+  options: Pick<
+    FetchWithAuthOptions,
+    'redirectOnUnauthorized' | 'suppressUnauthorizedRedirectForCodes'
+  > = {}
+): boolean => {
+  const { redirectOnUnauthorized = true, suppressUnauthorizedRedirectForCodes = [] } = options
+  const errorCode = error?.error?.code as ErrorCode | undefined
+  const shouldSuppressUnauthorizedRedirect =
+    typeof errorCode !== 'undefined' && suppressUnauthorizedRedirectForCodes.includes(errorCode)
+
+  return (
+    redirectOnUnauthorized &&
+    !shouldSuppressUnauthorizedRedirect &&
+    shouldRedirectToLogin(status, error)
+  )
 }
 
 const redirectToLogin = () => {
@@ -37,7 +58,11 @@ export const fetchWithAuth = async (
   input: string | URL,
   init: FetchWithAuthOptions = {}
 ): Promise<Response> => {
-  const { redirectOnUnauthorized = true, ...requestInit } = init
+  const {
+    redirectOnUnauthorized = true,
+    suppressUnauthorizedRedirectForCodes = [],
+    ...requestInit
+  } = init
 
   const token = await getFirebaseIdToken()
   const headers = new Headers(requestInit.headers)
@@ -59,7 +84,12 @@ export const fetchWithAuth = async (
       // ignore
     }
 
-    if (redirectOnUnauthorized && shouldRedirectToLogin(response.status, error)) {
+    if (
+      shouldClearSessionOnUnauthorized(response.status, error, {
+        redirectOnUnauthorized,
+        suppressUnauthorizedRedirectForCodes,
+      })
+    ) {
       clearAuthenticatedUser()
       redirectToLogin()
     }

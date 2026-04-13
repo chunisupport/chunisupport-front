@@ -12,6 +12,12 @@ const links = [
     title: 'APIトークン管理',
     description: 'APIトークンの発行・削除を行います。',
   },
+  {
+    href: '/settings/account-delete',
+    title: '退会',
+    description: 'アカウントを完全に削除します。',
+    danger: true,
+  },
 ]
 
 const SettingsPage = () => {
@@ -26,9 +32,15 @@ const SettingsPage = () => {
         {links.map((link) => (
           <A
             href={link.href}
-            class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition hover:border-primary-300 hover:bg-primary-50"
+            class={`rounded-lg border bg-white p-4 shadow-sm transition ${
+              link.danger
+                ? 'border-red-200 hover:border-red-300 hover:bg-red-50'
+                : 'border-gray-200 hover:border-primary-300 hover:bg-primary-50'
+            }`}
           >
-            <h2 class="text-lg font-semibold text-gray-900">{link.title}</h2>
+            <h2 class={`text-lg font-semibold ${link.danger ? 'text-red-700' : 'text-gray-900'}`}>
+              {link.title}
+            </h2>
             <p class="mt-1 text-sm text-gray-600">{link.description}</p>
           </A>
         ))}
