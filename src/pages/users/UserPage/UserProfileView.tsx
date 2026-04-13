@@ -6,9 +6,9 @@ import { createMemo, For, lazy, Show, Suspense } from 'solid-js'
 import { Loading, ScrollToTop } from '../../../components'
 import type {
   HonorDTO,
+  LinkedUserProfileWithRecordsDTO,
   PlayerDTO,
   PlayerRecordDTO,
-  UserProfileWithRecordsDTO,
 } from '../../../types/api'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
@@ -19,8 +19,8 @@ const UserRecord = lazy(() => import('../UserRecord'))
 const WorldsendRecord = lazy(() => import('../WorldsendRecord'))
 
 type Props = {
-  profile: UserProfileWithRecordsDTO
-  recordProfile: Accessor<UserProfileWithRecordsDTO | undefined>
+  profile: LinkedUserProfileWithRecordsDTO
+  recordProfile: Accessor<LinkedUserProfileWithRecordsDTO | undefined>
   onShowRecords: () => void
   selectedPage: ProfilePageQuery
   username: string

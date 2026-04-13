@@ -315,9 +315,14 @@ export interface AdminUserListResponse {
 
 export interface UserProfileWithRecordsDTO {
   username: string
+  player: PlayerDTO | null
+  records: UserRecordResponseDTO | null
+  updated_at: string | null
+}
+
+export type LinkedUserProfileWithRecordsDTO = UserProfileWithRecordsDTO & {
   player: PlayerDTO
   records: UserRecordResponseDTO
-  updated_at: string
 }
 
 export interface PlayerDTO {

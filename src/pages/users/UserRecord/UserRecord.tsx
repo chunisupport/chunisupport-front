@@ -13,7 +13,7 @@ import {
 import { fetchAllSongs, fetchMasterData, fetchVersionSummaries } from '../../../api/songs'
 import { Loading, ScrollToTop } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import type { UserProfileWithRecordsDTO } from '../../../types/api'
+import type { LinkedUserProfileWithRecordsDTO } from '../../../types/api'
 import { attachSongMetaToRecords } from '../../../utils/recordMerger'
 import FilterDialog from './components/FilterDialog'
 import FilterStats from './components/FilterStats'
@@ -50,7 +50,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
 }
 
 type Props = {
-  profile: UserProfileWithRecordsDTO
+  profile: LinkedUserProfileWithRecordsDTO
 }
 
 const UserRecord: Component<Props> = (props) => {

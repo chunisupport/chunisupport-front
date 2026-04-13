@@ -1,6 +1,8 @@
-import { A, Route, Router } from '@solidjs/router'
+import { A, Route, Router, useParams } from '@solidjs/router'
 import type { JSX } from 'solid-js'
-import { NavBar } from './components'
+import { createResource, ErrorBoundary, Show } from 'solid-js'
+import { fetchUserProfile } from './api/users'
+import { Loading, NavBar, PlayerDataEmptyState } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
@@ -54,8 +56,25 @@ const LandingPage = () => {
 }
 
 const UserStatsPage = () => {
+  const params = useParams<{ username: string }>()
   useDocumentTitle('統計')
-  return <h1>User Stats Page</h1>
+
+  const [resource] = createResource(
+    () => params.username,
+    async (username) => fetchUserProfile(username)
+  )
+
+  return (
+    <ErrorBoundary fallback={(err) => <p class="p-4 text-red-500">ERROR: {err.message}</p>}>
+      <Show when={!resource.loading} fallback={<Loading />}>
+        <Show when={resource()?.player} fallback={<PlayerDataEmptyState />}>
+          <div class="mx-auto w-full max-w-3xl p-4">
+            <h1 class="text-2xl font-semibold">統計</h1>
+          </div>
+        </Show>
+      </Show>
+    </ErrorBoundary>
+  )
 }
 
 const ToolsPage = () => {
