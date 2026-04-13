@@ -16,6 +16,7 @@ import {
   NotFoundPage,
   Register,
   RegisterScoreTempPage,
+  SettingsAccountDeletePage,
   SettingsApiTokenPage,
   SettingsPage,
   SettingsPrivacyPage,
@@ -128,6 +129,10 @@ const App = () => {
       <Route path="/settings" component={withNavBar(withAuth(SettingsPage))} />
       <Route path="/settings/privacy" component={withNavBar(withAuth(SettingsPrivacyPage))} />
       <Route path="/settings/api-token" component={withNavBar(withAuth(SettingsApiTokenPage))} />
+      <Route
+        path="/settings/account-delete"
+        component={withNavBar(withAuth(SettingsAccountDeletePage))}
+      />
 
       {/* その他 */}
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />

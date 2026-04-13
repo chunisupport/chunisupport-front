@@ -16,6 +16,7 @@ export type ErrorCode =
   | 'invalid_token'
   | 'token_expired'
   | 'missing_token'
+  | 'recent_sign_in_required'
   // 権限
   | 'forbidden'
   | 'firebase_uid_already_linked'
@@ -71,6 +72,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   invalid_token: '認証トークンが無効です',
   token_expired: '認証トークンの有効期限が切れています',
   missing_token: '認証トークンが必要です',
+  recent_sign_in_required: '再認証が必要です。もう一度Googleログインを行ってください',
   forbidden: 'アクセス権限がありません',
   firebase_uid_already_linked: 'このGoogleアカウントはすでに別のユーザーに連携されています',
   registration_failed: 'このユーザー名は使用できません',
