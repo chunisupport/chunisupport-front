@@ -15,9 +15,3 @@ export const postSignup = async (payload: SignupPayload): Promise<UserDTO> => {
 
   return response.json()
 }
-
-export const postLogout = async (): Promise<void> => {
-  await fetchWithAuth(`${API_BASE_URL}/internal/auth/logout`, {
-    method: 'POST',
-  })
-}

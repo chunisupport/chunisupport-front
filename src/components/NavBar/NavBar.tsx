@@ -22,7 +22,6 @@ type NavBarProps = {
 }
 
 import { signOut } from 'firebase/auth'
-import { postLogout } from '../../api/auth'
 import { fetchMe } from '../../api/users'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
@@ -175,16 +174,10 @@ const NavBar = (props: NavBarProps) => {
   }
 
   const handleLogout = async () => {
-    try {
-      await postLogout()
-    } catch (e) {
-      console.error('Logout API failed', e)
-    } finally {
-      await signOut(auth)
-      clearAuthenticatedUser()
-      setShowLogoutDialog(false)
-      navigate('/login')
-    }
+    await signOut(auth)
+    clearAuthenticatedUser()
+    setShowLogoutDialog(false)
+    navigate('/login')
   }
 
   return (
