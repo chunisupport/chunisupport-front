@@ -24,6 +24,7 @@ import type { FilterState, RecordSortKey, SortDirection } from './types/types'
 import { getDefaultFilter, isRecordMatched } from './utils/filtering'
 import { getRecordStats } from './utils/recordStats'
 import { loadSavedFilters, type SavedFilter } from './utils/storage'
+import { updatedAtTimestamp } from './utils/updatedAt'
 
 const DIFFICULTY_ORDER: Record<string, number> = {
   BASIC: 0,
@@ -46,6 +47,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   const: 'const',
   rating: 'rating',
   score: 'score',
+  updated_at: 'updatedAt',
   lamp: 'lamp',
 }
 
@@ -183,6 +185,9 @@ const UserRecord: Component<Props> = (props) => {
             }
             break
           }
+          case 'updatedAt':
+            comparison = updatedAtTimestamp(left.updated_at) - updatedAtTimestamp(right.updated_at)
+            break
           case 'lamp': {
             const leftLampKey = !left.is_played
               ? 'UNPLAYED'

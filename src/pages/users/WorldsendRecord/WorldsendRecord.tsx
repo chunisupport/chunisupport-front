@@ -19,12 +19,13 @@ import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendGridColumns } from '../UserPage/worldsendRecordTableLayout'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
+import { formatUpdatedAt, updatedAtTimestamp } from '../UserRecord/utils/updatedAt'
 
 type Props = {
   records: WorldsendRecordDTO[]
 }
 
-type WorldsendSortKey = 'title' | 'attribute' | 'level' | 'score' | 'lamp'
+type WorldsendSortKey = 'title' | 'attribute' | 'level' | 'score' | 'updatedAt' | 'lamp'
 type WorldsendSortDirection = 'asc' | 'desc'
 
 const WE_SORT_COL_MAP: Record<string, WorldsendSortKey> = {
@@ -32,6 +33,7 @@ const WE_SORT_COL_MAP: Record<string, WorldsendSortKey> = {
   attr: 'attribute',
   level: 'level',
   score: 'score',
+  updated_at: 'updatedAt',
   lamp: 'lamp',
 }
 
@@ -159,6 +161,9 @@ const WorldsendRecordTable = (props: {
             }
             break
           }
+          case 'updatedAt':
+            comparison = updatedAtTimestamp(left.updated_at) - updatedAtTimestamp(right.updated_at)
+            break
           case 'lamp': {
             const leftLampKey = !left.is_played
               ? 'UNPLAYED'
@@ -224,7 +229,7 @@ const WorldsendRecordTable = (props: {
         }
       >
         <div class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200">
-          <div class="min-w-[32.9rem]">
+          <div class="min-w-[36.5rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
                 class="grid text-xs font-semibold"
@@ -261,6 +266,14 @@ const WorldsendRecordTable = (props: {
                 >
                   <span>スコア</span>
                   {worldsendSortIndicator(sortKey() === 'score', sortDirection())}
+                </button>
+                <button
+                  type="button"
+                  class={worldsendHeaderButtonClass}
+                  onClick={() => handleSortChange('updatedAt')}
+                >
+                  <span>更新日</span>
+                  {worldsendSortIndicator(sortKey() === 'updatedAt', sortDirection())}
                 </button>
                 <button
                   type="button"
@@ -308,6 +321,11 @@ const WorldsendRecordTable = (props: {
                           record.score.toLocaleString('ja-JP')
                         )}
                       </div>
+                    </div>
+                    <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                      <span class="inline-block w-full text-center leading-none">
+                        {formatUpdatedAt(record.updated_at)}
+                      </span>
                     </div>
                     <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
                       <div class="flex w-full justify-center">

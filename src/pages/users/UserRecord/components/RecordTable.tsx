@@ -18,6 +18,7 @@ import {
 } from '../../../../utils/difficultyUtils'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import type { RecordSortKey, SortDirection } from '../types/types'
+import { formatUpdatedAt } from '../utils/updatedAt'
 
 interface RecordTableProps {
   records: PlayerRecordWithSongMeta[]
@@ -28,7 +29,7 @@ interface RecordTableProps {
 }
 
 // 列幅は曲名以外は固定、曲名は残りスペースを全て使う
-const GRID_COLUMNS = 'minmax(11.25rem,1fr) 2.5rem 3.1rem 3.6rem 3.5rem 3.5rem'
+const GRID_COLUMNS = 'minmax(11.25rem,1fr) 2.5rem 3.1rem 3.6rem 3.6rem 3.5rem 3.5rem'
 
 const ROW_HEIGHT = 34
 const HEADER_BUTTON_CLASS =
@@ -164,7 +165,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
           ref={tableContainerRef}
           class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200"
         >
-          <div class="min-w-[31.75rem]">
+          <div class="min-w-[35.35rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
                 class="grid text-xs font-semibold"
@@ -201,6 +202,14 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                 >
                   <span>スコア</span>
                   {sortIndicator(props.sortKey === 'score', props.sortDirection)}
+                </button>
+                <button
+                  type="button"
+                  class={HEADER_BUTTON_CLASS}
+                  onClick={() => props.onSortChange('updatedAt')}
+                >
+                  <span>更新日</span>
+                  {sortIndicator(props.sortKey === 'updatedAt', props.sortDirection)}
                 </button>
                 <button
                   type="button"
@@ -271,6 +280,11 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                                 ? unplayedBadge()
                                 : currentRecord().score.toLocaleString()}
                             </div>
+                          </div>
+                          <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                            <span class="inline-block w-full text-center leading-none">
+                              {formatUpdatedAt(currentRecord().updated_at)}
+                            </span>
                           </div>
                           <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
                             <span class="inline-block w-full text-center leading-none">
