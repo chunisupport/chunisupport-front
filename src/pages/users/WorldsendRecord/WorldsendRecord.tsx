@@ -14,6 +14,7 @@ import {
 import { fetchWorldsendSongs } from '../../../api/songs'
 import { Loading } from '../../../components'
 import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
+import { formatRecordAddedDate } from '../UserPage/recordAddedDate'
 import { worldsendLampClass, worldsendLampLabel } from '../UserPage/worldsendLampDisplay'
 import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendGridColumns } from '../UserPage/worldsendRecordTableLayout'
@@ -224,7 +225,7 @@ const WorldsendRecordTable = (props: {
         }
       >
         <div class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200">
-          <div class="min-w-[32.9rem]">
+          <div class="min-w-[36.5rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
                 class="grid text-xs font-semibold"
@@ -270,6 +271,9 @@ const WorldsendRecordTable = (props: {
                   <span>ランプ</span>
                   {worldsendSortIndicator(sortKey() === 'lamp', sortDirection())}
                 </button>
+                <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                  <span>追加日</span>
+                </div>
               </div>
             </div>
 
@@ -321,6 +325,11 @@ const WorldsendRecordTable = (props: {
                           </span>
                         )}
                       </div>
+                    </div>
+                    <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                      <span class="inline-block w-full text-center leading-none">
+                        {formatRecordAddedDate(record.updated_at)}
+                      </span>
                     </div>
                   </div>
                 )}

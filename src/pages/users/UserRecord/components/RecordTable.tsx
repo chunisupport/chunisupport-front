@@ -17,6 +17,7 @@ import {
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import { formatRecordAddedDate } from '../../UserPage/recordAddedDate'
 import type { RecordSortKey, SortDirection } from '../types/types'
 
 interface RecordTableProps {
@@ -28,7 +29,7 @@ interface RecordTableProps {
 }
 
 // 列幅は曲名以外は固定、曲名は残りスペースを全て使う
-const GRID_COLUMNS = 'minmax(11.25rem,1fr) 2.5rem 3.1rem 3.6rem 3.5rem 3.5rem'
+const GRID_COLUMNS = 'minmax(11.25rem,1fr) 2.5rem 3.1rem 3.6rem 3.5rem 3.5rem 3.6rem'
 
 const ROW_HEIGHT = 34
 const HEADER_BUTTON_CLASS =
@@ -164,7 +165,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
           ref={tableContainerRef}
           class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200"
         >
-          <div class="min-w-[31.75rem]">
+          <div class="min-w-[35.35rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
                 class="grid text-xs font-semibold"
@@ -218,6 +219,9 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                   <span>ランプ</span>
                   {sortIndicator(props.sortKey === 'lamp', props.sortDirection)}
                 </button>
+                <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                  <span>追加日</span>
+                </div>
               </div>
             </div>
 
@@ -285,6 +289,11 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                                 lampBadge(currentRecord().combo_lamp)
                               )}
                             </div>
+                          </div>
+                          <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                            <span class="inline-block w-full text-center leading-none">
+                              {formatRecordAddedDate(currentRecord().updated_at)}
+                            </span>
                           </div>
                         </div>
                       )}
