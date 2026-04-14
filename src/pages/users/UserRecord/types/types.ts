@@ -4,7 +4,14 @@ export type Difficulty = PlayerRecordDTO['difficulty']
 export type ComboLamp = PlayerRecordDTO['combo_lamp']
 export type ChainLamp = PlayerRecordDTO['full_chain']
 export type HardLamp = PlayerRecordDTO['clear_lamp']
-export type RecordSortKey = 'title' | 'difficulty' | 'const' | 'rating' | 'score' | 'lamp'
+export type RecordSortKey =
+  | 'title'
+  | 'difficulty'
+  | 'const'
+  | 'rating'
+  | 'score'
+  | 'updatedAt'
+  | 'lamp'
 export type SortDirection = 'asc' | 'desc'
 
 /** フィルターの型定義 */

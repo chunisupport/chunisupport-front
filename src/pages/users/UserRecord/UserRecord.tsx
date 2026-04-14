@@ -24,6 +24,7 @@ import type { FilterState, RecordSortKey, SortDirection } from './types/types'
 import { getDefaultFilter, isRecordMatched } from './utils/filtering'
 import { getRecordStats } from './utils/recordStats'
 import { loadSavedFilters, type SavedFilter } from './utils/storage'
+import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './utils/updatedAt'
 
 const DIFFICULTY_ORDER: Record<string, number> = {
   BASIC: 0,
@@ -46,6 +47,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   const: 'const',
   rating: 'rating',
   score: 'score',
+  updated_at: 'updatedAt',
   lamp: 'lamp',
 }
 
@@ -135,7 +137,11 @@ const UserRecord: Component<Props> = (props) => {
     const direction = currentSortDirection === 'asc' ? 1 : -1
 
     return records
-      .map((record, index) => ({ record, index }))
+      .map((record, index) => ({
+        record,
+        index,
+        updatedAtTs: updatedAtTimestamp(record.updated_at),
+      }))
       .sort((a, b) => {
         const left = a.record
         const right = b.record
@@ -181,6 +187,13 @@ const UserRecord: Component<Props> = (props) => {
             } else {
               comparison = left.score - right.score
             }
+            break
+          }
+          case 'updatedAt': {
+            comparison = compareUpdatedAtWithMissingLast(
+              { isPlayed: left.is_played, updatedAtTimestamp: a.updatedAtTs },
+              { isPlayed: right.is_played, updatedAtTimestamp: b.updatedAtTs }
+            )
             break
           }
           case 'lamp': {
