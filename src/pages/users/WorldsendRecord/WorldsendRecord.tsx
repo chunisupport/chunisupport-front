@@ -161,9 +161,23 @@ const WorldsendRecordTable = (props: {
             }
             break
           }
-          case 'updatedAt':
-            comparison = updatedAtTimestamp(left.updated_at) - updatedAtTimestamp(right.updated_at)
+          case 'updatedAt': {
+            const leftUnplayed = !left.is_played || left.updated_at === null
+            const rightUnplayed = !right.is_played || right.updated_at === null
+
+            if (leftUnplayed && rightUnplayed) {
+              comparison = 0
+            } else if (leftUnplayed) {
+              return 1
+            } else if (rightUnplayed) {
+              return -1
+            } else {
+              const leftTs = updatedAtTimestamp(left.updated_at)
+              const rightTs = updatedAtTimestamp(right.updated_at)
+              comparison = leftTs === rightTs ? 0 : leftTs - rightTs
+            }
             break
+          }
           case 'lamp': {
             const leftLampKey = !left.is_played
               ? 'UNPLAYED'
