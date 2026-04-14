@@ -328,7 +328,7 @@ const WorldsendRecordTable = (props: {
                     </div>
                     <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
                       <span class="inline-block w-full text-center leading-none">
-                        {formatRecordAddedDate(record.updated_at)}
+                        {formatRecordAddedDate(record.release)}
                       </span>
                     </div>
                   </div>

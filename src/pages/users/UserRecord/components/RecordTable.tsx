@@ -292,7 +292,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           </div>
                           <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
                             <span class="inline-block w-full text-center leading-none">
-                              {formatRecordAddedDate(currentRecord().updated_at)}
+                              {formatRecordAddedDate(currentRecord().release)}
                             </span>
                           </div>
                         </div>
