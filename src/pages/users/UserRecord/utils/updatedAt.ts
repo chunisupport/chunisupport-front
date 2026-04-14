@@ -30,3 +30,7 @@ export const updatedAtTimestamp = (updatedAt: string | null): number => {
   const ts = Date.parse(updatedAt)
   return Number.isNaN(ts) ? Number.NEGATIVE_INFINITY : ts
 }
+
+export const hasValidUpdatedAtTimestamp = (timestamp: number): boolean => {
+  return timestamp !== Number.NEGATIVE_INFINITY
+}

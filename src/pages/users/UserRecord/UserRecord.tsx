@@ -24,7 +24,7 @@ import type { FilterState, RecordSortKey, SortDirection } from './types/types'
 import { getDefaultFilter, isRecordMatched } from './utils/filtering'
 import { getRecordStats } from './utils/recordStats'
 import { loadSavedFilters, type SavedFilter } from './utils/storage'
-import { updatedAtTimestamp } from './utils/updatedAt'
+import { hasValidUpdatedAtTimestamp, updatedAtTimestamp } from './utils/updatedAt'
 
 const DIFFICULTY_ORDER: Record<string, number> = {
   BASIC: 0,
@@ -186,8 +186,10 @@ const UserRecord: Component<Props> = (props) => {
             break
           }
           case 'updatedAt': {
-            const leftUnplayed = !left.is_played || left.updated_at === null
-            const rightUnplayed = !right.is_played || right.updated_at === null
+            const leftTs = updatedAtTimestamp(left.updated_at)
+            const rightTs = updatedAtTimestamp(right.updated_at)
+            const leftUnplayed = !left.is_played || !hasValidUpdatedAtTimestamp(leftTs)
+            const rightUnplayed = !right.is_played || !hasValidUpdatedAtTimestamp(rightTs)
 
             if (leftUnplayed && rightUnplayed) {
               comparison = 0
@@ -196,8 +198,6 @@ const UserRecord: Component<Props> = (props) => {
             } else if (rightUnplayed) {
               return -1
             } else {
-              const leftTs = updatedAtTimestamp(left.updated_at)
-              const rightTs = updatedAtTimestamp(right.updated_at)
               comparison = leftTs === rightTs ? 0 : leftTs - rightTs
             }
             break

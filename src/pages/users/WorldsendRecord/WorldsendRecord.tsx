@@ -19,7 +19,11 @@ import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendGridColumns } from '../UserPage/worldsendRecordTableLayout'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
-import { formatUpdatedAt, updatedAtTimestamp } from '../UserRecord/utils/updatedAt'
+import {
+  formatUpdatedAt,
+  hasValidUpdatedAtTimestamp,
+  updatedAtTimestamp,
+} from '../UserRecord/utils/updatedAt'
 
 type Props = {
   records: WorldsendRecordDTO[]
@@ -162,8 +166,10 @@ const WorldsendRecordTable = (props: {
             break
           }
           case 'updatedAt': {
-            const leftUnplayed = !left.is_played || left.updated_at === null
-            const rightUnplayed = !right.is_played || right.updated_at === null
+            const leftTs = updatedAtTimestamp(left.updated_at)
+            const rightTs = updatedAtTimestamp(right.updated_at)
+            const leftUnplayed = !left.is_played || !hasValidUpdatedAtTimestamp(leftTs)
+            const rightUnplayed = !right.is_played || !hasValidUpdatedAtTimestamp(rightTs)
 
             if (leftUnplayed && rightUnplayed) {
               comparison = 0
@@ -172,8 +178,6 @@ const WorldsendRecordTable = (props: {
             } else if (rightUnplayed) {
               return -1
             } else {
-              const leftTs = updatedAtTimestamp(left.updated_at)
-              const rightTs = updatedAtTimestamp(right.updated_at)
               comparison = leftTs === rightTs ? 0 : leftTs - rightTs
             }
             break
