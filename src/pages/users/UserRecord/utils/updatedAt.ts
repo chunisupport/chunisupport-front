@@ -27,6 +27,6 @@ export const updatedAtTimestamp = (updatedAt: string | null): number => {
     return Number.NEGATIVE_INFINITY
   }
 
-  const parsed = new Date(updatedAt)
-  return Number.isNaN(parsed.getTime()) ? Number.NEGATIVE_INFINITY : parsed.getTime()
+  const ts = Date.parse(updatedAt)
+  return Number.isNaN(ts) ? Number.NEGATIVE_INFINITY : ts
 }
