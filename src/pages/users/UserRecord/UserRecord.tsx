@@ -47,6 +47,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   rating: 'rating',
   score: 'score',
   lamp: 'lamp',
+  added: 'addedDate',
 }
 
 type Props = {
@@ -198,6 +199,21 @@ const UserRecord: Component<Props> = (props) => {
             comparison =
               (LAMP_ORDER[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
               (LAMP_ORDER[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
+            break
+          }
+          case 'addedDate': {
+            const leftNoDate = !left.release
+            const rightNoDate = !right.release
+
+            if (leftNoDate && rightNoDate) {
+              comparison = 0
+            } else if (leftNoDate) {
+              return 1
+            } else if (rightNoDate) {
+              return -1
+            } else {
+              comparison = left.release.localeCompare(right.release, 'ja')
+            }
             break
           }
         }

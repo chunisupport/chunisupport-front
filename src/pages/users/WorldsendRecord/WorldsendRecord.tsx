@@ -25,7 +25,7 @@ type Props = {
   records: WorldsendRecordDTO[]
 }
 
-type WorldsendSortKey = 'title' | 'attribute' | 'level' | 'score' | 'lamp'
+type WorldsendSortKey = 'title' | 'attribute' | 'level' | 'score' | 'lamp' | 'addedDate'
 type WorldsendSortDirection = 'asc' | 'desc'
 
 const WE_SORT_COL_MAP: Record<string, WorldsendSortKey> = {
@@ -34,6 +34,7 @@ const WE_SORT_COL_MAP: Record<string, WorldsendSortKey> = {
   level: 'level',
   score: 'score',
   lamp: 'lamp',
+  added: 'addedDate',
 }
 
 type WorldsendRecordWithSongMeta = WorldsendRecordDTO & {
@@ -181,6 +182,21 @@ const WorldsendRecordTable = (props: {
               (worldsendLampOrder[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
             break
           }
+          case 'addedDate': {
+            const leftNoDate = !left.release
+            const rightNoDate = !right.release
+
+            if (leftNoDate && rightNoDate) {
+              comparison = 0
+            } else if (leftNoDate) {
+              return 1
+            } else if (rightNoDate) {
+              return -1
+            } else {
+              comparison = left.release.localeCompare(right.release, 'ja')
+            }
+            break
+          }
         }
 
         if (comparison !== 0) {
@@ -271,9 +287,14 @@ const WorldsendRecordTable = (props: {
                   <span>ランプ</span>
                   {worldsendSortIndicator(sortKey() === 'lamp', sortDirection())}
                 </button>
-                <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                <button
+                  type="button"
+                  class={worldsendHeaderButtonClass}
+                  onClick={() => handleSortChange('addedDate')}
+                >
                   <span>追加日</span>
-                </div>
+                  {worldsendSortIndicator(sortKey() === 'addedDate', sortDirection())}
+                </button>
               </div>
             </div>
 

@@ -219,9 +219,14 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                   <span>ランプ</span>
                   {sortIndicator(props.sortKey === 'lamp', props.sortDirection)}
                 </button>
-                <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                <button
+                  type="button"
+                  class={HEADER_BUTTON_CLASS}
+                  onClick={() => props.onSortChange('addedDate')}
+                >
                   <span>追加日</span>
-                </div>
+                  {sortIndicator(props.sortKey === 'addedDate', props.sortDirection)}
+                </button>
               </div>
             </div>
 
