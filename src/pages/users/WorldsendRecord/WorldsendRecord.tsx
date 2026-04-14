@@ -20,8 +20,8 @@ import { worldsendGridColumns } from '../UserPage/worldsendRecordTableLayout'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
 import {
+  compareUpdatedAtWithMissingLast,
   formatUpdatedAt,
-  hasValidUpdatedAtTimestamp,
   updatedAtTimestamp,
 } from '../UserRecord/utils/updatedAt'
 
@@ -132,7 +132,11 @@ const WorldsendRecordTable = (props: {
     const direction = currentSortDirection === 'asc' ? 1 : -1
 
     return props.records
-      .map((record, index) => ({ record, index }))
+      .map((record, index) => ({
+        record,
+        index,
+        updatedAtTs: updatedAtTimestamp(record.updated_at),
+      }))
       .sort((a, b) => {
         const left = a.record
         const right = b.record
@@ -166,20 +170,10 @@ const WorldsendRecordTable = (props: {
             break
           }
           case 'updatedAt': {
-            const leftTs = updatedAtTimestamp(left.updated_at)
-            const rightTs = updatedAtTimestamp(right.updated_at)
-            const leftUnplayed = !left.is_played || !hasValidUpdatedAtTimestamp(leftTs)
-            const rightUnplayed = !right.is_played || !hasValidUpdatedAtTimestamp(rightTs)
-
-            if (leftUnplayed && rightUnplayed) {
-              comparison = 0
-            } else if (leftUnplayed) {
-              return 1
-            } else if (rightUnplayed) {
-              return -1
-            } else {
-              comparison = leftTs === rightTs ? 0 : leftTs - rightTs
-            }
+            comparison = compareUpdatedAtWithMissingLast(
+              { isPlayed: left.is_played, updatedAtTimestamp: a.updatedAtTs },
+              { isPlayed: right.is_played, updatedAtTimestamp: b.updatedAtTs }
+            )
             break
           }
           case 'lamp': {

@@ -34,3 +34,32 @@ export const updatedAtTimestamp = (updatedAt: string | null): number => {
 export const hasValidUpdatedAtTimestamp = (timestamp: number): boolean => {
   return timestamp !== Number.NEGATIVE_INFINITY
 }
+
+export type UpdatedAtSortable = {
+  isPlayed: boolean
+  updatedAtTimestamp: number
+}
+
+export const compareUpdatedAtWithMissingLast = (
+  left: UpdatedAtSortable,
+  right: UpdatedAtSortable
+): number => {
+  const leftMissing = !left.isPlayed || !hasValidUpdatedAtTimestamp(left.updatedAtTimestamp)
+  const rightMissing = !right.isPlayed || !hasValidUpdatedAtTimestamp(right.updatedAtTimestamp)
+
+  if (leftMissing && rightMissing) {
+    return 0
+  }
+
+  if (leftMissing) {
+    return 1
+  }
+
+  if (rightMissing) {
+    return -1
+  }
+
+  return left.updatedAtTimestamp === right.updatedAtTimestamp
+    ? 0
+    : left.updatedAtTimestamp - right.updatedAtTimestamp
+}

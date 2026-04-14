@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatUpdatedAt, hasValidUpdatedAtTimestamp, updatedAtTimestamp } from './updatedAt.ts'
+import {
+  compareUpdatedAtWithMissingLast,
+  formatUpdatedAt,
+  hasValidUpdatedAtTimestamp,
+  updatedAtTimestamp,
+} from './updatedAt.ts'
 
 test('更新日をyy/mm/dd形式で表示する', () => {
   assert.equal(formatUpdatedAt('2026-04-14T11:22:33Z'), '26/04/14')
@@ -25,4 +30,14 @@ test('不正な更新日は未設定として扱う', () => {
   assert.equal(invalid, Number.NEGATIVE_INFINITY)
   assert.equal(hasValidUpdatedAtTimestamp(invalid), false)
   assert.equal(hasValidUpdatedAtTimestamp(updatedAtTimestamp('2026-01-01T00:00:00Z')), true)
+})
+
+test('更新日比較は未プレイ/無効日付を末尾固定する', () => {
+  const played = { isPlayed: true, updatedAtTimestamp: updatedAtTimestamp('2026-01-01T00:00:00Z') }
+  const unplayed = { isPlayed: false, updatedAtTimestamp: Number.NEGATIVE_INFINITY }
+  const invalidDate = { isPlayed: true, updatedAtTimestamp: Number.NEGATIVE_INFINITY }
+
+  assert.equal(compareUpdatedAtWithMissingLast(unplayed, played), 1)
+  assert.equal(compareUpdatedAtWithMissingLast(played, unplayed), -1)
+  assert.equal(compareUpdatedAtWithMissingLast(invalidDate, unplayed), 0)
 })
