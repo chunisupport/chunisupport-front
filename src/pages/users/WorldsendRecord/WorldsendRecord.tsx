@@ -270,18 +270,18 @@ const WorldsendRecordTable = (props: {
                 <button
                   type="button"
                   class={worldsendHeaderButtonClass}
-                  onClick={() => handleSortChange('updatedAt')}
-                >
-                  <span>更新日</span>
-                  {worldsendSortIndicator(sortKey() === 'updatedAt', sortDirection())}
-                </button>
-                <button
-                  type="button"
-                  class={worldsendHeaderButtonClass}
                   onClick={() => handleSortChange('lamp')}
                 >
                   <span>ランプ</span>
                   {worldsendSortIndicator(sortKey() === 'lamp', sortDirection())}
+                </button>
+                <button
+                  type="button"
+                  class={worldsendHeaderButtonClass}
+                  onClick={() => handleSortChange('updatedAt')}
+                >
+                  <span>更新日</span>
+                  {worldsendSortIndicator(sortKey() === 'updatedAt', sortDirection())}
                 </button>
               </div>
             </div>
@@ -322,11 +322,6 @@ const WorldsendRecordTable = (props: {
                         )}
                       </div>
                     </div>
-                    <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
-                      <span class="inline-block w-full text-center leading-none">
-                        {formatUpdatedAt(record.updated_at)}
-                      </span>
-                    </div>
                     <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
                       <div class="flex w-full justify-center">
                         {worldsendLampLabel(record) === '-' ? (
@@ -339,6 +334,11 @@ const WorldsendRecordTable = (props: {
                           </span>
                         )}
                       </div>
+                    </div>
+                    <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                      <span class="inline-block w-full text-center leading-none">
+                        {formatUpdatedAt(record.updated_at)}
+                      </span>
                     </div>
                   </div>
                 )}

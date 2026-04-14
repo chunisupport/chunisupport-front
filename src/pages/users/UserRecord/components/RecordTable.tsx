@@ -206,14 +206,6 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                 <button
                   type="button"
                   class={HEADER_BUTTON_CLASS}
-                  onClick={() => props.onSortChange('updatedAt')}
-                >
-                  <span>更新日</span>
-                  {sortIndicator(props.sortKey === 'updatedAt', props.sortDirection)}
-                </button>
-                <button
-                  type="button"
-                  class={HEADER_BUTTON_CLASS}
                   onClick={() => props.onSortChange('rating')}
                 >
                   <span>レート</span>
@@ -226,6 +218,14 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                 >
                   <span>ランプ</span>
                   {sortIndicator(props.sortKey === 'lamp', props.sortDirection)}
+                </button>
+                <button
+                  type="button"
+                  class={HEADER_BUTTON_CLASS}
+                  onClick={() => props.onSortChange('updatedAt')}
+                >
+                  <span>更新日</span>
+                  {sortIndicator(props.sortKey === 'updatedAt', props.sortDirection)}
                 </button>
               </div>
             </div>
@@ -283,11 +283,6 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           </div>
                           <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
                             <span class="inline-block w-full text-center leading-none">
-                              {formatUpdatedAt(currentRecord().updated_at)}
-                            </span>
-                          </div>
-                          <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
-                            <span class="inline-block w-full text-center leading-none">
                               {!currentRecord().is_played ? '-' : currentRecord().rating.toFixed(2)}
                             </span>
                           </div>
@@ -299,6 +294,11 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                                 lampBadge(currentRecord().combo_lamp)
                               )}
                             </div>
+                          </div>
+                          <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                            <span class="inline-block w-full text-center leading-none">
+                              {formatUpdatedAt(currentRecord().updated_at)}
+                            </span>
                           </div>
                         </div>
                       )}
