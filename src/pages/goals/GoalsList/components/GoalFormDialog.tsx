@@ -9,7 +9,13 @@ import type {
   GoalUpdateRequest,
   MasterDataDTO,
 } from '../../../../../types/api'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
+import {
+  getScoreRank,
+  MAX_SCORE,
+  SCORE_RANK_MIN_SCORES,
+  SCORE_RANKS_ASC,
+  type ScoreRank,
+} from '../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../utils/versionConverter'
 import {
   COMBO_LAMP_OPTIONS,
@@ -67,6 +73,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [title, setTitle] = createSignal('')
   const [achievementType, setAchievementType] = createSignal<GoalAchievementType>('score_count')
   const [score, setScore] = createSignal(String(MAX_SCORE - 10000))
+  const [rank, setRank] = createSignal<ScoreRank>('S')
   const [count, setCount] = createSignal('1')
   const [countMode, setCountMode] = createSignal<'number' | 'all'>('number')
   const [total, setTotal] = createSignal('100')
@@ -93,6 +100,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setTitle('')
       setAchievementType('score_count')
       setScore(String(MAX_SCORE - 10000))
+      setRank('S')
       setCount('1')
       setCountMode('number')
       setTotal('100')
@@ -111,6 +119,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setAchievementType(goal.achievement_type)
     if ('score' in goal.achievement_params) {
       setScore(String(goal.achievement_params.score))
+      if (goal.achievement_type === 'rank_count') {
+        setRank(getScoreRank(goal.achievement_params.score))
+      }
     }
     const allCount = props.resolveAllCount(goal.attributes)
     const hasCountParam = 'count' in goal.achievement_params
@@ -181,7 +192,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     }
 
     const currentType = achievementType()
-    const parsedScore = Number(score())
+    const parsedScore =
+      currentType === 'rank_count' ? SCORE_RANK_MIN_SCORES[rank()] : Number(score())
     const parsedCount = Number(count())
     const parsedTotal = Number(total())
     const parsedConstMin = constMin() === '' ? undefined : Number(constMin())
@@ -319,9 +331,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               <span class="mb-1 block text-gray-700">目標種別</span>
               <select
                 value={achievementType()}
-                onChange={(event) =>
-                  setAchievementType(event.currentTarget.value as GoalAchievementType)
-                }
+                onChange={(event) => {
+                  const nextType = event.currentTarget.value as GoalAchievementType
+                  setAchievementType(nextType)
+                  if (nextType === 'rank_count') {
+                    setScore(String(SCORE_RANK_MIN_SCORES[rank()]))
+                  }
+                }}
                 class="w-full rounded border border-gray-300 px-3 py-2"
               >
                 {props.masterData.achievement_types.map((item) => (
@@ -335,13 +351,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               </select>
             </label>
 
-            <Show
-              when={
-                achievementType() === 'score_count' ||
-                achievementType() === 'rank_count' ||
-                achievementType() === 'avg_score'
-              }
-            >
+            <Show when={achievementType() === 'score_count' || achievementType() === 'avg_score'}>
               <label class="block text-sm">
                 <span class="mb-1 block text-gray-700">スコア目標</span>
                 <input
@@ -350,6 +360,27 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   onInput={(event) => setScore(event.currentTarget.value)}
                   class="w-full rounded border border-gray-300 px-3 py-2"
                 />
+              </label>
+            </Show>
+
+            <Show when={achievementType() === 'rank_count'}>
+              <label class="block text-sm">
+                <span class="mb-1 block text-gray-700">ランク目標</span>
+                <select
+                  value={rank()}
+                  onChange={(event) => {
+                    const nextRank = event.currentTarget.value as ScoreRank
+                    setRank(nextRank)
+                    setScore(String(SCORE_RANK_MIN_SCORES[nextRank]))
+                  }}
+                  class="w-full rounded border border-gray-300 px-3 py-2"
+                >
+                  {SCORE_RANKS_ASC.map((scoreRank) => (
+                    <option value={scoreRank}>
+                      {scoreRank}（{SCORE_RANK_MIN_SCORES[scoreRank].toLocaleString('ja-JP')}）
+                    </option>
+                  ))}
+                </select>
               </label>
             </Show>
 
