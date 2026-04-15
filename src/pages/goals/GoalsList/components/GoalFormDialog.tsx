@@ -335,7 +335,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   const nextType = event.currentTarget.value as GoalAchievementType
                   setAchievementType(nextType)
                   if (nextType === 'rank_count') {
-                    setScore(String(SCORE_RANK_MIN_SCORES[rank()]))
+                    setRank('S')
+                    setScore(String(SCORE_RANK_MIN_SCORES.S))
                   }
                 }}
                 class="w-full rounded border border-gray-300 px-3 py-2"
