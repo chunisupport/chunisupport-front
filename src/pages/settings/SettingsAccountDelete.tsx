@@ -5,7 +5,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { clearAuthenticatedUser } from '../../stores/authSession'
 
-const SettingsAccountDeletePage = () => {
+const SettingsAccountDelete = () => {
   const navigate = useNavigate()
   const [isDeleting, setIsDeleting] = createSignal(false)
   const [errorMessage, setErrorMessage] = createSignal('')
@@ -92,4 +92,4 @@ const SettingsAccountDeletePage = () => {
   )
 }
 
-export default SettingsAccountDeletePage
+export default SettingsAccountDelete

@@ -18,7 +18,7 @@ import {
   NotFoundPage,
   Register,
   RegisterScoreTempPage,
-  SettingsPage,
+  Settings,
   SongDetail,
   SongsList,
   UserPage,
@@ -142,7 +142,7 @@ const App = () => {
       <Route path="/songs/:displayid" component={withNavBar(SongDetail)} />
 
       {/* 設定 */}
-      <Route path="/settings/:section?" component={withNavBar(withAuth(SettingsPage))} />
+      <Route path="/settings/:section?" component={withNavBar(withAuth(Settings))} />
 
       {/* その他 */}
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />

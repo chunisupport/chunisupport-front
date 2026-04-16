@@ -3,7 +3,7 @@ import { createSignal } from 'solid-js'
 import { deleteApiToken, issueApiToken } from '../../api/settings'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
-const SettingsApiTokenPage = () => {
+const SettingsApiToken = () => {
   const [token, setToken] = createSignal('')
   const [isIssuing, setIsIssuing] = createSignal(false)
   const [isDeleting, setIsDeleting] = createSignal(false)
@@ -117,4 +117,4 @@ const SettingsApiTokenPage = () => {
   )
 }
 
-export default SettingsApiTokenPage
+export default SettingsApiToken

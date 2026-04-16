@@ -3,7 +3,7 @@ import { createSignal, onMount } from 'solid-js'
 import { fetchPrivacy, updatePrivacy } from '../../api/settings'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
-const SettingsPrivacyPage = () => {
+const SettingsPrivacy = () => {
   const [isPrivate, setIsPrivate] = createSignal(false)
   const [isLoading, setIsLoading] = createSignal(true)
   const [isSubmitting, setIsSubmitting] = createSignal(false)
@@ -78,4 +78,4 @@ const SettingsPrivacyPage = () => {
   )
 }
 
-export default SettingsPrivacyPage
+export default SettingsPrivacy

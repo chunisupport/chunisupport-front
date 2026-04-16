@@ -55,7 +55,7 @@ const formatDateTime = (value: string | null): string => {
   }).format(date)
 }
 
-const SettingsPage = () => {
+const Settings = () => {
   const navigate = useNavigate()
   const params = useParams<{ section?: string }>()
   const [token, setToken] = createSignal('')
@@ -600,4 +600,4 @@ const SettingsPage = () => {
   )
 }
 
-export default SettingsPage
+export default Settings
