@@ -297,6 +297,11 @@ export interface UserDTO {
   last_score_update: string | null
 }
 
+export interface UserProfileDTO {
+  username: string
+  player: PlayerDTO | null
+}
+
 export interface AdminUserListResponse {
   username: string
   email?: string | null

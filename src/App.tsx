@@ -18,10 +18,7 @@ import {
   NotFoundPage,
   Register,
   RegisterScoreTempPage,
-  SettingsAccountDeletePage,
-  SettingsApiTokenPage,
   SettingsPage,
-  SettingsPrivacyPage,
   SongDetail,
   SongsList,
   UserPage,
@@ -145,13 +142,7 @@ const App = () => {
       <Route path="/songs/:displayid" component={withNavBar(SongDetail)} />
 
       {/* 設定 */}
-      <Route path="/settings" component={withNavBar(withAuth(SettingsPage))} />
-      <Route path="/settings/privacy" component={withNavBar(withAuth(SettingsPrivacyPage))} />
-      <Route path="/settings/api-token" component={withNavBar(withAuth(SettingsApiTokenPage))} />
-      <Route
-        path="/settings/account-delete"
-        component={withNavBar(withAuth(SettingsAccountDeletePage))}
-      />
+      <Route path="/settings/:section?" component={withNavBar(withAuth(SettingsPage))} />
 
       {/* その他 */}
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />

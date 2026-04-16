@@ -1,5 +1,10 @@
 import { API_BASE_URL } from '../config'
-import type { AdminUserListResponse, UserDTO, UserProfileWithRecordsDTO } from '../types/api'
+import type {
+  AdminUserListResponse,
+  UserDTO,
+  UserProfileDTO,
+  UserProfileWithRecordsDTO,
+} from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 
 type FetchUserProfileOptions = {
@@ -23,6 +28,14 @@ export const fetchUserProfile = async (
     url.searchParams.set('include_noplay', 'true')
   }
   const response = await fetchWithAuth(url)
+
+  return response.json()
+}
+
+export const fetchUserProfileSummary = async (username: string): Promise<UserProfileDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/profile`
+  )
 
   return response.json()
 }

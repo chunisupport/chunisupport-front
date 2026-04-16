@@ -5,11 +5,6 @@ export { default as ForbiddenPage } from './ForbiddenPage'
 export { GoalsList } from './goals'
 export { default as NotFoundPage } from './NotFoundPage'
 export { RegisterScoreTempPage } from './register-score-temp'
-export {
-  SettingsAccountDeletePage,
-  SettingsApiTokenPage,
-  SettingsPage,
-  SettingsPrivacyPage,
-} from './settings'
+export { SettingsPage } from './settings'
 export { SongDetail, SongsList, WorldsendSongDetail } from './songs'
 export { UserPage } from './users'

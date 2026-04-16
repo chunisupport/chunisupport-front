@@ -36,6 +36,12 @@ export const deleteApiToken = async (): Promise<void> => {
   })
 }
 
+export const deletePlayerData = async (): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/me/player-data`, {
+    method: 'DELETE',
+  })
+}
+
 export const deleteAccount = async (): Promise<void> => {
   const reauthToken = await reauthenticateAndGetToken()
   await fetchWithAuth(`${API_BASE_URL}/internal/me`, {
