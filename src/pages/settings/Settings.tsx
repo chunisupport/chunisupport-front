@@ -4,6 +4,7 @@ import {
   deleteAccount,
   deleteApiToken,
   deletePlayerData,
+  fetchApiTokenStatus,
   fetchPrivacy,
   issueApiToken,
   updatePrivacy,
@@ -22,11 +23,7 @@ type SettingsSummary = {
   profile: Awaited<ReturnType<typeof fetchUserProfileSummary>>
 }
 
-const accountTypeLabelMap = {
-  PLAYER: 'プレイヤー',
-  EDITOR: 'エディター',
-  ADMIN: '管理者',
-} as const
+// アカウント種別ラベルマップを廃止 — 生の `account_type` をそのまま表示します。
 
 const normalizeSection = (section?: string): SectionId | null => {
   if (typeof section === 'undefined') {
@@ -88,6 +85,10 @@ const Settings = () => {
       return { me, profile }
     }
   )
+  const [apiTokenStatus, { refetch: refetchApiTokenStatus }] = createResource(
+    () => authSession.user?.username,
+    async () => fetchApiTokenStatus()
+  )
 
   createEffect(() => {
     const currentSummary = summary()
@@ -112,12 +113,15 @@ const Settings = () => {
     setPrivacyValue(currentPrivacy.is_private)
   }
 
-  const handleSavePrivacy = async () => {
+  const handleTogglePrivacy = async () => {
     setPrivacyError('')
     setPrivacySuccess('')
+    const nextValue = !privacyValue()
+    const previousValue = privacyValue()
+    setPrivacyValue(nextValue)
     setPrivacySubmitting(true)
     try {
-      const result = await updatePrivacy(privacyValue())
+      const result = await updatePrivacy(nextValue)
       setPrivacyValue(result.is_private)
       mutateSummary((current) =>
         current
@@ -132,6 +136,7 @@ const Settings = () => {
       )
       setPrivacySuccess('非公開設定を更新しました。')
     } catch (error) {
+      setPrivacyValue(previousValue)
       setPrivacyError(error instanceof Error ? error.message : '設定更新に失敗しました。')
       await handlePrivacyRefresh()
     } finally {
@@ -146,7 +151,9 @@ const Settings = () => {
     try {
       const result = await issueApiToken()
       setToken(result.token)
+      setCopied(false)
       setApiTokenSuccess('APIトークンを発行しました。表示はこの1回のみです。')
+      await refetchApiTokenStatus()
     } catch (error) {
       setApiTokenError(error instanceof Error ? error.message : 'APIトークン発行に失敗しました。')
     } finally {
@@ -165,7 +172,9 @@ const Settings = () => {
     try {
       await deleteApiToken()
       setToken('')
+      setCopied(false)
       setApiTokenSuccess('APIトークンを削除しました。')
+      await refetchApiTokenStatus()
     } catch (error) {
       setApiTokenError(error instanceof Error ? error.message : 'APIトークン削除に失敗しました。')
     } finally {
@@ -241,16 +250,6 @@ const Settings = () => {
     <div class="mx-auto w-full max-w-5xl p-6">
       <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h1 class="text-2xl font-semibold">設定</h1>
-        <p class="mt-2 text-sm text-gray-600">
-          アカウント状態の確認と、プライバシー・連携・危険操作をこのページで管理できます。
-        </p>
-
-        <Show when={normalizeSection(params.section)}>
-          <p class="mt-4 rounded-lg border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-800">
-            個別設定ページは統合されました。該当セクションまで自動で移動します。
-          </p>
-        </Show>
-
         <Show
           when={summary()}
           fallback={<p class="mt-6 text-sm text-gray-600">設定情報を読み込み中です...</p>}
@@ -271,7 +270,7 @@ const Settings = () => {
                     アカウント種別
                   </dt>
                   <dd class="mt-2 text-base font-semibold text-gray-900">
-                    {accountTypeLabelMap[loadedSummary().me.account_type]}
+                    {loadedSummary().me.account_type}
                   </dd>
                 </div>
                 <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
@@ -292,143 +291,175 @@ const Settings = () => {
                 </div>
               </dl>
 
-              <div class="mt-6 flex flex-wrap gap-2">
-                <A
-                  href="/settings/privacy"
-                  class="rounded-full border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                >
-                  非公開設定
-                </A>
-                <A
-                  href="/settings/api-token"
-                  class="rounded-full border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                >
-                  APIトークン
-                </A>
-                <A
-                  href="/settings/player-data"
-                  class="rounded-full border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                >
-                  プレイヤーデータ
-                </A>
-                <A
-                  href="/settings/account-delete"
-                  class="rounded-full border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-50"
-                >
-                  退会
-                </A>
-              </div>
-
               <div class="mt-8 space-y-6">
-                <section id="privacy" class="rounded-2xl border border-gray-200 bg-white p-5">
-                  <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <h2 class="text-lg font-semibold text-gray-900">非公開設定</h2>
-                      <p class="mt-1 text-sm text-gray-600">
-                        プロフィールページの公開状態を切り替えます。
-                      </p>
-                    </div>
-                    <span class="text-sm font-medium text-gray-500">
-                      現在: {loadedSummary().me.is_private ? '非公開' : '公開'}
-                    </span>
-                  </div>
-
-                  <label class="mt-4 flex cursor-pointer items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={privacyValue()}
-                      onChange={(event) => setPrivacyValue(event.currentTarget.checked)}
-                      disabled={privacySubmitting()}
-                      class="h-4 w-4"
-                    />
-                    <span class="text-sm text-gray-700">プロフィールを非公開にする</span>
-                  </label>
-
-                  <Show when={privacyError()}>
-                    <p class="mt-3 text-sm text-red-600" aria-live="polite">
-                      {privacyError()}
-                    </p>
-                  </Show>
-                  <Show when={privacySuccess()}>
-                    <p class="mt-3 text-sm text-primary-600" aria-live="polite">
-                      {privacySuccess()}
-                    </p>
-                  </Show>
-
-                  <button
-                    type="button"
-                    onClick={handleSavePrivacy}
-                    disabled={privacySubmitting()}
-                    class="mt-4 rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {privacySubmitting() ? '更新中...' : '保存する'}
-                  </button>
-                </section>
-
-                <section id="api-token" class="rounded-2xl border border-gray-200 bg-white p-5">
-                  <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <h2 class="text-lg font-semibold text-gray-900">APIトークン管理</h2>
-                      <p class="mt-1 text-sm text-gray-600">
-                        外部連携用の API
-                        トークンを発行・削除します。トークン文字列は発行時にのみ確認できます。
-                      </p>
-                    </div>
-                  </div>
-
-                  <div class="mt-4 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={handleIssueApiToken}
-                      disabled={apiTokenIssuing()}
-                      class="rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {apiTokenIssuing() ? '発行中...' : 'APIトークンを発行'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDeleteApiToken}
-                      disabled={apiTokenDeleting()}
-                      class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {apiTokenDeleting() ? '削除中...' : 'APIトークンを削除'}
-                    </button>
-                  </div>
-
-                  <Show when={apiTokenError()}>
-                    <p class="mt-3 text-sm text-red-600" aria-live="polite">
-                      {apiTokenError()}
-                    </p>
-                  </Show>
-                  <Show when={apiTokenSuccess()}>
-                    <p class="mt-3 text-sm text-primary-600" aria-live="polite">
-                      {apiTokenSuccess()}
-                    </p>
-                  </Show>
-
-                  <Show when={token()}>
-                    <div class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                      <p class="text-sm font-medium text-gray-700">発行されたAPIトークン</p>
-                      <p class="mt-2 break-all rounded border border-gray-200 bg-white p-2 font-mono text-xs text-gray-800">
-                        {token()}
-                      </p>
-                      <div class="mt-3 flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={handleCopyToken}
-                          class="rounded-md bg-gray-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-800"
+                <div class="flex flex-col gap-6">
+                  <section id="privacy" class="py-4">
+                    <div class="flex flex-col gap-4">
+                      <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <h2 class="text-lg font-semibold text-gray-900">非公開設定</h2>
+                        </div>
+                        <span
+                          class={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-semibold ${
+                            privacyValue()
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-emerald-100 text-emerald-800'
+                          }`}
                         >
-                          コピー
-                        </button>
-                        <Show when={copied()}>
-                          <span class="text-xs text-primary-600">コピーしました</span>
-                        </Show>
+                          現在: {privacyValue() ? '非公開' : '公開'}
+                        </span>
                       </div>
-                    </div>
-                  </Show>
-                </section>
 
-                <section id="player-data" class="rounded-2xl border border-gray-200 bg-white p-5">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={privacyValue()}
+                        aria-label={`プロフィールを${privacyValue() ? '公開' : '非公開'}にする`}
+                        onClick={handleTogglePrivacy}
+                        disabled={privacySubmitting()}
+                        class={`flex w-full items-center justify-between rounded-2xl border px-4 py-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                          privacyValue()
+                            ? 'border-amber-200 bg-amber-50 hover:bg-amber-100'
+                            : 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100'
+                        }`}
+                      >
+                        <div class="pr-4">
+                          <p class="text-sm font-semibold text-gray-900">
+                            {privacySubmitting() ? '更新中...' : 'プロフィール'}
+                          </p>
+                        </div>
+                        <span
+                          aria-hidden="true"
+                          class={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ${
+                            privacyValue() ? 'bg-amber-500' : 'bg-emerald-500'
+                          }`}
+                        >
+                          <span
+                            class={`inline-block h-6 w-6 rounded-full bg-white shadow-sm transition ${
+                              privacyValue() ? 'translate-x-7' : 'translate-x-1'
+                            }`}
+                          />
+                        </span>
+                      </button>
+
+                      <Show when={privacyError()}>
+                        <p class="text-sm text-red-600" aria-live="polite">
+                          {privacyError()}
+                        </p>
+                      </Show>
+                      <Show when={privacySuccess()}>
+                        <p class="text-sm text-primary-600" aria-live="polite">
+                          {privacySuccess()}
+                        </p>
+                      </Show>
+                    </div>
+                  </section>
+
+                  <section id="api-token" class="py-4">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h2 class="text-lg font-semibold text-gray-900">APIトークン管理</h2>
+                        <p class="mt-1 text-sm text-gray-600">
+                          外部連携用の API トークンを発行・削除します。トークン文字列は発行時にのみ確認できます。
+                        </p>
+                      </div>
+                      <Show
+                        when={apiTokenStatus()}
+                        fallback={
+                          <span class="inline-flex w-fit rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-600">
+                            状態を確認中...
+                          </span>
+                        }
+                      >
+                        {(status) => (
+                          <span
+                            class={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-semibold ${
+                              status().has_token
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            現在: {status().has_token ? '発行済み' : '未発行'}
+                          </span>
+                        )}
+                      </Show>
+                    </div>
+
+                    <Show when={apiTokenStatus()}>
+                      {(status) => (
+                        <div class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                          <p class="text-sm font-medium text-gray-800">
+                            {status().has_token
+                              ? '現在有効なAPIトークンが発行されています。'
+                              : '現在有効なAPIトークンは発行されていません。'}
+                          </p>
+                          <Show when={status().has_token}>
+                            <p class="mt-1 text-sm text-gray-600">
+                              発行日時: {formatDateTime(status().created_at)}
+                            </p>
+                          </Show>
+                        </div>
+                      )}
+                    </Show>
+
+                    <div class="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={handleIssueApiToken}
+                        disabled={apiTokenIssuing()}
+                        class="rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {apiTokenIssuing()
+                          ? '発行中...'
+                          : apiTokenStatus()?.has_token
+                            ? 'APIトークンを再発行'
+                            : 'APIトークンを発行'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDeleteApiToken}
+                        disabled={apiTokenDeleting() || !apiTokenStatus()?.has_token}
+                        class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {apiTokenDeleting() ? '削除中...' : 'APIトークンを削除'}
+                      </button>
+                    </div>
+
+                    <Show when={apiTokenError()}>
+                      <p class="mt-3 text-sm text-red-600" aria-live="polite">
+                        {apiTokenError()}
+                      </p>
+                    </Show>
+                    <Show when={apiTokenSuccess()}>
+                      <p class="mt-3 text-sm text-primary-600" aria-live="polite">
+                        {apiTokenSuccess()}
+                      </p>
+                    </Show>
+
+                    <Show when={token()}>
+                      <div class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <p class="text-sm font-medium text-gray-700">発行されたAPIトークン</p>
+                        <p class="mt-2 break-all rounded border border-gray-200 bg-white p-2 font-mono text-xs text-gray-800">
+                          {token()}
+                        </p>
+                        <div class="mt-3 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleCopyToken}
+                            class="rounded-md bg-gray-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-800"
+                          >
+                            コピー
+                          </button>
+                          <Show when={copied()}>
+                            <span class="text-xs text-primary-600">コピーしました</span>
+                          </Show>
+                        </div>
+                      </div>
+                    </Show>
+                  </section>
+                </div>
+
+                <section id="player-data" class="py-4">
                   <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <h2 class="text-lg font-semibold text-gray-900">プレイヤーデータ</h2>
@@ -536,10 +567,7 @@ const Settings = () => {
                   </button>
                 </section>
 
-                <section
-                  id="account-delete"
-                  class="rounded-2xl border border-red-200 bg-white p-5 shadow-sm"
-                >
+                <section id="account-delete" class="py-4">
                   <div>
                     <h2 class="text-lg font-semibold text-red-800">退会</h2>
                     <p class="mt-1 text-sm text-gray-600">

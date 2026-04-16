@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../config'
-import type { ApiTokenResponse } from '../types/api'
+import type { ApiTokenResponse, ApiTokenStatusResponse } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 import { reauthenticateAndGetToken } from './reauthenticate'
 
@@ -25,6 +25,14 @@ export const updatePrivacy = async (isPrivate: boolean): Promise<{ is_private: b
 export const issueApiToken = async (): Promise<ApiTokenResponse> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/auth/api-tokens`, {
     method: 'POST',
+  })
+
+  return response.json()
+}
+
+export const fetchApiTokenStatus = async (): Promise<ApiTokenStatusResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/auth/api-tokens`, {
+    method: 'GET',
   })
 
   return response.json()

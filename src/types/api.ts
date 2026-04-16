@@ -485,3 +485,8 @@ export interface UpdateWorldsendSongRequestDTO {
 export interface ApiTokenResponse {
   token: string
 }
+
+export interface ApiTokenStatusResponse {
+  has_token: boolean
+  created_at: string | null
+}
