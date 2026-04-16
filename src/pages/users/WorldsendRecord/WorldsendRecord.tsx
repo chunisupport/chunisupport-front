@@ -244,7 +244,7 @@ const WorldsendRecordTable = (props: {
           <div class="min-w-[36.5rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
-                class="grid text-xs font-semibold"
+                class="grid pr-2 text-xs font-semibold"
                 style={{ 'grid-template-columns': worldsendGridColumns }}
               >
                 <button
@@ -302,7 +302,7 @@ const WorldsendRecordTable = (props: {
               <For each={sortedRecords()}>
                 {(record) => (
                   <div
-                    class="grid border-b border-gray-200 text-xs hover:bg-gray-100"
+                    class="grid border-b border-gray-200 pr-2 text-xs hover:bg-gray-100"
                     style={{ 'grid-template-columns': worldsendGridColumns }}
                   >
                     <div class="flex min-h-[34px] min-w-0 items-center px-2" title={record.title}>
@@ -369,10 +369,12 @@ const WorldsendRecord = (props: Props) => {
 
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
-  const parsedSortKey = WE_SORT_COL_MAP[searchParams.sortcol ?? ''] ?? null
+  const sortColParam = typeof searchParams.sortcol === 'string' ? searchParams.sortcol : ''
+  const sortOrderParam = typeof searchParams.sortorder === 'string' ? searchParams.sortorder : null
+  const parsedSortKey = WE_SORT_COL_MAP[sortColParam] ?? null
   const parsedSortOrder =
-    searchParams.sortorder === 'asc' || searchParams.sortorder === 'desc'
-      ? (searchParams.sortorder as WorldsendSortDirection)
+    sortOrderParam === 'asc' || sortOrderParam === 'desc'
+      ? (sortOrderParam as WorldsendSortDirection)
       : null
   const initialSortKey: WorldsendSortKey | null =
     parsedSortKey !== null && parsedSortOrder !== null ? parsedSortKey : 'score'

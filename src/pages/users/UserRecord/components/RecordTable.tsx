@@ -168,7 +168,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
           <div class="min-w-[35.35rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
-                class="grid text-xs font-semibold"
+                class="grid pr-2 text-xs font-semibold"
                 style={{ 'grid-template-columns': GRID_COLUMNS }}
               >
                 <button
@@ -243,7 +243,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                     <Show when={record()}>
                       {(currentRecord) => (
                         <div
-                          class="absolute left-0 top-0 grid w-full border-b border-gray-200 text-xs hover:bg-gray-100"
+                          class="absolute left-0 top-0 grid w-full border-b border-gray-200 pr-2 text-xs hover:bg-gray-100"
                           style={{
                             'grid-template-columns': GRID_COLUMNS,
                             transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
