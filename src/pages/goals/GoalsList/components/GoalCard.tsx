@@ -1,4 +1,4 @@
-﻿import { MoreVertical, Pencil, Trash2 } from 'lucide-solid'
+﻿import { EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
 import { type Component, createSignal, onCleanup } from 'solid-js'
 import type { GoalDTO, MasterDataDTO } from '../../../../types/api'
 // import { formatGoalAttributesLabel, formatGoalTypeLabel } from '../../utils/goalForm'
@@ -28,8 +28,15 @@ const GoalCard: Component<GoalCardProps> = (props) => {
     props.goal.invert
       ? Math.max(props.progress.target - props.progress.current, 0)
       : props.progress.current
-  const displayPercent = () =>
-    props.goal.invert ? 100 - props.progress.percent : props.progress.percent
+  const displayPercent = () => {
+    const safeTarget = props.progress.target <= 0 ? 1 : props.progress.target
+    const rawPercent = (props.progress.current / safeTarget) * 100
+    const normalizedPercent = Number.isFinite(rawPercent) ? Math.max(0, rawPercent) : 0
+
+    return props.goal.invert
+      ? Math.max(0, 100 - Math.min(normalizedPercent, 100))
+      : normalizedPercent
+  }
 
   const [menuOpen, setMenuOpen] = createSignal(false)
 
@@ -63,10 +70,14 @@ const GoalCard: Component<GoalCardProps> = (props) => {
   }
 
   return (
-    <article class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+    <article
+      class={`rounded-lg border p-4 shadow-sm ${
+        props.progress.achieved ? 'border-primary-200 bg-primary-50' : 'border-gray-200 bg-white'
+      }`}
+    >
       <div class="flex items-start justify-between gap-3">
         <div>
-          <h2 class="text-lg font-semibold text-gray-900">{props.goal.title}</h2>
+          <h2 class="text-lg font-bold text-gray-900">{props.goal.title}</h2>
         </div>
         <div ref={menuRef} class="relative">
           <button
@@ -80,7 +91,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
               menuOpen() ? closeMenu() : openMenu()
             }}
           >
-            <MoreVertical size={20} aria-hidden="true" />
+            <EllipsisVertical size={20} aria-hidden="true" />
           </button>
           {menuOpen() && (
             <div
@@ -111,9 +122,19 @@ const GoalCard: Component<GoalCardProps> = (props) => {
       </div>
 
       <div class="mt-4">
-        <div class="mb-1 flex items-center justify-between text-xs text-gray-600">
-          <span>{props.goal.invert ? '反転表示（未達寄り）' : '進捗'}</span>
-          <span>{displayPercent().toFixed(1)}%</span>
+        <div class="mb-2 flex items-end justify-between gap-3">
+          <div class="flex min-w-0 items-end gap-2 text-gray-700">
+            <span class="font-oswald text-3xl font-bold leading-none text-black">
+              {formatValue(displayCurrent(), props.goal.achievement_type)}
+            </span>
+            <span class="pb-0.5 font-oswald text-xl font-bold leading-none text-gray-400">/</span>
+            <span class="pb-0.5 font-oswald text-2xl font-bold leading-none text-gray-500">
+              {formatValue(props.progress.target, props.goal.achievement_type)}
+            </span>
+            <span class="pb-0.5 font-oswald text-lg font-semibold leading-none text-gray-400">
+              {displayPercent().toFixed(2)}%
+            </span>
+          </div>
         </div>
         <progress
           class="h-2 w-full rounded appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-gray-200 [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-primary-600 [&::-moz-progress-bar]:rounded [&::-moz-progress-bar]:bg-primary-600"
@@ -122,22 +143,6 @@ const GoalCard: Component<GoalCardProps> = (props) => {
           aria-label={`${props.goal.title} 進捗 ${displayPercent().toFixed(1)}%`}
         />
       </div>
-
-      <div class="mt-3 flex items-center justify-between text-sm">
-        <span class="text-gray-700">
-          {formatValue(displayCurrent(), props.goal.achievement_type)} /{' '}
-          {formatValue(props.progress.target, props.goal.achievement_type)}
-        </span>
-        {props.progress.achieved && (
-          <span class="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700">
-            達成
-          </span>
-        )}
-      </div>
-
-      {props.goal.achievement_type === 'overpower_percent' && props.progress.hasUnknownMaxOp && (
-        <p class="mt-2 text-xs text-amber-700">※ maxop不明譜面を含むため、達成率は暫定値です。</p>
-      )}
     </article>
   )
 }
