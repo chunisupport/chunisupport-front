@@ -248,7 +248,7 @@ const Settings = () => {
 
   return (
     <div class="mx-auto w-full max-w-5xl p-6">
-      <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div class="rounded-2xl bg-white p-6 shadow-sm">
         <h1 class="text-2xl font-semibold">設定</h1>
         <Show
           when={summary()}
@@ -360,7 +360,8 @@ const Settings = () => {
                       <div>
                         <h2 class="text-lg font-semibold text-gray-900">APIトークン管理</h2>
                         <p class="mt-1 text-sm text-gray-600">
-                          外部連携用の API トークンを発行・削除します。トークン文字列は発行時にのみ確認できます。
+                          外部連携用の API
+                          トークンを発行・削除します。トークン文字列は発行時にのみ確認できます。
                         </p>
                       </div>
                       <Show
