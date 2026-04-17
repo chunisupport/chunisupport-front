@@ -318,16 +318,16 @@ export interface AdminUserListResponse {
   is_private: boolean
 }
 
-export interface UserProfileWithRecordsDTO {
-  username: string
-  player: PlayerDTO | null
-  records: UserRecordResponseDTO | null
+export interface UserRatingMetaDTO {
   updated_at: string | null
 }
 
-export type LinkedUserProfileWithRecordsDTO = UserProfileWithRecordsDTO & {
-  player: PlayerDTO
-  records: UserRecordResponseDTO
+export interface UserRatingDTO {
+  best: PlayerRecordDTO[]
+  best_candidate: PlayerRecordDTO[]
+  new: PlayerRecordDTO[]
+  new_candidate: PlayerRecordDTO[]
+  meta: UserRatingMetaDTO
 }
 
 export interface PlayerDTO {
@@ -367,6 +367,28 @@ export interface HonorDTO {
     | 'master'
     | 'ultima'
   image_url: string | null
+}
+
+export interface UserRecordMetaDTO {
+  updated_at: string | null
+}
+
+export interface UserRecordDTO {
+  all: PlayerRecordDTO[]
+  worldsend?: WorldsendRecordDTO[]
+  meta: UserRecordMetaDTO
+}
+
+export interface UserProfileWithRecordsDTO {
+  username: string
+  player: PlayerDTO | null
+  records: UserRecordDTO | null
+  updated_at: string | null
+}
+
+export type LinkedUserProfileWithRecordsDTO = UserProfileWithRecordsDTO & {
+  player: PlayerDTO
+  records: UserRecordDTO
 }
 
 export interface UserRecordResponseDTO {

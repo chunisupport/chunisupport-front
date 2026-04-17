@@ -13,7 +13,7 @@ import {
 import { fetchAllSongs, fetchMasterData, fetchVersionSummaries } from '../../../api/songs'
 import { Loading, ScrollToTop } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import type { LinkedUserProfileWithRecordsDTO } from '../../../types/api'
+import type { UserRecordDTO } from '../../../types/api'
 import { attachSongMetaToRecords } from '../../../utils/recordMerger'
 import FilterDialog from './components/FilterDialog'
 import FilterStats from './components/FilterStats'
@@ -52,7 +52,8 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
 }
 
 type Props = {
-  profile: LinkedUserProfileWithRecordsDTO
+  username: string
+  record: UserRecordDTO
 }
 
 const UserRecord: Component<Props> = (props) => {
@@ -115,7 +116,7 @@ const UserRecord: Component<Props> = (props) => {
     const songs = allSongs()
     const versions = versionSummaries()
     if (!songs || !versions) return []
-    return attachSongMetaToRecords(songs.songs, props.profile.records.all, versions.versions)
+    return attachSongMetaToRecords(songs.songs, props.record.all, versions.versions)
   })
 
   /** フィルター適用後のレコード */
@@ -255,7 +256,7 @@ const UserRecord: Component<Props> = (props) => {
   /** レコード統計の集計結果 */
   const stats = createMemo(() => getRecordStats(filteredRecords()))
 
-  useDocumentTitle(() => `${props.profile.username}さんのレコード`)
+  useDocumentTitle(() => `${props.username}さんのレコード`)
 
   return (
     <Suspense fallback={<Loading />}>

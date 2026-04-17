@@ -3,12 +3,12 @@ import type {
   AdminUserListResponse,
   UserDTO,
   UserProfileDTO,
-  UserProfileWithRecordsDTO,
+  UserRatingDTO,
+  UserRecordDTO,
 } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 
-type FetchUserProfileOptions = {
-  view?: 'rating' | 'record'
+type FetchUserRecordOptions = {
   includeNoPlay?: boolean
 }
 
@@ -16,26 +16,31 @@ type FetchMeOptions = {
   redirectOnUnauthorized?: boolean
 }
 
-export const fetchUserProfile = async (
-  username: string,
-  options: FetchUserProfileOptions = {}
-): Promise<UserProfileWithRecordsDTO> => {
-  const url = new URL(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}`)
-  if (options.view) {
-    url.searchParams.set('view', options.view)
-  }
-  if (options.includeNoPlay) {
-    url.searchParams.set('include_noplay', 'true')
-  }
-  const response = await fetchWithAuth(url)
-
-  return response.json()
-}
-
 export const fetchUserProfileSummary = async (username: string): Promise<UserProfileDTO> => {
   const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/profile`
   )
+
+  return response.json()
+}
+
+export const fetchUserRating = async (username: string): Promise<UserRatingDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/rating`
+  )
+
+  return response.json()
+}
+
+export const fetchUserRecord = async (
+  username: string,
+  options: FetchUserRecordOptions = {}
+): Promise<UserRecordDTO> => {
+  const url = new URL(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record`)
+  if (options.includeNoPlay) {
+    url.searchParams.set('include_noplay', 'true')
+  }
+  const response = await fetchWithAuth(url)
 
   return response.json()
 }

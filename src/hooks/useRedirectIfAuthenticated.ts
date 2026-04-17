@@ -1,7 +1,7 @@
 import { useNavigate } from '@solidjs/router'
 import { createSignal, onMount } from 'solid-js'
 
-import { fetchMe, fetchUserProfile } from '../api/users'
+import { fetchMe, fetchUserProfileSummary } from '../api/users'
 import { clearAuthenticatedUser, getAuthenticatedUser, getAuthStatus } from '../stores/authSession'
 import { resolveAuthenticatedRedirect } from '../usecases/auth/resolveAuthenticatedRedirect.ts'
 import { resolveAuthSession } from '../usecases/auth/resolveAuthSession.ts'
@@ -19,7 +19,7 @@ const useRedirectIfAuthenticated = () => {
       try {
         const redirectPath = await resolveAuthenticatedRedirect(
           getAuthenticatedUser(),
-          (username) => fetchUserProfile(username, { view: 'rating' })
+          fetchUserProfileSummary
         )
 
         if (redirectPath) {

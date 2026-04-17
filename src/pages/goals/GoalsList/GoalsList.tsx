@@ -3,7 +3,7 @@ import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { createGoal, deleteGoal, fetchGoals, updateGoal } from '../../../api/goals'
 import { fetchAllSongs, fetchMasterData } from '../../../api/songs'
-import { fetchMe, fetchUserProfile } from '../../../api/users'
+import { fetchMe, fetchUserProfileSummary, fetchUserRecord } from '../../../api/users'
 import { Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../types/api'
@@ -34,14 +34,15 @@ const GoalsList: Component = () => {
         throw error
       })
 
-      const [goalsResponse, songsResponse, masterData, userProfile] = await Promise.all([
+      const [goalsResponse, songsResponse, masterData, profile, record] = await Promise.all([
         fetchGoals(),
         fetchAllSongs(),
         fetchMasterData(),
-        fetchUserProfile(me.username, { includeNoPlay: true }),
+        fetchUserProfileSummary(me.username),
+        fetchUserRecord(me.username, { includeNoPlay: true }),
       ])
 
-      if (!userProfile.player || !userProfile.records) {
+      if (!profile.player) {
         return {
           noPlayerData: true,
           goals: goalsResponse.goals,
@@ -56,7 +57,7 @@ const GoalsList: Component = () => {
         goals: goalsResponse.goals,
         songs: songsResponse.songs,
         masterData,
-        records: userProfile.records.all,
+        records: record.all,
       }
     }
   )

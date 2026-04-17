@@ -4,23 +4,19 @@ import { ChartColumnIncreasing } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
 import { createMemo, For, lazy, Show, Suspense } from 'solid-js'
 import { Loading, ScrollToTop } from '../../../components'
-import type {
-  HonorDTO,
-  LinkedUserProfileWithRecordsDTO,
-  PlayerDTO,
-  PlayerRecordDTO,
-} from '../../../types/api'
+import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
 import { buildUserProfilePagePath, type ProfilePageQuery } from './profilePageQuery'
 import { shouldShowProfileScrollToTop } from './scrollToTopVisibility'
+import type { UserPageRatingProfile, UserPageRecordProfile } from './UserPage'
 
 const UserRecord = lazy(() => import('../UserRecord'))
 const WorldsendRecord = lazy(() => import('../WorldsendRecord'))
 
 type Props = {
-  profile: LinkedUserProfileWithRecordsDTO
-  recordProfile: Accessor<LinkedUserProfileWithRecordsDTO | undefined>
+  profile: UserPageRatingProfile
+  recordProfile: Accessor<UserPageRecordProfile | undefined>
   onShowRecords: () => void
   selectedPage: ProfilePageQuery
   username: string
@@ -51,10 +47,10 @@ const RecordList: Component<{ records: PlayerRecordDTO[]; candidates?: PlayerRec
 export const UserProfileView: Component<Props> = (props) => {
   const playerInfo = (): PlayerDTO => props.profile.player
   const honors = (): HonorDTO[] => playerInfo().honors
-  const bestRecords = (): PlayerRecordDTO[] => props.profile.records.best
-  const bestCandidateRecords = (): PlayerRecordDTO[] => props.profile.records.best_candidate
-  const newRecords = (): PlayerRecordDTO[] => props.profile.records.new
-  const newCandidateRecords = (): PlayerRecordDTO[] => props.profile.records.new_candidate
+  const bestRecords = (): PlayerRecordDTO[] => props.profile.rating.best
+  const bestCandidateRecords = (): PlayerRecordDTO[] => props.profile.rating.best_candidate
+  const newRecords = (): PlayerRecordDTO[] => props.profile.rating.new
+  const newCandidateRecords = (): PlayerRecordDTO[] => props.profile.rating.new_candidate
   const recordProfile = () => props.recordProfile()
   const navigate = useNavigate()
   const location = useLocation()
@@ -209,14 +205,16 @@ export const UserProfileView: Component<Props> = (props) => {
             <Tabs.Content value="standard" forceMount class={forceMountedTabContentClass}>
               <Suspense fallback={<Loading />}>
                 <Show when={recordProfile()} fallback={<Loading />}>
-                  {(profile) => <UserRecord profile={profile()} />}
+                  {(profile) => (
+                    <UserRecord username={profile().username} record={profile().record} />
+                  )}
                 </Show>
               </Suspense>
             </Tabs.Content>
             <Tabs.Content value="worldsend" forceMount class={forceMountedTabContentClass}>
               <Suspense fallback={<Loading />}>
                 <Show when={recordProfile()} fallback={<Loading />}>
-                  {(profile) => <WorldsendRecord records={profile().records.worldsend ?? []} />}
+                  {(profile) => <WorldsendRecord records={profile().record.worldsend ?? []} />}
                 </Show>
               </Suspense>
             </Tabs.Content>

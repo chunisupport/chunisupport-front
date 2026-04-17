@@ -71,8 +71,9 @@ const GoalCard: Component<GoalCardProps> = (props) => {
 
   return (
     <article
-      class={`rounded-lg border p-4 shadow-sm ${props.progress.achieved ? 'border-primary-200 bg-primary-50' : 'border-gray-200 bg-white'
-        }`}
+      class={`rounded-lg border p-4 shadow-sm ${
+        props.progress.achieved ? 'border-primary-200 bg-primary-50' : 'border-gray-200 bg-white'
+      }`}
     >
       <div class="flex items-start justify-between gap-3">
         <div>

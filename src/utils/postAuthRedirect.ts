@@ -1,6 +1,6 @@
 import type { Navigator } from '@solidjs/router'
 
-import { fetchMe, fetchUserProfile } from '../api/users'
+import { fetchMe, fetchUserProfileSummary } from '../api/users'
 import { setAuthenticatedUser } from '../stores/authSession'
 
 export const redirectAfterAuthentication = async (navigate: Navigator): Promise<void> => {
@@ -8,7 +8,7 @@ export const redirectAfterAuthentication = async (navigate: Navigator): Promise<
   setAuthenticatedUser(user)
 
   try {
-    await fetchUserProfile(user.username, { view: 'rating' })
+    await fetchUserProfileSummary(user.username)
     navigate(`/users/${encodeURIComponent(user.username)}`)
   } catch (error) {
     const apiError = error as Error & { code?: string }

@@ -1,7 +1,7 @@
 import { A, Route, Router, useParams } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { createResource, ErrorBoundary, Show } from 'solid-js'
-import { fetchUserProfile } from './api/users'
+import { fetchUserProfileSummary } from './api/users'
 import { Loading, NavBar, PlayerDataEmptyState } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
@@ -56,10 +56,7 @@ const UserStatsPage = () => {
   const params = useParams<{ username: string }>()
   useDocumentTitle('統計')
 
-  const [resource] = createResource(
-    () => params.username,
-    async (username) => fetchUserProfile(username)
-  )
+  const [resource] = createResource(() => params.username, fetchUserProfileSummary)
 
   return (
     <ErrorBoundary fallback={(err) => <p class="p-4 text-red-500">ERROR: {err.message}</p>}>
