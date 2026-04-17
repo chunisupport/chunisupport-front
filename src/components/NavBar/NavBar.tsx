@@ -4,7 +4,6 @@ import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { A, useLocation, useNavigate } from '@solidjs/router'
 import {
   BadgeQuestionMark,
-  ChartNoAxesCombined,
   Ellipsis,
   House,
   LogOut,
@@ -34,7 +33,7 @@ type DropdownItem = {
 }
 
 type NavItem = {
-  id: 'home' | 'goals' | 'stats' | 'tools' | 'others'
+  id: 'home' | 'goals' | 'tools' | 'songs' | 'others'
   label: string
   path: string
   icon: () => JSX.Element
@@ -59,11 +58,6 @@ const NavBar = (props: NavBarProps) => {
     const uname = username()
     const userPath = uname ? `/users/${encodeURIComponent(uname)}` : '#'
     const dropdownBase = [
-      {
-        label: '楽曲データベース',
-        icon: () => <Music class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-        path: '/songs',
-      },
       // 設定・ログアウトはログイン時のみ
       ...(uname
         ? [
@@ -107,18 +101,17 @@ const NavBar = (props: NavBarProps) => {
         requiresAuth: true,
       },
       {
-        id: 'stats',
-        label: '統計',
-        path: `${userPath}/stats`,
-        icon: () => <ChartNoAxesCombined class="h-6 w-6" aria-hidden="true" />,
-        matchPattern: /^\/users\/[^/]+\/stats/,
-        requiresAuth: true,
-      },
-      {
         id: 'tools',
         label: 'ツール',
         path: '/tools',
         icon: () => <Toolbox class="h-6 w-6" aria-hidden="true" />,
+        matchPrefix: true,
+      },
+      {
+        id: 'songs',
+        label: '楽曲DB',
+        path: '/songs',
+        icon: () => <Music class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
       },
       {
