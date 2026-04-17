@@ -41,6 +41,9 @@ const LAMP_ORDER: Record<string, number> = {
   UNPLAYED: 3,
 }
 
+const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
+  !isPlayed || timestamp === Number.NEGATIVE_INFINITY
+
 const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   title: 'title',
   diff: 'difficulty',
@@ -191,13 +194,36 @@ const UserRecord: Component<Props> = (props) => {
             break
           }
           case 'updatedAt': {
+            const leftMissing = isUpdatedAtMissing(left.is_played, a.updatedAtTs)
+            const rightMissing = isUpdatedAtMissing(right.is_played, b.updatedAtTs)
+
             comparison = compareUpdatedAtWithMissingLast(
               { isPlayed: left.is_played, updatedAtTimestamp: a.updatedAtTs },
               { isPlayed: right.is_played, updatedAtTimestamp: b.updatedAtTs }
             )
+
+            if (leftMissing || rightMissing) {
+              return comparison
+            }
             break
           }
           case 'lamp': {
+            const leftMissing = !left.is_played || left.combo_lamp === null
+            const rightMissing = !right.is_played || right.combo_lamp === null
+
+            if (leftMissing && rightMissing) {
+              comparison = 0
+              break
+            }
+
+            if (leftMissing) {
+              return 1
+            }
+
+            if (rightMissing) {
+              return -1
+            }
+
             const leftLampKey = !left.is_played
               ? 'UNPLAYED'
               : left.combo_lamp === null

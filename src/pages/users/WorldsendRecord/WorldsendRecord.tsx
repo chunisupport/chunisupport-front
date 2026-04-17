@@ -59,6 +59,9 @@ const worldsendLampOrder: Record<string, number> = {
   UNPLAYED: 9,
 }
 
+const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
+  !isPlayed || timestamp === Number.NEGATIVE_INFINITY
+
 const worldsendHeaderButtonClass =
   'flex min-h-[34px] w-full items-center justify-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const worldsendSortIconClass = 'h-3 w-3 shrink-0'
@@ -170,13 +173,38 @@ const WorldsendRecordTable = (props: {
             break
           }
           case 'updatedAt': {
+            const leftMissing = isUpdatedAtMissing(left.is_played, a.updatedAtTs)
+            const rightMissing = isUpdatedAtMissing(right.is_played, b.updatedAtTs)
+
             comparison = compareUpdatedAtWithMissingLast(
               { isPlayed: left.is_played, updatedAtTimestamp: a.updatedAtTs },
               { isPlayed: right.is_played, updatedAtTimestamp: b.updatedAtTs }
             )
+
+            if (leftMissing || rightMissing) {
+              return comparison
+            }
             break
           }
           case 'lamp': {
+            const leftMissing =
+              !left.is_played || (left.combo_lamp === null && left.clear_lamp === null)
+            const rightMissing =
+              !right.is_played || (right.combo_lamp === null && right.clear_lamp === null)
+
+            if (leftMissing && rightMissing) {
+              comparison = 0
+              break
+            }
+
+            if (leftMissing) {
+              return 1
+            }
+
+            if (rightMissing) {
+              return -1
+            }
+
             const leftLampKey = !left.is_played
               ? 'UNPLAYED'
               : left.combo_lamp === 'ALL JUSTICE'
