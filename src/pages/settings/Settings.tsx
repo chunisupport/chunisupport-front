@@ -248,7 +248,7 @@ const Settings = () => {
 
   return (
     <div class="mx-auto w-full max-w-5xl p-6">
-      <div class="rounded-2xl bg-white p-6 shadow-sm">
+      <div class="p-6">
         <h1 class="text-2xl font-semibold">設定</h1>
         <Show
           when={summary()}
