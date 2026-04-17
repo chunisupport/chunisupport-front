@@ -71,9 +71,8 @@ const GoalCard: Component<GoalCardProps> = (props) => {
 
   return (
     <article
-      class={`rounded-lg border p-4 shadow-sm ${
-        props.progress.achieved ? 'border-primary-200 bg-primary-50' : 'border-gray-200 bg-white'
-      }`}
+      class={`rounded-lg border p-4 shadow-sm ${props.progress.achieved ? 'border-primary-200 bg-primary-50' : 'border-gray-200 bg-white'
+        }`}
     >
       <div class="flex items-start justify-between gap-3">
         <div>
@@ -123,17 +122,17 @@ const GoalCard: Component<GoalCardProps> = (props) => {
 
       <div class="mt-4">
         <div class="mb-2 flex items-end justify-between gap-3">
-          <div class="flex min-w-0 items-end gap-2 text-gray-700">
-            <span class="font-oswald text-3xl font-bold leading-none text-black">
+          <div class="flex min-w-0 w-full items-end gap-3 text-gray-700">
+            <div class="font-oswald text-3xl font-bold leading-none text-black">
               {formatValue(displayCurrent(), props.goal.achievement_type)}
-            </span>
-            <span class="pb-0.5 font-oswald text-xl font-bold leading-none text-gray-400">/</span>
-            <span class="pb-0.5 font-oswald text-2xl font-bold leading-none text-gray-500">
+            </div>
+            <div class="pb-0.5 font-oswald text-xl font-bold leading-none text-gray-400">/</div>
+            <div class="pb-0.5 font-oswald text-2xl font-bold leading-none text-gray-500">
               {formatValue(props.progress.target, props.goal.achievement_type)}
-            </span>
-            <span class="pb-0.5 font-oswald text-lg font-semibold leading-none text-gray-400">
+            </div>
+            <div class="ml-auto pb-0.5 text-right font-oswald text-lg font-semibold leading-none text-gray-500">
               {displayPercent().toFixed(2)}%
-            </span>
+            </div>
           </div>
         </div>
         <progress
