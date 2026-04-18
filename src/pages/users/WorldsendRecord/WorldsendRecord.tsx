@@ -66,7 +66,7 @@ const worldsendHeaderButtonClass =
   'flex min-h-[34px] w-full items-center justify-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const worldsendSortIconClass = 'h-3 w-3 shrink-0'
 const worldsendSortIconWrapperClass = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
-const worldsendAlphanumericColumnClass = 'text-xs font-semibold'
+const worldsendAlphanumericColumnClass = 'text-xs'
 const worldsendLampColumnClass = 'font-oswald text-sm font-semibold'
 
 const worldsendSortIndicator = (active: boolean, direction: WorldsendSortDirection | null) => {
@@ -360,7 +360,7 @@ const WorldsendRecordTable = (props: {
                     >
                       <div class="flex w-full justify-center">
                         {!record.is_played ? (
-                          <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-400">
+                          <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">
                             NoPlay
                           </span>
                         ) : (

@@ -38,7 +38,7 @@ const SORT_ICON_CLASS = 'h-3 w-3 shrink-0'
 const SORT_ICON_WRAPPER_CLASS = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
 const DIFFICULTY_BADGE_CLASS =
   'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
-const ALPHANUMERIC_COLUMN_CLASS = 'text-xs font-semibold'
+const ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
 const DIFFICULTY_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
 const LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
 
@@ -59,7 +59,7 @@ const lampBadge = (lamp: string | null) => {
 }
 
 const unplayedBadge = () => (
-  <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-400">NoPlay</span>
+  <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">NoPlay</span>
 )
 
 const sortIndicator = (active: boolean, direction: SortDirection | null) => {
