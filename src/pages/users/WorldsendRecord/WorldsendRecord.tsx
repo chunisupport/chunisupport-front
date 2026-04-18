@@ -314,7 +314,7 @@ const WorldsendRecordTable = (props: {
                   class={worldsendHeaderButtonClass}
                   onClick={() => handleSortChange('lamp')}
                 >
-                  <span>ランプ</span>
+                  <span>AJ</span>
                   {worldsendSortIndicator(sortKey() === 'lamp', sortDirection())}
                 </button>
                 <button

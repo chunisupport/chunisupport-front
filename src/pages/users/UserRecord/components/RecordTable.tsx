@@ -223,7 +223,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                   class={HEADER_BUTTON_CLASS}
                   onClick={() => props.onSortChange('lamp')}
                 >
-                  <span>ランプ</span>
+                  <span>AJ</span>
                   {sortIndicator(props.sortKey === 'lamp', props.sortDirection)}
                 </button>
                 <button
