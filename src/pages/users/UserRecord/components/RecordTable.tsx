@@ -37,18 +37,25 @@ const HEADER_BUTTON_CLASS =
 const SORT_ICON_CLASS = 'h-3 w-3 shrink-0'
 const SORT_ICON_WRAPPER_CLASS = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
 const DIFFICULTY_BADGE_CLASS =
-  'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-xs font-bold leading-none'
+  'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
+const ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
+const DIFFICULTY_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
+const LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
 
 const lampBadge = (lamp: string | null) => {
   if (lamp === 'FULL COMBO')
     return (
-      <span class="rounded-lg bg-orange-200 px-2 py-1 text-xs font-bold text-orange-900">FC</span>
+      <span class="rounded-lg bg-orange-200 px-2 py-1 text-sm font-extrabold text-orange-900">
+        FC
+      </span>
     )
   if (lamp === 'ALL JUSTICE')
     return (
-      <span class="rounded-lg bg-yellow-200 px-2 py-1 text-xs font-bold text-yellow-900">AJ</span>
+      <span class="rounded-lg bg-yellow-200 px-2 py-1 text-sm font-extrabold text-yellow-900">
+        AJ
+      </span>
     )
-  return <span class="px-2 py-1 text-xs">-</span>
+  return <span class="px-2 py-1 text-sm font-semibold">-</span>
 }
 
 const unplayedBadge = () => (
@@ -216,7 +223,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                   class={HEADER_BUTTON_CLASS}
                   onClick={() => props.onSortChange('lamp')}
                 >
-                  <span>ランプ</span>
+                  <span>AJ</span>
                   {sortIndicator(props.sortKey === 'lamp', props.sortDirection)}
                 </button>
                 <button
@@ -260,7 +267,9 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                               {currentRecord().title}
                             </A>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
+                          <div
+                            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${DIFFICULTY_COLUMN_CLASS}`}
+                          >
                             <div class="flex w-full justify-center">
                               <span
                                 class={`${DIFFICULTY_BADGE_CLASS} ${difficultyBadgeClass(currentRecord().difficulty)}`}
@@ -269,33 +278,43 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                               </span>
                             </div>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                          <div
+                            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+                          >
                             <span class="inline-block w-full text-center leading-none">
                               {currentRecord().const.toFixed(1)}
                             </span>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
+                          <div
+                            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+                          >
                             <div class="flex w-full justify-center">
                               {!currentRecord().is_played
                                 ? unplayedBadge()
                                 : currentRecord().score.toLocaleString()}
                             </div>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                          <div
+                            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+                          >
                             <span class="inline-block w-full text-center leading-none">
                               {!currentRecord().is_played ? '-' : currentRecord().rating.toFixed(2)}
                             </span>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
+                          <div
+                            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${LAMP_COLUMN_CLASS}`}
+                          >
                             <div class="flex w-full justify-center">
                               {!currentRecord().is_played ? (
-                                <span class="px-2 py-1 text-xs">-</span>
+                                <span class="px-2 py-1 text-sm font-semibold">-</span>
                               ) : (
                                 lampBadge(currentRecord().combo_lamp)
                               )}
                             </div>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                          <div
+                            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+                          >
                             <span class="inline-block w-full text-center leading-none">
                               {formatUpdatedAt(currentRecord().updated_at)}
                             </span>
