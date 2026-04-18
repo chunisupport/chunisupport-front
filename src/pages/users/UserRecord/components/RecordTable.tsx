@@ -38,6 +38,7 @@ const SORT_ICON_CLASS = 'h-3 w-3 shrink-0'
 const SORT_ICON_WRAPPER_CLASS = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
 const DIFFICULTY_BADGE_CLASS =
   'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-xs font-bold leading-none'
+const ALPHANUMERIC_COLUMN_CLASS = 'font-oswald'
 
 const lampBadge = (lamp: string | null) => {
   if (lamp === 'FULL COMBO')
@@ -260,7 +261,9 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                               {currentRecord().title}
                             </A>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
+                          <div
+                            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+                          >
                             <div class="flex w-full justify-center">
                               <span
                                 class={`${DIFFICULTY_BADGE_CLASS} ${difficultyBadgeClass(currentRecord().difficulty)}`}
@@ -269,24 +272,32 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                               </span>
                             </div>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                          <div
+                            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+                          >
                             <span class="inline-block w-full text-center leading-none">
                               {currentRecord().const.toFixed(1)}
                             </span>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
+                          <div
+                            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+                          >
                             <div class="flex w-full justify-center">
                               {!currentRecord().is_played
                                 ? unplayedBadge()
                                 : currentRecord().score.toLocaleString()}
                             </div>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                          <div
+                            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+                          >
                             <span class="inline-block w-full text-center leading-none">
                               {!currentRecord().is_played ? '-' : currentRecord().rating.toFixed(2)}
                             </span>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
+                          <div
+                            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+                          >
                             <div class="flex w-full justify-center">
                               {!currentRecord().is_played ? (
                                 <span class="px-2 py-1 text-xs">-</span>
@@ -295,7 +306,9 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                               )}
                             </div>
                           </div>
-                          <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                          <div
+                            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+                          >
                             <span class="inline-block w-full text-center leading-none">
                               {formatUpdatedAt(currentRecord().updated_at)}
                             </span>

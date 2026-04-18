@@ -66,6 +66,7 @@ const worldsendHeaderButtonClass =
   'flex min-h-[34px] w-full items-center justify-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const worldsendSortIconClass = 'h-3 w-3 shrink-0'
 const worldsendSortIconWrapperClass = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
+const worldsendAlphanumericColumnClass = 'font-oswald'
 
 const worldsendSortIndicator = (active: boolean, direction: WorldsendSortDirection | null) => {
   if (!active || !direction) {
@@ -346,12 +347,16 @@ const WorldsendRecordTable = (props: {
                         {record.attribute ?? '-'}
                       </span>
                     </div>
-                    <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
+                    <div
+                      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
+                    >
                       <span class="inline-block leading-none">
                         {worldsendLevelLabel(record.level_star)}
                       </span>
                     </div>
-                    <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
+                    <div
+                      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
+                    >
                       <div class="flex w-full justify-center">
                         {!record.is_played ? (
                           <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">
@@ -362,7 +367,9 @@ const WorldsendRecordTable = (props: {
                         )}
                       </div>
                     </div>
-                    <div class="flex min-h-[34px] items-center justify-center whitespace-nowrap">
+                    <div
+                      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
+                    >
                       <div class="flex w-full justify-center">
                         {worldsendLampLabel(record) === '-' ? (
                           <span class="px-2 py-1 text-xs">-</span>
@@ -375,7 +382,9 @@ const WorldsendRecordTable = (props: {
                         )}
                       </div>
                     </div>
-                    <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                    <div
+                      class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
+                    >
                       <span class="inline-block w-full text-center leading-none">
                         {formatUpdatedAt(record.updated_at)}
                       </span>
