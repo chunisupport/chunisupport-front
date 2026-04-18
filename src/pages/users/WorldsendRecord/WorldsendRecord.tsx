@@ -270,7 +270,7 @@ const WorldsendRecordTable = (props: {
           <p class="py-6 text-center text-gray-400">WORLD'S END のレコードはありません。</p>
         }
       >
-        <div class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200">
+        <div class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-gray-200">
           <div class="min-w-[36.5rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
