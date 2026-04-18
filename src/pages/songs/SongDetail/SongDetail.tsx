@@ -109,8 +109,8 @@ const SongDetail = () => {
                 </button>
               </div>
 
-              <h1 class="text-2xl font-semibold mb-1">{currentSong.title}</h1>
-              <div class="text-gray-600">{currentSong.artist}</div>
+              <h1 class="font-sans text-2xl font-semibold mb-1">{currentSong.title}</h1>
+              <div class="font-sans text-gray-600">{currentSong.artist}</div>
 
               <SongInfoCard
                 song={currentSong}

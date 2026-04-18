@@ -54,7 +54,7 @@ const WorldsendSongInfoCard = (props: Props) => {
                       <span class="block whitespace-nowrap">{chart.notes}</span>
                     </td>
                     <td class="px-3 py-2 text-gray-800">
-                      <span class="block whitespace-nowrap">{chart.notesDesigner}</span>
+                      <span class="font-sans block whitespace-nowrap">{chart.notesDesigner}</span>
                     </td>
                   </tr>
                 )}

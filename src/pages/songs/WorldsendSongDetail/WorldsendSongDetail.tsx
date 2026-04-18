@@ -74,8 +74,8 @@ const WorldsendSongDetail = () => {
               </div>
 
               <div class="space-y-1">
-                <h1 class="mb-1 text-2xl font-semibold">{titleMeta.title}</h1>
-                <div class="text-gray-600">{titleMeta.artist}</div>
+                <h1 class="font-sans mb-1 text-2xl font-semibold">{titleMeta.title}</h1>
+                <div class="font-sans text-gray-600">{titleMeta.artist}</div>
               </div>
 
               <WorldsendSongInfoCard song={currentSong} versionName={songVersionName()} />

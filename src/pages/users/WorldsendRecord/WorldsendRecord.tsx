@@ -338,7 +338,7 @@ const WorldsendRecordTable = (props: {
                     <div class="flex min-h-[34px] min-w-0 items-center px-2" title={record.title}>
                       <A
                         href={buildWorldsendSongDetailPath(record.id)}
-                        class="block w-full truncate text-inherit hover:underline"
+                        class="font-sans block w-full truncate text-inherit hover:underline"
                       >
                         {record.title}
                       </A>

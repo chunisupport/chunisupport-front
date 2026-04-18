@@ -262,7 +262,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           >
                             <A
                               href={`/songs/${encodeURIComponent(currentRecord().id)}?diff=${encodeURIComponent(difficultyToQueryValue(currentRecord().difficulty))}`}
-                              class="block pl-2 w-full truncate text-inherit hover:underline"
+                              class="font-sans block pl-2 w-full truncate text-inherit hover:underline"
                             >
                               {currentRecord().title}
                             </A>

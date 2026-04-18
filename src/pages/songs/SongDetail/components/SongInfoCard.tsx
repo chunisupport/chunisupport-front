@@ -74,7 +74,7 @@ const SongInfoCard = (props: Props) => {
                         <span class="block whitespace-nowrap">{chart?.notes ?? '-'}</span>
                       </td>
                       <td class="px-3 py-2 text-gray-800">
-                        <span class="block whitespace-nowrap">
+                        <span class="font-sans block whitespace-nowrap">
                           {getNotesDesignerLabel(chart?.notes_designer)}
                         </span>
                       </td>

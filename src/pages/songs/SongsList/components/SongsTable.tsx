@@ -29,12 +29,12 @@ const SongsTable = (props: Props) => {
                 <td class="px-3 py-2">
                   <A
                     href={`/songs/${encodeURIComponent(song.id)}`}
-                    class="text-primary-600 hover:underline"
+                    class="font-sans text-primary-600 hover:underline"
                   >
                     {song.title}
                   </A>
                 </td>
-                <td class="px-3 py-2">{song.artist}</td>
+                <td class="font-sans px-3 py-2">{song.artist}</td>
                 <td class="px-3 py-2 w-fit whitespace-nowrap">{song.genre}</td>
                 <td class="px-3 py-2">{song.bpm ?? '-'}</td>
                 <td class="px-3 py-2">
