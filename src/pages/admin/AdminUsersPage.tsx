@@ -3,7 +3,6 @@ import { deleteUserByUsername, fetchAdminUsers } from '../../api/users'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   formatAccountType,
-  formatAdminUserAuthInfo,
   formatAdminUserDateTime,
   formatBooleanFlag,
   formatNullableText,
@@ -92,7 +91,7 @@ const AdminUsersPage = () => {
           <thead class="bg-gray-50">
             <tr>
               <th class="px-3 py-2 text-left">username</th>
-              <th class="px-3 py-2 text-left">連携情報</th>
+              <th class="px-3 py-2 text-left">uid</th>
               <th class="px-3 py-2 text-left">account_type</th>
               <th class="px-3 py-2 text-left">created_at</th>
               <th class="px-3 py-2 text-left">updated_at</th>
@@ -109,50 +108,8 @@ const AdminUsersPage = () => {
               {(user) => (
                 <tr class="border-t border-gray-100">
                   <td class="px-3 py-2 font-mono text-xs">{user.username}</td>
-                  <td class="px-3 py-2">
-                    <div
-                      class="min-w-56 space-y-1"
-                      title={formatAdminUserAuthInfo(user.email, user.firebase_uid)}
-                    >
-                      <Show when={user.email}>
-                        <div>
-                          <div class="text-[11px] text-gray-500">email</div>
-                          <div class="font-mono text-xs break-all">{user.email}</div>
-                        </div>
-                      </Show>
-                      <Show when={user.firebase_uid}>
-                        <div>
-                          <div class="text-[11px] text-gray-500">firebase_uid</div>
-                          <div class="font-mono text-xs break-all">{user.firebase_uid}</div>
-                        </div>
-                      </Show>
-                      <Show when={user.last_sign_in_time}>
-                        <div>
-                          <div class="text-[11px] text-gray-500">last_sign_in_time</div>
-                          <div class="font-mono text-xs break-all">
-                            {formatAdminUserDateTime(user.last_sign_in_time)}
-                          </div>
-                        </div>
-                      </Show>
-                      <Show when={user.last_refresh_time}>
-                        <div>
-                          <div class="text-[11px] text-gray-500">last_refresh_time</div>
-                          <div class="font-mono text-xs break-all">
-                            {formatAdminUserDateTime(user.last_refresh_time)}
-                          </div>
-                        </div>
-                      </Show>
-                      <Show
-                        when={
-                          !user.email &&
-                          !user.firebase_uid &&
-                          !user.last_sign_in_time &&
-                          !user.last_refresh_time
-                        }
-                      >
-                        <span>-</span>
-                      </Show>
-                    </div>
+                  <td class="px-3 py-2 font-mono text-xs break-all">
+                    {formatNullableText(user.firebase_uid)}
                   </td>
                   <td class="px-3 py-2">{formatAccountType(user.account_type)}</td>
                   <td class="px-3 py-2">{formatAdminUserDateTime(user.created_at)}</td>

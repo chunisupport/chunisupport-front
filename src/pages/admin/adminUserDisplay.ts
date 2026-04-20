@@ -24,13 +24,3 @@ export const formatAccountType = (value: 'ADMIN' | 'PLAYER'): string => value
 
 export const formatNullableText = (value: string | null | undefined): string =>
   value ? value : '-'
-
-export const formatAdminUserAuthInfo = (
-  email: string | null | undefined,
-  firebaseUid: string | null | undefined
-): string => {
-  const normalizedEmail = formatNullableText(email ?? null)
-  if (normalizedEmail !== '-') return normalizedEmail
-
-  return formatNullableText(firebaseUid ?? null)
-}
