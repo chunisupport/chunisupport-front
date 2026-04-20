@@ -1,7 +1,9 @@
 # フロントエンド リファクタリング観点整理 (2026-04-18 現在)
 
 本ドキュメントは、`chunisupport-front` の現行実装を確認し、`_report/refactor.md` に以前記載していた改善点が現在も有効かを棚卸しした結果をまとめたものです。
-旧レポートのうち、現状と一致しない記述は削除または書き換えを行い、必要に応じてステータスを付け直しています。
+
+## 注意
+解消された点は解消済みと書くのではなく、必ず削除してください。
 
 ## 優先度
 - **Critical**: 誤認証・誤権限制御・誤遷移につながるもの
@@ -17,7 +19,6 @@
 ## 全体所見
 1. `UserRecord` のページロジック、`localStorage` 永続化、テスト不足は引き続き未解消です。
 2. 画面分割や純粋関数切り出しは進んでいますが、定数の散在と TODO/FIXME の残置はまだ改善余地があります。
-3. `UserPage` はリソース取得が3本に増え、取得戦略の整理が課題として浮上しています。
 
 ---
 
@@ -25,7 +26,6 @@
 
 | ID | タイトル | 重大度 | ステータス | 主な対象 |
 |---|---|---|---|---|
-| **REF-F03** | UserPage のプロフィール多重取得 | **Medium** | **継続（悪化）** | `src/pages/users/UserPage/UserPage.tsx` |
 | **REF-F04** | UserRecord ページロジックの責務集中 | **High** | **継続** | `src/pages/users/UserRecord/UserRecord.tsx` |
 | **REF-F05** | フィルタ永続化データの型検証不足 | **Medium** | **継続** | `src/pages/users/UserRecord/utils/storage.ts` |
 | **REF-F06** | レコード画面ロジックのテスト不足 | **Medium** | **一部改善** | `src/pages/users/UserRecord/utils/filtering.ts`, `src/pages/users/UserRecord/utils/recordStats.ts`, `src/pages/users/UserRecord/utils/storage.ts` |
@@ -35,19 +35,6 @@
 ---
 
 ## 詳細
-
-### REF-F03: UserPage のプロフィール多重取得
-- **ステータス**: 継続（悪化）
-- **現状**:
-  - `UserPage` は `profileSummary`（プレイヤー基本情報）、`ratingProfile`（レーティング）、`recordProfile`（レコード）の計3本の `createResource` を持っています (`src/pages/users/UserPage/UserPage.tsx:31-39`)。
-  - `profileSummary` の追加により、`linkedRatingProfile` / `linkedRecordProfile` はいずれも `profileSummary` に依存する形になっています。
-  - `recordProfile` は `record` 系タブへ遷移したときだけ遅延取得されるため、不要な取得は一部抑えられています。
-  - `UserProfileView` では `WorldsendRecord` ビューも追加されており（`record_we` タブ）、record 系の表示パターンがさらに増えています。
-- **影響**:
-  - レコード画面表示時には、同一ユーザーに対して `profileSummary`・`ratingProfile`・`recordProfile` の最大3回取得が走る構造になっています。
-  - 成功/失敗状態が 3 本のリソースに分かれるため、エラーハンドリングやローディング制御がより複雑化しやすいです。
-- **対応方針**:
-  - `profileSummary` を起点に遅延取得を組み立てるか、取得戦略を `UserPage.tsx` から分離し、UI 側が複数系統の取得状態を直接抱えない形に寄せる。
 
 ### REF-F04: UserRecord ページロジックの責務集中
 - **ステータス**: 継続
@@ -124,10 +111,9 @@
 3. **保存データの型安全化**
    - `REF-F05` を進め、`localStorage` の破損耐性と将来の互換性を確保する。
 4. **取得戦略と定数整理**
-   - `REF-F03`, `REF-F07`, `REF-F08` を後追いで整える。
+   - `REF-F07`, `REF-F08` を後追いで整える。
 
 ## まとめ
 - 現在の主戦場は `UserRecord` 周辺で、責務集中、保存データの型検証不足、テスト不足が残っています。
-- `UserPage` はプロフィールサマリー取得と `WorldsendRecord` ビューの追加により、リソース取得が3本に増え、取得戦略の整理が以前より重要になっています。
 - `updatedAt.test.ts` の追加など、`UserRecord` 配下でテスト整備が始まっています。`filtering.ts` / `recordStats.ts` / `storage.ts` まで広げることが優先課題です。
 - 定数整理と TODO/FIXME 整理は低優先度ですが、`UserRecord` の構造整理と合わせて進めると効率が良いです。
