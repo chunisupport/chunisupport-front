@@ -17,8 +17,9 @@
 - 共通定数/表示ルール: `src/utils/difficultyUtils.ts`, `src/utils/scoreRank.ts`
 
 ## 全体所見
-1. `UserRecord` のページロジック、`localStorage` 永続化、テスト不足は引き続き未解消です。
-2. 画面分割や純粋関数切り出しは進んでいますが、定数の散在と TODO/FIXME の残置はまだ改善余地があります。
+1. `UserRecord` のページロジック集中は一部緩和され、ソート関連の責務とテストが `utils/sorting.ts` / `utils/sorting.test.ts` へ切り出されました。
+2. 一方で `localStorage` 永続化の型検証不足と、フィルタ・統計まわりのテスト不足は引き続き未解消です。
+3. 画面分割や純粋関数切り出しは進んでいますが、定数の散在と TODO/FIXME の残置はまだ改善余地があります。
 
 ---
 
@@ -26,7 +27,7 @@
 
 | ID | タイトル | 重大度 | ステータス | 主な対象 |
 |---|---|---|---|---|
-| **REF-F04** | UserRecord ページロジックの責務集中 | **High** | **継続** | `src/pages/users/UserRecord/UserRecord.tsx` |
+| **REF-F04** | UserRecord ページロジックの責務集中 | **High** | **一部改善** | `src/pages/users/UserRecord/UserRecord.tsx`, `src/pages/users/UserRecord/utils/sorting.ts` |
 | **REF-F05** | フィルタ永続化データの型検証不足 | **Medium** | **継続** | `src/pages/users/UserRecord/utils/storage.ts` |
 | **REF-F06** | レコード画面ロジックのテスト不足 | **Medium** | **一部改善** | `src/pages/users/UserRecord/utils/filtering.ts`, `src/pages/users/UserRecord/utils/recordStats.ts`, `src/pages/users/UserRecord/utils/storage.ts` |
 | **REF-F07** | 表示用定数/判定ロジックの整理不足 | **Low** | **一部改善** | `src/utils/difficultyUtils.ts`, `src/utils/scoreRank.ts`, `src/pages/users/UserRecord/types/filterDefaults.ts`, `src/pages/users/UserRecord/utils/scoreRank.ts` |
@@ -37,17 +38,18 @@
 ## 詳細
 
 ### REF-F04: UserRecord ページロジックの責務集中
-- **ステータス**: 継続
+- **ステータス**: 一部改善
 - **現状**:
   - 旧レポート時点から `FilterDialog`、`FilterToolbar`、`FilterStats`、`RecordTable` などへ UI 分割は進んでいます (`src/pages/users/UserRecord/UserRecord.tsx:18-21`)。
-  - `UserRecord.tsx` には依然としてデータ取得、フィルタ初期化、URL ソート読取、ソート計算、統計計算、ダイアログ状態、件数表示が集約されています (`src/pages/users/UserRecord/UserRecord.tsx:62-`)。
-  - ソート用の `DIFFICULTY_ORDER` / `LAMP_ORDER` もページ内ローカル定義のままです (`src/pages/users/UserRecord/UserRecord.tsx:28-43`)。
+  - 今回、URL ソート読取、ソート状態遷移、ソート比較ロジックは `utils/sorting.ts` に切り出され、`UserRecord.tsx` は `parseSortParams` / `nextSortState` / `sortRecords` を呼び出す形になりました (`src/pages/users/UserRecord/UserRecord.tsx:23-24`, `src/pages/users/UserRecord/UserRecord.tsx:51`, `src/pages/users/UserRecord/UserRecord.tsx:88-93`)。
+  - ソート用の `DIFFICULTY_ORDER` / `LAMP_ORDER` もページ内ローカル定義ではなくなり、`utils/sorting.ts` 側へ移動しています (`src/pages/users/UserRecord/utils/sorting.ts:5-16`)。
+  - ただし `UserRecord.tsx` には依然としてデータ取得、フィルタ初期化、統計計算、ダイアログ状態、件数表示が集約されています (`src/pages/users/UserRecord/UserRecord.tsx:31-101`)。
 - **影響**:
-  - UI 分割済みでも、ページ仕様変更時の影響範囲が `UserRecord.tsx` に集中しています。
-  - `createMemo` と `createSignal` の組み合わせが増えるほど、状態遷移の見通しが悪くなります。
+  - ソート仕様変更時の影響範囲は `UserRecord.tsx` から `utils/sorting.ts` に分離され、ページコンポーネントの見通しは改善しました。
+  - ただしフィルタ条件、統計計算、件数表示、ダイアログ状態はまだページ側に残っており、仕様変更時の影響範囲集中は未解消です。
 - **対応方針**:
   - `useUserRecordPageModel` のようなページモデル層へ、取得済みデータから導出される状態を集約する。
-  - ソート、件数、統計、初期フィルタ生成を純粋関数化して `UserRecord.tsx` から押し出す。
+  - 次段階では、件数、統計、初期フィルタ生成も純粋関数またはページモデルへ押し出す。
 
 ### REF-F05: フィルタ永続化データの型検証不足
 - **ステータス**: 継続
@@ -65,11 +67,12 @@
 - **ステータス**: 一部改善
 - **現状**:
   - `updatedAt.ts` に対応する `updatedAt.test.ts` が追加されました (`src/pages/users/UserRecord/utils/updatedAt.test.ts`)。
+  - 今回、`sorting.ts` に対応する `sorting.test.ts` も追加され、ソートクエリ解析、状態遷移、未プレイ末尾固定、更新日ソート、安定ソート、ランプ順が固定されました (`src/pages/users/UserRecord/utils/sorting.test.ts`)。
   - 一方で `filtering.ts`, `recordStats.ts`, `storage.ts` に対応する `*.test.ts` はいまだ存在しません。
   - `UserPage` 配下では `worldsendLampDisplay.test.ts`, `worldsendNavigation.test.ts`, `worldsendTableStyles.test.ts`, `scrollToTopVisibility.test.ts` など純粋関数テストの整備が進んでいます。
 - **影響**:
-  - フィルタ条件、統計集計、`localStorage` 復元の退行検知ができません。
-  - リファクタ時に仕様固定の足場がなく、`UserRecord.tsx` の責務分割も進めにくいです。
+  - フィルタ条件、統計集計、`localStorage` 復元の退行検知はまだできません。
+  - ただしソート仕様については足場ができたため、`UserRecord.tsx` の責務分割を段階的に進めやすくなりました。
 - **対応方針**:
   - 優先順は `isRecordMatched`、`getRecordStats`、`loadSavedFilters`。
   - 先に純粋関数テストを置いてからページモデル化へ進むのが妥当です。
@@ -78,7 +81,7 @@
 - **ステータス**: 一部改善
 - **現状**:
   - スコアランク定義は `src/utils/scoreRank.ts` に寄せられ、`UserRecord` 側の `utils/scoreRank.ts` はその派生値を使う形になっています。
-  - 一方で難易度の短縮名、クエリ値、バッジ色、カード境界色は `src/utils/difficultyUtils.ts` にまとまっているものの、`UserRecord.tsx` には別途 `DIFFICULTY_ORDER` が残っています (`src/pages/users/UserRecord/UserRecord.tsx:28-34`)。
+  - 一方で難易度の短縮名、クエリ値、バッジ色、カード境界色は `src/utils/difficultyUtils.ts` にまとまっているものの、ソート順定義 `DIFFICULTY_ORDER` は `src/pages/users/UserRecord/utils/sorting.ts` に別途残っています (`src/pages/users/UserRecord/utils/sorting.ts:5-11`)。
   - ランプ選択肢は `src/pages/users/UserRecord/types/filterDefaults.ts` に残っており、サーバ由来データにすべきかを迷う TODO も残っています (`src/pages/users/UserRecord/types/filterDefaults.ts:6-11`)。
 - **影響**:
   - 旧レポート時点よりは整理が進んだものの、「canonical な定義を 1 か所に寄せる」状態にはまだ至っていません。
@@ -105,15 +108,15 @@
 ## 推奨着手順
 
 1. **UserRecord のテスト追加**
-   - `REF-F06` を先に進め、フィルタ・統計・保存データ読込の仕様を固定する。
+  - `sorting.ts` の次に、`REF-F06` としてフィルタ・統計・保存データ読込の仕様を固定する。
 2. **UserRecord のページモデル化**
-   - `REF-F04` を進め、ページ責務を分割する。
+  - `REF-F04` の残タスクとして、件数・統計・フィルタ初期化をページ責務から分離する。
 3. **保存データの型安全化**
    - `REF-F05` を進め、`localStorage` の破損耐性と将来の互換性を確保する。
 4. **取得戦略と定数整理**
    - `REF-F07`, `REF-F08` を後追いで整える。
 
 ## まとめ
-- 現在の主戦場は `UserRecord` 周辺で、責務集中、保存データの型検証不足、テスト不足が残っています。
-- `updatedAt.test.ts` の追加など、`UserRecord` 配下でテスト整備が始まっています。`filtering.ts` / `recordStats.ts` / `storage.ts` まで広げることが優先課題です。
+- 現在の主戦場は `UserRecord` 周辺で、責務集中は一部緩和されたものの、保存データの型検証不足とテスト不足が残っています。
+- `updatedAt.test.ts` に加えて `sorting.test.ts` も追加され、`UserRecord` 配下の純粋関数テストは前進しました。次は `filtering.ts` / `recordStats.ts` / `storage.ts` まで広げることが優先課題です。
 - 定数整理と TODO/FIXME 整理は低優先度ですが、`UserRecord` の構造整理と合わせて進めると効率が良いです。
