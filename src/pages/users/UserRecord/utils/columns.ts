@@ -30,6 +30,10 @@ const RECORD_COLUMN_IDS = new Set<RecordColumnId>(
   RECORD_COLUMN_DEFINITIONS.map((column) => column.id)
 )
 
+const COLUMN_BY_ID = new Map<RecordColumnId, RecordColumnDefinition>(
+  RECORD_COLUMN_DEFINITIONS.map((column) => [column.id, column])
+)
+
 export const getDefaultVisibleColumnIds = (): RecordColumnId[] =>
   RECORD_COLUMN_DEFINITIONS.filter((column) => column.defaultVisible).map((column) => column.id)
 
@@ -53,9 +57,8 @@ export const sanitizeVisibleColumnIds = (
 }
 
 export const getVisibleColumns = (visibleColumnIds: RecordColumnId[]): RecordColumnDefinition[] => {
-  const columnById = new Map(RECORD_COLUMN_DEFINITIONS.map((column) => [column.id, column]))
   return visibleColumnIds
-    .map((columnId) => columnById.get(columnId))
+    .map((columnId) => COLUMN_BY_ID.get(columnId))
     .filter((column): column is RecordColumnDefinition => column !== undefined)
 }
 
