@@ -162,7 +162,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   )
   const visibleColumns = createMemo(() => getVisibleColumns(props.visibleColumnIds))
   const gridTemplateColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
-  const renderCell = (columnId: RecordColumnId, currentRecord: PlayerRecordWithSongMeta) => {
+  const renderCell = (columnId: RecordColumnId, currentRecord: PlayerRecordWithSongMeta): import('solid-js').JSX.Element | null => {
     switch (columnId) {
       case 'title':
         return (
