@@ -20,7 +20,8 @@ import FilterStats from './components/FilterStats'
 import FilterToolbar from './components/FilterToolbar'
 import RecordTable from './components/RecordTable'
 import { DEFAULT_FILTER, getMasterDataDefaults } from './types/filterDefaults'
-import type { FilterState, RecordSortKey, SortDirection } from './types/types'
+import type { FilterState, RecordColumnId, RecordSortKey, SortDirection } from './types/types'
+import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
 import { getDefaultFilter, isRecordMatched } from './utils/filtering'
 import { getRecordStats } from './utils/recordStats'
 import { nextSortState, parseSortParams, sortRecords } from './utils/sorting'
@@ -55,6 +56,9 @@ const UserRecord: Component<Props> = (props) => {
 
   const [sortKey, setSortKey] = createSignal<RecordSortKey | null>(initialSortKey)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(initialSortOrder)
+  const [visibleColumnIds] = createSignal<RecordColumnId[]>(
+    sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
+  )
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
   onMount(() => {
@@ -140,6 +144,7 @@ const UserRecord: Component<Props> = (props) => {
               statsOpen={filterStatsOpen()}
               sortKey={sortKey()}
               sortDirection={sortDirection()}
+              visibleColumnIds={visibleColumnIds()}
               onSortChange={handleSortChange}
             />
 

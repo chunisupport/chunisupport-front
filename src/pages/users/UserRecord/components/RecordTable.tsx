@@ -17,7 +17,8 @@ import {
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
-import type { RecordSortKey, SortDirection } from '../types/types'
+import type { RecordColumnId, RecordSortKey, SortDirection } from '../types/types'
+import { createGridTemplateColumns, getVisibleColumns } from '../utils/columns'
 import { formatUpdatedAt } from '../utils/updatedAt'
 
 interface RecordTableProps {
@@ -25,11 +26,9 @@ interface RecordTableProps {
   statsOpen: boolean
   sortKey: RecordSortKey | null
   sortDirection: SortDirection | null
+  visibleColumnIds: RecordColumnId[]
   onSortChange: (key: RecordSortKey) => void
 }
-
-// 列幅は曲名以外は固定、曲名は残りスペースを全て使う
-const GRID_COLUMNS = 'minmax(11.25rem,1fr) 2.5rem 3.1rem 3.6rem 3.6rem 3.5rem 3.5rem'
 
 const ROW_HEIGHT = 34
 const HEADER_BUTTON_CLASS =
@@ -161,6 +160,91 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   const virtualRows = createMemo(() =>
     rowVirtualizer.getVirtualItems().filter((virtualRow) => virtualRow.index < props.records.length)
   )
+  const visibleColumns = createMemo(() => getVisibleColumns(props.visibleColumnIds))
+  const gridTemplateColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
+  const renderCell = (columnId: RecordColumnId, currentRecord: PlayerRecordWithSongMeta) => {
+    switch (columnId) {
+      case 'title':
+        return (
+          <div class="flex min-h-[34px] min-w-0 items-center" title={currentRecord.title}>
+            <A
+              href={`/songs/${encodeURIComponent(currentRecord.id)}?diff=${encodeURIComponent(difficultyToQueryValue(currentRecord.difficulty))}`}
+              class="font-sans block pl-2 w-full truncate text-inherit hover:underline"
+            >
+              {currentRecord.title}
+            </A>
+          </div>
+        )
+      case 'difficulty':
+        return (
+          <div
+            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${DIFFICULTY_COLUMN_CLASS}`}
+          >
+            <div class="flex w-full justify-center">
+              <span
+                class={`${DIFFICULTY_BADGE_CLASS} ${difficultyBadgeClass(currentRecord.difficulty)}`}
+              >
+                {difficultyShort(currentRecord.difficulty)}
+              </span>
+            </div>
+          </div>
+        )
+      case 'const':
+        return (
+          <div
+            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+          >
+            <span class="inline-block w-full text-center leading-none">
+              {currentRecord.const.toFixed(1)}
+            </span>
+          </div>
+        )
+      case 'score':
+        return (
+          <div
+            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+          >
+            <div class="flex w-full justify-center">
+              {!currentRecord.is_played ? unplayedBadge() : currentRecord.score.toLocaleString()}
+            </div>
+          </div>
+        )
+      case 'rating':
+        return (
+          <div
+            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+          >
+            <span class="inline-block w-full text-center leading-none">
+              {!currentRecord.is_played ? '-' : currentRecord.rating.toFixed(2)}
+            </span>
+          </div>
+        )
+      case 'lamp':
+        return (
+          <div
+            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${LAMP_COLUMN_CLASS}`}
+          >
+            <div class="flex w-full justify-center">
+              {!currentRecord.is_played ? (
+                <span class="px-2 py-1 text-sm font-semibold">-</span>
+              ) : (
+                lampBadge(currentRecord.combo_lamp)
+              )}
+            </div>
+          </div>
+        )
+      case 'updatedAt':
+        return (
+          <div
+            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+          >
+            <span class="inline-block w-full text-center leading-none">
+              {formatUpdatedAt(currentRecord.updated_at)}
+            </span>
+          </div>
+        )
+    }
+  }
 
   return (
     <div class="w-full">
@@ -176,64 +260,20 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             <div class="border-b border-gray-200 bg-white">
               <div
                 class="grid pr-2 text-xs font-semibold"
-                style={{ 'grid-template-columns': GRID_COLUMNS }}
+                style={{ 'grid-template-columns': gridTemplateColumns() }}
               >
-                <button
-                  type="button"
-                  class={`${HEADER_BUTTON_CLASS} justify-start pl-2`}
-                  onClick={() => props.onSortChange('title')}
-                >
-                  <span>曲名</span>
-                  {sortIndicator(props.sortKey === 'title', props.sortDirection)}
-                </button>
-                <button
-                  type="button"
-                  class={HEADER_BUTTON_CLASS}
-                  onClick={() => props.onSortChange('difficulty')}
-                >
-                  <span>難</span>
-                  {sortIndicator(props.sortKey === 'difficulty', props.sortDirection)}
-                </button>
-                <button
-                  type="button"
-                  class={HEADER_BUTTON_CLASS}
-                  onClick={() => props.onSortChange('const')}
-                >
-                  <span>定数</span>
-                  {sortIndicator(props.sortKey === 'const', props.sortDirection)}
-                </button>
-                <button
-                  type="button"
-                  class={HEADER_BUTTON_CLASS}
-                  onClick={() => props.onSortChange('score')}
-                >
-                  <span>スコア</span>
-                  {sortIndicator(props.sortKey === 'score', props.sortDirection)}
-                </button>
-                <button
-                  type="button"
-                  class={HEADER_BUTTON_CLASS}
-                  onClick={() => props.onSortChange('rating')}
-                >
-                  <span>レート</span>
-                  {sortIndicator(props.sortKey === 'rating', props.sortDirection)}
-                </button>
-                <button
-                  type="button"
-                  class={HEADER_BUTTON_CLASS}
-                  onClick={() => props.onSortChange('lamp')}
-                >
-                  <span>AJ</span>
-                  {sortIndicator(props.sortKey === 'lamp', props.sortDirection)}
-                </button>
-                <button
-                  type="button"
-                  class={HEADER_BUTTON_CLASS}
-                  onClick={() => props.onSortChange('updatedAt')}
-                >
-                  <span>更新日</span>
-                  {sortIndicator(props.sortKey === 'updatedAt', props.sortDirection)}
-                </button>
+                <For each={visibleColumns()}>
+                  {(column) => (
+                    <button
+                      type="button"
+                      class={`${HEADER_BUTTON_CLASS} ${column.align === 'start' ? 'justify-start pl-2' : ''}`}
+                      onClick={() => props.onSortChange(column.sortKey)}
+                    >
+                      <span>{column.label}</span>
+                      {sortIndicator(props.sortKey === column.sortKey, props.sortDirection)}
+                    </button>
+                  )}
+                </For>
               </div>
             </div>
 
@@ -252,73 +292,13 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                         <div
                           class="absolute left-0 top-0 grid w-full border-b border-gray-200 pr-2 text-xs hover:bg-gray-100"
                           style={{
-                            'grid-template-columns': GRID_COLUMNS,
+                            'grid-template-columns': gridTemplateColumns(),
                             transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
                           }}
                         >
-                          <div
-                            class="flex min-h-[34px] min-w-0 items-center"
-                            title={currentRecord().title}
-                          >
-                            <A
-                              href={`/songs/${encodeURIComponent(currentRecord().id)}?diff=${encodeURIComponent(difficultyToQueryValue(currentRecord().difficulty))}`}
-                              class="font-sans block pl-2 w-full truncate text-inherit hover:underline"
-                            >
-                              {currentRecord().title}
-                            </A>
-                          </div>
-                          <div
-                            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${DIFFICULTY_COLUMN_CLASS}`}
-                          >
-                            <div class="flex w-full justify-center">
-                              <span
-                                class={`${DIFFICULTY_BADGE_CLASS} ${difficultyBadgeClass(currentRecord().difficulty)}`}
-                              >
-                                {difficultyShort(currentRecord().difficulty)}
-                              </span>
-                            </div>
-                          </div>
-                          <div
-                            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
-                          >
-                            <span class="inline-block w-full text-center leading-none">
-                              {currentRecord().const.toFixed(1)}
-                            </span>
-                          </div>
-                          <div
-                            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
-                          >
-                            <div class="flex w-full justify-center">
-                              {!currentRecord().is_played
-                                ? unplayedBadge()
-                                : currentRecord().score.toLocaleString()}
-                            </div>
-                          </div>
-                          <div
-                            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
-                          >
-                            <span class="inline-block w-full text-center leading-none">
-                              {!currentRecord().is_played ? '-' : currentRecord().rating.toFixed(2)}
-                            </span>
-                          </div>
-                          <div
-                            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${LAMP_COLUMN_CLASS}`}
-                          >
-                            <div class="flex w-full justify-center">
-                              {!currentRecord().is_played ? (
-                                <span class="px-2 py-1 text-sm font-semibold">-</span>
-                              ) : (
-                                lampBadge(currentRecord().combo_lamp)
-                              )}
-                            </div>
-                          </div>
-                          <div
-                            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
-                          >
-                            <span class="inline-block w-full text-center leading-none">
-                              {formatUpdatedAt(currentRecord().updated_at)}
-                            </span>
-                          </div>
+                          <For each={visibleColumns()}>
+                            {(column) => renderCell(column.id, currentRecord())}
+                          </For>
                         </div>
                       )}
                     </Show>
