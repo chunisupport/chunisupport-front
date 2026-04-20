@@ -27,7 +27,7 @@ test('表示カラムの順序を維持してカラム定義を取得できる',
   const columns = getVisibleColumns(['updatedAt', 'title'])
   assert.deepEqual(
     columns.map((column) => column.id),
-    ['title', 'updatedAt']
+    ['updatedAt', 'title']
   )
 })
 

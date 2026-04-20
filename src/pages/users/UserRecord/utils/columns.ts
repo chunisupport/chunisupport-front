@@ -53,8 +53,10 @@ export const sanitizeVisibleColumnIds = (
 }
 
 export const getVisibleColumns = (visibleColumnIds: RecordColumnId[]): RecordColumnDefinition[] => {
-  const visibleSet = new Set(visibleColumnIds)
-  return RECORD_COLUMN_DEFINITIONS.filter((column) => visibleSet.has(column.id))
+  const columnById = new Map(RECORD_COLUMN_DEFINITIONS.map((column) => [column.id, column]))
+  return visibleColumnIds
+    .map((columnId) => columnById.get(columnId))
+    .filter((column): column is RecordColumnDefinition => column !== undefined)
 }
 
 export const createGridTemplateColumns = (columns: RecordColumnDefinition[]): string =>
