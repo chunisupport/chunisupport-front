@@ -7,6 +7,7 @@ import {
   createMemo,
   createSignal,
   For,
+  type JSX,
   onCleanup,
   onMount,
   Show,
@@ -32,7 +33,7 @@ interface RecordTableProps {
 
 const ROW_HEIGHT = 34
 const HEADER_BUTTON_CLASS =
-  'flex min-h-[34px] w-full items-center justify-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
+  'flex min-h-[34px] w-full items-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const SORT_ICON_CLASS = 'h-3 w-3 shrink-0'
 const SORT_ICON_WRAPPER_CLASS = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
 const DIFFICULTY_BADGE_CLASS =
@@ -168,7 +169,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   const renderCell = (
     columnId: RecordColumnId,
     currentRecord: PlayerRecordWithSongMeta
-  ): import('solid-js').JSX.Element | null => {
+  ): JSX.Element | null => {
     switch (columnId) {
       case 'title':
         return (
@@ -186,13 +187,11 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
           <div
             class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${DIFFICULTY_COLUMN_CLASS}`}
           >
-            <div class="flex w-full justify-center">
-              <span
-                class={`${DIFFICULTY_BADGE_CLASS} ${difficultyBadgeClass(currentRecord.difficulty)}`}
-              >
-                {difficultyShort(currentRecord.difficulty)}
-              </span>
-            </div>
+            <span
+              class={`${DIFFICULTY_BADGE_CLASS} ${difficultyBadgeClass(currentRecord.difficulty)}`}
+            >
+              {difficultyShort(currentRecord.difficulty)}
+            </span>
           </div>
         )
       case 'const':
@@ -210,9 +209,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
           <div
             class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
           >
-            <div class="flex w-full justify-center">
-              {!currentRecord.is_played ? unplayedBadge() : currentRecord.score.toLocaleString()}
-            </div>
+            {!currentRecord.is_played ? unplayedBadge() : currentRecord.score.toLocaleString()}
           </div>
         )
       case 'rating':
@@ -230,13 +227,11 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
           <div
             class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${LAMP_COLUMN_CLASS}`}
           >
-            <div class="flex w-full justify-center">
-              {!currentRecord.is_played ? (
-                <span class="px-2 py-1 text-sm font-semibold">-</span>
-              ) : (
-                lampBadge(currentRecord.combo_lamp)
-              )}
-            </div>
+            {!currentRecord.is_played ? (
+              <span class="px-2 py-1 text-sm font-semibold">-</span>
+            ) : (
+              lampBadge(currentRecord.combo_lamp)
+            )}
           </div>
         )
       case 'updatedAt':
@@ -274,7 +269,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                   {(column) => (
                     <button
                       type="button"
-                      class={`${HEADER_BUTTON_CLASS} ${column.align === 'start' ? 'justify-start pl-2' : ''}`}
+                      class={`${HEADER_BUTTON_CLASS} ${column.align === 'start' ? 'justify-start pl-2' : 'justify-center'}`}
                       onClick={() => props.onSortChange(column.sortKey)}
                     >
                       <span>{column.label}</span>
