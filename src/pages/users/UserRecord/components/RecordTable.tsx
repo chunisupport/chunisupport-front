@@ -40,6 +40,9 @@ const DIFFICULTY_BADGE_CLASS =
 const ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
 const DIFFICULTY_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
 const LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
+const assertNever = (value: never): never => {
+  throw new Error(`Unhandled RecordColumnId: ${String(value)}`)
+}
 
 const lampBadge = (lamp: string | null) => {
   if (lamp === 'FULL COMBO')
@@ -162,7 +165,10 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   )
   const visibleColumns = createMemo(() => getVisibleColumns(props.visibleColumnIds))
   const gridTemplateColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
-  const renderCell = (columnId: RecordColumnId, currentRecord: PlayerRecordWithSongMeta): import('solid-js').JSX.Element | null => {
+  const renderCell = (
+    columnId: RecordColumnId,
+    currentRecord: PlayerRecordWithSongMeta
+  ): import('solid-js').JSX.Element | null => {
     switch (columnId) {
       case 'title':
         return (
@@ -243,6 +249,8 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             </span>
           </div>
         )
+      default:
+        return assertNever(columnId)
     }
   }
 
