@@ -12,6 +12,14 @@ export type RecordSortKey =
   | 'score'
   | 'updatedAt'
   | 'lamp'
+export type RecordColumnId =
+  | 'title'
+  | 'difficulty'
+  | 'const'
+  | 'score'
+  | 'rating'
+  | 'lamp'
+  | 'updatedAt'
 export type SortDirection = 'asc' | 'desc'
 
 /** フィルターの型定義 */
