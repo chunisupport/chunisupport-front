@@ -28,14 +28,16 @@ const GoalCard: Component<GoalCardProps> = (props) => {
     props.goal.invert
       ? Math.max(props.progress.target - props.progress.current, 0)
       : props.progress.current
-  const displayPercent = () => {
+  const normalizedPercent = () => {
     const safeTarget = props.progress.target <= 0 ? 1 : props.progress.target
-    const rawPercent = (props.progress.current / safeTarget) * 100
-    const normalizedPercent = Number.isFinite(rawPercent) ? Math.max(0, rawPercent) : 0
+    const raw = (props.progress.current / safeTarget) * 100
+    return Number.isFinite(raw) ? Math.max(0, raw) : 0
+  }
 
+  const displayPercent = () => {
     return props.goal.invert
-      ? Math.max(0, 100 - Math.min(normalizedPercent, 100))
-      : normalizedPercent
+      ? Math.max(0, 100 - Math.min(normalizedPercent(), 100))
+      : normalizedPercent()
   }
 
   const [menuOpen, setMenuOpen] = createSignal(false)
@@ -137,9 +139,9 @@ const GoalCard: Component<GoalCardProps> = (props) => {
         </div>
         <progress
           class="h-2 w-full rounded appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-gray-200 [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-primary-600 [&::-moz-progress-bar]:rounded [&::-moz-progress-bar]:bg-primary-600"
-          value={Math.max(0, Math.min(displayPercent(), 100))}
+          value={Math.max(0, Math.min(normalizedPercent(), 100))}
           max={100}
-          aria-label={`${props.goal.title} 進捗 ${displayPercent().toFixed(1)}%`}
+          aria-label={`${props.goal.title} 進捗 ${displayPercent().toFixed(2)}%`}
         />
       </div>
     </article>
