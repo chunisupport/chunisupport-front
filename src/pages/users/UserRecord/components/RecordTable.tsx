@@ -300,7 +300,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           }}
                         >
                           <For each={visibleColumns()}>
-                            {(column) => renderCell(column.id, currentRecord())}
+                            {(column) => renderCell(column.id, currentRecord)}
                           </For>
                         </div>
                       )}
