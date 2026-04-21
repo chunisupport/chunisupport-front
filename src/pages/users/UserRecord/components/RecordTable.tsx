@@ -21,6 +21,7 @@ import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import type { RecordColumnId, RecordSortKey, SortDirection } from '../types/types'
 import { createGridTemplateColumns, getVisibleColumns } from '../utils/columns'
 import { formatUpdatedAt } from '../utils/updatedAt'
+import { getRecordVirtualRowKey } from '../utils/virtualRowKey'
 
 interface RecordTableProps {
   records: PlayerRecordWithSongMeta[]
@@ -103,6 +104,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
     get scrollMargin() {
       return scrollMargin()
     },
+    getItemKey: (index) => getRecordVirtualRowKey(props.records, index),
   })
 
   const updateScrollMargin = () => {
@@ -144,7 +146,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   })
 
   createEffect(() => {
-    props.records.length
+    props.records
     queueMicrotask(() => {
       updateScrollMargin()
       rowVirtualizer.scrollToIndex(0)
