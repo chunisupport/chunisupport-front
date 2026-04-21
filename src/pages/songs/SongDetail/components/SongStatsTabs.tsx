@@ -1,4 +1,5 @@
 ﻿import * as Tabs from '@kobalte/core/tabs'
+import type { JSX } from 'solid-js'
 import { For, Show } from 'solid-js'
 import type { SongStatsResponseDTO } from '../../../../types/api'
 import SongStatsTable from './SongStatsTable'
@@ -14,11 +15,13 @@ type Props = {
   onDifficultyChange: (difficulty: string) => void
   stats: SongStatsResponseDTO | undefined
   isStatsLoading: boolean
+  personalScoreCard?: JSX.Element
 }
 
 const SongStatsTabs = (props: Props) => {
   return (
     <div class="rounded-md border border-gray-200 bg-white p-4 space-y-3">
+      {props.personalScoreCard}
       <h2 class="text-lg font-semibold">難易度別統計</h2>
 
       <Tabs.Root value={props.selectedDifficulty} onChange={props.onDifficultyChange}>

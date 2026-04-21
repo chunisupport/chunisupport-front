@@ -10,13 +10,17 @@ import {
   untrack,
 } from 'solid-js'
 import { fetchMasterData, fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
+import { fetchUserRecord } from '../../../api/users'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { authSession } from '../../../stores/authSession'
+import { resolveSongPersonalBest } from '../../../usecases/songs/resolveSongPersonalBest'
 import { normalizeDifficultyQueryValue } from '../../../utils/difficultyUtils'
 import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
 } from '../../../utils/versionConverter'
+import PersonalScoreCard from './components/PersonalScoreCard'
 import SongInfoCard from './components/SongInfoCard'
 import SongStatsTabs from './components/SongStatsTabs'
 
@@ -82,6 +86,29 @@ const SongDetail = () => {
     (source) => fetchSongStats(source.displayId, source.difficulty)
   )
 
+  const [myRecord] = createResource(
+    () => {
+      if (authSession.status !== 'authenticated' || !authSession.user?.username) return null
+      const displayId = params.displayid
+      const difficulty = selectedDifficulty()
+      if (!displayId || !difficulty) return null
+      return {
+        username: authSession.user.username,
+        displayId,
+        difficulty,
+      }
+    },
+    async (source) => {
+      const record = await fetchUserRecord(source.username)
+      return resolveSongPersonalBest(record.all, source.displayId, source.difficulty)
+    }
+  )
+
+  const selectedDifficultyLabel = createMemo(
+    () =>
+      availableDifficulties().find((difficulty) => difficulty.value === selectedDifficulty())?.label
+  )
+
   useDocumentTitle(() => `${song()?.title ?? '楽曲'} - 楽曲詳細`)
 
   const handleBack = () => {
@@ -124,6 +151,16 @@ const SongDetail = () => {
                 onDifficultyChange={setSelectedDifficulty}
                 stats={stats()}
                 isStatsLoading={stats.loading}
+                personalScoreCard={
+                  <Show when={myRecord() && selectedDifficultyLabel()}>
+                    {(record) => (
+                      <PersonalScoreCard
+                        record={record()}
+                        difficultyLabel={selectedDifficultyLabel() ?? '-'}
+                      />
+                    )}
+                  </Show>
+                }
               />
             </div>
           )
