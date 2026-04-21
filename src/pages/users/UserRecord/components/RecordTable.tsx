@@ -153,14 +153,6 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   })
 
   createEffect(() => {
-    props.sortKey
-    props.sortDirection
-    queueMicrotask(() => {
-      rowVirtualizer.scrollToIndex(0)
-    })
-  })
-
-  createEffect(() => {
     props.statsOpen
 
     // 統計表示の開閉でレイアウトが動くため、次フレームでも再計測する
@@ -173,17 +165,6 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   const virtualRows = createMemo(() =>
     rowVirtualizer.getVirtualItems().filter((virtualRow) => virtualRow.index < props.records.length)
   )
-  const paddingTop = createMemo(() => {
-    const firstRow = virtualRows()[0]
-    if (!firstRow) return 0
-    return Math.max(firstRow.start - scrollMargin(), 0)
-  })
-  const paddingBottom = createMemo(() => {
-    const rows = virtualRows()
-    const lastRow = rows[rows.length - 1]
-    if (!lastRow) return 0
-    return Math.max(rowVirtualizer.getTotalSize() - lastRow.end, 0)
-  })
   const visibleColumns = createMemo(() => getVisibleColumns(props.visibleColumnIds))
   const gridTemplateColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
   const handleSortHeaderClick = (key: RecordSortKey) => {
@@ -304,10 +285,11 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
               </div>
             </div>
 
-            <div ref={tableBodyRef} class="relative">
-              <Show when={paddingTop() > 0}>
-                <div aria-hidden="true" style={{ height: `${paddingTop()}px` }} />
-              </Show>
+            <div
+              ref={tableBodyRef}
+              class="relative"
+              style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+            >
               <For each={virtualRows()}>
                 {(virtualRow) => {
                   const record = createMemo(() => props.records[virtualRow.index])
@@ -316,9 +298,10 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                     <Show when={record()}>
                       {(currentRecord) => (
                         <div
-                          class="grid w-full border-b border-gray-200 pr-2 text-xs hover:bg-gray-100"
+                          class="absolute left-0 top-0 grid w-full border-b border-gray-200 pr-2 text-xs hover:bg-gray-100"
                           style={{
                             'grid-template-columns': gridTemplateColumns(),
+                            transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
                           }}
                         >
                           <For each={visibleColumns()}>
@@ -330,9 +313,6 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                   )
                 }}
               </For>
-              <Show when={paddingBottom() > 0}>
-                <div aria-hidden="true" style={{ height: `${paddingBottom()}px` }} />
-              </Show>
             </div>
           </div>
         </div>
