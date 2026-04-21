@@ -199,16 +199,8 @@ const WorldsendRecordTable = (props: {
               return -1
             }
 
-            const leftLampKey = !left.is_played
-              ? 'UNPLAYED'
-              : left.combo_lamp === null
-                ? 'NONE'
-                : left.combo_lamp
-            const rightLampKey = !right.is_played
-              ? 'UNPLAYED'
-              : right.combo_lamp === null
-                ? 'NONE'
-                : right.combo_lamp
+            const leftLampKey = left.combo_lamp ?? 'NONE'
+            const rightLampKey = right.combo_lamp ?? 'NONE'
 
             comparison =
               (worldsendLampOrder[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
