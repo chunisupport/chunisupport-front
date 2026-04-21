@@ -122,7 +122,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   })
 
   createEffect(() => {
-    props.records.length
+    props.records
     queueMicrotask(() => {
       updateScrollMargin()
       rowVirtualizer.scrollToIndex(0)
@@ -275,11 +275,11 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             >
               <For each={virtualRows()}>
                 {(virtualRow) => {
-                  const record = createMemo(() => props.records[virtualRow.index])
+                  const currentRecord = () => props.records[virtualRow.index]
 
                   return (
-                    <Show when={record()}>
-                      {(currentRecord) => (
+                    <Show when={currentRecord()}>
+                      {(record) => (
                         <div
                           class="absolute left-0 top-0 grid w-full border-b border-gray-200 pr-2 text-xs hover:bg-gray-100"
                           style={{
@@ -288,7 +288,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           }}
                         >
                           <For each={visibleColumns()}>
-                            {(column) => renderCell(column.id, currentRecord())}
+                            {(column) => renderCell(column.id, record())}
                           </For>
                         </div>
                       )}
