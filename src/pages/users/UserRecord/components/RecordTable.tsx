@@ -145,9 +145,19 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   })
 
   createEffect(() => {
-    props.records.length
+    props.records
     queueMicrotask(() => {
       updateScrollMargin()
+      rowVirtualizer.measure()
+      rowVirtualizer.scrollToIndex(0)
+    })
+  })
+
+  createEffect(() => {
+    props.sortKey
+    props.sortDirection
+    queueMicrotask(() => {
+      rowVirtualizer.measure()
       rowVirtualizer.scrollToIndex(0)
     })
   })
@@ -292,24 +302,21 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             >
               <For each={virtualRows()}>
                 {(virtualRow) => {
-                  const record = createMemo(() => props.records[virtualRow.index])
+                  const currentRecord = props.records[virtualRow.index]
+                  if (!currentRecord) return null
 
                   return (
-                    <Show when={record()}>
-                      {(currentRecord) => (
-                        <div
-                          class="absolute left-0 top-0 grid w-full border-b border-gray-200 pr-2 text-xs hover:bg-gray-100"
-                          style={{
-                            'grid-template-columns': gridTemplateColumns(),
-                            transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
-                          }}
-                        >
-                          <For each={visibleColumns()}>
-                            {(column) => renderCell(column.id, currentRecord())}
-                          </For>
-                        </div>
-                      )}
-                    </Show>
+                    <div
+                      class="absolute left-0 top-0 grid w-full border-b border-gray-200 pr-2 text-xs hover:bg-gray-100"
+                      style={{
+                        'grid-template-columns': gridTemplateColumns(),
+                        transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
+                      }}
+                    >
+                      <For each={visibleColumns()}>
+                        {(column) => renderCell(column.id, currentRecord)}
+                      </For>
+                    </div>
                   )
                 }}
               </For>
