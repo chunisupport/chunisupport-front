@@ -49,14 +49,8 @@ type WorldsendRecordWithSongMeta = WorldsendRecordDTO & {
 const worldsendLampOrder: Record<string, number> = {
   'ALL JUSTICE': 0,
   'FULL COMBO': 1,
-  CATASTROPHY: 2,
-  ABSOLUTE: 3,
-  BRAVE: 4,
-  HARD: 5,
-  CLEAR: 6,
-  FAILED: 7,
-  NONE: 8,
-  UNPLAYED: 9,
+  NONE: 2,
+  UNPLAYED: 3,
 }
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
@@ -189,10 +183,8 @@ const WorldsendRecordTable = (props: {
             break
           }
           case 'lamp': {
-            const leftMissing =
-              !left.is_played || (left.combo_lamp === null && left.clear_lamp === null)
-            const rightMissing =
-              !right.is_played || (right.combo_lamp === null && right.clear_lamp === null)
+            const leftMissing = !left.is_played || left.combo_lamp === null
+            const rightMissing = !right.is_played || right.combo_lamp === null
 
             if (leftMissing && rightMissing) {
               comparison = 0
@@ -209,18 +201,14 @@ const WorldsendRecordTable = (props: {
 
             const leftLampKey = !left.is_played
               ? 'UNPLAYED'
-              : left.combo_lamp === 'ALL JUSTICE'
-                ? 'ALL JUSTICE'
-                : left.combo_lamp === 'FULL COMBO'
-                  ? 'FULL COMBO'
-                  : (left.clear_lamp ?? 'NONE')
+              : left.combo_lamp === null
+                ? 'NONE'
+                : left.combo_lamp
             const rightLampKey = !right.is_played
               ? 'UNPLAYED'
-              : right.combo_lamp === 'ALL JUSTICE'
-                ? 'ALL JUSTICE'
-                : right.combo_lamp === 'FULL COMBO'
-                  ? 'FULL COMBO'
-                  : (right.clear_lamp ?? 'NONE')
+              : right.combo_lamp === null
+                ? 'NONE'
+                : right.combo_lamp
 
             comparison =
               (worldsendLampOrder[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
