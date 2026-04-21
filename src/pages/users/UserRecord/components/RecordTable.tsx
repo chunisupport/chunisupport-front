@@ -1,5 +1,6 @@
 import { A } from '@solidjs/router'
 import { createVirtualizer } from '@tanstack/solid-virtual'
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import {
   type Component,
   createEffect,
@@ -19,7 +20,6 @@ import {
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import type { RecordColumnId, RecordSortKey, SortDirection } from '../types/types'
 import { createGridTemplateColumns, getVisibleColumns } from '../utils/columns'
-import { sortHeaderLabelClass } from '../utils/sortHeaderColor'
 import { formatUpdatedAt } from '../utils/updatedAt'
 
 interface RecordTableProps {
@@ -33,7 +33,9 @@ interface RecordTableProps {
 
 const ROW_HEIGHT = 34
 const HEADER_BUTTON_CLASS =
-  'flex min-h-[34px] w-full items-center gap-1 text-center whitespace-nowrap cursor-pointer transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
+  'flex min-h-[34px] w-full items-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
+const SORT_ICON_CLASS = 'h-3 w-3 shrink-0'
+const SORT_ICON_WRAPPER_CLASS = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
 const DIFFICULTY_BADGE_CLASS =
   'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
 const ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
@@ -62,6 +64,26 @@ const lampBadge = (lamp: string | null) => {
 const unplayedBadge = () => (
   <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">NoPlay</span>
 )
+
+const sortIndicator = (active: boolean, direction: SortDirection | null) => {
+  if (!active || !direction) {
+    return (
+      <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
+        <ArrowUpDown class={`${SORT_ICON_CLASS} text-gray-300`} />
+      </span>
+    )
+  }
+
+  return direction === 'asc' ? (
+    <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
+      <ArrowUp class={`${SORT_ICON_CLASS} text-sky-600`} />
+    </span>
+  ) : (
+    <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
+      <ArrowDown class={`${SORT_ICON_CLASS} text-sky-600`} />
+    </span>
+  )
+}
 
 export const RecordTable: Component<RecordTableProps> = (props) => {
   let tableContainerRef: HTMLDivElement | undefined
@@ -122,7 +144,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   })
 
   createEffect(() => {
-    props.records
+    props.records.length
     queueMicrotask(() => {
       updateScrollMargin()
       rowVirtualizer.scrollToIndex(0)
@@ -248,20 +270,10 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                     <button
                       type="button"
                       class={`${HEADER_BUTTON_CLASS} ${column.align === 'start' ? 'justify-start pl-2' : 'justify-center'}`}
-                      data-sort-state={
-                        props.sortKey === column.sortKey ? (props.sortDirection ?? 'none') : 'none'
-                      }
-                      onClick={[props.onSortChange, column.sortKey]}
+                      onClick={() => props.onSortChange(column.sortKey)}
                     >
-                      <span
-                        class={sortHeaderLabelClass(
-                          props.sortKey,
-                          props.sortDirection,
-                          column.sortKey
-                        )}
-                      >
-                        {column.label}
-                      </span>
+                      <span>{column.label}</span>
+                      {sortIndicator(props.sortKey === column.sortKey, props.sortDirection)}
                     </button>
                   )}
                 </For>
@@ -275,11 +287,11 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             >
               <For each={virtualRows()}>
                 {(virtualRow) => {
-                  const currentRecord = () => props.records[virtualRow.index]
+                  const record = createMemo(() => props.records[virtualRow.index])
 
                   return (
-                    <Show when={currentRecord()}>
-                      {(record) => (
+                    <Show when={record()}>
+                      {(currentRecord) => (
                         <div
                           class="absolute left-0 top-0 grid w-full border-b border-gray-200 pr-2 text-xs hover:bg-gray-100"
                           style={{
@@ -288,7 +300,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           }}
                         >
                           <For each={visibleColumns()}>
-                            {(column) => renderCell(column.id, record())}
+                            {(column) => renderCell(column.id, currentRecord())}
                           </For>
                         </div>
                       )}
