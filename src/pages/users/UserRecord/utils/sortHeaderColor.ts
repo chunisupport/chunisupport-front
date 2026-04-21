@@ -1,13 +1,13 @@
-import type { RecordSortKey, SortDirection } from '../types/types'
+import type { SortDirection } from '../types/types'
 
 const INACTIVE_LABEL_CLASS = 'text-gray-700'
 const ASC_LABEL_CLASS = 'text-rose-600'
 const DESC_LABEL_CLASS = 'text-sky-600'
 
-export const sortHeaderLabelClass = (
-  currentSortKey: RecordSortKey | null,
+export const sortHeaderLabelClass = <T extends string>(
+  currentSortKey: T | null,
   currentSortDirection: SortDirection | null,
-  targetSortKey: RecordSortKey
+  targetSortKey: T
 ): string => {
   if (currentSortKey !== targetSortKey || !currentSortDirection) {
     return INACTIVE_LABEL_CLASS

@@ -1,5 +1,4 @@
 import { A, useSearchParams } from '@solidjs/router'
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import {
   createMemo,
   createResource,
@@ -19,6 +18,7 @@ import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendGridColumns } from '../UserPage/worldsendRecordTableLayout'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
+import { sortHeaderLabelClass } from '../UserRecord/utils/sortHeaderColor'
 import {
   compareUpdatedAtWithMissingLast,
   formatUpdatedAt,
@@ -63,31 +63,9 @@ const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
   !isPlayed || timestamp === Number.NEGATIVE_INFINITY
 
 const worldsendHeaderButtonClass =
-  'flex min-h-[34px] w-full items-center justify-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
-const worldsendSortIconClass = 'h-3 w-3 shrink-0'
-const worldsendSortIconWrapperClass = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
+  'flex min-h-[34px] w-full items-center justify-center gap-1 text-center whitespace-nowrap cursor-pointer transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const worldsendAlphanumericColumnClass = 'text-xs'
 const worldsendLampColumnClass = 'font-oswald text-sm font-semibold'
-
-const worldsendSortIndicator = (active: boolean, direction: WorldsendSortDirection | null) => {
-  if (!active || !direction) {
-    return (
-      <span class={worldsendSortIconWrapperClass} aria-hidden="true">
-        <ArrowUpDown class={`${worldsendSortIconClass} text-gray-300`} />
-      </span>
-    )
-  }
-
-  return direction === 'asc' ? (
-    <span class={worldsendSortIconWrapperClass} aria-hidden="true">
-      <ArrowUp class={`${worldsendSortIconClass} text-sky-600`} />
-    </span>
-  ) : (
-    <span class={worldsendSortIconWrapperClass} aria-hidden="true">
-      <ArrowDown class={`${worldsendSortIconClass} text-sky-600`} />
-    </span>
-  )
-}
 
 const worldsendLevelLabel = (levelStar: number | null | undefined) => {
   if (typeof levelStar !== 'number' || levelStar <= 0) {
@@ -280,50 +258,54 @@ const WorldsendRecordTable = (props: {
                 <button
                   type="button"
                   class={`${worldsendHeaderButtonClass} justify-start px-2`}
-                  onClick={() => handleSortChange('title')}
+                  onClick={[handleSortChange, 'title']}
                 >
-                  <span>曲名</span>
-                  {worldsendSortIndicator(sortKey() === 'title', sortDirection())}
+                  <span class={sortHeaderLabelClass(sortKey(), sortDirection(), 'title')}>
+                    曲名
+                  </span>
                 </button>
                 <button
                   type="button"
                   class={worldsendHeaderButtonClass}
-                  onClick={() => handleSortChange('attribute')}
+                  onClick={[handleSortChange, 'attribute']}
                 >
-                  <span>属性</span>
-                  {worldsendSortIndicator(sortKey() === 'attribute', sortDirection())}
+                  <span class={sortHeaderLabelClass(sortKey(), sortDirection(), 'attribute')}>
+                    属性
+                  </span>
                 </button>
                 <button
                   type="button"
                   class={worldsendHeaderButtonClass}
-                  onClick={() => handleSortChange('level')}
+                  onClick={[handleSortChange, 'level']}
                 >
-                  <span>レベル</span>
-                  {worldsendSortIndicator(sortKey() === 'level', sortDirection())}
+                  <span class={sortHeaderLabelClass(sortKey(), sortDirection(), 'level')}>
+                    レベル
+                  </span>
                 </button>
                 <button
                   type="button"
                   class={worldsendHeaderButtonClass}
-                  onClick={() => handleSortChange('score')}
+                  onClick={[handleSortChange, 'score']}
                 >
-                  <span>スコア</span>
-                  {worldsendSortIndicator(sortKey() === 'score', sortDirection())}
+                  <span class={sortHeaderLabelClass(sortKey(), sortDirection(), 'score')}>
+                    スコア
+                  </span>
                 </button>
                 <button
                   type="button"
                   class={worldsendHeaderButtonClass}
-                  onClick={() => handleSortChange('lamp')}
+                  onClick={[handleSortChange, 'lamp']}
                 >
-                  <span>AJ</span>
-                  {worldsendSortIndicator(sortKey() === 'lamp', sortDirection())}
+                  <span class={sortHeaderLabelClass(sortKey(), sortDirection(), 'lamp')}>AJ</span>
                 </button>
                 <button
                   type="button"
                   class={worldsendHeaderButtonClass}
-                  onClick={() => handleSortChange('updatedAt')}
+                  onClick={[handleSortChange, 'updatedAt']}
                 >
-                  <span>更新日</span>
-                  {worldsendSortIndicator(sortKey() === 'updatedAt', sortDirection())}
+                  <span class={sortHeaderLabelClass(sortKey(), sortDirection(), 'updatedAt')}>
+                    更新日
+                  </span>
                 </button>
               </div>
             </div>

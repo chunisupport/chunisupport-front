@@ -251,7 +251,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                       data-sort-state={
                         props.sortKey === column.sortKey ? (props.sortDirection ?? 'none') : 'none'
                       }
-                      onClick={() => props.onSortChange(column.sortKey)}
+                      onClick={[props.onSortChange, column.sortKey]}
                     >
                       <span
                         class={sortHeaderLabelClass(
