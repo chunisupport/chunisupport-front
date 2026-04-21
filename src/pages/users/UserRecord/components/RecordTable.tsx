@@ -33,7 +33,7 @@ interface RecordTableProps {
 
 const ROW_HEIGHT = 34
 const HEADER_BUTTON_CLASS =
-  'flex min-h-[34px] w-full items-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
+  'flex min-h-[34px] w-full items-center gap-1 text-center whitespace-nowrap cursor-pointer transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const DIFFICULTY_BADGE_CLASS =
   'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
 const ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
@@ -248,6 +248,9 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                     <button
                       type="button"
                       class={`${HEADER_BUTTON_CLASS} ${column.align === 'start' ? 'justify-start pl-2' : 'justify-center'}`}
+                      data-sort-state={
+                        props.sortKey === column.sortKey ? (props.sortDirection ?? 'none') : 'none'
+                      }
                       onClick={() => props.onSortChange(column.sortKey)}
                     >
                       <span

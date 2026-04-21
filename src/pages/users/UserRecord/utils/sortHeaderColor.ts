@@ -1,8 +1,8 @@
 import type { RecordSortKey, SortDirection } from '../types/types'
 
 const INACTIVE_LABEL_CLASS = 'text-gray-700'
-const ASC_LABEL_CLASS = 'text-sky-600'
-const DESC_LABEL_CLASS = 'text-indigo-600'
+const ASC_LABEL_CLASS = 'text-rose-600'
+const DESC_LABEL_CLASS = 'text-sky-600'
 
 export const sortHeaderLabelClass = (
   currentSortKey: RecordSortKey | null,
