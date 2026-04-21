@@ -153,6 +153,14 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   })
 
   createEffect(() => {
+    props.sortKey
+    props.sortDirection
+    queueMicrotask(() => {
+      rowVirtualizer.scrollToIndex(0)
+    })
+  })
+
+  createEffect(() => {
     props.statsOpen
 
     // 統計表示の開閉でレイアウトが動くため、次フレームでも再計測する
