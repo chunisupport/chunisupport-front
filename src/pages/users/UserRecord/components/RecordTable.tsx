@@ -90,6 +90,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   let tableBodyRef: HTMLDivElement | undefined
   let layoutResizeObserver: ResizeObserver | undefined
   const getScrollElement = () => document.getElementById('app-main') as HTMLDivElement | null
+  const [sortHeaderClickCount, setSortHeaderClickCount] = createSignal(0)
 
   const [scrollMargin, setScrollMargin] = createSignal(0)
 
@@ -177,6 +178,10 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   })
   const visibleColumns = createMemo(() => getVisibleColumns(props.visibleColumnIds))
   const gridTemplateColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
+  const handleSortHeaderClick = (key: RecordSortKey) => {
+    setSortHeaderClickCount((current) => current + 1)
+    props.onSortChange(key)
+  }
   const renderCell = (
     columnId: RecordColumnId,
     currentRecord: PlayerRecordWithSongMeta
@@ -281,7 +286,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                     <button
                       type="button"
                       class={`${HEADER_BUTTON_CLASS} ${column.align === 'start' ? 'justify-start pl-2' : 'justify-center'}`}
-                      onClick={() => props.onSortChange(column.sortKey)}
+                      onClick={() => handleSortHeaderClick(column.sortKey)}
                     >
                       <span>{column.label}</span>
                       {sortIndicator(props.sortKey === column.sortKey, props.sortDirection)}
@@ -323,6 +328,12 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             </div>
           </div>
         </div>
+        <Show when={import.meta.env.DEV}>
+          <p class="mt-2 text-xs text-gray-500">
+            debug(sort): clicks={sortHeaderClickCount()} key={props.sortKey ?? 'none'} dir=
+            {props.sortDirection ?? 'none'} first={props.records[0]?.id ?? 'none'}
+          </p>
+        </Show>
       </Show>
     </div>
   )
