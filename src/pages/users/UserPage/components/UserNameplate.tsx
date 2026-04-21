@@ -19,6 +19,8 @@ export const UserNameplate: Component<Props> = (props) => {
   const newRating = props.newRecords.length > 0 ? newSum / props.newRecords.length : 0
   const totalRecordsLength = props.bestRecords.length + props.newRecords.length
   const playerRating = totalRecordsLength > 0 ? (bestSum + newSum) / totalRecordsLength : 0
+  const ratingGradientClass =
+    'bg-[linear-gradient(to_bottom,#b9c06a_0%,#dfe07f_7.69%,#e8c67f_15.38%,#d99d73_23.07%,#c87867_30.76%,#c46a76_38.46%,#c76596_46.15%,#ff27c8_53.84%,#d10fd0_61.53%,#7b3fe5_69.23%,#1496f0_76.92%,#16d4ea_84.61%,#11e0c3_92.3%,#00cf86_100%)] bg-clip-text text-transparent'
 
   return (
     <div class="mb-2 mx-auto w-[min(420px,calc(100%-2rem))] px-3 py-3 border border-gray-200 shadow-sm rounded-md ">
@@ -30,7 +32,7 @@ export const UserNameplate: Component<Props> = (props) => {
       </div>
       <hr class="mb-2 border-t border-gray-200" />
       <p>
-        RATING <b>{playerRating.toFixed(4)}</b>{' '}
+        RATING <b class={ratingGradientClass}>{playerRating.toFixed(4)}</b>{' '}
         <span class="text-gray-500">
           (BEST <b>{bestRating.toFixed(4)}</b> / NEW <b>{newRating.toFixed(4)}</b>)
         </span>
