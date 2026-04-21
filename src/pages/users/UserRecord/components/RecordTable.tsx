@@ -290,7 +290,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                   const record = createMemo(() => props.records[virtualRow.index])
 
                   return (
-                    <Show when={record()}>
+                    <Show when={record()} keyed>
                       {(currentRecord) => (
                         <div
                           class="absolute left-0 top-0 grid w-full border-b border-gray-200 pr-2 text-xs hover:bg-gray-100"
@@ -300,7 +300,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           }}
                         >
                           <For each={visibleColumns()}>
-                            {(column) => renderCell(column.id, currentRecord())}
+                            {(column) => renderCell(column.id, currentRecord)}
                           </For>
                         </div>
                       )}
