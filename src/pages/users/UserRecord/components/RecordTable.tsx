@@ -328,12 +328,12 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             </div>
           </div>
         </div>
-        <Show when={import.meta.env.DEV}>
-          <p class="mt-2 text-xs text-gray-500">
-            debug(sort): clicks={sortHeaderClickCount()} key={props.sortKey ?? 'none'} dir=
-            {props.sortDirection ?? 'none'} first={props.records[0]?.id ?? 'none'}
-          </p>
-        </Show>
+      </Show>
+      <Show when={import.meta.env.DEV}>
+        <div class="pointer-events-none fixed right-2 bottom-2 z-[9999] rounded bg-black/80 px-2 py-1 font-mono text-xs text-white shadow-lg">
+          debug(sort): clicks={sortHeaderClickCount()} key={props.sortKey ?? 'none'} dir=
+          {props.sortDirection ?? 'none'} first={props.records[0]?.id ?? 'none'}
+        </div>
       </Show>
     </div>
   )
