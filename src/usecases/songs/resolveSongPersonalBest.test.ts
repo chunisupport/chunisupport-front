@@ -48,6 +48,17 @@ test('未プレイまたはスコア0のデータは返さない', () => {
   assert.equal(result, undefined)
 })
 
+test('score が不正なレコードは除外し、画面クラッシュを防ぐ', () => {
+  const malformedRecord = {
+    ...createRecord({ id: 'song-1', difficulty: 'MASTER' }),
+    score: undefined,
+  } as unknown as PlayerRecordDTO
+
+  const result = resolveSongPersonalBest([malformedRecord], 'song-1', 'master')
+
+  assert.equal(result, undefined)
+})
+
 test('不正な難易度文字列の場合は undefined を返す', () => {
   const records = [createRecord({ id: 'song-1', difficulty: 'MASTER' })]
 

@@ -21,6 +21,7 @@ export const resolveSongPersonalBest = (
       record.id === displayId &&
       record.difficulty === normalizedDifficulty &&
       record.is_played &&
+      typeof record.score === 'number' &&
       record.score > 0
   )
 }

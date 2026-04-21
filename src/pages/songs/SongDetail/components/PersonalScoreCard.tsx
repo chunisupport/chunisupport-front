@@ -7,7 +7,8 @@ type Props = {
 }
 
 const PersonalScoreCard = (props: Props) => {
-  const rank = () => getScoreRank(props.record.score)
+  const score = () => (typeof props.record.score === 'number' ? props.record.score : 0)
+  const rank = () => getScoreRank(score())
 
   return (
     <section
@@ -25,7 +26,7 @@ const PersonalScoreCard = (props: Props) => {
       </div>
 
       <div class="mt-3 flex flex-wrap items-end gap-x-6 gap-y-2">
-        <p class="text-3xl font-bold tabular-nums">{props.record.score.toLocaleString()}</p>
+        <p class="text-3xl font-bold tabular-nums">{score().toLocaleString()}</p>
         <p class="text-sm text-primary-100">
           CLEAR: {props.record.clear_lamp ?? '未記録'} / COMBO:{' '}
           {props.record.combo_lamp ?? '未記録'}
