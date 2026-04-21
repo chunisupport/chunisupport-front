@@ -183,8 +183,8 @@ const WorldsendRecordTable = (props: {
             break
           }
           case 'lamp': {
-            const leftMissing = !left.is_played || left.combo_lamp === null
-            const rightMissing = !right.is_played || right.combo_lamp === null
+            const leftMissing = !left.is_played
+            const rightMissing = !right.is_played
 
             if (leftMissing && rightMissing) {
               comparison = 0
