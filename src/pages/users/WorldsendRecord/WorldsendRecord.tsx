@@ -63,6 +63,31 @@ const worldsendSortIconWrapperClass = 'inline-flex h-3 w-3 shrink-0 items-center
 const worldsendAlphanumericColumnClass = 'text-xs'
 const worldsendLampColumnClass = 'font-oswald text-sm font-semibold'
 
+const worldsendUnplayedBadge = () => (
+  <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">NoPlay</span>
+)
+
+const worldsendLampBadge = (record: WorldsendRecordDTO) => {
+  const label = worldsendLampLabel(record)
+
+  if (label === '-') {
+    return (
+      <span
+        class="inline-flex min-h-[30px] min-w-[30px] items-center justify-center rounded-lg bg-gray-100 px-2 py-1 text-sm font-extrabold text-gray-300"
+        aria-hidden="true"
+      >
+        {'\u00a0'}
+      </span>
+    )
+  }
+
+  return (
+    <span class={`rounded-lg px-2 py-1 text-sm font-extrabold ${worldsendLampClass(record)}`}>
+      {label}
+    </span>
+  )
+}
+
 const worldsendSortIndicator = (active: boolean, direction: WorldsendSortDirection | null) => {
   if (!active || !direction) {
     return (
@@ -254,12 +279,12 @@ const WorldsendRecordTable = (props: {
           <div class="min-w-[36.5rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
-                class="grid pr-2 text-xs font-semibold"
+                class="grid text-xs font-semibold"
                 style={{ 'grid-template-columns': worldsendGridColumns }}
               >
                 <button
                   type="button"
-                  class={`${worldsendHeaderButtonClass} justify-start px-2`}
+                  class={`${worldsendHeaderButtonClass} justify-start pl-2`}
                   onClick={() => handleSortChange('title')}
                 >
                   <span>曲名</span>
@@ -299,7 +324,7 @@ const WorldsendRecordTable = (props: {
                 </button>
                 <button
                   type="button"
-                  class={worldsendHeaderButtonClass}
+                  class={`${worldsendHeaderButtonClass} pr-2`}
                   onClick={() => handleSortChange('updatedAt')}
                 >
                   <span>更新日</span>
@@ -312,17 +337,16 @@ const WorldsendRecordTable = (props: {
               <For each={sortedRecords()}>
                 {(record) => (
                   <div
-                    class="grid border-b border-gray-200 pr-2 text-xs hover:bg-gray-100"
+                    class="grid border-b border-gray-200 text-xs hover:bg-gray-100"
                     style={{ 'grid-template-columns': worldsendGridColumns }}
                   >
-                    <div class="flex min-h-[34px] min-w-0 items-center px-2" title={record.title}>
-                      <A
-                        href={buildWorldsendSongDetailPath(record.id)}
-                        class="font-sans block w-full truncate text-inherit hover:underline"
-                      >
-                        {record.title}
-                      </A>
-                    </div>
+                    <A
+                      href={buildWorldsendSongDetailPath(record.id)}
+                      class="font-sans flex min-h-[34px] min-w-0 w-full items-center pl-2 text-inherit hover:underline"
+                      title={record.title}
+                    >
+                      <span class="block w-full truncate">{record.title}</span>
+                    </A>
                     <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
                       <span class="inline-block w-full text-center leading-none">
                         {record.attribute ?? '-'}
@@ -338,36 +362,20 @@ const WorldsendRecordTable = (props: {
                     <div
                       class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
                     >
-                      <div class="flex w-full justify-center">
-                        {!record.is_played ? (
-                          <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">
-                            NoPlay
-                          </span>
-                        ) : (
-                          record.score.toLocaleString('ja-JP')
-                        )}
-                      </div>
+                      {!record.is_played
+                        ? worldsendUnplayedBadge()
+                        : record.score.toLocaleString('ja-JP')}
                     </div>
                     <div
                       class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${worldsendLampColumnClass}`}
                     >
-                      <div class="flex w-full justify-center">
-                        {worldsendLampLabel(record) === '-' ? (
-                          <span class="px-2 py-1 text-sm font-semibold">-</span>
-                        ) : (
-                          <span
-                            class={`rounded-lg px-2 py-1 text-sm font-extrabold ${worldsendLampClass(record)}`}
-                          >
-                            {worldsendLampLabel(record)}
-                          </span>
-                        )}
-                      </div>
+                      {record.is_played ? worldsendLampBadge(record) : null}
                     </div>
                     <div
-                      class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
+                      class={`flex min-h-[34px] items-center justify-center pr-2 text-center whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
                     >
                       <span class="inline-block w-full text-center leading-none">
-                        {formatUpdatedAt(record.updated_at)}
+                        {record.is_played ? formatUpdatedAt(record.updated_at) : ''}
                       </span>
                     </div>
                   </div>
