@@ -237,7 +237,7 @@ const NavBar = (props: NavBarProps) => {
         </nav>
       </aside>
 
-      <div class="flex flex-col min-h-0 flex-1">
+      <div class="flex flex-col min-h-0 flex-1 min-w-0">
         <main id="app-main" class="flex-1 min-h-0 overflow-y-auto">
           {props.children}
         </main>

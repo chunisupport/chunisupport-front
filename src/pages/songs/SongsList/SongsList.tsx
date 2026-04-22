@@ -17,7 +17,7 @@ const SongsList = () => {
   return (
     <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
       <Show when={!songsResponse.loading} fallback={<Loading />}>
-        <div class="mx-auto w-full max-w-6xl p-4 space-y-4">
+        <div class="mx-auto w-full max-w-[100%] p-4 space-y-4">
           <h1 class="text-2xl font-semibold">楽曲一覧</h1>
           <p class="text-sm text-gray-600">{sortedSongs().length}件</p>
 
