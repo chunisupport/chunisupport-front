@@ -1,6 +1,5 @@
 import { A } from '@solidjs/router'
 import { createVirtualizer } from '@tanstack/solid-virtual'
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import {
   type Component,
   createEffect,
@@ -18,6 +17,11 @@ import {
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import {
+  LampPlaceholderBadge,
+  NoPlayBadge,
+  renderSortIndicator,
+} from '../../components/RecordTableUiParts'
 import type { RecordColumnId, RecordSortKey, SortDirection } from '../types/types'
 import { createGridTemplateColumns, getVisibleColumns } from '../utils/columns'
 import { formatUpdatedAt } from '../utils/updatedAt'
@@ -34,8 +38,6 @@ interface RecordTableProps {
 const ROW_HEIGHT = 34
 const HEADER_BUTTON_CLASS =
   'flex min-h-[34px] w-full items-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
-const SORT_ICON_CLASS = 'h-3 w-3 shrink-0'
-const SORT_ICON_WRAPPER_CLASS = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
 const DIFFICULTY_BADGE_CLASS =
   'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
 const ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
@@ -58,38 +60,7 @@ const lampBadge = (lamp: string | null) => {
         AJ
       </span>
     )
-  return (
-    <span
-      class="inline-flex min-h-[30px] min-w-[30px] items-center justify-center rounded-lg bg-gray-100 px-2 py-1 text-sm font-extrabold text-gray-300"
-      aria-hidden="true"
-    >
-      {'\u00a0'}
-    </span>
-  )
-}
-
-const unplayedBadge = () => (
-  <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">NoPlay</span>
-)
-
-const sortIndicator = (active: boolean, direction: SortDirection | null) => {
-  if (!active || !direction) {
-    return (
-      <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
-        <ArrowUpDown class={`${SORT_ICON_CLASS} text-gray-300`} />
-      </span>
-    )
-  }
-
-  return direction === 'asc' ? (
-    <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
-      <ArrowUp class={`${SORT_ICON_CLASS} text-sky-600`} />
-    </span>
-  ) : (
-    <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
-      <ArrowDown class={`${SORT_ICON_CLASS} text-sky-600`} />
-    </span>
-  )
+  return <LampPlaceholderBadge />
 }
 
 export const RecordTable: Component<RecordTableProps> = (props) => {
@@ -215,7 +186,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
           <div
             class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
           >
-            {!currentRecord.is_played ? unplayedBadge() : currentRecord.score.toLocaleString()}
+            {!currentRecord.is_played ? <NoPlayBadge /> : currentRecord.score.toLocaleString()}
           </div>
         )
       case 'rating':
@@ -275,7 +246,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                       onClick={() => props.onSortChange(column.sortKey)}
                     >
                       <span>{column.label}</span>
-                      {sortIndicator(props.sortKey === column.sortKey, props.sortDirection)}
+                      {renderSortIndicator(props.sortKey === column.sortKey, props.sortDirection)}
                     </button>
                   )}
                 </For>

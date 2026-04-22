@@ -1,5 +1,4 @@
 import { A, useSearchParams } from '@solidjs/router'
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
 import {
   createMemo,
   createResource,
@@ -14,6 +13,11 @@ import {
 import { fetchWorldsendSongs } from '../../../api/songs'
 import { Loading } from '../../../components'
 import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
+import {
+  LampPlaceholderBadge,
+  NoPlayBadge,
+  renderSortIndicator,
+} from '../components/RecordTableUiParts'
 import { worldsendLampClass, worldsendLampLabel } from '../UserPage/worldsendLampDisplay'
 import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendGridColumns } from '../UserPage/worldsendRecordTableLayout'
@@ -58,52 +62,19 @@ const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
 
 const worldsendHeaderButtonClass =
   'flex min-h-[34px] w-full items-center justify-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
-const worldsendSortIconClass = 'h-3 w-3 shrink-0'
-const worldsendSortIconWrapperClass = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
 const worldsendAlphanumericColumnClass = 'text-xs'
 const worldsendLampColumnClass = 'font-oswald text-sm font-semibold'
-
-const worldsendUnplayedBadge = () => (
-  <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">NoPlay</span>
-)
 
 const worldsendLampBadge = (record: WorldsendRecordDTO) => {
   const label = worldsendLampLabel(record)
 
   if (label === '-') {
-    return (
-      <span
-        class="inline-flex min-h-[30px] min-w-[30px] items-center justify-center rounded-lg bg-gray-100 px-2 py-1 text-sm font-extrabold text-gray-300"
-        aria-hidden="true"
-      >
-        {'\u00a0'}
-      </span>
-    )
+    return <LampPlaceholderBadge />
   }
 
   return (
     <span class={`rounded-lg px-2 py-1 text-sm font-extrabold ${worldsendLampClass(record)}`}>
       {label}
-    </span>
-  )
-}
-
-const worldsendSortIndicator = (active: boolean, direction: WorldsendSortDirection | null) => {
-  if (!active || !direction) {
-    return (
-      <span class={worldsendSortIconWrapperClass} aria-hidden="true">
-        <ArrowUpDown class={`${worldsendSortIconClass} text-gray-300`} />
-      </span>
-    )
-  }
-
-  return direction === 'asc' ? (
-    <span class={worldsendSortIconWrapperClass} aria-hidden="true">
-      <ArrowUp class={`${worldsendSortIconClass} text-sky-600`} />
-    </span>
-  ) : (
-    <span class={worldsendSortIconWrapperClass} aria-hidden="true">
-      <ArrowDown class={`${worldsendSortIconClass} text-sky-600`} />
     </span>
   )
 }
@@ -288,7 +259,7 @@ const WorldsendRecordTable = (props: {
                   onClick={() => handleSortChange('title')}
                 >
                   <span>曲名</span>
-                  {worldsendSortIndicator(sortKey() === 'title', sortDirection())}
+                  {renderSortIndicator(sortKey() === 'title', sortDirection())}
                 </button>
                 <button
                   type="button"
@@ -296,7 +267,7 @@ const WorldsendRecordTable = (props: {
                   onClick={() => handleSortChange('attribute')}
                 >
                   <span>属性</span>
-                  {worldsendSortIndicator(sortKey() === 'attribute', sortDirection())}
+                  {renderSortIndicator(sortKey() === 'attribute', sortDirection())}
                 </button>
                 <button
                   type="button"
@@ -304,7 +275,7 @@ const WorldsendRecordTable = (props: {
                   onClick={() => handleSortChange('level')}
                 >
                   <span>レベル</span>
-                  {worldsendSortIndicator(sortKey() === 'level', sortDirection())}
+                  {renderSortIndicator(sortKey() === 'level', sortDirection())}
                 </button>
                 <button
                   type="button"
@@ -312,7 +283,7 @@ const WorldsendRecordTable = (props: {
                   onClick={() => handleSortChange('score')}
                 >
                   <span>スコア</span>
-                  {worldsendSortIndicator(sortKey() === 'score', sortDirection())}
+                  {renderSortIndicator(sortKey() === 'score', sortDirection())}
                 </button>
                 <button
                   type="button"
@@ -320,7 +291,7 @@ const WorldsendRecordTable = (props: {
                   onClick={() => handleSortChange('lamp')}
                 >
                   <span>AJ</span>
-                  {worldsendSortIndicator(sortKey() === 'lamp', sortDirection())}
+                  {renderSortIndicator(sortKey() === 'lamp', sortDirection())}
                 </button>
                 <button
                   type="button"
@@ -328,7 +299,7 @@ const WorldsendRecordTable = (props: {
                   onClick={() => handleSortChange('updatedAt')}
                 >
                   <span>更新日</span>
-                  {worldsendSortIndicator(sortKey() === 'updatedAt', sortDirection())}
+                  {renderSortIndicator(sortKey() === 'updatedAt', sortDirection())}
                 </button>
               </div>
             </div>
@@ -362,9 +333,7 @@ const WorldsendRecordTable = (props: {
                     <div
                       class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
                     >
-                      {!record.is_played
-                        ? worldsendUnplayedBadge()
-                        : record.score.toLocaleString('ja-JP')}
+                      {!record.is_played ? <NoPlayBadge /> : record.score.toLocaleString('ja-JP')}
                     </div>
                     <div
                       class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${worldsendLampColumnClass}`}
