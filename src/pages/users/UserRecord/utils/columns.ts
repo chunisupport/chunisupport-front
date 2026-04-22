@@ -23,7 +23,7 @@ export const RECORD_COLUMN_DEFINITIONS: RecordColumnDefinition[] = [
   { id: 'score', label: 'スコア', width: '3.6rem', sortKey: 'score', defaultVisible: true },
   { id: 'rating', label: 'レート', width: '3.6rem', sortKey: 'rating', defaultVisible: true },
   { id: 'lamp', label: 'AJ', width: '3.5rem', sortKey: 'lamp', defaultVisible: true },
-  { id: 'updatedAt', label: '更新日', width: '3.5rem', sortKey: 'updatedAt', defaultVisible: true },
+  { id: 'updatedAt', label: '更新日', width: '4rem', sortKey: 'updatedAt', defaultVisible: true },
 ]
 
 const RECORD_COLUMN_IDS = new Set<RecordColumnId>(

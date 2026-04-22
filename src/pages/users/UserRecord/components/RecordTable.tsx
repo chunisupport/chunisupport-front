@@ -180,14 +180,13 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
     switch (columnId) {
       case 'title':
         return (
-          <div class="flex min-h-[34px] min-w-0 items-center" title={currentRecord.title}>
-            <A
-              href={`/songs/${encodeURIComponent(currentRecord.id)}?diff=${encodeURIComponent(difficultyToQueryValue(currentRecord.difficulty))}`}
-              class="font-sans block pl-2 w-full truncate text-inherit hover:underline"
-            >
-              {currentRecord.title}
-            </A>
-          </div>
+          <A
+            href={`/songs/${encodeURIComponent(currentRecord.id)}?diff=${encodeURIComponent(difficultyToQueryValue(currentRecord.difficulty))}`}
+            class="font-sans flex min-h-[34px] min-w-0 w-full items-center pl-2 text-inherit hover:underline"
+            title={currentRecord.title}
+          >
+            <span class="block w-full truncate">{currentRecord.title}</span>
+          </A>
         )
       case 'difficulty':
         return (
@@ -225,7 +224,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
           >
             <span class="inline-block w-full text-center leading-none">
-              {!currentRecord.is_played ? '-' : currentRecord.rating.toFixed(2)}
+              {currentRecord.is_played ? currentRecord.rating.toFixed(2) : ''}
             </span>
           </div>
         )
@@ -243,7 +242,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             class={`flex min-h-[34px] items-center justify-center pr-2 text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
           >
             <span class="inline-block w-full text-center leading-none">
-              {formatUpdatedAt(currentRecord.updated_at)}
+              {currentRecord.is_played ? formatUpdatedAt(currentRecord.updated_at) : ''}
             </span>
           </div>
         )
