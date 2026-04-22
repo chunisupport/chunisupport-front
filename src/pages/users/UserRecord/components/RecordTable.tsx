@@ -58,7 +58,14 @@ const lampBadge = (lamp: string | null) => {
         AJ
       </span>
     )
-  return <span class="px-2 py-1 text-sm font-semibold">-</span>
+  return (
+    <span
+      class="inline-flex min-h-[30px] min-w-[30px] items-center justify-center rounded-lg bg-gray-100 px-2 py-1 text-sm font-extrabold text-gray-300"
+      aria-hidden="true"
+    >
+      {'\u00a0'}
+    </span>
+  )
 }
 
 const unplayedBadge = () => (
@@ -227,17 +234,13 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
           <div
             class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${LAMP_COLUMN_CLASS}`}
           >
-            {!currentRecord.is_played ? (
-              <span class="px-2 py-1 text-sm font-semibold">-</span>
-            ) : (
-              lampBadge(currentRecord.combo_lamp)
-            )}
+            {currentRecord.is_played ? lampBadge(currentRecord.combo_lamp) : null}
           </div>
         )
       case 'updatedAt':
         return (
           <div
-            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+            class={`flex min-h-[34px] items-center justify-center pr-2 text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
           >
             <span class="inline-block w-full text-center leading-none">
               {formatUpdatedAt(currentRecord.updated_at)}
@@ -262,14 +265,14 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
           <div class="min-w-[35.35rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
-                class="grid pr-2 text-xs font-semibold"
+                class="grid text-xs font-semibold"
                 style={{ 'grid-template-columns': gridTemplateColumns() }}
               >
                 <For each={visibleColumns()}>
                   {(column) => (
                     <button
                       type="button"
-                      class={`${HEADER_BUTTON_CLASS} ${column.align === 'start' ? 'justify-start pl-2' : 'justify-center'}`}
+                      class={`${HEADER_BUTTON_CLASS} ${column.align === 'start' ? 'justify-start pl-2' : 'justify-center'} ${column.id === 'updatedAt' ? 'pr-2' : ''}`}
                       onClick={() => props.onSortChange(column.sortKey)}
                     >
                       <span>{column.label}</span>
@@ -293,7 +296,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                     <Show when={record()} keyed>
                       {(currentRecord) => (
                         <div
-                          class="absolute left-0 top-0 grid w-full border-b border-gray-200 pr-2 text-xs hover:bg-gray-100"
+                          class="absolute left-0 top-0 grid w-full border-b border-gray-200 text-xs hover:bg-gray-100"
                           style={{
                             'grid-template-columns': gridTemplateColumns(),
                             transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
