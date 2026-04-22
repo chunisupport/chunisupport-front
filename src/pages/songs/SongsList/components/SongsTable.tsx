@@ -12,21 +12,21 @@ type Props = {
 const SongsTable = (props: Props) => {
   return (
     <div class="overflow-x-auto rounded-md border border-gray-200 bg-white">
-      <table class="table-fixed w-full max-w-full text-sm">
+      <table class="w-full max-w-full text-sm">
         <thead class="bg-gray-50 text-left">
           <tr>
-            <th class="px-3 py-2 min-w-[15rem]">タイトル</th>
-            <th class="px-3 py-2 min-w-[15rem]">アーティスト</th>
-            <th class="px-3 py-2 w-36 whitespace-nowrap">ジャンル</th>
-            <th class="px-3 py-2 w-20 whitespace-nowrap">BPM</th>
-            <th class="px-3 py-2 w-[241px] whitespace-nowrap">譜面定数</th>
+            <th class="px-3 py-2 w-1/2 min-w-[15rem]">タイトル</th>
+            <th class="px-3 py-2 w-1/2 min-w-[15rem]">アーティスト</th>
+            <th class="px-3 py-2 w-px whitespace-nowrap">ジャンル</th>
+            <th class="px-3 py-2 w-px whitespace-nowrap">BPM</th>
+            <th class="px-3 py-2 w-px whitespace-nowrap">譜面定数</th>
           </tr>
         </thead>
         <tbody>
           <For each={props.songs}>
             {(song) => (
               <tr class="border-t border-gray-100 align-top">
-                <td class="px-3 py-2">
+                <td class="px-3 py-2 max-w-0">
                   <A
                     href={`/songs/${encodeURIComponent(song.id)}`}
                     class="block truncate font-sans text-primary-600 hover:underline"
@@ -35,12 +35,12 @@ const SongsTable = (props: Props) => {
                     {song.title}
                   </A>
                 </td>
-                <td class="font-sans px-3 py-2">
+                <td class="font-sans px-3 py-2 max-w-0">
                   <span class="block truncate" title={song.artist}>
                     {song.artist}
                   </span>
                 </td>
-                <td class="overflow-hidden px-3 py-2 whitespace-nowrap">{song.genre}</td>
+                <td class="px-3 py-2 whitespace-nowrap">{song.genre}</td>
                 <td class="px-3 py-2 whitespace-nowrap">{song.bpm ?? '-'}</td>
                 <td class="px-3 py-2 whitespace-nowrap">
                   <div class="flex flex-nowrap gap-1 whitespace-nowrap">
