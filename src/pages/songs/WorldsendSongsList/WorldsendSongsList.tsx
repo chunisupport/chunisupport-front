@@ -3,7 +3,7 @@ import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByTitle, useSongsData } from '../../../stores/songsData'
 import SongsViewToggle from '../components/SongsViewToggle'
-import WorldsendSongsTable from '../SongsList/components/WorldsendSongsTable'
+import WorldsendSongsTable from './components/WorldsendSongsTable'
 
 const WorldsendSongsList = () => {
   const { worldsendSongsResponse, ensureWorldsendSongsLoaded, isWorldsendSongsLoading } =
