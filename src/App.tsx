@@ -23,6 +23,7 @@ import {
   SongsList,
   UserPage,
   WorldsendSongDetail,
+  WorldsendSongsList,
 } from './pages'
 
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
@@ -135,6 +136,7 @@ const App = () => {
 
       {/* 楽曲 */}
       <Route path="/songs" component={withNavBar(SongsList)} />
+      <Route path="/songs/worldsend" component={withNavBar(WorldsendSongsList)} />
       <Route path="/songs/worldsend/:displayid" component={withNavBar(WorldsendSongDetail)} />
       <Route path="/songs/:displayid" component={withNavBar(SongDetail)} />
 
