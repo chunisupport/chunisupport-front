@@ -1,7 +1,7 @@
 import { createMemo, ErrorBoundary, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { useSongsData } from '../../../stores/songsData'
+import { sortSongsByTitle, useSongsData } from '../../../stores/songsData'
 import SongsViewToggle from '../components/SongsViewToggle'
 import SongsTable from './components/SongsTable'
 
@@ -10,7 +10,7 @@ const SongsList = () => {
 
   const sortedSongs = createMemo(() => {
     const songs = songsResponse()?.songs ?? []
-    return [...songs].sort((a, b) => a.title.localeCompare(b.title, 'ja'))
+    return sortSongsByTitle(songs)
   })
 
   useDocumentTitle('楽曲一覧')

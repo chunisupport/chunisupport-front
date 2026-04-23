@@ -1,7 +1,7 @@
 import { createMemo, ErrorBoundary, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { useSongsData } from '../../../stores/songsData'
+import { sortSongsByTitle, useSongsData } from '../../../stores/songsData'
 import SongsViewToggle from '../components/SongsViewToggle'
 import WorldsendSongsTable from '../SongsList/components/WorldsendSongsTable'
 
@@ -10,7 +10,7 @@ const WorldsendSongsList = () => {
 
   const sortedSongs = createMemo(() => {
     const songs = worldsendSongsResponse()?.songs ?? []
-    return [...songs].sort((a, b) => a.title.localeCompare(b.title, 'ja'))
+    return sortSongsByTitle(songs)
   })
 
   useDocumentTitle("WORLD'S END 楽曲一覧")

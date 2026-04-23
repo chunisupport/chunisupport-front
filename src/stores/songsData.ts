@@ -8,6 +8,10 @@ const createSongsStore = () => {
   return { songsResponse, worldsendSongsResponse }
 }
 
+export const sortSongsByTitle = <T extends { title: string }>(songs: T[]): T[] => {
+  return [...songs].sort((a, b) => a.title.localeCompare(b.title, 'ja'))
+}
+
 const songsStore = createRoot(createSongsStore)
 
 export const useSongsData = () => songsStore
