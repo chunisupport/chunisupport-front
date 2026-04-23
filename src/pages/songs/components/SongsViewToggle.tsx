@@ -11,16 +11,18 @@ const SongsViewToggle = () => {
     >
       <A
         href="/songs"
-        class={`rounded-full px-3 py-1.5 transition-colors ${isWorldsend() ? 'text-gray-400 hover:text-white' : 'bg-primary-500 text-white shadow-sm'
-          }`}
+        class={`rounded-full px-3 py-1.5 transition-colors ${
+          isWorldsend() ? 'text-gray-400 hover:text-white' : 'bg-primary-500 text-white shadow-sm'
+        }`}
         aria-current={!isWorldsend() ? 'page' : undefined}
       >
         Standard
       </A>
       <A
         href="/songs/worldsend"
-        class={`rounded-full px-3 py-1.5 transition-colors ${isWorldsend() ? 'bg-primary-500 text-white shadow-sm' : 'text-gray-400 hover:text-white'
-          }`}
+        class={`rounded-full px-3 py-1.5 transition-colors ${
+          isWorldsend() ? 'bg-primary-500 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+        }`}
         aria-current={isWorldsend() ? 'page' : undefined}
       >
         WORLD&apos;S END
