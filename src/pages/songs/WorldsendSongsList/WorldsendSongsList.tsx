@@ -1,4 +1,4 @@
-import { createMemo, ErrorBoundary, Show } from 'solid-js'
+import { createMemo, ErrorBoundary, onMount, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByTitle, useSongsData } from '../../../stores/songsData'
@@ -6,7 +6,12 @@ import SongsViewToggle from '../components/SongsViewToggle'
 import WorldsendSongsTable from '../SongsList/components/WorldsendSongsTable'
 
 const WorldsendSongsList = () => {
-  const { worldsendSongsResponse } = useSongsData()
+  const { worldsendSongsResponse, ensureWorldsendSongsLoaded, isWorldsendSongsLoading } =
+    useSongsData()
+
+  onMount(() => {
+    ensureWorldsendSongsLoaded()
+  })
 
   const sortedSongs = createMemo(() => {
     const songs = worldsendSongsResponse()?.songs ?? []
@@ -17,7 +22,7 @@ const WorldsendSongsList = () => {
 
   return (
     <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
-      <Show when={!worldsendSongsResponse.loading} fallback={<Loading />}>
+      <Show when={!isWorldsendSongsLoading()} fallback={<Loading />}>
         <div class="mx-auto w-full max-w-[100%] p-4 space-y-4">
           <div class="flex items-center justify-between">
             <h1 class="text-2xl font-semibold">WORLD&apos;S END 楽曲一覧</h1>

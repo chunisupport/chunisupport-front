@@ -1,11 +1,35 @@
-import { createResource, createRoot } from 'solid-js'
+import { createResource, createRoot, createSignal } from 'solid-js'
 import { fetchAllSongs, fetchWorldsendSongs } from '../api/songs'
 
 const createSongsStore = () => {
-  const [songsResponse] = createResource(fetchAllSongs)
-  const [worldsendSongsResponse] = createResource(fetchWorldsendSongs)
+  const [songsRequested, setSongsRequested] = createSignal(false)
+  const [worldsendSongsRequested, setWorldsendSongsRequested] = createSignal(false)
 
-  return { songsResponse, worldsendSongsResponse }
+  const [songsResponse] = createResource(() => (songsRequested() ? true : undefined), fetchAllSongs)
+  const [worldsendSongsResponse] = createResource(
+    () => (worldsendSongsRequested() ? true : undefined),
+    fetchWorldsendSongs
+  )
+
+  const ensureSongsLoaded = () => {
+    setSongsRequested(true)
+  }
+
+  const ensureWorldsendSongsLoaded = () => {
+    setWorldsendSongsRequested(true)
+  }
+
+  const isSongsLoading = () => !songsRequested() || songsResponse.loading
+  const isWorldsendSongsLoading = () => !worldsendSongsRequested() || worldsendSongsResponse.loading
+
+  return {
+    songsResponse,
+    worldsendSongsResponse,
+    ensureSongsLoaded,
+    ensureWorldsendSongsLoaded,
+    isSongsLoading,
+    isWorldsendSongsLoading,
+  }
 }
 
 export const sortSongsByTitle = <T extends { title: string }>(songs: T[]): T[] => {
