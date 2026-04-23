@@ -32,8 +32,12 @@ const createSongsStore = () => {
   }
 }
 
+const jaCollator = new Intl.Collator('ja')
+
 export const sortSongsByTitle = <T extends { title: string }>(songs: T[]): T[] => {
-  return [...songs].sort((a, b) => a.title.localeCompare(b.title, 'ja'))
+  const keyed = songs.map((song) => ({ song, key: song.title }))
+  keyed.sort((a, b) => jaCollator.compare(a.key, b.key))
+  return keyed.map(({ song }) => song)
 }
 
 const songsStore = createRoot(createSongsStore)

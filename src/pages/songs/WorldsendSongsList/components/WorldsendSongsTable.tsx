@@ -30,7 +30,7 @@ const WorldsendSongsTable = (props: Props) => {
         <tbody>
           <For each={props.songs}>
             {(song) => {
-              const chart = song.charts.WORLDSEND
+              const chart = song.charts?.WORLDSEND
               return (
                 <tr class="border-t border-gray-100 align-top">
                   <td class="px-3 py-2 max-w-0">
