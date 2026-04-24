@@ -31,12 +31,13 @@ export const resolvePostLoginRedirectPath = (
 ): string | null => {
   const safePath = sanitizeRedirectPath(redirectPath)
   if (!safePath) return null
-  if (
-    safePath === LOGIN_PATH ||
-    safePath.startsWith(LOGIN_PATH + '?') ||
-    safePath === '/register' ||
-    safePath.startsWith('/register?')
-  ) {
+
+  const isExactPathOrWithQueryOrHash = (basePath: string): boolean =>
+    safePath === basePath ||
+    safePath.startsWith(`${basePath}?`) ||
+    safePath.startsWith(`${basePath}#`)
+
+  if (isExactPathOrWithQueryOrHash(LOGIN_PATH) || isExactPathOrWithQueryOrHash('/register')) {
     return null
   }
   return safePath
@@ -50,7 +51,8 @@ export const buildLoginRedirectPath = (
   if (
     !safeCurrentPath ||
     safeCurrentPath === baseLoginPath ||
-    safeCurrentPath.startsWith(`${baseLoginPath}?`)
+    safeCurrentPath.startsWith(`${baseLoginPath}?`) ||
+    safeCurrentPath.startsWith(`${baseLoginPath}#`)
   ) {
     return baseLoginPath
   }

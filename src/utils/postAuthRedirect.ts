@@ -11,15 +11,8 @@ export const redirectAfterAuthentication = async (
   const user = await fetchMe({ redirectOnUnauthorized: false })
   setAuthenticatedUser(user)
 
-  const safeRedirectPath = resolvePostLoginRedirectPath(redirectPath)
-  if (safeRedirectPath) {
-    navigate(safeRedirectPath)
-    return
-  }
-
   try {
     await fetchUserProfileSummary(user.username)
-    navigate(`/users/${encodeURIComponent(user.username)}`)
   } catch (error) {
     const apiError = error as Error & { code?: string }
     if (apiError.code === 'user_not_found') {
@@ -29,4 +22,12 @@ export const redirectAfterAuthentication = async (
 
     throw error
   }
+
+  const safeRedirectPath = resolvePostLoginRedirectPath(redirectPath)
+  if (safeRedirectPath) {
+    navigate(safeRedirectPath)
+    return
+  }
+
+  navigate(`/users/${encodeURIComponent(user.username)}`)
 }
