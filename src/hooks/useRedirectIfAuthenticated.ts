@@ -3,10 +3,11 @@ import { createSignal, onMount } from 'solid-js'
 
 import { fetchMe, fetchUserProfileSummary } from '../api/users'
 import { clearAuthenticatedUser, getAuthenticatedUser, getAuthStatus } from '../stores/authSession'
+import { resolvePostLoginRedirectPath } from '../usecases/auth/redirectPath.ts'
 import { resolveAuthenticatedRedirect } from '../usecases/auth/resolveAuthenticatedRedirect.ts'
 import { resolveAuthSession } from '../usecases/auth/resolveAuthSession.ts'
 
-const useRedirectIfAuthenticated = () => {
+const useRedirectIfAuthenticated = (redirectPath?: string) => {
   const navigate = useNavigate()
   const [isCheckingAuth, setIsCheckingAuth] = createSignal(getAuthStatus() !== 'authenticated')
 
@@ -17,13 +18,19 @@ const useRedirectIfAuthenticated = () => {
 
     if (authStatus === 'authenticated') {
       try {
-        const redirectPath = await resolveAuthenticatedRedirect(
+        const safeRedirectPath = resolvePostLoginRedirectPath(redirectPath)
+        if (safeRedirectPath) {
+          navigate(safeRedirectPath)
+          return
+        }
+
+        const fallbackRedirectPath = await resolveAuthenticatedRedirect(
           getAuthenticatedUser(),
           fetchUserProfileSummary
         )
 
-        if (redirectPath) {
-          navigate(redirectPath)
+        if (fallbackRedirectPath) {
+          navigate(fallbackRedirectPath)
           return
         }
       } catch (error) {
