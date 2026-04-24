@@ -1,4 +1,4 @@
-﻿import { A, useNavigate } from '@solidjs/router'
+import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import { signInWithPopup } from 'firebase/auth'
 import { createSignal } from 'solid-js'
 import { Loading } from '../../../components'
@@ -9,11 +9,12 @@ import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 
 const Login = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [errorMessage, setErrorMessage] = createSignal('')
   const [isSubmitting, setIsSubmitting] = createSignal(false)
 
   // すでにログインしている場合はユーザーページへリダイレクト
-  const { isCheckingAuth } = useRedirectIfAuthenticated()
+  const { isCheckingAuth } = useRedirectIfAuthenticated(searchParams.redirect)
 
   // Google ログイン処理
   const handleGoogleLogin = async () => {
@@ -21,7 +22,7 @@ const Login = () => {
     setErrorMessage('')
     try {
       await signInWithPopup(auth, googleProvider)
-      await redirectAfterAuthentication(navigate)
+      await redirectAfterAuthentication(navigate, searchParams.redirect)
     } catch (error) {
       const apiError = error as Error & { code?: string }
       if (apiError.code === 'user_not_found') {

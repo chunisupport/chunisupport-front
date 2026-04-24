@@ -1,9 +1,11 @@
-import { Navigate } from '@solidjs/router'
+import { Navigate, useLocation } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { createSignal, Match, onMount, Switch } from 'solid-js'
 import { fetchMe } from '../../api/users'
 import { getAuthStatus } from '../../stores/authSession.ts'
+import { buildLoginRedirectPath } from '../../usecases/auth/redirectPath.ts'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession.ts'
+import { buildCurrentPath } from '../../utils/currentPath'
 import Loading from '../Loading/Loading'
 
 type RequireAuthProps = {
@@ -20,6 +22,7 @@ const getInitialAuthStatus = (): 'checking' | 'authenticated' | 'unauthenticated
 }
 
 const RequireAuth = (props: RequireAuthProps) => {
+  const location = useLocation()
   const [authStatus, setAuthStatus] = createSignal<
     'checking' | 'authenticated' | 'unauthenticated' | 'error'
   >(getInitialAuthStatus())
@@ -50,7 +53,7 @@ const RequireAuth = (props: RequireAuthProps) => {
       </Match>
 
       <Match when={true}>
-        <Navigate href="/login" />
+        <Navigate href={buildLoginRedirectPath(buildCurrentPath(location))} />
       </Match>
     </Switch>
   )

@@ -1,6 +1,9 @@
+import { LOGIN_PATH } from '../constants/routes'
 import { auth } from '../lib/firebase'
 import { clearAuthenticatedUser } from '../stores/authSession'
 import { type ErrorCode, type ErrorResponse, getErrorMessage } from '../types/api'
+import { buildLoginRedirectPath } from '../usecases/auth/redirectPath'
+import { buildCurrentPath } from '../utils/currentPath'
 
 type FetchWithAuthOptions = RequestInit & {
   redirectOnUnauthorized?: boolean
@@ -40,11 +43,12 @@ export const shouldClearSessionOnUnauthorized = (
 }
 
 const redirectToLogin = () => {
-  if (typeof window === 'undefined' || window.location.pathname === '/login') {
+  if (typeof window === 'undefined' || window.location.pathname === LOGIN_PATH) {
     return
   }
 
-  window.location.replace('/login')
+  const currentPath = buildCurrentPath(window.location)
+  window.location.replace(buildLoginRedirectPath(currentPath))
 }
 
 const getFirebaseIdToken = async (): Promise<string | null> => {
