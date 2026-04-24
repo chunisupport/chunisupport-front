@@ -39,7 +39,7 @@ export const buildLoginRedirectPath = (
   baseLoginPath = LOGIN_PATH
 ): string => {
   const safeCurrentPath = sanitizeRedirectPath(currentPath)
-  if (!safeCurrentPath || isPathMatch(safeCurrentPath, baseLoginPath)) {
+  if (!safeCurrentPath || isPathMatch(safeCurrentPath, baseLoginPath) || isPathMatch(safeCurrentPath, REGISTER_PATH)) {
     return baseLoginPath
   }
 
