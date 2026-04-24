@@ -33,8 +33,9 @@ export const resolvePostLoginRedirectPath = (
   if (!safePath) return null
   if (
     safePath === LOGIN_PATH ||
-    safePath.startsWith(`${LOGIN_PATH}?`) ||
-    safePath === '/register'
+    safePath.startsWith(LOGIN_PATH + '?') ||
+    safePath === '/register' ||
+    safePath.startsWith('/register?')
   ) {
     return null
   }
