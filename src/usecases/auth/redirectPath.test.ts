@@ -22,6 +22,11 @@ test('sanitizeRedirectPath: スキーム相対URLは拒否する', () => {
   assert.equal(result, null)
 })
 
+test('sanitizeRedirectPath: 3つ以上のスラッシュで始まるパスは拒否する', () => {
+  const result = sanitizeRedirectPath('///evil.example/path')
+  assert.equal(result, null)
+})
+
 test('sanitizeRedirectPath: バックスラッシュを含むパスは拒否する', () => {
   const result = sanitizeRedirectPath('/\\evil')
   assert.equal(result, null)
