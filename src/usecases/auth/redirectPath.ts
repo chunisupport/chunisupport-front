@@ -2,19 +2,9 @@ const LOGIN_PATH = '/login'
 const REGISTER_PATH = '/register'
 
 const isPathMatch = (safePath: string, basePath: string): boolean => {
-  const safePathname = new URL(safePath, 'https://app.local').pathname.replace(/\/$/, '');
-  const basePathname = new URL(basePath, 'https://app.local').pathname.replace(/\/$/, '');
-  return safePathname === basePathname;
-}
-
-const hasBlockedPrefix = (value: string): boolean => {
-  const lower = value.toLowerCase()
-  return (
-    lower.startsWith('//') ||
-    lower.startsWith('/\\') ||
-    lower.startsWith('/%5c') ||
-    lower.startsWith('/%2f%2f')
-  )
+  const safePathname = new URL(safePath, 'https://app.local').pathname.replace(/\/$/, '')
+  const basePathname = new URL(basePath, 'https://app.local').pathname.replace(/\/$/, '')
+  return safePathname === basePathname
 }
 
 export const sanitizeRedirectPath = (rawPath: string | null | undefined): string | null => {
@@ -25,7 +15,6 @@ export const sanitizeRedirectPath = (rawPath: string | null | undefined): string
   try {
     const parsed = new URL(rawPath, 'https://app.local')
     if (parsed.origin !== 'https://app.local') return null
-    if (!parsed.pathname.startsWith('/') || parsed.pathname.startsWith('//')) return null
     return `${parsed.pathname}${parsed.search}${parsed.hash}`
   } catch {
     return null
