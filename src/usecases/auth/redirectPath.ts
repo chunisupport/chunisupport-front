@@ -25,7 +25,7 @@ export const sanitizeRedirectPath = (rawPath: string | null | undefined): string
   try {
     const parsed = new URL(rawPath, 'https://app.local')
     if (parsed.origin !== 'https://app.local') return null
-    if (!parsed.pathname.startsWith('/')) return null
+    if (!parsed.pathname.startsWith('/') || parsed.pathname.startsWith('//')) return null
     return `${parsed.pathname}${parsed.search}${parsed.hash}`
   } catch {
     return null
