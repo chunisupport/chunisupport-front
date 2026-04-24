@@ -1,6 +1,7 @@
 import type { Navigator } from '@solidjs/router'
 
 import { fetchMe, fetchUserProfileSummary } from '../api/users'
+import { REGISTER_SCORE_TEMP_PATH } from '../constants/routes'
 import { setAuthenticatedUser } from '../stores/authSession'
 import { resolvePostLoginRedirectPath } from '../usecases/auth/redirectPath'
 
@@ -16,7 +17,7 @@ export const redirectAfterAuthentication = async (
   } catch (error) {
     const apiError = error as Error & { code?: string }
     if (apiError.code === 'user_not_found') {
-      navigate('/register-score-temp')
+      navigate(REGISTER_SCORE_TEMP_PATH)
       return
     }
 

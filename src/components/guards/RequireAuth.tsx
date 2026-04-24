@@ -5,6 +5,7 @@ import { fetchMe } from '../../api/users'
 import { getAuthStatus } from '../../stores/authSession.ts'
 import { buildLoginRedirectPath } from '../../usecases/auth/redirectPath.ts'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession.ts'
+import { buildCurrentPath } from '../../utils/currentPath'
 import Loading from '../Loading/Loading'
 
 type RequireAuthProps = {
@@ -52,9 +53,7 @@ const RequireAuth = (props: RequireAuthProps) => {
       </Match>
 
       <Match when={true}>
-        <Navigate
-          href={buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`)}
-        />
+        <Navigate href={buildLoginRedirectPath(buildCurrentPath(location))} />
       </Match>
     </Switch>
   )

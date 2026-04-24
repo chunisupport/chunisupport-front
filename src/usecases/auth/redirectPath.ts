@@ -1,5 +1,4 @@
-const LOGIN_PATH = '/login'
-const REGISTER_PATH = '/register'
+import { LOGIN_PATH, REGISTER_PATH } from '../../constants/routes.ts'
 
 const isPathMatch = (safePath: string, basePath: string): boolean => {
   const safePathname = new URL(safePath, 'https://app.local').pathname.replace(/\/$/, '')
@@ -39,7 +38,11 @@ export const buildLoginRedirectPath = (
   baseLoginPath = LOGIN_PATH
 ): string => {
   const safeCurrentPath = sanitizeRedirectPath(currentPath)
-  if (!safeCurrentPath || isPathMatch(safeCurrentPath, baseLoginPath) || isPathMatch(safeCurrentPath, REGISTER_PATH)) {
+  const isLoginOrRegister =
+    safeCurrentPath &&
+    (isPathMatch(safeCurrentPath, baseLoginPath) || isPathMatch(safeCurrentPath, REGISTER_PATH))
+
+  if (!safeCurrentPath || isLoginOrRegister) {
     return baseLoginPath
   }
 

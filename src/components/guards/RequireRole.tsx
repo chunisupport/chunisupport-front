@@ -6,6 +6,7 @@ import { authSession } from '../../stores/authSession'
 import type { AccountType } from '../../types/api'
 import { buildLoginRedirectPath } from '../../usecases/auth/redirectPath'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
+import { buildCurrentPath } from '../../utils/currentPath'
 
 type RequireRoleProps = {
   allowedRoles: AccountType[]
@@ -41,9 +42,7 @@ const RequireRole = (props: RequireRoleProps) => {
       <Match when={isAllowed()}>{props.children}</Match>
 
       <Match when={authSession.status === 'unauthenticated'}>
-        <Navigate
-          href={buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`)}
-        />
+        <Navigate href={buildLoginRedirectPath(buildCurrentPath(location))} />
       </Match>
 
       <Match when={true}>

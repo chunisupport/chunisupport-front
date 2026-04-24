@@ -1,3 +1,4 @@
+import { REGISTER_SCORE_TEMP_PATH } from '../../constants/routes'
 import type { UserDTO } from '../../types/api.ts'
 
 type FetchUserProfile = (username: string) => Promise<unknown>
@@ -16,7 +17,7 @@ export const resolveAuthenticatedRedirect = async (
   } catch (error) {
     const apiError = error as Error & { code?: string }
     if (apiError.code === 'user_not_found') {
-      return '/register-score-temp'
+      return REGISTER_SCORE_TEMP_PATH
     }
 
     throw error
