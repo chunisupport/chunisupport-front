@@ -20,8 +20,7 @@ const hasBlockedPrefix = (value: string): boolean => {
 export const sanitizeRedirectPath = (rawPath: string | null | undefined): string | null => {
   if (!rawPath) return null
   if (!rawPath.startsWith('/')) return null
-  if (hasBlockedPrefix(rawPath)) return null
-  if (rawPath.includes('\\')) return null
+  if (rawPath.includes('\')) return null
 
   try {
     const parsed = new URL(rawPath, 'https://app.local')
