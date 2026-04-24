@@ -1,8 +1,11 @@
 const LOGIN_PATH = '/login'
 const REGISTER_PATH = '/register'
 
-const isPathMatch = (safePath: string, basePath: string): boolean =>
-  safePath.split(/[?#]/)[0].replace(/\/$/, '') === basePath.replace(/\/$/, '')
+const isPathMatch = (safePath: string, basePath: string): boolean => {
+  const safePathname = new URL(safePath, 'https://app.local').pathname.replace(/\/$/, '');
+  const basePathname = new URL(basePath, 'https://app.local').pathname.replace(/\/$/, '');
+  return safePathname === basePathname;
+}
 
 const hasBlockedPrefix = (value: string): boolean => {
   const lower = value.toLowerCase()
