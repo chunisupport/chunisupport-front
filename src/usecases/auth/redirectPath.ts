@@ -1,4 +1,10 @@
 const LOGIN_PATH = '/login'
+const REGISTER_PATH = '/register'
+
+const isPathMatch = (safePath: string, basePath: string): boolean =>
+  safePath === basePath ||
+  safePath.startsWith(`${basePath}?`) ||
+  safePath.startsWith(`${basePath}#`)
 
 const hasBlockedPrefix = (value: string): boolean => {
   const lower = value.toLowerCase()
@@ -32,14 +38,10 @@ export const resolvePostLoginRedirectPath = (
   const safePath = sanitizeRedirectPath(redirectPath)
   if (!safePath) return null
 
-  const isExactPathOrWithQueryOrHash = (basePath: string): boolean =>
-    safePath === basePath ||
-    safePath.startsWith(`${basePath}?`) ||
-    safePath.startsWith(`${basePath}#`)
-
-  if (isExactPathOrWithQueryOrHash(LOGIN_PATH) || isExactPathOrWithQueryOrHash('/register')) {
+  if (isPathMatch(safePath, LOGIN_PATH) || isPathMatch(safePath, REGISTER_PATH)) {
     return null
   }
+
   return safePath
 }
 
@@ -48,12 +50,7 @@ export const buildLoginRedirectPath = (
   baseLoginPath = LOGIN_PATH
 ): string => {
   const safeCurrentPath = sanitizeRedirectPath(currentPath)
-  if (
-    !safeCurrentPath ||
-    safeCurrentPath === baseLoginPath ||
-    safeCurrentPath.startsWith(`${baseLoginPath}?`) ||
-    safeCurrentPath.startsWith(`${baseLoginPath}#`)
-  ) {
+  if (!safeCurrentPath || isPathMatch(safeCurrentPath, baseLoginPath)) {
     return baseLoginPath
   }
 
