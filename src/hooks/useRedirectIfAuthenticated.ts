@@ -18,16 +18,21 @@ const useRedirectIfAuthenticated = (redirectPath?: string) => {
 
     if (authStatus === 'authenticated') {
       try {
+        const fallbackRedirectPath = await resolveAuthenticatedRedirect(
+          getAuthenticatedUser(),
+          fetchUserProfileSummary
+        )
+
+        if (fallbackRedirectPath === '/register-score-temp') {
+          navigate(fallbackRedirectPath)
+          return
+        }
+
         const safeRedirectPath = resolvePostLoginRedirectPath(redirectPath)
         if (safeRedirectPath) {
           navigate(safeRedirectPath)
           return
         }
-
-        const fallbackRedirectPath = await resolveAuthenticatedRedirect(
-          getAuthenticatedUser(),
-          fetchUserProfileSummary
-        )
 
         if (fallbackRedirectPath) {
           navigate(fallbackRedirectPath)
