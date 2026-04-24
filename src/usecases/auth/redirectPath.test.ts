@@ -46,3 +46,8 @@ test('resolvePostLoginRedirectPath: /login への戻りは拒否する', () => {
   const result = resolvePostLoginRedirectPath('/login?redirect=%2Fgoals')
   assert.equal(result, null)
 })
+
+test('resolvePostLoginRedirectPath: /register への戻りは拒否する', () => {
+  const result = resolvePostLoginRedirectPath('/register?foo=bar')
+  assert.equal(result, null)
+})
