@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
+import { createEffect, createMemo, createResource, createSignal, For, Index, Show } from 'solid-js'
 import {
   createSong,
   createWorldsendSong,
@@ -348,14 +348,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   }
 
   const updateCreateSongChart = (
-    difficultyName: CreateSongChartDraft['difficulty_name'],
+    chartIndex: number,
     key: 'enabled' | 'const' | 'is_const_unknown' | 'notes' | 'notes_designer',
     value: boolean | number | string | null
   ) => {
     setCreateSongDraft((prev) => ({
       ...prev,
-      charts: prev.charts.map((chart) =>
-        chart.difficulty_name === difficultyName ? { ...chart, [key]: value } : chart
+      charts: prev.charts.map((chart, index) =>
+        index === chartIndex ? { ...chart, [key]: value } : chart
       ),
     }))
   }
@@ -545,9 +545,9 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
     const hasChartInput = Boolean(
       current.attribute?.trim() ||
-        current.level_star !== null ||
-        current.notes !== null ||
-        current.notes_designer?.trim()
+      current.level_star !== null ||
+      current.notes !== null ||
+      current.notes_designer?.trim()
     )
 
     const request: CreateWorldsendSongRequestDTO = {
@@ -560,11 +560,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       jacket: current.jacket?.trim() ? current.jacket.trim() : null,
       chart: hasChartInput
         ? {
-            attribute: current.attribute?.trim() ? current.attribute.trim() : null,
-            level_star: current.level_star,
-            notes: current.notes,
-            notes_designer: current.notes_designer?.trim() ? current.notes_designer.trim() : null,
-          }
+          attribute: current.attribute?.trim() ? current.attribute.trim() : null,
+          level_star: current.level_star,
+          notes: current.notes,
+          notes_designer: current.notes_designer?.trim() ? current.notes_designer.trim() : null,
+        }
         : undefined,
     }
 
@@ -675,7 +675,19 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   }
 
   return (
-    <div class="mx-auto w-full max-w-6xl p-4 space-y-6">
+    <div class="song-management mx-auto w-full max-w-6xl p-4 space-y-6">
+      <style>{`
+        .song-management input[type='number'] {
+          appearance: textfield;
+          -moz-appearance: textfield;
+        }
+
+        .song-management input[type='number']::-webkit-outer-spin-button,
+        .song-management input[type='number']::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+      `}</style>
       <div>
         <h1 class="text-2xl font-semibold">{props.title}</h1>
         <p class="mt-2 text-sm text-gray-600">
@@ -800,60 +812,60 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                 </tr>
               </thead>
               <tbody>
-                <For each={createSongDraft().charts}>
-                  {(chart) => (
+                <Index each={createSongDraft().charts}>
+                  {(chart, chartIndex) => (
                     <tr class="border-t border-gray-100">
                       <td class="px-3 py-2">
                         <input
                           type="checkbox"
-                          checked={chart.enabled}
+                          checked={chart().enabled}
                           onChange={(event) =>
                             updateCreateSongChart(
-                              chart.difficulty_name,
+                              chartIndex,
                               'enabled',
                               event.currentTarget.checked
                             )
                           }
                         />
                       </td>
-                      <td class="px-3 py-2">{chart.difficulty_name}</td>
+                      <td class="px-3 py-2">{chart().difficulty_name}</td>
                       <td class="px-3 py-2">
                         <input
                           type="number"
                           step="0.1"
-                          value={chart.const}
+                          value={chart().const}
                           onInput={(event) =>
                             updateCreateSongChart(
-                              chart.difficulty_name,
+                              chartIndex,
                               'const',
                               Number(event.currentTarget.value)
                             )
                           }
                           class="w-20 rounded border border-gray-300 px-2 py-1"
-                          disabled={!chart.enabled}
+                          disabled={!chart().enabled}
                         />
                       </td>
                       <td class="px-3 py-2">
                         <input
                           type="checkbox"
-                          checked={chart.is_const_unknown}
+                          checked={chart().is_const_unknown}
                           onChange={(event) =>
                             updateCreateSongChart(
-                              chart.difficulty_name,
+                              chartIndex,
                               'is_const_unknown',
                               event.currentTarget.checked
                             )
                           }
-                          disabled={!chart.enabled}
+                          disabled={!chart().enabled}
                         />
                       </td>
                       <td class="px-3 py-2">
                         <input
                           type="number"
-                          value={chart.notes ?? ''}
+                          value={chart().notes ?? ''}
                           onInput={(event) =>
                             updateCreateSongChart(
-                              chart.difficulty_name,
+                              chartIndex,
                               'notes',
                               event.currentTarget.value === ''
                                 ? null
@@ -861,15 +873,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                             )
                           }
                           class="w-24 rounded border border-gray-300 px-2 py-1"
-                          disabled={!chart.enabled}
+                          disabled={!chart().enabled}
                         />
                       </td>
                       <td class="px-3 py-2">
                         <input
-                          value={chart.notes_designer ?? ''}
+                          value={chart().notes_designer ?? ''}
                           onInput={(event) =>
                             updateCreateSongChart(
-                              chart.difficulty_name,
+                              chartIndex,
                               'notes_designer',
                               event.currentTarget.value.trim() === ''
                                 ? null
@@ -877,12 +889,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                             )
                           }
                           class="w-56 rounded border border-gray-300 px-2 py-1"
-                          disabled={!chart.enabled}
+                          disabled={!chart().enabled}
                         />
                       </td>
                     </tr>
                   )}
-                </For>
+                </Index>
               </tbody>
             </table>
           </div>
@@ -1203,18 +1215,18 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         </tr>
                       </thead>
                       <tbody>
-                        <For each={currentDraft().charts}>
+                        <Index each={currentDraft().charts}>
                           {(chart) => (
                             <tr class="border-t border-gray-100">
-                              <td class="px-3 py-2">{chart.difficulty_name}</td>
+                              <td class="px-3 py-2">{chart().difficulty_name}</td>
                               <td class="px-3 py-2">
                                 <input
                                   type="number"
                                   step="0.1"
-                                  value={chart.const}
+                                  value={chart().const}
                                   onInput={(event) =>
                                     updateDraftChart(
-                                      chart.difficulty_id,
+                                      chart().difficulty_id,
                                       'const',
                                       Number(event.currentTarget.value)
                                     )
@@ -1225,10 +1237,10 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                               <td class="px-3 py-2">
                                 <input
                                   type="checkbox"
-                                  checked={chart.is_const_unknown}
+                                  checked={chart().is_const_unknown}
                                   onChange={(event) =>
                                     updateDraftChart(
-                                      chart.difficulty_id,
+                                      chart().difficulty_id,
                                       'is_const_unknown',
                                       event.currentTarget.checked
                                     )
@@ -1238,10 +1250,10 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                               <td class="px-3 py-2">
                                 <input
                                   type="number"
-                                  value={chart.notes ?? ''}
+                                  value={chart().notes ?? ''}
                                   onInput={(event) =>
                                     updateDraftChart(
-                                      chart.difficulty_id,
+                                      chart().difficulty_id,
                                       'notes',
                                       event.currentTarget.value === ''
                                         ? null
@@ -1253,10 +1265,10 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                               </td>
                               <td class="px-3 py-2">
                                 <input
-                                  value={chart.notes_designer ?? ''}
+                                  value={chart().notes_designer ?? ''}
                                   onInput={(event) =>
                                     updateDraftChart(
-                                      chart.difficulty_id,
+                                      chart().difficulty_id,
                                       'notes_designer',
                                       event.currentTarget.value.trim() === ''
                                         ? null
@@ -1268,14 +1280,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                               </td>
                               <td class="px-3 py-2">
                                 <input
-                                  value={formatUpdatedAt(chart.updated_at)}
+                                  value={formatUpdatedAt(chart().updated_at)}
                                   class="w-40 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-gray-600"
                                   disabled
                                 />
                               </td>
                             </tr>
                           )}
-                        </For>
+                        </Index>
                       </tbody>
                     </table>
                   </div>
