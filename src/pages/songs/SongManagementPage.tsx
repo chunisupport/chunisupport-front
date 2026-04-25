@@ -31,7 +31,7 @@ type SongManagementPageProps = {
 type EditableChartDraft = {
   difficulty_id: number
   difficulty_name: string
-  const: number
+  const: string
   is_const_unknown: boolean
   notes: number | null
   notes_designer: string | null
@@ -69,7 +69,7 @@ type WorldsendDraft = {
 type CreateSongChartDraft = {
   difficulty_name: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
   enabled: boolean
-  const: number
+  const: string
   is_const_unknown: boolean
   notes: number | null
   notes_designer: string | null
@@ -161,7 +161,7 @@ const buildCreateSongDraft = (): CreateSongDraft => {
     charts: editableDifficulties.map((difficultyName) => ({
       difficulty_name: difficultyName,
       enabled: false,
-      const: 0,
+      const: '0',
       is_const_unknown: false,
       notes: null,
       notes_designer: null,
@@ -206,7 +206,7 @@ const toSongDraft = (
         return {
           difficulty_id: difficulty.id,
           difficulty_name: difficulty.name,
-          const: chart.const,
+          const: String(chart.const),
           is_const_unknown: chart.is_const_unknown,
           notes: chart.notes ?? null,
           notes_designer: chart.notes_designer ?? null,
@@ -400,7 +400,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         current.charts.map((chart) => [
           chart.difficulty_name,
           {
-            const: chart.const,
+            const: parseFloat(chart.const),
             is_const_unknown: chart.is_const_unknown,
             notes: chart.notes,
             notes_designer: chart.notes_designer?.trim() ? chart.notes_designer.trim() : null,
@@ -452,7 +452,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     }
 
     const invalidChart = current.charts.find(
-      (chart) => chart.enabled && (chart.const < 0 || (chart.notes !== null && chart.notes < 0))
+      (chart) =>
+        chart.enabled && (parseFloat(chart.const) < 0 || (chart.notes !== null && chart.notes < 0))
     )
     if (invalidChart) {
       setErrorMessage('追加する譜面の定数・ノーツは0以上で入力してください。')
@@ -477,7 +478,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         .filter((chart) => chart.enabled)
         .map((chart) => ({
           difficulty: chart.difficulty_name,
-          const: chart.const,
+          const: parseFloat(chart.const),
           is_const_unknown: chart.is_const_unknown,
           notes: chart.notes,
           notes_designer: chart.notes_designer?.trim() ? chart.notes_designer.trim() : null,
@@ -831,15 +832,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                       <td class="px-3 py-2">{chart().difficulty_name}</td>
                       <td class="px-3 py-2">
                         <input
-                          type="number"
-                          step="0.1"
+                          type="text"
+                          inputmode="decimal"
                           value={chart().const}
                           onInput={(event) =>
-                            updateCreateSongChart(
-                              chartIndex,
-                              'const',
-                              Number(event.currentTarget.value)
-                            )
+                            updateCreateSongChart(chartIndex, 'const', event.currentTarget.value)
                           }
                           class="w-20 rounded border border-gray-300 px-2 py-1"
                           disabled={!chart().enabled}
@@ -1221,14 +1218,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                               <td class="px-3 py-2">{chart().difficulty_name}</td>
                               <td class="px-3 py-2">
                                 <input
-                                  type="number"
-                                  step="0.1"
+                                  type="text"
+                                  inputmode="decimal"
                                   value={chart().const}
                                   onInput={(event) =>
                                     updateDraftChart(
                                       chart().difficulty_id,
                                       'const',
-                                      Number(event.currentTarget.value)
+                                      event.currentTarget.value
                                     )
                                   }
                                   class="w-20 rounded border border-gray-300 px-2 py-1"
