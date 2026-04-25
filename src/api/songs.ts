@@ -1,6 +1,8 @@
 import { API_BASE_URL } from '../config'
 import type {
   AchievementTypeDTO,
+  CreateSongRequestDTO,
+  CreateWorldsendSongRequestDTO,
   EditorSongDTO,
   EditorWorldsendSongDTO,
   MasterDataDTO,
@@ -80,6 +82,14 @@ export const updateSongs = async (requests: UpdateSongRequestDTO[]): Promise<voi
   })
 }
 
+export const createSong = async (request: CreateSongRequestDTO): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/songs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+}
+
 export const updateWorldsendSongs = async (
   requests: UpdateWorldsendSongRequestDTO[]
 ): Promise<void> => {
@@ -87,6 +97,16 @@ export const updateWorldsendSongs = async (
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(requests),
+  })
+}
+
+export const createWorldsendSong = async (
+  request: CreateWorldsendSongRequestDTO
+): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/songs/worldsend`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
   })
 }
 

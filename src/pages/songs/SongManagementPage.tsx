@@ -1,5 +1,7 @@
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import {
+  createSong,
+  createWorldsendSong,
   deleteSongByDisplayId,
   deleteWorldsendSongByDisplayId,
   fetchEditorSongs,
@@ -12,6 +14,8 @@ import {
 } from '../../api/songs'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type {
+  CreateSongRequestDTO,
+  CreateWorldsendSongRequestDTO,
   EditorSongDTO,
   EditorWorldsendSongDTO,
   MasterItemDTO,
@@ -62,6 +66,40 @@ type WorldsendDraft = {
   chart_updated_at: string | null
 }
 
+type CreateSongChartDraft = {
+  difficulty_name: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
+  enabled: boolean
+  const: number
+  is_const_unknown: boolean
+  notes: number | null
+  notes_designer: string | null
+}
+
+type CreateSongDraft = {
+  official_idx: string
+  title: string
+  artist: string
+  genre_id: number | null
+  bpm: number | null
+  released_at: string | null
+  jacket: string | null
+  charts: CreateSongChartDraft[]
+}
+
+type CreateWorldsendDraft = {
+  official_idx: string
+  title: string
+  artist: string
+  genre_id: number | null
+  bpm: number | null
+  released_at: string | null
+  jacket: string | null
+  attribute: string | null
+  level_star: number | null
+  notes: number | null
+  notes_designer: string | null
+}
+
 const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
 const dateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
   year: 'numeric',
@@ -107,6 +145,44 @@ const formatUpdatedAt = (value: string | null | undefined): string => {
   if (Number.isNaN(date.getTime())) return '-'
 
   return dateTimeFormatter.format(date)
+}
+
+const editableDifficulties = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
+
+const buildCreateSongDraft = (): CreateSongDraft => {
+  return {
+    official_idx: '',
+    title: '',
+    artist: '',
+    genre_id: null,
+    bpm: null,
+    released_at: null,
+    jacket: null,
+    charts: editableDifficulties.map((difficultyName) => ({
+      difficulty_name: difficultyName,
+      enabled: false,
+      const: 0,
+      is_const_unknown: false,
+      notes: null,
+      notes_designer: null,
+    })),
+  }
+}
+
+const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
+  return {
+    official_idx: '',
+    title: '',
+    artist: '',
+    genre_id: null,
+    bpm: null,
+    released_at: null,
+    jacket: null,
+    attribute: null,
+    level_star: null,
+    notes: null,
+    notes_designer: null,
+  }
 }
 
 const toSongDraft = (
@@ -176,6 +252,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const [selectedWorldsendSongId, setSelectedWorldsendSongId] = createSignal<string>('')
   const [draft, setDraft] = createSignal<SongDraft | null>(null)
   const [worldsendDraft, setWorldsendDraft] = createSignal<WorldsendDraft | null>(null)
+  const [createSongDraft, setCreateSongDraft] = createSignal<CreateSongDraft>(
+    buildCreateSongDraft()
+  )
+  const [createWorldsendDraft, setCreateWorldsendDraft] = createSignal<CreateWorldsendDraft>(
+    buildCreateWorldsendDraft()
+  )
   const [message, setMessage] = createSignal('')
   const [errorMessage, setErrorMessage] = createSignal('')
 
@@ -258,6 +340,33 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     setWorldsendDraft((prev) => (prev ? { ...prev, [key]: value } : prev))
   }
 
+  const updateCreateSongDraftField = <K extends keyof CreateSongDraft>(
+    key: K,
+    value: CreateSongDraft[K]
+  ) => {
+    setCreateSongDraft((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const updateCreateSongChart = (
+    difficultyName: CreateSongChartDraft['difficulty_name'],
+    key: 'enabled' | 'const' | 'is_const_unknown' | 'notes' | 'notes_designer',
+    value: boolean | number | string | null
+  ) => {
+    setCreateSongDraft((prev) => ({
+      ...prev,
+      charts: prev.charts.map((chart) =>
+        chart.difficulty_name === difficultyName ? { ...chart, [key]: value } : chart
+      ),
+    }))
+  }
+
+  const updateCreateWorldsendDraftField = <K extends keyof CreateWorldsendDraft>(
+    key: K,
+    value: CreateWorldsendDraft[K]
+  ) => {
+    setCreateWorldsendDraft((prev) => ({ ...prev, [key]: value }))
+  }
+
   const refresh = () => setRefreshKey((prev) => prev + 1)
 
   const handleSave = async () => {
@@ -306,6 +415,166 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       refresh()
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '更新に失敗しました。')
+    }
+  }
+
+  const handleCreateSong = async () => {
+    const current = createSongDraft()
+
+    setMessage('')
+    setErrorMessage('')
+
+    const md = masterData()
+    if (!md) {
+      setErrorMessage('マスターデータの取得前のため追加できません。再読み込みしてください。')
+      return
+    }
+
+    if (!current.official_idx.trim() || !current.title.trim() || !current.artist.trim()) {
+      setErrorMessage('公式ID・タイトル・アーティストは必須です。')
+      return
+    }
+
+    if (current.official_idx.trim().length > 10) {
+      setErrorMessage('公式IDは10文字以内で入力してください。')
+      return
+    }
+
+    const genreName = md.genres.find((genre) => genre.id === current.genre_id)?.name
+    if (!genreName) {
+      setErrorMessage('ジャンルを選択してください。')
+      return
+    }
+
+    if (current.bpm !== null && current.bpm < 0) {
+      setErrorMessage('BPMは0以上で入力してください。')
+      return
+    }
+
+    const invalidChart = current.charts.find(
+      (chart) => chart.enabled && (chart.const < 0 || (chart.notes !== null && chart.notes < 0))
+    )
+    if (invalidChart) {
+      setErrorMessage('追加する譜面の定数・ノーツは0以上で入力してください。')
+      return
+    }
+
+    const normalizedReleasedAt = toDateOnly(current.released_at)
+    if (current.released_at && !normalizedReleasedAt) {
+      setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
+      return
+    }
+
+    const request: CreateSongRequestDTO = {
+      official_idx: current.official_idx.trim(),
+      title: current.title.trim(),
+      artist: current.artist.trim(),
+      genre: genreName,
+      bpm: current.bpm,
+      released_at: normalizedReleasedAt,
+      jacket: current.jacket?.trim() ? current.jacket.trim() : null,
+      charts: current.charts
+        .filter((chart) => chart.enabled)
+        .map((chart) => ({
+          difficulty: chart.difficulty_name,
+          const: chart.const,
+          is_const_unknown: chart.is_const_unknown,
+          notes: chart.notes,
+          notes_designer: chart.notes_designer?.trim() ? chart.notes_designer.trim() : null,
+        })),
+    }
+
+    try {
+      await createSong(request)
+      setMessage('通常楽曲を追加しました。')
+      setCreateSongDraft(buildCreateSongDraft())
+      refresh()
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '追加に失敗しました。')
+    }
+  }
+
+  const handleCreateWorldsendSong = async () => {
+    const current = createWorldsendDraft()
+
+    setMessage('')
+    setErrorMessage('')
+
+    const md = masterData()
+    if (!md) {
+      setErrorMessage('マスターデータの取得前のため追加できません。再読み込みしてください。')
+      return
+    }
+
+    if (!current.official_idx.trim() || !current.title.trim() || !current.artist.trim()) {
+      setErrorMessage('公式ID・タイトル・アーティストは必須です。')
+      return
+    }
+
+    if (current.official_idx.trim().length > 10) {
+      setErrorMessage('公式IDは10文字以内で入力してください。')
+      return
+    }
+
+    const genreName = md.genres.find((genre) => genre.id === current.genre_id)?.name
+    if (!genreName) {
+      setErrorMessage('ジャンルを選択してください。')
+      return
+    }
+
+    if (current.bpm !== null && current.bpm < 0) {
+      setErrorMessage('BPMは0以上で入力してください。')
+      return
+    }
+
+    if (current.level_star !== null && (current.level_star < 1 || current.level_star > 5)) {
+      setErrorMessage("WORLD'S ENDレベルは1〜5で入力してください。")
+      return
+    }
+
+    if (current.notes !== null && current.notes < 0) {
+      setErrorMessage('ノーツは0以上で入力してください。')
+      return
+    }
+
+    const normalizedReleasedAt = toDateOnly(current.released_at)
+    if (current.released_at && !normalizedReleasedAt) {
+      setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
+      return
+    }
+
+    const hasChartInput = Boolean(
+      current.attribute?.trim() ||
+        current.level_star !== null ||
+        current.notes !== null ||
+        current.notes_designer?.trim()
+    )
+
+    const request: CreateWorldsendSongRequestDTO = {
+      official_idx: current.official_idx.trim(),
+      title: current.title.trim(),
+      artist: current.artist.trim(),
+      genre: genreName,
+      bpm: current.bpm,
+      released_at: normalizedReleasedAt,
+      jacket: current.jacket?.trim() ? current.jacket.trim() : null,
+      chart: hasChartInput
+        ? {
+            attribute: current.attribute?.trim() ? current.attribute.trim() : null,
+            level_star: current.level_star,
+            notes: current.notes,
+            notes_designer: current.notes_designer?.trim() ? current.notes_designer.trim() : null,
+          }
+        : undefined,
+    }
+
+    try {
+      await createWorldsendSong(request)
+      setMessage("WORLD'S END楽曲を追加しました。")
+      setCreateWorldsendDraft(buildCreateWorldsendDraft())
+      refresh()
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '追加に失敗しました。')
     }
   }
 
@@ -410,7 +679,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       <div>
         <h1 class="text-2xl font-semibold">{props.title}</h1>
         <p class="mt-2 text-sm text-gray-600">
-          API仕様準拠: 通常楽曲・WORLD&apos;S END ともに既存データの編集・削除・復活に対応します。
+          API仕様準拠: 通常楽曲・WORLD&apos;S END ともに追加・編集・削除・復活に対応します。
         </p>
       </div>
 
@@ -424,6 +693,371 @@ const SongManagementPage = (props: SongManagementPageProps) => {
           {errorMessage()}
         </p>
       </Show>
+
+      <section class="rounded-lg border border-gray-200 bg-white p-4">
+        <h2 class="text-lg font-semibold">通常楽曲を追加</h2>
+        <div class="mt-3 space-y-4">
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">公式ID</span>
+              <input
+                value={createSongDraft().official_idx}
+                maxLength={10}
+                onInput={(event) =>
+                  updateCreateSongDraftField('official_idx', event.currentTarget.value)
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+                placeholder="1234567890"
+              />
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">タイトル</span>
+              <input
+                value={createSongDraft().title}
+                onInput={(event) => updateCreateSongDraftField('title', event.currentTarget.value)}
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">アーティスト</span>
+              <input
+                value={createSongDraft().artist}
+                onInput={(event) => updateCreateSongDraftField('artist', event.currentTarget.value)}
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">ジャンル</span>
+              <select
+                value={String(createSongDraft().genre_id ?? '')}
+                onChange={(event) =>
+                  updateCreateSongDraftField(
+                    'genre_id',
+                    event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              >
+                <option value="">選択してください</option>
+                <For each={masterData()?.genres ?? []}>
+                  {(genre) => <option value={genre.id}>{genre.name}</option>}
+                </For>
+              </select>
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">BPM</span>
+              <input
+                type="number"
+                value={createSongDraft().bpm ?? ''}
+                onInput={(event) =>
+                  updateCreateSongDraftField(
+                    'bpm',
+                    event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">リリース日</span>
+              <input
+                type="date"
+                value={toDateInputValue(createSongDraft().released_at)}
+                onInput={(event) =>
+                  updateCreateSongDraftField(
+                    'released_at',
+                    event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">ジャケット名</span>
+              <input
+                value={createSongDraft().jacket ?? ''}
+                onInput={(event) =>
+                  updateCreateSongDraftField(
+                    'jacket',
+                    event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </label>
+          </div>
+
+          <div class="overflow-x-auto rounded border border-gray-200">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-3 py-2 text-left">追加</th>
+                  <th class="px-3 py-2 text-left">難易度</th>
+                  <th class="px-3 py-2 text-left">定数</th>
+                  <th class="px-3 py-2 text-left">未確定</th>
+                  <th class="px-3 py-2 text-left">ノーツ</th>
+                  <th class="px-3 py-2 text-left">NOTES DESIGNER</th>
+                </tr>
+              </thead>
+              <tbody>
+                <For each={createSongDraft().charts}>
+                  {(chart) => (
+                    <tr class="border-t border-gray-100">
+                      <td class="px-3 py-2">
+                        <input
+                          type="checkbox"
+                          checked={chart.enabled}
+                          onChange={(event) =>
+                            updateCreateSongChart(
+                              chart.difficulty_name,
+                              'enabled',
+                              event.currentTarget.checked
+                            )
+                          }
+                        />
+                      </td>
+                      <td class="px-3 py-2">{chart.difficulty_name}</td>
+                      <td class="px-3 py-2">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={chart.const}
+                          onInput={(event) =>
+                            updateCreateSongChart(
+                              chart.difficulty_name,
+                              'const',
+                              Number(event.currentTarget.value)
+                            )
+                          }
+                          class="w-20 rounded border border-gray-300 px-2 py-1"
+                          disabled={!chart.enabled}
+                        />
+                      </td>
+                      <td class="px-3 py-2">
+                        <input
+                          type="checkbox"
+                          checked={chart.is_const_unknown}
+                          onChange={(event) =>
+                            updateCreateSongChart(
+                              chart.difficulty_name,
+                              'is_const_unknown',
+                              event.currentTarget.checked
+                            )
+                          }
+                          disabled={!chart.enabled}
+                        />
+                      </td>
+                      <td class="px-3 py-2">
+                        <input
+                          type="number"
+                          value={chart.notes ?? ''}
+                          onInput={(event) =>
+                            updateCreateSongChart(
+                              chart.difficulty_name,
+                              'notes',
+                              event.currentTarget.value === ''
+                                ? null
+                                : Number(event.currentTarget.value)
+                            )
+                          }
+                          class="w-24 rounded border border-gray-300 px-2 py-1"
+                          disabled={!chart.enabled}
+                        />
+                      </td>
+                      <td class="px-3 py-2">
+                        <input
+                          value={chart.notes_designer ?? ''}
+                          onInput={(event) =>
+                            updateCreateSongChart(
+                              chart.difficulty_name,
+                              'notes_designer',
+                              event.currentTarget.value.trim() === ''
+                                ? null
+                                : event.currentTarget.value
+                            )
+                          }
+                          class="w-56 rounded border border-gray-300 px-2 py-1"
+                          disabled={!chart.enabled}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </For>
+              </tbody>
+            </table>
+          </div>
+
+          <button
+            type="button"
+            class="rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            onClick={handleCreateSong}
+          >
+            通常楽曲を追加する
+          </button>
+        </div>
+      </section>
+
+      <section class="rounded-lg border border-gray-200 bg-white p-4">
+        <h2 class="text-lg font-semibold">WORLD&apos;S END楽曲を追加</h2>
+        <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">公式ID</span>
+            <input
+              value={createWorldsendDraft().official_idx}
+              maxLength={10}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField('official_idx', event.currentTarget.value)
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+              placeholder="1234567890"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">タイトル</span>
+            <input
+              value={createWorldsendDraft().title}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField('title', event.currentTarget.value)
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">アーティスト</span>
+            <input
+              value={createWorldsendDraft().artist}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField('artist', event.currentTarget.value)
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">ジャンル</span>
+            <select
+              value={String(createWorldsendDraft().genre_id ?? '')}
+              onChange={(event) =>
+                updateCreateWorldsendDraftField(
+                  'genre_id',
+                  event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                )
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            >
+              <option value="">選択してください</option>
+              <For each={masterData()?.genres ?? []}>
+                {(genre) => <option value={genre.id}>{genre.name}</option>}
+              </For>
+            </select>
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">BPM</span>
+            <input
+              type="number"
+              value={createWorldsendDraft().bpm ?? ''}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField(
+                  'bpm',
+                  event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                )
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">リリース日</span>
+            <input
+              type="date"
+              value={toDateInputValue(createWorldsendDraft().released_at)}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField(
+                  'released_at',
+                  event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                )
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">ジャケット名</span>
+            <input
+              value={createWorldsendDraft().jacket ?? ''}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField(
+                  'jacket',
+                  event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                )
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">属性</span>
+            <input
+              value={createWorldsendDraft().attribute ?? ''}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField(
+                  'attribute',
+                  event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                )
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">レベル</span>
+            <input
+              type="number"
+              min="1"
+              max="5"
+              value={createWorldsendDraft().level_star ?? ''}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField(
+                  'level_star',
+                  event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                )
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">ノーツ</span>
+            <input
+              type="number"
+              min="0"
+              value={createWorldsendDraft().notes ?? ''}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField(
+                  'notes',
+                  event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                )
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="text-sm sm:col-span-2 lg:col-span-1">
+            <span class="mb-1 block text-gray-700">NOTES DESIGNER</span>
+            <input
+              value={createWorldsendDraft().notes_designer ?? ''}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField(
+                  'notes_designer',
+                  event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                )
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            />
+          </label>
+        </div>
+
+        <button
+          type="button"
+          class="mt-4 rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          onClick={handleCreateWorldsendSong}
+        >
+          WORLD&apos;S END楽曲を追加する
+        </button>
+      </section>
 
       <section class="rounded-lg border border-gray-200 bg-white p-4">
         <h2 class="text-lg font-semibold">通常楽曲（編集 / 削除 / 復活）</h2>

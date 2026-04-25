@@ -471,6 +471,25 @@ export interface UpdateChartRequestDTO {
   notes_designer?: string | null
 }
 
+export interface CreateSongChartRequestDTO {
+  difficulty: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
+  const: number
+  is_const_unknown: boolean
+  notes: number | null
+  notes_designer?: string | null
+}
+
+export interface CreateSongRequestDTO {
+  official_idx: string
+  title: string
+  artist: string
+  genre: string
+  bpm: number | null
+  released_at: string | null
+  jacket: string | null
+  charts?: CreateSongChartRequestDTO[]
+}
+
 export interface UpdateSongRequestDTO {
   id: string
   title: string
@@ -487,6 +506,17 @@ export interface UpdateWorldsendChartRequestDTO {
   level_star: number | null
   notes: number | null
   notes_designer?: string | null
+}
+
+export interface CreateWorldsendSongRequestDTO {
+  official_idx: string
+  title: string
+  artist: string
+  genre: string
+  bpm: number | null
+  released_at: string | null
+  jacket: string | null
+  chart?: UpdateWorldsendChartRequestDTO
 }
 
 export interface UpdateWorldsendSongRequestDTO {
