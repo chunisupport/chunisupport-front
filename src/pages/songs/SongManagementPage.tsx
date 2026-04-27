@@ -1200,7 +1200,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   </div>
 
                   <div class="overflow-x-auto rounded border border-gray-200">
-                    <table class="min-w-max text-sm">
+                    <table class="min-w-full text-sm">
                       <thead class="bg-gray-50">
                         <tr>
                           <th class="px-3 py-2 text-left">難易度</th>
