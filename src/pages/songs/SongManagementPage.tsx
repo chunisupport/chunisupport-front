@@ -1105,8 +1105,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
             <Show when={draft()}>
               {(currentDraft) => (
                 <div class="min-w-0 space-y-4">
-                  <div class="grid gap-3 sm:grid-cols-2">
-                    <label class="text-sm">
+                  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">更新日時</span>
                       <input
                         value={formatUpdatedAt(currentDraft().updated_at)}
@@ -1114,7 +1114,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         disabled
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">タイトル</span>
                       <input
                         value={currentDraft().title}
@@ -1122,7 +1122,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="w-full rounded border border-gray-300 px-3 py-2"
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">アーティスト</span>
                       <input
                         value={currentDraft().artist}
@@ -1362,8 +1362,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
             <Show when={worldsendDraft()}>
               {(currentDraft) => (
                 <div class="space-y-4">
-                  <div class="grid gap-3 sm:grid-cols-2">
-                    <label class="text-sm">
+                  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">更新日時</span>
                       <input
                         value={formatUpdatedAt(currentDraft().updated_at)}
@@ -1371,7 +1371,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         disabled
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">タイトル</span>
                       <input
                         value={currentDraft().title}
@@ -1381,7 +1381,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="w-full rounded border border-gray-300 px-3 py-2"
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">アーティスト</span>
                       <input
                         value={currentDraft().artist}
@@ -1458,7 +1458,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="w-full rounded border border-gray-300 px-3 py-2"
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">属性</span>
                       <input
                         value={currentDraft().attribute ?? ''}
@@ -1473,7 +1473,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="w-full rounded border border-gray-300 px-3 py-2"
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">レベル</span>
                       <input
                         type="number"
@@ -1491,7 +1491,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="w-full rounded border border-gray-300 px-3 py-2"
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">ノーツ</span>
                       <input
                         type="number"
@@ -1508,7 +1508,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="w-full rounded border border-gray-300 px-3 py-2"
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">譜面更新日時</span>
                       <input
                         value={formatUpdatedAt(currentDraft().chart_updated_at)}
@@ -1516,7 +1516,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         disabled
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">NOTES DESIGNER</span>
                       <input
                         value={currentDraft().notes_designer ?? ''}
