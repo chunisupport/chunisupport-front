@@ -546,9 +546,9 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
     const hasChartInput = Boolean(
       current.attribute?.trim() ||
-      current.level_star !== null ||
-      current.notes !== null ||
-      current.notes_designer?.trim()
+        current.level_star !== null ||
+        current.notes !== null ||
+        current.notes_designer?.trim()
     )
 
     const request: CreateWorldsendSongRequestDTO = {
@@ -561,11 +561,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       jacket: current.jacket?.trim() ? current.jacket.trim() : null,
       chart: hasChartInput
         ? {
-          attribute: current.attribute?.trim() ? current.attribute.trim() : null,
-          level_star: current.level_star,
-          notes: current.notes,
-          notes_designer: current.notes_designer?.trim() ? current.notes_designer.trim() : null,
-        }
+            attribute: current.attribute?.trim() ? current.attribute.trim() : null,
+            level_star: current.level_star,
+            notes: current.notes,
+            notes_designer: current.notes_designer?.trim() ? current.notes_designer.trim() : null,
+          }
         : undefined,
     }
 
@@ -1092,8 +1092,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           }}
                           onClick={() => handleSelectSong(song.id)}
                         >
-                          <p class="font-medium text-gray-900">{song.title}</p>
-                          <p class="text-xs text-gray-600">{song.artist}</p>
+                          <p class="font-sans font-medium text-gray-900">{song.title}</p>
+                          <p class="font-sans text-xs text-gray-600">{song.artist}</p>
                         </button>
                       </li>
                     )
@@ -1349,8 +1349,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           }}
                           onClick={() => handleSelectWorldsendSong(song.id)}
                         >
-                          <p class="font-medium text-gray-900">{song.title}</p>
-                          <p class="text-xs text-gray-600">{song.artist}</p>
+                          <p class="font-sans font-medium text-gray-900">{song.title}</p>
+                          <p class="font-sans text-xs text-gray-600">{song.artist}</p>
                         </button>
                       </li>
                     )
