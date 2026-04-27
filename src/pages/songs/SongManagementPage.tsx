@@ -801,7 +801,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
           </div>
 
           <div class="overflow-x-auto rounded border border-gray-200">
-            <table class="min-w-full text-sm">
+            <table class="min-w-max text-sm">
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-3 py-2 text-left">追加</th>
@@ -1104,7 +1104,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
             <Show when={draft()}>
               {(currentDraft) => (
-                <div class="space-y-4">
+                <div class="min-w-0 space-y-4">
                   <div class="grid gap-3 sm:grid-cols-2">
                     <label class="text-sm">
                       <span class="mb-1 block text-gray-700">更新日時</span>
@@ -1200,7 +1200,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   </div>
 
                   <div class="overflow-x-auto rounded border border-gray-200">
-                    <table class="min-w-full text-sm">
+                    <table class="min-w-max text-sm">
                       <thead class="bg-gray-50">
                         <tr>
                           <th class="px-3 py-2 text-left">難易度</th>
