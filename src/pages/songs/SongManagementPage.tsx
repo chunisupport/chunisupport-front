@@ -749,7 +749,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
                   )
                 }
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-gray-300 px-3 py-2 sm:w-1/2"
               >
                 <option value="">選択してください</option>
                 <For each={masterData()?.genres ?? []}>
@@ -768,7 +768,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
                   )
                 }
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-gray-300 px-3 py-2 sm:w-1/2"
               />
             </label>
             <label class="text-sm">
@@ -782,7 +782,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                   )
                 }
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-gray-300 px-3 py-2 sm:w-1/2"
               />
             </label>
             <label class="text-sm">
@@ -795,7 +795,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                   )
                 }
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-gray-300 px-3 py-2 sm:w-1/2"
               />
             </label>
           </div>
@@ -951,7 +951,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
                 )
               }
-              class="w-full rounded border border-gray-300 px-3 py-2"
+              class="w-full rounded border border-gray-300 px-3 py-2 sm:w-1/2"
             >
               <option value="">選択してください</option>
               <For each={masterData()?.genres ?? []}>
@@ -970,7 +970,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
                 )
               }
-              class="w-full rounded border border-gray-300 px-3 py-2"
+              class="w-full rounded border border-gray-300 px-3 py-2 sm:w-1/2"
             />
           </label>
           <label class="text-sm">
@@ -984,7 +984,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                 )
               }
-              class="w-full rounded border border-gray-300 px-3 py-2"
+              class="w-full rounded border border-gray-300 px-3 py-2 sm:w-1/2"
             />
           </label>
           <label class="text-sm">
@@ -997,7 +997,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                 )
               }
-              class="w-full rounded border border-gray-300 px-3 py-2"
+              class="w-full rounded border border-gray-300 px-3 py-2 sm:w-1/2"
             />
           </label>
           <label class="text-sm">
