@@ -1,6 +1,5 @@
 export { AdminPage, AdminSongsPage, AdminUsersPage } from './admin'
 export { Login, Register } from './auth'
-export { EditorPage, EditorSongsPage } from './editor'
 export { default as ForbiddenPage } from './ForbiddenPage'
 export { GoalsList } from './goals'
 export { default as NotFoundPage } from './NotFoundPage'

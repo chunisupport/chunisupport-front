@@ -3,8 +3,8 @@ import type {
   AchievementTypeDTO,
   CreateSongRequestDTO,
   CreateWorldsendSongRequestDTO,
-  EditorSongDTO,
-  EditorWorldsendSongDTO,
+  ManagedSongDTO,
+  ManagedWorldsendSongDTO,
   MasterDataDTO,
   SongDTO,
   SongStatsResponseDTO,
@@ -21,7 +21,7 @@ export const fetchAllSongs = async (): Promise<{ songs: SongDTO[] }> => {
   return response.json()
 }
 
-export const fetchEditorSongs = async (): Promise<{ songs: EditorSongDTO[] }> => {
+export const fetchManagedSongs = async (): Promise<{ songs: ManagedSongDTO[] }> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/editor/songs`)
 
   return response.json()
@@ -33,7 +33,9 @@ export const fetchWorldsendSongs = async (): Promise<{ songs: WorldsendSongDTO[]
   return response.json()
 }
 
-export const fetchEditorWorldsendSongs = async (): Promise<{ songs: EditorWorldsendSongDTO[] }> => {
+export const fetchManagedWorldsendSongs = async (): Promise<{
+  songs: ManagedWorldsendSongDTO[]
+}> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/editor/songs/worldsend`)
 
   return response.json()

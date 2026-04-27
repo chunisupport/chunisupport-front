@@ -148,7 +148,7 @@ export interface SongDTO {
   }
 }
 
-export interface EditorSongDTO extends SongDTO {
+export interface ManagedSongDTO extends SongDTO {
   is_deleted: boolean
   updated_at: string
 }
@@ -459,7 +459,7 @@ export interface WorldsendSongDTO {
   is_deleted?: boolean
 }
 
-export interface EditorWorldsendSongDTO extends WorldsendSongDTO {
+export interface ManagedWorldsendSongDTO extends WorldsendSongDTO {
   is_deleted: boolean
   updated_at: string
 }

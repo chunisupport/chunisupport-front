@@ -10,8 +10,6 @@ import {
   AdminPage,
   AdminSongsPage,
   AdminUsersPage,
-  EditorPage,
-  EditorSongsPage,
   ForbiddenPage,
   GoalsList,
   Login,
@@ -100,18 +98,6 @@ const GuardedAdminSongsPage = () => (
   </RequireRole>
 )
 
-const GuardedEditorPage = () => (
-  <RequireRole allowedRoles={['EDITOR', 'ADMIN']}>
-    <EditorPage />
-  </RequireRole>
-)
-
-const GuardedEditorSongsPage = () => (
-  <RequireRole allowedRoles={['EDITOR', 'ADMIN']}>
-    <EditorSongsPage />
-  </RequireRole>
-)
-
 const GuardedRegisterScoreTempPage = () => (
   <RequireAuth>
     <RegisterScoreTempPage />
@@ -152,8 +138,6 @@ const App = () => {
       <Route path="/admin" component={withNavBar(GuardedAdminPage)} />
       <Route path="/admin/users" component={withNavBar(GuardedAdminUsersPage)} />
       <Route path="/admin/songs" component={withNavBar(GuardedAdminSongsPage)} />
-      <Route path="/editor" component={withNavBar(GuardedEditorPage)} />
-      <Route path="/editor/songs" component={withNavBar(GuardedEditorSongsPage)} />
 
       {/* 404 */}
       <Route path="*" component={NotFoundPage} />

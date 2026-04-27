@@ -4,8 +4,8 @@ import {
   createWorldsendSong,
   deleteSongByDisplayId,
   deleteWorldsendSongByDisplayId,
-  fetchEditorSongs,
-  fetchEditorWorldsendSongs,
+  fetchManagedSongs,
+  fetchManagedWorldsendSongs,
   fetchMasterData,
   restoreSongByDisplayId,
   restoreWorldsendSongByDisplayId,
@@ -16,8 +16,8 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type {
   CreateSongRequestDTO,
   CreateWorldsendSongRequestDTO,
-  EditorSongDTO,
-  EditorWorldsendSongDTO,
+  ManagedSongDTO,
+  ManagedWorldsendSongDTO,
   MasterItemDTO,
   SongDTO,
   UpdateSongRequestDTO,
@@ -186,7 +186,7 @@ const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
 }
 
 const toSongDraft = (
-  song: EditorSongDTO,
+  song: ManagedSongDTO,
   genres: MasterItemDTO[],
   difficulties: MasterItemDTO[]
 ): SongDraft => {
@@ -218,7 +218,7 @@ const toSongDraft = (
 }
 
 const toWorldsendDraft = (
-  song: EditorWorldsendSongDTO,
+  song: ManagedWorldsendSongDTO,
   genres: MasterItemDTO[]
 ): WorldsendDraft => {
   const chart = song.charts.WORLDSEND
@@ -244,8 +244,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   useDocumentTitle(props.title)
 
   const [refreshKey, setRefreshKey] = createSignal(0)
-  const [songsResponse] = createResource(() => refreshKey(), fetchEditorSongs)
-  const [worldsendResponse] = createResource(() => refreshKey(), fetchEditorWorldsendSongs)
+  const [songsResponse] = createResource(() => refreshKey(), fetchManagedSongs)
+  const [worldsendResponse] = createResource(() => refreshKey(), fetchManagedWorldsendSongs)
   const [masterData] = createResource(fetchMasterData)
 
   const [selectedSongId, setSelectedSongId] = createSignal<string>('')
@@ -261,8 +261,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const [message, setMessage] = createSignal('')
   const [errorMessage, setErrorMessage] = createSignal('')
 
-  const songs = createMemo<EditorSongDTO[]>(() => songsResponse()?.songs ?? [])
-  const worldsendSongs = createMemo<EditorWorldsendSongDTO[]>(
+  const songs = createMemo<ManagedSongDTO[]>(() => songsResponse()?.songs ?? [])
+  const worldsendSongs = createMemo<ManagedWorldsendSongDTO[]>(
     () => worldsendResponse()?.songs ?? []
   )
   const selectedSong = createMemo(() => {
