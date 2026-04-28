@@ -21,7 +21,7 @@ const SongsViewToggle = () => {
     <nav aria-label="楽曲一覧切り替え" class="flex items-center">
       <A
         href={nextView().href}
-        class="rounded-md bg-primary-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-600"
+        class="rounded-md bg-primary-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-700"
       >
         {nextView().label}
       </A>
