@@ -739,65 +739,67 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                 class="w-full rounded border border-gray-300 px-3 py-2"
               />
             </label>
-            <label class="text-sm">
-              <span class="mb-1 block text-gray-700">ジャンル</span>
-              <select
-                value={String(createSongDraft().genre_id ?? '')}
-                onChange={(event) =>
-                  updateCreateSongDraftField(
-                    'genre_id',
-                    event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
-                  )
-                }
-                class="w-full rounded border border-gray-300 px-3 py-2"
-              >
-                <option value="">選択してください</option>
-                <For each={masterData()?.genres ?? []}>
-                  {(genre) => <option value={genre.id}>{genre.name}</option>}
-                </For>
-              </select>
-            </label>
-            <label class="text-sm">
-              <span class="mb-1 block text-gray-700">BPM</span>
-              <input
-                type="number"
-                value={createSongDraft().bpm ?? ''}
-                onInput={(event) =>
-                  updateCreateSongDraftField(
-                    'bpm',
-                    event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
-                  )
-                }
-                class="w-full rounded border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="text-sm">
-              <span class="mb-1 block text-gray-700">リリース日</span>
-              <input
-                type="date"
-                value={toDateInputValue(createSongDraft().released_at)}
-                onInput={(event) =>
-                  updateCreateSongDraftField(
-                    'released_at',
-                    event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
-                  )
-                }
-                class="w-full rounded border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="text-sm">
-              <span class="mb-1 block text-gray-700">ジャケット名</span>
-              <input
-                value={createSongDraft().jacket ?? ''}
-                onInput={(event) =>
-                  updateCreateSongDraftField(
-                    'jacket',
-                    event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
-                  )
-                }
-                class="w-full rounded border border-gray-300 px-3 py-2"
-              />
-            </label>
+            <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
+              <label class="text-sm">
+                <span class="mb-1 block text-gray-700">ジャンル</span>
+                <select
+                  value={String(createSongDraft().genre_id ?? '')}
+                  onChange={(event) =>
+                    updateCreateSongDraftField(
+                      'genre_id',
+                      event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                    )
+                  }
+                  class="w-full rounded border border-gray-300 px-3 py-2"
+                >
+                  <option value="">選択してください</option>
+                  <For each={masterData()?.genres ?? []}>
+                    {(genre) => <option value={genre.id}>{genre.name}</option>}
+                  </For>
+                </select>
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block text-gray-700">BPM</span>
+                <input
+                  type="number"
+                  value={createSongDraft().bpm ?? ''}
+                  onInput={(event) =>
+                    updateCreateSongDraftField(
+                      'bpm',
+                      event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                    )
+                  }
+                  class="w-full rounded border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block text-gray-700">リリース日</span>
+                <input
+                  type="date"
+                  value={toDateInputValue(createSongDraft().released_at)}
+                  onInput={(event) =>
+                    updateCreateSongDraftField(
+                      'released_at',
+                      event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                    )
+                  }
+                  class="w-full rounded border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block text-gray-700">ジャケット名</span>
+                <input
+                  value={createSongDraft().jacket ?? ''}
+                  onInput={(event) =>
+                    updateCreateSongDraftField(
+                      'jacket',
+                      event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                    )
+                  }
+                  class="w-full rounded border border-gray-300 px-3 py-2"
+                />
+              </label>
+            </div>
           </div>
 
           <div class="overflow-x-auto rounded border border-gray-200">
@@ -941,65 +943,67 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               class="w-full rounded border border-gray-300 px-3 py-2"
             />
           </label>
-          <label class="text-sm">
-            <span class="mb-1 block text-gray-700">ジャンル</span>
-            <select
-              value={String(createWorldsendDraft().genre_id ?? '')}
-              onChange={(event) =>
-                updateCreateWorldsendDraftField(
-                  'genre_id',
-                  event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
-                )
-              }
-              class="w-full rounded border border-gray-300 px-3 py-2"
-            >
-              <option value="">選択してください</option>
-              <For each={masterData()?.genres ?? []}>
-                {(genre) => <option value={genre.id}>{genre.name}</option>}
-              </For>
-            </select>
-          </label>
-          <label class="text-sm">
-            <span class="mb-1 block text-gray-700">BPM</span>
-            <input
-              type="number"
-              value={createWorldsendDraft().bpm ?? ''}
-              onInput={(event) =>
-                updateCreateWorldsendDraftField(
-                  'bpm',
-                  event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
-                )
-              }
-              class="w-full rounded border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="text-sm">
-            <span class="mb-1 block text-gray-700">リリース日</span>
-            <input
-              type="date"
-              value={toDateInputValue(createWorldsendDraft().released_at)}
-              onInput={(event) =>
-                updateCreateWorldsendDraftField(
-                  'released_at',
-                  event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
-                )
-              }
-              class="w-full rounded border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="text-sm">
-            <span class="mb-1 block text-gray-700">ジャケット名</span>
-            <input
-              value={createWorldsendDraft().jacket ?? ''}
-              onInput={(event) =>
-                updateCreateWorldsendDraftField(
-                  'jacket',
-                  event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
-                )
-              }
-              class="w-full rounded border border-gray-300 px-3 py-2"
-            />
-          </label>
+          <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">ジャンル</span>
+              <select
+                value={String(createWorldsendDraft().genre_id ?? '')}
+                onChange={(event) =>
+                  updateCreateWorldsendDraftField(
+                    'genre_id',
+                    event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              >
+                <option value="">選択してください</option>
+                <For each={masterData()?.genres ?? []}>
+                  {(genre) => <option value={genre.id}>{genre.name}</option>}
+                </For>
+              </select>
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">BPM</span>
+              <input
+                type="number"
+                value={createWorldsendDraft().bpm ?? ''}
+                onInput={(event) =>
+                  updateCreateWorldsendDraftField(
+                    'bpm',
+                    event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">リリース日</span>
+              <input
+                type="date"
+                value={toDateInputValue(createWorldsendDraft().released_at)}
+                onInput={(event) =>
+                  updateCreateWorldsendDraftField(
+                    'released_at',
+                    event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">ジャケット名</span>
+              <input
+                value={createWorldsendDraft().jacket ?? ''}
+                onInput={(event) =>
+                  updateCreateWorldsendDraftField(
+                    'jacket',
+                    event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </label>
+          </div>
           <label class="text-sm">
             <span class="mb-1 block text-gray-700">属性</span>
             <input
@@ -1104,9 +1108,9 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
             <Show when={draft()}>
               {(currentDraft) => (
-                <div class="space-y-4">
-                  <div class="grid gap-3 sm:grid-cols-2">
-                    <label class="text-sm">
+                <div class="min-w-0 space-y-4">
+                  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">更新日時</span>
                       <input
                         value={formatUpdatedAt(currentDraft().updated_at)}
@@ -1114,7 +1118,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         disabled
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">タイトル</span>
                       <input
                         value={currentDraft().title}
@@ -1122,7 +1126,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="w-full rounded border border-gray-300 px-3 py-2"
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">アーティスト</span>
                       <input
                         value={currentDraft().artist}
@@ -1362,8 +1366,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
             <Show when={worldsendDraft()}>
               {(currentDraft) => (
                 <div class="space-y-4">
-                  <div class="grid gap-3 sm:grid-cols-2">
-                    <label class="text-sm">
+                  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">更新日時</span>
                       <input
                         value={formatUpdatedAt(currentDraft().updated_at)}
@@ -1371,7 +1375,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         disabled
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">タイトル</span>
                       <input
                         value={currentDraft().title}
@@ -1381,7 +1385,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="w-full rounded border border-gray-300 px-3 py-2"
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">アーティスト</span>
                       <input
                         value={currentDraft().artist}
@@ -1458,7 +1462,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="w-full rounded border border-gray-300 px-3 py-2"
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">属性</span>
                       <input
                         value={currentDraft().attribute ?? ''}
@@ -1473,7 +1477,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="w-full rounded border border-gray-300 px-3 py-2"
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">レベル</span>
                       <input
                         type="number"
@@ -1491,7 +1495,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="w-full rounded border border-gray-300 px-3 py-2"
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">ノーツ</span>
                       <input
                         type="number"
@@ -1508,7 +1512,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="w-full rounded border border-gray-300 px-3 py-2"
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">譜面更新日時</span>
                       <input
                         value={formatUpdatedAt(currentDraft().chart_updated_at)}
@@ -1516,7 +1520,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         disabled
                       />
                     </label>
-                    <label class="text-sm">
+                    <label class="col-span-2 text-sm">
                       <span class="mb-1 block text-gray-700">NOTES DESIGNER</span>
                       <input
                         value={currentDraft().notes_designer ?? ''}
