@@ -9,11 +9,11 @@ const SongsViewToggle = () => {
     isWorldsend()
       ? {
           href: '/songs',
-          label: '通常譜面を見る',
+          label: '通常譜面',
         }
       : {
           href: '/songs/worldsend',
-          label: "WORLD'S ENDを見る",
+          label: "WORLD'S END",
         }
   )
 
@@ -21,7 +21,7 @@ const SongsViewToggle = () => {
     <nav aria-label="楽曲一覧切り替え" class="flex items-center">
       <A
         href={nextView().href}
-        class="rounded-full bg-gray-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-gray-800"
+        class="rounded-md bg-primary-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-600"
       >
         {nextView().label}
       </A>
