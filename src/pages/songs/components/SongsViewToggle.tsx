@@ -1,31 +1,29 @@
 import { A, useLocation } from '@solidjs/router'
+import { createMemo } from 'solid-js'
 
 const SongsViewToggle = () => {
   const location = useLocation()
   const isWorldsend = () => location.pathname.startsWith('/songs/worldsend')
 
+  const nextView = createMemo(() =>
+    isWorldsend()
+      ? {
+          href: '/songs',
+          label: '通常譜面を見る',
+        }
+      : {
+          href: '/songs/worldsend',
+          label: "WORLD'S ENDを見る",
+        }
+  )
+
   return (
-    <nav
-      aria-label="楽曲一覧切り替え"
-      class="flex items-center rounded-full bg-gray-900 p-0.5 text-xs font-medium shadow-sm"
-    >
+    <nav aria-label="楽曲一覧切り替え" class="flex items-center">
       <A
-        href="/songs"
-        class={`rounded-full px-3 py-1.5 transition-colors ${
-          isWorldsend() ? 'text-gray-400 hover:text-white' : 'bg-primary-500 text-white shadow-sm'
-        }`}
-        aria-current={!isWorldsend() ? 'page' : undefined}
+        href={nextView().href}
+        class="rounded-full bg-gray-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-gray-800"
       >
-        Standard
-      </A>
-      <A
-        href="/songs/worldsend"
-        class={`rounded-full px-3 py-1.5 transition-colors ${
-          isWorldsend() ? 'bg-primary-500 text-white shadow-sm' : 'text-gray-400 hover:text-white'
-        }`}
-        aria-current={isWorldsend() ? 'page' : undefined}
-      >
-        WORLD&apos;S END
+        {nextView().label}
       </A>
     </nav>
   )
