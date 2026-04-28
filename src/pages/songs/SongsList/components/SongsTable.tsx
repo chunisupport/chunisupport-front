@@ -6,10 +6,10 @@ import { difficultyBadgeClass } from '../../../../utils/difficultyUtils'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
-const GRID_TEMPLATE_COLUMNS =
-  'minmax(15rem, 1fr) minmax(15rem, 1fr) max-content max-content max-content'
+const GRID_TEMPLATE_COLUMNS = 'minmax(15rem, 1fr) minmax(15rem, 1fr) 9rem 5rem 16rem'
 const HEADER_CELL_CLASS = 'px-3 py-2 text-left font-semibold whitespace-nowrap'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
+const NUMERIC_CELL_CLASS = `${CELL_CLASS} justify-end tabular-nums`
 
 type Props = {
   songs: SongDTO[]
@@ -98,10 +98,10 @@ const SongsTable = (props: Props) => {
             <th class={HEADER_CELL_CLASS} scope="col">
               ジャンル
             </th>
-            <th class={HEADER_CELL_CLASS} scope="col">
+            <th class={`${HEADER_CELL_CLASS} text-right`} scope="col">
               BPM
             </th>
-            <th class={HEADER_CELL_CLASS} scope="col">
+            <th class={`${HEADER_CELL_CLASS} text-right`} scope="col">
               譜面定数
             </th>
           </tr>
@@ -140,10 +140,14 @@ const SongsTable = (props: Props) => {
                           {currentSong.artist}
                         </span>
                       </td>
-                      <td class={CELL_CLASS}>{currentSong.genre}</td>
-                      <td class={CELL_CLASS}>{currentSong.bpm ?? '-'}</td>
-                      <td class={CELL_CLASS}>
-                        <div class="flex flex-nowrap gap-1 whitespace-nowrap">
+                      <td class={`${CELL_CLASS} overflow-hidden`}>
+                        <span class="block w-full truncate" title={currentSong.genre}>
+                          {currentSong.genre}
+                        </span>
+                      </td>
+                      <td class={NUMERIC_CELL_CLASS}>{currentSong.bpm ?? '-'}</td>
+                      <td class={NUMERIC_CELL_CLASS}>
+                        <div class="ml-auto flex flex-nowrap gap-1 whitespace-nowrap">
                           <For each={chartOrder}>
                             {(difficulty) => {
                               const chart = currentSong.charts[difficulty]
