@@ -156,7 +156,7 @@ const SongsTable = (props: Props) => {
 
                               return (
                                 <span
-                                  class={`inline-flex w-[45px] justify-center rounded px-2 py-0.5 text-xs font-medium whitespace-nowrap ${difficultyBadgeClass(difficulty)} ${chart.is_const_unknown ? 'opacity-70' : ''}`}
+                                  class={`inline-flex w-[45px] justify-center rounded px-2 py-0.5 text-xs font-medium whitespace-nowrap ${difficultyBadgeClass(difficulty)} ${chart.is_const_unknown ? 'opacity-50' : ''}`}
                                 >
                                   <span>{chart.const.toFixed(1)}</span>
                                   {chart.is_const_unknown ? (
