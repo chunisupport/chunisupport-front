@@ -84,7 +84,10 @@ const SongsTable = (props: Props) => {
   )
 
   return (
-    <div ref={tableContainerRef} class="overflow-x-auto rounded-md border border-gray-200 bg-white">
+    <div
+      ref={tableContainerRef}
+      class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200 bg-white"
+    >
       <table class="block min-w-[45rem] text-sm" aria-rowcount={props.songs.length}>
         <thead class="block bg-gray-50">
           <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
