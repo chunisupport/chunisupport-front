@@ -6,8 +6,7 @@ import { difficultyBadgeClass } from '../../../../utils/difficultyUtils'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
-const GRID_TEMPLATE_COLUMNS =
-  'minmax(15rem, 1fr) minmax(15rem, 1fr) max-content max-content max-content'
+const GRID_TEMPLATE_COLUMNS = 'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 3.75rem 16rem'
 const HEADER_CELL_CLASS = 'px-3 py-2 text-left font-semibold whitespace-nowrap'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
 
@@ -140,7 +139,11 @@ const SongsTable = (props: Props) => {
                           {currentSong.artist}
                         </span>
                       </td>
-                      <td class={CELL_CLASS}>{currentSong.genre}</td>
+                      <td class={`${CELL_CLASS} overflow-hidden`}>
+                        <span class="block w-full truncate" title={currentSong.genre}>
+                          {currentSong.genre}
+                        </span>
+                      </td>
                       <td class={CELL_CLASS}>{currentSong.bpm ?? '-'}</td>
                       <td class={CELL_CLASS}>
                         <div class="flex flex-nowrap gap-1 whitespace-nowrap">
