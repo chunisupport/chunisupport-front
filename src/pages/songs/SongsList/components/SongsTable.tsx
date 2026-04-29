@@ -6,7 +6,7 @@ import { difficultyBadgeClass } from '../../../../utils/difficultyUtils'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
-const GRID_TEMPLATE_COLUMNS = 'minmax(15rem, 1fr) minmax(15rem, 1fr) 6.75rem 5rem 16rem'
+const GRID_TEMPLATE_COLUMNS = 'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 3.75rem 16rem'
 const HEADER_CELL_CLASS = 'px-3 py-2 text-left font-semibold whitespace-nowrap'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
 
