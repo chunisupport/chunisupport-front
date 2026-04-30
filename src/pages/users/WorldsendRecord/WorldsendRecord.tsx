@@ -5,6 +5,7 @@ import {
   createSignal,
   ErrorBoundary,
   For,
+  type JSX,
   onMount,
   Show,
   Suspense,
@@ -13,6 +14,7 @@ import {
 import { fetchWorldsendSongs } from '../../../api/songs'
 import { Loading } from '../../../components'
 import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
+import { getScoreRank, type ScoreRank } from '../../../utils/scoreRank'
 import {
   LampPlaceholderBadge,
   NoPlayBadge,
@@ -64,6 +66,22 @@ const worldsendHeaderButtonClass =
   'flex min-h-[34px] w-full items-center justify-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const worldsendAlphanumericColumnClass = 'text-xs'
 const worldsendLampColumnClass = 'font-oswald text-sm font-semibold'
+const worldsendScoreRankTextClass: Record<ScoreRank, string> = {
+  'SSS+': 'text-green-500',
+  SSS: 'text-yellow-500',
+  'SS+': 'text-orange-500',
+  SS: 'text-orange-500',
+  'S+': 'text-orange-500',
+  S: 'text-orange-500',
+  AAA: 'text-red-500',
+  AA: 'text-red-500',
+  A: 'text-red-500',
+  BBB: 'text-sky-500',
+  BB: 'text-sky-500',
+  B: 'text-sky-500',
+  C: 'text-amber-700',
+  D: 'text-gray-500',
+}
 
 const worldsendLampBadge = (record: WorldsendRecordDTO) => {
   const label = worldsendLampLabel(record)
@@ -85,6 +103,33 @@ const worldsendLevelLabel = (levelStar: number | null | undefined) => {
   }
 
   return `★${levelStar}`
+}
+
+const worldsendScoreCell = (record: WorldsendRecordDTO): JSX.Element => {
+  if (!record.is_played) {
+    return (
+      <div
+        class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
+      >
+        <NoPlayBadge />
+      </div>
+    )
+  }
+
+  const scoreRank = getScoreRank(record.score)
+
+  return (
+    <div
+      class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
+    >
+      <span class="leading-none">{record.score.toLocaleString('ja-JP')}</span>
+      <span
+        class={`mt-0.5 text-[10px] font-semibold leading-none ${worldsendScoreRankTextClass[scoreRank]}`}
+      >
+        {scoreRank}
+      </span>
+    </div>
+  )
 }
 
 const attachWorldsendSongMetaToRecords = (
@@ -330,11 +375,7 @@ const WorldsendRecordTable = (props: {
                         {worldsendLevelLabel(record.level_star)}
                       </span>
                     </div>
-                    <div
-                      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
-                    >
-                      {!record.is_played ? <NoPlayBadge /> : record.score.toLocaleString('ja-JP')}
-                    </div>
+                    {worldsendScoreCell(record)}
                     <div
                       class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${worldsendLampColumnClass}`}
                     >
