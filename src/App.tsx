@@ -48,7 +48,7 @@ const LandingPage = () => {
   useDocumentTitle()
 
   const [authStatus] = createResource(async () =>
-    resolveAuthSession(() => fetchMe({ redirectOnUnauthorized: false }), { forceRefresh: true })
+    resolveAuthSession(() => fetchMe({ redirectOnUnauthorized: false }))
   )
 
   const homeView = createMemo(() => {
