@@ -17,6 +17,7 @@ type RecordHeaderButtonProps = {
   label: string
   active: boolean
   direction: SharedSortDirection
+  align?: 'start' | 'center'
   class?: string
   onClick: () => void
 }
@@ -27,7 +28,7 @@ type RecordTitleCellProps = {
 }
 
 export const RECORD_HEADER_BUTTON_CLASS =
-  'flex min-h-[34px] w-full items-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
+  'flex min-h-[34px] w-full items-center text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 export const RECORD_ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
 export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
 
@@ -67,11 +68,15 @@ export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp) => {
 export const RecordHeaderButton = (props: RecordHeaderButtonProps) => (
   <button
     type="button"
-    class={`${RECORD_HEADER_BUTTON_CLASS} ${props.class ?? ''}`}
+    class={`${RECORD_HEADER_BUTTON_CLASS} ${props.active && props.direction ? 'py-1' : ''} ${props.class ?? ''}`}
     onClick={props.onClick}
   >
-    <span>{props.label}</span>
-    {renderSortIndicator(props.active, props.direction)}
+    <span
+      class={`flex flex-col ${props.align === 'start' ? 'items-start' : 'items-center'} justify-center gap-0.5 leading-none`}
+    >
+      <span>{props.label}</span>
+      {renderSortIndicator(props.active, props.direction)}
+    </span>
   </button>
 )
 

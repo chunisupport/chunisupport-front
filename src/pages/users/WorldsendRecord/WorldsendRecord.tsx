@@ -240,6 +240,7 @@ const WorldsendRecordTable = (props: {
                   label="曲名"
                   active={sortKey() === 'title'}
                   direction={sortDirection()}
+                  align="start"
                   class="justify-start pl-2"
                   onClick={() => handleSortChange('title')}
                 />
@@ -247,6 +248,7 @@ const WorldsendRecordTable = (props: {
                   label="属性"
                   active={sortKey() === 'attribute'}
                   direction={sortDirection()}
+                  align="center"
                   class="justify-center"
                   onClick={() => handleSortChange('attribute')}
                 />
@@ -254,6 +256,7 @@ const WorldsendRecordTable = (props: {
                   label="レベル"
                   active={sortKey() === 'level'}
                   direction={sortDirection()}
+                  align="center"
                   class="justify-center"
                   onClick={() => handleSortChange('level')}
                 />
@@ -261,6 +264,7 @@ const WorldsendRecordTable = (props: {
                   label="スコア"
                   active={sortKey() === 'score'}
                   direction={sortDirection()}
+                  align="center"
                   class="justify-center"
                   onClick={() => handleSortChange('score')}
                 />
@@ -268,6 +272,7 @@ const WorldsendRecordTable = (props: {
                   label="AJ"
                   active={sortKey() === 'lamp'}
                   direction={sortDirection()}
+                  align="center"
                   class="justify-center"
                   onClick={() => handleSortChange('lamp')}
                 />
@@ -275,6 +280,7 @@ const WorldsendRecordTable = (props: {
                   label="更新日"
                   active={sortKey() === 'updatedAt'}
                   direction={sortDirection()}
+                  align="center"
                   class="justify-center pr-2"
                   onClick={() => handleSortChange('updatedAt')}
                 />

@@ -1,9 +1,7 @@
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-solid'
-
 type SharedSortDirection = 'asc' | 'desc' | null
 
-const SORT_ICON_CLASS = 'h-3 w-3 shrink-0'
-const SORT_ICON_WRAPPER_CLASS = 'inline-flex h-3 w-3 shrink-0 items-center justify-center'
+const SORT_ICON_WRAPPER_CLASS = 'inline-flex h-[3px] w-[18px] shrink-0 items-center justify-center'
+const SORT_TRIANGLE_BASE_CLASS = 'h-0 w-0 border-x-[8px] border-x-transparent'
 
 export const NoPlayBadge = () => (
   <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">NoPlay</span>
@@ -20,20 +18,16 @@ export const LampPlaceholderBadge = () => (
 
 export const renderSortIndicator = (active: boolean, direction: SharedSortDirection) => {
   if (!active || !direction) {
-    return (
-      <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
-        <ArrowUpDown class={`${SORT_ICON_CLASS} text-gray-300`} />
-      </span>
-    )
+    return null
   }
 
   return direction === 'asc' ? (
     <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
-      <ArrowUp class={`${SORT_ICON_CLASS} text-red-600`} />
+      <span class={`${SORT_TRIANGLE_BASE_CLASS} border-b-[3px] border-b-red-600`} />
     </span>
   ) : (
     <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
-      <ArrowDown class={`${SORT_ICON_CLASS} text-sky-600`} />
+      <span class={`${SORT_TRIANGLE_BASE_CLASS} border-t-[3px] border-t-sky-600`} />
     </span>
   )
 }

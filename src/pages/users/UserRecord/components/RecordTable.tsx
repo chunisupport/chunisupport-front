@@ -203,6 +203,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                       label={column.label}
                       active={props.sortKey === column.sortKey}
                       direction={props.sortDirection}
+                      align={column.align ?? 'center'}
                       class={`${column.align === 'start' ? 'justify-start pl-2' : 'justify-center'} ${column.id === 'updatedAt' ? 'pr-2' : ''}`}
                       onClick={() => props.onSortChange(column.sortKey)}
                     />
