@@ -62,7 +62,7 @@ const LandingPage = () => {
     <main class="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
       <Show when={homeView().type !== 'loading'} fallback={<Loading />}>
         <Show
-          when={homeView().type === 'authenticated'}
+          when={homeView().type === 'authenticated' ? homeView() : null}
           fallback={
             <section class="rounded-lg border border-gray-200 bg-white p-6">
               <h1 class="mb-2 text-2xl font-semibold">ChuniSupport</h1>
