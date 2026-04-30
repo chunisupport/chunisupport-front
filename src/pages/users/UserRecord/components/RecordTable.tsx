@@ -26,7 +26,7 @@ import {
 } from '../../components/SharedRecordTableColumns'
 import type { RecordColumnId, RecordSortKey, SortDirection } from '../types/types'
 import { createGridTemplateColumns, getVisibleColumns } from '../utils/columns'
-import { getConstDisplay } from '../utils/constDisplay'
+import { getConstDisplay, getRatingDisplay } from '../utils/constDisplay'
 import { formatUpdatedAt } from '../utils/updatedAt'
 
 interface RecordTableProps {
@@ -159,23 +159,33 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
           >
             <span class={`inline-block w-full text-center leading-none ${constDisplay.className}`}>
-              {constDisplay.text}
+              {constDisplay.valueText}
+              <Show when={constDisplay.markerText}>
+                {(markerText) => <sup class="align-super text-[0.7em]">{markerText()}</sup>}
+              </Show>
             </span>
           </div>
         )
       }
       case 'score':
         return <RecordScoreCell record={currentRecord} />
-      case 'rating':
+      case 'rating': {
+        const ratingDisplay = getRatingDisplay(
+          currentRecord.rating,
+          currentRecord.is_played,
+          currentRecord.is_const_unknown
+        )
+
         return (
           <div
             class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
           >
-            <span class="inline-block w-full text-center leading-none">
-              {currentRecord.is_played ? currentRecord.rating.toFixed(2) : ''}
+            <span class={`inline-block w-full text-center leading-none ${ratingDisplay.className}`}>
+              {ratingDisplay.text}
             </span>
           </div>
         )
+      }
       case 'lamp':
         return <RecordLampCell record={currentRecord} />
       case 'updatedAt':

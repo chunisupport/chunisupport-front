@@ -1,23 +1,49 @@
 export type ConstDisplay = {
-  text: string
+  valueText: string
+  markerText: string | null
   className: string
-  isUnknown: boolean
 }
 
+export type RatingDisplay = {
+  text: string
+  className: string
+}
+
+const UNKNOWN_STYLE = 'text-red-600 italic'
+const NORMAL_STYLE = 'text-gray-900'
+
 export const getConstDisplay = (value: number, isConstUnknown: boolean): ConstDisplay => {
-  const formattedValue = value.toFixed(1)
+  const valueText = value.toFixed(1)
 
   if (isConstUnknown) {
     return {
-      text: `${formattedValue}?`,
-      className: 'text-red-600 italic',
-      isUnknown: true,
+      valueText,
+      markerText: '?',
+      className: UNKNOWN_STYLE,
     }
   }
 
   return {
-    text: formattedValue,
-    className: 'text-gray-900',
-    isUnknown: false,
+    valueText,
+    markerText: null,
+    className: NORMAL_STYLE,
+  }
+}
+
+export const getRatingDisplay = (
+  value: number,
+  isPlayed: boolean,
+  isConstUnknown: boolean
+): RatingDisplay => {
+  if (!isPlayed) {
+    return {
+      text: '',
+      className: NORMAL_STYLE,
+    }
+  }
+
+  return {
+    text: value.toFixed(2),
+    className: isConstUnknown ? UNKNOWN_STYLE : NORMAL_STYLE,
   }
 }
