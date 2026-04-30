@@ -15,7 +15,7 @@ export const resolveHomeView = (params: Params): HomeView => {
     return { type: 'authenticated', username: params.username }
   }
 
-  if (params.authStatus === 'unauthenticated') {
+  if (params.authStatus === 'unauthenticated' || params.authStatus === 'error') {
     return { type: 'guest' }
   }
 
