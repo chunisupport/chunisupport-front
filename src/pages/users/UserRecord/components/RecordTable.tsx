@@ -1,4 +1,3 @@
-import { A } from '@solidjs/router'
 import { createVirtualizer } from '@tanstack/solid-virtual'
 import {
   type Component,
@@ -17,12 +16,14 @@ import {
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
-import { getScoreRank, type ScoreRank } from '../../../../utils/scoreRank'
 import {
-  LampPlaceholderBadge,
-  NoPlayBadge,
-  renderSortIndicator,
-} from '../../components/RecordTableUiParts'
+  RECORD_ALPHANUMERIC_COLUMN_CLASS,
+  RecordHeaderButton,
+  RecordLampCell,
+  RecordScoreCell,
+  RecordTitleCell,
+  RecordUpdatedAtCell,
+} from '../../components/SharedRecordTableColumns'
 import type { RecordColumnId, RecordSortKey, SortDirection } from '../types/types'
 import { createGridTemplateColumns, getVisibleColumns } from '../utils/columns'
 import { formatUpdatedAt } from '../utils/updatedAt'
@@ -37,47 +38,11 @@ interface RecordTableProps {
 }
 
 const ROW_HEIGHT = 34
-const HEADER_BUTTON_CLASS =
-  'flex min-h-[34px] w-full items-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const DIFFICULTY_BADGE_CLASS =
   'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
-const ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
 const DIFFICULTY_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
-const LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
-const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
-  'SSS+': 'text-green-500',
-  SSS: 'text-yellow-500',
-  'SS+': 'text-orange-500',
-  SS: 'text-orange-500',
-  'S+': 'text-orange-500',
-  S: 'text-orange-500',
-  AAA: 'text-red-500',
-  AA: 'text-red-500',
-  A: 'text-red-500',
-  BBB: 'text-sky-500',
-  BB: 'text-sky-500',
-  B: 'text-sky-500',
-  C: 'text-amber-700',
-  D: 'text-gray-500',
-}
 const assertNever = (value: never): never => {
   throw new Error(`Unhandled RecordColumnId: ${String(value)}`)
-}
-
-const lampBadge = (lamp: string | null) => {
-  if (lamp === 'FULL COMBO')
-    return (
-      <span class="rounded-lg bg-orange-200 px-2 py-1 text-sm font-extrabold text-orange-900">
-        FC
-      </span>
-    )
-  if (lamp === 'ALL JUSTICE')
-    return (
-      <span class="rounded-lg bg-yellow-200 px-2 py-1 text-sm font-extrabold text-yellow-900">
-        AJ
-      </span>
-    )
-  return <LampPlaceholderBadge />
 }
 
 export const RecordTable: Component<RecordTableProps> = (props) => {
@@ -168,13 +133,10 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
     switch (columnId) {
       case 'title':
         return (
-          <A
+          <RecordTitleCell
             href={`/songs/${encodeURIComponent(currentRecord.id)}?diff=${encodeURIComponent(difficultyToQueryValue(currentRecord.difficulty))}`}
-            class="font-sans flex min-h-[34px] min-w-0 w-full items-center pl-2 text-inherit hover:underline"
             title={currentRecord.title}
-          >
-            <span class="block w-full truncate">{currentRecord.title}</span>
-          </A>
+          />
         )
       case 'difficulty':
         return (
@@ -191,43 +153,19 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
       case 'const':
         return (
           <div
-            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
           >
             <span class="inline-block w-full text-center leading-none">
               {currentRecord.const.toFixed(1)}
             </span>
           </div>
         )
-      case 'score': {
-        if (!currentRecord.is_played) {
-          return (
-            <div
-              class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
-            >
-              <NoPlayBadge />
-            </div>
-          )
-        }
-
-        const scoreRank = getScoreRank(currentRecord.score)
-
-        return (
-          <div
-            class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
-          >
-            <span class="leading-none">{currentRecord.score.toLocaleString()}</span>
-            <span
-              class={`mt-0.5 text-[10px] font-semibold leading-none ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}
-            >
-              {scoreRank}
-            </span>
-          </div>
-        )
-      }
+      case 'score':
+        return <RecordScoreCell record={currentRecord} />
       case 'rating':
         return (
           <div
-            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
           >
             <span class="inline-block w-full text-center leading-none">
               {currentRecord.is_played ? currentRecord.rating.toFixed(2) : ''}
@@ -235,23 +173,9 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
           </div>
         )
       case 'lamp':
-        return (
-          <div
-            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${LAMP_COLUMN_CLASS}`}
-          >
-            {currentRecord.is_played ? lampBadge(currentRecord.combo_lamp) : null}
-          </div>
-        )
+        return <RecordLampCell record={currentRecord} />
       case 'updatedAt':
-        return (
-          <div
-            class={`flex min-h-[34px] items-center justify-center pr-2 text-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
-          >
-            <span class="inline-block w-full text-center leading-none">
-              {currentRecord.is_played ? formatUpdatedAt(currentRecord.updated_at) : ''}
-            </span>
-          </div>
-        )
+        return <RecordUpdatedAtCell record={currentRecord} formatUpdatedAt={formatUpdatedAt} />
       default:
         return assertNever(columnId)
     }
@@ -275,14 +199,13 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
               >
                 <For each={visibleColumns()}>
                   {(column) => (
-                    <button
-                      type="button"
-                      class={`${HEADER_BUTTON_CLASS} ${column.align === 'start' ? 'justify-start pl-2' : 'justify-center'} ${column.id === 'updatedAt' ? 'pr-2' : ''}`}
+                    <RecordHeaderButton
+                      label={column.label}
+                      active={props.sortKey === column.sortKey}
+                      direction={props.sortDirection}
+                      class={`${column.align === 'start' ? 'justify-start pl-2' : 'justify-center'} ${column.id === 'updatedAt' ? 'pr-2' : ''}`}
                       onClick={() => props.onSortChange(column.sortKey)}
-                    >
-                      <span>{column.label}</span>
-                      {renderSortIndicator(props.sortKey === column.sortKey, props.sortDirection)}
-                    </button>
+                    />
                   )}
                 </For>
               </div>

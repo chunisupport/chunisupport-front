@@ -1,0 +1,139 @@
+import { A } from '@solidjs/router'
+import type { JSX } from 'solid-js'
+
+import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
+import { getScoreRank, type ScoreRank } from '../../../utils/scoreRank'
+import { LampPlaceholderBadge, NoPlayBadge, renderSortIndicator } from './RecordTableUiParts'
+
+type SharedSortDirection = 'asc' | 'desc' | null
+type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
+type ComboLamp = SharedRecordSource['combo_lamp']
+type ScoreRecord = Pick<SharedRecordSource, 'is_played' | 'score'>
+type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp'>
+type UpdatedAtRecord = Pick<SharedRecordSource, 'is_played' | 'updated_at'>
+type LampBadgeRenderer = (lamp: ComboLamp) => JSX.Element
+
+type RecordHeaderButtonProps = {
+  label: string
+  active: boolean
+  direction: SharedSortDirection
+  class?: string
+  onClick: () => void
+}
+
+type RecordTitleCellProps = {
+  href: string
+  title: string
+}
+
+export const RECORD_HEADER_BUTTON_CLASS =
+  'flex min-h-[34px] w-full items-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
+export const RECORD_ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
+export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
+
+const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
+  'SSS+': 'text-green-500',
+  SSS: 'text-yellow-500',
+  'SS+': 'text-orange-500',
+  SS: 'text-orange-500',
+  'S+': 'text-orange-500',
+  S: 'text-orange-500',
+  AAA: 'text-red-500',
+  AA: 'text-red-500',
+  A: 'text-red-500',
+  BBB: 'text-sky-500',
+  BB: 'text-sky-500',
+  B: 'text-sky-500',
+  C: 'text-amber-700',
+  D: 'text-gray-500',
+}
+
+export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp) => {
+  if (lamp === 'FULL COMBO')
+    return (
+      <span class="rounded-lg bg-orange-200 px-2 py-1 text-sm font-extrabold text-orange-900">
+        FC
+      </span>
+    )
+  if (lamp === 'ALL JUSTICE')
+    return (
+      <span class="rounded-lg bg-yellow-200 px-2 py-1 text-sm font-extrabold text-yellow-900">
+        AJ
+      </span>
+    )
+  return <LampPlaceholderBadge />
+}
+
+export const RecordHeaderButton = (props: RecordHeaderButtonProps) => (
+  <button
+    type="button"
+    class={`${RECORD_HEADER_BUTTON_CLASS} ${props.class ?? ''}`}
+    onClick={props.onClick}
+  >
+    <span>{props.label}</span>
+    {renderSortIndicator(props.active, props.direction)}
+  </button>
+)
+
+export const RecordTitleCell = (props: RecordTitleCellProps) => (
+  <A
+    href={props.href}
+    class="font-sans flex min-h-[34px] min-w-0 w-full items-center pl-2 text-inherit hover:underline"
+    title={props.title}
+  >
+    <span class="block w-full truncate">{props.title}</span>
+  </A>
+)
+
+export const RecordScoreCell = (props: { record: ScoreRecord }): JSX.Element => {
+  if (!props.record.is_played) {
+    return (
+      <div
+        class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+      >
+        <NoPlayBadge />
+      </div>
+    )
+  }
+
+  const scoreRank = getScoreRank(props.record.score)
+
+  return (
+    <div
+      class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+    >
+      <span class="leading-none">{props.record.score.toLocaleString('ja-JP')}</span>
+      <span
+        class={`mt-0.5 text-[10px] font-semibold leading-none ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}
+      >
+        {scoreRank}
+      </span>
+    </div>
+  )
+}
+
+export const RecordLampCell = (props: {
+  record: LampRecord
+  renderLampBadge?: LampBadgeRenderer
+}) => (
+  <div
+    class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${RECORD_LAMP_COLUMN_CLASS}`}
+  >
+    {props.record.is_played
+      ? (props.renderLampBadge ?? renderDefaultRecordLampBadge)(props.record.combo_lamp)
+      : null}
+  </div>
+)
+
+export const RecordUpdatedAtCell = (props: {
+  record: UpdatedAtRecord
+  formatUpdatedAt: (updatedAt: string | null) => string
+}) => (
+  <div
+    class={`flex min-h-[34px] items-center justify-center pr-2 text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+  >
+    <span class="inline-block w-full text-center leading-none">
+      {props.record.is_played ? props.formatUpdatedAt(props.record.updated_at) : ''}
+    </span>
+  </div>
+)

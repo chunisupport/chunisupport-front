@@ -1,11 +1,10 @@
-import { A, useSearchParams } from '@solidjs/router'
+import { useSearchParams } from '@solidjs/router'
 import {
   createMemo,
   createResource,
   createSignal,
   ErrorBoundary,
   For,
-  type JSX,
   onMount,
   Show,
   Suspense,
@@ -14,13 +13,14 @@ import {
 import { fetchWorldsendSongs } from '../../../api/songs'
 import { Loading } from '../../../components'
 import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
-import { getScoreRank, type ScoreRank } from '../../../utils/scoreRank'
 import {
-  LampPlaceholderBadge,
-  NoPlayBadge,
-  renderSortIndicator,
-} from '../components/RecordTableUiParts'
-import { worldsendLampClass, worldsendLampLabel } from '../UserPage/worldsendLampDisplay'
+  RECORD_ALPHANUMERIC_COLUMN_CLASS,
+  RecordHeaderButton,
+  RecordLampCell,
+  RecordScoreCell,
+  RecordTitleCell,
+  RecordUpdatedAtCell,
+} from '../components/SharedRecordTableColumns'
 import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendGridColumns } from '../UserPage/worldsendRecordTableLayout'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
@@ -62,74 +62,12 @@ const worldsendLampOrder: Record<string, number> = {
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
   !isPlayed || timestamp === Number.NEGATIVE_INFINITY
 
-const worldsendHeaderButtonClass =
-  'flex min-h-[34px] w-full items-center justify-center gap-1 text-center whitespace-nowrap transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
-const worldsendAlphanumericColumnClass = 'text-xs'
-const worldsendLampColumnClass = 'font-oswald text-sm font-semibold'
-const worldsendScoreRankTextClass: Record<ScoreRank, string> = {
-  'SSS+': 'text-green-500',
-  SSS: 'text-yellow-500',
-  'SS+': 'text-orange-500',
-  SS: 'text-orange-500',
-  'S+': 'text-orange-500',
-  S: 'text-orange-500',
-  AAA: 'text-red-500',
-  AA: 'text-red-500',
-  A: 'text-red-500',
-  BBB: 'text-sky-500',
-  BB: 'text-sky-500',
-  B: 'text-sky-500',
-  C: 'text-amber-700',
-  D: 'text-gray-500',
-}
-
-const worldsendLampBadge = (record: WorldsendRecordDTO) => {
-  const label = worldsendLampLabel(record)
-
-  if (label === '-') {
-    return <LampPlaceholderBadge />
-  }
-
-  return (
-    <span class={`rounded-lg px-2 py-1 text-sm font-extrabold ${worldsendLampClass(record)}`}>
-      {label}
-    </span>
-  )
-}
-
 const worldsendLevelLabel = (levelStar: number | null | undefined) => {
   if (typeof levelStar !== 'number' || levelStar <= 0) {
     return '-'
   }
 
   return `★${levelStar}`
-}
-
-const worldsendScoreCell = (record: WorldsendRecordDTO): JSX.Element => {
-  if (!record.is_played) {
-    return (
-      <div
-        class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
-      >
-        <NoPlayBadge />
-      </div>
-    )
-  }
-
-  const scoreRank = getScoreRank(record.score)
-
-  return (
-    <div
-      class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
-    >
-      <span class="leading-none">{record.score.toLocaleString('ja-JP')}</span>
-      <span
-        class={`mt-0.5 text-[10px] font-semibold leading-none ${worldsendScoreRankTextClass[scoreRank]}`}
-      >
-        {scoreRank}
-      </span>
-    </div>
-  )
 }
 
 const attachWorldsendSongMetaToRecords = (
@@ -298,54 +236,48 @@ const WorldsendRecordTable = (props: {
                 class="grid text-xs font-semibold"
                 style={{ 'grid-template-columns': worldsendGridColumns }}
               >
-                <button
-                  type="button"
-                  class={`${worldsendHeaderButtonClass} justify-start pl-2`}
+                <RecordHeaderButton
+                  label="曲名"
+                  active={sortKey() === 'title'}
+                  direction={sortDirection()}
+                  class="justify-start pl-2"
                   onClick={() => handleSortChange('title')}
-                >
-                  <span>曲名</span>
-                  {renderSortIndicator(sortKey() === 'title', sortDirection())}
-                </button>
-                <button
-                  type="button"
-                  class={worldsendHeaderButtonClass}
+                />
+                <RecordHeaderButton
+                  label="属性"
+                  active={sortKey() === 'attribute'}
+                  direction={sortDirection()}
+                  class="justify-center"
                   onClick={() => handleSortChange('attribute')}
-                >
-                  <span>属性</span>
-                  {renderSortIndicator(sortKey() === 'attribute', sortDirection())}
-                </button>
-                <button
-                  type="button"
-                  class={worldsendHeaderButtonClass}
+                />
+                <RecordHeaderButton
+                  label="レベル"
+                  active={sortKey() === 'level'}
+                  direction={sortDirection()}
+                  class="justify-center"
                   onClick={() => handleSortChange('level')}
-                >
-                  <span>レベル</span>
-                  {renderSortIndicator(sortKey() === 'level', sortDirection())}
-                </button>
-                <button
-                  type="button"
-                  class={worldsendHeaderButtonClass}
+                />
+                <RecordHeaderButton
+                  label="スコア"
+                  active={sortKey() === 'score'}
+                  direction={sortDirection()}
+                  class="justify-center"
                   onClick={() => handleSortChange('score')}
-                >
-                  <span>スコア</span>
-                  {renderSortIndicator(sortKey() === 'score', sortDirection())}
-                </button>
-                <button
-                  type="button"
-                  class={worldsendHeaderButtonClass}
+                />
+                <RecordHeaderButton
+                  label="AJ"
+                  active={sortKey() === 'lamp'}
+                  direction={sortDirection()}
+                  class="justify-center"
                   onClick={() => handleSortChange('lamp')}
-                >
-                  <span>AJ</span>
-                  {renderSortIndicator(sortKey() === 'lamp', sortDirection())}
-                </button>
-                <button
-                  type="button"
-                  class={`${worldsendHeaderButtonClass} pr-2`}
+                />
+                <RecordHeaderButton
+                  label="更新日"
+                  active={sortKey() === 'updatedAt'}
+                  direction={sortDirection()}
+                  class="justify-center pr-2"
                   onClick={() => handleSortChange('updatedAt')}
-                >
-                  <span>更新日</span>
-                  {renderSortIndicator(sortKey() === 'updatedAt', sortDirection())}
-                </button>
+                />
               </div>
             </div>
 
@@ -356,38 +288,25 @@ const WorldsendRecordTable = (props: {
                     class="grid border-b border-gray-200 text-xs hover:bg-gray-100"
                     style={{ 'grid-template-columns': worldsendGridColumns }}
                   >
-                    <A
+                    <RecordTitleCell
                       href={buildWorldsendSongDetailPath(record.id)}
-                      class="font-sans flex min-h-[34px] min-w-0 w-full items-center pl-2 text-inherit hover:underline"
                       title={record.title}
-                    >
-                      <span class="block w-full truncate">{record.title}</span>
-                    </A>
+                    />
                     <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
                       <span class="inline-block w-full text-center leading-none">
                         {record.attribute ?? '-'}
                       </span>
                     </div>
                     <div
-                      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
+                      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
                     >
                       <span class="inline-block leading-none">
                         {worldsendLevelLabel(record.level_star)}
                       </span>
                     </div>
-                    {worldsendScoreCell(record)}
-                    <div
-                      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${worldsendLampColumnClass}`}
-                    >
-                      {record.is_played ? worldsendLampBadge(record) : null}
-                    </div>
-                    <div
-                      class={`flex min-h-[34px] items-center justify-center pr-2 text-center whitespace-nowrap ${worldsendAlphanumericColumnClass}`}
-                    >
-                      <span class="inline-block w-full text-center leading-none">
-                        {record.is_played ? formatUpdatedAt(record.updated_at) : ''}
-                      </span>
-                    </div>
+                    <RecordScoreCell record={record} />
+                    <RecordLampCell record={record} />
+                    <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />
                   </div>
                 )}
               </For>
