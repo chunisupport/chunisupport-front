@@ -17,6 +17,7 @@ import {
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import { getScoreRank, type ScoreRank } from '../../../../utils/scoreRank'
 import {
   LampPlaceholderBadge,
   NoPlayBadge,
@@ -43,6 +44,22 @@ const DIFFICULTY_BADGE_CLASS =
 const ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
 const DIFFICULTY_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
 const LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
+const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
+  'SSS+': 'text-green-500',
+  SSS: 'text-yellow-500',
+  'SS+': 'text-orange-500',
+  SS: 'text-orange-500',
+  'S+': 'text-orange-500',
+  S: 'text-orange-500',
+  AAA: 'text-red-500',
+  AA: 'text-red-500',
+  A: 'text-red-500',
+  BBB: 'text-sky-500',
+  BB: 'text-sky-500',
+  B: 'text-sky-500',
+  C: 'text-amber-700',
+  D: 'text-gray-500',
+}
 const assertNever = (value: never): never => {
   throw new Error(`Unhandled RecordColumnId: ${String(value)}`)
 }
@@ -181,14 +198,32 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             </span>
           </div>
         )
-      case 'score':
+      case 'score': {
+        if (!currentRecord.is_played) {
+          return (
+            <div
+              class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+            >
+              <NoPlayBadge />
+            </div>
+          )
+        }
+
+        const scoreRank = getScoreRank(currentRecord.score)
+
         return (
           <div
-            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
+            class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${ALPHANUMERIC_COLUMN_CLASS}`}
           >
-            {!currentRecord.is_played ? <NoPlayBadge /> : currentRecord.score.toLocaleString()}
+            <span class="leading-none">{currentRecord.score.toLocaleString()}</span>
+            <span
+              class={`mt-0.5 text-[10px] font-semibold leading-none ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}
+            >
+              {scoreRank}
+            </span>
           </div>
         )
+      }
       case 'rating':
         return (
           <div
