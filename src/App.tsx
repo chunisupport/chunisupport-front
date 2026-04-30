@@ -1,7 +1,7 @@
 import { A, Route, Router, useParams } from '@solidjs/router'
 import type { JSX } from 'solid-js'
-import { createResource, ErrorBoundary, Show } from 'solid-js'
-import { fetchUserProfileSummary } from './api/users'
+import { createMemo, createResource, ErrorBoundary, Show } from 'solid-js'
+import { fetchMe, fetchUserProfileSummary } from './api/users'
 import { Loading, NavBar, PlayerDataEmptyState } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
@@ -23,6 +23,9 @@ import {
   WorldsendSongDetail,
   WorldsendSongsList,
 } from './pages'
+import { getAuthenticatedUser } from './stores/authSession'
+import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
+import { resolveHomeView } from './usecases/auth/resolveHomeView'
 
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
   return (props: P) => (
@@ -43,11 +46,86 @@ const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
 // インラインコンポーネント用のラッパー
 const LandingPage = () => {
   useDocumentTitle()
+
+  const [authStatus] = createResource(async () =>
+    resolveAuthSession(() => fetchMe({ redirectOnUnauthorized: false }))
+  )
+
+  const homeView = createMemo(() => {
+    return resolveHomeView({
+      authStatus: authStatus() ?? 'unknown',
+      username: getAuthenticatedUser()?.username ?? null,
+    })
+  })
+
   return (
-    <>
-      <h1>Welcome!</h1>
-      <A href="/login">Login</A>
-    </>
+    <main class="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
+      <Show when={homeView().type !== 'loading'} fallback={<Loading />}>
+        <Show
+          when={homeView().type === 'authenticated' ? homeView() : null}
+          fallback={
+            <section class="rounded-lg border border-gray-200 bg-white p-6">
+              <h1 class="mb-2 text-2xl font-semibold">ChuniSupport</h1>
+              <p class="mb-4 text-sm text-gray-700">
+                ログインまたは新規登録して、プレイデータを管理しましょう。
+              </p>
+              <div class="flex flex-wrap gap-3">
+                <A
+                  href="/login"
+                  class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                >
+                  ログイン
+                </A>
+                <A
+                  href="/register"
+                  class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+                >
+                  新規登録
+                </A>
+              </div>
+            </section>
+          }
+        >
+          {(view) => (
+            <section class="rounded-lg border border-gray-200 bg-white p-6">
+              <h1 class="mb-4 text-2xl font-semibold">ようこそ、{view().username}さん</h1>
+              <div class="rounded-md border border-gray-200 bg-gray-50 p-4">
+                <p class="text-sm text-gray-600">プロフィール</p>
+                <p class="mt-1 text-lg font-semibold text-gray-900">@{view().username}</p>
+                <A
+                  href={`/users/${encodeURIComponent(view().username)}`}
+                  class="mt-3 inline-block text-sm font-medium text-primary-600 underline"
+                >
+                  マイページを開く
+                </A>
+              </div>
+            </section>
+          )}
+        </Show>
+      </Show>
+
+      <section class="rounded-lg border border-gray-200 bg-white p-6">
+        <h2 class="mb-3 text-xl font-semibold">お知らせ</h2>
+        <ul class="space-y-2 text-sm text-gray-700">
+          <li class="rounded-md border border-gray-200 p-3">
+            [モック] 2026-04-29: 新機能の準備を進めています。
+          </li>
+          <li class="rounded-md border border-gray-200 p-3">
+            [モック] 2026-04-25: メンテナンス予定を公開しました。
+          </li>
+        </ul>
+      </section>
+
+      <section class="rounded-lg border border-gray-200 bg-white p-6">
+        <h2 class="mb-3 text-xl font-semibold">X公式アカウント</h2>
+        <ul class="space-y-2 text-sm text-gray-700">
+          <li class="rounded-md border border-gray-200 p-3">
+            [モック] 投稿1: アップデート予定のお知らせ
+          </li>
+          <li class="rounded-md border border-gray-200 p-3">[モック] 投稿2: 活用方法の紹介</li>
+        </ul>
+      </section>
+    </main>
   )
 }
 
