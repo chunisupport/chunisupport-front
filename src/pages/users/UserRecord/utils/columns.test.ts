@@ -33,5 +33,5 @@ test('表示カラムの順序を維持してカラム定義を取得できる',
 
 test('表示カラム定義からgrid-template-columns文字列を生成できる', () => {
   const columns = getVisibleColumns(['title', 'score'])
-  assert.equal(createGridTemplateColumns(columns), 'minmax(11.25rem,1fr) 3.6rem')
+  assert.equal(createGridTemplateColumns(columns), 'minmax(11.25rem,1fr) 3.8rem')
 })

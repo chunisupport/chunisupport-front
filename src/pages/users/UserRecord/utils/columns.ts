@@ -1,3 +1,7 @@
+import {
+  createGridTemplateColumns,
+  getRecordColumnBaseDefinition,
+} from '../../utils/recordColumnDefinitions.ts'
 import type { RecordColumnId, RecordSortKey } from '../types/types'
 
 export type RecordColumnDefinition = {
@@ -9,22 +13,33 @@ export type RecordColumnDefinition = {
   align?: 'start' | 'center'
 }
 
-export const RECORD_COLUMN_DEFINITIONS: RecordColumnDefinition[] = [
-  {
-    id: 'title',
-    label: '曲名',
-    width: 'minmax(11.25rem,1fr)',
-    sortKey: 'title',
-    defaultVisible: true,
-    align: 'start',
-  },
-  { id: 'difficulty', label: '難', width: '2.5rem', sortKey: 'difficulty', defaultVisible: true },
-  { id: 'const', label: '定数', width: '3.1rem', sortKey: 'const', defaultVisible: true },
-  { id: 'score', label: 'スコア', width: '3.6rem', sortKey: 'score', defaultVisible: true },
-  { id: 'rating', label: 'レート', width: '3.6rem', sortKey: 'rating', defaultVisible: true },
-  { id: 'lamp', label: 'AJ', width: '3.5rem', sortKey: 'lamp', defaultVisible: true },
-  { id: 'updatedAt', label: '更新日', width: '4rem', sortKey: 'updatedAt', defaultVisible: true },
+type RecordColumnSetting = {
+  id: RecordColumnId
+  defaultVisible: boolean
+}
+
+const RECORD_COLUMN_SETTINGS: RecordColumnSetting[] = [
+  { id: 'title', defaultVisible: true },
+  { id: 'difficulty', defaultVisible: true },
+  { id: 'const', defaultVisible: true },
+  { id: 'score', defaultVisible: true },
+  { id: 'rating', defaultVisible: true },
+  { id: 'lamp', defaultVisible: true },
+  { id: 'updatedAt', defaultVisible: true },
 ]
+
+export const RECORD_COLUMN_DEFINITIONS: RecordColumnDefinition[] = RECORD_COLUMN_SETTINGS.map(
+  (setting) => {
+    const baseDefinition = getRecordColumnBaseDefinition(setting.id)
+
+    return {
+      ...baseDefinition,
+      id: setting.id,
+      sortKey: baseDefinition.sortKey as RecordSortKey,
+      defaultVisible: setting.defaultVisible,
+    }
+  }
+)
 
 const RECORD_COLUMN_IDS = new Set<RecordColumnId>(
   RECORD_COLUMN_DEFINITIONS.map((column) => column.id)
@@ -62,5 +77,4 @@ export const getVisibleColumns = (visibleColumnIds: RecordColumnId[]): RecordCol
     .filter((column): column is RecordColumnDefinition => column !== undefined)
 }
 
-export const createGridTemplateColumns = (columns: RecordColumnDefinition[]): string =>
-  columns.map((column) => column.width).join(' ')
+export { createGridTemplateColumns }

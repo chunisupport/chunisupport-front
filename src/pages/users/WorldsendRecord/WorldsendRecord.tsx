@@ -22,7 +22,6 @@ import {
   RecordUpdatedAtCell,
 } from '../components/SharedRecordTableColumns'
 import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
-import { worldsendGridColumns } from '../UserPage/worldsendRecordTableLayout'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
 import {
@@ -30,6 +29,7 @@ import {
   formatUpdatedAt,
   updatedAtTimestamp,
 } from '../UserRecord/utils/updatedAt'
+import { worldsendGridColumns } from './utils/columns'
 
 type Props = {
   records: WorldsendRecordDTO[]
