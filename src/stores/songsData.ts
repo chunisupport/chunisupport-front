@@ -34,6 +34,28 @@ const createSongsStore = () => {
 
 const jaCollator = new Intl.Collator('ja')
 
+export const sortSongsByOfficialIndex = <T extends { official_idx?: string; title: string }>(
+  songs: T[]
+): T[] => {
+  const keyed = songs.map((song) => {
+    const parsed = Number(song.official_idx)
+    return {
+      song,
+      index: Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER,
+    }
+  })
+
+  keyed.sort((left, right) => {
+    if (left.index !== right.index) {
+      return left.index - right.index
+    }
+
+    return jaCollator.compare(left.song.title, right.song.title)
+  })
+
+  return keyed.map(({ song }) => song)
+}
+
 export const sortSongsByTitle = <T extends { title: string }>(songs: T[]): T[] => {
   const keyed = songs.map((song) => ({ song, key: song.title }))
   keyed.sort((a, b) => jaCollator.compare(a.key, b.key))

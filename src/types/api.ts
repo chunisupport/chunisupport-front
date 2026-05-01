@@ -136,6 +136,7 @@ export interface SongDTO {
   genre: string
   bpm: number | null
   release: string | null
+  official_idx?: string
   jacket: string | null
   maxop: number
   is_maxop_unknown: boolean
