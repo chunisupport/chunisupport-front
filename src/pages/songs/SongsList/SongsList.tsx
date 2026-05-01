@@ -1,7 +1,7 @@
 import { createMemo, ErrorBoundary, onMount, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { sortSongsByOfficialIndex, useSongsData } from '../../../stores/songsData'
+import { sortSongsByAddedDateAndOfficialIndex, useSongsData } from '../../../stores/songsData'
 import SongsViewToggle from '../components/SongsViewToggle'
 import SongsTable from './components/SongsTable'
 
@@ -14,7 +14,7 @@ const SongsList = () => {
 
   const sortedSongs = createMemo(() => {
     const songs = songsResponse()?.songs ?? []
-    return sortSongsByOfficialIndex(songs)
+    return sortSongsByAddedDateAndOfficialIndex(songs)
   })
 
   useDocumentTitle('楽曲一覧')

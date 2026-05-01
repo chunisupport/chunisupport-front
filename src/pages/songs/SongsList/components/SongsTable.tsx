@@ -8,7 +8,7 @@ const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
 const GRID_TEMPLATE_COLUMNS =
   'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 5.2rem 3.75rem repeat(5, 3.4rem)'
-const HEADER_CELL_CLASS = 'px-3 py-2 text-left font-semibold whitespace-nowrap'
+const HEADER_CELL_CLASS = 'px-3 py-2 font-semibold whitespace-nowrap'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
 type Props = {
   songs: SongDTO[]
@@ -101,19 +101,19 @@ const SongsTable = (props: Props) => {
       <table class="block min-w-[45rem] text-sm" aria-rowcount={props.songs.length}>
         <thead class="block bg-gray-50">
           <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
-            <th class={`${HEADER_CELL_CLASS} min-w-[15rem]`} scope="col">
+            <th class={`${HEADER_CELL_CLASS} min-w-[15rem] text-left`} scope="col">
               タイトル
             </th>
-            <th class={`${HEADER_CELL_CLASS} min-w-[15rem]`} scope="col">
+            <th class={`${HEADER_CELL_CLASS} min-w-[15rem] text-left`} scope="col">
               アーティスト
             </th>
-            <th class={HEADER_CELL_CLASS} scope="col">
+            <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
               ジャンル
             </th>
             <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
               追加日
             </th>
-            <th class={HEADER_CELL_CLASS} scope="col">
+            <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
               BPM
             </th>
             <For each={chartOrder}>
@@ -159,15 +159,15 @@ const SongsTable = (props: Props) => {
                           {currentSong.artist}
                         </span>
                       </td>
-                      <td class={`${CELL_CLASS} overflow-hidden`}>
-                        <span class="block w-full truncate" title={currentSong.genre}>
+                      <td class={`${CELL_CLASS} justify-center overflow-hidden`}>
+                        <span class="block w-full truncate text-center" title={currentSong.genre}>
                           {currentSong.genre}
                         </span>
                       </td>
                       <td class={`${CELL_CLASS} justify-center`}>
                         {formatAddedDate(currentSong.release)}
                       </td>
-                      <td class={CELL_CLASS}>{currentSong.bpm ?? '-'}</td>
+                      <td class={`${CELL_CLASS} justify-center`}>{currentSong.bpm ?? '-'}</td>
                       <For each={chartOrder}>
                         {(difficulty) => {
                           const chart = currentSong.charts[difficulty]
