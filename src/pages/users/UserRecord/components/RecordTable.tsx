@@ -239,7 +239,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                     <Show when={record()} keyed>
                       {(currentRecord) => (
                         <div
-                          class="absolute left-0 top-0 grid w-full border-b border-gray-200 text-xs hover:bg-green-50"
+                          class="absolute left-0 top-0 grid w-full border-b border-gray-200 text-xs transition-colors hover:bg-green-50"
                           style={{
                             'grid-template-columns': gridTemplateColumns(),
                             transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
