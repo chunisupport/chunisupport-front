@@ -2,18 +2,15 @@ import { A } from '@solidjs/router'
 import { createVirtualizer } from '@tanstack/solid-virtual'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import type { SongDTO } from '../../../../types/api'
+import {
+  DIFFICULTY_FORMAL_NAME_MAP,
+  DIFFICULTY_SHORT_NAME_MAP,
+} from '../../../../utils/difficultyUtils'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
 const GRID_TEMPLATE_COLUMNS =
   'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 3.75rem repeat(5, 3.4rem)'
-const DIFFICULTY_SHORT_NAMES: Record<(typeof chartOrder)[number], string> = {
-  BASIC: 'BAS',
-  ADVANCED: 'ADV',
-  EXPERT: 'EXP',
-  MASTER: 'MAS',
-  ULTIMA: 'ULT',
-}
 const HEADER_CELL_CLASS = 'px-3 py-2 text-left font-semibold whitespace-nowrap'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
 const DIFFICULTY_CELL_CLASS: Record<(typeof chartOrder)[number], string> = {
@@ -120,7 +117,7 @@ const SongsTable = (props: Props) => {
             <For each={chartOrder}>
               {(difficulty) => (
                 <th class={`${HEADER_CELL_CLASS} bg-gray-50 text-center`} scope="col">
-                  {DIFFICULTY_SHORT_NAMES[difficulty]}
+                  {DIFFICULTY_SHORT_NAME_MAP[DIFFICULTY_FORMAL_NAME_MAP[difficulty]]}
                 </th>
               )}
             </For>
@@ -178,7 +175,7 @@ const SongsTable = (props: Props) => {
                                 <>
                                   <span>{chart.const.toFixed(1)}</span>
                                   {chart.is_const_unknown ? (
-                                    <sub class="text-[0.65em] leading-none">?</sub>
+                                    <sup class="text-[0.65em] leading-none">?</sup>
                                   ) : null}
                                 </>
                               ) : null}

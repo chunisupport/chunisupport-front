@@ -107,3 +107,19 @@ export function difficultyCardBorderColor(difficulty: string): string {
       return 'before:bg-gray-500'
   }
 }
+
+export const DIFFICULTY_SHORT_NAME_MAP = {
+  BASIC: 'BAS',
+  ADVANCED: 'ADV',
+  EXPERT: 'EXP',
+  MASTER: 'MAS',
+  ULTIMA: 'ULT',
+} as const
+
+export const DIFFICULTY_FORMAL_NAME_MAP = {
+  BASIC: 'BASIC',
+  ADVANCED: 'ADVANCED',
+  EXPERT: 'EXPERT',
+  MASTER: 'MASTER',
+  ULTIMA: 'ULTIMA',
+} as const
