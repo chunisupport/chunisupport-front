@@ -291,7 +291,7 @@ const WorldsendRecordTable = (props: {
               <For each={sortedRecords()}>
                 {(record) => (
                   <div
-                    class="grid border-b border-gray-200 text-xs hover:bg-gray-100"
+                    class="grid border-b border-gray-200 text-xs hover:bg-green-50"
                     style={{ 'grid-template-columns': worldsendGridColumns }}
                   >
                     <RecordTitleCell
