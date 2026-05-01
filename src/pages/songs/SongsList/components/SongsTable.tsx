@@ -130,7 +130,7 @@ const SongsTable = (props: Props) => {
             <For each={chartOrder}>
               {(difficulty) => (
                 <th class={`${HEADER_CELL_CLASS} bg-gray-50 text-center`} scope="col">
-                  {DIFFICULTY_SHORT_NAME_MAP[DIFFICULTY_FORMAL_NAME_MAP[difficulty]]}
+                  {DIFFICULTY_SHORT_NAME_MAP[difficulty]}
                 </th>
               )}
             </For>
