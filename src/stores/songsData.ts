@@ -40,7 +40,7 @@ export const sortSongsByAddedDateAndOfficialIndex = <
   songs: T[]
 ): T[] => {
   const keyed = songs.map((song) => {
-    const parsedIndex = Number(song.official_idx)
+    const parsedIndex = song.official_idx?.trim() ? Number(song.official_idx) : NaN
     const parsedRelease = Date.parse(song.release ?? '')
 
     return {
