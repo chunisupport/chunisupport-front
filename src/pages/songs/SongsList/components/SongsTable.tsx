@@ -128,7 +128,7 @@ const SongsTable = (props: Props) => {
         </thead>
         <tbody
           ref={tableBodyRef}
-          class="relative block"
+          class="relative block min-w-full"
           style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
         >
           <For each={virtualRows()}>
@@ -139,7 +139,7 @@ const SongsTable = (props: Props) => {
                 <Show when={song()} keyed>
                   {(currentSong) => (
                     <tr
-                      class="absolute left-0 top-0 grid w-full border-y border-white"
+                      class="absolute left-0 top-0 grid min-w-full border-t border-gray-100"
                       style={{
                         'grid-template-columns': GRID_TEMPLATE_COLUMNS,
                         transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
