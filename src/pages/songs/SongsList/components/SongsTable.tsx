@@ -6,7 +6,15 @@ import { difficultyBadgeClass } from '../../../../utils/difficultyUtils'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
-const GRID_TEMPLATE_COLUMNS = 'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 3.75rem 16rem'
+const GRID_TEMPLATE_COLUMNS =
+  'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 3.75rem repeat(5, 3.4rem)'
+const DIFFICULTY_SHORT_NAMES: Record<(typeof chartOrder)[number], string> = {
+  BASIC: 'BAS',
+  ADVANCED: 'ADV',
+  EXPERT: 'EXP',
+  MASTER: 'MAS',
+  ULTIMA: 'ULT',
+}
 const HEADER_CELL_CLASS = 'px-3 py-2 text-left font-semibold whitespace-nowrap'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
 
@@ -103,9 +111,13 @@ const SongsTable = (props: Props) => {
             <th class={HEADER_CELL_CLASS} scope="col">
               BPM
             </th>
-            <th class={HEADER_CELL_CLASS} scope="col">
-              譜面定数
-            </th>
+            <For each={chartOrder}>
+              {(difficulty) => (
+                <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
+                  {DIFFICULTY_SHORT_NAMES[difficulty]}
+                </th>
+              )}
+            </For>
           </tr>
         </thead>
         <tbody
@@ -148,16 +160,13 @@ const SongsTable = (props: Props) => {
                         </span>
                       </td>
                       <td class={CELL_CLASS}>{currentSong.bpm ?? '-'}</td>
-                      <td class={CELL_CLASS}>
-                        <div class="flex flex-nowrap gap-1 whitespace-nowrap">
-                          <For each={chartOrder}>
-                            {(difficulty) => {
-                              const chart = currentSong.charts[difficulty]
-                              if (!chart) {
-                                return null
-                              }
+                      <For each={chartOrder}>
+                        {(difficulty) => {
+                          const chart = currentSong.charts[difficulty]
 
-                              return (
+                          return (
+                            <td class={`${CELL_CLASS} justify-center`}>
+                              {chart ? (
                                 <span
                                   class={`inline-flex w-[45px] justify-center rounded px-2 py-0.5 text-xs font-medium whitespace-nowrap ${difficultyBadgeClass(difficulty)} ${chart.is_const_unknown ? 'opacity-50' : ''}`}
                                 >
@@ -166,11 +175,13 @@ const SongsTable = (props: Props) => {
                                     <sub class="text-[0.65em] leading-none">?</sub>
                                   ) : null}
                                 </span>
-                              )
-                            }}
-                          </For>
-                        </div>
-                      </td>
+                              ) : (
+                                '-'
+                              )}
+                            </td>
+                          )
+                        }}
+                      </For>
                     </tr>
                   )}
                 </Show>
