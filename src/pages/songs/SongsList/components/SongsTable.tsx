@@ -107,13 +107,13 @@ const SongsTable = (props: Props) => {
             <th class={`${HEADER_CELL_CLASS} min-w-[15rem]`} scope="col">
               アーティスト
             </th>
-            <th class={HEADER_CELL_CLASS} scope="col">
+            <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
               ジャンル
             </th>
             <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
               追加日
             </th>
-            <th class={HEADER_CELL_CLASS} scope="col">
+            <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
               BPM
             </th>
             <For each={chartOrder}>
@@ -159,15 +159,15 @@ const SongsTable = (props: Props) => {
                           {currentSong.artist}
                         </span>
                       </td>
-                      <td class={`${CELL_CLASS} overflow-hidden`}>
-                        <span class="block w-full truncate" title={currentSong.genre}>
+                      <td class={`${CELL_CLASS} justify-center overflow-hidden`}>
+                        <span class="block w-full truncate text-center" title={currentSong.genre}>
                           {currentSong.genre}
                         </span>
                       </td>
                       <td class={`${CELL_CLASS} justify-center`}>
                         {formatAddedDate(currentSong.release)}
                       </td>
-                      <td class={CELL_CLASS}>{currentSong.bpm ?? '-'}</td>
+                      <td class={`${CELL_CLASS} justify-center`}>{currentSong.bpm ?? '-'}</td>
                       <For each={chartOrder}>
                         {(difficulty) => {
                           const chart = currentSong.charts[difficulty]
