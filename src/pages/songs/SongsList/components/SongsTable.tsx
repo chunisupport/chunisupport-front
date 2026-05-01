@@ -8,7 +8,7 @@ const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
 const GRID_TEMPLATE_COLUMNS =
   'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 5.2rem 3.75rem repeat(5, 3.4rem)'
-const HEADER_CELL_CLASS = 'px-3 py-2 text-left font-semibold whitespace-nowrap'
+const HEADER_CELL_CLASS = 'px-3 py-2 font-semibold whitespace-nowrap'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
 type Props = {
   songs: SongDTO[]
@@ -101,10 +101,10 @@ const SongsTable = (props: Props) => {
       <table class="block min-w-[45rem] text-sm" aria-rowcount={props.songs.length}>
         <thead class="block bg-gray-50">
           <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
-            <th class={`${HEADER_CELL_CLASS} min-w-[15rem]`} scope="col">
+            <th class={`${HEADER_CELL_CLASS} min-w-[15rem] text-left`} scope="col">
               タイトル
             </th>
-            <th class={`${HEADER_CELL_CLASS} min-w-[15rem]`} scope="col">
+            <th class={`${HEADER_CELL_CLASS} min-w-[15rem] text-left`} scope="col">
               アーティスト
             </th>
             <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
