@@ -10,7 +10,7 @@ import {
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
 const GRID_TEMPLATE_COLUMNS =
-  'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 3.75rem repeat(5, 3.4rem)'
+  'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 5.2rem 3.75rem repeat(5, 3.4rem)'
 const HEADER_CELL_CLASS = 'px-3 py-2 text-left font-semibold whitespace-nowrap'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
 const DIFFICULTY_CELL_CLASS: Record<(typeof chartOrder)[number], string> = {
@@ -23,6 +23,16 @@ const DIFFICULTY_CELL_CLASS: Record<(typeof chartOrder)[number], string> = {
 
 type Props = {
   songs: SongDTO[]
+}
+
+const formatAddedDate = (release: string | null): string => {
+  if (!release) return '-'
+
+  const matched = release.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!matched) return '-'
+
+  const [, year, month, day] = matched
+  return `${year.slice(-2)}/${month}/${day}`
 }
 
 const SongsTable = (props: Props) => {
@@ -111,6 +121,9 @@ const SongsTable = (props: Props) => {
             <th class={HEADER_CELL_CLASS} scope="col">
               ジャンル
             </th>
+            <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
+              追加日
+            </th>
             <th class={HEADER_CELL_CLASS} scope="col">
               BPM
             </th>
@@ -162,6 +175,9 @@ const SongsTable = (props: Props) => {
                           {currentSong.genre}
                         </span>
                       </td>
+                      <td class={`${CELL_CLASS} justify-center`}>
+                        {formatAddedDate(currentSong.release)}
+                      </td>
                       <td class={CELL_CLASS}>{currentSong.bpm ?? '-'}</td>
                       <For each={chartOrder}>
                         {(difficulty) => {
@@ -169,7 +185,7 @@ const SongsTable = (props: Props) => {
 
                           return (
                             <td
-                              class={`${CELL_CLASS} justify-center font-medium ${DIFFICULTY_CELL_CLASS[difficulty]} ${chart?.is_const_unknown ? 'opacity-50' : ''}`}
+                              class={`${CELL_CLASS} justify-center font-medium ${chart ? DIFFICULTY_CELL_CLASS[difficulty] : 'bg-white text-gray-700'} ${chart?.is_const_unknown ? 'opacity-50' : ''}`}
                             >
                               {chart ? (
                                 <>
