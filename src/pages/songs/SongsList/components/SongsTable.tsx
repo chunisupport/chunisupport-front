@@ -2,7 +2,6 @@ import { A } from '@solidjs/router'
 import { createVirtualizer } from '@tanstack/solid-virtual'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import type { SongDTO } from '../../../../types/api'
-import { difficultyBadgeClass } from '../../../../utils/difficultyUtils'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
@@ -17,6 +16,19 @@ const DIFFICULTY_SHORT_NAMES: Record<(typeof chartOrder)[number], string> = {
 }
 const HEADER_CELL_CLASS = 'px-3 py-2 text-left font-semibold whitespace-nowrap'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
+const DIFFICULTY_CELL_CLASS: Record<(typeof chartOrder)[number], string> = {
+  BASIC: 'bg-[#00ab84] text-white',
+  ADVANCED: 'bg-[#ff7e00] text-white',
+  EXPERT: 'bg-[#f12929] text-white',
+  MASTER: 'bg-[#8e1be5] text-white',
+  ULTIMA: 'bg-[#000000] text-white',
+}
+const DIFFICULTY_HEADER_CLASS: Partial<Record<(typeof chartOrder)[number], string>> = {
+  ADVANCED: 'bg-[#ff7e00] text-white',
+  EXPERT: 'bg-[#f12929] text-white',
+  MASTER: 'bg-[#8e1be5] text-white',
+  ULTIMA: 'bg-[#000000] text-white',
+}
 
 type Props = {
   songs: SongDTO[]
@@ -113,7 +125,10 @@ const SongsTable = (props: Props) => {
             </th>
             <For each={chartOrder}>
               {(difficulty) => (
-                <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
+                <th
+                  class={`${HEADER_CELL_CLASS} text-center ${DIFFICULTY_HEADER_CLASS[difficulty] ?? ''}`}
+                  scope="col"
+                >
                   {DIFFICULTY_SHORT_NAMES[difficulty]}
                 </th>
               )}
@@ -165,16 +180,16 @@ const SongsTable = (props: Props) => {
                           const chart = currentSong.charts[difficulty]
 
                           return (
-                            <td class={`${CELL_CLASS} justify-center`}>
+                            <td
+                              class={`${CELL_CLASS} justify-center font-medium ${DIFFICULTY_CELL_CLASS[difficulty]} ${chart?.is_const_unknown ? 'opacity-50' : ''}`}
+                            >
                               {chart ? (
-                                <span
-                                  class={`inline-flex w-[45px] justify-center rounded px-2 py-0.5 text-xs font-medium whitespace-nowrap ${difficultyBadgeClass(difficulty)} ${chart.is_const_unknown ? 'opacity-50' : ''}`}
-                                >
+                                <>
                                   <span>{chart.const.toFixed(1)}</span>
                                   {chart.is_const_unknown ? (
                                     <sub class="text-[0.65em] leading-none">?</sub>
                                   ) : null}
-                                </span>
+                                </>
                               ) : (
                                 '-'
                               )}
