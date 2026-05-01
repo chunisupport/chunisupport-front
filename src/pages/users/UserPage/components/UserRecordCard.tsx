@@ -14,6 +14,7 @@ import {
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
 import { getScoreRank } from '../../../../utils/scoreRank'
+import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
 
 // FIXME: 色使いすぎ？
 const idxColor = (index: number) => {
@@ -55,7 +56,7 @@ export const UserRecordCard: Component<Props> = (props) => {
         class="group block text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
       >
         <div
-          class={`relative select-none border-y border-r border-gray-200 bg-white p-2 pl-4 transition-colors group-hover:bg-green-50 before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 ${difficultyCardBorderColor(props.record.difficulty)}`}
+          class={`relative select-none border-y border-r border-gray-200 bg-white p-2 pl-4 ${RECORD_CARD_HOVER_CLASS} before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 ${difficultyCardBorderColor(props.record.difficulty)}`}
         >
           <div class="flex gap-3 items-center">
             <div
