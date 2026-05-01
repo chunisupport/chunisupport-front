@@ -23,12 +23,6 @@ const DIFFICULTY_CELL_CLASS: Record<(typeof chartOrder)[number], string> = {
   MASTER: 'bg-[#8e1be5] text-white',
   ULTIMA: 'bg-[#000000] text-white',
 }
-const DIFFICULTY_HEADER_CLASS: Partial<Record<(typeof chartOrder)[number], string>> = {
-  ADVANCED: 'bg-[#ff7e00] text-white',
-  EXPERT: 'bg-[#f12929] text-white',
-  MASTER: 'bg-[#8e1be5] text-white',
-  ULTIMA: 'bg-[#000000] text-white',
-}
 
 type Props = {
   songs: SongDTO[]
@@ -125,10 +119,7 @@ const SongsTable = (props: Props) => {
             </th>
             <For each={chartOrder}>
               {(difficulty) => (
-                <th
-                  class={`${HEADER_CELL_CLASS} text-center ${DIFFICULTY_HEADER_CLASS[difficulty] ?? ''}`}
-                  scope="col"
-                >
+                <th class={`${HEADER_CELL_CLASS} bg-gray-50 text-center`} scope="col">
                   {DIFFICULTY_SHORT_NAMES[difficulty]}
                 </th>
               )}
@@ -148,7 +139,7 @@ const SongsTable = (props: Props) => {
                 <Show when={song()} keyed>
                   {(currentSong) => (
                     <tr
-                      class="absolute left-0 top-0 grid w-full border-t border-gray-100"
+                      class="absolute left-0 top-0 grid w-full border-y border-white"
                       style={{
                         'grid-template-columns': GRID_TEMPLATE_COLUMNS,
                         transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
@@ -190,9 +181,7 @@ const SongsTable = (props: Props) => {
                                     <sub class="text-[0.65em] leading-none">?</sub>
                                   ) : null}
                                 </>
-                              ) : (
-                                '-'
-                              )}
+                              ) : null}
                             </td>
                           )
                         }}
