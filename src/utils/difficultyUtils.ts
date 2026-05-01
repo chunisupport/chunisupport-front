@@ -115,11 +115,3 @@ export const DIFFICULTY_SHORT_NAME_MAP = {
   MASTER: 'MAS',
   ULTIMA: 'ULT',
 } as const
-
-export const DIFFICULTY_FORMAL_NAME_MAP = {
-  BASIC: 'BASIC',
-  ADVANCED: 'ADVANCED',
-  EXPERT: 'EXPERT',
-  MASTER: 'MASTER',
-  ULTIMA: 'ULTIMA',
-} as const
