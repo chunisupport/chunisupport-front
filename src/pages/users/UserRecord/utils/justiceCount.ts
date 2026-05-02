@@ -15,6 +15,7 @@ export const calcJusticeCountForAj = (params: {
   const { comboLamp, score, notes } = params
 
   if (comboLamp !== 'ALL JUSTICE') return ''
+  if (score === 1_010_000) return 0
   if (!notes || notes <= 0) return '-'
 
   const justiceCount = Math.round((notes * (1_000_000 + AJ_BONUS_UNIT - score)) / AJ_BONUS_UNIT)

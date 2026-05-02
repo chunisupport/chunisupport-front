@@ -14,6 +14,11 @@ describe('calcJusticeCountForAj', () => {
     expect(calcJusticeCountForAj({ comboLamp: null, score: 1009990, notes: 1000 })).toBe('')
   })
 
+  it('AJかつ1010000点の場合はノーツ不明でもJ数0を返す', () => {
+    expect(calcJusticeCountForAj({ comboLamp: 'ALL JUSTICE', score: 1010000, notes: null })).toBe(0)
+    expect(calcJusticeCountForAj({ comboLamp: 'ALL JUSTICE', score: 1010000, notes: 0 })).toBe(0)
+  })
+
   it('ノーツ数が無効な場合はハイフンを返す', () => {
     expect(calcJusticeCountForAj({ comboLamp: 'ALL JUSTICE', score: 1009990, notes: null })).toBe(
       '-'
