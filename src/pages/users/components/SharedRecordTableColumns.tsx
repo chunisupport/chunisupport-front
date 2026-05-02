@@ -3,7 +3,7 @@ import type { JSX } from 'solid-js'
 
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
 import { getScoreRank, type ScoreRank } from '../../../utils/scoreRank'
-import { LampPlaceholderBadge, NoPlayBadge, renderSortIndicator } from './RecordTableUiParts'
+import { LampPlaceholderBadge, renderSortIndicator } from './RecordTableUiParts'
 
 type SharedSortDirection = 'asc' | 'desc' | null
 type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
@@ -96,10 +96,8 @@ export const RecordScoreCell = (props: { record: ScoreRecord }): JSX.Element => 
   if (!props.record.is_played) {
     return (
       <div
-        class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-      >
-        <NoPlayBadge />
-      </div>
+        class={`flex min-h-[34px] flex-col items-end justify-center px-1 text-right whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+      />
     )
   }
 
@@ -107,11 +105,13 @@ export const RecordScoreCell = (props: { record: ScoreRecord }): JSX.Element => 
 
   return (
     <div
-      class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+      class={`flex min-h-[34px] flex-col items-end justify-center px-1 text-right whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
     >
-      <span class="leading-none">{props.record.score.toLocaleString('ja-JP')}</span>
+      <span class="w-full text-right leading-none">
+        {props.record.score.toLocaleString('ja-JP')}
+      </span>
       <span
-        class={`mt-0.5 text-[10px] font-semibold leading-none ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}
+        class={`mt-0.5 w-full text-right text-[10px] font-semibold leading-none ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}
       >
         {scoreRank}
       </span>
