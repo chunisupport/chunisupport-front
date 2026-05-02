@@ -15,6 +15,7 @@ import { Loading } from '../../../components'
 import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
 import {
   RECORD_ALPHANUMERIC_COLUMN_CLASS,
+  RECORD_ROW_HOVER_CLASS,
   RecordHeaderButton,
   RecordLampCell,
   RecordScoreCell,
@@ -291,7 +292,7 @@ const WorldsendRecordTable = (props: {
               <For each={sortedRecords()}>
                 {(record) => (
                   <div
-                    class="grid border-b border-gray-200 text-xs hover:bg-gray-100"
+                    class={`grid border-b border-gray-200 text-xs ${RECORD_ROW_HOVER_CLASS}`}
                     style={{ 'grid-template-columns': worldsendGridColumns }}
                   >
                     <RecordTitleCell

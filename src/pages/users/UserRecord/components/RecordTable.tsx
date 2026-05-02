@@ -18,6 +18,7 @@ import {
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
   RECORD_ALPHANUMERIC_COLUMN_CLASS,
+  RECORD_ROW_HOVER_CLASS,
   RecordHeaderButton,
   RecordLampCell,
   RecordScoreCell,
@@ -239,7 +240,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                     <Show when={record()} keyed>
                       {(currentRecord) => (
                         <div
-                          class="absolute left-0 top-0 grid w-full border-b border-gray-200 text-xs hover:bg-gray-100"
+                          class={`absolute left-0 top-0 grid w-full border-b border-gray-200 text-xs ${RECORD_ROW_HOVER_CLASS}`}
                           style={{
                             'grid-template-columns': gridTemplateColumns(),
                             transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
