@@ -1,5 +1,6 @@
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import type { RecordSortKey, SortDirection } from '../types/types'
+import { calcJusticeCountForAj } from './justiceCount.ts'
 import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
 
 const DIFFICULTY_ORDER: Record<string, number> = {
@@ -157,15 +158,34 @@ export const sortRecords = (
         }
 
         case 'justiceCount': {
-          const leftScore =
-            left.combo_lamp === 'ALL JUSTICE' && left.notes && left.notes > 0
-              ? left.score
-              : Number.POSITIVE_INFINITY
-          const rightScore =
-            right.combo_lamp === 'ALL JUSTICE' && right.notes && right.notes > 0
-              ? right.score
-              : Number.POSITIVE_INFINITY
-          comparison = leftScore - rightScore
+          const leftJusticeCount = calcJusticeCountForAj({
+            comboLamp: left.combo_lamp,
+            score: left.score,
+            notes: left.notes,
+          })
+          const rightJusticeCount = calcJusticeCountForAj({
+            comboLamp: right.combo_lamp,
+            score: right.score,
+            notes: right.notes,
+          })
+
+          const leftMissing = leftJusticeCount === '' || leftJusticeCount === '-'
+          const rightMissing = rightJusticeCount === '' || rightJusticeCount === '-'
+
+          if (leftMissing && rightMissing) {
+            comparison = 0
+            break
+          }
+
+          if (leftMissing) {
+            return 1
+          }
+
+          if (rightMissing) {
+            return -1
+          }
+
+          comparison = leftJusticeCount - rightJusticeCount
           break
         }
         case 'lamp': {
