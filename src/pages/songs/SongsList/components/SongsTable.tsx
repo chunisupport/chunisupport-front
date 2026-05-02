@@ -8,7 +8,7 @@ const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
 const GRID_TEMPLATE_COLUMNS =
   'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 5.2rem 3.75rem repeat(5, 3.4rem)'
-const HEADER_CELL_CLASS = 'px-3 py-2 font-semibold whitespace-nowrap'
+const HEADER_CELL_CLASS = 'px-3 py-2 font-semibold whitespace-nowrap bg-gray-50'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
 type Props = {
   songs: SongDTO[]
@@ -99,7 +99,7 @@ const SongsTable = (props: Props) => {
       class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200 bg-white"
     >
       <table class="block min-w-[45rem] text-sm" aria-rowcount={props.songs.length}>
-        <thead class="block bg-gray-50">
+        <thead class="block">
           <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
             <th class={`${HEADER_CELL_CLASS} min-w-[15rem] text-left`} scope="col">
               タイトル
@@ -118,7 +118,7 @@ const SongsTable = (props: Props) => {
             </th>
             <For each={chartOrder}>
               {(difficulty) => (
-                <th class={`${HEADER_CELL_CLASS} bg-gray-50 text-center`} scope="col">
+                <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
                   {DIFFICULTY_SHORT_NAME_MAP[difficulty]}
                 </th>
               )}
