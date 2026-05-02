@@ -28,7 +28,7 @@ export const RECORD_COLUMN_BASE_DEFINITIONS: Record<
     sortKey: 'title',
     align: 'start',
   },
-  difficulty: { id: 'difficulty', label: '難', width: '2.5rem', sortKey: 'difficulty' },
+  difficulty: { id: 'difficulty', label: '難易度', width: '2.5rem', sortKey: 'difficulty' },
   const: { id: 'const', label: '定数', width: '2.5rem', sortKey: 'const' },
   score: { id: 'score', label: 'スコア', width: '4.4rem', sortKey: 'score' },
   rating: { id: 'rating', label: 'レート', width: '3.2rem', sortKey: 'rating' },
