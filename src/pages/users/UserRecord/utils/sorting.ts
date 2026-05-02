@@ -25,6 +25,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   score: 'score',
   updated_at: 'updatedAt',
   lamp: 'lamp',
+  justice_count: 'justiceCount',
 }
 
 type SortParamsSource = Record<string, string | string[] | undefined>
@@ -152,6 +153,19 @@ export const sortRecords = (
           if (leftMissing || rightMissing) {
             return comparison
           }
+          break
+        }
+
+        case 'justiceCount': {
+          const leftScore =
+            left.combo_lamp === 'ALL JUSTICE' && left.notes && left.notes > 0
+              ? left.score
+              : Number.POSITIVE_INFINITY
+          const rightScore =
+            right.combo_lamp === 'ALL JUSTICE' && right.notes && right.notes > 0
+              ? right.score
+              : Number.POSITIVE_INFINITY
+          comparison = leftScore - rightScore
           break
         }
         case 'lamp': {

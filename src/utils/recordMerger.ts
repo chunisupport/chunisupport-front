@@ -6,6 +6,7 @@ export interface PlayerRecordWithSongMeta extends PlayerRecordDTO {
   genre: string
   release: string | null
   release_version: string
+  notes: number | null
 }
 
 /**
@@ -25,11 +26,13 @@ export function attachSongMetaToRecords(
   return records.map((record) => {
     const song = songMap.get(record.id)
     const release = song?.release ?? null
+    const notes = song?.charts?.[record.difficulty]?.notes ?? null
 
     return {
       ...record,
       genre: song?.genre ?? '不明',
       release,
+      notes,
       release_version: getShortVersionName(resolveVersionNameByReleaseDate(release, versions)),
     }
   })

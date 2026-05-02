@@ -25,6 +25,7 @@ const RECORD_COLUMN_SETTINGS: RecordColumnSetting[] = [
   { id: 'score', defaultVisible: true },
   { id: 'rating', defaultVisible: true },
   { id: 'lamp', defaultVisible: true },
+  { id: 'justiceCount', defaultVisible: true },
   { id: 'updatedAt', defaultVisible: true },
 ]
 
