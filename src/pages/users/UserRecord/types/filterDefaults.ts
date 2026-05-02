@@ -1,6 +1,7 @@
 import type { MasterDataDTO, MasterItemDTO, VersionSummaryDTO } from '../../../../types/api'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../utils/versionConverter'
+import { CONST_MAX, CONST_MIN } from '../constants/constRange'
 import type { ChainLamp, ComboLamp, FilterState, HardLamp } from '../types/types'
 
 // TODO: これらの定数がハードコードされていていいのか？サーバから取ってこなくていいのか？
@@ -24,8 +25,8 @@ export const DEFAULT_FILTER: FilterState = {
   difficulties: ['MASTER', 'ULTIMA'],
   genres: [],
   versions: [],
-  constMin: 1.0,
-  constMax: 15.9,
+  constMin: CONST_MIN,
+  constMax: CONST_MAX,
   constFilterMode: 'level',
   scoreMin: 0,
   scoreMax: MAX_SCORE,

@@ -1,11 +1,12 @@
 import { MAX_SCORE } from '../../../../utils/scoreRank'
+import { CONST_MAX } from '../constants/constRange'
 import type { FilterState } from '../types/types'
 
 export function formatFilterSummary(filter: FilterState): string {
   const parts: string[] = []
   if (filter.excludeNoPlay) parts.push('未プレイ譜面を除外')
   if (filter.difficulties.length > 0) parts.push(`難易度: ${filter.difficulties.join(',')}`)
-  if (filter.constMin !== 0.0 || filter.constMax !== 15.9)
+  if (filter.constMin !== 0.0 || filter.constMax !== CONST_MAX)
     parts.push(`定数: ${filter.constMin}-${filter.constMax}`)
   if (filter.scoreMin !== 0 || filter.scoreMax !== MAX_SCORE)
     parts.push(`スコア: ${filter.scoreMin}-${filter.scoreMax}`)
