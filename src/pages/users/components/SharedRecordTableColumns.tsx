@@ -137,9 +137,9 @@ export const RecordUpdatedAtCell = (props: {
   formatUpdatedAt: (updatedAt: string | null) => string
 }) => (
   <div
-    class={`flex min-h-[34px] items-center justify-center pr-2 text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+    class={`flex min-h-[34px] items-center justify-end pr-2 text-right whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
   >
-    <span class="inline-block w-full text-center leading-none">
+    <span class="inline-block text-right leading-none">
       {props.record.is_played ? props.formatUpdatedAt(props.record.updated_at) : ''}
     </span>
   </div>
