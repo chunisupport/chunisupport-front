@@ -17,7 +17,7 @@
   "genres": [],
   "versions": [],
   "constMin": 1,
-  "constMax": 15.9,
+  "constMax": 16.0,
   "constFilterMode": "level",
   "scoreMin": 0,
   "scoreMax": 1010000,
@@ -72,7 +72,7 @@
 - `genres`: マスターデータ上の全ジャンル
 - `versions`: バージョン API (`/internal/master/versions`) から取得した全バージョン名
 - `constMin`: `1.0`
-- `constMax`: `15.9`
+- `constMax`: `16.0`
 - `constFilterMode`: `"level"`
 - `scoreMin`: `0`
 - `scoreMax`: `1010000`
@@ -139,7 +139,7 @@ API の `PlayerRecordDTO["difficulty"]` と同じ値を使います。
       "genres": [],
       "versions": ["CHUNITHM VERSE", "CHUNITHM X-VERSE"],
       "constMin": 14,
-      "constMax": 15.9,
+      "constMax": 16.0,
       "constFilterMode": "number",
       "scoreMin": 1000000,
       "scoreMax": 1010000,

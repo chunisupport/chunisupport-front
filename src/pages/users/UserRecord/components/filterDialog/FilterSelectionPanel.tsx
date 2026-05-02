@@ -3,6 +3,7 @@ import { createEffect, createSignal } from 'solid-js'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
+import { CONST_MAX, CONST_MIN } from '../../constants/constRange'
 import {
   CHAIN_LAMP_OPTIONS,
   COMBO_LAMP_OPTIONS,
@@ -41,14 +42,14 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const [scoreRankMin, setScoreRankMin] = createSignal('0点')
   const [scoreRankMax, setScoreRankMax] = createSignal('SSS+')
   const [constLevelMin, setConstLevelMin] = createSignal('1')
-  const [constLevelMax, setConstLevelMax] = createSignal('15+')
+  const [constLevelMax, setConstLevelMax] = createSignal('16')
   const [constMinInput, setConstMinInput] = createSignal(toInputValue(props.filters.constMin))
   const [constMaxInput, setConstMaxInput] = createSignal(toInputValue(props.filters.constMax))
   const [scoreMinInput, setScoreMinInput] = createSignal(toInputValue(props.filters.scoreMin))
   const [scoreMaxInput, setScoreMaxInput] = createSignal(toInputValue(props.filters.scoreMax))
 
   const Const2Level = (value: number) => {
-    const normalized = Math.max(1, Math.min(value, 15.9))
+    const normalized = Math.max(CONST_MIN, Math.min(value, CONST_MAX))
     if (normalized <= 6.9) {
       return String(Math.floor(normalized))
     }
@@ -68,6 +69,9 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     }
     if (isPlus) {
       return type === 'min' ? Number((base + 0.5).toFixed(1)) : Number((base + 0.9).toFixed(1))
+    }
+    if (base >= CONST_MAX) {
+      return CONST_MAX
     }
     return type === 'min' ? base : Number((base + 0.4).toFixed(1))
   }
@@ -240,14 +244,14 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           setConstMinInput(value)
           props.setFilters((prev) => ({
             ...prev,
-            constMin: parseNumberInput(value) ?? 0.0,
+            constMin: parseNumberInput(value) ?? CONST_MIN,
           }))
         }}
         onMaxCommit={(value) => {
           setConstMaxInput(value)
           props.setFilters((prev) => ({
             ...prev,
-            constMax: parseNumberInput(value) ?? 15.9,
+            constMax: parseNumberInput(value) ?? CONST_MAX,
           }))
         }}
         onConstFilterModeChange={handleConstFilterModeChange}

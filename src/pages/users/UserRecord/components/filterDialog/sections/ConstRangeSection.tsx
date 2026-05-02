@@ -3,6 +3,7 @@ import { NumberField } from '@kobalte/core/number-field'
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
+import { CONST_MAX } from '../../../constants/constRange'
 
 const CONST_LEVEL_OPTIONS = [
   '1',
@@ -29,6 +30,7 @@ const CONST_LEVEL_OPTIONS = [
   '14+',
   '15',
   '15+',
+  '16',
 ]
 
 type ConstRangeSectionProps = {
@@ -80,7 +82,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
             <NumberField.Input
               id="filter-const-max"
               min={0}
-              max={15.9}
+              max={CONST_MAX}
               step={0.1}
               class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
               onFocus={(event) => event.currentTarget.select()}
