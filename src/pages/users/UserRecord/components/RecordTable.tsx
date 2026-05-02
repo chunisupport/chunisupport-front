@@ -157,7 +157,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
 
         return (
           <div
-            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap text-sm ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
           >
             <span class={`inline-block w-full text-center leading-none ${constDisplay.className}`}>
               {constDisplay.valueText}
@@ -179,7 +179,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
 
         return (
           <div
-            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap text-sm ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
           >
             <span class={`inline-block w-full text-center leading-none ${ratingDisplay.className}`}>
               {ratingDisplay.text}

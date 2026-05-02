@@ -299,13 +299,13 @@ const WorldsendRecordTable = (props: {
                       href={buildWorldsendSongDetailPath(record.id)}
                       title={record.title}
                     />
-                    <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap">
+                    <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap text-sm">
                       <span class="inline-block w-full text-center leading-none">
                         {record.attribute ?? '-'}
                       </span>
                     </div>
                     <div
-                      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+                      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap text-sm ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
                     >
                       <span class="inline-block leading-none">
                         {worldsendLevelLabel(record.level_star)}

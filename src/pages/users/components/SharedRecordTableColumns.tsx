@@ -85,7 +85,7 @@ export const RecordHeaderButton = (props: RecordHeaderButtonProps) => (
 export const RecordTitleCell = (props: RecordTitleCellProps) => (
   <A
     href={props.href}
-    class="font-sans flex min-h-[34px] min-w-0 w-full items-center pl-2 text-inherit hover:underline"
+    class="font-sans flex min-h-[34px] min-w-0 w-full items-center pl-2 text-sm text-inherit hover:underline"
     title={props.title}
   >
     <span class="block w-full truncate">{props.title}</span>
@@ -137,7 +137,7 @@ export const RecordUpdatedAtCell = (props: {
   formatUpdatedAt: (updatedAt: string | null) => string
 }) => (
   <div
-    class={`flex min-h-[34px] items-center justify-center pr-2 text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+    class={`flex min-h-[34px] items-center justify-center pr-2 text-center whitespace-nowrap text-sm ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
   >
     <span class="inline-block w-full text-center leading-none">
       {props.record.is_played ? props.formatUpdatedAt(props.record.updated_at) : ''}
