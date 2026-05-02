@@ -27,8 +27,9 @@ type RecordTitleCellProps = {
   title: string
 }
 
-export const RECORD_ROW_HOVER_CLASS = 'transition-colors hover:bg-green-50'
-export const RECORD_CARD_HOVER_CLASS = 'transition-colors group-hover:bg-green-50'
+export const RECORD_HOVER_TRANSITION_CLASS = 'transition-colors'
+export const RECORD_ROW_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} hover:bg-green-50`
+export const RECORD_CARD_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} group-hover:bg-green-50`
 export const RECORD_HEADER_BUTTON_CLASS = `flex min-h-[34px] w-full items-center text-center whitespace-nowrap ${RECORD_ROW_HOVER_CLASS} focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset`
 export const RECORD_ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
 export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
