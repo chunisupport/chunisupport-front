@@ -1,6 +1,5 @@
 type ComboLamp = 'FULL COMBO' | 'ALL JUSTICE' | null
 
-const SCORE_UNIT = 1_000_000
 const AJ_BONUS_UNIT = 10_000
 
 /**
@@ -18,9 +17,7 @@ export const calcJusticeCountForAj = (params: {
   if (comboLamp !== 'ALL JUSTICE') return ''
   if (!notes || notes <= 0) return '-'
 
-  const justiceCount = Math.round(
-    (notes * (SCORE_UNIT + AJ_BONUS_UNIT) - notes * score) / SCORE_UNIT
-  )
+  const justiceCount = Math.round((notes * (1_000_000 + AJ_BONUS_UNIT - score)) / AJ_BONUS_UNIT)
   if (justiceCount < 0) return 0
   if (justiceCount > notes) return notes
   return justiceCount
