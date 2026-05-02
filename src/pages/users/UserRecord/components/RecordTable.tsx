@@ -200,9 +200,9 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
 
         return (
           <div
-            class={`flex min-h-[34px] items-center justify-end pr-1 text-right whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
           >
-            <span class="inline-block w-full text-right leading-none">
+            <span class="inline-block w-full text-center leading-none">
               {justiceCount === '' ? '' : justiceCount}
             </span>
           </div>

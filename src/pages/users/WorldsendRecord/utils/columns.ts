@@ -3,7 +3,14 @@ import {
   getRecordColumnBaseDefinition,
 } from '../../utils/recordColumnDefinitions.ts'
 
-type WorldsendRecordColumnId = 'title' | 'attribute' | 'level' | 'score' | 'lamp' | 'updatedAt'
+type WorldsendRecordColumnId =
+  | 'title'
+  | 'attribute'
+  | 'level'
+  | 'score'
+  | 'lamp'
+  | 'justiceCount'
+  | 'updatedAt'
 type WorldsendRecordSortKey = WorldsendRecordColumnId
 
 type WorldsendRecordColumnDefinition = {
@@ -26,6 +33,7 @@ const WORLDSEND_RECORD_COLUMN_SETTINGS: WorldsendRecordColumnSetting[] = [
   { id: 'level', defaultVisible: true },
   { id: 'score', defaultVisible: true },
   { id: 'lamp', defaultVisible: true },
+  { id: 'justiceCount', defaultVisible: true },
   { id: 'updatedAt', defaultVisible: true },
 ]
 

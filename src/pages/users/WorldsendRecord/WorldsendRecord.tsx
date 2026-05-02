@@ -25,6 +25,7 @@ import {
 import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
+import { calcJusticeCountForAj } from '../UserRecord/utils/justiceCount'
 import {
   compareUpdatedAtWithMissingLast,
   formatUpdatedAt,
@@ -36,7 +37,14 @@ type Props = {
   records: WorldsendRecordDTO[]
 }
 
-type WorldsendSortKey = 'title' | 'attribute' | 'level' | 'score' | 'updatedAt' | 'lamp'
+type WorldsendSortKey =
+  | 'title'
+  | 'attribute'
+  | 'level'
+  | 'score'
+  | 'updatedAt'
+  | 'lamp'
+  | 'justiceCount'
 type WorldsendSortDirection = 'asc' | 'desc'
 
 const WE_SORT_COL_MAP: Record<string, WorldsendSortKey> = {
@@ -46,6 +54,7 @@ const WE_SORT_COL_MAP: Record<string, WorldsendSortKey> = {
   score: 'score',
   updated_at: 'updatedAt',
   lamp: 'lamp',
+  justice_count: 'justiceCount',
 }
 
 type WorldsendRecordWithSongMeta = WorldsendRecordDTO & {
@@ -162,6 +171,32 @@ const WorldsendRecordTable = (props: {
             }
             break
           }
+
+          case 'justiceCount': {
+            const leftJusticeCount = calcJusticeCountForAj({
+              comboLamp: left.combo_lamp,
+              score: left.score,
+              notes: left.notes,
+            })
+            const rightJusticeCount = calcJusticeCountForAj({
+              comboLamp: right.combo_lamp,
+              score: right.score,
+              notes: right.notes,
+            })
+
+            const leftMissing = leftJusticeCount === '' || leftJusticeCount === '-'
+            const rightMissing = rightJusticeCount === '' || rightJusticeCount === '-'
+
+            if (leftMissing && rightMissing) {
+              comparison = 0
+              break
+            }
+            if (leftMissing) return 1
+            if (rightMissing) return -1
+
+            comparison = leftJusticeCount - rightJusticeCount
+            break
+          }
           case 'lamp': {
             const leftMissing = !left.is_played
             const rightMissing = !right.is_played
@@ -231,7 +266,7 @@ const WorldsendRecordTable = (props: {
         }
       >
         <div class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-gray-200">
-          <div class="min-w-[36.5rem]">
+          <div class="min-w-[38.5rem]">
             <div class="border-b border-gray-200 bg-white">
               <div
                 class="grid text-xs font-semibold"
@@ -278,6 +313,14 @@ const WorldsendRecordTable = (props: {
                   onClick={() => handleSortChange('lamp')}
                 />
                 <RecordHeaderButton
+                  label="J数"
+                  active={sortKey() === 'justiceCount'}
+                  direction={sortDirection()}
+                  align="center"
+                  class="justify-center"
+                  onClick={() => handleSortChange('justiceCount')}
+                />
+                <RecordHeaderButton
                   label="更新日"
                   active={sortKey() === 'updatedAt'}
                   direction={sortDirection()}
@@ -313,6 +356,20 @@ const WorldsendRecordTable = (props: {
                     </div>
                     <RecordScoreCell record={record} />
                     <RecordLampCell record={record} />
+                    <div
+                      class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+                    >
+                      <span class="inline-block w-full text-center leading-none">
+                        {(() => {
+                          const justiceCount = calcJusticeCountForAj({
+                            comboLamp: record.combo_lamp,
+                            score: record.score,
+                            notes: record.notes,
+                          })
+                          return justiceCount === '' ? '' : justiceCount
+                        })()}
+                      </span>
+                    </div>
                     <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />
                   </div>
                 )}
