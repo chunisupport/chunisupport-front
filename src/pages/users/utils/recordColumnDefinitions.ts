@@ -33,7 +33,7 @@ export const RECORD_COLUMN_BASE_DEFINITIONS: Record<
   score: { id: 'score', label: 'スコア', width: '4.4rem', sortKey: 'score' },
   rating: { id: 'rating', label: 'レート', width: '3.2rem', sortKey: 'rating' },
   lamp: { id: 'lamp', label: 'AJ', width: '2.5rem', sortKey: 'lamp' },
-  updatedAt: { id: 'updatedAt', label: '更新日', width: '4.4rem', sortKey: 'updatedAt' },
+  updatedAt: { id: 'updatedAt', label: '更新日', width: '5rem', sortKey: 'updatedAt' },
   attribute: { id: 'attribute', label: '属性', width: '2.5rem', sortKey: 'attribute' },
   level: { id: 'level', label: 'レベル', width: '3.1rem', sortKey: 'level' },
 }
