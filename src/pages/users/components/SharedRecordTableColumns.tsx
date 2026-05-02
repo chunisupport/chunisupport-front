@@ -3,7 +3,7 @@ import type { JSX } from 'solid-js'
 
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
 import { getScoreRank, type ScoreRank } from '../../../utils/scoreRank'
-import { LampPlaceholderBadge, NoPlayBadge, renderSortIndicator } from './RecordTableUiParts'
+import { LampPlaceholderBadge, renderSortIndicator } from './RecordTableUiParts'
 
 type SharedSortDirection = 'asc' | 'desc' | null
 type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
@@ -31,7 +31,7 @@ export const RECORD_HOVER_TRANSITION_CLASS = 'transition-colors'
 export const RECORD_ROW_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} hover:bg-green-50`
 export const RECORD_CARD_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} group-hover:bg-green-50`
 export const RECORD_HEADER_BUTTON_CLASS = `flex min-h-[34px] w-full items-center text-center whitespace-nowrap ${RECORD_ROW_HOVER_CLASS} focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset`
-export const RECORD_ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
+export const RECORD_ALPHANUMERIC_COLUMN_CLASS = 'text-sm'
 export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
 
 const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
@@ -85,7 +85,7 @@ export const RecordHeaderButton = (props: RecordHeaderButtonProps) => (
 export const RecordTitleCell = (props: RecordTitleCellProps) => (
   <A
     href={props.href}
-    class="font-sans flex min-h-[34px] min-w-0 w-full items-center pl-2 text-inherit hover:underline"
+    class="font-sans flex min-h-[34px] min-w-0 w-full items-center pl-2 text-sm text-inherit hover:underline"
     title={props.title}
   >
     <span class="block w-full truncate">{props.title}</span>
@@ -96,10 +96,8 @@ export const RecordScoreCell = (props: { record: ScoreRecord }): JSX.Element => 
   if (!props.record.is_played) {
     return (
       <div
-        class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-      >
-        <NoPlayBadge />
-      </div>
+        class={`flex min-h-[34px] flex-col items-end justify-center px-1 text-right whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+      />
     )
   }
 
@@ -107,11 +105,13 @@ export const RecordScoreCell = (props: { record: ScoreRecord }): JSX.Element => 
 
   return (
     <div
-      class={`flex min-h-[34px] flex-col items-start justify-center px-1 text-left whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+      class={`flex min-h-[34px] flex-col items-end justify-center px-1 text-right whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
     >
-      <span class="leading-none">{props.record.score.toLocaleString('ja-JP')}</span>
+      <span class="w-full text-right leading-none">
+        {props.record.score.toLocaleString('ja-JP')}
+      </span>
       <span
-        class={`mt-0.5 text-[10px] font-semibold leading-none ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}
+        class={`mt-0.5 w-full text-right text-[10px] font-semibold leading-none ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}
       >
         {scoreRank}
       </span>
@@ -137,9 +137,9 @@ export const RecordUpdatedAtCell = (props: {
   formatUpdatedAt: (updatedAt: string | null) => string
 }) => (
   <div
-    class={`flex min-h-[34px] items-center justify-center pr-2 text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+    class={`flex min-h-[34px] items-center justify-end pr-2 text-right whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
   >
-    <span class="inline-block w-full text-center leading-none">
+    <span class="inline-block text-right leading-none">
       {props.record.is_played ? props.formatUpdatedAt(props.record.updated_at) : ''}
     </span>
   </div>
