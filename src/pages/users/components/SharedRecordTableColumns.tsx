@@ -31,7 +31,7 @@ export const RECORD_HOVER_TRANSITION_CLASS = 'transition-colors'
 export const RECORD_ROW_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} hover:bg-green-50`
 export const RECORD_CARD_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} group-hover:bg-green-50`
 export const RECORD_HEADER_BUTTON_CLASS = `flex min-h-[34px] w-full items-center text-center whitespace-nowrap ${RECORD_ROW_HOVER_CLASS} focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset`
-export const RECORD_ALPHANUMERIC_COLUMN_CLASS = 'text-xs'
+export const RECORD_ALPHANUMERIC_COLUMN_CLASS = 'text-sm'
 export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
 
 const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
@@ -137,7 +137,7 @@ export const RecordUpdatedAtCell = (props: {
   formatUpdatedAt: (updatedAt: string | null) => string
 }) => (
   <div
-    class={`flex min-h-[34px] items-center justify-center pr-2 text-center whitespace-nowrap text-sm ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+    class={`flex min-h-[34px] items-center justify-center pr-2 text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
   >
     <span class="inline-block w-full text-center leading-none">
       {props.record.is_played ? props.formatUpdatedAt(props.record.updated_at) : ''}

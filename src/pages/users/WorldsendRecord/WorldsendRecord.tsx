@@ -305,7 +305,7 @@ const WorldsendRecordTable = (props: {
                       </span>
                     </div>
                     <div
-                      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap text-sm ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+                      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
                     >
                       <span class="inline-block leading-none">
                         {worldsendLevelLabel(record.level_star)}
