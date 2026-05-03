@@ -1,3 +1,4 @@
+import { Combobox } from '@kobalte/core/combobox'
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createMemo, createSignal, For } from 'solid-js'
@@ -11,12 +12,25 @@ type ColumnSettingsDialogProps = {
   onApply: (visibleColumnIds: RecordColumnId[]) => void
 }
 
+type ColumnOption = {
+  id: RecordColumnId
+  label: string
+}
+
+const COLUMN_OPTIONS: ColumnOption[] = RECORD_COLUMN_DEFINITIONS.map((column) => ({
+  id: column.id,
+  label: column.label,
+}))
+
 const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
   const [selectedColumnIds, setSelectedColumnIds] = createSignal<RecordColumnId[]>(
     props.visibleColumnIds
   )
 
-  const selectedIdSet = createMemo(() => new Set(selectedColumnIds()))
+  const selectedOptions = createMemo(() => {
+    const selectedIdSet = new Set(selectedColumnIds())
+    return COLUMN_OPTIONS.filter((option) => selectedIdSet.has(option.id))
+  })
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
@@ -25,19 +39,16 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
     props.onOpenChange(open)
   }
 
-  const toggleColumn = (columnId: RecordColumnId) => {
-    setSelectedColumnIds((prev) => {
-      if (prev.includes(columnId)) {
-        if (prev.length === 1) {
-          return prev
-        }
-        return prev.filter((id) => id !== columnId)
-      }
-      return [...prev, columnId]
-    })
+  const handleChange = (options: ColumnOption[]) => {
+    const nextIds = sortVisibleColumnIdsByDefinitionOrder(options.map((option) => option.id))
+    setSelectedColumnIds(nextIds)
   }
 
   const handleApply = () => {
+    if (selectedColumnIds().length === 0) {
+      return
+    }
+
     props.onApply(sortVisibleColumnIdsByDefinitionOrder(selectedColumnIds()))
     props.onOpenChange(false)
   }
@@ -49,20 +60,41 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
         <Dialog.Content class="fixed z-50 left-1/2 top-1/2 max-h-11/12 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg">
           <Dialog.Title class="mb-4 text-lg font-bold">列設定</Dialog.Title>
           <p class="mb-3 text-xs text-gray-500">表示する列を選択してください（1列以上必須）</p>
-          <div class="space-y-2">
-            <For each={RECORD_COLUMN_DEFINITIONS}>
-              {(column) => (
-                <label class="flex cursor-pointer items-center gap-2 rounded border border-gray-200 px-3 py-2 hover:bg-gray-50">
-                  <input
-                    type="checkbox"
-                    checked={selectedIdSet().has(column.id)}
-                    onChange={() => toggleColumn(column.id)}
-                  />
-                  <span>{column.label}</span>
-                </label>
-              )}
+
+          <Combobox<ColumnOption>
+            multiple
+            options={COLUMN_OPTIONS}
+            optionValue="id"
+            optionTextValue="label"
+            value={selectedOptions()}
+            onChange={handleChange}
+            placeholder="表示列を選択"
+            itemComponent={(props) => (
+              <Combobox.Item item={props.item} class="px-3 py-2 hover:bg-gray-100 cursor-pointer">
+                <Combobox.ItemLabel />
+              </Combobox.Item>
+            )}
+          >
+            <Combobox.Control>
+              <Combobox.Input class="w-full rounded border border-gray-300 px-3 py-2" />
+              <Combobox.Trigger class="ml-2 rounded border border-gray-300 px-3 py-2">
+                選択
+              </Combobox.Trigger>
+            </Combobox.Control>
+            <Combobox.Portal>
+              <Combobox.Content class="z-50 mt-1 max-h-64 w-[--kb-combobox-content-width] overflow-auto rounded border border-gray-200 bg-white shadow-md">
+                <Combobox.Listbox />
+              </Combobox.Content>
+            </Combobox.Portal>
+          </Combobox>
+
+          <div class="mt-2 text-xs text-gray-500">
+            選択中:{' '}
+            <For each={selectedOptions()}>
+              {(option) => <span class="mr-1">{option.label}</span>}
             </For>
           </div>
+
           <div class="mt-6 flex justify-end gap-2">
             <button
               type="button"
@@ -73,8 +105,9 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
             </button>
             <button
               type="button"
-              class="rounded bg-primary-600 px-4 py-2 text-white hover:bg-primary-700"
+              class="rounded bg-primary-600 px-4 py-2 text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-300"
               onClick={handleApply}
+              disabled={selectedColumnIds().length === 0}
             >
               適用
             </button>
