@@ -1,6 +1,6 @@
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
-import { createMemo, createSignal } from 'solid-js'
+import { createMemo, createSignal, For } from 'solid-js'
 import type { RecordColumnId } from '../types/types'
 import { RECORD_COLUMN_DEFINITIONS, sortVisibleColumnIdsByDefinitionOrder } from '../utils/columns'
 
@@ -50,16 +50,18 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
           <Dialog.Title class="mb-4 text-lg font-bold">列設定</Dialog.Title>
           <p class="mb-3 text-xs text-gray-500">表示する列を選択してください（1列以上必須）</p>
           <div class="space-y-2">
-            {RECORD_COLUMN_DEFINITIONS.map((column) => (
-              <label class="flex cursor-pointer items-center gap-2 rounded border border-gray-200 px-3 py-2 hover:bg-gray-50">
-                <input
-                  type="checkbox"
-                  checked={selectedIdSet().has(column.id)}
-                  onChange={() => toggleColumn(column.id)}
-                />
-                <span>{column.label}</span>
-              </label>
-            ))}
+            <For each={RECORD_COLUMN_DEFINITIONS}>
+              {(column) => (
+                <label class="flex cursor-pointer items-center gap-2 rounded border border-gray-200 px-3 py-2 hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={selectedIdSet().has(column.id)}
+                    onChange={() => toggleColumn(column.id)}
+                  />
+                  <span>{column.label}</span>
+                </label>
+              )}
+            </For>
           </div>
           <div class="mt-6 flex justify-end gap-2">
             <button
