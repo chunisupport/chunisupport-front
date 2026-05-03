@@ -1,8 +1,8 @@
 import { Combobox } from '@kobalte/core/combobox'
 import { Dialog } from '@kobalte/core/dialog'
-import { ChevronsUpDown } from 'lucide-solid'
+import { Check, ChevronsUpDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createMemo, createSignal } from 'solid-js'
+import { createMemo, createSignal, For, Show } from 'solid-js'
 import type { RecordColumnId } from '../types/types'
 import { RECORD_COLUMN_DEFINITIONS, sortVisibleColumnIdsByDefinitionOrder } from '../utils/columns'
 
@@ -33,11 +33,7 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
     return COLUMN_OPTIONS.filter((option) => selectedIdSet.has(option.id))
   })
 
-  const selectedLabelsText = createMemo(() =>
-    selectedOptions()
-      .map((option) => option.label)
-      .join(' / ')
-  )
+  const selectedIdSet = createMemo(() => new Set(selectedColumnIds()))
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
@@ -79,18 +75,33 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
             itemComponent={(props) => (
               <Combobox.Item
                 item={props.item}
-                class="cursor-pointer px-3 py-2 text-gray-800 hover:bg-gray-100"
+                class={`cursor-pointer px-3 py-2 text-gray-800 hover:bg-green-50 ${selectedIdSet().has(props.item.rawValue.id) ? 'bg-green-50' : ''}`}
               >
-                <Combobox.ItemLabel>{props.item.rawValue.label}</Combobox.ItemLabel>
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex w-4 justify-center text-green-700">
+                    {selectedIdSet().has(props.item.rawValue.id) ? <Check size={14} /> : null}
+                  </span>
+                  <Combobox.ItemLabel>{props.item.rawValue.label}</Combobox.ItemLabel>
+                </div>
               </Combobox.Item>
             )}
           >
             <Combobox.Control class="flex items-center rounded border border-gray-300 px-3 py-2">
-              <Combobox.Input
-                class="w-full bg-transparent outline-none"
-                value={selectedLabelsText()}
-                placeholder="表示列を選択"
-              />
+              <div class="flex min-h-6 flex-1 flex-wrap gap-1">
+                <Show
+                  when={selectedOptions().length > 0}
+                  fallback={<span class="text-gray-400">表示列を選択</span>}
+                >
+                  <For each={selectedOptions()}>
+                    {(option) => (
+                      <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">
+                        {option.label}
+                      </span>
+                    )}
+                  </For>
+                </Show>
+              </div>
+              <Combobox.Input class="h-0 w-0 opacity-0" />
               <Combobox.Trigger class="text-gray-500" aria-label="列選択を開く">
                 <ChevronsUpDown size={16} />
               </Combobox.Trigger>
