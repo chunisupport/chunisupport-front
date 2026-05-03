@@ -52,7 +52,7 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
       return
     }
 
-    props.onApply(sortVisibleColumnIdsByDefinitionOrder(selectedColumnIds()))
+    props.onApply(selectedColumnIds())
     props.onOpenChange(false)
   }
 
