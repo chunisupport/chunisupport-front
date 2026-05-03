@@ -28,6 +28,7 @@ import {
 import type { RecordColumnId, RecordSortKey, SortDirection } from '../types/types'
 import { createGridTemplateColumns, getVisibleColumns } from '../utils/columns'
 import { getConstDisplay, getRatingDisplay } from '../utils/constDisplay'
+import { calcJusticeCountForAj } from '../utils/justiceCount'
 import { formatUpdatedAt } from '../utils/updatedAt'
 
 interface RecordTableProps {
@@ -189,6 +190,25 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
       }
       case 'lamp':
         return <RecordLampCell record={currentRecord} />
+
+      case 'justiceCount': {
+        const justiceCount = calcJusticeCountForAj({
+          comboLamp: currentRecord.combo_lamp,
+          score: currentRecord.score,
+          notes: currentRecord.notes,
+        })
+
+        return (
+          <div
+            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+          >
+            <span class="inline-block w-full text-center leading-none">
+              {justiceCount === '' ? '' : justiceCount}
+            </span>
+          </div>
+        )
+      }
+
       case 'updatedAt':
         return <RecordUpdatedAtCell record={currentRecord} formatUpdatedAt={formatUpdatedAt} />
       default:

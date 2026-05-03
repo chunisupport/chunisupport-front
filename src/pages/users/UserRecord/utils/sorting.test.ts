@@ -105,6 +105,27 @@ test('同値の並び順は元の順序を維持する', () => {
   )
 })
 
+test('J数ソートはJ数を基準に並べ、J数なし行は常に末尾に寄せる', () => {
+  const records = [
+    createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', notes: 1000, score: 1009980 }),
+    createRecord({ id: 'aj-j1', combo_lamp: 'ALL JUSTICE', notes: 1000, score: 1009990 }),
+    createRecord({ id: 'aj-j0', combo_lamp: 'ALL JUSTICE', notes: null, score: 1010000 }),
+    createRecord({ id: 'aj-no-notes', combo_lamp: 'ALL JUSTICE', notes: null, score: 1009990 }),
+    createRecord({ id: 'fc', combo_lamp: 'FULL COMBO', notes: 1000, score: 1009990 }),
+    createRecord({ id: 'unplayed', is_played: false, combo_lamp: null, notes: 1000, score: 0 }),
+  ]
+
+  assert.deepEqual(
+    sortRecords(records, 'justiceCount', 'asc').map((record) => record.id),
+    ['aj-j0', 'aj-j1', 'aj-j2', 'aj-no-notes', 'fc', 'unplayed']
+  )
+
+  assert.deepEqual(
+    sortRecords(records, 'justiceCount', 'desc').map((record) => record.id),
+    ['aj-j2', 'aj-j1', 'aj-j0', 'aj-no-notes', 'fc', 'unplayed']
+  )
+})
+
 test('ランプソートはAJ、FC、ランプなし、未プレイの順で並べる', () => {
   const records = [
     createRecord({ id: 'none', combo_lamp: null }),

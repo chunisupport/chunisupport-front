@@ -10,6 +10,7 @@ export type RecordSortKey =
   | 'const'
   | 'rating'
   | 'score'
+  | 'justiceCount'
   | 'updatedAt'
   | 'lamp'
 export type RecordColumnId =
@@ -19,6 +20,7 @@ export type RecordColumnId =
   | 'score'
   | 'rating'
   | 'lamp'
+  | 'justiceCount'
   | 'updatedAt'
 export type SortDirection = 'asc' | 'desc'
 
