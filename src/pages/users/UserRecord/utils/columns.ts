@@ -50,6 +50,10 @@ const COLUMN_BY_ID = new Map<RecordColumnId, RecordColumnDefinition>(
   RECORD_COLUMN_DEFINITIONS.map((column) => [column.id, column])
 )
 
+const COLUMN_ORDER = new Map<RecordColumnId, number>(
+  RECORD_COLUMN_DEFINITIONS.map((column, index) => [column.id, index])
+)
+
 export const getDefaultVisibleColumnIds = (): RecordColumnId[] =>
   RECORD_COLUMN_DEFINITIONS.filter((column) => column.defaultVisible).map((column) => column.id)
 
@@ -76,6 +80,14 @@ export const getVisibleColumns = (visibleColumnIds: RecordColumnId[]): RecordCol
   return visibleColumnIds
     .map((columnId) => COLUMN_BY_ID.get(columnId))
     .filter((column): column is RecordColumnDefinition => column !== undefined)
+}
+
+export const sortVisibleColumnIdsByDefinitionOrder = (
+  visibleColumnIds: RecordColumnId[]
+): RecordColumnId[] => {
+  return [...visibleColumnIds].sort(
+    (a, b) => (COLUMN_ORDER.get(a) ?? 0) - (COLUMN_ORDER.get(b) ?? 0)
+  )
 }
 
 export { createGridTemplateColumns }

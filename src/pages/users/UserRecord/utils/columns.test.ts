@@ -6,6 +6,7 @@ import {
   getDefaultVisibleColumnIds,
   getVisibleColumns,
   sanitizeVisibleColumnIds,
+  sortVisibleColumnIdsByDefinitionOrder,
 } from './columns.ts'
 
 test('表示カラム未指定時は既定の表示カラムを返す', () => {
@@ -33,5 +34,13 @@ test('表示カラムの順序を維持してカラム定義を取得できる',
 
 test('表示カラム定義からgrid-template-columns文字列を生成できる', () => {
   const columns = getVisibleColumns(['title', 'score'])
-  assert.equal(createGridTemplateColumns(columns), 'minmax(11.25rem,1fr) 3.8rem')
+  assert.equal(createGridTemplateColumns(columns), 'minmax(11.25rem,1fr) 4.4rem')
+})
+
+test('表示カラムIDを定義順に並び替える', () => {
+  assert.deepEqual(sortVisibleColumnIdsByDefinitionOrder(['updatedAt', 'title', 'score']), [
+    'title',
+    'score',
+    'updatedAt',
+  ])
 })

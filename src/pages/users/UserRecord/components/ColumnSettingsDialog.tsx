@@ -2,7 +2,7 @@ import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createMemo, createSignal } from 'solid-js'
 import type { RecordColumnId } from '../types/types'
-import { RECORD_COLUMN_DEFINITIONS } from '../utils/columns'
+import { RECORD_COLUMN_DEFINITIONS, sortVisibleColumnIdsByDefinitionOrder } from '../utils/columns'
 
 type ColumnSettingsDialogProps = {
   open: boolean
@@ -38,7 +38,7 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
   }
 
   const handleApply = () => {
-    props.onApply(selectedColumnIds())
+    props.onApply(sortVisibleColumnIdsByDefinitionOrder(selectedColumnIds()))
     props.onOpenChange(false)
   }
 
