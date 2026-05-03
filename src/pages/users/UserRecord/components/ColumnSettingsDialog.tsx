@@ -1,5 +1,6 @@
 import { Combobox } from '@kobalte/core/combobox'
 import { Dialog } from '@kobalte/core/dialog'
+import { ChevronsUpDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createSignal } from 'solid-js'
 import type { RecordColumnId } from '../types/types'
@@ -76,8 +77,11 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
             onChange={handleChange}
             placeholder="表示列を選択"
             itemComponent={(props) => (
-              <Combobox.Item item={props.item} class="cursor-pointer px-3 py-2 hover:bg-gray-100">
-                <Combobox.ItemLabel />
+              <Combobox.Item
+                item={props.item}
+                class="cursor-pointer px-3 py-2 text-gray-800 hover:bg-gray-100"
+              >
+                <Combobox.ItemLabel>{props.item.rawValue.label}</Combobox.ItemLabel>
               </Combobox.Item>
             )}
           >
@@ -88,7 +92,7 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
                 placeholder="表示列を選択"
               />
               <Combobox.Trigger class="text-gray-500" aria-label="列選択を開く">
-                ▼
+                <ChevronsUpDown size={16} />
               </Combobox.Trigger>
             </Combobox.Control>
             <Combobox.Portal>
