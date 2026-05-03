@@ -1,7 +1,7 @@
 import { Combobox } from '@kobalte/core/combobox'
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
-import { createMemo, createSignal, For } from 'solid-js'
+import { createMemo, createSignal } from 'solid-js'
 import type { RecordColumnId } from '../types/types'
 import { RECORD_COLUMN_DEFINITIONS, sortVisibleColumnIdsByDefinitionOrder } from '../utils/columns'
 
@@ -31,6 +31,12 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
     const selectedIdSet = new Set(selectedColumnIds())
     return COLUMN_OPTIONS.filter((option) => selectedIdSet.has(option.id))
   })
+
+  const selectedLabelsText = createMemo(() =>
+    selectedOptions()
+      .map((option) => option.label)
+      .join(' / ')
+  )
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
@@ -70,15 +76,19 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
             onChange={handleChange}
             placeholder="表示列を選択"
             itemComponent={(props) => (
-              <Combobox.Item item={props.item} class="px-3 py-2 hover:bg-gray-100 cursor-pointer">
+              <Combobox.Item item={props.item} class="cursor-pointer px-3 py-2 hover:bg-gray-100">
                 <Combobox.ItemLabel />
               </Combobox.Item>
             )}
           >
-            <Combobox.Control>
-              <Combobox.Input class="w-full rounded border border-gray-300 px-3 py-2" />
-              <Combobox.Trigger class="ml-2 rounded border border-gray-300 px-3 py-2">
-                選択
+            <Combobox.Control class="flex items-center rounded border border-gray-300 px-3 py-2">
+              <Combobox.Input
+                class="w-full bg-transparent outline-none"
+                value={selectedLabelsText()}
+                placeholder="表示列を選択"
+              />
+              <Combobox.Trigger class="text-gray-500" aria-label="列選択を開く">
+                ▼
               </Combobox.Trigger>
             </Combobox.Control>
             <Combobox.Portal>
@@ -87,13 +97,6 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
               </Combobox.Content>
             </Combobox.Portal>
           </Combobox>
-
-          <div class="mt-2 text-xs text-gray-500">
-            選択中:{' '}
-            <For each={selectedOptions()}>
-              {(option) => <span class="mr-1">{option.label}</span>}
-            </For>
-          </div>
 
           <div class="mt-6 flex justify-end gap-2">
             <button
