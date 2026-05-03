@@ -15,6 +15,7 @@ import { Loading, ScrollToTop } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { UserRecordDTO } from '../../../types/api'
 import { attachSongMetaToRecords } from '../../../utils/recordMerger'
+import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FilterDialog from './components/FilterDialog'
 import FilterStats from './components/FilterStats'
 import FilterToolbar from './components/FilterToolbar'
@@ -49,6 +50,7 @@ const UserRecord: Component<Props> = (props) => {
   // フィルターダイアログの開閉状態
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
+  const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
 
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
@@ -56,7 +58,7 @@ const UserRecord: Component<Props> = (props) => {
 
   const [sortKey, setSortKey] = createSignal<RecordSortKey | null>(initialSortKey)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(initialSortOrder)
-  const [visibleColumnIds] = createSignal<RecordColumnId[]>(
+  const [visibleColumnIds, setVisibleColumnIds] = createSignal<RecordColumnId[]>(
     sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
   )
 
@@ -123,6 +125,7 @@ const UserRecord: Component<Props> = (props) => {
               title={filters().title}
               onTitleChange={(value) => setFilters({ ...filters(), title: value })}
               onOpenFilter={() => setFilterOpen(true)}
+              onOpenColumnSettings={() => setColumnSettingsOpen(true)}
             />
 
             {/* フィルター統計 */}
@@ -158,6 +161,15 @@ const UserRecord: Component<Props> = (props) => {
               versions={versionSummaries()?.versions}
               defaultFilter={getDefaultFilter(masterData(), versionSummaries()?.versions)}
               setSavedFilters={setSavedFilters}
+            />
+
+            <ColumnSettingsDialog
+              open={columnSettingsOpen()}
+              onOpenChange={setColumnSettingsOpen}
+              visibleColumnIds={visibleColumnIds()}
+              onApply={(nextVisibleColumnIds) =>
+                setVisibleColumnIds(sanitizeVisibleColumnIds(nextVisibleColumnIds))
+              }
             />
           </div>
         </Show>
