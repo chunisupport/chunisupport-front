@@ -75,11 +75,11 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
             itemComponent={(props) => (
               <Combobox.Item
                 item={props.item}
-                class={`cursor-pointer px-3 py-2 text-gray-800 hover:bg-green-50 ${selectedIdSet().has(props.item.rawValue.id) ? 'bg-green-50' : ''}`}
+                class="cursor-pointer px-3 py-2 text-gray-800 hover:bg-green-50 data-[selected]:bg-green-50"
               >
                 <div class="flex items-center gap-2">
                   <span class="inline-flex w-4 justify-center text-green-700">
-                    {selectedIdSet().has(props.item.rawValue.id) ? <Check size={14} /> : null}
+                    <Combobox.ItemIndicator><Check size={14} /></Combobox.ItemIndicator>
                   </span>
                   <Combobox.ItemLabel>{props.item.rawValue.label}</Combobox.ItemLabel>
                 </div>
