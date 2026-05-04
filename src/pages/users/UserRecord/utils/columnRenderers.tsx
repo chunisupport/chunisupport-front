@@ -24,7 +24,6 @@ const DIFFICULTY_BADGE_CLASS =
   'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
 const BASE_CELL_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap`
 const DIFFICULTY_COLUMN_CLASS = `${BASE_CELL_CLASS} font-oswald text-sm font-semibold`
-const ALPHANUMERIC_CELL_CLASS = `${BASE_CELL_CLASS} text-center ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`
 
 export const recordColumnRenderers: Record<
   RecordColumnId,
@@ -46,7 +45,7 @@ export const recordColumnRenderers: Record<
   const: (record) => {
     const constDisplay = getConstDisplay(record.const, record.is_const_unknown)
     return (
-      <div class={ALPHANUMERIC_CELL_CLASS}>
+      <div class={`${BASE_CELL_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}>
         <span class={`inline-block w-full text-center leading-none ${constDisplay.className}`}>
           {constDisplay.valueText}
           <Show when={constDisplay.markerText}>
@@ -60,7 +59,7 @@ export const recordColumnRenderers: Record<
   rating: (record) => {
     const ratingDisplay = getRatingDisplay(record.rating, record.is_played, record.is_const_unknown)
     return (
-      <div class={ALPHANUMERIC_CELL_CLASS}>
+      <div class={`${BASE_CELL_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}>
         <span class={`inline-block w-full text-center leading-none ${ratingDisplay.className}`}>
           {ratingDisplay.text}
         </span>
@@ -75,7 +74,7 @@ export const recordColumnRenderers: Record<
       notes: record.notes,
     })
     return (
-      <div class={ALPHANUMERIC_CELL_CLASS}>
+      <div class={`${BASE_CELL_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}>
         <span class="inline-block w-full text-center leading-none">
           {justiceCount === '' ? '' : justiceCount}
         </span>
