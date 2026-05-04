@@ -1,8 +1,8 @@
-import { Combobox } from '@kobalte/core/combobox'
 import { Dialog } from '@kobalte/core/dialog'
+import { Select } from '@kobalte/core/select'
 import { Check, ChevronsUpDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createMemo, createSignal, For, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import type { RecordColumnId } from '../types/types'
 import { RECORD_COLUMN_DEFINITIONS, sortVisibleColumnIdsByDefinitionOrder } from '../utils/columns'
 
@@ -35,10 +35,13 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
 
   const selectedIdSet = createMemo(() => new Set(selectedColumnIds()))
 
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
+  createEffect(() => {
+    if (props.open) {
       setSelectedColumnIds(props.visibleColumnIds)
     }
+  })
+
+  const handleOpenChange = (open: boolean) => {
     props.onOpenChange(open)
   }
 
@@ -48,11 +51,14 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
   }
 
   const handleApply = () => {
-    if (selectedColumnIds().length === 0) {
+    if (selectedIdSet().size === 0) {
       return
     }
 
-    props.onApply(selectedColumnIds())
+    const nextVisibleColumnIds = RECORD_COLUMN_DEFINITIONS.map((column) => column.id).filter((id) =>
+      selectedIdSet().has(id)
+    )
+    props.onApply(nextVisibleColumnIds)
     props.onOpenChange(false)
   }
 
@@ -64,7 +70,7 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
           <Dialog.Title class="mb-4 text-lg font-bold">列設定</Dialog.Title>
           <p class="mb-3 text-xs text-gray-500">表示する列を選択してください（1列以上必須）</p>
 
-          <Combobox<ColumnOption>
+          <Select<ColumnOption>
             multiple
             options={COLUMN_OPTIONS}
             optionValue="id"
@@ -73,21 +79,23 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
             onChange={handleChange}
             placeholder="表示列を選択"
             itemComponent={(props) => (
-              <Combobox.Item
+              <Select.Item
                 item={props.item}
                 class="cursor-pointer px-3 py-2 text-gray-800 hover:bg-green-50 data-[selected]:bg-green-50"
               >
                 <div class="flex items-center gap-2">
                   <span class="inline-flex w-4 justify-center text-green-700">
-                    <Combobox.ItemIndicator><Check size={14} /></Combobox.ItemIndicator>
+                    <Select.ItemIndicator>
+                      <Check size={14} />
+                    </Select.ItemIndicator>
                   </span>
-                  <Combobox.ItemLabel>{props.item.rawValue.label}</Combobox.ItemLabel>
+                  <Select.ItemLabel>{props.item.rawValue.label}</Select.ItemLabel>
                 </div>
-              </Combobox.Item>
+              </Select.Item>
             )}
           >
-            <Combobox.Control class="flex items-center rounded border border-gray-300 px-3 py-2">
-              <div class="flex min-h-6 flex-1 flex-wrap gap-1">
+            <Select.Trigger class="flex w-full items-center rounded border border-gray-300 px-3 py-2 text-left">
+              <div class="flex min-h-6 flex-1 flex-wrap gap-1" aria-live="polite">
                 <Show
                   when={selectedOptions().length > 0}
                   fallback={<span class="text-gray-400">表示列を選択</span>}
@@ -101,17 +109,16 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
                   </For>
                 </Show>
               </div>
-              <Combobox.Input class="h-0 w-0 opacity-0" />
-              <Combobox.Trigger class="text-gray-500" aria-label="列選択を開く">
+              <span class="text-gray-500" aria-hidden="true">
                 <ChevronsUpDown size={16} />
-              </Combobox.Trigger>
-            </Combobox.Control>
-            <Combobox.Portal>
-              <Combobox.Content class="z-50 mt-1 max-h-64 w-[--kb-combobox-content-width] overflow-auto rounded border border-gray-200 bg-white shadow-md">
-                <Combobox.Listbox />
-              </Combobox.Content>
-            </Combobox.Portal>
-          </Combobox>
+              </span>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content class="z-50 mt-1 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-gray-200 bg-white shadow-md">
+                <Select.Listbox />
+              </Select.Content>
+            </Select.Portal>
+          </Select>
 
           <div class="mt-6 flex justify-end gap-2">
             <button
