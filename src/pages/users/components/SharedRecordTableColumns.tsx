@@ -12,6 +12,7 @@ type ScoreRecord = Pick<SharedRecordSource, 'is_played' | 'score'>
 type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp'>
 type UpdatedAtRecord = Pick<SharedRecordSource, 'is_played' | 'updated_at'>
 type LampBadgeRenderer = (lamp: ComboLamp) => JSX.Element
+export type ColumnRenderer<TRecord> = (record: TRecord) => JSX.Element
 
 type RecordHeaderButtonProps = {
   label: string

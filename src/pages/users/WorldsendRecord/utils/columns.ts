@@ -104,3 +104,7 @@ export const getVisibleWorldsendColumns = (
 export type { WorldsendRecordColumnDefinition, WorldsendRecordColumnId, WorldsendRecordSortKey }
 
 export { createGridTemplateColumns }
+
+export const worldsendGridColumns = createGridTemplateColumns(
+  WORLDSEND_RECORD_COLUMN_DEFINITIONS.filter((c) => c.defaultVisible)
+)
