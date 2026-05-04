@@ -1,34 +1,21 @@
-﻿import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
-import {
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-  ErrorBoundary,
-  on,
-  Show,
-  untrack,
-} from 'solid-js'
-import { fetchMasterData, fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
-import { Loading } from '../../../components'
+import { useParams, useSearchParams } from '@solidjs/router'
+import { createEffect, createMemo, createResource, createSignal, on, untrack } from 'solid-js'
+import { fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { normalizeDifficultyQueryValue } from '../../../utils/difficultyUtils'
-import {
-  getShortVersionName,
-  resolveVersionNameByReleaseDate,
-} from '../../../utils/versionConverter'
+import SongDetailLayout from '../components/SongDetailLayout'
+import { useSongDetailBase } from '../components/useSongDetailBase'
 import SongInfoCard from './components/SongInfoCard'
 import SongStatsTabs from './components/SongStatsTabs'
 
 const SongDetail = () => {
   const params = useParams<{ displayid: string }>()
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
   const [song] = createResource(() => params.displayid, fetchSongByDisplayId)
-  const [masterData] = createResource(fetchMasterData)
   const [selectedDifficulty, setSelectedDifficulty] = createSignal<string>('')
   const requestedDifficulty = createMemo(() => normalizeDifficultyQueryValue(searchParams.diff))
+  const { masterData, songVersionName, handleBack } = useSongDetailBase(() => song())
 
   const availableDifficulties = createMemo(() => {
     const currentSong = song()
@@ -45,14 +32,6 @@ const SongDetail = () => {
         label: difficultyName,
         value: difficultyName.toLowerCase(),
       }))
-  })
-
-  const songVersionName = createMemo(() => {
-    const currentSong = song()
-    const versions = masterData()?.versions
-    if (!currentSong || !versions) return '不明'
-
-    return getShortVersionName(resolveVersionNameByReleaseDate(currentSong.release, versions))
   })
 
   createEffect(
@@ -84,52 +63,31 @@ const SongDetail = () => {
 
   useDocumentTitle(() => `${song()?.title ?? '楽曲'} - 楽曲詳細`)
 
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1)
-      return
-    }
-    navigate('/songs')
-  }
-
   return (
-    <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
-      <Show when={!song.loading && song()} fallback={<Loading />}>
-        {(songData) => {
-          const currentSong = songData()
-          return (
-            <div class="mx-auto w-full max-w-6xl p-4 space-y-4">
-              <div class="text-sm">
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  class="text-primary-600 hover:underline bg-transparent border-0 p-0 cursor-pointer"
-                >
-                  ← 戻る
-                </button>
-              </div>
-
-              <h1 class="font-sans text-2xl font-semibold mb-1">{currentSong.title}</h1>
-              <div class="font-sans text-gray-600">{currentSong.artist}</div>
-
-              <SongInfoCard
-                song={currentSong}
-                availableDifficulties={availableDifficulties()}
-                versionName={songVersionName()}
-              />
-
-              <SongStatsTabs
-                difficulties={availableDifficulties()}
-                selectedDifficulty={selectedDifficulty()}
-                onDifficultyChange={setSelectedDifficulty}
-                stats={stats()}
-                isStatsLoading={stats.loading}
-              />
-            </div>
-          )
-        }}
-      </Show>
-    </ErrorBoundary>
+    <SongDetailLayout
+      song={song()}
+      isSongLoading={song.loading}
+      songErrorMessage={song.error?.message}
+      title={song()?.title ?? '-'}
+      artist={song()?.artist || '-'}
+      onBack={handleBack}
+      renderInfoCard={(currentSong) => (
+        <SongInfoCard
+          song={currentSong}
+          availableDifficulties={availableDifficulties()}
+          versionName={songVersionName()}
+        />
+      )}
+      renderStats={() => (
+        <SongStatsTabs
+          difficulties={availableDifficulties()}
+          selectedDifficulty={selectedDifficulty()}
+          onDifficultyChange={setSelectedDifficulty}
+          stats={stats()}
+          isStatsLoading={stats.loading}
+        />
+      )}
+    />
   )
 }
 
