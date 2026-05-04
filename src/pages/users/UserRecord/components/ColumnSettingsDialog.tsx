@@ -28,10 +28,8 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
     props.visibleColumnIds
   )
 
-  const selectedIdSet = createMemo(() => new Set(selectedColumnIds()))
-
   const selectedOptions = createMemo(() => {
-    const idSet = selectedIdSet()
+    const idSet = new Set(selectedColumnIds())
     return COLUMN_OPTIONS.filter((option) => idSet.has(option.id))
   })
 
@@ -47,7 +45,7 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
   }
 
   const handleApply = () => {
-    if (selectedIdSet().size === 0) {
+    if (selectedColumnIds().length === 0) {
       return
     }
 
