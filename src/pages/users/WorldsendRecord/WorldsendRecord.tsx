@@ -31,7 +31,6 @@ import {
   formatUpdatedAt,
   updatedAtTimestamp,
 } from '../UserRecord/utils/updatedAt'
-import WorldsendColumnSettingsDialog from './WorldsendColumnSettingsDialog'
 import {
   createGridTemplateColumns,
   getDefaultVisibleWorldsendColumnIds,
@@ -40,6 +39,7 @@ import {
   type WorldsendRecordColumnId,
   type WorldsendRecordSortKey,
 } from './utils/columns'
+import WorldsendColumnSettingsDialog from './WorldsendColumnSettingsDialog'
 
 type Props = {
   records: WorldsendRecordDTO[]
@@ -277,62 +277,24 @@ const WorldsendRecordTable = (props: {
                 class="grid text-xs font-semibold"
                 style={{ 'grid-template-columns': worldsendGridColumns() }}
               >
-                <RecordHeaderButton
-                  label="曲名"
-                  active={sortKey() === 'title'}
-                  direction={sortDirection()}
-                  align="start"
-                  class="justify-start pl-2"
-                  onClick={() => handleSortChange('title')}
-                />
-                <RecordHeaderButton
-                  label="属性"
-                  active={sortKey() === 'attribute'}
-                  direction={sortDirection()}
-                  align="center"
-                  class="justify-center"
-                  onClick={() => handleSortChange('attribute')}
-                />
-                <RecordHeaderButton
-                  label="レベル"
-                  active={sortKey() === 'level'}
-                  direction={sortDirection()}
-                  align="center"
-                  class="justify-center"
-                  onClick={() => handleSortChange('level')}
-                />
-                <RecordHeaderButton
-                  label="スコア"
-                  active={sortKey() === 'score'}
-                  direction={sortDirection()}
-                  align="center"
-                  class="justify-center"
-                  onClick={() => handleSortChange('score')}
-                />
-                <RecordHeaderButton
-                  label="AJ"
-                  active={sortKey() === 'lamp'}
-                  direction={sortDirection()}
-                  align="center"
-                  class="justify-center"
-                  onClick={() => handleSortChange('lamp')}
-                />
-                <RecordHeaderButton
-                  label="J数"
-                  active={sortKey() === 'justiceCount'}
-                  direction={sortDirection()}
-                  align="center"
-                  class="justify-center"
-                  onClick={() => handleSortChange('justiceCount')}
-                />
-                <RecordHeaderButton
-                  label="更新日"
-                  active={sortKey() === 'updatedAt'}
-                  direction={sortDirection()}
-                  align="center"
-                  class="justify-center pr-2"
-                  onClick={() => handleSortChange('updatedAt')}
-                />
+                <For each={visibleColumns()}>
+                  {(column) => (
+                    <RecordHeaderButton
+                      label={column.label}
+                      active={sortKey() === column.sortKey}
+                      direction={sortDirection()}
+                      align={column.align}
+                      class={
+                        column.id === 'title'
+                          ? 'justify-start pl-2'
+                          : column.id === 'updatedAt'
+                            ? 'justify-center pr-2'
+                            : 'justify-center'
+                      }
+                      onClick={() => handleSortChange(column.sortKey)}
+                    />
+                  )}
+                </For>
               </div>
             </div>
 
@@ -393,7 +355,9 @@ const WorldsendRecordTable = (props: {
                             </div>
                           )
                         }
-                        return <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />
+                        return (
+                          <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />
+                        )
                       }}
                     </For>
                   </div>

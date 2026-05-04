@@ -4,8 +4,8 @@ import { Check, ChevronsUpDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import {
-  WORLDSEND_RECORD_COLUMN_DEFINITIONS,
   sortVisibleWorldsendColumnIdsByDefinitionOrder,
+  WORLDSEND_RECORD_COLUMN_DEFINITIONS,
   type WorldsendRecordColumnId,
 } from './utils/columns'
 
@@ -50,7 +50,7 @@ const WorldsendColumnSettingsDialog: Component<Props> = (props) => {
 
   const handleApply = () => {
     if (selectedColumnIds().length === 0) return
-    props.onApply(selectedOptions().map((option) => option.id))
+    props.onApply(selectedColumnIds())
     props.onOpenChange(false)
   }
 
