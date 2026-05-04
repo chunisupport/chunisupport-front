@@ -3,6 +3,7 @@ import {
   nextSortState as nextSharedSortState,
   parseSortQuery,
   type SortDirection,
+  type SortParamsSource,
 } from '../../recordTable/sortingQuery'
 import type { RecordSortKey } from '../types/types'
 import { calcJusticeCountForAj } from './justiceCount.ts'
@@ -37,7 +38,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   justice_count: 'justiceCount',
 }
 
-export const parseSortParams = (searchParams: Record<string, string | string[] | undefined>) => {
+export const parseSortParams = (searchParams: SortParamsSource) => {
   const parsed = parseSortQuery(searchParams, RECORD_SORT_COL_MAP, {
     sortKey: 'rating',
     sortDirection: 'desc',

@@ -1,6 +1,6 @@
 export type SortDirection = 'asc' | 'desc'
 
-type SortParamsSource = Record<string, string | string[] | undefined>
+export type SortParamsSource = Record<string, string | string[] | undefined>
 
 const readFirstParam = (value: string | string[] | undefined): string =>
   Array.isArray(value) ? (value[0] ?? '') : (value ?? '')
