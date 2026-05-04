@@ -14,7 +14,7 @@
     "lint:check": "biome lint .",
     "check": "biome check --write .",
     "check:ci": "biome ci .",
-    "test:unit": "node --loader ./scripts/resolve-ts-extension-loader.mjs --test src/pages/users/UserRecord/utils/sorting.test.ts src/pages/users/recordTable/sortingQuery.test.ts"
+    "test:unit": "node --loader ./scripts/resolve-ts-extension-loader.mjs --test src/**/*.test.ts"
   },
   "dependencies": {
     "@kobalte/core": "^0.13.11",
