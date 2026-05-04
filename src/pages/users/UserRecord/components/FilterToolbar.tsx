@@ -1,11 +1,12 @@
 ﻿import { TextField } from '@kobalte/core/text-field'
-import { Funnel } from 'lucide-solid'
+import { Columns3, Funnel } from 'lucide-solid'
 import type { Component } from 'solid-js'
 
 type FilterToolbarProps = {
   title: string
   onTitleChange: (value: string) => void
   onOpenFilter: () => void
+  onOpenColumnSettings: () => void
   filterButtonDisabled?: boolean
 }
 
@@ -26,6 +27,13 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => (
       disabled={props.filterButtonDisabled}
     >
       <Funnel size={16} /> フィルター
+    </button>
+    <button
+      class="px-2 py-1 rounded border border-gray-500 flex items-center gap-2 hover:bg-gray-100"
+      onClick={props.onOpenColumnSettings}
+      type="button"
+    >
+      <Columns3 size={16} /> 列設定
     </button>
   </div>
 )
