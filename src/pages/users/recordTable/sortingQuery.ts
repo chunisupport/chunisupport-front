@@ -47,8 +47,8 @@ export const nextSortState = <TSortKey extends string>(
 export const sanitizeSortQuery = (
   searchParams: SortParamsSource,
   setSearchParams: (
-    params: { sortcol: undefined; sortorder: undefined },
-    options: { replace: true }
+    params: Record<string, any>,
+    options?: { replace?: boolean }
   ) => void
 ): void => {
   if (searchParams.sortcol !== undefined || searchParams.sortorder !== undefined) {
