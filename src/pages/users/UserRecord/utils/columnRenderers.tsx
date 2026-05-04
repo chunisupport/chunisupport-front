@@ -75,9 +75,7 @@ export const recordColumnRenderers: Record<
     })
     return (
       <div class={`${BASE_CELL_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}>
-        <span class="inline-block w-full text-center leading-none">
-          {justiceCount}
-        </span>
+        <span class="inline-block w-full text-center leading-none">{justiceCount}</span>
       </div>
     )
   },
