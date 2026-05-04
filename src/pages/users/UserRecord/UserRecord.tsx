@@ -15,17 +15,23 @@ import { Loading, ScrollToTop } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { UserRecordDTO } from '../../../types/api'
 import { attachSongMetaToRecords } from '../../../utils/recordMerger'
+import {
+  nextSortState,
+  parseSortQuery,
+  type SortDirection,
+  sanitizeSortQuery,
+} from '../recordTable/sortingQuery.ts'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FilterDialog from './components/FilterDialog'
 import FilterStats from './components/FilterStats'
 import FilterToolbar from './components/FilterToolbar'
 import RecordTable from './components/RecordTable'
 import { DEFAULT_FILTER, getMasterDataDefaults } from './types/filterDefaults'
-import type { FilterState, RecordColumnId, RecordSortKey, SortDirection } from './types/types'
+import type { FilterState, RecordColumnId, RecordSortKey } from './types/types'
 import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
 import { getDefaultFilter, isRecordMatched } from './utils/filtering'
 import { getRecordStats } from './utils/recordStats'
-import { nextSortState, parseSortParams, sortRecords } from './utils/sorting'
+import { sortRecords } from './utils/sorting'
 import { loadSavedFilters, type SavedFilter } from './utils/storage'
 
 type Props = {
@@ -54,20 +60,31 @@ const UserRecord: Component<Props> = (props) => {
 
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
-  const { initialSortKey, initialSortOrder } = parseSortParams(searchParams)
+  const initialSort = parseSortQuery(
+    searchParams,
+    {
+      title: 'title',
+      diff: 'difficulty',
+      const: 'const',
+      rating: 'rating',
+      score: 'score',
+      updated_at: 'updatedAt',
+      lamp: 'lamp',
+      justice_count: 'justiceCount',
+    } as const,
+    { sortKey: 'rating', sortDirection: 'desc' }
+  )
 
-  const [sortKey, setSortKey] = createSignal<RecordSortKey | null>(initialSortKey)
-  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(initialSortOrder)
+  const [sortKey, setSortKey] = createSignal<RecordSortKey | null>(initialSort.sortKey)
+  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(
+    initialSort.sortDirection
+  )
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<RecordColumnId[]>(
     sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
   )
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
-  onMount(() => {
-    if (searchParams.sortcol !== undefined || searchParams.sortorder !== undefined) {
-      setSearchParams({ sortcol: undefined, sortorder: undefined }, { replace: true })
-    }
-  })
+  onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
 
   // フィルターを初期化
   // マスタデータ取得後にgenres/versionsを全選択

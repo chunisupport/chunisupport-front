@@ -1,5 +1,10 @@
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
-import type { RecordSortKey, SortDirection } from '../types/types'
+import {
+  nextSortState as nextSharedSortState,
+  parseSortQuery,
+  type SortDirection,
+} from '../../recordTable/sortingQuery.ts'
+import type { RecordSortKey } from '../types/types'
 import { calcJusticeCountForAj } from './justiceCount.ts'
 import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
 
@@ -18,6 +23,9 @@ const LAMP_ORDER: Record<string, number> = {
   UNPLAYED: 3,
 }
 
+const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
+  !isPlayed || timestamp === Number.NEGATIVE_INFINITY
+
 const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   title: 'title',
   diff: 'difficulty',
@@ -29,29 +37,15 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   justice_count: 'justiceCount',
 }
 
-type SortParamsSource = Record<string, string | string[] | undefined>
-
-const readFirstParam = (value: string | string[] | undefined): string =>
-  Array.isArray(value) ? (value[0] ?? '') : (value ?? '')
-
-const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
-  !isPlayed || timestamp === Number.NEGATIVE_INFINITY
-
-export const parseSortParams = (
-  searchParams: SortParamsSource
-): {
-  initialSortKey: RecordSortKey | null
-  initialSortOrder: SortDirection | null
-} => {
-  const sortcolParam = readFirstParam(searchParams.sortcol)
-  const parsedSortKey = RECORD_SORT_COL_MAP[sortcolParam] ?? null
-  const sortorderParam = readFirstParam(searchParams.sortorder)
-  const parsedSortOrder =
-    sortorderParam === 'asc' || sortorderParam === 'desc' ? sortorderParam : null
+export const parseSortParams = (searchParams: Record<string, string | string[] | undefined>) => {
+  const parsed = parseSortQuery(searchParams, RECORD_SORT_COL_MAP, {
+    sortKey: 'rating',
+    sortDirection: 'desc',
+  })
 
   return {
-    initialSortKey: parsedSortKey !== null && parsedSortOrder !== null ? parsedSortKey : 'rating',
-    initialSortOrder: parsedSortKey !== null && parsedSortOrder !== null ? parsedSortOrder : 'desc',
+    initialSortKey: parsed.sortKey,
+    initialSortOrder: parsed.sortDirection,
   }
 }
 
@@ -62,21 +56,7 @@ export const nextSortState = (
 ): {
   sortKey: RecordSortKey | null
   sortDirection: SortDirection | null
-} => {
-  if (currentSortKey !== nextKey) {
-    return { sortKey: nextKey, sortDirection: 'asc' }
-  }
-
-  if (currentSortDirection === 'asc') {
-    return { sortKey: nextKey, sortDirection: 'desc' }
-  }
-
-  if (currentSortDirection === 'desc') {
-    return { sortKey: null, sortDirection: null }
-  }
-
-  return { sortKey: nextKey, sortDirection: 'asc' }
-}
+} => nextSharedSortState(currentSortKey, currentSortDirection, nextKey)
 
 export const sortRecords = (
   records: PlayerRecordWithSongMeta[],
