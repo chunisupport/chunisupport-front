@@ -5,31 +5,19 @@ import {
   createMemo,
   createSignal,
   For,
-  type JSX,
   onCleanup,
   onMount,
   Show,
 } from 'solid-js'
-import {
-  difficultyBadgeClass,
-  difficultyShort,
-  difficultyToQueryValue,
-} from '../../../../utils/difficultyUtils'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
-  RECORD_ALPHANUMERIC_COLUMN_CLASS,
+  RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
   RecordHeaderButton,
-  RecordLampCell,
-  RecordScoreCell,
-  RecordTitleCell,
-  RecordUpdatedAtCell,
 } from '../../components/SharedRecordTableColumns'
 import type { RecordColumnId, RecordSortKey, SortDirection } from '../types/types'
+import { getRecordColumnRenderer } from '../utils/columnRenderers'
 import { createGridTemplateColumns, getVisibleColumns } from '../utils/columns'
-import { getConstDisplay, getRatingDisplay } from '../utils/constDisplay'
-import { calcJusticeCountForAj } from '../utils/justiceCount'
-import { formatUpdatedAt } from '../utils/updatedAt'
 
 interface RecordTableProps {
   records: PlayerRecordWithSongMeta[]
@@ -38,14 +26,6 @@ interface RecordTableProps {
   sortDirection: SortDirection | null
   visibleColumnIds: RecordColumnId[]
   onSortChange: (key: RecordSortKey) => void
-}
-
-const ROW_HEIGHT = 34
-const DIFFICULTY_BADGE_CLASS =
-  'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
-const DIFFICULTY_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
-const assertNever = (value: never): never => {
-  throw new Error(`Unhandled RecordColumnId: ${String(value)}`)
 }
 
 export const RecordTable: Component<RecordTableProps> = (props) => {
@@ -61,7 +41,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
       return props.records.length
     },
     getScrollElement,
-    estimateSize: () => ROW_HEIGHT,
+    estimateSize: () => RECORD_ROW_HEIGHT,
     overscan: 12,
     get scrollMargin() {
       return scrollMargin()
@@ -129,92 +109,6 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   )
   const visibleColumns = createMemo(() => getVisibleColumns(props.visibleColumnIds))
   const gridTemplateColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
-  const renderCell = (
-    columnId: RecordColumnId,
-    currentRecord: PlayerRecordWithSongMeta
-  ): JSX.Element | null => {
-    switch (columnId) {
-      case 'title':
-        return (
-          <RecordTitleCell
-            href={`/songs/${encodeURIComponent(currentRecord.id)}?diff=${encodeURIComponent(difficultyToQueryValue(currentRecord.difficulty))}`}
-            title={currentRecord.title}
-          />
-        )
-      case 'difficulty':
-        return (
-          <div
-            class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${DIFFICULTY_COLUMN_CLASS}`}
-          >
-            <span
-              class={`${DIFFICULTY_BADGE_CLASS} ${difficultyBadgeClass(currentRecord.difficulty)}`}
-            >
-              {difficultyShort(currentRecord.difficulty)}
-            </span>
-          </div>
-        )
-      case 'const': {
-        const constDisplay = getConstDisplay(currentRecord.const, currentRecord.is_const_unknown)
-
-        return (
-          <div
-            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-          >
-            <span class={`inline-block w-full text-center leading-none ${constDisplay.className}`}>
-              {constDisplay.valueText}
-              <Show when={constDisplay.markerText}>
-                {(markerText) => <sup class="align-super text-[0.7em]">{markerText()}</sup>}
-              </Show>
-            </span>
-          </div>
-        )
-      }
-      case 'score':
-        return <RecordScoreCell record={currentRecord} />
-      case 'rating': {
-        const ratingDisplay = getRatingDisplay(
-          currentRecord.rating,
-          currentRecord.is_played,
-          currentRecord.is_const_unknown
-        )
-
-        return (
-          <div
-            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-          >
-            <span class={`inline-block w-full text-center leading-none ${ratingDisplay.className}`}>
-              {ratingDisplay.text}
-            </span>
-          </div>
-        )
-      }
-      case 'lamp':
-        return <RecordLampCell record={currentRecord} />
-
-      case 'justiceCount': {
-        const justiceCount = calcJusticeCountForAj({
-          comboLamp: currentRecord.combo_lamp,
-          score: currentRecord.score,
-          notes: currentRecord.notes,
-        })
-
-        return (
-          <div
-            class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-          >
-            <span class="inline-block w-full text-center leading-none">
-              {justiceCount === '' ? '' : justiceCount}
-            </span>
-          </div>
-        )
-      }
-
-      case 'updatedAt':
-        return <RecordUpdatedAtCell record={currentRecord} formatUpdatedAt={formatUpdatedAt} />
-      default:
-        return assertNever(columnId)
-    }
-  }
 
   return (
     <div class="w-full">
@@ -267,7 +161,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           }}
                         >
                           <For each={visibleColumns()}>
-                            {(column) => renderCell(column.id, currentRecord)}
+                            {(column) => getRecordColumnRenderer(column.id)(currentRecord)}
                           </For>
                         </div>
                       )}
