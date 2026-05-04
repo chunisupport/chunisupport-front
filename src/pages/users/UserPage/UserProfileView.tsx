@@ -75,7 +75,7 @@ export const UserProfileView: Component<Props> = (props) => {
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
   const tabTriggerClass =
-    'px-3 py-1 rounded-t data-selected:bg-white data-selected:border-b-2 data-selected:border-primary-500'
+    'rounded-t px-3 py-1 text-sm data-selected:border-b-2 data-selected:border-primary-500 data-selected:bg-white'
   const ratingTabTriggerClass =
     'rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors data-selected:bg-primary-600 data-selected:text-white data-selected:shadow-sm'
   const forceMountedTabContentClass = 'hidden data-selected:block'
