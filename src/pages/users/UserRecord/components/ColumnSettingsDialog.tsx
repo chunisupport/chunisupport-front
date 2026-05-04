@@ -63,7 +63,7 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={handleOpenChange}>
+    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-black/30" />
         <Dialog.Content class="fixed z-50 left-1/2 top-1/2 max-h-[90vh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg">
