@@ -21,13 +21,13 @@ export async function resolve(specifier, context, defaultResolve) {
     }
 
     const parentPath = fileURLToPath(context.parentURL)
-    const candidatePath = resolvePath(dirname(parentPath), `${specifier}.ts`)
-
-    try {
-      await access(candidatePath)
-      return defaultResolve(pathToFileURL(candidatePath).href, context, defaultResolve)
-    } catch {
-      throw error
+    for (const ext of ['.ts', '.tsx']) {
+      const candidatePath = resolvePath(dirname(parentPath), `${specifier}${ext}`)
+      try {
+        await access(candidatePath)
+        return defaultResolve(pathToFileURL(candidatePath).href, context, defaultResolve)
+      } catch {}
     }
+    throw error
   }
 }
