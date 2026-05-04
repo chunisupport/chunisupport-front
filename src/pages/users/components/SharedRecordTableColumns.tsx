@@ -13,6 +13,8 @@ type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp'>
 type UpdatedAtRecord = Pick<SharedRecordSource, 'is_played' | 'updated_at'>
 type LampBadgeRenderer = (lamp: ComboLamp) => JSX.Element
 
+export type ColumnRenderer<TRecord> = (record: TRecord) => JSX.Element
+
 type RecordHeaderButtonProps = {
   label: string
   active: boolean
@@ -93,16 +95,13 @@ export const RecordTitleCell = (props: RecordTitleCellProps) => (
 )
 
 export const RecordScoreCell = (props: { record: ScoreRecord }): JSX.Element => {
-  if (!props.record.is_played) {
+  if (!props.record.is_played)
     return (
       <div
         class={`flex min-h-[34px] flex-col items-end justify-center px-1 text-right whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
       />
     )
-  }
-
   const scoreRank = getScoreRank(props.record.score)
-
   return (
     <div
       class={`flex min-h-[34px] flex-col items-end justify-center px-1 text-right whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
