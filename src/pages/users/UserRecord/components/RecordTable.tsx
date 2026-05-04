@@ -11,6 +11,7 @@ import {
 } from 'solid-js'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
+  RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
   RecordHeaderButton,
 } from '../../components/SharedRecordTableColumns'
@@ -27,7 +28,6 @@ interface RecordTableProps {
   onSortChange: (key: RecordSortKey) => void
 }
 
-const ROW_HEIGHT = 34
 export const RecordTable: Component<RecordTableProps> = (props) => {
   let tableContainerRef: HTMLDivElement | undefined
   let tableBodyRef: HTMLDivElement | undefined
@@ -41,7 +41,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
       return props.records.length
     },
     getScrollElement,
-    estimateSize: () => ROW_HEIGHT,
+    estimateSize: () => RECORD_ROW_HEIGHT,
     overscan: 12,
     get scrollMargin() {
       return scrollMargin()

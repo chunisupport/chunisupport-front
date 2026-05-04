@@ -9,6 +9,7 @@ import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
   type ColumnRenderer,
   RECORD_ALPHANUMERIC_COLUMN_CLASS,
+  RECORD_ROW_MIN_HEIGHT_CLASS,
   RecordLampCell,
   RecordScoreCell,
   RecordTitleCell,
@@ -21,7 +22,7 @@ import { formatUpdatedAt } from './updatedAt'
 
 const DIFFICULTY_BADGE_CLASS =
   'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
-const BASE_CELL_CLASS = 'flex min-h-[34px] items-center justify-center whitespace-nowrap'
+const BASE_CELL_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap`
 const DIFFICULTY_COLUMN_CLASS = `${BASE_CELL_CLASS} font-oswald text-sm font-semibold`
 const ALPHANUMERIC_CELL_CLASS = `${BASE_CELL_CLASS} text-center ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`
 
