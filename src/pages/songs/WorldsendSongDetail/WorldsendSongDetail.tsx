@@ -1,12 +1,9 @@
-import { useNavigate, useParams } from '@solidjs/router'
-import { createMemo, createResource, ErrorBoundary, Show } from 'solid-js'
-import { fetchMasterData, fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
-import { Loading } from '../../../components'
+import { useParams } from '@solidjs/router'
+import { createMemo, createResource, Show } from 'solid-js'
+import { fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import {
-  getShortVersionName,
-  resolveVersionNameByReleaseDate,
-} from '../../../utils/versionConverter'
+import SongDetailLayout from '../components/SongDetailLayout'
+import { useSongDetailBase } from '../components/useSongDetailBase'
 import SongStatsTabs from '../SongDetail/components/SongStatsTabs'
 import { getWorldsendTitleMeta } from '../worldsendDetailModel'
 import WorldsendSongInfoCard from './components/WorldsendSongInfoCard'
@@ -16,87 +13,50 @@ const worldsendDifficulty = [{ label: "WORLD'S END", value: 'worldsend' }]
 
 const WorldsendSongDetail = () => {
   const params = useParams<{ displayid: string }>()
-  const navigate = useNavigate()
 
   const displayIdSource = () => getWorldsendDisplayIdSource(params.displayid)
 
   const [song] = createResource(displayIdSource, fetchWorldsendSongByDisplayId)
-  const [masterData] = createResource(fetchMasterData)
+  const { songVersionName, handleBack } = useSongDetailBase(() => song())
   const [stats] = createResource(displayIdSource, (displayId) =>
     fetchSongStats(displayId, worldsendDifficulty[0].value)
   )
 
-  const songVersionName = createMemo(() => {
+  const titleMeta = createMemo(() => {
     const currentSong = song()
-    const versions = masterData()?.versions
-    if (!currentSong || !versions) return '不明'
-
-    return getShortVersionName(resolveVersionNameByReleaseDate(currentSong.release, versions))
+    if (!currentSong) return { title: '-', artist: '-' }
+    return getWorldsendTitleMeta(currentSong)
   })
 
   useDocumentTitle(() => `${song()?.title ?? "WORLD'S END楽曲"} - WORLD'S END楽曲詳細`)
 
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1)
-      return
-    }
-    navigate('/songs')
-  }
-
   return (
-    <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
-      <Show
-        when={song()}
-        keyed
-        fallback={
-          <Show
-            when={song.loading}
-            fallback={<p class="text-red-500">ERROR: {song.error?.message}</p>}
-          >
-            <Loading />
+    <SongDetailLayout
+      song={song()}
+      isSongLoading={song.loading}
+      songErrorMessage={song.error?.message}
+      title={titleMeta().title}
+      artist={titleMeta().artist}
+      onBack={handleBack}
+      renderInfoCard={(currentSong) => (
+        <WorldsendSongInfoCard song={currentSong} versionName={songVersionName()} />
+      )}
+      renderStats={() => (
+        <>
+          <Show when={stats.error} keyed>
+            {(err) => <p class="text-red-500">Error loading stats: {err.message}</p>}
           </Show>
-        }
-      >
-        {(currentSong) => {
-          const titleMeta = getWorldsendTitleMeta(currentSong)
-
-          return (
-            <div class="mx-auto w-full max-w-6xl space-y-4 p-4">
-              <div class="text-sm">
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  class="cursor-pointer border-0 bg-transparent p-0 text-primary-600 hover:underline"
-                >
-                  ← 戻る
-                </button>
-              </div>
-
-              <div class="space-y-1">
-                <h1 class="font-sans mb-1 text-2xl font-semibold">{titleMeta.title}</h1>
-                <div class="font-sans text-gray-600">{titleMeta.artist}</div>
-              </div>
-
-              <WorldsendSongInfoCard song={currentSong} versionName={songVersionName()} />
-
-              <Show when={stats.error} keyed>
-                {(err) => <p class="text-red-500">Error loading stats: {err.message}</p>}
-              </Show>
-              <Show when={!stats.error}>
-                <SongStatsTabs
-                  difficulties={worldsendDifficulty}
-                  selectedDifficulty={worldsendDifficulty[0].value}
-                  onDifficultyChange={() => undefined}
-                  stats={stats()}
-                  isStatsLoading={stats.loading}
-                />
-              </Show>
-            </div>
-          )
-        }}
-      </Show>
-    </ErrorBoundary>
+          <Show when={!stats.error}>
+            <SongStatsTabs
+              difficulties={worldsendDifficulty}
+              readonlyDifficulty={worldsendDifficulty[0].value}
+              stats={stats()}
+              isStatsLoading={stats.loading}
+            />
+          </Show>
+        </>
+      )}
+    />
   )
 }
 
