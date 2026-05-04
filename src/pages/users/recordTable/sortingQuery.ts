@@ -44,10 +44,12 @@ export const nextSortState = <TSortKey extends string>(
   return { sortKey: nextKey, sortDirection: 'asc' }
 }
 
+type SearchParamValue = string | number | boolean | null | undefined
+
 export const sanitizeSortQuery = (
   searchParams: SortParamsSource,
   setSearchParams: (
-    params: Record<string, any>,
+    params: Record<string, SearchParamValue>,
     options?: { replace?: boolean }
   ) => void
 ): void => {
