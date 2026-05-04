@@ -31,20 +31,21 @@ import {
   formatUpdatedAt,
   updatedAtTimestamp,
 } from '../UserRecord/utils/updatedAt'
-import { worldsendGridColumns } from './utils/columns'
+import WorldsendColumnSettingsDialog from './WorldsendColumnSettingsDialog'
+import {
+  createGridTemplateColumns,
+  getDefaultVisibleWorldsendColumnIds,
+  getVisibleWorldsendColumns,
+  sanitizeVisibleWorldsendColumnIds,
+  type WorldsendRecordColumnId,
+  type WorldsendRecordSortKey,
+} from './utils/columns'
 
 type Props = {
   records: WorldsendRecordDTO[]
 }
 
-type WorldsendSortKey =
-  | 'title'
-  | 'attribute'
-  | 'level'
-  | 'score'
-  | 'updatedAt'
-  | 'lamp'
-  | 'justiceCount'
+type WorldsendSortKey = WorldsendRecordSortKey
 type WorldsendSortDirection = 'asc' | 'desc'
 
 const WE_SORT_COL_MAP: Record<string, WorldsendSortKey> = {
@@ -101,6 +102,7 @@ const WorldsendRecordTable = (props: {
   records: WorldsendRecordWithSongMeta[]
   initialSortKey?: WorldsendSortKey | null
   initialSortDirection?: WorldsendSortDirection | null
+  visibleColumnIds: WorldsendRecordColumnId[]
 }) => {
   const [sortKey, setSortKey] = createSignal<WorldsendSortKey | null>(
     props.initialSortKey !== undefined ? props.initialSortKey : 'score'
@@ -108,6 +110,9 @@ const WorldsendRecordTable = (props: {
   const [sortDirection, setSortDirection] = createSignal<WorldsendSortDirection | null>(
     props.initialSortDirection !== undefined ? props.initialSortDirection : 'desc'
   )
+
+  const visibleColumns = createMemo(() => getVisibleWorldsendColumns(props.visibleColumnIds))
+  const worldsendGridColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
 
   const sortedRecords = createMemo(() => {
     const currentSortKey = sortKey()
@@ -270,7 +275,7 @@ const WorldsendRecordTable = (props: {
             <div class="border-b border-gray-200 bg-white">
               <div
                 class="grid text-xs font-semibold"
-                style={{ 'grid-template-columns': worldsendGridColumns }}
+                style={{ 'grid-template-columns': worldsendGridColumns() }}
               >
                 <RecordHeaderButton
                   label="曲名"
@@ -336,41 +341,61 @@ const WorldsendRecordTable = (props: {
                 {(record) => (
                   <div
                     class={`grid border-b border-gray-200 text-xs ${RECORD_ROW_HOVER_CLASS}`}
-                    style={{ 'grid-template-columns': worldsendGridColumns }}
+                    style={{ 'grid-template-columns': worldsendGridColumns() }}
                   >
-                    <RecordTitleCell
-                      href={buildWorldsendSongDetailPath(record.id)}
-                      title={record.title}
-                    />
-                    <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap text-sm">
-                      <span class="inline-block w-full text-center leading-none">
-                        {record.attribute ?? '-'}
-                      </span>
-                    </div>
-                    <div
-                      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-                    >
-                      <span class="inline-block leading-none">
-                        {worldsendLevelLabel(record.level_star)}
-                      </span>
-                    </div>
-                    <RecordScoreCell record={record} />
-                    <RecordLampCell record={record} />
-                    <div
-                      class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-                    >
-                      <span class="inline-block w-full text-center leading-none">
-                        {(() => {
-                          const justiceCount = calcJusticeCountForAj({
-                            comboLamp: record.combo_lamp,
-                            score: record.score,
-                            notes: record.notes,
-                          })
-                          return justiceCount === '' ? '' : justiceCount
-                        })()}
-                      </span>
-                    </div>
-                    <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />
+                    <For each={visibleColumns()}>
+                      {(column) => {
+                        if (column.id === 'title') {
+                          return (
+                            <RecordTitleCell
+                              href={buildWorldsendSongDetailPath(record.id)}
+                              title={record.title}
+                            />
+                          )
+                        }
+                        if (column.id === 'attribute') {
+                          return (
+                            <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap text-sm">
+                              <span class="inline-block w-full text-center leading-none">
+                                {record.attribute ?? '-'}
+                              </span>
+                            </div>
+                          )
+                        }
+                        if (column.id === 'level') {
+                          return (
+                            <div
+                              class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+                            >
+                              <span class="inline-block leading-none">
+                                {worldsendLevelLabel(record.level_star)}
+                              </span>
+                            </div>
+                          )
+                        }
+                        if (column.id === 'score') return <RecordScoreCell record={record} />
+                        if (column.id === 'lamp') return <RecordLampCell record={record} />
+                        if (column.id === 'justiceCount') {
+                          return (
+                            <div
+                              class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+                            >
+                              <span class="inline-block w-full text-center leading-none">
+                                {(() => {
+                                  const justiceCount = calcJusticeCountForAj({
+                                    comboLamp: record.combo_lamp,
+                                    score: record.score,
+                                    notes: record.notes,
+                                  })
+                                  return justiceCount === '' ? '' : justiceCount
+                                })()}
+                              </span>
+                            </div>
+                          )
+                        }
+                        return <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />
+                      }}
+                    </For>
                   </div>
                 )}
               </For>
@@ -385,6 +410,10 @@ const WorldsendRecordTable = (props: {
 const WorldsendRecord = (props: Props) => {
   const [worldsendSongs] = createResource(fetchWorldsendSongs)
   const [title, setTitle] = createSignal('')
+  const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
+  const [visibleColumnIds, setVisibleColumnIds] = createSignal<WorldsendRecordColumnId[]>(
+    sanitizeVisibleWorldsendColumnIds(getDefaultVisibleWorldsendColumnIds())
+  )
 
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
@@ -434,6 +463,7 @@ const WorldsendRecord = (props: Props) => {
               title={title()}
               onTitleChange={setTitle}
               onOpenFilter={() => undefined}
+              onOpenColumnSettings={() => setColumnSettingsOpen(true)}
               filterButtonDisabled
             />
 
@@ -445,6 +475,16 @@ const WorldsendRecord = (props: Props) => {
               records={filteredRecords()}
               initialSortKey={initialSortKey}
               initialSortDirection={initialSortDirection}
+              visibleColumnIds={visibleColumnIds()}
+            />
+
+            <WorldsendColumnSettingsDialog
+              open={columnSettingsOpen()}
+              onOpenChange={setColumnSettingsOpen}
+              visibleColumnIds={visibleColumnIds()}
+              onApply={(nextVisibleColumnIds) =>
+                setVisibleColumnIds(sanitizeVisibleWorldsendColumnIds(nextVisibleColumnIds))
+              }
             />
           </div>
         </Show>
