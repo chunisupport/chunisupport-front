@@ -15,13 +15,14 @@ import { Loading, ScrollToTop } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { UserRecordDTO } from '../../../types/api'
 import { attachSongMetaToRecords } from '../../../utils/recordMerger'
+import { type SortDirection, sanitizeSortQuery } from '../recordTable/sortingQuery'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FilterDialog from './components/FilterDialog'
 import FilterStats from './components/FilterStats'
 import FilterToolbar from './components/FilterToolbar'
 import RecordTable from './components/RecordTable'
 import { DEFAULT_FILTER, getMasterDataDefaults } from './types/filterDefaults'
-import type { FilterState, RecordColumnId, RecordSortKey, SortDirection } from './types/types'
+import type { FilterState, RecordColumnId, RecordSortKey } from './types/types'
 import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
 import { getDefaultFilter, isRecordMatched } from './utils/filtering'
 import { getRecordStats } from './utils/recordStats'
@@ -63,11 +64,7 @@ const UserRecord: Component<Props> = (props) => {
   )
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
-  onMount(() => {
-    if (searchParams.sortcol !== undefined || searchParams.sortorder !== undefined) {
-      setSearchParams({ sortcol: undefined, sortorder: undefined }, { replace: true })
-    }
-  })
+  onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
 
   // フィルターを初期化
   // マスタデータ取得後にgenres/versionsを全選択

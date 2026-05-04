@@ -22,6 +22,12 @@ import {
   RecordTitleCell,
   RecordUpdatedAtCell,
 } from '../components/SharedRecordTableColumns'
+import {
+  nextSortState,
+  parseSortQuery,
+  type SortDirection,
+  sanitizeSortQuery,
+} from '../recordTable/sortingQuery'
 import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
@@ -46,7 +52,6 @@ type Props = {
 }
 
 type WorldsendSortKey = WorldsendRecordSortKey
-type WorldsendSortDirection = 'asc' | 'desc'
 
 const WE_SORT_COL_MAP: Record<string, WorldsendSortKey> = {
   title: 'title',
@@ -100,23 +105,17 @@ const attachWorldsendSongMetaToRecords = (
 
 const WorldsendRecordTable = (props: {
   records: WorldsendRecordWithSongMeta[]
-  initialSortKey?: WorldsendSortKey | null
-  initialSortDirection?: WorldsendSortDirection | null
+  sortKey: WorldsendSortKey | null
+  sortDirection: SortDirection | null
+  onSortChange: (nextKey: WorldsendSortKey) => void
   visibleColumnIds: WorldsendRecordColumnId[]
 }) => {
-  const [sortKey, setSortKey] = createSignal<WorldsendSortKey | null>(
-    props.initialSortKey !== undefined ? props.initialSortKey : 'score'
-  )
-  const [sortDirection, setSortDirection] = createSignal<WorldsendSortDirection | null>(
-    props.initialSortDirection !== undefined ? props.initialSortDirection : 'desc'
-  )
-
   const visibleColumns = createMemo(() => getVisibleWorldsendColumns(props.visibleColumnIds))
   const worldsendGridColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
 
   const sortedRecords = createMemo(() => {
-    const currentSortKey = sortKey()
-    const currentSortDirection = sortDirection()
+    const currentSortKey = props.sortKey
+    const currentSortDirection = props.sortDirection
 
     if (!currentSortKey || !currentSortDirection) {
       return props.records
@@ -238,30 +237,6 @@ const WorldsendRecordTable = (props: {
       .map(({ record }) => record)
   })
 
-  const handleSortChange = (nextKey: WorldsendSortKey) => {
-    const currentSortKey = sortKey()
-    const currentSortDirection = sortDirection()
-
-    if (currentSortKey !== nextKey) {
-      setSortKey(nextKey)
-      setSortDirection('asc')
-      return
-    }
-
-    if (currentSortDirection === 'asc') {
-      setSortDirection('desc')
-      return
-    }
-
-    if (currentSortDirection === 'desc') {
-      setSortKey(null)
-      setSortDirection(null)
-      return
-    }
-
-    setSortDirection('asc')
-  }
-
   return (
     <div class={worldsendTableWrapperClass}>
       <Show
@@ -281,8 +256,8 @@ const WorldsendRecordTable = (props: {
                   {(column) => (
                     <RecordHeaderButton
                       label={column.label}
-                      active={sortKey() === column.sortKey}
-                      direction={sortDirection()}
+                      active={props.sortKey === column.sortKey}
+                      direction={props.sortDirection}
                       align={column.align}
                       class={
                         column.id === 'title'
@@ -291,7 +266,7 @@ const WorldsendRecordTable = (props: {
                             ? 'justify-center pr-2'
                             : 'justify-center'
                       }
-                      onClick={() => handleSortChange(column.sortKey)}
+                      onClick={() => props.onSortChange(column.sortKey)}
                     />
                   )}
                 </For>
@@ -381,24 +356,17 @@ const WorldsendRecord = (props: Props) => {
 
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
-  const sortColParam = typeof searchParams.sortcol === 'string' ? searchParams.sortcol : ''
-  const sortOrderParam = typeof searchParams.sortorder === 'string' ? searchParams.sortorder : null
-  const parsedSortKey = WE_SORT_COL_MAP[sortColParam] ?? null
-  const parsedSortOrder =
-    sortOrderParam === 'asc' || sortOrderParam === 'desc'
-      ? (sortOrderParam as WorldsendSortDirection)
-      : null
-  const initialSortKey: WorldsendSortKey | null =
-    parsedSortKey !== null && parsedSortOrder !== null ? parsedSortKey : 'score'
-  const initialSortDirection: WorldsendSortDirection | null =
-    parsedSortKey !== null && parsedSortOrder !== null ? parsedSortOrder : 'desc'
+  const initialSort = parseSortQuery(searchParams, WE_SORT_COL_MAP, {
+    sortKey: 'score',
+    sortDirection: 'desc',
+  })
+  const [sortKey, setSortKey] = createSignal<WorldsendSortKey | null>(initialSort.sortKey)
+  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(
+    initialSort.sortDirection
+  )
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
-  onMount(() => {
-    if (searchParams.sortcol !== undefined || searchParams.sortorder !== undefined) {
-      setSearchParams({ sortcol: undefined, sortorder: undefined }, { replace: true })
-    }
-  })
+  onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
 
   const recordsWithSongMeta = createMemo(() => {
     const songs = worldsendSongs()
@@ -437,8 +405,13 @@ const WorldsendRecord = (props: Props) => {
 
             <WorldsendRecordTable
               records={filteredRecords()}
-              initialSortKey={initialSortKey}
-              initialSortDirection={initialSortDirection}
+              sortKey={sortKey()}
+              sortDirection={sortDirection()}
+              onSortChange={(nextKey) => {
+                const nextSort = nextSortState(sortKey(), sortDirection(), nextKey)
+                setSortKey(nextSort.sortKey)
+                setSortDirection(nextSort.sortDirection)
+              }}
               visibleColumnIds={visibleColumnIds()}
             />
 
