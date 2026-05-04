@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,5 +26,16 @@ jobs:
       - name: Check
         run: npm run check:ci
 
+      - name: Type check
+        continue-on-error: true
+        run: npm run typecheck
+
+      - name: Unit test
+        run: npm run test:unit
+
       - name: Build
         run: npm run build
+
+      - name: Audit dependencies
+        continue-on-error: true
+        run: npm audit --audit-level=high
