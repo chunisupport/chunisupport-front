@@ -186,7 +186,7 @@ export const UserProfileView: Component<Props> = (props) => {
             <div class="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3">
               <Tabs.List class="inline-flex gap-1 rounded-xl bg-gray-100 p-1">
                 <Tabs.Trigger value="standard" class={ratingTabTriggerClass}>
-                  通常譜面
+                  STANDARD
                 </Tabs.Trigger>
                 <Tabs.Trigger value="worldsend" class={ratingTabTriggerClass}>
                   WORLD'S END
