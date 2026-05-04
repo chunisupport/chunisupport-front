@@ -49,7 +49,7 @@ export const recordColumnRenderers: Record<
         <span class={`inline-block w-full text-center leading-none ${constDisplay.className}`}>
           {constDisplay.valueText}
           <Show when={constDisplay.markerText}>
-            {(m) => <sup class="align-super text-[0.7em]">{m()}</sup>}
+            {(m) => <sup class="align-super text-[0.7em]">{m}</sup>}
           </Show>
         </span>
       </div>
