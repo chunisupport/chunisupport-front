@@ -14,15 +14,21 @@ import {
   RecordTitleCell,
   RecordUpdatedAtCell,
 } from '../../components/SharedRecordTableColumns'
+import type { RecordColumnId } from '../types/types'
 import { getConstDisplay, getRatingDisplay } from './constDisplay'
 import { calcJusticeCountForAj } from './justiceCount'
 import { formatUpdatedAt } from './updatedAt'
 
 const DIFFICULTY_BADGE_CLASS =
   'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
-const DIFFICULTY_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
+const BASE_CELL_CLASS = 'flex min-h-[34px] items-center justify-center whitespace-nowrap'
+const DIFFICULTY_COLUMN_CLASS = `${BASE_CELL_CLASS} font-oswald text-sm font-semibold`
+const ALPHANUMERIC_CELL_CLASS = `${BASE_CELL_CLASS} text-center ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`
 
-export const recordColumnRenderers: Record<string, ColumnRenderer<PlayerRecordWithSongMeta>> = {
+export const recordColumnRenderers: Record<
+  RecordColumnId,
+  ColumnRenderer<PlayerRecordWithSongMeta>
+> = {
   title: (record) => (
     <RecordTitleCell
       href={`/songs/${encodeURIComponent(record.id)}?diff=${encodeURIComponent(difficultyToQueryValue(record.difficulty))}`}
@@ -30,9 +36,7 @@ export const recordColumnRenderers: Record<string, ColumnRenderer<PlayerRecordWi
     />
   ),
   difficulty: (record) => (
-    <div
-      class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${DIFFICULTY_COLUMN_CLASS}`}
-    >
+    <div class={DIFFICULTY_COLUMN_CLASS}>
       <span class={`${DIFFICULTY_BADGE_CLASS} ${difficultyBadgeClass(record.difficulty)}`}>
         {difficultyShort(record.difficulty)}
       </span>
@@ -41,9 +45,7 @@ export const recordColumnRenderers: Record<string, ColumnRenderer<PlayerRecordWi
   const: (record) => {
     const constDisplay = getConstDisplay(record.const, record.is_const_unknown)
     return (
-      <div
-        class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-      >
+      <div class={ALPHANUMERIC_CELL_CLASS}>
         <span class={`inline-block w-full text-center leading-none ${constDisplay.className}`}>
           {constDisplay.valueText}
           <Show when={constDisplay.markerText}>
@@ -57,9 +59,7 @@ export const recordColumnRenderers: Record<string, ColumnRenderer<PlayerRecordWi
   rating: (record) => {
     const ratingDisplay = getRatingDisplay(record.rating, record.is_played, record.is_const_unknown)
     return (
-      <div
-        class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-      >
+      <div class={ALPHANUMERIC_CELL_CLASS}>
         <span class={`inline-block w-full text-center leading-none ${ratingDisplay.className}`}>
           {ratingDisplay.text}
         </span>
@@ -74,9 +74,7 @@ export const recordColumnRenderers: Record<string, ColumnRenderer<PlayerRecordWi
       notes: record.notes,
     })
     return (
-      <div
-        class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-      >
+      <div class={ALPHANUMERIC_CELL_CLASS}>
         <span class="inline-block w-full text-center leading-none">
           {justiceCount === '' ? '' : justiceCount}
         </span>
@@ -87,7 +85,7 @@ export const recordColumnRenderers: Record<string, ColumnRenderer<PlayerRecordWi
 }
 
 export const getRecordColumnRenderer = (
-  columnId: string
+  columnId: RecordColumnId
 ): ColumnRenderer<PlayerRecordWithSongMeta> => {
   const renderer = recordColumnRenderers[columnId]
   if (!renderer) throw new Error(`Unknown record column renderer: ${columnId}`)
