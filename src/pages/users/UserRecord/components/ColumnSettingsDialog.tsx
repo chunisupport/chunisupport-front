@@ -60,7 +60,7 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
     <Dialog open={props.open} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-black/30" />
-        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 max-h-11/12 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg">
+        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 max-h-[90vh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg">
           <Dialog.Title class="mb-4 text-lg font-bold">列設定</Dialog.Title>
           <p class="mb-3 text-xs text-gray-500">表示する列を選択してください（1列以上必須）</p>
 
