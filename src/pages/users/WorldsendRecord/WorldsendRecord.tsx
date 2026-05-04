@@ -27,7 +27,7 @@ import {
   parseSortQuery,
   type SortDirection,
   sanitizeSortQuery,
-} from '../recordTable/sortingQuery.ts'
+} from '../recordTable/sortingQuery'
 import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'

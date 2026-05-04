@@ -3,7 +3,7 @@ import {
   nextSortState as nextSharedSortState,
   parseSortQuery,
   type SortDirection,
-} from '../../recordTable/sortingQuery.ts'
+} from '../../recordTable/sortingQuery'
 import type { RecordSortKey } from '../types/types'
 import { calcJusticeCountForAj } from './justiceCount.ts'
 import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'

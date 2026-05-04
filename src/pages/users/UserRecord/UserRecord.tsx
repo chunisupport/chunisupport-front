@@ -15,12 +15,7 @@ import { Loading, ScrollToTop } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { UserRecordDTO } from '../../../types/api'
 import { attachSongMetaToRecords } from '../../../utils/recordMerger'
-import {
-  nextSortState,
-  parseSortQuery,
-  type SortDirection,
-  sanitizeSortQuery,
-} from '../recordTable/sortingQuery.ts'
+import { type SortDirection, sanitizeSortQuery } from '../recordTable/sortingQuery'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FilterDialog from './components/FilterDialog'
 import FilterStats from './components/FilterStats'
@@ -31,7 +26,7 @@ import type { FilterState, RecordColumnId, RecordSortKey } from './types/types'
 import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
 import { getDefaultFilter, isRecordMatched } from './utils/filtering'
 import { getRecordStats } from './utils/recordStats'
-import { sortRecords } from './utils/sorting'
+import { nextSortState, parseSortParams, sortRecords } from './utils/sorting'
 import { loadSavedFilters, type SavedFilter } from './utils/storage'
 
 type Props = {
@@ -60,25 +55,10 @@ const UserRecord: Component<Props> = (props) => {
 
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
-  const initialSort = parseSortQuery(
-    searchParams,
-    {
-      title: 'title',
-      diff: 'difficulty',
-      const: 'const',
-      rating: 'rating',
-      score: 'score',
-      updated_at: 'updatedAt',
-      lamp: 'lamp',
-      justice_count: 'justiceCount',
-    } as const,
-    { sortKey: 'rating', sortDirection: 'desc' }
-  )
+  const { initialSortKey, initialSortOrder } = parseSortParams(searchParams)
 
-  const [sortKey, setSortKey] = createSignal<RecordSortKey | null>(initialSort.sortKey)
-  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(
-    initialSort.sortDirection
-  )
+  const [sortKey, setSortKey] = createSignal<RecordSortKey | null>(initialSortKey)
+  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(initialSortOrder)
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<RecordColumnId[]>(
     sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
   )
