@@ -28,12 +28,12 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
     props.visibleColumnIds
   )
 
-  const selectedOptions = createMemo(() => {
-    const selectedIdSet = new Set(selectedColumnIds())
-    return COLUMN_OPTIONS.filter((option) => selectedIdSet.has(option.id))
-  })
-
   const selectedIdSet = createMemo(() => new Set(selectedColumnIds()))
+
+  const selectedOptions = createMemo(() => {
+    const idSet = selectedIdSet()
+    return COLUMN_OPTIONS.filter((option) => idSet.has(option.id))
+  })
 
   createEffect(() => {
     if (props.open) {
