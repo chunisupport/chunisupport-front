@@ -226,7 +226,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
           ref={tableContainerRef}
           class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-gray-200"
         >
-          <div class="min-w-[35.35rem]">
+          <div class="w-fit min-w-full">
             <div class="border-b border-gray-200 bg-white">
               <div
                 class="grid text-xs font-semibold"
