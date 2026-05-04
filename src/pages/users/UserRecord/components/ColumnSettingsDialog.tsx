@@ -41,10 +41,6 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
     }
   })
 
-  const handleOpenChange = (open: boolean) => {
-    props.onOpenChange(open)
-  }
-
   const handleChange = (options: ColumnOption[]) => {
     const nextIds = sortVisibleColumnIdsByDefinitionOrder(options.map((option) => option.id))
     setSelectedColumnIds(nextIds)
@@ -55,9 +51,7 @@ const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
       return
     }
 
-    const nextVisibleColumnIds = RECORD_COLUMN_DEFINITIONS.map((column) => column.id).filter((id) =>
-      selectedIdSet().has(id)
-    )
+    const nextVisibleColumnIds = selectedOptions().map((option) => option.id)
     props.onApply(nextVisibleColumnIds)
     props.onOpenChange(false)
   }
