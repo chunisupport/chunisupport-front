@@ -168,12 +168,6 @@ const GoalsList: Component = () => {
               </p>
             </Show>
 
-            <Show when={actionError()}>
-              <p class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600">
-                {actionError()}
-              </p>
-            </Show>
-
             <Show
               when={goalWithProgress().length > 0}
               fallback={
@@ -209,6 +203,7 @@ const GoalsList: Component = () => {
                 initialGoal={editingGoal()}
                 masterData={data().masterData}
                 isSaving={isSaving()}
+                serverErrorMessage={actionError()}
                 onOpenChange={setFormOpen}
                 onSave={handleSave}
                 resolveAllCount={resolveAllCount}

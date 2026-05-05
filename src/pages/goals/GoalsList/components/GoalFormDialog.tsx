@@ -31,6 +31,7 @@ interface GoalFormDialogProps {
   initialGoal?: GoalDTO
   masterData: MasterDataDTO
   isSaving: boolean
+  serverErrorMessage?: string
   onOpenChange: (open: boolean) => void
   onSave: (payload: GoalRequest) => Promise<void>
   resolveAllCount: (attributes: GoalAttributes) => number
@@ -617,6 +618,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
             <Show when={errorMessage()}>
               <p class="text-sm text-red-600">{errorMessage()}</p>
+            </Show>
+
+            <Show when={!errorMessage() && props.serverErrorMessage}>
+              <p class="text-sm text-red-600">{props.serverErrorMessage}</p>
             </Show>
           </div>
 
