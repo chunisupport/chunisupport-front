@@ -9,7 +9,7 @@ const SongsViewToggle = () => {
     isWorldsend()
       ? {
           href: '/songs',
-          label: '通常譜面',
+          label: 'STANDARD',
         }
       : {
           href: '/songs/worldsend',

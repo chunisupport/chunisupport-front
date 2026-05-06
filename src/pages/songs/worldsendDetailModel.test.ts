@@ -32,7 +32,7 @@ const createSong = (overrides: Partial<WorldsendSongDTO> = {}): WorldsendSongDTO
   ...overrides,
 })
 
-test("WORLD'S END詳細の楽曲情報は通常譜面ページと同じ基本項目を表示する", () => {
+test("WORLD'S END詳細の楽曲情報はSTANDARDページと同じ基本項目を表示する", () => {
   const song = createSong()
 
   assert.deepEqual(getWorldsendSongInfoItems(song, 'VERSE'), [

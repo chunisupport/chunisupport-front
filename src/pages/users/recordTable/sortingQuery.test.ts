@@ -3,7 +3,7 @@ import test from 'node:test'
 
 import { nextSortState, parseSortQuery, sanitizeSortQuery } from './sortingQuery.ts'
 
-test('通常譜面: クエリあり初期表示は指定ソートを使う', () => {
+test('STANDARD: クエリあり初期表示は指定ソートを使う', () => {
   const result = parseSortQuery(
     { sortcol: 'score', sortorder: 'asc' },
     { score: 'score', rating: 'rating' } as const,
