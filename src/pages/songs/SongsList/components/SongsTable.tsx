@@ -1,8 +1,14 @@
-import { A } from '@solidjs/router'
 import { createVirtualizer } from '@tanstack/solid-virtual'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import type { SongDTO } from '../../../../types/api'
 import { DIFFICULTY_SHORT_NAME_MAP, difficultyBadgeClass } from '../../../../utils/difficultyUtils'
+import {
+  SongListAddedDateCell,
+  SongListArtistCell,
+  SongListBpmCell,
+  SongListGenreCell,
+  SongListTitleCell,
+} from '../../components/SongListMetaCells'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
@@ -12,16 +18,6 @@ const HEADER_CELL_CLASS = 'px-3 py-2 font-semibold whitespace-nowrap bg-gray-50'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
 type Props = {
   songs: SongDTO[]
-}
-
-const formatAddedDate = (release: string | null): string => {
-  if (!release) return '-'
-
-  const matched = release.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-  if (!matched) return '-'
-
-  const [, year, month, day] = matched
-  return `${year.slice(-2)}/${month}/${day}`
 }
 
 const SongsTable = (props: Props) => {
@@ -145,29 +141,27 @@ const SongsTable = (props: Props) => {
                       }}
                       aria-rowindex={virtualRow.index + 2}
                     >
-                      <td class={`${CELL_CLASS} min-w-0`}>
-                        <A
-                          href={`/songs/${encodeURIComponent(currentSong.id)}`}
-                          class="block min-w-0 truncate font-sans text-primary-600 hover:underline"
-                          title={currentSong.title}
-                        >
-                          {currentSong.title}
-                        </A>
-                      </td>
-                      <td class={`${CELL_CLASS} min-w-0 font-sans`}>
-                        <span class="block min-w-0 truncate" title={currentSong.artist}>
-                          {currentSong.artist}
-                        </span>
-                      </td>
-                      <td class={`${CELL_CLASS} justify-center overflow-hidden`}>
-                        <span class="block w-full truncate text-center" title={currentSong.genre}>
-                          {currentSong.genre}
-                        </span>
-                      </td>
-                      <td class={`${CELL_CLASS} justify-center`}>
-                        {formatAddedDate(currentSong.release)}
-                      </td>
-                      <td class={`${CELL_CLASS} justify-center`}>{currentSong.bpm ?? '-'}</td>
+                      <SongListTitleCell
+                        href={`/songs/${encodeURIComponent(currentSong.id)}`}
+                        title={currentSong.title}
+                        class={`${CELL_CLASS} min-w-0`}
+                      />
+                      <SongListArtistCell
+                        artist={currentSong.artist}
+                        class={`${CELL_CLASS} min-w-0 font-sans`}
+                      />
+                      <SongListGenreCell
+                        genre={currentSong.genre}
+                        class={`${CELL_CLASS} justify-center overflow-hidden`}
+                      />
+                      <SongListAddedDateCell
+                        release={currentSong.release}
+                        class={`${CELL_CLASS} justify-center`}
+                      />
+                      <SongListBpmCell
+                        bpm={currentSong.bpm}
+                        class={`${CELL_CLASS} justify-center`}
+                      />
                       <For each={chartOrder}>
                         {(difficulty) => {
                           const chart = currentSong.charts[difficulty]
