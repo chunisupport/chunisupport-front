@@ -261,7 +261,7 @@ const WorldsendRecordTable = (props: {
                       align={column.align}
                       class={
                         column.id === 'title'
-                          ? 'justify-start pl-2'
+                          ? 'justify-start'
                           : column.id === 'updatedAt'
                             ? 'justify-center pr-2'
                             : 'justify-center'

@@ -1,1 +1,1 @@
-export const worldsendTableWrapperClass = 'w-full'
+export const worldsendTableWrapperClass = 'w-full px-2'

@@ -111,7 +111,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   const gridTemplateColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
 
   return (
-    <div class="w-full">
+    <div class="w-full px-2">
       <Show
         when={props.records.length > 0}
         fallback={<p class="py-6 text-center text-gray-400">データがありません</p>}
@@ -133,7 +133,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                       active={props.sortKey === column.sortKey}
                       direction={props.sortDirection}
                       align={column.align ?? 'center'}
-                      class={`${column.align === 'start' ? 'justify-start pl-2' : 'justify-center'} ${column.id === 'updatedAt' ? 'pr-2' : ''}`}
+                      class={`${column.align === 'start' ? 'justify-start' : 'justify-center'} ${column.id === 'updatedAt' ? 'pr-2' : ''}`}
                       onClick={() => props.onSortChange(column.sortKey)}
                     />
                   )}

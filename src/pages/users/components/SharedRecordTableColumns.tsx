@@ -88,7 +88,7 @@ export const RecordHeaderButton = (props: RecordHeaderButtonProps) => (
 export const RecordTitleCell = (props: RecordTitleCellProps) => (
   <A
     href={props.href}
-    class={`font-sans flex ${RECORD_ROW_MIN_HEIGHT_CLASS} min-w-0 w-full items-center pl-2 text-sm text-inherit hover:underline`}
+    class={`font-sans flex ${RECORD_ROW_MIN_HEIGHT_CLASS} min-w-0 w-full items-center text-sm text-inherit hover:underline`}
     title={props.title}
   >
     <span class="block w-full truncate">{props.title}</span>
