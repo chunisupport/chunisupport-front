@@ -249,7 +249,7 @@ const WorldsendRecordTable = (props: {
           <div class="w-fit min-w-full">
             <div class="border-b border-gray-200 bg-white">
               <div
-                class="grid text-xs font-semibold"
+                class="grid px-2 text-xs font-semibold"
                 style={{ 'grid-template-columns': worldsendGridColumns() }}
               >
                 <For each={visibleColumns()}>
@@ -261,9 +261,9 @@ const WorldsendRecordTable = (props: {
                       align={column.align}
                       class={
                         column.id === 'title'
-                          ? 'justify-start pl-2'
+                          ? 'justify-start'
                           : column.id === 'updatedAt'
-                            ? 'justify-center pr-2'
+                            ? 'justify-center'
                             : 'justify-center'
                       }
                       onClick={() => props.onSortChange(column.sortKey)}
@@ -277,7 +277,7 @@ const WorldsendRecordTable = (props: {
               <For each={sortedRecords()}>
                 {(record) => (
                   <div
-                    class={`grid border-b border-gray-200 text-xs ${RECORD_ROW_HOVER_CLASS}`}
+                    class={`grid border-b border-gray-200 px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
                     style={{ 'grid-template-columns': worldsendGridColumns() }}
                   >
                     <For each={visibleColumns()}>

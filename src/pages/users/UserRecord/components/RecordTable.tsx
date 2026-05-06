@@ -123,7 +123,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
           <div class="w-fit min-w-full">
             <div class="border-b border-gray-200 bg-white">
               <div
-                class="grid text-xs font-semibold"
+                class="grid px-2 text-xs font-semibold"
                 style={{ 'grid-template-columns': gridTemplateColumns() }}
               >
                 <For each={visibleColumns()}>
@@ -133,7 +133,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                       active={props.sortKey === column.sortKey}
                       direction={props.sortDirection}
                       align={column.align ?? 'center'}
-                      class={`${column.align === 'start' ? 'justify-start pl-2' : 'justify-center'} ${column.id === 'updatedAt' ? 'pr-2' : ''}`}
+                      class={column.align === 'start' ? 'justify-start' : 'justify-center'}
                       onClick={() => props.onSortChange(column.sortKey)}
                     />
                   )}
@@ -154,7 +154,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                     <Show when={record()} keyed>
                       {(currentRecord) => (
                         <div
-                          class={`absolute left-0 top-0 grid w-full border-b border-gray-200 text-xs ${RECORD_ROW_HOVER_CLASS}`}
+                          class={`absolute left-0 top-0 grid w-full border-b border-gray-200 px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
                           style={{
                             'grid-template-columns': gridTemplateColumns(),
                             transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
