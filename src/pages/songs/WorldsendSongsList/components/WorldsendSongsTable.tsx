@@ -21,10 +21,10 @@ const WorldsendSongsTable = (props: Props) => {
           <tr>
             <th class="px-3 py-2 w-1/2 min-w-[15rem]">タイトル</th>
             <th class="px-3 py-2 w-1/2 min-w-[15rem]">アーティスト</th>
-            <th class="px-3 py-2 w-px whitespace-nowrap">ジャンル</th>
-            <th class="px-3 py-2 w-px whitespace-nowrap">BPM</th>
-            <th class="px-3 py-2 w-px whitespace-nowrap">属性</th>
-            <th class="px-3 py-2 w-px whitespace-nowrap">レベル</th>
+            <th class="px-3 py-2 w-px whitespace-nowrap text-center">ジャンル</th>
+            <th class="px-3 py-2 w-px whitespace-nowrap text-center">BPM</th>
+            <th class="px-3 py-2 w-px whitespace-nowrap text-center">属性</th>
+            <th class="px-3 py-2 w-px whitespace-nowrap text-center">レベル</th>
           </tr>
         </thead>
         <tbody>
@@ -47,10 +47,10 @@ const WorldsendSongsTable = (props: Props) => {
                       {song.artist}
                     </span>
                   </td>
-                  <td class="px-3 py-2 whitespace-nowrap">{song.genre ?? '-'}</td>
-                  <td class="px-3 py-2 whitespace-nowrap">{song.bpm ?? '-'}</td>
-                  <td class="px-3 py-2 whitespace-nowrap">{chart?.attribute ?? '-'}</td>
-                  <td class="px-3 py-2 whitespace-nowrap">
+                  <td class="px-3 py-2 whitespace-nowrap text-center">{song.genre ?? '-'}</td>
+                  <td class="px-3 py-2 whitespace-nowrap text-center">{song.bpm ?? '-'}</td>
+                  <td class="px-3 py-2 whitespace-nowrap text-center">{chart?.attribute ?? '-'}</td>
+                  <td class="px-3 py-2 whitespace-nowrap text-center">
                     <StarLevel level={chart?.level_star} />
                   </td>
                 </tr>
