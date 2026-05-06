@@ -111,7 +111,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
   const gridTemplateColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
 
   return (
-    <div class="w-full px-2">
+    <div class="w-full">
       <Show
         when={props.records.length > 0}
         fallback={<p class="py-6 text-center text-gray-400">データがありません</p>}
