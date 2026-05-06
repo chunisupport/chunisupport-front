@@ -2,16 +2,16 @@ import { A } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
-import { getScoreRank, type ScoreRank } from '../../../utils/scoreRank'
+import { getScoreRank, MAX_SCORE, type ScoreRank } from '../../../utils/scoreRank'
 import { LampPlaceholderBadge, renderSortIndicator } from './RecordTableUiParts'
 
 type SharedSortDirection = 'asc' | 'desc' | null
 type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
 type ComboLamp = SharedRecordSource['combo_lamp']
 type ScoreRecord = Pick<SharedRecordSource, 'is_played' | 'score'>
-type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp'>
+type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp' | 'score'>
 type UpdatedAtRecord = Pick<SharedRecordSource, 'is_played' | 'updated_at'>
-type LampBadgeRenderer = (lamp: ComboLamp) => JSX.Element
+type LampBadgeRenderer = (lamp: ComboLamp, record?: LampRecord) => JSX.Element
 export type ColumnRenderer<TRecord> = (record: TRecord) => JSX.Element
 
 type RecordHeaderButtonProps = {
@@ -56,19 +56,21 @@ const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
   D: 'text-gray-500',
 }
 
-export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp) => {
+export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, record) => {
   if (lamp === 'FULL COMBO')
     return (
       <span class="rounded-lg bg-orange-200 px-2 py-1 text-sm font-extrabold text-orange-900">
         FC
       </span>
     )
-  if (lamp === 'ALL JUSTICE')
-    return (
-      <span class="rounded-lg bg-yellow-200 px-2 py-1 text-sm font-extrabold text-yellow-900">
-        AJ
-      </span>
-    )
+  if (lamp === 'ALL JUSTICE') {
+    const ajBadgeClass =
+      record?.score === MAX_SCORE
+        ? 'bg-[linear-gradient(135deg,#ef4444_0%,#f97316_16%,#eab308_32%,#22c55e_48%,#06b6d4_64%,#3b82f6_80%,#a855f7_100%)] text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]'
+        : 'bg-yellow-200 text-yellow-900'
+
+    return <span class={`rounded-lg px-2 py-1 text-sm font-extrabold ${ajBadgeClass}`}>AJ</span>
+  }
   return <LampPlaceholderBadge />
 }
 
@@ -132,7 +134,10 @@ export const RecordLampCell = (props: {
     class={`flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap ${RECORD_LAMP_COLUMN_CLASS}`}
   >
     {props.record.is_played
-      ? (props.renderLampBadge ?? renderDefaultRecordLampBadge)(props.record.combo_lamp)
+      ? (props.renderLampBadge ?? renderDefaultRecordLampBadge)(
+          props.record.combo_lamp,
+          props.record
+        )
       : null}
   </div>
 )
