@@ -23,6 +23,8 @@ import { formatUpdatedAt } from './updatedAt'
 const DIFFICULTY_BADGE_CLASS =
   'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
 const DIFFICULTY_COLUMN_CLASS = `${RECORD_CELL_BASE_CLASS} font-oswald text-sm font-semibold`
+const calcOverpowerPercent = (record: PlayerRecordWithSongMeta): number =>
+  (record.overpower / ((record.const + 3) * 5)) * 100
 
 export const recordColumnRenderers: Record<
   RecordColumnId,
@@ -78,6 +80,20 @@ export const recordColumnRenderers: Record<
       </div>
     )
   },
+  overpower: (record) => (
+    <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+      <span class="inline-block w-full text-center leading-none">
+        {record.is_played ? record.overpower.toFixed(3) : ''}
+      </span>
+    </div>
+  ),
+  overpowerPercent: (record) => (
+    <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+      <span class="inline-block w-full text-center leading-none">
+        {record.is_played ? calcOverpowerPercent(record).toFixed(2) : ''}
+      </span>
+    </div>
+  ),
   updatedAt: (record) => <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />,
 }
 

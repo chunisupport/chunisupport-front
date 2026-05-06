@@ -79,6 +79,40 @@ test('スコアソートは未プレイを末尾に固定する', () => {
   )
 })
 
+test('OPソートは未プレイを末尾に固定する', () => {
+  const records = [
+    createRecord({ id: 'played-low', overpower: 50.123 }),
+    createRecord({ id: 'unplayed', is_played: false, overpower: 0 }),
+    createRecord({ id: 'played-high', overpower: 80.456 }),
+  ]
+
+  assert.deepEqual(
+    sortRecords(records, 'overpower', 'asc').map((record) => record.id),
+    ['played-low', 'played-high', 'unplayed']
+  )
+  assert.deepEqual(
+    sortRecords(records, 'overpower', 'desc').map((record) => record.id),
+    ['played-high', 'played-low', 'unplayed']
+  )
+})
+
+test('OP%ソートは最大OPに対する割合で並べ、未プレイを末尾に固定する', () => {
+  const records = [
+    createRecord({ id: 'played-low-percent', const: 17, overpower: 50 }),
+    createRecord({ id: 'unplayed', is_played: false, const: 17, overpower: 0 }),
+    createRecord({ id: 'played-high-percent', const: 7, overpower: 40 }),
+  ]
+
+  assert.deepEqual(
+    sortRecords(records, 'overpowerPercent', 'asc').map((record) => record.id),
+    ['played-low-percent', 'played-high-percent', 'unplayed']
+  )
+  assert.deepEqual(
+    sortRecords(records, 'overpowerPercent', 'desc').map((record) => record.id),
+    ['played-high-percent', 'played-low-percent', 'unplayed']
+  )
+})
+
 test('更新日ソートは未プレイと無効日付を末尾に寄せる', () => {
   const records = [
     createRecord({ id: 'older', updated_at: '2026-04-19T00:00:00Z' }),

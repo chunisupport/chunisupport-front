@@ -33,10 +33,15 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   const: 'const',
   rating: 'rating',
   score: 'score',
+  overpower: 'overpower',
+  op_percent: 'overpowerPercent',
   updated_at: 'updatedAt',
   lamp: 'lamp',
   justice_count: 'justiceCount',
 }
+
+const calcOverpowerPercent = (record: PlayerRecordWithSongMeta): number =>
+  (record.overpower / ((record.const + 3) * 5)) * 100
 
 export const parseSortParams = (searchParams: SortParamsSource) => {
   const parsed = parseSortQuery(searchParams, RECORD_SORT_COL_MAP, {
@@ -120,6 +125,36 @@ export const sortRecords = (
             return -1
           } else {
             comparison = left.score - right.score
+          }
+          break
+        }
+        case 'overpower': {
+          const leftUnplayed = !left.is_played
+          const rightUnplayed = !right.is_played
+
+          if (leftUnplayed && rightUnplayed) {
+            comparison = 0
+          } else if (leftUnplayed) {
+            return 1
+          } else if (rightUnplayed) {
+            return -1
+          } else {
+            comparison = left.overpower - right.overpower
+          }
+          break
+        }
+        case 'overpowerPercent': {
+          const leftUnplayed = !left.is_played
+          const rightUnplayed = !right.is_played
+
+          if (leftUnplayed && rightUnplayed) {
+            comparison = 0
+          } else if (leftUnplayed) {
+            return 1
+          } else if (rightUnplayed) {
+            return -1
+          } else {
+            comparison = calcOverpowerPercent(left) - calcOverpowerPercent(right)
           }
           break
         }

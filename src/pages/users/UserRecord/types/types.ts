@@ -11,6 +11,8 @@ export type RecordSortKey =
   | 'rating'
   | 'score'
   | 'justiceCount'
+  | 'overpower'
+  | 'overpowerPercent'
   | 'updatedAt'
   | 'lamp'
 export type RecordColumnId =
@@ -21,6 +23,8 @@ export type RecordColumnId =
   | 'rating'
   | 'lamp'
   | 'justiceCount'
+  | 'overpower'
+  | 'overpowerPercent'
   | 'updatedAt'
 export type SortDirection = 'asc' | 'desc'
 
