@@ -247,7 +247,7 @@ const WorldsendRecordTable = (props: {
       >
         <div class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-gray-200">
           <div class="w-fit min-w-full">
-            <div class="border-b border-gray-200 bg-white">
+            <div class="border-b border-gray-200 bg-gray-50">
               <div
                 class="grid px-2 text-xs font-semibold"
                 style={{ 'grid-template-columns': worldsendGridColumns() }}

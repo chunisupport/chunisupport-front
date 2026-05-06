@@ -33,7 +33,7 @@ export const RECORD_ROW_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} hover:bg
 export const RECORD_CARD_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} group-hover:bg-green-50`
 export const RECORD_ROW_HEIGHT = 34
 export const RECORD_ROW_MIN_HEIGHT_CLASS = 'min-h-[34px]'
-export const RECORD_HEADER_BUTTON_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} w-full items-center text-center whitespace-nowrap ${RECORD_ROW_HOVER_CLASS} focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset`
+export const RECORD_HEADER_BUTTON_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} w-full items-center text-center whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset`
 export const RECORD_ALPHANUMERIC_COLUMN_CLASS = 'text-sm'
 export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
 
