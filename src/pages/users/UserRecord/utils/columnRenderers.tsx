@@ -8,8 +8,8 @@ import {
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
   type ColumnRenderer,
-  RECORD_ALPHANUMERIC_COLUMN_CLASS,
-  RECORD_ROW_MIN_HEIGHT_CLASS,
+  RECORD_CELL_BASE_CLASS,
+  RECORD_CELL_CENTER_TEXT_CLASS,
   RecordLampCell,
   RecordScoreCell,
   RecordTitleCell,
@@ -22,8 +22,7 @@ import { formatUpdatedAt } from './updatedAt'
 
 const DIFFICULTY_BADGE_CLASS =
   'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
-const BASE_CELL_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap`
-const DIFFICULTY_COLUMN_CLASS = `${BASE_CELL_CLASS} font-oswald text-sm font-semibold`
+const DIFFICULTY_COLUMN_CLASS = `${RECORD_CELL_BASE_CLASS} font-oswald text-sm font-semibold`
 
 export const recordColumnRenderers: Record<
   RecordColumnId,
@@ -45,11 +44,11 @@ export const recordColumnRenderers: Record<
   const: (record) => {
     const constDisplay = getConstDisplay(record.const, record.is_const_unknown)
     return (
-      <div class={`${BASE_CELL_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}>
+      <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
         <span class={`inline-block w-full text-center leading-none ${constDisplay.className}`}>
           {constDisplay.valueText}
           <Show when={constDisplay.markerText}>
-            {(m) => <sup class="align-super text-[0.7em]">{m}</sup>}
+            {(m) => <sup class="align-super text-[0.7em]">{m()}</sup>}
           </Show>
         </span>
       </div>
@@ -59,7 +58,7 @@ export const recordColumnRenderers: Record<
   rating: (record) => {
     const ratingDisplay = getRatingDisplay(record.rating, record.is_played, record.is_const_unknown)
     return (
-      <div class={`${BASE_CELL_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}>
+      <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
         <span class={`inline-block w-full text-center leading-none ${ratingDisplay.className}`}>
           {ratingDisplay.text}
         </span>
@@ -74,7 +73,7 @@ export const recordColumnRenderers: Record<
       notes: record.notes,
     })
     return (
-      <div class={`${BASE_CELL_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}>
+      <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
         <span class="inline-block w-full text-center leading-none">{justiceCount}</span>
       </div>
     )

@@ -15,6 +15,8 @@ import { Loading } from '../../../components'
 import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
 import {
   RECORD_ALPHANUMERIC_COLUMN_CLASS,
+  RECORD_CELL_BASE_CLASS,
+  RECORD_CELL_CENTER_TEXT_CLASS,
   RECORD_ROW_HOVER_CLASS,
   RecordHeaderButton,
   RecordLampCell,
@@ -292,7 +294,7 @@ const WorldsendRecordTable = (props: {
                         }
                         if (column.id === 'attribute') {
                           return (
-                            <div class="flex min-h-[34px] items-center justify-center text-center whitespace-nowrap text-sm">
+                            <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
                               <span class="inline-block w-full text-center leading-none">
                                 {record.attribute ?? '-'}
                               </span>
@@ -302,7 +304,7 @@ const WorldsendRecordTable = (props: {
                         if (column.id === 'level') {
                           return (
                             <div
-                              class={`flex min-h-[34px] items-center justify-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+                              class={`${RECORD_CELL_BASE_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
                             >
                               <span class="inline-block leading-none">
                                 {worldsendLevelLabel(record.level_star)}
@@ -314,9 +316,7 @@ const WorldsendRecordTable = (props: {
                         if (column.id === 'lamp') return <RecordLampCell record={record} />
                         if (column.id === 'justiceCount') {
                           return (
-                            <div
-                              class={`flex min-h-[34px] items-center justify-center text-center whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-                            >
+                            <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
                               <span class="inline-block w-full text-center leading-none">
                                 {(() => {
                                   const justiceCount = calcJusticeCountForAj({
