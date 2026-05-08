@@ -18,6 +18,7 @@
 }
 
 @keyframes marquee {
+
   0%,
   25% {
     transform: translateX(0%);
@@ -38,6 +39,7 @@
 @layer components {
   .user-honor-title {
     background: var(--honor-background, var(--color-yellow-200));
+    font-weight: bold;
   }
 
   .user-honor-title--normal {
