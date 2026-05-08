@@ -1,4 +1,4 @@
-import type { Component } from 'solid-js'
+import { type Component, Show } from 'solid-js'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../../types/api'
 
 type Props = {
@@ -12,6 +12,25 @@ const sumRating = (records: PlayerRecordDTO[]): number => {
   return records.reduce((sum, record) => sum + record.rating, 0)
 }
 
+const honorTypeClassNames: Record<HonorDTO['type_name'], string> = {
+  normal: 'user-honor-title--normal',
+  copper: 'user-honor-title--copper',
+  silver: 'user-honor-title--silver',
+  gold: 'user-honor-title--gold',
+  platina: 'user-honor-title--platina',
+  rainbow: 'user-honor-title--rainbow',
+  staff: 'user-honor-title--staff',
+  ongeki: 'user-honor-title--ongeki',
+  maimai: 'user-honor-title--maimai',
+  sp: 'user-honor-title--sp',
+  phoenix_g: 'user-honor-title--phoenix-g',
+  phoenix_p: 'user-honor-title--phoenix-p',
+  phoenix_r: 'user-honor-title--phoenix-r',
+  expert: 'user-honor-title--expert',
+  master: 'user-honor-title--master',
+  ultima: 'user-honor-title--ultima',
+}
+
 export const UserNameplate: Component<Props> = (props) => {
   const bestSum = sumRating(props.bestRecords)
   const newSum = sumRating(props.newRecords)
@@ -19,11 +38,21 @@ export const UserNameplate: Component<Props> = (props) => {
   const newRating = props.newRecords.length > 0 ? newSum / props.newRecords.length : 0
   const totalRecordsLength = props.bestRecords.length + props.newRecords.length
   const playerRating = totalRecordsLength > 0 ? (bestSum + newSum) / totalRecordsLength : 0
+  const primaryHonor = () => props.honors[0]
 
   return (
     <div class="mb-2 mx-auto w-[min(420px,calc(100%-2rem))] px-3 py-3 border border-gray-200 shadow-sm rounded-md ">
       {/* TODO: 称号の背景画像を表示 */}
-      <p class="mb-3 p-1 bg-yellow-200 rounded-md text-sm text-center">{props.honors[0].name}</p>
+      <Show when={primaryHonor()}>
+        {(honor) => (
+          <p
+            class={`user-honor-title mb-3 p-1 rounded-md text-sm text-center ${honorTypeClassNames[honor().type_name]}`}
+            data-honor-type={honor().type_name}
+          >
+            {honor().name}
+          </p>
+        )}
+      </Show>
       <div class="mb-2 flex flex-row items-end justify-between">
         <p class="">Lv. {props.playerInfo.level}</p>
         <h1 class="flex-1 text-xl font-medium text-center">{props.playerInfo.name}</h1>

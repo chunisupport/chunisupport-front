@@ -35,6 +35,76 @@
   }
 }
 
+@layer components {
+  .user-honor-title {
+    background: var(--honor-background, var(--color-yellow-200));
+  }
+
+  .user-honor-title--normal {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--copper {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--silver {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--gold {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--platina {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--rainbow {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--staff {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--ongeki {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--maimai {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--sp {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--phoenix-g {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--phoenix-p {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--phoenix-r {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--expert {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--master {
+    --honor-background: var(--color-yellow-200);
+  }
+
+  .user-honor-title--ultima {
+    --honor-background: var(--color-yellow-200);
+  }
+}
+
 @layer base {
   html {
     font-family: "Jost", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
