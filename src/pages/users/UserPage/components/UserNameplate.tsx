@@ -46,7 +46,7 @@ export const UserNameplate: Component<Props> = (props) => {
       <Show when={primaryHonor()}>
         {(honor) => (
           <p
-            class={`user-honor-title mb-3 p-1 rounded-md text-sm text-center ${honorTypeClassNames[honor().type_name]}`}
+            class={`user-honor-title mb-3 p-1 rounded-md font-sans text-sm text-center ${honorTypeClassNames[honor().type_name]}`}
             data-honor-type={honor().type_name}
           >
             {honor().name}
