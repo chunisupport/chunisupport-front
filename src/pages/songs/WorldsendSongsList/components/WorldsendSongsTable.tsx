@@ -1,4 +1,5 @@
-import { For } from 'solid-js'
+import { createVirtualizer } from '@tanstack/solid-virtual'
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import type { WorldsendSongDTO } from '../../../../types/api'
 import { renderSortIndicator } from '../../../users/components/RecordTableUiParts'
 import type { SortDirection } from '../../../users/recordTable/sortingQuery'
@@ -11,6 +12,14 @@ import {
 } from '../../components/SongListMetaCells'
 import type { WorldsendSongSortKey } from '../utils/sorting'
 
+const ROW_HEIGHT = 37
+const GRID_TEMPLATE_COLUMNS =
+  'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 5.2rem 3.75rem 4.8rem 4.8rem'
+const HEADER_CELL_CLASS = 'font-semibold whitespace-nowrap bg-gray-50'
+const COMMON_CELL_STYLE = 'flex items-center px-3 whitespace-nowrap'
+const HEADER_BUTTON_CLASS = `${COMMON_CELL_STYLE} min-h-[${ROW_HEIGHT}px] w-full py-2 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset`
+const CELL_CLASS = `${COMMON_CELL_STYLE} h-[${ROW_HEIGHT}px]`
+
 type Props = {
   songs: WorldsendSongDTO[]
   sortKey: WorldsendSongSortKey | null
@@ -22,7 +31,6 @@ type HeaderButtonProps = {
   label: string
   active: boolean
   direction: SortDirection | null
-  class: string
   align?: 'start' | 'center'
   onClick: () => void
 }
@@ -36,10 +44,14 @@ const sortAriaValue = (
 }
 
 const WorldsendHeaderButton = (props: HeaderButtonProps) => (
-  <th class={props.class} scope="col" aria-sort={sortAriaValue(props.active, props.direction)}>
+  <th
+    class={HEADER_CELL_CLASS}
+    scope="col"
+    aria-sort={sortAriaValue(props.active, props.direction)}
+  >
     <button
       type="button"
-      class={`flex min-h-[37px] w-full items-center px-3 py-2 text-center whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset ${props.align === 'start' ? 'justify-start' : 'justify-center'}`}
+      class={`${HEADER_BUTTON_CLASS} ${props.align === 'start' ? 'justify-start' : 'justify-center'}`}
       onClick={props.onClick}
     >
       <span
@@ -60,90 +72,179 @@ const StarLevel = (props: { level: number | null | undefined }) => {
 }
 
 const WorldsendSongsTable = (props: Props) => {
+  let tableContainerRef: HTMLDivElement | undefined
+  let tableBodyRef: HTMLTableSectionElement | undefined
+  let layoutResizeObserver: ResizeObserver | undefined
+  const getScrollElement = () => document.getElementById('app-main') as HTMLDivElement | null
+
+  const [scrollMargin, setScrollMargin] = createSignal(0)
+
+  const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLTableRowElement>({
+    get count() {
+      return props.songs.length
+    },
+    getScrollElement,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 12,
+    get scrollMargin() {
+      return scrollMargin()
+    },
+  })
+
+  const updateScrollMargin = () => {
+    const scrollElement = getScrollElement()
+    const tableBodyElement = tableBodyRef
+    if (!scrollElement || !tableBodyElement) return
+
+    const scrollRect = scrollElement.getBoundingClientRect()
+    const tableBodyRect = tableBodyElement.getBoundingClientRect()
+    const next = tableBodyRect.top - scrollRect.top + scrollElement.scrollTop
+    if (Math.abs(next - scrollMargin()) >= 1) {
+      setScrollMargin(next)
+    }
+  }
+
+  onMount(() => {
+    updateScrollMargin()
+
+    if (tableContainerRef && typeof ResizeObserver !== 'undefined') {
+      layoutResizeObserver = new ResizeObserver(() => {
+        queueMicrotask(updateScrollMargin)
+      })
+
+      layoutResizeObserver.observe(tableContainerRef)
+
+      const scrollElement = getScrollElement()
+      if (scrollElement) {
+        layoutResizeObserver.observe(scrollElement)
+      }
+    }
+
+    window.addEventListener('resize', updateScrollMargin)
+  })
+
+  onCleanup(() => {
+    layoutResizeObserver?.disconnect()
+    window.removeEventListener('resize', updateScrollMargin)
+  })
+
+  const handleSortChange = (key: WorldsendSongSortKey) => {
+    props.onSortChange(key)
+    queueMicrotask(() => {
+      updateScrollMargin()
+      rowVirtualizer.scrollToIndex(0)
+    })
+  }
+
+  const virtualRows = createMemo(() =>
+    rowVirtualizer.getVirtualItems().filter((virtualRow) => virtualRow.index < props.songs.length)
+  )
+
   return (
-    <div class="overflow-x-auto rounded-md border border-gray-200 bg-white">
-      <table class="w-full max-w-full text-sm">
-        <thead class="bg-gray-50 text-left">
-          <tr>
+    <div
+      ref={tableContainerRef}
+      class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200 bg-white"
+    >
+      <table class="block min-w-[45rem] text-sm" aria-rowcount={props.songs.length}>
+        <thead class="block">
+          <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
             <WorldsendHeaderButton
               label="タイトル"
-              class="w-1/2 min-w-[15rem] font-semibold whitespace-nowrap"
               active={props.sortKey === 'title'}
               direction={props.sortDirection}
               align="start"
-              onClick={() => props.onSortChange('title')}
+              onClick={() => handleSortChange('title')}
             />
             <WorldsendHeaderButton
               label="アーティスト"
-              class="w-1/2 min-w-[15rem] font-semibold whitespace-nowrap"
               active={props.sortKey === 'artist'}
               direction={props.sortDirection}
               align="start"
-              onClick={() => props.onSortChange('artist')}
+              onClick={() => handleSortChange('artist')}
             />
             <WorldsendHeaderButton
               label="ジャンル"
-              class="w-px font-semibold whitespace-nowrap text-center"
               active={props.sortKey === 'genre'}
               direction={props.sortDirection}
-              onClick={() => props.onSortChange('genre')}
+              onClick={() => handleSortChange('genre')}
             />
             <WorldsendHeaderButton
               label="追加日"
-              class="w-px font-semibold whitespace-nowrap text-center"
               active={props.sortKey === 'release'}
               direction={props.sortDirection}
-              onClick={() => props.onSortChange('release')}
+              onClick={() => handleSortChange('release')}
             />
             <WorldsendHeaderButton
               label="BPM"
-              class="w-px font-semibold whitespace-nowrap text-center"
               active={props.sortKey === 'bpm'}
               direction={props.sortDirection}
-              onClick={() => props.onSortChange('bpm')}
+              onClick={() => handleSortChange('bpm')}
             />
             <WorldsendHeaderButton
               label="属性"
-              class="w-px font-semibold whitespace-nowrap text-center"
               active={props.sortKey === 'attribute'}
               direction={props.sortDirection}
-              onClick={() => props.onSortChange('attribute')}
+              onClick={() => handleSortChange('attribute')}
             />
             <WorldsendHeaderButton
               label="レベル"
-              class="w-px font-semibold whitespace-nowrap text-center"
               active={props.sortKey === 'level'}
               direction={props.sortDirection}
-              onClick={() => props.onSortChange('level')}
+              onClick={() => handleSortChange('level')}
             />
           </tr>
         </thead>
-        <tbody>
-          <For each={props.songs}>
-            {(song) => {
-              const chart = song.charts?.WORLDSEND
+        <tbody
+          ref={tableBodyRef}
+          class="relative block min-w-full"
+          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+        >
+          <For each={virtualRows()}>
+            {(virtualRow) => {
+              const song = createMemo(() => props.songs[virtualRow.index])
+
               return (
-                <tr class="border-t border-gray-100 align-top">
-                  <SongListTitleCell
-                    href={`/songs/worldsend/${encodeURIComponent(song.id)}`}
-                    title={song.title}
-                    class="px-3 py-2 max-w-0"
-                  />
-                  <SongListArtistCell artist={song.artist} class="font-sans px-3 py-2 max-w-0" />
-                  <SongListGenreCell
-                    genre={song.genre}
-                    class="px-3 py-2 whitespace-nowrap text-center"
-                  />
-                  <SongListAddedDateCell
-                    release={song.release}
-                    class="px-3 py-2 whitespace-nowrap text-center"
-                  />
-                  <SongListBpmCell bpm={song.bpm} class="px-3 py-2 whitespace-nowrap text-center" />
-                  <td class="px-3 py-2 whitespace-nowrap text-center">{chart?.attribute ?? '-'}</td>
-                  <td class="px-3 py-2 whitespace-nowrap text-center">
-                    <StarLevel level={chart?.level_star} />
-                  </td>
-                </tr>
+                <Show when={song()} keyed>
+                  {(currentSong) => {
+                    const chart = currentSong.charts?.WORLDSEND
+                    return (
+                      <tr
+                        class="absolute left-0 top-0 grid min-w-full border-t border-gray-100"
+                        style={{
+                          'grid-template-columns': GRID_TEMPLATE_COLUMNS,
+                          transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
+                        }}
+                        aria-rowindex={virtualRow.index + 2}
+                      >
+                        <SongListTitleCell
+                          href={`/songs/worldsend/${encodeURIComponent(currentSong.id)}`}
+                          title={currentSong.title}
+                          class={`${CELL_CLASS} min-w-0`}
+                        />
+                        <SongListArtistCell
+                          artist={currentSong.artist}
+                          class={`${CELL_CLASS} min-w-0 font-sans`}
+                        />
+                        <SongListGenreCell
+                          genre={currentSong.genre}
+                          class={`${CELL_CLASS} justify-center overflow-hidden`}
+                        />
+                        <SongListAddedDateCell
+                          release={currentSong.release}
+                          class={`${CELL_CLASS} justify-center`}
+                        />
+                        <SongListBpmCell
+                          bpm={currentSong.bpm}
+                          class={`${CELL_CLASS} justify-center`}
+                        />
+                        <td class={`${CELL_CLASS} justify-center`}>{chart?.attribute ?? '-'}</td>
+                        <td class={`${CELL_CLASS} justify-center`}>
+                          <StarLevel level={chart?.level_star} />
+                        </td>
+                      </tr>
+                    )
+                  }}
+                </Show>
               )
             }}
           </For>
