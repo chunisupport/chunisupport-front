@@ -71,9 +71,7 @@ const WorldsendSongsTable = (props: Props) => {
 
   const handleSortChange = (key: WorldsendSongSortKey) => {
     props.onSortChange(key)
-    queueMicrotask(() => {
-      virtualizedTable.resetToTop()
-    })
+    virtualizedTable.resetToTop()
   }
 
   const virtualRows = createMemo(() => virtualizedTable.virtualRows())
