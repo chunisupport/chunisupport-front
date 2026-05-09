@@ -5,12 +5,12 @@ import { A, useLocation, useNavigate } from '@solidjs/router'
 import {
   BadgeQuestionMark,
   Ellipsis,
+  Flag,
   House,
   LogOut,
   Music,
   Settings,
-  Target,
-  Toolbox,
+  Wrench,
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createSignal, onMount } from 'solid-js'
@@ -96,7 +96,7 @@ const NavBar = (props: NavBarProps) => {
         id: 'goals',
         label: '目標',
         path: '/goals',
-        icon: () => <Target class="h-6 w-6" aria-hidden="true" />,
+        icon: () => <Flag class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
         requiresAuth: true,
       },
@@ -104,7 +104,7 @@ const NavBar = (props: NavBarProps) => {
         id: 'tools',
         label: 'ツール',
         path: '/tools',
-        icon: () => <Toolbox class="h-6 w-6" aria-hidden="true" />,
+        icon: () => <Wrench class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
       },
       {
@@ -243,7 +243,7 @@ const NavBar = (props: NavBarProps) => {
         </main>
 
         {/* スマホ用nav-bar 768px未満 */}
-        <nav class="md:hidden z-40 flex items-center justify-between border-t border-gray-200 bg-white p-3 shadow-sm">
+        <nav class="md:hidden z-40 flex items-center justify-between border-t border-gray-200 bg-white p-1 shadow-sm">
           {getNavItems().map((item) =>
             item.dropdown ? (
               <DropdownMenu>
