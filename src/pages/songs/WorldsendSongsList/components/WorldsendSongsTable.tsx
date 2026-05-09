@@ -1,5 +1,7 @@
 import { For } from 'solid-js'
 import type { WorldsendSongDTO } from '../../../../types/api'
+import { renderSortIndicator } from '../../../users/components/RecordTableUiParts'
+import type { SortDirection } from '../../../users/recordTable/sortingQuery'
 import {
   SongListAddedDateCell,
   SongListArtistCell,
@@ -7,10 +9,48 @@ import {
   SongListGenreCell,
   SongListTitleCell,
 } from '../../components/SongListMetaCells'
+import type { WorldsendSongSortKey } from '../utils/sorting'
 
 type Props = {
   songs: WorldsendSongDTO[]
+  sortKey: WorldsendSongSortKey | null
+  sortDirection: SortDirection | null
+  onSortChange: (key: WorldsendSongSortKey) => void
 }
+
+type HeaderButtonProps = {
+  label: string
+  active: boolean
+  direction: SortDirection | null
+  class: string
+  align?: 'start' | 'center'
+  onClick: () => void
+}
+
+const sortAriaValue = (
+  active: boolean,
+  direction: SortDirection | null
+): 'ascending' | 'descending' | 'none' => {
+  if (!active || !direction) return 'none'
+  return direction === 'asc' ? 'ascending' : 'descending'
+}
+
+const WorldsendHeaderButton = (props: HeaderButtonProps) => (
+  <th class={props.class} scope="col" aria-sort={sortAriaValue(props.active, props.direction)}>
+    <button
+      type="button"
+      class={`flex min-h-[37px] w-full items-center px-3 py-2 text-center whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset ${props.align === 'start' ? 'justify-start' : 'justify-center'}`}
+      onClick={props.onClick}
+    >
+      <span
+        class={`flex flex-col ${props.align === 'start' ? 'items-start' : 'items-center'} justify-center gap-0.5 leading-none`}
+      >
+        <span>{props.label}</span>
+        {renderSortIndicator(props.active, props.direction)}
+      </span>
+    </button>
+  </th>
+)
 
 const StarLevel = (props: { level: number | null | undefined }) => {
   if (props.level == null) {
@@ -25,13 +65,57 @@ const WorldsendSongsTable = (props: Props) => {
       <table class="w-full max-w-full text-sm">
         <thead class="bg-gray-50 text-left">
           <tr>
-            <th class="px-3 py-2 w-1/2 min-w-[15rem]">タイトル</th>
-            <th class="px-3 py-2 w-1/2 min-w-[15rem]">アーティスト</th>
-            <th class="px-3 py-2 w-px whitespace-nowrap text-center">ジャンル</th>
-            <th class="px-3 py-2 w-px whitespace-nowrap text-center">追加日</th>
-            <th class="px-3 py-2 w-px whitespace-nowrap text-center">BPM</th>
-            <th class="px-3 py-2 w-px whitespace-nowrap text-center">属性</th>
-            <th class="px-3 py-2 w-px whitespace-nowrap text-center">レベル</th>
+            <WorldsendHeaderButton
+              label="タイトル"
+              class="w-1/2 min-w-[15rem] font-semibold whitespace-nowrap"
+              active={props.sortKey === 'title'}
+              direction={props.sortDirection}
+              align="start"
+              onClick={() => props.onSortChange('title')}
+            />
+            <WorldsendHeaderButton
+              label="アーティスト"
+              class="w-1/2 min-w-[15rem] font-semibold whitespace-nowrap"
+              active={props.sortKey === 'artist'}
+              direction={props.sortDirection}
+              align="start"
+              onClick={() => props.onSortChange('artist')}
+            />
+            <WorldsendHeaderButton
+              label="ジャンル"
+              class="w-px font-semibold whitespace-nowrap text-center"
+              active={props.sortKey === 'genre'}
+              direction={props.sortDirection}
+              onClick={() => props.onSortChange('genre')}
+            />
+            <WorldsendHeaderButton
+              label="追加日"
+              class="w-px font-semibold whitespace-nowrap text-center"
+              active={props.sortKey === 'release'}
+              direction={props.sortDirection}
+              onClick={() => props.onSortChange('release')}
+            />
+            <WorldsendHeaderButton
+              label="BPM"
+              class="w-px font-semibold whitespace-nowrap text-center"
+              active={props.sortKey === 'bpm'}
+              direction={props.sortDirection}
+              onClick={() => props.onSortChange('bpm')}
+            />
+            <WorldsendHeaderButton
+              label="属性"
+              class="w-px font-semibold whitespace-nowrap text-center"
+              active={props.sortKey === 'attribute'}
+              direction={props.sortDirection}
+              onClick={() => props.onSortChange('attribute')}
+            />
+            <WorldsendHeaderButton
+              label="レベル"
+              class="w-px font-semibold whitespace-nowrap text-center"
+              active={props.sortKey === 'level'}
+              direction={props.sortDirection}
+              onClick={() => props.onSortChange('level')}
+            />
           </tr>
         </thead>
         <tbody>

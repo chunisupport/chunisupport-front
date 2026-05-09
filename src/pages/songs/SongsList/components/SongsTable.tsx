@@ -2,6 +2,8 @@ import { createVirtualizer } from '@tanstack/solid-virtual'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import type { SongDTO } from '../../../../types/api'
 import { DIFFICULTY_SHORT_NAME_MAP, difficultyBadgeClass } from '../../../../utils/difficultyUtils'
+import { renderSortIndicator } from '../../../users/components/RecordTableUiParts'
+import type { SortDirection } from '../../../users/recordTable/sortingQuery'
 import {
   SongListAddedDateCell,
   SongListArtistCell,
@@ -9,16 +11,55 @@ import {
   SongListGenreCell,
   SongListTitleCell,
 } from '../../components/SongListMetaCells'
+import type { SongSortKey } from '../utils/sorting'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
 const GRID_TEMPLATE_COLUMNS =
   'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 5.2rem 3.75rem repeat(5, 3.4rem)'
-const HEADER_CELL_CLASS = 'px-3 py-2 font-semibold whitespace-nowrap bg-gray-50'
+const HEADER_CELL_CLASS = 'font-semibold whitespace-nowrap bg-gray-50'
+const HEADER_BUTTON_CLASS =
+  'flex min-h-[37px] w-full items-center px-3 py-2 text-center whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
 type Props = {
   songs: SongDTO[]
+  sortKey: SongSortKey | null
+  sortDirection: SortDirection | null
+  onSortChange: (key: SongSortKey) => void
 }
+
+type HeaderButtonProps = {
+  label: string
+  active: boolean
+  direction: SortDirection | null
+  align?: 'start' | 'center'
+  onClick: () => void
+}
+
+const sortAriaValue = (
+  active: boolean,
+  direction: SortDirection | null
+): 'ascending' | 'descending' | 'none' => {
+  if (!active || !direction) return 'none'
+  return direction === 'asc' ? 'ascending' : 'descending'
+}
+
+const SongHeaderButton = (props: HeaderButtonProps) => (
+  <th
+    class={HEADER_CELL_CLASS}
+    scope="col"
+    aria-sort={sortAriaValue(props.active, props.direction)}
+  >
+    <button type="button" class={HEADER_BUTTON_CLASS} onClick={props.onClick}>
+      <span
+        class={`flex flex-col ${props.align === 'start' ? 'items-start' : 'items-center'} justify-center gap-0.5 leading-none`}
+      >
+        <span>{props.label}</span>
+        {renderSortIndicator(props.active, props.direction)}
+      </span>
+    </button>
+  </th>
+)
 
 const SongsTable = (props: Props) => {
   let tableContainerRef: HTMLDivElement | undefined
@@ -97,26 +138,46 @@ const SongsTable = (props: Props) => {
       <table class="block min-w-[45rem] text-sm" aria-rowcount={props.songs.length}>
         <thead class="block">
           <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
-            <th class={`${HEADER_CELL_CLASS} min-w-[15rem] text-left`} scope="col">
-              タイトル
-            </th>
-            <th class={`${HEADER_CELL_CLASS} min-w-[15rem] text-left`} scope="col">
-              アーティスト
-            </th>
-            <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
-              ジャンル
-            </th>
-            <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
-              追加日
-            </th>
-            <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
-              BPM
-            </th>
+            <SongHeaderButton
+              label="タイトル"
+              active={props.sortKey === 'title'}
+              direction={props.sortDirection}
+              align="start"
+              onClick={() => props.onSortChange('title')}
+            />
+            <SongHeaderButton
+              label="アーティスト"
+              active={props.sortKey === 'artist'}
+              direction={props.sortDirection}
+              align="start"
+              onClick={() => props.onSortChange('artist')}
+            />
+            <SongHeaderButton
+              label="ジャンル"
+              active={props.sortKey === 'genre'}
+              direction={props.sortDirection}
+              onClick={() => props.onSortChange('genre')}
+            />
+            <SongHeaderButton
+              label="追加日"
+              active={props.sortKey === 'release'}
+              direction={props.sortDirection}
+              onClick={() => props.onSortChange('release')}
+            />
+            <SongHeaderButton
+              label="BPM"
+              active={props.sortKey === 'bpm'}
+              direction={props.sortDirection}
+              onClick={() => props.onSortChange('bpm')}
+            />
             <For each={chartOrder}>
               {(difficulty) => (
-                <th class={`${HEADER_CELL_CLASS} text-center`} scope="col">
-                  {DIFFICULTY_SHORT_NAME_MAP[difficulty]}
-                </th>
+                <SongHeaderButton
+                  label={DIFFICULTY_SHORT_NAME_MAP[difficulty]}
+                  active={props.sortKey === difficulty.toLowerCase()}
+                  direction={props.sortDirection}
+                  onClick={() => props.onSortChange(difficulty.toLowerCase() as SongSortKey)}
+                />
               )}
             </For>
           </tr>

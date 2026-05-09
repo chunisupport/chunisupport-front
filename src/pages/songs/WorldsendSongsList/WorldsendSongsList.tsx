@@ -1,22 +1,36 @@
-import { createMemo, ErrorBoundary, onMount, Show } from 'solid-js'
+import { createMemo, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByAddedDateAndOfficialIndex, useSongsData } from '../../../stores/songsData'
+import type { SortDirection } from '../../users/recordTable/sortingQuery'
 import SongsViewToggle from '../components/SongsViewToggle'
 import WorldsendSongsTable from './components/WorldsendSongsTable'
+import { nextSortState, sortWorldsendSongs, type WorldsendSongSortKey } from './utils/sorting'
 
 const WorldsendSongsList = () => {
   const { worldsendSongsResponse, ensureWorldsendSongsLoaded, isWorldsendSongsLoading } =
     useSongsData()
+  const [sortKey, setSortKey] = createSignal<WorldsendSongSortKey | null>(null)
+  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
 
   onMount(() => {
     ensureWorldsendSongsLoaded()
   })
 
-  const sortedSongs = createMemo(() => {
+  const defaultSortedSongs = createMemo(() => {
     const songs = worldsendSongsResponse()?.songs ?? []
     return sortSongsByAddedDateAndOfficialIndex(songs)
   })
+
+  const sortedSongs = createMemo(() =>
+    sortWorldsendSongs(defaultSortedSongs(), sortKey(), sortDirection())
+  )
+
+  const handleSortChange = (nextKey: WorldsendSongSortKey) => {
+    const nextSort = nextSortState(sortKey(), sortDirection(), nextKey)
+    setSortKey(nextSort.sortKey)
+    setSortDirection(nextSort.sortDirection)
+  }
 
   useDocumentTitle("WORLD'S END 楽曲一覧")
 
@@ -30,7 +44,12 @@ const WorldsendSongsList = () => {
           </div>
           <p class="text-sm text-gray-600">{sortedSongs().length}件</p>
 
-          <WorldsendSongsTable songs={sortedSongs()} />
+          <WorldsendSongsTable
+            songs={sortedSongs()}
+            sortKey={sortKey()}
+            sortDirection={sortDirection()}
+            onSortChange={handleSortChange}
+          />
 
           <Show when={sortedSongs().length === 0}>
             <p class="text-sm text-gray-500">表示できる楽曲がありません。</p>

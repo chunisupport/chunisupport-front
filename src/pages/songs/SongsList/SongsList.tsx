@@ -1,21 +1,33 @@
-import { createMemo, ErrorBoundary, onMount, Show } from 'solid-js'
+import { createMemo, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByAddedDateAndOfficialIndex, useSongsData } from '../../../stores/songsData'
+import type { SortDirection } from '../../users/recordTable/sortingQuery'
 import SongsViewToggle from '../components/SongsViewToggle'
 import SongsTable from './components/SongsTable'
+import { nextSortState, type SongSortKey, sortSongs } from './utils/sorting'
 
 const SongsList = () => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
+  const [sortKey, setSortKey] = createSignal<SongSortKey | null>(null)
+  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
 
   onMount(() => {
     ensureSongsLoaded()
   })
 
-  const sortedSongs = createMemo(() => {
+  const defaultSortedSongs = createMemo(() => {
     const songs = songsResponse()?.songs ?? []
     return sortSongsByAddedDateAndOfficialIndex(songs)
   })
+
+  const sortedSongs = createMemo(() => sortSongs(defaultSortedSongs(), sortKey(), sortDirection()))
+
+  const handleSortChange = (nextKey: SongSortKey) => {
+    const nextSort = nextSortState(sortKey(), sortDirection(), nextKey)
+    setSortKey(nextSort.sortKey)
+    setSortDirection(nextSort.sortDirection)
+  }
 
   useDocumentTitle('楽曲一覧')
 
@@ -29,7 +41,12 @@ const SongsList = () => {
           </div>
           <p class="text-sm text-gray-600">{sortedSongs().length}件</p>
 
-          <SongsTable songs={sortedSongs()} />
+          <SongsTable
+            songs={sortedSongs()}
+            sortKey={sortKey()}
+            sortDirection={sortDirection()}
+            onSortChange={handleSortChange}
+          />
 
           <Show when={sortedSongs().length === 0}>
             <p class="text-sm text-gray-500">表示できる楽曲がありません。</p>
