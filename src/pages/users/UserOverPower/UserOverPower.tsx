@@ -1,13 +1,16 @@
 import * as Tabs from '@kobalte/core/tabs'
 import { useLocation, useNavigate } from '@solidjs/router'
-import { ChevronDown } from 'lucide-solid'
+import { ChevronDown, LockKeyhole } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
 import { fetchAllSongs, fetchVersionSummaries } from '../../../api/songs'
+import { addMyLockedSong, deleteMyLockedSong, fetchMyLockedSongs } from '../../../api/users'
 import { Loading } from '../../../components'
+import { authSession } from '../../../stores/authSession'
 import type { UserRecordDTO } from '../../../types/api'
 import { buildOverPowerSummary } from '../../../usecases/overpower/overpowerSummary'
 import { buildUserOverPowerPagePath, type OverPowerSubPage } from '../UserPage/profilePageQuery'
+import LockedSongsDialog from './components/LockedSongsDialog'
 import { OverPowerAllSummary } from './components/OverPowerAllSummary'
 import { OverPowerSummaryTable } from './components/OverPowerSummaryTable'
 
@@ -36,7 +39,17 @@ const overPowerSubPageBySummaryTab: Record<OverPowerSummaryTab, OverPowerSubPage
 const UserOverPower: Component<Props> = (props) => {
   const [allSongs] = createResource(fetchAllSongs)
   const [versionSummaries] = createResource(fetchVersionSummaries)
+  const canManageLockedSongs = createMemo(
+    () => authSession.status === 'authenticated' && authSession.user?.username === props.username
+  )
+  const [lockedSongs, { refetch: refetchLockedSongs }] = createResource(
+    canManageLockedSongs,
+    (enabled) => (enabled ? fetchMyLockedSongs() : Promise.resolve({ items: [] }))
+  )
   const [showLowLevels, setShowLowLevels] = createSignal(false)
+  const [lockedSongsDialogOpen, setLockedSongsDialogOpen] = createSignal(false)
+  const [savingLockedSongKey, setSavingLockedSongKey] = createSignal<string | null>(null)
+  const [lockedSongsError, setLockedSongsError] = createSignal<string | null>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const selectedSummaryTab = createMemo<OverPowerSummaryTab>(
@@ -46,14 +59,24 @@ const UserOverPower: Component<Props> = (props) => {
   const summary = createMemo(() => {
     const songs = allSongs()
     const versions = versionSummaries()
-    if (!songs || !versions) return undefined
-    return buildOverPowerSummary(songs.songs, props.record.all, versions.versions)
+    const currentLockedSongs = lockedSongs()
+    if (!songs || !versions || !currentLockedSongs) return undefined
+    return buildOverPowerSummary(
+      songs.songs,
+      props.record.all,
+      versions.versions,
+      canManageLockedSongs() ? currentLockedSongs.items : []
+    )
   })
 
   const highLevelRows = createMemo(() => summary()?.levels.filter((row) => !row.isLowLevel) ?? [])
   const lowLevelRows = createMemo(() => summary()?.levels.filter((row) => row.isLowLevel) ?? [])
   const summaryTabTriggerClass =
     'rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors data-selected:bg-primary-600 data-selected:text-white data-selected:shadow-sm'
+  const iconButtonClass =
+    'inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-gray-400'
+  const createLockedSongKey = (displayId: string, isUltima: boolean) =>
+    `${displayId}:${isUltima ? 'ultima' : 'normal'}`
 
   const handleSummaryTabChange = (value: string) => {
     if (
@@ -76,6 +99,27 @@ const UserOverPower: Component<Props> = (props) => {
     navigate(`${normalizedPath}${queryString ? `?${queryString}` : ''}${location.hash}`)
   }
 
+  const handleToggleLockedSong = async (displayId: string, isUltima: boolean, locked: boolean) => {
+    const key = createLockedSongKey(displayId, isUltima)
+    setSavingLockedSongKey(key)
+    setLockedSongsError(null)
+
+    try {
+      if (locked) {
+        await addMyLockedSong({ display_id: displayId, is_ultima: isUltima })
+      } else {
+        await deleteMyLockedSong({ display_id: displayId, is_ultima: isUltima })
+      }
+      await refetchLockedSongs()
+    } catch (error) {
+      setLockedSongsError(
+        error instanceof Error ? error.message : '未解禁曲設定の更新に失敗しました'
+      )
+    } finally {
+      setSavingLockedSongKey(null)
+    }
+  }
+
   return (
     <Suspense fallback={<Loading />}>
       <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
@@ -85,22 +129,44 @@ const UserOverPower: Component<Props> = (props) => {
               <OverPowerAllSummary summary={currentSummary().all} />
 
               <Tabs.Root value={selectedSummaryTab()} onChange={handleSummaryTabChange}>
-                <div class="overflow-x-auto">
-                  <Tabs.List class="inline-flex gap-1 rounded-xl bg-gray-100 p-1">
-                    <Tabs.Trigger value="genres" class={summaryTabTriggerClass}>
-                      ジャンル
-                    </Tabs.Trigger>
-                    <Tabs.Trigger value="difficulties" class={summaryTabTriggerClass}>
-                      難易度
-                    </Tabs.Trigger>
-                    <Tabs.Trigger value="levels" class={summaryTabTriggerClass}>
-                      レベル
-                    </Tabs.Trigger>
-                    <Tabs.Trigger value="versions" class={summaryTabTriggerClass}>
-                      バージョン
-                    </Tabs.Trigger>
-                  </Tabs.List>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="overflow-x-auto">
+                    <Tabs.List class="inline-flex gap-1 rounded-xl bg-gray-100 p-1">
+                      <Tabs.Trigger value="genres" class={summaryTabTriggerClass}>
+                        ジャンル
+                      </Tabs.Trigger>
+                      <Tabs.Trigger value="difficulties" class={summaryTabTriggerClass}>
+                        難易度
+                      </Tabs.Trigger>
+                      <Tabs.Trigger value="levels" class={summaryTabTriggerClass}>
+                        レベル
+                      </Tabs.Trigger>
+                      <Tabs.Trigger value="versions" class={summaryTabTriggerClass}>
+                        バージョン
+                      </Tabs.Trigger>
+                    </Tabs.List>
+                  </div>
+                  <Show when={canManageLockedSongs()}>
+                    <button
+                      type="button"
+                      class={iconButtonClass}
+                      aria-label="未解禁曲設定"
+                      title="未解禁曲設定"
+                      disabled={!allSongs() || lockedSongs.loading}
+                      onClick={() => setLockedSongsDialogOpen(true)}
+                    >
+                      <LockKeyhole class="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  </Show>
                 </div>
+
+                <Show when={lockedSongsError()}>
+                  {(message) => (
+                    <p class="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                      {message()}
+                    </p>
+                  )}
+                </Show>
 
                 <Tabs.Content value="genres" class="mt-4">
                   <OverPowerSummaryTable rows={currentSummary().genres} countLabel="曲数" />
@@ -141,6 +207,17 @@ const UserOverPower: Component<Props> = (props) => {
                   <OverPowerSummaryTable rows={currentSummary().versions} countLabel="曲数" />
                 </Tabs.Content>
               </Tabs.Root>
+
+              <Show when={canManageLockedSongs() && allSongs() && lockedSongs()}>
+                <LockedSongsDialog
+                  open={lockedSongsDialogOpen()}
+                  songs={allSongs()?.songs ?? []}
+                  lockedSongs={lockedSongs()?.items ?? []}
+                  savingKey={savingLockedSongKey()}
+                  onOpenChange={setLockedSongsDialogOpen}
+                  onToggleLockedSong={handleToggleLockedSong}
+                />
+              </Show>
             </div>
           )}
         </Show>

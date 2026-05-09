@@ -1,6 +1,8 @@
 import { API_BASE_URL } from '../config'
 import type {
   AdminUserListResponse,
+  PlayerLockedSongRequest,
+  PlayerLockedSongsResponse,
   UserDTO,
   UserProfileDTO,
   UserRatingDTO,
@@ -51,6 +53,31 @@ export const fetchMe = async (options: FetchMeOptions = {}): Promise<UserDTO> =>
   })
 
   return response.json()
+}
+
+export const fetchMyLockedSongs = async (): Promise<PlayerLockedSongsResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/me/locked-songs`)
+
+  return response.json()
+}
+
+export const addMyLockedSong = async (request: PlayerLockedSongRequest): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/me/locked-songs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+}
+
+export const deleteMyLockedSong = async (request: PlayerLockedSongRequest): Promise<void> => {
+  const url = new URL(
+    `${API_BASE_URL}/internal/me/locked-songs/${encodeURIComponent(request.display_id)}`
+  )
+  url.searchParams.set('is_ultima', String(request.is_ultima ?? false))
+
+  await fetchWithAuth(url, {
+    method: 'DELETE',
+  })
 }
 
 type FetchAdminUsersOptions = {

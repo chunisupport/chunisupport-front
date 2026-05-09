@@ -26,3 +26,8 @@ export type OverPowerSummary = {
 }
 
 export type OverPowerDifficulty = PlayerRecordDTO['difficulty']
+
+export type OverPowerLockedSong = {
+  display_id: string
+  is_ultima: boolean
+}

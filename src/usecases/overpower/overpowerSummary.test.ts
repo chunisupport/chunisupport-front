@@ -171,3 +171,55 @@ test('難易度別は譜面単位で現在値と理論値を集計する', () =>
     ]
   )
 })
+
+test('通常未解禁曲は曲単位と譜面単位の集計から除外する', () => {
+  const summary = buildOverPowerSummary(
+    [createSong({ id: 'locked', maxop: 90 }), createSong({ id: 'available', maxop: 80 })],
+    [
+      createRecord({ id: 'locked', difficulty: 'MASTER', overpower: 85 }),
+      createRecord({ id: 'available', difficulty: 'MASTER', overpower: 70, const: 13 }),
+    ],
+    versions,
+    [{ display_id: 'locked', is_ultima: false }]
+  )
+
+  assert.equal(summary.all.current, 70)
+  assert.equal(summary.all.max, 80)
+  assert.equal(summary.all.count, 1)
+  assert.deepEqual(
+    summary.difficulties.map((row) => [row.label, row.current, row.max, row.count]),
+    [['MASTER', 70, 80, 1]]
+  )
+})
+
+test('ULTIMA未解禁はULTIMA譜面だけを集計から除外する', () => {
+  const summary = buildOverPowerSummary(
+    [
+      createSong({
+        id: 'song-a',
+        maxop: 95,
+        charts: {
+          MASTER: { const: 14, is_const_unknown: false, notes: null },
+          ULTIMA: { const: 16, is_const_unknown: false, notes: null },
+        },
+      }),
+    ],
+    [
+      createRecord({ id: 'song-a', difficulty: 'MASTER', overpower: 80, const: 14 }),
+      createRecord({ id: 'song-a', difficulty: 'ULTIMA', overpower: 92, const: 16 }),
+    ],
+    versions,
+    [{ display_id: 'song-a', is_ultima: true }]
+  )
+
+  assert.equal(summary.all.current, 80)
+  assert.equal(summary.all.max, 85)
+  assert.deepEqual(
+    summary.levels.map((row) => row.label),
+    ['14']
+  )
+  assert.deepEqual(
+    summary.difficulties.map((row) => row.label),
+    ['MASTER']
+  )
+})

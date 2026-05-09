@@ -380,6 +380,21 @@ export interface UserRecordDTO {
   meta: UserRecordMetaDTO
 }
 
+export interface PlayerLockedSongResponseItem {
+  display_id: string
+  title: string
+  is_ultima: boolean
+}
+
+export interface PlayerLockedSongsResponse {
+  items: PlayerLockedSongResponseItem[]
+}
+
+export interface PlayerLockedSongRequest {
+  display_id: string
+  is_ultima?: boolean
+}
+
 export interface UserProfileWithRecordsDTO {
   username: string
   player: PlayerDTO | null

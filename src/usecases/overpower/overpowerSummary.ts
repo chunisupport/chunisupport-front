@@ -9,11 +9,13 @@ import { getShortVersionName, resolveVersionNameByReleaseDate } from '../../util
 import type {
   OverPowerDifficulty,
   OverPowerLevelSummaryRow,
+  OverPowerLockedSong,
   OverPowerSummary,
   OverPowerSummaryRow,
 } from './types'
 
 const DIFFICULTY_ORDER: OverPowerDifficulty[] = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA']
+const ULTIMA_DIFFICULTY: OverPowerDifficulty = 'ULTIMA'
 
 type SongAggregationEntry = {
   song: SongDTO
@@ -27,6 +29,11 @@ type MutableSummary = {
   current: number
   max: number
   count: number
+}
+
+type LockedSongLookup = {
+  lockedSongIds: Set<string>
+  ultimaLockedSongIds: Set<string>
 }
 
 const emptyMutableSummary = (): MutableSummary => ({
@@ -59,18 +66,59 @@ const addToGroup = (
   groups.set(key, summary)
 }
 
-const getHighestChartConst = (song: SongDTO): number | null => {
-  const chartConsts = Object.values(song.charts)
-    .map((chart) => chart?.const)
+const getHighestAvailableChartConst = (
+  song: SongDTO,
+  lockedLookup: LockedSongLookup
+): number | null => {
+  const chartEntries = Object.entries(song.charts) as [
+    OverPowerDifficulty,
+    SongDTO['charts'][OverPowerDifficulty],
+  ][]
+  const chartConsts = chartEntries
+    .filter(
+      ([difficulty]) =>
+        !(difficulty === ULTIMA_DIFFICULTY && lockedLookup.ultimaLockedSongIds.has(song.id))
+    )
+    .map(([, chart]) => chart?.const)
     .filter((chartConst): chartConst is number => typeof chartConst === 'number')
   if (chartConsts.length === 0) return null
   return Math.max(...chartConsts)
 }
 
+const getAvailableSongMaxOverPower = (song: SongDTO, lockedLookup: LockedSongLookup): number => {
+  if (!lockedLookup.ultimaLockedSongIds.has(song.id)) return song.maxop
+
+  const highestConst = getHighestAvailableChartConst(song, lockedLookup)
+  return highestConst === null ? 0 : (highestConst + 3) * 5
+}
+
+const buildLockedSongLookup = (lockedSongs: OverPowerLockedSong[]): LockedSongLookup => {
+  const lockedSongIds = new Set<string>()
+  const ultimaLockedSongIds = new Set<string>()
+
+  for (const lockedSong of lockedSongs) {
+    if (lockedSong.is_ultima) {
+      ultimaLockedSongIds.add(lockedSong.display_id)
+    } else {
+      lockedSongIds.add(lockedSong.display_id)
+    }
+  }
+
+  return { lockedSongIds, ultimaLockedSongIds }
+}
+
+const isRecordAvailable = (record: PlayerRecordDTO, lockedLookup: LockedSongLookup): boolean => {
+  if (lockedLookup.lockedSongIds.has(record.id)) return false
+  return !(
+    record.difficulty === ULTIMA_DIFFICULTY && lockedLookup.ultimaLockedSongIds.has(record.id)
+  )
+}
+
 const buildSongEntries = (
   songs: SongDTO[],
   records: PlayerRecordDTO[],
-  versions: VersionSummaryDTO[]
+  versions: VersionSummaryDTO[],
+  lockedLookup: LockedSongLookup
 ): SongAggregationEntry[] => {
   const maxRecordOpBySongId = new Map<string, number>()
   for (const record of records) {
@@ -80,17 +128,20 @@ const buildSongEntries = (
     }
   }
 
-  return songs.map((song) => {
-    const highestConst = getHighestChartConst(song)
-    const resolvedVersion = resolveVersionNameByReleaseDate(song.release, versions)
-    return {
-      song,
-      current: maxRecordOpBySongId.get(song.id) ?? 0,
-      max: song.maxop,
-      level: highestConst === null ? null : toChartLevelLabel(highestConst),
-      versionName: resolvedVersion === '不明' ? null : getShortVersionName(resolvedVersion),
-    }
-  })
+  return songs
+    .filter((song) => !lockedLookup.lockedSongIds.has(song.id))
+    .map((song) => {
+      const highestConst = getHighestAvailableChartConst(song, lockedLookup)
+      const resolvedVersion = resolveVersionNameByReleaseDate(song.release, versions)
+      return {
+        song,
+        current: maxRecordOpBySongId.get(song.id) ?? 0,
+        max: getAvailableSongMaxOverPower(song, lockedLookup),
+        level: highestConst === null ? null : toChartLevelLabel(highestConst),
+        versionName: resolvedVersion === '不明' ? null : getShortVersionName(resolvedVersion),
+      }
+    })
+    .filter((entry) => entry.max > 0)
 }
 
 const buildAllSummary = (entries: SongAggregationEntry[]): OverPowerSummaryRow => {
@@ -181,15 +232,18 @@ const buildDifficultySummaries = (records: PlayerRecordDTO[]): OverPowerSummaryR
 export const buildOverPowerSummary = (
   songs: SongDTO[],
   records: PlayerRecordDTO[],
-  versions: VersionSummaryDTO[]
+  versions: VersionSummaryDTO[],
+  lockedSongs: OverPowerLockedSong[] = []
 ): OverPowerSummary => {
-  const entries = buildSongEntries(songs, records, versions)
+  const lockedLookup = buildLockedSongLookup(lockedSongs)
+  const availableRecords = records.filter((record) => isRecordAvailable(record, lockedLookup))
+  const entries = buildSongEntries(songs, availableRecords, versions, lockedLookup)
 
   return {
     all: buildAllSummary(entries),
     genres: buildGenreSummaries(entries),
     levels: buildLevelSummaries(entries),
     versions: buildVersionSummaries(entries, versions),
-    difficulties: buildDifficultySummaries(records),
+    difficulties: buildDifficultySummaries(availableRecords),
   }
 }
