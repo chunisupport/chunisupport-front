@@ -50,7 +50,11 @@ const SongHeaderButton = (props: HeaderButtonProps) => (
     scope="col"
     aria-sort={sortAriaValue(props.active, props.direction)}
   >
-    <button type="button" class={HEADER_BUTTON_CLASS} onClick={props.onClick}>
+    <button
+      type="button"
+      class={`${HEADER_BUTTON_CLASS} ${props.align === 'start' ? 'justify-start' : 'justify-center'}`}
+      onClick={props.onClick}
+    >
       <span
         class={`flex flex-col ${props.align === 'start' ? 'items-start' : 'items-center'} justify-center gap-0.5 leading-none`}
       >
