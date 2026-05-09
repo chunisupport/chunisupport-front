@@ -3,7 +3,7 @@ import { A, useLocation, useNavigate } from '@solidjs/router'
 import { ChartColumnIncreasing } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
 import { createMemo, For, lazy, Show, Suspense } from 'solid-js'
-import { Loading, ScrollToTop } from '../../../components'
+import { Loading } from '../../../components'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
@@ -13,7 +13,6 @@ import {
   type OverPowerSubPage,
   type ProfilePageQuery,
 } from './profilePageQuery'
-import { shouldShowProfileScrollToTop } from './scrollToTopVisibility'
 import type { UserPageRatingProfile, UserPageRecordProfile } from './UserPage'
 
 const UserRecord = lazy(() => import('../UserRecord'))
@@ -251,13 +250,6 @@ export const UserProfileView: Component<Props> = (props) => {
           </Suspense>
         </Tabs.Content>
       </Tabs.Root>
-
-      {/* スクロールトップボタン（モバイル用） */}
-      <Show when={shouldShowProfileScrollToTop(props.selectedPage)}>
-        <div class="md:hidden">
-          <ScrollToTop />
-        </div>
-      </Show>
     </div>
   )
 }
