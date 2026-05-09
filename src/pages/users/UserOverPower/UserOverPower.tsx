@@ -4,7 +4,7 @@ import { ChevronDown, LockKeyhole } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
 import { fetchAllSongs, fetchVersionSummaries } from '../../../api/songs'
-import { addMyLockedSong, deleteMyLockedSong, fetchMyLockedSongs } from '../../../api/users'
+import { addMyLockedSong, deleteMyLockedSong, fetchUserLockedSongs } from '../../../api/users'
 import { Loading } from '../../../components'
 import { authSession } from '../../../stores/authSession'
 import type { UserRecordDTO } from '../../../types/api'
@@ -43,8 +43,8 @@ const UserOverPower: Component<Props> = (props) => {
     () => authSession.status === 'authenticated' && authSession.user?.username === props.username
   )
   const [lockedSongs, { refetch: refetchLockedSongs }] = createResource(
-    canManageLockedSongs,
-    (enabled) => (enabled ? fetchMyLockedSongs() : Promise.resolve({ items: [] }))
+    () => props.username,
+    fetchUserLockedSongs
   )
   const [showLowLevels, setShowLowLevels] = createSignal(false)
   const [lockedSongsDialogOpen, setLockedSongsDialogOpen] = createSignal(false)
@@ -65,7 +65,7 @@ const UserOverPower: Component<Props> = (props) => {
       songs.songs,
       props.record.all,
       versions.versions,
-      canManageLockedSongs() ? currentLockedSongs.items : []
+      currentLockedSongs.items
     )
   })
 

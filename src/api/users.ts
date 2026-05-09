@@ -55,8 +55,12 @@ export const fetchMe = async (options: FetchMeOptions = {}): Promise<UserDTO> =>
   return response.json()
 }
 
-export const fetchMyLockedSongs = async (): Promise<PlayerLockedSongsResponse> => {
-  const response = await fetchWithAuth(`${API_BASE_URL}/internal/me/locked-songs`)
+export const fetchUserLockedSongs = async (
+  username: string
+): Promise<PlayerLockedSongsResponse> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/locked-songs`
+  )
 
   return response.json()
 }
