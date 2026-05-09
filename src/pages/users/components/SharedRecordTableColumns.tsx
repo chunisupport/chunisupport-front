@@ -95,7 +95,7 @@ export const RecordTitleCell = (props: RecordTitleCellProps) => (
     class={`font-sans flex ${RECORD_ROW_MIN_HEIGHT_CLASS} min-w-0 w-full items-center text-sm text-inherit hover:underline`}
     title={props.title}
   >
-    <span class="block w-full truncate">{props.title}</span>
+    <span class="block w-full truncate pt-0.25">{props.title}</span>
   </A>
 )
 
