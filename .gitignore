@@ -26,3 +26,4 @@ migration/
 *.sql
 error_codes.md
 .env.staging
+*_calculation.md
