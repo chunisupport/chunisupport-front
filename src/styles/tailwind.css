@@ -14,7 +14,7 @@
   --color-primary-900: var(--color-green-900);
 
   --font-oswald: "Oswald", sans-serif;
-  --font-sans: "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
 }
 
 @keyframes marquee {

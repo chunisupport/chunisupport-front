@@ -96,9 +96,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                     <li class="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
                       <div class="min-w-0">
                         <p class="truncate font-sans font-medium text-gray-900">{song.title}</p>
-                        <p class="truncate font-sans text-xs text-gray-500">
-                          {song.artist}
-                        </p>
+                        <p class="truncate font-sans text-xs text-gray-500">{song.artist}</p>
                       </div>
                       <div class="flex shrink-0 flex-wrap gap-3">
                         <label class="inline-flex items-center gap-2 text-sm">
