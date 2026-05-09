@@ -1,5 +1,4 @@
-import { createVirtualizer } from '@tanstack/solid-virtual'
-import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
+import { createMemo, For, Show } from 'solid-js'
 import type { WorldsendSongDTO } from '../../../../types/api'
 import { renderSortIndicator } from '../../../users/components/RecordTableUiParts'
 import type { SortDirection } from '../../../users/recordTable/sortingQuery'
@@ -10,6 +9,7 @@ import {
   SongListGenreCell,
   SongListTitleCell,
 } from '../../components/SongListMetaCells'
+import { createVirtualizedSongsTable, sortAriaValue } from '../../components/virtualizedSongsTable'
 import type { WorldsendSongSortKey } from '../utils/sorting'
 
 const ROW_HEIGHT = 37
@@ -33,14 +33,6 @@ type HeaderButtonProps = {
   direction: SortDirection | null
   align?: 'start' | 'center'
   onClick: () => void
-}
-
-const sortAriaValue = (
-  active: boolean,
-  direction: SortDirection | null
-): 'ascending' | 'descending' | 'none' => {
-  if (!active || !direction) return 'none'
-  return direction === 'asc' ? 'ascending' : 'descending'
 }
 
 const WorldsendHeaderButton = (props: HeaderButtonProps) => (
@@ -72,77 +64,21 @@ const StarLevel = (props: { level: number | null | undefined }) => {
 }
 
 const WorldsendSongsTable = (props: Props) => {
-  let tableContainerRef: HTMLDivElement | undefined
-  let tableBodyRef: HTMLTableSectionElement | undefined
-  let layoutResizeObserver: ResizeObserver | undefined
-  const getScrollElement = () => document.getElementById('app-main') as HTMLDivElement | null
-
-  const [scrollMargin, setScrollMargin] = createSignal(0)
-
-  const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLTableRowElement>({
-    get count() {
-      return props.songs.length
-    },
-    getScrollElement,
-    estimateSize: () => ROW_HEIGHT,
-    overscan: 12,
-    get scrollMargin() {
-      return scrollMargin()
-    },
-  })
-
-  const updateScrollMargin = () => {
-    const scrollElement = getScrollElement()
-    const tableBodyElement = tableBodyRef
-    if (!scrollElement || !tableBodyElement) return
-
-    const scrollRect = scrollElement.getBoundingClientRect()
-    const tableBodyRect = tableBodyElement.getBoundingClientRect()
-    const next = tableBodyRect.top - scrollRect.top + scrollElement.scrollTop
-    if (Math.abs(next - scrollMargin()) >= 1) {
-      setScrollMargin(next)
-    }
-  }
-
-  onMount(() => {
-    updateScrollMargin()
-
-    if (tableContainerRef && typeof ResizeObserver !== 'undefined') {
-      layoutResizeObserver = new ResizeObserver(() => {
-        queueMicrotask(updateScrollMargin)
-      })
-
-      layoutResizeObserver.observe(tableContainerRef)
-
-      const scrollElement = getScrollElement()
-      if (scrollElement) {
-        layoutResizeObserver.observe(scrollElement)
-      }
-    }
-
-    window.addEventListener('resize', updateScrollMargin)
-  })
-
-  onCleanup(() => {
-    layoutResizeObserver?.disconnect()
-    window.removeEventListener('resize', updateScrollMargin)
+  const virtualizedTable = createVirtualizedSongsTable({
+    getCount: () => props.songs.length,
+    rowHeight: ROW_HEIGHT,
   })
 
   const handleSortChange = (key: WorldsendSongSortKey) => {
     props.onSortChange(key)
-    queueMicrotask(() => {
-      updateScrollMargin()
-      rowVirtualizer.scrollToIndex(0)
-    })
+    virtualizedTable.resetToTop()
   }
 
-  const virtualRows = createMemo(() =>
-    rowVirtualizer.getVirtualItems().filter((virtualRow) => virtualRow.index < props.songs.length)
-  )
+  const virtualRows = createMemo(() => virtualizedTable.virtualRows())
 
   return (
     <div
-      ref={tableContainerRef}
+      ref={virtualizedTable.setTableContainerRef}
       class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200 bg-white"
     >
       <table class="block min-w-[45rem] text-sm" aria-rowcount={props.songs.length}>
@@ -195,9 +131,9 @@ const WorldsendSongsTable = (props: Props) => {
           </tr>
         </thead>
         <tbody
-          ref={tableBodyRef}
+          ref={virtualizedTable.setTableBodyRef}
           class="relative block min-w-full"
-          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+          style={{ height: `${virtualizedTable.getTotalSize()}px` }}
         >
           <For each={virtualRows()}>
             {(virtualRow) => {
@@ -212,7 +148,7 @@ const WorldsendSongsTable = (props: Props) => {
                         class="absolute left-0 top-0 grid min-w-full border-t border-gray-100"
                         style={{
                           'grid-template-columns': GRID_TEMPLATE_COLUMNS,
-                          transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
+                          transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
                         }}
                         aria-rowindex={virtualRow.index + 2}
                       >
