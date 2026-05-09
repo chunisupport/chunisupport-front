@@ -5,7 +5,7 @@ import { A, useLocation, useNavigate } from '@solidjs/router'
 import {
   BadgeQuestionMark,
   Ellipsis,
-  Flag,
+  FlagTriangleRight,
   House,
   LogOut,
   Music,
@@ -96,7 +96,7 @@ const NavBar = (props: NavBarProps) => {
         id: 'goals',
         label: '目標',
         path: '/goals',
-        icon: () => <Flag class="h-6 w-6" aria-hidden="true" />,
+        icon: () => <FlagTriangleRight class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
         requiresAuth: true,
       },
@@ -243,11 +243,11 @@ const NavBar = (props: NavBarProps) => {
         </main>
 
         {/* スマホ用nav-bar 768px未満 */}
-        <nav class="md:hidden z-40 flex items-center justify-between border-t border-gray-200 bg-white p-1 shadow-sm">
+        <nav class="md:hidden z-40 flex items-center justify-between border-t border-gray-200 bg-white p-2 shadow-sm">
           {getNavItems().map((item) =>
             item.dropdown ? (
               <DropdownMenu>
-                <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-700 justify-center">
+                <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-gray-700 justify-center">
                   <span class="text-lg">{item.icon()}</span>
                   <span>{item.label}</span>
                 </DropdownMenu.Trigger>
@@ -280,7 +280,7 @@ const NavBar = (props: NavBarProps) => {
             item.requiresAuth && !isLoading() && !username() ? (
               <button
                 type="button"
-                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-300 justify-center"
+                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-gray-300 justify-center"
                 onClick={() => setShowLoginDialog(true)}
               >
                 <span class="text-lg">{item.icon()}</span>
@@ -289,7 +289,7 @@ const NavBar = (props: NavBarProps) => {
             ) : (
               <A
                 href={item.path}
-                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-700 justify-center"
+                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-gray-700 justify-center"
                 classList={{
                   'bg-primary-600 text-white hover:bg-primary-700 hover:text-white': isActive(item),
                 }}
