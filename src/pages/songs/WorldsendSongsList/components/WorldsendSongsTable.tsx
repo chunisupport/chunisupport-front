@@ -1,5 +1,5 @@
 import { createVirtualizer } from '@tanstack/solid-virtual'
-import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import type { WorldsendSongDTO } from '../../../../types/api'
 import { renderSortIndicator } from '../../../users/components/RecordTableUiParts'
 import type { SortDirection } from '../../../users/recordTable/sortingQuery'
@@ -16,9 +16,9 @@ const ROW_HEIGHT = 37
 const GRID_TEMPLATE_COLUMNS =
   'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 5.2rem 3.75rem 4.8rem 4.8rem'
 const HEADER_CELL_CLASS = 'font-semibold whitespace-nowrap bg-gray-50'
-const COMMON_CELL_STYLE = "flex items-center px-3 whitespace-nowrap"
-const HEADER_BUTTON_CLASS = COMMON_CELL_STYLE + " min-h-[" + ROW_HEIGHT + "px] w-full py-2 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset"
-const CELL_CLASS = COMMON_CELL_STYLE + " h-[" + ROW_HEIGHT + "px]"
+const COMMON_CELL_STYLE = 'flex items-center px-3 whitespace-nowrap'
+const HEADER_BUTTON_CLASS = `${COMMON_CELL_STYLE} min-h-[${ROW_HEIGHT}px] w-full py-2 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset`
+const CELL_CLASS = `${COMMON_CELL_STYLE} h-[${ROW_HEIGHT}px]`
 
 type Props = {
   songs: WorldsendSongDTO[]
@@ -128,13 +128,13 @@ const WorldsendSongsTable = (props: Props) => {
     window.removeEventListener('resize', updateScrollMargin)
   })
 
-  createEffect(() => {
-    props.songs.length
+  const handleSortChange = (key: WorldsendSongSortKey) => {
+    props.onSortChange(key)
     queueMicrotask(() => {
       updateScrollMargin()
       rowVirtualizer.scrollToIndex(0)
     })
-  })
+  }
 
   const virtualRows = createMemo(() =>
     rowVirtualizer.getVirtualItems().filter((virtualRow) => virtualRow.index < props.songs.length)
@@ -153,44 +153,44 @@ const WorldsendSongsTable = (props: Props) => {
               active={props.sortKey === 'title'}
               direction={props.sortDirection}
               align="start"
-              onClick={() => props.onSortChange('title')}
+              onClick={() => handleSortChange('title')}
             />
             <WorldsendHeaderButton
               label="アーティスト"
               active={props.sortKey === 'artist'}
               direction={props.sortDirection}
               align="start"
-              onClick={() => props.onSortChange('artist')}
+              onClick={() => handleSortChange('artist')}
             />
             <WorldsendHeaderButton
               label="ジャンル"
               active={props.sortKey === 'genre'}
               direction={props.sortDirection}
-              onClick={() => props.onSortChange('genre')}
+              onClick={() => handleSortChange('genre')}
             />
             <WorldsendHeaderButton
               label="追加日"
               active={props.sortKey === 'release'}
               direction={props.sortDirection}
-              onClick={() => props.onSortChange('release')}
+              onClick={() => handleSortChange('release')}
             />
             <WorldsendHeaderButton
               label="BPM"
               active={props.sortKey === 'bpm'}
               direction={props.sortDirection}
-              onClick={() => props.onSortChange('bpm')}
+              onClick={() => handleSortChange('bpm')}
             />
             <WorldsendHeaderButton
               label="属性"
               active={props.sortKey === 'attribute'}
               direction={props.sortDirection}
-              onClick={() => props.onSortChange('attribute')}
+              onClick={() => handleSortChange('attribute')}
             />
             <WorldsendHeaderButton
               label="レベル"
               active={props.sortKey === 'level'}
               direction={props.sortDirection}
-              onClick={() => props.onSortChange('level')}
+              onClick={() => handleSortChange('level')}
             />
           </tr>
         </thead>
