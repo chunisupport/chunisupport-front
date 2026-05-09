@@ -50,7 +50,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
         <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-white p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
           <div class="mb-4 flex items-start justify-between gap-3">
             <div>
-              <Dialog.Title class="text-lg font-bold">未解禁曲設定</Dialog.Title>
+              <Dialog.Title class="text-lg font-bold">未解禁楽曲設定</Dialog.Title>
               <Dialog.Description class="mt-1 text-sm text-gray-600">
                 チェックした曲・譜面はOVER POWER計算対象から除外されます。
               </Dialog.Description>
@@ -65,8 +65,8 @@ const LockedSongsDialog: Component<Props> = (props) => {
               <Search class="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
               <TextField.Input
                 class="min-w-0 flex-1 py-2 text-sm outline-none"
-                aria-label="未解禁曲検索"
-                placeholder="曲名・アーティスト・IDで検索..."
+                aria-label="未解禁楽曲検索"
+                placeholder="曲名・アーティストで検索..."
                 value={query()}
                 onInput={(event) => setQuery(event.currentTarget.value)}
               />
@@ -95,9 +95,9 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   {(song) => (
                     <li class="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
                       <div class="min-w-0">
-                        <p class="truncate font-medium text-gray-900">{song.title}</p>
-                        <p class="truncate text-xs text-gray-500">
-                          {song.artist} / {song.id}
+                        <p class="truncate font-sans font-medium text-gray-900">{song.title}</p>
+                        <p class="truncate font-sans text-xs text-gray-500">
+                          {song.artist}
                         </p>
                       </div>
                       <div class="flex shrink-0 flex-wrap gap-3">

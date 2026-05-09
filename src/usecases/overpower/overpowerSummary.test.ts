@@ -172,7 +172,7 @@ test('難易度別は譜面単位で現在値と理論値を集計する', () =>
   )
 })
 
-test('通常未解禁曲は曲単位と譜面単位の集計から除外する', () => {
+test('通常未解禁楽曲は曲単位と譜面単位の集計から除外する', () => {
   const summary = buildOverPowerSummary(
     [createSong({ id: 'locked', maxop: 90 }), createSong({ id: 'available', maxop: 80 })],
     [

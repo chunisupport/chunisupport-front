@@ -75,6 +75,9 @@ const UserOverPower: Component<Props> = (props) => {
     'rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors data-selected:bg-primary-600 data-selected:text-white data-selected:shadow-sm'
   const iconButtonClass =
     'inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-gray-400'
+  const lockedSongsButtonDisabled = createMemo(
+    () => !canManageLockedSongs() || !allSongs() || lockedSongs.loading
+  )
   const createLockedSongKey = (displayId: string, isUltima: boolean) =>
     `${displayId}:${isUltima ? 'ultima' : 'normal'}`
 
@@ -113,7 +116,7 @@ const UserOverPower: Component<Props> = (props) => {
       await refetchLockedSongs()
     } catch (error) {
       setLockedSongsError(
-        error instanceof Error ? error.message : '未解禁曲設定の更新に失敗しました'
+        error instanceof Error ? error.message : '未解禁楽曲設定の更新に失敗しました'
       )
     } finally {
       setSavingLockedSongKey(null)
@@ -146,18 +149,16 @@ const UserOverPower: Component<Props> = (props) => {
                       </Tabs.Trigger>
                     </Tabs.List>
                   </div>
-                  <Show when={canManageLockedSongs()}>
-                    <button
-                      type="button"
-                      class={iconButtonClass}
-                      aria-label="未解禁曲設定"
-                      title="未解禁曲設定"
-                      disabled={!allSongs() || lockedSongs.loading}
-                      onClick={() => setLockedSongsDialogOpen(true)}
-                    >
-                      <LockKeyhole class="h-5 w-5" aria-hidden="true" />
-                    </button>
-                  </Show>
+                  <button
+                    type="button"
+                    class={iconButtonClass}
+                    aria-label="未解禁楽曲設定"
+                    title="未解禁楽曲設定"
+                    disabled={lockedSongsButtonDisabled()}
+                    onClick={() => setLockedSongsDialogOpen(true)}
+                  >
+                    <LockKeyhole class="h-5 w-5" aria-hidden="true" />
+                  </button>
                 </div>
 
                 <Show when={lockedSongsError()}>
