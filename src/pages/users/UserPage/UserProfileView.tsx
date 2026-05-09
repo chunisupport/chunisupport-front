@@ -12,6 +12,7 @@ import { shouldShowProfileScrollToTop } from './scrollToTopVisibility'
 import type { UserPageRatingProfile, UserPageRecordProfile } from './UserPage'
 
 const UserRecord = lazy(() => import('../UserRecord'))
+const UserOverPower = lazy(() => import('../UserOverPower/UserOverPower'))
 const WorldsendRecord = lazy(() => import('../WorldsendRecord'))
 
 type Props = {
@@ -116,6 +117,7 @@ export const UserProfileView: Component<Props> = (props) => {
       props.onShowRecords()
     } else {
       navigate(buildProfileNavigationTarget('overpower'))
+      props.onShowRecords()
     }
 
     scrollToRecordList()
@@ -222,9 +224,11 @@ export const UserProfileView: Component<Props> = (props) => {
         </Tabs.Content>
 
         <Tabs.Content value="overpower" forceMount class={forceMountedTabContentClass}>
-          <div class="mx-4 min-h-24 rounded-md border border-dashed border-gray-200 bg-gray-50">
-            工事中
-          </div>
+          <Suspense fallback={<Loading />}>
+            <Show when={recordProfile()} fallback={<Loading />}>
+              {(profile) => <UserOverPower record={profile().record} />}
+            </Show>
+          </Suspense>
         </Tabs.Content>
       </Tabs.Root>
 

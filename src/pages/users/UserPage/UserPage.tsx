@@ -30,7 +30,9 @@ const UserPage: Component = () => {
   const [ratingProfile] = createResource(() => params.username, fetchUserRating)
   const [recordProfile] = createResource(
     () =>
-      shouldFetchRecordProfile() || isRecordPageQuery(params.page, searchParams.page)
+      shouldFetchRecordProfile() ||
+      isRecordPageQuery(params.page, searchParams.page) ||
+      resolveProfilePageQuery(params.page, searchParams.page) === 'overpower'
         ? params.username
         : undefined,
     (username) => fetchUserRecord(username, { includeNoPlay: true })
