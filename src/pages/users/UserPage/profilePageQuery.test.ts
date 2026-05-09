@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  buildUserOverPowerPagePath,
   buildUserProfilePagePath,
   DEFAULT_PROFILE_PAGE_QUERY,
   isRecordPageQuery,
+  resolveOverPowerSubPage,
   resolveProfilePageQuery,
 } from './profilePageQuery.ts'
 
@@ -41,4 +43,18 @@ test('デフォルトタブはユーザールート直下に正規化する', ()
 test('デフォルト以外のタブはパスセグメントとして表現する', () => {
   assert.equal(buildUserProfilePagePath('alice', 'rating_new'), '/users/alice/rating_new')
   assert.equal(buildUserProfilePagePath('alice', 'record_normal'), '/users/alice/record_normal')
+})
+
+test('OVER POWERサブページを解決できる', () => {
+  assert.equal(resolveOverPowerSubPage('genre'), 'genre')
+  assert.equal(resolveOverPowerSubPage('diff'), 'diff')
+  assert.equal(resolveOverPowerSubPage('level'), 'level')
+  assert.equal(resolveOverPowerSubPage('version'), 'version')
+  assert.equal(resolveOverPowerSubPage('invalid'), 'genre')
+  assert.equal(resolveOverPowerSubPage(undefined), 'genre')
+})
+
+test('OVER POWERサブページはパスセグメントとして表現する', () => {
+  assert.equal(buildUserOverPowerPagePath('alice', 'genre'), '/users/alice/overpower/genre')
+  assert.equal(buildUserOverPowerPagePath('alice', 'diff'), '/users/alice/overpower/diff')
 })

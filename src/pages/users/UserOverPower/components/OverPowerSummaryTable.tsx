@@ -3,7 +3,6 @@ import { For, Show } from 'solid-js'
 import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
 
 type Props = {
-  title: string
   rows: OverPowerSummaryRow[]
   countLabel: string
 }
@@ -13,9 +12,6 @@ const formatPercent = (value: number): string => value.toFixed(2)
 
 export const OverPowerSummaryTable: Component<Props> = (props) => (
   <section class="overflow-hidden rounded-lg border border-gray-200 bg-white">
-    <h2 class="border-b border-gray-200 px-3 py-2 text-base font-semibold text-gray-900">
-      {props.title}
-    </h2>
     <Show
       when={props.rows.length > 0}
       fallback={<p class="px-3 py-4 text-sm text-gray-500">表示できるデータがありません。</p>}

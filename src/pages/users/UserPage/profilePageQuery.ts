@@ -10,10 +10,22 @@ export const profilePageQueryValues = [
 
 export type ProfilePageQuery = (typeof profilePageQueryValues)[number]
 
+export const overPowerSubPageValues = ['genre', 'diff', 'level', 'version'] as const
+
+export type OverPowerSubPage = (typeof overPowerSubPageValues)[number]
+
 const profilePageQuerySet = new Set<string>(profilePageQueryValues)
+const overPowerSubPageSet = new Set<string>(overPowerSubPageValues)
 
 const resolveSingleProfilePageQuery = (value: string | string[] | undefined): string | undefined =>
   typeof value === 'string' && profilePageQuerySet.has(value) ? value : undefined
+
+export const resolveOverPowerSubPage = (
+  subPagePathParam: string | string[] | undefined
+): OverPowerSubPage =>
+  typeof subPagePathParam === 'string' && overPowerSubPageSet.has(subPagePathParam)
+    ? (subPagePathParam as OverPowerSubPage)
+    : 'genre'
 
 export const resolveProfilePageQuery = (
   pagePathParam: string | string[] | undefined,
@@ -48,3 +60,6 @@ export const buildUserProfilePagePath = (username: string, page: ProfilePageQuer
 
   return `/users/${encodedUsername}/${page}`
 }
+
+export const buildUserOverPowerPagePath = (username: string, subPage: OverPowerSubPage): string =>
+  `${buildUserProfilePagePath(username, 'overpower')}/${subPage}`

@@ -1,7 +1,13 @@
-import { profilePageQueryValues } from '../../pages/users/UserPage/profilePageQuery.ts'
+import {
+  overPowerSubPageValues,
+  profilePageQueryValues,
+} from '../../pages/users/UserPage/profilePageQuery.ts'
+
+const profilePagePattern = profilePageQueryValues.filter((value) => value !== 'overpower').join('|')
+const overPowerSubPagePattern = overPowerSubPageValues.join('|')
 
 export const homePathPattern = new RegExp(
-  `^/users/[^/]+(?:/(${profilePageQueryValues.join('|')}))?$`
+  `^/users/[^/]+(?:/(?:${profilePagePattern}|overpower(?:/(${overPowerSubPagePattern}))?))?$`
 )
 
 export const isHomePath = (pathname: string): boolean => homePathPattern.test(pathname)

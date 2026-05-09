@@ -7,7 +7,12 @@ import { Loading, ScrollToTop } from '../../../components'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
-import { buildUserProfilePagePath, type ProfilePageQuery } from './profilePageQuery'
+import {
+  buildUserOverPowerPagePath,
+  buildUserProfilePagePath,
+  type OverPowerSubPage,
+  type ProfilePageQuery,
+} from './profilePageQuery'
 import { shouldShowProfileScrollToTop } from './scrollToTopVisibility'
 import type { UserPageRatingProfile, UserPageRecordProfile } from './UserPage'
 
@@ -19,6 +24,7 @@ type Props = {
   profile: UserPageRatingProfile
   recordProfile: Accessor<UserPageRecordProfile | undefined>
   onShowRecords: () => void
+  selectedOverPowerSubPage: OverPowerSubPage
   selectedPage: ProfilePageQuery
   username: string
 }
@@ -99,6 +105,14 @@ export const UserProfileView: Component<Props> = (props) => {
     return `${normalizedPath}${queryString ? `?${queryString}` : ''}${location.hash}`
   }
 
+  const buildOverPowerNavigationTarget = (subPage: OverPowerSubPage) => {
+    const normalizedPath = buildUserOverPowerPagePath(props.username, subPage)
+    const queryParams = new URLSearchParams(location.search)
+    queryParams.delete('page')
+    const queryString = queryParams.toString()
+    return `${normalizedPath}${queryString ? `?${queryString}` : ''}${location.hash}`
+  }
+
   const statsPagePath = () => `/users/${encodeURIComponent(props.username)}/stats`
 
   const handlePageTabChange = (value: string) => {
@@ -116,7 +130,7 @@ export const UserProfileView: Component<Props> = (props) => {
       )
       props.onShowRecords()
     } else {
-      navigate(buildProfileNavigationTarget('overpower'))
+      navigate(buildOverPowerNavigationTarget(props.selectedOverPowerSubPage))
       props.onShowRecords()
     }
 
@@ -226,7 +240,13 @@ export const UserProfileView: Component<Props> = (props) => {
         <Tabs.Content value="overpower" forceMount class={forceMountedTabContentClass}>
           <Suspense fallback={<Loading />}>
             <Show when={recordProfile()} fallback={<Loading />}>
-              {(profile) => <UserOverPower record={profile().record} />}
+              {(profile) => (
+                <UserOverPower
+                  record={profile().record}
+                  selectedSubPage={props.selectedOverPowerSubPage}
+                  username={props.username}
+                />
+              )}
             </Show>
           </Suspense>
         </Tabs.Content>

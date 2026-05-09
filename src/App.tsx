@@ -195,7 +195,7 @@ const App = () => {
 
       {/* ユーザ */}
       <Route path="/users/:username/stats" component={withNavBar(withAuth(UserStatsPage))} />
-      <Route path="/users/:username/:page?" component={withNavBar(UserPage)} />
+      <Route path="/users/:username/:page?/:subPage?" component={withNavBar(UserPage)} />
       <Route path="/goals" component={withNavBar(withAuth(GoalsList))} />
 
       {/* 楽曲 */}

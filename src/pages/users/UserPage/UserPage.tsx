@@ -6,7 +6,11 @@ import { fetchUserProfileSummary, fetchUserRating, fetchUserRecord } from '../..
 import { Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { PlayerDTO, UserRatingDTO, UserRecordDTO } from '../../../types/api'
-import { isRecordPageQuery, resolveProfilePageQuery } from './profilePageQuery'
+import {
+  isRecordPageQuery,
+  resolveOverPowerSubPage,
+  resolveProfilePageQuery,
+} from './profilePageQuery'
 import { UserProfileView } from './UserProfileView'
 
 export type UserPageRatingProfile = {
@@ -22,7 +26,7 @@ export type UserPageRecordProfile = {
 }
 
 const UserPage: Component = () => {
-  const params = useParams<{ username: string; page?: string }>()
+  const params = useParams<{ username: string; page?: string; subPage?: string }>()
   const [searchParams] = useSearchParams()
   const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
 
@@ -85,6 +89,7 @@ const UserPage: Component = () => {
                   recordProfile={linkedRecordProfile}
                   onShowRecords={() => setShouldFetchRecordProfile(true)}
                   selectedPage={resolveProfilePageQuery(params.page, searchParams.page)}
+                  selectedOverPowerSubPage={resolveOverPowerSubPage(params.subPage)}
                   username={params.username}
                 />
               )}
