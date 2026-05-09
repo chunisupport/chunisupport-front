@@ -16,9 +16,9 @@ const ROW_HEIGHT = 37
 const GRID_TEMPLATE_COLUMNS =
   'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 5.2rem 3.75rem 4.8rem 4.8rem'
 const HEADER_CELL_CLASS = 'font-semibold whitespace-nowrap bg-gray-50'
-const HEADER_BUTTON_CLASS =
-  'flex min-h-[37px] w-full items-center px-3 py-2 text-center whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
-const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
+const COMMON_CELL_STYLE = "flex items-center px-3 whitespace-nowrap"
+const HEADER_BUTTON_CLASS = COMMON_CELL_STYLE + " min-h-[" + ROW_HEIGHT + "px] w-full py-2 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset"
+const CELL_CLASS = COMMON_CELL_STYLE + " h-[" + ROW_HEIGHT + "px]"
 
 type Props = {
   songs: WorldsendSongDTO[]
