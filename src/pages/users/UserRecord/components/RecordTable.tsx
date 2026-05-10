@@ -1,15 +1,6 @@
-import { createVirtualizer } from '@tanstack/solid-virtual'
-import {
-  type Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  onCleanup,
-  onMount,
-  Show,
-} from 'solid-js'
+import { type Component, createMemo, For, Show } from 'solid-js'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import { createRecordTableVirtualizer } from '../../components/createRecordTableVirtualizer'
 import {
   RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
@@ -31,82 +22,15 @@ interface RecordTableProps {
 export const RecordTable: Component<RecordTableProps> = (props) => {
   let tableContainerRef: HTMLDivElement | undefined
   let tableBodyRef: HTMLDivElement | undefined
-  let layoutResizeObserver: ResizeObserver | undefined
-  const getScrollElement = () => document.getElementById('app-main') as HTMLDivElement | null
 
-  const [scrollMargin, setScrollMargin] = createSignal(0)
-
-  const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>({
-    get count() {
-      return props.records.length
-    },
-    getScrollElement,
-    estimateSize: () => RECORD_ROW_HEIGHT,
-    overscan: 12,
-    get scrollMargin() {
-      return scrollMargin()
-    },
+  const virtualizedTable = createRecordTableVirtualizer({
+    rowHeight: RECORD_ROW_HEIGHT,
+    rowCount: () => props.records.length,
+    containerRef: () => tableContainerRef,
+    bodyRef: () => tableBodyRef,
+    resetDeps: () => props.statsOpen,
   })
 
-  const updateScrollMargin = () => {
-    const scrollElement = getScrollElement()
-    const tableBodyElement = tableBodyRef
-    if (!scrollElement || !tableBodyElement) return
-
-    const scrollRect = scrollElement.getBoundingClientRect()
-    const tableBodyRect = tableBodyElement.getBoundingClientRect()
-    const next = tableBodyRect.top - scrollRect.top + scrollElement.scrollTop
-    if (Math.abs(next - scrollMargin()) >= 1) {
-      setScrollMargin(next)
-    }
-  }
-
-  onMount(() => {
-    updateScrollMargin()
-
-    // レイアウト変化で本文開始位置が変わるため、親要素とスクロール要素を監視する
-    if (tableContainerRef && typeof ResizeObserver !== 'undefined') {
-      layoutResizeObserver = new ResizeObserver(() => {
-        queueMicrotask(updateScrollMargin)
-      })
-
-      layoutResizeObserver.observe(tableContainerRef)
-
-      const scrollElement = getScrollElement()
-      if (scrollElement) {
-        layoutResizeObserver.observe(scrollElement)
-      }
-    }
-
-    window.addEventListener('resize', updateScrollMargin)
-  })
-
-  onCleanup(() => {
-    layoutResizeObserver?.disconnect()
-    window.removeEventListener('resize', updateScrollMargin)
-  })
-
-  createEffect(() => {
-    props.records.length
-    queueMicrotask(() => {
-      updateScrollMargin()
-      rowVirtualizer.scrollToIndex(0)
-    })
-  })
-
-  createEffect(() => {
-    props.statsOpen
-
-    // 統計表示の開閉でレイアウトが動くため、次フレームでも再計測する
-    queueMicrotask(updateScrollMargin)
-    requestAnimationFrame(() => {
-      updateScrollMargin()
-    })
-  })
-
-  const virtualRows = createMemo(() =>
-    rowVirtualizer.getVirtualItems().filter((virtualRow) => virtualRow.index < props.records.length)
-  )
   const visibleColumns = createMemo(() => getVisibleColumns(props.visibleColumnIds))
   const gridTemplateColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
 
@@ -144,9 +68,9 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
             <div
               ref={tableBodyRef}
               class="relative"
-              style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+              style={{ height: `${virtualizedTable.getTotalSize()}px` }}
             >
-              <For each={virtualRows()}>
+              <For each={virtualizedTable.virtualRows()}>
                 {(virtualRow) => {
                   const record = createMemo(() => props.records[virtualRow.index])
 
@@ -157,7 +81,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                           class={`absolute left-0 top-0 grid w-full border-b border-gray-200 px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
                           style={{
                             'grid-template-columns': gridTemplateColumns(),
-                            transform: `translateY(${virtualRow.start - scrollMargin()}px)`,
+                            transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
                           }}
                         >
                           <For each={visibleColumns()}>

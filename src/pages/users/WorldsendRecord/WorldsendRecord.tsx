@@ -13,6 +13,7 @@ import {
 import { fetchWorldsendSongs } from '../../../api/songs'
 import { Loading } from '../../../components'
 import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
+import { createRecordTableVirtualizer } from '../components/createRecordTableVirtualizer'
 import {
   RECORD_ALPHANUMERIC_COLUMN_CLASS,
   RECORD_CELL_BASE_CLASS,
@@ -114,6 +115,9 @@ const WorldsendRecordTable = (props: {
 }) => {
   const visibleColumns = createMemo(() => getVisibleWorldsendColumns(props.visibleColumnIds))
   const worldsendGridColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
+
+  let tableContainerRef: HTMLDivElement | undefined
+  let tableBodyRef: HTMLDivElement | undefined
 
   const sortedRecords = createMemo(() => {
     const currentSortKey = props.sortKey
@@ -239,6 +243,13 @@ const WorldsendRecordTable = (props: {
       .map(({ record }) => record)
   })
 
+  const virtualizedTable = createRecordTableVirtualizer({
+    rowHeight: 40,
+    rowCount: () => sortedRecords().length,
+    containerRef: () => tableContainerRef,
+    bodyRef: () => tableBodyRef,
+  })
+
   return (
     <div class={worldsendTableWrapperClass}>
       <Show
@@ -247,7 +258,10 @@ const WorldsendRecordTable = (props: {
           <p class="py-6 text-center text-gray-400">WORLD'S END のレコードはありません。</p>
         }
       >
-        <div class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-gray-200">
+        <div
+          ref={tableContainerRef}
+          class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-gray-200"
+        >
           <div class="w-fit min-w-full">
             <div class="border-b border-gray-200 bg-gray-50">
               <div
@@ -275,68 +289,82 @@ const WorldsendRecordTable = (props: {
               </div>
             </div>
 
-            <div>
-              <For each={sortedRecords()}>
-                {(record) => (
-                  <div
-                    class={`grid border-b border-gray-200 px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
-                    style={{ 'grid-template-columns': worldsendGridColumns() }}
-                  >
-                    <For each={visibleColumns()}>
-                      {(column) => {
-                        if (column.id === 'title') {
+            <div
+              ref={tableBodyRef}
+              class="relative"
+              style={{ height: `${virtualizedTable.getTotalSize()}px` }}
+            >
+              <For each={virtualizedTable.virtualRows()}>
+                {(virtualRow) => {
+                  const record = sortedRecords()[virtualRow.index]
+
+                  return (
+                    <div
+                      class={`absolute left-0 top-0 grid w-full border-b border-gray-200 px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
+                      style={{
+                        'grid-template-columns': worldsendGridColumns(),
+                        transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
+                      }}
+                    >
+                      <For each={visibleColumns()}>
+                        {(column) => {
+                          if (column.id === 'title') {
+                            return (
+                              <RecordTitleCell
+                                href={buildWorldsendSongDetailPath(record.id)}
+                                title={record.title}
+                              />
+                            )
+                          }
+                          if (column.id === 'attribute') {
+                            return (
+                              <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+                                <span class="inline-block w-full text-center leading-none">
+                                  {record.attribute ?? '-'}
+                                </span>
+                              </div>
+                            )
+                          }
+                          if (column.id === 'level') {
+                            return (
+                              <div
+                                class={`${RECORD_CELL_BASE_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+                              >
+                                <span class="inline-block leading-none">
+                                  {worldsendLevelLabel(record.level_star)}
+                                </span>
+                              </div>
+                            )
+                          }
+                          if (column.id === 'score') return <RecordScoreCell record={record} />
+                          if (column.id === 'lamp') return <RecordLampCell record={record} />
+                          if (column.id === 'justiceCount') {
+                            return (
+                              <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+                                <span class="inline-block w-full text-center leading-none">
+                                  {(() => {
+                                    const justiceCount = calcJusticeCountForAj({
+                                      comboLamp: record.combo_lamp,
+                                      score: record.score,
+                                      notes: record.notes,
+                                    })
+                                    return justiceCount === '' ? '' : justiceCount
+                                  })()}
+                                </span>
+                              </div>
+                            )
+                          }
                           return (
-                            <RecordTitleCell
-                              href={buildWorldsendSongDetailPath(record.id)}
-                              title={record.title}
+                            <RecordUpdatedAtCell
+                              record={record}
+                              formatUpdatedAt={formatUpdatedAt}
                             />
                           )
-                        }
-                        if (column.id === 'attribute') {
-                          return (
-                            <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
-                              <span class="inline-block w-full text-center leading-none">
-                                {record.attribute ?? '-'}
-                              </span>
-                            </div>
-                          )
-                        }
-                        if (column.id === 'level') {
-                          return (
-                            <div
-                              class={`${RECORD_CELL_BASE_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-                            >
-                              <span class="inline-block leading-none">
-                                {worldsendLevelLabel(record.level_star)}
-                              </span>
-                            </div>
-                          )
-                        }
-                        if (column.id === 'score') return <RecordScoreCell record={record} />
-                        if (column.id === 'lamp') return <RecordLampCell record={record} />
-                        if (column.id === 'justiceCount') {
-                          return (
-                            <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
-                              <span class="inline-block w-full text-center leading-none">
-                                {(() => {
-                                  const justiceCount = calcJusticeCountForAj({
-                                    comboLamp: record.combo_lamp,
-                                    score: record.score,
-                                    notes: record.notes,
-                                  })
-                                  return justiceCount === '' ? '' : justiceCount
-                                })()}
-                              </span>
-                            </div>
-                          )
-                        }
-                        return (
-                          <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />
-                        )
-                      }}
-                    </For>
-                  </div>
-                )}
+                        }}
+                      </For>
+                    </div>
+                  )
+                }}
               </For>
             </div>
           </div>
