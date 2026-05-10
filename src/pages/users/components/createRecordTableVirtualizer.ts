@@ -40,23 +40,31 @@ export const createRecordTableVirtualizer = (params: Params) => {
     }
   }
 
-  onMount(() => {
+  createEffect(() => {
+    const container = params.containerRef()
+    const scrollElement = getScrollElement()
+
     updateScrollMargin()
 
-    const container = params.containerRef()
     if (container && typeof ResizeObserver !== 'undefined') {
+      layoutResizeObserver?.disconnect()
       layoutResizeObserver = new ResizeObserver(() => {
         queueMicrotask(updateScrollMargin)
       })
 
       layoutResizeObserver.observe(container)
 
-      const scrollElement = getScrollElement()
       if (scrollElement) {
         layoutResizeObserver.observe(scrollElement)
       }
-    }
 
+      onCleanup(() => {
+        layoutResizeObserver?.disconnect()
+      })
+    }
+  })
+
+  onMount(() => {
     window.addEventListener('resize', updateScrollMargin)
   })
 
