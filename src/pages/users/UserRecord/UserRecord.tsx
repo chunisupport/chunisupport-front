@@ -11,7 +11,7 @@ import {
   Suspense,
 } from 'solid-js'
 import { fetchAllSongs, fetchMasterData, fetchVersionSummaries } from '../../../api/songs'
-import { Loading, ScrollToTop } from '../../../components'
+import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { UserRecordDTO } from '../../../types/api'
 import { attachSongMetaToRecords } from '../../../utils/recordMerger'
@@ -170,7 +170,6 @@ const UserRecord: Component<Props> = (props) => {
             />
           </div>
         </Show>
-        <ScrollToTop />
       </ErrorBoundary>
     </Suspense>
   )
