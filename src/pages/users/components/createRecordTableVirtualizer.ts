@@ -77,6 +77,7 @@ export const createRecordTableVirtualizer = (params: Params) => {
     params.rowCount()
     queueMicrotask(() => {
       updateScrollMargin()
+      // 現在はフィルタ/ソート連動時に先頭へ戻す意図。バックグラウンド更新などで件数だけ変化する用途では挙動を見直すこと。
       rowVirtualizer.scrollToIndex(0)
     })
   })
