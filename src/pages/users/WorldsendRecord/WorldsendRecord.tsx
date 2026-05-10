@@ -18,6 +18,7 @@ import {
   RECORD_ALPHANUMERIC_COLUMN_CLASS,
   RECORD_CELL_BASE_CLASS,
   RECORD_CELL_CENTER_TEXT_CLASS,
+  RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
   RecordHeaderButton,
   RecordLampCell,
@@ -244,7 +245,7 @@ const WorldsendRecordTable = (props: {
   })
 
   const virtualizedTable = createRecordTableVirtualizer({
-    rowHeight: 40,
+    rowHeight: RECORD_ROW_HEIGHT,
     rowCount: () => sortedRecords().length,
     containerRef: () => tableContainerRef,
     bodyRef: () => tableBodyRef,
@@ -275,13 +276,7 @@ const WorldsendRecordTable = (props: {
                       active={props.sortKey === column.sortKey}
                       direction={props.sortDirection}
                       align={column.align}
-                      class={
-                        column.id === 'title'
-                          ? 'justify-start'
-                          : column.id === 'updatedAt'
-                            ? 'justify-center'
-                            : 'justify-center'
-                      }
+                      class={column.id === 'title' ? 'justify-start' : 'justify-center'}
                       onClick={() => props.onSortChange(column.sortKey)}
                     />
                   )}
@@ -296,73 +291,79 @@ const WorldsendRecordTable = (props: {
             >
               <For each={virtualizedTable.virtualRows()}>
                 {(virtualRow) => {
-                  const record = sortedRecords()[virtualRow.index]
+                  const record = createMemo(() => sortedRecords()[virtualRow.index])
 
                   return (
-                    <div
-                      class={`absolute left-0 top-0 grid w-full border-b border-gray-200 px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
-                      style={{
-                        'grid-template-columns': worldsendGridColumns(),
-                        transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
-                      }}
-                    >
-                      <For each={visibleColumns()}>
-                        {(column) => {
-                          if (column.id === 'title') {
-                            return (
-                              <RecordTitleCell
-                                href={buildWorldsendSongDetailPath(record.id)}
-                                title={record.title}
-                              />
-                            )
-                          }
-                          if (column.id === 'attribute') {
-                            return (
-                              <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
-                                <span class="inline-block w-full text-center leading-none">
-                                  {record.attribute ?? '-'}
-                                </span>
-                              </div>
-                            )
-                          }
-                          if (column.id === 'level') {
-                            return (
-                              <div
-                                class={`${RECORD_CELL_BASE_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-                              >
-                                <span class="inline-block leading-none">
-                                  {worldsendLevelLabel(record.level_star)}
-                                </span>
-                              </div>
-                            )
-                          }
-                          if (column.id === 'score') return <RecordScoreCell record={record} />
-                          if (column.id === 'lamp') return <RecordLampCell record={record} />
-                          if (column.id === 'justiceCount') {
-                            return (
-                              <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
-                                <span class="inline-block w-full text-center leading-none">
-                                  {(() => {
-                                    const justiceCount = calcJusticeCountForAj({
-                                      comboLamp: record.combo_lamp,
-                                      score: record.score,
-                                      notes: record.notes,
-                                    })
-                                    return justiceCount === '' ? '' : justiceCount
-                                  })()}
-                                </span>
-                              </div>
-                            )
-                          }
-                          return (
-                            <RecordUpdatedAtCell
-                              record={record}
-                              formatUpdatedAt={formatUpdatedAt}
-                            />
-                          )
-                        }}
-                      </For>
-                    </div>
+                    <Show when={record()} keyed>
+                      {(currentRecord) => (
+                        <div
+                          class={`absolute left-0 top-0 grid w-full border-b border-gray-200 px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
+                          style={{
+                            'grid-template-columns': worldsendGridColumns(),
+                            transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
+                          }}
+                        >
+                          <For each={visibleColumns()}>
+                            {(column) => {
+                              if (column.id === 'title') {
+                                return (
+                                  <RecordTitleCell
+                                    href={buildWorldsendSongDetailPath(currentRecord.id)}
+                                    title={currentRecord.title}
+                                  />
+                                )
+                              }
+                              if (column.id === 'attribute') {
+                                return (
+                                  <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+                                    <span class="inline-block w-full text-center leading-none">
+                                      {currentRecord.attribute ?? '-'}
+                                    </span>
+                                  </div>
+                                )
+                              }
+                              if (column.id === 'level') {
+                                return (
+                                  <div
+                                    class={`${RECORD_CELL_BASE_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+                                  >
+                                    <span class="inline-block leading-none">
+                                      {worldsendLevelLabel(currentRecord.level_star)}
+                                    </span>
+                                  </div>
+                                )
+                              }
+                              if (column.id === 'score')
+                                return <RecordScoreCell record={currentRecord} />
+                              if (column.id === 'lamp')
+                                return <RecordLampCell record={currentRecord} />
+                              if (column.id === 'justiceCount') {
+                                return (
+                                  <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+                                    <span class="inline-block w-full text-center leading-none">
+                                      {(() => {
+                                        const justiceCount = calcJusticeCountForAj({
+                                          comboLamp: currentRecord.combo_lamp,
+                                          score: currentRecord.score,
+                                          notes: currentRecord.notes,
+                                        })
+                                        return justiceCount === '' ? '' : justiceCount
+                                      })()}
+                                    </span>
+                                  </div>
+                                )
+                              }
+                              return (
+                                <RecordUpdatedAtCell
+                                  record={currentRecord}
+                                  formatUpdatedAt={formatUpdatedAt}
+                                />
+                              )
+                            }}
+                          </For>
+                        </div>
+                      )}
+                    </Show>
                   )
                 }}
               </For>

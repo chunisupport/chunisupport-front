@@ -76,7 +76,6 @@ export const createRecordTableVirtualizer = (params: Params) => {
   createEffect(() => {
     params.resetDeps?.()
     queueMicrotask(updateScrollMargin)
-    requestAnimationFrame(updateScrollMargin)
   })
 
   const virtualRows = createMemo(() =>
