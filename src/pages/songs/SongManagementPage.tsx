@@ -1096,7 +1096,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                 type="search"
                 value={songSearchQuery()}
                 onInput={(event) => setSongSearchQuery(event.currentTarget.value)}
-                placeholder="曲名で検索..."
+                placeholder="曲名・アーティスト名で検索"
                 class="mb-2 w-full rounded border border-gray-300 px-3 py-2 text-sm"
               />
               <div class="max-h-130 overflow-y-auto rounded border border-gray-200">
@@ -1364,7 +1364,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                 type="search"
                 value={worldsendSearchQuery()}
                 onInput={(event) => setWorldsendSearchQuery(event.currentTarget.value)}
-                placeholder="曲名で検索..."
+                placeholder="曲名・アーティスト名で検索"
                 class="mb-2 w-full rounded border border-gray-300 px-3 py-2 text-sm"
               />
               <div class="max-h-130 overflow-y-auto rounded border border-gray-200">
