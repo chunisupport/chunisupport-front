@@ -20,7 +20,7 @@ export const OverPowerSummaryTable: Component<Props> = (props) => (
         <table class="min-w-full text-sm">
           <thead class="bg-gray-50 text-xs text-gray-600">
             <tr>
-              <th class="px-3 py-2 text-left font-medium">項目</th>
+              <th class="px-3 py-2 text-left font-medium" aria-label="項目"></th>
               <th class="px-3 py-2 text-right font-medium">現在値</th>
               <th class="px-3 py-2 text-right font-medium">理論値</th>
               <th class="px-3 py-2 text-right font-medium">達成率</th>
@@ -31,7 +31,9 @@ export const OverPowerSummaryTable: Component<Props> = (props) => (
             <For each={props.rows}>
               {(row) => (
                 <tr>
-                  <th class="px-3 py-2 text-left font-medium text-gray-900">{row.label}</th>
+                  <th class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-900">
+                    {row.label}
+                  </th>
                   <td class="px-3 py-2 text-right tabular-nums">{formatValue(row.current)}</td>
                   <td class="px-3 py-2 text-right tabular-nums text-gray-600">
                     {formatValue(row.max)}
