@@ -267,14 +267,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const songs = createMemo<ManagedSongDTO[]>(() => songsResponse()?.songs ?? [])
   const filteredSongs = createMemo(() => {
     const query = songSearchQuery()
-    return songs().filter((song) => matchesSearchQuery(song.title, query))
+    return songs().filter((song) => matchesSearchQuery(song.title, song.artist, query))
   })
   const worldsendSongs = createMemo<ManagedWorldsendSongDTO[]>(
     () => worldsendResponse()?.songs ?? []
   )
   const filteredWorldsendSongs = createMemo(() => {
     const query = worldsendSearchQuery()
-    return worldsendSongs().filter((song) => matchesSearchQuery(song.title, query))
+    return worldsendSongs().filter((song) => matchesSearchQuery(song.title, song.artist, query))
   })
   const selectedSong = createMemo(() => {
     const selected = selectedSongId()
