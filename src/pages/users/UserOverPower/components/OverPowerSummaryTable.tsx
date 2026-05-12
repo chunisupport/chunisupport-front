@@ -31,7 +31,7 @@ export const OverPowerSummaryTable: Component<Props> = (props) => (
             <For each={props.rows}>
               {(row) => (
                 <tr>
-                  <th class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-900">
+                  <th scope="row" class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-900">
                     {row.label}
                   </th>
                   <td class="px-3 py-2 text-right tabular-nums">{formatValue(row.current)}</td>
