@@ -7,7 +7,8 @@ const symbolOrSpaceRegex = /[\p{P}\p{S}\p{Z}\p{Cf}]/gu
  * - カタカナをひらがなに変換
  * - 記号・空白類を除去
  */
-export function normalizeForSearch(value: string): string {
+export function normalizeForSearch(value: string | null | undefined): string {
+  if (!value) return ''
   return value
     .normalize('NFKC')
     .toLowerCase()
