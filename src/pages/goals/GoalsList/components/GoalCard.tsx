@@ -1,13 +1,12 @@
 ﻿import { EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
 import { type Component, createSignal, onCleanup } from 'solid-js'
-import type { GoalDTO, MasterDataDTO } from '../../../../types/api'
+import type { GoalDTO } from '../../../../types/api'
 // import { formatGoalAttributesLabel, formatGoalTypeLabel } from '../../utils/goalForm'
 import type { GoalProgressResult } from '../../utils/goalProgress'
 
 interface GoalCardProps {
   goal: GoalDTO
   progress: GoalProgressResult
-  masterData: MasterDataDTO
   onEdit: (goal: GoalDTO) => void
   onDelete: (goal: GoalDTO) => void
 }

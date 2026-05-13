@@ -5,6 +5,7 @@ import type {
   GoalDTO,
   GoalUpdateRequest,
   MasterDataDTO,
+  VersionDTO,
 } from '../../../types/api'
 import { getShortVersionName } from '../../../utils/versionConverter'
 
@@ -61,7 +62,8 @@ export const formatGoalTypeLabel = (type: GoalAchievementType): string =>
 
 export const formatGoalAttributesLabel = (
   attributes: GoalAttributes,
-  masterData: MasterDataDTO
+  masterData: MasterDataDTO,
+  versions: VersionDTO[]
 ): string => {
   const parts: string[] = []
 
@@ -82,9 +84,7 @@ export const formatGoalAttributesLabel = (
 
   const difficultyNameMap = new Map(masterData.difficulties.map((item) => [item.id, item.name]))
   const genreNameMap = new Map(masterData.genres.map((item) => [item.id, item.name]))
-  const versionNameMap = new Map(
-    masterData.versions.map((item) => [item.id, getShortVersionName(item.name)])
-  )
+  const versionNameMap = new Map(versions.map((item) => [item.id, getShortVersionName(item.name)]))
 
   if (diffIds.length > 0) {
     parts.push(`難易度: ${formatNames(diffIds, difficultyNameMap)}`)

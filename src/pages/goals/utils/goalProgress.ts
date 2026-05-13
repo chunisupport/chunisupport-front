@@ -5,6 +5,7 @@ import type {
   MasterDataDTO,
   PlayerRecordDTO,
   SongDTO,
+  VersionDTO,
 } from '../../../types/api'
 import { resolveVersionNameByReleaseDate } from '../../../utils/versionConverter'
 
@@ -38,20 +39,18 @@ const normalizeAttributeIds = (value: number | number[] | undefined): number[] =
   return []
 }
 
-const resolveSongVersionId = (song: SongDTO, masterData: MasterDataDTO): number | undefined => {
+const resolveSongVersionId = (song: SongDTO, versions: VersionDTO[]): number | undefined => {
   const release = song.release
   if (!release) return undefined
 
-  const resolved = resolveVersionNameByReleaseDate(release, masterData.versions)
+  const resolved = resolveVersionNameByReleaseDate(release, versions)
   const normalized = normalizeVersionName(resolved)
-  const byName = masterData.versions.find((v) => normalizeVersionName(v.name) === normalized)
+  const byName = versions.find((v) => normalizeVersionName(v.name) === normalized)
   if (byName) {
     return byName.id
   }
 
-  const sorted = [...masterData.versions].sort((a, b) =>
-    a.released_at.localeCompare(b.released_at, 'ja')
-  )
+  const sorted = [...versions].sort((a, b) => a.released_at.localeCompare(b.released_at, 'ja'))
   let candidate: number | undefined
   for (const version of sorted) {
     if (release >= version.released_at.slice(0, 10)) {
@@ -66,7 +65,8 @@ export const filterRecordsByAttributes = (
   records: PlayerRecordDTO[],
   attributes: GoalAttributes,
   masterData: MasterDataDTO,
-  songs: SongDTO[]
+  songs: SongDTO[],
+  versions: VersionDTO[]
 ): PlayerRecordDTO[] => {
   const songMap = new Map(songs.map((song) => [song.id, song]))
   const diffIds = normalizeAttributeIds(attributes.diff)
@@ -103,7 +103,7 @@ export const filterRecordsByAttributes = (
 
     if (versionIds.length > 0) {
       if (!song) return false
-      const songVersionId = resolveSongVersionId(song, masterData)
+      const songVersionId = resolveSongVersionId(song, versions)
       if (!songVersionId || !versionIds.includes(songVersionId)) return false
     }
 
