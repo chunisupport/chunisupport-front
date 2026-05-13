@@ -1,4 +1,5 @@
-import type { SongDTO } from '../../../../types/api'
+import type { MasterItemDTO, SongDTO } from '../../../../types/api'
+import { compareMasterItemNames, createMasterItemOrderMap } from '../../../../utils/masterData'
 import {
   nextSortState as nextSharedSortState,
   type SortDirection,
@@ -58,13 +59,15 @@ export const nextSortState = (
 export const sortSongs = (
   songs: SongDTO[],
   currentSortKey: SongSortKey | null,
-  currentSortDirection: SortDirection | null
+  currentSortDirection: SortDirection | null,
+  genres?: MasterItemDTO[]
 ): SongDTO[] => {
   if (!currentSortKey || !currentSortDirection) {
     return songs
   }
 
   const direction = currentSortDirection === 'asc' ? 1 : -1
+  const genreOrderMap = createMasterItemOrderMap(genres)
 
   return songs
     .map((song, index) => ({ song, index }))
@@ -81,7 +84,7 @@ export const sortSongs = (
           comparison = jaCollator.compare(left.artist, right.artist)
           break
         case 'genre':
-          comparison = jaCollator.compare(left.genre, right.genre)
+          comparison = compareMasterItemNames(left.genre, right.genre, genreOrderMap)
           break
         case 'release':
           comparison = compareNullableNumber(

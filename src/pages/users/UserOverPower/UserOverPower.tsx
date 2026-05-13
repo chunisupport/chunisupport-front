@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from '@solidjs/router'
 import { ChevronDown, LockKeyhole } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
-import { fetchAllSongs, fetchVersionSummaries } from '../../../api/songs'
+import { fetchAllSongs, fetchMasterData, fetchVersionSummaries } from '../../../api/songs'
 import { addMyLockedSong, deleteMyLockedSong, fetchUserLockedSongs } from '../../../api/users'
 import { Loading } from '../../../components'
 import { authSession } from '../../../stores/authSession'
@@ -38,6 +38,7 @@ const overPowerSubPageBySummaryTab: Record<OverPowerSummaryTab, OverPowerSubPage
 
 const UserOverPower: Component<Props> = (props) => {
   const [allSongs] = createResource(fetchAllSongs)
+  const [masterData] = createResource(fetchMasterData)
   const [versionSummaries] = createResource(fetchVersionSummaries)
   const canManageLockedSongs = createMemo(
     () => authSession.status === 'authenticated' && authSession.user?.username === props.username
@@ -58,14 +59,16 @@ const UserOverPower: Component<Props> = (props) => {
 
   const summary = createMemo(() => {
     const songs = allSongs()
+    const md = masterData()
     const versions = versionSummaries()
     const currentLockedSongs = lockedSongs()
-    if (!songs || !versions || !currentLockedSongs) return undefined
+    if (!songs || !md || !versions || !currentLockedSongs) return undefined
     return buildOverPowerSummary(
       songs.songs,
       props.record.all,
       versions.versions,
-      currentLockedSongs.items
+      currentLockedSongs.items,
+      md.genres
     )
   })
 

@@ -1,4 +1,5 @@
-import { createMemo, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
+import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
+import { fetchMasterData } from '../../../api/songs'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByAddedDateAndOfficialIndex, useSongsData } from '../../../stores/songsData'
@@ -12,6 +13,7 @@ import { nextSortState, sortWorldsendSongs, type WorldsendSongSortKey } from './
 const WorldsendSongsList = () => {
   const { worldsendSongsResponse, ensureWorldsendSongsLoaded, isWorldsendSongsLoading } =
     useSongsData()
+  const [masterData] = createResource(fetchMasterData)
   const [sortKey, setSortKey] = createSignal<WorldsendSongSortKey | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
   const [searchQuery, setSearchQuery] = createSignal('')
@@ -30,7 +32,7 @@ const WorldsendSongsList = () => {
   const filteredSongs = createMemo(() => filterSearchableItems(searchableSongs(), searchQuery()))
 
   const sortedSongs = createMemo(() =>
-    sortWorldsendSongs(filteredSongs(), sortKey(), sortDirection())
+    sortWorldsendSongs(filteredSongs(), sortKey(), sortDirection(), masterData()?.genres)
   )
 
   const handleSortChange = (nextKey: WorldsendSongSortKey) => {

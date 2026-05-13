@@ -44,6 +44,28 @@ test('タイトルで日本語順にソートする', () => {
   )
 })
 
+test('ジャンルはマスタのsort_order順にソートする', () => {
+  const songs = [
+    createSong({ id: 'touhou', genre: '東方Project' }),
+    createSong({ id: 'pops', genre: 'POPS & ANIME' }),
+    createSong({ id: 'niconico', genre: 'niconico' }),
+  ]
+  const genres = [
+    { id: 1, name: 'POPS & ANIME', sort_order: 10 },
+    { id: 2, name: 'niconico', sort_order: 20 },
+    { id: 3, name: '東方Project', sort_order: 30 },
+  ]
+
+  assert.deepEqual(
+    sortSongs(songs, 'genre', 'asc', genres).map((song) => song.id),
+    ['pops', 'niconico', 'touhou']
+  )
+  assert.deepEqual(
+    sortSongs(songs, 'genre', 'desc', genres).map((song) => song.id),
+    ['touhou', 'niconico', 'pops']
+  )
+})
+
 test('BPMと定数の未設定値は末尾に寄せる', () => {
   const songs = [
     createSong({ id: 'missing-bpm', bpm: null }),

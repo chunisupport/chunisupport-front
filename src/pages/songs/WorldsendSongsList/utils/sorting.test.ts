@@ -42,6 +42,28 @@ test("WORLD'S END楽曲をタイトルで日本語順にソートする", () => 
   )
 })
 
+test("WORLD'S END楽曲のジャンルはマスタのsort_order順にソートする", () => {
+  const songs = [
+    createSong({ id: 'touhou', genre: '東方Project' }),
+    createSong({ id: 'pops', genre: 'POPS & ANIME' }),
+    createSong({ id: 'niconico', genre: 'niconico' }),
+  ]
+  const genres = [
+    { id: 1, name: 'POPS & ANIME', sort_order: 10 },
+    { id: 2, name: 'niconico', sort_order: 20 },
+    { id: 3, name: '東方Project', sort_order: 30 },
+  ]
+
+  assert.deepEqual(
+    sortWorldsendSongs(songs, 'genre', 'asc', genres).map((song) => song.id),
+    ['pops', 'niconico', 'touhou']
+  )
+  assert.deepEqual(
+    sortWorldsendSongs(songs, 'genre', 'desc', genres).map((song) => song.id),
+    ['touhou', 'niconico', 'pops']
+  )
+})
+
 test("WORLD'S END楽曲の属性とレベルの未設定値は末尾に寄せる", () => {
   const songs = [
     createSong({ id: 'missing-chart' }),

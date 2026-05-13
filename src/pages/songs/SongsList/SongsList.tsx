@@ -1,4 +1,5 @@
-import { createMemo, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
+import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
+import { fetchMasterData } from '../../../api/songs'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByAddedDateAndOfficialIndex, useSongsData } from '../../../stores/songsData'
@@ -11,6 +12,7 @@ import { nextSortState, type SongSortKey, sortSongs } from './utils/sorting'
 
 const SongsList = () => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
+  const [masterData] = createResource(fetchMasterData)
   const [sortKey, setSortKey] = createSignal<SongSortKey | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
   const [searchQuery, setSearchQuery] = createSignal('')
@@ -28,7 +30,9 @@ const SongsList = () => {
 
   const filteredSongs = createMemo(() => filterSearchableItems(searchableSongs(), searchQuery()))
 
-  const sortedSongs = createMemo(() => sortSongs(filteredSongs(), sortKey(), sortDirection()))
+  const sortedSongs = createMemo(() =>
+    sortSongs(filteredSongs(), sortKey(), sortDirection(), masterData()?.genres)
+  )
 
   const handleSortChange = (nextKey: SongSortKey) => {
     const nextSort = nextSortState(sortKey(), sortDirection(), nextKey)

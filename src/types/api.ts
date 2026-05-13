@@ -199,6 +199,7 @@ export interface SongStatsResponseDTO {
 export interface MasterItemDTO {
   id: number
   name: string
+  sort_order?: number
 }
 
 export interface RatingBandDTO {

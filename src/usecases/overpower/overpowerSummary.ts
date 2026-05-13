@@ -1,10 +1,11 @@
-import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
+import type { MasterItemDTO, PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
 import {
   type ChartLevelLabel,
   getChartLevelSortKey,
   isLowChartLevel,
   toChartLevelLabel,
 } from '../../utils/chartLevel'
+import { compareMasterItemNames, createMasterItemOrderMap } from '../../utils/masterData'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
 import type {
   OverPowerDifficulty,
@@ -157,8 +158,12 @@ const buildAllSummary = (entries: SongAggregationEntry[]): OverPowerSummaryRow =
   return toSummaryRow('all', 'ALL', summary)
 }
 
-const buildGenreSummaries = (entries: SongAggregationEntry[]): OverPowerSummaryRow[] => {
+const buildGenreSummaries = (
+  entries: SongAggregationEntry[],
+  genres?: MasterItemDTO[]
+): OverPowerSummaryRow[] => {
   const groups = new Map<string, MutableSummary>()
+  const genreOrderMap = createMasterItemOrderMap(genres)
   for (const entry of entries) {
     if (!entry.song.genre || entry.song.genre === '不明') continue
     addToGroup(groups, entry.song.genre, entry.current, entry.max)
@@ -167,7 +172,7 @@ const buildGenreSummaries = (entries: SongAggregationEntry[]): OverPowerSummaryR
   return [...groups.entries()]
     .map(([label, summary]) => toSummaryRow(label, label, summary))
     .filter((row) => row.max > 0)
-    .sort((a, b) => a.label.localeCompare(b.label, 'ja'))
+    .sort((a, b) => compareMasterItemNames(a.label, b.label, genreOrderMap))
 }
 
 const buildLevelSummaries = (entries: SongAggregationEntry[]): OverPowerLevelSummaryRow[] => {
@@ -233,7 +238,8 @@ export const buildOverPowerSummary = (
   songs: SongDTO[],
   records: PlayerRecordDTO[],
   versions: VersionSummaryDTO[],
-  lockedSongs: OverPowerLockedSong[] = []
+  lockedSongs: OverPowerLockedSong[] = [],
+  genres?: MasterItemDTO[]
 ): OverPowerSummary => {
   const lockedLookup = buildLockedSongLookup(lockedSongs)
   const availableRecords = records.filter((record) => isRecordAvailable(record, lockedLookup))
@@ -241,7 +247,7 @@ export const buildOverPowerSummary = (
 
   return {
     all: buildAllSummary(entries),
-    genres: buildGenreSummaries(entries),
+    genres: buildGenreSummaries(entries, genres),
     levels: buildLevelSummaries(entries),
     versions: buildVersionSummaries(entries, versions),
     difficulties: buildDifficultySummaries(availableRecords),

@@ -13,6 +13,7 @@ import type {
   VersionSummaryDTO,
   WorldsendSongDTO,
 } from '../types/api'
+import { sortMasterItemsBySortOrder } from '../utils/masterData'
 import { fetchWithAuth } from './fetchWithAuth'
 
 export const fetchAllSongs = async (): Promise<{ songs: SongDTO[] }> => {
@@ -185,6 +186,7 @@ export const fetchMasterData = async (): Promise<MasterDataDTO> => {
 
   return {
     ...raw,
+    genres: sortMasterItemsBySortOrder(raw.genres ?? []),
     achievement_types: achievementTypes,
   }
 }

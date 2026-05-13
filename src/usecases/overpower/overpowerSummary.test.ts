@@ -104,6 +104,33 @@ test('バージョン別はリリース日順で並ぶ', () => {
   )
 })
 
+test('ジャンル別はマスタのsort_order順で並ぶ', () => {
+  const summary = buildOverPowerSummary(
+    [
+      createSong({ id: 'touhou', genre: '東方Project', maxop: 90 }),
+      createSong({ id: 'pops', genre: 'POPS & ANIME', maxop: 90 }),
+      createSong({ id: 'niconico', genre: 'niconico', maxop: 90 }),
+    ],
+    [
+      createRecord({ id: 'touhou', overpower: 80 }),
+      createRecord({ id: 'pops', overpower: 80 }),
+      createRecord({ id: 'niconico', overpower: 80 }),
+    ],
+    versions,
+    [],
+    [
+      { id: 1, name: 'POPS & ANIME', sort_order: 10 },
+      { id: 2, name: 'niconico', sort_order: 20 },
+      { id: 3, name: '東方Project', sort_order: 30 },
+    ]
+  )
+
+  assert.deepEqual(
+    summary.genres.map((row) => row.label),
+    ['POPS & ANIME', 'niconico', '東方Project']
+  )
+})
+
 test('レベル別は最高譜面定数を表示レベルへ変換し、10未満を判定する', () => {
   const summary = buildOverPowerSummary(
     [

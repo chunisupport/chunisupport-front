@@ -1,6 +1,7 @@
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
+import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
 import { CONST_MAX, CONST_MIN } from '../../constants/constRange'
@@ -217,7 +218,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   }
 
   const difficulties = () => props.masterData?.difficulties?.map((d) => d.name as Difficulty) ?? []
-  const genres = () => props.masterData?.genres?.map((g) => g.name) ?? []
+  const genres = () => sortMasterItemsBySortOrder(props.masterData?.genres ?? []).map((g) => g.name)
   const versions = () => props.versions?.map((version) => getShortVersionName(version.name)) ?? []
 
   return (

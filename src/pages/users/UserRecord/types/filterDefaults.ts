@@ -1,4 +1,5 @@
 import type { MasterDataDTO, MasterItemDTO, VersionSummaryDTO } from '../../../../types/api'
+import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../utils/versionConverter'
 import { CONST_MAX, CONST_MIN } from '../constants/constRange'
@@ -42,7 +43,7 @@ export const getMasterDataDefaults = (
   masterData?: MasterDataDTO,
   versions?: VersionSummaryDTO[]
 ) => ({
-  genres: masterData?.genres?.map((g: MasterItemDTO) => g.name) ?? [],
+  genres: sortMasterItemsBySortOrder(masterData?.genres ?? []).map((g: MasterItemDTO) => g.name),
   versions: versions?.map((version) => getShortVersionName(version.name)) ?? [],
 })
 
