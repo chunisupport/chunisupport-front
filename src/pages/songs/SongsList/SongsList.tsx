@@ -2,7 +2,7 @@ import { createMemo, createSignal, ErrorBoundary, onMount, Show } from 'solid-js
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByAddedDateAndOfficialIndex, useSongsData } from '../../../stores/songsData'
-import { matchesSearchQuery } from '../../../utils/searchUtils'
+import { matchesNormalizedSearchQuery, normalizeForSearch } from '../../../utils/searchUtils'
 import type { SortDirection } from '../../users/recordTable/sortingQuery'
 import SongsViewToggle from '../components/SongsViewToggle'
 import SongsTable from './components/SongsTable'
@@ -23,10 +23,22 @@ const SongsList = () => {
     return sortSongsByAddedDateAndOfficialIndex(songs)
   })
 
+  const searchableSongs = createMemo(() =>
+    defaultSortedSongs().map((song) => ({
+      song,
+      normalizedTitle: normalizeForSearch(song.title),
+      normalizedArtist: normalizeForSearch(song.artist),
+    }))
+  )
+
+  const normalizedQuery = createMemo(() => normalizeForSearch(searchQuery()))
+
   const filteredSongs = createMemo(() =>
-    defaultSortedSongs().filter((song) =>
-      matchesSearchQuery(song.title, song.artist, searchQuery())
-    )
+    searchableSongs()
+      .filter(({ normalizedTitle, normalizedArtist }) =>
+        matchesNormalizedSearchQuery(normalizedTitle, normalizedArtist, normalizedQuery())
+      )
+      .map(({ song }) => song)
   )
 
   const sortedSongs = createMemo(() => sortSongs(filteredSongs(), sortKey(), sortDirection()))

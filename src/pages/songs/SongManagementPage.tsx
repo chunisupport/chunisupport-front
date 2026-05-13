@@ -23,7 +23,7 @@ import type {
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
 } from '../../types/api'
-import { matchesSearchQuery } from '../../utils/searchUtils'
+import { matchesNormalizedSearchQuery, normalizeForSearch } from '../../utils/searchUtils'
 
 type SongManagementPageProps = {
   title: string
@@ -265,16 +265,38 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const [worldsendSearchQuery, setWorldsendSearchQuery] = createSignal('')
 
   const songs = createMemo<ManagedSongDTO[]>(() => songsResponse()?.songs ?? [])
+  const searchableSongs = createMemo(() =>
+    songs().map((song) => ({
+      song,
+      normalizedTitle: normalizeForSearch(song.title),
+      normalizedArtist: normalizeForSearch(song.artist),
+    }))
+  )
+  const normalizedSongQuery = createMemo(() => normalizeForSearch(songSearchQuery()))
   const filteredSongs = createMemo(() => {
-    const query = songSearchQuery()
-    return songs().filter((song) => matchesSearchQuery(song.title, song.artist, query))
+    return searchableSongs()
+      .filter(({ normalizedTitle, normalizedArtist }) =>
+        matchesNormalizedSearchQuery(normalizedTitle, normalizedArtist, normalizedSongQuery())
+      )
+      .map(({ song }) => song)
   })
   const worldsendSongs = createMemo<ManagedWorldsendSongDTO[]>(
     () => worldsendResponse()?.songs ?? []
   )
+  const searchableWorldsendSongs = createMemo(() =>
+    worldsendSongs().map((song) => ({
+      song,
+      normalizedTitle: normalizeForSearch(song.title),
+      normalizedArtist: normalizeForSearch(song.artist),
+    }))
+  )
+  const normalizedWorldsendQuery = createMemo(() => normalizeForSearch(worldsendSearchQuery()))
   const filteredWorldsendSongs = createMemo(() => {
-    const query = worldsendSearchQuery()
-    return worldsendSongs().filter((song) => matchesSearchQuery(song.title, song.artist, query))
+    return searchableWorldsendSongs()
+      .filter(({ normalizedTitle, normalizedArtist }) =>
+        matchesNormalizedSearchQuery(normalizedTitle, normalizedArtist, normalizedWorldsendQuery())
+      )
+      .map(({ song }) => song)
   })
   const selectedSong = createMemo(() => {
     const selected = selectedSongId()

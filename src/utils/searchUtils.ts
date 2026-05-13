@@ -15,15 +15,21 @@ export function normalizeForSearch(value: string): string {
     .replace(symbolOrSpaceRegex, '')
 }
 
+export function matchesNormalizedSearchQuery(
+  normalizedTitle: string,
+  normalizedArtist: string,
+  normalizedQuery: string
+): boolean {
+  if (!normalizedQuery) return true
+  return normalizedTitle.includes(normalizedQuery) || normalizedArtist.includes(normalizedQuery)
+}
+
 /**
  * タイトルとアーティスト名のどちらかが検索クエリに部分一致するか判定する。
  */
 export function matchesSearchQuery(title: string, artist: string, query: string): boolean {
   const normalizedQuery = normalizeForSearch(query)
-  if (!normalizedQuery) return true
-
   const normalizedTitle = normalizeForSearch(title)
   const normalizedArtist = normalizeForSearch(artist)
-
-  return normalizedTitle.includes(normalizedQuery) || normalizedArtist.includes(normalizedQuery)
+  return matchesNormalizedSearchQuery(normalizedTitle, normalizedArtist, normalizedQuery)
 }
