@@ -71,7 +71,7 @@ export const fetchSongStats = async (
   return response.json()
 }
 
-export const fetchVersionSummaries = async (): Promise<{ versions: VersionDTO[] }> => {
+export const fetchVersions = async (): Promise<{ versions: VersionDTO[] }> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/master/versions`)
 
   return response.json()

@@ -1,6 +1,6 @@
 import { useNavigate } from '@solidjs/router'
 import { createMemo, createResource } from 'solid-js'
-import { fetchMasterData, fetchVersionSummaries } from '../../../api/songs'
+import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
@@ -13,7 +13,7 @@ type ReleaseSong = {
 export const useSongDetailBase = (song: () => ReleaseSong | undefined) => {
   const navigate = useNavigate()
   const [masterData] = createResource(fetchMasterData)
-  const [versionData] = createResource(fetchVersionSummaries)
+  const [versionData] = createResource(fetchVersions)
 
   const songVersionName = createMemo(() => {
     const currentSong = song()

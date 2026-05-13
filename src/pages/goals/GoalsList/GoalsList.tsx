@@ -2,7 +2,7 @@
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { createGoal, deleteGoal, fetchGoals, updateGoal } from '../../../api/goals'
-import { fetchAllSongs, fetchMasterData, fetchVersionSummaries } from '../../../api/songs'
+import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchMe, fetchUserProfileSummary, fetchUserRecord } from '../../../api/users'
 import { Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
@@ -39,7 +39,7 @@ const GoalsList: Component = () => {
           fetchGoals(),
           fetchAllSongs(),
           fetchMasterData(),
-          fetchVersionSummaries(),
+          fetchVersions(),
           fetchUserProfileSummary(me.username),
           fetchUserRecord(me.username, { includeNoPlay: true }),
         ])
