@@ -3,7 +3,9 @@ import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByAddedDateAndOfficialIndex, useSongsData } from '../../../stores/songsData'
 import type { SortDirection } from '../../users/recordTable/sortingQuery'
+import SongSearchInput from '../components/SongSearchInput'
 import SongsViewToggle from '../components/SongsViewToggle'
+import { buildSearchableItems, filterSearchableItems } from '../searchHelpers'
 import SongsTable from './components/SongsTable'
 import { nextSortState, type SongSortKey, sortSongs } from './utils/sorting'
 
@@ -11,6 +13,7 @@ const SongsList = () => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [sortKey, setSortKey] = createSignal<SongSortKey | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
+  const [searchQuery, setSearchQuery] = createSignal('')
 
   onMount(() => {
     ensureSongsLoaded()
@@ -21,7 +24,11 @@ const SongsList = () => {
     return sortSongsByAddedDateAndOfficialIndex(songs)
   })
 
-  const sortedSongs = createMemo(() => sortSongs(defaultSortedSongs(), sortKey(), sortDirection()))
+  const searchableSongs = createMemo(() => buildSearchableItems(defaultSortedSongs()))
+
+  const filteredSongs = createMemo(() => filterSearchableItems(searchableSongs(), searchQuery()))
+
+  const sortedSongs = createMemo(() => sortSongs(filteredSongs(), sortKey(), sortDirection()))
 
   const handleSortChange = (nextKey: SongSortKey) => {
     const nextSort = nextSortState(sortKey(), sortDirection(), nextKey)
@@ -39,6 +46,7 @@ const SongsList = () => {
             <h1 class="text-2xl font-semibold">楽曲一覧</h1>
             <SongsViewToggle />
           </div>
+          <SongSearchInput id="songs-search" value={searchQuery()} onInput={setSearchQuery} />
           <p class="text-sm text-gray-600">{sortedSongs().length}件</p>
 
           <SongsTable

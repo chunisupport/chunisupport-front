@@ -3,7 +3,9 @@ import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByAddedDateAndOfficialIndex, useSongsData } from '../../../stores/songsData'
 import type { SortDirection } from '../../users/recordTable/sortingQuery'
+import SongSearchInput from '../components/SongSearchInput'
 import SongsViewToggle from '../components/SongsViewToggle'
+import { buildSearchableItems, filterSearchableItems } from '../searchHelpers'
 import WorldsendSongsTable from './components/WorldsendSongsTable'
 import { nextSortState, sortWorldsendSongs, type WorldsendSongSortKey } from './utils/sorting'
 
@@ -12,6 +14,7 @@ const WorldsendSongsList = () => {
     useSongsData()
   const [sortKey, setSortKey] = createSignal<WorldsendSongSortKey | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
+  const [searchQuery, setSearchQuery] = createSignal('')
 
   onMount(() => {
     ensureWorldsendSongsLoaded()
@@ -22,8 +25,12 @@ const WorldsendSongsList = () => {
     return sortSongsByAddedDateAndOfficialIndex(songs)
   })
 
+  const searchableSongs = createMemo(() => buildSearchableItems(defaultSortedSongs()))
+
+  const filteredSongs = createMemo(() => filterSearchableItems(searchableSongs(), searchQuery()))
+
   const sortedSongs = createMemo(() =>
-    sortWorldsendSongs(defaultSortedSongs(), sortKey(), sortDirection())
+    sortWorldsendSongs(filteredSongs(), sortKey(), sortDirection())
   )
 
   const handleSortChange = (nextKey: WorldsendSongSortKey) => {
@@ -42,6 +49,11 @@ const WorldsendSongsList = () => {
             <h1 class="text-2xl font-semibold">WORLD&apos;S END 楽曲一覧</h1>
             <SongsViewToggle />
           </div>
+          <SongSearchInput
+            id="worldsend-songs-search"
+            value={searchQuery()}
+            onInput={setSearchQuery}
+          />
           <p class="text-sm text-gray-600">{sortedSongs().length}件</p>
 
           <WorldsendSongsTable
