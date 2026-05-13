@@ -23,7 +23,7 @@ import type {
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
 } from '../../types/api'
-import { matchesNormalizedSearchQuery, normalizeForSearch } from '../../utils/searchUtils'
+import { buildSearchableItems, filterSearchableItems } from './searchHelpers'
 
 type SongManagementPageProps = {
   title: string
@@ -265,39 +265,17 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const [worldsendSearchQuery, setWorldsendSearchQuery] = createSignal('')
 
   const songs = createMemo<ManagedSongDTO[]>(() => songsResponse()?.songs ?? [])
-  const searchableSongs = createMemo(() =>
-    songs().map((song) => ({
-      song,
-      normalizedTitle: normalizeForSearch(song.title),
-      normalizedArtist: normalizeForSearch(song.artist),
-    }))
+  const searchableSongs = createMemo(() => buildSearchableItems(songs()))
+  const filteredSongs = createMemo(() =>
+    filterSearchableItems(searchableSongs(), songSearchQuery())
   )
-  const normalizedSongQuery = createMemo(() => normalizeForSearch(songSearchQuery()))
-  const filteredSongs = createMemo(() => {
-    return searchableSongs()
-      .filter(({ normalizedTitle, normalizedArtist }) =>
-        matchesNormalizedSearchQuery(normalizedTitle, normalizedArtist, normalizedSongQuery())
-      )
-      .map(({ song }) => song)
-  })
   const worldsendSongs = createMemo<ManagedWorldsendSongDTO[]>(
     () => worldsendResponse()?.songs ?? []
   )
-  const searchableWorldsendSongs = createMemo(() =>
-    worldsendSongs().map((song) => ({
-      song,
-      normalizedTitle: normalizeForSearch(song.title),
-      normalizedArtist: normalizeForSearch(song.artist),
-    }))
+  const searchableWorldsendSongs = createMemo(() => buildSearchableItems(worldsendSongs()))
+  const filteredWorldsendSongs = createMemo(() =>
+    filterSearchableItems(searchableWorldsendSongs(), worldsendSearchQuery())
   )
-  const normalizedWorldsendQuery = createMemo(() => normalizeForSearch(worldsendSearchQuery()))
-  const filteredWorldsendSongs = createMemo(() => {
-    return searchableWorldsendSongs()
-      .filter(({ normalizedTitle, normalizedArtist }) =>
-        matchesNormalizedSearchQuery(normalizedTitle, normalizedArtist, normalizedWorldsendQuery())
-      )
-      .map(({ song }) => song)
-  })
   const selectedSong = createMemo(() => {
     const selected = selectedSongId()
     if (!selected) return null

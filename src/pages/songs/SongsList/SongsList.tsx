@@ -2,9 +2,10 @@ import { createMemo, createSignal, ErrorBoundary, onMount, Show } from 'solid-js
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByAddedDateAndOfficialIndex, useSongsData } from '../../../stores/songsData'
-import { matchesNormalizedSearchQuery, normalizeForSearch } from '../../../utils/searchUtils'
 import type { SortDirection } from '../../users/recordTable/sortingQuery'
+import SongSearchInput from '../components/SongSearchInput'
 import SongsViewToggle from '../components/SongsViewToggle'
+import { buildSearchableItems, filterSearchableItems } from '../searchHelpers'
 import SongsTable from './components/SongsTable'
 import { nextSortState, type SongSortKey, sortSongs } from './utils/sorting'
 
@@ -23,23 +24,9 @@ const SongsList = () => {
     return sortSongsByAddedDateAndOfficialIndex(songs)
   })
 
-  const searchableSongs = createMemo(() =>
-    defaultSortedSongs().map((song) => ({
-      song,
-      normalizedTitle: normalizeForSearch(song.title),
-      normalizedArtist: normalizeForSearch(song.artist),
-    }))
-  )
+  const searchableSongs = createMemo(() => buildSearchableItems(defaultSortedSongs()))
 
-  const normalizedQuery = createMemo(() => normalizeForSearch(searchQuery()))
-
-  const filteredSongs = createMemo(() =>
-    searchableSongs()
-      .filter(({ normalizedTitle, normalizedArtist }) =>
-        matchesNormalizedSearchQuery(normalizedTitle, normalizedArtist, normalizedQuery())
-      )
-      .map(({ song }) => song)
-  )
+  const filteredSongs = createMemo(() => filterSearchableItems(searchableSongs(), searchQuery()))
 
   const sortedSongs = createMemo(() => sortSongs(filteredSongs(), sortKey(), sortDirection()))
 
@@ -59,19 +46,7 @@ const SongsList = () => {
             <h1 class="text-2xl font-semibold">楽曲一覧</h1>
             <SongsViewToggle />
           </div>
-          <div class="max-w-md">
-            <label class="mb-1 block text-sm font-medium text-gray-700" for="songs-search">
-              楽曲検索
-            </label>
-            <input
-              id="songs-search"
-              type="search"
-              value={searchQuery()}
-              onInput={(event) => setSearchQuery(event.currentTarget.value)}
-              placeholder="曲名・アーティスト名で検索"
-              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-            />
-          </div>
+          <SongSearchInput id="songs-search" value={searchQuery()} onInput={setSearchQuery} />
           <p class="text-sm text-gray-600">{sortedSongs().length}件</p>
 
           <SongsTable
