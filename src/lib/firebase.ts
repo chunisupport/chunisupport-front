@@ -1,9 +1,9 @@
 import { initializeApp } from 'firebase/app'
 import { GoogleAuthProvider, getAuth } from 'firebase/auth'
 
-import { getRequiredEnv } from './env'
+import { getEnv, getRequiredEnv } from './env'
 
-const importMetaEnv = (import.meta as ImportMeta & { env?: Record<string, string> }).env
+const env = getEnv()
 
 const firebaseConfig = {
   apiKey: getRequiredEnv('PUBLIC_FB_API_KEY'),
@@ -12,9 +12,7 @@ const firebaseConfig = {
   storageBucket: getRequiredEnv('PUBLIC_FB_STORAGE_BUCKET'),
   messagingSenderId: getRequiredEnv('PUBLIC_FB_MESSAGING_SENDER_ID'),
   appId: getRequiredEnv('PUBLIC_FB_APP_ID'),
-  measurementId:
-    importMetaEnv?.PUBLIC_FB_MEASUREMENT_ID ??
-    (typeof process !== 'undefined' ? process.env.PUBLIC_FB_MEASUREMENT_ID : undefined),
+  measurementId: env.PUBLIC_FB_MEASUREMENT_ID,
 }
 
 const app = initializeApp(firebaseConfig)

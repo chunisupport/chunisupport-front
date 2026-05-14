@@ -19,16 +19,11 @@ const readEnvValue = (key: EnvKey): string | undefined => {
 }
 
 export const getEnv = (): AppEnv => {
-  return {
-    PUBLIC_BACKEND_URL: readEnvValue('PUBLIC_BACKEND_URL'),
-    PUBLIC_FB_API_KEY: readEnvValue('PUBLIC_FB_API_KEY'),
-    PUBLIC_FB_AUTH_DOMAIN: readEnvValue('PUBLIC_FB_AUTH_DOMAIN'),
-    PUBLIC_FB_PROJECT_ID: readEnvValue('PUBLIC_FB_PROJECT_ID'),
-    PUBLIC_FB_STORAGE_BUCKET: readEnvValue('PUBLIC_FB_STORAGE_BUCKET'),
-    PUBLIC_FB_MESSAGING_SENDER_ID: readEnvValue('PUBLIC_FB_MESSAGING_SENDER_ID'),
-    PUBLIC_FB_APP_ID: readEnvValue('PUBLIC_FB_APP_ID'),
-    PUBLIC_FB_MEASUREMENT_ID: readEnvValue('PUBLIC_FB_MEASUREMENT_ID'),
+  const env = {} as AppEnv
+  for (const key of ENV_KEYS) {
+    env[key] = readEnvValue(key)
   }
+  return env
 }
 
 export const getRequiredEnv = (key: EnvKey): string => {
