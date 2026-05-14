@@ -71,6 +71,9 @@ export const sortSongsByTitle = <T extends { title: string }>(songs: T[]): T[] =
   return keyed.map(({ song }) => song)
 }
 
-const songsStore = createRoot(createSongsStore)
+let songsStore: ReturnType<typeof createSongsStore> | undefined
 
-export const useSongsData = () => songsStore
+export const useSongsData = () => {
+  songsStore ??= createRoot(createSongsStore)
+  return songsStore
+}
