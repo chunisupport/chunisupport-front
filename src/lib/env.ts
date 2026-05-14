@@ -15,7 +15,10 @@ export type AppEnv = Record<EnvKey, string | undefined>
 const importMetaEnv = (import.meta as ImportMeta & { env?: Record<string, string> }).env
 
 const readEnvValue = (key: EnvKey): string | undefined => {
-  return importMetaEnv?.[key] ?? (typeof process !== "undefined" ? process.env[key] : undefined)
+  return (
+    importMetaEnv?.[key] ??
+    (typeof process !== "undefined" ? process.env[key] : undefined)
+  )
 }
 
 export const getEnv = (): AppEnv => {
