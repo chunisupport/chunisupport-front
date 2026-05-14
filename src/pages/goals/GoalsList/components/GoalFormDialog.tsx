@@ -566,8 +566,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
                     {props.versions.map((item) => {
-                      const versionId = `goal-version-${item.id}`
-                      const versionValue = String(item.id)
+                      const versionId = `goal-version-${item.id}-${item.name}`
+                      const versionValue = Number.isInteger(item.id)
+                        ? String(item.id)
+                        : `${item.name}-${versionId}`
 
                       return (
                         <div class="flex items-center gap-2 text-sm text-gray-700">
