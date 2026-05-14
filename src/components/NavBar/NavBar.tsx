@@ -10,6 +10,7 @@ import {
   LogOut,
   Music,
   Settings,
+  Shield,
   Wrench,
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
@@ -61,6 +62,15 @@ const NavBar = (props: NavBarProps) => {
       // 設定・ログアウトはログイン時のみ
       ...(uname
         ? [
+            ...(authSession.user?.account_type === 'ADMIN'
+              ? [
+                  {
+                    label: '管理メニュー',
+                    icon: () => <Shield class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+                    path: '/admin',
+                  },
+                ]
+              : []),
             {
               label: '設定',
               icon: () => <Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />,
