@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { GoogleAuthProvider, getAuth } from 'firebase/auth'
 
-import { getRequiredEnv } from './env.ts'
+import { getRequiredEnv } from './env'
 
 const firebaseConfig = {
   apiKey: getRequiredEnv('PUBLIC_FB_API_KEY'),
