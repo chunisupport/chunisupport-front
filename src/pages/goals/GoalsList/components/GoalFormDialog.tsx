@@ -1,6 +1,6 @@
-﻿import { Dialog } from '@kobalte/core/dialog'
+import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
-import { createEffect, createSignal, Show } from 'solid-js'
+import { createEffect, createSignal, For, Show } from 'solid-js'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -565,16 +565,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     </button>
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
-                    {props.versions
-                      .filter((item) => Number.isInteger(item.id))
-                      .map((item) => {
-                        const versionId = `goal-version-${item.id}-${item.name}`
+                    <For each={props.versions.filter((item) => Number.isInteger(item.id))}>
+                      {(item) => {
                         const versionValue = String(item.id)
 
                         return (
-                          <div class="flex items-center gap-2 text-sm text-gray-700">
+                          <label class="flex items-center gap-2 text-sm text-gray-700">
                             <input
-                              id={versionId}
                               type="checkbox"
                               checked={versions().includes(versionValue)}
                               onChange={(event) =>
@@ -583,10 +580,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                                 )
                               }
                             />
-                            <label for={versionId}>{getShortVersionName(item.name)}</label>
-                          </div>
+                            <span>{getShortVersionName(item.name)}</span>
+                          </label>
                         )
-                      })}
+                      }}
+                    </For>
                   </div>
                   <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
                 </fieldset>
