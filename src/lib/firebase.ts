@@ -12,7 +12,9 @@ const firebaseConfig = {
   storageBucket: getRequiredEnv('PUBLIC_FB_STORAGE_BUCKET'),
   messagingSenderId: getRequiredEnv('PUBLIC_FB_MESSAGING_SENDER_ID'),
   appId: getRequiredEnv('PUBLIC_FB_APP_ID'),
-  measurementId: importMetaEnv?.PUBLIC_FB_MEASUREMENT_ID ?? (typeof process !== "undefined" ? process.env.PUBLIC_FB_MEASUREMENT_ID : undefined),
+  measurementId:
+    importMetaEnv?.PUBLIC_FB_MEASUREMENT_ID ??
+    (typeof process !== 'undefined' ? process.env.PUBLIC_FB_MEASUREMENT_ID : undefined),
 }
 
 const app = initializeApp(firebaseConfig)
