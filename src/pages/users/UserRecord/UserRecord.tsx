@@ -10,7 +10,7 @@ import {
   Show,
   Suspense,
 } from 'solid-js'
-import { fetchAllSongs, fetchMasterData, fetchVersionSummaries } from '../../../api/songs'
+import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/songs'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { UserRecordDTO } from '../../../types/api'
@@ -37,7 +37,7 @@ type Props = {
 const UserRecord: Component<Props> = (props) => {
   const [allSongs] = createResource(fetchAllSongs)
   const [masterData] = createResource(fetchMasterData)
-  const [versionSummaries] = createResource(fetchVersionSummaries)
+  const [versionData] = createResource(fetchVersions)
 
   // 保存済みフィルター一覧
   const [, setSavedFilters] = createSignal<SavedFilter[]>(loadSavedFilters())
@@ -70,7 +70,7 @@ const UserRecord: Component<Props> = (props) => {
   // マスタデータ取得後にgenres/versionsを全選択
   createEffect(() => {
     const md = masterData()
-    const versions = versionSummaries()
+    const versions = versionData()
     if (!md || !versions) return
     setFilters((prev) => ({
       ...prev,
@@ -81,7 +81,7 @@ const UserRecord: Component<Props> = (props) => {
   /** 未プレイを含む全曲のレコード */
   const recordsWithSongMeta = createMemo(() => {
     const songs = allSongs()
-    const versions = versionSummaries()
+    const versions = versionData()
     if (!songs || !versions) return []
     return attachSongMetaToRecords(songs.songs, props.record.all, versions.versions)
   })
@@ -115,7 +115,7 @@ const UserRecord: Component<Props> = (props) => {
   return (
     <Suspense fallback={<Loading />}>
       <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
-        <Show when={allSongs() && masterData() && versionSummaries()} fallback={<Loading />}>
+        <Show when={allSongs() && masterData() && versionData()} fallback={<Loading />}>
           <div class="mx-2 text-sm">
             {/* フィルター関連UI */}
             <FilterToolbar
@@ -155,8 +155,8 @@ const UserRecord: Component<Props> = (props) => {
               filters={filters()}
               onChange={setFilters}
               masterData={masterData()}
-              versions={versionSummaries()?.versions}
-              defaultFilter={getDefaultFilter(masterData(), versionSummaries()?.versions)}
+              versions={versionData()?.versions}
+              defaultFilter={getDefaultFilter(masterData(), versionData()?.versions)}
               setSavedFilters={setSavedFilters}
             />
 

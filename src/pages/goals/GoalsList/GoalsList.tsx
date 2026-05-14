@@ -2,7 +2,7 @@
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { createGoal, deleteGoal, fetchGoals, updateGoal } from '../../../api/goals'
-import { fetchAllSongs, fetchMasterData } from '../../../api/songs'
+import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchMe, fetchUserProfileSummary, fetchUserRecord } from '../../../api/users'
 import { Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
@@ -34,13 +34,15 @@ const GoalsList: Component = () => {
         throw error
       })
 
-      const [goalsResponse, songsResponse, masterData, profile, record] = await Promise.all([
-        fetchGoals(),
-        fetchAllSongs(),
-        fetchMasterData(),
-        fetchUserProfileSummary(me.username),
-        fetchUserRecord(me.username, { includeNoPlay: true }),
-      ])
+      const [goalsResponse, songsResponse, masterData, versionData, profile, record] =
+        await Promise.all([
+          fetchGoals(),
+          fetchAllSongs(),
+          fetchMasterData(),
+          fetchVersions(),
+          fetchUserProfileSummary(me.username),
+          fetchUserRecord(me.username, { includeNoPlay: true }),
+        ])
 
       if (!profile.player) {
         return {
@@ -48,6 +50,7 @@ const GoalsList: Component = () => {
           goals: goalsResponse.goals,
           songs: songsResponse.songs,
           masterData,
+          versions: versionData.versions,
           records: [],
         }
       }
@@ -57,6 +60,7 @@ const GoalsList: Component = () => {
         goals: goalsResponse.goals,
         songs: songsResponse.songs,
         masterData,
+        versions: versionData.versions,
         records: record.all,
       }
     }
@@ -71,7 +75,8 @@ const GoalsList: Component = () => {
         data.records,
         goal.attributes,
         data.masterData,
-        data.songs
+        data.songs,
+        data.versions
       )
       const progress = calculateGoalProgress(goal, filtered, data.songs)
       return { goal, progress }
@@ -81,7 +86,13 @@ const GoalsList: Component = () => {
   const resolveAllCount = (attributes: GoalCreateRequest['attributes']) => {
     const data = resource()
     if (!data) return 0
-    return filterRecordsByAttributes(data.records, attributes, data.masterData, data.songs).length
+    return filterRecordsByAttributes(
+      data.records,
+      attributes,
+      data.masterData,
+      data.songs,
+      data.versions
+    ).length
   }
 
   useDocumentTitle('目標')
@@ -191,7 +202,6 @@ const GoalsList: Component = () => {
                     <GoalCard
                       goal={goal}
                       progress={progress}
-                      masterData={data.masterData}
                       onEdit={handleEdit}
                       onDelete={handleDeleteAsk}
                     />
@@ -208,6 +218,7 @@ const GoalsList: Component = () => {
                 mode={editingGoal() ? 'edit' : 'create'}
                 initialGoal={editingGoal()}
                 masterData={data().masterData}
+                versions={data().versions}
                 isSaving={isSaving()}
                 onOpenChange={setFormOpen}
                 onSave={handleSave}

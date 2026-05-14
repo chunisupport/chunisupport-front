@@ -8,6 +8,7 @@ import type {
   GoalDTO,
   GoalUpdateRequest,
   MasterDataDTO,
+  VersionDTO,
 } from '../../../../../types/api'
 import {
   getScoreRank,
@@ -30,6 +31,7 @@ interface GoalFormDialogProps {
   mode: 'create' | 'edit'
   initialGoal?: GoalDTO
   masterData: MasterDataDTO
+  versions: VersionDTO[]
   isSaving: boolean
   onOpenChange: (open: boolean) => void
   onSave: (payload: GoalRequest) => Promise<void>
@@ -563,7 +565,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     </button>
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
-                    {props.masterData.versions.map((item) => (
+                    {props.versions.map((item) => (
                       <label class="flex items-center gap-2 text-sm text-gray-700">
                         <input
                           type="checkbox"

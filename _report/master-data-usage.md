@@ -101,9 +101,9 @@ APIラッパー: `src/api/songs.ts` → `fetchMasterData()`
 | --- | --- |
 | `genres` | ジャンル一覧・表示順だけを返す個別APIを用意し、楽曲一覧ソート、WORLD'S END一覧ソート、OVER POWERジャンル集計、UserRecordフィルター、楽曲管理、目標フォームで共有する。`SongDTO.genre` は文字列名称で返却されるが、現在は表示順・ソート順に `sort_order` を使っているため、単純に楽曲一覧から一意のジャンル名セットを作るだけでは代替しきれない |
 | `difficulties` | 難易度一覧だけを返す個別APIを用意し、楽曲詳細タブ、楽曲管理、目標フォーム、UserRecordフィルターで利用する。難易度名はゲーム仕様上の固定値に近いが、方針としてはフロント定数化ではなく個別API化を優先する |
-| `versions` | **個別APIは達成済み**。`fetchVersionSummaries()` が `/internal/master/versions` を呼び出しており、UserRecordとUserOverPowerは既にこのAPIを利用している。一方で、`useSongDetailBase` と目標関連はまだ `/internal/master` の `versions` を参照しているため、完全分離にはこれらを `/internal/master/versions` へ移行する必要がある |
+| `versions` | **個別APIは達成済み**。`fetchVersions()` が `/internal/master/versions` を呼び出しており、UserRecord、UserOverPower、`useSongDetailBase`、目標関連はこのAPIを利用している |
 | `achievement_types` | 成果種別だけを返す個別APIを用意し、目標作成・編集ダイアログの選択肢として利用する。`goalForm.ts` には表示名の静的対応表があるが、選択肢の取得元は個別APIに分離する |
 | `account_types` | フロントエンドでは現在未使用。利用する画面が出た時点でアカウント種別用の個別APIから取得する |
 | `rating_bands` | フロントエンドでは現在未使用。利用する画面が出た時点でレーティング帯用の個別APIから取得する |
 
-最も影響範囲が大きいのは **`/internal/master` の一括取得に複数画面が依存している** 点。個別API化の第一候補は、既に `/internal/master/versions` が存在する `versions` の残利用箇所（`useSongDetailBase`・目標関連）の移行。その後、`genres`・`difficulties`・`achievement_types` を用途別に分離する。
+最も影響範囲が大きいのは **`/internal/master` の一括取得に複数画面が依存している** 点。`versions` は `/internal/master/versions` への移行が完了しているため、次の候補は `genres`・`difficulties`・`achievement_types` の用途別分離となる。
