@@ -20,6 +20,7 @@ import {
   RECORD_CELL_CENTER_TEXT_CLASS,
   RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
+  RecordHardLampCell,
   RecordHeaderButton,
   RecordLampCell,
   RecordScoreCell,
@@ -64,6 +65,7 @@ const WE_SORT_COL_MAP: Record<string, WorldsendSortKey> = {
   score: 'score',
   updated_at: 'updatedAt',
   lamp: 'lamp',
+  hard_lamp: 'hardLamp',
   justice_count: 'justiceCount',
 }
 
@@ -233,6 +235,18 @@ const WorldsendRecordTable = (props: {
               (worldsendLampOrder[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
             break
           }
+          case 'hardLamp': {
+            const leftMissing = !left.is_played || left.clear_lamp === null
+            const rightMissing = !right.is_played || right.clear_lamp === null
+            if (leftMissing && rightMissing) {
+              comparison = 0
+              break
+            }
+            if (leftMissing) return 1
+            if (rightMissing) return -1
+            comparison = (left.clear_lamp ?? '').localeCompare(right.clear_lamp ?? '', 'ja')
+            break
+          }
         }
 
         if (comparison !== 0) {
@@ -337,6 +351,8 @@ const WorldsendRecordTable = (props: {
                                 return <RecordScoreCell record={currentRecord} />
                               if (column.id === 'lamp')
                                 return <RecordLampCell record={currentRecord} />
+                              if (column.id === 'hardLamp')
+                                return <RecordHardLampCell record={currentRecord} />
                               if (column.id === 'justiceCount') {
                                 return (
                                   <div class={RECORD_CELL_CENTER_TEXT_CLASS}>

@@ -23,6 +23,15 @@ const LAMP_ORDER: Record<string, number> = {
   NONE: 2,
   UNPLAYED: 3,
 }
+const HARD_LAMP_ORDER: Record<string, number> = {
+  CLEAR: 0,
+  HARD: 1,
+  BRAVE: 2,
+  ABSOLUTE: 3,
+  CATASTROPHY: 4,
+  NONE: 5,
+  UNPLAYED: 6,
+}
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
   !isPlayed || timestamp === Number.NEGATIVE_INFINITY
@@ -37,6 +46,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   op_percent: 'overpowerPercent',
   updated_at: 'updatedAt',
   lamp: 'lamp',
+  hard_lamp: 'hardLamp',
   justice_count: 'justiceCount',
 }
 
@@ -235,6 +245,30 @@ export const sortRecords = (
           comparison =
             (LAMP_ORDER[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
             (LAMP_ORDER[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
+          break
+        }
+        case 'hardLamp': {
+          const leftMissing = !left.is_played || left.clear_lamp === null
+          const rightMissing = !right.is_played || right.clear_lamp === null
+          if (leftMissing && rightMissing) {
+            comparison = 0
+            break
+          }
+          if (leftMissing) return 1
+          if (rightMissing) return -1
+          const leftLampKey = !left.is_played
+            ? 'UNPLAYED'
+            : left.clear_lamp === null
+              ? 'NONE'
+              : left.clear_lamp
+          const rightLampKey = !right.is_played
+            ? 'UNPLAYED'
+            : right.clear_lamp === null
+              ? 'NONE'
+              : right.clear_lamp
+          comparison =
+            (HARD_LAMP_ORDER[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
+            (HARD_LAMP_ORDER[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
           break
         }
       }

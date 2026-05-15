@@ -10,6 +10,7 @@ import {
   type ColumnRenderer,
   RECORD_CELL_BASE_CLASS,
   RECORD_CELL_CENTER_TEXT_CLASS,
+  RecordHardLampCell,
   RecordLampCell,
   RecordScoreCell,
   RecordTitleCell,
@@ -68,6 +69,7 @@ export const recordColumnRenderers: Record<
     )
   },
   lamp: (record) => <RecordLampCell record={record} />,
+  hardLamp: (record) => <RecordHardLampCell record={record} />,
   justiceCount: (record) => {
     const justiceCount = calcJusticeCountForAj({
       comboLamp: record.combo_lamp,

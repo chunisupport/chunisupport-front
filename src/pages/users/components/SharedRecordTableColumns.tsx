@@ -8,8 +8,10 @@ import { LampPlaceholderBadge, renderSortIndicator } from './RecordTableUiParts'
 type SharedSortDirection = 'asc' | 'desc' | null
 type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
 type ComboLamp = SharedRecordSource['combo_lamp']
+type ClearLamp = SharedRecordSource['clear_lamp']
 type ScoreRecord = Pick<SharedRecordSource, 'is_played' | 'score'>
 type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp' | 'score'>
+type HardLampRecord = Pick<SharedRecordSource, 'is_played' | 'clear_lamp'>
 type UpdatedAtRecord = Pick<SharedRecordSource, 'is_played' | 'updated_at'>
 type LampBadgeRenderer = (lamp: ComboLamp, record?: LampRecord) => JSX.Element
 export type ColumnRenderer<TRecord> = (record: TRecord) => JSX.Element
@@ -71,6 +73,38 @@ export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, record) =>
 
     return <span class={`rounded-lg px-2 py-1 text-sm font-extrabold ${ajBadgeClass}`}>AJ</span>
   }
+  return <LampPlaceholderBadge />
+}
+
+export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element => {
+  if (lamp === 'CLEAR')
+    return (
+      <span class="rounded-lg bg-orange-200 px-2 py-1 text-sm font-extrabold text-orange-900">
+        CLR
+      </span>
+    )
+  if (lamp === 'HARD')
+    return (
+      <span class="rounded-lg bg-red-200 px-2 py-1 text-sm font-extrabold text-red-900">HRD</span>
+    )
+  if (lamp === 'BRAVE')
+    return (
+      <span class="rounded-lg bg-orange-200 px-2 py-1 text-sm font-extrabold text-orange-900">
+        BRV
+      </span>
+    )
+  if (lamp === 'ABSOLUTE')
+    return (
+      <span class="rounded-lg bg-yellow-200 px-2 py-1 text-sm font-extrabold text-yellow-900">
+        ABS
+      </span>
+    )
+  if (lamp === 'CATASTROPHY')
+    return (
+      <span class="rounded-lg bg-yellow-200 px-2 py-1 text-sm font-extrabold text-yellow-900">
+        CTS
+      </span>
+    )
   return <LampPlaceholderBadge />
 }
 
@@ -139,6 +173,14 @@ export const RecordLampCell = (props: {
           props.record
         )
       : null}
+  </div>
+)
+
+export const RecordHardLampCell = (props: { record: HardLampRecord }) => (
+  <div
+    class={`flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap ${RECORD_LAMP_COLUMN_CLASS}`}
+  >
+    {props.record.is_played ? renderDefaultRecordHardLampBadge(props.record.clear_lamp) : null}
   </div>
 )
 
