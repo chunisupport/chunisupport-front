@@ -76,10 +76,10 @@ type WorldsendRecordWithSongMeta = WorldsendRecordDTO & {
 }
 
 const worldsendLampOrder: Record<string, number> = {
-  'ALL JUSTICE': 0,
-  'FULL COMBO': 1,
-  NONE: 2,
-  UNPLAYED: 3,
+  UNPLAYED: 0,
+  NONE: 1,
+  'FULL COMBO': 2,
+  'ALL JUSTICE': 3,
 }
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
