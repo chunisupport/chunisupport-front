@@ -5,7 +5,7 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../recordTable/sortingQuery'
-import { compareHardLamp } from '../../utils/lampSorting'
+import { compareComboLamp, compareHardLamp } from '../../utils/lampSorting'
 import type { RecordSortKey } from '../types/types'
 import { calcJusticeCountForAj } from './justiceCount.ts'
 import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
@@ -16,13 +16,6 @@ const DIFFICULTY_ORDER: Record<string, number> = {
   EXPERT: 2,
   MASTER: 3,
   ULTIMA: 4,
-}
-
-const LAMP_ORDER: Record<string, number> = {
-  NONE: 0,
-  'FULL COMBO': 1,
-  'ALL JUSTICE': 2,
-  UNPLAYED: 3,
 }
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
@@ -207,36 +200,9 @@ export const sortRecords = (
           break
         }
         case 'lamp': {
-          const leftMissing = !left.is_played
-          const rightMissing = !right.is_played
-
-          if (leftMissing && rightMissing) {
-            comparison = 0
-            break
-          }
-
-          if (leftMissing) {
-            return 1
-          }
-
-          if (rightMissing) {
-            return -1
-          }
-
-          const leftLampKey = !left.is_played
-            ? 'UNPLAYED'
-            : left.combo_lamp === null
-              ? 'NONE'
-              : left.combo_lamp
-          const rightLampKey = !right.is_played
-            ? 'UNPLAYED'
-            : right.combo_lamp === null
-              ? 'NONE'
-              : right.combo_lamp
-
-          comparison =
-            (LAMP_ORDER[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
-            (LAMP_ORDER[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
+          const result = compareComboLamp(left, right)
+          if (result.skipDirection) return result.comparison
+          comparison = result.comparison
           break
         }
         case 'hardLamp': {
