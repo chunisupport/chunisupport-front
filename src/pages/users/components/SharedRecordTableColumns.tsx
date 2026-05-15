@@ -13,7 +13,11 @@ type ScoreRecord = Pick<SharedRecordSource, 'is_played' | 'score'>
 type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp' | 'score'>
 type HardLampRecord = Pick<SharedRecordSource, 'is_played' | 'clear_lamp'>
 
-type JusticeCountRecord = Pick<SharedRecordSource, 'combo_lamp' | 'score' | 'notes'>
+type JusticeCountRecord = {
+  combo_lamp: ComboLamp
+  score: number
+  notes: number | null
+}
 type UpdatedAtRecord = Pick<SharedRecordSource, 'is_played' | 'updated_at'>
 type LampBadgeRenderer = (lamp: ComboLamp, record?: LampRecord) => JSX.Element
 export type ColumnRenderer<TRecord> = (record: TRecord) => JSX.Element
@@ -33,7 +37,7 @@ type RecordTitleCellProps = {
 }
 
 export const RECORD_HOVER_TRANSITION_CLASS = 'transition-colors'
-export const RECORD_ROW_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} hover:bg-green-50`
+export const RECORD_ROW_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} hover:bg-green-50 hover:shadow-[inset_0_1px_0_rgb(229_231_235)]`
 export const RECORD_CARD_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} group-hover:bg-green-50`
 export const RECORD_ROW_HEIGHT = 34
 export const RECORD_ROW_MIN_HEIGHT_CLASS = 'min-h-[34px]'
