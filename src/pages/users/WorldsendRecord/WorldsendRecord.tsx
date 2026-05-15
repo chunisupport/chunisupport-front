@@ -15,6 +15,7 @@ import { Loading } from '../../../components'
 import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
 import { createRecordTableVirtualizer } from '../components/createRecordTableVirtualizer'
 import {
+  type ColumnRenderer,
   RECORD_ALPHANUMERIC_COLUMN_CLASS,
   RECORD_CELL_BASE_CLASS,
   RECORD_CELL_CENTER_TEXT_CLASS,
@@ -108,6 +109,51 @@ const attachWorldsendSongMetaToRecords = (
       release: song?.release ?? null,
     }
   })
+}
+
+const worldsendColumnRenderers: Record<
+  WorldsendRecordColumnId,
+  ColumnRenderer<WorldsendRecordWithSongMeta>
+> = {
+  title: (record) => (
+    <RecordTitleCell href={buildWorldsendSongDetailPath(record.id)} title={record.title} />
+  ),
+  attribute: (record) => (
+    <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+      <span class="inline-block w-full text-center leading-none">{record.attribute ?? '-'}</span>
+    </div>
+  ),
+  level: (record) => (
+    <div class={`${RECORD_CELL_BASE_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}>
+      <span class="inline-block leading-none">{worldsendLevelLabel(record.level_star)}</span>
+    </div>
+  ),
+  score: (record) => <RecordScoreCell record={record} />,
+  lamp: (record) => <RecordLampCell record={record} />,
+  hardLamp: (record) => <RecordHardLampCell record={record} />,
+  justiceCount: (record) => {
+    const justiceCount = calcJusticeCountForAj({
+      comboLamp: record.combo_lamp,
+      score: record.score,
+      notes: record.notes,
+    })
+    return (
+      <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+        <span class="inline-block w-full text-center leading-none">
+          {justiceCount === '' ? '' : justiceCount}
+        </span>
+      </div>
+    )
+  },
+  updatedAt: (record) => <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />,
+}
+
+const getWorldsendColumnRenderer = (
+  columnId: WorldsendRecordColumnId
+): ColumnRenderer<WorldsendRecordWithSongMeta> => {
+  const renderer = worldsendColumnRenderers[columnId]
+  if (!renderer) throw new Error(`Unknown worldsend column renderer: ${columnId}`)
+  return renderer
 }
 
 const WorldsendRecordTable = (props: {
@@ -314,62 +360,8 @@ const WorldsendRecordTable = (props: {
                         >
                           <For each={visibleColumns()}>
                             {(column) => {
-                              if (column.id === 'title') {
-                                return (
-                                  <RecordTitleCell
-                                    href={buildWorldsendSongDetailPath(currentRecord.id)}
-                                    title={currentRecord.title}
-                                  />
-                                )
-                              }
-                              if (column.id === 'attribute') {
-                                return (
-                                  <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
-                                    <span class="inline-block w-full text-center leading-none">
-                                      {currentRecord.attribute ?? '-'}
-                                    </span>
-                                  </div>
-                                )
-                              }
-                              if (column.id === 'level') {
-                                return (
-                                  <div
-                                    class={`${RECORD_CELL_BASE_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-                                  >
-                                    <span class="inline-block leading-none">
-                                      {worldsendLevelLabel(currentRecord.level_star)}
-                                    </span>
-                                  </div>
-                                )
-                              }
-                              if (column.id === 'score')
-                                return <RecordScoreCell record={currentRecord} />
-                              if (column.id === 'lamp')
-                                return <RecordLampCell record={currentRecord} />
-                              if (column.id === 'hardLamp')
-                                return <RecordHardLampCell record={currentRecord} />
-                              if (column.id === 'justiceCount') {
-                                return (
-                                  <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
-                                    <span class="inline-block w-full text-center leading-none">
-                                      {(() => {
-                                        const justiceCount = calcJusticeCountForAj({
-                                          comboLamp: currentRecord.combo_lamp,
-                                          score: currentRecord.score,
-                                          notes: currentRecord.notes,
-                                        })
-                                        return justiceCount === '' ? '' : justiceCount
-                                      })()}
-                                    </span>
-                                  </div>
-                                )
-                              }
-                              return (
-                                <RecordUpdatedAtCell
-                                  record={currentRecord}
-                                  formatUpdatedAt={formatUpdatedAt}
-                                />
-                              )
+                              const renderer = getWorldsendColumnRenderer(column.id)
+                              return renderer(currentRecord)
                             }}
                           </For>
                         </div>
