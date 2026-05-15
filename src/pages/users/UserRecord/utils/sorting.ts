@@ -5,6 +5,7 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../recordTable/sortingQuery'
+import { compareHardLamp } from '../../utils/lampSorting'
 import type { RecordSortKey } from '../types/types'
 import { calcJusticeCountForAj } from './justiceCount.ts'
 import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
@@ -18,10 +19,10 @@ const DIFFICULTY_ORDER: Record<string, number> = {
 }
 
 const LAMP_ORDER: Record<string, number> = {
-  'ALL JUSTICE': 0,
-  'FULL COMBO': 1,
-  NONE: 2,
-  UNPLAYED: 3,
+  UNPLAYED: 0,
+  NONE: 1,
+  'FULL COMBO': 2,
+  'ALL JUSTICE': 3,
 }
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
@@ -37,6 +38,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   op_percent: 'overpowerPercent',
   updated_at: 'updatedAt',
   lamp: 'lamp',
+  hard_lamp: 'hardLamp',
   justice_count: 'justiceCount',
 }
 
@@ -235,6 +237,12 @@ export const sortRecords = (
           comparison =
             (LAMP_ORDER[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
             (LAMP_ORDER[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
+          break
+        }
+        case 'hardLamp': {
+          const result = compareHardLamp(left, right)
+          if (result.skipDirection) return result.comparison
+          comparison = result.comparison
           break
         }
       }

@@ -8,8 +8,12 @@ import { LampPlaceholderBadge, renderSortIndicator } from './RecordTableUiParts'
 type SharedSortDirection = 'asc' | 'desc' | null
 type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
 type ComboLamp = SharedRecordSource['combo_lamp']
+type ClearLamp = SharedRecordSource['clear_lamp']
 type ScoreRecord = Pick<SharedRecordSource, 'is_played' | 'score'>
 type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp' | 'score'>
+type HardLampRecord = Pick<SharedRecordSource, 'is_played' | 'clear_lamp'>
+
+type JusticeCountRecord = Pick<SharedRecordSource, 'combo_lamp' | 'score' | 'notes'>
 type UpdatedAtRecord = Pick<SharedRecordSource, 'is_played' | 'updated_at'>
 type LampBadgeRenderer = (lamp: ComboLamp, record?: LampRecord) => JSX.Element
 export type ColumnRenderer<TRecord> = (record: TRecord) => JSX.Element
@@ -38,6 +42,8 @@ export const RECORD_ALPHANUMERIC_COLUMN_CLASS = 'text-sm'
 export const RECORD_CELL_BASE_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap`
 export const RECORD_CELL_CENTER_TEXT_CLASS = `${RECORD_CELL_BASE_CLASS} text-center ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`
 export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
+const HARD_LAMP_BADGE_CLASS =
+  'inline-flex w-[40px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
 
 const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
   'SSS+': 'text-green-500',
@@ -71,6 +77,20 @@ export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, record) =>
 
     return <span class={`rounded-lg px-2 py-1 text-sm font-extrabold ${ajBadgeClass}`}>AJ</span>
   }
+  return <LampPlaceholderBadge />
+}
+
+export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element => {
+  if (lamp === 'CLEAR')
+    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-gray-200 text-gray-900`}>CLR</span>
+  if (lamp === 'HARD')
+    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-red-200 text-red-900`}>HRD</span>
+  if (lamp === 'BRAVE')
+    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-orange-200 text-orange-900`}>BRV</span>
+  if (lamp === 'ABSOLUTE')
+    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-yellow-200 text-yellow-900`}>ABS</span>
+  if (lamp === 'CATASTROPHY')
+    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-green-200 text-green-900`}>CTS</span>
   return <LampPlaceholderBadge />
 }
 
@@ -141,6 +161,29 @@ export const RecordLampCell = (props: {
       : null}
   </div>
 )
+
+export const RecordHardLampCell = (props: { record: HardLampRecord }) => (
+  <div
+    class={`flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap ${RECORD_LAMP_COLUMN_CLASS}`}
+  >
+    {props.record.is_played ? renderDefaultRecordHardLampBadge(props.record.clear_lamp) : null}
+  </div>
+)
+
+export const RecordJusticeCountCell = (props: {
+  record: JusticeCountRecord
+  calcJusticeCount: (record: JusticeCountRecord) => number | '' | '-'
+}) => {
+  const justiceCount = props.calcJusticeCount(props.record)
+
+  return (
+    <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+      <span class="inline-block w-full text-center leading-none">
+        {justiceCount === '' ? '' : justiceCount}
+      </span>
+    </div>
+  )
+}
 
 export const RecordUpdatedAtCell = (props: {
   record: UpdatedAtRecord

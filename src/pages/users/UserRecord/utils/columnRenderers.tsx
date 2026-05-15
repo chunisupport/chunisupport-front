@@ -10,6 +10,8 @@ import {
   type ColumnRenderer,
   RECORD_CELL_BASE_CLASS,
   RECORD_CELL_CENTER_TEXT_CLASS,
+  RecordHardLampCell,
+  RecordJusticeCountCell,
   RecordLampCell,
   RecordScoreCell,
   RecordTitleCell,
@@ -68,18 +70,19 @@ export const recordColumnRenderers: Record<
     )
   },
   lamp: (record) => <RecordLampCell record={record} />,
-  justiceCount: (record) => {
-    const justiceCount = calcJusticeCountForAj({
-      comboLamp: record.combo_lamp,
-      score: record.score,
-      notes: record.notes,
-    })
-    return (
-      <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
-        <span class="inline-block w-full text-center leading-none">{justiceCount}</span>
-      </div>
-    )
-  },
+  hardLamp: (record) => <RecordHardLampCell record={record} />,
+  justiceCount: (record) => (
+    <RecordJusticeCountCell
+      record={record}
+      calcJusticeCount={(target) =>
+        calcJusticeCountForAj({
+          comboLamp: target.combo_lamp,
+          score: target.score,
+          notes: target.notes,
+        })
+      }
+    />
+  ),
   overpower: (record) => (
     <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
       <span class="inline-block w-full text-center leading-none">

@@ -15,6 +15,7 @@ export type RecordSortKey =
   | 'overpowerPercent'
   | 'updatedAt'
   | 'lamp'
+  | 'hardLamp'
 export type RecordColumnId =
   | 'title'
   | 'difficulty'
@@ -22,6 +23,7 @@ export type RecordColumnId =
   | 'score'
   | 'rating'
   | 'lamp'
+  | 'hardLamp'
   | 'justiceCount'
   | 'overpower'
   | 'overpowerPercent'

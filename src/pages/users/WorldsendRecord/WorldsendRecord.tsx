@@ -15,12 +15,15 @@ import { Loading } from '../../../components'
 import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
 import { createRecordTableVirtualizer } from '../components/createRecordTableVirtualizer'
 import {
+  type ColumnRenderer,
   RECORD_ALPHANUMERIC_COLUMN_CLASS,
   RECORD_CELL_BASE_CLASS,
   RECORD_CELL_CENTER_TEXT_CLASS,
   RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
+  RecordHardLampCell,
   RecordHeaderButton,
+  RecordJusticeCountCell,
   RecordLampCell,
   RecordScoreCell,
   RecordTitleCell,
@@ -41,6 +44,7 @@ import {
   formatUpdatedAt,
   updatedAtTimestamp,
 } from '../UserRecord/utils/updatedAt'
+import { compareHardLamp } from '../utils/lampSorting'
 import {
   createGridTemplateColumns,
   getDefaultVisibleWorldsendColumnIds,
@@ -64,6 +68,7 @@ const WE_SORT_COL_MAP: Record<string, WorldsendSortKey> = {
   score: 'score',
   updated_at: 'updatedAt',
   lamp: 'lamp',
+  hard_lamp: 'hardLamp',
   justice_count: 'justiceCount',
 }
 
@@ -73,10 +78,10 @@ type WorldsendRecordWithSongMeta = WorldsendRecordDTO & {
 }
 
 const worldsendLampOrder: Record<string, number> = {
-  'ALL JUSTICE': 0,
-  'FULL COMBO': 1,
-  NONE: 2,
-  UNPLAYED: 3,
+  UNPLAYED: 0,
+  NONE: 1,
+  'FULL COMBO': 2,
+  'ALL JUSTICE': 3,
 }
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
@@ -105,6 +110,49 @@ const attachWorldsendSongMetaToRecords = (
       release: song?.release ?? null,
     }
   })
+}
+
+const worldsendColumnRenderers: Record<
+  WorldsendRecordColumnId,
+  ColumnRenderer<WorldsendRecordWithSongMeta>
+> = {
+  title: (record) => (
+    <RecordTitleCell href={buildWorldsendSongDetailPath(record.id)} title={record.title} />
+  ),
+  attribute: (record) => (
+    <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+      <span class="inline-block w-full text-center leading-none">{record.attribute ?? '-'}</span>
+    </div>
+  ),
+  level: (record) => (
+    <div class={`${RECORD_CELL_BASE_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}>
+      <span class="inline-block leading-none">{worldsendLevelLabel(record.level_star)}</span>
+    </div>
+  ),
+  score: (record) => <RecordScoreCell record={record} />,
+  lamp: (record) => <RecordLampCell record={record} />,
+  hardLamp: (record) => <RecordHardLampCell record={record} />,
+  justiceCount: (record) => (
+    <RecordJusticeCountCell
+      record={record}
+      calcJusticeCount={(target) =>
+        calcJusticeCountForAj({
+          comboLamp: target.combo_lamp,
+          score: target.score,
+          notes: target.notes,
+        })
+      }
+    />
+  ),
+  updatedAt: (record) => <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />,
+}
+
+const getWorldsendColumnRenderer = (
+  columnId: WorldsendRecordColumnId
+): ColumnRenderer<WorldsendRecordWithSongMeta> => {
+  const renderer = worldsendColumnRenderers[columnId]
+  if (!renderer) throw new Error(`Unknown worldsend column renderer: ${columnId}`)
+  return renderer
 }
 
 const WorldsendRecordTable = (props: {
@@ -233,6 +281,12 @@ const WorldsendRecordTable = (props: {
               (worldsendLampOrder[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
             break
           }
+          case 'hardLamp': {
+            const result = compareHardLamp(left, right)
+            if (result.skipDirection) return result.comparison
+            comparison = result.comparison
+            break
+          }
         }
 
         if (comparison !== 0) {
@@ -305,60 +359,8 @@ const WorldsendRecordTable = (props: {
                         >
                           <For each={visibleColumns()}>
                             {(column) => {
-                              if (column.id === 'title') {
-                                return (
-                                  <RecordTitleCell
-                                    href={buildWorldsendSongDetailPath(currentRecord.id)}
-                                    title={currentRecord.title}
-                                  />
-                                )
-                              }
-                              if (column.id === 'attribute') {
-                                return (
-                                  <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
-                                    <span class="inline-block w-full text-center leading-none">
-                                      {currentRecord.attribute ?? '-'}
-                                    </span>
-                                  </div>
-                                )
-                              }
-                              if (column.id === 'level') {
-                                return (
-                                  <div
-                                    class={`${RECORD_CELL_BASE_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
-                                  >
-                                    <span class="inline-block leading-none">
-                                      {worldsendLevelLabel(currentRecord.level_star)}
-                                    </span>
-                                  </div>
-                                )
-                              }
-                              if (column.id === 'score')
-                                return <RecordScoreCell record={currentRecord} />
-                              if (column.id === 'lamp')
-                                return <RecordLampCell record={currentRecord} />
-                              if (column.id === 'justiceCount') {
-                                return (
-                                  <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
-                                    <span class="inline-block w-full text-center leading-none">
-                                      {(() => {
-                                        const justiceCount = calcJusticeCountForAj({
-                                          comboLamp: currentRecord.combo_lamp,
-                                          score: currentRecord.score,
-                                          notes: currentRecord.notes,
-                                        })
-                                        return justiceCount === '' ? '' : justiceCount
-                                      })()}
-                                    </span>
-                                  </div>
-                                )
-                              }
-                              return (
-                                <RecordUpdatedAtCell
-                                  record={currentRecord}
-                                  formatUpdatedAt={formatUpdatedAt}
-                                />
-                              )
+                              const renderer = getWorldsendColumnRenderer(column.id)
+                              return renderer(currentRecord)
                             }}
                           </For>
                         </div>
