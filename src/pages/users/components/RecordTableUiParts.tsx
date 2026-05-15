@@ -7,9 +7,9 @@ export const NoPlayBadge = () => (
   <span class="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-400">NoPlay</span>
 )
 
-export const LampPlaceholderBadge = () => (
+export const LampPlaceholderBadge = (props: { class?: string }) => (
   <span
-    class="inline-flex min-h-[30px] min-w-[30px] items-center justify-center rounded-lg bg-gray-100 px-2 py-1 text-sm font-extrabold text-gray-300"
+    class={`inline-flex min-h-[30px] min-w-[30px] items-center justify-center rounded-lg bg-gray-100 px-2 py-1 text-sm font-extrabold text-gray-300 ${props.class ?? ''}`}
     aria-hidden="true"
   >
     {'\u00a0'}

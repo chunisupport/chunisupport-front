@@ -95,7 +95,7 @@ export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element =
     return <span class={`${HARD_LAMP_BADGE_CLASS} bg-yellow-200 text-yellow-900`}>ABS</span>
   if (lamp === 'CATASTROPHY')
     return <span class={`${HARD_LAMP_BADGE_CLASS} bg-green-200 text-green-900`}>CTS</span>
-  return <LampPlaceholderBadge />
+  return <LampPlaceholderBadge class="w-[40px]" />
 }
 
 export const RecordHeaderButton = (props: RecordHeaderButtonProps) => (
