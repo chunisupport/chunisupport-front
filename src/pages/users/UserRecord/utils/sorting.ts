@@ -29,8 +29,9 @@ const HARD_LAMP_ORDER: Record<string, number> = {
   BRAVE: 2,
   ABSOLUTE: 3,
   CATASTROPHY: 4,
-  NONE: 5,
-  UNPLAYED: 6,
+  FAILED: 5,
+  NONE: 6,
+  UNPLAYED: 7,
 }
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>

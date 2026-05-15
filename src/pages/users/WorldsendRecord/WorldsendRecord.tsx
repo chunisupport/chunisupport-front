@@ -80,6 +80,16 @@ const worldsendLampOrder: Record<string, number> = {
   NONE: 2,
   UNPLAYED: 3,
 }
+const worldsendHardLampOrder: Record<string, number> = {
+  CLEAR: 0,
+  HARD: 1,
+  BRAVE: 2,
+  ABSOLUTE: 3,
+  CATASTROPHY: 4,
+  FAILED: 5,
+  NONE: 6,
+  UNPLAYED: 7,
+}
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
   !isPlayed || timestamp === Number.NEGATIVE_INFINITY
@@ -244,7 +254,9 @@ const WorldsendRecordTable = (props: {
             }
             if (leftMissing) return 1
             if (rightMissing) return -1
-            comparison = (left.clear_lamp ?? '').localeCompare(right.clear_lamp ?? '', 'ja')
+            comparison =
+              (worldsendHardLampOrder[left.clear_lamp ?? 'NONE'] ?? Number.MAX_SAFE_INTEGER) -
+              (worldsendHardLampOrder[right.clear_lamp ?? 'NONE'] ?? Number.MAX_SAFE_INTEGER)
             break
           }
         }
