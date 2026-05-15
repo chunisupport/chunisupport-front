@@ -7,7 +7,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: ci
     env:
       PUBLIC_BACKEND_URL: ${{ vars.PUBLIC_BACKEND_URL }}
       PUBLIC_FB_API_KEY: ${{ vars.PUBLIC_FB_API_KEY }}
