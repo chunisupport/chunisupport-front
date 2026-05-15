@@ -35,3 +35,25 @@ export const getHardLampKey = (
 
   return (clearLamp as HardLampKey) ?? 'NONE'
 }
+
+export const compareHardLamp = (
+  left: { is_played: boolean; clear_lamp: string | null | undefined },
+  right: { is_played: boolean; clear_lamp: string | null | undefined }
+): { comparison: number; skipDirection: boolean } => {
+  const leftKey = getHardLampKey(left.is_played, left.clear_lamp)
+  const rightKey = getHardLampKey(right.is_played, right.clear_lamp)
+
+  const leftMissing = NO_HARD_CLEAR_LAMPS.has(leftKey)
+  const rightMissing = NO_HARD_CLEAR_LAMPS.has(rightKey)
+
+  if (leftMissing && rightMissing) return { comparison: 0, skipDirection: false }
+  if (leftMissing) return { comparison: 1, skipDirection: true }
+  if (rightMissing) return { comparison: -1, skipDirection: true }
+
+  return {
+    comparison:
+      (HARD_LAMP_ORDER[leftKey] ?? Number.MAX_SAFE_INTEGER) -
+      (HARD_LAMP_ORDER[rightKey] ?? Number.MAX_SAFE_INTEGER),
+    skipDirection: false,
+  }
+}
