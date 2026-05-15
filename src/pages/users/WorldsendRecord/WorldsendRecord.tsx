@@ -29,22 +29,12 @@ import {
   RecordTitleCell,
   RecordUpdatedAtCell,
 } from '../components/SharedRecordTableColumns'
-import {
-  nextSortState,
-  parseSortQuery,
-  type SortDirection,
-  sanitizeSortQuery,
-} from '../recordTable/sortingQuery'
+import { type SortDirection, sanitizeSortQuery } from '../recordTable/sortingQuery'
 import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
 import { calcJusticeCountForAj } from '../UserRecord/utils/justiceCount'
-import {
-  compareUpdatedAtWithMissingLast,
-  formatUpdatedAt,
-  updatedAtTimestamp,
-} from '../UserRecord/utils/updatedAt'
-import { compareHardLamp } from '../utils/lampSorting'
+import { formatUpdatedAt } from '../UserRecord/utils/updatedAt'
 import {
   createGridTemplateColumns,
   getDefaultVisibleWorldsendColumnIds,
@@ -53,6 +43,11 @@ import {
   type WorldsendRecordColumnId,
   type WorldsendRecordSortKey,
 } from './utils/columns'
+import {
+  nextWorldsendSortState,
+  parseWorldsendSortParams,
+  sortWorldsendRecords,
+} from './utils/sorting'
 import WorldsendColumnSettingsDialog from './WorldsendColumnSettingsDialog'
 
 type Props = {
@@ -61,31 +56,10 @@ type Props = {
 
 type WorldsendSortKey = WorldsendRecordSortKey
 
-const WE_SORT_COL_MAP: Record<string, WorldsendSortKey> = {
-  title: 'title',
-  attr: 'attribute',
-  level: 'level',
-  score: 'score',
-  updated_at: 'updatedAt',
-  lamp: 'lamp',
-  hard_lamp: 'hardLamp',
-  justice_count: 'justiceCount',
-}
-
 type WorldsendRecordWithSongMeta = WorldsendRecordDTO & {
   genre: string | null
   release: string | null
 }
-
-const worldsendLampOrder: Record<string, number> = {
-  UNPLAYED: 0,
-  NONE: 1,
-  'FULL COMBO': 2,
-  'ALL JUSTICE': 3,
-}
-
-const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
-  !isPlayed || timestamp === Number.NEGATIVE_INFINITY
 
 const worldsendLevelLabel = (levelStar: number | null | undefined) => {
   if (typeof levelStar !== 'number' || levelStar <= 0) {
@@ -168,135 +142,9 @@ const WorldsendRecordTable = (props: {
   let tableContainerRef: HTMLDivElement | undefined
   let tableBodyRef: HTMLDivElement | undefined
 
-  const sortedRecords = createMemo(() => {
-    const currentSortKey = props.sortKey
-    const currentSortDirection = props.sortDirection
-
-    if (!currentSortKey || !currentSortDirection) {
-      return props.records
-    }
-
-    const direction = currentSortDirection === 'asc' ? 1 : -1
-
-    return props.records
-      .map((record, index) => ({
-        record,
-        index,
-        updatedAtTs: updatedAtTimestamp(record.updated_at),
-      }))
-      .sort((a, b) => {
-        const left = a.record
-        const right = b.record
-        let comparison = 0
-
-        switch (currentSortKey) {
-          case 'title':
-            comparison = left.title.localeCompare(right.title, 'ja')
-            break
-          case 'attribute':
-            comparison = (left.attribute ?? '').localeCompare(right.attribute ?? '', 'ja')
-            break
-          case 'level':
-            comparison =
-              (left.level_star ?? Number.NEGATIVE_INFINITY) -
-              (right.level_star ?? Number.NEGATIVE_INFINITY)
-            break
-          case 'score': {
-            const leftUnplayed = !left.is_played
-            const rightUnplayed = !right.is_played
-
-            if (leftUnplayed && rightUnplayed) {
-              comparison = 0
-            } else if (leftUnplayed) {
-              return 1
-            } else if (rightUnplayed) {
-              return -1
-            } else {
-              comparison = left.score - right.score
-            }
-            break
-          }
-          case 'updatedAt': {
-            const leftMissing = isUpdatedAtMissing(left.is_played, a.updatedAtTs)
-            const rightMissing = isUpdatedAtMissing(right.is_played, b.updatedAtTs)
-
-            comparison = compareUpdatedAtWithMissingLast(
-              { isPlayed: left.is_played, updatedAtTimestamp: a.updatedAtTs },
-              { isPlayed: right.is_played, updatedAtTimestamp: b.updatedAtTs }
-            )
-
-            if (leftMissing || rightMissing) {
-              return comparison
-            }
-            break
-          }
-
-          case 'justiceCount': {
-            const leftJusticeCount = calcJusticeCountForAj({
-              comboLamp: left.combo_lamp,
-              score: left.score,
-              notes: left.notes,
-            })
-            const rightJusticeCount = calcJusticeCountForAj({
-              comboLamp: right.combo_lamp,
-              score: right.score,
-              notes: right.notes,
-            })
-
-            const leftMissing = leftJusticeCount === '' || leftJusticeCount === '-'
-            const rightMissing = rightJusticeCount === '' || rightJusticeCount === '-'
-
-            if (leftMissing && rightMissing) {
-              comparison = 0
-              break
-            }
-            if (leftMissing) return 1
-            if (rightMissing) return -1
-
-            comparison = leftJusticeCount - rightJusticeCount
-            break
-          }
-          case 'lamp': {
-            const leftMissing = !left.is_played
-            const rightMissing = !right.is_played
-
-            if (leftMissing && rightMissing) {
-              comparison = 0
-              break
-            }
-
-            if (leftMissing) {
-              return 1
-            }
-
-            if (rightMissing) {
-              return -1
-            }
-
-            const leftLampKey = left.combo_lamp ?? 'NONE'
-            const rightLampKey = right.combo_lamp ?? 'NONE'
-
-            comparison =
-              (worldsendLampOrder[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
-              (worldsendLampOrder[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
-            break
-          }
-          case 'hardLamp': {
-            const result = compareHardLamp(left, right)
-            if (result.skipDirection) return result.comparison
-            comparison = result.comparison
-            break
-          }
-        }
-
-        if (comparison !== 0) {
-          return comparison * direction
-        }
-
-        return a.index - b.index
-      })
-      .map(({ record }) => record)
-  })
+  const sortedRecords = createMemo(() =>
+    sortWorldsendRecords(props.records, props.sortKey, props.sortDirection)
+  )
 
   const virtualizedTable = createRecordTableVirtualizer({
     rowHeight: RECORD_ROW_HEIGHT,
@@ -387,14 +235,9 @@ const WorldsendRecord = (props: Props) => {
 
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
-  const initialSort = parseSortQuery(searchParams, WE_SORT_COL_MAP, {
-    sortKey: 'score',
-    sortDirection: 'desc',
-  })
-  const [sortKey, setSortKey] = createSignal<WorldsendSortKey | null>(initialSort.sortKey)
-  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(
-    initialSort.sortDirection
-  )
+  const { initialSortKey, initialSortOrder } = parseWorldsendSortParams(searchParams)
+  const [sortKey, setSortKey] = createSignal<WorldsendSortKey | null>(initialSortKey)
+  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(initialSortOrder)
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
   onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
@@ -439,7 +282,7 @@ const WorldsendRecord = (props: Props) => {
               sortKey={sortKey()}
               sortDirection={sortDirection()}
               onSortChange={(nextKey) => {
-                const nextSort = nextSortState(sortKey(), sortDirection(), nextKey)
+                const nextSort = nextWorldsendSortState(sortKey(), sortDirection(), nextKey)
                 setSortKey(nextSort.sortKey)
                 setSortDirection(nextSort.sortDirection)
               }}

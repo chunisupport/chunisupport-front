@@ -2,6 +2,12 @@ import {
   createGridTemplateColumns,
   getRecordColumnBaseDefinition,
 } from '../../utils/recordColumnDefinitions.ts'
+import {
+  getDefaultVisibleColumnIds as getDefaultVisibleColumnIdsFromDefinitions,
+  getVisibleColumns as getVisibleColumnsFromDefinitions,
+  sanitizeVisibleColumnIds as sanitizeVisibleColumnIdsFromDefinitions,
+  sortVisibleColumnIdsByDefinitionOrder as sortVisibleColumnIdsByDefinitionOrderFromDefinitions,
+} from '../../utils/recordTableColumns'
 
 type WorldsendRecordColumnId =
   | 'title'
@@ -51,57 +57,26 @@ export const WORLDSEND_RECORD_COLUMN_DEFINITIONS: WorldsendRecordColumnDefinitio
     }
   })
 
-const WORLDSEND_COLUMN_IDS = new Set<WorldsendRecordColumnId>(
-  WORLDSEND_RECORD_COLUMN_DEFINITIONS.map((column) => column.id)
-)
-
-const WORLDSEND_COLUMN_BY_ID = new Map<WorldsendRecordColumnId, WorldsendRecordColumnDefinition>(
-  WORLDSEND_RECORD_COLUMN_DEFINITIONS.map((column) => [column.id, column])
-)
-
-const WORLDSEND_COLUMN_ORDER = new Map<WorldsendRecordColumnId, number>(
-  WORLDSEND_RECORD_COLUMN_DEFINITIONS.map((column, index) => [column.id, index])
-)
-
 export const getDefaultVisibleWorldsendColumnIds = (): WorldsendRecordColumnId[] =>
-  WORLDSEND_RECORD_COLUMN_DEFINITIONS.filter((column) => column.defaultVisible).map(
-    (column) => column.id
-  )
+  getDefaultVisibleColumnIdsFromDefinitions(WORLDSEND_RECORD_COLUMN_DEFINITIONS)
 
 export const sanitizeVisibleWorldsendColumnIds = (
   visibleColumnIds: WorldsendRecordColumnId[] | null | undefined
-): WorldsendRecordColumnId[] => {
-  const defaults = getDefaultVisibleWorldsendColumnIds()
-  if (!visibleColumnIds || visibleColumnIds.length === 0) {
-    return defaults
-  }
-
-  const uniqueVisibleColumnIds = Array.from(new Set(visibleColumnIds)).filter((columnId) =>
-    WORLDSEND_COLUMN_IDS.has(columnId)
-  )
-
-  if (uniqueVisibleColumnIds.length === 0) {
-    return defaults
-  }
-
-  return uniqueVisibleColumnIds
-}
+): WorldsendRecordColumnId[] =>
+  sanitizeVisibleColumnIdsFromDefinitions(WORLDSEND_RECORD_COLUMN_DEFINITIONS, visibleColumnIds)
 
 export const sortVisibleWorldsendColumnIdsByDefinitionOrder = (
   visibleColumnIds: WorldsendRecordColumnId[]
-): WorldsendRecordColumnId[] => {
-  return [...visibleColumnIds].sort(
-    (a, b) => (WORLDSEND_COLUMN_ORDER.get(a) ?? 0) - (WORLDSEND_COLUMN_ORDER.get(b) ?? 0)
+): WorldsendRecordColumnId[] =>
+  sortVisibleColumnIdsByDefinitionOrderFromDefinitions(
+    WORLDSEND_RECORD_COLUMN_DEFINITIONS,
+    visibleColumnIds
   )
-}
 
 export const getVisibleWorldsendColumns = (
   visibleColumnIds: WorldsendRecordColumnId[]
-): WorldsendRecordColumnDefinition[] => {
-  return visibleColumnIds
-    .map((columnId) => WORLDSEND_COLUMN_BY_ID.get(columnId))
-    .filter((column): column is WorldsendRecordColumnDefinition => column !== undefined)
-}
+): WorldsendRecordColumnDefinition[] =>
+  getVisibleColumnsFromDefinitions(WORLDSEND_RECORD_COLUMN_DEFINITIONS, visibleColumnIds)
 
 export type { WorldsendRecordColumnDefinition, WorldsendRecordColumnId, WorldsendRecordSortKey }
 

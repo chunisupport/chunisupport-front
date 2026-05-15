@@ -1,46 +1,35 @@
-import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import type { WorldsendRecordDTO } from '../../../../types/api'
 import {
   nextSortState as nextSharedSortState,
   parseSortQuery,
   type SortDirection,
   type SortParamsSource,
 } from '../../recordTable/sortingQuery'
+import { calcJusticeCountForAj } from '../../UserRecord/utils/justiceCount'
+import {
+  compareUpdatedAtWithMissingLast,
+  updatedAtTimestamp,
+} from '../../UserRecord/utils/updatedAt'
 import { compareComboLamp, compareHardLamp } from '../../utils/lampSorting'
-import type { RecordSortKey } from '../types/types'
-import { calcJusticeCountForAj } from './justiceCount.ts'
-import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
-
-const DIFFICULTY_ORDER: Record<string, number> = {
-  BASIC: 0,
-  ADVANCED: 1,
-  EXPERT: 2,
-  MASTER: 3,
-  ULTIMA: 4,
-}
+import type { WorldsendRecordSortKey } from './columns'
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
   !isPlayed || timestamp === Number.NEGATIVE_INFINITY
 
-const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
+const WE_SORT_COL_MAP: Record<string, WorldsendRecordSortKey> = {
   title: 'title',
-  diff: 'difficulty',
-  const: 'const',
-  rating: 'rating',
+  attr: 'attribute',
+  level: 'level',
   score: 'score',
-  overpower: 'overpower',
-  op_percent: 'overpowerPercent',
   updated_at: 'updatedAt',
   lamp: 'lamp',
   hard_lamp: 'hardLamp',
   justice_count: 'justiceCount',
 }
 
-const calcOverpowerPercent = (record: PlayerRecordWithSongMeta): number =>
-  (record.overpower / ((record.const + 3) * 5)) * 100
-
-export const parseSortParams = (searchParams: SortParamsSource) => {
-  const parsed = parseSortQuery(searchParams, RECORD_SORT_COL_MAP, {
-    sortKey: 'rating',
+export const parseWorldsendSortParams = (searchParams: SortParamsSource) => {
+  const parsed = parseSortQuery(searchParams, WE_SORT_COL_MAP, {
+    sortKey: 'score',
     sortDirection: 'desc',
   })
 
@@ -50,20 +39,20 @@ export const parseSortParams = (searchParams: SortParamsSource) => {
   }
 }
 
-export const nextSortState = (
-  currentSortKey: RecordSortKey | null,
+export const nextWorldsendSortState = (
+  currentSortKey: WorldsendRecordSortKey | null,
   currentSortDirection: SortDirection | null,
-  nextKey: RecordSortKey
+  nextKey: WorldsendRecordSortKey
 ): {
-  sortKey: RecordSortKey | null
+  sortKey: WorldsendRecordSortKey | null
   sortDirection: SortDirection | null
 } => nextSharedSortState(currentSortKey, currentSortDirection, nextKey)
 
-export const sortRecords = (
-  records: PlayerRecordWithSongMeta[],
-  currentSortKey: RecordSortKey | null,
+export const sortWorldsendRecords = (
+  records: WorldsendRecordDTO[],
+  currentSortKey: WorldsendRecordSortKey | null,
   currentSortDirection: SortDirection | null
-): PlayerRecordWithSongMeta[] => {
+): WorldsendRecordDTO[] => {
   if (!currentSortKey || !currentSortDirection) {
     return records
   }
@@ -90,29 +79,14 @@ export const sortRecords = (
         case 'title':
           comparison = left.title.localeCompare(right.title, 'ja')
           break
-        case 'difficulty':
+        case 'attribute':
+          comparison = (left.attribute ?? '').localeCompare(right.attribute ?? '', 'ja')
+          break
+        case 'level':
           comparison =
-            (DIFFICULTY_ORDER[left.difficulty] ?? Number.MAX_SAFE_INTEGER) -
-            (DIFFICULTY_ORDER[right.difficulty] ?? Number.MAX_SAFE_INTEGER)
+            (left.level_star ?? Number.NEGATIVE_INFINITY) -
+            (right.level_star ?? Number.NEGATIVE_INFINITY)
           break
-        case 'const':
-          comparison = left.const - right.const
-          break
-        case 'rating': {
-          const leftUnplayed = !left.is_played
-          const rightUnplayed = !right.is_played
-
-          if (leftUnplayed && rightUnplayed) {
-            comparison = 0
-          } else if (leftUnplayed) {
-            return 1
-          } else if (rightUnplayed) {
-            return -1
-          } else {
-            comparison = left.rating - right.rating
-          }
-          break
-        }
         case 'score': {
           const leftUnplayed = !left.is_played
           const rightUnplayed = !right.is_played
@@ -125,36 +99,6 @@ export const sortRecords = (
             return -1
           } else {
             comparison = left.score - right.score
-          }
-          break
-        }
-        case 'overpower': {
-          const leftUnplayed = !left.is_played
-          const rightUnplayed = !right.is_played
-
-          if (leftUnplayed && rightUnplayed) {
-            comparison = 0
-          } else if (leftUnplayed) {
-            return 1
-          } else if (rightUnplayed) {
-            return -1
-          } else {
-            comparison = left.overpower - right.overpower
-          }
-          break
-        }
-        case 'overpowerPercent': {
-          const leftUnplayed = !left.is_played
-          const rightUnplayed = !right.is_played
-
-          if (leftUnplayed && rightUnplayed) {
-            comparison = 0
-          } else if (leftUnplayed) {
-            return 1
-          } else if (rightUnplayed) {
-            return -1
-          } else {
-            comparison = calcOverpowerPercent(left) - calcOverpowerPercent(right)
           }
           break
         }
@@ -184,14 +128,8 @@ export const sortRecords = (
             comparison = 0
             break
           }
-
-          if (leftMissing) {
-            return 1
-          }
-
-          if (rightMissing) {
-            return -1
-          }
+          if (leftMissing) return 1
+          if (rightMissing) return -1
 
           comparison = leftJusticeCount - rightJusticeCount
           break

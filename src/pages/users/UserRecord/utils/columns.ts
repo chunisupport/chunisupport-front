@@ -2,6 +2,12 @@ import {
   createGridTemplateColumns,
   getRecordColumnBaseDefinition,
 } from '../../utils/recordColumnDefinitions.ts'
+import {
+  getDefaultVisibleColumnIds as getDefaultVisibleColumnIdsFromDefinitions,
+  getVisibleColumns as getVisibleColumnsFromDefinitions,
+  sanitizeVisibleColumnIds as sanitizeVisibleColumnIdsFromDefinitions,
+  sortVisibleColumnIdsByDefinitionOrder as sortVisibleColumnIdsByDefinitionOrderFromDefinitions,
+} from '../../utils/recordTableColumns'
 import type { RecordColumnId, RecordSortKey } from '../types/types'
 
 export type RecordColumnDefinition = {
@@ -45,52 +51,20 @@ export const RECORD_COLUMN_DEFINITIONS: RecordColumnDefinition[] = RECORD_COLUMN
   }
 )
 
-const RECORD_COLUMN_IDS = new Set<RecordColumnId>(
-  RECORD_COLUMN_DEFINITIONS.map((column) => column.id)
-)
-
-const COLUMN_BY_ID = new Map<RecordColumnId, RecordColumnDefinition>(
-  RECORD_COLUMN_DEFINITIONS.map((column) => [column.id, column])
-)
-
-const COLUMN_ORDER = new Map<RecordColumnId, number>(
-  RECORD_COLUMN_DEFINITIONS.map((column, index) => [column.id, index])
-)
-
 export const getDefaultVisibleColumnIds = (): RecordColumnId[] =>
-  RECORD_COLUMN_DEFINITIONS.filter((column) => column.defaultVisible).map((column) => column.id)
+  getDefaultVisibleColumnIdsFromDefinitions(RECORD_COLUMN_DEFINITIONS)
 
 export const sanitizeVisibleColumnIds = (
   visibleColumnIds: RecordColumnId[] | null | undefined
-): RecordColumnId[] => {
-  const defaults = getDefaultVisibleColumnIds()
-  if (!visibleColumnIds || visibleColumnIds.length === 0) {
-    return defaults
-  }
+): RecordColumnId[] =>
+  sanitizeVisibleColumnIdsFromDefinitions(RECORD_COLUMN_DEFINITIONS, visibleColumnIds)
 
-  const uniqueVisibleColumnIds = Array.from(new Set(visibleColumnIds)).filter((columnId) =>
-    RECORD_COLUMN_IDS.has(columnId)
-  )
-
-  if (uniqueVisibleColumnIds.length === 0) {
-    return defaults
-  }
-
-  return uniqueVisibleColumnIds
-}
-
-export const getVisibleColumns = (visibleColumnIds: RecordColumnId[]): RecordColumnDefinition[] => {
-  return visibleColumnIds
-    .map((columnId) => COLUMN_BY_ID.get(columnId))
-    .filter((column): column is RecordColumnDefinition => column !== undefined)
-}
+export const getVisibleColumns = (visibleColumnIds: RecordColumnId[]): RecordColumnDefinition[] =>
+  getVisibleColumnsFromDefinitions(RECORD_COLUMN_DEFINITIONS, visibleColumnIds)
 
 export const sortVisibleColumnIdsByDefinitionOrder = (
   visibleColumnIds: RecordColumnId[]
-): RecordColumnId[] => {
-  return [...visibleColumnIds].sort(
-    (a, b) => (COLUMN_ORDER.get(a) ?? 0) - (COLUMN_ORDER.get(b) ?? 0)
-  )
-}
+): RecordColumnId[] =>
+  sortVisibleColumnIdsByDefinitionOrderFromDefinitions(RECORD_COLUMN_DEFINITIONS, visibleColumnIds)
 
 export { createGridTemplateColumns }
