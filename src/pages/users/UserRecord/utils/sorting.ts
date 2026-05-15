@@ -75,6 +75,11 @@ export const sortRecords = (
       record,
       index,
       updatedAtTs: updatedAtTimestamp(record.updated_at),
+      justiceCountForAj: calcJusticeCountForAj({
+        comboLamp: record.combo_lamp,
+        score: record.score,
+        notes: record.notes,
+      }),
     }))
     .sort((a, b) => {
       const left = a.record
@@ -169,16 +174,8 @@ export const sortRecords = (
         }
 
         case 'justiceCount': {
-          const leftJusticeCount = calcJusticeCountForAj({
-            comboLamp: left.combo_lamp,
-            score: left.score,
-            notes: left.notes,
-          })
-          const rightJusticeCount = calcJusticeCountForAj({
-            comboLamp: right.combo_lamp,
-            score: right.score,
-            notes: right.notes,
-          })
+          const leftJusticeCount = a.justiceCountForAj
+          const rightJusticeCount = b.justiceCountForAj
 
           const leftMissing = leftJusticeCount === '' || leftJusticeCount === '-'
           const rightMissing = rightJusticeCount === '' || rightJusticeCount === '-'
