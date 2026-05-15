@@ -12,6 +12,8 @@ type ClearLamp = SharedRecordSource['clear_lamp']
 type ScoreRecord = Pick<SharedRecordSource, 'is_played' | 'score'>
 type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp' | 'score'>
 type HardLampRecord = Pick<SharedRecordSource, 'is_played' | 'clear_lamp'>
+
+type JusticeCountRecord = Pick<SharedRecordSource, 'combo_lamp' | 'score' | 'notes'>
 type UpdatedAtRecord = Pick<SharedRecordSource, 'is_played' | 'updated_at'>
 type LampBadgeRenderer = (lamp: ComboLamp, record?: LampRecord) => JSX.Element
 export type ColumnRenderer<TRecord> = (record: TRecord) => JSX.Element
@@ -167,6 +169,21 @@ export const RecordHardLampCell = (props: { record: HardLampRecord }) => (
     {props.record.is_played ? renderDefaultRecordHardLampBadge(props.record.clear_lamp) : null}
   </div>
 )
+
+export const RecordJusticeCountCell = (props: {
+  record: JusticeCountRecord
+  calcJusticeCount: (record: JusticeCountRecord) => number | '' | '-'
+}) => {
+  const justiceCount = props.calcJusticeCount(props.record)
+
+  return (
+    <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+      <span class="inline-block w-full text-center leading-none">
+        {justiceCount === '' ? '' : justiceCount}
+      </span>
+    </div>
+  )
+}
 
 export const RecordUpdatedAtCell = (props: {
   record: UpdatedAtRecord

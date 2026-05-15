@@ -23,6 +23,7 @@ import {
   RECORD_ROW_HOVER_CLASS,
   RecordHardLampCell,
   RecordHeaderButton,
+  RecordJusticeCountCell,
   RecordLampCell,
   RecordScoreCell,
   RecordTitleCell,
@@ -131,20 +132,18 @@ const worldsendColumnRenderers: Record<
   score: (record) => <RecordScoreCell record={record} />,
   lamp: (record) => <RecordLampCell record={record} />,
   hardLamp: (record) => <RecordHardLampCell record={record} />,
-  justiceCount: (record) => {
-    const justiceCount = calcJusticeCountForAj({
-      comboLamp: record.combo_lamp,
-      score: record.score,
-      notes: record.notes,
-    })
-    return (
-      <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
-        <span class="inline-block w-full text-center leading-none">
-          {justiceCount === '' ? '' : justiceCount}
-        </span>
-      </div>
-    )
-  },
+  justiceCount: (record) => (
+    <RecordJusticeCountCell
+      record={record}
+      calcJusticeCount={(target) =>
+        calcJusticeCountForAj({
+          comboLamp: target.combo_lamp,
+          score: target.score,
+          notes: target.notes,
+        })
+      }
+    />
+  ),
   updatedAt: (record) => <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />,
 }
 
