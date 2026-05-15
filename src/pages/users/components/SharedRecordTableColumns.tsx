@@ -40,6 +40,8 @@ export const RECORD_ALPHANUMERIC_COLUMN_CLASS = 'text-sm'
 export const RECORD_CELL_BASE_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap`
 export const RECORD_CELL_CENTER_TEXT_CLASS = `${RECORD_CELL_BASE_CLASS} text-center ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`
 export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
+const HARD_LAMP_BADGE_CLASS =
+  'inline-flex w-[40px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
 
 const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
   'SSS+': 'text-green-500',
@@ -78,31 +80,15 @@ export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, record) =>
 
 export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element => {
   if (lamp === 'CLEAR')
-    return (
-      <span class="rounded-lg bg-gray-200 px-2 py-1 text-sm font-extrabold text-gray-900">CLR</span>
-    )
+    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-gray-200 text-gray-900`}>CLR</span>
   if (lamp === 'HARD')
-    return (
-      <span class="rounded-lg bg-red-200 px-2 py-1 text-sm font-extrabold text-red-900">HRD</span>
-    )
+    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-red-200 text-red-900`}>HRD</span>
   if (lamp === 'BRAVE')
-    return (
-      <span class="rounded-lg bg-orange-200 px-2 py-1 text-sm font-extrabold text-orange-900">
-        BRV
-      </span>
-    )
+    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-orange-200 text-orange-900`}>BRV</span>
   if (lamp === 'ABSOLUTE')
-    return (
-      <span class="rounded-lg bg-yellow-200 px-2 py-1 text-sm font-extrabold text-yellow-900">
-        ABS
-      </span>
-    )
+    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-yellow-200 text-yellow-900`}>ABS</span>
   if (lamp === 'CATASTROPHY')
-    return (
-      <span class="rounded-lg bg-green-200 px-2 py-1 text-sm font-extrabold text-green-900">
-        CTS
-      </span>
-    )
+    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-green-200 text-green-900`}>CTS</span>
   return <LampPlaceholderBadge />
 }
 
