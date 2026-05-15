@@ -42,6 +42,7 @@ import {
   formatUpdatedAt,
   updatedAtTimestamp,
 } from '../UserRecord/utils/updatedAt'
+import { getHardLampKey, HARD_LAMP_ORDER, NO_HARD_CLEAR_LAMPS } from '../utils/lampSorting'
 import {
   createGridTemplateColumns,
   getDefaultVisibleWorldsendColumnIds,
@@ -80,17 +81,6 @@ const worldsendLampOrder: Record<string, number> = {
   NONE: 2,
   UNPLAYED: 3,
 }
-const worldsendHardLampOrder: Record<string, number> = {
-  FAILED: -1,
-  CLEAR: 0,
-  HARD: 1,
-  BRAVE: 2,
-  ABSOLUTE: 3,
-  CATASTROPHY: 4,
-  NONE: 5,
-  UNPLAYED: 6,
-}
-const NO_HARD_CLEAR_LAMPS = new Set(['NONE', 'UNPLAYED'])
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
   !isPlayed || timestamp === Number.NEGATIVE_INFINITY
@@ -247,16 +237,8 @@ const WorldsendRecordTable = (props: {
             break
           }
           case 'hardLamp': {
-            const leftLampKey = !left.is_played
-              ? 'UNPLAYED'
-              : left.clear_lamp === null
-                ? 'NONE'
-                : left.clear_lamp
-            const rightLampKey = !right.is_played
-              ? 'UNPLAYED'
-              : right.clear_lamp === null
-                ? 'NONE'
-                : right.clear_lamp
+            const leftLampKey = getHardLampKey(left.is_played, left.clear_lamp)
+            const rightLampKey = getHardLampKey(right.is_played, right.clear_lamp)
             const leftMissing = NO_HARD_CLEAR_LAMPS.has(leftLampKey)
             const rightMissing = NO_HARD_CLEAR_LAMPS.has(rightLampKey)
             if (leftMissing && rightMissing) {
@@ -266,8 +248,8 @@ const WorldsendRecordTable = (props: {
             if (leftMissing) return 1
             if (rightMissing) return -1
             comparison =
-              (worldsendHardLampOrder[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
-              (worldsendHardLampOrder[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
+              (HARD_LAMP_ORDER[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
+              (HARD_LAMP_ORDER[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
             break
           }
         }

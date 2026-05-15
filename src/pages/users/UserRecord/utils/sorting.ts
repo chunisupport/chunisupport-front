@@ -5,6 +5,7 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../recordTable/sortingQuery'
+import { getHardLampKey, HARD_LAMP_ORDER, NO_HARD_CLEAR_LAMPS } from '../../utils/lampSorting'
 import type { RecordSortKey } from '../types/types'
 import { calcJusticeCountForAj } from './justiceCount.ts'
 import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
@@ -23,17 +24,6 @@ const LAMP_ORDER: Record<string, number> = {
   NONE: 2,
   UNPLAYED: 3,
 }
-const HARD_LAMP_ORDER: Record<string, number> = {
-  FAILED: -1,
-  CLEAR: 0,
-  HARD: 1,
-  BRAVE: 2,
-  ABSOLUTE: 3,
-  CATASTROPHY: 4,
-  NONE: 5,
-  UNPLAYED: 6,
-}
-const NO_HARD_CLEAR_LAMPS = new Set(['NONE', 'UNPLAYED'])
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
   !isPlayed || timestamp === Number.NEGATIVE_INFINITY
@@ -250,16 +240,8 @@ export const sortRecords = (
           break
         }
         case 'hardLamp': {
-          const leftLampKey = !left.is_played
-            ? 'UNPLAYED'
-            : left.clear_lamp === null
-              ? 'NONE'
-              : left.clear_lamp
-          const rightLampKey = !right.is_played
-            ? 'UNPLAYED'
-            : right.clear_lamp === null
-              ? 'NONE'
-              : right.clear_lamp
+          const leftLampKey = getHardLampKey(left.is_played, left.clear_lamp)
+          const rightLampKey = getHardLampKey(right.is_played, right.clear_lamp)
 
           const leftMissing = NO_HARD_CLEAR_LAMPS.has(leftLampKey)
           const rightMissing = NO_HARD_CLEAR_LAMPS.has(rightLampKey)
