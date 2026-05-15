@@ -42,7 +42,11 @@ export const getComboLampKey = (
     return 'NONE'
   }
 
-  return (comboLamp as ComboLampKey) ?? 'NONE'
+  if (comboLamp === 'FULL COMBO' || comboLamp === 'ALL JUSTICE' || comboLamp === 'NONE' || comboLamp === 'UNPLAYED') {
+    return comboLamp as ComboLampKey
+  }
+
+  return 'NONE'
 }
 
 export const compareComboLamp = (
