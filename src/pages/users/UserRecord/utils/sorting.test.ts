@@ -190,4 +190,9 @@ test('ハードランプソートはCATASTROPHYより後ろにFAILEDを並べる
     sortRecords(records, 'hardLamp', 'asc').map((record) => record.id),
     ['clear', 'hard', 'brave', 'absolute', 'catastrophy', 'failed', 'none', 'unplayed']
   )
+
+  assert.deepEqual(
+    sortRecords(records, 'hardLamp', 'desc').map((record) => record.id),
+    ['catastrophy', 'absolute', 'brave', 'hard', 'clear', 'failed', 'none', 'unplayed']
+  )
 })

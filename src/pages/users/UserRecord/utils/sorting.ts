@@ -33,6 +33,7 @@ const HARD_LAMP_ORDER: Record<string, number> = {
   NONE: 6,
   UNPLAYED: 7,
 }
+const NON_HARD_CLEAR_LAMPS = new Set(['FAILED', 'NONE', 'UNPLAYED'])
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
   !isPlayed || timestamp === Number.NEGATIVE_INFINITY
@@ -249,14 +250,6 @@ export const sortRecords = (
           break
         }
         case 'hardLamp': {
-          const leftMissing = !left.is_played || left.clear_lamp === null
-          const rightMissing = !right.is_played || right.clear_lamp === null
-          if (leftMissing && rightMissing) {
-            comparison = 0
-            break
-          }
-          if (leftMissing) return 1
-          if (rightMissing) return -1
           const leftLampKey = !left.is_played
             ? 'UNPLAYED'
             : left.clear_lamp === null
@@ -267,6 +260,15 @@ export const sortRecords = (
             : right.clear_lamp === null
               ? 'NONE'
               : right.clear_lamp
+
+          const leftMissing = NON_HARD_CLEAR_LAMPS.has(leftLampKey)
+          const rightMissing = NON_HARD_CLEAR_LAMPS.has(rightLampKey)
+          if (leftMissing && rightMissing) {
+            comparison = 0
+            break
+          }
+          if (leftMissing) return 1
+          if (rightMissing) return -1
           comparison =
             (HARD_LAMP_ORDER[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
             (HARD_LAMP_ORDER[rightLampKey] ?? Number.MAX_SAFE_INTEGER)

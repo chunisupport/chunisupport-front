@@ -90,6 +90,7 @@ const worldsendHardLampOrder: Record<string, number> = {
   NONE: 6,
   UNPLAYED: 7,
 }
+const NON_HARD_CLEAR_LAMPS = new Set(['FAILED', 'NONE', 'UNPLAYED'])
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
   !isPlayed || timestamp === Number.NEGATIVE_INFINITY
@@ -246,8 +247,18 @@ const WorldsendRecordTable = (props: {
             break
           }
           case 'hardLamp': {
-            const leftMissing = !left.is_played || left.clear_lamp === null
-            const rightMissing = !right.is_played || right.clear_lamp === null
+            const leftLampKey = !left.is_played
+              ? 'UNPLAYED'
+              : left.clear_lamp === null
+                ? 'NONE'
+                : left.clear_lamp
+            const rightLampKey = !right.is_played
+              ? 'UNPLAYED'
+              : right.clear_lamp === null
+                ? 'NONE'
+                : right.clear_lamp
+            const leftMissing = NON_HARD_CLEAR_LAMPS.has(leftLampKey)
+            const rightMissing = NON_HARD_CLEAR_LAMPS.has(rightLampKey)
             if (leftMissing && rightMissing) {
               comparison = 0
               break
@@ -255,8 +266,8 @@ const WorldsendRecordTable = (props: {
             if (leftMissing) return 1
             if (rightMissing) return -1
             comparison =
-              (worldsendHardLampOrder[left.clear_lamp ?? 'NONE'] ?? Number.MAX_SAFE_INTEGER) -
-              (worldsendHardLampOrder[right.clear_lamp ?? 'NONE'] ?? Number.MAX_SAFE_INTEGER)
+              (worldsendHardLampOrder[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
+              (worldsendHardLampOrder[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
             break
           }
         }
