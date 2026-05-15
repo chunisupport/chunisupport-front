@@ -14,10 +14,10 @@ import { compareHardLamp } from '../../utils/lampSorting'
 import type { WorldsendRecordSortKey } from './columns'
 
 const LAMP_ORDER: Record<string, number> = {
-  UNPLAYED: 0,
-  NONE: 1,
-  'FULL COMBO': 2,
-  'ALL JUSTICE': 3,
+  NONE: 0,
+  'FULL COMBO': 1,
+  'ALL JUSTICE': 2,
+  UNPLAYED: 3,
 }
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>

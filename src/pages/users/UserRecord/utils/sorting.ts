@@ -19,10 +19,10 @@ const DIFFICULTY_ORDER: Record<string, number> = {
 }
 
 const LAMP_ORDER: Record<string, number> = {
-  UNPLAYED: 0,
-  NONE: 1,
-  'FULL COMBO': 2,
-  'ALL JUSTICE': 3,
+  NONE: 0,
+  'FULL COMBO': 1,
+  'ALL JUSTICE': 2,
+  UNPLAYED: 3,
 }
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
@@ -207,8 +207,8 @@ export const sortRecords = (
           break
         }
         case 'lamp': {
-          const leftMissing = !left.is_played || left.combo_lamp === null
-          const rightMissing = !right.is_played || right.combo_lamp === null
+          const leftMissing = !left.is_played
+          const rightMissing = !right.is_played
 
           if (leftMissing && rightMissing) {
             comparison = 0
