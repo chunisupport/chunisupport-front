@@ -79,9 +79,7 @@ export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, record) =>
 export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element => {
   if (lamp === 'CLEAR')
     return (
-      <span class="rounded-lg bg-orange-200 px-2 py-1 text-sm font-extrabold text-orange-900">
-        CLR
-      </span>
+      <span class="rounded-lg bg-gray-200 px-2 py-1 text-sm font-extrabold text-gray-900">CLR</span>
     )
   if (lamp === 'HARD')
     return (
@@ -101,7 +99,7 @@ export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element =
     )
   if (lamp === 'CATASTROPHY')
     return (
-      <span class="rounded-lg bg-yellow-200 px-2 py-1 text-sm font-extrabold text-yellow-900">
+      <span class="rounded-lg bg-green-200 px-2 py-1 text-sm font-extrabold text-green-900">
         CTS
       </span>
     )
