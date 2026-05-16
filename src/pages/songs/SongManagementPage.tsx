@@ -1,3 +1,4 @@
+import { Search } from 'lucide-solid'
 import { createEffect, createMemo, createResource, createSignal, For, Index, Show } from 'solid-js'
 import {
   createSong,
@@ -1092,13 +1093,16 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         >
           <div class="mt-3 grid gap-4 lg:grid-cols-[300px_1fr]">
             <div>
-              <input
-                type="search"
-                value={songSearchQuery()}
-                onInput={(event) => setSongSearchQuery(event.currentTarget.value)}
-                placeholder="曲名・アーティスト名で検索"
-                class="mb-2 w-full rounded border border-gray-300 px-3 py-2 text-sm"
-              />
+              <div class="mb-2 flex items-center gap-2 rounded border border-gray-300 px-2 focus-within:border-primary-500">
+                <Search class="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
+                <input
+                  type="search"
+                  value={songSearchQuery()}
+                  onInput={(event) => setSongSearchQuery(event.currentTarget.value)}
+                  placeholder="曲名・アーティスト名で検索"
+                  class="min-w-0 flex-1 py-2 text-sm outline-none"
+                />
+              </div>
               <div class="max-h-130 overflow-y-auto rounded border border-gray-200">
                 <ul class="divide-y divide-gray-200">
                   <For each={filteredSongs()}>
@@ -1360,13 +1364,16 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         >
           <div class="mt-3 grid gap-4 lg:grid-cols-[300px_1fr]">
             <div>
-              <input
-                type="search"
-                value={worldsendSearchQuery()}
-                onInput={(event) => setWorldsendSearchQuery(event.currentTarget.value)}
-                placeholder="曲名・アーティスト名で検索"
-                class="mb-2 w-full rounded border border-gray-300 px-3 py-2 text-sm"
-              />
+              <div class="mb-2 flex items-center gap-2 rounded border border-gray-300 px-2 focus-within:border-primary-500">
+                <Search class="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
+                <input
+                  type="search"
+                  value={worldsendSearchQuery()}
+                  onInput={(event) => setWorldsendSearchQuery(event.currentTarget.value)}
+                  placeholder="曲名・アーティスト名で検索"
+                  class="min-w-0 flex-1 py-2 text-sm outline-none"
+                />
+              </div>
               <div class="max-h-130 overflow-y-auto rounded border border-gray-200">
                 <ul class="divide-y divide-gray-200">
                   <For each={filteredWorldsendSongs()}>
