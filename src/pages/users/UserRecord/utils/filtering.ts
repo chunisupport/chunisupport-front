@@ -1,32 +1,58 @@
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
-import { normalizeForReadingSearch, normalizeForSearch } from '../../../../utils/searchUtils'
+import {
+  matchesNormalizedSearchQuery,
+  normalizeForReadingSearch,
+  normalizeForSearch,
+} from '../../../../utils/searchUtils'
 import { buildDefaultFilter } from '../types/filterDefaults'
 import type { ChainLamp, ComboLamp, Difficulty, FilterState, HardLamp } from '../types/types'
 
 /** フィルターのデフォルト値を取得する */
 export const getDefaultFilter = buildDefaultFilter
 
+export type RecordTitleMatcher = (record: PlayerRecordWithSongMeta) => boolean
+
+export function createRecordTitleMatcher(query: string): RecordTitleMatcher {
+  const normalizedQuery = normalizeForSearch(query)
+  if (!normalizedQuery) {
+    return () => true
+  }
+
+  const normalizedReadingQuery = normalizeForReadingSearch(query)
+  return (record) => {
+    const normalizedTitle = normalizeForSearch(record.title)
+    const normalizedArtist = normalizeForSearch(record.artist)
+    const normalizedReading = normalizeForReadingSearch(record.reading ?? record.title)
+    return (
+      matchesNormalizedSearchQuery(
+        normalizedTitle,
+        normalizedArtist,
+        normalizedReading,
+        normalizedQuery
+      ) || normalizedReading.includes(normalizedReadingQuery)
+    )
+  }
+}
+
 /** レコードがフィルター条件にマッチするか判定する */
 export function isRecordMatched(record: PlayerRecordWithSongMeta, filters: FilterState): boolean {
+  const matchTitle = createRecordTitleMatcher(filters.title)
+  return isRecordMatchedWithTitleMatcher(record, filters, matchTitle)
+}
+
+export function isRecordMatchedWithTitleMatcher(
+  record: PlayerRecordWithSongMeta,
+  filters: FilterState,
+  matchTitle: RecordTitleMatcher
+): boolean {
   // 未プレイ除外
   if (filters.excludeNoPlay && !record.is_played) {
     return false
   }
 
   // 曲名
-  if (filters.title) {
-    const normalizedQuery = normalizeForSearch(filters.title)
-    const normalizedReadingQuery = normalizeForReadingSearch(filters.title)
-    const normalizedTitle = normalizeForSearch(record.title)
-    const normalizedArtist = normalizeForSearch(record.artist)
-    const normalizedReading = normalizeForReadingSearch(record.reading ?? record.title)
-    if (
-      !normalizedTitle.includes(normalizedQuery) &&
-      !normalizedArtist.includes(normalizedQuery) &&
-      !normalizedReading.includes(normalizedReadingQuery)
-    ) {
-      return false
-    }
+  if (!matchTitle(record)) {
+    return false
   }
 
   // 難易度

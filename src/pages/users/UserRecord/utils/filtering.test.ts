@@ -2,7 +2,12 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
-import { getDefaultFilter, isRecordMatched } from './filtering'
+import {
+  createRecordTitleMatcher,
+  getDefaultFilter,
+  isRecordMatched,
+  isRecordMatchedWithTitleMatcher,
+} from './filtering'
 
 const createRecord = (
   overrides: Partial<PlayerRecordWithSongMeta> = {}
@@ -42,4 +47,12 @@ test('isRecordMatched は reading 正規化したクエリでも検索できる'
   const filters = { ...getDefaultFilter(), title: 'ガッツ' }
 
   assert.equal(isRecordMatched(record, filters), true)
+})
+
+test('isRecordMatchedWithTitleMatcher は事前生成したマッチャーで一致判定できる', () => {
+  const record = createRecord({ artist: 'LeaF', reading: 'カッツ' })
+  const filters = { ...getDefaultFilter(), title: 'ｶﾞｯﾂ' }
+  const matcher = createRecordTitleMatcher(filters.title)
+
+  assert.equal(isRecordMatchedWithTitleMatcher(record, filters, matcher), true)
 })
