@@ -153,10 +153,10 @@ const UserOverPower: Component<Props> = (props) => {
                     value={selectedSummaryTab()}
                     onChange={handleSummaryTabChange}
                     placeholder="集計軸を選択"
-                    itemComponent={(props) => (
+                    itemComponent={(itemProps) => (
                       <Select.Item
-                        item={props.item}
-                        class="cursor-pointer px-3 py-2 text-gray-800 hover:bg-green-50 data-[selected]:bg-green-50"
+                        item={itemProps.item}
+                        class="cursor-pointer px-3 py-2 text-gray-800 hover:bg-green-50 data-[highlighted]:bg-green-50 data-[selected]:bg-green-50"
                       >
                         <div class="flex items-center gap-2">
                           <span class="inline-flex w-4 justify-center text-green-700">
@@ -164,7 +164,7 @@ const UserOverPower: Component<Props> = (props) => {
                               <Check size={14} />
                             </Select.ItemIndicator>
                           </span>
-                          <Select.ItemLabel>{props.item.rawValue.label}</Select.ItemLabel>
+                          <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
                         </div>
                       </Select.Item>
                     )}
