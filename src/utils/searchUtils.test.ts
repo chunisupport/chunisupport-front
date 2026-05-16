@@ -38,3 +38,7 @@ test('matchesSearchQuery は記号を除去した reading でも検索できる'
 test('matchesSearchQuery は reading 検索でクエリも reading 正規化して一致判定できる', () => {
   assert.equal(matchesSearchQuery('曲A', 'Artist', 'ガッツ', 'カッツ'), true)
 })
+
+test('matchesSearchQuery は半角カナでも濁点を無視して reading 検索できる', () => {
+  assert.equal(matchesSearchQuery('曲A', 'Artist', 'ｶﾞｯﾂ', 'カッツ'), true)
+})

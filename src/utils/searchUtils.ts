@@ -21,7 +21,11 @@ export function normalizeForSearch(value: string | null | undefined): string {
 export function normalizeForReadingSearch(value: string | null | undefined): string {
   if (!value) return ''
   return normalizeForSearch(
-    value.normalize('NFD').replace(voicedMarkRegex, '').replace(prolongedSoundMarkRegex, 'ウ')
+    value
+      .normalize('NFKC')
+      .normalize('NFD')
+      .replace(voicedMarkRegex, '')
+      .replace(prolongedSoundMarkRegex, 'ウ')
   )
 }
 
