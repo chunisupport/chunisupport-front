@@ -1,7 +1,7 @@
 import { Select } from '@kobalte/core/select'
 import * as Tabs from '@kobalte/core/tabs'
 import { useLocation, useNavigate } from '@solidjs/router'
-import { Check, ChevronDown, ChevronsUpDown, LockKeyhole } from 'lucide-solid'
+import { Check, ChevronDown, LockKeyhole } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
 import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/songs'
@@ -172,12 +172,12 @@ const UserOverPower: Component<Props> = (props) => {
                       </Select.Item>
                     )}
                   >
-                    <Select.Trigger class="flex min-w-52 items-center rounded-xl border border-gray-300 bg-white px-3 py-2 text-left text-sm font-medium text-gray-700">
-                      <Select.Value<OverPowerSummaryOption>>
+                    <Select.Trigger class="grid min-w-52 grid-cols-[1fr_auto] items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-left text-sm font-medium text-gray-700">
+                      <Select.Value<OverPowerSummaryOption> class="truncate">
                         {(state) => <span>{state.selectedOption()?.label ?? '集計軸を選択'}</span>}
                       </Select.Value>
-                      <span class="ml-2 text-gray-500" aria-hidden="true">
-                        <ChevronsUpDown size={16} />
+                      <span class="justify-self-end text-gray-500" aria-hidden="true">
+                        <ChevronDown size={16} />
                       </span>
                     </Select.Trigger>
                     <Select.Portal>
