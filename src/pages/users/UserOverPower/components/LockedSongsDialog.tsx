@@ -1,8 +1,9 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
-import { CircleSlash2, Loader, Search } from 'lucide-solid'
+import { CircleSlash2, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
+import Loading from '../../../../components/Loading/Loading'
 import type { PlayerLockedSongResponseItem, SongDTO } from '../../../../types/api'
 
 type Props = {
@@ -107,7 +108,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   aria-live="polite"
                   aria-busy="true"
                 >
-                  <Loader class="h-6 w-6 animate-spin" aria-hidden="true" />
+                  <Loading />
                   <span class="sr-only">読み込み中</span>
                 </div>
               }
