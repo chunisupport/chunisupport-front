@@ -1,6 +1,7 @@
+import { Select } from '@kobalte/core/select'
 import * as Tabs from '@kobalte/core/tabs'
 import { useLocation, useNavigate } from '@solidjs/router'
-import { ChevronDown, LockKeyhole } from 'lucide-solid'
+import { Check, ChevronDown, LockKeyhole } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
 import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/songs'
@@ -21,6 +22,17 @@ type Props = {
 }
 
 type OverPowerSummaryTab = 'genres' | 'difficulties' | 'levels' | 'versions'
+type OverPowerSummaryOption = {
+  value: OverPowerSummaryTab
+  label: string
+}
+
+const OVER_POWER_SUMMARY_OPTIONS: OverPowerSummaryOption[] = [
+  { value: 'genres', label: 'ジャンル' },
+  { value: 'difficulties', label: '難易度' },
+  { value: 'levels', label: 'レベル' },
+  { value: 'versions', label: 'バージョン' },
+]
 
 const overPowerSummaryTabBySubPage: Record<OverPowerSubPage, OverPowerSummaryTab> = {
   genre: 'genres',
@@ -74,8 +86,6 @@ const UserOverPower: Component<Props> = (props) => {
 
   const highLevelRows = createMemo(() => summary()?.levels.filter((row) => !row.isLowLevel) ?? [])
   const lowLevelRows = createMemo(() => summary()?.levels.filter((row) => row.isLowLevel) ?? [])
-  const summaryTabTriggerClass =
-    'rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors data-selected:bg-primary-600 data-selected:text-white data-selected:shadow-sm'
   const iconButtonClass =
     'inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-gray-400'
   const lockedSongsButtonDisabled = createMemo(
@@ -134,24 +144,45 @@ const UserOverPower: Component<Props> = (props) => {
             <div class="mx-4 flex flex-col gap-4 text-sm">
               <OverPowerAllSummary summary={currentSummary().all} />
 
-              <Tabs.Root value={selectedSummaryTab()} onChange={handleSummaryTabChange}>
+              <Tabs.Root value={selectedSummaryTab()}>
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                  <div class="overflow-x-auto">
-                    <Tabs.List class="inline-flex gap-1 rounded-xl bg-gray-100 p-1">
-                      <Tabs.Trigger value="genres" class={summaryTabTriggerClass}>
-                        ジャンル
-                      </Tabs.Trigger>
-                      <Tabs.Trigger value="difficulties" class={summaryTabTriggerClass}>
-                        難易度
-                      </Tabs.Trigger>
-                      <Tabs.Trigger value="levels" class={summaryTabTriggerClass}>
-                        レベル
-                      </Tabs.Trigger>
-                      <Tabs.Trigger value="versions" class={summaryTabTriggerClass}>
-                        バージョン
-                      </Tabs.Trigger>
-                    </Tabs.List>
-                  </div>
+                  <Select<OverPowerSummaryOption>
+                    options={OVER_POWER_SUMMARY_OPTIONS}
+                    optionValue="value"
+                    optionTextValue="label"
+                    value={selectedSummaryTab()}
+                    onChange={handleSummaryTabChange}
+                    placeholder="集計軸を選択"
+                    itemComponent={(itemProps) => (
+                      <Select.Item
+                        item={itemProps.item}
+                        class="cursor-pointer px-3 py-2 text-gray-800 hover:bg-green-50 data-[highlighted]:bg-green-50 data-[selected]:bg-green-50"
+                      >
+                        <div class="flex items-center gap-2">
+                          <span class="inline-flex w-4 justify-center text-green-700">
+                            <Select.ItemIndicator>
+                              <Check size={14} />
+                            </Select.ItemIndicator>
+                          </span>
+                          <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
+                        </div>
+                      </Select.Item>
+                    )}
+                  >
+                    <Select.Trigger class="grid min-w-52 grid-cols-[1fr_auto] items-center gap-2 rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm font-medium text-gray-700">
+                      <Select.Value<OverPowerSummaryOption> class="truncate">
+                        {(state) => <span>{state.selectedOption()?.label ?? '集計軸を選択'}</span>}
+                      </Select.Value>
+                      <span class="justify-self-end text-gray-500" aria-hidden="true">
+                        <ChevronDown size={16} />
+                      </span>
+                    </Select.Trigger>
+                    <Select.Portal>
+                      <Select.Content class="z-50 mt-1 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-gray-200 bg-white shadow-md">
+                        <Select.Listbox />
+                      </Select.Content>
+                    </Select.Portal>
+                  </Select>
                   <button
                     type="button"
                     class={iconButtonClass}
