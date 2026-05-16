@@ -1,6 +1,6 @@
 const symbolOrSpaceRegex = /[\p{P}\p{S}\p{Z}\p{Cf}]/gu
 const voicedMarkRegex = /[\u3099\u309A]/gu
-const prolongedSoundMarkRegex = /ー/g
+const prolongedSoundMarkRegex = /[ーｰ]/g
 
 /**
  * 検索用に文字列を正規化する。
