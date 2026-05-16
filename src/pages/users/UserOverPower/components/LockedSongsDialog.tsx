@@ -15,6 +15,8 @@ type Props = {
   onToggleLockedSong: (displayId: string, isUltima: boolean, locked: boolean) => void
 }
 
+type ChartScope = 'normal' | 'ultima'
+
 const createLockedSongKey = (displayId: string, isUltima: boolean): string =>
   `${displayId}:${isUltima ? 'ultima' : 'normal'}`
 
@@ -23,6 +25,7 @@ const hasUltimaChart = (song: SongDTO): boolean => Boolean(song.charts.ULTIMA)
 const LockedSongsDialog: Component<Props> = (props) => {
   const [query, setQuery] = createSignal('')
   const [showLockedOnly, setShowLockedOnly] = createSignal(false)
+  const [chartScope, setChartScope] = createSignal<ChartScope>('normal')
   const [isListReady, setIsListReady] = createSignal(false)
   const lockedSongKeys = createMemo(
     () =>
@@ -34,12 +37,21 @@ const LockedSongsDialog: Component<Props> = (props) => {
   )
   const isLocked = (displayId: string, isUltima: boolean): boolean =>
     lockedSongKeys().has(createLockedSongKey(displayId, isUltima))
+  const isUltimaScope = createMemo(() => chartScope() === 'ultima')
+  const lockedSongCount = createMemo(
+    () => props.lockedSongs.filter((lockedSong) => lockedSong.is_ultima === isUltimaScope()).length
+  )
   const filteredSongs = createMemo(() => {
     const normalizedQuery = query().trim().toLowerCase()
     const shouldShowLockedOnly = showLockedOnly()
+    const shouldShowUltima = isUltimaScope()
 
     return props.songs.filter((song) => {
-      if (shouldShowLockedOnly && !isLocked(song.id, false) && !isLocked(song.id, true)) {
+      if (shouldShowUltima && !hasUltimaChart(song)) {
+        return false
+      }
+
+      if (shouldShowLockedOnly && !isLocked(song.id, shouldShowUltima)) {
         return false
       }
 
@@ -114,9 +126,36 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </button>
           </div>
 
+          <div class="mb-3 grid grid-cols-2 overflow-hidden rounded border border-gray-300 text-sm">
+            <button
+              type="button"
+              class={`px-3 py-2 font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 ${
+                chartScope() === 'normal'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+              aria-pressed={chartScope() === 'normal'}
+              onClick={() => setChartScope('normal')}
+            >
+              通常譜面
+            </button>
+            <button
+              type="button"
+              class={`border-l border-gray-300 px-3 py-2 font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 ${
+                chartScope() === 'ultima'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+              aria-pressed={chartScope() === 'ultima'}
+              onClick={() => setChartScope('ultima')}
+            >
+              ULTIMA
+            </button>
+          </div>
+
           <div class="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
             <span>
-              {props.lockedSongs.length}件設定中 / {filteredSongs().length}曲表示
+              {lockedSongCount()}件設定中 / {filteredSongs().length}曲表示
             </span>
             <span>通常未解禁は曲単位、ULTIMA未解禁はULTIMA譜面のみ除外</span>
           </div>
@@ -158,36 +197,18 @@ const LockedSongsDialog: Component<Props> = (props) => {
                             <input
                               type="checkbox"
                               class="h-4 w-4"
-                              checked={isLocked(song.id, false)}
-                              disabled={isSaving(song.id, false)}
+                              checked={isLocked(song.id, isUltimaScope())}
+                              disabled={isSaving(song.id, isUltimaScope())}
                               onChange={(event) =>
                                 props.onToggleLockedSong(
                                   song.id,
-                                  false,
+                                  isUltimaScope(),
                                   event.currentTarget.checked
                                 )
                               }
                             />
-                            通常
+                            {isUltimaScope() ? 'ULTIMA' : '通常'}
                           </label>
-                          <Show when={hasUltimaChart(song)}>
-                            <label class="inline-flex items-center gap-2 text-sm">
-                              <input
-                                type="checkbox"
-                                class="h-4 w-4"
-                                checked={isLocked(song.id, true)}
-                                disabled={isSaving(song.id, true)}
-                                onChange={(event) =>
-                                  props.onToggleLockedSong(
-                                    song.id,
-                                    true,
-                                    event.currentTarget.checked
-                                  )
-                                }
-                              />
-                              ULTIMA
-                            </label>
-                          </Show>
                         </div>
                       </li>
                     )}
