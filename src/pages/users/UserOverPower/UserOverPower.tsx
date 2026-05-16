@@ -68,9 +68,6 @@ const UserOverPower: Component<Props> = (props) => {
   const selectedSummaryTab = createMemo<OverPowerSummaryTab>(
     () => overPowerSummaryTabBySubPage[props.selectedSubPage]
   )
-  const selectedSummaryOption = createMemo(() =>
-    OVER_POWER_SUMMARY_OPTIONS.find((option) => option.value === selectedSummaryTab())
-  )
 
   const summary = createMemo(() => {
     const songs = allSongs()
@@ -147,14 +144,14 @@ const UserOverPower: Component<Props> = (props) => {
             <div class="mx-4 flex flex-col gap-4 text-sm">
               <OverPowerAllSummary summary={currentSummary().all} />
 
-              <Tabs.Root value={selectedSummaryTab()} onChange={handleSummaryTabChange}>
+              <Tabs.Root value={selectedSummaryTab()}>
                 <div class="flex flex-wrap items-center justify-between gap-3">
                   <Select<OverPowerSummaryOption>
                     options={OVER_POWER_SUMMARY_OPTIONS}
                     optionValue="value"
                     optionTextValue="label"
-                    value={selectedSummaryOption()}
-                    onChange={(option) => option && handleSummaryTabChange(option.value)}
+                    value={selectedSummaryTab()}
+                    onChange={handleSummaryTabChange}
                     placeholder="集計軸を選択"
                     itemComponent={(props) => (
                       <Select.Item
