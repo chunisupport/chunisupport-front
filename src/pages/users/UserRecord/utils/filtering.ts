@@ -23,13 +23,12 @@ export function createRecordTitleMatcher(query: string): RecordTitleMatcher {
     const normalizedTitle = normalizeForSearch(record.title)
     const normalizedArtist = normalizeForSearch(record.artist)
     const normalizedReading = normalizeForReadingSearch(record.reading ?? record.title)
-    return (
-      matchesNormalizedSearchQuery(
-        normalizedTitle,
-        normalizedArtist,
-        normalizedReading,
-        normalizedQuery
-      ) || normalizedReading.includes(normalizedReadingQuery)
+    return matchesNormalizedSearchQuery(
+      normalizedTitle,
+      normalizedArtist,
+      normalizedReading,
+      normalizedQuery,
+      normalizedReadingQuery
     )
   }
 }

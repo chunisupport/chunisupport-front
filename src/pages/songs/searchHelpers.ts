@@ -31,14 +31,14 @@ export const filterSearchableItems = <T>(
   const normalizedQuery = normalizeForSearch(query)
   const normalizedReadingQuery = normalizeForReadingSearch(query)
   return searchableItems
-    .filter(
-      ({ normalizedTitle, normalizedArtist, normalizedReading }) =>
-        matchesNormalizedSearchQuery(
-          normalizedTitle,
-          normalizedArtist,
-          normalizedReading,
-          normalizedQuery
-        ) || normalizedReading.includes(normalizedReadingQuery)
+    .filter(({ normalizedTitle, normalizedArtist, normalizedReading }) =>
+      matchesNormalizedSearchQuery(
+        normalizedTitle,
+        normalizedArtist,
+        normalizedReading,
+        normalizedQuery,
+        normalizedReadingQuery
+      )
     )
     .map(({ item }) => item)
 }

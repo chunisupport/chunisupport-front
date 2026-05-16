@@ -33,13 +33,14 @@ export function matchesNormalizedSearchQuery(
   normalizedTitle: string,
   normalizedArtist: string,
   normalizedReading: string,
-  normalizedQuery: string
+  normalizedQuery: string,
+  normalizedReadingQuery: string
 ): boolean {
   if (!normalizedQuery) return true
   return (
     normalizedTitle.includes(normalizedQuery) ||
     normalizedArtist.includes(normalizedQuery) ||
-    normalizedReading.includes(normalizedQuery)
+    normalizedReading.includes(normalizedReadingQuery)
   )
 }
 
@@ -57,12 +58,11 @@ export function matchesSearchQuery(
   const normalizedTitle = normalizeForSearch(title)
   const normalizedArtist = normalizeForSearch(artist)
   const normalizedReading = normalizeForReadingSearch(reading ?? title)
-  return (
-    matchesNormalizedSearchQuery(
-      normalizedTitle,
-      normalizedArtist,
-      normalizedReading,
-      normalizedQuery
-    ) || normalizedReading.includes(normalizedReadingQuery)
+  return matchesNormalizedSearchQuery(
+    normalizedTitle,
+    normalizedArtist,
+    normalizedReading,
+    normalizedQuery,
+    normalizedReadingQuery
   )
 }
