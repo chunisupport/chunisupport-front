@@ -68,6 +68,11 @@ const UserOverPower: Component<Props> = (props) => {
   const selectedSummaryTab = createMemo<OverPowerSummaryTab>(
     () => overPowerSummaryTabBySubPage[props.selectedSubPage]
   )
+  const selectedSummaryOption = createMemo(
+    () =>
+      OVER_POWER_SUMMARY_OPTIONS.find((option) => option.value === selectedSummaryTab()) ??
+      OVER_POWER_SUMMARY_OPTIONS[0]
+  )
 
   const summary = createMemo(() => {
     const songs = allSongs()
@@ -94,22 +99,15 @@ const UserOverPower: Component<Props> = (props) => {
   const createLockedSongKey = (displayId: string, isUltima: boolean) =>
     `${displayId}:${isUltima ? 'ultima' : 'normal'}`
 
-  const handleSummaryTabChange = (value: string) => {
-    if (
-      value !== 'genres' &&
-      value !== 'difficulties' &&
-      value !== 'levels' &&
-      value !== 'versions'
-    ) {
-      return
-    }
+  const handleSummaryTabChange = (option: OverPowerSummaryOption | null) => {
+    if (!option) return
 
     const queryParams = new URLSearchParams(location.search)
     queryParams.delete('page')
     const queryString = queryParams.toString()
     const normalizedPath = buildUserOverPowerPagePath(
       props.username,
-      overPowerSubPageBySummaryTab[value]
+      overPowerSubPageBySummaryTab[option.value]
     )
 
     navigate(`${normalizedPath}${queryString ? `?${queryString}` : ''}${location.hash}`)
@@ -150,9 +148,9 @@ const UserOverPower: Component<Props> = (props) => {
                     options={OVER_POWER_SUMMARY_OPTIONS}
                     optionValue="value"
                     optionTextValue="label"
-                    value={selectedSummaryTab()}
+                    value={selectedSummaryOption()}
                     onChange={handleSummaryTabChange}
-                    placeholder="集計軸を選択"
+                    placeholder="ジャンル"
                     itemComponent={(itemProps) => (
                       <Select.Item
                         item={itemProps.item}
@@ -171,7 +169,7 @@ const UserOverPower: Component<Props> = (props) => {
                   >
                     <Select.Trigger class="grid min-w-52 grid-cols-[1fr_auto] items-center gap-2 rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm font-medium text-gray-700">
                       <Select.Value<OverPowerSummaryOption> class="truncate">
-                        {(state) => <span>{state.selectedOption()?.label ?? '集計軸を選択'}</span>}
+                        {(state) => <span>{state.selectedOption()?.label ?? 'ジャンル'}</span>}
                       </Select.Value>
                       <span class="justify-self-end text-gray-500" aria-hidden="true">
                         <ChevronDown size={16} />
