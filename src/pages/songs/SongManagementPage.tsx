@@ -740,7 +740,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               <input
                 value={createSongDraft().title}
                 onInput={(event) => updateCreateSongDraftField('title', event.currentTarget.value)}
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
               />
             </label>
             <label class="text-sm">
@@ -748,7 +748,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               <input
                 value={createSongDraft().artist}
                 onInput={(event) => updateCreateSongDraftField('artist', event.currentTarget.value)}
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
               />
             </label>
             <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
@@ -799,7 +799,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                 />
               </label>
               <label class="text-sm">
-                <span class="mb-1 block text-gray-700">ジャケット名</span>
+                <span class="mb-1 block text-gray-700">ジャケットID</span>
                 <input
                   value={createSongDraft().jacket ?? ''}
                   onInput={(event) =>
@@ -899,7 +899,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : event.currentTarget.value
                             )
                           }
-                          class="w-56 rounded border border-gray-300 px-2 py-1"
+                          class="w-56 rounded border border-gray-300 px-2 py-1 font-sans"
                           disabled={!chart().enabled}
                         />
                       </td>
@@ -942,7 +942,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               onInput={(event) =>
                 updateCreateWorldsendDraftField('title', event.currentTarget.value)
               }
-              class="w-full rounded border border-gray-300 px-3 py-2"
+              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
             />
           </label>
           <label class="text-sm">
@@ -952,7 +952,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               onInput={(event) =>
                 updateCreateWorldsendDraftField('artist', event.currentTarget.value)
               }
-              class="w-full rounded border border-gray-300 px-3 py-2"
+              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
             />
           </label>
           <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
@@ -1003,7 +1003,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               />
             </label>
             <label class="text-sm">
-              <span class="mb-1 block text-gray-700">ジャケット名</span>
+              <span class="mb-1 block text-gray-700">ジャケットID</span>
               <input
                 value={createWorldsendDraft().jacket ?? ''}
                 onInput={(event) =>
@@ -1070,7 +1070,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                 )
               }
-              class="w-full rounded border border-gray-300 px-3 py-2"
+              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
             />
           </label>
         </div>
@@ -1148,7 +1148,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         <input
                           value={currentDraft().title}
                           onInput={(event) => updateDraftField('title', event.currentTarget.value)}
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
                         />
                       </label>
                       <label class="col-span-2 text-sm">
@@ -1156,7 +1156,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         <input
                           value={currentDraft().artist}
                           onInput={(event) => updateDraftField('artist', event.currentTarget.value)}
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
                         />
                       </label>
                       <label class="text-sm">
@@ -1212,7 +1212,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         />
                       </label>
                       <label class="text-sm">
-                        <span class="mb-1 block text-gray-700">ジャケット名</span>
+                        <span class="mb-1 block text-gray-700">ジャケットID</span>
                         <input
                           value={currentDraft().jacket ?? ''}
                           onInput={(event) =>
@@ -1301,7 +1301,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                           : event.currentTarget.value
                                       )
                                     }
-                                    class="w-48 rounded border border-gray-300 px-2 py-1"
+                                    class="w-48 rounded border border-gray-300 px-2 py-1 font-sans"
                                   />
                                 </td>
                                 <td class="px-3 py-2">
@@ -1421,7 +1421,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           onInput={(event) =>
                             updateWorldsendDraftField('title', event.currentTarget.value)
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
                         />
                       </label>
                       <label class="col-span-2 text-sm">
@@ -1431,7 +1431,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           onInput={(event) =>
                             updateWorldsendDraftField('artist', event.currentTarget.value)
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
                         />
                       </label>
                       <label class="text-sm">
@@ -1487,7 +1487,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         />
                       </label>
                       <label class="text-sm">
-                        <span class="mb-1 block text-gray-700">ジャケット名</span>
+                        <span class="mb-1 block text-gray-700">ジャケットID</span>
                         <input
                           value={currentDraft().jacket ?? ''}
                           onInput={(event) =>
@@ -1571,7 +1571,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : event.currentTarget.value
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
                         />
                       </label>
                     </div>
