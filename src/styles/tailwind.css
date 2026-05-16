@@ -124,3 +124,9 @@
     overscroll-behavior-y: auto;
   }
 }
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .app-main-mobile-offset {
+    padding-bottom: calc(77px + env(safe-area-inset-bottom));
+  }
+}

@@ -248,12 +248,12 @@ const NavBar = (props: NavBarProps) => {
       </aside>
 
       <div class="flex flex-col min-h-0 flex-1 min-w-0">
-        <main id="app-main" class="flex-1 min-h-0 overflow-y-auto">
+        <main id="app-main" class="app-main-mobile-offset flex-1 min-h-0 overflow-y-auto">
           {props.children}
         </main>
 
         {/* スマホ用nav-bar 768px未満 */}
-        <nav class="md:hidden z-40 flex items-center justify-between border-t border-gray-200 bg-white p-2 shadow-sm">
+        <nav class="md:hidden fixed inset-x-0 bottom-0 z-40 flex h-[77px] items-center justify-between border-t border-gray-200 bg-white/95 p-2 shadow-sm backdrop-blur">
           {getNavItems().map((item) =>
             item.dropdown ? (
               <DropdownMenu>
