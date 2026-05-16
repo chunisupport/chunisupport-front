@@ -20,9 +20,7 @@ export const buildSearchableItems = <
     item,
     normalizedTitle: normalizeForSearch(item.title),
     normalizedArtist: normalizeForSearch(item.artist),
-    normalizedReading: normalizeForReadingSearch(
-      item.reading?.trim() ? item.reading : item.title
-    ),
+    normalizedReading: normalizeForReadingSearch(item.reading?.trim() ? item.reading : item.title),
   }))
 }
 
