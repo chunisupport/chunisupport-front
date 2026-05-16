@@ -22,7 +22,6 @@ export function normalizeForReadingSearch(value: string | null | undefined): str
   if (!value) return ''
   return normalizeForSearch(
     value
-      .normalize('NFKC')
       .normalize('NFD')
       .replace(voicedMarkRegex, '')
       .replace(prolongedSoundMarkRegex, 'ウ')
