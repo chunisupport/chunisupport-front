@@ -720,371 +720,6 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       </Show>
 
       <section class="rounded-lg border border-gray-200 bg-white p-4">
-        <h2 class="text-lg font-semibold">通常楽曲を追加</h2>
-        <div class="mt-3 space-y-4">
-          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <label class="text-sm">
-              <span class="mb-1 block text-gray-700">公式ID</span>
-              <input
-                value={createSongDraft().official_idx}
-                maxLength={10}
-                onInput={(event) =>
-                  updateCreateSongDraftField('official_idx', event.currentTarget.value)
-                }
-                class="w-full rounded border border-gray-300 px-3 py-2"
-                placeholder="1234567890"
-              />
-            </label>
-            <label class="text-sm">
-              <span class="mb-1 block text-gray-700">タイトル</span>
-              <input
-                value={createSongDraft().title}
-                onInput={(event) => updateCreateSongDraftField('title', event.currentTarget.value)}
-                class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
-              />
-            </label>
-            <label class="text-sm">
-              <span class="mb-1 block text-gray-700">アーティスト</span>
-              <input
-                value={createSongDraft().artist}
-                onInput={(event) => updateCreateSongDraftField('artist', event.currentTarget.value)}
-                class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
-              />
-            </label>
-            <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
-              <label class="text-sm">
-                <span class="mb-1 block text-gray-700">ジャンル</span>
-                <select
-                  value={String(createSongDraft().genre_id ?? '')}
-                  onChange={(event) =>
-                    updateCreateSongDraftField(
-                      'genre_id',
-                      event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
-                    )
-                  }
-                  class="w-full rounded border border-gray-300 px-3 py-2"
-                >
-                  <option value="">選択してください</option>
-                  <For each={masterData()?.genres ?? []}>
-                    {(genre) => <option value={genre.id}>{genre.name}</option>}
-                  </For>
-                </select>
-              </label>
-              <label class="text-sm">
-                <span class="mb-1 block text-gray-700">BPM</span>
-                <input
-                  type="number"
-                  value={createSongDraft().bpm ?? ''}
-                  onInput={(event) =>
-                    updateCreateSongDraftField(
-                      'bpm',
-                      event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
-                    )
-                  }
-                  class="w-full rounded border border-gray-300 px-3 py-2"
-                />
-              </label>
-              <label class="text-sm">
-                <span class="mb-1 block text-gray-700">リリース日</span>
-                <input
-                  type="date"
-                  value={toDateInputValue(createSongDraft().released_at)}
-                  onInput={(event) =>
-                    updateCreateSongDraftField(
-                      'released_at',
-                      event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
-                    )
-                  }
-                  class="w-full rounded border border-gray-300 px-3 py-2"
-                />
-              </label>
-              <label class="text-sm">
-                <span class="mb-1 block text-gray-700">ジャケットID</span>
-                <input
-                  value={createSongDraft().jacket ?? ''}
-                  onInput={(event) =>
-                    updateCreateSongDraftField(
-                      'jacket',
-                      event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
-                    )
-                  }
-                  class="w-full rounded border border-gray-300 px-3 py-2"
-                />
-              </label>
-            </div>
-          </div>
-
-          <div class="overflow-x-auto rounded border border-gray-200">
-            <table class="min-w-full text-sm">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-3 py-2 text-left">追加</th>
-                  <th class="px-3 py-2 text-left">難易度</th>
-                  <th class="px-3 py-2 text-left">定数</th>
-                  <th class="px-3 py-2 text-left">未確定</th>
-                  <th class="px-3 py-2 text-left">ノーツ</th>
-                  <th class="px-3 py-2 text-left">NOTES DESIGNER</th>
-                </tr>
-              </thead>
-              <tbody>
-                <Index each={createSongDraft().charts}>
-                  {(chart, chartIndex) => (
-                    <tr class="border-t border-gray-100">
-                      <td class="px-3 py-2">
-                        <input
-                          type="checkbox"
-                          checked={chart().enabled}
-                          onChange={(event) =>
-                            updateCreateSongChart(
-                              chartIndex,
-                              'enabled',
-                              event.currentTarget.checked
-                            )
-                          }
-                        />
-                      </td>
-                      <td class="px-3 py-2">{chart().difficulty_name}</td>
-                      <td class="px-3 py-2">
-                        <input
-                          type="text"
-                          inputmode="decimal"
-                          value={chart().const}
-                          onInput={(event) =>
-                            updateCreateSongChart(chartIndex, 'const', event.currentTarget.value)
-                          }
-                          class="w-20 rounded border border-gray-300 px-2 py-1"
-                          disabled={!chart().enabled}
-                        />
-                      </td>
-                      <td class="px-3 py-2">
-                        <input
-                          type="checkbox"
-                          checked={chart().is_const_unknown}
-                          onChange={(event) =>
-                            updateCreateSongChart(
-                              chartIndex,
-                              'is_const_unknown',
-                              event.currentTarget.checked
-                            )
-                          }
-                          disabled={!chart().enabled}
-                        />
-                      </td>
-                      <td class="px-3 py-2">
-                        <input
-                          type="number"
-                          value={chart().notes ?? ''}
-                          onInput={(event) =>
-                            updateCreateSongChart(
-                              chartIndex,
-                              'notes',
-                              event.currentTarget.value === ''
-                                ? null
-                                : Number(event.currentTarget.value)
-                            )
-                          }
-                          class="w-24 rounded border border-gray-300 px-2 py-1"
-                          disabled={!chart().enabled}
-                        />
-                      </td>
-                      <td class="px-3 py-2">
-                        <input
-                          value={chart().notes_designer ?? ''}
-                          onInput={(event) =>
-                            updateCreateSongChart(
-                              chartIndex,
-                              'notes_designer',
-                              event.currentTarget.value.trim() === ''
-                                ? null
-                                : event.currentTarget.value
-                            )
-                          }
-                          class="w-56 rounded border border-gray-300 px-2 py-1 font-sans"
-                          disabled={!chart().enabled}
-                        />
-                      </td>
-                    </tr>
-                  )}
-                </Index>
-              </tbody>
-            </table>
-          </div>
-
-          <button
-            type="button"
-            class="rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-            onClick={handleCreateSong}
-          >
-            通常楽曲を追加する
-          </button>
-        </div>
-      </section>
-
-      <section class="rounded-lg border border-gray-200 bg-white p-4">
-        <h2 class="text-lg font-semibold">WORLD&apos;S END楽曲を追加</h2>
-        <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <label class="text-sm">
-            <span class="mb-1 block text-gray-700">公式ID</span>
-            <input
-              value={createWorldsendDraft().official_idx}
-              maxLength={10}
-              onInput={(event) =>
-                updateCreateWorldsendDraftField('official_idx', event.currentTarget.value)
-              }
-              class="w-full rounded border border-gray-300 px-3 py-2"
-              placeholder="1234567890"
-            />
-          </label>
-          <label class="text-sm">
-            <span class="mb-1 block text-gray-700">タイトル</span>
-            <input
-              value={createWorldsendDraft().title}
-              onInput={(event) =>
-                updateCreateWorldsendDraftField('title', event.currentTarget.value)
-              }
-              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
-            />
-          </label>
-          <label class="text-sm">
-            <span class="mb-1 block text-gray-700">アーティスト</span>
-            <input
-              value={createWorldsendDraft().artist}
-              onInput={(event) =>
-                updateCreateWorldsendDraftField('artist', event.currentTarget.value)
-              }
-              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
-            />
-          </label>
-          <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
-            <label class="text-sm">
-              <span class="mb-1 block text-gray-700">ジャンル</span>
-              <select
-                value={String(createWorldsendDraft().genre_id ?? '')}
-                onChange={(event) =>
-                  updateCreateWorldsendDraftField(
-                    'genre_id',
-                    event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
-                  )
-                }
-                class="w-full rounded border border-gray-300 px-3 py-2"
-              >
-                <option value="">選択してください</option>
-                <For each={masterData()?.genres ?? []}>
-                  {(genre) => <option value={genre.id}>{genre.name}</option>}
-                </For>
-              </select>
-            </label>
-            <label class="text-sm">
-              <span class="mb-1 block text-gray-700">BPM</span>
-              <input
-                type="number"
-                value={createWorldsendDraft().bpm ?? ''}
-                onInput={(event) =>
-                  updateCreateWorldsendDraftField(
-                    'bpm',
-                    event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
-                  )
-                }
-                class="w-full rounded border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="text-sm">
-              <span class="mb-1 block text-gray-700">リリース日</span>
-              <input
-                type="date"
-                value={toDateInputValue(createWorldsendDraft().released_at)}
-                onInput={(event) =>
-                  updateCreateWorldsendDraftField(
-                    'released_at',
-                    event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
-                  )
-                }
-                class="w-full rounded border border-gray-300 px-3 py-2"
-              />
-            </label>
-            <label class="text-sm">
-              <span class="mb-1 block text-gray-700">ジャケットID</span>
-              <input
-                value={createWorldsendDraft().jacket ?? ''}
-                onInput={(event) =>
-                  updateCreateWorldsendDraftField(
-                    'jacket',
-                    event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
-                  )
-                }
-                class="w-full rounded border border-gray-300 px-3 py-2"
-              />
-            </label>
-          </div>
-          <label class="text-sm">
-            <span class="mb-1 block text-gray-700">属性</span>
-            <input
-              value={createWorldsendDraft().attribute ?? ''}
-              onInput={(event) =>
-                updateCreateWorldsendDraftField(
-                  'attribute',
-                  event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
-                )
-              }
-              class="w-full rounded border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="text-sm">
-            <span class="mb-1 block text-gray-700">レベル</span>
-            <input
-              type="number"
-              min="1"
-              max="5"
-              value={createWorldsendDraft().level_star ?? ''}
-              onInput={(event) =>
-                updateCreateWorldsendDraftField(
-                  'level_star',
-                  event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
-                )
-              }
-              class="w-full rounded border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="text-sm">
-            <span class="mb-1 block text-gray-700">ノーツ</span>
-            <input
-              type="number"
-              min="0"
-              value={createWorldsendDraft().notes ?? ''}
-              onInput={(event) =>
-                updateCreateWorldsendDraftField(
-                  'notes',
-                  event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
-                )
-              }
-              class="w-full rounded border border-gray-300 px-3 py-2"
-            />
-          </label>
-          <label class="text-sm sm:col-span-2 lg:col-span-1">
-            <span class="mb-1 block text-gray-700">NOTES DESIGNER</span>
-            <input
-              value={createWorldsendDraft().notes_designer ?? ''}
-              onInput={(event) =>
-                updateCreateWorldsendDraftField(
-                  'notes_designer',
-                  event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
-                )
-              }
-              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
-            />
-          </label>
-        </div>
-
-        <button
-          type="button"
-          class="mt-4 rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-          onClick={handleCreateWorldsendSong}
-        >
-          WORLD&apos;S END楽曲を追加する
-        </button>
-      </section>
-
-      <section class="rounded-lg border border-gray-200 bg-white p-4">
         <h2 class="text-lg font-semibold">通常楽曲（編集 / 削除 / 復活）</h2>
 
         <Show
@@ -1615,6 +1250,371 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         <Show when={!worldsendResponse.loading && worldsendSongs().length === 0}>
           <p class="mt-3 text-sm text-gray-500">WORLD&apos;S END楽曲がありません。</p>
         </Show>
+      </section>
+
+      <section class="rounded-lg border border-gray-200 bg-white p-4">
+        <h2 class="text-lg font-semibold">通常楽曲を追加</h2>
+        <div class="mt-3 space-y-4">
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">公式ID</span>
+              <input
+                value={createSongDraft().official_idx}
+                maxLength={10}
+                onInput={(event) =>
+                  updateCreateSongDraftField('official_idx', event.currentTarget.value)
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+                placeholder="1234567890"
+              />
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">タイトル</span>
+              <input
+                value={createSongDraft().title}
+                onInput={(event) => updateCreateSongDraftField('title', event.currentTarget.value)}
+                class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+              />
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">アーティスト</span>
+              <input
+                value={createSongDraft().artist}
+                onInput={(event) => updateCreateSongDraftField('artist', event.currentTarget.value)}
+                class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+              />
+            </label>
+            <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
+              <label class="text-sm">
+                <span class="mb-1 block text-gray-700">ジャンル</span>
+                <select
+                  value={String(createSongDraft().genre_id ?? '')}
+                  onChange={(event) =>
+                    updateCreateSongDraftField(
+                      'genre_id',
+                      event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                    )
+                  }
+                  class="w-full rounded border border-gray-300 px-3 py-2"
+                >
+                  <option value="">選択してください</option>
+                  <For each={masterData()?.genres ?? []}>
+                    {(genre) => <option value={genre.id}>{genre.name}</option>}
+                  </For>
+                </select>
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block text-gray-700">BPM</span>
+                <input
+                  type="number"
+                  value={createSongDraft().bpm ?? ''}
+                  onInput={(event) =>
+                    updateCreateSongDraftField(
+                      'bpm',
+                      event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                    )
+                  }
+                  class="w-full rounded border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block text-gray-700">リリース日</span>
+                <input
+                  type="date"
+                  value={toDateInputValue(createSongDraft().released_at)}
+                  onInput={(event) =>
+                    updateCreateSongDraftField(
+                      'released_at',
+                      event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                    )
+                  }
+                  class="w-full rounded border border-gray-300 px-3 py-2"
+                />
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block text-gray-700">ジャケットID</span>
+                <input
+                  value={createSongDraft().jacket ?? ''}
+                  onInput={(event) =>
+                    updateCreateSongDraftField(
+                      'jacket',
+                      event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                    )
+                  }
+                  class="w-full rounded border border-gray-300 px-3 py-2"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto rounded border border-gray-200">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-3 py-2 text-left">追加</th>
+                  <th class="px-3 py-2 text-left">難易度</th>
+                  <th class="px-3 py-2 text-left">定数</th>
+                  <th class="px-3 py-2 text-left">未確定</th>
+                  <th class="px-3 py-2 text-left">ノーツ</th>
+                  <th class="px-3 py-2 text-left">NOTES DESIGNER</th>
+                </tr>
+              </thead>
+              <tbody>
+                <Index each={createSongDraft().charts}>
+                  {(chart, chartIndex) => (
+                    <tr class="border-t border-gray-100">
+                      <td class="px-3 py-2">
+                        <input
+                          type="checkbox"
+                          checked={chart().enabled}
+                          onChange={(event) =>
+                            updateCreateSongChart(
+                              chartIndex,
+                              'enabled',
+                              event.currentTarget.checked
+                            )
+                          }
+                        />
+                      </td>
+                      <td class="px-3 py-2">{chart().difficulty_name}</td>
+                      <td class="px-3 py-2">
+                        <input
+                          type="text"
+                          inputmode="decimal"
+                          value={chart().const}
+                          onInput={(event) =>
+                            updateCreateSongChart(chartIndex, 'const', event.currentTarget.value)
+                          }
+                          class="w-20 rounded border border-gray-300 px-2 py-1"
+                          disabled={!chart().enabled}
+                        />
+                      </td>
+                      <td class="px-3 py-2">
+                        <input
+                          type="checkbox"
+                          checked={chart().is_const_unknown}
+                          onChange={(event) =>
+                            updateCreateSongChart(
+                              chartIndex,
+                              'is_const_unknown',
+                              event.currentTarget.checked
+                            )
+                          }
+                          disabled={!chart().enabled}
+                        />
+                      </td>
+                      <td class="px-3 py-2">
+                        <input
+                          type="number"
+                          value={chart().notes ?? ''}
+                          onInput={(event) =>
+                            updateCreateSongChart(
+                              chartIndex,
+                              'notes',
+                              event.currentTarget.value === ''
+                                ? null
+                                : Number(event.currentTarget.value)
+                            )
+                          }
+                          class="w-24 rounded border border-gray-300 px-2 py-1"
+                          disabled={!chart().enabled}
+                        />
+                      </td>
+                      <td class="px-3 py-2">
+                        <input
+                          value={chart().notes_designer ?? ''}
+                          onInput={(event) =>
+                            updateCreateSongChart(
+                              chartIndex,
+                              'notes_designer',
+                              event.currentTarget.value.trim() === ''
+                                ? null
+                                : event.currentTarget.value
+                            )
+                          }
+                          class="w-56 rounded border border-gray-300 px-2 py-1 font-sans"
+                          disabled={!chart().enabled}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </Index>
+              </tbody>
+            </table>
+          </div>
+
+          <button
+            type="button"
+            class="rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            onClick={handleCreateSong}
+          >
+            通常楽曲を追加する
+          </button>
+        </div>
+      </section>
+
+      <section class="rounded-lg border border-gray-200 bg-white p-4">
+        <h2 class="text-lg font-semibold">WORLD&apos;S END楽曲を追加</h2>
+        <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">公式ID</span>
+            <input
+              value={createWorldsendDraft().official_idx}
+              maxLength={10}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField('official_idx', event.currentTarget.value)
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+              placeholder="1234567890"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">タイトル</span>
+            <input
+              value={createWorldsendDraft().title}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField('title', event.currentTarget.value)
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">アーティスト</span>
+            <input
+              value={createWorldsendDraft().artist}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField('artist', event.currentTarget.value)
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+            />
+          </label>
+          <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">ジャンル</span>
+              <select
+                value={String(createWorldsendDraft().genre_id ?? '')}
+                onChange={(event) =>
+                  updateCreateWorldsendDraftField(
+                    'genre_id',
+                    event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              >
+                <option value="">選択してください</option>
+                <For each={masterData()?.genres ?? []}>
+                  {(genre) => <option value={genre.id}>{genre.name}</option>}
+                </For>
+              </select>
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">BPM</span>
+              <input
+                type="number"
+                value={createWorldsendDraft().bpm ?? ''}
+                onInput={(event) =>
+                  updateCreateWorldsendDraftField(
+                    'bpm',
+                    event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">リリース日</span>
+              <input
+                type="date"
+                value={toDateInputValue(createWorldsendDraft().released_at)}
+                onInput={(event) =>
+                  updateCreateWorldsendDraftField(
+                    'released_at',
+                    event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-700">ジャケットID</span>
+              <input
+                value={createWorldsendDraft().jacket ?? ''}
+                onInput={(event) =>
+                  updateCreateWorldsendDraftField(
+                    'jacket',
+                    event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </label>
+          </div>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">属性</span>
+            <input
+              value={createWorldsendDraft().attribute ?? ''}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField(
+                  'attribute',
+                  event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                )
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">レベル</span>
+            <input
+              type="number"
+              min="1"
+              max="5"
+              value={createWorldsendDraft().level_star ?? ''}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField(
+                  'level_star',
+                  event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                )
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">ノーツ</span>
+            <input
+              type="number"
+              min="0"
+              value={createWorldsendDraft().notes ?? ''}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField(
+                  'notes',
+                  event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
+                )
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2"
+            />
+          </label>
+          <label class="text-sm sm:col-span-2 lg:col-span-1">
+            <span class="mb-1 block text-gray-700">NOTES DESIGNER</span>
+            <input
+              value={createWorldsendDraft().notes_designer ?? ''}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField(
+                  'notes_designer',
+                  event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                )
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+            />
+          </label>
+        </div>
+
+        <button
+          type="button"
+          class="mt-4 rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          onClick={handleCreateWorldsendSong}
+        >
+          WORLD&apos;S END楽曲を追加する
+        </button>
       </section>
     </div>
   )
