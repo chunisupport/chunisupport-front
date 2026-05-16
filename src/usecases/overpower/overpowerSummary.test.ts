@@ -13,6 +13,7 @@ const versions: VersionSummaryDTO[] = [
 const createSong = (overrides: Partial<SongDTO> & Pick<SongDTO, 'id'>): SongDTO => ({
   id: overrides.id,
   title: overrides.title ?? overrides.id,
+  reading: overrides.reading ?? null,
   artist: overrides.artist ?? 'artist',
   genre: overrides.genre ?? 'POPS',
   bpm: overrides.bpm ?? null,

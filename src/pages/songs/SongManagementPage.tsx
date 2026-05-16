@@ -43,6 +43,7 @@ type EditableChartDraft = {
 type SongDraft = {
   id: string
   title: string
+  reading: string | null
   artist: string
   genre_id: number | null
   bpm: number | null
@@ -55,6 +56,7 @@ type SongDraft = {
 type WorldsendDraft = {
   id: string
   title: string
+  reading: string | null
   artist: string
   genre_id: number | null
   bpm: number | null
@@ -80,6 +82,7 @@ type CreateSongChartDraft = {
 type CreateSongDraft = {
   official_idx: string
   title: string
+  reading: string | null
   artist: string
   genre_id: number | null
   bpm: number | null
@@ -91,6 +94,7 @@ type CreateSongDraft = {
 type CreateWorldsendDraft = {
   official_idx: string
   title: string
+  reading: string | null
   artist: string
   genre_id: number | null
   bpm: number | null
@@ -151,10 +155,15 @@ const formatUpdatedAt = (value: string | null | undefined): string => {
 
 const editableDifficulties = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 
+const toNullableTrimmedString = (value: string | null): string | null => {
+  return value?.trim() ? value.trim() : null
+}
+
 const buildCreateSongDraft = (): CreateSongDraft => {
   return {
     official_idx: '',
     title: '',
+    reading: null,
     artist: '',
     genre_id: null,
     bpm: null,
@@ -175,6 +184,7 @@ const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
   return {
     official_idx: '',
     title: '',
+    reading: null,
     artist: '',
     genre_id: null,
     bpm: null,
@@ -195,6 +205,7 @@ const toSongDraft = (
   return {
     id: song.id,
     title: song.title,
+    reading: song.reading ?? null,
     artist: song.artist,
     genre_id: genres.find((genre) => genre.name === song.genre)?.id ?? null,
     bpm: song.bpm ?? null,
@@ -228,6 +239,7 @@ const toWorldsendDraft = (
   return {
     id: song.id,
     title: song.title,
+    reading: song.reading ?? null,
     artist: song.artist,
     genre_id: genres.find((genre) => genre.name === song.genre)?.id ?? null,
     bpm: song.bpm ?? null,
@@ -403,6 +415,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     const request: UpdateSongRequestDTO = {
       id: current.id,
       title: current.title,
+      reading: toNullableTrimmedString(current.reading),
       artist: current.artist,
       genre: md.genres.find((genre) => genre.id === current.genre_id)?.name ?? null,
       bpm: current.bpm,
@@ -481,6 +494,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     const request: CreateSongRequestDTO = {
       official_idx: current.official_idx.trim(),
       title: current.title.trim(),
+      reading: toNullableTrimmedString(current.reading),
       artist: current.artist.trim(),
       genre: genreName,
       bpm: current.bpm,
@@ -566,6 +580,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     const request: CreateWorldsendSongRequestDTO = {
       official_idx: current.official_idx.trim(),
       title: current.title.trim(),
+      reading: toNullableTrimmedString(current.reading),
       artist: current.artist.trim(),
       genre: genreName,
       bpm: current.bpm,
@@ -613,6 +628,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     const request: UpdateWorldsendSongRequestDTO = {
       id: current.id,
       title: current.title,
+      reading: toNullableTrimmedString(current.reading),
       artist: current.artist,
       genre: md.genres.find((genre) => genre.id === current.genre_id)?.name ?? null,
       bpm: current.bpm,
@@ -783,6 +799,22 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         <input
                           value={currentDraft().title}
                           onInput={(event) => updateDraftField('title', event.currentTarget.value)}
+                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+                        />
+                      </label>
+                      <label class="col-span-2 text-sm">
+                        <span class="mb-1 block text-gray-700">読み</span>
+                        <input
+                          value={currentDraft().reading ?? ''}
+                          maxLength={300}
+                          onInput={(event) =>
+                            updateDraftField(
+                              'reading',
+                              event.currentTarget.value.trim() === ''
+                                ? null
+                                : event.currentTarget.value
+                            )
+                          }
                           class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
                         />
                       </label>
@@ -1060,6 +1092,22 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         />
                       </label>
                       <label class="col-span-2 text-sm">
+                        <span class="mb-1 block text-gray-700">読み</span>
+                        <input
+                          value={currentDraft().reading ?? ''}
+                          maxLength={300}
+                          onInput={(event) =>
+                            updateWorldsendDraftField(
+                              'reading',
+                              event.currentTarget.value.trim() === ''
+                                ? null
+                                : event.currentTarget.value
+                            )
+                          }
+                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+                        />
+                      </label>
+                      <label class="col-span-2 text-sm">
                         <span class="mb-1 block text-gray-700">アーティスト</span>
                         <input
                           value={currentDraft().artist}
@@ -1277,6 +1325,20 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               />
             </label>
             <label class="text-sm">
+              <span class="mb-1 block text-gray-700">読み</span>
+              <input
+                value={createSongDraft().reading ?? ''}
+                maxLength={300}
+                onInput={(event) =>
+                  updateCreateSongDraftField(
+                    'reading',
+                    event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                  )
+                }
+                class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+              />
+            </label>
+            <label class="text-sm">
               <span class="mb-1 block text-gray-700">アーティスト</span>
               <input
                 value={createSongDraft().artist}
@@ -1474,6 +1536,20 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               value={createWorldsendDraft().title}
               onInput={(event) =>
                 updateCreateWorldsendDraftField('title', event.currentTarget.value)
+              }
+              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+            />
+          </label>
+          <label class="text-sm">
+            <span class="mb-1 block text-gray-700">読み</span>
+            <input
+              value={createWorldsendDraft().reading ?? ''}
+              maxLength={300}
+              onInput={(event) =>
+                updateCreateWorldsendDraftField(
+                  'reading',
+                  event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
+                )
               }
               class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
             />

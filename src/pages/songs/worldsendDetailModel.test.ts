@@ -15,6 +15,7 @@ import {
 const createSong = (overrides: Partial<WorldsendSongDTO> = {}): WorldsendSongDTO => ({
   id: '123',
   title: "WORLD'S END Song",
+  reading: null,
   artist: 'Artist',
   genre: 'VARIETY',
   bpm: 180,

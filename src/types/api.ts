@@ -132,6 +132,7 @@ export interface ChartDTO {
 export interface SongDTO {
   id: string
   title: string
+  reading: string | null
   artist: string
   genre: string
   bpm: number | null
@@ -465,6 +466,7 @@ export interface WorldsendChartDTO {
 export interface WorldsendSongDTO {
   id: string
   title: string
+  reading: string | null
   artist: string
   genre: string | null
   bpm: number | null
@@ -499,6 +501,7 @@ export interface CreateSongChartRequestDTO {
 export interface CreateSongRequestDTO {
   official_idx: string
   title: string
+  reading?: string | null
   artist: string
   genre: string
   bpm: number | null
@@ -510,6 +513,7 @@ export interface CreateSongRequestDTO {
 export interface UpdateSongRequestDTO {
   id: string
   title: string
+  reading: string | null
   artist: string
   genre: string | null
   bpm: number | null
@@ -528,6 +532,7 @@ export interface UpdateWorldsendChartRequestDTO {
 export interface CreateWorldsendSongRequestDTO {
   official_idx: string
   title: string
+  reading?: string | null
   artist: string
   genre: string
   bpm: number | null
@@ -539,6 +544,7 @@ export interface CreateWorldsendSongRequestDTO {
 export interface UpdateWorldsendSongRequestDTO {
   id: string
   title: string
+  reading: string | null
   artist: string
   genre: string | null
   bpm: number | null

@@ -6,6 +6,7 @@ import { nextSortState, sortSongs } from './sorting.ts'
 const createSong = (overrides: Partial<SongDTO>): SongDTO => ({
   id: overrides.id ?? 'song',
   title: overrides.title ?? '楽曲',
+  reading: overrides.reading ?? null,
   artist: overrides.artist ?? 'アーティスト',
   genre: overrides.genre ?? 'ジャンル',
   bpm: overrides.bpm === undefined ? 120 : overrides.bpm,
