@@ -184,7 +184,7 @@ const NavBar = (props: NavBarProps) => {
   }
 
   return (
-    <div class="h-dvh overflow-hidden flex md:flex-row flex-col">
+    <div class="min-h-dvh flex flex-col md:h-dvh md:flex-row md:overflow-hidden">
       {/* PC用nav-bar 768px以上 */}
       {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
       <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-gray-200 md:bg-white">
@@ -248,7 +248,10 @@ const NavBar = (props: NavBarProps) => {
       </aside>
 
       <div class="flex flex-col min-h-0 flex-1 min-w-0">
-        <main id="app-main" class="app-main-mobile-offset flex-1 min-h-0 overflow-y-auto">
+        <main
+          id="app-main"
+          class="app-main-mobile-offset flex-1 overflow-visible md:min-h-0 md:overflow-y-auto"
+        >
           {props.children}
         </main>
 
