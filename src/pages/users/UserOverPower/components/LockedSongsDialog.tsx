@@ -101,8 +101,17 @@ const LockedSongsDialog: Component<Props> = (props) => {
             <Show
               when={isListReady()}
               fallback={
-                <div class="flex h-full min-h-32 items-center justify-center p-8 text-sm text-gray-500">
-                  読み込み中...
+                <div
+                  class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-sm text-gray-500"
+                  role="status"
+                  aria-live="polite"
+                  aria-busy="true"
+                >
+                  <span
+                    class="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary-500"
+                    aria-hidden="true"
+                  />
+                  <span class="sr-only">読み込み中</span>
                 </div>
               }
             >
