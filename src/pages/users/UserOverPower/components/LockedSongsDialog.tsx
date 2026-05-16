@@ -109,7 +109,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
               <Show
                 when={filteredSongs().length > 0}
                 fallback={
-                  <div class="flex flex-col items-center justify-center gap-2 p-8 text-sm text-gray-500">
+                  <div class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-sm text-gray-500">
                     <CircleSlash2 class="h-6 w-6" aria-hidden="true" />
                     <p>該当する曲がありません。</p>
                   </div>
