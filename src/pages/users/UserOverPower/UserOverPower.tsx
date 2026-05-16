@@ -143,47 +143,49 @@ const UserOverPower: Component<Props> = (props) => {
               <OverPowerAllSummary summary={currentSummary().all} />
 
               <Tabs.Root value={selectedSummaryTab()}>
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                  <Select<OverPowerSummaryOption>
-                    options={OVER_POWER_SUMMARY_OPTIONS}
-                    optionValue="value"
-                    optionTextValue="label"
-                    value={selectedSummaryOption()}
-                    onChange={handleSummaryTabChange}
-                    placeholder="ジャンル"
-                    itemComponent={(itemProps) => (
-                      <Select.Item
-                        item={itemProps.item}
-                        class="cursor-pointer px-3 py-2 text-gray-800 hover:bg-green-50 data-[highlighted]:bg-green-50 data-[selected]:bg-green-50"
-                      >
-                        <div class="flex items-center gap-2">
-                          <span class="inline-flex w-4 justify-center text-green-700">
-                            <Select.ItemIndicator>
-                              <Check size={14} />
-                            </Select.ItemIndicator>
-                          </span>
-                          <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                        </div>
-                      </Select.Item>
-                    )}
-                  >
-                    <Select.Trigger class="grid min-w-52 grid-cols-[1fr_auto] items-center gap-2 rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm font-medium text-gray-700">
-                      <Select.Value<OverPowerSummaryOption> class="truncate">
-                        {(state) => <span>{state.selectedOption()?.label ?? 'ジャンル'}</span>}
-                      </Select.Value>
-                      <span class="justify-self-end text-gray-500" aria-hidden="true">
-                        <ChevronDown size={16} />
-                      </span>
-                    </Select.Trigger>
-                    <Select.Portal>
-                      <Select.Content class="z-50 mt-1 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-gray-200 bg-white shadow-md">
-                        <Select.Listbox />
-                      </Select.Content>
-                    </Select.Portal>
-                  </Select>
+                <div class="flex items-center justify-between gap-3">
+                  <div class="min-w-0 flex-1">
+                    <Select<OverPowerSummaryOption>
+                      options={OVER_POWER_SUMMARY_OPTIONS}
+                      optionValue="value"
+                      optionTextValue="label"
+                      value={selectedSummaryOption()}
+                      onChange={handleSummaryTabChange}
+                      placeholder="ジャンル"
+                      itemComponent={(itemProps) => (
+                        <Select.Item
+                          item={itemProps.item}
+                          class="cursor-pointer px-3 py-2 text-gray-800 hover:bg-green-50 data-[highlighted]:bg-green-50 data-[selected]:bg-green-50"
+                        >
+                          <div class="flex items-center gap-2">
+                            <span class="inline-flex w-4 justify-center text-green-700">
+                              <Select.ItemIndicator>
+                                <Check size={14} />
+                              </Select.ItemIndicator>
+                            </span>
+                            <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
+                          </div>
+                        </Select.Item>
+                      )}
+                    >
+                      <Select.Trigger class="grid w-full min-w-0 grid-cols-[1fr_auto] items-center gap-2 rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm font-medium text-gray-700">
+                        <Select.Value<OverPowerSummaryOption> class="truncate">
+                          {(state) => <span>{state.selectedOption()?.label ?? 'ジャンル'}</span>}
+                        </Select.Value>
+                        <span class="justify-self-end text-gray-500" aria-hidden="true">
+                          <ChevronDown size={16} />
+                        </span>
+                      </Select.Trigger>
+                      <Select.Portal>
+                        <Select.Content class="z-50 mt-1 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-gray-200 bg-white shadow-md">
+                          <Select.Listbox />
+                        </Select.Content>
+                      </Select.Portal>
+                    </Select>
+                  </div>
                   <button
                     type="button"
-                    class={iconButtonClass}
+                    class={`${iconButtonClass} shrink-0 whitespace-nowrap`}
                     aria-label="未解禁楽曲設定"
                     title="未解禁楽曲設定"
                     disabled={lockedSongsButtonDisabled()}
