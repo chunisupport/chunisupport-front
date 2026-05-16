@@ -178,7 +178,7 @@ const UserOverPower: Component<Props> = (props) => {
                       </span>
                     </Select.Trigger>
                     <Select.Portal>
-                      <Select.Content class="z-50 mt-1 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-gray-200 bg-white shadow-md">
+                      <Select.Content class="z-50 mt-1 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-gray-200 bg-white shadow-md">
                         <Select.Listbox />
                       </Select.Content>
                     </Select.Portal>
