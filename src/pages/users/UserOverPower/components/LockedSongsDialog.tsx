@@ -1,6 +1,6 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
-import { CircleSlash2, Search } from 'lucide-solid'
+import { Check, CircleSlash2, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import Loading from '../../../../components/Loading/Loading'
@@ -22,6 +22,7 @@ const hasUltimaChart = (song: SongDTO): boolean => Boolean(song.charts.ULTIMA)
 
 const LockedSongsDialog: Component<Props> = (props) => {
   const [query, setQuery] = createSignal('')
+  const [showLockedOnly, setShowLockedOnly] = createSignal(false)
   const [isListReady, setIsListReady] = createSignal(false)
   const lockedSongKeys = createMemo(
     () =>
@@ -31,17 +32,23 @@ const LockedSongsDialog: Component<Props> = (props) => {
         )
       )
   )
+  const isLocked = (displayId: string, isUltima: boolean): boolean =>
+    lockedSongKeys().has(createLockedSongKey(displayId, isUltima))
   const filteredSongs = createMemo(() => {
     const normalizedQuery = query().trim().toLowerCase()
-    if (!normalizedQuery) return props.songs
+    const shouldShowLockedOnly = showLockedOnly()
 
     return props.songs.filter((song) => {
+      if (shouldShowLockedOnly && !isLocked(song.id, false) && !isLocked(song.id, true)) {
+        return false
+      }
+
+      if (!normalizedQuery) return true
+
       const searchableText = `${song.id} ${song.title} ${song.artist}`.toLowerCase()
       return searchableText.includes(normalizedQuery)
     })
   })
-  const isLocked = (displayId: string, isUltima: boolean): boolean =>
-    lockedSongKeys().has(createLockedSongKey(displayId, isUltima))
   const isSaving = (displayId: string, isUltima: boolean): boolean =>
     props.savingKey === createLockedSongKey(displayId, isUltima)
 
@@ -78,18 +85,34 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </Dialog.CloseButton>
           </div>
 
-          <TextField class="mb-3">
-            <div class="flex items-center gap-2 rounded border border-gray-300 px-2 focus-within:border-primary-500">
-              <Search class="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
-              <TextField.Input
-                class="min-w-0 flex-1 py-2 text-sm outline-none"
-                aria-label="未解禁楽曲検索"
-                placeholder="曲名・アーティストで検索..."
-                value={query()}
-                onInput={(event) => setQuery(event.currentTarget.value)}
-              />
-            </div>
-          </TextField>
+          <div class="mb-3 flex items-center gap-2">
+            <TextField class="flex-1">
+              <div class="flex items-center gap-2 rounded border border-gray-300 px-2 focus-within:border-primary-500">
+                <Search class="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
+                <TextField.Input
+                  class="min-w-0 flex-1 py-2 text-sm outline-none"
+                  aria-label="未解禁楽曲検索"
+                  placeholder="曲名・アーティストで検索..."
+                  value={query()}
+                  onInput={(event) => setQuery(event.currentTarget.value)}
+                />
+              </div>
+            </TextField>
+            <button
+              type="button"
+              class={`flex h-[38px] w-[38px] items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+                showLockedOnly()
+                  ? 'border-primary-600 bg-primary-600 text-white hover:bg-primary-700'
+                  : 'border-gray-500 text-gray-700 hover:bg-gray-100'
+              }`}
+              aria-label="チェック済み楽曲のみ表示"
+              aria-pressed={showLockedOnly()}
+              title="チェック済み楽曲のみ表示"
+              onClick={() => setShowLockedOnly((value) => !value)}
+            >
+              <Check size={24} aria-hidden="true" />
+            </button>
+          </div>
 
           <div class="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
             <span>
