@@ -28,7 +28,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => (
       title="フィルター"
       disabled={props.filterButtonDisabled}
     >
-      <Funnel size={30} />
+      <Funnel size={24} />
     </button>
     <button
       class="flex h-[38px] w-[38px] items-center justify-center rounded border border-gray-500 text-gray-700 hover:bg-gray-100"
@@ -37,7 +37,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => (
       aria-label="列設定"
       title="列設定"
     >
-      <Columns3 size={30} />
+      <Columns3 size={24} />
     </button>
   </div>
 )

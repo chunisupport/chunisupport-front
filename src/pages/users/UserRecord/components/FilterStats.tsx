@@ -70,11 +70,11 @@ const ScoreBoxPlot: Component<{ stats: RecordStats['scoreStats'] }> = (props) =>
 
 const FilterStats: Component<FilterStatsProps> = (props) => (
   <Collapsible
-    class="mb-2 px-2 py-1 border border-gray-500 rounded-sm"
+    class="mb-2 px-2 border border-gray-500 rounded-sm"
     open={props.open}
     onOpenChange={props.onOpenChange}
   >
-    <Collapsible.Trigger class="flex w-full gap-1 group">
+    <Collapsible.Trigger class="flex h-[36px] w-full items-center gap-1 group">
       <span class="mr-1 group-data-expanded:rotate-90">▶</span>
       <p class="flex-1 text-left">フィルター統計</p>
       <p>平均スコア: {props.stats.scoreStats.avg.toLocaleString()}</p>
