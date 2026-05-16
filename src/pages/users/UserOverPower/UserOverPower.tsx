@@ -92,7 +92,7 @@ const UserOverPower: Component<Props> = (props) => {
   const highLevelRows = createMemo(() => summary()?.levels.filter((row) => !row.isLowLevel) ?? [])
   const lowLevelRows = createMemo(() => summary()?.levels.filter((row) => row.isLowLevel) ?? [])
   const iconButtonClass =
-    'inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-gray-400'
+    'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-gray-400'
   const lockedSongsButtonDisabled = createMemo(
     () => !canManageLockedSongs() || !allSongs() || lockedSongs.loading
   )
@@ -189,6 +189,7 @@ const UserOverPower: Component<Props> = (props) => {
                     disabled={lockedSongsButtonDisabled()}
                     onClick={() => setLockedSongsDialogOpen(true)}
                   >
+                    <span>未解禁曲</span>
                     <LockKeyhole class="h-5 w-5" aria-hidden="true" />
                   </button>
                 </div>

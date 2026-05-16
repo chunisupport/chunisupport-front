@@ -29,7 +29,7 @@ type Props = {
 }
 
 const statsPageButtonClass =
-  'inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2'
+  'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 text-sm text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2'
 
 const RecordList: Component<{ records: PlayerRecordDTO[]; candidates?: PlayerRecordDTO[] }> = (
   props
@@ -213,6 +213,7 @@ export const UserProfileView: Component<Props> = (props) => {
                 aria-label="統計ページ"
                 title="統計ページ"
               >
+                <span>統計</span>
                 <ChartColumnIncreasing class="h-5 w-5" aria-hidden="true" />
               </A>
             </div>
