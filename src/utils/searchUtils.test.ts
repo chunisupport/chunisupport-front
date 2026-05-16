@@ -22,3 +22,15 @@ test('matchesSearchQuery はアーティスト名を検索できる', () => {
 test('matchesSearchQuery は正規化後に部分一致しない場合 false を返す', () => {
   assert.equal(matchesSearchQuery('テリトリーバトル', '東雲めぐ', 'abc'), false)
 })
+
+test('matchesSearchQuery は reading の濁点・半濁点を無視して検索できる', () => {
+  assert.equal(matchesSearchQuery('テスト', 'アーティスト', 'カッツ', 'ガッツ'), true)
+})
+
+test('matchesSearchQuery は reading の長音記号をウとして扱う', () => {
+  assert.equal(matchesSearchQuery('テスト', 'アーティスト', 'コーヒー', 'コウヒウ'), true)
+})
+
+test('matchesSearchQuery は記号を除去した reading でも検索できる', () => {
+  assert.equal(matchesSearchQuery('ダミー', 'A', 'DONT', 'D!O?N-T'), true)
+})
