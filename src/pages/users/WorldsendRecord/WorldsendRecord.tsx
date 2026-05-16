@@ -13,6 +13,7 @@ import {
 import { fetchWorldsendSongs } from '../../../api/songs'
 import { Loading } from '../../../components'
 import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
+import { normalizeForReadingSearch, normalizeForSearch } from '../../../utils/searchUtils'
 import { createRecordTableVirtualizer } from '../components/createRecordTableVirtualizer'
 import {
   type ColumnRenderer,
@@ -249,15 +250,30 @@ const WorldsendRecord = (props: Props) => {
     return attachWorldsendSongMetaToRecords(songs.songs, props.records)
   })
 
+  const searchableRecords = createMemo(() =>
+    recordsWithSongMeta().map((record) => ({
+      record,
+      normalizedTitle: normalizeForSearch(record.title),
+      normalizedReading: normalizeForReadingSearch(
+        record.reading?.trim() ? record.reading : record.title
+      ),
+    }))
+  )
+
   const filteredRecords = createMemo(() => {
-    const keyword = title().trim().toLowerCase()
-    const records = recordsWithSongMeta()
+    const keyword = normalizeForSearch(title())
+    const readingKeyword = normalizeForReadingSearch(title())
 
     if (!keyword) {
-      return records
+      return recordsWithSongMeta()
     }
 
-    return records.filter((record) => record.title.toLowerCase().includes(keyword))
+    return searchableRecords()
+      .filter(
+        ({ normalizedTitle, normalizedReading }) =>
+          normalizedTitle.includes(keyword) || normalizedReading.includes(readingKeyword)
+      )
+      .map(({ record }) => record)
   })
 
   return (

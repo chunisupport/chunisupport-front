@@ -24,7 +24,11 @@ import RecordTable from './components/RecordTable'
 import { DEFAULT_FILTER, getMasterDataDefaults } from './types/filterDefaults'
 import type { FilterState, RecordColumnId, RecordSortKey } from './types/types'
 import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
-import { getDefaultFilter, isRecordMatched } from './utils/filtering'
+import {
+  createRecordTitleMatcher,
+  getDefaultFilter,
+  isRecordMatchedWithTitleMatcher,
+} from './utils/filtering'
 import { getRecordStats } from './utils/recordStats'
 import { nextSortState, parseSortParams, sortRecords } from './utils/sorting'
 import { loadSavedFilters, type SavedFilter } from './utils/storage'
@@ -90,7 +94,10 @@ const UserRecord: Component<Props> = (props) => {
   const filteredRecords = createMemo(() => {
     const records = recordsWithSongMeta()
     const currentFilters = filters()
-    return records.filter((record) => isRecordMatched(record, currentFilters))
+    const matchTitle = createRecordTitleMatcher(currentFilters.title)
+    return records.filter((record) =>
+      isRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle)
+    )
   })
 
   const sortedRecords = createMemo(() => {
