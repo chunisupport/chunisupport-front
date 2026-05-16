@@ -46,28 +46,40 @@ const LockedSongsDialog: Component<Props> = (props) => {
       ...(hasUltimaChart(song) ? [{ song, isUltima: true }] : []),
     ])
   )
+  const searchableSongListItems = createMemo(() =>
+    songListItems().map((item) => {
+      const chartLabel = item.isUltima ? 'ultima' : '通常 譜面'
+      return {
+        item,
+        searchableText: normalizeForSearch(
+          `${item.song.id} ${item.song.title} ${item.song.artist} ${chartLabel}`
+        ),
+        searchableReading: normalizeForReadingSearch(
+          item.song.reading?.trim() ? item.song.reading : item.song.title
+        ),
+      }
+    })
+  )
+
   const filteredSongListItems = createMemo(() => {
     const normalizedQuery = normalizeForSearch(query())
     const normalizedReadingQuery = normalizeForReadingSearch(query())
     const shouldShowLockedOnly = showLockedOnly()
 
-    return songListItems().filter((item) => {
-      if (shouldShowLockedOnly && !isLocked(item.song.id, item.isUltima)) {
-        return false
-      }
+    return searchableSongListItems()
+      .filter(({ item, searchableText, searchableReading }) => {
+        if (shouldShowLockedOnly && !isLocked(item.song.id, item.isUltima)) {
+          return false
+        }
 
-      if (!normalizedQuery) return true
+        if (!normalizedQuery) return true
 
-      const chartLabel = item.isUltima ? 'ultima' : '通常 譜面'
-      const searchableText = normalizeForSearch(
-        `${item.song.id} ${item.song.title} ${item.song.artist} ${chartLabel}`
-      )
-      const searchableReading = normalizeForReadingSearch(item.song.reading ?? item.song.title)
-      return (
-        searchableText.includes(normalizedQuery) ||
-        searchableReading.includes(normalizedReadingQuery)
-      )
-    })
+        return (
+          searchableText.includes(normalizedQuery) ||
+          searchableReading.includes(normalizedReadingQuery)
+        )
+      })
+      .map(({ item }) => item)
   })
   const isSaving = (displayId: string, isUltima: boolean): boolean =>
     props.savingKey === createLockedSongKey(displayId, isUltima)

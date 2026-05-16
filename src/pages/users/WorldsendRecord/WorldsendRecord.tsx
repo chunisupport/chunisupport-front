@@ -250,20 +250,30 @@ const WorldsendRecord = (props: Props) => {
     return attachWorldsendSongMetaToRecords(songs.songs, props.records)
   })
 
+  const searchableRecords = createMemo(() =>
+    recordsWithSongMeta().map((record) => ({
+      record,
+      normalizedTitle: normalizeForSearch(record.title),
+      normalizedReading: normalizeForReadingSearch(
+        record.reading?.trim() ? record.reading : record.title
+      ),
+    }))
+  )
+
   const filteredRecords = createMemo(() => {
     const keyword = normalizeForSearch(title())
     const readingKeyword = normalizeForReadingSearch(title())
-    const records = recordsWithSongMeta()
 
     if (!keyword) {
-      return records
+      return recordsWithSongMeta()
     }
 
-    return records.filter((record) => {
-      const normalizedTitle = normalizeForSearch(record.title)
-      const normalizedReading = normalizeForReadingSearch(record.reading ?? record.title)
-      return normalizedTitle.includes(keyword) || normalizedReading.includes(readingKeyword)
-    })
+    return searchableRecords()
+      .filter(
+        ({ normalizedTitle, normalizedReading }) =>
+          normalizedTitle.includes(keyword) || normalizedReading.includes(readingKeyword)
+      )
+      .map(({ record }) => record)
   })
 
   return (
