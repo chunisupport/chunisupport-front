@@ -2,7 +2,8 @@ import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { CircleSlash2, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createMemo, createSignal, For, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
+import Loading from '../../../../components/Loading/Loading'
 import type { PlayerLockedSongResponseItem, SongDTO } from '../../../../types/api'
 
 type Props = {
@@ -21,6 +22,7 @@ const hasUltimaChart = (song: SongDTO): boolean => Boolean(song.charts.ULTIMA)
 
 const LockedSongsDialog: Component<Props> = (props) => {
   const [query, setQuery] = createSignal('')
+  const [isListReady, setIsListReady] = createSignal(false)
   const lockedSongKeys = createMemo(
     () =>
       new Set(
@@ -42,6 +44,22 @@ const LockedSongsDialog: Component<Props> = (props) => {
     lockedSongKeys().has(createLockedSongKey(displayId, isUltima))
   const isSaving = (displayId: string, isUltima: boolean): boolean =>
     props.savingKey === createLockedSongKey(displayId, isUltima)
+
+  createEffect(() => {
+    if (!props.open) {
+      setIsListReady(false)
+      return
+    }
+
+    setIsListReady(false)
+    const timerId = window.setTimeout(() => {
+      setIsListReady(true)
+    }, 0)
+
+    onCleanup(() => {
+      window.clearTimeout(timerId)
+    })
+  })
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
@@ -82,54 +100,77 @@ const LockedSongsDialog: Component<Props> = (props) => {
 
           <div class="min-h-0 flex-1 overflow-y-auto rounded border border-gray-200">
             <Show
-              when={filteredSongs().length > 0}
+              when={isListReady()}
               fallback={
-                <div class="flex flex-col items-center justify-center gap-2 p-8 text-sm text-gray-500">
-                  <CircleSlash2 class="h-6 w-6" aria-hidden="true" />
-                  <p>該当する曲がありません。</p>
+                <div
+                  class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-sm text-gray-500"
+                  role="status"
+                  aria-live="polite"
+                  aria-busy="true"
+                >
+                  <Loading />
+                  <span class="sr-only">読み込み中</span>
                 </div>
               }
             >
-              <ul class="divide-y divide-gray-200">
-                <For each={filteredSongs()}>
-                  {(song) => (
-                    <li class="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div class="min-w-0">
-                        <p class="truncate font-sans font-medium text-gray-900">{song.title}</p>
-                        <p class="truncate font-sans text-xs text-gray-500">{song.artist}</p>
-                      </div>
-                      <div class="flex shrink-0 flex-wrap gap-3">
-                        <label class="inline-flex items-center gap-2 text-sm">
-                          <input
-                            type="checkbox"
-                            class="h-4 w-4"
-                            checked={isLocked(song.id, false)}
-                            disabled={isSaving(song.id, false)}
-                            onChange={(event) =>
-                              props.onToggleLockedSong(song.id, false, event.currentTarget.checked)
-                            }
-                          />
-                          通常
-                        </label>
-                        <Show when={hasUltimaChart(song)}>
+              <Show
+                when={filteredSongs().length > 0}
+                fallback={
+                  <div class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-sm text-gray-500">
+                    <CircleSlash2 class="h-6 w-6" aria-hidden="true" />
+                    <p>該当する曲がありません。</p>
+                  </div>
+                }
+              >
+                <ul class="divide-y divide-gray-200">
+                  <For each={filteredSongs()}>
+                    {(song) => (
+                      <li class="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="min-w-0">
+                          <p class="truncate font-sans font-medium text-gray-900">{song.title}</p>
+                          <p class="truncate font-sans text-xs text-gray-500">{song.artist}</p>
+                        </div>
+                        <div class="flex shrink-0 flex-wrap gap-3">
                           <label class="inline-flex items-center gap-2 text-sm">
                             <input
                               type="checkbox"
                               class="h-4 w-4"
-                              checked={isLocked(song.id, true)}
-                              disabled={isSaving(song.id, true)}
+                              checked={isLocked(song.id, false)}
+                              disabled={isSaving(song.id, false)}
                               onChange={(event) =>
-                                props.onToggleLockedSong(song.id, true, event.currentTarget.checked)
+                                props.onToggleLockedSong(
+                                  song.id,
+                                  false,
+                                  event.currentTarget.checked
+                                )
                               }
                             />
-                            ULTIMA
+                            通常
                           </label>
-                        </Show>
-                      </div>
-                    </li>
-                  )}
-                </For>
-              </ul>
+                          <Show when={hasUltimaChart(song)}>
+                            <label class="inline-flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                class="h-4 w-4"
+                                checked={isLocked(song.id, true)}
+                                disabled={isSaving(song.id, true)}
+                                onChange={(event) =>
+                                  props.onToggleLockedSong(
+                                    song.id,
+                                    true,
+                                    event.currentTarget.checked
+                                  )
+                                }
+                              />
+                              ULTIMA
+                            </label>
+                          </Show>
+                        </div>
+                      </li>
+                    )}
+                  </For>
+                </ul>
+              </Show>
             </Show>
           </div>
         </Dialog.Content>
