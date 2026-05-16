@@ -1,4 +1,5 @@
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import { normalizeForReadingSearch, normalizeForSearch } from '../../../../utils/searchUtils'
 import { buildDefaultFilter } from '../types/filterDefaults'
 import type { ChainLamp, ComboLamp, Difficulty, FilterState, HardLamp } from '../types/types'
 
@@ -14,8 +15,16 @@ export function isRecordMatched(record: PlayerRecordWithSongMeta, filters: Filte
 
   // 曲名
   if (filters.title) {
-    const title = record.title.toLowerCase()
-    if (!title.includes(filters.title.toLowerCase())) {
+    const normalizedQuery = normalizeForSearch(filters.title)
+    const normalizedReadingQuery = normalizeForReadingSearch(filters.title)
+    const normalizedTitle = normalizeForSearch(record.title)
+    const normalizedArtist = normalizeForSearch(record.artist)
+    const normalizedReading = normalizeForReadingSearch(record.reading ?? record.title)
+    if (
+      !normalizedTitle.includes(normalizedQuery) &&
+      !normalizedArtist.includes(normalizedQuery) &&
+      !normalizedReading.includes(normalizedReadingQuery)
+    ) {
       return false
     }
   }
