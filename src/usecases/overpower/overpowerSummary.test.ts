@@ -132,29 +132,36 @@ test('ジャンル別はマスタのsort_order順で並ぶ', () => {
   )
 })
 
-test('レベル別は最高譜面定数を表示レベルへ変換し、10未満を判定する', () => {
+test('レベル別は譜面単位で表示レベルへ変換して集計し、同曲重複を含める', () => {
   const summary = buildOverPowerSummary(
     [
+      createSong({
+        id: 'same-song',
+        maxop: 99,
+        charts: {
+          EXPERT: { const: 14.5, is_const_unknown: false, notes: null },
+          MASTER: { const: 14.5, is_const_unknown: false, notes: null },
+        },
+      }),
       createSong({
         id: 'low',
         maxop: 62.5,
         charts: { MASTER: { const: 9.5, is_const_unknown: false, notes: null } },
       }),
-      createSong({
-        id: 'high',
-        maxop: 87,
-        charts: { MASTER: { const: 14.4, is_const_unknown: false, notes: null } },
-      }),
     ],
-    [createRecord({ id: 'low', overpower: 10 }), createRecord({ id: 'high', overpower: 80 })],
+    [
+      createRecord({ id: 'same-song', difficulty: 'EXPERT', const: 14.5, overpower: 70 }),
+      createRecord({ id: 'same-song', difficulty: 'MASTER', const: 14.5, overpower: 80 }),
+      createRecord({ id: 'low', difficulty: 'MASTER', const: 9.5, overpower: 10 }),
+    ],
     versions
   )
 
   assert.deepEqual(
-    summary.levels.map((row) => [row.label, row.isLowLevel]),
+    summary.levels.map((row) => [row.label, row.current, row.max, row.count, row.isLowLevel]),
     [
-      ['9+', true],
-      ['14', false],
+      ['9+', 10, 62.5, 1, true],
+      ['14+', 150, 175, 2, false],
     ]
   )
 })
