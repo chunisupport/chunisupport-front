@@ -1,6 +1,26 @@
 const symbolOrSpaceRegex = /[\p{P}\p{S}\p{Z}\p{Cf}]/gu
 const voicedMarkRegex = /[\u3099\u309A]/gu
 const prolongedSoundMarkRegex = /[ーｰ]/g
+const trailingFullwidthAlphabetRegex = /[Ａ-Ｚａ-ｚ]$/u
+
+/**
+ * 検索クエリ末尾の全角英字を1文字除去する。
+ */
+export function removeTrailingFullwidthAlphabet(value: string | null | undefined): string {
+  if (!value) return ''
+  return trailingFullwidthAlphabetRegex.test(value) ? value.slice(0, -1) : value
+}
+
+export function normalizeQuery(query: string | null | undefined): {
+  normalizedQuery: string
+  normalizedReadingQuery: string
+} {
+  const stabilizedQuery = removeTrailingFullwidthAlphabet(query)
+  return {
+    normalizedQuery: normalizeForSearch(stabilizedQuery),
+    normalizedReadingQuery: normalizeForReadingSearch(stabilizedQuery),
+  }
+}
 
 /**
  * 検索用に文字列を正規化する。
@@ -53,8 +73,7 @@ export function matchesSearchQuery(
   query: string,
   reading?: string | null
 ): boolean {
-  const normalizedQuery = normalizeForSearch(query)
-  const normalizedReadingQuery = normalizeForReadingSearch(query)
+  const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query)
   const normalizedTitle = normalizeForSearch(title)
   const normalizedArtist = normalizeForSearch(artist)
   const normalizedReading = normalizeForReadingSearch(reading ?? title)

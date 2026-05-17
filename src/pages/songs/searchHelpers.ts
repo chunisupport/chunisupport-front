@@ -2,6 +2,7 @@ import {
   matchesNormalizedSearchQuery,
   normalizeForReadingSearch,
   normalizeForSearch,
+  normalizeQuery,
 } from '../../utils/searchUtils'
 
 type SearchableItem<T> = {
@@ -28,8 +29,7 @@ export const filterSearchableItems = <T>(
   searchableItems: SearchableItem<T>[],
   query: string
 ): T[] => {
-  const normalizedQuery = normalizeForSearch(query)
-  const normalizedReadingQuery = normalizeForReadingSearch(query)
+  const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query)
   return searchableItems
     .filter(({ normalizedTitle, normalizedArtist, normalizedReading }) =>
       matchesNormalizedSearchQuery(
