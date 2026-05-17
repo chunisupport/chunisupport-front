@@ -6,7 +6,7 @@ type Props = {
 }
 
 const formatValue = (value: number): string => value.toFixed(3)
-const formatPercent = (value: number): string => value.toFixed(2)
+const formatPercent = (value: number): string => value.toFixed(4)
 
 export const OverPowerAllSummary: Component<Props> = (props) => (
   <section class="rounded-lg border border-sky-200 bg-sky-50 p-4">

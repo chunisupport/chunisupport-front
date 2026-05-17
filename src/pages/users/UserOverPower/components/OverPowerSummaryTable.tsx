@@ -8,7 +8,7 @@ type Props = {
 }
 
 const formatValue = (value: number): string => value.toFixed(3)
-const formatPercent = (value: number): string => value.toFixed(2)
+const formatPercent = (value: number): string => value.toFixed(4)
 
 export const OverPowerSummaryTable: Component<Props> = (props) => (
   <section class="overflow-hidden rounded-lg border border-gray-200 bg-white">
