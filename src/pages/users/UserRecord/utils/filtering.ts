@@ -3,6 +3,7 @@ import {
   matchesNormalizedSearchQuery,
   normalizeForReadingSearch,
   normalizeForSearch,
+  normalizeQuery,
 } from '../../../../utils/searchUtils'
 import { buildDefaultFilter } from '../types/filterDefaults'
 import type { ChainLamp, ComboLamp, Difficulty, FilterState, HardLamp } from '../types/types'
@@ -13,12 +14,11 @@ export const getDefaultFilter = buildDefaultFilter
 export type RecordTitleMatcher = (record: PlayerRecordWithSongMeta) => boolean
 
 export function createRecordTitleMatcher(query: string): RecordTitleMatcher {
-  const normalizedQuery = normalizeForSearch(query)
+  const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query)
   if (!normalizedQuery) {
     return () => true
   }
 
-  const normalizedReadingQuery = normalizeForReadingSearch(query)
   return (record) => {
     const normalizedTitle = normalizeForSearch(record.title)
     const normalizedArtist = normalizeForSearch(record.artist)

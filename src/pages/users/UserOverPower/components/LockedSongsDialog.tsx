@@ -5,7 +5,11 @@ import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import Loading from '../../../../components/Loading/Loading'
 import type { PlayerLockedSongResponseItem, SongDTO } from '../../../../types/api'
-import { normalizeForReadingSearch, normalizeForSearch } from '../../../../utils/searchUtils'
+import {
+  normalizeForReadingSearch,
+  normalizeForSearch,
+  normalizeQuery,
+} from '../../../../utils/searchUtils'
 
 type Props = {
   open: boolean
@@ -62,8 +66,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
   )
 
   const filteredSongListItems = createMemo(() => {
-    const normalizedQuery = normalizeForSearch(query())
-    const normalizedReadingQuery = normalizeForReadingSearch(query())
+    const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query())
     const shouldShowLockedOnly = showLockedOnly()
 
     return searchableSongListItems()
