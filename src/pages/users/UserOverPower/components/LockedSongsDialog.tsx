@@ -8,7 +8,7 @@ import type { PlayerLockedSongResponseItem, SongDTO } from '../../../../types/ap
 import {
   normalizeForReadingSearch,
   normalizeForSearch,
-  removeTrailingFullwidthAlphabet,
+  normalizeQuery,
 } from '../../../../utils/searchUtils'
 
 type Props = {
@@ -66,9 +66,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
   )
 
   const filteredSongListItems = createMemo(() => {
-    const stabilizedQuery = removeTrailingFullwidthAlphabet(query())
-    const normalizedQuery = normalizeForSearch(stabilizedQuery)
-    const normalizedReadingQuery = normalizeForReadingSearch(stabilizedQuery)
+    const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query())
     const shouldShowLockedOnly = showLockedOnly()
 
     return searchableSongListItems()

@@ -3,9 +3,23 @@ const voicedMarkRegex = /[\u3099\u309A]/gu
 const prolongedSoundMarkRegex = /[ーｰ]/g
 const trailingFullwidthAlphabetRegex = /[Ａ-Ｚａ-ｚ]$/u
 
+/**
+ * 検索クエリ末尾の全角英字を1文字除去する。
+ */
 export function removeTrailingFullwidthAlphabet(value: string | null | undefined): string {
   if (!value) return ''
   return trailingFullwidthAlphabetRegex.test(value) ? value.slice(0, -1) : value
+}
+
+export function normalizeQuery(query: string | null | undefined): {
+  normalizedQuery: string
+  normalizedReadingQuery: string
+} {
+  const stabilizedQuery = removeTrailingFullwidthAlphabet(query)
+  return {
+    normalizedQuery: normalizeForSearch(stabilizedQuery),
+    normalizedReadingQuery: normalizeForReadingSearch(stabilizedQuery),
+  }
 }
 
 /**
@@ -55,9 +69,7 @@ export function matchesSearchQuery(
   query: string,
   reading?: string | null
 ): boolean {
-  const stabilizedQuery = removeTrailingFullwidthAlphabet(query)
-  const normalizedQuery = normalizeForSearch(stabilizedQuery)
-  const normalizedReadingQuery = normalizeForReadingSearch(stabilizedQuery)
+  const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query)
   const normalizedTitle = normalizeForSearch(title)
   const normalizedArtist = normalizeForSearch(artist)
   const normalizedReading = normalizeForReadingSearch(reading ?? title)

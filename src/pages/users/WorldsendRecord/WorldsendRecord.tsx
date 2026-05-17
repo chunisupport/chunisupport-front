@@ -16,7 +16,7 @@ import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
 import {
   normalizeForReadingSearch,
   normalizeForSearch,
-  removeTrailingFullwidthAlphabet,
+  normalizeQuery,
 } from '../../../utils/searchUtils'
 import { createRecordTableVirtualizer } from '../components/createRecordTableVirtualizer'
 import {
@@ -265,9 +265,9 @@ const WorldsendRecord = (props: Props) => {
   )
 
   const filteredRecords = createMemo(() => {
-    const stabilizedQuery = removeTrailingFullwidthAlphabet(title())
-    const keyword = normalizeForSearch(stabilizedQuery)
-    const readingKeyword = normalizeForReadingSearch(stabilizedQuery)
+    const { normalizedQuery: keyword, normalizedReadingQuery: readingKeyword } = normalizeQuery(
+      title()
+    )
 
     if (!keyword) {
       return recordsWithSongMeta()
