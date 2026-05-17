@@ -175,11 +175,11 @@ const buildGenreSummaries = (
     .sort((a, b) => compareMasterItemNames(a.label, b.label, genreOrderMap))
 }
 
-const buildLevelSummaries = (entries: SongAggregationEntry[]): OverPowerLevelSummaryRow[] => {
+const buildLevelSummaries = (records: PlayerRecordDTO[]): OverPowerLevelSummaryRow[] => {
   const groups = new Map<ChartLevelLabel, MutableSummary>()
-  for (const entry of entries) {
-    if (!entry.level) continue
-    addToGroup(groups, entry.level, entry.current, entry.max)
+  for (const record of records) {
+    const level = toChartLevelLabel(record.const)
+    addToGroup(groups, level, record.overpower, (record.const + 3) * 5)
   }
 
   return [...groups.entries()]
@@ -248,7 +248,7 @@ export const buildOverPowerSummary = (
   return {
     all: buildAllSummary(entries),
     genres: buildGenreSummaries(entries, genres),
-    levels: buildLevelSummaries(entries),
+    levels: buildLevelSummaries(availableRecords),
     versions: buildVersionSummaries(entries, versions),
     difficulties: buildDifficultySummaries(availableRecords),
   }

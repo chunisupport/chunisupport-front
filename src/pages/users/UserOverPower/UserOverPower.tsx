@@ -214,7 +214,7 @@ const UserOverPower: Component<Props> = (props) => {
 
                 <Tabs.Content value="levels" class="mt-4">
                   <div class="flex flex-col gap-4">
-                    <OverPowerSummaryTable rows={highLevelRows()} countLabel="曲数" />
+                    <OverPowerSummaryTable rows={highLevelRows()} countLabel="譜面数" />
                     <Show when={lowLevelRows().length > 0}>
                       <section>
                         <button
@@ -232,7 +232,7 @@ const UserOverPower: Component<Props> = (props) => {
                           />
                         </button>
                         <Show when={showLowLevels()}>
-                          <OverPowerSummaryTable rows={lowLevelRows()} countLabel="曲数" />
+                          <OverPowerSummaryTable rows={lowLevelRows()} countLabel="譜面数" />
                         </Show>
                       </section>
                     </Show>
