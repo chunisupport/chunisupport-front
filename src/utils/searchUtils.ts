@@ -1,6 +1,12 @@
 const symbolOrSpaceRegex = /[\p{P}\p{S}\p{Z}\p{Cf}]/gu
 const voicedMarkRegex = /[\u3099\u309A]/gu
 const prolongedSoundMarkRegex = /[ーｰ]/g
+const trailingFullwidthAlphabetRegex = /[Ａ-Ｚａ-ｚ]$/u
+
+export function removeTrailingFullwidthAlphabet(value: string | null | undefined): string {
+  if (!value) return ''
+  return trailingFullwidthAlphabetRegex.test(value) ? value.slice(0, -1) : value
+}
 
 /**
  * 検索用に文字列を正規化する。
@@ -49,8 +55,9 @@ export function matchesSearchQuery(
   query: string,
   reading?: string | null
 ): boolean {
-  const normalizedQuery = normalizeForSearch(query)
-  const normalizedReadingQuery = normalizeForReadingSearch(query)
+  const stabilizedQuery = removeTrailingFullwidthAlphabet(query)
+  const normalizedQuery = normalizeForSearch(stabilizedQuery)
+  const normalizedReadingQuery = normalizeForReadingSearch(stabilizedQuery)
   const normalizedTitle = normalizeForSearch(title)
   const normalizedArtist = normalizeForSearch(artist)
   const normalizedReading = normalizeForReadingSearch(reading ?? title)

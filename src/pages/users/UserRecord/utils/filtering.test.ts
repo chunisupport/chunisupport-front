@@ -56,3 +56,10 @@ test('isRecordMatchedWithTitleMatcher は事前生成したマッチャーで一
 
   assert.equal(isRecordMatchedWithTitleMatcher(record, filters, matcher), true)
 })
+
+test('createRecordTitleMatcher は末尾の全角英字を除去して一致判定できる', () => {
+  const record = createRecord({ title: 'かもねぎ' })
+  const matcher = createRecordTitleMatcher('かもｎ')
+
+  assert.equal(matcher(record), true)
+})
