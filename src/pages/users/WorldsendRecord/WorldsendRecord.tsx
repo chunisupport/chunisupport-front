@@ -59,6 +59,7 @@ type WorldsendSortKey = WorldsendRecordSortKey
 
 type WorldsendRecordWithSongMeta = WorldsendRecordDTO & {
   genre: string | null
+  reading: string | null
   release: string | null
 }
 
@@ -82,6 +83,7 @@ const attachWorldsendSongMetaToRecords = (
     return {
       ...record,
       genre: song?.genre ?? null,
+      reading: song?.reading ?? null,
       release: song?.release ?? null,
     }
   })

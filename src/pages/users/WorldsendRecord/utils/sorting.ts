@@ -48,11 +48,11 @@ export const nextWorldsendSortState = (
   sortDirection: SortDirection | null
 } => nextSharedSortState(currentSortKey, currentSortDirection, nextKey)
 
-export const sortWorldsendRecords = (
-  records: WorldsendRecordDTO[],
+export const sortWorldsendRecords = <TRecord extends WorldsendRecordDTO>(
+  records: TRecord[],
   currentSortKey: WorldsendRecordSortKey | null,
   currentSortDirection: SortDirection | null
-): WorldsendRecordDTO[] => {
+): TRecord[] => {
   if (!currentSortKey || !currentSortDirection) {
     return records
   }

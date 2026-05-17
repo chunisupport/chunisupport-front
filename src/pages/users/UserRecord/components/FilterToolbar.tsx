@@ -17,7 +17,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => (
         <Search class="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
         <TextField.Input
           class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
-          placeholder="曲名で検索..."
+          placeholder="曲名・アーティスト名で検索"
           value={props.title}
           onInput={(event) => props.onTitleChange(event.currentTarget.value)}
         />

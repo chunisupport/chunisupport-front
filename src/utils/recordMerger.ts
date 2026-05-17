@@ -3,6 +3,9 @@ import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionC
 
 /** 楽曲メタ情報を付与したプレイヤーレコード */
 export interface PlayerRecordWithSongMeta extends PlayerRecordDTO {
+  title: string
+  artist: string
+  reading: string | null
   genre: string
   release: string | null
   release_version: string
@@ -30,6 +33,9 @@ export function attachSongMetaToRecords(
 
     return {
       ...record,
+      title: song?.title ?? record.title,
+      artist: song?.artist ?? record.artist,
+      reading: song?.reading ?? null,
       genre: song?.genre ?? '不明',
       release,
       notes,
