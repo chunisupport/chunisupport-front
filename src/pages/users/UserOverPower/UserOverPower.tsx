@@ -59,7 +59,6 @@ const UserOverPower: Component<Props> = (props) => {
     () => props.username,
     fetchUserLockedSongs
   )
-  const [showLowLevels, setShowLowLevels] = createSignal(false)
   const [lockedSongsDialogOpen, setLockedSongsDialogOpen] = createSignal(false)
   const [savingLockedSongKey, setSavingLockedSongKey] = createSignal<string | null>(null)
   const [lockedSongsError, setLockedSongsError] = createSignal<string | null>(null)
@@ -90,7 +89,6 @@ const UserOverPower: Component<Props> = (props) => {
   })
 
   const highLevelRows = createMemo(() => summary()?.levels.filter((row) => !row.isLowLevel) ?? [])
-  const lowLevelRows = createMemo(() => summary()?.levels.filter((row) => row.isLowLevel) ?? [])
   const iconButtonClass =
     'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-gray-400'
   const lockedSongsButtonDisabled = createMemo(
@@ -213,30 +211,7 @@ const UserOverPower: Component<Props> = (props) => {
                 </Tabs.Content>
 
                 <Tabs.Content value="levels" class="mt-4">
-                  <div class="flex flex-col gap-4">
-                    <OverPowerSummaryTable rows={highLevelRows()} countLabel="譜面数" />
-                    <Show when={lowLevelRows().length > 0}>
-                      <section>
-                        <button
-                          type="button"
-                          class="mb-2 flex w-full items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
-                          aria-expanded={showLowLevels()}
-                          onClick={() => setShowLowLevels((value) => !value)}
-                        >
-                          <span>レベル10未満</span>
-                          <ChevronDown
-                            class={`h-4 w-4 transition-transform ${
-                              showLowLevels() ? 'rotate-180' : ''
-                            }`}
-                            aria-hidden="true"
-                          />
-                        </button>
-                        <Show when={showLowLevels()}>
-                          <OverPowerSummaryTable rows={lowLevelRows()} countLabel="譜面数" />
-                        </Show>
-                      </section>
-                    </Show>
-                  </div>
+                  <OverPowerSummaryTable rows={highLevelRows()} countLabel="譜面数" />
                 </Tabs.Content>
 
                 <Tabs.Content value="versions" class="mt-4">
