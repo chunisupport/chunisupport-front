@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PlayerLockedSongResponseItem } from '../../types/api'
-import { buildLockedSongsBatchPayload } from './lockedSongsBatch'
+import { buildLockedSongsBatchPayload, createLockedSongKey } from './lockedSongsBatch'
 
 const createItem = (displayId: string, isUltima = false): PlayerLockedSongResponseItem => ({
   display_id: displayId,
@@ -59,4 +59,9 @@ test('未解禁曲差分: 差分なしは空payloadを返す', () => {
   const result = buildLockedSongsBatchPayload(base, edited)
 
   assert.deepEqual(result, {})
+})
+
+test('createLockedSongKey は通常とULTIMAで異なるキーを返す', () => {
+  assert.equal(createLockedSongKey('song', false), 'song:normal')
+  assert.equal(createLockedSongKey('song', true), 'song:ultima')
 })

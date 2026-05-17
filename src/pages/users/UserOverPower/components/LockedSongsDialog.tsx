@@ -28,9 +28,6 @@ type LockedSongListItem = {
   isUltima: boolean
 }
 
-const createLockedSongKey = (displayId: string, isUltima: boolean): string =>
-  `${displayId}:${isUltima ? 'ultima' : 'normal'}`
-
 const hasUltimaChart = (song: SongDTO): boolean => Boolean(song.charts.ULTIMA)
 
 const LockedSongsDialog: Component<Props> = (props) => {
