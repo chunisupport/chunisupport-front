@@ -1,10 +1,14 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, CircleSlash2, Search } from 'lucide-solid'
+import { Check, CircleSlash2, LoaderCircle, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import Loading from '../../../../components/Loading/Loading'
-import type { PlayerLockedSongResponseItem, SongDTO } from '../../../../types/api'
+import type {
+  PlayerLockedSongRequest,
+  PlayerLockedSongResponseItem,
+  SongDTO,
+} from '../../../../types/api'
 import {
   normalizeForReadingSearch,
   normalizeForSearch,
@@ -15,9 +19,8 @@ type Props = {
   open: boolean
   songs: SongDTO[]
   lockedSongs: PlayerLockedSongResponseItem[]
-  savingKey: string | null
   onOpenChange: (open: boolean) => void
-  onToggleLockedSong: (displayId: string, isUltima: boolean, locked: boolean) => void
+  onSaveLockedSongs: (items: PlayerLockedSongRequest[]) => Promise<void>
 }
 
 type LockedSongListItem = {
@@ -34,6 +37,9 @@ const LockedSongsDialog: Component<Props> = (props) => {
   const [query, setQuery] = createSignal('')
   const [showLockedOnly, setShowLockedOnly] = createSignal(false)
   const [isListReady, setIsListReady] = createSignal(false)
+  const [draftLockedSongKeys, setDraftLockedSongKeys] = createSignal<Set<string>>(new Set())
+  const [isSaving, setIsSaving] = createSignal(false)
+  const [saveError, setSaveError] = createSignal<string | null>(null)
   const lockedSongKeys = createMemo(
     () =>
       new Set(
@@ -43,7 +49,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
       )
   )
   const isLocked = (displayId: string, isUltima: boolean): boolean =>
-    lockedSongKeys().has(createLockedSongKey(displayId, isUltima))
+    draftLockedSongKeys().has(createLockedSongKey(displayId, isUltima))
   const songListItems = createMemo<LockedSongListItem[]>(() =>
     props.songs.flatMap((song) => [
       { song, isUltima: false },
@@ -84,8 +90,56 @@ const LockedSongsDialog: Component<Props> = (props) => {
       })
       .map(({ item }) => item)
   })
-  const isSaving = (displayId: string, isUltima: boolean): boolean =>
-    props.savingKey === createLockedSongKey(displayId, isUltima)
+
+  createEffect(() => {
+    if (!props.open) return
+    setDraftLockedSongKeys(new Set(lockedSongKeys()))
+    setSaveError(null)
+  })
+
+  const hasChanges = createMemo(() => {
+    const baseKeys = lockedSongKeys()
+    const draftKeys = draftLockedSongKeys()
+    if (baseKeys.size !== draftKeys.size) return true
+    for (const key of baseKeys) {
+      if (!draftKeys.has(key)) return true
+    }
+    return false
+  })
+
+  const handleToggleDraft = (displayId: string, isUltima: boolean, locked: boolean) => {
+    const key = createLockedSongKey(displayId, isUltima)
+    setDraftLockedSongKeys((prev) => {
+      const next = new Set(prev)
+      if (locked) {
+        next.add(key)
+      } else {
+        next.delete(key)
+      }
+      return next
+    })
+  }
+
+  const handleSave = async () => {
+    const nextLockedSongs = [...draftLockedSongKeys()].map((key) => {
+      const [displayId, mode] = key.split(':')
+      return {
+        display_id: displayId,
+        is_ultima: mode === 'ultima',
+      }
+    })
+
+    setIsSaving(true)
+    setSaveError(null)
+    try {
+      await props.onSaveLockedSongs(nextLockedSongs)
+      props.onOpenChange(false)
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : '未解禁楽曲設定の保存に失敗しました')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   createEffect(() => {
     if (!props.open) {
@@ -207,9 +261,9 @@ const LockedSongsDialog: Component<Props> = (props) => {
                               type="checkbox"
                               class="h-4 w-4"
                               checked={isLocked(item.song.id, item.isUltima)}
-                              disabled={isSaving(item.song.id, item.isUltima)}
+                              disabled={isSaving()}
                               onChange={(event) =>
-                                props.onToggleLockedSong(
+                                handleToggleDraft(
                                   item.song.id,
                                   item.isUltima,
                                   event.currentTarget.checked
@@ -225,6 +279,32 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 </ul>
               </Show>
             </Show>
+          </div>
+
+          <Show when={saveError()}>
+            {(message) => <p class="mt-3 text-sm text-red-600">{message()}</p>}
+          </Show>
+
+          <div class="mt-4 flex justify-end gap-2">
+            <button
+              type="button"
+              class="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => props.onOpenChange(false)}
+              disabled={isSaving()}
+            >
+              キャンセル
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded bg-primary-600 px-3 py-2 text-sm text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleSave}
+              disabled={!hasChanges() || isSaving()}
+            >
+              <Show when={isSaving()}>
+                <LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />
+              </Show>
+              保存
+            </button>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
