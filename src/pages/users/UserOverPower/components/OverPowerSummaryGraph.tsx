@@ -61,8 +61,8 @@ const DistributionBar: Component<{
       : 'grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4'
   const itemClass = () =>
     props.fixedWidth
-      ? 'flex w-[100px] min-w-0 items-baseline gap-1.5 text-gray-800'
-      : 'flex min-w-0 items-baseline gap-1.5 text-gray-800'
+      ? 'flex min-w-[80px] items-baseline gap-1.5 whitespace-nowrap text-gray-800'
+      : 'flex min-w-max items-baseline gap-1.5 whitespace-nowrap text-gray-800'
 
   return (
     <div class="space-y-2">
@@ -70,7 +70,7 @@ const DistributionBar: Component<{
         <For each={props.bands}>
           {(band) => (
             <p class={itemClass()}>
-              <span class="truncate text-xs">{band.label}:</span>
+              <span class="shrink-0 text-xs">{band.label}:</span>
               <span class="shrink-0 text-base font-bold tabular-nums text-gray-950 sm:text-lg">
                 {band.count}
               </span>
