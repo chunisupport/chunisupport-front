@@ -397,6 +397,11 @@ export interface PlayerLockedSongRequest {
   is_ultima?: boolean
 }
 
+export interface PlayerLockedSongsBatchRequest {
+  add?: PlayerLockedSongRequest[]
+  delete?: PlayerLockedSongRequest[]
+}
+
 export interface UserProfileWithRecordsDTO {
   username: string
   player: PlayerDTO | null

@@ -2,6 +2,7 @@ import { API_BASE_URL } from '../config'
 import type {
   AdminUserListResponse,
   PlayerLockedSongRequest,
+  PlayerLockedSongsBatchRequest,
   PlayerLockedSongsResponse,
   UserDTO,
   UserProfileDTO,
@@ -67,6 +68,16 @@ export const fetchUserLockedSongs = async (
 
 export const addMyLockedSong = async (request: PlayerLockedSongRequest): Promise<void> => {
   await fetchWithAuth(`${API_BASE_URL}/internal/me/locked-songs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+}
+
+export const updateMyLockedSongsBatch = async (
+  request: PlayerLockedSongsBatchRequest
+): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/me/locked-songs/batch`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),

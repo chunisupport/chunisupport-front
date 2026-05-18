@@ -5,10 +5,11 @@ import { Check, ChevronDown, LockKeyhole } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
 import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/songs'
-import { addMyLockedSong, deleteMyLockedSong, fetchUserLockedSongs } from '../../../api/users'
+import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
 import { Loading } from '../../../components'
 import { authSession } from '../../../stores/authSession'
-import type { UserRecordDTO } from '../../../types/api'
+import type { PlayerLockedSongRequest, UserRecordDTO } from '../../../types/api'
+import { buildLockedSongsBatchPayload } from '../../../usecases/overpower/lockedSongsBatch'
 import { buildOverPowerSummary } from '../../../usecases/overpower/overpowerSummary'
 import { buildUserOverPowerPagePath, type OverPowerSubPage } from '../UserPage/profilePageQuery'
 import LockedSongsDialog from './components/LockedSongsDialog'
@@ -60,8 +61,6 @@ const UserOverPower: Component<Props> = (props) => {
     fetchUserLockedSongs
   )
   const [lockedSongsDialogOpen, setLockedSongsDialogOpen] = createSignal(false)
-  const [savingLockedSongKey, setSavingLockedSongKey] = createSignal<string | null>(null)
-  const [lockedSongsError, setLockedSongsError] = createSignal<string | null>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const selectedSummaryTab = createMemo<OverPowerSummaryTab>(
@@ -94,8 +93,6 @@ const UserOverPower: Component<Props> = (props) => {
   const lockedSongsButtonDisabled = createMemo(
     () => !canManageLockedSongs() || !allSongs() || lockedSongs.loading
   )
-  const createLockedSongKey = (displayId: string, isUltima: boolean) =>
-    `${displayId}:${isUltima ? 'ultima' : 'normal'}`
 
   const handleSummaryTabChange = (option: OverPowerSummaryOption | null) => {
     if (!option) return
@@ -111,25 +108,15 @@ const UserOverPower: Component<Props> = (props) => {
     navigate(`${normalizedPath}${queryString ? `?${queryString}` : ''}${location.hash}`)
   }
 
-  const handleToggleLockedSong = async (displayId: string, isUltima: boolean, locked: boolean) => {
-    const key = createLockedSongKey(displayId, isUltima)
-    setSavingLockedSongKey(key)
-    setLockedSongsError(null)
+  const handleSaveLockedSongs = async (nextLockedSongs: PlayerLockedSongRequest[]) => {
+    const currentLockedSongs = lockedSongs()?.items
+    if (!currentLockedSongs) return
 
-    try {
-      if (locked) {
-        await addMyLockedSong({ display_id: displayId, is_ultima: isUltima })
-      } else {
-        await deleteMyLockedSong({ display_id: displayId, is_ultima: isUltima })
-      }
-      await refetchLockedSongs()
-    } catch (error) {
-      setLockedSongsError(
-        error instanceof Error ? error.message : '未解禁楽曲設定の更新に失敗しました'
-      )
-    } finally {
-      setSavingLockedSongKey(null)
-    }
+    const payload = buildLockedSongsBatchPayload(currentLockedSongs, nextLockedSongs)
+    if (!payload.add && !payload.delete) return
+
+    await updateMyLockedSongsBatch(payload)
+    await refetchLockedSongs()
   }
 
   return (
@@ -194,14 +181,6 @@ const UserOverPower: Component<Props> = (props) => {
                   </button>
                 </div>
 
-                <Show when={lockedSongsError()}>
-                  {(message) => (
-                    <p class="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                      {message()}
-                    </p>
-                  )}
-                </Show>
-
                 <Tabs.Content value="genres" class="mt-4">
                   <OverPowerSummaryTable rows={currentSummary().genres} countLabel="曲数" />
                 </Tabs.Content>
@@ -224,9 +203,8 @@ const UserOverPower: Component<Props> = (props) => {
                   open={lockedSongsDialogOpen()}
                   songs={allSongs()?.songs ?? []}
                   lockedSongs={lockedSongs()?.items ?? []}
-                  savingKey={savingLockedSongKey()}
                   onOpenChange={setLockedSongsDialogOpen}
-                  onToggleLockedSong={handleToggleLockedSong}
+                  onSaveLockedSongs={handleSaveLockedSongs}
                 />
               </Show>
             </div>
