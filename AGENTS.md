@@ -21,7 +21,8 @@
 知識を利用しようとせず、ドキュメントを検索するようにしてください。SolidJSには特にReactと類似した点が多く、Reactのコードを書くとエラーが発生することが多いです。Reactの知識でコードを書くより、こまめに検索を行い、ドキュメントを参照してコードを書くことが重要です。ドキュメントを読む習慣をつけてください。
 
 ### API
-このアプリケーションが利用するAPIは、次のURLを参照してください: https://github.com/chunisupport/chunisupport-api/blob/develop/docs/API.md
+このアプリケーションのAPIサーバは、次のリポジトリで管理されています: https://github.com/chunisupport/chunisupport-api
+このアプリケーションが利用するAPIは、次のURLを参照してください: https://github.com/chunisupport/chunisupport-api/blob/develop/docs/API.md（developブランチのAPIドキュメント）。
 
 ### 文字コード
 Powershellを使っている場合は、-Encoding utf8 -Raw オプションを付けてファイルを読み書きしてください。これにより、UTF-8エンコードで保存され、文字化けを防止できます。
