@@ -52,33 +52,45 @@ const calcBandPercent = (count: number, total: number): number =>
 const DistributionBar: Component<{
   bands: OverPowerBandCount<string>[]
   colorClassByLabel: Record<string, string>
+  fixedWidth?: boolean
   total: number
-}> = (props) => (
-  <div class="space-y-2">
-    <div class="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
-      <For each={props.bands}>
-        {(band) => (
-          <p class="flex min-w-0 items-baseline gap-1.5 text-gray-800">
-            <span class="truncate text-xs">{band.label}:</span>
-            <span class="shrink-0 text-base font-bold tabular-nums text-gray-950 sm:text-lg">
-              {band.count}
-            </span>
-          </p>
-        )}
-      </For>
+}> = (props) => {
+  const listClass = () =>
+    props.fixedWidth
+      ? 'flex flex-wrap gap-x-4 gap-y-2'
+      : 'grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4'
+  const itemClass = () =>
+    props.fixedWidth
+      ? 'flex w-[100px] min-w-0 items-baseline gap-1.5 text-gray-800'
+      : 'flex min-w-0 items-baseline gap-1.5 text-gray-800'
+
+  return (
+    <div class="space-y-2">
+      <div class={listClass()}>
+        <For each={props.bands}>
+          {(band) => (
+            <p class={itemClass()}>
+              <span class="truncate text-xs">{band.label}:</span>
+              <span class="shrink-0 text-base font-bold tabular-nums text-gray-950 sm:text-lg">
+                {band.count}
+              </span>
+            </p>
+          )}
+        </For>
+      </div>
+      <div class="flex h-7 w-full overflow-hidden bg-gray-100" role="presentation">
+        <For each={props.bands.filter((band) => band.count > 0)}>
+          {(band) => (
+            <div
+              class={props.colorClassByLabel[band.label] ?? 'bg-gray-300'}
+              style={{ width: `${calcBandPercent(band.count, props.total)}%` }}
+            />
+          )}
+        </For>
+      </div>
     </div>
-    <div class="flex h-7 w-full overflow-hidden bg-gray-100" role="presentation">
-      <For each={props.bands.filter((band) => band.count > 0)}>
-        {(band) => (
-          <div
-            class={props.colorClassByLabel[band.label] ?? 'bg-gray-300'}
-            style={{ width: `${calcBandPercent(band.count, props.total)}%` }}
-          />
-        )}
-      </For>
-    </div>
-  </div>
-)
+  )
+}
 
 /** OVERPOWERサマリーをランク・コンボ分布付きのカードグラフとして描画する。 */
 export const OverPowerSummaryGraph: Component<Props> = (props) => (
@@ -110,6 +122,7 @@ export const OverPowerSummaryGraph: Component<Props> = (props) => (
                 <DistributionBar
                   bands={row.scoreBands}
                   colorClassByLabel={scoreBandClass}
+                  fixedWidth
                   total={totalScoreCount()}
                 />
                 <DistributionBar
