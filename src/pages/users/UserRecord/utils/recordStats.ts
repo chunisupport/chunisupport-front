@@ -1,24 +1,19 @@
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import { getScoreRank } from '../../../../utils/scoreRank'
+import {
+  COMBO_LAMP_BAR_CLASS,
+  HARD_LAMP_BAR_CLASS,
+  SCORE_RANK_BAR_CLASS,
+} from '../../components/recordStyleClasses'
 
 export const rankOrder = ['SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'OTHERS', '未プレイ']
 export const rankColorMap: Record<string, string> = {
-  'SSS+': 'bg-lime-300',
-  SSS: 'bg-yellow-300',
-  'SS+': 'bg-amber-300',
-  SS: 'bg-orange-300',
-  'S+': 'bg-blue-300',
-  S: 'bg-cyan-300',
-  OTHERS: 'bg-gray-300',
-  未プレイ: 'bg-gray-200',
+  ...SCORE_RANK_BAR_CLASS,
 }
 
 export const comboOrder = ['ALL JUSTICE', 'FULL COMBO', 'なし', '未プレイ']
 export const comboColorMap: Record<string, string> = {
-  'ALL JUSTICE': 'bg-yellow-300',
-  'FULL COMBO': 'bg-orange-300',
-  なし: 'bg-gray-300',
-  未プレイ: 'bg-gray-200',
+  ...COMBO_LAMP_BAR_CLASS,
 }
 
 export const clearOrder = [
@@ -31,13 +26,7 @@ export const clearOrder = [
   '未プレイ',
 ]
 export const clearColorMap: Record<string, string> = {
-  CATASTROPHY: 'bg-red-300',
-  ABSOLUTE: 'bg-lime-300',
-  BRAVE: 'bg-yellow-300',
-  HARD: 'bg-amber-300',
-  CLEAR: 'bg-blue-300',
-  FAILED: 'bg-gray-300',
-  未プレイ: 'bg-gray-200',
+  ...HARD_LAMP_BAR_CLASS,
 }
 
 /** 統計情報の型定義 */

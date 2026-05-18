@@ -2,8 +2,15 @@ import { A } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
-import { getScoreRank, MAX_SCORE, type ScoreRank } from '../../../utils/scoreRank'
+import { getScoreRank, MAX_SCORE } from '../../../utils/scoreRank'
 import { LampPlaceholderBadge, renderSortIndicator } from './RecordTableUiParts'
+import {
+  COMBO_LAMP_BADGE_BACKGROUND_CLASS,
+  COMBO_LAMP_BADGE_TEXT_CLASS,
+  HARD_LAMP_BADGE_BACKGROUND_CLASS,
+  HARD_LAMP_BADGE_TEXT_CLASS,
+  SCORE_RANK_TEXT_CLASS,
+} from './recordStyleClasses'
 
 type SharedSortDirection = 'asc' | 'desc' | null
 type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
@@ -48,28 +55,21 @@ export const RECORD_CELL_CENTER_TEXT_CLASS = `${RECORD_CELL_BASE_CLASS} text-cen
 export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
 const HARD_LAMP_BADGE_CLASS =
   'inline-flex w-[40px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
-
-const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
-  'SSS+': 'text-green-500',
-  SSS: 'text-yellow-500',
-  'SS+': 'text-orange-500',
-  SS: 'text-orange-500',
-  'S+': 'text-orange-500',
-  S: 'text-orange-500',
-  AAA: 'text-red-500',
-  AA: 'text-red-500',
-  A: 'text-red-500',
-  BBB: 'text-sky-500',
-  BB: 'text-sky-500',
-  B: 'text-sky-500',
-  C: 'text-amber-700',
-  D: 'text-gray-500',
+const HARD_LAMP_LABEL: Record<Exclude<NonNullable<ClearLamp>, 'FAILED'>, string> = {
+  CLEAR: 'CLR',
+  HARD: 'HRD',
+  BRAVE: 'BRV',
+  ABSOLUTE: 'ABS',
+  CATASTROPHY: 'CTS',
 }
 
+/** レコードのコンボランプ値から表示用バッジを生成する。 */
 export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, record) => {
   if (lamp === 'FULL COMBO')
     return (
-      <span class="rounded-lg bg-orange-200 px-2 py-1 text-sm font-extrabold text-orange-900">
+      <span
+        class={`rounded-lg px-2 py-1 text-sm font-extrabold ${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`}
+      >
         FC
       </span>
     )
@@ -77,24 +77,25 @@ export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, record) =>
     const ajBadgeClass =
       record?.score === MAX_SCORE
         ? 'bg-[linear-gradient(135deg,#ef4444_0%,#f97316_16%,#eab308_32%,#22c55e_48%,#06b6d4_64%,#3b82f6_80%,#a855f7_100%)] text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]'
-        : 'bg-yellow-200 text-yellow-900'
+        : `${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`
 
     return <span class={`rounded-lg px-2 py-1 text-sm font-extrabold ${ajBadgeClass}`}>AJ</span>
   }
   return <LampPlaceholderBadge />
 }
 
+/** レコードのハードランプバッジに共通する色とラベルを組み立てる。 */
+const renderHardLampTextBadge = (lamp: keyof typeof HARD_LAMP_LABEL): JSX.Element => (
+  <span
+    class={`${HARD_LAMP_BADGE_CLASS} ${HARD_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${HARD_LAMP_BADGE_TEXT_CLASS[lamp]}`}
+  >
+    {HARD_LAMP_LABEL[lamp]}
+  </span>
+)
+
+/** レコードのハードランプ値から表示用バッジを生成する。 */
 export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element => {
-  if (lamp === 'CLEAR')
-    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-gray-200 text-gray-900`}>CLR</span>
-  if (lamp === 'HARD')
-    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-red-200 text-red-900`}>HRD</span>
-  if (lamp === 'BRAVE')
-    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-orange-200 text-orange-900`}>BRV</span>
-  if (lamp === 'ABSOLUTE')
-    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-yellow-200 text-yellow-900`}>ABS</span>
-  if (lamp === 'CATASTROPHY')
-    return <span class={`${HARD_LAMP_BADGE_CLASS} bg-green-200 text-green-900`}>CTS</span>
+  if (lamp && lamp !== 'FAILED') return renderHardLampTextBadge(lamp)
   return <LampPlaceholderBadge class="w-[40px]" />
 }
 
