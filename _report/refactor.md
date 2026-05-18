@@ -25,23 +25,22 @@
 
 ---
 
-## ステータス付きサマリ
+## サマリ
 
-| ID | タイトル | 重大度 | ステータス | 主な対象 |
-|---|---|---|---|---|
-| **REF-F04** | UserRecord ページロジックの責務集中 | **High** | **一部改善** | `src/pages/users/UserRecord/UserRecord.tsx`, `src/pages/users/UserRecord/utils/*` |
-| **REF-F05** | フィルタ永続化データの型検証不足 | **Medium** | **継続** | `src/pages/users/UserRecord/utils/storage.ts` |
-| **REF-F06** | レコード画面ロジックのテスト不足 | **Medium** | **一部改善** | `src/pages/users/UserRecord/utils/recordStats.ts`, `src/pages/users/UserRecord/utils/storage.ts` |
-| **REF-F07** | 表示用定数/判定ロジックの整理不足 | **Low** | **一部改善** | `src/utils/difficultyUtils.ts`, `src/pages/users/UserRecord/types/filterDefaults.ts`, `src/pages/users/UserRecord/utils/sorting.ts` |
-| **REF-F08** | TODO/FIXME の残置 | **Low** | **継続** | `src/components/NavBar/NavBar.tsx`, `src/pages/users/UserPage/components/*`, `src/pages/users/UserRecord/types/filterDefaults.ts` |
-| **REF-F09** | UserOverPower ページロジックの責務集中 | **High** | **継続** | `src/pages/users/UserOverPower/UserOverPower.tsx`, `src/pages/users/UserOverPower/components/OverPowerSummaryGraph.tsx` |
+| ID | タイトル | 重大度 | 主な対象 |
+|---|---|---|---|
+| **REF-F04** | UserRecord ページロジックの責務集中 | **High** | `src/pages/users/UserRecord/UserRecord.tsx`, `src/pages/users/UserRecord/utils/*` |
+| **REF-F05** | フィルタ永続化データの型検証不足 | **Medium** | `src/pages/users/UserRecord/utils/storage.ts` |
+| **REF-F06** | レコード画面ロジックのテスト不足 | **Medium** | `src/pages/users/UserRecord/utils/recordStats.ts`, `src/pages/users/UserRecord/utils/storage.ts` |
+| **REF-F07** | 表示用定数/判定ロジックの整理不足 | **Low** | `src/utils/difficultyUtils.ts`, `src/pages/users/UserRecord/types/filterDefaults.ts`, `src/pages/users/UserRecord/utils/sorting.ts` |
+| **REF-F08** | TODO/FIXME の残置 | **Low** | `src/components/NavBar/NavBar.tsx`, `src/pages/users/UserPage/components/*`, `src/pages/users/UserRecord/types/filterDefaults.ts` |
+| **REF-F09** | UserOverPower ページロジックの責務集中 | **High** | `src/pages/users/UserOverPower/UserOverPower.tsx`, `src/pages/users/UserOverPower/components/OverPowerSummaryGraph.tsx` |
 
 ---
 
 ## 詳細
 
 ### REF-F04: UserRecord ページロジックの責務集中
-- **ステータス**: 一部改善
 - **現状**:
   - `FilterDialog`、`FilterToolbar`、`FilterStats`、`RecordTable` などへの UI 分割は進んでいます。
   - ソート関連は `utils/sorting.ts` に切り出され、URL ソート読取、状態遷移、ソート比較はテスト済みです。
@@ -55,7 +54,6 @@
   - 件数、統計、初期フィルタ生成、表示列状態をページコンポーネントから順に押し出す。
 
 ### REF-F05: フィルタ永続化データの型検証不足
-- **ステータス**: 継続
 - **現状**:
   - `loadSavedFilters()` は `localStorage` から取り出した JSON を `JSON.parse` した結果のまま返しています。
   - `saveNewFilter()` / `deleteFilter()` にも `schemaVersion` や migration はありません。
@@ -67,7 +65,6 @@
   - `schemaVersion` を導入し、後方互換が必要になった時点で migration を追加できる構造にしておく。
 
 ### REF-F06: レコード画面ロジックのテスト不足
-- **ステータス**: 一部改善
 - **現状**:
   - `updatedAt.ts`、`sorting.ts`、`filtering.ts`、`columns.ts`、`constDisplay.ts`、`justiceCount.ts` には対応するテストがあります。
   - 一方で `recordStats.ts` と `storage.ts` に対応する `*.test.ts` は存在しません。
@@ -80,7 +77,6 @@
   - 先に純粋関数テストを置いてからページモデル化へ進む。
 
 ### REF-F07: 表示用定数/判定ロジックの整理不足
-- **ステータス**: 一部改善
 - **現状**:
   - スコアランク定義は `src/utils/scoreRank.ts` に寄せられ、表示色は `src/pages/users/components/recordStyleClasses.ts` に整理されています。
   - 難易度の短縮名、クエリ値、バッジ色、カード境界色は `src/utils/difficultyUtils.ts` にまとまっています。
@@ -93,7 +89,6 @@
   - ランプは「表示用定義」「フィルタ既定値」「ソート順」を分離し、選択肢そのものの出所を明確にする。
 
 ### REF-F08: TODO/FIXME の残置
-- **ステータス**: 継続
 - **現状**:
   - `NavBar` にレイアウト TODO が残っています。
   - `UserNameplate` に称号背景画像と OVER POWER ゲージの TODO が残っています。
@@ -106,7 +101,6 @@
   - コメントとして残す場合は、未着手理由と次の判断条件を短く添える。
 
 ### REF-F09: UserOverPower ページロジックの責務集中
-- **ステータス**: 継続
 - **現状**:
   - `UserOverPower.tsx` にデータ取得、未解禁曲の権限制御、タブ遷移、OVER POWER 集計、グラフ用の曲数/譜面数分布生成、保存処理がまとまっています。
   - `buildLockedSongLookup`、`buildSongEntriesBySummaryTab`、`buildRecordsBySummaryTab`、`buildGraphRows`、`buildSongBasedGraphRows` などのページローカル関数は、仕様上重要ですがテストから直接参照しにくい位置にあります。
