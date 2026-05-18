@@ -167,7 +167,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 チェックした曲・譜面はOVER POWER計算対象から除外されます。
               </Dialog.Description>
             </div>
-            <Dialog.CloseButton class="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50">
+            <Dialog.CloseButton class="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 shrink-0">
               閉じる
             </Dialog.CloseButton>
           </div>
