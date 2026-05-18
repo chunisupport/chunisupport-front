@@ -202,6 +202,8 @@ const UserOverPower: Component<Props> = (props) => {
                 <LockedSongsDialog
                   open={lockedSongsDialogOpen()}
                   songs={allSongs()?.songs ?? []}
+                  genres={masterData()?.genres ?? []}
+                  versions={versionData()?.versions ?? []}
                   lockedSongs={lockedSongs()?.items ?? []}
                   onOpenChange={setLockedSongsDialogOpen}
                   onSaveLockedSongs={handleSaveLockedSongs}

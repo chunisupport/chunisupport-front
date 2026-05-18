@@ -1,24 +1,34 @@
+import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, CircleSlash2, LoaderCircle, Search } from 'lucide-solid'
+import { Check, CircleSlash2, Filter, LoaderCircle, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import Loading from '../../../../components/Loading/Loading'
 import type {
+  MasterItemDTO,
   PlayerLockedSongRequest,
   PlayerLockedSongResponseItem,
   SongDTO,
+  VersionDTO,
 } from '../../../../types/api'
 import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch'
+import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
 import {
   normalizeForReadingSearch,
   normalizeForSearch,
   normalizeQuery,
 } from '../../../../utils/searchUtils'
+import {
+  getShortVersionName,
+  resolveVersionNameByReleaseDate,
+} from '../../../../utils/versionConverter'
 
 type Props = {
   open: boolean
   songs: SongDTO[]
+  genres: MasterItemDTO[]
+  versions: VersionDTO[]
   lockedSongs: PlayerLockedSongResponseItem[]
   onOpenChange: (open: boolean) => void
   onSaveLockedSongs: (items: PlayerLockedSongRequest[]) => Promise<void>
@@ -27,6 +37,11 @@ type Props = {
 type LockedSongListItem = {
   song: SongDTO
   isUltima: boolean
+}
+
+type LockedSongsFilter = {
+  genres: string[]
+  versions: string[]
 }
 
 const hasUltimaChart = (song: SongDTO): boolean => Boolean(song.charts.ULTIMA)
@@ -41,13 +56,38 @@ const releaseTimestamp = (release: string | null): number => {
   return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY
 }
 
+const toggleFilterValue = (values: string[], value: string): string[] =>
+  values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
+
 const LockedSongsDialog: Component<Props> = (props) => {
   const [query, setQuery] = createSignal('')
+  const [filterDialogOpen, setFilterDialogOpen] = createSignal(false)
+  const [filters, setFilters] = createSignal<LockedSongsFilter>({ genres: [], versions: [] })
   const [showLockedOnly, setShowLockedOnly] = createSignal(false)
   const [isListReady, setIsListReady] = createSignal(false)
   const [draftLockedSongKeys, setDraftLockedSongKeys] = createSignal<Set<string>>(new Set())
   const [isSaving, setIsSaving] = createSignal(false)
   const [saveError, setSaveError] = createSignal<string | null>(null)
+  const genreOptions = createMemo(() =>
+    sortMasterItemsBySortOrder(props.genres).map((genre) => genre.name)
+  )
+  const versionOptions = createMemo(() =>
+    props.versions.map((version) => getShortVersionName(version.name))
+  )
+  const songVersionNameById = createMemo(
+    () =>
+      new Map(
+        props.songs.map((song) => [
+          song.id,
+          getShortVersionName(resolveVersionNameByReleaseDate(song.release, props.versions)),
+        ])
+      )
+  )
+  const songVersionName = (song: SongDTO): string => songVersionNameById().get(song.id) ?? '不明'
+  const activeFilterCount = createMemo(() => filters().genres.length + filters().versions.length)
+  const filterButtonLabel = createMemo(() =>
+    activeFilterCount() > 0 ? `フィルター ${activeFilterCount()}件` : 'フィルター'
+  )
   const lockedSongKeys = createMemo(
     () =>
       new Set(
@@ -93,10 +133,22 @@ const LockedSongsDialog: Component<Props> = (props) => {
   const filteredSongListItems = createMemo(() => {
     const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query())
     const shouldShowLockedOnly = showLockedOnly()
+    const currentFilters = filters()
 
     return searchableSongListItems()
       .filter(({ item, searchableText, searchableReading }) => {
         if (shouldShowLockedOnly && !isLocked(item.song.id, item.isUltima)) {
+          return false
+        }
+
+        if (currentFilters.genres.length > 0 && !currentFilters.genres.includes(item.song.genre)) {
+          return false
+        }
+
+        if (
+          currentFilters.versions.length > 0 &&
+          !currentFilters.versions.includes(songVersionName(item.song))
+        ) {
           return false
         }
 
@@ -160,6 +212,14 @@ const LockedSongsDialog: Component<Props> = (props) => {
     }
   }
 
+  const handleToggleGenreFilter = (genre: string) => {
+    setFilters((prev) => ({ ...prev, genres: toggleFilterValue(prev.genres, genre) }))
+  }
+
+  const handleToggleVersionFilter = (version: string) => {
+    setFilters((prev) => ({ ...prev, versions: toggleFilterValue(prev.versions, version) }))
+  }
+
   createEffect(() => {
     if (!props.open) {
       setIsListReady(false)
@@ -206,6 +266,23 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 />
               </div>
             </TextField>
+            <button
+              type="button"
+              class={`flex h-[38px] min-w-[38px] items-center justify-center gap-1.5 rounded border px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+                activeFilterCount() > 0
+                  ? 'border-primary-600 bg-primary-600 text-white hover:bg-primary-700'
+                  : 'border-gray-500 text-gray-700 hover:bg-gray-100'
+              }`}
+              aria-label={filterButtonLabel()}
+              aria-pressed={activeFilterCount() > 0}
+              title={filterButtonLabel()}
+              onClick={() => setFilterDialogOpen(true)}
+            >
+              <Filter size={20} aria-hidden="true" />
+              <Show when={activeFilterCount() > 0}>
+                <span class="text-xs font-medium">{activeFilterCount()}</span>
+              </Show>
+            </button>
             <button
               type="button"
               class={`flex h-[38px] w-[38px] items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
@@ -320,6 +397,111 @@ const LockedSongsDialog: Component<Props> = (props) => {
           <Show when={saveError()}>
             {(message) => <p class="mt-3 text-sm text-red-600">{message()}</p>}
           </Show>
+
+          <Dialog open={filterDialogOpen()} onOpenChange={setFilterDialogOpen}>
+            <Dialog.Portal>
+              <Dialog.Overlay class="fixed inset-0 z-60 bg-black/30" />
+              <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex max-h-[80dvh] -translate-y-1/2 flex-col rounded-lg bg-white p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
+                <div class="mb-4 flex items-start justify-between gap-3">
+                  <div>
+                    <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
+                  </div>
+                  <Dialog.CloseButton class="shrink-0 rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50">
+                    閉じる
+                  </Dialog.CloseButton>
+                </div>
+
+                <div class="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
+                  <section>
+                    <div class="mb-2 flex items-center justify-between gap-2">
+                      <h3 class="font-bold">ジャンル</h3>
+                      <button
+                        type="button"
+                        class="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                        onClick={() => setFilters((prev) => ({ ...prev, genres: [] }))}
+                      >
+                        解除
+                      </button>
+                    </div>
+                    <div class="grid gap-2">
+                      <For each={genreOptions()}>
+                        {(genre, index) => {
+                          const id = `locked-song-filter-genre-${index()}`
+                          return (
+                            <Checkbox
+                              checked={filters().genres.includes(genre)}
+                              onChange={() => handleToggleGenreFilter(genre)}
+                              class="flex items-center gap-2"
+                            >
+                              <Checkbox.Input id={id} />
+                              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white">
+                                <Checkbox.Indicator>
+                                  <Check class="h-4 w-4" />
+                                </Checkbox.Indicator>
+                              </Checkbox.Control>
+                              <Checkbox.Label class="min-w-0 leading-5" for={id}>
+                                {genre}
+                              </Checkbox.Label>
+                            </Checkbox>
+                          )
+                        }}
+                      </For>
+                    </div>
+                  </section>
+
+                  <section>
+                    <div class="mb-2 flex items-center justify-between gap-2">
+                      <h3 class="font-bold">バージョン</h3>
+                      <button
+                        type="button"
+                        class="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                        onClick={() => setFilters((prev) => ({ ...prev, versions: [] }))}
+                      >
+                        解除
+                      </button>
+                    </div>
+                    <div class="grid gap-2">
+                      <For each={versionOptions()}>
+                        {(version, index) => {
+                          const id = `locked-song-filter-version-${index()}`
+                          return (
+                            <Checkbox
+                              checked={filters().versions.includes(version)}
+                              onChange={() => handleToggleVersionFilter(version)}
+                              class="flex items-center gap-2"
+                            >
+                              <Checkbox.Input id={id} />
+                              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white">
+                                <Checkbox.Indicator>
+                                  <Check class="h-4 w-4" />
+                                </Checkbox.Indicator>
+                              </Checkbox.Control>
+                              <Checkbox.Label class="min-w-0 leading-5" for={id}>
+                                {version}
+                              </Checkbox.Label>
+                            </Checkbox>
+                          )
+                        }}
+                      </For>
+                    </div>
+                  </section>
+                </div>
+
+                <div class="mt-4 flex justify-between gap-2">
+                  <button
+                    type="button"
+                    class="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    onClick={() => setFilters({ genres: [], versions: [] })}
+                  >
+                    すべて解除
+                  </button>
+                  <Dialog.CloseButton class="rounded bg-primary-600 px-3 py-2 text-sm text-white hover:bg-primary-700">
+                    適用
+                  </Dialog.CloseButton>
+                </div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog>
 
           <div class="mt-4 flex justify-end gap-2">
             <button
