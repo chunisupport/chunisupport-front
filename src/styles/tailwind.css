@@ -108,7 +108,7 @@
 
 @layer base {
   html {
-    font-family: "Jost", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+    font-family: "Inter", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
     overscroll-behavior-y: auto;
   }
 
