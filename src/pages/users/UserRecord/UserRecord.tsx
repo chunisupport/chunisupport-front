@@ -2,7 +2,6 @@ import { useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import {
   createEffect,
-  createMemo,
   createResource,
   createSignal,
   ErrorBoundary,
@@ -14,7 +13,6 @@ import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/song
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { UserRecordDTO } from '../../../types/api'
-import { attachSongMetaToRecords } from '../../../utils/recordMerger'
 import { type SortDirection, sanitizeSortQuery } from '../recordTable/sortingQuery'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FilterDialog from './components/FilterDialog'
@@ -24,13 +22,9 @@ import RecordTable from './components/RecordTable'
 import { DEFAULT_FILTER, getMasterDataDefaults } from './types/filterDefaults'
 import type { FilterState, RecordColumnId, RecordSortKey } from './types/types'
 import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
-import {
-  createRecordTitleMatcher,
-  getDefaultFilter,
-  isRecordMatchedWithTitleMatcher,
-} from './utils/filtering'
-import { getRecordStats } from './utils/recordStats'
-import { nextSortState, parseSortParams, sortRecords } from './utils/sorting'
+import { getDefaultFilter } from './utils/filtering'
+import { useUserRecordPageModel } from './utils/pageModel'
+import { parseSortParams } from './utils/sorting'
 import { loadSavedFilters, type SavedFilter } from './utils/storage'
 
 type Props = {
@@ -82,40 +76,17 @@ const UserRecord: Component<Props> = (props) => {
     }))
   })
 
-  /** 未プレイを含む全曲のレコード */
-  const recordsWithSongMeta = createMemo(() => {
-    const songs = allSongs()
-    const versions = versionData()
-    if (!songs || !versions) return []
-    return attachSongMetaToRecords(songs.songs, props.record.all, versions.versions)
-  })
-
-  /** フィルター適用後のレコード */
-  const filteredRecords = createMemo(() => {
-    const records = recordsWithSongMeta()
-    const currentFilters = filters()
-    const matchTitle = createRecordTitleMatcher(currentFilters.title)
-    return records.filter((record) =>
-      isRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle)
-    )
-  })
-
-  const sortedRecords = createMemo(() => {
-    return sortRecords(filteredRecords(), sortKey(), sortDirection())
-  })
-
-  const handleSortChange = (nextKey: RecordSortKey) => {
-    const nextSort = nextSortState(sortKey(), sortDirection(), nextKey)
-    setSortKey(nextSort.sortKey)
-    setSortDirection(nextSort.sortDirection)
-  }
-
-  // 件数表示
-  const totalCount = () => recordsWithSongMeta().length
-  const filteredCount = () => filteredRecords().length
-
-  /** レコード統計の集計結果 */
-  const stats = createMemo(() => getRecordStats(filteredRecords()))
+  const { sortedRecords, totalCount, filteredCount, stats, handleSortChange } =
+    useUserRecordPageModel({
+      songs: allSongs,
+      versions: versionData,
+      sourceRecords: () => props.record.all,
+      filters,
+      sortKey,
+      sortDirection,
+      setSortKey,
+      setSortDirection,
+    })
 
   useDocumentTitle(() => `${props.username}さんのレコード`)
 
