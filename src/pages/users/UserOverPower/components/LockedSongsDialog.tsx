@@ -256,17 +256,17 @@ const LockedSongsDialog: Component<Props> = (props) => {
                             <div class="min-w-0">
                               <div class="flex min-w-0 items-center gap-2">
                                 <p class="truncate font-sans font-medium">{item.song.title}</p>
-                                <span
-                                  class={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${
-                                    selected()
-                                      ? 'bg-white/20 text-white'
-                                      : item.isUltima
-                                        ? 'bg-red-50 text-red-700'
-                                        : 'bg-gray-100 text-gray-700'
-                                  }`}
-                                >
-                                  {item.isUltima ? 'ULTIMA' : '通常'}
-                                </span>
+                                <Show when={item.isUltima}>
+                                  <span
+                                    class={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${
+                                      selected()
+                                        ? 'bg-white/20 text-white'
+                                        : 'bg-red-50 text-red-700'
+                                    }`}
+                                  >
+                                    ULTIMA
+                                  </span>
+                                </Show>
                               </div>
                               <p
                                 class={`truncate font-sans text-xs ${
