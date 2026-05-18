@@ -61,7 +61,6 @@ const UserOverPower: Component<Props> = (props) => {
     fetchUserLockedSongs
   )
   const [lockedSongsDialogOpen, setLockedSongsDialogOpen] = createSignal(false)
-  const [lockedSongsError, setLockedSongsError] = createSignal<string | null>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const selectedSummaryTab = createMemo<OverPowerSummaryTab>(
@@ -116,17 +115,8 @@ const UserOverPower: Component<Props> = (props) => {
     const payload = buildLockedSongsBatchPayload(currentLockedSongs, nextLockedSongs)
     if (!payload.add && !payload.delete) return
 
-    setLockedSongsError(null)
-
-    try {
-      await updateMyLockedSongsBatch(payload)
-      await refetchLockedSongs()
-    } catch (error) {
-      setLockedSongsError(
-        error instanceof Error ? error.message : '未解禁楽曲設定の更新に失敗しました'
-      )
-      throw error
-    }
+    await updateMyLockedSongsBatch(payload)
+    await refetchLockedSongs()
   }
 
   return (
@@ -190,14 +180,6 @@ const UserOverPower: Component<Props> = (props) => {
                     <LockKeyhole class="h-5 w-5" aria-hidden="true" />
                   </button>
                 </div>
-
-                <Show when={lockedSongsError()}>
-                  {(message) => (
-                    <p class="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                      {message()}
-                    </p>
-                  )}
-                </Show>
 
                 <Tabs.Content value="genres" class="mt-4">
                   <OverPowerSummaryTable rows={currentSummary().genres} countLabel="曲数" />
