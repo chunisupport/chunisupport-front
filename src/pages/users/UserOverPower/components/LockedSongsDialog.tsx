@@ -31,6 +31,16 @@ type LockedSongListItem = {
 
 const hasUltimaChart = (song: SongDTO): boolean => Boolean(song.charts.ULTIMA)
 
+const parseOfficialIdx = (officialIdx: string | undefined): number => {
+  const parsed = Number(officialIdx)
+  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY
+}
+
+const releaseTimestamp = (release: string | null): number => {
+  const parsed = Date.parse(release ?? '')
+  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY
+}
+
 const LockedSongsDialog: Component<Props> = (props) => {
   const [query, setQuery] = createSignal('')
   const [showLockedOnly, setShowLockedOnly] = createSignal(false)
@@ -49,10 +59,21 @@ const LockedSongsDialog: Component<Props> = (props) => {
   const isLocked = (displayId: string, isUltima: boolean): boolean =>
     draftLockedSongKeys().has(createLockedSongKey(displayId, isUltima))
   const songListItems = createMemo<LockedSongListItem[]>(() =>
-    props.songs.flatMap((song) => [
-      { song, isUltima: false },
-      ...(hasUltimaChart(song) ? [{ song, isUltima: true }] : []),
-    ])
+    props.songs
+      .map((song, index) => ({ song, index }))
+      .sort((left, right) => {
+        const releaseComparison =
+          releaseTimestamp(right.song.release) - releaseTimestamp(left.song.release)
+        if (releaseComparison !== 0) return releaseComparison
+
+        const idxComparison =
+          parseOfficialIdx(right.song.official_idx) - parseOfficialIdx(left.song.official_idx)
+        return idxComparison || left.index - right.index
+      })
+      .flatMap(({ song }) => [
+        { song, isUltima: false },
+        ...(hasUltimaChart(song) ? [{ song, isUltima: true }] : []),
+      ])
   )
   const searchableSongListItems = createMemo(() =>
     songListItems().map((item) => {
@@ -228,7 +249,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 fallback={
                   <div class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-sm text-gray-500">
                     <CircleSlash2 class="h-6 w-6" aria-hidden="true" />
-                    <p>該当する曲がありません。</p>
+                    <p>該当する曲がありません</p>
                   </div>
                 }
               >
@@ -241,7 +262,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                         <li>
                           <button
                             type="button"
-                            class={`flex w-full items-center justify-between gap-3 p-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-60 ${
+                            class={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-60 ${
                               selected()
                                 ? 'bg-green-600 text-white hover:bg-green-700'
                                 : 'bg-white text-gray-900 hover:bg-gray-50'
@@ -255,7 +276,9 @@ const LockedSongsDialog: Component<Props> = (props) => {
                           >
                             <div class="min-w-0">
                               <div class="flex min-w-0 items-center gap-2">
-                                <p class="truncate font-sans font-medium">{item.song.title}</p>
+                                <p class="truncate font-sans text-sm font-medium">
+                                  {item.song.title}
+                                </p>
                                 <Show when={item.isUltima}>
                                   <span
                                     class={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${
@@ -277,12 +300,12 @@ const LockedSongsDialog: Component<Props> = (props) => {
                               </p>
                             </div>
                             <span
-                              class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                              class={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
                                 selected() ? 'bg-white/20 opacity-100' : 'opacity-0'
                               }`}
                               aria-hidden="true"
                             >
-                              <Check class="h-6 w-6" />
+                              <Check class="h-4 w-4" />
                             </span>
                           </button>
                         </li>
