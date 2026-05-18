@@ -18,8 +18,8 @@
 - 共通定数/表示ルール: `src/utils/difficultyUtils.ts`, `src/utils/scoreRank.ts`, `src/pages/users/components/recordStyleClasses.ts`
 
 ## 全体所見
-1. `UserRecord` のページロジック集中は一部緩和され、ソートとフィルタ検索のテストは追加済みです。
-2. 一方で `localStorage` 永続化の型検証不足、`recordStats.ts` / `storage.ts` のテスト不足、ページモデル未分離は引き続き未解消です。
+1. `UserRecord` のページロジック集中は一部緩和され、ソート、フィルタ検索、統計集計、保存データ操作のテストは追加済みです。
+2. 一方で `localStorage` 永続化の型検証不足とページモデル未分離は引き続き未解消です。
 3. OVER POWER 画面は集計補助関数が `UserOverPower.tsx` に多数残っており、機能追加時の影響範囲が広がっています。
 4. 表示定数の共通化は進んでいますが、難易度順・ランプ選択肢・TODO/FIXME の整理はまだ改善余地があります。
 
@@ -31,7 +31,6 @@
 |---|---|---|---|
 | **REF-F04** | UserRecord ページロジックの責務集中 | **High** | `src/pages/users/UserRecord/UserRecord.tsx`, `src/pages/users/UserRecord/utils/*` |
 | **REF-F05** | フィルタ永続化データの型検証不足 | **Medium** | `src/pages/users/UserRecord/utils/storage.ts` |
-| **REF-F06** | レコード画面ロジックのテスト不足 | **Medium** | `src/pages/users/UserRecord/utils/recordStats.ts`, `src/pages/users/UserRecord/utils/storage.ts` |
 | **REF-F07** | 表示用定数/判定ロジックの整理不足 | **Low** | `src/utils/difficultyUtils.ts`, `src/pages/users/UserRecord/types/filterDefaults.ts`, `src/pages/users/UserRecord/utils/sorting.ts` |
 | **REF-F08** | TODO/FIXME の残置 | **Low** | `src/components/NavBar/NavBar.tsx`, `src/pages/users/UserPage/components/*`, `src/pages/users/UserRecord/types/filterDefaults.ts` |
 | **REF-F09** | UserOverPower ページロジックの責務集中 | **High** | `src/pages/users/UserOverPower/UserOverPower.tsx`, `src/pages/users/UserOverPower/components/OverPowerSummaryGraph.tsx` |
@@ -63,18 +62,6 @@
 - **対応方針**:
   - `parseSavedFilters` を追加し、配列 shape と各 `SavedFilter` の最低限の型検証を行う。
   - `schemaVersion` を導入し、後方互換が必要になった時点で migration を追加できる構造にしておく。
-
-### REF-F06: レコード画面ロジックのテスト不足
-- **現状**:
-  - `updatedAt.ts`、`sorting.ts`、`filtering.ts`、`columns.ts`、`constDisplay.ts`、`justiceCount.ts` には対応するテストがあります。
-  - 一方で `recordStats.ts` と `storage.ts` に対応する `*.test.ts` は存在しません。
-  - `filtering.test.ts` は検索系の主要ケースを押さえていますが、難易度、ジャンル、バージョン、譜面定数、スコア、ランプ、未プレイ除外の組み合わせは未固定です。
-- **影響**:
-  - 統計集計、`localStorage` 復元、フィルタ条件の組み合わせに対する退行検知が弱いです。
-  - ページモデル化を進める際、既存挙動を固定するテストが不足しています。
-- **対応方針**:
-  - 優先順は `getRecordStats`、`loadSavedFilters` / `saveNewFilter` / `deleteFilter`、`isRecordMatched` の条件別追加ケース。
-  - 先に純粋関数テストを置いてからページモデル化へ進む。
 
 ### REF-F07: 表示用定数/判定ロジックの整理不足
 - **現状**:
@@ -117,19 +104,17 @@
 
 ## 推奨着手順
 
-1. **UserRecord の未テスト純粋関数を固定**
-   - `recordStats.ts` と `storage.ts` のテストを追加し、フィルタ検索の条件別ケースも補強する。
-2. **保存データの型安全化**
+1. **保存データの型安全化**
    - `REF-F05` を進め、`localStorage` の破損耐性と将来の互換性を確保する。
-3. **UserRecord のページモデル化**
+2. **UserRecord のページモデル化**
    - `REF-F04` の残タスクとして、件数・統計・フィルタ初期化・表示列状態をページ責務から分離する。
-4. **UserOverPower の集計補助関数切り出し**
+3. **UserOverPower の集計補助関数切り出し**
    - `REF-F09` として、グラフ行生成と分類ロジックをテスト可能な層へ移す。
-5. **定数整理と TODO/FIXME 整理**
+4. **定数整理と TODO/FIXME 整理**
    - `REF-F07`, `REF-F08` を後追いで整える。
 
 ## まとめ
 - 現在の主戦場は `UserRecord` と `UserOverPower` 周辺です。
-- `UserRecord` はソート・検索・表示列などのテストが増えていますが、保存データと統計集計のテスト、ページモデル化が残っています。
+- `UserRecord` はソート・検索・表示列・保存データ・統計集計などのテストが増えていますが、ページモデル化が残っています。
 - `UserOverPower` は usecase 層のテストはあるものの、ページ内に残るグラフ分類ロジックが大きく、次の分割候補です。
 - 定数整理と TODO/FIXME 整理は低優先度ですが、ページ責務分割と合わせて進めると効率が良いです。
