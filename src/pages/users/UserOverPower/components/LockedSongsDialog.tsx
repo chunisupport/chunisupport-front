@@ -9,6 +9,7 @@ import type {
   PlayerLockedSongResponseItem,
   SongDTO,
 } from '../../../../types/api'
+import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch'
 import {
   normalizeForReadingSearch,
   normalizeForSearch,
