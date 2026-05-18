@@ -65,6 +65,9 @@ type SongEntriesBySummaryTab = Pick<
   all: Map<string, SongGraphEntry[]>
 }
 
+/** OVERPOWERサマリーを開いたときに最初に表示する表示形式。 */
+const DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE: OverPowerSummaryViewMode = 'graph'
+
 const OVER_POWER_SUMMARY_OPTIONS: OverPowerSummaryOption[] = [
   { value: 'genres', label: 'ジャンル' },
   { value: 'difficulties', label: '難易度' },
@@ -336,7 +339,9 @@ const UserOverPower: Component<Props> = (props) => {
   const [allSongs] = createResource(fetchAllSongs)
   const [masterData] = createResource(fetchMasterData)
   const [versionData] = createResource(fetchVersions)
-  const [summaryViewMode, setSummaryViewMode] = createSignal<OverPowerSummaryViewMode>('table')
+  const [summaryViewMode, setSummaryViewMode] = createSignal<OverPowerSummaryViewMode>(
+    DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE
+  )
   const canManageLockedSongs = createMemo(
     () => authSession.status === 'authenticated' && authSession.user?.username === props.username
   )
