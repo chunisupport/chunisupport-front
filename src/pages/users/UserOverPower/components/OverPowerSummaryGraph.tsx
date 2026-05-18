@@ -57,8 +57,8 @@ const DistributionBar: Component<{
 }> = (props) => {
   const listClass = () =>
     props.fixedWidth
-      ? 'flex flex-wrap gap-x-4 gap-y-2'
-      : 'grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4'
+      ? 'flex flex-wrap gap-x-2 gap-y-2'
+      : 'grid grid-cols-2 gap-x-2 gap-y-2 sm:grid-cols-4'
   const itemClass = () =>
     props.fixedWidth
       ? 'flex min-w-[80px] items-baseline gap-1.5 whitespace-nowrap text-gray-800'
