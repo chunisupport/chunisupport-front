@@ -234,45 +234,60 @@ const LockedSongsDialog: Component<Props> = (props) => {
               >
                 <ul class="divide-y divide-gray-200">
                   <For each={filteredSongListItems()}>
-                    {(item) => (
-                      <li class="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div class="min-w-0">
-                          <div class="flex min-w-0 items-center gap-2">
-                            <p class="truncate font-sans font-medium text-gray-900">
-                              {item.song.title}
-                            </p>
+                    {(item) => {
+                      const selected = () => isLocked(item.song.id, item.isUltima)
+
+                      return (
+                        <li>
+                          <button
+                            type="button"
+                            class={`flex w-full items-center justify-between gap-3 p-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-60 ${
+                              selected()
+                                ? 'bg-green-600 text-white hover:bg-green-700'
+                                : 'bg-white text-gray-900 hover:bg-gray-50'
+                            }`}
+                            aria-pressed={selected()}
+                            aria-label={`${item.song.title} ${item.isUltima ? 'ULTIMA' : '通常'}の未解禁設定を切り替え`}
+                            disabled={isSaving()}
+                            onClick={() =>
+                              handleToggleDraft(item.song.id, item.isUltima, !selected())
+                            }
+                          >
+                            <div class="min-w-0">
+                              <div class="flex min-w-0 items-center gap-2">
+                                <p class="truncate font-sans font-medium">{item.song.title}</p>
+                                <span
+                                  class={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${
+                                    selected()
+                                      ? 'bg-white/20 text-white'
+                                      : item.isUltima
+                                        ? 'bg-red-50 text-red-700'
+                                        : 'bg-gray-100 text-gray-700'
+                                  }`}
+                                >
+                                  {item.isUltima ? 'ULTIMA' : '通常'}
+                                </span>
+                              </div>
+                              <p
+                                class={`truncate font-sans text-xs ${
+                                  selected() ? 'text-white/80' : 'text-gray-500'
+                                }`}
+                              >
+                                {item.song.artist}
+                              </p>
+                            </div>
                             <span
-                              class={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${
-                                item.isUltima
-                                  ? 'bg-red-50 text-red-700'
-                                  : 'bg-gray-100 text-gray-700'
+                              class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                                selected() ? 'bg-white/20 opacity-100' : 'opacity-0'
                               }`}
+                              aria-hidden="true"
                             >
-                              {item.isUltima ? 'ULTIMA' : '通常'}
+                              <Check class="h-6 w-6" />
                             </span>
-                          </div>
-                          <p class="truncate font-sans text-xs text-gray-500">{item.song.artist}</p>
-                        </div>
-                        <div class="flex shrink-0 flex-wrap gap-3">
-                          <label class="inline-flex items-center gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              class="h-4 w-4"
-                              checked={isLocked(item.song.id, item.isUltima)}
-                              disabled={isSaving()}
-                              onChange={(event) =>
-                                handleToggleDraft(
-                                  item.song.id,
-                                  item.isUltima,
-                                  event.currentTarget.checked
-                                )
-                              }
-                            />
-                            未解禁
-                          </label>
-                        </div>
-                      </li>
-                    )}
+                          </button>
+                        </li>
+                      )
+                    }}
                   </For>
                 </ul>
               </Show>
