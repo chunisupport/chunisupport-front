@@ -474,8 +474,8 @@ const UserOverPower: Component<Props> = (props) => {
           {(currentSummary) => (
             <div class="mx-4 flex flex-col gap-4 text-sm">
               <Tabs.Root value={selectedSummaryTab()}>
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                  <div class="min-w-0 shrink">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="min-w-0 flex-1">
                     <Select<OverPowerSummaryOption>
                       options={OVER_POWER_SUMMARY_OPTIONS}
                       optionValue="value"
@@ -499,7 +499,7 @@ const UserOverPower: Component<Props> = (props) => {
                         </Select.Item>
                       )}
                     >
-                      <Select.Trigger class="grid w-52 max-w-full min-w-0 grid-cols-[1fr_auto] items-center gap-2 rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm font-medium text-gray-700">
+                      <Select.Trigger class="grid w-full min-w-0 grid-cols-[1fr_auto] items-center gap-2 rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm font-medium text-gray-700">
                         <Select.Value<OverPowerSummaryOption> class="truncate">
                           {(state) => <span>{state.selectedOption()?.label ?? 'ジャンル'}</span>}
                         </Select.Value>
