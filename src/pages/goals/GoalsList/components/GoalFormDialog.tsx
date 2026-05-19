@@ -82,9 +82,8 @@ const toggleSelection = (current: string[], value: string, checked: boolean): st
  */
 const getSelectableVersions = (versions: VersionDTO[]): { id: string; label: string }[] =>
   versions
-    .map((item) => ({ id: Number(item.id), label: getShortVersionName(item.name) }))
-    .filter((item) => Number.isInteger(item.id))
-    .map((item) => ({ id: String(item.id), label: item.label }))
+    .filter((item) => Number.isInteger(Number(item.id)))
+    .map((item) => ({ id: String(item.id), label: getShortVersionName(item.name) }))
 
 /**
  * Kobalteのチェックボックス行を描画します。
