@@ -105,6 +105,63 @@ const getNumberParam = (
   return typeof value === 'number' ? value : 0
 }
 
+/**
+ * 対象譜面数を動的上限として扱う件数目標値を解決する。
+ *
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @param filteredRecords - 現在の条件に一致した譜面レコード一覧。
+ * @returns 明示された件数、または現在の対象譜面数。
+ */
+const resolveCountTarget = (
+  params: GoalAchievementParams,
+  filteredRecords: PlayerRecordDTO[]
+): number => {
+  const value = (params as Record<string, unknown>).count
+  return typeof value === 'number' ? value : filteredRecords.length
+}
+
+/**
+ * 総スコア目標の動的上限を解決する。
+ *
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @param filteredRecords - 現在の条件に一致した譜面レコード一覧。
+ * @returns 明示された総スコア、または対象譜面数に基づく理論値。
+ */
+const resolveTotalScoreTarget = (
+  params: GoalAchievementParams,
+  filteredRecords: PlayerRecordDTO[]
+): number => {
+  const value = (params as Record<string, unknown>).total
+  return typeof value === 'number' ? value : filteredRecords.length * 1010000
+}
+
+/**
+ * OVER POWER合計目標の動的上限を解決する。
+ *
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @param filteredRecords - 現在の条件に一致した譜面レコード一覧。
+ * @param songMap - 楽曲IDから楽曲情報を引くためのマップ。
+ * @returns 明示されたOVER POWER合計、または対象譜面の理論値合計。
+ */
+const resolveOverPowerValueTarget = (
+  params: GoalAchievementParams,
+  filteredRecords: PlayerRecordDTO[],
+  songMap: Map<string, SongDTO>
+): number => {
+  const value = (params as Record<string, unknown>).total
+  if (typeof value === 'number') return value
+
+  return filteredRecords.reduce((acc, record) => acc + (songMap.get(record.id)?.maxop ?? 0), 0)
+}
+
+/**
+ * 目標の現在値、目標値、達成率を計算する。
+ *
+ * @param goal - 計算対象の目標。
+ * @param filteredRecords - 目標条件に一致したプレイヤーレコード一覧。
+ * @param songs - 楽曲マスタ一覧。
+ * @returns 目標カード表示に必要な進捗情報。
+ */
 export const calculateGoalProgress = (
   goal: GoalDTO,
   filteredRecords: PlayerRecordDTO[],
@@ -120,7 +177,7 @@ export const calculateGoalProgress = (
     case 'rank_count':
     case 'score_count': {
       const threshold = getNumberParam(goal.achievement_params, 'score')
-      target = getNumberParam(goal.achievement_params, 'count')
+      target = resolveCountTarget(goal.achievement_params, filteredRecords)
       current = filteredRecords.filter((record) => record.score >= threshold).length
       break
     }
@@ -137,7 +194,7 @@ export const calculateGoalProgress = (
     case 'hardlamp_count': {
       const params = goal.achievement_params as {
         lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'
-        count: number
+        count?: number
       }
       const hardLampName =
         params.lamp === 'HRD'
@@ -148,7 +205,7 @@ export const calculateGoalProgress = (
               ? 'ABSOLUTE'
               : 'CATASTROPHY'
       const required = HARD_LAMP_ORDER[hardLampName]
-      target = params.count
+      target = resolveCountTarget(goal.achievement_params, filteredRecords)
       current = filteredRecords.filter((record) => {
         const lamp = record.clear_lamp
         if (!lamp) return false
@@ -157,10 +214,10 @@ export const calculateGoalProgress = (
       break
     }
     case 'combolamp_count': {
-      const params = goal.achievement_params as { lamp: 'FC' | 'AJ'; count: number }
+      const params = goal.achievement_params as { lamp: 'FC' | 'AJ'; count?: number }
       const required =
         params.lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']
-      target = params.count
+      target = resolveCountTarget(goal.achievement_params, filteredRecords)
       current = filteredRecords.filter((record) => {
         const lamp = record.combo_lamp
         if (!lamp) return false
@@ -169,12 +226,12 @@ export const calculateGoalProgress = (
       break
     }
     case 'total_score': {
-      target = getNumberParam(goal.achievement_params, 'total')
+      target = resolveTotalScoreTarget(goal.achievement_params, filteredRecords)
       current = filteredRecords.reduce((acc, record) => acc + record.score, 0)
       break
     }
     case 'overpower_value': {
-      target = getNumberParam(goal.achievement_params, 'total')
+      target = resolveOverPowerValueTarget(goal.achievement_params, filteredRecords, songMap)
       current = filteredRecords.reduce((acc, record) => acc + record.overpower, 0)
       break
     }

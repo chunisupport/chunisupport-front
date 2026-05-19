@@ -44,6 +44,30 @@ const isCountAchievementType = (type: GoalAchievementType): boolean =>
   type === 'hardlamp_count' ||
   type === 'combolamp_count'
 
+/**
+ * 成果パラメータから有効な数値を取り出す。
+ *
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @param key - 取り出すパラメータ名。
+ * @returns 数値が設定されていればその値、未指定ならundefined。
+ */
+const getOptionalNumberParam = (
+  params: GoalDTO['achievement_params'],
+  key: 'count' | 'total'
+): number | undefined => {
+  const value = (params as Record<string, unknown>)[key]
+  return typeof value === 'number' ? value : undefined
+}
+
+/**
+ * 成果種別が動的な合計上限を利用できるか判定する。
+ *
+ * @param type - 判定対象の成果種別。
+ * @returns 動的上限を選択できる成果種別ならtrue。
+ */
+const canUseDynamicTotalTarget = (type: GoalAchievementType): boolean =>
+  type === 'total_score' || type === 'overpower_value'
+
 const normalizeAttributeSelection = (value: number | number[] | undefined): string[] => {
   if (typeof value === 'number') return [String(value)]
   if (Array.isArray(value)) {
@@ -85,6 +109,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [count, setCount] = createSignal('1')
   const [countMode, setCountMode] = createSignal<'number' | 'all'>('number')
   const [total, setTotal] = createSignal('100')
+  const [totalMode, setTotalMode] = createSignal<'number' | 'all'>('number')
   const [hardLamp, setHardLamp] = createSignal<'HRD' | 'BRV' | 'ABS' | 'CTS'>('HRD')
   const [comboLamp, setComboLamp] = createSignal<'FC' | 'AJ'>('FC')
   const [invert, setInvert] = createSignal(false)
@@ -113,6 +138,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setCount('1')
       setCountMode('number')
       setTotal('100')
+      setTotalMode('number')
       setHardLamp('HRD')
       setComboLamp('FC')
       setInvert(false)
@@ -133,13 +159,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       }
     }
     const allCount = props.resolveAllCount(goal.attributes)
-    const hasCountParam = 'count' in goal.achievement_params
-    if (hasCountParam) {
-      const rawCount = goal.achievement_params.count
+    const rawCount = getOptionalNumberParam(goal.achievement_params, 'count')
+    if (typeof rawCount === 'number') {
       setCount(String(goal.invert ? Math.max(allCount - rawCount, 0) : rawCount))
     }
-    if ('total' in goal.achievement_params) {
-      setTotal(String(goal.achievement_params.total))
+    const rawTotal = getOptionalNumberParam(goal.achievement_params, 'total')
+    if (typeof rawTotal === 'number') {
+      setTotal(String(rawTotal))
     }
     if (
       'lamp' in goal.achievement_params &&
@@ -161,11 +187,16 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setGenres(normalizeAttributeSelection(goal.attributes.genre))
     setVersions(normalizeAttributeSelection(goal.attributes.ver))
 
-    if (hasCountParam) {
-      setCountMode(allCount > 0 && goal.achievement_params.count === allCount ? 'all' : 'number')
+    if (isCountAchievementType(goal.achievement_type)) {
+      setCountMode(
+        rawCount === undefined || (allCount > 0 && rawCount === allCount) ? 'all' : 'number'
+      )
     } else {
       setCountMode('number')
     }
+    setTotalMode(
+      canUseDynamicTotalTarget(goal.achievement_type) && rawTotal === undefined ? 'all' : 'number'
+    )
   })
 
   const getDraftAttributes = (): GoalRequest['attributes'] => ({
@@ -236,17 +267,21 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       return
     }
 
+    if (canUseDynamicTotalTarget(currentType) && totalMode() === 'all' && allCount <= 0) {
+      setErrorMessage('条件に当てはまる譜面がありません。条件を見直してください。')
+      return
+    }
+
     if (
-      (currentType === 'total_score' ||
-        currentType === 'overpower_value' ||
-        currentType === 'overpower_percent') &&
+      (currentType === 'overpower_percent' ||
+        (canUseDynamicTotalTarget(currentType) && totalMode() === 'number')) &&
       (!Number.isFinite(parsedTotal) || parsedTotal < 0)
     ) {
       setErrorMessage('合計/割合の目標値は0以上で入力してください。')
       return
     }
 
-    if (currentType === 'total_score') {
+    if (currentType === 'total_score' && totalMode() === 'number') {
       const maxTotalScore = getTotalScoreMax()
       if (parsedTotal > maxTotalScore) {
         setErrorMessage(
@@ -274,26 +309,37 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
     const targetCount =
       countMode() === 'all'
-        ? allCount
+        ? undefined
         : invert()
           ? allCount - Math.floor(parsedCount)
           : Math.floor(parsedCount)
 
-    if (isCountType && targetCount <= 0) {
+    if (isCountType && typeof targetCount === 'number' && targetCount <= 0) {
       setErrorMessage('件数目標の変換結果が0以下です。条件または入力値を見直してください。')
       return
     }
 
     const achievement_params =
       currentType === 'score_count' || currentType === 'rank_count'
-        ? { score: Math.floor(parsedScore), count: targetCount }
+        ? {
+            score: Math.floor(parsedScore),
+            ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
+          }
         : currentType === 'avg_score'
           ? { score: Math.floor(parsedScore) }
           : currentType === 'hardlamp_count'
-            ? { lamp: hardLamp(), count: targetCount }
+            ? {
+                lamp: hardLamp(),
+                ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
+              }
             : currentType === 'combolamp_count'
-              ? { lamp: comboLamp(), count: targetCount }
-              : { total: parsedTotal }
+              ? {
+                  lamp: comboLamp(),
+                  ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
+                }
+              : canUseDynamicTotalTarget(currentType) && totalMode() === 'all'
+                ? {}
+                : { total: parsedTotal }
 
     await props.onSave({
       title: trimmed,
@@ -343,6 +389,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 onChange={(event) => {
                   const nextType = event.currentTarget.value as GoalAchievementType
                   setAchievementType(nextType)
+                  if (!canUseDynamicTotalTarget(nextType)) {
+                    setTotalMode('number')
+                  }
                   if (nextType === 'rank_count') {
                     setRank('S')
                     setScore(String(SCORE_RANK_MIN_SCORES.S))
@@ -483,17 +532,41 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
             >
               <label class="block text-sm">
                 <span class="mb-1 block text-gray-700">合計/割合目標</span>
-                <input
-                  type="number"
-                  value={total()}
-                  onInput={(event) => setTotal(event.currentTarget.value)}
-                  class="w-full rounded border border-gray-300 px-3 py-2"
-                />
-                <Show when={achievementType() === 'total_score'}>
-                  <p class="mt-1 text-xs text-gray-600">
-                    最大値: {getTotalScoreMax().toLocaleString('ja-JP')}（対象譜面数 × 1,010,000）
-                  </p>
-                </Show>
+                <div class="space-y-2">
+                  <Show when={canUseDynamicTotalTarget(achievementType())}>
+                    <select
+                      value={totalMode()}
+                      onChange={(event) =>
+                        setTotalMode(event.currentTarget.value as 'number' | 'all')
+                      }
+                      class="w-full rounded border border-gray-300 px-3 py-2"
+                    >
+                      <option value="number">数値を指定</option>
+                      <option value="all">条件に当てはまるものすべて</option>
+                    </select>
+                  </Show>
+                  <Show
+                    when={!canUseDynamicTotalTarget(achievementType()) || totalMode() === 'number'}
+                    fallback={
+                      <p class="rounded border border-primary-200 bg-primary-50 px-3 py-2 text-xs text-primary-700">
+                        現在の対象譜面数から目標値を自動計算します。
+                      </p>
+                    }
+                  >
+                    <input
+                      type="number"
+                      value={total()}
+                      onInput={(event) => setTotal(event.currentTarget.value)}
+                      class="w-full rounded border border-gray-300 px-3 py-2"
+                    />
+                    <Show when={achievementType() === 'total_score'}>
+                      <p class="mt-1 text-xs text-gray-600">
+                        最大値: {getTotalScoreMax().toLocaleString('ja-JP')}（対象譜面数 ×
+                        1,010,000）
+                      </p>
+                    </Show>
+                  </Show>
+                </div>
               </label>
             </Show>
 

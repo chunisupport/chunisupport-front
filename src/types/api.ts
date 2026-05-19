@@ -259,21 +259,21 @@ export interface GoalAttributes {
 export type GoalAchievementParams =
   | {
       score: number
-      count: number
+      count?: number
     }
   | {
       score: number
     }
   | {
       lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'
-      count: number
+      count?: number
     }
   | {
       lamp: 'FC' | 'AJ'
-      count: number
+      count?: number
     }
   | {
-      total: number
+      total?: number
     }
 
 export interface GoalDTO {
