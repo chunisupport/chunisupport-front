@@ -254,6 +254,13 @@ const toWorldsendDraft = (
   }
 }
 
+/**
+ * 管理者向けの楽曲管理画面を描画します。
+ * 通常楽曲およびWORLD'S END楽曲の追加・更新・削除・復活操作を提供します。
+ *
+ * @param props 画面タイトルを含むプロパティ
+ * @returns 楽曲管理UI
+ */
 const SongManagementPage = (props: SongManagementPageProps) => {
   useDocumentTitle(props.title)
 
@@ -742,8 +749,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
           when={!songsResponse.loading && !masterData.loading && songs().length > 0}
           fallback={<p class="mt-3 text-sm text-gray-500">楽曲データを読み込み中...</p>}
         >
-          <div class="mt-3 grid gap-4 lg:grid-cols-[300px_1fr]">
-            <div>
+          <div class="mt-3 grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
+            <div class="min-w-0">
               <div class="mb-2 flex items-center gap-2 rounded border border-gray-300 px-2 focus-within:border-primary-500">
                 <Search class="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
                 <input
@@ -781,7 +788,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               </div>
             </div>
 
-            <div>
+            <div class="min-w-0">
               <Show when={draft()}>
                 {(currentDraft) => (
                   <div class="min-w-0 space-y-4">
@@ -899,12 +906,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                       <table class="min-w-full text-sm">
                         <thead class="bg-gray-50">
                           <tr>
-                            <th class="px-3 py-2 text-left">難易度</th>
-                            <th class="px-3 py-2 text-left">定数</th>
-                            <th class="px-3 py-2 text-left">未確定</th>
-                            <th class="px-3 py-2 text-left">ノーツ</th>
-                            <th class="px-3 py-2 text-left">NOTES DESIGNER</th>
-                            <th class="px-3 py-2 text-left">更新日時</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-left">難易度</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-left">定数</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-left">未確定</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-left">ノーツ</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-left">NOTES DESIGNER</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-left">更新日時</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1413,12 +1420,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
             <table class="min-w-full text-sm">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-3 py-2 text-left">追加</th>
-                  <th class="px-3 py-2 text-left">難易度</th>
-                  <th class="px-3 py-2 text-left">定数</th>
-                  <th class="px-3 py-2 text-left">未確定</th>
-                  <th class="px-3 py-2 text-left">ノーツ</th>
-                  <th class="px-3 py-2 text-left">NOTES DESIGNER</th>
+                  <th class="whitespace-nowrap px-3 py-2 text-left">追加</th>
+                  <th class="whitespace-nowrap px-3 py-2 text-left">難易度</th>
+                  <th class="whitespace-nowrap px-3 py-2 text-left">定数</th>
+                  <th class="whitespace-nowrap px-3 py-2 text-left">未確定</th>
+                  <th class="whitespace-nowrap px-3 py-2 text-left">ノーツ</th>
+                  <th class="whitespace-nowrap px-3 py-2 text-left">NOTES DESIGNER</th>
                 </tr>
               </thead>
               <tbody>
