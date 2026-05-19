@@ -80,10 +80,15 @@ const toggleSelection = (current: string[], value: string, checked: boolean): st
  * @param versions バージョン一覧
  * @returns 選択肢として表示可能なバージョン情報
  */
-const getSelectableVersions = (versions: VersionDTO[]): { id: string; label: string }[] =>
-  versions
-    .filter((item) => Number.isInteger(Number(item.id)))
-    .map((item) => ({ id: String(item.id), label: getShortVersionName(item.name) }))
+const getSelectableVersions = (
+  versions: VersionDTO[]
+): { id: string; label: string; normalizedId: number }[] =>
+  versions.flatMap((item) => {
+    const normalizedId = Number(item.id)
+    if (!Number.isInteger(normalizedId)) return []
+
+    return [{ id: String(item.id), label: getShortVersionName(item.name), normalizedId }]
+  })
 
 /**
  * Kobalteのチェックボックス行を描画します。
@@ -610,16 +615,22 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
                     <For each={getSelectableVersions(props.versions)}>
-                      {(item) => (
-                        <FilterCheckboxRow
-                          label={<span>{item.label}</span>}
-                          checked={versions().includes(item.id)}
-                          onChange={(checked) =>
-                            setVersions((prev) => toggleSelection(prev, item.id, checked))
-                          }
-                        />
-                      )}
+                      {(item) => {
+                        const normalizedId = String(item.normalizedId)
+                        return (
+                          <FilterCheckboxRow
+                            label={<span>{item.label}</span>}
+                            checked={versions().includes(normalizedId)}
+                            onChange={(checked) =>
+                              setVersions((prev) => toggleSelection(prev, normalizedId, checked))
+                            }
+                          />
+                        )
+                      }}
                     </For>
+                    <Show when={props.versions.length === 0}>
+                      <p class="text-xs text-gray-500">バージョンが読み込まれていません。</p>
+                    </Show>
                   </div>
                   <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
                 </fieldset>
