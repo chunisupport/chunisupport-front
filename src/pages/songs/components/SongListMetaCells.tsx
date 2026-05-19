@@ -48,9 +48,14 @@ export const SongListTitleCell = (props: SongListTitleCellProps) => (
   </td>
 )
 
+/**
+ * 楽曲一覧テーブルのアーティスト名セルを描画する。
+ * @param props アーティスト名とセルのスタイル情報。
+ * @returns アーティスト名セル。
+ */
 export const SongListArtistCell = (props: SongListArtistCellProps) => (
   <td class={props.class}>
-    <span class="block min-w-0 truncate" title={props.artist}>
+    <span class="block min-w-0 truncate font-sans" title={props.artist}>
       {props.artist}
     </span>
   </td>
