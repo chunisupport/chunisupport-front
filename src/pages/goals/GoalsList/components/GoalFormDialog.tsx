@@ -1,5 +1,7 @@
+import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
-import type { Component } from 'solid-js'
+import { Check } from 'lucide-solid'
+import type { Component, JSX } from 'solid-js'
 import { createEffect, createSignal, For, Show } from 'solid-js'
 import type {
   GoalAchievementType,
@@ -71,6 +73,46 @@ const toggleSelection = (current: string[], value: string, checked: boolean): st
   return current.filter((item) => item !== value)
 }
 
+/**
+ * バージョン選択肢として扱えるIDを正規化して返します。
+ * APIレスポンスでIDが文字列になるケースも考慮し、数値へ変換した値を利用します。
+ *
+ * @param versions バージョン一覧
+ * @returns 選択肢として表示可能なバージョン情報
+ */
+const getSelectableVersions = (versions: VersionDTO[]): { id: string; label: string }[] =>
+  versions
+    .map((item) => ({ id: Number(item.id), label: getShortVersionName(item.name) }))
+    .filter((item) => Number.isInteger(item.id))
+    .map((item) => ({ id: String(item.id), label: item.label }))
+
+/**
+ * Kobalteのチェックボックス行を描画します。
+ *
+ * @param props 表示ラベルとチェック状態、変更ハンドラ
+ * @returns チェックボックス行
+ */
+const FilterCheckboxRow: Component<{
+  id: string
+  label: JSX.Element
+  checked: boolean
+  onChange: (checked: boolean) => void
+}> = (props) => (
+  <Checkbox
+    checked={props.checked}
+    onChange={props.onChange}
+    class="flex items-center gap-2 text-sm text-gray-700"
+  >
+    <Checkbox.Input id={props.id} />
+    <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white">
+      <Checkbox.Indicator>
+        <Check class="h-4 w-4" />
+      </Checkbox.Indicator>
+    </Checkbox.Control>
+    <Checkbox.Label for={props.id}>{props.label}</Checkbox.Label>
+  </Checkbox>
+)
+
 const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [title, setTitle] = createSignal('')
   const [achievementType, setAchievementType] = createSignal<GoalAchievementType>('score_count')
@@ -91,6 +133,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
   const [errorMessage, setErrorMessage] = createSignal('')
 
+  /**
+   * 現在の対象条件で理論上の総スコア最大値を計算します。
+   *
+   * @returns 総スコア最大値
+   */
   const getTotalScoreMax = (): number => props.resolveAllCount(getDraftAttributes()) * MAX_SCORE
 
   createEffect(() => {
@@ -297,6 +344,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     })
   }
 
+  /**
+   * 進捗反転設定を切り替え、件数指定時は表示中の入力値を維持するよう変換します。
+   *
+   * @param next 反転状態
+   */
   const handleInvertChange = (next: boolean) => {
     if (isCountAchievementType(achievementType()) && countMode() === 'number') {
       const parsed = Number(count())
@@ -506,18 +558,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
                     {props.masterData.difficulties.map((item) => (
-                      <label class="flex items-center gap-2 text-sm text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={diffs().includes(String(item.id))}
-                          onChange={(event) =>
-                            setDiffs((prev) =>
-                              toggleSelection(prev, String(item.id), event.currentTarget.checked)
-                            )
-                          }
-                        />
-                        <span>{item.name}</span>
-                      </label>
+                      <FilterCheckboxRow
+                        id={`goal-diff-${item.id}`}
+                        label={<span>{item.name}</span>}
+                        checked={diffs().includes(String(item.id))}
+                        onChange={(checked) =>
+                          setDiffs((prev) => toggleSelection(prev, String(item.id), checked))
+                        }
+                      />
                     ))}
                   </div>
                   <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
@@ -536,18 +584,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
                     {props.masterData.genres.map((item) => (
-                      <label class="flex items-center gap-2 text-sm text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={genres().includes(String(item.id))}
-                          onChange={(event) =>
-                            setGenres((prev) =>
-                              toggleSelection(prev, String(item.id), event.currentTarget.checked)
-                            )
-                          }
-                        />
-                        <span>{item.name}</span>
-                      </label>
+                      <FilterCheckboxRow
+                        id={`goal-genre-${item.id}`}
+                        label={<span>{item.name}</span>}
+                        checked={genres().includes(String(item.id))}
+                        onChange={(checked) =>
+                          setGenres((prev) => toggleSelection(prev, String(item.id), checked))
+                        }
+                      />
                     ))}
                   </div>
                   <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
@@ -565,25 +609,17 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     </button>
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
-                    <For each={props.versions.filter((item) => Number.isInteger(item.id))}>
-                      {(item) => {
-                        const versionValue = String(item.id)
-
-                        return (
-                          <label class="flex items-center gap-2 text-sm text-gray-700">
-                            <input
-                              type="checkbox"
-                              checked={versions().includes(versionValue)}
-                              onChange={(event) =>
-                                setVersions((prev) =>
-                                  toggleSelection(prev, versionValue, event.currentTarget.checked)
-                                )
-                              }
-                            />
-                            <span>{getShortVersionName(item.name)}</span>
-                          </label>
-                        )
-                      }}
+                    <For each={getSelectableVersions(props.versions)}>
+                      {(item) => (
+                        <FilterCheckboxRow
+                          id={`goal-version-${item.id}`}
+                          label={<span>{item.label}</span>}
+                          checked={versions().includes(item.id)}
+                          onChange={(checked) =>
+                            setVersions((prev) => toggleSelection(prev, item.id, checked))
+                          }
+                        />
+                      )}
                     </For>
                   </div>
                   <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
@@ -614,14 +650,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               </div>
             </div>
 
-            <label class="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={invert()}
-                onChange={(event) => handleInvertChange(event.currentTarget.checked)}
-              />
-              進捗表示を反転（未達寄り）
-            </label>
+            <FilterCheckboxRow
+              id="goal-invert"
+              label={<span>進捗表示を反転（未達寄り）</span>}
+              checked={invert()}
+              onChange={handleInvertChange}
+            />
 
             <Show when={errorMessage()}>
               <p class="text-sm text-red-600">{errorMessage()}</p>
