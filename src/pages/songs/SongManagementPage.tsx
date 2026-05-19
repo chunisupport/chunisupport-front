@@ -788,7 +788,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               </div>
             </div>
 
-            <div>
+            <div class="min-w-0">
               <Show when={draft()}>
                 {(currentDraft) => (
                   <div class="min-w-0 space-y-4">
