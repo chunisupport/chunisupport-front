@@ -650,7 +650,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
             </div>
 
             <FilterCheckboxRow
-              id="goal-invert"
               label={<span>進捗表示を反転（未達寄り）</span>}
               checked={invert()}
               onChange={handleInvertChange}
