@@ -258,6 +258,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
               <div class="flex items-center gap-2 rounded border border-gray-300 px-2 focus-within:border-primary-500">
                 <Search class="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
                 <TextField.Input
+                  type="search"
                   class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
                   aria-label="未解禁楽曲検索"
                   placeholder="曲名・アーティストで検索..."
