@@ -92,7 +92,6 @@ const getSelectableVersions = (versions: VersionDTO[]): { id: string; label: str
  * @returns チェックボックス行
  */
 const FilterCheckboxRow: Component<{
-  id: string
   label: JSX.Element
   checked: boolean
   onChange: (checked: boolean) => void
@@ -102,13 +101,13 @@ const FilterCheckboxRow: Component<{
     onChange={props.onChange}
     class="flex items-center gap-2 text-sm text-gray-700"
   >
-    <Checkbox.Input id={props.id} />
+    <Checkbox.Input />
     <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white">
       <Checkbox.Indicator>
         <Check class="h-4 w-4" />
       </Checkbox.Indicator>
     </Checkbox.Control>
-    <Checkbox.Label for={props.id}>{props.label}</Checkbox.Label>
+    <Checkbox.Label>{props.label}</Checkbox.Label>
   </Checkbox>
 )
 
@@ -556,16 +555,17 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     </button>
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
-                    {props.masterData.difficulties.map((item) => (
-                      <FilterCheckboxRow
-                        id={`goal-diff-${item.id}`}
-                        label={<span>{item.name}</span>}
-                        checked={diffs().includes(String(item.id))}
-                        onChange={(checked) =>
-                          setDiffs((prev) => toggleSelection(prev, String(item.id), checked))
-                        }
-                      />
-                    ))}
+                    <For each={props.masterData.difficulties}>
+                      {(item) => (
+                        <FilterCheckboxRow
+                          label={<span>{item.name}</span>}
+                          checked={diffs().includes(String(item.id))}
+                          onChange={(checked) =>
+                            setDiffs((prev) => toggleSelection(prev, String(item.id), checked))
+                          }
+                        />
+                      )}
+                    </For>
                   </div>
                   <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
                 </fieldset>
@@ -582,16 +582,17 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     </button>
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
-                    {props.masterData.genres.map((item) => (
-                      <FilterCheckboxRow
-                        id={`goal-genre-${item.id}`}
-                        label={<span>{item.name}</span>}
-                        checked={genres().includes(String(item.id))}
-                        onChange={(checked) =>
-                          setGenres((prev) => toggleSelection(prev, String(item.id), checked))
-                        }
-                      />
-                    ))}
+                    <For each={props.masterData.genres}>
+                      {(item) => (
+                        <FilterCheckboxRow
+                          label={<span>{item.name}</span>}
+                          checked={genres().includes(String(item.id))}
+                          onChange={(checked) =>
+                            setGenres((prev) => toggleSelection(prev, String(item.id), checked))
+                          }
+                        />
+                      )}
+                    </For>
                   </div>
                   <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
                 </fieldset>
@@ -611,7 +612,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     <For each={getSelectableVersions(props.versions)}>
                       {(item) => (
                         <FilterCheckboxRow
-                          id={`goal-version-${item.id}`}
                           label={<span>{item.label}</span>}
                           checked={versions().includes(item.id)}
                           onChange={(checked) =>
