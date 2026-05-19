@@ -2,7 +2,7 @@ import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
 import { Check } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import { createEffect, createSignal, For, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -80,14 +80,12 @@ const toggleSelection = (current: string[], value: string, checked: boolean): st
  * @param versions バージョン一覧
  * @returns 選択肢として表示可能なバージョン情報
  */
-const getSelectableVersions = (
-  versions: VersionDTO[]
-): { id: string; label: string; normalizedId: number }[] =>
+const getSelectableVersions = (versions: VersionDTO[]): { id: string; label: string }[] =>
   versions.flatMap((item) => {
     const normalizedId = Number(item.id)
     if (!Number.isInteger(normalizedId)) return []
 
-    return [{ id: String(item.id), label: getShortVersionName(item.name), normalizedId }]
+    return [{ id: String(normalizedId), label: getShortVersionName(item.name) }]
   })
 
 /**
@@ -135,6 +133,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [versions, setVersions] = createSignal<string[]>([])
 
   const [errorMessage, setErrorMessage] = createSignal('')
+
+  /**
+   * 描画に利用するバージョン選択肢をメモ化します。
+   * 生データに不正なIDが含まれる場合でも描画判定を安定させます。
+   */
+  const selectableVersions = createMemo(() => getSelectableVersions(props.versions))
 
   /**
    * 現在の対象条件で理論上の総スコア最大値を計算します。
@@ -614,15 +618,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     </button>
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
-                    <For each={getSelectableVersions(props.versions)}>
+                    <For each={selectableVersions()}>
                       {(item) => {
-                        const normalizedId = String(item.normalizedId)
                         return (
                           <FilterCheckboxRow
                             label={<span>{item.label}</span>}
-                            checked={versions().includes(normalizedId)}
+                            checked={versions().includes(item.id)}
                             onChange={(checked) =>
-                              setVersions((prev) => toggleSelection(prev, normalizedId, checked))
+                              setVersions((prev) => toggleSelection(prev, item.id, checked))
                             }
                           />
                         )
@@ -630,6 +633,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     </For>
                     <Show when={props.versions.length === 0}>
                       <p class="text-xs text-gray-500">バージョンが読み込まれていません。</p>
+                    </Show>
+                    <Show when={props.versions.length > 0 && selectableVersions().length === 0}>
+                      <p class="text-xs text-amber-600">
+                        バージョンIDの形式が不正なため表示できません。
+                      </p>
                     </Show>
                   </div>
                   <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
