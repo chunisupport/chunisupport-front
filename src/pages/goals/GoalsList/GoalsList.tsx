@@ -50,7 +50,7 @@ const GoalsList: Component = () => {
           goals: goalsResponse.goals,
           songs: songsResponse.songs,
           masterData,
-          versions: versionData.versions,
+          versions: versionData.versions ?? [],
           records: [],
         }
       }
@@ -60,7 +60,7 @@ const GoalsList: Component = () => {
         goals: goalsResponse.goals,
         songs: songsResponse.songs,
         masterData,
-        versions: versionData.versions,
+        versions: versionData.versions ?? [],
         records: record.all,
       }
     }

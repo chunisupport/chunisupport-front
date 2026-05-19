@@ -1,6 +1,6 @@
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
-import { createEffect, createSignal, For, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -25,6 +25,11 @@ import {
 } from '../../utils/goalForm'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
+
+type VersionOption = {
+  value: string
+  label: string
+}
 
 interface GoalFormDialogProps {
   open: boolean
@@ -71,6 +76,25 @@ const toggleSelection = (current: string[], value: string, checked: boolean): st
   return current.filter((item) => item !== value)
 }
 
+/**
+ * 目標条件のバージョンチェックボックスに描画できる形式へ変換する。
+ *
+ * @param version - API から返されたバージョン情報。
+ * @returns チェックボックス用の値と表示名。ID が不正な場合は null。
+ */
+const toVersionOption = (version: VersionDTO): VersionOption | null => {
+  const rawId: unknown = version.id
+  const stringId = typeof rawId === 'string' ? rawId.trim() : ''
+  const id = typeof rawId === 'number' ? rawId : stringId ? Number(stringId) : Number.NaN
+
+  if (!Number.isInteger(id)) return null
+
+  return {
+    value: String(id),
+    label: getShortVersionName(version.name),
+  }
+}
+
 const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [title, setTitle] = createSignal('')
   const [achievementType, setAchievementType] = createSignal<GoalAchievementType>('score_count')
@@ -90,6 +114,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [versions, setVersions] = createSignal<string[]>([])
 
   const [errorMessage, setErrorMessage] = createSignal('')
+  const versionOptions = createMemo(() =>
+    props.versions.map(toVersionOption).filter((option): option is VersionOption => option !== null)
+  )
 
   const getTotalScoreMax = (): number => props.resolveAllCount(getDraftAttributes()) * MAX_SCORE
 
@@ -565,26 +592,29 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     </button>
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
-                    <For each={props.versions.filter((item) => Number.isInteger(item.id))}>
-                      {(item) => {
-                        const versionValue = String(item.id)
-
-                        return (
+                    <Show
+                      when={versionOptions().length > 0}
+                      fallback={
+                        <p class="text-sm text-gray-500">バージョンを取得できませんでした。</p>
+                      }
+                    >
+                      <For each={versionOptions()}>
+                        {(item) => (
                           <label class="flex items-center gap-2 text-sm text-gray-700">
                             <input
                               type="checkbox"
-                              checked={versions().includes(versionValue)}
+                              checked={versions().includes(item.value)}
                               onChange={(event) =>
                                 setVersions((prev) =>
-                                  toggleSelection(prev, versionValue, event.currentTarget.checked)
+                                  toggleSelection(prev, item.value, event.currentTarget.checked)
                                 )
                               }
                             />
-                            <span>{getShortVersionName(item.name)}</span>
+                            <span>{item.label}</span>
                           </label>
-                        )
-                      }}
-                    </For>
+                        )}
+                      </For>
+                    </Show>
                   </div>
                   <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
                 </fieldset>
