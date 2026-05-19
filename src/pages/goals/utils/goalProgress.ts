@@ -7,7 +7,7 @@ import type {
   SongDTO,
   VersionDTO,
 } from '../../../types/api'
-import { resolveVersionNameByReleaseDate } from '../../../utils/versionConverter'
+import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
 
 export interface GoalProgressResult {
   current: number
@@ -29,8 +29,6 @@ const COMBO_LAMP_ORDER: Record<string, number> = {
   'ALL JUSTICE': 2,
 }
 
-const normalizeVersionName = (name: string): string => name.trim().toUpperCase()
-
 const normalizeAttributeIds = (value: number | number[] | undefined): number[] => {
   if (typeof value === 'number') return [value]
   if (Array.isArray(value)) {
@@ -39,28 +37,16 @@ const normalizeAttributeIds = (value: number | number[] | undefined): number[] =
   return []
 }
 
-const resolveSongVersionId = (song: SongDTO, versions: VersionDTO[]): number | undefined => {
-  const release = song.release
-  if (!release) return undefined
-
-  const resolved = resolveVersionNameByReleaseDate(release, versions)
-  const normalized = normalizeVersionName(resolved)
-  const byName = versions.find((v) => normalizeVersionName(v.name) === normalized)
-  if (byName) {
-    return byName.id
-  }
-
-  const sorted = [...versions].sort((a, b) => a.released_at.localeCompare(b.released_at, 'ja'))
-  let candidate: number | undefined
-  for (const version of sorted) {
-    if (release >= version.released_at.slice(0, 10)) {
-      candidate = version.id
-    }
-  }
-
-  return candidate
-}
-
+/**
+ * 目標条件に一致するプレイヤーレコードだけを抽出する。
+ *
+ * @param records - 判定対象のプレイヤーレコード一覧。
+ * @param attributes - 目標に設定された対象条件。
+ * @param masterData - 難易度・ジャンルなどのマスタデータ。
+ * @param songs - 楽曲マスタ一覧。
+ * @param versions - version API から返されたバージョン一覧。
+ * @returns 目標条件に一致したレコード一覧。
+ */
 export const filterRecordsByAttributes = (
   records: PlayerRecordDTO[],
   attributes: GoalAttributes,
@@ -103,8 +89,8 @@ export const filterRecordsByAttributes = (
 
     if (versionIds.length > 0) {
       if (!song) return false
-      const songVersionId = resolveSongVersionId(song, versions)
-      if (!songVersionId || !versionIds.includes(songVersionId)) return false
+      const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
+      if (!songVersionValue || !versionIds.includes(songVersionValue)) return false
     }
 
     return true

@@ -7,7 +7,7 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../types/api'
-import { getShortVersionName } from '../../../utils/versionConverter'
+import { buildGoalVersionNameMap } from './goalVersion'
 
 // ID(code) -> 表示名の辞書。将来は言語キーを増やすだけでi18n対応できる。
 export const GOAL_ACHIEVEMENT_TYPE_LABELS = {
@@ -60,6 +60,14 @@ export const resolveGoalAchievementTypeLabel = (
 export const formatGoalTypeLabel = (type: GoalAchievementType): string =>
   resolveGoalAchievementTypeLabel(type)
 
+/**
+ * 目標条件をユーザー向けの要約テキストへ変換する。
+ *
+ * @param attributes - 目標に設定された対象条件。
+ * @param masterData - 難易度・ジャンルなどのマスタデータ。
+ * @param versions - version API から返されたバージョン一覧。
+ * @returns 条件の要約テキスト。
+ */
 export const formatGoalAttributesLabel = (
   attributes: GoalAttributes,
   masterData: MasterDataDTO,
@@ -84,7 +92,7 @@ export const formatGoalAttributesLabel = (
 
   const difficultyNameMap = new Map(masterData.difficulties.map((item) => [item.id, item.name]))
   const genreNameMap = new Map(masterData.genres.map((item) => [item.id, item.name]))
-  const versionNameMap = new Map(versions.map((item) => [item.id, getShortVersionName(item.name)]))
+  const versionNameMap = buildGoalVersionNameMap(versions)
 
   if (diffIds.length > 0) {
     parts.push(`難易度: ${formatNames(diffIds, difficultyNameMap)}`)

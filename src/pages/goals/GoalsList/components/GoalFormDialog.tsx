@@ -17,19 +17,14 @@ import {
   SCORE_RANKS_ASC,
   type ScoreRank,
 } from '../../../../utils/scoreRank'
-import { getShortVersionName } from '../../../../utils/versionConverter'
 import {
   COMBO_LAMP_OPTIONS,
   HARD_LAMP_OPTIONS,
   resolveGoalAchievementTypeLabel,
 } from '../../utils/goalForm'
+import { buildGoalVersionOptions } from '../../utils/goalVersion'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
-
-type VersionOption = {
-  value: string
-  label: string
-}
 
 interface GoalFormDialogProps {
   open: boolean
@@ -77,24 +72,11 @@ const toggleSelection = (current: string[], value: string, checked: boolean): st
 }
 
 /**
- * 目標条件のバージョンチェックボックスに描画できる形式へ変換する。
+ * 目標の作成・編集に使う入力ダイアログを表示する。
  *
- * @param version - API から返されたバージョン情報。
- * @returns チェックボックス用の値と表示名。ID が不正な場合は null。
+ * @param props - ダイアログの表示状態、初期値、マスタデータ、保存ハンドラ。
+ * @returns 目標フォームダイアログの JSX 要素。
  */
-const toVersionOption = (version: VersionDTO): VersionOption | null => {
-  const rawId: unknown = version.id
-  const stringId = typeof rawId === 'string' ? rawId.trim() : ''
-  const id = typeof rawId === 'number' ? rawId : stringId ? Number(stringId) : Number.NaN
-
-  if (!Number.isInteger(id)) return null
-
-  return {
-    value: String(id),
-    label: getShortVersionName(version.name),
-  }
-}
-
 const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [title, setTitle] = createSignal('')
   const [achievementType, setAchievementType] = createSignal<GoalAchievementType>('score_count')
@@ -114,9 +96,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [versions, setVersions] = createSignal<string[]>([])
 
   const [errorMessage, setErrorMessage] = createSignal('')
-  const versionOptions = createMemo(() =>
-    props.versions.map(toVersionOption).filter((option): option is VersionOption => option !== null)
-  )
+  const versionOptions = createMemo(() => buildGoalVersionOptions(props.versions))
 
   const getTotalScoreMax = (): number => props.resolveAllCount(getDraftAttributes()) * MAX_SCORE
 
