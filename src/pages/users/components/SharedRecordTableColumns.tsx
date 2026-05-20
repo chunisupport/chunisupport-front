@@ -212,7 +212,7 @@ export const RecordHardLampCell = (props: { record: HardLampRecord }) => (
  * レコード行にFULL CHAINランプバッジセルを表示する。
  * @param props - コンポーネントのプロパティ
  * @param props.record - プレイ状態とフルチェイン情報を含むレコードデータ
- * @returns フルチェインセルを表すReact要素
+ * @returns フルチェインセルを表すJSX要素
  */
 export const RecordFullChainCell = (props: { record: FullChainRecord }) => (
   <div
