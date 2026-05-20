@@ -88,7 +88,7 @@ npm run test:unit
 
 ## 関連資料
 
-- Rsbuild Documentation: https://rsbuild.rs/llms.txt
-- Rspack Documentation: https://rspack.rs/llms.txt
+- Rsbuild Documentation: https://rsbuild.rs/
+- Rspack Documentation: https://rspack.rs/
 - API 管理リポジトリ: https://github.com/chunisupport/chunisupport-api
 - API 仕様書（develop）: https://github.com/chunisupport/chunisupport-api/blob/develop/docs/API.md
