@@ -16,6 +16,7 @@ type WorldsendRecordColumnId =
   | 'score'
   | 'lamp'
   | 'hardLamp'
+  | 'fullChain'
   | 'justiceCount'
   | 'updatedAt'
 type WorldsendRecordSortKey = WorldsendRecordColumnId
@@ -41,6 +42,7 @@ const WORLDSEND_RECORD_COLUMN_SETTINGS: WorldsendRecordColumnSetting[] = [
   { id: 'score', defaultVisible: true },
   { id: 'lamp', defaultVisible: true },
   { id: 'hardLamp', defaultVisible: true },
+  { id: 'fullChain', defaultVisible: true },
   { id: 'justiceCount', defaultVisible: true },
   { id: 'updatedAt', defaultVisible: true },
 ]

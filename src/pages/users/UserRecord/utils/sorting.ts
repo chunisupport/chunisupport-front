@@ -5,7 +5,7 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../recordTable/sortingQuery'
-import { compareComboLamp, compareHardLamp } from '../../utils/lampSorting'
+import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
 import type { RecordSortKey } from '../types/types'
 import { calcJusticeCountForAj } from './justiceCount.ts'
 import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
@@ -32,6 +32,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   updated_at: 'updatedAt',
   lamp: 'lamp',
   hard_lamp: 'hardLamp',
+  full_chain: 'fullChain',
   justice_count: 'justiceCount',
 }
 
@@ -204,6 +205,12 @@ export const sortRecords = (
         }
         case 'hardLamp': {
           const result = compareHardLamp(left, right)
+          if (result.skipDirection) return result.comparison
+          comparison = result.comparison
+          break
+        }
+        case 'fullChain': {
+          const result = compareFullChainLamp(left, right)
           if (result.skipDirection) return result.comparison
           comparison = result.comparison
           break

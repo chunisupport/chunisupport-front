@@ -10,7 +10,7 @@ import {
   compareUpdatedAtWithMissingLast,
   updatedAtTimestamp,
 } from '../../UserRecord/utils/updatedAt'
-import { compareComboLamp, compareHardLamp } from '../../utils/lampSorting'
+import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
 import type { WorldsendRecordSortKey } from './columns'
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
@@ -24,6 +24,7 @@ const WE_SORT_COL_MAP: Record<string, WorldsendRecordSortKey> = {
   updated_at: 'updatedAt',
   lamp: 'lamp',
   hard_lamp: 'hardLamp',
+  full_chain: 'fullChain',
   justice_count: 'justiceCount',
 }
 
@@ -142,6 +143,12 @@ export const sortWorldsendRecords = <TRecord extends WorldsendRecordDTO>(
         }
         case 'hardLamp': {
           const result = compareHardLamp(left, right)
+          if (result.skipDirection) return result.comparison
+          comparison = result.comparison
+          break
+        }
+        case 'fullChain': {
+          const result = compareFullChainLamp(left, right)
           if (result.skipDirection) return result.comparison
           comparison = result.comparison
           break

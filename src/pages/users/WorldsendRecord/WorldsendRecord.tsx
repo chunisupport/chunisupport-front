@@ -26,6 +26,7 @@ import {
   RECORD_CELL_CENTER_TEXT_CLASS,
   RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
+  RecordFullChainCell,
   RecordHardLampCell,
   RecordHeaderButton,
   RecordJusticeCountCell,
@@ -113,6 +114,7 @@ const worldsendColumnRenderers: Record<
   score: (record) => <RecordScoreCell record={record} />,
   lamp: (record) => <RecordLampCell record={record} />,
   hardLamp: (record) => <RecordHardLampCell record={record} />,
+  fullChain: (record) => <RecordFullChainCell record={record} />,
   justiceCount: (record) => (
     <RecordJusticeCountCell
       record={record}
