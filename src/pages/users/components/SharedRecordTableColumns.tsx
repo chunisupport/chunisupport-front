@@ -102,7 +102,11 @@ export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element =
   return <LampPlaceholderBadge class="w-[40px]" />
 }
 
-/** レコードのFULL CHAINランプ値から表示用バッジを生成する。 */
+/**
+ * レコードのFULL CHAINランプ値から表示用バッジを生成する。
+ * @param fullChain - レコードのフルチェイン状態 (FULL CHAIN GOLD, FULL CHAIN PLATINUM, またはnull)
+ * @returns フルチェインバッジまたはプレースホルダーを表すJSX要素
+ */
 export const renderDefaultRecordFullChainBadge = (
   fullChain: SharedRecordSource['full_chain']
 ): JSX.Element => {
@@ -201,7 +205,12 @@ export const RecordHardLampCell = (props: { record: HardLampRecord }) => (
   </div>
 )
 
-/** レコード行にFULL CHAINランプバッジセルを表示する。 */
+/**
+ * レコード行にFULL CHAINランプバッジセルを表示する。
+ * @param props - コンポーネントのプロパティ
+ * @param props.record - プレイ状態とフルチェイン情報を含むレコードデータ
+ * @returns フルチェインセルを表すReact要素
+ */
 export const RecordFullChainCell = (props: { record: FullChainRecord }) => (
   <div
     class={`flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap ${RECORD_LAMP_COLUMN_CLASS}`}
