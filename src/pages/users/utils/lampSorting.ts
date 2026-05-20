@@ -111,3 +111,56 @@ export const compareHardLamp = (
     skipDirection: false,
   }
 }
+
+export type FullChainLampKey = 'NONE' | 'FULL CHAIN GOLD' | 'FULL CHAIN PLATINUM' | 'UNPLAYED'
+
+export const FULL_CHAIN_LAMP_ORDER: Record<FullChainLampKey, number> = {
+  NONE: 0,
+  'FULL CHAIN GOLD': 1,
+  'FULL CHAIN PLATINUM': 2,
+  UNPLAYED: 3,
+}
+
+/**
+ * FULL CHAINランプをソート用のキーに正規化する。
+ * @param isPlayed プレイ済みかどうか
+ * @param fullChain FULL CHAINランプ値
+ * @returns 比較可能なFULL CHAINランプキー
+ */
+export const getFullChainLampKey = (
+  isPlayed: boolean,
+  fullChain: string | null | undefined
+): FullChainLampKey => {
+  if (!isPlayed) return 'UNPLAYED'
+  if (fullChain === null || fullChain === undefined) return 'NONE'
+  if (fullChain === 'FULL CHAIN GOLD' || fullChain === 'FULL CHAIN PLATINUM') return fullChain
+  return 'NONE'
+}
+
+/**
+ * FULL CHAINランプを比較する。
+ * @param left 左側の比較対象
+ * @param right 右側の比較対象
+ * @returns 比較結果と方向反転をスキップするかどうか
+ */
+export const compareFullChainLamp = (
+  left: { is_played: boolean; full_chain: string | null | undefined },
+  right: { is_played: boolean; full_chain: string | null | undefined }
+): { comparison: number; skipDirection: boolean } => {
+  const leftMissing = !left.is_played
+  const rightMissing = !right.is_played
+
+  if (leftMissing && rightMissing) return { comparison: 0, skipDirection: false }
+  if (leftMissing) return { comparison: 1, skipDirection: true }
+  if (rightMissing) return { comparison: -1, skipDirection: true }
+
+  const leftKey = getFullChainLampKey(left.is_played, left.full_chain)
+  const rightKey = getFullChainLampKey(right.is_played, right.full_chain)
+
+  return {
+    comparison:
+      (FULL_CHAIN_LAMP_ORDER[leftKey] ?? Number.MAX_SAFE_INTEGER) -
+      (FULL_CHAIN_LAMP_ORDER[rightKey] ?? Number.MAX_SAFE_INTEGER),
+    skipDirection: false,
+  }
+}

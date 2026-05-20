@@ -5,7 +5,7 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../recordTable/sortingQuery'
-import { compareComboLamp, compareHardLamp } from '../../utils/lampSorting'
+import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
 import type { RecordSortKey } from '../types/types'
 import { calcJusticeCountForAj } from './justiceCount.ts'
 import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
@@ -32,6 +32,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   updated_at: 'updatedAt',
   lamp: 'lamp',
   hard_lamp: 'hardLamp',
+  full_chain: 'fullChain',
   justice_count: 'justiceCount',
 }
 
@@ -59,6 +60,18 @@ export const nextSortState = (
   sortDirection: SortDirection | null
 } => nextSharedSortState(currentSortKey, currentSortDirection, nextKey)
 
+/**
+ * Sorts user records using various sort keys including sorting by full chain lamp status.
+ *
+ * This function supports multiple sorting modes such as title, difficulty, score, rating,
+ * and lamp-based comparisons. The 'fullChain' sort key delegates to compareFullChainLamp
+ * which may return early when skipDirection is true, bypassing the standard direction multiplier.
+ *
+ * @param records - The array of user records to sort
+ * @param currentSortKey - The key to sort by (e.g., 'title', 'score', 'fullChain'), or null to skip sorting
+ * @param currentSortDirection - The direction to sort ('asc' or 'desc'), or null to skip sorting
+ * @returns The sorted array of user records, or the original array if no sort key/direction is provided
+ */
 export const sortRecords = (
   records: PlayerRecordWithSongMeta[],
   currentSortKey: RecordSortKey | null,
@@ -204,6 +217,12 @@ export const sortRecords = (
         }
         case 'hardLamp': {
           const result = compareHardLamp(left, right)
+          if (result.skipDirection) return result.comparison
+          comparison = result.comparison
+          break
+        }
+        case 'fullChain': {
+          const result = compareFullChainLamp(left, right)
           if (result.skipDirection) return result.comparison
           comparison = result.comparison
           break

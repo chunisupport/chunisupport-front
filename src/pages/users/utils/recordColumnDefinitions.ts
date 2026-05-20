@@ -6,6 +6,7 @@ export type RecordColumnBaseId =
   | 'rating'
   | 'lamp'
   | 'hardLamp'
+  | 'fullChain'
   | 'justiceCount'
   | 'overpower'
   | 'overpowerPercent'
@@ -38,6 +39,7 @@ export const RECORD_COLUMN_BASE_DEFINITIONS: Record<
   rating: { id: 'rating', label: 'レート', width: '3.2rem', sortKey: 'rating' },
   lamp: { id: 'lamp', label: 'AJ', width: '2.5rem', sortKey: 'lamp' },
   hardLamp: { id: 'hardLamp', label: 'ハード', width: '44px', sortKey: 'hardLamp' },
+  fullChain: { id: 'fullChain', label: 'FCH', width: '44px', sortKey: 'fullChain' },
   justiceCount: { id: 'justiceCount', label: 'J数', width: '2rem', sortKey: 'justiceCount' },
   overpower: { id: 'overpower', label: 'OP', width: '3rem', sortKey: 'overpower' },
   overpowerPercent: {

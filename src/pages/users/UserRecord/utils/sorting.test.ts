@@ -201,3 +201,22 @@ test('ハードランプソートはCATASTROPHYより後ろにFAILEDを並べる
     ['catastrophy', 'absolute', 'brave', 'hard', 'clear', 'failed', 'none', 'unplayed']
   )
 })
+
+test('FCHソートはなし、GOLD、PLATINUM、未プレイの順で並べる', () => {
+  const records = [
+    createRecord({ id: 'none', full_chain: null }),
+    createRecord({ id: 'gold', full_chain: 'FULL CHAIN GOLD' }),
+    createRecord({ id: 'platinum', full_chain: 'FULL CHAIN PLATINUM' }),
+    createRecord({ id: 'unplayed', is_played: false, full_chain: null }),
+  ]
+
+  assert.deepEqual(
+    sortRecords(records, 'fullChain', 'asc').map((record) => record.id),
+    ['none', 'gold', 'platinum', 'unplayed']
+  )
+
+  assert.deepEqual(
+    sortRecords(records, 'fullChain', 'desc').map((record) => record.id),
+    ['platinum', 'gold', 'none', 'unplayed']
+  )
+})

@@ -16,6 +16,7 @@ export type RecordSortKey =
   | 'updatedAt'
   | 'lamp'
   | 'hardLamp'
+  | 'fullChain'
 export type RecordColumnId =
   | 'title'
   | 'difficulty'
@@ -24,6 +25,7 @@ export type RecordColumnId =
   | 'rating'
   | 'lamp'
   | 'hardLamp'
+  | 'fullChain'
   | 'justiceCount'
   | 'overpower'
   | 'overpowerPercent'
