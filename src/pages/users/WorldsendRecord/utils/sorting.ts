@@ -49,6 +49,19 @@ export const nextWorldsendSortState = (
   sortDirection: SortDirection | null
 } => nextSharedSortState(currentSortKey, currentSortDirection, nextKey)
 
+/**
+ * Sorts worldsend records with multiple comparison modes including full chain lamp status.
+ *
+ * This function supports various sorting modes such as title, attribute, level, score, and
+ * lamp-based comparisons. The 'fullChain' sort key delegates to compareFullChainLamp which
+ * may return early when result.skipDirection is true, bypassing the standard direction multiplier
+ * to handle special ordering requirements for full chain lamp values.
+ *
+ * @param records - The array of worldsend records to sort
+ * @param currentSortKey - The key to sort by (e.g., 'title', 'score', 'fullChain'), or null to skip sorting
+ * @param currentSortDirection - The direction to sort ('asc' or 'desc'), or null to skip sorting
+ * @returns The sorted array of worldsend records, or the original array if no sort key/direction is provided
+ */
 export const sortWorldsendRecords = <TRecord extends WorldsendRecordDTO>(
   records: TRecord[],
   currentSortKey: WorldsendRecordSortKey | null,

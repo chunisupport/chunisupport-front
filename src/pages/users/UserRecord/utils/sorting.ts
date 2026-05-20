@@ -60,6 +60,18 @@ export const nextSortState = (
   sortDirection: SortDirection | null
 } => nextSharedSortState(currentSortKey, currentSortDirection, nextKey)
 
+/**
+ * Sorts user records using various sort keys including sorting by full chain lamp status.
+ *
+ * This function supports multiple sorting modes such as title, difficulty, score, rating,
+ * and lamp-based comparisons. The 'fullChain' sort key delegates to compareFullChainLamp
+ * which may return early when skipDirection is true, bypassing the standard direction multiplier.
+ *
+ * @param records - The array of user records to sort
+ * @param currentSortKey - The key to sort by (e.g., 'title', 'score', 'fullChain'), or null to skip sorting
+ * @param currentSortDirection - The direction to sort ('asc' or 'desc'), or null to skip sorting
+ * @returns The sorted array of user records, or the original array if no sort key/direction is provided
+ */
 export const sortRecords = (
   records: PlayerRecordWithSongMeta[],
   currentSortKey: RecordSortKey | null,

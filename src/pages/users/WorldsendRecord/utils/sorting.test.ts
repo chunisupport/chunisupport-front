@@ -4,6 +4,16 @@ import test from 'node:test'
 import type { WorldsendRecordDTO } from '../../../../types/api'
 import { sortWorldsendRecords } from './sorting'
 
+/**
+ * Test helper to build a WorldsendRecordDTO with default field values.
+ *
+ * Creates a complete WorldsendRecordDTO object with sensible defaults for all required fields
+ * (is_played, updated_at, id, title, artist, level_star, attribute, notes, score, img, clear_lamp,
+ * combo_lamp, full_chain), allowing tests to override specific fields as needed.
+ *
+ * @param overrides - Optional partial object to override default field values
+ * @returns A complete WorldsendRecordDTO test object
+ */
 const createRecord = (overrides: Partial<WorldsendRecordDTO> = {}): WorldsendRecordDTO => ({
   is_played: true,
   updated_at: '2026-04-20T00:00:00Z',
