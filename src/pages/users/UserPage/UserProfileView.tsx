@@ -31,6 +31,19 @@ type Props = {
 const statsPageButtonClass =
   'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 text-sm text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2'
 
+/**
+ * ユーザー統計ページへ遷移するリンクボタンを表示する。
+ *
+ * @param props - 統計ページのリンク先。
+ * @returns 統計ページへのリンクボタン。
+ */
+const StatsPageLink: Component<{ href: string }> = (props) => (
+  <A href={props.href} class={statsPageButtonClass} aria-label="統計ページ" title="統計ページ">
+    <span>統計</span>
+    <ChartColumnIncreasing class="h-5 w-5" aria-hidden="true" />
+  </A>
+)
+
 const RecordList: Component<{ records: PlayerRecordDTO[]; candidates?: PlayerRecordDTO[] }> = (
   props
 ) => (
@@ -178,14 +191,17 @@ export const UserProfileView: Component<Props> = (props) => {
 
         <Tabs.Content value="rating" forceMount class={forceMountedTabContentClass}>
           <Tabs.Root value={selectedRatingTab()} onChange={handleRatingTabChange}>
-            <Tabs.List class="mb-4 mx-4 inline-flex gap-1 rounded-xl bg-gray-100 p-1">
-              <Tabs.Trigger value="best" class={ratingTabTriggerClass}>
-                ベスト枠
-              </Tabs.Trigger>
-              <Tabs.Trigger value="new" class={ratingTabTriggerClass}>
-                新曲枠
-              </Tabs.Trigger>
-            </Tabs.List>
+            <div class="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3">
+              <Tabs.List class="inline-flex gap-1 rounded-xl bg-gray-100 p-1">
+                <Tabs.Trigger value="best" class={ratingTabTriggerClass}>
+                  ベスト枠
+                </Tabs.Trigger>
+                <Tabs.Trigger value="new" class={ratingTabTriggerClass}>
+                  新曲枠
+                </Tabs.Trigger>
+              </Tabs.List>
+              <StatsPageLink href={statsPagePath()} />
+            </div>
 
             <Tabs.Content value="best">
               <RecordList records={bestRecords()} candidates={bestCandidateRecords()} />
@@ -207,15 +223,7 @@ export const UserProfileView: Component<Props> = (props) => {
                   WORLD'S END
                 </Tabs.Trigger>
               </Tabs.List>
-              <A
-                href={statsPagePath()}
-                class={statsPageButtonClass}
-                aria-label="統計ページ"
-                title="統計ページ"
-              >
-                <span>統計</span>
-                <ChartColumnIncreasing class="h-5 w-5" aria-hidden="true" />
-              </A>
+              <StatsPageLink href={statsPagePath()} />
             </div>
 
             <Tabs.Content value="standard" forceMount class={forceMountedTabContentClass}>
