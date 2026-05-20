@@ -148,9 +148,18 @@ const UserStatsPage = () => {
   )
 }
 
+/**
+ * ツールページの見出しを表示する。
+ * @returns ツールページ
+ */
 const ToolsPage = () => {
   useDocumentTitle('ツール')
-  return <h1>Tools Page</h1>
+
+  return (
+    <div class="mx-auto w-full max-w-3xl p-4">
+      <h1 class="text-2xl font-semibold">ツール</h1>
+    </div>
+  )
 }
 
 const TermsPage = () => {
