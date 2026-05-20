@@ -10,6 +10,7 @@ import {
   type ColumnRenderer,
   RECORD_CELL_BASE_CLASS,
   RECORD_CELL_CENTER_TEXT_CLASS,
+  RecordFullChainCell,
   RecordHardLampCell,
   RecordJusticeCountCell,
   RecordLampCell,
@@ -71,6 +72,7 @@ export const recordColumnRenderers: Record<
   },
   lamp: (record) => <RecordLampCell record={record} />,
   hardLamp: (record) => <RecordHardLampCell record={record} />,
+  fullChain: (record) => <RecordFullChainCell record={record} />,
   justiceCount: (record) => (
     <RecordJusticeCountCell
       record={record}

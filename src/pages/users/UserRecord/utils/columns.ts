@@ -32,6 +32,7 @@ const RECORD_COLUMN_SETTINGS: RecordColumnSetting[] = [
   { id: 'rating', defaultVisible: true },
   { id: 'lamp', defaultVisible: true },
   { id: 'hardLamp', defaultVisible: true },
+  { id: 'fullChain', defaultVisible: true },
   { id: 'justiceCount', defaultVisible: true },
   { id: 'overpower', defaultVisible: true },
   { id: 'overpowerPercent', defaultVisible: true },

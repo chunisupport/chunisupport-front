@@ -19,6 +19,7 @@ type ClearLamp = SharedRecordSource['clear_lamp']
 type ScoreRecord = Pick<SharedRecordSource, 'is_played' | 'score'>
 type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp' | 'score'>
 type HardLampRecord = Pick<SharedRecordSource, 'is_played' | 'clear_lamp'>
+type FullChainRecord = Pick<SharedRecordSource, 'is_played' | 'full_chain'>
 
 type JusticeCountRecord = {
   combo_lamp: ComboLamp
@@ -62,6 +63,8 @@ const HARD_LAMP_LABEL: Record<Exclude<NonNullable<ClearLamp>, 'FAILED'>, string>
   ABSOLUTE: 'ABS',
   CATASTROPHY: 'CTS',
 }
+const FULL_CHAIN_BADGE_CLASS =
+  'inline-flex w-[40px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
 
 /** レコードのコンボランプ値から表示用バッジを生成する。 */
 export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, record) => {
@@ -96,6 +99,29 @@ const renderHardLampTextBadge = (lamp: keyof typeof HARD_LAMP_LABEL): JSX.Elemen
 /** レコードのハードランプ値から表示用バッジを生成する。 */
 export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element => {
   if (lamp && lamp !== 'FAILED') return renderHardLampTextBadge(lamp)
+  return <LampPlaceholderBadge class="w-[40px]" />
+}
+
+/** レコードのFULL CHAINランプ値から表示用バッジを生成する。 */
+export const renderDefaultRecordFullChainBadge = (
+  fullChain: SharedRecordSource['full_chain']
+): JSX.Element => {
+  if (fullChain === 'FULL CHAIN GOLD')
+    return (
+      <span
+        class={`${FULL_CHAIN_BADGE_CLASS} ${COMBO_LAMP_BADGE_BACKGROUND_CLASS['FULL COMBO']} ${COMBO_LAMP_BADGE_TEXT_CLASS['FULL COMBO']}`}
+      >
+        FCH
+      </span>
+    )
+  if (fullChain === 'FULL CHAIN PLATINUM')
+    return (
+      <span
+        class={`${FULL_CHAIN_BADGE_CLASS} ${COMBO_LAMP_BADGE_BACKGROUND_CLASS['ALL JUSTICE']} ${COMBO_LAMP_BADGE_TEXT_CLASS['ALL JUSTICE']}`}
+      >
+        FCH
+      </span>
+    )
   return <LampPlaceholderBadge class="w-[40px]" />
 }
 
@@ -172,6 +198,15 @@ export const RecordHardLampCell = (props: { record: HardLampRecord }) => (
     class={`flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap ${RECORD_LAMP_COLUMN_CLASS}`}
   >
     {props.record.is_played ? renderDefaultRecordHardLampBadge(props.record.clear_lamp) : null}
+  </div>
+)
+
+/** レコード行にFULL CHAINランプバッジセルを表示する。 */
+export const RecordFullChainCell = (props: { record: FullChainRecord }) => (
+  <div
+    class={`flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap ${RECORD_LAMP_COLUMN_CLASS}`}
+  >
+    {props.record.is_played ? renderDefaultRecordFullChainBadge(props.record.full_chain) : null}
   </div>
 )
 
