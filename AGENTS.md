@@ -90,36 +90,36 @@
 ### テスト方針とテンプレート
 - 重要なロジック（`src/utils` やカスタム Primitive）には、原則として **Given-When-Then** パターンを用いた単体テストを記述してください。
 - 本リポジトリの標準実行コマンドは `npm run test:unit` です。
-- 以下に、フロントエンド（Vitest / Jest想定）のテストコードテンプレートを示します。
+- 以下に、Node.js標準テストランナー（`node:test` / `node:assert/strict`）を使ったテストコードテンプレートを示します。
 
 ```typescript
-import { describe, it, expect } from 'vitest';
+import assert from 'node:assert/strict';
+import test from 'node:test';
 import { calculateDisplayScore } from './scoreCalculator';
 
-describe('calculateDisplayScore', () => {
-  // Test Case 1: 正常系
-  it('スコアが1,000,000以上の場合は理論値として計算されること', () => {
-    // Given: 前提条件
-    const rawScore = 1010000;
-    const hasBonus = true;
+// Test Case 1: 正常系
+test('スコアが1,000,000以上の場合は理論値として計算されること', () => {
+  // Given: 前提条件
+  const rawScore = 1010000;
+  const hasBonus = true;
 
-    // When: 操作・実行
-    const result = calculateDisplayScore(rawScore, hasBonus);
+  // When: 操作・実行
+  const result = calculateDisplayScore(rawScore, hasBonus);
 
-    // Then: 期待する結果 (アサーション)
-    expect(result).toBe(1010000);
-  });
+  // Then: 期待する結果 (アサーション)
+  assert.equal(result, 1010000);
+});
 
-  // Test Case 2: 異常系・境界値
-  it('スコアが負の値の場合はエラーをスローすること', () => {
-    // Given
-    const negativeScore = -500;
+// Test Case 2: 異常系・境界値
+test('スコアが負の値の場合はエラーをスローすること', () => {
+  // Given
+  const negativeScore = -500;
 
-    // When & Then
-    expect(() => calculateDisplayScore(negativeScore, false)).toThrowError(
-      'Invalid score value'
-    );
-  });
+  // When & Then
+  assert.throws(
+    () => calculateDisplayScore(negativeScore, false),
+    new Error('Invalid score value')
+  );
 });
 ```
 
