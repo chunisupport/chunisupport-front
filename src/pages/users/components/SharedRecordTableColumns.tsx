@@ -65,6 +65,15 @@ const HARD_LAMP_LABEL: Record<Exclude<NonNullable<ClearLamp>, 'FAILED'>, string>
 }
 const FULL_CHAIN_BADGE_CLASS =
   'inline-flex w-[40px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
+const FULL_CHAIN_BADGE_VARIANT: Partial<
+  Record<
+    NonNullable<SharedRecordSource['full_chain']>,
+    keyof typeof COMBO_LAMP_BADGE_BACKGROUND_CLASS
+  >
+> = {
+  'FULL CHAIN GOLD': 'FULL COMBO',
+  'FULL CHAIN PLATINUM': 'ALL JUSTICE',
+}
 
 /** レコードのコンボランプ値から表示用バッジを生成する。 */
 export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, record) => {
@@ -110,23 +119,17 @@ export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element =
 export const renderDefaultRecordFullChainBadge = (
   fullChain: SharedRecordSource['full_chain']
 ): JSX.Element => {
-  if (fullChain === 'FULL CHAIN GOLD')
-    return (
-      <span
-        class={`${FULL_CHAIN_BADGE_CLASS} ${COMBO_LAMP_BADGE_BACKGROUND_CLASS['FULL COMBO']} ${COMBO_LAMP_BADGE_TEXT_CLASS['FULL COMBO']}`}
-      >
-        FCH
-      </span>
-    )
-  if (fullChain === 'FULL CHAIN PLATINUM')
-    return (
-      <span
-        class={`${FULL_CHAIN_BADGE_CLASS} ${COMBO_LAMP_BADGE_BACKGROUND_CLASS['ALL JUSTICE']} ${COMBO_LAMP_BADGE_TEXT_CLASS['ALL JUSTICE']}`}
-      >
-        FCH
-      </span>
-    )
-  return <LampPlaceholderBadge class="w-[40px]" />
+  const lampType = fullChain ? FULL_CHAIN_BADGE_VARIANT[fullChain] : undefined
+
+  if (!lampType) return <LampPlaceholderBadge class="w-[40px]" />
+
+  return (
+    <span
+      class={`${FULL_CHAIN_BADGE_CLASS} ${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lampType]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lampType]}`}
+    >
+      FCH
+    </span>
+  )
 }
 
 export const RecordHeaderButton = (props: RecordHeaderButtonProps) => (
