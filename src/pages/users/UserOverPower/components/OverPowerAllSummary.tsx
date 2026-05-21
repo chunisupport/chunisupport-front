@@ -1,12 +1,13 @@
 import type { Component } from 'solid-js'
 import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
+import { formatOverPowerPercent } from '../../utils/overPowerFormat'
 
 type Props = {
   summary: OverPowerSummaryRow
 }
 
 const formatValue = (value: number): string => value.toFixed(3)
-const formatPercent = (value: number): string => value.toFixed(4)
+const formatPercent = formatOverPowerPercent
 
 export const OverPowerAllSummary: Component<Props> = (props) => (
   <section class="rounded-lg border border-sky-200 bg-sky-50 p-4">

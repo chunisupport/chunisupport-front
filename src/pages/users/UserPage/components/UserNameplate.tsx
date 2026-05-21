@@ -1,5 +1,6 @@
 import { type Component, Show } from 'solid-js'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../../types/api'
+import { formatOverPowerPercent } from '../../utils/overPowerFormat'
 
 type Props = {
   playerInfo: PlayerDTO
@@ -67,7 +68,10 @@ export const UserNameplate: Component<Props> = (props) => {
       {/* TODO: OVER POWERのゲージみたいなのあるといいよね */}
       <p>
         OVER POWER <b>{props.playerInfo.overpower_value?.toFixed(3)}</b> (
-        {props.playerInfo.overpower_percent}%)
+        <Show when={props.playerInfo.overpower_percent !== null}>
+          {formatOverPowerPercent(props.playerInfo.overpower_percent ?? 0)}
+        </Show>
+        %)
       </p>
     </div>
   )

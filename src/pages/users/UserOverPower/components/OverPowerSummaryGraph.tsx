@@ -2,6 +2,7 @@ import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
 import { COMBO_LAMP_BAR_CLASS, SCORE_RANK_BAR_CLASS } from '../../components/recordStyleClasses'
+import { formatOverPowerPercent } from '../../utils/overPowerFormat'
 
 export type OverPowerScoreBand = 'MAX' | 'SSS+' | 'SSS' | 'SS+' | 'SS' | 'S+' | 'S' | 'OTHER'
 export type OverPowerComboBand = 'ALL JUSTICE' | 'FULL COMBO' | 'OTHER'
@@ -42,7 +43,7 @@ const comboBandClass: Record<OverPowerComboBand, string> = {
 const formatValue = (value: number): string => value.toFixed(3)
 
 /** 達成率をグラフ表示用の固定小数点文字列に整形する。 */
-const formatPercent = (value: number): string => value.toFixed(4)
+const formatPercent = formatOverPowerPercent
 
 /** 分布バーの横幅として使う割合を算出する。 */
 const calcBandPercent = (count: number, total: number): number =>
