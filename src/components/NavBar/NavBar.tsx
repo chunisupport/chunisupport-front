@@ -14,7 +14,7 @@ import {
   Wrench,
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createSignal, onMount } from 'solid-js'
+import { createSignal, For, onMount } from 'solid-js'
 import {
   LOGIN_REQUIRED_DESC,
   LOGIN_REQUIRED_TITLE,
@@ -203,54 +203,58 @@ const NavBar = (props: NavBarProps) => {
       {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
       <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-border md:bg-surface">
         <nav class="flex flex-1 flex-col px-2 py-6">
-          {getNavItems().map((item) =>
-            item.dropdown ? (
-              <DropdownMenu>
-                <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-text-muted hover:bg-surface-hover hover:text-text focus:outline-none">
+          <For each={getNavItems()}>
+            {(item) =>
+              item.dropdown ? (
+                <DropdownMenu>
+                  <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-text-muted hover:bg-surface-hover hover:text-text focus:outline-none">
+                    <span class="text-lg">{item.icon()}</span>
+                    <span>{item.label}</span>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
+                      <For each={item.dropdown}>
+                        {(d) => (
+                          <CommonDropdownItem
+                            label={d.label}
+                            icon={d.icon()}
+                            onSelect={
+                              d.kind === 'logout'
+                                ? () => setShowLogoutDialog(true)
+                                : () => handleDropdownSelect(d.path)
+                            }
+                            danger={d.kind === 'logout'}
+                          />
+                        )}
+                      </For>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu>
+              ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
+              item.requiresAuth && !isLoading() && !username() ? (
+                <button
+                  type="button"
+                  class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-disabled-text w-full"
+                  onClick={() => setShowLoginDialog(true)}
+                >
                   <span class="text-lg">{item.icon()}</span>
                   <span>{item.label}</span>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
-                    {item.dropdown?.map((d) => (
-                      <CommonDropdownItem
-                        label={d.label}
-                        icon={d.icon()}
-                        onSelect={
-                          d.kind === 'logout'
-                            ? () => setShowLogoutDialog(true)
-                            : () => handleDropdownSelect(d.path)
-                        }
-                        danger={d.kind === 'logout'}
-                      />
-                    ))}
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu>
-            ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
-            item.requiresAuth && !isLoading() && !username() ? (
-              <button
-                type="button"
-                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-disabled-text w-full"
-                onClick={() => setShowLoginDialog(true)}
-              >
-                <span class="text-lg">{item.icon()}</span>
-                <span>{item.label}</span>
-              </button>
-            ) : (
-              <A
-                href={item.path}
-                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-text-muted hover:bg-surface-hover hover:text-text"
-                classList={{
-                  'bg-action-primary text-text-inverse hover:bg-action-primary-hover hover:text-text-inverse':
-                    isActive(item),
-                }}
-              >
-                <span class="text-lg">{item.icon()}</span>
-                <span>{item.label}</span>
-              </A>
-            )
-          )}
+                </button>
+              ) : (
+                <A
+                  href={item.path}
+                  class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-text-muted hover:bg-surface-hover hover:text-text"
+                  classList={{
+                    'bg-action-primary text-text-inverse hover:bg-action-primary-hover hover:text-text-inverse':
+                      isActive(item),
+                  }}
+                >
+                  <span class="text-lg">{item.icon()}</span>
+                  <span>{item.label}</span>
+                </A>
+              )
+            }
+          </For>
         </nav>
       </aside>
 
@@ -261,54 +265,58 @@ const NavBar = (props: NavBarProps) => {
 
         {/* スマホ用nav-bar 768px未満 */}
         <nav class="md:hidden z-40 flex items-center justify-between border-t border-border bg-surface p-2 shadow-sm">
-          {getNavItems().map((item) =>
-            item.dropdown ? (
-              <DropdownMenu>
-                <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-text-muted justify-center">
+          <For each={getNavItems()}>
+            {(item) =>
+              item.dropdown ? (
+                <DropdownMenu>
+                  <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-text-muted justify-center">
+                    <span class="text-lg">{item.icon()}</span>
+                    <span>{item.label}</span>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
+                      <For each={item.dropdown}>
+                        {(d) => (
+                          <CommonDropdownItem
+                            label={d.label}
+                            icon={d.icon()}
+                            onSelect={
+                              d.kind === 'logout'
+                                ? () => setShowLogoutDialog(true)
+                                : () => handleDropdownSelect(d.path)
+                            }
+                            danger={d.kind === 'logout'}
+                          />
+                        )}
+                      </For>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu>
+              ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
+              item.requiresAuth && !isLoading() && !username() ? (
+                <button
+                  type="button"
+                  class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-disabled-text justify-center"
+                  onClick={() => setShowLoginDialog(true)}
+                >
                   <span class="text-lg">{item.icon()}</span>
                   <span>{item.label}</span>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
-                    {item.dropdown?.map((d) => (
-                      <CommonDropdownItem
-                        label={d.label}
-                        icon={d.icon()}
-                        onSelect={
-                          d.kind === 'logout'
-                            ? () => setShowLogoutDialog(true)
-                            : () => handleDropdownSelect(d.path)
-                        }
-                        danger={d.kind === 'logout'}
-                      />
-                    ))}
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu>
-            ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
-            item.requiresAuth && !isLoading() && !username() ? (
-              <button
-                type="button"
-                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-disabled-text justify-center"
-                onClick={() => setShowLoginDialog(true)}
-              >
-                <span class="text-lg">{item.icon()}</span>
-                <span>{item.label}</span>
-              </button>
-            ) : (
-              <A
-                href={item.path}
-                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-text-muted justify-center"
-                classList={{
-                  'bg-action-primary text-text-inverse hover:bg-action-primary-hover hover:text-text-inverse':
-                    isActive(item),
-                }}
-              >
-                <span class="text-lg">{item.icon()}</span>
-                <span>{item.label}</span>
-              </A>
-            )
-          )}
+                </button>
+              ) : (
+                <A
+                  href={item.path}
+                  class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-text-muted justify-center"
+                  classList={{
+                    'bg-action-primary text-text-inverse hover:bg-action-primary-hover hover:text-text-inverse':
+                      isActive(item),
+                  }}
+                >
+                  <span class="text-lg">{item.icon()}</span>
+                  <span>{item.label}</span>
+                </A>
+              )
+            }
+          </For>
         </nav>
 
         {/* 未ログイン警告ダイアログ */}

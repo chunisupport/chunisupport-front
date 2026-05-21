@@ -1,6 +1,6 @@
 import { A, Route, Router, useParams } from '@solidjs/router'
 import type { JSX } from 'solid-js'
-import { createMemo, createResource, ErrorBoundary, Show } from 'solid-js'
+import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 import { fetchMe, fetchUserProfileSummary } from './api/users'
 import { Loading, NavBar, PlayerDataEmptyState } from './components'
 import RequireAuth from './components/guards/RequireAuth'
@@ -116,18 +116,18 @@ const LandingPage = () => {
       <section class="rounded-lg border border-border bg-surface p-6">
         <h2 class="mb-3 text-xl font-semibold">{ANNOUNCEMENTS_TITLE}</h2>
         <ul class="space-y-2 text-sm text-text-muted">
-          {ANNOUNCEMENTS_ITEMS.map((item) => (
-            <li class="rounded-md border border-border p-3">{item}</li>
-          ))}
+          <For each={ANNOUNCEMENTS_ITEMS}>
+            {(item) => <li class="rounded-md border border-border p-3">{item}</li>}
+          </For>
         </ul>
       </section>
 
       <section class="rounded-lg border border-border bg-surface p-6">
         <h2 class="mb-3 text-xl font-semibold">{X_ACCOUNT_TITLE}</h2>
         <ul class="space-y-2 text-sm text-text-muted">
-          {X_ACCOUNT_ITEMS.map((item) => (
-            <li class="rounded-md border border-border p-3">{item}</li>
-          ))}
+          <For each={X_ACCOUNT_ITEMS}>
+            {(item) => <li class="rounded-md border border-border p-3">{item}</li>}
+          </For>
         </ul>
       </section>
     </main>
