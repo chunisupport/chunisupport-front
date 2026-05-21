@@ -1,4 +1,4 @@
-﻿import { AlertDialog } from '@kobalte/core/alert-dialog'
+import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Dialog } from '@kobalte/core/dialog'
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { A, useLocation, useNavigate } from '@solidjs/router'
@@ -8,6 +8,7 @@ import {
   FlagTriangleRight,
   House,
   LogOut,
+  MoonStar,
   Music,
   Settings,
   Shield,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createSignal, onMount } from 'solid-js'
+import { getNextTheme, resolveTheme } from '../../utils/theme'
 import { isHomePath } from './navItemMatching'
 
 type NavBarProps = {
@@ -31,6 +33,7 @@ type DropdownItem = {
   label: string
   icon: () => JSX.Element
   path: string
+  onSelect?: () => void
 }
 
 type NavItem = {
@@ -78,6 +81,12 @@ const NavBar = (props: NavBarProps) => {
             },
           ]
         : []),
+      {
+        label: 'テーマ切替',
+        icon: () => <MoonStar class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+        path: '#',
+        onSelect: toggleTheme,
+      },
       {
         label: 'ヘルプ',
         icon: () => <BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />,
@@ -168,6 +177,14 @@ const NavBar = (props: NavBarProps) => {
     return pathname === item.path
   }
 
+  /**
+   * その他メニューからテーマを切り替えます。
+   */
+  const toggleTheme = () => {
+    const current = resolveTheme(document.documentElement.dataset.theme)
+    document.documentElement.dataset.theme = getNextTheme(current)
+  }
+
   const handleDropdownSelect = (path: string) => {
     if (path.startsWith('http')) {
       window.open(path, '_blank', 'noopener,noreferrer')
@@ -210,7 +227,9 @@ const NavBar = (props: NavBarProps) => {
                         </DropdownMenu.Item>
                       ) : (
                         <DropdownMenu.Item
-                          onSelect={() => handleDropdownSelect(d.path)}
+                          onSelect={() =>
+                            d.onSelect ? d.onSelect() : handleDropdownSelect(d.path)
+                          }
                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 outline-none cursor-pointer"
                         >
                           <span class="pr-2">{d.icon()}</span>
@@ -275,7 +294,9 @@ const NavBar = (props: NavBarProps) => {
                         </DropdownMenu.Item>
                       ) : (
                         <DropdownMenu.Item
-                          onSelect={() => handleDropdownSelect(d.path)}
+                          onSelect={() =>
+                            d.onSelect ? d.onSelect() : handleDropdownSelect(d.path)
+                          }
                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 outline-none cursor-pointer"
                         >
                           <span class="pr-2">{d.icon()}</span>
