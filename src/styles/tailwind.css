@@ -69,68 +69,52 @@
 }
 
 [data-theme="dark"] {
-  --cs-color-bg: var(--color-green-950);
-  --cs-color-surface: color-mix(in srgb, var(--color-green-900) 80%, var(--color-gray-950));
-  --cs-color-surface-muted: color-mix(in srgb, var(--color-green-950) 88%, var(--color-gray-950));
-  --cs-color-surface-raised: color-mix(in srgb, var(--color-green-900) 74%, var(--color-gray-900));
-  --cs-color-surface-hover: color-mix(in srgb, var(--color-green-800) 72%, var(--color-gray-900));
+  --cs-color-bg: #052e1f;
+  --cs-color-surface: #052e1f;
+  --cs-color-surface-muted: #04261a;
+  --cs-color-surface-raised: #052e1f;
+  --cs-color-surface-hover: #0b3b2a;
 
-  --cs-color-text: var(--color-green-50);
-  --cs-color-text-muted: var(--color-green-100);
-  --cs-color-text-subtle: var(--color-green-300);
-  --cs-color-text-inverse: var(--color-green-950);
-  --cs-color-text-placeholder: var(--color-green-300);
+  --cs-color-text: #ecfdf5;
+  --cs-color-text-muted: #d1fae5;
+  --cs-color-text-subtle: #86efac;
+  --cs-color-text-inverse: #052e1f;
+  --cs-color-text-placeholder: #86efac;
 
-  --cs-color-border: color-mix(in srgb, var(--color-green-700) 45%, var(--color-gray-900));
-  --cs-color-border-strong: color-mix(in srgb, var(--color-green-600) 55%, var(--color-gray-900));
-  --cs-color-focus-ring: var(--color-primary-400);
+  --cs-color-border: #166534;
+  --cs-color-border-strong: #15803d;
+  --cs-color-focus-ring: #4ade80;
 
-  --cs-color-action-primary: var(--color-primary-400);
-  --cs-color-action-primary-hover: var(--color-primary-300);
-  --cs-color-action-primary-muted: color-mix(
-    in srgb,
-    var(--color-primary-900) 70%,
-    var(--color-gray-900)
-  );
-  --cs-color-action-primary-border: var(--color-primary-700);
-  --cs-color-action-secondary: color-mix(
-    in srgb,
-    var(--color-green-700) 38%,
-    var(--color-gray-900)
-  );
-  --cs-color-action-secondary-hover: color-mix(
-    in srgb,
-    var(--color-green-600) 50%,
-    var(--color-gray-900)
-  );
+  --cs-color-action-primary: #22c55e;
+  --cs-color-action-primary-hover: #4ade80;
+  --cs-color-action-primary-muted: #14532d;
+  --cs-color-action-primary-border: #15803d;
+  --cs-color-action-secondary: #166534;
+  --cs-color-action-secondary-hover: #15803d;
 
-  --cs-color-danger: var(--color-red-300);
-  --cs-color-danger-hover: var(--color-red-200);
-  --cs-color-danger-bg: color-mix(in srgb, var(--color-red-950) 72%, var(--color-gray-950));
-  --cs-color-danger-border: var(--color-red-700);
+  --cs-color-danger: #fca5a5;
+  --cs-color-danger-hover: #fecaca;
+  --cs-color-danger-bg: #450a0a;
+  --cs-color-danger-border: #b91c1c;
 
-  --cs-color-success: var(--color-green-200);
-  --cs-color-success-bg: color-mix(in srgb, var(--color-green-900) 70%, var(--color-gray-950));
-  --cs-color-success-border: var(--color-green-700);
+  --cs-color-success: #bbf7d0;
+  --cs-color-success-bg: #14532d;
+  --cs-color-success-border: #15803d;
 
-  --cs-color-warning: var(--color-yellow-200);
-  --cs-color-warning-bg: color-mix(in srgb, var(--color-yellow-950) 60%, var(--color-gray-950));
-  --cs-color-warning-border: var(--color-yellow-700);
+  --cs-color-warning: #fde68a;
+  --cs-color-warning-bg: #422006;
+  --cs-color-warning-border: #ca8a04;
 
-  --cs-color-info: var(--color-blue-200);
-  --cs-color-info-bg: color-mix(in srgb, var(--color-blue-950) 70%, var(--color-gray-950));
-  --cs-color-info-border: var(--color-blue-700);
+  --cs-color-info: #bfdbfe;
+  --cs-color-info-bg: #172554;
+  --cs-color-info-border: #1d4ed8;
 
   --cs-color-overlay: rgb(2 6 23 / 65%);
-  --cs-color-disabled-bg: color-mix(in srgb, var(--color-green-900) 60%, var(--color-gray-900));
-  --cs-color-disabled-text: var(--color-green-600);
-  --cs-color-input-bg: color-mix(in srgb, var(--color-green-900) 72%, var(--color-gray-900));
-  --cs-color-input-border: color-mix(in srgb, var(--color-green-700) 40%, var(--color-gray-800));
-  --cs-color-input-border-hover: color-mix(
-    in srgb,
-    var(--color-green-500) 55%,
-    var(--color-gray-800)
-  );
+  --cs-color-disabled-bg: #14532d;
+  --cs-color-disabled-text: #4ade80;
+  --cs-color-input-bg: #064e3b;
+  --cs-color-input-border: #166534;
+  --cs-color-input-border-hover: #22c55e;
 }
 
 @theme inline {
