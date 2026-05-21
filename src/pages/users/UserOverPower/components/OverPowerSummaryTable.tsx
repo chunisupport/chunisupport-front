@@ -1,14 +1,14 @@
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
-import { formatOverPowerPercent } from '../../utils/overPowerFormat'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 
 type Props = {
   rows: OverPowerSummaryRow[]
   countLabel: string
 }
 
-const formatValue = (value: number): string => value.toFixed(3)
+const formatValue = formatOverPowerValue
 const formatPercent = formatOverPowerPercent
 
 export const OverPowerSummaryTable: Component<Props> = (props) => (

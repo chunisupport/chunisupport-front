@@ -1,12 +1,12 @@
 import type { Component } from 'solid-js'
 import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
-import { formatOverPowerPercent } from '../../utils/overPowerFormat'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 
 type Props = {
   summary: OverPowerSummaryRow
 }
 
-const formatValue = (value: number): string => value.toFixed(3)
+const formatValue = formatOverPowerValue
 const formatPercent = formatOverPowerPercent
 
 export const OverPowerAllSummary: Component<Props> = (props) => (
