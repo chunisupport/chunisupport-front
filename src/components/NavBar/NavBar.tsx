@@ -208,7 +208,7 @@ const NavBar = (props: NavBarProps) => {
               item.dropdown ? (
                 <DropdownMenu>
                   <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-text-muted hover:bg-surface-hover hover:text-text focus:outline-none">
-                    <span class="text-lg">{item.icon()}</span>
+                    <span class="text-lg text-current">{item.icon()}</span>
                     <span>{item.label}</span>
                   </DropdownMenu.Trigger>
                   <DropdownMenu.Portal>
@@ -237,7 +237,7 @@ const NavBar = (props: NavBarProps) => {
                   class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-disabled-text w-full"
                   onClick={() => setShowLoginDialog(true)}
                 >
-                  <span class="text-lg">{item.icon()}</span>
+                  <span class="text-lg text-current">{item.icon()}</span>
                   <span>{item.label}</span>
                 </button>
               ) : (
@@ -249,7 +249,7 @@ const NavBar = (props: NavBarProps) => {
                       isActive(item),
                   }}
                 >
-                  <span class="text-lg">{item.icon()}</span>
+                  <span class="text-lg text-current">{item.icon()}</span>
                   <span>{item.label}</span>
                 </A>
               )
@@ -270,7 +270,7 @@ const NavBar = (props: NavBarProps) => {
               item.dropdown ? (
                 <DropdownMenu>
                   <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-text-muted justify-center">
-                    <span class="text-lg">{item.icon()}</span>
+                    <span class="text-lg text-current">{item.icon()}</span>
                     <span>{item.label}</span>
                   </DropdownMenu.Trigger>
                   <DropdownMenu.Portal>
@@ -299,7 +299,7 @@ const NavBar = (props: NavBarProps) => {
                   class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-disabled-text justify-center"
                   onClick={() => setShowLoginDialog(true)}
                 >
-                  <span class="text-lg">{item.icon()}</span>
+                  <span class="text-lg text-current">{item.icon()}</span>
                   <span>{item.label}</span>
                 </button>
               ) : (
@@ -311,7 +311,7 @@ const NavBar = (props: NavBarProps) => {
                       isActive(item),
                   }}
                 >
-                  <span class="text-lg">{item.icon()}</span>
+                  <span class="text-lg text-current">{item.icon()}</span>
                   <span>{item.label}</span>
                 </A>
               )
