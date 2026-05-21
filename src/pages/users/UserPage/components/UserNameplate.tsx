@@ -1,6 +1,7 @@
 import { type Component, Show } from 'solid-js'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../../types/api'
 import { formatOverPowerPercent } from '../../utils/overPowerFormat'
+import { formatPlayerRating } from '../../utils/ratingFormat'
 
 type Props = {
   playerInfo: PlayerDTO
@@ -39,6 +40,9 @@ export const UserNameplate: Component<Props> = (props) => {
   const newRating = props.newRecords.length > 0 ? newSum / props.newRecords.length : 0
   const totalRecordsLength = props.bestRecords.length + props.newRecords.length
   const playerRating = totalRecordsLength > 0 ? (bestSum + newSum) / totalRecordsLength : 0
+  const playerRatingText = formatPlayerRating(playerRating)
+  const bestRatingText = formatPlayerRating(bestRating)
+  const newRatingText = formatPlayerRating(newRating)
   const primaryHonor = () => props.honors[0]
 
   return (
@@ -60,9 +64,9 @@ export const UserNameplate: Component<Props> = (props) => {
       </div>
       <hr class="mb-2 border-t border-gray-200" />
       <p>
-        RATING <b>{playerRating.toFixed(4)}</b>{' '}
+        RATING <b>{playerRatingText}</b>{' '}
         <span class="text-gray-500">
-          (BEST <b>{bestRating.toFixed(4)}</b> / NEW <b>{newRating.toFixed(4)}</b>)
+          (BEST <b>{bestRatingText}</b> / NEW <b>{newRatingText}</b>)
         </span>
       </p>
       {/* TODO: OVER POWERのゲージみたいなのあるといいよね */}
