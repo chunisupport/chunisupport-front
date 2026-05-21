@@ -1,4 +1,4 @@
-﻿import { AlertDialog } from '@kobalte/core/alert-dialog'
+import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Dialog } from '@kobalte/core/dialog'
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { A, useLocation, useNavigate } from '@solidjs/router'
@@ -44,6 +44,11 @@ type NavItem = {
   requiresAuth?: boolean
 }
 
+/**
+ * アプリ共通のナビゲーションを表示する。
+ * @param props 子要素を含むナビゲーションのプロパティ
+ * @returns ナビゲーション付きレイアウト
+ */
 const NavBar = (props: NavBarProps) => {
   const [showLoginDialog, setShowLoginDialog] = createSignal(false)
   const [showLogoutDialog, setShowLogoutDialog] = createSignal(false)
@@ -187,23 +192,23 @@ const NavBar = (props: NavBarProps) => {
     <div class="h-dvh overflow-hidden flex md:flex-row flex-col">
       {/* PC用nav-bar 768px以上 */}
       {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
-      <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-gray-200 md:bg-white">
+      <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-border md:bg-surface">
         <nav class="flex flex-1 flex-col px-2 py-6">
           {getNavItems().map((item) =>
             item.dropdown ? (
               <DropdownMenu>
-                <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none">
+                <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-text-muted hover:bg-surface-hover hover:text-text focus:outline-none">
                   <span class="text-lg">{item.icon()}</span>
                   <span>{item.label}</span>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
-                  <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
+                  <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
                     {item.dropdown?.map((d) =>
                       // ログアウト項目は赤色で表示
                       d.label === 'ログアウト' ? (
                         <DropdownMenu.Item
                           onSelect={() => setShowLogoutDialog(true)}
-                          class="block px-4 py-2 text-sm text-red-600 hover:bg-red-100 focus:bg-red-100 outline-none cursor-pointer"
+                          class="block px-4 py-2 text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg outline-none cursor-pointer"
                         >
                           <span class="pr-2">{d.icon()}</span>
                           {d.label}
@@ -211,7 +216,7 @@ const NavBar = (props: NavBarProps) => {
                       ) : (
                         <DropdownMenu.Item
                           onSelect={() => handleDropdownSelect(d.path)}
-                          class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 outline-none cursor-pointer"
+                          class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
                         >
                           <span class="pr-2">{d.icon()}</span>
                           {d.label}
@@ -225,7 +230,7 @@ const NavBar = (props: NavBarProps) => {
             item.requiresAuth && !isLoading() && !username() ? (
               <button
                 type="button"
-                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-300 w-full"
+                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-disabled-text w-full"
                 onClick={() => setShowLoginDialog(true)}
               >
                 <span class="text-lg">{item.icon()}</span>
@@ -234,9 +239,10 @@ const NavBar = (props: NavBarProps) => {
             ) : (
               <A
                 href={item.path}
-                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-text-muted hover:bg-surface-hover hover:text-text"
                 classList={{
-                  'bg-primary-600 text-white hover:bg-primary-700 hover:text-white': isActive(item),
+                  'bg-action-primary text-text-inverse hover:bg-action-primary-hover hover:text-text-inverse':
+                    isActive(item),
                 }}
               >
                 <span class="text-lg">{item.icon()}</span>
@@ -253,22 +259,22 @@ const NavBar = (props: NavBarProps) => {
         </main>
 
         {/* スマホ用nav-bar 768px未満 */}
-        <nav class="md:hidden z-40 flex items-center justify-between border-t border-gray-200 bg-white p-2 shadow-sm">
+        <nav class="md:hidden z-40 flex items-center justify-between border-t border-border bg-surface p-2 shadow-sm">
           {getNavItems().map((item) =>
             item.dropdown ? (
               <DropdownMenu>
-                <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-gray-700 justify-center">
+                <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-text-muted justify-center">
                   <span class="text-lg">{item.icon()}</span>
                   <span>{item.label}</span>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
-                  <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-gray-200 bg-white shadow-sm py-2 z-50">
+                  <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
                     {item.dropdown?.map((d) =>
                       // ログアウト項目は赤色で表示
                       d.label === 'ログアウト' ? (
                         <DropdownMenu.Item
                           onSelect={() => setShowLogoutDialog(true)}
-                          class="block px-4 py-2 text-sm text-red-600 hover:bg-red-100 focus:bg-red-100 outline-none cursor-pointer font-semibold"
+                          class="block px-4 py-2 text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg outline-none cursor-pointer font-semibold"
                         >
                           <span class="pr-2">{d.icon()}</span>
                           {d.label}
@@ -276,7 +282,7 @@ const NavBar = (props: NavBarProps) => {
                       ) : (
                         <DropdownMenu.Item
                           onSelect={() => handleDropdownSelect(d.path)}
-                          class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 outline-none cursor-pointer"
+                          class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
                         >
                           <span class="pr-2">{d.icon()}</span>
                           {d.label}
@@ -290,7 +296,7 @@ const NavBar = (props: NavBarProps) => {
             item.requiresAuth && !isLoading() && !username() ? (
               <button
                 type="button"
-                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-gray-300 justify-center"
+                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-disabled-text justify-center"
                 onClick={() => setShowLoginDialog(true)}
               >
                 <span class="text-lg">{item.icon()}</span>
@@ -299,9 +305,10 @@ const NavBar = (props: NavBarProps) => {
             ) : (
               <A
                 href={item.path}
-                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-gray-700 justify-center"
+                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-text-muted justify-center"
                 classList={{
-                  'bg-primary-600 text-white hover:bg-primary-700 hover:text-white': isActive(item),
+                  'bg-action-primary text-text-inverse hover:bg-action-primary-hover hover:text-text-inverse':
+                    isActive(item),
                 }}
               >
                 <span class="text-lg">{item.icon()}</span>
@@ -314,23 +321,23 @@ const NavBar = (props: NavBarProps) => {
         {/* 未ログイン警告ダイアログ */}
         <Dialog open={showLoginDialog()} onOpenChange={setShowLoginDialog}>
           <Dialog.Portal>
-            <Dialog.Overlay class="fixed inset-0 bg-black/30 z-50" />
-            <Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg flex flex-col items-center">
+            <Dialog.Overlay class="fixed inset-0 bg-overlay z-50" />
+            <Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg flex flex-col items-center">
               <Dialog.Title class="text-lg font-bold mb-2">ログインが必要です</Dialog.Title>
-              <Dialog.Description class="mb-4 text-sm text-gray-700">
+              <Dialog.Description class="mb-4 text-sm text-text-muted">
                 この機能を利用するにはログインが必要です。
               </Dialog.Description>
               <div class="flex gap-4 mt-2">
                 <button
                   type="button"
-                  class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                  class="px-4 py-2 rounded bg-action-secondary hover:bg-action-secondary-hover"
                   onClick={() => setShowLoginDialog(false)}
                 >
                   戻る
                 </button>
                 <button
                   type="button"
-                  class="px-4 py-2 rounded bg-primary-600 text-white hover:bg-primary-700"
+                  class="px-4 py-2 rounded bg-action-primary text-text-inverse hover:bg-action-primary-hover"
                   onClick={() => {
                     setShowLoginDialog(false)
                     navigate('/login')
@@ -346,25 +353,25 @@ const NavBar = (props: NavBarProps) => {
         {/* ログアウト確認AlertDialog */}
         <AlertDialog open={showLogoutDialog()} onOpenChange={setShowLogoutDialog}>
           <AlertDialog.Portal>
-            <AlertDialog.Overlay class="fixed inset-0 bg-black/30 z-50" />
-            <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg flex flex-col items-center">
+            <AlertDialog.Overlay class="fixed inset-0 bg-overlay z-50" />
+            <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg flex flex-col items-center">
               <AlertDialog.Title class="text-lg font-bold mb-2">
                 ログアウトしますか？
               </AlertDialog.Title>
-              <AlertDialog.Description class="mb-4 text-sm text-gray-700">
+              <AlertDialog.Description class="mb-4 text-sm text-text-muted">
                 本当にログアウトしますか？
               </AlertDialog.Description>
               <div class="flex gap-4 mt-2">
                 <button
                   type="button"
-                  class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                  class="px-4 py-2 rounded bg-action-secondary hover:bg-action-secondary-hover"
                   onClick={() => setShowLogoutDialog(false)}
                 >
                   キャンセル
                 </button>
                 <button
                   type="button"
-                  class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                  class="px-4 py-2 rounded bg-danger text-text-inverse hover:bg-danger-hover"
                   onClick={handleLogout}
                 >
                   ログアウト
