@@ -17,6 +17,107 @@
   --font-sans: "Inter", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
 }
 
+:root,
+[data-theme="light"] {
+  --cs-color-bg: var(--color-gray-50);
+  --cs-color-surface: var(--color-white);
+  --cs-color-surface-muted: var(--color-gray-50);
+  --cs-color-surface-raised: var(--color-white);
+  --cs-color-surface-hover: var(--color-gray-100);
+
+  --cs-color-text: var(--color-gray-900);
+  --cs-color-text-muted: var(--color-gray-600);
+  --cs-color-text-subtle: var(--color-gray-400);
+  --cs-color-text-inverse: var(--color-white);
+  --cs-color-text-placeholder: var(--color-gray-400);
+
+  --cs-color-border: var(--color-gray-200);
+  --cs-color-border-strong: var(--color-gray-300);
+  --cs-color-focus-ring: var(--color-primary-500);
+
+  --cs-color-action-primary: var(--color-primary-600);
+  --cs-color-action-primary-hover: var(--color-primary-700);
+  --cs-color-action-primary-muted: var(--color-primary-50);
+  --cs-color-action-primary-border: var(--color-primary-200);
+  --cs-color-action-secondary: var(--color-gray-200);
+  --cs-color-action-secondary-hover: var(--color-gray-300);
+
+  --cs-color-danger: var(--color-red-600);
+  --cs-color-danger-hover: var(--color-red-700);
+  --cs-color-danger-bg: var(--color-red-50);
+  --cs-color-danger-border: var(--color-red-300);
+
+  --cs-color-success: var(--color-green-700);
+  --cs-color-success-bg: var(--color-green-50);
+  --cs-color-success-border: var(--color-green-300);
+
+  --cs-color-warning: var(--color-yellow-700);
+  --cs-color-warning-bg: var(--color-yellow-50);
+  --cs-color-warning-border: var(--color-yellow-300);
+
+  --cs-color-info: var(--color-blue-700);
+  --cs-color-info-bg: var(--color-blue-50);
+  --cs-color-info-border: var(--color-blue-300);
+
+  --cs-color-overlay: rgb(0 0 0 / 30%);
+  --cs-color-disabled-bg: var(--color-gray-100);
+  --cs-color-disabled-text: var(--color-gray-300);
+  --cs-color-input-bg: var(--color-white);
+  --cs-color-input-border: var(--color-gray-300);
+  --cs-color-input-border-hover: var(--color-gray-400);
+  --cs-color-honor-title-normal-bg: var(--color-yellow-200);
+}
+
+@theme inline {
+  --color-bg: var(--cs-color-bg);
+  --color-surface: var(--cs-color-surface);
+  --color-surface-muted: var(--cs-color-surface-muted);
+  --color-surface-raised: var(--cs-color-surface-raised);
+  --color-surface-hover: var(--cs-color-surface-hover);
+
+  --color-text: var(--cs-color-text);
+  --color-text-muted: var(--cs-color-text-muted);
+  --color-text-subtle: var(--cs-color-text-subtle);
+  --color-text-inverse: var(--cs-color-text-inverse);
+  --color-text-placeholder: var(--cs-color-text-placeholder);
+
+  --color-border: var(--cs-color-border);
+  --color-border-strong: var(--cs-color-border-strong);
+  --color-focus-ring: var(--cs-color-focus-ring);
+
+  --color-action-primary: var(--cs-color-action-primary);
+  --color-action-primary-hover: var(--cs-color-action-primary-hover);
+  --color-action-primary-muted: var(--cs-color-action-primary-muted);
+  --color-action-primary-border: var(--cs-color-action-primary-border);
+  --color-action-secondary: var(--cs-color-action-secondary);
+  --color-action-secondary-hover: var(--cs-color-action-secondary-hover);
+
+  --color-danger: var(--cs-color-danger);
+  --color-danger-hover: var(--cs-color-danger-hover);
+  --color-danger-bg: var(--cs-color-danger-bg);
+  --color-danger-border: var(--cs-color-danger-border);
+
+  --color-success: var(--cs-color-success);
+  --color-success-bg: var(--cs-color-success-bg);
+  --color-success-border: var(--cs-color-success-border);
+
+  --color-warning: var(--cs-color-warning);
+  --color-warning-bg: var(--cs-color-warning-bg);
+  --color-warning-border: var(--cs-color-warning-border);
+
+  --color-info: var(--cs-color-info);
+  --color-info-bg: var(--cs-color-info-bg);
+  --color-info-border: var(--cs-color-info-border);
+
+  --color-overlay: var(--cs-color-overlay);
+  --color-disabled-bg: var(--cs-color-disabled-bg);
+  --color-disabled-text: var(--cs-color-disabled-text);
+  --color-input-bg: var(--cs-color-input-bg);
+  --color-input-border: var(--cs-color-input-border);
+  --color-input-border-hover: var(--cs-color-input-border-hover);
+  --color-honor-title-normal-bg: var(--cs-color-honor-title-normal-bg);
+}
+
 @keyframes marquee {
   0%,
   25% {
@@ -37,72 +138,72 @@
 
 @layer components {
   .user-honor-title {
-    background: var(--honor-background, var(--color-yellow-200));
+    background: var(--honor-background, var(--color-honor-title-normal-bg));
     font-weight: bold;
   }
 
   .user-honor-title--normal {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--copper {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--silver {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--gold {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--platina {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--rainbow {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--staff {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--ongeki {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--maimai {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--sp {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--phoenix-g {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--phoenix-p {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--phoenix-r {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--expert {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--master {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 
   .user-honor-title--ultima {
-    --honor-background: var(--color-yellow-200);
+    --honor-background: var(--color-honor-title-normal-bg);
   }
 }
 
