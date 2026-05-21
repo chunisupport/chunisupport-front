@@ -15,6 +15,13 @@ import {
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createSignal, onMount } from 'solid-js'
+import {
+  LOGIN_REQUIRED_DESC,
+  LOGIN_REQUIRED_TITLE,
+  LOGOUT_CONFIRM_DESC,
+  LOGOUT_CONFIRM_TITLE,
+} from '../../constants'
+import CommonDropdownItem from '../common/CommonDropdownItem'
 import { isHomePath } from './navItemMatching'
 
 type NavBarProps = {
@@ -203,26 +210,18 @@ const NavBar = (props: NavBarProps) => {
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
-                    {item.dropdown?.map((d) =>
-                      // ログアウト項目は赤色で表示
-                      d.label === 'ログアウト' ? (
-                        <DropdownMenu.Item
-                          onSelect={() => setShowLogoutDialog(true)}
-                          class="block px-4 py-2 text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg outline-none cursor-pointer"
-                        >
-                          <span class="pr-2">{d.icon()}</span>
-                          {d.label}
-                        </DropdownMenu.Item>
-                      ) : (
-                        <DropdownMenu.Item
-                          onSelect={() => handleDropdownSelect(d.path)}
-                          class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
-                        >
-                          <span class="pr-2">{d.icon()}</span>
-                          {d.label}
-                        </DropdownMenu.Item>
-                      )
-                    )}
+                    {item.dropdown?.map((d) => (
+                      <CommonDropdownItem
+                        label={d.label}
+                        icon={d.icon()}
+                        onSelect={
+                          d.label === 'ログアウト'
+                            ? () => setShowLogoutDialog(true)
+                            : () => handleDropdownSelect(d.path)
+                        }
+                        danger={d.label === 'ログアウト'}
+                      />
+                    ))}
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>
               </DropdownMenu>
@@ -269,26 +268,23 @@ const NavBar = (props: NavBarProps) => {
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
-                    {item.dropdown?.map((d) =>
-                      // ログアウト項目は赤色で表示
-                      d.label === 'ログアウト' ? (
-                        <DropdownMenu.Item
-                          onSelect={() => setShowLogoutDialog(true)}
-                          class="block px-4 py-2 text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg outline-none cursor-pointer font-semibold"
-                        >
-                          <span class="pr-2">{d.icon()}</span>
-                          {d.label}
-                        </DropdownMenu.Item>
-                      ) : (
-                        <DropdownMenu.Item
-                          onSelect={() => handleDropdownSelect(d.path)}
-                          class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
-                        >
-                          <span class="pr-2">{d.icon()}</span>
-                          {d.label}
-                        </DropdownMenu.Item>
-                      )
-                    )}
+                    {item.dropdown?.map((d) => (
+                      <CommonDropdownItem
+                        label={d.label}
+                        icon={d.icon()}
+                        onSelect={
+                          d.label === 'ログアウト'
+                            ? () => setShowLogoutDialog(true)
+                            : () => handleDropdownSelect(d.path)
+                        }
+                        danger={d.label === 'ログアウト'}
+                        className={
+                          d.label === 'ログアウト'
+                            ? 'block px-4 py-2 text-sm outline-none cursor-pointer font-semibold'
+                            : undefined
+                        }
+                      />
+                    ))}
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>
               </DropdownMenu>
@@ -323,9 +319,9 @@ const NavBar = (props: NavBarProps) => {
           <Dialog.Portal>
             <Dialog.Overlay class="fixed inset-0 bg-overlay z-50" />
             <Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg flex flex-col items-center">
-              <Dialog.Title class="text-lg font-bold mb-2">ログインが必要です</Dialog.Title>
+              <Dialog.Title class="text-lg font-bold mb-2">{LOGIN_REQUIRED_TITLE}</Dialog.Title>
               <Dialog.Description class="mb-4 text-sm text-text-muted">
-                この機能を利用するにはログインが必要です。
+                {LOGIN_REQUIRED_DESC}
               </Dialog.Description>
               <div class="flex gap-4 mt-2">
                 <button
@@ -356,10 +352,10 @@ const NavBar = (props: NavBarProps) => {
             <AlertDialog.Overlay class="fixed inset-0 bg-overlay z-50" />
             <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg flex flex-col items-center">
               <AlertDialog.Title class="text-lg font-bold mb-2">
-                ログアウトしますか？
+                {LOGOUT_CONFIRM_TITLE}
               </AlertDialog.Title>
               <AlertDialog.Description class="mb-4 text-sm text-text-muted">
-                本当にログアウトしますか？
+                {LOGOUT_CONFIRM_DESC}
               </AlertDialog.Description>
               <div class="flex gap-4 mt-2">
                 <button

@@ -5,6 +5,12 @@ import { fetchMe, fetchUserProfileSummary } from './api/users'
 import { Loading, NavBar, PlayerDataEmptyState } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
+import {
+  ANNOUNCEMENTS_ITEMS,
+  ANNOUNCEMENTS_TITLE,
+  X_ACCOUNT_ITEMS,
+  X_ACCOUNT_TITLE,
+} from './constants'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import {
   AdminPage,
@@ -105,24 +111,20 @@ const LandingPage = () => {
       </Show>
 
       <section class="rounded-lg border border-border bg-surface p-6">
-        <h2 class="mb-3 text-xl font-semibold">お知らせ</h2>
+        <h2 class="mb-3 text-xl font-semibold">{ANNOUNCEMENTS_TITLE}</h2>
         <ul class="space-y-2 text-sm text-text-muted">
-          <li class="rounded-md border border-border p-3">
-            [モック] 2026-04-29: 新機能の準備を進めています。
-          </li>
-          <li class="rounded-md border border-border p-3">
-            [モック] 2026-04-25: メンテナンス予定を公開しました。
-          </li>
+          {ANNOUNCEMENTS_ITEMS.map((item) => (
+            <li class="rounded-md border border-border p-3">{item}</li>
+          ))}
         </ul>
       </section>
 
       <section class="rounded-lg border border-border bg-surface p-6">
-        <h2 class="mb-3 text-xl font-semibold">X公式アカウント</h2>
+        <h2 class="mb-3 text-xl font-semibold">{X_ACCOUNT_TITLE}</h2>
         <ul class="space-y-2 text-sm text-text-muted">
-          <li class="rounded-md border border-border p-3">
-            [モック] 投稿1: アップデート予定のお知らせ
-          </li>
-          <li class="rounded-md border border-border p-3">[モック] 投稿2: 活用方法の紹介</li>
+          {X_ACCOUNT_ITEMS.map((item) => (
+            <li class="rounded-md border border-border p-3">{item}</li>
+          ))}
         </ul>
       </section>
     </main>
