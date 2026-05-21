@@ -123,11 +123,15 @@ const GoalCard: Component<GoalCardProps> = (props) => {
       </div>
 
       <div class="mt-2">
-        <div class="font-oswald text-3xl font-bold leading-none text-white">
+        <div
+          class={`font-oswald text-3xl font-bold leading-none ${props.progress.achieved ? 'text-white' : 'text-gray-900'}`}
+        >
           {formatValue(displayCurrent(), props.goal.achievement_type)}
         </div>
         <div class="mb-2 flex items-end justify-between gap-3 mt-1">
-          <div class="flex min-w-0 w-full items-end gap-3 text-white/80">
+          <div
+            class={`flex min-w-0 w-full items-end gap-3 ${props.progress.achieved ? 'text-white/80' : 'text-gray-500'}`}
+          >
             <div class="pb-0.5 font-oswald text-lg font-bold leading-none">/</div>
             <div class="pb-0.5 font-oswald text-xl font-bold leading-none">
               {formatValue(props.progress.target, props.goal.achievement_type)}
