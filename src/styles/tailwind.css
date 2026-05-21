@@ -68,6 +68,71 @@
   --cs-color-honor-title-normal-bg: var(--color-yellow-200);
 }
 
+[data-theme="dark"] {
+  --cs-color-bg: var(--color-green-950);
+  --cs-color-surface: color-mix(in srgb, var(--color-green-900) 80%, var(--color-gray-950));
+  --cs-color-surface-muted: color-mix(in srgb, var(--color-green-950) 88%, var(--color-gray-950));
+  --cs-color-surface-raised: color-mix(in srgb, var(--color-green-900) 74%, var(--color-gray-900));
+  --cs-color-surface-hover: color-mix(in srgb, var(--color-green-800) 72%, var(--color-gray-900));
+
+  --cs-color-text: var(--color-green-50);
+  --cs-color-text-muted: var(--color-green-100);
+  --cs-color-text-subtle: var(--color-green-300);
+  --cs-color-text-inverse: var(--color-green-950);
+  --cs-color-text-placeholder: var(--color-green-300);
+
+  --cs-color-border: color-mix(in srgb, var(--color-green-700) 45%, var(--color-gray-900));
+  --cs-color-border-strong: color-mix(in srgb, var(--color-green-600) 55%, var(--color-gray-900));
+  --cs-color-focus-ring: var(--color-primary-400);
+
+  --cs-color-action-primary: var(--color-primary-400);
+  --cs-color-action-primary-hover: var(--color-primary-300);
+  --cs-color-action-primary-muted: color-mix(
+    in srgb,
+    var(--color-primary-900) 70%,
+    var(--color-gray-900)
+  );
+  --cs-color-action-primary-border: var(--color-primary-700);
+  --cs-color-action-secondary: color-mix(
+    in srgb,
+    var(--color-green-700) 38%,
+    var(--color-gray-900)
+  );
+  --cs-color-action-secondary-hover: color-mix(
+    in srgb,
+    var(--color-green-600) 50%,
+    var(--color-gray-900)
+  );
+
+  --cs-color-danger: var(--color-red-300);
+  --cs-color-danger-hover: var(--color-red-200);
+  --cs-color-danger-bg: color-mix(in srgb, var(--color-red-950) 72%, var(--color-gray-950));
+  --cs-color-danger-border: var(--color-red-700);
+
+  --cs-color-success: var(--color-green-200);
+  --cs-color-success-bg: color-mix(in srgb, var(--color-green-900) 70%, var(--color-gray-950));
+  --cs-color-success-border: var(--color-green-700);
+
+  --cs-color-warning: var(--color-yellow-200);
+  --cs-color-warning-bg: color-mix(in srgb, var(--color-yellow-950) 60%, var(--color-gray-950));
+  --cs-color-warning-border: var(--color-yellow-700);
+
+  --cs-color-info: var(--color-blue-200);
+  --cs-color-info-bg: color-mix(in srgb, var(--color-blue-950) 70%, var(--color-gray-950));
+  --cs-color-info-border: var(--color-blue-700);
+
+  --cs-color-overlay: rgb(2 6 23 / 65%);
+  --cs-color-disabled-bg: color-mix(in srgb, var(--color-green-900) 60%, var(--color-gray-900));
+  --cs-color-disabled-text: var(--color-green-600);
+  --cs-color-input-bg: color-mix(in srgb, var(--color-green-900) 72%, var(--color-gray-900));
+  --cs-color-input-border: color-mix(in srgb, var(--color-green-700) 40%, var(--color-gray-800));
+  --cs-color-input-border-hover: color-mix(
+    in srgb,
+    var(--color-green-500) 55%,
+    var(--color-gray-800)
+  );
+}
+
 @theme inline {
   --color-bg: var(--cs-color-bg);
   --color-surface: var(--cs-color-surface);
