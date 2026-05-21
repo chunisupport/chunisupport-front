@@ -1,4 +1,4 @@
-﻿import { EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
+import { EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
 import { type Component, createSignal, onCleanup } from 'solid-js'
 import type { GoalDTO } from '../../../../types/api'
 // import { formatGoalAttributesLabel, formatGoalTypeLabel } from '../../utils/goalForm'
@@ -73,7 +73,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
   return (
     <article
       class={`rounded-lg border p-4 shadow-sm ${
-        props.progress.achieved ? 'border-primary-200 bg-primary-50' : 'border-gray-200 bg-white'
+        props.progress.achieved ? 'border-primary-500 bg-primary-900' : 'border-gray-200 bg-white'
       }`}
     >
       <div class="flex items-start justify-between gap-3">
@@ -83,7 +83,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
         <div ref={menuRef} class="relative">
           <button
             type="button"
-            class="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+            class="rounded p-1 text-white/80 hover:bg-gray-100 hover:text-gray-700"
             aria-label="メニューを開く"
             aria-haspopup="true"
             aria-expanded={menuOpen()}
@@ -123,11 +123,11 @@ const GoalCard: Component<GoalCardProps> = (props) => {
       </div>
 
       <div class="mt-2">
-        <div class="font-oswald text-3xl font-bold leading-none text-black">
+        <div class="font-oswald text-3xl font-bold leading-none text-white">
           {formatValue(displayCurrent(), props.goal.achievement_type)}
         </div>
         <div class="mb-2 flex items-end justify-between gap-3 mt-1">
-          <div class="flex min-w-0 w-full items-end gap-3 text-gray-500">
+          <div class="flex min-w-0 w-full items-end gap-3 text-white/80">
             <div class="pb-0.5 font-oswald text-lg font-bold leading-none">/</div>
             <div class="pb-0.5 font-oswald text-xl font-bold leading-none">
               {formatValue(props.progress.target, props.goal.achievement_type)}

@@ -71,15 +71,15 @@ export function difficultyBadgeClass(difficulty: string): string {
 export function difficultyColor(difficulty: string): string {
   switch (difficulty) {
     case 'BASIC':
-      return 'bg-green-100 text-green-800'
+      return 'bg-green-100 text-white'
     case 'ADVANCED':
-      return 'bg-yellow-100 text-yellow-800'
+      return 'bg-yellow-100 text-white'
     case 'EXPERT':
-      return 'bg-pink-100 text-pink-800'
+      return 'bg-pink-100 text-white'
     case 'MASTER':
-      return 'bg-purple-100 text-purple-800'
+      return 'bg-purple-100 text-white'
     case 'ULTIMA':
-      return 'bg-red-100 text-red-800'
+      return 'bg-red-100 text-white'
     default:
       return ''
   }
