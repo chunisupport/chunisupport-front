@@ -245,8 +245,10 @@ const NavBar = (props: NavBarProps) => {
                   href={item.path}
                   class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-text-muted hover:bg-surface-hover hover:text-text"
                   classList={{
-                    'bg-action-primary text-text-inverse hover:bg-action-primary-hover hover:text-text-inverse':
-                      isActive(item),
+                    'bg-action-primary': isActive(item),
+                    'text-text-inverse': isActive(item),
+                    'hover:bg-action-primary-hover': isActive(item),
+                    'hover:text-text-inverse': isActive(item),
                   }}
                 >
                   <span class="text-lg text-current">{item.icon()}</span>
@@ -307,8 +309,10 @@ const NavBar = (props: NavBarProps) => {
                   href={item.path}
                   class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-text-muted justify-center"
                   classList={{
-                    'bg-action-primary text-text-inverse hover:bg-action-primary-hover hover:text-text-inverse':
-                      isActive(item),
+                    'bg-action-primary': isActive(item),
+                    'text-text-inverse': isActive(item),
+                    'hover:bg-action-primary-hover': isActive(item),
+                    'hover:text-text-inverse': isActive(item),
                   }}
                 >
                   <span class="text-lg text-current">{item.icon()}</span>
