@@ -280,11 +280,6 @@ const NavBar = (props: NavBarProps) => {
                             : () => handleDropdownSelect(d.path)
                         }
                         danger={d.kind === 'logout'}
-                        className={
-                          d.kind === 'logout'
-                            ? 'block px-4 py-2 text-sm outline-none cursor-pointer font-semibold'
-                            : undefined
-                        }
                       />
                     ))}
                   </DropdownMenu.Content>

@@ -19,7 +19,7 @@
 
 :root,
 [data-theme="light"] {
-  --cs-color-bg: var(--color-gray-50);
+  --cs-color-bg: var(--color-white);
   --cs-color-surface: var(--color-white);
   --cs-color-surface-muted: var(--color-gray-50);
   --cs-color-surface-raised: var(--color-white);

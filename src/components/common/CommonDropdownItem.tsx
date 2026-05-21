@@ -6,7 +6,7 @@ type CommonDropdownItemProps = {
   icon: JSX.Element
   onSelect: () => void
   danger?: boolean
-  className?: string
+  class?: string
 }
 
 /**
@@ -14,17 +14,16 @@ type CommonDropdownItemProps = {
  * @param props 表示文言、アイコン、選択時処理などを含むプロパティ
  * @returns ドロップダウン項目要素
  */
-const CommonDropdownItem = (props: CommonDropdownItemProps) => {
-  const baseClass =
-    'block px-4 py-2 text-sm outline-none cursor-pointer font-semibold transition-colors duration-150'
+const BASE_CLASS =
+  'block px-4 py-2 text-sm outline-none cursor-pointer font-semibold transition-colors duration-150'
 
-  const variantClass = props.danger
-    ? 'text-danger hover:bg-danger-bg'
-    : 'text-text-muted hover:bg-surface-muted'
+const CommonDropdownItem = (props: CommonDropdownItemProps) => {
+  const variantClass = () =>
+    props.danger ? 'text-danger hover:bg-danger-bg' : 'text-text-muted hover:bg-surface-muted'
 
   return (
     <DropdownMenu.Item
-      class={props.className ?? `${baseClass} ${variantClass}`}
+      class={`${BASE_CLASS} ${variantClass()} ${props.class ?? ''}`}
       onSelect={props.onSelect}
     >
       {props.icon}
