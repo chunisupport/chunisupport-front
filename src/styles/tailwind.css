@@ -284,6 +284,8 @@
 
   body {
     overscroll-behavior-y: auto;
+    background-color: var(--cs-color-bg);
+    color: var(--cs-color-text);
   }
 
   main {
