@@ -19,7 +19,7 @@
 
 :root,
 [data-theme="light"] {
-  --cs-color-bg: var(--color-gray-50);
+  --cs-color-bg: var(--color-white);
   --cs-color-surface: var(--color-white);
   --cs-color-surface-muted: var(--color-gray-50);
   --cs-color-surface-raised: var(--color-white);
@@ -70,14 +70,14 @@
 
 [data-theme="dark"] {
   --color-white: #052e1f;
-  --color-gray-50: #ecfdf5;
-  --color-gray-100: #d1fae5;
-  --color-gray-200: #a7f3d0;
-  --color-gray-300: #6ee7b7;
-  --color-gray-400: #34d399;
-  --color-gray-500: #10b981;
-  --color-gray-600: #bbf7d0;
-  --color-gray-700: #ecfdf5;
+  --color-gray-50: #0b3b2a;
+  --color-gray-100: #14532d;
+  --color-gray-200: #166534;
+  --color-gray-300: #15803d;
+  --color-gray-400: #22c55e;
+  --color-gray-500: #4ade80;
+  --color-gray-600: #86efac;
+  --color-gray-700: #d1fae5;
   --color-gray-800: #ecfdf5;
   --color-gray-900: #f0fdf4;
 
