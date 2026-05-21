@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { formatOverPowerPercent, formatOverPowerValue } from './overPowerFormat'
 
-test('OVER POWER値は小数点以下3桁で切り捨てられること', () => {
+test('OVER POWER値は小数点以下3桁で丸められること', () => {
   // Given
   const roundedUpByToFixed = 123.4569
 
@@ -10,7 +10,18 @@ test('OVER POWER値は小数点以下3桁で切り捨てられること', () => 
   const result = formatOverPowerValue(roundedUpByToFixed)
 
   // Then
-  assert.equal(result, '123.456')
+  assert.equal(result, '123.457')
+})
+
+test('OVER POWER値は小数点以下3桁まで0埋めされること', () => {
+  // Given
+  const shortDecimal = 123.45
+
+  // When
+  const result = formatOverPowerValue(shortDecimal)
+
+  // Then
+  assert.equal(result, '123.450')
 })
 
 test('OVER POWER達成率は小数点以下4桁で切り捨てられること', () => {
