@@ -15,7 +15,7 @@ type CommonDropdownItemProps = {
  * @returns ドロップダウン項目要素
  */
 const BASE_CLASS =
-  'flex items-center gap-1 px-4 py-2 text-sm outline-none cursor-pointer font-semibold transition-colors duration-150'
+  'flex items-center gap-1 px-4 py-2 text-sm outline-none cursor-pointer font-medium transition-colors duration-150'
 
 const CommonDropdownItem = (props: CommonDropdownItemProps) => {
   const variantClass = () =>
@@ -29,7 +29,7 @@ const CommonDropdownItem = (props: CommonDropdownItemProps) => {
       <span class="text-current" aria-hidden="true">
         {props.icon}
       </span>
-      <span class="font-semibold text-current">{props.label}</span>
+      <span class="text-current">{props.label}</span>
     </DropdownMenu.Item>
   )
 }
