@@ -49,7 +49,10 @@ const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
   )
 }
 
-// インラインコンポーネント用のラッパー
+/**
+ * ランディングページを表示し、認証状態に応じた導線とお知らせ情報を提供する。
+ * @returns 認証状態に応じたコンテンツとお知らせセクションを含むJSX
+ */
 const LandingPage = () => {
   useDocumentTitle()
 

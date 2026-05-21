@@ -38,6 +38,7 @@ type DropdownItem = {
   label: string
   icon: () => JSX.Element
   path: string
+  kind?: 'link' | 'logout'
 }
 
 type NavItem = {
@@ -101,6 +102,7 @@ const NavBar = (props: NavBarProps) => {
               label: 'ログアウト',
               icon: () => <LogOut class="inline h-4 w-4 mr-1" aria-hidden="true" />,
               path: '#', // ページ遷移しない
+              kind: 'logout',
             },
           ]
         : []),
@@ -215,11 +217,11 @@ const NavBar = (props: NavBarProps) => {
                         label={d.label}
                         icon={d.icon()}
                         onSelect={
-                          d.label === 'ログアウト'
+                          d.kind === 'logout'
                             ? () => setShowLogoutDialog(true)
                             : () => handleDropdownSelect(d.path)
                         }
-                        danger={d.label === 'ログアウト'}
+                        danger={d.kind === 'logout'}
                       />
                     ))}
                   </DropdownMenu.Content>
@@ -273,13 +275,13 @@ const NavBar = (props: NavBarProps) => {
                         label={d.label}
                         icon={d.icon()}
                         onSelect={
-                          d.label === 'ログアウト'
+                          d.kind === 'logout'
                             ? () => setShowLogoutDialog(true)
                             : () => handleDropdownSelect(d.path)
                         }
-                        danger={d.label === 'ログアウト'}
+                        danger={d.kind === 'logout'}
                         className={
-                          d.label === 'ログアウト'
+                          d.kind === 'logout'
                             ? 'block px-4 py-2 text-sm outline-none cursor-pointer font-semibold'
                             : undefined
                         }
