@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* テーマカラー: ここを変えるだけで全体の色が変わります */
+  /* テーマカラー: ここを変えるだけで全体の色が変わります（アクセントカラー：ボタン・リンク・フォーカスリングなど） */
   --color-primary-50: var(--color-green-50);
   --color-primary-100: var(--color-green-100);
   --color-primary-200: var(--color-green-200);
@@ -13,18 +13,22 @@
   --color-primary-800: var(--color-green-800);
   --color-primary-900: var(--color-green-900);
 
+  /* フォント: 装飾用（スコア表示など） */
   --font-oswald: "Oswald", sans-serif;
+  /* フォント: 本文用 */
   --font-sans: "Inter", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root,
 [data-theme="light"] {
+  /* ===== 背景・サーフェス（ページ全体 / カード / パネル / モーダル / ホバー） ===== */
   --cs-color-bg: var(--color-white);
   --cs-color-surface: var(--color-white);
   --cs-color-surface-muted: var(--color-gray-50);
   --cs-color-surface-raised: var(--color-white);
   --cs-color-surface-hover: var(--color-gray-100);
 
+  /* ===== テキスト（本文 / 補助 / メタ情報 / 反転 / プレースホルダー / ナビ） ===== */
   --cs-color-text: var(--color-gray-900);
   --cs-color-text-muted: var(--color-gray-600);
   --cs-color-text-subtle: var(--color-gray-400);
@@ -32,10 +36,12 @@
   --cs-color-text-placeholder: var(--color-gray-400);
   --cs-color-nav-text: var(--color-gray-700);
 
+  /* ===== 枠線・フォーカスリング（カード境界 / 強調境界 / フォーカスリング） ===== */
   --cs-color-border: var(--color-gray-200);
   --cs-color-border-strong: var(--color-gray-300);
   --cs-color-focus-ring: var(--color-primary-500);
 
+  /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
   --cs-color-action-primary: var(--color-primary-600);
   --cs-color-action-primary-hover: var(--color-primary-700);
   --cs-color-action-primary-muted: var(--color-primary-50);
@@ -43,30 +49,34 @@
   --cs-color-action-secondary: var(--color-gray-200);
   --cs-color-action-secondary-hover: var(--color-gray-300);
 
+  /* ===== 危険: エラー・削除操作（テキスト / 背景 / 枠線） ===== */
   --cs-color-danger: var(--color-red-600);
   --cs-color-danger-hover: var(--color-red-700);
   --cs-color-danger-bg: var(--color-red-50);
   --cs-color-danger-border: var(--color-red-300);
 
+  /* ===== 成功（テキスト / 背景 / 枠線） ===== */
   --cs-color-success: var(--color-green-700);
   --cs-color-success-bg: var(--color-green-50);
   --cs-color-success-border: var(--color-green-300);
 
+  /* ===== 警告（テキスト / 背景 / 枠線） ===== */
   --cs-color-warning: var(--color-yellow-700);
   --cs-color-warning-bg: var(--color-yellow-50);
   --cs-color-warning-border: var(--color-yellow-300);
 
+  /* ===== 情報（テキスト / 背景 / 枠線） ===== */
   --cs-color-info: var(--color-blue-700);
   --cs-color-info-bg: var(--color-blue-50);
   --cs-color-info-border: var(--color-blue-300);
 
+  /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） ===== */
   --cs-color-overlay: rgb(0 0 0 / 30%);
   --cs-color-disabled-bg: var(--color-gray-100);
   --cs-color-disabled-text: var(--color-gray-300);
   --cs-color-input-bg: var(--color-white);
   --cs-color-input-border: var(--color-gray-300);
   --cs-color-input-border-hover: var(--color-gray-400);
-
   --cs-color-link: var(--color-primary-600);
   --cs-color-link-hover: var(--color-primary-700);
 }
@@ -74,12 +84,14 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
+  /* ===== 背景・サーフェス（ページ全体 / カード / パネル / モーダル / ホバー） ===== */
   --cs-color-bg: #03150f;
   --cs-color-surface: #082018;
   --cs-color-surface-muted: #0d2a20;
   --cs-color-surface-raised: #0b241b;
   --cs-color-surface-hover: #123528;
 
+  /* ===== テキスト（本文 / 補助 / メタ情報 / 反転 / プレースホルダー / ナビ） ===== */
   --cs-color-text: var(--color-gray-50);
   --cs-color-text-muted: var(--color-gray-300);
   --cs-color-text-subtle: var(--color-gray-500);
@@ -87,10 +99,12 @@
   --cs-color-text-placeholder: var(--color-gray-500);
   --cs-color-nav-text: var(--color-gray-100);
 
+  /* ===== 枠線・フォーカスリング（カード境界 / 強調境界 / フォーカスリング） ===== */
   --cs-color-border: #1d4a39;
   --cs-color-border-strong: #2f6b53;
   --cs-color-focus-ring: var(--color-primary-400);
 
+  /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
   --cs-color-action-primary: var(--color-primary-500);
   --cs-color-action-primary-hover: var(--color-primary-400);
   --cs-color-action-primary-muted: rgb(20 83 45 / 35%);
@@ -98,30 +112,34 @@
   --cs-color-action-secondary: #1d4a39;
   --cs-color-action-secondary-hover: #2f6b53;
 
+  /* ===== 危険: エラー・削除操作（テキスト / 背景 / 枠線） ===== */
   --cs-color-danger: var(--color-red-400);
   --cs-color-danger-hover: var(--color-red-300);
   --cs-color-danger-bg: rgb(127 29 29 / 35%);
   --cs-color-danger-border: var(--color-red-800);
 
+  /* ===== 成功（テキスト / 背景 / 枠線） ===== */
   --cs-color-success: var(--color-green-300);
   --cs-color-success-bg: rgb(20 83 45 / 35%);
   --cs-color-success-border: var(--color-green-800);
 
+  /* ===== 警告（テキスト / 背景 / 枠線） ===== */
   --cs-color-warning: var(--color-yellow-300);
   --cs-color-warning-bg: rgb(113 63 18 / 35%);
   --cs-color-warning-border: var(--color-yellow-800);
 
+  /* ===== 情報（テキスト / 背景 / 枠線） ===== */
   --cs-color-info: var(--color-teal-300);
   --cs-color-info-bg: rgb(19 78 74 / 35%);
   --cs-color-info-border: var(--color-teal-800);
 
+  /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） ===== */
   --cs-color-overlay: rgb(0 0 0 / 60%);
   --cs-color-disabled-bg: #0d2a20;
   --cs-color-disabled-text: var(--color-gray-600);
   --cs-color-input-bg: #082018;
   --cs-color-input-border: #2f6b53;
   --cs-color-input-border-hover: #3f8a6b;
-
   --cs-color-link: var(--color-primary-400);
   --cs-color-link-hover: var(--color-primary-300);
 }
@@ -129,6 +147,7 @@
 :root,
 [data-theme="light"],
 [data-theme="dark"] {
+  /* ===== 難易度バッジ（BASIC / ADVANCED / EXPERT / MASTER / ULTIMA） ===== */
   --cs-color-difficulty-basic-bg: #00ab84;
   --cs-color-difficulty-basic-text: var(--color-white);
   --cs-color-difficulty-advanced-bg: #ff7e00;
@@ -140,14 +159,17 @@
   --cs-color-difficulty-ultima-bg: #000000;
   --cs-color-difficulty-ultima-text: var(--color-white);
 
+  /* ===== ユーザー称号（ノーマル） ===== */
   --cs-color-honor-title-normal-bg: var(--color-yellow-200);
   --cs-color-honor-title-normal-text: var(--color-gray-900);
 
+  /* ===== ランキングメダル（金 / 銀 / 銅） ===== */
   --cs-color-ranking-gold-bg: var(--color-yellow-300);
   --cs-color-ranking-silver-bg: var(--color-gray-300);
   --cs-color-ranking-bronze-bg: var(--color-orange-300);
   --cs-color-ranking-medal-text: var(--color-gray-900);
 
+  /* ===== スコアランク（SSSP / SSS / SS / A / B / C / D） ===== */
   --cs-color-score-rank-sssp-bg: var(--color-green-500);
   --cs-color-score-rank-sssp-text: var(--color-green-500);
   --cs-color-score-rank-sss-bg: var(--color-yellow-500);
@@ -162,6 +184,7 @@
   --cs-color-score-rank-d-bg: var(--color-gray-500);
   --cs-color-score-rank-d-text: var(--color-gray-500);
 
+  /* ===== ランプ（FULL COMBO / ALL JUSTICE / CLEAR / HARD / BRAVE / ABSOLUTE / CATASTROPHY / FAILED / 未プレイ） ===== */
   --cs-color-lamp-full-combo-bg: var(--color-orange-200);
   --cs-color-lamp-full-combo-text: var(--color-orange-900);
   --cs-color-lamp-all-justice-bg: var(--color-yellow-200);
@@ -182,12 +205,14 @@
 }
 
 @theme inline {
+  /* 背景・サーフェス */
   --color-bg: var(--cs-color-bg);
   --color-surface: var(--cs-color-surface);
   --color-surface-muted: var(--cs-color-surface-muted);
   --color-surface-raised: var(--cs-color-surface-raised);
   --color-surface-hover: var(--cs-color-surface-hover);
 
+  /* テキスト */
   --color-text: var(--cs-color-text);
   --color-text-muted: var(--cs-color-text-muted);
   --color-text-subtle: var(--cs-color-text-subtle);
@@ -195,10 +220,12 @@
   --color-text-placeholder: var(--cs-color-text-placeholder);
   --color-nav-text: var(--cs-color-nav-text);
 
+  /* 枠線・フォーカスリング */
   --color-border: var(--cs-color-border);
   --color-border-strong: var(--cs-color-border-strong);
   --color-focus-ring: var(--cs-color-focus-ring);
 
+  /* アクション（ボタン） */
   --color-action-primary: var(--cs-color-action-primary);
   --color-action-primary-hover: var(--cs-color-action-primary-hover);
   --color-action-primary-muted: var(--cs-color-action-primary-muted);
@@ -206,23 +233,28 @@
   --color-action-secondary: var(--cs-color-action-secondary);
   --color-action-secondary-hover: var(--cs-color-action-secondary-hover);
 
+  /* 危険（エラー） */
   --color-danger: var(--cs-color-danger);
   --color-danger-hover: var(--cs-color-danger-hover);
   --color-danger-bg: var(--cs-color-danger-bg);
   --color-danger-border: var(--cs-color-danger-border);
 
+  /* 成功 */
   --color-success: var(--cs-color-success);
   --color-success-bg: var(--cs-color-success-bg);
   --color-success-border: var(--cs-color-success-border);
 
+  /* 警告 */
   --color-warning: var(--cs-color-warning);
   --color-warning-bg: var(--cs-color-warning-bg);
   --color-warning-border: var(--cs-color-warning-border);
 
+  /* 情報 */
   --color-info: var(--cs-color-info);
   --color-info-bg: var(--cs-color-info-bg);
   --color-info-border: var(--cs-color-info-border);
 
+  /* その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） */
   --color-overlay: var(--cs-color-overlay);
   --color-disabled-bg: var(--cs-color-disabled-bg);
   --color-disabled-text: var(--cs-color-disabled-text);
@@ -232,6 +264,7 @@
   --color-link: var(--cs-color-link);
   --color-link-hover: var(--cs-color-link-hover);
 
+  /* 難易度バッジ */
   --color-difficulty-basic-bg: var(--cs-color-difficulty-basic-bg);
   --color-difficulty-basic-text: var(--cs-color-difficulty-basic-text);
   --color-difficulty-advanced-bg: var(--cs-color-difficulty-advanced-bg);
@@ -243,14 +276,17 @@
   --color-difficulty-ultima-bg: var(--cs-color-difficulty-ultima-bg);
   --color-difficulty-ultima-text: var(--cs-color-difficulty-ultima-text);
 
+  /* ユーザー称号 */
   --color-honor-title-normal-bg: var(--cs-color-honor-title-normal-bg);
   --color-honor-title-normal-text: var(--cs-color-honor-title-normal-text);
 
+  /* ランキングメダル */
   --color-ranking-gold-bg: var(--cs-color-ranking-gold-bg);
   --color-ranking-silver-bg: var(--cs-color-ranking-silver-bg);
   --color-ranking-bronze-bg: var(--cs-color-ranking-bronze-bg);
   --color-ranking-medal-text: var(--cs-color-ranking-medal-text);
 
+  /* スコアランク */
   --color-score-rank-sss-bg: var(--cs-color-score-rank-sss-bg);
   --color-score-rank-sss-text: var(--cs-color-score-rank-sss-text);
   --color-score-rank-sssp-bg: var(--cs-color-score-rank-sssp-bg);
@@ -265,6 +301,7 @@
   --color-score-rank-d-bg: var(--cs-color-score-rank-d-bg);
   --color-score-rank-d-text: var(--cs-color-score-rank-d-text);
 
+  /* ランプ */
   --color-lamp-full-combo-bg: var(--cs-color-lamp-full-combo-bg);
   --color-lamp-full-combo-text: var(--cs-color-lamp-full-combo-text);
   --color-lamp-all-justice-bg: var(--cs-color-lamp-all-justice-bg);
@@ -285,6 +322,7 @@
 }
 
 @keyframes marquee {
+
   0%,
   25% {
     transform: translateX(0%);
