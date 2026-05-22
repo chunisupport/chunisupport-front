@@ -1,7 +1,10 @@
-import { type Component, Show } from 'solid-js'
+import { type Component, createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../../types/api'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
+
+const HONOR_ROTATION_INTERVAL_MS = 4000
+const VISIBLE_HONOR_LIMIT = 3
 
 type Props = {
   playerInfo: PlayerDTO
@@ -10,8 +13,35 @@ type Props = {
   newRecords: PlayerRecordDTO[]
 }
 
+/**
+ * レーティング対象レコードの rating 合計値を計算する。
+ *
+ * @param records - 合計対象のプレイヤーレコード一覧。
+ * @returns rating の合計値。
+ */
 const sumRating = (records: PlayerRecordDTO[]): number => {
   return records.reduce((sum, record) => sum + record.rating, 0)
+}
+
+/**
+ * プレイヤー名札に表示する称号一覧を最大表示件数へ絞り込む。
+ *
+ * @param honors - APIから取得した称号一覧。
+ * @returns ローテーション表示対象の称号一覧。
+ */
+const getVisibleHonors = (honors: HonorDTO[]): HonorDTO[] => {
+  return honors.slice(0, VISIBLE_HONOR_LIMIT)
+}
+
+/**
+ * 称号配列の範囲内に収まる表示インデックスへ正規化する。
+ *
+ * @param index - 正規化前の表示インデックス。
+ * @param length - 称号配列の件数。
+ * @returns 有効な表示インデックス。称号がない場合は 0。
+ */
+const normalizeHonorIndex = (index: number, length: number): number => {
+  return length === 0 ? 0 : index % length
 }
 
 /**
@@ -52,18 +82,38 @@ export const UserNameplate: Component<Props> = (props) => {
   const playerRatingText = formatPlayerRating(playerRating)
   const bestRatingText = formatPlayerRating(bestRating)
   const newRatingText = formatPlayerRating(newRating)
-  const primaryHonor = () => props.honors[0]
+  const [activeHonorIndex, setActiveHonorIndex] = createSignal(0)
+  const visibleHonors = createMemo(() => getVisibleHonors(props.honors))
+  const activeHonor = createMemo(() => {
+    const honors = visibleHonors()
+
+    return honors[normalizeHonorIndex(activeHonorIndex(), honors.length)]
+  })
+
+  createEffect(() => {
+    const honorsLength = visibleHonors().length
+
+    setActiveHonorIndex((current) => normalizeHonorIndex(current, honorsLength))
+
+    if (honorsLength <= 1) return
+
+    const intervalId = window.setInterval(() => {
+      setActiveHonorIndex((current) => normalizeHonorIndex(current + 1, visibleHonors().length))
+    }, HONOR_ROTATION_INTERVAL_MS)
+
+    onCleanup(() => window.clearInterval(intervalId))
+  })
 
   return (
     <div class="mb-2 mx-auto w-[min(420px,calc(100%-2rem))] px-3 py-3 border border-border shadow-sm rounded-md ">
       {/* TODO: 称号の背景画像を表示 */}
-      <Show when={primaryHonor()}>
+      <Show when={activeHonor()} keyed>
         {(honor) => (
           <p
-            class={`user-honor-title ${honorTypeClassNames[honor().type_name]}`}
-            data-honor-type={honor().type_name}
+            class={`user-honor-title user-honor-title--rotating ${honorTypeClassNames[honor.type_name]}`}
+            data-honor-type={honor.type_name}
           >
-            {honor().name}
+            {honor.name}
           </p>
         )}
       </Show>

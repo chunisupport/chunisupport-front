@@ -333,6 +333,24 @@
   }
 }
 
+@keyframes honor-title-rotate {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  16%,
+  84% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
 @layer utilities {
   .animate-marquee {
     animation: marquee 5s linear infinite;
@@ -360,6 +378,10 @@
       rgb(255 255 255 / 50%) 47%,
       transparent 52%
     );
+  }
+
+  .user-honor-title--rotating {
+    animation: honor-title-rotate 4s ease-in-out both;
   }
 
   .user-honor-title--normal {
