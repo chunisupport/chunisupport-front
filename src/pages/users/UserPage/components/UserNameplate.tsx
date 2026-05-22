@@ -106,7 +106,6 @@ export const UserNameplate: Component<Props> = (props) => {
 
   return (
     <div class="mb-2 mx-auto w-[min(420px,calc(100%-2rem))] px-3 py-3 border border-border shadow-sm rounded-md ">
-      {/* TODO: 称号の背景画像を表示 */}
       <Show when={activeHonor()} keyed>
         {(honor) => (
           <p
