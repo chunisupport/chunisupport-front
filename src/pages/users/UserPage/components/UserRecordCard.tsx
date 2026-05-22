@@ -1,12 +1,12 @@
 import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createSignal, onMount, Show } from 'solid-js'
+import { createSignal, onMount } from 'solid-js'
 import type { PlayerRecordDTO } from '../../../../types/api'
 
 type Props = {
   record: PlayerRecordDTO
   index: number
-  showCandidateDivider?: boolean
+  useDefaultIndexColor?: boolean
 }
 
 import {
@@ -36,10 +36,17 @@ const idxColor = (index: number) => {
   }
 }
 
+/**
+ * ユーザーのプレイレコードをカード形式で表示する。
+ *
+ * @param props - 表示対象のレコードと一覧内の0始まりインデックス。
+ * @returns 楽曲詳細へ遷移できるレコードカード。
+ */
 export const UserRecordCard: Component<Props> = (props) => {
   const [shouldAnimate, setShouldAnimate] = createSignal(false)
   let titleRef: HTMLParagraphElement | undefined
   const scoreRank = () => getScoreRank(props.record.score)
+  const indexColor = () => (props.useDefaultIndexColor ? idxColor(0) : idxColor(props.index + 1))
 
   onMount(() => {
     if (titleRef && titleRef.scrollWidth > titleRef.clientWidth) {
@@ -54,9 +61,6 @@ export const UserRecordCard: Component<Props> = (props) => {
 
   return (
     <div class="flex flex-col gap-2">
-      <Show when={props.showCandidateDivider}>
-        <div class="mt-4 border-t-2 border-border-strong pt-4" aria-hidden="true" />
-      </Show>
       <A
         href={`/songs/${encodeURIComponent(props.record.id)}?diff=${encodeURIComponent(difficultyToQueryValue(props.record.difficulty))}`}
         class="group block text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
@@ -66,7 +70,7 @@ export const UserRecordCard: Component<Props> = (props) => {
         >
           <div class="flex gap-3 items-center">
             <div
-              class={`w-8 h-8 flex items-center justify-center rounded-full ${idxColor(props.index + 1)} font-oswald font-bold text-lg`}
+              class={`w-8 h-8 flex items-center justify-center rounded-full ${indexColor()} font-oswald font-bold text-lg`}
             >
               {props.index + 1}
             </div>

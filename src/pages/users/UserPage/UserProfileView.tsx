@@ -30,6 +30,8 @@ type Props = {
 
 const statsPageButtonClass =
   'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-sm text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2'
+const BEST_CANDIDATE_HEADING = 'ベスト枠候補'
+const NEW_CANDIDATE_HEADING = '新曲枠候補'
 
 /**
  * ユーザー統計ページへ遷移するリンクボタンを表示する。
@@ -44,20 +46,25 @@ const StatsPageLink: Component<{ href: string }> = (props) => (
   </A>
 )
 
-const RecordList: Component<{ records: PlayerRecordDTO[]; candidates?: PlayerRecordDTO[] }> = (
-  props
-) => (
+/**
+ * レーティング対象レコードと候補レコードを一覧表示する。
+ *
+ * @param props - レーティング対象レコード、候補レコード、候補見出し。
+ * @returns レコードカードの一覧。
+ */
+const RecordList: Component<{
+  records: PlayerRecordDTO[]
+  candidates?: PlayerRecordDTO[]
+  candidateHeading: string
+}> = (props) => (
   <div class="mx-4 flex flex-col gap-2">
     <For each={props.records}>{(record, i) => <UserRecordCard record={record} index={i()} />}</For>
     <Show when={(props.candidates?.length ?? 0) > 0}>
+      <h3 class="mt-4 border-t-2 border-border-strong pt-4 text-base font-bold text-text">
+        {props.candidateHeading}
+      </h3>
       <For each={props.candidates}>
-        {(record, i) => (
-          <UserRecordCard
-            record={record}
-            index={props.records.length + i()}
-            showCandidateDivider={i() === 0}
-          />
-        )}
+        {(record, i) => <UserRecordCard record={record} index={i()} useDefaultIndexColor />}
       </For>
     </Show>
   </div>
@@ -204,10 +211,18 @@ export const UserProfileView: Component<Props> = (props) => {
             </div>
 
             <Tabs.Content value="best">
-              <RecordList records={bestRecords()} candidates={bestCandidateRecords()} />
+              <RecordList
+                records={bestRecords()}
+                candidates={bestCandidateRecords()}
+                candidateHeading={BEST_CANDIDATE_HEADING}
+              />
             </Tabs.Content>
             <Tabs.Content value="new">
-              <RecordList records={newRecords()} candidates={newCandidateRecords()} />
+              <RecordList
+                records={newRecords()}
+                candidates={newCandidateRecords()}
+                candidateHeading={NEW_CANDIDATE_HEADING}
+              />
             </Tabs.Content>
           </Tabs.Root>
         </Tabs.Content>
