@@ -322,7 +322,6 @@
 }
 
 @keyframes marquee {
-
   0%,
   25% {
     transform: translateX(0%);
@@ -342,73 +341,166 @@
 
 @layer components {
   .user-honor-title {
-    background: var(--honor-background, var(--color-honor-title-normal-bg));
-    color: var(--color-honor-title-normal-text);
+    box-sizing: border-box;
+    display: block;
+    width: min(394px, 100%);
+    margin: 0 0 12px;
+    padding: 4px;
+    border-radius: 6px;
+    background: var(--honor-background, #d4d4d4);
+    color: #000;
+    font-family: "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+    font-size: 14px;
     font-weight: bold;
+    line-height: 20px;
+    text-align: center;
+    --honor-shine: linear-gradient(
+      to bottom,
+      rgb(255 255 255 / 0%),
+      rgb(255 255 255 / 50%) 47%,
+      transparent 52%
+    );
   }
 
   .user-honor-title--normal {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background: var(--honor-shine), #d4d4d4;
   }
 
   .user-honor-title--copper {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background: var(--honor-shine), #df943e;
   }
 
   .user-honor-title--silver {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background: var(--honor-shine), #b4d0e7;
   }
 
   .user-honor-title--gold {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background: var(--honor-shine), #e4c438;
   }
 
   .user-honor-title--platina {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background: var(--honor-shine), #fdf5a7;
   }
 
   .user-honor-title--rainbow {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(45deg, #aeefff, #b7ceff, #d0b5ff, #ffb8e8, #ffc4ad, #fff0a8, #b9eeb7);
   }
 
   .user-honor-title--staff {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background:
+      linear-gradient(
+        to bottom,
+        transparent 0% 47%,
+        rgba(103, 116, 177, 0.25) 52%,
+        transparent 100%
+      ),
+      linear-gradient(
+        110deg,
+        #5f7cfc 0 30px,
+        transparent 30px 35px,
+        #4869fa 35px 45px,
+        transparent 45px 100%
+      ),
+      linear-gradient(
+        290deg,
+        #5f7cfc 0 30px,
+        transparent 30px 35px,
+        #4869fa 35px 45px,
+        transparent 45px 100%
+      ),
+      #ebebeb;
   }
 
   .user-honor-title--ongeki {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(150deg, #f799d3 0 30px, #66c7ee 30px 40px, transparent 40px 100%),
+      linear-gradient(330deg, #f799d3 0 30px, #66c7ee 30px 40px, transparent 40px 100%), #f8f8f8;
   }
 
   .user-honor-title--maimai {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(
+        150deg,
+        #ff4646 0 10px,
+        #ffa02d 10px 20px,
+        #ffdc00 20px 30px,
+        #9ac948 30px 40px,
+        transparent 40px 100%
+      ),
+      linear-gradient(
+        330deg,
+        #ff4646 0 10px,
+        #ffa02d 10px 20px,
+        #ffdc00 20px 30px,
+        #9ac948 30px 40px,
+        transparent 40px 100%
+      ),
+      #f8f8f8;
   }
 
   .user-honor-title--sp {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background: var(--honor-shine), #a7fdc1;
   }
 
   .user-honor-title--phoenix-g {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(150deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%),
+      linear-gradient(330deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%), #e4c438;
   }
 
   .user-honor-title--phoenix-p {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(150deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%),
+      linear-gradient(330deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%), #fdf5a7;
   }
 
   .user-honor-title--phoenix-r {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(150deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%),
+      linear-gradient(330deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%),
+      linear-gradient(45deg, #aeefff, #b7ceff, #d0b5ff, #ffb8e8, #ffc4ad, #fff0a8, #b9eeb7);
   }
 
   .user-honor-title--expert {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background: var(--honor-shine), #e4c438;
   }
 
   .user-honor-title--master {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background: var(--honor-shine), #fdf5a7;
   }
 
   .user-honor-title--ultima {
-    --honor-background: var(--color-honor-title-normal-bg);
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(
+        135deg,
+        #333 0 15px,
+        #ee6666 15px 20px,
+        #863a3a 20px 30px,
+        #ee6666 30px 35px,
+        #863a3a 35px 38px,
+        #ee6666 38px 45px,
+        transparent 45px 100%
+      ),
+      linear-gradient(
+        315deg,
+        #333 0 15px,
+        #863a3a 15px 25px,
+        #ee6666 25px 27px,
+        #863a3a 27px 30px,
+        #ee6666 30px 32px,
+        #863a3a 32px 35px,
+        #ee6666 35px 45px,
+        transparent 45px 100%
+      ),
+      #fdf5a7;
   }
 
   .goal-card-progress-secondary {
