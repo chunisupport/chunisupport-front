@@ -16,6 +16,11 @@ import type {
 import { sortMasterItemsBySortOrder } from '../utils/masterData'
 import { fetchWithAuth } from './fetchWithAuth'
 
+type VersionsResponse = { versions: VersionDTO[] }
+
+let cachedVersionsResponse: VersionsResponse | undefined
+let versionsResponsePromise: Promise<VersionsResponse> | undefined
+
 export const fetchAllSongs = async (): Promise<{ songs: SongDTO[] }> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs`)
 
@@ -71,10 +76,36 @@ export const fetchSongStats = async (
   return response.json()
 }
 
-export const fetchVersions = async (): Promise<{ versions: VersionDTO[] }> => {
+/**
+ * API からバージョン一覧を取得する。
+ *
+ * @returns バージョン一覧レスポンス。
+ */
+const fetchVersionsFromApi = async (): Promise<VersionsResponse> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/master/versions`)
 
   return response.json()
+}
+
+/**
+ * セッション中にバージョン一覧を一度だけ取得し、メモリ上に保持する。
+ *
+ * @returns キャッシュ済み、または API から取得したバージョン一覧レスポンス。
+ */
+export const fetchVersions = async (): Promise<VersionsResponse> => {
+  if (cachedVersionsResponse) {
+    return cachedVersionsResponse
+  }
+
+  versionsResponsePromise ??= fetchVersionsFromApi()
+
+  try {
+    cachedVersionsResponse = await versionsResponsePromise
+    return cachedVersionsResponse
+  } catch (error) {
+    versionsResponsePromise = undefined
+    throw error
+  }
 }
 
 export const updateSongs = async (requests: UpdateSongRequestDTO[]): Promise<void> => {
