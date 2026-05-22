@@ -46,17 +46,17 @@ const Login = () => {
         ) : (
           <>
             <div class="text-center mb-6">
-              <p class="text-gray-600 mb-2">ChuniSupport</p>
+              <p class="text-text-muted mb-2">ChuniSupport</p>
               <h1 class="text-2xl font-semibold">ログイン</h1>
             </div>
 
             <div class="mb-6">
-              {errorMessage() && <p class="text-sm text-red-600 mb-4">{errorMessage()}</p>}
+              {errorMessage() && <p class="text-sm text-danger mb-4">{errorMessage()}</p>}
               <button
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={isSubmitting()}
-                class="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                class="flex w-full items-center justify-center gap-2 rounded-md border border-border-strong bg-surface px-4 py-2 text-sm font-semibold text-text-muted shadow-sm hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -86,14 +86,14 @@ const Login = () => {
             </div>
 
             <div class="text-center">
-              <p class="mb-5 text-sm text-gray-600">
+              <p class="mb-5 text-sm text-text-muted">
                 新規アカウント作成は
-                <A href="/register" class="text-primary-500 underline ml-1">
+                <A href="/register" class="text-link underline ml-1">
                   こちら
                 </A>
               </p>
-              <p class="text-sm text-gray-600">
-                <A href="/" class="text-primary-500 underline ml-1">
+              <p class="text-sm text-text-muted">
+                <A href="/" class="text-link underline ml-1">
                   トップページへ戻る
                 </A>
               </p>

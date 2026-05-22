@@ -47,7 +47,7 @@ const RequireAuth = (props: RequireAuthProps) => {
       <Match when={authStatus() === 'authenticated'}>{props.children}</Match>
 
       <Match when={authStatus() === 'error'}>
-        <div class="mx-auto w-full max-w-3xl p-6 text-sm text-gray-600">
+        <div class="mx-auto w-full max-w-3xl p-6 text-sm text-text-muted">
           認証情報の取得に失敗しました。ページを再読み込みしてください。
         </div>
       </Match>

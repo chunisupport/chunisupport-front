@@ -167,15 +167,15 @@ const WorldsendRecordTable = (props: {
       <Show
         when={props.records.length > 0}
         fallback={
-          <p class="py-6 text-center text-gray-400">WORLD'S END のレコードはありません。</p>
+          <p class="py-6 text-center text-text-subtle">WORLD'S END のレコードはありません。</p>
         }
       >
         <div
           ref={tableContainerRef}
-          class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-gray-200"
+          class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-border"
         >
           <div class="w-fit min-w-full">
-            <div class="border-b border-gray-200 bg-gray-50">
+            <div class="border-b border-border bg-surface-muted">
               <div
                 class="grid px-2 text-xs font-semibold"
                 style={{ 'grid-template-columns': worldsendGridColumns() }}
@@ -208,7 +208,7 @@ const WorldsendRecordTable = (props: {
                     <Show when={record()} keyed>
                       {(currentRecord) => (
                         <div
-                          class={`absolute left-0 top-0 grid w-full border-b border-gray-200 px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
+                          class={`absolute left-0 top-0 grid w-full border-b border-border px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
                           style={{
                             'grid-template-columns': worldsendGridColumns(),
                             transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
@@ -287,7 +287,7 @@ const WorldsendRecord = (props: Props) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
+      <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
         <Show when={worldsendSongs()} fallback={<Loading />}>
           <div class="mx-2 text-sm">
             <FilterToolbar
@@ -298,7 +298,7 @@ const WorldsendRecord = (props: Props) => {
               filterButtonDisabled
             />
 
-            <p class="mb-2 text-sm text-gray-600">
+            <p class="mb-2 text-sm text-text-muted">
               全 {recordsWithSongMeta().length} 件中 {filteredRecords().length} 件を表示
             </p>
 

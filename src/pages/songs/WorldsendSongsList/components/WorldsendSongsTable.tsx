@@ -15,9 +15,9 @@ import type { WorldsendSongSortKey } from '../utils/sorting'
 const ROW_HEIGHT = 37
 const GRID_TEMPLATE_COLUMNS =
   'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 5.2rem 3.75rem 4.8rem 4.8rem'
-const HEADER_CELL_CLASS = 'font-semibold whitespace-nowrap bg-gray-50'
+const HEADER_CELL_CLASS = 'font-semibold whitespace-nowrap bg-surface-muted'
 const COMMON_CELL_STYLE = 'flex items-center px-3 whitespace-nowrap'
-const HEADER_BUTTON_CLASS = `${COMMON_CELL_STYLE} min-h-[${ROW_HEIGHT}px] w-full py-2 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset`
+const HEADER_BUTTON_CLASS = `${COMMON_CELL_STYLE} min-h-[${ROW_HEIGHT}px] w-full py-2 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset`
 const CELL_CLASS = `${COMMON_CELL_STYLE} h-[${ROW_HEIGHT}px]`
 
 type Props = {
@@ -79,7 +79,7 @@ const WorldsendSongsTable = (props: Props) => {
   return (
     <div
       ref={virtualizedTable.setTableContainerRef}
-      class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200 bg-white"
+      class="overflow-x-auto overflow-y-hidden rounded-md border border-border bg-surface"
     >
       <table class="block min-w-[45rem] text-sm" aria-rowcount={props.songs.length}>
         <thead class="block">
@@ -145,7 +145,7 @@ const WorldsendSongsTable = (props: Props) => {
                     const chart = currentSong.charts?.WORLDSEND
                     return (
                       <tr
-                        class="absolute left-0 top-0 grid min-w-full border-t border-gray-100"
+                        class="absolute left-0 top-0 grid min-w-full border-t border-border"
                         style={{
                           'grid-template-columns': GRID_TEMPLATE_COLUMNS,
                           transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,

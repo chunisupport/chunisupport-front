@@ -9,8 +9,8 @@ export type RatingDisplay = {
   className: string
 }
 
-const UNKNOWN_STYLE = 'text-red-600 italic'
-const NORMAL_STYLE = 'text-gray-900'
+const UNKNOWN_STYLE = 'text-danger italic'
+const NORMAL_STYLE = 'text-text'
 
 export const getConstDisplay = (value: number, isConstUnknown: boolean): ConstDisplay => {
   const valueText = value.toFixed(1)

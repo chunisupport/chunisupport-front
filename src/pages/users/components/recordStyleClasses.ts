@@ -13,72 +13,72 @@ export type FilterStatsClearLamp = NonNullable<SharedClearLamp> | '未プレイ'
 
 /** レコードのスコアランク表示で使う文字色クラス。 */
 export const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
-  'SSS+': 'text-green-500',
-  SSS: 'text-yellow-500',
-  'SS+': 'text-orange-500',
-  SS: 'text-orange-500',
-  'S+': 'text-orange-500',
-  S: 'text-orange-500',
-  AAA: 'text-red-500',
-  AA: 'text-red-500',
-  A: 'text-red-500',
-  BBB: 'text-sky-500',
-  BB: 'text-sky-500',
-  B: 'text-sky-500',
-  C: 'text-amber-700',
-  D: 'text-gray-500',
+  'SSS+': 'text-score-rank-sssp-text',
+  SSS: 'text-score-rank-sss-text',
+  'SS+': 'text-score-rank-ss-text',
+  SS: 'text-score-rank-ss-text',
+  'S+': 'text-score-rank-ss-text',
+  S: 'text-score-rank-ss-text',
+  AAA: 'text-score-rank-a-text',
+  AA: 'text-score-rank-a-text',
+  A: 'text-score-rank-a-text',
+  BBB: 'text-score-rank-b-text',
+  BB: 'text-score-rank-b-text',
+  B: 'text-score-rank-b-text',
+  C: 'text-score-rank-c-text',
+  D: 'text-score-rank-d-text',
 }
 
 /** レコードのスコアランク文字色に合わせたフィルター統計グラフ用背景色クラス。 */
 export const SCORE_RANK_BAR_CLASS: Record<FilterStatsRank, string> = {
-  'SSS+': 'bg-green-500',
-  SSS: 'bg-yellow-500',
-  'SS+': 'bg-orange-500',
-  SS: 'bg-orange-500',
-  'S+': 'bg-orange-500',
-  S: 'bg-orange-500',
-  OTHERS: 'bg-gray-500',
-  未プレイ: 'bg-gray-100',
+  'SSS+': 'bg-score-rank-sssp-bg',
+  SSS: 'bg-score-rank-sss-bg',
+  'SS+': 'bg-score-rank-ss-bg',
+  SS: 'bg-score-rank-ss-bg',
+  'S+': 'bg-score-rank-ss-bg',
+  S: 'bg-score-rank-ss-bg',
+  OTHERS: 'bg-score-rank-d-bg',
+  未プレイ: 'bg-surface-hover',
 }
 
 /** レコードのコンボランプバッジで使う背景色クラス。 */
 export const COMBO_LAMP_BADGE_BACKGROUND_CLASS: Record<NonNullable<SharedComboLamp>, string> = {
-  'FULL COMBO': 'bg-orange-200',
-  'ALL JUSTICE': 'bg-yellow-200',
+  'FULL COMBO': 'bg-lamp-full-combo-bg',
+  'ALL JUSTICE': 'bg-lamp-all-justice-bg',
 }
 
 /** レコードのコンボランプバッジで使う文字色クラス。 */
 export const COMBO_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedComboLamp>, string> = {
-  'FULL COMBO': 'text-orange-900',
-  'ALL JUSTICE': 'text-yellow-900',
+  'FULL COMBO': 'text-lamp-full-combo-text',
+  'ALL JUSTICE': 'text-lamp-all-justice-text',
 }
 
 /** レコードのハードランプバッジで使う背景色クラス。 */
 export const HARD_LAMP_BADGE_BACKGROUND_CLASS: Record<NonNullable<SharedClearLamp>, string> = {
-  CLEAR: 'bg-gray-200',
-  HARD: 'bg-red-200',
-  BRAVE: 'bg-orange-200',
-  ABSOLUTE: 'bg-yellow-200',
-  CATASTROPHY: 'bg-green-200',
-  FAILED: 'bg-gray-100',
+  CLEAR: 'bg-lamp-clear-bg',
+  HARD: 'bg-lamp-hard-bg',
+  BRAVE: 'bg-lamp-full-combo-bg',
+  ABSOLUTE: 'bg-lamp-all-justice-bg',
+  CATASTROPHY: 'bg-lamp-catastrophy-bg',
+  FAILED: 'bg-lamp-failed-bg',
 }
 
 /** レコードのハードランプバッジで使う文字色クラス。 */
 export const HARD_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedClearLamp>, string> = {
-  CLEAR: 'text-gray-900',
-  HARD: 'text-red-900',
-  BRAVE: 'text-orange-900',
-  ABSOLUTE: 'text-yellow-900',
-  CATASTROPHY: 'text-green-900',
-  FAILED: 'text-gray-300',
+  CLEAR: 'text-lamp-clear-text',
+  HARD: 'text-lamp-hard-text',
+  BRAVE: 'text-lamp-full-combo-text',
+  ABSOLUTE: 'text-lamp-all-justice-text',
+  CATASTROPHY: 'text-lamp-catastrophy-text',
+  FAILED: 'text-lamp-failed-text',
 }
 
 /** レコードのコンボランプバッジ色に合わせたフィルター統計グラフ用背景色クラス。 */
 export const COMBO_LAMP_BAR_CLASS: Record<FilterStatsComboLamp, string> = {
   'ALL JUSTICE': COMBO_LAMP_BADGE_BACKGROUND_CLASS['ALL JUSTICE'],
   'FULL COMBO': COMBO_LAMP_BADGE_BACKGROUND_CLASS['FULL COMBO'],
-  なし: 'bg-gray-100',
-  未プレイ: 'bg-gray-100',
+  なし: 'bg-lamp-none-bg',
+  未プレイ: 'bg-lamp-none-bg',
 }
 
 /** レコードのハードランプバッジ色に合わせたフィルター統計グラフ用背景色クラス。 */
@@ -89,5 +89,5 @@ export const HARD_LAMP_BAR_CLASS: Record<FilterStatsClearLamp, string> = {
   HARD: HARD_LAMP_BADGE_BACKGROUND_CLASS.HARD,
   CLEAR: HARD_LAMP_BADGE_BACKGROUND_CLASS.CLEAR,
   FAILED: HARD_LAMP_BADGE_BACKGROUND_CLASS.FAILED,
-  未プレイ: 'bg-gray-100',
+  未プレイ: 'bg-lamp-none-bg',
 }

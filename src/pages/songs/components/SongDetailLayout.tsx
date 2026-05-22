@@ -17,13 +17,13 @@ const SongDetailLayout = <TSong,>(props: Props<TSong>) => {
   const viewState = () => getSongDetailViewState(Boolean(props.song), props.isSongLoading)
 
   return (
-    <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
+    <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
       <Show
         when={viewState() === 'content' && props.song}
         fallback={
           <Show
             when={viewState() === 'loading'}
-            fallback={<p class="text-red-500">ERROR: {props.songErrorMessage}</p>}
+            fallback={<p class="text-danger">ERROR: {props.songErrorMessage}</p>}
           >
             <Loading />
           </Show>
@@ -35,7 +35,7 @@ const SongDetailLayout = <TSong,>(props: Props<TSong>) => {
               <button
                 type="button"
                 onClick={props.onBack}
-                class="cursor-pointer border-0 bg-transparent p-0 text-primary-600 hover:underline"
+                class="cursor-pointer border-0 bg-transparent p-0 text-action-primary hover:underline"
               >
                 ← 戻る
               </button>
@@ -43,7 +43,7 @@ const SongDetailLayout = <TSong,>(props: Props<TSong>) => {
 
             <div class="space-y-1">
               <h1 class="mb-1 font-sans text-2xl font-semibold">{props.title}</h1>
-              <div class="font-sans text-gray-600">{props.artist}</div>
+              <div class="font-sans text-text-muted">{props.artist}</div>
             </div>
 
             {props.renderInfoCard(songData())}

@@ -20,16 +20,16 @@ const AdminPage = () => {
   return (
     <div class="mx-auto w-full max-w-4xl p-6">
       <h1 class="text-2xl font-semibold">管理ページ</h1>
-      <p class="mt-2 text-sm text-gray-600">管理者向けのメニューです。</p>
+      <p class="mt-2 text-sm text-text-muted">管理者向けのメニューです。</p>
 
       <div class="mt-6 grid gap-4 sm:grid-cols-2">
         {links.map((link) => (
           <A
             href={link.href}
-            class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+            class="rounded-lg border border-border bg-surface p-4 shadow-sm transition hover:border-info-border hover:bg-info-bg"
           >
-            <h2 class="text-lg font-semibold text-gray-900">{link.title}</h2>
-            <p class="mt-1 text-sm text-gray-600">{link.description}</p>
+            <h2 class="text-lg font-semibold text-text">{link.title}</h2>
+            <p class="mt-1 text-sm text-text-muted">{link.description}</p>
           </A>
         ))}
       </div>

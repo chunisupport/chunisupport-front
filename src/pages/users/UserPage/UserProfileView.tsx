@@ -29,7 +29,7 @@ type Props = {
 }
 
 const statsPageButtonClass =
-  'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 text-sm text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2'
+  'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-sm text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2'
 
 /**
  * ユーザー統計ページへ遷移するリンクボタンを表示する。
@@ -94,9 +94,9 @@ export const UserProfileView: Component<Props> = (props) => {
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
   const tabTriggerClass =
-    'rounded-t px-3 py-1 text-sm data-selected:border-b-2 data-selected:border-primary-500 data-selected:bg-white'
+    'rounded-t px-3 py-1 text-sm data-selected:border-b-2 data-selected:border-focus-ring data-selected:bg-bg'
   const ratingTabTriggerClass =
-    'rounded-lg p-2 text-sm font-medium text-gray-600 transition-colors data-selected:bg-primary-600 data-selected:text-white data-selected:shadow-sm'
+    'rounded-lg p-2 text-sm font-medium text-text-muted transition-colors data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm'
   const forceMountedTabContentClass = 'hidden data-selected:block'
 
   const scrollToRecordList = () => {
@@ -176,7 +176,7 @@ export const UserProfileView: Component<Props> = (props) => {
       </div>
 
       <Tabs.Root value={selectedPageTab()} class="mb-4" onChange={handlePageTabChange}>
-        <Tabs.List class="sticky top-0 z-10 bg-white flex gap-2 mb-4 px-4 pt-2 border-b border-gray-300">
+        <Tabs.List class="sticky top-0 z-10 bg-bg flex gap-2 mb-4 px-4 pt-2 border-b border-border-strong">
           <Tabs.Trigger value="rating" class={tabTriggerClass}>
             レーティング
           </Tabs.Trigger>
@@ -192,7 +192,7 @@ export const UserProfileView: Component<Props> = (props) => {
         <Tabs.Content value="rating" forceMount class={forceMountedTabContentClass}>
           <Tabs.Root value={selectedRatingTab()} onChange={handleRatingTabChange}>
             <div class="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3">
-              <Tabs.List class="inline-flex gap-1 rounded-xl bg-gray-100 p-1">
+              <Tabs.List class="inline-flex gap-1 rounded-xl bg-surface-hover p-1">
                 <Tabs.Trigger value="best" class={ratingTabTriggerClass}>
                   ベスト枠
                 </Tabs.Trigger>
@@ -215,7 +215,7 @@ export const UserProfileView: Component<Props> = (props) => {
         <Tabs.Content value="records" forceMount class={forceMountedTabContentClass}>
           <Tabs.Root value={selectedRecordTab()} onChange={handleRecordTabChange}>
             <div class="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3">
-              <Tabs.List class="inline-flex gap-1 rounded-xl bg-gray-100 p-1">
+              <Tabs.List class="inline-flex gap-1 rounded-xl bg-surface-hover p-1">
                 <Tabs.Trigger value="standard" class={ratingTabTriggerClass}>
                   STANDARD
                 </Tabs.Trigger>

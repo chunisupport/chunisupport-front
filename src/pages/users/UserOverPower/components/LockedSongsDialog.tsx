@@ -239,24 +239,24 @@ const LockedSongsDialog: Component<Props> = (props) => {
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-black/30" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-white p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
+        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
           <div class="mb-4 flex items-start justify-between gap-3">
             <div>
               <Dialog.Title class="text-lg font-bold">未解禁楽曲設定</Dialog.Title>
-              <Dialog.Description class="mt-1 text-sm text-gray-600">
+              <Dialog.Description class="mt-1 text-sm text-text-muted">
                 チェックした曲・譜面はOVER POWER計算対象から除外されます。
               </Dialog.Description>
             </div>
-            <Dialog.CloseButton class="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 shrink-0">
+            <Dialog.CloseButton class="rounded border border-border-strong px-3 py-1 text-sm hover:bg-surface-muted shrink-0">
               閉じる
             </Dialog.CloseButton>
           </div>
 
           <div class="mb-3 flex items-center gap-2">
             <TextField class="flex-1">
-              <div class="flex items-center gap-2 rounded border border-gray-300 px-2 focus-within:border-primary-500">
-                <Search class="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
+              <div class="flex items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
+                <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
                 <TextField.Input
                   type="search"
                   class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
@@ -269,10 +269,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </TextField>
             <button
               type="button"
-              class={`flex h-[38px] min-w-[38px] items-center justify-center gap-1.5 rounded border px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+              class={`flex h-[38px] min-w-[38px] items-center justify-center gap-1.5 rounded border px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 activeFilterCount() > 0
-                  ? 'border-primary-600 bg-primary-600 text-white hover:bg-primary-700'
-                  : 'border-gray-500 text-gray-700 hover:bg-gray-100'
+                  ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
+                  : 'border-border-strong text-text-muted hover:bg-surface-hover'
               }`}
               aria-label={filterButtonLabel()}
               aria-pressed={activeFilterCount() > 0}
@@ -286,10 +286,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </button>
             <button
               type="button"
-              class={`flex h-[38px] w-[38px] items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+              class={`flex h-[38px] w-[38px] items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 showLockedOnly()
-                  ? 'border-primary-600 bg-primary-600 text-white hover:bg-primary-700'
-                  : 'border-gray-500 text-gray-700 hover:bg-gray-100'
+                  ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
+                  : 'border-border-strong text-text-muted hover:bg-surface-hover'
               }`}
               aria-label="チェック済み楽曲のみ表示"
               aria-pressed={showLockedOnly()}
@@ -300,19 +300,19 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </button>
           </div>
 
-          <div class="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+          <div class="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-text-subtle">
             <span>
               {props.lockedSongs.length}件設定中 / {filteredSongListItems().length}件表示
             </span>
             <span>通常未解禁は曲単位、ULTIMA未解禁はULTIMA譜面のみ除外</span>
           </div>
 
-          <div class="min-h-0 flex-1 overflow-y-auto rounded border border-gray-200">
+          <div class="min-h-0 flex-1 overflow-y-auto rounded border border-border">
             <Show
               when={isListReady()}
               fallback={
                 <div
-                  class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-sm text-gray-500"
+                  class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-sm text-text-subtle"
                   role="status"
                   aria-live="polite"
                   aria-busy="true"
@@ -325,13 +325,13 @@ const LockedSongsDialog: Component<Props> = (props) => {
               <Show
                 when={filteredSongListItems().length > 0}
                 fallback={
-                  <div class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-sm text-gray-500">
+                  <div class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-sm text-text-subtle">
                     <CircleSlash2 class="h-6 w-6" aria-hidden="true" />
                     <p>該当する曲がありません</p>
                   </div>
                 }
               >
-                <ul class="divide-y divide-gray-200">
+                <ul class="divide-y divide-border">
                   <For each={filteredSongListItems()}>
                     {(item) => {
                       const selected = () => isLocked(item.song.id, item.isUltima)
@@ -340,10 +340,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
                         <li>
                           <button
                             type="button"
-                            class={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-60 ${
+                            class={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60 ${
                               selected()
-                                ? 'bg-green-600 text-white hover:bg-green-700'
-                                : 'bg-white text-gray-900 hover:bg-gray-50'
+                                ? 'bg-success text-text-inverse hover:bg-success'
+                                : 'bg-surface text-text hover:bg-surface-muted'
                             }`}
                             aria-pressed={selected()}
                             aria-label={`${item.song.title} ${item.isUltima ? 'ULTIMA' : '通常'}の未解禁設定を切り替え`}
@@ -361,8 +361,8 @@ const LockedSongsDialog: Component<Props> = (props) => {
                                   <span
                                     class={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${
                                       selected()
-                                        ? 'bg-white/20 text-white'
-                                        : 'bg-red-50 text-red-700'
+                                        ? 'bg-surface/20 text-text-inverse'
+                                        : 'bg-danger-bg text-danger'
                                     }`}
                                   >
                                     ULTIMA
@@ -371,7 +371,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                               </div>
                               <p
                                 class={`truncate font-sans text-xs ${
-                                  selected() ? 'text-white/80' : 'text-gray-500'
+                                  selected() ? 'text-text-inverse/80' : 'text-text-subtle'
                                 }`}
                               >
                                 {item.song.artist}
@@ -379,7 +379,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                             </div>
                             <span
                               class={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                                selected() ? 'bg-white/20 opacity-100' : 'opacity-0'
+                                selected() ? 'bg-surface/20 opacity-100' : 'opacity-0'
                               }`}
                               aria-hidden="true"
                             >
@@ -396,18 +396,18 @@ const LockedSongsDialog: Component<Props> = (props) => {
           </div>
 
           <Show when={saveError()}>
-            {(message) => <p class="mt-3 text-sm text-red-600">{message()}</p>}
+            {(message) => <p class="mt-3 text-sm text-danger">{message()}</p>}
           </Show>
 
           <Dialog open={filterDialogOpen()} onOpenChange={setFilterDialogOpen}>
             <Dialog.Portal>
-              <Dialog.Overlay class="fixed inset-0 z-60 bg-black/30" />
-              <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex max-h-[80dvh] -translate-y-1/2 flex-col rounded-lg bg-white p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
+              <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
+              <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex max-h-[80dvh] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
                 <div class="mb-4 flex items-start justify-between gap-3">
                   <div>
                     <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
                   </div>
-                  <Dialog.CloseButton class="shrink-0 rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50">
+                  <Dialog.CloseButton class="shrink-0 rounded border border-border-strong px-3 py-1 text-sm hover:bg-surface-muted">
                     閉じる
                   </Dialog.CloseButton>
                 </div>
@@ -418,7 +418,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                       <h3 class="font-bold">ジャンル</h3>
                       <button
                         type="button"
-                        class="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                        class="rounded border border-border-strong px-2 py-1 text-xs text-text-muted hover:bg-surface-muted"
                         onClick={() => setFilters((prev) => ({ ...prev, genres: [] }))}
                       >
                         解除
@@ -435,7 +435,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                               class="flex items-center gap-2"
                             >
                               <Checkbox.Input id={id} />
-                              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white">
+                              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
                                 <Checkbox.Indicator>
                                   <Check class="h-4 w-4" />
                                 </Checkbox.Indicator>
@@ -455,7 +455,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                       <h3 class="font-bold">バージョン</h3>
                       <button
                         type="button"
-                        class="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                        class="rounded border border-border-strong px-2 py-1 text-xs text-text-muted hover:bg-surface-muted"
                         onClick={() => setFilters((prev) => ({ ...prev, versions: [] }))}
                       >
                         解除
@@ -472,7 +472,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                               class="flex items-center gap-2"
                             >
                               <Checkbox.Input id={id} />
-                              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white">
+                              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
                                 <Checkbox.Indicator>
                                   <Check class="h-4 w-4" />
                                 </Checkbox.Indicator>
@@ -491,12 +491,12 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 <div class="mt-4 flex justify-between gap-2">
                   <button
                     type="button"
-                    class="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    class="rounded border border-border-strong px-3 py-2 text-sm text-text-muted hover:bg-surface-muted"
                     onClick={() => setFilters({ genres: [], versions: [] })}
                   >
                     すべて解除
                   </button>
-                  <Dialog.CloseButton class="rounded bg-primary-600 px-3 py-2 text-sm text-white hover:bg-primary-700">
+                  <Dialog.CloseButton class="rounded bg-action-primary px-3 py-2 text-sm text-text-inverse hover:bg-action-primary-hover">
                     適用
                   </Dialog.CloseButton>
                 </div>
@@ -507,7 +507,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
           <div class="mt-4 flex justify-end gap-2">
             <button
               type="button"
-              class="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              class="rounded border border-border-strong px-3 py-2 text-sm text-text-muted hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
               onClick={() => props.onOpenChange(false)}
               disabled={isSaving()}
             >
@@ -515,7 +515,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </button>
             <button
               type="button"
-              class="inline-flex items-center gap-2 rounded bg-primary-600 px-3 py-2 text-sm text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+              class="inline-flex items-center gap-2 rounded bg-action-primary px-3 py-2 text-sm text-text-inverse hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
               onClick={handleSave}
               disabled={!hasChanges() || isSaving()}
             >

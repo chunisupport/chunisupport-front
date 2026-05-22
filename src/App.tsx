@@ -64,21 +64,21 @@ const LandingPage = () => {
         <Show
           when={homeView().type === 'authenticated' ? homeView() : null}
           fallback={
-            <section class="rounded-lg border border-gray-200 bg-white p-6">
+            <section class="rounded-lg border border-border bg-surface p-6">
               <h1 class="mb-2 text-2xl font-semibold">ChuniSupport</h1>
-              <p class="mb-4 text-sm text-gray-700">
+              <p class="mb-4 text-sm text-text-muted">
                 ログインまたは新規登録して、プレイデータを管理しましょう。
               </p>
               <div class="flex flex-wrap gap-3">
                 <A
                   href="/login"
-                  class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                  class="rounded-md border border-border-strong px-4 py-2 text-sm font-medium hover:bg-surface-muted"
                 >
                   ログイン
                 </A>
                 <A
                   href="/register"
-                  class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+                  class="rounded-md bg-action-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-action-primary-hover"
                 >
                   新規登録
                 </A>
@@ -87,14 +87,14 @@ const LandingPage = () => {
           }
         >
           {(view) => (
-            <section class="rounded-lg border border-gray-200 bg-white p-6">
+            <section class="rounded-lg border border-border bg-surface p-6">
               <h1 class="mb-4 text-2xl font-semibold">ようこそ、{view().username}さん</h1>
-              <div class="rounded-md border border-gray-200 bg-gray-50 p-4">
-                <p class="text-sm text-gray-600">プロフィール</p>
-                <p class="mt-1 text-lg font-semibold text-gray-900">@{view().username}</p>
+              <div class="rounded-md border border-border bg-surface-muted p-4">
+                <p class="text-sm text-text-muted">プロフィール</p>
+                <p class="mt-1 text-lg font-semibold text-text">@{view().username}</p>
                 <A
                   href={`/users/${encodeURIComponent(view().username)}`}
-                  class="mt-3 inline-block text-sm font-medium text-primary-600 underline"
+                  class="mt-3 inline-block text-sm font-medium text-action-primary underline"
                 >
                   マイページを開く
                 </A>
@@ -104,25 +104,25 @@ const LandingPage = () => {
         </Show>
       </Show>
 
-      <section class="rounded-lg border border-gray-200 bg-white p-6">
+      <section class="rounded-lg border border-border bg-surface p-6">
         <h2 class="mb-3 text-xl font-semibold">お知らせ</h2>
-        <ul class="space-y-2 text-sm text-gray-700">
-          <li class="rounded-md border border-gray-200 p-3">
+        <ul class="space-y-2 text-sm text-text-muted">
+          <li class="rounded-md border border-border p-3">
             [モック] 2026-04-29: 新機能の準備を進めています。
           </li>
-          <li class="rounded-md border border-gray-200 p-3">
+          <li class="rounded-md border border-border p-3">
             [モック] 2026-04-25: メンテナンス予定を公開しました。
           </li>
         </ul>
       </section>
 
-      <section class="rounded-lg border border-gray-200 bg-white p-6">
+      <section class="rounded-lg border border-border bg-surface p-6">
         <h2 class="mb-3 text-xl font-semibold">X公式アカウント</h2>
-        <ul class="space-y-2 text-sm text-gray-700">
-          <li class="rounded-md border border-gray-200 p-3">
+        <ul class="space-y-2 text-sm text-text-muted">
+          <li class="rounded-md border border-border p-3">
             [モック] 投稿1: アップデート予定のお知らせ
           </li>
-          <li class="rounded-md border border-gray-200 p-3">[モック] 投稿2: 活用方法の紹介</li>
+          <li class="rounded-md border border-border p-3">[モック] 投稿2: 活用方法の紹介</li>
         </ul>
       </section>
     </main>
@@ -136,7 +136,7 @@ const UserStatsPage = () => {
   const [resource] = createResource(() => params.username, fetchUserProfileSummary)
 
   return (
-    <ErrorBoundary fallback={(err) => <p class="p-4 text-red-500">ERROR: {err.message}</p>}>
+    <ErrorBoundary fallback={(err) => <p class="p-4 text-danger">ERROR: {err.message}</p>}>
       <Show when={!resource.loading} fallback={<Loading />}>
         <Show when={resource()?.player} fallback={<PlayerDataEmptyState />}>
           <div class="mx-auto w-full max-w-3xl p-4">

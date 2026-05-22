@@ -17,9 +17,9 @@ const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37
 const GRID_TEMPLATE_COLUMNS =
   'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 5.2rem 3.75rem repeat(5, 3.4rem)'
-const HEADER_CELL_CLASS = 'font-semibold whitespace-nowrap bg-gray-50'
+const HEADER_CELL_CLASS = 'font-semibold whitespace-nowrap bg-surface-muted'
 const HEADER_BUTTON_CLASS =
-  'flex min-h-[37px] w-full items-center px-3 py-2 text-center whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset'
+  'flex min-h-[37px] w-full items-center px-3 py-2 text-center whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset'
 const CELL_CLASS = 'flex h-[37px] items-center px-3 whitespace-nowrap'
 type Props = {
   songs: SongDTO[]
@@ -74,7 +74,7 @@ const SongsTable = (props: Props) => {
   return (
     <div
       ref={virtualizedTable.setTableContainerRef}
-      class="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200 bg-white"
+      class="overflow-x-auto overflow-y-hidden rounded-md border border-border bg-surface"
     >
       <table class="block min-w-[45rem] text-sm" aria-rowcount={props.songs.length}>
         <thead class="block">
@@ -136,7 +136,7 @@ const SongsTable = (props: Props) => {
                 <Show when={song()} keyed>
                   {(currentSong) => (
                     <tr
-                      class="absolute left-0 top-0 grid min-w-full border-t border-gray-100"
+                      class="absolute left-0 top-0 grid min-w-full border-t border-border"
                       style={{
                         'grid-template-columns': GRID_TEMPLATE_COLUMNS,
                         transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
@@ -170,7 +170,7 @@ const SongsTable = (props: Props) => {
 
                           return (
                             <td
-                              class={`${CELL_CLASS} justify-center font-medium ${chart ? difficultyBadgeClass(difficulty) : 'bg-white text-gray-700'} ${chart?.is_const_unknown ? 'opacity-50' : ''}`}
+                              class={`${CELL_CLASS} justify-center font-medium ${chart ? difficultyBadgeClass(difficulty) : 'bg-surface text-text-muted'} ${chart?.is_const_unknown ? 'opacity-50' : ''}`}
                             >
                               {chart ? (
                                 <>

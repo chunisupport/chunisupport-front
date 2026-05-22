@@ -1,4 +1,4 @@
-﻿import { EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
+import { EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
 import { type Component, createSignal, onCleanup } from 'solid-js'
 import type { GoalDTO } from '../../../../types/api'
 // import { formatGoalAttributesLabel, formatGoalTypeLabel } from '../../utils/goalForm'
@@ -11,6 +11,13 @@ interface GoalCardProps {
   onDelete: (goal: GoalDTO) => void
 }
 
+/**
+ * 目標進捗の数値を目標種別に合わせて表示用に整形する。
+ *
+ * @param value - 整形対象の数値。
+ * @param type - 目標種別。
+ * @returns 画面表示用の数値文字列。
+ */
 const formatValue = (value: number, type: GoalDTO['achievement_type']) => {
   if (type === 'overpower_value' || type === 'overpower_percent') {
     return value.toLocaleString('ja-JP', {
@@ -22,6 +29,12 @@ const formatValue = (value: number, type: GoalDTO['achievement_type']) => {
   return Math.floor(value).toLocaleString('ja-JP')
 }
 
+/**
+ * 目標の現在値、目標値、達成率をカード形式で表示する。
+ *
+ * @param props - 目標カードの表示内容と操作ハンドラ。
+ * @returns 目標カードの JSX 要素。
+ */
 const GoalCard: Component<GoalCardProps> = (props) => {
   const displayCurrent = () =>
     props.goal.invert
@@ -73,17 +86,19 @@ const GoalCard: Component<GoalCardProps> = (props) => {
   return (
     <article
       class={`rounded-lg border p-4 shadow-sm ${
-        props.progress.achieved ? 'border-primary-200 bg-primary-50' : 'border-gray-200 bg-white'
+        props.progress.achieved
+          ? 'border-action-primary-border bg-action-primary-muted'
+          : 'border-border bg-surface'
       }`}
     >
       <div class="flex items-start justify-between gap-3">
         <div>
-          <h2 class="font-sans text-lg font-bold text-gray-900">{props.goal.title}</h2>
+          <h2 class="font-sans text-lg font-bold text-text">{props.goal.title}</h2>
         </div>
         <div ref={menuRef} class="relative">
           <button
             type="button"
-            class="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+            class="rounded p-1 text-text-subtle hover:bg-surface-hover hover:text-text-muted"
             aria-label="メニューを開く"
             aria-haspopup="true"
             aria-expanded={menuOpen()}
@@ -97,12 +112,12 @@ const GoalCard: Component<GoalCardProps> = (props) => {
           {menuOpen() && (
             <div
               role="menu"
-              class="absolute right-0 z-10 mt-1 w-28 rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+              class="absolute right-0 z-10 mt-1 w-28 rounded-md border border-border bg-surface py-1 shadow-lg"
             >
               <button
                 type="button"
                 role="menuitem"
-                class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-muted hover:bg-surface-muted"
                 onClick={handleEdit}
               >
                 <Pencil size={16} aria-hidden="true" />
@@ -111,7 +126,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
               <button
                 type="button"
                 role="menuitem"
-                class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-danger hover:bg-danger-bg"
                 onClick={handleDelete}
               >
                 <Trash2 size={16} aria-hidden="true" />
@@ -123,22 +138,22 @@ const GoalCard: Component<GoalCardProps> = (props) => {
       </div>
 
       <div class="mt-2">
-        <div class="font-oswald text-3xl font-bold leading-none text-black">
+        <div class="font-oswald text-3xl font-bold leading-none text-text">
           {formatValue(displayCurrent(), props.goal.achievement_type)}
         </div>
         <div class="mb-2 flex items-end justify-between gap-3 mt-1">
-          <div class="flex min-w-0 w-full items-end gap-3 text-gray-500">
+          <div class="flex min-w-0 w-full items-end gap-3 text-text-subtle">
             <div class="pb-0.5 font-oswald text-lg font-bold leading-none">/</div>
-            <div class="pb-0.5 font-oswald text-xl font-bold leading-none">
+            <div class="goal-card-progress-secondary pb-0.5 font-oswald text-xl font-bold leading-none">
               {formatValue(props.progress.target, props.goal.achievement_type)}
             </div>
-            <div class="ml-auto pb-0.5 text-right font-oswald text-lg font-semibold leading-none">
+            <div class="goal-card-progress-secondary ml-auto pb-0.5 text-right font-oswald text-lg font-semibold leading-none">
               {displayPercent().toFixed(2)}%
             </div>
           </div>
         </div>
         <progress
-          class="h-2 w-full rounded appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-gray-200 [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-primary-600 [&::-moz-progress-bar]:rounded [&::-moz-progress-bar]:bg-primary-600"
+          class="h-2 w-full rounded appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-action-secondary [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-action-primary [&::-moz-progress-bar]:rounded [&::-moz-progress-bar]:bg-action-primary"
           value={Math.max(0, Math.min(normalizedPercent(), 100))}
           max={100}
           aria-label={`${props.goal.title} 進捗 ${displayPercent().toFixed(2)}%`}

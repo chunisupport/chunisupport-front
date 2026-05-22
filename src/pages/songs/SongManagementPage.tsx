@@ -726,33 +726,33 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       `}</style>
       <div>
         <h1 class="text-2xl font-semibold">{props.title}</h1>
-        <p class="mt-2 text-sm text-gray-600">
+        <p class="mt-2 text-sm text-text-muted">
           API仕様準拠: 通常楽曲・WORLD&apos;S END ともに追加・編集・削除・復活に対応します。
         </p>
       </div>
 
       <Show when={message()}>
-        <p class="rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
+        <p class="rounded border border-success-border bg-success-bg px-3 py-2 text-sm text-success">
           {message()}
         </p>
       </Show>
       <Show when={errorMessage()}>
-        <p class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
           {errorMessage()}
         </p>
       </Show>
 
-      <section class="rounded-lg border border-gray-200 bg-white p-4">
+      <section class="rounded-lg border border-border bg-surface p-4">
         <h2 class="text-lg font-semibold">通常楽曲（編集 / 削除 / 復活）</h2>
 
         <Show
           when={!songsResponse.loading && !masterData.loading && songs().length > 0}
-          fallback={<p class="mt-3 text-sm text-gray-500">楽曲データを読み込み中...</p>}
+          fallback={<p class="mt-3 text-sm text-text-subtle">楽曲データを読み込み中...</p>}
         >
           <div class="mt-3 grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
             <div class="min-w-0">
-              <div class="mb-2 flex items-center gap-2 rounded border border-gray-300 px-2 focus-within:border-primary-500">
-                <Search class="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
+              <div class="mb-2 flex items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
+                <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
                 <input
                   type="search"
                   value={songSearchQuery()}
@@ -761,8 +761,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   class="min-w-0 flex-1 py-2 text-sm outline-none"
                 />
               </div>
-              <div class="max-h-130 overflow-y-auto rounded border border-gray-200">
-                <ul class="divide-y divide-gray-200">
+              <div class="max-h-130 overflow-y-auto rounded border border-border">
+                <ul class="divide-y divide-border">
                   <For each={filteredSongs()}>
                     {(song) => {
                       const isSelected = () => song.id === selectedSongId()
@@ -770,15 +770,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         <li>
                           <button
                             type="button"
-                            class="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+                            class="w-full px-3 py-2 text-left text-sm hover:bg-surface-muted"
                             classList={{
-                              'bg-blue-50': isSelected(),
-                              'bg-red-50': song.is_deleted && !isSelected(),
+                              'bg-info-bg': isSelected(),
+                              'bg-danger-bg': song.is_deleted && !isSelected(),
                             }}
                             onClick={() => handleSelectSong(song.id)}
                           >
-                            <p class="font-sans font-medium text-gray-900">{song.title}</p>
-                            <p class="font-sans text-xs text-gray-600">{song.artist}</p>
+                            <p class="font-sans font-medium text-text">{song.title}</p>
+                            <p class="font-sans text-xs text-text-muted">{song.artist}</p>
                           </button>
                         </li>
                       )
@@ -794,23 +794,23 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   <div class="min-w-0 space-y-4">
                     <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">更新日時</span>
+                        <span class="mb-1 block text-text-muted">更新日時</span>
                         <input
                           value={formatUpdatedAt(currentDraft().updated_at)}
-                          class="w-full rounded border border-gray-300 bg-gray-100 px-3 py-2 text-gray-600"
+                          class="w-full rounded border border-border-strong bg-surface-hover px-3 py-2 text-text-muted"
                           disabled
                         />
                       </label>
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">タイトル</span>
+                        <span class="mb-1 block text-text-muted">タイトル</span>
                         <input
                           value={currentDraft().title}
                           onInput={(event) => updateDraftField('title', event.currentTarget.value)}
-                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+                          class="w-full rounded border border-border-strong px-3 py-2 font-sans"
                         />
                       </label>
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">読み</span>
+                        <span class="mb-1 block text-text-muted">読み</span>
                         <input
                           value={currentDraft().reading ?? ''}
                           maxLength={300}
@@ -822,19 +822,19 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : event.currentTarget.value
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+                          class="w-full rounded border border-border-strong px-3 py-2 font-sans"
                         />
                       </label>
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">アーティスト</span>
+                        <span class="mb-1 block text-text-muted">アーティスト</span>
                         <input
                           value={currentDraft().artist}
                           onInput={(event) => updateDraftField('artist', event.currentTarget.value)}
-                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+                          class="w-full rounded border border-border-strong px-3 py-2 font-sans"
                         />
                       </label>
                       <label class="text-sm">
-                        <span class="mb-1 block text-gray-700">ジャンル</span>
+                        <span class="mb-1 block text-text-muted">ジャンル</span>
                         <select
                           value={String(currentDraft().genre_id ?? '')}
                           onChange={(event) =>
@@ -845,7 +845,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : Number(event.currentTarget.value)
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-border-strong px-3 py-2"
                         >
                           <option value="">未設定</option>
                           <For each={masterData()?.genres ?? []}>
@@ -854,7 +854,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         </select>
                       </label>
                       <label class="text-sm">
-                        <span class="mb-1 block text-gray-700">BPM</span>
+                        <span class="mb-1 block text-text-muted">BPM</span>
                         <input
                           type="number"
                           value={currentDraft().bpm ?? ''}
@@ -866,11 +866,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : Number(event.currentTarget.value)
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-border-strong px-3 py-2"
                         />
                       </label>
                       <label class="text-sm">
-                        <span class="mb-1 block text-gray-700">リリース日</span>
+                        <span class="mb-1 block text-text-muted">リリース日</span>
                         <input
                           type="date"
                           value={toDateInputValue(currentDraft().released_at)}
@@ -882,11 +882,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : event.currentTarget.value
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-border-strong px-3 py-2"
                         />
                       </label>
                       <label class="text-sm">
-                        <span class="mb-1 block text-gray-700">ジャケットID</span>
+                        <span class="mb-1 block text-text-muted">ジャケットID</span>
                         <input
                           value={currentDraft().jacket ?? ''}
                           onInput={(event) =>
@@ -897,14 +897,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : event.currentTarget.value
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-border-strong px-3 py-2"
                         />
                       </label>
                     </div>
 
-                    <div class="overflow-x-auto rounded border border-gray-200">
+                    <div class="overflow-x-auto rounded border border-border">
                       <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-surface-muted">
                           <tr>
                             <th class="whitespace-nowrap px-3 py-2 text-left">難易度</th>
                             <th class="whitespace-nowrap px-3 py-2 text-left">定数</th>
@@ -917,7 +917,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         <tbody>
                           <Index each={currentDraft().charts}>
                             {(chart) => (
-                              <tr class="border-t border-gray-100">
+                              <tr class="border-t border-border">
                                 <td class="px-3 py-2">{chart().difficulty_name}</td>
                                 <td class="px-3 py-2">
                                   <input
@@ -931,7 +931,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                         event.currentTarget.value
                                       )
                                     }
-                                    class="w-20 rounded border border-gray-300 px-2 py-1"
+                                    class="w-20 rounded border border-border-strong px-2 py-1"
                                   />
                                 </td>
                                 <td class="px-3 py-2">
@@ -960,7 +960,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                           : Number(event.currentTarget.value)
                                       )
                                     }
-                                    class="w-20 rounded border border-gray-300 px-2 py-1"
+                                    class="w-20 rounded border border-border-strong px-2 py-1"
                                   />
                                 </td>
                                 <td class="px-3 py-2">
@@ -975,13 +975,13 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                           : event.currentTarget.value
                                       )
                                     }
-                                    class="w-48 rounded border border-gray-300 px-2 py-1 font-sans"
+                                    class="w-48 rounded border border-border-strong px-2 py-1 font-sans"
                                   />
                                 </td>
                                 <td class="px-3 py-2">
                                   <input
                                     value={formatUpdatedAt(chart().updated_at)}
-                                    class="w-40 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-gray-600"
+                                    class="w-40 rounded border border-border-strong bg-surface-hover px-2 py-1 text-text-muted"
                                     disabled
                                   />
                                 </td>
@@ -995,7 +995,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     <div class="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                        class="rounded bg-info px-4 py-2 text-sm font-medium text-text-inverse hover:bg-info"
                         onClick={handleSave}
                       >
                         更新する
@@ -1005,7 +1005,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         fallback={
                           <button
                             type="button"
-                            class="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                            class="rounded bg-success px-4 py-2 text-sm font-medium text-text-inverse hover:bg-success"
                             onClick={() => handleRestoreSong(currentDraft().id)}
                           >
                             復活する
@@ -1014,7 +1014,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                       >
                         <button
                           type="button"
-                          class="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                          class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover"
                           onClick={() => handleDeleteSong(currentDraft().id)}
                         >
                           削除する
@@ -1029,17 +1029,19 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         </Show>
       </section>
 
-      <section class="rounded-lg border border-gray-200 bg-white p-4">
+      <section class="rounded-lg border border-border bg-surface p-4">
         <h2 class="text-lg font-semibold">WORLD&apos;S END（編集 / 削除 / 復活）</h2>
 
         <Show
           when={!worldsendResponse.loading && !masterData.loading && worldsendSongs().length > 0}
-          fallback={<p class="mt-3 text-sm text-gray-500">WORLD&apos;S END楽曲を読み込み中...</p>}
+          fallback={
+            <p class="mt-3 text-sm text-text-subtle">WORLD&apos;S END楽曲を読み込み中...</p>
+          }
         >
           <div class="mt-3 grid gap-4 lg:grid-cols-[300px_1fr]">
             <div>
-              <div class="mb-2 flex items-center gap-2 rounded border border-gray-300 px-2 focus-within:border-primary-500">
-                <Search class="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
+              <div class="mb-2 flex items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
+                <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
                 <input
                   type="search"
                   value={worldsendSearchQuery()}
@@ -1048,8 +1050,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   class="min-w-0 flex-1 py-2 text-sm outline-none"
                 />
               </div>
-              <div class="max-h-130 overflow-y-auto rounded border border-gray-200">
-                <ul class="divide-y divide-gray-200">
+              <div class="max-h-130 overflow-y-auto rounded border border-border">
+                <ul class="divide-y divide-border">
                   <For each={filteredWorldsendSongs()}>
                     {(song) => {
                       const isSelected = () => song.id === selectedWorldsendSongId()
@@ -1057,15 +1059,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         <li>
                           <button
                             type="button"
-                            class="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+                            class="w-full px-3 py-2 text-left text-sm hover:bg-surface-muted"
                             classList={{
-                              'bg-blue-50': isSelected(),
-                              'bg-red-50': song.is_deleted && !isSelected(),
+                              'bg-info-bg': isSelected(),
+                              'bg-danger-bg': song.is_deleted && !isSelected(),
                             }}
                             onClick={() => handleSelectWorldsendSong(song.id)}
                           >
-                            <p class="font-sans font-medium text-gray-900">{song.title}</p>
-                            <p class="font-sans text-xs text-gray-600">{song.artist}</p>
+                            <p class="font-sans font-medium text-text">{song.title}</p>
+                            <p class="font-sans text-xs text-text-muted">{song.artist}</p>
                           </button>
                         </li>
                       )
@@ -1081,25 +1083,25 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">更新日時</span>
+                        <span class="mb-1 block text-text-muted">更新日時</span>
                         <input
                           value={formatUpdatedAt(currentDraft().updated_at)}
-                          class="w-full rounded border border-gray-300 bg-gray-100 px-3 py-2 text-gray-600"
+                          class="w-full rounded border border-border-strong bg-surface-hover px-3 py-2 text-text-muted"
                           disabled
                         />
                       </label>
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">タイトル</span>
+                        <span class="mb-1 block text-text-muted">タイトル</span>
                         <input
                           value={currentDraft().title}
                           onInput={(event) =>
                             updateWorldsendDraftField('title', event.currentTarget.value)
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+                          class="w-full rounded border border-border-strong px-3 py-2 font-sans"
                         />
                       </label>
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">読み</span>
+                        <span class="mb-1 block text-text-muted">読み</span>
                         <input
                           value={currentDraft().reading ?? ''}
                           maxLength={300}
@@ -1111,21 +1113,21 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : event.currentTarget.value
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+                          class="w-full rounded border border-border-strong px-3 py-2 font-sans"
                         />
                       </label>
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">アーティスト</span>
+                        <span class="mb-1 block text-text-muted">アーティスト</span>
                         <input
                           value={currentDraft().artist}
                           onInput={(event) =>
                             updateWorldsendDraftField('artist', event.currentTarget.value)
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+                          class="w-full rounded border border-border-strong px-3 py-2 font-sans"
                         />
                       </label>
                       <label class="text-sm">
-                        <span class="mb-1 block text-gray-700">ジャンル</span>
+                        <span class="mb-1 block text-text-muted">ジャンル</span>
                         <select
                           value={String(currentDraft().genre_id ?? '')}
                           onChange={(event) =>
@@ -1136,7 +1138,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : Number(event.currentTarget.value)
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-border-strong px-3 py-2"
                         >
                           <option value="">未設定</option>
                           <For each={masterData()?.genres ?? []}>
@@ -1145,7 +1147,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         </select>
                       </label>
                       <label class="text-sm">
-                        <span class="mb-1 block text-gray-700">BPM</span>
+                        <span class="mb-1 block text-text-muted">BPM</span>
                         <input
                           type="number"
                           value={currentDraft().bpm ?? ''}
@@ -1157,11 +1159,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : Number(event.currentTarget.value)
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-border-strong px-3 py-2"
                         />
                       </label>
                       <label class="text-sm">
-                        <span class="mb-1 block text-gray-700">リリース日</span>
+                        <span class="mb-1 block text-text-muted">リリース日</span>
                         <input
                           type="date"
                           value={toDateInputValue(currentDraft().released_at)}
@@ -1173,11 +1175,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : event.currentTarget.value
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-border-strong px-3 py-2"
                         />
                       </label>
                       <label class="text-sm">
-                        <span class="mb-1 block text-gray-700">ジャケットID</span>
+                        <span class="mb-1 block text-text-muted">ジャケットID</span>
                         <input
                           value={currentDraft().jacket ?? ''}
                           onInput={(event) =>
@@ -1188,11 +1190,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : event.currentTarget.value
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-border-strong px-3 py-2"
                         />
                       </label>
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">属性</span>
+                        <span class="mb-1 block text-text-muted">属性</span>
                         <input
                           value={currentDraft().attribute ?? ''}
                           onInput={(event) =>
@@ -1203,11 +1205,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : event.currentTarget.value
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-border-strong px-3 py-2"
                         />
                       </label>
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">レベル</span>
+                        <span class="mb-1 block text-text-muted">レベル</span>
                         <input
                           type="number"
                           min="1"
@@ -1221,11 +1223,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : Number(event.currentTarget.value)
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-border-strong px-3 py-2"
                         />
                       </label>
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">ノーツ</span>
+                        <span class="mb-1 block text-text-muted">ノーツ</span>
                         <input
                           type="number"
                           min="0"
@@ -1238,19 +1240,19 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : Number(event.currentTarget.value)
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2"
+                          class="w-full rounded border border-border-strong px-3 py-2"
                         />
                       </label>
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">譜面更新日時</span>
+                        <span class="mb-1 block text-text-muted">譜面更新日時</span>
                         <input
                           value={formatUpdatedAt(currentDraft().chart_updated_at)}
-                          class="w-full rounded border border-gray-300 bg-gray-100 px-3 py-2 text-gray-600"
+                          class="w-full rounded border border-border-strong bg-surface-hover px-3 py-2 text-text-muted"
                           disabled
                         />
                       </label>
                       <label class="col-span-2 text-sm">
-                        <span class="mb-1 block text-gray-700">NOTES DESIGNER</span>
+                        <span class="mb-1 block text-text-muted">NOTES DESIGNER</span>
                         <input
                           value={currentDraft().notes_designer ?? ''}
                           onInput={(event) =>
@@ -1261,7 +1263,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : event.currentTarget.value
                             )
                           }
-                          class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+                          class="w-full rounded border border-border-strong px-3 py-2 font-sans"
                         />
                       </label>
                     </div>
@@ -1269,7 +1271,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     <div class="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                        class="rounded bg-info px-4 py-2 text-sm font-medium text-text-inverse hover:bg-info"
                         onClick={handleSaveWorldsend}
                       >
                         更新する
@@ -1279,7 +1281,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         fallback={
                           <button
                             type="button"
-                            class="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                            class="rounded bg-success px-4 py-2 text-sm font-medium text-text-inverse hover:bg-success"
                             onClick={() => handleRestoreWorldsendSong(currentDraft().id)}
                           >
                             復活する
@@ -1288,7 +1290,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                       >
                         <button
                           type="button"
-                          class="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                          class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover"
                           onClick={() => handleDeleteWorldsendSong(currentDraft().id)}
                         >
                           削除する
@@ -1303,36 +1305,36 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         </Show>
 
         <Show when={!worldsendResponse.loading && worldsendSongs().length === 0}>
-          <p class="mt-3 text-sm text-gray-500">WORLD&apos;S END楽曲がありません。</p>
+          <p class="mt-3 text-sm text-text-subtle">WORLD&apos;S END楽曲がありません。</p>
         </Show>
       </section>
 
-      <section class="rounded-lg border border-gray-200 bg-white p-4">
+      <section class="rounded-lg border border-border bg-surface p-4">
         <h2 class="text-lg font-semibold">通常楽曲を追加</h2>
         <div class="mt-3 space-y-4">
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <label class="text-sm">
-              <span class="mb-1 block text-gray-700">公式ID</span>
+              <span class="mb-1 block text-text-muted">公式ID</span>
               <input
                 value={createSongDraft().official_idx}
                 maxLength={10}
                 onInput={(event) =>
                   updateCreateSongDraftField('official_idx', event.currentTarget.value)
                 }
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-border-strong px-3 py-2"
                 placeholder="1234567890"
               />
             </label>
             <label class="text-sm">
-              <span class="mb-1 block text-gray-700">タイトル</span>
+              <span class="mb-1 block text-text-muted">タイトル</span>
               <input
                 value={createSongDraft().title}
                 onInput={(event) => updateCreateSongDraftField('title', event.currentTarget.value)}
-                class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+                class="w-full rounded border border-border-strong px-3 py-2 font-sans"
               />
             </label>
             <label class="text-sm">
-              <span class="mb-1 block text-gray-700">読み</span>
+              <span class="mb-1 block text-text-muted">読み</span>
               <input
                 value={createSongDraft().reading ?? ''}
                 maxLength={300}
@@ -1342,20 +1344,20 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                   )
                 }
-                class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+                class="w-full rounded border border-border-strong px-3 py-2 font-sans"
               />
             </label>
             <label class="text-sm">
-              <span class="mb-1 block text-gray-700">アーティスト</span>
+              <span class="mb-1 block text-text-muted">アーティスト</span>
               <input
                 value={createSongDraft().artist}
                 onInput={(event) => updateCreateSongDraftField('artist', event.currentTarget.value)}
-                class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+                class="w-full rounded border border-border-strong px-3 py-2 font-sans"
               />
             </label>
             <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
               <label class="text-sm">
-                <span class="mb-1 block text-gray-700">ジャンル</span>
+                <span class="mb-1 block text-text-muted">ジャンル</span>
                 <select
                   value={String(createSongDraft().genre_id ?? '')}
                   onChange={(event) =>
@@ -1364,7 +1366,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                       event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
                     )
                   }
-                  class="w-full rounded border border-gray-300 px-3 py-2"
+                  class="w-full rounded border border-border-strong px-3 py-2"
                 >
                   <option value="">選択してください</option>
                   <For each={masterData()?.genres ?? []}>
@@ -1373,7 +1375,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                 </select>
               </label>
               <label class="text-sm">
-                <span class="mb-1 block text-gray-700">BPM</span>
+                <span class="mb-1 block text-text-muted">BPM</span>
                 <input
                   type="number"
                   value={createSongDraft().bpm ?? ''}
@@ -1383,11 +1385,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                       event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
                     )
                   }
-                  class="w-full rounded border border-gray-300 px-3 py-2"
+                  class="w-full rounded border border-border-strong px-3 py-2"
                 />
               </label>
               <label class="text-sm">
-                <span class="mb-1 block text-gray-700">リリース日</span>
+                <span class="mb-1 block text-text-muted">リリース日</span>
                 <input
                   type="date"
                   value={toDateInputValue(createSongDraft().released_at)}
@@ -1397,11 +1399,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                       event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                     )
                   }
-                  class="w-full rounded border border-gray-300 px-3 py-2"
+                  class="w-full rounded border border-border-strong px-3 py-2"
                 />
               </label>
               <label class="text-sm">
-                <span class="mb-1 block text-gray-700">ジャケットID</span>
+                <span class="mb-1 block text-text-muted">ジャケットID</span>
                 <input
                   value={createSongDraft().jacket ?? ''}
                   onInput={(event) =>
@@ -1410,15 +1412,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                       event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                     )
                   }
-                  class="w-full rounded border border-gray-300 px-3 py-2"
+                  class="w-full rounded border border-border-strong px-3 py-2"
                 />
               </label>
             </div>
           </div>
 
-          <div class="overflow-x-auto rounded border border-gray-200">
+          <div class="overflow-x-auto rounded border border-border">
             <table class="min-w-full text-sm">
-              <thead class="bg-gray-50">
+              <thead class="bg-surface-muted">
                 <tr>
                   <th class="whitespace-nowrap px-3 py-2 text-left">追加</th>
                   <th class="whitespace-nowrap px-3 py-2 text-left">難易度</th>
@@ -1431,7 +1433,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               <tbody>
                 <Index each={createSongDraft().charts}>
                   {(chart, chartIndex) => (
-                    <tr class="border-t border-gray-100">
+                    <tr class="border-t border-border">
                       <td class="px-3 py-2">
                         <input
                           type="checkbox"
@@ -1454,7 +1456,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           onInput={(event) =>
                             updateCreateSongChart(chartIndex, 'const', event.currentTarget.value)
                           }
-                          class="w-20 rounded border border-gray-300 px-2 py-1"
+                          class="w-20 rounded border border-border-strong px-2 py-1"
                           disabled={!chart().enabled}
                         />
                       </td>
@@ -1485,7 +1487,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : Number(event.currentTarget.value)
                             )
                           }
-                          class="w-24 rounded border border-gray-300 px-2 py-1"
+                          class="w-24 rounded border border-border-strong px-2 py-1"
                           disabled={!chart().enabled}
                         />
                       </td>
@@ -1501,7 +1503,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                 : event.currentTarget.value
                             )
                           }
-                          class="w-56 rounded border border-gray-300 px-2 py-1 font-sans"
+                          class="w-56 rounded border border-border-strong px-2 py-1 font-sans"
                           disabled={!chart().enabled}
                         />
                       </td>
@@ -1514,7 +1516,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
           <button
             type="button"
-            class="rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            class="rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-text-inverse hover:bg-indigo-700"
             onClick={handleCreateSong}
           >
             通常楽曲を追加する
@@ -1522,33 +1524,33 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         </div>
       </section>
 
-      <section class="rounded-lg border border-gray-200 bg-white p-4">
+      <section class="rounded-lg border border-border bg-surface p-4">
         <h2 class="text-lg font-semibold">WORLD&apos;S END楽曲を追加</h2>
         <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label class="text-sm">
-            <span class="mb-1 block text-gray-700">公式ID</span>
+            <span class="mb-1 block text-text-muted">公式ID</span>
             <input
               value={createWorldsendDraft().official_idx}
               maxLength={10}
               onInput={(event) =>
                 updateCreateWorldsendDraftField('official_idx', event.currentTarget.value)
               }
-              class="w-full rounded border border-gray-300 px-3 py-2"
+              class="w-full rounded border border-border-strong px-3 py-2"
               placeholder="1234567890"
             />
           </label>
           <label class="text-sm">
-            <span class="mb-1 block text-gray-700">タイトル</span>
+            <span class="mb-1 block text-text-muted">タイトル</span>
             <input
               value={createWorldsendDraft().title}
               onInput={(event) =>
                 updateCreateWorldsendDraftField('title', event.currentTarget.value)
               }
-              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+              class="w-full rounded border border-border-strong px-3 py-2 font-sans"
             />
           </label>
           <label class="text-sm">
-            <span class="mb-1 block text-gray-700">読み</span>
+            <span class="mb-1 block text-text-muted">読み</span>
             <input
               value={createWorldsendDraft().reading ?? ''}
               maxLength={300}
@@ -1558,22 +1560,22 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                 )
               }
-              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+              class="w-full rounded border border-border-strong px-3 py-2 font-sans"
             />
           </label>
           <label class="text-sm">
-            <span class="mb-1 block text-gray-700">アーティスト</span>
+            <span class="mb-1 block text-text-muted">アーティスト</span>
             <input
               value={createWorldsendDraft().artist}
               onInput={(event) =>
                 updateCreateWorldsendDraftField('artist', event.currentTarget.value)
               }
-              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+              class="w-full rounded border border-border-strong px-3 py-2 font-sans"
             />
           </label>
           <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
             <label class="text-sm">
-              <span class="mb-1 block text-gray-700">ジャンル</span>
+              <span class="mb-1 block text-text-muted">ジャンル</span>
               <select
                 value={String(createWorldsendDraft().genre_id ?? '')}
                 onChange={(event) =>
@@ -1582,7 +1584,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
                   )
                 }
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-border-strong px-3 py-2"
               >
                 <option value="">選択してください</option>
                 <For each={masterData()?.genres ?? []}>
@@ -1591,7 +1593,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               </select>
             </label>
             <label class="text-sm">
-              <span class="mb-1 block text-gray-700">BPM</span>
+              <span class="mb-1 block text-text-muted">BPM</span>
               <input
                 type="number"
                 value={createWorldsendDraft().bpm ?? ''}
@@ -1601,11 +1603,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
                   )
                 }
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-border-strong px-3 py-2"
               />
             </label>
             <label class="text-sm">
-              <span class="mb-1 block text-gray-700">リリース日</span>
+              <span class="mb-1 block text-text-muted">リリース日</span>
               <input
                 type="date"
                 value={toDateInputValue(createWorldsendDraft().released_at)}
@@ -1615,11 +1617,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                   )
                 }
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-border-strong px-3 py-2"
               />
             </label>
             <label class="text-sm">
-              <span class="mb-1 block text-gray-700">ジャケットID</span>
+              <span class="mb-1 block text-text-muted">ジャケットID</span>
               <input
                 value={createWorldsendDraft().jacket ?? ''}
                 onInput={(event) =>
@@ -1628,12 +1630,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                   )
                 }
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-border-strong px-3 py-2"
               />
             </label>
           </div>
           <label class="text-sm">
-            <span class="mb-1 block text-gray-700">属性</span>
+            <span class="mb-1 block text-text-muted">属性</span>
             <input
               value={createWorldsendDraft().attribute ?? ''}
               onInput={(event) =>
@@ -1642,11 +1644,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                 )
               }
-              class="w-full rounded border border-gray-300 px-3 py-2"
+              class="w-full rounded border border-border-strong px-3 py-2"
             />
           </label>
           <label class="text-sm">
-            <span class="mb-1 block text-gray-700">レベル</span>
+            <span class="mb-1 block text-text-muted">レベル</span>
             <input
               type="number"
               min="1"
@@ -1658,11 +1660,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
                 )
               }
-              class="w-full rounded border border-gray-300 px-3 py-2"
+              class="w-full rounded border border-border-strong px-3 py-2"
             />
           </label>
           <label class="text-sm">
-            <span class="mb-1 block text-gray-700">ノーツ</span>
+            <span class="mb-1 block text-text-muted">ノーツ</span>
             <input
               type="number"
               min="0"
@@ -1673,11 +1675,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   event.currentTarget.value === '' ? null : Number(event.currentTarget.value)
                 )
               }
-              class="w-full rounded border border-gray-300 px-3 py-2"
+              class="w-full rounded border border-border-strong px-3 py-2"
             />
           </label>
           <label class="text-sm sm:col-span-2 lg:col-span-1">
-            <span class="mb-1 block text-gray-700">NOTES DESIGNER</span>
+            <span class="mb-1 block text-text-muted">NOTES DESIGNER</span>
             <input
               value={createWorldsendDraft().notes_designer ?? ''}
               onInput={(event) =>
@@ -1686,14 +1688,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   event.currentTarget.value.trim() === '' ? null : event.currentTarget.value
                 )
               }
-              class="w-full rounded border border-gray-300 px-3 py-2 font-sans"
+              class="w-full rounded border border-border-strong px-3 py-2 font-sans"
             />
           </label>
         </div>
 
         <button
           type="button"
-          class="mt-4 rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          class="mt-4 rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-text-inverse hover:bg-indigo-700"
           onClick={handleCreateWorldsendSong}
         >
           WORLD&apos;S END楽曲を追加する

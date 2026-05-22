@@ -23,7 +23,7 @@ type Props = {
 }
 
 const scoreBandClass: Record<OverPowerScoreBand, string> = {
-  MAX: 'bg-emerald-300',
+  MAX: 'bg-success',
   'SSS+': SCORE_RANK_BAR_CLASS['SSS+'],
   SSS: SCORE_RANK_BAR_CLASS.SSS,
   'SS+': SCORE_RANK_BAR_CLASS['SS+'],
@@ -62,8 +62,8 @@ const DistributionBar: Component<{
       : 'grid grid-cols-2 gap-x-2 gap-y-2 sm:grid-cols-4'
   const itemClass = () =>
     props.fixedWidth
-      ? 'flex min-w-[80px] items-baseline gap-1.5 whitespace-nowrap text-gray-800'
-      : 'flex min-w-max items-baseline gap-1.5 whitespace-nowrap text-gray-800'
+      ? 'flex min-w-[80px] items-baseline gap-1.5 whitespace-nowrap text-text'
+      : 'flex min-w-max items-baseline gap-1.5 whitespace-nowrap text-text'
 
   return (
     <div class="space-y-2">
@@ -72,18 +72,18 @@ const DistributionBar: Component<{
           {(band) => (
             <p class={itemClass()}>
               <span class="shrink-0 text-xs">{band.label}:</span>
-              <span class="shrink-0 text-base font-bold tabular-nums text-gray-950 sm:text-lg">
+              <span class="shrink-0 text-base font-bold tabular-nums text-text sm:text-lg">
                 {band.count}
               </span>
             </p>
           )}
         </For>
       </div>
-      <div class="flex h-7 w-full overflow-hidden bg-gray-100" role="presentation">
+      <div class="flex h-7 w-full overflow-hidden bg-surface-hover" role="presentation">
         <For each={props.bands.filter((band) => band.count > 0)}>
           {(band) => (
             <div
-              class={props.colorClassByLabel[band.label] ?? 'bg-gray-300'}
+              class={props.colorClassByLabel[band.label] ?? 'bg-action-secondary-hover'}
               style={{ width: `${calcBandPercent(band.count, props.total)}%` }}
             />
           )}
@@ -99,7 +99,7 @@ export const OverPowerSummaryGraph: Component<Props> = (props) => (
     <Show
       when={props.rows.length > 0}
       fallback={
-        <p class="rounded-lg border border-gray-200 bg-white px-3 py-4 text-sm text-gray-500">
+        <p class="rounded-lg border border-border bg-surface px-3 py-4 text-sm text-text-subtle">
           表示できるデータがありません。
         </p>
       }
@@ -110,11 +110,11 @@ export const OverPowerSummaryGraph: Component<Props> = (props) => (
           const totalComboCount = () => row.comboBands.reduce((sum, band) => sum + band.count, 0)
 
           return (
-            <article class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <h3 class="text-center text-base font-bold text-gray-950">{row.summary.label}</h3>
-              <p class="mt-2 text-lg font-bold tabular-nums text-gray-950">
+            <article class="rounded-lg border border-border bg-surface p-4 shadow-sm">
+              <h3 class="text-center text-base font-bold text-text">{row.summary.label}</h3>
+              <p class="mt-2 text-lg font-bold tabular-nums text-text">
                 {formatValue(row.summary.current)}
-                <span class="text-sm font-normal text-gray-700">
+                <span class="text-sm font-normal text-text-muted">
                   {' '}
                   / {formatValue(row.summary.max)} ({formatPercent(row.summary.percent)}%)
                 </span>

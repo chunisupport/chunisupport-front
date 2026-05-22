@@ -17,16 +17,22 @@ import { getScoreRank } from '../../../../utils/scoreRank'
 import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
 
 // FIXME: 色使いすぎ？
+/**
+ * レコード順位の表示色クラスを返す。
+ *
+ * @param index - 1始まりの順位。
+ * @returns 順位に対応する背景色と文字色のTailwindクラス。
+ */
 const idxColor = (index: number) => {
   switch (index) {
     case 1:
-      return 'bg-yellow-300'
+      return 'bg-ranking-gold-bg text-ranking-medal-text'
     case 2:
-      return 'bg-gray-300'
+      return 'bg-ranking-silver-bg text-ranking-medal-text'
     case 3:
-      return 'bg-orange-300'
+      return 'bg-ranking-bronze-bg text-ranking-medal-text'
     default:
-      return 'bg-gray-100'
+      return 'bg-surface-hover'
   }
 }
 
@@ -49,14 +55,14 @@ export const UserRecordCard: Component<Props> = (props) => {
   return (
     <div class="flex flex-col gap-2">
       <Show when={props.showCandidateDivider}>
-        <div class="mt-4 border-t-2 border-gray-300 pt-4" aria-hidden="true" />
+        <div class="mt-4 border-t-2 border-border-strong pt-4" aria-hidden="true" />
       </Show>
       <A
         href={`/songs/${encodeURIComponent(props.record.id)}?diff=${encodeURIComponent(difficultyToQueryValue(props.record.difficulty))}`}
-        class="group block text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+        class="group block text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
       >
         <div
-          class={`relative select-none border-y border-r border-gray-200 bg-white p-2 pl-4 ${RECORD_CARD_HOVER_CLASS} before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 ${difficultyCardBorderColor(props.record.difficulty)}`}
+          class={`relative select-none border-y border-r border-border bg-surface p-2 pl-4 ${RECORD_CARD_HOVER_CLASS} before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 ${difficultyCardBorderColor(props.record.difficulty)}`}
         >
           <div class="flex gap-3 items-center">
             <div

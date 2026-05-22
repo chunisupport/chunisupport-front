@@ -1,4 +1,4 @@
-﻿import { useNavigate } from '@solidjs/router'
+import { useNavigate } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { createGoal, deleteGoal, fetchGoals, updateGoal } from '../../../api/goals'
@@ -154,18 +154,18 @@ const GoalsList: Component = () => {
   }
 
   return (
-    <ErrorBoundary fallback={(err) => <p class="p-4 text-red-500">ERROR: {err.message}</p>}>
+    <ErrorBoundary fallback={(err) => <p class="p-4 text-danger">ERROR: {err.message}</p>}>
       <Show when={!resource.loading} fallback={<Loading />}>
         <Show when={!resource()?.noPlayerData} fallback={<PlayerDataEmptyState />}>
           <div class="mx-auto w-full max-w-3xl p-4 space-y-4">
             <div class="flex items-center justify-between gap-3">
               <div>
                 <h1 class="text-2xl font-semibold">目標</h1>
-                <p class="text-sm text-gray-600">{resource()?.goals.length ?? 0} / 100件</p>
+                <p class="text-sm text-text-muted">{resource()?.goals.length ?? 0} / 100件</p>
               </div>
               <button
                 type="button"
-                class="rounded bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
+                class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:opacity-60"
                 disabled={(resource()?.goals.length ?? 0) >= 100}
                 onClick={openCreateDialog}
               >
@@ -174,13 +174,13 @@ const GoalsList: Component = () => {
             </div>
 
             <Show when={(resource()?.goals.length ?? 0) >= 100}>
-              <p class="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+              <p class="rounded border border-warning-border bg-warning-bg px-3 py-2 text-sm text-score-rank-c-text">
                 目標は100件まで作成できます。不要な目標を削除してください。
               </p>
             </Show>
 
             <Show when={actionError()}>
-              <p class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600">
+              <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
                 {actionError()}
               </p>
             </Show>
@@ -188,7 +188,7 @@ const GoalsList: Component = () => {
             <Show
               when={goalWithProgress().length > 0}
               fallback={
-                <p class="rounded border border-gray-200 bg-white p-4 text-sm text-gray-600">
+                <p class="rounded border border-border bg-surface p-4 text-sm text-text-muted">
                   目標がありません。「目標を追加」から作成してください。
                 </p>
               }

@@ -92,7 +92,7 @@ const UserRecord: Component<Props> = (props) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
+      <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
         <Show when={allSongs() && masterData() && versionData()} fallback={<Loading />}>
           <div class="mx-2 text-sm">
             {/* フィルター関連UI */}
@@ -112,7 +112,7 @@ const UserRecord: Component<Props> = (props) => {
               />
             )}
 
-            <p class="mb-2 text-sm text-gray-600">
+            <p class="mb-2 text-sm text-text-muted">
               全 {totalCount()} 件中 {filteredCount()} 件を表示
             </p>
 

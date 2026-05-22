@@ -1,4 +1,4 @@
-﻿import { Collapsible } from '@kobalte/core/collapsible'
+import { Collapsible } from '@kobalte/core/collapsible'
 import type { Component } from 'solid-js'
 import type { RecordStats } from '../utils/recordStats'
 import {
@@ -22,7 +22,7 @@ const DistributionBar: Component<{
   order: string[]
   colorMap: Record<string, string>
 }> = (props) => (
-  <div class="flex w-full h-4 rounded overflow-hidden mb-1 divide-x divide-gray-100">
+  <div class="flex w-full h-4 rounded overflow-hidden mb-1 divide-x divide-border">
     {props.order
       .filter((key) => props.dist[key])
       .map((key) => {
@@ -48,17 +48,17 @@ const ScoreBoxPlot: Component<{ stats: RecordStats['scoreStats'] }> = (props) =>
 
   return (
     <div class="relative w-full h-4 rounded mb-1">
-      <div class="absolute left-0 top-1/2 w-full h-full -translate-y-1/2 bg-gray-200 rounded">
+      <div class="absolute left-0 top-1/2 w-full h-full -translate-y-1/2 bg-action-secondary rounded">
         {/* 既プレイの分布をざっくり掴むための箱ひげ図 */}
         <div
-          class="absolute h-full bg-primary-400 rounded"
+          class="absolute h-full bg-action-primary rounded"
           style={{
             left: `${q1Pct}%`,
             width: `${q3Pct - q1Pct}%`,
           }}
         ></div>
         <div
-          class="absolute w-1 bg-primary-900 h-full rounded"
+          class="absolute w-1 bg-action-primary-hover h-full rounded"
           style={{
             left: `${medianPct}%`,
           }}
@@ -70,7 +70,7 @@ const ScoreBoxPlot: Component<{ stats: RecordStats['scoreStats'] }> = (props) =>
 
 const FilterStats: Component<FilterStatsProps> = (props) => (
   <Collapsible
-    class="mb-2 px-2 border border-gray-500 rounded-sm"
+    class="mb-2 px-2 border border-border-strong rounded-sm"
     open={props.open}
     onOpenChange={props.onOpenChange}
   >

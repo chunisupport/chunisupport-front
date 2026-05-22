@@ -30,11 +30,11 @@ const RequireRole = (props: RequireRoleProps) => {
   return (
     <Switch>
       <Match when={authSession.status === 'unknown'}>
-        <div class="mx-auto w-full max-w-3xl p-6 text-sm text-gray-600">認証情報を確認中...</div>
+        <div class="mx-auto w-full max-w-3xl p-6 text-sm text-text-muted">認証情報を確認中...</div>
       </Match>
 
       <Match when={authSession.status === 'error'}>
-        <div class="mx-auto w-full max-w-3xl p-6 text-sm text-gray-600">
+        <div class="mx-auto w-full max-w-3xl p-6 text-sm text-text-muted">
           認証情報の取得に失敗しました。ページを再読み込みしてください。
         </div>
       </Match>

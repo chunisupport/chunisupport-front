@@ -38,14 +38,14 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
     <div class="w-full">
       <Show
         when={props.records.length > 0}
-        fallback={<p class="py-6 text-center text-gray-400">データがありません</p>}
+        fallback={<p class="py-6 text-center text-text-subtle">データがありません</p>}
       >
         <div
           ref={tableContainerRef}
-          class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-gray-200"
+          class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-border"
         >
           <div class="w-fit min-w-full">
-            <div class="border-b border-gray-200 bg-gray-50">
+            <div class="border-b border-border bg-surface-muted">
               <div
                 class="grid px-2 text-xs font-semibold"
                 style={{ 'grid-template-columns': gridTemplateColumns() }}
@@ -78,7 +78,7 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
                     <Show when={record()} keyed>
                       {(currentRecord) => (
                         <div
-                          class={`absolute left-0 top-0 grid w-full border-b border-gray-200 px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
+                          class={`absolute left-0 top-0 grid w-full border-b border-border px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
                           style={{
                             'grid-template-columns': gridTemplateColumns(),
                             transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,

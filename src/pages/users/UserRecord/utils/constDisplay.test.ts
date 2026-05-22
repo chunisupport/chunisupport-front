@@ -10,7 +10,7 @@ describe('getConstDisplay', () => {
     assert.deepEqual(result, {
       valueText: '13.7',
       markerText: null,
-      className: 'text-gray-900',
+      className: 'text-text',
     })
   })
 
@@ -20,7 +20,7 @@ describe('getConstDisplay', () => {
     assert.deepEqual(result, {
       valueText: '13.7',
       markerText: '?',
-      className: 'text-red-600 italic',
+      className: 'text-danger italic',
     })
   })
 })
@@ -31,7 +31,7 @@ describe('getRatingDisplay', () => {
 
     assert.deepEqual(result, {
       text: '',
-      className: 'text-gray-900',
+      className: 'text-text',
     })
   })
 
@@ -40,7 +40,7 @@ describe('getRatingDisplay', () => {
 
     assert.deepEqual(result, {
       text: '16.42',
-      className: 'text-gray-900',
+      className: 'text-text',
     })
   })
 
@@ -49,7 +49,7 @@ describe('getRatingDisplay', () => {
 
     assert.deepEqual(result, {
       text: '16.42',
-      className: 'text-red-600 italic',
+      className: 'text-danger italic',
     })
   })
 })

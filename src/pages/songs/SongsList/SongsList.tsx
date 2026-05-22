@@ -43,7 +43,7 @@ const SongsList = () => {
   useDocumentTitle('楽曲一覧')
 
   return (
-    <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
+    <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
       <Show when={!isSongsLoading()} fallback={<Loading />}>
         <div class="mx-auto w-full max-w-[100%] p-4 space-y-4">
           <div class="flex items-center justify-between">
@@ -51,7 +51,7 @@ const SongsList = () => {
             <SongsViewToggle />
           </div>
           <SongSearchInput id="songs-search" value={searchQuery()} onInput={setSearchQuery} />
-          <p class="text-sm text-gray-600">{sortedSongs().length}件</p>
+          <p class="text-sm text-text-muted">{sortedSongs().length}件</p>
 
           <SongsTable
             songs={sortedSongs()}
@@ -61,7 +61,7 @@ const SongsList = () => {
           />
 
           <Show when={sortedSongs().length === 0}>
-            <p class="text-sm text-gray-500">表示できる楽曲がありません。</p>
+            <p class="text-sm text-text-subtle">表示できる楽曲がありません。</p>
           </Show>
         </div>
       </Show>

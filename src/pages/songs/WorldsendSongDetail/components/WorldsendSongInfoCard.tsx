@@ -3,9 +3,9 @@ import type { WorldsendSongDTO } from '../../../../types/api'
 import SongMetaCardLayout from '../../components/SongMetaCardLayout'
 import { getWorldsendChartRows, getWorldsendSongInfoItems } from '../../worldsendDetailModel'
 
-const badgeClass = 'bg-black text-white'
+const badgeClass = 'bg-difficulty-ultima-bg text-text-inverse'
 const fixedColumnClass = 'w-px whitespace-nowrap'
-const fixedCellClass = 'px-3 py-2 text-gray-800 whitespace-nowrap'
+const fixedCellClass = 'px-3 py-2 text-text whitespace-nowrap'
 
 type Props = {
   song: WorldsendSongDTO
@@ -19,16 +19,16 @@ const WorldsendSongInfoCard = (props: Props) => {
       jacket={props.song.jacket}
       infoItems={getWorldsendSongInfoItems(props.song, props.versionName)}
     >
-      <div class="rounded-md border border-gray-200 bg-white p-4">
+      <div class="rounded-md border border-border bg-surface p-4">
         <div class="overflow-x-auto">
           <table class="min-w-full table-auto text-sm">
-            <thead class="bg-gray-50 text-left">
+            <thead class="bg-surface-muted text-left">
               <tr>
-                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}></th>
-                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}></th>
-                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>LEVEL</th>
-                <th class={`px-3 py-2 font-medium text-gray-700 ${fixedColumnClass}`}>NOTES</th>
-                <th class="px-3 py-2 font-medium text-gray-700 whitespace-nowrap">
+                <th class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass}`}></th>
+                <th class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass}`}></th>
+                <th class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass}`}>LEVEL</th>
+                <th class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass}`}>NOTES</th>
+                <th class="px-3 py-2 font-medium text-text-muted whitespace-nowrap">
                   NOTES DESIGNER
                 </th>
               </tr>
@@ -36,7 +36,7 @@ const WorldsendSongInfoCard = (props: Props) => {
             <tbody>
               <For each={getWorldsendChartRows(props.song)}>
                 {(chart) => (
-                  <tr class="border-t border-gray-100">
+                  <tr class="border-t border-border">
                     <td class={`${fixedCellClass} ${fixedColumnClass}`}>
                       <div
                         class={`rounded px-3 py-1 text-center text-xs font-semibold tracking-wide whitespace-nowrap ${badgeClass}`}
@@ -53,7 +53,7 @@ const WorldsendSongInfoCard = (props: Props) => {
                     <td class={`${fixedCellClass} ${fixedColumnClass}`}>
                       <span class="block whitespace-nowrap">{chart.notes}</span>
                     </td>
-                    <td class="px-3 py-2 text-gray-800">
+                    <td class="px-3 py-2 text-text">
                       <span class="font-sans block whitespace-nowrap">{chart.notesDesigner}</span>
                     </td>
                   </tr>

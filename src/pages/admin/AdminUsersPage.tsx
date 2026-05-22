@@ -49,36 +49,36 @@ const AdminUsersPage = () => {
     <div class="mx-auto w-full max-w-6xl p-4 space-y-4">
       <div>
         <h1 class="text-2xl font-semibold">ユーザー管理</h1>
-        <p class="mt-1 text-sm text-gray-600">
+        <p class="mt-1 text-sm text-text-muted">
           API仕様準拠: 一覧・検索・物理削除に対応。ユーザー情報の管理者編集APIは未提供です。
         </p>
       </div>
 
       <Show when={message()}>
-        <p class="rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
+        <p class="rounded border border-success-border bg-success-bg px-3 py-2 text-sm text-success">
           {message()}
         </p>
       </Show>
       <Show when={errorMessage()}>
-        <p class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
           {errorMessage()}
         </p>
       </Show>
 
-      <div class="rounded-lg border border-gray-200 bg-white p-4">
+      <div class="rounded-lg border border-border bg-surface p-4">
         <div class="flex flex-wrap items-end gap-2">
           <label class="text-sm">
-            <span class="mb-1 block text-gray-700">ユーザー/プレイヤー名（前方一致）</span>
+            <span class="mb-1 block text-text-muted">ユーザー/プレイヤー名（前方一致）</span>
             <input
               value={searchInput()}
               onInput={(event) => setSearchInput(event.currentTarget.value)}
-              class="w-72 rounded border border-gray-300 px-3 py-2"
+              class="w-72 rounded border border-border-strong px-3 py-2"
               placeholder="例: user"
             />
           </label>
           <button
             type="button"
-            class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            class="rounded bg-info px-4 py-2 text-sm font-medium text-text-inverse hover:bg-info"
             onClick={handleSearch}
           >
             検索
@@ -86,9 +86,9 @@ const AdminUsersPage = () => {
         </div>
       </div>
 
-      <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+      <div class="overflow-x-auto rounded-lg border border-border bg-surface">
         <table class="min-w-full text-sm">
-          <thead class="bg-gray-50">
+          <thead class="bg-surface-muted">
             <tr>
               <th class="px-3 py-2 text-left">username</th>
               <th class="px-3 py-2 text-left">uid</th>
@@ -106,7 +106,7 @@ const AdminUsersPage = () => {
           <tbody>
             <For each={users()}>
               {(user) => (
-                <tr class="border-t border-gray-100">
+                <tr class="border-t border-border">
                   <td class="px-3 py-2 font-mono text-xs">{user.username}</td>
                   <td class="px-3 py-2 font-mono text-xs break-all">
                     {formatNullableText(user.firebase_uid)}
@@ -122,7 +122,7 @@ const AdminUsersPage = () => {
                   <td class="px-3 py-2">
                     <button
                       type="button"
-                      class="rounded bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700"
+                      class="rounded bg-danger px-3 py-1 text-xs font-medium text-text-inverse hover:bg-danger-hover"
                       onClick={() => handleDelete(user.username)}
                     >
                       削除
@@ -136,7 +136,7 @@ const AdminUsersPage = () => {
       </div>
 
       <Show when={!usersResponse.loading && !hasRows()}>
-        <p class="text-sm text-gray-500">一致するユーザーが見つかりません。</p>
+        <p class="text-sm text-text-subtle">一致するユーザーが見つかりません。</p>
       </Show>
     </div>
   )

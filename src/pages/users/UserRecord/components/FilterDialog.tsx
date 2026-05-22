@@ -1,4 +1,4 @@
-﻿import { Dialog } from '@kobalte/core/dialog'
+import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../types/api'
@@ -57,8 +57,8 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
   return (
     <Dialog open={props.open} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 bg-black/30 z-40" />
-        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 w-[90vw] max-w-md max-h-11/12 flex flex-col">
+        <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
+        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface rounded-lg shadow-lg p-6 w-[90vw] max-w-md max-h-11/12 flex flex-col">
           <div class="flex items-center justify-between mb-4 shrink-0">
             <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
             <FilterResetDialog onReset={handleReset} />
@@ -82,14 +82,14 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
             <div class="flex gap-2">
               <button
                 type="button"
-                class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+                class="px-4 py-2 rounded bg-action-secondary text-text-muted hover:bg-action-secondary-hover"
                 onClick={() => props.onOpenChange(false)}
               >
                 キャンセル
               </button>
               <button
                 type="button"
-                class="px-4 py-2 rounded bg-primary-600 text-white hover:bg-primary-700"
+                class="px-4 py-2 rounded bg-action-primary text-text-inverse hover:bg-action-primary-hover"
                 onClick={handleApply}
               >
                 適用

@@ -9,7 +9,7 @@ const SongStatsTable = (props: Props) => {
   return (
     <div class="overflow-x-auto">
       <table class="min-w-full text-sm">
-        <thead class="bg-gray-50">
+        <thead class="bg-surface-muted">
           <tr>
             <th class="px-2 py-2 text-left">帯</th>
             <th class="px-2 py-2 text-right">人数</th>
@@ -25,7 +25,7 @@ const SongStatsTable = (props: Props) => {
         <tbody>
           <For each={props.stats}>
             {(band) => (
-              <tr class="border-t border-gray-100">
+              <tr class="border-t border-border">
                 <td class="px-2 py-2">{band.rating_band}</td>
                 <td class="px-2 py-2 text-right">{band.player_count.toLocaleString()}</td>
                 <td class="px-2 py-2 text-right">

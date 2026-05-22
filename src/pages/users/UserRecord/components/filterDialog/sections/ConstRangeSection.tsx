@@ -1,4 +1,4 @@
-﻿import { Checkbox } from '@kobalte/core/checkbox'
+import { Checkbox } from '@kobalte/core/checkbox'
 import { NumberField } from '@kobalte/core/number-field'
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown } from 'lucide-solid'
@@ -63,7 +63,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
             <NumberField.Label class="block text-sm font-medium mb-1">定数(最小)</NumberField.Label>
             <NumberField.Input
               id="filter-const-min"
-              class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400  focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
+              class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-surface border-border-strong hover:border-input-border-hover  focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2"
               onFocus={(event) => event.currentTarget.select()}
               onBlur={(event) => props.onMinCommit(event.currentTarget.value)}
             />
@@ -84,7 +84,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
               min={0}
               max={CONST_MAX}
               step={0.1}
-              class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
+              class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-surface border-border-strong hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2"
               onFocus={(event) => event.currentTarget.select()}
               onBlur={(event) => props.onMaxCommit(event.currentTarget.value)}
             />
@@ -105,7 +105,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
             itemComponent={(itemProps) => (
               <Select.Item
                 item={itemProps.item}
-                class="text-sm rounded flex items-center justify-between h-8 px-2 outline-none cursor-pointer data-disabled:opacity-50 data-disabled:pointer-events-none data-highlighted:bg-primary-600 data-highlighted:text-white"
+                class="text-sm rounded flex items-center justify-between h-8 px-2 outline-none cursor-pointer data-disabled:opacity-50 data-disabled:pointer-events-none data-highlighted:bg-action-primary data-highlighted:text-text-inverse"
               >
                 <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
                 <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
@@ -115,8 +115,8 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
             )}
           >
             <Select.Label class="block text-sm font-medium mb-1">レベル(最小)</Select.Label>
-            <Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2">
-              <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-gray-400">
+            <Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-surface border-border-strong hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2">
+              <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
                 {(state) => state.selectedOption()}
               </Select.Value>
               <Select.Icon class="h-5 w-5 flex items-center justify-center">
@@ -124,7 +124,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
               </Select.Icon>
             </Select.Trigger>
             <Select.Portal>
-              <Select.Content class="z-60 bg-white rounded-md border border-gray-300 shadow-lg">
+              <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
                 <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
               </Select.Content>
             </Select.Portal>
@@ -142,7 +142,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
             itemComponent={(itemProps) => (
               <Select.Item
                 item={itemProps.item}
-                class="text-sm rounded flex items-center justify-between h-8 px-2 outline-none cursor-pointer data-disabled:opacity-50 data-disabled:pointer-events-none data-highlighted:bg-primary-600 data-highlighted:text-white"
+                class="text-sm rounded flex items-center justify-between h-8 px-2 outline-none cursor-pointer data-disabled:opacity-50 data-disabled:pointer-events-none data-highlighted:bg-action-primary data-highlighted:text-text-inverse"
               >
                 <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
                 <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
@@ -152,8 +152,8 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
             )}
           >
             <Select.Label class="block text-sm font-medium mb-1">レベル(最大)</Select.Label>
-            <Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2">
-              <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-gray-400">
+            <Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-surface border-border-strong hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2">
+              <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
                 {(state) => state.selectedOption()}
               </Select.Value>
               <Select.Icon class="h-5 w-5 flex items-center justify-center">
@@ -161,7 +161,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
               </Select.Icon>
             </Select.Trigger>
             <Select.Portal>
-              <Select.Content class="z-60 bg-white rounded-md border border-gray-300 shadow-lg">
+              <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
                 <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
               </Select.Content>
             </Select.Portal>
@@ -176,7 +176,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
         class="flex items-center gap-2"
       >
         <Checkbox.Input id="filter-const-mode" />
-        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white">
+        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
           <Checkbox.Indicator>
             <Check class="h-4 w-4" />
           </Checkbox.Indicator>

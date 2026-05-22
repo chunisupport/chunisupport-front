@@ -57,10 +57,10 @@ const WorldsendColumnSettingsDialog: Component<Props> = (props) => {
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-black/30" />
-        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 max-h-[90vh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg">
+        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
+        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 max-h-[90vh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
           <Dialog.Title class="mb-4 text-lg font-bold">列設定</Dialog.Title>
-          <p class="mb-3 text-xs text-gray-500">表示する列を選択してください（1列以上必須）</p>
+          <p class="mb-3 text-xs text-text-subtle">表示する列を選択してください（1列以上必須）</p>
 
           <Select<ColumnOption>
             multiple
@@ -73,10 +73,10 @@ const WorldsendColumnSettingsDialog: Component<Props> = (props) => {
             itemComponent={(props) => (
               <Select.Item
                 item={props.item}
-                class="cursor-pointer px-3 py-2 text-gray-800 hover:bg-green-50 data-[selected]:bg-green-50"
+                class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[selected]:bg-success-bg"
               >
                 <div class="flex items-center gap-2">
-                  <span class="inline-flex w-4 justify-center text-green-700">
+                  <span class="inline-flex w-4 justify-center text-success">
                     <Select.ItemIndicator>
                       <Check size={14} />
                     </Select.ItemIndicator>
@@ -86,27 +86,27 @@ const WorldsendColumnSettingsDialog: Component<Props> = (props) => {
               </Select.Item>
             )}
           >
-            <Select.Trigger class="flex w-full items-center rounded border border-gray-300 px-3 py-2 text-left">
+            <Select.Trigger class="flex w-full items-center rounded border border-border-strong px-3 py-2 text-left">
               <div class="flex min-h-6 flex-1 flex-wrap gap-1" aria-live="polite">
                 <Show
                   when={selectedOptions().length > 0}
-                  fallback={<span class="text-gray-400">表示列を選択</span>}
+                  fallback={<span class="text-text-subtle">表示列を選択</span>}
                 >
                   <For each={selectedOptions()}>
                     {(option) => (
-                      <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">
+                      <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
                         {option.label}
                       </span>
                     )}
                   </For>
                 </Show>
               </div>
-              <span class="text-gray-500" aria-hidden="true">
+              <span class="text-text-subtle" aria-hidden="true">
                 <ChevronsUpDown size={16} />
               </span>
             </Select.Trigger>
             <Select.Portal>
-              <Select.Content class="z-50 mt-1 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-gray-200 bg-white shadow-md">
+              <Select.Content class="z-50 mt-1 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
                 <Select.Listbox />
               </Select.Content>
             </Select.Portal>
@@ -115,14 +115,14 @@ const WorldsendColumnSettingsDialog: Component<Props> = (props) => {
           <div class="mt-6 flex justify-end gap-2">
             <button
               type="button"
-              class="rounded bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+              class="rounded bg-action-secondary px-4 py-2 text-text-muted hover:bg-action-secondary-hover"
               onClick={() => props.onOpenChange(false)}
             >
               キャンセル
             </button>
             <button
               type="button"
-              class="rounded bg-primary-600 px-4 py-2 text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+              class="rounded bg-action-primary px-4 py-2 text-text-inverse hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:bg-action-secondary-hover"
               onClick={handleApply}
               disabled={selectedColumnIds().length === 0}
             >

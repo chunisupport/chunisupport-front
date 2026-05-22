@@ -434,7 +434,7 @@ const UserOverPower: Component<Props> = (props) => {
     return buildSongBasedGraphRows(currentSummary.versions, songGroups.versions)
   })
   const iconButtonClass =
-    'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-gray-400'
+    'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-disabled-text'
   const lockedSongsButtonDisabled = createMemo(
     () => !canManageLockedSongs() || !allSongs() || lockedSongs.loading
   )
@@ -474,7 +474,7 @@ const UserOverPower: Component<Props> = (props) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
+      <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
         <Show when={summary()} fallback={<Loading />}>
           {(currentSummary) => (
             <div class="mx-4 flex flex-col gap-4 text-sm">
@@ -491,10 +491,10 @@ const UserOverPower: Component<Props> = (props) => {
                       itemComponent={(itemProps) => (
                         <Select.Item
                           item={itemProps.item}
-                          class="cursor-pointer px-3 py-2 text-gray-800 hover:bg-green-50 data-[highlighted]:bg-green-50 data-[selected]:bg-green-50"
+                          class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
                         >
                           <div class="flex items-center gap-2">
-                            <span class="inline-flex w-4 justify-center text-green-700">
+                            <span class="inline-flex w-4 justify-center text-success">
                               <Select.ItemIndicator>
                                 <Check size={14} />
                               </Select.ItemIndicator>
@@ -504,16 +504,16 @@ const UserOverPower: Component<Props> = (props) => {
                         </Select.Item>
                       )}
                     >
-                      <Select.Trigger class="grid w-[200px] min-w-20 max-w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm font-medium text-gray-700">
+                      <Select.Trigger class="grid w-[200px] min-w-20 max-w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm font-medium text-text-muted">
                         <Select.Value<OverPowerSummaryOption> class="truncate">
                           {(state) => <span>{state.selectedOption()?.label ?? 'ジャンル'}</span>}
                         </Select.Value>
-                        <span class="justify-self-end text-gray-500" aria-hidden="true">
+                        <span class="justify-self-end text-text-subtle" aria-hidden="true">
                           <ChevronDown size={16} />
                         </span>
                       </Select.Trigger>
                       <Select.Portal>
-                        <Select.Content class="z-50 mt-1 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-gray-200 bg-white shadow-md">
+                        <Select.Content class="z-50 mt-1 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-border bg-surface shadow-md">
                           <Select.Listbox />
                         </Select.Content>
                       </Select.Portal>
@@ -522,7 +522,7 @@ const UserOverPower: Component<Props> = (props) => {
                   <div class="flex shrink-0 items-center gap-2">
                     <Button
                       type="button"
-                      class="inline-flex h-10 min-w-16 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-3 text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+                      class="inline-flex h-10 min-w-16 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-3 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
                       aria-label={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
                       title={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
                       onClick={handleToggleSummaryViewMode}

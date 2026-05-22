@@ -44,7 +44,7 @@ const WorldsendSongDetail = () => {
       renderStats={() => (
         <>
           <Show when={stats.error} keyed>
-            {(err) => <p class="text-red-500">Error loading stats: {err.message}</p>}
+            {(err) => <p class="text-danger">Error loading stats: {err.message}</p>}
           </Show>
           <Show when={!stats.error}>
             <SongStatsTabs

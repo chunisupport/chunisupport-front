@@ -1,4 +1,4 @@
-﻿import { Checkbox } from '@kobalte/core/checkbox'
+import { Checkbox } from '@kobalte/core/checkbox'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate } from '@solidjs/router'
 import { signInWithPopup } from 'firebase/auth'
@@ -101,15 +101,15 @@ const Register = () => {
       if (props.isChecking) return <Loader class="inline w-4 h-4 animate-spin" />
       if (props.status === null) return <Dot class="inline w-4 h-4" />
       return props.status ? (
-        <Check class="inline w-4 h-4 text-primary-600" />
+        <Check class="inline w-4 h-4 text-action-primary" />
       ) : (
-        <X class="inline w-4 h-4 text-red-600" />
+        <X class="inline w-4 h-4 text-danger" />
       )
     }
     const getColor = () => {
-      if (props.isChecking) return 'text-gray-500'
-      if (props.status === null) return 'text-gray-500'
-      return props.status ? 'text-primary-600' : 'text-red-600'
+      if (props.isChecking) return 'text-text-subtle'
+      if (props.status === null) return 'text-text-subtle'
+      return props.status ? 'text-action-primary' : 'text-danger'
     }
     return (
       <div class={`text-xs ${getColor()}`}>
@@ -132,13 +132,13 @@ const Register = () => {
         ) : (
           <>
             <div class="text-center mb-6">
-              <p class="text-gray-600 mb-2">ChuniSupport</p>
+              <p class="text-text-muted mb-2">ChuniSupport</p>
               <h1 class="text-2xl font-semibold">新規登録</h1>
             </div>
 
             {/* 注意事項 */}
-            <div class="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded-md">
-              <p class="text-yellow-800 text-sm">
+            <div class="mb-6 p-4 bg-warning-bg border border-warning-border rounded-md">
+              <p class="text-warning text-sm">
                 スコアデータの登録には
                 <span class="font-bold">ゲキチュウマイ-NET利用権</span>が必要です。
               </p>
@@ -147,16 +147,16 @@ const Register = () => {
             {/* Step 1: Google認証 */}
             <Show when={step() === 'google_auth'}>
               <div class="mb-6 text-center">
-                <p class="text-sm text-gray-600 mb-4">Googleアカウントで新規登録します。</p>
+                <p class="text-sm text-text-muted mb-4">Googleアカウントで新規登録します。</p>
                 {errorMessage() && (
-                  <div class="mb-4 p-3 bg-red-100 border border-red-400 rounded-md flex items-center text-left">
-                    <X class="w-5 h-5 text-red-600 mr-2 shrink-0" />
-                    <p class="text-sm text-red-700">{errorMessage()}</p>
+                  <div class="mb-4 p-3 bg-danger-bg border border-danger-border rounded-md flex items-center text-left">
+                    <X class="w-5 h-5 text-danger mr-2 shrink-0" />
+                    <p class="text-sm text-danger">{errorMessage()}</p>
                   </div>
                 )}
                 <button
                   type="button"
-                  class="w-full flex items-center justify-center gap-3 px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+                  class="w-full flex items-center justify-center gap-3 px-4 py-2 border border-border-strong rounded-md bg-surface hover:bg-surface-muted disabled:opacity-50"
                   onClick={handleGoogleAuth}
                   disabled={isSubmitting()}
                 >
@@ -182,7 +182,7 @@ const Register = () => {
                       />
                     </svg>
                   )}
-                  <span class="text-sm font-medium text-gray-700">Googleで続ける</span>
+                  <span class="text-sm font-medium text-text-muted">Googleで続ける</span>
                 </button>
               </div>
             </Show>
@@ -190,7 +190,7 @@ const Register = () => {
             {/* Step 2: ユーザー名入力 */}
             <Show when={step() === 'fill_username'}>
               <div class="mb-6 text-left">
-                <div class="mb-4 p-3 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-700">
+                <div class="mb-4 p-3 bg-surface-hover border border-border-strong rounded-md text-sm text-text-muted">
                   Googleアカウント: <span class="font-medium">{googleEmail()}</span>
                 </div>
                 <TextField
@@ -200,7 +200,7 @@ const Register = () => {
                   }
                 >
                   <TextField.Input
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 data-invalid:border-red-500"
+                    class="w-full px-3 py-2 border border-border-strong rounded-md focus:outline-none focus:ring-2 focus:ring-focus-ring data-invalid:border-danger-border"
                     placeholder="ユーザー名"
                     value={username()}
                     onInput={(event) => {
@@ -221,28 +221,28 @@ const Register = () => {
                   onChange={setAgreedToTerms}
                 >
                   <Checkbox.Input class="sr-only" />
-                  <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white flex items-center justify-center">
+                  <Checkbox.Control class="h-5 w-5 rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse flex items-center justify-center">
                     <Checkbox.Indicator>
                       <Check class="h-4 w-4" />
                     </Checkbox.Indicator>
                   </Checkbox.Control>
-                  <Checkbox.Label class="ml-2 text-gray-900 text-sm select-none">
-                    <A href="/terms" class="text-primary-500 underline mr-1">
+                  <Checkbox.Label class="ml-2 text-text text-sm select-none">
+                    <A href="/terms" class="text-link underline mr-1">
                       利用規約
                     </A>
                     に同意します
                   </Checkbox.Label>
                 </Checkbox>
                 {errorMessage() && (
-                  <div class="mb-4 p-3 bg-red-100 border border-red-400 rounded-md flex items-center">
-                    <X class="w-5 h-5 text-red-600 mr-2 shrink-0" />
-                    <p class="text-sm text-red-700">{errorMessage()}</p>
+                  <div class="mb-4 p-3 bg-danger-bg border border-danger-border rounded-md flex items-center">
+                    <X class="w-5 h-5 text-danger mr-2 shrink-0" />
+                    <p class="text-sm text-danger">{errorMessage()}</p>
                   </div>
                 )}
                 <div class="flex justify-center">
                   <button
                     type="button"
-                    class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50"
+                    class="px-4 py-2 bg-action-primary text-text-inverse rounded-md hover:bg-action-primary-hover disabled:opacity-50"
                     onClick={handleRegister}
                     disabled={!(isUsernameValid() && agreedToTerms()) || isSubmitting()}
                   >
@@ -253,14 +253,14 @@ const Register = () => {
             </Show>
 
             <div class="text-center">
-              <p class="mb-5 text-sm text-gray-600">
+              <p class="mb-5 text-sm text-text-muted">
                 すでにアカウントをお持ちの方は
-                <A href="/login" class="text-primary-500 underline ml-1">
+                <A href="/login" class="text-link underline ml-1">
                   こちら
                 </A>
               </p>
-              <p class="text-sm text-gray-600">
-                <A href="/" class="text-primary-500 underline ml-1">
+              <p class="text-sm text-text-muted">
+                <A href="/" class="text-link underline ml-1">
                   トップページへ戻る
                 </A>
               </p>

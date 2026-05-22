@@ -364,26 +364,26 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 bg-black/30 z-40" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-white p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+        <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
+        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
           <Dialog.Title class="text-lg font-bold">
             {props.mode === 'create' ? '目標を作成' : '目標を編集'}
           </Dialog.Title>
 
           <div class="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             <label class="block text-sm">
-              <span class="mb-1 block text-gray-700">タイトル</span>
+              <span class="mb-1 block text-text-muted">タイトル</span>
               <input
                 type="text"
                 maxlength={30}
                 value={title()}
                 onInput={(event) => setTitle(event.currentTarget.value)}
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-border-strong px-3 py-2"
               />
             </label>
 
             <label class="block text-sm">
-              <span class="mb-1 block text-gray-700">目標種別</span>
+              <span class="mb-1 block text-text-muted">目標種別</span>
               <select
                 value={achievementType()}
                 onChange={(event) => {
@@ -397,7 +397,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     setScore(String(SCORE_RANK_MIN_SCORES.S))
                   }
                 }}
-                class="w-full rounded border border-gray-300 px-3 py-2"
+                class="w-full rounded border border-border-strong px-3 py-2"
               >
                 {props.masterData.achievement_types.map((item) => (
                   <option value={item.code}>
@@ -412,19 +412,19 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
             <Show when={achievementType() === 'score_count' || achievementType() === 'avg_score'}>
               <label class="block text-sm">
-                <span class="mb-1 block text-gray-700">スコア目標</span>
+                <span class="mb-1 block text-text-muted">スコア目標</span>
                 <input
                   type="number"
                   value={score()}
                   onInput={(event) => setScore(event.currentTarget.value)}
-                  class="w-full rounded border border-gray-300 px-3 py-2"
+                  class="w-full rounded border border-border-strong px-3 py-2"
                 />
               </label>
             </Show>
 
             <Show when={achievementType() === 'rank_count'}>
               <label class="block text-sm">
-                <span class="mb-1 block text-gray-700">ランク目標</span>
+                <span class="mb-1 block text-text-muted">ランク目標</span>
                 <select
                   value={rank()}
                   onChange={(event) => {
@@ -432,7 +432,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     setRank(nextRank)
                     setScore(String(SCORE_RANK_MIN_SCORES[nextRank]))
                   }}
-                  class="w-full rounded border border-gray-300 px-3 py-2"
+                  class="w-full rounded border border-border-strong px-3 py-2"
                 >
                   {SCORE_RANKS_ASC.map((scoreRank) => (
                     <option value={scoreRank}>
@@ -452,7 +452,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               }
             >
               <label class="block text-sm">
-                <span class="mb-1 block text-gray-700">
+                <span class="mb-1 block text-text-muted">
                   {invert() ? '未達成件数目標' : '件数目標'}
                 </span>
                 <div class="space-y-2">
@@ -461,7 +461,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     onChange={(event) =>
                       setCountMode(event.currentTarget.value as 'number' | 'all')
                     }
-                    class="w-full rounded border border-gray-300 px-3 py-2"
+                    class="w-full rounded border border-border-strong px-3 py-2"
                   >
                     <option value="number">数値を指定</option>
                     <option value="all">条件に当てはまるものすべて</option>
@@ -469,7 +469,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   <Show
                     when={countMode() === 'number'}
                     fallback={
-                      <p class="rounded border border-primary-200 bg-primary-50 px-3 py-2 text-xs text-primary-700">
+                      <p class="rounded border border-action-primary-border bg-action-primary-muted px-3 py-2 text-xs text-action-primary">
                         現在の対象譜面数: {props.resolveAllCount(getDraftAttributes())} 件
                       </p>
                     }
@@ -479,10 +479,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       min={invert() ? 0 : 1}
                       value={count()}
                       onInput={(event) => setCount(event.currentTarget.value)}
-                      class="w-full rounded border border-gray-300 px-3 py-2"
+                      class="w-full rounded border border-border-strong px-3 py-2"
                     />
                     <Show when={invert()}>
-                      <p class="mt-1 text-xs text-gray-600">
+                      <p class="mt-1 text-xs text-text-muted">
                         入力値は「許容する未達成数」です（保存時に達成件数へ変換）。
                       </p>
                     </Show>
@@ -493,13 +493,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
             <Show when={achievementType() === 'hardlamp_count'}>
               <label class="block text-sm">
-                <span class="mb-1 block text-gray-700">ハードランプ</span>
+                <span class="mb-1 block text-text-muted">ハードランプ</span>
                 <select
                   value={hardLamp()}
                   onChange={(event) =>
                     setHardLamp(event.currentTarget.value as 'HRD' | 'BRV' | 'ABS' | 'CTS')
                   }
-                  class="w-full rounded border border-gray-300 px-3 py-2"
+                  class="w-full rounded border border-border-strong px-3 py-2"
                 >
                   {HARD_LAMP_OPTIONS.map((lamp) => (
                     <option value={lamp.value}>{lamp.label}</option>
@@ -510,11 +510,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
             <Show when={achievementType() === 'combolamp_count'}>
               <label class="block text-sm">
-                <span class="mb-1 block text-gray-700">コンボランプ</span>
+                <span class="mb-1 block text-text-muted">コンボランプ</span>
                 <select
                   value={comboLamp()}
                   onChange={(event) => setComboLamp(event.currentTarget.value as 'FC' | 'AJ')}
-                  class="w-full rounded border border-gray-300 px-3 py-2"
+                  class="w-full rounded border border-border-strong px-3 py-2"
                 >
                   {COMBO_LAMP_OPTIONS.map((lamp) => (
                     <option value={lamp.value}>{lamp.label}</option>
@@ -531,7 +531,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               }
             >
               <label class="block text-sm">
-                <span class="mb-1 block text-gray-700">合計/割合目標</span>
+                <span class="mb-1 block text-text-muted">合計/割合目標</span>
                 <div class="space-y-2">
                   <Show when={canUseDynamicTotalTarget(achievementType())}>
                     <select
@@ -539,7 +539,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       onChange={(event) =>
                         setTotalMode(event.currentTarget.value as 'number' | 'all')
                       }
-                      class="w-full rounded border border-gray-300 px-3 py-2"
+                      class="w-full rounded border border-border-strong px-3 py-2"
                     >
                       <option value="number">数値を指定</option>
                       <option value="all">条件に当てはまるものすべて</option>
@@ -548,7 +548,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   <Show
                     when={!canUseDynamicTotalTarget(achievementType()) || totalMode() === 'number'}
                     fallback={
-                      <p class="rounded border border-primary-200 bg-primary-50 px-3 py-2 text-xs text-primary-700">
+                      <p class="rounded border border-action-primary-border bg-action-primary-muted px-3 py-2 text-xs text-action-primary">
                         現在の対象譜面数から目標値を自動計算します。
                       </p>
                     }
@@ -557,10 +557,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       type="number"
                       value={total()}
                       onInput={(event) => setTotal(event.currentTarget.value)}
-                      class="w-full rounded border border-gray-300 px-3 py-2"
+                      class="w-full rounded border border-border-strong px-3 py-2"
                     />
                     <Show when={achievementType() === 'total_score'}>
-                      <p class="mt-1 text-xs text-gray-600">
+                      <p class="mt-1 text-xs text-text-muted">
                         最大値: {getTotalScoreMax().toLocaleString('ja-JP')}（対象譜面数 ×
                         1,010,000）
                       </p>
@@ -570,23 +570,23 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               </label>
             </Show>
 
-            <div class="rounded border border-gray-200 p-3">
-              <p class="mb-2 text-sm font-semibold text-gray-700">対象条件（任意）</p>
+            <div class="rounded border border-border p-3">
+              <p class="mb-2 text-sm font-semibold text-text-muted">対象条件（任意）</p>
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <fieldset class="block text-sm space-y-1">
                   <div class="flex items-center justify-between">
-                    <span class="block text-gray-700">難易度（複数可）</span>
+                    <span class="block text-text-muted">難易度（複数可）</span>
                     <button
                       type="button"
-                      class="text-xs text-primary-600 hover:text-primary-700"
+                      class="text-xs text-action-primary hover:text-action-primary"
                       onClick={() => setDiffs([])}
                     >
                       クリア
                     </button>
                   </div>
-                  <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
+                  <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-border-strong px-3 py-2">
                     {props.masterData.difficulties.map((item) => (
-                      <label class="flex items-center gap-2 text-sm text-gray-700">
+                      <label class="flex items-center gap-2 text-sm text-text-muted">
                         <input
                           type="checkbox"
                           checked={diffs().includes(String(item.id))}
@@ -600,23 +600,23 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       </label>
                     ))}
                   </div>
-                  <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
+                  <p class="text-xs text-text-subtle">未選択で「指定なし」になります。</p>
                 </fieldset>
 
                 <fieldset class="block text-sm space-y-1">
                   <div class="flex items-center justify-between">
-                    <span class="block text-gray-700">ジャンル（複数可）</span>
+                    <span class="block text-text-muted">ジャンル（複数可）</span>
                     <button
                       type="button"
-                      class="text-xs text-primary-600 hover:text-primary-700"
+                      class="text-xs text-action-primary hover:text-action-primary"
                       onClick={() => setGenres([])}
                     >
                       クリア
                     </button>
                   </div>
-                  <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
+                  <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-border-strong px-3 py-2">
                     {props.masterData.genres.map((item) => (
-                      <label class="flex items-center gap-2 text-sm text-gray-700">
+                      <label class="flex items-center gap-2 text-sm text-text-muted">
                         <input
                           type="checkbox"
                           checked={genres().includes(String(item.id))}
@@ -630,30 +630,30 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       </label>
                     ))}
                   </div>
-                  <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
+                  <p class="text-xs text-text-subtle">未選択で「指定なし」になります。</p>
                 </fieldset>
 
                 <fieldset class="block text-sm space-y-1">
                   <div class="flex items-center justify-between">
-                    <span class="block text-gray-700">バージョン（複数可）</span>
+                    <span class="block text-text-muted">バージョン（複数可）</span>
                     <button
                       type="button"
-                      class="text-xs text-primary-600 hover:text-primary-700"
+                      class="text-xs text-action-primary hover:text-action-primary"
                       onClick={() => setVersions([])}
                     >
                       クリア
                     </button>
                   </div>
-                  <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-gray-300 px-3 py-2">
+                  <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-border-strong px-3 py-2">
                     <Show
                       when={versionOptions().length > 0}
                       fallback={
-                        <p class="text-sm text-gray-500">バージョンを取得できませんでした。</p>
+                        <p class="text-sm text-text-subtle">バージョンを取得できませんでした。</p>
                       }
                     >
                       <For each={versionOptions()}>
                         {(item) => (
-                          <label class="flex items-center gap-2 text-sm text-gray-700">
+                          <label class="flex items-center gap-2 text-sm text-text-muted">
                             <input
                               type="checkbox"
                               checked={versions().includes(item.value)}
@@ -669,35 +669,35 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       </For>
                     </Show>
                   </div>
-                  <p class="text-xs text-gray-500">未選択で「指定なし」になります。</p>
+                  <p class="text-xs text-text-subtle">未選択で「指定なし」になります。</p>
                 </fieldset>
 
                 <div class="grid grid-cols-2 gap-2">
                   <label class="block text-sm">
-                    <span class="mb-1 block text-gray-700">定数min</span>
+                    <span class="mb-1 block text-text-muted">定数min</span>
                     <input
                       type="number"
                       step="0.1"
                       value={constMin()}
                       onInput={(event) => setConstMin(event.currentTarget.value)}
-                      class="w-full rounded border border-gray-300 px-3 py-2"
+                      class="w-full rounded border border-border-strong px-3 py-2"
                     />
                   </label>
                   <label class="block text-sm">
-                    <span class="mb-1 block text-gray-700">定数max</span>
+                    <span class="mb-1 block text-text-muted">定数max</span>
                     <input
                       type="number"
                       step="0.1"
                       value={constMax()}
                       onInput={(event) => setConstMax(event.currentTarget.value)}
-                      class="w-full rounded border border-gray-300 px-3 py-2"
+                      class="w-full rounded border border-border-strong px-3 py-2"
                     />
                   </label>
                 </div>
               </div>
             </div>
 
-            <label class="flex items-center gap-2 text-sm text-gray-700">
+            <label class="flex items-center gap-2 text-sm text-text-muted">
               <input
                 type="checkbox"
                 checked={invert()}
@@ -707,14 +707,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
             </label>
 
             <Show when={errorMessage()}>
-              <p class="text-sm text-red-600">{errorMessage()}</p>
+              <p class="text-sm text-danger">{errorMessage()}</p>
             </Show>
           </div>
 
           <div class="mt-6 flex justify-end gap-2">
             <button
               type="button"
-              class="rounded bg-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-300"
+              class="rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover"
               onClick={() => props.onOpenChange(false)}
               disabled={props.isSaving}
             >
@@ -722,7 +722,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
             </button>
             <button
               type="button"
-              class="rounded bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
+              class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:opacity-60"
               onClick={() => {
                 void handleSave()
               }}

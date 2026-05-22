@@ -33,6 +33,12 @@ const honorTypeClassNames: Record<HonorDTO['type_name'], string> = {
   ultima: 'user-honor-title--ultima',
 }
 
+/**
+ * ユーザーの称号、レベル、レーティング、OVER POWERをまとめたプロフィールカードを表示する。
+ *
+ * @param props - 表示対象のプレイヤー情報、称号、レーティング対象レコード。
+ * @returns プロフィールカードの JSX 要素。
+ */
 export const UserNameplate: Component<Props> = (props) => {
   const bestSum = sumRating(props.bestRecords)
   const newSum = sumRating(props.newRecords)
@@ -46,7 +52,7 @@ export const UserNameplate: Component<Props> = (props) => {
   const primaryHonor = () => props.honors[0]
 
   return (
-    <div class="mb-2 mx-auto w-[min(420px,calc(100%-2rem))] px-3 py-3 border border-gray-200 shadow-sm rounded-md ">
+    <div class="mb-2 mx-auto w-[min(420px,calc(100%-2rem))] px-3 py-3 border border-border shadow-sm rounded-md ">
       {/* TODO: 称号の背景画像を表示 */}
       <Show when={primaryHonor()}>
         {(honor) => (
@@ -62,10 +68,10 @@ export const UserNameplate: Component<Props> = (props) => {
         <p class="">Lv. {props.playerInfo.level}</p>
         <h1 class="flex-1 text-xl font-medium text-center">{props.playerInfo.name}</h1>
       </div>
-      <hr class="mb-2 border-t border-gray-200" />
+      <hr class="mb-2 border-t border-border" />
       <p>
         RATING <b>{playerRatingText}</b>{' '}
-        <span class="text-gray-500">
+        <span class="goal-card-progress-secondary">
           (BEST <b>{bestRatingText}</b> / NEW <b>{newRatingText}</b>)
         </span>
       </p>

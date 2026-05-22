@@ -1,4 +1,4 @@
-﻿import { Checkbox } from '@kobalte/core/checkbox'
+import { Checkbox } from '@kobalte/core/checkbox'
 import { Check } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For } from 'solid-js'
@@ -17,14 +17,14 @@ const GenreSection: Component<GenreSectionProps> = (props) => (
     <div class="flex gap-2 mb-1">
       <button
         type="button"
-        class="px-2 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 text-xs"
+        class="px-2 py-1 rounded bg-action-secondary text-text-muted hover:bg-action-secondary-hover text-xs"
         onClick={props.onSelectAll}
       >
         すべて選択
       </button>
       <button
         type="button"
-        class="px-2 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 text-xs"
+        class="px-2 py-1 rounded bg-action-secondary text-text-muted hover:bg-action-secondary-hover text-xs"
         onClick={props.onClear}
       >
         すべて解除
@@ -41,7 +41,7 @@ const GenreSection: Component<GenreSectionProps> = (props) => (
               class="flex items-center gap-2"
             >
               <Checkbox.Input id={id} />
-              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white">
+              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
                 <Checkbox.Indicator>
                   <Check class="h-4 w-4" />
                 </Checkbox.Indicator>

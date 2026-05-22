@@ -14,11 +14,11 @@ type SongSearchInputProps = {
 const SongSearchInput = (props: SongSearchInputProps) => {
   return (
     <div class="max-w-md">
-      <label class="mb-1 block text-sm font-medium text-gray-700" for={props.id}>
+      <label class="mb-1 block text-sm font-medium text-text-muted" for={props.id}>
         楽曲検索
       </label>
-      <div class="flex items-center gap-2 rounded-md border border-gray-300 px-2 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/30">
-        <Search class="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
+      <div class="flex items-center gap-2 rounded-md border border-border-strong px-2 focus-within:border-focus-ring focus-within:ring-2 focus-within:ring-focus-ring/30">
+        <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
         <input
           id={props.id}
           type="search"

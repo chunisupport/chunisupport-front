@@ -12,14 +12,14 @@ const formatValue = formatOverPowerValue
 const formatPercent = formatOverPowerPercent
 
 export const OverPowerSummaryTable: Component<Props> = (props) => (
-  <section class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+  <section class="overflow-hidden rounded-lg border border-border bg-surface">
     <Show
       when={props.rows.length > 0}
-      fallback={<p class="px-3 py-4 text-sm text-gray-500">表示できるデータがありません。</p>}
+      fallback={<p class="px-3 py-4 text-sm text-text-subtle">表示できるデータがありません。</p>}
     >
       <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
-          <thead class="bg-gray-50 text-xs text-gray-600">
+          <thead class="bg-surface-muted text-xs text-text-muted">
             <tr>
               <th class="px-3 py-2 text-left font-medium" scope="col">
                 <span class="sr-only">項目</span>
@@ -38,24 +38,24 @@ export const OverPowerSummaryTable: Component<Props> = (props) => (
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
+          <tbody class="divide-y divide-border">
             <For each={props.rows}>
               {(row) => (
                 <tr>
                   <th
                     scope="row"
-                    class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-900"
+                    class="whitespace-nowrap px-3 py-2 text-left font-medium text-text"
                   >
                     {row.label}
                   </th>
                   <td class="px-3 py-2 text-right tabular-nums">{formatValue(row.current)}</td>
-                  <td class="px-3 py-2 text-right tabular-nums text-gray-600">
+                  <td class="px-3 py-2 text-right tabular-nums text-text-muted">
                     {formatValue(row.max)}
                   </td>
-                  <td class="px-3 py-2 text-right tabular-nums text-gray-600">
+                  <td class="px-3 py-2 text-right tabular-nums text-text-muted">
                     {formatPercent(row.percent)}%
                   </td>
-                  <td class="px-3 py-2 text-right tabular-nums text-gray-600">{row.count}</td>
+                  <td class="px-3 py-2 text-right tabular-nums text-text-muted">{row.count}</td>
                 </tr>
               )}
             </For>

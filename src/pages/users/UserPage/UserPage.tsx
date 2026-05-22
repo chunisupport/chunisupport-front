@@ -79,7 +79,7 @@ const UserPage: Component = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <ErrorBoundary fallback={(err: Error) => <p class="text-red-500">ERROR: {err.message}</p>}>
+      <ErrorBoundary fallback={(err: Error) => <p class="text-danger">ERROR: {err.message}</p>}>
         <Show when={profileSummary() && ratingProfile()}>
           <Show when={hasPlayerData()} fallback={<PlayerDataEmptyState />}>
             <Show when={linkedRatingProfile()}>
