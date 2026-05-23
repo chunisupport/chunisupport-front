@@ -1,4 +1,6 @@
+import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
+import { Check } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import type {
@@ -37,6 +39,37 @@ interface GoalFormDialogProps {
   onSave: (payload: GoalRequest) => Promise<void>
   resolveAllCount: (attributes: GoalAttributes) => number
 }
+
+interface GoalFilterCheckboxProps {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}
+
+const GOAL_FILTER_CHECKBOX_CONTROL_CLASS =
+  'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
+
+/**
+ * 目標設定ダイアログで使うフィルター用チェックボックスを描画する。
+ *
+ * @param props - 表示ラベル、選択状態、選択変更ハンドラ。
+ * @returns Kobalte Checkbox を使ったチェックボックス要素。
+ */
+const GoalFilterCheckbox: Component<GoalFilterCheckboxProps> = (props) => (
+  <Checkbox
+    class="flex items-center gap-2 text-sm text-text-muted"
+    checked={props.checked}
+    onChange={props.onChange}
+  >
+    <Checkbox.Input />
+    <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
+      <Checkbox.Indicator>
+        <Check class="h-4 w-4" />
+      </Checkbox.Indicator>
+    </Checkbox.Control>
+    <Checkbox.Label>{props.label}</Checkbox.Label>
+  </Checkbox>
+)
 
 const isCountAchievementType = (type: GoalAchievementType): boolean =>
   type === 'score_count' ||
@@ -585,20 +618,17 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     </button>
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-border-strong px-3 py-2">
-                    {props.masterData.difficulties.map((item) => (
-                      <label class="flex items-center gap-2 text-sm text-text-muted">
-                        <input
-                          type="checkbox"
+                    <For each={props.masterData.difficulties}>
+                      {(item) => (
+                        <GoalFilterCheckbox
+                          label={item.name}
                           checked={diffs().includes(String(item.id))}
-                          onChange={(event) =>
-                            setDiffs((prev) =>
-                              toggleSelection(prev, String(item.id), event.currentTarget.checked)
-                            )
+                          onChange={(checked) =>
+                            setDiffs((prev) => toggleSelection(prev, String(item.id), checked))
                           }
                         />
-                        <span>{item.name}</span>
-                      </label>
-                    ))}
+                      )}
+                    </For>
                   </div>
                   <p class="text-xs text-text-subtle">未選択で「指定なし」になります。</p>
                 </fieldset>
@@ -615,20 +645,17 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     </button>
                   </div>
                   <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-border-strong px-3 py-2">
-                    {props.masterData.genres.map((item) => (
-                      <label class="flex items-center gap-2 text-sm text-text-muted">
-                        <input
-                          type="checkbox"
+                    <For each={props.masterData.genres}>
+                      {(item) => (
+                        <GoalFilterCheckbox
+                          label={item.name}
                           checked={genres().includes(String(item.id))}
-                          onChange={(event) =>
-                            setGenres((prev) =>
-                              toggleSelection(prev, String(item.id), event.currentTarget.checked)
-                            )
+                          onChange={(checked) =>
+                            setGenres((prev) => toggleSelection(prev, String(item.id), checked))
                           }
                         />
-                        <span>{item.name}</span>
-                      </label>
-                    ))}
+                      )}
+                    </For>
                   </div>
                   <p class="text-xs text-text-subtle">未選択で「指定なし」になります。</p>
                 </fieldset>
@@ -653,18 +680,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     >
                       <For each={versionOptions()}>
                         {(item) => (
-                          <label class="flex items-center gap-2 text-sm text-text-muted">
-                            <input
-                              type="checkbox"
-                              checked={versions().includes(item.value)}
-                              onChange={(event) =>
-                                setVersions((prev) =>
-                                  toggleSelection(prev, item.value, event.currentTarget.checked)
-                                )
-                              }
-                            />
-                            <span>{item.label}</span>
-                          </label>
+                          <GoalFilterCheckbox
+                            label={item.label}
+                            checked={versions().includes(item.value)}
+                            onChange={(checked) =>
+                              setVersions((prev) => toggleSelection(prev, item.value, checked))
+                            }
+                          />
                         )}
                       </For>
                     </Show>
@@ -697,14 +719,19 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               </div>
             </div>
 
-            <label class="flex items-center gap-2 text-sm text-text-muted">
-              <input
-                type="checkbox"
-                checked={invert()}
-                onChange={(event) => handleInvertChange(event.currentTarget.checked)}
-              />
-              進捗表示を反転（未達寄り）
-            </label>
+            <Checkbox
+              class="flex items-center gap-2 text-sm text-text-muted"
+              checked={invert()}
+              onChange={handleInvertChange}
+            >
+              <Checkbox.Input />
+              <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
+                <Checkbox.Indicator>
+                  <Check class="h-4 w-4" />
+                </Checkbox.Indicator>
+              </Checkbox.Control>
+              <Checkbox.Label>進捗表示を反転（未達寄り）</Checkbox.Label>
+            </Checkbox>
 
             <Show when={errorMessage()}>
               <p class="text-sm text-danger">{errorMessage()}</p>
