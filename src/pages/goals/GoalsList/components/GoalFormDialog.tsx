@@ -745,7 +745,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               }
             >
               <div class="block text-sm">
-                <p class="mb-1 block text-text-muted">{invert() ? '未達成件数目標' : '件数目標'}</p>
+                <p class="mb-1 block text-text-muted">件数目標</p>
                 <div class="space-y-2">
                   <GoalSelectField
                     label="件数指定方法"
@@ -755,8 +755,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   />
                   <Show when={countMode() === 'number'}>
                     <GoalNumberField
-                      label={invert() ? '未達成件数' : '件数'}
-                      min={invert() ? 0 : 1}
+                      label="件数"
+                      min={1}
                       value={count()}
                       onChange={setCount}
                     />
