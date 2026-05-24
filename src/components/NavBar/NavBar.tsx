@@ -16,7 +16,7 @@ import {
   Wrench,
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createSignal, onCleanup, onMount } from 'solid-js'
+import { createSignal, For, onCleanup, onMount } from 'solid-js'
 import { isHomePath } from './navItemMatching'
 
 type NavBarProps = {
@@ -259,62 +259,66 @@ const NavBar = (props: NavBarProps) => {
       {/* TODO: lg以上では段階的にサイドナビゲーションバーの大きさを変化させる */}
       <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-border md:bg-surface">
         <nav class="flex flex-1 flex-col px-2 py-6">
-          {getNavItems().map((item) =>
-            item.dropdown ? (
-              <DropdownMenu>
-                <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-nav-text hover:bg-surface-hover focus:outline-none">
+          <For each={getNavItems()}>
+            {(item) =>
+              item.dropdown ? (
+                <DropdownMenu>
+                  <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-nav-text hover:bg-surface-hover focus:outline-none">
+                    <span class="text-lg">{item.icon()}</span>
+                    <span>{item.label}</span>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
+                      <For each={item.dropdown}>
+                        {(d) =>
+                          // ログアウト項目は赤色で表示
+                          d.label === 'ログアウト' ? (
+                            <DropdownMenu.Item
+                              onSelect={() => setShowLogoutDialog(true)}
+                              class="block px-4 py-2 text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg outline-none cursor-pointer"
+                            >
+                              <span class="pr-2">{d.icon()}</span>
+                              {d.label}
+                            </DropdownMenu.Item>
+                          ) : (
+                            <DropdownMenu.Item
+                              onSelect={() => handleDropdownSelect(d)}
+                              class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
+                            >
+                              <span class="pr-2">{d.icon()}</span>
+                              {d.label}
+                            </DropdownMenu.Item>
+                          )
+                        }
+                      </For>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu>
+              ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
+              item.requiresAuth && !isLoading() && !username() ? (
+                <button
+                  type="button"
+                  class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-disabled-text w-full"
+                  onClick={() => setShowLoginDialog(true)}
+                >
                   <span class="text-lg">{item.icon()}</span>
                   <span>{item.label}</span>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
-                    {item.dropdown?.map((d) =>
-                      // ログアウト項目は赤色で表示
-                      d.label === 'ログアウト' ? (
-                        <DropdownMenu.Item
-                          onSelect={() => setShowLogoutDialog(true)}
-                          class="block px-4 py-2 text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg outline-none cursor-pointer"
-                        >
-                          <span class="pr-2">{d.icon()}</span>
-                          {d.label}
-                        </DropdownMenu.Item>
-                      ) : (
-                        <DropdownMenu.Item
-                          onSelect={() => handleDropdownSelect(d)}
-                          class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
-                        >
-                          <span class="pr-2">{d.icon()}</span>
-                          {d.label}
-                        </DropdownMenu.Item>
-                      )
-                    )}
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu>
-            ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
-            item.requiresAuth && !isLoading() && !username() ? (
-              <button
-                type="button"
-                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-disabled-text w-full"
-                onClick={() => setShowLoginDialog(true)}
-              >
-                <span class="text-lg">{item.icon()}</span>
-                <span>{item.label}</span>
-              </button>
-            ) : (
-              <A
-                href={item.path}
-                class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-nav-text hover:bg-surface-hover"
-                classList={{
-                  '!bg-action-primary !text-text-inverse hover:!bg-action-primary-hover hover:!text-text-inverse':
-                    isActive(item),
-                }}
-              >
-                <span class="text-lg">{item.icon()}</span>
-                <span>{item.label}</span>
-              </A>
-            )
-          )}
+                </button>
+              ) : (
+                <A
+                  href={item.path}
+                  class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-nav-text hover:bg-surface-hover"
+                  classList={{
+                    '!bg-action-primary !text-text-inverse hover:!bg-action-primary-hover hover:!text-text-inverse':
+                      isActive(item),
+                  }}
+                >
+                  <span class="text-lg">{item.icon()}</span>
+                  <span>{item.label}</span>
+                </A>
+              )
+            }
+          </For>
         </nav>
       </aside>
 
@@ -325,62 +329,66 @@ const NavBar = (props: NavBarProps) => {
 
         {/* スマホ用nav-bar 768px未満 */}
         <nav class="md:hidden z-40 flex items-center justify-between border-t border-border bg-surface p-2 shadow-sm">
-          {getNavItems().map((item) =>
-            item.dropdown ? (
-              <DropdownMenu>
-                <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-nav-text justify-center">
+          <For each={getNavItems()}>
+            {(item) =>
+              item.dropdown ? (
+                <DropdownMenu>
+                  <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-nav-text justify-center">
+                    <span class="text-lg">{item.icon()}</span>
+                    <span>{item.label}</span>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
+                      <For each={item.dropdown}>
+                        {(d) =>
+                          // ログアウト項目は赤色で表示
+                          d.label === 'ログアウト' ? (
+                            <DropdownMenu.Item
+                              onSelect={() => setShowLogoutDialog(true)}
+                              class="block px-4 py-2 text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg outline-none cursor-pointer font-semibold"
+                            >
+                              <span class="pr-2">{d.icon()}</span>
+                              {d.label}
+                            </DropdownMenu.Item>
+                          ) : (
+                            <DropdownMenu.Item
+                              onSelect={() => handleDropdownSelect(d)}
+                              class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
+                            >
+                              <span class="pr-2">{d.icon()}</span>
+                              {d.label}
+                            </DropdownMenu.Item>
+                          )
+                        }
+                      </For>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu>
+              ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
+              item.requiresAuth && !isLoading() && !username() ? (
+                <button
+                  type="button"
+                  class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-disabled-text justify-center"
+                  onClick={() => setShowLoginDialog(true)}
+                >
                   <span class="text-lg">{item.icon()}</span>
                   <span>{item.label}</span>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
-                    {item.dropdown?.map((d) =>
-                      // ログアウト項目は赤色で表示
-                      d.label === 'ログアウト' ? (
-                        <DropdownMenu.Item
-                          onSelect={() => setShowLogoutDialog(true)}
-                          class="block px-4 py-2 text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg outline-none cursor-pointer font-semibold"
-                        >
-                          <span class="pr-2">{d.icon()}</span>
-                          {d.label}
-                        </DropdownMenu.Item>
-                      ) : (
-                        <DropdownMenu.Item
-                          onSelect={() => handleDropdownSelect(d)}
-                          class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
-                        >
-                          <span class="pr-2">{d.icon()}</span>
-                          {d.label}
-                        </DropdownMenu.Item>
-                      )
-                    )}
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu>
-            ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
-            item.requiresAuth && !isLoading() && !username() ? (
-              <button
-                type="button"
-                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-disabled-text justify-center"
-                onClick={() => setShowLoginDialog(true)}
-              >
-                <span class="text-lg">{item.icon()}</span>
-                <span>{item.label}</span>
-              </button>
-            ) : (
-              <A
-                href={item.path}
-                class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-nav-text justify-center"
-                classList={{
-                  '!bg-action-primary !text-text-inverse hover:!bg-action-primary-hover hover:!text-text-inverse':
-                    isActive(item),
-                }}
-              >
-                <span class="text-lg">{item.icon()}</span>
-                <span>{item.label}</span>
-              </A>
-            )
-          )}
+                </button>
+              ) : (
+                <A
+                  href={item.path}
+                  class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-nav-text justify-center"
+                  classList={{
+                    '!bg-action-primary !text-text-inverse hover:!bg-action-primary-hover hover:!text-text-inverse':
+                      isActive(item),
+                  }}
+                >
+                  <span class="text-lg">{item.icon()}</span>
+                  <span>{item.label}</span>
+                </A>
+              )
+            }
+          </For>
         </nav>
 
         {/* 未ログイン警告ダイアログ */}
@@ -455,20 +463,22 @@ const NavBar = (props: NavBarProps) => {
                 画面の配色をライト、ダーク、システム連動から選択します。
               </Dialog.Description>
               <div class="mt-4 grid gap-3">
-                {THEME_OPTIONS.map((option) => (
-                  <Button
-                    aria-pressed={themePreference() === option.value}
-                    onClick={() => handleThemePreferenceChange(option.value)}
-                    class={`rounded-lg border p-4 text-left transition hover:bg-surface-hover ${
-                      themePreference() === option.value
-                        ? 'border-action-primary bg-action-primary-muted'
-                        : 'border-border bg-surface'
-                    }`}
-                  >
-                    <span class="block text-sm font-semibold text-text">{option.label}</span>
-                    <span class="mt-1 block text-xs text-text-muted">{option.description}</span>
-                  </Button>
-                ))}
+                <For each={THEME_OPTIONS}>
+                  {(option) => (
+                    <Button
+                      aria-pressed={themePreference() === option.value}
+                      onClick={() => handleThemePreferenceChange(option.value)}
+                      class={`rounded-lg border p-4 text-left transition hover:bg-surface-hover ${
+                        themePreference() === option.value
+                          ? 'border-action-primary bg-action-primary-muted'
+                          : 'border-border bg-surface'
+                      }`}
+                    >
+                      <span class="block text-sm font-semibold text-text">{option.label}</span>
+                      <span class="mt-1 block text-xs text-text-muted">{option.description}</span>
+                    </Button>
+                  )}
+                </For>
               </div>
               <div class="mt-5 flex justify-end">
                 <Dialog.CloseButton class="rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover">

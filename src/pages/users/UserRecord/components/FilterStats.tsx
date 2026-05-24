@@ -1,5 +1,6 @@
 import { Collapsible } from '@kobalte/core/collapsible'
 import type { Component } from 'solid-js'
+import { For } from 'solid-js'
 import type { RecordStats } from '../utils/recordStats'
 import {
   clearColorMap,
@@ -23,9 +24,8 @@ const DistributionBar: Component<{
   colorMap: Record<string, string>
 }> = (props) => (
   <div class="flex w-full h-4 rounded overflow-hidden mb-1 divide-x divide-border">
-    {props.order
-      .filter((key) => props.dist[key])
-      .map((key) => {
+    <For each={props.order.filter((key) => props.dist[key])}>
+      {(key) => {
         const { percent } = props.dist[key]
         return (
           <div
@@ -34,7 +34,8 @@ const DistributionBar: Component<{
             title={key}
           ></div>
         )
-      })}
+      }}
+    </For>
   </div>
 )
 
@@ -86,16 +87,16 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
           <b>スコアランク割合:</b>
           <DistributionBar dist={props.stats.rankDist} order={rankOrder} colorMap={rankColorMap} />
           <ul>
-            {rankOrder
-              .filter((rank) => props.stats.rankDist[rank])
-              .map((rank) => {
+            <For each={rankOrder.filter((rank) => props.stats.rankDist[rank])}>
+              {(rank) => {
                 const { count, percent } = props.stats.rankDist[rank]
                 return (
                   <li>
                     {rank}: {count}件 ({percent.toFixed(1)}%)
                   </li>
                 )
-              })}
+              }}
+            </For>
           </ul>
         </div>
         <div>
@@ -106,16 +107,16 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
             colorMap={comboColorMap}
           />
           <ul>
-            {comboOrder
-              .filter((lamp) => props.stats.comboDist[lamp])
-              .map((lamp) => {
+            <For each={comboOrder.filter((lamp) => props.stats.comboDist[lamp])}>
+              {(lamp) => {
                 const { count, percent } = props.stats.comboDist[lamp]
                 return (
                   <li>
                     {lamp}: {count}件 ({percent.toFixed(1)}%)
                   </li>
                 )
-              })}
+              }}
+            </For>
           </ul>
         </div>
         <div>
@@ -126,16 +127,16 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
             colorMap={clearColorMap}
           />
           <ul>
-            {clearOrder
-              .filter((lamp) => props.stats.clearDist[lamp])
-              .map((lamp) => {
+            <For each={clearOrder.filter((lamp) => props.stats.clearDist[lamp])}>
+              {(lamp) => {
                 const { count, percent } = props.stats.clearDist[lamp]
                 return (
                   <li>
                     {lamp}: {count}件 ({percent.toFixed(1)}%)
                   </li>
                 )
-              })}
+              }}
+            </For>
           </ul>
         </div>
         {props.stats.scoreStats.max !== props.stats.scoreStats.min ? (

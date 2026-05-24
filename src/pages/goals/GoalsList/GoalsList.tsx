@@ -1,6 +1,6 @@
 import { useNavigate } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
+import { createMemo, createResource, createSignal, ErrorBoundary, For, Show } from 'solid-js'
 import { createGoal, deleteGoal, fetchGoals, updateGoal } from '../../../api/goals'
 import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchMe, fetchUserProfileSummary, fetchUserRecord } from '../../../api/users'
@@ -236,19 +236,16 @@ const GoalsList: Component = () => {
               }
             >
               <div class="grid grid-cols-1 gap-3">
-                {goalWithProgress().map(({ goal, progress }) => {
-                  const data = resource()
-                  if (!data) return null
-
-                  return (
+                <For each={goalWithProgress()}>
+                  {({ goal, progress }) => (
                     <GoalCard
                       goal={goal}
                       progress={progress}
                       onEdit={handleEdit}
                       onDelete={handleDeleteAsk}
                     />
-                  )
-                })}
+                  )}
+                </For>
               </div>
             </Show>
           </div>
