@@ -62,6 +62,7 @@ interface GoalNumberFieldProps {
   min?: number
   max?: number
   step?: number
+  inputRef?: (el: HTMLInputElement) => void
   onChange: (value: string) => void
 }
 
@@ -182,6 +183,7 @@ const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
   >
     <NumberField.Label class="mb-1 block text-text-muted">{props.label}</NumberField.Label>
     <NumberField.Input
+      ref={props.inputRef}
       class={GOAL_FIELD_INPUT_CLASS}
       min={props.min}
       max={props.max}
@@ -351,6 +353,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   let dialogContentRef: HTMLDivElement | undefined
   let formScrollAreaRef: HTMLDivElement | undefined
   let invertCheckboxRef: HTMLInputElement | undefined
+  let countInputRef: HTMLInputElement | undefined
+  let goalCountSectionRef: HTMLDivElement | undefined
   const versionOptions = createMemo(() => buildGoalVersionOptions(props.versions))
   const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
     props.masterData.achievement_types
@@ -445,7 +449,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @param phase - ログ出力タイミングの識別子。
    * @returns なし。
    */
-  const logGoalDialogLayout = (phase: string): void => {
+  const logGoalDialogLayout = (phase: string, eventDetail?: Record<string, unknown>): void => {
     if (!dialogContentRef || !formScrollAreaRef) {
       console.log('[GoalFormDialog][layout]', { phase, reason: 'ref_unavailable' })
       return
@@ -463,6 +467,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const activeElementAriaLabel =
       activeElement instanceof HTMLElement ? activeElement.getAttribute('aria-label') : undefined
     const invertCheckboxRect = invertCheckboxRef?.getBoundingClientRect()
+    const countInputRect = countInputRef?.getBoundingClientRect()
+    const goalCountSectionRect = goalCountSectionRef?.getBoundingClientRect()
+    const documentScrollTop = document.scrollingElement?.scrollTop
+    const rootClientTop = document.documentElement.getBoundingClientRect().top
+    const bodyClientTop = document.body.getBoundingClientRect().top
+    const activeIsInvertCheckbox = activeElement === invertCheckboxRef
+    const activeIsCountInput = activeElement === countInputRef
 
     console.log('[GoalFormDialog][layout]', {
       phase,
@@ -487,6 +498,16 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       scrollAreaHeight: scrollRect.height,
       invertCheckboxTop: invertCheckboxRect?.top,
       invertCheckboxBottom: invertCheckboxRect?.bottom,
+      countInputTop: countInputRect?.top,
+      countInputBottom: countInputRect?.bottom,
+      goalCountSectionTop: goalCountSectionRect?.top,
+      goalCountSectionBottom: goalCountSectionRect?.bottom,
+      documentScrollTop,
+      rootClientTop,
+      bodyClientTop,
+      activeIsInvertCheckbox,
+      activeIsCountInput,
+      eventDetail,
     })
   }
 
@@ -511,6 +532,57 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   })
 
   /**
+   * クリック・フォーカス・入力イベントを監視して原因調査用ログを出力する。
+   *
+   * @returns なし。
+   */
+  createEffect(() => {
+    if (!dialogContentRef || !formScrollAreaRef) return
+
+    const handleWindowClick = (event: MouseEvent): void => {
+      logGoalDialogLayout('window_click', {
+        targetTag: (event.target as HTMLElement | null)?.tagName,
+        clientX: event.clientX,
+        clientY: event.clientY,
+      })
+    }
+    const handleFocusIn = (event: FocusEvent): void => {
+      const target = event.target as HTMLElement | null
+      logGoalDialogLayout('focusin', {
+        targetTag: target?.tagName,
+        targetClassName: target?.className,
+      })
+    }
+    const handleFocusOut = (event: FocusEvent): void => {
+      const target = event.target as HTMLElement | null
+      logGoalDialogLayout('focusout', {
+        targetTag: target?.tagName,
+        targetClassName: target?.className,
+      })
+    }
+    const handleInput = (event: Event): void => {
+      const target = event.target as HTMLInputElement | null
+      logGoalDialogLayout('input_event', {
+        targetTag: target?.tagName,
+        targetType: target?.type,
+        targetValue: target?.value,
+      })
+    }
+
+    window.addEventListener('click', handleWindowClick, true)
+    dialogContentRef.addEventListener('focusin', handleFocusIn)
+    dialogContentRef.addEventListener('focusout', handleFocusOut)
+    dialogContentRef.addEventListener('input', handleInput, true)
+
+    onCleanup(() => {
+      window.removeEventListener('click', handleWindowClick, true)
+      dialogContentRef?.removeEventListener('focusin', handleFocusIn)
+      dialogContentRef?.removeEventListener('focusout', handleFocusOut)
+      dialogContentRef?.removeEventListener('input', handleInput, true)
+    })
+  })
+
+  /**
    * スクロール領域・VisualViewportのイベントを監視してデバッグログを出力する。
    *
    * @returns なし。
@@ -519,7 +591,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     if (!formScrollAreaRef) return
 
     const handleScroll = (): void => {
-      logGoalDialogLayout('scroll_event')
+      logGoalDialogLayout('scroll_event', { source: 'formScrollAreaRef' })
     }
     const handleVisualViewportResize = (): void => {
       logGoalDialogLayout('visual_viewport_resize')
@@ -527,8 +599,16 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const handleVisualViewportScroll = (): void => {
       logGoalDialogLayout('visual_viewport_scroll')
     }
+    const handleWindowResize = (): void => {
+      logGoalDialogLayout('window_resize')
+    }
+    const handleWindowScroll = (): void => {
+      logGoalDialogLayout('window_scroll')
+    }
 
     formScrollAreaRef.addEventListener('scroll', handleScroll)
+    window.addEventListener('resize', handleWindowResize)
+    window.addEventListener('scroll', handleWindowScroll, true)
     window.visualViewport?.addEventListener('resize', handleVisualViewportResize)
     window.visualViewport?.addEventListener('scroll', handleVisualViewportScroll)
 
@@ -536,6 +616,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       formScrollAreaRef?.removeEventListener('scroll', handleScroll)
       window.visualViewport?.removeEventListener('resize', handleVisualViewportResize)
       window.visualViewport?.removeEventListener('scroll', handleVisualViewportScroll)
+      window.removeEventListener('resize', handleWindowResize)
+      window.removeEventListener('scroll', handleWindowScroll, true)
     })
   })
 
@@ -763,7 +845,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 achievementType() === 'combolamp_count'
               }
             >
-              <div class="block text-sm">
+              <div
+                ref={goalCountSectionRef}
+                data-debug-id="goal-count-section"
+                class="block text-sm"
+              >
                 <p class="mb-1 block text-text-muted">{invert() ? '未達成件数目標' : '件数目標'}</p>
                 <div class="space-y-2">
                   <GoalSelectField
@@ -784,6 +870,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       label={invert() ? '未達成件数' : '件数'}
                       min={invert() ? 0 : 1}
                       value={count()}
+                      inputRef={(element) => {
+                        countInputRef = element
+                      }}
                       onChange={setCount}
                     />
                   </Show>
