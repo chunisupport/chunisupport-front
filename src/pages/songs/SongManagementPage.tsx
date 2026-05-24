@@ -13,6 +13,7 @@ import {
   updateSongs,
   updateWorldsendSongs,
 } from '../../api/songs'
+import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type {
   CreateSongRequestDTO,
@@ -747,7 +748,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
         <Show
           when={!songsResponse.loading && !masterData.loading && songs().length > 0}
-          fallback={<p class="mt-3 text-sm text-text-subtle">楽曲データを読み込み中...</p>}
+          fallback={
+            <div class="mt-3 h-20">
+              <Loading />
+            </div>
+          }
         >
           <div class="mt-3 grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
             <div class="min-w-0">
@@ -1035,7 +1040,9 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         <Show
           when={!worldsendResponse.loading && !masterData.loading && worldsendSongs().length > 0}
           fallback={
-            <p class="mt-3 text-sm text-text-subtle">WORLD&apos;S END楽曲を読み込み中...</p>
+            <div class="mt-3 h-20">
+              <Loading />
+            </div>
           }
         >
           <div class="mt-3 grid gap-4 lg:grid-cols-[300px_1fr]">

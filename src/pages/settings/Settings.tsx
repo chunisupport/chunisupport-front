@@ -10,6 +10,7 @@ import {
   updatePrivacy,
 } from '../../api/settings'
 import { fetchMe, fetchUserProfileSummary } from '../../api/users'
+import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
@@ -254,10 +255,7 @@ const Settings = () => {
   return (
     <div class="mx-auto w-full max-w-5xl p-4 space-y-4">
       <h1 class="text-2xl font-semibold">設定</h1>
-      <Show
-        when={summary()}
-        fallback={<p class="mt-6 text-sm text-text-muted">設定情報を読み込み中です...</p>}
-      >
+      <Show when={summary()} fallback={<Loading />}>
         {(loadedSummary) => (
           <>
             <dl class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

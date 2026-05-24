@@ -59,6 +59,12 @@ const releaseTimestamp = (release: string | null): number => {
 const toggleFilterValue = (values: string[], value: string): string[] =>
   values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
 
+/**
+ * OVER POWER計算から除外する未解禁楽曲を検索・絞り込みしながら編集するダイアログ。
+ *
+ * @param props - ダイアログの表示状態、楽曲・マスターデータ、未解禁楽曲、保存処理。
+ * @returns 未解禁楽曲設定ダイアログのUI。
+ */
 const LockedSongsDialog: Component<Props> = (props) => {
   const [query, setQuery] = createSignal('')
   const [filterDialogOpen, setFilterDialogOpen] = createSignal(false)
@@ -314,11 +320,11 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 <div
                   class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-sm text-text-subtle"
                   role="status"
+                  aria-label="読み込み中"
                   aria-live="polite"
                   aria-busy="true"
                 >
                   <Loading />
-                  <span class="sr-only">読み込み中</span>
                 </div>
               }
             >
