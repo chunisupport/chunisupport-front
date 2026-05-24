@@ -38,9 +38,13 @@ interface GoalFormDialogProps {
   masterData: MasterDataDTO
   versions: VersionDTO[]
   isSaving: boolean
+  /** 保存APIから返されたエラーメッセージ。 */
+  apiErrorMessage: string
   onOpenChange: (open: boolean) => void
   onSave: (payload: GoalRequest) => Promise<void>
   resolveAllCount: (attributes: GoalAttributes) => number
+  /** 対象条件に一致する譜面ごとの最大OVER POWER合計を解決する関数。 */
+  resolveOverPowerChartMax: (attributes: GoalAttributes) => number
 }
 
 interface GoalFilterCheckboxProps {
@@ -62,6 +66,12 @@ interface GoalNumberFieldProps {
   min?: number
   max?: number
   step?: number
+  onChange: (value: string) => void
+}
+
+interface GoalDecimalTextFieldProps {
+  label: string
+  value: string
   onChange: (value: string) => void
 }
 
@@ -124,6 +134,35 @@ const GOAL_ACHIEVEMENT_TYPES = [
 ] as const satisfies readonly GoalAchievementType[]
 const HARD_LAMP_VALUES = ['HRD', 'BRV', 'ABS', 'CTS'] as const
 const COMBO_LAMP_VALUES = ['FC', 'AJ'] as const
+const MIN_SCORE = 0
+const MIN_MUSIC_CONST = 1
+const MAX_MUSIC_CONST = 16
+const MUSIC_CONST_DECIMAL_PLACES = 1
+const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
+
+/**
+ * 数値入力値を指定範囲内に丸めた文字列へ変換する。
+ *
+ * @param value - 入力欄から受け取った文字列。
+ * @param min - 許容する最小値。
+ * @param max - 許容する最大値。
+ * @param format - 範囲外補正時の文字列フォーマット。
+ * @returns 空文字または数値でない入力はそのまま、範囲外の数値は丸めた文字列。
+ */
+const clampNumericInput = (
+  value: string,
+  min: number,
+  max: number,
+  format: (value: number) => string
+): string => {
+  if (value === '') return value
+
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return value
+  if (parsed < min) return format(min)
+  if (parsed > max) return format(max)
+  return value
+}
 
 /**
  * 文字列が目標種別として扱える値か判定する。
@@ -188,6 +227,19 @@ const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
       step={props.step ?? 1}
     />
   </NumberField>
+)
+
+/**
+ * 空欄を許可する小数入力欄を描画する。
+ *
+ * @param props - 表示ラベル、入力値、変更ハンドラ。
+ * @returns Kobalte TextField を使った小数入力欄。
+ */
+const GoalDecimalTextField: Component<GoalDecimalTextFieldProps> = (props) => (
+  <TextField class="block text-sm" value={props.value} onChange={props.onChange}>
+    <TextField.Label class="mb-1 block text-text-muted">{props.label}</TextField.Label>
+    <TextField.Input class={GOAL_FIELD_INPUT_CLASS} inputMode="decimal" pattern="[0-9.]*" />
+  </TextField>
 )
 
 /**
@@ -348,6 +400,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [versions, setVersions] = createSignal<string[]>([])
 
   const [errorMessage, setErrorMessage] = createSignal('')
+  const displayErrorMessage = createMemo(() => errorMessage() || props.apiErrorMessage)
   const versionOptions = createMemo(() => buildGoalVersionOptions(props.versions))
   const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
     props.masterData.achievement_types
@@ -364,6 +417,41 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   )
 
   const getTotalScoreMax = (): number => props.resolveAllCount(getDraftAttributes()) * MAX_SCORE
+
+  /**
+   * 現在の対象条件から譜面別に見た総OVER POWER最大値を取得する。
+   *
+   * @returns 対象譜面ごとの最大OVER POWERを合計した値。
+   */
+  const getOverPowerChartMax = (): number => props.resolveOverPowerChartMax(getDraftAttributes())
+
+  /**
+   * スコア入力値を有効なスコア範囲に丸めて保持する。
+   *
+   * @param value - 入力欄から受け取ったスコア文字列。
+   * @returns なし。
+   */
+  const handleScoreChange = (value: string): void => {
+    setScore(clampNumericInput(value, MIN_SCORE, MAX_SCORE, String))
+  }
+
+  /**
+   * 譜面定数入力値を有効な定数範囲に丸めて保持する。
+   *
+   * @param setter - 更新対象の Signal setter。
+   * @param value - 入力欄から受け取った譜面定数文字列。
+   * @returns なし。
+   */
+  const handleMusicConstChange = (setter: (value: string) => void, value: string): void => {
+    if (!DECIMAL_INPUT_PATTERN.test(value)) return
+
+    setErrorMessage('')
+    setter(
+      clampNumericInput(value, MIN_MUSIC_CONST, MAX_MUSIC_CONST, (nextValue) =>
+        nextValue.toFixed(MUSIC_CONST_DECIMAL_PLACES)
+      )
+    )
+  }
 
   createEffect(() => {
     if (!props.open) return
@@ -480,7 +568,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       (currentType === 'score_count' ||
         currentType === 'rank_count' ||
         currentType === 'avg_score') &&
-      (!Number.isFinite(parsedScore) || parsedScore < 0 || parsedScore > MAX_SCORE)
+      (!Number.isFinite(parsedScore) || parsedScore < MIN_SCORE || parsedScore > MAX_SCORE)
     ) {
       setErrorMessage('スコアは 0 ～ 1,010,000 の範囲で入力してください。')
       return
@@ -630,9 +718,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               <GoalNumberField
                 label="スコア目標"
                 value={score()}
-                min={0}
+                min={MIN_SCORE}
                 max={MAX_SCORE}
-                onChange={setScore}
+                onChange={handleScoreChange}
               />
             </Show>
 
@@ -665,14 +753,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     options={COUNT_MODE_OPTIONS}
                     onChange={setCountMode}
                   />
-                  <Show
-                    when={countMode() === 'number'}
-                    fallback={
-                      <p class="rounded border border-action-primary-border bg-action-primary-muted px-3 py-2 text-xs text-action-primary">
-                        現在の対象譜面数: {props.resolveAllCount(getDraftAttributes())} 件
-                      </p>
-                    }
-                  >
+                  <Show when={countMode() === 'number'}>
                     <GoalNumberField
                       label={invert() ? '未達成件数' : '件数'}
                       min={invert() ? 0 : 1}
@@ -680,6 +761,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       onChange={setCount}
                     />
                   </Show>
+                  <p class="text-xs text-text-muted">
+                    最大値: {props.resolveAllCount(getDraftAttributes()).toLocaleString('ja-JP')} 件
+                  </p>
                 </div>
               </div>
             </Show>
@@ -722,11 +806,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   </Show>
                   <Show
                     when={!canUseDynamicTotalTarget(achievementType()) || totalMode() === 'number'}
-                    fallback={
-                      <p class="rounded border border-action-primary-border bg-action-primary-muted px-3 py-2 text-xs text-action-primary">
-                        現在の対象譜面数から目標値を自動計算します。
-                      </p>
-                    }
                   >
                     <GoalNumberField
                       label="合計/割合の目標値"
@@ -734,12 +813,17 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       min={0}
                       onChange={setTotal}
                     />
-                    <Show when={achievementType() === 'total_score'}>
-                      <p class="mt-1 text-xs text-text-muted">
-                        最大値: {getTotalScoreMax().toLocaleString('ja-JP')}（対象譜面数 ×
-                        1,010,000）
-                      </p>
-                    </Show>
+                  </Show>
+                  <Show when={achievementType() === 'total_score'}>
+                    <p class="text-xs text-text-muted">
+                      最大値: {getTotalScoreMax().toLocaleString('ja-JP')}（対象譜面数 × 1,010,000）
+                    </p>
+                  </Show>
+                  <Show when={achievementType() === 'overpower_value'}>
+                    <p class="text-xs text-text-muted">
+                      最大値: {getOverPowerChartMax().toLocaleString('ja-JP')}（対象譜面の最大OVER
+                      POWER合計）
+                    </p>
                   </Show>
                 </div>
               </div>
@@ -837,17 +921,15 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 </fieldset>
 
                 <div class="grid grid-cols-2 gap-2">
-                  <GoalNumberField
+                  <GoalDecimalTextField
                     label="定数min"
                     value={constMin()}
-                    step={0.1}
-                    onChange={setConstMin}
+                    onChange={(value) => handleMusicConstChange(setConstMin, value)}
                   />
-                  <GoalNumberField
+                  <GoalDecimalTextField
                     label="定数max"
                     value={constMax()}
-                    step={0.1}
-                    onChange={setConstMax}
+                    onChange={(value) => handleMusicConstChange(setConstMax, value)}
                   />
                 </div>
               </div>
@@ -867,8 +949,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               <Checkbox.Label>進捗表示を反転（未達寄り）</Checkbox.Label>
             </Checkbox> */}
 
-            <Show when={errorMessage()}>
-              <p class="text-sm text-danger">{errorMessage()}</p>
+            <Show when={displayErrorMessage()}>
+              <p class="text-sm text-danger">{displayErrorMessage()}</p>
             </Show>
           </div>
 

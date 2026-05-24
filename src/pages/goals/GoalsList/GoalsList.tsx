@@ -12,6 +12,9 @@ import GoalCard from './components/GoalCard'
 import GoalDeleteDialog from './components/GoalDeleteDialog'
 import GoalFormDialog from './components/GoalFormDialog'
 
+const OVERPOWER_CHART_CONST_BONUS = 3
+const OVERPOWER_CHART_MULTIPLIER = 5
+
 const GoalsList: Component = () => {
   const navigate = useNavigate()
   const [refreshKey, setRefreshKey] = createSignal(0)
@@ -23,6 +26,7 @@ const GoalsList: Component = () => {
   const [isSaving, setIsSaving] = createSignal(false)
   const [isDeleting, setIsDeleting] = createSignal(false)
   const [actionError, setActionError] = createSignal('')
+  const [formError, setFormError] = createSignal('')
 
   const [resource] = createResource(
     () => refreshKey(),
@@ -95,17 +99,41 @@ const GoalsList: Component = () => {
     ).length
   }
 
+  /**
+   * 対象条件に一致する譜面ごとの固定定数から最大OVER POWER合計を算出する。
+   *
+   * @param attributes - 目標フォームで選択中の対象条件。
+   * @returns 対象譜面それぞれの最大OVER POWERを合計した値。
+   */
+  const resolveOverPowerChartMax = (attributes: GoalCreateRequest['attributes']) => {
+    const data = resource()
+    if (!data) return 0
+    return filterRecordsByAttributes(
+      data.records,
+      attributes,
+      data.masterData,
+      data.songs,
+      data.versions
+    ).reduce(
+      (acc, record) =>
+        acc + (record.const + OVERPOWER_CHART_CONST_BONUS) * OVERPOWER_CHART_MULTIPLIER,
+      0
+    )
+  }
+
   useDocumentTitle('目標')
 
   const openCreateDialog = () => {
     setEditingGoal(undefined)
     setActionError('')
+    setFormError('')
     setFormOpen(true)
   }
 
   const handleEdit = (goal: GoalDTO) => {
     setEditingGoal(goal)
     setActionError('')
+    setFormError('')
     setFormOpen(true)
   }
 
@@ -115,8 +143,22 @@ const GoalsList: Component = () => {
     setDeleteOpen(true)
   }
 
+  /**
+   * 目標フォームダイアログの開閉状態を更新する。
+   *
+   * @param open - 次のダイアログ表示状態。
+   * @returns なし。
+   */
+  const handleFormOpenChange = (open: boolean): void => {
+    if (!open) {
+      setFormError('')
+    }
+    setFormOpen(open)
+  }
+
   const handleSave = async (payload: GoalCreateRequest | GoalUpdateRequest) => {
     setActionError('')
+    setFormError('')
     setIsSaving(true)
     try {
       const goal = editingGoal()
@@ -129,7 +171,7 @@ const GoalsList: Component = () => {
       setEditingGoal(undefined)
       setRefreshKey((prev) => prev + 1)
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : '保存に失敗しました。')
+      setFormError(error instanceof Error ? error.message : '保存に失敗しました。')
     } finally {
       setIsSaving(false)
     }
@@ -220,9 +262,11 @@ const GoalsList: Component = () => {
                 masterData={data().masterData}
                 versions={data().versions}
                 isSaving={isSaving()}
-                onOpenChange={setFormOpen}
+                apiErrorMessage={formError()}
+                onOpenChange={handleFormOpenChange}
                 onSave={handleSave}
                 resolveAllCount={resolveAllCount}
+                resolveOverPowerChartMax={resolveOverPowerChartMax}
               />
             )}
           </Show>
