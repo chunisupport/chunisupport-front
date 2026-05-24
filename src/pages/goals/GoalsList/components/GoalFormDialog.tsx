@@ -772,8 +772,27 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     })
   }
 
+  /**
+   * 反転チェック切替前後でチェックボックスの見た目位置を維持するようスクロールを補正する。
+   *
+   * @param previousCheckboxTop - 切替前のチェックボックス上端座標。
+   * @returns なし。
+   */
+  const adjustScrollForInvertToggle = (previousCheckboxTop: number): void => {
+    if (!formScrollAreaRef || !invertCheckboxRef) return
+
+    const nextCheckboxTop = invertCheckboxRef.getBoundingClientRect().top
+    const delta = nextCheckboxTop - previousCheckboxTop
+
+    if (delta === 0) return
+
+    formScrollAreaRef.scrollTop += delta
+    logGoalDialogLayout('after_invert_scroll_adjust', { delta })
+  }
+
   const handleInvertChange = (next: boolean) => {
     logGoalDialogLayout('before_invert_change')
+    const previousCheckboxTop = invertCheckboxRef?.getBoundingClientRect().top
     if (isCountAchievementType(achievementType()) && countMode() === 'number') {
       const parsed = Number(count())
       if (Number.isInteger(parsed) && parsed >= 0) {
@@ -786,6 +805,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       logGoalDialogLayout('after_invert_change_microtask')
     })
     requestAnimationFrame(() => {
+      if (typeof previousCheckboxTop === 'number') {
+        adjustScrollForInvertToggle(previousCheckboxTop)
+      }
       logGoalDialogLayout('after_invert_change_animation_frame')
     })
   }
