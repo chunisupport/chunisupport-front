@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
+import type { FilterState } from '../types/types'
 import {
   createRecordTitleMatcher,
   getDefaultFilter,
@@ -11,29 +12,32 @@ import {
 
 const createRecord = (
   overrides: Partial<PlayerRecordWithSongMeta> = {}
-): PlayerRecordWithSongMeta => ({
-  is_played: true,
-  updated_at: '2026-04-20T00:00:00Z',
-  difficulty: 'MASTER',
-  id: 'song-1',
-  title: 'アルファ',
-  reading: 'アルファ',
-  artist: 'LeaF',
-  const: 14.5,
-  is_const_unknown: false,
-  score: 1005000,
-  rating: 16.5,
-  overpower: 80,
-  img: 'image',
-  clear_lamp: 'CLEAR',
-  combo_lamp: null,
-  full_chain: null,
-  slot: null,
-  genre: 'POPS & ANIME',
-  release: '2024-01-01',
-  release_version: 'VERSE',
-  ...overrides,
-})
+): PlayerRecordWithSongMeta => {
+  const record: PlayerRecordWithSongMeta = {
+    is_played: true,
+    updated_at: '2026-04-20T00:00:00Z',
+    difficulty: 'MASTER',
+    id: 'song-1',
+    title: 'アルファ',
+    reading: 'アルファ',
+    artist: 'LeaF',
+    const: 14.5,
+    is_const_unknown: false,
+    score: 1005000,
+    rating: 16.5,
+    overpower: 80,
+    img: 'image',
+    clear_lamp: 'CLEAR',
+    combo_lamp: null,
+    full_chain: null,
+    slot: null,
+    genre: 'POPS & ANIME',
+    release: '2024-01-01',
+    release_version: 'VERSE',
+    notes: 1200,
+  }
+  return Object.assign(record, overrides)
+}
 
 test('isRecordMatched はアーティスト名でも検索できる', () => {
   const record = createRecord({ artist: 'LeaF' })
@@ -70,7 +74,7 @@ test('isRecordMatched は難易度・ジャンル・バージョンの条件を�
     genre: 'niconico',
     release_version: 'LUMINOUS',
   })
-  const matchedFilters = {
+  const matchedFilters: FilterState = {
     ...getDefaultFilter(),
     difficulties: ['EXPERT'],
     genres: ['niconico'],
@@ -85,7 +89,7 @@ test('isRecordMatched は難易度・ジャンル・バージョンの条件を�
 
 test('isRecordMatched は譜面定数とスコアの範囲を判定できる', () => {
   const record = createRecord({ const: 14.7, score: 1007500 })
-  const matchedFilters = {
+  const matchedFilters: FilterState = {
     ...getDefaultFilter(),
     constMin: 14.6,
     constMax: 14.8,
@@ -106,7 +110,7 @@ test('isRecordMatched はランプ条件を判定できる', () => {
     full_chain: 'FULL CHAIN GOLD',
     clear_lamp: 'HARD',
   })
-  const matchedFilters = {
+  const matchedFilters: FilterState = {
     ...getDefaultFilter(),
     combo_lamp: ['FULL COMBO'],
     chain_lamp: ['FULL CHAIN GOLD'],

@@ -7,7 +7,7 @@ import {
 } from '../../../utils/versionConverter'
 
 type ReleaseSong = {
-  release: string
+  release: string | null
 }
 
 export const useSongDetailBase = (song: () => ReleaseSong | undefined) => {

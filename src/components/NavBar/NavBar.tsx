@@ -92,7 +92,7 @@ const NavBar = (props: NavBarProps) => {
   const getNavItems = (): NavItem[] => {
     const uname = username()
     const userPath = uname ? `/users/${encodeURIComponent(uname)}` : '#'
-    const dropdownBase = [
+    const dropdownBase: DropdownItem[] = [
       // 設定・ログアウトはログイン時のみ
       ...(uname
         ? [

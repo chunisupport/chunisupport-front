@@ -1,3 +1,4 @@
+import type { JSX } from 'solid-js'
 import { ErrorBoundary, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { getSongDetailViewState } from './songDetailLayoutModel'

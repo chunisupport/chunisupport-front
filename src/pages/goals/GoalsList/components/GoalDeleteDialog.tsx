@@ -1,6 +1,6 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
 import type { Component } from 'solid-js'
-import type { GoalDTO } from '../../../../../types/api'
+import type { GoalDTO } from '../../../../types/api'
 
 interface GoalDeleteDialogProps {
   open: boolean
@@ -10,6 +10,12 @@ interface GoalDeleteDialogProps {
   onConfirm: () => void
 }
 
+/**
+ * 目標削除の確認ダイアログを表示する。
+ *
+ * @param props - ダイアログの表示状態、削除対象、削除ハンドラ。
+ * @returns 目標削除確認ダイアログの JSX 要素。
+ */
 const GoalDeleteDialog: Component<GoalDeleteDialogProps> = (props) => {
   return (
     <AlertDialog open={props.open} onOpenChange={props.onOpenChange}>

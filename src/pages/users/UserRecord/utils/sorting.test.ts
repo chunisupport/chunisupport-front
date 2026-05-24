@@ -6,28 +6,32 @@ import { nextSortState, parseSortParams, sortRecords } from './sorting.ts'
 
 const createRecord = (
   overrides: Partial<PlayerRecordWithSongMeta> = {}
-): PlayerRecordWithSongMeta => ({
-  is_played: true,
-  updated_at: '2026-04-20T00:00:00Z',
-  difficulty: 'MASTER',
-  id: 'song-1',
-  title: 'Alpha',
-  artist: 'Artist',
-  const: 14.5,
-  is_const_unknown: false,
-  score: 1005000,
-  rating: 16.5,
-  overpower: 80,
-  img: 'image',
-  clear_lamp: 'CLEAR',
-  combo_lamp: null,
-  full_chain: null,
-  slot: null,
-  genre: 'POPS & ANIME',
-  release: '2024-01-01',
-  release_version: 'VERSE',
-  ...overrides,
-})
+): PlayerRecordWithSongMeta => {
+  const record: PlayerRecordWithSongMeta = {
+    is_played: true,
+    updated_at: '2026-04-20T00:00:00Z',
+    difficulty: 'MASTER',
+    id: 'song-1',
+    title: 'Alpha',
+    reading: 'Alpha',
+    artist: 'Artist',
+    const: 14.5,
+    is_const_unknown: false,
+    score: 1005000,
+    rating: 16.5,
+    overpower: 80,
+    img: 'image',
+    clear_lamp: 'CLEAR',
+    combo_lamp: null,
+    full_chain: null,
+    slot: null,
+    genre: 'POPS & ANIME',
+    release: '2024-01-01',
+    release_version: 'VERSE',
+    notes: 1200,
+  }
+  return Object.assign(record, overrides)
+}
 
 test('ソートクエリが有効な場合は指定値をそのまま使う', () => {
   assert.deepEqual(parseSortParams({ sortcol: 'score', sortorder: 'asc' }), {

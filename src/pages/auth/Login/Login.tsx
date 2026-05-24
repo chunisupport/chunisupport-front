@@ -7,14 +7,24 @@ import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticate
 import { auth, googleProvider } from '../../../lib/firebase'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 
+/**
+ * URLクエリのredirect値を単一の文字列へ正規化する。
+ *
+ * @param redirect - Solid Router から取得したredirectクエリ値。
+ * @returns 利用可能なredirect値。複数指定時は先頭を採用する。
+ */
+const normalizeRedirectParam = (redirect: string | string[] | undefined): string | undefined =>
+  Array.isArray(redirect) ? redirect[0] : redirect
+
 const Login = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [errorMessage, setErrorMessage] = createSignal('')
   const [isSubmitting, setIsSubmitting] = createSignal(false)
+  const redirectParam = () => normalizeRedirectParam(searchParams.redirect)
 
   // すでにログインしている場合はユーザーページへリダイレクト
-  const { isCheckingAuth } = useRedirectIfAuthenticated(searchParams.redirect)
+  const { isCheckingAuth } = useRedirectIfAuthenticated(redirectParam())
 
   // Google ログイン処理
   const handleGoogleLogin = async () => {
@@ -22,7 +32,7 @@ const Login = () => {
     setErrorMessage('')
     try {
       await signInWithPopup(auth, googleProvider)
-      await redirectAfterAuthentication(navigate, searchParams.redirect)
+      await redirectAfterAuthentication(navigate, redirectParam())
     } catch (error) {
       const apiError = error as Error & { code?: string }
       if (apiError.code === 'user_not_found') {

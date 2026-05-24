@@ -1,6 +1,9 @@
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
-import { Check } from 'lucide-solid'
+import { NumberField } from '@kobalte/core/number-field'
+import { Select } from '@kobalte/core/select'
+import { TextField } from '@kobalte/core/text-field'
+import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import type {
@@ -46,8 +49,188 @@ interface GoalFilterCheckboxProps {
   onChange: (checked: boolean) => void
 }
 
+interface GoalTextFieldProps {
+  label: string
+  value: string
+  maxLength?: number
+  onChange: (value: string) => void
+}
+
+interface GoalNumberFieldProps {
+  label: string
+  value: string
+  min?: number
+  max?: number
+  step?: number
+  onChange: (value: string) => void
+}
+
+interface GoalSelectOption<TValue extends string> {
+  value: TValue
+  label: string
+}
+
+interface GoalSelectFieldProps<TValue extends string> {
+  label: string
+  value: TValue
+  options: GoalSelectOption<TValue>[]
+  onChange: (value: TValue) => void
+}
+
 const GOAL_FILTER_CHECKBOX_CONTROL_CLASS =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
+const GOAL_FIELD_INPUT_CLASS =
+  'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2'
+const GOAL_SELECT_ITEM_CLASS =
+  'flex h-8 cursor-pointer items-center justify-between rounded px-2 text-sm outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-action-primary data-highlighted:text-text-inverse'
+const GOAL_SELECT_CONTENT_CLASS =
+  'z-60 mt-1 max-h-64 w-[--kb-select-content-width] overflow-y-auto rounded-md border border-border-strong bg-surface p-2 shadow-lg'
+
+const COUNT_MODE_OPTIONS: GoalSelectOption<'number' | 'all'>[] = [
+  { value: 'number', label: '数値を指定' },
+  { value: 'all', label: '条件に当てはまるものすべて' },
+]
+
+const RANK_OPTIONS: GoalSelectOption<ScoreRank>[] = SCORE_RANKS_ASC.map((scoreRank) => ({
+  value: scoreRank,
+  label: `${scoreRank}（${SCORE_RANK_MIN_SCORES[scoreRank].toLocaleString('ja-JP')}）`,
+}))
+
+const HARD_LAMP_SELECT_OPTIONS: GoalSelectOption<'HRD' | 'BRV' | 'ABS' | 'CTS'>[] =
+  HARD_LAMP_OPTIONS.map((lamp) => ({ value: lamp.value, label: lamp.label }))
+
+const COMBO_LAMP_SELECT_OPTIONS: GoalSelectOption<'FC' | 'AJ'>[] = COMBO_LAMP_OPTIONS.map(
+  (lamp) => ({ value: lamp.value, label: lamp.label })
+)
+
+const GOAL_ACHIEVEMENT_TYPES = [
+  'rank_count',
+  'score_count',
+  'avg_score',
+  'hardlamp_count',
+  'combolamp_count',
+  'total_score',
+  'overpower_value',
+  'overpower_percent',
+] as const satisfies readonly GoalAchievementType[]
+const HARD_LAMP_VALUES = ['HRD', 'BRV', 'ABS', 'CTS'] as const
+const COMBO_LAMP_VALUES = ['FC', 'AJ'] as const
+
+/**
+ * 文字列が目標種別として扱える値か判定する。
+ *
+ * @param value - APIから受け取った目標種別コード。
+ * @returns 目標種別として定義済みの値ならtrue。
+ */
+const isGoalAchievementType = (value: string): value is GoalAchievementType =>
+  GOAL_ACHIEVEMENT_TYPES.includes(value as GoalAchievementType)
+
+/**
+ * 文字列がハードランプ目標の値か判定する。
+ *
+ * @param value - 成果パラメータ内のランプ値。
+ * @returns ハードランプ目標で利用できる値ならtrue。
+ */
+const isHardLampValue = (value: string): value is 'HRD' | 'BRV' | 'ABS' | 'CTS' =>
+  HARD_LAMP_VALUES.includes(value as 'HRD' | 'BRV' | 'ABS' | 'CTS')
+
+/**
+ * 文字列がコンボランプ目標の値か判定する。
+ *
+ * @param value - 成果パラメータ内のランプ値。
+ * @returns コンボランプ目標で利用できる値ならtrue。
+ */
+const isComboLampValue = (value: string): value is 'FC' | 'AJ' =>
+  COMBO_LAMP_VALUES.includes(value as 'FC' | 'AJ')
+
+/**
+ * 目標設定ダイアログで使う文字列入力欄を描画する。
+ *
+ * @param props - 表示ラベル、入力値、最大文字数、変更ハンドラ。
+ * @returns Kobalte TextField を使った入力欄。
+ */
+const GoalTextField: Component<GoalTextFieldProps> = (props) => (
+  <TextField class="block text-sm" value={props.value} onChange={props.onChange}>
+    <TextField.Label class="mb-1 block text-text-muted">{props.label}</TextField.Label>
+    <TextField.Input class={GOAL_FIELD_INPUT_CLASS} maxLength={props.maxLength} />
+  </TextField>
+)
+
+/**
+ * 目標設定ダイアログで使う数値入力欄を描画する。
+ *
+ * @param props - 表示ラベル、入力値、数値制約、変更ハンドラ。
+ * @returns Kobalte NumberField を使った入力欄。
+ */
+const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
+  <NumberField
+    class="block text-sm"
+    value={props.value}
+    onChange={props.onChange}
+    format={false}
+    allowedInput={/[0-9.]/}
+    step={props.step ?? 1}
+  >
+    <NumberField.Label class="mb-1 block text-text-muted">{props.label}</NumberField.Label>
+    <NumberField.Input
+      class={GOAL_FIELD_INPUT_CLASS}
+      min={props.min}
+      max={props.max}
+      step={props.step ?? 1}
+    />
+  </NumberField>
+)
+
+/**
+ * 目標設定ダイアログで使う単一選択欄を描画する。
+ *
+ * @param props - 表示ラベル、選択値、選択肢、変更ハンドラ。
+ * @returns Kobalte Select を使った単一選択欄。
+ */
+const GoalSelectField = <TValue extends string>(props: GoalSelectFieldProps<TValue>) => {
+  const selectedOption = () => props.options.find((option) => option.value === props.value) ?? null
+
+  return (
+    <Select<GoalSelectOption<TValue>>
+      class="block text-sm"
+      options={props.options}
+      optionValue="value"
+      optionTextValue="label"
+      value={selectedOption()}
+      onChange={(option) => {
+        if (option) {
+          props.onChange(option.value)
+        }
+      }}
+      placeholder="選択..."
+      itemComponent={(itemProps) => (
+        <Select.Item item={itemProps.item} class={GOAL_SELECT_ITEM_CLASS}>
+          <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
+          <Select.ItemIndicator class="inline-flex h-5 w-5 items-center justify-center">
+            <Check class="h-4 w-4" />
+          </Select.ItemIndicator>
+        </Select.Item>
+      )}
+    >
+      <Select.Label class="mb-1 block text-text-muted">{props.label}</Select.Label>
+      <Select.Trigger class="inline-flex w-full items-center justify-between rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2">
+        <Select.Value<
+          GoalSelectOption<TValue>
+        > class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
+          {(state) => state.selectedOption()?.label}
+        </Select.Value>
+        <Select.Icon class="flex h-5 w-5 items-center justify-center text-text-subtle">
+          <ChevronDown class="h-4 w-4" />
+        </Select.Icon>
+      </Select.Trigger>
+      <Select.Portal>
+        <Select.Content class={GOAL_SELECT_CONTENT_CLASS}>
+          <Select.Listbox />
+        </Select.Content>
+      </Select.Portal>
+    </Select>
+  )
+}
 
 /**
  * 目標設定ダイアログで使うフィルター用チェックボックスを描画する。
@@ -155,6 +338,19 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
   const [errorMessage, setErrorMessage] = createSignal('')
   const versionOptions = createMemo(() => buildGoalVersionOptions(props.versions))
+  const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
+    props.masterData.achievement_types
+      .filter((item): item is typeof item & { code: GoalAchievementType } =>
+        isGoalAchievementType(item.code)
+      )
+      .map((item) => ({
+        value: item.code,
+        label: resolveGoalAchievementTypeLabel(item.code, {
+          locale: 'ja',
+          fallbackLabel: item.label ?? item.name,
+        }),
+      }))
+  )
 
   const getTotalScoreMax = (): number => props.resolveAllCount(getDraftAttributes()) * MAX_SCORE
 
@@ -200,13 +396,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     if (typeof rawTotal === 'number') {
       setTotal(String(rawTotal))
     }
-    if (
-      'lamp' in goal.achievement_params &&
-      ['HRD', 'BRV', 'ABS', 'CTS'].includes(goal.achievement_params.lamp)
-    ) {
+    if ('lamp' in goal.achievement_params && isHardLampValue(goal.achievement_params.lamp)) {
       setHardLamp(goal.achievement_params.lamp)
     }
-    if ('lamp' in goal.achievement_params && ['FC', 'AJ'].includes(goal.achievement_params.lamp)) {
+    if ('lamp' in goal.achievement_params && isComboLampValue(goal.achievement_params.lamp)) {
       setComboLamp(goal.achievement_params.lamp)
     }
     setInvert(goal.invert)
@@ -404,76 +597,44 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
           </Dialog.Title>
 
           <div class="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-            <label class="block text-sm">
-              <span class="mb-1 block text-text-muted">タイトル</span>
-              <input
-                type="text"
-                maxlength={30}
-                value={title()}
-                onInput={(event) => setTitle(event.currentTarget.value)}
-                class="w-full rounded border border-border-strong px-3 py-2"
-              />
-            </label>
+            <GoalTextField label="タイトル" value={title()} maxLength={30} onChange={setTitle} />
 
-            <label class="block text-sm">
-              <span class="mb-1 block text-text-muted">目標種別</span>
-              <select
-                value={achievementType()}
-                onChange={(event) => {
-                  const nextType = event.currentTarget.value as GoalAchievementType
-                  setAchievementType(nextType)
-                  if (!canUseDynamicTotalTarget(nextType)) {
-                    setTotalMode('number')
-                  }
-                  if (nextType === 'rank_count') {
-                    setRank('S')
-                    setScore(String(SCORE_RANK_MIN_SCORES.S))
-                  }
-                }}
-                class="w-full rounded border border-border-strong px-3 py-2"
-              >
-                {props.masterData.achievement_types.map((item) => (
-                  <option value={item.code}>
-                    {resolveGoalAchievementTypeLabel(item.code, {
-                      locale: 'ja',
-                      fallbackLabel: item.label ?? item.name,
-                    })}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <GoalSelectField
+              label="目標種別"
+              value={achievementType()}
+              options={achievementTypeOptions()}
+              onChange={(nextType) => {
+                setAchievementType(nextType)
+                if (!canUseDynamicTotalTarget(nextType)) {
+                  setTotalMode('number')
+                }
+                if (nextType === 'rank_count') {
+                  setRank('S')
+                  setScore(String(SCORE_RANK_MIN_SCORES.S))
+                }
+              }}
+            />
 
             <Show when={achievementType() === 'score_count' || achievementType() === 'avg_score'}>
-              <label class="block text-sm">
-                <span class="mb-1 block text-text-muted">スコア目標</span>
-                <input
-                  type="number"
-                  value={score()}
-                  onInput={(event) => setScore(event.currentTarget.value)}
-                  class="w-full rounded border border-border-strong px-3 py-2"
-                />
-              </label>
+              <GoalNumberField
+                label="スコア目標"
+                value={score()}
+                min={0}
+                max={MAX_SCORE}
+                onChange={setScore}
+              />
             </Show>
 
             <Show when={achievementType() === 'rank_count'}>
-              <label class="block text-sm">
-                <span class="mb-1 block text-text-muted">ランク目標</span>
-                <select
-                  value={rank()}
-                  onChange={(event) => {
-                    const nextRank = event.currentTarget.value as ScoreRank
-                    setRank(nextRank)
-                    setScore(String(SCORE_RANK_MIN_SCORES[nextRank]))
-                  }}
-                  class="w-full rounded border border-border-strong px-3 py-2"
-                >
-                  {SCORE_RANKS_ASC.map((scoreRank) => (
-                    <option value={scoreRank}>
-                      {scoreRank}（{SCORE_RANK_MIN_SCORES[scoreRank].toLocaleString('ja-JP')}）
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <GoalSelectField
+                label="ランク目標"
+                value={rank()}
+                options={RANK_OPTIONS}
+                onChange={(nextRank) => {
+                  setRank(nextRank)
+                  setScore(String(SCORE_RANK_MIN_SCORES[nextRank]))
+                }}
+              />
             </Show>
 
             <Show
@@ -484,21 +645,15 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 achievementType() === 'combolamp_count'
               }
             >
-              <label class="block text-sm">
-                <span class="mb-1 block text-text-muted">
-                  {invert() ? '未達成件数目標' : '件数目標'}
-                </span>
+              <div class="block text-sm">
+                <p class="mb-1 block text-text-muted">{invert() ? '未達成件数目標' : '件数目標'}</p>
                 <div class="space-y-2">
-                  <select
+                  <GoalSelectField
+                    label="件数指定方法"
                     value={countMode()}
-                    onChange={(event) =>
-                      setCountMode(event.currentTarget.value as 'number' | 'all')
-                    }
-                    class="w-full rounded border border-border-strong px-3 py-2"
-                  >
-                    <option value="number">数値を指定</option>
-                    <option value="all">条件に当てはまるものすべて</option>
-                  </select>
+                    options={COUNT_MODE_OPTIONS}
+                    onChange={setCountMode}
+                  />
                   <Show
                     when={countMode() === 'number'}
                     fallback={
@@ -507,12 +662,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       </p>
                     }
                   >
-                    <input
-                      type="number"
+                    <GoalNumberField
+                      label={invert() ? '未達成件数' : '件数'}
                       min={invert() ? 0 : 1}
                       value={count()}
-                      onInput={(event) => setCount(event.currentTarget.value)}
-                      class="w-full rounded border border-border-strong px-3 py-2"
+                      onChange={setCount}
                     />
                     <Show when={invert()}>
                       <p class="mt-1 text-xs text-text-muted">
@@ -521,39 +675,25 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     </Show>
                   </Show>
                 </div>
-              </label>
+              </div>
             </Show>
 
             <Show when={achievementType() === 'hardlamp_count'}>
-              <label class="block text-sm">
-                <span class="mb-1 block text-text-muted">ハードランプ</span>
-                <select
-                  value={hardLamp()}
-                  onChange={(event) =>
-                    setHardLamp(event.currentTarget.value as 'HRD' | 'BRV' | 'ABS' | 'CTS')
-                  }
-                  class="w-full rounded border border-border-strong px-3 py-2"
-                >
-                  {HARD_LAMP_OPTIONS.map((lamp) => (
-                    <option value={lamp.value}>{lamp.label}</option>
-                  ))}
-                </select>
-              </label>
+              <GoalSelectField
+                label="ハードランプ"
+                value={hardLamp()}
+                options={HARD_LAMP_SELECT_OPTIONS}
+                onChange={setHardLamp}
+              />
             </Show>
 
             <Show when={achievementType() === 'combolamp_count'}>
-              <label class="block text-sm">
-                <span class="mb-1 block text-text-muted">コンボランプ</span>
-                <select
-                  value={comboLamp()}
-                  onChange={(event) => setComboLamp(event.currentTarget.value as 'FC' | 'AJ')}
-                  class="w-full rounded border border-border-strong px-3 py-2"
-                >
-                  {COMBO_LAMP_OPTIONS.map((lamp) => (
-                    <option value={lamp.value}>{lamp.label}</option>
-                  ))}
-                </select>
-              </label>
+              <GoalSelectField
+                label="コンボランプ"
+                value={comboLamp()}
+                options={COMBO_LAMP_SELECT_OPTIONS}
+                onChange={setComboLamp}
+              />
             </Show>
 
             <Show
@@ -563,20 +703,16 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 achievementType() === 'overpower_percent'
               }
             >
-              <label class="block text-sm">
-                <span class="mb-1 block text-text-muted">合計/割合目標</span>
+              <div class="block text-sm">
+                <p class="mb-1 block text-text-muted">合計/割合目標</p>
                 <div class="space-y-2">
                   <Show when={canUseDynamicTotalTarget(achievementType())}>
-                    <select
+                    <GoalSelectField
+                      label="目標値の指定方法"
                       value={totalMode()}
-                      onChange={(event) =>
-                        setTotalMode(event.currentTarget.value as 'number' | 'all')
-                      }
-                      class="w-full rounded border border-border-strong px-3 py-2"
-                    >
-                      <option value="number">数値を指定</option>
-                      <option value="all">条件に当てはまるものすべて</option>
-                    </select>
+                      options={COUNT_MODE_OPTIONS}
+                      onChange={setTotalMode}
+                    />
                   </Show>
                   <Show
                     when={!canUseDynamicTotalTarget(achievementType()) || totalMode() === 'number'}
@@ -586,11 +722,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       </p>
                     }
                   >
-                    <input
-                      type="number"
+                    <GoalNumberField
+                      label="合計/割合の目標値"
                       value={total()}
-                      onInput={(event) => setTotal(event.currentTarget.value)}
-                      class="w-full rounded border border-border-strong px-3 py-2"
+                      min={0}
+                      onChange={setTotal}
                     />
                     <Show when={achievementType() === 'total_score'}>
                       <p class="mt-1 text-xs text-text-muted">
@@ -600,7 +736,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     </Show>
                   </Show>
                 </div>
-              </label>
+              </div>
             </Show>
 
             <div class="rounded border border-border p-3">
@@ -695,26 +831,18 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 </fieldset>
 
                 <div class="grid grid-cols-2 gap-2">
-                  <label class="block text-sm">
-                    <span class="mb-1 block text-text-muted">定数min</span>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={constMin()}
-                      onInput={(event) => setConstMin(event.currentTarget.value)}
-                      class="w-full rounded border border-border-strong px-3 py-2"
-                    />
-                  </label>
-                  <label class="block text-sm">
-                    <span class="mb-1 block text-text-muted">定数max</span>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={constMax()}
-                      onInput={(event) => setConstMax(event.currentTarget.value)}
-                      class="w-full rounded border border-border-strong px-3 py-2"
-                    />
-                  </label>
+                  <GoalNumberField
+                    label="定数min"
+                    value={constMin()}
+                    step={0.1}
+                    onChange={setConstMin}
+                  />
+                  <GoalNumberField
+                    label="定数max"
+                    value={constMax()}
+                    step={0.1}
+                    onChange={setConstMax}
+                  />
                 </div>
               </div>
             </div>

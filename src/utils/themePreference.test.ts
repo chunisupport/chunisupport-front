@@ -95,7 +95,11 @@ test('system設定中はOSテーマ変更に追従する', () => {
 
   try {
     const unsubscribe = subscribeSystemThemeChange(() => 'system')
-    mediaListener?.()
+    const listener = mediaListener as (() => void) | null
+    if (listener === null) {
+      throw new Error('media listener was not registered')
+    }
+    listener()
     assert.equal(documentElement.dataset.theme, 'dark')
 
     unsubscribe()

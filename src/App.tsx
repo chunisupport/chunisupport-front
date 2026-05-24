@@ -57,12 +57,16 @@ const LandingPage = () => {
       username: getAuthenticatedUser()?.username ?? null,
     })
   })
+  const authenticatedUsername = createMemo(() => {
+    const view = homeView()
+    return view.type === 'authenticated' ? view.username : null
+  })
 
   return (
     <main class="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
       <Show when={homeView().type !== 'loading'} fallback={<Loading />}>
         <Show
-          when={homeView().type === 'authenticated' ? homeView() : null}
+          when={authenticatedUsername()}
           fallback={
             <section class="rounded-lg border border-border bg-surface p-6">
               <h1 class="mb-2 text-2xl font-semibold">ChuniSupport</h1>
@@ -86,14 +90,14 @@ const LandingPage = () => {
             </section>
           }
         >
-          {(view) => (
+          {(username) => (
             <section class="rounded-lg border border-border bg-surface p-6">
-              <h1 class="mb-4 text-2xl font-semibold">ようこそ、{view().username}さん</h1>
+              <h1 class="mb-4 text-2xl font-semibold">ようこそ、{username()}さん</h1>
               <div class="rounded-md border border-border bg-surface-muted p-4">
                 <p class="text-sm text-text-muted">プロフィール</p>
-                <p class="mt-1 text-lg font-semibold text-text">@{view().username}</p>
+                <p class="mt-1 text-lg font-semibold text-text">@{username()}</p>
                 <A
-                  href={`/users/${encodeURIComponent(view().username)}`}
+                  href={`/users/${encodeURIComponent(username())}`}
                   class="mt-3 inline-block text-sm font-medium text-action-primary underline"
                 >
                   マイページを開く
