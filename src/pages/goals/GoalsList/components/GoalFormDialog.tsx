@@ -5,7 +5,7 @@ import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createEffect, createMemo, createSignal, For, on, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, on, onCleanup, Show } from 'solid-js'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -350,6 +350,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [errorMessage, setErrorMessage] = createSignal('')
   let dialogContentRef: HTMLDivElement | undefined
   let formScrollAreaRef: HTMLDivElement | undefined
+  let invertCheckboxRef: HTMLInputElement | undefined
   const versionOptions = createMemo(() => buildGoalVersionOptions(props.versions))
   const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
     props.masterData.achievement_types
@@ -453,12 +454,28 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const contentRect = dialogContentRef.getBoundingClientRect()
     const scrollRect = formScrollAreaRef.getBoundingClientRect()
 
+    const visualViewportHeight = window.visualViewport?.height
+    const visualViewportOffsetTop = window.visualViewport?.offsetTop
+    const activeElement = document.activeElement
+    const activeTagName = activeElement?.tagName
+    const activeElementClassName =
+      activeElement instanceof HTMLElement ? activeElement.className : undefined
+    const activeElementAriaLabel =
+      activeElement instanceof HTMLElement ? activeElement.getAttribute('aria-label') : undefined
+    const invertCheckboxRect = invertCheckboxRef?.getBoundingClientRect()
+
     console.log('[GoalFormDialog][layout]', {
       phase,
       invert: invert(),
       countMode: countMode(),
       count: count(),
       viewportHeight: window.innerHeight,
+      visualViewportHeight,
+      visualViewportOffsetTop,
+      windowScrollY: window.scrollY,
+      activeTagName,
+      activeElementClassName,
+      activeElementAriaLabel,
       contentTop: contentRect.top,
       contentBottom: contentRect.bottom,
       contentHeight: contentRect.height,
@@ -468,6 +485,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       scrollAreaTop: scrollRect.top,
       scrollAreaBottom: scrollRect.bottom,
       scrollAreaHeight: scrollRect.height,
+      invertCheckboxTop: invertCheckboxRect?.top,
+      invertCheckboxBottom: invertCheckboxRect?.bottom,
     })
   }
 
@@ -489,6 +508,35 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     ...(parseAttributeSelection(versions()) !== undefined
       ? { ver: parseAttributeSelection(versions()) }
       : {}),
+  })
+
+  /**
+   * スクロール領域・VisualViewportのイベントを監視してデバッグログを出力する。
+   *
+   * @returns なし。
+   */
+  createEffect(() => {
+    if (!formScrollAreaRef) return
+
+    const handleScroll = (): void => {
+      logGoalDialogLayout('scroll_event')
+    }
+    const handleVisualViewportResize = (): void => {
+      logGoalDialogLayout('visual_viewport_resize')
+    }
+    const handleVisualViewportScroll = (): void => {
+      logGoalDialogLayout('visual_viewport_scroll')
+    }
+
+    formScrollAreaRef.addEventListener('scroll', handleScroll)
+    window.visualViewport?.addEventListener('resize', handleVisualViewportResize)
+    window.visualViewport?.addEventListener('scroll', handleVisualViewportScroll)
+
+    onCleanup(() => {
+      formScrollAreaRef?.removeEventListener('scroll', handleScroll)
+      window.visualViewport?.removeEventListener('resize', handleVisualViewportResize)
+      window.visualViewport?.removeEventListener('scroll', handleVisualViewportScroll)
+    })
   })
 
   createEffect(
@@ -917,7 +965,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               checked={invert()}
               onChange={handleInvertChange}
             >
-              <Checkbox.Input />
+              <Checkbox.Input ref={invertCheckboxRef} />
               <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
                 <Checkbox.Indicator>
                   <Check class="h-4 w-4" />
