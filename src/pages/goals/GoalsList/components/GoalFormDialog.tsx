@@ -79,12 +79,21 @@ interface GoalSelectFieldProps<TValue extends string> {
 
 const GOAL_FILTER_CHECKBOX_CONTROL_CLASS =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
-const GOAL_FIELD_INPUT_CLASS =
-  'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2'
+/**
+ * 入力系コントロールのフォーカス表示を要素内側に収める共通スタイル。
+ */
+const GOAL_FIELD_FOCUS_CLASS =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+const GOAL_FIELD_INPUT_CLASS = `w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm hover:border-input-border-hover ${GOAL_FIELD_FOCUS_CLASS}`
 const GOAL_SELECT_ITEM_CLASS =
   'flex h-8 cursor-pointer items-center justify-between rounded px-2 text-sm outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-action-primary data-highlighted:text-text-inverse'
 const GOAL_SELECT_CONTENT_CLASS =
   'z-60 mt-1 max-h-64 w-[--kb-select-content-width] overflow-y-auto rounded-md border border-border-strong bg-surface p-2 shadow-lg'
+/**
+ * スクロール可能な目標条件リストの共通スタイル。
+ */
+const GOAL_FILTER_LIST_CLASS =
+  'scrollbar-none max-h-36 space-y-1 overflow-y-auto rounded border border-border-strong px-3 py-2'
 
 const COUNT_MODE_OPTIONS: GoalSelectOption<'number' | 'all'>[] = [
   { value: 'number', label: '数値を指定' },
@@ -213,7 +222,9 @@ const GoalSelectField = <TValue extends string>(props: GoalSelectFieldProps<TVal
       )}
     >
       <Select.Label class="mb-1 block text-text-muted">{props.label}</Select.Label>
-      <Select.Trigger class="inline-flex w-full items-center justify-between rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2">
+      <Select.Trigger
+        class={`inline-flex w-full items-center justify-between rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover ${GOAL_FIELD_FOCUS_CLASS}`}
+      >
         <Select.Value<
           GoalSelectOption<TValue>
         > class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
@@ -591,12 +602,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
           <Dialog.Title class="text-lg font-bold">
             {props.mode === 'create' ? '目標を作成' : '目標を編集'}
           </Dialog.Title>
 
-          <div class="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+          <div class="scrollbar-none mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             <GoalTextField label="タイトル" value={title()} maxLength={30} onChange={setTitle} />
 
             <GoalSelectField
@@ -668,11 +679,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       value={count()}
                       onChange={setCount}
                     />
-                    <Show when={invert()}>
-                      <p class="mt-1 text-xs text-text-muted">
-                        入力値は「許容する未達成数」です（保存時に達成件数へ変換）。
-                      </p>
-                    </Show>
                   </Show>
                 </div>
               </div>
@@ -753,7 +759,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       クリア
                     </button>
                   </div>
-                  <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-border-strong px-3 py-2">
+                  <div class={GOAL_FILTER_LIST_CLASS}>
                     <For each={props.masterData.difficulties}>
                       {(item) => (
                         <GoalFilterCheckbox
@@ -780,7 +786,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       クリア
                     </button>
                   </div>
-                  <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-border-strong px-3 py-2">
+                  <div class={GOAL_FILTER_LIST_CLASS}>
                     <For each={props.masterData.genres}>
                       {(item) => (
                         <GoalFilterCheckbox
@@ -807,7 +813,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       クリア
                     </button>
                   </div>
-                  <div class="max-h-36 space-y-1 overflow-y-auto rounded border border-border-strong px-3 py-2">
+                  <div class={GOAL_FILTER_LIST_CLASS}>
                     <Show
                       when={versionOptions().length > 0}
                       fallback={
