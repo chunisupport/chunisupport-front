@@ -30,6 +30,31 @@ const formatValue = (value: number, type: GoalDTO['achievement_type']) => {
 }
 
 /**
+ * 反転目標の達成値として表示する符号付き文字列を作成する。
+ *
+ * @param value - 整形対象の数値。
+ * @param type - 目標種別。
+ * @param invert - 目標の反転表示が有効か。
+ * @returns 反転時はマイナスを付与した画面表示用の数値文字列。
+ */
+const formatDisplayValue = (value: number, type: GoalDTO['achievement_type'], invert: boolean) => {
+  const formatted = formatValue(value, type)
+  return invert ? `-${formatted}` : formatted
+}
+
+/**
+ * 反転目標の達成率として表示する符号付き文字列を作成する。
+ *
+ * @param percent - 整形対象の達成率。
+ * @param invert - 目標の反転表示が有効か。
+ * @returns 反転時はマイナスを付与した画面表示用の達成率文字列。
+ */
+const formatDisplayPercent = (percent: number, invert: boolean) => {
+  const formatted = `${percent.toFixed(2)}%`
+  return invert ? `-${formatted}` : formatted
+}
+
+/**
  * 目標の現在値、目標値、達成率をカード形式で表示する。
  *
  * @param props - 目標カードの表示内容と操作ハンドラ。
@@ -51,6 +76,9 @@ const GoalCard: Component<GoalCardProps> = (props) => {
       ? Math.max(0, 100 - Math.min(normalizedPercent(), 100))
       : normalizedPercent()
   }
+  const displayCurrentText = () =>
+    formatDisplayValue(displayCurrent(), props.goal.achievement_type, props.goal.invert)
+  const displayPercentText = () => formatDisplayPercent(displayPercent(), props.goal.invert)
 
   const [menuOpen, setMenuOpen] = createSignal(false)
 
@@ -139,7 +167,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
 
       <div class="mt-2">
         <div class="font-oswald text-3xl font-bold leading-none text-text">
-          {formatValue(displayCurrent(), props.goal.achievement_type)}
+          {displayCurrentText()}
         </div>
         <div class="mb-2 flex items-end justify-between gap-3 mt-1">
           <div class="flex min-w-0 w-full items-end gap-3 text-text-subtle">
@@ -148,7 +176,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
               {formatValue(props.progress.target, props.goal.achievement_type)}
             </div>
             <div class="goal-card-progress-secondary ml-auto pb-0.5 text-right font-oswald text-lg font-semibold leading-none">
-              {displayPercent().toFixed(2)}%
+              {displayPercentText()}
             </div>
           </div>
         </div>
@@ -156,7 +184,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
           class="h-2 w-full rounded appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-action-secondary [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-action-primary [&::-moz-progress-bar]:rounded [&::-moz-progress-bar]:bg-action-primary"
           value={Math.max(0, Math.min(normalizedPercent(), 100))}
           max={100}
-          aria-label={`${props.goal.title} 進捗 ${displayPercent().toFixed(2)}%`}
+          aria-label={`${props.goal.title} 進捗 ${displayPercentText()}`}
         />
       </div>
     </article>

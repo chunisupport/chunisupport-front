@@ -11,7 +11,7 @@ import type {
   GoalUpdateRequest,
   MasterDataDTO,
   VersionDTO,
-} from '../../../../../types/api'
+} from '../../../../types/api'
 import {
   getScoreRank,
   MAX_SCORE,
