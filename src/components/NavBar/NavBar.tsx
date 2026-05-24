@@ -219,7 +219,9 @@ const NavBar = (props: NavBarProps) => {
    */
   const handleDropdownSelect = (item: DropdownItem) => {
     if (item.action === 'theme') {
-      setShowThemeDialog(true)
+      window.requestAnimationFrame(() => {
+        setShowThemeDialog(true)
+      })
       return
     }
 
