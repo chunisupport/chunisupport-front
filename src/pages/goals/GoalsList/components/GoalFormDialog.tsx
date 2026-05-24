@@ -5,7 +5,7 @@ import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, on, Show } from 'solid-js'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -348,6 +348,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [versions, setVersions] = createSignal<string[]>([])
 
   const [errorMessage, setErrorMessage] = createSignal('')
+  let dialogContentRef: HTMLDivElement | undefined
+  let formScrollAreaRef: HTMLDivElement | undefined
   const versionOptions = createMemo(() => buildGoalVersionOptions(props.versions))
   const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
     props.masterData.achievement_types
@@ -436,6 +438,39 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     )
   })
 
+  /**
+   * 目標フォームダイアログのレイアウト情報をデバッグ出力する。
+   *
+   * @param phase - ログ出力タイミングの識別子。
+   * @returns なし。
+   */
+  const logGoalDialogLayout = (phase: string): void => {
+    if (!dialogContentRef || !formScrollAreaRef) {
+      console.log('[GoalFormDialog][layout]', { phase, reason: 'ref_unavailable' })
+      return
+    }
+
+    const contentRect = dialogContentRef.getBoundingClientRect()
+    const scrollRect = formScrollAreaRef.getBoundingClientRect()
+
+    console.log('[GoalFormDialog][layout]', {
+      phase,
+      invert: invert(),
+      countMode: countMode(),
+      count: count(),
+      viewportHeight: window.innerHeight,
+      contentTop: contentRect.top,
+      contentBottom: contentRect.bottom,
+      contentHeight: contentRect.height,
+      scrollTop: formScrollAreaRef.scrollTop,
+      scrollHeight: formScrollAreaRef.scrollHeight,
+      scrollClientHeight: formScrollAreaRef.clientHeight,
+      scrollAreaTop: scrollRect.top,
+      scrollAreaBottom: scrollRect.bottom,
+      scrollAreaHeight: scrollRect.height,
+    })
+  }
+
   const getDraftAttributes = (): GoalRequest['attributes'] => ({
     ...(parseAttributeSelection(diffs()) !== undefined
       ? { diff: parseAttributeSelection(diffs()) }
@@ -455,6 +490,17 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       ? { ver: parseAttributeSelection(versions()) }
       : {}),
   })
+
+  createEffect(
+    on([invert, countMode, count], () => {
+      queueMicrotask(() => {
+        logGoalDialogLayout('state_change_microtask')
+      })
+      requestAnimationFrame(() => {
+        logGoalDialogLayout('state_change_animation_frame')
+      })
+    })
+  )
 
   const handleSave = async () => {
     setErrorMessage('')
@@ -588,6 +634,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   }
 
   const handleInvertChange = (next: boolean) => {
+    logGoalDialogLayout('before_invert_change')
     if (isCountAchievementType(achievementType()) && countMode() === 'number') {
       const parsed = Number(count())
       if (Number.isInteger(parsed) && parsed >= 0) {
@@ -596,18 +643,30 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       }
     }
     setInvert(next)
+    queueMicrotask(() => {
+      logGoalDialogLayout('after_invert_change_microtask')
+    })
+    requestAnimationFrame(() => {
+      logGoalDialogLayout('after_invert_change_animation_frame')
+    })
   }
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+        <Dialog.Content
+          ref={dialogContentRef}
+          class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6"
+        >
           <Dialog.Title class="text-lg font-bold">
             {props.mode === 'create' ? '目標を作成' : '目標を編集'}
           </Dialog.Title>
 
-          <div class="scrollbar-none mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+          <div
+            ref={formScrollAreaRef}
+            class="scrollbar-none mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1"
+          >
             <GoalTextField label="タイトル" value={title()} maxLength={30} onChange={setTitle} />
 
             <GoalSelectField
