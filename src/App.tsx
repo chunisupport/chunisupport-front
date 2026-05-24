@@ -1,10 +1,18 @@
 import { A, Route, Router, useParams } from '@solidjs/router'
+import { Calculator, Search, Target } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createMemo, createResource, ErrorBoundary, Show } from 'solid-js'
+import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 import { fetchMe, fetchUserProfileSummary } from './api/users'
 import { Loading, NavBar, PlayerDataEmptyState } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
+import {
+  BORDER_CALCULATOR_PATH,
+  CHART_CONSTANT_CALCULATOR_PATH,
+  LOCKED_SONGS_FINDER_PATH,
+  TOOLS_PATH,
+} from './constants/routes'
+import { TOOL_LINKS, type ToolLinkIcon } from './constants/tools'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import {
   AdminPage,
@@ -153,6 +161,24 @@ const UserStatsPage = () => {
 }
 
 /**
+ * ツールリンクの種類に対応するアイコンを表示する。
+ * @param props.icon - 表示するツールアイコンの種類。
+ * @returns ツールカード用アイコン
+ */
+const ToolCardIcon = (props: { icon: ToolLinkIcon }) => {
+  const iconClass = 'h-5 w-5 text-action-primary'
+
+  switch (props.icon) {
+    case 'calculator':
+      return <Calculator class={iconClass} aria-hidden="true" />
+    case 'target':
+      return <Target class={iconClass} aria-hidden="true" />
+    case 'search':
+      return <Search class={iconClass} aria-hidden="true" />
+  }
+}
+
+/**
  * ツールページの見出しを表示する。
  * @returns ツールページ
  */
@@ -160,10 +186,33 @@ const ToolsPage = () => {
   useDocumentTitle('ツール')
 
   return (
-    <div class="mx-auto w-full max-w-3xl p-4">
+    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
       <h1 class="text-2xl font-semibold">ツール</h1>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <For each={TOOL_LINKS}>
+          {(tool) => (
+            <A
+              href={tool.href}
+              class="flex min-h-24 items-center gap-4 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            >
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+                <ToolCardIcon icon={tool.icon} />
+              </span>
+              <span class="text-base font-semibold text-text">{tool.title}</span>
+            </A>
+          )}
+        </For>
+      </div>
     </div>
   )
+}
+
+/**
+ * 未実装ツールの空ページを表示する。
+ * @returns 空のツールページ
+ */
+const EmptyToolPage = () => {
+  return <div />
 }
 
 const TermsPage = () => {
@@ -222,7 +271,10 @@ const App = () => {
 
       {/* その他 */}
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />
-      <Route path="/tools" component={withNavBar(ToolsPage)} />
+      <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />
+      <Route path={CHART_CONSTANT_CALCULATOR_PATH} component={withNavBar(EmptyToolPage)} />
+      <Route path={BORDER_CALCULATOR_PATH} component={withNavBar(EmptyToolPage)} />
+      <Route path={LOCKED_SONGS_FINDER_PATH} component={withNavBar(EmptyToolPage)} />
       <Route path="/terms" component={withNavBar(TermsPage)} />
 
       {/* 管理 */}
