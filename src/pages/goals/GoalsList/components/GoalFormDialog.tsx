@@ -355,6 +355,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   let invertCheckboxRef: HTMLInputElement | undefined
   let countInputRef: HTMLInputElement | undefined
   let goalCountSectionRef: HTMLDivElement | undefined
+  const [debugDialogId] = createSignal(`goal-form-${Math.random().toString(36).slice(2, 10)}`)
   const versionOptions = createMemo(() => buildGoalVersionOptions(props.versions))
   const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
     props.masterData.achievement_types
@@ -450,6 +451,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @returns なし。
    */
   const logGoalDialogLayout = (phase: string, eventDetail?: Record<string, unknown>): void => {
+    if (!props.open) return
+
     if (!dialogContentRef || !formScrollAreaRef) {
       console.log('[GoalFormDialog][layout]', { phase, reason: 'ref_unavailable' })
       return
@@ -476,6 +479,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const activeIsCountInput = activeElement === countInputRef
 
     console.log('[GoalFormDialog][layout]', {
+      debugDialogId: debugDialogId(),
+      open: props.open,
+      mode: props.mode,
       phase,
       invert: invert(),
       countMode: countMode(),
@@ -537,6 +543,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @returns なし。
    */
   createEffect(() => {
+    if (!props.open) return
     if (!dialogContentRef || !formScrollAreaRef) return
 
     const handleWindowClick = (event: MouseEvent): void => {
@@ -588,6 +595,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @returns なし。
    */
   createEffect(() => {
+    if (!props.open) return
     if (!formScrollAreaRef) return
 
     const handleScroll = (): void => {
@@ -623,6 +631,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
   createEffect(
     on([invert, countMode, count], () => {
+      if (!props.open) return
       queueMicrotask(() => {
         logGoalDialogLayout('state_change_microtask')
       })
