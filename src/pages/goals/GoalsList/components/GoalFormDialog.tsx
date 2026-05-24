@@ -165,6 +165,27 @@ const clampNumericInput = (
 }
 
 /**
+ * 数値入力欄の値を進捗表示用の数値へ変換する。
+ *
+ * @param value - 入力欄から受け取った文字列。
+ * @returns 有効な数値ならその値、不正な値なら0。
+ */
+const parseProgressDisplayValue = (value: string): number => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+/**
+ * 現在値と最大値をスラッシュ区切りの表示文字列へ変換する。
+ *
+ * @param current - 現在入力されている目標値。
+ * @param max - 対象条件から解決した最大値。
+ * @returns 日本語ロケールで桁区切りした進捗表示。
+ */
+const formatProgressLimit = (current: number, max: number): string =>
+  `${current.toLocaleString('ja-JP')} / ${max.toLocaleString('ja-JP')}`
+
+/**
  * 文字列が目標種別として扱える値か判定する。
  *
  * @param value - APIから受け取った目標種別コード。
@@ -544,6 +565,28 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       : {}),
   })
 
+  /**
+   * 件数目標の現在値と最大値を表示用に組み立てる。
+   *
+   * @returns 件数目標の進捗上限表示。
+   */
+  const countProgressLimitText = (): string => {
+    const max = props.resolveAllCount(getDraftAttributes())
+    const current = countMode() === 'all' ? max : Math.floor(parseProgressDisplayValue(count()))
+    return `${formatProgressLimit(current, max)} 件`
+  }
+
+  /**
+   * 合計値目標の現在値と最大値を表示用に組み立てる。
+   *
+   * @param max - 対象条件から解決した最大値。
+   * @returns 合計値目標の進捗上限表示。
+   */
+  const totalProgressLimitText = (max: number): string => {
+    const current = totalMode() === 'all' ? max : parseProgressDisplayValue(total())
+    return formatProgressLimit(current, max)
+  }
+
   const handleSave = async () => {
     setErrorMessage('')
     const trimmed = title().trim()
@@ -745,7 +788,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               }
             >
               <div class="block text-sm">
-                <p class="mb-1 block text-text-muted">件数目標</p>
                 <div class="space-y-2">
                   <GoalSelectField
                     label="件数指定方法"
@@ -754,16 +796,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     onChange={setCountMode}
                   />
                   <Show when={countMode() === 'number'}>
-                    <GoalNumberField
-                      label="件数"
-                      min={1}
-                      value={count()}
-                      onChange={setCount}
-                    />
+                    <GoalNumberField label="件数" min={1} value={count()} onChange={setCount} />
                   </Show>
-                  <p class="text-xs text-text-muted">
-                    最大値: {props.resolveAllCount(getDraftAttributes()).toLocaleString('ja-JP')} 件
-                  </p>
+                  <p class="text-xs text-text-muted">{countProgressLimitText()}</p>
                 </div>
               </div>
             </Show>
@@ -794,7 +829,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               }
             >
               <div class="block text-sm">
-                <p class="mb-1 block text-text-muted">合計/割合目標</p>
                 <div class="space-y-2">
                   <Show when={canUseDynamicTotalTarget(achievementType())}>
                     <GoalSelectField
@@ -816,13 +850,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   </Show>
                   <Show when={achievementType() === 'total_score'}>
                     <p class="text-xs text-text-muted">
-                      最大値: {getTotalScoreMax().toLocaleString('ja-JP')}（対象譜面数 × 1,010,000）
+                      {totalProgressLimitText(getTotalScoreMax())}
                     </p>
                   </Show>
                   <Show when={achievementType() === 'overpower_value'}>
                     <p class="text-xs text-text-muted">
-                      最大値: {getOverPowerChartMax().toLocaleString('ja-JP')}（対象譜面の最大OVER
-                      POWER合計）
+                      {totalProgressLimitText(getOverPowerChartMax())}
                     </p>
                   </Show>
                 </div>

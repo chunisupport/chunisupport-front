@@ -1,4 +1,13 @@
-import { type Component, createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js'
+import { Button } from '@kobalte/core/button'
+import {
+  type Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  Show,
+} from 'solid-js'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../../types/api'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
@@ -11,6 +20,11 @@ type Props = {
   honors: HonorDTO[]
   bestRecords: PlayerRecordDTO[]
   newRecords: PlayerRecordDTO[]
+}
+
+type HonorTitleProps = {
+  honor: HonorDTO
+  isRotating?: boolean
 }
 
 /**
@@ -67,6 +81,23 @@ const honorTypeClassNames: Record<HonorDTO['type_name'], string> = {
 }
 
 /**
+ * 称号種別に応じた装飾を付けて称号名を表示する。
+ *
+ * @param props - 表示対象の称号とローテーションアニメーションの有無。
+ * @returns 称号表示の JSX 要素。
+ */
+const HonorTitle: Component<HonorTitleProps> = (props) => (
+  <span
+    class={`user-honor-title${props.isRotating ? ' user-honor-title--rotating' : ''} ${
+      honorTypeClassNames[props.honor.type_name]
+    }`}
+    data-honor-type={props.honor.type_name}
+  >
+    {props.honor.name}
+  </span>
+)
+
+/**
  * ユーザーの称号、レベル、レーティング、OVER POWERをまとめたプロフィールカードを表示する。
  *
  * @param props - 表示対象のプレイヤー情報、称号、レーティング対象レコード。
@@ -83,19 +114,30 @@ export const UserNameplate: Component<Props> = (props) => {
   const bestRatingText = formatPlayerRating(bestRating)
   const newRatingText = formatPlayerRating(newRating)
   const [activeHonorIndex, setActiveHonorIndex] = createSignal(0)
+  const [isHonorListExpanded, setIsHonorListExpanded] = createSignal(false)
   const visibleHonors = createMemo(() => getVisibleHonors(props.honors))
+  const hasMultipleVisibleHonors = createMemo(() => visibleHonors().length > 1)
   const activeHonor = createMemo(() => {
     const honors = visibleHonors()
 
     return honors[normalizeHonorIndex(activeHonorIndex(), honors.length)]
   })
 
+  /**
+   * 複数称号の表示モードをローテーションと縦並びで切り替える。
+   *
+   * @returns なし。
+   */
+  const toggleHonorDisplay = (): void => {
+    setIsHonorListExpanded((current) => !current)
+  }
+
   createEffect(() => {
     const honorsLength = visibleHonors().length
 
     setActiveHonorIndex((current) => normalizeHonorIndex(current, honorsLength))
 
-    if (honorsLength <= 1) return
+    if (honorsLength <= 1 || isHonorListExpanded()) return
 
     const intervalId = window.setInterval(() => {
       setActiveHonorIndex((current) => normalizeHonorIndex(current + 1, visibleHonors().length))
@@ -106,15 +148,38 @@ export const UserNameplate: Component<Props> = (props) => {
 
   return (
     <div class="mb-2 mx-auto w-[min(420px,calc(100%-2rem))] px-3 py-3 border border-border shadow-sm rounded-md ">
-      <Show when={activeHonor()} keyed>
-        {(honor) => (
-          <p
-            class={`user-honor-title user-honor-title--rotating ${honorTypeClassNames[honor.type_name]}`}
-            data-honor-type={honor.type_name}
+      <Show when={visibleHonors().length > 0}>
+        <Show
+          when={hasMultipleVisibleHonors()}
+          fallback={
+            <Show when={activeHonor()} keyed>
+              {(honor) => <HonorTitle honor={honor} />}
+            </Show>
+          }
+        >
+          <Button
+            type="button"
+            class="user-honor-toggle"
+            aria-expanded={isHonorListExpanded()}
+            aria-label={
+              isHonorListExpanded() ? '称号をローテーション表示に戻す' : '称号を縦に表示する'
+            }
+            onClick={toggleHonorDisplay}
           >
-            {honor.name}
-          </p>
-        )}
+            <Show
+              when={isHonorListExpanded()}
+              fallback={
+                <Show when={activeHonor()} keyed>
+                  {(honor) => <HonorTitle honor={honor} isRotating />}
+                </Show>
+              }
+            >
+              <span class="user-honor-list">
+                <For each={visibleHonors()}>{(honor) => <HonorTitle honor={honor} />}</For>
+              </span>
+            </Show>
+          </Button>
+        </Show>
       </Show>
       <div class="mb-2 flex flex-row items-end justify-between">
         <p class="">Lv. {props.playerInfo.level}</p>

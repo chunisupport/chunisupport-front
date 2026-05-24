@@ -393,6 +393,34 @@
     animation: honor-title-rotate 4s ease-in-out both;
   }
 
+  .user-honor-toggle {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .user-honor-toggle:focus-visible {
+    border-radius: 8px;
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+
+  .user-honor-list {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0 0 12px;
+  }
+
+  .user-honor-list .user-honor-title {
+    width: 100%;
+    margin: 0;
+  }
+
   .user-honor-title--normal {
     --honor-background: var(--honor-shine), #d4d4d4;
   }
