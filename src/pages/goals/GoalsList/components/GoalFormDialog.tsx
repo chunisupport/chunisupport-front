@@ -587,16 +587,16 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     })
   }
 
-  const handleInvertChange = (next: boolean) => {
-    if (isCountAchievementType(achievementType()) && countMode() === 'number') {
-      const parsed = Number(count())
-      if (Number.isInteger(parsed) && parsed >= 0) {
-        const allCount = props.resolveAllCount(getDraftAttributes())
-        setCount(String(Math.max(allCount - parsed, 0)))
-      }
-    }
-    setInvert(next)
-  }
+  // const handleInvertChange = (next: boolean) => {
+  //   if (isCountAchievementType(achievementType()) && countMode() === 'number') {
+  //     const parsed = Number(count())
+  //     if (Number.isInteger(parsed) && parsed >= 0) {
+  //       const allCount = props.resolveAllCount(getDraftAttributes())
+  //       setCount(String(Math.max(allCount - parsed, 0)))
+  //     }
+  //   }
+  //   setInvert(next)
+  // }
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
