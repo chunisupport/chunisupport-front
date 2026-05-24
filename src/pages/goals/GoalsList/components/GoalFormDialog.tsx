@@ -853,7 +853,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               </div>
             </div>
 
-            <Checkbox
+            {/* <Checkbox
               class="flex items-center gap-2 text-sm text-text-muted"
               checked={invert()}
               onChange={handleInvertChange}
@@ -865,7 +865,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 </Checkbox.Indicator>
               </Checkbox.Control>
               <Checkbox.Label>進捗表示を反転（未達寄り）</Checkbox.Label>
-            </Checkbox>
+            </Checkbox> */}
 
             <Show when={errorMessage()}>
               <p class="text-sm text-danger">{errorMessage()}</p>
