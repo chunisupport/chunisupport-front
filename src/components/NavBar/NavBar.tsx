@@ -219,7 +219,11 @@ const NavBar = (props: NavBarProps) => {
    */
   const handleDropdownSelect = (item: DropdownItem) => {
     if (item.action === 'theme') {
-      setShowThemeDialog(true)
+      // モバイル環境では、DropdownMenu のクローズ時フォーカス復元と Dialog オープン時フォーカス奪取が
+      // 同一タップ内で競合し、ダイアログが開いてすぐ閉じることがあるため、次のイベントループで開く。
+      window.setTimeout(() => {
+        setShowThemeDialog(true)
+      }, 0)
       return
     }
 
