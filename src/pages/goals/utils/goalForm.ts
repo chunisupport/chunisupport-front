@@ -16,7 +16,7 @@ export const GOAL_ACHIEVEMENT_TYPE_LABELS = {
     score_count: 'スコア達成数',
     avg_score: '平均スコア',
     hardlamp_count: 'ハードランプ達成数',
-    combolamp_count: 'コンボランプ達成数',
+    combolamp_count: 'FC/AJ達成数',
     total_score: '総スコア',
     overpower_value: '総OVER POWER',
     overpower_percent: 'OVER POWER達成率',
