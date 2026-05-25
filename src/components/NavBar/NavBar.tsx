@@ -480,11 +480,6 @@ const NavBar = (props: NavBarProps) => {
                   )}
                 </For>
               </div>
-              <div class="mt-5 flex justify-end">
-                <Dialog.CloseButton class="rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover">
-                  閉じる
-                </Dialog.CloseButton>
-              </div>
             </Dialog.Content>
           </Dialog.Portal>
         </Dialog>
