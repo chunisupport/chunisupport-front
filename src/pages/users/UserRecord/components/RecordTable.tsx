@@ -4,6 +4,7 @@ import { createRecordTableVirtualizer } from '../../components/createRecordTable
 import {
   RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
+  RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS,
   RecordHeaderButton,
 } from '../../components/SharedRecordTableColumns'
 import type { RecordColumnId, RecordSortKey, SortDirection } from '../types/types'
@@ -19,6 +20,11 @@ interface RecordTableProps {
   onSortChange: (key: RecordSortKey) => void
 }
 
+/**
+ * ユーザーレコードを仮想スクロール付きの一覧表として表示する。
+ * @param props - 表示対象レコード、表示列、ソート状態、ソート変更ハンドラ。
+ * @returns レコード表または空状態メッセージを表すJSX要素。
+ */
 export const RecordTable: Component<RecordTableProps> = (props) => {
   let tableContainerRef: HTMLDivElement | undefined
   let tableBodyRef: HTMLDivElement | undefined
@@ -73,12 +79,16 @@ export const RecordTable: Component<RecordTableProps> = (props) => {
               <For each={virtualizedTable.virtualRows()}>
                 {(virtualRow) => {
                   const record = createMemo(() => props.records[virtualRow.index])
+                  const rowHoverClass =
+                    virtualRow.index === 0
+                      ? RECORD_ROW_HOVER_CLASS
+                      : RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS
 
                   return (
                     <Show when={record()} keyed>
                       {(currentRecord) => (
                         <div
-                          class={`absolute left-0 top-0 grid w-full border-b border-border px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
+                          class={`absolute left-0 top-0 grid w-full border-b border-border px-2 text-xs ${rowHoverClass}`}
                           style={{
                             'grid-template-columns': gridTemplateColumns(),
                             transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
