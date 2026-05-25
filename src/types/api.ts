@@ -384,6 +384,16 @@ export interface AdminHonorsResponse {
   honors: AdminHonorDTO[]
 }
 
+export interface HonorRequestDTO {
+  name: string
+  type_name: string
+  image_url: string
+}
+
+export interface HonorTypesResponse {
+  honor_types: MasterItemDTO[]
+}
+
 export interface UserRecordMetaDTO {
   updated_at: string | null
 }
