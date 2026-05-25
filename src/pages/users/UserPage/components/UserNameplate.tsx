@@ -8,6 +8,7 @@ import {
   onCleanup,
   Show,
 } from 'solid-js'
+import { HONOR_TYPE_CLASS_NAMES } from '../../../../constants/honors'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../../types/api'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
@@ -61,24 +62,7 @@ const normalizeHonorIndex = (index: number, length: number): number => {
 /**
  * APIの称号種別を称号背景のCSSクラス名へ変換する。
  */
-const honorTypeClassNames: Record<HonorDTO['type_name'], string> = {
-  normal: 'user-honor-title--normal',
-  copper: 'user-honor-title--copper',
-  silver: 'user-honor-title--silver',
-  gold: 'user-honor-title--gold',
-  platina: 'user-honor-title--platina',
-  rainbow: 'user-honor-title--rainbow',
-  staff: 'user-honor-title--staff',
-  ongeki: 'user-honor-title--ongeki',
-  maimai: 'user-honor-title--maimai',
-  sp: 'user-honor-title--sp',
-  phoenix_g: 'user-honor-title--phoenix-g',
-  phoenix_p: 'user-honor-title--phoenix-p',
-  phoenix_r: 'user-honor-title--phoenix-r',
-  expert: 'user-honor-title--expert',
-  master: 'user-honor-title--master',
-  ultima: 'user-honor-title--ultima',
-}
+const honorTypeClassNames: Record<HonorDTO['type_name'], string> = HONOR_TYPE_CLASS_NAMES
 
 /**
  * 称号種別に応じた装飾を付けて称号名を表示する。

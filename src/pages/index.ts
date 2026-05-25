@@ -1,4 +1,4 @@
-export { AdminPage, AdminSongsPage, AdminUsersPage } from './admin'
+export { AdminHonorsPage, AdminPage, AdminSongsPage, AdminUsersPage } from './admin'
 export { Login, Register } from './auth'
 export { default as ForbiddenPage } from './ForbiddenPage'
 export { GoalsList } from './goals'

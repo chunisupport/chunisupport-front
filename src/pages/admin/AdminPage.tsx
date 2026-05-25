@@ -13,8 +13,18 @@ const links = [
     title: '楽曲管理',
     description: '楽曲一覧、編集、削除、復活を行います。',
   },
+  {
+    href: '/admin/honors',
+    title: '称号管理',
+    description: '称号一覧、クラス、画像URLを確認します。',
+  },
 ]
 
+/**
+ * 管理者向けメニュー画面を描画する。
+ *
+ * @returns 管理メニューUI。
+ */
 const AdminPage = () => {
   useDocumentTitle('管理')
 

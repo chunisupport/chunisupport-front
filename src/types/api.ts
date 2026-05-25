@@ -372,6 +372,18 @@ export interface HonorDTO {
   image_url: string | null
 }
 
+export interface AdminHonorDTO {
+  id: number
+  name: string
+  type_name: string
+  image_url: string
+  created_at: string | null
+}
+
+export interface AdminHonorsResponse {
+  honors: AdminHonorDTO[]
+}
+
 export interface UserRecordMetaDTO {
   updated_at: string | null
 }

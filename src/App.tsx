@@ -15,6 +15,7 @@ import {
 import { TOOL_LINKS, type ToolLinkIcon } from './constants/tools'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import {
+  AdminHonorsPage,
   AdminPage,
   AdminSongsPage,
   AdminUsersPage,
@@ -238,6 +239,17 @@ const GuardedAdminSongsPage = () => (
   </RequireRole>
 )
 
+/**
+ * ADMIN 権限を要求して称号管理画面を表示する。
+ *
+ * @returns 権限制御済みの称号管理画面。
+ */
+const GuardedAdminHonorsPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <AdminHonorsPage />
+  </RequireRole>
+)
+
 const GuardedRegisterScoreTempPage = () => (
   <RequireAuth>
     <RegisterScoreTempPage />
@@ -281,6 +293,7 @@ const App = () => {
       <Route path="/admin" component={withNavBar(GuardedAdminPage)} />
       <Route path="/admin/users" component={withNavBar(GuardedAdminUsersPage)} />
       <Route path="/admin/songs" component={withNavBar(GuardedAdminSongsPage)} />
+      <Route path="/admin/honors" component={withNavBar(GuardedAdminHonorsPage)} />
 
       {/* 404 */}
       <Route path="*" component={NotFoundPage} />
