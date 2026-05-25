@@ -9,7 +9,7 @@ const NotFoundPage = () => {
       <h1 class="text-2xl font-semibold">404 Not Found</h1>
       <p class="text-sm text-text-muted">お探しのページは見つかりませんでした。</p>
       <A href="/" class="text-link hover:underline">
-        ルートページへ戻る
+        トップページへ戻る
       </A>
     </div>
   )

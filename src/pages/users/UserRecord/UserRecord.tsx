@@ -10,7 +10,7 @@ import {
   Suspense,
 } from 'solid-js'
 import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/songs'
-import { Loading } from '../../../components'
+import { LoadError, Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { UserRecordDTO } from '../../../types/api'
 import { type SortDirection, sanitizeSortQuery } from '../recordTable/sortingQuery'
@@ -93,60 +93,65 @@ const UserRecord: Component<Props> = (props) => {
   return (
     <Suspense fallback={<Loading />}>
       <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
-        <Show when={allSongs() && masterData() && versionData()} fallback={<Loading />}>
-          <div class="mx-2 text-sm">
-            {/* フィルター関連UI */}
-            <FilterToolbar
-              title={filters().title}
-              onTitleChange={(value) => setFilters({ ...filters(), title: value })}
-              onOpenFilter={() => setFilterOpen(true)}
-              onOpenColumnSettings={() => setColumnSettingsOpen(true)}
-            />
-
-            {/* フィルター統計 */}
-            {filteredCount() > 0 && (
-              <FilterStats
-                stats={stats()}
-                open={filterStatsOpen()}
-                onOpenChange={setFilterStatsOpen}
+        <Show
+          when={!allSongs.error && !masterData.error && !versionData.error}
+          fallback={<LoadError error={allSongs.error ?? masterData.error ?? versionData.error} />}
+        >
+          <Show when={allSongs() && masterData() && versionData()} fallback={<Loading />}>
+            <div class="mx-2 text-sm">
+              {/* フィルター関連UI */}
+              <FilterToolbar
+                title={filters().title}
+                onTitleChange={(value) => setFilters({ ...filters(), title: value })}
+                onOpenFilter={() => setFilterOpen(true)}
+                onOpenColumnSettings={() => setColumnSettingsOpen(true)}
               />
-            )}
 
-            <p class="mb-2 text-sm text-text-muted">
-              全 {totalCount()} 件中 {filteredCount()} 件を表示
-            </p>
+              {/* フィルター統計 */}
+              {filteredCount() > 0 && (
+                <FilterStats
+                  stats={stats()}
+                  open={filterStatsOpen()}
+                  onOpenChange={setFilterStatsOpen}
+                />
+              )}
 
-            {/* レコード一覧 */}
-            <RecordTable
-              records={sortedRecords()}
-              statsOpen={filterStatsOpen()}
-              sortKey={sortKey()}
-              sortDirection={sortDirection()}
-              visibleColumnIds={visibleColumnIds()}
-              onSortChange={handleSortChange}
-            />
+              <p class="mb-2 text-sm text-text-muted">
+                全 {totalCount()} 件中 {filteredCount()} 件を表示
+              </p>
 
-            {/* フィルターダイアログ */}
-            <FilterDialog
-              open={filterOpen()}
-              onOpenChange={setFilterOpen}
-              filters={filters()}
-              onChange={setFilters}
-              masterData={masterData()}
-              versions={versionData()?.versions}
-              defaultFilter={getDefaultFilter(masterData(), versionData()?.versions)}
-              setSavedFilters={setSavedFilters}
-            />
+              {/* レコード一覧 */}
+              <RecordTable
+                records={sortedRecords()}
+                statsOpen={filterStatsOpen()}
+                sortKey={sortKey()}
+                sortDirection={sortDirection()}
+                visibleColumnIds={visibleColumnIds()}
+                onSortChange={handleSortChange}
+              />
 
-            <ColumnSettingsDialog
-              open={columnSettingsOpen()}
-              onOpenChange={setColumnSettingsOpen}
-              visibleColumnIds={visibleColumnIds()}
-              onApply={(nextVisibleColumnIds) =>
-                setVisibleColumnIds(sanitizeVisibleColumnIds(nextVisibleColumnIds))
-              }
-            />
-          </div>
+              {/* フィルターダイアログ */}
+              <FilterDialog
+                open={filterOpen()}
+                onOpenChange={setFilterOpen}
+                filters={filters()}
+                onChange={setFilters}
+                masterData={masterData()}
+                versions={versionData()?.versions}
+                defaultFilter={getDefaultFilter(masterData(), versionData()?.versions)}
+                setSavedFilters={setSavedFilters}
+              />
+
+              <ColumnSettingsDialog
+                open={columnSettingsOpen()}
+                onOpenChange={setColumnSettingsOpen}
+                visibleColumnIds={visibleColumnIds()}
+                onApply={(nextVisibleColumnIds) =>
+                  setVisibleColumnIds(sanitizeVisibleColumnIds(nextVisibleColumnIds))
+                }
+              />
+            </div>
+          </Show>
         </Show>
       </ErrorBoundary>
     </Suspense>

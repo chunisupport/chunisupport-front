@@ -3,7 +3,7 @@ import { Calculator, Search, Target } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 import { fetchMe, fetchUserProfileSummary } from './api/users'
-import { Loading, NavBar, PlayerDataEmptyState } from './components'
+import { LoadError, Loading, NavBar, PlayerDataEmptyState } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
 import {
@@ -35,6 +35,7 @@ import {
 import { getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
 import { resolveHomeView } from './usecases/auth/resolveHomeView'
+import { isNotFoundApiError } from './utils/apiError'
 
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
   return (props: P) => (
@@ -150,11 +151,27 @@ const UserStatsPage = () => {
 
   return (
     <ErrorBoundary fallback={(err) => <p class="p-4 text-danger">ERROR: {err.message}</p>}>
-      <Show when={!resource.loading} fallback={<Loading />}>
-        <Show when={resource()?.player} fallback={<PlayerDataEmptyState />}>
-          <div class="mx-auto w-full max-w-3xl p-4">
-            <h1 class="text-2xl font-semibold">統計</h1>
-          </div>
+      <Show
+        when={!resource.error}
+        fallback={
+          <Show
+            when={isNotFoundApiError(resource.error)}
+            fallback={
+              <div class="mx-auto w-full max-w-3xl p-4">
+                <LoadError error={resource.error} />
+              </div>
+            }
+          >
+            <NotFoundPage />
+          </Show>
+        }
+      >
+        <Show when={!resource.loading} fallback={<Loading />}>
+          <Show when={resource()?.player} fallback={<PlayerDataEmptyState />}>
+            <div class="mx-auto w-full max-w-3xl p-4">
+              <h1 class="text-2xl font-semibold">統計</h1>
+            </div>
+          </Show>
         </Show>
       </Show>
     </ErrorBoundary>

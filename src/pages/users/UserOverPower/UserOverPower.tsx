@@ -7,7 +7,7 @@ import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
 import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
-import { Loading } from '../../../components'
+import { LoadError, Loading } from '../../../components'
 import { authSession } from '../../../stores/authSession'
 import type {
   PlayerLockedSongRequest,
@@ -475,148 +475,159 @@ const UserOverPower: Component<Props> = (props) => {
   return (
     <Suspense fallback={<Loading />}>
       <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
-        <Show when={summary()} fallback={<Loading />}>
-          {(currentSummary) => (
-            <div class="mx-4 flex flex-col gap-4 text-sm">
-              <Tabs.Root value={selectedSummaryTab()}>
-                <div class="flex items-center justify-between gap-3">
-                  <div class="min-w-0 shrink">
-                    <Select<OverPowerSummaryOption>
-                      options={OVER_POWER_SUMMARY_OPTIONS}
-                      optionValue="value"
-                      optionTextValue="label"
-                      value={selectedSummaryOption()}
-                      onChange={handleSummaryTabChange}
-                      placeholder="ジャンル"
-                      itemComponent={(itemProps) => (
-                        <Select.Item
-                          item={itemProps.item}
-                          class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
-                        >
-                          <div class="flex items-center gap-2">
-                            <span class="inline-flex w-4 justify-center text-success">
-                              <Select.ItemIndicator>
-                                <Check size={14} />
-                              </Select.ItemIndicator>
-                            </span>
-                            <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                          </div>
-                        </Select.Item>
-                      )}
-                    >
-                      <Select.Trigger class="grid w-[200px] min-w-20 max-w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm font-medium text-text-muted">
-                        <Select.Value<OverPowerSummaryOption> class="truncate">
-                          {(state) => <span>{state.selectedOption()?.label ?? 'ジャンル'}</span>}
-                        </Select.Value>
-                        <span class="justify-self-end text-text-subtle" aria-hidden="true">
-                          <ChevronDown size={16} />
-                        </span>
-                      </Select.Trigger>
-                      <Select.Portal>
-                        <Select.Content class="z-50 mt-1 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-border bg-surface shadow-md">
-                          <Select.Listbox />
-                        </Select.Content>
-                      </Select.Portal>
-                    </Select>
-                  </div>
-                  <div class="flex shrink-0 items-center gap-2">
-                    <Button
-                      type="button"
-                      class="inline-flex h-10 min-w-16 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-3 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
-                      aria-label={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
-                      title={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
-                      onClick={handleToggleSummaryViewMode}
-                    >
-                      <ArrowLeftRight class="h-4 w-4" aria-hidden="true" />
-                      <Show
-                        when={nextSummaryViewMode() === 'graph'}
-                        fallback={<Table2 class="h-4 w-4" aria-hidden="true" />}
+        <Show
+          when={!allSongs.error && !masterData.error && !versionData.error && !lockedSongs.error}
+          fallback={
+            <LoadError
+              error={allSongs.error ?? masterData.error ?? versionData.error ?? lockedSongs.error}
+            />
+          }
+        >
+          <Show when={summary()} fallback={<Loading />}>
+            {(currentSummary) => (
+              <div class="mx-4 flex flex-col gap-4 text-sm">
+                <Tabs.Root value={selectedSummaryTab()}>
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="min-w-0 shrink">
+                      <Select<OverPowerSummaryOption>
+                        options={OVER_POWER_SUMMARY_OPTIONS}
+                        optionValue="value"
+                        optionTextValue="label"
+                        value={selectedSummaryOption()}
+                        onChange={handleSummaryTabChange}
+                        placeholder="ジャンル"
+                        itemComponent={(itemProps) => (
+                          <Select.Item
+                            item={itemProps.item}
+                            class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
+                          >
+                            <div class="flex items-center gap-2">
+                              <span class="inline-flex w-4 justify-center text-success">
+                                <Select.ItemIndicator>
+                                  <Check size={14} />
+                                </Select.ItemIndicator>
+                              </span>
+                              <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
+                            </div>
+                          </Select.Item>
+                        )}
                       >
-                        <ChartBarBig class="h-4 w-4" aria-hidden="true" />
-                      </Show>
-                    </Button>
-                    <Button
-                      type="button"
-                      class={`${iconButtonClass} whitespace-nowrap`}
-                      aria-label="未解禁楽曲設定"
-                      title="未解禁楽曲設定"
-                      disabled={lockedSongsButtonDisabled()}
-                      onClick={() => setLockedSongsDialogOpen(true)}
-                    >
-                      <span>未解禁曲</span>
-                      <LockKeyhole class="h-5 w-5" aria-hidden="true" />
-                    </Button>
+                        <Select.Trigger class="grid w-[200px] min-w-20 max-w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm font-medium text-text-muted">
+                          <Select.Value<OverPowerSummaryOption> class="truncate">
+                            {(state) => <span>{state.selectedOption()?.label ?? 'ジャンル'}</span>}
+                          </Select.Value>
+                          <span class="justify-self-end text-text-subtle" aria-hidden="true">
+                            <ChevronDown size={16} />
+                          </span>
+                        </Select.Trigger>
+                        <Select.Portal>
+                          <Select.Content class="z-50 mt-1 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-border bg-surface shadow-md">
+                            <Select.Listbox />
+                          </Select.Content>
+                        </Select.Portal>
+                      </Select>
+                    </div>
+                    <div class="flex shrink-0 items-center gap-2">
+                      <Button
+                        type="button"
+                        class="inline-flex h-10 min-w-16 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-3 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
+                        aria-label={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
+                        title={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
+                        onClick={handleToggleSummaryViewMode}
+                      >
+                        <ArrowLeftRight class="h-4 w-4" aria-hidden="true" />
+                        <Show
+                          when={nextSummaryViewMode() === 'graph'}
+                          fallback={<Table2 class="h-4 w-4" aria-hidden="true" />}
+                        >
+                          <ChartBarBig class="h-4 w-4" aria-hidden="true" />
+                        </Show>
+                      </Button>
+                      <Button
+                        type="button"
+                        class={`${iconButtonClass} whitespace-nowrap`}
+                        aria-label="未解禁楽曲設定"
+                        title="未解禁楽曲設定"
+                        disabled={lockedSongsButtonDisabled()}
+                        onClick={() => setLockedSongsDialogOpen(true)}
+                      >
+                        <span>未解禁曲</span>
+                        <LockKeyhole class="h-5 w-5" aria-hidden="true" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
 
-                <div class="mt-4">
-                  <Show
-                    when={summaryViewMode() === 'graph'}
-                    fallback={<OverPowerAllSummary summary={currentSummary().all} />}
-                  >
-                    <OverPowerSummaryGraph rows={allGraphRows()} />
-                  </Show>
-                </div>
+                  <div class="mt-4">
+                    <Show
+                      when={summaryViewMode() === 'graph'}
+                      fallback={<OverPowerAllSummary summary={currentSummary().all} />}
+                    >
+                      <OverPowerSummaryGraph rows={allGraphRows()} />
+                    </Show>
+                  </div>
 
-                <Tabs.Content value="genres" class="mt-4">
-                  <Show
-                    when={summaryViewMode() === 'graph'}
-                    fallback={
-                      <OverPowerSummaryTable rows={currentSummary().genres} countLabel="曲数" />
-                    }
-                  >
-                    <OverPowerSummaryGraph rows={genreGraphRows()} />
-                  </Show>
-                </Tabs.Content>
+                  <Tabs.Content value="genres" class="mt-4">
+                    <Show
+                      when={summaryViewMode() === 'graph'}
+                      fallback={
+                        <OverPowerSummaryTable rows={currentSummary().genres} countLabel="曲数" />
+                      }
+                    >
+                      <OverPowerSummaryGraph rows={genreGraphRows()} />
+                    </Show>
+                  </Tabs.Content>
 
-                <Tabs.Content value="difficulties" class="mt-4">
-                  <Show
-                    when={summaryViewMode() === 'graph'}
-                    fallback={
-                      <OverPowerSummaryTable
-                        rows={currentSummary().difficulties}
-                        countLabel="譜面数"
-                      />
-                    }
-                  >
-                    <OverPowerSummaryGraph rows={difficultyGraphRows()} />
-                  </Show>
-                </Tabs.Content>
+                  <Tabs.Content value="difficulties" class="mt-4">
+                    <Show
+                      when={summaryViewMode() === 'graph'}
+                      fallback={
+                        <OverPowerSummaryTable
+                          rows={currentSummary().difficulties}
+                          countLabel="譜面数"
+                        />
+                      }
+                    >
+                      <OverPowerSummaryGraph rows={difficultyGraphRows()} />
+                    </Show>
+                  </Tabs.Content>
 
-                <Tabs.Content value="levels" class="mt-4">
-                  <Show
-                    when={summaryViewMode() === 'graph'}
-                    fallback={<OverPowerSummaryTable rows={highLevelRows()} countLabel="譜面数" />}
-                  >
-                    <OverPowerSummaryGraph rows={levelGraphRows()} />
-                  </Show>
-                </Tabs.Content>
+                  <Tabs.Content value="levels" class="mt-4">
+                    <Show
+                      when={summaryViewMode() === 'graph'}
+                      fallback={
+                        <OverPowerSummaryTable rows={highLevelRows()} countLabel="譜面数" />
+                      }
+                    >
+                      <OverPowerSummaryGraph rows={levelGraphRows()} />
+                    </Show>
+                  </Tabs.Content>
 
-                <Tabs.Content value="versions" class="mt-4">
-                  <Show
-                    when={summaryViewMode() === 'graph'}
-                    fallback={
-                      <OverPowerSummaryTable rows={currentSummary().versions} countLabel="曲数" />
-                    }
-                  >
-                    <OverPowerSummaryGraph rows={versionGraphRows()} />
-                  </Show>
-                </Tabs.Content>
-              </Tabs.Root>
+                  <Tabs.Content value="versions" class="mt-4">
+                    <Show
+                      when={summaryViewMode() === 'graph'}
+                      fallback={
+                        <OverPowerSummaryTable rows={currentSummary().versions} countLabel="曲数" />
+                      }
+                    >
+                      <OverPowerSummaryGraph rows={versionGraphRows()} />
+                    </Show>
+                  </Tabs.Content>
+                </Tabs.Root>
 
-              <Show when={canManageLockedSongs() && allSongs() && lockedSongs()}>
-                <LockedSongsDialog
-                  open={lockedSongsDialogOpen()}
-                  songs={allSongs()?.songs ?? []}
-                  genres={masterData()?.genres ?? []}
-                  versions={versionData()?.versions ?? []}
-                  lockedSongs={lockedSongs()?.items ?? []}
-                  onOpenChange={setLockedSongsDialogOpen}
-                  onSaveLockedSongs={handleSaveLockedSongs}
-                />
-              </Show>
-            </div>
-          )}
+                <Show when={canManageLockedSongs() && allSongs() && lockedSongs()}>
+                  <LockedSongsDialog
+                    open={lockedSongsDialogOpen()}
+                    songs={allSongs()?.songs ?? []}
+                    genres={masterData()?.genres ?? []}
+                    versions={versionData()?.versions ?? []}
+                    lockedSongs={lockedSongs()?.items ?? []}
+                    onOpenChange={setLockedSongsDialogOpen}
+                    onSaveLockedSongs={handleSaveLockedSongs}
+                  />
+                </Show>
+              </div>
+            )}
+          </Show>
         </Show>
       </ErrorBoundary>
     </Suspense>

@@ -4,7 +4,7 @@ import { createMemo, createResource, createSignal, ErrorBoundary, For, Show } fr
 import { createGoal, deleteGoal, fetchGoals, updateGoal } from '../../../api/goals'
 import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchMe, fetchUserProfileSummary, fetchUserRecord } from '../../../api/users'
-import { Loading, PlayerDataEmptyState } from '../../../components'
+import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../types/api'
 import { calculateGoalProgress, filterRecordsByAttributes } from '../utils/goalProgress'
@@ -197,86 +197,88 @@ const GoalsList: Component = () => {
 
   return (
     <ErrorBoundary fallback={(err) => <p class="p-4 text-danger">ERROR: {err.message}</p>}>
-      <Show when={!resource.loading} fallback={<Loading />}>
-        <Show when={!resource()?.noPlayerData} fallback={<PlayerDataEmptyState />}>
-          <div class="mx-auto w-full max-w-3xl p-4 space-y-4">
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <h1 class="text-2xl font-semibold">目標</h1>
-                <p class="text-sm text-text-muted">{resource()?.goals.length ?? 0} / 100件</p>
+      <Show when={!resource.error} fallback={<LoadError error={resource.error} />}>
+        <Show when={!resource.loading} fallback={<Loading />}>
+          <Show when={!resource()?.noPlayerData} fallback={<PlayerDataEmptyState />}>
+            <div class="mx-auto w-full max-w-3xl p-4 space-y-4">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <h1 class="text-2xl font-semibold">目標</h1>
+                  <p class="text-sm text-text-muted">{resource()?.goals.length ?? 0} / 100件</p>
+                </div>
+                <button
+                  type="button"
+                  class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:opacity-60"
+                  disabled={(resource()?.goals.length ?? 0) >= 100}
+                  onClick={openCreateDialog}
+                >
+                  目標を追加
+                </button>
               </div>
-              <button
-                type="button"
-                class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:opacity-60"
-                disabled={(resource()?.goals.length ?? 0) >= 100}
-                onClick={openCreateDialog}
+
+              <Show when={(resource()?.goals.length ?? 0) >= 100}>
+                <p class="rounded border border-warning-border bg-warning-bg px-3 py-2 text-sm text-score-rank-c-text">
+                  目標は100件まで作成できます。不要な目標を削除してください。
+                </p>
+              </Show>
+
+              <Show when={actionError()}>
+                <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
+                  {actionError()}
+                </p>
+              </Show>
+
+              <Show
+                when={goalWithProgress().length > 0}
+                fallback={
+                  <p class="rounded border border-border bg-surface p-4 text-sm text-text-muted">
+                    目標がありません。「目標を追加」から作成してください。
+                  </p>
+                }
               >
-                目標を追加
-              </button>
+                <div class="grid grid-cols-1 gap-3">
+                  <For each={goalWithProgress()}>
+                    {({ goal, progress }) => (
+                      <GoalCard
+                        goal={goal}
+                        progress={progress}
+                        onEdit={handleEdit}
+                        onDelete={handleDeleteAsk}
+                      />
+                    )}
+                  </For>
+                </div>
+              </Show>
             </div>
 
-            <Show when={(resource()?.goals.length ?? 0) >= 100}>
-              <p class="rounded border border-warning-border bg-warning-bg px-3 py-2 text-sm text-score-rank-c-text">
-                目標は100件まで作成できます。不要な目標を削除してください。
-              </p>
+            <Show when={resource()}>
+              {(data) => (
+                <GoalFormDialog
+                  open={formOpen()}
+                  mode={editingGoal() ? 'edit' : 'create'}
+                  initialGoal={editingGoal()}
+                  masterData={data().masterData}
+                  versions={data().versions}
+                  isSaving={isSaving()}
+                  apiErrorMessage={formError()}
+                  onOpenChange={handleFormOpenChange}
+                  onSave={handleSave}
+                  resolveAllCount={resolveAllCount}
+                  resolveOverPowerChartMax={resolveOverPowerChartMax}
+                />
+              )}
             </Show>
 
-            <Show when={actionError()}>
-              <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-                {actionError()}
-              </p>
-            </Show>
-
-            <Show
-              when={goalWithProgress().length > 0}
-              fallback={
-                <p class="rounded border border-border bg-surface p-4 text-sm text-text-muted">
-                  目標がありません。「目標を追加」から作成してください。
-                </p>
-              }
-            >
-              <div class="grid grid-cols-1 gap-3">
-                <For each={goalWithProgress()}>
-                  {({ goal, progress }) => (
-                    <GoalCard
-                      goal={goal}
-                      progress={progress}
-                      onEdit={handleEdit}
-                      onDelete={handleDeleteAsk}
-                    />
-                  )}
-                </For>
-              </div>
-            </Show>
-          </div>
-
-          <Show when={resource()}>
-            {(data) => (
-              <GoalFormDialog
-                open={formOpen()}
-                mode={editingGoal() ? 'edit' : 'create'}
-                initialGoal={editingGoal()}
-                masterData={data().masterData}
-                versions={data().versions}
-                isSaving={isSaving()}
-                apiErrorMessage={formError()}
-                onOpenChange={handleFormOpenChange}
-                onSave={handleSave}
-                resolveAllCount={resolveAllCount}
-                resolveOverPowerChartMax={resolveOverPowerChartMax}
-              />
-            )}
+            <GoalDeleteDialog
+              open={deleteOpen()}
+              goal={deletingGoal()}
+              isDeleting={isDeleting()}
+              onOpenChange={setDeleteOpen}
+              onConfirm={() => {
+                void handleDelete()
+              }}
+            />
           </Show>
-
-          <GoalDeleteDialog
-            open={deleteOpen()}
-            goal={deletingGoal()}
-            isDeleting={isDeleting()}
-            onOpenChange={setDeleteOpen}
-            onConfirm={() => {
-              void handleDelete()
-            }}
-          />
         </Show>
       </Show>
     </ErrorBoundary>

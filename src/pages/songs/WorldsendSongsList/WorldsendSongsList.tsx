@@ -1,6 +1,6 @@
 import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
 import { fetchMasterData } from '../../../api/songs'
-import { Loading } from '../../../components'
+import { LoadError, Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByAddedDateAndOfficialIndex, useSongsData } from '../../../stores/songsData'
 import type { SortDirection } from '../../users/recordTable/sortingQuery'
@@ -45,30 +45,35 @@ const WorldsendSongsList = () => {
 
   return (
     <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
-      <Show when={!isWorldsendSongsLoading()} fallback={<Loading />}>
-        <div class="mx-auto w-full max-w-[100%] p-4 space-y-4">
-          <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-semibold">WORLD&apos;S END 楽曲一覧</h1>
-            <SongsViewToggle />
+      <Show
+        when={!worldsendSongsResponse.error && !masterData.error}
+        fallback={<LoadError error={worldsendSongsResponse.error ?? masterData.error} />}
+      >
+        <Show when={!isWorldsendSongsLoading()} fallback={<Loading />}>
+          <div class="mx-auto w-full max-w-[100%] p-4 space-y-4">
+            <div class="flex items-center justify-between">
+              <h1 class="text-2xl font-semibold">WORLD&apos;S END 楽曲一覧</h1>
+              <SongsViewToggle />
+            </div>
+            <SongSearchInput
+              id="worldsend-songs-search"
+              value={searchQuery()}
+              onInput={setSearchQuery}
+            />
+            <p class="text-sm text-text-muted">{sortedSongs().length}件</p>
+
+            <WorldsendSongsTable
+              songs={sortedSongs()}
+              sortKey={sortKey()}
+              sortDirection={sortDirection()}
+              onSortChange={handleSortChange}
+            />
+
+            <Show when={sortedSongs().length === 0}>
+              <p class="text-sm text-text-subtle">表示できる楽曲がありません。</p>
+            </Show>
           </div>
-          <SongSearchInput
-            id="worldsend-songs-search"
-            value={searchQuery()}
-            onInput={setSearchQuery}
-          />
-          <p class="text-sm text-text-muted">{sortedSongs().length}件</p>
-
-          <WorldsendSongsTable
-            songs={sortedSongs()}
-            sortKey={sortKey()}
-            sortDirection={sortDirection()}
-            onSortChange={handleSortChange}
-          />
-
-          <Show when={sortedSongs().length === 0}>
-            <p class="text-sm text-text-subtle">表示できる楽曲がありません。</p>
-          </Show>
-        </div>
+        </Show>
       </Show>
     </ErrorBoundary>
   )

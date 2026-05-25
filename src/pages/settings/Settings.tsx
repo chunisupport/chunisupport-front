@@ -10,7 +10,7 @@ import {
   updatePrivacy,
 } from '../../api/settings'
 import { fetchMe, fetchUserProfileSummary } from '../../api/users'
-import { Loading } from '../../components'
+import { LoadError, Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
@@ -255,376 +255,387 @@ const Settings = () => {
   return (
     <div class="mx-auto w-full max-w-5xl p-4 space-y-4">
       <h1 class="text-2xl font-semibold">設定</h1>
-      <Show when={summary()} fallback={<Loading />}>
-        {(loadedSummary) => (
-          <>
-            <dl class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div class="rounded-xl border border-border bg-surface-muted p-4">
-                <dt class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                  ユーザー名
-                </dt>
-                <dd class="mt-2 text-base font-semibold text-text">
-                  {loadedSummary().me.username}
-                </dd>
-              </div>
-              <div class="rounded-xl border border-border bg-surface-muted p-4">
-                <dt class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                  アカウント種別
-                </dt>
-                <dd class="mt-2 text-base font-semibold text-text">
-                  {loadedSummary().me.account_type}
-                </dd>
-              </div>
-              <div class="rounded-xl border border-border bg-surface-muted p-4">
-                <dt class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                  公開状態
-                </dt>
-                <dd class="mt-2 text-base font-semibold text-text">
-                  {loadedSummary().me.is_private ? '非公開' : '公開'}
-                </dd>
-              </div>
-              <div class="rounded-xl border border-border bg-surface-muted p-4">
-                <dt class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                  プレイヤーデータ
-                </dt>
-                <dd class="mt-2 text-base font-semibold text-text">
-                  {loadedSummary().profile.player ? '連携済み' : '未連携'}
-                </dd>
-              </div>
-            </dl>
+      <Show when={!summary.error} fallback={<LoadError error={summary.error} />}>
+        <Show when={summary()} fallback={<Loading />}>
+          {(loadedSummary) => (
+            <>
+              <dl class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-xl border border-border bg-surface-muted p-4">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                    ユーザー名
+                  </dt>
+                  <dd class="mt-2 text-base font-semibold text-text">
+                    {loadedSummary().me.username}
+                  </dd>
+                </div>
+                <div class="rounded-xl border border-border bg-surface-muted p-4">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                    アカウント種別
+                  </dt>
+                  <dd class="mt-2 text-base font-semibold text-text">
+                    {loadedSummary().me.account_type}
+                  </dd>
+                </div>
+                <div class="rounded-xl border border-border bg-surface-muted p-4">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                    公開状態
+                  </dt>
+                  <dd class="mt-2 text-base font-semibold text-text">
+                    {loadedSummary().me.is_private ? '非公開' : '公開'}
+                  </dd>
+                </div>
+                <div class="rounded-xl border border-border bg-surface-muted p-4">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                    プレイヤーデータ
+                  </dt>
+                  <dd class="mt-2 text-base font-semibold text-text">
+                    {loadedSummary().profile.player ? '連携済み' : '未連携'}
+                  </dd>
+                </div>
+              </dl>
 
-            <div class="mt-8 space-y-6">
-              <div class="flex flex-col gap-6">
-                <section id="privacy" class="py-4">
-                  <div class="flex flex-col gap-4">
-                    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <h2 class="text-lg font-semibold text-text">非公開設定</h2>
-                      </div>
-                      <span
-                        class={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-semibold ${
-                          privacyValue()
-                            ? 'bg-warning-bg text-warning'
-                            : 'bg-success-bg text-success'
-                        }`}
-                      >
-                        現在: {privacyValue() ? '非公開' : '公開'}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={privacyValue()}
-                      aria-label={`プロフィールを${privacyValue() ? '公開' : '非公開'}にする`}
-                      onClick={handleTogglePrivacy}
-                      disabled={privacySubmitting()}
-                      class={`flex w-full items-center justify-between rounded-2xl border px-4 py-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                        privacyValue()
-                          ? 'border-warning-border bg-warning-bg hover:bg-warning-bg'
-                          : 'border-success-border bg-success-bg hover:bg-success-bg'
-                      }`}
-                    >
-                      <div class="pr-4">
-                        <p class="text-sm font-semibold text-text">
-                          {privacySubmitting() ? '更新中...' : 'プロフィール'}
-                        </p>
-                      </div>
-                      <span
-                        aria-hidden="true"
-                        class={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ${
-                          privacyValue() ? 'bg-warning' : 'bg-success'
-                        }`}
-                      >
-                        <span
-                          class={`inline-block h-6 w-6 rounded-full bg-surface shadow-sm transition ${
-                            privacyValue() ? 'translate-x-7' : 'translate-x-1'
-                          }`}
-                        />
-                      </span>
-                    </button>
-
-                    <Show when={privacyError()}>
-                      <p class="text-sm text-danger" aria-live="polite">
-                        {privacyError()}
-                      </p>
-                    </Show>
-                    <Show when={privacySuccess()}>
-                      <p class="text-sm text-action-primary" aria-live="polite">
-                        {privacySuccess()}
-                      </p>
-                    </Show>
-                  </div>
-                </section>
-
-                <section id="api-token" class="py-4">
-                  <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <h2 class="text-lg font-semibold text-text">APIトークン管理</h2>
-                      <p class="mt-1 text-sm text-text-muted">
-                        外部連携用の API
-                        トークンを発行・削除します。トークン文字列は発行時にのみ確認できます。
-                      </p>
-                    </div>
-                    <Show
-                      when={apiTokenStatus()}
-                      fallback={
-                        <span class="inline-flex w-fit rounded-full bg-surface-hover px-3 py-1 text-sm font-semibold text-text-muted">
-                          状態を確認中...
-                        </span>
-                      }
-                    >
-                      {(status) => (
+              <div class="mt-8 space-y-6">
+                <div class="flex flex-col gap-6">
+                  <section id="privacy" class="py-4">
+                    <div class="flex flex-col gap-4">
+                      <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <h2 class="text-lg font-semibold text-text">非公開設定</h2>
+                        </div>
                         <span
                           class={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-semibold ${
-                            status().has_token
-                              ? 'bg-success-bg text-success'
-                              : 'bg-surface-hover text-text-muted'
+                            privacyValue()
+                              ? 'bg-warning-bg text-warning'
+                              : 'bg-success-bg text-success'
                           }`}
                         >
-                          現在: {status().has_token ? '発行済み' : '未発行'}
+                          現在: {privacyValue() ? '非公開' : '公開'}
                         </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={privacyValue()}
+                        aria-label={`プロフィールを${privacyValue() ? '公開' : '非公開'}にする`}
+                        onClick={handleTogglePrivacy}
+                        disabled={privacySubmitting()}
+                        class={`flex w-full items-center justify-between rounded-2xl border px-4 py-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                          privacyValue()
+                            ? 'border-warning-border bg-warning-bg hover:bg-warning-bg'
+                            : 'border-success-border bg-success-bg hover:bg-success-bg'
+                        }`}
+                      >
+                        <div class="pr-4">
+                          <p class="text-sm font-semibold text-text">
+                            {privacySubmitting() ? '更新中...' : 'プロフィール'}
+                          </p>
+                        </div>
+                        <span
+                          aria-hidden="true"
+                          class={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ${
+                            privacyValue() ? 'bg-warning' : 'bg-success'
+                          }`}
+                        >
+                          <span
+                            class={`inline-block h-6 w-6 rounded-full bg-surface shadow-sm transition ${
+                              privacyValue() ? 'translate-x-7' : 'translate-x-1'
+                            }`}
+                          />
+                        </span>
+                      </button>
+
+                      <Show when={privacyError()}>
+                        <p class="text-sm text-danger" aria-live="polite">
+                          {privacyError()}
+                        </p>
+                      </Show>
+                      <Show when={privacySuccess()}>
+                        <p class="text-sm text-action-primary" aria-live="polite">
+                          {privacySuccess()}
+                        </p>
+                      </Show>
+                    </div>
+                  </section>
+
+                  <section id="api-token" class="py-4">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h2 class="text-lg font-semibold text-text">APIトークン管理</h2>
+                        <p class="mt-1 text-sm text-text-muted">
+                          外部連携用の API
+                          トークンを発行・削除します。トークン文字列は発行時にのみ確認できます。
+                        </p>
+                      </div>
+                      <Show
+                        when={apiTokenStatus()}
+                        fallback={
+                          <Show
+                            when={apiTokenStatus.error}
+                            fallback={
+                              <span class="inline-flex w-fit rounded-full bg-surface-hover px-3 py-1 text-sm font-semibold text-text-muted">
+                                状態を確認中...
+                              </span>
+                            }
+                          >
+                            <span class="inline-flex w-fit rounded-full bg-danger-bg px-3 py-1 text-sm font-semibold text-danger">
+                              状態取得に失敗
+                            </span>
+                          </Show>
+                        }
+                      >
+                        {(status) => (
+                          <span
+                            class={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-semibold ${
+                              status().has_token
+                                ? 'bg-success-bg text-success'
+                                : 'bg-surface-hover text-text-muted'
+                            }`}
+                          >
+                            現在: {status().has_token ? '発行済み' : '未発行'}
+                          </span>
+                        )}
+                      </Show>
+                    </div>
+
+                    <Show when={apiTokenStatus()}>
+                      {(status) => (
+                        <div class="mt-4 rounded-lg border border-border bg-surface-muted p-4">
+                          <p class="text-sm font-medium text-text">
+                            {status().has_token
+                              ? '現在有効なAPIトークンが発行されています。'
+                              : '現在有効なAPIトークンは発行されていません。'}
+                          </p>
+                          <Show when={status().has_token}>
+                            <p class="mt-1 text-sm text-text-muted">
+                              発行日時: {formatDateTime(status().created_at)}
+                            </p>
+                          </Show>
+                        </div>
                       )}
                     </Show>
+
+                    <div class="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={handleIssueApiToken}
+                        disabled={apiTokenIssuing()}
+                        class="rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {apiTokenIssuing()
+                          ? '発行中...'
+                          : apiTokenStatus()?.has_token
+                            ? 'APIトークンを再発行'
+                            : 'APIトークンを発行'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDeleteApiToken}
+                        disabled={apiTokenDeleting() || !apiTokenStatus()?.has_token}
+                        class="rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {apiTokenDeleting() ? '削除中...' : 'APIトークンを削除'}
+                      </button>
+                    </div>
+
+                    <Show when={apiTokenError()}>
+                      <p class="mt-3 text-sm text-danger" aria-live="polite">
+                        {apiTokenError()}
+                      </p>
+                    </Show>
+                    <Show when={apiTokenSuccess()}>
+                      <p class="mt-3 text-sm text-action-primary" aria-live="polite">
+                        {apiTokenSuccess()}
+                      </p>
+                    </Show>
+
+                    <Show when={token()}>
+                      <div class="mt-4 rounded-lg border border-border bg-surface-muted p-4">
+                        <p class="text-sm font-medium text-text-muted">発行されたAPIトークン</p>
+                        <p class="mt-2 break-all rounded border border-border bg-surface p-2 font-mono text-xs text-text">
+                          {token()}
+                        </p>
+                        <div class="mt-3 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleCopyToken}
+                            class="rounded-md bg-border-strong px-3 py-1.5 text-xs font-semibold text-text-inverse hover:bg-surface-hover"
+                          >
+                            コピー
+                          </button>
+                          <Show when={copied()}>
+                            <span class="text-xs text-action-primary">コピーしました</span>
+                          </Show>
+                        </div>
+                      </div>
+                    </Show>
+                  </section>
+                </div>
+
+                <section id="player-data" class="py-4">
+                  <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h2 class="text-lg font-semibold text-text">プレイヤーデータ</h2>
+                      <p class="mt-1 text-sm text-text-muted">
+                        登録済みプレイヤーデータの状態確認、再登録、連携解除を行います。
+                      </p>
+                    </div>
+                    <span class="text-sm font-medium text-text-subtle">
+                      最終更新: {formatDateTime(loadedSummary().me.last_score_update)}
+                    </span>
                   </div>
 
-                  <Show when={apiTokenStatus()}>
-                    {(status) => (
-                      <div class="mt-4 rounded-lg border border-border bg-surface-muted p-4">
+                  <Show
+                    when={loadedSummary().profile.player}
+                    fallback={
+                      <div class="mt-4 rounded-xl border border-dashed border-border-strong bg-surface-muted p-4">
                         <p class="text-sm font-medium text-text">
-                          {status().has_token
-                            ? '現在有効なAPIトークンが発行されています。'
-                            : '現在有効なAPIトークンは発行されていません。'}
+                          現在プレイヤーデータは連携されていません。
                         </p>
-                        <Show when={status().has_token}>
-                          <p class="mt-1 text-sm text-text-muted">
-                            発行日時: {formatDateTime(status().created_at)}
+                        <p class="mt-1 text-sm text-text-muted">
+                          スコアアップロード後に登録することで、プロフィールや統計に反映できます。
+                        </p>
+                      </div>
+                    }
+                  >
+                    {(player) => (
+                      <div class="mt-4 grid gap-4 sm:grid-cols-3">
+                        <div class="rounded-xl border border-border bg-surface-muted p-4">
+                          <p class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                            プレイヤー名
                           </p>
-                        </Show>
+                          <p class="mt-2 text-base font-semibold text-text">{player().name}</p>
+                        </div>
+                        <div class="rounded-xl border border-border bg-surface-muted p-4">
+                          <p class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                            レーティング
+                          </p>
+                          <p class="mt-2 text-base font-semibold text-text">
+                            {player().rating.toFixed(2)}
+                          </p>
+                        </div>
+                        <div class="rounded-xl border border-border bg-surface-muted p-4">
+                          <p class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                            最終プレイ
+                          </p>
+                          <p class="mt-2 text-base font-semibold text-text">
+                            {formatDateTime(player().last_played_at)}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </Show>
 
-                  <div class="mt-4 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={handleIssueApiToken}
-                      disabled={apiTokenIssuing()}
-                      class="rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {apiTokenIssuing()
-                        ? '発行中...'
-                        : apiTokenStatus()?.has_token
-                          ? 'APIトークンを再発行'
-                          : 'APIトークンを発行'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDeleteApiToken}
-                      disabled={apiTokenDeleting() || !apiTokenStatus()?.has_token}
-                      class="rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {apiTokenDeleting() ? '削除中...' : 'APIトークンを削除'}
-                    </button>
+                  <div class="mt-4 rounded-lg border border-warning-border bg-warning-bg p-4">
+                    <p class="text-sm font-medium text-warning">
+                      削除すると `players` / `player_records` / `player_worldsend_records` /
+                      `player_honors` が削除されます。
+                    </p>
+                    <p class="mt-1 text-sm text-warning">
+                      ユーザーアカウント自体は残ります。削除後は `/register-score-temp`
+                      から再登録できます。
+                    </p>
                   </div>
 
-                  <Show when={apiTokenError()}>
+                  <div class="mt-4 flex flex-wrap gap-2">
+                    <A
+                      href="/register-score-temp"
+                      class="rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover"
+                    >
+                      プレイヤーデータを登録する
+                    </A>
+                  </div>
+
+                  <label class="mt-4 flex cursor-pointer items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={playerDeleteConfirmed()}
+                      onChange={(event) => setPlayerDeleteConfirmed(event.currentTarget.checked)}
+                      disabled={playerDeleting()}
+                      class="h-4 w-4"
+                    />
+                    <span class="text-sm text-text-muted">
+                      上記の内容を理解し、プレイヤーデータを削除することに同意します
+                    </span>
+                  </label>
+
+                  <Show when={playerDataError()}>
                     <p class="mt-3 text-sm text-danger" aria-live="polite">
-                      {apiTokenError()}
+                      {playerDataError()}
                     </p>
                   </Show>
-                  <Show when={apiTokenSuccess()}>
+                  <Show when={playerDataSuccess()}>
                     <p class="mt-3 text-sm text-action-primary" aria-live="polite">
-                      {apiTokenSuccess()}
+                      {playerDataSuccess()}
                     </p>
                   </Show>
 
-                  <Show when={token()}>
-                    <div class="mt-4 rounded-lg border border-border bg-surface-muted p-4">
-                      <p class="text-sm font-medium text-text-muted">発行されたAPIトークン</p>
-                      <p class="mt-2 break-all rounded border border-border bg-surface p-2 font-mono text-xs text-text">
-                        {token()}
-                      </p>
-                      <div class="mt-3 flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={handleCopyToken}
-                          class="rounded-md bg-border-strong px-3 py-1.5 text-xs font-semibold text-text-inverse hover:bg-surface-hover"
-                        >
-                          コピー
-                        </button>
-                        <Show when={copied()}>
-                          <span class="text-xs text-action-primary">コピーしました</span>
-                        </Show>
-                      </div>
-                    </div>
+                  <button
+                    type="button"
+                    onClick={handleDeletePlayerData}
+                    disabled={!playerDeleteConfirmed() || playerDeleting()}
+                    class="mt-4 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {playerDeleting() ? '削除中...' : 'プレイヤーデータを削除'}
+                  </button>
+                </section>
+
+                <section id="account-delete" class="py-4">
+                  <div>
+                    <h2 class="text-lg font-semibold text-danger">退会</h2>
+                    <p class="mt-1 text-sm text-text-muted">
+                      アカウントを完全に削除します。この操作は取り消せません。
+                    </p>
+                  </div>
+
+                  <div class="mt-4 rounded-lg bg-danger-bg p-4">
+                    <p class="text-sm font-medium text-danger">
+                      退会すると以下のデータがすべて削除されます
+                    </p>
+                    <ul class="mt-2 list-inside list-disc text-sm text-danger">
+                      <li>ユーザー情報</li>
+                      <li>プレイヤーデータ・スコア記録</li>
+                      <li>目標設定</li>
+                      <li>APIトークン</li>
+                    </ul>
+                  </div>
+
+                  <label class="mt-4 flex cursor-pointer items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={accountDeleteConfirmed()}
+                      onChange={(event) => setAccountDeleteConfirmed(event.currentTarget.checked)}
+                      disabled={accountDeleting()}
+                      class="h-4 w-4"
+                    />
+                    <span class="text-sm text-text-muted">
+                      上記の内容を理解し、退会することに同意します
+                    </span>
+                  </label>
+
+                  <Show when={accountDeleteError()}>
+                    <p class="mt-3 text-sm text-danger" aria-live="polite">
+                      {accountDeleteError()}
+                    </p>
                   </Show>
+
+                  <p class="mt-4 text-xs text-text-subtle">
+                    退会ボタンを押すと、本人確認のためGoogleアカウントでの再認証が求められます。
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={handleDeleteAccount}
+                    disabled={!accountDeleteConfirmed() || accountDeleting()}
+                    class="mt-3 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {accountDeleting() ? '処理中...' : '退会する'}
+                  </button>
                 </section>
               </div>
-
-              <section id="player-data" class="py-4">
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <h2 class="text-lg font-semibold text-text">プレイヤーデータ</h2>
-                    <p class="mt-1 text-sm text-text-muted">
-                      登録済みプレイヤーデータの状態確認、再登録、連携解除を行います。
-                    </p>
-                  </div>
-                  <span class="text-sm font-medium text-text-subtle">
-                    最終更新: {formatDateTime(loadedSummary().me.last_score_update)}
-                  </span>
-                </div>
-
-                <Show
-                  when={loadedSummary().profile.player}
-                  fallback={
-                    <div class="mt-4 rounded-xl border border-dashed border-border-strong bg-surface-muted p-4">
-                      <p class="text-sm font-medium text-text">
-                        現在プレイヤーデータは連携されていません。
-                      </p>
-                      <p class="mt-1 text-sm text-text-muted">
-                        スコアアップロード後に登録することで、プロフィールや統計に反映できます。
-                      </p>
-                    </div>
-                  }
-                >
-                  {(player) => (
-                    <div class="mt-4 grid gap-4 sm:grid-cols-3">
-                      <div class="rounded-xl border border-border bg-surface-muted p-4">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                          プレイヤー名
-                        </p>
-                        <p class="mt-2 text-base font-semibold text-text">{player().name}</p>
-                      </div>
-                      <div class="rounded-xl border border-border bg-surface-muted p-4">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                          レーティング
-                        </p>
-                        <p class="mt-2 text-base font-semibold text-text">
-                          {player().rating.toFixed(2)}
-                        </p>
-                      </div>
-                      <div class="rounded-xl border border-border bg-surface-muted p-4">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                          最終プレイ
-                        </p>
-                        <p class="mt-2 text-base font-semibold text-text">
-                          {formatDateTime(player().last_played_at)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </Show>
-
-                <div class="mt-4 rounded-lg border border-warning-border bg-warning-bg p-4">
-                  <p class="text-sm font-medium text-warning">
-                    削除すると `players` / `player_records` / `player_worldsend_records` /
-                    `player_honors` が削除されます。
-                  </p>
-                  <p class="mt-1 text-sm text-warning">
-                    ユーザーアカウント自体は残ります。削除後は `/register-score-temp`
-                    から再登録できます。
-                  </p>
-                </div>
-
-                <div class="mt-4 flex flex-wrap gap-2">
-                  <A
-                    href="/register-score-temp"
-                    class="rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover"
-                  >
-                    プレイヤーデータを登録する
-                  </A>
-                </div>
-
-                <label class="mt-4 flex cursor-pointer items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={playerDeleteConfirmed()}
-                    onChange={(event) => setPlayerDeleteConfirmed(event.currentTarget.checked)}
-                    disabled={playerDeleting()}
-                    class="h-4 w-4"
-                  />
-                  <span class="text-sm text-text-muted">
-                    上記の内容を理解し、プレイヤーデータを削除することに同意します
-                  </span>
-                </label>
-
-                <Show when={playerDataError()}>
-                  <p class="mt-3 text-sm text-danger" aria-live="polite">
-                    {playerDataError()}
-                  </p>
-                </Show>
-                <Show when={playerDataSuccess()}>
-                  <p class="mt-3 text-sm text-action-primary" aria-live="polite">
-                    {playerDataSuccess()}
-                  </p>
-                </Show>
-
-                <button
-                  type="button"
-                  onClick={handleDeletePlayerData}
-                  disabled={!playerDeleteConfirmed() || playerDeleting()}
-                  class="mt-4 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {playerDeleting() ? '削除中...' : 'プレイヤーデータを削除'}
-                </button>
-              </section>
-
-              <section id="account-delete" class="py-4">
-                <div>
-                  <h2 class="text-lg font-semibold text-danger">退会</h2>
-                  <p class="mt-1 text-sm text-text-muted">
-                    アカウントを完全に削除します。この操作は取り消せません。
-                  </p>
-                </div>
-
-                <div class="mt-4 rounded-lg bg-danger-bg p-4">
-                  <p class="text-sm font-medium text-danger">
-                    退会すると以下のデータがすべて削除されます
-                  </p>
-                  <ul class="mt-2 list-inside list-disc text-sm text-danger">
-                    <li>ユーザー情報</li>
-                    <li>プレイヤーデータ・スコア記録</li>
-                    <li>目標設定</li>
-                    <li>APIトークン</li>
-                  </ul>
-                </div>
-
-                <label class="mt-4 flex cursor-pointer items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={accountDeleteConfirmed()}
-                    onChange={(event) => setAccountDeleteConfirmed(event.currentTarget.checked)}
-                    disabled={accountDeleting()}
-                    class="h-4 w-4"
-                  />
-                  <span class="text-sm text-text-muted">
-                    上記の内容を理解し、退会することに同意します
-                  </span>
-                </label>
-
-                <Show when={accountDeleteError()}>
-                  <p class="mt-3 text-sm text-danger" aria-live="polite">
-                    {accountDeleteError()}
-                  </p>
-                </Show>
-
-                <p class="mt-4 text-xs text-text-subtle">
-                  退会ボタンを押すと、本人確認のためGoogleアカウントでの再認証が求められます。
-                </p>
-
-                <button
-                  type="button"
-                  onClick={handleDeleteAccount}
-                  disabled={!accountDeleteConfirmed() || accountDeleting()}
-                  class="mt-3 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {accountDeleting() ? '処理中...' : '退会する'}
-                </button>
-              </section>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </Show>
       </Show>
     </div>
   )

@@ -9,7 +9,7 @@ const ForbiddenPage = () => {
       <h1 class="text-2xl font-semibold">403 Forbidden</h1>
       <p class="text-sm text-text-muted">このページにアクセスする権限がありません。</p>
       <A href="/" class="text-link hover:underline">
-        ルートページへ戻る
+        トップページへ戻る
       </A>
     </div>
   )

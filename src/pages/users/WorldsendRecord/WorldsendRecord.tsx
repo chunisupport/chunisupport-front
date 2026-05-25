@@ -11,7 +11,7 @@ import {
 } from 'solid-js'
 
 import { fetchWorldsendSongs } from '../../../api/songs'
-import { Loading } from '../../../components'
+import { LoadError, Loading } from '../../../components'
 import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
 import {
   normalizeForReadingSearch,
@@ -288,41 +288,43 @@ const WorldsendRecord = (props: Props) => {
   return (
     <Suspense fallback={<Loading />}>
       <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
-        <Show when={worldsendSongs()} fallback={<Loading />}>
-          <div class="mx-2 text-sm">
-            <FilterToolbar
-              title={title()}
-              onTitleChange={setTitle}
-              onOpenFilter={() => undefined}
-              onOpenColumnSettings={() => setColumnSettingsOpen(true)}
-              filterButtonDisabled
-            />
+        <Show when={!worldsendSongs.error} fallback={<LoadError error={worldsendSongs.error} />}>
+          <Show when={worldsendSongs()} fallback={<Loading />}>
+            <div class="mx-2 text-sm">
+              <FilterToolbar
+                title={title()}
+                onTitleChange={setTitle}
+                onOpenFilter={() => undefined}
+                onOpenColumnSettings={() => setColumnSettingsOpen(true)}
+                filterButtonDisabled
+              />
 
-            <p class="mb-2 text-sm text-text-muted">
-              全 {recordsWithSongMeta().length} 件中 {filteredRecords().length} 件を表示
-            </p>
+              <p class="mb-2 text-sm text-text-muted">
+                全 {recordsWithSongMeta().length} 件中 {filteredRecords().length} 件を表示
+              </p>
 
-            <WorldsendRecordTable
-              records={filteredRecords()}
-              sortKey={sortKey()}
-              sortDirection={sortDirection()}
-              onSortChange={(nextKey) => {
-                const nextSort = nextWorldsendSortState(sortKey(), sortDirection(), nextKey)
-                setSortKey(nextSort.sortKey)
-                setSortDirection(nextSort.sortDirection)
-              }}
-              visibleColumnIds={visibleColumnIds()}
-            />
+              <WorldsendRecordTable
+                records={filteredRecords()}
+                sortKey={sortKey()}
+                sortDirection={sortDirection()}
+                onSortChange={(nextKey) => {
+                  const nextSort = nextWorldsendSortState(sortKey(), sortDirection(), nextKey)
+                  setSortKey(nextSort.sortKey)
+                  setSortDirection(nextSort.sortDirection)
+                }}
+                visibleColumnIds={visibleColumnIds()}
+              />
 
-            <WorldsendColumnSettingsDialog
-              open={columnSettingsOpen()}
-              onOpenChange={setColumnSettingsOpen}
-              visibleColumnIds={visibleColumnIds()}
-              onApply={(nextVisibleColumnIds) =>
-                setVisibleColumnIds(sanitizeVisibleWorldsendColumnIds(nextVisibleColumnIds))
-              }
-            />
-          </div>
+              <WorldsendColumnSettingsDialog
+                open={columnSettingsOpen()}
+                onOpenChange={setColumnSettingsOpen}
+                visibleColumnIds={visibleColumnIds()}
+                onApply={(nextVisibleColumnIds) =>
+                  setVisibleColumnIds(sanitizeVisibleWorldsendColumnIds(nextVisibleColumnIds))
+                }
+              />
+            </div>
+          </Show>
         </Show>
       </ErrorBoundary>
     </Suspense>

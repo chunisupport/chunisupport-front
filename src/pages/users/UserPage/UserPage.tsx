@@ -1,11 +1,13 @@
 import { useParams, useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createMemo, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
+import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
 
 import { fetchUserProfileSummary, fetchUserRating, fetchUserRecord } from '../../../api/users'
-import { Loading, PlayerDataEmptyState } from '../../../components'
+import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { PlayerDTO, UserRatingDTO, UserRecordDTO } from '../../../types/api'
+import { isNotFoundApiError } from '../../../utils/apiError'
+import NotFoundPage from '../../NotFoundPage'
 import {
   isRecordPageQuery,
   resolveOverPowerSubPage,
@@ -25,13 +27,49 @@ export type UserPageRecordProfile = {
   record: UserRecordDTO
 }
 
+type UserPageLoadState =
+  | {
+      type: 'loaded'
+      profile: Awaited<ReturnType<typeof fetchUserProfileSummary>>
+      rating: UserRatingDTO
+    }
+  | {
+      type: 'notFound'
+    }
+  | {
+      type: 'error'
+      error: unknown
+    }
+
+/**
+ * ユーザーページの初期表示に必要なプロフィールとレーティングを取得する。
+ *
+ * @param username - 表示対象のユーザー名。
+ * @returns ユーザーページの初期表示状態。
+ */
+const fetchUserPageLoadState = async (username: string): Promise<UserPageLoadState> => {
+  try {
+    const [profile, rating] = await Promise.all([
+      fetchUserProfileSummary(username),
+      fetchUserRating(username),
+    ])
+
+    return { type: 'loaded', profile, rating }
+  } catch (error) {
+    if (isNotFoundApiError(error)) {
+      return { type: 'notFound' }
+    }
+
+    return { type: 'error', error }
+  }
+}
+
 const UserPage: Component = () => {
   const params = useParams<{ username: string; page?: string; subPage?: string }>()
   const [searchParams] = useSearchParams()
   const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
 
-  const [profileSummary] = createResource(() => params.username, fetchUserProfileSummary)
-  const [ratingProfile] = createResource(() => params.username, fetchUserRating)
+  const [pageState] = createResource(() => params.username, fetchUserPageLoadState)
   const [recordProfile] = createResource(
     () =>
       shouldFetchRecordProfile() ||
@@ -43,61 +81,83 @@ const UserPage: Component = () => {
   )
 
   const linkedRatingProfile = createMemo<UserPageRatingProfile | undefined>(() => {
-    const profile = profileSummary()
-    const rating = ratingProfile()
-    if (!profile?.player || !rating) {
+    const state = pageState()
+    if (state?.type !== 'loaded' || !state.profile.player) {
       return undefined
     }
 
     return {
-      username: profile.username,
-      player: profile.player,
-      rating,
+      username: state.profile.username,
+      player: state.profile.player,
+      rating: state.rating,
     }
   })
 
   const linkedRecordProfile = createMemo<UserPageRecordProfile | undefined>(() => {
-    const profile = profileSummary()
+    const state = pageState()
     const record = recordProfile()
-    if (!profile?.player || !record) {
+    if (state?.type !== 'loaded' || !state.profile.player || !record) {
       return undefined
     }
 
     return {
-      username: profile.username,
-      player: profile.player,
+      username: state.profile.username,
+      player: state.profile.player,
       record,
     }
   })
 
   const hasPlayerData = createMemo((): boolean => {
-    const profile = profileSummary()
-    return Boolean(profile?.player)
+    const state = pageState()
+    return state?.type === 'loaded' && Boolean(state.profile.player)
+  })
+  const pageLoadError = createMemo(() => {
+    const state = pageState()
+    if (state?.type === 'error') return state.error
+    return recordProfile.error
   })
 
   useDocumentTitle(() => `${params.username}さんのページ`)
 
   return (
-    <Suspense fallback={<Loading />}>
-      <ErrorBoundary fallback={(err: Error) => <p class="text-danger">ERROR: {err.message}</p>}>
-        <Show when={profileSummary() && ratingProfile()}>
-          <Show when={hasPlayerData()} fallback={<PlayerDataEmptyState />}>
-            <Show when={linkedRatingProfile()}>
-              {(linkedProfile) => (
-                <UserProfileView
-                  profile={linkedProfile()}
-                  recordProfile={linkedRecordProfile}
-                  onShowRecords={() => setShouldFetchRecordProfile(true)}
-                  selectedPage={resolveProfilePageQuery(params.page, searchParams.page)}
-                  selectedOverPowerSubPage={resolveOverPowerSubPage(params.subPage)}
-                  username={params.username}
-                />
-              )}
+    <ErrorBoundary
+      fallback={(err: Error) => (
+        <Show when={isNotFoundApiError(err)} fallback={<LoadError error={err} />}>
+          <NotFoundPage />
+        </Show>
+      )}
+    >
+      <Show when={pageState()?.type !== 'notFound'} fallback={<NotFoundPage />}>
+        <Show
+          when={!pageLoadError()}
+          fallback={
+            <Show
+              when={isNotFoundApiError(pageLoadError())}
+              fallback={<LoadError error={pageLoadError()} />}
+            >
+              <NotFoundPage />
+            </Show>
+          }
+        >
+          <Show when={pageState()?.type === 'loaded'} fallback={<Loading />}>
+            <Show when={hasPlayerData()} fallback={<PlayerDataEmptyState />}>
+              <Show when={linkedRatingProfile()}>
+                {(linkedProfile) => (
+                  <UserProfileView
+                    profile={linkedProfile()}
+                    recordProfile={linkedRecordProfile}
+                    onShowRecords={() => setShouldFetchRecordProfile(true)}
+                    selectedPage={resolveProfilePageQuery(params.page, searchParams.page)}
+                    selectedOverPowerSubPage={resolveOverPowerSubPage(params.subPage)}
+                    username={params.username}
+                  />
+                )}
+              </Show>
             </Show>
           </Show>
         </Show>
-      </ErrorBoundary>
-    </Suspense>
+      </Show>
+    </ErrorBoundary>
   )
 }
 
