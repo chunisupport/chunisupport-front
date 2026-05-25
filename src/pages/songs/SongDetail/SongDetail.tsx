@@ -1,13 +1,5 @@
 import { useParams, useSearchParams } from '@solidjs/router'
-import {
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-  on,
-  Show,
-  untrack,
-} from 'solid-js'
+import { createEffect, createMemo, createResource, createSignal, on, Show, untrack } from 'solid-js'
 import { fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
 import { LoadError } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'

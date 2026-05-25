@@ -1,7 +1,13 @@
 import { MAX_SCORE } from '../../../../utils/scoreRank'
+import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
 import { CONST_MAX } from '../constants/constRange'
 import type { FilterState } from '../types/types'
 
+/**
+ * 現在のフィルター条件を表示用の要約文字列に変換する。
+ * @param filter - 要約対象のフィルター状態
+ * @returns 画面に表示するフィルター条件の要約
+ */
 export function formatFilterSummary(filter: FilterState): string {
   const parts: string[] = []
   if (filter.excludeNoPlay) parts.push('未プレイ譜面を除外')
@@ -14,7 +20,7 @@ export function formatFilterSummary(filter: FilterState): string {
   if (filter.combo_lamp.length > 0)
     parts.push(`コンボランプ: ${filter.combo_lamp.map((lamp) => lamp ?? 'なし').join(',')}`)
   if (filter.chain_lamp.length > 0)
-    parts.push(`FULL CHAIN: ${filter.chain_lamp.map((lamp) => lamp ?? 'なし').join(',')}`)
+    parts.push(`FULL CHAIN: ${filter.chain_lamp.map(formatFullChainLampLabel).join(',')}`)
   if (filter.hard_lamp.length > 0)
     parts.push(`ハードランプ: ${filter.hard_lamp.map((lamp) => lamp ?? 'なし').join(',')}`)
   if (filter.versions.length > 0) parts.push(`バージョン: ${filter.versions.join(',')}`)

@@ -4,6 +4,7 @@ import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
+import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
 import { CONST_MAX, CONST_MIN } from '../../constants/constRange'
 import {
   CHAIN_LAMP_OPTIONS,
@@ -316,6 +317,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         idPrefix="chain-lamp"
         lamps={CHAIN_LAMP_OPTIONS}
         selected={props.filters.chain_lamp}
+        formatLabel={formatFullChainLampLabel}
         onToggle={(lamp) =>
           props.setFilters((prev) => ({
             ...prev,

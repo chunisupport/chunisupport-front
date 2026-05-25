@@ -3,7 +3,12 @@ type ApiErrorLike = {
   status?: number
 }
 
-const NOT_FOUND_ERROR_CODES = ['user_not_found', 'song_not_found', 'resource_not_found', 'not_found']
+const NOT_FOUND_ERROR_CODES = [
+  'user_not_found',
+  'song_not_found',
+  'resource_not_found',
+  'not_found',
+]
 
 /**
  * unknown の値から API エラーとして参照できる形を取り出す。

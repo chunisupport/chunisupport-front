@@ -10,8 +10,14 @@ type LampSectionProps = {
   selected: (string | null)[]
   onToggle: (lamp: string | null) => void
   onExcludeNoPlayChange: (value: boolean) => void
+  formatLabel?: (lamp: string | null) => string
 }
 
+/**
+ * ランプ系フィルターの選択肢をチェックボックス一覧で表示する。
+ * @param props - 表示対象のランプ候補、選択状態、更新ハンドラー
+ * @returns ランプ選択セクション
+ */
 const LampSection: Component<LampSectionProps> = (props) => (
   <div>
     <span class="block text-sm font-medium mb-1">{props.title}</span>
@@ -38,7 +44,7 @@ const LampSection: Component<LampSectionProps> = (props) => (
                 </Checkbox.Indicator>
               </Checkbox.Control>
               <Checkbox.Label class="leading-5" for={id}>
-                {lamp ?? 'なし'}
+                {props.formatLabel ? props.formatLabel(lamp) : (lamp ?? 'なし')}
               </Checkbox.Label>
             </Checkbox>
           )
