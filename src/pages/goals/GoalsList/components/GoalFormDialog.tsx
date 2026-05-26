@@ -139,16 +139,19 @@ const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
 const DEFAULT_GOAL_ACHIEVEMENT_TYPE = 'rank_count' satisfies GoalAchievementType
 const DEFAULT_RANK_GOAL = 'S' satisfies RankGoalValue
 const THEORETICAL_RANK_GOAL = 'THEORETICAL' satisfies RankGoalValue
+const SELECTABLE_SCORE_RANKS_DESC = [...SCORE_RANKS_ASC]
+  .filter((scoreRank) => scoreRank !== 'D')
+  .reverse()
 
 const RANK_OPTIONS: GoalSelectOption<RankGoalValue>[] = [
-  ...SCORE_RANKS_ASC.map((scoreRank) => ({
-    value: scoreRank,
-    label: `${scoreRank}（${SCORE_RANK_MIN_SCORES[scoreRank].toLocaleString('ja-JP')}）`,
-  })),
   {
     value: THEORETICAL_RANK_GOAL,
     label: `理論値（${MAX_SCORE.toLocaleString('ja-JP')}）`,
   },
+  ...SELECTABLE_SCORE_RANKS_DESC.map((scoreRank) => ({
+    value: scoreRank,
+    label: `${scoreRank}（${SCORE_RANK_MIN_SCORES[scoreRank].toLocaleString('ja-JP')}）`,
+  })),
 ]
 
 /**
