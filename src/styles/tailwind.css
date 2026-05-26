@@ -587,6 +587,12 @@
     overscroll-behavior-y: auto;
   }
 
+  html:has(#app-main),
+  body:has(#app-main) {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
   main {
     overscroll-behavior-y: auto;
   }
