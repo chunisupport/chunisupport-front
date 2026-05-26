@@ -147,6 +147,7 @@ test("getRecordStats はWORLD'S ENDレコードも同じ集計ロジックで処
       level_star: 5,
       attribute: '狂',
       notes: 1234,
+      img: '/path/to/img.png',
     },
     {
       id: 'we-2',
@@ -160,6 +161,7 @@ test("getRecordStats はWORLD'S ENDレコードも同じ集計ロジックで処
       level_star: 3,
       attribute: '改',
       notes: 1400,
+      img: '/path/to/img.png',
     },
   ]
 
