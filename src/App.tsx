@@ -10,6 +10,7 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   LOCKED_SONGS_FINDER_PATH,
+  REGISTER_SCORE_PATH,
   TOOLS_PATH,
 } from './constants/routes'
 import { TOOL_LINKS, type ToolLinkIcon } from './constants/tools'
@@ -24,6 +25,7 @@ import {
   Login,
   NotFoundPage,
   Register,
+  RegisterScorePage,
   RegisterScoreTempPage,
   Settings,
   SongDetail,
@@ -299,6 +301,7 @@ const App = () => {
       <Route path="/settings/:section?" component={withNavBar(withAuth(Settings))} />
 
       {/* その他 */}
+      <Route path={REGISTER_SCORE_PATH} component={withNavBar(withAuth(RegisterScorePage))} />
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />
       <Route path={CHART_CONSTANT_CALCULATOR_PATH} component={withNavBar(EmptyToolPage)} />

@@ -300,6 +300,38 @@ export interface UserDTO {
   last_score_update: string | null
 }
 
+export interface PlayerDataResult {
+  player_id: number
+  app_ver: string
+  imported_at: string
+  summary: PlayerDataSummary
+  counts: PlayerDataCounts
+  skipped_records: SkippedRecord[]
+}
+
+export interface PlayerDataSummary {
+  name: string
+  level: number
+  rating: number
+  last_played_at: string | null
+  overpower_value: number | null
+  overpower_percentage: number | null
+}
+
+export interface PlayerDataCounts {
+  full_records_upserted: number
+  worldsend_records_upserted: number
+  full_records_skipped: number
+  worldsend_records_skipped: number
+  honors_skipped: number
+}
+
+export interface SkippedRecord {
+  record_type: string
+  reason: string
+  details: string
+}
+
 export interface UserProfileDTO {
   username: string
   player: PlayerDTO | null
