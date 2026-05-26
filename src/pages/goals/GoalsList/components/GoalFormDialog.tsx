@@ -87,6 +87,8 @@ interface GoalSelectFieldProps<TValue extends string> {
   onChange: (value: TValue) => void
 }
 
+type RankGoalValue = ScoreRank | 'THEORETICAL'
+
 const GOAL_FILTER_CHECKBOX_CONTROL_CLASS =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
 /**
@@ -109,11 +111,6 @@ const COUNT_MODE_OPTIONS: GoalSelectOption<'number' | 'all'>[] = [
   { value: 'number', label: '数値を指定' },
   { value: 'all', label: '条件に当てはまるものすべて' },
 ]
-
-const RANK_OPTIONS: GoalSelectOption<ScoreRank>[] = SCORE_RANKS_ASC.map((scoreRank) => ({
-  value: scoreRank,
-  label: `${scoreRank}（${SCORE_RANK_MIN_SCORES[scoreRank].toLocaleString('ja-JP')}）`,
-}))
 
 const HARD_LAMP_SELECT_OPTIONS: GoalSelectOption<'HRD' | 'BRV' | 'ABS' | 'CTS'>[] =
   HARD_LAMP_OPTIONS.map((lamp) => ({ value: lamp.value, label: lamp.label }))
@@ -139,6 +136,20 @@ const MIN_MUSIC_CONST = 1
 const MAX_MUSIC_CONST = 16
 const MUSIC_CONST_DECIMAL_PLACES = 1
 const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
+const DEFAULT_GOAL_ACHIEVEMENT_TYPE = 'rank_count' satisfies GoalAchievementType
+const DEFAULT_RANK_GOAL = 'S' satisfies RankGoalValue
+const THEORETICAL_RANK_GOAL = 'THEORETICAL' satisfies RankGoalValue
+
+const RANK_OPTIONS: GoalSelectOption<RankGoalValue>[] = [
+  ...SCORE_RANKS_ASC.map((scoreRank) => ({
+    value: scoreRank,
+    label: `${scoreRank}（${SCORE_RANK_MIN_SCORES[scoreRank].toLocaleString('ja-JP')}）`,
+  })),
+  {
+    value: THEORETICAL_RANK_GOAL,
+    label: `理論値（${MAX_SCORE.toLocaleString('ja-JP')}）`,
+  },
+]
 
 /**
  * 数値入力値を指定範囲内に丸めた文字列へ変換する。
@@ -174,6 +185,24 @@ const parseProgressDisplayValue = (value: string): number => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : 0
 }
+
+/**
+ * ランク目標の選択値を保存用スコアへ変換する。
+ *
+ * @param value - ランク目標の選択値。
+ * @returns APIへ送信するスコア目標値。
+ */
+const getRankGoalScore = (value: RankGoalValue): number =>
+  value === THEORETICAL_RANK_GOAL ? MAX_SCORE : SCORE_RANK_MIN_SCORES[value]
+
+/**
+ * 保存済みスコアからランク目標の選択値を復元する。
+ *
+ * @param score - APIから返されたスコア目標値。
+ * @returns ダイアログで選択するランク目標値。
+ */
+const getRankGoalValue = (score: number): RankGoalValue =>
+  score >= MAX_SCORE ? THEORETICAL_RANK_GOAL : getScoreRank(score)
 
 /**
  * 現在値と最大値をスラッシュ区切りの表示文字列へ変換する。
@@ -403,9 +432,11 @@ const toggleSelection = (current: string[], value: string, checked: boolean): st
  */
 const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [title, setTitle] = createSignal('')
-  const [achievementType, setAchievementType] = createSignal<GoalAchievementType>('score_count')
-  const [score, setScore] = createSignal(String(MAX_SCORE - 10000))
-  const [rank, setRank] = createSignal<ScoreRank>('S')
+  const [achievementType, setAchievementType] = createSignal<GoalAchievementType>(
+    DEFAULT_GOAL_ACHIEVEMENT_TYPE
+  )
+  const [score, setScore] = createSignal(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
+  const [rank, setRank] = createSignal<RankGoalValue>(DEFAULT_RANK_GOAL)
   const [count, setCount] = createSignal('1')
   const [countMode, setCountMode] = createSignal<'number' | 'all'>('number')
   const [total, setTotal] = createSignal('100')
@@ -481,9 +512,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const goal = props.initialGoal
     if (!goal) {
       setTitle('')
-      setAchievementType('score_count')
-      setScore(String(MAX_SCORE - 10000))
-      setRank('S')
+      setAchievementType(DEFAULT_GOAL_ACHIEVEMENT_TYPE)
+      setScore(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
+      setRank(DEFAULT_RANK_GOAL)
       setCount('1')
       setCountMode('number')
       setTotal('100')
@@ -504,7 +535,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     if ('score' in goal.achievement_params) {
       setScore(String(goal.achievement_params.score))
       if (goal.achievement_type === 'rank_count') {
-        setRank(getScoreRank(goal.achievement_params.score))
+        setRank(getRankGoalValue(goal.achievement_params.score))
       }
     }
     const allCount = props.resolveAllCount(goal.attributes)
@@ -600,8 +631,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     }
 
     const currentType = achievementType()
-    const parsedScore =
-      currentType === 'rank_count' ? SCORE_RANK_MIN_SCORES[rank()] : Number(score())
+    const parsedScore = currentType === 'rank_count' ? getRankGoalScore(rank()) : Number(score())
     const parsedCount = Number(count())
     const parsedTotal = Number(total())
     const parsedConstMin = constMin() === '' ? undefined : Number(constMin())
@@ -751,8 +781,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   setTotalMode('number')
                 }
                 if (nextType === 'rank_count') {
-                  setRank('S')
-                  setScore(String(SCORE_RANK_MIN_SCORES.S))
+                  setRank(DEFAULT_RANK_GOAL)
+                  setScore(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
                 }
               }}
             />
@@ -774,7 +804,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 options={RANK_OPTIONS}
                 onChange={(nextRank) => {
                   setRank(nextRank)
-                  setScore(String(SCORE_RANK_MIN_SCORES[nextRank]))
+                  setScore(String(getRankGoalScore(nextRank)))
                 }}
               />
             </Show>
