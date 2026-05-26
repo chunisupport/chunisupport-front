@@ -1,8 +1,5 @@
-import { Dialog } from '@kobalte/core/dialog'
-import { Select } from '@kobalte/core/select'
-import { Check, ChevronsUpDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import ColumnSettingsDialogBase from '../../components/ColumnSettingsDialogBase'
 import type { RecordColumnId } from '../types/types'
 import { RECORD_COLUMN_DEFINITIONS, sortVisibleColumnIdsByDefinitionOrder } from '../utils/columns'
 
@@ -13,125 +10,21 @@ type ColumnSettingsDialogProps = {
   onApply: (visibleColumnIds: RecordColumnId[]) => void
 }
 
-type ColumnOption = {
-  id: RecordColumnId
-  label: string
-}
-
-const COLUMN_OPTIONS: ColumnOption[] = RECORD_COLUMN_DEFINITIONS.map((column) => ({
-  id: column.id,
-  label: column.label,
-}))
-
+/**
+ * 目的: 通常譜面レコードの列設定ダイアログを表示します。
+ * 引数: props - 開閉状態、表示列ID、適用時のコールバック。
+ * 返り値: 通常譜面用の列設定ダイアログUI。
+ */
 const ColumnSettingsDialog: Component<ColumnSettingsDialogProps> = (props) => {
-  const [selectedColumnIds, setSelectedColumnIds] = createSignal<RecordColumnId[]>(
-    props.visibleColumnIds
-  )
-
-  const selectedOptions = createMemo(() => {
-    const idSet = new Set(selectedColumnIds())
-    return COLUMN_OPTIONS.filter((option) => idSet.has(option.id))
-  })
-
-  createEffect(() => {
-    if (props.open) {
-      setSelectedColumnIds(props.visibleColumnIds)
-    }
-  })
-
-  const handleChange = (options: ColumnOption[]) => {
-    const nextIds = sortVisibleColumnIdsByDefinitionOrder(options.map((option) => option.id))
-    setSelectedColumnIds(nextIds)
-  }
-
-  const handleApply = () => {
-    if (selectedColumnIds().length === 0) {
-      return
-    }
-
-    const nextVisibleColumnIds = selectedOptions().map((option) => option.id)
-    props.onApply(nextVisibleColumnIds)
-    props.onOpenChange(false)
-  }
-
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 max-h-[90vh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
-          <Dialog.Title class="mb-4 text-lg font-bold">列設定</Dialog.Title>
-          <p class="mb-3 text-xs text-text-subtle">表示する列を選択してください（1列以上必須）</p>
-
-          <Select<ColumnOption>
-            multiple
-            options={COLUMN_OPTIONS}
-            optionValue="id"
-            optionTextValue="label"
-            value={selectedOptions()}
-            onChange={handleChange}
-            placeholder="表示列を選択"
-            itemComponent={(props) => (
-              <Select.Item
-                item={props.item}
-                class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[selected]:bg-success-bg"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="inline-flex w-4 justify-center text-success">
-                    <Select.ItemIndicator>
-                      <Check size={14} />
-                    </Select.ItemIndicator>
-                  </span>
-                  <Select.ItemLabel>{props.item.rawValue.label}</Select.ItemLabel>
-                </div>
-              </Select.Item>
-            )}
-          >
-            <Select.Trigger class="flex w-full items-center rounded border border-border-strong px-3 py-2 text-left">
-              <div class="flex min-h-6 flex-1 flex-wrap gap-1" aria-live="polite">
-                <Show
-                  when={selectedOptions().length > 0}
-                  fallback={<span class="text-text-subtle">表示列を選択</span>}
-                >
-                  <For each={selectedOptions()}>
-                    {(option) => (
-                      <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
-                        {option.label}
-                      </span>
-                    )}
-                  </For>
-                </Show>
-              </div>
-              <span class="text-text-subtle" aria-hidden="true">
-                <ChevronsUpDown size={16} />
-              </span>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content class="z-50 mt-1 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
-                <Select.Listbox />
-              </Select.Content>
-            </Select.Portal>
-          </Select>
-
-          <div class="mt-6 flex justify-end gap-2">
-            <button
-              type="button"
-              class="rounded bg-action-secondary px-4 py-2 text-text-muted hover:bg-action-secondary-hover"
-              onClick={() => props.onOpenChange(false)}
-            >
-              キャンセル
-            </button>
-            <button
-              type="button"
-              class="rounded bg-action-primary px-4 py-2 text-text-inverse hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:bg-action-secondary-hover"
-              onClick={handleApply}
-              disabled={selectedColumnIds().length === 0}
-            >
-              適用
-            </button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+    <ColumnSettingsDialogBase
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      visibleColumnIds={props.visibleColumnIds}
+      columnDefinitions={RECORD_COLUMN_DEFINITIONS}
+      sortVisibleColumnIdsByDefinitionOrder={sortVisibleColumnIdsByDefinitionOrder}
+      onApply={props.onApply}
+    />
   )
 }
 
