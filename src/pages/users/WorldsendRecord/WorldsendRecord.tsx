@@ -19,6 +19,7 @@ import {
   normalizeQuery,
 } from '../../../utils/searchUtils'
 import { createRecordTableVirtualizer } from '../components/createRecordTableVirtualizer'
+import FilterStats from '../components/FilterStats'
 import {
   type ColumnRenderer,
   RECORD_ALPHANUMERIC_COLUMN_CLASS,
@@ -41,6 +42,7 @@ import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
 import { calcJusticeCountForAj } from '../UserRecord/utils/justiceCount'
 import { formatUpdatedAt } from '../UserRecord/utils/updatedAt'
+import { getRecordStats } from '../utils/recordStats'
 import {
   createGridTemplateColumns,
   getDefaultVisibleWorldsendColumnIds,
@@ -238,6 +240,7 @@ const WorldsendRecord = (props: Props) => {
   const [worldsendSongs] = createResource(fetchWorldsendSongs)
   const [title, setTitle] = createSignal('')
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
+  const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<WorldsendRecordColumnId[]>(
     sanitizeVisibleWorldsendColumnIds(getDefaultVisibleWorldsendColumnIds())
   )
@@ -284,6 +287,7 @@ const WorldsendRecord = (props: Props) => {
       )
       .map(({ record }) => record)
   })
+  const stats = createMemo(() => getRecordStats(filteredRecords()))
 
   return (
     <Suspense fallback={<Loading />}>
@@ -298,6 +302,13 @@ const WorldsendRecord = (props: Props) => {
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
                 filterButtonDisabled
               />
+              {filteredRecords().length > 0 && (
+                <FilterStats
+                  stats={stats()}
+                  open={filterStatsOpen()}
+                  onOpenChange={setFilterStatsOpen}
+                />
+              )}
 
               <p class="mb-2 text-sm text-text-muted">
                 全 {recordsWithSongMeta().length} 件中 {filteredRecords().length} 件を表示

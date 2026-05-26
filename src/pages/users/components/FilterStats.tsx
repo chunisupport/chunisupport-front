@@ -69,6 +69,11 @@ const ScoreBoxPlot: Component<{ stats: RecordStats['scoreStats'] }> = (props) =>
   )
 }
 
+/**
+ * フィルター適用結果の分布とスコア統計を折りたたみ表示する。
+ * @param props - 集計済み統計、開閉状態、開閉ハンドラ。
+ * @returns フィルター統計表示コンポーネント。
+ */
 const FilterStats: Component<FilterStatsProps> = (props) => (
   <Collapsible
     class="mb-2 px-2 border border-border-strong rounded-sm"

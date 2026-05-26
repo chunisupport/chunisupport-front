@@ -6,9 +6,9 @@ import {
   type PlayerRecordWithSongMeta,
 } from '../../../../utils/recordMerger'
 import type { SortDirection } from '../../recordTable/sortingQuery'
+import { getRecordStats, type RecordStats } from '../../utils/recordStats'
 import type { FilterState, RecordSortKey } from '../types/types'
 import { createRecordTitleMatcher, isRecordMatchedWithTitleMatcher } from './filtering'
-import { getRecordStats, type RecordStats } from './recordStats'
 import { nextSortState, sortRecords } from './sorting'
 
 /** UserRecordページモデルの入力値 */

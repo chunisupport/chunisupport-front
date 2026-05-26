@@ -1,10 +1,11 @@
-import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
-import { getScoreRank } from '../../../../utils/scoreRank'
+import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
+import type { PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
+import { getScoreRank } from '../../../utils/scoreRank'
 import {
   COMBO_LAMP_BAR_CLASS,
   HARD_LAMP_BAR_CLASS,
   SCORE_RANK_BAR_CLASS,
-} from '../../components/recordStyleClasses'
+} from '../components/recordStyleClasses'
 
 export const rankOrder = ['SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'OTHERS', '未プレイ']
 export const rankColorMap: Record<string, string> = {
@@ -62,8 +63,14 @@ function getRank(score: number): string {
   return 'OTHERS'
 }
 
+/** 集計対象として扱うレコードの最小要素。 */
+type RecordStatsSource = Pick<
+  PlayerRecordWithSongMeta | PlayerRecordDTO | WorldsendRecordDTO,
+  'is_played' | 'score' | 'combo_lamp' | 'clear_lamp'
+>
+
 /** レコードから統計情報を取得する */
-export function getRecordStats(records: PlayerRecordWithSongMeta[]): RecordStats {
+export function getRecordStats(records: RecordStatsSource[]): RecordStats {
   const total = records.length
   // ランク分布
   const rankMap: DistributionMap = {}
