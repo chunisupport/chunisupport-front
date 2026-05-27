@@ -8,6 +8,12 @@ import {
   formatNullableText,
 } from './adminUserDisplay'
 
+/**
+ * 管理者向けユーザー管理ページ。
+ * ユーザー一覧の検索・表示・物理削除を提供する。
+ * テーブルヘッダおよび全データ行のセルでテキストの自動改行（折り返し）を禁止し、
+ * 内容が長い場合は親要素の overflow-x-auto により横スクロールで表示する。
+ */
 const AdminUsersPage = () => {
   useDocumentTitle('ユーザー管理')
 
@@ -90,36 +96,46 @@ const AdminUsersPage = () => {
         <table class="min-w-full text-sm">
           <thead class="bg-surface-muted">
             <tr>
-              <th class="px-3 py-2 text-left">username</th>
-              <th class="px-3 py-2 text-left">uid</th>
-              <th class="px-3 py-2 text-left">account_type</th>
-              <th class="px-3 py-2 text-left">created_at</th>
-              <th class="px-3 py-2 text-left">updated_at</th>
-              <th class="px-3 py-2 text-left">player_name</th>
-              <th class="px-3 py-2 text-left">rating</th>
-              <th class="px-3 py-2 text-left">overpower_value</th>
-              <th class="px-3 py-2 text-left">is_suspicious</th>
-              <th class="px-3 py-2 text-left">is_private</th>
-              <th class="px-3 py-2 text-left">操作</th>
+              <th class="whitespace-nowrap px-3 py-2 text-left">username</th>
+              <th class="whitespace-nowrap px-3 py-2 text-left">uid</th>
+              <th class="whitespace-nowrap px-3 py-2 text-left">account_type</th>
+              <th class="whitespace-nowrap px-3 py-2 text-left">created_at</th>
+              <th class="whitespace-nowrap px-3 py-2 text-left">updated_at</th>
+              <th class="whitespace-nowrap px-3 py-2 text-left">player_name</th>
+              <th class="whitespace-nowrap px-3 py-2 text-left">rating</th>
+              <th class="whitespace-nowrap px-3 py-2 text-left">overpower_value</th>
+              <th class="whitespace-nowrap px-3 py-2 text-left">is_suspicious</th>
+              <th class="whitespace-nowrap px-3 py-2 text-left">is_private</th>
+              <th class="whitespace-nowrap px-3 py-2 text-left">操作</th>
             </tr>
           </thead>
           <tbody>
             <For each={users()}>
               {(user) => (
                 <tr class="border-t border-border">
-                  <td class="px-3 py-2 font-mono text-xs">{user.username}</td>
-                  <td class="px-3 py-2 font-mono text-xs break-all">
+                  <td class="whitespace-nowrap px-3 py-2 font-mono text-xs">{user.username}</td>
+                  <td class="whitespace-nowrap px-3 py-2 font-mono text-xs">
                     {formatNullableText(user.firebase_uid)}
                   </td>
-                  <td class="px-3 py-2">{formatAccountType(user.account_type)}</td>
-                  <td class="px-3 py-2">{formatAdminUserDateTime(user.created_at)}</td>
-                  <td class="px-3 py-2">{formatAdminUserDateTime(user.updated_at)}</td>
-                  <td class="px-3 py-2">{formatNullableText(user.player_name)}</td>
-                  <td class="px-3 py-2">{user.rating ?? '-'}</td>
-                  <td class="px-3 py-2">{user.overpower_value ?? '-'}</td>
-                  <td class="px-3 py-2">{formatBooleanFlag(user.is_suspicious)}</td>
-                  <td class="px-3 py-2">{formatBooleanFlag(user.is_private)}</td>
-                  <td class="px-3 py-2">
+                  <td class="whitespace-nowrap px-3 py-2">
+                    {formatAccountType(user.account_type)}
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-2">
+                    {formatAdminUserDateTime(user.created_at)}
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-2">
+                    {formatAdminUserDateTime(user.updated_at)}
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-2">
+                    {formatNullableText(user.player_name)}
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-2">{user.rating ?? '-'}</td>
+                  <td class="whitespace-nowrap px-3 py-2">{user.overpower_value ?? '-'}</td>
+                  <td class="whitespace-nowrap px-3 py-2">
+                    {formatBooleanFlag(user.is_suspicious)}
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-2">{formatBooleanFlag(user.is_private)}</td>
+                  <td class="whitespace-nowrap px-3 py-2">
                     <button
                       type="button"
                       class="rounded bg-danger px-3 py-1 text-xs font-medium text-text-inverse hover:bg-danger-hover"
