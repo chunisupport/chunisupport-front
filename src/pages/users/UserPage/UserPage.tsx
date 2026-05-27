@@ -41,6 +41,11 @@ type UserPageLoadState =
       error: unknown
     }
 
+type UserPageRecordLoadState = {
+  username: string
+  record: UserRecordDTO
+}
+
 /**
  * ユーザーページの初期表示に必要なプロフィールとレーティングを取得する。
  *
@@ -64,6 +69,17 @@ const fetchUserPageLoadState = async (username: string): Promise<UserPageLoadSta
   }
 }
 
+/**
+ * ユーザーレコードと取得対象ユーザー名をまとめて取得する。
+ *
+ * @param username - レコード取得対象のユーザー名。
+ * @returns 取得対象ユーザー名付きのレコード取得結果。
+ */
+const fetchUserRecordLoadState = async (username: string): Promise<UserPageRecordLoadState> => ({
+  username,
+  record: await fetchUserRecord(username, { includeNoPlay: true }),
+})
+
 const UserPage: Component = () => {
   const params = useParams<{ username: string; page?: string; subPage?: string }>()
   const [searchParams] = useSearchParams()
@@ -77,12 +93,16 @@ const UserPage: Component = () => {
       resolveProfilePageQuery(params.page, searchParams.page) === 'overpower'
         ? params.username
         : undefined,
-    (username) => fetchUserRecord(username, { includeNoPlay: true })
+    fetchUserRecordLoadState
   )
 
   const linkedRatingProfile = createMemo<UserPageRatingProfile | undefined>(() => {
     const state = pageState()
-    if (state?.type !== 'loaded' || !state.profile.player) {
+    if (
+      state?.type !== 'loaded' ||
+      !state.profile.player ||
+      state.profile.username !== params.username
+    ) {
       return undefined
     }
 
@@ -95,15 +115,21 @@ const UserPage: Component = () => {
 
   const linkedRecordProfile = createMemo<UserPageRecordProfile | undefined>(() => {
     const state = pageState()
-    const record = recordProfile()
-    if (state?.type !== 'loaded' || !state.profile.player || !record) {
+    const recordState = recordProfile()
+    if (
+      state?.type !== 'loaded' ||
+      !state.profile.player ||
+      !recordState ||
+      state.profile.username !== params.username ||
+      recordState.username !== state.profile.username
+    ) {
       return undefined
     }
 
     return {
       username: state.profile.username,
       player: state.profile.player,
-      record,
+      record: recordState.record,
     }
   })
 
@@ -141,7 +167,7 @@ const UserPage: Component = () => {
         >
           <Show when={pageState()?.type === 'loaded'} fallback={<Loading />}>
             <Show when={hasPlayerData()} fallback={<PlayerDataEmptyState />}>
-              <Show when={linkedRatingProfile()}>
+              <Show when={linkedRatingProfile()} fallback={<Loading />}>
                 {(linkedProfile) => (
                   <UserProfileView
                     profile={linkedProfile()}
