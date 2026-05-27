@@ -36,7 +36,7 @@ const PlayerDataEmptyState: Component<PlayerDataEmptyStateProps> = (props) => {
   return (
     <section class="mx-auto flex w-full max-w-3xl flex-col items-center justify-center px-4 py-12">
       <div class="w-full rounded-2xl border border-action-primary-border bg-gradient-to-br from-surface to-action-primary-muted p-8 text-center shadow-sm">
-        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-action-primary-muted text-action-primary">
+        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border-2 border-success-border bg-success-bg text-action-primary shadow-sm">
           <span class="text-2xl font-semibold" aria-hidden="true">
             !
           </span>
