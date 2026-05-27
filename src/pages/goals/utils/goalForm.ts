@@ -9,7 +9,7 @@ import type {
 } from '../../../types/api'
 import { buildGoalVersionNameMap } from './goalVersion'
 
-// ID(code) -> 表示名の辞書。将来は言語キーを増やすだけでi18n対応できる。
+// ID(code) -> 表示名の辞書。将来は言語キーを増やすだけでi18n対応できる
 export const GOAL_ACHIEVEMENT_TYPE_LABELS = {
   ja: {
     rank_count: 'ランク達成数',
