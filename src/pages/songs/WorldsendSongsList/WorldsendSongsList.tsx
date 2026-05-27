@@ -44,7 +44,7 @@ const WorldsendSongsList = () => {
   useDocumentTitle("WORLD'S END 楽曲一覧")
 
   return (
-    <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
+    <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
       <Show
         when={!worldsendSongsResponse.error && !masterData.error}
         fallback={<LoadError error={worldsendSongsResponse.error ?? masterData.error} />}

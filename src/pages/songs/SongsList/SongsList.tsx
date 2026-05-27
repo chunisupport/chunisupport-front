@@ -43,7 +43,7 @@ const SongsList = () => {
   useDocumentTitle('楽曲一覧')
 
   return (
-    <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
+    <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
       <Show
         when={!songsResponse.error && !masterData.error}
         fallback={<LoadError error={songsResponse.error ?? masterData.error} />}

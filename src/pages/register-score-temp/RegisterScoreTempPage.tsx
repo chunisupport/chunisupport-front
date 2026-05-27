@@ -2,6 +2,7 @@ import { createSignal, Show } from 'solid-js'
 
 import { postPlayerDataCommit, postRegisterData } from '../../api/register-data'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 
 type RegisterDataFormat = 'json' | 'text'
 
@@ -73,6 +74,11 @@ const RegisterScoreTempPage = () => {
     setFormat(detectedFormat)
   }
 
+  /**
+   * 選択されたスコアデータファイルを検証して一時アップロードする。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleSubmit = async () => {
     resetMessages()
 
@@ -101,12 +107,17 @@ const RegisterScoreTempPage = () => {
       })
       setSuccessMessage('スコアデータを送信しました。')
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'アップロードに失敗しました。')
+      setErrorMessage(toUserFriendlyErrorMessage(error, 'アップロードに失敗しました。'))
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  /**
+   * 入力されたアップロードトークンのスコアデータを確定保存する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleCommit = async () => {
     setCommitErrorMessage('')
     setCommitSuccessMessage('')
@@ -127,7 +138,7 @@ const RegisterScoreTempPage = () => {
       if (apiError.status === 404) {
         setCommitErrorMessage('アップロードトークンが見つかりません。')
       } else {
-        setCommitErrorMessage(error instanceof Error ? error.message : '保存に失敗しました。')
+        setCommitErrorMessage(toUserFriendlyErrorMessage(error, '保存に失敗しました。'))
       }
     } finally {
       setIsCommitting(false)

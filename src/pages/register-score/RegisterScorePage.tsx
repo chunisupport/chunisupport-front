@@ -7,6 +7,7 @@ import { fetchMe } from '../../api/users'
 import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreToken'
 
 type RegisterScoreState = 'committing' | 'success' | 'error'
@@ -28,10 +29,7 @@ const REGISTER_SCORE_MESSAGES = {
  * @returns 画面表示用のエラーメッセージ。
  */
 const resolveRegisterScoreErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) {
-    return error.message
-  }
-  return REGISTER_SCORE_MESSAGES.fallbackError
+  return toUserFriendlyErrorMessage(error, REGISTER_SCORE_MESSAGES.fallbackError)
 }
 
 /**

@@ -7,6 +7,7 @@ import { fetchMe, fetchUserProfileSummary, fetchUserRecord } from '../../../api/
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../types/api'
+import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { calculateGoalProgress, filterRecordsByAttributes } from '../utils/goalProgress'
 import GoalCard from './components/GoalCard'
 import GoalDeleteDialog from './components/GoalDeleteDialog'
@@ -171,7 +172,7 @@ const GoalsList: Component = () => {
       setEditingGoal(undefined)
       setRefreshKey((prev) => prev + 1)
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : '保存に失敗しました。')
+      setFormError(toUserFriendlyErrorMessage(error, '保存に失敗しました。'))
     } finally {
       setIsSaving(false)
     }
@@ -189,14 +190,14 @@ const GoalsList: Component = () => {
       setDeletingGoal(undefined)
       setRefreshKey((prev) => prev + 1)
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : '削除に失敗しました。')
+      setActionError(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     } finally {
       setIsDeleting(false)
     }
   }
 
   return (
-    <ErrorBoundary fallback={(err) => <p class="p-4 text-danger">ERROR: {err.message}</p>}>
+    <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
       <Show when={!resource.error} fallback={<LoadError error={resource.error} />}>
         <Show when={!resource.loading} fallback={<Loading />}>
           <Show when={!resource()?.noPlayerData} fallback={<PlayerDataEmptyState />}>

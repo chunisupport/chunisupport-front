@@ -30,6 +30,7 @@ import type {
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
 } from '../../types/api'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { buildSearchableItems, filterSearchableItems } from './searchHelpers'
 
 type SongManagementPageProps = {
@@ -538,6 +539,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
   const refresh = () => setRefreshKey((prev) => prev + 1)
 
+  /**
+   * 編集中の通常楽曲を検証して保存する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleSave = async () => {
     const current = draft()
     if (!current) return
@@ -584,10 +590,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       setMessage('楽曲を更新しました。')
       refresh()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '更新に失敗しました。')
+      setErrorMessage(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
     }
   }
 
+  /**
+   * 入力中の通常楽曲を検証して追加する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleCreateSong = async () => {
     const current = createSongDraft()
 
@@ -662,10 +673,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       setCreateSongDraft(buildCreateSongDraft())
       refresh()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '追加に失敗しました。')
+      setErrorMessage(toUserFriendlyErrorMessage(error, '追加に失敗しました。'))
     }
   }
 
+  /**
+   * 入力中のWORLD'S END楽曲を検証して追加する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleCreateWorldsendSong = async () => {
     const current = createWorldsendDraft()
 
@@ -747,10 +763,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       setCreateWorldsendDraft(buildCreateWorldsendDraft())
       refresh()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '追加に失敗しました。')
+      setErrorMessage(toUserFriendlyErrorMessage(error, '追加に失敗しました。'))
     }
   }
 
+  /**
+   * 編集中のWORLD'S END楽曲を検証して保存する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleSaveWorldsend = async () => {
     const current = worldsendDraft()
     if (!current) return
@@ -794,10 +815,16 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       setMessage("WORLD'S END楽曲を更新しました。")
       refresh()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '更新に失敗しました。')
+      setErrorMessage(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
     }
   }
 
+  /**
+   * 指定された通常楽曲を確認後に削除する。
+   *
+   * @param displayId - 削除対象の楽曲表示ID。
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleDeleteSong = async (displayId: string) => {
     if (!window.confirm('この楽曲を削除しますか？')) return
     setMessage('')
@@ -807,10 +834,16 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       setMessage('楽曲を削除しました。')
       refresh()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '削除に失敗しました。')
+      setErrorMessage(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
   }
 
+  /**
+   * 指定された通常楽曲を復活する。
+   *
+   * @param displayId - 復活対象の楽曲表示ID。
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleRestoreSong = async (displayId: string) => {
     setMessage('')
     setErrorMessage('')
@@ -819,10 +852,16 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       setMessage('楽曲を復活しました。')
       refresh()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '復活に失敗しました。')
+      setErrorMessage(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
     }
   }
 
+  /**
+   * 指定されたWORLD'S END楽曲を確認後に削除する。
+   *
+   * @param displayId - 削除対象の楽曲表示ID。
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleDeleteWorldsendSong = async (displayId: string) => {
     if (!window.confirm("このWORLD'S END楽曲を削除しますか？")) return
     setMessage('')
@@ -832,10 +871,16 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       setMessage("WORLD'S END楽曲を削除しました。")
       refresh()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '削除に失敗しました。')
+      setErrorMessage(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
   }
 
+  /**
+   * 指定されたWORLD'S END楽曲を復活する。
+   *
+   * @param displayId - 復活対象の楽曲表示ID。
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleRestoreWorldsendSong = async (displayId: string) => {
     setMessage('')
     setErrorMessage('')
@@ -844,7 +889,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       setMessage("WORLD'S END楽曲を復活しました。")
       refresh()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '復活に失敗しました。')
+      setErrorMessage(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
     }
   }
 

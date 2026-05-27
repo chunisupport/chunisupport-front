@@ -14,6 +14,7 @@ import { LoadError, Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 
 const SECTION_IDS = ['privacy', 'api-token', 'player-data', 'account-delete'] as const
 
@@ -119,6 +120,11 @@ const Settings = () => {
     setPrivacyValue(currentPrivacy.is_private)
   }
 
+  /**
+   * プライバシー設定を切り替え、失敗時は直前の状態へ戻す。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleTogglePrivacy = async () => {
     setPrivacyError('')
     setPrivacySuccess('')
@@ -143,13 +149,18 @@ const Settings = () => {
       setPrivacySuccess('非公開設定を更新しました。')
     } catch (error) {
       setPrivacyValue(previousValue)
-      setPrivacyError(error instanceof Error ? error.message : '設定更新に失敗しました。')
+      setPrivacyError(toUserFriendlyErrorMessage(error, '設定更新に失敗しました。'))
       await handlePrivacyRefresh()
     } finally {
       setPrivacySubmitting(false)
     }
   }
 
+  /**
+   * 新しいAPIトークンを発行して画面へ反映する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleIssueApiToken = async () => {
     setApiTokenError('')
     setApiTokenSuccess('')
@@ -161,12 +172,17 @@ const Settings = () => {
       setApiTokenSuccess('APIトークンを発行しました。表示はこの1回のみです。')
       await refetchApiTokenStatus()
     } catch (error) {
-      setApiTokenError(error instanceof Error ? error.message : 'APIトークン発行に失敗しました。')
+      setApiTokenError(toUserFriendlyErrorMessage(error, 'APIトークン発行に失敗しました。'))
     } finally {
       setApiTokenIssuing(false)
     }
   }
 
+  /**
+   * 確認後にAPIトークンを削除して発行状態を更新する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleDeleteApiToken = async () => {
     setApiTokenError('')
     setApiTokenSuccess('')
@@ -182,7 +198,7 @@ const Settings = () => {
       setApiTokenSuccess('APIトークンを削除しました。')
       await refetchApiTokenStatus()
     } catch (error) {
-      setApiTokenError(error instanceof Error ? error.message : 'APIトークン削除に失敗しました。')
+      setApiTokenError(toUserFriendlyErrorMessage(error, 'APIトークン削除に失敗しました。'))
     } finally {
       setApiTokenDeleting(false)
     }
@@ -202,6 +218,11 @@ const Settings = () => {
     }
   }
 
+  /**
+   * 確認チェック後にプレイヤーデータを削除する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleDeletePlayerData = async () => {
     if (!playerDeleteConfirmed()) {
       return
@@ -216,14 +237,17 @@ const Settings = () => {
       setPlayerDataSuccess('プレイヤーデータを削除しました。必要であれば再登録してください。')
       await refetchSummary()
     } catch (error) {
-      setPlayerDataError(
-        error instanceof Error ? error.message : 'プレイヤーデータ削除に失敗しました。'
-      )
+      setPlayerDataError(toUserFriendlyErrorMessage(error, 'プレイヤーデータ削除に失敗しました。'))
     } finally {
       setPlayerDeleting(false)
     }
   }
 
+  /**
+   * 確認チェック後にアカウントを退会処理し、ログイン画面へ遷移する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleDeleteAccount = async () => {
     if (!accountDeleteConfirmed()) {
       return
@@ -245,7 +269,7 @@ const Settings = () => {
       } else if (err.code === 'recent_sign_in_required') {
         setAccountDeleteError('再認証の有効期限が切れています。もう一度お試しください。')
       } else {
-        setAccountDeleteError(err.message || '退会処理に失敗しました。')
+        setAccountDeleteError(toUserFriendlyErrorMessage(error, '退会処理に失敗しました。'))
       }
     } finally {
       setAccountDeleting(false)

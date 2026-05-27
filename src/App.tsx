@@ -152,7 +152,7 @@ const UserStatsPage = () => {
   const [resource] = createResource(() => params.username, fetchUserProfileSummary)
 
   return (
-    <ErrorBoundary fallback={(err) => <p class="p-4 text-danger">ERROR: {err.message}</p>}>
+    <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
       <Show
         when={!resource.error}
         fallback={

@@ -13,6 +13,7 @@ import type {
   VersionDTO,
 } from '../../../../types/api'
 import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch'
+import { toUserFriendlyErrorMessage } from '../../../../utils/errorMessage'
 import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
 import {
   normalizeForReadingSearch,
@@ -197,6 +198,11 @@ const LockedSongsDialog: Component<Props> = (props) => {
     })
   }
 
+  /**
+   * ダイアログ上の未解禁楽曲設定を保存する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleSave = async () => {
     const nextLockedSongs = [...draftLockedSongKeys()].map((key) => {
       const [displayId, mode] = key.split(':')
@@ -212,7 +218,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
       await props.onSaveLockedSongs(nextLockedSongs)
       props.onOpenChange(false)
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : '未解禁楽曲設定の保存に失敗しました')
+      setSaveError(toUserFriendlyErrorMessage(error, '未解禁楽曲設定の保存に失敗しました。'))
     } finally {
       setIsSaving(false)
     }

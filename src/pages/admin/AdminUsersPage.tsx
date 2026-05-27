@@ -1,6 +1,7 @@
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { deleteUserByUsername, fetchAdminUsers } from '../../api/users'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
   formatAccountType,
   formatAdminUserDateTime,
@@ -37,6 +38,12 @@ const AdminUsersPage = () => {
     setSearchName(searchInput().trim())
   }
 
+  /**
+   * 指定されたユーザーを確認後に物理削除する。
+   *
+   * @param username - 削除対象のユーザー名。
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleDelete = async (username: string) => {
     if (!window.confirm(`ユーザー ${username} を物理削除しますか？この操作は取り消せません。`))
       return
@@ -47,7 +54,7 @@ const AdminUsersPage = () => {
       setMessage(`ユーザー ${username} を削除しました。`)
       refresh()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '削除に失敗しました。')
+      setErrorMessage(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
   }
 

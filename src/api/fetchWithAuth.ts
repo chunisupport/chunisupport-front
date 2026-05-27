@@ -99,7 +99,7 @@ export const fetchWithAuth = async (
     }
 
     const apiError = new Error(
-      error ? getErrorMessage(error) : response.statusText || `HTTP ${response.status}`
+      error ? getErrorMessage(error) : 'リクエストに失敗しました'
     ) as Error & {
       status?: number
       code?: string

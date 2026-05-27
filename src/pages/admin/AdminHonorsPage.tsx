@@ -10,6 +10,7 @@ import { Loading } from '../../components'
 import { getHonorTypeClassName } from '../../constants/honors'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { AdminHonorDTO, HonorRequestDTO, MasterItemDTO } from '../../types/api'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 
 type HonorEditDialogProps = {
   open: boolean
@@ -262,7 +263,7 @@ const AdminHonorsPage = () => {
       handleEditDialogOpenChange(false)
       refresh()
     } catch (error) {
-      setFormErrorMessage(error instanceof Error ? error.message : '称号の更新に失敗しました。')
+      setFormErrorMessage(toUserFriendlyErrorMessage(error, '称号の更新に失敗しました。'))
     } finally {
       setSaving(false)
     }

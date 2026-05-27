@@ -474,7 +474,7 @@ const UserOverPower: Component<Props> = (props) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
+      <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
         <Show
           when={!allSongs.error && !masterData.error && !versionData.error && !lockedSongs.error}
           fallback={

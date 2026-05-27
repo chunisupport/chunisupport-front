@@ -291,7 +291,7 @@ const WorldsendRecord = (props: Props) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
+      <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
         <Show when={!worldsendSongs.error} fallback={<LoadError error={worldsendSongs.error} />}>
           <Show when={worldsendSongs()} fallback={<Loading />}>
             <div class="mx-2 text-sm">

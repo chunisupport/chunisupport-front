@@ -5,6 +5,7 @@ import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
 import { auth, googleProvider } from '../../../lib/firebase'
+import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 
 /**
@@ -26,7 +27,11 @@ const Login = () => {
   // すでにログインしている場合はユーザーページへリダイレクト
   const { isCheckingAuth } = useRedirectIfAuthenticated(redirectParam())
 
-  // Google ログイン処理
+  /**
+   * Google認証後にログイン後の遷移先へ移動する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleGoogleLogin = async () => {
     setIsSubmitting(true)
     setErrorMessage('')
@@ -40,7 +45,7 @@ const Login = () => {
         navigate('/register')
         return
       }
-      setErrorMessage(error instanceof Error ? error.message : 'Googleログインに失敗しました。')
+      setErrorMessage(toUserFriendlyErrorMessage(error, 'Googleログインに失敗しました。'))
     } finally {
       setIsSubmitting(false)
     }

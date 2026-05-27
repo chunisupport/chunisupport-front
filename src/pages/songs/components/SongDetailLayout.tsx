@@ -1,6 +1,6 @@
 import type { JSX } from 'solid-js'
 import { ErrorBoundary, Show } from 'solid-js'
-import { Loading } from '../../../components'
+import { LoadError, Loading } from '../../../components'
 import { getSongDetailViewState } from './songDetailLayoutModel'
 
 type Props<TSong> = {
@@ -14,17 +14,23 @@ type Props<TSong> = {
   renderStats: (song: TSong) => JSX.Element
 }
 
+/**
+ * 楽曲詳細画面の共通レイアウトを表示する。
+ *
+ * @param props - 楽曲詳細の表示状態と描画関数。
+ * @returns 楽曲詳細画面の共通レイアウト。
+ */
 const SongDetailLayout = <TSong,>(props: Props<TSong>) => {
   const viewState = () => getSongDetailViewState(Boolean(props.song), props.isSongLoading)
 
   return (
-    <ErrorBoundary fallback={(err) => <p class="text-danger">ERROR: {err.message}</p>}>
+    <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
       <Show
         when={viewState() === 'content' && props.song}
         fallback={
           <Show
             when={viewState() === 'loading'}
-            fallback={<p class="text-danger">ERROR: {props.songErrorMessage}</p>}
+            fallback={<LoadError error={props.songErrorMessage} />}
           >
             <Loading />
           </Show>

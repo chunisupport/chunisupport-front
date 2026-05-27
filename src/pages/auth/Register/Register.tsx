@@ -13,6 +13,7 @@ import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticate
 import { auth, googleProvider } from '../../../lib/firebase'
 import { clearAuthenticatedUser } from '../../../stores/authSession'
 import { resolveGoogleRegistrationEligibility } from '../../../usecases/auth/registrationEligibility'
+import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 
 const REGISTERED_GOOGLE_ACCOUNT_MESSAGE =
@@ -89,15 +90,17 @@ const Register = () => {
       setGoogleEmail(result.user.email ?? '')
       setStep('fill_username')
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : 'Googleアカウントの認証に失敗しました。'
-      )
+      setErrorMessage(toUserFriendlyErrorMessage(error, 'Googleアカウントの認証に失敗しました。'))
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // Step 2: ユーザー名を送信してアカウント作成
+  /**
+   * 入力されたユーザー名でアカウントを作成し、登録後の遷移先へ移動する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleRegister = async () => {
     setIsSubmitting(true)
     setErrorMessage('')
@@ -105,9 +108,7 @@ const Register = () => {
       await postSignup({ username: username() })
       await redirectAfterAuthentication(navigate)
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : '予期せぬエラーで登録に失敗しました。'
-      )
+      setErrorMessage(toUserFriendlyErrorMessage(error, '予期せぬエラーで登録に失敗しました。'))
     } finally {
       setIsSubmitting(false)
     }
