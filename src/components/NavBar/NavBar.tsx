@@ -120,7 +120,7 @@ const NavBar = (props: NavBarProps) => {
       {
         label: 'ヘルプ',
         icon: () => <BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-        path: 'https://example.com',
+        path: 'https://help.chunisupport.net/',
       },
       ...(uname
         ? [
