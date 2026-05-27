@@ -284,7 +284,7 @@ const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
       itemComponent={(selectProps) => (
         <Select.Item
           item={selectProps.item}
-          class="cursor-pointer px-3 py-2 text-text hover:bg-surface-hover data-[selected]:bg-surface-hover"
+          class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
         >
           <div class="flex items-center gap-2">
             <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-success">

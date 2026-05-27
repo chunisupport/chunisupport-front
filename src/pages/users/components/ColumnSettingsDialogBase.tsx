@@ -25,8 +25,6 @@ type ColumnSettingsDialogBaseProps<TColumnId extends string, TSortKey extends st
   onApply: (visibleColumnIds: TColumnId[]) => void
 }
 
-const unselectedColumnItemClass = '[&:not([data-selected])]:bg-surface-hover'
-
 /**
  * 目的: 列定義から列設定で使う選択肢を生成します。
  * 引数: columnDefinitions - 表示対象の列定義配列。
@@ -98,7 +96,7 @@ const ColumnSettingsDialogBase = <TColumnId extends string, TSortKey extends str
             itemComponent={(props) => (
               <Select.Item
                 item={props.item}
-                class={`cursor-pointer px-3 py-2 text-text hover:bg-action-secondary-hover data-[selected]:bg-success-bg ${unselectedColumnItemClass}`}
+                class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
               >
                 <div class="flex items-center gap-2">
                   <span class="inline-flex w-4 justify-center text-success">
