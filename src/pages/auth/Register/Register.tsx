@@ -1,16 +1,22 @@
 import { Checkbox } from '@kobalte/core/checkbox'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate } from '@solidjs/router'
-import { signInWithPopup } from 'firebase/auth'
+import { signInWithPopup, signOut } from 'firebase/auth'
 import { Check, Dot, Loader, X } from 'lucide-solid'
 import { createEffect, createSignal, onMount, Show } from 'solid-js'
 
 import { postSignup } from '../../../api/auth'
+import { fetchMe } from '../../../api/users'
 import { Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
 import { auth, googleProvider } from '../../../lib/firebase'
+import { clearAuthenticatedUser } from '../../../stores/authSession'
+import { resolveGoogleRegistrationEligibility } from '../../../usecases/auth/registrationEligibility'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
+
+const REGISTERED_GOOGLE_ACCOUNT_MESSAGE =
+  'このGoogleアカウントはすでに登録済みです。ログイン画面からログインしてください。'
 
 const Register = () => {
   const navigate = useNavigate()
@@ -59,11 +65,27 @@ const Register = () => {
   })
 
   // Step 1: Google認証してIDトークンを取得
+  /**
+   * Step 1: Google認証後、既存アカウントでなければユーザー名入力へ進める。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleGoogleAuth = async () => {
     setIsSubmitting(true)
     setErrorMessage('')
     try {
       const result = await signInWithPopup(auth, googleProvider)
+      const registrationEligibility = await resolveGoogleRegistrationEligibility(() =>
+        fetchMe({ redirectOnUnauthorized: false })
+      )
+      if (registrationEligibility === 'registered') {
+        await signOut(auth)
+        clearAuthenticatedUser()
+        setGoogleEmail('')
+        setErrorMessage(REGISTERED_GOOGLE_ACCOUNT_MESSAGE)
+        return
+      }
+
       setGoogleEmail(result.user.email ?? '')
       setStep('fill_username')
     } catch (error) {
