@@ -394,6 +394,81 @@ const toWorldsendDraft = (
 }
 
 /**
+ * 保存済みの通常楽曲ドラフトを一覧表示用DTOへ反映する。
+ *
+ * @param song 更新前の一覧表示用DTO
+ * @param current 保存に成功した通常楽曲ドラフト
+ * @param genres ジャンル名解決に使うマスターデータ
+ * @returns 保存内容を反映した一覧表示用DTO
+ */
+const applySongDraftToManagedSong = (
+  song: ManagedSongDTO,
+  current: SongDraft,
+  genres: MasterItemDTO[]
+): ManagedSongDTO => {
+  return {
+    ...song,
+    title: current.title,
+    reading: toNullableTrimmedString(current.reading),
+    artist: current.artist,
+    genre: genres.find((genre) => genre.id === current.genre_id)?.name ?? '',
+    bpm: current.bpm,
+    release: toDateOnly(current.released_at),
+    jacket: current.jacket,
+    charts: {
+      ...song.charts,
+      ...Object.fromEntries(
+        current.charts.map((chart) => [
+          chart.difficulty_name,
+          {
+            const: parseFloat(chart.const),
+            is_const_unknown: chart.is_const_unknown,
+            notes: chart.notes,
+            notes_designer: chart.notes_designer?.trim() ? chart.notes_designer.trim() : null,
+            updated_at: chart.updated_at,
+          },
+        ])
+      ),
+    },
+  }
+}
+
+/**
+ * 保存済みのWORLD'S END楽曲ドラフトを一覧表示用DTOへ反映する。
+ *
+ * @param song 更新前の一覧表示用DTO
+ * @param current 保存に成功したWORLD'S END楽曲ドラフト
+ * @param genres ジャンル名解決に使うマスターデータ
+ * @returns 保存内容を反映した一覧表示用DTO
+ */
+const applyWorldsendDraftToManagedSong = (
+  song: ManagedWorldsendSongDTO,
+  current: WorldsendDraft,
+  genres: MasterItemDTO[]
+): ManagedWorldsendSongDTO => {
+  return {
+    ...song,
+    title: current.title,
+    reading: toNullableTrimmedString(current.reading),
+    artist: current.artist,
+    genre: genres.find((genre) => genre.id === current.genre_id)?.name ?? null,
+    bpm: current.bpm,
+    release: toDateOnly(current.released_at),
+    jacket: current.jacket,
+    charts: {
+      ...song.charts,
+      WORLDSEND: {
+        attribute: current.attribute?.trim() ? current.attribute.trim() : null,
+        level_star: current.level_star,
+        notes: current.notes,
+        notes_designer: current.notes_designer?.trim() ? current.notes_designer.trim() : null,
+        updated_at: current.chart_updated_at,
+      },
+    },
+  }
+}
+
+/**
  * 管理者向けの楽曲管理画面を描画します。
  * 通常楽曲およびWORLD'S END楽曲の追加・更新・削除・復活操作を提供します。
  *
@@ -404,8 +479,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   useDocumentTitle(props.title)
 
   const [refreshKey, setRefreshKey] = createSignal(0)
-  const [songsResponse] = createResource(() => refreshKey(), fetchManagedSongs)
-  const [worldsendResponse] = createResource(() => refreshKey(), fetchManagedWorldsendSongs)
+  const [songsResponse, { mutate: mutateSongsResponse }] = createResource(
+    () => refreshKey(),
+    fetchManagedSongs
+  )
+  const [worldsendResponse, { mutate: mutateWorldsendResponse }] = createResource(
+    () => refreshKey(),
+    fetchManagedWorldsendSongs
+  )
   const [masterData] = createResource(fetchMasterData)
 
   const [selectedSongId, setSelectedSongId] = createSignal<string>('')
@@ -587,8 +668,19 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
     try {
       await updateSongs([request])
+      mutateSongsResponse((prev) =>
+        prev
+          ? {
+              ...prev,
+              songs: prev.songs.map((song) =>
+                song.id === current.id
+                  ? applySongDraftToManagedSong(song, current, md.genres)
+                  : song
+              ),
+            }
+          : prev
+      )
       setMessage('楽曲を更新しました。')
-      refresh()
     } catch (error) {
       setErrorMessage(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
     }
@@ -812,8 +904,19 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
     try {
       await updateWorldsendSongs([request])
+      mutateWorldsendResponse((prev) =>
+        prev
+          ? {
+              ...prev,
+              songs: prev.songs.map((song) =>
+                song.id === current.id
+                  ? applyWorldsendDraftToManagedSong(song, current, md.genres)
+                  : song
+              ),
+            }
+          : prev
+      )
       setMessage("WORLD'S END楽曲を更新しました。")
-      refresh()
     } catch (error) {
       setErrorMessage(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
     }
