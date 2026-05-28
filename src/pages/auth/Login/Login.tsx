@@ -11,7 +11,6 @@ import { auth, googleProvider } from '../../../lib/firebase'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 
-const TURNSTILE_REQUIRED_MESSAGE = '認証確認を完了してからログインしてください。'
 const TURNSTILE_ERROR_MESSAGE = '認証確認に失敗しました。しばらく待ってから再度お試しください。'
 
 /**
@@ -64,7 +63,6 @@ const Login = () => {
     event.preventDefault()
     const verifiedToken = turnstileToken()
     if (!verifiedToken) {
-      setErrorMessage(TURNSTILE_REQUIRED_MESSAGE)
       return
     }
 
@@ -118,7 +116,7 @@ const Login = () => {
                 />
                 <Button
                   type="submit"
-                  disabled={isSubmitting()}
+                  disabled={isSubmitting() || !turnstileToken()}
                   class="flex w-full items-center justify-center gap-2 rounded-md border border-border-strong bg-surface px-4 py-2 text-sm font-semibold text-text-muted shadow-sm hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <svg
