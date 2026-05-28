@@ -14,6 +14,7 @@ const loadSortSongsByAddedDateAndOfficialIndex = async () => {
   process.env.PUBLIC_FB_STORAGE_BUCKET = 'test.appspot.com'
   process.env.PUBLIC_FB_MESSAGING_SENDER_ID = '123456789'
   process.env.PUBLIC_FB_APP_ID = 'test-app-id'
+  process.env.PUBLIC_CF_TURNSTILE_SITE_KEY = '1x00000000000000000000AA'
 
   const { sortSongsByAddedDateAndOfficialIndex } = await import('./songsData.ts')
   return sortSongsByAddedDateAndOfficialIndex

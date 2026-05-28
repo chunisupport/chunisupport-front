@@ -7,6 +7,7 @@ const ENV_KEYS = [
   'PUBLIC_FB_MESSAGING_SENDER_ID',
   'PUBLIC_FB_APP_ID',
   'PUBLIC_FB_MEASUREMENT_ID',
+  'PUBLIC_CF_TURNSTILE_SITE_KEY',
 ] as const
 
 type EnvKey = (typeof ENV_KEYS)[number]

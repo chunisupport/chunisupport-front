@@ -9,6 +9,7 @@ interface ImportMetaEnv {
   readonly PUBLIC_FB_MESSAGING_SENDER_ID: string
   readonly PUBLIC_FB_APP_ID: string
   readonly PUBLIC_FB_MEASUREMENT_ID: string
+  readonly PUBLIC_CF_TURNSTILE_SITE_KEY: string
 }
 
 interface ImportMeta {

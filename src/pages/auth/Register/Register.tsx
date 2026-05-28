@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate } from '@solidjs/router'
@@ -7,7 +8,8 @@ import { createEffect, createSignal, onMount, Show } from 'solid-js'
 
 import { postSignup } from '../../../api/auth'
 import { fetchMe } from '../../../api/users'
-import { Loading } from '../../../components'
+import { Loading, Turnstile } from '../../../components'
+import { CF_TURNSTILE_SITE_KEY } from '../../../config'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
 import { auth, googleProvider } from '../../../lib/firebase'
@@ -18,6 +20,8 @@ import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 
 const REGISTERED_GOOGLE_ACCOUNT_MESSAGE =
   'このGoogleアカウントはすでに登録済みです。ログイン画面からログインしてください。'
+const TURNSTILE_REQUIRED_MESSAGE = '認証確認を完了してから登録してください。'
+const TURNSTILE_ERROR_MESSAGE = '認証確認に失敗しました。しばらく待ってから再度お試しください。'
 
 const Register = () => {
   const navigate = useNavigate()
@@ -27,6 +31,8 @@ const Register = () => {
   const [errorMessage, setErrorMessage] = createSignal('')
   const [isSubmitting, setIsSubmitting] = createSignal(false)
   const [agreedToTerms, setAgreedToTerms] = createSignal(false)
+  const [turnstileToken, setTurnstileToken] = createSignal('')
+  const [turnstileResetKey, setTurnstileResetKey] = createSignal(0)
 
   // バリデーション用Signal
   const [isAlphanumeric, setIsAlphanumeric] = createSignal<boolean | null>(null)
@@ -54,6 +60,16 @@ const Register = () => {
 
   // すでにログインしている場合はユーザーページへリダイレクト
   const { isCheckingAuth } = useRedirectIfAuthenticated()
+
+  /**
+   * Turnstile の応答トークンを破棄し、ウィジェットの再検証を要求する。
+   *
+   * @returns なし。
+   */
+  const resetTurnstile = () => {
+    setTurnstileToken('')
+    setTurnstileResetKey((current) => current + 1)
+  }
 
   // Firebaseに既にサインイン済みの場合はStep 2へスキップ（ログインページからのリダイレクト時）
   onMount(async () => {
@@ -99,15 +115,24 @@ const Register = () => {
   /**
    * 入力されたユーザー名でアカウントを作成し、登録後の遷移先へ移動する。
    *
+   * @param event - 登録フォームの送信イベント。
    * @returns 処理完了後に解決されるPromise。
    */
-  const handleRegister = async () => {
+  const handleRegister = async (event: SubmitEvent) => {
+    event.preventDefault()
+    const verifiedToken = turnstileToken()
+    if (!verifiedToken) {
+      setErrorMessage(TURNSTILE_REQUIRED_MESSAGE)
+      return
+    }
+
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await postSignup({ username: username() })
+      await postSignup({ username: username(), turnstile_token: verifiedToken })
       await redirectAfterAuthentication(navigate)
     } catch (error) {
+      resetTurnstile()
       setErrorMessage(toUserFriendlyErrorMessage(error, '予期せぬエラーで登録に失敗しました。'))
     } finally {
       setIsSubmitting(false)
@@ -262,16 +287,28 @@ const Register = () => {
                     <p class="text-sm text-danger">{errorMessage()}</p>
                   </div>
                 )}
-                <div class="flex justify-center">
-                  <button
-                    type="button"
-                    class="px-4 py-2 bg-action-primary text-text-inverse rounded-md hover:bg-action-primary-hover disabled:opacity-50"
-                    onClick={handleRegister}
-                    disabled={!(isUsernameValid() && agreedToTerms()) || isSubmitting()}
-                  >
-                    {isSubmitting() ? '処理中...' : '登録'}
-                  </button>
-                </div>
+                <form onSubmit={handleRegister}>
+                  <Turnstile
+                    siteKey={CF_TURNSTILE_SITE_KEY}
+                    resetKey={turnstileResetKey()}
+                    class="mb-4 flex justify-center"
+                    onVerify={setTurnstileToken}
+                    onExpire={() => setTurnstileToken('')}
+                    onError={() => {
+                      setTurnstileToken('')
+                      setErrorMessage(TURNSTILE_ERROR_MESSAGE)
+                    }}
+                  />
+                  <div class="flex justify-center">
+                    <Button
+                      type="submit"
+                      class="px-4 py-2 bg-action-primary text-text-inverse rounded-md hover:bg-action-primary-hover disabled:opacity-50"
+                      disabled={!(isUsernameValid() && agreedToTerms()) || isSubmitting()}
+                    >
+                      {isSubmitting() ? '処理中...' : '登録'}
+                    </Button>
+                  </div>
+                </form>
               </div>
             </Show>
 
