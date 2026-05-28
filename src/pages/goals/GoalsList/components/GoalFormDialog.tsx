@@ -106,6 +106,22 @@ const GOAL_SELECT_CONTENT_CLASS =
  */
 const GOAL_FILTER_LIST_CLASS =
   'scrollbar-none max-h-36 space-y-1 overflow-y-auto rounded border border-border-strong px-3 py-2'
+const GOAL_STEP_SECTION_CLASS = 'rounded-lg border border-border bg-surface-muted p-4'
+const GOAL_STEP_BADGE_CLASS =
+  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-action-primary text-sm font-bold text-text-inverse'
+const GOAL_STEP_TITLE_CLASS = 'text-base font-bold text-text'
+const GOAL_STEP_DESCRIPTION_CLASS = 'text-sm text-text-muted'
+
+const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = {
+  rank_count: '指定ランク以上を達成した譜面数を追います。',
+  score_count: '指定スコア以上を達成した譜面数を追います。',
+  avg_score: '対象譜面の平均スコアを追います。',
+  hardlamp_count: '指定ハードランプ以上を達成した譜面数を追います。',
+  combolamp_count: 'FULL COMBO / ALL JUSTICE の達成数を追います。',
+  total_score: '対象譜面のスコア合計を追います。',
+  overpower_value: '対象譜面のOVER POWER合計値を追います。',
+  overpower_percent: '対象譜面のOVER POWER達成率を追います。',
+} as const satisfies Record<GoalAchievementType, string>
 
 const COUNT_MODE_OPTIONS: GoalSelectOption<'number' | 'all'>[] = [
   { value: 'number', label: '数値を指定' },
@@ -356,11 +372,11 @@ const GoalSelectField = <TValue extends string>(props: GoalSelectFieldProps<TVal
  */
 const GoalFilterCheckbox: Component<GoalFilterCheckboxProps> = (props) => (
   <Checkbox
-    class="flex items-center gap-2 text-sm text-text-muted"
+    class="relative flex items-center gap-2 text-sm text-text-muted"
     checked={props.checked}
     onChange={props.onChange}
   >
-    <Checkbox.Input />
+    <Checkbox.Input style={{ left: '0', top: '0' }} />
     <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
       <Checkbox.Indicator>
         <Check class="h-4 w-4" />
@@ -426,6 +442,18 @@ const toggleSelection = (current: string[], value: string, checked: boolean): st
   }
   return current.filter((item) => item !== value)
 }
+
+/**
+ * 目標の対象譜面条件が1つ以上指定されているか判定する。
+ *
+ * @param attributes - 目標フォームで組み立てた対象条件。
+ * @returns 対象条件が指定済みならtrue。
+ */
+const hasGoalTargetCondition = (attributes: GoalAttributes): boolean =>
+  attributes.diff !== undefined ||
+  attributes.genre !== undefined ||
+  attributes.ver !== undefined ||
+  attributes.const !== undefined
 
 /**
  * 目標の作成・編集に使う入力ダイアログを表示する。
@@ -600,6 +628,51 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   })
 
   /**
+   * 現在の対象譜面条件に一致する件数を表示用テキストへ変換する。
+   *
+   * @returns 日本語ロケールで桁区切りした対象譜面数。
+   */
+  const targetCountText = (): string =>
+    `${props.resolveAllCount(getDraftAttributes()).toLocaleString('ja-JP')} 譜面`
+
+  /**
+   * 現在選択中の目標種別の説明文を取得する。
+   *
+   * @returns 目標種別ごとの説明テキスト。
+   */
+  const selectedAchievementDescription = (): string =>
+    GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS[achievementType()]
+
+  /**
+   * プレビューカードに表示するタイトルを取得する。
+   *
+   * @returns 入力済みタイトル、未入力の場合は仮タイトル。
+   */
+  const previewTitle = (): string => title().trim() || '新しい目標'
+
+  /**
+   * プレビューカードの現在値・目標値表示を組み立てる。
+   *
+   * @returns 現在入力中の条件から作った進捗表示テキスト。
+   */
+  const previewProgressText = (): string => {
+    const currentType = achievementType()
+    if (isCountAchievementType(currentType)) {
+      return countProgressLimitText()
+    }
+    if (currentType === 'total_score') {
+      return totalProgressLimitText(getTotalScoreMax())
+    }
+    if (currentType === 'overpower_value') {
+      return totalProgressLimitText(getOverPowerChartMax())
+    }
+    if (currentType === 'avg_score') {
+      return `${Number(score()).toLocaleString('ja-JP')} 点`
+    }
+    return `${Number(total()).toLocaleString('ja-JP')} %`
+  }
+
+  /**
    * 件数目標の現在値と最大値を表示用に組み立てる。
    *
    * @returns 件数目標の進捗上限表示。
@@ -653,6 +726,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const isCountType = isCountAchievementType(currentType)
 
     const attributes = getDraftAttributes()
+    if (!hasGoalTargetCondition(attributes)) {
+      setErrorMessage('対象譜面を1つ以上指定してください。')
+      return
+    }
+
     const allCount = props.resolveAllCount(attributes)
 
     if (isCountType && countMode() === 'number') {
@@ -766,240 +844,323 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
-          <Dialog.Title class="text-lg font-bold">
+        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+          <Dialog.Title class="shrink-0 text-lg font-bold">
             {props.mode === 'create' ? '目標を作成' : '目標を編集'}
           </Dialog.Title>
 
-          <div class="scrollbar-none mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-            <GoalTextField label="タイトル" value={title()} maxLength={30} onChange={setTitle} />
+          <div class="scrollbar-none mt-4 min-h-0 flex-1 basis-0 space-y-4 overflow-y-auto pr-1">
+            <section class={GOAL_STEP_SECTION_CLASS}>
+              <div class="mb-4 flex gap-3">
+                <span class={GOAL_STEP_BADGE_CLASS}>1</span>
+                <div>
+                  <h2 class={GOAL_STEP_TITLE_CLASS}>タイトルと対象譜面</h2>
+                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>
+                    目標名を決めてから、進捗を計算する譜面を絞り込みます。
+                  </p>
+                </div>
+              </div>
 
-            <GoalSelectField
-              label="目標種別"
-              value={achievementType()}
-              options={achievementTypeOptions()}
-              onChange={(nextType) => {
-                setAchievementType(nextType)
-                if (!canUseDynamicTotalTarget(nextType)) {
-                  setTotalMode('number')
-                }
-                if (nextType === 'rank_count') {
-                  setRank(DEFAULT_RANK_GOAL)
-                  setScore(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
-                }
-              }}
-            />
+              <div class="space-y-4">
+                <GoalTextField
+                  label="タイトル"
+                  value={title()}
+                  maxLength={30}
+                  onChange={setTitle}
+                />
 
-            <Show when={achievementType() === 'score_count' || achievementType() === 'avg_score'}>
-              <GoalNumberField
-                label="スコア目標"
-                value={score()}
-                min={MIN_SCORE}
-                max={MAX_SCORE}
-                onChange={handleScoreChange}
-              />
-            </Show>
+                <div class="rounded border border-border bg-surface p-3">
+                  <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-sm font-semibold text-text-muted">対象譜面</p>
+                    <p class="rounded bg-action-secondary px-2 py-1 text-xs font-semibold text-text-muted">
+                      {targetCountText()}
+                    </p>
+                  </div>
+                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <fieldset class="block text-sm space-y-1">
+                      <div class="flex items-center justify-between">
+                        <span class="block text-text-muted">難易度（複数可）</span>
+                        <button
+                          type="button"
+                          class="text-xs text-action-primary hover:text-action-primary"
+                          onClick={() => setDiffs([])}
+                        >
+                          クリア
+                        </button>
+                      </div>
+                      <div class={GOAL_FILTER_LIST_CLASS}>
+                        <For each={props.masterData.difficulties}>
+                          {(item) => (
+                            <GoalFilterCheckbox
+                              label={item.name}
+                              checked={diffs().includes(String(item.id))}
+                              onChange={(checked) =>
+                                setDiffs((prev) => toggleSelection(prev, String(item.id), checked))
+                              }
+                            />
+                          )}
+                        </For>
+                      </div>
+                    </fieldset>
 
-            <Show when={achievementType() === 'rank_count'}>
-              <GoalSelectField
-                label="ランク目標"
-                value={rank()}
-                options={RANK_OPTIONS}
-                onChange={(nextRank) => {
-                  setRank(nextRank)
-                  setScore(String(getRankGoalScore(nextRank)))
-                }}
-              />
-            </Show>
+                    <fieldset class="block text-sm space-y-1">
+                      <div class="flex items-center justify-between">
+                        <span class="block text-text-muted">ジャンル（複数可）</span>
+                        <button
+                          type="button"
+                          class="text-xs text-action-primary hover:text-action-primary"
+                          onClick={() => setGenres([])}
+                        >
+                          クリア
+                        </button>
+                      </div>
+                      <div class={GOAL_FILTER_LIST_CLASS}>
+                        <For each={props.masterData.genres}>
+                          {(item) => (
+                            <GoalFilterCheckbox
+                              label={item.name}
+                              checked={genres().includes(String(item.id))}
+                              onChange={(checked) =>
+                                setGenres((prev) => toggleSelection(prev, String(item.id), checked))
+                              }
+                            />
+                          )}
+                        </For>
+                      </div>
+                    </fieldset>
 
-            <Show
-              when={
-                achievementType() === 'score_count' ||
-                achievementType() === 'rank_count' ||
-                achievementType() === 'hardlamp_count' ||
-                achievementType() === 'combolamp_count'
-              }
-            >
-              <div class="block text-sm">
-                <div class="space-y-2">
+                    <fieldset class="block text-sm space-y-1">
+                      <div class="flex items-center justify-between">
+                        <span class="block text-text-muted">バージョン（複数可）</span>
+                        <button
+                          type="button"
+                          class="text-xs text-action-primary hover:text-action-primary"
+                          onClick={() => setVersions([])}
+                        >
+                          クリア
+                        </button>
+                      </div>
+                      <div class={GOAL_FILTER_LIST_CLASS}>
+                        <Show
+                          when={versionOptions().length > 0}
+                          fallback={
+                            <p class="text-sm text-text-subtle">
+                              バージョンを取得できませんでした。
+                            </p>
+                          }
+                        >
+                          <For each={versionOptions()}>
+                            {(item) => (
+                              <GoalFilterCheckbox
+                                label={item.label}
+                                checked={versions().includes(item.value)}
+                                onChange={(checked) =>
+                                  setVersions((prev) => toggleSelection(prev, item.value, checked))
+                                }
+                              />
+                            )}
+                          </For>
+                        </Show>
+                      </div>
+                    </fieldset>
+
+                    <div class="grid grid-cols-2 gap-2">
+                      <GoalDecimalTextField
+                        label="定数min"
+                        value={constMin()}
+                        onChange={(value) => handleMusicConstChange(setConstMin, value)}
+                      />
+                      <GoalDecimalTextField
+                        label="定数max"
+                        value={constMax()}
+                        onChange={(value) => handleMusicConstChange(setConstMax, value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class={GOAL_STEP_SECTION_CLASS}>
+              <div class="mb-4 flex gap-3">
+                <span class={GOAL_STEP_BADGE_CLASS}>2</span>
+                <div>
+                  <h2 class={GOAL_STEP_TITLE_CLASS}>目標種別と数値</h2>
+                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>
+                    何を達成扱いにするかを決め、必要な数値と表示方法を設定します。
+                  </p>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <GoalSelectField
+                  label="目標種別"
+                  value={achievementType()}
+                  options={achievementTypeOptions()}
+                  onChange={(nextType) => {
+                    setAchievementType(nextType)
+                    if (!canUseDynamicTotalTarget(nextType)) {
+                      setTotalMode('number')
+                    }
+                    if (nextType === 'rank_count') {
+                      setRank(DEFAULT_RANK_GOAL)
+                      setScore(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
+                    }
+                  }}
+                />
+
+                <p class="rounded border border-border bg-surface px-3 py-2 text-sm text-text-muted">
+                  {selectedAchievementDescription()}
+                </p>
+
+                <Show
+                  when={achievementType() === 'score_count' || achievementType() === 'avg_score'}
+                >
+                  <GoalNumberField
+                    label="スコア目標"
+                    value={score()}
+                    min={MIN_SCORE}
+                    max={MAX_SCORE}
+                    onChange={handleScoreChange}
+                  />
+                </Show>
+
+                <Show when={achievementType() === 'rank_count'}>
                   <GoalSelectField
-                    label="件数指定方法"
-                    value={countMode()}
-                    options={COUNT_MODE_OPTIONS}
-                    onChange={setCountMode}
+                    label="ランク目標"
+                    value={rank()}
+                    options={RANK_OPTIONS}
+                    onChange={(nextRank) => {
+                      setRank(nextRank)
+                      setScore(String(getRankGoalScore(nextRank)))
+                    }}
                   />
-                  <Show when={countMode() === 'number'}>
-                    <GoalNumberField label="件数" min={1} value={count()} onChange={setCount} />
-                  </Show>
-                  <p class="text-xs text-text-muted">{countProgressLimitText()}</p>
-                </div>
-              </div>
-            </Show>
+                </Show>
 
-            <Show when={achievementType() === 'hardlamp_count'}>
-              <GoalSelectField
-                label="ハードランプ"
-                value={hardLamp()}
-                options={HARD_LAMP_SELECT_OPTIONS}
-                onChange={setHardLamp}
-              />
-            </Show>
-
-            <Show when={achievementType() === 'combolamp_count'}>
-              <GoalSelectField
-                label="コンボランプ"
-                value={comboLamp()}
-                options={COMBO_LAMP_SELECT_OPTIONS}
-                onChange={setComboLamp}
-              />
-            </Show>
-
-            <Show
-              when={
-                achievementType() === 'total_score' ||
-                achievementType() === 'overpower_value' ||
-                achievementType() === 'overpower_percent'
-              }
-            >
-              <div class="block text-sm">
-                <div class="space-y-2">
-                  <Show when={canUseDynamicTotalTarget(achievementType())}>
-                    <GoalSelectField
-                      label="目標値の指定方法"
-                      value={totalMode()}
-                      options={COUNT_MODE_OPTIONS}
-                      onChange={setTotalMode}
-                    />
-                  </Show>
-                  <Show
-                    when={!canUseDynamicTotalTarget(achievementType()) || totalMode() === 'number'}
-                  >
-                    <GoalNumberField
-                      label="合計/割合の目標値"
-                      value={total()}
-                      min={0}
-                      onChange={setTotal}
-                    />
-                  </Show>
-                  <Show when={achievementType() === 'total_score'}>
-                    <p class="text-xs text-text-muted">
-                      {totalProgressLimitText(getTotalScoreMax())}
-                    </p>
-                  </Show>
-                  <Show when={achievementType() === 'overpower_value'}>
-                    <p class="text-xs text-text-muted">
-                      {totalProgressLimitText(getOverPowerChartMax())}
-                    </p>
-                  </Show>
-                </div>
-              </div>
-            </Show>
-
-            <div class="rounded border border-border p-3">
-              <p class="mb-2 text-sm font-semibold text-text-muted">対象条件（任意）</p>
-              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <fieldset class="block text-sm space-y-1">
-                  <div class="flex items-center justify-between">
-                    <span class="block text-text-muted">難易度（複数可）</span>
-                    <button
-                      type="button"
-                      class="text-xs text-action-primary hover:text-action-primary"
-                      onClick={() => setDiffs([])}
-                    >
-                      クリア
-                    </button>
+                <Show
+                  when={
+                    achievementType() === 'score_count' ||
+                    achievementType() === 'rank_count' ||
+                    achievementType() === 'hardlamp_count' ||
+                    achievementType() === 'combolamp_count'
+                  }
+                >
+                  <div class="block text-sm">
+                    <div class="space-y-2">
+                      <GoalSelectField
+                        label="件数指定方法"
+                        value={countMode()}
+                        options={COUNT_MODE_OPTIONS}
+                        onChange={setCountMode}
+                      />
+                      <Show when={countMode() === 'number'}>
+                        <GoalNumberField label="件数" min={1} value={count()} onChange={setCount} />
+                      </Show>
+                      <p class="text-xs text-text-muted">{countProgressLimitText()}</p>
+                    </div>
                   </div>
-                  <div class={GOAL_FILTER_LIST_CLASS}>
-                    <For each={props.masterData.difficulties}>
-                      {(item) => (
-                        <GoalFilterCheckbox
-                          label={item.name}
-                          checked={diffs().includes(String(item.id))}
-                          onChange={(checked) =>
-                            setDiffs((prev) => toggleSelection(prev, String(item.id), checked))
-                          }
+                </Show>
+
+                <Show when={achievementType() === 'hardlamp_count'}>
+                  <GoalSelectField
+                    label="ハードランプ"
+                    value={hardLamp()}
+                    options={HARD_LAMP_SELECT_OPTIONS}
+                    onChange={setHardLamp}
+                  />
+                </Show>
+
+                <Show when={achievementType() === 'combolamp_count'}>
+                  <GoalSelectField
+                    label="コンボランプ"
+                    value={comboLamp()}
+                    options={COMBO_LAMP_SELECT_OPTIONS}
+                    onChange={setComboLamp}
+                  />
+                </Show>
+
+                <Show
+                  when={
+                    achievementType() === 'total_score' ||
+                    achievementType() === 'overpower_value' ||
+                    achievementType() === 'overpower_percent'
+                  }
+                >
+                  <div class="block text-sm">
+                    <div class="space-y-2">
+                      <Show when={canUseDynamicTotalTarget(achievementType())}>
+                        <GoalSelectField
+                          label="目標値の指定方法"
+                          value={totalMode()}
+                          options={COUNT_MODE_OPTIONS}
+                          onChange={setTotalMode}
                         />
-                      )}
-                    </For>
-                  </div>
-                  <p class="text-xs text-text-subtle">未選択で「指定なし」になります。</p>
-                </fieldset>
-
-                <fieldset class="block text-sm space-y-1">
-                  <div class="flex items-center justify-between">
-                    <span class="block text-text-muted">ジャンル（複数可）</span>
-                    <button
-                      type="button"
-                      class="text-xs text-action-primary hover:text-action-primary"
-                      onClick={() => setGenres([])}
-                    >
-                      クリア
-                    </button>
-                  </div>
-                  <div class={GOAL_FILTER_LIST_CLASS}>
-                    <For each={props.masterData.genres}>
-                      {(item) => (
-                        <GoalFilterCheckbox
-                          label={item.name}
-                          checked={genres().includes(String(item.id))}
-                          onChange={(checked) =>
-                            setGenres((prev) => toggleSelection(prev, String(item.id), checked))
-                          }
+                      </Show>
+                      <Show
+                        when={
+                          !canUseDynamicTotalTarget(achievementType()) || totalMode() === 'number'
+                        }
+                      >
+                        <GoalNumberField
+                          label="合計/割合の目標値"
+                          value={total()}
+                          min={0}
+                          onChange={setTotal}
                         />
-                      )}
-                    </For>
+                      </Show>
+                      <Show when={achievementType() === 'total_score'}>
+                        <p class="text-xs text-text-muted">
+                          {totalProgressLimitText(getTotalScoreMax())}
+                        </p>
+                      </Show>
+                      <Show when={achievementType() === 'overpower_value'}>
+                        <p class="text-xs text-text-muted">
+                          {totalProgressLimitText(getOverPowerChartMax())}
+                        </p>
+                      </Show>
+                    </div>
                   </div>
-                  <p class="text-xs text-text-subtle">未選択で「指定なし」になります。</p>
-                </fieldset>
+                </Show>
 
-                <fieldset class="block text-sm space-y-1">
-                  <div class="flex items-center justify-between">
-                    <span class="block text-text-muted">バージョン（複数可）</span>
-                    <button
-                      type="button"
-                      class="text-xs text-action-primary hover:text-action-primary"
-                      onClick={() => setVersions([])}
-                    >
-                      クリア
-                    </button>
-                  </div>
-                  <div class={GOAL_FILTER_LIST_CLASS}>
-                    <Show
-                      when={versionOptions().length > 0}
-                      fallback={
-                        <p class="text-sm text-text-subtle">バージョンを取得できませんでした。</p>
-                      }
-                    >
-                      <For each={versionOptions()}>
-                        {(item) => (
-                          <GoalFilterCheckbox
-                            label={item.label}
-                            checked={versions().includes(item.value)}
-                            onChange={(checked) =>
-                              setVersions((prev) => toggleSelection(prev, item.value, checked))
-                            }
-                          />
-                        )}
-                      </For>
-                    </Show>
-                  </div>
-                  <p class="text-xs text-text-subtle">未選択で「指定なし」になります。</p>
-                </fieldset>
+                <Checkbox
+                  class="relative flex items-center gap-2 text-sm text-text-muted"
+                  checked={invert()}
+                  onChange={setInvert}
+                >
+                  <Checkbox.Input style={{ left: '0', top: '0' }} />
+                  <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
+                    <Checkbox.Indicator>
+                      <Check class="h-4 w-4" />
+                    </Checkbox.Indicator>
+                  </Checkbox.Control>
+                  <Checkbox.Label>進捗表示を反転（未達寄り）</Checkbox.Label>
+                </Checkbox>
 
-                <div class="grid grid-cols-2 gap-2">
-                  <GoalDecimalTextField
-                    label="定数min"
-                    value={constMin()}
-                    onChange={(value) => handleMusicConstChange(setConstMin, value)}
-                  />
-                  <GoalDecimalTextField
-                    label="定数max"
-                    value={constMax()}
-                    onChange={(value) => handleMusicConstChange(setConstMax, value)}
-                  />
-                </div>
+                <article class="rounded-lg border border-border bg-surface p-4 shadow-sm">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <p class="truncate font-sans text-lg font-bold text-text">{previewTitle()}</p>
+                      <p class="mt-1 text-xs text-text-subtle">
+                        {resolveGoalAchievementTypeLabel(achievementType())} / 対象{' '}
+                        {targetCountText()}
+                      </p>
+                    </div>
+                    <span class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted">
+                      Preview
+                    </span>
+                  </div>
+                  <div class="mt-3">
+                    <div class="font-oswald text-2xl font-bold leading-none text-text">
+                      {previewProgressText()}
+                    </div>
+                    <div class="mt-3 h-2 overflow-hidden rounded bg-action-secondary">
+                      <div class="h-full w-2/5 rounded bg-action-primary" />
+                    </div>
+                    <p class="mt-2 text-xs text-text-subtle">{selectedAchievementDescription()}</p>
+                  </div>
+                </article>
               </div>
-            </div>
+            </section>
 
             {/* <Checkbox
               class="flex items-center gap-2 text-sm text-text-muted"
@@ -1020,7 +1181,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
             </Show>
           </div>
 
-          <div class="mt-6 flex justify-end gap-2">
+          <div class="mt-6 flex shrink-0 justify-end gap-2">
             <button
               type="button"
               class="rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover"
