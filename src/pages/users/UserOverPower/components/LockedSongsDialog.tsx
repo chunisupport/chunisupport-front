@@ -265,9 +265,9 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </Dialog.CloseButton>
           </div>
 
-          <div class="mb-3 flex items-center gap-2">
-            <TextField class="flex-1">
-              <div class="flex items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
+          <div class="mb-3 flex min-w-0 items-center gap-2">
+            <TextField class="min-w-0 flex-1">
+              <div class="flex min-w-0 items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
                 <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
                 <TextField.Input
                   type="search"
@@ -281,7 +281,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </TextField>
             <button
               type="button"
-              class={`flex h-[38px] min-w-[38px] items-center justify-center gap-1.5 rounded border px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+              class={`flex h-[38px] min-w-[38px] shrink-0 items-center justify-center gap-1.5 rounded border px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 activeFilterCount() > 0
                   ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                   : 'border-border-strong text-text-muted hover:bg-surface-hover'
@@ -298,7 +298,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </button>
             <button
               type="button"
-              class={`flex h-[38px] w-[38px] items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+              class={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 showLockedOnly()
                   ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                   : 'border-border-strong text-text-muted hover:bg-surface-hover'
