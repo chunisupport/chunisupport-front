@@ -550,17 +550,6 @@ const Settings = () => {
                     )}
                   </Show>
 
-                  <div class="mt-4 rounded-lg border border-warning-border bg-warning-bg p-4">
-                    <p class="text-sm font-medium text-warning">
-                      削除すると `players` / `player_records` / `player_worldsend_records` /
-                      `player_honors` が削除されます。
-                    </p>
-                    <p class="mt-1 text-sm text-warning">
-                      ユーザーアカウント自体は残ります。削除後は `/register-score-temp`
-                      から再登録できます。
-                    </p>
-                  </div>
-
                   <div class="mt-4 flex flex-wrap gap-2">
                     <A
                       href="/register-score-temp"
