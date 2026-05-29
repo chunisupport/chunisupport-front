@@ -52,7 +52,10 @@ export const sortSongsByAddedDateAndOfficialIndex = <
 
   keyed.sort((left, right) => {
     if (left.releaseTime !== right.releaseTime) {
-      return left.releaseTime - right.releaseTime
+      // 新しい順 (リリース日降順) でソート。リリース日が無い場合は最後に回す
+      if (left.releaseTime === Number.MAX_SAFE_INTEGER) return 1
+      if (right.releaseTime === Number.MAX_SAFE_INTEGER) return -1
+      return right.releaseTime - left.releaseTime
     }
 
     if (left.index !== right.index) {
