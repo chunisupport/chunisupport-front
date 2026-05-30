@@ -28,6 +28,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check third-party licenses
+        run: npm run licenses:check
+
       - name: Check
         run: npm run check:ci
 

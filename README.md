@@ -86,6 +86,13 @@ npm run build
 npm run test:unit
 ```
 
+## OSSライセンス
+
+本プロジェクトで使用しているサードパーティ製ソフトウェアのライセンス情報は、
+リポジトリルートの `THIRD-PARTY-NOTICES.txt` に集約されています。
+依存関係を更新した場合は必ず `npm run licenses:generate` を実行し、
+ファイルを更新した上でコミットしてください（CIで差分チェックを行っています）。
+
 ## 関連資料
 
 - Rsbuild Documentation: https://rsbuild.rs/
