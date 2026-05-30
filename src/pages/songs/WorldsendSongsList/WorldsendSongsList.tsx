@@ -2,7 +2,7 @@ import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show 
 import { fetchMasterData } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { sortSongsByAddedDateAndOfficialIndex, useSongsData } from '../../../stores/songsData'
+import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../../stores/songsData'
 import type { SortDirection } from '../../users/recordTable/sortingQuery'
 import SongSearchInput from '../components/SongSearchInput'
 import SongsViewToggle from '../components/SongsViewToggle'
@@ -24,7 +24,7 @@ const WorldsendSongsList = () => {
 
   const defaultSortedSongs = createMemo(() => {
     const songs = worldsendSongsResponse()?.songs ?? []
-    return sortSongsByAddedDateAndOfficialIndex(songs)
+    return sortSongsByReleaseDescAndIdxDesc(songs)
   })
 
   const searchableSongs = createMemo(() => buildSearchableItems(defaultSortedSongs()))
