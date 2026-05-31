@@ -39,38 +39,9 @@ const DistributionBar: Component<{
   </div>
 )
 
-/** スコア統計用の箱ひげ図 */
-const ScoreBoxPlot: Component<{ stats: RecordStats['scoreStats'] }> = (props) => {
-  const { min, q1, median, q3, max } = props.stats
-  const toPct = (value: number) => ((value - min) / (max - min)) * 100
-  const q1Pct = toPct(q1)
-  const medianPct = toPct(median)
-  const q3Pct = toPct(q3)
-
-  return (
-    <div class="relative w-full h-4 rounded mb-1">
-      <div class="absolute left-0 top-1/2 w-full h-full -translate-y-1/2 bg-action-secondary rounded">
-        {/* 既プレイの分布をざっくり掴むための箱ひげ図 */}
-        <div
-          class="absolute h-full bg-action-primary rounded"
-          style={{
-            left: `${q1Pct}%`,
-            width: `${q3Pct - q1Pct}%`,
-          }}
-        ></div>
-        <div
-          class="absolute w-1 bg-action-primary-hover h-full rounded"
-          style={{
-            left: `${medianPct}%`,
-          }}
-        ></div>
-      </div>
-    </div>
-  )
-}
-
 /**
- * フィルター適用結果の分布とスコア統計を折りたたみ表示する。
+ * フィルター適用結果の分布を折りたたみ表示する。
+ * スコア分布の詳細表示は削除済み。ヘッダーには平均スコアのみ表示。
  * @param props - 集計済み統計、開閉状態、開閉ハンドラ。
  * @returns フィルター統計表示コンポーネント。
  */
@@ -144,20 +115,6 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
             </For>
           </ul>
         </div>
-        {props.stats.scoreStats.max !== props.stats.scoreStats.min ? (
-          <div>
-            <b>スコア分布(既プレイのみ):</b>
-            <ScoreBoxPlot stats={props.stats.scoreStats} />
-            <ul>
-              <li>最小: {props.stats.scoreStats.min.toLocaleString()}</li>
-              <li>最大: {props.stats.scoreStats.max.toLocaleString()}</li>
-              <li>平均: {props.stats.scoreStats.avg.toLocaleString()}</li>
-              <li>第1四分位数: {props.stats.scoreStats.q1.toLocaleString()}</li>
-              <li>中央値: {props.stats.scoreStats.median.toLocaleString()}</li>
-              <li>第3四分位数: {props.stats.scoreStats.q3.toLocaleString()}</li>
-            </ul>
-          </div>
-        ) : null}
       </div>
     </Collapsible.Content>
   </Collapsible>
