@@ -27,7 +27,9 @@ import {
   HARD_LAMP_OPTIONS,
   resolveGoalAchievementTypeLabel,
 } from '../../utils/goalForm'
+import type { GoalProgressResult } from '../../utils/goalProgress'
 import { buildGoalVersionOptions } from '../../utils/goalVersion'
+import { GoalCardProgress } from './GoalCard'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 
@@ -651,25 +653,49 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const previewTitle = (): string => title().trim() || '新しい目標'
 
   /**
-   * プレビューカードの現在値・目標値表示を組み立てる。
+   * プレビューカードに渡す進捗値を現在の入力内容から組み立てる。
    *
-   * @returns 現在入力中の条件から作った進捗表示テキスト。
+   * @returns 実際の目標カードと同じ表示計算に渡す進捗情報。
    */
-  const previewProgressText = (): string => {
+  const previewProgress = (): GoalProgressResult => {
     const currentType = achievementType()
+    let current = 0
+    let target = 1
+
     if (isCountAchievementType(currentType)) {
-      return countProgressLimitText()
+      target = props.resolveAllCount(getDraftAttributes())
+      const displayValue =
+        countMode() === 'all' ? target : Math.floor(parseProgressDisplayValue(count()))
+      current = invert() ? Math.max(target - displayValue, 0) : displayValue
+    } else if (currentType === 'total_score') {
+      target = getTotalScoreMax()
+      const displayValue = totalMode() === 'all' ? target : parseProgressDisplayValue(total())
+      current = invert() ? Math.max(target - displayValue, 0) : displayValue
+    } else if (currentType === 'overpower_value') {
+      target = getOverPowerChartMax()
+      const displayValue = totalMode() === 'all' ? target : parseProgressDisplayValue(total())
+      current = invert() ? Math.max(target - displayValue, 0) : displayValue
+    } else if (currentType === 'avg_score') {
+      target = MAX_SCORE
+      const displayValue = parseProgressDisplayValue(score())
+      current = invert() ? Math.max(target - displayValue, 0) : displayValue
+    } else {
+      target = 100
+      const displayValue = parseProgressDisplayValue(total())
+      current = invert() ? Math.max(target - displayValue, 0) : displayValue
     }
-    if (currentType === 'total_score') {
-      return totalProgressLimitText(getTotalScoreMax())
+
+    const safeTarget = target <= 0 ? 1 : target
+    const rawPercent = (current / safeTarget) * 100
+    const percent = Number.isFinite(rawPercent) ? Math.max(0, Math.min(rawPercent, 100)) : 0
+
+    return {
+      current,
+      target,
+      percent,
+      achieved: current >= target,
+      hasUnknownMaxOp: false,
     }
-    if (currentType === 'overpower_value') {
-      return totalProgressLimitText(getOverPowerChartMax())
-    }
-    if (currentType === 'avg_score') {
-      return `${Number(score()).toLocaleString('ja-JP')} 点`
-    }
-    return `${Number(total()).toLocaleString('ja-JP')} %`
   }
 
   /**
@@ -1128,25 +1154,17 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 <article class="rounded-lg border border-border bg-surface p-4 shadow-sm">
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                      <p class="truncate font-sans text-lg font-bold text-text">{previewTitle()}</p>
-                      <p class="mt-1 text-xs text-text-subtle">
-                        {resolveGoalAchievementTypeLabel(achievementType())} / 対象{' '}
-                        {targetCountText()}
-                      </p>
+                      <h2 class="truncate font-sans text-lg font-bold text-text">
+                        {previewTitle()}
+                      </h2>
                     </div>
-                    <span class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted">
-                      Preview
-                    </span>
                   </div>
-                  <div class="mt-3">
-                    <div class="font-oswald text-2xl font-bold leading-none text-text">
-                      {previewProgressText()}
-                    </div>
-                    <div class="mt-3 h-2 overflow-hidden rounded bg-action-secondary">
-                      <div class="h-full w-2/5 rounded bg-action-primary" />
-                    </div>
-                    <p class="mt-2 text-xs text-text-subtle">{selectedAchievementDescription()}</p>
-                  </div>
+                  <GoalCardProgress
+                    title={previewTitle()}
+                    achievementType={achievementType()}
+                    invert={invert()}
+                    progress={previewProgress()}
+                  />
                 </article>
               </div>
             </section>

@@ -11,6 +11,13 @@ interface GoalCardProps {
   onDelete: (goal: GoalDTO) => void
 }
 
+interface GoalCardProgressProps {
+  title: string
+  achievementType: GoalDTO['achievement_type']
+  invert: boolean
+  progress: GoalProgressResult
+}
+
 /**
  * 目標進捗の数値を目標種別に合わせて表示用に整形する。
  *
@@ -18,7 +25,7 @@ interface GoalCardProps {
  * @param type - 目標種別。
  * @returns 画面表示用の数値文字列。
  */
-const formatValue = (value: number, type: GoalDTO['achievement_type']) => {
+export const formatValue = (value: number, type: GoalDTO['achievement_type']) => {
   if (type === 'overpower_value' || type === 'overpower_percent') {
     return value.toLocaleString('ja-JP', {
       minimumFractionDigits: 0,
@@ -55,31 +62,77 @@ const formatDisplayPercent = (percent: number, invert: boolean) => {
 }
 
 /**
+ * 目標カードの進捗値とゲージ値を実表示用に変換する。
+ *
+ * @param progress - 目標進捗の現在値、目標値、達成率。
+ * @param type - 目標種別。
+ * @param invert - 反転表示が有効か。
+ * @returns カードに表示する現在値、目標値、達成率、ゲージ値。
+ */
+const resolveGoalCardDisplayProgress = (
+  progress: GoalProgressResult,
+  type: GoalDTO['achievement_type'],
+  invert: boolean
+) => {
+  const displayCurrent = invert ? Math.max(progress.target - progress.current, 0) : progress.current
+  const safeTarget = progress.target <= 0 ? 1 : progress.target
+  const raw = (progress.current / safeTarget) * 100
+  const normalizedPercent = Number.isFinite(raw) ? Math.max(0, raw) : 0
+  const displayPercent = invert
+    ? Math.max(0, 100 - Math.min(normalizedPercent, 100))
+    : normalizedPercent
+
+  return {
+    currentText: formatDisplayValue(displayCurrent, type, invert),
+    targetText: formatValue(progress.target, type),
+    percentText: formatDisplayPercent(displayPercent, invert),
+    progressValue: Math.max(0, Math.min(normalizedPercent, 100)),
+  }
+}
+
+/**
+ * 目標カード共通の進捗数値とゲージを表示する。
+ *
+ * @param props - タイトル、目標種別、反転表示、進捗情報。
+ * @returns 目標カードの進捗表示 JSX 要素。
+ */
+export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
+  const displayProgress = () =>
+    resolveGoalCardDisplayProgress(props.progress, props.achievementType, props.invert)
+
+  return (
+    <div class="mt-2">
+      <div class="font-oswald text-3xl font-bold leading-none text-text">
+        {displayProgress().currentText}
+      </div>
+      <div class="mb-2 flex items-end justify-between gap-3 mt-1">
+        <div class="flex min-w-0 w-full items-end gap-3 text-text-subtle">
+          <div class="pb-0.5 font-oswald text-lg font-bold leading-none">/</div>
+          <div class="goal-card-progress-secondary pb-0.5 font-oswald text-xl font-bold leading-none">
+            {displayProgress().targetText}
+          </div>
+          <div class="goal-card-progress-secondary ml-auto pb-0.5 text-right font-oswald text-lg font-semibold leading-none">
+            {displayProgress().percentText}
+          </div>
+        </div>
+      </div>
+      <progress
+        class="h-2 w-full rounded appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-action-secondary [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-action-primary [&::-moz-progress-bar]:rounded [&::-moz-progress-bar]:bg-action-primary"
+        value={displayProgress().progressValue}
+        max={100}
+        aria-label={`${props.title} 進捗 ${displayProgress().percentText}`}
+      />
+    </div>
+  )
+}
+
+/**
  * 目標の現在値、目標値、達成率をカード形式で表示する。
  *
  * @param props - 目標カードの表示内容と操作ハンドラ。
  * @returns 目標カードの JSX 要素。
  */
 const GoalCard: Component<GoalCardProps> = (props) => {
-  const displayCurrent = () =>
-    props.goal.invert
-      ? Math.max(props.progress.target - props.progress.current, 0)
-      : props.progress.current
-  const normalizedPercent = () => {
-    const safeTarget = props.progress.target <= 0 ? 1 : props.progress.target
-    const raw = (props.progress.current / safeTarget) * 100
-    return Number.isFinite(raw) ? Math.max(0, raw) : 0
-  }
-
-  const displayPercent = () => {
-    return props.goal.invert
-      ? Math.max(0, 100 - Math.min(normalizedPercent(), 100))
-      : normalizedPercent()
-  }
-  const displayCurrentText = () =>
-    formatDisplayValue(displayCurrent(), props.goal.achievement_type, props.goal.invert)
-  const displayPercentText = () => formatDisplayPercent(displayPercent(), props.goal.invert)
-
   const [menuOpen, setMenuOpen] = createSignal(false)
 
   let menuRef: HTMLDivElement | undefined
@@ -165,28 +218,12 @@ const GoalCard: Component<GoalCardProps> = (props) => {
         </div>
       </div>
 
-      <div class="mt-2">
-        <div class="font-oswald text-3xl font-bold leading-none text-text">
-          {displayCurrentText()}
-        </div>
-        <div class="mb-2 flex items-end justify-between gap-3 mt-1">
-          <div class="flex min-w-0 w-full items-end gap-3 text-text-subtle">
-            <div class="pb-0.5 font-oswald text-lg font-bold leading-none">/</div>
-            <div class="goal-card-progress-secondary pb-0.5 font-oswald text-xl font-bold leading-none">
-              {formatValue(props.progress.target, props.goal.achievement_type)}
-            </div>
-            <div class="goal-card-progress-secondary ml-auto pb-0.5 text-right font-oswald text-lg font-semibold leading-none">
-              {displayPercentText()}
-            </div>
-          </div>
-        </div>
-        <progress
-          class="h-2 w-full rounded appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-action-secondary [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-action-primary [&::-moz-progress-bar]:rounded [&::-moz-progress-bar]:bg-action-primary"
-          value={Math.max(0, Math.min(normalizedPercent(), 100))}
-          max={100}
-          aria-label={`${props.goal.title} 進捗 ${displayPercentText()}`}
-        />
-      </div>
+      <GoalCardProgress
+        title={props.goal.title}
+        achievementType={props.goal.achievement_type}
+        invert={props.goal.invert}
+        progress={props.progress}
+      />
     </article>
   )
 }
