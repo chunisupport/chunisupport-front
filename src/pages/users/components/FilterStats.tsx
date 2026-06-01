@@ -4,7 +4,14 @@ import { ChevronRight, Link2, ShieldCheck, Trophy } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For } from 'solid-js'
 import type { DistributionMap, RecordStats } from '../utils/recordStats'
-import { clearOrder, comboColorMap, comboOrder, rankOrder } from '../utils/recordStats'
+import {
+  clearColorMap,
+  clearOrder,
+  comboColorMap,
+  comboOrder,
+  rankColorMap,
+  rankOrder,
+} from '../utils/recordStats'
 
 type FilterStatsProps = {
   stats: RecordStats
@@ -31,25 +38,6 @@ const FILTER_STATS_ROW_CLASS =
   'grid grid-cols-[minmax(0,1fr)_auto_2.5rem_minmax(3.25rem,5rem)] items-center gap-2 py-1.5 text-xs'
 const FILTER_STATS_TAB_TRIGGER_CLASS =
   'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-text-muted transition-colors hover:bg-surface data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
-const FILTER_STATS_RANK_COLOR_MAP: Record<string, string> = {
-  'SSS+': 'bg-green-500',
-  SSS: 'bg-green-400',
-  'SS+': 'bg-lime-400',
-  SS: 'bg-yellow-400',
-  'S+': 'bg-orange-400',
-  S: 'bg-orange-500',
-  OTHERS: 'bg-red-500',
-  未プレイ: 'bg-gray-400',
-}
-const FILTER_STATS_CLEAR_COLOR_MAP: Record<string, string> = {
-  CATASTROPHY: 'bg-pink-500',
-  ABSOLUTE: 'bg-yellow-400',
-  BRAVE: 'bg-amber-400',
-  HARD: 'bg-orange-500',
-  CLEAR: 'bg-green-500',
-  FAILED: 'bg-red-500',
-  未プレイ: 'bg-gray-400',
-}
 
 /**
  * フィルター統計タブの選択肢を表示する。
@@ -144,7 +132,7 @@ const DistributionSection: Component<DistributionSectionConfig> = (props) => (
     </div>
     <div class="space-y-3 p-3">
       <DistributionBar dist={props.dist} order={props.order} colorMap={props.colorMap} />
-      <ul class="space-y-0.5">
+      <ul class="divide-y divide-border">
         <For each={getVisibleDistributionKeys(props.dist, props.order)}>
           {(key) => {
             const { count, percent } = props.dist[key]
@@ -190,25 +178,25 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
       <div class="border-t border-border p-3">
         <Tabs.Root defaultValue="score">
           <Tabs.List class="mb-3 inline-flex gap-1 rounded-lg bg-surface-hover p-1">
-            <FilterStatsTabTrigger value="score" label="スコア" Icon={Trophy} />
-            <FilterStatsTabTrigger value="combo" label="コンボ" Icon={Link2} />
-            <FilterStatsTabTrigger value="clear" label="クリア" Icon={ShieldCheck} />
+            <FilterStatsTabTrigger value="score" label="RANK" Icon={Trophy} />
+            <FilterStatsTabTrigger value="combo" label="COMBO" Icon={Link2} />
+            <FilterStatsTabTrigger value="clear" label="HARD" Icon={ShieldCheck} />
           </Tabs.List>
 
           <Tabs.Content value="score">
             <DistributionSection
-              title="スコアランク"
-              label="スコアランク割合"
+              title="RANK"
+              label="RANK"
               dist={props.stats.rankDist}
               order={rankOrder}
-              colorMap={FILTER_STATS_RANK_COLOR_MAP}
+              colorMap={rankColorMap}
               Icon={Trophy}
             />
           </Tabs.Content>
           <Tabs.Content value="combo">
             <DistributionSection
-              title="コンボランク"
-              label="コンボランプ割合"
+              title="COMBO"
+              label="COMBO"
               dist={props.stats.comboDist}
               order={comboOrder}
               colorMap={comboColorMap}
@@ -217,11 +205,11 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
           </Tabs.Content>
           <Tabs.Content value="clear">
             <DistributionSection
-              title="クリアランク"
-              label="クリアランプ割合"
+              title="HARD"
+              label="HARD"
               dist={props.stats.clearDist}
               order={clearOrder}
-              colorMap={FILTER_STATS_CLEAR_COLOR_MAP}
+              colorMap={clearColorMap}
               Icon={ShieldCheck}
             />
           </Tabs.Content>

@@ -96,7 +96,7 @@ export const COMBO_LAMP_BAR_CLASS: Record<FilterStatsComboLamp, string> = {
   'ALL JUSTICE': COMBO_LAMP_BADGE_BACKGROUND_CLASS['ALL JUSTICE'],
   'FULL COMBO': COMBO_LAMP_BADGE_BACKGROUND_CLASS['FULL COMBO'],
   なし: 'bg-lamp-none-bg',
-  未プレイ: 'bg-lamp-none-bg',
+  未プレイ: 'bg-surface-hover',
 }
 
 /** レコードのハードランプバッジ色に合わせたフィルター統計グラフ用背景色クラス。 */
@@ -107,5 +107,5 @@ export const HARD_LAMP_BAR_CLASS: Record<FilterStatsClearLamp, string> = {
   HARD: HARD_LAMP_BADGE_BACKGROUND_CLASS.HARD,
   CLEAR: HARD_LAMP_BADGE_BACKGROUND_CLASS.CLEAR,
   FAILED: HARD_LAMP_BADGE_BACKGROUND_CLASS.FAILED,
-  未プレイ: 'bg-lamp-none-bg',
+  未プレイ: 'bg-surface-hover',
 }
