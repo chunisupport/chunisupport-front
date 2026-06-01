@@ -181,6 +181,33 @@
   --cs-color-ranking-silver-bg: var(--color-gray-300);
   --cs-color-ranking-bronze-bg: var(--color-orange-300);
   --cs-color-ranking-medal-text: var(--color-gray-900);
+  --cs-gradient-ranking-gold-bg: linear-gradient(
+    45deg,
+    #d6a63a 0%,
+    #f8d86a 24%,
+    #fff8bd 42%,
+    #ecc153 58%,
+    #ffe47d 76%,
+    #c99b32 100%
+  );
+  --cs-gradient-ranking-silver-bg: linear-gradient(
+    45deg,
+    #c2c8d2 0%,
+    #edf0f5 24%,
+    #ffffff 42%,
+    #d9dee7 58%,
+    #f7f9fb 76%,
+    #b5bdca 100%
+  );
+  --cs-gradient-ranking-bronze-bg: linear-gradient(
+    45deg,
+    #c8793d 0%,
+    #e39b5b 24%,
+    #ffe0bd 42%,
+    #d88a4b 58%,
+    #f0b075 76%,
+    #b86a35 100%
+  );
 
   /* ===== スコアランク（SSSP / SSS / SS / A / B / C / D） ===== */
   --cs-color-score-rank-sssp-bg: var(--color-green-500);
@@ -379,6 +406,21 @@
 
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  .bg-ranking-gold-bg {
+    background-color: var(--cs-color-ranking-gold-bg);
+    background-image: var(--cs-gradient-ranking-gold-bg);
+  }
+
+  .bg-ranking-silver-bg {
+    background-color: var(--cs-color-ranking-silver-bg);
+    background-image: var(--cs-gradient-ranking-silver-bg);
+  }
+
+  .bg-ranking-bronze-bg {
+    background-color: var(--cs-color-ranking-bronze-bg);
+    background-image: var(--cs-gradient-ranking-bronze-bg);
   }
 }
 
