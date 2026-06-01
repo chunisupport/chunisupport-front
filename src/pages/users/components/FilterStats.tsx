@@ -144,12 +144,6 @@ const DistributionSection: Component<DistributionSectionConfig> = (props) => (
     </div>
     <div class="space-y-3 p-3">
       <DistributionBar dist={props.dist} order={props.order} colorMap={props.colorMap} />
-      <div class="grid grid-cols-[minmax(0,1fr)_auto_3.5rem_minmax(3.25rem,5rem)] gap-2 border-b border-border px-3 pb-2 text-xs font-semibold text-text-muted">
-        <span>ランク</span>
-        <span class="text-right">件数</span>
-        <span class="text-right">割合</span>
-        <span aria-hidden="true" />
-      </div>
       <ul class="space-y-0.5">
         <For each={getVisibleDistributionKeys(props.dist, props.order)}>
           {(key) => {
