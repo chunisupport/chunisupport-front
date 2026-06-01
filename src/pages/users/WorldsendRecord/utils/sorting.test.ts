@@ -24,6 +24,7 @@ const createRecord = (overrides: Partial<WorldsendRecordDTO> = {}): WorldsendRec
   attribute: 'FIRE',
   notes: 1000,
   score: 1005000,
+  justice_count: null,
   img: 'image',
   clear_lamp: 'CLEAR',
   combo_lamp: null,
@@ -47,5 +48,26 @@ test("WORLD'S ENDのFCHソートはなし、GOLD、PLATINUM、未プレイの順
   assert.deepEqual(
     sortWorldsendRecords(records, 'fullChain', 'desc').map((record) => record.id),
     ['platinum', 'gold', 'none', 'unplayed']
+  )
+})
+
+test("WORLD'S ENDのJ数ソートはJ数なし行をスコア降順で並べ、未プレイを末尾に寄せる", () => {
+  const records = [
+    createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2, score: 1008000 }),
+    createRecord({ id: 'fc-high', combo_lamp: 'FULL COMBO', score: 1009500 }),
+    createRecord({ id: 'aj-null', combo_lamp: 'ALL JUSTICE', justice_count: null, score: 1009000 }),
+    createRecord({ id: 'none-low', combo_lamp: null, score: 1007000 }),
+    createRecord({ id: 'aj-j0', combo_lamp: 'ALL JUSTICE', justice_count: 0, score: 1010000 }),
+    createRecord({ id: 'unplayed', is_played: false, combo_lamp: null, score: 0 }),
+  ]
+
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'justiceCount', 'asc').map((record) => record.id),
+    ['aj-j0', 'aj-j2', 'fc-high', 'aj-null', 'none-low', 'unplayed']
+  )
+
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'justiceCount', 'desc').map((record) => record.id),
+    ['aj-j2', 'aj-j0', 'fc-high', 'aj-null', 'none-low', 'unplayed']
   )
 })

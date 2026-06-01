@@ -23,8 +23,7 @@ type FullChainRecord = Pick<SharedRecordSource, 'is_played' | 'full_chain'>
 
 type JusticeCountRecord = {
   combo_lamp: ComboLamp
-  score: number
-  notes: number | null
+  justice_count: number | null
 }
 type UpdatedAtRecord = Pick<SharedRecordSource, 'is_played' | 'updated_at'>
 type LampBadgeRenderer = (lamp: ComboLamp, record?: LampRecord) => JSX.Element

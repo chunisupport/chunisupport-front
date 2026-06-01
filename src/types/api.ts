@@ -493,6 +493,10 @@ export interface PlayerRecordDTO {
   score: number
   rating: number
   overpower: number
+  /** AJ時のJUSTICE数。AJ以外または算出不能な場合はnull。 */
+  justice_count: number | null
+  /** OVER POWER達成率。 */
+  overpower_percent: number
   img: string
   clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY' | null
   combo_lamp: 'FULL COMBO' | 'ALL JUSTICE' | null
@@ -510,6 +514,8 @@ export interface WorldsendRecordDTO {
   attribute: string | null
   notes: number | null
   score: number
+  /** AJ時のJUSTICE数。AJ以外または算出不能な場合はnull。 */
+  justice_count: number | null
   img: string
   clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY' | null
   combo_lamp: 'FULL COMBO' | 'ALL JUSTICE' | null

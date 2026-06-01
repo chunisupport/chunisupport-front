@@ -40,7 +40,7 @@ import { type SortDirection, sanitizeSortQuery } from '../recordTable/sortingQue
 import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
-import { calcJusticeCountForAj } from '../UserRecord/utils/justiceCount'
+import { formatJusticeCountForAj } from '../UserRecord/utils/justiceCountDisplay'
 import { formatUpdatedAt } from '../UserRecord/utils/updatedAt'
 import { getRecordStats } from '../utils/recordStats'
 import {
@@ -121,10 +121,9 @@ const worldsendColumnRenderers: Record<
     <RecordJusticeCountCell
       record={record}
       calcJusticeCount={(target) =>
-        calcJusticeCountForAj({
+        formatJusticeCountForAj({
           comboLamp: target.combo_lamp,
-          score: target.score,
-          notes: target.notes,
+          justiceCount: target.justice_count,
         })
       }
     />

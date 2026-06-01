@@ -5,9 +5,13 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../recordTable/sortingQuery'
+import {
+  compareMissingJusticeCountRecords,
+  isJusticeCountMissing,
+} from '../../utils/justiceCountSorting'
 import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
 import type { RecordSortKey } from '../types/types'
-import { calcJusticeCountForAj } from './justiceCount.ts'
+import { formatJusticeCountForAj } from './justiceCountDisplay.ts'
 import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
 
 const DIFFICULTY_ORDER: Record<string, number> = {
@@ -35,9 +39,6 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   full_chain: 'fullChain',
   justice_count: 'justiceCount',
 }
-
-const calcOverpowerPercent = (record: PlayerRecordWithSongMeta): number =>
-  (record.overpower / ((record.const + 3) * 5)) * 100
 
 export const parseSortParams = (searchParams: SortParamsSource) => {
   const parsed = parseSortQuery(searchParams, RECORD_SORT_COL_MAP, {
@@ -88,10 +89,9 @@ export const sortRecords = (
       record,
       index,
       updatedAtTs: updatedAtTimestamp(record.updated_at),
-      justiceCountForAj: calcJusticeCountForAj({
+      justiceCountForAj: formatJusticeCountForAj({
         comboLamp: record.combo_lamp,
-        score: record.score,
-        notes: record.notes,
+        justiceCount: record.justice_count,
       }),
     }))
     .sort((a, b) => {
@@ -167,7 +167,7 @@ export const sortRecords = (
           } else if (rightUnplayed) {
             return -1
           } else {
-            comparison = calcOverpowerPercent(left) - calcOverpowerPercent(right)
+            comparison = left.overpower_percent - right.overpower_percent
           }
           break
         }
@@ -190,12 +190,11 @@ export const sortRecords = (
           const leftJusticeCount = a.justiceCountForAj
           const rightJusticeCount = b.justiceCountForAj
 
-          const leftMissing = leftJusticeCount === '' || leftJusticeCount === '-'
-          const rightMissing = rightJusticeCount === '' || rightJusticeCount === '-'
+          const leftMissing = isJusticeCountMissing(leftJusticeCount)
+          const rightMissing = isJusticeCountMissing(rightJusticeCount)
 
           if (leftMissing && rightMissing) {
-            comparison = 0
-            break
+            return compareMissingJusticeCountRecords(left, right) || a.index - b.index
           }
 
           if (leftMissing) {

@@ -5,11 +5,15 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../recordTable/sortingQuery'
-import { calcJusticeCountForAj } from '../../UserRecord/utils/justiceCount'
+import { formatJusticeCountForAj } from '../../UserRecord/utils/justiceCountDisplay'
 import {
   compareUpdatedAtWithMissingLast,
   updatedAtTimestamp,
 } from '../../UserRecord/utils/updatedAt'
+import {
+  compareMissingJusticeCountRecords,
+  isJusticeCountMissing,
+} from '../../utils/justiceCountSorting'
 import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
 import type { WorldsendRecordSortKey } from './columns'
 
@@ -78,10 +82,9 @@ export const sortWorldsendRecords = <TRecord extends WorldsendRecordDTO>(
       record,
       index,
       updatedAtTs: updatedAtTimestamp(record.updated_at),
-      justiceCountForAj: calcJusticeCountForAj({
+      justiceCountForAj: formatJusticeCountForAj({
         comboLamp: record.combo_lamp,
-        score: record.score,
-        notes: record.notes,
+        justiceCount: record.justice_count,
       }),
     }))
     .sort((a, b) => {
@@ -135,12 +138,11 @@ export const sortWorldsendRecords = <TRecord extends WorldsendRecordDTO>(
           const leftJusticeCount = a.justiceCountForAj
           const rightJusticeCount = b.justiceCountForAj
 
-          const leftMissing = leftJusticeCount === '' || leftJusticeCount === '-'
-          const rightMissing = rightJusticeCount === '' || rightJusticeCount === '-'
+          const leftMissing = isJusticeCountMissing(leftJusticeCount)
+          const rightMissing = isJusticeCountMissing(rightJusticeCount)
 
           if (leftMissing && rightMissing) {
-            comparison = 0
-            break
+            return compareMissingJusticeCountRecords(left, right) || a.index - b.index
           }
           if (leftMissing) return 1
           if (rightMissing) return -1

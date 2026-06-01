@@ -44,6 +44,8 @@ const createRecord = (
   score: overrides.score ?? 1_010_000,
   rating: overrides.rating ?? 17,
   overpower: overrides.overpower ?? 90,
+  justice_count: overrides.justice_count ?? null,
+  overpower_percent: overrides.overpower_percent ?? 100,
   img: overrides.img ?? '',
   clear_lamp: overrides.clear_lamp ?? 'CLEAR',
   combo_lamp: overrides.combo_lamp ?? null,

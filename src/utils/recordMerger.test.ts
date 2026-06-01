@@ -37,6 +37,8 @@ const createRecord = (overrides: Partial<PlayerRecordDTO> = {}): PlayerRecordDTO
   score: 1005000,
   rating: 16.5,
   overpower: 80,
+  justice_count: null,
+  overpower_percent: 91.42,
   img: 'image',
   clear_lamp: 'CLEAR',
   combo_lamp: null,

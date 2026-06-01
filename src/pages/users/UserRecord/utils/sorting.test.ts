@@ -20,6 +20,8 @@ const createRecord = (
     score: 1005000,
     rating: 16.5,
     overpower: 80,
+    justice_count: null,
+    overpower_percent: 91.42,
     img: 'image',
     clear_lamp: 'CLEAR',
     combo_lamp: null,
@@ -100,11 +102,17 @@ test('OPソートは未プレイを末尾に固定する', () => {
   )
 })
 
-test('OP%ソートは最大OPに対する割合で並べ、未プレイを末尾に固定する', () => {
+test('OP%ソートはAPIのOVER POWER達成率で並べ、未プレイを末尾に固定する', () => {
   const records = [
-    createRecord({ id: 'played-low-percent', const: 17, overpower: 50 }),
-    createRecord({ id: 'unplayed', is_played: false, const: 17, overpower: 0 }),
-    createRecord({ id: 'played-high-percent', const: 7, overpower: 40 }),
+    createRecord({ id: 'played-low-percent', const: 7, overpower: 40, overpower_percent: 30 }),
+    createRecord({
+      id: 'unplayed',
+      is_played: false,
+      const: 17,
+      overpower: 0,
+      overpower_percent: 0,
+    }),
+    createRecord({ id: 'played-high-percent', const: 17, overpower: 50, overpower_percent: 80 }),
   ]
 
   assert.deepEqual(
@@ -145,22 +153,22 @@ test('同値の並び順は元の順序を維持する', () => {
 
 test('J数ソートはJ数を基準に並べ、J数なし行は常に末尾に寄せる', () => {
   const records = [
-    createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', notes: 1000, score: 1009980 }),
-    createRecord({ id: 'aj-j1', combo_lamp: 'ALL JUSTICE', notes: 1000, score: 1009990 }),
-    createRecord({ id: 'aj-j0', combo_lamp: 'ALL JUSTICE', notes: null, score: 1010000 }),
-    createRecord({ id: 'aj-no-notes', combo_lamp: 'ALL JUSTICE', notes: null, score: 1009990 }),
+    createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2 }),
+    createRecord({ id: 'aj-j1', combo_lamp: 'ALL JUSTICE', justice_count: 1 }),
+    createRecord({ id: 'aj-j0', combo_lamp: 'ALL JUSTICE', justice_count: 0 }),
+    createRecord({ id: 'aj-null', combo_lamp: 'ALL JUSTICE', justice_count: null }),
     createRecord({ id: 'fc', combo_lamp: 'FULL COMBO', notes: 1000, score: 1009990 }),
     createRecord({ id: 'unplayed', is_played: false, combo_lamp: null, notes: 1000, score: 0 }),
   ]
 
   assert.deepEqual(
     sortRecords(records, 'justiceCount', 'asc').map((record) => record.id),
-    ['aj-j0', 'aj-j1', 'aj-j2', 'aj-no-notes', 'fc', 'unplayed']
+    ['aj-j0', 'aj-j1', 'aj-j2', 'fc', 'aj-null', 'unplayed']
   )
 
   assert.deepEqual(
     sortRecords(records, 'justiceCount', 'desc').map((record) => record.id),
-    ['aj-j2', 'aj-j1', 'aj-j0', 'aj-no-notes', 'fc', 'unplayed']
+    ['aj-j2', 'aj-j1', 'aj-j0', 'fc', 'aj-null', 'unplayed']
   )
 })
 
