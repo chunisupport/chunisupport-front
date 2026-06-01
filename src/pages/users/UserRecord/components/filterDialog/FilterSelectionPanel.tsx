@@ -40,6 +40,12 @@ type FilterSelectionPanelProps = {
 const toInputValue = (value?: number | null) =>
   value === undefined || value === null ? '' : String(value)
 
+/**
+ * プレイヤーレコードのフィルター条件を選択するパネルを描画する。
+ *
+ * @param props - フィルター状態、マスターデータ、リセット状態を含むパネル設定。
+ * @returns フィルター条件を編集するための選択パネル。
+ */
 const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const [scoreRankMin, setScoreRankMin] = createSignal('0点')
   const [scoreRankMax, setScoreRankMax] = createSignal('SSS+')
@@ -223,7 +229,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const versions = () => props.versions?.map((version) => getShortVersionName(version.name)) ?? []
 
   return (
-    <div class="space-y-4 overflow-y-auto flex-1 min-h-0">
+    <div class="scrollbar-none min-h-0 flex-1 space-y-4 overflow-y-auto">
       <DifficultySection
         difficulties={difficulties()}
         selected={props.filters.difficulties}

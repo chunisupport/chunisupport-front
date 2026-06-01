@@ -185,16 +185,16 @@
   --cs-color-score-rank-d-text: var(--color-gray-500);
 
   /* ===== ランプ（FULL COMBO / ALL JUSTICE / CLEAR / HARD / BRAVE / ABSOLUTE / CATASTROPHY / FAILED / 未プレイ） ===== */
-  --cs-color-lamp-full-combo-bg: var(--color-orange-200);
-  --cs-color-lamp-full-combo-text: var(--color-orange-900);
+  --cs-color-lamp-full-combo-bg: var(--color-yellow-300);
+  --cs-color-lamp-full-combo-text: var(--color-yellow-900);
   --cs-color-lamp-all-justice-bg: #fdf5a7;
   --cs-color-lamp-all-justice-text: var(--color-yellow-900);
   --cs-color-lamp-clear-bg: var(--color-gray-200);
   --cs-color-lamp-clear-text: var(--color-gray-900);
   --cs-color-lamp-hard-bg: var(--color-red-200);
   --cs-color-lamp-hard-text: var(--color-red-900);
-  --cs-color-lamp-brave-bg: var(--color-orange-200);
-  --cs-color-lamp-brave-text: var(--color-orange-900);
+  --cs-color-lamp-brave-bg: var(--color-yellow-300);
+  --cs-color-lamp-brave-text: var(--color-yellow-900);
   --cs-color-lamp-absolute-bg: #fdf5a7;
   --cs-color-lamp-absolute-text: var(--color-yellow-900);
   --cs-color-lamp-catastrophy-bg: var(--color-green-200);
@@ -322,7 +322,6 @@
 }
 
 @keyframes marquee {
-
   0%,
   25% {
     transform: translateX(0%);
@@ -382,10 +381,12 @@
     font-weight: bold;
     line-height: 20px;
     text-align: center;
-    --honor-shine: linear-gradient(to bottom,
-        rgb(255 255 255 / 0%),
-        rgb(255 255 255 / 50%) 47%,
-        transparent 52%);
+    --honor-shine: linear-gradient(
+      to bottom,
+      rgb(255 255 255 / 0%),
+      rgb(255 255 255 / 50%) 47%,
+      transparent 52%
+    );
   }
 
   .user-honor-title--rotating {
@@ -448,20 +449,26 @@
 
   .user-honor-title--staff {
     --honor-background:
-      linear-gradient(to bottom,
+      linear-gradient(
+        to bottom,
         transparent 0% 47%,
         rgba(103, 116, 177, 0.25) 52%,
-        transparent 100%),
-      linear-gradient(110deg,
+        transparent 100%
+      ),
+      linear-gradient(
+        110deg,
         #5f7cfc 0 30px,
         transparent 30px 35px,
         #4869fa 35px 45px,
-        transparent 45px 100%),
-      linear-gradient(290deg,
+        transparent 45px 100%
+      ),
+      linear-gradient(
+        290deg,
         #5f7cfc 0 30px,
         transparent 30px 35px,
         #4869fa 35px 45px,
-        transparent 45px 100%),
+        transparent 45px 100%
+      ),
       #ebebeb;
   }
 
@@ -475,18 +482,22 @@
   .user-honor-title--maimai {
     --honor-background:
       var(--honor-shine),
-      linear-gradient(150deg,
+      linear-gradient(
+        150deg,
         #ff4646 0 10px,
         #ffa02d 10px 20px,
         #ffdc00 20px 30px,
         #9ac948 30px 40px,
-        transparent 40px 100%),
-      linear-gradient(330deg,
+        transparent 40px 100%
+      ),
+      linear-gradient(
+        330deg,
         #ff4646 0 10px,
         #ffa02d 10px 20px,
         #ffdc00 20px 30px,
         #9ac948 30px 40px,
-        transparent 40px 100%),
+        transparent 40px 100%
+      ),
       #f8f8f8;
   }
 
@@ -527,15 +538,18 @@
   .user-honor-title--ultima {
     --honor-background:
       var(--honor-shine),
-      linear-gradient(135deg,
+      linear-gradient(
+        135deg,
         #333 0 15px,
         #ee6666 15px 20px,
         #863a3a 20px 30px,
         #ee6666 30px 35px,
         #863a3a 35px 38px,
         #ee6666 38px 45px,
-        transparent 45px 100%),
-      linear-gradient(315deg,
+        transparent 45px 100%
+      ),
+      linear-gradient(
+        315deg,
         #333 0 15px,
         #863a3a 15px 25px,
         #ee6666 25px 27px,
@@ -543,7 +557,8 @@
         #ee6666 30px 32px,
         #863a3a 32px 35px,
         #ee6666 35px 45px,
-        transparent 45px 100%),
+        transparent 45px 100%
+      ),
       #fdf5a7;
   }
 

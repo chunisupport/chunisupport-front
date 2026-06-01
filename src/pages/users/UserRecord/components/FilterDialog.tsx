@@ -58,7 +58,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
     <Dialog open={props.open} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
-        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface rounded-lg shadow-lg p-6 w-[90vw] max-w-md max-h-11/12 flex flex-col">
+        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface rounded-lg shadow-lg p-6 w-[90vw] max-w-md max-h-11/12 flex flex-col select-none">
           <div class="flex items-center justify-between mb-4 shrink-0">
             <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
             <FilterResetDialog onReset={handleReset} />
