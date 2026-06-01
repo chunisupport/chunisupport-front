@@ -122,6 +122,43 @@ const GoalsList: Component = () => {
     )
   }
 
+  /**
+   * 目標フォームの下書き内容から現在のプレイヤーレコードに基づく進捗を算出する。
+   *
+   * @param draftGoal - フォーム入力中の目標内容。
+   * @returns 実際の目標カードと同じ計算で作った進捗情報。
+   */
+  const resolveDraftGoalProgress = (draftGoal: GoalCreateRequest) => {
+    const data = resource()
+    if (!data) {
+      return {
+        current: 0,
+        target: 1,
+        percent: 0,
+        achieved: false,
+        hasUnknownMaxOp: false,
+      }
+    }
+
+    const filtered = filterRecordsByAttributes(
+      data.records,
+      draftGoal.attributes,
+      data.masterData,
+      data.songs,
+      data.versions
+    )
+
+    return calculateGoalProgress(
+      {
+        ...draftGoal,
+        id: 0,
+        created_at: '',
+      },
+      filtered,
+      data.songs
+    )
+  }
+
   useDocumentTitle('目標')
 
   const openCreateDialog = () => {
@@ -266,6 +303,7 @@ const GoalsList: Component = () => {
                   onSave={handleSave}
                   resolveAllCount={resolveAllCount}
                   resolveOverPowerChartMax={resolveOverPowerChartMax}
+                  resolveDraftGoalProgress={resolveDraftGoalProgress}
                 />
               )}
             </Show>

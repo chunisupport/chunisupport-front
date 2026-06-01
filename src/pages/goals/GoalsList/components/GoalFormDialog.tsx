@@ -7,6 +7,7 @@ import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import type {
+  GoalAchievementParams,
   GoalAchievementType,
   GoalAttributes,
   GoalCreateRequest,
@@ -47,6 +48,8 @@ interface GoalFormDialogProps {
   resolveAllCount: (attributes: GoalAttributes) => number
   /** 対象条件に一致する譜面ごとの最大OVER POWER合計を解決する関数。 */
   resolveOverPowerChartMax: (attributes: GoalAttributes) => number
+  /** フォーム入力中の目標内容から実レコードに基づく進捗を解決する関数。 */
+  resolveDraftGoalProgress: (goal: GoalCreateRequest) => GoalProgressResult
 }
 
 interface GoalFilterCheckboxProps {
@@ -418,6 +421,28 @@ const getOptionalNumberParam = (
 const canUseDynamicTotalTarget = (type: GoalAchievementType): boolean =>
   type === 'total_score' || type === 'overpower_value'
 
+/**
+ * 件数目標の入力値を保存・プレビューで使う目標件数へ変換する。
+ *
+ * @param countMode - 件数の指定方法。
+ * @param countValue - 件数入力欄の文字列。
+ * @param invert - 反転表示が有効か。
+ * @param allCount - 対象条件に一致する全譜面数。
+ * @returns 動的上限を使う場合はundefined、固定件数の場合はAPIへ渡す目標件数。
+ */
+const buildTargetCountParam = (
+  countMode: 'number' | 'all',
+  countValue: string,
+  invert: boolean,
+  allCount: number
+): number | undefined => {
+  if (countMode === 'all') return undefined
+
+  const parsedCount = Number(countValue)
+  const normalizedCount = Number.isFinite(parsedCount) ? Math.floor(parsedCount) : 0
+  return invert ? allCount - normalizedCount : normalizedCount
+}
+
 const normalizeAttributeSelection = (value: number | number[] | undefined): string[] => {
   if (typeof value === 'number') return [String(value)]
   if (Array.isArray(value)) {
@@ -630,6 +655,43 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   })
 
   /**
+   * 現在のフォーム入力値から保存・プレビュー共通の成果パラメータを組み立てる。
+   *
+   * @param type - 現在選択中の目標種別。
+   * @param allCount - 対象条件に一致する全譜面数。
+   * @returns API送信値と同じ形の成果パラメータ。
+   */
+  const buildDraftAchievementParams = (
+    type: GoalAchievementType,
+    allCount: number
+  ): GoalAchievementParams => {
+    const parsedScore = type === 'rank_count' ? getRankGoalScore(rank()) : Number(score())
+    const parsedTotal = Number(total())
+    const targetCount = buildTargetCountParam(countMode(), count(), invert(), allCount)
+
+    return type === 'score_count' || type === 'rank_count'
+      ? {
+          score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : 0),
+          ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
+        }
+      : type === 'avg_score'
+        ? { score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : 0) }
+        : type === 'hardlamp_count'
+          ? {
+              lamp: hardLamp(),
+              ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
+            }
+          : type === 'combolamp_count'
+            ? {
+                lamp: comboLamp(),
+                ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
+              }
+            : canUseDynamicTotalTarget(type) && totalMode() === 'all'
+              ? {}
+              : { total: Number.isFinite(parsedTotal) ? parsedTotal : 0 }
+  }
+
+  /**
    * 現在の対象譜面条件に一致する件数を表示用テキストへ変換する。
    *
    * @returns 日本語ロケールで桁区切りした対象譜面数。
@@ -659,43 +721,16 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    */
   const previewProgress = (): GoalProgressResult => {
     const currentType = achievementType()
-    let current = 0
-    let target = 1
+    const attributes = getDraftAttributes()
+    const allCount = props.resolveAllCount(attributes)
 
-    if (isCountAchievementType(currentType)) {
-      target = props.resolveAllCount(getDraftAttributes())
-      const displayValue =
-        countMode() === 'all' ? target : Math.floor(parseProgressDisplayValue(count()))
-      current = invert() ? Math.max(target - displayValue, 0) : displayValue
-    } else if (currentType === 'total_score') {
-      target = getTotalScoreMax()
-      const displayValue = totalMode() === 'all' ? target : parseProgressDisplayValue(total())
-      current = invert() ? Math.max(target - displayValue, 0) : displayValue
-    } else if (currentType === 'overpower_value') {
-      target = getOverPowerChartMax()
-      const displayValue = totalMode() === 'all' ? target : parseProgressDisplayValue(total())
-      current = invert() ? Math.max(target - displayValue, 0) : displayValue
-    } else if (currentType === 'avg_score') {
-      target = MAX_SCORE
-      const displayValue = parseProgressDisplayValue(score())
-      current = invert() ? Math.max(target - displayValue, 0) : displayValue
-    } else {
-      target = 100
-      const displayValue = parseProgressDisplayValue(total())
-      current = invert() ? Math.max(target - displayValue, 0) : displayValue
-    }
-
-    const safeTarget = target <= 0 ? 1 : target
-    const rawPercent = (current / safeTarget) * 100
-    const percent = Number.isFinite(rawPercent) ? Math.max(0, Math.min(rawPercent, 100)) : 0
-
-    return {
-      current,
-      target,
-      percent,
-      achieved: current >= target,
-      hasUnknownMaxOp: false,
-    }
+    return props.resolveDraftGoalProgress({
+      title: previewTitle(),
+      achievement_type: currentType,
+      achievement_params: buildDraftAchievementParams(currentType, allCount),
+      attributes,
+      invert: invert(),
+    })
   }
 
   /**
@@ -812,39 +847,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       return
     }
 
-    const targetCount =
-      countMode() === 'all'
-        ? undefined
-        : invert()
-          ? allCount - Math.floor(parsedCount)
-          : Math.floor(parsedCount)
+    const targetCount = buildTargetCountParam(countMode(), count(), invert(), allCount)
 
     if (isCountType && typeof targetCount === 'number' && targetCount <= 0) {
       setErrorMessage('件数目標の変換結果が0以下です。条件または入力値を見直してください。')
       return
     }
 
-    const achievement_params =
-      currentType === 'score_count' || currentType === 'rank_count'
-        ? {
-            score: Math.floor(parsedScore),
-            ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
-          }
-        : currentType === 'avg_score'
-          ? { score: Math.floor(parsedScore) }
-          : currentType === 'hardlamp_count'
-            ? {
-                lamp: hardLamp(),
-                ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
-              }
-            : currentType === 'combolamp_count'
-              ? {
-                  lamp: comboLamp(),
-                  ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
-                }
-              : canUseDynamicTotalTarget(currentType) && totalMode() === 'all'
-                ? {}
-                : { total: parsedTotal }
+    const achievement_params = buildDraftAchievementParams(currentType, allCount)
 
     await props.onSave({
       title: trimmed,
