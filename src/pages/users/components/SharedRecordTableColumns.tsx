@@ -5,8 +5,7 @@ import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
 import { getScoreRank } from '../../../utils/scoreRank'
 import { LampPlaceholderBadge, renderSortIndicator } from './RecordTableUiParts'
 import {
-  COMBO_LAMP_BADGE_BACKGROUND_CLASS,
-  COMBO_LAMP_BADGE_TEXT_CLASS,
+  getComboLampBadgeClass,
   HARD_LAMP_BADGE_BACKGROUND_CLASS,
   HARD_LAMP_BADGE_TEXT_CLASS,
   SCORE_RANK_TEXT_CLASS,
@@ -17,7 +16,7 @@ type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
 type ComboLamp = SharedRecordSource['combo_lamp']
 type ClearLamp = SharedRecordSource['clear_lamp']
 type ScoreRecord = Pick<SharedRecordSource, 'is_played' | 'score'>
-type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp'>
+type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp' | 'score'>
 type HardLampRecord = Pick<SharedRecordSource, 'is_played' | 'clear_lamp'>
 type FullChainRecord = Pick<SharedRecordSource, 'is_played' | 'full_chain'>
 
@@ -70,10 +69,7 @@ const HARD_LAMP_LABEL: Record<Exclude<NonNullable<ClearLamp>, 'FAILED'>, string>
 const FULL_CHAIN_BADGE_CLASS =
   'inline-flex w-[40px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
 const FULL_CHAIN_BADGE_VARIANT: Partial<
-  Record<
-    NonNullable<SharedRecordSource['full_chain']>,
-    keyof typeof COMBO_LAMP_BADGE_BACKGROUND_CLASS
-  >
+  Record<NonNullable<SharedRecordSource['full_chain']>, NonNullable<ComboLamp>>
 > = {
   'FULL CHAIN GOLD': 'FULL COMBO',
   'FULL CHAIN PLATINUM': 'ALL JUSTICE',
@@ -84,7 +80,7 @@ export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, _record) =
   if (lamp === 'FULL COMBO')
     return (
       <span
-        class={`rounded-lg px-2 py-1 text-sm font-extrabold ${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`}
+        class={`rounded-lg px-2 py-1 text-sm font-extrabold ${getComboLampBadgeClass(lamp, _record?.score)}`}
       >
         FC
       </span>
@@ -92,7 +88,7 @@ export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, _record) =
   if (lamp === 'ALL JUSTICE') {
     return (
       <span
-        class={`rounded-lg px-2 py-1 text-sm font-extrabold ${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`}
+        class={`rounded-lg px-2 py-1 text-sm font-extrabold ${getComboLampBadgeClass(lamp, _record?.score)}`}
       >
         AJ
       </span>
@@ -129,9 +125,7 @@ export const renderDefaultRecordFullChainBadge = (
   if (!lampType) return <LampPlaceholderBadge class="w-[40px]" />
 
   return (
-    <span
-      class={`${FULL_CHAIN_BADGE_CLASS} ${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lampType]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lampType]}`}
-    >
+    <span class={`${FULL_CHAIN_BADGE_CLASS} ${getComboLampBadgeClass(lampType, undefined)}`}>
       FCH
     </span>
   )

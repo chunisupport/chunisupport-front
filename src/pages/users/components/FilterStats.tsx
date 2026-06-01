@@ -28,7 +28,7 @@ const FILTER_STATS_CARD_CLASS =
 const FILTER_STATS_HEADER_CLASS =
   'flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2 text-sm font-bold'
 const FILTER_STATS_ROW_CLASS =
-  'grid grid-cols-[minmax(0,1fr)_auto_3.5rem_minmax(3.25rem,5rem)] items-center gap-2 px-3 py-1.5 text-xs'
+  'grid grid-cols-[minmax(0,1fr)_auto_2.5rem_minmax(3.25rem,5rem)] items-center gap-2 px-3 py-1.5 text-xs'
 const FILTER_STATS_TAB_TRIGGER_CLASS =
   'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-text-muted transition-colors hover:bg-surface data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
 const FILTER_STATS_RANK_COLOR_MAP: Record<string, string> = {

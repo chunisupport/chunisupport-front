@@ -1,5 +1,5 @@
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
-import type { ScoreRank } from '../../../utils/scoreRank'
+import { MAX_SCORE, type ScoreRank } from '../../../utils/scoreRank'
 
 type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
 export type SharedComboLamp = SharedRecordSource['combo_lamp']
@@ -51,6 +51,24 @@ export const COMBO_LAMP_BADGE_BACKGROUND_CLASS: Record<NonNullable<SharedComboLa
 export const COMBO_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedComboLamp>, string> = {
   'FULL COMBO': 'text-lamp-full-combo-text',
   'ALL JUSTICE': 'text-lamp-all-justice-text',
+}
+
+export const ALL_JUSTICE_CRITICAL_BADGE_CLASS =
+  'bg-[linear-gradient(135deg,#ef4444_0%,#f97316_16%,#eab308_32%,#22c55e_48%,#06b6d4_64%,#3b82f6_80%,#a855f7_100%)] text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]'
+
+/**
+ * コンボランプとスコアから、レコード用コンボランプバッジの色クラスを返す。
+ * @param lamp コンボランプ。FULL COMBO または ALL JUSTICE。
+ * @param score レコードのスコア。AJC判定に利用する。
+ * @returns バッジに適用する背景色・文字色・補助装飾のTailwindクラス。
+ */
+export const getComboLampBadgeClass = (
+  lamp: NonNullable<SharedComboLamp>,
+  score: number | undefined
+): string => {
+  if (lamp === 'ALL JUSTICE' && score === MAX_SCORE) return ALL_JUSTICE_CRITICAL_BADGE_CLASS
+
+  return `${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`
 }
 
 /** レコードのハードランプバッジで使う背景色クラス。 */
