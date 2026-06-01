@@ -3,7 +3,7 @@ import type { WorldsendSongDTO } from '../../../../types/api'
 import SongMetaCardLayout from '../../components/SongMetaCardLayout'
 import { getWorldsendChartRows, getWorldsendSongInfoItems } from '../../worldsendDetailModel'
 
-const badgeClass = 'bg-difficulty-ultima-bg text-text-inverse'
+const badgeClass = 'bg-difficulty-ultima-bg text-difficulty-ultima-text'
 const fixedColumnClass = 'w-px whitespace-nowrap'
 const fixedCellClass = 'px-3 py-2 text-text whitespace-nowrap'
 
