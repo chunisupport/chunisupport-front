@@ -159,6 +159,19 @@
   --cs-color-difficulty-ultima-bg: #000000;
   --cs-color-difficulty-ultima-text: var(--color-white);
 
+  /* ===== WORLD'S ENDラベル ===== */
+  --cs-color-worldsend-label-bg: linear-gradient(
+    135deg,
+    #48111d 0%,
+    #5a3609 18%,
+    #48520f 34%,
+    #0f4f32 50%,
+    #0d4a57 66%,
+    #1e3473 82%,
+    #3f1f61 100%
+  );
+  --cs-color-worldsend-label-text: var(--color-white);
+
   /* ===== ユーザー称号（ノーマル） ===== */
   --cs-color-honor-title-normal-bg: var(--color-yellow-200);
   --cs-color-honor-title-normal-text: var(--color-gray-900);
@@ -275,6 +288,9 @@
   --color-difficulty-master-text: var(--cs-color-difficulty-master-text);
   --color-difficulty-ultima-bg: var(--cs-color-difficulty-ultima-bg);
   --color-difficulty-ultima-text: var(--cs-color-difficulty-ultima-text);
+
+  /* WORLD'S ENDラベル */
+  --color-worldsend-label-text: var(--cs-color-worldsend-label-text);
 
   /* ユーザー称号 */
   --color-honor-title-normal-bg: var(--cs-color-honor-title-normal-bg);
