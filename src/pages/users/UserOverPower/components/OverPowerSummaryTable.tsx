@@ -21,19 +21,19 @@ export const OverPowerSummaryTable: Component<Props> = (props) => (
         <table class="min-w-full text-sm">
           <thead class="bg-surface-muted text-xs text-text-muted">
             <tr>
-              <th class="px-3 py-2 text-left font-medium" scope="col">
+              <th class="w-full px-3 py-2 text-left font-medium" scope="col">
                 <span class="sr-only">項目</span>
               </th>
-              <th class="px-3 py-2 text-right font-medium" scope="col">
+              <th class="whitespace-nowrap px-2 py-2 text-right font-medium" scope="col">
                 現在値
               </th>
-              <th class="px-3 py-2 text-right font-medium" scope="col">
+              <th class="whitespace-nowrap px-2 py-2 text-right font-medium" scope="col">
                 理論値
               </th>
-              <th class="px-3 py-2 text-right font-medium" scope="col">
+              <th class="whitespace-nowrap px-2 py-2 text-right font-medium" scope="col">
                 達成率
               </th>
-              <th class="px-3 py-2 text-right font-medium" scope="col">
+              <th class="whitespace-nowrap px-2 py-2 text-right font-medium" scope="col">
                 {props.countLabel}
               </th>
             </tr>
@@ -44,18 +44,22 @@ export const OverPowerSummaryTable: Component<Props> = (props) => (
                 <tr>
                   <th
                     scope="row"
-                    class="whitespace-nowrap px-3 py-2 text-left font-medium text-text"
+                    class="w-full whitespace-nowrap px-3 py-2 text-left font-medium text-text"
                   >
                     {row.label}
                   </th>
-                  <td class="px-3 py-2 text-right tabular-nums">{formatValue(row.current)}</td>
-                  <td class="px-3 py-2 text-right tabular-nums text-text-muted">
+                  <td class="whitespace-nowrap px-2 py-2 text-right tabular-nums">
+                    {formatValue(row.current)}
+                  </td>
+                  <td class="whitespace-nowrap px-2 py-2 text-right tabular-nums text-text-muted">
                     {formatValue(row.max)}
                   </td>
-                  <td class="px-3 py-2 text-right tabular-nums text-text-muted">
+                  <td class="whitespace-nowrap px-2 py-2 text-right tabular-nums text-text-muted">
                     {formatPercent(row.percent)}%
                   </td>
-                  <td class="px-3 py-2 text-right tabular-nums text-text-muted">{row.count}</td>
+                  <td class="whitespace-nowrap px-2 py-2 text-right tabular-nums text-text-muted">
+                    {row.count}
+                  </td>
                 </tr>
               )}
             </For>
