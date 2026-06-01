@@ -57,8 +57,8 @@ export const COMBO_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedComboLamp>, s
 export const HARD_LAMP_BADGE_BACKGROUND_CLASS: Record<NonNullable<SharedClearLamp>, string> = {
   CLEAR: 'bg-lamp-clear-bg',
   HARD: 'bg-lamp-hard-bg',
-  BRAVE: 'bg-lamp-full-combo-bg',
-  ABSOLUTE: 'bg-lamp-all-justice-bg',
+  BRAVE: 'bg-lamp-brave-bg',
+  ABSOLUTE: 'bg-lamp-absolute-bg',
   CATASTROPHY: 'bg-lamp-catastrophy-bg',
   FAILED: 'bg-lamp-failed-bg',
 }
@@ -67,8 +67,8 @@ export const HARD_LAMP_BADGE_BACKGROUND_CLASS: Record<NonNullable<SharedClearLam
 export const HARD_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedClearLamp>, string> = {
   CLEAR: 'text-lamp-clear-text',
   HARD: 'text-lamp-hard-text',
-  BRAVE: 'text-lamp-full-combo-text',
-  ABSOLUTE: 'text-lamp-all-justice-text',
+  BRAVE: 'text-lamp-brave-text',
+  ABSOLUTE: 'text-lamp-absolute-text',
   CATASTROPHY: 'text-lamp-catastrophy-text',
   FAILED: 'text-lamp-failed-text',
 }

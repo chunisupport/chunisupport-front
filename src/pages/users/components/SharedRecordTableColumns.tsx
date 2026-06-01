@@ -2,7 +2,7 @@ import { A } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
-import { getScoreRank, MAX_SCORE } from '../../../utils/scoreRank'
+import { getScoreRank } from '../../../utils/scoreRank'
 import { LampPlaceholderBadge, renderSortIndicator } from './RecordTableUiParts'
 import {
   COMBO_LAMP_BADGE_BACKGROUND_CLASS,
@@ -17,7 +17,7 @@ type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
 type ComboLamp = SharedRecordSource['combo_lamp']
 type ClearLamp = SharedRecordSource['clear_lamp']
 type ScoreRecord = Pick<SharedRecordSource, 'is_played' | 'score'>
-type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp' | 'score'>
+type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp'>
 type HardLampRecord = Pick<SharedRecordSource, 'is_played' | 'clear_lamp'>
 type FullChainRecord = Pick<SharedRecordSource, 'is_played' | 'full_chain'>
 
@@ -80,7 +80,7 @@ const FULL_CHAIN_BADGE_VARIANT: Partial<
 }
 
 /** レコードのコンボランプ値から表示用バッジを生成する。 */
-export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, record) => {
+export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, _record) => {
   if (lamp === 'FULL COMBO')
     return (
       <span
@@ -90,12 +90,13 @@ export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, record) =>
       </span>
     )
   if (lamp === 'ALL JUSTICE') {
-    const ajBadgeClass =
-      record?.score === MAX_SCORE
-        ? 'bg-[linear-gradient(135deg,#ef4444_0%,#f97316_16%,#eab308_32%,#22c55e_48%,#06b6d4_64%,#3b82f6_80%,#a855f7_100%)] text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]'
-        : `${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`
-
-    return <span class={`rounded-lg px-2 py-1 text-sm font-extrabold ${ajBadgeClass}`}>AJ</span>
+    return (
+      <span
+        class={`rounded-lg px-2 py-1 text-sm font-extrabold ${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`}
+      >
+        AJ
+      </span>
+    )
   }
   return <LampPlaceholderBadge />
 }
