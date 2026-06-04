@@ -303,9 +303,9 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                   : 'border-border-strong text-text-muted hover:bg-surface-hover'
               }`}
-              aria-label="チェック済み楽曲のみ表示"
+              aria-label="選択済み楽曲のみ表示"
               aria-pressed={showLockedOnly()}
-              title="チェック済み楽曲のみ表示"
+              title="選択済み楽曲のみ表示"
               onClick={() => setShowLockedOnly((value) => !value)}
             >
               <Check size={24} aria-hidden="true" />
