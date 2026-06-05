@@ -308,6 +308,7 @@ export interface PlayerDataResult {
   imported_at: string
   summary: PlayerDataSummary
   counts: PlayerDataCounts
+  changes?: PlayerDataRecordChange[]
   skipped_records: SkippedRecord[]
 }
 
@@ -326,6 +327,24 @@ export interface PlayerDataCounts {
   full_records_skipped: number
   worldsend_records_skipped: number
   honors_skipped: number
+  full_records_actually_changed?: number
+  worldsend_records_actually_changed?: number
+}
+
+export interface PlayerDataRecordChange {
+  record_type: 'full' | 'worldsend'
+  change_type: 'new' | 'updated'
+  idx: string
+  diff?: string
+  before: PlayerDataRecordState | null
+  after: PlayerDataRecordState
+}
+
+export interface PlayerDataRecordState {
+  score: number
+  clear_lamp: string | null
+  combo_lamp: string | null
+  full_chain: string | null
 }
 
 export interface SkippedRecord {

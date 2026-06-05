@@ -27,3 +27,4 @@ migration/
 error_codes.md
 .env.staging
 *_calculation.md
+testdata/
