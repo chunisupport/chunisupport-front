@@ -48,6 +48,7 @@ const createSong = (overrides: Partial<SongDTO>): SongDTO => ({
   jacket: null,
   maxop: 10,
   is_maxop_unknown: false,
+  op_target_difficulty: null,
   charts: {},
   ...overrides,
 })

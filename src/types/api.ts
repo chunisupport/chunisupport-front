@@ -143,6 +143,8 @@ export interface SongDTO {
   jacket: string | null
   maxop: number
   is_maxop_unknown: boolean
+  /** 理論値OVER POWERが最大となる譜面の難易度。譜面がない場合は null。 */
+  op_target_difficulty: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA' | null
   charts: {
     BASIC?: ChartDTO
     ADVANCED?: ChartDTO

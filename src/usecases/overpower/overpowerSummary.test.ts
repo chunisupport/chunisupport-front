@@ -21,6 +21,7 @@ const createSong = (overrides: Partial<SongDTO> & Pick<SongDTO, 'id'>): SongDTO 
   jacket: overrides.jacket ?? null,
   maxop: overrides.maxop ?? 90,
   is_maxop_unknown: overrides.is_maxop_unknown ?? false,
+  op_target_difficulty: overrides.op_target_difficulty ?? 'MASTER',
   charts: overrides.charts ?? {
     MASTER: {
       const: 15,
