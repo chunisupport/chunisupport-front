@@ -147,6 +147,8 @@
 :root,
 [data-theme="light"],
 [data-theme="dark"] {
+  --cs-size-user-honor-title-max-width: 464px;
+
   /* ===== 難易度バッジ（BASIC / ADVANCED / EXPERT / MASTER / ULTIMA） ===== */
   --cs-color-difficulty-basic-bg: #00ab84;
   --cs-color-difficulty-basic-text: var(--color-white);
@@ -428,7 +430,7 @@
   .user-honor-title {
     box-sizing: border-box;
     display: block;
-    width: min(394px, 100%);
+    width: min(var(--cs-size-user-honor-title-max-width), 100%);
     margin: 0 0 12px;
     padding: 4px;
     border-radius: 6px;

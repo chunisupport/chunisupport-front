@@ -308,19 +308,45 @@ export interface PlayerDataResult {
   player_id: number
   app_ver: string
   imported_at: string
+  /** 登録後のプレイヤープロフィール情報。 */
+  profile: PlayerDataProfile
   summary: PlayerDataSummary
+  /** 登録後の通常譜面集計。 */
+  statistics: PlayerDataStatistics
   counts: PlayerDataCounts
-  changes?: PlayerDataRecordChange[]
+  /** 実際に新規追加または更新されたスコア差分。0件の場合は空配列。 */
+  changes: PlayerDataRecordChange[]
   skipped_records: SkippedRecord[]
+}
+
+export interface PlayerDataProfile {
+  player_id: number
+  name: string
+  level: number
+  rating: number | null
+  class_emblem_id: number | null
+  class_emblem_base_id: number | null
+  last_played_at: string | null
+  overpower_value: number | null
+  overpower_percent: number | null
 }
 
 export interface PlayerDataSummary {
   name: string
   level: number
-  rating: number
+  rating: number | null
   last_played_at: string | null
   overpower_value: number | null
   overpower_percentage: number | null
+}
+
+export interface PlayerDataStatistics {
+  total_high_score: number
+  lamp_counts: {
+    clear: Record<string, number>
+    combo: Record<string, number>
+    full_chain: Record<string, number>
+  }
 }
 
 export interface PlayerDataCounts {
@@ -329,15 +355,16 @@ export interface PlayerDataCounts {
   full_records_skipped: number
   worldsend_records_skipped: number
   honors_skipped: number
-  full_records_actually_changed?: number
-  worldsend_records_actually_changed?: number
+  full_records_actually_changed: number
+  worldsend_records_actually_changed: number
 }
 
 export interface PlayerDataRecordChange {
   record_type: 'full' | 'worldsend'
   change_type: 'new' | 'updated'
   idx: string
-  diff?: string
+  /** 通常譜面は大文字難易度名、WORLD'S ENDはWE。 */
+  diff: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA' | 'WE'
   before: PlayerDataRecordState | null
   after: PlayerDataRecordState
 }
