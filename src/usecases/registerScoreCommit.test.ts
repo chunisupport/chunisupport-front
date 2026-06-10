@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import type { PlayerDataResult } from '../../types/api'
+import type { PlayerDataResult } from '../types/api'
 import {
   commitRegisterScore,
   normalizePlayerDataResult,

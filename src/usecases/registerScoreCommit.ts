@@ -1,4 +1,4 @@
-import type { PlayerDataResult } from '../../types/api'
+import type { PlayerDataResult } from '../types/api'
 
 type RegisterScoreCommitDependencies = {
   commitPlayerData: (uploadToken: string) => Promise<PlayerDataResult>
