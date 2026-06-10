@@ -1,11 +1,11 @@
-ChuniSupport Frontend
+ChuniSupport
 Third-Party Software Notices and Licenses
 =======================================
 
-この製品（ChuniSupport Frontend）は、以下のサードパーティ製ソフトウェアを使用しています。
+この製品（ChuniSupport）は、以下のサードパーティ製ソフトウェアを使用しています。
 各ソフトウェアのライセンス条項を以下に記載します。
 
-This product (ChuniSupport Frontend) uses the following third-party software.
+This product (ChuniSupport) uses the following third-party software.
 The applicable license terms for each are listed below.
 
 本製品のソースコード（自前部分）は MIT License の下で提供されています。

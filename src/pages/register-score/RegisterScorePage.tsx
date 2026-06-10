@@ -9,6 +9,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
 import type { PlayerDataRecordChange, PlayerDataResult } from '../../types/api'
+import { commitRegisterScore } from '../../usecases/registerScoreCommit'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { REGISTER_SCORE_MESSAGES, RegisterScoreResultView } from './RegisterScoreResultView'
 import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreToken'
@@ -83,23 +84,21 @@ const RegisterScorePage = () => {
     }
 
     try {
-      const result = await postPlayerDataCommit(uploadToken)
-      setRegisterResult(result)
-      if (result.changes.some((change) => change.record_type === 'full')) {
-        songsData.ensureSongsLoaded()
-      }
-      if (result.changes.some((change) => change.record_type === 'worldsend')) {
-        songsData.ensureWorldsendSongsLoaded()
-      }
-      if (!username()) {
-        try {
-          const me = await fetchMe({ redirectOnUnauthorized: false })
-          setUsername(me.username)
-        } catch {
-          setUsername(null)
+      const { result, usernamePromise } = await commitRegisterScore(
+        { uploadToken, currentUsername: username() },
+        {
+          commitPlayerData: postPlayerDataCommit,
+          fetchUsername: async () => {
+            const me = await fetchMe({ redirectOnUnauthorized: false })
+            return me.username
+          },
+          ensureSongsLoaded: songsData.ensureSongsLoaded,
+          ensureWorldsendSongsLoaded: songsData.ensureWorldsendSongsLoaded,
         }
-      }
+      )
+      setRegisterResult(result)
       setState('success')
+      usernamePromise?.then(setUsername)
     } catch (error) {
       setErrorMessage(resolveRegisterScoreErrorMessage(error))
       setState('error')
