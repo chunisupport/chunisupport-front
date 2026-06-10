@@ -18,14 +18,33 @@ type RegisterScoreCommitResult = {
 }
 
 /**
+ * 統計レスポンス内のランプ件数が欠落した場合に使う空マップ。
+ */
+const EMPTY_LAMP_COUNTS = {
+  clear: {},
+  combo: {},
+  full_chain: {},
+} as const
+
+/**
  * APIレスポンスの配列フィールドを画面で扱いやすい形へ正規化する。
  *
  * @param result - スコア登録APIから返却された登録結果。
- * @returns 差分配列とスキップ配列が常に配列になった登録結果。
+ * @returns 差分配列、スキップ配列、統計内の件数マップが常に表示可能な登録結果。
  */
 export const normalizePlayerDataResult = (result: PlayerDataResult): PlayerDataResult => {
+  const lampCounts = result.statistics?.lamp_counts ?? EMPTY_LAMP_COUNTS
+
   return {
     ...result,
+    statistics: {
+      total_high_score: result.statistics?.total_high_score ?? 0,
+      lamp_counts: {
+        clear: lampCounts.clear ?? {},
+        combo: lampCounts.combo ?? {},
+        full_chain: lampCounts.full_chain ?? {},
+      },
+    },
     changes: Array.isArray(result.changes) ? result.changes : [],
     skipped_records: Array.isArray(result.skipped_records) ? result.skipped_records : [],
   }

@@ -1,6 +1,6 @@
 import { A, useSearchParams } from '@solidjs/router'
 import { ArrowRight } from 'lucide-solid'
-import { createSignal, Match, onMount, Show, Switch } from 'solid-js'
+import { createSignal, Match, onMount, Switch } from 'solid-js'
 
 import { postPlayerDataCommit } from '../../api/register-data'
 import { fetchMe } from '../../api/users'
@@ -14,7 +14,13 @@ import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { REGISTER_SCORE_MESSAGES, RegisterScoreResultView } from './RegisterScoreResultView'
 import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreToken'
 
-type RegisterScoreState = 'committing' | 'success' | 'error'
+/**
+ * スコア登録画面の表示状態と、成功時に表示する登録結果をまとめて保持する。
+ */
+type RegisterScoreViewState =
+  | { type: 'committing' }
+  | { type: 'success'; result: PlayerDataResult }
+  | { type: 'error'; message: string }
 
 type SongLookupItem = {
   official_idx?: string
@@ -50,10 +56,8 @@ const findSongTitleByOfficialIdx = (songs: SongLookupItem[], idx: string): strin
 const RegisterScorePage = () => {
   const [searchParams] = useSearchParams<{ token: string | string[] }>()
   const songsData = useSongsData()
-  const [state, setState] = createSignal<RegisterScoreState>('committing')
-  const [errorMessage, setErrorMessage] = createSignal('')
+  const [viewState, setViewState] = createSignal<RegisterScoreViewState>({ type: 'committing' })
   const [username, setUsername] = createSignal(authSession.user?.username ?? null)
-  const [registerResult, setRegisterResult] = createSignal<PlayerDataResult | null>(null)
 
   useDocumentTitle(REGISTER_SCORE_MESSAGES.title)
 
@@ -78,8 +82,7 @@ const RegisterScorePage = () => {
   onMount(async () => {
     const uploadToken = normalizeUploadTokenParam(searchParams.token)
     if (!uploadToken || !isValidUploadToken(uploadToken)) {
-      setErrorMessage(REGISTER_SCORE_MESSAGES.invalidToken)
-      setState('error')
+      setViewState({ type: 'error', message: REGISTER_SCORE_MESSAGES.invalidToken })
       return
     }
 
@@ -96,12 +99,10 @@ const RegisterScorePage = () => {
           ensureWorldsendSongsLoaded: songsData.ensureWorldsendSongsLoaded,
         }
       )
-      setRegisterResult(result)
-      setState('success')
+      setViewState({ type: 'success', result })
       usernamePromise?.then(setUsername)
     } catch (error) {
-      setErrorMessage(resolveRegisterScoreErrorMessage(error))
-      setState('error')
+      setViewState({ type: 'error', message: resolveRegisterScoreErrorMessage(error) })
     }
   })
 
@@ -120,7 +121,7 @@ const RegisterScorePage = () => {
       <h1 class="text-2xl font-semibold">{REGISTER_SCORE_MESSAGES.title}</h1>
 
       <Switch>
-        <Match when={state() === 'committing'}>
+        <Match when={viewState().type === 'committing'}>
           <section class="rounded-lg border border-border bg-surface p-6">
             <Loading />
             <p class="mt-4 text-center text-sm text-text-muted" aria-live="polite">
@@ -129,11 +130,16 @@ const RegisterScorePage = () => {
           </section>
         </Match>
 
-        <Match when={state() === 'success'}>
-          <Show when={registerResult()}>
-            {(result) => (
+        <Match when={viewState().type === 'success' && viewState()}>
+          {(currentViewState) => {
+            const successState = currentViewState() as Extract<
+              RegisterScoreViewState,
+              { type: 'success' }
+            >
+
+            return (
               <RegisterScoreResultView
-                result={result()}
+                result={successState.result}
                 resolveSongTitle={songTitleByIdx}
                 action={
                   <Switch>
@@ -156,14 +162,23 @@ const RegisterScorePage = () => {
                   </Switch>
                 }
               />
-            )}
-          </Show>
+            )
+          }}
         </Match>
 
-        <Match when={state() === 'error'}>
-          <p class="rounded-md border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-            {errorMessage()}
-          </p>
+        <Match when={viewState().type === 'error' && viewState()}>
+          {(currentViewState) => {
+            const errorState = currentViewState() as Extract<
+              RegisterScoreViewState,
+              { type: 'error' }
+            >
+
+            return (
+              <p class="rounded-md border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
+                {errorState.message}
+              </p>
+            )
+          }}
         </Match>
       </Switch>
     </main>
