@@ -32,6 +32,7 @@ import type {
 } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { buildSearchableItems, filterSearchableItems } from './searchHelpers'
+import { sortByAddedDateDescWithMissingFirst } from './utils/addedDateSorting'
 
 type SongManagementPageProps = {
   title: string
@@ -504,13 +505,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const [songSearchQuery, setSongSearchQuery] = createSignal('')
   const [worldsendSearchQuery, setWorldsendSearchQuery] = createSignal('')
 
-  const songs = createMemo<ManagedSongDTO[]>(() => songsResponse()?.songs ?? [])
+  const songs = createMemo<ManagedSongDTO[]>(() =>
+    sortByAddedDateDescWithMissingFirst(songsResponse()?.songs ?? [])
+  )
   const searchableSongs = createMemo(() => buildSearchableItems(songs()))
   const filteredSongs = createMemo(() =>
     filterSearchableItems(searchableSongs(), songSearchQuery())
   )
-  const worldsendSongs = createMemo<ManagedWorldsendSongDTO[]>(
-    () => worldsendResponse()?.songs ?? []
+  const worldsendSongs = createMemo<ManagedWorldsendSongDTO[]>(() =>
+    sortByAddedDateDescWithMissingFirst(worldsendResponse()?.songs ?? [])
   )
   const searchableWorldsendSongs = createMemo(() => buildSearchableItems(worldsendSongs()))
   const filteredWorldsendSongs = createMemo(() =>

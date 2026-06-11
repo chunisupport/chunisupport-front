@@ -156,6 +156,8 @@ export interface SongDTO {
 
 export interface ManagedSongDTO extends SongDTO {
   is_deleted: boolean
+  /** 楽曲が管理データへ追加された日時。古いデータでは未設定の場合がある。 */
+  created_at?: string | null
   updated_at: string
 }
 
@@ -595,6 +597,8 @@ export interface WorldsendSongDTO {
 
 export interface ManagedWorldsendSongDTO extends WorldsendSongDTO {
   is_deleted: boolean
+  /** 楽曲が管理データへ追加された日時。古いデータでは未設定の場合がある。 */
+  created_at?: string | null
   updated_at: string
 }
 
