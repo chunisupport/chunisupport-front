@@ -2,7 +2,7 @@ import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, ChevronDown, Search } from 'lucide-solid'
+import { Check, ChevronDown, Plus, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Index, Show } from 'solid-js'
 import {
@@ -26,7 +26,6 @@ import type {
   ManagedSongDTO,
   ManagedWorldsendSongDTO,
   MasterItemDTO,
-  SongDTO,
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
 } from '../../types/api'
@@ -40,7 +39,7 @@ type SongManagementPageProps = {
 
 type EditableChartDraft = {
   difficulty_id: number
-  difficulty_name: string
+  difficulty_name: EditableDifficultyName
   const: string
   is_const_unknown: boolean
   notes: number | null
@@ -192,6 +191,17 @@ const formatUpdatedAt = (value: string | null | undefined): string => {
 }
 
 const editableDifficulties = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
+type EditableDifficultyName = (typeof editableDifficulties)[number]
+
+/**
+ * 通常譜面として編集可能な難易度名か判定する。
+ *
+ * @param value 判定対象の難易度名
+ * @returns 編集可能な通常譜面難易度名であれば true
+ */
+const isEditableDifficultyName = (value: string): value is EditableDifficultyName => {
+  return editableDifficulties.some((difficulty) => difficulty === value)
+}
 
 const toNullableTrimmedString = (value: string | null): string | null => {
   return value?.trim() ? value.trim() : null
@@ -216,6 +226,39 @@ const buildCreateSongDraft = (): CreateSongDraft => {
       notes_designer: null,
     })),
   }
+}
+
+/**
+ * 未登録の通常譜面を編集ドラフトへ追加する初期値を組み立てる。
+ *
+ * @param difficultyId 追加する難易度マスタID
+ * @param difficultyName 追加する難易度名
+ * @returns 編集用の譜面ドラフト
+ */
+const buildEmptyEditableChartDraft = (
+  difficultyId: number,
+  difficultyName: EditableDifficultyName
+): EditableChartDraft => ({
+  difficulty_id: difficultyId,
+  difficulty_name: difficultyName,
+  const: '0',
+  is_const_unknown: false,
+  notes: null,
+  notes_designer: null,
+  updated_at: null,
+})
+
+/**
+ * 編集中の通常譜面に無効な数値入力が含まれているか判定する。
+ *
+ * @param charts 検証対象の通常譜面ドラフト配列
+ * @returns 無効な譜面が1件でもあれば true
+ */
+const hasInvalidEditableChart = (charts: EditableChartDraft[]): boolean => {
+  return charts.some((chart) => {
+    const chartConst = parseFloat(chart.const)
+    return Number.isNaN(chartConst) || chartConst < 0 || (chart.notes !== null && chart.notes < 0)
+  })
 }
 
 const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
@@ -354,11 +397,14 @@ const toSongDraft = (
     updated_at: song.updated_at,
     charts: difficulties
       .map((difficulty) => {
-        const chart = song.charts[difficulty.name as keyof SongDTO['charts']]
+        const difficultyName = difficulty.name.toUpperCase()
+        if (!isEditableDifficultyName(difficultyName)) return null
+
+        const chart = song.charts[difficultyName]
         if (!chart) return null
         return {
           difficulty_id: difficulty.id,
-          difficulty_name: difficulty.name,
+          difficulty_name: difficultyName,
           const: String(chart.const),
           is_const_unknown: chart.is_const_unknown,
           notes: chart.notes ?? null,
@@ -587,6 +633,37 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     })
   }
 
+  /**
+   * 選択中の通常楽曲ドラフトへ ULTIMA 譜面の入力行を追加する。
+   *
+   * @returns 追加処理の完了後に制御を返す。
+   */
+  const handleAddUltimaChart = () => {
+    const md = masterData()
+    if (!md) {
+      setErrorMessage('マスターデータの取得前のためULTIMA譜面を追加できません。')
+      return
+    }
+
+    const ultimaDifficulty = md.difficulties.find((difficulty) => {
+      const difficultyName = difficulty.name.toUpperCase()
+      return isEditableDifficultyName(difficultyName) && difficultyName === 'ULTIMA'
+    })
+    if (!ultimaDifficulty) {
+      setErrorMessage('ULTIMA難易度のマスターデータが見つかりません。')
+      return
+    }
+
+    setDraft((prev) => {
+      if (!prev || prev.charts.some((chart) => chart.difficulty_name === 'ULTIMA')) return prev
+
+      return {
+        ...prev,
+        charts: [...prev.charts, buildEmptyEditableChartDraft(ultimaDifficulty.id, 'ULTIMA')],
+      }
+    })
+  }
+
   const updateWorldsendChart = (
     key: 'attribute' | 'level_star' | 'notes' | 'notes_designer',
     value: string | number | null
@@ -644,6 +721,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     const normalizedReleasedAt = toDateOnly(current.released_at)
     if (current.released_at && !normalizedReleasedAt) {
       setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
+      return
+    }
+
+    if (hasInvalidEditableChart(current.charts)) {
+      setErrorMessage('譜面の定数・ノーツは0以上で入力してください。')
       return
     }
 
@@ -1148,6 +1230,21 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         }
                       />
                     </div>
+
+                    <Show
+                      when={
+                        !currentDraft().charts.some((chart) => chart.difficulty_name === 'ULTIMA')
+                      }
+                    >
+                      <Button
+                        type="button"
+                        class="inline-flex items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-sm font-medium text-text hover:bg-surface-hover"
+                        onClick={handleAddUltimaChart}
+                      >
+                        <Plus size={16} />
+                        ULTIMA譜面を追加
+                      </Button>
+                    </Show>
 
                     <div class="overflow-x-auto rounded border border-border">
                       <table class="min-w-full text-sm">
