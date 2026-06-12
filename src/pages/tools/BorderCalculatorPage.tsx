@@ -16,10 +16,10 @@ const BORDER_CALCULATOR_COPY = {
   title: 'ボーダー計算機',
   description: '楽曲と譜面を選び、目標スコアまでの許容判定数を計算します。',
   calculationConditionTitle: '条件',
-  songSearchLabel: '楽曲検索',
+  songSearchLabel: '曲名',
   songSearchPlaceholder: '曲名・アーティスト名で検索',
   songCandidatesLabel: '検索候補',
-  difficultyLabel: '譜面',
+  difficultyLabel: '難易度',
   notesLabel: 'ノーツ数',
   targetScoreLabel: '目標スコア',
   targetJusticeLabel: '目標JUSTICE数',
@@ -38,7 +38,7 @@ const BORDER_CALCULATOR_DIFFICULTIES = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER']
 const FIELD_INPUT_CLASS =
   'w-full rounded border border-border-strong bg-input-bg px-3 py-2 text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const COMPACT_FIELD_INPUT_CLASS =
-  'h-12 w-full rounded border border-border-strong bg-input-bg px-3 font-sans text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+  'w-full rounded border border-border-strong bg-input-bg px-3 py-2 font-sans text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const CHECKBOX_CONTROL_CLASS =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
 const SONG_CANDIDATE_BUTTON_CLASS =
@@ -166,10 +166,10 @@ const DifficultySelectField: Component<{
       </Select.Item>
     )}
   >
-    <Select.Label class={VISUALLY_HIDDEN_LABEL_CLASS}>
+    <Select.Label class="mb-1 block font-medium text-text-muted">
       {BORDER_CALCULATOR_COPY.difficultyLabel}
     </Select.Label>
-    <Select.Trigger class="grid h-12 w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring">
+    <Select.Trigger class="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring">
       <Select.Value<BorderCalculatorDifficulty> class="truncate">
         {(state) => state.selectedOption()}
       </Select.Value>
@@ -197,7 +197,7 @@ const CompactNotesField: Component<{
   onChange: (value: string) => void
 }> = (props) => (
   <TextField class="block text-sm" value={props.value} onChange={props.onChange}>
-    <TextField.Label class={VISUALLY_HIDDEN_LABEL_CLASS} for="notes">
+    <TextField.Label class="mb-1 block font-medium text-text-muted" for="notes">
       {BORDER_CALCULATOR_COPY.notesLabel}
     </TextField.Label>
     <TextField.Input
@@ -237,14 +237,14 @@ const SongSearchField: Component<{
 }> = (props) => (
   <div class="relative min-w-0">
     <TextField class="block text-sm" value={props.query} onChange={props.onQueryChange}>
-      <TextField.Label class={VISUALLY_HIDDEN_LABEL_CLASS} for="border-song-search">
+      <TextField.Label class="mb-1 block font-medium text-text-muted" for="border-song-search">
         {BORDER_CALCULATOR_COPY.songSearchLabel}
       </TextField.Label>
       <TextField.Input
         id="border-song-search"
         name="border-song-search"
         type="search"
-        class={COMPACT_FIELD_INPUT_CLASS}
+        class={`${COMPACT_FIELD_INPUT_CLASS} truncate`}
         placeholder={BORDER_CALCULATOR_COPY.songSearchPlaceholder}
         autocomplete="off"
       />
