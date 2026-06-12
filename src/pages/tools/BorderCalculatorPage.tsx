@@ -330,14 +330,6 @@ const BorderCalculatorPrimaryControls: Component<{
           onChange={props.onNotesChange}
         />
       </div>
-      <div class="basis-full">
-        <Button
-          type="submit"
-          class="inline-flex w-fit min-w-24 items-center justify-center rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-        >
-          {BORDER_CALCULATOR_COPY.submitLabel}
-        </Button>
-      </div>
     </div>
   </fieldset>
 )
@@ -527,7 +519,7 @@ const BorderCalculatorPage = (): JSX.Element => {
                 />
 
                 <fieldset class="space-y-4">
-                  <div class="grid gap-4 sm:grid-cols-2">
+                  <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
                     <BorderFormField
                       id="targetScore"
                       label={BORDER_CALCULATOR_COPY.targetScoreLabel}
@@ -541,6 +533,12 @@ const BorderCalculatorPage = (): JSX.Element => {
                       value={targetJustice()}
                       onChange={setTargetJustice}
                     />
+                    <Button
+                      type="submit"
+                      class="inline-flex w-fit min-w-24 items-center justify-center rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+                    >
+                      {BORDER_CALCULATOR_COPY.submitLabel}
+                    </Button>
                   </div>
 
                   <Checkbox
