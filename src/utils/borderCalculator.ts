@@ -23,22 +23,13 @@ export type BorderCalculatorRow = {
 
 export type BorderCalculatorResult =
   | {
-      mode: 'summary'
-      reachable: true
-      justice: number
-      attack: number
-      miss: number
-      lossBudget: number
-      score: number
-    }
-  | {
       mode: 'candidates'
       reachable: true
       lossBudget: number
       candidates: BorderCalculatorRow[]
     }
   | {
-      mode: 'summary' | 'candidates'
+      mode: 'candidates'
       reachable: false
       lossBudget: number
       score: 0
@@ -120,52 +111,25 @@ const calculateLoss = (justice: number, attack: number, miss: number): number =>
   JUSTICE_LOSS * justice + ATTACK_LOSS * attack + MISS_LOSS * miss
 
 /**
- * 代表的な許容JUSTICE / ATTACK / MISS数を計算する。
+ * JUSTICE数の下限を基準にMISS数ごとの候補一覧を計算する。
  *
- * @param input - ボーダー計算の入力値。
- * @param lossBudget - 目標スコアに対する許容失点。
- * @returns 通常表示用の1行結果。
- */
-const calculateSummaryBorder = (
-  input: BorderCalculatorInput,
-  lossBudget: number
-): Extract<BorderCalculatorResult, { mode: 'summary'; reachable: true }> => {
-  const miss = input.fullComboOnly ? 0 : Math.min(Math.floor(lossBudget / MISS_LOSS), input.notes)
-  const remainingAfterMiss = lossBudget - MISS_LOSS * miss
-  const attack = Math.min(Math.floor(remainingAfterMiss / ATTACK_LOSS), input.notes - miss)
-  const remainingAfterAttack = remainingAfterMiss - ATTACK_LOSS * attack
-  const justice = Math.min(remainingAfterAttack, input.notes - miss - attack)
-
-  return {
-    mode: 'summary',
-    reachable: true,
-    justice,
-    attack,
-    miss,
-    lossBudget,
-    score: calculateBorderScore(input.notes, justice, attack, miss),
-  }
-}
-
-/**
- * 目標JUSTICE数を基準にMISS数ごとの候補一覧を計算する。
- *
- * @param input - 目標JUSTICE数を含むボーダー計算の入力値。
+ * @param input - 任意の目標JUSTICE数を含むボーダー計算の入力値。
  * @param lossBudget - 目標スコアに対する許容失点。
  * @returns 候補一覧表示用の結果。
  */
 const calculateCandidateBorders = (
-  input: BorderCalculatorInput & { targetJustice: number },
+  input: BorderCalculatorInput,
   lossBudget: number
 ): Extract<BorderCalculatorResult, { mode: 'candidates'; reachable: true }> => {
   const maxMiss = input.fullComboOnly
     ? 0
     : Math.min(Math.floor(lossBudget / MISS_LOSS), input.notes)
   const candidates: BorderCalculatorRow[] = []
+  const minJustice = input.targetJustice ?? -1
 
   for (let miss = maxMiss; miss >= 0; miss -= 1) {
     const remaining = lossBudget - MISS_LOSS * miss
-    const maxAttackByJustice = Math.floor((remaining - (input.targetJustice + 1)) / ATTACK_LOSS)
+    const maxAttackByJustice = Math.floor((remaining - (minJustice + 1)) / ATTACK_LOSS)
     const maxAttackByNotes = input.notes - miss
     const attack = Math.min(maxAttackByJustice, maxAttackByNotes)
     const minAttackByNotes = Math.max(0, ceilDiv(Math.max(0, remaining + miss - input.notes), 50))
@@ -177,7 +141,7 @@ const calculateCandidateBorders = (
     const score = calculateBorderScore(input.notes, justice, attack, miss)
 
     if (
-      justice > input.targetJustice &&
+      justice > minJustice &&
       loss <= lossBudget &&
       justice + attack + miss <= input.notes &&
       score >= input.targetScore
@@ -203,21 +167,16 @@ const calculateCandidateBorders = (
 export const calculateBorder = (input: BorderCalculatorInput): BorderCalculatorResult => {
   assertValidBorderInput(input)
 
-  const mode = input.targetJustice === undefined ? 'summary' : 'candidates'
   const lossBudget = calculateLossBudget(input.notes, input.targetScore)
 
   if (lossBudget < 0) {
     return {
-      mode,
+      mode: 'candidates',
       reachable: false,
       lossBudget,
       score: 0,
     }
   }
 
-  if (input.targetJustice !== undefined) {
-    return calculateCandidateBorders({ ...input, targetJustice: input.targetJustice }, lossBudget)
-  }
-
-  return calculateSummaryBorder(input, lossBudget)
+  return calculateCandidateBorders(input, lossBudget)
 }

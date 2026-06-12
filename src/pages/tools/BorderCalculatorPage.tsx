@@ -3,7 +3,7 @@ import { Checkbox } from '@kobalte/core/checkbox'
 import { TextField } from '@kobalte/core/text-field'
 import { Check, Target } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import { createMemo, createSignal, For, Show } from 'solid-js'
+import { createSignal, For, Show } from 'solid-js'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   type BorderCalculatorResult,
@@ -17,7 +17,7 @@ const BORDER_CALCULATOR_COPY = {
   notesLabel: 'ノーツ数',
   targetScoreLabel: '目標スコア',
   targetJusticeLabel: '目標JUSTICE数',
-  targetJusticeHelp: '空欄の場合は代表的な許容数を表示します。',
+  targetJusticeHelp: '空欄の場合はJUSTICE数を制限せずに候補を表示します。',
   fullComboOnlyLabel: 'FULL COMBO指定（MISSを0に固定）',
   submitLabel: '計算する',
   unreachableMessage: '理論値を超えるため到達不能です。',
@@ -93,40 +93,7 @@ const BorderFormField: Component<BorderFormFieldProps> = (props) => (
 )
 
 /**
- * 通常のボーダー計算結果を表示する。
- *
- * @param props.result - 代表的な許容数の計算結果。
- * @returns 結果表示の JSX 要素。
- */
-const SummaryResult: Component<{
-  result: Extract<BorderCalculatorResult, { mode: 'summary'; reachable: true }>
-}> = (props) => {
-  const rows = createMemo(() => [
-    { label: 'JUSTICE', value: props.result.justice },
-    { label: 'ATTACK', value: props.result.attack },
-    { label: 'MISS', value: props.result.miss },
-    { label: '到達スコア', value: props.result.score },
-    { label: '許容失点', value: props.result.lossBudget },
-  ])
-
-  return (
-    <dl class="grid gap-3 sm:grid-cols-2">
-      <For each={rows()}>
-        {(row) => (
-          <div class="rounded border border-border bg-surface-muted p-3">
-            <dt class="text-xs font-semibold text-text-muted">{row.label}</dt>
-            <dd class="mt-1 font-oswald text-2xl font-semibold text-text">
-              {formatNumber(row.value)}
-            </dd>
-          </div>
-        )}
-      </For>
-    </dl>
-  )
-}
-
-/**
- * 目標JUSTICE数つきの候補一覧を表示する。
+ * ボーダー計算の候補一覧を表示する。
  *
  * @param props.result - MISS数ごとの候補一覧結果。
  * @returns 候補テーブルの JSX 要素。
@@ -299,28 +266,14 @@ const BorderCalculatorPage = (): JSX.Element => {
                 </p>
               }
             >
-              <Show
-                when={currentResult().mode === 'summary'}
-                fallback={
-                  <CandidateResult
-                    result={
-                      currentResult() as Extract<
-                        BorderCalculatorResult,
-                        { mode: 'candidates'; reachable: true }
-                      >
-                    }
-                  />
+              <CandidateResult
+                result={
+                  currentResult() as Extract<
+                    BorderCalculatorResult,
+                    { mode: 'candidates'; reachable: true }
+                  >
                 }
-              >
-                <SummaryResult
-                  result={
-                    currentResult() as Extract<
-                      BorderCalculatorResult,
-                      { mode: 'summary'; reachable: true }
-                    >
-                  }
-                />
-              </Show>
+              />
             </Show>
           </section>
         )}
