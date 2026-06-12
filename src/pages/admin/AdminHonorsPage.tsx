@@ -23,6 +23,14 @@ type HonorEditDialogProps = {
 }
 
 /**
+ * 称号編集ダイアログ内の入力系コントロールに適用する共通スタイル。
+ */
+const HONOR_EDIT_FIELD_FOCUS_CLASS =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+const HONOR_EDIT_TEXT_INPUT_CLASS = `w-full rounded border border-border-strong bg-surface px-3 py-2 hover:border-input-border-hover ${HONOR_EDIT_FIELD_FOCUS_CLASS}`
+const HONOR_EDIT_SELECT_TRIGGER_CLASS = `grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover ${HONOR_EDIT_FIELD_FOCUS_CLASS}`
+
+/**
  * 称号編集フォームの初期値を作成する。
  *
  * @param honor - 編集対象の称号。
@@ -100,7 +108,7 @@ const HonorEditDialog: Component<HonorEditDialogProps> = (props) => {
                 maxLength={500}
                 required
                 onInput={(event) => updateRequestField('name', event.currentTarget.value)}
-                class="w-full rounded border border-border-strong px-3 py-2 font-sans"
+                class={`${HONOR_EDIT_TEXT_INPUT_CLASS} font-sans`}
               />
             </TextField>
 
@@ -128,7 +136,7 @@ const HonorEditDialog: Component<HonorEditDialogProps> = (props) => {
               )}
             >
               <Select.Label class="mb-1 block text-sm text-text-muted">クラス</Select.Label>
-              <Select.Trigger class="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm">
+              <Select.Trigger class={HONOR_EDIT_SELECT_TRIGGER_CLASS}>
                 <Select.Value<MasterItemDTO> class="truncate data-placeholder-shown:text-text-placeholder">
                   {(state) => state.selectedOption().name}
                 </Select.Value>
@@ -151,7 +159,7 @@ const HonorEditDialog: Component<HonorEditDialogProps> = (props) => {
                 value={request().image_url}
                 maxLength={255}
                 onInput={(event) => updateRequestField('image_url', event.currentTarget.value)}
-                class="w-full rounded border border-border-strong px-3 py-2 font-mono text-xs"
+                class={`${HONOR_EDIT_TEXT_INPUT_CLASS} font-mono text-xs`}
               />
             </TextField>
 

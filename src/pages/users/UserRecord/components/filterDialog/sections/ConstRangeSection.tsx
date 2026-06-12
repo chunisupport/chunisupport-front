@@ -4,6 +4,7 @@ import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { CONST_MAX } from '../../../constants/constRange'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS, FILTER_DIALOG_SELECT_TRIGGER_CLASS } from '../styles'
 
 const CONST_LEVEL_OPTIONS = [
   '1',
@@ -47,6 +48,12 @@ type ConstRangeSectionProps = {
   onConstLevelChange: (type: 'min' | 'max', value: string) => void
 }
 
+/**
+ * レベルまたは譜面定数の範囲条件を表示する。
+ *
+ * @param props - 範囲入力値、入力モード、選択値、各変更ハンドラ。
+ * @returns 定数範囲フィルターセクションの JSX 要素。
+ */
 const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
   <div>
     {props.constFilterMode === 'number' ? (
@@ -63,7 +70,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
             <NumberField.Label class="block text-sm font-medium mb-1">定数(最小)</NumberField.Label>
             <NumberField.Input
               id="filter-const-min"
-              class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-surface border-border-strong hover:border-input-border-hover  focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2"
+              class={FILTER_DIALOG_FIELD_INPUT_CLASS}
               onFocus={(event) => event.currentTarget.select()}
               onBlur={(event) => props.onMinCommit(event.currentTarget.value)}
             />
@@ -84,7 +91,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
               min={0}
               max={CONST_MAX}
               step={0.1}
-              class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-surface border-border-strong hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2"
+              class={FILTER_DIALOG_FIELD_INPUT_CLASS}
               onFocus={(event) => event.currentTarget.select()}
               onBlur={(event) => props.onMaxCommit(event.currentTarget.value)}
             />
@@ -115,7 +122,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
             )}
           >
             <Select.Label class="block text-sm font-medium mb-1">レベル(最小)</Select.Label>
-            <Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-surface border-border-strong hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2">
+            <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
               <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
                 {(state) => state.selectedOption()}
               </Select.Value>
@@ -152,7 +159,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
             )}
           >
             <Select.Label class="block text-sm font-medium mb-1">レベル(最大)</Select.Label>
-            <Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-surface border-border-strong hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2">
+            <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
               <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
                 {(state) => state.selectedOption()}
               </Select.Value>

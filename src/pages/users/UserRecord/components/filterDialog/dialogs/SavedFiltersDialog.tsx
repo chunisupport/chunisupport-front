@@ -19,6 +19,18 @@ type SavedFiltersDialogProps = {
   setSavedFilters?: (filters: SavedFilter[]) => void
 }
 
+/**
+ * 保存フィルター名入力欄のフォーカス表示を要素内側に収める共通スタイル。
+ */
+const SAVED_FILTER_NAME_INPUT_CLASS =
+  'w-full rounded border border-border-strong bg-surface px-2 py-1 text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+
+/**
+ * レコードフィルター条件の保存と呼び出しを行うダイアログを表示する。
+ *
+ * @param props - 現在のフィルター、適用ハンドラ、保存済みフィルター更新ハンドラ。
+ * @returns 保存フィルターダイアログの JSX 要素。
+ */
 const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
   // このダイアログの開閉状態
   const [open, setOpen] = createSignal(false)
@@ -129,7 +141,7 @@ const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => {
               <div class="text-xs text-text-subtle mb-1">現在の条件を保存</div>
               <TextField class="mb-2">
                 <TextField.Input
-                  class="w-full rounded border border-border-strong px-2 py-1 focus:border-focus-ring"
+                  class={SAVED_FILTER_NAME_INPUT_CLASS}
                   placeholder="フィルターの名前を入力..."
                   value={saveName()}
                   onInput={(event) => setSaveName(event.currentTarget.value)}

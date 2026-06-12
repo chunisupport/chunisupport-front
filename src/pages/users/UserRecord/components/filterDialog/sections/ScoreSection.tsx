@@ -6,6 +6,7 @@ import type { Component } from 'solid-js'
 import { MAX_SCORE } from '../../../../../../utils/scoreRank'
 import { parseNumberInput } from '../../../utils/filterDialog'
 import { SCORE_RANKS } from '../../../utils/scoreRank'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS, FILTER_DIALOG_SELECT_TRIGGER_CLASS } from '../styles'
 
 type ScoreSectionProps = {
   scoreFilterMode: 'number' | 'rank'
@@ -23,6 +24,12 @@ type ScoreSectionProps = {
   onExcludeNoPlayChange: (value: boolean) => void
 }
 
+/**
+ * スコア条件の入力欄とランク選択欄を表示する。
+ *
+ * @param props - スコア条件、表示モード、未プレイ除外状態、各変更ハンドラ。
+ * @returns スコアフィルターセクションの JSX 要素。
+ */
 const ScoreSection: Component<ScoreSectionProps> = (props) => (
   <div>
     {props.scoreFilterMode === 'number' ? (
@@ -56,7 +63,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
               min={0}
               max={MAX_SCORE}
               step={1}
-              class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-surface border-border-strong hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2"
+              class={FILTER_DIALOG_FIELD_INPUT_CLASS}
               onFocus={(event) => event.currentTarget.select()}
               onBlur={(event) => props.onScoreMinCommit(event.currentTarget.value)}
             />
@@ -79,7 +86,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
               min={0}
               max={MAX_SCORE}
               step={1}
-              class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-surface border-border-strong hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2"
+              class={FILTER_DIALOG_FIELD_INPUT_CLASS}
               onFocus={(event) => event.currentTarget.select()}
               onBlur={(event) => props.onScoreMaxCommit(event.currentTarget.value)}
             />
@@ -115,7 +122,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
             )}
           >
             <Select.Label class="block text-sm font-medium mb-1">スコアランク(最小)</Select.Label>
-            <Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-surface border-border-strong hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2">
+            <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
               <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
                 {(state) => state.selectedOption()}
               </Select.Value>
@@ -157,7 +164,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
             )}
           >
             <Select.Label class="block text-sm font-medium mb-1">スコアランク(最大)</Select.Label>
-            <Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-surface border-border-strong hover:border-input-border-hover focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2">
+            <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
               <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
                 {(state) => state.selectedOption()}
               </Select.Value>
