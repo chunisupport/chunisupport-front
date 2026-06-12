@@ -321,8 +321,8 @@ const BorderCalculatorPrimaryControls: Component<{
   onNotesChange: (notes: string) => void
 }> = (props) => (
   <fieldset class="space-y-3">
-    <div class="flex flex-wrap items-start gap-3">
-      <div class="min-w-0 basis-full sm:basis-64 md:flex-1">
+    <div class="grid grid-cols-2 items-start gap-3 md:grid-cols-[minmax(0,1fr)_9rem_8rem]">
+      <div class="col-span-2 min-w-0 md:col-span-1">
         <SongSearchField
           query={props.songSearchQuery}
           candidates={props.songCandidates}
@@ -331,14 +331,14 @@ const BorderCalculatorPrimaryControls: Component<{
           onSelectSong={props.onSelectSong}
         />
       </div>
-      <div class="w-32 sm:w-36">
+      <div class="min-w-0">
         <DifficultySelectField
           value={props.selectedDifficulty}
           availableDifficulties={props.availableDifficulties}
           onChange={props.onDifficultyChange}
         />
       </div>
-      <div class="w-32">
+      <div class="min-w-0">
         <CompactNotesField
           value={props.notes}
           helpText={props.notesHelpText}
@@ -543,7 +543,7 @@ const BorderCalculatorPage = (): JSX.Element => {
                 />
 
                 <fieldset class="space-y-4">
-                  <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+                  <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
                     <BorderFormField
                       id="targetScore"
                       label={BORDER_CALCULATOR_COPY.targetScoreLabel}
