@@ -33,7 +33,7 @@ const BORDER_CALCULATOR_COPY = {
 const DEFAULT_NOTES = '2800'
 const DEFAULT_TARGET_SCORE = '1007500'
 const SONG_CANDIDATE_LIMIT = 8
-const BORDER_CALCULATOR_DIFFICULTIES = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER'] as const
+const BORDER_CALCULATOR_DIFFICULTIES = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const FIELD_INPUT_CLASS =
   'w-full rounded border border-border-strong bg-input-bg px-3 py-2 text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const COMPACT_FIELD_INPUT_CLASS =
@@ -79,10 +79,22 @@ const formatNumber = (value: number): string => value.toLocaleString('ja-JP')
  * ボーダー計算機で選択可能な譜面か判定する。
  *
  * @param value - 判定対象の難易度文字列。
- * @returns BASIC～MASTER の通常譜面であれば true。
+ * @returns BASIC～ULTIMA の通常譜面であれば true。
  */
 const isBorderCalculatorDifficulty = (value: string): value is BorderCalculatorDifficulty =>
   BORDER_CALCULATOR_DIFFICULTIES.some((difficulty) => difficulty === value)
+
+/**
+ * 選択中の楽曲で利用できる通常譜面の難易度候補を返す。
+ *
+ * @param song - 選択中の楽曲。未選択の場合は全難易度を返す。
+ * @returns ボーダー計算機で選択できる難易度一覧。
+ */
+const getAvailableDifficulties = (song: SongDTO | null): BorderCalculatorDifficulty[] => {
+  if (!song) return [...BORDER_CALCULATOR_DIFFICULTIES]
+
+  return BORDER_CALCULATOR_DIFFICULTIES.filter((difficulty) => song.charts[difficulty])
+}
 
 /**
  * 選択中の楽曲と譜面からノーツ数を取得する。
@@ -136,11 +148,12 @@ const BorderFormField: Component<BorderFormFieldProps> = (props) => (
  */
 const DifficultySelectField: Component<{
   value: BorderCalculatorDifficulty
+  availableDifficulties: BorderCalculatorDifficulty[]
   onChange: (difficulty: BorderCalculatorDifficulty) => void
 }> = (props) => (
   <Select<BorderCalculatorDifficulty>
     class="block text-sm"
-    options={[...BORDER_CALCULATOR_DIFFICULTIES]}
+    options={props.availableDifficulties}
     value={props.value}
     onChange={(difficulty) => {
       if (difficulty && isBorderCalculatorDifficulty(difficulty)) {
@@ -299,6 +312,7 @@ const BorderCalculatorPrimaryControls: Component<{
   songCandidates: SongDTO[]
   showSongCandidates: boolean
   selectedDifficulty: BorderCalculatorDifficulty
+  availableDifficulties: BorderCalculatorDifficulty[]
   notes: string
   notesHelpText?: string
   onSongSearchQueryChange: (query: string) => void
@@ -320,6 +334,7 @@ const BorderCalculatorPrimaryControls: Component<{
       <div class="w-32 sm:w-36">
         <DifficultySelectField
           value={props.selectedDifficulty}
+          availableDifficulties={props.availableDifficulties}
           onChange={props.onDifficultyChange}
         />
       </div>
@@ -419,9 +434,17 @@ const BorderCalculatorPage = (): JSX.Element => {
     return filterSearchableItems(searchableSongs(), query).slice(0, SONG_CANDIDATE_LIMIT)
   })
 
+  const availableDifficulties = createMemo(() => getAvailableDifficulties(selectedSong()))
   const selectedChartNotes = createMemo(() => getChartNotes(selectedSong(), selectedDifficulty()))
   const isSelectedSongDisplayed = createMemo(() => selectedSong()?.title === songSearchQuery())
   const showSongCandidates = createMemo(() => !isSelectedSongDisplayed())
+
+  createEffect(() => {
+    const difficulties = availableDifficulties()
+    if (!difficulties.includes(selectedDifficulty())) {
+      setSelectedDifficulty(difficulties[0] ?? 'MASTER')
+    }
+  })
 
   createEffect(() => {
     const chartNotes = selectedChartNotes()
@@ -506,6 +529,7 @@ const BorderCalculatorPage = (): JSX.Element => {
                   songCandidates={songCandidates()}
                   showSongCandidates={showSongCandidates()}
                   selectedDifficulty={selectedDifficulty()}
+                  availableDifficulties={availableDifficulties()}
                   notes={notes()}
                   notesHelpText={
                     selectedSong() && selectedChartNotes() === null
