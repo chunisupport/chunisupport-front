@@ -17,7 +17,6 @@ const BORDER_CALCULATOR_COPY = {
   notesLabel: 'ノーツ数',
   targetScoreLabel: '目標スコア',
   targetJusticeLabel: '目標JUSTICE数',
-  targetJusticeHelp: '空欄の場合はJUSTICE数を制限せずに候補を表示します。',
   fullComboOnlyLabel: 'FULL COMBO指定（MISSを0に固定）',
   submitLabel: '計算する',
   unreachableMessage: '理論値を超えるため到達不能です。',
@@ -80,7 +79,6 @@ const BorderFormField: Component<BorderFormFieldProps> = (props) => (
       inputMode="numeric"
       pattern="[0-9]*"
       required={props.required}
-      aria-describedby={props.helpText ? `${props.id}-help` : undefined}
     />
     <Show when={props.helpText}>
       {(helpText) => (
@@ -216,7 +214,6 @@ const BorderCalculatorPage = (): JSX.Element => {
               id="targetJustice"
               label={BORDER_CALCULATOR_COPY.targetJusticeLabel}
               value={targetJustice()}
-              helpText={BORDER_CALCULATOR_COPY.targetJusticeHelp}
               onChange={setTargetJustice}
             />
             <div class="flex items-end">
