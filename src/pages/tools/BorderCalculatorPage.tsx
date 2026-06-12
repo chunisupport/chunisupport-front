@@ -42,8 +42,6 @@ const CHECKBOX_CONTROL_CLASS =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
 const SONG_CANDIDATE_BUTTON_CLASS =
   'block w-full border-b border-border px-3 py-2.5 text-left text-sm last:border-b-0 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
-const SECTION_TITLE_CLASS = 'text-sm font-semibold text-text'
-const VISUALLY_HIDDEN_LABEL_CLASS = 'sr-only'
 const EMPTY_STATE_CLASS =
   'rounded border border-border bg-surface-muted p-3 text-sm text-text-muted'
 
@@ -335,7 +333,7 @@ const BorderCalculatorPrimaryControls: Component<{
       <div class="basis-full">
         <Button
           type="submit"
-          class="inline-flex h-12 w-fit min-w-24 items-center justify-center rounded bg-action-primary px-4 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          class="inline-flex w-fit min-w-24 items-center justify-center rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         >
           {BORDER_CALCULATOR_COPY.submitLabel}
         </Button>
