@@ -15,7 +15,6 @@ import { buildSearchableItems, filterSearchableItems } from '../songs/searchHelp
 const BORDER_CALCULATOR_COPY = {
   title: 'ボーダー計算機',
   description: '楽曲と譜面を選び、目標スコアまでの許容判定数を計算します。',
-  calculationConditionTitle: '条件',
   songSearchLabel: '曲名',
   songSearchPlaceholder: '曲名・アーティスト名で検索',
   songCandidatesLabel: '検索候補',
@@ -310,7 +309,6 @@ const BorderCalculatorPrimaryControls: Component<{
   onNotesChange: (notes: string) => void
 }> = (props) => (
   <fieldset class="space-y-3">
-    <legend class={SECTION_TITLE_CLASS}>{BORDER_CALCULATOR_COPY.calculationConditionTitle}</legend>
     <div class="flex flex-wrap items-start gap-3">
       <div class="min-w-0 basis-full sm:basis-64 md:flex-1">
         <SongSearchField
@@ -531,9 +529,6 @@ const BorderCalculatorPage = (): JSX.Element => {
                 />
 
                 <fieldset class="space-y-4">
-                  <legend class={VISUALLY_HIDDEN_LABEL_CLASS}>
-                    {BORDER_CALCULATOR_COPY.calculationConditionTitle}
-                  </legend>
                   <div class="grid gap-4 sm:grid-cols-2">
                     <BorderFormField
                       id="targetScore"
