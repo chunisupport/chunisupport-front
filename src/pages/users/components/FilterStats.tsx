@@ -36,8 +36,9 @@ const FILTER_STATS_HEADER_CLASS =
   'flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2 text-sm font-bold'
 const FILTER_STATS_ROW_CLASS =
   'grid grid-cols-[minmax(0,1fr)_auto_2.5rem_minmax(3.25rem,5rem)] items-center gap-2 py-1.5 text-xs'
+/** フィルター統計タブの通常、ホバー、選択中状態を表す表示クラス。 */
 const FILTER_STATS_TAB_TRIGGER_CLASS =
-  'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-text-muted transition-colors hover:bg-surface data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
+  'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-text-muted transition-colors hover:bg-action-secondary hover:text-text data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm data-selected:hover:bg-action-primary data-selected:hover:text-text-inverse focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
 
 /**
  * フィルター統計タブの選択肢を表示する。
