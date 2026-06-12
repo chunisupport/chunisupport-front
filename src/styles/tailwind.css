@@ -24,21 +24,21 @@
   /* ===== 背景・サーフェス（ページ全体 / カード / パネル / モーダル / ホバー） ===== */
   --cs-color-bg: var(--color-white);
   --cs-color-surface: var(--color-white);
-  --cs-color-surface-muted: var(--color-gray-50);
+  --cs-color-surface-muted: var(--color-gray-100);
   --cs-color-surface-raised: var(--color-white);
-  --cs-color-surface-hover: var(--color-gray-100);
+  --cs-color-surface-hover: var(--color-gray-200);
 
   /* ===== テキスト（本文 / 補助 / メタ情報 / 反転 / プレースホルダー / ナビ） ===== */
   --cs-color-text: var(--color-gray-900);
   --cs-color-text-muted: var(--color-gray-600);
-  --cs-color-text-subtle: var(--color-gray-400);
+  --cs-color-text-subtle: var(--color-gray-500);
   --cs-color-text-inverse: var(--color-white);
   --cs-color-text-placeholder: var(--color-gray-400);
   --cs-color-nav-text: var(--color-gray-700);
 
   /* ===== 枠線・フォーカスリング（カード境界 / 強調境界 / フォーカスリング） ===== */
-  --cs-color-border: var(--color-gray-200);
-  --cs-color-border-strong: var(--color-gray-300);
+  --cs-color-border: var(--color-gray-300);
+  --cs-color-border-strong: var(--color-gray-400);
   --cs-color-focus-ring: var(--color-primary-500);
 
   /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
@@ -46,8 +46,8 @@
   --cs-color-action-primary-hover: var(--color-primary-700);
   --cs-color-action-primary-muted: var(--color-primary-50);
   --cs-color-action-primary-border: var(--color-primary-200);
-  --cs-color-action-secondary: var(--color-gray-200);
-  --cs-color-action-secondary-hover: var(--color-gray-300);
+  --cs-color-action-secondary: var(--color-gray-300);
+  --cs-color-action-secondary-hover: var(--color-gray-400);
 
   /* ===== 危険: エラー・削除操作（テキスト / 背景 / 枠線） ===== */
   --cs-color-danger: var(--color-red-600);
@@ -72,11 +72,11 @@
 
   /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） ===== */
   --cs-color-overlay: rgb(0 0 0 / 30%);
-  --cs-color-disabled-bg: var(--color-gray-100);
-  --cs-color-disabled-text: var(--color-gray-300);
+  --cs-color-disabled-bg: var(--color-gray-200);
+  --cs-color-disabled-text: var(--color-gray-400);
   --cs-color-input-bg: var(--color-white);
-  --cs-color-input-border: var(--color-gray-300);
-  --cs-color-input-border-hover: var(--color-gray-400);
+  --cs-color-input-border: var(--color-gray-400);
+  --cs-color-input-border-hover: var(--color-gray-500);
   --cs-color-link: var(--color-primary-600);
   --cs-color-link-hover: var(--color-primary-700);
 }
