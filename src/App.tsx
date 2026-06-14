@@ -2,10 +2,12 @@ import { A, Route, Router, useParams } from '@solidjs/router'
 import { Calculator, Search, Target } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
+import { fetchApiRoot } from './api/root'
 import { fetchMe, fetchUserProfileSummary } from './api/users'
 import { LoadError, Loading, NavBar, PlayerDataEmptyState } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
+import { FOOTER_COPYRIGHT_TEXT, FOOTER_GITHUB_LABEL, FOOTER_GITHUB_URL } from './constants/footer'
 import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
@@ -56,7 +58,56 @@ const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
   )
 }
 
-// インラインコンポーネント用のラッパー
+/**
+ * API メタ情報からフッターに表示するバージョン文字列を組み立てる。
+ *
+ * @param apiRoot - API ルートから取得した公開メタ情報。
+ * @returns 表示用のバージョン文字列。
+ */
+const formatApiVersionLabel = (apiRoot: {
+  app_name: string
+  build_date: string
+  version?: string
+}): string => {
+  const version = apiRoot.version ?? apiRoot.build_date
+  return `${apiRoot.app_name}: ${version}`
+}
+
+/**
+ * トップページ専用のフッターを表示する。
+ *
+ * @returns API バージョン、ライセンス表記、GitHub リンクを含むフッター。
+ */
+const LandingFooter = () => {
+  const [apiRoot] = createResource(fetchApiRoot)
+
+  return (
+    <footer class="border-t border-border bg-surface px-4 py-5 text-sm text-text-muted">
+      <div class="mx-auto flex w-full max-w-4xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+          <Show when={apiRoot()} keyed>
+            {(root) => <span>{formatApiVersionLabel(root)}</span>}
+          </Show>
+          <span>{FOOTER_COPYRIGHT_TEXT}</span>
+        </div>
+        <a
+          href={FOOTER_GITHUB_URL}
+          target="_blank"
+          rel="noreferrer"
+          class="font-medium text-link underline-offset-4 hover:text-link-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+        >
+          {FOOTER_GITHUB_LABEL}
+        </a>
+      </div>
+    </footer>
+  )
+}
+
+/**
+ * トップページを表示する。
+ *
+ * @returns ランディングページ。
+ */
 const LandingPage = () => {
   useDocumentTitle()
 
@@ -76,73 +127,76 @@ const LandingPage = () => {
   })
 
   return (
-    <main class="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
-      <Show when={homeView().type !== 'loading'} fallback={<Loading />}>
-        <Show
-          when={authenticatedUsername()}
-          fallback={
-            <section class="rounded-lg border border-border bg-surface p-6">
-              <h1 class="mb-2 text-2xl font-semibold">ChuniSupport</h1>
-              <p class="mb-4 text-sm text-text-muted">
-                ログインまたは新規登録して、プレイデータを管理しましょう。
-              </p>
-              <div class="flex flex-wrap gap-3">
-                <A
-                  href="/login"
-                  class="rounded-md border border-border-strong px-4 py-2 text-sm font-medium hover:bg-surface-muted"
-                >
-                  ログイン
-                </A>
-                <A
-                  href="/register"
-                  class="rounded-md bg-action-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-action-primary-hover"
-                >
-                  新規登録
-                </A>
-              </div>
-            </section>
-          }
-        >
-          {(username) => (
-            <section class="rounded-lg border border-border bg-surface p-6">
-              <h1 class="mb-4 text-2xl font-semibold">ようこそ、{username()}さん</h1>
-              <div class="rounded-md border border-border bg-surface-muted p-4">
-                <p class="text-sm text-text-muted">プロフィール</p>
-                <p class="mt-1 text-lg font-semibold text-text">@{username()}</p>
-                <A
-                  href={`/users/${encodeURIComponent(username())}`}
-                  class="mt-3 inline-block text-sm font-medium text-action-primary underline"
-                >
-                  マイページを開く
-                </A>
-              </div>
-            </section>
-          )}
+    <div class="flex min-h-dvh flex-col">
+      <main class="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8">
+        <Show when={homeView().type !== 'loading'} fallback={<Loading />}>
+          <Show
+            when={authenticatedUsername()}
+            fallback={
+              <section class="rounded-lg border border-border bg-surface p-6">
+                <h1 class="mb-2 text-2xl font-semibold">ChuniSupport</h1>
+                <p class="mb-4 text-sm text-text-muted">
+                  ログインまたは新規登録して、プレイデータを管理しましょう。
+                </p>
+                <div class="flex flex-wrap gap-3">
+                  <A
+                    href="/login"
+                    class="rounded-md border border-border-strong px-4 py-2 text-sm font-medium hover:bg-surface-muted"
+                  >
+                    ログイン
+                  </A>
+                  <A
+                    href="/register"
+                    class="rounded-md bg-action-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-action-primary-hover"
+                  >
+                    新規登録
+                  </A>
+                </div>
+              </section>
+            }
+          >
+            {(username) => (
+              <section class="rounded-lg border border-border bg-surface p-6">
+                <h1 class="mb-4 text-2xl font-semibold">ようこそ、{username()}さん</h1>
+                <div class="rounded-md border border-border bg-surface-muted p-4">
+                  <p class="text-sm text-text-muted">プロフィール</p>
+                  <p class="mt-1 text-lg font-semibold text-text">@{username()}</p>
+                  <A
+                    href={`/users/${encodeURIComponent(username())}`}
+                    class="mt-3 inline-block text-sm font-medium text-action-primary underline"
+                  >
+                    マイページを開く
+                  </A>
+                </div>
+              </section>
+            )}
+          </Show>
         </Show>
-      </Show>
 
-      <section class="rounded-lg border border-border bg-surface p-6">
-        <h2 class="mb-3 text-xl font-semibold">お知らせ</h2>
-        <ul class="space-y-2 text-sm text-text-muted">
-          <li class="rounded-md border border-border p-3">
-            [モック] 2026-04-29: 新機能の準備を進めています。
-          </li>
-          <li class="rounded-md border border-border p-3">
-            [モック] 2026-04-25: メンテナンス予定を公開しました。
-          </li>
-        </ul>
-      </section>
+        <section class="rounded-lg border border-border bg-surface p-6">
+          <h2 class="mb-3 text-xl font-semibold">お知らせ</h2>
+          <ul class="space-y-2 text-sm text-text-muted">
+            <li class="rounded-md border border-border p-3">
+              [モック] 2026-04-29: 新機能の準備を進めています。
+            </li>
+            <li class="rounded-md border border-border p-3">
+              [モック] 2026-04-25: メンテナンス予定を公開しました。
+            </li>
+          </ul>
+        </section>
 
-      <section class="rounded-lg border border-border bg-surface p-6">
-        <h2 class="mb-3 text-xl font-semibold">X公式アカウント</h2>
-        <ul class="space-y-2 text-sm text-text-muted">
-          <li class="rounded-md border border-border p-3">
-            [モック] 投稿1: アップデート予定のお知らせ
-          </li>
-          <li class="rounded-md border border-border p-3">[モック] 投稿2: 活用方法の紹介</li>
-        </ul>
-      </section>
-    </main>
+        <section class="rounded-lg border border-border bg-surface p-6">
+          <h2 class="mb-3 text-xl font-semibold">X公式アカウント</h2>
+          <ul class="space-y-2 text-sm text-text-muted">
+            <li class="rounded-md border border-border p-3">
+              [モック] 投稿1: アップデート予定のお知らせ
+            </li>
+            <li class="rounded-md border border-border p-3">[モック] 投稿2: 活用方法の紹介</li>
+          </ul>
+        </section>
+      </main>
+      <LandingFooter />
+    </div>
   )
 }
 

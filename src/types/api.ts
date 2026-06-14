@@ -5,6 +5,18 @@ export interface ErrorResponse {
   }
 }
 
+/**
+ * API ルートが返す公開メタ情報。
+ */
+export interface ApiRootResponse {
+  /** API アプリケーション名。 */
+  app_name: string
+  /** API のビルド日時または開発環境識別子。 */
+  build_date: string
+  /** API が返すバージョン番号。未設定の環境では省略される。 */
+  version?: string
+}
+
 export type ErrorCode =
   // 汎用
   | 'bad_request'
