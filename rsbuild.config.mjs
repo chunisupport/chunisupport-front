@@ -12,6 +12,22 @@ const REQUIRED_PUBLIC_ENV_KEYS = [
   'PUBLIC_FB_APP_ID',
 ]
 
+const FRONTEND_BUILD_DATE = new Date().toISOString().slice(0, 10).replaceAll('-', '')
+
+/**
+ * CI 環境変数からフロントエンドの短縮コミットハッシュを取得する。
+ *
+ * @returns フロントエンドビルドに埋め込む短縮コミットハッシュ。ローカル開発では none。
+ */
+const resolveFrontendCommitHash = () => {
+  const envCommitHash =
+    process.env.GITHUB_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.CF_PAGES_COMMIT_SHA
+
+  return envCommitHash ? envCommitHash.slice(0, 7) : 'none'
+}
+
+const FRONTEND_COMMIT_HASH = resolveFrontendCommitHash()
+
 // Docs: https://rsbuild.rs/config/
 export default defineConfig(({ env, envMode }) => {
   const envResult = loadEnv({ mode: envMode, prefixes: ['PUBLIC_'] })
@@ -24,6 +40,8 @@ export default defineConfig(({ env, envMode }) => {
 
   const publicEnvDefine = {
     ...envResult.publicVars,
+    __FRONTEND_BUILD_DATE__: JSON.stringify(FRONTEND_BUILD_DATE),
+    __FRONTEND_COMMIT_HASH__: JSON.stringify(FRONTEND_COMMIT_HASH),
     'import.meta.env': JSON.stringify({
       ...envResult.rawPublicVars,
       MODE: envMode,

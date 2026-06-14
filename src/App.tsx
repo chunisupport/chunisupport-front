@@ -7,6 +7,7 @@ import { fetchMe, fetchUserProfileSummary } from './api/users'
 import { LoadError, Loading, NavBar, PlayerDataEmptyState } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
+import { FRONTEND_APP_NAME, FRONTEND_BUILD_DATE } from './constants/appBuild'
 import { FOOTER_COPYRIGHT_TEXT, FOOTER_GITHUB_LABEL, FOOTER_GITHUB_URL } from './constants/footer'
 import {
   BORDER_CALCULATOR_PATH,
@@ -41,6 +42,7 @@ import { getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
 import { resolveHomeView } from './usecases/auth/resolveHomeView'
 import { isNotFoundApiError } from './utils/apiError'
+import { formatBuildDateLabel } from './utils/appVersionLabel'
 
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
   return (props: P) => (
@@ -59,35 +61,29 @@ const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
 }
 
 /**
- * API メタ情報からフッターに表示するバージョン文字列を組み立てる。
- *
- * @param apiRoot - API ルートから取得した公開メタ情報。
- * @returns 表示用のバージョン文字列。
- */
-const formatApiVersionLabel = (apiRoot: {
-  app_name: string
-  build_date: string
-  version?: string
-}): string => {
-  const version = apiRoot.version ?? apiRoot.build_date
-  return `${apiRoot.app_name}: ${version}`
-}
-
-/**
  * トップページ専用のフッターを表示する。
  *
- * @returns API バージョン、ライセンス表記、GitHub リンクを含むフッター。
+ * @returns API とフロントエンドのビルド情報、ライセンス表記、GitHub リンクを含むフッター。
  */
 const LandingFooter = () => {
   const [apiRoot] = createResource(fetchApiRoot)
+  const frontendVersionLabel = formatBuildDateLabel({
+    appName: FRONTEND_APP_NAME,
+    buildDate: FRONTEND_BUILD_DATE,
+  })
 
   return (
     <footer class="border-t border-border bg-surface px-4 py-5 text-sm text-text-muted">
       <div class="mx-auto flex w-full max-w-4xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
           <Show when={apiRoot()} keyed>
-            {(root) => <span>{formatApiVersionLabel(root)}</span>}
+            {(root) => (
+              <span>
+                {formatBuildDateLabel({ appName: root.app_name, buildDate: root.build_date })}
+              </span>
+            )}
           </Show>
+          <span>{frontendVersionLabel}</span>
           <span>{FOOTER_COPYRIGHT_TEXT}</span>
         </div>
         <a

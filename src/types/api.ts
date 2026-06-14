@@ -13,6 +13,8 @@ export interface ApiRootResponse {
   app_name: string
   /** API のビルド日時または開発環境識別子。 */
   build_date: string
+  /** API の短縮コミットハッシュ。管理者向けレスポンスで返される。 */
+  revision?: string
   /** API が返すバージョン番号。未設定の環境では省略される。 */
   version?: string
 }
