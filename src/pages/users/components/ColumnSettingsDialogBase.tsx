@@ -15,6 +15,11 @@ const APPLY_LABEL = '適用'
  */
 const COLUMN_SETTINGS_SELECT_TRIGGER_CLASS =
   'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+/**
+ * 目的: 列設定リストのチェック済み色とフォーカス中のホバー色を分ける共通スタイル。
+ */
+const COLUMN_SETTINGS_SELECT_ITEM_CLASS =
+  'cursor-pointer px-3 py-2 text-text hover:bg-success-bg-hover data-[highlighted]:bg-success-bg-hover data-[selected]:bg-success-bg data-[selected]:hover:bg-success-bg-hover data-[selected]:data-[highlighted]:bg-success-bg-hover'
 
 type ColumnOption<TColumnId extends string> = {
   id: TColumnId
@@ -99,10 +104,7 @@ const ColumnSettingsDialogBase = <TColumnId extends string, TSortKey extends str
             onChange={handleChange}
             placeholder={COLUMN_SETTINGS_PLACEHOLDER}
             itemComponent={(props) => (
-              <Select.Item
-                item={props.item}
-                class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
-              >
+              <Select.Item item={props.item} class={COLUMN_SETTINGS_SELECT_ITEM_CLASS}>
                 <div class="flex items-center gap-2">
                   <span class="inline-flex w-4 justify-center text-success">
                     <Select.ItemIndicator>

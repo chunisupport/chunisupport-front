@@ -22,6 +22,10 @@
   "scoreMin": 0,
   "scoreMax": 1010000,
   "scoreFilterMode": "rank",
+  "justiceCountMin": null,
+  "justiceCountMax": null,
+  "overPowerMin": null,
+  "overPowerMax": null,
   "combo_lamp": ["ALL JUSTICE", "FULL COMBO", null],
   "chain_lamp": ["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null],
   "hard_lamp": ["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null],
@@ -43,6 +47,10 @@
 | `scoreMin` | `number` | はい | スコアの下限です。未プレイ譜面には適用されません。 |
 | `scoreMax` | `number` | はい | スコアの上限です。未プレイ譜面には適用されません。 |
 | `scoreFilterMode` | `"rank"` \| `"number"` | はい | UI の入力モードです。現在の絞り込み判定自体は `scoreMin` / `scoreMax` のみを参照します。 |
+| `justiceCountMin` | `number \| null` | はい | AJ時のJUSTICE数の下限です。`null` なら下限なしです。 |
+| `justiceCountMax` | `number \| null` | はい | AJ時のJUSTICE数の上限です。`null` なら上限なしです。 |
+| `overPowerMin` | `number \| null` | はい | OVER POWER値の下限です。`null` なら下限なしです。 |
+| `overPowerMax` | `number \| null` | はい | OVER POWER値の上限です。`null` なら上限なしです。 |
 | `combo_lamp` | `Array<string \| null>` | はい | 許可するコンボランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
 | `chain_lamp` | `Array<string \| null>` | はい | 許可するFULL CHAINランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
 | `hard_lamp` | `Array<string \| null>` | はい | 許可するクリアランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
@@ -59,9 +67,11 @@
 5. `versions` が空でないとき、レコードのバージョンが `versions` に含まれること。
 6. 譜面定数が `constMin` 以上かつ `constMax` 以下であること。
 7. プレイ済み譜面の場合のみ、スコアが `scoreMin` 以上かつ `scoreMax` 以下であること。
-8. コンボランプが `combo_lamp` に含まれること。
-9. FULL CHAINランプが `chain_lamp` に含まれること。
-10. クリアランプが `hard_lamp` に含まれること。
+8. `justiceCountMin` または `justiceCountMax` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。この場合、`combo_lamp` の選択状態は判定に使いません。
+9. `overPowerMin` または `overPowerMax` が `null` でないとき、プレイ済み譜面で、`overpower` が指定範囲内であること。
+10. コンボランプが `combo_lamp` に含まれること。
+11. FULL CHAINランプが `chain_lamp` に含まれること。
+12. クリアランプが `hard_lamp` に含まれること。
 
 ## デフォルト値
 
@@ -77,6 +87,10 @@
 - `scoreMin`: `0`
 - `scoreMax`: `1010000`
 - `scoreFilterMode`: `"rank"`
+- `justiceCountMin`: `null`
+- `justiceCountMax`: `null`
+- `overPowerMin`: `null`
+- `overPowerMax`: `null`
 - `combo_lamp`: `["ALL JUSTICE", "FULL COMBO", null]`
 - `chain_lamp`: `["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null]`
 - `hard_lamp`: `["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null]`
@@ -103,6 +117,19 @@ API の `PlayerRecordDTO["difficulty"]` と同じ値を使います。
 ```
 
 `null` は JSON 上で文字列ではなく null 値です。
+
+### `justiceCountMin` / `justiceCountMax`
+
+入力値は0以上の整数です。
+どちらか一方でも `null` でない場合、AJ済み譜面のみが検索対象になります。
+この条件は判定時の暗黙条件であり、`combo_lamp` の保存値や選択状態は変更せず、コンボランプ条件の判定もスキップします。
+
+### `overPowerMin` / `overPowerMax`
+
+入力値は0以上、`(CONST_MAX + 3) * 5` 以下です。
+現在の `CONST_MAX` は `16.0` のため、上限は `95` です。
+小数点以下3桁までを扱います。
+OVER POWER達成率 (`overpower_percent`) は検索対象にしません。
 
 ### `chain_lamp`
 
@@ -144,6 +171,10 @@ API の `PlayerRecordDTO["difficulty"]` と同じ値を使います。
       "scoreMin": 1000000,
       "scoreMax": 1010000,
       "scoreFilterMode": "number",
+      "justiceCountMin": null,
+      "justiceCountMax": 20,
+      "overPowerMin": 80,
+      "overPowerMax": 95,
       "combo_lamp": ["FULL COMBO"],
       "chain_lamp": ["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null],
       "hard_lamp": ["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD"],

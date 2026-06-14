@@ -64,6 +64,36 @@ test('loadSavedFilters は保存済みJSONを復元する', () => {
   assert.deepEqual(loadSavedFilters(), savedFilters)
 })
 
+test('loadSavedFilters は古い保存済みフィルターに新しい範囲フィールドを補完する', () => {
+  const legacyFilter: Partial<ReturnType<typeof getDefaultFilter>> = {
+    ...getDefaultFilter(),
+    title: '旧条件',
+  }
+  delete legacyFilter.justiceCountMin
+  delete legacyFilter.justiceCountMax
+  delete legacyFilter.overPowerMin
+  delete legacyFilter.overPowerMax
+  const savedFilters = [
+    { id: 'filter-1', name: '旧形式', filter: legacyFilter, savedAt: 1_774_972_800_000 },
+  ]
+  localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(savedFilters))
+
+  assert.deepEqual(loadSavedFilters(), [
+    {
+      id: 'filter-1',
+      name: '旧形式',
+      filter: {
+        ...legacyFilter,
+        justiceCountMin: null,
+        justiceCountMax: null,
+        overPowerMin: null,
+        overPowerMax: null,
+      },
+      savedAt: 1_774_972_800_000,
+    },
+  ])
+})
+
 test('saveNewFilter は既存フィルターを残して新規フィルターを保存する', () => {
   const existingFilter = { ...getDefaultFilter(), title: '既存' }
   const newFilter = { ...getDefaultFilter(), title: '追加' }

@@ -7,6 +7,7 @@ import {
 } from '../../../../utils/searchUtils'
 import { buildDefaultFilter } from '../types/filterDefaults'
 import type { ChainLamp, ComboLamp, Difficulty, FilterState, HardLamp } from '../types/types'
+import { hasJusticeCountFilter, hasOverPowerFilter } from './filterDialog'
 
 /** フィルターのデフォルト値を取得する */
 export const getDefaultFilter = buildDefaultFilter
@@ -78,9 +79,26 @@ export function isRecordMatchedWithTitleMatcher(
   if (score < filters.scoreMin) return false
   if (score > filters.scoreMax) return false
 
+  // JUSTICE数
+  if (hasJusticeCountFilter(filters)) {
+    if (record.combo_lamp !== 'ALL JUSTICE' || record.justice_count === null) return false
+    if (filters.justiceCountMin !== null && record.justice_count < filters.justiceCountMin)
+      return false
+    if (filters.justiceCountMax !== null && record.justice_count > filters.justiceCountMax)
+      return false
+  }
+
+  // OVER POWER
+  if (hasOverPowerFilter(filters)) {
+    if (!record.is_played) return false
+    if (filters.overPowerMin !== null && record.overpower < filters.overPowerMin) return false
+    if (filters.overPowerMax !== null && record.overpower > filters.overPowerMax) return false
+  }
+
   // コンボランプ
   const comboLamp = record.is_played ? (record.combo_lamp ?? null) : null
-  if (!filters.combo_lamp.includes(comboLamp as ComboLamp)) return false
+  if (!hasJusticeCountFilter(filters) && !filters.combo_lamp.includes(comboLamp as ComboLamp))
+    return false
 
   // FULL CHAINランプ
   const chainLamp = record.is_played ? (record.full_chain ?? null) : null

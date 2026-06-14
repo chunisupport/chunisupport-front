@@ -44,6 +44,10 @@ export interface FilterState {
   scoreMin: number
   scoreMax: number
   scoreFilterMode: 'number' | 'rank'
+  justiceCountMin: number | null
+  justiceCountMax: number | null
+  overPowerMin: number | null
+  overPowerMax: number | null
   combo_lamp: ComboLamp[]
   chain_lamp: ChainLamp[]
   hard_lamp: HardLamp[]

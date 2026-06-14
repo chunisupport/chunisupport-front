@@ -106,6 +106,51 @@ test('isRecordMatched は譜面定数とスコアの範囲を判定できる', (
   assert.equal(isRecordMatched(record, { ...matchedFilters, scoreMax: 1007000 }), false)
 })
 
+test('isRecordMatched はJUSTICE数の範囲をAJ済み譜面だけに適用する', () => {
+  const record = createRecord({
+    combo_lamp: 'ALL JUSTICE',
+    justice_count: 12,
+  })
+  const matchedFilters: FilterState = {
+    ...getDefaultFilter(),
+    justiceCountMin: 10,
+    justiceCountMax: 15,
+  }
+
+  assert.equal(isRecordMatched(record, matchedFilters), true)
+  assert.equal(isRecordMatched(record, { ...matchedFilters, combo_lamp: ['FULL COMBO'] }), true)
+  assert.equal(isRecordMatched(record, { ...matchedFilters, justiceCountMin: 13 }), false)
+  assert.equal(isRecordMatched(record, { ...matchedFilters, justiceCountMax: 11 }), false)
+  assert.equal(
+    isRecordMatched(createRecord({ combo_lamp: 'FULL COMBO', justice_count: 12 }), matchedFilters),
+    false
+  )
+  assert.equal(
+    isRecordMatched(
+      createRecord({ combo_lamp: 'ALL JUSTICE', justice_count: null }),
+      matchedFilters
+    ),
+    false
+  )
+})
+
+test('isRecordMatched はOVER POWERの範囲をプレイ済み譜面だけに適用する', () => {
+  const record = createRecord({ overpower: 88.123 })
+  const matchedFilters: FilterState = {
+    ...getDefaultFilter(),
+    overPowerMin: 88,
+    overPowerMax: 88.5,
+  }
+
+  assert.equal(isRecordMatched(record, matchedFilters), true)
+  assert.equal(isRecordMatched(record, { ...matchedFilters, overPowerMin: 88.124 }), false)
+  assert.equal(isRecordMatched(record, { ...matchedFilters, overPowerMax: 88.122 }), false)
+  assert.equal(
+    isRecordMatched(createRecord({ is_played: false, overpower: 88.123 }), matchedFilters),
+    false
+  )
+})
+
 test('isRecordMatched はランプ条件を判定できる', () => {
   const record = createRecord({
     combo_lamp: 'FULL COMBO',

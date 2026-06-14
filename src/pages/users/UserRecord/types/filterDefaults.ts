@@ -32,6 +32,10 @@ export const DEFAULT_FILTER: FilterState = {
   scoreMin: 0,
   scoreMax: MAX_SCORE,
   scoreFilterMode: 'rank',
+  justiceCountMin: null,
+  justiceCountMax: null,
+  overPowerMin: null,
+  overPowerMax: null,
   combo_lamp: [...COMBO_LAMP_OPTIONS],
   chain_lamp: [...CHAIN_LAMP_OPTIONS],
   hard_lamp: [...HARD_LAMP_OPTIONS],
@@ -57,4 +61,22 @@ export const buildDefaultFilter = (
   combo_lamp: [...COMBO_LAMP_OPTIONS],
   chain_lamp: [...CHAIN_LAMP_OPTIONS],
   hard_lamp: [...HARD_LAMP_OPTIONS],
+})
+
+/**
+ * 保存済みフィルターなどの部分的なフィルター情報を現行のFilterStateへ補完する。
+ *
+ * @param filter - 補完対象のフィルター情報。
+ * @returns 現行フィールドをすべて持つフィルター状態。
+ */
+export const normalizeFilterState = (filter: Partial<FilterState>): FilterState => ({
+  ...DEFAULT_FILTER,
+  ...filter,
+  combo_lamp: filter.combo_lamp ?? [...COMBO_LAMP_OPTIONS],
+  chain_lamp: filter.chain_lamp ?? [...CHAIN_LAMP_OPTIONS],
+  hard_lamp: filter.hard_lamp ?? [...HARD_LAMP_OPTIONS],
+  justiceCountMin: filter.justiceCountMin ?? null,
+  justiceCountMax: filter.justiceCountMax ?? null,
+  overPowerMin: filter.overPowerMin ?? null,
+  overPowerMax: filter.overPowerMax ?? null,
 })

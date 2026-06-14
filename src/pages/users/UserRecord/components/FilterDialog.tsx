@@ -2,6 +2,7 @@ import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../types/api'
+import { normalizeFilterState } from '../types/filterDefaults'
 import type { FilterState } from '../types/types'
 import FilterResetDialog from './filterDialog/dialogs/FilterResetDialog'
 import SavedFiltersDialog from './filterDialog/dialogs/SavedFiltersDialog'
@@ -20,13 +21,13 @@ interface FilterDialogProps {
 
 export const FilterDialog: Component<FilterDialogProps> = (props) => {
   // 現在のフィルター状態
-  const [filters, setFilters] = createSignal<FilterState>({ ...props.filters })
+  const [filters, setFilters] = createSignal<FilterState>(normalizeFilterState(props.filters))
   const [resetKey, setResetKey] = createSignal(0)
 
   // フィルターダイアログが開かれた時にフィルター状態を同期
   createEffect(() => {
     if (props.open) {
-      setFilters({ ...props.filters })
+      setFilters(normalizeFilterState(props.filters))
     }
   })
 
@@ -50,7 +51,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
 
   /** 保存済みフィルター適用処理 */
   const handleApplySavedFilter = (filter: FilterState) => {
-    props.onChange(filter)
+    props.onChange(normalizeFilterState(filter))
     props.onOpenChange(false)
   }
 

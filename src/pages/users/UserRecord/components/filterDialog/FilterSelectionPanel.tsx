@@ -6,13 +6,14 @@ import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
 import { CONST_MAX, CONST_MIN } from '../../constants/constRange'
+import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../../constants/rangeFilters'
 import {
   CHAIN_LAMP_OPTIONS,
   COMBO_LAMP_OPTIONS,
   HARD_LAMP_OPTIONS,
 } from '../../types/filterDefaults'
 import type { Difficulty, FilterState } from '../../types/types'
-import { parseNumberInput, toggleArray } from '../../utils/filterDialog'
+import { parseNumberInput, toggleArray, updateOptionalNumberRange } from '../../utils/filterDialog'
 import {
   SCORE_RANK_MAX_VALUES,
   SCORE_RANK_VALUES,
@@ -23,6 +24,7 @@ import ConstRangeSection from './sections/ConstRangeSection'
 import DifficultySection from './sections/DifficultySection'
 import GenreSection from './sections/GenreSection'
 import LampSection from './sections/LampSection'
+import NumericRangeSection from './sections/NumericRangeSection'
 import ScoreSection from './sections/ScoreSection'
 import VersionSection from './sections/VersionSection'
 
@@ -55,6 +57,18 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const [constMaxInput, setConstMaxInput] = createSignal(toInputValue(props.filters.constMax))
   const [scoreMinInput, setScoreMinInput] = createSignal(toInputValue(props.filters.scoreMin))
   const [scoreMaxInput, setScoreMaxInput] = createSignal(toInputValue(props.filters.scoreMax))
+  const [justiceCountMinInput, setJusticeCountMinInput] = createSignal(
+    toInputValue(props.filters.justiceCountMin)
+  )
+  const [justiceCountMaxInput, setJusticeCountMaxInput] = createSignal(
+    toInputValue(props.filters.justiceCountMax)
+  )
+  const [overPowerMinInput, setOverPowerMinInput] = createSignal(
+    toInputValue(props.filters.overPowerMin)
+  )
+  const [overPowerMaxInput, setOverPowerMaxInput] = createSignal(
+    toInputValue(props.filters.overPowerMax)
+  )
 
   const Const2Level = (value: number) => {
     const normalized = Math.max(CONST_MIN, Math.min(value, CONST_MAX))
@@ -113,6 +127,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     setConstMaxInput(toInputValue(props.filters.constMax))
     setScoreMinInput(toInputValue(props.filters.scoreMin))
     setScoreMaxInput(toInputValue(props.filters.scoreMax))
+    setJusticeCountMinInput(toInputValue(props.filters.justiceCountMin))
+    setJusticeCountMaxInput(toInputValue(props.filters.justiceCountMax))
+    setOverPowerMinInput(toInputValue(props.filters.overPowerMin))
+    setOverPowerMaxInput(toInputValue(props.filters.overPowerMax))
     setConstLevelMin(Const2Level(props.filters.constMin))
     setConstLevelMax(Const2Level(props.filters.constMax))
     setScoreRankMin(Score2Rank(props.filters.scoreMin))
@@ -228,6 +246,62 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const genres = () => sortMasterItemsBySortOrder(props.masterData?.genres ?? []).map((g) => g.name)
   const versions = () => props.versions?.map((version) => getShortVersionName(version.name)) ?? []
 
+  /**
+   * JUSTICE数の入力値をフィルター状態へ反映する。
+   *
+   * @param type - 更新対象の範囲端。
+   * @param value - 入力欄から受け取った文字列。
+   */
+  const commitJusticeCountRange = (type: 'min' | 'max', value: string) => {
+    const nextRange = updateOptionalNumberRange(
+      {
+        min: props.filters.justiceCountMin,
+        max: props.filters.justiceCountMax,
+      },
+      type,
+      value,
+      { min: JUSTICE_COUNT_RANGE_FILTER.min, max: JUSTICE_COUNT_RANGE_FILTER.max, integer: true }
+    )
+    const nextValue = toInputValue(nextRange[type])
+    if (type === 'min') {
+      setJusticeCountMinInput(nextValue)
+      props.setFilters((prev) => ({ ...prev, justiceCountMin: nextRange.min }))
+      return
+    }
+    setJusticeCountMaxInput(nextValue)
+    props.setFilters((prev) => ({ ...prev, justiceCountMax: nextRange.max }))
+  }
+
+  /**
+   * OVER POWERの入力値をフィルター状態へ反映する。
+   *
+   * @param type - 更新対象の範囲端。
+   * @param value - 入力欄から受け取った文字列。
+   */
+  const commitOverPowerRange = (type: 'min' | 'max', value: string) => {
+    const nextRange = updateOptionalNumberRange(
+      {
+        min: props.filters.overPowerMin,
+        max: props.filters.overPowerMax,
+      },
+      type,
+      value,
+      {
+        min: OVER_POWER_RANGE_FILTER.min,
+        max: OVER_POWER_RANGE_FILTER.max,
+        decimalPlaces: 3,
+      }
+    )
+    const nextValue = toInputValue(nextRange[type])
+    if (type === 'min') {
+      setOverPowerMinInput(nextValue)
+      props.setFilters((prev) => ({ ...prev, overPowerMin: nextRange.min }))
+      return
+    }
+    setOverPowerMaxInput(nextValue)
+    props.setFilters((prev) => ({ ...prev, overPowerMax: nextRange.max }))
+  }
+
   return (
     <div class="scrollbar-none min-h-0 flex-1 space-y-4 overflow-y-auto">
       <DifficultySection
@@ -296,6 +370,24 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             excludeNoPlay: checked,
           }))
         }
+      />
+      <NumericRangeSection
+        config={JUSTICE_COUNT_RANGE_FILTER}
+        minValue={justiceCountMinInput()}
+        maxValue={justiceCountMaxInput()}
+        onMinInput={setJusticeCountMinInput}
+        onMaxInput={setJusticeCountMaxInput}
+        onMinCommit={(value) => commitJusticeCountRange('min', value)}
+        onMaxCommit={(value) => commitJusticeCountRange('max', value)}
+      />
+      <NumericRangeSection
+        config={OVER_POWER_RANGE_FILTER}
+        minValue={overPowerMinInput()}
+        maxValue={overPowerMaxInput()}
+        onMinInput={setOverPowerMinInput}
+        onMaxInput={setOverPowerMaxInput}
+        onMinCommit={(value) => commitOverPowerRange('min', value)}
+        onMaxCommit={(value) => commitOverPowerRange('max', value)}
       />
       <LampSection
         title="コンボランプ"

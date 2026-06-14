@@ -58,6 +58,7 @@
   /* ===== 成功（テキスト / 背景 / 枠線） ===== */
   --cs-color-success: var(--color-green-700);
   --cs-color-success-bg: var(--color-green-50);
+  --cs-color-success-bg-hover: var(--color-green-100);
   --cs-color-success-border: var(--color-green-300);
 
   /* ===== 警告（テキスト / 背景 / 枠線） ===== */
@@ -121,6 +122,7 @@
   /* ===== 成功（テキスト / 背景 / 枠線） ===== */
   --cs-color-success: var(--color-green-300);
   --cs-color-success-bg: rgb(20 83 45 / 35%);
+  --cs-color-success-bg-hover: rgb(22 101 52 / 45%);
   --cs-color-success-border: var(--color-green-800);
 
   /* ===== 警告（テキスト / 背景 / 枠線） ===== */
@@ -284,6 +286,7 @@
   /* 成功 */
   --color-success: var(--cs-color-success);
   --color-success-bg: var(--cs-color-success-bg);
+  --color-success-bg-hover: var(--cs-color-success-bg-hover);
   --color-success-border: var(--cs-color-success-border);
 
   /* 警告 */
