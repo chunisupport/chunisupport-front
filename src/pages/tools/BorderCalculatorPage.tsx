@@ -410,7 +410,7 @@ const BorderCalculatorPage = (): JSX.Element => {
     createSignal<BorderCalculatorDifficulty>('MASTER')
   const [notes, setNotes] = createSignal(DEFAULT_NOTES)
   const [targetScore, setTargetScore] = createSignal(DEFAULT_TARGET_SCORE)
-  const [targetJustice, setTargetJustice] = createSignal('')
+  const [targetJustice, setTargetJustice] = createSignal('50')
   const [fullComboOnly, setFullComboOnly] = createSignal(false)
   const [result, setResult] = createSignal<BorderCalculatorResult | null>(null)
   const [errorMessage, setErrorMessage] = createSignal('')
