@@ -42,7 +42,7 @@ const WORLDSEND_RECORD_COLUMN_SETTINGS: WorldsendRecordColumnSetting[] = [
   { id: 'score', defaultVisible: true },
   { id: 'lamp', defaultVisible: true },
   { id: 'hardLamp', defaultVisible: true },
-  { id: 'fullChain', defaultVisible: true },
+  { id: 'fullChain', defaultVisible: false },
   { id: 'justiceCount', defaultVisible: true },
   { id: 'updatedAt', defaultVisible: true },
 ]

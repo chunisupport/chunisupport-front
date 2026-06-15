@@ -37,7 +37,7 @@ export const RECORD_COLUMN_BASE_DEFINITIONS: Record<
   const: { id: 'const', label: '定数', width: '2.5rem', sortKey: 'const' },
   score: { id: 'score', label: 'スコア', width: '4.4rem', sortKey: 'score' },
   rating: { id: 'rating', label: 'レート', width: '3.2rem', sortKey: 'rating' },
-  lamp: { id: 'lamp', label: 'AJ', width: '2.5rem', sortKey: 'lamp' },
+  lamp: { id: 'lamp', label: 'AJ', width: '32px', sortKey: 'lamp' },
   hardLamp: { id: 'hardLamp', label: 'ハード', width: '44px', sortKey: 'hardLamp' },
   fullChain: { id: 'fullChain', label: 'FCH', width: '44px', sortKey: 'fullChain' },
   justiceCount: { id: 'justiceCount', label: 'J数', width: '2rem', sortKey: 'justiceCount' },
