@@ -82,7 +82,7 @@ export const UserRecordCard: Component<Props> = (props) => {
                 {props.record.title}
               </p>
               <p class="text-base font-oswald font-bold">
-                {props.record.rating.toFixed(2)} &lt; {props.record.const} /{' '}
+                {props.record.rating.toFixed(2)} &lt; {props.record.const.toFixed(1)} /{' '}
                 {props.record.score.toLocaleString('ja-JP')} {scoreRank()}
               </p>
             </div>
