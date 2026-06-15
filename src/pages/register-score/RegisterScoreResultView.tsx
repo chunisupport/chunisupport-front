@@ -380,7 +380,10 @@ const RegisterScoreProfileSummary = (props: { result: PlayerDataResult }) => (
  */
 const RegisterScoreAggregateSummary = (props: { result: PlayerDataResult }) => {
   const averageHighScore = createMemo(() =>
-    calculateAverageHighScore(props.result.statistics, props.result.counts.full_records_upserted)
+    calculateAverageHighScore(
+      props.result.statistics,
+      props.result.counts.standard_records_upserted
+    )
   )
   const statisticRow = createMemo(() => toRegisterScoreStatisticRow(props.result.statistics))
 

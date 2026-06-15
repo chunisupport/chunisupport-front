@@ -29,6 +29,17 @@ const loadFetchVersions = async () => {
   return fetchVersions
 }
 
+/**
+ * モジュール内定数をテストごとに再評価して songs API 関数群を読み込む。
+ *
+ * @returns songs API モジュール。
+ */
+const loadSongsApi = async () => {
+  setupApiTestEnv()
+  const cacheKey = `${Date.now()}-${Math.random()}`
+  return import(`./songs.ts?cache=${cacheKey}`)
+}
+
 test('fetchVersions は一度取得したバージョン一覧をセッション中に再利用する', async () => {
   const responseBody = {
     versions: [{ name: 'CHUNITHM VERSE', released_at: '2024-12-12' }],
@@ -48,6 +59,51 @@ test('fetchVersions は一度取得したバージョン一覧をセッション
   assert.equal(fetchCount, 1)
   assert.equal(first, second)
   assert.deepEqual(second, responseBody)
+})
+
+test("WORLD'S END 楽曲APIは独立リソースの新パスを呼び出す", async () => {
+  const calledUrls: string[] = []
+
+  globalThis.fetch = async (input) => {
+    calledUrls.push(String(input))
+    return Response.json({ songs: [] })
+  }
+
+  const {
+    createWorldsendSong,
+    deleteWorldsendSongByDisplayId,
+    fetchManagedWorldsendSongs,
+    fetchWorldsendSongByDisplayId,
+    fetchWorldsendSongs,
+    restoreWorldsendSongByDisplayId,
+    updateWorldsendSongs,
+  } = await loadSongsApi()
+
+  await fetchWorldsendSongs()
+  await fetchManagedWorldsendSongs()
+  await fetchWorldsendSongByDisplayId('A/B C')
+  await updateWorldsendSongs([])
+  await createWorldsendSong({
+    official_idx: '1',
+    title: 'test',
+    artist: 'artist',
+    genre: 'genre',
+    bpm: null,
+    released_at: null,
+    jacket: null,
+  })
+  await deleteWorldsendSongByDisplayId('A/B C')
+  await restoreWorldsendSongByDisplayId('A/B C')
+
+  assert.deepEqual(calledUrls, [
+    'http://localhost:3000/internal/worldsend-songs',
+    'http://localhost:3000/internal/editor/worldsend-songs',
+    'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
+    'http://localhost:3000/internal/worldsend-songs',
+    'http://localhost:3000/internal/worldsend-songs',
+    'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
+    'http://localhost:3000/internal/worldsend-songs/A%2FB%20C/restore',
+  ])
 })
 
 test('fetchVersions は同時呼び出しを同じリクエストにまとめる', async () => {

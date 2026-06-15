@@ -40,12 +40,12 @@ const createPlayerDataResult = (overrides: Partial<PlayerDataResult> = {}): Play
     },
   },
   counts: {
-    full_records_upserted: 0,
+    standard_records_upserted: 0,
     worldsend_records_upserted: 0,
-    full_records_skipped: 0,
+    standard_records_skipped: 0,
     worldsend_records_skipped: 0,
     honors_skipped: 0,
-    full_records_actually_changed: 0,
+    standard_records_actually_changed: 0,
     worldsend_records_actually_changed: 0,
   },
   changes: [],
@@ -96,7 +96,7 @@ test("requestChangedSongMasters: 通常譜面とWORLD'S ENDの差分に応じた
   const result = createPlayerDataResult({
     changes: [
       {
-        record_type: 'full',
+        record_type: 'standard',
         change_type: 'new',
         idx: '1',
         diff: 'MASTER',
@@ -116,12 +116,12 @@ test("requestChangedSongMasters: 通常譜面とWORLD'S ENDの差分に応じた
 
   // When: 差分に必要な楽曲マスタの読み込みを要求する。
   requestChangedSongMasters(result, {
-    ensureSongsLoaded: () => calls.push('full'),
+    ensureSongsLoaded: () => calls.push('standard'),
     ensureWorldsendSongsLoaded: () => calls.push('worldsend'),
   })
 
   // Then: 両方のマスタ取得が開始される。
-  assert.deepEqual(calls, ['full', 'worldsend'])
+  assert.deepEqual(calls, ['standard', 'worldsend'])
 })
 
 test('commitRegisterScore: ユーザー名取得が完了しなくても登録結果を返す', async () => {

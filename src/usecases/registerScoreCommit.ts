@@ -64,7 +64,7 @@ export const requestChangedSongMasters = (
     'ensureSongsLoaded' | 'ensureWorldsendSongsLoaded'
   >
 ): void => {
-  if (result.changes.some((change) => change.record_type === 'full')) {
+  if (result.changes.some((change) => change.record_type === 'standard')) {
     dependencies.ensureSongsLoaded()
   }
   if (result.changes.some((change) => change.record_type === 'worldsend')) {

@@ -369,7 +369,7 @@ const UserOverPower: Component<Props> = (props) => {
     if (!songs || !md || !versions || !currentLockedSongs) return undefined
     return buildOverPowerSummary(
       songs.songs,
-      props.record.all,
+      props.record.standard,
       versions.versions,
       currentLockedSongs.items,
       md.genres
@@ -382,7 +382,7 @@ const UserOverPower: Component<Props> = (props) => {
     if (!currentLockedSongs) return []
 
     const lockedLookup = buildLockedSongLookup(currentLockedSongs.items)
-    return props.record.all.filter((record) => isRecordAvailable(record, lockedLookup))
+    return props.record.standard.filter((record) => isRecordAvailable(record, lockedLookup))
   })
   const graphRecordsByTab = createMemo<RecordsBySummaryTab | undefined>(() => {
     const songs = allSongs()

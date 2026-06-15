@@ -80,7 +80,7 @@ const UserRecord: Component<Props> = (props) => {
     useUserRecordPageModel({
       songs: allSongs,
       versions: versionData,
-      sourceRecords: () => props.record.all,
+      sourceRecords: () => props.record.standard,
       filters,
       sortKey,
       sortDirection,

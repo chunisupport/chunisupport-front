@@ -364,17 +364,25 @@ export interface PlayerDataStatistics {
 }
 
 export interface PlayerDataCounts {
-  full_records_upserted: number
+  /** 通常譜面レコードの保存対象件数。 */
+  standard_records_upserted: number
+  /** WORLD'S END レコードの保存対象件数。 */
   worldsend_records_upserted: number
-  full_records_skipped: number
+  /** 通常譜面レコードのスキップ件数。 */
+  standard_records_skipped: number
+  /** WORLD'S END レコードのスキップ件数。 */
   worldsend_records_skipped: number
+  /** 称号データのスキップ件数。 */
   honors_skipped: number
-  full_records_actually_changed: number
+  /** 通常譜面レコードの実更新件数。 */
+  standard_records_actually_changed: number
+  /** WORLD'S END レコードの実更新件数。 */
   worldsend_records_actually_changed: number
 }
 
 export interface PlayerDataRecordChange {
-  record_type: 'full' | 'worldsend'
+  /** 登録差分のレコード種別。 */
+  record_type: 'standard' | 'worldsend'
   change_type: 'new' | 'updated'
   idx: string
   /** 通常譜面は大文字難易度名、WORLD'S ENDはWE。 */
@@ -391,7 +399,8 @@ export interface PlayerDataRecordState {
 }
 
 export interface SkippedRecord {
-  record_type: string
+  /** スキップされたレコード種別。 */
+  record_type: 'standard' | 'worldsend' | 'honor'
   reason: string
   details: string
 }
@@ -495,7 +504,9 @@ export interface UserRecordMetaDTO {
 }
 
 export interface UserRecordDTO {
-  all: PlayerRecordDTO[]
+  /** 通常譜面のユーザーレコード。 */
+  standard: PlayerRecordDTO[]
+  /** WORLD'S END のユーザーレコード。 */
   worldsend?: WorldsendRecordDTO[]
   meta: UserRecordMetaDTO
 }
@@ -538,7 +549,9 @@ export interface UserRecordResponseDTO {
   best_candidate: PlayerRecordDTO[]
   new: PlayerRecordDTO[]
   new_candidate: PlayerRecordDTO[]
-  all: PlayerRecordDTO[]
+  /** 通常譜面のユーザーレコード。 */
+  standard: PlayerRecordDTO[]
+  /** WORLD'S END のユーザーレコード。 */
   worldsend?: WorldsendRecordDTO[]
 }
 

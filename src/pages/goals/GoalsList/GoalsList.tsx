@@ -66,7 +66,7 @@ const GoalsList: Component = () => {
         songs: songsResponse.songs,
         masterData,
         versions: versionData.versions ?? [],
-        records: record.all,
+        records: record.standard,
       }
     }
   )
