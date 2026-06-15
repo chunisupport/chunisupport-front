@@ -100,8 +100,9 @@ export const UserProfileView: Component<Props> = (props) => {
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
+  /** プロフィールページ上部のメインタブに適用する表示クラス。 */
   const tabTriggerClass =
-    'rounded-t px-3 py-1 text-sm data-selected:border-b-2 data-selected:border-focus-ring data-selected:bg-bg'
+    'rounded-t border-b-2 border-transparent px-3 py-1 text-sm text-text-muted transition-colors hover:border-success data-selected:border-focus-ring data-selected:bg-bg data-selected:text-text data-selected:hover:border-focus-ring'
   /** レーティング枠とレコード種別を切り替えるサブタブの表示クラス。 */
   const ratingTabTriggerClass =
     'rounded-lg p-2 text-sm font-medium text-text-muted transition-colors hover:bg-action-secondary hover:text-text data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm data-selected:hover:bg-action-primary data-selected:hover:text-text-inverse focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
