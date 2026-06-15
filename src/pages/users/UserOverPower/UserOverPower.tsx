@@ -499,7 +499,7 @@ const UserOverPower: Component<Props> = (props) => {
                         itemComponent={(itemProps) => (
                           <Select.Item
                             item={itemProps.item}
-                            class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
+                            class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg-hover data-[highlighted]:bg-success-bg-hover data-[selected]:bg-success-bg data-[selected]:hover:bg-success-bg-hover data-[selected]:data-[highlighted]:bg-success-bg-hover"
                           >
                             <div class="flex items-center gap-2">
                               <span class="inline-flex w-4 justify-center text-success">
