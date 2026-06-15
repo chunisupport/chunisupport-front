@@ -71,28 +71,28 @@ export function isRecordMatchedWithTitleMatcher(
   }
 
   // 定数
-  if (record.const < filters.constMin) return false
-  if (record.const > filters.constMax) return false
+  if (record.const < filters.const.min) return false
+  if (record.const > filters.const.max) return false
 
   // スコア
   const score = record.is_played ? record.score : 0
-  if (score < filters.scoreMin) return false
-  if (score > filters.scoreMax) return false
+  if (score < filters.score.min) return false
+  if (score > filters.score.max) return false
 
   // JUSTICE数
   if (hasJusticeCountFilter(filters)) {
     if (record.combo_lamp !== 'ALL JUSTICE' || record.justice_count === null) return false
-    if (filters.justiceCountMin !== null && record.justice_count < filters.justiceCountMin)
+    if (filters.justiceCount.min !== null && record.justice_count < filters.justiceCount.min)
       return false
-    if (filters.justiceCountMax !== null && record.justice_count > filters.justiceCountMax)
+    if (filters.justiceCount.max !== null && record.justice_count > filters.justiceCount.max)
       return false
   }
 
   // OVER POWER
   if (hasOverPowerFilter(filters)) {
     if (!record.is_played) return false
-    if (filters.overPowerMin !== null && record.overpower < filters.overPowerMin) return false
-    if (filters.overPowerMax !== null && record.overpower > filters.overPowerMax) return false
+    if (filters.overPower.min !== null && record.overpower < filters.overPower.min) return false
+    if (filters.overPower.max !== null && record.overpower > filters.overPower.max) return false
   }
 
   // コンボランプ

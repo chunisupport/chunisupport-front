@@ -5,6 +5,7 @@ import { getDefaultFilter } from './filtering'
 import { deleteFilter, loadSavedFilters, saveNewFilter } from './storage'
 
 const SAVED_FILTERS_KEY = 'chunisup_saved_filters'
+const SAVED_FILTER_SCHEMA_VERSION = 3
 
 /**
  * localStorageを利用する処理のテスト用にメモリ実装を作成する。
@@ -58,40 +59,40 @@ test('loadSavedFilters は不正JSONの場合に空配列を返す', () => {
 
 test('loadSavedFilters は保存済みJSONを復元する', () => {
   const filter = { ...getDefaultFilter(), title: 'アルファ' }
-  const savedFilters = [{ id: 'filter-1', name: '高難度', filter, savedAt: 1_774_972_800_000 }]
+  const savedFilters = [
+    {
+      schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
+      id: 'filter-1',
+      name: '高難度',
+      filter,
+      savedAt: 1_774_972_800_000,
+    },
+  ]
   localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(savedFilters))
 
   assert.deepEqual(loadSavedFilters(), savedFilters)
 })
 
-test('loadSavedFilters は古い保存済みフィルターに新しい範囲フィールドを補完する', () => {
-  const legacyFilter: Partial<ReturnType<typeof getDefaultFilter>> = {
+test('loadSavedFilters は旧スキーマの保存済みフィルターを破棄する', () => {
+  const legacyFilter = {
     ...getDefaultFilter(),
+    constMin: 1,
+    constMax: 16,
+    scoreMin: 0,
+    scoreMax: 1010000,
+    justiceCountMin: null,
+    justiceCountMax: null,
+    overPowerMin: null,
+    overPowerMax: null,
     title: '旧条件',
   }
-  delete legacyFilter.justiceCountMin
-  delete legacyFilter.justiceCountMax
-  delete legacyFilter.overPowerMin
-  delete legacyFilter.overPowerMax
   const savedFilters = [
     { id: 'filter-1', name: '旧形式', filter: legacyFilter, savedAt: 1_774_972_800_000 },
   ]
   localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(savedFilters))
 
-  assert.deepEqual(loadSavedFilters(), [
-    {
-      id: 'filter-1',
-      name: '旧形式',
-      filter: {
-        ...legacyFilter,
-        justiceCountMin: null,
-        justiceCountMax: null,
-        overPowerMin: null,
-        overPowerMax: null,
-      },
-      savedAt: 1_774_972_800_000,
-    },
-  ])
+  assert.deepEqual(loadSavedFilters(), [])
+  assert.deepEqual(JSON.parse(localStorage.getItem(SAVED_FILTERS_KEY) ?? '[]'), [])
 })
 
 test('saveNewFilter は既存フィルターを残して新規フィルターを保存する', () => {
@@ -99,7 +100,15 @@ test('saveNewFilter は既存フィルターを残して新規フィルターを
   const newFilter = { ...getDefaultFilter(), title: '追加' }
   localStorage.setItem(
     SAVED_FILTERS_KEY,
-    JSON.stringify([{ id: 'filter-1', name: '既存条件', filter: existingFilter, savedAt: 1 }])
+    JSON.stringify([
+      {
+        schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
+        id: 'filter-1',
+        name: '既存条件',
+        filter: existingFilter,
+        savedAt: 1,
+      },
+    ])
   )
   Date.now = () => 1_774_972_800_000
 
@@ -107,8 +116,15 @@ test('saveNewFilter は既存フィルターを残して新規フィルターを
 
   assert.equal(id, '1774972800000')
   assert.deepEqual(JSON.parse(localStorage.getItem(SAVED_FILTERS_KEY) ?? '[]'), [
-    { id: 'filter-1', name: '既存条件', filter: existingFilter, savedAt: 1 },
     {
+      schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
+      id: 'filter-1',
+      name: '既存条件',
+      filter: existingFilter,
+      savedAt: 1,
+    },
+    {
+      schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
       id: '1774972800000',
       name: '追加条件',
       filter: newFilter,
@@ -122,14 +138,32 @@ test('deleteFilter は指定ID以外のフィルターを保存し直す', () =>
   localStorage.setItem(
     SAVED_FILTERS_KEY,
     JSON.stringify([
-      { id: 'filter-1', name: '残す条件', filter, savedAt: 1 },
-      { id: 'filter-2', name: '削除する条件', filter, savedAt: 2 },
+      {
+        schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
+        id: 'filter-1',
+        name: '残す条件',
+        filter,
+        savedAt: 1,
+      },
+      {
+        schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
+        id: 'filter-2',
+        name: '削除する条件',
+        filter,
+        savedAt: 2,
+      },
     ])
   )
 
   deleteFilter('filter-2')
 
   assert.deepEqual(JSON.parse(localStorage.getItem(SAVED_FILTERS_KEY) ?? '[]'), [
-    { id: 'filter-1', name: '残す条件', filter, savedAt: 1 },
+    {
+      schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
+      id: 'filter-1',
+      name: '残す条件',
+      filter,
+      savedAt: 1,
+    },
   ])
 })

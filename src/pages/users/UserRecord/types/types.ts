@@ -32,22 +32,29 @@ export type RecordColumnId =
   | 'updatedAt'
 export type SortDirection = 'asc' | 'desc'
 
-/** フィルターの型定義 */
+/**
+ * 数値範囲フィルターの型定義。
+ *
+ * @property min - 範囲の下限値。
+ * @property max - 範囲の上限値。
+ */
+export type NumericRangeFilter<T extends number | null = number> = {
+  min: T
+  max: T
+}
+
+/** フィルターの型定義。 */
 export interface FilterState {
   title: string
   difficulties: Difficulty[]
   genres: string[]
   versions: string[]
-  constMin: number
-  constMax: number
+  const: NumericRangeFilter
   constFilterMode: 'level' | 'number'
-  scoreMin: number
-  scoreMax: number
+  score: NumericRangeFilter
   scoreFilterMode: 'number' | 'rank'
-  justiceCountMin: number | null
-  justiceCountMax: number | null
-  overPowerMin: number | null
-  overPowerMax: number | null
+  justiceCount: NumericRangeFilter<number | null>
+  overPower: NumericRangeFilter<number | null>
   combo_lamp: ComboLamp[]
   chain_lamp: ChainLamp[]
   hard_lamp: HardLamp[]

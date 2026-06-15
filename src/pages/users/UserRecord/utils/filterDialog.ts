@@ -24,17 +24,19 @@ export function formatFilterSummary(filter: FilterState): string {
   const parts: string[] = []
   if (filter.excludeNoPlay) parts.push('未プレイ譜面を除外')
   if (filter.difficulties.length > 0) parts.push(`難易度: ${filter.difficulties.join(',')}`)
-  if (filter.constMin !== 0.0 || filter.constMax !== CONST_MAX)
-    parts.push(`定数: ${filter.constMin}-${filter.constMax}`)
-  if (filter.scoreMin !== 0 || filter.scoreMax !== MAX_SCORE)
-    parts.push(`スコア: ${filter.scoreMin}-${filter.scoreMax}`)
-  if (filter.justiceCountMin !== null || filter.justiceCountMax !== null) {
+  if (filter.const.min !== 0.0 || filter.const.max !== CONST_MAX)
+    parts.push(`定数: ${filter.const.min}-${filter.const.max}`)
+  if (filter.score.min !== 0 || filter.score.max !== MAX_SCORE)
+    parts.push(`スコア: ${filter.score.min}-${filter.score.max}`)
+  if (filter.justiceCount.min !== null || filter.justiceCount.max !== null) {
     parts.push(
-      `JUSTICE数: ${formatOptionalNumberRange(filter.justiceCountMin, filter.justiceCountMax)}`
+      `JUSTICE数: ${formatOptionalNumberRange(filter.justiceCount.min, filter.justiceCount.max)}`
     )
   }
-  if (filter.overPowerMin !== null || filter.overPowerMax !== null) {
-    parts.push(`OVER POWER: ${formatOptionalNumberRange(filter.overPowerMin, filter.overPowerMax)}`)
+  if (filter.overPower.min !== null || filter.overPower.max !== null) {
+    parts.push(
+      `OVER POWER: ${formatOptionalNumberRange(filter.overPower.min, filter.overPower.max)}`
+    )
   }
   if (filter.genres.length > 0) parts.push(`ジャンル: ${filter.genres.join(',')}`)
   if (filter.combo_lamp.length > 0)
@@ -125,7 +127,7 @@ export function updateOptionalNumberRange(
  * @returns JUSTICE数の下限または上限が指定されている場合はtrue。
  */
 export function hasJusticeCountFilter(filter: FilterState): boolean {
-  return filter.justiceCountMin !== null || filter.justiceCountMax !== null
+  return filter.justiceCount.min !== null || filter.justiceCount.max !== null
 }
 
 /**
@@ -135,7 +137,7 @@ export function hasJusticeCountFilter(filter: FilterState): boolean {
  * @returns OVER POWERの下限または上限が指定されている場合はtrue。
  */
 export function hasOverPowerFilter(filter: FilterState): boolean {
-  return filter.overPowerMin !== null || filter.overPowerMax !== null
+  return filter.overPower.min !== null || filter.overPower.max !== null
 }
 
 /**

@@ -26,10 +26,14 @@ test('formatFilterSummary はJUSTICE数とOVER POWERの範囲を出力するこ�
   // Given
   const filter = {
     ...DEFAULT_FILTER,
-    justiceCountMin: 1,
-    justiceCountMax: null,
-    overPowerMin: 80.123,
-    overPowerMax: 95,
+    justiceCount: {
+      min: 1,
+      max: null,
+    },
+    overPower: {
+      min: 80.123,
+      max: 95,
+    },
   }
 
   // When
