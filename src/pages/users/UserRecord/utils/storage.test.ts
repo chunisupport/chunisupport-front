@@ -1,169 +1,86 @@
 import assert from 'node:assert/strict'
-import test, { afterEach, beforeEach } from 'node:test'
+import test from 'node:test'
 
+import type { RecordFilterDTO } from '../../../../types/api'
 import { getDefaultFilter } from './filtering'
-import { deleteFilter, loadSavedFilters, saveNewFilter } from './storage'
-
-const SAVED_FILTERS_KEY = 'chunisup_saved_filters'
-const SAVED_FILTER_SCHEMA_VERSION = 3
 
 /**
- * localStorageを利用する処理のテスト用にメモリ実装を作成する。
- * @returns Storage互換のメモリストレージ
+ * API 設定に必要な環境変数を補って保存フィルターユーティリティを読み込む。
+ *
+ * @returns 保存フィルターユーティリティモジュール。
  */
-const createMemoryStorage = (): Storage => {
-  const store = new Map<string, string>()
-
-  return {
-    get length() {
-      return store.size
-    },
-    clear: () => {
-      store.clear()
-    },
-    getItem: (key) => store.get(key) ?? null,
-    key: (index) => Array.from(store.keys())[index] ?? null,
-    removeItem: (key) => {
-      store.delete(key)
-    },
-    setItem: (key, value) => {
-      store.set(key, value)
-    },
-  }
+const loadStorageModule = async () => {
+  process.env.PUBLIC_BACKEND_URL = 'http://localhost:8787'
+  process.env.PUBLIC_CF_TURNSTILE_SITE_KEY = 'test-turnstile-site-key'
+  process.env.PUBLIC_FB_API_KEY = 'test-api-key'
+  process.env.PUBLIC_FB_AUTH_DOMAIN = 'test.firebaseapp.com'
+  process.env.PUBLIC_FB_PROJECT_ID = 'test-project'
+  process.env.PUBLIC_FB_STORAGE_BUCKET = 'test.appspot.com'
+  process.env.PUBLIC_FB_MESSAGING_SENDER_ID = '123456789'
+  process.env.PUBLIC_FB_APP_ID = 'test-app-id'
+  return import('./storage.ts')
 }
 
-let originalDateNow: typeof Date.now
+test('buildSavedFilterRequest は通常レコード用の保存リクエストを生成する', async () => {
+  // Given
+  const { buildSavedFilterRequest } = await loadStorageModule()
+  const filter = { ...getDefaultFilter(), title: '高難度' }
 
-beforeEach(() => {
-  Object.defineProperty(globalThis, 'localStorage', {
-    configurable: true,
-    value: createMemoryStorage(),
-  })
-  originalDateNow = Date.now
+  // When
+  const result = buildSavedFilterRequest('高難度FC狙い', filter)
+
+  // Then
+  assert.equal(result.name, '高難度FC狙い')
+  assert.equal(result.filter_type, 'standard')
+  assert.equal(result.schema_version, 3)
+  assert.deepEqual(result.filter, filter)
 })
 
-afterEach(() => {
-  Date.now = originalDateNow
-  Reflect.deleteProperty(globalThis, 'localStorage')
-})
-
-test('loadSavedFilters は保存データがない場合に空配列を返す', () => {
-  assert.deepEqual(loadSavedFilters(), [])
-})
-
-test('loadSavedFilters は不正JSONの場合に空配列を返す', () => {
-  localStorage.setItem(SAVED_FILTERS_KEY, '{')
-
-  assert.deepEqual(loadSavedFilters(), [])
-})
-
-test('loadSavedFilters は保存済みJSONを復元する', () => {
+test('toSavedFilter は現行スキーマのDTOを呼び出し可能な保存フィルターへ変換する', async () => {
+  // Given
+  const { toSavedFilter } = await loadStorageModule()
   const filter = { ...getDefaultFilter(), title: 'アルファ' }
-  const savedFilters = [
-    {
-      schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
-      id: 'filter-1',
-      name: '高難度',
-      filter,
-      savedAt: 1_774_972_800_000,
-    },
-  ]
-  localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(savedFilters))
-
-  assert.deepEqual(loadSavedFilters(), savedFilters)
-})
-
-test('loadSavedFilters は旧スキーマの保存済みフィルターを破棄する', () => {
-  const legacyFilter = {
-    ...getDefaultFilter(),
-    constMin: 1,
-    constMax: 16,
-    scoreMin: 0,
-    scoreMax: 1010000,
-    justiceCountMin: null,
-    justiceCountMax: null,
-    overPowerMin: null,
-    overPowerMax: null,
-    title: '旧条件',
+  const dto: RecordFilterDTO = {
+    id: '11111111-1111-1111-1111-111111111111',
+    name: '高難度',
+    filter_type: 'standard',
+    schema_version: 3,
+    filter,
+    created_at: '2026-06-15T12:00:00Z',
+    updated_at: '2026-06-15T12:00:00Z',
   }
-  const savedFilters = [
-    { id: 'filter-1', name: '旧形式', filter: legacyFilter, savedAt: 1_774_972_800_000 },
-  ]
-  localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(savedFilters))
 
-  assert.deepEqual(loadSavedFilters(), [])
-  assert.deepEqual(JSON.parse(localStorage.getItem(SAVED_FILTERS_KEY) ?? '[]'), [])
+  // When
+  const result = toSavedFilter(dto)
+
+  // Then
+  assert.equal(result.id, dto.id)
+  assert.equal(result.name, dto.name)
+  assert.equal(result.schemaVersion, 3)
+  assert.equal(result.isValid, true)
+  assert.deepEqual(result.filter, filter)
 })
 
-test('saveNewFilter は既存フィルターを残して新規フィルターを保存する', () => {
-  const existingFilter = { ...getDefaultFilter(), title: '既存' }
-  const newFilter = { ...getDefaultFilter(), title: '追加' }
-  localStorage.setItem(
-    SAVED_FILTERS_KEY,
-    JSON.stringify([
-      {
-        schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
-        id: 'filter-1',
-        name: '既存条件',
-        filter: existingFilter,
-        savedAt: 1,
-      },
-    ])
-  )
-  Date.now = () => 1_774_972_800_000
+test('toSavedFilter は旧スキーマのDTOを古くて無効な保存フィルターとして残す', async () => {
+  // Given
+  const { toSavedFilter } = await loadStorageModule()
+  const dto: RecordFilterDTO = {
+    id: '11111111-1111-1111-1111-111111111111',
+    name: '旧形式',
+    filter_type: 'standard',
+    schema_version: 2,
+    filter: { title: '旧条件' },
+    created_at: '2026-06-15T12:00:00Z',
+    updated_at: '2026-06-15T12:00:00Z',
+  }
 
-  const id = saveNewFilter('追加条件', newFilter)
+  // When
+  const result = toSavedFilter(dto)
 
-  assert.equal(id, '1774972800000')
-  assert.deepEqual(JSON.parse(localStorage.getItem(SAVED_FILTERS_KEY) ?? '[]'), [
-    {
-      schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
-      id: 'filter-1',
-      name: '既存条件',
-      filter: existingFilter,
-      savedAt: 1,
-    },
-    {
-      schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
-      id: '1774972800000',
-      name: '追加条件',
-      filter: newFilter,
-      savedAt: 1_774_972_800_000,
-    },
-  ])
-})
-
-test('deleteFilter は指定ID以外のフィルターを保存し直す', () => {
-  const filter = getDefaultFilter()
-  localStorage.setItem(
-    SAVED_FILTERS_KEY,
-    JSON.stringify([
-      {
-        schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
-        id: 'filter-1',
-        name: '残す条件',
-        filter,
-        savedAt: 1,
-      },
-      {
-        schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
-        id: 'filter-2',
-        name: '削除する条件',
-        filter,
-        savedAt: 2,
-      },
-    ])
-  )
-
-  deleteFilter('filter-2')
-
-  assert.deepEqual(JSON.parse(localStorage.getItem(SAVED_FILTERS_KEY) ?? '[]'), [
-    {
-      schemaVersion: SAVED_FILTER_SCHEMA_VERSION,
-      id: 'filter-1',
-      name: '残す条件',
-      filter,
-      savedAt: 1,
-    },
-  ])
+  // Then
+  assert.equal(result.name, '旧形式')
+  assert.equal(result.schemaVersion, 2)
+  assert.equal(result.isValid, false)
+  assert.equal(result.filter, null)
+  assert.equal(result.invalidReason, '古い形式のため無効です。')
 })

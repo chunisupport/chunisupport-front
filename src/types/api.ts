@@ -76,6 +76,11 @@ export type ErrorCode =
   | 'goal_invalid_achievement_params'
   | 'goal_invalid_attributes'
   | 'invalid_goal_input'
+  // Record Filters
+  | 'record_filter_not_found'
+  | 'record_filter_limit_exceeded'
+  | 'invalid_record_filter_input'
+  | 'invalid_record_filter_id'
   // 入力検証
   | 'username_empty'
   | 'username_too_short'
@@ -127,6 +132,10 @@ export const errorMessages: Record<ErrorCode, string> = {
   goal_invalid_achievement_params: '目標パラメータが不正です',
   goal_invalid_attributes: '目標条件が不正です',
   invalid_goal_input: '目標入力が不正です',
+  record_filter_not_found: '保存済みフィルターが見つかりません',
+  record_filter_limit_exceeded: '保存済みフィルターの上限件数に達しています',
+  invalid_record_filter_input: '保存済みフィルターの入力内容が不正です',
+  invalid_record_filter_id: '保存済みフィルターIDが不正です',
   username_empty: 'ユーザー名が空です',
   username_too_short: 'ユーザー名は5文字以上である必要があります',
   username_too_long: 'ユーザー名は50文字以内である必要があります',
@@ -320,6 +329,33 @@ export interface GoalDTO {
 
 export type GoalCreateRequest = Omit<GoalDTO, 'id' | 'created_at'>
 export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'created_at'>
+
+// --------------------------------
+
+/** 保存済みレコードフィルターの対象種別。 */
+export type RecordFilterType = 'standard' | 'worldsend'
+
+/** API が返す保存済みレコードフィルター。 */
+export interface RecordFilterDTO<TFilter = unknown> {
+  id: string
+  name: string
+  filter_type: RecordFilterType
+  schema_version: number
+  filter: TFilter
+  created_at: string
+  updated_at: string
+}
+
+/** 保存済みレコードフィルターの作成・更新リクエスト。 */
+export type RecordFilterRequest<TFilter = unknown> = Pick<
+  RecordFilterDTO<TFilter>,
+  'name' | 'filter_type' | 'schema_version' | 'filter'
+>
+
+/** 保存済みレコードフィルター一覧レスポンス。 */
+export interface RecordFiltersResponse<TFilter = unknown> {
+  filters: RecordFilterDTO<TFilter>[]
+}
 
 // --------------------------------
 

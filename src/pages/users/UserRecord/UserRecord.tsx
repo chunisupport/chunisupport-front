@@ -25,7 +25,6 @@ import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/co
 import { getDefaultFilter } from './utils/filtering'
 import { useUserRecordPageModel } from './utils/pageModel'
 import { parseSortParams } from './utils/sorting'
-import { loadSavedFilters, type SavedFilter } from './utils/storage'
 
 type Props = {
   username: string
@@ -36,9 +35,6 @@ const UserRecord: Component<Props> = (props) => {
   const [allSongs] = createResource(fetchAllSongs)
   const [masterData] = createResource(fetchMasterData)
   const [versionData] = createResource(fetchVersions)
-
-  // 保存済みフィルター一覧
-  const [, setSavedFilters] = createSignal<SavedFilter[]>(loadSavedFilters())
 
   // フィルターの状態
   const [filters, setFilters] = createSignal<FilterState>({
@@ -139,7 +135,6 @@ const UserRecord: Component<Props> = (props) => {
                 masterData={masterData()}
                 versions={versionData()?.versions}
                 defaultFilter={getDefaultFilter(masterData(), versionData()?.versions)}
-                setSavedFilters={setSavedFilters}
               />
 
               <ColumnSettingsDialog
