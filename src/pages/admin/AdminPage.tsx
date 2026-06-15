@@ -1,6 +1,6 @@
 import { A } from '@solidjs/router'
 import { createResource, For, Show } from 'solid-js'
-import { fetchApiRoot } from '../../api/root'
+import { fetchApiVersion } from '../../api/root'
 import {
   FRONTEND_APP_NAME,
   FRONTEND_BUILD_DATE,
@@ -33,7 +33,7 @@ const links = [
  * @returns 管理メニューに表示するビルド情報。
  */
 const AdminBuildInfo = () => {
-  const [apiRoot] = createResource(fetchApiRoot)
+  const [apiVersion] = createResource(fetchApiVersion)
   const frontendBuildLabel = formatBuildRevisionLabel({
     appName: FRONTEND_APP_NAME,
     buildDate: FRONTEND_BUILD_DATE,
@@ -43,13 +43,13 @@ const AdminBuildInfo = () => {
   return (
     <div class="mt-4 rounded-md border border-border bg-surface p-3 text-sm text-text-muted">
       <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
-        <Show when={apiRoot()} keyed>
-          {(root) => (
+        <Show when={apiVersion()} keyed>
+          {(version) => (
             <span>
               {formatBuildRevisionLabel({
-                appName: root.app_name,
-                buildDate: root.build_date,
-                commitHash: root.revision ?? 'unknown',
+                appName: version.app_name,
+                buildDate: version.build_date,
+                commitHash: version.commit_hash,
               })}
             </span>
           )}

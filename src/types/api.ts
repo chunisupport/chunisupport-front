@@ -19,6 +19,20 @@ export interface ApiRootResponse {
   version?: string
 }
 
+/**
+ * GET /version が返すAPIバージョン情報。
+ */
+export interface ApiVersionResponse {
+  /** API アプリケーション名。 */
+  app_name: string
+  /** API のビルド日時または開発環境識別子。 */
+  build_date: string
+  /** API の Git 短縮コミットハッシュ。 */
+  commit_hash: string
+  /** API バイナリの Go バージョン。 */
+  go_version: string
+}
+
 export type ErrorCode =
   // 汎用
   | 'bad_request'
