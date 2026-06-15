@@ -1,17 +1,19 @@
 import type { Component } from 'solid-js'
 import { SavedRecordFiltersDialog } from '../../../../components/SavedRecordFiltersDialog'
 import type { FilterState } from '../../../types/types'
-import { formatFilterSummary } from '../../../utils/filterDialog'
 import {
   deleteFilter,
   loadSavedFilters,
+  SAVED_FILTER_SCHEMA_VERSION,
   saveNewFilter,
   updateSavedFilter,
 } from '../../../utils/storage'
 
 type SavedFiltersDialogProps = {
+  open: boolean
   currentFilters: FilterState
   onApplyFilter: (filter: FilterState) => void
+  onEditFilter: (filter: FilterState) => void
 }
 
 /**
@@ -22,13 +24,15 @@ type SavedFiltersDialogProps = {
  */
 const SavedFiltersDialog: Component<SavedFiltersDialogProps> = (props) => (
   <SavedRecordFiltersDialog
+    open={props.open}
     currentFilters={props.currentFilters}
+    schemaVersion={SAVED_FILTER_SCHEMA_VERSION}
     onApplyFilter={props.onApplyFilter}
+    onEditFilter={props.onEditFilter}
     loadFilters={loadSavedFilters}
     createFilter={saveNewFilter}
     updateFilter={updateSavedFilter}
     deleteFilter={deleteFilter}
-    formatSummary={formatFilterSummary}
   />
 )
 

@@ -93,6 +93,17 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
     props.onOpenChange(false)
   }
 
+  /**
+   * 保存済みフィルターを編集対象として読み込み、選択パネルへ反映する。
+   *
+   * @param filter - 編集対象として読み込む保存済みフィルター。
+   * @returns なし。
+   */
+  const handleEditSavedFilter = (filter: FilterState) => {
+    setFilters(normalizeFilterState(filter))
+    setResetKey((prev) => prev + 1)
+  }
+
   return (
     <Dialog open={props.open} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
@@ -113,7 +124,12 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
             resetKey={resetKey()}
           />
           <div class="flex justify-between mt-6">
-            <SavedFiltersDialog currentFilters={filters()} onApplyFilter={handleApplySavedFilter} />
+            <SavedFiltersDialog
+              open={props.open}
+              currentFilters={filters()}
+              onApplyFilter={handleApplySavedFilter}
+              onEditFilter={handleEditSavedFilter}
+            />
             <div class="flex gap-2">
               <Button
                 type="button"

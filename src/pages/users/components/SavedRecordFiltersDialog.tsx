@@ -1,9 +1,9 @@
+import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
-import { Popover } from '@kobalte/core/popover'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
-import { EllipsisVertical, Save } from 'lucide-solid'
+import { Check, FolderOpen, Pencil, Save, Trash2 } from 'lucide-solid'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { LOGIN_PATH } from '../../../constants/routes'
@@ -14,6 +14,12 @@ import {
   SAVED_RECORD_FILTER_DIALOG_CLASS,
   SAVED_RECORD_FILTER_DIALOG_TEXT,
 } from './SavedRecordFiltersDialog.constants'
+import {
+  buildUniqueRecordFilterName,
+  isRecordFilterPayloadWithinLimit,
+  isValidRecordFilterName,
+  RECORD_FILTER_NAME_MAX_LENGTH,
+} from './savedRecordFilters'
 
 /**
  * 保存済みレコードフィルター一覧の表示項目。
@@ -31,13 +37,20 @@ export type SavedRecordFilterItem<TFilter> = {
  * 保存済みレコードフィルターダイアログへ渡す操作と表示設定。
  */
 type SavedRecordFiltersDialogProps<TFilter> = {
+  open: boolean
   currentFilters: TFilter
+  schemaVersion: number
   onApplyFilter: (filter: TFilter) => void
+  onEditFilter: (filter: TFilter) => void
   loadFilters: () => Promise<SavedRecordFilterItem<TFilter>[]>
   createFilter: (name: string, filter: TFilter) => Promise<void>
   updateFilter: (id: string, name: string, filter: TFilter) => Promise<void>
   deleteFilter: (id: string) => Promise<void>
-  formatSummary: (filter: TFilter) => string
+}
+
+type EditingFilter = {
+  id: string
+  name: string
 }
 
 /**
@@ -51,57 +64,140 @@ const buildCurrentLoginHref = (): string => {
 }
 
 /**
- * 保存済みレコードフィルターの保存、呼び出し、編集を行う共通ダイアログを表示する。
+ * 保存名入力値を API の最大文字数に丸める。
  *
- * @param props - フィルター状態、CRUD操作、要約表示ハンドラー。
+ * @param value - 入力欄の値。
+ * @returns 最大文字数以内の入力値。
+ */
+const limitNameInput = (value: string): string =>
+  Array.from(value).slice(0, RECORD_FILTER_NAME_MAX_LENGTH).join('')
+
+/**
+ * 保存済みフィルターの保存、呼び出し、編集を行う共通ダイアログを表示する。
+ *
+ * @param props - フィルター状態、CRUD操作、保存済みフィルター適用ハンドラー。
  * @returns 保存済みフィルターダイアログの JSX 要素。
  */
 export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialogProps<TFilter>) {
-  const [open, setOpen] = createSignal(false)
+  const [saveNameDialogOpen, setSaveNameDialogOpen] = createSignal(false)
+  const [listDialogOpen, setListDialogOpen] = createSignal(false)
   const [saveName, setSaveName] = createSignal('')
   const [filtersList, setFiltersList] = createSignal<SavedRecordFilterItem<TFilter>[]>([])
-  const [editNames, setEditNames] = createSignal<Record<string, string>>({})
   const [loading, setLoading] = createSignal(false)
   const [pendingAction, setPendingAction] = createSignal<string | null>(null)
   const [errorMessage, setErrorMessage] = createSignal<string | null>(null)
+  const [editingFilter, setEditingFilter] = createSignal<EditingFilter | null>(null)
+  const [highlightedFilterId, setHighlightedFilterId] = createSignal<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = createSignal<SavedRecordFilterItem<TFilter> | null>(null)
+
   const isAuthenticated = createMemo(() => authSession.status === 'authenticated')
   const shouldShowLoginLink = createMemo(
     () => authSession.status === 'unauthenticated' || authSession.status === 'error'
   )
   const loginHref = createMemo(buildCurrentLoginHref)
+  const isPayloadWithinLimit = createMemo(() =>
+    isRecordFilterPayloadWithinLimit(props.schemaVersion, props.currentFilters)
+  )
+  const canSubmitName = createMemo(
+    () =>
+      isValidRecordFilterName(saveName()) &&
+      isPayloadWithinLimit() &&
+      pendingAction() === null &&
+      isAuthenticated()
+  )
+
+  createEffect(() => {
+    if (props.open) return
+    setSaveNameDialogOpen(false)
+    setListDialogOpen(false)
+    setDeleteTarget(null)
+    setEditingFilter(null)
+    setErrorMessage(null)
+  })
 
   /**
    * 保存済みフィルター一覧をサーバーから再取得する。
    *
-   * @returns なし。
+   * @returns 取得した保存済みフィルター一覧。
    */
-  const reloadFilters = async (): Promise<void> => {
-    if (!isAuthenticated()) return
+  const reloadFilters = async (): Promise<SavedRecordFilterItem<TFilter>[]> => {
+    if (!isAuthenticated()) return []
     setLoading(true)
     setErrorMessage(null)
     try {
-      setFiltersList(await props.loadFilters())
+      const loadedFilters = await props.loadFilters()
+      setFiltersList(loadedFilters)
+      return loadedFilters
     } catch {
       setErrorMessage(SAVED_RECORD_FILTER_DIALOG_TEXT.loadError)
+      return []
     } finally {
       setLoading(false)
     }
   }
 
   createEffect(() => {
-    if (!open() || !isAuthenticated()) return
+    if (!listDialogOpen() || !isAuthenticated()) return
     void reloadFilters()
   })
 
   /**
-   * 保存済みフィルターを適用してダイアログを閉じる。
+   * ペイロードサイズが API 制限内か確認する。
    *
-   * @param filter - 適用対象のフィルター状態。
+   * @returns 保存可能なサイズの場合は true。
+   */
+  const validateCurrentPayload = (): boolean => {
+    if (isPayloadWithinLimit()) return true
+    setErrorMessage(SAVED_RECORD_FILTER_DIALOG_TEXT.payloadTooLarge)
+    return false
+  }
+
+  /**
+   * 新規保存名の入力ダイアログを開く。
+   *
    * @returns なし。
    */
-  const handleApplySavedFilter = (filter: TFilter): void => {
-    props.onApplyFilter(filter)
-    setOpen(false)
+  const openSaveNameDialog = (): void => {
+    if (!validateCurrentPayload()) return
+    setSaveName('')
+    setErrorMessage(null)
+    setSaveNameDialogOpen(true)
+  }
+
+  /**
+   * 保存済みフィルター一覧ダイアログを開く。
+   *
+   * @returns なし。
+   */
+  const openListDialog = (): void => {
+    setErrorMessage(null)
+    setListDialogOpen(true)
+  }
+
+  /**
+   * 保存済みフィルターを適用してダイアログを閉じる。
+   *
+   * @param item - 適用対象の保存済みフィルター。
+   * @returns なし。
+   */
+  const handleApplySavedFilter = (item: SavedRecordFilterItem<TFilter>): void => {
+    if (!item.filter) return
+    props.onApplyFilter(item.filter)
+    setListDialogOpen(false)
+  }
+
+  /**
+   * 保存済みフィルターを編集対象として読み込む。
+   *
+   * @param item - 編集対象の保存済みフィルター。
+   * @returns なし。
+   */
+  const handleEditSavedFilter = (item: SavedRecordFilterItem<TFilter>): void => {
+    if (!item.filter) return
+    props.onEditFilter(item.filter)
+    setEditingFilter({ id: item.id, name: item.name })
+    setHighlightedFilterId(item.id)
+    setListDialogOpen(false)
   }
 
   /**
@@ -111,13 +207,23 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
    */
   const handleSaveNewFilter = async (): Promise<void> => {
     const name = saveName().trim()
-    if (!name || pendingAction()) return
+    if (!isValidRecordFilterName(name) || pendingAction() || !validateCurrentPayload()) return
     setPendingAction('create')
     setErrorMessage(null)
     try {
-      await props.createFilter(name, props.currentFilters)
+      const latestFilters = await props.loadFilters()
+      setFiltersList(latestFilters)
+      const uniqueName = buildUniqueRecordFilterName(
+        name,
+        latestFilters.map((item) => item.name)
+      )
+      await props.createFilter(uniqueName, props.currentFilters)
       setSaveName('')
-      await reloadFilters()
+      setSaveNameDialogOpen(false)
+      const reloadedFilters = await reloadFilters()
+      const createdFilter = reloadedFilters.find((item) => item.name === uniqueName)
+      setHighlightedFilterId(createdFilter?.id ?? null)
+      setListDialogOpen(true)
     } catch {
       setErrorMessage(SAVED_RECORD_FILTER_DIALOG_TEXT.saveError)
     } finally {
@@ -126,20 +232,23 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
   }
 
   /**
-   * 保存済みフィルター名を変更する。
+   * 編集中の保存済みフィルターを現在の条件で上書きする。
    *
-   * @param item - 更新対象の保存済みフィルター。
    * @returns なし。
    */
-  const handleRenameFilter = async (item: SavedRecordFilterItem<TFilter>): Promise<void> => {
-    const filter = item.filter
-    const name = (editNames()[item.id] ?? item.name).trim()
-    if (!filter || !name || pendingAction()) return
-    setPendingAction(`rename:${item.id}`)
+  const handleSaveEditingFilter = async (): Promise<void> => {
+    const editing = editingFilter()
+    if (!editing || pendingAction() || !validateCurrentPayload()) return
+    setPendingAction(`update:${editing.id}`)
     setErrorMessage(null)
     try {
-      await props.updateFilter(item.id, name, filter)
-      await reloadFilters()
+      await props.updateFilter(editing.id, editing.name, props.currentFilters)
+      const reloadedFilters = await reloadFilters()
+      setHighlightedFilterId(
+        reloadedFilters.some((item) => item.id === editing.id) ? editing.id : null
+      )
+      setEditingFilter(null)
+      setListDialogOpen(true)
     } catch {
       setErrorMessage(SAVED_RECORD_FILTER_DIALOG_TEXT.updateError)
     } finally {
@@ -148,38 +257,37 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
   }
 
   /**
-   * 保存済みフィルターを現在の条件で上書きする。
+   * 保存ボタン押下時に新規保存または編集中フィルターの更新へ分岐する。
    *
-   * @param item - 更新対象の保存済みフィルター。
    * @returns なし。
    */
-  const handleOverwriteFilter = async (item: SavedRecordFilterItem<TFilter>): Promise<void> => {
-    const name = (editNames()[item.id] ?? item.name).trim()
-    if (!name || pendingAction()) return
-    setPendingAction(`overwrite:${item.id}`)
-    setErrorMessage(null)
-    try {
-      await props.updateFilter(item.id, name, props.currentFilters)
-      await reloadFilters()
-    } catch {
-      setErrorMessage(SAVED_RECORD_FILTER_DIALOG_TEXT.updateError)
-    } finally {
-      setPendingAction(null)
+  const handleSaveButtonClick = (): void => {
+    if (editingFilter()) {
+      void handleSaveEditingFilter()
+      return
     }
+    openSaveNameDialog()
   }
 
   /**
    * 保存済みフィルターを削除する。
    *
-   * @param id - 削除対象の保存済みフィルターID。
    * @returns なし。
    */
-  const handleDeleteSavedFilter = async (id: string): Promise<void> => {
-    if (pendingAction()) return
-    setPendingAction(`delete:${id}`)
+  const handleDeleteSavedFilter = async (): Promise<void> => {
+    const target = deleteTarget()
+    if (!target || pendingAction()) return
+    setPendingAction(`delete:${target.id}`)
     setErrorMessage(null)
     try {
-      await props.deleteFilter(id)
+      await props.deleteFilter(target.id)
+      if (editingFilter()?.id === target.id) {
+        setEditingFilter(null)
+      }
+      if (highlightedFilterId() === target.id) {
+        setHighlightedFilterId(null)
+      }
+      setDeleteTarget(null)
       await reloadFilters()
     } catch {
       setErrorMessage(SAVED_RECORD_FILTER_DIALOG_TEXT.deleteError)
@@ -194,14 +302,27 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
         <Button
           type="button"
           class={SAVED_RECORD_FILTER_DIALOG_CLASS.secondaryButton}
-          disabled={!isAuthenticated()}
-          onClick={() => setOpen(true)}
+          disabled={!isAuthenticated() || pendingAction() !== null}
+          onClick={handleSaveButtonClick}
         >
           <div class="mb-0.5 flex items-center justify-center text-sm">
-            <Save class="mr-1 h-4 w-4" />
-            <div>{SAVED_RECORD_FILTER_DIALOG_TEXT.trigger}</div>
+            <Save class="mr-1 h-4 w-4" aria-hidden="true" />
+            <div>{SAVED_RECORD_FILTER_DIALOG_TEXT.save}</div>
           </div>
         </Button>
+        <Show when={!editingFilter()}>
+          <Button
+            type="button"
+            class={SAVED_RECORD_FILTER_DIALOG_CLASS.secondaryButton}
+            disabled={!isAuthenticated() || pendingAction() !== null}
+            onClick={openListDialog}
+          >
+            <div class="mb-0.5 flex items-center justify-center text-sm">
+              <FolderOpen class="mr-1 h-4 w-4" aria-hidden="true" />
+              <div>{SAVED_RECORD_FILTER_DIALOG_TEXT.openList}</div>
+            </div>
+          </Button>
+        </Show>
         <Show when={shouldShowLoginLink()}>
           <A
             href={loginHref()}
@@ -211,188 +332,146 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
           </A>
         </Show>
       </div>
-      <Dialog open={open()} onOpenChange={setOpen}>
+      <Show when={errorMessage()}>
+        {(message) => (
+          <div class="mt-2 max-w-56 text-xs text-danger" role="alert">
+            {message()}
+          </div>
+        )}
+      </Show>
+
+      <Dialog open={saveNameDialogOpen()} onOpenChange={setSaveNameDialogOpen}>
         <Dialog.Portal>
           <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
-          <Dialog.Content class="fixed left-1/2 top-1/2 z-70 flex h-[40rem] max-h-[calc(100vh-2rem)] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
-            <Dialog.Title class="mb-2 shrink-0 font-bold">
-              {SAVED_RECORD_FILTER_DIALOG_TEXT.title}
+          <Dialog.Content class="fixed left-1/2 top-1/2 z-70 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
+            <Dialog.Title class="mb-4 text-lg font-bold">
+              {SAVED_RECORD_FILTER_DIALOG_TEXT.saveNameTitle}
             </Dialog.Title>
-            <div class="min-h-0 flex-1 basis-0 overflow-y-auto pr-1">
-              <div class="mb-1 text-xs text-text-subtle">
-                {SAVED_RECORD_FILTER_DIALOG_TEXT.savedListLabel}
-              </div>
-              <div class="mb-4 min-h-48 rounded border border-border-strong bg-surface-muted px-3 py-2">
-                <Show
-                  when={!loading()}
-                  fallback={
-                    <div class="h-48">
-                      <span class="sr-only">{SAVED_RECORD_FILTER_DIALOG_TEXT.loadingLabel}</span>
-                      <Loading />
-                    </div>
-                  }
-                >
-                  <For each={filtersList()}>
-                    {(item) => (
-                      <div class="flex items-center justify-between border-b border-border-strong py-1">
-                        <div class="min-w-0 flex-1">
-                          <div class="flex items-center gap-2">
-                            <div class="truncate">{item.name}</div>
-                            <Show when={!item.isValid}>
-                              <span class="shrink-0 rounded border border-danger px-1 text-[10px] leading-4 text-danger">
-                                {SAVED_RECORD_FILTER_DIALOG_TEXT.invalidBadge}
-                              </span>
-                            </Show>
-                          </div>
-                        </div>
-                        <Popover
-                          onOpenChange={(nextOpen) => {
-                            if (!nextOpen) return
-                            setEditNames((prev) => ({ ...prev, [item.id]: item.name }))
-                          }}
-                        >
-                          <Popover.Trigger
-                            aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.actionsLabel}
-                            title={SAVED_RECORD_FILTER_DIALOG_TEXT.actionsLabel}
-                          >
-                            <EllipsisVertical class="h-5 w-5 cursor-pointer text-text-subtle" />
-                          </Popover.Trigger>
-                          <Popover.Portal>
-                            <Popover.Content class="z-80 w-72 rounded border border-border-strong bg-surface p-4 shadow">
-                              <Popover.Arrow />
-                              <div class="mb-4">
-                                <div class="mb-2 text-sm font-sm text-text-muted">
-                                  {SAVED_RECORD_FILTER_DIALOG_TEXT.detailLabel}
-                                </div>
-                                <Show
-                                  when={item.filter}
-                                  fallback={
-                                    <div class="max-w-xs whitespace-pre-line text-xs text-danger">
-                                      {item.invalidReason ??
-                                        SAVED_RECORD_FILTER_DIALOG_TEXT.invalidFallback}
-                                    </div>
-                                  }
-                                >
-                                  {(filter) => (
-                                    <div class="max-w-xs whitespace-pre-line text-xs text-text-muted">
-                                      {props.formatSummary(filter()) ||
-                                        SAVED_RECORD_FILTER_DIALOG_TEXT.noCondition}
-                                    </div>
-                                  )}
-                                </Show>
-                              </div>
-                              <Show when={item.filter}>
-                                <div class="mb-3">
-                                  <TextField class="mb-2">
-                                    <TextField.Label class="sr-only">
-                                      {SAVED_RECORD_FILTER_DIALOG_TEXT.filterNameLabel}
-                                    </TextField.Label>
-                                    <TextField.Input
-                                      class={SAVED_RECORD_FILTER_DIALOG_CLASS.nameInput}
-                                      value={editNames()[item.id] ?? item.name}
-                                      onInput={(event) =>
-                                        setEditNames((prev) => ({
-                                          ...prev,
-                                          [item.id]: event.currentTarget.value,
-                                        }))
-                                      }
-                                    />
-                                  </TextField>
-                                  <div class="flex flex-wrap justify-end gap-2">
-                                    <Button
-                                      type="button"
-                                      class={SAVED_RECORD_FILTER_DIALOG_CLASS.primarySmallButton}
-                                      disabled={
-                                        pendingAction() !== null ||
-                                        !(editNames()[item.id] ?? item.name).trim()
-                                      }
-                                      onClick={() => void handleRenameFilter(item)}
-                                    >
-                                      {SAVED_RECORD_FILTER_DIALOG_TEXT.rename}
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      class={SAVED_RECORD_FILTER_DIALOG_CLASS.primarySmallButton}
-                                      disabled={
-                                        pendingAction() !== null ||
-                                        !(editNames()[item.id] ?? item.name).trim()
-                                      }
-                                      onClick={() => void handleOverwriteFilter(item)}
-                                    >
-                                      {SAVED_RECORD_FILTER_DIALOG_TEXT.overwrite}
-                                    </Button>
-                                  </div>
-                                </div>
-                              </Show>
-                              <div class="flex justify-end">
-                                <Button
-                                  type="button"
-                                  class={SAVED_RECORD_FILTER_DIALOG_CLASS.dangerButton}
-                                  disabled={pendingAction() !== null}
-                                  onClick={() => void handleDeleteSavedFilter(item.id)}
-                                >
-                                  {SAVED_RECORD_FILTER_DIALOG_TEXT.delete}
-                                </Button>
-                              </div>
-                            </Popover.Content>
-                          </Popover.Portal>
-                        </Popover>
-                        <Button
-                          type="button"
-                          class={SAVED_RECORD_FILTER_DIALOG_CLASS.primarySmallButton}
-                          disabled={!item.filter}
-                          onClick={() => {
-                            if (item.filter) handleApplySavedFilter(item.filter)
-                          }}
-                        >
-                          {SAVED_RECORD_FILTER_DIALOG_TEXT.apply}
-                        </Button>
-                      </div>
-                    )}
-                  </For>
-                  {filtersList().length === 0 && (
-                    <div class="mt-2 w-full text-center text-xs text-text-subtle">
-                      {SAVED_RECORD_FILTER_DIALOG_TEXT.empty}
-                    </div>
-                  )}
-                </Show>
-              </div>
-              <div class="mb-6">
-                <TextField class="mb-2">
-                  <TextField.Label class="mb-1 block text-xs text-text-subtle">
-                    {SAVED_RECORD_FILTER_DIALOG_TEXT.saveCurrentLabel}
-                  </TextField.Label>
-                  <TextField.Input
-                    class={SAVED_RECORD_FILTER_DIALOG_CLASS.nameInput}
-                    placeholder={SAVED_RECORD_FILTER_DIALOG_TEXT.namePlaceholder}
-                    value={saveName()}
-                    onInput={(event) => setSaveName(event.currentTarget.value)}
-                  />
-                </TextField>
-                <div class="flex justify-end space-x-2">
-                  <Button
-                    type="button"
-                    class={SAVED_RECORD_FILTER_DIALOG_CLASS.primarySmallButton}
-                    onClick={() => void handleSaveNewFilter()}
-                    disabled={!saveName().trim() || pendingAction() !== null}
-                  >
-                    {SAVED_RECORD_FILTER_DIALOG_TEXT.save}
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <div class="mt-4 flex shrink-0 items-center justify-between space-x-2">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault()
+                void handleSaveNewFilter()
+              }}
+            >
+              <TextField class="mb-4">
+                <TextField.Label class="mb-1 block text-xs text-text-subtle">
+                  {SAVED_RECORD_FILTER_DIALOG_TEXT.filterNameLabel}
+                </TextField.Label>
+                <TextField.Input
+                  class={SAVED_RECORD_FILTER_DIALOG_CLASS.nameInput}
+                  maxLength={RECORD_FILTER_NAME_MAX_LENGTH}
+                  value={saveName()}
+                  onInput={(event) => setSaveName(limitNameInput(event.currentTarget.value))}
+                />
+              </TextField>
               <Show when={errorMessage()}>
                 {(message) => (
-                  <div class="flex-1 text-xs text-danger" role="alert">
+                  <div class="mb-3 text-xs text-danger" role="alert">
                     {message()}
                   </div>
                 )}
               </Show>
+              <div class="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  class={SAVED_RECORD_FILTER_DIALOG_CLASS.secondaryButton}
+                  onClick={() => setSaveNameDialogOpen(false)}
+                >
+                  {SAVED_RECORD_FILTER_DIALOG_TEXT.cancel}
+                </Button>
+                <Button
+                  type="submit"
+                  class={SAVED_RECORD_FILTER_DIALOG_CLASS.primaryButton}
+                  disabled={!canSubmitName()}
+                >
+                  {SAVED_RECORD_FILTER_DIALOG_TEXT.save}
+                </Button>
+              </div>
+            </form>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog>
+
+      <Dialog open={listDialogOpen()} onOpenChange={setListDialogOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
+          <Dialog.Content class="fixed left-1/2 top-1/2 z-70 flex h-[40rem] max-h-[calc(100vh-2rem)] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
+            <Dialog.Title class="mb-4 shrink-0 text-lg font-bold">
+              {SAVED_RECORD_FILTER_DIALOG_TEXT.listTitle}
+            </Dialog.Title>
+            <div class="min-h-0 flex-1 basis-0 overflow-y-auto pr-1">
+              <Show
+                when={!loading()}
+                fallback={
+                  <div class="h-48">
+                    <span class="sr-only">{SAVED_RECORD_FILTER_DIALOG_TEXT.loadingLabel}</span>
+                    <Loading />
+                  </div>
+                }
+              >
+                <For each={filtersList()}>
+                  {(item) => (
+                    <div
+                      class="mb-2 grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded border border-border-strong bg-surface-muted p-3"
+                      classList={{
+                        'ring-2 ring-focus-ring': highlightedFilterId() === item.id,
+                      }}
+                    >
+                      <div class="min-w-0 truncate font-semibold leading-5">{item.name}</div>
+                      <div class="flex shrink-0 gap-1">
+                        <Button
+                          type="button"
+                          class={SAVED_RECORD_FILTER_DIALOG_CLASS.iconButton}
+                          disabled={!item.filter || pendingAction() !== null}
+                          aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.apply}
+                          title={SAVED_RECORD_FILTER_DIALOG_TEXT.apply}
+                          onClick={() => handleApplySavedFilter(item)}
+                        >
+                          <Check class="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          type="button"
+                          class={SAVED_RECORD_FILTER_DIALOG_CLASS.iconButton}
+                          disabled={!item.filter || pendingAction() !== null}
+                          aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.edit}
+                          title={SAVED_RECORD_FILTER_DIALOG_TEXT.edit}
+                          onClick={() => handleEditSavedFilter(item)}
+                        >
+                          <Pencil class="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          type="button"
+                          class={SAVED_RECORD_FILTER_DIALOG_CLASS.dangerIconButton}
+                          disabled={pendingAction() !== null}
+                          aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.delete}
+                          title={SAVED_RECORD_FILTER_DIALOG_TEXT.delete}
+                          onClick={() => setDeleteTarget(item)}
+                        >
+                          <Trash2 class="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </For>
+                {filtersList().length === 0 && (
+                  <div class="mt-2 w-full text-center text-xs text-text-subtle">
+                    {SAVED_RECORD_FILTER_DIALOG_TEXT.empty}
+                  </div>
+                )}
+              </Show>
+            </div>
+            <Show when={errorMessage()}>
+              {(message) => (
+                <div class="mt-3 shrink-0 text-xs text-danger" role="alert">
+                  {message()}
+                </div>
+              )}
+            </Show>
+            <div class="mt-4 flex shrink-0 justify-end">
               <Button
                 type="button"
-                class={`${SAVED_RECORD_FILTER_DIALOG_CLASS.secondaryButton} ml-auto shrink-0`}
-                onClick={() => setOpen(false)}
+                class={SAVED_RECORD_FILTER_DIALOG_CLASS.secondaryButton}
+                onClick={() => setListDialogOpen(false)}
               >
                 {SAVED_RECORD_FILTER_DIALOG_TEXT.close}
               </Button>
@@ -400,6 +479,38 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog>
+
+      <AlertDialog
+        open={deleteTarget() !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+      >
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay class="fixed inset-0 z-80 bg-overlay" />
+          <AlertDialog.Content class="fixed left-1/2 top-1/2 z-90 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
+            <AlertDialog.Title class="mb-2 text-lg font-bold">
+              {SAVED_RECORD_FILTER_DIALOG_TEXT.deleteTitle}
+            </AlertDialog.Title>
+            <AlertDialog.Description class="mb-4 text-sm text-text-muted">
+              {SAVED_RECORD_FILTER_DIALOG_TEXT.deleteDescription}
+            </AlertDialog.Description>
+            <div class="flex justify-end gap-2">
+              <AlertDialog.CloseButton class={SAVED_RECORD_FILTER_DIALOG_CLASS.secondaryButton}>
+                {SAVED_RECORD_FILTER_DIALOG_TEXT.cancel}
+              </AlertDialog.CloseButton>
+              <Button
+                type="button"
+                class={SAVED_RECORD_FILTER_DIALOG_CLASS.dangerButton}
+                disabled={pendingAction() !== null}
+                onClick={() => void handleDeleteSavedFilter()}
+              >
+                {SAVED_RECORD_FILTER_DIALOG_TEXT.delete}
+              </Button>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog>
     </>
   )
 }

@@ -6,12 +6,14 @@ import {
 } from '../../../../api/recordFilters'
 import type { RecordFilterDTO, RecordFilterRequest } from '../../../../types/api'
 import type { SavedRecordFilterItem } from '../../components/SavedRecordFiltersDialog'
+import { isValidSavedWorldsendFilter } from '../../components/savedRecordFilters'
 import { normalizeWorldsendFilterState } from '../types/filterDefaults'
 import type { WorldsendFilterState } from '../types/filterTypes'
 
 export const SAVED_WORLDSEND_FILTER_SCHEMA_VERSION = 2
 const WORLDSEND_RECORD_FILTER_TYPE = 'worldsend'
 const INVALID_SCHEMA_MESSAGE = '古い形式のため無効です。'
+const INVALID_FILTER_MESSAGE = '保存値が壊れているため無効です。'
 
 export type SavedWorldsendFilter = SavedRecordFilterItem<WorldsendFilterState>
 
@@ -33,7 +35,8 @@ function isObjectRecord(value: unknown): value is Partial<WorldsendFilterState> 
  */
 export function toSavedWorldsendFilter(dto: RecordFilterDTO<unknown>): SavedWorldsendFilter {
   const validSchema = dto.schema_version === SAVED_WORLDSEND_FILTER_SCHEMA_VERSION
-  const validFilter = isObjectRecord(dto.filter)
+  const validFilter =
+    validSchema && isObjectRecord(dto.filter) && isValidSavedWorldsendFilter(dto.filter)
 
   return {
     id: dto.id,
@@ -41,7 +44,11 @@ export function toSavedWorldsendFilter(dto: RecordFilterDTO<unknown>): SavedWorl
     schemaVersion: dto.schema_version,
     filter: validSchema && validFilter ? normalizeWorldsendFilterState(dto.filter) : null,
     isValid: validSchema && validFilter,
-    invalidReason: validSchema ? undefined : INVALID_SCHEMA_MESSAGE,
+    invalidReason: validSchema
+      ? validFilter
+        ? undefined
+        : INVALID_FILTER_MESSAGE
+      : INVALID_SCHEMA_MESSAGE,
   }
 }
 

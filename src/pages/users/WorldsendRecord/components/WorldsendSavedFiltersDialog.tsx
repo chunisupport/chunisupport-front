@@ -1,17 +1,19 @@
 import type { Component } from 'solid-js'
 import { SavedRecordFiltersDialog } from '../../components/SavedRecordFiltersDialog'
 import type { WorldsendFilterState } from '../types/filterTypes'
-import { formatWorldsendFilterSummary } from '../utils/filterDialog'
 import {
   deleteWorldsendFilter,
   loadSavedWorldsendFilters,
+  SAVED_WORLDSEND_FILTER_SCHEMA_VERSION,
   saveNewWorldsendFilter,
   updateSavedWorldsendFilter,
 } from '../utils/storage'
 
 type WorldsendSavedFiltersDialogProps = {
+  open: boolean
   currentFilters: WorldsendFilterState
   onApplyFilter: (filter: WorldsendFilterState) => void
+  onEditFilter: (filter: WorldsendFilterState) => void
 }
 
 /**
@@ -22,13 +24,15 @@ type WorldsendSavedFiltersDialogProps = {
  */
 const WorldsendSavedFiltersDialog: Component<WorldsendSavedFiltersDialogProps> = (props) => (
   <SavedRecordFiltersDialog
+    open={props.open}
     currentFilters={props.currentFilters}
+    schemaVersion={SAVED_WORLDSEND_FILTER_SCHEMA_VERSION}
     onApplyFilter={props.onApplyFilter}
+    onEditFilter={props.onEditFilter}
     loadFilters={loadSavedWorldsendFilters}
     createFilter={saveNewWorldsendFilter}
     updateFilter={updateSavedWorldsendFilter}
     deleteFilter={deleteWorldsendFilter}
-    formatSummary={formatWorldsendFilterSummary}
   />
 )
 

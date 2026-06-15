@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
@@ -73,6 +74,16 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
     props.onOpenChange(false)
   }
 
+  /**
+   * 保存済み WORLD'S END フィルターを編集対象として読み込む。
+   *
+   * @param filter - 編集対象として読み込む保存済み WORLD'S END フィルター。
+   * @returns なし。
+   */
+  const handleEditSavedFilter = (filter: WorldsendFilterState) => {
+    setFilters(normalizeWorldsendFilterState(filter))
+  }
+
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <Dialog.Portal>
@@ -90,24 +101,26 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
           />
           <div class="mt-6 flex justify-between">
             <WorldsendSavedFiltersDialog
+              open={props.open}
               currentFilters={filters()}
               onApplyFilter={handleApplySavedFilter}
+              onEditFilter={handleEditSavedFilter}
             />
             <div class="flex gap-2">
-              <button
+              <Button
                 type="button"
                 class="rounded bg-action-secondary px-4 py-2 text-text-muted hover:bg-action-secondary-hover"
                 onClick={() => props.onOpenChange(false)}
               >
                 キャンセル
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 class="rounded bg-action-primary px-4 py-2 text-text-inverse hover:bg-action-primary-hover"
                 onClick={handleApply}
               >
                 適用
-              </button>
+              </Button>
             </div>
           </div>
         </Dialog.Content>
