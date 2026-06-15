@@ -4,7 +4,7 @@ import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { MAX_SCORE } from '../../../../../../utils/scoreRank'
-import { parseNumberInput } from '../../../utils/filterDialog'
+
 import { SCORE_RANKS } from '../../../utils/scoreRank'
 import {
   FILTER_DIALOG_FIELD_INPUT_CLASS,
@@ -51,16 +51,6 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
             <NumberField
               value={props.scoreMinInput}
               onChange={(value: string) => {
-                // 0点から1点以上に変更された時、「未プレイ譜面を除外する」をONする
-                const prevValue = parseNumberInput(props.scoreMinInput)
-                const nextValue = parseNumberInput(value)
-                if (
-                  (prevValue === undefined || prevValue === 0) &&
-                  nextValue !== undefined &&
-                  nextValue >= 1
-                ) {
-                  props.onExcludeNoPlayChange(true)
-                }
                 props.onScoreMinInput(value)
               }}
               class="w-full"
@@ -118,9 +108,6 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
               value={props.scoreRankMin}
               onChange={(value) => {
                 if (value !== null) {
-                  if (props.scoreRankMin === '0点' && value !== '0点') {
-                    props.onExcludeNoPlayChange(true)
-                  }
                   props.onScoreRankChange('min', value)
                 }
               }}
@@ -160,9 +147,6 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
               value={props.scoreRankMax}
               onChange={(value) => {
                 if (value !== null) {
-                  if (props.scoreRankMax === '0点' && value !== '0点') {
-                    props.onExcludeNoPlayChange(true)
-                  }
                   props.onScoreRankChange('max', value)
                 }
               }}

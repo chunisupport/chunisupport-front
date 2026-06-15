@@ -29,10 +29,6 @@ const LampSection: Component<LampSectionProps> = (props) => (
             <Checkbox
               checked={props.selected.includes(lamp)}
               onChange={() => {
-                // 「なし」をOFFにした時、「未プレイ譜面を除外する」をONする
-                if (lamp === null && props.selected.includes(lamp)) {
-                  props.onExcludeNoPlayChange(true)
-                }
                 props.onToggle(lamp)
               }}
               class="flex items-center gap-2"

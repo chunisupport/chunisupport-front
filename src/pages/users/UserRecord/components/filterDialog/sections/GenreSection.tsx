@@ -1,7 +1,7 @@
-import { Checkbox } from '@kobalte/core/checkbox'
-import { Check } from 'lucide-solid'
+import { Select } from '@kobalte/core/select'
+import { Check, ChevronsUpDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { For } from 'solid-js'
+import { createMemo, For, Show } from 'solid-js'
 
 type GenreSectionProps = {
   genres: string[]
@@ -11,50 +11,101 @@ type GenreSectionProps = {
   onClear: () => void
 }
 
-const GenreSection: Component<GenreSectionProps> = (props) => (
-  <div>
-    <span class="block text-sm font-medium mb-1">ジャンル</span>
-    <div class="flex gap-2 mb-1">
-      <button
-        type="button"
-        class="px-2 py-1 rounded bg-action-secondary text-text-muted hover:bg-action-secondary-hover text-xs"
-        onClick={props.onSelectAll}
+const MULTI_SELECT_TRIGGER_CLASS =
+  'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+
+const MULTI_SELECT_ITEM_CLASS =
+  'cursor-pointer px-3 py-2 text-sm text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
+
+/**
+ * ジャンルの複数選択フィルターをプルダウン式チェックリストで表示する。
+ *
+ * @param props - 選択肢、選択状態、更新ハンドラーを含む表示設定。
+ * @returns ジャンル選択の JSX 要素。
+ */
+const GenreSection: Component<GenreSectionProps> = (props) => {
+  const selectedOptions = createMemo(() =>
+    props.genres.filter((genre) => props.selected.includes(genre))
+  )
+
+  /**
+   * 複数選択 Select の変更結果をフィルター状態へ反映する。
+   *
+   * @param nextSelected - Select で選択された次の値配列。
+   */
+  const handleChange = (nextSelected: string[]) => {
+    for (const genre of props.genres) {
+      if (props.selected.includes(genre) !== nextSelected.includes(genre)) {
+        props.onToggle(genre)
+      }
+    }
+  }
+
+  return (
+    <div>
+      <span class="mb-1 block text-sm font-medium">ジャンル</span>
+      <div class="mb-1 flex gap-2">
+        <button
+          type="button"
+          class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover"
+          onClick={props.onSelectAll}
+        >
+          すべて選択
+        </button>
+        <button
+          type="button"
+          class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover"
+          onClick={props.onClear}
+        >
+          すべて解除
+        </button>
+      </div>
+      <Select<string>
+        multiple
+        options={props.genres}
+        value={selectedOptions()}
+        onChange={handleChange}
+        placeholder="ジャンルを選択"
+        itemComponent={(itemProps) => (
+          <Select.Item item={itemProps.item} class={MULTI_SELECT_ITEM_CLASS}>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex w-4 justify-center text-success">
+                <Select.ItemIndicator>
+                  <Check size={14} />
+                </Select.ItemIndicator>
+              </span>
+              <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
+            </div>
+          </Select.Item>
+        )}
       >
-        すべて選択
-      </button>
-      <button
-        type="button"
-        class="px-2 py-1 rounded bg-action-secondary text-text-muted hover:bg-action-secondary-hover text-xs"
-        onClick={props.onClear}
-      >
-        すべて解除
-      </button>
-    </div>
-    <div class="flex flex-col gap-2">
-      <For each={props.genres}>
-        {(genre, index) => {
-          const id = `filter-genre-${index()}`
-          return (
-            <Checkbox
-              checked={props.selected.includes(genre)}
-              onChange={() => props.onToggle(genre)}
-              class="flex items-center gap-2"
+        <Select.Trigger class={MULTI_SELECT_TRIGGER_CLASS}>
+          <div class="flex min-h-6 flex-1 flex-wrap gap-1" aria-live="polite">
+            <Show
+              when={selectedOptions().length > 0}
+              fallback={<span class="text-text-subtle">ジャンルを選択</span>}
             >
-              <Checkbox.Input id={id} />
-              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
-                <Checkbox.Indicator>
-                  <Check class="h-4 w-4" />
-                </Checkbox.Indicator>
-              </Checkbox.Control>
-              <Checkbox.Label class="leading-5" for={id}>
-                {genre}
-              </Checkbox.Label>
-            </Checkbox>
-          )
-        }}
-      </For>
+              <For each={selectedOptions()}>
+                {(genre) => (
+                  <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
+                    {genre}
+                  </span>
+                )}
+              </For>
+            </Show>
+          </div>
+          <span class="text-text-subtle" aria-hidden="true">
+            <ChevronsUpDown size={16} />
+          </span>
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Content class="z-60 mt-1 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
+            <Select.Listbox />
+          </Select.Content>
+        </Select.Portal>
+      </Select>
     </div>
-  </div>
-)
+  )
+}
 
 export default GenreSection
