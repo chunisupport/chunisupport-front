@@ -1500,7 +1500,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         }
                       />
                       <ManagementTextField
-                        class="col-span-2 text-sm"
+                        class="col-span-1 text-sm"
                         label="属性"
                         value={currentDraft().attribute ?? ''}
                         onInput={(value) =>
@@ -1508,7 +1508,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         }
                       />
                       <ManagementTextField
-                        class="col-span-2 text-sm"
+                        class="col-span-1 text-sm"
                         label="レベル"
                         type="number"
                         min="1"
@@ -1519,7 +1519,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         }
                       />
                       <ManagementTextField
-                        class="col-span-2 text-sm"
+                        class="col-span-1 text-sm"
                         label="ノーツ"
                         type="number"
                         min="0"
@@ -1529,20 +1529,20 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         }
                       />
                       <ManagementTextField
-                        class="col-span-2 text-sm"
-                        label="譜面更新日時"
-                        value={formatUpdatedAt(currentDraft().chart_updated_at)}
-                        inputClass="w-full rounded border border-border-strong bg-surface-hover px-3 py-2 text-text-muted"
-                        disabled
-                      />
-                      <ManagementTextField
-                        class="col-span-2 text-sm"
+                        class="col-span-1 text-sm"
                         label="NOTES DESIGNER"
                         value={currentDraft().notes_designer ?? ''}
                         inputClass={`${managementInputClass} font-sans`}
                         onInput={(value) =>
                           updateWorldsendChart('notes_designer', value.trim() === '' ? null : value)
                         }
+                      />
+                      <ManagementTextField
+                        class="col-span-2 text-sm"
+                        label="譜面更新日時"
+                        value={formatUpdatedAt(currentDraft().chart_updated_at)}
+                        inputClass="w-full rounded border border-border-strong bg-surface-hover px-3 py-2 text-text-muted"
+                        disabled
                       />
                     </div>
 
