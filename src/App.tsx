@@ -2,13 +2,13 @@ import { A, Route, Router, useParams } from '@solidjs/router'
 import { Calculator, Search, Target } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
-import { fetchApiRoot } from './api/root'
+
 import { fetchMe, fetchUserProfileSummary } from './api/users'
 import { LoadError, Loading, NavBar, PlayerDataEmptyState } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
-import { FRONTEND_APP_NAME, FRONTEND_BUILD_DATE } from './constants/appBuild'
-import { FOOTER_COPYRIGHT_TEXT, FOOTER_GITHUB_LABEL, FOOTER_GITHUB_URL } from './constants/footer'
+
+import { FOOTER_COPYRIGHT_TEXT } from './constants/footer'
 import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
@@ -42,7 +42,6 @@ import { getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
 import { resolveHomeView } from './usecases/auth/resolveHomeView'
 import { isNotFoundApiError } from './utils/apiError'
-import { formatBuildDateLabel } from './utils/appVersionLabel'
 
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
   return (props: P) => (
@@ -63,37 +62,13 @@ const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
 /**
  * トップページ専用のフッターを表示する。
  *
- * @returns API とフロントエンドのビルド情報、ライセンス表記、GitHub リンクを含むフッター。
+ * @returns ライセンス表記を含むフッター。
  */
 const LandingFooter = () => {
-  const [apiRoot] = createResource(fetchApiRoot)
-  const frontendVersionLabel = formatBuildDateLabel({
-    appName: FRONTEND_APP_NAME,
-    buildDate: FRONTEND_BUILD_DATE,
-  })
-
   return (
     <footer class="border-t border-border bg-surface px-4 py-5 text-sm text-text-muted">
-      <div class="mx-auto flex w-full max-w-4xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-          <Show when={apiRoot()} keyed>
-            {(root) => (
-              <span>
-                {formatBuildDateLabel({ appName: root.app_name, buildDate: root.build_date })}
-              </span>
-            )}
-          </Show>
-          <span>{frontendVersionLabel}</span>
-          <span>{FOOTER_COPYRIGHT_TEXT}</span>
-        </div>
-        <a
-          href={FOOTER_GITHUB_URL}
-          target="_blank"
-          rel="noreferrer"
-          class="font-medium text-link underline-offset-4 hover:text-link-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-        >
-          {FOOTER_GITHUB_LABEL}
-        </a>
+      <div class="mx-auto flex w-full max-w-4xl justify-center">
+        <span>{FOOTER_COPYRIGHT_TEXT}</span>
       </div>
     </footer>
   )
