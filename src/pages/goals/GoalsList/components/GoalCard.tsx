@@ -19,6 +19,11 @@ interface GoalCardProgressProps {
 }
 
 /**
+ * 反転表示時に現在値へ添える未達量ラベル。
+ */
+const INVERT_PROGRESS_LABEL = '残り'
+
+/**
  * 目標進捗の数値を目標種別に合わせて表示用に整形する。
  *
  * @param value - 整形対象の数値。
@@ -101,12 +106,14 @@ export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
   return (
     <div class="mt-2">
       <div class="flex items-baseline gap-1">
-        {props.invert && <span class="text-base font-medium text-text">残り</span>}
+        {props.invert && (
+          <span class="text-base font-medium leading-none text-text">{INVERT_PROGRESS_LABEL}</span>
+        )}
         <span class="font-oswald text-3xl font-bold leading-none text-text">
           {displayProgress().currentText}
         </span>
       </div>
-      <div class="mb-2 flex items-end justify-between gap-3 mt-1">
+      <div class="mb-2 mt-1 flex items-end justify-between gap-3">
         <div class="flex min-w-0 w-full items-end gap-3 text-text-subtle">
           <div class="pb-0.5 font-oswald text-lg font-bold leading-none">/</div>
           <div class="goal-card-progress-secondary pb-0.5 font-oswald text-xl font-bold leading-none">
