@@ -1,5 +1,6 @@
 import { useSearchParams } from '@solidjs/router'
 import {
+  createEffect,
   createMemo,
   createResource,
   createSignal,
@@ -10,14 +11,13 @@ import {
   Suspense,
 } from 'solid-js'
 
-import { fetchWorldsendSongs } from '../../../api/songs'
+import { fetchVersions, fetchWorldsendSongs } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
-import type { WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
+import type { VersionSummaryDTO, WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
 import {
-  normalizeForReadingSearch,
-  normalizeForSearch,
-  normalizeQuery,
-} from '../../../utils/searchUtils'
+  getShortVersionName,
+  resolveVersionNameByReleaseDate,
+} from '../../../utils/versionConverter'
 import { createRecordTableVirtualizer } from '../components/createRecordTableVirtualizer'
 import FilterStats from '../components/FilterStats'
 import {
@@ -43,6 +43,9 @@ import FilterToolbar from '../UserRecord/components/FilterToolbar'
 import { formatJusticeCountForAj } from '../UserRecord/utils/justiceCountDisplay'
 import { formatUpdatedAt } from '../UserRecord/utils/updatedAt'
 import { getRecordStats } from '../utils/recordStats'
+import WorldsendFilterDialog from './components/WorldsendFilterDialog'
+import { buildDefaultWorldsendFilter, DEFAULT_WORLDSEND_FILTER } from './types/filterDefaults'
+import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from './types/filterTypes'
 import {
   createGridTemplateColumns,
   getDefaultVisibleWorldsendColumnIds,
@@ -51,6 +54,10 @@ import {
   type WorldsendRecordColumnId,
   type WorldsendRecordSortKey,
 } from './utils/columns'
+import {
+  createWorldsendRecordTitleMatcher,
+  isWorldsendRecordMatchedWithTitleMatcher,
+} from './utils/filtering'
 import {
   nextWorldsendSortState,
   parseWorldsendSortParams,
@@ -64,12 +71,6 @@ type Props = {
 
 type WorldsendSortKey = WorldsendRecordSortKey
 
-type WorldsendRecordWithSongMeta = WorldsendRecordDTO & {
-  genre: string | null
-  reading: string | null
-  release: string | null
-}
-
 const worldsendLevelLabel = (levelStar: number | null | undefined) => {
   if (typeof levelStar !== 'number' || levelStar <= 0) {
     return '-'
@@ -80,7 +81,8 @@ const worldsendLevelLabel = (levelStar: number | null | undefined) => {
 
 const attachWorldsendSongMetaToRecords = (
   songs: WorldsendSongDTO[],
-  records: WorldsendRecordDTO[]
+  records: WorldsendRecordDTO[],
+  versions: VersionSummaryDTO[]
 ): WorldsendRecordWithSongMeta[] => {
   const songMap = new Map(songs.map((song) => [song.id, song]))
 
@@ -92,6 +94,9 @@ const attachWorldsendSongMetaToRecords = (
       genre: song?.genre ?? null,
       reading: song?.reading ?? null,
       release: song?.release ?? null,
+      release_version: getShortVersionName(
+        resolveVersionNameByReleaseDate(song?.release ?? null, versions)
+      ),
     }
   })
 }
@@ -237,7 +242,11 @@ const WorldsendRecordTable = (props: {
 
 const WorldsendRecord = (props: Props) => {
   const [worldsendSongs] = createResource(fetchWorldsendSongs)
-  const [title, setTitle] = createSignal('')
+  const [versionData] = createResource(fetchVersions)
+  const [filters, setFilters] = createSignal<WorldsendFilterState>({
+    ...DEFAULT_WORLDSEND_FILTER,
+  })
+  const [filterOpen, setFilterOpen] = createSignal(false)
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
   const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<WorldsendRecordColumnId[]>(
@@ -253,53 +262,54 @@ const WorldsendRecord = (props: Props) => {
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
   onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
 
-  const recordsWithSongMeta = createMemo(() => {
-    const songs = worldsendSongs()
-    if (!songs) return []
-
-    return attachWorldsendSongMetaToRecords(songs.songs, props.records)
-  })
-
-  const searchableRecords = createMemo(() =>
-    recordsWithSongMeta().map((record) => ({
-      record,
-      normalizedTitle: normalizeForSearch(record.title),
-      normalizedReading: normalizeForReadingSearch(
-        record.reading?.trim() ? record.reading : record.title
-      ),
-    }))
+  const defaultFilter = createMemo(() =>
+    buildDefaultWorldsendFilter(worldsendSongs()?.songs ?? [], versionData()?.versions ?? [])
   )
 
+  createEffect(() => {
+    const songs = worldsendSongs()
+    const versions = versionData()
+    if (!songs || !versions) return
+    const defaults = buildDefaultWorldsendFilter(songs.songs, versions.versions)
+    setFilters((prev) => ({
+      ...prev,
+      attributes: defaults.attributes,
+      genres: defaults.genres,
+      versions: defaults.versions,
+    }))
+  })
+
+  const recordsWithSongMeta = createMemo(() => {
+    const songs = worldsendSongs()
+    const versions = versionData()
+    if (!songs || !versions) return []
+
+    return attachWorldsendSongMetaToRecords(songs.songs, props.records, versions.versions)
+  })
+
   const filteredRecords = createMemo(() => {
-    const { normalizedQuery: keyword, normalizedReadingQuery: readingKeyword } = normalizeQuery(
-      title()
+    const currentFilters = filters()
+    const matchTitle = createWorldsendRecordTitleMatcher(currentFilters.title)
+    return recordsWithSongMeta().filter((record) =>
+      isWorldsendRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle)
     )
-
-    if (!keyword) {
-      return recordsWithSongMeta()
-    }
-
-    return searchableRecords()
-      .filter(
-        ({ normalizedTitle, normalizedReading }) =>
-          normalizedTitle.includes(keyword) || normalizedReading.includes(readingKeyword)
-      )
-      .map(({ record }) => record)
   })
   const stats = createMemo(() => getRecordStats(filteredRecords()))
 
   return (
     <Suspense fallback={<Loading />}>
       <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
-        <Show when={!worldsendSongs.error} fallback={<LoadError error={worldsendSongs.error} />}>
-          <Show when={worldsendSongs()} fallback={<Loading />}>
+        <Show
+          when={!worldsendSongs.error && !versionData.error}
+          fallback={<LoadError error={worldsendSongs.error ?? versionData.error} />}
+        >
+          <Show when={worldsendSongs() && versionData()} fallback={<Loading />}>
             <div class="mx-2 text-sm">
               <FilterToolbar
-                title={title()}
-                onTitleChange={setTitle}
-                onOpenFilter={() => undefined}
+                title={filters().title}
+                onTitleChange={(value) => setFilters((prev) => ({ ...prev, title: value }))}
+                onOpenFilter={() => setFilterOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
-                filterButtonDisabled
               />
               {filteredRecords().length > 0 && (
                 <FilterStats
@@ -332,6 +342,14 @@ const WorldsendRecord = (props: Props) => {
                 onApply={(nextVisibleColumnIds) =>
                   setVisibleColumnIds(sanitizeVisibleWorldsendColumnIds(nextVisibleColumnIds))
                 }
+              />
+
+              <WorldsendFilterDialog
+                open={filterOpen()}
+                onOpenChange={setFilterOpen}
+                filters={filters()}
+                onChange={setFilters}
+                defaultFilter={defaultFilter()}
               />
             </div>
           </Show>
