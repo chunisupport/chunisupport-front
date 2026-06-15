@@ -14,6 +14,7 @@ import {
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
 import { getScoreRank } from '../../../../utils/scoreRank'
+import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses'
 import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
 
 // FIXME: 色使いすぎ？
@@ -83,7 +84,8 @@ export const UserRecordCard: Component<Props> = (props) => {
               </p>
               <p class="text-base font-oswald font-bold">
                 {props.record.rating.toFixed(2)} &lt; {props.record.const.toFixed(1)} /{' '}
-                {props.record.score.toLocaleString('ja-JP')} {scoreRank()}
+                {props.record.score.toLocaleString('ja-JP')}{' '}
+                <span class={SCORE_RANK_TEXT_CLASS[scoreRank()]}>{scoreRank()}</span>
               </p>
             </div>
           </div>
