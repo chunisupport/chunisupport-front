@@ -22,6 +22,10 @@ type Props = {
   rows: OverPowerGraphRow[]
 }
 
+/** OVERPOWERグラフのOTHER帯に使う、フィルター統計の未プレイと同じ背景色クラス。 */
+const OVER_POWER_OTHER_BAR_CLASS = SCORE_RANK_BAR_CLASS.未プレイ
+
+/** OVERPOWERグラフのスコア帯ごとの背景色クラス。 */
 const scoreBandClass: Record<OverPowerScoreBand, string> = {
   MAX: 'bg-success',
   'SSS+': SCORE_RANK_BAR_CLASS['SSS+'],
@@ -30,13 +34,14 @@ const scoreBandClass: Record<OverPowerScoreBand, string> = {
   SS: SCORE_RANK_BAR_CLASS.SS,
   'S+': SCORE_RANK_BAR_CLASS['S+'],
   S: SCORE_RANK_BAR_CLASS.S,
-  OTHER: 'bg-zinc-800',
+  OTHER: OVER_POWER_OTHER_BAR_CLASS,
 }
 
+/** OVERPOWERグラフのコンボ帯ごとの背景色クラス。 */
 const comboBandClass: Record<OverPowerComboBand, string> = {
   'ALL JUSTICE': COMBO_LAMP_BAR_CLASS['ALL JUSTICE'],
   'FULL COMBO': COMBO_LAMP_BAR_CLASS['FULL COMBO'],
-  OTHER: 'bg-zinc-800',
+  OTHER: OVER_POWER_OTHER_BAR_CLASS,
 }
 
 /** OVERPOWER値をグラフ表示用の固定小数点文字列に整形する。 */
