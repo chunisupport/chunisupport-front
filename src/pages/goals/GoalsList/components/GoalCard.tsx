@@ -44,9 +44,8 @@ export const formatValue = (value: number, type: GoalDTO['achievement_type']) =>
  * @param invert - 目標の反転表示が有効か。
  * @returns 反転時はマイナスを付与した画面表示用の数値文字列。
  */
-const formatDisplayValue = (value: number, type: GoalDTO['achievement_type'], invert: boolean) => {
-  const formatted = formatValue(value, type)
-  return invert ? `-${formatted}` : formatted
+const formatDisplayValue = (value: number, type: GoalDTO['achievement_type'], _invert: boolean) => {
+  return formatValue(value, type)
 }
 
 /**
@@ -56,9 +55,8 @@ const formatDisplayValue = (value: number, type: GoalDTO['achievement_type'], in
  * @param invert - 目標の反転表示が有効か。
  * @returns 反転時はマイナスを付与した画面表示用の達成率文字列。
  */
-const formatDisplayPercent = (percent: number, invert: boolean) => {
-  const formatted = `${percent.toFixed(2)}%`
-  return invert ? `-${formatted}` : formatted
+const formatDisplayPercent = (percent: number, _invert: boolean) => {
+  return `${percent.toFixed(2)}%`
 }
 
 /**
@@ -102,8 +100,11 @@ export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
 
   return (
     <div class="mt-2">
-      <div class="font-oswald text-3xl font-bold leading-none text-text">
-        {displayProgress().currentText}
+      <div class="flex items-baseline gap-1">
+        {props.invert && <span class="text-base font-medium text-text">残り</span>}
+        <span class="font-oswald text-3xl font-bold leading-none text-text">
+          {displayProgress().currentText}
+        </span>
       </div>
       <div class="mb-2 flex items-end justify-between gap-3 mt-1">
         <div class="flex min-w-0 w-full items-end gap-3 text-text-subtle">
