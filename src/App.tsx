@@ -8,7 +8,11 @@ import { LoadError, Loading, NavBar, PlayerDataEmptyState } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
 
-import { FOOTER_COPYRIGHT_TEXT } from './constants/footer'
+import {
+  FOOTER_COPYRIGHT_TEXT,
+  FOOTER_COPYRIGHT_TEXT_2,
+  FOOTER_DISCLAIMER_TEXT,
+} from './constants/footer'
 import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
@@ -67,8 +71,10 @@ const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
 const LandingFooter = () => {
   return (
     <footer class="border-t border-border bg-surface px-4 py-5 text-sm text-text-muted">
-      <div class="mx-auto flex w-full max-w-4xl justify-center">
+      <div class="mx-auto flex w-full max-w-4xl flex-col items-center gap-1">
         <span>{FOOTER_COPYRIGHT_TEXT}</span>
+        <span>{FOOTER_COPYRIGHT_TEXT_2}</span>
+        <span>{FOOTER_DISCLAIMER_TEXT}</span>
       </div>
     </footer>
   )
