@@ -1,9 +1,11 @@
+import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
-import { createEffect, createSignal } from 'solid-js'
+import { createEffect, createSignal, Show } from 'solid-js'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
+import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
 import { CONST_MAX, CONST_MIN } from '../../constants/constRange'
 import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../../constants/rangeFilters'
@@ -36,11 +38,19 @@ type FilterSelectionPanelProps = {
   versions?: VersionSummaryDTO[]
   defaultFilter: FilterState
   resetKey: number
+  /** 編集中のフィルター名。null の場合は編集中でない。 */
+  editingFilterName?: string | null
+  /** フィルター名が変更されたときのコールバック。 */
+  onEditingFilterNameChange?: (name: string) => void
 }
 
 /** 数値を入力欄用の文字列に変換するユーティリティ関数 */
 const toInputValue = (value?: number | null) =>
   value === undefined || value === null ? '' : String(value)
+
+/** フィルター名入力を API の最大文字数に丸める。 */
+const limitNameInput = (value: string): string =>
+  Array.from(value).slice(0, RECORD_FILTER_NAME_MAX_LENGTH).join('')
 
 /**
  * プレイヤーレコードのフィルター条件を選択するパネルを描画する。
@@ -344,6 +354,21 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 
   return (
     <div class="scrollbar-none min-h-0 flex-1 space-y-4 overflow-y-auto">
+      <Show when={props.editingFilterName != null}>
+        <div>
+          <span class="block text-sm font-medium mb-1">フィルター名</span>
+          <TextField>
+            <TextField.Input
+              class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+              maxLength={RECORD_FILTER_NAME_MAX_LENGTH}
+              value={props.editingFilterName ?? ''}
+              onInput={(event) =>
+                props.onEditingFilterNameChange?.(limitNameInput(event.currentTarget.value))
+              }
+            />
+          </TextField>
+        </div>
+      </Show>
       <DifficultySection
         difficulties={difficulties()}
         selected={props.filters.difficulties}

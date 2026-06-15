@@ -3,6 +3,7 @@ import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../types/api'
+import type { EditingFilter } from '../../../components/SavedRecordFiltersDialog'
 import { normalizeFilterState } from '../types/filterDefaults'
 import type { FilterState } from '../types/types'
 import FilterResetDialog from './filterDialog/dialogs/FilterResetDialog'
@@ -43,6 +44,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
   // 現在のフィルター状態
   const [filters, setFilters] = createSignal<FilterState>(normalizeFilterState(props.filters))
   const [resetKey, setResetKey] = createSignal(0)
+  const [editingFilter, setEditingFilter] = createSignal<EditingFilter | null>(null)
 
   // フィルターダイアログが開かれた時にフィルター状態を同期
   createEffect(() => {
@@ -104,6 +106,16 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
     setResetKey((prev) => prev + 1)
   }
 
+  /**
+   * 保存済みフィルターダイアログからの編集中状態の変更を反映する。
+   *
+   * @param editing - 現在の編集中フィルター情報。null の場合は編集中でない。
+   * @returns なし。
+   */
+  const handleEditingChange = (editing: EditingFilter | null) => {
+    setEditingFilter(editing)
+  }
+
   return (
     <Dialog open={props.open} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
@@ -122,6 +134,10 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
             versions={props.versions}
             defaultFilter={props.defaultFilter}
             resetKey={resetKey()}
+            editingFilterName={editingFilter()?.name ?? null}
+            onEditingFilterNameChange={(name) =>
+              setEditingFilter((prev) => (prev ? { ...prev, name } : null))
+            }
           />
           <div class="flex justify-between mt-6">
             <SavedFiltersDialog
@@ -129,6 +145,8 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
               currentFilters={filters()}
               onApplyFilter={handleApplySavedFilter}
               onEditFilter={handleEditSavedFilter}
+              onEditingChange={handleEditingChange}
+              editedFilterName={editingFilter()?.name}
             />
             <div class="flex gap-2">
               <Button

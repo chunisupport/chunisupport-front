@@ -6,7 +6,6 @@ export const SAVED_RECORD_FILTER_DIALOG_TEXT = {
   saveNameTitle: 'フィルター名',
   listTitle: '保存済みフィルター',
   empty: '保存された条件はありません',
-  filterNameLabel: 'フィルター名',
   apply: '呼出',
   edit: '編集',
   save: '保存',
@@ -29,7 +28,7 @@ export const SAVED_RECORD_FILTER_DIALOG_TEXT = {
  */
 export const SAVED_RECORD_FILTER_DIALOG_CLASS = {
   nameInput:
-    'w-full rounded border border-border-strong bg-surface px-2 py-1 text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring',
+    'w-full rounded border border-border-strong bg-surface px-2 py-2 text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring',
   secondaryButton:
     'rounded bg-action-secondary px-4 py-2 text-text-muted hover:bg-action-secondary-hover disabled:cursor-not-allowed disabled:opacity-50',
   primaryButton:

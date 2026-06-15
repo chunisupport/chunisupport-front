@@ -46,9 +46,14 @@ type SavedRecordFiltersDialogProps<TFilter> = {
   createFilter: (name: string, filter: TFilter) => Promise<void>
   updateFilter: (id: string, name: string, filter: TFilter) => Promise<void>
   deleteFilter: (id: string) => Promise<void>
+  /** 編集中フィルターの状態が変化したときに呼ばれる。null の場合は編集中でないことを示す。 */
+  onEditingChange?: (editing: EditingFilter | null) => void
+  /** フィルターダイアログ本体で編集中のフィルター名。保存時に内部名よりも優先される。 */
+  editedFilterName?: string
 }
 
-type EditingFilter = {
+/** 編集中の保存済みフィルター情報。 */
+export type EditingFilter = {
   id: string
   name: string
 }
@@ -87,7 +92,6 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
   const [pendingAction, setPendingAction] = createSignal<string | null>(null)
   const [errorMessage, setErrorMessage] = createSignal<string | null>(null)
   const [editingFilter, setEditingFilter] = createSignal<EditingFilter | null>(null)
-  const [highlightedFilterId, setHighlightedFilterId] = createSignal<string | null>(null)
   const [deleteTarget, setDeleteTarget] = createSignal<SavedRecordFilterItem<TFilter> | null>(null)
 
   const isAuthenticated = createMemo(() => authSession.status === 'authenticated')
@@ -113,6 +117,10 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
     setDeleteTarget(null)
     setEditingFilter(null)
     setErrorMessage(null)
+  })
+
+  createEffect(() => {
+    props.onEditingChange?.(editingFilter())
   })
 
   /**
@@ -196,7 +204,6 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
     if (!item.filter) return
     props.onEditFilter(item.filter)
     setEditingFilter({ id: item.id, name: item.name })
-    setHighlightedFilterId(item.id)
     setListDialogOpen(false)
   }
 
@@ -220,9 +227,7 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
       await props.createFilter(uniqueName, props.currentFilters)
       setSaveName('')
       setSaveNameDialogOpen(false)
-      const reloadedFilters = await reloadFilters()
-      const createdFilter = reloadedFilters.find((item) => item.name === uniqueName)
-      setHighlightedFilterId(createdFilter?.id ?? null)
+      await reloadFilters()
       setListDialogOpen(true)
     } catch {
       setErrorMessage(SAVED_RECORD_FILTER_DIALOG_TEXT.saveError)
@@ -239,14 +244,12 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
   const handleSaveEditingFilter = async (): Promise<void> => {
     const editing = editingFilter()
     if (!editing || pendingAction() || !validateCurrentPayload()) return
+    const name = props.editedFilterName ?? editing.name
     setPendingAction(`update:${editing.id}`)
     setErrorMessage(null)
     try {
-      await props.updateFilter(editing.id, editing.name, props.currentFilters)
-      const reloadedFilters = await reloadFilters()
-      setHighlightedFilterId(
-        reloadedFilters.some((item) => item.id === editing.id) ? editing.id : null
-      )
+      await props.updateFilter(editing.id, name, props.currentFilters)
+      await reloadFilters()
       setEditingFilter(null)
       setListDialogOpen(true)
     } catch {
@@ -283,9 +286,6 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
       await props.deleteFilter(target.id)
       if (editingFilter()?.id === target.id) {
         setEditingFilter(null)
-      }
-      if (highlightedFilterId() === target.id) {
-        setHighlightedFilterId(null)
       }
       setDeleteTarget(null)
       await reloadFilters()
@@ -354,9 +354,6 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
               }}
             >
               <TextField class="mb-4">
-                <TextField.Label class="mb-1 block text-xs text-text-subtle">
-                  {SAVED_RECORD_FILTER_DIALOG_TEXT.filterNameLabel}
-                </TextField.Label>
                 <TextField.Input
                   class={SAVED_RECORD_FILTER_DIALOG_CLASS.nameInput}
                   maxLength={RECORD_FILTER_NAME_MAX_LENGTH}
@@ -411,12 +408,7 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
               >
                 <For each={filtersList()}>
                   {(item) => (
-                    <div
-                      class="mb-2 grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded border border-border-strong bg-surface-muted p-3"
-                      classList={{
-                        'ring-2 ring-focus-ring': highlightedFilterId() === item.id,
-                      }}
-                    >
+                    <div class="mb-2 grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded border border-border-strong bg-surface-muted p-3">
                       <div class="min-w-0 truncate font-semibold leading-5">{item.name}</div>
                       <div class="flex shrink-0 gap-1">
                         <Button
