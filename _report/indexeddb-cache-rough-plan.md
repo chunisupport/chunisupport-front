@@ -121,7 +121,7 @@ Dexie schema のイメージ:
 
 ```ts
 db.version(1).stores({
-  cacheEntries: '&key, kind, dataUpdatedAt, fetchedAt',
+  cacheEntries: 'key, kind, dataUpdatedAt, fetchedAt',
 })
 ```
 
