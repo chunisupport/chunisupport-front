@@ -22,6 +22,7 @@
     "@kobalte/core": "^0.13.11",
     "@solidjs/router": "^0.15.4",
     "@tanstack/solid-virtual": "^3.13.22",
+    "dexie": "^4.4.3",
     "firebase": "^12.11.0",
     "lucide-solid": "^0.562.0",
     "solid-js": "^1.9.10",
@@ -34,6 +35,7 @@
     "@rsbuild/plugin-solid": "^1.0.6",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^25.5.2",
+    "fake-indexeddb": "^6.2.5",
     "generate-license-file": "^4.2.1",
     "typescript": "^5.9.3"
   }

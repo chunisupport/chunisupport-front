@@ -8,6 +8,7 @@ import type {
   MasterDataDTO,
   SongDTO,
   SongStatsResponseDTO,
+  UpdatedAtResponseDTO,
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
   VersionDTO,
@@ -25,11 +26,48 @@ const INTERNAL_EDITOR_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/editor/wo
 
 let cachedVersionsResponse: VersionsResponse | undefined
 let versionsResponsePromise: Promise<VersionsResponse> | undefined
+let cachedSongsUpdatedAtResponse: UpdatedAtResponseDTO | undefined
+let songsUpdatedAtResponsePromise: Promise<UpdatedAtResponseDTO> | undefined
+let cachedMasterDataResponse: MasterDataDTO | undefined
+let masterDataResponsePromise: Promise<MasterDataDTO> | undefined
 
 export const fetchAllSongs = async (): Promise<{ songs: SongDTO[] }> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs`)
 
   return response.json()
+}
+
+/**
+ * API から楽曲更新日時を取得する。
+ *
+ * @returns 通常楽曲と WORLD'S END 楽曲の共通更新日時レスポンス。
+ */
+const fetchSongsUpdatedAtFromApi = async (): Promise<UpdatedAtResponseDTO> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs/updated-at`)
+
+  return response.json()
+}
+
+/**
+ * セッション中に楽曲更新日時を一度だけ取得し、メモリ上に保持する。
+ * 同時呼び出しは同一リクエストにまとめる。
+ *
+ * @returns キャッシュ済み、または API から取得した更新日時レスポンス。
+ */
+export const fetchSongsUpdatedAt = async (): Promise<UpdatedAtResponseDTO> => {
+  if (cachedSongsUpdatedAtResponse) {
+    return cachedSongsUpdatedAtResponse
+  }
+
+  songsUpdatedAtResponsePromise ??= fetchSongsUpdatedAtFromApi()
+
+  try {
+    cachedSongsUpdatedAtResponse = await songsUpdatedAtResponsePromise
+    return cachedSongsUpdatedAtResponse
+  } catch (error) {
+    songsUpdatedAtResponsePromise = undefined
+    throw error
+  }
 }
 
 export const fetchManagedSongs = async (): Promise<{ songs: ManagedSongDTO[] }> => {
@@ -213,8 +251,12 @@ export const restoreWorldsendSongByDisplayId = async (displayId: string): Promis
   })
 }
 
-// --- マスターデータ取得API ---
-export const fetchMasterData = async (): Promise<MasterDataDTO> => {
+/**
+ * API からマスターデータを取得する。
+ *
+ * @returns ソート・正規化済みのマスターデータ。
+ */
+const fetchMasterDataFromApi = async (): Promise<MasterDataDTO> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/master`)
   const raw = (await response.json()) as Omit<MasterDataDTO, 'achievement_types'> & {
     achievement_types?: unknown[]
@@ -261,5 +303,26 @@ export const fetchMasterData = async (): Promise<MasterDataDTO> => {
     ...raw,
     genres: sortMasterItemsBySortOrder(raw.genres ?? []),
     achievement_types: achievementTypes,
+  }
+}
+
+/**
+ * セッション中にマスターデータを一度だけ取得し、メモリ上に保持する。
+ *
+ * @returns キャッシュ済み、または API から取得したマスターデータ。
+ */
+export const fetchMasterData = async (): Promise<MasterDataDTO> => {
+  if (cachedMasterDataResponse) {
+    return cachedMasterDataResponse
+  }
+
+  masterDataResponsePromise ??= fetchMasterDataFromApi()
+
+  try {
+    cachedMasterDataResponse = await masterDataResponsePromise
+    return cachedMasterDataResponse
+  } catch (error) {
+    masterDataResponsePromise = undefined
+    throw error
   }
 }

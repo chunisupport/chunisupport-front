@@ -2,10 +2,12 @@ import { useParams, useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
 
-import { fetchUserProfileSummary, fetchUserRating, fetchUserRecord } from '../../../api/users'
+import { fetchUserProfileSummary } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { PlayerDTO, UserRatingDTO, UserRecordDTO } from '../../../types/api'
+import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
+import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
 import NotFoundPage from '../../NotFoundPage'
 import {
@@ -56,7 +58,7 @@ const fetchUserPageLoadState = async (username: string): Promise<UserPageLoadSta
   try {
     const [profile, rating] = await Promise.all([
       fetchUserProfileSummary(username),
-      fetchUserRating(username),
+      fetchUserRatingWithCache(username),
     ])
 
     return { type: 'loaded', profile, rating }
@@ -77,7 +79,7 @@ const fetchUserPageLoadState = async (username: string): Promise<UserPageLoadSta
  */
 const fetchUserRecordLoadState = async (username: string): Promise<UserPageRecordLoadState> => ({
   username,
-  record: await fetchUserRecord(username, { includeNoPlay: true }),
+  record: await fetchUserRecordWithCache(username),
 })
 
 const UserPage: Component = () => {

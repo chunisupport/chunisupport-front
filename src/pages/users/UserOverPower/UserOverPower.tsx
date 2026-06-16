@@ -4,11 +4,20 @@ import * as Tabs from '@kobalte/core/tabs'
 import { useLocation, useNavigate } from '@solidjs/router'
 import { ArrowLeftRight, ChartBarBig, Check, ChevronDown, LockKeyhole, Table2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createMemo, createResource, createSignal, ErrorBoundary, Show, Suspense } from 'solid-js'
-import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/songs'
+import {
+  createMemo,
+  createResource,
+  createSignal,
+  ErrorBoundary,
+  onMount,
+  Show,
+  Suspense,
+} from 'solid-js'
+import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
 import { authSession } from '../../../stores/authSession'
+import { useSongsData } from '../../../stores/songsData'
 import type {
   PlayerLockedSongRequest,
   PlayerRecordDTO,
@@ -334,9 +343,14 @@ const buildSongBasedGraphRows = (
     }
   })
 
-/** ユーザーのOVERPOWERサマリーと分布グラフを表示するページコンポーネント。 */
+/**
+ * ユーザーのOVERPOWERサマリーと分布グラフを表示する。
+ *
+ * @param props - レコード、選択中サブページ、表示対象ユーザー名。
+ * @returns OVER POWER タブの表示要素。
+ */
 const UserOverPower: Component<Props> = (props) => {
-  const [allSongs] = createResource(fetchAllSongs)
+  const { songsResponse: allSongs, ensureSongsLoaded } = useSongsData()
   const [masterData] = createResource(fetchMasterData)
   const [versionData] = createResource(fetchVersions)
   const [summaryViewMode, setSummaryViewMode] = createSignal<OverPowerSummaryViewMode>(
@@ -352,6 +366,11 @@ const UserOverPower: Component<Props> = (props) => {
   const [lockedSongsDialogOpen, setLockedSongsDialogOpen] = createSignal(false)
   const navigate = useNavigate()
   const location = useLocation()
+
+  onMount(() => {
+    ensureSongsLoaded()
+  })
+
   const selectedSummaryTab = createMemo<OverPowerSummaryTab>(
     () => overPowerSummaryTabBySubPage[props.selectedSubPage]
   )

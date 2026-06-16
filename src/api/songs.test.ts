@@ -61,6 +61,28 @@ test('fetchVersions は一度取得したバージョン一覧をセッション
   assert.deepEqual(second, responseBody)
 })
 
+test('fetchSongsUpdatedAt は一度取得した更新日時をセッション中に再利用する', async () => {
+  const responseBody = { updated_at: '2026-06-16T12:00:00Z' }
+  let fetchCount = 0
+
+  globalThis.fetch = async (input) => {
+    if (String(input).endsWith('/internal/songs/updated-at')) {
+      fetchCount += 1
+      return Response.json(responseBody)
+    }
+    throw new Error(`unexpected fetch: ${String(input)}`)
+  }
+
+  const { fetchSongsUpdatedAt } = await loadSongsApi()
+
+  const first = await fetchSongsUpdatedAt()
+  const second = await fetchSongsUpdatedAt()
+
+  assert.equal(fetchCount, 1)
+  assert.equal(first, second)
+  assert.deepEqual(second, responseBody)
+})
+
 test("WORLD'S END 楽曲APIは独立リソースの新パスを呼び出す", async () => {
   const calledUrls: string[] = []
 
@@ -125,4 +147,51 @@ test('fetchVersions は同時呼び出しを同じリクエストにまとめる
   assert.equal(fetchCount, 1)
   assert.equal(first, second)
   assert.deepEqual(second, responseBody)
+})
+
+test('fetchSongsUpdatedAt は同時呼び出しを同じリクエストにまとめる', async () => {
+  const responseBody = { updated_at: '2026-06-16T12:00:00Z' }
+  let fetchCount = 0
+
+  globalThis.fetch = async (input) => {
+    if (String(input).endsWith('/internal/songs/updated-at')) {
+      fetchCount += 1
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      return Response.json(responseBody)
+    }
+    throw new Error(`unexpected fetch: ${String(input)}`)
+  }
+
+  const { fetchSongsUpdatedAt } = await loadSongsApi()
+
+  const [first, second] = await Promise.all([fetchSongsUpdatedAt(), fetchSongsUpdatedAt()])
+
+  assert.equal(fetchCount, 1)
+  assert.equal(first, second)
+  assert.deepEqual(second, responseBody)
+})
+
+test('fetchSongsUpdatedAt は失敗後に再試行できる', async () => {
+  let fetchCount = 0
+
+  globalThis.fetch = async (input) => {
+    if (!String(input).endsWith('/internal/songs/updated-at')) {
+      throw new Error(`unexpected fetch: ${String(input)}`)
+    }
+
+    fetchCount += 1
+    if (fetchCount === 1) {
+      throw new Error('network error')
+    }
+
+    return Response.json({ updated_at: '2026-06-16T12:00:00Z' })
+  }
+
+  const { fetchSongsUpdatedAt } = await loadSongsApi()
+
+  await assert.rejects(() => fetchSongsUpdatedAt(), /network error/)
+  const result = await fetchSongsUpdatedAt()
+
+  assert.equal(fetchCount, 2)
+  assert.equal(result.updated_at, '2026-06-16T12:00:00Z')
 })

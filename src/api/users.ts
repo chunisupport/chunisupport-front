@@ -4,6 +4,7 @@ import type {
   PlayerLockedSongRequest,
   PlayerLockedSongsBatchRequest,
   PlayerLockedSongsResponse,
+  UpdatedAtResponseDTO,
   UserDTO,
   UserProfileDTO,
   UserRatingDTO,
@@ -30,6 +31,20 @@ export const fetchUserProfileSummary = async (username: string): Promise<UserPro
 export const fetchUserRating = async (username: string): Promise<UserRatingDTO> => {
   const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/rating`
+  )
+
+  return response.json()
+}
+
+/**
+ * ユーザー系キャッシュの更新判定に使う最新更新日時を取得する。
+ *
+ * @param username - 更新日時を取得するユーザー名。
+ * @returns ユーザー更新日時レスポンス。
+ */
+export const fetchUserUpdatedAt = async (username: string): Promise<UpdatedAtResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/updated-at`
   )
 
   return response.json()

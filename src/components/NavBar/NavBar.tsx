@@ -28,6 +28,7 @@ import { fetchMe } from '../../api/users'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
+import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import {
   applyThemePreference,
   readThemePreference,
@@ -248,6 +249,7 @@ const NavBar = (props: NavBarProps) => {
 
   const handleLogout = async () => {
     await signOut(auth)
+    await clearClientCache().catch(() => undefined)
     clearAuthenticatedUser()
     setShowLogoutDialog(false)
     navigate('/login')

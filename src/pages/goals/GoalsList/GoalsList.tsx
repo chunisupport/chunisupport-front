@@ -2,11 +2,13 @@ import { useNavigate } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, For, Show } from 'solid-js'
 import { createGoal, deleteGoal, fetchGoals, updateGoal } from '../../../api/goals'
-import { fetchAllSongs, fetchMasterData, fetchVersions } from '../../../api/songs'
-import { fetchMe, fetchUserProfileSummary, fetchUserRecord } from '../../../api/users'
+import { fetchMasterData, fetchVersions } from '../../../api/songs'
+import { fetchMe, fetchUserProfileSummary } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../types/api'
+import { fetchAllSongsWithCache } from '../../../usecases/cache/fetchAllSongsWithCache'
+import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { calculateGoalProgress, filterRecordsByAttributes } from '../utils/goalProgress'
 import GoalCard from './components/GoalCard'
@@ -42,11 +44,11 @@ const GoalsList: Component = () => {
       const [goalsResponse, songsResponse, masterData, versionData, profile, record] =
         await Promise.all([
           fetchGoals(),
-          fetchAllSongs(),
+          fetchAllSongsWithCache(),
           fetchMasterData(),
           fetchVersions(),
           fetchUserProfileSummary(me.username),
-          fetchUserRecord(me.username, { includeNoPlay: true }),
+          fetchUserRecordWithCache(me.username),
         ])
 
       if (!profile.player) {
