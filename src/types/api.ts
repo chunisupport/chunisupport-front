@@ -33,6 +33,12 @@ export interface ApiVersionResponse {
   go_version: string
 }
 
+/** キャッシュ更新判定 API が返す更新日時レスポンス。 */
+export interface UpdatedAtResponseDTO {
+  /** 対象データの最新更新日時。未登録の場合は null。 */
+  updated_at: string | null
+}
+
 export type ErrorCode =
   // 汎用
   | 'bad_request'

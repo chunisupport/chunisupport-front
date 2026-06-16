@@ -14,6 +14,7 @@ import { LoadError, Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
+import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 
 const SECTION_IDS = ['privacy', 'api-token', 'player-data', 'account-delete'] as const
@@ -258,6 +259,7 @@ const Settings = () => {
     try {
       await deleteAccount()
       await auth.signOut()
+      await clearClientCache().catch(() => undefined)
       clearAuthenticatedUser()
       navigate('/login', { replace: true })
     } catch (error) {

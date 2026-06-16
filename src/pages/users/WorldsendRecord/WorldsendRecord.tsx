@@ -11,8 +11,15 @@ import {
   Suspense,
 } from 'solid-js'
 
-import { fetchVersions, fetchWorldsendSongs } from '../../../api/songs'
+import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
+import {
+  readWorldsendRecordColumnsSetting,
+  readWorldsendRecordFilterSetting,
+  saveWorldsendRecordColumnsSetting,
+  saveWorldsendRecordFilterSetting,
+} from '../../../repositories/viewSettingsRepository'
+import { useSongsData } from '../../../stores/songsData'
 import type { VersionSummaryDTO, WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
 import {
   getShortVersionName,
@@ -36,6 +43,7 @@ import {
   RecordTitleCell,
   RecordUpdatedAtCell,
 } from '../components/SharedRecordTableColumns'
+import { isValidSavedWorldsendFilter } from '../components/savedRecordFilters'
 import { type SortDirection, sanitizeSortQuery } from '../recordTable/sortingQuery'
 import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
@@ -70,6 +78,27 @@ type Props = {
 }
 
 type WorldsendSortKey = WorldsendRecordSortKey
+
+/**
+ * WORLD'S END レコードの初期フィルターを保存済み設定、または既定値から決定する。
+ *
+ * @param songs - フィルター既定値の構築に使う WORLD'S END 楽曲一覧。
+ * @param versions - フィルター既定値の構築に使うバージョン一覧。
+ * @returns 初回表示に適用する WORLD'S END フィルター状態。
+ */
+const restoreInitialWorldsendRecordFilter = async (
+  songs: WorldsendSongDTO[],
+  versions: VersionSummaryDTO[]
+): Promise<WorldsendFilterState> => {
+  const defaultFilter = buildDefaultWorldsendFilter(songs, versions)
+
+  try {
+    const savedFilter = await readWorldsendRecordFilterSetting()
+    return isValidSavedWorldsendFilter(savedFilter) ? savedFilter : defaultFilter
+  } catch {
+    return defaultFilter
+  }
+}
 
 const worldsendLevelLabel = (levelStar: number | null | undefined) => {
   if (typeof levelStar !== 'number' || levelStar <= 0) {
@@ -240,12 +269,23 @@ const WorldsendRecordTable = (props: {
   )
 }
 
+/**
+ * WORLD'S END レコード一覧とフィルター操作 UI を表示する。
+ *
+ * @param props - WORLD'S END レコード配列。
+ * @returns WORLD'S END レコードタブの表示要素。
+ */
 const WorldsendRecord = (props: Props) => {
-  const [worldsendSongs] = createResource(fetchWorldsendSongs)
+  const {
+    worldsendSongsResponse: worldsendSongs,
+    ensureWorldsendSongsLoaded,
+    isWorldsendSongsLoading,
+  } = useSongsData()
   const [versionData] = createResource(fetchVersions)
   const [filters, setFilters] = createSignal<WorldsendFilterState>({
     ...DEFAULT_WORLDSEND_FILTER,
   })
+  const [filterReady, setFilterReady] = createSignal(false)
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
   const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
@@ -261,23 +301,60 @@ const WorldsendRecord = (props: Props) => {
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
   onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
+  onMount(() => {
+    ensureWorldsendSongsLoaded()
+  })
 
   const defaultFilter = createMemo(() =>
     buildDefaultWorldsendFilter(worldsendSongs()?.songs ?? [], versionData()?.versions ?? [])
   )
 
+  let filterRestored = false
+
   createEffect(() => {
     const songs = worldsendSongs()
     const versions = versionData()
-    if (!songs || !versions) return
-    const defaults = buildDefaultWorldsendFilter(songs.songs, versions.versions)
-    setFilters((prev) => ({
-      ...prev,
-      attributes: defaults.attributes,
-      genres: defaults.genres,
-      versions: defaults.versions,
-    }))
+    if (filterRestored || !songs || !versions) return
+    filterRestored = true
+    void restoreInitialWorldsendRecordFilter(songs.songs, versions.versions)
+      .then(setFilters)
+      .finally(() => setFilterReady(true))
   })
+
+  onMount(() => {
+    void readWorldsendRecordColumnsSetting()
+      .then((savedColumnIds) => {
+        if (Array.isArray(savedColumnIds)) {
+          setVisibleColumnIds(
+            sanitizeVisibleWorldsendColumnIds(savedColumnIds as WorldsendRecordColumnId[])
+          )
+        }
+      })
+      .catch(() => undefined)
+  })
+
+  /**
+   * WORLD'S END レコードの現在フィルターを画面へ反映し、IndexedDB へ保存する。
+   *
+   * @param nextFilters - 次に適用するフィルター状態。
+   * @returns なし。
+   */
+  const applyFilters = (nextFilters: WorldsendFilterState) => {
+    setFilters(nextFilters)
+    void saveWorldsendRecordFilterSetting(nextFilters).catch(() => undefined)
+  }
+
+  /**
+   * WORLD'S END レコードの表示列設定を画面へ反映し、IndexedDB へ保存する。
+   *
+   * @param nextVisibleColumnIds - 次に表示する列 ID 配列。
+   * @returns なし。
+   */
+  const applyVisibleColumns = (nextVisibleColumnIds: WorldsendRecordColumnId[]) => {
+    const sanitizedColumnIds = sanitizeVisibleWorldsendColumnIds(nextVisibleColumnIds)
+    setVisibleColumnIds(sanitizedColumnIds)
+    void saveWorldsendRecordColumnsSetting(sanitizedColumnIds).catch(() => undefined)
+  }
 
   const recordsWithSongMeta = createMemo(() => {
     const songs = worldsendSongs()
@@ -303,7 +380,10 @@ const WorldsendRecord = (props: Props) => {
           when={!worldsendSongs.error && !versionData.error}
           fallback={<LoadError error={worldsendSongs.error ?? versionData.error} />}
         >
-          <Show when={worldsendSongs() && versionData()} fallback={<Loading />}>
+          <Show
+            when={!isWorldsendSongsLoading() && versionData() && filterReady()}
+            fallback={<Loading />}
+          >
             <div class="mx-2 text-sm">
               <FilterToolbar
                 title={filters().title}
@@ -339,16 +419,14 @@ const WorldsendRecord = (props: Props) => {
                 open={columnSettingsOpen()}
                 onOpenChange={setColumnSettingsOpen}
                 visibleColumnIds={visibleColumnIds()}
-                onApply={(nextVisibleColumnIds) =>
-                  setVisibleColumnIds(sanitizeVisibleWorldsendColumnIds(nextVisibleColumnIds))
-                }
+                onApply={applyVisibleColumns}
               />
 
               <WorldsendFilterDialog
                 open={filterOpen()}
                 onOpenChange={setFilterOpen}
                 filters={filters()}
-                onChange={setFilters}
+                onChange={applyFilters}
                 defaultFilter={defaultFilter()}
               />
             </div>

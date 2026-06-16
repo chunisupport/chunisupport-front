@@ -1,14 +1,18 @@
 import { createResource, createRoot, createSignal } from 'solid-js'
-import { fetchAllSongs, fetchWorldsendSongs } from '../api/songs'
+import { fetchAllSongsWithCache } from '../usecases/cache/fetchAllSongsWithCache'
+import { fetchWorldsendSongsWithCache } from '../usecases/cache/fetchWorldsendSongsWithCache'
 
 const createSongsStore = () => {
   const [songsRequested, setSongsRequested] = createSignal(false)
   const [worldsendSongsRequested, setWorldsendSongsRequested] = createSignal(false)
 
-  const [songsResponse] = createResource(() => (songsRequested() ? true : undefined), fetchAllSongs)
+  const [songsResponse] = createResource(
+    () => (songsRequested() ? true : undefined),
+    fetchAllSongsWithCache
+  )
   const [worldsendSongsResponse] = createResource(
     () => (worldsendSongsRequested() ? true : undefined),
-    fetchWorldsendSongs
+    fetchWorldsendSongsWithCache
   )
 
   const ensureSongsLoaded = () => {
