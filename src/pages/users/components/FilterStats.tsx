@@ -170,7 +170,7 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
         aria-hidden="true"
       />
       <p class="flex-1 text-left font-semibold">フィルター統計</p>
-      <p class="text-xs text-text-muted">
+      <p class="text-sm text-text-muted">
         平均スコア: {props.stats.scoreStats.avg.toLocaleString()}
       </p>
     </Collapsible.Trigger>
