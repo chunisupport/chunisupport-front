@@ -93,19 +93,21 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
             <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
             <FilterResetDialog onReset={handleReset} />
           </div>
-          <WorldsendFilterSelectionPanel
-            open={props.open}
-            filters={filters()}
-            setFilters={setFilters}
-            defaultFilter={props.defaultFilter}
-          />
-          <div class="mt-6 flex justify-between">
+          <div class="mb-4">
             <WorldsendSavedFiltersDialog
               open={props.open}
               currentFilters={filters()}
               onApplyFilter={handleApplySavedFilter}
               onEditFilter={handleEditSavedFilter}
             />
+          </div>
+          <WorldsendFilterSelectionPanel
+            open={props.open}
+            filters={filters()}
+            setFilters={setFilters}
+            defaultFilter={props.defaultFilter}
+          />
+          <div class="mt-6 flex justify-end">
             <div class="flex gap-2">
               <Button
                 type="button"

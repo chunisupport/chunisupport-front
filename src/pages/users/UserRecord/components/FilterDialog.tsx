@@ -125,6 +125,16 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
             <Dialog.Title class="text-lg font-bold">{FILTER_DIALOG_TEXT.title}</Dialog.Title>
             <FilterResetDialog onReset={handleReset} />
           </div>
+          <div class="mb-4">
+            <SavedFiltersDialog
+              open={props.open}
+              currentFilters={filters()}
+              onApplyFilter={handleApplySavedFilter}
+              onEditFilter={handleEditSavedFilter}
+              onEditingChange={handleEditingChange}
+              editedFilterName={editingFilter()?.name}
+            />
+          </div>
           {/* メインのフィルター選択部分 */}
           <FilterSelectionPanel
             open={props.open}
@@ -139,15 +149,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
               setEditingFilter((prev) => (prev ? { ...prev, name } : null))
             }
           />
-          <div class="flex justify-between mt-6">
-            <SavedFiltersDialog
-              open={props.open}
-              currentFilters={filters()}
-              onApplyFilter={handleApplySavedFilter}
-              onEditFilter={handleEditSavedFilter}
-              onEditingChange={handleEditingChange}
-              editedFilterName={editingFilter()?.name}
-            />
+          <div class="flex justify-end mt-6">
             <div class="flex gap-2">
               <Button
                 type="button"
