@@ -1,16 +1,119 @@
-# レコードフィルター仕様
+# レコードフィルター・列表示設定
 
-このドキュメントは、ユーザーレコード画面で利用するフィルター状態、保存済みフィルター API、URL クエリ表現をまとめたものです。
-基準実装は `src/pages/users/UserRecord`、`src/pages/users/WorldsendRecord`、`src/pages/users/components/SavedRecordFiltersDialog.tsx`、`src/api/recordFilters.ts` です。
+このドキュメントは、ユーザーレコード画面で利用するフィルター状態、列表示設定、各種永続化方式をまとめたものです。
+基準実装は `src/pages/users/UserRecord`、`src/pages/users/WorldsendRecord`、`src/pages/users/components/SavedRecordFiltersDialog.tsx`、`src/pages/users/components/ColumnSettingsDialogBase.tsx`、`src/api/recordFilters.ts`、`src/repositories/viewSettingsRepository.ts` です。
+
+IndexedDB の DB 設計全体については [IndexedDB キャッシュ](./indexeddb-cache.md) を参照してください。
 
 ## 対象
 
-レコードフィルターは、通常レコード用の `FilterState` と WORLD'S END 用の `WorldsendFilterState` に分かれます。
+レコード画面の表示制御は、以下の 2 種類に分かれます。
+
+- **フィルター**: 通常レコード用の `FilterState` と WORLD'S END 用の `WorldsendFilterState`
+- **列表示設定**: 通常レコード用の `RecordColumnId[]` と WORLD'S END 用の `WorldsendRecordColumnId[]`
+
+これらの状態は、用途に応じて 3 つの永続化方式を使い分けます。
+
+| 永続化方式 | 保存先 | 用途 |
+| --- | --- | --- |
+| 現在適用中の設定 | IndexedDB `viewSettings` store | 画面リロード後も直前のフィルター・列表示を復元する |
+| 保存済みフィルター | サーバー API `/internal/me/record-filters` | 名前付きプリセットの作成・呼出・編集・削除 |
+| URL クエリ | ブラウザ URL | 通常レコードの範囲条件のみを共有可能な形で表現する |
 
 保存済みフィルターは localStorage ではなく、認証済みユーザーのサーバーデータとして `/internal/me/record-filters` API に保存します。
 API 上は `filter_type` で通常レコードと WORLD'S END を区別し、`filter` に各画面のフィルター状態 JSON を内包します。
 
-URL クエリでは内部 JSON をそのまま入れず、通常レコードの範囲条件だけをフラットなキーへ変換します。
+URL クエリでは内部 JSON をそのまま入れず、通常レコードの範囲条件だけをフラットなキーへ変換します。ソート条件（`sortcol`, `sortorder`）は URL クエリで扱いますが、IndexedDB には保存しません。
+
+## IndexedDB による現在適用中設定の永続化
+
+通常レコード画面と WORLD'S END レコード画面の「現在適用中」のフィルター・列表示設定は、IndexedDB の `viewSettings` store に保存します。
+`src/api/recordFilters.ts` の保存済みフィルター（名前付きプリセット）とは別物です。サーバー側の保存済みフィルター機能は今後も維持します。
+
+### 保存対象とキー
+
+| 保存対象 | IndexedDB キー | データ型 |
+| --- | --- | --- |
+| 現在適用中の通常レコードフィルター | `standardRecordFilter` | `FilterState` |
+| 現在適用中の通常レコード列表示設定 | `standardRecordColumns` | `RecordColumnId[]` |
+| 現在適用中の WORLD'S END フィルター | `worldsendRecordFilter` | `WorldsendFilterState` |
+| 現在適用中の WORLD'S END 列表示設定 | `worldsendRecordColumns` | `WorldsendRecordColumnId[]` |
+
+### 保存・復元のルール
+
+- フィルターはフィルターダイアログの「適用」時に保存します。
+- 列表示設定は列設定ダイアログの「適用」時に保存します。
+- 初期表示時、IndexedDB に保存があればそれを復元します。
+- 保存がない、または `CLIENT_CACHE_SCHEMA_VERSION` と `schemaVersion` が不一致の場合はデフォルト値を使用します。
+- 壊れた保存値は安全に破棄し、デフォルト値にフォールバックします。
+- フィルター復元時は `isValidSavedStandardFilter` / `isValidSavedWorldsendFilter` で型と許可値を検証します。
+- 列表示復元時は `sanitizeVisibleColumnIds` / `sanitizeVisibleWorldsendColumnIds` で未知の列 ID を除外し、空配列の場合はデフォルト列に戻します。
+- 初期化直後にデフォルト値で保存済み設定を上書きしないよう、復元処理と保存処理を分離します。
+- IndexedDB 操作に失敗しても画面表示は継続し、デフォルト値またはメモリ上の現在値を使います。
+- ログアウト・退会時は `clearClientCache()` により `viewSettings` を含む IndexedDB 全体が削除されます。
+
+### 保存データ例
+
+```ts
+{
+  key: 'standardRecordColumns',
+  schemaVersion: 1,
+  savedAt: '2026-06-16T12:01:00Z',
+  data: ['title', 'difficulty', 'const', 'score', 'rating', 'lamp', 'hardLamp', 'justiceCount', 'updatedAt']
+}
+```
+
+読み書きは `src/repositories/viewSettingsRepository.ts` に集約しています。
+
+## 列表示設定
+
+レコードテーブルの表示列は、列 ID の配列として管理します。列設定ダイアログで表示/非表示を切り替え、「適用」時に画面へ反映し IndexedDB へ保存します。
+
+### 通常レコードの列
+
+定義は `src/pages/users/UserRecord/utils/columns.ts` の `RECORD_COLUMN_DEFINITIONS` です。
+
+| 列 ID | デフォルト表示 | 説明 |
+| --- | --- | --- |
+| `title` | はい | 曲名 |
+| `difficulty` | はい | 難易度 |
+| `const` | はい | 譜面定数 |
+| `score` | はい | スコア |
+| `rating` | はい | レーティング値 |
+| `lamp` | はい | コンボランプ |
+| `hardLamp` | はい | クリアランプ |
+| `fullChain` | いいえ | FULL CHAIN ランプ |
+| `justiceCount` | はい | JUSTICE 数 |
+| `overpower` | いいえ | OVER POWER 値 |
+| `overpowerPercent` | いいえ | OVER POWER 達成率 |
+| `updatedAt` | はい | 更新日時 |
+
+デフォルト表示列は `getDefaultVisibleColumnIds()` が返す ID 配列です。保存値の検証・正規化は `sanitizeVisibleColumnIds()` が担います。
+
+### WORLD'S END レコードの列
+
+定義は `src/pages/users/WorldsendRecord/utils/columns.ts` の `WORLDSEND_RECORD_COLUMN_DEFINITIONS` です。
+
+| 列 ID | デフォルト表示 | 説明 |
+| --- | --- | --- |
+| `title` | はい | 曲名 |
+| `attribute` | はい | WORLD'S END 属性 |
+| `level` | はい | ★レベル |
+| `score` | はい | スコア |
+| `lamp` | はい | コンボランプ |
+| `hardLamp` | はい | クリアランプ |
+| `fullChain` | いいえ | FULL CHAIN ランプ |
+| `justiceCount` | はい | JUSTICE 数 |
+| `updatedAt` | はい | 更新日時 |
+
+デフォルト表示列は `getDefaultVisibleWorldsendColumnIds()` が返す ID 配列です。保存値の検証・正規化は `sanitizeVisibleWorldsendColumnIds()` が担います。
+
+### 列表示の共通ルール
+
+- 列の表示順は定義ファイルの順序に従い、`sortVisibleColumnIdsByDefinitionOrder` で整列します。
+- 重複する列 ID は除去します。
+- 定義に存在しない列 ID は無視します。
+- 正規化後に有効な列が 1 つも残らない場合は、デフォルト表示列を使います。
 
 ## 通常レコード FilterState
 
