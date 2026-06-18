@@ -6,17 +6,21 @@ import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchMe, fetchUserProfileSummary } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { saveStandardRecordFilterSetting } from '../../../repositories/viewSettingsRepository'
 import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../types/api'
 import { fetchAllSongsWithCache } from '../../../usecases/cache/fetchAllSongsWithCache'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
+import { buildUserProfilePagePath } from '../../users/UserPage/profilePageQuery'
 import { calculateGoalProgress, filterRecordsByAttributes } from '../utils/goalProgress'
+import { buildGoalRecordFilter } from '../utils/goalRecordFilter'
 import GoalCard from './components/GoalCard'
 import GoalDeleteDialog from './components/GoalDeleteDialog'
 import GoalFormDialog from './components/GoalFormDialog'
 
 const OVERPOWER_CHART_CONST_BONUS = 3
 const OVERPOWER_CHART_MULTIPLIER = 5
+const RECORD_NAVIGATION_ERROR_MESSAGE = '未達成レコードの表示に失敗しました。'
 
 const GoalsList: Component = () => {
   const navigate = useNavigate()
@@ -53,6 +57,7 @@ const GoalsList: Component = () => {
 
       if (!profile.player) {
         return {
+          username: me.username,
           noPlayerData: true,
           goals: goalsResponse.goals,
           songs: songsResponse.songs,
@@ -63,6 +68,7 @@ const GoalsList: Component = () => {
       }
 
       return {
+        username: me.username,
         noPlayerData: false,
         goals: goalsResponse.goals,
         songs: songsResponse.songs,
@@ -184,6 +190,26 @@ const GoalsList: Component = () => {
   }
 
   /**
+   * 目標の未達成条件を保存し、ログインユーザーの通常レコード画面へ遷移する。
+   *
+   * @param goal - フィルターへ変換する目標。
+   * @returns 保存と遷移の完了後に解決される Promise。
+   */
+  const handleOpenUnachievedRecords = async (goal: GoalDTO): Promise<void> => {
+    const data = resource()
+    if (!data) return
+
+    setActionError('')
+    try {
+      const filter = buildGoalRecordFilter(goal, data.masterData, data.versions)
+      await saveStandardRecordFilterSetting(filter)
+      navigate(buildUserProfilePagePath(data.username, 'record_normal'))
+    } catch (error) {
+      setActionError(toUserFriendlyErrorMessage(error, RECORD_NAVIGATION_ERROR_MESSAGE))
+    }
+  }
+
+  /**
    * 目標フォームダイアログの開閉状態を更新する。
    *
    * @param open - 次のダイアログ表示状態。
@@ -284,6 +310,9 @@ const GoalsList: Component = () => {
                         progress={progress}
                         onEdit={handleEdit}
                         onDelete={handleDeleteAsk}
+                        onOpenRecords={(selectedGoal) => {
+                          void handleOpenUnachievedRecords(selectedGoal)
+                        }}
                       />
                     )}
                   </For>

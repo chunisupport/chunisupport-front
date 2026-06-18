@@ -1,14 +1,17 @@
-import { EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
+import { Button } from '@kobalte/core/button'
+import { EllipsisVertical, ExternalLink, Pencil, Trash2 } from 'lucide-solid'
 import { type Component, createSignal, onCleanup } from 'solid-js'
 import type { GoalDTO } from '../../../../types/api'
 // import { formatGoalAttributesLabel, formatGoalTypeLabel } from '../../utils/goalForm'
 import type { GoalProgressResult } from '../../utils/goalProgress'
+import { isGoalRecordNavigationEnabled } from '../../utils/goalRecordFilter'
 
 interface GoalCardProps {
   goal: GoalDTO
   progress: GoalProgressResult
   onEdit: (goal: GoalDTO) => void
   onDelete: (goal: GoalDTO) => void
+  onOpenRecords?: (goal: GoalDTO) => void
 }
 
 interface GoalCardProgressProps {
@@ -172,6 +175,15 @@ const GoalCard: Component<GoalCardProps> = (props) => {
     props.onDelete(props.goal)
   }
 
+  /**
+   * 現在の目標で未達成の通常レコード画面を開く。
+   *
+   * @returns なし。
+   */
+  const handleOpenRecords = (): void => {
+    props.onOpenRecords?.(props.goal)
+  }
+
   return (
     <article
       class={`rounded-lg border p-4 shadow-sm ${
@@ -181,9 +193,20 @@ const GoalCard: Component<GoalCardProps> = (props) => {
       }`}
     >
       <div class="flex items-start justify-between gap-3">
-        <div>
-          <h2 class="font-sans text-lg font-bold text-text">{props.goal.title}</h2>
-        </div>
+        <h2 class="min-w-0 font-sans text-lg font-bold text-text">
+          {isGoalRecordNavigationEnabled(props.goal) && props.onOpenRecords ? (
+            <Button
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+              onClick={handleOpenRecords}
+            >
+              <span>{props.goal.title}</span>
+              <ExternalLink class="shrink-0" size={18} aria-hidden="true" />
+            </Button>
+          ) : (
+            props.goal.title
+          )}
+        </h2>
         <div ref={menuRef} class="relative">
           <button
             type="button"
