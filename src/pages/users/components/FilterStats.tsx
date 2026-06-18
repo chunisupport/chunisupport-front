@@ -80,16 +80,13 @@ const DistributionBar: Component<{
 }> = (props) => (
   <div class="flex h-5 w-full overflow-hidden rounded bg-surface-hover">
     <For each={getVisibleDistributionKeys(props.dist, props.order)}>
-      {(key) => {
-        const { percent } = props.dist[key]
-        return (
-          <div
-            class={`${props.colorMap[key]} h-full`}
-            style={{ width: `${percent}%` }}
-            title={key}
-          ></div>
-        )
-      }}
+      {(key) => (
+        <div
+          class={`${props.colorMap[key]} h-full`}
+          style={{ width: `${props.dist[key].percent}%` }}
+          title={key}
+        ></div>
+      )}
     </For>
   </div>
 )
@@ -135,17 +132,14 @@ const DistributionSection: Component<DistributionSectionConfig> = (props) => (
       <DistributionBar dist={props.dist} order={props.order} colorMap={props.colorMap} />
       <ul class="divide-y divide-border">
         <For each={getVisibleDistributionKeys(props.dist, props.order)}>
-          {(key) => {
-            const { count, percent } = props.dist[key]
-            return (
-              <DistributionRow
-                label={key}
-                count={count}
-                percent={percent}
-                colorClass={props.colorMap[key]}
-              />
-            )
-          }}
+          {(key) => (
+            <DistributionRow
+              label={key}
+              count={props.dist[key].count}
+              percent={props.dist[key].percent}
+              colorClass={props.colorMap[key]}
+            />
+          )}
         </For>
       </ul>
     </div>
