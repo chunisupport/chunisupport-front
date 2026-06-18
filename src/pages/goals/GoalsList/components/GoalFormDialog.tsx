@@ -274,7 +274,7 @@ const isComboLampValue = (value: string): value is 'FC' | 'AJ' =>
 const GoalTextField: Component<GoalTextFieldProps> = (props) => (
   <TextField class="block text-sm" value={props.value} onChange={props.onChange}>
     <TextField.Label class="mb-1 block text-text-muted">{props.label}</TextField.Label>
-    <TextField.Input class={GOAL_FIELD_INPUT_CLASS} maxLength={props.maxLength} />
+    <TextField.Input class={`${GOAL_FIELD_INPUT_CLASS} font-sans`} maxLength={props.maxLength} />
   </TextField>
 )
 
