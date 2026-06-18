@@ -471,18 +471,6 @@ const toggleSelection = (current: string[], value: string, checked: boolean): st
 }
 
 /**
- * 目標の対象譜面条件が1つ以上指定されているか判定する。
- *
- * @param attributes - 目標フォームで組み立てた対象条件。
- * @returns 対象条件が指定済みならtrue。
- */
-const hasGoalTargetCondition = (attributes: GoalAttributes): boolean =>
-  attributes.diff !== undefined ||
-  attributes.genre !== undefined ||
-  attributes.ver !== undefined ||
-  attributes.const !== undefined
-
-/**
  * 目標の作成・編集に使う入力ダイアログを表示する。
  *
  * @param props - ダイアログの表示状態、初期値、マスタデータ、保存ハンドラ。
@@ -787,10 +775,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const isCountType = isCountAchievementType(currentType)
 
     const attributes = getDraftAttributes()
-    if (!hasGoalTargetCondition(attributes)) {
-      setErrorMessage('対象譜面を1つ以上指定してください。')
-      return
-    }
 
     const allCount = props.resolveAllCount(attributes)
 
