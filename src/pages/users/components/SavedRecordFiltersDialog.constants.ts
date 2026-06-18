@@ -28,7 +28,7 @@ export const SAVED_RECORD_FILTER_DIALOG_TEXT = {
  */
 export const SAVED_RECORD_FILTER_DIALOG_CLASS = {
   nameInput:
-    'w-full rounded border border-border-strong bg-surface px-2 py-2 text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring',
+    'w-full rounded border border-border-strong bg-surface px-2 py-2 font-sans text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring',
   secondaryButton:
     'rounded bg-action-secondary px-4 py-2 text-text-muted hover:bg-action-secondary-hover disabled:cursor-not-allowed disabled:opacity-50',
   primaryButton:

@@ -359,7 +359,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           <span class="block text-sm font-medium mb-1">フィルター名</span>
           <TextField>
             <TextField.Input
-              class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+              class="w-full rounded border border-border-strong bg-surface px-3 py-2 font-sans text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
               maxLength={RECORD_FILTER_NAME_MAX_LENGTH}
               value={props.editingFilterName ?? ''}
               onInput={(event) =>

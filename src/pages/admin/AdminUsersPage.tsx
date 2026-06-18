@@ -85,7 +85,7 @@ const AdminUsersPage = () => {
             <input
               value={searchInput()}
               onInput={(event) => setSearchInput(event.currentTarget.value)}
-              class="w-72 rounded border border-border-strong px-3 py-2"
+              class="w-72 rounded border border-border-strong px-3 py-2 font-sans"
               placeholder="例: user"
             />
           </label>

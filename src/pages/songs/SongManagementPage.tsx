@@ -1503,6 +1503,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         class="col-span-1 text-sm"
                         label="属性"
                         value={currentDraft().attribute ?? ''}
+                        inputClass={`${managementInputClass} font-sans`}
                         onInput={(value) =>
                           updateWorldsendChart('attribute', value.trim() === '' ? null : value)
                         }
@@ -1820,6 +1821,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
           <ManagementTextField
             label="属性"
             value={createWorldsendDraft().attribute ?? ''}
+            inputClass={`${managementInputClass} font-sans`}
             onInput={(value) =>
               updateCreateWorldsendDraftField('attribute', value.trim() === '' ? null : value)
             }
