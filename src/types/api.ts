@@ -468,7 +468,6 @@ export interface UserProfileDTO {
 
 export interface AdminUserListResponse {
   username: string
-  email?: string | null
   firebase_uid?: string | null
   last_sign_in_time?: string | null
   last_refresh_time?: string | null
