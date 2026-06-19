@@ -15,6 +15,7 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "noUncheckedSideEffectImports": true,
+    "types": ["node"],
     /* type checking */
     "strict": true,
     "noUnusedLocals": true,

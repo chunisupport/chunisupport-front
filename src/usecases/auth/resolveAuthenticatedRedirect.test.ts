@@ -5,9 +5,10 @@ import type { UserDTO } from '../../types/api.ts'
 import { resolveAuthenticatedRedirect } from './resolveAuthenticatedRedirect.ts'
 
 const createUser = (): UserDTO => ({
-  id: '1',
   username: 'alice name',
-  role: 'USER',
+  account_type: 'PLAYER',
+  is_private: false,
+  last_score_update: null,
 })
 
 test('プロフィールが存在する認証済みユーザーはユーザーページへ遷移する', async () => {

@@ -1,25 +1,34 @@
+import { createRoot } from 'solid-js'
+import { createStore } from 'solid-js/store'
 import type { UserDTO } from '../types/api'
 
-type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated'
+type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated' | 'error'
 
-let authStatus: AuthStatus = 'unknown'
-let authenticatedUser: UserDTO | null = null
+type AuthState = {
+  status: AuthStatus
+  user: UserDTO | null
+}
 
-export const getAuthStatus = (): AuthStatus => authStatus
+export const [authSession, setAuthSession] = createRoot(() =>
+  createStore<AuthState>({ status: 'unknown', user: null })
+)
 
-export const getAuthenticatedUser = (): UserDTO | null => authenticatedUser
+export const getAuthStatus = (): AuthStatus => authSession.status
+
+export const getAuthenticatedUser = (): UserDTO | null => authSession.user
 
 export const setAuthenticatedUser = (user: UserDTO) => {
-  authStatus = 'authenticated'
-  authenticatedUser = user
+  setAuthSession({ status: 'authenticated', user })
 }
 
 export const clearAuthenticatedUser = () => {
-  authStatus = 'unauthenticated'
-  authenticatedUser = null
+  setAuthSession({ status: 'unauthenticated', user: null })
+}
+
+export const setAuthSessionError = () => {
+  setAuthSession({ status: 'error' })
 }
 
 export const resetAuthSession = () => {
-  authStatus = 'unknown'
-  authenticatedUser = null
+  setAuthSession({ status: 'unknown', user: null })
 }

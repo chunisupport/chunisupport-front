@@ -1,0 +1,49 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@apply",
+      "description": "Inline existing utility classes into custom CSS."
+    },
+    {
+      "name": "@config",
+      "description": "Load a legacy JavaScript-based Tailwind CSS configuration file."
+    },
+    {
+      "name": "@custom-variant",
+      "description": "Register a custom Tailwind CSS variant."
+    },
+    {
+      "name": "@layer",
+      "description": "Define styles in a Tailwind CSS cascade layer."
+    },
+    {
+      "name": "@plugin",
+      "description": "Load a legacy Tailwind CSS plugin."
+    },
+    {
+      "name": "@reference",
+      "description": "Import Tailwind CSS theme variables, custom utilities, and variants for reference."
+    },
+    {
+      "name": "@source",
+      "description": "Explicitly register source files for Tailwind CSS class detection."
+    },
+    {
+      "name": "@tailwind",
+      "description": "Legacy Tailwind CSS directive for injecting generated styles."
+    },
+    {
+      "name": "@theme",
+      "description": "Define Tailwind CSS theme variables and design tokens."
+    },
+    {
+      "name": "@utility",
+      "description": "Register a custom Tailwind CSS utility."
+    },
+    {
+      "name": "@variant",
+      "description": "Apply a Tailwind CSS variant to nested CSS rules."
+    }
+  ]
+}

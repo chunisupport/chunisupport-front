@@ -1,16 +1,35 @@
 import { API_BASE_URL } from '../config'
 import type {
   AchievementTypeDTO,
-  EditorSongDTO,
-  EditorWorldsendSongDTO,
+  CreateSongRequestDTO,
+  CreateWorldsendSongRequestDTO,
+  ManagedSongDTO,
+  ManagedWorldsendSongDTO,
   MasterDataDTO,
   SongDTO,
   SongStatsResponseDTO,
+  UpdatedAtResponseDTO,
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
+  VersionDTO,
   WorldsendSongDTO,
 } from '../types/api'
+import { sortMasterItemsBySortOrder } from '../utils/masterData'
 import { fetchWithAuth } from './fetchWithAuth'
+
+type VersionsResponse = { versions: VersionDTO[] }
+
+/** 内部向け WORLD'S END 楽曲APIのベースパス。 */
+const INTERNAL_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/worldsend-songs`
+/** 編集者向け WORLD'S END 楽曲APIのベースパス。 */
+const INTERNAL_EDITOR_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/editor/worldsend-songs`
+
+let cachedVersionsResponse: VersionsResponse | undefined
+let versionsResponsePromise: Promise<VersionsResponse> | undefined
+let cachedSongsUpdatedAtResponse: UpdatedAtResponseDTO | undefined
+let songsUpdatedAtResponsePromise: Promise<UpdatedAtResponseDTO> | undefined
+let cachedMasterDataResponse: MasterDataDTO | undefined
+let masterDataResponsePromise: Promise<MasterDataDTO> | undefined
 
 export const fetchAllSongs = async (): Promise<{ songs: SongDTO[] }> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs`)
@@ -18,20 +37,65 @@ export const fetchAllSongs = async (): Promise<{ songs: SongDTO[] }> => {
   return response.json()
 }
 
-export const fetchEditorSongs = async (): Promise<{ songs: EditorSongDTO[] }> => {
+/**
+ * API から楽曲更新日時を取得する。
+ *
+ * @returns 通常楽曲と WORLD'S END 楽曲の共通更新日時レスポンス。
+ */
+const fetchSongsUpdatedAtFromApi = async (): Promise<UpdatedAtResponseDTO> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs/updated-at`)
+
+  return response.json()
+}
+
+/**
+ * セッション中に楽曲更新日時を一度だけ取得し、メモリ上に保持する。
+ * 同時呼び出しは同一リクエストにまとめる。
+ *
+ * @returns キャッシュ済み、または API から取得した更新日時レスポンス。
+ */
+export const fetchSongsUpdatedAt = async (): Promise<UpdatedAtResponseDTO> => {
+  if (cachedSongsUpdatedAtResponse) {
+    return cachedSongsUpdatedAtResponse
+  }
+
+  songsUpdatedAtResponsePromise ??= fetchSongsUpdatedAtFromApi()
+
+  try {
+    cachedSongsUpdatedAtResponse = await songsUpdatedAtResponsePromise
+    return cachedSongsUpdatedAtResponse
+  } catch (error) {
+    songsUpdatedAtResponsePromise = undefined
+    throw error
+  }
+}
+
+export const fetchManagedSongs = async (): Promise<{ songs: ManagedSongDTO[] }> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/editor/songs`)
 
   return response.json()
 }
 
+/**
+ * WORLD'S END 楽曲一覧を取得する。
+ *
+ * @returns WORLD'S END 楽曲一覧レスポンス。
+ */
 export const fetchWorldsendSongs = async (): Promise<{ songs: WorldsendSongDTO[] }> => {
-  const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs/worldsend`)
+  const response = await fetchWithAuth(INTERNAL_WORLDSEND_SONGS_PATH)
 
   return response.json()
 }
 
-export const fetchEditorWorldsendSongs = async (): Promise<{ songs: EditorWorldsendSongDTO[] }> => {
-  const response = await fetchWithAuth(`${API_BASE_URL}/internal/editor/songs/worldsend`)
+/**
+ * 編集者向けの WORLD'S END 楽曲一覧を取得する。
+ *
+ * @returns 削除状態を含む WORLD'S END 楽曲一覧レスポンス。
+ */
+export const fetchManagedWorldsendSongs = async (): Promise<{
+  songs: ManagedWorldsendSongDTO[]
+}> => {
+  const response = await fetchWithAuth(INTERNAL_EDITOR_WORLDSEND_SONGS_PATH)
 
   return response.json()
 }
@@ -44,11 +108,17 @@ export const fetchSongByDisplayId = async (displayId: string): Promise<SongDTO> 
   return response.json()
 }
 
+/**
+ * Display ID を指定して WORLD'S END 楽曲詳細を取得する。
+ *
+ * @param displayId - 取得対象の楽曲表示ID。
+ * @returns WORLD'S END 楽曲詳細。
+ */
 export const fetchWorldsendSongByDisplayId = async (
   displayId: string
 ): Promise<WorldsendSongDTO> => {
   const response = await fetchWithAuth(
-    `${API_BASE_URL}/internal/songs/worldsend/${encodeURIComponent(displayId)}`
+    `${INTERNAL_WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}`
   )
 
   return response.json()
@@ -65,6 +135,38 @@ export const fetchSongStats = async (
   return response.json()
 }
 
+/**
+ * API からバージョン一覧を取得する。
+ *
+ * @returns バージョン一覧レスポンス。
+ */
+const fetchVersionsFromApi = async (): Promise<VersionsResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/master/versions`)
+
+  return response.json()
+}
+
+/**
+ * セッション中にバージョン一覧を一度だけ取得し、メモリ上に保持する。
+ *
+ * @returns キャッシュ済み、または API から取得したバージョン一覧レスポンス。
+ */
+export const fetchVersions = async (): Promise<VersionsResponse> => {
+  if (cachedVersionsResponse) {
+    return cachedVersionsResponse
+  }
+
+  versionsResponsePromise ??= fetchVersionsFromApi()
+
+  try {
+    cachedVersionsResponse = await versionsResponsePromise
+    return cachedVersionsResponse
+  } catch (error) {
+    versionsResponsePromise = undefined
+    throw error
+  }
+}
+
 export const updateSongs = async (requests: UpdateSongRequestDTO[]): Promise<void> => {
   await fetchWithAuth(`${API_BASE_URL}/internal/songs`, {
     method: 'PUT',
@@ -73,13 +175,43 @@ export const updateSongs = async (requests: UpdateSongRequestDTO[]): Promise<voi
   })
 }
 
+export const createSong = async (request: CreateSongRequestDTO): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/songs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+}
+
+/**
+ * WORLD'S END 楽曲を一括更新する。
+ *
+ * @param requests - 更新対象の WORLD'S END 楽曲リクエスト配列。
+ * @returns なし。
+ */
 export const updateWorldsendSongs = async (
   requests: UpdateWorldsendSongRequestDTO[]
 ): Promise<void> => {
-  await fetchWithAuth(`${API_BASE_URL}/internal/songs/worldsend`, {
+  await fetchWithAuth(INTERNAL_WORLDSEND_SONGS_PATH, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(requests),
+  })
+}
+
+/**
+ * WORLD'S END 楽曲を新規追加する。
+ *
+ * @param request - 追加する WORLD'S END 楽曲リクエスト。
+ * @returns なし。
+ */
+export const createWorldsendSong = async (
+  request: CreateWorldsendSongRequestDTO
+): Promise<void> => {
+  await fetchWithAuth(INTERNAL_WORLDSEND_SONGS_PATH, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
   })
 }
 
@@ -95,23 +227,36 @@ export const restoreSongByDisplayId = async (displayId: string): Promise<void> =
   })
 }
 
+/**
+ * Display ID を指定して WORLD'S END 楽曲を論理削除する。
+ *
+ * @param displayId - 削除対象の楽曲表示ID。
+ * @returns なし。
+ */
 export const deleteWorldsendSongByDisplayId = async (displayId: string): Promise<void> => {
-  await fetchWithAuth(`${API_BASE_URL}/internal/songs/worldsend/${encodeURIComponent(displayId)}`, {
+  await fetchWithAuth(`${INTERNAL_WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}`, {
     method: 'DELETE',
   })
 }
 
+/**
+ * Display ID を指定して WORLD'S END 楽曲を復活させる。
+ *
+ * @param displayId - 復活対象の楽曲表示ID。
+ * @returns なし。
+ */
 export const restoreWorldsendSongByDisplayId = async (displayId: string): Promise<void> => {
-  await fetchWithAuth(
-    `${API_BASE_URL}/internal/songs/worldsend/${encodeURIComponent(displayId)}/restore`,
-    {
-      method: 'POST',
-    }
-  )
+  await fetchWithAuth(`${INTERNAL_WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}/restore`, {
+    method: 'POST',
+  })
 }
 
-// --- マスターデータ取得API ---
-export const fetchMasterData = async (): Promise<MasterDataDTO> => {
+/**
+ * API からマスターデータを取得する。
+ *
+ * @returns ソート・正規化済みのマスターデータ。
+ */
+const fetchMasterDataFromApi = async (): Promise<MasterDataDTO> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/master`)
   const raw = (await response.json()) as Omit<MasterDataDTO, 'achievement_types'> & {
     achievement_types?: unknown[]
@@ -156,6 +301,28 @@ export const fetchMasterData = async (): Promise<MasterDataDTO> => {
 
   return {
     ...raw,
+    genres: sortMasterItemsBySortOrder(raw.genres ?? []),
     achievement_types: achievementTypes,
+  }
+}
+
+/**
+ * セッション中にマスターデータを一度だけ取得し、メモリ上に保持する。
+ *
+ * @returns キャッシュ済み、または API から取得したマスターデータ。
+ */
+export const fetchMasterData = async (): Promise<MasterDataDTO> => {
+  if (cachedMasterDataResponse) {
+    return cachedMasterDataResponse
+  }
+
+  masterDataResponsePromise ??= fetchMasterDataFromApi()
+
+  try {
+    cachedMasterDataResponse = await masterDataResponsePromise
+    return cachedMasterDataResponse
+  } catch (error) {
+    masterDataResponsePromise = undefined
+    throw error
   }
 }

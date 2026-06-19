@@ -1,0 +1,35 @@
+import { Search } from 'lucide-solid'
+
+type SongSearchInputProps = {
+  id: string
+  value: string
+  onInput: (value: string) => void
+}
+
+/**
+ * 楽曲名・アーティスト名での検索入力欄を描画するコンポーネント。
+ * @param props 入力欄の識別子・現在値・入力変更ハンドラ。
+ * @returns 楽曲検索用の入力UI。
+ */
+const SongSearchInput = (props: SongSearchInputProps) => {
+  return (
+    <div class="max-w-md">
+      <label class="mb-1 block text-sm font-medium text-text-muted" for={props.id}>
+        楽曲検索
+      </label>
+      <div class="flex items-center gap-2 rounded-md border border-border-strong px-2 focus-within:border-focus-ring focus-within:ring-2 focus-within:ring-focus-ring/30">
+        <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
+        <input
+          id={props.id}
+          type="search"
+          value={props.value}
+          onInput={(event) => props.onInput(event.currentTarget.value)}
+          placeholder="曲名・アーティスト名で検索"
+          class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
+        />
+      </div>
+    </div>
+  )
+}
+
+export default SongSearchInput

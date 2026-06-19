@@ -1,67 +1,46 @@
 import { API_BASE_URL } from '../config'
-import { getErrorMessage } from '../types/api'
+import type { UserDTO } from '../types/api'
+import { fetchWithAuth } from './fetchWithAuth'
 
-type AuthPayload = {
+type SignupPayload = {
   username: string
-  password: string
+  turnstile_token: string
 }
 
-type RecoveryResetPayload = {
-  recovery_code: string
-  new_password: string
+type LoginPayload = {
+  turnstile_token: string
 }
 
-export const postLogin = async (payload: AuthPayload): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/internal/auth/login`, {
+/**
+ * Firebase認証済みユーザーのログインをバックエンドで検証する。
+ *
+ * @param payload Cloudflare Turnstile の応答トークンを含むリクエストボディ。
+ * @returns ログイン済みユーザー情報。
+ */
+export const postLogin = async (payload: LoginPayload): Promise<UserDTO> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
     body: JSON.stringify(payload),
+    suppressUnauthorizedRedirectForCodes: ['invalid_turnstile_token'],
   })
 
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(getErrorMessage(error))
-  }
+  return response.json()
 }
 
-export const postLogout = async (): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/internal/auth/logout`, {
-    method: 'POST',
-    credentials: 'include',
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(getErrorMessage(error))
-  }
-}
-
-// 新規登録
-export const postRegister = async (payload: AuthPayload): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/internal/auth/register`, {
+/**
+ * Firebase認証済みユーザーを新規登録する。
+ *
+ * @param payload ユーザー名とCloudflare Turnstile の応答トークンを含むリクエストボディ。
+ * @returns 作成されたユーザー情報。
+ */
+export const postSignup = async (payload: SignupPayload): Promise<UserDTO> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/auth/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
     body: JSON.stringify(payload),
+    suppressUnauthorizedRedirectForCodes: ['invalid_turnstile_token'],
   })
 
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(getErrorMessage(error))
-  }
-}
-
-export const postRecoveryReset = async (payload: RecoveryResetPayload): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/internal/auth/recovery-codes`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(payload),
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(getErrorMessage(error))
-  }
+  return response.json()
 }

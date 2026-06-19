@@ -5,27 +5,33 @@ type Props = {
   stats: SongStatsBandDTO[]
 }
 
+/**
+ * 楽曲詳細ページのレーティング帯別統計を表示する。
+ * @param props 表示する統計行。
+ * @returns 難易度別統計テーブル。
+ */
 const SongStatsTable = (props: Props) => {
   return (
     <div class="overflow-x-auto">
       <table class="min-w-full text-sm">
-        <thead class="bg-gray-50">
+        <thead class="bg-surface-muted">
           <tr>
-            <th class="px-2 py-2 text-left">帯</th>
-            <th class="px-2 py-2 text-right">人数</th>
-            <th class="px-2 py-2 text-right">平均スコア</th>
-            <th class="px-2 py-2 text-right">FC</th>
-            <th class="px-2 py-2 text-right">AJ</th>
-            <th class="px-2 py-2 text-right">CLEAR</th>
-            <th class="px-2 py-2 text-right">HARD</th>
-            <th class="px-2 py-2 text-right">BRAVE</th>
-            <th class="px-2 py-2 text-right">ABSOLUTE</th>
+            <th class="px-2 py-2 text-left whitespace-nowrap">帯</th>
+            <th class="px-2 py-2 text-right whitespace-nowrap">人数</th>
+            <th class="px-2 py-2 text-right whitespace-nowrap">平均スコア</th>
+            <th class="px-2 py-2 text-right whitespace-nowrap">FC</th>
+            <th class="px-2 py-2 text-right whitespace-nowrap">AJ</th>
+            <th class="px-2 py-2 text-right whitespace-nowrap">CLEAR</th>
+            <th class="px-2 py-2 text-right whitespace-nowrap">HARD</th>
+            <th class="px-2 py-2 text-right whitespace-nowrap">BRAVE</th>
+            <th class="px-2 py-2 text-right whitespace-nowrap">ABSOLUTE</th>
+            <th class="px-2 py-2 text-right whitespace-nowrap">CATASTROPHY</th>
           </tr>
         </thead>
         <tbody>
           <For each={props.stats}>
             {(band) => (
-              <tr class="border-t border-gray-100">
+              <tr class="border-t border-border">
                 <td class="px-2 py-2">{band.rating_band}</td>
                 <td class="px-2 py-2 text-right">{band.player_count.toLocaleString()}</td>
                 <td class="px-2 py-2 text-right">
@@ -39,6 +45,7 @@ const SongStatsTable = (props: Props) => {
                 <td class="px-2 py-2 text-right">{band.clear.hard.toLocaleString()}</td>
                 <td class="px-2 py-2 text-right">{band.clear.brave.toLocaleString()}</td>
                 <td class="px-2 py-2 text-right">{band.clear.absolute.toLocaleString()}</td>
+                <td class="px-2 py-2 text-right">{band.clear.catastrophy.toLocaleString()}</td>
               </tr>
             )}
           </For>

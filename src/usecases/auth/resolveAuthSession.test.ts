@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import {
   clearAuthenticatedUser,
+  getAuthenticatedUser,
   getAuthStatus,
   resetAuthSession,
   setAuthenticatedUser,
@@ -11,9 +12,10 @@ import type { UserDTO } from '../../types/api.ts'
 import { resolveAuthSession } from './resolveAuthSession.ts'
 
 const createUser = (): UserDTO => ({
-  id: '1',
   username: 'alice',
-  role: 'USER',
+  account_type: 'PLAYER',
+  is_private: false,
+  last_score_update: null,
 })
 
 test('認証済みキャッシュがあればAPIを呼ばず authenticated を返す', async () => {
@@ -39,18 +41,36 @@ test('未確定状態では me API 成功時に authenticated へ更新する', 
   assert.equal(getAuthStatus(), 'authenticated')
 })
 
-test('me API 失敗時は unauthenticated へ更新する', async () => {
+test('me API から 401 が返った場合は unauthenticated へ更新し認証状態をクリアする', async () => {
   setAuthenticatedUser(createUser())
 
   const result = await resolveAuthSession(
     async () => {
-      throw new Error('unauthorized')
+      const error = new Error('unauthorized') as Error & { status?: number }
+      error.status = 401
+      throw error
     },
     { forceRefresh: true }
   )
 
   assert.equal(result, 'unauthenticated')
   assert.equal(getAuthStatus(), 'unauthenticated')
+})
+
+test('通信障害など非認証エラーの場合は error を返しセッション状態をクリアしない', async () => {
+  const user = createUser()
+  setAuthenticatedUser(user)
+
+  const result = await resolveAuthSession(
+    async () => {
+      throw new Error('network error')
+    },
+    { forceRefresh: true }
+  )
+
+  assert.equal(result, 'error')
+  assert.equal(getAuthStatus(), 'error')
+  assert.deepEqual(getAuthenticatedUser(), user)
 })
 
 test('同時実行時は in-flight な認証確認を共有する', async () => {

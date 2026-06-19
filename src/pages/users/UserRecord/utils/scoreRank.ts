@@ -1,14 +1,29 @@
-export type ScoreRank = 'SSS+' | 'SSS' | 'SS+' | 'SS' | 'S+' | 'S' | '0点' | 'MAX'
+import {
+  HIGH_SCORE_RANKS,
+  SCORE_RANK_MAX_SCORES,
+  SCORE_RANK_MIN_SCORES,
+} from '../../../../utils/scoreRank'
 
-export const SCORE_RANKS: ScoreRank[] = ['0点', 'S', 'S+', 'SS', 'SS+', 'SSS', 'SSS+', 'MAX']
+export type ScoreRank = '0点' | (typeof HIGH_SCORE_RANKS)[number]
+
+export const SCORE_RANKS: ScoreRank[] = ['0点', ...HIGH_SCORE_RANKS]
 
 export const SCORE_RANK_VALUES: Record<ScoreRank, number> = {
-  'SSS+': 1009000,
-  SSS: 1007500,
-  'SS+': 1005000,
-  SS: 1000000,
-  'S+': 990000,
-  S: 975000,
   '0点': 0,
-  MAX: 1010000,
+  S: SCORE_RANK_MIN_SCORES.S,
+  'S+': SCORE_RANK_MIN_SCORES['S+'],
+  SS: SCORE_RANK_MIN_SCORES.SS,
+  'SS+': SCORE_RANK_MIN_SCORES['SS+'],
+  SSS: SCORE_RANK_MIN_SCORES.SSS,
+  'SSS+': SCORE_RANK_MIN_SCORES['SSS+'],
+}
+
+export const SCORE_RANK_MAX_VALUES: Record<ScoreRank, number> = {
+  '0点': SCORE_RANK_MIN_SCORES.S - 1,
+  S: SCORE_RANK_MAX_SCORES.S,
+  'S+': SCORE_RANK_MAX_SCORES['S+'],
+  SS: SCORE_RANK_MAX_SCORES.SS,
+  'SS+': SCORE_RANK_MAX_SCORES['SS+'],
+  SSS: SCORE_RANK_MAX_SCORES.SSS,
+  'SSS+': SCORE_RANK_MAX_SCORES['SSS+'],
 }

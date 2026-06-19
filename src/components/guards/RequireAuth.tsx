@@ -1,10 +1,12 @@
-import { Navigate } from '@solidjs/router'
+import { Navigate, useLocation } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { createSignal, Match, onMount, Switch } from 'solid-js'
 import { fetchMe } from '../../api/users'
 import { getAuthStatus } from '../../stores/authSession.ts'
+import { buildLoginRedirectPath } from '../../usecases/auth/redirectPath.ts'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession.ts'
-import AuthLoadingIndicator from '../AuthLoadingIndicator/AuthLoadingIndicator'
+import { buildCurrentPath } from '../../utils/currentPath'
+import Loading from '../Loading/Loading'
 
 type RequireAuthProps = {
   children: JSX.Element
@@ -15,13 +17,14 @@ const getInitialAuthStatus = (): 'checking' | 'authenticated' | 'unauthenticated
   if (authStatus === 'authenticated' || authStatus === 'unauthenticated') {
     return authStatus
   }
-
+  // 'unknown' および 'error' はいずれも再チェックを行う
   return 'checking'
 }
 
 const RequireAuth = (props: RequireAuthProps) => {
+  const location = useLocation()
   const [authStatus, setAuthStatus] = createSignal<
-    'checking' | 'authenticated' | 'unauthenticated'
+    'checking' | 'authenticated' | 'unauthenticated' | 'error'
   >(getInitialAuthStatus())
 
   onMount(async () => {
@@ -38,13 +41,19 @@ const RequireAuth = (props: RequireAuthProps) => {
   return (
     <Switch>
       <Match when={authStatus() === 'checking'}>
-        <AuthLoadingIndicator />
+        <Loading />
       </Match>
 
       <Match when={authStatus() === 'authenticated'}>{props.children}</Match>
 
+      <Match when={authStatus() === 'error'}>
+        <div class="mx-auto w-full max-w-3xl p-6 text-sm text-text-muted">
+          認証情報の取得に失敗しました。ページを再読み込みしてください。
+        </div>
+      </Match>
+
       <Match when={true}>
-        <Navigate href="/login" />
+        <Navigate href={buildLoginRedirectPath(buildCurrentPath(location))} />
       </Match>
     </Switch>
   )

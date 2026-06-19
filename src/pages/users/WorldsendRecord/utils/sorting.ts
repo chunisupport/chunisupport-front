@@ -1,0 +1,180 @@
+import type { WorldsendRecordDTO } from '../../../../types/api'
+import {
+  nextSortState as nextSharedSortState,
+  parseSortQuery,
+  type SortDirection,
+  type SortParamsSource,
+} from '../../recordTable/sortingQuery'
+import { formatJusticeCountForAj } from '../../UserRecord/utils/justiceCountDisplay'
+import {
+  compareUpdatedAtWithMissingLast,
+  updatedAtTimestamp,
+} from '../../UserRecord/utils/updatedAt'
+import {
+  compareMissingJusticeCountRecords,
+  isJusticeCountMissing,
+} from '../../utils/justiceCountSorting'
+import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
+import type { WorldsendRecordSortKey } from './columns'
+
+const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
+  !isPlayed || timestamp === Number.NEGATIVE_INFINITY
+
+const WE_SORT_COL_MAP: Record<string, WorldsendRecordSortKey> = {
+  title: 'title',
+  attr: 'attribute',
+  level: 'level',
+  score: 'score',
+  updated_at: 'updatedAt',
+  lamp: 'lamp',
+  hard_lamp: 'hardLamp',
+  full_chain: 'fullChain',
+  justice_count: 'justiceCount',
+}
+
+export const parseWorldsendSortParams = (searchParams: SortParamsSource) => {
+  const parsed = parseSortQuery(searchParams, WE_SORT_COL_MAP, {
+    sortKey: 'score',
+    sortDirection: 'desc',
+  })
+
+  return {
+    initialSortKey: parsed.sortKey,
+    initialSortOrder: parsed.sortDirection,
+  }
+}
+
+export const nextWorldsendSortState = (
+  currentSortKey: WorldsendRecordSortKey | null,
+  currentSortDirection: SortDirection | null,
+  nextKey: WorldsendRecordSortKey
+): {
+  sortKey: WorldsendRecordSortKey | null
+  sortDirection: SortDirection | null
+} => nextSharedSortState(currentSortKey, currentSortDirection, nextKey)
+
+/**
+ * Sorts worldsend records with multiple comparison modes including full chain lamp status.
+ *
+ * This function supports various sorting modes such as title, attribute, level, score, and
+ * lamp-based comparisons. The 'fullChain' sort key delegates to compareFullChainLamp which
+ * may return early when result.skipDirection is true, bypassing the standard direction multiplier
+ * to handle special ordering requirements for full chain lamp values.
+ *
+ * @param records - The array of worldsend records to sort
+ * @param currentSortKey - The key to sort by (e.g., 'title', 'score', 'fullChain'), or null to skip sorting
+ * @param currentSortDirection - The direction to sort ('asc' or 'desc'), or null to skip sorting
+ * @returns The sorted array of worldsend records, or the original array if no sort key/direction is provided
+ */
+export const sortWorldsendRecords = <TRecord extends WorldsendRecordDTO>(
+  records: TRecord[],
+  currentSortKey: WorldsendRecordSortKey | null,
+  currentSortDirection: SortDirection | null
+): TRecord[] => {
+  if (!currentSortKey || !currentSortDirection) {
+    return records
+  }
+
+  const direction = currentSortDirection === 'asc' ? 1 : -1
+
+  return records
+    .map((record, index) => ({
+      record,
+      index,
+      updatedAtTs: updatedAtTimestamp(record.updated_at),
+      justiceCountForAj: formatJusticeCountForAj({
+        comboLamp: record.combo_lamp,
+        justiceCount: record.justice_count,
+      }),
+    }))
+    .sort((a, b) => {
+      const left = a.record
+      const right = b.record
+      let comparison = 0
+
+      switch (currentSortKey) {
+        case 'title':
+          comparison = left.title.localeCompare(right.title, 'ja')
+          break
+        case 'attribute':
+          comparison = (left.attribute ?? '').localeCompare(right.attribute ?? '', 'ja')
+          break
+        case 'level':
+          comparison =
+            (left.level_star ?? Number.NEGATIVE_INFINITY) -
+            (right.level_star ?? Number.NEGATIVE_INFINITY)
+          break
+        case 'score': {
+          const leftUnplayed = !left.is_played
+          const rightUnplayed = !right.is_played
+
+          if (leftUnplayed && rightUnplayed) {
+            comparison = 0
+          } else if (leftUnplayed) {
+            return 1
+          } else if (rightUnplayed) {
+            return -1
+          } else {
+            comparison = left.score - right.score
+          }
+          break
+        }
+        case 'updatedAt': {
+          const leftMissing = isUpdatedAtMissing(left.is_played, a.updatedAtTs)
+          const rightMissing = isUpdatedAtMissing(right.is_played, b.updatedAtTs)
+
+          comparison = compareUpdatedAtWithMissingLast(
+            { isPlayed: left.is_played, updatedAtTimestamp: a.updatedAtTs },
+            { isPlayed: right.is_played, updatedAtTimestamp: b.updatedAtTs }
+          )
+
+          if (leftMissing || rightMissing) {
+            return comparison
+          }
+          break
+        }
+
+        case 'justiceCount': {
+          const leftJusticeCount = a.justiceCountForAj
+          const rightJusticeCount = b.justiceCountForAj
+
+          const leftMissing = isJusticeCountMissing(leftJusticeCount)
+          const rightMissing = isJusticeCountMissing(rightJusticeCount)
+
+          if (leftMissing && rightMissing) {
+            return compareMissingJusticeCountRecords(left, right) || a.index - b.index
+          }
+          if (leftMissing) return 1
+          if (rightMissing) return -1
+
+          comparison = leftJusticeCount - rightJusticeCount
+          break
+        }
+        case 'lamp': {
+          const result = compareComboLamp(left, right)
+          if (result.skipDirection) return result.comparison
+          comparison = result.comparison
+          break
+        }
+        case 'hardLamp': {
+          const result = compareHardLamp(left, right)
+          if (result.skipDirection) return result.comparison
+          comparison = result.comparison
+          break
+        }
+        case 'fullChain': {
+          const result = compareFullChainLamp(left, right)
+          if (result.skipDirection) return result.comparison
+          comparison = result.comparison
+          break
+        }
+      }
+
+      if (comparison !== 0) {
+        return comparison * direction
+      }
+
+      return a.index - b.index
+    })
+    .map(({ record }) => record)
+}

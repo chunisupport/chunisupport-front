@@ -1,80 +1,66 @@
-import { For, Show } from 'solid-js'
-import { CHUNITHM_JACKET_BASE_URL } from '../../../../config'
+import { For } from 'solid-js'
 import type { WorldsendSongDTO } from '../../../../types/api'
+import SongMetaCardLayout from '../../components/SongMetaCardLayout'
 import { getWorldsendChartRows, getWorldsendSongInfoItems } from '../../worldsendDetailModel'
 
-const badgeClass = 'bg-black text-white'
+const badgeClass = '[background:var(--cs-color-worldsend-label-bg)] text-worldsend-label-text'
+const fixedColumnClass = 'w-px whitespace-nowrap'
+const fixedCellClass = 'px-3 py-2 text-text whitespace-nowrap'
 
 type Props = {
   song: WorldsendSongDTO
+  versionName: string
 }
 
+/**
+ * WORLD'S END楽曲の基本情報と譜面情報を表示する。
+ * @param props 表示対象のWORLD'S END楽曲とバージョン名
+ * @returns 楽曲情報カードUI
+ */
 const WorldsendSongInfoCard = (props: Props) => {
-  const jacketUrl = () => {
-    if (!props.song.jacket) return null
-    return `${CHUNITHM_JACKET_BASE_URL}/${props.song.jacket}.webp`
-  }
-
   return (
-    <div class="space-y-4 lg:grid lg:grid-cols-[240px_minmax(0,220px)_minmax(0,1fr)] lg:items-start lg:gap-4 lg:space-y-0">
-      <div class="grid grid-cols-[minmax(0,42vw)_minmax(0,1fr)] items-start gap-4 lg:contents">
-        <div class="aspect-square w-full overflow-hidden rounded-md border border-gray-200 bg-white">
-          <Show
-            when={jacketUrl()}
-            fallback={
-              <div class="flex h-full w-full items-center justify-center bg-gray-50 p-4 text-sm text-gray-400">
-                ジャケットなし
-              </div>
-            }
-          >
-            {(url) => (
-              <img
-                src={url()}
-                alt={`${props.song.title}のジャケット`}
-                class="h-full w-full object-cover"
-                loading="lazy"
-              />
-            )}
-          </Show>
-        </div>
-
-        <div class="grid gap-4 rounded-md border border-gray-200 bg-white p-4">
-          <For each={getWorldsendSongInfoItems(props.song)}>
-            {(item) => (
-              <div class="space-y-1">
-                <p class="text-xs font-medium text-gray-500">{item.label}</p>
-                <p class="text-sm text-gray-900">{item.value}</p>
-              </div>
-            )}
-          </For>
-        </div>
-      </div>
-
-      <div class="rounded-md border border-gray-200 bg-white p-4">
+    <SongMetaCardLayout
+      title={props.song.title}
+      jacket={props.song.jacket}
+      infoItems={getWorldsendSongInfoItems(props.song, props.versionName)}
+    >
+      <div class="rounded-md border border-border bg-surface p-4">
         <div class="overflow-x-auto">
-          <table class="min-w-full text-sm">
-            <thead class="bg-gray-50 text-left">
+          <table class="min-w-full table-auto text-sm">
+            <thead class="bg-surface-muted text-left">
               <tr>
-                <th class="px-3 py-2 font-medium text-gray-700"></th>
-                <th class="px-3 py-2 font-medium text-gray-700">属性</th>
-                <th class="px-3 py-2 font-medium text-gray-700">レベル</th>
-                <th class="px-3 py-2 font-medium text-gray-700">ノーツ数</th>
+                <th class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass}`}></th>
+                <th class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass}`}></th>
+                <th class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass}`}>LEVEL</th>
+                <th class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass}`}>NOTES</th>
+                <th class="px-3 py-2 font-medium text-text-muted whitespace-nowrap">
+                  NOTES DESIGNER
+                </th>
               </tr>
             </thead>
             <tbody>
               <For each={getWorldsendChartRows(props.song)}>
                 {(chart) => (
-                  <tr class="border-t border-gray-100">
-                    <td class="px-3 py-2">
-                      <span
-                        class={`inline-flex min-w-[7rem] justify-center rounded px-3 py-1 text-xs font-semibold tracking-wide ${badgeClass}`}
+                  <tr class="border-t border-border">
+                    <td class={`${fixedCellClass} ${fixedColumnClass}`}>
+                      <div
+                        class={`rounded px-3 py-1 text-center text-xs font-semibold tracking-wide whitespace-nowrap ${badgeClass}`}
                       >
                         {chart.label}
-                      </span>
+                      </div>
                     </td>
-                    <td class="px-3 py-2 text-gray-800">{chart.attribute}</td>
-                    <td class="px-3 py-2 text-gray-800">{chart.level}</td>
-                    <td class="px-3 py-2 text-gray-800">{chart.notes}</td>
+                    <td class={`${fixedCellClass} ${fixedColumnClass}`}>
+                      <span class="block whitespace-nowrap font-bold">{chart.attribute}</span>
+                    </td>
+                    <td class={`${fixedCellClass} ${fixedColumnClass}`}>
+                      <span class="block whitespace-nowrap">{chart.level}</span>
+                    </td>
+                    <td class={`${fixedCellClass} ${fixedColumnClass}`}>
+                      <span class="block whitespace-nowrap">{chart.notes}</span>
+                    </td>
+                    <td class="px-3 py-2 text-text">
+                      <span class="font-sans block whitespace-nowrap">{chart.notesDesigner}</span>
+                    </td>
                   </tr>
                 )}
               </For>
@@ -82,7 +68,7 @@ const WorldsendSongInfoCard = (props: Props) => {
           </table>
         </div>
       </div>
-    </div>
+    </SongMetaCardLayout>
   )
 }
 

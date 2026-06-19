@@ -1,10 +1,23 @@
-﻿import { Checkbox } from '@kobalte/core/checkbox'
+import { Checkbox } from '@kobalte/core/checkbox'
 import { NumberField } from '@kobalte/core/number-field'
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { parseNumberInput } from '../../../utils/filterDialog'
+import { MAX_SCORE } from '../../../../../../utils/scoreRank'
+
 import { SCORE_RANKS } from '../../../utils/scoreRank'
+import {
+  FILTER_DIALOG_FIELD_INPUT_CLASS,
+  FILTER_DIALOG_SELECT_ITEM_CLASS,
+  FILTER_DIALOG_SELECT_TRIGGER_CLASS,
+} from '../styles'
+import RangeSeparator, { RANGE_END_LABEL_SUFFIX, RANGE_START_LABEL_SUFFIX } from './RangeSeparator'
+
+/** スコア範囲セクションの見出し。 */
+const SCORE_RANGE_TITLE = 'スコア'
+
+/** スコアランク範囲セクションの見出し。 */
+const SCORE_RANK_RANGE_TITLE = 'スコアランク'
 
 type ScoreSectionProps = {
   scoreFilterMode: 'number' | 'rank'
@@ -22,185 +35,185 @@ type ScoreSectionProps = {
   onExcludeNoPlayChange: (value: boolean) => void
 }
 
+/**
+ * スコア条件の入力欄とランク選択欄を表示する。
+ *
+ * @param props - スコア条件、表示モード、未プレイ除外状態、各変更ハンドラ。
+ * @returns スコアフィルターセクションの JSX 要素。
+ */
 const ScoreSection: Component<ScoreSectionProps> = (props) => (
   <div>
     {props.scoreFilterMode === 'number' ? (
-      <div class="flex gap-2">
-        <div class="flex-1">
-          <NumberField
-            value={props.scoreMinInput}
-            onChange={(value: string) => {
-              // 0点から1点以上に変更された時、「未プレイ譜面を除外する」をONする
-              const prevValue = parseNumberInput(props.scoreMinInput)
-              const nextValue = parseNumberInput(value)
-              if (
-                (prevValue === undefined || prevValue === 0) &&
-                nextValue !== undefined &&
-                nextValue >= 1
-              ) {
-                props.onExcludeNoPlayChange(true)
-              }
-              props.onScoreMinInput(value)
-            }}
-            class="w-full"
-            format={false}
-            allowedInput={/[0-9.]/}
-            step={1}
-          >
-            <NumberField.Label class="block text-sm font-medium mb-1">
-              スコア(最小)
-            </NumberField.Label>
-            <NumberField.Input
-              id="filter-score-min"
-              min={0}
-              max={1010000}
+      <>
+        <div class="mb-1 text-sm font-medium">{SCORE_RANGE_TITLE}</div>
+        <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
+          <div class="min-w-0">
+            <NumberField
+              value={props.scoreMinInput}
+              onChange={(value: string) => {
+                props.onScoreMinInput(value)
+              }}
+              class="w-full"
+              format={false}
+              allowedInput={/[0-9.]/}
               step={1}
-              class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
-              onFocus={(event) => event.currentTarget.select()}
-              onBlur={(event) => props.onScoreMinCommit(event.currentTarget.value)}
-            />
-          </NumberField>
-        </div>
-        <div class="flex-1">
-          <NumberField
-            value={props.scoreMaxInput}
-            onChange={(value: string) => props.onScoreMaxInput(value)}
-            class="w-full"
-            format={false}
-            allowedInput={/[0-9.]/}
-            step={1}
-          >
-            <NumberField.Label class="block text-sm font-medium mb-1">
-              スコア(最大)
-            </NumberField.Label>
-            <NumberField.Input
-              id="filter-score-max"
-              min={0}
-              max={1010000}
+            >
+              <NumberField.Label class="sr-only">
+                {SCORE_RANGE_TITLE} {RANGE_START_LABEL_SUFFIX}
+              </NumberField.Label>
+              <NumberField.Input
+                id="filter-score-min"
+                min={0}
+                max={MAX_SCORE}
+                step={1}
+                class={FILTER_DIALOG_FIELD_INPUT_CLASS}
+                onFocus={(event) => event.currentTarget.select()}
+                onBlur={(event) => props.onScoreMinCommit(event.currentTarget.value)}
+              />
+            </NumberField>
+          </div>
+          <RangeSeparator />
+          <div class="min-w-0">
+            <NumberField
+              value={props.scoreMaxInput}
+              onChange={(value: string) => props.onScoreMaxInput(value)}
+              class="w-full"
+              format={false}
+              allowedInput={/[0-9.]/}
               step={1}
-              class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
-              onFocus={(event) => event.currentTarget.select()}
-              onBlur={(event) => props.onScoreMaxCommit(event.currentTarget.value)}
-            />
-          </NumberField>
+            >
+              <NumberField.Label class="sr-only">
+                {SCORE_RANGE_TITLE} {RANGE_END_LABEL_SUFFIX}
+              </NumberField.Label>
+              <NumberField.Input
+                id="filter-score-max"
+                min={0}
+                max={MAX_SCORE}
+                step={1}
+                class={FILTER_DIALOG_FIELD_INPUT_CLASS}
+                onFocus={(event) => event.currentTarget.select()}
+                onBlur={(event) => props.onScoreMaxCommit(event.currentTarget.value)}
+              />
+            </NumberField>
+          </div>
         </div>
-      </div>
+      </>
     ) : (
-      <div class="flex gap-2">
-        <div class="flex-1">
-          <Select
-            options={SCORE_RANKS}
-            value={props.scoreRankMin}
-            onChange={(value) => {
-              if (value !== null) {
-                if (props.scoreRankMin === '0点' && value !== '0点') {
-                  props.onExcludeNoPlayChange(true)
+      <>
+        <div class="mb-1 text-sm font-medium">{SCORE_RANK_RANGE_TITLE}</div>
+        <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
+          <div class="min-w-0">
+            <Select
+              options={SCORE_RANKS}
+              value={props.scoreRankMin}
+              onChange={(value) => {
+                if (value !== null) {
+                  props.onScoreRankChange('min', value)
                 }
-                props.onScoreRankChange('min', value)
-              }
-            }}
-            class="w-full"
-            placeholder="選択…"
-            itemComponent={(itemProps) => (
-              <Select.Item
-                item={itemProps.item}
-                class="text-sm rounded flex items-center justify-between h-8 px-2 outline-none cursor-pointer data-disabled:opacity-50 data-disabled:pointer-events-none data-highlighted:bg-primary-600 data-highlighted:text-white"
-              >
-                <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
-                <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
-                  <Check />
-                </Select.ItemIndicator>
-              </Select.Item>
-            )}
-          >
-            <Select.Label class="block text-sm font-medium mb-1">スコアランク(最小)</Select.Label>
-            <Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2">
-              <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-gray-400">
-                {(state) => state.selectedOption()}
-              </Select.Value>
-              <Select.Icon class="h-5 w-5 flex items-center justify-center">
-                <ChevronDown />
-              </Select.Icon>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content class="z-60 bg-white rounded-md border border-gray-300 shadow-lg">
-                <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
-              </Select.Content>
-            </Select.Portal>
-          </Select>
-        </div>
-        <div class="flex-1">
-          <Select
-            options={SCORE_RANKS}
-            value={props.scoreRankMax}
-            onChange={(value) => {
-              if (value !== null) {
-                if (props.scoreRankMax === '0点' && value !== '0点') {
-                  props.onExcludeNoPlayChange(true)
+              }}
+              class="w-full"
+              placeholder="選択…"
+              itemComponent={(itemProps) => (
+                <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
+                  <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
+                  <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
+                    <Check />
+                  </Select.ItemIndicator>
+                </Select.Item>
+              )}
+            >
+              <Select.Label class="sr-only">
+                {SCORE_RANK_RANGE_TITLE} {RANGE_START_LABEL_SUFFIX}
+              </Select.Label>
+              <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
+                <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
+                  {(state) => state.selectedOption()}
+                </Select.Value>
+                <Select.Icon class="h-5 w-5 flex items-center justify-center">
+                  <ChevronDown />
+                </Select.Icon>
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
+                  <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
+                </Select.Content>
+              </Select.Portal>
+            </Select>
+          </div>
+          <RangeSeparator />
+          <div class="min-w-0">
+            <Select
+              options={SCORE_RANKS}
+              value={props.scoreRankMax}
+              onChange={(value) => {
+                if (value !== null) {
+                  props.onScoreRankChange('max', value)
                 }
-                props.onScoreRankChange('max', value)
-              }
-            }}
-            class="w-full"
-            placeholder="選択…"
-            itemComponent={(itemProps) => (
-              <Select.Item
-                item={itemProps.item}
-                class="text-sm rounded flex items-center justify-between h-8 px-2 outline-none cursor-pointer data-disabled:opacity-50 data-disabled:pointer-events-none data-highlighted:bg-primary-600 data-highlighted:text-white"
-              >
-                <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
-                <Select.ItemIndicator class="h-5 w-5 inline-flex items-center justify-center">
-                  <Check />
-                </Select.ItemIndicator>
-              </Select.Item>
-            )}
-          >
-            <Select.Label class="block text-sm font-medium mb-1">スコアランク(最大)</Select.Label>
-            <Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2">
-              <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-gray-400">
-                {(state) => state.selectedOption()}
-              </Select.Value>
-              <Select.Icon class="h-5 w-5 flex items-center justify-center">
-                <ChevronDown />
-              </Select.Icon>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content class="z-60 bg-white rounded-md border border-gray-300 shadow-lg">
-                <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
-              </Select.Content>
-            </Select.Portal>
-          </Select>
+              }}
+              class="w-full"
+              placeholder="選択…"
+              itemComponent={(itemProps) => (
+                <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
+                  <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
+                  <Select.ItemIndicator class="h-5 w-5 inline-flex items-center justify-center">
+                    <Check />
+                  </Select.ItemIndicator>
+                </Select.Item>
+              )}
+            >
+              <Select.Label class="sr-only">
+                {SCORE_RANK_RANGE_TITLE} {RANGE_END_LABEL_SUFFIX}
+              </Select.Label>
+              <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
+                <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
+                  {(state) => state.selectedOption()}
+                </Select.Value>
+                <Select.Icon class="h-5 w-5 flex items-center justify-center">
+                  <ChevronDown />
+                </Select.Icon>
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
+                  <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
+                </Select.Content>
+              </Select.Portal>
+            </Select>
+          </div>
         </div>
-      </div>
+      </>
     )}
     <div class="mt-2">
       <Checkbox
         checked={props.scoreFilterMode === 'number'}
         onChange={(checked) => props.onScoreFilterModeChange(checked ? 'number' : 'rank')}
-        class="flex items-center"
+        class="flex items-center gap-2"
       >
         <Checkbox.Input id="filter-score-mode" />
-        <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white flex items-center justify-center mr-2">
+        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
           <Checkbox.Indicator>
             <Check class="h-4 w-4" />
           </Checkbox.Indicator>
         </Checkbox.Control>
-        <Checkbox.Label for="filter-score-mode">数値で指定する</Checkbox.Label>
+        <Checkbox.Label class="leading-5" for="filter-score-mode">
+          数値で指定する
+        </Checkbox.Label>
       </Checkbox>
     </div>
     <div class="mt-2">
       <Checkbox
         checked={props.excludeNoPlay}
         onChange={(checked) => props.onExcludeNoPlayChange(checked)}
-        class="flex items-center"
+        class="flex items-center gap-2"
       >
         <Checkbox.Input id="filter-exclude-noplay" />
-        <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white flex items-center justify-center mr-2">
+        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
           <Checkbox.Indicator>
             <Check class="h-4 w-4" />
           </Checkbox.Indicator>
         </Checkbox.Control>
-        <Checkbox.Label for="filter-exclude-noplay">未プレイ譜面を除外する</Checkbox.Label>
+        <Checkbox.Label class="leading-5" for="filter-exclude-noplay">
+          未プレイ譜面を除外する
+        </Checkbox.Label>
       </Checkbox>
     </div>
   </div>

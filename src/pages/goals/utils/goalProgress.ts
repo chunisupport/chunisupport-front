@@ -5,8 +5,9 @@ import type {
   MasterDataDTO,
   PlayerRecordDTO,
   SongDTO,
+  VersionDTO,
 } from '../../../types/api'
-import { dateToChunithmVersion } from '../../../utils/versionConverter'
+import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
 
 export interface GoalProgressResult {
   current: number
@@ -28,32 +29,6 @@ const COMBO_LAMP_ORDER: Record<string, number> = {
   'ALL JUSTICE': 2,
 }
 
-const VERSION_NAME_ALIAS: Record<string, string> = {
-  ORIGIN: 'CHUNITHM',
-  'ORIGIN PLUS': 'CHUNITHM PLUS',
-  AIR: 'CHUNITHM AIR',
-  'AIR PLUS': 'CHUNITHM AIR PLUS',
-  STAR: 'CHUNITHM STAR',
-  'STAR PLUS': 'CHUNITHM STAR PLUS',
-  AMAZON: 'CHUNITHM AMAZON',
-  'AMAZON PLUS': 'CHUNITHM AMAZON PLUS',
-  CRYSTAL: 'CHUNITHM CRYSTAL',
-  'CRYSTAL PLUS': 'CHUNITHM CRYSTAL PLUS',
-  PARADISE: 'CHUNITHM PARADISE',
-  'PARADISE LOST': 'CHUNITHM PARADISE LOST',
-  NEW: 'CHUNITHM NEW',
-  'NEW PLUS': 'CHUNITHM NEW PLUS',
-  SUN: 'CHUNITHM SUN',
-  'SUN PLUS': 'CHUNITHM SUN PLUS',
-  LUMINOUS: 'CHUNITHM LUMINOUS',
-  'LUMINOUS PLUS': 'CHUNITHM LUMINOUS PLUS',
-  VERSE: 'CHUNITHM VERSE',
-  'X-VERSE': 'CHUNITHM X-VERSE',
-  'X-VERSE-X': 'CHUNITHM X-VERSE-X',
-}
-
-const normalizeVersionName = (name: string): string => name.trim().toUpperCase()
-
 const normalizeAttributeIds = (value: number | number[] | undefined): number[] => {
   if (typeof value === 'number') return [value]
   if (Array.isArray(value)) {
@@ -62,36 +37,22 @@ const normalizeAttributeIds = (value: number | number[] | undefined): number[] =
   return []
 }
 
-const resolveSongVersionId = (song: SongDTO, masterData: MasterDataDTO): number | undefined => {
-  const release = song.release
-  if (!release) return undefined
-
-  const converted = dateToChunithmVersion(release)
-  const aliased = VERSION_NAME_ALIAS[converted] ?? converted
-  const normalized = normalizeVersionName(aliased)
-  const byName = masterData.versions.find((v) => normalizeVersionName(v.name) === normalized)
-  if (byName) {
-    return byName.id
-  }
-
-  const sorted = [...masterData.versions].sort((a, b) =>
-    a.released_at.localeCompare(b.released_at, 'ja')
-  )
-  let candidate: number | undefined
-  for (const version of sorted) {
-    if (release >= version.released_at.slice(0, 10)) {
-      candidate = version.id
-    }
-  }
-
-  return candidate
-}
-
+/**
+ * 目標条件に一致するプレイヤーレコードだけを抽出する。
+ *
+ * @param records - 判定対象のプレイヤーレコード一覧。
+ * @param attributes - 目標に設定された対象条件。
+ * @param masterData - 難易度・ジャンルなどのマスタデータ。
+ * @param songs - 楽曲マスタ一覧。
+ * @param versions - version API から返されたバージョン一覧。
+ * @returns 目標条件に一致したレコード一覧。
+ */
 export const filterRecordsByAttributes = (
   records: PlayerRecordDTO[],
   attributes: GoalAttributes,
   masterData: MasterDataDTO,
-  songs: SongDTO[]
+  songs: SongDTO[],
+  versions: VersionDTO[]
 ): PlayerRecordDTO[] => {
   const songMap = new Map(songs.map((song) => [song.id, song]))
   const diffIds = normalizeAttributeIds(attributes.diff)
@@ -101,18 +62,18 @@ export const filterRecordsByAttributes = (
   const diffNames =
     diffIds.length > 0
       ? new Set(
-        masterData.difficulties
-          .filter((difficulty) => diffIds.includes(difficulty.id))
-          .map((difficulty) => difficulty.name)
-      )
+          masterData.difficulties
+            .filter((difficulty) => diffIds.includes(difficulty.id))
+            .map((difficulty) => difficulty.name)
+        )
       : undefined
   const genreNames =
     genreIds.length > 0
       ? new Set(
-        masterData.genres
-          .filter((genre) => genreIds.includes(genre.id))
-          .map((genre) => genre.name)
-      )
+          masterData.genres
+            .filter((genre) => genreIds.includes(genre.id))
+            .map((genre) => genre.name)
+        )
       : undefined
 
   return records.filter((record) => {
@@ -128,19 +89,79 @@ export const filterRecordsByAttributes = (
 
     if (versionIds.length > 0) {
       if (!song) return false
-      const songVersionId = resolveSongVersionId(song, masterData)
-      if (!songVersionId || !versionIds.includes(songVersionId)) return false
+      const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
+      if (!songVersionValue || !versionIds.includes(songVersionValue)) return false
     }
 
     return true
   })
 }
 
-const getNumberParam = (params: GoalAchievementParams, key: 'score' | 'count' | 'total'): number => {
+const getNumberParam = (
+  params: GoalAchievementParams,
+  key: 'score' | 'count' | 'total'
+): number => {
   const value = (params as Record<string, unknown>)[key]
   return typeof value === 'number' ? value : 0
 }
 
+/**
+ * 対象譜面数を動的上限として扱う件数目標値を解決する。
+ *
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @param filteredRecords - 現在の条件に一致した譜面レコード一覧。
+ * @returns 明示された件数、または現在の対象譜面数。
+ */
+const resolveCountTarget = (
+  params: GoalAchievementParams,
+  filteredRecords: PlayerRecordDTO[]
+): number => {
+  const value = (params as Record<string, unknown>).count
+  return typeof value === 'number' ? value : filteredRecords.length
+}
+
+/**
+ * 総スコア目標の動的上限を解決する。
+ *
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @param filteredRecords - 現在の条件に一致した譜面レコード一覧。
+ * @returns 明示された総スコア、または対象譜面数に基づく理論値。
+ */
+const resolveTotalScoreTarget = (
+  params: GoalAchievementParams,
+  filteredRecords: PlayerRecordDTO[]
+): number => {
+  const value = (params as Record<string, unknown>).total
+  return typeof value === 'number' ? value : filteredRecords.length * 1010000
+}
+
+/**
+ * OVER POWER合計目標の動的上限を解決する。
+ *
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @param filteredRecords - 現在の条件に一致した譜面レコード一覧。
+ * @param songMap - 楽曲IDから楽曲情報を引くためのマップ。
+ * @returns 明示されたOVER POWER合計、または対象譜面の理論値合計。
+ */
+const resolveOverPowerValueTarget = (
+  params: GoalAchievementParams,
+  filteredRecords: PlayerRecordDTO[],
+  songMap: Map<string, SongDTO>
+): number => {
+  const value = (params as Record<string, unknown>).total
+  if (typeof value === 'number') return value
+
+  return filteredRecords.reduce((acc, record) => acc + (songMap.get(record.id)?.maxop ?? 0), 0)
+}
+
+/**
+ * 目標の現在値、目標値、達成率を計算する。
+ *
+ * @param goal - 計算対象の目標。
+ * @param filteredRecords - 目標条件に一致したプレイヤーレコード一覧。
+ * @param songs - 楽曲マスタ一覧。
+ * @returns 目標カード表示に必要な進捗情報。
+ */
 export const calculateGoalProgress = (
   goal: GoalDTO,
   filteredRecords: PlayerRecordDTO[],
@@ -156,7 +177,7 @@ export const calculateGoalProgress = (
     case 'rank_count':
     case 'score_count': {
       const threshold = getNumberParam(goal.achievement_params, 'score')
-      target = getNumberParam(goal.achievement_params, 'count')
+      target = resolveCountTarget(goal.achievement_params, filteredRecords)
       current = filteredRecords.filter((record) => record.score >= threshold).length
       break
     }
@@ -171,7 +192,10 @@ export const calculateGoalProgress = (
       break
     }
     case 'hardlamp_count': {
-      const params = goal.achievement_params as { lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'; count: number }
+      const params = goal.achievement_params as {
+        lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'
+        count?: number
+      }
       const hardLampName =
         params.lamp === 'HRD'
           ? 'HARD'
@@ -181,7 +205,7 @@ export const calculateGoalProgress = (
               ? 'ABSOLUTE'
               : 'CATASTROPHY'
       const required = HARD_LAMP_ORDER[hardLampName]
-      target = params.count
+      target = resolveCountTarget(goal.achievement_params, filteredRecords)
       current = filteredRecords.filter((record) => {
         const lamp = record.clear_lamp
         if (!lamp) return false
@@ -190,9 +214,10 @@ export const calculateGoalProgress = (
       break
     }
     case 'combolamp_count': {
-      const params = goal.achievement_params as { lamp: 'FC' | 'AJ'; count: number }
-      const required = params.lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']
-      target = params.count
+      const params = goal.achievement_params as { lamp: 'FC' | 'AJ'; count?: number }
+      const required =
+        params.lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']
+      target = resolveCountTarget(goal.achievement_params, filteredRecords)
       current = filteredRecords.filter((record) => {
         const lamp = record.combo_lamp
         if (!lamp) return false
@@ -201,12 +226,12 @@ export const calculateGoalProgress = (
       break
     }
     case 'total_score': {
-      target = getNumberParam(goal.achievement_params, 'total')
+      target = resolveTotalScoreTarget(goal.achievement_params, filteredRecords)
       current = filteredRecords.reduce((acc, record) => acc + record.score, 0)
       break
     }
     case 'overpower_value': {
-      target = getNumberParam(goal.achievement_params, 'total')
+      target = resolveOverPowerValueTarget(goal.achievement_params, filteredRecords, songMap)
       current = filteredRecords.reduce((acc, record) => acc + record.overpower, 0)
       break
     }

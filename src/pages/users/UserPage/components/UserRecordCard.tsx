@@ -6,16 +6,48 @@ import type { PlayerRecordDTO } from '../../../../types/api'
 type Props = {
   record: PlayerRecordDTO
   index: number
+  useDefaultIndexColor?: boolean
 }
 
 import {
   difficultyCardBorderColor,
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
+import { getScoreRank } from '../../../../utils/scoreRank'
+import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses'
+import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
 
+// FIXME: 色使いすぎ？
+/**
+ * レコード順位の表示色クラスを返す。
+ *
+ * @param index - 1始まりの順位。
+ * @returns 順位に対応する背景色と文字色のTailwindクラス。
+ */
+const idxColor = (index: number) => {
+  switch (index) {
+    case 1:
+      return 'bg-ranking-gold-bg text-ranking-medal-text'
+    case 2:
+      return 'bg-ranking-silver-bg text-ranking-medal-text'
+    case 3:
+      return 'bg-ranking-bronze-bg text-ranking-medal-text'
+    default:
+      return 'bg-surface-hover'
+  }
+}
+
+/**
+ * ユーザーのプレイレコードをカード形式で表示する。
+ *
+ * @param props - 表示対象のレコードと一覧内の0始まりインデックス。
+ * @returns 楽曲詳細へ遷移できるレコードカード。
+ */
 export const UserRecordCard: Component<Props> = (props) => {
   const [shouldAnimate, setShouldAnimate] = createSignal(false)
   let titleRef: HTMLParagraphElement | undefined
+  const scoreRank = () => getScoreRank(props.record.score)
+  const indexColor = () => (props.useDefaultIndexColor ? idxColor(0) : idxColor(props.index + 1))
 
   onMount(() => {
     if (titleRef && titleRef.scrollWidth > titleRef.clientWidth) {
@@ -29,29 +61,36 @@ export const UserRecordCard: Component<Props> = (props) => {
   })
 
   return (
-    <div class={`relative pl-4 p-2 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-2 shadow-md ${difficultyCardBorderColor(props.record.difficulty)}`}>
-      <div class="flex gap-3">
-        <div class="flex flex-col">
-          <p># {props.index + 1}</p>
-          <p class="text-sm">{props.record.rating.toFixed(2)}</p>
-        </div>
-        <div class="flex-1 min-w-0 overflow-hidden">
-          <A
-            href={`/songs/${encodeURIComponent(props.record.id)}?diff=${encodeURIComponent(difficultyToQueryValue(props.record.difficulty))}`}
-            class="text-inherit hover:underline"
-          >
-            <p
-              ref={titleRef}
-              class={`font-semibold whitespace-nowrap ${shouldAnimate() ? 'animate-marquee' : ''}`}
+    <div class="flex flex-col gap-2">
+      <A
+        href={`/songs/${encodeURIComponent(props.record.id)}?diff=${encodeURIComponent(difficultyToQueryValue(props.record.difficulty))}`}
+        class="group block text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
+      >
+        <div
+          class={`relative select-none border-y border-r border-border bg-surface p-2 pl-4 ${RECORD_CARD_HOVER_CLASS} before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 ${difficultyCardBorderColor(props.record.difficulty)}`}
+        >
+          <div class="flex gap-3 items-center">
+            <div
+              class={`w-8 h-8 flex items-center justify-center rounded-full ${indexColor()} font-oswald font-bold text-lg`}
             >
-              {props.record.title}
-            </p>
-          </A>
-          <p class="text-sm">
-            {props.record.const} / {props.record.score}
-          </p>
+              {props.index + 1}
+            </div>
+            <div class="flex-1 min-w-0 overflow-hidden">
+              <p
+                ref={titleRef}
+                class={`font-sans text-base font-semibold whitespace-nowrap ${shouldAnimate() ? 'animate-marquee' : ''}`}
+              >
+                {props.record.title}
+              </p>
+              <p class="text-base font-oswald font-bold">
+                {props.record.rating.toFixed(2)} &lt; {props.record.const.toFixed(1)} /{' '}
+                {props.record.score.toLocaleString('ja-JP')}{' '}
+                <span class={SCORE_RANK_TEXT_CLASS[scoreRank()]}>{scoreRank()}</span>
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      </A>
     </div>
   )
 }

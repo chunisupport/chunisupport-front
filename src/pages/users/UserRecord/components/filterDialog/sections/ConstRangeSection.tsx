@@ -1,8 +1,21 @@
-﻿import { Checkbox } from '@kobalte/core/checkbox'
+import { Checkbox } from '@kobalte/core/checkbox'
 import { NumberField } from '@kobalte/core/number-field'
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
+import { CONST_MAX } from '../../../constants/constRange'
+import {
+  FILTER_DIALOG_FIELD_INPUT_CLASS,
+  FILTER_DIALOG_SELECT_ITEM_CLASS,
+  FILTER_DIALOG_SELECT_TRIGGER_CLASS,
+} from '../styles'
+import RangeSeparator, { RANGE_END_LABEL_SUFFIX, RANGE_START_LABEL_SUFFIX } from './RangeSeparator'
+
+/** レベル範囲セクションの見出し。 */
+const CONST_LEVEL_RANGE_TITLE = 'レベル'
+
+/** 譜面定数範囲セクションの見出し。 */
+const CONST_VALUE_RANGE_TITLE = '譜面定数'
 
 const CONST_LEVEL_OPTIONS = [
   '1',
@@ -29,6 +42,7 @@ const CONST_LEVEL_OPTIONS = [
   '14+',
   '15',
   '15+',
+  '16',
 ]
 
 type ConstRangeSectionProps = {
@@ -45,141 +59,159 @@ type ConstRangeSectionProps = {
   onConstLevelChange: (type: 'min' | 'max', value: string) => void
 }
 
+/**
+ * レベルまたは譜面定数の範囲条件を表示する。
+ *
+ * @param props - 範囲入力値、入力モード、選択値、各変更ハンドラ。
+ * @returns 定数範囲フィルターセクションの JSX 要素。
+ */
 const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
   <div>
     {props.constFilterMode === 'number' ? (
-      <div class="flex gap-2">
-        <div class="flex-1">
-          <NumberField
-            value={props.minValue}
-            onChange={(value: string) => props.onMinInput(value)}
-            class="w-full"
-            format={false}
-            allowedInput={/[0-9.]/}
-            step={0.1}
-          >
-            <NumberField.Label class="block text-sm font-medium mb-1">定数(最小)</NumberField.Label>
-            <NumberField.Input
-              id="filter-const-min"
-              class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400  focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
-              onFocus={(event) => event.currentTarget.select()}
-              onBlur={(event) => props.onMinCommit(event.currentTarget.value)}
-            />
-          </NumberField>
-        </div>
-        <div class="flex-1">
-          <NumberField
-            value={props.maxValue}
-            onChange={(value: string) => props.onMaxInput(value)}
-            class="w-full"
-            format={false}
-            allowedInput={/[0-9.]/}
-            step={0.1}
-          >
-            <NumberField.Label class="block text-sm font-medium mb-1">定数(最大)</NumberField.Label>
-            <NumberField.Input
-              id="filter-const-max"
-              min={0}
-              max={15.9}
+      <>
+        <div class="mb-1 text-sm font-medium">{CONST_VALUE_RANGE_TITLE}</div>
+        <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
+          <div class="min-w-0">
+            <NumberField
+              value={props.minValue}
+              onChange={(value: string) => props.onMinInput(value)}
+              class="w-full"
+              format={false}
+              allowedInput={/[0-9.]/}
               step={0.1}
-              class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
-              onFocus={(event) => event.currentTarget.select()}
-              onBlur={(event) => props.onMaxCommit(event.currentTarget.value)}
-            />
-          </NumberField>
+            >
+              <NumberField.Label class="sr-only">
+                {CONST_VALUE_RANGE_TITLE} {RANGE_START_LABEL_SUFFIX}
+              </NumberField.Label>
+              <NumberField.Input
+                id="filter-const-min"
+                class={FILTER_DIALOG_FIELD_INPUT_CLASS}
+                onFocus={(event) => event.currentTarget.select()}
+                onBlur={(event) => props.onMinCommit(event.currentTarget.value)}
+              />
+            </NumberField>
+          </div>
+          <RangeSeparator />
+          <div class="min-w-0">
+            <NumberField
+              value={props.maxValue}
+              onChange={(value: string) => props.onMaxInput(value)}
+              class="w-full"
+              format={false}
+              allowedInput={/[0-9.]/}
+              step={0.1}
+            >
+              <NumberField.Label class="sr-only">
+                {CONST_VALUE_RANGE_TITLE} {RANGE_END_LABEL_SUFFIX}
+              </NumberField.Label>
+              <NumberField.Input
+                id="filter-const-max"
+                min={0}
+                max={CONST_MAX}
+                step={0.1}
+                class={FILTER_DIALOG_FIELD_INPUT_CLASS}
+                onFocus={(event) => event.currentTarget.select()}
+                onBlur={(event) => props.onMaxCommit(event.currentTarget.value)}
+              />
+            </NumberField>
+          </div>
         </div>
-      </div>
+      </>
     ) : (
-      <div class="flex gap-2">
-        <div class="flex-1">
-          <Select
-            options={CONST_LEVEL_OPTIONS}
-            value={props.constLevelMin}
-            onChange={(value) => {
-              if (value !== null) props.onConstLevelChange('min', value)
-            }}
-            class="w-full"
-            placeholder="選択…"
-            itemComponent={(itemProps) => (
-              <Select.Item
-                item={itemProps.item}
-                class="text-sm rounded flex items-center justify-between h-8 px-2 outline-none cursor-pointer data-disabled:opacity-50 data-disabled:pointer-events-none data-highlighted:bg-primary-600 data-highlighted:text-white"
-              >
-                <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
-                <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
-                  <Check />
-                </Select.ItemIndicator>
-              </Select.Item>
-            )}
-          >
-            <Select.Label class="block text-sm font-medium mb-1">レベル(最小)</Select.Label>
-            <Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2">
-              <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-gray-400">
-                {(state) => state.selectedOption()}
-              </Select.Value>
-              <Select.Icon class="h-5 w-5 flex items-center justify-center">
-                <ChevronDown />
-              </Select.Icon>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content class="z-60 bg-white rounded-md border border-gray-300 shadow-lg">
-                <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
-              </Select.Content>
-            </Select.Portal>
-          </Select>
+      <>
+        <div class="mb-1 text-sm font-medium">{CONST_LEVEL_RANGE_TITLE}</div>
+        <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
+          <div class="min-w-0">
+            <Select
+              options={CONST_LEVEL_OPTIONS}
+              value={props.constLevelMin}
+              onChange={(value) => {
+                if (value !== null) props.onConstLevelChange('min', value)
+              }}
+              class="w-full"
+              placeholder="選択…"
+              itemComponent={(itemProps) => (
+                <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
+                  <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
+                  <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
+                    <Check />
+                  </Select.ItemIndicator>
+                </Select.Item>
+              )}
+            >
+              <Select.Label class="sr-only">
+                {CONST_LEVEL_RANGE_TITLE} {RANGE_START_LABEL_SUFFIX}
+              </Select.Label>
+              <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
+                <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
+                  {(state) => state.selectedOption()}
+                </Select.Value>
+                <Select.Icon class="h-5 w-5 flex items-center justify-center">
+                  <ChevronDown />
+                </Select.Icon>
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
+                  <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
+                </Select.Content>
+              </Select.Portal>
+            </Select>
+          </div>
+          <RangeSeparator />
+          <div class="min-w-0">
+            <Select
+              options={CONST_LEVEL_OPTIONS}
+              value={props.constLevelMax}
+              onChange={(value) => {
+                if (value !== null) props.onConstLevelChange('max', value)
+              }}
+              class="w-full"
+              placeholder="選択…"
+              itemComponent={(itemProps) => (
+                <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
+                  <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
+                  <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
+                    <Check />
+                  </Select.ItemIndicator>
+                </Select.Item>
+              )}
+            >
+              <Select.Label class="sr-only">
+                {CONST_LEVEL_RANGE_TITLE} {RANGE_END_LABEL_SUFFIX}
+              </Select.Label>
+              <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
+                <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
+                  {(state) => state.selectedOption()}
+                </Select.Value>
+                <Select.Icon class="h-5 w-5 flex items-center justify-center">
+                  <ChevronDown />
+                </Select.Icon>
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
+                  <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
+                </Select.Content>
+              </Select.Portal>
+            </Select>
+          </div>
         </div>
-        <div class="flex-1">
-          <Select
-            options={CONST_LEVEL_OPTIONS}
-            value={props.constLevelMax}
-            onChange={(value) => {
-              if (value !== null) props.onConstLevelChange('max', value)
-            }}
-            class="w-full"
-            placeholder="選択…"
-            itemComponent={(itemProps) => (
-              <Select.Item
-                item={itemProps.item}
-                class="text-sm rounded flex items-center justify-between h-8 px-2 outline-none cursor-pointer data-disabled:opacity-50 data-disabled:pointer-events-none data-highlighted:bg-primary-600 data-highlighted:text-white"
-              >
-                <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
-                <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
-                  <Check />
-                </Select.ItemIndicator>
-              </Select.Item>
-            )}
-          >
-            <Select.Label class="block text-sm font-medium mb-1">レベル(最大)</Select.Label>
-            <Select.Trigger class="inline-flex items-center justify-between w-full border rounded px-3 py-2 text-sm bg-white border-gray-300 hover:border-gray-400 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2">
-              <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-gray-400">
-                {(state) => state.selectedOption()}
-              </Select.Value>
-              <Select.Icon class="h-5 w-5 flex items-center justify-center">
-                <ChevronDown />
-              </Select.Icon>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content class="z-60 bg-white rounded-md border border-gray-300 shadow-lg">
-                <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
-              </Select.Content>
-            </Select.Portal>
-          </Select>
-        </div>
-      </div>
+      </>
     )}
     <div class="mt-2">
       <Checkbox
         checked={props.constFilterMode === 'number'}
         onChange={(checked) => props.onConstFilterModeChange(checked ? 'number' : 'level')}
-        class="flex items-center"
+        class="flex items-center gap-2"
       >
         <Checkbox.Input id="filter-const-mode" />
-        <Checkbox.Control class="h-5 w-5 rounded-md border border-gray-300 bg-gray-50 data-checked:border-primary-600 data-checked:bg-primary-600 data-checked:text-white flex items-center justify-center mr-2">
+        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
           <Checkbox.Indicator>
             <Check class="h-4 w-4" />
           </Checkbox.Indicator>
         </Checkbox.Control>
-        <Checkbox.Label for="filter-const-mode">譜面定数で指定</Checkbox.Label>
+        <Checkbox.Label class="leading-5" for="filter-const-mode">
+          譜面定数で指定
+        </Checkbox.Label>
       </Checkbox>
     </div>
   </div>

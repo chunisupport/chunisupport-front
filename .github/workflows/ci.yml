@@ -7,6 +7,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PUBLIC_BACKEND_URL: ${{ vars.PUBLIC_BACKEND_URL }}
+      PUBLIC_FB_API_KEY: ${{ vars.PUBLIC_FB_API_KEY }}
+      PUBLIC_FB_AUTH_DOMAIN: ${{ vars.PUBLIC_FB_AUTH_DOMAIN }}
+      PUBLIC_FB_PROJECT_ID: ${{ vars.PUBLIC_FB_PROJECT_ID }}
+      PUBLIC_FB_STORAGE_BUCKET: ${{ vars.PUBLIC_FB_STORAGE_BUCKET }}
+      PUBLIC_FB_MESSAGING_SENDER_ID: ${{ vars.PUBLIC_FB_MESSAGING_SENDER_ID }}
+      PUBLIC_FB_APP_ID: ${{ vars.PUBLIC_FB_APP_ID }}
+      PUBLIC_FB_MEASUREMENT_ID: ${{ vars.PUBLIC_FB_MEASUREMENT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -18,6 +27,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Check third-party licenses
+        run: npm run licenses:check
+
+      - name: Check
+        run: npm run check:ci
 
       - name: Build
         run: npm run build

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* テーマカラー: ここを変えるだけで全体の色が変わります */
+  /* テーマカラー: ここを変えるだけで全体の色が変わります（アクセントカラー：ボタン・リンク・フォーカスリングなど） */
   --color-primary-50: var(--color-green-50);
   --color-primary-100: var(--color-green-100);
   --color-primary-200: var(--color-green-200);
@@ -12,10 +12,364 @@
   --color-primary-700: var(--color-green-700);
   --color-primary-800: var(--color-green-800);
   --color-primary-900: var(--color-green-900);
+
+  /* フォント: 装飾用（スコア表示など） */
+  --font-oswald: "Oswald", sans-serif;
+  /* フォント: 本文用 */
+  --font-sans: "Inter", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root,
+[data-theme="light"] {
+  /* ===== 背景・サーフェス（ページ全体 / カード / パネル / モーダル / ホバー） ===== */
+  --cs-color-bg: var(--color-white);
+  --cs-color-surface: var(--color-white);
+  --cs-color-surface-muted: var(--color-gray-100);
+  --cs-color-surface-raised: var(--color-white);
+  --cs-color-surface-hover: var(--color-gray-200);
+
+  /* ===== テキスト（本文 / 補助 / メタ情報 / 反転 / プレースホルダー / ナビ） ===== */
+  --cs-color-text: var(--color-gray-900);
+  --cs-color-text-muted: var(--color-gray-600);
+  --cs-color-text-subtle: var(--color-gray-500);
+  --cs-color-text-inverse: var(--color-white);
+  --cs-color-text-placeholder: var(--color-gray-400);
+  --cs-color-nav-text: var(--color-gray-700);
+
+  /* ===== 枠線・フォーカスリング（カード境界 / 強調境界 / フォーカスリング） ===== */
+  --cs-color-border: var(--color-gray-300);
+  --cs-color-border-strong: var(--color-gray-400);
+  --cs-color-focus-ring: var(--color-primary-500);
+
+  /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
+  --cs-color-action-primary: var(--color-primary-600);
+  --cs-color-action-primary-hover: var(--color-primary-700);
+  --cs-color-action-primary-muted: var(--color-primary-50);
+  --cs-color-action-primary-border: var(--color-primary-200);
+  --cs-color-action-secondary: var(--color-gray-300);
+  --cs-color-action-secondary-hover: var(--color-gray-400);
+
+  /* ===== 危険: エラー・削除操作（テキスト / 背景 / 枠線） ===== */
+  --cs-color-danger: var(--color-red-600);
+  --cs-color-danger-hover: var(--color-red-700);
+  --cs-color-danger-bg: var(--color-red-50);
+  --cs-color-danger-border: var(--color-red-300);
+
+  /* ===== 成功（テキスト / 背景 / 枠線） ===== */
+  --cs-color-success: var(--color-green-700);
+  --cs-color-success-bg: var(--color-green-50);
+  --cs-color-success-bg-hover: var(--color-green-100);
+  --cs-color-success-border: var(--color-green-300);
+
+  /* ===== 警告（テキスト / 背景 / 枠線） ===== */
+  --cs-color-warning: var(--color-yellow-700);
+  --cs-color-warning-bg: var(--color-yellow-50);
+  --cs-color-warning-border: var(--color-yellow-300);
+
+  /* ===== 情報（テキスト / 背景 / 枠線） ===== */
+  --cs-color-info: var(--color-blue-700);
+  --cs-color-info-bg: var(--color-blue-50);
+  --cs-color-info-border: var(--color-blue-300);
+
+  /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） ===== */
+  --cs-color-overlay: rgb(0 0 0 / 30%);
+  --cs-color-disabled-bg: var(--color-gray-200);
+  --cs-color-disabled-text: var(--color-gray-400);
+  --cs-color-input-bg: var(--color-white);
+  --cs-color-input-border: var(--color-gray-400);
+  --cs-color-input-border-hover: var(--color-gray-500);
+  --cs-color-link: var(--color-primary-600);
+  --cs-color-link-hover: var(--color-primary-700);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* ===== 背景・サーフェス（ページ全体 / カード / パネル / モーダル / ホバー） ===== */
+  --cs-color-bg: #03150f;
+  --cs-color-surface: #082018;
+  --cs-color-surface-muted: #0d2a20;
+  --cs-color-surface-raised: #0b241b;
+  --cs-color-surface-hover: #123528;
+
+  /* ===== テキスト（本文 / 補助 / メタ情報 / 反転 / プレースホルダー / ナビ） ===== */
+  --cs-color-text: var(--color-gray-50);
+  --cs-color-text-muted: var(--color-gray-300);
+  --cs-color-text-subtle: var(--color-gray-500);
+  --cs-color-text-inverse: #03150f;
+  --cs-color-text-placeholder: var(--color-gray-500);
+  --cs-color-nav-text: var(--color-gray-100);
+
+  /* ===== 枠線・フォーカスリング（カード境界 / 強調境界 / フォーカスリング） ===== */
+  --cs-color-border: #1d4a39;
+  --cs-color-border-strong: #2f6b53;
+  --cs-color-focus-ring: var(--color-primary-400);
+
+  /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
+  --cs-color-action-primary: var(--color-primary-500);
+  --cs-color-action-primary-hover: var(--color-primary-400);
+  --cs-color-action-primary-muted: rgb(20 83 45 / 35%);
+  --cs-color-action-primary-border: var(--color-primary-700);
+  --cs-color-action-secondary: #1d4a39;
+  --cs-color-action-secondary-hover: #2f6b53;
+
+  /* ===== 危険: エラー・削除操作（テキスト / 背景 / 枠線） ===== */
+  --cs-color-danger: var(--color-red-400);
+  --cs-color-danger-hover: var(--color-red-300);
+  --cs-color-danger-bg: rgb(127 29 29 / 35%);
+  --cs-color-danger-border: var(--color-red-800);
+
+  /* ===== 成功（テキスト / 背景 / 枠線） ===== */
+  --cs-color-success: var(--color-green-300);
+  --cs-color-success-bg: rgb(20 83 45 / 35%);
+  --cs-color-success-bg-hover: rgb(22 101 52 / 45%);
+  --cs-color-success-border: var(--color-green-800);
+
+  /* ===== 警告（テキスト / 背景 / 枠線） ===== */
+  --cs-color-warning: var(--color-yellow-300);
+  --cs-color-warning-bg: rgb(113 63 18 / 35%);
+  --cs-color-warning-border: var(--color-yellow-800);
+
+  /* ===== 情報（テキスト / 背景 / 枠線） ===== */
+  --cs-color-info: var(--color-teal-300);
+  --cs-color-info-bg: rgb(19 78 74 / 35%);
+  --cs-color-info-border: var(--color-teal-800);
+
+  /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） ===== */
+  --cs-color-overlay: rgb(0 0 0 / 60%);
+  --cs-color-disabled-bg: #0d2a20;
+  --cs-color-disabled-text: var(--color-gray-600);
+  --cs-color-input-bg: #082018;
+  --cs-color-input-border: #2f6b53;
+  --cs-color-input-border-hover: #3f8a6b;
+  --cs-color-link: var(--color-primary-400);
+  --cs-color-link-hover: var(--color-primary-300);
+}
+
+:root,
+[data-theme="light"],
+[data-theme="dark"] {
+  --cs-size-user-honor-title-max-width: 464px;
+
+  /* ===== 難易度バッジ（BASIC / ADVANCED / EXPERT / MASTER / ULTIMA） ===== */
+  --cs-color-difficulty-basic-bg: #00ab84;
+  --cs-color-difficulty-basic-text: var(--color-white);
+  --cs-color-difficulty-advanced-bg: #ff7e00;
+  --cs-color-difficulty-advanced-text: var(--color-white);
+  --cs-color-difficulty-expert-bg: #f12929;
+  --cs-color-difficulty-expert-text: var(--color-white);
+  --cs-color-difficulty-master-bg: #8e1be5;
+  --cs-color-difficulty-master-text: var(--color-white);
+  --cs-color-difficulty-ultima-bg: #000000;
+  --cs-color-difficulty-ultima-text: var(--color-white);
+
+  /* ===== WORLD'S ENDラベル ===== */
+  --cs-color-worldsend-label-bg: linear-gradient(
+    135deg,
+    #48111d 0%,
+    #5a3609 18%,
+    #48520f 34%,
+    #0f4f32 50%,
+    #0d4a57 66%,
+    #1e3473 82%,
+    #3f1f61 100%
+  );
+  --cs-color-worldsend-label-text: var(--color-white);
+
+  /* ===== ユーザー称号（ノーマル） ===== */
+  --cs-color-honor-title-normal-bg: var(--color-yellow-200);
+  --cs-color-honor-title-normal-text: var(--color-gray-900);
+
+  /* ===== ランキングメダル（金 / 銀 / 銅） ===== */
+  --cs-color-ranking-gold-bg: var(--color-yellow-300);
+  --cs-color-ranking-silver-bg: var(--color-gray-300);
+  --cs-color-ranking-bronze-bg: var(--color-orange-300);
+  --cs-color-ranking-medal-text: var(--color-gray-900);
+  --cs-gradient-ranking-gold-bg: linear-gradient(
+    45deg,
+    #d6a63a 0%,
+    #f8d86a 24%,
+    #fff8bd 42%,
+    #ecc153 58%,
+    #ffe47d 76%,
+    #c99b32 100%
+  );
+  --cs-gradient-ranking-silver-bg: linear-gradient(
+    45deg,
+    #c2c8d2 0%,
+    #edf0f5 24%,
+    #ffffff 42%,
+    #d9dee7 58%,
+    #f7f9fb 76%,
+    #b5bdca 100%
+  );
+  --cs-gradient-ranking-bronze-bg: linear-gradient(
+    45deg,
+    #c8793d 0%,
+    #e39b5b 24%,
+    #ffe0bd 42%,
+    #d88a4b 58%,
+    #f0b075 76%,
+    #b86a35 100%
+  );
+
+  /* ===== スコアランク（SSSP / SSS / SS / A / B / C / D） ===== */
+  --cs-color-score-rank-sssp-bg: var(--color-green-500);
+  --cs-color-score-rank-sssp-text: var(--color-green-500);
+  --cs-color-score-rank-sss-bg: var(--color-yellow-500);
+  --cs-color-score-rank-sss-text: var(--color-yellow-500);
+  --cs-color-score-rank-ss-bg: var(--color-orange-500);
+  --cs-color-score-rank-ss-text: var(--color-orange-500);
+  --cs-color-score-rank-a-bg: var(--color-red-500);
+  --cs-color-score-rank-a-text: var(--color-red-500);
+  --cs-color-score-rank-b-bg: var(--color-sky-500);
+  --cs-color-score-rank-b-text: var(--color-sky-500);
+  --cs-color-score-rank-c-text: var(--color-amber-700);
+  --cs-color-score-rank-d-bg: var(--color-gray-500);
+  --cs-color-score-rank-d-text: var(--color-gray-500);
+
+  /* ===== ランプ（FULL COMBO / ALL JUSTICE / CLEAR / HARD / BRAVE / ABSOLUTE / CATASTROPHY / FAILED / 未プレイ） ===== */
+  --cs-color-lamp-full-combo-bg: var(--color-yellow-300);
+  --cs-color-lamp-full-combo-text: var(--color-yellow-900);
+  --cs-color-lamp-all-justice-bg: #fdf5a7;
+  --cs-color-lamp-all-justice-text: var(--color-yellow-900);
+  --cs-color-lamp-clear-bg: var(--color-gray-200);
+  --cs-color-lamp-clear-text: var(--color-gray-900);
+  --cs-color-lamp-hard-bg: var(--color-red-200);
+  --cs-color-lamp-hard-text: var(--color-red-900);
+  --cs-color-lamp-brave-bg: var(--color-yellow-300);
+  --cs-color-lamp-brave-text: var(--color-yellow-900);
+  --cs-color-lamp-absolute-bg: #fdf5a7;
+  --cs-color-lamp-absolute-text: var(--color-yellow-900);
+  --cs-color-lamp-catastrophy-bg: var(--color-green-200);
+  --cs-color-lamp-catastrophy-text: var(--color-green-900);
+  --cs-color-lamp-failed-bg: var(--color-gray-100);
+  --cs-color-lamp-failed-text: var(--color-gray-300);
+  --cs-color-lamp-none-bg: var(--color-gray-100);
+}
+
+@theme inline {
+  /* 背景・サーフェス */
+  --color-bg: var(--cs-color-bg);
+  --color-surface: var(--cs-color-surface);
+  --color-surface-muted: var(--cs-color-surface-muted);
+  --color-surface-raised: var(--cs-color-surface-raised);
+  --color-surface-hover: var(--cs-color-surface-hover);
+
+  /* テキスト */
+  --color-text: var(--cs-color-text);
+  --color-text-muted: var(--cs-color-text-muted);
+  --color-text-subtle: var(--cs-color-text-subtle);
+  --color-text-inverse: var(--cs-color-text-inverse);
+  --color-text-placeholder: var(--cs-color-text-placeholder);
+  --color-nav-text: var(--cs-color-nav-text);
+
+  /* 枠線・フォーカスリング */
+  --color-border: var(--cs-color-border);
+  --color-border-strong: var(--cs-color-border-strong);
+  --color-focus-ring: var(--cs-color-focus-ring);
+
+  /* アクション（ボタン） */
+  --color-action-primary: var(--cs-color-action-primary);
+  --color-action-primary-hover: var(--cs-color-action-primary-hover);
+  --color-action-primary-muted: var(--cs-color-action-primary-muted);
+  --color-action-primary-border: var(--cs-color-action-primary-border);
+  --color-action-secondary: var(--cs-color-action-secondary);
+  --color-action-secondary-hover: var(--cs-color-action-secondary-hover);
+
+  /* 危険（エラー） */
+  --color-danger: var(--cs-color-danger);
+  --color-danger-hover: var(--cs-color-danger-hover);
+  --color-danger-bg: var(--cs-color-danger-bg);
+  --color-danger-border: var(--cs-color-danger-border);
+
+  /* 成功 */
+  --color-success: var(--cs-color-success);
+  --color-success-bg: var(--cs-color-success-bg);
+  --color-success-bg-hover: var(--cs-color-success-bg-hover);
+  --color-success-border: var(--cs-color-success-border);
+
+  /* 警告 */
+  --color-warning: var(--cs-color-warning);
+  --color-warning-bg: var(--cs-color-warning-bg);
+  --color-warning-border: var(--cs-color-warning-border);
+
+  /* 情報 */
+  --color-info: var(--cs-color-info);
+  --color-info-bg: var(--cs-color-info-bg);
+  --color-info-border: var(--cs-color-info-border);
+
+  /* その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） */
+  --color-overlay: var(--cs-color-overlay);
+  --color-disabled-bg: var(--cs-color-disabled-bg);
+  --color-disabled-text: var(--cs-color-disabled-text);
+  --color-input-bg: var(--cs-color-input-bg);
+  --color-input-border: var(--cs-color-input-border);
+  --color-input-border-hover: var(--cs-color-input-border-hover);
+  --color-link: var(--cs-color-link);
+  --color-link-hover: var(--cs-color-link-hover);
+
+  /* 難易度バッジ */
+  --color-difficulty-basic-bg: var(--cs-color-difficulty-basic-bg);
+  --color-difficulty-basic-text: var(--cs-color-difficulty-basic-text);
+  --color-difficulty-advanced-bg: var(--cs-color-difficulty-advanced-bg);
+  --color-difficulty-advanced-text: var(--cs-color-difficulty-advanced-text);
+  --color-difficulty-expert-bg: var(--cs-color-difficulty-expert-bg);
+  --color-difficulty-expert-text: var(--cs-color-difficulty-expert-text);
+  --color-difficulty-master-bg: var(--cs-color-difficulty-master-bg);
+  --color-difficulty-master-text: var(--cs-color-difficulty-master-text);
+  --color-difficulty-ultima-bg: var(--cs-color-difficulty-ultima-bg);
+  --color-difficulty-ultima-text: var(--cs-color-difficulty-ultima-text);
+
+  /* WORLD'S ENDラベル */
+  --color-worldsend-label-text: var(--cs-color-worldsend-label-text);
+
+  /* ユーザー称号 */
+  --color-honor-title-normal-bg: var(--cs-color-honor-title-normal-bg);
+  --color-honor-title-normal-text: var(--cs-color-honor-title-normal-text);
+
+  /* ランキングメダル */
+  --color-ranking-gold-bg: var(--cs-color-ranking-gold-bg);
+  --color-ranking-silver-bg: var(--cs-color-ranking-silver-bg);
+  --color-ranking-bronze-bg: var(--cs-color-ranking-bronze-bg);
+  --color-ranking-medal-text: var(--cs-color-ranking-medal-text);
+
+  /* スコアランク */
+  --color-score-rank-sss-bg: var(--cs-color-score-rank-sss-bg);
+  --color-score-rank-sss-text: var(--cs-color-score-rank-sss-text);
+  --color-score-rank-sssp-bg: var(--cs-color-score-rank-sssp-bg);
+  --color-score-rank-sssp-text: var(--cs-color-score-rank-sssp-text);
+  --color-score-rank-ss-bg: var(--cs-color-score-rank-ss-bg);
+  --color-score-rank-ss-text: var(--cs-color-score-rank-ss-text);
+  --color-score-rank-a-bg: var(--cs-color-score-rank-a-bg);
+  --color-score-rank-a-text: var(--cs-color-score-rank-a-text);
+  --color-score-rank-b-bg: var(--cs-color-score-rank-b-bg);
+  --color-score-rank-b-text: var(--cs-color-score-rank-b-text);
+  --color-score-rank-c-text: var(--cs-color-score-rank-c-text);
+  --color-score-rank-d-bg: var(--cs-color-score-rank-d-bg);
+  --color-score-rank-d-text: var(--cs-color-score-rank-d-text);
+
+  /* ランプ */
+  --color-lamp-full-combo-bg: var(--cs-color-lamp-full-combo-bg);
+  --color-lamp-full-combo-text: var(--cs-color-lamp-full-combo-text);
+  --color-lamp-all-justice-bg: var(--cs-color-lamp-all-justice-bg);
+  --color-lamp-all-justice-text: var(--cs-color-lamp-all-justice-text);
+  --color-lamp-clear-bg: var(--cs-color-lamp-clear-bg);
+  --color-lamp-clear-text: var(--cs-color-lamp-clear-text);
+  --color-lamp-hard-bg: var(--cs-color-lamp-hard-bg);
+  --color-lamp-hard-text: var(--cs-color-lamp-hard-text);
+  --color-lamp-brave-bg: var(--cs-color-lamp-brave-bg);
+  --color-lamp-brave-text: var(--cs-color-lamp-brave-text);
+  --color-lamp-absolute-bg: var(--cs-color-lamp-absolute-bg);
+  --color-lamp-absolute-text: var(--cs-color-lamp-absolute-text);
+  --color-lamp-catastrophy-bg: var(--cs-color-lamp-catastrophy-bg);
+  --color-lamp-catastrophy-text: var(--cs-color-lamp-catastrophy-text);
+  --color-lamp-failed-bg: var(--cs-color-lamp-failed-bg);
+  --color-lamp-failed-text: var(--cs-color-lamp-failed-text);
+  --color-lamp-none-bg: var(--cs-color-lamp-none-bg);
 }
 
 @keyframes marquee {
-
   0%,
   25% {
     transform: translateX(0%);
@@ -27,15 +381,262 @@
   }
 }
 
+@keyframes honor-title-rotate {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  16%,
+  84% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
 @layer utilities {
   .animate-marquee {
     animation: marquee 5s linear infinite;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .bg-ranking-gold-bg {
+    background-color: var(--cs-color-ranking-gold-bg);
+    background-image: var(--cs-gradient-ranking-gold-bg);
+  }
+
+  .bg-ranking-silver-bg {
+    background-color: var(--cs-color-ranking-silver-bg);
+    background-image: var(--cs-gradient-ranking-silver-bg);
+  }
+
+  .bg-ranking-bronze-bg {
+    background-color: var(--cs-color-ranking-bronze-bg);
+    background-image: var(--cs-gradient-ranking-bronze-bg);
+  }
+}
+
+@layer components {
+  .user-honor-title {
+    box-sizing: border-box;
+    display: block;
+    width: min(var(--cs-size-user-honor-title-max-width), 100%);
+    margin: 0 0 12px;
+    padding: 4px;
+    border-radius: 6px;
+    background: var(--honor-background, #d4d4d4);
+    color: #000;
+    font-family: "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 20px;
+    text-align: center;
+    --honor-shine: linear-gradient(
+      to bottom,
+      rgb(255 255 255 / 0%),
+      rgb(255 255 255 / 50%) 47%,
+      transparent 52%
+    );
+  }
+
+  .user-honor-title--rotating {
+    animation: honor-title-rotate 4s ease-in-out both;
+  }
+
+  .user-honor-toggle {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .user-honor-toggle:focus-visible {
+    border-radius: 8px;
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+
+  .user-honor-list {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0 0 12px;
+  }
+
+  .user-honor-list .user-honor-title {
+    width: 100%;
+    margin: 0;
+  }
+
+  .user-honor-title--normal {
+    --honor-background: var(--honor-shine), #d4d4d4;
+  }
+
+  .user-honor-title--copper {
+    --honor-background: var(--honor-shine), #df943e;
+  }
+
+  .user-honor-title--silver {
+    --honor-background: var(--honor-shine), #b4d0e7;
+  }
+
+  .user-honor-title--gold {
+    --honor-background: var(--honor-shine), #e4c438;
+  }
+
+  .user-honor-title--platina {
+    --honor-background: var(--honor-shine), #fdf5a7;
+  }
+
+  .user-honor-title--rainbow {
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(45deg, #aeefff, #b7ceff, #d0b5ff, #ffb8e8, #ffc4ad, #fff0a8, #b9eeb7);
+  }
+
+  .user-honor-title--staff {
+    --honor-background:
+      linear-gradient(
+        to bottom,
+        transparent 0% 47%,
+        rgba(103, 116, 177, 0.25) 52%,
+        transparent 100%
+      ),
+      linear-gradient(
+        110deg,
+        #5f7cfc 0 30px,
+        transparent 30px 35px,
+        #4869fa 35px 45px,
+        transparent 45px 100%
+      ),
+      linear-gradient(
+        290deg,
+        #5f7cfc 0 30px,
+        transparent 30px 35px,
+        #4869fa 35px 45px,
+        transparent 45px 100%
+      ),
+      #ebebeb;
+  }
+
+  .user-honor-title--ongeki {
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(150deg, #f799d3 0 30px, #66c7ee 30px 40px, transparent 40px 100%),
+      linear-gradient(330deg, #f799d3 0 30px, #66c7ee 30px 40px, transparent 40px 100%), #f8f8f8;
+  }
+
+  .user-honor-title--maimai {
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(
+        150deg,
+        #ff4646 0 10px,
+        #ffa02d 10px 20px,
+        #ffdc00 20px 30px,
+        #9ac948 30px 40px,
+        transparent 40px 100%
+      ),
+      linear-gradient(
+        330deg,
+        #ff4646 0 10px,
+        #ffa02d 10px 20px,
+        #ffdc00 20px 30px,
+        #9ac948 30px 40px,
+        transparent 40px 100%
+      ),
+      #f8f8f8;
+  }
+
+  .user-honor-title--sp {
+    --honor-background: var(--honor-shine), #a7fdc1;
+  }
+
+  .user-honor-title--phoenix-g {
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(150deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%),
+      linear-gradient(330deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%), #e4c438;
+  }
+
+  .user-honor-title--phoenix-p {
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(150deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%),
+      linear-gradient(330deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%), #fdf5a7;
+  }
+
+  .user-honor-title--phoenix-r {
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(150deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%),
+      linear-gradient(330deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%),
+      linear-gradient(45deg, #aeefff, #b7ceff, #d0b5ff, #ffb8e8, #ffc4ad, #fff0a8, #b9eeb7);
+  }
+
+  .user-honor-title--expert {
+    --honor-background: var(--honor-shine), #e4c438;
+  }
+
+  .user-honor-title--master {
+    --honor-background: var(--honor-shine), #fdf5a7;
+  }
+
+  .user-honor-title--ultima {
+    --honor-background:
+      var(--honor-shine),
+      linear-gradient(
+        135deg,
+        #333 0 15px,
+        #ee6666 15px 20px,
+        #863a3a 20px 30px,
+        #ee6666 30px 35px,
+        #863a3a 35px 38px,
+        #ee6666 38px 45px,
+        transparent 45px 100%
+      ),
+      linear-gradient(
+        315deg,
+        #333 0 15px,
+        #863a3a 15px 25px,
+        #ee6666 25px 27px,
+        #863a3a 27px 30px,
+        #ee6666 30px 32px,
+        #863a3a 32px 35px,
+        #ee6666 35px 45px,
+        transparent 45px 100%
+      ),
+      #fdf5a7;
+  }
+
+  .goal-card-progress-secondary {
+    color: var(--color-text-subtle);
+  }
+
+  [data-theme="dark"] .goal-card-progress-secondary {
+    color: var(--color-primary-300);
   }
 }
 
 @layer base {
   html {
-    font-family: "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+    font-family: "Jost", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
     overscroll-behavior-y: auto;
   }
 
@@ -44,7 +645,15 @@
   }
 
   body {
+    background: var(--color-bg);
+    color: var(--color-text);
     overscroll-behavior-y: auto;
+  }
+
+  html:has(#app-main),
+  body:has(#app-main) {
+    height: 100dvh;
+    overflow: hidden;
   }
 
   main {

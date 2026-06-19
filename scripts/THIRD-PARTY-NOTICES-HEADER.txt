@@ -1,0 +1,20 @@
+ChuniSupport
+Third-Party Software Notices and Licenses
+=======================================
+
+この製品（ChuniSupport）は、以下のサードパーティ製ソフトウェアを使用しています。
+各ソフトウェアのライセンス条項を以下に記載します。
+
+This product (ChuniSupport) uses the following third-party software.
+The applicable license terms for each are listed below.
+
+本製品のソースコード（自前部分）は MIT License の下で提供されています。
+詳細はリポジトリルートの LICENSE ファイルを参照してください。
+
+The source code of this product (our own portions) is provided under the MIT License.
+See the LICENSE file in the repository root for details.
+
+-------------------------------------------------------------------------------
+以下に、各依存パッケージのライセンス情報を記載します。
+-------------------------------------------------------------------------------
+

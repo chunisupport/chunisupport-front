@@ -1,362 +1,227 @@
+import { useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import {
   createEffect,
-  createMemo,
   createResource,
   createSignal,
   ErrorBoundary,
+  onMount,
   Show,
   Suspense,
 } from 'solid-js'
-import { fetchAllSongs, fetchMasterData } from '../../../api/songs'
-import { Loading, ScrollToTop } from '../../../components'
+import { fetchMasterData, fetchVersions } from '../../../api/songs'
+import { LoadError, Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import type { UserProfileWithRecordsDTO } from '../../../types/api'
-import { attachSongMetaToRecords, type PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
+import {
+  readStandardRecordColumnsSetting,
+  readStandardRecordFilterSetting,
+  saveStandardRecordColumnsSetting,
+  saveStandardRecordFilterSetting,
+} from '../../../repositories/viewSettingsRepository'
+import { useSongsData } from '../../../stores/songsData'
+import type { MasterDataDTO, UserRecordDTO, VersionSummaryDTO } from '../../../types/api'
+import FilterStats from '../components/FilterStats'
+import { isValidSavedStandardFilter } from '../components/savedRecordFilters'
+import { type SortDirection, sanitizeSortQuery } from '../recordTable/sortingQuery'
+import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FilterDialog from './components/FilterDialog'
-import FilterStats from './components/FilterStats'
 import FilterToolbar from './components/FilterToolbar'
 import RecordTable from './components/RecordTable'
-import TrackingSummary from './components/TrackingSummary'
-import { DEFAULT_FILTER, getMasterDataDefaults } from './types/filterDefaults'
-import type { ComboLamp, FilterState, RecordSortKey, SortDirection } from './types/types'
-import { getDefaultFilter, isRecordMatched } from './utils/filtering'
-import { getRecordStats } from './utils/recordStats'
-import {
-  clearTrackingCondition,
-  loadSavedFilters,
-  loadTrackingCondition,
-  type SavedFilter,
-  type TrackingCondition,
-} from './utils/storage'
-
-const DIFFICULTY_ORDER: Record<string, number> = {
-  BASIC: 0,
-  ADVANCED: 1,
-  EXPERT: 2,
-  MASTER: 3,
-  ULTIMA: 4,
-}
-
-const LAMP_ORDER: Record<string, number> = {
-  'ALL JUSTICE': 0,
-  'FULL COMBO': 1,
-  NONE: 2,
-  UNPLAYED: 3,
-}
+import { buildDefaultFilter, DEFAULT_FILTER } from './types/filterDefaults'
+import type { FilterState, RecordColumnId, RecordSortKey } from './types/types'
+import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
+import { getDefaultFilter } from './utils/filtering'
+import { useUserRecordPageModel } from './utils/pageModel'
+import { parseSortParams } from './utils/sorting'
 
 type Props = {
-  profile: UserProfileWithRecordsDTO
+  username: string
+  record: UserRecordDTO
 }
 
+/**
+ * 通常レコードの初期フィルターを保存済み設定、または既定値から決定する。
+ *
+ * @param masterData - フィルター既定値の構築に使うマスターデータ。
+ * @param versions - フィルター既定値の構築に使うバージョン一覧。
+ * @returns 初回表示に適用するフィルター状態。
+ */
+const restoreInitialStandardRecordFilter = async (
+  masterData: MasterDataDTO,
+  versions: VersionSummaryDTO[]
+): Promise<FilterState> => {
+  const defaultFilter = buildDefaultFilter(masterData, versions)
+
+  try {
+    const savedFilter = await readStandardRecordFilterSetting()
+    return isValidSavedStandardFilter(savedFilter) ? savedFilter : defaultFilter
+  } catch {
+    return defaultFilter
+  }
+}
+
+/**
+ * 通常レコード一覧とフィルター操作 UI を表示する。
+ *
+ * @param props - 表示対象ユーザー名と通常レコードを含むレスポンス。
+ * @returns 通常レコードタブの表示要素。
+ */
 const UserRecord: Component<Props> = (props) => {
-  const [allSongs] = createResource(fetchAllSongs)
+  const { songsResponse: allSongs, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [masterData] = createResource(fetchMasterData)
+  const [versionData] = createResource(fetchVersions)
 
-  // 保存済みフィルター一覧
-  const [savedFilters, setSavedFilters] = createSignal<SavedFilter[]>(loadSavedFilters())
-
-  // フィルター・追跡の状態
+  // フィルターの状態
   const [filters, setFilters] = createSignal<FilterState>({
     // createEffect内で初期化されるので、ここでは仮の値をセット
     ...DEFAULT_FILTER,
   })
-  const [trackingCondition, setTrackingCondition] = createSignal<TrackingCondition | null>(
-    loadTrackingCondition()
-  )
+  const [filterReady, setFilterReady] = createSignal(false)
 
   // フィルターダイアログの開閉状態
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
-  const [sortKey, setSortKey] = createSignal<RecordSortKey | null>('rating')
-  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>('desc')
+  const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
 
-  // フィルターを初期化
-  // マスタデータ取得後にgenres/versionsを全選択
+  // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { initialSortKey, initialSortOrder } = parseSortParams(searchParams)
+
+  const [sortKey, setSortKey] = createSignal<RecordSortKey | null>(initialSortKey)
+  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(initialSortOrder)
+  const [visibleColumnIds, setVisibleColumnIds] = createSignal<RecordColumnId[]>(
+    sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
+  )
+
+  // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
+  onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
+  onMount(() => {
+    ensureSongsLoaded()
+  })
+
+  let filterRestored = false
+
+  // マスタデータ取得後に保存済みフィルター、またはデフォルトフィルターを反映する。
   createEffect(() => {
     const md = masterData()
-    if (!md) return
-    setFilters((prev) => ({
-      ...prev,
-      ...getMasterDataDefaults(md),
-    }))
+    const versions = versionData()
+    if (filterRestored || !md || !versions) return
+    filterRestored = true
+    void restoreInitialStandardRecordFilter(md, versions.versions)
+      .then(setFilters)
+      .finally(() => setFilterReady(true))
   })
 
-  /** 未プレイを含む全曲のレコード */
-  const recordsWithSongMeta = createMemo(() => {
-    const songs = allSongs()
-    if (!songs) return []
-    return attachSongMetaToRecords(songs.songs, props.profile.records.all)
-  })
-
-  /** フィルター適用後のレコード */
-  const filteredRecords = createMemo(() => {
-    const records = recordsWithSongMeta()
-    const currentFilters = filters()
-    return records.filter((record) => isRecordMatched(record, currentFilters))
-  })
-
-  const sortedRecords = createMemo(() => {
-    const records = filteredRecords()
-    const currentSortKey = sortKey()
-    const currentSortDirection = sortDirection()
-
-    if (!currentSortKey || !currentSortDirection) {
-      return records
-    }
-
-    const direction = currentSortDirection === 'asc' ? 1 : -1
-
-    return records
-      .map((record, index) => ({ record, index }))
-      .sort((a, b) => {
-        const left = a.record
-        const right = b.record
-        let comparison = 0
-
-        switch (currentSortKey) {
-          case 'title':
-            comparison = left.title.localeCompare(right.title, 'ja')
-            break
-          case 'difficulty':
-            comparison =
-              (DIFFICULTY_ORDER[left.difficulty] ?? Number.MAX_SAFE_INTEGER) -
-              (DIFFICULTY_ORDER[right.difficulty] ?? Number.MAX_SAFE_INTEGER)
-            break
-          case 'const':
-            comparison = left.const - right.const
-            break
-          case 'rating': {
-            const leftUnplayed = !left.is_played
-            const rightUnplayed = !right.is_played
-
-            if (leftUnplayed && rightUnplayed) {
-              comparison = 0
-            } else if (leftUnplayed) {
-              return 1
-            } else if (rightUnplayed) {
-              return -1
-            } else {
-              comparison = left.rating - right.rating
-            }
-            break
-          }
-          case 'score': {
-            const leftUnplayed = !left.is_played
-            const rightUnplayed = !right.is_played
-
-            if (leftUnplayed && rightUnplayed) {
-              comparison = 0
-            } else if (leftUnplayed) {
-              return 1
-            } else if (rightUnplayed) {
-              return -1
-            } else {
-              comparison = left.score - right.score
-            }
-            break
-          }
-          case 'lamp': {
-            const leftLampKey = !left.is_played
-              ? 'UNPLAYED'
-              : left.combo_lamp === null
-                ? 'NONE'
-                : left.combo_lamp
-            const rightLampKey = !right.is_played
-              ? 'UNPLAYED'
-              : right.combo_lamp === null
-                ? 'NONE'
-                : right.combo_lamp
-
-            comparison =
-              (LAMP_ORDER[leftLampKey] ?? Number.MAX_SAFE_INTEGER) -
-              (LAMP_ORDER[rightLampKey] ?? Number.MAX_SAFE_INTEGER)
-            break
-          }
+  onMount(() => {
+    void readStandardRecordColumnsSetting()
+      .then((savedColumnIds) => {
+        if (Array.isArray(savedColumnIds)) {
+          setVisibleColumnIds(sanitizeVisibleColumnIds(savedColumnIds as RecordColumnId[]))
         }
-
-        if (comparison !== 0) {
-          return comparison * direction
-        }
-
-        return a.index - b.index
       })
-      .map(({ record }) => record)
+      .catch(() => undefined)
   })
 
-  const handleSortChange = (nextKey: RecordSortKey) => {
-    const currentSortKey = sortKey()
-    const currentSortDirection = sortDirection()
-
-    if (currentSortKey !== nextKey) {
-      setSortKey(nextKey)
-      setSortDirection('asc')
-      return
-    }
-
-    if (currentSortDirection === 'asc') {
-      setSortDirection('desc')
-      return
-    }
-
-    if (currentSortDirection === 'desc') {
-      setSortKey(null)
-      setSortDirection(null)
-      return
-    }
-
-    setSortDirection('asc')
+  /**
+   * 通常レコードの現在フィルターを画面へ反映し、保存可能な場合は IndexedDB へ保存する。
+   *
+   * @param nextFilters - 次に適用するフィルター状態。
+   * @returns なし。
+   */
+  const applyFilters = (nextFilters: FilterState) => {
+    setFilters(nextFilters)
+    void saveStandardRecordFilterSetting(nextFilters).catch(() => undefined)
   }
 
-  /** 追跡中のフィルター情報 */
-  const trackingTargetFilter = createMemo(() => {
-    const condition = trackingCondition()
-    if (!condition) return null
-    const saved = savedFilters()
-    return saved.find((item) => item.id === condition.filterId) ?? null
-  })
-
-  /** 追跡中のフィルターに該当するレコード(未達成・達成済みすべて) */
-  const trackingTargetRecords = createMemo(() => {
-    const records = recordsWithSongMeta()
-    const target = trackingTargetFilter()
-    if (!target) return []
-    return records.filter((record) => isRecordMatched(record, target.filter))
-  })
-
-  /** 追跡の条件達成判定 */
-  const isRecordAchieved = (record: PlayerRecordWithSongMeta, condition: TrackingCondition) => {
-    const hasScore = typeof condition.scoreMin !== 'undefined'
-    const hasLamp = (condition.lamps ?? []).length > 0
-    if (!hasScore && !hasLamp) return false
-    if (!record.is_played) return false
-
-    if (hasScore) {
-      const minScore = condition.scoreMin ?? 0
-      if (record.score < minScore) return false
-    }
-
-    if (hasLamp) {
-      const lamp = record.combo_lamp ?? null
-      if (!condition.lamps?.includes(lamp as ComboLamp)) return false
-    }
-
-    return true
+  /**
+   * 通常レコードの表示列設定を画面へ反映し、IndexedDB へ保存する。
+   *
+   * @param nextVisibleColumnIds - 次に表示する列 ID 配列。
+   * @returns なし。
+   */
+  const applyVisibleColumns = (nextVisibleColumnIds: RecordColumnId[]) => {
+    const sanitizedColumnIds = sanitizeVisibleColumnIds(nextVisibleColumnIds)
+    setVisibleColumnIds(sanitizedColumnIds)
+    void saveStandardRecordColumnsSetting(sanitizedColumnIds).catch(() => undefined)
   }
 
-  /** 追跡中の統計情報 */
-  const trackingStats = createMemo(() => {
-    const condition = trackingCondition()
-    const baseRecords = trackingTargetRecords()
-    if (!condition || baseRecords.length === 0) {
-      return {
-        achieved: 0,
-        total: baseRecords.length,
-        remaining: baseRecords.length,
-        percent: 0,
-      }
-    }
-    const achieved = baseRecords.filter((record) => isRecordAchieved(record, condition)).length
-    const total = baseRecords.length
-    const percent = total ? (achieved / total) * 100 : 0
-    return {
-      achieved,
-      total,
-      remaining: total - achieved,
-      percent,
-    }
-  })
+  const { sortedRecords, totalCount, filteredCount, stats, handleSortChange } =
+    useUserRecordPageModel({
+      songs: allSongs,
+      versions: versionData,
+      sourceRecords: () => props.record.standard,
+      filters,
+      sortKey,
+      sortDirection,
+      setSortKey,
+      setSortDirection,
+    })
 
-  /** 追跡中の目標を読めるようにしたもの */
-  const trackingGoalLabel = createMemo(() => {
-    const condition = trackingCondition()
-    if (!condition) return ''
-    const parts: string[] = []
-    if (typeof condition.scoreMin !== 'undefined') {
-      parts.push(`${condition.scoreMin.toLocaleString()}点以上`)
-    }
-    if (condition.lamps) {
-      const lamps = condition.lamps
-      if (lamps.includes('ALL JUSTICE') && lamps.includes('FULL COMBO')) {
-        parts.push('FULL COMBO')
-      } else if (lamps.includes('ALL JUSTICE')) {
-        parts.push('ALL JUSTICE')
-      }
-    }
-    return parts.join(' & ')
-  })
-
-  // 件数表示
-  const totalCount = () => recordsWithSongMeta().length
-  const filteredCount = () => filteredRecords().length
-
-  /** レコード統計の集計結果 */
-  const stats = createMemo(() => getRecordStats(filteredRecords()))
-
-  useDocumentTitle(() => `${props.profile.username}さんのレコード`)
+  useDocumentTitle(() => `${props.username}さんのレコード`)
 
   return (
     <Suspense fallback={<Loading />}>
-      <ErrorBoundary fallback={(err) => <p class="text-red-500">ERROR: {err.message}</p>}>
-        <Show when={allSongs() && masterData()} fallback={<Loading />}>
-          <div class="mx-2 text-sm">
-            {/* 追跡表示 */}
-            {trackingCondition() && trackingTargetFilter() && (
-              <TrackingSummary
-                condition={trackingCondition() as TrackingCondition}
-                targetName={trackingTargetFilter()?.name ?? ''}
-                goalLabel={trackingGoalLabel()}
-                stats={trackingStats()}
-                onClear={() => {
-                  clearTrackingCondition()
-                  setTrackingCondition(null)
-                }}
+      <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
+        <Show
+          when={!allSongs.error && !masterData.error && !versionData.error}
+          fallback={<LoadError error={allSongs.error ?? masterData.error ?? versionData.error} />}
+        >
+          <Show
+            when={!isSongsLoading() && masterData() && versionData() && filterReady()}
+            fallback={<Loading />}
+          >
+            <div class="mx-2 text-sm">
+              {/* フィルター関連UI */}
+              <FilterToolbar
+                title={filters().title}
+                onTitleChange={(value) => setFilters({ ...filters(), title: value })}
+                onOpenFilter={() => setFilterOpen(true)}
+                onOpenColumnSettings={() => setColumnSettingsOpen(true)}
               />
-            )}
 
-            {/* フィルター関連UI */}
-            <FilterToolbar
-              title={filters().title}
-              onTitleChange={(value) => setFilters({ ...filters(), title: value })}
-              onOpenFilter={() => setFilterOpen(true)}
-            />
+              {/* フィルター統計 */}
+              {filteredCount() > 0 && (
+                <FilterStats
+                  stats={stats()}
+                  open={filterStatsOpen()}
+                  onOpenChange={setFilterStatsOpen}
+                />
+              )}
 
-            {/* フィルター統計 */}
-            {filteredCount() > 0 && (
-              <FilterStats
-                stats={stats()}
-                open={filterStatsOpen()}
-                onOpenChange={setFilterStatsOpen}
+              <p class="mb-2 text-sm text-text-muted">
+                全 {totalCount()} 件中 {filteredCount()} 件を表示
+              </p>
+
+              {/* レコード一覧 */}
+              <RecordTable
+                records={sortedRecords()}
+                statsOpen={filterStatsOpen()}
+                sortKey={sortKey()}
+                sortDirection={sortDirection()}
+                visibleColumnIds={visibleColumnIds()}
+                onSortChange={handleSortChange}
               />
-            )}
 
-            <p class="mb-2 text-sm text-gray-600">
-              全 {totalCount()} 件中 {filteredCount()} 件を表示 ( {filteredCount()}/{totalCount()} )
-            </p>
+              {/* フィルターダイアログ */}
+              <FilterDialog
+                open={filterOpen()}
+                onOpenChange={setFilterOpen}
+                filters={filters()}
+                onChange={applyFilters}
+                masterData={masterData()}
+                versions={versionData()?.versions}
+                defaultFilter={getDefaultFilter(masterData(), versionData()?.versions)}
+              />
 
-            {/* レコード一覧 */}
-            <RecordTable
-              records={sortedRecords()}
-              statsOpen={filterStatsOpen()}
-              sortKey={sortKey()}
-              sortDirection={sortDirection()}
-              onSortChange={handleSortChange}
-            />
-
-            {/* フィルターダイアログ */}
-            <FilterDialog
-              open={filterOpen()}
-              onOpenChange={setFilterOpen}
-              filters={filters()}
-              onChange={setFilters}
-              masterData={masterData()}
-              defaultFilter={getDefaultFilter(masterData())}
-              onTrackingChange={() => setTrackingCondition(loadTrackingCondition())}
-              setSavedFilters={setSavedFilters}
-            />
-          </div>
+              <ColumnSettingsDialog
+                open={columnSettingsOpen()}
+                onOpenChange={setColumnSettingsOpen}
+                visibleColumnIds={visibleColumnIds()}
+                onApply={applyVisibleColumns}
+              />
+            </div>
+          </Show>
         </Show>
-        <ScrollToTop />
       </ErrorBoundary>
     </Suspense>
   )

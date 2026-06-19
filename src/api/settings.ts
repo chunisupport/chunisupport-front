@@ -1,15 +1,7 @@
 import { API_BASE_URL } from '../config'
-import {
-  type ApiTokenResponse,
-  type RecoveryCodesResponse,
-  type SessionCountResponse,
-} from '../types/api'
+import type { ApiTokenResponse, ApiTokenStatusResponse } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
-
-type PasswordUpdatePayload = {
-  current_password: string
-  new_password: string
-}
+import { reauthenticateAndGetToken } from './reauthenticate'
 
 export const fetchPrivacy = async (): Promise<{ is_private: boolean }> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/me`, {
@@ -30,25 +22,17 @@ export const updatePrivacy = async (isPrivate: boolean): Promise<{ is_private: b
   return response.json()
 }
 
-export const updatePassword = async (payload: PasswordUpdatePayload): Promise<void> => {
-  await fetchWithAuth(`${API_BASE_URL}/internal/me/password`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-}
-
-export const issueRecoveryCodes = async (): Promise<RecoveryCodesResponse> => {
-  const response = await fetchWithAuth(`${API_BASE_URL}/internal/me/recovery-codes`, {
+export const issueApiToken = async (): Promise<ApiTokenResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/auth/api-tokens`, {
     method: 'POST',
   })
 
   return response.json()
 }
 
-export const issueApiToken = async (): Promise<ApiTokenResponse> => {
+export const fetchApiTokenStatus = async (): Promise<ApiTokenStatusResponse> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/auth/api-tokens`, {
-    method: 'POST',
+    method: 'GET',
   })
 
   return response.json()
@@ -60,16 +44,17 @@ export const deleteApiToken = async (): Promise<void> => {
   })
 }
 
-export const fetchSessionCount = async (): Promise<SessionCountResponse> => {
-  const response = await fetchWithAuth(`${API_BASE_URL}/internal/me/sessions`, {
-    method: 'GET',
+export const deletePlayerData = async (): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/me/player-data`, {
+    method: 'DELETE',
   })
-
-  return response.json()
 }
 
-export const logoutOtherSessions = async (): Promise<void> => {
-  await fetchWithAuth(`${API_BASE_URL}/internal/me/sessions`, {
+export const deleteAccount = async (): Promise<void> => {
+  const reauthToken = await reauthenticateAndGetToken()
+  await fetchWithAuth(`${API_BASE_URL}/internal/me`, {
     method: 'DELETE',
+    headers: { 'X-Reauth-Token': reauthToken },
+    suppressUnauthorizedRedirectForCodes: ['recent_sign_in_required'],
   })
 }

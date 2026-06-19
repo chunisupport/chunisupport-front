@@ -1,17 +1,11 @@
-export { AdminPage, AdminSongsPage, AdminUsersPage } from './admin'
-export { Login, RecoveryReset, Register } from './auth'
-export { EditorPage, EditorSongsPage } from './editor'
+export { AdminHonorsPage, AdminPage, AdminSongsPage, AdminUsersPage } from './admin'
+export { Login, Register } from './auth'
 export { default as ForbiddenPage } from './ForbiddenPage'
-export { default as NotFoundPage } from './NotFoundPage'
 export { GoalsList } from './goals'
+export { default as NotFoundPage } from './NotFoundPage'
+export { RegisterScorePage } from './register-score'
 export { RegisterScoreTempPage } from './register-score-temp'
-export {
-  SettingsApiTokenPage,
-  SettingsPage,
-  SettingsPasswordPage,
-  SettingsPrivacyPage,
-  SettingsRecoveryCodesPage,
-  SettingsSessionsPage,
-} from './settings'
-export { SongDetail, SongsList, WorldsendSongDetail } from './songs'
+export { Settings } from './settings'
+export { SongDetail, SongsList, WorldsendSongDetail, WorldsendSongsList } from './songs'
+export { BorderCalculatorPage } from './tools'
 export { UserPage } from './users'

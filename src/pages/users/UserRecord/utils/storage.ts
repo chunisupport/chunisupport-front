@@ -1,69 +1,119 @@
-import type { ComboLamp, FilterState } from '../types/types'
+import {
+  createRecordFilter,
+  deleteRecordFilter,
+  fetchRecordFilters,
+  updateRecordFilter,
+} from '../../../../api/recordFilters'
+import type { RecordFilterDTO, RecordFilterRequest } from '../../../../types/api'
+import type { SavedRecordFilterItem } from '../../components/SavedRecordFiltersDialog'
+import { isValidSavedStandardFilter } from '../../components/savedRecordFilters'
+import { normalizeFilterState } from '../types/filterDefaults'
+import type { FilterState } from '../types/types'
 
-/** 保存されたフィルター情報 */
-export interface SavedFilter {
-  id: string
-  name: string
+export const SAVED_FILTER_SCHEMA_VERSION = 3
+const STANDARD_RECORD_FILTER_TYPE = 'standard'
+const INVALID_SCHEMA_MESSAGE = '古い形式のため無効です。'
+const INVALID_FILTER_MESSAGE = '保存値が壊れているため無効です。'
+
+export type SavedFilter = SavedRecordFilterItem<FilterState>
+
+/**
+ * 値が null ではないオブジェクトかどうかを判定する。
+ *
+ * @param value - 判定対象の値。
+ * @returns null ではないオブジェクトの場合は true。
+ */
+function isObjectRecord(value: unknown): value is Partial<FilterState> {
+  return typeof value === 'object' && value !== null
+}
+
+/**
+ * API DTO を画面表示用の保存済み通常フィルターへ変換する。
+ *
+ * @param dto - API から返された保存済みフィルター。
+ * @returns 画面表示用の保存済み通常フィルター。
+ */
+export function toSavedFilter(dto: RecordFilterDTO<unknown>): SavedFilter {
+  const validSchema = dto.schema_version === SAVED_FILTER_SCHEMA_VERSION
+  const validFilter =
+    validSchema && isObjectRecord(dto.filter) && isValidSavedStandardFilter(dto.filter)
+
+  return {
+    id: dto.id,
+    name: dto.name,
+    schemaVersion: dto.schema_version,
+    filter: validSchema && validFilter ? normalizeFilterState(dto.filter) : null,
+    isValid: validSchema && validFilter,
+    invalidReason: validSchema
+      ? validFilter
+        ? undefined
+        : INVALID_FILTER_MESSAGE
+      : INVALID_SCHEMA_MESSAGE,
+  }
+}
+
+/**
+ * 通常レコードフィルター保存 API のリクエストを生成する。
+ *
+ * @param name - 保存するフィルター名。
+ * @param filter - 保存対象の通常レコードフィルター状態。
+ * @returns 通常レコードフィルター保存 API のリクエスト。
+ */
+export function buildSavedFilterRequest(
+  name: string,
   filter: FilterState
-  savedAt: number
-}
-
-/** 追跡中のフィルター情報 */
-export interface TrackingCondition {
-  filterId: string
-  filterName: string
-  scoreMin?: number
-  lamps?: (ComboLamp | null)[]
-  savedAt: number
-}
-
-const SAVED_FILTERS_KEY = 'chunisup_saved_filters'
-const TRACKING_CONDITION_KEY = 'chunisup_tracking_condition'
-
-/** 保存されたフィルター一覧をlocalStrageから取得 */
-export function loadSavedFilters(): SavedFilter[] {
-  try {
-    const raw = localStorage.getItem(SAVED_FILTERS_KEY)
-    if (!raw) return []
-    return JSON.parse(raw)
-  } catch {
-    return []
+): RecordFilterRequest<FilterState> {
+  return {
+    name,
+    filter_type: STANDARD_RECORD_FILTER_TYPE,
+    schema_version: SAVED_FILTER_SCHEMA_VERSION,
+    filter: normalizeFilterState(filter),
   }
 }
 
-/** 新しいフィルターを保存 */
-export function saveNewFilter(name: string, filter: FilterState): string {
-  const filters = loadSavedFilters()
-  const id = Date.now().toString()
-  filters.push({ id, name, filter, savedAt: Date.now() })
-  localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(filters))
-  return id
+/**
+ * 保存済み通常レコードフィルター一覧をサーバーから取得する。
+ *
+ * @returns 保存済み通常レコードフィルター一覧。
+ */
+export async function loadSavedFilters(): Promise<SavedFilter[]> {
+  const response = await fetchRecordFilters(STANDARD_RECORD_FILTER_TYPE)
+  return response.filters.map(toSavedFilter)
 }
 
-/** フィルターを削除 */
-export function deleteFilter(id: string) {
-  // 指定ID以外のフィルターを保存し直すことで削除を実現
-  const filters = loadSavedFilters().filter((f) => f.id !== id)
-  localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(filters))
+/**
+ * 新しい通常レコードフィルターをサーバーへ保存する。
+ *
+ * @param name - 保存するフィルター名。
+ * @param filter - 保存対象の通常レコードフィルター状態。
+ * @returns なし。
+ */
+export async function saveNewFilter(name: string, filter: FilterState): Promise<void> {
+  await createRecordFilter(buildSavedFilterRequest(name, filter))
 }
 
-/** 追跡中のフィルター情報をlocalStorageから取得 */
-export function loadTrackingCondition(): TrackingCondition | null {
-  try {
-    const raw = localStorage.getItem(TRACKING_CONDITION_KEY)
-    if (!raw) return null
-    return JSON.parse(raw)
-  } catch {
-    return null
-  }
+/**
+ * 保存済み通常レコードフィルターを完全上書き更新する。
+ *
+ * @param id - 更新対象の保存済みフィルターID。
+ * @param name - 更新後のフィルター名。
+ * @param filter - 更新後の通常レコードフィルター状態。
+ * @returns なし。
+ */
+export async function updateSavedFilter(
+  id: string,
+  name: string,
+  filter: FilterState
+): Promise<void> {
+  await updateRecordFilter(id, buildSavedFilterRequest(name, filter))
 }
 
-/** 追跡中のフィルター情報を保存 */
-export function saveTrackingCondition(condition: TrackingCondition) {
-  localStorage.setItem(TRACKING_CONDITION_KEY, JSON.stringify(condition))
-}
-
-/** 追跡中のフィルター情報を削除 */
-export function clearTrackingCondition() {
-  localStorage.removeItem(TRACKING_CONDITION_KEY)
+/**
+ * 指定IDの保存済み通常レコードフィルターを削除する。
+ *
+ * @param id - 削除対象の保存済みフィルターID。
+ * @returns なし。
+ */
+export async function deleteFilter(id: string): Promise<void> {
+  await deleteRecordFilter(id)
 }

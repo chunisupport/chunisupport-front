@@ -13,22 +13,30 @@
     "lint": "biome lint --write .",
     "lint:check": "biome lint .",
     "check": "biome check --write .",
-    "check:ci": "biome ci ."
+    "check:ci": "biome ci .",
+    "licenses:check": "node scripts/generate-licenses.mjs --check",
+    "licenses:generate": "node scripts/generate-licenses.mjs",
+    "test:unit": "node --loader ./scripts/resolve-ts-extension-loader.mjs --test src/**/*.test.ts"
   },
   "dependencies": {
     "@kobalte/core": "^0.13.11",
     "@solidjs/router": "^0.15.4",
     "@tanstack/solid-virtual": "^3.13.22",
+    "dexie": "^4.4.3",
+    "firebase": "^12.11.0",
     "lucide-solid": "^0.562.0",
     "solid-js": "^1.9.10",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.11",
+    "@biomejs/biome": "^2.4.11",
     "@rsbuild/core": "^1.7.1",
     "@rsbuild/plugin-babel": "^1.0.6",
     "@rsbuild/plugin-solid": "^1.0.6",
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^25.5.2",
+    "fake-indexeddb": "^6.2.5",
+    "generate-license-file": "^4.2.1",
     "typescript": "^5.9.3"
   }
 }

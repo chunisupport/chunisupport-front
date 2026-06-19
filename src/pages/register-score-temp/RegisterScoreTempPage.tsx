@@ -1,7 +1,9 @@
-﻿import { createSignal, Show } from 'solid-js'
+import { Button } from '@kobalte/core/button'
+import { createSignal, Show } from 'solid-js'
 
-import { postRegisterData } from '../../api/register-data'
+import { postPlayerDataCommit, postRegisterData } from '../../api/register-data'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 
 type RegisterDataFormat = 'json' | 'text'
 
@@ -21,6 +23,11 @@ const RegisterScoreTempPage = () => {
   const [successMessage, setSuccessMessage] = createSignal('')
   const [isSubmitting, setIsSubmitting] = createSignal(false)
   const [copied, setCopied] = createSignal(false)
+
+  const [uploadToken, setUploadToken] = createSignal('')
+  const [commitErrorMessage, setCommitErrorMessage] = createSignal('')
+  const [commitSuccessMessage, setCommitSuccessMessage] = createSignal('')
+  const [isCommitting, setIsCommitting] = createSignal(false)
 
   const resetMessages = () => {
     setErrorMessage('')
@@ -68,6 +75,11 @@ const RegisterScoreTempPage = () => {
     setFormat(detectedFormat)
   }
 
+  /**
+   * 選択されたスコアデータファイルを検証して一時アップロードする。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
   const handleSubmit = async () => {
     resetMessages()
 
@@ -96,9 +108,41 @@ const RegisterScoreTempPage = () => {
       })
       setSuccessMessage('スコアデータを送信しました。')
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'アップロードに失敗しました。')
+      setErrorMessage(toUserFriendlyErrorMessage(error, 'アップロードに失敗しました。'))
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  /**
+   * 入力されたアップロードトークンのスコアデータを確定保存する。
+   *
+   * @returns 処理完了後に解決されるPromise。
+   */
+  const handleCommit = async () => {
+    setCommitErrorMessage('')
+    setCommitSuccessMessage('')
+
+    const token = uploadToken().trim()
+    if (!token) {
+      setCommitErrorMessage('uploadToken を入力してください。')
+      return
+    }
+
+    setIsCommitting(true)
+    try {
+      await postPlayerDataCommit(token)
+      setCommitSuccessMessage('スコアデータを確定保存しました。')
+      setUploadToken('')
+    } catch (error) {
+      const apiError = error as Error & { status?: number }
+      if (apiError.status === 404) {
+        setCommitErrorMessage('アップロードトークンが見つかりません。')
+      } else {
+        setCommitErrorMessage(toUserFriendlyErrorMessage(error, '保存に失敗しました。'))
+      }
+    } finally {
+      setIsCommitting(false)
     }
   }
 
@@ -109,16 +153,16 @@ const RegisterScoreTempPage = () => {
       <div class="space-y-4">
         <div>
           <h1 class="text-2xl font-semibold">スコア情報アップロード</h1>
-          <p class="mt-2 text-sm text-gray-600">
+          <p class="mt-2 text-sm text-text-muted">
             .txt (base64+gzip) もしくは .json (デバッグ用) をアップロードできます。 JSONは送信時に{' '}
             <span class="font-semibold">?format=json</span>
             を付与します。
           </p>
         </div>
 
-        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="rounded-lg border border-border bg-surface p-4 shadow-sm">
           <div class="space-y-3">
-            <label class="block text-sm font-medium text-gray-700" for="score-file">
+            <label class="block text-sm font-medium text-text-muted" for="score-file">
               アップロードファイル
             </label>
             <input
@@ -126,11 +170,11 @@ const RegisterScoreTempPage = () => {
               type="file"
               accept=".json,.txt"
               onChange={handleFileChange}
-              class="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-primary-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-600 hover:file:bg-primary-100"
+              class="block w-full text-sm text-text-muted file:mr-4 file:rounded-md file:border-0 file:bg-action-primary-muted file:px-3 file:py-2 file:text-sm file:font-semibold file:text-action-primary hover:file:bg-action-primary-muted"
             />
             <Show when={selectedFile()}>
               {(file) => (
-                <div class="rounded-md bg-gray-50 p-3 text-sm text-gray-700">
+                <div class="rounded-md bg-surface-muted p-3 text-sm text-text-muted">
                   <p>ファイル名: {file().name}</p>
                   <p>
                     形式:
@@ -142,42 +186,77 @@ const RegisterScoreTempPage = () => {
                 </div>
               )}
             </Show>
-            <div class="text-xs text-gray-500">
+            <div class="text-xs text-text-subtle">
               アップロード上限は5MBです。Cookie認証が必要なのでログイン済みで操作してください。
             </div>
           </div>
         </div>
 
         <Show when={errorMessage()}>
-          <p class="text-sm text-red-600">{errorMessage()}</p>
+          <p class="text-sm text-danger">{errorMessage()}</p>
         </Show>
         <Show when={successMessage()}>
-          <p class="text-sm text-primary-600">{successMessage()}</p>
+          <p class="text-sm text-action-primary">{successMessage()}</p>
         </Show>
 
-        <button
+        <Button
           type="button"
-          class="inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+          class="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse shadow-sm hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
           onClick={handleSubmit}
           disabled={isSubmitting()}
         >
           {isSubmitting() ? '送信中...' : 'アップロードする'}
-        </button>
+        </Button>
       </div>
+      <div class="mt-8">
+        <h2 class="text-xl font-semibold mb-4">確定保存 (commit)</h2>
+        <div class="rounded-lg border border-border bg-surface p-4 shadow-sm space-y-3">
+          <p class="text-sm text-text-muted">
+            ブックマークレットが発行した <span class="font-semibold">uploadToken</span>{' '}
+            を入力して確定保存します。Cookie認証が必要なのでログイン済みで操作してください。
+          </p>
+          <label class="block text-sm font-medium text-text-muted" for="upload-token">
+            uploadToken
+          </label>
+          <input
+            id="upload-token"
+            type="text"
+            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+            value={uploadToken()}
+            onInput={(e) => setUploadToken((e.currentTarget as HTMLInputElement).value)}
+            class="block w-full rounded-md border border-border-strong px-3 py-2 text-sm placeholder-text-placeholder focus:border-focus-ring focus:outline-none focus:ring-1 focus:ring-focus-ring"
+          />
+          <Show when={commitErrorMessage()}>
+            <p class="text-sm text-danger">{commitErrorMessage()}</p>
+          </Show>
+          <Show when={commitSuccessMessage()}>
+            <p class="text-sm text-action-primary">{commitSuccessMessage()}</p>
+          </Show>
+          <Button
+            type="button"
+            class="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse shadow-sm hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={handleCommit}
+            disabled={isCommitting()}
+          >
+            {isCommitting() ? '送信中...' : '確定保存する'}
+          </Button>
+        </div>
+      </div>
+
       <div class="mt-8">
         <h2 class="text-lg font-semibold mb-2">ブックマークレットコード</h2>
         <div>
-          <pre class="bg-gray-100 rounded-md p-4 overflow-x-auto text-sm">
+          <pre class="bg-surface-hover rounded-md p-4 overflow-x-auto text-sm">
             {`javascript:(function(){var e=document.createElement("script");e.src="https://reiwa.f5.si/bookmarklets/chunisupport_test.js?%22+Math.floor(Date.now()/1000);document.body.appendChild(e)})();`}
           </pre>
         </div>
         <div class="mt-2 flex items-center justify-end gap-2">
           <Show when={copied()}>
-            <span class="text-primary-600 text-xs">コピーしました！</span>
+            <span class="text-action-primary text-xs">コピーしました！</span>
           </Show>
-          <button
+          <Button
             type="button"
-            class="bg-primary-600 text-white p-3 rounded hover:bg-primary-700"
+            class="bg-action-primary text-text-inverse p-3 rounded hover:bg-action-primary-hover"
             onClick={() => {
               const code =
                 'javascript:(function(){var e=document.createElement("script");e.src="https://reiwa.f5.si/bookmarklets/chunisupport_test.js?%22+Math.floor(Date.now()/1000);document.body.appendChild(e)})();'
@@ -196,7 +275,7 @@ const RegisterScoreTempPage = () => {
                   document.execCommand('copy')
                   setCopied(true)
                   setTimeout(() => setCopied(false), 2000)
-                } catch (e) {
+                } catch (_e) {
                   alert('コピーに失敗しました。手動でコピーしてください。')
                 }
                 document.body.removeChild(textarea)
@@ -204,7 +283,7 @@ const RegisterScoreTempPage = () => {
             }}
           >
             コピー
-          </button>
+          </Button>
         </div>
       </div>
     </div>

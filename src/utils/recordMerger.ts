@@ -1,34 +1,45 @@
-import type { PlayerRecordDTO, SongDTO } from '../types/api'
-import { dateToChunithmVersion } from './versionConverter'
+import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../types/api'
+import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter'
 
-/** プレイ済み・未プレイを含むレコードの型定義 */
+/** 楽曲メタ情報を付与したプレイヤーレコード */
 export interface PlayerRecordWithSongMeta extends PlayerRecordDTO {
+  title: string
+  artist: string
+  reading: string | null
   genre: string
   release: string | null
   release_version: string
+  notes: number | null
 }
 
 /**
- * レコードに楽曲マスタ由来の補助情報を付与する
+ * レコードに楽曲マスタ由来の追加情報を付与する
  * @param songs 全楽曲データ
- * @param records APIから取得した全レコード（未プレイ含む）
+ * @param records APIから取得したレコード配列
+ * @param versions バージョン一覧
  * @returns 楽曲情報を付与したレコード配列
  */
 export function attachSongMetaToRecords(
   songs: SongDTO[],
-  records: PlayerRecordDTO[]
+  records: PlayerRecordDTO[],
+  versions: VersionSummaryDTO[]
 ): PlayerRecordWithSongMeta[] {
   const songMap = new Map(songs.map((song) => [song.id, song]))
 
   return records.map((record) => {
     const song = songMap.get(record.id)
     const release = song?.release ?? null
+    const notes = song?.charts?.[record.difficulty]?.notes ?? null
 
     return {
       ...record,
+      title: song?.title ?? record.title,
+      artist: song?.artist ?? record.artist,
+      reading: song?.reading ?? null,
       genre: song?.genre ?? '不明',
       release,
-      release_version: dateToChunithmVersion(release),
+      notes,
+      release_version: getShortVersionName(resolveVersionNameByReleaseDate(release, versions)),
     }
   })
 }

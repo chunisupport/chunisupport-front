@@ -1,15 +1,32 @@
+import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
-import { createEffect, createSignal } from 'solid-js'
-import type { MasterDataDTO } from '../../../../../types/api'
-import { CHUNITHM_VERSIONS } from '../../../../../utils/versionConverter'
-import { LAMP_OPTIONS } from '../../types/filterDefaults'
+import { createEffect, createSignal, Show } from 'solid-js'
+import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
+import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
+import { MAX_SCORE } from '../../../../../utils/scoreRank'
+import { getShortVersionName } from '../../../../../utils/versionConverter'
+import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters'
+import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
+import { CONST_MAX, CONST_MIN } from '../../constants/constRange'
+import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../../constants/rangeFilters'
+import {
+  CHAIN_LAMP_OPTIONS,
+  COMBO_LAMP_OPTIONS,
+  HARD_LAMP_OPTIONS,
+} from '../../types/filterDefaults'
 import type { Difficulty, FilterState } from '../../types/types'
-import { parseNumberInput, toggleArray } from '../../utils/filterDialog'
-import { SCORE_RANK_VALUES, SCORE_RANKS, type ScoreRank } from '../../utils/scoreRank'
+import { parseNumberInput, toggleArray, updateOptionalNumberRange } from '../../utils/filterDialog'
+import {
+  SCORE_RANK_MAX_VALUES,
+  SCORE_RANK_VALUES,
+  SCORE_RANKS,
+  type ScoreRank,
+} from '../../utils/scoreRank'
 import ConstRangeSection from './sections/ConstRangeSection'
 import DifficultySection from './sections/DifficultySection'
 import GenreSection from './sections/GenreSection'
 import LampSection from './sections/LampSection'
+import NumericRangeSection from './sections/NumericRangeSection'
 import ScoreSection from './sections/ScoreSection'
 import VersionSection from './sections/VersionSection'
 
@@ -18,27 +35,53 @@ type FilterSelectionPanelProps = {
   filters: FilterState
   setFilters: Setter<FilterState>
   masterData?: MasterDataDTO
+  versions?: VersionSummaryDTO[]
   defaultFilter: FilterState
   resetKey: number
+  /** 編集中のフィルター名。null の場合は編集中でない。 */
+  editingFilterName?: string | null
+  /** フィルター名が変更されたときのコールバック。 */
+  onEditingFilterNameChange?: (name: string) => void
 }
 
 /** 数値を入力欄用の文字列に変換するユーティリティ関数 */
 const toInputValue = (value?: number | null) =>
   value === undefined || value === null ? '' : String(value)
 
+/** フィルター名入力を API の最大文字数に丸める。 */
+const limitNameInput = (value: string): string =>
+  Array.from(value).slice(0, RECORD_FILTER_NAME_MAX_LENGTH).join('')
+
+/**
+ * プレイヤーレコードのフィルター条件を選択するパネルを描画する。
+ *
+ * @param props - フィルター状態、マスターデータ、リセット状態を含むパネル設定。
+ * @returns フィルター条件を編集するための選択パネル。
+ */
 const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
-  // 入力値の状態管理
   const [scoreRankMin, setScoreRankMin] = createSignal('0点')
-  const [scoreRankMax, setScoreRankMax] = createSignal('MAX')
+  const [scoreRankMax, setScoreRankMax] = createSignal('SSS+')
   const [constLevelMin, setConstLevelMin] = createSignal('1')
-  const [constLevelMax, setConstLevelMax] = createSignal('15+')
-  const [constMinInput, setConstMinInput] = createSignal(toInputValue(props.filters.constMin))
-  const [constMaxInput, setConstMaxInput] = createSignal(toInputValue(props.filters.constMax))
-  const [scoreMinInput, setScoreMinInput] = createSignal(toInputValue(props.filters.scoreMin))
-  const [scoreMaxInput, setScoreMaxInput] = createSignal(toInputValue(props.filters.scoreMax))
+  const [constLevelMax, setConstLevelMax] = createSignal('16')
+  const [constMinInput, setConstMinInput] = createSignal(toInputValue(props.filters.const.min))
+  const [constMaxInput, setConstMaxInput] = createSignal(toInputValue(props.filters.const.max))
+  const [scoreMinInput, setScoreMinInput] = createSignal(toInputValue(props.filters.score.min))
+  const [scoreMaxInput, setScoreMaxInput] = createSignal(toInputValue(props.filters.score.max))
+  const [justiceCountMinInput, setJusticeCountMinInput] = createSignal(
+    toInputValue(props.filters.justiceCount.min)
+  )
+  const [justiceCountMaxInput, setJusticeCountMaxInput] = createSignal(
+    toInputValue(props.filters.justiceCount.max)
+  )
+  const [overPowerMinInput, setOverPowerMinInput] = createSignal(
+    toInputValue(props.filters.overPower.min)
+  )
+  const [overPowerMaxInput, setOverPowerMaxInput] = createSignal(
+    toInputValue(props.filters.overPower.max)
+  )
 
   const Const2Level = (value: number) => {
-    const normalized = Math.max(1, Math.min(value, 15.9))
+    const normalized = Math.max(CONST_MIN, Math.min(value, CONST_MAX))
     if (normalized <= 6.9) {
       return String(Math.floor(normalized))
     }
@@ -59,42 +102,49 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     if (isPlus) {
       return type === 'min' ? Number((base + 0.5).toFixed(1)) : Number((base + 0.9).toFixed(1))
     }
+    if (base >= CONST_MAX) {
+      return CONST_MAX
+    }
     return type === 'min' ? base : Number((base + 0.4).toFixed(1))
   }
 
   const Score2Rank = (value: number) => {
-    const normalized = Math.max(SCORE_RANK_VALUES['0点'], Math.min(value, SCORE_RANK_VALUES.MAX))
+    const highestRank = SCORE_RANKS[SCORE_RANKS.length - 1]
+    const normalized = Math.max(
+      SCORE_RANK_VALUES['0点'],
+      Math.min(value, SCORE_RANK_VALUES[highestRank])
+    )
     for (const rank of SCORE_RANKS) {
       const maxValue = Rank2Score(rank, 'max')
       if (normalized <= maxValue) {
         return rank
       }
     }
-    return 'MAX'
+    return highestRank
   }
 
   const Rank2Score = (rank: ScoreRank, type: 'min' | 'max') => {
-    const rankIndex = SCORE_RANKS.indexOf(rank)
-    const minValue = SCORE_RANK_VALUES[rank]
-    if (type === 'min' || rank === 'MAX') {
-      return minValue
+    if (type === 'max') {
+      return SCORE_RANK_MAX_VALUES[rank]
     }
-    const nextRank = SCORE_RANKS[rankIndex + 1]
-    const nextValue = SCORE_RANK_VALUES[nextRank]
-    return Math.max(0, nextValue - 1)
+    return SCORE_RANK_VALUES[rank]
   }
 
   // フィルターダイアログが開かれた時にフィルター状態を同期
   createEffect(() => {
     if (!props.open) return
-    setConstMinInput(toInputValue(props.filters.constMin))
-    setConstMaxInput(toInputValue(props.filters.constMax))
-    setScoreMinInput(toInputValue(props.filters.scoreMin))
-    setScoreMaxInput(toInputValue(props.filters.scoreMax))
-    setConstLevelMin(Const2Level(props.filters.constMin))
-    setConstLevelMax(Const2Level(props.filters.constMax))
-    setScoreRankMin(Score2Rank(props.filters.scoreMin))
-    setScoreRankMax(Score2Rank(props.filters.scoreMax))
+    setConstMinInput(toInputValue(props.filters.const.min))
+    setConstMaxInput(toInputValue(props.filters.const.max))
+    setScoreMinInput(toInputValue(props.filters.score.min))
+    setScoreMaxInput(toInputValue(props.filters.score.max))
+    setJusticeCountMinInput(toInputValue(props.filters.justiceCount.min))
+    setJusticeCountMaxInput(toInputValue(props.filters.justiceCount.max))
+    setOverPowerMinInput(toInputValue(props.filters.overPower.min))
+    setOverPowerMaxInput(toInputValue(props.filters.overPower.max))
+    setConstLevelMin(Const2Level(props.filters.const.min))
+    setConstLevelMax(Const2Level(props.filters.const.max))
+    setScoreRankMin(Score2Rank(props.filters.score.min))
+    setScoreRankMax(Score2Rank(props.filters.score.max))
   })
 
   /** 定数入力モードの変更時に内部値を同期 */
@@ -102,8 +152,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     // レベル->定数の場合
     if (mode === 'number') {
       // 内部の保持値をそのままセット
-      setConstMinInput(toInputValue(props.filters.constMin))
-      setConstMaxInput(toInputValue(props.filters.constMax))
+      setConstMinInput(toInputValue(props.filters.const.min))
+      setConstMaxInput(toInputValue(props.filters.const.max))
       // フィルター状態を更新
       props.setFilters((prev) => ({
         ...prev,
@@ -113,8 +163,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     }
     // 定数->レベルの場合
     // 内部の保持値を変換してセット
-    const nextMinLevel = Const2Level(props.filters.constMin)
-    const nextMaxLevel = Const2Level(props.filters.constMax)
+    const nextMinLevel = Const2Level(props.filters.const.min)
+    const nextMaxLevel = Const2Level(props.filters.const.max)
     const nextMinValue = Level2Const(nextMinLevel, 'min')
     const nextMaxValue = Level2Const(nextMaxLevel, 'max')
     setConstLevelMin(nextMinLevel)
@@ -123,8 +173,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     props.setFilters((prev) => ({
       ...prev,
       constFilterMode: mode,
-      constMin: nextMinValue,
-      constMax: nextMaxValue,
+      const: {
+        min: nextMinValue,
+        max: nextMaxValue,
+      },
     }))
   }
 
@@ -133,8 +185,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     // ランク->数値の場合
     if (mode === 'number') {
       // 内部の保持値をそのままセット
-      setScoreMinInput(toInputValue(props.filters.scoreMin))
-      setScoreMaxInput(toInputValue(props.filters.scoreMax))
+      setScoreMinInput(toInputValue(props.filters.score.min))
+      setScoreMaxInput(toInputValue(props.filters.score.max))
       // フィルター状態を更新
       props.setFilters((prev) => ({
         ...prev,
@@ -144,8 +196,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     }
     // 数値->ランクの場合
     // 内部の保持値を変換してセット
-    const nextMinRank = Score2Rank(props.filters.scoreMin)
-    const nextMaxRank = Score2Rank(props.filters.scoreMax)
+    const nextMinRank = Score2Rank(props.filters.score.min)
+    const nextMaxRank = Score2Rank(props.filters.score.max)
     const nextMinValue = Rank2Score(nextMinRank, 'min')
     const nextMaxValue = Rank2Score(nextMaxRank, 'max')
     setScoreRankMin(nextMinRank)
@@ -156,8 +208,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     props.setFilters((prev) => ({
       ...prev,
       scoreFilterMode: mode,
-      scoreMin: nextMinValue,
-      scoreMax: nextMaxValue,
+      score: {
+        min: nextMinValue,
+        max: nextMaxValue,
+      },
     }))
   }
 
@@ -169,7 +223,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       setConstMinInput(toInputValue(nextValue))
       props.setFilters((prev) => ({
         ...prev,
-        constMin: nextValue,
+        const: {
+          ...prev.const,
+          min: nextValue,
+        },
       }))
       return
     }
@@ -178,7 +235,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     setConstMaxInput(toInputValue(nextValue))
     props.setFilters((prev) => ({
       ...prev,
-      constMax: nextValue,
+      const: {
+        ...prev.const,
+        max: nextValue,
+      },
     }))
   }
 
@@ -190,23 +250,125 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       setScoreMinInput(toInputValue(nextValue))
       props.setFilters((prev) => ({
         ...prev,
-        scoreMin: nextValue,
+        score: {
+          ...prev.score,
+          min: nextValue,
+        },
       }))
-    } else {
-      setScoreRankMax(value)
-      setScoreMaxInput(toInputValue(nextValue))
-      props.setFilters((prev) => ({
-        ...prev,
-        scoreMax: nextValue,
-      }))
+      return
     }
+    setScoreRankMax(value)
+    setScoreMaxInput(toInputValue(nextValue))
+    props.setFilters((prev) => ({
+      ...prev,
+      score: {
+        ...prev.score,
+        max: nextValue,
+      },
+    }))
   }
 
   const difficulties = () => props.masterData?.difficulties?.map((d) => d.name as Difficulty) ?? []
-  const genres = () => props.masterData?.genres?.map((g) => g.name) ?? []
+  const genres = () => sortMasterItemsBySortOrder(props.masterData?.genres ?? []).map((g) => g.name)
+  const versions = () => props.versions?.map((version) => getShortVersionName(version.name)) ?? []
+
+  /**
+   * JUSTICE数の入力値をフィルター状態へ反映する。
+   *
+   * @param type - 更新対象の範囲端。
+   * @param value - 入力欄から受け取った文字列。
+   */
+  const commitJusticeCountRange = (type: 'min' | 'max', value: string) => {
+    const nextRange = updateOptionalNumberRange(
+      {
+        min: props.filters.justiceCount.min,
+        max: props.filters.justiceCount.max,
+      },
+      type,
+      value,
+      { min: JUSTICE_COUNT_RANGE_FILTER.min, max: JUSTICE_COUNT_RANGE_FILTER.max, integer: true }
+    )
+    const nextValue = toInputValue(nextRange[type])
+    if (type === 'min') {
+      setJusticeCountMinInput(nextValue)
+      props.setFilters((prev) => ({
+        ...prev,
+        justiceCount: {
+          ...prev.justiceCount,
+          min: nextRange.min,
+        },
+      }))
+      return
+    }
+    setJusticeCountMaxInput(nextValue)
+    props.setFilters((prev) => ({
+      ...prev,
+      justiceCount: {
+        ...prev.justiceCount,
+        max: nextRange.max,
+      },
+    }))
+  }
+
+  /**
+   * OVER POWERの入力値をフィルター状態へ反映する。
+   *
+   * @param type - 更新対象の範囲端。
+   * @param value - 入力欄から受け取った文字列。
+   */
+  const commitOverPowerRange = (type: 'min' | 'max', value: string) => {
+    const nextRange = updateOptionalNumberRange(
+      {
+        min: props.filters.overPower.min,
+        max: props.filters.overPower.max,
+      },
+      type,
+      value,
+      {
+        min: OVER_POWER_RANGE_FILTER.min,
+        max: OVER_POWER_RANGE_FILTER.max,
+        decimalPlaces: 3,
+      }
+    )
+    const nextValue = toInputValue(nextRange[type])
+    if (type === 'min') {
+      setOverPowerMinInput(nextValue)
+      props.setFilters((prev) => ({
+        ...prev,
+        overPower: {
+          ...prev.overPower,
+          min: nextRange.min,
+        },
+      }))
+      return
+    }
+    setOverPowerMaxInput(nextValue)
+    props.setFilters((prev) => ({
+      ...prev,
+      overPower: {
+        ...prev.overPower,
+        max: nextRange.max,
+      },
+    }))
+  }
 
   return (
-    <div class="space-y-4 overflow-y-auto flex-1 min-h-0">
+    <div class="scrollbar-none min-h-0 flex-1 space-y-4 overflow-y-auto">
+      <Show when={props.editingFilterName != null}>
+        <div>
+          <span class="block text-sm font-medium mb-1">フィルター名</span>
+          <TextField>
+            <TextField.Input
+              class="w-full rounded border border-border-strong bg-surface px-3 py-2 font-sans text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+              maxLength={RECORD_FILTER_NAME_MAX_LENGTH}
+              value={props.editingFilterName ?? ''}
+              onInput={(event) =>
+                props.onEditingFilterNameChange?.(limitNameInput(event.currentTarget.value))
+              }
+            />
+          </TextField>
+        </div>
+      </Show>
       <DifficultySection
         difficulties={difficulties()}
         selected={props.filters.difficulties}
@@ -229,14 +391,20 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           setConstMinInput(value)
           props.setFilters((prev) => ({
             ...prev,
-            constMin: parseNumberInput(value) ?? 0.0,
+            const: {
+              ...prev.const,
+              min: parseNumberInput(value) ?? CONST_MIN,
+            },
           }))
         }}
         onMaxCommit={(value) => {
           setConstMaxInput(value)
           props.setFilters((prev) => ({
             ...prev,
-            constMax: parseNumberInput(value) ?? 15.9,
+            const: {
+              ...prev.const,
+              max: parseNumberInput(value) ?? CONST_MAX,
+            },
           }))
         }}
         onConstFilterModeChange={handleConstFilterModeChange}
@@ -256,14 +424,20 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           setScoreMinInput(value)
           props.setFilters((prev) => ({
             ...prev,
-            scoreMin: parseNumberInput(value) ?? 0,
+            score: {
+              ...prev.score,
+              min: parseNumberInput(value) ?? 0,
+            },
           }))
         }}
         onScoreMaxCommit={(value) => {
           setScoreMaxInput(value)
           props.setFilters((prev) => ({
             ...prev,
-            scoreMax: parseNumberInput(value) ?? 1010000,
+            score: {
+              ...prev.score,
+              max: parseNumberInput(value) ?? MAX_SCORE,
+            },
           }))
         }}
         onScoreRankChange={handleScoreRankChange}
@@ -274,15 +448,84 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           }))
         }
       />
+      <NumericRangeSection
+        config={JUSTICE_COUNT_RANGE_FILTER}
+        minValue={justiceCountMinInput()}
+        maxValue={justiceCountMaxInput()}
+        onMinInput={setJusticeCountMinInput}
+        onMaxInput={setJusticeCountMaxInput}
+        onMinCommit={(value) => commitJusticeCountRange('min', value)}
+        onMaxCommit={(value) => commitJusticeCountRange('max', value)}
+      />
+      <NumericRangeSection
+        config={OVER_POWER_RANGE_FILTER}
+        minValue={overPowerMinInput()}
+        maxValue={overPowerMaxInput()}
+        onMinInput={setOverPowerMinInput}
+        onMaxInput={setOverPowerMaxInput}
+        onMinCommit={(value) => commitOverPowerRange('min', value)}
+        onMaxCommit={(value) => commitOverPowerRange('max', value)}
+      />
       <LampSection
-        lamps={LAMP_OPTIONS}
-        selected={props.filters.lamps}
+        title="コンボランプ"
+        idPrefix="combo-lamp"
+        lamps={COMBO_LAMP_OPTIONS}
+        selected={props.filters.combo_lamp}
         onToggle={(lamp) =>
           props.setFilters((prev) => ({
             ...prev,
-            lamps: toggleArray(prev.lamps, lamp).filter(
+            combo_lamp: toggleArray(prev.combo_lamp, lamp).filter(
               (l): l is 'FULL COMBO' | 'ALL JUSTICE' | null =>
                 l === 'FULL COMBO' || l === 'ALL JUSTICE' || l === null
+            ),
+          }))
+        }
+        onExcludeNoPlayChange={(checked) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            excludeNoPlay: checked,
+          }))
+        }
+      />
+      <LampSection
+        title="FULL CHAIN"
+        idPrefix="chain-lamp"
+        lamps={CHAIN_LAMP_OPTIONS}
+        selected={props.filters.chain_lamp}
+        formatLabel={formatFullChainLampLabel}
+        onToggle={(lamp) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            chain_lamp: toggleArray(prev.chain_lamp, lamp).filter(
+              (l): l is 'FULL CHAIN GOLD' | 'FULL CHAIN PLATINUM' | null =>
+                l === 'FULL CHAIN GOLD' || l === 'FULL CHAIN PLATINUM' || l === null
+            ),
+          }))
+        }
+        onExcludeNoPlayChange={(checked) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            excludeNoPlay: checked,
+          }))
+        }
+      />
+      <LampSection
+        title="ハードランプ"
+        idPrefix="hard-lamp"
+        lamps={HARD_LAMP_OPTIONS}
+        selected={props.filters.hard_lamp}
+        onToggle={(lamp) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            hard_lamp: toggleArray(prev.hard_lamp, lamp).filter(
+              (l): l is 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY' | null =>
+                l === 'FAILED' ||
+                l === 'CLEAR' ||
+                l === 'HARD' ||
+                l === 'BRAVE' ||
+                l === 'ABSOLUTE' ||
+                l === 'CATASTROPHY' ||
+                l === null
             ),
           }))
         }
@@ -316,12 +559,12 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         }
       />
       <VersionSection
-        versions={[...CHUNITHM_VERSIONS]}
+        versions={versions()}
         selected={props.filters.versions}
         onSelectAll={() =>
           props.setFilters((prev) => ({
             ...prev,
-            versions: [...CHUNITHM_VERSIONS],
+            versions: versions(),
           }))
         }
         onClear={() =>
