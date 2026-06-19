@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronsUpDown } from 'lucide-solid'
 import { createMemo, For, Show } from 'solid-js'
@@ -50,20 +51,20 @@ const WorldsendMultiSelectSection = <T extends string | number | null>(
     <div>
       <span class="mb-1 block text-sm font-medium">{props.title}</span>
       <div class="mb-1 flex gap-2">
-        <button
+        <Button.Root
           type="button"
           class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover"
           onClick={props.onSelectAll}
         >
           すべて選択
-        </button>
-        <button
+        </Button.Root>
+        <Button.Root
           type="button"
           class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover"
           onClick={props.onClear}
         >
           すべて解除
-        </button>
+        </Button.Root>
       </div>
       <Select<T>
         multiple

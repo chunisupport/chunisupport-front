@@ -1,4 +1,5 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
+import { Button } from '@kobalte/core/button'
 import { RotateCcw } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createSignal } from 'solid-js'
@@ -33,7 +34,7 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
             >
               キャンセル
             </AlertDialog.CloseButton>
-            <button
+            <Button.Root
               type="button"
               class="px-4 py-2 rounded bg-danger text-text-inverse hover:bg-danger-hover"
               onClick={() => {
@@ -42,7 +43,7 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
               }}
             >
               リセット
-            </button>
+            </Button.Root>
           </div>
         </AlertDialog.Content>
       </AlertDialog.Portal>

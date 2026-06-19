@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import { createMemo, For, Show } from 'solid-js'
 import type { WorldsendSongDTO } from '../../../../types/api'
 import { renderSortIndicator } from '../../../users/components/RecordTableUiParts'
@@ -41,7 +42,7 @@ const WorldsendHeaderButton = (props: HeaderButtonProps) => (
     scope="col"
     aria-sort={sortAriaValue(props.active, props.direction)}
   >
-    <button
+    <Button.Root
       type="button"
       class={`${HEADER_BUTTON_CLASS} ${props.align === 'start' ? 'justify-start' : 'justify-center'}`}
       onClick={props.onClick}
@@ -52,7 +53,7 @@ const WorldsendHeaderButton = (props: HeaderButtonProps) => (
         <span>{props.label}</span>
         {renderSortIndicator(props.active, props.direction)}
       </span>
-    </button>
+    </Button.Root>
   </th>
 )
 

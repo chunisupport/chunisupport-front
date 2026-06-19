@@ -298,14 +298,14 @@ const NavBar = (props: NavBarProps) => {
                 </DropdownMenu>
               ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
               item.requiresAuth && !isLoading() && !username() ? (
-                <button
+                <Button.Root
                   type="button"
                   class="flex flex-col items-center gap-1 rounded-md px-0 py-3 text-xs font-semibold text-disabled-text w-full"
                   onClick={() => setShowLoginDialog(true)}
                 >
                   <span class="text-lg">{item.icon()}</span>
                   <span>{item.label}</span>
-                </button>
+                </Button.Root>
               ) : (
                 <A
                   href={item.path}
@@ -368,14 +368,14 @@ const NavBar = (props: NavBarProps) => {
                 </DropdownMenu>
               ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
               item.requiresAuth && !isLoading() && !username() ? (
-                <button
+                <Button.Root
                   type="button"
                   class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-disabled-text justify-center"
                   onClick={() => setShowLoginDialog(true)}
                 >
                   <span class="text-lg">{item.icon()}</span>
                   <span>{item.label}</span>
-                </button>
+                </Button.Root>
               ) : (
                 <A
                   href={item.path}
@@ -403,14 +403,14 @@ const NavBar = (props: NavBarProps) => {
                 この機能を利用するにはログインが必要です。
               </Dialog.Description>
               <div class="flex gap-4 mt-2">
-                <button
+                <Button.Root
                   type="button"
                   class="px-4 py-2 rounded bg-action-secondary hover:bg-action-secondary-hover"
                   onClick={() => setShowLoginDialog(false)}
                 >
                   戻る
-                </button>
-                <button
+                </Button.Root>
+                <Button.Root
                   type="button"
                   class="px-4 py-2 rounded bg-action-primary text-text-inverse hover:bg-action-primary-hover"
                   onClick={() => {
@@ -419,7 +419,7 @@ const NavBar = (props: NavBarProps) => {
                   }}
                 >
                   ログイン画面へ
-                </button>
+                </Button.Root>
               </div>
             </Dialog.Content>
           </Dialog.Portal>
@@ -437,20 +437,20 @@ const NavBar = (props: NavBarProps) => {
                 本当にログアウトしますか？
               </AlertDialog.Description>
               <div class="flex gap-4 mt-2">
-                <button
+                <Button.Root
                   type="button"
                   class="px-4 py-2 rounded bg-action-secondary hover:bg-action-secondary-hover"
                   onClick={() => setShowLogoutDialog(false)}
                 >
                   キャンセル
-                </button>
-                <button
+                </Button.Root>
+                <Button.Root
                   type="button"
                   class="px-4 py-2 rounded bg-danger text-text-inverse hover:bg-danger-hover"
                   onClick={handleLogout}
                 >
                   ログアウト
-                </button>
+                </Button.Root>
               </div>
             </AlertDialog.Content>
           </AlertDialog.Portal>

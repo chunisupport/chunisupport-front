@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import { createEffect, createMemo, For, Show } from 'solid-js'
 import type { SongDTO } from '../../../../types/api'
 import { DIFFICULTY_SHORT_NAME_MAP, difficultyBadgeClass } from '../../../../utils/difficultyUtils'
@@ -42,7 +43,7 @@ const SongHeaderButton = (props: HeaderButtonProps) => (
     scope="col"
     aria-sort={sortAriaValue(props.active, props.direction)}
   >
-    <button
+    <Button.Root
       type="button"
       class={`${HEADER_BUTTON_CLASS} ${props.align === 'start' ? 'justify-start' : 'justify-center'}`}
       onClick={props.onClick}
@@ -53,7 +54,7 @@ const SongHeaderButton = (props: HeaderButtonProps) => (
         <span>{props.label}</span>
         {renderSortIndicator(props.active, props.direction)}
       </span>
-    </button>
+    </Button.Root>
   </th>
 )
 

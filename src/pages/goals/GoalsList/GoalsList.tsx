@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import { useNavigate } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, For, Show } from 'solid-js'
@@ -272,14 +273,14 @@ const GoalsList: Component = () => {
                   <h1 class="text-2xl font-semibold">目標</h1>
                   <p class="text-sm text-text-muted">{resource()?.goals.length ?? 0} / 100件</p>
                 </div>
-                <button
+                <Button.Root
                   type="button"
                   class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:opacity-60"
                   disabled={(resource()?.goals.length ?? 0) >= 100}
                   onClick={openCreateDialog}
                 >
                   目標を追加
-                </button>
+                </Button.Root>
               </div>
 
               <Show when={(resource()?.goals.length ?? 0) >= 100}>

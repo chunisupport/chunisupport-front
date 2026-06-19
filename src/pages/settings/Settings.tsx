@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { createEffect, createResource, createSignal, Show } from 'solid-js'
 import {
@@ -339,7 +340,7 @@ const Settings = () => {
                         </span>
                       </div>
 
-                      <button
+                      <Button.Root
                         type="button"
                         role="switch"
                         aria-checked={privacyValue()}
@@ -369,7 +370,7 @@ const Settings = () => {
                             }`}
                           />
                         </span>
-                      </button>
+                      </Button.Root>
 
                       <Show when={privacyError()}>
                         <p class="text-sm text-danger" aria-live="polite">
@@ -442,7 +443,7 @@ const Settings = () => {
                     </Show>
 
                     <div class="mt-4 flex flex-wrap gap-2">
-                      <button
+                      <Button.Root
                         type="button"
                         onClick={handleIssueApiToken}
                         disabled={apiTokenIssuing()}
@@ -453,15 +454,15 @@ const Settings = () => {
                           : apiTokenStatus()?.has_token
                             ? 'APIトークンを再発行'
                             : 'APIトークンを発行'}
-                      </button>
-                      <button
+                      </Button.Root>
+                      <Button.Root
                         type="button"
                         onClick={handleDeleteApiToken}
                         disabled={apiTokenDeleting() || !apiTokenStatus()?.has_token}
                         class="rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {apiTokenDeleting() ? '削除中...' : 'APIトークンを削除'}
-                      </button>
+                      </Button.Root>
                     </div>
 
                     <Show when={apiTokenError()}>
@@ -482,13 +483,13 @@ const Settings = () => {
                           {token()}
                         </p>
                         <div class="mt-3 flex items-center gap-2">
-                          <button
+                          <Button.Root
                             type="button"
                             onClick={handleCopyToken}
                             class="rounded-md bg-border-strong px-3 py-1.5 text-xs font-semibold text-text-inverse hover:bg-surface-hover"
                           >
                             コピー
-                          </button>
+                          </Button.Root>
                           <Show when={copied()}>
                             <span class="text-xs text-action-primary">コピーしました</span>
                           </Show>
@@ -585,14 +586,14 @@ const Settings = () => {
                     </p>
                   </Show>
 
-                  <button
+                  <Button.Root
                     type="button"
                     onClick={handleDeletePlayerData}
                     disabled={!playerDeleteConfirmed() || playerDeleting()}
                     class="mt-4 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {playerDeleting() ? '削除中...' : 'プレイヤーデータを削除'}
-                  </button>
+                  </Button.Root>
                 </section>
 
                 <section id="account-delete" class="py-4">
@@ -638,14 +639,14 @@ const Settings = () => {
                     退会ボタンを押すと、本人確認のためGoogleアカウントでの再認証が求められます。
                   </p>
 
-                  <button
+                  <Button.Root
                     type="button"
                     onClick={handleDeleteAccount}
                     disabled={!accountDeleteConfirmed() || accountDeleting()}
                     class="mt-3 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {accountDeleting() ? '処理中...' : '退会する'}
-                  </button>
+                  </Button.Root>
                 </section>
               </div>
             </>
