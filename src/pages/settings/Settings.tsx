@@ -1,4 +1,5 @@
 import { Button } from '@kobalte/core/button'
+import { Switch } from '@kobalte/core/switch'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { createEffect, createResource, createSignal, Show } from 'solid-js'
 import {
@@ -340,37 +341,40 @@ const Settings = () => {
                         </span>
                       </div>
 
-                      <Button.Root
-                        type="button"
-                        role="switch"
-                        aria-checked={privacyValue()}
-                        aria-label={`プロフィールを${privacyValue() ? '公開' : '非公開'}にする`}
-                        onClick={handleTogglePrivacy}
+                      <Switch.Root
+                        checked={privacyValue()}
+                        onChange={handleTogglePrivacy}
                         disabled={privacySubmitting()}
-                        class={`flex w-full items-center justify-between rounded-2xl border px-4 py-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                          privacyValue()
-                            ? 'border-warning-border bg-warning-bg hover:bg-warning-bg'
-                            : 'border-success-border bg-success-bg hover:bg-success-bg'
-                        }`}
                       >
-                        <div class="pr-4">
-                          <p class="text-sm font-semibold text-text">
-                            {privacySubmitting() ? '更新中...' : 'プロフィール'}
-                          </p>
-                        </div>
-                        <span
-                          aria-hidden="true"
-                          class={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ${
-                            privacyValue() ? 'bg-warning' : 'bg-success'
+                        <Switch.Input
+                          aria-label={`プロフィールを${privacyValue() ? '公開' : '非公開'}にする`}
+                        />
+                        <Switch.Control
+                          class={`flex w-full items-center justify-between rounded-2xl border px-4 py-4 text-left transition data-disabled:cursor-not-allowed data-disabled:opacity-60 ${
+                            privacyValue()
+                              ? 'border-warning-border bg-warning-bg hover:bg-warning-bg'
+                              : 'border-success-border bg-success-bg hover:bg-success-bg'
                           }`}
                         >
+                          <div class="pr-4">
+                            <p class="text-sm font-semibold text-text">
+                              {privacySubmitting() ? '更新中...' : 'プロフィール'}
+                            </p>
+                          </div>
                           <span
-                            class={`inline-block h-6 w-6 rounded-full bg-surface shadow-sm transition ${
-                              privacyValue() ? 'translate-x-7' : 'translate-x-1'
+                            aria-hidden="true"
+                            class={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ${
+                              privacyValue() ? 'bg-warning' : 'bg-success'
                             }`}
-                          />
-                        </span>
-                      </Button.Root>
+                          >
+                            <Switch.Thumb
+                              class={`inline-block h-6 w-6 rounded-full bg-surface shadow-sm transition ${
+                                privacyValue() ? 'translate-x-7' : 'translate-x-1'
+                              }`}
+                            />
+                          </span>
+                        </Switch.Control>
+                      </Switch.Root>
 
                       <Show when={privacyError()}>
                         <p class="text-sm text-danger" aria-live="polite">
