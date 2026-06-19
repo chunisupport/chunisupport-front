@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
@@ -279,7 +280,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 />
               </div>
             </TextField>
-            <button
+            <Button.Root
               type="button"
               class={`flex h-[38px] min-w-[38px] shrink-0 items-center justify-center gap-1.5 rounded border px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 activeFilterCount() > 0
@@ -295,8 +296,8 @@ const LockedSongsDialog: Component<Props> = (props) => {
               <Show when={activeFilterCount() > 0}>
                 <span class="text-xs font-medium">{activeFilterCount()}</span>
               </Show>
-            </button>
-            <button
+            </Button.Root>
+            <Button.Root
               type="button"
               class={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 showLockedOnly()
@@ -309,7 +310,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
               onClick={() => setShowLockedOnly((value) => !value)}
             >
               <Check size={24} aria-hidden="true" />
-            </button>
+            </Button.Root>
           </div>
 
           <div class="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-text-subtle">
@@ -350,7 +351,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
 
                       return (
                         <li>
-                          <button
+                          <Button.Root
                             type="button"
                             class={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60 ${
                               selected()
@@ -397,7 +398,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                             >
                               <Check class="h-4 w-4" />
                             </span>
-                          </button>
+                          </Button.Root>
                         </li>
                       )
                     }}
@@ -428,13 +429,13 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   <section>
                     <div class="mb-2 flex items-center justify-between gap-2">
                       <h3 class="font-bold">ジャンル</h3>
-                      <button
+                      <Button.Root
                         type="button"
                         class="rounded border border-border-strong px-2 py-1 text-xs text-text-muted hover:bg-surface-muted"
                         onClick={() => setFilters((prev) => ({ ...prev, genres: [] }))}
                       >
                         解除
-                      </button>
+                      </Button.Root>
                     </div>
                     <div class="grid gap-2">
                       <For each={genreOptions()}>
@@ -465,13 +466,13 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   <section>
                     <div class="mb-2 flex items-center justify-between gap-2">
                       <h3 class="font-bold">バージョン</h3>
-                      <button
+                      <Button.Root
                         type="button"
                         class="rounded border border-border-strong px-2 py-1 text-xs text-text-muted hover:bg-surface-muted"
                         onClick={() => setFilters((prev) => ({ ...prev, versions: [] }))}
                       >
                         解除
-                      </button>
+                      </Button.Root>
                     </div>
                     <div class="grid gap-2">
                       <For each={versionOptions()}>
@@ -501,13 +502,13 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 </div>
 
                 <div class="mt-4 flex justify-between gap-2">
-                  <button
+                  <Button.Root
                     type="button"
                     class="rounded border border-border-strong px-3 py-2 text-sm text-text-muted hover:bg-surface-muted"
                     onClick={() => setFilters({ genres: [], versions: [] })}
                   >
                     すべて解除
-                  </button>
+                  </Button.Root>
                   <Dialog.CloseButton class="rounded bg-action-primary px-3 py-2 text-sm text-text-inverse hover:bg-action-primary-hover">
                     適用
                   </Dialog.CloseButton>
@@ -517,15 +518,15 @@ const LockedSongsDialog: Component<Props> = (props) => {
           </Dialog>
 
           <div class="mt-4 flex justify-end gap-2">
-            <button
+            <Button.Root
               type="button"
               class="rounded border border-border-strong px-3 py-2 text-sm text-text-muted hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
               onClick={() => props.onOpenChange(false)}
               disabled={isSaving()}
             >
               キャンセル
-            </button>
-            <button
+            </Button.Root>
+            <Button.Root
               type="button"
               class="inline-flex items-center gap-2 rounded bg-action-primary px-3 py-2 text-sm text-text-inverse hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
               onClick={handleSave}
@@ -535,7 +536,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 <LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />
               </Show>
               保存
-            </button>
+            </Button.Root>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

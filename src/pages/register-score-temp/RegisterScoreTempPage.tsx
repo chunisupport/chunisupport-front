@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import { createSignal, Show } from 'solid-js'
 
 import { postPlayerDataCommit, postRegisterData } from '../../api/register-data'
@@ -198,14 +199,14 @@ const RegisterScoreTempPage = () => {
           <p class="text-sm text-action-primary">{successMessage()}</p>
         </Show>
 
-        <button
+        <Button.Root
           type="button"
           class="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse shadow-sm hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
           onClick={handleSubmit}
           disabled={isSubmitting()}
         >
           {isSubmitting() ? '送信中...' : 'アップロードする'}
-        </button>
+        </Button.Root>
       </div>
       <div class="mt-8">
         <h2 class="text-xl font-semibold mb-4">確定保存 (commit)</h2>
@@ -231,14 +232,14 @@ const RegisterScoreTempPage = () => {
           <Show when={commitSuccessMessage()}>
             <p class="text-sm text-action-primary">{commitSuccessMessage()}</p>
           </Show>
-          <button
+          <Button.Root
             type="button"
             class="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse shadow-sm hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
             onClick={handleCommit}
             disabled={isCommitting()}
           >
             {isCommitting() ? '送信中...' : '確定保存する'}
-          </button>
+          </Button.Root>
         </div>
       </div>
 
@@ -253,7 +254,7 @@ const RegisterScoreTempPage = () => {
           <Show when={copied()}>
             <span class="text-action-primary text-xs">コピーしました！</span>
           </Show>
-          <button
+          <Button.Root
             type="button"
             class="bg-action-primary text-text-inverse p-3 rounded hover:bg-action-primary-hover"
             onClick={() => {
@@ -282,7 +283,7 @@ const RegisterScoreTempPage = () => {
             }}
           >
             コピー
-          </button>
+          </Button.Root>
         </div>
       </div>
     </div>

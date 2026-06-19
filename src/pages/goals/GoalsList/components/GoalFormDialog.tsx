@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
 import { NumberField } from '@kobalte/core/number-field'
@@ -889,13 +890,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     <fieldset class="block text-sm space-y-1">
                       <div class="flex items-center justify-between">
                         <span class="block text-text-muted">難易度（複数可）</span>
-                        <button
+                        <Button.Root
                           type="button"
                           class="text-xs text-action-primary hover:text-action-primary"
                           onClick={() => setDiffs([])}
                         >
                           クリア
-                        </button>
+                        </Button.Root>
                       </div>
                       <div class={GOAL_FILTER_LIST_CLASS}>
                         <For each={props.masterData.difficulties}>
@@ -915,13 +916,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     <fieldset class="block text-sm space-y-1">
                       <div class="flex items-center justify-between">
                         <span class="block text-text-muted">ジャンル（複数可）</span>
-                        <button
+                        <Button.Root
                           type="button"
                           class="text-xs text-action-primary hover:text-action-primary"
                           onClick={() => setGenres([])}
                         >
                           クリア
-                        </button>
+                        </Button.Root>
                       </div>
                       <div class={GOAL_FILTER_LIST_CLASS}>
                         <For each={props.masterData.genres}>
@@ -941,13 +942,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     <fieldset class="block text-sm space-y-1">
                       <div class="flex items-center justify-between">
                         <span class="block text-text-muted">バージョン（複数可）</span>
-                        <button
+                        <Button.Root
                           type="button"
                           class="text-xs text-action-primary hover:text-action-primary"
                           onClick={() => setVersions([])}
                         >
                           クリア
-                        </button>
+                        </Button.Root>
                       </div>
                       <div class={GOAL_FILTER_LIST_CLASS}>
                         <Show
@@ -1183,15 +1184,15 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
           </div>
 
           <div class="mt-6 flex shrink-0 justify-end gap-2">
-            <button
+            <Button.Root
               type="button"
               class="rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover"
               onClick={() => props.onOpenChange(false)}
               disabled={props.isSaving}
             >
               キャンセル
-            </button>
-            <button
+            </Button.Root>
+            <Button.Root
               type="button"
               class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:opacity-60"
               onClick={() => {
@@ -1200,7 +1201,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               disabled={props.isSaving}
             >
               {props.isSaving ? '保存中...' : '保存する'}
-            </button>
+            </Button.Root>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import type { JSX } from 'solid-js'
 import { ErrorBoundary, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
@@ -39,13 +40,13 @@ const SongDetailLayout = <TSong,>(props: Props<TSong>) => {
         {(songData) => (
           <div class="mx-auto w-full max-w-6xl space-y-4 p-4">
             <div class="text-sm">
-              <button
+              <Button.Root
                 type="button"
                 onClick={props.onBack}
                 class="cursor-pointer border-0 bg-transparent p-0 text-action-primary hover:underline"
               >
                 ← 戻る
-              </button>
+              </Button.Root>
             </div>
 
             <div class="space-y-1">

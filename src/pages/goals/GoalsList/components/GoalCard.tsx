@@ -208,7 +208,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
           )}
         </h2>
         <div ref={menuRef} class="relative">
-          <button
+          <Button.Root
             type="button"
             class="rounded p-1 text-text-subtle hover:bg-surface-hover hover:text-text-muted"
             aria-label="メニューを開く"
@@ -220,13 +220,13 @@ const GoalCard: Component<GoalCardProps> = (props) => {
             }}
           >
             <EllipsisVertical size={20} aria-hidden="true" />
-          </button>
+          </Button.Root>
           {menuOpen() && (
             <div
               role="menu"
               class="absolute right-0 z-10 mt-1 w-28 rounded-md border border-border bg-surface py-1 shadow-lg"
             >
-              <button
+              <Button.Root
                 type="button"
                 role="menuitem"
                 class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-muted hover:bg-surface-muted"
@@ -234,8 +234,8 @@ const GoalCard: Component<GoalCardProps> = (props) => {
               >
                 <Pencil size={16} aria-hidden="true" />
                 編集
-              </button>
-              <button
+              </Button.Root>
+              <Button.Root
                 type="button"
                 role="menuitem"
                 class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-danger hover:bg-danger-bg"
@@ -243,7 +243,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
               >
                 <Trash2 size={16} aria-hidden="true" />
                 削除
-              </button>
+              </Button.Root>
             </div>
           )}
         </div>

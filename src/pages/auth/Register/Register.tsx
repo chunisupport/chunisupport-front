@@ -202,7 +202,7 @@ const Register = () => {
                     <p class="text-sm text-danger">{errorMessage()}</p>
                   </div>
                 )}
-                <button
+                <Button.Root
                   type="button"
                   class="w-full flex items-center justify-center gap-3 px-4 py-2 border border-border-strong rounded-md bg-surface hover:bg-surface-muted disabled:opacity-50"
                   onClick={handleGoogleAuth}
@@ -231,7 +231,7 @@ const Register = () => {
                     </svg>
                   )}
                   <span class="text-sm font-medium text-text-muted">Googleで続ける</span>
-                </button>
+                </Button.Root>
               </div>
             </Show>
 

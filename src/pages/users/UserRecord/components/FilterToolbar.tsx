@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import { TextField } from '@kobalte/core/text-field'
 import { Columns3, Funnel, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -28,7 +29,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => (
         />
       </div>
     </TextField>
-    <button
+    <Button.Root
       class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent"
       onClick={props.onOpenFilter}
       type="button"
@@ -37,8 +38,8 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => (
       disabled={props.filterButtonDisabled}
     >
       <Funnel size={24} />
-    </button>
-    <button
+    </Button.Root>
+    <Button.Root
       class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover"
       onClick={props.onOpenColumnSettings}
       type="button"
@@ -46,7 +47,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => (
       title="列設定"
     >
       <Columns3 size={24} />
-    </button>
+    </Button.Root>
   </div>
 )
 

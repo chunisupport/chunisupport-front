@@ -1,3 +1,5 @@
+import { Button } from '@kobalte/core/button'
+import { Switch } from '@kobalte/core/switch'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { createEffect, createResource, createSignal, Show } from 'solid-js'
 import {
@@ -339,37 +341,40 @@ const Settings = () => {
                         </span>
                       </div>
 
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={privacyValue()}
-                        aria-label={`プロフィールを${privacyValue() ? '公開' : '非公開'}にする`}
-                        onClick={handleTogglePrivacy}
+                      <Switch.Root
+                        checked={privacyValue()}
+                        onChange={handleTogglePrivacy}
                         disabled={privacySubmitting()}
-                        class={`flex w-full items-center justify-between rounded-2xl border px-4 py-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                          privacyValue()
-                            ? 'border-warning-border bg-warning-bg hover:bg-warning-bg'
-                            : 'border-success-border bg-success-bg hover:bg-success-bg'
-                        }`}
                       >
-                        <div class="pr-4">
-                          <p class="text-sm font-semibold text-text">
-                            {privacySubmitting() ? '更新中...' : 'プロフィール'}
-                          </p>
-                        </div>
-                        <span
-                          aria-hidden="true"
-                          class={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ${
-                            privacyValue() ? 'bg-warning' : 'bg-success'
+                        <Switch.Input
+                          aria-label={`プロフィールを${privacyValue() ? '公開' : '非公開'}にする`}
+                        />
+                        <Switch.Control
+                          class={`flex w-full items-center justify-between rounded-2xl border px-4 py-4 text-left transition data-disabled:cursor-not-allowed data-disabled:opacity-60 ${
+                            privacyValue()
+                              ? 'border-warning-border bg-warning-bg hover:bg-warning-bg'
+                              : 'border-success-border bg-success-bg hover:bg-success-bg'
                           }`}
                         >
+                          <div class="pr-4">
+                            <p class="text-sm font-semibold text-text">
+                              {privacySubmitting() ? '更新中...' : 'プロフィール'}
+                            </p>
+                          </div>
                           <span
-                            class={`inline-block h-6 w-6 rounded-full bg-surface shadow-sm transition ${
-                              privacyValue() ? 'translate-x-7' : 'translate-x-1'
+                            aria-hidden="true"
+                            class={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ${
+                              privacyValue() ? 'bg-warning' : 'bg-success'
                             }`}
-                          />
-                        </span>
-                      </button>
+                          >
+                            <Switch.Thumb
+                              class={`inline-block h-6 w-6 rounded-full bg-surface shadow-sm transition ${
+                                privacyValue() ? 'translate-x-7' : 'translate-x-1'
+                              }`}
+                            />
+                          </span>
+                        </Switch.Control>
+                      </Switch.Root>
 
                       <Show when={privacyError()}>
                         <p class="text-sm text-danger" aria-live="polite">
@@ -442,7 +447,7 @@ const Settings = () => {
                     </Show>
 
                     <div class="mt-4 flex flex-wrap gap-2">
-                      <button
+                      <Button.Root
                         type="button"
                         onClick={handleIssueApiToken}
                         disabled={apiTokenIssuing()}
@@ -453,15 +458,15 @@ const Settings = () => {
                           : apiTokenStatus()?.has_token
                             ? 'APIトークンを再発行'
                             : 'APIトークンを発行'}
-                      </button>
-                      <button
+                      </Button.Root>
+                      <Button.Root
                         type="button"
                         onClick={handleDeleteApiToken}
                         disabled={apiTokenDeleting() || !apiTokenStatus()?.has_token}
                         class="rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {apiTokenDeleting() ? '削除中...' : 'APIトークンを削除'}
-                      </button>
+                      </Button.Root>
                     </div>
 
                     <Show when={apiTokenError()}>
@@ -482,13 +487,13 @@ const Settings = () => {
                           {token()}
                         </p>
                         <div class="mt-3 flex items-center gap-2">
-                          <button
+                          <Button.Root
                             type="button"
                             onClick={handleCopyToken}
                             class="rounded-md bg-border-strong px-3 py-1.5 text-xs font-semibold text-text-inverse hover:bg-surface-hover"
                           >
                             コピー
-                          </button>
+                          </Button.Root>
                           <Show when={copied()}>
                             <span class="text-xs text-action-primary">コピーしました</span>
                           </Show>
@@ -585,14 +590,14 @@ const Settings = () => {
                     </p>
                   </Show>
 
-                  <button
+                  <Button.Root
                     type="button"
                     onClick={handleDeletePlayerData}
                     disabled={!playerDeleteConfirmed() || playerDeleting()}
                     class="mt-4 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {playerDeleting() ? '削除中...' : 'プレイヤーデータを削除'}
-                  </button>
+                  </Button.Root>
                 </section>
 
                 <section id="account-delete" class="py-4">
@@ -638,14 +643,14 @@ const Settings = () => {
                     退会ボタンを押すと、本人確認のためGoogleアカウントでの再認証が求められます。
                   </p>
 
-                  <button
+                  <Button.Root
                     type="button"
                     onClick={handleDeleteAccount}
                     disabled={!accountDeleteConfirmed() || accountDeleting()}
                     class="mt-3 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {accountDeleting() ? '処理中...' : '退会する'}
-                  </button>
+                  </Button.Root>
                 </section>
               </div>
             </>
