@@ -43,7 +43,7 @@ const SongHeaderButton = (props: HeaderButtonProps) => (
     scope="col"
     aria-sort={sortAriaValue(props.active, props.direction)}
   >
-    <Button.Root
+    <Button
       type="button"
       class={`${HEADER_BUTTON_CLASS} ${props.align === 'start' ? 'justify-start' : 'justify-center'}`}
       onClick={props.onClick}
@@ -54,7 +54,7 @@ const SongHeaderButton = (props: HeaderButtonProps) => (
         <span>{props.label}</span>
         {renderSortIndicator(props.active, props.direction)}
       </span>
-    </Button.Root>
+    </Button>
   </th>
 )
 

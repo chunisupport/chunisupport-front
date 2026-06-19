@@ -51,20 +51,20 @@ const WorldsendMultiSelectSection = <T extends string | number | null>(
     <div>
       <span class="mb-1 block text-sm font-medium">{props.title}</span>
       <div class="mb-1 flex gap-2">
-        <Button.Root
+        <Button
           type="button"
           class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover"
           onClick={props.onSelectAll}
         >
           すべて選択
-        </Button.Root>
-        <Button.Root
+        </Button>
+        <Button
           type="button"
           class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover"
           onClick={props.onClear}
         >
           すべて解除
-        </Button.Root>
+        </Button>
       </div>
       <Select<T>
         multiple

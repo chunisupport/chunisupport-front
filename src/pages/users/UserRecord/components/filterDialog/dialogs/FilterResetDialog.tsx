@@ -34,7 +34,7 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
             >
               キャンセル
             </AlertDialog.CloseButton>
-            <Button.Root
+            <Button
               type="button"
               class="px-4 py-2 rounded bg-danger text-text-inverse hover:bg-danger-hover"
               onClick={() => {
@@ -43,7 +43,7 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
               }}
             >
               リセット
-            </Button.Root>
+            </Button>
           </div>
         </AlertDialog.Content>
       </AlertDialog.Portal>

@@ -29,22 +29,22 @@ const GoalDeleteDialog: Component<GoalDeleteDialogProps> = (props) => {
           </AlertDialog.Description>
 
           <div class="mt-5 flex justify-end gap-2">
-            <Button.Root
+            <Button
               type="button"
               class="rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover"
               disabled={props.isDeleting}
               onClick={() => props.onOpenChange(false)}
             >
               キャンセル
-            </Button.Root>
-            <Button.Root
+            </Button>
+            <Button
               type="button"
               class="rounded bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:opacity-60"
               disabled={props.isDeleting}
               onClick={props.onConfirm}
             >
               {props.isDeleting ? '削除中...' : '削除する'}
-            </Button.Root>
+            </Button>
           </div>
         </AlertDialog.Content>
       </AlertDialog.Portal>

@@ -133,7 +133,7 @@ export const renderDefaultRecordFullChainBadge = (
 }
 
 export const RecordHeaderButton = (props: RecordHeaderButtonProps) => (
-  <Button.Root
+  <Button
     type="button"
     class={`${RECORD_HEADER_BUTTON_CLASS} ${props.active && props.direction ? 'py-1' : ''} ${props.class ?? ''}`}
     onClick={props.onClick}
@@ -144,7 +144,7 @@ export const RecordHeaderButton = (props: RecordHeaderButtonProps) => (
       <span>{props.label}</span>
       {renderSortIndicator(props.active, props.direction)}
     </span>
-  </Button.Root>
+  </Button>
 )
 
 export const RecordTitleCell = (props: RecordTitleCellProps) => (

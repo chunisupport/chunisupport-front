@@ -40,13 +40,13 @@ const SongDetailLayout = <TSong,>(props: Props<TSong>) => {
         {(songData) => (
           <div class="mx-auto w-full max-w-6xl space-y-4 p-4">
             <div class="text-sm">
-              <Button.Root
+              <Button
                 type="button"
                 onClick={props.onBack}
                 class="cursor-pointer border-0 bg-transparent p-0 text-action-primary hover:underline"
               >
                 ← 戻る
-              </Button.Root>
+              </Button>
             </div>
 
             <div class="space-y-1">

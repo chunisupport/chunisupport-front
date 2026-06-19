@@ -90,13 +90,13 @@ const AdminUsersPage = () => {
               placeholder="例: user"
             />
           </label>
-          <Button.Root
+          <Button
             type="button"
             class="rounded bg-info px-4 py-2 text-sm font-medium text-text-inverse hover:bg-info"
             onClick={handleSearch}
           >
             検索
-          </Button.Root>
+          </Button>
         </div>
       </div>
 
@@ -144,13 +144,13 @@ const AdminUsersPage = () => {
                   </td>
                   <td class="whitespace-nowrap px-3 py-2">{formatBooleanFlag(user.is_private)}</td>
                   <td class="whitespace-nowrap px-3 py-2">
-                    <Button.Root
+                    <Button
                       type="button"
                       class="rounded bg-danger px-3 py-1 text-xs font-medium text-text-inverse hover:bg-danger-hover"
                       onClick={() => handleDelete(user.username)}
                     >
                       削除
-                    </Button.Root>
+                    </Button>
                   </td>
                 </tr>
               )}

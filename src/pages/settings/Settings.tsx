@@ -447,7 +447,7 @@ const Settings = () => {
                     </Show>
 
                     <div class="mt-4 flex flex-wrap gap-2">
-                      <Button.Root
+                      <Button
                         type="button"
                         onClick={handleIssueApiToken}
                         disabled={apiTokenIssuing()}
@@ -458,15 +458,15 @@ const Settings = () => {
                           : apiTokenStatus()?.has_token
                             ? 'APIトークンを再発行'
                             : 'APIトークンを発行'}
-                      </Button.Root>
-                      <Button.Root
+                      </Button>
+                      <Button
                         type="button"
                         onClick={handleDeleteApiToken}
                         disabled={apiTokenDeleting() || !apiTokenStatus()?.has_token}
                         class="rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {apiTokenDeleting() ? '削除中...' : 'APIトークンを削除'}
-                      </Button.Root>
+                      </Button>
                     </div>
 
                     <Show when={apiTokenError()}>
@@ -487,13 +487,13 @@ const Settings = () => {
                           {token()}
                         </p>
                         <div class="mt-3 flex items-center gap-2">
-                          <Button.Root
+                          <Button
                             type="button"
                             onClick={handleCopyToken}
                             class="rounded-md bg-border-strong px-3 py-1.5 text-xs font-semibold text-text-inverse hover:bg-surface-hover"
                           >
                             コピー
-                          </Button.Root>
+                          </Button>
                           <Show when={copied()}>
                             <span class="text-xs text-action-primary">コピーしました</span>
                           </Show>
@@ -590,14 +590,14 @@ const Settings = () => {
                     </p>
                   </Show>
 
-                  <Button.Root
+                  <Button
                     type="button"
                     onClick={handleDeletePlayerData}
                     disabled={!playerDeleteConfirmed() || playerDeleting()}
                     class="mt-4 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {playerDeleting() ? '削除中...' : 'プレイヤーデータを削除'}
-                  </Button.Root>
+                  </Button>
                 </section>
 
                 <section id="account-delete" class="py-4">
@@ -643,14 +643,14 @@ const Settings = () => {
                     退会ボタンを押すと、本人確認のためGoogleアカウントでの再認証が求められます。
                   </p>
 
-                  <Button.Root
+                  <Button
                     type="button"
                     onClick={handleDeleteAccount}
                     disabled={!accountDeleteConfirmed() || accountDeleting()}
                     class="mt-3 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {accountDeleting() ? '処理中...' : '退会する'}
-                  </Button.Root>
+                  </Button>
                 </section>
               </div>
             </>
