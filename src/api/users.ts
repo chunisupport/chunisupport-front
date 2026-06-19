@@ -63,8 +63,15 @@ export const fetchUserRecord = async (
   return response.json()
 }
 
+/**
+ * Firebase にログインしている現在のユーザー情報を取得する。
+ *
+ * @param options - 未認証時のリダイレクト設定。
+ * @returns 現在のユーザー情報。
+ */
 export const fetchMe = async (options: FetchMeOptions = {}): Promise<UserDTO> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/me`, {
+    requireAuthentication: true,
     redirectOnUnauthorized: options.redirectOnUnauthorized,
   })
 

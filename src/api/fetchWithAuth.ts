@@ -6,6 +6,7 @@ import { buildLoginRedirectPath } from '../usecases/auth/redirectPath'
 import { buildCurrentPath } from '../utils/currentPath'
 
 type FetchWithAuthOptions = RequestInit & {
+  requireAuthentication?: boolean
   redirectOnUnauthorized?: boolean
   suppressUnauthorizedRedirectForCodes?: readonly ErrorCode[]
 }
@@ -58,17 +59,40 @@ const getFirebaseIdToken = async (): Promise<string | null> => {
   return user.getIdToken()
 }
 
+/**
+ * Firebase 認証トークンを付与して API を呼び出す。
+ *
+ * @param input - リクエスト先。
+ * @param init - fetch オプションと認証エラー時の挙動。
+ * @returns API レスポンス。
+ */
 export const fetchWithAuth = async (
   input: string | URL,
   init: FetchWithAuthOptions = {}
 ): Promise<Response> => {
   const {
+    requireAuthentication = false,
     redirectOnUnauthorized = true,
     suppressUnauthorizedRedirectForCodes = [],
     ...requestInit
   } = init
 
   const token = await getFirebaseIdToken()
+  if (requireAuthentication && !token) {
+    clearAuthenticatedUser()
+    if (redirectOnUnauthorized) {
+      redirectToLogin()
+    }
+
+    const error = new Error(getErrorMessage({ error: { code: 'missing_token' } })) as Error & {
+      status?: number
+      code?: string
+    }
+    error.status = 401
+    error.code = 'missing_token'
+    throw error
+  }
+
   const headers = new Headers(requestInit.headers)
   if (token) {
     headers.set('Authorization', `Bearer ${token}`)
