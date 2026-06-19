@@ -10,6 +10,11 @@ type FilterToolbarProps = {
   filterButtonDisabled?: boolean
 }
 
+/**
+ * レコード一覧の検索欄とフィルター操作ボタンを表示する。
+ * @param props - 検索文字列、変更ハンドラー、各操作ダイアログを開くハンドラー。
+ * @returns レコード一覧上部のフィルターツールバー。
+ */
 const FilterToolbar: Component<FilterToolbarProps> = (props) => (
   <div class="flex items-center mb-2 gap-2">
     <TextField class="flex-1">
@@ -24,7 +29,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => (
       </div>
     </TextField>
     <button
-      class="flex h-[38px] w-[38px] items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent"
+      class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent"
       onClick={props.onOpenFilter}
       type="button"
       aria-label="フィルター"
@@ -34,7 +39,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => (
       <Funnel size={24} />
     </button>
     <button
-      class="flex h-[38px] w-[38px] items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover"
+      class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover"
       onClick={props.onOpenColumnSettings}
       type="button"
       aria-label="列設定"
