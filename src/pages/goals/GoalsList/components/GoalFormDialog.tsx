@@ -24,6 +24,7 @@ import {
   SCORE_RANKS_ASC,
   type ScoreRank,
 } from '../../../../utils/scoreRank'
+import { buildTargetCountParam } from '../../utils/goalCountTarget'
 import {
   COMBO_LAMP_OPTIONS,
   HARD_LAMP_OPTIONS,
@@ -422,28 +423,6 @@ const getOptionalNumberParam = (
 const canUseDynamicTotalTarget = (type: GoalAchievementType): boolean =>
   type === 'total_score' || type === 'overpower_value'
 
-/**
- * 件数目標の入力値を保存・プレビューで使う目標件数へ変換する。
- *
- * @param countMode - 件数の指定方法。
- * @param countValue - 件数入力欄の文字列。
- * @param invert - 反転表示が有効か。
- * @param allCount - 対象条件に一致する全譜面数。
- * @returns 動的上限を使う場合はundefined、固定件数の場合はAPIへ渡す目標件数。
- */
-const buildTargetCountParam = (
-  countMode: 'number' | 'all',
-  countValue: string,
-  invert: boolean,
-  allCount: number
-): number | undefined => {
-  if (countMode === 'all') return undefined
-
-  const parsedCount = Number(countValue)
-  const normalizedCount = Number.isFinite(parsedCount) ? Math.floor(parsedCount) : 0
-  return invert ? allCount - normalizedCount : normalizedCount
-}
-
 const normalizeAttributeSelection = (value: number | number[] | undefined): string[] => {
   if (typeof value === 'number') return [String(value)]
   if (Array.isArray(value)) {
@@ -588,7 +567,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const allCount = props.resolveAllCount(goal.attributes)
     const rawCount = getOptionalNumberParam(goal.achievement_params, 'count')
     if (typeof rawCount === 'number') {
-      setCount(String(goal.invert ? Math.max(allCount - rawCount, 0) : rawCount))
+      setCount(String(rawCount))
     }
     const rawTotal = getOptionalNumberParam(goal.achievement_params, 'total')
     if (typeof rawTotal === 'number') {
@@ -647,16 +626,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * 現在のフォーム入力値から保存・プレビュー共通の成果パラメータを組み立てる。
    *
    * @param type - 現在選択中の目標種別。
-   * @param allCount - 対象条件に一致する全譜面数。
    * @returns API送信値と同じ形の成果パラメータ。
    */
-  const buildDraftAchievementParams = (
-    type: GoalAchievementType,
-    allCount: number
-  ): GoalAchievementParams => {
+  const buildDraftAchievementParams = (type: GoalAchievementType): GoalAchievementParams => {
     const parsedScore = type === 'rank_count' ? getRankGoalScore(rank()) : Number(score())
     const parsedTotal = Number(total())
-    const targetCount = buildTargetCountParam(countMode(), count(), invert(), allCount)
+    const targetCount = buildTargetCountParam(countMode(), count())
 
     return type === 'score_count' || type === 'rank_count'
       ? {
@@ -711,12 +686,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const previewProgress = (): GoalProgressResult => {
     const currentType = achievementType()
     const attributes = getDraftAttributes()
-    const allCount = props.resolveAllCount(attributes)
-
     return props.resolveDraftGoalProgress({
       title: previewTitle(),
       achievement_type: currentType,
-      achievement_params: buildDraftAchievementParams(currentType, allCount),
+      achievement_params: buildDraftAchievementParams(currentType),
       attributes,
       invert: invert(),
     })
@@ -780,7 +753,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const allCount = props.resolveAllCount(attributes)
 
     if (isCountType && countMode() === 'number') {
-      const countMin = invert() ? 0 : 1
+      const countMin = 1
       if (!Number.isInteger(parsedCount) || parsedCount < countMin) {
         setErrorMessage(`件数は${countMin}以上の整数で入力してください。`)
         return
@@ -832,14 +805,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       return
     }
 
-    const targetCount = buildTargetCountParam(countMode(), count(), invert(), allCount)
+    const targetCount = buildTargetCountParam(countMode(), count())
 
     if (isCountType && typeof targetCount === 'number' && targetCount <= 0) {
       setErrorMessage('件数目標の変換結果が0以下です。条件または入力値を見直してください。')
       return
     }
 
-    const achievement_params = buildDraftAchievementParams(currentType, allCount)
+    const achievement_params = buildDraftAchievementParams(currentType)
 
     await props.onSave({
       title: trimmed,
@@ -997,7 +970,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 <div>
                   <h2 class={GOAL_STEP_TITLE_CLASS}>目標種別と数値</h2>
                   <p class={GOAL_STEP_DESCRIPTION_CLASS}>
-                    何を達成扱いにするかを決め、必要な数値と表示方法を設定します。
+                    何を達成扱いにするかを決め、必要な数値を設定します。
                   </p>
                 </div>
               </div>
@@ -1143,7 +1116,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       <Check class="h-4 w-4" />
                     </Checkbox.Indicator>
                   </Checkbox.Control>
-                  <Checkbox.Label>進捗表示を反転（未達寄り）</Checkbox.Label>
+                  <Checkbox.Label>達成までの残数を表示</Checkbox.Label>
                 </Checkbox>
 
                 <article class="rounded-lg border border-border bg-surface p-4 shadow-sm">
@@ -1163,20 +1136,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 </article>
               </div>
             </section>
-
-            {/* <Checkbox
-              class="flex items-center gap-2 text-sm text-text-muted"
-              checked={invert()}
-              onChange={handleInvertChange}
-            >
-              <Checkbox.Input />
-              <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
-                <Checkbox.Indicator>
-                  <Check class="h-4 w-4" />
-                </Checkbox.Indicator>
-              </Checkbox.Control>
-              <Checkbox.Label>進捗表示を反転（未達寄り）</Checkbox.Label>
-            </Checkbox> */}
 
             <Show when={displayErrorMessage()}>
               <p class="text-sm text-danger">{displayErrorMessage()}</p>
