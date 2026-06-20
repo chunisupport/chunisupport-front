@@ -33,6 +33,11 @@ import {
 import type { GoalProgressResult } from '../../utils/goalProgress'
 import { buildGoalVersionOptions } from '../../utils/goalVersion'
 import { GoalCardProgress } from './GoalCard'
+import {
+  ERROR_MESSAGE_INVALID_COUNT_TARGET,
+  LABEL_INVERT_DISPLAY,
+  STEP2_DESCRIPTION,
+} from './constants'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 
@@ -808,7 +813,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const targetCount = buildTargetCountParam(countMode(), count())
 
     if (isCountType && typeof targetCount === 'number' && targetCount <= 0) {
-      setErrorMessage('件数目標の変換結果が0以下です。条件または入力値を見直してください。')
+      setErrorMessage(ERROR_MESSAGE_INVALID_COUNT_TARGET)
       return
     }
 
@@ -969,9 +974,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 <span class={GOAL_STEP_BADGE_CLASS}>2</span>
                 <div>
                   <h2 class={GOAL_STEP_TITLE_CLASS}>目標種別と数値</h2>
-                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>
-                    何を達成扱いにするかを決め、必要な数値を設定します。
-                  </p>
+                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>{STEP2_DESCRIPTION}</p>
                 </div>
               </div>
 
@@ -1116,7 +1119,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       <Check class="h-4 w-4" />
                     </Checkbox.Indicator>
                   </Checkbox.Control>
-                  <Checkbox.Label>達成までの残数を表示</Checkbox.Label>
+                  <Checkbox.Label>{LABEL_INVERT_DISPLAY}</Checkbox.Label>
                 </Checkbox>
 
                 <article class="rounded-lg border border-border bg-surface p-4 shadow-sm">
