@@ -32,12 +32,12 @@ import {
 } from '../../utils/goalForm'
 import type { GoalProgressResult } from '../../utils/goalProgress'
 import { buildGoalVersionOptions } from '../../utils/goalVersion'
-import { GoalCardProgress } from './GoalCard'
 import {
   ERROR_MESSAGE_INVALID_COUNT_TARGET,
   LABEL_INVERT_DISPLAY,
   STEP2_DESCRIPTION,
 } from './constants'
+import { GoalCardProgress } from './GoalCard'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 
