@@ -1,49 +1,67 @@
-import type { PlayerDataResult } from '../types/api'
+import type {
+  PlayerDataDifficulty,
+  PlayerDataNumberDiff,
+  PlayerDataResult,
+  PlayerDataStatisticsGroup,
+} from '../types/api'
 
 type RegisterScoreCommitDependencies = {
   commitPlayerData: (uploadToken: string) => Promise<PlayerDataResult>
-  fetchUsername: () => Promise<string>
   ensureSongsLoaded: () => void
   ensureWorldsendSongsLoaded: () => void
 }
 
 type RegisterScoreCommitInput = {
   uploadToken: string
-  currentUsername: string | null
 }
 
 type RegisterScoreCommitResult = {
   result: PlayerDataResult
-  usernamePromise: Promise<string | null> | null
 }
 
-/**
- * 統計レスポンス内のランプ件数が欠落した場合に使う空マップ。
- */
-const EMPTY_LAMP_COUNTS = {
-  clear: {},
-  combo: {},
-  full_chain: {},
-} as const
+const PLAYER_DATA_DIFFICULTIES: readonly PlayerDataDifficulty[] = [
+  'BASIC',
+  'ADVANCED',
+  'EXPERT',
+  'MASTER',
+  'ULTIMA',
+]
+
+/** 数値差分のゼロ値を生成する。 */
+const createEmptyDiff = (): PlayerDataNumberDiff => ({ before: 0, after: 0, delta: 0 })
+
+/** 統計グループのゼロ値を生成する。 */
+const createEmptyStatisticsGroup = (): PlayerDataStatisticsGroup => ({
+  total_high_score: createEmptyDiff(),
+  record_statistics: {
+    aj: createEmptyDiff(),
+    fc: createEmptyDiff(),
+    clr: createEmptyDiff(),
+    fch: createEmptyDiff(),
+    max: createEmptyDiff(),
+    sss_plus: createEmptyDiff(),
+    sss: createEmptyDiff(),
+    ss_plus: createEmptyDiff(),
+    ss: createEmptyDiff(),
+  },
+})
 
 /**
  * APIレスポンスの配列フィールドを画面で扱いやすい形へ正規化する。
  *
  * @param result - スコア登録APIから返却された登録結果。
- * @returns 差分配列、スキップ配列、統計内の件数マップが常に表示可能な登録結果。
+ * @returns 差分配列、スキップ配列、固定難易度の統計が常に表示可能な登録結果。
  */
 export const normalizePlayerDataResult = (result: PlayerDataResult): PlayerDataResult => {
-  const lampCounts = result.statistics?.lamp_counts ?? EMPTY_LAMP_COUNTS
+  const emptyByDifficulty = Object.fromEntries(
+    PLAYER_DATA_DIFFICULTIES.map((difficulty) => [difficulty, createEmptyStatisticsGroup()])
+  ) as Record<PlayerDataDifficulty, PlayerDataStatisticsGroup>
 
   return {
     ...result,
     statistics: {
-      total_high_score: result.statistics?.total_high_score ?? 0,
-      lamp_counts: {
-        clear: lampCounts.clear ?? {},
-        combo: lampCounts.combo ?? {},
-        full_chain: lampCounts.full_chain ?? {},
-      },
+      overall: result.statistics?.overall ?? createEmptyStatisticsGroup(),
+      by_difficulty: { ...emptyByDifficulty, ...result.statistics?.by_difficulty },
     },
     changes: Array.isArray(result.changes) ? result.changes : [],
     skipped_records: Array.isArray(result.skipped_records) ? result.skipped_records : [],
@@ -75,9 +93,7 @@ export const requestChangedSongMasters = (
 /**
  * 一時保存済みスコアを確定し、結果表示に必要な副作用を開始する。
  *
- * ユーザー名の補完取得は結果表示の必須条件ではないため、登録完了画面をブロックしないPromiseとして返す。
- *
- * @param input - アップロードトークンと現在保持しているユーザー名。
+ * @param input - アップロードトークン。
  * @param dependencies - API呼び出しと周辺データ取得を行う依存関数群。
  * @returns 正規化済み登録結果と、必要な場合のみユーザー名取得Promise。
  */
@@ -91,6 +107,5 @@ export const commitRegisterScore = async (
 
   return {
     result,
-    usernamePromise: input.currentUsername ? null : dependencies.fetchUsername().catch(() => null),
   }
 }

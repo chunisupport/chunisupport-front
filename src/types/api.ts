@@ -381,7 +381,7 @@ export interface PlayerDataResult {
   /** 登録後のプレイヤープロフィール情報。 */
   profile: PlayerDataProfile
   summary: PlayerDataSummary
-  /** 登録後の通常譜面集計。 */
+  /** 登録前後の通常譜面集計差分。 */
   statistics: PlayerDataStatistics
   counts: PlayerDataCounts
   /** 実際に新規追加または更新されたスコア差分。0件の場合は空配列。 */
@@ -410,13 +410,38 @@ export interface PlayerDataSummary {
   overpower_percentage: number | null
 }
 
+export type PlayerDataDifficulty = 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
+
+/** 登録前後の整数差分。 */
+export interface PlayerDataNumberDiff {
+  before: number
+  after: number
+  delta: number
+}
+
+/** 通常譜面の達成件数差分。 */
+export interface PlayerDataRecordStatisticsDiff {
+  aj: PlayerDataNumberDiff
+  fc: PlayerDataNumberDiff
+  clr: PlayerDataNumberDiff
+  fch: PlayerDataNumberDiff
+  max: PlayerDataNumberDiff
+  sss_plus: PlayerDataNumberDiff
+  sss: PlayerDataNumberDiff
+  ss_plus: PlayerDataNumberDiff
+  ss: PlayerDataNumberDiff
+}
+
+/** 全体または1難易度分の通常譜面集計差分。 */
+export interface PlayerDataStatisticsGroup {
+  total_high_score: PlayerDataNumberDiff
+  record_statistics: PlayerDataRecordStatisticsDiff
+}
+
+/** 全体および固定5難易度の通常譜面集計差分。 */
 export interface PlayerDataStatistics {
-  total_high_score: number
-  lamp_counts: {
-    clear: Record<string, number>
-    combo: Record<string, number>
-    full_chain: Record<string, number>
-  }
+  overall: PlayerDataStatisticsGroup
+  by_difficulty: Record<PlayerDataDifficulty, PlayerDataStatisticsGroup>
 }
 
 export interface PlayerDataCounts {

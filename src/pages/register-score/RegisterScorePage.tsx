@@ -1,12 +1,9 @@
-import { A, useSearchParams } from '@solidjs/router'
-import { ArrowRight } from 'lucide-solid'
+import { useSearchParams } from '@solidjs/router'
 import { createSignal, Match, onMount, Switch } from 'solid-js'
 
 import { postPlayerDataCommit } from '../../api/register-data'
-import { fetchMe } from '../../api/users'
 import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
 import type { PlayerDataRecordChange, PlayerDataResult } from '../../types/api'
 import { commitRegisterScore } from '../../usecases/registerScoreCommit'
@@ -57,7 +54,6 @@ const RegisterScorePage = () => {
   const [searchParams] = useSearchParams<{ token: string | string[] }>()
   const songsData = useSongsData()
   const [viewState, setViewState] = createSignal<RegisterScoreViewState>({ type: 'committing' })
-  const [username, setUsername] = createSignal(authSession.user?.username ?? null)
 
   useDocumentTitle(REGISTER_SCORE_MESSAGES.title)
 
@@ -87,34 +83,19 @@ const RegisterScorePage = () => {
     }
 
     try {
-      const { result, usernamePromise } = await commitRegisterScore(
-        { uploadToken, currentUsername: username() },
+      const { result } = await commitRegisterScore(
+        { uploadToken },
         {
           commitPlayerData: postPlayerDataCommit,
-          fetchUsername: async () => {
-            const me = await fetchMe({ redirectOnUnauthorized: false })
-            return me.username
-          },
           ensureSongsLoaded: songsData.ensureSongsLoaded,
           ensureWorldsendSongsLoaded: songsData.ensureWorldsendSongsLoaded,
         }
       )
       setViewState({ type: 'success', result })
-      usernamePromise?.then(setUsername)
     } catch (error) {
       setViewState({ type: 'error', message: resolveRegisterScoreErrorMessage(error) })
     }
   })
-
-  /**
-   * ログインユーザーのマイページパスを作成する。
-   *
-   * @returns ユーザー名がある場合はマイページパス、ない場合はnull。
-   */
-  const userPagePath = () => {
-    const currentUsername = username()
-    return currentUsername ? `/users/${encodeURIComponent(currentUsername)}` : null
-  }
 
   return (
     <main class="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
@@ -141,26 +122,6 @@ const RegisterScorePage = () => {
               <RegisterScoreResultView
                 result={successState.result}
                 resolveSongTitle={songTitleByIdx}
-                action={
-                  <Switch>
-                    <Match when={userPagePath()}>
-                      {(path) => (
-                        <A
-                          href={path()}
-                          class="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
-                        >
-                          {REGISTER_SCORE_MESSAGES.myPageLink}
-                          <ArrowRight class="h-4 w-4" aria-hidden="true" />
-                        </A>
-                      )}
-                    </Match>
-                    <Match when={true}>
-                      <p class="text-sm text-red-600" aria-live="polite">
-                        {REGISTER_SCORE_MESSAGES.missingUser}
-                      </p>
-                    </Match>
-                  </Switch>
-                }
               />
             )
           }}

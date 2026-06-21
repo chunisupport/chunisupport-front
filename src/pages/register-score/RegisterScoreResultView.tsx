@@ -1,12 +1,14 @@
 import { Play } from 'lucide-solid'
-import type { JSX } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
 
 import type {
+  PlayerDataDifficulty,
+  PlayerDataNumberDiff,
   PlayerDataRecordChange,
   PlayerDataRecordState,
   PlayerDataResult,
   PlayerDataStatistics,
+  PlayerDataStatisticsGroup,
 } from '../../types/api'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
 import {
@@ -19,17 +21,15 @@ import {
   RecordHardLampCell,
   RecordLampCell,
 } from '../users/components/SharedRecordTableColumns'
-import { formatOverPowerPercent } from '../users/utils/overPowerFormat'
+import { formatOverPowerPercent, formatOverPowerValue } from '../users/utils/overPowerFormat'
 import { formatPlayerRating } from '../users/utils/ratingFormat'
 
 export const REGISTER_SCORE_MESSAGES = {
   invalidToken: 'tokenが不正です。登録用URLを確認してください。',
-  missingUser: 'ログインユーザー情報を取得できませんでした。ページを再読み込みしてください。',
   fallbackError: '登録に失敗しました。',
   reportTitle: '更新差分',
   title: 'スコア登録',
   processing: 'スコアデータを登録しています。',
-  myPageLink: 'マイページへ移動',
   changedSongsTitle: 'NEW RECORDS',
   changedSongsEmpty: '今回更新された楽曲はありません。',
   totalHighScoreTitle: 'TOTAL HIGH SCORE',
@@ -40,27 +40,16 @@ export const REGISTER_SCORE_MESSAGES = {
 const NO_DATA_TEXT = '-'
 const WORLD_END_BADGE_CLASS =
   'bg-[image:var(--cs-color-worldsend-label-bg)] text-worldsend-label-text'
-const REGISTER_SCORE_CLEAR_LAMP_ORDER = [
-  'FAILED',
-  'CLEAR',
-  'HARD',
-  'BRAVE',
-  'ABSOLUTE',
-  'CATASTROPHY',
-] as const
-const REGISTER_SCORE_FULL_CHAIN_ORDER = ['none', 'full chain gold', 'full chain platinum'] as const
-const REGISTER_SCORE_STAT_COLUMNS = [
-  'AJ',
-  'FC',
-  'CLR',
-  'FCH',
-  'MAX',
-  'SSS+',
-  'SSS',
-  'SS+',
-  'SS',
-] as const
+const REGISTER_SCORE_DIFFICULTIES: readonly PlayerDataDifficulty[] = [
+  'BASIC',
+  'ADVANCED',
+  'EXPERT',
+  'MASTER',
+  'ULTIMA',
+]
+const REGISTER_SCORE_STAT_COLUMNS = ['AJ', 'FC', 'MAX', 'SSS+', 'SSS', 'SS+', 'SS'] as const
 const REGISTER_SCORE_MAIN_STAT_ROW_LABEL = 'ALL'
+const PROFILE_VALUE_CLASS = 'font-jost text-base font-normal leading-6'
 /**
  * 難易度バッジを固定幅で中央揃えにする共通レイアウトクラス。
  */
@@ -89,49 +78,77 @@ type RegisterScoreLampRecord = {
 
 type RegisterScoreStatisticRow = {
   label: string
-  values: Record<(typeof REGISTER_SCORE_STAT_COLUMNS)[number], number | null>
+  difficulty: PlayerDataDifficulty | null
+  values: Record<(typeof REGISTER_SCORE_STAT_COLUMNS)[number], PlayerDataNumberDiff>
 }
 
 export type RegisterScoreSongTitleResolver = (change: PlayerDataRecordChange) => string
 export type RegisterScoreChartLevelResolver = (change: PlayerDataRecordChange) => string | undefined
 
 /**
- * 指定されたキー群の件数を合算する。
+ * 1統計グループを表示用の統計行へ変換する。
  *
- * @param counts - APIが返すランプ別件数。
- * @param keys - 合算対象のキー。
- * @returns 合算した件数。
- */
-const sumCounts = (counts: Record<string, number>, keys: readonly string[]): number => {
-  return keys.reduce((total, key) => total + (counts[key] ?? 0), 0)
-}
-
-/**
- * 通常譜面集計をモックデザインに近い1行の統計表へ変換する。
- *
- * @param statistics - APIが返す登録後の通常譜面集計。
+ * @param label - 行見出し。
+ * @param group - APIが返す統計グループ。
  * @returns 表示用の統計行。
  */
 const toRegisterScoreStatisticRow = (
-  statistics: PlayerDataStatistics
-): RegisterScoreStatisticRow => {
-  const clearCounts = statistics.lamp_counts.clear
-  const comboCounts = statistics.lamp_counts.combo
-  const fullChainCounts = statistics.lamp_counts.full_chain
+  label: string,
+  group: PlayerDataStatisticsGroup,
+  difficulty: PlayerDataDifficulty | null = null
+): RegisterScoreStatisticRow => ({
+  label,
+  difficulty,
+  values: {
+    AJ: group.record_statistics.aj,
+    FC: group.record_statistics.fc,
+    MAX: group.record_statistics.max,
+    'SSS+': group.record_statistics.sss_plus,
+    SSS: group.record_statistics.sss,
+    'SS+': group.record_statistics.ss_plus,
+    SS: group.record_statistics.ss,
+  },
+})
 
-  return {
-    label: REGISTER_SCORE_MAIN_STAT_ROW_LABEL,
-    values: {
-      AJ: comboCounts['all justice'] ?? 0,
-      FC: comboCounts['full combo'] ?? 0,
-      CLR: sumCounts(clearCounts, REGISTER_SCORE_CLEAR_LAMP_ORDER),
-      FCH: sumCounts(fullChainCounts, REGISTER_SCORE_FULL_CHAIN_ORDER.slice(1)),
-      MAX: clearCounts.CATASTROPHY ?? 0,
-      'SSS+': null,
-      SSS: null,
-      'SS+': null,
-      SS: null,
-    },
+/**
+ * 全体と固定5難易度の統計行を生成する。
+ *
+ * @param statistics - APIが返す全体および難易度別の統計差分。
+ * @returns 全体、BASIC、ADVANCED、EXPERT、MASTER、ULTIMAの表示行。
+ */
+const toRegisterScoreStatisticRows = (
+  statistics: PlayerDataStatistics
+): RegisterScoreStatisticRow[] => [
+  toRegisterScoreStatisticRow(REGISTER_SCORE_MAIN_STAT_ROW_LABEL, statistics.overall),
+  ...REGISTER_SCORE_DIFFICULTIES.map((difficulty) =>
+    toRegisterScoreStatisticRow(
+      difficulty.slice(0, 3),
+      statistics.by_difficulty[difficulty],
+      difficulty
+    )
+  ),
+]
+
+/**
+ * 難易度ラベルへゲーム公式色の文字色クラスを適用する。
+ *
+ * @param difficulty - 表示対象の難易度。全体行の場合はnull。
+ * @returns 難易度色のTailwindクラス。全体行の場合は空文字。
+ */
+const getDifficultyTextClass = (difficulty: PlayerDataDifficulty | null): string => {
+  switch (difficulty) {
+    case 'BASIC':
+      return 'text-[var(--cs-color-difficulty-basic-bg)]'
+    case 'ADVANCED':
+      return 'text-[var(--cs-color-difficulty-advanced-bg)]'
+    case 'EXPERT':
+      return 'text-[var(--cs-color-difficulty-expert-bg)]'
+    case 'MASTER':
+      return 'text-[var(--cs-color-difficulty-master-bg)]'
+    case 'ULTIMA':
+      return 'text-[var(--cs-color-difficulty-ultima-bg)]'
+    default:
+      return ''
   }
 }
 
@@ -188,31 +205,22 @@ const formatNullableRating = (value: number | null): string => {
 }
 
 /**
- * レポート内の小数表示を4桁固定で整形する。
+ * 差分値を符号付き表示へ変換する。
  *
- * @param value - 表示対象の数値。
- * @returns 小数4桁の表示文字列。
+ * @param delta - 表示対象の差分値。
+ * @returns 正数にはプラス記号を付けた差分文字列。
  */
-const formatReportDecimal = (value: number): string => {
-  return value.toLocaleString('ja-JP', {
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 4,
-  })
-}
+const formatStatisticDelta = (delta: number): string =>
+  delta > 0 ? `+${formatScore(delta)}` : formatScore(delta)
 
 /**
- * TOTAL HIGH SCORE の平均値を算出する。
+ * TOTAL HIGH SCOREの差分文字色を返す。
  *
- * @param statistics - APIが返す登録後の通常譜面集計。
- * @param recordCount - 登録処理で保存対象になった通常譜面数。
- * @returns 平均値。件数が0の場合はnull。
+ * @param delta - 表示対象の差分値。
+ * @returns プラスの場合はNEW RECORDSと同じ青、それ以外は通常文字色。
  */
-const calculateAverageHighScore = (
-  statistics: PlayerDataStatistics,
-  recordCount: number
-): number | null => {
-  return recordCount > 0 ? statistics.total_high_score / recordCount : null
-}
+const getTotalHighScoreDeltaClass = (delta: number): string =>
+  delta > 0 ? 'text-blue-700' : 'text-text'
 
 /**
  * 差分がスコア更新を含む場合に増分を表示する。
@@ -357,15 +365,20 @@ const RegisterScoreProfileSummary = (props: { result: PlayerDataResult }) => (
         <span class="min-w-0 truncate text-center">{props.result.profile.name}</span>
       </p>
     </div>
-    <dl class="grid grid-cols-[5rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
+    <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
       <dt class="font-extrabold text-text-muted">RATING</dt>
-      <dd class="text-lg font-extrabold leading-6">
-        {formatNullableRating(props.result.profile.rating)}
-      </dd>
-      <dt class="font-extrabold text-text-muted">OP</dt>
-      <dd>
-        <Show when={props.result.profile.overpower_percent !== null} fallback={NO_DATA_TEXT}>
-          {formatOverPowerPercent(props.result.profile.overpower_percent ?? 0)} %
+      <dd class={PROFILE_VALUE_CLASS}>{formatNullableRating(props.result.summary.rating)}</dd>
+      <dt class="font-extrabold text-text-muted">OVER POWER</dt>
+      <dd class={PROFILE_VALUE_CLASS}>
+        <Show
+          when={
+            props.result.summary.overpower_value !== null &&
+            props.result.summary.overpower_percentage !== null
+          }
+          fallback={NO_DATA_TEXT}
+        >
+          {formatOverPowerValue(props.result.summary.overpower_value ?? 0)} (
+          {formatOverPowerPercent(props.result.summary.overpower_percentage ?? 0)}%)
         </Show>
       </dd>
     </dl>
@@ -379,13 +392,19 @@ const RegisterScoreProfileSummary = (props: { result: PlayerDataResult }) => (
  * @returns 集計値セクション。
  */
 const RegisterScoreAggregateSummary = (props: { result: PlayerDataResult }) => {
-  const averageHighScore = createMemo(() =>
-    calculateAverageHighScore(
-      props.result.statistics,
-      props.result.counts.standard_records_upserted
-    )
-  )
-  const statisticRow = createMemo(() => toRegisterScoreStatisticRow(props.result.statistics))
+  const statisticRows = createMemo(() => toRegisterScoreStatisticRows(props.result.statistics))
+  const totalHighScoreRows = createMemo(() => [
+    {
+      label: REGISTER_SCORE_MAIN_STAT_ROW_LABEL,
+      difficulty: null,
+      value: props.result.statistics.overall.total_high_score,
+    },
+    ...REGISTER_SCORE_DIFFICULTIES.map((difficulty) => ({
+      label: difficulty.slice(0, 3),
+      difficulty,
+      value: props.result.statistics.by_difficulty[difficulty].total_high_score,
+    })),
+  ])
 
   return (
     <>
@@ -393,21 +412,24 @@ const RegisterScoreAggregateSummary = (props: { result: PlayerDataResult }) => {
         <h2 class="mb-3 text-xl font-extrabold leading-6">
           {REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
         </h2>
-        <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-base">
-          <p class="flex min-w-0 items-center gap-2">
-            <span
-              class={`${DIFFICULTY_BADGE_LAYOUT_CLASS} bg-difficulty-master-bg text-difficulty-master-text`}
-            >
-              MAS
-            </span>
-            <span class="font-medium">{formatScore(props.result.statistics.total_high_score)}</span>
-          </p>
-          <p class="font-medium">
-            avg{' '}
-            <Show when={averageHighScore() !== null} fallback={NO_DATA_TEXT}>
-              {formatReportDecimal(averageHighScore() ?? 0)}
-            </Show>
-          </p>
+        <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3">
+          <For each={totalHighScoreRows()}>
+            {(row) => (
+              <p class="grid grid-cols-[2.25rem_1fr] items-baseline gap-1">
+                <span class={`font-extrabold ${getDifficultyTextClass(row.difficulty)}`}>
+                  {row.label}
+                </span>
+                <span class="min-w-0">
+                  <span class="block font-jost font-medium">{formatScore(row.value.after)}</span>
+                  <span
+                    class={`block font-jost text-xs font-bold ${getTotalHighScoreDeltaClass(row.value.delta)}`}
+                  >
+                    ({formatStatisticDelta(row.value.delta)})
+                  </span>
+                </span>
+              </p>
+            )}
+          </For>
         </div>
       </section>
 
@@ -415,21 +437,21 @@ const RegisterScoreAggregateSummary = (props: { result: PlayerDataResult }) => {
         <h2 class="mb-3 text-xl font-extrabold leading-6">
           {REGISTER_SCORE_MESSAGES.recordStatsTitle}
         </h2>
-        <RegisterScoreLampStatistics row={statisticRow()} />
+        <RegisterScoreLampStatistics rows={statisticRows()} />
       </section>
     </>
   )
 }
 
 /**
- * ランプ統計をモック表示と同じ横スクロール表で表示する。
+ * ランプ統計を表示領域内へ均等配置した表で表示する。
  *
  * @param props - 表示対象の統計行。
  * @returns ランプ統計テーブル。
  */
-const RegisterScoreLampStatistics = (props: { row: RegisterScoreStatisticRow }) => (
-  <div class="overflow-x-auto">
-    <table class="w-full min-w-[29rem] border-collapse text-center text-sm">
+const RegisterScoreLampStatistics = (props: { rows: RegisterScoreStatisticRow[] }) => (
+  <div class="w-full">
+    <table class="w-full table-fixed border-collapse text-center text-sm">
       <thead>
         <tr class="border-b border-border text-xs font-extrabold">
           <th class="w-12 px-1 py-1 text-left"></th>
@@ -439,18 +461,29 @@ const RegisterScoreLampStatistics = (props: { row: RegisterScoreStatisticRow }) 
         </tr>
       </thead>
       <tbody>
-        <tr class="border-b border-border align-top">
-          <th class="px-1 py-2 text-left text-lg font-extrabold text-fuchsia-700">
-            {props.row.label}
-          </th>
-          <For each={REGISTER_SCORE_STAT_COLUMNS}>
-            {(column) => (
-              <td class="px-1 py-2 leading-5">
-                {props.row.values[column] === null ? NO_DATA_TEXT : props.row.values[column]}
-              </td>
-            )}
-          </For>
-        </tr>
+        <For each={props.rows}>
+          {(row) => (
+            <tr class="border-b border-border align-top">
+              <th
+                class={`px-1 py-2 text-left text-sm font-extrabold ${getDifficultyTextClass(row.difficulty)}`}
+              >
+                {row.label}
+              </th>
+              <For each={REGISTER_SCORE_STAT_COLUMNS}>
+                {(column) => (
+                  <td class="px-1 py-2 leading-4">
+                    <div class="font-jost">{row.values[column].after}</div>
+                    <Show when={row.values[column].delta !== 0}>
+                      <div class="font-jost text-[0.65rem] font-bold text-blue-700">
+                        {formatStatisticDelta(row.values[column].delta)}
+                      </div>
+                    </Show>
+                  </td>
+                )}
+              </For>
+            </tr>
+          )}
+        </For>
       </tbody>
     </table>
   </div>
@@ -468,7 +501,7 @@ const RegisterScoreChangeRow = (props: {
   chartLevel?: string
 }) => {
   return (
-    <article class={SCORE_CHANGE_CARD_CLASS}>
+    <article class={`${SCORE_CHANGE_CARD_CLASS} font-jost`}>
       <div class="flex min-w-0 items-center gap-2 text-base">
         <span class={`${DIFFICULTY_BADGE_LAYOUT_CLASS} ${getDifficultyBadgeClass(props.change)}`}>
           {getShortDifficultyLabel(props.change)}
@@ -512,23 +545,15 @@ const RegisterScoreChangeRow = (props: {
 /**
  * スコア登録結果のヘッダーを表示する。
  *
- * @param props - APIから返却された登録結果と操作要素。
+ * @param props - APIから返却された登録結果。
  * @returns レポートヘッダー。
  */
-const RegisterScoreReportHeader = (props: { result: PlayerDataResult; action?: JSX.Element }) => (
+const RegisterScoreReportHeader = (props: { result: PlayerDataResult }) => (
   <header class="border-b border-border bg-surface-muted px-3 py-3">
-    <div class="flex items-start justify-between gap-3">
-      <div class="min-w-0">
-        <h1 class="text-2xl font-bold">{REGISTER_SCORE_MESSAGES.reportTitle}</h1>
-        <p class="mt-1 text-sm">更新日時: {formatImportedAt(props.result.imported_at)}</p>
-      </div>
-      <div class="shrink-0 text-right text-base">
-        <p>{props.result.app_ver}</p>
-        <Show when={props.action}>
-          {(action) => <div class="mt-2 flex justify-end">{action()}</div>}
-        </Show>
-      </div>
-    </div>
+    <h1 class="text-2xl font-bold">{REGISTER_SCORE_MESSAGES.reportTitle}</h1>
+    <p class="mt-1 text-sm">
+      更新日時: <span class="font-jost">{formatImportedAt(props.result.imported_at)}</span>
+    </p>
   </header>
 )
 
@@ -571,23 +596,22 @@ const RegisterScoreChangesSection = (props: {
 /**
  * スコア登録完了後の結果と差分一覧を表示する。
  *
- * @param props - 登録結果、楽曲名解決関数、右上に表示する操作要素、譜面レベル解決関数。
+ * @param props - 登録結果、楽曲名解決関数、譜面レベル解決関数。
  * @returns 登録結果パネル。
  */
 export const RegisterScoreResultView = (props: {
   result: PlayerDataResult
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
-  action?: JSX.Element
 }) => {
   const changes = createMemo(() => props.result.changes)
 
   return (
     <section
       data-theme="light"
-      class="mx-auto w-full max-w-[31rem] overflow-hidden rounded-md border border-border bg-surface px-0 pb-4 pt-0 text-text shadow-sm"
+      class="mx-auto w-full max-w-[31rem] overflow-hidden rounded-md border border-border bg-surface px-0 pb-4 pt-0 font-sans text-text shadow-sm"
     >
-      <RegisterScoreReportHeader result={props.result} action={props.action} />
+      <RegisterScoreReportHeader result={props.result} />
       <div class="px-2 pt-3 sm:px-4">
         <RegisterScoreProfileSummary result={props.result} />
         <RegisterScoreAggregateSummary result={props.result} />
