@@ -370,7 +370,7 @@ const RecordLampBadges = (props: { state: PlayerDataRecordState }) => {
  * @returns プロフィール概要。
  */
 const RegisterScoreProfileSummary = (props: { result: PlayerDataResult }) => (
-  <section class="border-b border-border pb-3">
+  <section class="pb-3">
     <div class="flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2.5">
       <p class="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 font-sans text-xl font-extrabold leading-none">
         <span class="shrink-0 tracking-normal">Lv. {props.result.profile.level}</span>
@@ -420,13 +420,13 @@ const RegisterScoreAggregateSummary = (props: { result: PlayerDataResult }) => {
 
   return (
     <>
-      <section class="border-b border-border py-4">
+      <section class="py-4">
         <h2 class="mb-3 text-xl font-extrabold leading-6">
           {REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
         </h2>
         <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3">
           <For each={totalHighScoreRows()}>
-            {(row) => (
+            {(row, _index) => (
               <p class="grid grid-cols-[2.25rem_1fr] items-baseline gap-1">
                 <span class={`font-extrabold ${getDifficultyTextClass(row.difficulty)}`}>
                   {row.label}
@@ -447,7 +447,7 @@ const RegisterScoreAggregateSummary = (props: { result: PlayerDataResult }) => {
         </div>
       </section>
 
-      <section class="border-b border-border py-4">
+      <section class="py-4">
         <h2 class="mb-3 text-xl font-extrabold leading-6">
           {REGISTER_SCORE_MESSAGES.recordStatsTitle}
         </h2>
@@ -476,8 +476,10 @@ const RegisterScoreLampStatistics = (props: { rows: RegisterScoreStatisticRow[] 
       </thead>
       <tbody>
         <For each={props.rows}>
-          {(row) => (
-            <tr class="border-b border-border align-top">
+          {(row, index) => (
+            <tr
+              class={`${index() < props.rows.length - 1 ? 'border-b border-border ' : ''}align-top`}
+            >
               <th
                 class={`px-1 py-2 text-left text-sm font-extrabold ${getDifficultyTextClass(row.difficulty)}`}
               >
