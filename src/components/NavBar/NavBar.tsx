@@ -25,6 +25,7 @@ type NavBarProps = {
 
 import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
+import { DOCUMENTATION_BASE_URL } from '../../config'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
@@ -77,6 +78,11 @@ type NavItem = {
   requiresAuth?: boolean
 }
 
+/**
+ * アプリケーション共通のナビゲーションと画面領域を表示する。
+ * @param props ナビゲーション内に表示する画面要素
+ * @returns ナビゲーション付きの画面レイアウト
+ */
 const NavBar = (props: NavBarProps) => {
   const [showLoginDialog, setShowLoginDialog] = createSignal(false)
   const [showLogoutDialog, setShowLogoutDialog] = createSignal(false)
@@ -121,7 +127,7 @@ const NavBar = (props: NavBarProps) => {
       {
         label: 'ヘルプ',
         icon: () => <BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-        path: 'https://help.chunisupport.net/',
+        path: DOCUMENTATION_BASE_URL,
       },
       ...(uname
         ? [
