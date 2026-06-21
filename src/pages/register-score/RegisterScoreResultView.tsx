@@ -421,11 +421,13 @@ const RegisterScoreAggregateSummary = (props: { result: PlayerDataResult }) => {
                 </span>
                 <span class="min-w-0">
                   <span class="block font-jost font-medium">{formatScore(row.value.after)}</span>
-                  <span
-                    class={`block font-jost text-xs font-bold ${getTotalHighScoreDeltaClass(row.value.delta)}`}
-                  >
-                    ({formatStatisticDelta(row.value.delta)})
-                  </span>
+                  <Show when={row.value.delta !== 0}>
+                    <span
+                      class={`block font-jost text-xs font-bold ${getTotalHighScoreDeltaClass(row.value.delta)}`}
+                    >
+                      ({formatStatisticDelta(row.value.delta)})
+                    </span>
+                  </Show>
                 </span>
               </p>
             )}
