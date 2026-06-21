@@ -11,6 +11,9 @@ import { getDefaultFilter } from './filtering'
  */
 const loadStorageModule = async () => {
   process.env.PUBLIC_BACKEND_URL = 'http://localhost:8787'
+  process.env.PUBLIC_FRONTEND_URL = 'http://localhost:3000'
+  process.env.PUBLIC_DOCUMENTATION_URL = 'https://help.chunisupport.net'
+  process.env.PUBLIC_BOOKMARKLET_URL = 'https://dist.chunisupport.net'
   process.env.PUBLIC_CF_TURNSTILE_SITE_KEY = 'test-turnstile-site-key'
   process.env.PUBLIC_FB_API_KEY = 'test-api-key'
   process.env.PUBLIC_FB_AUTH_DOMAIN = 'test.firebaseapp.com'

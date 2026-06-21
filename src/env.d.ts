@@ -2,6 +2,9 @@
 
 interface ImportMetaEnv {
   readonly PUBLIC_BACKEND_URL: string
+  readonly PUBLIC_FRONTEND_URL: string
+  readonly PUBLIC_DOCUMENTATION_URL: string
+  readonly PUBLIC_BOOKMARKLET_URL: string
   readonly PUBLIC_FB_API_KEY: string
   readonly PUBLIC_FB_AUTH_DOMAIN: string
   readonly PUBLIC_FB_PROJECT_ID: string

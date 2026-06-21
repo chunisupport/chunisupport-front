@@ -23,14 +23,13 @@ const BORDER_CALCULATOR_COPY = {
   targetScoreLabel: '目標スコア',
   targetJusticeLabel: '目標JUSTICE数',
   fullComboOnlyLabel: 'FULL COMBO指定（MISSを0に固定）',
-  submitLabel: '計算する',
   unreachableMessage: '理論値を超えるため到達不能です。',
   noCandidatesMessage: '条件に合う候補はありません。',
   noSongCandidatesMessage: '該当する楽曲はありません。',
   missingChartMessage: '選択した譜面のノーツ数が未登録です。ノーツ数を手入力してください。',
 } as const
 
-const DEFAULT_NOTES = '2800'
+const DEFAULT_NOTES = '2500'
 const DEFAULT_TARGET_SCORE = '1007500'
 const SONG_CANDIDATE_LIMIT = 8
 const BORDER_CALCULATOR_DIFFICULTIES = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
@@ -304,7 +303,7 @@ const SongSearchField: Component<{
 /**
  * ボーダー計算の主要入力を横並びまたは折り返しで表示する。
  *
- * @param props - 楽曲検索、譜面、ノーツ数、送信操作に必要な値とハンドラ。
+ * @param props - 楽曲検索、譜面、ノーツ数に必要な値と変更ハンドラ。
  * @returns 計算フォームのコンパクトな主操作行。
  */
 const BorderCalculatorPrimaryControls: Component<{
@@ -412,8 +411,6 @@ const BorderCalculatorPage = (): JSX.Element => {
   const [targetScore, setTargetScore] = createSignal(DEFAULT_TARGET_SCORE)
   const [targetJustice, setTargetJustice] = createSignal('50')
   const [fullComboOnly, setFullComboOnly] = createSignal(false)
-  const [result, setResult] = createSignal<BorderCalculatorResult | null>(null)
-  const [errorMessage, setErrorMessage] = createSignal('')
 
   useDocumentTitle(BORDER_CALCULATOR_COPY.title)
 
@@ -439,6 +436,30 @@ const BorderCalculatorPage = (): JSX.Element => {
   const isSelectedSongDisplayed = createMemo(() => selectedSong()?.title === songSearchQuery())
   const showSongCandidates = createMemo(() => !isSelectedSongDisplayed())
 
+  /**
+   * 現在の入力値からボーダー計算結果をリアクティブに導出する。
+   *
+   * @returns 計算結果、または入力値のエラーメッセージ。
+   */
+  const calculation = createMemo(() => {
+    try {
+      return {
+        result: calculateBorder({
+          notes: Number(notes()),
+          targetScore: Number(targetScore()),
+          targetJustice: parseOptionalNumber(targetJustice()),
+          fullComboOnly: fullComboOnly(),
+        }),
+        errorMessage: null,
+      }
+    } catch (error) {
+      return {
+        result: null,
+        errorMessage: error instanceof Error ? error.message : '入力値を確認してください。',
+      }
+    }
+  })
+
   createEffect(() => {
     const difficulties = availableDifficulties()
     if (!difficulties.includes(selectedDifficulty())) {
@@ -462,7 +483,6 @@ const BorderCalculatorPage = (): JSX.Element => {
   const handleSelectSong = (song: SongDTO): void => {
     setSelectedSong(song)
     setSongSearchQuery(song.title)
-    setResult(null)
     const chartNotes = getChartNotes(song, selectedDifficulty())
     if (chartNotes !== null) {
       setNotes(String(chartNotes))
@@ -479,31 +499,6 @@ const BorderCalculatorPage = (): JSX.Element => {
     setSongSearchQuery(query)
     if (selectedSong()?.title !== query) {
       setSelectedSong(null)
-      setResult(null)
-    }
-  }
-
-  /**
-   * フォーム入力からボーダー計算を実行する。
-   *
-   * @param event - フォーム送信イベント。
-   * @returns なし。
-   */
-  const handleSubmit = (event: SubmitEvent): void => {
-    event.preventDefault()
-    setErrorMessage('')
-
-    try {
-      const calculationResult = calculateBorder({
-        notes: Number(notes()),
-        targetScore: Number(targetScore()),
-        targetJustice: parseOptionalNumber(targetJustice()),
-        fullComboOnly: fullComboOnly(),
-      })
-      setResult(calculationResult)
-    } catch (error) {
-      setResult(null)
-      setErrorMessage(error instanceof Error ? error.message : '入力値を確認してください。')
     }
   }
 
@@ -523,7 +518,7 @@ const BorderCalculatorPage = (): JSX.Element => {
         <Show when={!songsResponse.error} fallback={<LoadError error={songsResponse.error} />}>
           <section class="rounded-lg border border-border bg-surface p-4">
             <Show when={!isSongsLoading()} fallback={<Loading />}>
-              <form class="space-y-4" onSubmit={handleSubmit}>
+              <form class="space-y-4" onSubmit={(event) => event.preventDefault()}>
                 <BorderCalculatorPrimaryControls
                   songSearchQuery={songSearchQuery()}
                   songCandidates={songCandidates()}
@@ -543,7 +538,7 @@ const BorderCalculatorPage = (): JSX.Element => {
                 />
 
                 <fieldset class="space-y-4">
-                  <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+                  <div class="grid gap-3 sm:grid-cols-2 sm:items-end">
                     <BorderFormField
                       id="targetScore"
                       label={BORDER_CALCULATOR_COPY.targetScoreLabel}
@@ -557,12 +552,6 @@ const BorderCalculatorPage = (): JSX.Element => {
                       value={targetJustice()}
                       onChange={setTargetJustice}
                     />
-                    <Button
-                      type="submit"
-                      class="inline-flex w-fit min-w-24 items-center justify-center rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-                    >
-                      {BORDER_CALCULATOR_COPY.submitLabel}
-                    </Button>
                   </div>
 
                   <Checkbox
@@ -579,20 +568,19 @@ const BorderCalculatorPage = (): JSX.Element => {
                     <Checkbox.Label>{BORDER_CALCULATOR_COPY.fullComboOnlyLabel}</Checkbox.Label>
                   </Checkbox>
                 </fieldset>
-
-                <Show when={errorMessage()}>
-                  {(message) => <p class="text-sm text-danger">{message()}</p>}
-                </Show>
               </form>
             </Show>
           </section>
 
-          <Show when={result()}>
-            {(currentResult) => (
-              <section class="rounded-lg border border-border bg-surface p-4">
-                <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <h2 class="text-lg font-semibold">計算結果</h2>
-                </div>
+          <section class="rounded-lg border border-border bg-surface p-4" aria-live="polite">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 class="text-lg font-semibold">計算結果</h2>
+            </div>
+            <Show
+              when={calculation().result}
+              fallback={<p class="text-sm text-danger">{calculation().errorMessage}</p>}
+            >
+              {(currentResult) => (
                 <Show
                   when={currentResult().reachable}
                   fallback={
@@ -610,9 +598,9 @@ const BorderCalculatorPage = (): JSX.Element => {
                     }
                   />
                 </Show>
-              </section>
-            )}
-          </Show>
+              )}
+            </Show>
+          </section>
         </Show>
       </ErrorBoundary>
     </main>

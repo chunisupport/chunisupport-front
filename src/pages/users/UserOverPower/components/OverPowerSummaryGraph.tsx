@@ -54,26 +54,27 @@ const formatPercent = formatOverPowerPercent
 const calcBandPercent = (count: number, total: number): number =>
   total > 0 ? (count / total) * 100 : 0
 
-/** 分布ラベルと横積みバーを描画する。 */
+/**
+ * 分布ラベルと横積みバーを描画する。
+ *
+ * @param props 分布帯、色クラス、および合計件数。
+ * @returns 幅に応じて折り返す分布ラベルと横積みバー。
+ */
 const DistributionBar: Component<{
   bands: OverPowerBandCount<string>[]
   colorClassByLabel: Record<string, string>
-  fixedWidth?: boolean
+  spaciousLabels?: boolean
   total: number
 }> = (props) => {
-  const listClass = () =>
-    props.fixedWidth ? 'flex flex-wrap gap-x-2' : 'grid grid-cols-2 gap-x-2 sm:grid-cols-4'
-  const itemClass = () =>
-    props.fixedWidth
-      ? 'flex min-w-[80px] items-baseline gap-1.5 whitespace-nowrap text-text'
-      : 'flex min-w-max items-baseline gap-1.5 whitespace-nowrap text-text'
+  const labelListClass = () =>
+    props.spaciousLabels ? 'flex flex-wrap gap-x-4' : 'flex flex-wrap gap-x-2'
 
   return (
     <div class="space-y-2">
-      <div class={listClass()}>
+      <div class={labelListClass()}>
         <For each={props.bands}>
           {(band) => (
-            <p class={itemClass()}>
+            <p class="flex min-w-[80px] items-baseline gap-1.5 whitespace-nowrap text-text">
               <span class="shrink-0 text-xs">{band.label}:</span>
               <span class="shrink-0 text-base font-bold tabular-nums text-text sm:text-lg">
                 {band.count}
@@ -126,12 +127,12 @@ export const OverPowerSummaryGraph: Component<Props> = (props) => (
                 <DistributionBar
                   bands={row.scoreBands}
                   colorClassByLabel={scoreBandClass}
-                  fixedWidth
                   total={totalScoreCount()}
                 />
                 <DistributionBar
                   bands={row.comboBands}
                   colorClassByLabel={comboBandClass}
+                  spaciousLabels
                   total={totalComboCount()}
                 />
               </div>

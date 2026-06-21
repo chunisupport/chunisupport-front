@@ -29,7 +29,22 @@ test('user_not_foundの場合は新規登録可能として判定する', async 
   assert.equal(result, 'available')
 })
 
-test('user_not_found以外のエラーはそのまま送出する', async () => {
+test('invalid_tokenの場合は新規登録可能として判定する', async () => {
+  // Given
+  const fetchCurrentUser = async () => {
+    const error = new Error('invalid token') as Error & { code?: string }
+    error.code = 'invalid_token'
+    throw error
+  }
+
+  // When
+  const result = await resolveGoogleRegistrationEligibility(fetchCurrentUser)
+
+  // Then
+  assert.equal(result, 'available')
+})
+
+test('未登録由来以外のエラーはそのまま送出する', async () => {
   // Given
   const expectedError = new Error('network error')
   const fetchCurrentUser = async () => {

@@ -1,8 +1,9 @@
+import { BOOKMARKLET_BASE_URL } from '../../config'
+
 /**
  * プレイヤーデータ登録用スクリプトを読み込むブックマークレット。
  */
-export const CHUNISUPPORT_BOOKMARKLET =
-  'javascript:(function(){var e=document.createElement("script");e.src="https://dist.chunisupport.net/main.js";document.body.appendChild(e)})();'
+export const CHUNISUPPORT_BOOKMARKLET = `javascript:(function(){var e=document.createElement("script");e.src="${new URL('/main.js', BOOKMARKLET_BASE_URL)}";document.body.appendChild(e)})();`
 
 /**
  * プレイヤーデータ未登録案内で利用する表示文言。

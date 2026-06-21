@@ -483,7 +483,7 @@ const RegisterScoreChangeRow = (props: {
         <h3 class="min-w-0 truncate font-sans text-base font-bold">{props.songTitle}</h3>
       </div>
       <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
-        <div class="min-w-0 justify-self-end text-right">
+        <div class="min-w-0">
           <span class="font-oswald font-semibold">
             {props.change.before ? formatScore(props.change.before.score) : NO_DATA_TEXT}
           </span>
