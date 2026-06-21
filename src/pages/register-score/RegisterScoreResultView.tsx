@@ -1,5 +1,5 @@
 import { Play } from 'lucide-solid'
-import { createMemo, For, Show } from 'solid-js'
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 
 import type {
   PlayerDataDifficulty,
@@ -60,6 +60,11 @@ const REGISTER_SCORE_STAT_COLUMNS = [
 ] as const
 const REGISTER_SCORE_MAIN_STAT_ROW_LABEL = 'ALL'
 const PROFILE_VALUE_CLASS = 'font-jost text-base font-normal leading-6'
+/** 更新差分レポートの原寸幅を固定するクラス。 */
+const REGISTER_SCORE_REPORT_WIDTH_CLASS = 'w-[31rem]'
+/** 更新差分レポートの表示領域を原寸幅以下に制限するクラス。 */
+const REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS = 'max-w-[31rem]'
+
 /**
  * 難易度バッジを固定幅で中央揃えにする共通レイアウトクラス。
  */
@@ -424,7 +429,7 @@ const RegisterScoreAggregateSummary = (props: { result: PlayerDataResult }) => {
         <h2 class="mb-3 text-xl font-extrabold leading-6">
           {REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
         </h2>
-        <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3">
+        <div class="grid grid-cols-3 gap-x-4 gap-y-1 text-sm">
           <For each={totalHighScoreRows()}>
             {(row, _index) => (
               <p class="grid grid-cols-[2.25rem_1fr] items-baseline gap-1">
@@ -621,22 +626,59 @@ export const RegisterScoreResultView = (props: {
   resolveChartLevel?: RegisterScoreChartLevelResolver
 }) => {
   const changes = createMemo(() => props.result.changes)
+  const [reportScale, setReportScale] = createSignal(1)
+  const [scaledReportHeight, setScaledReportHeight] = createSignal<number>()
+  let scaleContainerRef!: HTMLDivElement
+  let reportRef!: HTMLElement
+
+  onMount(() => {
+    /**
+     * 固定幅レポートを親要素の表示幅へ収める縮小率と占有高さを更新する。
+     *
+     * @returns なし。
+     */
+    const updateReportScale = () => {
+      const scale = Math.min(1, scaleContainerRef.clientWidth / reportRef.offsetWidth)
+
+      setReportScale(scale)
+      setScaledReportHeight(reportRef.offsetHeight * scale)
+    }
+
+    const resizeObserver = new ResizeObserver(updateReportScale)
+    resizeObserver.observe(scaleContainerRef)
+    resizeObserver.observe(reportRef)
+    updateReportScale()
+
+    onCleanup(() => resizeObserver.disconnect())
+  })
 
   return (
-    <section
-      data-theme="light"
-      class="mx-auto w-full max-w-[31rem] overflow-hidden rounded-md border border-border bg-surface px-0 pb-4 pt-0 font-sans text-text shadow-sm"
+    <div
+      ref={scaleContainerRef}
+      class={`mx-auto w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} overflow-hidden`}
+      style={{ height: scaledReportHeight() ? `${scaledReportHeight()}px` : undefined }}
     >
-      <RegisterScoreReportHeader result={props.result} />
-      <div class="px-2 pt-3 sm:px-4">
-        <RegisterScoreProfileSummary result={props.result} />
-        <RegisterScoreAggregateSummary result={props.result} />
-        <RegisterScoreChangesSection
-          changes={changes()}
-          resolveSongTitle={props.resolveSongTitle}
-          resolveChartLevel={props.resolveChartLevel}
-        />
+      <div
+        class={`${REGISTER_SCORE_REPORT_WIDTH_CLASS} origin-top-left`}
+        style={{ transform: `scale(${reportScale()})` }}
+      >
+        <section
+          ref={reportRef}
+          data-theme="light"
+          class="w-full overflow-hidden rounded-md border border-border bg-surface px-0 pb-4 pt-0 font-sans text-text shadow-sm"
+        >
+          <RegisterScoreReportHeader result={props.result} />
+          <div class="px-4 pt-3">
+            <RegisterScoreProfileSummary result={props.result} />
+            <RegisterScoreAggregateSummary result={props.result} />
+            <RegisterScoreChangesSection
+              changes={changes()}
+              resolveSongTitle={props.resolveSongTitle}
+              resolveChartLevel={props.resolveChartLevel}
+            />
+          </div>
+        </section>
       </div>
-    </section>
+    </div>
   )
 }
