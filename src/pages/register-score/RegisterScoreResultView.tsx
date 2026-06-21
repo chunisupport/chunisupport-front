@@ -594,7 +594,7 @@ const RegisterScoreChangesSection = (props: {
     <Show
       when={props.changes.length > 0}
       fallback={
-        <p class="border-t border-border px-2 py-6 text-center text-sm text-text-muted">
+        <p class="px-2 py-6 text-center text-sm text-text-muted">
           {REGISTER_SCORE_MESSAGES.changedSongsEmpty}
         </p>
       }
