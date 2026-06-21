@@ -49,21 +49,44 @@ const createEmptyStatisticsGroup = (): PlayerDataStatisticsGroup => ({
 })
 
 /**
+ * APIから返された統計グループ内の欠落項目をゼロ値で補完する。
+ *
+ * @param group - APIから返された統計グループ。未返却の場合はundefined。
+ * @returns すべての表示対象項目を保持する統計グループ。
+ */
+const normalizeStatisticsGroup = (
+  group: PlayerDataStatisticsGroup | undefined
+): PlayerDataStatisticsGroup => {
+  const emptyGroup = createEmptyStatisticsGroup()
+
+  return {
+    total_high_score: group?.total_high_score ?? emptyGroup.total_high_score,
+    record_statistics: {
+      ...emptyGroup.record_statistics,
+      ...group?.record_statistics,
+    },
+  }
+}
+
+/**
  * APIレスポンスの配列フィールドを画面で扱いやすい形へ正規化する。
  *
  * @param result - スコア登録APIから返却された登録結果。
  * @returns 差分配列、スキップ配列、固定難易度の統計が常に表示可能な登録結果。
  */
 export const normalizePlayerDataResult = (result: PlayerDataResult): PlayerDataResult => {
-  const emptyByDifficulty = Object.fromEntries(
-    PLAYER_DATA_DIFFICULTIES.map((difficulty) => [difficulty, createEmptyStatisticsGroup()])
+  const byDifficulty = Object.fromEntries(
+    PLAYER_DATA_DIFFICULTIES.map((difficulty) => [
+      difficulty,
+      normalizeStatisticsGroup(result.statistics?.by_difficulty?.[difficulty]),
+    ])
   ) as Record<PlayerDataDifficulty, PlayerDataStatisticsGroup>
 
   return {
     ...result,
     statistics: {
-      overall: result.statistics?.overall ?? createEmptyStatisticsGroup(),
-      by_difficulty: { ...emptyByDifficulty, ...result.statistics?.by_difficulty },
+      overall: normalizeStatisticsGroup(result.statistics?.overall),
+      by_difficulty: byDifficulty,
     },
     changes: Array.isArray(result.changes) ? result.changes : [],
     skipped_records: Array.isArray(result.skipped_records) ? result.skipped_records : [],
