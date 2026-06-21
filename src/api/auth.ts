@@ -22,7 +22,7 @@ export const postLogin = async (payload: LoginPayload): Promise<UserDTO> => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
-    suppressUnauthorizedRedirectForCodes: ['invalid_turnstile_token'],
+    suppressUnauthorizedRedirectForCodes: ['invalid_turnstile_token', 'invalid_token'],
   })
 
   return response.json()
@@ -39,7 +39,7 @@ export const postSignup = async (payload: SignupPayload): Promise<UserDTO> => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
-    suppressUnauthorizedRedirectForCodes: ['invalid_turnstile_token'],
+    suppressUnauthorizedRedirectForCodes: ['invalid_turnstile_token', 'invalid_token'],
   })
 
   return response.json()

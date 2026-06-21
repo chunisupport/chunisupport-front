@@ -4,12 +4,15 @@ export type FetchCurrentUserForRegistration = () => Promise<unknown>
 /**
  * APIエラーがバックエンド未登録ユーザーを表すか判定する。
  *
+ * `/internal/me` や `/internal/auth/login` は、Firebase認証は成功したが
+ * アプリ内ユーザーが未作成の場合に `invalid_token` を返す。
+ *
  * @param error - fetchWithAuth が送出した可能性のあるエラー。
- * @returns user_not_found エラーの場合はtrue。
+ * @returns 未登録ユーザー由来のエラーの場合はtrue。
  */
-const isUserNotFoundError = (error: unknown): boolean => {
+const isUnregisteredUserError = (error: unknown): boolean => {
   const apiError = error as Partial<{ code: string }>
-  return apiError.code === 'user_not_found'
+  return apiError.code === 'user_not_found' || apiError.code === 'invalid_token'
 }
 
 /**
@@ -25,7 +28,7 @@ export const resolveGoogleRegistrationEligibility = async (
     await fetchCurrentUser()
     return 'registered'
   } catch (error) {
-    if (isUserNotFoundError(error)) {
+    if (isUnregisteredUserError(error)) {
       return 'available'
     }
 
