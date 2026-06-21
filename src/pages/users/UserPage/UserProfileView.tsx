@@ -176,12 +176,7 @@ export const UserProfileView: Component<Props> = (props) => {
       {/* ↑と↓について: stickyScrollの関係でmy-4を使わず、mb-4とmt-4を別の箇所で指定しています */}
       <div class="mt-4">
         {/* ネームプレート */}
-        <UserNameplate
-          playerInfo={playerInfo()}
-          honors={honors()}
-          bestRecords={bestRecords()}
-          newRecords={newRecords()}
-        />
+        <UserNameplate playerInfo={playerInfo()} honors={honors()} rating={props.profile.rating} />
       </div>
 
       <Tabs.Root value={selectedPageTab()} class="mb-4" onChange={handlePageTabChange}>

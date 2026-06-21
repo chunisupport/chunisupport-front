@@ -9,9 +9,9 @@ import {
   Show,
 } from 'solid-js'
 import { HONOR_TYPE_CLASS_NAMES } from '../../../../constants/honors'
-import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../../types/api'
+import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
-import { formatPlayerRating } from '../../utils/ratingFormat'
+import { formatNullablePlayerRating } from '../../utils/ratingFormat'
 
 const HONOR_ROTATION_INTERVAL_MS = 4000
 const VISIBLE_HONOR_LIMIT = 3
@@ -19,23 +19,12 @@ const VISIBLE_HONOR_LIMIT = 3
 type Props = {
   playerInfo: PlayerDTO
   honors: HonorDTO[]
-  bestRecords: PlayerRecordDTO[]
-  newRecords: PlayerRecordDTO[]
+  rating: UserRatingDTO
 }
 
 type HonorTitleProps = {
   honor: HonorDTO
   isRotating?: boolean
-}
-
-/**
- * レーティング対象レコードの rating 合計値を計算する。
- *
- * @param records - 合計対象のプレイヤーレコード一覧。
- * @returns rating の合計値。
- */
-const sumRating = (records: PlayerRecordDTO[]): number => {
-  return records.reduce((sum, record) => sum + record.rating, 0)
 }
 
 /**
@@ -84,19 +73,13 @@ const HonorTitle: Component<HonorTitleProps> = (props) => (
 /**
  * ユーザーの称号、レベル、レーティング、OVER POWERをまとめたプロフィールカードを表示する。
  *
- * @param props - 表示対象のプレイヤー情報、称号、レーティング対象レコード。
+ * @param props - 表示対象のプレイヤー情報、称号、APIで計算済みのレーティング。
  * @returns プロフィールカードの JSX 要素。
  */
 export const UserNameplate: Component<Props> = (props) => {
-  const bestSum = sumRating(props.bestRecords)
-  const newSum = sumRating(props.newRecords)
-  const bestRating = props.bestRecords.length > 0 ? bestSum / props.bestRecords.length : 0
-  const newRating = props.newRecords.length > 0 ? newSum / props.newRecords.length : 0
-  const totalRecordsLength = props.bestRecords.length + props.newRecords.length
-  const playerRating = totalRecordsLength > 0 ? (bestSum + newSum) / totalRecordsLength : 0
-  const playerRatingText = formatPlayerRating(playerRating)
-  const bestRatingText = formatPlayerRating(bestRating)
-  const newRatingText = formatPlayerRating(newRating)
+  const playerRatingText = createMemo(() => formatNullablePlayerRating(props.rating.rating))
+  const bestRatingText = createMemo(() => formatNullablePlayerRating(props.rating.best_average))
+  const newRatingText = createMemo(() => formatNullablePlayerRating(props.rating.new_average))
   const [activeHonorIndex, setActiveHonorIndex] = createSignal(0)
   const [isHonorListExpanded, setIsHonorListExpanded] = createSignal(false)
   const visibleHonors = createMemo(() => getVisibleHonors(props.honors))
@@ -171,9 +154,9 @@ export const UserNameplate: Component<Props> = (props) => {
       </div>
       <hr class="mb-2 border-t border-border" />
       <p>
-        RATING <b>{playerRatingText}</b>{' '}
+        RATING <b>{playerRatingText()}</b>{' '}
         <span class="goal-card-progress-secondary">
-          (BEST <b>{bestRatingText}</b> / NEW <b>{newRatingText}</b>)
+          (BEST <b>{bestRatingText()}</b> / NEW <b>{newRatingText()}</b>)
         </span>
       </p>
       {/* TODO: OVER POWERのゲージみたいなのあるといいよね */}

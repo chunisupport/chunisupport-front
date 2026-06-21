@@ -1,7 +1,12 @@
 import 'fake-indexeddb/auto'
 import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
-import { type CachedSong, CLIENT_CACHE_SCHEMA_VERSION, db } from '../lib/db/cacheDB.ts'
+import {
+  type CachedSong,
+  CLIENT_CACHE_SCHEMA_VERSION,
+  db,
+  type UserApiResponse,
+} from '../lib/db/cacheDB.ts'
 import type { SongDTO, UserRatingDTO, UserRecordDTO } from '../types/api.ts'
 import { readCachedSongs, replaceCachedSongs } from './songCacheRepository.ts'
 import {
@@ -38,6 +43,9 @@ const previousIdSong: SongDTO = {
 }
 
 const rating = {
+  rating: 17.1234,
+  best_average: 17.2345,
+  new_average: 16.9567,
   best: [],
   best_candidate: [],
   new: [],
@@ -129,6 +137,35 @@ test('ユーザー API キャッシュは username と updated-at が一致す�
   assert.deepEqual(matchedRating, rating)
   assert.equal(mismatchedRating, null)
   assert.deepEqual(matchedRecord, record)
+})
+
+test('集計値がない旧形式のレーティングキャッシュは読み込まれないこと', async () => {
+  // Given
+  await db.userApiResponses.put({
+    key: 'userRating',
+    username: 'alice',
+    schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
+    userUpdatedAt: 'user-1',
+    songsUpdatedAt: 'songs-1',
+    fetchedAt: new Date().toISOString(),
+    data: {
+      best: [],
+      best_candidate: [],
+      new: [],
+      new_candidate: [],
+      meta: { updated_at: '2026-06-16T12:00:00Z' },
+    },
+  } as unknown as UserApiResponse)
+
+  // When
+  const cachedRating = await readCachedUserRating({
+    username: 'alice',
+    userUpdatedAt: 'user-1',
+    songsUpdatedAt: 'songs-1',
+  })
+
+  // Then
+  assert.equal(cachedRating, null)
 })
 
 test('画面設定は現行 schemaVersion の保存値だけ読み込まれること', async () => {

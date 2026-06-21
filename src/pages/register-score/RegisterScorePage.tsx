@@ -4,6 +4,7 @@ import { createSignal, Match, onMount, Switch } from 'solid-js'
 import { postPlayerDataCommit } from '../../api/register-data'
 import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
 import { useSongsData } from '../../stores/songsData'
 import type { PlayerDataRecordChange, PlayerDataResult } from '../../types/api'
 import { commitRegisterScore } from '../../usecases/registerScoreCommit'
@@ -87,6 +88,7 @@ const RegisterScorePage = () => {
         { uploadToken },
         {
           commitPlayerData: postPlayerDataCommit,
+          clearUserApiCache: clearCachedUserApiResponses,
           ensureSongsLoaded: songsData.ensureSongsLoaded,
           ensureWorldsendSongsLoaded: songsData.ensureWorldsendSongsLoaded,
         }

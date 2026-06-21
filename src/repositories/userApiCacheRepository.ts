@@ -8,6 +8,17 @@ type UserApiCacheMatch = {
 }
 
 /**
+ * キャッシュ済みレーティングレスポンスが現行API契約の集計値を持つか判定する。
+ *
+ * @param data - 判定対象のレーティングレスポンス。
+ * @returns 現行API契約を満たす場合はtrue。
+ */
+const hasCurrentRatingSummary = (data: UserRatingDTO): boolean =>
+  (typeof data.rating === 'number' || data.rating === null) &&
+  (typeof data.best_average === 'number' || data.best_average === null) &&
+  (typeof data.new_average === 'number' || data.new_average === null)
+
+/**
  * ユーザー API キャッシュが現行スキーマと更新日時に一致するか判定する。
  *
  * @param cached - IndexedDB から読み込んだ保存済みレスポンス。
@@ -33,7 +44,11 @@ export const readCachedUserRating = async (
   match: UserApiCacheMatch
 ): Promise<UserRatingDTO | null> => {
   const cached = await db.userApiResponses.get('userRating')
-  if (!isUserApiCacheMatched(cached, match) || cached.key !== 'userRating') {
+  if (
+    !isUserApiCacheMatched(cached, match) ||
+    cached.key !== 'userRating' ||
+    !hasCurrentRatingSummary(cached.data)
+  ) {
     return null
   }
 
@@ -66,6 +81,13 @@ export const readCachedUserRecord = async (
 const saveUserApiResponse = async (response: UserApiResponse): Promise<void> => {
   await db.userApiResponses.put(response)
 }
+
+/**
+ * RATINGとレコードのユーザーAPIキャッシュをすべて削除する。
+ *
+ * @returns キャッシュ削除完了後に解決されるPromise。
+ */
+export const clearCachedUserApiResponses = (): Promise<void> => db.userApiResponses.clear()
 
 /**
  * レーティング API レスポンスキャッシュを保存する。

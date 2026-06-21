@@ -7,6 +7,7 @@ import type {
 
 type RegisterScoreCommitDependencies = {
   commitPlayerData: (uploadToken: string) => Promise<PlayerDataResult>
+  clearUserApiCache: () => Promise<void>
   ensureSongsLoaded: () => void
   ensureWorldsendSongsLoaded: () => void
 }
@@ -127,6 +128,12 @@ export const commitRegisterScore = async (
   dependencies: RegisterScoreCommitDependencies
 ): Promise<RegisterScoreCommitResult> => {
   const result = normalizePlayerDataResult(await dependencies.commitPlayerData(input.uploadToken))
+
+  try {
+    await dependencies.clearUserApiCache()
+  } catch {
+    // キャッシュ削除失敗より、確定済みスコアの結果表示を優先する。
+  }
 
   requestChangedSongMasters(result, dependencies)
 

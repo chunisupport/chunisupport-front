@@ -513,6 +513,9 @@ export interface UserRatingMetaDTO {
 }
 
 export interface UserRatingDTO {
+  rating: number | null
+  best_average: number | null
+  new_average: number | null
   best: PlayerRecordDTO[]
   best_candidate: PlayerRecordDTO[]
   new: PlayerRecordDTO[]

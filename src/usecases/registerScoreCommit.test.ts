@@ -181,17 +181,43 @@ test("requestChangedSongMasters: 通常譜面とWORLD'S ENDの差分に応じた
 test('commitRegisterScore: 登録結果を正規化して返す', async () => {
   // Given: 登録APIが成功する状態。
   const result = createPlayerDataResult()
+  let cacheCleared = false
 
   // When: スコア登録確定処理を実行する。
   const committed = await commitRegisterScore(
     { uploadToken: '11111111-1111-4111-8111-111111111111' },
     {
       commitPlayerData: async () => result,
+      clearUserApiCache: async () => {
+        cacheCleared = true
+      },
       ensureSongsLoaded: () => {},
       ensureWorldsendSongsLoaded: () => {},
     }
   )
 
   // Then: 登録結果を画面へ返す。
+  assert.deepEqual(committed.result, result)
+  assert.equal(cacheCleared, true)
+})
+
+test('commitRegisterScore: キャッシュ削除失敗時も確定済みの登録結果を返す', async () => {
+  // Given: スコア登録は成功し、キャッシュ削除だけが失敗する状態。
+  const result = createPlayerDataResult()
+
+  // When: スコア登録確定処理を実行する。
+  const committed = await commitRegisterScore(
+    { uploadToken: '11111111-1111-4111-8111-111111111111' },
+    {
+      commitPlayerData: async () => result,
+      clearUserApiCache: async () => {
+        throw new Error('IndexedDB error')
+      },
+      ensureSongsLoaded: () => {},
+      ensureWorldsendSongsLoaded: () => {},
+    }
+  )
+
+  // Then: 登録成功はキャッシュ削除エラーの影響を受けない。
   assert.deepEqual(committed.result, result)
 })
