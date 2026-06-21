@@ -64,8 +64,8 @@ const RegisterScorePage = () => {
    * @returns 楽曲名。未取得の場合はプレースホルダー。
    */
   const songTitleByIdx = (change: PlayerDataRecordChange) => {
-    const standardSongs = songsData.songsResponse()?.songs ?? []
-    const worldsendSongs = songsData.worldsendSongsResponse()?.songs ?? []
+    const standardSongs = songsData.songsResponse.latest?.songs ?? []
+    const worldsendSongs = songsData.worldsendSongsResponse.latest?.songs ?? []
 
     return (
       findSongTitleByOfficialIdx(

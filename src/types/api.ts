@@ -430,6 +430,8 @@ export interface PlayerDataRecordStatisticsDiff {
   sss: PlayerDataNumberDiff
   ss_plus: PlayerDataNumberDiff
   ss: PlayerDataNumberDiff
+  s_plus: PlayerDataNumberDiff
+  s: PlayerDataNumberDiff
 }
 
 /** 全体または1難易度分の通常譜面集計差分。 */

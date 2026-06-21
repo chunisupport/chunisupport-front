@@ -12,10 +12,9 @@ import {
 const createStatisticsGroup = (after = 0): PlayerDataStatisticsGroup => ({
   total_high_score: { before: 0, after, delta: after },
   record_statistics: Object.fromEntries(
-    ['aj', 'fc', 'clr', 'fch', 'max', 'sss_plus', 'sss', 'ss_plus', 'ss'].map((key) => [
-      key,
-      { before: 0, after: 0, delta: 0 },
-    ])
+    ['aj', 'fc', 'clr', 'fch', 'max', 'sss_plus', 'sss', 'ss_plus', 'ss', 's_plus', 's'].map(
+      (key) => [key, { before: 0, after: 0, delta: 0 }]
+    )
   ) as unknown as PlayerDataStatisticsGroup['record_statistics'],
 })
 
@@ -95,6 +94,8 @@ test('normalizePlayerDataResult: 難易度別統計が欠落した場合も固�
 
   // Then: 結果ビューが固定順の全難易度を安全に表示できる。
   assert.equal(normalized.statistics.by_difficulty.MASTER.total_high_score.after, 1_000_000)
+  assert.equal(normalized.statistics.by_difficulty.BASIC.record_statistics.s_plus.after, 0)
+  assert.equal(normalized.statistics.by_difficulty.BASIC.record_statistics.s.after, 0)
   assert.deepEqual(Object.keys(normalized.statistics.by_difficulty), [
     'BASIC',
     'ADVANCED',

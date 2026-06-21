@@ -43,6 +43,8 @@ const createEmptyStatisticsGroup = (): PlayerDataStatisticsGroup => ({
     sss: createEmptyDiff(),
     ss_plus: createEmptyDiff(),
     ss: createEmptyDiff(),
+    s_plus: createEmptyDiff(),
+    s: createEmptyDiff(),
   },
 })
 

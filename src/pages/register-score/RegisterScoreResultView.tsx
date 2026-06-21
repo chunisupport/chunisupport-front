@@ -47,7 +47,17 @@ const REGISTER_SCORE_DIFFICULTIES: readonly PlayerDataDifficulty[] = [
   'MASTER',
   'ULTIMA',
 ]
-const REGISTER_SCORE_STAT_COLUMNS = ['AJ', 'FC', 'MAX', 'SSS+', 'SSS', 'SS+', 'SS'] as const
+const REGISTER_SCORE_STAT_COLUMNS = [
+  'AJ',
+  'FC',
+  'MAX',
+  'SSS+',
+  'SSS',
+  'SS+',
+  'SS',
+  'S+',
+  'S',
+] as const
 const REGISTER_SCORE_MAIN_STAT_ROW_LABEL = 'ALL'
 const PROFILE_VALUE_CLASS = 'font-jost text-base font-normal leading-6'
 /**
@@ -107,6 +117,8 @@ const toRegisterScoreStatisticRow = (
     SSS: group.record_statistics.sss,
     'SS+': group.record_statistics.ss_plus,
     SS: group.record_statistics.ss,
+    'S+': group.record_statistics.s_plus,
+    S: group.record_statistics.s,
   },
 })
 
