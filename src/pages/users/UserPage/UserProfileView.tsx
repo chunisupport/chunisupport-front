@@ -30,17 +30,30 @@ type Props = {
 
 const statsPageButtonClass =
   'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-sm text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2'
+const disabledStatsPageButtonClass =
+  'pointer-events-none cursor-not-allowed opacity-50 hover:bg-surface focus-visible:ring-0'
+const isStatsPageLinkDisabled = true
 const BEST_CANDIDATE_HEADING = 'ベスト枠候補'
 const NEW_CANDIDATE_HEADING = '新曲枠候補'
 
 /**
- * ユーザー統計ページへ遷移するリンクボタンを表示する。
+ * ユーザー統計ページへのリンクを表示する。
  *
  * @param props - 統計ページのリンク先。
- * @returns 統計ページへのリンクボタン。
+ * @returns 統計ページへのリンク。
  */
 const StatsPageLink: Component<{ href: string }> = (props) => (
-  <A href={props.href} class={statsPageButtonClass} aria-label="統計ページ" title="統計ページ">
+  <A
+    href={props.href}
+    class={`${statsPageButtonClass} ${isStatsPageLinkDisabled ? disabledStatsPageButtonClass : ''}`}
+    aria-disabled={isStatsPageLinkDisabled}
+    aria-label={isStatsPageLinkDisabled ? '統計ページ（開発中）' : '統計ページ'}
+    tabIndex={isStatsPageLinkDisabled ? -1 : undefined}
+    title={isStatsPageLinkDisabled ? '統計ページ（開発中）' : '統計ページ'}
+    onClick={(event) => {
+      if (isStatsPageLinkDisabled) event.preventDefault()
+    }}
+  >
     <span>統計</span>
     <ChartColumnIncreasing class="h-5 w-5" aria-hidden="true" />
   </A>
