@@ -20,7 +20,12 @@ import {
   REGISTER_SCORE_PATH,
   TOOLS_PATH,
 } from './constants/routes'
-import { TOOL_LINKS, type ToolLinkIcon } from './constants/tools'
+import {
+  DISABLED_TOOL_BADGE_TEXT,
+  TOOL_LINKS,
+  type ToolLink,
+  type ToolLinkIcon,
+} from './constants/tools'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import {
   AdminHonorsPage,
@@ -216,10 +221,11 @@ const UserStatsPage = () => {
 /**
  * ツールリンクの種類に対応するアイコンを表示する。
  * @param props.icon - 表示するツールアイコンの種類。
+ * @param props.disabled - 無効状態の見た目で表示するかどうか。
  * @returns ツールカード用アイコン
  */
-const ToolCardIcon = (props: { icon: ToolLinkIcon }) => {
-  const iconClass = 'h-5 w-5 text-action-primary'
+const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
+  const iconClass = `h-5 w-5 ${props.disabled === true ? 'text-text-muted' : 'text-action-primary'}`
 
   switch (props.icon) {
     case 'calculator':
@@ -229,6 +235,29 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon }) => {
     case 'search':
       return <Search class={iconClass} aria-hidden="true" />
   }
+}
+
+/**
+ * ツールカード内の共通表示要素を表示する。
+ * @param props.tool - 表示対象のツールリンク情報。
+ * @returns アイコン、タイトル、状態ラベルを含むツールカード内容。
+ */
+const ToolCardContent = (props: { tool: ToolLink }) => {
+  return (
+    <>
+      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+        <ToolCardIcon icon={props.tool.icon} disabled={props.tool.disabled} />
+      </span>
+      <span class="flex min-w-0 flex-1 flex-row gap-2">
+        <span class="text-base font-semibold text-text">{props.tool.title}</span>
+        <Show when={props.tool.disabled === true}>
+          <span class="w-fit rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text-muted">
+            {DISABLED_TOOL_BADGE_TEXT}
+          </span>
+        </Show>
+      </span>
+    </>
+  )
 }
 
 /**
@@ -244,15 +273,24 @@ const ToolsPage = () => {
       <div class="grid gap-3 sm:grid-cols-2">
         <For each={TOOL_LINKS}>
           {(tool) => (
-            <A
-              href={tool.href}
-              class="flex min-h-24 items-center gap-4 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            <Show
+              when={tool.disabled !== true}
+              fallback={
+                <div
+                  aria-disabled="true"
+                  class="flex min-h-24 cursor-not-allowed items-center gap-4 rounded-lg border border-border bg-surface-muted p-4 opacity-70"
+                >
+                  <ToolCardContent tool={tool} />
+                </div>
+              }
             >
-              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
-                <ToolCardIcon icon={tool.icon} />
-              </span>
-              <span class="text-base font-semibold text-text">{tool.title}</span>
-            </A>
+              <A
+                href={tool.href}
+                class="flex min-h-24 items-center gap-4 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+              >
+                <ToolCardContent tool={tool} />
+              </A>
+            </Show>
           )}
         </For>
       </div>
