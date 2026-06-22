@@ -17,8 +17,9 @@ import {
   CHART_CONSTANT_LAMP_OPTIONS,
 } from './chartConstantCalculator.constants'
 
-const INPUT_CLASS =
-  'w-full rounded border border-border-strong bg-input-bg px-3 py-3 text-base text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+const FIELD_CONTROL_CLASS =
+  'min-h-12 rounded-md border border-border-strong bg-input-bg px-3 text-base text-text hover:border-input-border-hover'
+const INPUT_CLASS = `${FIELD_CONTROL_CLASS} w-full py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring`
 
 /**
  * フォームの数値文字列を計算用の数値へ変換する。
@@ -152,17 +153,17 @@ const ChartConstantCalculatorPage = (): JSX.Element => {
             name="chart-constant-lamp"
             value={lamp()}
             onChange={(value) => setLamp(value as ChartConstantLamp)}
-            class="space-y-2"
+            class="space-y-1"
           >
             <RadioGroup.Label class="block text-sm font-medium text-text-muted">
               {CHART_CONSTANT_CALCULATOR_COPY.lampLabel}
             </RadioGroup.Label>
-            <div class="grid gap-2 sm:grid-cols-2">
+            <div class="grid gap-x-4 gap-y-2 sm:grid-cols-2">
               <For each={CHART_CONSTANT_LAMP_OPTIONS}>
                 {(option) => (
                   <RadioGroup.Item
                     value={option.value}
-                    class="relative flex min-h-12 items-center gap-3 rounded border border-border-strong bg-surface px-3 py-2 text-sm text-text hover:bg-surface-muted data-[checked]:border-action-primary data-[checked]:bg-action-primary-muted"
+                    class={`${FIELD_CONTROL_CLASS} relative flex items-center gap-3 py-3 hover:bg-surface-muted data-[checked]:border-action-primary data-[checked]:bg-action-primary-muted`}
                   >
                     <RadioGroup.ItemInput class="peer" />
                     <RadioGroup.ItemControl class="pointer-events-none flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border-strong bg-input-bg data-[checked]:border-action-primary">
