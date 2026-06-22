@@ -46,7 +46,7 @@ const StatsPageLink: Component<{ href: string }> = (props) => (
   <A
     href={props.href}
     class={`${statsPageButtonClass} ${isStatsPageLinkDisabled ? disabledStatsPageButtonClass : ''}`}
-    aria-disabled={isStatsPageLinkDisabled}
+    aria-disabled={isStatsPageLinkDisabled ? 'true' : undefined}
     aria-label={isStatsPageLinkDisabled ? '統計ページ（開発中）' : '統計ページ'}
     tabIndex={isStatsPageLinkDisabled ? -1 : undefined}
     title={isStatsPageLinkDisabled ? '統計ページ（開発中）' : '統計ページ'}
