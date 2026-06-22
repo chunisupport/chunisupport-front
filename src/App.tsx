@@ -28,6 +28,7 @@ import {
   AdminSongsPage,
   AdminUsersPage,
   BorderCalculatorPage,
+  ChartConstantCalculatorPage,
   ForbiddenPage,
   GoalsList,
   Login,
@@ -336,7 +337,10 @@ const App = () => {
       <Route path={REGISTER_SCORE_PATH} component={withNavBar(withAuth(RegisterScorePage))} />
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />
-      <Route path={CHART_CONSTANT_CALCULATOR_PATH} component={withNavBar(EmptyToolPage)} />
+      <Route
+        path={CHART_CONSTANT_CALCULATOR_PATH}
+        component={withNavBar(ChartConstantCalculatorPage)}
+      />
       <Route path={BORDER_CALCULATOR_PATH} component={withNavBar(BorderCalculatorPage)} />
       <Route path={LOCKED_SONGS_FINDER_PATH} component={withNavBar(EmptyToolPage)} />
       <Route path="/terms" component={withNavBar(TermsPage)} />
