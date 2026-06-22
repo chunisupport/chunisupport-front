@@ -17,12 +17,19 @@ import { clearAuthenticatedUser } from '../../../stores/authSession'
 import { resolveGoogleRegistrationEligibility } from '../../../usecases/auth/registrationEligibility'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
+import {
+  PRIVACY_POLICY_URL,
+  REGISTERED_GOOGLE_ACCOUNT_MESSAGE,
+  TERMS_URL,
+  TURNSTILE_ERROR_MESSAGE,
+  TURNSTILE_REQUIRED_MESSAGE,
+} from './constants'
 
-const REGISTERED_GOOGLE_ACCOUNT_MESSAGE =
-  'このGoogleアカウントはすでに登録済みです。ログイン画面からログインしてください。'
-const TURNSTILE_REQUIRED_MESSAGE = '認証確認を完了してから登録してください。'
-const TURNSTILE_ERROR_MESSAGE = '認証確認に失敗しました。しばらく待ってから再度お試しください。'
-
+/**
+ * Google認証を利用する新規登録画面を表示する。
+ *
+ * @returns 新規登録画面。
+ */
 const Register = () => {
   const navigate = useNavigate()
   const [step, setStep] = createSignal<'google_auth' | 'fill_username'>('google_auth')
@@ -264,20 +271,34 @@ const Register = () => {
                 </TextField>
                 {/* 利用規約 */}
                 <Checkbox
-                  class="flex items-center mb-3 mt-4"
+                  class="relative mt-4 mb-3 flex items-center"
                   checked={agreedToTerms()}
                   onChange={setAgreedToTerms}
                 >
-                  <Checkbox.Input class="sr-only" />
+                  <Checkbox.Input class="sr-only" style={{ left: '0', top: '0' }} />
                   <Checkbox.Control class="h-5 w-5 rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse flex items-center justify-center">
                     <Checkbox.Indicator>
                       <Check class="h-4 w-4" />
                     </Checkbox.Indicator>
                   </Checkbox.Control>
                   <Checkbox.Label class="ml-2 text-text text-sm select-none">
-                    <A href="/terms" class="text-link underline mr-1">
+                    <a
+                      href={TERMS_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-link underline"
+                    >
                       利用規約
-                    </A>
+                    </a>
+                    と
+                    <a
+                      href={PRIVACY_POLICY_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-link underline"
+                    >
+                      プライバシーポリシー
+                    </a>
                     に同意します
                   </Checkbox.Label>
                 </Checkbox>
