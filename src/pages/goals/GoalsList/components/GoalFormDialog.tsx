@@ -979,25 +979,24 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               </div>
 
               <div class="space-y-4">
-                <GoalSelectField
-                  label="目標種別"
-                  value={achievementType()}
-                  options={achievementTypeOptions()}
-                  onChange={(nextType) => {
-                    setAchievementType(nextType)
-                    if (!canUseDynamicTotalTarget(nextType)) {
-                      setTotalMode('number')
-                    }
-                    if (nextType === 'rank_count') {
-                      setRank(DEFAULT_RANK_GOAL)
-                      setScore(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
-                    }
-                  }}
-                />
-
-                <p class="rounded border border-border bg-surface px-3 py-2 text-sm text-text-muted">
-                  {selectedAchievementDescription()}
-                </p>
+                <div class="space-y-1">
+                  <GoalSelectField
+                    label="目標種別"
+                    value={achievementType()}
+                    options={achievementTypeOptions()}
+                    onChange={(nextType) => {
+                      setAchievementType(nextType)
+                      if (!canUseDynamicTotalTarget(nextType)) {
+                        setTotalMode('number')
+                      }
+                      if (nextType === 'rank_count') {
+                        setRank(DEFAULT_RANK_GOAL)
+                        setScore(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
+                      }
+                    }}
+                  />
+                  <p class="text-xs text-text-muted">{selectedAchievementDescription()}</p>
+                </div>
 
                 <Show
                   when={achievementType() === 'score_count' || achievementType() === 'avg_score'}
