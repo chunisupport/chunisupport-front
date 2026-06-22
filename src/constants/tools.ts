@@ -10,12 +10,23 @@ import {
 export type ToolLinkIcon = 'calculator' | 'target' | 'search'
 
 /**
+ * 無効化されたツールカードに表示する状態ラベル。
+ */
+export const DISABLED_TOOL_BADGE_TEXT = 'coming soon'
+
+/**
  * ツールページに表示するリンク情報。
+ *
+ * @property title - ツールカードに表示する名前。
+ * @property href - 有効時に遷移するツールページのパス。
+ * @property icon - ツールカードに表示するアイコン種別。
+ * @property disabled - ツールカードを無効状態として表示し、リンク遷移を止めるかどうか。
  */
 export type ToolLink = {
   title: string
   href: string
   icon: ToolLinkIcon
+  disabled?: boolean
 }
 
 /**
@@ -36,5 +47,6 @@ export const TOOL_LINKS: ToolLink[] = [
     title: '未解禁曲探索',
     href: LOCKED_SONGS_FINDER_PATH,
     icon: 'search',
+    disabled: true,
   },
 ]
