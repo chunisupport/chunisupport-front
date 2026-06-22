@@ -306,11 +306,6 @@ const EmptyToolPage = () => {
   return <div />
 }
 
-const TermsPage = () => {
-  useDocumentTitle('利用規約')
-  return <h1>Terms of Service Page</h1>
-}
-
 const GuardedAdminPage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
     <AdminPage />
@@ -381,7 +376,6 @@ const App = () => {
       />
       <Route path={BORDER_CALCULATOR_PATH} component={withNavBar(BorderCalculatorPage)} />
       <Route path={LOCKED_SONGS_FINDER_PATH} component={withNavBar(EmptyToolPage)} />
-      <Route path="/terms" component={withNavBar(TermsPage)} />
 
       {/* 管理 */}
       <Route path="/admin" component={withNavBar(GuardedAdminPage)} />
