@@ -125,14 +125,14 @@ const GOAL_STEP_TITLE_CLASS = 'text-base font-bold text-text'
 const GOAL_STEP_DESCRIPTION_CLASS = 'text-sm text-text-muted'
 
 const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = {
-  rank_count: '指定ランク以上を達成した譜面数を追います。',
-  score_count: '指定スコア以上を達成した譜面数を追います。',
-  avg_score: '対象譜面の平均スコアを追います。',
-  hardlamp_count: '指定ハードランプ以上を達成した譜面数を追います。',
-  combolamp_count: 'FULL COMBO / ALL JUSTICE の達成数を追います。',
-  total_score: '対象譜面のスコア合計を追います。',
-  overpower_value: '対象譜面のOVER POWER合計値を追います。',
-  overpower_percent: '対象譜面のOVER POWER達成率を追います。',
+  rank_count: '指定ランク以上を達成した譜面数を対象にします。',
+  score_count: '指定スコア以上を達成した譜面数を対象にします。',
+  avg_score: '対象譜面の平均スコアを対象にします。',
+  hardlamp_count: '指定ハードランプ以上を達成した譜面数を対象にします。',
+  combolamp_count: 'FULL COMBO / ALL JUSTICE の達成数を対象にします。',
+  total_score: '対象譜面のスコア合計を対象にします。',
+  overpower_value: '対象譜面のOVER POWER合計値を対象にします。',
+  overpower_percent: '対象譜面のOVER POWER達成率を対象にします。',
 } as const satisfies Record<GoalAchievementType, string>
 
 const COUNT_MODE_OPTIONS: GoalSelectOption<'number' | 'all'>[] = [
