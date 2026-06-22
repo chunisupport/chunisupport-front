@@ -8,6 +8,8 @@ export const FRONTEND_BASE_URL = getRequiredEnv('PUBLIC_FRONTEND_URL')
 export const DOCUMENTATION_BASE_URL = getRequiredEnv('PUBLIC_DOCUMENTATION_URL')
 /** ブックマークレット配布サイトのベース URL。 */
 export const BOOKMARKLET_BASE_URL = getRequiredEnv('PUBLIC_BOOKMARKLET_URL')
+/** 現在の環境で使用するブックマークレットのエントリーポイント名。 */
+export const BOOKMARKLET_ENTRYPOINT = getRequiredEnv('PUBLIC_BOOKMARKLET_ENTRYPOINT')
 /** Cloudflare Turnstile のサイトキー。 */
 export const CF_TURNSTILE_SITE_KEY = getRequiredEnv('PUBLIC_CF_TURNSTILE_SITE_KEY')
 /** CHUNITHM ジャケット画像のベース URL。 */
