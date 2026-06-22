@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatPlayerRating } from './ratingFormat'
+import { formatNullablePlayerRating, formatPlayerRating } from './ratingFormat'
 
 test('プレイヤーレーティングは小数点以下4桁で切り捨てられること', () => {
   // Given
@@ -22,4 +22,15 @@ test('プレイヤーレーティングは小数点以下4桁まで0埋めされ
 
   // Then
   assert.equal(result, '15.2000')
+})
+
+test('未計算のプレイヤーレーティングはハイフンを返すこと', () => {
+  // Given
+  const rating = null
+
+  // When
+  const result = formatNullablePlayerRating(rating)
+
+  // Then
+  assert.equal(result, '-')
 })
