@@ -126,12 +126,12 @@ const Settings = () => {
   /**
    * プライバシー設定を切り替え、失敗時は直前の状態へ戻す。
    *
+   * @param nextValue 切り替え後の非公開状態。
    * @returns 処理完了後に解決されるPromise。
    */
-  const handleTogglePrivacy = async () => {
+  const handleTogglePrivacy = async (nextValue: boolean) => {
     setPrivacyError('')
     setPrivacySuccess('')
-    const nextValue = !privacyValue()
     const previousValue = privacyValue()
     setPrivacyValue(nextValue)
     setPrivacySubmitting(true)
@@ -341,7 +341,7 @@ const Settings = () => {
                         </span>
                       </div>
 
-                      <Switch.Root
+                      <Switch
                         checked={privacyValue()}
                         onChange={handleTogglePrivacy}
                         disabled={privacySubmitting()}
@@ -374,7 +374,7 @@ const Settings = () => {
                             />
                           </span>
                         </Switch.Control>
-                      </Switch.Root>
+                      </Switch>
 
                       <Show when={privacyError()}>
                         <p class="text-sm text-danger" aria-live="polite">
