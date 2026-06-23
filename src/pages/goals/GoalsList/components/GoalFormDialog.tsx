@@ -2,6 +2,7 @@ import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
 import { NumberField } from '@kobalte/core/number-field'
+import { RadioGroup } from '@kobalte/core/radio-group'
 import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
 import { Check, ChevronDown } from 'lucide-solid'
@@ -110,6 +111,19 @@ interface GoalSelectFieldProps<TValue extends string> {
   onChange: (value: TValue) => void
 }
 
+interface GoalTargetModeRadioGroupProps<TValue extends string> {
+  /** ラジオグループ全体の表示ラベル。 */
+  label: string
+  /** フォーム送信・アクセシビリティ用の名前。 */
+  name: string
+  /** 現在選択中の値。 */
+  value: TValue
+  /** 選択できる目標値指定方法。 */
+  options: GoalSelectOption<TValue>[]
+  /** 選択値が変更されたときの通知先。 */
+  onChange: (value: TValue) => void
+}
+
 type RankGoalValue = ScoreRank | 'THEORETICAL'
 
 const GOAL_FILTER_CHECKBOX_CONTROL_CLASS =
@@ -124,6 +138,10 @@ const GOAL_SELECT_ITEM_CLASS =
   'flex h-8 cursor-pointer items-center justify-between rounded px-2 text-sm outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-action-primary data-highlighted:text-text-inverse'
 const GOAL_SELECT_CONTENT_CLASS =
   'z-60 mt-1 max-h-64 w-[--kb-select-content-width] overflow-y-auto rounded-md border border-border-strong bg-surface p-2 shadow-lg'
+const GOAL_RADIO_ITEM_CLASS =
+  'relative flex min-h-10 items-center gap-3 rounded border border-border-strong bg-surface px-3 py-2 text-sm text-text-muted hover:bg-surface-muted data-[checked]:border-action-primary data-[checked]:bg-action-primary-muted'
+const GOAL_RADIO_CONTROL_CLASS =
+  'pointer-events-none flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border-strong bg-input-bg data-[checked]:border-action-primary'
 /**
  * スクロール可能な目標条件リストの共通スタイル。
  */
@@ -146,9 +164,14 @@ const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = {
   overpower_percent: '対象譜面のOVER POWER達成率を目標にします。',
 } as const satisfies Record<GoalAchievementType, string>
 
-const COUNT_MODE_OPTIONS: GoalSelectOption<'number' | 'all'>[] = [
-  { value: 'number', label: '数値を指定' },
-  { value: 'all', label: '条件に当てはまるものすべて' },
+const COUNT_MODE_OPTIONS: GoalSelectOption<'all' | 'number'>[] = [
+  { value: 'all', label: '条件に当てはまる譜面すべて' },
+  { value: 'number', label: '目標値を指定' },
+]
+
+const TOTAL_MODE_OPTIONS: GoalSelectOption<'all' | 'number'>[] = [
+  { value: 'all', label: '理論値' },
+  { value: 'number', label: '目標値を指定' },
 ]
 
 const HARD_LAMP_SELECT_OPTIONS: GoalSelectOption<'HRD' | 'BRV' | 'ABS' | 'CTS'>[] =
@@ -402,6 +425,41 @@ const GoalFilterCheckbox: Component<GoalFilterCheckboxProps> = (props) => (
   </Checkbox>
 )
 
+/**
+ * 目標値の指定方法をラジオボタンで選択する欄を描画する。
+ *
+ * @param props - 表示ラベル、name属性、選択値、選択肢、変更ハンドラ。
+ * @returns Kobalte RadioGroup を使った目標値指定方法の選択欄。
+ */
+const GoalTargetModeRadioGroup = <TValue extends string>(
+  props: GoalTargetModeRadioGroupProps<TValue>
+) => (
+  <RadioGroup
+    name={props.name}
+    value={props.value}
+    onChange={(value) => props.onChange(value as TValue)}
+    class="space-y-2 text-sm"
+  >
+    <RadioGroup.Label class="block text-text-muted">{props.label}</RadioGroup.Label>
+    <div class="space-y-2">
+      <For each={props.options}>
+        {(option) => (
+          <RadioGroup.Item value={option.value} class={GOAL_RADIO_ITEM_CLASS}>
+            <RadioGroup.ItemInput class="peer" />
+            <RadioGroup.ItemControl class={GOAL_RADIO_CONTROL_CLASS}>
+              <RadioGroup.ItemIndicator class="h-2.5 w-2.5 rounded-full bg-action-primary" />
+            </RadioGroup.ItemControl>
+            <span class="pointer-events-none">{option.label}</span>
+            <RadioGroup.ItemLabel class="absolute inset-0 cursor-pointer rounded focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring">
+              <span class="sr-only">{option.label}</span>
+            </RadioGroup.ItemLabel>
+          </RadioGroup.Item>
+        )}
+      </For>
+    </div>
+  </RadioGroup>
+)
+
 const isCountAchievementType = (type: GoalAchievementType): boolean =>
   type === 'score_count' ||
   type === 'rank_count' ||
@@ -488,9 +546,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [score, setScore] = createSignal(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
   const [rank, setRank] = createSignal<RankGoalValue>(DEFAULT_RANK_GOAL)
   const [count, setCount] = createSignal('1')
-  const [countMode, setCountMode] = createSignal<'number' | 'all'>('number')
+  const [countMode, setCountMode] = createSignal<'all' | 'number'>('all')
   const [total, setTotal] = createSignal(getDefaultTotalGoalValue(DEFAULT_GOAL_ACHIEVEMENT_TYPE))
-  const [totalMode, setTotalMode] = createSignal<'number' | 'all'>('number')
+  const [totalMode, setTotalMode] = createSignal<'all' | 'number'>('number')
   const [hardLamp, setHardLamp] = createSignal<'HRD' | 'BRV' | 'ABS' | 'CTS'>('HRD')
   const [comboLamp, setComboLamp] = createSignal<'FC' | 'AJ'>('FC')
   const [invert, setInvert] = createSignal(false)
@@ -580,7 +638,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setScore(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
       setRank(DEFAULT_RANK_GOAL)
       setCount('1')
-      setCountMode('number')
+      setCountMode('all')
       setTotal(getDefaultTotalGoalValue(DEFAULT_GOAL_ACHIEVEMENT_TYPE))
       setTotalMode('number')
       setHardLamp('HRD')
@@ -745,14 +803,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     `${props.resolveAllCount(getDraftAttributes()).toLocaleString('ja-JP')}件以内`
 
   /**
-   * 件数入力欄へ表示する値を取得する。
-   *
-   * @returns すべて指定時は現在の対象譜面数、通常時は入力中の件数。
-   */
-  const countFieldValue = (): string =>
-    countMode() === 'all' ? String(props.resolveAllCount(getDraftAttributes())) : count()
-
-  /**
    * 目標値入力で指定できる上限を表示用に組み立てる。
    *
    * @returns 目標種別に応じた上限表示。
@@ -762,16 +812,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     if (currentType === 'overpower_percent') return '100%以内'
     return `${getTheoreticalTotal(currentType).toLocaleString('ja-JP')}以内`
   }
-
-  /**
-   * 目標値入力欄へ表示する値を取得する。
-   *
-   * @returns 理論値指定時は現在の最大目標値、通常時は入力中の目標値。
-   */
-  const totalFieldValue = (): string =>
-    canUseDynamicTotalTarget(achievementType()) && totalMode() === 'all'
-      ? String(getTheoreticalTotal(achievementType()))
-      : total()
 
   /**
    * 目標値入力欄に適用する最大値を取得する。
@@ -1059,8 +1099,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     options={achievementTypeOptions()}
                     onChange={(nextType) => {
                       setAchievementType(nextType)
+                      setCountMode(isCountAchievementType(nextType) ? 'all' : 'number')
                       if (!canUseDynamicTotalTarget(nextType)) {
                         setTotalMode('number')
+                      } else {
+                        setTotalMode('all')
                       }
                       setTotal(getDefaultTotalGoalValue(nextType))
                       if (nextType === 'rank_count') {
@@ -1123,28 +1166,25 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   }
                 >
                   <div class="block text-sm">
-                    <div class="space-y-2">
-                      <GoalNumberField
+                    <div class="space-y-3">
+                      <GoalTargetModeRadioGroup
                         label="目標譜面数"
-                        min={1}
-                        value={countFieldValue()}
-                        description={countLimitText()}
-                        onChange={setCount}
-                        disabled={countMode() === 'all'}
+                        name="goal-count-mode"
+                        value={countMode()}
+                        options={COUNT_MODE_OPTIONS}
+                        onChange={setCountMode}
                       />
-                      <Checkbox
-                        class="relative flex items-center gap-2 text-sm text-text-muted"
-                        checked={countMode() === 'all'}
-                        onChange={(checked) => setCountMode(checked ? 'all' : 'number')}
-                      >
-                        <Checkbox.Input style={{ left: '0', top: '0' }} />
-                        <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
-                          <Checkbox.Indicator>
-                            <Check class="h-4 w-4" />
-                          </Checkbox.Indicator>
-                        </Checkbox.Control>
-                        <Checkbox.Label>{COUNT_MODE_OPTIONS[1].label}</Checkbox.Label>
-                      </Checkbox>
+                      <Show when={countMode() === 'number'}>
+                        <div class="pl-8">
+                          <GoalNumberField
+                            label="目標値"
+                            min={1}
+                            value={count()}
+                            description={countLimitText()}
+                            onChange={setCount}
+                          />
+                        </div>
+                      </Show>
                     </div>
                   </div>
                 </Show>
@@ -1158,31 +1198,40 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 >
                   <div class="block text-sm">
                     <div class="space-y-2">
-                      <GoalNumberField
-                        label="目標値"
-                        value={totalFieldValue()}
-                        description={totalLimitText()}
-                        min={0}
-                        max={totalFieldMax()}
-                        onChange={setTotal}
-                        disabled={
-                          canUseDynamicTotalTarget(achievementType()) && totalMode() === 'all'
+                      <Show
+                        when={canUseDynamicTotalTarget(achievementType())}
+                        fallback={
+                          <GoalNumberField
+                            label="目標値"
+                            value={total()}
+                            description={totalLimitText()}
+                            min={0}
+                            max={totalFieldMax()}
+                            onChange={setTotal}
+                          />
                         }
-                      />
-                      <Show when={canUseDynamicTotalTarget(achievementType())}>
-                        <Checkbox
-                          class="relative flex items-center gap-2 text-sm text-text-muted"
-                          checked={totalMode() === 'all'}
-                          onChange={(checked) => setTotalMode(checked ? 'all' : 'number')}
-                        >
-                          <Checkbox.Input style={{ left: '0', top: '0' }} />
-                          <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
-                            <Checkbox.Indicator>
-                              <Check class="h-4 w-4" />
-                            </Checkbox.Indicator>
-                          </Checkbox.Control>
-                          <Checkbox.Label>理論値</Checkbox.Label>
-                        </Checkbox>
+                      >
+                        <div class="space-y-3">
+                          <GoalTargetModeRadioGroup
+                            label="目標値"
+                            name="goal-total-mode"
+                            value={totalMode()}
+                            options={TOTAL_MODE_OPTIONS}
+                            onChange={setTotalMode}
+                          />
+                          <Show when={totalMode() === 'number'}>
+                            <div class="pl-8">
+                              <GoalNumberField
+                                label="目標値"
+                                value={total()}
+                                description={totalLimitText()}
+                                min={0}
+                                max={totalFieldMax()}
+                                onChange={setTotal}
+                              />
+                            </div>
+                          </Show>
+                        </div>
                       </Show>
                     </div>
                   </div>
