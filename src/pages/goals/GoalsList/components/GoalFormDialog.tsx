@@ -1045,6 +1045,24 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   />
                 </Show>
 
+                <Show when={achievementType() === 'hardlamp_count'}>
+                  <GoalSelectField
+                    label="ハードランプ"
+                    value={hardLamp()}
+                    options={HARD_LAMP_SELECT_OPTIONS}
+                    onChange={setHardLamp}
+                  />
+                </Show>
+
+                <Show when={achievementType() === 'combolamp_count'}>
+                  <GoalSelectField
+                    label="コンボランプ"
+                    value={comboLamp()}
+                    options={COMBO_LAMP_SELECT_OPTIONS}
+                    onChange={setComboLamp}
+                  />
+                </Show>
+
                 <Show
                   when={
                     achievementType() === 'score_count' ||
@@ -1078,24 +1096,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       </Checkbox>
                     </div>
                   </div>
-                </Show>
-
-                <Show when={achievementType() === 'hardlamp_count'}>
-                  <GoalSelectField
-                    label="ハードランプ"
-                    value={hardLamp()}
-                    options={HARD_LAMP_SELECT_OPTIONS}
-                    onChange={setHardLamp}
-                  />
-                </Show>
-
-                <Show when={achievementType() === 'combolamp_count'}>
-                  <GoalSelectField
-                    label="コンボランプ"
-                    value={comboLamp()}
-                    options={COMBO_LAMP_SELECT_OPTIONS}
-                    onChange={setComboLamp}
-                  />
                 </Show>
 
                 <Show
