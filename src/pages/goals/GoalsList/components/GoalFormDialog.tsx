@@ -173,7 +173,6 @@ const MIN_SCORE = 0
 const MIN_MUSIC_CONST = 1
 const MAX_MUSIC_CONST = 16
 const MUSIC_CONST_DECIMAL_PLACES = 1
-const MAX_OVERPOWER_PERCENT = 100
 const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
 const DEFAULT_GOAL_ACHIEVEMENT_TYPE = 'rank_count' satisfies GoalAchievementType
 const DEFAULT_TOTAL_GOAL_VALUE = '10'
@@ -535,9 +534,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       ? getTotalScoreMax()
       : type === 'overpower_value'
         ? getOverPowerChartMax()
-        : type === 'overpower_percent'
-          ? MAX_OVERPOWER_PERCENT
-          : 0
+        : 0
 
   /**
    * スコア入力値を有効なスコア範囲に丸めて保持する。
@@ -667,7 +664,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    */
   const buildDraftAchievementParams = (type: GoalAchievementType): GoalAchievementParams => {
     const parsedScore = type === 'rank_count' ? getRankGoalScore(rank()) : Number(score())
-    const parsedTotal = totalMode() === 'all' ? getTheoreticalTotal(type) : Number(total())
+    const parsedTotal =
+      canUseDynamicTotalTarget(type) && totalMode() === 'all'
+        ? getTheoreticalTotal(type)
+        : Number(total())
     const targetCount = buildTargetCountParam(countMode(), count())
 
     return type === 'score_count' || type === 'rank_count'
@@ -755,8 +755,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    */
   const totalLimitText = (): string => {
     const currentType = achievementType()
-    const suffix = currentType === 'overpower_percent' ? '%以内' : '以内'
-    return `${getTheoreticalTotal(currentType).toLocaleString('ja-JP')}${suffix}`
+    if (currentType === 'overpower_percent') return '100%以内'
+    return `${getTheoreticalTotal(currentType).toLocaleString('ja-JP')}以内`
   }
 
   /**
@@ -765,7 +765,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @returns 理論値指定時は現在の最大目標値、通常時は入力中の目標値。
    */
   const totalFieldValue = (): string =>
-    totalMode() === 'all' ? String(getTheoreticalTotal(achievementType())) : total()
+    canUseDynamicTotalTarget(achievementType()) && totalMode() === 'all'
+      ? String(getTheoreticalTotal(achievementType()))
+      : total()
 
   const handleSave = async () => {
     setErrorMessage('')
@@ -782,7 +784,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const currentType = achievementType()
     const parsedScore = currentType === 'rank_count' ? getRankGoalScore(rank()) : Number(score())
     const parsedCount = Number(count())
-    const parsedTotal = totalMode() === 'all' ? getTheoreticalTotal(currentType) : Number(total())
+    const parsedTotal =
+      canUseDynamicTotalTarget(currentType) && totalMode() === 'all'
+        ? getTheoreticalTotal(currentType)
+        : Number(total())
     const parsedConstMin = constMin() === '' ? undefined : Number(constMin())
     const parsedConstMax = constMax() === '' ? undefined : Number(constMax())
 
@@ -1136,21 +1141,25 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                         description={totalLimitText()}
                         min={0}
                         onChange={setTotal}
-                        disabled={totalMode() === 'all'}
+                        disabled={
+                          canUseDynamicTotalTarget(achievementType()) && totalMode() === 'all'
+                        }
                       />
-                      <Checkbox
-                        class="relative flex items-center gap-2 text-sm text-text-muted"
-                        checked={totalMode() === 'all'}
-                        onChange={(checked) => setTotalMode(checked ? 'all' : 'number')}
-                      >
-                        <Checkbox.Input style={{ left: '0', top: '0' }} />
-                        <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
-                          <Checkbox.Indicator>
-                            <Check class="h-4 w-4" />
-                          </Checkbox.Indicator>
-                        </Checkbox.Control>
-                        <Checkbox.Label>理論値</Checkbox.Label>
-                      </Checkbox>
+                      <Show when={canUseDynamicTotalTarget(achievementType())}>
+                        <Checkbox
+                          class="relative flex items-center gap-2 text-sm text-text-muted"
+                          checked={totalMode() === 'all'}
+                          onChange={(checked) => setTotalMode(checked ? 'all' : 'number')}
+                        >
+                          <Checkbox.Input style={{ left: '0', top: '0' }} />
+                          <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
+                            <Checkbox.Indicator>
+                              <Check class="h-4 w-4" />
+                            </Checkbox.Indicator>
+                          </Checkbox.Control>
+                          <Checkbox.Label>理論値</Checkbox.Label>
+                        </Checkbox>
+                      </Show>
                     </div>
                   </div>
                 </Show>
