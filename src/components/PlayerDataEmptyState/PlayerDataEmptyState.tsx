@@ -1,8 +1,12 @@
 import { Button } from '@kobalte/core/button'
-import { Check, Copy } from 'lucide-solid'
+import { Check, Copy, ExternalLink } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createSignal, Show } from 'solid-js'
-import { CHUNISUPPORT_BOOKMARKLET, PLAYER_DATA_EMPTY_STATE_TEXT } from './constants'
+import {
+  CHUNISUPPORT_BOOKMARKLET,
+  DATA_REGISTRATION_HELP_URL,
+  PLAYER_DATA_EMPTY_STATE_TEXT,
+} from './constants'
 
 type PlayerDataEmptyStateProps = {
   title?: string
@@ -43,6 +47,15 @@ const PlayerDataEmptyState: Component<PlayerDataEmptyStateProps> = (props) => {
         </div>
         <h1 class="text-2xl font-semibold text-text">{title()}</h1>
         <p class="mt-3 text-sm leading-7 text-text-muted">{message()}</p>
+        <a
+          href={DATA_REGISTRATION_HELP_URL}
+          target="_blank"
+          rel="noreferrer"
+          class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-action-primary underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-focus"
+        >
+          {PLAYER_DATA_EMPTY_STATE_TEXT.dataRegistrationHelpLink}
+          <ExternalLink class="h-4 w-4" aria-hidden="true" />
+        </a>
         <div class="mt-6 rounded-lg border border-border bg-surface p-4 text-left">
           <p class="text-sm font-semibold text-text">
             {PLAYER_DATA_EMPTY_STATE_TEXT.bookmarkletTitle}

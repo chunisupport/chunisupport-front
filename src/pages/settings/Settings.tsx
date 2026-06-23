@@ -1,6 +1,6 @@
 import { Button } from '@kobalte/core/button'
 import { Switch } from '@kobalte/core/switch'
-import { A, useNavigate, useParams } from '@solidjs/router'
+import { useNavigate, useParams } from '@solidjs/router'
 import { createEffect, createResource, createSignal, Show } from 'solid-js'
 import {
   deleteAccount,
