@@ -173,6 +173,7 @@ const MIN_SCORE = 0
 const MIN_MUSIC_CONST = 1
 const MAX_MUSIC_CONST = 16
 const MUSIC_CONST_DECIMAL_PLACES = 1
+const MAX_OVERPOWER_PERCENT = 100
 const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
 const DEFAULT_GOAL_ACHIEVEMENT_TYPE = 'rank_count' satisfies GoalAchievementType
 const DEFAULT_RANK_GOAL = 'S' satisfies RankGoalValue
@@ -217,17 +218,6 @@ const clampNumericInput = (
 }
 
 /**
- * 数値入力欄の値を進捗表示用の数値へ変換する。
- *
- * @param value - 入力欄から受け取った文字列。
- * @returns 有効な数値ならその値、不正な値なら0。
- */
-const parseProgressDisplayValue = (value: string): number => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : 0
-}
-
-/**
  * ランク目標の選択値を保存用スコアへ変換する。
  *
  * @param value - ランク目標の選択値。
@@ -244,16 +234,6 @@ const getRankGoalScore = (value: RankGoalValue): number =>
  */
 const getRankGoalValue = (score: number): RankGoalValue =>
   score >= MAX_SCORE ? THEORETICAL_RANK_GOAL : getScoreRank(score)
-
-/**
- * 現在値と最大値をスラッシュ区切りの表示文字列へ変換する。
- *
- * @param current - 現在入力されている目標値。
- * @param max - 対象条件から解決した最大値。
- * @returns 日本語ロケールで桁区切りした進捗表示。
- */
-const formatProgressLimit = (current: number, max: number): string =>
-  `${current.toLocaleString('ja-JP')} / ${max.toLocaleString('ja-JP')}`
 
 /**
  * 文字列が目標種別として扱える値か判定する。
@@ -526,6 +506,21 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const getOverPowerChartMax = (): number => props.resolveOverPowerChartMax(getDraftAttributes())
 
   /**
+   * 現在の目標種別で利用できる理論値を取得する。
+   *
+   * @param type - 現在選択中の目標種別。
+   * @returns 対象条件や目標種別から決まる最大目標値。
+   */
+  const getTheoreticalTotal = (type: GoalAchievementType): number =>
+    type === 'total_score'
+      ? getTotalScoreMax()
+      : type === 'overpower_value'
+        ? getOverPowerChartMax()
+        : type === 'overpower_percent'
+          ? MAX_OVERPOWER_PERCENT
+          : 0
+
+  /**
    * スコア入力値を有効なスコア範囲に丸めて保持する。
    *
    * @param value - 入力欄から受け取ったスコア文字列。
@@ -653,7 +648,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    */
   const buildDraftAchievementParams = (type: GoalAchievementType): GoalAchievementParams => {
     const parsedScore = type === 'rank_count' ? getRankGoalScore(rank()) : Number(score())
-    const parsedTotal = Number(total())
+    const parsedTotal = totalMode() === 'all' ? getTheoreticalTotal(type) : Number(total())
     const targetCount = buildTargetCountParam(countMode(), count())
 
     return type === 'score_count' || type === 'rank_count'
@@ -735,15 +730,23 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     countMode() === 'all' ? String(props.resolveAllCount(getDraftAttributes())) : count()
 
   /**
-   * 合計値目標の現在値と最大値を表示用に組み立てる。
+   * 目標値入力で指定できる上限を表示用に組み立てる。
    *
-   * @param max - 対象条件から解決した最大値。
-   * @returns 合計値目標の進捗上限表示。
+   * @returns 目標種別に応じた上限表示。
    */
-  const totalProgressLimitText = (max: number): string => {
-    const current = totalMode() === 'all' ? max : parseProgressDisplayValue(total())
-    return formatProgressLimit(current, max)
+  const totalLimitText = (): string => {
+    const currentType = achievementType()
+    const suffix = currentType === 'overpower_percent' ? '%以内' : '以内'
+    return `${getTheoreticalTotal(currentType).toLocaleString('ja-JP')}${suffix}`
   }
+
+  /**
+   * 目標値入力欄へ表示する値を取得する。
+   *
+   * @returns 理論値指定時は現在の最大目標値、通常時は入力中の目標値。
+   */
+  const totalFieldValue = (): string =>
+    totalMode() === 'all' ? String(getTheoreticalTotal(achievementType())) : total()
 
   const handleSave = async () => {
     setErrorMessage('')
@@ -760,7 +763,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const currentType = achievementType()
     const parsedScore = currentType === 'rank_count' ? getRankGoalScore(rank()) : Number(score())
     const parsedCount = Number(count())
-    const parsedTotal = Number(total())
+    const parsedTotal = totalMode() === 'all' ? getTheoreticalTotal(currentType) : Number(total())
     const parsedConstMin = constMin() === '' ? undefined : Number(constMin())
     const parsedConstMax = constMax() === '' ? undefined : Number(constMax())
 
@@ -1107,36 +1110,27 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 >
                   <div class="block text-sm">
                     <div class="space-y-2">
-                      <Show when={canUseDynamicTotalTarget(achievementType())}>
-                        <GoalSelectField
-                          label="目標値の指定方法"
-                          value={totalMode()}
-                          options={COUNT_MODE_OPTIONS}
-                          onChange={setTotalMode}
-                        />
-                      </Show>
-                      <Show
-                        when={
-                          !canUseDynamicTotalTarget(achievementType()) || totalMode() === 'number'
-                        }
+                      <GoalNumberField
+                        label="目標値"
+                        value={totalFieldValue()}
+                        description={totalLimitText()}
+                        min={0}
+                        onChange={setTotal}
+                        disabled={totalMode() === 'all'}
+                      />
+                      <Checkbox
+                        class="relative flex items-center gap-2 text-sm text-text-muted"
+                        checked={totalMode() === 'all'}
+                        onChange={(checked) => setTotalMode(checked ? 'all' : 'number')}
                       >
-                        <GoalNumberField
-                          label="合計/割合の目標値"
-                          value={total()}
-                          min={0}
-                          onChange={setTotal}
-                        />
-                      </Show>
-                      <Show when={achievementType() === 'total_score'}>
-                        <p class="text-xs text-text-muted">
-                          {totalProgressLimitText(getTotalScoreMax())}
-                        </p>
-                      </Show>
-                      <Show when={achievementType() === 'overpower_value'}>
-                        <p class="text-xs text-text-muted">
-                          {totalProgressLimitText(getOverPowerChartMax())}
-                        </p>
-                      </Show>
+                        <Checkbox.Input style={{ left: '0', top: '0' }} />
+                        <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
+                          <Checkbox.Indicator>
+                            <Check class="h-4 w-4" />
+                          </Checkbox.Indicator>
+                        </Checkbox.Control>
+                        <Checkbox.Label>理論値</Checkbox.Label>
+                      </Checkbox>
                     </div>
                   </div>
                 </Show>
