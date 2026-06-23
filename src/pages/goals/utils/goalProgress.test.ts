@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalDTO, PlayerRecordDTO, SongDTO } from '../../../types/api'
-import { calculateGoalProgress } from './goalProgress'
+import { calculateGoalProgress, filterRecordsByAttributes } from './goalProgress'
 
 /**
  * 目標進捗テスト用のプレイヤーレコードを作る。
@@ -136,4 +136,99 @@ test('OVER POWER合計目標のtotalが欠落している場合は対象譜面�
 
   assert.equal(progress.current, 16)
   assert.equal(progress.target, 18)
+})
+
+test('OP対象条件では曲ごとのOP対象難易度に一致するレコードだけを抽出する', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', difficulty: 'MASTER', overpower: 8 }),
+    createRecord({ id: 'song-1', difficulty: 'ULTIMA', overpower: 9 }),
+    createRecord({ id: 'song-2', difficulty: 'MASTER', overpower: 7 }),
+    createRecord({ id: 'song-2', difficulty: 'ULTIMA', overpower: 6 }),
+  ]
+  const songs = [
+    createSong({
+      id: 'song-1',
+      op_target_difficulty: 'ULTIMA',
+      charts: { ULTIMA: { const: 15, is_const_unknown: false, notes: null } },
+    }),
+    createSong({
+      id: 'song-2',
+      op_target_difficulty: 'MASTER',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
+    }),
+  ]
+
+  // When
+  const filtered = filterRecordsByAttributes(
+    records,
+    { chart_target: 'OP_TARGET' },
+    {
+      genres: [],
+      difficulties: [],
+      versions: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+    },
+    songs,
+    []
+  )
+
+  // Then
+  assert.deepEqual(
+    filtered.map((record) => `${record.id}:${record.difficulty}`),
+    ['song-1:ULTIMA', 'song-2:MASTER']
+  )
+})
+
+test('OP対象のOVER POWER合計は曲ごとの最大レコードOPを現在値にする', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', difficulty: 'MASTER', overpower: 80 }),
+    createRecord({ id: 'song-1', difficulty: 'ULTIMA', overpower: 70 }),
+    createRecord({ id: 'song-2', difficulty: 'MASTER', overpower: 60 }),
+    createRecord({ id: 'song-2', difficulty: 'ULTIMA', overpower: 65 }),
+  ]
+  const songs = [
+    createSong({
+      id: 'song-1',
+      maxop: 90,
+      op_target_difficulty: 'ULTIMA',
+      charts: { ULTIMA: { const: 15, is_const_unknown: false, notes: null } },
+    }),
+    createSong({
+      id: 'song-2',
+      maxop: 85,
+      op_target_difficulty: 'MASTER',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
+    }),
+  ]
+  const filtered = filterRecordsByAttributes(
+    records,
+    { chart_target: 'OP_TARGET' },
+    {
+      genres: [],
+      difficulties: [],
+      versions: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+    },
+    songs,
+    [],
+    { includeAllChartsForOpTarget: true }
+  )
+  const goal = createGoal({
+    achievement_type: 'overpower_value',
+    achievement_params: {},
+    attributes: { chart_target: 'OP_TARGET' },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, filtered, songs)
+
+  // Then
+  assert.equal(progress.current, 145)
+  assert.equal(progress.target, 175)
 })

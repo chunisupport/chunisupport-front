@@ -27,6 +27,11 @@ interface GoalCardProgressProps {
 const INVERT_PROGRESS_LABEL = '残り'
 
 /**
+ * 総OVER POWERの表示で固定する小数点以下桁数。
+ */
+const OVER_POWER_VALUE_DECIMAL_PLACES = 3
+
+/**
  * 目標進捗の数値を目標種別に合わせて表示用に整形する。
  *
  * @param value - 整形対象の数値。
@@ -34,7 +39,14 @@ const INVERT_PROGRESS_LABEL = '残り'
  * @returns 画面表示用の数値文字列。
  */
 export const formatValue = (value: number, type: GoalDTO['achievement_type']) => {
-  if (type === 'overpower_value' || type === 'overpower_percent') {
+  if (type === 'overpower_value') {
+    return value.toLocaleString('ja-JP', {
+      minimumFractionDigits: OVER_POWER_VALUE_DECIMAL_PLACES,
+      maximumFractionDigits: OVER_POWER_VALUE_DECIMAL_PLACES,
+    })
+  }
+
+  if (type === 'overpower_percent') {
     return value.toLocaleString('ja-JP', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 3,
