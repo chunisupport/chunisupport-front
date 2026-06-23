@@ -141,7 +141,8 @@ const GOAL_SELECT_ITEM_CLASS =
 const GOAL_SELECT_CONTENT_CLASS =
   'z-60 mt-1 max-h-64 w-[--kb-select-content-width] overflow-y-auto rounded-md border border-border-strong bg-surface p-2 shadow-lg'
 const GOAL_RADIO_CARD_BASE_CLASS =
-  'rounded border border-border-strong bg-surface px-3 py-2 text-sm text-text-muted hover:bg-surface-muted'
+  'rounded border px-3 py-2 text-sm text-text-muted hover:bg-surface-muted'
+const GOAL_RADIO_CARD_UNCHECKED_CLASS = 'border-border-strong bg-surface'
 const GOAL_RADIO_CARD_CHECKED_CLASS = 'border-action-primary bg-action-primary-muted'
 const GOAL_RADIO_ITEM_CLASS = 'relative flex min-h-6 items-center gap-3'
 const GOAL_RADIO_CONTROL_CLASS =
@@ -449,7 +450,11 @@ const GoalTargetModeRadioGroup = <TValue extends string>(
       <For each={props.options}>
         {(option) => (
           <div
-            class={`${GOAL_RADIO_CARD_BASE_CLASS} ${props.value === option.value ? GOAL_RADIO_CARD_CHECKED_CLASS : ''}`}
+            class={`${GOAL_RADIO_CARD_BASE_CLASS} ${
+              props.value === option.value
+                ? GOAL_RADIO_CARD_CHECKED_CLASS
+                : GOAL_RADIO_CARD_UNCHECKED_CLASS
+            }`}
           >
             <RadioGroup.Item value={option.value} class={GOAL_RADIO_ITEM_CLASS}>
               <RadioGroup.ItemInput class="peer" />
