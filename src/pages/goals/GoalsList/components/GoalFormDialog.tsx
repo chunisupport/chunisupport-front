@@ -825,6 +825,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
         setErrorMessage(`件数は${countMin}以上の整数で入力してください。`)
         return
       }
+      if (parsedCount > allCount) {
+        setErrorMessage(`件数は${allCount.toLocaleString('ja-JP')}件以内で入力してください。`)
+        return
+      }
     }
 
     if (isCountType && countMode() === 'all' && allCount <= 0) {
@@ -851,14 +855,16 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       return
     }
 
-    if (currentType === 'total_score' && totalMode() === 'number') {
-      const maxTotalScore = getTotalScoreMax()
-      if (parsedTotal > maxTotalScore) {
-        setErrorMessage(
-          `総スコア目標は最大 ${maxTotalScore.toLocaleString('ja-JP')} 以下で入力してください。`
-        )
-        return
-      }
+    const dynamicTotalMax =
+      canUseDynamicTotalTarget(currentType) && totalMode() === 'number'
+        ? getTheoreticalTotal(currentType)
+        : undefined
+    if (dynamicTotalMax !== undefined && parsedTotal > dynamicTotalMax) {
+      const targetLabel = currentType === 'total_score' ? '総スコア目標' : 'OVER POWER合計目標'
+      setErrorMessage(
+        `${targetLabel}は最大 ${dynamicTotalMax.toLocaleString('ja-JP')} 以下で入力してください。`
+      )
+      return
     }
 
     if (
