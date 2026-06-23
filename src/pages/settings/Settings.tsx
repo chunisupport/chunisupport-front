@@ -1,6 +1,6 @@
 import { Button } from '@kobalte/core/button'
 import { Switch } from '@kobalte/core/switch'
-import { A, useNavigate, useParams } from '@solidjs/router'
+import { useNavigate, useParams } from '@solidjs/router'
 import { createEffect, createResource, createSignal, Show } from 'solid-js'
 import {
   deleteAccount,
@@ -556,15 +556,6 @@ const Settings = () => {
                       </div>
                     )}
                   </Show>
-
-                  <div class="mt-4 flex flex-wrap gap-2">
-                    <A
-                      href="/register-score-temp"
-                      class="rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover"
-                    >
-                      プレイヤーデータを登録する
-                    </A>
-                  </div>
 
                   <label class="mt-4 flex cursor-pointer items-center gap-3">
                     <input
