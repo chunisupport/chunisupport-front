@@ -974,7 +974,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               <div class="mb-4 flex gap-3">
                 <span class={GOAL_STEP_BADGE_CLASS}>2</span>
                 <div>
-                  <h2 class={GOAL_STEP_TITLE_CLASS}>目標種別と数値</h2>
+                  <h2 class={GOAL_STEP_TITLE_CLASS}>達成条件</h2>
                   <p class={GOAL_STEP_DESCRIPTION_CLASS}>{STEP2_DESCRIPTION}</p>
                 </div>
               </div>
