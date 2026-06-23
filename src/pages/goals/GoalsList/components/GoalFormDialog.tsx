@@ -173,6 +173,7 @@ const MIN_SCORE = 0
 const MIN_MUSIC_CONST = 1
 const MAX_MUSIC_CONST = 16
 const MUSIC_CONST_DECIMAL_PLACES = 1
+const MAX_OVERPOWER_PERCENT = 100
 const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
 const DEFAULT_GOAL_ACHIEVEMENT_TYPE = 'rank_count' satisfies GoalAchievementType
 const DEFAULT_TOTAL_GOAL_VALUE = '10'
@@ -769,6 +770,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       ? String(getTheoreticalTotal(achievementType()))
       : total()
 
+  /**
+   * 目標値入力欄に適用する最大値を取得する。
+   *
+   * @returns OVER POWER達成率では100、それ以外では未指定。
+   */
+  const totalFieldMax = (): number | undefined =>
+    achievementType() === 'overpower_percent' ? MAX_OVERPOWER_PERCENT : undefined
+
   const handleSave = async () => {
     setErrorMessage('')
     const trimmed = title().trim()
@@ -831,6 +840,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       (!Number.isFinite(parsedTotal) || parsedTotal < 0)
     ) {
       setErrorMessage('合計/割合の目標値は0以上で入力してください。')
+      return
+    }
+
+    if (currentType === 'overpower_percent' && parsedTotal > MAX_OVERPOWER_PERCENT) {
+      setErrorMessage('OVER POWER達成率は100%以下で入力してください。')
       return
     }
 
@@ -1140,6 +1154,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                         value={totalFieldValue()}
                         description={totalLimitText()}
                         min={0}
+                        max={totalFieldMax()}
                         onChange={setTotal}
                         disabled={
                           canUseDynamicTotalTarget(achievementType()) && totalMode() === 'all'
