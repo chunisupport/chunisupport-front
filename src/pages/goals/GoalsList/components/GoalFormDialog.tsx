@@ -282,6 +282,7 @@ const GoalTextField: Component<GoalTextFieldProps> = (props) => (
   <TextField class="block text-sm" value={props.value} onChange={props.onChange}>
     <TextField.Label class="mb-1 block text-text-muted">{props.label}</TextField.Label>
     <TextField.Input class={`${GOAL_FIELD_INPUT_CLASS} font-sans`} maxLength={props.maxLength} />
+    <TextField.Description class="mt-1 text-xs text-text-subtle">30文字以内</TextField.Description>
   </TextField>
 )
 
