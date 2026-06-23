@@ -17,6 +17,11 @@ export interface GoalProgressResult {
   hasUnknownMaxOp: boolean
 }
 
+interface FilterRecordsByAttributesOptions {
+  /** OP対象指定時に、対象曲の全譜面レコードを残すか。OVER POWER集計で曲内最大値を取るために使う。 */
+  includeAllChartsForOpTarget?: boolean
+}
+
 const HARD_LAMP_ORDER: Record<string, number> = {
   HARD: 1,
   BRAVE: 2,
@@ -38,6 +43,64 @@ const normalizeAttributeIds = (value: number | number[] | undefined): number[] =
 }
 
 /**
+ * レコードが曲ごとのOVER POWER対象譜面かを判定する。
+ *
+ * @param record - 判定対象のプレイヤーレコード。
+ * @param song - レコードに対応する楽曲マスタ。
+ * @returns 楽曲のOP対象難易度とレコード難易度が一致する場合はtrue。
+ */
+const isOverPowerTargetRecord = (record: PlayerRecordDTO, song: SongDTO | undefined): boolean =>
+  song?.op_target_difficulty === record.difficulty
+
+/**
+ * 楽曲マスタからOP対象譜面の定数を取得する。
+ *
+ * @param song - 判定対象の楽曲マスタ。
+ * @returns OP対象譜面の定数。対象譜面が解決できない場合はundefined。
+ */
+const getOverPowerTargetChartConst = (song: SongDTO): number | undefined => {
+  const targetDifficulty = song.op_target_difficulty
+  if (!targetDifficulty) return undefined
+  return song.charts[targetDifficulty]?.const
+}
+
+/**
+ * OP対象曲が目標属性に一致するか判定する。
+ *
+ * @param song - 判定対象の楽曲マスタ。
+ * @param attributes - 目標に設定された対象条件。
+ * @param genreNames - ジャンルIDから解決した対象ジャンル名。
+ * @param versionIds - 対象バージョン番号。
+ * @param versions - version API から返されたバージョン一覧。
+ * @returns OP対象譜面の定数、曲ジャンル、曲バージョンが条件に一致する場合はtrue。
+ */
+const isOverPowerTargetSongMatched = (
+  song: SongDTO | undefined,
+  attributes: GoalAttributes,
+  genreNames: Set<string> | undefined,
+  versionIds: number[],
+  versions: VersionDTO[]
+): song is SongDTO => {
+  if (!song?.op_target_difficulty) return false
+
+  const targetConst = getOverPowerTargetChartConst(song)
+  const constMin = attributes.const?.min
+  const constMax = attributes.const?.max
+  if (typeof targetConst !== 'number') return false
+  if (typeof constMin === 'number' && targetConst < constMin) return false
+  if (typeof constMax === 'number' && targetConst > constMax) return false
+
+  if (genreNames && (!song.genre || !genreNames.has(song.genre))) return false
+
+  if (versionIds.length > 0) {
+    const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
+    if (!songVersionValue || !versionIds.includes(songVersionValue)) return false
+  }
+
+  return true
+}
+
+/**
  * 目標条件に一致するプレイヤーレコードだけを抽出する。
  *
  * @param records - 判定対象のプレイヤーレコード一覧。
@@ -45,6 +108,7 @@ const normalizeAttributeIds = (value: number | number[] | undefined): number[] =
  * @param masterData - 難易度・ジャンルなどのマスタデータ。
  * @param songs - 楽曲マスタ一覧。
  * @param versions - version API から返されたバージョン一覧。
+ * @param options - OP対象のレコード粒度を調整する追加オプション。
  * @returns 目標条件に一致したレコード一覧。
  */
 export const filterRecordsByAttributes = (
@@ -52,12 +116,14 @@ export const filterRecordsByAttributes = (
   attributes: GoalAttributes,
   masterData: MasterDataDTO,
   songs: SongDTO[],
-  versions: VersionDTO[]
+  versions: VersionDTO[],
+  options: FilterRecordsByAttributesOptions = {}
 ): PlayerRecordDTO[] => {
   const songMap = new Map(songs.map((song) => [song.id, song]))
   const diffIds = normalizeAttributeIds(attributes.diff)
   const genreIds = normalizeAttributeIds(attributes.genre)
   const versionIds = normalizeAttributeIds(attributes.ver)
+  const opTargetOnly = attributes.chart_target === 'OP_TARGET'
 
   const diffNames =
     diffIds.length > 0
@@ -77,6 +143,14 @@ export const filterRecordsByAttributes = (
       : undefined
 
   return records.filter((record) => {
+    const song = songMap.get(record.id)
+
+    if (opTargetOnly) {
+      if (!isOverPowerTargetSongMatched(song, attributes, genreNames, versionIds, versions)) {
+        return false
+      }
+      return options.includeAllChartsForOpTarget || isOverPowerTargetRecord(record, song)
+    }
     if (diffNames && !diffNames.has(record.difficulty)) return false
 
     const constMin = attributes.const?.min
@@ -84,7 +158,6 @@ export const filterRecordsByAttributes = (
     if (typeof constMin === 'number' && record.const < constMin) return false
     if (typeof constMax === 'number' && record.const > constMax) return false
 
-    const song = songMap.get(record.id)
     if (genreNames && (!song?.genre || !genreNames.has(song.genre))) return false
 
     if (versionIds.length > 0) {
@@ -146,12 +219,53 @@ const resolveTotalScoreTarget = (
 const resolveOverPowerValueTarget = (
   params: GoalAchievementParams,
   filteredRecords: PlayerRecordDTO[],
-  songMap: Map<string, SongDTO>
+  songMap: Map<string, SongDTO>,
+  useSongMaxOverPower: boolean
 ): number => {
   const value = (params as Record<string, unknown>).total
   if (typeof value === 'number') return value
 
+  if (useSongMaxOverPower) {
+    return sumUniqueSongMaxOverPower(filteredRecords, songMap)
+  }
+
   return filteredRecords.reduce((acc, record) => acc + (songMap.get(record.id)?.maxop ?? 0), 0)
+}
+
+/**
+ * 曲ごとの理論OVER POWERを重複なく合計する。
+ *
+ * @param records - 集計対象曲を含むプレイヤーレコード一覧。
+ * @param songMap - 楽曲IDから楽曲情報を引くためのマップ。
+ * @returns 曲ごとの最大OVER POWER合計。
+ */
+const sumUniqueSongMaxOverPower = (
+  records: PlayerRecordDTO[],
+  songMap: Map<string, SongDTO>
+): number => {
+  const songIds = new Set(records.map((record) => record.id))
+  let total = 0
+  for (const songId of songIds) {
+    total += songMap.get(songId)?.maxop ?? 0
+  }
+  return total
+}
+
+/**
+ * 曲ごとに最も高い現在OVER POWERを合計する。
+ *
+ * @param records - 集計対象のプレイヤーレコード一覧。
+ * @returns 同一曲内では最大のOVER POWERだけを採用した合計値。
+ */
+const sumBestRecordOverPowerBySong = (records: PlayerRecordDTO[]): number => {
+  const maxOverPowerBySong = new Map<string, number>()
+  for (const record of records) {
+    const current = maxOverPowerBySong.get(record.id) ?? 0
+    if (record.overpower > current) {
+      maxOverPowerBySong.set(record.id, record.overpower)
+    }
+  }
+  return [...maxOverPowerBySong.values()].reduce((acc, overpower) => acc + overpower, 0)
 }
 
 /**
@@ -231,20 +345,44 @@ export const calculateGoalProgress = (
       break
     }
     case 'overpower_value': {
-      target = resolveOverPowerValueTarget(goal.achievement_params, filteredRecords, songMap)
-      current = filteredRecords.reduce((acc, record) => acc + record.overpower, 0)
+      const useSongAggregation = goal.attributes.chart_target === 'OP_TARGET'
+      target = resolveOverPowerValueTarget(
+        goal.achievement_params,
+        filteredRecords,
+        songMap,
+        useSongAggregation
+      )
+      current = useSongAggregation
+        ? sumBestRecordOverPowerBySong(filteredRecords)
+        : filteredRecords.reduce((acc, record) => acc + record.overpower, 0)
       break
     }
     case 'overpower_percent': {
       target = getNumberParam(goal.achievement_params, 'total')
-      const totalOp = filteredRecords.reduce((acc, record) => acc + record.overpower, 0)
-      const totalMaxOp = filteredRecords.reduce((acc, record) => {
-        const song = songMap.get(record.id)
-        if (song?.is_maxop_unknown) {
-          hasUnknownMaxOp = true
+      const useSongAggregation = goal.attributes.chart_target === 'OP_TARGET'
+      const totalOp = useSongAggregation
+        ? sumBestRecordOverPowerBySong(filteredRecords)
+        : filteredRecords.reduce((acc, record) => acc + record.overpower, 0)
+      const targetSongIds = useSongAggregation
+        ? new Set(filteredRecords.map((record) => record.id))
+        : undefined
+      const totalMaxOp = useSongAggregation
+        ? sumUniqueSongMaxOverPower(filteredRecords, songMap)
+        : filteredRecords.reduce((acc, record) => {
+            const song = songMap.get(record.id)
+            if (song?.is_maxop_unknown) {
+              hasUnknownMaxOp = true
+            }
+            return acc + (song?.maxop ?? 0)
+          }, 0)
+      if (targetSongIds) {
+        for (const songId of targetSongIds) {
+          const song = songMap.get(songId)
+          if (song?.is_maxop_unknown) {
+            hasUnknownMaxOp = true
+          }
         }
-        return acc + (song?.maxop ?? 0)
-      }, 0)
+      }
       current = totalMaxOp > 0 ? (totalOp / totalMaxOp) * 100 : 0
       break
     }

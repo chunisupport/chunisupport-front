@@ -17,8 +17,8 @@ export const GOAL_ACHIEVEMENT_TYPE_LABELS = {
     avg_score: '平均スコア',
     hardlamp_count: 'ハードランプ達成数',
     combolamp_count: 'FC/AJ達成数',
-    total_score: '総スコア',
-    overpower_value: '総OVER POWER',
+    total_score: 'トータルハイスコア',
+    overpower_value: 'OVER POWER',
     overpower_percent: 'OVER POWER達成率',
   } satisfies Record<GoalAchievementType, string>,
 }
@@ -93,6 +93,10 @@ export const formatGoalAttributesLabel = (
   const difficultyNameMap = new Map(masterData.difficulties.map((item) => [item.id, item.name]))
   const genreNameMap = new Map(masterData.genres.map((item) => [item.id, item.name]))
   const versionNameMap = buildGoalVersionNameMap(versions)
+
+  if (attributes.chart_target === 'OP_TARGET') {
+    parts.push('対象: OP対象')
+  }
 
   if (diffIds.length > 0) {
     parts.push(`難易度: ${formatNames(diffIds, difficultyNameMap)}`)

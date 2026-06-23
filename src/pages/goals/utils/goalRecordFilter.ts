@@ -132,4 +132,5 @@ export const buildGoalRecordFilter = (
  * @returns 通常レコードへのフィルター付き遷移が可能な場合は true。
  */
 export const isGoalRecordNavigationEnabled = (goal: GoalDTO): boolean =>
+  goal.attributes.chart_target !== 'OP_TARGET' &&
   NAVIGABLE_ACHIEVEMENT_TYPES.has(goal.achievement_type)

@@ -295,6 +295,7 @@ export type GoalAchievementType =
 
 export interface GoalAttributes {
   diff?: number | number[]
+  chart_target?: 'OP_TARGET'
   const?: {
     min?: number
     max?: number

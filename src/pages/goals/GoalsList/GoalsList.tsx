@@ -23,6 +23,18 @@ const OVERPOWER_CHART_CONST_BONUS = 3
 const OVERPOWER_CHART_MULTIPLIER = 5
 const RECORD_NAVIGATION_ERROR_MESSAGE = '未達成レコードの表示に失敗しました。'
 
+/**
+ * OP対象のOVER POWER目標で曲内最大値を使うべきか判定する。
+ *
+ * @param goal - 判定対象の目標。
+ * @returns OP対象かつOVER POWER系の目標ならtrue。
+ */
+const shouldUseOpTargetSongAggregation = (
+  goal: Pick<GoalCreateRequest, 'achievement_type' | 'attributes'>
+): boolean =>
+  goal.attributes.chart_target === 'OP_TARGET' &&
+  (goal.achievement_type === 'overpower_value' || goal.achievement_type === 'overpower_percent')
+
 const GoalsList: Component = () => {
   const navigate = useNavigate()
   const [refreshKey, setRefreshKey] = createSignal(0)
@@ -90,7 +102,8 @@ const GoalsList: Component = () => {
         goal.attributes,
         data.masterData,
         data.songs,
-        data.versions
+        data.versions,
+        { includeAllChartsForOpTarget: shouldUseOpTargetSongAggregation(goal) }
       )
       const progress = calculateGoalProgress(goal, filtered, data.songs)
       return { goal, progress }
@@ -110,7 +123,8 @@ const GoalsList: Component = () => {
   }
 
   /**
-   * 対象条件に一致する譜面ごとの固定定数から最大OVER POWER合計を算出する。
+   * 対象条件に一致する譜面ごとの最大OVER POWER合計を算出する。
+   * OP対象では楽曲マスタの曲別最大OP、通常指定では譜面定数から理論値を使う。
    *
    * @param attributes - 目標フォームで選択中の対象条件。
    * @returns 対象譜面それぞれの最大OVER POWERを合計した値。
@@ -118,17 +132,26 @@ const GoalsList: Component = () => {
   const resolveOverPowerChartMax = (attributes: GoalCreateRequest['attributes']) => {
     const data = resource()
     if (!data) return 0
-    return filterRecordsByAttributes(
+    const filteredRecords = filterRecordsByAttributes(
       data.records,
       attributes,
       data.masterData,
       data.songs,
-      data.versions
-    ).reduce(
-      (acc, record) =>
-        acc + (record.const + OVERPOWER_CHART_CONST_BONUS) * OVERPOWER_CHART_MULTIPLIER,
-      0
+      data.versions,
+      { includeAllChartsForOpTarget: attributes.chart_target === 'OP_TARGET' }
     )
+    const songMap = new Map(data.songs.map((song) => [song.id, song]))
+    const countedSongIds = new Set<string>()
+
+    return filteredRecords.reduce((acc, record) => {
+      const song = songMap.get(record.id)
+      if (attributes.chart_target === 'OP_TARGET') {
+        if (countedSongIds.has(record.id)) return acc
+        countedSongIds.add(record.id)
+        return acc + (song?.maxop ?? 0)
+      }
+      return acc + (record.const + OVERPOWER_CHART_CONST_BONUS) * OVERPOWER_CHART_MULTIPLIER
+    }, 0)
   }
 
   /**
@@ -154,7 +177,8 @@ const GoalsList: Component = () => {
       draftGoal.attributes,
       data.masterData,
       data.songs,
-      data.versions
+      data.versions,
+      { includeAllChartsForOpTarget: shouldUseOpTargetSongAggregation(draftGoal) }
     )
 
     return calculateGoalProgress(
