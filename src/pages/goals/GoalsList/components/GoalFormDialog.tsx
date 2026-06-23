@@ -34,6 +34,7 @@ import type { GoalProgressResult } from '../../utils/goalProgress'
 import { buildGoalVersionOptions } from '../../utils/goalVersion'
 import {
   ERROR_MESSAGE_INVALID_COUNT_TARGET,
+  GOAL_TITLE_MAX_LENGTH,
   LABEL_INVERT_DISPLAY,
   STEP2_DESCRIPTION,
 } from './constants'
@@ -276,7 +277,9 @@ const GoalTextField: Component<GoalTextFieldProps> = (props) => (
   <TextField class="block text-sm" value={props.value} onChange={props.onChange}>
     <TextField.Label class="mb-1 block text-text-muted">{props.label}</TextField.Label>
     <TextField.Input class={`${GOAL_FIELD_INPUT_CLASS} font-sans`} maxLength={props.maxLength} />
-    <TextField.Description class="mt-1 text-xs text-text-subtle">30文字以内</TextField.Description>
+    <TextField.Description class="mt-1 text-xs text-text-subtle">
+      {GOAL_TITLE_MAX_LENGTH}文字以内
+    </TextField.Description>
   </TextField>
 )
 
@@ -785,8 +788,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setErrorMessage('タイトルを入力してください。')
       return
     }
-    if (trimmed.length > 30) {
-      setErrorMessage('タイトルは30文字以内で入力してください。')
+    if (trimmed.length > GOAL_TITLE_MAX_LENGTH) {
+      setErrorMessage(`タイトルは${GOAL_TITLE_MAX_LENGTH}文字以内で入力してください。`)
       return
     }
 
@@ -917,7 +920,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 <GoalTextField
                   label="タイトル"
                   value={title()}
-                  maxLength={30}
+                  maxLength={GOAL_TITLE_MAX_LENGTH}
                   onChange={setTitle}
                 />
 
