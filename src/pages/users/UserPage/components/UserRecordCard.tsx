@@ -69,24 +69,26 @@ export const UserRecordCard: Component<Props> = (props) => {
         <div
           class={`relative select-none border-y border-r border-border bg-surface p-2 pl-4 ${RECORD_CARD_HOVER_CLASS} before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 ${difficultyCardBorderColor(props.record.difficulty)}`}
         >
-          <div class="flex gap-3 items-center">
+          <div class="flex items-center gap-3">
             <div
-              class={`w-8 h-8 flex items-center justify-center rounded-full ${indexColor()} font-oswald font-bold text-lg`}
+              class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${indexColor()} font-oswald text-lg font-bold`}
             >
               {props.index + 1}
             </div>
-            <div class="flex-1 min-w-0 overflow-hidden">
+            <div class="min-w-0 flex-1 overflow-hidden">
               <p
                 ref={titleRef}
-                class={`font-sans text-base font-semibold whitespace-nowrap ${shouldAnimate() ? 'animate-marquee' : ''}`}
+                class={`whitespace-nowrap font-sans text-base font-semibold ${shouldAnimate() ? 'animate-marquee' : ''}`}
               >
                 {props.record.title}
               </p>
               <p class="text-base font-oswald font-bold">
-                {props.record.rating.toFixed(2)} &lt; {props.record.const.toFixed(1)} /{' '}
-                {props.record.score.toLocaleString('ja-JP')}{' '}
+                {props.record.const.toFixed(1)} / {props.record.score.toLocaleString('ja-JP')}{' '}
                 <span class={SCORE_RANK_TEXT_CLASS[scoreRank()]}>{scoreRank()}</span>
               </p>
+            </div>
+            <div class="shrink-0 text-right font-oswald text-lg font-bold leading-none">
+              {props.record.rating.toFixed(2)}
             </div>
           </div>
         </div>
