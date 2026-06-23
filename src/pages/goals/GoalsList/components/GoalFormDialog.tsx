@@ -73,11 +73,21 @@ interface GoalTextFieldProps {
 }
 
 interface GoalNumberFieldProps {
+  /** 入力欄の表示ラベル。 */
   label: string
+  /** 入力欄に表示する数値文字列。 */
   value: string
+  /** 入力欄の補足説明。 */
+  description?: string
+  /** 入力できる最小値。 */
   min?: number
+  /** 入力できる最大値。 */
   max?: number
+  /** 入力値の増減単位。 */
   step?: number
+  /** 入力操作を無効化するか。 */
+  disabled?: boolean
+  /** 入力値が変更されたときの通知先。 */
   onChange: (value: string) => void
 }
 
@@ -289,7 +299,7 @@ const GoalTextField: Component<GoalTextFieldProps> = (props) => (
 /**
  * 目標設定ダイアログで使う数値入力欄を描画する。
  *
- * @param props - 表示ラベル、入力値、数値制約、変更ハンドラ。
+ * @param props - 表示ラベル、入力値、補足説明、数値制約、無効状態、変更ハンドラ。
  * @returns Kobalte NumberField を使った入力欄。
  */
 const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
@@ -297,17 +307,23 @@ const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
     class="block text-sm"
     value={props.value}
     onChange={props.onChange}
+    disabled={props.disabled}
     format={false}
     allowedInput={/[0-9.]/}
     step={props.step ?? 1}
   >
     <NumberField.Label class="mb-1 block text-text-muted">{props.label}</NumberField.Label>
     <NumberField.Input
-      class={GOAL_FIELD_INPUT_CLASS}
+      class={`${GOAL_FIELD_INPUT_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
       min={props.min}
       max={props.max}
       step={props.step ?? 1}
     />
+    <Show when={props.description}>
+      <NumberField.Description class="mt-1 text-xs text-text-muted">
+        {props.description}
+      </NumberField.Description>
+    </Show>
   </NumberField>
 )
 
@@ -537,6 +553,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     )
   }
 
+  // ダイアログを開いたタイミングで作成・編集モードに応じた初期値へ同期するため。
   createEffect(() => {
     if (!props.open) return
     setErrorMessage('')
@@ -702,15 +719,20 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   }
 
   /**
-   * 件数目標の現在値と最大値を表示用に組み立てる。
+   * 件数入力で指定できる上限を表示用に組み立てる。
    *
-   * @returns 件数目標の進捗上限表示。
+   * @returns 日本語ロケールで桁区切りした件数上限表示。
    */
-  const countProgressLimitText = (): string => {
-    const max = props.resolveAllCount(getDraftAttributes())
-    const current = countMode() === 'all' ? max : Math.floor(parseProgressDisplayValue(count()))
-    return `${formatProgressLimit(current, max)} 件`
-  }
+  const countLimitText = (): string =>
+    `${props.resolveAllCount(getDraftAttributes()).toLocaleString('ja-JP')}件以内`
+
+  /**
+   * 件数入力欄へ表示する値を取得する。
+   *
+   * @returns すべて指定時は現在の対象譜面数、通常時は入力中の件数。
+   */
+  const countFieldValue = (): string =>
+    countMode() === 'all' ? String(props.resolveAllCount(getDraftAttributes())) : count()
 
   /**
    * 合計値目標の現在値と最大値を表示用に組み立てる。
@@ -1033,16 +1055,27 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 >
                   <div class="block text-sm">
                     <div class="space-y-2">
-                      <GoalSelectField
-                        label="件数指定方法"
-                        value={countMode()}
-                        options={COUNT_MODE_OPTIONS}
-                        onChange={setCountMode}
+                      <GoalNumberField
+                        label="目標譜面数"
+                        min={1}
+                        value={countFieldValue()}
+                        description={countLimitText()}
+                        onChange={setCount}
+                        disabled={countMode() === 'all'}
                       />
-                      <Show when={countMode() === 'number'}>
-                        <GoalNumberField label="件数" min={1} value={count()} onChange={setCount} />
-                      </Show>
-                      <p class="text-xs text-text-muted">{countProgressLimitText()}</p>
+                      <Checkbox
+                        class="relative flex items-center gap-2 text-sm text-text-muted"
+                        checked={countMode() === 'all'}
+                        onChange={(checked) => setCountMode(checked ? 'all' : 'number')}
+                      >
+                        <Checkbox.Input style={{ left: '0', top: '0' }} />
+                        <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
+                          <Checkbox.Indicator>
+                            <Check class="h-4 w-4" />
+                          </Checkbox.Indicator>
+                        </Checkbox.Control>
+                        <Checkbox.Label>{COUNT_MODE_OPTIONS[1].label}</Checkbox.Label>
+                      </Checkbox>
                     </div>
                   </div>
                 </Show>
@@ -1108,19 +1141,22 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   </div>
                 </Show>
 
-                <Checkbox
-                  class="relative flex items-center gap-2 text-sm text-text-muted"
-                  checked={invert()}
-                  onChange={setInvert}
-                >
-                  <Checkbox.Input style={{ left: '0', top: '0' }} />
-                  <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
-                    <Checkbox.Indicator>
-                      <Check class="h-4 w-4" />
-                    </Checkbox.Indicator>
-                  </Checkbox.Control>
-                  <Checkbox.Label>{LABEL_INVERT_DISPLAY}</Checkbox.Label>
-                </Checkbox>
+                <div class="block text-sm">
+                  <p class="mb-1 block text-text-muted">表示形式</p>
+                  <Checkbox
+                    class="relative flex items-center gap-2 text-sm text-text-muted"
+                    checked={invert()}
+                    onChange={setInvert}
+                  >
+                    <Checkbox.Input style={{ left: '0', top: '0' }} />
+                    <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
+                      <Checkbox.Indicator>
+                        <Check class="h-4 w-4" />
+                      </Checkbox.Indicator>
+                    </Checkbox.Control>
+                    <Checkbox.Label>{LABEL_INVERT_DISPLAY}</Checkbox.Label>
+                  </Checkbox>
+                </div>
 
                 <article class="rounded-lg border border-border bg-surface p-4 shadow-sm">
                   <div class="flex items-start justify-between gap-3">
