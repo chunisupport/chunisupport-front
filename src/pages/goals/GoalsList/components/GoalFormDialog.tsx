@@ -1138,31 +1138,32 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 </article>
               </div>
             </section>
-
-            <Show when={displayErrorMessage()}>
-              <p class="text-sm text-danger">{displayErrorMessage()}</p>
-            </Show>
           </div>
 
-          <div class="mt-6 flex shrink-0 justify-end gap-2">
-            <Button
-              type="button"
-              class="rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover"
-              onClick={() => props.onOpenChange(false)}
-              disabled={props.isSaving}
-            >
-              キャンセル
-            </Button>
-            <Button
-              type="button"
-              class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:opacity-60"
-              onClick={() => {
-                void handleSave()
-              }}
-              disabled={props.isSaving}
-            >
-              {props.isSaving ? '保存中...' : '保存する'}
-            </Button>
+          <div class="mt-6">
+            <Show when={displayErrorMessage()}>
+              <p class="text-sm text-danger -mt-4 mb-2">{displayErrorMessage()}</p>
+            </Show>
+            <div class="flex shrink-0 justify-end gap-2">
+              <Button
+                type="button"
+                class="rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover"
+                onClick={() => props.onOpenChange(false)}
+                disabled={props.isSaving}
+              >
+                キャンセル
+              </Button>
+              <Button
+                type="button"
+                class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:opacity-60"
+                onClick={() => {
+                  void handleSave()
+                }}
+                disabled={props.isSaving}
+              >
+                {props.isSaving ? '保存中...' : '保存する'}
+              </Button>
+            </div>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
