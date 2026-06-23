@@ -176,6 +176,10 @@ const MUSIC_CONST_DECIMAL_PLACES = 1
 const MAX_OVERPOWER_PERCENT = 100
 const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
 const DEFAULT_GOAL_ACHIEVEMENT_TYPE = 'rank_count' satisfies GoalAchievementType
+const DEFAULT_TOTAL_GOAL_VALUE = '10'
+const DEFAULT_TOTAL_SCORE_GOAL_VALUE = '1000000'
+const DEFAULT_OVERPOWER_VALUE_GOAL_VALUE = '10'
+const DEFAULT_OVERPOWER_PERCENT_GOAL_VALUE = '90'
 const DEFAULT_RANK_GOAL = 'S' satisfies RankGoalValue
 const THEORETICAL_RANK_GOAL = 'THEORETICAL' satisfies RankGoalValue
 const SELECTABLE_SCORE_RANKS_DESC = [...SCORE_RANKS_ASC]
@@ -425,6 +429,21 @@ const getOptionalNumberParam = (
 const canUseDynamicTotalTarget = (type: GoalAchievementType): boolean =>
   type === 'total_score' || type === 'overpower_value'
 
+/**
+ * 目標種別ごとの目標値入力の初期値を取得する。
+ *
+ * @param type - 選択された目標種別。
+ * @returns 目標値欄に設定する初期値文字列。
+ */
+const getDefaultTotalGoalValue = (type: GoalAchievementType): string =>
+  type === 'total_score'
+    ? DEFAULT_TOTAL_SCORE_GOAL_VALUE
+    : type === 'overpower_value'
+      ? DEFAULT_OVERPOWER_VALUE_GOAL_VALUE
+      : type === 'overpower_percent'
+        ? DEFAULT_OVERPOWER_PERCENT_GOAL_VALUE
+        : DEFAULT_TOTAL_GOAL_VALUE
+
 const normalizeAttributeSelection = (value: number | number[] | undefined): string[] => {
   if (typeof value === 'number') return [String(value)]
   if (Array.isArray(value)) {
@@ -467,7 +486,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [rank, setRank] = createSignal<RankGoalValue>(DEFAULT_RANK_GOAL)
   const [count, setCount] = createSignal('1')
   const [countMode, setCountMode] = createSignal<'number' | 'all'>('number')
-  const [total, setTotal] = createSignal('100')
+  const [total, setTotal] = createSignal(getDefaultTotalGoalValue(DEFAULT_GOAL_ACHIEVEMENT_TYPE))
   const [totalMode, setTotalMode] = createSignal<'number' | 'all'>('number')
   const [hardLamp, setHardLamp] = createSignal<'HRD' | 'BRV' | 'ABS' | 'CTS'>('HRD')
   const [comboLamp, setComboLamp] = createSignal<'FC' | 'AJ'>('FC')
@@ -561,7 +580,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setRank(DEFAULT_RANK_GOAL)
       setCount('1')
       setCountMode('number')
-      setTotal('100')
+      setTotal(getDefaultTotalGoalValue(DEFAULT_GOAL_ACHIEVEMENT_TYPE))
       setTotalMode('number')
       setHardLamp('HRD')
       setComboLamp('FC')
@@ -1015,6 +1034,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       if (!canUseDynamicTotalTarget(nextType)) {
                         setTotalMode('number')
                       }
+                      setTotal(getDefaultTotalGoalValue(nextType))
                       if (nextType === 'rank_count') {
                         setRank(DEFAULT_RANK_GOAL)
                         setScore(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
