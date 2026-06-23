@@ -6,7 +6,7 @@ import { RadioGroup } from '@kobalte/core/radio-group'
 import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
 import { Check, ChevronDown } from 'lucide-solid'
-import type { Component } from 'solid-js'
+import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import type {
   GoalAchievementParams,
@@ -122,6 +122,8 @@ interface GoalTargetModeRadioGroupProps<TValue extends string> {
   options: GoalSelectOption<TValue>[]
   /** 選択値が変更されたときの通知先。 */
   onChange: (value: TValue) => void
+  /** 選択肢カード内へ追加表示する入力欄などの内容。 */
+  renderOptionContent?: (option: GoalSelectOption<TValue>) => JSX.Element
 }
 
 type RankGoalValue = ScoreRank | 'THEORETICAL'
@@ -138,8 +140,10 @@ const GOAL_SELECT_ITEM_CLASS =
   'flex h-8 cursor-pointer items-center justify-between rounded px-2 text-sm outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-action-primary data-highlighted:text-text-inverse'
 const GOAL_SELECT_CONTENT_CLASS =
   'z-60 mt-1 max-h-64 w-[--kb-select-content-width] overflow-y-auto rounded-md border border-border-strong bg-surface p-2 shadow-lg'
-const GOAL_RADIO_ITEM_CLASS =
-  'relative flex min-h-10 items-center gap-3 rounded border border-border-strong bg-surface px-3 py-2 text-sm text-text-muted hover:bg-surface-muted data-[checked]:border-action-primary data-[checked]:bg-action-primary-muted'
+const GOAL_RADIO_CARD_BASE_CLASS =
+  'rounded border border-border-strong bg-surface px-3 py-2 text-sm text-text-muted hover:bg-surface-muted'
+const GOAL_RADIO_CARD_CHECKED_CLASS = 'border-action-primary bg-action-primary-muted'
+const GOAL_RADIO_ITEM_CLASS = 'relative flex min-h-6 items-center gap-3'
 const GOAL_RADIO_CONTROL_CLASS =
   'pointer-events-none flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border-strong bg-input-bg data-[checked]:border-action-primary'
 /**
@@ -428,7 +432,7 @@ const GoalFilterCheckbox: Component<GoalFilterCheckboxProps> = (props) => (
 /**
  * 目標値の指定方法をラジオボタンで選択する欄を描画する。
  *
- * @param props - 表示ラベル、name属性、選択値、選択肢、変更ハンドラ。
+ * @param props - 表示ラベル、name属性、選択値、選択肢、変更ハンドラ、追加内容の描画関数。
  * @returns Kobalte RadioGroup を使った目標値指定方法の選択欄。
  */
 const GoalTargetModeRadioGroup = <TValue extends string>(
@@ -444,16 +448,23 @@ const GoalTargetModeRadioGroup = <TValue extends string>(
     <div class="space-y-2">
       <For each={props.options}>
         {(option) => (
-          <RadioGroup.Item value={option.value} class={GOAL_RADIO_ITEM_CLASS}>
-            <RadioGroup.ItemInput class="peer" />
-            <RadioGroup.ItemControl class={GOAL_RADIO_CONTROL_CLASS}>
-              <RadioGroup.ItemIndicator class="h-2.5 w-2.5 rounded-full bg-action-primary" />
-            </RadioGroup.ItemControl>
-            <span class="pointer-events-none">{option.label}</span>
-            <RadioGroup.ItemLabel class="absolute inset-0 cursor-pointer rounded focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring">
-              <span class="sr-only">{option.label}</span>
-            </RadioGroup.ItemLabel>
-          </RadioGroup.Item>
+          <div
+            class={`${GOAL_RADIO_CARD_BASE_CLASS} ${props.value === option.value ? GOAL_RADIO_CARD_CHECKED_CLASS : ''}`}
+          >
+            <RadioGroup.Item value={option.value} class={GOAL_RADIO_ITEM_CLASS}>
+              <RadioGroup.ItemInput class="peer" />
+              <RadioGroup.ItemControl class={GOAL_RADIO_CONTROL_CLASS}>
+                <RadioGroup.ItemIndicator class="h-2.5 w-2.5 rounded-full bg-action-primary" />
+              </RadioGroup.ItemControl>
+              <span class="pointer-events-none">{option.label}</span>
+              <RadioGroup.ItemLabel class="absolute inset-0 cursor-pointer rounded focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring">
+                <span class="sr-only">{option.label}</span>
+              </RadioGroup.ItemLabel>
+            </RadioGroup.Item>
+            <Show when={props.renderOptionContent?.(option)}>
+              {(content) => <div class="relative z-10 mt-3 pl-8">{content()}</div>}
+            </Show>
+          </div>
         )}
       </For>
     </div>
@@ -1173,18 +1184,18 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                         value={countMode()}
                         options={COUNT_MODE_OPTIONS}
                         onChange={setCountMode}
+                        renderOptionContent={(option) =>
+                          option.value === 'number' && countMode() === 'number' ? (
+                            <GoalNumberField
+                              label=""
+                              min={1}
+                              value={count()}
+                              description={countLimitText()}
+                              onChange={setCount}
+                            />
+                          ) : null
+                        }
                       />
-                      <Show when={countMode() === 'number'}>
-                        <div class="pl-8">
-                          <GoalNumberField
-                            label="目標値"
-                            min={1}
-                            value={count()}
-                            description={countLimitText()}
-                            onChange={setCount}
-                          />
-                        </div>
-                      </Show>
                     </div>
                   </div>
                 </Show>
@@ -1218,19 +1229,19 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                             value={totalMode()}
                             options={TOTAL_MODE_OPTIONS}
                             onChange={setTotalMode}
+                            renderOptionContent={(option) =>
+                              option.value === 'number' && totalMode() === 'number' ? (
+                                <GoalNumberField
+                                  label=""
+                                  value={total()}
+                                  description={totalLimitText()}
+                                  min={0}
+                                  max={totalFieldMax()}
+                                  onChange={setTotal}
+                                />
+                              ) : null
+                            }
                           />
-                          <Show when={totalMode() === 'number'}>
-                            <div class="pl-8">
-                              <GoalNumberField
-                                label="目標値"
-                                value={total()}
-                                description={totalLimitText()}
-                                min={0}
-                                max={totalFieldMax()}
-                                onChange={setTotal}
-                              />
-                            </div>
-                          </Show>
                         </div>
                       </Show>
                     </div>
