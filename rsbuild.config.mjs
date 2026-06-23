@@ -88,6 +88,55 @@ export default defineConfig(({ env, envMode }) => {
             href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Jost:ital,wght@0,100..900;1,100..900&family=Noto+Sans:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Oswald:wght@200..700&display=swap',
           },
         },
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'manifest',
+            href: '/manifest.webmanifest',
+          },
+        },
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'apple-touch-icon',
+            href: '/apple-touch-icon.png',
+          },
+        },
+        {
+          tag: 'meta',
+          attrs: {
+            name: 'theme-color',
+            content: '#ffffff',
+          },
+        },
+        {
+          tag: 'meta',
+          attrs: {
+            name: 'mobile-web-app-capable',
+            content: 'yes',
+          },
+        },
+        {
+          tag: 'meta',
+          attrs: {
+            name: 'apple-mobile-web-app-capable',
+            content: 'yes',
+          },
+        },
+        {
+          tag: 'meta',
+          attrs: {
+            name: 'apple-mobile-web-app-title',
+            content: 'ChuniSupport',
+          },
+        },
+        {
+          tag: 'meta',
+          attrs: {
+            name: 'apple-mobile-web-app-status-bar-style',
+            content: 'default',
+          },
+        },
       ],
     },
     plugins: [
