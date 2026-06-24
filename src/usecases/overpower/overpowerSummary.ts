@@ -7,6 +7,7 @@ import {
 } from '../../utils/chartLevel'
 import { compareMasterItemNames, createMasterItemOrderMap } from '../../utils/masterData'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
+import { buildCurrentOverPowerBySongId } from './currentOpTarget'
 import type {
   OverPowerDifficulty,
   OverPowerLevelSummaryRow,
@@ -130,14 +131,7 @@ const buildSongEntries = (
   versions: VersionSummaryDTO[],
   lockedLookup: LockedSongLookup
 ): SongAggregationEntry[] => {
-  const currentOpTargetBySongId = new Map<string, number>()
-  for (const record of records) {
-    if (!record.is_op_target) continue
-    const current = currentOpTargetBySongId.get(record.id) ?? 0
-    if (record.overpower > current) {
-      currentOpTargetBySongId.set(record.id, record.overpower)
-    }
-  }
+  const currentOpTargetBySongId = buildCurrentOverPowerBySongId(records)
 
   return songs
     .filter((song) => !lockedLookup.lockedSongIds.has(song.id))

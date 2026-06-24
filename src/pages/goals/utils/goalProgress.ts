@@ -7,6 +7,7 @@ import type {
   SongDTO,
   VersionDTO,
 } from '../../../types/api'
+import { buildCurrentOverPowerBySongId } from '../../../usecases/overpower/currentOpTarget'
 import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
 
 export interface GoalProgressResult {
@@ -258,14 +259,7 @@ const sumUniqueSongMaxOverPower = (
  * @returns 同一曲内では現在OP対象レコードのOVER POWERを1回だけ採用した合計値。
  */
 const sumCurrentOpTargetOverPowerBySong = (records: PlayerRecordDTO[]): number => {
-  const targetOverPowerBySong = new Map<string, number>()
-  for (const record of records) {
-    if (!record.is_op_target) continue
-    const current = targetOverPowerBySong.get(record.id) ?? 0
-    if (record.overpower > current) {
-      targetOverPowerBySong.set(record.id, record.overpower)
-    }
-  }
+  const targetOverPowerBySong = buildCurrentOverPowerBySongId(records)
   return [...targetOverPowerBySong.values()].reduce((acc, overpower) => acc + overpower, 0)
 }
 
