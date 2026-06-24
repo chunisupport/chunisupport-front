@@ -11,6 +11,7 @@ import {
   comboOrder,
   rankColorMap,
   rankOrder,
+  UNPLAYED_DISTRIBUTION_KEY,
 } from '../utils/recordStats'
 
 type FilterStatsProps = {
@@ -75,7 +76,7 @@ const getPercentWidth = (percent: number) => (percent > 0 ? `max(2px, ${percent}
 
 /**
  * 分布の構成比を帯グラフで表示する。
- * @param props - 分布、表示順、色クラス、グラフ非表示キー。
+ * @param props - 分布、表示順、色クラス、帯グラフを透明化する分布キー。
  * @returns 分布帯グラフコンポーネント。
  */
 const DistributionBar: Component<{
@@ -99,7 +100,7 @@ const DistributionBar: Component<{
 
 /**
  * 分布の1行分を件数、割合、ミニバーで表示する。
- * @param props - 表示ラベル、分布値、色クラス。
+ * @param props - 表示ラベル、分布値、色クラス、ミニバーを透明化する指定。
  * @returns 分布行コンポーネント。
  */
 const DistributionRow: Component<{
@@ -132,7 +133,7 @@ const DistributionRow: Component<{
 
 /**
  * フィルター統計の分布カードを表示する。
- * @param props - カード見出し、分布、表示順、色クラス、アイコン。
+ * @param props - カード見出し、分布、表示順、色クラス、アイコン、グラフ透明化対象キー。
  * @returns 分布カードコンポーネント。
  */
 const DistributionSection: Component<DistributionSectionConfig> = (props) => (
@@ -205,7 +206,7 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
               order={rankOrder}
               colorMap={rankColorMap}
               Icon={Trophy}
-              hiddenGraphKeys={['未プレイ']}
+              hiddenGraphKeys={[UNPLAYED_DISTRIBUTION_KEY]}
             />
           </Tabs.Content>
           <Tabs.Content value="combo">
@@ -216,7 +217,7 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
               order={comboOrder}
               colorMap={comboColorMap}
               Icon={Link2}
-              hiddenGraphKeys={['未プレイ']}
+              hiddenGraphKeys={[UNPLAYED_DISTRIBUTION_KEY]}
             />
           </Tabs.Content>
           <Tabs.Content value="clear">
@@ -227,7 +228,7 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
               order={clearOrder}
               colorMap={clearColorMap}
               Icon={ShieldCheck}
-              hiddenGraphKeys={['未プレイ']}
+              hiddenGraphKeys={[UNPLAYED_DISTRIBUTION_KEY]}
             />
           </Tabs.Content>
         </Tabs.Root>

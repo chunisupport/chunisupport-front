@@ -7,12 +7,31 @@ import {
   SCORE_RANK_BAR_CLASS,
 } from '../components/recordStyleClasses'
 
-export const rankOrder = ['MAX', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'OTHERS', '未プレイ']
+/** 未プレイレコードを分布で表す共通カテゴリ名。 */
+export const UNPLAYED_DISTRIBUTION_KEY = '未プレイ'
+
+export const rankOrder = [
+  'MAX',
+  'SSS+',
+  'SSS',
+  'SS+',
+  'SS',
+  'S+',
+  'S',
+  'OTHERS',
+  UNPLAYED_DISTRIBUTION_KEY,
+]
 export const rankColorMap: Record<string, string> = {
   ...SCORE_RANK_BAR_CLASS,
 }
 
-export const comboOrder = ['ALL JUSTICE CRITICAL', 'ALL JUSTICE', 'FULL COMBO', 'なし', '未プレイ']
+export const comboOrder = [
+  'ALL JUSTICE CRITICAL',
+  'ALL JUSTICE',
+  'FULL COMBO',
+  'なし',
+  UNPLAYED_DISTRIBUTION_KEY,
+]
 export const comboColorMap: Record<string, string> = {
   ...COMBO_LAMP_BAR_CLASS,
 }
@@ -24,7 +43,7 @@ export const clearOrder = [
   'HARD',
   'CLEAR',
   'FAILED',
-  '未プレイ',
+  UNPLAYED_DISTRIBUTION_KEY,
 ]
 export const clearColorMap: Record<string, string> = {
   ...HARD_LAMP_BAR_CLASS,
@@ -81,7 +100,7 @@ type RecordStatsSource = Pick<
  * @returns AJC、AJ、FC、なし、未プレイのいずれかのカテゴリ。
  */
 function getComboCategory(record: RecordStatsSource): string {
-  if (!record.is_played) return '未プレイ'
+  if (!record.is_played) return UNPLAYED_DISTRIBUTION_KEY
   if (record.combo_lamp === 'ALL JUSTICE' && record.score === MAX_SCORE) {
     return 'ALL JUSTICE CRITICAL'
   }
@@ -110,7 +129,7 @@ export function getRecordStats(records: RecordStatsSource[]): RecordStats {
 
   for (const record of records) {
     // ランク
-    const rank = record.is_played ? getRank(record.score) : '未プレイ'
+    const rank = record.is_played ? getRank(record.score) : UNPLAYED_DISTRIBUTION_KEY
     rankMap[rank] = rankMap[rank] || { count: 0, percent: 0 }
     rankMap[rank].count++
     // コンボ
@@ -118,7 +137,7 @@ export function getRecordStats(records: RecordStatsSource[]): RecordStats {
     comboMap[combo] = comboMap[combo] || { count: 0, percent: 0 }
     comboMap[combo].count++
     // クリア
-    const clear = record.is_played ? (record.clear_lamp ?? 'FAILED') : '未プレイ'
+    const clear = record.is_played ? (record.clear_lamp ?? 'FAILED') : UNPLAYED_DISTRIBUTION_KEY
     clearMap[clear] = clearMap[clear] || { count: 0, percent: 0 }
     clearMap[clear].count++
   }

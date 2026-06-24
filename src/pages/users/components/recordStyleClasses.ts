@@ -59,8 +59,12 @@ export const COMBO_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedComboLamp>, s
   'ALL JUSTICE': 'text-lamp-all-justice-text',
 }
 
-export const ALL_JUSTICE_CRITICAL_BADGE_CLASS =
-  'bg-[linear-gradient(135deg,#ef4444_0%,#f97316_16%,#eab308_32%,#22c55e_48%,#06b6d4_64%,#3b82f6_80%,#a855f7_100%)] text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]'
+/** ALL JUSTICE CRITICAL表示で共通利用するグラデーション背景クラス。 */
+export const ALL_JUSTICE_CRITICAL_BG_CLASS =
+  'bg-[linear-gradient(135deg,#ef4444_0%,#f97316_16%,#eab308_32%,#22c55e_48%,#06b6d4_64%,#3b82f6_80%,#a855f7_100%)]'
+
+/** ALL JUSTICE CRITICALバッジで使う背景・文字・装飾クラス。 */
+export const ALL_JUSTICE_CRITICAL_BADGE_CLASS = `${ALL_JUSTICE_CRITICAL_BG_CLASS} text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]`
 
 /**
  * コンボランプとスコアから、レコード用コンボランプバッジの色クラスを返す。
@@ -99,8 +103,7 @@ export const HARD_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedClearLamp>, st
 
 /** レコードのコンボランプバッジ色に合わせたフィルター統計グラフ用背景色クラス。 */
 export const COMBO_LAMP_BAR_CLASS: Record<FilterStatsComboLamp, string> = {
-  'ALL JUSTICE CRITICAL':
-    'bg-[linear-gradient(135deg,#ef4444_0%,#f97316_16%,#eab308_32%,#22c55e_48%,#06b6d4_64%,#3b82f6_80%,#a855f7_100%)]',
+  'ALL JUSTICE CRITICAL': ALL_JUSTICE_CRITICAL_BG_CLASS,
   'ALL JUSTICE': COMBO_LAMP_BADGE_BACKGROUND_CLASS['ALL JUSTICE'],
   'FULL COMBO': COMBO_LAMP_BADGE_BACKGROUND_CLASS['FULL COMBO'],
   なし: SCORE_RANK_BAR_CLASS.OTHERS,
