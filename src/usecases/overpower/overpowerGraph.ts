@@ -107,3 +107,28 @@ export const buildTheoreticalTargetRecordBySongId = (
 
   return targetRecordBySongId
 }
+
+/**
+ * 曲ごとの現在OVER POWER最大レコードを選択する。
+ *
+ * @param records - 集計対象のプレイヤーレコード一覧。
+ * @returns 曲IDをキーに現在OVER POWERが最大のレコードを保持するMap。
+ */
+export const buildHighestCurrentRecordBySongId = (
+  records: PlayerRecordDTO[]
+): Map<string, PlayerRecordDTO> => {
+  const recordsBySongId = new Map<string, PlayerRecordDTO>()
+
+  for (const record of records) {
+    const current = recordsBySongId.get(record.id)
+    if (
+      !current ||
+      record.overpower > current.overpower ||
+      (record.overpower === current.overpower && record.score > current.score)
+    ) {
+      recordsBySongId.set(record.id, record)
+    }
+  }
+
+  return recordsBySongId
+}
