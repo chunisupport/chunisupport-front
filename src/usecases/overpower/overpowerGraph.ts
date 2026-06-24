@@ -4,13 +4,19 @@ import type { OverPowerDifficulty, OverPowerLockedSong } from './types'
 const DIFFICULTY_ORDER: OverPowerDifficulty[] = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA']
 const ULTIMA_DIFFICULTY: OverPowerDifficulty = 'ULTIMA'
 
+/** 未解禁設定をOVER POWERグラフ集計で参照するための検索セット。 */
 type LockedSongLookup = {
+  /** 通常未解禁として曲ごと除外する楽曲ID一覧。 */
   lockedSongIds: Set<string>
+  /** ULTIMA未解禁としてULTIMA譜面だけ除外する楽曲ID一覧。 */
   ultimaLockedSongIds: Set<string>
 }
 
+/** OVER POWERグラフで理論値最大譜面として扱う譜面情報。 */
 type TargetChart = {
+  /** 理論値最大譜面の難易度。 */
   difficulty: OverPowerDifficulty
+  /** 理論値OVER POWERの比較に使う譜面定数。 */
   chartConst: number
 }
 

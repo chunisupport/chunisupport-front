@@ -8,6 +8,12 @@ import {
   buildTheoreticalTargetRecordBySongId,
 } from './overpowerGraph'
 
+/**
+ * OVER POWERグラフ用テストで使う楽曲DTOを生成する。
+ *
+ * @param overrides - テストケースごとに上書きする楽曲DTOの一部。楽曲IDは必須。
+ * @returns 既定値を補完した楽曲DTO。
+ */
 const createSong = (overrides: Partial<SongDTO> & Pick<SongDTO, 'id'>): SongDTO => ({
   id: overrides.id,
   title: overrides.title ?? overrides.id,
@@ -29,6 +35,12 @@ const createSong = (overrides: Partial<SongDTO> & Pick<SongDTO, 'id'>): SongDTO 
   },
 })
 
+/**
+ * OVER POWERグラフ用テストで使うプレイヤーレコードDTOを生成する。
+ *
+ * @param overrides - テストケースごとに上書きするプレイヤーレコードDTOの一部。楽曲IDは必須。
+ * @returns 既定値を補完したプレイヤーレコードDTO。
+ */
 const createRecord = (
   overrides: Partial<PlayerRecordDTO> & Pick<PlayerRecordDTO, 'id'>
 ): PlayerRecordDTO => ({
