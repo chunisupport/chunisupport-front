@@ -176,7 +176,7 @@ const UserRecord: Component<Props> = (props) => {
               {/* フィルター関連UI */}
               <FilterToolbar
                 title={filters().title}
-                onTitleChange={(value) => setFilters({ ...filters(), title: value })}
+                onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
               />

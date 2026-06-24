@@ -387,7 +387,7 @@ const WorldsendRecord = (props: Props) => {
             <div class="mx-2 text-sm">
               <FilterToolbar
                 title={filters().title}
-                onTitleChange={(value) => setFilters((prev) => ({ ...prev, title: value }))}
+                onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
               />
