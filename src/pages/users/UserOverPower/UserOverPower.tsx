@@ -27,7 +27,6 @@ import type {
 } from '../../../types/api'
 import { buildLockedSongsBatchPayload } from '../../../usecases/overpower/lockedSongsBatch'
 import {
-  buildHighestCurrentRecordBySongId,
   buildOverPowerLockedSongLookup,
   buildTheoreticalTargetRecordBySongId,
 } from '../../../usecases/overpower/overpowerGraph'
@@ -152,7 +151,6 @@ const buildSongEntriesBySummaryTab = (
   lockedLookup: LockedSongLookup
 ): SongEntriesBySummaryTab => {
   const targetRecordBySongId = buildTheoreticalTargetRecordBySongId(songs, records, lockedLookup)
-  const highestCurrentRecordBySongId = buildHighestCurrentRecordBySongId(records)
   const groups: SongEntriesBySummaryTab = {
     all: new Map(),
     genres: new Map(),
@@ -172,18 +170,14 @@ const buildSongEntriesBySummaryTab = (
       ...baseEntry,
       record: targetRecordBySongId.get(song.id) ?? null,
     }
-    const currentEntry: SongGraphEntry = {
-      ...baseEntry,
-      record: highestCurrentRecordBySongId.get(song.id) ?? null,
-    }
     addSongEntryToGroup(groups.all, 'all', allEntry)
 
     if (song.genre && song.genre !== '不明') {
-      addSongEntryToGroup(groups.genres, song.genre, currentEntry)
+      addSongEntryToGroup(groups.genres, song.genre, allEntry)
     }
 
-    if (currentEntry.versionName) {
-      addSongEntryToGroup(groups.versions, currentEntry.versionName, currentEntry)
+    if (allEntry.versionName) {
+      addSongEntryToGroup(groups.versions, allEntry.versionName, allEntry)
     }
   }
 

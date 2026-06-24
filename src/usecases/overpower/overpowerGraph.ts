@@ -80,7 +80,7 @@ const getHighestTheoreticalChart = (
 }
 
 /**
- * ALLグラフ向けに、曲ごとの理論値最大譜面に対応するレコードを選択する。
+ * ALL・ジャンル・バージョングラフ向けに、曲ごとの理論値最大譜面に対応するレコードを選択する。
  *
  * @param songs - 集計対象の楽曲一覧。
  * @param records - 未解禁設定で除外済みのプレイヤーレコード一覧。
@@ -112,29 +112,4 @@ export const buildTheoreticalTargetRecordBySongId = (
   }
 
   return targetRecordBySongId
-}
-
-/**
- * 曲ごとの現在OVER POWER最大レコードを選択する。
- *
- * @param records - 集計対象のプレイヤーレコード一覧。
- * @returns 曲IDをキーに現在OVER POWERが最大のレコードを保持するMap。
- */
-export const buildHighestCurrentRecordBySongId = (
-  records: PlayerRecordDTO[]
-): Map<string, PlayerRecordDTO> => {
-  const recordsBySongId = new Map<string, PlayerRecordDTO>()
-
-  for (const record of records) {
-    const current = recordsBySongId.get(record.id)
-    if (
-      !current ||
-      record.overpower > current.overpower ||
-      (record.overpower === current.overpower && record.score > current.score)
-    ) {
-      recordsBySongId.set(record.id, record)
-    }
-  }
-
-  return recordsBySongId
 }
