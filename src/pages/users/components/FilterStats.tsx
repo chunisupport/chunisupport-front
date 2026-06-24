@@ -118,7 +118,10 @@ const DistributionRow: Component<{
     <span class="whitespace-nowrap text-right tabular-nums text-text-muted">
       {props.percent.toFixed(1)}%
     </span>
-    <div class="h-3 overflow-hidden rounded-sm bg-surface-hover" aria-hidden="true">
+    <div
+      class={`h-3 overflow-hidden rounded-sm ${props.hideGraph ? 'bg-transparent' : 'bg-surface-hover'}`}
+      aria-hidden="true"
+    >
       <div
         class={`${props.hideGraph ? 'bg-transparent' : props.colorClass} h-full`}
         style={{ width: getPercentWidth(props.percent) }}
