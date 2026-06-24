@@ -15,6 +15,9 @@ type DifficultySectionProps = {
 /** OP対象フィルターのチェックボックスID。 */
 const CURRENT_OP_TARGET_ONLY_CHECKBOX_ID = 'filter-current-op-target-only'
 
+/** OP計算対象譜面フィルターのラベル。 */
+const CURRENT_OP_TARGET_ONLY_LABEL = 'OP計算対象の譜面のみ表示'
+
 /**
  * 通常レコードの難易度条件と現在のOP対象条件を表示する。
  *
@@ -59,7 +62,7 @@ const DifficultySection: Component<DifficultySectionProps> = (props) => (
           </Checkbox.Indicator>
         </Checkbox.Control>
         <Checkbox.Label class="leading-5" for={CURRENT_OP_TARGET_ONLY_CHECKBOX_ID}>
-          OP対象の楽曲のみを表示
+          {CURRENT_OP_TARGET_ONLY_LABEL}
         </Checkbox.Label>
       </Checkbox>
     </div>
