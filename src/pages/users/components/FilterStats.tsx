@@ -202,7 +202,7 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
               order={rankOrder}
               colorMap={rankColorMap}
               Icon={Trophy}
-              hiddenGraphKeys={['OTHERS']}
+              hiddenGraphKeys={['未プレイ']}
             />
           </Tabs.Content>
           <Tabs.Content value="combo">
