@@ -9,6 +9,7 @@ const createRecord = (
 ): PlayerRecordWithSongMeta => {
   const record: PlayerRecordWithSongMeta = {
     is_played: true,
+    is_op_target: true,
     updated_at: '2026-04-20T00:00:00Z',
     difficulty: 'MASTER',
     id: 'song-1',

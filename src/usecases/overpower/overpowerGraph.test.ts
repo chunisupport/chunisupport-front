@@ -44,6 +44,7 @@ const createRecord = (
   overrides: Partial<PlayerRecordDTO> & Pick<PlayerRecordDTO, 'id'>
 ): PlayerRecordDTO => ({
   is_played: overrides.is_played ?? true,
+  is_op_target: overrides.is_op_target ?? true,
   updated_at: overrides.updated_at ?? null,
   difficulty: overrides.difficulty ?? 'MASTER',
   id: overrides.id,

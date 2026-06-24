@@ -24,6 +24,7 @@ export function formatFilterSummary(filter: FilterState): string {
   const parts: string[] = []
   if (filter.excludeNoPlay) parts.push('未プレイ譜面を除外')
   if (filter.difficulties.length > 0) parts.push(`難易度: ${filter.difficulties.join(',')}`)
+  if (filter.currentOpTargetOnly) parts.push('OP対象の楽曲のみ')
   if (filter.const.min !== 0.0 || filter.const.max !== CONST_MAX)
     parts.push(`定数: ${filter.const.min}-${filter.const.max}`)
   if (filter.score.min !== 0 || filter.score.max !== MAX_SCORE)

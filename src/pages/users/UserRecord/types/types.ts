@@ -47,6 +47,8 @@ export type NumericRangeFilter<T extends number | null = number> = {
 export interface FilterState {
   title: string
   difficulties: Difficulty[]
+  /** 現在のOVER POWER集計対象譜面だけを表示するか。 */
+  currentOpTargetOnly: boolean
   genres: string[]
   versions: string[]
   const: NumericRangeFilter

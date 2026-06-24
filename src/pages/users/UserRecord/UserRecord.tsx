@@ -27,7 +27,7 @@ import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FilterDialog from './components/FilterDialog'
 import FilterToolbar from './components/FilterToolbar'
 import RecordTable from './components/RecordTable'
-import { buildDefaultFilter, DEFAULT_FILTER } from './types/filterDefaults'
+import { buildDefaultFilter, DEFAULT_FILTER, normalizeFilterState } from './types/filterDefaults'
 import type { FilterState, RecordColumnId, RecordSortKey } from './types/types'
 import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
 import { getDefaultFilter } from './utils/filtering'
@@ -54,7 +54,9 @@ const restoreInitialStandardRecordFilter = async (
 
   try {
     const savedFilter = await readStandardRecordFilterSetting()
-    return isValidSavedStandardFilter(savedFilter) ? savedFilter : defaultFilter
+    return isValidSavedStandardFilter(savedFilter)
+      ? normalizeFilterState(savedFilter)
+      : defaultFilter
   } catch {
     return defaultFilter
   }

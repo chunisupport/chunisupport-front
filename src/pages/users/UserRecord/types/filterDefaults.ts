@@ -24,6 +24,7 @@ export const HARD_LAMP_OPTIONS: HardLamp[] = [
 export const DEFAULT_FILTER: FilterState = {
   title: '',
   difficulties: ['MASTER', 'ULTIMA'],
+  currentOpTargetOnly: false,
   genres: [],
   versions: [],
   const: {
@@ -88,6 +89,7 @@ export const normalizeFilterState = (filter: Partial<FilterState>): FilterState 
   score: filter.score ?? { ...DEFAULT_FILTER.score },
   justiceCount: filter.justiceCount ?? { ...DEFAULT_FILTER.justiceCount },
   overPower: filter.overPower ?? { ...DEFAULT_FILTER.overPower },
+  currentOpTargetOnly: filter.currentOpTargetOnly ?? DEFAULT_FILTER.currentOpTargetOnly,
   combo_lamp: filter.combo_lamp ?? [...COMBO_LAMP_OPTIONS],
   chain_lamp: filter.chain_lamp ?? [...CHAIN_LAMP_OPTIONS],
   hard_lamp: filter.hard_lamp ?? [...HARD_LAMP_OPTIONS],

@@ -115,17 +115,27 @@ const isRecordAvailable = (record: PlayerRecordDTO, lockedLookup: LockedSongLook
   )
 }
 
+/**
+ * 曲単位のOVER POWERサマリー集計行を作る。
+ *
+ * @param songs - 集計対象の楽曲マスタ一覧。
+ * @param records - 未解禁設定を反映済みのプレイヤーレコード一覧。
+ * @param versions - リリース日からバージョン名を解決するための一覧。
+ * @param lockedLookup - 未解禁曲とULTIMA未解禁曲の判定用セット。
+ * @returns ALL・ジャンル・バージョン集計で使う曲単位の集計行。
+ */
 const buildSongEntries = (
   songs: SongDTO[],
   records: PlayerRecordDTO[],
   versions: VersionSummaryDTO[],
   lockedLookup: LockedSongLookup
 ): SongAggregationEntry[] => {
-  const maxRecordOpBySongId = new Map<string, number>()
+  const currentOpTargetBySongId = new Map<string, number>()
   for (const record of records) {
-    const current = maxRecordOpBySongId.get(record.id) ?? 0
+    if (!record.is_op_target) continue
+    const current = currentOpTargetBySongId.get(record.id) ?? 0
     if (record.overpower > current) {
-      maxRecordOpBySongId.set(record.id, record.overpower)
+      currentOpTargetBySongId.set(record.id, record.overpower)
     }
   }
 
@@ -136,7 +146,7 @@ const buildSongEntries = (
       const resolvedVersion = resolveVersionNameByReleaseDate(song.release, versions)
       return {
         song,
-        current: maxRecordOpBySongId.get(song.id) ?? 0,
+        current: currentOpTargetBySongId.get(song.id) ?? 0,
         max: getAvailableSongMaxOverPower(song, lockedLookup),
         level: highestConst === null ? null : toChartLevelLabel(highestConst),
         versionName: resolvedVersion === '不明' ? null : getShortVersionName(resolvedVersion),
