@@ -103,7 +103,7 @@ export const COMBO_LAMP_BAR_CLASS: Record<FilterStatsComboLamp, string> = {
     'bg-[linear-gradient(135deg,#ef4444_0%,#f97316_16%,#eab308_32%,#22c55e_48%,#06b6d4_64%,#3b82f6_80%,#a855f7_100%)]',
   'ALL JUSTICE': COMBO_LAMP_BADGE_BACKGROUND_CLASS['ALL JUSTICE'],
   'FULL COMBO': COMBO_LAMP_BADGE_BACKGROUND_CLASS['FULL COMBO'],
-  なし: 'bg-lamp-none-bg',
+  なし: SCORE_RANK_BAR_CLASS.OTHERS,
   未プレイ: 'bg-surface-hover',
 }
 
@@ -114,6 +114,6 @@ export const HARD_LAMP_BAR_CLASS: Record<FilterStatsClearLamp, string> = {
   BRAVE: HARD_LAMP_BADGE_BACKGROUND_CLASS.BRAVE,
   HARD: HARD_LAMP_BADGE_BACKGROUND_CLASS.HARD,
   CLEAR: HARD_LAMP_BADGE_BACKGROUND_CLASS.CLEAR,
-  FAILED: HARD_LAMP_BADGE_BACKGROUND_CLASS.FAILED,
+  FAILED: SCORE_RANK_BAR_CLASS.OTHERS,
   未プレイ: 'bg-surface-hover',
 }

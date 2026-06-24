@@ -216,6 +216,7 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
               order={comboOrder}
               colorMap={comboColorMap}
               Icon={Link2}
+              hiddenGraphKeys={['未プレイ']}
             />
           </Tabs.Content>
           <Tabs.Content value="clear">
@@ -226,6 +227,7 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
               order={clearOrder}
               colorMap={clearColorMap}
               Icon={ShieldCheck}
+              hiddenGraphKeys={['未プレイ']}
             />
           </Tabs.Content>
         </Tabs.Root>
