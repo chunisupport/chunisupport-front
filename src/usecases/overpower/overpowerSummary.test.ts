@@ -106,6 +106,20 @@ test('ALLのOP数値は理論値最大譜面が未プレイでも現在OP対象r
   assert.equal(summary.all.count, 1)
 })
 
+test('現在OP対象フラグが全てfalseでも曲内最大OPへフォールバックする', () => {
+  const summary = buildOverPowerSummary(
+    [createSong({ id: 'song-a', maxop: 90 })],
+    [
+      createRecord({ id: 'song-a', difficulty: 'EXPERT', overpower: 70, is_op_target: false }),
+      createRecord({ id: 'song-a', difficulty: 'MASTER', overpower: 85, is_op_target: false }),
+    ],
+    versions
+  )
+
+  assert.equal(summary.all.current, 85)
+  assert.equal(summary.all.max, 90)
+})
+
 test('ジャンル不明とバージョン不明はALLに含め、各内訳から除外する', () => {
   const summary = buildOverPowerSummary(
     [
