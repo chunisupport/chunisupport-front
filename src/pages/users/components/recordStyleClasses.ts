@@ -5,10 +5,15 @@ type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
 export type SharedComboLamp = SharedRecordSource['combo_lamp']
 export type SharedClearLamp = SharedRecordSource['clear_lamp']
 export type FilterStatsRank =
+  | 'MAX'
   | Extract<ScoreRank, 'SSS+' | 'SSS' | 'SS+' | 'SS' | 'S+' | 'S'>
   | 'OTHERS'
   | '未プレイ'
-export type FilterStatsComboLamp = NonNullable<SharedComboLamp> | 'なし' | '未プレイ'
+export type FilterStatsComboLamp =
+  | 'ALL JUSTICE CRITICAL'
+  | NonNullable<SharedComboLamp>
+  | 'なし'
+  | '未プレイ'
 export type FilterStatsClearLamp = NonNullable<SharedClearLamp> | '未プレイ'
 
 /** レコードのスコアランク表示で使う文字色クラス。 */
@@ -31,6 +36,7 @@ export const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
 
 /** レコードのスコアランク文字色に合わせたフィルター統計グラフ用背景色クラス。 */
 export const SCORE_RANK_BAR_CLASS: Record<FilterStatsRank, string> = {
+  MAX: 'bg-success',
   'SSS+': 'bg-score-rank-sssp-bg',
   SSS: 'bg-score-rank-sss-bg',
   'SS+': 'bg-score-rank-ss-bg',
@@ -93,6 +99,8 @@ export const HARD_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedClearLamp>, st
 
 /** レコードのコンボランプバッジ色に合わせたフィルター統計グラフ用背景色クラス。 */
 export const COMBO_LAMP_BAR_CLASS: Record<FilterStatsComboLamp, string> = {
+  'ALL JUSTICE CRITICAL':
+    'bg-[linear-gradient(135deg,#ef4444_0%,#f97316_16%,#eab308_32%,#22c55e_48%,#06b6d4_64%,#3b82f6_80%,#a855f7_100%)]',
   'ALL JUSTICE': COMBO_LAMP_BADGE_BACKGROUND_CLASS['ALL JUSTICE'],
   'FULL COMBO': COMBO_LAMP_BADGE_BACKGROUND_CLASS['FULL COMBO'],
   なし: 'bg-lamp-none-bg',

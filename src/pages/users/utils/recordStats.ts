@@ -1,18 +1,18 @@
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
 import type { PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
-import { getScoreRank } from '../../../utils/scoreRank'
+import { getScoreRank, MAX_SCORE } from '../../../utils/scoreRank'
 import {
   COMBO_LAMP_BAR_CLASS,
   HARD_LAMP_BAR_CLASS,
   SCORE_RANK_BAR_CLASS,
 } from '../components/recordStyleClasses'
 
-export const rankOrder = ['SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'OTHERS', '未プレイ']
+export const rankOrder = ['MAX', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'OTHERS', '未プレイ']
 export const rankColorMap: Record<string, string> = {
   ...SCORE_RANK_BAR_CLASS,
 }
 
-export const comboOrder = ['ALL JUSTICE', 'FULL COMBO', 'なし', '未プレイ']
+export const comboOrder = ['ALL JUSTICE CRITICAL', 'ALL JUSTICE', 'FULL COMBO', 'なし', '未プレイ']
 export const comboColorMap: Record<string, string> = {
   ...COMBO_LAMP_BAR_CLASS,
 }
@@ -51,8 +51,14 @@ export type RecordStats = {
   scoreStats: ScoreStats
 }
 
-/** スコアからランクを取得する */
+/**
+ * フィルター統計で表示するスコア帯を取得する。
+ * @param score 集計対象レコードのスコア。
+ * @returns 理論値、S以上のランク、またはその他カテゴリ。
+ */
 function getRank(score: number): string {
+  if (score === MAX_SCORE) return 'MAX'
+
   const rank = getScoreRank(score)
   if (rank === 'SSS+') return rank
   if (rank === 'SSS') return rank
@@ -69,7 +75,25 @@ type RecordStatsSource = Pick<
   'is_played' | 'score' | 'combo_lamp' | 'clear_lamp'
 >
 
-/** レコードから統計情報を取得する */
+/**
+ * コンボランプとスコアから、フィルター統計で表示するコンボカテゴリを取得する。
+ * @param record 集計対象レコード。
+ * @returns AJC、AJ、FC、なし、未プレイのいずれかのカテゴリ。
+ */
+function getComboCategory(record: RecordStatsSource): string {
+  if (!record.is_played) return '未プレイ'
+  if (record.combo_lamp === 'ALL JUSTICE' && record.score === MAX_SCORE) {
+    return 'ALL JUSTICE CRITICAL'
+  }
+
+  return record.combo_lamp ?? 'なし'
+}
+
+/**
+ * レコード一覧から、RANK・COMBO・HARDの分布とスコア統計を算出する。
+ * @param records 集計対象のレコード一覧。
+ * @returns フィルター統計に表示する分布とスコア統計。
+ */
 export function getRecordStats(records: RecordStatsSource[]): RecordStats {
   const total = records.length
   // ランク分布
@@ -90,7 +114,7 @@ export function getRecordStats(records: RecordStatsSource[]): RecordStats {
     rankMap[rank] = rankMap[rank] || { count: 0, percent: 0 }
     rankMap[rank].count++
     // コンボ
-    const combo = record.is_played ? (record.combo_lamp ?? 'なし') : '未プレイ'
+    const combo = getComboCategory(record)
     comboMap[combo] = comboMap[combo] || { count: 0, percent: 0 }
     comboMap[combo].count++
     // クリア
