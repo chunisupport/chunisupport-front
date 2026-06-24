@@ -252,20 +252,21 @@ const sumUniqueSongMaxOverPower = (
 }
 
 /**
- * 曲ごとに最も高い現在OVER POWERを合計する。
+ * 曲ごとの現在OVER POWER対象レコードを合計する。
  *
  * @param records - 集計対象のプレイヤーレコード一覧。
- * @returns 同一曲内では最大のOVER POWERだけを採用した合計値。
+ * @returns 同一曲内では現在OP対象レコードのOVER POWERを1回だけ採用した合計値。
  */
-const sumBestRecordOverPowerBySong = (records: PlayerRecordDTO[]): number => {
-  const maxOverPowerBySong = new Map<string, number>()
+const sumCurrentOpTargetOverPowerBySong = (records: PlayerRecordDTO[]): number => {
+  const targetOverPowerBySong = new Map<string, number>()
   for (const record of records) {
-    const current = maxOverPowerBySong.get(record.id) ?? 0
+    if (!record.is_op_target) continue
+    const current = targetOverPowerBySong.get(record.id) ?? 0
     if (record.overpower > current) {
-      maxOverPowerBySong.set(record.id, record.overpower)
+      targetOverPowerBySong.set(record.id, record.overpower)
     }
   }
-  return [...maxOverPowerBySong.values()].reduce((acc, overpower) => acc + overpower, 0)
+  return [...targetOverPowerBySong.values()].reduce((acc, overpower) => acc + overpower, 0)
 }
 
 /**
@@ -353,7 +354,7 @@ export const calculateGoalProgress = (
         useSongAggregation
       )
       current = useSongAggregation
-        ? sumBestRecordOverPowerBySong(filteredRecords)
+        ? sumCurrentOpTargetOverPowerBySong(filteredRecords)
         : filteredRecords.reduce((acc, record) => acc + record.overpower, 0)
       break
     }
@@ -361,7 +362,7 @@ export const calculateGoalProgress = (
       target = getNumberParam(goal.achievement_params, 'total')
       const useSongAggregation = goal.attributes.chart_target === 'OP_TARGET'
       const totalOp = useSongAggregation
-        ? sumBestRecordOverPowerBySong(filteredRecords)
+        ? sumCurrentOpTargetOverPowerBySong(filteredRecords)
         : filteredRecords.reduce((acc, record) => acc + record.overpower, 0)
       const targetSongIds = useSongAggregation
         ? new Set(filteredRecords.map((record) => record.id))

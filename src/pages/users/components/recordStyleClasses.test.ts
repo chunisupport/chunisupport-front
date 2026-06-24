@@ -54,6 +54,17 @@ test('FCのコンボランプバッジはFC用トークン色を返すこと', (
   )
 })
 
+test('COMBOのなしとHARDのFAILEDはRANKのOTHERS色を返すこと', () => {
+  // Given: RANKのOTHERSで使う低ランク向け色クラス
+  const othersClass = SCORE_RANK_BAR_CLASS.OTHERS
+
+  // When: COMBOのなしとHARDのFAILEDの色クラスを取得する
+  const result = [COMBO_LAMP_BAR_CLASS.なし, HARD_LAMP_BAR_CLASS.FAILED]
+
+  // Then: どちらもOTHERS色に統一される
+  assert.deepEqual(result, [othersClass, othersClass])
+})
+
 test('フィルター統計の未プレイは背景と同じ色クラスを返すこと', () => {
   // Given: フィルター統計に表示する未プレイカテゴリ
   const expectedClass = 'bg-surface-hover'

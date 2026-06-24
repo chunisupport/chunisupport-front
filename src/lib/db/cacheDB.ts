@@ -5,7 +5,7 @@ import type { WorldsendRecordColumnId } from '../../pages/users/WorldsendRecord/
 import type { SongDTO, UserRatingDTO, UserRecordDTO, WorldsendSongDTO } from '../../types/api'
 
 /** IndexedDB に保存するキャッシュデータの現行スキーマバージョン。 */
-export const CLIENT_CACHE_SCHEMA_VERSION = 1
+export const CLIENT_CACHE_SCHEMA_VERSION = 2
 
 /** フロントエンドキャッシュ用 IndexedDB の DB 名。 */
 export const CLIENT_CACHE_DB_NAME = 'ChuniSupportCache'

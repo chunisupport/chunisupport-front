@@ -26,8 +26,12 @@ import type {
   VersionSummaryDTO,
 } from '../../../types/api'
 import { buildLockedSongsBatchPayload } from '../../../usecases/overpower/lockedSongsBatch'
+import {
+  buildOverPowerLockedSongLookup,
+  buildTheoreticalTargetRecordBySongId,
+} from '../../../usecases/overpower/overpowerGraph'
 import { buildOverPowerSummary } from '../../../usecases/overpower/overpowerSummary'
-import type { OverPowerDifficulty, OverPowerLockedSong } from '../../../usecases/overpower/types'
+import type { OverPowerDifficulty } from '../../../usecases/overpower/types'
 import { toChartLevelLabel } from '../../../utils/chartLevel'
 import { getScoreRank, MAX_SCORE } from '../../../utils/scoreRank'
 import {
@@ -111,22 +115,6 @@ const OVER_POWER_SCORE_BANDS: OverPowerScoreBand[] = [
 const OVER_POWER_COMBO_BANDS: OverPowerComboBand[] = ['ALL JUSTICE', 'FULL COMBO', 'OTHER']
 const ULTIMA_DIFFICULTY: OverPowerDifficulty = 'ULTIMA'
 
-/** 未解禁設定をレコードフィルターで参照しやすいSetへ変換する。 */
-const buildLockedSongLookup = (lockedSongs: OverPowerLockedSong[]): LockedSongLookup => {
-  const lockedSongIds = new Set<string>()
-  const ultimaLockedSongIds = new Set<string>()
-
-  for (const lockedSong of lockedSongs) {
-    if (lockedSong.is_ultima) {
-      ultimaLockedSongIds.add(lockedSong.display_id)
-    } else {
-      lockedSongIds.add(lockedSong.display_id)
-    }
-  }
-
-  return { lockedSongIds, ultimaLockedSongIds }
-}
-
 /** レコードが未解禁設定の対象外で、OVERPOWER集計に含められるかを判定する。 */
 const isRecordAvailable = (record: PlayerRecordDTO, lockedLookup: LockedSongLookup): boolean => {
   if (lockedLookup.lockedSongIds.has(record.id)) return false
@@ -155,26 +143,6 @@ const getHighestAvailableChartConst = (
   return Math.max(...chartConsts)
 }
 
-/** 曲数ベースの集計で利用する代表レコードを曲ごとに選択する。 */
-const buildRepresentativeRecordBySongId = (
-  records: PlayerRecordDTO[]
-): Map<string, PlayerRecordDTO> => {
-  const recordsBySongId = new Map<string, PlayerRecordDTO>()
-
-  for (const record of records) {
-    const current = recordsBySongId.get(record.id)
-    if (
-      !current ||
-      record.overpower > current.overpower ||
-      (record.overpower === current.overpower && record.score > current.score)
-    ) {
-      recordsBySongId.set(record.id, record)
-    }
-  }
-
-  return recordsBySongId
-}
-
 /** 曲数ベースのグラフ分布を作るため、楽曲を表示タブごとに分類する。 */
 const buildSongEntriesBySummaryTab = (
   songs: SongDTO[],
@@ -182,7 +150,7 @@ const buildSongEntriesBySummaryTab = (
   versions: VersionSummaryDTO[],
   lockedLookup: LockedSongLookup
 ): SongEntriesBySummaryTab => {
-  const representativeRecordBySongId = buildRepresentativeRecordBySongId(records)
+  const targetRecordBySongId = buildTheoreticalTargetRecordBySongId(songs, records, lockedLookup)
   const groups: SongEntriesBySummaryTab = {
     all: new Map(),
     genres: new Map(),
@@ -194,19 +162,22 @@ const buildSongEntriesBySummaryTab = (
     if (getHighestAvailableChartConst(song, lockedLookup) === null) continue
 
     const resolvedVersion = resolveVersionNameByReleaseDate(song.release, versions)
-    const entry: SongGraphEntry = {
+    const baseEntry = {
       song,
-      record: representativeRecordBySongId.get(song.id) ?? null,
       versionName: resolvedVersion === '不明' ? null : getShortVersionName(resolvedVersion),
     }
-    addSongEntryToGroup(groups.all, 'all', entry)
+    const allEntry: SongGraphEntry = {
+      ...baseEntry,
+      record: targetRecordBySongId.get(song.id) ?? null,
+    }
+    addSongEntryToGroup(groups.all, 'all', allEntry)
 
     if (song.genre && song.genre !== '不明') {
-      addSongEntryToGroup(groups.genres, song.genre, entry)
+      addSongEntryToGroup(groups.genres, song.genre, allEntry)
     }
 
-    if (entry.versionName) {
-      addSongEntryToGroup(groups.versions, entry.versionName, entry)
+    if (allEntry.versionName) {
+      addSongEntryToGroup(groups.versions, allEntry.versionName, allEntry)
     }
   }
 
@@ -400,7 +371,7 @@ const UserOverPower: Component<Props> = (props) => {
     const currentLockedSongs = lockedSongs()
     if (!currentLockedSongs) return []
 
-    const lockedLookup = buildLockedSongLookup(currentLockedSongs.items)
+    const lockedLookup = buildOverPowerLockedSongLookup(currentLockedSongs.items)
     return props.record.standard.filter((record) => isRecordAvailable(record, lockedLookup))
   })
   const graphRecordsByTab = createMemo<RecordsBySummaryTab | undefined>(() => {
@@ -415,7 +386,7 @@ const UserOverPower: Component<Props> = (props) => {
     const currentLockedSongs = lockedSongs()
     if (!songs || !versions || !currentLockedSongs) return undefined
 
-    const lockedLookup = buildLockedSongLookup(currentLockedSongs.items)
+    const lockedLookup = buildOverPowerLockedSongLookup(currentLockedSongs.items)
     return buildSongEntriesBySummaryTab(
       songs.songs,
       availableRecords(),

@@ -5,10 +5,15 @@ type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
 export type SharedComboLamp = SharedRecordSource['combo_lamp']
 export type SharedClearLamp = SharedRecordSource['clear_lamp']
 export type FilterStatsRank =
+  | 'MAX'
   | Extract<ScoreRank, 'SSS+' | 'SSS' | 'SS+' | 'SS' | 'S+' | 'S'>
   | 'OTHERS'
   | '未プレイ'
-export type FilterStatsComboLamp = NonNullable<SharedComboLamp> | 'なし' | '未プレイ'
+export type FilterStatsComboLamp =
+  | 'ALL JUSTICE CRITICAL'
+  | NonNullable<SharedComboLamp>
+  | 'なし'
+  | '未プレイ'
 export type FilterStatsClearLamp = NonNullable<SharedClearLamp> | '未プレイ'
 
 /** レコードのスコアランク表示で使う文字色クラス。 */
@@ -31,6 +36,7 @@ export const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
 
 /** レコードのスコアランク文字色に合わせたフィルター統計グラフ用背景色クラス。 */
 export const SCORE_RANK_BAR_CLASS: Record<FilterStatsRank, string> = {
+  MAX: 'bg-success',
   'SSS+': 'bg-score-rank-sssp-bg',
   SSS: 'bg-score-rank-sss-bg',
   'SS+': 'bg-score-rank-ss-bg',
@@ -53,8 +59,12 @@ export const COMBO_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedComboLamp>, s
   'ALL JUSTICE': 'text-lamp-all-justice-text',
 }
 
-export const ALL_JUSTICE_CRITICAL_BADGE_CLASS =
-  'bg-[linear-gradient(135deg,#ef4444_0%,#f97316_16%,#eab308_32%,#22c55e_48%,#06b6d4_64%,#3b82f6_80%,#a855f7_100%)] text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]'
+/** ALL JUSTICE CRITICAL表示で共通利用するグラデーション背景クラス。 */
+export const ALL_JUSTICE_CRITICAL_BG_CLASS =
+  'bg-[linear-gradient(135deg,#ef4444_0%,#f97316_16%,#eab308_32%,#22c55e_48%,#06b6d4_64%,#3b82f6_80%,#a855f7_100%)]'
+
+/** ALL JUSTICE CRITICALバッジで使う背景・文字・装飾クラス。 */
+export const ALL_JUSTICE_CRITICAL_BADGE_CLASS = `${ALL_JUSTICE_CRITICAL_BG_CLASS} text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]`
 
 /**
  * コンボランプとスコアから、レコード用コンボランプバッジの色クラスを返す。
@@ -93,9 +103,10 @@ export const HARD_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedClearLamp>, st
 
 /** レコードのコンボランプバッジ色に合わせたフィルター統計グラフ用背景色クラス。 */
 export const COMBO_LAMP_BAR_CLASS: Record<FilterStatsComboLamp, string> = {
+  'ALL JUSTICE CRITICAL': ALL_JUSTICE_CRITICAL_BG_CLASS,
   'ALL JUSTICE': COMBO_LAMP_BADGE_BACKGROUND_CLASS['ALL JUSTICE'],
   'FULL COMBO': COMBO_LAMP_BADGE_BACKGROUND_CLASS['FULL COMBO'],
-  なし: 'bg-lamp-none-bg',
+  なし: SCORE_RANK_BAR_CLASS.OTHERS,
   未プレイ: 'bg-surface-hover',
 }
 
@@ -106,6 +117,6 @@ export const HARD_LAMP_BAR_CLASS: Record<FilterStatsClearLamp, string> = {
   BRAVE: HARD_LAMP_BADGE_BACKGROUND_CLASS.BRAVE,
   HARD: HARD_LAMP_BADGE_BACKGROUND_CLASS.HARD,
   CLEAR: HARD_LAMP_BADGE_BACKGROUND_CLASS.CLEAR,
-  FAILED: HARD_LAMP_BADGE_BACKGROUND_CLASS.FAILED,
+  FAILED: SCORE_RANK_BAR_CLASS.OTHERS,
   未プレイ: 'bg-surface-hover',
 }

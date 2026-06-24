@@ -54,6 +54,7 @@ const createRecord = (
   overrides: Partial<PlayerRecordWithSongMeta> = {}
 ): PlayerRecordWithSongMeta => ({
   is_played: true,
+  is_op_target: true,
   updated_at: null,
   difficulty: 'MASTER',
   id: 'song-1',
