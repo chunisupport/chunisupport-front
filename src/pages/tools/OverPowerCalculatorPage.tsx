@@ -61,8 +61,8 @@ const OVER_POWER_CALCULATOR_COPY = {
   unplayedCalculatorTitle: '未プレイ除外計算',
   loginRequiredMessage: 'ログイン中のみ使用できます。',
   unplayedModeLabel: '未プレイの扱い',
-  manualScoreLabel: '手動指定',
-  manualScoreSuffix: '点で埋める',
+  manualScoreLabel: '指定したスコアで埋める',
+  manualScoreSuffix: '点',
   noPlayedAverageLabel: '平均なし',
 } as const
 
@@ -78,13 +78,13 @@ const CHECKBOX_CONTROL_CLASS =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
 
 const UNPLAYED_FILL_OPTIONS = [
-  { value: 'none', label: '何もしない' },
+  { value: 'none', label: '何もしない(現在の値)' },
   { value: 'remove', label: '存在を消す' },
   { value: 'theoretical', label: '理論値で埋める' },
   { value: 'playedAverage', label: '既プレイ平均で埋める' },
-  { value: 'targetConstAverage', label: '譜面定数ごとの既プレイ平均で埋める' },
-  { value: 'targetConstRegressionAverage', label: '譜面定数ごとの線形回帰予測平均で埋める' },
-  { value: 'manual', label: '手動指定' },
+  { value: 'targetConstAverage', label: '定数ごとの既プレイ平均で埋める' },
+  { value: 'targetConstRegressionAverage', label: '定数ごとの線形回帰で埋める' },
+  { value: 'manual', label: '指定したスコアで埋める' },
 ] as const
 
 const ULTIMA_DIFFICULTY = 'ULTIMA'
