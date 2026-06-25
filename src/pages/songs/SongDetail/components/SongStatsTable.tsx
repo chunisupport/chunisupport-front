@@ -37,7 +37,10 @@ const SongStatsTable = (props: Props) => {
                 <td class="px-2 py-2 text-right">
                   {band.average_score === null
                     ? '-'
-                    : band.average_score.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                    : band.average_score.toLocaleString(undefined, {
+                        minimumFractionDigits: 4,
+                        maximumFractionDigits: 4,
+                      })}
                 </td>
                 <td class="px-2 py-2 text-right">{band.combo.fc.toLocaleString()}</td>
                 <td class="px-2 py-2 text-right">{band.combo.aj.toLocaleString()}</td>
