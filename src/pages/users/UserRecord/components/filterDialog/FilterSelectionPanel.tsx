@@ -52,6 +52,9 @@ const toInputValue = (value?: number | null) =>
 const limitNameInput = (value: string): string =>
   Array.from(value).slice(0, RECORD_FILTER_NAME_MAX_LENGTH).join('')
 
+/** 通常のフィルターダイアログ上で Select の選択肢を前面に表示する z-index クラス。 */
+const FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
+
 /**
  * プレイヤーレコードのフィルター条件を選択するパネルを描画する。
  *
@@ -546,6 +549,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       <GenreSection
         genres={genres()}
         selected={props.filters.genres}
+        contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
         onSelectAll={() =>
           props.setFilters((prev) => ({
             ...prev,
@@ -568,6 +572,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       <VersionSection
         versions={versions()}
         selected={props.filters.versions}
+        contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
         onSelectAll={() =>
           props.setFilters((prev) => ({
             ...prev,
