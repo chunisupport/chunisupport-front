@@ -651,14 +651,30 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                   <RadioGroup.ItemControl class={RADIO_CONTROL_CLASS}>
                     <RadioGroup.ItemIndicator class="h-2.5 w-2.5 rounded-full bg-action-primary" />
                   </RadioGroup.ItemControl>
-                  <RadioGroup.ItemLabel class="min-w-0 flex-1 cursor-pointer">
-                    <Show when={option.value === 'manual'} fallback={<span>{option.label}</span>}>
+                  <Show
+                    when={option.value === 'manual'}
+                    fallback={
+                      <span class="pointer-events-none min-w-0 flex-1">
+                        <span>{option.label}</span>
+                        <Show when={option.value === 'playedAverage'}>
+                          <span class="ml-2 text-xs text-text-muted">
+                            {playedAverageScoreLabel()}
+                          </span>
+                        </Show>
+                      </span>
+                    }
+                  >
+                    <span class="min-w-0 flex-1">
                       <span class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                        <span class="shrink-0">{OVER_POWER_CALCULATOR_COPY.manualScoreLabel}</span>
+                        <span class="pointer-events-none shrink-0">
+                          {OVER_POWER_CALCULATOR_COPY.manualScoreLabel}
+                        </span>
                         <TextField
-                          class="w-full sm:w-40"
+                          class="relative z-20 w-full sm:w-40"
                           value={manualFillScore()}
                           onChange={setManualFillScore}
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onClick={(event) => event.stopPropagation()}
                         >
                           <TextField.Input
                             id="unplayed-over-power-manual-score"
@@ -669,14 +685,14 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                             pattern="[0-9]*"
                           />
                         </TextField>
-                        <span class="shrink-0 text-text-muted">
+                        <span class="pointer-events-none shrink-0 text-text-muted">
                           {OVER_POWER_CALCULATOR_COPY.manualScoreSuffix}
                         </span>
                       </span>
-                    </Show>
-                    <Show when={option.value === 'playedAverage'}>
-                      <span class="ml-2 text-xs text-text-muted">{playedAverageScoreLabel()}</span>
-                    </Show>
+                    </span>
+                  </Show>
+                  <RadioGroup.ItemLabel class="absolute inset-0 z-0 cursor-pointer rounded focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring">
+                    <span class="sr-only">{option.label}</span>
                   </RadioGroup.ItemLabel>
                 </RadioGroup.Item>
               )}
