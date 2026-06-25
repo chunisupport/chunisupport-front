@@ -2,12 +2,13 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   LOCKED_SONGS_FINDER_PATH,
+  OVER_POWER_CALCULATOR_PATH,
 } from './routes'
 
 /**
  * ツールカードに表示するアイコン種別。
  */
-export type ToolLinkIcon = 'calculator' | 'target' | 'search'
+export type ToolLinkIcon = 'calculator' | 'gauge' | 'target' | 'search'
 
 /**
  * 無効化されたツールカードに表示する状態ラベル。
@@ -42,6 +43,11 @@ export const TOOL_LINKS: ToolLink[] = [
     title: 'ボーダー計算機',
     href: BORDER_CALCULATOR_PATH,
     icon: 'target',
+  },
+  {
+    title: 'OVER POWER計算機',
+    href: OVER_POWER_CALCULATOR_PATH,
+    icon: 'gauge',
   },
   {
     title: '未解禁曲探索',

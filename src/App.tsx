@@ -1,5 +1,5 @@
 import { A, Route, Router, useParams } from '@solidjs/router'
-import { Calculator, Search, Target } from 'lucide-solid'
+import { Calculator, Gauge, Search, Target } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 
@@ -17,6 +17,7 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   LOCKED_SONGS_FINDER_PATH,
+  OVER_POWER_CALCULATOR_PATH,
   REGISTER_SCORE_PATH,
   TOOLS_PATH,
 } from './constants/routes'
@@ -38,6 +39,7 @@ import {
   GoalsList,
   Login,
   NotFoundPage,
+  OverPowerCalculatorPage,
   Register,
   RegisterScorePage,
   RegisterScoreTempPage,
@@ -230,6 +232,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
   switch (props.icon) {
     case 'calculator':
       return <Calculator class={iconClass} aria-hidden="true" />
+    case 'gauge':
+      return <Gauge class={iconClass} aria-hidden="true" />
     case 'target':
       return <Target class={iconClass} aria-hidden="true" />
     case 'search':
@@ -375,6 +379,7 @@ const App = () => {
         component={withNavBar(ChartConstantCalculatorPage)}
       />
       <Route path={BORDER_CALCULATOR_PATH} component={withNavBar(BorderCalculatorPage)} />
+      <Route path={OVER_POWER_CALCULATOR_PATH} component={withNavBar(OverPowerCalculatorPage)} />
       <Route path={LOCKED_SONGS_FINDER_PATH} component={withNavBar(EmptyToolPage)} />
 
       {/* 管理 */}
