@@ -125,16 +125,36 @@ export const calculateOverPowerForScore = (score: number, chartConst: number): n
 }
 
 /**
- * 既プレイ譜面全体の平均スコアを計算する。
+ * 現在OVER POWER対象になっている既プレイ譜面の平均スコアを計算する。
  *
  * @param records - 集計対象のプレイヤーレコード一覧。
- * @returns 既プレイ譜面がある場合は平均スコア。ない場合はnull。
+ * @returns 対象譜面がある場合は平均スコア。ない場合はnull。
  */
 export const calculatePlayedAverageScore = (records: PlayerRecordDTO[]): number | null => {
-  const playedRecords = records.filter((record) => record.is_played)
-  if (playedRecords.length === 0) return null
+  const recordsBySongId = new Map<string, PlayerRecordDTO[]>()
 
-  return playedRecords.reduce((sum, record) => sum + record.score, 0) / playedRecords.length
+  for (const record of records) {
+    const songRecords = recordsBySongId.get(record.id) ?? []
+    songRecords.push(record)
+    recordsBySongId.set(record.id, songRecords)
+  }
+
+  const targetPlayedRecords = [...recordsBySongId.values()]
+    .map((songRecords) => {
+      const targetRecords = songRecords.some((record) => record.is_op_target)
+        ? songRecords.filter((record) => record.is_op_target)
+        : songRecords
+      return targetRecords.reduce((maxRecord, record) =>
+        record.overpower > maxRecord.overpower ? record : maxRecord
+      )
+    })
+    .filter((record) => record.is_played)
+
+  if (targetPlayedRecords.length === 0) return null
+
+  return (
+    targetPlayedRecords.reduce((sum, record) => sum + record.score, 0) / targetPlayedRecords.length
+  )
 }
 
 /**

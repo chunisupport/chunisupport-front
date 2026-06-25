@@ -51,6 +51,7 @@ const OVER_POWER_CALCULATOR_COPY = {
   unplayedModeLabel: '未プレイの扱い',
   manualScoreLabel: '手動指定',
   manualScoreSuffix: '点で埋める',
+  noPlayedAverageLabel: '平均なし',
 } as const
 
 const BORDER_PERCENTS = [97.5, 99.0, 99.5] as const
@@ -68,7 +69,7 @@ const UNPLAYED_FILL_OPTIONS = [
   { value: 'none', label: '何もしない' },
   { value: 'remove', label: '存在を消す' },
   { value: 'theoretical', label: '理論値で埋める' },
-  { value: 'playedAverage', label: '全曲の既プレイ平均で埋める' },
+  { value: 'playedAverage', label: '既プレイ平均で埋める' },
   { value: 'manual', label: '手動指定' },
 ] as const
 
@@ -371,6 +372,12 @@ const OverPowerCalculatorPage = (): JSX.Element => {
       manualScore: parseOverPowerInput(manualFillScore()) ?? 0,
     })
   )
+  const playedAverageScoreLabel = createMemo(() => {
+    const score = importedBase()?.playedAverageScore
+    return score === null || typeof score === 'undefined'
+      ? OVER_POWER_CALCULATOR_COPY.noPlayedAverageLabel
+      : `${Math.round(score).toLocaleString('ja-JP')}点`
+  })
 
   /**
    * 加算値を現在獲得値へ足し、加算入力欄を空に戻す。
@@ -593,6 +600,9 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                           {OVER_POWER_CALCULATOR_COPY.manualScoreSuffix}
                         </span>
                       </span>
+                    </Show>
+                    <Show when={option.value === 'playedAverage'}>
+                      <span class="ml-2 text-xs text-text-muted">{playedAverageScoreLabel()}</span>
                     </Show>
                   </RadioGroup.ItemLabel>
                 </RadioGroup.Item>
