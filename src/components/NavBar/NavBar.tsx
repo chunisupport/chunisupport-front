@@ -25,7 +25,7 @@ type NavBarProps = {
 
 import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
-// import { DOCUMENTATION_BASE_URL } from '../../config'
+import { DOCUMENTATION_BASE_URL } from '../../config'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
@@ -44,14 +44,12 @@ import {
  * @property icon 項目名の左側に表示するアイコン要素を返す関数
  * @property path 選択時に遷移する内部パスまたは外部URL
  * @property action 遷移以外に実行するメニュー固有の操作
- * @property disabled 項目を準備中などで選択不可として扱うかどうか
  */
 type DropdownItem = {
   label: string
   icon: () => JSX.Element
   path?: string
   action?: 'theme'
-  disabled?: boolean
 }
 
 const THEME_OPTIONS = [
@@ -134,9 +132,9 @@ const NavBar = (props: NavBarProps) => {
         action: 'theme',
       },
       {
-        label: 'ヘルプ(準備中)',
+        label: 'ヘルプ',
         icon: () => <BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-        disabled: true,
+        path: DOCUMENTATION_BASE_URL,
       },
       ...(uname
         ? [
@@ -235,10 +233,6 @@ const NavBar = (props: NavBarProps) => {
    * @returns なし
    */
   const handleDropdownSelect = (item: DropdownItem) => {
-    if (item.disabled === true) {
-      return
-    }
-
     if (item.action === 'theme') {
       // モバイル環境では、DropdownMenu のクローズ時フォーカス復元と Dialog オープン時フォーカス奪取が
       // 同一タップ内で競合し、ダイアログが開いてすぐ閉じることがあるため、次のイベントループで開く。
@@ -304,10 +298,8 @@ const NavBar = (props: NavBarProps) => {
                             </DropdownMenu.Item>
                           ) : (
                             <DropdownMenu.Item
-                              disabled={d.disabled === true}
-                              aria-disabled={d.disabled === true ? 'true' : undefined}
                               onSelect={() => handleDropdownSelect(d)}
-                              class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer data-disabled:cursor-not-allowed data-disabled:text-disabled-text data-disabled:opacity-60 data-disabled:hover:bg-transparent data-disabled:focus:bg-transparent"
+                              class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
                             >
                               <span class="pr-2">{d.icon()}</span>
                               {d.label}
@@ -376,10 +368,8 @@ const NavBar = (props: NavBarProps) => {
                             </DropdownMenu.Item>
                           ) : (
                             <DropdownMenu.Item
-                              disabled={d.disabled === true}
-                              aria-disabled={d.disabled === true ? 'true' : undefined}
                               onSelect={() => handleDropdownSelect(d)}
-                              class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer data-disabled:cursor-not-allowed data-disabled:text-disabled-text data-disabled:opacity-60 data-disabled:hover:bg-transparent data-disabled:focus:bg-transparent"
+                              class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
                             >
                               <span class="pr-2">{d.icon()}</span>
                               {d.label}

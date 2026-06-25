@@ -10,6 +10,7 @@ import type {
   MasterItemDTO,
   PlayerLockedSongRequest,
   PlayerLockedSongResponseItem,
+  PlayerRecordDTO,
   SongDTO,
   VersionDTO,
 } from '../../../../types/api'
@@ -25,10 +26,13 @@ import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
 } from '../../../../utils/versionConverter'
+import GenreSection from '../../UserRecord/components/filterDialog/sections/GenreSection'
+import VersionSection from '../../UserRecord/components/filterDialog/sections/VersionSection'
 
 type Props = {
   open: boolean
   songs: SongDTO[]
+  records: PlayerRecordDTO[]
   genres: MasterItemDTO[]
   versions: VersionDTO[]
   lockedSongs: PlayerLockedSongResponseItem[]
@@ -44,6 +48,7 @@ type LockedSongListItem = {
 type LockedSongsFilter = {
   genres: string[]
   versions: string[]
+  unplayedOnly: boolean
 }
 
 const hasUltimaChart = (song: SongDTO): boolean => Boolean(song.charts.ULTIMA)
@@ -61,6 +66,10 @@ const releaseTimestamp = (release: string | null): number => {
 const toggleFilterValue = (values: string[], value: string): string[] =>
   values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
 
+/** チェックボックスの見た目を未解禁曲ダイアログ内で統一する Tailwind クラス。 */
+const FILTER_CHECKBOX_CONTROL_CLASS =
+  'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
+
 /**
  * OVER POWER計算から除外する未解禁楽曲を検索・絞り込みしながら編集するダイアログ。
  *
@@ -70,7 +79,11 @@ const toggleFilterValue = (values: string[], value: string): string[] =>
 const LockedSongsDialog: Component<Props> = (props) => {
   const [query, setQuery] = createSignal('')
   const [filterDialogOpen, setFilterDialogOpen] = createSignal(false)
-  const [filters, setFilters] = createSignal<LockedSongsFilter>({ genres: [], versions: [] })
+  const [filters, setFilters] = createSignal<LockedSongsFilter>({
+    genres: [],
+    versions: [],
+    unplayedOnly: false,
+  })
   const [showLockedOnly, setShowLockedOnly] = createSignal(false)
   const [isListReady, setIsListReady] = createSignal(false)
   const [draftLockedSongKeys, setDraftLockedSongKeys] = createSignal<Set<string>>(new Set())
@@ -91,8 +104,22 @@ const LockedSongsDialog: Component<Props> = (props) => {
         ])
       )
   )
+  const recordBySongAndDifficulty = createMemo(
+    () => new Map(props.records.map((record) => [`${record.id}:${record.difficulty}`, record]))
+  )
+  const recordsBySongId = createMemo(() => {
+    const grouped = new Map<string, PlayerRecordDTO[]>()
+    for (const record of props.records) {
+      const records = grouped.get(record.id) ?? []
+      records.push(record)
+      grouped.set(record.id, records)
+    }
+    return grouped
+  })
   const songVersionName = (song: SongDTO): string => songVersionNameById().get(song.id) ?? '不明'
-  const activeFilterCount = createMemo(() => filters().genres.length + filters().versions.length)
+  const activeFilterCount = createMemo(
+    () => filters().genres.length + filters().versions.length + (filters().unplayedOnly ? 1 : 0)
+  )
   const filterButtonLabel = createMemo(() =>
     activeFilterCount() > 0 ? `フィルター ${activeFilterCount()}件` : 'フィルター'
   )
@@ -106,6 +133,20 @@ const LockedSongsDialog: Component<Props> = (props) => {
   )
   const isLocked = (displayId: string, isUltima: boolean): boolean =>
     draftLockedSongKeys().has(createLockedSongKey(displayId, isUltima))
+  /**
+   * 未プレイのみ表示フィルターに合致する未解禁候補かを判定する。
+   *
+   * @param item - 未解禁候補の曲・譜面種別。
+   * @returns 未プレイ候補として表示できる場合は true。
+   */
+  const isUnplayedListItem = (item: LockedSongListItem): boolean => {
+    if (item.isUltima) {
+      return recordBySongAndDifficulty().get(`${item.song.id}:ULTIMA`)?.is_played !== true
+    }
+
+    const songRecords = recordsBySongId().get(item.song.id) ?? []
+    return songRecords.length === 0 || songRecords.every((record) => !record.is_played)
+  }
   const songListItems = createMemo<LockedSongListItem[]>(() =>
     props.songs
       .map((song, index) => ({ song, index }))
@@ -146,6 +187,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
     return searchableSongListItems()
       .filter(({ item, searchableText, searchableReading }) => {
         if (shouldShowLockedOnly && !isLocked(item.song.id, item.isUltima)) {
+          return false
+        }
+
+        if (currentFilters.unplayedOnly && !isUnplayedListItem(item)) {
           return false
         }
 
@@ -231,6 +276,16 @@ const LockedSongsDialog: Component<Props> = (props) => {
 
   const handleToggleVersionFilter = (version: string) => {
     setFilters((prev) => ({ ...prev, versions: toggleFilterValue(prev.versions, version) }))
+  }
+
+  /**
+   * 未プレイのみ表示フィルターを切り替える。
+   *
+   * @param checked - 次のチェック状態。
+   * @returns なし。
+   */
+  const handleUnplayedOnlyFilterChange = (checked: boolean) => {
+    setFilters((prev) => ({ ...prev, unplayedOnly: checked }))
   }
 
   createEffect(() => {
@@ -426,78 +481,46 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 </div>
 
                 <div class="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
-                  <section>
-                    <div class="mb-2 flex items-center justify-between gap-2">
-                      <h3 class="font-bold">ジャンル</h3>
-                      <Button
-                        type="button"
-                        class="rounded border border-border-strong px-2 py-1 text-xs text-text-muted hover:bg-surface-muted"
-                        onClick={() => setFilters((prev) => ({ ...prev, genres: [] }))}
-                      >
-                        解除
-                      </Button>
-                    </div>
-                    <div class="grid gap-2">
-                      <For each={genreOptions()}>
-                        {(genre, index) => {
-                          const id = `locked-song-filter-genre-${index()}`
-                          return (
-                            <Checkbox
-                              checked={filters().genres.includes(genre)}
-                              onChange={() => handleToggleGenreFilter(genre)}
-                              class="flex items-center gap-2"
-                            >
-                              <Checkbox.Input id={id} />
-                              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
-                                <Checkbox.Indicator>
-                                  <Check class="h-4 w-4" />
-                                </Checkbox.Indicator>
-                              </Checkbox.Control>
-                              <Checkbox.Label class="min-w-0 leading-5" for={id}>
-                                {genre}
-                              </Checkbox.Label>
-                            </Checkbox>
-                          )
-                        }}
-                      </For>
-                    </div>
-                  </section>
+                  <GenreSection
+                    genres={genreOptions()}
+                    selected={filters().genres}
+                    onToggle={handleToggleGenreFilter}
+                    onSelectAll={() => setFilters((prev) => ({ ...prev, genres: genreOptions() }))}
+                    onClear={() => setFilters((prev) => ({ ...prev, genres: [] }))}
+                  />
+
+                  <VersionSection
+                    versions={versionOptions()}
+                    selected={filters().versions}
+                    onToggle={handleToggleVersionFilter}
+                    onSelectAll={() =>
+                      setFilters((prev) => ({ ...prev, versions: versionOptions() }))
+                    }
+                    onClear={() => setFilters((prev) => ({ ...prev, versions: [] }))}
+                  />
 
                   <section>
-                    <div class="mb-2 flex items-center justify-between gap-2">
-                      <h3 class="font-bold">バージョン</h3>
-                      <Button
-                        type="button"
-                        class="rounded border border-border-strong px-2 py-1 text-xs text-text-muted hover:bg-surface-muted"
-                        onClick={() => setFilters((prev) => ({ ...prev, versions: [] }))}
+                    <Checkbox
+                      checked={filters().unplayedOnly}
+                      onChange={handleUnplayedOnlyFilterChange}
+                      class="relative flex items-center gap-2"
+                    >
+                      <Checkbox.Input
+                        id="locked-song-filter-unplayed-only"
+                        style={{ left: '0', top: '0' }}
+                      />
+                      <Checkbox.Control class={FILTER_CHECKBOX_CONTROL_CLASS}>
+                        <Checkbox.Indicator>
+                          <Check class="h-4 w-4" />
+                        </Checkbox.Indicator>
+                      </Checkbox.Control>
+                      <Checkbox.Label
+                        class="min-w-0 leading-5"
+                        for="locked-song-filter-unplayed-only"
                       >
-                        解除
-                      </Button>
-                    </div>
-                    <div class="grid gap-2">
-                      <For each={versionOptions()}>
-                        {(version, index) => {
-                          const id = `locked-song-filter-version-${index()}`
-                          return (
-                            <Checkbox
-                              checked={filters().versions.includes(version)}
-                              onChange={() => handleToggleVersionFilter(version)}
-                              class="flex items-center gap-2"
-                            >
-                              <Checkbox.Input id={id} />
-                              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
-                                <Checkbox.Indicator>
-                                  <Check class="h-4 w-4" />
-                                </Checkbox.Indicator>
-                              </Checkbox.Control>
-                              <Checkbox.Label class="min-w-0 leading-5" for={id}>
-                                {version}
-                              </Checkbox.Label>
-                            </Checkbox>
-                          )
-                        }}
-                      </For>
-                    </div>
+                        未プレイのみ表示
+                      </Checkbox.Label>
+                    </Checkbox>
                   </section>
                 </div>
 
@@ -505,7 +528,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   <Button
                     type="button"
                     class="rounded border border-border-strong px-3 py-2 text-sm text-text-muted hover:bg-surface-muted"
-                    onClick={() => setFilters({ genres: [], versions: [] })}
+                    onClick={() => setFilters({ genres: [], versions: [], unplayedOnly: false })}
                   >
                     すべて解除
                   </Button>
