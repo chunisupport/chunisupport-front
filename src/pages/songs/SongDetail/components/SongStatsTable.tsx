@@ -114,7 +114,7 @@ const createSongStatsChartOptions = (): ChartOptions<'bar'> => {
       },
       tooltip: {
         callbacks: {
-          label: (context) => `${context.dataset.label}: ${context.parsed.y.toLocaleString()}人`,
+          label: (context) => `${context.dataset.label}: ${context.parsed.y?.toLocaleString()}人`,
         },
       },
     },
@@ -250,14 +250,14 @@ const SongStatsCharts = (props: Props) => {
   return (
     <div class="mt-4 grid gap-4 lg:grid-cols-2">
       <SongStatsBarChart
-        title="FC / AJ"
+        title="COMBO"
         ariaLabel="レーティング帯別のFCとAJ人数グラフ"
         labels={labels()}
         datasets={comboDatasets()}
       />
       <SongStatsBarChart
-        title="CLEAR - CATASTROPHY"
-        ariaLabel="レーティング帯別のCLEAR、HARD、BRAVE、ABSOLUTE、CATASTROPHY人数グラフ"
+        title="HARD"
+        ariaLabel="レーティング帯別のハードランプ人数グラフ"
         labels={labels()}
         datasets={clearDatasets()}
       />
@@ -277,7 +277,7 @@ const SongStatsTable = (props: Props) => {
         <table class="min-w-full text-sm">
           <thead class="bg-surface-muted">
             <tr>
-              <th class="px-2 py-2 text-left whitespace-nowrap">帯</th>
+              <th class="px-2 py-2 text-left whitespace-nowrap">ベスト枠平均</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">人数</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">平均スコア</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">FC</th>
