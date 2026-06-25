@@ -84,19 +84,30 @@ const DistributionBar: Component<{
   order: string[]
   colorMap: Record<string, string>
   hiddenGraphKeys?: readonly string[]
-}> = (props) => (
-  <div class="flex h-5 w-full overflow-hidden rounded bg-surface-hover">
-    <For each={getVisibleDistributionKeys(props.dist, props.order)}>
-      {(key) => (
-        <div
-          class={`${props.hiddenGraphKeys?.includes(key) ? 'bg-transparent' : props.colorMap[key]} h-full`}
-          style={{ width: `${props.dist[key].percent}%` }}
-          title={key}
-        ></div>
-      )}
-    </For>
-  </div>
-)
+}> = (props) => {
+  const visibleKeys = () => getVisibleDistributionKeys(props.dist, props.order)
+  return (
+    <div class="overflow-hidden rounded">
+      <div class="flex h-5 w-full overflow-visible bg-surface-hover">
+        <For each={visibleKeys()}>
+          {(key, index) => {
+            const z = () => visibleKeys().length - index()
+            return (
+              <div
+                class={`${props.hiddenGraphKeys?.includes(key) ? 'bg-transparent' : props.colorMap[key]} relative h-full shadow-[2px_0_3px_-1px_rgba(0,0,0,0.4)]`}
+                style={{
+                  width: `${props.dist[key].percent}%`,
+                  'z-index': z(),
+                }}
+                title={key}
+              ></div>
+            )
+          }}
+        </For>
+      </div>
+    </div>
+  )
+}
 
 /**
  * 分布の1行分を件数、割合、ミニバーで表示する。
