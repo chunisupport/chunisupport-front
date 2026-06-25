@@ -3,6 +3,10 @@ import { Select } from '@kobalte/core/select'
 import { Check, ChevronsUpDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
+import {
+  DEFAULT_MULTI_SELECT_CONTENT_Z_INDEX_CLASS,
+  MULTI_SELECT_CONTENT_BASE_CLASS,
+} from './multiSelectSectionClasses'
 
 type GenreSectionProps = {
   /** ジャンルの選択肢。 */
@@ -24,13 +28,6 @@ const MULTI_SELECT_TRIGGER_CLASS =
 
 const MULTI_SELECT_ITEM_CLASS =
   'cursor-pointer px-3 py-2 text-sm text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
-
-/** Select の選択肢ポータルに共通で適用する Tailwind クラス。 */
-const MULTI_SELECT_CONTENT_BASE_CLASS =
-  '-mt-2 -mb-2 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md'
-
-/** Select の選択肢ポータルを通常のフィルターダイアログ上に表示するための既定 z-index クラス。 */
-const DEFAULT_MULTI_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
 
 /**
  * ジャンルの複数選択フィルターをプルダウン式チェックリストで表示する。
