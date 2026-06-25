@@ -35,6 +35,7 @@ const CHART_HEIGHT_CLASS = 'h-72'
 const CHART_COLOR_FALLBACK = '#6b7280'
 const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
 const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
+const CHART_EXCLUDED_RATING_BAND = 'ALL'
 const COMBO_CHART_DATASET_DEFINITIONS = [
   { label: 'FC', valueKey: 'fc', colorVariable: '--cs-color-lamp-full-combo-bg' },
   { label: 'AJ', valueKey: 'aj', colorVariable: '--cs-color-lamp-all-justice-bg' },
@@ -76,15 +77,19 @@ const formatAverageScore = (score: number) => {
 }
 
 /**
- * CSSカスタムプロパティからChart.jsへ渡す色値を取得する。
+ * CSSカスタムプロパティからChart.jsへ渡す解決済みの色値を取得する。
  * @param variableName 取得対象のCSSカスタムプロパティ名。
  * @returns Chart.jsで利用するCSS色値。
  */
 const getChartColor = (variableName: string): string => {
-  return (
-    getComputedStyle(document.documentElement).getPropertyValue(variableName).trim() ||
-    CHART_COLOR_FALLBACK
-  )
+  const colorProbe = document.createElement('span')
+  colorProbe.style.color = `var(${variableName}, ${CHART_COLOR_FALLBACK})`
+  document.documentElement.append(colorProbe)
+
+  const color = getComputedStyle(colorProbe).color || CHART_COLOR_FALLBACK
+  colorProbe.remove()
+
+  return color
 }
 
 /**
@@ -159,11 +164,21 @@ const createSongStatsChartData = (
       data: dataset.values,
       backgroundColor: color,
       borderColor: color,
+      hoverBackgroundColor: color,
+      hoverBorderColor: color,
       borderWidth: 1,
       borderRadius: 3,
     }
   }),
 })
+
+/**
+ * 積み上げグラフに表示する統計行を取得する。
+ * @param stats APIから取得したレーティング帯別統計行。
+ * @returns ALL行を除いたグラフ表示用の統計行。
+ */
+const getChartStats = (stats: SongStatsBandDTO[]): SongStatsBandDTO[] =>
+  stats.filter((band) => band.rating_band !== CHART_EXCLUDED_RATING_BAND)
 
 /**
  * Chart.jsをSolidJSのライフサイクルに合わせて描画する。
@@ -217,17 +232,18 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
  * @returns FC/AJとCLEAR系ランプのグラフ。
  */
 const SongStatsCharts = (props: Props) => {
-  const labels = createMemo(() => props.stats.map((band) => band.rating_band))
+  const chartStats = createMemo(() => getChartStats(props.stats))
+  const labels = createMemo(() => chartStats().map((band) => band.rating_band))
   const comboDatasets = createMemo<SongStatsChartDataset[]>(() =>
     COMBO_CHART_DATASET_DEFINITIONS.map((definition) => ({
       ...definition,
-      values: props.stats.map((band) => band.combo[definition.valueKey]),
+      values: chartStats().map((band) => band.combo[definition.valueKey]),
     }))
   )
   const clearDatasets = createMemo<SongStatsChartDataset[]>(() =>
     CLEAR_CHART_DATASET_DEFINITIONS.map((definition) => ({
       ...definition,
-      values: props.stats.map((band) => band.clear[definition.valueKey]),
+      values: chartStats().map((band) => band.clear[definition.valueKey]),
     }))
   )
 
