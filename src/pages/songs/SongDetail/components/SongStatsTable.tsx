@@ -5,6 +5,30 @@ type Props = {
   stats: SongStatsBandDTO[]
 }
 
+/** 現在のロケールにおける小数点セパレータを取得する。 */
+const getDecimalSeparator = (): string => (1.1).toLocaleString().charAt(1)
+
+/**
+ * 平均スコアを整数部と小数部に分割して表示する。
+ * @param score 表示するスコア値。
+ * @returns 小数部のみフォントサイズを小さくした JSX。
+ */
+const formatAverageScore = (score: number) => {
+  const formatted = score.toLocaleString(undefined, {
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4,
+  })
+  const sep = getDecimalSeparator()
+  const idx = formatted.lastIndexOf(sep)
+  if (idx === -1) return formatted
+  return (
+    <>
+      {formatted.slice(0, idx)}
+      <span class="text-[0.8em]">{formatted.slice(idx)}</span>
+    </>
+  )
+}
+
 /**
  * 楽曲詳細ページのレーティング帯別統計を表示する。
  * @param props 表示する統計行。
@@ -35,12 +59,7 @@ const SongStatsTable = (props: Props) => {
                 <td class="px-2 py-2">{band.rating_band}</td>
                 <td class="px-2 py-2 text-right">{band.player_count.toLocaleString()}</td>
                 <td class="px-2 py-2 text-right">
-                  {band.average_score === null
-                    ? '-'
-                    : band.average_score.toLocaleString(undefined, {
-                        minimumFractionDigits: 4,
-                        maximumFractionDigits: 4,
-                      })}
+                  {band.average_score === null ? '-' : formatAverageScore(band.average_score)}
                 </td>
                 <td class="px-2 py-2 text-right">{band.combo.fc.toLocaleString()}</td>
                 <td class="px-2 py-2 text-right">{band.combo.aj.toLocaleString()}</td>
