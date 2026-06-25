@@ -10,12 +10,15 @@ import {
   Tooltip,
 } from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
-import type { SongStatsBandDTO } from '../../../../types/api'
+import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
+import { isOwnBestAverageRatingBand } from './songStatsHighlight'
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip)
 
 type Props = {
   stats: SongStatsBandDTO[]
+  bestAverage?: number | null
+  ratingBands?: RatingBandDTO[]
 }
 
 type SongStatsChartDataset = {
@@ -36,6 +39,9 @@ const CHART_COLOR_FALLBACK = '#6b7280'
 const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
 const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_EXCLUDED_RATING_BAND = 'ALL'
+const HIGHLIGHTED_RATING_BAND_ROW_CLASS =
+  'border-l-4 border-l-action-primary bg-action-primary-muted font-semibold'
+const NORMAL_RATING_BAND_ROW_CLASS = 'border-l-4 border-l-transparent'
 const COMBO_CHART_DATASET_DEFINITIONS = [
   { label: 'FC', valueKey: 'fc', colorVariable: '--cs-color-lamp-full-combo-bg' },
   { label: 'AJ', valueKey: 'aj', colorVariable: '--cs-color-lamp-all-justice-bg' },
@@ -271,6 +277,19 @@ const SongStatsCharts = (props: Props) => {
  * @returns 難易度別統計テーブルとランプ別グラフ。
  */
 const SongStatsTable = (props: Props) => {
+  /**
+   * 統計行に適用するハイライト状態を含むクラスを返す。
+   *
+   * @param ratingBandLabel 判定対象のレーティング帯ラベル。
+   * @returns ハイライト有無に応じたテーブル行クラス。
+   */
+  const getRowClass = (ratingBandLabel: string): string =>
+    `border-t border-border ${
+      isOwnBestAverageRatingBand(ratingBandLabel, props.bestAverage, props.ratingBands)
+        ? HIGHLIGHTED_RATING_BAND_ROW_CLASS
+        : NORMAL_RATING_BAND_ROW_CLASS
+    }`
+
   return (
     <>
       <div class="overflow-x-auto">
@@ -292,7 +311,7 @@ const SongStatsTable = (props: Props) => {
           <tbody>
             <For each={props.stats}>
               {(band) => (
-                <tr class="border-t border-border">
+                <tr class={getRowClass(band.rating_band)}>
                   <td class="px-2 py-2">{band.rating_band}</td>
                   <td class="px-2 py-2 text-right">{band.player_count.toLocaleString()}</td>
                   <td class="px-2 py-2 text-right">

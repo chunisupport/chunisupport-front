@@ -3,7 +3,9 @@ import { createMemo, createResource, Show } from 'solid-js'
 import { fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
 import { LoadError } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { authSession } from '../../../stores/authSession'
 import type { WorldsendSongDTO } from '../../../types/api'
+import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
 import NotFoundPage from '../../NotFoundPage'
 import SongDetailLayout from '../components/SongDetailLayout'
@@ -62,10 +64,15 @@ const WorldsendSongDetail = () => {
     const state = songState()
     return state?.type === 'error' ? state.error : undefined
   })
-  const { songVersionName, handleBack } = useSongDetailBase(() => song())
+  const { masterData, songVersionName, handleBack } = useSongDetailBase(() => song())
   const [stats] = createResource(displayIdSource, (displayId) =>
     fetchSongStats(displayId, worldsendDifficulty[0].value)
   )
+  const [ownRating] = createResource(
+    () => (authSession.status === 'authenticated' ? authSession.user?.username : null),
+    fetchUserRatingWithCache
+  )
+  const ownBestAverage = createMemo(() => ownRating()?.best_average)
 
   const titleMeta = createMemo(() => {
     const currentSong = song()
@@ -98,6 +105,8 @@ const WorldsendSongDetail = () => {
                   readonlyDifficulty={worldsendDifficulty[0].value}
                   stats={stats()}
                   isStatsLoading={stats.loading}
+                  bestAverage={ownBestAverage()}
+                  ratingBands={masterData()?.rating_bands}
                 />
               </Show>
             </>

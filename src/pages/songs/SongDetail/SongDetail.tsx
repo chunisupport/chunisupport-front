@@ -3,7 +3,9 @@ import { createEffect, createMemo, createResource, createSignal, on, Show, untra
 import { fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
 import { LoadError } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { authSession } from '../../../stores/authSession'
 import type { SongDTO } from '../../../types/api'
+import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
 import { normalizeDifficultyQueryValue } from '../../../utils/difficultyUtils'
 import NotFoundPage from '../../NotFoundPage'
@@ -103,6 +105,11 @@ const SongDetail = () => {
     },
     (source) => fetchSongStats(source.displayId, source.difficulty)
   )
+  const [ownRating] = createResource(
+    () => (authSession.status === 'authenticated' ? authSession.user?.username : null),
+    fetchUserRatingWithCache
+  )
+  const ownBestAverage = createMemo(() => ownRating()?.best_average)
 
   useDocumentTitle(() => `${song()?.title ?? '楽曲'} - 楽曲詳細`)
 
@@ -129,6 +136,8 @@ const SongDetail = () => {
               onDifficultyChange={setSelectedDifficulty}
               stats={stats()}
               isStatsLoading={stats.loading}
+              bestAverage={ownBestAverage()}
+              ratingBands={masterData()?.rating_bands}
             />
           )}
         />

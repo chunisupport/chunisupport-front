@@ -1,7 +1,7 @@
 import * as Tabs from '@kobalte/core/tabs'
 import { For, Show } from 'solid-js'
 import { Loading } from '../../../../components'
-import type { SongStatsResponseDTO } from '../../../../types/api'
+import type { RatingBandDTO, SongStatsResponseDTO } from '../../../../types/api'
 import SongStatsTable from './SongStatsTable'
 
 type DifficultyOption = {
@@ -25,6 +25,8 @@ type Props = {
   difficulties: DifficultyOption[]
   stats: SongStatsResponseDTO | undefined
   isStatsLoading: boolean
+  bestAverage?: number | null
+  ratingBands?: RatingBandDTO[]
 } & (SelectableDifficultyProps | ReadonlyDifficultyProps)
 
 /**
@@ -61,7 +63,13 @@ const SongStatsTabs = (props: Props) => {
           {(difficulty) => (
             <Tabs.Content value={difficulty.value} class="mt-3">
               <Show when={!props.isStatsLoading && props.stats} fallback={<Loading />}>
-                {(statsData) => <SongStatsTable stats={statsData().stats} />}
+                {(statsData) => (
+                  <SongStatsTable
+                    stats={statsData().stats}
+                    bestAverage={props.bestAverage}
+                    ratingBands={props.ratingBands}
+                  />
+                )}
               </Show>
             </Tabs.Content>
           )}
