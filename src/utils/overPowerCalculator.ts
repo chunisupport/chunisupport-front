@@ -18,7 +18,19 @@ export type UnplayedOverPowerFillMode =
   | 'remove'
   | 'theoretical'
   | 'playedAverage'
+  | 'targetConstAverage'
+  | 'targetConstRegressionAverage'
   | 'manual'
+
+/**
+ * 譜面定数から予測スコアを出す線形回帰モデル。
+ */
+export type PlayedAverageScoreRegression = {
+  /** score = slope * const + intercept の傾き。 */
+  slope: number
+  /** score = slope * const + intercept の切片。 */
+  intercept: number
+}
 
 /**
  * 未プレイ除外計算で扱う曲ごとのOVER POWER情報。
@@ -40,8 +52,12 @@ export type UnplayedOverPowerEntry = {
 export type UnplayedOverPowerCalculationInput = {
   /** 曲ごとのOVER POWER情報。 */
   entries: UnplayedOverPowerEntry[]
-  /** 既プレイ譜面全体の平均スコア。 */
+  /** 現在OP対象になっている既プレイ譜面の平均スコア。 */
   playedAverageScore: number | null
+  /** 現在OP対象の既プレイ譜面を譜面定数ごとに集計した平均スコア。 */
+  playedAverageScoreByConst: Map<number, number>
+  /** 譜面定数ごとの平均スコアから作った線形回帰モデル。 */
+  playedAverageScoreRegression: PlayedAverageScoreRegression | null
   /** 未プレイ曲の扱い。 */
   mode: UnplayedOverPowerFillMode
   /** 手動指定で埋めるスコア。 */
@@ -62,6 +78,31 @@ const SSS_OVER_POWER_SCORE = 1007500
 const SSS_OVER_POWER_RATE = 0.0015
 const OP_MULTIPLIER = 5
 const SSS_CONSTANT_BONUS = 2
+
+/**
+ * 曲ごとに現在OVER POWER対象として扱う譜面レコードを抽出する。
+ *
+ * @param records - 集計対象のプレイヤーレコード一覧。
+ * @returns 曲ごとの現在OVER POWER対象レコード一覧。
+ */
+const getCurrentOverPowerTargetRecords = (records: PlayerRecordDTO[]): PlayerRecordDTO[] => {
+  const recordsBySongId = new Map<string, PlayerRecordDTO[]>()
+
+  for (const record of records) {
+    const songRecords = recordsBySongId.get(record.id) ?? []
+    songRecords.push(record)
+    recordsBySongId.set(record.id, songRecords)
+  }
+
+  return [...recordsBySongId.values()].map((songRecords) => {
+    const targetRecords = songRecords.some((record) => record.is_op_target)
+      ? songRecords.filter((record) => record.is_op_target)
+      : songRecords
+    return targetRecords.reduce((maxRecord, record) =>
+      record.overpower > maxRecord.overpower ? record : maxRecord
+    )
+  })
+}
 
 /**
  * 現在値と理論値からOVER POWER達成率を計算する。
@@ -131,29 +172,91 @@ export const calculateOverPowerForScore = (score: number, chartConst: number): n
  * @returns 対象譜面がある場合は平均スコア。ない場合はnull。
  */
 export const calculatePlayedAverageScore = (records: PlayerRecordDTO[]): number | null => {
-  const recordsBySongId = new Map<string, PlayerRecordDTO[]>()
-
-  for (const record of records) {
-    const songRecords = recordsBySongId.get(record.id) ?? []
-    songRecords.push(record)
-    recordsBySongId.set(record.id, songRecords)
-  }
-
-  const targetPlayedRecords = [...recordsBySongId.values()]
-    .map((songRecords) => {
-      const targetRecords = songRecords.some((record) => record.is_op_target)
-        ? songRecords.filter((record) => record.is_op_target)
-        : songRecords
-      return targetRecords.reduce((maxRecord, record) =>
-        record.overpower > maxRecord.overpower ? record : maxRecord
-      )
-    })
-    .filter((record) => record.is_played)
+  const targetPlayedRecords = getCurrentOverPowerTargetRecords(records).filter(
+    (record) => record.is_played
+  )
 
   if (targetPlayedRecords.length === 0) return null
 
   return (
     targetPlayedRecords.reduce((sum, record) => sum + record.score, 0) / targetPlayedRecords.length
+  )
+}
+
+/**
+ * 現在OVER POWER対象になっている既プレイ譜面の平均スコアを譜面定数ごとに計算する。
+ *
+ * @param records - 集計対象のプレイヤーレコード一覧。
+ * @returns 譜面定数をキーにした平均スコア。
+ */
+export const calculatePlayedAverageScoreByConst = (
+  records: PlayerRecordDTO[]
+): Map<number, number> => {
+  const groupedScores = new Map<number, { total: number; count: number }>()
+
+  for (const record of getCurrentOverPowerTargetRecords(records)) {
+    if (!record.is_played) continue
+
+    const group = groupedScores.get(record.const) ?? { total: 0, count: 0 }
+    group.total += record.score
+    group.count += 1
+    groupedScores.set(record.const, group)
+  }
+
+  return new Map(
+    [...groupedScores.entries()].map(([chartConst, group]) => [
+      chartConst,
+      group.total / group.count,
+    ])
+  )
+}
+
+/**
+ * 譜面定数ごとの平均スコアから線形回帰モデルを作成する。
+ *
+ * @param playedAverageScoreByConst - 譜面定数をキーにした平均スコア。
+ * @returns 予測に使う線形回帰モデル。点がない場合はnull。
+ */
+export const calculatePlayedAverageScoreRegression = (
+  playedAverageScoreByConst: Map<number, number>
+): PlayedAverageScoreRegression | null => {
+  const points = [...playedAverageScoreByConst.entries()]
+  if (points.length === 0) return null
+  if (points.length === 1) {
+    return { slope: 0, intercept: points[0][1] }
+  }
+
+  const averageConst = points.reduce((sum, [chartConst]) => sum + chartConst, 0) / points.length
+  const averageScore = points.reduce((sum, [, score]) => sum + score, 0) / points.length
+  const variance = points.reduce((sum, [chartConst]) => sum + (chartConst - averageConst) ** 2, 0)
+  if (variance === 0) return { slope: 0, intercept: averageScore }
+
+  const covariance = points.reduce(
+    (sum, [chartConst, score]) => sum + (chartConst - averageConst) * (score - averageScore),
+    0
+  )
+  const slope = covariance / variance
+  return {
+    slope,
+    intercept: averageScore - slope * averageConst,
+  }
+}
+
+/**
+ * 線形回帰モデルから指定譜面定数の予測スコアを計算する。
+ *
+ * @param regression - 譜面定数ごとの平均スコアから作った線形回帰モデル。
+ * @param chartConst - 予測対象の譜面定数。
+ * @returns 予測スコア。モデルがない場合は0。
+ */
+export const predictPlayedAverageScoreByConstRegression = (
+  regression: PlayedAverageScoreRegression | null,
+  chartConst: number
+): number => {
+  if (regression === null) return 0
+  return Math.max(
+    0,
+    Math.min(MAX_OVER_POWER_SCORE, regression.slope * chartConst + regression.intercept)
   )
 }
 
@@ -180,6 +283,33 @@ export const calculateUnplayedOverPower = (
             entry.current,
             Math.min(
               calculateOverPowerForScore(input.playedAverageScore, entry.targetConst),
+              entry.max
+            )
+          )
+        }
+        if (input.mode === 'targetConstAverage') {
+          return Math.max(
+            entry.current,
+            Math.min(
+              calculateOverPowerForScore(
+                input.playedAverageScoreByConst.get(entry.targetConst) ?? 0,
+                entry.targetConst
+              ),
+              entry.max
+            )
+          )
+        }
+        if (input.mode === 'targetConstRegressionAverage') {
+          return Math.max(
+            entry.current,
+            Math.min(
+              calculateOverPowerForScore(
+                predictPlayedAverageScoreByConstRegression(
+                  input.playedAverageScoreRegression,
+                  entry.targetConst
+                ),
+                entry.targetConst
+              ),
               entry.max
             )
           )

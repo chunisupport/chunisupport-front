@@ -27,10 +27,13 @@ import {
   calculateOverPowerDifference,
   calculateOverPowerPercent,
   calculatePlayedAverageScore,
+  calculatePlayedAverageScoreByConst,
+  calculatePlayedAverageScoreRegression,
   calculateRequiredOverPower,
   calculateUnplayedOverPower,
   formatOverPowerInputValue,
   type OverPowerCalculatorBase,
+  type PlayedAverageScoreRegression,
   parseOverPowerInput,
   type UnplayedOverPowerEntry,
   type UnplayedOverPowerFillMode,
@@ -79,6 +82,8 @@ const UNPLAYED_FILL_OPTIONS = [
   { value: 'remove', label: '存在を消す' },
   { value: 'theoretical', label: '理論値で埋める' },
   { value: 'playedAverage', label: '既プレイ平均で埋める' },
+  { value: 'targetConstAverage', label: '譜面定数ごとの既プレイ平均で埋める' },
+  { value: 'targetConstRegressionAverage', label: '譜面定数ごとの線形回帰予測平均で埋める' },
   { value: 'manual', label: '手動指定' },
 ] as const
 
@@ -96,6 +101,10 @@ type OverPowerCalculatorData = OverPowerCalculatorBase & {
   unplayedEntries: UnplayedOverPowerEntry[]
   /** 現在OP対象になっている既プレイ譜面の平均スコア。 */
   playedAverageScore: number | null
+  /** 現在OP対象になっている既プレイ譜面の譜面定数別平均スコア。 */
+  playedAverageScoreByConst: Map<number, number>
+  /** 譜面定数別平均スコアから作った線形回帰モデル。 */
+  playedAverageScoreRegression: PlayedAverageScoreRegression | null
   /** ダイアログに渡す通常譜面レコード一覧。 */
   records: PlayerRecordDTO[]
   /** ダイアログに渡すバージョン一覧。 */
@@ -296,6 +305,7 @@ const fetchOverPowerCalculatorBase = async (
   const availableRecords = record.standard.filter((playerRecord) =>
     isRecordAvailable(playerRecord, lockedLookup)
   )
+  const playedAverageScoreByConst = calculatePlayedAverageScoreByConst(availableRecords)
 
   return {
     max: summary.all.max,
@@ -306,6 +316,8 @@ const fetchOverPowerCalculatorBase = async (
       effectiveLockedSongs
     ),
     playedAverageScore: calculatePlayedAverageScore(availableRecords),
+    playedAverageScoreByConst,
+    playedAverageScoreRegression: calculatePlayedAverageScoreRegression(playedAverageScoreByConst),
     records: record.standard,
     versions: versions.versions,
     lockedSongs: lockedSongs.items,
@@ -391,9 +403,14 @@ const OverPowerCalculatorPage = (): JSX.Element => {
     calculateUnplayedOverPower({
       entries: importedBase()?.unplayedEntries ?? [],
       playedAverageScore: importedBase()?.playedAverageScore ?? null,
+      playedAverageScoreByConst: importedBase()?.playedAverageScoreByConst ?? new Map(),
+      playedAverageScoreRegression: importedBase()?.playedAverageScoreRegression ?? null,
       mode: unplayedFillMode(),
       manualScore: parseOverPowerInput(manualFillScore()) ?? 0,
     })
+  )
+  const unplayedSongCount = createMemo(
+    () => importedBase()?.unplayedEntries.filter((entry) => entry.isUnplayed).length ?? 0
   )
   const playedAverageScoreLabel = createMemo(() => {
     const score = importedBase()?.playedAverageScore
@@ -642,7 +659,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
             class="mt-5 space-y-2"
           >
             <RadioGroup.Label class="block text-sm font-medium text-text-muted">
-              {OVER_POWER_CALCULATOR_COPY.unplayedModeLabel}
+              {OVER_POWER_CALCULATOR_COPY.unplayedModeLabel}（{unplayedSongCount()}曲）
             </RadioGroup.Label>
             <For each={UNPLAYED_FILL_OPTIONS}>
               {(option) => (
