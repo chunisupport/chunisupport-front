@@ -61,6 +61,8 @@ const OVER_POWER_CALCULATOR_COPY = {
   unplayedCalculatorTitle: '未プレイ除外計算',
   loginRequiredMessage: 'ログイン中のみ使用できます。',
   unplayedModeLabel: '未プレイの扱い',
+  unplayedCalculationDescription:
+    '未プレイ曲のOP対象譜面を指定したスコアで埋めた際のOVER POWERを計算します。「存在を消す」は分母から未プレイ分を除外します。「定数ごとの既プレイ平均」では、譜面定数ごとに平均を算出した上で、未プレイ譜面の譜面定数に対応する値で埋めます。既プレイ譜面が存在しない定数は平均0点として扱います。「定数ごとの線形回帰」では、譜面定数を説明変数、譜面定数ごとの既プレイ平均を目的変数として平均値を推定します。そのため、既プレイ譜面が存在しない定数においても平均は0点になりません。(※既プレイ平均の算出は、現在OP対象となっている譜面に対して行われます。)',
   manualScoreLabel: '指定したスコアで埋める',
   manualScoreSuffix: '点',
   noPlayedAverageLabel: '平均なし',
@@ -715,6 +717,9 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               )}
             </For>
           </RadioGroup>
+          <p class="mt-3 rounded-md border border-border bg-surface-muted px-4 py-3 text-sm leading-6 text-text-muted">
+            {OVER_POWER_CALCULATOR_COPY.unplayedCalculationDescription}
+          </p>
         </Show>
       </section>
     </main>
