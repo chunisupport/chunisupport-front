@@ -98,6 +98,7 @@ const createSongStatsChartOptions = (): ChartOptions<'bar'> => {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    animation: false,
     plugins: {
       legend: {
         labels: {
@@ -114,6 +115,7 @@ const createSongStatsChartOptions = (): ChartOptions<'bar'> => {
     },
     scales: {
       x: {
+        stacked: true,
         ticks: {
           color: textColor,
           maxRotation: 0,
@@ -124,6 +126,7 @@ const createSongStatsChartOptions = (): ChartOptions<'bar'> => {
         },
       },
       y: {
+        stacked: true,
         beginAtZero: true,
         ticks: {
           color: textColor,
@@ -191,7 +194,7 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
     }
 
     chart.data = chartData
-    chart.update()
+    chart.update('none')
   })
 
   onCleanup(() => {
