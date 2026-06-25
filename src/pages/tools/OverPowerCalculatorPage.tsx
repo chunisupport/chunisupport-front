@@ -1,7 +1,8 @@
 import { Button } from '@kobalte/core/button'
+import { Checkbox } from '@kobalte/core/checkbox'
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
-import { Gauge, Plus } from 'lucide-solid'
+import { Check, Gauge, Plus } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { fetchVersions } from '../../api/songs'
@@ -34,6 +35,7 @@ const OVER_POWER_CALCULATOR_COPY = {
   description: '理論値・現在値・達成率を相互に計算します。',
   guestMessage: 'ログインして使用すると自動インポートされます。',
   importErrorMessage: 'OVER POWER情報の自動インポートに失敗しました。',
+  unlockLockedSongsLabel: '未解禁設定曲を解禁扱いにする',
   valueToPercentTitle: '数値→%',
   percentToValueTitle: '%→数値',
   maxLabel: '満点',
@@ -59,6 +61,8 @@ const RADIO_ITEM_CLASS =
   'relative flex min-h-10 items-center gap-3 rounded-md border border-border bg-surface px-3 py-2 text-sm hover:bg-surface-muted data-[checked]:border-action-primary data-[checked]:bg-action-primary-muted'
 const RADIO_CONTROL_CLASS =
   'pointer-events-none flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border-strong bg-input-bg data-[checked]:border-action-primary'
+const CHECKBOX_CONTROL_CLASS =
+  'flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
 
 const UNPLAYED_FILL_OPTIONS = [
   { value: 'none', label: '何もしない' },
@@ -252,7 +256,8 @@ const buildUnplayedOverPowerEntries = (
  */
 const fetchOverPowerCalculatorBase = async (
   username: string,
-  songs: NonNullable<ReturnType<typeof useSongsData>['songsResponse']>
+  songs: NonNullable<ReturnType<typeof useSongsData>['songsResponse']>,
+  unlockLockedSongs: boolean
 ): Promise<OverPowerCalculatorData> => {
   const [record, versions, lockedSongs] = await Promise.all([
     fetchUserRecordWithCache(username),
@@ -263,14 +268,15 @@ const fetchOverPowerCalculatorBase = async (
   if (!songsResponse) {
     throw new Error(OVER_POWER_CALCULATOR_COPY.importErrorMessage)
   }
+  const effectiveLockedSongs = unlockLockedSongs ? [] : lockedSongs.items
 
   const summary = buildOverPowerSummary(
     songsResponse.songs,
     record.standard,
     versions.versions,
-    lockedSongs.items
+    effectiveLockedSongs
   )
-  const lockedLookup = buildLockedSongLookup(lockedSongs.items)
+  const lockedLookup = buildLockedSongLookup(effectiveLockedSongs)
   const availableRecords = record.standard.filter((playerRecord) =>
     isRecordAvailable(playerRecord, lockedLookup)
   )
@@ -281,7 +287,7 @@ const fetchOverPowerCalculatorBase = async (
     unplayedEntries: buildUnplayedOverPowerEntries(
       songsResponse.songs,
       record.standard,
-      lockedSongs.items
+      effectiveLockedSongs
     ),
     playedAverageScore: calculatePlayedAverageScore(availableRecords),
   }
@@ -298,6 +304,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   const [currentValue, setCurrentValue] = createSignal('')
   const [addValue, setAddValue] = createSignal('')
   const [targetPercent, setTargetPercent] = createSignal('')
+  const [unlockLockedSongs, setUnlockLockedSongs] = createSignal(false)
   const [unplayedFillMode, setUnplayedFillMode] = createSignal<UnplayedOverPowerFillMode>('none')
   const [manualFillScore, setManualFillScore] = createSignal(DEFAULT_MANUAL_FILL_SCORE)
 
@@ -316,9 +323,12 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   const [importedBase] = createResource(
     () => {
       const username = authenticatedUsername()
-      return username && songsResponse() ? username : undefined
+      return username && songsResponse()
+        ? { username, unlockLockedSongs: unlockLockedSongs() }
+        : undefined
     },
-    (username) => fetchOverPowerCalculatorBase(username, songsResponse)
+    ({ username, unlockLockedSongs }) =>
+      fetchOverPowerCalculatorBase(username, songsResponse, unlockLockedSongs)
   )
 
   createEffect(() => {
@@ -398,6 +408,22 @@ const OverPowerCalculatorPage = (): JSX.Element => {
       </Show>
       <Show when={importedBase.error}>
         <LoadError error={importedBase.error} />
+      </Show>
+
+      <Show when={authSession.status === 'authenticated'}>
+        <Checkbox
+          class="relative flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-3 text-sm text-text"
+          checked={unlockLockedSongs()}
+          onChange={setUnlockLockedSongs}
+        >
+          <Checkbox.Input style={{ left: '0', top: '0' }} />
+          <Checkbox.Control class={CHECKBOX_CONTROL_CLASS}>
+            <Checkbox.Indicator>
+              <Check size={14} />
+            </Checkbox.Indicator>
+          </Checkbox.Control>
+          <Checkbox.Label>{OVER_POWER_CALCULATOR_COPY.unlockLockedSongsLabel}</Checkbox.Label>
+        </Checkbox>
       </Show>
 
       <div class="grid gap-4 lg:grid-cols-2">
