@@ -18,8 +18,8 @@ type FilterToolbarProps = {
  */
 const FilterToolbar: Component<FilterToolbarProps> = (props) => (
   <div class="flex items-center mb-2 gap-2">
-    <TextField class="flex-1" value={props.title} onChange={props.onTitleChange}>
-      <div class="flex items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
+    <TextField class="min-w-0 flex-1" value={props.title} onChange={props.onTitleChange}>
+      <div class="flex min-w-0 items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
         <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
         <TextField.Input
           class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
