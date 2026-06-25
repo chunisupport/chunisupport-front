@@ -64,6 +64,8 @@ interface GoalFormDialogProps {
 interface GoalFilterCheckboxProps {
   label: string
   checked: boolean
+  /** チェックボックスを操作不可にし、非対象状態として表示するか。 */
+  disabled?: boolean
   onChange: (checked: boolean) => void
 }
 
@@ -416,8 +418,9 @@ const GoalSelectField = <TValue extends string>(props: GoalSelectFieldProps<TVal
  */
 const GoalFilterCheckbox: Component<GoalFilterCheckboxProps> = (props) => (
   <Checkbox
-    class="relative flex items-center gap-2 text-sm text-text-muted"
+    class="relative flex items-center gap-2 text-sm text-text-muted data-disabled:cursor-not-allowed data-disabled:opacity-45"
     checked={props.checked}
+    disabled={props.disabled}
     onChange={props.onChange}
   >
     <Checkbox.Input style={{ left: '0', top: '0' }} />
@@ -569,6 +572,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [comboLamp, setComboLamp] = createSignal<'FC' | 'AJ'>('FC')
   const [invert, setInvert] = createSignal(false)
 
+  const [chartTargetMode, setChartTargetMode] = createSignal<'normal' | 'op_target'>('normal')
   const [diffs, setDiffs] = createSignal<string[]>([])
   const [constMin, setConstMin] = createSignal('')
   const [constMax, setConstMax] = createSignal('')
@@ -660,6 +664,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setHardLamp('HRD')
       setComboLamp('FC')
       setInvert(false)
+      setChartTargetMode('normal')
       setDiffs([])
       setConstMin('')
       setConstMax('')
@@ -692,6 +697,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setComboLamp(goal.achievement_params.lamp)
     }
     setInvert(goal.invert)
+    setChartTargetMode(goal.attributes.chart_target === 'OP_TARGET' ? 'op_target' : 'normal')
     setDiffs(normalizeAttributeSelection(goal.attributes.diff))
     setConstMin(
       typeof goal.attributes.const?.min === 'number' ? String(goal.attributes.const.min) : ''
@@ -715,7 +721,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   })
 
   const getDraftAttributes = (): GoalRequest['attributes'] => ({
-    ...(parseAttributeSelection(diffs()) !== undefined
+    ...(chartTargetMode() === 'op_target' ? { chart_target: 'OP_TARGET' as const } : {}),
+    ...(chartTargetMode() === 'normal' && parseAttributeSelection(diffs()) !== undefined
       ? { diff: parseAttributeSelection(diffs()) }
       : {}),
     ...(constMin() || constMax()
@@ -1000,20 +1007,37 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                         <Button
                           type="button"
                           class="text-xs text-action-primary hover:text-action-primary"
-                          onClick={() => setDiffs([])}
+                          onClick={() => {
+                            setChartTargetMode('normal')
+                            setDiffs([])
+                          }}
                         >
                           クリア
                         </Button>
                       </div>
                       <div class={GOAL_FILTER_LIST_CLASS}>
+                        <GoalFilterCheckbox
+                          label="OP対象 (MAS+ULT)"
+                          checked={chartTargetMode() === 'op_target'}
+                          onChange={(checked) => {
+                            setChartTargetMode(checked ? 'op_target' : 'normal')
+                            if (checked) {
+                              setDiffs([])
+                            }
+                          }}
+                        />
                         <For each={props.masterData.difficulties}>
                           {(item) => (
                             <GoalFilterCheckbox
                               label={item.name}
-                              checked={diffs().includes(String(item.id))}
-                              onChange={(checked) =>
-                                setDiffs((prev) => toggleSelection(prev, String(item.id), checked))
+                              checked={
+                                chartTargetMode() === 'normal' && diffs().includes(String(item.id))
                               }
+                              disabled={chartTargetMode() === 'op_target'}
+                              onChange={(checked) => {
+                                setChartTargetMode('normal')
+                                setDiffs((prev) => toggleSelection(prev, String(item.id), checked))
+                              }}
                             />
                           )}
                         </For>

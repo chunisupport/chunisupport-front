@@ -15,6 +15,7 @@ const createRecord = (
 ): PlayerRecordWithSongMeta => {
   const record: PlayerRecordWithSongMeta = {
     is_played: true,
+    is_op_target: true,
     updated_at: '2026-04-20T00:00:00Z',
     difficulty: 'MASTER',
     id: 'song-1',
@@ -87,6 +88,18 @@ test('isRecordMatched は難易度・ジャンル・バージョンの条件を�
   assert.equal(isRecordMatched(record, { ...matchedFilters, difficulties: ['MASTER'] }), false)
   assert.equal(isRecordMatched(record, { ...matchedFilters, genres: ['VARIETY'] }), false)
   assert.equal(isRecordMatched(record, { ...matchedFilters, versions: ['VERSE'] }), false)
+})
+
+test('isRecordMatched は現在のOP対象譜面だけに絞り込める', () => {
+  // Given
+  const matchedFilters: FilterState = {
+    ...getDefaultFilter(),
+    currentOpTargetOnly: true,
+  }
+
+  // When & Then
+  assert.equal(isRecordMatched(createRecord({ is_op_target: true }), matchedFilters), true)
+  assert.equal(isRecordMatched(createRecord({ is_op_target: false }), matchedFilters), false)
 })
 
 test('isRecordMatched は譜面定数とスコアの範囲を判定できる', () => {

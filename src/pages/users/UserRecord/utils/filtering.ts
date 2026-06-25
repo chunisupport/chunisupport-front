@@ -60,6 +60,11 @@ export function isRecordMatchedWithTitleMatcher(
     return false
   }
 
+  // 現在のOVER POWER集計対象
+  if (filters.currentOpTargetOnly && !record.is_op_target) {
+    return false
+  }
+
   // ジャンル
   if (filters.genres.length > 0 && !filters.genres.includes(record.genre)) {
     return false

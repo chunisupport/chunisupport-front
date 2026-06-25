@@ -295,6 +295,7 @@ export type GoalAchievementType =
 
 export interface GoalAttributes {
   diff?: number | number[]
+  chart_target?: 'OP_TARGET'
   const?: {
     min?: number
     max?: number
@@ -642,6 +643,8 @@ export interface UserRecordResponseDTO {
 
 export interface PlayerRecordDTO {
   is_played: boolean
+  /** 曲ごとの現在OVER POWER集計対象か。楽曲マスタ上の理論値対象譜面ではない。 */
+  is_op_target: boolean
   updated_at: string | null
   difficulty: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
   id: string

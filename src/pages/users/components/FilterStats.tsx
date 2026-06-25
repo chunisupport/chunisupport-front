@@ -11,6 +11,7 @@ import {
   comboOrder,
   rankColorMap,
   rankOrder,
+  UNPLAYED_DISTRIBUTION_KEY,
 } from '../utils/recordStats'
 
 type FilterStatsProps = {
@@ -26,6 +27,7 @@ type DistributionSectionConfig = {
   colorMap: Record<string, string>
   dist: DistributionMap
   Icon: Component<{ class?: string; 'aria-hidden'?: boolean }>
+  hiddenGraphKeys?: readonly string[]
 }
 
 type FilterStatsTabValue = 'score' | 'combo' | 'clear'
@@ -72,28 +74,44 @@ const getVisibleDistributionKeys = (dist: DistributionMap, order: string[]) =>
  */
 const getPercentWidth = (percent: number) => (percent > 0 ? `max(2px, ${percent}%)` : '0')
 
-/** 帯グラフ */
+/**
+ * 分布の構成比を帯グラフで表示する。
+ * @param props - 分布、表示順、色クラス、帯グラフを透明化する分布キー。
+ * @returns 分布帯グラフコンポーネント。
+ */
 const DistributionBar: Component<{
   dist: DistributionMap
   order: string[]
   colorMap: Record<string, string>
-}> = (props) => (
-  <div class="flex h-5 w-full overflow-hidden rounded bg-surface-hover">
-    <For each={getVisibleDistributionKeys(props.dist, props.order)}>
-      {(key) => (
-        <div
-          class={`${props.colorMap[key]} h-full`}
-          style={{ width: `${props.dist[key].percent}%` }}
-          title={key}
-        ></div>
-      )}
-    </For>
-  </div>
-)
+  hiddenGraphKeys?: readonly string[]
+}> = (props) => {
+  const visibleKeys = () => getVisibleDistributionKeys(props.dist, props.order)
+  return (
+    <div class="overflow-hidden rounded">
+      <div class="flex h-5 w-full overflow-visible bg-surface-hover">
+        <For each={visibleKeys()}>
+          {(key, index) => {
+            const z = () => visibleKeys().length - index()
+            return (
+              <div
+                class={`${props.hiddenGraphKeys?.includes(key) ? 'bg-transparent' : props.colorMap[key]} relative h-full shadow-[2px_0_3px_-1px_rgba(0,0,0,0.4)]`}
+                style={{
+                  width: `${props.dist[key].percent}%`,
+                  'z-index': z(),
+                }}
+                title={key}
+              ></div>
+            )
+          }}
+        </For>
+      </div>
+    </div>
+  )
+}
 
 /**
  * 分布の1行分を件数、割合、ミニバーで表示する。
- * @param props - 表示ラベル、分布値、色クラス。
+ * @param props - 表示ラベル、分布値、色クラス、ミニバーを透明化する指定。
  * @returns 分布行コンポーネント。
  */
 const DistributionRow: Component<{
@@ -101,6 +119,7 @@ const DistributionRow: Component<{
   count: number
   percent: number
   colorClass: string
+  hideGraph?: boolean
 }> = (props) => (
   <li class={FILTER_STATS_ROW_CLASS}>
     <div class="flex min-w-0 items-center gap-2 font-semibold">
@@ -111,15 +130,21 @@ const DistributionRow: Component<{
     <span class="whitespace-nowrap text-right tabular-nums text-text-muted">
       {props.percent.toFixed(1)}%
     </span>
-    <div class="h-3 overflow-hidden rounded-sm bg-surface-hover" aria-hidden="true">
-      <div class={`${props.colorClass} h-full`} style={{ width: getPercentWidth(props.percent) }} />
+    <div
+      class={`h-3 overflow-hidden rounded-sm ${props.hideGraph ? 'bg-transparent' : 'bg-surface-hover'}`}
+      aria-hidden="true"
+    >
+      <div
+        class={`${props.hideGraph ? 'bg-transparent' : props.colorClass} h-full`}
+        style={{ width: getPercentWidth(props.percent) }}
+      />
     </div>
   </li>
 )
 
 /**
  * フィルター統計の分布カードを表示する。
- * @param props - カード見出し、分布、表示順、色クラス、アイコン。
+ * @param props - カード見出し、分布、表示順、色クラス、アイコン、グラフ透明化対象キー。
  * @returns 分布カードコンポーネント。
  */
 const DistributionSection: Component<DistributionSectionConfig> = (props) => (
@@ -129,7 +154,12 @@ const DistributionSection: Component<DistributionSectionConfig> = (props) => (
       <h3>{props.title}</h3>
     </div>
     <div class="space-y-3 p-3">
-      <DistributionBar dist={props.dist} order={props.order} colorMap={props.colorMap} />
+      <DistributionBar
+        dist={props.dist}
+        order={props.order}
+        colorMap={props.colorMap}
+        hiddenGraphKeys={props.hiddenGraphKeys}
+      />
       <ul class="divide-y divide-border">
         <For each={getVisibleDistributionKeys(props.dist, props.order)}>
           {(key) => (
@@ -138,6 +168,7 @@ const DistributionSection: Component<DistributionSectionConfig> = (props) => (
               count={props.dist[key].count}
               percent={props.dist[key].percent}
               colorClass={props.colorMap[key]}
+              hideGraph={props.hiddenGraphKeys?.includes(key)}
             />
           )}
         </For>
@@ -186,6 +217,7 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
               order={rankOrder}
               colorMap={rankColorMap}
               Icon={Trophy}
+              hiddenGraphKeys={[UNPLAYED_DISTRIBUTION_KEY]}
             />
           </Tabs.Content>
           <Tabs.Content value="combo">
@@ -196,6 +228,7 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
               order={comboOrder}
               colorMap={comboColorMap}
               Icon={Link2}
+              hiddenGraphKeys={[UNPLAYED_DISTRIBUTION_KEY]}
             />
           </Tabs.Content>
           <Tabs.Content value="clear">
@@ -206,6 +239,7 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
               order={clearOrder}
               colorMap={clearColorMap}
               Icon={ShieldCheck}
+              hiddenGraphKeys={[UNPLAYED_DISTRIBUTION_KEY]}
             />
           </Tabs.Content>
         </Tabs.Root>

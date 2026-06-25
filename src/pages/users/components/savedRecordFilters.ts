@@ -197,6 +197,7 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
   return (
     typeof value.title === 'string' &&
     isArrayOfOptions(value.difficulties, DIFFICULTY_OPTIONS) &&
+    (value.currentOpTargetOnly === undefined || typeof value.currentOpTargetOnly === 'boolean') &&
     isStringArray(value.genres) &&
     isStringArray(value.versions) &&
     isRequiredNumberRange(value.const, CONST_MIN, CONST_MAX) &&

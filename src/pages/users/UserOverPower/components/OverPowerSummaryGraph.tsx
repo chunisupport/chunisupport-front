@@ -83,14 +83,21 @@ const DistributionBar: Component<{
           )}
         </For>
       </div>
-      <div class="flex h-7 w-full overflow-hidden bg-surface-hover" role="presentation">
+      <div class="flex h-7 w-full overflow-visible bg-surface-hover" role="presentation">
         <For each={props.bands.filter((band) => band.count > 0)}>
-          {(band) => (
-            <div
-              class={props.colorClassByLabel[band.label] ?? 'bg-action-secondary-hover'}
-              style={{ width: `${calcBandPercent(band.count, props.total)}%` }}
-            />
-          )}
+          {(band, index) => {
+            const visibleBands = props.bands.filter((b) => b.count > 0)
+            const z = () => visibleBands.length - index()
+            return (
+              <div
+                class={`${props.colorClassByLabel[band.label] ?? 'bg-action-secondary-hover'} relative shadow-[2px_0_3px_-1px_rgba(0,0,0,0.4)]`}
+                style={{
+                  width: `${calcBandPercent(band.count, props.total)}%`,
+                  'z-index': z(),
+                }}
+              />
+            )
+          }}
         </For>
       </div>
     </div>

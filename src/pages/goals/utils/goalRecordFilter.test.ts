@@ -54,6 +54,7 @@ const createRecord = (
   overrides: Partial<PlayerRecordWithSongMeta> = {}
 ): PlayerRecordWithSongMeta => ({
   is_played: true,
+  is_op_target: true,
   updated_at: null,
   difficulty: 'MASTER',
   id: 'song-1',
@@ -185,4 +186,14 @@ test('集計系目標ではレコード遷移を無効にする', () => {
     assert.equal(isGoalRecordNavigationEnabled(goal), false)
   })
   assert.equal(isGoalRecordNavigationEnabled(createGoal()), true)
+})
+
+test('OP対象目標では通常レコードへのフィルター付き遷移を無効にする', () => {
+  // Given
+  const goal = createGoal({
+    attributes: { chart_target: 'OP_TARGET' },
+  })
+
+  // When & Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
 })
