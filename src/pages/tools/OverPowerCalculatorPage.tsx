@@ -2,18 +2,25 @@ import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, Gauge, Plus } from 'lucide-solid'
+import { Check, Gauge, LockKeyhole, Plus } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
-import { fetchVersions } from '../../api/songs'
-import { fetchUserLockedSongs } from '../../api/users'
+import { fetchMasterData, fetchVersions } from '../../api/songs'
+import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
-import type { PlayerRecordDTO, SongDTO } from '../../types/api'
+import type {
+  PlayerLockedSongRequest,
+  PlayerLockedSongResponseItem,
+  PlayerRecordDTO,
+  SongDTO,
+  VersionDTO,
+} from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { buildCurrentOverPowerBySongId } from '../../usecases/overpower/currentOpTarget'
+import { buildLockedSongsBatchPayload } from '../../usecases/overpower/lockedSongsBatch'
 import { buildOverPowerSummary } from '../../usecases/overpower/overpowerSummary'
 import type { OverPowerLockedSong } from '../../usecases/overpower/types'
 import {
@@ -28,6 +35,7 @@ import {
   type UnplayedOverPowerEntry,
   type UnplayedOverPowerFillMode,
 } from '../../utils/overPowerCalculator'
+import LockedSongsDialog from '../users/UserOverPower/components/LockedSongsDialog'
 import { formatOverPowerPercent, formatOverPowerValue } from '../users/utils/overPowerFormat'
 
 const OVER_POWER_CALCULATOR_COPY = {
@@ -36,6 +44,7 @@ const OVER_POWER_CALCULATOR_COPY = {
   guestMessage: 'ログインして使用すると自動インポートされます。',
   importErrorMessage: 'OVER POWER情報の自動インポートに失敗しました。',
   unlockLockedSongsLabel: '未解禁設定曲を解禁扱いにする',
+  lockedSongsButtonLabel: '未解禁曲',
   valueToPercentTitle: '数値→%',
   percentToValueTitle: '%→数値',
   maxLabel: '満点',
@@ -85,8 +94,14 @@ type OverPowerFieldProps = {
 type OverPowerCalculatorData = OverPowerCalculatorBase & {
   /** 未プレイ除外計算で使う曲ごとの集計情報。 */
   unplayedEntries: UnplayedOverPowerEntry[]
-  /** 既プレイ譜面全体の平均スコア。 */
+  /** 現在OP対象になっている既プレイ譜面の平均スコア。 */
   playedAverageScore: number | null
+  /** ダイアログに渡す通常譜面レコード一覧。 */
+  records: PlayerRecordDTO[]
+  /** ダイアログに渡すバージョン一覧。 */
+  versions: VersionDTO[]
+  /** 保存済みの未解禁楽曲設定一覧。 */
+  lockedSongs: PlayerLockedSongResponseItem[]
 }
 
 type LockedSongLookup = {
@@ -291,6 +306,9 @@ const fetchOverPowerCalculatorBase = async (
       effectiveLockedSongs
     ),
     playedAverageScore: calculatePlayedAverageScore(availableRecords),
+    records: record.standard,
+    versions: versions.versions,
+    lockedSongs: lockedSongs.items,
   }
 }
 
@@ -308,6 +326,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   const [unlockLockedSongs, setUnlockLockedSongs] = createSignal(false)
   const [unplayedFillMode, setUnplayedFillMode] = createSignal<UnplayedOverPowerFillMode>('none')
   const [manualFillScore, setManualFillScore] = createSignal(DEFAULT_MANUAL_FILL_SCORE)
+  const [lockedSongsDialogOpen, setLockedSongsDialogOpen] = createSignal(false)
 
   useDocumentTitle(OVER_POWER_CALCULATOR_COPY.title)
 
@@ -321,7 +340,11 @@ const OverPowerCalculatorPage = (): JSX.Element => {
     authSession.status === 'authenticated' ? (authSession.user?.username ?? undefined) : undefined
   )
 
-  const [importedBase] = createResource(
+  const [masterData] = createResource(
+    () => (authSession.status === 'authenticated' ? true : undefined),
+    fetchMasterData
+  )
+  const [importedBase, { refetch: refetchImportedBase }] = createResource(
     () => {
       const username = authenticatedUsername()
       return username && songsResponse()
@@ -378,6 +401,9 @@ const OverPowerCalculatorPage = (): JSX.Element => {
       ? OVER_POWER_CALCULATOR_COPY.noPlayedAverageLabel
       : `${Math.round(score).toLocaleString('ja-JP')}点`
   })
+  const lockedSongsButtonDisabled = createMemo(
+    () => importedBase.loading || masterData.loading || !songsResponse() || !importedBase()
+  )
 
   /**
    * 加算値を現在獲得値へ足し、加算入力欄を空に戻す。
@@ -390,6 +416,25 @@ const OverPowerCalculatorPage = (): JSX.Element => {
 
     setCurrentValue(formatOverPowerInputValue(parsedCurrentValue() + parsedAddValue))
     setAddValue('')
+  }
+
+  /**
+   * 未解禁楽曲設定の差分を保存し、計算用データを再取得する。
+   *
+   * @param nextLockedSongs - ダイアログで編集された未解禁楽曲設定一覧。
+   * @returns 保存処理の完了Promise。
+   */
+  const handleSaveLockedSongs = async (
+    nextLockedSongs: PlayerLockedSongRequest[]
+  ): Promise<void> => {
+    const currentLockedSongs = importedBase()?.lockedSongs
+    if (!currentLockedSongs) return
+
+    const payload = buildLockedSongsBatchPayload(currentLockedSongs, nextLockedSongs)
+    if (!payload.add && !payload.delete) return
+
+    await updateMyLockedSongsBatch(payload)
+    await refetchImportedBase()
   }
 
   return (
@@ -418,19 +463,47 @@ const OverPowerCalculatorPage = (): JSX.Element => {
       </Show>
 
       <Show when={authSession.status === 'authenticated'}>
-        <Checkbox
-          class="relative flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-3 text-sm text-text"
-          checked={unlockLockedSongs()}
-          onChange={setUnlockLockedSongs}
-        >
-          <Checkbox.Input style={{ left: '0', top: '0' }} />
-          <Checkbox.Control class={CHECKBOX_CONTROL_CLASS}>
-            <Checkbox.Indicator>
-              <Check size={14} />
-            </Checkbox.Indicator>
-          </Checkbox.Control>
-          <Checkbox.Label>{OVER_POWER_CALCULATOR_COPY.unlockLockedSongsLabel}</Checkbox.Label>
-        </Checkbox>
+        <div class="flex flex-col gap-3 rounded-md border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
+          <Checkbox
+            class="relative flex items-center gap-2 text-sm text-text"
+            checked={unlockLockedSongs()}
+            onChange={setUnlockLockedSongs}
+          >
+            <Checkbox.Input style={{ left: '0', top: '0' }} />
+            <Checkbox.Control class={CHECKBOX_CONTROL_CLASS}>
+              <Checkbox.Indicator>
+                <Check size={14} />
+              </Checkbox.Indicator>
+            </Checkbox.Control>
+            <Checkbox.Label>{OVER_POWER_CALCULATOR_COPY.unlockLockedSongsLabel}</Checkbox.Label>
+          </Checkbox>
+          <Button
+            type="button"
+            class="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-sm text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-disabled-text"
+            aria-label="未解禁楽曲設定"
+            title="未解禁楽曲設定"
+            disabled={lockedSongsButtonDisabled()}
+            onClick={() => setLockedSongsDialogOpen(true)}
+          >
+            <span>{OVER_POWER_CALCULATOR_COPY.lockedSongsButtonLabel}</span>
+            <LockKeyhole class="h-5 w-5" aria-hidden="true" />
+          </Button>
+        </div>
+      </Show>
+
+      <Show when={authSession.status === 'authenticated' && songsResponse() && importedBase()}>
+        {(data) => (
+          <LockedSongsDialog
+            open={lockedSongsDialogOpen()}
+            songs={songsResponse()?.songs ?? []}
+            records={data().records}
+            genres={masterData()?.genres ?? []}
+            versions={data().versions}
+            lockedSongs={data().lockedSongs}
+            onOpenChange={setLockedSongsDialogOpen}
+            onSaveLockedSongs={handleSaveLockedSongs}
+          />
+        )}
       </Show>
 
       <div class="grid gap-4 lg:grid-cols-2">
