@@ -82,6 +82,35 @@ const buildDefaultLockedSongsFilter = (
   unplayedOnly: false,
 })
 
+/**
+ * 2つの文字列配列が順序に依存せず同じ値を持つか判定する。
+ *
+ * @param left - 比較元の値配列。
+ * @param right - 比較先の値配列。
+ * @returns 2つの配列が同じ値集合の場合は true。
+ */
+const hasSameStringValues = (left: string[], right: string[]): boolean => {
+  if (left.length !== right.length) return false
+
+  const rightValues = new Set(right)
+  return left.every((value) => rightValues.has(value))
+}
+
+/**
+ * 未解禁楽曲フィルターが既定値から変更されているか判定する。
+ *
+ * @param current - 現在のフィルター状態。
+ * @param defaultFilter - 比較対象の既定フィルター状態。
+ * @returns 既定値との差分がある場合は true。
+ */
+const isLockedSongsFilterChanged = (
+  current: LockedSongsFilter,
+  defaultFilter: LockedSongsFilter
+): boolean =>
+  current.unplayedOnly !== defaultFilter.unplayedOnly ||
+  !hasSameStringValues(current.genres, defaultFilter.genres) ||
+  !hasSameStringValues(current.versions, defaultFilter.versions)
+
 /** チェックボックスの見た目を未解禁曲ダイアログ内で統一する Tailwind クラス。 */
 const FILTER_CHECKBOX_CONTROL_CLASS =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
@@ -137,11 +166,12 @@ const LockedSongsDialog: Component<Props> = (props) => {
     return grouped
   })
   const songVersionName = (song: SongDTO): string => songVersionNameById().get(song.id) ?? '不明'
-  const activeFilterCount = createMemo(
-    () => filters().genres.length + filters().versions.length + (filters().unplayedOnly ? 1 : 0)
+  const defaultFilter = createMemo(() =>
+    buildDefaultLockedSongsFilter(genreOptions(), versionOptions())
   )
+  const hasFilterChanges = createMemo(() => isLockedSongsFilterChanged(filters(), defaultFilter()))
   const filterButtonLabel = createMemo(() =>
-    activeFilterCount() > 0 ? `フィルター ${activeFilterCount()}件` : 'フィルター'
+    hasFilterChanges() ? 'フィルター適用中' : 'フィルター'
   )
   const lockedSongKeys = createMemo(
     () =>
@@ -239,7 +269,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
     const versions = versionOptions()
     if (genres.length === 0 || versions.length === 0) return
 
-    setFilters(buildDefaultLockedSongsFilter(genres, versions))
+    setFilters(defaultFilter())
     setFilterInitialized(true)
   })
 
@@ -361,19 +391,16 @@ const LockedSongsDialog: Component<Props> = (props) => {
             <Button
               type="button"
               class={`flex h-9.5 min-w-9.5 shrink-0 items-center justify-center gap-1.5 rounded-l border-l border-t border-b px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
-                activeFilterCount() > 0
+                hasFilterChanges()
                   ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                   : 'border-border-strong text-text-muted hover:bg-surface-hover'
               }`}
               aria-label={filterButtonLabel()}
-              aria-pressed={activeFilterCount() > 0}
+              aria-pressed={hasFilterChanges()}
               title={filterButtonLabel()}
               onClick={() => setFilterDialogOpen(true)}
             >
               <Funnel size={20} aria-hidden="true" />
-              <Show when={activeFilterCount() > 0}>
-                <span class="text-xs font-medium">{activeFilterCount()}</span>
-              </Show>
             </Button>
             <Button
               type="button"
