@@ -74,7 +74,7 @@ export const UserRecordCard: Component<Props> = (props) => {
           <Show when={jacketUrl()}>
             {(url) => (
               <Image
-                class="pointer-events-none absolute inset-y-0 right-0 z-0 block w-1/2 overflow-hidden"
+                class="pointer-events-none absolute inset-y-0 right-0 z-0 block w-1/2 overflow-hidden [mask-image:linear-gradient(to_right,transparent_0%,black_33%)]"
                 aria-hidden="true"
               >
                 <Image.Img
@@ -82,7 +82,6 @@ export const UserRecordCard: Component<Props> = (props) => {
                   alt=""
                   class="h-full w-full object-cover object-center opacity-15"
                 />
-                <span class="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-surface to-transparent" />
               </Image>
             )}
           </Show>
