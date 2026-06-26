@@ -524,6 +524,12 @@ const getDefaultTotalGoalValue = (type: GoalAchievementType): string =>
         ? DEFAULT_OVERPOWER_PERCENT_GOAL_VALUE
         : DEFAULT_TOTAL_GOAL_VALUE
 
+/**
+ * API属性に保存された単一IDまたはID配列をフォーム用の文字列配列へ変換する。
+ *
+ * @param value - API属性に保存されたID指定。
+ * @returns フォームのチェック状態として扱う文字列ID配列。
+ */
 const normalizeAttributeSelection = (value: number | number[] | undefined): string[] => {
   if (typeof value === 'number') return [String(value)]
   if (Array.isArray(value)) {
@@ -534,16 +540,59 @@ const normalizeAttributeSelection = (value: number | number[] | undefined): stri
   return []
 }
 
-const parseAttributeSelection = (selectedValues: string[]): number | number[] | undefined => {
+/**
+ * フォームの選択値をAPI属性で使う単一IDまたはID配列へ変換する。
+ *
+ * @param selectedValues - フォーム上で選択されている文字列ID配列。
+ * @returns 選択値が1件なら単一数値、それ以外は数値配列。
+ */
+const parseAttributeSelection = (selectedValues: string[]): number | number[] => {
   const normalized = Array.from(new Set(selectedValues))
     .map((value) => Number(value))
     .filter((value) => Number.isInteger(value))
 
-  if (normalized.length === 0) return undefined
   if (normalized.length === 1) return normalized[0]
   return normalized
 }
 
+/**
+ * マスタデータのID一覧をフォーム用の全選択値へ変換する。
+ *
+ * @param items - IDを持つマスタデータ一覧。
+ * @returns 全項目を選択済みにする文字列ID配列。
+ */
+const buildAllIdSelections = (items: readonly { id: number }[]): string[] =>
+  items.map((item) => String(item.id))
+
+/**
+ * 保存済み属性が未指定の場合だけ、現在の全選択値で補完する。
+ *
+ * @param value - API属性に保存されたID指定。
+ * @param fallbackValues - 属性未指定時に使う全選択値。
+ * @returns 編集フォームへ反映する選択値。
+ */
+const resolveInitialAttributeSelection = (
+  value: number | number[] | undefined,
+  fallbackValues: string[]
+): string[] => (value === undefined ? fallbackValues : normalizeAttributeSelection(value))
+
+/**
+ * バージョン選択肢をフォーム用の全選択値へ変換する。
+ *
+ * @param options - 目標フォームで表示するバージョン選択肢。
+ * @returns 全バージョンを選択済みにする値配列。
+ */
+const buildAllVersionSelections = (options: readonly GoalSelectOption<string>[]): string[] =>
+  options.map((option) => option.value)
+
+/**
+ * チェックボックスの選択状態を更新する。
+ *
+ * @param current - 現在の選択値一覧。
+ * @param value - 操作対象の選択値。
+ * @param checked - チェック後の状態。
+ * @returns 更新後の選択値一覧。
+ */
 const toggleSelection = (current: string[], value: string, checked: boolean): string[] => {
   if (checked) {
     return current.includes(value) ? current : [...current, value]
@@ -582,6 +631,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [errorMessage, setErrorMessage] = createSignal('')
   const displayErrorMessage = createMemo(() => errorMessage() || props.apiErrorMessage)
   const versionOptions = createMemo(() => buildGoalVersionOptions(props.versions))
+  const allDifficultySelections = createMemo(() =>
+    buildAllIdSelections(props.masterData.difficulties)
+  )
+  const allGenreSelections = createMemo(() => buildAllIdSelections(props.masterData.genres))
+  const allVersionSelections = createMemo(() => buildAllVersionSelections(versionOptions()))
   const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
     props.masterData.achievement_types
       .filter((item): item is typeof item & { code: GoalAchievementType } =>
@@ -665,11 +719,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setComboLamp('FC')
       setInvert(false)
       setChartTargetMode('normal')
-      setDiffs([])
+      setDiffs(allDifficultySelections())
       setConstMin('')
       setConstMax('')
-      setGenres([])
-      setVersions([])
+      setGenres(allGenreSelections())
+      setVersions(allVersionSelections())
       return
     }
 
@@ -698,15 +752,15 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     }
     setInvert(goal.invert)
     setChartTargetMode(goal.attributes.chart_target === 'OP_TARGET' ? 'op_target' : 'normal')
-    setDiffs(normalizeAttributeSelection(goal.attributes.diff))
+    setDiffs(resolveInitialAttributeSelection(goal.attributes.diff, allDifficultySelections()))
     setConstMin(
       typeof goal.attributes.const?.min === 'number' ? String(goal.attributes.const.min) : ''
     )
     setConstMax(
       typeof goal.attributes.const?.max === 'number' ? String(goal.attributes.const.max) : ''
     )
-    setGenres(normalizeAttributeSelection(goal.attributes.genre))
-    setVersions(normalizeAttributeSelection(goal.attributes.ver))
+    setGenres(resolveInitialAttributeSelection(goal.attributes.genre, allGenreSelections()))
+    setVersions(resolveInitialAttributeSelection(goal.attributes.ver, allVersionSelections()))
 
     if (isCountAchievementType(goal.achievement_type)) {
       setCountMode(
@@ -722,9 +776,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
   const getDraftAttributes = (): GoalRequest['attributes'] => ({
     ...(chartTargetMode() === 'op_target' ? { chart_target: 'OP_TARGET' as const } : {}),
-    ...(chartTargetMode() === 'normal' && parseAttributeSelection(diffs()) !== undefined
-      ? { diff: parseAttributeSelection(diffs()) }
-      : {}),
+    ...(chartTargetMode() === 'normal' ? { diff: parseAttributeSelection(diffs()) } : {}),
     ...(constMin() || constMax()
       ? {
           const: {
@@ -733,12 +785,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
           },
         }
       : {}),
-    ...(parseAttributeSelection(genres()) !== undefined
-      ? { genre: parseAttributeSelection(genres()) }
-      : {}),
-    ...(parseAttributeSelection(versions()) !== undefined
-      ? { ver: parseAttributeSelection(versions()) }
-      : {}),
+    genre: parseAttributeSelection(genres()),
+    ver: parseAttributeSelection(versions()),
   })
 
   /**

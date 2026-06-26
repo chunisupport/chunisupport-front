@@ -42,6 +42,15 @@ const normalizeAttributeIds = (value: number | number[] | undefined): number[] =
 }
 
 /**
+ * 目標属性が明示的な空選択として保存されているか判定する。
+ *
+ * @param value - 目標属性に保存された ID 指定。
+ * @returns 空配列が保存されていれば true。
+ */
+const isExplicitEmptyAttribute = (value: number | number[] | undefined): boolean =>
+  Array.isArray(value) && value.length === 0
+
+/**
  * 目標種別ごとの未達成条件を通常レコードフィルターへ反映する。
  *
  * @param filter - 属性条件を反映済みのフィルター。
@@ -97,16 +106,20 @@ export const buildGoalRecordFilter = (
     ...defaultFilter,
     title: '',
     difficulties: masterData.difficulties
-      .filter((difficulty) => difficultyIds.length === 0 || difficultyIds.includes(difficulty.id))
+      .filter(
+        (difficulty) =>
+          !isExplicitEmptyAttribute(goal.attributes.diff) &&
+          (difficultyIds.length === 0 || difficultyIds.includes(difficulty.id))
+      )
       .map((difficulty) => difficulty.name.toUpperCase() as Difficulty),
     genres:
-      genreIds.length === 0
+      genreIds.length === 0 || isExplicitEmptyAttribute(goal.attributes.genre)
         ? []
         : masterData.genres
             .filter((genre) => genreIds.includes(genre.id))
             .map((genre) => genre.name),
     versions:
-      versionIds.length === 0
+      versionIds.length === 0 || isExplicitEmptyAttribute(goal.attributes.ver)
         ? []
         : versionIds.flatMap((versionId) => {
             const versionName = versionNameMap.get(versionId)

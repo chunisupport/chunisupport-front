@@ -83,6 +83,15 @@ export const formatGoalAttributesLabel = (
     return []
   }
 
+  /**
+   * 目標属性が明示的な空選択として保存されているか判定する。
+   *
+   * @param value - 目標属性に保存された ID 指定。
+   * @returns 空配列が保存されていれば true。
+   */
+  const isExplicitEmptyAttribute = (value: number | number[] | undefined): boolean =>
+    Array.isArray(value) && value.length === 0
+
   const formatNames = (ids: number[], namesById: Map<number, string>): string =>
     ids.map((id) => namesById.get(id) ?? String(id)).join(', ')
 
@@ -98,7 +107,9 @@ export const formatGoalAttributesLabel = (
     parts.push('対象: OP対象')
   }
 
-  if (diffIds.length > 0) {
+  if (isExplicitEmptyAttribute(attributes.diff)) {
+    parts.push('難易度: 選択なし')
+  } else if (diffIds.length > 0) {
     parts.push(`難易度: ${formatNames(diffIds, difficultyNameMap)}`)
   }
 
@@ -106,11 +117,15 @@ export const formatGoalAttributesLabel = (
     parts.push(`定数: ${attributes.const?.min ?? '-'} ～ ${attributes.const?.max ?? '-'}`)
   }
 
-  if (genreIds.length > 0) {
+  if (isExplicitEmptyAttribute(attributes.genre)) {
+    parts.push('ジャンル: 選択なし')
+  } else if (genreIds.length > 0) {
     parts.push(`ジャンル: ${formatNames(genreIds, genreNameMap)}`)
   }
 
-  if (versionIds.length > 0) {
+  if (isExplicitEmptyAttribute(attributes.ver)) {
+    parts.push('バージョン: 選択なし')
+  } else if (versionIds.length > 0) {
     parts.push(`バージョン: ${formatNames(versionIds, versionNameMap)}`)
   }
 
