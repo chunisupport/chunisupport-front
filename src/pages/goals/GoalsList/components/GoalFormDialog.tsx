@@ -1146,6 +1146,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       </div>
                     </fieldset>
 
+                    {/* TODO: 「ジャンル」という文字部分のスタイルが違うのは後で修正 「難易度」に合わせる */}
                     <GenreSection
                       genres={genreLabels()}
                       selected={selectedGenreLabels()}
@@ -1164,6 +1165,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                         </div>
                       }
                     >
+                      {/* TODO: 「バージョン」という文字部分のスタイルが違うのは後で修正 「難易度」に合わせる */}
                       <VersionSection
                         versions={versionLabels()}
                         selected={selectedVersionLabels()}
