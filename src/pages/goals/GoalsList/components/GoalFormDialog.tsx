@@ -25,6 +25,8 @@ import {
   SCORE_RANKS_ASC,
   type ScoreRank,
 } from '../../../../utils/scoreRank'
+import GenreSection from '../../../users/UserRecord/components/filterDialog/sections/GenreSection'
+import VersionSection from '../../../users/UserRecord/components/filterDialog/sections/VersionSection'
 import { buildTargetCountParam } from '../../utils/goalCountTarget'
 import {
   COMBO_LAMP_OPTIONS,
@@ -142,6 +144,7 @@ const GOAL_SELECT_ITEM_CLASS =
   'flex h-8 cursor-pointer items-center justify-between rounded px-2 text-sm outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-action-primary data-highlighted:text-text-inverse'
 const GOAL_SELECT_CONTENT_CLASS =
   'z-60 mt-1 max-h-64 w-[--kb-select-content-width] overflow-y-auto rounded-md border border-border-strong bg-surface p-2 shadow-lg'
+const GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
 const GOAL_RADIO_CARD_BASE_CLASS =
   'rounded border px-3 py-2 text-sm text-text-muted hover:bg-surface-muted'
 const GOAL_RADIO_CARD_UNCHECKED_CLASS = 'border-border-strong bg-surface'
@@ -636,6 +639,32 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   )
   const allGenreSelections = createMemo(() => buildAllIdSelections(props.masterData.genres))
   const allVersionSelections = createMemo(() => buildAllVersionSelections(versionOptions()))
+  const genreLabels = createMemo(() => props.masterData.genres.map((genre) => genre.name))
+  const genreValueByLabel = createMemo(
+    () => new Map(props.masterData.genres.map((genre) => [genre.name, String(genre.id)]))
+  )
+  const genreLabelByValue = createMemo(
+    () => new Map(props.masterData.genres.map((genre) => [String(genre.id), genre.name]))
+  )
+  const selectedGenreLabels = createMemo(() =>
+    genres().flatMap((value) => {
+      const label = genreLabelByValue().get(value)
+      return label ? [label] : []
+    })
+  )
+  const versionLabels = createMemo(() => versionOptions().map((option) => option.label))
+  const versionValueByLabel = createMemo(
+    () => new Map(versionOptions().map((option) => [option.label, option.value]))
+  )
+  const versionLabelByValue = createMemo(
+    () => new Map(versionOptions().map((option) => [option.value, option.label]))
+  )
+  const selectedVersionLabels = createMemo(() =>
+    versions().flatMap((value) => {
+      const label = versionLabelByValue().get(value)
+      return label ? [label] : []
+    })
+  )
   const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
     props.masterData.achievement_types
       .filter((item): item is typeof item & { code: GoalAchievementType } =>
@@ -698,6 +727,30 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
         nextValue.toFixed(MUSIC_CONST_DECIMAL_PLACES)
       )
     )
+  }
+
+  /**
+   * 表示名で指定されたジャンルの選択状態を内部ID値へ変換して切り替える。
+   *
+   * @param label - GenreSection から受け取ったジャンル表示名。
+   * @returns なし。
+   */
+  const handleToggleGenreLabel = (label: string): void => {
+    const value = genreValueByLabel().get(label)
+    if (!value) return
+    setGenres((prev) => toggleSelection(prev, value, !prev.includes(value)))
+  }
+
+  /**
+   * 表示名で指定されたバージョンの選択状態を内部番号値へ変換して切り替える。
+   *
+   * @param label - VersionSection から受け取ったバージョン表示名。
+   * @returns なし。
+   */
+  const handleToggleVersionLabel = (label: string): void => {
+    const value = versionValueByLabel().get(label)
+    if (!value) return
+    setVersions((prev) => toggleSelection(prev, value, !prev.includes(value)))
   }
 
   // ダイアログを開いたタイミングで作成・編集モードに応じた初期値へ同期するため。
@@ -1092,66 +1145,33 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       </div>
                     </fieldset>
 
-                    <fieldset class="block text-sm space-y-1">
-                      <div class="flex items-center justify-between">
-                        <span class="block text-text-muted">ジャンル</span>
-                        <Button
-                          type="button"
-                          class="text-xs text-action-primary hover:text-action-primary"
-                          onClick={() => setGenres([])}
-                        >
-                          クリア
-                        </Button>
-                      </div>
-                      <div class={GOAL_FILTER_LIST_CLASS}>
-                        <For each={props.masterData.genres}>
-                          {(item) => (
-                            <GoalFilterCheckbox
-                              label={item.name}
-                              checked={genres().includes(String(item.id))}
-                              onChange={(checked) =>
-                                setGenres((prev) => toggleSelection(prev, String(item.id), checked))
-                              }
-                            />
-                          )}
-                        </For>
-                      </div>
-                    </fieldset>
+                    <GenreSection
+                      genres={genreLabels()}
+                      selected={selectedGenreLabels()}
+                      contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
+                      onToggle={handleToggleGenreLabel}
+                      onSelectAll={() => setGenres(allGenreSelections())}
+                      onClear={() => setGenres([])}
+                    />
 
-                    <fieldset class="block text-sm space-y-1">
-                      <div class="flex items-center justify-between">
-                        <span class="block text-text-muted">バージョン</span>
-                        <Button
-                          type="button"
-                          class="text-xs text-action-primary hover:text-action-primary"
-                          onClick={() => setVersions([])}
-                        >
-                          クリア
-                        </Button>
-                      </div>
-                      <div class={GOAL_FILTER_LIST_CLASS}>
-                        <Show
-                          when={versionOptions().length > 0}
-                          fallback={
-                            <p class="text-sm text-text-subtle">
-                              バージョンを取得できませんでした。
-                            </p>
-                          }
-                        >
-                          <For each={versionOptions()}>
-                            {(item) => (
-                              <GoalFilterCheckbox
-                                label={item.label}
-                                checked={versions().includes(item.value)}
-                                onChange={(checked) =>
-                                  setVersions((prev) => toggleSelection(prev, item.value, checked))
-                                }
-                              />
-                            )}
-                          </For>
-                        </Show>
-                      </div>
-                    </fieldset>
+                    <Show
+                      when={versionLabels().length > 0}
+                      fallback={
+                        <div>
+                          <span class="mb-1 block text-sm font-medium">バージョン</span>
+                          <p class="text-sm text-text-subtle">バージョンを取得できませんでした。</p>
+                        </div>
+                      }
+                    >
+                      <VersionSection
+                        versions={versionLabels()}
+                        selected={selectedVersionLabels()}
+                        contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
+                        onToggle={handleToggleVersionLabel}
+                        onSelectAll={() => setVersions(allVersionSelections())}
+                        onClear={() => setVersions([])}
+                      />
+                    </Show>
 
                     <div class="grid grid-cols-2 gap-2">
                       <GoalDecimalTextField
