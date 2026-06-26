@@ -1146,34 +1146,38 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       </div>
                     </fieldset>
 
-                    {/* TODO: 「ジャンル」という文字部分のスタイルが違うのは後で修正 「難易度」に合わせる */}
-                    <GenreSection
-                      genres={genreLabels()}
-                      selected={selectedGenreLabels()}
-                      contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
-                      onToggle={handleToggleGenreLabel}
-                      onSelectAll={() => setGenres(allGenreSelections())}
-                      onClear={() => setGenres([])}
-                    />
+                    <fieldset class="block space-y-1 text-sm">
+                      <span class="block text-text-muted">ジャンル</span>
+                      <GenreSection
+                        genres={genreLabels()}
+                        selected={selectedGenreLabels()}
+                        contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
+                        onToggle={handleToggleGenreLabel}
+                        onSelectAll={() => setGenres(allGenreSelections())}
+                        onClear={() => setGenres([])}
+                      />
+                    </fieldset>
 
                     <Show
                       when={versionLabels().length > 0}
                       fallback={
-                        <div>
-                          <span class="mb-1 block text-sm font-medium">バージョン</span>
+                        <div class="space-y-1 text-sm">
+                          <span class="block text-text-muted">バージョン</span>
                           <p class="text-sm text-text-subtle">バージョンを取得できませんでした。</p>
                         </div>
                       }
                     >
-                      {/* TODO: 「バージョン」という文字部分のスタイルが違うのは後で修正 「難易度」に合わせる */}
-                      <VersionSection
-                        versions={versionLabels()}
-                        selected={selectedVersionLabels()}
-                        contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
-                        onToggle={handleToggleVersionLabel}
-                        onSelectAll={() => setVersions(allVersionSelections())}
-                        onClear={() => setVersions([])}
-                      />
+                      <fieldset class="block space-y-1 text-sm">
+                        <span class="block text-text-muted">バージョン</span>
+                        <VersionSection
+                          versions={versionLabels()}
+                          selected={selectedVersionLabels()}
+                          contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
+                          onToggle={handleToggleVersionLabel}
+                          onSelectAll={() => setVersions(allVersionSelections())}
+                          onClear={() => setVersions([])}
+                        />
+                      </fieldset>
                     </Show>
 
                     <div class="grid grid-cols-2 gap-2">

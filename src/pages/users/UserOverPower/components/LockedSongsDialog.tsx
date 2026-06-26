@@ -476,25 +476,33 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 </div>
 
                 <div class="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
-                  <GenreSection
-                    genres={genreOptions()}
-                    selected={filters().genres}
-                    contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                    onToggle={handleToggleGenreFilter}
-                    onSelectAll={() => setFilters((prev) => ({ ...prev, genres: genreOptions() }))}
-                    onClear={() => setFilters((prev) => ({ ...prev, genres: [] }))}
-                  />
+                  <div>
+                    <span class="mb-1 block text-sm font-medium">ジャンル</span>
+                    <GenreSection
+                      genres={genreOptions()}
+                      selected={filters().genres}
+                      contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+                      onToggle={handleToggleGenreFilter}
+                      onSelectAll={() =>
+                        setFilters((prev) => ({ ...prev, genres: genreOptions() }))
+                      }
+                      onClear={() => setFilters((prev) => ({ ...prev, genres: [] }))}
+                    />
+                  </div>
 
-                  <VersionSection
-                    versions={versionOptions()}
-                    selected={filters().versions}
-                    contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                    onToggle={handleToggleVersionFilter}
-                    onSelectAll={() =>
-                      setFilters((prev) => ({ ...prev, versions: versionOptions() }))
-                    }
-                    onClear={() => setFilters((prev) => ({ ...prev, versions: [] }))}
-                  />
+                  <div>
+                    <span class="mb-1 block text-sm font-medium">バージョン</span>
+                    <VersionSection
+                      versions={versionOptions()}
+                      selected={filters().versions}
+                      contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+                      onToggle={handleToggleVersionFilter}
+                      onSelectAll={() =>
+                        setFilters((prev) => ({ ...prev, versions: versionOptions() }))
+                      }
+                      onClear={() => setFilters((prev) => ({ ...prev, versions: [] }))}
+                    />
+                  </div>
 
                   <section>
                     <Checkbox
