@@ -29,10 +29,7 @@ export const WORLDSEND_LEVEL_STAR_MIN = 1
 export const WORLDSEND_LEVEL_STAR_MAX = 5
 
 /** WORLD'S END の星数レベル選択肢。 */
-export const WORLDSEND_LEVEL_STAR_OPTIONS = [
-  WORLDSEND_LEVEL_STAR_MIN,
-  2,
-  3,
-  4,
-  WORLDSEND_LEVEL_STAR_MAX,
-] as const
+export const WORLDSEND_LEVEL_STAR_OPTIONS = Array.from(
+  { length: WORLDSEND_LEVEL_STAR_MAX - WORLDSEND_LEVEL_STAR_MIN + 1 },
+  (_, index) => WORLDSEND_LEVEL_STAR_MIN + index
+)
