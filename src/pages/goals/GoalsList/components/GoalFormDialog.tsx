@@ -8,6 +8,7 @@ import { TextField } from '@kobalte/core/text-field'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
 import {
   CHART_CONST_DECIMAL_PLACES,
   CHART_CONST_MAX,
@@ -31,8 +32,6 @@ import {
   SCORE_RANKS_ASC,
   type ScoreRank,
 } from '../../../../utils/scoreRank'
-import GenreSection from '../../../users/UserRecord/components/filterDialog/sections/GenreSection'
-import VersionSection from '../../../users/UserRecord/components/filterDialog/sections/VersionSection'
 import { buildTargetCountParam } from '../../utils/goalCountTarget'
 import {
   COMBO_LAMP_OPTIONS,
@@ -1151,9 +1150,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
                     <fieldset class="block space-y-1 text-sm">
                       <span class="block text-text-muted">ジャンル</span>
-                      <GenreSection
-                        genres={genreLabels()}
+                      <MultiSelectDropdown
+                        options={genreLabels()}
                         selected={selectedGenreLabels()}
+                        placeholder="ジャンルを選択"
                         contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
                         onToggle={handleToggleGenreLabel}
                         onSelectAll={() => setGenres(allGenreSelections())}
@@ -1172,9 +1172,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                     >
                       <fieldset class="block space-y-1 text-sm">
                         <span class="block text-text-muted">バージョン</span>
-                        <VersionSection
-                          versions={versionLabels()}
+                        <MultiSelectDropdown
+                          options={versionLabels()}
                           selected={selectedVersionLabels()}
+                          placeholder="バージョンを選択"
                           contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
                           onToggle={handleToggleVersionLabel}
                           onSelectAll={() => setVersions(allVersionSelections())}

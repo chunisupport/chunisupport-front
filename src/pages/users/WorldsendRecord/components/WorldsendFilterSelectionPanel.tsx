@@ -210,7 +210,6 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
     <div class="scrollbar-none min-h-0 flex-1 space-y-4 overflow-y-auto">
       <WorldsendMultiSelectSection
         title="属性"
-        idPrefix="worldsend-attribute"
         options={props.defaultFilter.attributes}
         selected={props.filters.attributes}
         formatLabel={formatWorldsendAttribute}
@@ -351,7 +350,6 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
       />
       <WorldsendMultiSelectSection
         title="ジャンル"
-        idPrefix="worldsend-genre"
         options={props.defaultFilter.genres}
         selected={props.filters.genres}
         formatLabel={(genre) => genre}
@@ -365,7 +363,6 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
       />
       <WorldsendMultiSelectSection
         title="バージョン"
-        idPrefix="worldsend-version"
         options={props.defaultFilter.versions}
         selected={props.filters.versions}
         formatLabel={(version) => version}

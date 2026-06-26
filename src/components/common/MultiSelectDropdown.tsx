@@ -1,18 +1,19 @@
 import { Button } from '@kobalte/core/button'
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronsUpDown } from 'lucide-solid'
-import type { Component } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
 
-type MultiSelectDropdownProps = {
+type MultiSelectDropdownProps<T extends string | number | null> = {
   /** 複数選択で表示する選択肢。 */
-  options: string[]
+  options: T[]
   /** 現在選択されている値。 */
-  selected: string[]
+  selected: T[]
   /** 未選択時に表示するプレースホルダー。 */
   placeholder: string
+  /** 選択肢の値を表示用ラベルへ変換する処理。 */
+  formatLabel?: (value: T) => string
   /** 選択状態を切り替える処理。 */
-  onToggle: (value: string) => void
+  onToggle: (value: T) => void
   /** すべての選択肢を選択する処理。 */
   onSelectAll: () => void
   /** 選択をすべて解除する処理。 */
@@ -42,7 +43,17 @@ const MULTI_SELECT_ITEM_CLASS =
  * @param props - 選択肢、選択状態、表示文言、更新ハンドラーを含む設定。
  * @returns 複数選択 Select の JSX 要素。
  */
-const MultiSelectDropdown: Component<MultiSelectDropdownProps> = (props) => {
+const MultiSelectDropdown = <T extends string | number | null>(
+  props: MultiSelectDropdownProps<T>
+) => {
+  /**
+   * 選択肢の値を Select 上の表示名へ変換する。
+   *
+   * @param value - 選択肢の生値。
+   * @returns 画面に表示するラベル。
+   */
+  const formatLabel = (value: T): string => props.formatLabel?.(value) ?? String(value)
+
   const selectedOptions = createMemo(() =>
     props.options.filter((option) => props.selected.includes(option))
   )
@@ -53,7 +64,7 @@ const MultiSelectDropdown: Component<MultiSelectDropdownProps> = (props) => {
    * @param nextSelected - Select で選択された次の値配列。
    * @returns なし。
    */
-  const handleChange = (nextSelected: string[]): void => {
+  const handleChange = (nextSelected: T[]): void => {
     for (const option of props.options) {
       if (props.selected.includes(option) !== nextSelected.includes(option)) {
         props.onToggle(option)
@@ -79,7 +90,7 @@ const MultiSelectDropdown: Component<MultiSelectDropdownProps> = (props) => {
           すべて解除
         </Button>
       </div>
-      <Select<string>
+      <Select<T>
         multiple
         options={props.options}
         value={selectedOptions()}
@@ -93,7 +104,7 @@ const MultiSelectDropdown: Component<MultiSelectDropdownProps> = (props) => {
                   <Check size={14} />
                 </Select.ItemIndicator>
               </span>
-              <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
+              <Select.ItemLabel>{formatLabel(itemProps.item.rawValue)}</Select.ItemLabel>
             </div>
           </Select.Item>
         )}
@@ -107,7 +118,7 @@ const MultiSelectDropdown: Component<MultiSelectDropdownProps> = (props) => {
               <For each={selectedOptions()}>
                 {(option) => (
                   <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
-                    {option}
+                    {formatLabel(option)}
                   </span>
                 )}
               </For>

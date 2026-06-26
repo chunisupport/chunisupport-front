@@ -546,58 +546,52 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           }))
         }
       />
-      <div>
-        <span class="mb-1 block text-sm font-medium">ジャンル</span>
-        <GenreSection
-          genres={genres()}
-          selected={props.filters.genres}
-          contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-          onSelectAll={() =>
-            props.setFilters((prev) => ({
-              ...prev,
-              genres: genres(),
-            }))
-          }
-          onClear={() =>
-            props.setFilters((prev) => ({
-              ...prev,
-              genres: [],
-            }))
-          }
-          onToggle={(genre) =>
-            props.setFilters((prev) => ({
-              ...prev,
-              genres: toggleArray(prev.genres, genre),
-            }))
-          }
-        />
-      </div>
-      <div>
-        <span class="mb-1 block text-sm font-medium">バージョン</span>
-        <VersionSection
-          versions={versions()}
-          selected={props.filters.versions}
-          contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-          onSelectAll={() =>
-            props.setFilters((prev) => ({
-              ...prev,
-              versions: versions(),
-            }))
-          }
-          onClear={() =>
-            props.setFilters((prev) => ({
-              ...prev,
-              versions: [],
-            }))
-          }
-          onToggle={(version) =>
-            props.setFilters((prev) => ({
-              ...prev,
-              versions: toggleArray(prev.versions, version),
-            }))
-          }
-        />
-      </div>
+      <GenreSection
+        genres={genres()}
+        selected={props.filters.genres}
+        contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+        onSelectAll={() =>
+          props.setFilters((prev) => ({
+            ...prev,
+            genres: genres(),
+          }))
+        }
+        onClear={() =>
+          props.setFilters((prev) => ({
+            ...prev,
+            genres: [],
+          }))
+        }
+        onToggle={(genre) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            genres: toggleArray(prev.genres, genre),
+          }))
+        }
+      />
+      <VersionSection
+        versions={versions()}
+        selected={props.filters.versions}
+        contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+        onSelectAll={() =>
+          props.setFilters((prev) => ({
+            ...prev,
+            versions: versions(),
+          }))
+        }
+        onClear={() =>
+          props.setFilters((prev) => ({
+            ...prev,
+            versions: [],
+          }))
+        }
+        onToggle={(version) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            versions: toggleArray(prev.versions, version),
+          }))
+        }
+      />
     </div>
   )
 }

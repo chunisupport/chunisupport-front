@@ -5,6 +5,7 @@ import { TextField } from '@kobalte/core/text-field'
 import { Check, CircleSlash2, Funnel, ListChecks, LoaderCircle, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
+import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
 import Loading from '../../../../components/Loading/Loading'
 import type {
   MasterItemDTO,
@@ -26,8 +27,6 @@ import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
 } from '../../../../utils/versionConverter'
-import GenreSection from '../../UserRecord/components/filterDialog/sections/GenreSection'
-import VersionSection from '../../UserRecord/components/filterDialog/sections/VersionSection'
 
 type Props = {
   open: boolean
@@ -478,9 +477,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 <div class="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
                   <div>
                     <span class="mb-1 block text-sm font-medium">ジャンル</span>
-                    <GenreSection
-                      genres={genreOptions()}
+                    <MultiSelectDropdown
+                      options={genreOptions()}
                       selected={filters().genres}
+                      placeholder="ジャンルを選択"
                       contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
                       onToggle={handleToggleGenreFilter}
                       onSelectAll={() =>
@@ -492,9 +492,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
 
                   <div>
                     <span class="mb-1 block text-sm font-medium">バージョン</span>
-                    <VersionSection
-                      versions={versionOptions()}
+                    <MultiSelectDropdown
+                      options={versionOptions()}
                       selected={filters().versions}
+                      placeholder="バージョンを選択"
                       contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
                       onToggle={handleToggleVersionFilter}
                       onSelectAll={() =>

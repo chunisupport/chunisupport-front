@@ -23,15 +23,18 @@ type VersionSectionProps = {
  * @returns バージョン選択の JSX 要素。
  */
 const VersionSection: Component<VersionSectionProps> = (props) => (
-  <MultiSelectDropdown
-    options={props.versions}
-    selected={props.selected}
-    placeholder="バージョンを選択"
-    contentZIndexClass={props.contentZIndexClass}
-    onToggle={props.onToggle}
-    onSelectAll={props.onSelectAll}
-    onClear={props.onClear}
-  />
+  <div>
+    <span class="mb-1 block text-sm font-medium">バージョン</span>
+    <MultiSelectDropdown
+      options={props.versions}
+      selected={props.selected}
+      placeholder="バージョンを選択"
+      contentZIndexClass={props.contentZIndexClass}
+      onToggle={props.onToggle}
+      onSelectAll={props.onSelectAll}
+      onClear={props.onClear}
+    />
+  </div>
 )
 
 export default VersionSection

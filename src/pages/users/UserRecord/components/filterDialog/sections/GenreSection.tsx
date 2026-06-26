@@ -23,15 +23,18 @@ type GenreSectionProps = {
  * @returns ジャンル選択の JSX 要素。
  */
 const GenreSection: Component<GenreSectionProps> = (props) => (
-  <MultiSelectDropdown
-    options={props.genres}
-    selected={props.selected}
-    placeholder="ジャンルを選択"
-    contentZIndexClass={props.contentZIndexClass}
-    onToggle={props.onToggle}
-    onSelectAll={props.onSelectAll}
-    onClear={props.onClear}
-  />
+  <div>
+    <span class="mb-1 block text-sm font-medium">ジャンル</span>
+    <MultiSelectDropdown
+      options={props.genres}
+      selected={props.selected}
+      placeholder="ジャンルを選択"
+      contentZIndexClass={props.contentZIndexClass}
+      onToggle={props.onToggle}
+      onSelectAll={props.onSelectAll}
+      onClear={props.onClear}
+    />
+  </div>
 )
 
 export default GenreSection
