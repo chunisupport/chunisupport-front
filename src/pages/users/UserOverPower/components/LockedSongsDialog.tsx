@@ -2,7 +2,7 @@ import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, CircleSlash2, Funnel, LoaderCircle, Search } from 'lucide-solid'
+import { Check, CircleSlash2, Funnel, ListChecks, LoaderCircle, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import Loading from '../../../../components/Loading/Loading'
@@ -319,8 +319,8 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </Dialog.Description>
           </div>
 
-          <div class="mb-3 flex min-w-0 items-center gap-2">
-            <TextField class="min-w-0 flex-1">
+          <div class="mb-3 flex min-w-0 items-center">
+            <TextField class="min-w-0 flex-1 mr-2">
               <div class="flex min-w-0 items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
                 <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
                 <TextField.Input
@@ -335,7 +335,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </TextField>
             <Button
               type="button"
-              class={`flex h-9.5 min-w-9.5 shrink-0 items-center justify-center gap-1.5 rounded border px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+              class={`flex h-9.5 min-w-9.5 shrink-0 items-center justify-center gap-1.5 rounded-l border-l border-t border-b px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 activeFilterCount() > 0
                   ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                   : 'border-border-strong text-text-muted hover:bg-surface-hover'
@@ -352,7 +352,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </Button>
             <Button
               type="button"
-              class={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+              class={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 showLockedOnly()
                   ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                   : 'border-border-strong text-text-muted hover:bg-surface-hover'
@@ -362,7 +362,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
               title="選択済み楽曲のみ表示"
               onClick={() => setShowLockedOnly((value) => !value)}
             >
-              <Check size={24} aria-hidden="true" />
+              <ListChecks size={24} aria-hidden="true" />
             </Button>
           </div>
 
