@@ -1102,7 +1102,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       {targetCountText()}
                     </p>
                   </div>
-                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div class="grid grid-cols-1 gap-3 ">
                     <fieldset class="block text-sm space-y-1">
                       <div class="flex items-center justify-between">
                         <span class="block text-text-muted">難易度</span>
