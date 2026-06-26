@@ -61,6 +61,15 @@ export const formatGoalTypeLabel = (type: GoalAchievementType): string =>
   resolveGoalAchievementTypeLabel(type)
 
 /**
+ * 目標属性が明示的な空選択として保存されているか判定する。
+ *
+ * @param value - 目標属性に保存された ID 指定。
+ * @returns 空配列が保存されていれば true。
+ */
+export const isExplicitEmptyAttribute = (value: number | number[] | undefined): boolean =>
+  Array.isArray(value) && value.length === 0
+
+/**
  * 目標条件をユーザー向けの要約テキストへ変換する。
  *
  * @param attributes - 目標に設定された対象条件。
@@ -82,15 +91,6 @@ export const formatGoalAttributesLabel = (
     }
     return []
   }
-
-  /**
-   * 目標属性が明示的な空選択として保存されているか判定する。
-   *
-   * @param value - 目標属性に保存された ID 指定。
-   * @returns 空配列が保存されていれば true。
-   */
-  const isExplicitEmptyAttribute = (value: number | number[] | undefined): boolean =>
-    Array.isArray(value) && value.length === 0
 
   const formatNames = (ids: number[], namesById: Map<number, string>): string =>
     ids.map((id) => namesById.get(id) ?? String(id)).join(', ')

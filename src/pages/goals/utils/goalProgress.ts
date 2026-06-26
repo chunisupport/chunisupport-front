@@ -8,6 +8,7 @@ import type {
   VersionDTO,
 } from '../../../types/api'
 import { buildCurrentOverPowerBySongId } from '../../../usecases/overpower/currentOpTarget'
+import { isExplicitEmptyAttribute } from './goalForm'
 import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
 
 export interface GoalProgressResult {
@@ -48,15 +49,6 @@ const normalizeAttributeIds = (value: number | number[] | undefined): number[] =
   }
   return []
 }
-
-/**
- * 目標属性が明示的な空選択として保存されているか判定する。
- *
- * @param value - 目標属性に保存された ID 指定。
- * @returns 空配列が保存されていれば true。
- */
-const isExplicitEmptyAttribute = (value: number | number[] | undefined): boolean =>
-  Array.isArray(value) && value.length === 0
 
 /**
  * レコードが曲ごとのOVER POWER対象譜面かを判定する。

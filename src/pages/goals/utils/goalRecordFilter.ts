@@ -8,6 +8,7 @@ import type {
   FilterState,
   HardLamp,
 } from '../../users/UserRecord/types/types'
+import { isExplicitEmptyAttribute } from './goalForm'
 import { buildGoalVersionNameMap } from './goalVersion'
 
 const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
@@ -40,15 +41,6 @@ const normalizeAttributeIds = (value: number | number[] | undefined): number[] =
   if (typeof value === 'number') return [value]
   return Array.isArray(value) ? value.filter((id) => Number.isInteger(id)) : []
 }
-
-/**
- * 目標属性が明示的な空選択として保存されているか判定する。
- *
- * @param value - 目標属性に保存された ID 指定。
- * @returns 空配列が保存されていれば true。
- */
-const isExplicitEmptyAttribute = (value: number | number[] | undefined): boolean =>
-  Array.isArray(value) && value.length === 0
 
 /**
  * 目標種別ごとの未達成条件を通常レコードフィルターへ反映する。
