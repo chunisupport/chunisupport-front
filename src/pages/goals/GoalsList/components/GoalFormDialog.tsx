@@ -27,6 +27,7 @@ import {
 } from '../../../../utils/scoreRank'
 import GenreSection from '../../../users/UserRecord/components/filterDialog/sections/GenreSection'
 import VersionSection from '../../../users/UserRecord/components/filterDialog/sections/VersionSection'
+import { CONST_MAX, CONST_MIN } from '../../../users/UserRecord/constants/constRange'
 import { buildTargetCountParam } from '../../utils/goalCountTarget'
 import {
   COMBO_LAMP_OPTIONS,
@@ -202,8 +203,6 @@ const GOAL_ACHIEVEMENT_TYPES = [
 const HARD_LAMP_VALUES = ['HRD', 'BRV', 'ABS', 'CTS'] as const
 const COMBO_LAMP_VALUES = ['FC', 'AJ'] as const
 const MIN_SCORE = 0
-const MIN_MUSIC_CONST = 1
-const MAX_MUSIC_CONST = 16
 const MUSIC_CONST_DECIMAL_PLACES = 1
 const MAX_OVERPOWER_PERCENT = 100
 const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
@@ -721,7 +720,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
     setErrorMessage('')
     setter(
-      clampNumericInput(value, MIN_MUSIC_CONST, MAX_MUSIC_CONST, (nextValue) =>
+      clampNumericInput(value, CONST_MIN, CONST_MAX, (nextValue) =>
         nextValue.toFixed(MUSIC_CONST_DECIMAL_PLACES)
       )
     )
@@ -771,8 +770,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setInvert(false)
       setChartTargetMode('normal')
       setDiffs(allDifficultySelections())
-      setConstMin('')
-      setConstMax('')
+      setConstMin(String(CONST_MIN))
+      setConstMax(String(CONST_MAX))
       setGenres(allGenreSelections())
       setVersions(allVersionSelections())
       return
@@ -805,10 +804,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setChartTargetMode(goal.attributes.chart_target === 'OP_TARGET' ? 'op_target' : 'normal')
     setDiffs(resolveInitialAttributeSelection(goal.attributes.diff, allDifficultySelections()))
     setConstMin(
-      typeof goal.attributes.const?.min === 'number' ? String(goal.attributes.const.min) : ''
+      typeof goal.attributes.const?.min === 'number'
+        ? String(goal.attributes.const.min)
+        : String(CONST_MIN)
     )
     setConstMax(
-      typeof goal.attributes.const?.max === 'number' ? String(goal.attributes.const.max) : ''
+      typeof goal.attributes.const?.max === 'number'
+        ? String(goal.attributes.const.max)
+        : String(CONST_MAX)
     )
     setGenres(resolveInitialAttributeSelection(goal.attributes.genre, allGenreSelections()))
     setVersions(resolveInitialAttributeSelection(goal.attributes.ver, allVersionSelections()))
