@@ -1,15 +1,16 @@
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
+import { SCORE_MIN } from '../../../../constants/chart'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
+import {
+  RECORD_CHAIN_LAMP_OPTIONS,
+  RECORD_COMBO_LAMP_OPTIONS,
+  RECORD_HARD_LAMP_OPTIONS,
+} from '../../constants/recordFilterOptions'
 import LampSection from '../../UserRecord/components/filterDialog/sections/LampSection'
 import NumericRangeSection from '../../UserRecord/components/filterDialog/sections/NumericRangeSection'
 import ScoreSection from '../../UserRecord/components/filterDialog/sections/ScoreSection'
 import { JUSTICE_COUNT_RANGE_FILTER } from '../../UserRecord/constants/rangeFilters'
-import {
-  CHAIN_LAMP_OPTIONS,
-  COMBO_LAMP_OPTIONS,
-  HARD_LAMP_OPTIONS,
-} from '../../UserRecord/types/filterDefaults'
 import type { ChainLamp, ComboLamp, HardLamp } from '../../UserRecord/types/types'
 import {
   parseNumberInput,
@@ -259,7 +260,7 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
             ...prev,
             score: {
               ...prev.score,
-              min: parseNumberInput(value) ?? 0,
+              min: parseNumberInput(value) ?? SCORE_MIN,
             },
           }))
         }}
@@ -290,7 +291,7 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
       <LampSection
         title="コンボランプ"
         idPrefix="worldsend-combo-lamp"
-        lamps={COMBO_LAMP_OPTIONS}
+        lamps={RECORD_COMBO_LAMP_OPTIONS}
         selected={props.filters.combo_lamp}
         onToggle={(lamp) =>
           props.setFilters((prev) => ({
@@ -308,7 +309,7 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
       <LampSection
         title="FULL CHAIN"
         idPrefix="worldsend-chain-lamp"
-        lamps={CHAIN_LAMP_OPTIONS}
+        lamps={RECORD_CHAIN_LAMP_OPTIONS}
         selected={props.filters.chain_lamp}
         formatLabel={formatFullChainLampLabel}
         onToggle={(lamp) =>
@@ -327,7 +328,7 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
       <LampSection
         title="ハードランプ"
         idPrefix="worldsend-hard-lamp"
-        lamps={HARD_LAMP_OPTIONS}
+        lamps={RECORD_HARD_LAMP_OPTIONS}
         selected={props.filters.hard_lamp}
         onToggle={(lamp) =>
           props.setFilters((prev) => ({

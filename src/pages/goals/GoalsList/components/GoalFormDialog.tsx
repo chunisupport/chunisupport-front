@@ -8,6 +8,12 @@ import { TextField } from '@kobalte/core/text-field'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import {
+  CHART_CONST_DECIMAL_PLACES,
+  CHART_CONST_MAX,
+  CHART_CONST_MIN,
+  SCORE_MIN,
+} from '../../../../constants/chart'
 import type {
   GoalAchievementParams,
   GoalAchievementType,
@@ -27,7 +33,6 @@ import {
 } from '../../../../utils/scoreRank'
 import GenreSection from '../../../users/UserRecord/components/filterDialog/sections/GenreSection'
 import VersionSection from '../../../users/UserRecord/components/filterDialog/sections/VersionSection'
-import { CONST_MAX, CONST_MIN } from '../../../users/UserRecord/constants/constRange'
 import { buildTargetCountParam } from '../../utils/goalCountTarget'
 import {
   COMBO_LAMP_OPTIONS,
@@ -202,8 +207,6 @@ const GOAL_ACHIEVEMENT_TYPES = [
 ] as const satisfies readonly GoalAchievementType[]
 const HARD_LAMP_VALUES = ['HRD', 'BRV', 'ABS', 'CTS'] as const
 const COMBO_LAMP_VALUES = ['FC', 'AJ'] as const
-const MIN_SCORE = 0
-const MUSIC_CONST_DECIMAL_PLACES = 1
 const MAX_OVERPOWER_PERCENT = 100
 const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
 const DEFAULT_GOAL_ACHIEVEMENT_TYPE = 'rank_count' satisfies GoalAchievementType
@@ -705,7 +708,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @returns なし。
    */
   const handleScoreChange = (value: string): void => {
-    setScore(clampNumericInput(value, MIN_SCORE, MAX_SCORE, String))
+    setScore(clampNumericInput(value, SCORE_MIN, MAX_SCORE, String))
   }
 
   /**
@@ -720,8 +723,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
     setErrorMessage('')
     setter(
-      clampNumericInput(value, CONST_MIN, CONST_MAX, (nextValue) =>
-        nextValue.toFixed(MUSIC_CONST_DECIMAL_PLACES)
+      clampNumericInput(value, CHART_CONST_MIN, CHART_CONST_MAX, (nextValue) =>
+        nextValue.toFixed(CHART_CONST_DECIMAL_PLACES)
       )
     )
   }
@@ -770,8 +773,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setInvert(false)
       setChartTargetMode('normal')
       setDiffs(allDifficultySelections())
-      setConstMin(String(CONST_MIN))
-      setConstMax(String(CONST_MAX))
+      setConstMin(String(CHART_CONST_MIN))
+      setConstMax(String(CHART_CONST_MAX))
       setGenres(allGenreSelections())
       setVersions(allVersionSelections())
       return
@@ -806,12 +809,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setConstMin(
       typeof goal.attributes.const?.min === 'number'
         ? String(goal.attributes.const.min)
-        : String(CONST_MIN)
+        : String(CHART_CONST_MIN)
     )
     setConstMax(
       typeof goal.attributes.const?.max === 'number'
         ? String(goal.attributes.const.max)
-        : String(CONST_MAX)
+        : String(CHART_CONST_MAX)
     )
     setGenres(resolveInitialAttributeSelection(goal.attributes.genre, allGenreSelections()))
     setVersions(resolveInitialAttributeSelection(goal.attributes.ver, allVersionSelections()))
@@ -972,7 +975,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       (currentType === 'score_count' ||
         currentType === 'rank_count' ||
         currentType === 'avg_score') &&
-      (!Number.isFinite(parsedScore) || parsedScore < MIN_SCORE || parsedScore > MAX_SCORE)
+      (!Number.isFinite(parsedScore) || parsedScore < SCORE_MIN || parsedScore > MAX_SCORE)
     ) {
       setErrorMessage('スコアは 0 ～ 1,010,000 の範囲で入力してください。')
       return
@@ -1236,7 +1239,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   <GoalNumberField
                     label="スコア目標"
                     value={score()}
-                    min={MIN_SCORE}
+                    min={SCORE_MIN}
                     max={MAX_SCORE}
                     onChange={handleScoreChange}
                   />

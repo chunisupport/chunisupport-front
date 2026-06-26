@@ -3,7 +3,7 @@ import { NumberField } from '@kobalte/core/number-field'
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { CONST_MAX } from '../../../constants/constRange'
+import { CHART_CONST_MAX, SCORE_MIN } from '../../../../../../constants/chart'
 import {
   FILTER_DIALOG_FIELD_INPUT_CLASS,
   FILTER_DIALOG_SELECT_ITEM_CLASS,
@@ -106,8 +106,8 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
               </NumberField.Label>
               <NumberField.Input
                 id="filter-const-max"
-                min={0}
-                max={CONST_MAX}
+                min={SCORE_MIN}
+                max={CHART_CONST_MAX}
                 step={0.1}
                 class={FILTER_DIALOG_FIELD_INPUT_CLASS}
                 onFocus={(event) => event.currentTarget.select()}

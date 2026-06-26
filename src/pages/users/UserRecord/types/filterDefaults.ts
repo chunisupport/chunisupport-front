@@ -1,24 +1,14 @@
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart'
 import type { MasterDataDTO, MasterItemDTO, VersionSummaryDTO } from '../../../../types/api'
 import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../utils/versionConverter'
-import { CONST_MAX, CONST_MIN } from '../constants/constRange'
-import type { ChainLamp, ComboLamp, FilterState, HardLamp } from '../types/types'
-
-// TODO: これらの定数がハードコードされていていいのか？サーバから取ってこなくていいのか？
-
-/** ランプの選択肢 */
-export const COMBO_LAMP_OPTIONS: ComboLamp[] = ['ALL JUSTICE', 'FULL COMBO', null]
-export const CHAIN_LAMP_OPTIONS: ChainLamp[] = ['FULL CHAIN PLATINUM', 'FULL CHAIN GOLD', null] // TODO: 名前変える
-export const HARD_LAMP_OPTIONS: HardLamp[] = [
-  'CATASTROPHY',
-  'ABSOLUTE',
-  'BRAVE',
-  'HARD',
-  'CLEAR',
-  'FAILED',
-  null,
-]
+import {
+  RECORD_CHAIN_LAMP_OPTIONS,
+  RECORD_COMBO_LAMP_OPTIONS,
+  RECORD_HARD_LAMP_OPTIONS,
+} from '../../constants/recordFilterOptions'
+import type { FilterState } from '../types/types'
 
 /** フィルターのデフォルト値 */
 export const DEFAULT_FILTER: FilterState = {
@@ -28,12 +18,12 @@ export const DEFAULT_FILTER: FilterState = {
   genres: [],
   versions: [],
   const: {
-    min: CONST_MIN,
-    max: CONST_MAX,
+    min: CHART_CONST_MIN,
+    max: CHART_CONST_MAX,
   },
   constFilterMode: 'level',
   score: {
-    min: 0,
+    min: SCORE_MIN,
     max: MAX_SCORE,
   },
   scoreFilterMode: 'rank',
@@ -45,9 +35,9 @@ export const DEFAULT_FILTER: FilterState = {
     min: null,
     max: null,
   },
-  combo_lamp: [...COMBO_LAMP_OPTIONS],
-  chain_lamp: [...CHAIN_LAMP_OPTIONS],
-  hard_lamp: [...HARD_LAMP_OPTIONS],
+  combo_lamp: [...RECORD_COMBO_LAMP_OPTIONS],
+  chain_lamp: [...RECORD_CHAIN_LAMP_OPTIONS],
+  hard_lamp: [...RECORD_HARD_LAMP_OPTIONS],
   excludeNoPlay: false,
 }
 
@@ -71,9 +61,9 @@ export const buildDefaultFilter = (
   score: { ...DEFAULT_FILTER.score },
   justiceCount: { ...DEFAULT_FILTER.justiceCount },
   overPower: { ...DEFAULT_FILTER.overPower },
-  combo_lamp: [...COMBO_LAMP_OPTIONS],
-  chain_lamp: [...CHAIN_LAMP_OPTIONS],
-  hard_lamp: [...HARD_LAMP_OPTIONS],
+  combo_lamp: [...RECORD_COMBO_LAMP_OPTIONS],
+  chain_lamp: [...RECORD_CHAIN_LAMP_OPTIONS],
+  hard_lamp: [...RECORD_HARD_LAMP_OPTIONS],
 })
 
 /**
@@ -90,7 +80,7 @@ export const normalizeFilterState = (filter: Partial<FilterState>): FilterState 
   justiceCount: filter.justiceCount ?? { ...DEFAULT_FILTER.justiceCount },
   overPower: filter.overPower ?? { ...DEFAULT_FILTER.overPower },
   currentOpTargetOnly: filter.currentOpTargetOnly ?? DEFAULT_FILTER.currentOpTargetOnly,
-  combo_lamp: filter.combo_lamp ?? [...COMBO_LAMP_OPTIONS],
-  chain_lamp: filter.chain_lamp ?? [...CHAIN_LAMP_OPTIONS],
-  hard_lamp: filter.hard_lamp ?? [...HARD_LAMP_OPTIONS],
+  combo_lamp: filter.combo_lamp ?? [...RECORD_COMBO_LAMP_OPTIONS],
+  chain_lamp: filter.chain_lamp ?? [...RECORD_CHAIN_LAMP_OPTIONS],
+  hard_lamp: filter.hard_lamp ?? [...RECORD_HARD_LAMP_OPTIONS],
 })
