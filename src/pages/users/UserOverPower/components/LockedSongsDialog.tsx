@@ -118,6 +118,14 @@ const FILTER_CHECKBOX_CONTROL_CLASS =
 /** ネストしたフィルターモーダル上で Select の選択肢を前面に表示する z-index クラス。 */
 const NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-80'
 
+/** 未解禁楽曲フィルターダイアログの操作ボタンで使う Tailwind クラス。 */
+const LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS = {
+  secondary:
+    'rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover',
+  primary:
+    'rounded bg-action-primary px-4 py-2 text-sm text-text-inverse hover:bg-action-primary-hover',
+} as const
+
 /**
  * OVER POWER計算から除外する未解禁楽曲を検索・絞り込みしながら編集するダイアログ。
  *
@@ -346,6 +354,15 @@ const LockedSongsDialog: Component<Props> = (props) => {
     setFilters((prev) => ({ ...prev, unplayedOnly: checked }))
   }
 
+  /**
+   * 未解禁楽曲フィルターを既定値へ戻す。
+   *
+   * @returns なし。
+   */
+  const handleResetFilter = () => {
+    setFilters(defaultFilter())
+  }
+
   createEffect(() => {
     if (!props.open) {
       setIsListReady(false)
@@ -518,13 +535,15 @@ const LockedSongsDialog: Component<Props> = (props) => {
             <Dialog.Portal>
               <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
               <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex max-h-[80dvh] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
-                <div class="mb-4 flex items-start justify-between gap-3">
-                  <div>
-                    <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
-                  </div>
-                  <Dialog.CloseButton class="shrink-0 rounded border border-border-strong px-3 py-1 text-sm hover:bg-surface-muted">
-                    閉じる
-                  </Dialog.CloseButton>
+                <div class="mb-4 flex shrink-0 items-center justify-between gap-3">
+                  <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
+                  <Button
+                    type="button"
+                    class={LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS.secondary}
+                    onClick={handleResetFilter}
+                  >
+                    すべて選択
+                  </Button>
                 </div>
 
                 <div class="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
@@ -573,17 +592,15 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   </section>
                 </div>
 
-                <div class="mt-4 flex justify-between gap-2">
-                  <Button
-                    type="button"
-                    class="rounded border border-border-strong px-3 py-2 text-sm text-text-muted hover:bg-surface-muted"
-                    onClick={() => setFilters({ genres: [], versions: [], unplayedOnly: false })}
-                  >
-                    すべて解除
-                  </Button>
-                  <Dialog.CloseButton class="rounded bg-action-primary px-3 py-2 text-sm text-text-inverse hover:bg-action-primary-hover">
-                    適用
-                  </Dialog.CloseButton>
+                <div class="mt-6 flex justify-end">
+                  <div class="flex gap-2">
+                    <Dialog.CloseButton class={LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS.secondary}>
+                      閉じる
+                    </Dialog.CloseButton>
+                    <Dialog.CloseButton class={LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS.primary}>
+                      適用
+                    </Dialog.CloseButton>
+                  </div>
                 </div>
               </Dialog.Content>
             </Dialog.Portal>
