@@ -308,7 +308,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
   })
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
         <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
@@ -462,7 +462,11 @@ const LockedSongsDialog: Component<Props> = (props) => {
             {(message) => <p class="mt-3 text-sm text-danger">{message()}</p>}
           </Show>
 
-          <Dialog open={filterDialogOpen()} onOpenChange={setFilterDialogOpen}>
+          <Dialog
+            open={filterDialogOpen()}
+            onOpenChange={setFilterDialogOpen}
+            preventScroll={false}
+          >
             <Dialog.Portal>
               <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
               <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex max-h-[80dvh] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
