@@ -401,6 +401,30 @@
   }
 }
 
+@keyframes honor-title-marquee {
+  0%,
+  25% {
+    transform: translateX(0%);
+  }
+
+  75%,
+  100% {
+    transform: translateX(var(--honor-title-scroll-amount, -100%));
+  }
+}
+
+@keyframes honor-title-rotating-scroll {
+  0%,
+  12.5% {
+    transform: translateX(0%);
+  }
+
+  87.5%,
+  100% {
+    transform: translateX(var(--honor-title-scroll-amount, -100%));
+  }
+}
+
 @layer utilities {
   .animate-marquee {
     animation: marquee 5s linear infinite;
@@ -441,6 +465,7 @@
     border-radius: 6px;
     background: var(--honor-background, #d4d4d4);
     color: #000;
+    overflow: hidden;
     font-family: "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
     font-size: 14px;
     font-weight: bold;
@@ -452,6 +477,21 @@
       rgb(255 255 255 / 50%) 47%,
       transparent 52%
     );
+  }
+
+  .user-honor-title__text {
+    display: block;
+    width: 100%;
+    white-space: nowrap;
+  }
+
+  .user-honor-title__text--scrolling {
+    animation: honor-title-marquee var(--honor-title-scroll-duration, 4000ms) linear infinite;
+  }
+
+  .user-honor-title__text--scrolling.user-honor-title__text--rotating {
+    animation-name: honor-title-rotating-scroll;
+    animation-iteration-count: 1;
   }
 
   .user-honor-title--rotating {
