@@ -40,7 +40,7 @@ import {
   ERROR_MESSAGE_INVALID_COUNT_TARGET,
   GOAL_TITLE_MAX_LENGTH,
   LABEL_INVERT_DISPLAY,
-  STEP2_DESCRIPTION,
+  STEP3_DESCRIPTION,
 } from './constants'
 import { GoalCardProgress } from './GoalCard'
 
@@ -1077,128 +1077,131 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
           <div class="scrollbar-none mt-4 min-h-0 flex-1 basis-0 space-y-4 overflow-y-auto pr-1">
             <section class={GOAL_STEP_SECTION_CLASS}>
-              <div class="mb-4 flex gap-3">
+              <div class="mb-3 flex items-center gap-3">
                 <span class={GOAL_STEP_BADGE_CLASS}>1</span>
                 <div>
-                  <h2 class={GOAL_STEP_TITLE_CLASS}>タイトルと対象譜面</h2>
-                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>
-                    目標名を決めてから、進捗を計算する譜面を絞り込みます。
-                  </p>
+                  <h2 class={GOAL_STEP_TITLE_CLASS}>タイトル</h2>
+                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>表示名を設定します。</p>
+                </div>
+              </div>
+
+              <GoalTextField
+                label=""
+                value={title()}
+                maxLength={GOAL_TITLE_MAX_LENGTH}
+                onChange={setTitle}
+              />
+            </section>
+
+            <section class={GOAL_STEP_SECTION_CLASS}>
+              <div class="mb-3 flex items-center gap-3">
+                <span class={GOAL_STEP_BADGE_CLASS}>2</span>
+                <div>
+                  <h2 class={GOAL_STEP_TITLE_CLASS}>対象譜面</h2>
+                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>進捗を計算する譜面を絞り込みます。</p>
                 </div>
               </div>
 
               <div class="space-y-4">
-                <GoalTextField
-                  label="タイトル"
-                  value={title()}
-                  maxLength={GOAL_TITLE_MAX_LENGTH}
-                  onChange={setTitle}
-                />
-
-                <div class="rounded border border-border bg-surface p-3">
-                  <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-                    <p class="text-sm font-semibold text-text-muted">対象譜面</p>
-                    <p class="rounded bg-action-secondary px-2 py-1 text-xs font-semibold text-text-muted">
-                      {targetCountText()}
-                    </p>
-                  </div>
-                  <div class="grid grid-cols-1 gap-3 ">
-                    <fieldset class="block text-sm space-y-1">
-                      <div class="flex items-center justify-between">
-                        <span class="block text-text-muted">難易度</span>
-                        <Button
-                          type="button"
-                          class="text-xs text-action-primary hover:text-action-primary"
-                          onClick={() => {
-                            setChartTargetMode('normal')
-                            setDiffs([])
-                          }}
-                        >
-                          クリア
-                        </Button>
-                      </div>
-                      <div class="space-y-1 rounded border border-border-strong px-3 py-2">
-                        <GoalFilterCheckbox
-                          label="OP対象 (MAS+ULT)"
-                          checked={chartTargetMode() === 'op_target'}
-                          onChange={(checked) => {
-                            setChartTargetMode(checked ? 'op_target' : 'normal')
-                            if (checked) {
-                              setDiffs([])
-                            }
-                          }}
-                        />
-                        <For each={props.masterData.difficulties}>
-                          {(item) => (
-                            <GoalFilterCheckbox
-                              label={item.name}
-                              checked={
-                                chartTargetMode() === 'normal' && diffs().includes(String(item.id))
-                              }
-                              disabled={chartTargetMode() === 'op_target'}
-                              onChange={(checked) => {
-                                setChartTargetMode('normal')
-                                setDiffs((prev) => toggleSelection(prev, String(item.id), checked))
-                              }}
-                            />
-                          )}
-                        </For>
-                      </div>
-                    </fieldset>
-
-                    {/* TODO: 「ジャンル」という文字部分のスタイルが違うのは後で修正 「難易度」に合わせる */}
-                    <GenreSection
-                      genres={genreLabels()}
-                      selected={selectedGenreLabels()}
-                      contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
-                      onToggle={handleToggleGenreLabel}
-                      onSelectAll={() => setGenres(allGenreSelections())}
-                      onClear={() => setGenres([])}
-                    />
-
-                    <Show
-                      when={versionLabels().length > 0}
-                      fallback={
-                        <div>
-                          <span class="mb-1 block text-sm font-medium">バージョン</span>
-                          <p class="text-sm text-text-subtle">バージョンを取得できませんでした。</p>
-                        </div>
-                      }
-                    >
-                      {/* TODO: 「バージョン」という文字部分のスタイルが違うのは後で修正 「難易度」に合わせる */}
-                      <VersionSection
-                        versions={versionLabels()}
-                        selected={selectedVersionLabels()}
-                        contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
-                        onToggle={handleToggleVersionLabel}
-                        onSelectAll={() => setVersions(allVersionSelections())}
-                        onClear={() => setVersions([])}
-                      />
-                    </Show>
-
-                    <div class="grid grid-cols-2 gap-2">
-                      <GoalDecimalTextField
-                        label="定数min"
-                        value={constMin()}
-                        onChange={(value) => handleMusicConstChange(setConstMin, value)}
-                      />
-                      <GoalDecimalTextField
-                        label="定数max"
-                        value={constMax()}
-                        onChange={(value) => handleMusicConstChange(setConstMax, value)}
-                      />
+                <div class="mb-3 flex flex-wrap items-center justify-start gap-2 text-xs text-text-muted">
+                  対象となる譜面数: {targetCountText()}
+                </div>
+                <div class="grid grid-cols-1 gap-3">
+                  <fieldset class="block text-sm space-y-1">
+                    <div class="flex items-center justify-between">
+                      <span class="block text-text-muted">難易度</span>
+                      <Button
+                        type="button"
+                        class="text-xs text-action-primary hover:text-action-primary"
+                        onClick={() => {
+                          setChartTargetMode('normal')
+                          setDiffs([])
+                        }}
+                      >
+                        クリア
+                      </Button>
                     </div>
+                    <div class="space-y-1 bg-surface rounded border border-border-strong px-3 py-2">
+                      <GoalFilterCheckbox
+                        label="OP対象 (MAS+ULT)"
+                        checked={chartTargetMode() === 'op_target'}
+                        onChange={(checked) => {
+                          setChartTargetMode(checked ? 'op_target' : 'normal')
+                          if (checked) {
+                            setDiffs([])
+                          }
+                        }}
+                      />
+                      <For each={props.masterData.difficulties}>
+                        {(item) => (
+                          <GoalFilterCheckbox
+                            label={item.name}
+                            checked={
+                              chartTargetMode() === 'normal' && diffs().includes(String(item.id))
+                            }
+                            disabled={chartTargetMode() === 'op_target'}
+                            onChange={(checked) => {
+                              setChartTargetMode('normal')
+                              setDiffs((prev) => toggleSelection(prev, String(item.id), checked))
+                            }}
+                          />
+                        )}
+                      </For>
+                    </div>
+                  </fieldset>
+
+                  {/* TODO: 「ジャンル」という文字部分のスタイルが違うのは後で修正 「難易度」に合わせる */}
+                  <GenreSection
+                    genres={genreLabels()}
+                    selected={selectedGenreLabels()}
+                    contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
+                    onToggle={handleToggleGenreLabel}
+                    onSelectAll={() => setGenres(allGenreSelections())}
+                    onClear={() => setGenres([])}
+                  />
+
+                  <Show
+                    when={versionLabels().length > 0}
+                    fallback={
+                      <div>
+                        <span class="mb-1 block text-sm font-medium">バージョン</span>
+                        <p class="text-sm text-text-subtle">バージョンを取得できませんでした。</p>
+                      </div>
+                    }
+                  >
+                    {/* TODO: 「バージョン」という文字部分のスタイルが違うのは後で修正 「難易度」に合わせる */}
+                    <VersionSection
+                      versions={versionLabels()}
+                      selected={selectedVersionLabels()}
+                      contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
+                      onToggle={handleToggleVersionLabel}
+                      onSelectAll={() => setVersions(allVersionSelections())}
+                      onClear={() => setVersions([])}
+                    />
+                  </Show>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <GoalDecimalTextField
+                      label="定数min"
+                      value={constMin()}
+                      onChange={(value) => handleMusicConstChange(setConstMin, value)}
+                    />
+                    <GoalDecimalTextField
+                      label="定数max"
+                      value={constMax()}
+                      onChange={(value) => handleMusicConstChange(setConstMax, value)}
+                    />
                   </div>
                 </div>
               </div>
             </section>
 
             <section class={GOAL_STEP_SECTION_CLASS}>
-              <div class="mb-4 flex gap-3">
-                <span class={GOAL_STEP_BADGE_CLASS}>2</span>
+              <div class="mb-3 flex items-center gap-3">
+                <span class={GOAL_STEP_BADGE_CLASS}>3</span>
                 <div>
                   <h2 class={GOAL_STEP_TITLE_CLASS}>達成条件</h2>
-                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>{STEP2_DESCRIPTION}</p>
+                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>{STEP3_DESCRIPTION}</p>
                 </div>
               </div>
 
@@ -1365,6 +1368,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   </Checkbox>
                 </div>
 
+                <p class="mb-1 block text-text-muted text-sm">プレビュー</p>
                 <article class="rounded-lg border border-border bg-surface p-4 shadow-sm">
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
