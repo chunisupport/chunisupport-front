@@ -305,7 +305,9 @@ const isComboLampValue = (value: string): value is 'FC' | 'AJ' =>
  */
 const GoalTextField: Component<GoalTextFieldProps> = (props) => (
   <TextField class="block text-sm" value={props.value} onChange={props.onChange}>
-    <TextField.Label class="mb-1 block text-text-muted">{props.label}</TextField.Label>
+    <Show when={props.label}>
+      <TextField.Label class="mb-1 block text-text-muted">{props.label}</TextField.Label>
+    </Show>
     <TextField.Input class={`${GOAL_FIELD_INPUT_CLASS} font-sans`} maxLength={props.maxLength} />
     <TextField.Description class="mt-1 text-xs text-text-subtle">
       {GOAL_TITLE_MAX_LENGTH}文字以内
@@ -1087,6 +1089,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
               <GoalTextField
                 label=""
+                aria-label="タイトル"
                 value={title()}
                 maxLength={GOAL_TITLE_MAX_LENGTH}
                 onChange={setTitle}
