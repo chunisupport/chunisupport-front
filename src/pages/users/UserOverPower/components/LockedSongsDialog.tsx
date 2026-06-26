@@ -70,6 +70,9 @@ const toggleFilterValue = (values: string[], value: string): string[] =>
 const FILTER_CHECKBOX_CONTROL_CLASS =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
 
+/** ネストしたフィルターモーダル上で Select の選択肢を前面に表示する z-index クラス。 */
+const NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-80'
+
 /**
  * OVER POWER計算から除外する未解禁楽曲を検索・絞り込みしながら編集するダイアログ。
  *
@@ -337,7 +340,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </TextField>
             <Button
               type="button"
-              class={`flex h-[38px] min-w-[38px] shrink-0 items-center justify-center gap-1.5 rounded border px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+              class={`flex h-9.5 min-w-9.5 shrink-0 items-center justify-center gap-1.5 rounded border px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 activeFilterCount() > 0
                   ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                   : 'border-border-strong text-text-muted hover:bg-surface-hover'
@@ -354,7 +357,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </Button>
             <Button
               type="button"
-              class={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+              class={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 showLockedOnly()
                   ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                   : 'border-border-strong text-text-muted hover:bg-surface-hover'
@@ -484,6 +487,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   <GenreSection
                     genres={genreOptions()}
                     selected={filters().genres}
+                    contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
                     onToggle={handleToggleGenreFilter}
                     onSelectAll={() => setFilters((prev) => ({ ...prev, genres: genreOptions() }))}
                     onClear={() => setFilters((prev) => ({ ...prev, genres: [] }))}
@@ -492,6 +496,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   <VersionSection
                     versions={versionOptions()}
                     selected={filters().versions}
+                    contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
                     onToggle={handleToggleVersionFilter}
                     onSelectAll={() =>
                       setFilters((prev) => ({ ...prev, versions: versionOptions() }))
