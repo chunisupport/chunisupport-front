@@ -1,23 +1,22 @@
 import { Image } from '@kobalte/core/image'
 import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createSignal, onMount } from 'solid-js'
+import { createSignal, onMount, Show } from 'solid-js'
 import type { PlayerRecordDTO } from '../../../../types/api'
+import {
+  difficultyCardBorderColor,
+  difficultyToQueryValue,
+} from '../../../../utils/difficultyUtils'
+import { buildChunithmJacketUrl } from '../../../../utils/jacket'
+import { getScoreRank } from '../../../../utils/scoreRank'
+import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses'
+import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
 
 type Props = {
   record: PlayerRecordDTO
   index: number
   useDefaultIndexColor?: boolean
 }
-
-import {
-  difficultyCardBorderColor,
-  difficultyToQueryValue,
-} from '../../../../utils/difficultyUtils'
-import { getScoreRank } from '../../../../utils/scoreRank'
-import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses'
-import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
-import { buildRatingRecordJacketUrl } from '../utils/ratingRecordJacket'
 
 // FIXME: 色使いすぎ？
 /**
@@ -50,7 +49,7 @@ export const UserRecordCard: Component<Props> = (props) => {
   let titleRef: HTMLParagraphElement | undefined
   const scoreRank = () => getScoreRank(props.record.score)
   const indexColor = () => (props.useDefaultIndexColor ? idxColor(0) : idxColor(props.index + 1))
-  const jacketUrl = () => buildRatingRecordJacketUrl(props.record.img)
+  const jacketUrl = () => buildChunithmJacketUrl(props.record.img)
 
   onMount(() => {
     if (titleRef && titleRef.scrollWidth > titleRef.clientWidth) {
@@ -72,17 +71,21 @@ export const UserRecordCard: Component<Props> = (props) => {
         <div
           class={`relative select-none overflow-hidden border-y border-r border-border bg-surface p-2 pl-4 ${RECORD_CARD_HOVER_CLASS} before:absolute before:top-0 before:bottom-0 before:left-0 before:z-20 before:w-2 ${difficultyCardBorderColor(props.record.difficulty)}`}
         >
-          <Image
-            class="pointer-events-none absolute inset-y-0 right-0 z-0 block w-1/2 overflow-hidden"
-            aria-hidden="true"
-          >
-            <Image.Img
-              src={jacketUrl() ?? undefined}
-              alt=""
-              class="h-full w-full object-cover object-center opacity-15"
-            />
-            <span class="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-surface to-transparent" />
-          </Image>
+          <Show when={jacketUrl()}>
+            {(url) => (
+              <Image
+                class="pointer-events-none absolute inset-y-0 right-0 z-0 block w-1/2 overflow-hidden"
+                aria-hidden="true"
+              >
+                <Image.Img
+                  src={url()}
+                  alt=""
+                  class="h-full w-full object-cover object-center opacity-15"
+                />
+                <span class="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-surface to-transparent" />
+              </Image>
+            )}
+          </Show>
           <div class="relative z-10 flex items-center gap-3">
             <div
               class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${indexColor()} font-oswald text-lg font-bold`}
