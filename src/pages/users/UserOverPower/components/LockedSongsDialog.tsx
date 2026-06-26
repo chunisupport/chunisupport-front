@@ -366,11 +366,8 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </Button>
           </div>
 
-          <div class="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-text-subtle">
-            <span>
-              {props.lockedSongs.length}件設定中 / {filteredSongListItems().length}件表示
-            </span>
-            <span>通常未解禁は曲単位、ULTIMA未解禁はULTIMA譜面のみ除外</span>
+          <div class="mb-2 text-xs text-text-subtle">
+            {props.lockedSongs.length}件設定中 / {filteredSongListItems().length}件表示
           </div>
 
           <div class="min-h-0 flex-1 overflow-y-auto rounded border border-border">
