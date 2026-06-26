@@ -155,8 +155,6 @@ const GOAL_RADIO_CONTROL_CLASS =
 /**
  * スクロール可能な目標条件リストの共通スタイル。
  */
-const GOAL_FILTER_LIST_CLASS =
-  'scrollbar-none max-h-36 space-y-1 overflow-y-auto rounded border border-border-strong px-3 py-2'
 const GOAL_STEP_SECTION_CLASS = 'rounded-lg border border-border bg-surface-muted p-4'
 const GOAL_STEP_BADGE_CLASS =
   'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-action-primary text-sm font-bold text-text-inverse'
@@ -1116,7 +1114,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                           クリア
                         </Button>
                       </div>
-                      <div class={GOAL_FILTER_LIST_CLASS}>
+                      <div class="space-y-1 rounded border border-border-strong px-3 py-2">
                         <GoalFilterCheckbox
                           label="OP対象 (MAS+ULT)"
                           checked={chartTargetMode() === 'op_target'}
