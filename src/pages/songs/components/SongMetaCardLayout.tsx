@@ -1,6 +1,6 @@
 import { Image } from '@kobalte/core/image'
 import { For, type JSX } from 'solid-js'
-import { CHUNITHM_JACKET_BASE_URL } from '../../../config'
+import { CHUNITHM_JACKET_BASE_URL } from '../../../constants/jackets'
 
 export type SongMetaInfoItem = {
   label: string

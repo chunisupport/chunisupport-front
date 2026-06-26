@@ -1,3 +1,4 @@
+import { Image } from '@kobalte/core/image'
 import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createSignal, onMount } from 'solid-js'
@@ -16,6 +17,7 @@ import {
 import { getScoreRank } from '../../../../utils/scoreRank'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses'
 import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
+import { buildRatingRecordJacketUrl } from '../utils/ratingRecordJacket'
 
 // FIXME: 色使いすぎ？
 /**
@@ -48,6 +50,7 @@ export const UserRecordCard: Component<Props> = (props) => {
   let titleRef: HTMLParagraphElement | undefined
   const scoreRank = () => getScoreRank(props.record.score)
   const indexColor = () => (props.useDefaultIndexColor ? idxColor(0) : idxColor(props.index + 1))
+  const jacketUrl = () => buildRatingRecordJacketUrl(props.record.img)
 
   onMount(() => {
     if (titleRef && titleRef.scrollWidth > titleRef.clientWidth) {
@@ -67,9 +70,19 @@ export const UserRecordCard: Component<Props> = (props) => {
         class="group block text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
       >
         <div
-          class={`relative select-none border-y border-r border-border bg-surface p-2 pl-4 ${RECORD_CARD_HOVER_CLASS} before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 ${difficultyCardBorderColor(props.record.difficulty)}`}
+          class={`relative select-none overflow-hidden border-y border-r border-border bg-surface p-2 pl-4 ${RECORD_CARD_HOVER_CLASS} before:absolute before:top-0 before:bottom-0 before:left-0 before:z-20 before:w-2 ${difficultyCardBorderColor(props.record.difficulty)}`}
         >
-          <div class="flex items-center gap-3">
+          <Image
+            class="pointer-events-none absolute inset-y-0 right-0 z-0 block w-1/2 overflow-hidden opacity-15"
+            aria-hidden="true"
+          >
+            <Image.Img
+              src={jacketUrl() ?? undefined}
+              alt=""
+              class="h-full w-full object-cover object-center"
+            />
+          </Image>
+          <div class="relative z-10 flex items-center gap-3">
             <div
               class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${indexColor()} font-oswald text-lg font-bold`}
             >
