@@ -58,7 +58,7 @@ const normalizeHonorIndex = (index: number, length: number): number => {
  * @returns CSS translateX に渡すための負のパーセント値。はみ出しがない場合は `null`。
  */
 const calculateOverflowTranslatePercent = (element: HTMLElement): string | null => {
-  if (element.scrollWidth <= element.clientWidth) return null
+  if (element.clientWidth === 0 || element.scrollWidth <= element.clientWidth) return null
 
   const overflowPercentage =
     ((element.scrollWidth - element.clientWidth) / element.clientWidth) * 100
