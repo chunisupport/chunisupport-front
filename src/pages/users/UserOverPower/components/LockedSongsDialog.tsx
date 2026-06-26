@@ -66,6 +66,22 @@ const releaseTimestamp = (release: string | null): number => {
 const toggleFilterValue = (values: string[], value: string): string[] =>
   values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
 
+/**
+ * 未解禁楽曲フィルターの初期値を選択肢の全選択状態から生成する。
+ *
+ * @param genres - 初期選択するジャンル選択肢。
+ * @param versions - 初期選択するバージョン選択肢。
+ * @returns ジャンル・バージョンを全選択したフィルター状態。
+ */
+const buildDefaultLockedSongsFilter = (
+  genres: string[],
+  versions: string[]
+): LockedSongsFilter => ({
+  genres,
+  versions,
+  unplayedOnly: false,
+})
+
 /** チェックボックスの見た目を未解禁曲ダイアログ内で統一する Tailwind クラス。 */
 const FILTER_CHECKBOX_CONTROL_CLASS =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
@@ -87,6 +103,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
     versions: [],
     unplayedOnly: false,
   })
+  const [filterInitialized, setFilterInitialized] = createSignal(false)
   const [showLockedOnly, setShowLockedOnly] = createSignal(false)
   const [isListReady, setIsListReady] = createSignal(false)
   const [draftLockedSongKeys, setDraftLockedSongKeys] = createSignal<Set<string>>(new Set())
@@ -197,14 +214,11 @@ const LockedSongsDialog: Component<Props> = (props) => {
           return false
         }
 
-        if (currentFilters.genres.length > 0 && !currentFilters.genres.includes(item.song.genre)) {
+        if (!currentFilters.genres.includes(item.song.genre)) {
           return false
         }
 
-        if (
-          currentFilters.versions.length > 0 &&
-          !currentFilters.versions.includes(songVersionName(item.song))
-        ) {
+        if (!currentFilters.versions.includes(songVersionName(item.song))) {
           return false
         }
 
@@ -216,6 +230,17 @@ const LockedSongsDialog: Component<Props> = (props) => {
         )
       })
       .map(({ item }) => item)
+  })
+
+  createEffect(() => {
+    if (filterInitialized()) return
+
+    const genres = genreOptions()
+    const versions = versionOptions()
+    if (genres.length === 0 || versions.length === 0) return
+
+    setFilters(buildDefaultLockedSongsFilter(genres, versions))
+    setFilterInitialized(true)
   })
 
   createEffect(() => {
