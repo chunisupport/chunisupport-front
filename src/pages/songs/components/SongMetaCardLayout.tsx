@@ -1,6 +1,6 @@
 import { Image } from '@kobalte/core/image'
 import { For, type JSX } from 'solid-js'
-import { CHUNITHM_JACKET_BASE_URL } from '../../../config'
+import { buildChunithmJacketUrl } from '../../../utils/jacket'
 
 export type SongMetaInfoItem = {
   label: string
@@ -14,11 +14,14 @@ type Props = {
   children: JSX.Element
 }
 
+/**
+ * 楽曲メタ情報とジャケットをカード形式で表示する。
+ *
+ * @param props - 楽曲タイトル、ジャケット画像ID、表示項目、追加表示領域。
+ * @returns 楽曲の基本情報カードと追加表示領域。
+ */
 const SongMetaCardLayout = (props: Props) => {
-  const jacketUrl = () => {
-    if (!props.jacket) return null
-    return `${CHUNITHM_JACKET_BASE_URL}/${props.jacket}.webp`
-  }
+  const jacketUrl = () => buildChunithmJacketUrl(props.jacket)
 
   return (
     <div class="space-y-4 lg:grid lg:grid-cols-[240px_minmax(0,220px)_minmax(0,1fr)] lg:items-start lg:gap-4 lg:space-y-0">

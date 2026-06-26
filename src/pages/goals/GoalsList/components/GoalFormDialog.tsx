@@ -25,6 +25,9 @@ import {
   SCORE_RANKS_ASC,
   type ScoreRank,
 } from '../../../../utils/scoreRank'
+import GenreSection from '../../../users/UserRecord/components/filterDialog/sections/GenreSection'
+import VersionSection from '../../../users/UserRecord/components/filterDialog/sections/VersionSection'
+import { CONST_MAX, CONST_MIN } from '../../../users/UserRecord/constants/constRange'
 import { buildTargetCountParam } from '../../utils/goalCountTarget'
 import {
   COMBO_LAMP_OPTIONS,
@@ -142,6 +145,7 @@ const GOAL_SELECT_ITEM_CLASS =
   'flex h-8 cursor-pointer items-center justify-between rounded px-2 text-sm outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-action-primary data-highlighted:text-text-inverse'
 const GOAL_SELECT_CONTENT_CLASS =
   'z-60 mt-1 max-h-64 w-[--kb-select-content-width] overflow-y-auto rounded-md border border-border-strong bg-surface p-2 shadow-lg'
+const GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
 const GOAL_RADIO_CARD_BASE_CLASS =
   'rounded border px-3 py-2 text-sm text-text-muted hover:bg-surface-muted'
 const GOAL_RADIO_CARD_UNCHECKED_CLASS = 'border-border-strong bg-surface'
@@ -152,8 +156,6 @@ const GOAL_RADIO_CONTROL_CLASS =
 /**
  * スクロール可能な目標条件リストの共通スタイル。
  */
-const GOAL_FILTER_LIST_CLASS =
-  'scrollbar-none max-h-36 space-y-1 overflow-y-auto rounded border border-border-strong px-3 py-2'
 const GOAL_STEP_SECTION_CLASS = 'rounded-lg border border-border bg-surface-muted p-4'
 const GOAL_STEP_BADGE_CLASS =
   'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-action-primary text-sm font-bold text-text-inverse'
@@ -201,8 +203,6 @@ const GOAL_ACHIEVEMENT_TYPES = [
 const HARD_LAMP_VALUES = ['HRD', 'BRV', 'ABS', 'CTS'] as const
 const COMBO_LAMP_VALUES = ['FC', 'AJ'] as const
 const MIN_SCORE = 0
-const MIN_MUSIC_CONST = 1
-const MAX_MUSIC_CONST = 16
 const MUSIC_CONST_DECIMAL_PLACES = 1
 const MAX_OVERPOWER_PERCENT = 100
 const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
@@ -524,6 +524,12 @@ const getDefaultTotalGoalValue = (type: GoalAchievementType): string =>
         ? DEFAULT_OVERPOWER_PERCENT_GOAL_VALUE
         : DEFAULT_TOTAL_GOAL_VALUE
 
+/**
+ * API属性に保存された単一IDまたはID配列をフォーム用の文字列配列へ変換する。
+ *
+ * @param value - API属性に保存されたID指定。
+ * @returns フォームのチェック状態として扱う文字列ID配列。
+ */
 const normalizeAttributeSelection = (value: number | number[] | undefined): string[] => {
   if (typeof value === 'number') return [String(value)]
   if (Array.isArray(value)) {
@@ -534,16 +540,59 @@ const normalizeAttributeSelection = (value: number | number[] | undefined): stri
   return []
 }
 
-const parseAttributeSelection = (selectedValues: string[]): number | number[] | undefined => {
+/**
+ * フォームの選択値をAPI属性で使う単一IDまたはID配列へ変換する。
+ *
+ * @param selectedValues - フォーム上で選択されている文字列ID配列。
+ * @returns 選択値が1件なら単一数値、それ以外は数値配列。
+ */
+const parseAttributeSelection = (selectedValues: string[]): number | number[] => {
   const normalized = Array.from(new Set(selectedValues))
     .map((value) => Number(value))
     .filter((value) => Number.isInteger(value))
 
-  if (normalized.length === 0) return undefined
   if (normalized.length === 1) return normalized[0]
   return normalized
 }
 
+/**
+ * マスタデータのID一覧をフォーム用の全選択値へ変換する。
+ *
+ * @param items - IDを持つマスタデータ一覧。
+ * @returns 全項目を選択済みにする文字列ID配列。
+ */
+const buildAllIdSelections = (items: readonly { id: number }[]): string[] =>
+  items.map((item) => String(item.id))
+
+/**
+ * 保存済み属性が未指定の場合だけ、現在の全選択値で補完する。
+ *
+ * @param value - API属性に保存されたID指定。
+ * @param fallbackValues - 属性未指定時に使う全選択値。
+ * @returns 編集フォームへ反映する選択値。
+ */
+const resolveInitialAttributeSelection = (
+  value: number | number[] | undefined,
+  fallbackValues: string[]
+): string[] => (value === undefined ? fallbackValues : normalizeAttributeSelection(value))
+
+/**
+ * バージョン選択肢をフォーム用の全選択値へ変換する。
+ *
+ * @param options - 目標フォームで表示するバージョン選択肢。
+ * @returns 全バージョンを選択済みにする値配列。
+ */
+const buildAllVersionSelections = (options: readonly GoalSelectOption<string>[]): string[] =>
+  options.map((option) => option.value)
+
+/**
+ * チェックボックスの選択状態を更新する。
+ *
+ * @param current - 現在の選択値一覧。
+ * @param value - 操作対象の選択値。
+ * @param checked - チェック後の状態。
+ * @returns 更新後の選択値一覧。
+ */
 const toggleSelection = (current: string[], value: string, checked: boolean): string[] => {
   if (checked) {
     return current.includes(value) ? current : [...current, value]
@@ -582,6 +631,37 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [errorMessage, setErrorMessage] = createSignal('')
   const displayErrorMessage = createMemo(() => errorMessage() || props.apiErrorMessage)
   const versionOptions = createMemo(() => buildGoalVersionOptions(props.versions))
+  const allDifficultySelections = createMemo(() =>
+    buildAllIdSelections(props.masterData.difficulties)
+  )
+  const allGenreSelections = createMemo(() => buildAllIdSelections(props.masterData.genres))
+  const allVersionSelections = createMemo(() => buildAllVersionSelections(versionOptions()))
+  const genreLabels = createMemo(() => props.masterData.genres.map((genre) => genre.name))
+  const genreValueByLabel = createMemo(
+    () => new Map(props.masterData.genres.map((genre) => [genre.name, String(genre.id)]))
+  )
+  const genreLabelByValue = createMemo(
+    () => new Map(props.masterData.genres.map((genre) => [String(genre.id), genre.name]))
+  )
+  const selectedGenreLabels = createMemo(() =>
+    genres().flatMap((value) => {
+      const label = genreLabelByValue().get(value)
+      return label ? [label] : []
+    })
+  )
+  const versionLabels = createMemo(() => versionOptions().map((option) => option.label))
+  const versionValueByLabel = createMemo(
+    () => new Map(versionOptions().map((option) => [option.label, option.value]))
+  )
+  const versionLabelByValue = createMemo(
+    () => new Map(versionOptions().map((option) => [option.value, option.label]))
+  )
+  const selectedVersionLabels = createMemo(() =>
+    versions().flatMap((value) => {
+      const label = versionLabelByValue().get(value)
+      return label ? [label] : []
+    })
+  )
   const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
     props.masterData.achievement_types
       .filter((item): item is typeof item & { code: GoalAchievementType } =>
@@ -640,10 +720,34 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
     setErrorMessage('')
     setter(
-      clampNumericInput(value, MIN_MUSIC_CONST, MAX_MUSIC_CONST, (nextValue) =>
+      clampNumericInput(value, CONST_MIN, CONST_MAX, (nextValue) =>
         nextValue.toFixed(MUSIC_CONST_DECIMAL_PLACES)
       )
     )
+  }
+
+  /**
+   * 表示名で指定されたジャンルの選択状態を内部ID値へ変換して切り替える。
+   *
+   * @param label - GenreSection から受け取ったジャンル表示名。
+   * @returns なし。
+   */
+  const handleToggleGenreLabel = (label: string): void => {
+    const value = genreValueByLabel().get(label)
+    if (!value) return
+    setGenres((prev) => toggleSelection(prev, value, !prev.includes(value)))
+  }
+
+  /**
+   * 表示名で指定されたバージョンの選択状態を内部番号値へ変換して切り替える。
+   *
+   * @param label - VersionSection から受け取ったバージョン表示名。
+   * @returns なし。
+   */
+  const handleToggleVersionLabel = (label: string): void => {
+    const value = versionValueByLabel().get(label)
+    if (!value) return
+    setVersions((prev) => toggleSelection(prev, value, !prev.includes(value)))
   }
 
   // ダイアログを開いたタイミングで作成・編集モードに応じた初期値へ同期するため。
@@ -665,11 +769,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setComboLamp('FC')
       setInvert(false)
       setChartTargetMode('normal')
-      setDiffs([])
-      setConstMin('')
-      setConstMax('')
-      setGenres([])
-      setVersions([])
+      setDiffs(allDifficultySelections())
+      setConstMin(String(CONST_MIN))
+      setConstMax(String(CONST_MAX))
+      setGenres(allGenreSelections())
+      setVersions(allVersionSelections())
       return
     }
 
@@ -698,15 +802,19 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     }
     setInvert(goal.invert)
     setChartTargetMode(goal.attributes.chart_target === 'OP_TARGET' ? 'op_target' : 'normal')
-    setDiffs(normalizeAttributeSelection(goal.attributes.diff))
+    setDiffs(resolveInitialAttributeSelection(goal.attributes.diff, allDifficultySelections()))
     setConstMin(
-      typeof goal.attributes.const?.min === 'number' ? String(goal.attributes.const.min) : ''
+      typeof goal.attributes.const?.min === 'number'
+        ? String(goal.attributes.const.min)
+        : String(CONST_MIN)
     )
     setConstMax(
-      typeof goal.attributes.const?.max === 'number' ? String(goal.attributes.const.max) : ''
+      typeof goal.attributes.const?.max === 'number'
+        ? String(goal.attributes.const.max)
+        : String(CONST_MAX)
     )
-    setGenres(normalizeAttributeSelection(goal.attributes.genre))
-    setVersions(normalizeAttributeSelection(goal.attributes.ver))
+    setGenres(resolveInitialAttributeSelection(goal.attributes.genre, allGenreSelections()))
+    setVersions(resolveInitialAttributeSelection(goal.attributes.ver, allVersionSelections()))
 
     if (isCountAchievementType(goal.achievement_type)) {
       setCountMode(
@@ -722,9 +830,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
   const getDraftAttributes = (): GoalRequest['attributes'] => ({
     ...(chartTargetMode() === 'op_target' ? { chart_target: 'OP_TARGET' as const } : {}),
-    ...(chartTargetMode() === 'normal' && parseAttributeSelection(diffs()) !== undefined
-      ? { diff: parseAttributeSelection(diffs()) }
-      : {}),
+    ...(chartTargetMode() === 'normal' ? { diff: parseAttributeSelection(diffs()) } : {}),
     ...(constMin() || constMax()
       ? {
           const: {
@@ -733,12 +839,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
           },
         }
       : {}),
-    ...(parseAttributeSelection(genres()) !== undefined
-      ? { genre: parseAttributeSelection(genres()) }
-      : {}),
-    ...(parseAttributeSelection(versions()) !== undefined
-      ? { ver: parseAttributeSelection(versions()) }
-      : {}),
+    genre: parseAttributeSelection(genres()),
+    ver: parseAttributeSelection(versions()),
   })
 
   /**
@@ -1000,10 +1102,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       {targetCountText()}
                     </p>
                   </div>
-                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div class="grid grid-cols-1 gap-3 ">
                     <fieldset class="block text-sm space-y-1">
                       <div class="flex items-center justify-between">
-                        <span class="block text-text-muted">難易度（複数可）</span>
+                        <span class="block text-text-muted">難易度</span>
                         <Button
                           type="button"
                           class="text-xs text-action-primary hover:text-action-primary"
@@ -1015,7 +1117,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                           クリア
                         </Button>
                       </div>
-                      <div class={GOAL_FILTER_LIST_CLASS}>
+                      <div class="space-y-1 rounded border border-border-strong px-3 py-2">
                         <GoalFilterCheckbox
                           label="OP対象 (MAS+ULT)"
                           checked={chartTargetMode() === 'op_target'}
@@ -1044,66 +1146,35 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                       </div>
                     </fieldset>
 
-                    <fieldset class="block text-sm space-y-1">
-                      <div class="flex items-center justify-between">
-                        <span class="block text-text-muted">ジャンル（複数可）</span>
-                        <Button
-                          type="button"
-                          class="text-xs text-action-primary hover:text-action-primary"
-                          onClick={() => setGenres([])}
-                        >
-                          クリア
-                        </Button>
-                      </div>
-                      <div class={GOAL_FILTER_LIST_CLASS}>
-                        <For each={props.masterData.genres}>
-                          {(item) => (
-                            <GoalFilterCheckbox
-                              label={item.name}
-                              checked={genres().includes(String(item.id))}
-                              onChange={(checked) =>
-                                setGenres((prev) => toggleSelection(prev, String(item.id), checked))
-                              }
-                            />
-                          )}
-                        </For>
-                      </div>
-                    </fieldset>
+                    {/* TODO: 「ジャンル」という文字部分のスタイルが違うのは後で修正 「難易度」に合わせる */}
+                    <GenreSection
+                      genres={genreLabels()}
+                      selected={selectedGenreLabels()}
+                      contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
+                      onToggle={handleToggleGenreLabel}
+                      onSelectAll={() => setGenres(allGenreSelections())}
+                      onClear={() => setGenres([])}
+                    />
 
-                    <fieldset class="block text-sm space-y-1">
-                      <div class="flex items-center justify-between">
-                        <span class="block text-text-muted">バージョン（複数可）</span>
-                        <Button
-                          type="button"
-                          class="text-xs text-action-primary hover:text-action-primary"
-                          onClick={() => setVersions([])}
-                        >
-                          クリア
-                        </Button>
-                      </div>
-                      <div class={GOAL_FILTER_LIST_CLASS}>
-                        <Show
-                          when={versionOptions().length > 0}
-                          fallback={
-                            <p class="text-sm text-text-subtle">
-                              バージョンを取得できませんでした。
-                            </p>
-                          }
-                        >
-                          <For each={versionOptions()}>
-                            {(item) => (
-                              <GoalFilterCheckbox
-                                label={item.label}
-                                checked={versions().includes(item.value)}
-                                onChange={(checked) =>
-                                  setVersions((prev) => toggleSelection(prev, item.value, checked))
-                                }
-                              />
-                            )}
-                          </For>
-                        </Show>
-                      </div>
-                    </fieldset>
+                    <Show
+                      when={versionLabels().length > 0}
+                      fallback={
+                        <div>
+                          <span class="mb-1 block text-sm font-medium">バージョン</span>
+                          <p class="text-sm text-text-subtle">バージョンを取得できませんでした。</p>
+                        </div>
+                      }
+                    >
+                      {/* TODO: 「バージョン」という文字部分のスタイルが違うのは後で修正 「難易度」に合わせる */}
+                      <VersionSection
+                        versions={versionLabels()}
+                        selected={selectedVersionLabels()}
+                        contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
+                        onToggle={handleToggleVersionLabel}
+                        onSelectAll={() => setVersions(allVersionSelections())}
+                        onClear={() => setVersions([])}
+                      />
+                    </Show>
 
                     <div class="grid grid-cols-2 gap-2">
                       <GoalDecimalTextField

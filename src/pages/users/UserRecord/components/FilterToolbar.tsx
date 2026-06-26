@@ -28,7 +28,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => (
       </div>
     </TextField>
     <Button
-      class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent"
+      class="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent"
       onClick={props.onOpenFilter}
       type="button"
       aria-label="フィルター"
@@ -38,7 +38,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => (
       <Funnel size={24} />
     </Button>
     <Button
-      class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover"
+      class="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover"
       onClick={props.onOpenColumnSettings}
       type="button"
       aria-label="列設定"

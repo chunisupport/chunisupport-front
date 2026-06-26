@@ -2,7 +2,7 @@ import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, CircleSlash2, Filter, LoaderCircle, Search } from 'lucide-solid'
+import { Check, CircleSlash2, Funnel, ListChecks, LoaderCircle, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import Loading from '../../../../components/Loading/Loading'
@@ -69,6 +69,9 @@ const toggleFilterValue = (values: string[], value: string): string[] =>
 /** チェックボックスの見た目を未解禁曲ダイアログ内で統一する Tailwind クラス。 */
 const FILTER_CHECKBOX_CONTROL_CLASS =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
+
+/** ネストしたフィルターモーダル上で Select の選択肢を前面に表示する z-index クラス。 */
+const NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-80'
 
 /**
  * OVER POWER計算から除外する未解禁楽曲を検索・絞り込みしながら編集するダイアログ。
@@ -309,20 +312,15 @@ const LockedSongsDialog: Component<Props> = (props) => {
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
         <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
-          <div class="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <Dialog.Title class="text-lg font-bold">未解禁楽曲設定</Dialog.Title>
-              <Dialog.Description class="mt-1 text-sm text-text-muted">
-                チェックした曲・譜面はOVER POWER計算対象から除外されます。
-              </Dialog.Description>
-            </div>
-            <Dialog.CloseButton class="rounded border border-border-strong px-3 py-1 text-sm hover:bg-surface-muted shrink-0">
-              閉じる
-            </Dialog.CloseButton>
+          <div class="mb-4">
+            <Dialog.Title class="text-lg font-bold">未解禁楽曲設定</Dialog.Title>
+            <Dialog.Description class="mt-1 text-sm text-text-muted">
+              チェックした曲・譜面はOVER POWER計算対象から除外されます。
+            </Dialog.Description>
           </div>
 
-          <div class="mb-3 flex min-w-0 items-center gap-2">
-            <TextField class="min-w-0 flex-1">
+          <div class="mb-3 flex min-w-0 items-center">
+            <TextField class="min-w-0 flex-1 mr-2">
               <div class="flex min-w-0 items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
                 <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
                 <TextField.Input
@@ -337,7 +335,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </TextField>
             <Button
               type="button"
-              class={`flex h-[38px] min-w-[38px] shrink-0 items-center justify-center gap-1.5 rounded border px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+              class={`flex h-9.5 min-w-9.5 shrink-0 items-center justify-center gap-1.5 rounded-l border-l border-t border-b px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 activeFilterCount() > 0
                   ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                   : 'border-border-strong text-text-muted hover:bg-surface-hover'
@@ -347,14 +345,14 @@ const LockedSongsDialog: Component<Props> = (props) => {
               title={filterButtonLabel()}
               onClick={() => setFilterDialogOpen(true)}
             >
-              <Filter size={20} aria-hidden="true" />
+              <Funnel size={20} aria-hidden="true" />
               <Show when={activeFilterCount() > 0}>
                 <span class="text-xs font-medium">{activeFilterCount()}</span>
               </Show>
             </Button>
             <Button
               type="button"
-              class={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+              class={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 showLockedOnly()
                   ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                   : 'border-border-strong text-text-muted hover:bg-surface-hover'
@@ -364,15 +362,12 @@ const LockedSongsDialog: Component<Props> = (props) => {
               title="選択済み楽曲のみ表示"
               onClick={() => setShowLockedOnly((value) => !value)}
             >
-              <Check size={24} aria-hidden="true" />
+              <ListChecks size={24} aria-hidden="true" />
             </Button>
           </div>
 
-          <div class="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-text-subtle">
-            <span>
-              {props.lockedSongs.length}件設定中 / {filteredSongListItems().length}件表示
-            </span>
-            <span>通常未解禁は曲単位、ULTIMA未解禁はULTIMA譜面のみ除外</span>
+          <div class="mb-2 text-xs text-text-subtle">
+            {props.lockedSongs.length}件設定中 / {filteredSongListItems().length}件表示
           </div>
 
           <div class="min-h-0 flex-1 overflow-y-auto rounded border border-border">
@@ -484,6 +479,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   <GenreSection
                     genres={genreOptions()}
                     selected={filters().genres}
+                    contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
                     onToggle={handleToggleGenreFilter}
                     onSelectAll={() => setFilters((prev) => ({ ...prev, genres: genreOptions() }))}
                     onClear={() => setFilters((prev) => ({ ...prev, genres: [] }))}
@@ -492,6 +488,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   <VersionSection
                     versions={versionOptions()}
                     selected={filters().versions}
+                    contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
                     onToggle={handleToggleVersionFilter}
                     onSelectAll={() =>
                       setFilters((prev) => ({ ...prev, versions: versionOptions() }))

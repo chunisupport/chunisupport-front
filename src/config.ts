@@ -12,5 +12,4 @@ export const BOOKMARKLET_BASE_URL = getRequiredEnv('PUBLIC_BOOKMARKLET_URL')
 export const BOOKMARKLET_ENTRYPOINT = getRequiredEnv('PUBLIC_BOOKMARKLET_ENTRYPOINT')
 /** Cloudflare Turnstile のサイトキー。 */
 export const CF_TURNSTILE_SITE_KEY = getRequiredEnv('PUBLIC_CF_TURNSTILE_SITE_KEY')
-/** CHUNITHM ジャケット画像のベース URL。 */
-export const CHUNITHM_JACKET_BASE_URL = 'https://reiwa.f5.si/jackets/chunithm'
+export { CHUNITHM_JACKET_BASE_URL } from './constants/jackets'

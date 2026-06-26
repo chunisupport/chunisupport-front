@@ -8,6 +8,7 @@ import type {
   FilterState,
   HardLamp,
 } from '../../users/UserRecord/types/types'
+import { isExplicitEmptyAttribute } from './goalForm'
 import { buildGoalVersionNameMap } from './goalVersion'
 
 const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
@@ -97,16 +98,20 @@ export const buildGoalRecordFilter = (
     ...defaultFilter,
     title: '',
     difficulties: masterData.difficulties
-      .filter((difficulty) => difficultyIds.length === 0 || difficultyIds.includes(difficulty.id))
+      .filter(
+        (difficulty) =>
+          !isExplicitEmptyAttribute(goal.attributes.diff) &&
+          (difficultyIds.length === 0 || difficultyIds.includes(difficulty.id))
+      )
       .map((difficulty) => difficulty.name.toUpperCase() as Difficulty),
     genres:
-      genreIds.length === 0
+      genreIds.length === 0 || isExplicitEmptyAttribute(goal.attributes.genre)
         ? []
         : masterData.genres
             .filter((genre) => genreIds.includes(genre.id))
             .map((genre) => genre.name),
     versions:
-      versionIds.length === 0
+      versionIds.length === 0 || isExplicitEmptyAttribute(goal.attributes.ver)
         ? []
         : versionIds.flatMap((versionId) => {
             const versionName = versionNameMap.get(versionId)

@@ -3,13 +3,24 @@ import { Select } from '@kobalte/core/select'
 import { Check, ChevronsUpDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
+import {
+  DEFAULT_MULTI_SELECT_CONTENT_Z_INDEX_CLASS,
+  MULTI_SELECT_CONTENT_BASE_CLASS,
+} from './multiSelectSectionClasses'
 
 type VersionSectionProps = {
+  /** バージョンの選択肢。 */
   versions: string[]
+  /** 現在選択されているバージョン。 */
   selected: string[]
+  /** バージョンの選択状態を切り替える処理。 */
   onToggle: (version: string) => void
+  /** すべてのバージョンを選択する処理。 */
   onSelectAll: () => void
+  /** バージョンの選択をすべて解除する処理。 */
   onClear: () => void
+  /** Select のポータルコンテンツに適用する z-index クラス。 */
+  contentZIndexClass?: string
 }
 
 const MULTI_SELECT_TRIGGER_CLASS =
@@ -100,7 +111,9 @@ const VersionSection: Component<VersionSectionProps> = (props) => {
           </span>
         </Select.Trigger>
         <Select.Portal>
-          <Select.Content class="z-60 mt-1 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
+          <Select.Content
+            class={`${props.contentZIndexClass ?? DEFAULT_MULTI_SELECT_CONTENT_Z_INDEX_CLASS} ${MULTI_SELECT_CONTENT_BASE_CLASS}`}
+          >
             <Select.Listbox />
           </Select.Content>
         </Select.Portal>

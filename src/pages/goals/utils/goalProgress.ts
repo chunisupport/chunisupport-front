@@ -8,6 +8,7 @@ import type {
   VersionDTO,
 } from '../../../types/api'
 import { buildCurrentOverPowerBySongId } from '../../../usecases/overpower/currentOpTarget'
+import { isExplicitEmptyAttribute } from './goalForm'
 import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
 
 export interface GoalProgressResult {
@@ -35,6 +36,12 @@ const COMBO_LAMP_ORDER: Record<string, number> = {
   'ALL JUSTICE': 2,
 }
 
+/**
+ * 単一値または配列で保持された目標属性 ID を配列へ正規化する。
+ *
+ * @param value - 目標属性に保存された ID。
+ * @returns 有効な整数 ID の配列。
+ */
 const normalizeAttributeIds = (value: number | number[] | undefined): number[] => {
   if (typeof value === 'number') return [value]
   if (Array.isArray(value)) {
@@ -125,6 +132,9 @@ export const filterRecordsByAttributes = (
   const genreIds = normalizeAttributeIds(attributes.genre)
   const versionIds = normalizeAttributeIds(attributes.ver)
   const opTargetOnly = attributes.chart_target === 'OP_TARGET'
+  const hasExplicitEmptyDiff = !opTargetOnly && isExplicitEmptyAttribute(attributes.diff)
+  const hasExplicitEmptyGenre = isExplicitEmptyAttribute(attributes.genre)
+  const hasExplicitEmptyVersion = isExplicitEmptyAttribute(attributes.ver)
 
   const diffNames =
     diffIds.length > 0
@@ -142,6 +152,10 @@ export const filterRecordsByAttributes = (
             .map((genre) => genre.name)
         )
       : undefined
+
+  if (hasExplicitEmptyDiff || hasExplicitEmptyGenre || hasExplicitEmptyVersion) {
+    return []
+  }
 
   return records.filter((record) => {
     const song = songMap.get(record.id)
