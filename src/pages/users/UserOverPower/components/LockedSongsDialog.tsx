@@ -2,7 +2,7 @@ import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, CircleSlash2, Filter, LoaderCircle, Search } from 'lucide-solid'
+import { Check, CircleSlash2, Funnel, LoaderCircle, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import Loading from '../../../../components/Loading/Loading'
@@ -345,7 +345,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
               title={filterButtonLabel()}
               onClick={() => setFilterDialogOpen(true)}
             >
-              <Filter size={20} aria-hidden="true" />
+              <Funnel size={20} aria-hidden="true" />
               <Show when={activeFilterCount() > 0}>
                 <span class="text-xs font-medium">{activeFilterCount()}</span>
               </Show>
