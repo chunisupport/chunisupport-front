@@ -1003,7 +1003,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <fieldset class="block text-sm space-y-1">
                       <div class="flex items-center justify-between">
-                        <span class="block text-text-muted">難易度（複数可）</span>
+                        <span class="block text-text-muted">難易度</span>
                         <Button
                           type="button"
                           class="text-xs text-action-primary hover:text-action-primary"
@@ -1046,7 +1046,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
                     <fieldset class="block text-sm space-y-1">
                       <div class="flex items-center justify-between">
-                        <span class="block text-text-muted">ジャンル（複数可）</span>
+                        <span class="block text-text-muted">ジャンル</span>
                         <Button
                           type="button"
                           class="text-xs text-action-primary hover:text-action-primary"
@@ -1072,7 +1072,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
                     <fieldset class="block text-sm space-y-1">
                       <div class="flex items-center justify-between">
-                        <span class="block text-text-muted">バージョン（複数可）</span>
+                        <span class="block text-text-muted">バージョン</span>
                         <Button
                           type="button"
                           class="text-xs text-action-primary hover:text-action-primary"
