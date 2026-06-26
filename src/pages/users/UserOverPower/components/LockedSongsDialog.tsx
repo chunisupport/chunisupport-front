@@ -268,6 +268,11 @@ const LockedSongsDialog: Component<Props> = (props) => {
         )
       })
       .map(({ item }) => item)
+      .sort((left, right) => {
+        const leftRelease = left.song.release ?? ''
+        const rightRelease = right.song.release ?? ''
+        return leftRelease > rightRelease ? -1 : 1
+      })
   })
 
   createEffect(() => {
