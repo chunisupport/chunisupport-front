@@ -161,9 +161,11 @@ export const filterRecordsByAttributes = (
         )
       : undefined
 
-  return records.filter((record) => {
-    if (hasExplicitEmptyDiff || hasExplicitEmptyGenre || hasExplicitEmptyVersion) return false
+  if (hasExplicitEmptyDiff || hasExplicitEmptyGenre || hasExplicitEmptyVersion) {
+    return []
+  }
 
+  return records.filter((record) => {
     const song = songMap.get(record.id)
 
     if (opTargetOnly) {
