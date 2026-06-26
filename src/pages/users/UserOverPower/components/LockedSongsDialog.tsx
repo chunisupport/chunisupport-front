@@ -312,16 +312,11 @@ const LockedSongsDialog: Component<Props> = (props) => {
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
         <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
-          <div class="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <Dialog.Title class="text-lg font-bold">未解禁楽曲設定</Dialog.Title>
-              <Dialog.Description class="mt-1 text-sm text-text-muted">
-                チェックした曲・譜面はOVER POWER計算対象から除外されます。
-              </Dialog.Description>
-            </div>
-            <Dialog.CloseButton class="rounded border border-border-strong px-3 py-1 text-sm hover:bg-surface-muted shrink-0">
-              閉じる
-            </Dialog.CloseButton>
+          <div class="mb-4">
+            <Dialog.Title class="text-lg font-bold">未解禁楽曲設定</Dialog.Title>
+            <Dialog.Description class="mt-1 text-sm text-text-muted">
+              チェックした曲・譜面はOVER POWER計算対象から除外されます。
+            </Dialog.Description>
           </div>
 
           <div class="mb-3 flex min-w-0 items-center gap-2">
