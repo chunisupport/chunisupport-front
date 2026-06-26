@@ -189,13 +189,13 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
     open={props.open}
     onOpenChange={props.onOpenChange}
   >
-    <Collapsible.Trigger class="group flex min-h-10 w-full items-center gap-2 px-3 text-sm">
+    <Collapsible.Trigger class="group flex min-h-8 w-full items-center gap-1.5 px-3 text-sm">
       <ChevronRight
         class="h-4 w-4 text-text-muted transition-transform group-data-expanded:rotate-90"
         aria-hidden="true"
       />
-      <p class="flex-1 text-left font-semibold">フィルター統計</p>
-      <p class="text-sm text-text-muted">
+      <p class="flex-1 text-left ">フィルター統計</p>
+      <p class="text-xs text-text-muted">
         平均スコア: {props.stats.scoreStats.avg.toLocaleString()}
       </p>
     </Collapsible.Trigger>
