@@ -24,7 +24,7 @@ type MultiSelectDropdownProps<T extends string | number | null> = {
 
 /** Select の選択肢ポータルに共通で適用する Tailwind クラス。 */
 const MULTI_SELECT_CONTENT_BASE_CLASS =
-  '-mt-2 -mb-2 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md'
+  'max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md'
 
 /** Select の選択肢ポータルを通常のダイアログ上に表示するための既定 z-index クラス。 */
 const DEFAULT_MULTI_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
@@ -96,6 +96,7 @@ const MultiSelectDropdown = <T extends string | number | null>(
         value={selectedOptions()}
         onChange={handleChange}
         placeholder={props.placeholder}
+        gutter={0}
         itemComponent={(itemProps) => (
           <Select.Item item={itemProps.item} class={MULTI_SELECT_ITEM_CLASS}>
             <div class="flex items-center gap-2">

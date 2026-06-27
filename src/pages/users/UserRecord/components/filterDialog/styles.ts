@@ -19,3 +19,9 @@ export const FILTER_DIALOG_SELECT_TRIGGER_CLASS = `inline-flex w-full items-cent
  */
 export const FILTER_DIALOG_SELECT_ITEM_CLASS =
   'text-sm rounded flex h-8 cursor-pointer items-center justify-between px-2 outline-none hover:bg-success-bg data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-success-bg data-selected:bg-success-bg'
+
+/**
+ * レコードフィルターダイアログ内の単一選択ポータルに適用する共通スタイル。
+ */
+export const FILTER_DIALOG_SELECT_CONTENT_CLASS =
+  'z-60 max-h-90 overflow-y-auto rounded-md border border-border-strong bg-surface shadow-lg'
