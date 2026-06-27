@@ -51,8 +51,9 @@ export const UserRecordCard: Component<Props> = (props) => {
   const indexColor = () => (props.useDefaultIndexColor ? idxColor(0) : idxColor(props.index + 1))
   const jacketUrl = () => buildChunithmJacketUrl(props.record.img)
 
+  // DOM上の実寸に応じて、カード幅からはみ出す楽曲名だけ横スクロールさせる。
   onMount(() => {
-    if (titleRef && titleRef.scrollWidth > titleRef.clientWidth) {
+    if (titleRef && titleRef.clientWidth > 0 && titleRef.scrollWidth > titleRef.clientWidth) {
       // はみ出している割合を計算
       const overflowPercentage =
         ((titleRef.scrollWidth - titleRef.clientWidth) / titleRef.clientWidth) * 100
@@ -103,7 +104,7 @@ export const UserRecordCard: Component<Props> = (props) => {
                 <span class={SCORE_RANK_TEXT_CLASS[scoreRank()]}>{scoreRank()}</span>
               </p>
             </div>
-            <div class="shrink-0 text-right font-oswald text-lg font-bold leading-none">
+            <div class="shrink-0 text-right font-oswald text-xl font-bold leading-none">
               {props.record.rating.toFixed(2)}
             </div>
           </div>

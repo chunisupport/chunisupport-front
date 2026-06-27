@@ -1,6 +1,6 @@
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../constants/chart'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
 import { MAX_SCORE } from '../../../utils/scoreRank'
-import { CONST_MAX, CONST_MIN } from '../../users/UserRecord/constants/constRange'
 import { buildDefaultFilter } from '../../users/UserRecord/types/filterDefaults'
 import type {
   ComboLamp,
@@ -57,7 +57,7 @@ const applyUnachievedCondition = (filter: FilterState, goal: GoalDTO): FilterSta
       const params = goal.achievement_params as { score: number }
       return {
         ...filter,
-        score: { min: 0, max: Math.max(0, params.score - 1) },
+        score: { min: SCORE_MIN, max: Math.max(SCORE_MIN, params.score - 1) },
       }
     }
     case 'hardlamp_count': {
@@ -118,11 +118,11 @@ export const buildGoalRecordFilter = (
             return versionName ? [versionName] : []
           }),
     const: {
-      min: goal.attributes.const?.min ?? CONST_MIN,
-      max: goal.attributes.const?.max ?? CONST_MAX,
+      min: goal.attributes.const?.min ?? CHART_CONST_MIN,
+      max: goal.attributes.const?.max ?? CHART_CONST_MAX,
     },
     constFilterMode: 'number',
-    score: { min: 0, max: MAX_SCORE },
+    score: { min: SCORE_MIN, max: MAX_SCORE },
     scoreFilterMode: 'number',
     excludeNoPlay: false,
   }

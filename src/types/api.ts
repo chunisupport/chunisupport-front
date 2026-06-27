@@ -220,6 +220,8 @@ export interface SongStatsComboDTO {
   none: number
   fc: number
   aj: number
+  /** ALL JUSTICE CRITICALを達成したプレイヤー数。 */
+  ajc: number
 }
 
 export interface SongStatsClearDTO {
