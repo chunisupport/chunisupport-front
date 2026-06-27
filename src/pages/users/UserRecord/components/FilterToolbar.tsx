@@ -84,7 +84,9 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
             aria-hidden="true"
           />
           <TextField.Input
+            type="search"
             class="min-w-0 flex-1 bg-transparent py-2 font-sans text-sm outline-none"
+            aria-label="曲名・アーティスト名検索"
             placeholder="曲名・アーティスト名で検索"
           />
         </div>
