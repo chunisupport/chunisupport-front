@@ -10,6 +10,7 @@ type FilterToolbarProps = {
   onTitleChange: (value: string) => void
   onOpenFilter: () => void
   onOpenColumnSettings: () => void
+  titleActive?: boolean
   filterActive?: boolean
   filterButtonTone?: FilterButtonTone
   filterButtonDisabled?: boolean
@@ -34,6 +35,26 @@ const getFilterButtonToneClass = (tone: FilterButtonTone): string => {
 }
 
 /**
+ * 曲名検索欄の状態に応じた外枠クラスを返す。
+ *
+ * @param active - 曲名検索が既定値から変更されているか。
+ * @returns 曲名検索欄の外枠へ適用する Tailwind クラス。
+ */
+const getTitleInputFrameClass = (active?: boolean): string =>
+  active
+    ? 'border-action-primary bg-success-bg focus-within:border-action-primary'
+    : 'border-border-strong focus-within:border-focus-ring'
+
+/**
+ * 曲名検索欄の状態に応じたアイコンクラスを返す。
+ *
+ * @param active - 曲名検索が既定値から変更されているか。
+ * @returns 検索アイコンへ適用する Tailwind クラス。
+ */
+const getTitleInputIconClass = (active?: boolean): string =>
+  active ? 'text-success' : 'text-text-subtle'
+
+/**
  * レコード一覧の検索欄とフィルター操作ボタンを表示する。
  * @param props - 検索文字列、変更ハンドラー、各操作ダイアログを開くハンドラー。
  * @returns レコード一覧上部のフィルターツールバー。
@@ -53,10 +74,17 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
   return (
     <div class="flex items-center mb-2 gap-2">
       <TextField class="min-w-0 flex-1" value={props.title} onChange={props.onTitleChange}>
-        <div class="flex min-w-0 items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
-          <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
+        <div
+          class={`flex min-w-0 items-center gap-2 rounded border px-2 transition-colors ${getTitleInputFrameClass(
+            props.titleActive
+          )}`}
+        >
+          <Search
+            class={`h-4 w-4 shrink-0 ${getTitleInputIconClass(props.titleActive)}`}
+            aria-hidden="true"
+          />
           <TextField.Input
-            class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
+            class="min-w-0 flex-1 bg-transparent py-2 font-sans text-sm outline-none"
             placeholder="曲名・アーティスト名で検索"
           />
         </div>

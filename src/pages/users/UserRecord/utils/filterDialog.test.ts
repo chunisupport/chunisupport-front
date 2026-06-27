@@ -7,6 +7,7 @@ import {
   formatFilterSummary,
   isRecordDifficultyFilterOnlyChanged,
   isRecordFilterChanged,
+  isRecordFilterOptionsChanged,
   parseOptionalRangeNumberInput,
   updateOptionalNumberRange,
 } from './filterDialog'
@@ -103,6 +104,36 @@ test('isRecordFilterChanged はタイトル検索の変更を検出すること'
 
   // When
   const result = isRecordFilterChanged(currentFilter, defaultFilter)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('isRecordFilterOptionsChanged はタイトル検索だけの変更を対象外にすること', () => {
+  // Given
+  const defaultFilter = { ...DEFAULT_FILTER }
+  const currentFilter = { ...DEFAULT_FILTER, title: 'テスト' }
+
+  // When
+  const result = isRecordFilterOptionsChanged(currentFilter, defaultFilter)
+
+  // Then
+  assert.equal(result, false)
+})
+
+test('isRecordFilterOptionsChanged はタイトル検索以外の変更を検出すること', () => {
+  // Given
+  const defaultFilter = { ...DEFAULT_FILTER }
+  const currentFilter = {
+    ...DEFAULT_FILTER,
+    overPower: {
+      min: 90,
+      max: null,
+    },
+  }
+
+  // When
+  const result = isRecordFilterOptionsChanged(currentFilter, defaultFilter)
 
   // Then
   assert.equal(result, true)
@@ -207,7 +238,7 @@ test('isRecordDifficultyFilterOnlyChanged は難易度以外も変わる場合�
   const currentFilter: FilterState = {
     ...DEFAULT_FILTER,
     difficulties: ['MASTER', 'ULTIMA'],
-    title: 'テスト',
+    genres: ['POPS & ANIME'],
   }
 
   // When

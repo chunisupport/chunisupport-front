@@ -31,7 +31,10 @@ import RecordTable from './components/RecordTable'
 import { buildDefaultFilter, DEFAULT_FILTER, normalizeFilterState } from './types/filterDefaults'
 import type { FilterState, RecordColumnId, RecordSortKey } from './types/types'
 import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
-import { isRecordDifficultyFilterOnlyChanged, isRecordFilterChanged } from './utils/filterDialog'
+import {
+  isRecordDifficultyFilterOnlyChanged,
+  isRecordFilterOptionsChanged,
+} from './utils/filterDialog'
 import { useUserRecordPageModel } from './utils/pageModel'
 import { parseSortParams } from './utils/sorting'
 
@@ -97,7 +100,10 @@ const UserRecord: Component<Props> = (props) => {
   )
 
   const defaultFilter = createMemo(() => buildDefaultFilter(masterData(), versionData()?.versions))
-  const hasFilterChanges = createMemo(() => isRecordFilterChanged(filters(), defaultFilter()))
+  const hasTitleFilterChanges = createMemo(() => filters().title !== defaultFilter().title)
+  const hasFilterOptionChanges = createMemo(() =>
+    isRecordFilterOptionsChanged(filters(), defaultFilter())
+  )
   const filterButtonTone = createMemo(() =>
     isRecordDifficultyFilterOnlyChanged(filters(), defaultFilter()) ? 'difficulty-only' : undefined
   )
@@ -186,7 +192,8 @@ const UserRecord: Component<Props> = (props) => {
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
-                filterActive={hasFilterChanges()}
+                titleActive={hasTitleFilterChanges()}
+                filterActive={hasFilterOptionChanges()}
                 filterButtonTone={filterButtonTone()}
               />
 

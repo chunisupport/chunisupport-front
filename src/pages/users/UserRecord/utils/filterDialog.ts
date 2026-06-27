@@ -187,18 +187,50 @@ export function isRecordFilterChanged(current: FilterState, defaultFilter: Filte
 }
 
 /**
- * 通常レコードフィルターが難易度選択だけ既定値から変更されているか判定する。
+ * 通常レコードフィルターのうち、検索文字列以外が既定値から変更されているか判定する。
  *
  * @param current - 現在のフィルター状態。
  * @param defaultFilter - 比較対象の既定フィルター状態。
- * @returns 難易度選択だけに差分がある場合は true。
+ * @returns 検索文字列以外の条件に差分がある場合は true。
+ */
+export function isRecordFilterOptionsChanged(
+  current: FilterState,
+  defaultFilter: FilterState
+): boolean {
+  return (
+    current.currentOpTargetOnly !== defaultFilter.currentOpTargetOnly ||
+    current.constFilterMode !== defaultFilter.constFilterMode ||
+    current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
+    current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
+    current.const.min !== defaultFilter.const.min ||
+    current.const.max !== defaultFilter.const.max ||
+    current.score.min !== defaultFilter.score.min ||
+    current.score.max !== defaultFilter.score.max ||
+    current.justiceCount.min !== defaultFilter.justiceCount.min ||
+    current.justiceCount.max !== defaultFilter.justiceCount.max ||
+    current.overPower.min !== defaultFilter.overPower.min ||
+    current.overPower.max !== defaultFilter.overPower.max ||
+    !hasSameFilterValues(current.difficulties, defaultFilter.difficulties) ||
+    !hasSameFilterValues(current.genres, defaultFilter.genres) ||
+    !hasSameFilterValues(current.versions, defaultFilter.versions) ||
+    !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
+    !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
+    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+  )
+}
+
+/**
+ * 通常レコードフィルターが検索文字列を除いて難易度選択だけ既定値から変更されているか判定する。
+ *
+ * @param current - 現在のフィルター状態。
+ * @param defaultFilter - 比較対象の既定フィルター状態。
+ * @returns 検索文字列以外では難易度選択だけに差分がある場合は true。
  */
 export function isRecordDifficultyFilterOnlyChanged(
   current: FilterState,
   defaultFilter: FilterState
 ): boolean {
   return (
-    current.title === defaultFilter.title &&
     current.currentOpTargetOnly === defaultFilter.currentOpTargetOnly &&
     current.constFilterMode === defaultFilter.constFilterMode &&
     current.scoreFilterMode === defaultFilter.scoreFilterMode &&
