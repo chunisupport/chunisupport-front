@@ -207,7 +207,6 @@ const SortDialog: Component<SortDialogProps> = (props) => {
       draftSortCondition()?.key ?? DEFAULT_RECORD_SORT_CONDITIONS[rowIndex].key
     const selectedDirection = () => draftSortCondition()?.direction ?? 'asc'
     const isFixedTitleSort = () => rowIndex === FIXED_TITLE_SORT_INDEX
-    const sortName = () => (showBadge ? SORT_CONDITION_BADGE_LABELS[rowIndex] : 'ソート')
     const nextDirectionLabel = () => getSortDirectionLabel(nextSortDirection(selectedDirection()))
 
     return (
@@ -258,7 +257,7 @@ const SortDialog: Component<SortDialogProps> = (props) => {
         <Button
           type="button"
           class="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border border-border-strong text-text-muted transition-colors hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-          aria-label={`${sortName()}を${nextDirectionLabel()}にする`}
+          aria-label={`第${rowIndex + 1}ソートを${nextDirectionLabel()}にする`}
           title={`${getSortDirectionLabel(selectedDirection())}。クリックで${nextDirectionLabel()}に切り替え`}
           onClick={() => toggleDraftSortDirection(rowIndex)}
         >
