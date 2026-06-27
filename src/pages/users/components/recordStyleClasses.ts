@@ -61,7 +61,7 @@ export const COMBO_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedComboLamp>, s
 
 /** ALL JUSTICE CRITICAL表示で共通利用するグラデーション背景クラス。 */
 export const ALL_JUSTICE_CRITICAL_BG_CLASS =
-  'bg-[linear-gradient(135deg,#ef4444_0%,#f97316_16%,#eab308_32%,#22c55e_48%,#06b6d4_64%,#3b82f6_80%,#a855f7_100%)]'
+  '[background-image:var(--cs-gradient-lamp-all-justice-critical-bg)]'
 
 /** ALL JUSTICE CRITICALバッジで使う背景・文字・装飾クラス。 */
 export const ALL_JUSTICE_CRITICAL_BADGE_CLASS = `${ALL_JUSTICE_CRITICAL_BG_CLASS} text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]`
