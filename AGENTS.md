@@ -79,6 +79,10 @@
 - Kobalte Select の選択肢は、通常時の背景を `bg-surface` 系に揃え、未選択状態専用の背景色を追加しないでください。ライトテーマでは白、ダークテーマでは深緑の面に見えるように、Select.Content やダイアログ背景と同じトーンを維持してください。
 - 選択肢の hover / highlighted / selected 状態は、OVER POWERページの集計軸セレクトと同じく `hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg` を基準にしてください。
 
+### Kobalte Select の配置間隔
+
+- Kobalte Select では、トリガーとドロップダウンの隙間をなくすため、親の `<Select>` コンポーネントに必ず `gutter={0}` を指定してください。
+
 ### TSDocの付与
 - 新規追加するコード、および改修を行った既存コードには、必ず **TSDocコメント**（目的、引数、返り値の説明）を追加してください（※既存の全ファイルに今すぐ追加する必要はありません。変更を施した箇所のみで必須です）。
 
