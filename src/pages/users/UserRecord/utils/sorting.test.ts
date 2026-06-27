@@ -62,12 +62,12 @@ test('ソートクエリが無効な場合はscore descを既定値にする', (
   })
 })
 
-test('通常レコードの既定ソートはスコア降順、定数降順、難易度降順、曲名降順にする', () => {
+test('通常レコードの既定ソートはスコア降順、定数降順、難易度降順、曲名昇順にする', () => {
   assert.deepEqual(DEFAULT_RECORD_SORT_CONDITIONS, [
     { key: 'score', direction: 'desc' },
     { key: 'const', direction: 'desc' },
     { key: 'difficulty', direction: 'desc' },
-    { key: 'title', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
   ])
 })
 
@@ -76,7 +76,7 @@ test('初期ソートは第1ソートだけクエリ指定で置き換える', (
     { key: 'rating', direction: 'asc' },
     { key: 'const', direction: 'desc' },
     { key: 'difficulty', direction: 'desc' },
-    { key: 'title', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
   ])
 })
 
@@ -85,7 +85,7 @@ test('ソート条件は不足分を既定値で補って4条件にする', () =
     { key: 'rating', direction: 'asc' },
     { key: 'const', direction: 'desc' },
     { key: 'difficulty', direction: 'desc' },
-    { key: 'title', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
   ])
 })
 
