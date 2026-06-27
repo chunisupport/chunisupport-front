@@ -113,6 +113,15 @@ const nextSortDirection = (direction: SortDirection): SortDirection =>
   direction === 'asc' ? 'desc' : 'asc'
 
 /**
+ * タブの値がソート表示モードか判定する。
+ *
+ * @param value - Kobalte Tabs から渡されるタブ値。
+ * @returns ソート表示モードとして扱える場合は true。
+ */
+const isSortDialogViewMode = (value: string): value is SortDialogViewMode =>
+  value === 'standard' || value === 'advanced'
+
+/**
  * 通常レコード一覧の高度ソート条件を編集するダイアログを表示する。
  *
  * @param props - 開閉状態、適用済みソート条件、開閉・適用ハンドラー。
@@ -171,6 +180,18 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
   const applySortConditions = (): void => {
     props.onApply(toAppliedSortConditions(draftSortConditions()))
     props.onOpenChange(false)
+  }
+
+  /**
+   * ソート表示モードを切り替える。
+   *
+   * @param value - Kobalte Tabs から渡されるタブ値。
+   * @returns なし。
+   */
+  const handleViewModeChange = (value: string): void => {
+    if (isSortDialogViewMode(value)) {
+      setViewMode(value)
+    }
   }
 
   /**
@@ -260,7 +281,7 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
             <Dialog.Title class="text-lg font-bold">ソート</Dialog.Title>
           </div>
 
-          <Tabs.Root value={viewMode()} onChange={(value) => setViewMode(value)}>
+          <Tabs.Root value={viewMode()} onChange={handleViewModeChange}>
             <Tabs.List class="mb-4 inline-flex gap-1 rounded-lg bg-surface-hover p-1">
               <Tabs.Trigger value="standard" class={SORT_VIEW_TAB_TRIGGER_CLASS}>
                 通常
