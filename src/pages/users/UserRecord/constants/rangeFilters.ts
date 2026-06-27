@@ -1,4 +1,9 @@
-import { OVER_POWER_MAX, OVER_POWER_MIN } from './constRange'
+import {
+  JUSTICE_COUNT_MAX,
+  JUSTICE_COUNT_MIN,
+  OVER_POWER_MAX,
+  OVER_POWER_MIN,
+} from '../../../../constants/chart'
 
 /** 範囲フィルターの入力欄設定。 */
 export type NumericRangeFilterConfig = {
@@ -20,8 +25,8 @@ export const JUSTICE_COUNT_RANGE_FILTER: NumericRangeFilterConfig = {
   title: 'JUSTICE数',
   minLabel: 'JUSTICE数 ここから',
   maxLabel: 'JUSTICE数 ここまで',
-  min: 0,
-  max: Number.MAX_SAFE_INTEGER,
+  min: JUSTICE_COUNT_MIN,
+  max: JUSTICE_COUNT_MAX,
   step: 1,
   allowedInput: /[0-9]/,
   inputMode: 'numeric',
