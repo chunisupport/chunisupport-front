@@ -19,3 +19,6 @@ export const WEAK_CHART_INSPECTOR_COLORS = {
 
 /** スコア点を重ねる際の横方向の最大ずらし幅。 */
 export const WEAK_CHART_POINT_JITTER = 0.035
+
+/** 散布図のスコア軸目盛り間隔とk表記の換算値。 */
+export const WEAK_CHART_SCORE_TICK_INTERVAL = 1000

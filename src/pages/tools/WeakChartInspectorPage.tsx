@@ -15,7 +15,10 @@ import {
 import { fetchMe } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
-import { WEAK_CHART_INSPECTOR_DISPLAY_SCORE_MIN } from '../../constants/chart'
+import {
+  SCORE_THEORETICAL_MAX,
+  WEAK_CHART_INSPECTOR_DISPLAY_SCORE_MIN,
+} from '../../constants/chart'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
@@ -34,6 +37,7 @@ import {
   WEAK_CHART_INSPECTOR_COLORS,
   WEAK_CHART_INSPECTOR_COPY,
   WEAK_CHART_POINT_JITTER,
+  WEAK_CHART_SCORE_TICK_INTERVAL,
 } from './weakChartInspector.constants'
 
 Chart.register(ScatterController, LinearScale, PointElement, Tooltip)
@@ -151,10 +155,12 @@ const WeakChartDistributionChart = (props: {
           },
           y: {
             min: WEAK_CHART_INSPECTOR_DISPLAY_SCORE_MIN,
+            max: SCORE_THEORETICAL_MAX,
             grid: { color: gridColor },
             ticks: {
               color: textColor,
-              callback: (value) => Number(value).toLocaleString('ja-JP'),
+              stepSize: WEAK_CHART_SCORE_TICK_INTERVAL,
+              callback: (value) => `${Number(value) / WEAK_CHART_SCORE_TICK_INTERVAL}k`,
             },
             title: { display: true, text: '獲得スコア', color: textColor },
           },
@@ -240,7 +246,7 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
         }
       >
         <div class="overflow-x-auto">
-          <table class="w-full min-w-[36rem] table-fixed border-collapse text-sm">
+          <table class="w-full min-w-[30rem] table-fixed border-collapse text-sm">
             <caption class="sr-only">{WEAK_CHART_INSPECTOR_COPY.tableCaption}</caption>
             <colgroup>
               <col />
@@ -268,10 +274,11 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
               <For each={sortedOutliers()}>
                 {({ record }) => (
                   <tr class="border-t border-border">
-                    <td class="px-2 py-1.5 font-sans font-medium">
+                    <td class="overflow-hidden px-2 py-1.5 font-sans font-medium">
                       <A
                         href={`/songs/${encodeURIComponent(record.id)}`}
-                        class="text-link hover:text-link-hover hover:underline"
+                        class="block truncate text-link text-wrap-nowrap hover:text-link-hover hover:underline"
+                        title={record.title}
                       >
                         {record.title}
                       </A>
