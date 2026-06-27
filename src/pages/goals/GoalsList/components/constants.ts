@@ -10,9 +10,9 @@ export const ERROR_MESSAGE_INVALID_COUNT_TARGET =
 export const GOAL_TITLE_MAX_LENGTH = 30
 
 /**
- * 目標種別と数値ステップで、ユーザーに入力対象を案内する説明文。
+ * 達成条件ステップで、ユーザーに入力対象を案内する説明文。
  */
-export const STEP2_DESCRIPTION = '目標の種別と値を設定します。'
+export const STEP3_DESCRIPTION = '目標の種別と値を設定します。'
 
 /**
  * 進捗プレビューで達成済みではなく達成までの残数を表示するチェックボックスのラベル。
