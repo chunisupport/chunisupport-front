@@ -45,8 +45,8 @@ const FIXED_TITLE_SORT_INDEX = MAX_SORT_CONDITION_COUNT - 1
 /** ソート指定行の番号。 */
 const SORT_CONDITION_INDICES = Array.from({ length: MAX_SORT_CONDITION_COUNT }, (_, index) => index)
 
-/** ソート条件番号を丸数字で表示するためのラベル。 */
-const SORT_CONDITION_BADGE_LABELS = ['1', '2', '3', '*'] as const
+/** ソート条件番号を丸数字風に表示するためのラベル。 */
+const SORT_CONDITION_BADGE_LABELS = ['1', '2', '3', '4'] as const
 
 /** ソート列の選択肢。 */
 const SORT_COLUMN_OPTIONS: SortColumnOption[] = RECORD_COLUMN_DEFINITIONS.map((definition) => ({
@@ -209,7 +209,7 @@ const SortDialog: Component<SortDialogProps> = (props) => {
    *
    * @param rowIndex - 表示対象のソート条件番号。
    * @param showBadge - 詳細表示用の番号バッジを表示するか。
-   * @returns ソート列セレクトと方向切り替えボタン。
+   * @returns ソート列セレクトと方向セレクト、または固定ソートの表示。
    */
   const renderSortConditionRow = (rowIndex: number, showBadge: boolean) => {
     const draftSortCondition = () => draftSortConditions()[rowIndex]
@@ -218,6 +218,19 @@ const SortDialog: Component<SortDialogProps> = (props) => {
     const selectedDirection = () =>
       draftSortCondition()?.direction ?? DEFAULT_RECORD_SORT_CONDITIONS[rowIndex].direction
     const isFixedTitleSort = () => rowIndex === FIXED_TITLE_SORT_INDEX
+
+    if (isFixedTitleSort()) {
+      return (
+        <div class="flex items-baseline gap-2">
+          {showBadge ? (
+            <span class={SORT_CONDITION_BADGE_CLASS} aria-hidden="true">
+              {SORT_CONDITION_BADGE_LABELS[rowIndex]}
+            </span>
+          ) : null}
+          <div class="min-h-9.5 min-w-0 flex-1 px-1 py-2 text-text-muted">曲名（昇順）</div>
+        </div>
+      )
+    }
 
     return (
       <div class="flex items-center gap-2">
@@ -235,7 +248,6 @@ const SortDialog: Component<SortDialogProps> = (props) => {
             onChange={(option) => {
               if (option) updateDraftSortKey(rowIndex, option.value)
             }}
-            disabled={isFixedTitleSort()}
             gutter={0}
             itemComponent={(itemProps) => (
               <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
@@ -247,9 +259,7 @@ const SortDialog: Component<SortDialogProps> = (props) => {
             )}
           >
             <Select.Label class="sr-only">第{rowIndex + 1}ソート 列</Select.Label>
-            <Select.Trigger
-              class={`${FILTER_DIALOG_SELECT_TRIGGER_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
-            >
+            <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
               <Select.Value<SortColumnOption> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
                 {(state) => state.selectedOption()?.label}
               </Select.Value>

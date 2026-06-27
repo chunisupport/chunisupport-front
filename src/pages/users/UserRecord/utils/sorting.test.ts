@@ -89,13 +89,13 @@ test('ソート条件は不足分を既定値で補って4条件にする', () =
   ])
 })
 
-test('第4ソートは入力値に関わらず曲名固定にする', () => {
+test('第4ソートは入力値に関わらず曲名昇順固定にする', () => {
   assert.deepEqual(
     normalizeRecordSortConditions([
       { key: 'rating', direction: 'asc' },
       { key: 'const', direction: 'desc' },
       { key: 'difficulty', direction: 'desc' },
-      { key: 'score', direction: 'asc' },
+      { key: 'score', direction: 'desc' },
     ]),
     [
       { key: 'rating', direction: 'asc' },
@@ -106,13 +106,13 @@ test('第4ソートは入力値に関わらず曲名固定にする', () => {
   )
 })
 
-test('第4ソートは曲名の方向だけ維持できる', () => {
+test('第4ソートは曲名指定でも方向を昇順へ固定する', () => {
   assert.deepEqual(
     normalizeRecordSortConditions([
       { key: 'score', direction: 'desc' },
       { key: 'const', direction: 'desc' },
       { key: 'difficulty', direction: 'desc' },
-      { key: 'title', direction: 'asc' },
+      { key: 'title', direction: 'desc' },
     ]),
     [
       { key: 'score', direction: 'desc' },

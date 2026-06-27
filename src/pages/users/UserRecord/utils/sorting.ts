@@ -51,18 +51,18 @@ export const DEFAULT_RECORD_SORT_CONDITIONS: RecordSortCondition[] = [
  * ソート条件を常に4条件へ補正する。
  *
  * @param sortConditions - 補正対象のソート条件。
- * @returns 不足分を既定値で補い、第4ソートを曲名固定にした4条件のソート条件。
+ * @returns 不足分を既定値で補い、第4ソートを曲名昇順固定にした4条件のソート条件。
  */
 export const normalizeRecordSortConditions = (
   sortConditions: RecordSortCondition[]
 ): RecordSortCondition[] =>
-  DEFAULT_RECORD_SORT_CONDITIONS.map((defaultSortCondition, index) => ({
-    ...(sortConditions[index] ?? defaultSortCondition),
-    key:
-      index === DEFAULT_RECORD_SORT_CONDITIONS.length - 1
-        ? 'title'
-        : (sortConditions[index]?.key ?? defaultSortCondition.key),
-  }))
+  DEFAULT_RECORD_SORT_CONDITIONS.map((defaultSortCondition, index) => {
+    if (index === DEFAULT_RECORD_SORT_CONDITIONS.length - 1) {
+      return defaultSortCondition
+    }
+
+    return sortConditions[index] ?? defaultSortCondition
+  })
 
 export const parseSortParams = (searchParams: SortParamsSource) => {
   const parsed = parseSortQuery(searchParams, RECORD_SORT_COL_MAP, {
