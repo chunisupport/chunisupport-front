@@ -118,6 +118,29 @@ type SortableRecordEntry = {
 }
 
 /**
+ * 未プレイのレコードをソート方向に関係なく末尾へ寄せる。
+ *
+ * @param leftPlayed - 左側レコードがプレイ済みかどうか。
+ * @param rightPlayed - 右側レコードがプレイ済みかどうか。
+ * @returns 未プレイ判定だけで順序が決まる場合は比較結果、両方プレイ済みの場合はnull。
+ */
+const compareUnplayed = (leftPlayed: boolean, rightPlayed: boolean): number | null => {
+  if (!leftPlayed && !rightPlayed) {
+    return 0
+  }
+
+  if (!leftPlayed) {
+    return 1
+  }
+
+  if (!rightPlayed) {
+    return -1
+  }
+
+  return null
+}
+
+/**
  * 1つのソート条件で2件のレコードを比較する。
  *
  * @param a - 比較対象の左側レコード情報。
@@ -148,63 +171,31 @@ const compareRecordBySortCondition = (
       comparison = left.const - right.const
       break
     case 'rating': {
-      const leftUnplayed = !left.is_played
-      const rightUnplayed = !right.is_played
+      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
+      if (unplayedComparison !== null) return unplayedComparison
 
-      if (leftUnplayed && rightUnplayed) {
-        comparison = 0
-      } else if (leftUnplayed) {
-        return 1
-      } else if (rightUnplayed) {
-        return -1
-      } else {
-        comparison = left.rating - right.rating
-      }
+      comparison = left.rating - right.rating
       break
     }
     case 'score': {
-      const leftUnplayed = !left.is_played
-      const rightUnplayed = !right.is_played
+      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
+      if (unplayedComparison !== null) return unplayedComparison
 
-      if (leftUnplayed && rightUnplayed) {
-        comparison = 0
-      } else if (leftUnplayed) {
-        return 1
-      } else if (rightUnplayed) {
-        return -1
-      } else {
-        comparison = left.score - right.score
-      }
+      comparison = left.score - right.score
       break
     }
     case 'overpower': {
-      const leftUnplayed = !left.is_played
-      const rightUnplayed = !right.is_played
+      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
+      if (unplayedComparison !== null) return unplayedComparison
 
-      if (leftUnplayed && rightUnplayed) {
-        comparison = 0
-      } else if (leftUnplayed) {
-        return 1
-      } else if (rightUnplayed) {
-        return -1
-      } else {
-        comparison = left.overpower - right.overpower
-      }
+      comparison = left.overpower - right.overpower
       break
     }
     case 'overpowerPercent': {
-      const leftUnplayed = !left.is_played
-      const rightUnplayed = !right.is_played
+      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
+      if (unplayedComparison !== null) return unplayedComparison
 
-      if (leftUnplayed && rightUnplayed) {
-        comparison = 0
-      } else if (leftUnplayed) {
-        return 1
-      } else if (rightUnplayed) {
-        return -1
-      } else {
-        comparison = left.overpower_percent - right.overpower_percent
-      }
+      comparison = left.overpower_percent - right.overpower_percent
       break
     }
     case 'updatedAt': {
