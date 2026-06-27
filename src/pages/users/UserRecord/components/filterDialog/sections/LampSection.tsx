@@ -4,7 +4,7 @@ import { For } from 'solid-js'
 
 type LampValue = string | null
 
-type LampSectionProps<TLamp extends LampValue> = {
+type LampSectionProps<TLamp extends LampValue = LampValue> = {
   title: string
   idPrefix: string
   lamps: TLamp[]
@@ -21,7 +21,7 @@ type LampSectionProps<TLamp extends LampValue> = {
  * @param props - 表示対象のランプ候補、選択状態、更新ハンドラー。
  * @returns ランプ選択セクション
  */
-const LampSection = <TLamp extends LampValue>(props: LampSectionProps<TLamp>) => (
+const LampSection = <TLamp extends LampValue = LampValue>(props: LampSectionProps<TLamp>) => (
   <div>
     <span class="block text-sm font-medium mb-1">{props.title}</span>
     <div class="flex flex-col gap-2">
