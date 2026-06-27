@@ -11,7 +11,6 @@ type FilterToolbarProps = {
   onOpenFilter: () => void
   onOpenSortSettings: () => void
   onOpenColumnSettings: () => void
-  sortActive: boolean
   titleActive?: boolean
   filterActive?: boolean
   filterButtonTone?: FilterButtonTone
@@ -108,16 +107,11 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
         <Funnel size={24} aria-hidden="true" />
       </Button>
       <Button
-        class={`ml-2 flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
-          props.sortActive
-            ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
-            : 'border-border-strong text-text-muted hover:bg-surface-hover'
-        }`}
+        class="ml-2 flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border border-border-strong text-text-muted transition-colors hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
         onClick={props.onOpenSortSettings}
         type="button"
-        aria-label={props.sortActive ? 'ソート適用中' : 'ソート'}
-        aria-pressed={props.sortActive}
-        title={props.sortActive ? 'ソート適用中' : 'ソート'}
+        aria-label="ソート"
+        title="ソート"
       >
         <ArrowUpDown size={24} aria-hidden="true" />
       </Button>

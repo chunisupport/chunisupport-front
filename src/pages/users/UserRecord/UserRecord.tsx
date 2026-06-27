@@ -202,7 +202,6 @@ const UserRecord: Component<Props> = (props) => {
                 titleActive={hasTitleFilterChanges()}
                 filterActive={hasFilterOptionChanges()}
                 filterButtonTone={filterButtonTone()}
-                sortActive={true}
               />
 
               {/* フィルター統計 */}
