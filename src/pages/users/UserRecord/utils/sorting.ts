@@ -41,27 +41,32 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
 
 /** 通常レコード一覧で常に適用する既定ソート条件。 */
 export const DEFAULT_RECORD_SORT_CONDITIONS: RecordSortCondition[] = [
-  { key: 'rating', direction: 'desc' },
+  { key: 'score', direction: 'desc' },
   { key: 'const', direction: 'desc' },
-  { key: 'title', direction: 'asc' },
+  { key: 'difficulty', direction: 'desc' },
+  { key: 'title', direction: 'desc' },
 ]
 
 /**
- * ソート条件を常に3条件へ補正する。
+ * ソート条件を常に4条件へ補正する。
  *
  * @param sortConditions - 補正対象のソート条件。
- * @returns 不足分を既定値で補った3条件のソート条件。
+ * @returns 不足分を既定値で補い、第4ソートを曲名固定にした4条件のソート条件。
  */
 export const normalizeRecordSortConditions = (
   sortConditions: RecordSortCondition[]
 ): RecordSortCondition[] =>
   DEFAULT_RECORD_SORT_CONDITIONS.map((defaultSortCondition, index) => ({
     ...(sortConditions[index] ?? defaultSortCondition),
+    key:
+      index === DEFAULT_RECORD_SORT_CONDITIONS.length - 1
+        ? 'title'
+        : (sortConditions[index]?.key ?? defaultSortCondition.key),
   }))
 
 export const parseSortParams = (searchParams: SortParamsSource) => {
   const parsed = parseSortQuery(searchParams, RECORD_SORT_COL_MAP, {
-    sortKey: 'rating',
+    sortKey: 'score',
     sortDirection: 'desc',
   })
 
@@ -72,11 +77,11 @@ export const parseSortParams = (searchParams: SortParamsSource) => {
 }
 
 /**
- * クエリ文字列から取得した第1ソートと既定の第2・第3ソートを組み合わせる。
+ * クエリ文字列から取得した第1ソートと既定の第2〜第4ソートを組み合わせる。
  *
  * @param sortKey - 初期表示で第1ソートにする列キー。
  * @param sortDirection - 初期表示で第1ソートにする方向。
- * @returns 3条件を持つ初期ソート条件。
+ * @returns 4条件を持つ初期ソート条件。
  */
 export const createInitialRecordSortConditions = (
   sortKey: RecordSortKey,

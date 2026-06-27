@@ -51,39 +51,88 @@ test('ソートクエリが有効な場合は指定値をそのまま使う', ()
   })
 })
 
-test('ソートクエリが無効な場合はrating descを既定値にする', () => {
+test('ソートクエリが無効な場合はscore descを既定値にする', () => {
   assert.deepEqual(parseSortParams({ sortcol: 'unknown', sortorder: 'asc' }), {
-    initialSortKey: 'rating',
+    initialSortKey: 'score',
     initialSortOrder: 'desc',
   })
   assert.deepEqual(parseSortParams({ sortcol: 'score', sortorder: 'invalid' }), {
-    initialSortKey: 'rating',
+    initialSortKey: 'score',
     initialSortOrder: 'desc',
   })
 })
 
-test('通常レコードの既定ソートはレート降順、定数降順、曲名昇順にする', () => {
+test('通常レコードの既定ソートはスコア降順、定数降順、難易度降順、曲名降順にする', () => {
   assert.deepEqual(DEFAULT_RECORD_SORT_CONDITIONS, [
-    { key: 'rating', direction: 'desc' },
+    { key: 'score', direction: 'desc' },
     { key: 'const', direction: 'desc' },
-    { key: 'title', direction: 'asc' },
+    { key: 'difficulty', direction: 'desc' },
+    { key: 'title', direction: 'desc' },
   ])
 })
 
 test('初期ソートは第1ソートだけクエリ指定で置き換える', () => {
-  assert.deepEqual(createInitialRecordSortConditions('score', 'asc'), [
-    { key: 'score', direction: 'asc' },
+  assert.deepEqual(createInitialRecordSortConditions('rating', 'asc'), [
+    { key: 'rating', direction: 'asc' },
     { key: 'const', direction: 'desc' },
-    { key: 'title', direction: 'asc' },
+    { key: 'difficulty', direction: 'desc' },
+    { key: 'title', direction: 'desc' },
   ])
 })
 
-test('ソート条件は不足分を既定値で補って3条件にする', () => {
-  assert.deepEqual(normalizeRecordSortConditions([{ key: 'score', direction: 'asc' }]), [
-    { key: 'score', direction: 'asc' },
+test('ソート条件は不足分を既定値で補って4条件にする', () => {
+  assert.deepEqual(normalizeRecordSortConditions([{ key: 'rating', direction: 'asc' }]), [
+    { key: 'rating', direction: 'asc' },
     { key: 'const', direction: 'desc' },
-    { key: 'title', direction: 'asc' },
+    { key: 'difficulty', direction: 'desc' },
+    { key: 'title', direction: 'desc' },
   ])
+})
+
+test('第4ソートは入力値に関わらず曲名固定にする', () => {
+  assert.deepEqual(
+    normalizeRecordSortConditions([
+      { key: 'rating', direction: 'asc' },
+      { key: 'const', direction: 'desc' },
+      { key: 'difficulty', direction: 'desc' },
+      { key: 'score', direction: 'asc' },
+    ]),
+    [
+      { key: 'rating', direction: 'asc' },
+      { key: 'const', direction: 'desc' },
+      { key: 'difficulty', direction: 'desc' },
+      { key: 'title', direction: 'asc' },
+    ]
+  )
+})
+
+test('第4ソートは曲名の方向だけ維持できる', () => {
+  assert.deepEqual(
+    normalizeRecordSortConditions([
+      { key: 'score', direction: 'desc' },
+      { key: 'const', direction: 'desc' },
+      { key: 'difficulty', direction: 'desc' },
+      { key: 'title', direction: 'asc' },
+    ]),
+    [
+      { key: 'score', direction: 'desc' },
+      { key: 'const', direction: 'desc' },
+      { key: 'difficulty', direction: 'desc' },
+      { key: 'title', direction: 'asc' },
+    ]
+  )
+})
+
+test('複数ソートは第4ソートまで評価できる', () => {
+  const records = [
+    createRecord({ id: 'alpha', title: 'Alpha', score: 1000000, const: 14, difficulty: 'MASTER' }),
+    createRecord({ id: 'beta', title: 'Beta', score: 1000000, const: 14, difficulty: 'MASTER' }),
+  ]
+
+  assert.deepEqual(
+    sortRecordsByConditions(records, DEFAULT_RECORD_SORT_CONDITIONS).map((record) => record.id),
+    ['beta', 'alpha']
+  )
 })
 
 test('列クリックの第1ソートはascからdesc、最後にascへ戻る', () => {

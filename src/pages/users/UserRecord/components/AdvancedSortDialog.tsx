@@ -34,7 +34,10 @@ type SortDirectionOption = {
 }
 
 /** 高度ソートで指定できる最大条件数。 */
-const MAX_SORT_CONDITION_COUNT = 3
+const MAX_SORT_CONDITION_COUNT = 4
+
+/** 曲名固定にするソート行の番号。 */
+const FIXED_TITLE_SORT_INDEX = MAX_SORT_CONDITION_COUNT - 1
 
 /** ソート指定行の番号。 */
 const SORT_CONDITION_INDICES = Array.from({ length: MAX_SORT_CONDITION_COUNT }, (_, index) => index)
@@ -77,7 +80,7 @@ const toDraftSortConditions = (sortConditions: RecordSortCondition[]): DraftSort
  */
 const toAppliedSortConditions = (
   draftSortConditions: DraftSortCondition[]
-): RecordSortCondition[] => draftSortConditions.slice(0, MAX_SORT_CONDITION_COUNT)
+): RecordSortCondition[] => normalizeRecordSortConditions(draftSortConditions)
 
 /**
  * ソートキーに対応する列選択肢を取得する。
@@ -172,47 +175,54 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
                 const selectedKey = () =>
                   draftSortCondition()?.key ?? DEFAULT_RECORD_SORT_CONDITIONS[rowIndex].key
                 const selectedDirection = () => draftSortCondition()?.direction ?? 'asc'
+                const isFixedTitleSort = () => rowIndex === FIXED_TITLE_SORT_INDEX
 
                 return (
                   <div class="flex flex-wrap items-end gap-2">
                     <span class="w-18 pb-2 text-sm font-medium">第{rowIndex + 1}ソート</span>
                     <div class="min-w-36 flex-1">
-                      <Select<SortColumnOption>
-                        options={SORT_COLUMN_OPTIONS}
-                        optionValue="value"
-                        optionTextValue="label"
-                        value={getSortColumnOption(selectedKey())}
-                        onChange={(option) => {
-                          if (option) updateDraftSortKey(rowIndex, option.value)
-                        }}
-                        gutter={0}
-                        itemComponent={(itemProps) => (
-                          <Select.Item
-                            item={itemProps.item}
-                            class={FILTER_DIALOG_SELECT_ITEM_CLASS}
-                          >
-                            <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                            <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
-                              <Check class="h-4 w-4" />
-                            </Select.ItemIndicator>
-                          </Select.Item>
-                        )}
-                      >
-                        <Select.Label class="sr-only">第{rowIndex + 1}ソート 列</Select.Label>
-                        <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
-                          <Select.Value<SortColumnOption> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
-                            {(state) => state.selectedOption()?.label}
-                          </Select.Value>
-                          <Select.Icon class="h-5 w-5 flex items-center justify-center">
-                            <ChevronDown class="h-4 w-4" />
-                          </Select.Icon>
-                        </Select.Trigger>
-                        <Select.Portal>
-                          <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
-                            <Select.Listbox class="max-h-90 overflow-y-auto p-2" />
-                          </Select.Content>
-                        </Select.Portal>
-                      </Select>
+                      {isFixedTitleSort() ? (
+                        <div class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
+                          <span class="overflow-hidden text-ellipsis whitespace-nowrap">曲名</span>
+                        </div>
+                      ) : (
+                        <Select<SortColumnOption>
+                          options={SORT_COLUMN_OPTIONS}
+                          optionValue="value"
+                          optionTextValue="label"
+                          value={getSortColumnOption(selectedKey())}
+                          onChange={(option) => {
+                            if (option) updateDraftSortKey(rowIndex, option.value)
+                          }}
+                          gutter={0}
+                          itemComponent={(itemProps) => (
+                            <Select.Item
+                              item={itemProps.item}
+                              class={FILTER_DIALOG_SELECT_ITEM_CLASS}
+                            >
+                              <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
+                              <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
+                                <Check class="h-4 w-4" />
+                              </Select.ItemIndicator>
+                            </Select.Item>
+                          )}
+                        >
+                          <Select.Label class="sr-only">第{rowIndex + 1}ソート 列</Select.Label>
+                          <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
+                            <Select.Value<SortColumnOption> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
+                              {(state) => state.selectedOption()?.label}
+                            </Select.Value>
+                            <Select.Icon class="h-5 w-5 flex items-center justify-center">
+                              <ChevronDown class="h-4 w-4" />
+                            </Select.Icon>
+                          </Select.Trigger>
+                          <Select.Portal>
+                            <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
+                              <Select.Listbox class="max-h-90 overflow-y-auto p-2" />
+                            </Select.Content>
+                          </Select.Portal>
+                        </Select>
+                      )}
                     </div>
 
                     <div class="w-26">
