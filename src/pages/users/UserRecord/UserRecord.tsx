@@ -24,11 +24,11 @@ import type { MasterDataDTO, UserRecordDTO, VersionSummaryDTO } from '../../../t
 import FilterStats from '../components/FilterStats'
 import { isValidSavedStandardFilter } from '../components/savedRecordFilters'
 import { sanitizeSortQuery } from '../recordTable/sortingQuery'
-import AdvancedSortDialog from './components/AdvancedSortDialog'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FilterDialog from './components/FilterDialog'
 import FilterToolbar from './components/FilterToolbar'
 import RecordTable from './components/RecordTable'
+import SortDialog from './components/SortDialog'
 import { buildDefaultFilter, DEFAULT_FILTER, normalizeFilterState } from './types/filterDefaults'
 import type { FilterState, RecordColumnId, RecordSortCondition } from './types/types'
 import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
@@ -238,7 +238,7 @@ const UserRecord: Component<Props> = (props) => {
                 defaultFilter={defaultFilter()}
               />
 
-              <AdvancedSortDialog
+              <SortDialog
                 open={sortSettingsOpen()}
                 onOpenChange={setSortSettingsOpen}
                 sortConditions={sortConditions()}

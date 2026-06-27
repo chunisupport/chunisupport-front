@@ -12,7 +12,7 @@ import {
   FILTER_DIALOG_SELECT_TRIGGER_CLASS,
 } from './filterDialog/styles'
 
-type AdvancedSortDialogProps = {
+type SortDialogProps = {
   open: boolean
   sortConditions: RecordSortCondition[]
   onOpenChange: (open: boolean) => void
@@ -29,9 +29,9 @@ type SortColumnOption = {
   label: string
 }
 
-type SortDialogViewMode = 'standard' | 'advanced'
+type SortDialogViewMode = 'standard' | 'detail'
 
-/** 高度ソートで指定できる最大条件数。 */
+/** ソートで指定できる最大条件数。 */
 const MAX_SORT_CONDITION_COUNT = 4
 
 /** 曲名固定にするソート行の番号。 */
@@ -49,8 +49,8 @@ const SORT_COLUMN_OPTIONS: SortColumnOption[] = RECORD_COLUMN_DEFINITIONS.map((d
   label: definition.label,
 }))
 
-/** 高度ソートダイアログの操作ボタンで使う Tailwind クラス。 */
-const ADVANCED_SORT_DIALOG_BUTTON_CLASS = {
+/** ソートダイアログの操作ボタンで使う Tailwind クラス。 */
+const SORT_DIALOG_BUTTON_CLASS = {
   secondary:
     'rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover',
   primary:
@@ -119,15 +119,15 @@ const nextSortDirection = (direction: SortDirection): SortDirection =>
  * @returns ソート表示モードとして扱える場合は true。
  */
 const isSortDialogViewMode = (value: string): value is SortDialogViewMode =>
-  value === 'standard' || value === 'advanced'
+  value === 'standard' || value === 'detail'
 
 /**
- * 通常レコード一覧の高度ソート条件を編集するダイアログを表示する。
+ * 通常レコード一覧のソート条件を編集するダイアログを表示する。
  *
  * @param props - 開閉状態、適用済みソート条件、開閉・適用ハンドラー。
- * @returns 高度ソート条件を編集するダイアログUI。
+ * @returns ソート条件を編集するダイアログUI。
  */
-const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
+const SortDialog: Component<SortDialogProps> = (props) => {
   const [draftSortConditions, setDraftSortConditions] = createSignal<DraftSortCondition[]>(
     toDraftSortConditions(props.sortConditions)
   )
@@ -286,14 +286,14 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
               <Tabs.Trigger value="standard" class={SORT_VIEW_TAB_TRIGGER_CLASS}>
                 通常
               </Tabs.Trigger>
-              <Tabs.Trigger value="advanced" class={SORT_VIEW_TAB_TRIGGER_CLASS}>
+              <Tabs.Trigger value="detail" class={SORT_VIEW_TAB_TRIGGER_CLASS}>
                 詳細
               </Tabs.Trigger>
             </Tabs.List>
 
             <div class="min-h-0 flex-1 overflow-y-auto pr-1 text-sm">
               <Tabs.Content value="standard">{renderSortConditionRow(0, false)}</Tabs.Content>
-              <Tabs.Content value="advanced" class="space-y-3">
+              <Tabs.Content value="detail" class="space-y-3">
                 <For each={SORT_CONDITION_INDICES}>
                   {(rowIndex) => renderSortConditionRow(rowIndex, true)}
                 </For>
@@ -302,12 +302,12 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
           </Tabs.Root>
 
           <div class="mt-6 flex shrink-0 justify-end gap-2">
-            <Dialog.CloseButton class={ADVANCED_SORT_DIALOG_BUTTON_CLASS.secondary}>
+            <Dialog.CloseButton class={SORT_DIALOG_BUTTON_CLASS.secondary}>
               閉じる
             </Dialog.CloseButton>
             <Button
               type="button"
-              class={ADVANCED_SORT_DIALOG_BUTTON_CLASS.primary}
+              class={SORT_DIALOG_BUTTON_CLASS.primary}
               onClick={applySortConditions}
             >
               適用
@@ -319,4 +319,4 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
   )
 }
 
-export default AdvancedSortDialog
+export default SortDialog
