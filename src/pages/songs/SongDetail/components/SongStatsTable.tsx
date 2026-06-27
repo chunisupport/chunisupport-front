@@ -45,6 +45,11 @@ const NORMAL_RATING_BAND_ROW_CLASS = 'border-l-4 border-l-transparent'
 const COMBO_CHART_DATASET_DEFINITIONS = [
   { label: 'FC', valueKey: 'fc', colorVariable: '--cs-color-lamp-full-combo-bg' },
   { label: 'AJ', valueKey: 'aj', colorVariable: '--cs-color-lamp-all-justice-bg' },
+  {
+    label: 'AJC',
+    valueKey: 'ajc',
+    colorVariable: '--cs-color-lamp-all-justice-critical-bg',
+  },
 ] as const
 const CLEAR_CHART_DATASET_DEFINITIONS = [
   { label: 'CLEAR', valueKey: 'clear', colorVariable: '--cs-color-lamp-clear-bg' },
@@ -235,7 +240,7 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
 /**
  * 難易度別統計テーブルの下に表示するランプ別グラフを生成する。
  * @param props 表示対象の統計行。
- * @returns FC/AJとCLEAR系ランプのグラフ。
+ * @returns FC/AJ/AJCとCLEAR系ランプのグラフ。
  */
 const SongStatsCharts = (props: Props) => {
   const chartStats = createMemo(() => getChartStats(props.stats))
@@ -257,7 +262,7 @@ const SongStatsCharts = (props: Props) => {
     <div class="mt-4 grid gap-4 lg:grid-cols-2">
       <SongStatsBarChart
         title="COMBO"
-        ariaLabel="レーティング帯別のFCとAJ人数グラフ"
+        ariaLabel="レーティング帯別のFC、AJ、AJC人数グラフ"
         labels={labels()}
         datasets={comboDatasets()}
       />
@@ -301,6 +306,7 @@ const SongStatsTable = (props: Props) => {
               <th class="px-2 py-2 text-right whitespace-nowrap">平均スコア</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">FC</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">AJ</th>
+              <th class="px-2 py-2 text-right whitespace-nowrap">AJC</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">CLEAR</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">HARD</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">BRAVE</th>
@@ -319,6 +325,7 @@ const SongStatsTable = (props: Props) => {
                   </td>
                   <td class="px-2 py-2 text-right">{band.combo.fc.toLocaleString()}</td>
                   <td class="px-2 py-2 text-right">{band.combo.aj.toLocaleString()}</td>
+                  <td class="px-2 py-2 text-right">{band.combo.ajc.toLocaleString()}</td>
                   <td class="px-2 py-2 text-right">{band.clear.clear.toLocaleString()}</td>
                   <td class="px-2 py-2 text-right">{band.clear.hard.toLocaleString()}</td>
                   <td class="px-2 py-2 text-right">{band.clear.brave.toLocaleString()}</td>

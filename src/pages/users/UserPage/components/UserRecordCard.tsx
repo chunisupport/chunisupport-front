@@ -103,7 +103,7 @@ export const UserRecordCard: Component<Props> = (props) => {
                 <span class={SCORE_RANK_TEXT_CLASS[scoreRank()]}>{scoreRank()}</span>
               </p>
             </div>
-            <div class="shrink-0 text-right font-oswald text-lg font-bold leading-none">
+            <div class="shrink-0 text-right font-oswald text-xl font-bold leading-none">
               {props.record.rating.toFixed(2)}
             </div>
           </div>

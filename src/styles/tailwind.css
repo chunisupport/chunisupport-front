@@ -230,11 +230,12 @@
   --cs-color-score-rank-d-bg: var(--color-gray-500);
   --cs-color-score-rank-d-text: var(--color-gray-500);
 
-  /* ===== ランプ（FULL COMBO / ALL JUSTICE / CLEAR / HARD / BRAVE / ABSOLUTE / CATASTROPHY / FAILED / 未プレイ） ===== */
+  /* ===== ランプ（FULL COMBO / ALL JUSTICE / ALL JUSTICE CRITICAL / CLEAR / HARD / BRAVE / ABSOLUTE / CATASTROPHY / FAILED / 未プレイ） ===== */
   --cs-color-lamp-full-combo-bg: var(--color-yellow-300);
   --cs-color-lamp-full-combo-text: var(--color-yellow-900);
   --cs-color-lamp-all-justice-bg: #fdf5a7;
   --cs-color-lamp-all-justice-text: var(--color-yellow-900);
+  --cs-color-lamp-all-justice-critical-bg: var(--color-violet-500);
   --cs-color-lamp-clear-bg: var(--color-sky-200);
   --cs-color-lamp-clear-text: var(--color-sky-900);
   --cs-color-lamp-hard-bg: var(--color-red-200);
