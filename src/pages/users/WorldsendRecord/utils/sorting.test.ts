@@ -2,7 +2,14 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { WorldsendRecordDTO } from '../../../../types/api'
-import { sortWorldsendRecords } from './sorting'
+import {
+  createInitialWorldsendRecordSortConditions,
+  DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS,
+  nextPrimaryWorldsendRecordSortCondition,
+  normalizeWorldsendRecordSortConditions,
+  sortWorldsendRecords,
+  sortWorldsendRecordsByConditions,
+} from './sorting'
 
 /**
  * Test helper to build a WorldsendRecordDTO with default field values.
@@ -30,6 +37,78 @@ const createRecord = (overrides: Partial<WorldsendRecordDTO> = {}): WorldsendRec
   combo_lamp: null,
   full_chain: null,
   ...overrides,
+})
+
+test("WORLD'S ENDの既定ソートはスコア降順、属性昇順、レベル降順、曲名昇順にする", () => {
+  assert.deepEqual(DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS, [
+    { key: 'score', direction: 'desc' },
+    { key: 'attribute', direction: 'asc' },
+    { key: 'level', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
+  ])
+})
+
+test("WORLD'S ENDの初期ソートは第1ソートだけクエリ指定で置き換える", () => {
+  assert.deepEqual(createInitialWorldsendRecordSortConditions('attribute', 'asc'), [
+    { key: 'attribute', direction: 'asc' },
+    { key: 'attribute', direction: 'asc' },
+    { key: 'level', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
+  ])
+})
+
+test("WORLD'S ENDの第4ソートは入力値に関わらず曲名昇順固定にする", () => {
+  assert.deepEqual(
+    normalizeWorldsendRecordSortConditions([
+      { key: 'level', direction: 'asc' },
+      { key: 'attribute', direction: 'desc' },
+      { key: 'score', direction: 'desc' },
+      { key: 'updatedAt', direction: 'desc' },
+    ]),
+    [
+      { key: 'level', direction: 'asc' },
+      { key: 'attribute', direction: 'desc' },
+      { key: 'score', direction: 'desc' },
+      { key: 'title', direction: 'asc' },
+    ]
+  )
+})
+
+test("WORLD'S ENDの列クリックは第1ソートだけを切り替える", () => {
+  assert.deepEqual(
+    nextPrimaryWorldsendRecordSortCondition({ key: 'score', direction: 'asc' }, 'score'),
+    {
+      key: 'score',
+      direction: 'desc',
+    }
+  )
+  assert.deepEqual(
+    nextPrimaryWorldsendRecordSortCondition({ key: 'score', direction: 'desc' }, 'score'),
+    {
+      key: 'score',
+      direction: 'asc',
+    }
+  )
+  assert.deepEqual(nextPrimaryWorldsendRecordSortCondition(null, 'title'), {
+    key: 'title',
+    direction: 'asc',
+  })
+})
+
+test("WORLD'S ENDの複数ソートは前の条件が同値の場合に次の条件で並べる", () => {
+  const records = [
+    createRecord({ id: 'fire-low', score: 1009000, attribute: 'FIRE', level_star: 2 }),
+    createRecord({ id: 'fire-high', score: 1009000, attribute: 'FIRE', level_star: 4 }),
+    createRecord({ id: 'air', score: 1009000, attribute: 'AIR', level_star: 1 }),
+    createRecord({ id: 'score-high', score: 1010000, attribute: 'FIRE', level_star: 1 }),
+  ]
+
+  assert.deepEqual(
+    sortWorldsendRecordsByConditions(records, DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS).map(
+      (record) => record.id
+    ),
+    ['score-high', 'air', 'fire-high', 'fire-low']
+  )
 })
 
 test("WORLD'S ENDのFCHソートはなし、GOLD、PLATINUM、未プレイの順で並べる", () => {

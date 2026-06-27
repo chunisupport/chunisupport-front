@@ -44,7 +44,7 @@ import {
   RecordUpdatedAtCell,
 } from '../components/SharedRecordTableColumns'
 import { isValidSavedWorldsendFilter } from '../components/savedRecordFilters'
-import { type SortDirection, sanitizeSortQuery } from '../recordTable/sortingQuery'
+import { sanitizeSortQuery } from '../recordTable/sortingQuery'
 import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
@@ -52,6 +52,7 @@ import { formatJusticeCountForAj } from '../UserRecord/utils/justiceCountDisplay
 import { formatUpdatedAt } from '../UserRecord/utils/updatedAt'
 import { getRecordStats } from '../utils/recordStats'
 import WorldsendFilterDialog from './components/WorldsendFilterDialog'
+import WorldsendSortDialog from './components/WorldsendSortDialog'
 import { buildDefaultWorldsendFilter, DEFAULT_WORLDSEND_FILTER } from './types/filterDefaults'
 import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from './types/filterTypes'
 import {
@@ -68,9 +69,12 @@ import {
   isWorldsendRecordMatchedWithTitleMatcher,
 } from './utils/filtering'
 import {
-  nextWorldsendSortState,
+  createInitialWorldsendRecordSortConditions,
+  nextPrimaryWorldsendRecordSortCondition,
+  normalizeWorldsendRecordSortConditions,
   parseWorldsendSortParams,
-  sortWorldsendRecords,
+  sortWorldsendRecordsByConditions,
+  type WorldsendRecordSortCondition,
 } from './utils/sorting'
 import WorldsendColumnSettingsDialog from './WorldsendColumnSettingsDialog'
 
@@ -177,7 +181,8 @@ const getWorldsendColumnRenderer = (
 const WorldsendRecordTable = (props: {
   records: WorldsendRecordWithSongMeta[]
   sortKey: WorldsendSortKey | null
-  sortDirection: SortDirection | null
+  sortDirection: WorldsendRecordSortCondition['direction'] | null
+  sortConditions: WorldsendRecordSortCondition[]
   onSortChange: (nextKey: WorldsendSortKey) => void
   visibleColumnIds: WorldsendRecordColumnId[]
 }) => {
@@ -188,7 +193,7 @@ const WorldsendRecordTable = (props: {
   let tableBodyRef: HTMLDivElement | undefined
 
   const sortedRecords = createMemo(() =>
-    sortWorldsendRecords(props.records, props.sortKey, props.sortDirection)
+    sortWorldsendRecordsByConditions(props.records, props.sortConditions)
   )
 
   const virtualizedTable = createRecordTableVirtualizer({
@@ -288,6 +293,7 @@ const WorldsendRecord = (props: Props) => {
   })
   const [filterReady, setFilterReady] = createSignal(false)
   const [filterOpen, setFilterOpen] = createSignal(false)
+  const [sortSettingsOpen, setSortSettingsOpen] = createSignal(false)
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
   const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<WorldsendRecordColumnId[]>(
@@ -297,8 +303,10 @@ const WorldsendRecord = (props: Props) => {
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
   const { initialSortKey, initialSortOrder } = parseWorldsendSortParams(searchParams)
-  const [sortKey, setSortKey] = createSignal<WorldsendSortKey | null>(initialSortKey)
-  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(initialSortOrder)
+  const [sortConditions, setSortConditions] = createSignal<WorldsendRecordSortCondition[]>(
+    createInitialWorldsendRecordSortConditions(initialSortKey, initialSortOrder)
+  )
+  const primarySort = () => sortConditions()[0] ?? null
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
   onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
@@ -361,6 +369,26 @@ const WorldsendRecord = (props: Props) => {
     void saveWorldsendRecordColumnsSetting(sanitizedColumnIds).catch(() => undefined)
   }
 
+  /**
+   * 指定された列で WORLD'S END レコードの第1ソート状態を進める。
+   *
+   * @param nextKey - 次に第1ソート対象にする列ID。
+   * @returns なし。
+   */
+  const handleSortChange = (nextKey: WorldsendSortKey): void => {
+    const nextPrimarySort = nextPrimaryWorldsendRecordSortCondition(
+      sortConditions()[0] ?? null,
+      nextKey
+    )
+
+    setSortConditions((currentSortConditions) =>
+      normalizeWorldsendRecordSortConditions([
+        nextPrimarySort,
+        ...currentSortConditions.slice(1, 4),
+      ])
+    )
+  }
+
   const recordsWithSongMeta = createMemo(() => {
     const songs = worldsendSongs()
     const versions = versionData()
@@ -394,6 +422,7 @@ const WorldsendRecord = (props: Props) => {
                 title={filters().title}
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
+                onOpenSortSettings={() => setSortSettingsOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
                 titleActive={hasTitleFilterChanges()}
                 filterActive={hasFilterOptionChanges()}
@@ -412,13 +441,10 @@ const WorldsendRecord = (props: Props) => {
 
               <WorldsendRecordTable
                 records={filteredRecords()}
-                sortKey={sortKey()}
-                sortDirection={sortDirection()}
-                onSortChange={(nextKey) => {
-                  const nextSort = nextWorldsendSortState(sortKey(), sortDirection(), nextKey)
-                  setSortKey(nextSort.sortKey)
-                  setSortDirection(nextSort.sortDirection)
-                }}
+                sortKey={primarySort()?.key ?? null}
+                sortDirection={primarySort()?.direction ?? null}
+                sortConditions={sortConditions()}
+                onSortChange={handleSortChange}
                 visibleColumnIds={visibleColumnIds()}
               />
 
@@ -435,6 +461,13 @@ const WorldsendRecord = (props: Props) => {
                 filters={filters()}
                 onChange={applyFilters}
                 defaultFilter={defaultFilter()}
+              />
+
+              <WorldsendSortDialog
+                open={sortSettingsOpen()}
+                onOpenChange={setSortSettingsOpen}
+                sortConditions={sortConditions()}
+                onApply={setSortConditions}
               />
             </div>
           </Show>
