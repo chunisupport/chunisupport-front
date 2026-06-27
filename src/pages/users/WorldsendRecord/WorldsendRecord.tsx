@@ -62,7 +62,7 @@ import {
   type WorldsendRecordColumnId,
   type WorldsendRecordSortKey,
 } from './utils/columns'
-import { isWorldsendFilterChanged } from './utils/filterDialog'
+import { isWorldsendFilterOptionsChanged } from './utils/filterDialog'
 import {
   createWorldsendRecordTitleMatcher,
   isWorldsendRecordMatchedWithTitleMatcher,
@@ -309,7 +309,10 @@ const WorldsendRecord = (props: Props) => {
   const defaultFilter = createMemo(() =>
     buildDefaultWorldsendFilter(worldsendSongs()?.songs ?? [], versionData()?.versions ?? [])
   )
-  const hasFilterChanges = createMemo(() => isWorldsendFilterChanged(filters(), defaultFilter()))
+  const hasTitleFilterChanges = createMemo(() => filters().title !== defaultFilter().title)
+  const hasFilterOptionChanges = createMemo(() =>
+    isWorldsendFilterOptionsChanged(filters(), defaultFilter())
+  )
 
   let filterRestored = false
 
@@ -392,7 +395,8 @@ const WorldsendRecord = (props: Props) => {
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
-                filterActive={hasFilterChanges()}
+                titleActive={hasTitleFilterChanges()}
+                filterActive={hasFilterOptionChanges()}
               />
               {filteredRecords().length > 0 && (
                 <FilterStats

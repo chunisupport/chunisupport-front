@@ -82,6 +82,35 @@ export function isWorldsendFilterChanged(
 }
 
 /**
+ * WORLD'S END レコードフィルターのうち、検索文字列以外が既定値から変更されているか判定する。
+ *
+ * @param current - 現在の WORLD'S END フィルター状態。
+ * @param defaultFilter - 比較対象の既定フィルター状態。
+ * @returns 検索文字列以外の条件に差分がある場合は true。
+ */
+export function isWorldsendFilterOptionsChanged(
+  current: WorldsendFilterState,
+  defaultFilter: WorldsendFilterState
+): boolean {
+  return (
+    current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
+    current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
+    current.levelStarRange.min !== defaultFilter.levelStarRange.min ||
+    current.levelStarRange.max !== defaultFilter.levelStarRange.max ||
+    current.score.min !== defaultFilter.score.min ||
+    current.score.max !== defaultFilter.score.max ||
+    current.justiceCount.min !== defaultFilter.justiceCount.min ||
+    current.justiceCount.max !== defaultFilter.justiceCount.max ||
+    !hasSameWorldsendFilterValues(current.attributes, defaultFilter.attributes) ||
+    !hasSameWorldsendFilterValues(current.genres, defaultFilter.genres) ||
+    !hasSameWorldsendFilterValues(current.versions, defaultFilter.versions) ||
+    !hasSameWorldsendFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
+    !hasSameWorldsendFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
+    !hasSameWorldsendFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+  )
+}
+
+/**
  * WORLD'S END フィルター条件を保存ダイアログ用の要約へ変換する。
  *
  * @param filter - 要約対象の WORLD'S END フィルター。
