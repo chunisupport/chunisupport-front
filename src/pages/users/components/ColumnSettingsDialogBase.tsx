@@ -136,7 +136,7 @@ const ColumnSettingsDialogBase = <TColumnId extends string, TSortKey extends str
               </span>
             </Select.Trigger>
             <Select.Portal>
-              <Select.Content class="z-50 mt-1 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
+              <Select.Content class="z-50 -mt-2 -mb-2 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
                 <Select.Listbox />
               </Select.Content>
             </Select.Portal>

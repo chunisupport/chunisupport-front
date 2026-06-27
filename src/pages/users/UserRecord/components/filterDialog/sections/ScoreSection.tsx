@@ -9,6 +9,7 @@ import { MAX_SCORE } from '../../../../../../utils/scoreRank'
 import { SCORE_RANKS } from '../../../utils/scoreRank'
 import {
   FILTER_DIALOG_FIELD_INPUT_CLASS,
+  FILTER_DIALOG_SELECT_CONTENT_CLASS,
   FILTER_DIALOG_SELECT_ITEM_CLASS,
   FILTER_DIALOG_SELECT_TRIGGER_CLASS,
 } from '../styles'
@@ -135,8 +136,8 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
                 </Select.Icon>
               </Select.Trigger>
               <Select.Portal>
-                <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
-                  <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
+                <Select.Content class={FILTER_DIALOG_SELECT_CONTENT_CLASS}>
+                  <Select.Listbox />
                 </Select.Content>
               </Select.Portal>
             </Select>
@@ -174,8 +175,8 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
                 </Select.Icon>
               </Select.Trigger>
               <Select.Portal>
-                <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
-                  <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
+                <Select.Content class={FILTER_DIALOG_SELECT_CONTENT_CLASS}>
+                  <Select.Listbox />
                 </Select.Content>
               </Select.Portal>
             </Select>

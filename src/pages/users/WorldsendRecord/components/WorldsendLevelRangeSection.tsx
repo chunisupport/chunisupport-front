@@ -7,6 +7,7 @@ import RangeSeparator, {
   RANGE_START_LABEL_SUFFIX,
 } from '../../UserRecord/components/filterDialog/sections/RangeSeparator'
 import {
+  FILTER_DIALOG_SELECT_CONTENT_CLASS,
   FILTER_DIALOG_SELECT_ITEM_CLASS,
   FILTER_DIALOG_SELECT_TRIGGER_CLASS,
 } from '../../UserRecord/components/filterDialog/styles'
@@ -62,8 +63,8 @@ const WorldsendLevelRangeSection: Component<WorldsendLevelRangeSectionProps> = (
             </Select.Icon>
           </Select.Trigger>
           <Select.Portal>
-            <Select.Content class="z-60 rounded-md border border-border-strong bg-surface shadow-lg">
-              <Select.Listbox class="max-h-90 overflow-y-auto p-2" />
+            <Select.Content class={FILTER_DIALOG_SELECT_CONTENT_CLASS}>
+              <Select.Listbox />
             </Select.Content>
           </Select.Portal>
         </Select>
@@ -101,8 +102,8 @@ const WorldsendLevelRangeSection: Component<WorldsendLevelRangeSectionProps> = (
             </Select.Icon>
           </Select.Trigger>
           <Select.Portal>
-            <Select.Content class="z-60 rounded-md border border-border-strong bg-surface shadow-lg">
-              <Select.Listbox class="max-h-90 overflow-y-auto p-2" />
+            <Select.Content class={FILTER_DIALOG_SELECT_CONTENT_CLASS}>
+              <Select.Listbox />
             </Select.Content>
           </Select.Portal>
         </Select>

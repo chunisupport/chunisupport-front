@@ -148,7 +148,7 @@ const GOAL_FIELD_INPUT_CLASS = `w-full rounded border border-border-strong bg-su
 const GOAL_SELECT_ITEM_CLASS =
   'flex h-8 cursor-pointer items-center justify-between rounded px-2 text-sm outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-action-primary data-highlighted:text-text-inverse'
 const GOAL_SELECT_CONTENT_CLASS =
-  'z-60 mt-1 max-h-64 w-[--kb-select-content-width] overflow-y-auto rounded-md border border-border-strong bg-surface p-2 shadow-lg'
+  'z-60 -mt-2 -mb-2 max-h-64 w-[--kb-select-content-width] overflow-y-auto rounded-md border border-border-strong bg-surface shadow-lg'
 const GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
 const GOAL_RADIO_CARD_BASE_CLASS =
   'rounded border px-3 py-2 text-sm text-text-muted hover:bg-surface-muted'
