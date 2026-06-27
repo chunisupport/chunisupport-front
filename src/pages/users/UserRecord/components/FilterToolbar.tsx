@@ -72,10 +72,10 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
     filterButtonTone() === 'default' ? 'フィルター' : 'フィルター適用中'
 
   return (
-    <div class="flex items-center mb-2 gap-2">
+    <div class="flex items-center mb-2">
       <TextField class="min-w-0 flex-1" value={props.title} onChange={props.onTitleChange}>
         <div
-          class={`flex min-w-0 items-center gap-2 rounded border px-2 transition-colors ${getTitleInputFrameClass(
+          class={`flex min-w-0 items-center gap-2 rounded-l border-t border-b border-l px-2 transition-colors ${getTitleInputFrameClass(
             props.titleActive
           )}`}
         >
@@ -90,7 +90,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
         </div>
       </TextField>
       <Button
-        class={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent ${getFilterButtonToneClass(
+        class={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent ${getFilterButtonToneClass(
           filterButtonTone()
         )}`}
         onClick={props.onOpenFilter}
@@ -103,7 +103,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
         <Funnel size={24} aria-hidden="true" />
       </Button>
       <Button
-        class="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover"
+        class="ml-2 flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover"
         onClick={props.onOpenColumnSettings}
         type="button"
         aria-label="列設定"
