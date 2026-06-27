@@ -85,7 +85,7 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
         <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-11/12 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 select-none flex-col rounded-lg bg-surface p-6 shadow-lg">
