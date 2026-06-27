@@ -25,6 +25,8 @@ type SongStatsChartDataset = {
   label: string
   values: number[]
   colorVariable: string
+  legendBackgroundVariable?: string
+  gradientColorVariables?: readonly string[]
 }
 
 type SongStatsChartProps = {
@@ -49,6 +51,16 @@ const COMBO_CHART_DATASET_DEFINITIONS = [
     label: 'AJC',
     valueKey: 'ajc',
     colorVariable: '--cs-color-lamp-all-justice-critical-bg',
+    legendBackgroundVariable: '--cs-gradient-lamp-all-justice-critical-bg',
+    gradientColorVariables: [
+      '--cs-color-lamp-all-justice-critical-rainbow-1',
+      '--cs-color-lamp-all-justice-critical-rainbow-2',
+      '--cs-color-lamp-all-justice-critical-rainbow-3',
+      '--cs-color-lamp-all-justice-critical-rainbow-4',
+      '--cs-color-lamp-all-justice-critical-rainbow-5',
+      '--cs-color-lamp-all-justice-critical-rainbow-6',
+      '--cs-color-lamp-all-justice-critical-rainbow-7',
+    ],
   },
 ] as const
 const CLEAR_CHART_DATASET_DEFINITIONS = [
@@ -104,6 +116,30 @@ const getChartColor = (variableName: string): string => {
 }
 
 /**
+ * AJCバッジと同じ配色のCanvasグラデーションを生成する。
+ * @param canvas グラデーションの描画範囲に利用するCanvas。
+ * @param colorVariables グラデーションを構成するCSSカスタムプロパティ名。
+ * @param fallbackColor Canvasコンテキストを取得できない場合の代替色。
+ * @returns Chart.jsへ渡すCanvasグラデーションまたは代替色。
+ */
+const createChartGradient = (
+  canvas: HTMLCanvasElement,
+  colorVariables: readonly string[],
+  fallbackColor: string
+): CanvasGradient | string => {
+  const gradient = canvas.getContext('2d')?.createLinearGradient(0, 0, canvas.width, canvas.height)
+  if (!gradient) return fallbackColor
+
+  const lastColorIndex = colorVariables.length - 1
+
+  colorVariables.forEach((colorVariable, index) => {
+    gradient.addColorStop(index / lastColorIndex, getChartColor(colorVariable))
+  })
+
+  return gradient
+}
+
+/**
  * Chart.jsの棒グラフ設定を生成する。
  * @returns 統計グラフで共通利用するChart.jsオプション。
  */
@@ -117,6 +153,7 @@ const createSongStatsChartOptions = (): ChartOptions<'bar'> => {
     animation: false,
     plugins: {
       legend: {
+        display: false,
         labels: {
           color: textColor,
           boxWidth: 12,
@@ -163,20 +200,24 @@ const createSongStatsChartOptions = (): ChartOptions<'bar'> => {
  * @returns Chart.jsに渡すデータセット。
  */
 const createSongStatsChartData = (
+  canvas: HTMLCanvasElement,
   labels: string[],
   datasets: SongStatsChartDataset[]
 ): ChartData<'bar', number[], string> => ({
   labels,
   datasets: datasets.map((dataset) => {
     const color = getChartColor(dataset.colorVariable)
+    const backgroundColor = dataset.gradientColorVariables
+      ? createChartGradient(canvas, dataset.gradientColorVariables, color)
+      : color
 
     return {
       label: dataset.label,
       data: dataset.values,
-      backgroundColor: color,
-      borderColor: color,
-      hoverBackgroundColor: color,
-      hoverBorderColor: color,
+      backgroundColor,
+      borderColor: backgroundColor,
+      hoverBackgroundColor: backgroundColor,
+      hoverBorderColor: backgroundColor,
       borderWidth: 1,
       borderRadius: 3,
     }
@@ -208,7 +249,7 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
   createEffect(() => {
     if (!mounted()) return
 
-    const chartData = createSongStatsChartData(props.labels, props.datasets)
+    const chartData = createSongStatsChartData(canvasRef, props.labels, props.datasets)
 
     if (!chart) {
       chart = new Chart(canvasRef, {
@@ -230,8 +271,29 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
   return (
     <section class="min-w-0 rounded-md border border-border bg-surface-muted p-3">
       <h3 class="mb-2 text-sm font-semibold">{props.title}</h3>
-      <div class={CHART_HEIGHT_CLASS}>
-        <canvas ref={canvasRef} aria-label={props.ariaLabel} role="img" />
+      <div class={`${CHART_HEIGHT_CLASS} flex flex-col`}>
+        <ul
+          class="mb-1 flex shrink-0 justify-center gap-3 text-xs"
+          aria-label={`${props.title}凡例`}
+        >
+          <For each={props.datasets}>
+            {(dataset) => (
+              <li class="flex items-center gap-1">
+                <span
+                  class="size-3"
+                  style={{
+                    background: `var(${dataset.legendBackgroundVariable ?? dataset.colorVariable})`,
+                  }}
+                  aria-hidden="true"
+                />
+                <span>{dataset.label}</span>
+              </li>
+            )}
+          </For>
+        </ul>
+        <div class="min-h-0 flex-1">
+          <canvas ref={canvasRef} aria-label={props.ariaLabel} role="img" />
+        </div>
       </div>
     </section>
   )
