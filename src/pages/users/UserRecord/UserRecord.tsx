@@ -31,7 +31,7 @@ import RecordTable from './components/RecordTable'
 import { buildDefaultFilter, DEFAULT_FILTER, normalizeFilterState } from './types/filterDefaults'
 import type { FilterState, RecordColumnId, RecordSortKey } from './types/types'
 import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
-import { isRecordFilterChanged } from './utils/filterDialog'
+import { isRecordDifficultyFilterOnlyChanged, isRecordFilterChanged } from './utils/filterDialog'
 import { useUserRecordPageModel } from './utils/pageModel'
 import { parseSortParams } from './utils/sorting'
 
@@ -98,6 +98,9 @@ const UserRecord: Component<Props> = (props) => {
 
   const defaultFilter = createMemo(() => buildDefaultFilter(masterData(), versionData()?.versions))
   const hasFilterChanges = createMemo(() => isRecordFilterChanged(filters(), defaultFilter()))
+  const filterButtonTone = createMemo(() =>
+    isRecordDifficultyFilterOnlyChanged(filters(), defaultFilter()) ? 'difficulty-only' : undefined
+  )
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
   onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
@@ -184,6 +187,7 @@ const UserRecord: Component<Props> = (props) => {
                 onOpenFilter={() => setFilterOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
                 filterActive={hasFilterChanges()}
+                filterButtonTone={filterButtonTone()}
               />
 
               {/* フィルター統計 */}

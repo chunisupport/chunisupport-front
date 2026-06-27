@@ -3,13 +3,34 @@ import { TextField } from '@kobalte/core/text-field'
 import { Columns3, Funnel, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 
+type FilterButtonTone = 'default' | 'active' | 'difficulty-only'
+
 type FilterToolbarProps = {
   title: string
   onTitleChange: (value: string) => void
   onOpenFilter: () => void
   onOpenColumnSettings: () => void
   filterActive?: boolean
+  filterButtonTone?: FilterButtonTone
   filterButtonDisabled?: boolean
+}
+
+/**
+ * フィルター状態に応じたボタンクラスを返す。
+ *
+ * @param tone - フィルターボタンの強調状態。
+ * @returns フィルターボタンへ適用する Tailwind クラス。
+ */
+const getFilterButtonToneClass = (tone: FilterButtonTone): string => {
+  if (tone === 'active') {
+    return 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
+  }
+
+  if (tone === 'difficulty-only') {
+    return 'border-action-primary bg-success-bg text-success hover:bg-success-bg-hover'
+  }
+
+  return 'border-border-strong text-text-muted hover:bg-surface-hover'
 }
 
 /**
@@ -18,12 +39,16 @@ type FilterToolbarProps = {
  * @returns レコード一覧上部のフィルターツールバー。
  */
 const FilterToolbar: Component<FilterToolbarProps> = (props) => {
+  const filterButtonTone = () =>
+    props.filterButtonTone ?? (props.filterActive ? 'active' : 'default')
+
   /**
    * フィルター状態に応じたボタン表示名を返す。
    *
    * @returns フィルターボタンに付与するアクセシブル名。
    */
-  const filterButtonLabel = () => (props.filterActive ? 'フィルター適用中' : 'フィルター')
+  const filterButtonLabel = () =>
+    filterButtonTone() === 'default' ? 'フィルター' : 'フィルター適用中'
 
   return (
     <div class="flex items-center mb-2 gap-2">
@@ -37,15 +62,13 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
         </div>
       </TextField>
       <Button
-        class={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent ${
-          props.filterActive
-            ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
-            : 'border-border-strong text-text-muted hover:bg-surface-hover'
-        }`}
+        class={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent ${getFilterButtonToneClass(
+          filterButtonTone()
+        )}`}
         onClick={props.onOpenFilter}
         type="button"
         aria-label={filterButtonLabel()}
-        aria-pressed={props.filterActive === true}
+        aria-pressed={filterButtonTone() !== 'default'}
         title={filterButtonLabel()}
         disabled={props.filterButtonDisabled}
       >

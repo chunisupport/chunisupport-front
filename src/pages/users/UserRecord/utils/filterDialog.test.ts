@@ -2,8 +2,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import { DEFAULT_FILTER } from '../types/filterDefaults'
+import type { FilterState } from '../types/types'
 import {
   formatFilterSummary,
+  isRecordDifficultyFilterOnlyChanged,
   isRecordFilterChanged,
   parseOptionalRangeNumberInput,
   updateOptionalNumberRange,
@@ -11,7 +13,7 @@ import {
 
 test('FULL CHAINランプのフィルター要約は表示用ラベルで出力されること', () => {
   // Given
-  const filter = {
+  const filter: FilterState = {
     ...DEFAULT_FILTER,
     chain_lamp: ['FULL CHAIN PLATINUM', 'FULL CHAIN GOLD', null],
   }
@@ -162,11 +164,11 @@ test('isRecordFilterChanged は数値範囲の変更を検出すること', () =
 
 test('isRecordFilterChanged はnullを含むランプ配列の差分を検出すること', () => {
   // Given
-  const defaultFilter = {
+  const defaultFilter: FilterState = {
     ...DEFAULT_FILTER,
     combo_lamp: [null, 'FULL COMBO', 'ALL JUSTICE'],
   }
-  const currentFilter = {
+  const currentFilter: FilterState = {
     ...DEFAULT_FILTER,
     combo_lamp: ['FULL COMBO', 'ALL JUSTICE'],
   }
@@ -176,4 +178,41 @@ test('isRecordFilterChanged はnullを含むランプ配列の差分を検出す
 
   // Then
   assert.equal(result, true)
+})
+
+test('isRecordDifficultyFilterOnlyChanged は難易度選択だけの変更を検出すること', () => {
+  // Given
+  const defaultFilter: FilterState = {
+    ...DEFAULT_FILTER,
+    difficulties: ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'],
+  }
+  const currentFilter: FilterState = {
+    ...DEFAULT_FILTER,
+    difficulties: ['MASTER', 'ULTIMA'],
+  }
+
+  // When
+  const result = isRecordDifficultyFilterOnlyChanged(currentFilter, defaultFilter)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('isRecordDifficultyFilterOnlyChanged は難易度以外も変わる場合を対象外にすること', () => {
+  // Given
+  const defaultFilter: FilterState = {
+    ...DEFAULT_FILTER,
+    difficulties: ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'],
+  }
+  const currentFilter: FilterState = {
+    ...DEFAULT_FILTER,
+    difficulties: ['MASTER', 'ULTIMA'],
+    title: 'テスト',
+  }
+
+  // When
+  const result = isRecordDifficultyFilterOnlyChanged(currentFilter, defaultFilter)
+
+  // Then
+  assert.equal(result, false)
 })
