@@ -10,7 +10,7 @@ import {
   isJusticeCountMissing,
 } from '../../utils/justiceCountSorting'
 import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
-import type { RecordSortKey } from '../types/types'
+import type { RecordSortCondition, RecordSortKey } from '../types/types'
 import { formatJusticeCountForAj } from './justiceCountDisplay.ts'
 import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
 
@@ -61,28 +61,177 @@ export const nextSortState = (
   sortDirection: SortDirection | null
 } => nextSharedSortState(currentSortKey, currentSortDirection, nextKey)
 
+type SortableRecordEntry = {
+  record: PlayerRecordWithSongMeta
+  index: number
+  updatedAtTs: number
+  justiceCountForAj: number | '' | '-'
+}
+
 /**
- * Sorts user records using various sort keys including sorting by full chain lamp status.
+ * 1つのソート条件で2件のレコードを比較する。
  *
- * This function supports multiple sorting modes such as title, difficulty, score, rating,
- * and lamp-based comparisons. The 'fullChain' sort key delegates to compareFullChainLamp
- * which may return early when skipDirection is true, bypassing the standard direction multiplier.
- *
- * @param records - The array of user records to sort
- * @param currentSortKey - The key to sort by (e.g., 'title', 'score', 'fullChain'), or null to skip sorting
- * @param currentSortDirection - The direction to sort ('asc' or 'desc'), or null to skip sorting
- * @returns The sorted array of user records, or the original array if no sort key/direction is provided
+ * @param a - 比較対象の左側レコード情報。
+ * @param b - 比較対象の右側レコード情報。
+ * @param sortCondition - 比較に使うソートキーと方向。
+ * @returns 並び順に差がある場合は正負の数、同順の場合は0。
  */
-export const sortRecords = (
-  records: PlayerRecordWithSongMeta[],
-  currentSortKey: RecordSortKey | null,
-  currentSortDirection: SortDirection | null
-): PlayerRecordWithSongMeta[] => {
-  if (!currentSortKey || !currentSortDirection) {
-    return records
+const compareRecordBySortCondition = (
+  a: SortableRecordEntry,
+  b: SortableRecordEntry,
+  sortCondition: RecordSortCondition
+): number => {
+  const left = a.record
+  const right = b.record
+  const direction = sortCondition.direction === 'asc' ? 1 : -1
+  let comparison = 0
+
+  switch (sortCondition.key) {
+    case 'title':
+      comparison = left.title.localeCompare(right.title, 'ja')
+      break
+    case 'difficulty':
+      comparison =
+        (DIFFICULTY_ORDER[left.difficulty] ?? Number.MAX_SAFE_INTEGER) -
+        (DIFFICULTY_ORDER[right.difficulty] ?? Number.MAX_SAFE_INTEGER)
+      break
+    case 'const':
+      comparison = left.const - right.const
+      break
+    case 'rating': {
+      const leftUnplayed = !left.is_played
+      const rightUnplayed = !right.is_played
+
+      if (leftUnplayed && rightUnplayed) {
+        comparison = 0
+      } else if (leftUnplayed) {
+        return 1
+      } else if (rightUnplayed) {
+        return -1
+      } else {
+        comparison = left.rating - right.rating
+      }
+      break
+    }
+    case 'score': {
+      const leftUnplayed = !left.is_played
+      const rightUnplayed = !right.is_played
+
+      if (leftUnplayed && rightUnplayed) {
+        comparison = 0
+      } else if (leftUnplayed) {
+        return 1
+      } else if (rightUnplayed) {
+        return -1
+      } else {
+        comparison = left.score - right.score
+      }
+      break
+    }
+    case 'overpower': {
+      const leftUnplayed = !left.is_played
+      const rightUnplayed = !right.is_played
+
+      if (leftUnplayed && rightUnplayed) {
+        comparison = 0
+      } else if (leftUnplayed) {
+        return 1
+      } else if (rightUnplayed) {
+        return -1
+      } else {
+        comparison = left.overpower - right.overpower
+      }
+      break
+    }
+    case 'overpowerPercent': {
+      const leftUnplayed = !left.is_played
+      const rightUnplayed = !right.is_played
+
+      if (leftUnplayed && rightUnplayed) {
+        comparison = 0
+      } else if (leftUnplayed) {
+        return 1
+      } else if (rightUnplayed) {
+        return -1
+      } else {
+        comparison = left.overpower_percent - right.overpower_percent
+      }
+      break
+    }
+    case 'updatedAt': {
+      const leftMissing = isUpdatedAtMissing(left.is_played, a.updatedAtTs)
+      const rightMissing = isUpdatedAtMissing(right.is_played, b.updatedAtTs)
+
+      comparison = compareUpdatedAtWithMissingLast(
+        { isPlayed: left.is_played, updatedAtTimestamp: a.updatedAtTs },
+        { isPlayed: right.is_played, updatedAtTimestamp: b.updatedAtTs }
+      )
+
+      if (leftMissing || rightMissing) {
+        return comparison
+      }
+      break
+    }
+
+    case 'justiceCount': {
+      const leftJusticeCount = a.justiceCountForAj
+      const rightJusticeCount = b.justiceCountForAj
+
+      const leftMissing = isJusticeCountMissing(leftJusticeCount)
+      const rightMissing = isJusticeCountMissing(rightJusticeCount)
+
+      if (leftMissing && rightMissing) {
+        return compareMissingJusticeCountRecords(left, right)
+      }
+
+      if (leftMissing) {
+        return 1
+      }
+
+      if (rightMissing) {
+        return -1
+      }
+
+      comparison = leftJusticeCount - rightJusticeCount
+      break
+    }
+    case 'lamp': {
+      const result = compareComboLamp(left, right)
+      if (result.skipDirection) return result.comparison
+      comparison = result.comparison
+      break
+    }
+    case 'hardLamp': {
+      const result = compareHardLamp(left, right)
+      if (result.skipDirection) return result.comparison
+      comparison = result.comparison
+      break
+    }
+    case 'fullChain': {
+      const result = compareFullChainLamp(left, right)
+      if (result.skipDirection) return result.comparison
+      comparison = result.comparison
+      break
+    }
   }
 
-  const direction = currentSortDirection === 'asc' ? 1 : -1
+  return comparison * direction
+}
+
+/**
+ * 指定された複数の条件を上から順に使ってレコードをソートする。
+ *
+ * @param records - ソート対象のレコード配列。
+ * @param sortConditions - 優先順に並んだソート条件。
+ * @returns 複数条件で並び替えたレコード配列。条件がない場合は元の配列。
+ */
+export const sortRecordsByConditions = (
+  records: PlayerRecordWithSongMeta[],
+  sortConditions: RecordSortCondition[]
+): PlayerRecordWithSongMeta[] => {
+  if (sortConditions.length === 0) {
+    return records
+  }
 
   return records
     .map((record, index) => ({
@@ -95,144 +244,34 @@ export const sortRecords = (
       }),
     }))
     .sort((a, b) => {
-      const left = a.record
-      const right = b.record
-      let comparison = 0
-
-      switch (currentSortKey) {
-        case 'title':
-          comparison = left.title.localeCompare(right.title, 'ja')
-          break
-        case 'difficulty':
-          comparison =
-            (DIFFICULTY_ORDER[left.difficulty] ?? Number.MAX_SAFE_INTEGER) -
-            (DIFFICULTY_ORDER[right.difficulty] ?? Number.MAX_SAFE_INTEGER)
-          break
-        case 'const':
-          comparison = left.const - right.const
-          break
-        case 'rating': {
-          const leftUnplayed = !left.is_played
-          const rightUnplayed = !right.is_played
-
-          if (leftUnplayed && rightUnplayed) {
-            comparison = 0
-          } else if (leftUnplayed) {
-            return 1
-          } else if (rightUnplayed) {
-            return -1
-          } else {
-            comparison = left.rating - right.rating
-          }
-          break
+      for (const sortCondition of sortConditions) {
+        const comparison = compareRecordBySortCondition(a, b, sortCondition)
+        if (comparison !== 0) {
+          return comparison
         }
-        case 'score': {
-          const leftUnplayed = !left.is_played
-          const rightUnplayed = !right.is_played
-
-          if (leftUnplayed && rightUnplayed) {
-            comparison = 0
-          } else if (leftUnplayed) {
-            return 1
-          } else if (rightUnplayed) {
-            return -1
-          } else {
-            comparison = left.score - right.score
-          }
-          break
-        }
-        case 'overpower': {
-          const leftUnplayed = !left.is_played
-          const rightUnplayed = !right.is_played
-
-          if (leftUnplayed && rightUnplayed) {
-            comparison = 0
-          } else if (leftUnplayed) {
-            return 1
-          } else if (rightUnplayed) {
-            return -1
-          } else {
-            comparison = left.overpower - right.overpower
-          }
-          break
-        }
-        case 'overpowerPercent': {
-          const leftUnplayed = !left.is_played
-          const rightUnplayed = !right.is_played
-
-          if (leftUnplayed && rightUnplayed) {
-            comparison = 0
-          } else if (leftUnplayed) {
-            return 1
-          } else if (rightUnplayed) {
-            return -1
-          } else {
-            comparison = left.overpower_percent - right.overpower_percent
-          }
-          break
-        }
-        case 'updatedAt': {
-          const leftMissing = isUpdatedAtMissing(left.is_played, a.updatedAtTs)
-          const rightMissing = isUpdatedAtMissing(right.is_played, b.updatedAtTs)
-
-          comparison = compareUpdatedAtWithMissingLast(
-            { isPlayed: left.is_played, updatedAtTimestamp: a.updatedAtTs },
-            { isPlayed: right.is_played, updatedAtTimestamp: b.updatedAtTs }
-          )
-
-          if (leftMissing || rightMissing) {
-            return comparison
-          }
-          break
-        }
-
-        case 'justiceCount': {
-          const leftJusticeCount = a.justiceCountForAj
-          const rightJusticeCount = b.justiceCountForAj
-
-          const leftMissing = isJusticeCountMissing(leftJusticeCount)
-          const rightMissing = isJusticeCountMissing(rightJusticeCount)
-
-          if (leftMissing && rightMissing) {
-            return compareMissingJusticeCountRecords(left, right) || a.index - b.index
-          }
-
-          if (leftMissing) {
-            return 1
-          }
-
-          if (rightMissing) {
-            return -1
-          }
-
-          comparison = leftJusticeCount - rightJusticeCount
-          break
-        }
-        case 'lamp': {
-          const result = compareComboLamp(left, right)
-          if (result.skipDirection) return result.comparison
-          comparison = result.comparison
-          break
-        }
-        case 'hardLamp': {
-          const result = compareHardLamp(left, right)
-          if (result.skipDirection) return result.comparison
-          comparison = result.comparison
-          break
-        }
-        case 'fullChain': {
-          const result = compareFullChainLamp(left, right)
-          if (result.skipDirection) return result.comparison
-          comparison = result.comparison
-          break
-        }
-      }
-
-      if (comparison !== 0) {
-        return comparison * direction
       }
 
       return a.index - b.index
     })
     .map(({ record }) => record)
 }
+
+/**
+ * 互換用に単一条件でレコードをソートする。
+ *
+ * @param records - ソート対象のレコード配列。
+ * @param currentSortKey - ソート対象列。未指定の場合はソートしない。
+ * @param currentSortDirection - ソート方向。未指定の場合はソートしない。
+ * @returns 単一条件で並び替えたレコード配列。条件がない場合は元の配列。
+ */
+export const sortRecords = (
+  records: PlayerRecordWithSongMeta[],
+  currentSortKey: RecordSortKey | null,
+  currentSortDirection: SortDirection | null
+): PlayerRecordWithSongMeta[] =>
+  sortRecordsByConditions(
+    records,
+    currentSortKey && currentSortDirection
+      ? [{ key: currentSortKey, direction: currentSortDirection }]
+      : []
+  )

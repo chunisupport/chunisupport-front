@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
-import { nextSortState, parseSortParams, sortRecords } from './sorting.ts'
+import { nextSortState, parseSortParams, sortRecords, sortRecordsByConditions } from './sorting.ts'
 
 const createRecord = (
   overrides: Partial<PlayerRecordWithSongMeta> = {}
@@ -149,6 +149,22 @@ test('同値の並び順は元の順序を維持する', () => {
   assert.deepEqual(
     sortRecords(records, 'title', 'asc').map((record) => record.id),
     ['first', 'second']
+  )
+})
+
+test('複数ソートは前の条件が同値の場合に次の条件で並べる', () => {
+  const records = [
+    createRecord({ id: 'master-low', difficulty: 'MASTER', score: 1000000 }),
+    createRecord({ id: 'expert-high', difficulty: 'EXPERT', score: 1009000 }),
+    createRecord({ id: 'master-high', difficulty: 'MASTER', score: 1008000 }),
+  ]
+
+  assert.deepEqual(
+    sortRecordsByConditions(records, [
+      { key: 'difficulty', direction: 'asc' },
+      { key: 'score', direction: 'desc' },
+    ]).map((record) => record.id),
+    ['expert-high', 'master-high', 'master-low']
   )
 })
 
