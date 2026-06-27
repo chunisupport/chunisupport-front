@@ -340,7 +340,7 @@ const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
       optionTextValue="name"
       sameWidth
       fitViewport
-      gutter={4}
+      gutter={0}
       value={selectedGenre()}
       onChange={(genre) => props.onChange(genre?.id ?? null)}
       placeholder={props.placeholder}

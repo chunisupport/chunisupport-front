@@ -6,6 +6,7 @@ import type { Component } from 'solid-js'
 import { CHART_CONST_MAX, CHART_CONST_MIN } from '../../../../../../constants/chart'
 import {
   FILTER_DIALOG_FIELD_INPUT_CLASS,
+  FILTER_DIALOG_SELECT_CONTENT_CLASS,
   FILTER_DIALOG_SELECT_ITEM_CLASS,
   FILTER_DIALOG_SELECT_TRIGGER_CLASS,
 } from '../styles'
@@ -130,6 +131,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
               }}
               class="w-full"
               placeholder="選択…"
+              gutter={0}
               itemComponent={(itemProps) => (
                 <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
                   <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
@@ -151,8 +153,8 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
                 </Select.Icon>
               </Select.Trigger>
               <Select.Portal>
-                <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
-                  <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
+                <Select.Content class={FILTER_DIALOG_SELECT_CONTENT_CLASS}>
+                  <Select.Listbox />
                 </Select.Content>
               </Select.Portal>
             </Select>
@@ -167,6 +169,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
               }}
               class="w-full"
               placeholder="選択…"
+              gutter={0}
               itemComponent={(itemProps) => (
                 <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
                   <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
@@ -188,8 +191,8 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
                 </Select.Icon>
               </Select.Trigger>
               <Select.Portal>
-                <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
-                  <Select.Listbox class="overflow-y-auto max-h-90 p-2" />
+                <Select.Content class={FILTER_DIALOG_SELECT_CONTENT_CLASS}>
+                  <Select.Listbox />
                 </Select.Content>
               </Select.Portal>
             </Select>
