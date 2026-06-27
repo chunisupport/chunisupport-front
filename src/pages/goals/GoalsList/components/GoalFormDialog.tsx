@@ -32,7 +32,7 @@ import {
   SCORE_RANKS_ASC,
   type ScoreRank,
 } from '../../../../utils/scoreRank'
-import { buildTargetCountParam } from '../../utils/goalCountTarget'
+import { buildGoalTargetParam, type GoalTargetMode } from '../../utils/goalCountTarget'
 import {
   COMBO_LAMP_OPTIONS,
   HARD_LAMP_OPTIONS,
@@ -177,14 +177,18 @@ const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = {
   overpower_percent: '対象譜面のOVER POWER達成率を目標にします。',
 } as const satisfies Record<GoalAchievementType, string>
 
-const COUNT_MODE_OPTIONS: GoalSelectOption<'all' | 'number'>[] = [
+const COUNT_MODE_OPTIONS: GoalSelectOption<GoalTargetMode>[] = [
   { value: 'all', label: '条件に当てはまる譜面すべて' },
   { value: 'number', label: '目標値を指定' },
+  { value: 'remaining', label: '最大値に対する残数' },
+  { value: 'percent', label: '最大値に対する割合' },
 ]
 
-const TOTAL_MODE_OPTIONS: GoalSelectOption<'all' | 'number'>[] = [
+const TOTAL_MODE_OPTIONS: GoalSelectOption<GoalTargetMode>[] = [
   { value: 'all', label: '理論値' },
   { value: 'number', label: '目標値を指定' },
+  { value: 'remaining', label: '最大値に対する残数' },
+  { value: 'percent', label: '最大値に対する割合' },
 ]
 
 const HARD_LAMP_SELECT_OPTIONS: GoalSelectOption<'HRD' | 'BRV' | 'ABS' | 'CTS'>[] =
@@ -207,6 +211,7 @@ const GOAL_ACHIEVEMENT_TYPES = [
 const HARD_LAMP_VALUES = ['HRD', 'BRV', 'ABS', 'CTS'] as const
 const COMBO_LAMP_VALUES = ['FC', 'AJ'] as const
 const MAX_OVERPOWER_PERCENT = 100
+const OVERPOWER_TARGET_DECIMAL_PLACES = 3
 const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
 const DEFAULT_GOAL_ACHIEVEMENT_TYPE = 'rank_count' satisfies GoalAchievementType
 const DEFAULT_TOTAL_GOAL_VALUE = '10'
@@ -229,6 +234,18 @@ const RANK_OPTIONS: GoalSelectOption<RankGoalValue>[] = [
     label: `${scoreRank}（${SCORE_RANK_MIN_SCORES[scoreRank].toLocaleString('ja-JP')}）`,
   })),
 ]
+
+/**
+ * 数値が指定した小数桁数以内か判定する。
+ *
+ * @param value - 判定対象の数値。
+ * @param decimalPlaces - 許容する小数桁数。
+ * @returns 許容範囲内ならtrue。
+ */
+const isWithinDecimalPlaces = (value: number, decimalPlaces: number): boolean => {
+  const scale = 10 ** decimalPlaces
+  return Math.abs(value * scale - Math.round(value * scale)) < Number.EPSILON * scale
+}
 
 /**
  * 数値入力値を指定範囲内に丸めた文字列へ変換する。
@@ -498,10 +515,27 @@ const isCountAchievementType = (type: GoalAchievementType): boolean =>
  */
 const getOptionalNumberParam = (
   params: GoalDTO['achievement_params'],
-  key: 'count' | 'total'
+  key: 'count' | 'total' | 'remaining' | 'percent'
 ): number | undefined => {
   const value = (params as Record<string, unknown>)[key]
   return typeof value === 'number' ? value : undefined
+}
+
+/**
+ * 保存済み成果パラメータからフォームの目標値指定方法を解決する。
+ *
+ * @param params - APIから取得した成果パラメータ。
+ * @param absoluteKey - 絶対値指定に使うキー。
+ * @returns 保存済みキーに対応する指定方法。
+ */
+const resolveGoalTargetMode = (
+  params: GoalDTO['achievement_params'],
+  absoluteKey: 'count' | 'total'
+): GoalTargetMode => {
+  if (getOptionalNumberParam(params, 'remaining') !== undefined) return 'remaining'
+  if (getOptionalNumberParam(params, 'percent') !== undefined) return 'percent'
+  if (getOptionalNumberParam(params, absoluteKey) !== undefined) return 'number'
+  return 'all'
 }
 
 /**
@@ -618,9 +652,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [score, setScore] = createSignal(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
   const [rank, setRank] = createSignal<RankGoalValue>(DEFAULT_RANK_GOAL)
   const [count, setCount] = createSignal('1')
-  const [countMode, setCountMode] = createSignal<'all' | 'number'>('all')
+  const [countMode, setCountMode] = createSignal<GoalTargetMode>('all')
   const [total, setTotal] = createSignal(getDefaultTotalGoalValue(DEFAULT_GOAL_ACHIEVEMENT_TYPE))
-  const [totalMode, setTotalMode] = createSignal<'all' | 'number'>('number')
+  const [totalMode, setTotalMode] = createSignal<GoalTargetMode>('number')
   const [hardLamp, setHardLamp] = createSignal<'HRD' | 'BRV' | 'ABS' | 'CTS'>('HRD')
   const [comboLamp, setComboLamp] = createSignal<'FC' | 'AJ'>('FC')
   const [invert, setInvert] = createSignal(false)
@@ -789,15 +823,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
         setRank(getRankGoalValue(goal.achievement_params.score))
       }
     }
-    const allCount = props.resolveAllCount(goal.attributes)
     const rawCount = getOptionalNumberParam(goal.achievement_params, 'count')
-    if (typeof rawCount === 'number') {
-      setCount(String(rawCount))
-    }
+    const rawRemaining = getOptionalNumberParam(goal.achievement_params, 'remaining')
+    const rawPercent = getOptionalNumberParam(goal.achievement_params, 'percent')
+    const countTargetValue = rawCount ?? rawRemaining ?? rawPercent
+    if (typeof countTargetValue === 'number') setCount(String(countTargetValue))
     const rawTotal = getOptionalNumberParam(goal.achievement_params, 'total')
-    if (typeof rawTotal === 'number') {
-      setTotal(String(rawTotal))
-    }
+    const totalTargetValue = rawTotal ?? rawRemaining ?? rawPercent
+    if (typeof totalTargetValue === 'number') setTotal(String(totalTargetValue))
     if ('lamp' in goal.achievement_params && isHardLampValue(goal.achievement_params.lamp)) {
       setHardLamp(goal.achievement_params.lamp)
     }
@@ -821,14 +854,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setVersions(resolveInitialAttributeSelection(goal.attributes.ver, allVersionSelections()))
 
     if (isCountAchievementType(goal.achievement_type)) {
-      setCountMode(
-        rawCount === undefined || (allCount > 0 && rawCount === allCount) ? 'all' : 'number'
-      )
+      setCountMode(resolveGoalTargetMode(goal.achievement_params, 'count'))
     } else {
       setCountMode('number')
     }
     setTotalMode(
-      canUseDynamicTotalTarget(goal.achievement_type) && rawTotal === undefined ? 'all' : 'number'
+      canUseDynamicTotalTarget(goal.achievement_type)
+        ? resolveGoalTargetMode(goal.achievement_params, 'total')
+        : 'number'
     )
   })
 
@@ -855,32 +888,29 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    */
   const buildDraftAchievementParams = (type: GoalAchievementType): GoalAchievementParams => {
     const parsedScore = type === 'rank_count' ? getRankGoalScore(rank()) : Number(score())
-    const parsedTotal =
-      canUseDynamicTotalTarget(type) && totalMode() === 'all'
-        ? getTheoreticalTotal(type)
-        : Number(total())
-    const targetCount = buildTargetCountParam(countMode(), count())
+    const targetCountParam = buildGoalTargetParam(countMode(), count(), 'count')
+    const targetTotalParam = buildGoalTargetParam(totalMode(), total(), 'total')
 
     return type === 'score_count' || type === 'rank_count'
       ? {
           score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : 0),
-          ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
+          ...targetCountParam,
         }
       : type === 'avg_score'
         ? { score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : 0) }
         : type === 'hardlamp_count'
           ? {
               lamp: hardLamp(),
-              ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
+              ...targetCountParam,
             }
           : type === 'combolamp_count'
             ? {
                 lamp: comboLamp(),
-                ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
+                ...targetCountParam,
               }
-            : canUseDynamicTotalTarget(type) && totalMode() === 'all'
-              ? {}
-              : { total: Number.isFinite(parsedTotal) ? parsedTotal : 0 }
+            : canUseDynamicTotalTarget(type)
+              ? targetTotalParam
+              : { total: Number.isFinite(Number(total())) ? Number(total()) : 0 }
   }
 
   /**
@@ -929,7 +959,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @returns 日本語ロケールで桁区切りした件数上限表示。
    */
   const countLimitText = (): string =>
-    `${props.resolveAllCount(getDraftAttributes()).toLocaleString('ja-JP')}件以内`
+    countMode() === 'percent'
+      ? '100%以内'
+      : `${props.resolveAllCount(getDraftAttributes()).toLocaleString('ja-JP')}件以内`
 
   /**
    * 目標値入力で指定できる上限を表示用に組み立てる。
@@ -938,7 +970,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    */
   const totalLimitText = (): string => {
     const currentType = achievementType()
-    if (currentType === 'overpower_percent') return '100%以内'
+    if (currentType === 'overpower_percent' || totalMode() === 'percent') return '100%以内'
     return `${getTheoreticalTotal(currentType).toLocaleString('ja-JP')}以内`
   }
 
@@ -948,7 +980,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @returns OVER POWER達成率では100、それ以外では未指定。
    */
   const totalFieldMax = (): number | undefined =>
-    achievementType() === 'overpower_percent' ? MAX_OVERPOWER_PERCENT : undefined
+    achievementType() === 'overpower_percent' || totalMode() === 'percent'
+      ? MAX_OVERPOWER_PERCENT
+      : undefined
 
   const handleSave = async () => {
     setErrorMessage('')
@@ -988,14 +1022,26 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
     const allCount = props.resolveAllCount(attributes)
 
-    if (isCountType && countMode() === 'number') {
-      const countMin = 1
-      if (!Number.isInteger(parsedCount) || parsedCount < countMin) {
-        setErrorMessage(`件数は${countMin}以上の整数で入力してください。`)
+    if (isCountType && countMode() !== 'all') {
+      const countMin = countMode() === 'number' ? 1 : 0
+      const requiresInteger = countMode() !== 'percent'
+      if (
+        !Number.isFinite(parsedCount) ||
+        (requiresInteger && !Number.isInteger(parsedCount)) ||
+        parsedCount < countMin
+      ) {
+        const inputLabel = countMode() === 'percent' ? '割合' : '件数'
+        setErrorMessage(
+          `${inputLabel}は${countMin}以上の${requiresInteger ? '整数' : '数値'}で入力してください。`
+        )
         return
       }
-      if (parsedCount > allCount) {
-        setErrorMessage(`件数は${allCount.toLocaleString('ja-JP')}件以内で入力してください。`)
+      const countMax = countMode() === 'percent' ? MAX_OVERPOWER_PERCENT : allCount
+      if (parsedCount > countMax) {
+        const unit = countMode() === 'percent' ? '%' : '件'
+        setErrorMessage(
+          `${countMode() === 'percent' ? '割合' : '件数'}は${countMax.toLocaleString('ja-JP')}${unit}以内で入力してください。`
+        )
         return
       }
     }
@@ -1012,7 +1058,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
     if (
       (currentType === 'overpower_percent' ||
-        (canUseDynamicTotalTarget(currentType) && totalMode() === 'number')) &&
+        (canUseDynamicTotalTarget(currentType) && totalMode() !== 'all')) &&
       (!Number.isFinite(parsedTotal) || parsedTotal < 0)
     ) {
       setErrorMessage('合計/割合の目標値は0以上で入力してください。')
@@ -1024,10 +1070,33 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       return
     }
 
-    const dynamicTotalMax =
-      canUseDynamicTotalTarget(currentType) && totalMode() === 'number'
-        ? getTheoreticalTotal(currentType)
-        : undefined
+    if (
+      currentType === 'total_score' &&
+      (totalMode() === 'number' || totalMode() === 'remaining') &&
+      !Number.isInteger(parsedTotal)
+    ) {
+      setErrorMessage('総スコアの目標値と残数は整数で入力してください。')
+      return
+    }
+
+    if (
+      currentType === 'overpower_value' &&
+      totalMode() !== 'all' &&
+      !isWithinDecimalPlaces(parsedTotal, OVERPOWER_TARGET_DECIMAL_PLACES)
+    ) {
+      setErrorMessage(
+        `OVER POWERの目標値・残数・割合は小数第${OVERPOWER_TARGET_DECIMAL_PLACES}位以内で入力してください。`
+      )
+      return
+    }
+
+    const dynamicTotalMax = canUseDynamicTotalTarget(currentType)
+      ? totalMode() === 'percent'
+        ? MAX_OVERPOWER_PERCENT
+        : totalMode() === 'all'
+          ? undefined
+          : getTheoreticalTotal(currentType)
+      : undefined
     if (dynamicTotalMax !== undefined && parsedTotal > dynamicTotalMax) {
       const targetLabel = currentType === 'total_score' ? '総スコア目標' : 'OVER POWER合計目標'
       setErrorMessage(
@@ -1052,9 +1121,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       return
     }
 
-    const targetCount = buildTargetCountParam(countMode(), count())
-
-    if (isCountType && typeof targetCount === 'number' && targetCount <= 0) {
+    if (isCountType && countMode() === 'number' && parsedCount <= 0) {
       setErrorMessage(ERROR_MESSAGE_INVALID_COUNT_TARGET)
       return
     }
@@ -1299,10 +1366,15 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                         options={COUNT_MODE_OPTIONS}
                         onChange={setCountMode}
                         renderOptionContent={(option) =>
-                          option.value === 'number' && countMode() === 'number' ? (
+                          option.value === countMode() && option.value !== 'all' ? (
                             <GoalNumberField
                               label=""
-                              min={1}
+                              min={option.value === 'number' ? 1 : 0}
+                              max={
+                                option.value === 'percent'
+                                  ? MAX_OVERPOWER_PERCENT
+                                  : props.resolveAllCount(getDraftAttributes())
+                              }
                               value={count()}
                               description={countLimitText()}
                               onChange={setCount}
@@ -1344,7 +1416,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                             options={TOTAL_MODE_OPTIONS}
                             onChange={setTotalMode}
                             renderOptionContent={(option) =>
-                              option.value === 'number' && totalMode() === 'number' ? (
+                              option.value === totalMode() && option.value !== 'all' ? (
                                 <GoalNumberField
                                   label=""
                                   value={total()}

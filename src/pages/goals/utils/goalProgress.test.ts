@@ -106,6 +106,45 @@ test('件数目標のcountが指定されている場合は固定目標値を維
   assert.equal(progress.achieved, true)
 })
 
+test('件数目標のremainingを最大件数から差し引いて目標値にする', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', score: 1000000 }),
+    createRecord({ id: 'song-2', score: 1000000 }),
+    createRecord({ id: 'song-3', score: 990000 }),
+  ]
+  const goal = createGoal({
+    achievement_params: { score: 1000000, remaining: 1 },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.target, 2)
+  assert.equal(progress.achieved, true)
+})
+
+test('件数目標のpercentを最大件数に掛けて目標値にする', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', score: 1000000 }),
+    createRecord({ id: 'song-2', score: 990000 }),
+    createRecord({ id: 'song-3', score: 990000 }),
+    createRecord({ id: 'song-4', score: 1000000 }),
+  ]
+  const goal = createGoal({
+    achievement_params: { score: 1000000, percent: 50 },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.target, 2)
+  assert.equal(progress.achieved, true)
+})
+
 test('総スコア目標のtotalが欠落している場合は対象譜面数から理論値を計算する', () => {
   const records = [
     createRecord({ id: 'song-1', score: 1010000 }),
@@ -120,6 +159,25 @@ test('総スコア目標のtotalが欠落している場合は対象譜面数か
 
   assert.equal(progress.current, 2010000)
   assert.equal(progress.target, 2020000)
+})
+
+test('総スコア目標のremainingを理論値から差し引いて目標値にする', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', score: 1010000 }),
+    createRecord({ id: 'song-2', score: 1000000 }),
+  ]
+  const goal = createGoal({
+    achievement_type: 'total_score',
+    achievement_params: { remaining: 10000 },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.target, 2010000)
+  assert.equal(progress.achieved, true)
 })
 
 test('OVER POWER合計目標のtotalが欠落している場合は対象譜面の理論値合計を使う', () => {

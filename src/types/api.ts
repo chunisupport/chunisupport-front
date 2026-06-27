@@ -312,6 +312,8 @@ export type GoalAchievementParams =
   | {
       score: number
       count?: number
+      remaining?: number
+      percent?: number
     }
   | {
       score: number
@@ -319,13 +321,19 @@ export type GoalAchievementParams =
   | {
       lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'
       count?: number
+      remaining?: number
+      percent?: number
     }
   | {
       lamp: 'FC' | 'AJ'
       count?: number
+      remaining?: number
+      percent?: number
     }
   | {
       total?: number
+      remaining?: number
+      percent?: number
     }
 
 export interface GoalDTO {
