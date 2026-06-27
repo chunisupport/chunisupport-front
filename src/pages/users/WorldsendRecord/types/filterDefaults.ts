@@ -1,11 +1,16 @@
+import {
+  SCORE_MIN,
+  WORLDSEND_LEVEL_STAR_MAX,
+  WORLDSEND_LEVEL_STAR_MIN,
+} from '../../../../constants/chart'
 import type { VersionSummaryDTO, WorldsendSongDTO } from '../../../../types/api'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../utils/versionConverter'
 import {
-  CHAIN_LAMP_OPTIONS,
-  COMBO_LAMP_OPTIONS,
-  HARD_LAMP_OPTIONS,
-} from '../../UserRecord/types/filterDefaults'
+  RECORD_CHAIN_LAMP_OPTIONS,
+  RECORD_COMBO_LAMP_OPTIONS,
+  RECORD_HARD_LAMP_OPTIONS,
+} from '../../constants/recordFilterOptions'
 import type { WorldsendFilterState } from './filterTypes'
 
 /** WORLD'S END フィルターの初期値。 */
@@ -13,13 +18,13 @@ export const DEFAULT_WORLDSEND_FILTER: WorldsendFilterState = {
   title: '',
   attributes: [],
   levelStarRange: {
-    min: 1,
-    max: 5,
+    min: WORLDSEND_LEVEL_STAR_MIN,
+    max: WORLDSEND_LEVEL_STAR_MAX,
   },
   genres: [],
   versions: [],
   score: {
-    min: 0,
+    min: SCORE_MIN,
     max: MAX_SCORE,
   },
   scoreFilterMode: 'rank',
@@ -27,9 +32,9 @@ export const DEFAULT_WORLDSEND_FILTER: WorldsendFilterState = {
     min: null,
     max: null,
   },
-  combo_lamp: [...COMBO_LAMP_OPTIONS],
-  chain_lamp: [...CHAIN_LAMP_OPTIONS],
-  hard_lamp: [...HARD_LAMP_OPTIONS],
+  combo_lamp: [...RECORD_COMBO_LAMP_OPTIONS],
+  chain_lamp: [...RECORD_CHAIN_LAMP_OPTIONS],
+  hard_lamp: [...RECORD_HARD_LAMP_OPTIONS],
   excludeNoPlay: false,
 }
 
@@ -72,9 +77,9 @@ export const buildDefaultWorldsendFilter = (
     score: { ...DEFAULT_WORLDSEND_FILTER.score },
     justiceCount: { ...DEFAULT_WORLDSEND_FILTER.justiceCount },
     levelStarRange: { ...DEFAULT_WORLDSEND_FILTER.levelStarRange },
-    combo_lamp: [...COMBO_LAMP_OPTIONS],
-    chain_lamp: [...CHAIN_LAMP_OPTIONS],
-    hard_lamp: [...HARD_LAMP_OPTIONS],
+    combo_lamp: [...RECORD_COMBO_LAMP_OPTIONS],
+    chain_lamp: [...RECORD_CHAIN_LAMP_OPTIONS],
+    hard_lamp: [...RECORD_HARD_LAMP_OPTIONS],
   }
 }
 
@@ -93,7 +98,7 @@ export const normalizeWorldsendFilterState = (
   justiceCount: filter.justiceCount ?? { ...DEFAULT_WORLDSEND_FILTER.justiceCount },
   attributes: filter.attributes ?? [...DEFAULT_WORLDSEND_FILTER.attributes],
   levelStarRange: filter.levelStarRange ?? { ...DEFAULT_WORLDSEND_FILTER.levelStarRange },
-  combo_lamp: filter.combo_lamp ?? [...COMBO_LAMP_OPTIONS],
-  chain_lamp: filter.chain_lamp ?? [...CHAIN_LAMP_OPTIONS],
-  hard_lamp: filter.hard_lamp ?? [...HARD_LAMP_OPTIONS],
+  combo_lamp: filter.combo_lamp ?? [...RECORD_COMBO_LAMP_OPTIONS],
+  chain_lamp: filter.chain_lamp ?? [...RECORD_CHAIN_LAMP_OPTIONS],
+  hard_lamp: filter.hard_lamp ?? [...RECORD_HARD_LAMP_OPTIONS],
 })

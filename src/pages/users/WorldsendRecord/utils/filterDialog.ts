@@ -1,3 +1,8 @@
+import {
+  SCORE_MIN,
+  WORLDSEND_LEVEL_STAR_MAX,
+  WORLDSEND_LEVEL_STAR_MIN,
+} from '../../../../constants/chart'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
 import type { WorldsendFilterState } from '../types/filterTypes'
@@ -44,14 +49,17 @@ export function formatWorldsendFilterSummary(filter: WorldsendFilterState): stri
   if (filter.attributes.length > 0) {
     parts.push(`属性: ${filter.attributes.map(formatWorldsendAttribute).join(',')}`)
   }
-  if (filter.levelStarRange.min !== 1 || filter.levelStarRange.max !== 5) {
+  if (
+    filter.levelStarRange.min !== WORLDSEND_LEVEL_STAR_MIN ||
+    filter.levelStarRange.max !== WORLDSEND_LEVEL_STAR_MAX
+  ) {
     parts.push(
       `レベル: ${formatWorldsendLevelStar(filter.levelStarRange.min)}-${formatWorldsendLevelStar(
         filter.levelStarRange.max
       )}`
     )
   }
-  if (filter.score.min !== 0 || filter.score.max !== MAX_SCORE) {
+  if (filter.score.min !== SCORE_MIN || filter.score.max !== MAX_SCORE) {
     parts.push(`スコア: ${filter.score.min}-${filter.score.max}`)
   }
   if (filter.justiceCount.min !== null || filter.justiceCount.max !== null) {

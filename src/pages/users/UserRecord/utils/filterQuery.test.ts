@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import { CHART_CONST_MAX } from '../../../../constants/chart'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { CONST_MAX } from '../constants/constRange'
 import { DEFAULT_FILTER } from '../types/filterDefaults'
 import {
   parseFilterRangeQuery,
@@ -148,7 +148,7 @@ test('parseFilterRangeQuery はフラットなクエリ値を内部範囲フィ�
   assert.deepEqual(result, {
     const: {
       min: 14,
-      max: CONST_MAX,
+      max: CHART_CONST_MAX,
     },
     score: {
       min: 1_007_000,

@@ -3,6 +3,7 @@ import { NumberField } from '@kobalte/core/number-field'
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
+import { SCORE_MIN } from '../../../../../../constants/chart'
 import { MAX_SCORE } from '../../../../../../utils/scoreRank'
 
 import { SCORE_RANKS } from '../../../utils/scoreRank'
@@ -63,7 +64,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
               </NumberField.Label>
               <NumberField.Input
                 id="filter-score-min"
-                min={0}
+                min={SCORE_MIN}
                 max={MAX_SCORE}
                 step={1}
                 class={FILTER_DIALOG_FIELD_INPUT_CLASS}
@@ -87,7 +88,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
               </NumberField.Label>
               <NumberField.Input
                 id="filter-score-max"
-                min={0}
+                min={SCORE_MIN}
                 max={MAX_SCORE}
                 step={1}
                 class={FILTER_DIALOG_FIELD_INPUT_CLASS}
