@@ -36,6 +36,7 @@ import { nextSortState, type SortDirection } from '../users/recordTable/sortingQ
 import {
   WEAK_CHART_INSPECTOR_COLORS,
   WEAK_CHART_INSPECTOR_COPY,
+  WEAK_CHART_MIN_WIDTH_CLASS,
   WEAK_CHART_POINT_JITTER,
   WEAK_CHART_SCORE_TICK_INTERVAL,
 } from './weakChartInspector.constants'
@@ -175,8 +176,10 @@ const WeakChartDistributionChart = (props: {
         <ChartNoAxesCombined class="h-5 w-5 text-action-primary" aria-hidden="true" />
         {WEAK_CHART_INSPECTOR_COPY.chartTitle}
       </figcaption>
-      <div class="h-[28rem] min-w-0">
-        <canvas ref={canvasRef} aria-label={WEAK_CHART_INSPECTOR_COPY.chartAccessibleLabel} />
+      <div class="overflow-x-auto overscroll-x-contain">
+        <div class={`relative h-[28rem] w-full ${WEAK_CHART_MIN_WIDTH_CLASS}`}>
+          <canvas ref={canvasRef} aria-label={WEAK_CHART_INSPECTOR_COPY.chartAccessibleLabel} />
+        </div>
       </div>
     </figure>
   )
