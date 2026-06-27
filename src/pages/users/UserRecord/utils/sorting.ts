@@ -44,7 +44,7 @@ export const DEFAULT_RECORD_SORT_CONDITIONS: RecordSortCondition[] = [
   { key: 'score', direction: 'desc' },
   { key: 'const', direction: 'desc' },
   { key: 'difficulty', direction: 'desc' },
-  { key: 'title', direction: 'desc' },
+  { key: 'title', direction: 'asc' },
 ]
 
 /**
