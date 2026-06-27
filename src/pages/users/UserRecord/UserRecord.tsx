@@ -99,7 +99,11 @@ const UserRecord: Component<Props> = (props) => {
     sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
   )
 
-  const defaultFilter = createMemo(() => buildDefaultFilter(masterData(), versionData()?.versions))
+  const defaultFilter = createMemo(() => {
+    const md = masterData()
+    const vs = versionData()?.versions
+    return md && vs ? buildDefaultFilter(md, vs) : DEFAULT_FILTER
+  })
   const hasTitleFilterChanges = createMemo(() => filters().title !== defaultFilter().title)
   const hasFilterOptionChanges = createMemo(() =>
     isRecordFilterOptionsChanged(filters(), defaultFilter())
