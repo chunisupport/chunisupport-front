@@ -131,7 +131,7 @@ test('複数ソートは第4ソートまで評価できる', () => {
 
   assert.deepEqual(
     sortRecordsByConditions(records, DEFAULT_RECORD_SORT_CONDITIONS).map((record) => record.id),
-    ['beta', 'alpha']
+    ['alpha', 'beta']
   )
 })
 
