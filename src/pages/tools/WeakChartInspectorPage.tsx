@@ -151,7 +151,6 @@ const WeakChartDistributionChart = (props: {
               color: textColor,
               callback: (value) => Number(value).toFixed(1),
             },
-            title: { display: true, text: '譜面定数', color: textColor },
           },
           y: {
             min: WEAK_CHART_INSPECTOR_DISPLAY_SCORE_MIN,
@@ -162,7 +161,6 @@ const WeakChartDistributionChart = (props: {
               stepSize: WEAK_CHART_SCORE_TICK_INTERVAL,
               callback: (value) => `${Number(value) / WEAK_CHART_SCORE_TICK_INTERVAL}k`,
             },
-            title: { display: true, text: '獲得スコア', color: textColor },
           },
         },
       },
