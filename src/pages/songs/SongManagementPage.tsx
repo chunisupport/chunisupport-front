@@ -340,6 +340,7 @@ const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
       optionTextValue="name"
       sameWidth
       fitViewport
+      gutter={0}
       value={selectedGenre()}
       onChange={(genre) => props.onChange(genre?.id ?? null)}
       placeholder={props.placeholder}
@@ -367,7 +368,7 @@ const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
         </Select.Icon>
       </Select.Trigger>
       <Select.Portal>
-        <Select.Content class="z-50 -mt-2 -mb-2 max-h-[min(16rem,var(--kb-popper-content-available-height))] w-[--kb-popper-anchor-width] overflow-auto rounded border border-border bg-surface shadow-md">
+        <Select.Content class="z-50 max-h-[min(16rem,var(--kb-popper-content-available-height))] w-[--kb-popper-anchor-width] overflow-auto rounded border border-border bg-surface shadow-md">
           <Select.Listbox />
         </Select.Content>
       </Select.Portal>

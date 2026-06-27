@@ -24,4 +24,4 @@ export const FILTER_DIALOG_SELECT_ITEM_CLASS =
  * レコードフィルターダイアログ内の単一選択ポータルに適用する共通スタイル。
  */
 export const FILTER_DIALOG_SELECT_CONTENT_CLASS =
-  'z-60 -mt-2 -mb-2 max-h-90 overflow-y-auto rounded-md border border-border-strong bg-surface shadow-lg'
+  'z-60 max-h-90 overflow-y-auto rounded-md border border-border-strong bg-surface shadow-lg'

@@ -115,6 +115,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
               }}
               class="w-full"
               placeholder="選択…"
+              gutter={0}
               itemComponent={(itemProps) => (
                 <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
                   <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
@@ -154,6 +155,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
               }}
               class="w-full"
               placeholder="選択…"
+              gutter={0}
               itemComponent={(itemProps) => (
                 <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
                   <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
