@@ -2,7 +2,15 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
-import { nextSortState, parseSortParams, sortRecords, sortRecordsByConditions } from './sorting.ts'
+import {
+  createInitialRecordSortConditions,
+  DEFAULT_RECORD_SORT_CONDITIONS,
+  nextPrimaryRecordSortCondition,
+  normalizeRecordSortConditions,
+  parseSortParams,
+  sortRecords,
+  sortRecordsByConditions,
+} from './sorting.ts'
 
 const createRecord = (
   overrides: Partial<PlayerRecordWithSongMeta> = {}
@@ -54,18 +62,42 @@ test('ソートクエリが無効な場合はrating descを既定値にする', 
   })
 })
 
-test('ソート状態はascからdesc、最後に解除へ遷移する', () => {
-  assert.deepEqual(nextSortState('score', 'asc', 'score'), {
-    sortKey: 'score',
-    sortDirection: 'desc',
+test('通常レコードの既定ソートはレート降順、定数降順、曲名昇順にする', () => {
+  assert.deepEqual(DEFAULT_RECORD_SORT_CONDITIONS, [
+    { key: 'rating', direction: 'desc' },
+    { key: 'const', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
+  ])
+})
+
+test('初期ソートは第1ソートだけクエリ指定で置き換える', () => {
+  assert.deepEqual(createInitialRecordSortConditions('score', 'asc'), [
+    { key: 'score', direction: 'asc' },
+    { key: 'const', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
+  ])
+})
+
+test('ソート条件は不足分を既定値で補って3条件にする', () => {
+  assert.deepEqual(normalizeRecordSortConditions([{ key: 'score', direction: 'asc' }]), [
+    { key: 'score', direction: 'asc' },
+    { key: 'const', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
+  ])
+})
+
+test('列クリックの第1ソートはascからdesc、最後にascへ戻る', () => {
+  assert.deepEqual(nextPrimaryRecordSortCondition({ key: 'score', direction: 'asc' }, 'score'), {
+    key: 'score',
+    direction: 'desc',
   })
-  assert.deepEqual(nextSortState('score', 'desc', 'score'), {
-    sortKey: null,
-    sortDirection: null,
+  assert.deepEqual(nextPrimaryRecordSortCondition({ key: 'score', direction: 'desc' }, 'score'), {
+    key: 'score',
+    direction: 'asc',
   })
-  assert.deepEqual(nextSortState(null, null, 'title'), {
-    sortKey: 'title',
-    sortDirection: 'asc',
+  assert.deepEqual(nextPrimaryRecordSortCondition(null, 'title'), {
+    key: 'title',
+    direction: 'asc',
   })
 })
 

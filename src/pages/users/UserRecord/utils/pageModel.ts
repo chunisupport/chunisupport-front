@@ -8,7 +8,11 @@ import {
 import { getRecordStats, type RecordStats } from '../../utils/recordStats'
 import type { FilterState, RecordSortCondition, RecordSortKey } from '../types/types'
 import { createRecordTitleMatcher, isRecordMatchedWithTitleMatcher } from './filtering'
-import { nextSortState, sortRecordsByConditions } from './sorting'
+import {
+  nextPrimaryRecordSortCondition,
+  normalizeRecordSortConditions,
+  sortRecordsByConditions,
+} from './sorting'
 
 /** UserRecordページモデルの入力値 */
 type UserRecordPageModelParams = {
@@ -73,25 +77,14 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
    * @returns なし。
    */
   const handleSortChange = (nextKey: RecordSortKey) => {
-    const currentPrimarySort = params.sortConditions()[0] ?? null
-    const nextSort = nextSortState(
-      currentPrimarySort?.key ?? null,
-      currentPrimarySort?.direction ?? null,
+    const nextPrimarySort = nextPrimaryRecordSortCondition(
+      params.sortConditions()[0] ?? null,
       nextKey
     )
 
-    const nextSortKey = nextSort.sortKey
-    const nextSortDirection = nextSort.sortDirection
-
-    if (!nextSortKey || !nextSortDirection) {
-      params.setSortConditions([])
-      return
-    }
-
-    params.setSortConditions((currentSortConditions) => [
-      { key: nextSortKey, direction: nextSortDirection },
-      ...currentSortConditions.filter((sortCondition) => sortCondition.key !== nextKey).slice(0, 2),
-    ])
+    params.setSortConditions((currentSortConditions) =>
+      normalizeRecordSortConditions([nextPrimarySort, ...currentSortConditions.slice(1, 3)])
+    )
   }
 
   return {

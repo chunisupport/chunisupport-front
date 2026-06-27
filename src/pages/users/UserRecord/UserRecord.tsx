@@ -37,7 +37,7 @@ import {
   isRecordFilterOptionsChanged,
 } from './utils/filterDialog'
 import { useUserRecordPageModel } from './utils/pageModel'
-import { parseSortParams } from './utils/sorting'
+import { createInitialRecordSortConditions, parseSortParams } from './utils/sorting'
 
 type Props = {
   username: string
@@ -96,7 +96,7 @@ const UserRecord: Component<Props> = (props) => {
   const { initialSortKey, initialSortOrder } = parseSortParams(searchParams)
 
   const [sortConditions, setSortConditions] = createSignal<RecordSortCondition[]>(
-    initialSortKey && initialSortOrder ? [{ key: initialSortKey, direction: initialSortOrder }] : []
+    createInitialRecordSortConditions(initialSortKey, initialSortOrder)
   )
   const primarySort = () => sortConditions()[0] ?? null
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<RecordColumnId[]>(
@@ -202,7 +202,7 @@ const UserRecord: Component<Props> = (props) => {
                 titleActive={hasTitleFilterChanges()}
                 filterActive={hasFilterOptionChanges()}
                 filterButtonTone={filterButtonTone()}
-                sortActive={sortConditions().length > 0}
+                sortActive={true}
               />
 
               {/* フィルター統計 */}

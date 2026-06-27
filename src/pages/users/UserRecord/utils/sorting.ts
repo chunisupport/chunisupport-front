@@ -1,6 +1,5 @@
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
-  nextSortState as nextSharedSortState,
   parseSortQuery,
   type SortDirection,
   type SortParamsSource,
@@ -40,6 +39,26 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   justice_count: 'justiceCount',
 }
 
+/** 通常レコード一覧で常に適用する既定ソート条件。 */
+export const DEFAULT_RECORD_SORT_CONDITIONS: RecordSortCondition[] = [
+  { key: 'rating', direction: 'desc' },
+  { key: 'const', direction: 'desc' },
+  { key: 'title', direction: 'asc' },
+]
+
+/**
+ * ソート条件を常に3条件へ補正する。
+ *
+ * @param sortConditions - 補正対象のソート条件。
+ * @returns 不足分を既定値で補った3条件のソート条件。
+ */
+export const normalizeRecordSortConditions = (
+  sortConditions: RecordSortCondition[]
+): RecordSortCondition[] =>
+  DEFAULT_RECORD_SORT_CONDITIONS.map((defaultSortCondition, index) => ({
+    ...(sortConditions[index] ?? defaultSortCondition),
+  }))
+
 export const parseSortParams = (searchParams: SortParamsSource) => {
   const parsed = parseSortQuery(searchParams, RECORD_SORT_COL_MAP, {
     sortKey: 'rating',
@@ -52,14 +71,39 @@ export const parseSortParams = (searchParams: SortParamsSource) => {
   }
 }
 
-export const nextSortState = (
-  currentSortKey: RecordSortKey | null,
-  currentSortDirection: SortDirection | null,
+/**
+ * クエリ文字列から取得した第1ソートと既定の第2・第3ソートを組み合わせる。
+ *
+ * @param sortKey - 初期表示で第1ソートにする列キー。
+ * @param sortDirection - 初期表示で第1ソートにする方向。
+ * @returns 3条件を持つ初期ソート条件。
+ */
+export const createInitialRecordSortConditions = (
+  sortKey: RecordSortKey,
+  sortDirection: SortDirection
+): RecordSortCondition[] =>
+  normalizeRecordSortConditions([{ key: sortKey, direction: sortDirection }])
+
+/**
+ * 列ヘッダークリック時に第1ソートだけを更新する。
+ *
+ * @param currentSortCondition - 現在の第1ソート条件。
+ * @param nextKey - 次に第1ソート対象にする列キー。
+ * @returns 空状態を作らない次の第1ソート条件。
+ */
+export const nextPrimaryRecordSortCondition = (
+  currentSortCondition: RecordSortCondition | null,
   nextKey: RecordSortKey
-): {
-  sortKey: RecordSortKey | null
-  sortDirection: SortDirection | null
-} => nextSharedSortState(currentSortKey, currentSortDirection, nextKey)
+): RecordSortCondition => {
+  if (currentSortCondition?.key !== nextKey) {
+    return { key: nextKey, direction: 'asc' }
+  }
+
+  return {
+    key: nextKey,
+    direction: currentSortCondition.direction === 'asc' ? 'desc' : 'asc',
+  }
+}
 
 type SortableRecordEntry = {
   record: PlayerRecordWithSongMeta
