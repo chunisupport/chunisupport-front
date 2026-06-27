@@ -1,19 +1,19 @@
 import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
 import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters'
-import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
-import { CONST_MAX, CONST_MIN } from '../../constants/constRange'
-import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../../constants/rangeFilters'
 import {
-  CHAIN_LAMP_OPTIONS,
-  COMBO_LAMP_OPTIONS,
-  HARD_LAMP_OPTIONS,
-} from '../../types/filterDefaults'
+  RECORD_CHAIN_LAMP_OPTIONS,
+  RECORD_COMBO_LAMP_OPTIONS,
+  RECORD_HARD_LAMP_OPTIONS,
+} from '../../../constants/recordFilterOptions'
+import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
+import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../../constants/rangeFilters'
 import type { Difficulty, FilterState } from '../../types/types'
 import { parseNumberInput, toggleArray, updateOptionalNumberRange } from '../../utils/filterDialog'
 import {
@@ -84,7 +84,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   )
 
   const Const2Level = (value: number) => {
-    const normalized = Math.max(CONST_MIN, Math.min(value, CONST_MAX))
+    const normalized = Math.max(CHART_CONST_MIN, Math.min(value, CHART_CONST_MAX))
     if (normalized <= 6.9) {
       return String(Math.floor(normalized))
     }
@@ -105,8 +105,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     if (isPlus) {
       return type === 'min' ? Number((base + 0.5).toFixed(1)) : Number((base + 0.9).toFixed(1))
     }
-    if (base >= CONST_MAX) {
-      return CONST_MAX
+    if (base >= CHART_CONST_MAX) {
+      return CHART_CONST_MAX
     }
     return type === 'min' ? base : Number((base + 0.4).toFixed(1))
   }
@@ -403,7 +403,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             ...prev,
             const: {
               ...prev.const,
-              min: parseNumberInput(value) ?? CONST_MIN,
+              min: parseNumberInput(value) ?? CHART_CONST_MIN,
             },
           }))
         }}
@@ -413,7 +413,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             ...prev,
             const: {
               ...prev.const,
-              max: parseNumberInput(value) ?? CONST_MAX,
+              max: parseNumberInput(value) ?? CHART_CONST_MAX,
             },
           }))
         }}
@@ -436,7 +436,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             ...prev,
             score: {
               ...prev.score,
-              min: parseNumberInput(value) ?? 0,
+              min: parseNumberInput(value) ?? SCORE_MIN,
             },
           }))
         }}
@@ -479,7 +479,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       <LampSection
         title="コンボランプ"
         idPrefix="combo-lamp"
-        lamps={COMBO_LAMP_OPTIONS}
+        lamps={RECORD_COMBO_LAMP_OPTIONS}
         selected={props.filters.combo_lamp}
         onToggle={(lamp) =>
           props.setFilters((prev) => ({
@@ -500,7 +500,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       <LampSection
         title="FULL CHAIN"
         idPrefix="chain-lamp"
-        lamps={CHAIN_LAMP_OPTIONS}
+        lamps={RECORD_CHAIN_LAMP_OPTIONS}
         selected={props.filters.chain_lamp}
         formatLabel={formatFullChainLampLabel}
         onToggle={(lamp) =>
@@ -522,7 +522,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       <LampSection
         title="ハードランプ"
         idPrefix="hard-lamp"
-        lamps={HARD_LAMP_OPTIONS}
+        lamps={RECORD_HARD_LAMP_OPTIONS}
         selected={props.filters.hard_lamp}
         onToggle={(lamp) =>
           props.setFilters((prev) => ({

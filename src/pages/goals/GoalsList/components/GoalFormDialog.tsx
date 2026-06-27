@@ -8,6 +8,13 @@ import { TextField } from '@kobalte/core/text-field'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
+import {
+  CHART_CONST_DECIMAL_PLACES,
+  CHART_CONST_MAX,
+  CHART_CONST_MIN,
+  SCORE_MIN,
+} from '../../../../constants/chart'
 import type {
   GoalAchievementParams,
   GoalAchievementType,
@@ -25,10 +32,7 @@ import {
   SCORE_RANKS_ASC,
   type ScoreRank,
 } from '../../../../utils/scoreRank'
-import GenreSection from '../../../users/UserRecord/components/filterDialog/sections/GenreSection'
-import VersionSection from '../../../users/UserRecord/components/filterDialog/sections/VersionSection'
-import { CONST_MAX, CONST_MIN } from '../../../users/UserRecord/constants/constRange'
-import { buildTargetCountParam } from '../../utils/goalCountTarget'
+import { buildGoalTargetParam, type GoalTargetMode } from '../../utils/goalCountTarget'
 import {
   COMBO_LAMP_OPTIONS,
   HARD_LAMP_OPTIONS,
@@ -40,7 +44,7 @@ import {
   ERROR_MESSAGE_INVALID_COUNT_TARGET,
   GOAL_TITLE_MAX_LENGTH,
   LABEL_INVERT_DISPLAY,
-  STEP2_DESCRIPTION,
+  STEP3_DESCRIPTION,
 } from './constants'
 import { GoalCardProgress } from './GoalCard'
 
@@ -173,14 +177,18 @@ const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = {
   overpower_percent: '対象譜面のOVER POWER達成率を目標にします。',
 } as const satisfies Record<GoalAchievementType, string>
 
-const COUNT_MODE_OPTIONS: GoalSelectOption<'all' | 'number'>[] = [
+const COUNT_MODE_OPTIONS: GoalSelectOption<GoalTargetMode>[] = [
   { value: 'all', label: '条件に当てはまる譜面すべて' },
   { value: 'number', label: '目標値を指定' },
+  { value: 'remaining', label: '最大値に対する残数' },
+  { value: 'percent', label: '最大値に対する割合' },
 ]
 
-const TOTAL_MODE_OPTIONS: GoalSelectOption<'all' | 'number'>[] = [
+const TOTAL_MODE_OPTIONS: GoalSelectOption<GoalTargetMode>[] = [
   { value: 'all', label: '理論値' },
   { value: 'number', label: '目標値を指定' },
+  { value: 'remaining', label: '最大値に対する残数' },
+  { value: 'percent', label: '最大値に対する割合' },
 ]
 
 const HARD_LAMP_SELECT_OPTIONS: GoalSelectOption<'HRD' | 'BRV' | 'ABS' | 'CTS'>[] =
@@ -202,9 +210,8 @@ const GOAL_ACHIEVEMENT_TYPES = [
 ] as const satisfies readonly GoalAchievementType[]
 const HARD_LAMP_VALUES = ['HRD', 'BRV', 'ABS', 'CTS'] as const
 const COMBO_LAMP_VALUES = ['FC', 'AJ'] as const
-const MIN_SCORE = 0
-const MUSIC_CONST_DECIMAL_PLACES = 1
 const MAX_OVERPOWER_PERCENT = 100
+const OVERPOWER_TARGET_DECIMAL_PLACES = 3
 const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
 const DEFAULT_GOAL_ACHIEVEMENT_TYPE = 'rank_count' satisfies GoalAchievementType
 const DEFAULT_TOTAL_GOAL_VALUE = '10'
@@ -227,6 +234,18 @@ const RANK_OPTIONS: GoalSelectOption<RankGoalValue>[] = [
     label: `${scoreRank}（${SCORE_RANK_MIN_SCORES[scoreRank].toLocaleString('ja-JP')}）`,
   })),
 ]
+
+/**
+ * 数値が指定した小数桁数以内か判定する。
+ *
+ * @param value - 判定対象の数値。
+ * @param decimalPlaces - 許容する小数桁数。
+ * @returns 許容範囲内ならtrue。
+ */
+const isWithinDecimalPlaces = (value: number, decimalPlaces: number): boolean => {
+  const scale = 10 ** decimalPlaces
+  return Math.abs(value * scale - Math.round(value * scale)) < Number.EPSILON * scale
+}
 
 /**
  * 数値入力値を指定範囲内に丸めた文字列へ変換する。
@@ -305,7 +324,9 @@ const isComboLampValue = (value: string): value is 'FC' | 'AJ' =>
  */
 const GoalTextField: Component<GoalTextFieldProps> = (props) => (
   <TextField class="block text-sm" value={props.value} onChange={props.onChange}>
-    <TextField.Label class="mb-1 block text-text-muted">{props.label}</TextField.Label>
+    <Show when={props.label}>
+      <TextField.Label class="mb-1 block text-text-muted">{props.label}</TextField.Label>
+    </Show>
     <TextField.Input class={`${GOAL_FIELD_INPUT_CLASS} font-sans`} maxLength={props.maxLength} />
     <TextField.Description class="mt-1 text-xs text-text-subtle">
       {GOAL_TITLE_MAX_LENGTH}文字以内
@@ -494,10 +515,27 @@ const isCountAchievementType = (type: GoalAchievementType): boolean =>
  */
 const getOptionalNumberParam = (
   params: GoalDTO['achievement_params'],
-  key: 'count' | 'total'
+  key: 'count' | 'total' | 'remaining' | 'percent'
 ): number | undefined => {
   const value = (params as Record<string, unknown>)[key]
   return typeof value === 'number' ? value : undefined
+}
+
+/**
+ * 保存済み成果パラメータからフォームの目標値指定方法を解決する。
+ *
+ * @param params - APIから取得した成果パラメータ。
+ * @param absoluteKey - 絶対値指定に使うキー。
+ * @returns 保存済みキーに対応する指定方法。
+ */
+const resolveGoalTargetMode = (
+  params: GoalDTO['achievement_params'],
+  absoluteKey: 'count' | 'total'
+): GoalTargetMode => {
+  if (getOptionalNumberParam(params, 'remaining') !== undefined) return 'remaining'
+  if (getOptionalNumberParam(params, 'percent') !== undefined) return 'percent'
+  if (getOptionalNumberParam(params, absoluteKey) !== undefined) return 'number'
+  return 'all'
 }
 
 /**
@@ -614,9 +652,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [score, setScore] = createSignal(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
   const [rank, setRank] = createSignal<RankGoalValue>(DEFAULT_RANK_GOAL)
   const [count, setCount] = createSignal('1')
-  const [countMode, setCountMode] = createSignal<'all' | 'number'>('all')
+  const [countMode, setCountMode] = createSignal<GoalTargetMode>('all')
   const [total, setTotal] = createSignal(getDefaultTotalGoalValue(DEFAULT_GOAL_ACHIEVEMENT_TYPE))
-  const [totalMode, setTotalMode] = createSignal<'all' | 'number'>('number')
+  const [totalMode, setTotalMode] = createSignal<GoalTargetMode>('number')
   const [hardLamp, setHardLamp] = createSignal<'HRD' | 'BRV' | 'ABS' | 'CTS'>('HRD')
   const [comboLamp, setComboLamp] = createSignal<'FC' | 'AJ'>('FC')
   const [invert, setInvert] = createSignal(false)
@@ -705,7 +743,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @returns なし。
    */
   const handleScoreChange = (value: string): void => {
-    setScore(clampNumericInput(value, MIN_SCORE, MAX_SCORE, String))
+    setScore(clampNumericInput(value, SCORE_MIN, MAX_SCORE, String))
   }
 
   /**
@@ -720,8 +758,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
     setErrorMessage('')
     setter(
-      clampNumericInput(value, CONST_MIN, CONST_MAX, (nextValue) =>
-        nextValue.toFixed(MUSIC_CONST_DECIMAL_PLACES)
+      clampNumericInput(value, CHART_CONST_MIN, CHART_CONST_MAX, (nextValue) =>
+        nextValue.toFixed(CHART_CONST_DECIMAL_PLACES)
       )
     )
   }
@@ -770,8 +808,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setInvert(false)
       setChartTargetMode('normal')
       setDiffs(allDifficultySelections())
-      setConstMin(String(CONST_MIN))
-      setConstMax(String(CONST_MAX))
+      setConstMin(String(CHART_CONST_MIN))
+      setConstMax(String(CHART_CONST_MAX))
       setGenres(allGenreSelections())
       setVersions(allVersionSelections())
       return
@@ -785,15 +823,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
         setRank(getRankGoalValue(goal.achievement_params.score))
       }
     }
-    const allCount = props.resolveAllCount(goal.attributes)
     const rawCount = getOptionalNumberParam(goal.achievement_params, 'count')
-    if (typeof rawCount === 'number') {
-      setCount(String(rawCount))
-    }
+    const rawRemaining = getOptionalNumberParam(goal.achievement_params, 'remaining')
+    const rawPercent = getOptionalNumberParam(goal.achievement_params, 'percent')
+    const countTargetValue = rawCount ?? rawRemaining ?? rawPercent
+    if (typeof countTargetValue === 'number') setCount(String(countTargetValue))
     const rawTotal = getOptionalNumberParam(goal.achievement_params, 'total')
-    if (typeof rawTotal === 'number') {
-      setTotal(String(rawTotal))
-    }
+    const totalTargetValue = rawTotal ?? rawRemaining ?? rawPercent
+    if (typeof totalTargetValue === 'number') setTotal(String(totalTargetValue))
     if ('lamp' in goal.achievement_params && isHardLampValue(goal.achievement_params.lamp)) {
       setHardLamp(goal.achievement_params.lamp)
     }
@@ -806,25 +843,25 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setConstMin(
       typeof goal.attributes.const?.min === 'number'
         ? String(goal.attributes.const.min)
-        : String(CONST_MIN)
+        : String(CHART_CONST_MIN)
     )
     setConstMax(
       typeof goal.attributes.const?.max === 'number'
         ? String(goal.attributes.const.max)
-        : String(CONST_MAX)
+        : String(CHART_CONST_MAX)
     )
     setGenres(resolveInitialAttributeSelection(goal.attributes.genre, allGenreSelections()))
     setVersions(resolveInitialAttributeSelection(goal.attributes.ver, allVersionSelections()))
 
     if (isCountAchievementType(goal.achievement_type)) {
-      setCountMode(
-        rawCount === undefined || (allCount > 0 && rawCount === allCount) ? 'all' : 'number'
-      )
+      setCountMode(resolveGoalTargetMode(goal.achievement_params, 'count'))
     } else {
       setCountMode('number')
     }
     setTotalMode(
-      canUseDynamicTotalTarget(goal.achievement_type) && rawTotal === undefined ? 'all' : 'number'
+      canUseDynamicTotalTarget(goal.achievement_type)
+        ? resolveGoalTargetMode(goal.achievement_params, 'total')
+        : 'number'
     )
   })
 
@@ -851,32 +888,29 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    */
   const buildDraftAchievementParams = (type: GoalAchievementType): GoalAchievementParams => {
     const parsedScore = type === 'rank_count' ? getRankGoalScore(rank()) : Number(score())
-    const parsedTotal =
-      canUseDynamicTotalTarget(type) && totalMode() === 'all'
-        ? getTheoreticalTotal(type)
-        : Number(total())
-    const targetCount = buildTargetCountParam(countMode(), count())
+    const targetCountParam = buildGoalTargetParam(countMode(), count(), 'count')
+    const targetTotalParam = buildGoalTargetParam(totalMode(), total(), 'total')
 
     return type === 'score_count' || type === 'rank_count'
       ? {
           score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : 0),
-          ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
+          ...targetCountParam,
         }
       : type === 'avg_score'
         ? { score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : 0) }
         : type === 'hardlamp_count'
           ? {
               lamp: hardLamp(),
-              ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
+              ...targetCountParam,
             }
           : type === 'combolamp_count'
             ? {
                 lamp: comboLamp(),
-                ...(typeof targetCount === 'number' ? { count: targetCount } : {}),
+                ...targetCountParam,
               }
-            : canUseDynamicTotalTarget(type) && totalMode() === 'all'
-              ? {}
-              : { total: Number.isFinite(parsedTotal) ? parsedTotal : 0 }
+            : canUseDynamicTotalTarget(type)
+              ? targetTotalParam
+              : { total: Number.isFinite(Number(total())) ? Number(total()) : 0 }
   }
 
   /**
@@ -925,7 +959,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @returns 日本語ロケールで桁区切りした件数上限表示。
    */
   const countLimitText = (): string =>
-    `${props.resolveAllCount(getDraftAttributes()).toLocaleString('ja-JP')}件以内`
+    countMode() === 'percent'
+      ? '100%以内'
+      : `${props.resolveAllCount(getDraftAttributes()).toLocaleString('ja-JP')}件以内`
 
   /**
    * 目標値入力で指定できる上限を表示用に組み立てる。
@@ -934,7 +970,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    */
   const totalLimitText = (): string => {
     const currentType = achievementType()
-    if (currentType === 'overpower_percent') return '100%以内'
+    if (currentType === 'overpower_percent' || totalMode() === 'percent') return '100%以内'
     return `${getTheoreticalTotal(currentType).toLocaleString('ja-JP')}以内`
   }
 
@@ -944,7 +980,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @returns OVER POWER達成率では100、それ以外では未指定。
    */
   const totalFieldMax = (): number | undefined =>
-    achievementType() === 'overpower_percent' ? MAX_OVERPOWER_PERCENT : undefined
+    achievementType() === 'overpower_percent' || totalMode() === 'percent'
+      ? MAX_OVERPOWER_PERCENT
+      : undefined
 
   const handleSave = async () => {
     setErrorMessage('')
@@ -972,7 +1010,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       (currentType === 'score_count' ||
         currentType === 'rank_count' ||
         currentType === 'avg_score') &&
-      (!Number.isFinite(parsedScore) || parsedScore < MIN_SCORE || parsedScore > MAX_SCORE)
+      (!Number.isFinite(parsedScore) || parsedScore < SCORE_MIN || parsedScore > MAX_SCORE)
     ) {
       setErrorMessage('スコアは 0 ～ 1,010,000 の範囲で入力してください。')
       return
@@ -984,14 +1022,26 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
     const allCount = props.resolveAllCount(attributes)
 
-    if (isCountType && countMode() === 'number') {
-      const countMin = 1
-      if (!Number.isInteger(parsedCount) || parsedCount < countMin) {
-        setErrorMessage(`件数は${countMin}以上の整数で入力してください。`)
+    if (isCountType && countMode() !== 'all') {
+      const countMin = countMode() === 'number' ? 1 : 0
+      const requiresInteger = countMode() !== 'percent'
+      if (
+        !Number.isFinite(parsedCount) ||
+        (requiresInteger && !Number.isInteger(parsedCount)) ||
+        parsedCount < countMin
+      ) {
+        const inputLabel = countMode() === 'percent' ? '割合' : '件数'
+        setErrorMessage(
+          `${inputLabel}は${countMin}以上の${requiresInteger ? '整数' : '数値'}で入力してください。`
+        )
         return
       }
-      if (parsedCount > allCount) {
-        setErrorMessage(`件数は${allCount.toLocaleString('ja-JP')}件以内で入力してください。`)
+      const countMax = countMode() === 'percent' ? MAX_OVERPOWER_PERCENT : allCount
+      if (parsedCount > countMax) {
+        const unit = countMode() === 'percent' ? '%' : '件'
+        setErrorMessage(
+          `${countMode() === 'percent' ? '割合' : '件数'}は${countMax.toLocaleString('ja-JP')}${unit}以内で入力してください。`
+        )
         return
       }
     }
@@ -1008,7 +1058,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
     if (
       (currentType === 'overpower_percent' ||
-        (canUseDynamicTotalTarget(currentType) && totalMode() === 'number')) &&
+        (canUseDynamicTotalTarget(currentType) && totalMode() !== 'all')) &&
       (!Number.isFinite(parsedTotal) || parsedTotal < 0)
     ) {
       setErrorMessage('合計/割合の目標値は0以上で入力してください。')
@@ -1020,10 +1070,33 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       return
     }
 
-    const dynamicTotalMax =
-      canUseDynamicTotalTarget(currentType) && totalMode() === 'number'
-        ? getTheoreticalTotal(currentType)
-        : undefined
+    if (
+      currentType === 'total_score' &&
+      (totalMode() === 'number' || totalMode() === 'remaining') &&
+      !Number.isInteger(parsedTotal)
+    ) {
+      setErrorMessage('総スコアの目標値と残数は整数で入力してください。')
+      return
+    }
+
+    if (
+      currentType === 'overpower_value' &&
+      totalMode() !== 'all' &&
+      !isWithinDecimalPlaces(parsedTotal, OVERPOWER_TARGET_DECIMAL_PLACES)
+    ) {
+      setErrorMessage(
+        `OVER POWERの目標値・残数・割合は小数第${OVERPOWER_TARGET_DECIMAL_PLACES}位以内で入力してください。`
+      )
+      return
+    }
+
+    const dynamicTotalMax = canUseDynamicTotalTarget(currentType)
+      ? totalMode() === 'percent'
+        ? MAX_OVERPOWER_PERCENT
+        : totalMode() === 'all'
+          ? undefined
+          : getTheoreticalTotal(currentType)
+      : undefined
     if (dynamicTotalMax !== undefined && parsedTotal > dynamicTotalMax) {
       const targetLabel = currentType === 'total_score' ? '総スコア目標' : 'OVER POWER合計目標'
       setErrorMessage(
@@ -1048,9 +1121,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       return
     }
 
-    const targetCount = buildTargetCountParam(countMode(), count())
-
-    if (isCountType && typeof targetCount === 'number' && targetCount <= 0) {
+    if (isCountType && countMode() === 'number' && parsedCount <= 0) {
       setErrorMessage(ERROR_MESSAGE_INVALID_COUNT_TARGET)
       return
     }
@@ -1067,7 +1138,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
         <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
@@ -1077,128 +1148,138 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
           <div class="scrollbar-none mt-4 min-h-0 flex-1 basis-0 space-y-4 overflow-y-auto pr-1">
             <section class={GOAL_STEP_SECTION_CLASS}>
-              <div class="mb-4 flex gap-3">
+              <div class="mb-3 flex items-center gap-3">
                 <span class={GOAL_STEP_BADGE_CLASS}>1</span>
                 <div>
-                  <h2 class={GOAL_STEP_TITLE_CLASS}>タイトルと対象譜面</h2>
-                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>
-                    目標名を決めてから、進捗を計算する譜面を絞り込みます。
-                  </p>
+                  <h2 class={GOAL_STEP_TITLE_CLASS}>タイトル</h2>
+                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>表示名を設定します。</p>
+                </div>
+              </div>
+
+              <GoalTextField
+                label=""
+                aria-label="タイトル"
+                value={title()}
+                maxLength={GOAL_TITLE_MAX_LENGTH}
+                onChange={setTitle}
+              />
+            </section>
+
+            <section class={GOAL_STEP_SECTION_CLASS}>
+              <div class="mb-3 flex items-center gap-3">
+                <span class={GOAL_STEP_BADGE_CLASS}>2</span>
+                <div>
+                  <h2 class={GOAL_STEP_TITLE_CLASS}>対象譜面</h2>
+                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>進捗を計算する譜面を絞り込みます。</p>
                 </div>
               </div>
 
               <div class="space-y-4">
-                <GoalTextField
-                  label="タイトル"
-                  value={title()}
-                  maxLength={GOAL_TITLE_MAX_LENGTH}
-                  onChange={setTitle}
-                />
-
-                <div class="rounded border border-border bg-surface p-3">
-                  <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-                    <p class="text-sm font-semibold text-text-muted">対象譜面</p>
-                    <p class="rounded bg-action-secondary px-2 py-1 text-xs font-semibold text-text-muted">
-                      {targetCountText()}
-                    </p>
-                  </div>
-                  <div class="grid grid-cols-1 gap-3 ">
-                    <fieldset class="block text-sm space-y-1">
-                      <div class="flex items-center justify-between">
-                        <span class="block text-text-muted">難易度</span>
-                        <Button
-                          type="button"
-                          class="text-xs text-action-primary hover:text-action-primary"
-                          onClick={() => {
-                            setChartTargetMode('normal')
+                <div class="mb-3 flex flex-wrap items-center justify-start gap-2 text-xs text-text-muted">
+                  対象となる譜面数: {targetCountText()}
+                </div>
+                <div class="grid grid-cols-1 gap-3">
+                  <fieldset class="block text-sm space-y-1">
+                    <div class="flex items-center justify-between">
+                      <span class="block text-text-muted">難易度</span>
+                      <Button
+                        type="button"
+                        class="text-xs text-action-primary hover:text-action-primary"
+                        onClick={() => {
+                          setChartTargetMode('normal')
+                          setDiffs([])
+                        }}
+                      >
+                        クリア
+                      </Button>
+                    </div>
+                    <div class="space-y-1 bg-surface rounded border border-border-strong px-3 py-2">
+                      <GoalFilterCheckbox
+                        label="OP対象 (MAS+ULT)"
+                        checked={chartTargetMode() === 'op_target'}
+                        onChange={(checked) => {
+                          setChartTargetMode(checked ? 'op_target' : 'normal')
+                          if (checked) {
                             setDiffs([])
-                          }}
-                        >
-                          クリア
-                        </Button>
-                      </div>
-                      <div class="space-y-1 rounded border border-border-strong px-3 py-2">
-                        <GoalFilterCheckbox
-                          label="OP対象 (MAS+ULT)"
-                          checked={chartTargetMode() === 'op_target'}
-                          onChange={(checked) => {
-                            setChartTargetMode(checked ? 'op_target' : 'normal')
-                            if (checked) {
-                              setDiffs([])
+                          }
+                        }}
+                      />
+                      <For each={props.masterData.difficulties}>
+                        {(item) => (
+                          <GoalFilterCheckbox
+                            label={item.name}
+                            checked={
+                              chartTargetMode() === 'normal' && diffs().includes(String(item.id))
                             }
-                          }}
-                        />
-                        <For each={props.masterData.difficulties}>
-                          {(item) => (
-                            <GoalFilterCheckbox
-                              label={item.name}
-                              checked={
-                                chartTargetMode() === 'normal' && diffs().includes(String(item.id))
-                              }
-                              disabled={chartTargetMode() === 'op_target'}
-                              onChange={(checked) => {
-                                setChartTargetMode('normal')
-                                setDiffs((prev) => toggleSelection(prev, String(item.id), checked))
-                              }}
-                            />
-                          )}
-                        </For>
-                      </div>
-                    </fieldset>
+                            disabled={chartTargetMode() === 'op_target'}
+                            onChange={(checked) => {
+                              setChartTargetMode('normal')
+                              setDiffs((prev) => toggleSelection(prev, String(item.id), checked))
+                            }}
+                          />
+                        )}
+                      </For>
+                    </div>
+                  </fieldset>
 
-                    {/* TODO: 「ジャンル」という文字部分のスタイルが違うのは後で修正 「難易度」に合わせる */}
-                    <GenreSection
-                      genres={genreLabels()}
+                  <fieldset class="block space-y-1 text-sm">
+                    <span class="block text-text-muted">ジャンル</span>
+                    <MultiSelectDropdown
+                      options={genreLabels()}
                       selected={selectedGenreLabels()}
+                      placeholder="ジャンルを選択"
                       contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
                       onToggle={handleToggleGenreLabel}
                       onSelectAll={() => setGenres(allGenreSelections())}
                       onClear={() => setGenres([])}
                     />
+                  </fieldset>
 
-                    <Show
-                      when={versionLabels().length > 0}
-                      fallback={
-                        <div>
-                          <span class="mb-1 block text-sm font-medium">バージョン</span>
-                          <p class="text-sm text-text-subtle">バージョンを取得できませんでした。</p>
-                        </div>
-                      }
-                    >
-                      {/* TODO: 「バージョン」という文字部分のスタイルが違うのは後で修正 「難易度」に合わせる */}
-                      <VersionSection
-                        versions={versionLabels()}
+                  <Show
+                    when={versionLabels().length > 0}
+                    fallback={
+                      <div class="space-y-1 text-sm">
+                        <span class="block text-text-muted">バージョン</span>
+                        <p class="text-sm text-text-subtle">バージョンを取得できませんでした。</p>
+                      </div>
+                    }
+                  >
+                    <fieldset class="block space-y-1 text-sm">
+                      <span class="block text-text-muted">バージョン</span>
+                      <MultiSelectDropdown
+                        options={versionLabels()}
                         selected={selectedVersionLabels()}
+                        placeholder="バージョンを選択"
                         contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
                         onToggle={handleToggleVersionLabel}
                         onSelectAll={() => setVersions(allVersionSelections())}
                         onClear={() => setVersions([])}
                       />
-                    </Show>
+                    </fieldset>
+                  </Show>
 
-                    <div class="grid grid-cols-2 gap-2">
-                      <GoalDecimalTextField
-                        label="定数min"
-                        value={constMin()}
-                        onChange={(value) => handleMusicConstChange(setConstMin, value)}
-                      />
-                      <GoalDecimalTextField
-                        label="定数max"
-                        value={constMax()}
-                        onChange={(value) => handleMusicConstChange(setConstMax, value)}
-                      />
-                    </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <GoalDecimalTextField
+                      label="定数min"
+                      value={constMin()}
+                      onChange={(value) => handleMusicConstChange(setConstMin, value)}
+                    />
+                    <GoalDecimalTextField
+                      label="定数max"
+                      value={constMax()}
+                      onChange={(value) => handleMusicConstChange(setConstMax, value)}
+                    />
                   </div>
                 </div>
               </div>
             </section>
 
             <section class={GOAL_STEP_SECTION_CLASS}>
-              <div class="mb-4 flex gap-3">
-                <span class={GOAL_STEP_BADGE_CLASS}>2</span>
+              <div class="mb-3 flex items-center gap-3">
+                <span class={GOAL_STEP_BADGE_CLASS}>3</span>
                 <div>
                   <h2 class={GOAL_STEP_TITLE_CLASS}>達成条件</h2>
-                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>{STEP2_DESCRIPTION}</p>
+                  <p class={GOAL_STEP_DESCRIPTION_CLASS}>{STEP3_DESCRIPTION}</p>
                 </div>
               </div>
 
@@ -1232,7 +1313,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   <GoalNumberField
                     label="スコア目標"
                     value={score()}
-                    min={MIN_SCORE}
+                    min={SCORE_MIN}
                     max={MAX_SCORE}
                     onChange={handleScoreChange}
                   />
@@ -1285,10 +1366,15 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                         options={COUNT_MODE_OPTIONS}
                         onChange={setCountMode}
                         renderOptionContent={(option) =>
-                          option.value === 'number' && countMode() === 'number' ? (
+                          option.value === countMode() && option.value !== 'all' ? (
                             <GoalNumberField
                               label=""
-                              min={1}
+                              min={option.value === 'number' ? 1 : 0}
+                              max={
+                                option.value === 'percent'
+                                  ? MAX_OVERPOWER_PERCENT
+                                  : props.resolveAllCount(getDraftAttributes())
+                              }
                               value={count()}
                               description={countLimitText()}
                               onChange={setCount}
@@ -1330,7 +1416,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                             options={TOTAL_MODE_OPTIONS}
                             onChange={setTotalMode}
                             renderOptionContent={(option) =>
-                              option.value === 'number' && totalMode() === 'number' ? (
+                              option.value === totalMode() && option.value !== 'all' ? (
                                 <GoalNumberField
                                   label=""
                                   value={total()}
@@ -1365,6 +1451,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                   </Checkbox>
                 </div>
 
+                <p class="mb-1 block text-text-muted text-sm">プレビュー</p>
                 <article class="rounded-lg border border-border bg-surface p-4 shadow-sm">
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">

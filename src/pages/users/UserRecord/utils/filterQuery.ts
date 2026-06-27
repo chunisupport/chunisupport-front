@@ -1,5 +1,5 @@
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { CONST_MAX, CONST_MIN } from '../constants/constRange'
 import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../constants/rangeFilters'
 import type { FilterState, NumericRangeFilter } from '../types/types'
 
@@ -28,9 +28,9 @@ type FilterRangeQuerySource = {
  */
 export function serializeFilterRangeQuery(filter: FilterState): FilterRangeQuery {
   return {
-    constMin: filter.const.min === CONST_MIN ? undefined : String(filter.const.min),
-    constMax: filter.const.max === CONST_MAX ? undefined : String(filter.const.max),
-    scoreMin: filter.score.min === 0 ? undefined : String(filter.score.min),
+    constMin: filter.const.min === CHART_CONST_MIN ? undefined : String(filter.const.min),
+    constMax: filter.const.max === CHART_CONST_MAX ? undefined : String(filter.const.max),
+    scoreMin: filter.score.min === SCORE_MIN ? undefined : String(filter.score.min),
     scoreMax: filter.score.max === MAX_SCORE ? undefined : String(filter.score.max),
     justiceCountMin: filter.justiceCount.min === null ? undefined : String(filter.justiceCount.min),
     justiceCountMax: filter.justiceCount.max === null ? undefined : String(filter.justiceCount.max),
@@ -69,12 +69,12 @@ export function parseFilterRangeQuery(
   return {
     const: {
       min: parseNumberRangeQueryValue(query.constMin, fallback.const.min, {
-        min: CONST_MIN,
-        max: CONST_MAX,
+        min: CHART_CONST_MIN,
+        max: CHART_CONST_MAX,
       }),
       max: parseNumberRangeQueryValue(query.constMax, fallback.const.max, {
-        min: CONST_MIN,
-        max: CONST_MAX,
+        min: CHART_CONST_MIN,
+        max: CHART_CONST_MAX,
       }),
     },
     score: parseScoreRangeQuery(query, fallback.score),
@@ -117,8 +117,14 @@ export function parseScoreRangeQuery(
   fallback: NumericRangeFilter
 ): NumericRangeFilter {
   return {
-    min: parseNumberRangeQueryValue(query.scoreMin, fallback.min, { min: 0, max: MAX_SCORE }),
-    max: parseNumberRangeQueryValue(query.scoreMax, fallback.max, { min: 0, max: MAX_SCORE }),
+    min: parseNumberRangeQueryValue(query.scoreMin, fallback.min, {
+      min: SCORE_MIN,
+      max: MAX_SCORE,
+    }),
+    max: parseNumberRangeQueryValue(query.scoreMax, fallback.max, {
+      min: SCORE_MIN,
+      max: MAX_SCORE,
+    }),
   }
 }
 
