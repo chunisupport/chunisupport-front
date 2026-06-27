@@ -2,6 +2,7 @@ import { useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import {
   createEffect,
+  createMemo,
   createResource,
   createSignal,
   ErrorBoundary,
@@ -30,7 +31,7 @@ import RecordTable from './components/RecordTable'
 import { buildDefaultFilter, DEFAULT_FILTER, normalizeFilterState } from './types/filterDefaults'
 import type { FilterState, RecordColumnId, RecordSortKey } from './types/types'
 import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
-import { getDefaultFilter } from './utils/filtering'
+import { isRecordFilterChanged } from './utils/filterDialog'
 import { useUserRecordPageModel } from './utils/pageModel'
 import { parseSortParams } from './utils/sorting'
 
@@ -94,6 +95,9 @@ const UserRecord: Component<Props> = (props) => {
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<RecordColumnId[]>(
     sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
   )
+
+  const defaultFilter = createMemo(() => buildDefaultFilter(masterData(), versionData()?.versions))
+  const hasFilterChanges = createMemo(() => isRecordFilterChanged(filters(), defaultFilter()))
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
   onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
@@ -179,6 +183,7 @@ const UserRecord: Component<Props> = (props) => {
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
+                filterActive={hasFilterChanges()}
               />
 
               {/* フィルター統計 */}
@@ -212,7 +217,7 @@ const UserRecord: Component<Props> = (props) => {
                 onChange={applyFilters}
                 masterData={masterData()}
                 versions={versionData()?.versions}
-                defaultFilter={getDefaultFilter(masterData(), versionData()?.versions)}
+                defaultFilter={defaultFilter()}
               />
 
               <ColumnSettingsDialog
