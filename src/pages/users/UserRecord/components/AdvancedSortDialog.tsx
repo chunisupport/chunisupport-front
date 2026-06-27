@@ -75,7 +75,7 @@ const createEmptyDraftSortCondition = (): DraftSortCondition => ({
  * @returns ダイアログで編集する3行分の下書き。
  */
 const toDraftSortConditions = (sortConditions: RecordSortCondition[]): DraftSortCondition[] => {
-  const draftSortConditions = sortConditions
+  const draftSortConditions: DraftSortCondition[] = sortConditions
     .slice(0, MAX_SORT_CONDITION_COUNT)
     .map((sortCondition) => ({ ...sortCondition }))
 
@@ -99,13 +99,14 @@ const compactDraftSortConditions = (
   const sortConditions: RecordSortCondition[] = []
 
   for (const draftSortCondition of draftSortConditions) {
-    if (!draftSortCondition.key || usedKeys.has(draftSortCondition.key)) {
+    const sortKey = draftSortCondition.key
+    if (!sortKey || usedKeys.has(sortKey)) {
       continue
     }
 
-    usedKeys.add(draftSortCondition.key)
+    usedKeys.add(sortKey)
     sortConditions.push({
-      key: draftSortCondition.key,
+      key: sortKey,
       direction: draftSortCondition.direction,
     })
   }
@@ -248,8 +249,8 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
 
                 return (
                   <div class="flex flex-wrap items-end gap-2">
-                    <span class="w-[4.5rem] pb-2 text-sm font-medium">第{rowIndex + 1}ソート</span>
-                    <div class="min-w-[9rem] flex-1">
+                    <span class="w-18 pb-2 text-sm font-medium">第{rowIndex + 1}ソート</span>
+                    <div class="min-w-36 flex-1">
                       <Select<SortColumnOption>
                         options={SORT_COLUMN_OPTIONS}
                         optionValue="value"
@@ -287,7 +288,7 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
                       </Select>
                     </div>
 
-                    <div class="w-[6.5rem]">
+                    <div class="w-26">
                       <Select<SortDirectionOption>
                         options={SORT_DIRECTION_OPTIONS}
                         optionValue="value"

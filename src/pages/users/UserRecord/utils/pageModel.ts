@@ -80,13 +80,16 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
       nextKey
     )
 
-    if (!nextSort.sortKey || !nextSort.sortDirection) {
+    const nextSortKey = nextSort.sortKey
+    const nextSortDirection = nextSort.sortDirection
+
+    if (!nextSortKey || !nextSortDirection) {
       params.setSortConditions([])
       return
     }
 
     params.setSortConditions((currentSortConditions) => [
-      { key: nextSort.sortKey, direction: nextSort.sortDirection },
+      { key: nextSortKey, direction: nextSortDirection },
       ...currentSortConditions.filter((sortCondition) => sortCondition.key !== nextKey).slice(0, 2),
     ])
   }
