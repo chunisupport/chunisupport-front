@@ -51,20 +51,20 @@ test('ソートクエリが有効な場合は指定値をそのまま使う', ()
   })
 })
 
-test('ソートクエリが無効な場合はscore descを既定値にする', () => {
+test('ソートクエリが無効な場合はrating descを既定値にする', () => {
   assert.deepEqual(parseSortParams({ sortcol: 'unknown', sortorder: 'asc' }), {
-    initialSortKey: 'score',
+    initialSortKey: 'rating',
     initialSortOrder: 'desc',
   })
   assert.deepEqual(parseSortParams({ sortcol: 'score', sortorder: 'invalid' }), {
-    initialSortKey: 'score',
+    initialSortKey: 'rating',
     initialSortOrder: 'desc',
   })
 })
 
-test('通常レコードの既定ソートはスコア降順、定数降順、難易度降順、曲名昇順にする', () => {
+test('通常レコードの既定ソートは単曲レート降順、定数降順、難易度降順、曲名昇順にする', () => {
   assert.deepEqual(DEFAULT_RECORD_SORT_CONDITIONS, [
-    { key: 'score', direction: 'desc' },
+    { key: 'rating', direction: 'desc' },
     { key: 'const', direction: 'desc' },
     { key: 'difficulty', direction: 'desc' },
     { key: 'title', direction: 'asc' },

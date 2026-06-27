@@ -41,7 +41,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
 
 /** 通常レコード一覧で常に適用する既定ソート条件。 */
 export const DEFAULT_RECORD_SORT_CONDITIONS: RecordSortCondition[] = [
-  { key: 'score', direction: 'desc' },
+  { key: 'rating', direction: 'desc' },
   { key: 'const', direction: 'desc' },
   { key: 'difficulty', direction: 'desc' },
   { key: 'title', direction: 'asc' },
@@ -66,7 +66,7 @@ export const normalizeRecordSortConditions = (
 
 export const parseSortParams = (searchParams: SortParamsSource) => {
   const parsed = parseSortQuery(searchParams, RECORD_SORT_COL_MAP, {
-    sortKey: 'score',
+    sortKey: 'rating',
     sortDirection: 'desc',
   })
 
