@@ -7,6 +7,7 @@ import {
   type ChartOptions,
   Legend,
   LinearScale,
+  type Plugin,
   Tooltip,
 } from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
@@ -116,27 +117,63 @@ const getChartColor = (variableName: string): string => {
 }
 
 /**
- * AJCバッジと同じ配色のCanvasグラデーションを生成する。
- * @param canvas グラデーションの描画範囲に利用するCanvas。
- * @param colorVariables グラデーションを構成するCSSカスタムプロパティ名。
- * @param fallbackColor Canvasコンテキストを取得できない場合の代替色。
- * @returns Chart.jsへ渡すCanvasグラデーションまたは代替色。
+ * 棒の左上から右下へ向かうCanvasグラデーションを生成する。
+ * @param context グラデーションを生成するCanvasコンテキスト。
+ * @param bar グラデーションの描画範囲に利用する棒要素。
+ * @param colors グラデーションを構成する解決済みの色。
+ * @returns 棒の描画範囲に合わせたCanvasグラデーション。
  */
 const createChartGradient = (
-  canvas: HTMLCanvasElement,
-  colorVariables: readonly string[],
-  fallbackColor: string
-): CanvasGradient | string => {
-  const gradient = canvas.getContext('2d')?.createLinearGradient(0, 0, canvas.width, canvas.height)
-  if (!gradient) return fallbackColor
+  context: CanvasRenderingContext2D,
+  bar: BarElement,
+  colors: readonly string[]
+): CanvasGradient => {
+  const gradient = context.createLinearGradient(
+    bar.x - bar.width / 2,
+    bar.y,
+    bar.x + bar.width / 2,
+    bar.base
+  )
+  const lastColorIndex = colors.length - 1
 
-  const lastColorIndex = colorVariables.length - 1
-
-  colorVariables.forEach((colorVariable, index) => {
-    gradient.addColorStop(index / lastColorIndex, getChartColor(colorVariable))
+  colors.forEach((color, index) => {
+    gradient.addColorStop(index / lastColorIndex, color)
   })
 
   return gradient
+}
+
+/**
+ * グラデーション対象の各棒へ個別の虹色背景を適用するChart.jsプラグインを生成する。
+ * @param datasets グラデーション設定を含むグラフデータセット。
+ * @returns 棒の描画直前にグラデーションを更新するChart.jsプラグイン。
+ */
+const createBarGradientPlugin = (datasets: SongStatsChartDataset[]): Plugin<'bar'> => {
+  const gradientColors = datasets.map((dataset) =>
+    dataset.gradientColorVariables?.map(getChartColor)
+  )
+
+  return {
+    id: 'song-stats-bar-gradient',
+    beforeDatasetsDraw: (chart) => {
+      gradientColors.forEach((colors, datasetIndex) => {
+        if (!colors) return
+
+        chart.getDatasetMeta(datasetIndex).data.forEach((element) => {
+          const bar = element as BarElement
+          const backgroundColor = createChartGradient(chart.ctx, bar, colors)
+
+          bar.options = {
+            ...bar.options,
+            backgroundColor,
+            borderColor: backgroundColor,
+            hoverBackgroundColor: backgroundColor,
+            hoverBorderColor: backgroundColor,
+          }
+        })
+      })
+    },
+  }
 }
 
 /**
@@ -200,24 +237,20 @@ const createSongStatsChartOptions = (): ChartOptions<'bar'> => {
  * @returns Chart.jsに渡すデータセット。
  */
 const createSongStatsChartData = (
-  canvas: HTMLCanvasElement,
   labels: string[],
   datasets: SongStatsChartDataset[]
 ): ChartData<'bar', number[], string> => ({
   labels,
   datasets: datasets.map((dataset) => {
     const color = getChartColor(dataset.colorVariable)
-    const backgroundColor = dataset.gradientColorVariables
-      ? createChartGradient(canvas, dataset.gradientColorVariables, color)
-      : color
 
     return {
       label: dataset.label,
       data: dataset.values,
-      backgroundColor,
-      borderColor: backgroundColor,
-      hoverBackgroundColor: backgroundColor,
-      hoverBorderColor: backgroundColor,
+      backgroundColor: color,
+      borderColor: color,
+      hoverBackgroundColor: color,
+      hoverBorderColor: color,
       borderWidth: 1,
       borderRadius: 3,
     }
@@ -249,13 +282,14 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
   createEffect(() => {
     if (!mounted()) return
 
-    const chartData = createSongStatsChartData(canvasRef, props.labels, props.datasets)
+    const chartData = createSongStatsChartData(props.labels, props.datasets)
 
     if (!chart) {
       chart = new Chart(canvasRef, {
         type: 'bar',
         data: chartData,
         options: createSongStatsChartOptions(),
+        plugins: [createBarGradientPlugin(props.datasets)],
       })
       return
     }
