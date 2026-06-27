@@ -126,6 +126,26 @@ const LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS = {
 } as const
 
 /**
+ * 未解禁楽曲検索欄の状態に応じた外枠クラスを返す。
+ *
+ * @param active - 検索文字列が入力されているか。
+ * @returns 検索欄の外枠へ適用する Tailwind クラス。
+ */
+const getLockedSongsSearchFrameClass = (active: boolean): string =>
+  active
+    ? 'border-action-primary bg-success-bg focus-within:border-action-primary'
+    : 'border-border-strong focus-within:border-focus-ring'
+
+/**
+ * 未解禁楽曲検索欄の状態に応じたアイコンクラスを返す。
+ *
+ * @param active - 検索文字列が入力されているか。
+ * @returns 検索アイコンへ適用する Tailwind クラス。
+ */
+const getLockedSongsSearchIconClass = (active: boolean): string =>
+  active ? 'text-success' : 'text-text-subtle'
+
+/**
  * OVER POWER計算から除外する未解禁楽曲を検索・絞り込みしながら編集するダイアログ。
  *
  * @param props - ダイアログの表示状態、楽曲・マスターデータ、未解禁楽曲、保存処理。
@@ -177,6 +197,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
     buildDefaultLockedSongsFilter(genreOptions(), versionOptions())
   )
   const hasFilterChanges = createMemo(() => isLockedSongsFilterChanged(filters(), defaultFilter()))
+  const hasSearchQuery = createMemo(() => query().trim().length > 0)
   const filterButtonLabel = createMemo(() =>
     hasFilterChanges() ? 'フィルター適用中' : 'フィルター'
   )
@@ -391,12 +412,19 @@ const LockedSongsDialog: Component<Props> = (props) => {
           </div>
 
           <div class="mb-3 flex min-w-0 items-center">
-            <TextField class="min-w-0 flex-1 mr-2">
-              <div class="flex min-w-0 items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
-                <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
+            <TextField class="min-w-0 flex-1">
+              <div
+                class={`flex min-w-0 items-center gap-2 rounded-l border px-2 transition-colors ${getLockedSongsSearchFrameClass(
+                  hasSearchQuery()
+                )}`}
+              >
+                <Search
+                  class={`h-4 w-4 shrink-0 ${getLockedSongsSearchIconClass(hasSearchQuery())}`}
+                  aria-hidden="true"
+                />
                 <TextField.Input
                   type="search"
-                  class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
+                  class="min-w-0 flex-1 bg-transparent py-2 font-sans text-sm outline-none"
                   aria-label="未解禁楽曲検索"
                   placeholder="曲名・アーティストで検索..."
                   value={query()}
@@ -406,7 +434,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </TextField>
             <Button
               type="button"
-              class={`flex h-9.5 min-w-9.5 shrink-0 items-center justify-center gap-1.5 rounded-l border-l border-t border-b px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+              class={`-ml-px flex h-9.5 min-w-9.5 shrink-0 items-center justify-center gap-1.5 border px-2 text-sm transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 hasFilterChanges()
                   ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                   : 'border-border-strong text-text-muted hover:bg-surface-hover'
@@ -420,7 +448,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </Button>
             <Button
               type="button"
-              class={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+              class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 showLockedOnly()
                   ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                   : 'border-border-strong text-text-muted hover:bg-surface-hover'

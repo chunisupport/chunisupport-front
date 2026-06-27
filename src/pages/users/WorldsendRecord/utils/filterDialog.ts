@@ -38,6 +38,79 @@ export function hasWorldsendJusticeCountFilter(filter: WorldsendFilterState): bo
 }
 
 /**
+ * 2つの WORLD'S END フィルター配列が順序に依存せず同じ値を持つか判定する。
+ *
+ * @param left - 比較元の値配列。
+ * @param right - 比較先の値配列。
+ * @returns 2つの配列が同じ値集合の場合は true。
+ */
+export function hasSameWorldsendFilterValues<T>(left: T[], right: T[]): boolean {
+  if (left.length !== right.length) return false
+
+  const rightValues = new Set(right)
+  return left.every((value) => rightValues.has(value))
+}
+
+/**
+ * WORLD'S END レコードフィルターが既定値から変更されているか判定する。
+ *
+ * @param current - 現在の WORLD'S END フィルター状態。
+ * @param defaultFilter - 比較対象の既定フィルター状態。
+ * @returns 既定値との差分がある場合は true。
+ */
+export function isWorldsendFilterChanged(
+  current: WorldsendFilterState,
+  defaultFilter: WorldsendFilterState
+): boolean {
+  return (
+    current.title !== defaultFilter.title ||
+    current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
+    current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
+    current.levelStarRange.min !== defaultFilter.levelStarRange.min ||
+    current.levelStarRange.max !== defaultFilter.levelStarRange.max ||
+    current.score.min !== defaultFilter.score.min ||
+    current.score.max !== defaultFilter.score.max ||
+    current.justiceCount.min !== defaultFilter.justiceCount.min ||
+    current.justiceCount.max !== defaultFilter.justiceCount.max ||
+    !hasSameWorldsendFilterValues(current.attributes, defaultFilter.attributes) ||
+    !hasSameWorldsendFilterValues(current.genres, defaultFilter.genres) ||
+    !hasSameWorldsendFilterValues(current.versions, defaultFilter.versions) ||
+    !hasSameWorldsendFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
+    !hasSameWorldsendFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
+    !hasSameWorldsendFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+  )
+}
+
+/**
+ * WORLD'S END レコードフィルターのうち、検索文字列以外が既定値から変更されているか判定する。
+ *
+ * @param current - 現在の WORLD'S END フィルター状態。
+ * @param defaultFilter - 比較対象の既定フィルター状態。
+ * @returns 検索文字列以外の条件に差分がある場合は true。
+ */
+export function isWorldsendFilterOptionsChanged(
+  current: WorldsendFilterState,
+  defaultFilter: WorldsendFilterState
+): boolean {
+  return (
+    current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
+    current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
+    current.levelStarRange.min !== defaultFilter.levelStarRange.min ||
+    current.levelStarRange.max !== defaultFilter.levelStarRange.max ||
+    current.score.min !== defaultFilter.score.min ||
+    current.score.max !== defaultFilter.score.max ||
+    current.justiceCount.min !== defaultFilter.justiceCount.min ||
+    current.justiceCount.max !== defaultFilter.justiceCount.max ||
+    !hasSameWorldsendFilterValues(current.attributes, defaultFilter.attributes) ||
+    !hasSameWorldsendFilterValues(current.genres, defaultFilter.genres) ||
+    !hasSameWorldsendFilterValues(current.versions, defaultFilter.versions) ||
+    !hasSameWorldsendFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
+    !hasSameWorldsendFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
+    !hasSameWorldsendFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+  )
+}
+
+/**
  * WORLD'S END フィルター条件を保存ダイアログ用の要約へ変換する。
  *
  * @param filter - 要約対象の WORLD'S END フィルター。
