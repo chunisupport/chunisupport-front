@@ -414,12 +414,10 @@
 }
 
 @keyframes honor-title-rotating-scroll {
-  0%,
-  12.5% {
+  0% {
     transform: translateX(0%);
   }
 
-  87.5%,
   100% {
     transform: translateX(var(--honor-title-scroll-amount, -100%));
   }
