@@ -165,6 +165,8 @@ const GOAL_STEP_BADGE_CLASS =
   'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-action-primary text-sm font-bold text-text-inverse'
 const GOAL_STEP_TITLE_CLASS = 'text-base font-bold text-text'
 const GOAL_STEP_DESCRIPTION_CLASS = 'text-sm text-text-muted'
+/** 対象譜面数の表示ラベル。 */
+const TARGET_CHART_COUNT_LABEL = '対象となる譜面数:'
 
 const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = {
   rank_count: '指定ランク以上を達成した譜面数を目標にします。',
@@ -923,6 +925,16 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     `${props.resolveAllCount(getDraftAttributes()).toLocaleString('ja-JP')} 譜面`
 
   /**
+   * 理論値選択時に表示する目標値を組み立てる。
+   *
+   * @returns 目標種別に応じた総スコアまたはOVER POWERの理論値。
+   */
+  const theoreticalTotalText = (): string => {
+    const currentType = achievementType()
+    return getTheoreticalTotal(currentType).toLocaleString('ja-JP')
+  }
+
+  /**
    * 現在選択中の目標種別の説明文を取得する。
    *
    * @returns 目標種別ごとの説明テキスト。
@@ -942,7 +954,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    *
    * @returns 実際の目標カードと同じ表示計算に渡す進捗情報。
    */
-  const previewProgress = (): GoalProgressResult => {
+  const previewProgress = createMemo<GoalProgressResult>(() => {
     const currentType = achievementType()
     const attributes = getDraftAttributes()
     return props.resolveDraftGoalProgress({
@@ -952,7 +964,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       attributes,
       invert: invert(),
     })
-  }
+  })
 
   /**
    * 件数入力で指定できる上限を表示用に組み立てる。
@@ -1142,7 +1154,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] select-none flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
           <Dialog.Title class="shrink-0 text-lg font-bold">
             {props.mode === 'create' ? '目標を作成' : '目標を編集'}
           </Dialog.Title>
@@ -1177,7 +1189,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
               <div class="space-y-4">
                 <div class="mb-3 flex flex-wrap items-center justify-start gap-2 text-xs text-text-muted">
-                  対象となる譜面数: {targetCountText()}
+                  {TARGET_CHART_COUNT_LABEL} {targetCountText()}
                 </div>
                 <div class="grid grid-cols-1 gap-3">
                   <fieldset class="block text-sm space-y-1">
@@ -1367,19 +1379,25 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                         options={COUNT_MODE_OPTIONS}
                         onChange={setCountMode}
                         renderOptionContent={(option) =>
-                          option.value === countMode() && option.value !== 'all' ? (
-                            <GoalNumberField
-                              label=""
-                              min={option.value === 'number' ? 1 : 0}
-                              max={
-                                option.value === 'percent'
-                                  ? MAX_OVERPOWER_PERCENT
-                                  : props.resolveAllCount(getDraftAttributes())
-                              }
-                              value={count()}
-                              description={countLimitText()}
-                              onChange={setCount}
-                            />
+                          option.value === countMode() ? (
+                            option.value === 'all' ? (
+                              <p class="-mt-3 text-xs leading-none text-text-muted">
+                                {targetCountText()}
+                              </p>
+                            ) : (
+                              <GoalNumberField
+                                label=""
+                                min={option.value === 'number' ? 1 : 0}
+                                max={
+                                  option.value === 'percent'
+                                    ? MAX_OVERPOWER_PERCENT
+                                    : props.resolveAllCount(getDraftAttributes())
+                                }
+                                value={count()}
+                                description={countLimitText()}
+                                onChange={setCount}
+                              />
+                            )
                           ) : null
                         }
                       />
@@ -1417,15 +1435,21 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                             options={TOTAL_MODE_OPTIONS}
                             onChange={setTotalMode}
                             renderOptionContent={(option) =>
-                              option.value === totalMode() && option.value !== 'all' ? (
-                                <GoalNumberField
-                                  label=""
-                                  value={total()}
-                                  description={totalLimitText()}
-                                  min={0}
-                                  max={totalFieldMax()}
-                                  onChange={setTotal}
-                                />
+                              option.value === totalMode() ? (
+                                option.value === 'all' ? (
+                                  <p class="-mt-3 text-xs leading-none text-text-muted">
+                                    {theoreticalTotalText()}
+                                  </p>
+                                ) : (
+                                  <GoalNumberField
+                                    label=""
+                                    value={total()}
+                                    description={totalLimitText()}
+                                    min={0}
+                                    max={totalFieldMax()}
+                                    onChange={setTotal}
+                                  />
+                                )
                               ) : null
                             }
                           />
@@ -1453,7 +1477,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 </div>
 
                 <p class="mb-1 block text-text-muted text-sm">プレビュー</p>
-                <article class="rounded-lg border border-border bg-surface p-4 shadow-sm">
+                <article
+                  class={`rounded-lg border p-4 shadow-sm ${
+                    previewProgress().achieved
+                      ? 'border-action-primary-border bg-action-primary-muted'
+                      : 'border-border bg-surface'
+                  }`}
+                >
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                       <h2 class="truncate font-sans text-lg font-bold text-text">

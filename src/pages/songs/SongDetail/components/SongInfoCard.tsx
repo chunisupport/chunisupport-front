@@ -1,6 +1,6 @@
 import { For } from 'solid-js'
+import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'
 import type { SongDTO } from '../../../../types/api'
-import { difficultyBadgeClass } from '../../../../utils/difficultyUtils'
 import SongMetaCardLayout, { type SongMetaInfoItem } from '../../components/SongMetaCardLayout'
 
 const fixedColumnClass = 'w-px whitespace-nowrap'
@@ -57,11 +57,9 @@ const SongInfoCard = (props: Props) => {
                   return (
                     <tr class="border-t border-border">
                       <td class={`${fixedCellClass} ${fixedColumnClass}`}>
-                        <div
-                          class={`rounded px-3 py-1 text-center text-xs font-semibold tracking-wide whitespace-nowrap ${difficultyBadgeClass(difficulty.label)}`}
-                        >
-                          {difficulty.label}
-                        </div>
+                        <DifficultyBadge
+                          difficulty={difficulty.label as keyof typeof props.song.charts}
+                        />
                       </td>
                       <td class={`${fixedCellClass} ${fixedColumnClass}`}>
                         <span class="block whitespace-nowrap">
