@@ -1,7 +1,7 @@
 import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import { Select } from '@kobalte/core/select'
-import { Check, ChevronDown } from 'lucide-solid'
+import { ArrowDownWideNarrow, ArrowUpNarrowWide, Check, ChevronDown } from 'lucide-solid'
 import { type Component, createEffect, createSignal, For } from 'solid-js'
 import type { RecordSortCondition, RecordSortKey, SortDirection } from '../types/types'
 import { RECORD_COLUMN_DEFINITIONS } from '../utils/columns'
@@ -28,11 +28,6 @@ type SortColumnOption = {
   label: string
 }
 
-type SortDirectionOption = {
-  value: SortDirection
-  label: string
-}
-
 /** 高度ソートで指定できる最大条件数。 */
 const MAX_SORT_CONDITION_COUNT = 4
 
@@ -48,12 +43,6 @@ const SORT_COLUMN_OPTIONS: SortColumnOption[] = RECORD_COLUMN_DEFINITIONS.map((d
   label: definition.label,
 }))
 
-/** ソート方向の選択肢。 */
-const SORT_DIRECTION_OPTIONS: SortDirectionOption[] = [
-  { value: 'asc', label: '昇順' },
-  { value: 'desc', label: '降順' },
-]
-
 /** 高度ソートダイアログの操作ボタンで使う Tailwind クラス。 */
 const ADVANCED_SORT_DIALOG_BUTTON_CLASS = {
   secondary:
@@ -63,17 +52,17 @@ const ADVANCED_SORT_DIALOG_BUTTON_CLASS = {
 } as const
 
 /**
- * 適用済みソート条件を3行分の下書きに変換する。
+ * 適用済みソート条件を4行分の下書きに変換する。
  *
  * @param sortConditions - 適用済みのソート条件。
- * @returns ダイアログで編集する3行分の下書き。
+ * @returns ダイアログで編集する4行分の下書き。
  */
 const toDraftSortConditions = (sortConditions: RecordSortCondition[]): DraftSortCondition[] => {
   return normalizeRecordSortConditions(sortConditions)
 }
 
 /**
- * 下書きソート条件から3件の適用用ソート条件を取り出す。
+ * 下書きソート条件から4件の適用用ソート条件を取り出す。
  *
  * @param draftSortConditions - ダイアログで編集したソート下書き。
  * @returns 重複を維持した適用用ソート条件。
@@ -92,13 +81,22 @@ const getSortColumnOption = (key: RecordSortKey): SortColumnOption =>
   SORT_COLUMN_OPTIONS.find((option) => option.value === key) ?? SORT_COLUMN_OPTIONS[0]
 
 /**
- * ソート方向に対応する選択肢を取得する。
+ * ソート方向の表示名を取得する。
  *
  * @param direction - ソート方向。
- * @returns 対応する方向選択肢。
+ * @returns 方向の表示名。
  */
-const getSortDirectionOption = (direction: SortDirection): SortDirectionOption =>
-  SORT_DIRECTION_OPTIONS.find((option) => option.value === direction) ?? SORT_DIRECTION_OPTIONS[0]
+const getSortDirectionLabel = (direction: SortDirection): string =>
+  direction === 'asc' ? '昇順' : '降順'
+
+/**
+ * 次のソート方向を取得する。
+ *
+ * @param direction - 現在のソート方向。
+ * @returns 切り替え後のソート方向。
+ */
+const nextSortDirection = (direction: SortDirection): SortDirection =>
+  direction === 'asc' ? 'desc' : 'asc'
 
 /**
  * 通常レコード一覧の高度ソート条件を編集するダイアログを表示する。
@@ -135,16 +133,17 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
   }
 
   /**
-   * 指定行のソート方向を更新する。
+   * 指定行のソート方向を昇順・降順で切り替える。
    *
    * @param rowIndex - 更新対象の行番号。
-   * @param direction - 次に指定するソート方向。
    * @returns なし。
    */
-  const updateDraftSortDirection = (rowIndex: number, direction: SortDirection): void => {
+  const toggleDraftSortDirection = (rowIndex: number): void => {
     setDraftSortConditions((currentDraftSortConditions) =>
       currentDraftSortConditions.map((draftSortCondition, index) =>
-        index === rowIndex ? { ...draftSortCondition, direction } : draftSortCondition
+        index === rowIndex
+          ? { ...draftSortCondition, direction: nextSortDirection(draftSortCondition.direction) }
+          : draftSortCondition
       )
     )
   }
@@ -176,16 +175,18 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
                   draftSortCondition()?.key ?? DEFAULT_RECORD_SORT_CONDITIONS[rowIndex].key
                 const selectedDirection = () => draftSortCondition()?.direction ?? 'asc'
                 const isFixedTitleSort = () => rowIndex === FIXED_TITLE_SORT_INDEX
+                const sortLabel = () =>
+                  isFixedTitleSort()
+                    ? `第${rowIndex + 1}ソート(項目固定)`
+                    : `第${rowIndex + 1}ソート`
+                const nextDirectionLabel = () =>
+                  getSortDirectionLabel(nextSortDirection(selectedDirection()))
 
                 return (
-                  <div class="flex flex-wrap items-end gap-2">
-                    <span class="w-18 pb-2 text-sm font-medium">第{rowIndex + 1}ソート</span>
-                    <div class="min-w-36 flex-1">
-                      {isFixedTitleSort() ? (
-                        <div class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
-                          <span class="overflow-hidden text-ellipsis whitespace-nowrap">曲名</span>
-                        </div>
-                      ) : (
+                  <div class="space-y-1">
+                    <span class="block text-sm">{sortLabel()}</span>
+                    <div class="flex items-center gap-2">
+                      <div class="min-w-0 flex-1">
                         <Select<SortColumnOption>
                           options={SORT_COLUMN_OPTIONS}
                           optionValue="value"
@@ -194,6 +195,7 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
                           onChange={(option) => {
                             if (option) updateDraftSortKey(rowIndex, option.value)
                           }}
+                          disabled={isFixedTitleSort()}
                           gutter={0}
                           itemComponent={(itemProps) => (
                             <Select.Item
@@ -208,7 +210,9 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
                           )}
                         >
                           <Select.Label class="sr-only">第{rowIndex + 1}ソート 列</Select.Label>
-                          <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
+                          <Select.Trigger
+                            class={`${FILTER_DIALOG_SELECT_TRIGGER_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
+                          >
                             <Select.Value<SortColumnOption> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
                               {(state) => state.selectedOption()?.label}
                             </Select.Value>
@@ -222,46 +226,20 @@ const AdvancedSortDialog: Component<AdvancedSortDialogProps> = (props) => {
                             </Select.Content>
                           </Select.Portal>
                         </Select>
-                      )}
-                    </div>
-
-                    <div class="w-26">
-                      <Select<SortDirectionOption>
-                        options={SORT_DIRECTION_OPTIONS}
-                        optionValue="value"
-                        optionTextValue="label"
-                        value={getSortDirectionOption(selectedDirection())}
-                        onChange={(option) => {
-                          if (option) updateDraftSortDirection(rowIndex, option.value)
-                        }}
-                        gutter={0}
-                        itemComponent={(itemProps) => (
-                          <Select.Item
-                            item={itemProps.item}
-                            class={FILTER_DIALOG_SELECT_ITEM_CLASS}
-                          >
-                            <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                            <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
-                              <Check class="h-4 w-4" />
-                            </Select.ItemIndicator>
-                          </Select.Item>
-                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        class="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border border-border-strong text-text-muted transition-colors hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                        aria-label={`${sortLabel()}を${nextDirectionLabel()}にする`}
+                        title={`${getSortDirectionLabel(selectedDirection())}。クリックで${nextDirectionLabel()}に切り替え`}
+                        onClick={() => toggleDraftSortDirection(rowIndex)}
                       >
-                        <Select.Label class="sr-only">第{rowIndex + 1}ソート 方向</Select.Label>
-                        <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
-                          <Select.Value<SortDirectionOption> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
-                            {(state) => state.selectedOption()?.label}
-                          </Select.Value>
-                          <Select.Icon class="h-5 w-5 flex items-center justify-center">
-                            <ChevronDown class="h-4 w-4" />
-                          </Select.Icon>
-                        </Select.Trigger>
-                        <Select.Portal>
-                          <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
-                            <Select.Listbox class="max-h-90 overflow-y-auto p-2" />
-                          </Select.Content>
-                        </Select.Portal>
-                      </Select>
+                        {selectedDirection() === 'asc' ? (
+                          <ArrowUpNarrowWide size={22} aria-hidden="true" />
+                        ) : (
+                          <ArrowDownWideNarrow size={22} aria-hidden="true" />
+                        )}
+                      </Button>
                     </div>
                   </div>
                 )
