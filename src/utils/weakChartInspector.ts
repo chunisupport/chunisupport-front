@@ -1,9 +1,4 @@
-import {
-  CHART_LEVEL_10_CONST_MIN,
-  SCORE_THEORETICAL_MAX,
-  WEAK_CHART_INSPECTOR_DIFFICULTIES,
-  WEAK_CHART_INSPECTOR_DISPLAY_SCORE_MIN,
-} from '../constants/chart'
+import { SCORE_THEORETICAL_MAX, WEAK_CHART_INSPECTOR_DISPLAY_SCORE_MIN } from '../constants/chart'
 import type { PlayerRecordDTO } from '../types/api'
 
 /** 箱ひげ図を構成する譜面定数単位の統計値。 */
@@ -40,11 +35,7 @@ export type WeakChartInspection = {
  * @returns 分析対象の場合はtrue。
  */
 export const isWeakChartInspectionTarget = (record: PlayerRecordDTO): boolean =>
-  record.is_played &&
-  record.clear_lamp !== 'FAILED' &&
-  WEAK_CHART_INSPECTOR_DIFFICULTIES.some((difficulty) => difficulty === record.difficulty) &&
-  record.const >= CHART_LEVEL_10_CONST_MIN &&
-  record.score <= SCORE_THEORETICAL_MAX
+  record.is_played && record.clear_lamp !== 'FAILED' && record.score <= SCORE_THEORETICAL_MAX
 
 /**
  * 集計対象レコードをグラフと一覧へ表示するか判定する。
@@ -108,7 +99,7 @@ export const inspectWeakCharts = (records: PlayerRecordDTO[]): WeakChartInspecti
       firstQuartile,
       median,
       thirdQuartile,
-      upperWhisker: inlierScores.at(-1) ?? scores.at(-1) ?? 0,
+      upperWhisker: inlierScores[inlierScores.length - 1] ?? scores[scores.length - 1] ?? 0,
     })
 
     for (const record of group) {
