@@ -71,7 +71,7 @@ const CalculatorField: Component<{
  * @returns 計算フォームと推定譜面定数。
  */
 const ChartConstantCalculatorPage = (): JSX.Element => {
-  const [score, setScore] = createSignal(CHART_CONSTANT_DEFAULTS.score)
+  const [score, setScore] = createSignal<string>(CHART_CONSTANT_DEFAULTS.score)
   const [overPowerChange, setOverPowerChange] = createSignal(
     CHART_CONSTANT_DEFAULTS.overPowerChange
   )

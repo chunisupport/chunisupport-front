@@ -54,6 +54,12 @@ pnpm check
 # CI 用チェック（自動修正なし）
 pnpm check:ci
 
+# 型チェック
+pnpm typecheck
+
+# 品質チェック一括実行
+pnpm verify
+
 # 単体テスト
 pnpm test:unit
 ```
@@ -76,13 +82,15 @@ src/
 変更時は次のコマンドを実行してください。
 
 ```bash
-pnpm check:ci
-pnpm build
+pnpm verify
 ```
 
-必要に応じて単体テストも実行してください。
+個別に確認する場合は次のコマンドを実行してください。
 
 ```bash
+pnpm check:ci
+pnpm typecheck
+pnpm build
 pnpm test:unit
 ```
 

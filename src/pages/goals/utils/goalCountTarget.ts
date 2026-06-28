@@ -9,6 +9,20 @@ export type GoalTargetParam =
   | { percent: number }
   | Record<string, never>
 
+/** 件数系の目標値パラメータ。 */
+export type GoalCountTargetParam =
+  | { count: number }
+  | { remaining: number }
+  | { percent: number }
+  | Record<string, never>
+
+/** 合計系の目標値パラメータ。 */
+export type GoalTotalTargetParam =
+  | { total: number }
+  | { remaining: number }
+  | { percent: number }
+  | Record<string, never>
+
 /**
  * 目標値の指定方法と入力値をAPIパラメータへ変換する。
  *
@@ -17,11 +31,21 @@ export type GoalTargetParam =
  * @param absoluteKey - 絶対値指定時に使うAPIキー。
  * @returns 選択された指定方法に対応する相互排他的なAPIパラメータ。
  */
-export const buildGoalTargetParam = (
+export function buildGoalTargetParam(
+  mode: GoalTargetMode,
+  value: string,
+  absoluteKey: 'count'
+): GoalCountTargetParam
+export function buildGoalTargetParam(
+  mode: GoalTargetMode,
+  value: string,
+  absoluteKey: 'total'
+): GoalTotalTargetParam
+export function buildGoalTargetParam(
   mode: GoalTargetMode,
   value: string,
   absoluteKey: 'count' | 'total'
-): GoalTargetParam => {
+): GoalTargetParam {
   if (mode === 'all') return {}
 
   const parsedValue = Number(value)

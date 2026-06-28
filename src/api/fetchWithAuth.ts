@@ -84,7 +84,9 @@ export const fetchWithAuth = async (
       redirectToLogin()
     }
 
-    const error = new Error(getErrorMessage({ error: { code: 'missing_token' } })) as Error & {
+    const error = new Error(
+      getErrorMessage({ error: { status: 401, code: 'missing_token' } })
+    ) as Error & {
       status?: number
       code?: string
     }
