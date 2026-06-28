@@ -6,6 +6,7 @@ import {
   CLIENT_CACHE_SCHEMA_VERSION,
   db,
   type UserApiResponse,
+  type ViewSetting,
 } from '../lib/db/cacheDB.ts'
 import type { SongDTO, UserRatingDTO, UserRecordDTO } from '../types/api.ts'
 import { readCachedSongs, replaceCachedSongs } from './songCacheRepository.ts'
@@ -176,8 +177,8 @@ test('画面設定は現行 schemaVersion の保存値だけ読み込まれる�
     key: 'standardRecordFilter',
     schemaVersion: CLIENT_CACHE_SCHEMA_VERSION - 1,
     savedAt: '2026-06-16T12:00:00Z',
-    data: { title: 'old' } as never,
-  })
+    data: { title: 'old' },
+  } as unknown as ViewSetting)
 
   // When
   const columns = await readStandardRecordColumnsSetting()
