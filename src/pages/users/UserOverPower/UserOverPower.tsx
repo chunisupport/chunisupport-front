@@ -2,7 +2,15 @@ import { Button } from '@kobalte/core/button'
 import { Select } from '@kobalte/core/select'
 import * as Tabs from '@kobalte/core/tabs'
 import { useLocation, useNavigate } from '@solidjs/router'
-import { ArrowLeftRight, ChartBarBig, Check, ChevronDown, LockKeyhole, Table2 } from 'lucide-solid'
+import {
+  ArrowLeftRight,
+  ChartBarBig,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  LockKeyhole,
+  Table2,
+} from 'lucide-solid'
 import type { Component } from 'solid-js'
 import {
   createMemo,
@@ -80,6 +88,9 @@ type SongEntriesBySummaryTab = Pick<
 
 /** OVERPOWERサマリーを開いたときに最初に表示する表示形式。 */
 const DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE: OverPowerSummaryViewMode = 'graph'
+
+/** レベル別集計で初期状態では折りたたむ低レベル帯の表示名。 */
+const LOW_LEVEL_SUMMARY_LABEL = 'Lv.1-9+'
 
 const OVER_POWER_SUMMARY_OPTIONS: OverPowerSummaryOption[] = [
   { value: 'genres', label: 'ジャンル' },
@@ -315,6 +326,36 @@ const buildSongBasedGraphRows = (
   })
 
 /**
+ * レベル別集計の低レベル帯を開閉するボタンを表示する。
+ *
+ * @param props - 開閉状態、対象譜面数、および開閉ハンドラ。
+ * @returns レベル1から9+の表示を切り替えるボタン。
+ */
+const LowLevelRowsToggle: Component<{
+  expanded: boolean
+  chartCount: number
+  onClick: () => void
+}> = (props) => (
+  <Button
+    type="button"
+    class="group inline-flex min-h-9 items-center gap-2 rounded-full border border-border-strong bg-surface px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
+    aria-expanded={props.expanded}
+    aria-controls="over-power-low-level-summary"
+    title={`${LOW_LEVEL_SUMMARY_LABEL}を${props.expanded ? '折りたたむ' : '展開'}`}
+    onClick={props.onClick}
+  >
+    <ChevronRight
+      class="h-4 w-4 transition-transform group-aria-expanded:rotate-90"
+      aria-hidden="true"
+    />
+    <span>{LOW_LEVEL_SUMMARY_LABEL}</span>
+    <span class="rounded-full bg-surface-muted px-2 py-0.5 text-xs tabular-nums text-text-subtle">
+      {props.chartCount}
+    </span>
+  </Button>
+)
+
+/**
  * ユーザーのOVERPOWERサマリーと分布グラフを表示する。
  *
  * @param props - レコード、選択中サブページ、表示対象ユーザー名。
@@ -327,6 +368,7 @@ const UserOverPower: Component<Props> = (props) => {
   const [summaryViewMode, setSummaryViewMode] = createSignal<OverPowerSummaryViewMode>(
     DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE
   )
+  const [lowLevelRowsExpanded, setLowLevelRowsExpanded] = createSignal(false)
   const canManageLockedSongs = createMemo(
     () => authSession.status === 'authenticated' && authSession.user?.username === props.username
   )
@@ -367,6 +409,13 @@ const UserOverPower: Component<Props> = (props) => {
   })
 
   const highLevelRows = createMemo(() => summary()?.levels.filter((row) => !row.isLowLevel) ?? [])
+  const lowLevelRows = createMemo(() => summary()?.levels.filter((row) => row.isLowLevel) ?? [])
+  const displayedLevelRows = createMemo(() =>
+    lowLevelRowsExpanded() ? (summary()?.levels ?? []) : highLevelRows()
+  )
+  const lowLevelChartCount = createMemo(() =>
+    lowLevelRows().reduce((sum, row) => sum + row.count, 0)
+  )
   const availableRecords = createMemo(() => {
     const currentLockedSongs = lockedSongs()
     if (!currentLockedSongs) return []
@@ -415,7 +464,7 @@ const UserOverPower: Component<Props> = (props) => {
   const levelGraphRows = createMemo<OverPowerGraphRow[]>(() => {
     const recordGroups = graphRecordsByTab()
     if (!recordGroups) return []
-    return buildGraphRows(highLevelRows(), recordGroups.levels)
+    return buildGraphRows(displayedLevelRows(), recordGroups.levels)
   })
   const versionGraphRows = createMemo<OverPowerGraphRow[]>(() => {
     const currentSummary = summary()
@@ -435,6 +484,11 @@ const UserOverPower: Component<Props> = (props) => {
   /** OVERPOWERサマリーの表示形式をテーブルとグラフの間で切り替える。 */
   const handleToggleSummaryViewMode = () => {
     setSummaryViewMode(nextSummaryViewMode())
+  }
+
+  /** レベル別集計の低レベル帯表示を切り替える。 */
+  const handleToggleLowLevelRows = () => {
+    setLowLevelRowsExpanded((expanded) => !expanded)
   }
 
   const handleSummaryTabChange = (option: OverPowerSummaryOption | null) => {
@@ -486,6 +540,7 @@ const UserOverPower: Component<Props> = (props) => {
                         value={selectedSummaryOption()}
                         onChange={handleSummaryTabChange}
                         placeholder="ジャンル"
+                        gutter={0}
                         itemComponent={(itemProps) => (
                           <Select.Item
                             item={itemProps.item}
@@ -511,7 +566,7 @@ const UserOverPower: Component<Props> = (props) => {
                           </span>
                         </Select.Trigger>
                         <Select.Portal>
-                          <Select.Content class="z-50 mt-1 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-border bg-surface shadow-md">
+                          <Select.Content class="z-50 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-border bg-surface shadow-md">
                             <Select.Listbox />
                           </Select.Content>
                         </Select.Portal>
@@ -582,13 +637,26 @@ const UserOverPower: Component<Props> = (props) => {
                   </Tabs.Content>
 
                   <Tabs.Content value="levels" class="mt-4">
+                    <Show when={lowLevelRows().length > 0}>
+                      <div class="mb-3">
+                        <LowLevelRowsToggle
+                          expanded={lowLevelRowsExpanded()}
+                          chartCount={lowLevelChartCount()}
+                          onClick={handleToggleLowLevelRows}
+                        />
+                      </div>
+                    </Show>
                     <Show
                       when={summaryViewMode() === 'graph'}
                       fallback={
-                        <OverPowerSummaryTable rows={highLevelRows()} countLabel="譜面数" />
+                        <div id="over-power-low-level-summary">
+                          <OverPowerSummaryTable rows={displayedLevelRows()} countLabel="譜面数" />
+                        </div>
                       }
                     >
-                      <OverPowerSummaryGraph rows={levelGraphRows()} />
+                      <div id="over-power-low-level-summary">
+                        <OverPowerSummaryGraph rows={levelGraphRows()} />
+                      </div>
                     </Show>
                   </Tabs.Content>
 

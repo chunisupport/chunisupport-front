@@ -91,7 +91,7 @@ const HonorEditDialog: Component<HonorEditDialogProps> = (props) => {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
         <Dialog.Content class="fixed left-1/2 top-1/2 z-50 max-h-[90dvh] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-surface p-6 shadow-lg">
@@ -119,6 +119,7 @@ const HonorEditDialog: Component<HonorEditDialogProps> = (props) => {
               value={selectedHonorType()}
               onChange={(type) => updateRequestField('type_name', type?.name ?? '')}
               placeholder="選択してください"
+              gutter={0}
               itemComponent={(selectProps) => (
                 <Select.Item
                   item={selectProps.item}
@@ -145,7 +146,7 @@ const HonorEditDialog: Component<HonorEditDialogProps> = (props) => {
                 </Select.Icon>
               </Select.Trigger>
               <Select.Portal>
-                <Select.Content class="z-50 mt-1 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
+                <Select.Content class="z-50 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
                   <Select.Listbox />
                 </Select.Content>
               </Select.Portal>

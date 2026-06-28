@@ -58,6 +58,12 @@ const SongHeaderButton = (props: HeaderButtonProps) => (
   </th>
 )
 
+/**
+ * 楽曲DBの楽曲一覧を仮想化テーブルとして表示します。
+ *
+ * @param props - 楽曲一覧、ソート状態、ソート変更時のコールバック
+ * @returns 新曲を強調表示した楽曲一覧テーブル
+ */
 const SongsTable = (props: Props) => {
   const virtualizedTable = createVirtualizedSongsTable({
     getCount: () => props.songs.length,
@@ -138,6 +144,7 @@ const SongsTable = (props: Props) => {
                   {(currentSong) => (
                     <tr
                       class="absolute left-0 top-0 grid min-w-full border-t border-border"
+                      classList={{ 'bg-success-bg': currentSong.is_new === true }}
                       style={{
                         'grid-template-columns': GRID_TEMPLATE_COLUMNS,
                         transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,

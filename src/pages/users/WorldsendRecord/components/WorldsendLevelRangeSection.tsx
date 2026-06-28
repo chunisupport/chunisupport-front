@@ -1,18 +1,19 @@
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
+import { WORLDSEND_LEVEL_STAR_OPTIONS } from '../../../../constants/chart'
 import RangeSeparator, {
   RANGE_END_LABEL_SUFFIX,
   RANGE_START_LABEL_SUFFIX,
 } from '../../UserRecord/components/filterDialog/sections/RangeSeparator'
 import {
+  FILTER_DIALOG_SELECT_CONTENT_CLASS,
   FILTER_DIALOG_SELECT_ITEM_CLASS,
   FILTER_DIALOG_SELECT_TRIGGER_CLASS,
 } from '../../UserRecord/components/filterDialog/styles'
 import { formatWorldsendLevelStar } from '../utils/filterDialog'
 
 const WORLDSEND_LEVEL_RANGE_TITLE = 'レベル'
-const WORLDSEND_LEVEL_OPTIONS = [1, 2, 3, 4, 5]
 
 type WorldsendLevelRangeSectionProps = {
   minValue: number
@@ -32,13 +33,14 @@ const WorldsendLevelRangeSection: Component<WorldsendLevelRangeSectionProps> = (
     <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
       <div class="min-w-0">
         <Select<number>
-          options={WORLDSEND_LEVEL_OPTIONS}
+          options={WORLDSEND_LEVEL_STAR_OPTIONS}
           value={props.minValue}
           onChange={(value) => {
             if (value !== null) props.onChange('min', value)
           }}
           class="w-full"
           placeholder="選択…"
+          gutter={0}
           itemComponent={(itemProps) => (
             <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
               <Select.ItemLabel>
@@ -62,8 +64,8 @@ const WorldsendLevelRangeSection: Component<WorldsendLevelRangeSectionProps> = (
             </Select.Icon>
           </Select.Trigger>
           <Select.Portal>
-            <Select.Content class="z-60 rounded-md border border-border-strong bg-surface shadow-lg">
-              <Select.Listbox class="max-h-90 overflow-y-auto p-2" />
+            <Select.Content class={FILTER_DIALOG_SELECT_CONTENT_CLASS}>
+              <Select.Listbox />
             </Select.Content>
           </Select.Portal>
         </Select>
@@ -71,13 +73,14 @@ const WorldsendLevelRangeSection: Component<WorldsendLevelRangeSectionProps> = (
       <RangeSeparator />
       <div class="min-w-0">
         <Select<number>
-          options={WORLDSEND_LEVEL_OPTIONS}
+          options={WORLDSEND_LEVEL_STAR_OPTIONS}
           value={props.maxValue}
           onChange={(value) => {
             if (value !== null) props.onChange('max', value)
           }}
           class="w-full"
           placeholder="選択…"
+          gutter={0}
           itemComponent={(itemProps) => (
             <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
               <Select.ItemLabel>
@@ -101,8 +104,8 @@ const WorldsendLevelRangeSection: Component<WorldsendLevelRangeSectionProps> = (
             </Select.Icon>
           </Select.Trigger>
           <Select.Portal>
-            <Select.Content class="z-60 rounded-md border border-border-strong bg-surface shadow-lg">
-              <Select.Listbox class="max-h-90 overflow-y-auto p-2" />
+            <Select.Content class={FILTER_DIALOG_SELECT_CONTENT_CLASS}>
+              <Select.Listbox />
             </Select.Content>
           </Select.Portal>
         </Select>

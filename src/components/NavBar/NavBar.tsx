@@ -408,7 +408,7 @@ const NavBar = (props: NavBarProps) => {
         </nav>
 
         {/* 未ログイン警告ダイアログ */}
-        <Dialog open={showLoginDialog()} onOpenChange={setShowLoginDialog}>
+        <Dialog open={showLoginDialog()} onOpenChange={setShowLoginDialog} preventScroll={false}>
           <Dialog.Portal>
             <Dialog.Overlay class="fixed inset-0 bg-overlay z-50" />
             <Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg flex flex-col items-center">
@@ -470,7 +470,7 @@ const NavBar = (props: NavBarProps) => {
           </AlertDialog.Portal>
         </AlertDialog>
 
-        <Dialog open={showThemeDialog()} onOpenChange={setShowThemeDialog}>
+        <Dialog open={showThemeDialog()} onOpenChange={setShowThemeDialog} preventScroll={false}>
           <Dialog.Portal>
             <Dialog.Overlay class="fixed inset-0 bg-overlay z-50" />
             <Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">

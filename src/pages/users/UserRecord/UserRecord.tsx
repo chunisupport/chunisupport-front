@@ -2,6 +2,7 @@ import { useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import {
   createEffect,
+  createMemo,
   createResource,
   createSignal,
   ErrorBoundary,
@@ -30,7 +31,10 @@ import RecordTable from './components/RecordTable'
 import { buildDefaultFilter, DEFAULT_FILTER, normalizeFilterState } from './types/filterDefaults'
 import type { FilterState, RecordColumnId, RecordSortKey } from './types/types'
 import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
-import { getDefaultFilter } from './utils/filtering'
+import {
+  isRecordDifficultyFilterOnlyChanged,
+  isRecordFilterOptionsChanged,
+} from './utils/filterDialog'
 import { useUserRecordPageModel } from './utils/pageModel'
 import { parseSortParams } from './utils/sorting'
 
@@ -93,6 +97,19 @@ const UserRecord: Component<Props> = (props) => {
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(initialSortOrder)
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<RecordColumnId[]>(
     sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
+  )
+
+  const defaultFilter = createMemo(() => {
+    const md = masterData()
+    const vs = versionData()?.versions
+    return md && vs ? buildDefaultFilter(md, vs) : DEFAULT_FILTER
+  })
+  const hasTitleFilterChanges = createMemo(() => filters().title !== defaultFilter().title)
+  const hasFilterOptionChanges = createMemo(() =>
+    isRecordFilterOptionsChanged(filters(), defaultFilter())
+  )
+  const filterButtonTone = createMemo(() =>
+    isRecordDifficultyFilterOnlyChanged(filters(), defaultFilter()) ? 'difficulty-only' : undefined
   )
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
@@ -179,6 +196,9 @@ const UserRecord: Component<Props> = (props) => {
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
+                titleActive={hasTitleFilterChanges()}
+                filterActive={hasFilterOptionChanges()}
+                filterButtonTone={filterButtonTone()}
               />
 
               {/* フィルター統計 */}
@@ -212,7 +232,7 @@ const UserRecord: Component<Props> = (props) => {
                 onChange={applyFilters}
                 masterData={masterData()}
                 versions={versionData()?.versions}
-                defaultFilter={getDefaultFilter(masterData(), versionData()?.versions)}
+                defaultFilter={defaultFilter()}
               />
 
               <ColumnSettingsDialog

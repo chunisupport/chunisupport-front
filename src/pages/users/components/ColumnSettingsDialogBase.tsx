@@ -88,7 +88,7 @@ const ColumnSettingsDialogBase = <TColumnId extends string, TSortKey extends str
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
         <Dialog.Content class="fixed z-50 left-1/2 top-1/2 max-h-[90vh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
@@ -103,6 +103,7 @@ const ColumnSettingsDialogBase = <TColumnId extends string, TSortKey extends str
             value={selectedOptions()}
             onChange={handleChange}
             placeholder={COLUMN_SETTINGS_PLACEHOLDER}
+            gutter={0}
             itemComponent={(props) => (
               <Select.Item item={props.item} class={COLUMN_SETTINGS_SELECT_ITEM_CLASS}>
                 <div class="flex items-center gap-2">
@@ -136,7 +137,7 @@ const ColumnSettingsDialogBase = <TColumnId extends string, TSortKey extends str
               </span>
             </Select.Trigger>
             <Select.Portal>
-              <Select.Content class="z-50 mt-1 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
+              <Select.Content class="z-50 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
                 <Select.Listbox />
               </Select.Content>
             </Select.Portal>

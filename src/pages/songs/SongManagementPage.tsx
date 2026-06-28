@@ -26,6 +26,7 @@ import type {
   ManagedSongDTO,
   ManagedWorldsendSongDTO,
   MasterItemDTO,
+  SongDTO,
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
 } from '../../types/api'
@@ -56,6 +57,7 @@ type SongDraft = {
   bpm: number | null
   released_at: string | null
   jacket: string | null
+  is_new: boolean
   updated_at: string
   charts: EditableChartDraft[]
 }
@@ -95,6 +97,7 @@ type CreateSongDraft = {
   bpm: number | null
   released_at: string | null
   jacket: string | null
+  is_new: boolean
   charts: CreateSongChartDraft[]
 }
 
@@ -140,6 +143,8 @@ type ManagementCheckboxProps = {
   checked: boolean
   disabled?: boolean
   ariaLabel: string
+  label?: string
+  class?: string
   onChange: (checked: boolean) => void
 }
 
@@ -207,6 +212,16 @@ const toNullableTrimmedString = (value: string | null): string | null => {
   return value?.trim() ? value.trim() : null
 }
 
+/**
+ * 楽曲DTOの新曲フラグを編集用の真偽値へ正規化する。
+ *
+ * @param song 新曲フラグを持つ楽曲DTO
+ * @returns APIレスポンスの is_new が true の場合のみ true
+ */
+const readSongNewFlag = (song: Pick<SongDTO, 'is_new'>): boolean => {
+  return song.is_new === true
+}
+
 const buildCreateSongDraft = (): CreateSongDraft => {
   return {
     official_idx: '',
@@ -217,6 +232,7 @@ const buildCreateSongDraft = (): CreateSongDraft => {
     bpm: null,
     released_at: null,
     jacket: null,
+    is_new: false,
     charts: editableDifficulties.map((difficultyName) => ({
       difficulty_name: difficultyName,
       enabled: false,
@@ -281,6 +297,8 @@ const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
 const managementInputClass = 'w-full rounded border border-border-strong px-3 py-2'
 const checkboxControlClass =
   'flex h-5 w-5 items-center justify-center rounded border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse data-disabled:opacity-50'
+/** 通常楽曲の新曲判定を編集するチェックボックスの表示名。 */
+const newSongFlagLabel = '新曲フラグ'
 
 /**
  * 楽曲管理画面で利用する Kobalte TextField ベースの入力欄を描画します。
@@ -322,7 +340,7 @@ const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
       optionTextValue="name"
       sameWidth
       fitViewport
-      gutter={4}
+      gutter={0}
       value={selectedGenre()}
       onChange={(genre) => props.onChange(genre?.id ?? null)}
       placeholder={props.placeholder}
@@ -361,7 +379,7 @@ const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
 /**
  * 楽曲管理画面で利用する Kobalte Checkbox ベースのチェック欄を描画します。
  *
- * @param props 選択状態、無効状態、アクセシブル名、変更ハンドラを含むプロパティ
+ * @param props 選択状態、無効状態、表示ラベル、アクセシブル名、変更ハンドラを含むプロパティ
  * @returns Kobalte Checkbox を利用したチェック欄
  */
 const ManagementCheckbox: Component<ManagementCheckboxProps> = (props) => (
@@ -369,14 +387,18 @@ const ManagementCheckbox: Component<ManagementCheckboxProps> = (props) => (
     checked={props.checked}
     disabled={props.disabled}
     onChange={props.onChange}
-    aria-label={props.ariaLabel}
+    aria-label={props.label ? undefined : props.ariaLabel}
+    class={props.class ?? 'relative inline-flex items-center gap-2'}
   >
-    <Checkbox.Input />
+    <Checkbox.Input style={{ left: '0', top: '0' }} />
     <Checkbox.Control class={checkboxControlClass}>
       <Checkbox.Indicator>
         <Check size={14} />
       </Checkbox.Indicator>
     </Checkbox.Control>
+    <Show when={props.label}>
+      {(label) => <Checkbox.Label class="text-sm text-text">{label()}</Checkbox.Label>}
+    </Show>
   </Checkbox>
 )
 
@@ -394,6 +416,7 @@ const toSongDraft = (
     bpm: song.bpm ?? null,
     released_at: toDateOnly(song.release),
     jacket: song.jacket ?? null,
+    is_new: readSongNewFlag(song),
     updated_at: song.updated_at,
     charts: difficulties
       .map((difficulty) => {
@@ -462,6 +485,7 @@ const applySongDraftToManagedSong = (
     bpm: current.bpm,
     release: toDateOnly(current.released_at),
     jacket: current.jacket,
+    is_new: current.is_new,
     charts: {
       ...song.charts,
       ...Object.fromEntries(
@@ -738,6 +762,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       bpm: current.bpm,
       released_at: normalizedReleasedAt,
       jacket: current.jacket,
+      is_new: current.is_new,
       charts: Object.fromEntries(
         current.charts.map((chart) => [
           chart.difficulty_name,
@@ -833,6 +858,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       bpm: current.bpm,
       released_at: normalizedReleasedAt,
       jacket: current.jacket?.trim() ? current.jacket.trim() : null,
+      is_new: current.is_new,
       charts: current.charts
         .filter((chart) => chart.enabled)
         .map((chart) => ({
@@ -1229,6 +1255,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           updateDraftField('jacket', value.trim() === '' ? null : value)
                         }
                       />
+                      <div class="flex items-end py-2">
+                        <ManagementCheckbox
+                          checked={currentDraft().is_new === true}
+                          ariaLabel={newSongFlagLabel}
+                          label={newSongFlagLabel}
+                          onChange={(checked) => updateDraftField('is_new', checked)}
+                        />
+                      </div>
                     </div>
 
                     <Show
@@ -1651,6 +1685,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   updateCreateSongDraftField('jacket', value.trim() === '' ? null : value)
                 }
               />
+              <div class="flex items-end py-2">
+                <ManagementCheckbox
+                  checked={createSongDraft().is_new === true}
+                  ariaLabel={newSongFlagLabel}
+                  label={newSongFlagLabel}
+                  onChange={(checked) => updateCreateSongDraftField('is_new', checked)}
+                />
+              </div>
             </div>
           </div>
 

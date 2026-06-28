@@ -7,6 +7,7 @@ import {
   type ChartOptions,
   Legend,
   LinearScale,
+  type Plugin,
   Tooltip,
 } from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
@@ -25,6 +26,8 @@ type SongStatsChartDataset = {
   label: string
   values: number[]
   colorVariable: string
+  legendBackgroundVariable?: string
+  gradientColorVariables?: readonly string[]
 }
 
 type SongStatsChartProps = {
@@ -45,6 +48,21 @@ const NORMAL_RATING_BAND_ROW_CLASS = 'border-l-4 border-l-transparent'
 const COMBO_CHART_DATASET_DEFINITIONS = [
   { label: 'FC', valueKey: 'fc', colorVariable: '--cs-color-lamp-full-combo-bg' },
   { label: 'AJ', valueKey: 'aj', colorVariable: '--cs-color-lamp-all-justice-bg' },
+  {
+    label: 'AJC',
+    valueKey: 'ajc',
+    colorVariable: '--cs-color-lamp-all-justice-critical-bg',
+    legendBackgroundVariable: '--cs-gradient-lamp-all-justice-critical-bg',
+    gradientColorVariables: [
+      '--cs-color-lamp-all-justice-critical-rainbow-1',
+      '--cs-color-lamp-all-justice-critical-rainbow-2',
+      '--cs-color-lamp-all-justice-critical-rainbow-3',
+      '--cs-color-lamp-all-justice-critical-rainbow-4',
+      '--cs-color-lamp-all-justice-critical-rainbow-5',
+      '--cs-color-lamp-all-justice-critical-rainbow-6',
+      '--cs-color-lamp-all-justice-critical-rainbow-7',
+    ],
+  },
 ] as const
 const CLEAR_CHART_DATASET_DEFINITIONS = [
   { label: 'CLEAR', valueKey: 'clear', colorVariable: '--cs-color-lamp-clear-bg' },
@@ -99,6 +117,66 @@ const getChartColor = (variableName: string): string => {
 }
 
 /**
+ * 棒の左上から右下へ向かうCanvasグラデーションを生成する。
+ * @param context グラデーションを生成するCanvasコンテキスト。
+ * @param bar グラデーションの描画範囲に利用する棒要素。
+ * @param colors グラデーションを構成する解決済みの色。
+ * @returns 棒の描画範囲に合わせたCanvasグラデーション。
+ */
+const createChartGradient = (
+  context: CanvasRenderingContext2D,
+  bar: BarElement,
+  colors: readonly string[]
+): CanvasGradient => {
+  const gradient = context.createLinearGradient(
+    bar.x - bar.width / 2,
+    bar.y,
+    bar.x + bar.width / 2,
+    bar.base
+  )
+  const lastColorIndex = colors.length - 1
+
+  colors.forEach((color, index) => {
+    gradient.addColorStop(index / lastColorIndex, color)
+  })
+
+  return gradient
+}
+
+/**
+ * グラデーション対象の各棒へ個別の虹色背景を適用するChart.jsプラグインを生成する。
+ * @param datasets グラデーション設定を含むグラフデータセット。
+ * @returns 棒の描画直前にグラデーションを更新するChart.jsプラグイン。
+ */
+const createBarGradientPlugin = (datasets: SongStatsChartDataset[]): Plugin<'bar'> => {
+  const gradientColors = datasets.map((dataset) =>
+    dataset.gradientColorVariables?.map(getChartColor)
+  )
+
+  return {
+    id: 'song-stats-bar-gradient',
+    beforeDatasetsDraw: (chart) => {
+      gradientColors.forEach((colors, datasetIndex) => {
+        if (!colors) return
+
+        chart.getDatasetMeta(datasetIndex).data.forEach((element) => {
+          const bar = element as BarElement
+          const backgroundColor = createChartGradient(chart.ctx, bar, colors)
+
+          bar.options = {
+            ...bar.options,
+            backgroundColor,
+            borderColor: backgroundColor,
+            hoverBackgroundColor: backgroundColor,
+            hoverBorderColor: backgroundColor,
+          }
+        })
+      })
+    },
+  }
+}
+
+/**
  * Chart.jsの棒グラフ設定を生成する。
  * @returns 統計グラフで共通利用するChart.jsオプション。
  */
@@ -112,6 +190,7 @@ const createSongStatsChartOptions = (): ChartOptions<'bar'> => {
     animation: false,
     plugins: {
       legend: {
+        display: false,
         labels: {
           color: textColor,
           boxWidth: 12,
@@ -210,6 +289,7 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
         type: 'bar',
         data: chartData,
         options: createSongStatsChartOptions(),
+        plugins: [createBarGradientPlugin(props.datasets)],
       })
       return
     }
@@ -225,8 +305,29 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
   return (
     <section class="min-w-0 rounded-md border border-border bg-surface-muted p-3">
       <h3 class="mb-2 text-sm font-semibold">{props.title}</h3>
-      <div class={CHART_HEIGHT_CLASS}>
-        <canvas ref={canvasRef} aria-label={props.ariaLabel} role="img" />
+      <div class={`${CHART_HEIGHT_CLASS} flex flex-col`}>
+        <ul
+          class="mb-1 flex shrink-0 justify-center gap-3 text-xs"
+          aria-label={`${props.title}凡例`}
+        >
+          <For each={props.datasets}>
+            {(dataset) => (
+              <li class="flex items-center gap-1">
+                <span
+                  class="size-3"
+                  style={{
+                    background: `var(${dataset.legendBackgroundVariable ?? dataset.colorVariable})`,
+                  }}
+                  aria-hidden="true"
+                />
+                <span>{dataset.label}</span>
+              </li>
+            )}
+          </For>
+        </ul>
+        <div class="min-h-0 flex-1">
+          <canvas ref={canvasRef} aria-label={props.ariaLabel} role="img" />
+        </div>
       </div>
     </section>
   )
@@ -235,7 +336,7 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
 /**
  * 難易度別統計テーブルの下に表示するランプ別グラフを生成する。
  * @param props 表示対象の統計行。
- * @returns FC/AJとCLEAR系ランプのグラフ。
+ * @returns FC/AJ/AJCとCLEAR系ランプのグラフ。
  */
 const SongStatsCharts = (props: Props) => {
   const chartStats = createMemo(() => getChartStats(props.stats))
@@ -257,7 +358,7 @@ const SongStatsCharts = (props: Props) => {
     <div class="mt-4 grid gap-4 lg:grid-cols-2">
       <SongStatsBarChart
         title="COMBO"
-        ariaLabel="レーティング帯別のFCとAJ人数グラフ"
+        ariaLabel="レーティング帯別のFC、AJ、AJC人数グラフ"
         labels={labels()}
         datasets={comboDatasets()}
       />
@@ -301,6 +402,7 @@ const SongStatsTable = (props: Props) => {
               <th class="px-2 py-2 text-right whitespace-nowrap">平均スコア</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">FC</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">AJ</th>
+              <th class="px-2 py-2 text-right whitespace-nowrap">AJC</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">CLEAR</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">HARD</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">BRAVE</th>
@@ -319,6 +421,7 @@ const SongStatsTable = (props: Props) => {
                   </td>
                   <td class="px-2 py-2 text-right">{band.combo.fc.toLocaleString()}</td>
                   <td class="px-2 py-2 text-right">{band.combo.aj.toLocaleString()}</td>
+                  <td class="px-2 py-2 text-right">{band.combo.ajc.toLocaleString()}</td>
                   <td class="px-2 py-2 text-right">{band.clear.clear.toLocaleString()}</td>
                   <td class="px-2 py-2 text-right">{band.clear.hard.toLocaleString()}</td>
                   <td class="px-2 py-2 text-right">{band.clear.brave.toLocaleString()}</td>

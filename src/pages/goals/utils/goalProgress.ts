@@ -8,6 +8,7 @@ import type {
   VersionDTO,
 } from '../../../types/api'
 import { buildCurrentOverPowerBySongId } from '../../../usecases/overpower/currentOpTarget'
+import { isExplicitEmptyAttribute } from './goalForm'
 import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
 
 export interface GoalProgressResult {
@@ -35,6 +36,12 @@ const COMBO_LAMP_ORDER: Record<string, number> = {
   'ALL JUSTICE': 2,
 }
 
+/**
+ * 単一値または配列で保持された目標属性 ID を配列へ正規化する。
+ *
+ * @param value - 目標属性に保存された ID。
+ * @returns 有効な整数 ID の配列。
+ */
 const normalizeAttributeIds = (value: number | number[] | undefined): number[] => {
   if (typeof value === 'number') return [value]
   if (Array.isArray(value)) {
@@ -125,6 +132,9 @@ export const filterRecordsByAttributes = (
   const genreIds = normalizeAttributeIds(attributes.genre)
   const versionIds = normalizeAttributeIds(attributes.ver)
   const opTargetOnly = attributes.chart_target === 'OP_TARGET'
+  const hasExplicitEmptyDiff = !opTargetOnly && isExplicitEmptyAttribute(attributes.diff)
+  const hasExplicitEmptyGenre = isExplicitEmptyAttribute(attributes.genre)
+  const hasExplicitEmptyVersion = isExplicitEmptyAttribute(attributes.ver)
 
   const diffNames =
     diffIds.length > 0
@@ -142,6 +152,10 @@ export const filterRecordsByAttributes = (
             .map((genre) => genre.name)
         )
       : undefined
+
+  if (hasExplicitEmptyDiff || hasExplicitEmptyGenre || hasExplicitEmptyVersion) {
+    return []
+  }
 
   return records.filter((record) => {
     const song = songMap.get(record.id)
@@ -173,25 +187,34 @@ export const filterRecordsByAttributes = (
 
 const getNumberParam = (
   params: GoalAchievementParams,
-  key: 'score' | 'count' | 'total'
+  key: 'score' | 'count' | 'total' | 'remaining' | 'percent'
 ): number => {
   const value = (params as Record<string, unknown>)[key]
   return typeof value === 'number' ? value : 0
 }
 
 /**
- * 対象譜面数を動的上限として扱う件数目標値を解決する。
+ * 最大値を基準に相互排他的な目標値指定を実際の目標値へ変換する。
  *
- * @param params - 目標種別ごとの成果パラメータ。
- * @param filteredRecords - 現在の条件に一致した譜面レコード一覧。
- * @returns 明示された件数、または現在の対象譜面数。
+ * @param params - APIから受け取った成果パラメータ。
+ * @param maxValue - 対象条件から算出した最大値。
+ * @param absoluteKey - 絶対値指定に使うキー。
+ * @returns 絶対値、残数、割合、または最大値から解決した目標値。
  */
-const resolveCountTarget = (
+const resolveDynamicTarget = (
   params: GoalAchievementParams,
-  filteredRecords: PlayerRecordDTO[]
+  maxValue: number,
+  absoluteKey: 'count' | 'total'
 ): number => {
-  const value = (params as Record<string, unknown>).count
-  return typeof value === 'number' ? value : filteredRecords.length
+  const absoluteValue = getNumberParam(params, absoluteKey)
+  if (absoluteValue > 0 || (params as Record<string, unknown>)[absoluteKey] === 0) {
+    return absoluteValue
+  }
+  const remaining = (params as Record<string, unknown>).remaining
+  if (typeof remaining === 'number') return Math.max(maxValue - remaining, 0)
+  const percent = (params as Record<string, unknown>).percent
+  if (typeof percent === 'number') return (maxValue * percent) / 100
+  return maxValue
 }
 
 /**
@@ -205,8 +228,7 @@ const resolveTotalScoreTarget = (
   params: GoalAchievementParams,
   filteredRecords: PlayerRecordDTO[]
 ): number => {
-  const value = (params as Record<string, unknown>).total
-  return typeof value === 'number' ? value : filteredRecords.length * 1010000
+  return resolveDynamicTarget(params, filteredRecords.length * 1010000, 'total')
 }
 
 /**
@@ -223,14 +245,16 @@ const resolveOverPowerValueTarget = (
   songMap: Map<string, SongDTO>,
   useSongMaxOverPower: boolean
 ): number => {
-  const value = (params as Record<string, unknown>).total
-  if (typeof value === 'number') return value
-
+  let maxValue: number
   if (useSongMaxOverPower) {
-    return sumUniqueSongMaxOverPower(filteredRecords, songMap)
+    maxValue = sumUniqueSongMaxOverPower(filteredRecords, songMap)
+  } else {
+    maxValue = filteredRecords.reduce(
+      (acc, record) => acc + (songMap.get(record.id)?.maxop ?? 0),
+      0
+    )
   }
-
-  return filteredRecords.reduce((acc, record) => acc + (songMap.get(record.id)?.maxop ?? 0), 0)
+  return resolveDynamicTarget(params, maxValue, 'total')
 }
 
 /**
@@ -286,7 +310,7 @@ export const calculateGoalProgress = (
     case 'rank_count':
     case 'score_count': {
       const threshold = getNumberParam(goal.achievement_params, 'score')
-      target = resolveCountTarget(goal.achievement_params, filteredRecords)
+      target = resolveDynamicTarget(goal.achievement_params, filteredRecords.length, 'count')
       current = filteredRecords.filter((record) => record.score >= threshold).length
       break
     }
@@ -314,7 +338,7 @@ export const calculateGoalProgress = (
               ? 'ABSOLUTE'
               : 'CATASTROPHY'
       const required = HARD_LAMP_ORDER[hardLampName]
-      target = resolveCountTarget(goal.achievement_params, filteredRecords)
+      target = resolveDynamicTarget(goal.achievement_params, filteredRecords.length, 'count')
       current = filteredRecords.filter((record) => {
         const lamp = record.clear_lamp
         if (!lamp) return false
@@ -326,7 +350,7 @@ export const calculateGoalProgress = (
       const params = goal.achievement_params as { lamp: 'FC' | 'AJ'; count?: number }
       const required =
         params.lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']
-      target = resolveCountTarget(goal.achievement_params, filteredRecords)
+      target = resolveDynamicTarget(goal.achievement_params, filteredRecords.length, 'count')
       current = filteredRecords.filter((record) => {
         const lamp = record.combo_lamp
         if (!lamp) return false

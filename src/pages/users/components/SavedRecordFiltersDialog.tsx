@@ -340,7 +340,11 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
         )}
       </Show>
 
-      <Dialog open={saveNameDialogOpen()} onOpenChange={setSaveNameDialogOpen}>
+      <Dialog
+        open={saveNameDialogOpen()}
+        onOpenChange={setSaveNameDialogOpen}
+        preventScroll={false}
+      >
         <Dialog.Portal>
           <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
           <Dialog.Content class="fixed left-1/2 top-1/2 z-70 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
@@ -389,7 +393,7 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
         </Dialog.Portal>
       </Dialog>
 
-      <Dialog open={listDialogOpen()} onOpenChange={setListDialogOpen}>
+      <Dialog open={listDialogOpen()} onOpenChange={setListDialogOpen} preventScroll={false}>
         <Dialog.Portal>
           <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
           <Dialog.Content class="fixed left-1/2 top-1/2 z-70 flex h-[40rem] max-h-[calc(100vh-2rem)] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-border-strong bg-surface p-6 shadow-lg">

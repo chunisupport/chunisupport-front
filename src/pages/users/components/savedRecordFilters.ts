@@ -1,10 +1,20 @@
-import { MAX_SCORE } from '../../../utils/scoreRank'
-import { CONST_MAX, CONST_MIN, OVER_POWER_MAX } from '../UserRecord/constants/constRange'
 import {
-  CHAIN_LAMP_OPTIONS,
-  COMBO_LAMP_OPTIONS,
-  HARD_LAMP_OPTIONS,
-} from '../UserRecord/types/filterDefaults'
+  CHART_CONST_MAX,
+  CHART_CONST_MIN,
+  JUSTICE_COUNT_MAX,
+  JUSTICE_COUNT_MIN,
+  OVER_POWER_MAX,
+  OVER_POWER_MIN,
+  SCORE_MIN,
+  WORLDSEND_LEVEL_STAR_MAX,
+  WORLDSEND_LEVEL_STAR_MIN,
+} from '../../../constants/chart'
+import { MAX_SCORE } from '../../../utils/scoreRank'
+import {
+  RECORD_CHAIN_LAMP_OPTIONS,
+  RECORD_COMBO_LAMP_OPTIONS,
+  RECORD_HARD_LAMP_OPTIONS,
+} from '../constants/recordFilterOptions'
 import type {
   ChainLamp,
   ComboLamp,
@@ -22,9 +32,6 @@ export const RECORD_FILTER_NAME_MAX_LENGTH = 30
 export const RECORD_FILTER_MAX_PAYLOAD_BYTES = 8 * 1024
 
 const DIFFICULTY_OPTIONS: Difficulty[] = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA']
-const WORLDSEND_LEVEL_STAR_MIN = 1
-const WORLDSEND_LEVEL_STAR_MAX = 5
-
 /**
  * 文字列を Unicode コードポイント単位で指定文字数へ丸める。
  *
@@ -200,15 +207,15 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
     (value.currentOpTargetOnly === undefined || typeof value.currentOpTargetOnly === 'boolean') &&
     isStringArray(value.genres) &&
     isStringArray(value.versions) &&
-    isRequiredNumberRange(value.const, CONST_MIN, CONST_MAX) &&
+    isRequiredNumberRange(value.const, CHART_CONST_MIN, CHART_CONST_MAX) &&
     (value.constFilterMode === 'level' || value.constFilterMode === 'number') &&
-    isRequiredNumberRange(value.score, 0, MAX_SCORE, true) &&
+    isRequiredNumberRange(value.score, SCORE_MIN, MAX_SCORE, true) &&
     (value.scoreFilterMode === 'rank' || value.scoreFilterMode === 'number') &&
-    isOptionalNumberRange(value.justiceCount, 0, Number.MAX_SAFE_INTEGER, true) &&
-    isOptionalNumberRange(value.overPower, 0, OVER_POWER_MAX) &&
-    isArrayOfOptions<ComboLamp>(value.combo_lamp, COMBO_LAMP_OPTIONS) &&
-    isArrayOfOptions<ChainLamp>(value.chain_lamp, CHAIN_LAMP_OPTIONS) &&
-    isArrayOfOptions<HardLamp>(value.hard_lamp, HARD_LAMP_OPTIONS) &&
+    isOptionalNumberRange(value.justiceCount, JUSTICE_COUNT_MIN, JUSTICE_COUNT_MAX, true) &&
+    isOptionalNumberRange(value.overPower, OVER_POWER_MIN, OVER_POWER_MAX) &&
+    isArrayOfOptions<ComboLamp>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
+    isArrayOfOptions<ChainLamp>(value.chain_lamp, RECORD_CHAIN_LAMP_OPTIONS) &&
+    isArrayOfOptions<HardLamp>(value.hard_lamp, RECORD_HARD_LAMP_OPTIONS) &&
     typeof value.excludeNoPlay === 'boolean'
   )
 }
@@ -234,12 +241,12 @@ export const isValidSavedWorldsendFilter = (value: unknown): value is WorldsendF
     ) &&
     isStringArray(value.genres) &&
     isStringArray(value.versions) &&
-    isRequiredNumberRange(value.score, 0, MAX_SCORE, true) &&
+    isRequiredNumberRange(value.score, SCORE_MIN, MAX_SCORE, true) &&
     (value.scoreFilterMode === 'rank' || value.scoreFilterMode === 'number') &&
-    isOptionalNumberRange(value.justiceCount, 0, Number.MAX_SAFE_INTEGER, true) &&
-    isArrayOfOptions<ComboLamp>(value.combo_lamp, COMBO_LAMP_OPTIONS) &&
-    isArrayOfOptions<ChainLamp>(value.chain_lamp, CHAIN_LAMP_OPTIONS) &&
-    isArrayOfOptions<HardLamp>(value.hard_lamp, HARD_LAMP_OPTIONS) &&
+    isOptionalNumberRange(value.justiceCount, JUSTICE_COUNT_MIN, JUSTICE_COUNT_MAX, true) &&
+    isArrayOfOptions<ComboLamp>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
+    isArrayOfOptions<ChainLamp>(value.chain_lamp, RECORD_CHAIN_LAMP_OPTIONS) &&
+    isArrayOfOptions<HardLamp>(value.hard_lamp, RECORD_HARD_LAMP_OPTIONS) &&
     typeof value.excludeNoPlay === 'boolean'
   )
 }

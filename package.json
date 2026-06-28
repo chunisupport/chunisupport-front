@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@11.9.0",
   "scripts": {
     "build": "rsbuild build",
     "dev": "rsbuild dev --open",
@@ -16,7 +17,7 @@
     "check:ci": "biome ci .",
     "licenses:check": "node scripts/generate-licenses.mjs --check",
     "licenses:generate": "node scripts/generate-licenses.mjs",
-    "test:unit": "node --loader ./scripts/resolve-ts-extension-loader.mjs --test src/**/*.test.ts"
+    "test:unit": "node --import ./scripts/register-ts-extension-loader.mjs --disable-warning=ExperimentalWarning --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@kobalte/core": "^0.13.11",

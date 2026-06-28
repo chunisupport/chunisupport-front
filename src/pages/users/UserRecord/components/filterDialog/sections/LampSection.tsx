@@ -1,24 +1,27 @@
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Check } from 'lucide-solid'
-import type { Component } from 'solid-js'
 import { For } from 'solid-js'
 
-type LampSectionProps = {
+type LampValue = string | null
+
+type LampSectionProps<TLamp extends LampValue = LampValue> = {
   title: string
   idPrefix: string
-  lamps: (string | null)[]
-  selected: (string | null)[]
-  onToggle: (lamp: string | null) => void
+  lamps: TLamp[]
+  selected: TLamp[]
+  onToggle: (lamp: TLamp) => void
   onExcludeNoPlayChange: (value: boolean) => void
-  formatLabel?: (lamp: string | null) => string
+  formatLabel?: (lamp: TLamp) => string
 }
 
 /**
  * ランプ系フィルターの選択肢をチェックボックス一覧で表示する。
- * @param props - 表示対象のランプ候補、選択状態、更新ハンドラー
+ *
+ * @template TLamp - 対象セクションで扱うランプ値の型。
+ * @param props - 表示対象のランプ候補、選択状態、更新ハンドラー。
  * @returns ランプ選択セクション
  */
-const LampSection: Component<LampSectionProps> = (props) => (
+const LampSection = <TLamp extends LampValue = LampValue>(props: LampSectionProps<TLamp>) => (
   <div>
     <span class="block text-sm font-medium mb-1">{props.title}</span>
     <div class="flex flex-col gap-2">

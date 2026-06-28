@@ -1,6 +1,6 @@
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
-import { CONST_MAX } from '../constants/constRange'
 import type { FilterState } from '../types/types'
 
 type OptionalNumberRange = {
@@ -25,9 +25,9 @@ export function formatFilterSummary(filter: FilterState): string {
   if (filter.excludeNoPlay) parts.push('未プレイ譜面を除外')
   if (filter.difficulties.length > 0) parts.push(`難易度: ${filter.difficulties.join(',')}`)
   if (filter.currentOpTargetOnly) parts.push('OP対象の楽曲のみ')
-  if (filter.const.min !== 0.0 || filter.const.max !== CONST_MAX)
+  if (filter.const.min !== CHART_CONST_MIN || filter.const.max !== CHART_CONST_MAX)
     parts.push(`定数: ${filter.const.min}-${filter.const.max}`)
-  if (filter.score.min !== 0 || filter.score.max !== MAX_SCORE)
+  if (filter.score.min !== SCORE_MIN || filter.score.max !== MAX_SCORE)
     parts.push(`スコア: ${filter.score.min}-${filter.score.max}`)
   if (filter.justiceCount.min !== null || filter.justiceCount.max !== null) {
     parts.push(
@@ -139,6 +139,117 @@ export function hasJusticeCountFilter(filter: FilterState): boolean {
  */
 export function hasOverPowerFilter(filter: FilterState): boolean {
   return filter.overPower.min !== null || filter.overPower.max !== null
+}
+
+/**
+ * 2つの配列が順序に依存せず同じ値を持つか判定する。
+ *
+ * @param left - 比較元の値配列。
+ * @param right - 比較先の値配列。
+ * @returns 2つの配列が同じ値集合の場合は true。
+ */
+export function hasSameFilterValues<T>(left: T[], right: T[]): boolean {
+  if (left.length !== right.length) return false
+
+  const rightValues = new Set(right)
+  return left.every((value) => rightValues.has(value))
+}
+
+/**
+ * 通常レコードフィルターが既定値から変更されているか判定する。
+ *
+ * @param current - 現在のフィルター状態。
+ * @param defaultFilter - 比較対象の既定フィルター状態。
+ * @returns 既定値との差分がある場合は true。
+ */
+export function isRecordFilterChanged(current: FilterState, defaultFilter: FilterState): boolean {
+  return (
+    current.title !== defaultFilter.title ||
+    current.currentOpTargetOnly !== defaultFilter.currentOpTargetOnly ||
+    current.constFilterMode !== defaultFilter.constFilterMode ||
+    current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
+    current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
+    current.const.min !== defaultFilter.const.min ||
+    current.const.max !== defaultFilter.const.max ||
+    current.score.min !== defaultFilter.score.min ||
+    current.score.max !== defaultFilter.score.max ||
+    current.justiceCount.min !== defaultFilter.justiceCount.min ||
+    current.justiceCount.max !== defaultFilter.justiceCount.max ||
+    current.overPower.min !== defaultFilter.overPower.min ||
+    current.overPower.max !== defaultFilter.overPower.max ||
+    !hasSameFilterValues(current.difficulties, defaultFilter.difficulties) ||
+    !hasSameFilterValues(current.genres, defaultFilter.genres) ||
+    !hasSameFilterValues(current.versions, defaultFilter.versions) ||
+    !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
+    !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
+    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+  )
+}
+
+/**
+ * 通常レコードフィルターのうち、検索文字列以外が既定値から変更されているか判定する。
+ *
+ * @param current - 現在のフィルター状態。
+ * @param defaultFilter - 比較対象の既定フィルター状態。
+ * @returns 検索文字列以外の条件に差分がある場合は true。
+ */
+export function isRecordFilterOptionsChanged(
+  current: FilterState,
+  defaultFilter: FilterState
+): boolean {
+  return (
+    current.currentOpTargetOnly !== defaultFilter.currentOpTargetOnly ||
+    current.constFilterMode !== defaultFilter.constFilterMode ||
+    current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
+    current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
+    current.const.min !== defaultFilter.const.min ||
+    current.const.max !== defaultFilter.const.max ||
+    current.score.min !== defaultFilter.score.min ||
+    current.score.max !== defaultFilter.score.max ||
+    current.justiceCount.min !== defaultFilter.justiceCount.min ||
+    current.justiceCount.max !== defaultFilter.justiceCount.max ||
+    current.overPower.min !== defaultFilter.overPower.min ||
+    current.overPower.max !== defaultFilter.overPower.max ||
+    !hasSameFilterValues(current.difficulties, defaultFilter.difficulties) ||
+    !hasSameFilterValues(current.genres, defaultFilter.genres) ||
+    !hasSameFilterValues(current.versions, defaultFilter.versions) ||
+    !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
+    !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
+    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+  )
+}
+
+/**
+ * 通常レコードフィルターが検索文字列を除いて難易度選択だけ既定値から変更されているか判定する。
+ *
+ * @param current - 現在のフィルター状態。
+ * @param defaultFilter - 比較対象の既定フィルター状態。
+ * @returns 検索文字列以外では難易度選択だけに差分がある場合は true。
+ */
+export function isRecordDifficultyFilterOnlyChanged(
+  current: FilterState,
+  defaultFilter: FilterState
+): boolean {
+  return (
+    current.currentOpTargetOnly === defaultFilter.currentOpTargetOnly &&
+    current.constFilterMode === defaultFilter.constFilterMode &&
+    current.scoreFilterMode === defaultFilter.scoreFilterMode &&
+    current.excludeNoPlay === defaultFilter.excludeNoPlay &&
+    current.const.min === defaultFilter.const.min &&
+    current.const.max === defaultFilter.const.max &&
+    current.score.min === defaultFilter.score.min &&
+    current.score.max === defaultFilter.score.max &&
+    current.justiceCount.min === defaultFilter.justiceCount.min &&
+    current.justiceCount.max === defaultFilter.justiceCount.max &&
+    current.overPower.min === defaultFilter.overPower.min &&
+    current.overPower.max === defaultFilter.overPower.max &&
+    !hasSameFilterValues(current.difficulties, defaultFilter.difficulties) &&
+    hasSameFilterValues(current.genres, defaultFilter.genres) &&
+    hasSameFilterValues(current.versions, defaultFilter.versions) &&
+    hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) &&
+    hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) &&
+    hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+  )
 }
 
 /**

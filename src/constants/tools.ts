@@ -3,12 +3,13 @@ import {
   CHART_CONSTANT_CALCULATOR_PATH,
   LOCKED_SONGS_FINDER_PATH,
   OVER_POWER_CALCULATOR_PATH,
+  WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
 
 /**
  * ツールカードに表示するアイコン種別。
  */
-export type ToolLinkIcon = 'calculator' | 'gauge' | 'target' | 'search'
+export type ToolLinkIcon = 'calculator' | 'gauge' | 'chart' | 'target' | 'search'
 
 /**
  * 無効化されたツールカードに表示する状態ラベル。
@@ -48,6 +49,11 @@ export const TOOL_LINKS: ToolLink[] = [
     title: 'OVER POWER計算機',
     href: OVER_POWER_CALCULATOR_PATH,
     icon: 'gauge',
+  },
+  {
+    title: '苦手譜面インスペクター',
+    href: WEAK_CHART_INSPECTOR_PATH,
+    icon: 'chart',
   },
   {
     title: '未解禁曲探索',

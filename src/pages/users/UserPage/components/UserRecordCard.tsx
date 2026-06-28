@@ -1,21 +1,22 @@
+import { Image } from '@kobalte/core/image'
 import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createSignal, onMount } from 'solid-js'
+import { createSignal, onMount, Show } from 'solid-js'
 import type { PlayerRecordDTO } from '../../../../types/api'
+import {
+  difficultyCardBorderColor,
+  difficultyToQueryValue,
+} from '../../../../utils/difficultyUtils'
+import { buildChunithmJacketUrl } from '../../../../utils/jacket'
+import { getScoreRank } from '../../../../utils/scoreRank'
+import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses'
+import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
 
 type Props = {
   record: PlayerRecordDTO
   index: number
   useDefaultIndexColor?: boolean
 }
-
-import {
-  difficultyCardBorderColor,
-  difficultyToQueryValue,
-} from '../../../../utils/difficultyUtils'
-import { getScoreRank } from '../../../../utils/scoreRank'
-import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses'
-import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
 
 // FIXME: 色使いすぎ？
 /**
@@ -48,9 +49,11 @@ export const UserRecordCard: Component<Props> = (props) => {
   let titleRef: HTMLParagraphElement | undefined
   const scoreRank = () => getScoreRank(props.record.score)
   const indexColor = () => (props.useDefaultIndexColor ? idxColor(0) : idxColor(props.index + 1))
+  const jacketUrl = () => buildChunithmJacketUrl(props.record.img)
 
+  // DOM上の実寸に応じて、カード幅からはみ出す楽曲名だけ横スクロールさせる。
   onMount(() => {
-    if (titleRef && titleRef.scrollWidth > titleRef.clientWidth) {
+    if (titleRef && titleRef.clientWidth > 0 && titleRef.scrollWidth > titleRef.clientWidth) {
       // はみ出している割合を計算
       const overflowPercentage =
         ((titleRef.scrollWidth - titleRef.clientWidth) / titleRef.clientWidth) * 100
@@ -67,9 +70,23 @@ export const UserRecordCard: Component<Props> = (props) => {
         class="group block text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
       >
         <div
-          class={`relative select-none border-y border-r border-border bg-surface p-2 pl-4 ${RECORD_CARD_HOVER_CLASS} before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 ${difficultyCardBorderColor(props.record.difficulty)}`}
+          class={`relative isolate select-none overflow-hidden border-y border-r border-border bg-surface p-2 pl-4 ${RECORD_CARD_HOVER_CLASS} before:absolute before:top-0 before:bottom-0 before:left-0 before:z-20 before:w-2 ${difficultyCardBorderColor(props.record.difficulty)}`}
         >
-          <div class="flex items-center gap-3">
+          <Show when={jacketUrl()}>
+            {(url) => (
+              <Image
+                class="pointer-events-none absolute inset-y-0 right-0 z-0 block w-1/2 overflow-hidden [mask-image:linear-gradient(to_right,transparent_0%,black_33%)]"
+                aria-hidden="true"
+              >
+                <Image.Img
+                  src={url()}
+                  alt=""
+                  class="h-full w-full object-cover object-center opacity-15"
+                />
+              </Image>
+            )}
+          </Show>
+          <div class="relative z-10 flex items-center gap-3">
             <div
               class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${indexColor()} font-oswald text-lg font-bold`}
             >
@@ -87,7 +104,7 @@ export const UserRecordCard: Component<Props> = (props) => {
                 <span class={SCORE_RANK_TEXT_CLASS[scoreRank()]}>{scoreRank()}</span>
               </p>
             </div>
-            <div class="shrink-0 text-right font-oswald text-lg font-bold leading-none">
+            <div class="shrink-0 text-right font-oswald text-xl font-bold leading-none">
               {props.record.rating.toFixed(2)}
             </div>
           </div>

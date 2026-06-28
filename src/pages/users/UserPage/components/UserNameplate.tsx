@@ -6,6 +6,7 @@ import {
   createSignal,
   For,
   onCleanup,
+  onMount,
   Show,
 } from 'solid-js'
 import { HONOR_TYPE_CLASS_NAMES } from '../../../../constants/honors'
@@ -14,6 +15,8 @@ import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPo
 import { formatNullablePlayerRating } from '../../utils/ratingFormat'
 
 const HONOR_ROTATION_INTERVAL_MS = 4000
+const SCROLL_AMOUNT_CSS_VARIABLE = '--honor-title-scroll-amount'
+const SCROLL_DURATION_CSS_VARIABLE = '--honor-title-scroll-duration'
 const VISIBLE_HONOR_LIMIT = 3
 
 type Props = {
@@ -49,6 +52,21 @@ const normalizeHonorIndex = (index: number, length: number): number => {
 }
 
 /**
+ * 要素の表示幅に対する横方向のはみ出し割合を計算する。
+ *
+ * @param element - 横スクロール量を測定する称号テキスト要素。
+ * @returns CSS translateX に渡すための負のパーセント値。はみ出しがない場合は `null`。
+ */
+const calculateOverflowTranslatePercent = (element: HTMLElement): string | null => {
+  if (element.clientWidth === 0 || element.scrollWidth <= element.clientWidth) return null
+
+  const overflowPercentage =
+    ((element.scrollWidth - element.clientWidth) / element.clientWidth) * 100
+
+  return `-${overflowPercentage}%`
+}
+
+/**
  * APIの称号種別を称号背景のCSSクラス名へ変換する。
  */
 const honorTypeClassNames: Record<HonorDTO['type_name'], string> = HONOR_TYPE_CLASS_NAMES
@@ -59,16 +77,53 @@ const honorTypeClassNames: Record<HonorDTO['type_name'], string> = HONOR_TYPE_CL
  * @param props - 表示対象の称号とローテーションアニメーションの有無。
  * @returns 称号表示の JSX 要素。
  */
-const HonorTitle: Component<HonorTitleProps> = (props) => (
-  <span
-    class={`user-honor-title${props.isRotating ? ' user-honor-title--rotating' : ''} ${
-      honorTypeClassNames[props.honor.type_name]
-    }`}
-    data-honor-type={props.honor.type_name}
-  >
-    {props.honor.name}
-  </span>
-)
+const HonorTitle: Component<HonorTitleProps> = (props) => {
+  const [shouldScroll, setShouldScroll] = createSignal(false)
+  let titleTextRef: HTMLSpanElement | undefined
+
+  /**
+   * 称号テキストが表示幅を超える場合だけ横スクロール用のCSS変数を更新する。
+   *
+   * @returns なし。
+   */
+  const updateScrollAnimation = (): void => {
+    if (!titleTextRef) return
+
+    const scrollAmount = calculateOverflowTranslatePercent(titleTextRef)
+
+    if (!scrollAmount) {
+      titleTextRef.style.removeProperty(SCROLL_AMOUNT_CSS_VARIABLE)
+      titleTextRef.style.removeProperty(SCROLL_DURATION_CSS_VARIABLE)
+      setShouldScroll(false)
+      return
+    }
+
+    titleTextRef.style.setProperty(SCROLL_AMOUNT_CSS_VARIABLE, scrollAmount)
+    titleTextRef.style.setProperty(SCROLL_DURATION_CSS_VARIABLE, `${HONOR_ROTATION_INTERVAL_MS}ms`)
+    setShouldScroll(true)
+  }
+
+  // DOM上の実寸が必要なため、マウント後に称号テキストのはみ出し量を測定する。
+  onMount(updateScrollAnimation)
+
+  return (
+    <span
+      class={`user-honor-title${props.isRotating ? ' user-honor-title--rotating' : ''} ${
+        honorTypeClassNames[props.honor.type_name]
+      }`}
+      data-honor-type={props.honor.type_name}
+    >
+      <span
+        ref={titleTextRef}
+        class={`user-honor-title__text${shouldScroll() ? ' user-honor-title__text--scrolling' : ''}${
+          props.isRotating ? ' user-honor-title__text--rotating' : ''
+        }`}
+      >
+        {props.honor.name}
+      </span>
+    </span>
+  )
+}
 
 /**
  * ユーザーの称号、レベル、レーティング、OVER POWERをまとめたプロフィールカードを表示する。
@@ -99,6 +154,7 @@ export const UserNameplate: Component<Props> = (props) => {
     setIsHonorListExpanded((current) => !current)
   }
 
+  // 称号一覧や展開状態に応じて、表示中の称号インデックスと自動切り替えを同期する。
   createEffect(() => {
     const honorsLength = visibleHonors().length
 

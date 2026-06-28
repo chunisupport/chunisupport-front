@@ -1,6 +1,6 @@
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../constants/chart'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
 import { MAX_SCORE } from '../../../utils/scoreRank'
-import { CONST_MAX, CONST_MIN } from '../../users/UserRecord/constants/constRange'
 import { buildDefaultFilter } from '../../users/UserRecord/types/filterDefaults'
 import type {
   ComboLamp,
@@ -8,6 +8,7 @@ import type {
   FilterState,
   HardLamp,
 } from '../../users/UserRecord/types/types'
+import { isExplicitEmptyAttribute } from './goalForm'
 import { buildGoalVersionNameMap } from './goalVersion'
 
 const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
@@ -56,7 +57,7 @@ const applyUnachievedCondition = (filter: FilterState, goal: GoalDTO): FilterSta
       const params = goal.achievement_params as { score: number }
       return {
         ...filter,
-        score: { min: 0, max: Math.max(0, params.score - 1) },
+        score: { min: SCORE_MIN, max: Math.max(SCORE_MIN, params.score - 1) },
       }
     }
     case 'hardlamp_count': {
@@ -97,27 +98,31 @@ export const buildGoalRecordFilter = (
     ...defaultFilter,
     title: '',
     difficulties: masterData.difficulties
-      .filter((difficulty) => difficultyIds.length === 0 || difficultyIds.includes(difficulty.id))
+      .filter(
+        (difficulty) =>
+          !isExplicitEmptyAttribute(goal.attributes.diff) &&
+          (difficultyIds.length === 0 || difficultyIds.includes(difficulty.id))
+      )
       .map((difficulty) => difficulty.name.toUpperCase() as Difficulty),
     genres:
-      genreIds.length === 0
+      genreIds.length === 0 || isExplicitEmptyAttribute(goal.attributes.genre)
         ? []
         : masterData.genres
             .filter((genre) => genreIds.includes(genre.id))
             .map((genre) => genre.name),
     versions:
-      versionIds.length === 0
+      versionIds.length === 0 || isExplicitEmptyAttribute(goal.attributes.ver)
         ? []
         : versionIds.flatMap((versionId) => {
             const versionName = versionNameMap.get(versionId)
             return versionName ? [versionName] : []
           }),
     const: {
-      min: goal.attributes.const?.min ?? CONST_MIN,
-      max: goal.attributes.const?.max ?? CONST_MAX,
+      min: goal.attributes.const?.min ?? CHART_CONST_MIN,
+      max: goal.attributes.const?.max ?? CHART_CONST_MAX,
     },
     constFilterMode: 'number',
-    score: { min: 0, max: MAX_SCORE },
+    score: { min: SCORE_MIN, max: MAX_SCORE },
     scoreFilterMode: 'number',
     excludeNoPlay: false,
   }
