@@ -273,7 +273,7 @@ const parseWeightValue = (value: string): number | null => {
  * @returns 数値化された重みMap。
  */
 const parseWeightValues = <T extends string>(
-  values: Record<T, string>
+  values: Partial<Record<T, string>>
 ): Partial<Record<T, number>> => {
   const parsedEntries = Object.entries(values).flatMap(([key, value]) => {
     const parsed = parseWeightValue(value)
@@ -288,7 +288,7 @@ const parseWeightValues = <T extends string>(
  * @param values - 選択肢ごとの重み入力値。
  * @returns 無効な重みが含まれている場合は true。
  */
-const hasInvalidWeightValue = <T extends string>(values: Record<T, string>): boolean =>
+const hasInvalidWeightValue = <T extends string>(values: Partial<Record<T, string>>): boolean =>
   Object.values(values).some((value) => parseWeightValue(String(value)) === null)
 
 /**
@@ -496,11 +496,6 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const versionOptions = createMemo(() => [
     ...new Set(allCandidates().map((candidate) => candidate.version)),
   ])
-  const constOptions = createMemo(() =>
-    [...new Set(allCandidates().map((candidate) => candidate.chartConst.toFixed(1)))].sort(
-      (left, right) => Number(left) - Number(right)
-    )
-  )
   const parsedMinConst = createMemo(() => parseOptionalDecimal(minConst()))
   const parsedMaxConst = createMemo(() => parseOptionalDecimal(maxConst()))
   const parsedMinScore = createMemo(() => parseOptionalDecimal(minScore()))
@@ -513,8 +508,10 @@ const RandomSongSelectorPage = (): JSX.Element => {
     () => new Set(createRandomSongRecordMap(myRecordData()?.bestRecords ?? []).keys())
   )
   const hasMyRecordData = createMemo(() => myRecordData() !== null && myRecordData() !== undefined)
-  const hasInvalidWeights = createMemo(
-    () => hasInvalidWeightValue(difficultyWeights()) || hasInvalidWeightValue(constWeights())
+  const selectedDifficultyWeightOptions = createMemo(() =>
+    RANDOM_SONG_SELECTOR_DIFFICULTIES.filter((difficulty) =>
+      selectedDifficulties().includes(difficulty)
+    )
   )
   const constRangeError = createMemo(() => {
     const min = parsedMinConst()
@@ -544,14 +541,6 @@ const RandomSongSelectorPage = (): JSX.Element => {
 
     return null
   })
-  const validationMessage = createMemo(() => {
-    if (parsedCount() === null) return RANDOM_SONG_SELECTOR_COPY.invalidCountMessage
-    if (constRangeError()) return constRangeError()
-    if (scoreRangeError()) return scoreRangeError()
-    if (hasInvalidWeights()) return RANDOM_SONG_SELECTOR_COPY.invalidWeightMessage
-
-    return null
-  })
   const filteredCandidates = createMemo(() => {
     const basicFilteredCandidates = filterRandomSongCandidates(allCandidates(), {
       difficulties: selectedDifficulties(),
@@ -576,10 +565,46 @@ const RandomSongSelectorPage = (): JSX.Element => {
       }
     )
   })
+  const constWeightOptions = createMemo(() =>
+    [...new Set(filteredCandidates().map((candidate) => candidate.chartConst.toFixed(1)))].sort(
+      (left, right) => Number(left) - Number(right)
+    )
+  )
+  const selectedDifficultyWeights = createMemo(
+    () =>
+      Object.fromEntries(
+        selectedDifficultyWeightOptions().map((difficulty) => [
+          difficulty,
+          difficultyWeights()[difficulty],
+        ])
+      ) as Partial<Record<PlayerDataDifficulty, string>>
+  )
+  const selectedConstWeights = createMemo(
+    () =>
+      Object.fromEntries(
+        constWeightOptions().map((chartConst) => [
+          chartConst,
+          constWeights()[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
+        ])
+      ) as Partial<Record<string, string>>
+  )
+  const hasInvalidWeights = createMemo(
+    () =>
+      hasInvalidWeightValue(selectedDifficultyWeights()) ||
+      hasInvalidWeightValue(selectedConstWeights())
+  )
+  const validationMessage = createMemo(() => {
+    if (parsedCount() === null) return RANDOM_SONG_SELECTOR_COPY.invalidCountMessage
+    if (constRangeError()) return constRangeError()
+    if (scoreRangeError()) return scoreRangeError()
+    if (hasInvalidWeights()) return RANDOM_SONG_SELECTOR_COPY.invalidWeightMessage
+
+    return null
+  })
 
   const randomSongWeight = createMemo(() => ({
-    difficultyWeights: parseWeightValues(difficultyWeights()),
-    constWeights: parseWeightValues(constWeights()),
+    difficultyWeights: parseWeightValues(selectedDifficultyWeights()),
+    constWeights: parseWeightValues(selectedConstWeights()),
   }))
 
   createEffect(() => {
@@ -597,7 +622,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
   })
 
   createEffect(() => {
-    const options = constOptions()
+    const options = constWeightOptions()
     if (options.length === 0) return
 
     setConstWeights((prev) =>
@@ -649,7 +674,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     })
     setConstWeights(
       Object.fromEntries(
-        constOptions().map((chartConst) => [
+        constWeightOptions().map((chartConst) => [
           chartConst,
           RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
         ])
@@ -886,7 +911,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                               {RANDOM_SONG_SELECTOR_COPY.difficultyWeightLabel}
                             </div>
                             <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                              <For each={RANDOM_SONG_SELECTOR_DIFFICULTIES}>
+                              <For each={selectedDifficultyWeightOptions()}>
                                 {(difficulty) => (
                                   <RandomSongTextField
                                     id={`random-song-difficulty-weight-${difficulty.toLowerCase()}`}
@@ -906,7 +931,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                               {RANDOM_SONG_SELECTOR_COPY.constWeightLabel}
                             </div>
                             <div class="grid gap-3 sm:grid-cols-4 lg:grid-cols-6">
-                              <For each={constOptions()}>
+                              <For each={constWeightOptions()}>
                                 {(chartConst) => (
                                   <RandomSongTextField
                                     id={`random-song-const-weight-${chartConst.replace('.', '-')}`}

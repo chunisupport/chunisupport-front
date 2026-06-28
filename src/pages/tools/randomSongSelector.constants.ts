@@ -16,7 +16,7 @@ export const RANDOM_SONG_SELECTOR_DIFFICULTIES: PlayerDataDifficulty[] = [
  */
 export const RANDOM_SONG_SELECTOR_DEFAULTS = {
   count: '3',
-  minConst: '',
+  minConst: '12.0',
   maxConst: '',
   minScore: '',
   maxScore: '',
