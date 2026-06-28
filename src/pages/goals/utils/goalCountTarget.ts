@@ -1,10 +1,13 @@
 /** 最大値を基準にした目標値の指定方法。 */
 export type GoalTargetMode = 'all' | 'number' | 'remaining' | 'percent'
 
+type GoalAbsoluteTargetParam<TAbsoluteKey extends 'count' | 'total'> = TAbsoluteKey extends 'count'
+  ? { count: number }
+  : { total: number }
+
 /** APIへ送る目標値パラメータ。 */
-export type GoalTargetParam =
-  | { count: number }
-  | { total: number }
+export type GoalTargetParam<TAbsoluteKey extends 'count' | 'total' = 'count' | 'total'> =
+  | GoalAbsoluteTargetParam<TAbsoluteKey>
   | { remaining: number }
   | { percent: number }
   | Record<string, never>
@@ -20,11 +23,21 @@ type GoalTargetParamValue = Partial<Record<GoalTargetParamKey, unknown>>
  * @param absoluteKey - 絶対値指定時に使うAPIキー。
  * @returns 選択された指定方法に対応する相互排他的なAPIパラメータ。
  */
-export const buildGoalTargetParam = (
+export function buildGoalTargetParam(
+  mode: GoalTargetMode,
+  value: string,
+  absoluteKey: 'count'
+): GoalTargetParam<'count'>
+export function buildGoalTargetParam(
+  mode: GoalTargetMode,
+  value: string,
+  absoluteKey: 'total'
+): GoalTargetParam<'total'>
+export function buildGoalTargetParam(
   mode: GoalTargetMode,
   value: string,
   absoluteKey: 'count' | 'total'
-): GoalTargetParam => {
+): GoalTargetParam {
   if (mode === 'all') return {}
 
   const parsedValue = Number(value)
