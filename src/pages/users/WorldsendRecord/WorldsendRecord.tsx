@@ -14,45 +14,22 @@ import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import {
   readWorldsendRecordColumnsSetting,
-  readWorldsendRecordFilterSetting,
   saveWorldsendRecordColumnsSetting,
   saveWorldsendRecordFilterSetting,
 } from '../../../repositories/viewSettingsRepository'
 import { useSongsData } from '../../../stores/songsData'
-import type { VersionSummaryDTO, WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
-import {
-  getShortVersionName,
-  resolveVersionNameByReleaseDate,
-} from '../../../utils/versionConverter'
+import type { WorldsendRecordDTO } from '../../../types/api'
 import FilterStats from '../components/FilterStats'
-import RecordDataTable from '../components/RecordDataTable'
-import {
-  type ColumnRenderer,
-  RECORD_ALPHANUMERIC_COLUMN_CLASS,
-  RECORD_CELL_BASE_CLASS,
-  RECORD_CELL_CENTER_TEXT_CLASS,
-  RecordFullChainCell,
-  RecordHardLampCell,
-  RecordJusticeCountCell,
-  RecordLampCell,
-  RecordScoreCell,
-  RecordTitleCell,
-  RecordUpdatedAtCell,
-} from '../components/SharedRecordTableColumns'
-import { isValidSavedWorldsendFilter } from '../components/savedRecordFilters'
 import { sanitizeSortQuery } from '../recordTable/sortingQuery'
-import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
-import { formatJusticeCountForAj } from '../UserRecord/utils/justiceCountDisplay'
-import { formatUpdatedAt } from '../UserRecord/utils/updatedAt'
 import { getRecordStats } from '../utils/recordStats'
 import WorldsendFilterDialog from './components/WorldsendFilterDialog'
+import WorldsendRecordTable from './components/WorldsendRecordTable'
 import WorldsendSortDialog from './components/WorldsendSortDialog'
 import { buildDefaultWorldsendFilter, DEFAULT_WORLDSEND_FILTER } from './types/filterDefaults'
-import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from './types/filterTypes'
+import type { WorldsendFilterState } from './types/filterTypes'
 import {
   getDefaultVisibleWorldsendColumnIds,
-  getVisibleWorldsendColumns,
   sanitizeVisibleWorldsendColumnIds,
   type WorldsendRecordColumnId,
   type WorldsendRecordSortKey,
@@ -62,12 +39,13 @@ import {
   createWorldsendRecordTitleMatcher,
   isWorldsendRecordMatchedWithTitleMatcher,
 } from './utils/filtering'
+import { restoreInitialWorldsendRecordFilter } from './utils/initialFilter'
+import { attachWorldsendSongMetaToRecords } from './utils/songMeta'
 import {
   createInitialWorldsendRecordSortConditions,
   nextPrimaryWorldsendRecordSortCondition,
   normalizeWorldsendRecordSortConditions,
   parseWorldsendSortParams,
-  sortWorldsendRecordsByConditions,
   type WorldsendRecordSortCondition,
 } from './utils/sorting'
 import WorldsendColumnSettingsDialog from './WorldsendColumnSettingsDialog'
@@ -77,100 +55,6 @@ type Props = {
 }
 
 type WorldsendSortKey = WorldsendRecordSortKey
-
-/**
- * WORLD'S END レコードの初期フィルターを保存済み設定、または既定値から決定する。
- *
- * @param songs - フィルター既定値の構築に使う WORLD'S END 楽曲一覧。
- * @param versions - フィルター既定値の構築に使うバージョン一覧。
- * @returns 初回表示に適用する WORLD'S END フィルター状態。
- */
-const restoreInitialWorldsendRecordFilter = async (
-  songs: WorldsendSongDTO[],
-  versions: VersionSummaryDTO[]
-): Promise<WorldsendFilterState> => {
-  const defaultFilter = buildDefaultWorldsendFilter(songs, versions)
-
-  try {
-    const savedFilter = await readWorldsendRecordFilterSetting()
-    return isValidSavedWorldsendFilter(savedFilter) ? savedFilter : defaultFilter
-  } catch {
-    return defaultFilter
-  }
-}
-
-const worldsendLevelLabel = (levelStar: number | null | undefined) => {
-  if (typeof levelStar !== 'number' || levelStar <= 0) {
-    return '-'
-  }
-
-  return `★${levelStar}`
-}
-
-const attachWorldsendSongMetaToRecords = (
-  songs: WorldsendSongDTO[],
-  records: WorldsendRecordDTO[],
-  versions: VersionSummaryDTO[]
-): WorldsendRecordWithSongMeta[] => {
-  const songMap = new Map(songs.map((song) => [song.id, song]))
-
-  return records.map((record) => {
-    const song = songMap.get(record.id)
-
-    return {
-      ...record,
-      genre: song?.genre ?? null,
-      reading: song?.reading ?? null,
-      release: song?.release ?? null,
-      release_version: getShortVersionName(
-        resolveVersionNameByReleaseDate(song?.release ?? null, versions)
-      ),
-    }
-  })
-}
-
-const worldsendColumnRenderers: Record<
-  WorldsendRecordColumnId,
-  ColumnRenderer<WorldsendRecordWithSongMeta>
-> = {
-  title: (record) => (
-    <RecordTitleCell href={buildWorldsendSongDetailPath(record.id)} title={record.title} />
-  ),
-  attribute: (record) => (
-    <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
-      <span class="inline-block w-full text-center leading-none">{record.attribute ?? '-'}</span>
-    </div>
-  ),
-  level: (record) => (
-    <div class={`${RECORD_CELL_BASE_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}>
-      <span class="inline-block leading-none">{worldsendLevelLabel(record.level_star)}</span>
-    </div>
-  ),
-  score: (record) => <RecordScoreCell record={record} />,
-  lamp: (record) => <RecordLampCell record={record} />,
-  hardLamp: (record) => <RecordHardLampCell record={record} />,
-  fullChain: (record) => <RecordFullChainCell record={record} />,
-  justiceCount: (record) => (
-    <RecordJusticeCountCell
-      record={record}
-      calcJusticeCount={(target) =>
-        formatJusticeCountForAj({
-          comboLamp: target.combo_lamp,
-          justiceCount: target.justice_count,
-        })
-      }
-    />
-  ),
-  updatedAt: (record) => <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />,
-}
-
-const getWorldsendColumnRenderer = (
-  columnId: WorldsendRecordColumnId
-): ColumnRenderer<WorldsendRecordWithSongMeta> => {
-  const renderer = worldsendColumnRenderers[columnId]
-  if (!renderer) throw new Error(`Unknown worldsend column renderer: ${columnId}`)
-  return renderer
-}
 
 /**
  * WORLD'S END レコード一覧とフィルター操作 UI を表示する。
@@ -298,10 +182,6 @@ const WorldsendRecord = (props: Props) => {
       isWorldsendRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle)
     )
   })
-  const sortedRecords = createMemo(() =>
-    sortWorldsendRecordsByConditions(filteredRecords(), sortConditions())
-  )
-  const visibleColumns = createMemo(() => getVisibleWorldsendColumns(visibleColumnIds()))
   const stats = createMemo(() => getRecordStats(filteredRecords()))
 
   return (
@@ -337,13 +217,12 @@ const WorldsendRecord = (props: Props) => {
                 全 {recordsWithSongMeta().length} 件中 {filteredRecords().length} 件を表示
               </p>
 
-              <RecordDataTable
-                records={sortedRecords()}
-                columns={visibleColumns()}
+              <WorldsendRecordTable
+                records={filteredRecords()}
+                visibleColumnIds={visibleColumnIds()}
                 sortKey={primarySort()?.key ?? null}
                 sortDirection={primarySort()?.direction ?? null}
-                emptyMessage="WORLD'S END のレコードはありません。"
-                getColumnRenderer={getWorldsendColumnRenderer}
+                sortConditions={sortConditions()}
                 onSortChange={handleSortChange}
               />
 
