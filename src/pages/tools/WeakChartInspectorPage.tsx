@@ -550,88 +550,8 @@ const WeakChartInspectorPage = (): JSX.Element => {
                   </div>
 
                   <div class="flex flex-col gap-5">
-                    {/* 表示の絞り込み */}
-                    <Collapsible defaultOpen={false} class="order-2">
-                      <Collapsible.Trigger class="group flex w-full items-center justify-start gap-2 text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-focus-ring">
-                        <ChevronRight
-                          class="h-4 w-4 rotate-0 transition-transform group-data-[expanded]:rotate-90"
-                          aria-hidden="true"
-                        />
-                        <span>{WEAK_CHART_SETTINGS_COPY.displaySection}</span>
-                      </Collapsible.Trigger>
-                      <Collapsible.Content>
-                        <fieldset class="mt-3">
-                          <legend class="sr-only">{WEAK_CHART_SETTINGS_COPY.displaySection}</legend>
-                          <div class="space-y-3">
-                            {/* スコア範囲 */}
-                            <div class="space-y-1">
-                              <span class="block text-sm text-text-muted">
-                                {WEAK_CHART_SETTINGS_COPY.scoreRangeLabel}
-                              </span>
-                              <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-                                <TextField class="block" value={editYMin()} onChange={setEditYMin}>
-                                  <TextField.Input
-                                    type="number"
-                                    min={SCORE_MIN}
-                                    max={SCORE_THEORETICAL_MAX}
-                                    step="1"
-                                    class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
-                                    aria-label="表示の絞り込み スコア 最小"
-                                  />
-                                </TextField>
-                                <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
-                                  <span aria-hidden="true">～</span>
-                                </div>
-                                <TextField class="block" value={editYMax()} onChange={setEditYMax}>
-                                  <TextField.Input
-                                    type="number"
-                                    min={SCORE_MIN}
-                                    max={SCORE_THEORETICAL_MAX}
-                                    step="1"
-                                    class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
-                                    aria-label="表示の絞り込み スコア 最大"
-                                  />
-                                </TextField>
-                              </div>
-                            </div>
-                            {/* 譜面定数範囲 */}
-                            <div class="space-y-1">
-                              <span class="block text-sm text-text-muted">
-                                {WEAK_CHART_SETTINGS_COPY.constRangeLabel}
-                              </span>
-                              <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-                                <TextField class="block" value={editXMin()} onChange={setEditXMin}>
-                                  <TextField.Input
-                                    type="number"
-                                    min={CHART_CONST_MIN}
-                                    max={CHART_CONST_MAX}
-                                    step="0.1"
-                                    class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
-                                    aria-label="表示の絞り込み 譜面定数 最小"
-                                  />
-                                </TextField>
-                                <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
-                                  <span aria-hidden="true">～</span>
-                                </div>
-                                <TextField class="block" value={editXMax()} onChange={setEditXMax}>
-                                  <TextField.Input
-                                    type="number"
-                                    min={CHART_CONST_MIN}
-                                    max={CHART_CONST_MAX}
-                                    step="0.1"
-                                    class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
-                                    aria-label="表示の絞り込み 譜面定数 最大"
-                                  />
-                                </TextField>
-                              </div>
-                            </div>
-                          </div>
-                        </fieldset>
-                      </Collapsible.Content>
-                    </Collapsible>
-
                     {/* 集計対象の絞り込み */}
-                    <fieldset class="order-1">
+                    <fieldset>
                       <legend class="mb-2 text-sm font-semibold text-text">
                         {WEAK_CHART_SETTINGS_COPY.aggregationSection}
                       </legend>
@@ -748,6 +668,86 @@ const WeakChartInspectorPage = (): JSX.Element => {
                         </div>
                       </div>
                     </fieldset>
+
+                    {/* 表示の絞り込み */}
+                    <Collapsible defaultOpen={false}>
+                      <Collapsible.Trigger class="group flex w-full items-center justify-start gap-2 text-sm font-semibold text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring">
+                        <ChevronRight
+                          class="h-4 w-4 rotate-0 transition-transform group-data-[expanded]:rotate-90"
+                          aria-hidden="true"
+                        />
+                        <span>{WEAK_CHART_SETTINGS_COPY.displaySection}</span>
+                      </Collapsible.Trigger>
+                      <Collapsible.Content>
+                        <fieldset class="mt-3">
+                          <legend class="sr-only">{WEAK_CHART_SETTINGS_COPY.displaySection}</legend>
+                          <div class="space-y-3">
+                            {/* スコア範囲 */}
+                            <div class="space-y-1">
+                              <span class="block text-sm text-text-muted">
+                                {WEAK_CHART_SETTINGS_COPY.scoreRangeLabel}
+                              </span>
+                              <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
+                                <TextField class="block" value={editYMin()} onChange={setEditYMin}>
+                                  <TextField.Input
+                                    type="number"
+                                    min={SCORE_MIN}
+                                    max={SCORE_THEORETICAL_MAX}
+                                    step="1"
+                                    class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
+                                    aria-label="表示の絞り込み スコア 最小"
+                                  />
+                                </TextField>
+                                <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
+                                  <span aria-hidden="true">～</span>
+                                </div>
+                                <TextField class="block" value={editYMax()} onChange={setEditYMax}>
+                                  <TextField.Input
+                                    type="number"
+                                    min={SCORE_MIN}
+                                    max={SCORE_THEORETICAL_MAX}
+                                    step="1"
+                                    class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
+                                    aria-label="表示の絞り込み スコア 最大"
+                                  />
+                                </TextField>
+                              </div>
+                            </div>
+                            {/* 譜面定数範囲 */}
+                            <div class="space-y-1">
+                              <span class="block text-sm text-text-muted">
+                                {WEAK_CHART_SETTINGS_COPY.constRangeLabel}
+                              </span>
+                              <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
+                                <TextField class="block" value={editXMin()} onChange={setEditXMin}>
+                                  <TextField.Input
+                                    type="number"
+                                    min={CHART_CONST_MIN}
+                                    max={CHART_CONST_MAX}
+                                    step="0.1"
+                                    class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
+                                    aria-label="表示の絞り込み 譜面定数 最小"
+                                  />
+                                </TextField>
+                                <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
+                                  <span aria-hidden="true">～</span>
+                                </div>
+                                <TextField class="block" value={editXMax()} onChange={setEditXMax}>
+                                  <TextField.Input
+                                    type="number"
+                                    min={CHART_CONST_MIN}
+                                    max={CHART_CONST_MAX}
+                                    step="0.1"
+                                    class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
+                                    aria-label="表示の絞り込み 譜面定数 最大"
+                                  />
+                                </TextField>
+                              </div>
+                            </div>
+                          </div>
+                        </fieldset>
+                      </Collapsible.Content>
+                    </Collapsible>
                   </div>
 
                   <div class="flex justify-end mt-6">
