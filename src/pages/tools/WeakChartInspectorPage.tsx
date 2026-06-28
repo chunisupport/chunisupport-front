@@ -298,7 +298,7 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
           </p>
         }
       >
-        <div class="overflow-x-auto px-2">
+        <div class="overflow-x-auto">
           <table class="w-full min-w-[30rem] table-fixed border-collapse text-sm">
             <caption class="sr-only">{WEAK_CHART_INSPECTOR_COPY.tableCaption}</caption>
             <colgroup>
@@ -308,7 +308,7 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
               <col class="w-22" />
             </colgroup>
             <thead class="bg-surface-muted text-left text-text-muted">
-              <tr>
+              <tr class="[&>*:first-child]:pl-2 [&>*:last-child]:pr-2">
                 <th scope="col" class="font-medium">
                   {header('曲名', 'title', 'start')}
                 </th>
@@ -326,7 +326,7 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
             <tbody>
               <For each={sortedOutliers()}>
                 {({ record }) => (
-                  <tr class="border-t border-border">
+                  <tr class="border-t border-border [&>*:first-child]:pl-2 [&>*:last-child]:pr-2">
                     <td class="overflow-hidden py-1.5 font-sans font-medium">
                       <A
                         href={`/songs/${encodeURIComponent(record.id)}`}
