@@ -83,7 +83,7 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
     )
 
     params.setSortConditions((currentSortConditions) =>
-      normalizeRecordSortConditions([nextPrimarySort, ...currentSortConditions.slice(1, 4)])
+      normalizeRecordSortConditions([nextPrimarySort, ...currentSortConditions.slice(1)])
     )
   }
 

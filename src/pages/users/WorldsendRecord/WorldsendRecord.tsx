@@ -382,10 +382,7 @@ const WorldsendRecord = (props: Props) => {
     )
 
     setSortConditions((currentSortConditions) =>
-      normalizeWorldsendRecordSortConditions([
-        nextPrimarySort,
-        ...currentSortConditions.slice(1, 4),
-      ])
+      normalizeWorldsendRecordSortConditions([nextPrimarySort, ...currentSortConditions.slice(1)])
     )
   }
 
