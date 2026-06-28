@@ -1,4 +1,4 @@
-import { REGISTER_SCORE_TEMP_PATH } from '../../constants/routes'
+import { REGISTER_SCORE_TEMP_PATH } from '../../constants/routes.ts'
 import type { UserDTO } from '../../types/api.ts'
 
 type FetchUserProfile = (username: string) => Promise<unknown>

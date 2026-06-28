@@ -1,5 +1,5 @@
-import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
-import { MAX_SCORE, type ScoreRank } from '../../../utils/scoreRank'
+import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api.ts'
+import { MAX_SCORE, type ScoreRank } from '../../../utils/scoreRank.ts'
 
 type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
 export type SharedComboLamp = SharedRecordSource['combo_lamp']

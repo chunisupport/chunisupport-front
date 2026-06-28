@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildGoalTargetParam } from './goalCountTarget'
+import { buildGoalTargetParam } from './goalCountTarget.ts'
 
 /**
  * 件数指定モードで入力した値が、反転表示設定に関係なく目標件数として保存されることを検証する。

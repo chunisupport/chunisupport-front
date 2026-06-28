@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import type { PlayerRecordDTO, SongDTO } from '../../types/api'
+import type { PlayerRecordDTO, SongDTO } from '../../types/api.ts'
 import {
   buildOverPowerLockedSongLookup,
   buildTheoreticalTargetRecordBySongId,
-} from './overpowerGraph'
+} from './overpowerGraph.ts'
 
 /**
  * OVER POWERグラフ用テストで使う楽曲DTOを生成する。

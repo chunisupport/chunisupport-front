@@ -1,17 +1,20 @@
 import { Button } from '@kobalte/core/button'
 import { createMemo, For, Show } from 'solid-js'
-import type { WorldsendSongDTO } from '../../../../types/api'
-import { renderSortIndicator } from '../../../users/components/RecordTableUiParts'
-import type { SortDirection } from '../../../users/recordTable/sortingQuery'
+import type { WorldsendSongDTO } from '../../../../types/api.ts'
+import { renderSortIndicator } from '../../../users/components/RecordTableUiParts.tsx'
+import type { SortDirection } from '../../../users/recordTable/sortingQuery.ts'
 import {
   SongListAddedDateCell,
   SongListArtistCell,
   SongListBpmCell,
   SongListGenreCell,
   SongListTitleCell,
-} from '../../components/SongListMetaCells'
-import { createVirtualizedSongsTable, sortAriaValue } from '../../components/virtualizedSongsTable'
-import type { WorldsendSongSortKey } from '../utils/sorting'
+} from '../../components/SongListMetaCells.tsx'
+import {
+  createVirtualizedSongsTable,
+  sortAriaValue,
+} from '../../components/virtualizedSongsTable.ts'
+import type { WorldsendSongSortKey } from '../utils/sorting.ts'
 
 const ROW_HEIGHT = 37
 const GRID_TEMPLATE_COLUMNS =

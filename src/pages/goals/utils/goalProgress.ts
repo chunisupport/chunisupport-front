@@ -6,10 +6,10 @@ import type {
   PlayerRecordDTO,
   SongDTO,
   VersionDTO,
-} from '../../../types/api'
-import { buildCurrentOverPowerBySongId } from '../../../usecases/overpower/currentOpTarget'
-import { isExplicitEmptyAttribute } from './goalForm'
-import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
+} from '../../../types/api.ts'
+import { buildCurrentOverPowerBySongId } from '../../../usecases/overpower/currentOpTarget.ts'
+import { isExplicitEmptyAttribute } from './goalForm.ts'
+import { resolveGoalVersionValueByReleaseDate } from './goalVersion.ts'
 
 export interface GoalProgressResult {
   current: number

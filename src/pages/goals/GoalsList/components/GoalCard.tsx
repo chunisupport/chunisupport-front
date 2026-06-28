@@ -1,10 +1,10 @@
 import { Button } from '@kobalte/core/button'
 import { EllipsisVertical, ExternalLink, Pencil, Trash2 } from 'lucide-solid'
 import { type Component, createSignal, onCleanup } from 'solid-js'
-import type { GoalDTO } from '../../../../types/api'
+import type { GoalDTO } from '../../../../types/api.ts'
 // import { formatGoalAttributesLabel, formatGoalTypeLabel } from '../../utils/goalForm'
-import type { GoalProgressResult } from '../../utils/goalProgress'
-import { isGoalRecordNavigationEnabled } from '../../utils/goalRecordFilter'
+import type { GoalProgressResult } from '../../utils/goalProgress.ts'
+import { isGoalRecordNavigationEnabled } from '../../utils/goalRecordFilter.ts'
 
 interface GoalCardProps {
   goal: GoalDTO

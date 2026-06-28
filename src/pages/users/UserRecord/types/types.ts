@@ -1,4 +1,4 @@
-import type { PlayerRecordDTO } from '../../../../types/api'
+import type { PlayerRecordDTO } from '../../../../types/api.ts'
 
 export type Difficulty = PlayerRecordDTO['difficulty']
 export type ComboLamp = PlayerRecordDTO['combo_lamp']

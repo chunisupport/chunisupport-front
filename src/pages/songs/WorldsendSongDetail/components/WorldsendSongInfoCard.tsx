@@ -1,7 +1,7 @@
 import { For } from 'solid-js'
-import type { WorldsendSongDTO } from '../../../../types/api'
-import SongMetaCardLayout from '../../components/SongMetaCardLayout'
-import { getWorldsendChartRows, getWorldsendSongInfoItems } from '../../worldsendDetailModel'
+import type { WorldsendSongDTO } from '../../../../types/api.ts'
+import SongMetaCardLayout from '../../components/SongMetaCardLayout.tsx'
+import { getWorldsendChartRows, getWorldsendSongInfoItems } from '../../worldsendDetailModel.ts'
 
 const badgeClass = '[background:var(--cs-color-worldsend-label-bg)] text-worldsend-label-text'
 const fixedColumnClass = 'w-px whitespace-nowrap'

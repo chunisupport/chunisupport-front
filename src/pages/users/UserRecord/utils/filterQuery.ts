@@ -1,7 +1,7 @@
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../constants/rangeFilters'
-import type { FilterState, NumericRangeFilter } from '../types/types'
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart.ts'
+import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
+import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../constants/rangeFilters.ts'
+import type { FilterState, NumericRangeFilter } from '../types/types.ts'
 
 export type FilterRangeQuery = {
   constMin?: string

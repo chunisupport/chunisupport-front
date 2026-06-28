@@ -24,18 +24,18 @@ import {
   onCleanup,
   Show,
 } from 'solid-js'
-import { fetchMe } from '../../api/users'
-import { LoadError, Loading } from '../../components'
-import { DifficultyBadge } from '../../components/common/DifficultyBadge'
+import { fetchMe } from '../../api/users.ts'
+import { DifficultyBadge } from '../../components/common/DifficultyBadge.tsx'
+import { LoadError, Loading } from '../../components/index.ts'
 import {
   CHART_CONST_MAX,
   CHART_CONST_MIN,
   SCORE_MIN,
   SCORE_THEORETICAL_MAX,
-} from '../../constants/chart'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import type { PlayerRecordDTO } from '../../types/api'
-import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
+} from '../../constants/chart.ts'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle.ts'
+import type { PlayerRecordDTO } from '../../types/api.ts'
+import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache.ts'
 import {
   type ChartScoreDistribution,
   inspectWeakCharts,
@@ -44,9 +44,9 @@ import {
   sortWeakChartOutliers,
   type WeakChartOutlier,
   type WeakChartSortKey,
-} from '../../utils/weakChartInspector'
-import { RecordHeaderButton } from '../users/components/SharedRecordTableColumns'
-import { nextSortState, type SortDirection } from '../users/recordTable/sortingQuery'
+} from '../../utils/weakChartInspector.ts'
+import { RecordHeaderButton } from '../users/components/SharedRecordTableColumns.tsx'
+import { nextSortState, type SortDirection } from '../users/recordTable/sortingQuery.ts'
 import {
   WEAK_CHART_AGGREGATION_DIFFICULTIES,
   WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT,
@@ -58,7 +58,7 @@ import {
   WEAK_CHART_POINT_JITTER,
   WEAK_CHART_SCORE_TICK_INTERVAL,
   WEAK_CHART_SETTINGS_COPY,
-} from './weakChartInspector.constants'
+} from './weakChartInspector.constants.ts'
 
 Chart.register(ScatterController, LinearScale, PointElement, Tooltip)
 

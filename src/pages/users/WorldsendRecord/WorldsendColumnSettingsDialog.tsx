@@ -1,10 +1,10 @@
 import type { Component } from 'solid-js'
-import ColumnSettingsDialogBase from '../components/ColumnSettingsDialogBase'
+import ColumnSettingsDialogBase from '../components/ColumnSettingsDialogBase.tsx'
 import {
   sortVisibleWorldsendColumnIdsByDefinitionOrder,
   WORLDSEND_RECORD_COLUMN_DEFINITIONS,
   type WorldsendRecordColumnId,
-} from './utils/columns'
+} from './utils/columns.ts'
 
 type Props = {
   open: boolean

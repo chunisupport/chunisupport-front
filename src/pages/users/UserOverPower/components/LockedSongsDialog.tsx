@@ -5,8 +5,8 @@ import { TextField } from '@kobalte/core/text-field'
 import { Check, CircleSlash2, Funnel, ListChecks, LoaderCircle, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
-import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
-import Loading from '../../../../components/Loading/Loading'
+import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown.tsx'
+import Loading from '../../../../components/Loading/Loading.tsx'
 import type {
   MasterItemDTO,
   PlayerLockedSongRequest,
@@ -14,19 +14,19 @@ import type {
   PlayerRecordDTO,
   SongDTO,
   VersionDTO,
-} from '../../../../types/api'
-import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch'
-import { toUserFriendlyErrorMessage } from '../../../../utils/errorMessage'
-import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
+} from '../../../../types/api.ts'
+import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch.ts'
+import { toUserFriendlyErrorMessage } from '../../../../utils/errorMessage.ts'
+import { sortMasterItemsBySortOrder } from '../../../../utils/masterData.ts'
 import {
   normalizeForReadingSearch,
   normalizeForSearch,
   normalizeQuery,
-} from '../../../../utils/searchUtils'
+} from '../../../../utils/searchUtils.ts'
 import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
-} from '../../../../utils/versionConverter'
+} from '../../../../utils/versionConverter.ts'
 
 type Props = {
   open: boolean

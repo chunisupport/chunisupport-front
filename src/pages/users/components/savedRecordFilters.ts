@@ -8,13 +8,13 @@ import {
   SCORE_MIN,
   WORLDSEND_LEVEL_STAR_MAX,
   WORLDSEND_LEVEL_STAR_MIN,
-} from '../../../constants/chart'
-import { MAX_SCORE } from '../../../utils/scoreRank'
+} from '../../../constants/chart.ts'
+import { MAX_SCORE } from '../../../utils/scoreRank.ts'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
-} from '../constants/recordFilterOptions'
+} from '../constants/recordFilterOptions.ts'
 import type {
   ChainLamp,
   ComboLamp,
@@ -22,8 +22,8 @@ import type {
   FilterState,
   HardLamp,
   NumericRangeFilter,
-} from '../UserRecord/types/types'
-import type { WorldsendFilterState } from '../WorldsendRecord/types/filterTypes'
+} from '../UserRecord/types/types.ts'
+import type { WorldsendFilterState } from '../WorldsendRecord/types/filterTypes.ts'
 
 /** API と同じ保存済みフィルター名の最大文字数。 */
 export const RECORD_FILTER_NAME_MAX_LENGTH = 30

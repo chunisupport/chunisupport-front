@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { getChartLevelSortKey, isLowChartLevel, toChartLevelLabel } from './chartLevel'
+import { getChartLevelSortKey, isLowChartLevel, toChartLevelLabel } from './chartLevel.ts'
 
 test('譜面定数の小数第1位が.5未満なら整数レベルを返す', () => {
   assert.equal(toChartLevelLabel(10.0), '10')

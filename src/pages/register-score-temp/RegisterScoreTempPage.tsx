@@ -1,9 +1,9 @@
 import { Button } from '@kobalte/core/button'
 import { createSignal, Show } from 'solid-js'
 
-import { postPlayerDataCommit, postRegisterData } from '../../api/register-data'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { postPlayerDataCommit, postRegisterData } from '../../api/register-data.ts'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle.ts'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage.ts'
 
 type RegisterDataFormat = 'json' | 'text'
 

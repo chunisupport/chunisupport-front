@@ -5,12 +5,12 @@ import { TextField } from '@kobalte/core/text-field'
 import { Check, ChevronDown, Target } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, ErrorBoundary, For, onMount, Show } from 'solid-js'
-import { LoadError, Loading } from '../../components'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
-import type { SongDTO } from '../../types/api'
-import { type BorderCalculatorResult, calculateBorder } from '../../utils/borderCalculator'
-import { buildSearchableItems, filterSearchableItems } from '../songs/searchHelpers'
+import { LoadError, Loading } from '../../components/index.ts'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle.ts'
+import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData.ts'
+import type { SongDTO } from '../../types/api.ts'
+import { type BorderCalculatorResult, calculateBorder } from '../../utils/borderCalculator.ts'
+import { buildSearchableItems, filterSearchableItems } from '../songs/searchHelpers.ts'
 
 const BORDER_CALCULATOR_COPY = {
   title: 'ボーダー計算機',

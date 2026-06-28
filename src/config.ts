@@ -1,4 +1,4 @@
-import { getRequiredEnv } from './lib/env'
+import { getRequiredEnv } from './lib/env.ts'
 
 /** バックエンド API のベース URL。 */
 export const API_BASE_URL = getRequiredEnv('PUBLIC_BACKEND_URL')
@@ -12,4 +12,4 @@ export const BOOKMARKLET_BASE_URL = getRequiredEnv('PUBLIC_BOOKMARKLET_URL')
 export const BOOKMARKLET_ENTRYPOINT = getRequiredEnv('PUBLIC_BOOKMARKLET_ENTRYPOINT')
 /** Cloudflare Turnstile のサイトキー。 */
 export const CF_TURNSTILE_SITE_KEY = getRequiredEnv('PUBLIC_CF_TURNSTILE_SITE_KEY')
-export { CHUNITHM_JACKET_BASE_URL } from './constants/jackets'
+export { CHUNITHM_JACKET_BASE_URL } from './constants/jackets.ts'

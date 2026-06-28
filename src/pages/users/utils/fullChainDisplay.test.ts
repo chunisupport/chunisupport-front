@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { formatFullChainLampLabel } from './fullChainDisplay'
+import { formatFullChainLampLabel } from './fullChainDisplay.ts'
 
 test('FULL CHAIN GOLDは表示用ラベルに変換されること', () => {
   // Given

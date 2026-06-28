@@ -1,6 +1,6 @@
-import { API_BASE_URL } from '../config'
-import type { UserDTO } from '../types/api'
-import { fetchWithAuth } from './fetchWithAuth'
+import { API_BASE_URL } from '../config.ts'
+import type { UserDTO } from '../types/api.ts'
+import { fetchWithAuth } from './fetchWithAuth.ts'
 
 type SignupPayload = {
   username: string

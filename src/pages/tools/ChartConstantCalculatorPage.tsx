@@ -3,19 +3,19 @@ import { TextField } from '@kobalte/core/text-field'
 import { Calculator } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createSignal, For, Show } from 'solid-js'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle.ts'
 import {
   type ChartConstantLamp,
   calculateChartConstant,
   MAX_CHART_CONSTANT_SCORE,
   MIN_CHART_CONSTANT_SCORE,
   resolveLampForScore,
-} from '../../utils/chartConstantCalculator'
+} from '../../utils/chartConstantCalculator.ts'
 import {
   CHART_CONSTANT_CALCULATOR_COPY,
   CHART_CONSTANT_DEFAULTS,
   CHART_CONSTANT_LAMP_OPTIONS,
-} from './chartConstantCalculator.constants'
+} from './chartConstantCalculator.constants.ts'
 
 const FIELD_CONTROL_CLASS =
   'min-h-12 rounded-md border border-border-strong bg-input-bg px-3 text-base text-text hover:border-input-border-hover'

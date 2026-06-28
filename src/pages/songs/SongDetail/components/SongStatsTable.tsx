@@ -11,8 +11,8 @@ import {
   Tooltip,
 } from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
-import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
-import { isOwnBestAverageRatingBand } from './songStatsHighlight'
+import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api.ts'
+import { isOwnBestAverageRatingBand } from './songStatsHighlight.ts'
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip)
 

@@ -2,10 +2,10 @@ import {
   SCORE_MIN,
   WORLDSEND_LEVEL_STAR_MAX,
   WORLDSEND_LEVEL_STAR_MIN,
-} from '../../../../constants/chart'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
-import type { WorldsendFilterState } from '../types/filterTypes'
+} from '../../../../constants/chart.ts'
+import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
+import { formatFullChainLampLabel } from '../../utils/fullChainDisplay.ts'
+import type { WorldsendFilterState } from '../types/filterTypes.ts'
 
 /**
  * WORLD'S END の★レベル表示を返す。

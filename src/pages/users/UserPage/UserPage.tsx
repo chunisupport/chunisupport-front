@@ -2,20 +2,20 @@ import { useParams, useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
 
-import { fetchUserProfileSummary } from '../../../api/users'
-import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
-import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import type { PlayerDTO, UserRatingDTO, UserRecordDTO } from '../../../types/api'
-import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
-import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
-import { isNotFoundApiError } from '../../../utils/apiError'
-import NotFoundPage from '../../NotFoundPage'
+import { fetchUserProfileSummary } from '../../../api/users.ts'
+import { LoadError, Loading, PlayerDataEmptyState } from '../../../components/index.ts'
+import { useDocumentTitle } from '../../../hooks/useDocumentTitle.ts'
+import type { PlayerDTO, UserRatingDTO, UserRecordDTO } from '../../../types/api.ts'
+import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache.ts'
+import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache.ts'
+import { isNotFoundApiError } from '../../../utils/apiError.ts'
+import NotFoundPage from '../../NotFoundPage.tsx'
 import {
   isRecordPageQuery,
   resolveOverPowerSubPage,
   resolveProfilePageQuery,
-} from './profilePageQuery'
-import { UserProfileView } from './UserProfileView'
+} from './profilePageQuery.ts'
+import { UserProfileView } from './UserProfileView.tsx'
 
 export type UserPageRatingProfile = {
   username: string

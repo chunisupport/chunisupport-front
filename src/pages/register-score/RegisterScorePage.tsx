@@ -1,16 +1,16 @@
 import { useSearchParams } from '@solidjs/router'
 import { createSignal, Match, onMount, Switch } from 'solid-js'
 
-import { postPlayerDataCommit } from '../../api/register-data'
-import { Loading } from '../../components'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
-import { useSongsData } from '../../stores/songsData'
-import type { PlayerDataRecordChange, PlayerDataResult } from '../../types/api'
-import { commitRegisterScore } from '../../usecases/registerScoreCommit'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-import { REGISTER_SCORE_MESSAGES, RegisterScoreResultView } from './RegisterScoreResultView'
-import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreToken'
+import { postPlayerDataCommit } from '../../api/register-data.ts'
+import { Loading } from '../../components/index.ts'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle.ts'
+import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository.ts'
+import { useSongsData } from '../../stores/songsData.ts'
+import type { PlayerDataRecordChange, PlayerDataResult } from '../../types/api.ts'
+import { commitRegisterScore } from '../../usecases/registerScoreCommit.ts'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage.ts'
+import { REGISTER_SCORE_MESSAGES, RegisterScoreResultView } from './RegisterScoreResultView.tsx'
+import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreToken.ts'
 
 /**
  * スコア登録画面の表示状態と、成功時に表示する登録結果をまとめて保持する。

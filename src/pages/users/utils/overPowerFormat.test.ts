@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatOverPowerPercent, formatOverPowerValue } from './overPowerFormat'
+import { formatOverPowerPercent, formatOverPowerValue } from './overPowerFormat.ts'
 
 test('OVER POWER値は小数点以下3桁で丸められること', () => {
   // Given

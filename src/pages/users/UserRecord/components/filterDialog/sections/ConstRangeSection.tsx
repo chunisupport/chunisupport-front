@@ -3,14 +3,17 @@ import { NumberField } from '@kobalte/core/number-field'
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { CHART_CONST_MAX, CHART_CONST_MIN } from '../../../../../../constants/chart'
+import { CHART_CONST_MAX, CHART_CONST_MIN } from '../../../../../../constants/chart.ts'
 import {
   FILTER_DIALOG_FIELD_INPUT_CLASS,
   FILTER_DIALOG_SELECT_CONTENT_CLASS,
   FILTER_DIALOG_SELECT_ITEM_CLASS,
   FILTER_DIALOG_SELECT_TRIGGER_CLASS,
-} from '../styles'
-import RangeSeparator, { RANGE_END_LABEL_SUFFIX, RANGE_START_LABEL_SUFFIX } from './RangeSeparator'
+} from '../styles.ts'
+import RangeSeparator, {
+  RANGE_END_LABEL_SUFFIX,
+  RANGE_START_LABEL_SUFFIX,
+} from './RangeSeparator.tsx'
 
 /** レベル範囲セクションの見出し。 */
 const CONST_LEVEL_RANGE_TITLE = 'レベル'

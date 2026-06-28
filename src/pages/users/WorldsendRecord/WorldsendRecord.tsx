@@ -11,22 +11,22 @@ import {
   Suspense,
 } from 'solid-js'
 
-import { fetchVersions } from '../../../api/songs'
-import { LoadError, Loading } from '../../../components'
+import { fetchVersions } from '../../../api/songs.ts'
+import { LoadError, Loading } from '../../../components/index.ts'
 import {
   readWorldsendRecordColumnsSetting,
   readWorldsendRecordFilterSetting,
   saveWorldsendRecordColumnsSetting,
   saveWorldsendRecordFilterSetting,
-} from '../../../repositories/viewSettingsRepository'
-import { useSongsData } from '../../../stores/songsData'
-import type { VersionSummaryDTO, WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
+} from '../../../repositories/viewSettingsRepository.ts'
+import { useSongsData } from '../../../stores/songsData.ts'
+import type { VersionSummaryDTO, WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api.ts'
 import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
-} from '../../../utils/versionConverter'
-import { createRecordTableVirtualizer } from '../components/createRecordTableVirtualizer'
-import FilterStats from '../components/FilterStats'
+} from '../../../utils/versionConverter.ts'
+import { createRecordTableVirtualizer } from '../components/createRecordTableVirtualizer.ts'
+import FilterStats from '../components/FilterStats.tsx'
 import {
   type ColumnRenderer,
   RECORD_ALPHANUMERIC_COLUMN_CLASS,
@@ -42,19 +42,19 @@ import {
   RecordScoreCell,
   RecordTitleCell,
   RecordUpdatedAtCell,
-} from '../components/SharedRecordTableColumns'
-import { isValidSavedWorldsendFilter } from '../components/savedRecordFilters'
-import { sanitizeSortQuery } from '../recordTable/sortingQuery'
-import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
-import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
-import FilterToolbar from '../UserRecord/components/FilterToolbar'
-import { formatJusticeCountForAj } from '../UserRecord/utils/justiceCountDisplay'
-import { formatUpdatedAt } from '../UserRecord/utils/updatedAt'
-import { getRecordStats } from '../utils/recordStats'
-import WorldsendFilterDialog from './components/WorldsendFilterDialog'
-import WorldsendSortDialog from './components/WorldsendSortDialog'
-import { buildDefaultWorldsendFilter, DEFAULT_WORLDSEND_FILTER } from './types/filterDefaults'
-import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from './types/filterTypes'
+} from '../components/SharedRecordTableColumns.tsx'
+import { isValidSavedWorldsendFilter } from '../components/savedRecordFilters.ts'
+import { sanitizeSortQuery } from '../recordTable/sortingQuery.ts'
+import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation.ts'
+import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles.ts'
+import FilterToolbar from '../UserRecord/components/FilterToolbar.tsx'
+import { formatJusticeCountForAj } from '../UserRecord/utils/justiceCountDisplay.ts'
+import { formatUpdatedAt } from '../UserRecord/utils/updatedAt.ts'
+import { getRecordStats } from '../utils/recordStats.ts'
+import WorldsendFilterDialog from './components/WorldsendFilterDialog.tsx'
+import WorldsendSortDialog from './components/WorldsendSortDialog.tsx'
+import { buildDefaultWorldsendFilter, DEFAULT_WORLDSEND_FILTER } from './types/filterDefaults.ts'
+import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from './types/filterTypes.ts'
 import {
   createGridTemplateColumns,
   getDefaultVisibleWorldsendColumnIds,
@@ -62,12 +62,12 @@ import {
   sanitizeVisibleWorldsendColumnIds,
   type WorldsendRecordColumnId,
   type WorldsendRecordSortKey,
-} from './utils/columns'
-import { isWorldsendFilterOptionsChanged } from './utils/filterDialog'
+} from './utils/columns.ts'
+import { isWorldsendFilterOptionsChanged } from './utils/filterDialog.ts'
 import {
   createWorldsendRecordTitleMatcher,
   isWorldsendRecordMatchedWithTitleMatcher,
-} from './utils/filtering'
+} from './utils/filtering.ts'
 import {
   createInitialWorldsendRecordSortConditions,
   nextPrimaryWorldsendRecordSortCondition,
@@ -75,8 +75,8 @@ import {
   parseWorldsendSortParams,
   sortWorldsendRecordsByConditions,
   type WorldsendRecordSortCondition,
-} from './utils/sorting'
-import WorldsendColumnSettingsDialog from './WorldsendColumnSettingsDialog'
+} from './utils/sorting.ts'
+import WorldsendColumnSettingsDialog from './WorldsendColumnSettingsDialog.tsx'
 
 type Props = {
   records: WorldsendRecordDTO[]

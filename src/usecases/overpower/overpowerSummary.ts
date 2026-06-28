@@ -1,20 +1,23 @@
-import type { MasterItemDTO, PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
+import type { MasterItemDTO, PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api.ts'
 import {
   type ChartLevelLabel,
   getChartLevelSortKey,
   isLowChartLevel,
   toChartLevelLabel,
-} from '../../utils/chartLevel'
-import { compareMasterItemNames, createMasterItemOrderMap } from '../../utils/masterData'
-import { getShortVersionName, resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
-import { buildCurrentOverPowerBySongId } from './currentOpTarget'
+} from '../../utils/chartLevel.ts'
+import { compareMasterItemNames, createMasterItemOrderMap } from '../../utils/masterData.ts'
+import {
+  getShortVersionName,
+  resolveVersionNameByReleaseDate,
+} from '../../utils/versionConverter.ts'
+import { buildCurrentOverPowerBySongId } from './currentOpTarget.ts'
 import type {
   OverPowerDifficulty,
   OverPowerLevelSummaryRow,
   OverPowerLockedSong,
   OverPowerSummary,
   OverPowerSummaryRow,
-} from './types'
+} from './types.ts'
 
 const DIFFICULTY_ORDER: OverPowerDifficulty[] = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA']
 const ULTIMA_DIFFICULTY: OverPowerDifficulty = 'ULTIMA'

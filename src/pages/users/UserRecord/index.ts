@@ -1,1 +1,1 @@
-export { default } from './UserRecord'
+export { default } from './UserRecord.tsx'

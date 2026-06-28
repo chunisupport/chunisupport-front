@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
 
-import { getConstDisplay, getRatingDisplay } from './constDisplay'
+import { getConstDisplay, getRatingDisplay } from './constDisplay.ts'
 
 describe('getConstDisplay', () => {
   test('譜面定数が不明でない場合は通常表示を返す', () => {

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { PlayerLockedSongResponseItem } from '../../types/api'
-import { buildLockedSongsBatchPayload, createLockedSongKey } from './lockedSongsBatch'
+import type { PlayerLockedSongResponseItem } from '../../types/api.ts'
+import { buildLockedSongsBatchPayload, createLockedSongKey } from './lockedSongsBatch.ts'
 
 const createItem = (displayId: string, isUltima = false): PlayerLockedSongResponseItem => ({
   display_id: displayId,

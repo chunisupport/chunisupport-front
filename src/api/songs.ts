@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config'
+import { API_BASE_URL } from '../config.ts'
 import type {
   AchievementTypeDTO,
   CreateSongRequestDTO,
@@ -14,9 +14,9 @@ import type {
   UpdateWorldsendSongRequestDTO,
   VersionDTO,
   WorldsendSongDTO,
-} from '../types/api'
-import { sortMasterItemsBySortOrder } from '../utils/masterData'
-import { fetchWithAuth } from './fetchWithAuth'
+} from '../types/api.ts'
+import { sortMasterItemsBySortOrder } from '../utils/masterData.ts'
+import { fetchWithAuth } from './fetchWithAuth.ts'
 
 type VersionsResponse = { versions: VersionDTO[] }
 export type ScoreHistoryDifficulty = 'EXPERT' | 'MASTER' | 'ULTIMA'

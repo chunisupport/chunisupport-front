@@ -1,13 +1,13 @@
 import { A } from '@solidjs/router'
 import { createResource, For, Show } from 'solid-js'
-import { fetchApiVersion } from '../../api/root'
+import { fetchApiVersion } from '../../api/root.ts'
 import {
   FRONTEND_APP_NAME,
   FRONTEND_BUILD_DATE,
   FRONTEND_COMMIT_HASH,
-} from '../../constants/appBuild'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { formatBuildRevisionLabel } from '../../utils/appVersionLabel'
+} from '../../constants/appBuild.ts'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle.ts'
+import { formatBuildRevisionLabel } from '../../utils/appVersionLabel.ts'
 
 const links = [
   {

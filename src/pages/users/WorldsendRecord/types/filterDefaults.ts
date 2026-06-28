@@ -2,16 +2,16 @@ import {
   SCORE_MIN,
   WORLDSEND_LEVEL_STAR_MAX,
   WORLDSEND_LEVEL_STAR_MIN,
-} from '../../../../constants/chart'
-import type { VersionSummaryDTO, WorldsendSongDTO } from '../../../../types/api'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { getShortVersionName } from '../../../../utils/versionConverter'
+} from '../../../../constants/chart.ts'
+import type { VersionSummaryDTO, WorldsendSongDTO } from '../../../../types/api.ts'
+import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
+import { getShortVersionName } from '../../../../utils/versionConverter.ts'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
-} from '../../constants/recordFilterOptions'
-import type { WorldsendFilterState } from './filterTypes'
+} from '../../constants/recordFilterOptions.ts'
+import type { WorldsendFilterState } from './filterTypes.ts'
 
 /** WORLD'S END フィルターの初期値。 */
 export const DEFAULT_WORLDSEND_FILTER: WorldsendFilterState = {

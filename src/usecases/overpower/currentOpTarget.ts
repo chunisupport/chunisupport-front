@@ -1,4 +1,4 @@
-import type { PlayerRecordDTO } from '../../types/api'
+import type { PlayerRecordDTO } from '../../types/api.ts'
 
 /**
  * 曲ごとの現在OVER POWERを集計する。

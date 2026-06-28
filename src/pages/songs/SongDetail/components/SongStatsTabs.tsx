@@ -1,8 +1,8 @@
 import * as Tabs from '@kobalte/core/tabs'
 import { For, Show } from 'solid-js'
-import { Loading } from '../../../../components'
-import type { RatingBandDTO, SongStatsResponseDTO } from '../../../../types/api'
-import SongStatsTable from './SongStatsTable'
+import { Loading } from '../../../../components/index.ts'
+import type { RatingBandDTO, SongStatsResponseDTO } from '../../../../types/api.ts'
+import SongStatsTable from './SongStatsTable.tsx'
 
 type DifficultyOption = {
   label: string

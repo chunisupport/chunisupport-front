@@ -1,4 +1,4 @@
-import type { PlayerRecordDTO } from '../../../types/api'
+import type { PlayerRecordDTO } from '../../../types/api.ts'
 
 // TODO: これらの定数がハードコードされていていいのか？サーバから取ってこなくていいのか？
 /** 通常レコードと WORLD'S END レコードのコンボランプフィルター選択肢。 */

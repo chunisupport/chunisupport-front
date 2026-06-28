@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatScoreHistoryDateTime, parseScoreHistoryDifficulty } from './scoreHistory'
+import { formatScoreHistoryDateTime, parseScoreHistoryDifficulty } from './scoreHistory.ts'
 
 test('難易度クエリを大文字のドメイン値へ変換する', () => {
   // Given / When / Then

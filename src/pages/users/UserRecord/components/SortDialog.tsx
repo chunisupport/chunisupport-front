@@ -2,10 +2,10 @@ import type { Component } from 'solid-js'
 import {
   type SortConditionColumnOption,
   SortConditionsDialog,
-} from '../../components/SortConditionsDialog'
-import type { RecordSortCondition, RecordSortKey } from '../types/types'
-import { RECORD_COLUMN_DEFINITIONS } from '../utils/columns'
-import { DEFAULT_RECORD_SORT_CONDITIONS, normalizeRecordSortConditions } from '../utils/sorting'
+} from '../../components/SortConditionsDialog.tsx'
+import type { RecordSortCondition, RecordSortKey } from '../types/types.ts'
+import { RECORD_COLUMN_DEFINITIONS } from '../utils/columns.ts'
+import { DEFAULT_RECORD_SORT_CONDITIONS, normalizeRecordSortConditions } from '../utils/sorting.ts'
 
 type SortDialogProps = {
   open: boolean

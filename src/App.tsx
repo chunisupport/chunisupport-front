@@ -3,16 +3,16 @@ import { Calculator, ChartNoAxesCombined, Search, Target } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 
-import { fetchMe, fetchUserProfileSummary } from './api/users'
-import { LoadError, Loading, NavBar, PlayerDataEmptyState } from './components'
-import RequireAuth from './components/guards/RequireAuth'
-import RequireRole from './components/guards/RequireRole'
+import { fetchMe, fetchUserProfileSummary } from './api/users.ts'
+import RequireAuth from './components/guards/RequireAuth.tsx'
+import RequireRole from './components/guards/RequireRole.tsx'
+import { LoadError, Loading, NavBar, PlayerDataEmptyState } from './components/index.ts'
 
 import {
   FOOTER_COPYRIGHT_TEXT,
   FOOTER_COPYRIGHT_TEXT_2,
   FOOTER_DISCLAIMER_TEXT,
-} from './constants/footer'
+} from './constants/footer.ts'
 import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
@@ -20,14 +20,14 @@ import {
   REGISTER_SCORE_PATH,
   TOOLS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
-} from './constants/routes'
+} from './constants/routes.ts'
 import {
   DISABLED_TOOL_BADGE_TEXT,
   TOOL_LINKS,
   type ToolLink,
   type ToolLinkIcon,
-} from './constants/tools'
-import { useDocumentTitle } from './hooks/useDocumentTitle'
+} from './constants/tools.ts'
+import { useDocumentTitle } from './hooks/useDocumentTitle.ts'
 import {
   AdminHonorsPage,
   AdminPage,
@@ -50,11 +50,11 @@ import {
   WeakChartInspectorPage,
   WorldsendSongDetail,
   WorldsendSongsList,
-} from './pages'
-import { getAuthenticatedUser } from './stores/authSession'
-import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
-import { resolveHomeView } from './usecases/auth/resolveHomeView'
-import { isNotFoundApiError } from './utils/apiError'
+} from './pages/index.ts'
+import { getAuthenticatedUser } from './stores/authSession.ts'
+import { resolveAuthSession } from './usecases/auth/resolveAuthSession.ts'
+import { resolveHomeView } from './usecases/auth/resolveHomeView.ts'
+import { isNotFoundApiError } from './utils/apiError.ts'
 
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
   return (props: P) => (

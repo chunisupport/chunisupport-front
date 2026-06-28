@@ -1,7 +1,7 @@
-import { API_BASE_URL } from '../config'
-import type { ApiTokenResponse, ApiTokenStatusResponse } from '../types/api'
-import { fetchWithAuth } from './fetchWithAuth'
-import { reauthenticateAndGetToken } from './reauthenticate'
+import { API_BASE_URL } from '../config.ts'
+import type { ApiTokenResponse, ApiTokenStatusResponse } from '../types/api.ts'
+import { fetchWithAuth } from './fetchWithAuth.ts'
+import { reauthenticateAndGetToken } from './reauthenticate.ts'
 
 export const fetchPrivacy = async (): Promise<{ is_private: boolean }> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/me`, {

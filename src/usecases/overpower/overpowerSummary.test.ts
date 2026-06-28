@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
-import { buildOverPowerSummary } from './overpowerSummary'
+import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api.ts'
+import { buildOverPowerSummary } from './overpowerSummary.ts'
 
 const versions: VersionSummaryDTO[] = [
   { name: 'CHUNITHM', released_at: '2015-07-16' },

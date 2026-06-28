@@ -1,4 +1,4 @@
-import type { MasterItemDTO } from '../types/api'
+import type { MasterItemDTO } from '../types/api.ts'
 
 const jaCollator = new Intl.Collator('ja')
 

@@ -1,5 +1,5 @@
 import { A } from '@solidjs/router'
-import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useDocumentTitle } from '../hooks/useDocumentTitle.ts'
 
 const ForbiddenPage = () => {
   useDocumentTitle('403 Forbidden')

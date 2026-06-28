@@ -1,6 +1,6 @@
 import type { Component } from 'solid-js'
-import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
+import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types.ts'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat.ts'
 
 type Props = {
   summary: OverPowerSummaryRow

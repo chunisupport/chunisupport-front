@@ -1,1 +1,1 @@
-export { default } from './SongScoreHistory'
+export { default } from './SongScoreHistory.tsx'

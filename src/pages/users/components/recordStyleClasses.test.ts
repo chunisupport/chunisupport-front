@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { MAX_SCORE } from '../../../utils/scoreRank'
+import { MAX_SCORE } from '../../../utils/scoreRank.ts'
 import {
   ALL_JUSTICE_CRITICAL_BADGE_CLASS,
   COMBO_LAMP_BADGE_BACKGROUND_CLASS,
@@ -10,7 +10,7 @@ import {
   getComboLampBadgeClass,
   HARD_LAMP_BAR_CLASS,
   SCORE_RANK_BAR_CLASS,
-} from './recordStyleClasses'
+} from './recordStyleClasses.ts'
 
 test('AJCのコンボランプバッジは虹色クラスを返すこと', () => {
   // Given: ALL JUSTICEかつ理論値のレコード

@@ -1,13 +1,13 @@
 import type { Component } from 'solid-js'
-import { SavedRecordFiltersDialog } from '../../components/SavedRecordFiltersDialog'
-import type { WorldsendFilterState } from '../types/filterTypes'
+import { SavedRecordFiltersDialog } from '../../components/SavedRecordFiltersDialog.tsx'
+import type { WorldsendFilterState } from '../types/filterTypes.ts'
 import {
   deleteWorldsendFilter,
   loadSavedWorldsendFilters,
   SAVED_WORLDSEND_FILTER_SCHEMA_VERSION,
   saveNewWorldsendFilter,
   updateSavedWorldsendFilter,
-} from '../utils/storage'
+} from '../utils/storage.ts'
 
 type WorldsendSavedFiltersDialogProps = {
   open: boolean

@@ -1,8 +1,8 @@
 import { TextField } from '@kobalte/core/text-field'
 import type { Component } from 'solid-js'
-import type { NumericRangeFilterConfig } from '../../../constants/rangeFilters'
-import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../styles'
-import RangeSeparator from './RangeSeparator'
+import type { NumericRangeFilterConfig } from '../../../constants/rangeFilters.ts'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../styles.ts'
+import RangeSeparator from './RangeSeparator.tsx'
 
 type NumericRangeSectionProps = {
   config: NumericRangeFilterConfig

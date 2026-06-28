@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import type { PlayerDataResult, PlayerDataStatisticsGroup } from '../types/api'
+import type { PlayerDataResult, PlayerDataStatisticsGroup } from '../types/api.ts'
 import {
   commitRegisterScore,
   normalizePlayerDataResult,
   requestChangedSongMasters,
-} from './registerScoreCommit'
+} from './registerScoreCommit.ts'
 
 /** テスト用の統計グループを生成する。 */
 const createStatisticsGroup = (after = 0): PlayerDataStatisticsGroup => ({

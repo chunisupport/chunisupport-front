@@ -4,8 +4,8 @@ import {
   difficultyBadgeClass,
   difficultyShort,
   difficultyToQueryValue,
-} from '../../../../utils/difficultyUtils'
-import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+} from '../../../../utils/difficultyUtils.ts'
+import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
 import {
   type ColumnRenderer,
   RECORD_CELL_BASE_CLASS,
@@ -17,12 +17,12 @@ import {
   RecordScoreCell,
   RecordTitleCell,
   RecordUpdatedAtCell,
-} from '../../components/SharedRecordTableColumns'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
-import type { RecordColumnId } from '../types/types'
-import { getConstDisplay, getRatingDisplay } from './constDisplay'
-import { formatJusticeCountForAj } from './justiceCountDisplay'
-import { formatUpdatedAt } from './updatedAt'
+} from '../../components/SharedRecordTableColumns.tsx'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat.ts'
+import type { RecordColumnId } from '../types/types.ts'
+import { getConstDisplay, getRatingDisplay } from './constDisplay.ts'
+import { formatJusticeCountForAj } from './justiceCountDisplay.ts'
+import { formatUpdatedAt } from './updatedAt.ts'
 
 const DIFFICULTY_BADGE_CLASS =
   'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'

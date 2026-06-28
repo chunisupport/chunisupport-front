@@ -17,9 +17,9 @@
     "check:ci": "biome ci .",
     "typecheck": "tsc --noEmit --pretty false",
     "verify": "pnpm check:ci && pnpm typecheck && pnpm build && pnpm test:unit",
-    "licenses:check": "node scripts/generate-licenses.mjs --check",
-    "licenses:generate": "node scripts/generate-licenses.mjs",
-    "test:unit": "node --import ./scripts/register-ts-extension-loader.mjs --disable-warning=ExperimentalWarning --test \"src/**/*.test.ts\""
+    "licenses:check": "node scripts/generate-licenses.ts --check",
+    "licenses:generate": "node scripts/generate-licenses.ts",
+    "test:unit": "node --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@kobalte/core": "^0.13.11",

@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { VersionDTO } from '../../../types/api'
+import type { VersionDTO } from '../../../types/api.ts'
 import {
   buildGoalVersionNameMap,
   buildGoalVersionOptions,
   resolveGoalVersionValueByReleaseDate,
-} from './goalVersion'
+} from './goalVersion.ts'
 
 const versions: VersionDTO[] = [
   { id: 99, name: 'CHUNITHM SUN', released_at: '2022-10-13' },

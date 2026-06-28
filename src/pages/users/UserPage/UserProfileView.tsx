@@ -3,21 +3,21 @@ import { A, useLocation, useNavigate } from '@solidjs/router'
 import { ChartColumnIncreasing } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
 import { createMemo, For, lazy, Show, Suspense } from 'solid-js'
-import { Loading } from '../../../components'
-import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
-import { UserNameplate } from './components/UserNameplate'
-import { UserRecordCard } from './components/UserRecordCard'
+import { Loading } from '../../../components/index.ts'
+import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api.ts'
+import { UserNameplate } from './components/UserNameplate.tsx'
+import { UserRecordCard } from './components/UserRecordCard.tsx'
 import {
   buildUserOverPowerPagePath,
   buildUserProfilePagePath,
   type OverPowerSubPage,
   type ProfilePageQuery,
-} from './profilePageQuery'
-import type { UserPageRatingProfile, UserPageRecordProfile } from './UserPage'
+} from './profilePageQuery.ts'
+import type { UserPageRatingProfile, UserPageRecordProfile } from './UserPage.tsx'
 
-const UserRecord = lazy(() => import('../UserRecord'))
-const UserOverPower = lazy(() => import('../UserOverPower/UserOverPower'))
-const WorldsendRecord = lazy(() => import('../WorldsendRecord'))
+const UserRecord = lazy(() => import('../UserRecord/index.ts'))
+const UserOverPower = lazy(() => import('../UserOverPower/UserOverPower.tsx'))
+const WorldsendRecord = lazy(() => import('../WorldsendRecord/index.ts'))
 
 type Props = {
   profile: UserPageRatingProfile

@@ -2,13 +2,13 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
-import type { FilterState } from '../types/types'
+import type { FilterState } from '../types/types.ts'
 import {
   createRecordTitleMatcher,
   getDefaultFilter,
   isRecordMatched,
   isRecordMatchedWithTitleMatcher,
-} from './filtering'
+} from './filtering.ts'
 
 const createRecord = (
   overrides: Partial<PlayerRecordWithSongMeta> = {}

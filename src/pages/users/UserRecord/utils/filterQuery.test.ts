@@ -1,15 +1,15 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { CHART_CONST_MAX } from '../../../../constants/chart'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { DEFAULT_FILTER } from '../types/filterDefaults'
+import { CHART_CONST_MAX } from '../../../../constants/chart.ts'
+import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
+import { DEFAULT_FILTER } from '../types/filterDefaults.ts'
 import {
   parseFilterRangeQuery,
   parseScoreRangeQuery,
   serializeFilterRangeQuery,
   serializeScoreRangeQuery,
-} from './filterQuery'
+} from './filterQuery.ts'
 
 test('serializeFilterRangeQuery は範囲フィルターをフラットなクエリ値へ変換すること', () => {
   // Given

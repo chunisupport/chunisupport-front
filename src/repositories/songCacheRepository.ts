@@ -3,8 +3,8 @@ import {
   type CachedWorldsendSong,
   CLIENT_CACHE_SCHEMA_VERSION,
   db,
-} from '../lib/db/cacheDB'
-import type { SongDTO, WorldsendSongDTO } from '../types/api'
+} from '../lib/db/cacheDB.ts'
+import type { SongDTO, WorldsendSongDTO } from '../types/api.ts'
 
 type SongCacheKind = 'songs' | 'worldsendSongs'
 

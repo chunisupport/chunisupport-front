@@ -1,5 +1,5 @@
 import { reauthenticateWithPopup } from 'firebase/auth'
-import { auth, googleProvider } from '../lib/firebase'
+import { auth, googleProvider } from '../lib/firebase.ts'
 
 export const reauthenticateAndGetToken = async (): Promise<string> => {
   const user = auth.currentUser

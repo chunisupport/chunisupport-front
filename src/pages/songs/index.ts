@@ -1,6 +1,6 @@
-export { default as SongDetail } from './SongDetail'
-export { default as SongScoreHistory } from './SongScoreHistory'
-export { default as SongsList } from './SongsList'
+export { default as SongDetail } from './SongDetail/index.ts'
+export { default as SongScoreHistory } from './SongScoreHistory/index.ts'
+export { default as SongsList } from './SongsList/index.ts'
 
-export { default as WorldsendSongDetail } from './WorldsendSongDetail'
-export { default as WorldsendSongsList } from './WorldsendSongsList'
+export { default as WorldsendSongDetail } from './WorldsendSongDetail/index.ts'
+export { default as WorldsendSongsList } from './WorldsendSongsList/index.ts'

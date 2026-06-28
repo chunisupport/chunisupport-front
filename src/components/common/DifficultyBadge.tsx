@@ -1,6 +1,6 @@
-import type { PlayerDataDifficulty } from '../../types/api'
-import { getDifficultyBadgeWidthClass } from '../../utils/difficultyBadgeLayout'
-import { difficultyBadgeClass } from '../../utils/difficultyUtils'
+import type { PlayerDataDifficulty } from '../../types/api.ts'
+import { getDifficultyBadgeWidthClass } from '../../utils/difficultyBadgeLayout.ts'
+import { difficultyBadgeClass } from '../../utils/difficultyUtils.ts'
 
 /**
  * 楽曲詳細と分析表で共通利用するフルテキストの難易度バッジ。

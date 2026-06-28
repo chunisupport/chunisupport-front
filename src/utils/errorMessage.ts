@@ -1,4 +1,4 @@
-import { type ErrorCode, errorMessages } from '../types/api'
+import { type ErrorCode, errorMessages } from '../types/api.ts'
 
 const DEFAULT_USER_FRIENDLY_ERROR_MESSAGE =
   '予期せぬエラーが発生しました。時間をおいて再度お試しください。'

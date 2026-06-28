@@ -2,7 +2,7 @@ import type {
   PlayerLockedSongRequest,
   PlayerLockedSongResponseItem,
   PlayerLockedSongsBatchRequest,
-} from '../../types/api'
+} from '../../types/api.ts'
 
 export const createLockedSongKey = (displayId: string, isUltima: boolean): string =>
   `${displayId}:${isUltima ? 'ultima' : 'normal'}`

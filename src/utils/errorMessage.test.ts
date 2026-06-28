@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { toUserFriendlyErrorMessage } from './errorMessage'
+import { toUserFriendlyErrorMessage } from './errorMessage.ts'
 
 test('APIエラーコードがある場合は対応するユーザー向け文言に変換されること', () => {
   // Given

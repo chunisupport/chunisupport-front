@@ -1,11 +1,11 @@
-import { API_BASE_URL } from '../config'
+import { API_BASE_URL } from '../config.ts'
 import type {
   RecordFilterDTO,
   RecordFilterRequest,
   RecordFiltersResponse,
   RecordFilterType,
-} from '../types/api'
-import { fetchWithAuth } from './fetchWithAuth'
+} from '../types/api.ts'
+import { fetchWithAuth } from './fetchWithAuth.ts'
 
 /**
  * 保存済みレコードフィルター一覧を取得する。

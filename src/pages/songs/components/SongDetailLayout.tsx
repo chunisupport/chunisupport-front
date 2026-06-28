@@ -1,8 +1,8 @@
 import { Button } from '@kobalte/core/button'
 import type { JSX } from 'solid-js'
 import { ErrorBoundary, Show } from 'solid-js'
-import { LoadError, Loading } from '../../../components'
-import { getSongDetailViewState } from './songDetailLayoutModel'
+import { LoadError, Loading } from '../../../components/index.ts'
+import { getSongDetailViewState } from './songDetailLayoutModel.ts'
 
 type Props<TSong> = {
   song: TSong | undefined

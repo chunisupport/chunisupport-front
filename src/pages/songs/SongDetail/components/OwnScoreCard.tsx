@@ -1,15 +1,15 @@
 import { A } from '@solidjs/router'
 import { ChevronRight } from 'lucide-solid'
 import { For, Show } from 'solid-js'
-import { Loading } from '../../../../components'
-import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'
-import { buildSongScoreHistoryPath } from '../../../../constants/routes'
-import type { PlayerDataDifficulty } from '../../../../types/api'
+import { DifficultyBadge } from '../../../../components/common/DifficultyBadge.tsx'
+import { Loading } from '../../../../components/index.ts'
+import { buildSongScoreHistoryPath } from '../../../../constants/routes.ts'
+import type { PlayerDataDifficulty } from '../../../../types/api.ts'
 import {
   OWN_SCORE_CARD_TITLE,
   SCORE_HISTORY_LINK_LABEL,
   UNPLAYED_SCORE_LABEL,
-} from '../scoreHistory.constants'
+} from '../scoreHistory.constants.ts'
 
 export type OwnScoreItem = {
   difficulty: PlayerDataDifficulty

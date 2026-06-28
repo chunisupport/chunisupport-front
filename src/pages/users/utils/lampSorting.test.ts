@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { compareComboLamp, getComboLampKey } from './lampSorting'
+import { compareComboLamp, getComboLampKey } from './lampSorting.ts'
 
 test('getComboLampKey は未プレイをUNPLAYEDとして返す', () => {
   assert.equal(getComboLampKey(false, null), 'UNPLAYED')

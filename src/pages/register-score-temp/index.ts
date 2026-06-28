@@ -1,1 +1,1 @@
-export { default as RegisterScoreTempPage } from './RegisterScoreTempPage'
+export { default as RegisterScoreTempPage } from './RegisterScoreTempPage.tsx'

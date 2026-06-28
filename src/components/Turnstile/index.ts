@@ -1,1 +1,1 @@
-export { Turnstile } from './Turnstile'
+export { Turnstile } from './Turnstile.tsx'

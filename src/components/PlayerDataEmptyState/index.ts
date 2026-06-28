@@ -1,1 +1,1 @@
-export { default as PlayerDataEmptyState } from './PlayerDataEmptyState'
+export { default as PlayerDataEmptyState } from './PlayerDataEmptyState.tsx'

@@ -1,18 +1,18 @@
 import type { Accessor, Setter } from 'solid-js'
 import { createMemo } from 'solid-js'
-import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../../../../types/api'
+import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../../../../types/api.ts'
 import {
   attachSongMetaToRecords,
   type PlayerRecordWithSongMeta,
-} from '../../../../utils/recordMerger'
-import { getRecordStats, type RecordStats } from '../../utils/recordStats'
-import type { FilterState, RecordSortCondition, RecordSortKey } from '../types/types'
-import { createRecordTitleMatcher, isRecordMatchedWithTitleMatcher } from './filtering'
+} from '../../../../utils/recordMerger.ts'
+import { getRecordStats, type RecordStats } from '../../utils/recordStats.ts'
+import type { FilterState, RecordSortCondition, RecordSortKey } from '../types/types.ts'
+import { createRecordTitleMatcher, isRecordMatchedWithTitleMatcher } from './filtering.ts'
 import {
   nextPrimaryRecordSortCondition,
   normalizeRecordSortConditions,
   sortRecordsByConditions,
-} from './sorting'
+} from './sorting.ts'
 
 /** UserRecordページモデルの入力値 */
 type UserRecordPageModelParams = {

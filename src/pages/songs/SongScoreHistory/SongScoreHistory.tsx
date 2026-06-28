@@ -1,22 +1,22 @@
 import { Button } from '@kobalte/core/button'
 import { A, useParams, useSearchParams } from '@solidjs/router'
 import { createMemo, createResource, For, Show } from 'solid-js'
-import { fetchOwnSongScoreHistory, fetchSongByDisplayId } from '../../../api/songs'
-import { LoadError, Loading } from '../../../components'
-import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
-import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { authSession } from '../../../stores/authSession'
+import { fetchOwnSongScoreHistory, fetchSongByDisplayId } from '../../../api/songs.ts'
+import { DifficultyBadge } from '../../../components/common/DifficultyBadge.tsx'
+import { LoadError, Loading } from '../../../components/index.ts'
+import { useDocumentTitle } from '../../../hooks/useDocumentTitle.ts'
+import { authSession } from '../../../stores/authSession.ts'
 import {
   formatScoreHistoryDateTime,
   parseScoreHistoryDifficulty,
-} from '../../../utils/scoreHistory'
-import NotFoundPage from '../../NotFoundPage'
+} from '../../../utils/scoreHistory.ts'
+import NotFoundPage from '../../NotFoundPage.tsx'
 import {
   CURRENT_BEST_LABEL,
   SCORE_HISTORY_PAGE_TITLE,
   SCORE_HISTORY_SCORE_LABEL,
   SCORE_HISTORY_UPDATED_AT_LABEL,
-} from './constants'
+} from './constants.ts'
 
 /**
  * ログインユーザーの譜面別スコア履歴を表示する。

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import type { RecordFilterDTO } from '../../../../types/api'
-import { getDefaultFilter } from './filtering'
+import type { RecordFilterDTO } from '../../../../types/api.ts'
+import { getDefaultFilter } from './filtering.ts'
 
 /**
  * API 設定に必要な環境変数を補って保存フィルターユーティリティを読み込む。

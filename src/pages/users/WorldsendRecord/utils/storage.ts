@@ -3,12 +3,12 @@ import {
   deleteRecordFilter,
   fetchRecordFilters,
   updateRecordFilter,
-} from '../../../../api/recordFilters'
-import type { RecordFilterDTO, RecordFilterRequest } from '../../../../types/api'
-import type { SavedRecordFilterItem } from '../../components/SavedRecordFiltersDialog'
-import { isValidSavedWorldsendFilter } from '../../components/savedRecordFilters'
-import { normalizeWorldsendFilterState } from '../types/filterDefaults'
-import type { WorldsendFilterState } from '../types/filterTypes'
+} from '../../../../api/recordFilters.ts'
+import type { RecordFilterDTO, RecordFilterRequest } from '../../../../types/api.ts'
+import type { SavedRecordFilterItem } from '../../components/SavedRecordFiltersDialog.tsx'
+import { isValidSavedWorldsendFilter } from '../../components/savedRecordFilters.ts'
+import { normalizeWorldsendFilterState } from '../types/filterDefaults.ts'
+import type { WorldsendFilterState } from '../types/filterTypes.ts'
 
 export const SAVED_WORLDSEND_FILTER_SCHEMA_VERSION = 2
 const WORLDSEND_RECORD_FILTER_TYPE = 'worldsend'

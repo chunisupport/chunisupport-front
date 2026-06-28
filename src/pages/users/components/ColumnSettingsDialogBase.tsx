@@ -3,7 +3,7 @@ import { Dialog } from '@kobalte/core/dialog'
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronsUpDown } from 'lucide-solid'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
-import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
+import type { ColumnDefinitionBase } from '../utils/recordTableColumns.ts'
 
 const COLUMN_SETTINGS_TITLE = '列設定'
 const COLUMN_SETTINGS_DESCRIPTION = '表示する列を選択してください（1列以上必須）'

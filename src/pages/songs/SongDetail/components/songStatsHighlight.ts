@@ -1,4 +1,4 @@
-import type { RatingBandDTO } from '../../../../types/api'
+import type { RatingBandDTO } from '../../../../types/api.ts'
 
 const ALL_RATING_BAND_LABEL = 'ALL'
 

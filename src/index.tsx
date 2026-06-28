@@ -1,7 +1,7 @@
 import './styles/tailwind.css'
 import { render } from 'solid-js/web'
-import App from './App'
-import { applyInitialTheme } from './utils/themePreference'
+import App from './App.tsx'
+import { applyInitialTheme } from './utils/themePreference.ts'
 
 applyInitialTheme()
 

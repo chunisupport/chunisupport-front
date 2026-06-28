@@ -1,4 +1,4 @@
-import { CHUNITHM_JACKET_BASE_URL } from '../constants/jackets'
+import { CHUNITHM_JACKET_BASE_URL } from '../constants/jackets.ts'
 
 /**
  * CHUNITHMのジャケット画像URLを組み立てる。

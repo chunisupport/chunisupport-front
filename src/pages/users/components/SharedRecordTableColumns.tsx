@@ -2,15 +2,15 @@ import { Button } from '@kobalte/core/button'
 import { A } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 
-import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
-import { getScoreRank } from '../../../utils/scoreRank'
-import { LampPlaceholderBadge, renderSortIndicator } from './RecordTableUiParts'
+import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api.ts'
+import { getScoreRank } from '../../../utils/scoreRank.ts'
+import { LampPlaceholderBadge, renderSortIndicator } from './RecordTableUiParts.tsx'
 import {
   getComboLampBadgeClass,
   HARD_LAMP_BADGE_BACKGROUND_CLASS,
   HARD_LAMP_BADGE_TEXT_CLASS,
   SCORE_RANK_TEXT_CLASS,
-} from './recordStyleClasses'
+} from './recordStyleClasses.ts'
 
 type SharedSortDirection = 'asc' | 'desc' | null
 type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO

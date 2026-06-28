@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatTruncatedFixed } from './numberFormat'
+import { formatTruncatedFixed } from './numberFormat.ts'
 
 test('指定した小数点以下桁数で切り捨てられること', () => {
   // Given

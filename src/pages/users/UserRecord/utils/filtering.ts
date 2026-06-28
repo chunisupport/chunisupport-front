@@ -1,13 +1,13 @@
-import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
 import {
   matchesNormalizedSearchQuery,
   normalizeForReadingSearch,
   normalizeForSearch,
   normalizeQuery,
-} from '../../../../utils/searchUtils'
-import { buildDefaultFilter } from '../types/filterDefaults'
-import type { ChainLamp, ComboLamp, Difficulty, FilterState, HardLamp } from '../types/types'
-import { hasJusticeCountFilter, hasOverPowerFilter } from './filterDialog'
+} from '../../../../utils/searchUtils.ts'
+import { buildDefaultFilter } from '../types/filterDefaults.ts'
+import type { ChainLamp, ComboLamp, Difficulty, FilterState, HardLamp } from '../types/types.ts'
+import { hasJusticeCountFilter, hasOverPowerFilter } from './filterDialog.ts'
 
 /** フィルターのデフォルト値を取得する */
 export const getDefaultFilter = buildDefaultFilter

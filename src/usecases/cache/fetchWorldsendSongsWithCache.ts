@@ -1,9 +1,9 @@
-import { fetchSongsUpdatedAt, fetchWorldsendSongs } from '../../api/songs'
+import { fetchSongsUpdatedAt, fetchWorldsendSongs } from '../../api/songs.ts'
 import {
   readCachedWorldsendSongs,
   replaceCachedWorldsendSongs,
-} from '../../repositories/songCacheRepository'
-import type { WorldsendSongDTO } from '../../types/api'
+} from '../../repositories/songCacheRepository.ts'
+import type { WorldsendSongDTO } from '../../types/api.ts'
 
 type WorldsendSongsResponse = { songs: WorldsendSongDTO[] }
 

@@ -5,7 +5,7 @@ import {
   resolveAppliedTheme,
   saveThemePreference,
   subscribeSystemThemeChange,
-} from './themePreference'
+} from './themePreference.ts'
 
 test('明示的にlightが保存されている場合はlightを適用する', () => {
   assert.equal(resolveAppliedTheme('light', true), 'light')

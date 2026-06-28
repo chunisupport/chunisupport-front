@@ -3,7 +3,7 @@ import type {
   PlayerDataNumberDiff,
   PlayerDataResult,
   PlayerDataStatisticsGroup,
-} from '../types/api'
+} from '../types/api.ts'
 
 type RegisterScoreCommitDependencies = {
   commitPlayerData: (uploadToken: string) => Promise<PlayerDataResult>

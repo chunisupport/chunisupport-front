@@ -1,7 +1,7 @@
 import { For } from 'solid-js'
-import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'
-import type { SongDTO } from '../../../../types/api'
-import SongMetaCardLayout, { type SongMetaInfoItem } from '../../components/SongMetaCardLayout'
+import { DifficultyBadge } from '../../../../components/common/DifficultyBadge.tsx'
+import type { SongDTO } from '../../../../types/api.ts'
+import SongMetaCardLayout, { type SongMetaInfoItem } from '../../components/SongMetaCardLayout.tsx'
 
 const fixedColumnClass = 'w-px whitespace-nowrap'
 const fixedCellClass = 'px-3 py-2 text-text whitespace-nowrap'

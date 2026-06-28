@@ -1,33 +1,33 @@
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
-import { SCORE_MIN } from '../../../../constants/chart'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
+import { SCORE_MIN } from '../../../../constants/chart.ts'
+import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
-} from '../../constants/recordFilterOptions'
-import LampSection from '../../UserRecord/components/filterDialog/sections/LampSection'
-import NumericRangeSection from '../../UserRecord/components/filterDialog/sections/NumericRangeSection'
-import ScoreSection from '../../UserRecord/components/filterDialog/sections/ScoreSection'
-import { JUSTICE_COUNT_RANGE_FILTER } from '../../UserRecord/constants/rangeFilters'
-import type { ChainLamp, ComboLamp, HardLamp } from '../../UserRecord/types/types'
+} from '../../constants/recordFilterOptions.ts'
+import LampSection from '../../UserRecord/components/filterDialog/sections/LampSection.tsx'
+import NumericRangeSection from '../../UserRecord/components/filterDialog/sections/NumericRangeSection.tsx'
+import ScoreSection from '../../UserRecord/components/filterDialog/sections/ScoreSection.tsx'
+import { JUSTICE_COUNT_RANGE_FILTER } from '../../UserRecord/constants/rangeFilters.ts'
+import type { ChainLamp, ComboLamp, HardLamp } from '../../UserRecord/types/types.ts'
 import {
   parseNumberInput,
   toggleArray,
   updateOptionalNumberRange,
-} from '../../UserRecord/utils/filterDialog'
+} from '../../UserRecord/utils/filterDialog.ts'
 import {
   SCORE_RANK_MAX_VALUES,
   SCORE_RANK_VALUES,
   SCORE_RANKS,
   type ScoreRank,
-} from '../../UserRecord/utils/scoreRank'
-import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
-import type { WorldsendFilterState } from '../types/filterTypes'
-import { formatWorldsendAttribute } from '../utils/filterDialog'
-import WorldsendLevelRangeSection from './WorldsendLevelRangeSection'
-import WorldsendMultiSelectSection from './WorldsendMultiSelectSection'
+} from '../../UserRecord/utils/scoreRank.ts'
+import { formatFullChainLampLabel } from '../../utils/fullChainDisplay.ts'
+import type { WorldsendFilterState } from '../types/filterTypes.ts'
+import { formatWorldsendAttribute } from '../utils/filterDialog.ts'
+import WorldsendLevelRangeSection from './WorldsendLevelRangeSection.tsx'
+import WorldsendMultiSelectSection from './WorldsendMultiSelectSection.tsx'
 
 type WorldsendFilterSelectionPanelProps = {
   open: boolean

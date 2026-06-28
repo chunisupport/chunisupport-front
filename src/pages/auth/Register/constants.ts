@@ -1,4 +1,4 @@
-import { DOCUMENTATION_BASE_URL } from '../../../config'
+import { DOCUMENTATION_BASE_URL } from '../../../config.ts'
 
 const DOCUMENTATION_URL = DOCUMENTATION_BASE_URL.replace(/\/$/, '')
 

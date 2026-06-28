@@ -5,7 +5,7 @@ import {
   matchesSearchQuery,
   normalizeForSearch,
   removeTrailingFullwidthAlphabet,
-} from './searchUtils'
+} from './searchUtils.ts'
 
 test('normalizeForSearch はUnicode正規化して記号・空白を除去する', () => {
   assert.equal(normalizeForSearch(' ＡＢＣ－１２３ '), 'abc123')

@@ -1,14 +1,14 @@
 import type { Component } from 'solid-js'
-import type { EditingFilter } from '../../../../components/SavedRecordFiltersDialog'
-import { SavedRecordFiltersDialog } from '../../../../components/SavedRecordFiltersDialog'
-import type { FilterState } from '../../../types/types'
+import type { EditingFilter } from '../../../../components/SavedRecordFiltersDialog.tsx'
+import { SavedRecordFiltersDialog } from '../../../../components/SavedRecordFiltersDialog.tsx'
+import type { FilterState } from '../../../types/types.ts'
 import {
   deleteFilter,
   loadSavedFilters,
   SAVED_FILTER_SCHEMA_VERSION,
   saveNewFilter,
   updateSavedFilter,
-} from '../../../utils/storage'
+} from '../../../utils/storage.ts'
 
 type SavedFiltersDialogProps = {
   open: boolean

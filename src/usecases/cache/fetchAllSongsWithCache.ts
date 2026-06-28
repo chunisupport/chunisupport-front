@@ -1,6 +1,6 @@
-import { fetchAllSongs, fetchSongsUpdatedAt } from '../../api/songs'
-import { readCachedSongs, replaceCachedSongs } from '../../repositories/songCacheRepository'
-import type { SongDTO } from '../../types/api'
+import { fetchAllSongs, fetchSongsUpdatedAt } from '../../api/songs.ts'
+import { readCachedSongs, replaceCachedSongs } from '../../repositories/songCacheRepository.ts'
+import type { SongDTO } from '../../types/api.ts'
 
 type AllSongsResponse = { songs: SongDTO[] }
 

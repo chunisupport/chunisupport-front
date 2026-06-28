@@ -1,9 +1,9 @@
 import type { Navigator } from '@solidjs/router'
 
-import { fetchMe, fetchUserProfileSummary } from '../api/users'
-import { REGISTER_SCORE_TEMP_PATH } from '../constants/routes'
-import { setAuthenticatedUser } from '../stores/authSession'
-import { resolvePostLoginRedirectPath } from '../usecases/auth/redirectPath'
+import { fetchMe, fetchUserProfileSummary } from '../api/users.ts'
+import { REGISTER_SCORE_TEMP_PATH } from '../constants/routes.ts'
+import { setAuthenticatedUser } from '../stores/authSession.ts'
+import { resolvePostLoginRedirectPath } from '../usecases/auth/redirectPath.ts'
 
 export const redirectAfterAuthentication = async (
   navigate: Navigator,

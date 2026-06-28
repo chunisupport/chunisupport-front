@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import type { WorldsendRecordDTO } from '../../../../types/api'
+import type { WorldsendRecordDTO } from '../../../../types/api.ts'
 import {
   createInitialWorldsendRecordSortConditions,
   DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS,
@@ -9,7 +9,7 @@ import {
   normalizeWorldsendRecordSortConditions,
   sortWorldsendRecords,
   sortWorldsendRecordsByConditions,
-} from './sorting'
+} from './sorting.ts'
 
 /**
  * Test helper to build a WorldsendRecordDTO with default field values.

@@ -1,4 +1,4 @@
-import { formatTruncatedFixed } from '../../../utils/numberFormat'
+import { formatTruncatedFixed } from '../../../utils/numberFormat.ts'
 
 const RATING_DECIMAL_PLACES = 4
 const NO_RATING_TEXT = '-'

@@ -1,4 +1,4 @@
-import type { WorldsendSongDTO } from '../../types/api'
+import type { WorldsendSongDTO } from '../../types/api.ts'
 
 export type WorldsendSongInfoItem = {
   label: string

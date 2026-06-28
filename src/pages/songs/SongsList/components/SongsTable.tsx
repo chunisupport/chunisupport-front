@@ -1,18 +1,24 @@
 import { Button } from '@kobalte/core/button'
 import { createEffect, createMemo, For, Show } from 'solid-js'
-import type { SongDTO } from '../../../../types/api'
-import { DIFFICULTY_SHORT_NAME_MAP, difficultyBadgeClass } from '../../../../utils/difficultyUtils'
-import { renderSortIndicator } from '../../../users/components/RecordTableUiParts'
-import type { SortDirection } from '../../../users/recordTable/sortingQuery'
+import type { SongDTO } from '../../../../types/api.ts'
+import {
+  DIFFICULTY_SHORT_NAME_MAP,
+  difficultyBadgeClass,
+} from '../../../../utils/difficultyUtils.ts'
+import { renderSortIndicator } from '../../../users/components/RecordTableUiParts.tsx'
+import type { SortDirection } from '../../../users/recordTable/sortingQuery.ts'
 import {
   SongListAddedDateCell,
   SongListArtistCell,
   SongListBpmCell,
   SongListGenreCell,
   SongListTitleCell,
-} from '../../components/SongListMetaCells'
-import { createVirtualizedSongsTable, sortAriaValue } from '../../components/virtualizedSongsTable'
-import type { SongSortKey } from '../utils/sorting'
+} from '../../components/SongListMetaCells.tsx'
+import {
+  createVirtualizedSongsTable,
+  sortAriaValue,
+} from '../../components/virtualizedSongsTable.ts'
+import type { SongSortKey } from '../utils/sorting.ts'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
 const ROW_HEIGHT = 37

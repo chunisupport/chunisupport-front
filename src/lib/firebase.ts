@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { GoogleAuthProvider, getAuth } from 'firebase/auth'
 
-import { getEnv, getRequiredEnv } from './env'
+import { getEnv, getRequiredEnv } from './env.ts'
 
 const env = getEnv()
 
