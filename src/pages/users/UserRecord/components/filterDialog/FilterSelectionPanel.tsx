@@ -6,6 +6,10 @@ import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
+import LampSection from '../../../components/filter/LampSection'
+import MultiSelectFilterSection from '../../../components/filter/MultiSelectFilterSection'
+import NumericRangeSection from '../../../components/filter/NumericRangeSection'
+import ScoreSection from '../../../components/filter/ScoreSection'
 import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters'
 import {
   JUSTICE_COUNT_RANGE_FILTER,
@@ -27,11 +31,6 @@ import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../../u
 import type { Difficulty, FilterState } from '../../types/types'
 import ConstRangeSection from './sections/ConstRangeSection'
 import DifficultySection from './sections/DifficultySection'
-import GenreSection from './sections/GenreSection'
-import LampSection from './sections/LampSection'
-import NumericRangeSection from './sections/NumericRangeSection'
-import ScoreSection from './sections/ScoreSection'
-import VersionSection from './sections/VersionSection'
 
 type FilterSelectionPanelProps = {
   open: boolean
@@ -521,9 +520,11 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           }))
         }
       />
-      <GenreSection
-        genres={genres()}
+      <MultiSelectFilterSection
+        title="ジャンル"
+        options={genres()}
         selected={props.filters.genres}
+        placeholder="ジャンルを選択"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
         onSelectAll={() =>
           props.setFilters((prev) => ({
@@ -544,9 +545,11 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           }))
         }
       />
-      <VersionSection
-        versions={versions()}
+      <MultiSelectFilterSection
+        title="バージョン"
+        options={versions()}
         selected={props.filters.versions}
+        placeholder="バージョンを選択"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
         onSelectAll={() =>
           props.setFilters((prev) => ({

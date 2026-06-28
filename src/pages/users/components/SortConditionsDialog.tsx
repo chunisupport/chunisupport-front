@@ -8,7 +8,7 @@ import type { SortDirection } from '../recordTable/sortingQuery'
 import {
   FILTER_DIALOG_SELECT_ITEM_CLASS,
   FILTER_DIALOG_SELECT_TRIGGER_CLASS,
-} from '../UserRecord/components/filterDialog/styles'
+} from './filter/styles'
 
 /** 複数条件ソートで使う1行分のソート条件。 */
 export type SortCondition<TSortKey extends string> = {

@@ -3,15 +3,16 @@ import { createEffect, createSignal } from 'solid-js'
 import { SCORE_MIN } from '../../../../constants/chart'
 import type { ChainLamp, ComboLamp, HardLamp } from '../../../../types/record'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
+import LampSection from '../../components/filter/LampSection'
+import MultiSelectFilterSection from '../../components/filter/MultiSelectFilterSection'
+import NumericRangeSection from '../../components/filter/NumericRangeSection'
+import ScoreSection from '../../components/filter/ScoreSection'
 import { JUSTICE_COUNT_RANGE_FILTER } from '../../constants/rangeFilters'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../constants/recordFilterOptions'
-import LampSection from '../../UserRecord/components/filterDialog/sections/LampSection'
-import NumericRangeSection from '../../UserRecord/components/filterDialog/sections/NumericRangeSection'
-import ScoreSection from '../../UserRecord/components/filterDialog/sections/ScoreSection'
 import {
   parseNumberInput,
   toggleArray,
@@ -23,7 +24,6 @@ import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../util
 import type { WorldsendFilterState } from '../types/filterTypes'
 import { formatWorldsendAttribute } from '../utils/filterDialog'
 import WorldsendLevelRangeSection from './WorldsendLevelRangeSection'
-import WorldsendMultiSelectSection from './WorldsendMultiSelectSection'
 
 type WorldsendFilterSelectionPanelProps = {
   open: boolean
@@ -165,7 +165,7 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
 
   return (
     <div class="scrollbar-none min-h-0 flex-1 space-y-4 overflow-y-auto">
-      <WorldsendMultiSelectSection
+      <MultiSelectFilterSection
         title="属性"
         options={props.defaultFilter.attributes}
         selected={props.filters.attributes}
@@ -305,11 +305,10 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
           props.setFilters((prev) => ({ ...prev, excludeNoPlay: checked }))
         }
       />
-      <WorldsendMultiSelectSection
+      <MultiSelectFilterSection
         title="ジャンル"
         options={props.defaultFilter.genres}
         selected={props.filters.genres}
-        formatLabel={(genre) => genre}
         onSelectAll={() =>
           props.setFilters((prev) => ({ ...prev, genres: props.defaultFilter.genres }))
         }
@@ -318,11 +317,10 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
           props.setFilters((prev) => ({ ...prev, genres: toggleArray(prev.genres, genre) }))
         }
       />
-      <WorldsendMultiSelectSection
+      <MultiSelectFilterSection
         title="バージョン"
         options={props.defaultFilter.versions}
         selected={props.filters.versions}
-        formatLabel={(version) => version}
         onSelectAll={() =>
           props.setFilters((prev) => ({ ...prev, versions: props.defaultFilter.versions }))
         }
