@@ -40,62 +40,88 @@ const createRecord = (overrides: Partial<WorldsendRecordDTO> = {}): WorldsendRec
 })
 
 test("WORLD'S ENDの既定ソートはスコア降順、属性昇順、レベル降順、曲名昇順にする", () => {
-  assert.deepEqual(DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS, [
+  // Given
+  const expectedSortConditions = [
     { key: 'score', direction: 'desc' },
     { key: 'attribute', direction: 'asc' },
     { key: 'level', direction: 'desc' },
     { key: 'title', direction: 'asc' },
-  ])
+  ]
+
+  // When
+  const result = DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS
+
+  // Then
+  assert.deepEqual(result, expectedSortConditions)
 })
 
 test("WORLD'S ENDの初期ソートは第1ソートだけクエリ指定で置き換える", () => {
-  assert.deepEqual(createInitialWorldsendRecordSortConditions('attribute', 'asc'), [
+  // Given
+  const sortKey = 'attribute'
+  const sortDirection = 'asc'
+  const expectedSortConditions = [
     { key: 'attribute', direction: 'asc' },
     { key: 'attribute', direction: 'asc' },
     { key: 'level', direction: 'desc' },
     { key: 'title', direction: 'asc' },
-  ])
+  ]
+
+  // When
+  const result = createInitialWorldsendRecordSortConditions(sortKey, sortDirection)
+
+  // Then
+  assert.deepEqual(result, expectedSortConditions)
 })
 
 test("WORLD'S ENDの第4ソートは入力値に関わらず曲名昇順固定にする", () => {
-  assert.deepEqual(
-    normalizeWorldsendRecordSortConditions([
-      { key: 'level', direction: 'asc' },
-      { key: 'attribute', direction: 'desc' },
-      { key: 'score', direction: 'desc' },
-      { key: 'updatedAt', direction: 'desc' },
-    ]),
-    [
-      { key: 'level', direction: 'asc' },
-      { key: 'attribute', direction: 'desc' },
-      { key: 'score', direction: 'desc' },
-      { key: 'title', direction: 'asc' },
-    ]
-  )
+  // Given
+  const sortConditions = [
+    { key: 'level', direction: 'asc' },
+    { key: 'attribute', direction: 'desc' },
+    { key: 'score', direction: 'desc' },
+    { key: 'updatedAt', direction: 'desc' },
+  ] as const
+  const expectedSortConditions = [
+    { key: 'level', direction: 'asc' },
+    { key: 'attribute', direction: 'desc' },
+    { key: 'score', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
+  ]
+
+  // When
+  const result = normalizeWorldsendRecordSortConditions([...sortConditions])
+
+  // Then
+  assert.deepEqual(result, expectedSortConditions)
 })
 
 test("WORLD'S ENDの列クリックは第1ソートだけを切り替える", () => {
-  assert.deepEqual(
-    nextPrimaryWorldsendRecordSortCondition({ key: 'score', direction: 'asc' }, 'score'),
-    {
-      key: 'score',
-      direction: 'desc',
-    }
-  )
-  assert.deepEqual(
-    nextPrimaryWorldsendRecordSortCondition({ key: 'score', direction: 'desc' }, 'score'),
-    {
-      key: 'score',
-      direction: 'asc',
-    }
-  )
-  assert.deepEqual(nextPrimaryWorldsendRecordSortCondition(null, 'title'), {
+  // Given
+  const ascendingScoreSort = { key: 'score', direction: 'asc' } as const
+  const descendingScoreSort = { key: 'score', direction: 'desc' } as const
+
+  // When
+  const resultFromAsc = nextPrimaryWorldsendRecordSortCondition(ascendingScoreSort, 'score')
+  const resultFromDesc = nextPrimaryWorldsendRecordSortCondition(descendingScoreSort, 'score')
+  const resultFromEmpty = nextPrimaryWorldsendRecordSortCondition(null, 'title')
+
+  // Then
+  assert.deepEqual(resultFromAsc, {
+    key: 'score',
+    direction: 'desc',
+  })
+  assert.deepEqual(resultFromDesc, {
+    key: 'score',
+    direction: 'asc',
+  })
+  assert.deepEqual(resultFromEmpty, {
     key: 'title',
     direction: 'asc',
   })
 })
 
 test("WORLD'S ENDの複数ソートは前の条件が同値の場合に次の条件で並べる", () => {
+  // Given
   const records = [
     createRecord({ id: 'fire-low', score: 1009000, attribute: 'FIRE', level_star: 2 }),
     createRecord({ id: 'fire-high', score: 1009000, attribute: 'FIRE', level_star: 4 }),
@@ -103,12 +129,53 @@ test("WORLD'S ENDの複数ソートは前の条件が同値の場合に次の条
     createRecord({ id: 'score-high', score: 1010000, attribute: 'FIRE', level_star: 1 }),
   ]
 
-  assert.deepEqual(
-    sortWorldsendRecordsByConditions(records, DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS).map(
-      (record) => record.id
-    ),
-    ['score-high', 'air', 'fire-high', 'fire-low']
-  )
+  // When
+  const result = sortWorldsendRecordsByConditions(
+    records,
+    DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS
+  ).map((record) => record.id)
+
+  // Then
+  assert.deepEqual(result, ['score-high', 'air', 'fire-high', 'fire-low'])
+})
+
+test("WORLD'S ENDの第4ソートは曲名指定でも方向を昇順へ固定する", () => {
+  // Given
+  const sortConditions = [
+    { key: 'score', direction: 'desc' },
+    { key: 'attribute', direction: 'asc' },
+    { key: 'level', direction: 'desc' },
+    { key: 'title', direction: 'desc' },
+  ] as const
+  const expectedSortConditions = [
+    { key: 'score', direction: 'desc' },
+    { key: 'attribute', direction: 'asc' },
+    { key: 'level', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
+  ]
+
+  // When
+  const result = normalizeWorldsendRecordSortConditions([...sortConditions])
+
+  // Then
+  assert.deepEqual(result, expectedSortConditions)
+})
+
+test("WORLD'S ENDのソート条件は不足分を既定値で補って4条件にする", () => {
+  // Given
+  const sortConditions = [{ key: 'level', direction: 'asc' }] as const
+  const expectedSortConditions = [
+    { key: 'level', direction: 'asc' },
+    { key: 'attribute', direction: 'asc' },
+    { key: 'level', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
+  ]
+
+  // When
+  const result = normalizeWorldsendRecordSortConditions([...sortConditions])
+
+  // Then
+  assert.deepEqual(result, expectedSortConditions)
 })
 
 test("WORLD'S ENDのFCHソートはなし、GOLD、PLATINUM、未プレイの順で並べる", () => {

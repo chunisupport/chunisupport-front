@@ -63,88 +63,136 @@ test('ソートクエリが無効な場合はrating descを既定値にする', 
 })
 
 test('通常レコードの既定ソートは単曲レート降順、定数降順、難易度降順、曲名昇順にする', () => {
-  assert.deepEqual(DEFAULT_RECORD_SORT_CONDITIONS, [
+  // Given
+  const expectedSortConditions = [
     { key: 'rating', direction: 'desc' },
     { key: 'const', direction: 'desc' },
     { key: 'difficulty', direction: 'desc' },
     { key: 'title', direction: 'asc' },
-  ])
+  ]
+
+  // When
+  const result = DEFAULT_RECORD_SORT_CONDITIONS
+
+  // Then
+  assert.deepEqual(result, expectedSortConditions)
 })
 
 test('初期ソートは第1ソートだけクエリ指定で置き換える', () => {
-  assert.deepEqual(createInitialRecordSortConditions('rating', 'asc'), [
+  // Given
+  const sortKey = 'rating'
+  const sortDirection = 'asc'
+  const expectedSortConditions = [
     { key: 'rating', direction: 'asc' },
     { key: 'const', direction: 'desc' },
     { key: 'difficulty', direction: 'desc' },
     { key: 'title', direction: 'asc' },
-  ])
+  ]
+
+  // When
+  const result = createInitialRecordSortConditions(sortKey, sortDirection)
+
+  // Then
+  assert.deepEqual(result, expectedSortConditions)
 })
 
 test('ソート条件は不足分を既定値で補って4条件にする', () => {
-  assert.deepEqual(normalizeRecordSortConditions([{ key: 'rating', direction: 'asc' }]), [
+  // Given
+  const sortConditions = [{ key: 'rating', direction: 'asc' }] as const
+  const expectedSortConditions = [
     { key: 'rating', direction: 'asc' },
     { key: 'const', direction: 'desc' },
     { key: 'difficulty', direction: 'desc' },
     { key: 'title', direction: 'asc' },
-  ])
+  ]
+
+  // When
+  const result = normalizeRecordSortConditions([...sortConditions])
+
+  // Then
+  assert.deepEqual(result, expectedSortConditions)
 })
 
 test('第4ソートは入力値に関わらず曲名昇順固定にする', () => {
-  assert.deepEqual(
-    normalizeRecordSortConditions([
-      { key: 'rating', direction: 'asc' },
-      { key: 'const', direction: 'desc' },
-      { key: 'difficulty', direction: 'desc' },
-      { key: 'score', direction: 'desc' },
-    ]),
-    [
-      { key: 'rating', direction: 'asc' },
-      { key: 'const', direction: 'desc' },
-      { key: 'difficulty', direction: 'desc' },
-      { key: 'title', direction: 'asc' },
-    ]
-  )
+  // Given
+  const sortConditions = [
+    { key: 'rating', direction: 'asc' },
+    { key: 'const', direction: 'desc' },
+    { key: 'difficulty', direction: 'desc' },
+    { key: 'score', direction: 'desc' },
+  ] as const
+  const expectedSortConditions = [
+    { key: 'rating', direction: 'asc' },
+    { key: 'const', direction: 'desc' },
+    { key: 'difficulty', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
+  ]
+
+  // When
+  const result = normalizeRecordSortConditions([...sortConditions])
+
+  // Then
+  assert.deepEqual(result, expectedSortConditions)
 })
 
 test('第4ソートは曲名指定でも方向を昇順へ固定する', () => {
-  assert.deepEqual(
-    normalizeRecordSortConditions([
-      { key: 'score', direction: 'desc' },
-      { key: 'const', direction: 'desc' },
-      { key: 'difficulty', direction: 'desc' },
-      { key: 'title', direction: 'desc' },
-    ]),
-    [
-      { key: 'score', direction: 'desc' },
-      { key: 'const', direction: 'desc' },
-      { key: 'difficulty', direction: 'desc' },
-      { key: 'title', direction: 'asc' },
-    ]
-  )
+  // Given
+  const sortConditions = [
+    { key: 'score', direction: 'desc' },
+    { key: 'const', direction: 'desc' },
+    { key: 'difficulty', direction: 'desc' },
+    { key: 'title', direction: 'desc' },
+  ] as const
+  const expectedSortConditions = [
+    { key: 'score', direction: 'desc' },
+    { key: 'const', direction: 'desc' },
+    { key: 'difficulty', direction: 'desc' },
+    { key: 'title', direction: 'asc' },
+  ]
+
+  // When
+  const result = normalizeRecordSortConditions([...sortConditions])
+
+  // Then
+  assert.deepEqual(result, expectedSortConditions)
 })
 
 test('複数ソートは第4ソートまで評価できる', () => {
+  // Given
   const records = [
     createRecord({ id: 'alpha', title: 'Alpha', score: 1000000, const: 14, difficulty: 'MASTER' }),
     createRecord({ id: 'beta', title: 'Beta', score: 1000000, const: 14, difficulty: 'MASTER' }),
   ]
 
-  assert.deepEqual(
-    sortRecordsByConditions(records, DEFAULT_RECORD_SORT_CONDITIONS).map((record) => record.id),
-    ['alpha', 'beta']
+  // When
+  const result = sortRecordsByConditions(records, DEFAULT_RECORD_SORT_CONDITIONS).map(
+    (record) => record.id
   )
+
+  // Then
+  assert.deepEqual(result, ['alpha', 'beta'])
 })
 
 test('列クリックの第1ソートはascからdesc、最後にascへ戻る', () => {
-  assert.deepEqual(nextPrimaryRecordSortCondition({ key: 'score', direction: 'asc' }, 'score'), {
+  // Given
+  const ascendingScoreSort = { key: 'score', direction: 'asc' } as const
+  const descendingScoreSort = { key: 'score', direction: 'desc' } as const
+
+  // When
+  const resultFromAsc = nextPrimaryRecordSortCondition(ascendingScoreSort, 'score')
+  const resultFromDesc = nextPrimaryRecordSortCondition(descendingScoreSort, 'score')
+  const resultFromEmpty = nextPrimaryRecordSortCondition(null, 'title')
+
+  // Then
+  assert.deepEqual(resultFromAsc, {
     key: 'score',
     direction: 'desc',
   })
-  assert.deepEqual(nextPrimaryRecordSortCondition({ key: 'score', direction: 'desc' }, 'score'), {
+  assert.deepEqual(resultFromDesc, {
     key: 'score',
     direction: 'asc',
   })
-  assert.deepEqual(nextPrimaryRecordSortCondition(null, 'title'), {
+  assert.deepEqual(resultFromEmpty, {
     key: 'title',
     direction: 'asc',
   })
