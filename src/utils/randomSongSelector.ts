@@ -20,6 +20,7 @@ export type RandomSongFilter = {
 
 export type RandomSongWeight = {
   difficultyWeights?: Partial<Record<PlayerDataDifficulty, number>>
+  constWeights?: Partial<Record<string, number>>
 }
 
 export type RandomSongPlayStatusFilter = 'all' | 'played' | 'unplayed'
@@ -200,7 +201,7 @@ export const filterRandomSongCandidatesByRecord = (
  * 候補の重みを算出する。
  *
  * @param candidate - 抽選候補。
- * @param weight - 難易度別の重み設定。
+ * @param weight - 難易度別、定数別の倍率設定。
  * @returns 抽選に使う重み。0以下の場合は抽選対象外。
  */
 export const resolveRandomSongWeight = (
@@ -208,8 +209,9 @@ export const resolveRandomSongWeight = (
   weight: RandomSongWeight = {}
 ): number => {
   const difficultyWeight = weight.difficultyWeights?.[candidate.difficulty] ?? 1
+  const constWeight = weight.constWeights?.[candidate.chartConst.toFixed(1)] ?? 1
 
-  return Math.max(0, difficultyWeight)
+  return Math.max(0, difficultyWeight * constWeight)
 }
 
 /**
@@ -217,7 +219,7 @@ export const resolveRandomSongWeight = (
  *
  * @param candidates - 抽選候補。
  * @param count - 抽選する件数。
- * @param weight - 難易度別の重み設定。
+ * @param weight - 難易度別、定数別の倍率設定。
  * @param random - 0以上1未満の乱数を返す関数。
  * @returns ランダムに選ばれた候補一覧。
  */

@@ -1,7 +1,10 @@
+import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Button } from '@kobalte/core/button'
+import { Checkbox } from '@kobalte/core/checkbox'
 import { Collapsible } from '@kobalte/core/collapsible'
 import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
+import { A } from '@solidjs/router'
 import { Check, ChevronDown, ChevronRight, Dices, RotateCcw, SlidersHorizontal } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import {
@@ -67,7 +70,6 @@ const RESULT_RECORD_LAMP_BADGE_CLASS: Record<RandomSongLampFilter, string> = {
   NONE: `${RESULT_RECORD_BADGE_CLASS} bg-surface-hover text-text-subtle`,
 }
 const RESULT_RECORD_SCORE_BADGE_CLASS = `${RESULT_RECORD_BADGE_CLASS} bg-surface-muted text-text`
-const RESULT_RECORD_OP_BADGE_CLASS = `${RESULT_RECORD_BADGE_CLASS} bg-surface-muted text-text-muted tabular-nums`
 const RANDOM_SONG_LAMP_VALUES = RANDOM_SONG_LAMP_OPTIONS.map((option) => option.value)
 
 type RandomSongTextFieldProps = {
@@ -77,6 +79,20 @@ type RandomSongTextFieldProps = {
   inputMode?: 'numeric' | 'decimal'
   disabled?: boolean
   onChange: (value: string) => void
+}
+
+type RandomSongRangeFieldProps = {
+  idPrefix: string
+  label: string
+  minLabel: string
+  maxLabel: string
+  minValue: string
+  maxValue: string
+  inputMode?: 'numeric' | 'decimal'
+  disabled?: boolean
+  error?: string | null
+  onMinChange: (value: string) => void
+  onMaxChange: (value: string) => void
 }
 
 type RandomSongPlayStatus = (typeof RANDOM_SONG_PLAY_STATUS_OPTIONS)[number]['value']
@@ -123,6 +139,97 @@ const RandomSongTextField: Component<RandomSongTextFieldProps> = (props) => (
       disabled={props.disabled}
     />
   </TextField>
+)
+
+/**
+ * ランダム選曲ツールで使う範囲入力欄を表示する。
+ *
+ * @param props - 入力欄の識別子、ラベル、下限/上限値、エラー、変更ハンドラ。
+ * @returns 下限と上限を横並びにした範囲入力欄。
+ */
+const RandomSongRangeField: Component<RandomSongRangeFieldProps> = (props) => (
+  <div class="text-sm">
+    <div class="mb-1 font-medium text-text-muted">{props.label}</div>
+    <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
+      <TextField value={props.minValue} onChange={props.onMinChange}>
+        <TextField.Label class="sr-only" for={`${props.idPrefix}-min`}>
+          {props.minLabel}
+        </TextField.Label>
+        <TextField.Input
+          id={`${props.idPrefix}-min`}
+          name={`${props.idPrefix}-min`}
+          type="text"
+          class={FIELD_INPUT_CLASS}
+          inputMode={props.inputMode}
+          pattern={
+            props.inputMode === 'numeric'
+              ? '[0-9]*'
+              : props.inputMode === 'decimal'
+                ? '[0-9]*[.,]?[0-9]*'
+                : undefined
+          }
+          autocomplete="off"
+          disabled={props.disabled}
+          aria-invalid={props.error ? 'true' : 'false'}
+        />
+      </TextField>
+      <div class="flex min-h-10 items-center justify-center text-sm text-text-muted">～</div>
+      <TextField value={props.maxValue} onChange={props.onMaxChange}>
+        <TextField.Label class="sr-only" for={`${props.idPrefix}-max`}>
+          {props.maxLabel}
+        </TextField.Label>
+        <TextField.Input
+          id={`${props.idPrefix}-max`}
+          name={`${props.idPrefix}-max`}
+          type="text"
+          class={FIELD_INPUT_CLASS}
+          inputMode={props.inputMode}
+          pattern={
+            props.inputMode === 'numeric'
+              ? '[0-9]*'
+              : props.inputMode === 'decimal'
+                ? '[0-9]*[.,]?[0-9]*'
+                : undefined
+          }
+          autocomplete="off"
+          disabled={props.disabled}
+          aria-invalid={props.error ? 'true' : 'false'}
+        />
+      </TextField>
+    </div>
+    <Show when={props.error}>
+      {(message) => <p class="mt-1 text-xs text-danger">{message()}</p>}
+    </Show>
+  </div>
+)
+
+/**
+ * ランダム選曲ツールで使うチェックボックスを表示する。
+ *
+ * @param props - チェック状態、ラベル、変更ハンドラ。
+ * @returns Kobalte Checkbox の JSX 要素。
+ */
+const RandomSongCheckbox: Component<{
+  id: string
+  checked: boolean
+  label: string
+  onChange: (checked: boolean) => void
+}> = (props) => (
+  <Checkbox
+    class="relative inline-flex items-center gap-2 text-sm text-text"
+    checked={props.checked}
+    onChange={props.onChange}
+  >
+    <Checkbox.Input id={props.id} style={{ left: '0', top: '0' }} />
+    <Checkbox.Control class="flex h-5 w-5 items-center justify-center rounded border border-border-strong bg-surface text-success data-[checked]:border-success">
+      <Checkbox.Indicator>
+        <Check size={14} aria-hidden="true" />
+      </Checkbox.Indicator>
+    </Checkbox.Control>
+    <Checkbox.Label class="leading-5" for={props.id}>
+      {props.label}
+    </Checkbox.Label>
+  </Checkbox>
 )
 
 /**
@@ -229,9 +336,13 @@ const formatRandomSongRecordLampLabel = (lamp: RandomSongLampFilter): string =>
  * ランダム選曲結果で表示するレコードバッジを生成する。
  *
  * @param record - 選曲された譜面に対応する自分のレコード。
- * @returns スコア、ランク、ランプ、OVER POWERの表示。
+ * @param showScore - スコアを表示するかどうか。
+ * @returns スコア、ランク、ランプの表示。
  */
-const renderRandomSongRecordSummary = (record: PlayerRecordDTO | undefined): JSX.Element => {
+const renderRandomSongRecordSummary = (
+  record: PlayerRecordDTO | undefined,
+  showScore: boolean
+): JSX.Element => {
   if (record?.is_played !== true) {
     return <span class={RESULT_RECORD_LAMP_BADGE_CLASS.NONE}>未プレイ</span>
   }
@@ -241,14 +352,15 @@ const renderRandomSongRecordSummary = (record: PlayerRecordDTO | undefined): JSX
 
   return (
     <>
-      <span class={RESULT_RECORD_SCORE_BADGE_CLASS}>
-        {record.score.toLocaleString('ja-JP')}
-        <span class={`ml-1 ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}>{scoreRank}</span>
-      </span>
+      <Show when={showScore}>
+        <span class={RESULT_RECORD_SCORE_BADGE_CLASS}>
+          {record.score.toLocaleString('ja-JP')}
+          <span class={`ml-1 ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}>{scoreRank}</span>
+        </span>
+      </Show>
       <span class={RESULT_RECORD_LAMP_BADGE_CLASS[lamp]}>
         {formatRandomSongRecordLampLabel(lamp)}
       </span>
-      <span class={RESULT_RECORD_OP_BADGE_CLASS}>OP {record.overpower.toFixed(2)}</span>
     </>
   )
 }
@@ -345,6 +457,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
   ])
   const [minScore, setMinScore] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.minScore)
   const [maxScore, setMaxScore] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.maxScore)
+  const [showRecordScore, setShowRecordScore] = createSignal(
+    RANDOM_SONG_SELECTOR_DEFAULTS.showRecordScore
+  )
   const [difficultyWeights, setDifficultyWeights] = createSignal<
     Record<PlayerDataDifficulty, string>
   >({
@@ -354,6 +469,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     MASTER: RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
     ULTIMA: RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
   })
+  const [constWeights, setConstWeights] = createSignal<Record<string, string>>({})
   const [filterInitialized, setFilterInitialized] = createSignal(false)
   const [results, setResults] = createSignal<RandomSongCandidate[]>([])
 
@@ -380,6 +496,11 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const versionOptions = createMemo(() => [
     ...new Set(allCandidates().map((candidate) => candidate.version)),
   ])
+  const constOptions = createMemo(() =>
+    [...new Set(allCandidates().map((candidate) => candidate.chartConst.toFixed(1)))].sort(
+      (left, right) => Number(left) - Number(right)
+    )
+  )
   const parsedMinConst = createMemo(() => parseOptionalDecimal(minConst()))
   const parsedMaxConst = createMemo(() => parseOptionalDecimal(maxConst()))
   const parsedMinScore = createMemo(() => parseOptionalDecimal(minScore()))
@@ -392,13 +513,13 @@ const RandomSongSelectorPage = (): JSX.Element => {
     () => new Set(createRandomSongRecordMap(myRecordData()?.bestRecords ?? []).keys())
   )
   const hasMyRecordData = createMemo(() => myRecordData() !== null && myRecordData() !== undefined)
-  const hasInvalidWeights = createMemo(() => hasInvalidWeightValue(difficultyWeights()))
-  const validationMessage = createMemo(() => {
-    if (parsedCount() === null) return RANDOM_SONG_SELECTOR_COPY.invalidCountMessage
+  const hasInvalidWeights = createMemo(
+    () => hasInvalidWeightValue(difficultyWeights()) || hasInvalidWeightValue(constWeights())
+  )
+  const constRangeError = createMemo(() => {
     const min = parsedMinConst()
     const max = parsedMaxConst()
-    const scoreMin = parsedMinScore()
-    const scoreMax = parsedMaxScore()
+
     if (
       (minConst().trim() !== '' && (min === null || Number.isNaN(min))) ||
       (maxConst().trim() !== '' && (max === null || Number.isNaN(max))) ||
@@ -406,6 +527,13 @@ const RandomSongSelectorPage = (): JSX.Element => {
     ) {
       return RANDOM_SONG_SELECTOR_COPY.invalidConstRangeMessage
     }
+
+    return null
+  })
+  const scoreRangeError = createMemo(() => {
+    const scoreMin = parsedMinScore()
+    const scoreMax = parsedMaxScore()
+
     if (
       (minScore().trim() !== '' && (scoreMin === null || Number.isNaN(scoreMin))) ||
       (maxScore().trim() !== '' && (scoreMax === null || Number.isNaN(scoreMax))) ||
@@ -413,6 +541,13 @@ const RandomSongSelectorPage = (): JSX.Element => {
     ) {
       return RANDOM_SONG_SELECTOR_COPY.invalidScoreRangeMessage
     }
+
+    return null
+  })
+  const validationMessage = createMemo(() => {
+    if (parsedCount() === null) return RANDOM_SONG_SELECTOR_COPY.invalidCountMessage
+    if (constRangeError()) return constRangeError()
+    if (scoreRangeError()) return scoreRangeError()
     if (hasInvalidWeights()) return RANDOM_SONG_SELECTOR_COPY.invalidWeightMessage
 
     return null
@@ -444,6 +579,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
 
   const randomSongWeight = createMemo(() => ({
     difficultyWeights: parseWeightValues(difficultyWeights()),
+    constWeights: parseWeightValues(constWeights()),
   }))
 
   createEffect(() => {
@@ -458,6 +594,20 @@ const RandomSongSelectorPage = (): JSX.Element => {
       setSelectedVersions(versions)
       setFilterInitialized(true)
     })
+  })
+
+  createEffect(() => {
+    const options = constOptions()
+    if (options.length === 0) return
+
+    setConstWeights((prev) =>
+      Object.fromEntries(
+        options.map((chartConst) => [
+          chartConst,
+          prev[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
+        ])
+      )
+    )
   })
 
   /**
@@ -483,6 +633,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     setMaxConst(RANDOM_SONG_SELECTOR_DEFAULTS.maxConst)
     setMinScore(RANDOM_SONG_SELECTOR_DEFAULTS.minScore)
     setMaxScore(RANDOM_SONG_SELECTOR_DEFAULTS.maxScore)
+    setShowRecordScore(RANDOM_SONG_SELECTOR_DEFAULTS.showRecordScore)
     setPlayStatus('all')
     setBestFrame('all')
     setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])
@@ -496,6 +647,14 @@ const RandomSongSelectorPage = (): JSX.Element => {
       MASTER: RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
       ULTIMA: RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
     })
+    setConstWeights(
+      Object.fromEntries(
+        constOptions().map((chartConst) => [
+          chartConst,
+          RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
+        ])
+      )
+    )
     setResults([])
   }
 
@@ -508,6 +667,17 @@ const RandomSongSelectorPage = (): JSX.Element => {
    */
   const handleDifficultyWeightChange = (difficulty: PlayerDataDifficulty, value: string): void => {
     setDifficultyWeights((prev) => ({ ...prev, [difficulty]: value }))
+  }
+
+  /**
+   * 定数別の出やすさ倍率入力値を更新する。
+   *
+   * @param chartConst - 更新対象の譜面定数。
+   * @param value - 新しい倍率入力値。
+   * @returns なし。
+   */
+  const handleConstWeightChange = (chartConst: string, value: string): void => {
+    setConstWeights((prev) => ({ ...prev, [chartConst]: value }))
   }
 
   /**
@@ -539,7 +709,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
           <section class="rounded-lg border border-border bg-surface p-4 sm:p-6">
             <Show when={!isSongsLoading() && !versionsResponse.loading} fallback={<Loading />}>
               <form class="space-y-5" onSubmit={(event) => event.preventDefault()}>
-                <div class="grid gap-3 sm:max-w-32">
+                <div class="grid gap-3 sm:grid-cols-[8rem_minmax(0,1fr)] sm:items-start">
                   <RandomSongTextField
                     id="random-song-count"
                     label={RANDOM_SONG_SELECTOR_COPY.countLabel}
@@ -547,6 +717,14 @@ const RandomSongSelectorPage = (): JSX.Element => {
                     inputMode="numeric"
                     onChange={setCount}
                   />
+                  <div class="flex min-h-16 items-end">
+                    <p class="text-sm text-text-muted">
+                      {RANDOM_SONG_SELECTOR_COPY.candidateCountLabel}:{' '}
+                      <span class="font-medium tabular-nums text-text">
+                        {filteredCandidates().length.toLocaleString('ja-JP')}
+                      </span>
+                    </p>
+                  </div>
                 </div>
 
                 <div class="grid gap-3 lg:grid-cols-3">
@@ -599,48 +777,32 @@ const RandomSongSelectorPage = (): JSX.Element => {
                   </div>
                 </div>
 
-                <div class="grid gap-3 sm:grid-cols-[8rem_8rem_minmax(0,1fr)] sm:items-end">
-                  <RandomSongTextField
-                    id="random-song-min-const"
-                    label={RANDOM_SONG_SELECTOR_COPY.minConstLabel}
-                    value={minConst()}
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <RandomSongRangeField
+                    idPrefix="random-song-const"
+                    label="定数"
+                    minLabel={RANDOM_SONG_SELECTOR_COPY.minConstLabel}
+                    maxLabel={RANDOM_SONG_SELECTOR_COPY.maxConstLabel}
+                    minValue={minConst()}
+                    maxValue={maxConst()}
                     inputMode="decimal"
-                    onChange={setMinConst}
+                    error={constRangeError()}
+                    onMinChange={setMinConst}
+                    onMaxChange={setMaxConst}
                   />
-                  <RandomSongTextField
-                    id="random-song-max-const"
-                    label={RANDOM_SONG_SELECTOR_COPY.maxConstLabel}
-                    value={maxConst()}
-                    inputMode="decimal"
-                    onChange={setMaxConst}
+                  <RandomSongRangeField
+                    idPrefix="random-song-score"
+                    label="スコア"
+                    minLabel={RANDOM_SONG_SELECTOR_COPY.minScoreLabel}
+                    maxLabel={RANDOM_SONG_SELECTOR_COPY.maxScoreLabel}
+                    minValue={minScore()}
+                    maxValue={maxScore()}
+                    inputMode="numeric"
+                    disabled={!hasMyRecordData()}
+                    error={scoreRangeError()}
+                    onMinChange={setMinScore}
+                    onMaxChange={setMaxScore}
                   />
-                  <div class="flex flex-wrap items-center justify-between gap-3">
-                    <p class="text-sm text-text-muted">
-                      {RANDOM_SONG_SELECTOR_COPY.candidateCountLabel}:{' '}
-                      <span class="font-medium tabular-nums text-text">
-                        {filteredCandidates().length.toLocaleString('ja-JP')}
-                      </span>
-                    </p>
-                    <div class="flex gap-2">
-                      <Button
-                        type="button"
-                        class="inline-flex min-h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                        onClick={handleReset}
-                      >
-                        <RotateCcw size={16} aria-hidden="true" />
-                        {RANDOM_SONG_SELECTOR_COPY.resetButtonLabel}
-                      </Button>
-                      <Button
-                        type="button"
-                        class="inline-flex min-h-10 items-center gap-2 rounded-md bg-action-primary px-4 text-sm font-medium text-text-inverse hover:bg-action-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
-                        disabled={validationMessage() !== null || filteredCandidates().length === 0}
-                        onClick={handleDraw}
-                      >
-                        <Dices size={16} aria-hidden="true" />
-                        {RANDOM_SONG_SELECTOR_COPY.drawButtonLabel}
-                      </Button>
-                    </div>
-                  </div>
                 </div>
 
                 <Collapsible
@@ -666,6 +828,12 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         <h3 class="text-sm font-semibold text-text">
                           {RANDOM_SONG_SELECTOR_COPY.recordFilterLabel}
                         </h3>
+                        <RandomSongCheckbox
+                          id="random-song-show-record-score"
+                          checked={showRecordScore()}
+                          label={RANDOM_SONG_SELECTOR_COPY.scoreVisibleLabel}
+                          onChange={setShowRecordScore}
+                        />
                         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                           <RandomSongSelect
                             id="random-song-play-status"
@@ -700,22 +868,6 @@ const RandomSongSelectorPage = (): JSX.Element => {
                               onClear={() => setSelectedLamps([])}
                             />
                           </div>
-                          <RandomSongTextField
-                            id="random-song-min-score"
-                            label={RANDOM_SONG_SELECTOR_COPY.minScoreLabel}
-                            value={minScore()}
-                            inputMode="numeric"
-                            disabled={!hasMyRecordData()}
-                            onChange={setMinScore}
-                          />
-                          <RandomSongTextField
-                            id="random-song-max-score"
-                            label={RANDOM_SONG_SELECTOR_COPY.maxScoreLabel}
-                            value={maxScore()}
-                            inputMode="numeric"
-                            disabled={!hasMyRecordData()}
-                            onChange={setMaxScore}
-                          />
                         </div>
                         <Show when={!hasMyRecordData()}>
                           <p class="text-xs text-text-muted">
@@ -726,22 +878,47 @@ const RandomSongSelectorPage = (): JSX.Element => {
 
                       <section class="space-y-3">
                         <h3 class="text-sm font-semibold text-text">
-                          {RANDOM_SONG_SELECTOR_COPY.difficultyWeightLabel}
+                          {RANDOM_SONG_SELECTOR_COPY.drawRateLabel}
                         </h3>
-                        <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                          <For each={RANDOM_SONG_SELECTOR_DIFFICULTIES}>
-                            {(difficulty) => (
-                              <RandomSongTextField
-                                id={`random-song-difficulty-weight-${difficulty.toLowerCase()}`}
-                                label={difficulty}
-                                value={difficultyWeights()[difficulty]}
-                                inputMode="decimal"
-                                onChange={(value) =>
-                                  handleDifficultyWeightChange(difficulty, value)
-                                }
-                              />
-                            )}
-                          </For>
+                        <div class="grid gap-4">
+                          <div>
+                            <div class="mb-2 text-sm font-medium text-text-muted">
+                              {RANDOM_SONG_SELECTOR_COPY.difficultyWeightLabel}
+                            </div>
+                            <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                              <For each={RANDOM_SONG_SELECTOR_DIFFICULTIES}>
+                                {(difficulty) => (
+                                  <RandomSongTextField
+                                    id={`random-song-difficulty-weight-${difficulty.toLowerCase()}`}
+                                    label={difficulty}
+                                    value={difficultyWeights()[difficulty]}
+                                    inputMode="decimal"
+                                    onChange={(value) =>
+                                      handleDifficultyWeightChange(difficulty, value)
+                                    }
+                                  />
+                                )}
+                              </For>
+                            </div>
+                          </div>
+                          <div>
+                            <div class="mb-2 text-sm font-medium text-text-muted">
+                              {RANDOM_SONG_SELECTOR_COPY.constWeightLabel}
+                            </div>
+                            <div class="grid gap-3 sm:grid-cols-4 lg:grid-cols-6">
+                              <For each={constOptions()}>
+                                {(chartConst) => (
+                                  <RandomSongTextField
+                                    id={`random-song-const-weight-${chartConst.replace('.', '-')}`}
+                                    label={chartConst}
+                                    value={constWeights()[chartConst] ?? '1'}
+                                    inputMode="decimal"
+                                    onChange={(value) => handleConstWeightChange(chartConst, value)}
+                                  />
+                                )}
+                              </For>
+                            </div>
+                          </div>
                         </div>
                       </section>
                     </div>
@@ -751,14 +928,61 @@ const RandomSongSelectorPage = (): JSX.Element => {
                 <Show when={validationMessage()}>
                   {(message) => <p class="text-sm text-danger">{message()}</p>}
                 </Show>
+
+                <div class="flex flex-wrap justify-end gap-2">
+                  <AlertDialog>
+                    <AlertDialog.Trigger
+                      as="button"
+                      type="button"
+                      class="inline-flex min-h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                    >
+                      <RotateCcw size={16} aria-hidden="true" />
+                      {RANDOM_SONG_SELECTOR_COPY.resetButtonLabel}
+                    </AlertDialog.Trigger>
+                    <AlertDialog.Portal>
+                      <AlertDialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
+                      <AlertDialog.Content class="fixed left-1/2 top-1/2 z-60 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
+                        <AlertDialog.Title class="mb-2 text-lg font-bold">
+                          {RANDOM_SONG_SELECTOR_COPY.resetConfirmTitle}
+                        </AlertDialog.Title>
+                        <AlertDialog.Description class="mb-4 text-sm text-text-muted">
+                          {RANDOM_SONG_SELECTOR_COPY.resetConfirmDescription}
+                        </AlertDialog.Description>
+                        <div class="flex justify-end gap-2">
+                          <AlertDialog.CloseButton
+                            as="button"
+                            class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted hover:bg-action-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                          >
+                            {RANDOM_SONG_SELECTOR_COPY.resetCancelLabel}
+                          </AlertDialog.CloseButton>
+                          <AlertDialog.CloseButton
+                            as="button"
+                            class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                            onClick={handleReset}
+                          >
+                            {RANDOM_SONG_SELECTOR_COPY.resetConfirmLabel}
+                          </AlertDialog.CloseButton>
+                        </div>
+                      </AlertDialog.Content>
+                    </AlertDialog.Portal>
+                  </AlertDialog>
+                  <Button
+                    type="button"
+                    class="inline-flex min-h-10 items-center gap-2 rounded-md bg-action-primary px-4 text-sm font-medium text-text-inverse hover:bg-action-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={validationMessage() !== null || filteredCandidates().length === 0}
+                    onClick={handleDraw}
+                  >
+                    <Dices size={16} aria-hidden="true" />
+                    {RANDOM_SONG_SELECTOR_COPY.drawButtonLabel}
+                  </Button>
+                </div>
               </form>
             </Show>
           </section>
 
           <section class="rounded-lg border border-border bg-surface-muted p-4 sm:p-6">
-            <div class="mb-3 flex items-center justify-between gap-3">
+            <div class="mb-3">
               <h2 class="text-lg font-semibold">{RANDOM_SONG_SELECTOR_COPY.resultLabel}</h2>
-              <span class="text-sm tabular-nums text-text-muted">{results().length}</span>
             </div>
             <Show
               when={results().length > 0}
@@ -784,19 +1008,25 @@ const RandomSongSelectorPage = (): JSX.Element => {
                             {candidate.chartConst.toFixed(1)}
                           </span>
                         </div>
-                        <h3 class="truncate font-semibold text-text">{candidate.song.title}</h3>
+                        <h3 class="truncate font-semibold text-text">
+                          <A
+                            href={`/songs/${encodeURIComponent(candidate.song.id)}?diff=${encodeURIComponent(candidate.difficulty.toLowerCase())}`}
+                            class="text-link hover:underline"
+                          >
+                            {candidate.song.title}
+                          </A>
+                        </h3>
                         <p class="truncate text-sm text-text-muted">{candidate.song.artist}</p>
                       </div>
                       <div class="flex flex-col gap-2 sm:items-end">
                         <Show when={hasMyRecordData()}>
                           <div class="flex flex-wrap gap-2 sm:justify-end">
-                            {renderRandomSongRecordSummary(recordForCandidate(candidate))}
+                            {renderRandomSongRecordSummary(
+                              recordForCandidate(candidate),
+                              showRecordScore()
+                            )}
                           </div>
                         </Show>
-                        <div class="flex flex-wrap gap-2 text-xs text-text-muted sm:justify-end">
-                          <span class="rounded bg-surface px-2 py-1">{candidate.genre}</span>
-                          <span class="rounded bg-surface px-2 py-1">{candidate.version}</span>
-                        </div>
                       </div>
                     </article>
                   )}
