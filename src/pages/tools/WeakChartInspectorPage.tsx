@@ -552,12 +552,12 @@ const WeakChartInspectorPage = (): JSX.Element => {
                   <div class="flex flex-col gap-5">
                     {/* 表示の絞り込み */}
                     <Collapsible defaultOpen={false} class="order-2">
-                      <Collapsible.Trigger class="group flex w-full items-center justify-between gap-2 text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-focus-ring">
-                        <span>{WEAK_CHART_SETTINGS_COPY.displaySection}</span>
+                      <Collapsible.Trigger class="group flex w-full items-center justify-start gap-2 text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-focus-ring">
                         <ChevronDown
                           class="h-4 w-4 transition-transform group-data-[expanded]:rotate-180"
                           aria-hidden="true"
                         />
+                        <span>{WEAK_CHART_SETTINGS_COPY.displaySection}</span>
                       </Collapsible.Trigger>
                       <Collapsible.Content>
                         <fieldset class="mt-3">
