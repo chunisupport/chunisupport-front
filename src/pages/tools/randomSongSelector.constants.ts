@@ -1,6 +1,11 @@
 import type { PlayerDataDifficulty } from '../../types/api'
 
 /**
+ * ランダム選曲結果を保存する sessionStorage キー。
+ */
+export const RANDOM_SONG_RESULTS_STORAGE_KEY = 'chunisupport:random-song-selector:results'
+
+/**
  * ランダム選曲ツールの初期値。
  */
 export const RANDOM_SONG_SELECTOR_DEFAULTS = {
@@ -22,6 +27,15 @@ export const RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES: PlayerDataDifficulty[] =
 ]
 
 /**
+ * ランダム選曲ツールで使う短い入力項目ラベル。
+ */
+export const RANDOM_SONG_SELECTOR_FIELD_LABELS = {
+  const: '定数',
+  score: 'スコア',
+  drawRate: '出やすさ',
+} as const
+
+/**
  * ランダム選曲ツールの表示文言。
  */
 export const RANDOM_SONG_SELECTOR_COPY = {
@@ -34,7 +48,7 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   minConstLabel: '定数 下限',
   maxConstLabel: '定数 上限',
   advancedSettingsLabel: '高度な設定',
-  drawRateLabel: '出やすさ',
+  drawRateLabel: RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate,
   difficultyWeightLabel: '難易度別',
   constWeightLabel: '定数別',
   recordFilterLabel: '自分のレコード',

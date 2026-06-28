@@ -52,9 +52,11 @@ import {
   RANDOM_SONG_BEST_FRAME_OPTIONS,
   RANDOM_SONG_LAMP_OPTIONS,
   RANDOM_SONG_PLAY_STATUS_OPTIONS,
+  RANDOM_SONG_RESULTS_STORAGE_KEY,
   RANDOM_SONG_SELECTOR_COPY,
   RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES,
   RANDOM_SONG_SELECTOR_DEFAULTS,
+  RANDOM_SONG_SELECTOR_FIELD_LABELS,
 } from './randomSongSelector.constants'
 
 const FIELD_INPUT_CLASS =
@@ -78,7 +80,6 @@ const RESULT_RECORD_LAMP_BADGE_CLASS: Record<RandomSongLampFilter, string> = {
 }
 const RESULT_RECORD_SCORE_BADGE_CLASS = `${RESULT_RECORD_BADGE_CLASS} bg-surface-muted text-text`
 const RANDOM_SONG_LAMP_VALUES = RANDOM_SONG_LAMP_OPTIONS.map((option) => option.value)
-const RANDOM_SONG_RESULTS_STORAGE_KEY = 'chunisupport:random-song-selector:results'
 
 type RandomSongTextFieldProps = {
   id: string
@@ -161,15 +162,19 @@ const readStoredRandomSongResultKeys = (): string[] => {
  * @returns なし。
  */
 const writeStoredRandomSongResults = (results: readonly RandomSongCandidate[]): void => {
-  if (results.length === 0) {
-    sessionStorage.removeItem(RANDOM_SONG_RESULTS_STORAGE_KEY)
-    return
-  }
+  try {
+    if (results.length === 0) {
+      sessionStorage.removeItem(RANDOM_SONG_RESULTS_STORAGE_KEY)
+      return
+    }
 
-  sessionStorage.setItem(
-    RANDOM_SONG_RESULTS_STORAGE_KEY,
-    JSON.stringify(results.map(createRandomSongCandidateKey))
-  )
+    sessionStorage.setItem(
+      RANDOM_SONG_RESULTS_STORAGE_KEY,
+      JSON.stringify(results.map(createRandomSongCandidateKey))
+    )
+  } catch {
+    // sessionStorage が使えない環境でも選曲フローは継続する。
+  }
 }
 
 /**
@@ -863,7 +868,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                 <div class="grid gap-3 sm:grid-cols-2">
                   <RandomSongRangeField
                     idPrefix="random-song-const"
-                    label="定数"
+                    label={RANDOM_SONG_SELECTOR_FIELD_LABELS.const}
                     minLabel={RANDOM_SONG_SELECTOR_COPY.minConstLabel}
                     maxLabel={RANDOM_SONG_SELECTOR_COPY.maxConstLabel}
                     minValue={minConst()}
@@ -875,7 +880,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                   />
                   <RandomSongRangeField
                     idPrefix="random-song-score"
-                    label="スコア"
+                    label={RANDOM_SONG_SELECTOR_FIELD_LABELS.score}
                     minLabel={RANDOM_SONG_SELECTOR_COPY.minScoreLabel}
                     maxLabel={RANDOM_SONG_SELECTOR_COPY.maxScoreLabel}
                     minValue={minScore()}
@@ -1010,7 +1015,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                     <div class="mt-2">
                                       <RandomSongTextField
                                         id={`random-song-const-weight-${chartConst.replace('.', '-')}`}
-                                        label="出やすさ"
+                                        label={RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate}
                                         labelHidden
                                         value={constWeights()[chartConst] ?? '1'}
                                         inputMode="decimal"
@@ -1116,7 +1121,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         </div>
                         <h3 class="truncate font-semibold text-text">
                           <A
-                            href={`/songs/${encodeURIComponent(candidate.song.id)}?diff=${encodeURIComponent(candidate.difficulty.toLowerCase())}`}
+                            href={`/songs/${encodeURIComponent(candidate.song.id)}?diff=${encodeURIComponent(candidate.difficulty)}`}
                             class="text-link hover:underline"
                           >
                             {candidate.song.title}

@@ -87,7 +87,10 @@ export const createRandomSongCandidateKey = (candidate: RandomSongCandidate): st
  */
 export const parseOptionalRandomSongDecimal = (value: string): number | null => {
   const trimmed = value.trim()
-  return trimmed === '' ? null : Number(trimmed.replace(',', '.'))
+  if (trimmed === '') return null
+
+  const parsed = Number(trimmed.replace(',', '.'))
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 /**

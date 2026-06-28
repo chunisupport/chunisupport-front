@@ -229,12 +229,14 @@ test('ランダム選曲の入力値を抽選条件へ変換すること', () =>
   const count = parseRandomSongDrawCount('3')
   const emptyConst = parseOptionalRandomSongDecimal('')
   const decimalConst = parseOptionalRandomSongDecimal('12,5')
+  const invalidConst = parseOptionalRandomSongDecimal('abc')
   const parsedWeights = parseRandomSongWeightValues(weights)
 
   // Then: 有効な入力値だけが数値として扱われる。
   assert.equal(count, 3)
   assert.equal(emptyConst, null)
   assert.equal(decimalConst, 12.5)
+  assert.equal(invalidConst, null)
   assert.deepEqual(parsedWeights, { MASTER: 2, ULTIMA: 0.5 })
 })
 
