@@ -28,44 +28,48 @@ const OwnScoreCard = (props: {
   items: readonly OwnScoreItem[]
   loading: boolean
 }) => (
-  <section class="rounded-lg border border-border bg-surface p-4">
+  <section>
     <h2 class="mb-3 text-lg font-semibold">{OWN_SCORE_CARD_TITLE}</h2>
     <Show when={!props.loading} fallback={<Loading />}>
-      <ul class="divide-y divide-border">
+      <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <For each={props.items}>
-          {(item) => (
-            <li>
-              <Show
-                when={item.entry}
-                fallback={
-                  <div class="flex min-h-14 items-center gap-3 py-2">
-                    <DifficultyBadge difficulty={item.difficulty} />
-                    <span class="ml-auto text-sm text-text-muted">{UNPLAYED_SCORE_LABEL}</span>
-                  </div>
-                }
-              >
-                {(entry) => (
-                  <A
-                    href={buildSongScoreHistoryPath(props.displayId, item.difficulty)}
-                    class="group flex min-h-14 items-center gap-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                    aria-label={`${item.difficulty} ${entry().score.toLocaleString('ja-JP')} ${SCORE_HISTORY_LINK_LABEL}`}
-                  >
-                    <DifficultyBadge difficulty={item.difficulty} />
-                    <span class="ml-auto font-oswald text-lg font-semibold tabular-nums">
-                      {entry().score.toLocaleString('ja-JP')}
-                    </span>
-                    <span class="hidden text-sm text-action-primary sm:inline">
-                      {SCORE_HISTORY_LINK_LABEL}
-                    </span>
-                    <ChevronRight
-                      class="h-4 w-4 text-action-primary transition-transform group-hover:translate-x-0.5"
-                      aria-hidden="true"
-                    />
-                  </A>
-                )}
-              </Show>
-            </li>
-          )}
+          {(item) => {
+            const cardClass =
+              'flex min-h-20 items-center gap-3 rounded-lg border border-border bg-surface p-4'
+
+            return (
+              <li>
+                <Show
+                  when={item.entry}
+                  fallback={
+                    <div class={cardClass}>
+                      <DifficultyBadge difficulty={item.difficulty} />
+                      <span class="ml-auto text-sm text-text-muted">{UNPLAYED_SCORE_LABEL}</span>
+                    </div>
+                  }
+                >
+                  {(entry) => (
+                    <A
+                      href={buildSongScoreHistoryPath(props.displayId, item.difficulty)}
+                      class={`${cardClass} group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus`}
+                      aria-label={`${item.difficulty} ${entry().score.toLocaleString('ja-JP')} ${SCORE_HISTORY_LINK_LABEL}`}
+                    >
+                      <DifficultyBadge difficulty={item.difficulty} />
+                      <span class="ml-auto flex items-center gap-2">
+                        <span class="font-oswald text-lg font-semibold tabular-nums">
+                          {entry().score.toLocaleString('ja-JP')}
+                        </span>
+                        <ChevronRight
+                          class="h-4 w-4 text-action-primary transition-transform group-hover:translate-x-0.5"
+                          aria-hidden="true"
+                        />
+                      </span>
+                    </A>
+                  )}
+                </Show>
+              </li>
+            )
+          }}
         </For>
       </ul>
     </Show>
