@@ -1,4 +1,5 @@
 import type { PlayerDataDifficulty } from '../../types/api'
+import { getDifficultyBadgeWidthClass } from '../../utils/difficultyBadgeLayout'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
 
 /**
@@ -10,9 +11,11 @@ import { difficultyBadgeClass } from '../../utils/difficultyUtils'
  */
 export const DifficultyBadge = (props: { difficulty: PlayerDataDifficulty; compact?: boolean }) => (
   <span
-    class={`inline-flex items-center justify-center rounded text-center text-xs font-semibold tracking-wide whitespace-nowrap ${
-      props.compact === true ? 'px-2 py-0.5' : 'px-3 py-1'
-    } ${difficultyBadgeClass(props.difficulty)}`}
+    class={`inline-flex items-center justify-center rounded text-center text-xs font-semibold tracking-wide whitespace-nowrap ${getDifficultyBadgeWidthClass(
+      props.compact
+    )} ${props.compact === true ? 'px-2 py-0.5' : 'px-3 py-1'} ${difficultyBadgeClass(
+      props.difficulty
+    )}`}
   >
     {props.difficulty}
   </span>
