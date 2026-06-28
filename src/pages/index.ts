@@ -6,7 +6,13 @@ export { default as NotFoundPage } from './NotFoundPage'
 export { RegisterScorePage } from './register-score'
 export { RegisterScoreTempPage } from './register-score-temp'
 export { Settings } from './settings'
-export { SongDetail, SongsList, WorldsendSongDetail, WorldsendSongsList } from './songs'
+export {
+  SongDetail,
+  SongScoreHistory,
+  SongsList,
+  WorldsendSongDetail,
+  WorldsendSongsList,
+} from './songs'
 export {
   BorderCalculatorPage,
   ChartConstantCalculatorPage,

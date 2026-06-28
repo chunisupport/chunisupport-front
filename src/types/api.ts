@@ -68,6 +68,8 @@ export type ErrorCode =
   | 'invalid_genre_id'
   | 'invalid_difficulty_id'
   | 'invalid_difficulty'
+  | 'score_history_not_found'
+  | 'score_history_unsupported_difficulty'
   // データ
   | 'validation_failed'
   | 'resource_not_found'
@@ -126,6 +128,8 @@ export const errorMessages: Record<ErrorCode, string> = {
   invalid_genre_id: 'ジャンルIDが不正です',
   invalid_difficulty_id: '難易度IDが不正です',
   invalid_difficulty: '難易度の指定が不正です',
+  score_history_not_found: 'スコア履歴が見つかりません',
+  score_history_unsupported_difficulty: 'スコア履歴に対応していない難易度です',
   validation_failed: '入力内容に誤りがあります',
   resource_not_found: 'データが見つかりません',
   conflict: 'データが競合しています',
@@ -245,6 +249,20 @@ export interface SongStatsBandDTO {
 export interface SongStatsResponseDTO {
   song_id: string
   stats: SongStatsBandDTO[]
+}
+
+/** スコア履歴の1件を表す。 */
+export interface ScoreHistoryEntryDTO {
+  score: number
+  clear_lamp: PlayerRecordDTO['clear_lamp']
+  combo_lamp: PlayerRecordDTO['combo_lamp']
+  full_chain: PlayerRecordDTO['full_chain']
+  updated_at: string
+}
+
+/** 譜面単位のスコア履歴レスポンス。 */
+export interface ScoreHistoryResponseDTO {
+  entries: ScoreHistoryEntryDTO[]
 }
 
 // --- マスターデータ用型定義 ---
