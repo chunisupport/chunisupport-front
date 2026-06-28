@@ -83,6 +83,7 @@ const RANDOM_SONG_RESULTS_STORAGE_KEY = 'chunisupport:random-song-selector:resul
 type RandomSongTextFieldProps = {
   id: string
   label: string
+  labelHidden?: boolean
   value: string
   inputMode?: 'numeric' | 'decimal'
   disabled?: boolean
@@ -174,12 +175,15 @@ const writeStoredRandomSongResults = (results: readonly RandomSongCandidate[]): 
 /**
  * ランダム選曲ツールで使うテキスト入力欄を表示する。
  *
- * @param props - 入力欄の識別子、ラベル、値、入力種別、変更ハンドラ。
+ * @param props - 入力欄の識別子、ラベル、表示有無、値、入力種別、変更ハンドラ。
  * @returns Kobalte TextField の入力欄。
  */
 const RandomSongTextField: Component<RandomSongTextFieldProps> = (props) => (
   <TextField class="block text-sm" value={props.value} onChange={props.onChange}>
-    <TextField.Label class="mb-1 block font-medium text-text-muted" for={props.id}>
+    <TextField.Label
+      class={props.labelHidden ? 'sr-only' : 'mb-1 block font-medium text-text-muted'}
+      for={props.id}
+    >
       {props.label}
     </TextField.Label>
     <TextField.Input
@@ -276,17 +280,17 @@ const RandomSongCheckbox: Component<{
   onChange: (checked: boolean) => void
 }> = (props) => (
   <Checkbox
-    class="relative inline-flex items-center gap-2 text-sm text-text"
+    class="relative grid min-h-5 grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 text-sm text-text"
     checked={props.checked}
     onChange={props.onChange}
   >
     <Checkbox.Input id={props.id} style={{ left: '0', top: '0' }} />
-    <Checkbox.Control class="flex h-5 w-5 items-center justify-center rounded border border-border-strong bg-surface text-success data-[checked]:border-success">
+    <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-surface text-success data-[checked]:border-success">
       <Checkbox.Indicator>
         <Check size={14} aria-hidden="true" />
       </Checkbox.Indicator>
     </Checkbox.Control>
-    <Checkbox.Label class="leading-5" for={props.id}>
+    <Checkbox.Label class="min-w-0 leading-5" for={props.id}>
       {props.label}
     </Checkbox.Label>
   </Checkbox>
@@ -736,10 +740,10 @@ const RandomSongSelectorPage = (): JSX.Element => {
   }
 
   /**
-   * 定数別の出やすさ倍率入力値を更新する。
+   * 定数別の出やすさ入力値を更新する。
    *
    * @param chartConst - 更新対象の譜面定数。
-   * @param value - 新しい倍率入力値。
+   * @param value - 新しい出やすさ入力値。
    * @returns なし。
    */
   const handleConstWeightChange = (chartConst: string, value: string): void => {
@@ -994,7 +998,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                             <div class="grid gap-3 sm:grid-cols-4 lg:grid-cols-6">
                               <For each={constWeightOptions()}>
                                 {(chartConst) => (
-                                  <div class="rounded border border-border bg-surface p-3">
+                                  <div class="flex h-full min-h-24 flex-col gap-2 rounded border border-border bg-surface p-3">
                                     <RandomSongCheckbox
                                       id={`random-song-const-enabled-${chartConst.replace('.', '-')}`}
                                       checked={constWeightEnabled()[chartConst] ?? true}
@@ -1006,7 +1010,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                     <div class="mt-2">
                                       <RandomSongTextField
                                         id={`random-song-const-weight-${chartConst.replace('.', '-')}`}
-                                        label="倍率"
+                                        label="出やすさ"
+                                        labelHidden
                                         value={constWeights()[chartConst] ?? '1'}
                                         inputMode="decimal"
                                         disabled={constWeightEnabled()[chartConst] === false}
