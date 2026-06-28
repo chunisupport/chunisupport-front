@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import { DEFAULT_WORLDSEND_FILTER } from '../types/filterDefaults'
+import type { WorldsendFilterState } from '../types/filterTypes'
 import { isWorldsendFilterChanged, isWorldsendFilterOptionsChanged } from './filterDialog'
 
 test('isWorldsendFilterChanged は既定値と同じ条件を未変更として扱うこと', () => {
@@ -117,11 +118,11 @@ test('isWorldsendFilterChanged はnullを含むランプ配列の差分を検出
   const defaultFilter = {
     ...DEFAULT_WORLDSEND_FILTER,
     hard_lamp: [null, 'CLEAR', 'HARD'],
-  }
+  } satisfies WorldsendFilterState
   const currentFilter = {
     ...DEFAULT_WORLDSEND_FILTER,
     hard_lamp: ['CLEAR', 'HARD'],
-  }
+  } satisfies WorldsendFilterState
 
   // When
   const result = isWorldsendFilterChanged(currentFilter, defaultFilter)

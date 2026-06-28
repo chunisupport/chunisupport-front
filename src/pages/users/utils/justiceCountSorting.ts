@@ -9,7 +9,7 @@ type JusticeCountMissingRecord = {
  * @param justiceCount 表示・ソート用に整形済みのJ数。
  * @returns J数がない扱いにする場合はtrue。
  */
-export const isJusticeCountMissing = (justiceCount: number | '' | '-'): boolean =>
+export const isJusticeCountMissing = (justiceCount: number | '' | '-'): justiceCount is '' | '-' =>
   justiceCount === '' || justiceCount === '-'
 
 /**

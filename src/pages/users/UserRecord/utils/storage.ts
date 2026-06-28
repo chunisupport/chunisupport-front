@@ -35,17 +35,19 @@ function isObjectRecord(value: unknown): value is Partial<FilterState> {
  */
 export function toSavedFilter(dto: RecordFilterDTO<unknown>): SavedFilter {
   const validSchema = dto.schema_version === SAVED_FILTER_SCHEMA_VERSION
-  const validFilter =
+  const filter =
     validSchema && isObjectRecord(dto.filter) && isValidSavedStandardFilter(dto.filter)
+      ? dto.filter
+      : null
 
   return {
     id: dto.id,
     name: dto.name,
     schemaVersion: dto.schema_version,
-    filter: validSchema && validFilter ? normalizeFilterState(dto.filter) : null,
-    isValid: validSchema && validFilter,
+    filter: filter ? normalizeFilterState(filter) : null,
+    isValid: Boolean(filter),
     invalidReason: validSchema
-      ? validFilter
+      ? filter
         ? undefined
         : INVALID_FILTER_MESSAGE
       : INVALID_SCHEMA_MESSAGE,
