@@ -5,7 +5,14 @@ import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, PointElement, ScatterController, Tooltip } from 'chart.js'
-import { ChartNoAxesCombined, Check, ChevronRight, Settings, TriangleAlert } from 'lucide-solid'
+import {
+  ChartNoAxesCombined,
+  Check,
+  ChevronRight,
+  RotateCcw,
+  Settings,
+  TriangleAlert,
+} from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -547,6 +554,14 @@ const WeakChartInspectorPage = (): JSX.Element => {
                     <Dialog.Title class="text-lg font-bold">
                       {WEAK_CHART_SETTINGS_COPY.title}
                     </Dialog.Title>
+                    <Button
+                      type="button"
+                      aria-label={WEAK_CHART_SETTINGS_COPY.reset}
+                      class="rounded border border-danger-border bg-danger-bg p-2 text-text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                      onClick={resetSettings}
+                    >
+                      <RotateCcw class="h-5 w-5" aria-hidden="true" />
+                    </Button>
                   </div>
 
                   <div class="flex flex-col gap-5">
@@ -758,13 +773,6 @@ const WeakChartInspectorPage = (): JSX.Element => {
                         onClick={cancelSettings}
                       >
                         {WEAK_CHART_SETTINGS_COPY.cancel}
-                      </Button>
-                      <Button
-                        type="button"
-                        class="px-4 py-2 rounded bg-action-secondary text-text-muted hover:bg-action-secondary-hover"
-                        onClick={resetSettings}
-                      >
-                        {WEAK_CHART_SETTINGS_COPY.reset}
                       </Button>
                       <Button
                         type="button"
