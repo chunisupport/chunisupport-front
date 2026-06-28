@@ -10,6 +10,7 @@ export { SongDetail, SongsList, WorldsendSongDetail, WorldsendSongsList } from '
 export {
   BorderCalculatorPage,
   ChartConstantCalculatorPage,
+  RandomSongSelectorPage,
   WeakChartInspectorPage,
 } from './tools'
 export { UserPage } from './users'

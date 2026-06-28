@@ -1,0 +1,264 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
+import {
+  buildRandomSongCandidates,
+  createRandomSongChartKey,
+  createRandomSongRecordMap,
+  drawRandomSongs,
+  filterRandomSongCandidates,
+  filterRandomSongCandidatesByRecord,
+  type RandomSongCandidate,
+  type RandomSongLampFilter,
+} from './randomSongSelector.ts'
+
+const versions: VersionDTO[] = [
+  { id: 1, name: 'CHUNITHM', released_at: '2015-07-16' },
+  { id: 2, name: 'CHUNITHM NEW', released_at: '2021-11-04' },
+]
+
+const createSong = (overrides: Partial<SongDTO>): SongDTO => ({
+  id: 'song-a',
+  title: 'Song A',
+  reading: null,
+  artist: 'Artist',
+  genre: 'POPS & ANIME',
+  bpm: 180,
+  release: '2021-11-04',
+  official_idx: '1',
+  jacket: null,
+  maxop: 0,
+  is_maxop_unknown: false,
+  op_target_difficulty: 'MASTER',
+  is_new: false,
+  charts: {
+    BASIC: { const: 3, is_const_unknown: false, notes: 300 },
+    MASTER: { const: 13.7, is_const_unknown: false, notes: 1200 },
+  },
+  ...overrides,
+})
+
+const createCandidate = (overrides: Partial<RandomSongCandidate>): RandomSongCandidate => ({
+  song: createSong({ id: 'song-a', title: 'Song A' }),
+  difficulty: 'MASTER',
+  chartConst: 13.7,
+  levelLabel: '13+',
+  genre: 'POPS & ANIME',
+  version: 'NEW',
+  ...overrides,
+})
+
+const createRecord = (overrides: Partial<PlayerRecordDTO>): PlayerRecordDTO => ({
+  is_played: true,
+  is_op_target: false,
+  updated_at: null,
+  difficulty: 'MASTER',
+  id: 'song-a',
+  title: 'Song A',
+  artist: 'Artist',
+  const: 13.7,
+  is_const_unknown: false,
+  score: 1007500,
+  rating: 15,
+  overpower: 20,
+  justice_count: null,
+  overpower_percent: 100,
+  img: 'https://example.com/jacket-a.png',
+  clear_lamp: 'CLEAR',
+  combo_lamp: null,
+  full_chain: null,
+  slot: null,
+  ...overrides,
+})
+
+const allLampFilters: RandomSongLampFilter[] = [
+  'AJC',
+  'AJ',
+  'FC',
+  'CATASTROPHY',
+  'ABSOLUTE',
+  'BRAVE',
+  'HARD',
+  'CLEAR',
+  'FAILED',
+  'NONE',
+]
+
+test('楽曲一覧から譜面単位のランダム選曲候補を生成すること', () => {
+  // Given: 複数難易度を持つ楽曲がある。
+  const songs = [createSong({ id: 'song-a', title: 'Song A' })]
+
+  // When: ランダム選曲候補を生成する。
+  const candidates = buildRandomSongCandidates(songs, versions)
+
+  // Then: 存在する譜面だけが候補になり、バージョンとレベル表記が付与される。
+  assert.deepEqual(
+    candidates.map((candidate) => ({
+      title: candidate.song.title,
+      difficulty: candidate.difficulty,
+      levelLabel: candidate.levelLabel,
+      version: candidate.version,
+    })),
+    [
+      { title: 'Song A', difficulty: 'BASIC', levelLabel: '3', version: 'NEW' },
+      { title: 'Song A', difficulty: 'MASTER', levelLabel: '13+', version: 'NEW' },
+    ]
+  )
+})
+
+test('難易度・ジャンル・バージョン・譜面定数で候補を絞り込むこと', () => {
+  // Given: 条件が異なる候補がある。
+  const candidates = [
+    createCandidate({
+      difficulty: 'MASTER',
+      genre: 'POPS & ANIME',
+      version: 'NEW',
+      chartConst: 13.7,
+    }),
+    createCandidate({ difficulty: 'EXPERT', genre: 'niconico', version: 'NEW', chartConst: 11.2 }),
+    createCandidate({
+      difficulty: 'ULTIMA',
+      genre: 'POPS & ANIME',
+      version: 'VERSE',
+      chartConst: 14.5,
+    }),
+  ]
+
+  // When: 条件で絞り込む。
+  const filtered = filterRandomSongCandidates(candidates, {
+    difficulties: ['MASTER', 'ULTIMA'],
+    genres: ['POPS & ANIME'],
+    versions: ['NEW'],
+    minConst: 13,
+    maxConst: 14,
+  })
+
+  // Then: すべての条件に一致した候補だけが残る。
+  assert.deepEqual(
+    filtered.map((candidate) => candidate.difficulty),
+    ['MASTER']
+  )
+})
+
+test('重み付き抽選は重み0の候補を除外し重複なしで選ぶこと', () => {
+  // Given: 難易度重みが異なる候補がある。
+  const candidates = [
+    createCandidate({
+      song: createSong({ id: 'song-a', title: 'Song A' }),
+      difficulty: 'MASTER',
+    }),
+    createCandidate({
+      song: createSong({ id: 'song-b', title: 'Song B' }),
+      difficulty: 'EXPERT',
+    }),
+    createCandidate({
+      song: createSong({ id: 'song-c', title: 'Song C' }),
+      difficulty: 'ULTIMA',
+    }),
+  ]
+
+  // When: EXPERT を重み0にして2曲抽選する。
+  const selected = drawRandomSongs(candidates, 2, { difficultyWeights: { EXPERT: 0 } }, () => 0)
+
+  // Then: 重み0の候補は選ばれず、同じ候補も重複しない。
+  assert.deepEqual(
+    selected.map((candidate) => candidate.song.id),
+    ['song-a', 'song-c']
+  )
+})
+
+test('抽選数が候補数を超える場合は候補数までに制限すること', () => {
+  // Given: 候補が1件だけある。
+  const candidates = [createCandidate({ song: createSong({ id: 'song-a' }) })]
+
+  // When: 候補数より多い件数を抽選する。
+  const selected = drawRandomSongs(candidates, 10, {}, () => 0.5)
+
+  // Then: 候補数までの結果になる。
+  assert.equal(selected.length, 1)
+})
+
+test('自分のレコード条件でプレイ状況とスコアを絞り込むこと', () => {
+  // Given: プレイ済み、未プレイ、低スコアの候補がある。
+  const candidates = [
+    createCandidate({ song: createSong({ id: 'song-a', title: 'Song A' }) }),
+    createCandidate({ song: createSong({ id: 'song-b', title: 'Song B' }) }),
+    createCandidate({ song: createSong({ id: 'song-c', title: 'Song C' }) }),
+  ]
+  const records = createRandomSongRecordMap([
+    createRecord({ id: 'song-a', score: 1008000 }),
+    createRecord({ id: 'song-b', score: 995000 }),
+  ])
+
+  // When: プレイ済みかつスコア100万以上に絞り込む。
+  const filtered = filterRandomSongCandidatesByRecord(candidates, records, new Set(), {
+    playStatus: 'played',
+    bestFrame: 'all',
+    minScore: 1000000,
+    maxScore: null,
+    lamps: allLampFilters,
+  })
+
+  // Then: 条件を満たすプレイ済み候補だけが残る。
+  assert.deepEqual(
+    filtered.map((candidate) => candidate.song.id),
+    ['song-a']
+  )
+})
+
+test('自分のレコード条件でベスト枠のみを絞り込むこと', () => {
+  // Given: ベスト枠に含まれる候補と含まれない候補がある。
+  const candidates = [
+    createCandidate({ song: createSong({ id: 'song-a', title: 'Song A' }) }),
+    createCandidate({ song: createSong({ id: 'song-b', title: 'Song B' }) }),
+  ]
+  const records = createRandomSongRecordMap([
+    createRecord({ id: 'song-a' }),
+    createRecord({ id: 'song-b' }),
+  ])
+  const bestChartKeys = new Set([createRandomSongChartKey('song-b', 'MASTER')])
+
+  // When: ベスト枠のみで絞り込む。
+  const filtered = filterRandomSongCandidatesByRecord(candidates, records, bestChartKeys, {
+    playStatus: 'all',
+    bestFrame: 'only',
+    minScore: null,
+    maxScore: null,
+    lamps: allLampFilters,
+  })
+
+  // Then: ベスト枠の候補だけが残る。
+  assert.deepEqual(
+    filtered.map((candidate) => candidate.song.id),
+    ['song-b']
+  )
+})
+
+test('自分のレコード条件でランプを絞り込むこと', () => {
+  // Given: ランプが異なる候補がある。
+  const candidates = [
+    createCandidate({ song: createSong({ id: 'song-a', title: 'Song A' }) }),
+    createCandidate({ song: createSong({ id: 'song-b', title: 'Song B' }) }),
+    createCandidate({ song: createSong({ id: 'song-c', title: 'Song C' }) }),
+  ]
+  const records = createRandomSongRecordMap([
+    createRecord({ id: 'song-a', combo_lamp: 'ALL JUSTICE', justice_count: 0 }),
+    createRecord({ id: 'song-b', combo_lamp: 'FULL COMBO' }),
+    createRecord({ id: 'song-c', clear_lamp: 'HARD' }),
+  ])
+
+  // When: AJC と FC のみに絞り込む。
+  const filtered = filterRandomSongCandidatesByRecord(candidates, records, new Set(), {
+    playStatus: 'all',
+    bestFrame: 'all',
+    minScore: null,
+    maxScore: null,
+    lamps: ['AJC', 'FC'],
+  })
+
+  // Then: 対応するランプの候補だけが残る。
+  assert.deepEqual(
+    filtered.map((candidate) => candidate.song.id),
+    ['song-a', 'song-b']
+  )
+})
