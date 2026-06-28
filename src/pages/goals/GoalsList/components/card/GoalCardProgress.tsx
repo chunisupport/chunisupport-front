@@ -50,7 +50,8 @@ export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
         class="h-2 w-full rounded appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-action-secondary [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-action-primary [&::-moz-progress-bar]:rounded [&::-moz-progress-bar]:bg-action-primary"
         value={displayProgress().progressValue}
         max={100}
-        aria-label={`${props.title} 進捗 ${displayProgress().percentText}`}
+        aria-label={`${props.title} 進捗`}
+        aria-valuetext={displayProgress().ariaValueText}
       />
     </div>
   )

@@ -79,10 +79,12 @@ export const formatGoalAttributesLabel = (
     parts.push('対象: OP対象')
   }
 
-  if (isExplicitEmptyGoalAttribute(attributes.diff)) {
-    parts.push('難易度: 選択なし')
-  } else if (diffIds.length > 0) {
-    parts.push(`難易度: ${formatNames(diffIds, difficultyNameMap)}`)
+  if (attributes.chart_target !== 'OP_TARGET') {
+    if (isExplicitEmptyGoalAttribute(attributes.diff)) {
+      parts.push('難易度: 選択なし')
+    } else if (diffIds.length > 0) {
+      parts.push(`難易度: ${formatNames(diffIds, difficultyNameMap)}`)
+    }
   }
 
   if (typeof attributes.const?.min === 'number' || typeof attributes.const?.max === 'number') {

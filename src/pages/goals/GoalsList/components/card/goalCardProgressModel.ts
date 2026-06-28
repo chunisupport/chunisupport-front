@@ -5,6 +5,7 @@ export interface GoalCardDisplayProgress {
   currentText: string
   targetText: string
   percentText: string
+  ariaValueText: string
   progressValue: number
 }
 
@@ -58,11 +59,17 @@ export const resolveGoalCardDisplayProgress = (
   const displayPercent = invert
     ? Math.max(0, 100 - Math.min(normalizedPercent, 100))
     : normalizedPercent
+  const progressValue = Math.max(0, Math.min(normalizedPercent, 100))
+  const progressValueText = `${progressValue.toFixed(2)}%`
+  const displayPercentText = `${displayPercent.toFixed(2)}%`
 
   return {
     currentText: formatGoalCardValue(displayCurrent, type),
     targetText: formatGoalCardValue(progress.target, type),
-    percentText: `${displayPercent.toFixed(2)}%`,
-    progressValue: Math.max(0, Math.min(normalizedPercent, 100)),
+    percentText: displayPercentText,
+    ariaValueText: invert
+      ? `達成率 ${progressValueText}、残り ${displayPercentText}`
+      : `達成率 ${progressValueText}`,
+    progressValue,
   }
 }

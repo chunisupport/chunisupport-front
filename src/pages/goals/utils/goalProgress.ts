@@ -172,7 +172,9 @@ const resolveTotalScoreTarget = (
   params: GoalDTO['achievement_params'],
   filteredRecords: PlayerRecordDTO[]
 ): number => {
-  return resolveGoalDynamicTarget(params, filteredRecords.length * MAX_SCORE, 'total')
+  return resolveGoalDynamicTarget(params, filteredRecords.length * MAX_SCORE, 'total', {
+    rounding: 'ceil',
+  })
 }
 
 /**
@@ -254,7 +256,9 @@ export const calculateGoalProgress = (
     case 'rank_count':
     case 'score_count': {
       const threshold = getNumberGoalTargetParam(goal.achievement_params, 'score')
-      target = resolveGoalDynamicTarget(goal.achievement_params, filteredRecords.length, 'count')
+      target = resolveGoalDynamicTarget(goal.achievement_params, filteredRecords.length, 'count', {
+        rounding: 'ceil',
+      })
       current = filteredRecords.filter((record) => record.score >= threshold).length
       break
     }
@@ -275,7 +279,9 @@ export const calculateGoalProgress = (
       }
       const hardLampName = resolveHardLampRecordName(params.lamp)
       const required = HARD_LAMP_ORDER[hardLampName] ?? 0
-      target = resolveGoalDynamicTarget(goal.achievement_params, filteredRecords.length, 'count')
+      target = resolveGoalDynamicTarget(goal.achievement_params, filteredRecords.length, 'count', {
+        rounding: 'ceil',
+      })
       current = filteredRecords.filter((record) => {
         const lamp = record.clear_lamp
         if (!lamp) return false
@@ -288,7 +294,9 @@ export const calculateGoalProgress = (
       const required =
         (params.lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']) ??
         0
-      target = resolveGoalDynamicTarget(goal.achievement_params, filteredRecords.length, 'count')
+      target = resolveGoalDynamicTarget(goal.achievement_params, filteredRecords.length, 'count', {
+        rounding: 'ceil',
+      })
       current = filteredRecords.filter((record) => {
         const lamp = record.combo_lamp
         if (!lamp) return false

@@ -1,6 +1,9 @@
 /** 最大値を基準にした目標値の指定方法。 */
 export type GoalTargetMode = 'all' | 'number' | 'remaining' | 'percent'
 
+/** 動的に解決した目標値の丸め方法。 */
+export type GoalTargetRounding = 'none' | 'ceil' | 'floor' | 'round'
+
 type GoalAbsoluteTargetParam<TAbsoluteKey extends 'count' | 'total'> = TAbsoluteKey extends 'count'
   ? { count: number }
   : { total: number }
@@ -14,6 +17,24 @@ export type GoalTargetParam<TAbsoluteKey extends 'count' | 'total' = 'count' | '
 
 type GoalTargetParamKey = 'score' | 'count' | 'total' | 'remaining' | 'percent'
 type GoalTargetParamValue = Partial<Record<GoalTargetParamKey, unknown>>
+
+interface ResolveGoalDynamicTargetOptions {
+  rounding?: GoalTargetRounding
+}
+
+/**
+ * 目標種別に応じた丸め方法を適用する。
+ *
+ * @param value - 丸め対象の目標値。
+ * @param rounding - 適用する丸め方法。
+ * @returns 丸め後の目標値。
+ */
+const roundGoalTargetValue = (value: number, rounding: GoalTargetRounding = 'none'): number => {
+  if (rounding === 'ceil') return Math.ceil(value)
+  if (rounding === 'floor') return Math.floor(value)
+  if (rounding === 'round') return Math.round(value)
+  return value
+}
 
 /**
  * 目標値の指定方法と入力値をAPIパラメータへ変換する。
@@ -70,20 +91,26 @@ export const getNumberGoalTargetParam = (
  * @param params - APIから受け取った成果パラメータ。
  * @param maxValue - 対象条件から算出した最大値。
  * @param absoluteKey - 絶対値指定に使うキー。
+ * @param options - 目標種別に応じた丸め設定。
  * @returns 絶対値、残数、割合、または最大値から解決した目標値。
  */
 export const resolveGoalDynamicTarget = (
   params: GoalTargetParamValue,
   maxValue: number,
-  absoluteKey: 'count' | 'total'
+  absoluteKey: 'count' | 'total',
+  options: ResolveGoalDynamicTargetOptions = {}
 ): number => {
   const absoluteValue = getNumberGoalTargetParam(params, absoluteKey)
   if (absoluteValue > 0 || params[absoluteKey] === 0) {
-    return absoluteValue
+    return roundGoalTargetValue(absoluteValue, options.rounding)
   }
   const remaining = params.remaining
-  if (typeof remaining === 'number') return Math.max(maxValue - remaining, 0)
+  if (typeof remaining === 'number') {
+    return roundGoalTargetValue(Math.max(maxValue - remaining, 0), options.rounding)
+  }
   const percent = params.percent
-  if (typeof percent === 'number') return (maxValue * percent) / 100
-  return maxValue
+  if (typeof percent === 'number') {
+    return roundGoalTargetValue((maxValue * percent) / 100, options.rounding)
+  }
+  return roundGoalTargetValue(maxValue, options.rounding)
 }

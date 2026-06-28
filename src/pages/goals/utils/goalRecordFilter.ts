@@ -6,9 +6,9 @@ import type { Difficulty, FilterState } from '../../users/UserRecord/types/types
 import { isExplicitEmptyGoalAttribute, normalizeGoalAttributeIds } from './goalAttributes'
 import {
   COMBO_LAMP_UNACHIEVED_FILTERS,
-  type ComboLampGoalValue,
   HARD_LAMP_UNACHIEVED_FILTERS,
-  type HardLampGoalValue,
+  isComboLampGoalValue,
+  isHardLampGoalValue,
 } from './goalLamp'
 import { buildGoalVersionNameMap } from './goalVersion'
 
@@ -19,6 +19,41 @@ const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
   'hardlamp_count',
   'combolamp_count',
 ])
+
+/**
+ * API由来の成果パラメータからランプ指定値を安全に取り出す。
+ *
+ * @param goal - ランプ指定を持つ可能性がある目標。
+ * @returns ランプ指定値。オブジェクト形式でない場合は undefined。
+ */
+const getGoalLampParam = (goal: GoalDTO): unknown => {
+  const params: unknown = goal.achievement_params
+  return params && typeof params === 'object' && 'lamp' in params
+    ? (params as { lamp?: unknown }).lamp
+    : undefined
+}
+
+/**
+ * 通常レコード遷移に使えるハードランプ目標か判定する。
+ *
+ * @param goal - 判定対象の目標。
+ * @returns ランプ指定が現行定義に含まれる場合は true。
+ */
+const isNavigableHardLampGoal = (goal: GoalDTO): boolean => {
+  const lamp = getGoalLampParam(goal)
+  return typeof lamp === 'string' && isHardLampGoalValue(lamp)
+}
+
+/**
+ * 通常レコード遷移に使えるコンボランプ目標か判定する。
+ *
+ * @param goal - 判定対象の目標。
+ * @returns ランプ指定が現行定義に含まれる場合は true。
+ */
+const isNavigableComboLampGoal = (goal: GoalDTO): boolean => {
+  const lamp = getGoalLampParam(goal)
+  return typeof lamp === 'string' && isComboLampGoalValue(lamp)
+}
 
 /**
  * 目標種別ごとの未達成条件を通常レコードフィルターへ反映する。
@@ -39,12 +74,18 @@ const applyUnachievedCondition = (filter: FilterState, goal: GoalDTO): FilterSta
       }
     }
     case 'hardlamp_count': {
-      const params = goal.achievement_params as { lamp: HardLampGoalValue }
-      return { ...filter, hard_lamp: [...HARD_LAMP_UNACHIEVED_FILTERS[params.lamp]] }
+      const lamp = getGoalLampParam(goal)
+      if (typeof lamp !== 'string' || !isHardLampGoalValue(lamp)) {
+        return filter
+      }
+      return { ...filter, hard_lamp: [...HARD_LAMP_UNACHIEVED_FILTERS[lamp]] }
     }
     case 'combolamp_count': {
-      const params = goal.achievement_params as { lamp: ComboLampGoalValue }
-      return { ...filter, combo_lamp: [...COMBO_LAMP_UNACHIEVED_FILTERS[params.lamp]] }
+      const lamp = getGoalLampParam(goal)
+      if (typeof lamp !== 'string' || !isComboLampGoalValue(lamp)) {
+        return filter
+      }
+      return { ...filter, combo_lamp: [...COMBO_LAMP_UNACHIEVED_FILTERS[lamp]] }
     }
     case 'total_score':
     case 'overpower_value':
@@ -116,4 +157,6 @@ export const buildGoalRecordFilter = (
  */
 export const isGoalRecordNavigationEnabled = (goal: GoalDTO): boolean =>
   goal.attributes.chart_target !== 'OP_TARGET' &&
-  NAVIGABLE_ACHIEVEMENT_TYPES.has(goal.achievement_type)
+  NAVIGABLE_ACHIEVEMENT_TYPES.has(goal.achievement_type) &&
+  (goal.achievement_type !== 'hardlamp_count' || isNavigableHardLampGoal(goal)) &&
+  (goal.achievement_type !== 'combolamp_count' || isNavigableComboLampGoal(goal))

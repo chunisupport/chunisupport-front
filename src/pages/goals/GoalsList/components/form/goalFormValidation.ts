@@ -62,6 +62,25 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
       : Number(input.total)
   const parsedConstMin = input.constMin === '' ? undefined : Number(input.constMin)
   const parsedConstMax = input.constMax === '' ? undefined : Number(input.constMax)
+  const isCountType = isCountAchievementType(input.achievementType)
+
+  if (
+    (typeof parsedConstMin === 'number' && !Number.isFinite(parsedConstMin)) ||
+    (typeof parsedConstMax === 'number' && !Number.isFinite(parsedConstMax))
+  ) {
+    return '定数範囲が不正です。'
+  }
+  if (
+    typeof parsedConstMin === 'number' &&
+    typeof parsedConstMax === 'number' &&
+    parsedConstMin > parsedConstMax
+  ) {
+    return '定数の最小値は最大値以下にしてください。'
+  }
+
+  if (input.allCount <= 0) {
+    return '条件に当てはまる譜面がありません。条件を見直してください。'
+  }
 
   if (
     (input.achievementType === 'score_count' ||
@@ -71,8 +90,6 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
   ) {
     return 'スコアは 0 ～ 1,010,000 の範囲で入力してください。'
   }
-
-  const isCountType = isCountAchievementType(input.achievementType)
 
   if (isCountType && input.countMode !== 'all') {
     const countMin = input.countMode === 'number' ? 1 : 0
@@ -90,18 +107,6 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
       const unit = input.countMode === 'percent' ? '%' : '件'
       return `${input.countMode === 'percent' ? '割合' : '件数'}は${countMax.toLocaleString('ja-JP')}${unit}以内で入力してください。`
     }
-  }
-
-  if (isCountType && input.countMode === 'all' && input.allCount <= 0) {
-    return '条件に当てはまる譜面がありません。条件を見直してください。'
-  }
-
-  if (
-    canUseDynamicTotalTarget(input.achievementType) &&
-    input.totalMode === 'all' &&
-    input.allCount <= 0
-  ) {
-    return '条件に当てはまる譜面がありません。条件を見直してください。'
   }
 
   if (
@@ -143,20 +148,6 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
     const targetLabel =
       input.achievementType === 'total_score' ? '総スコア目標' : 'OVER POWER合計目標'
     return `${targetLabel}は最大 ${dynamicTotalMax.toLocaleString('ja-JP')} 以下で入力してください。`
-  }
-
-  if (
-    (typeof parsedConstMin === 'number' && !Number.isFinite(parsedConstMin)) ||
-    (typeof parsedConstMax === 'number' && !Number.isFinite(parsedConstMax))
-  ) {
-    return '定数範囲が不正です。'
-  }
-  if (
-    typeof parsedConstMin === 'number' &&
-    typeof parsedConstMax === 'number' &&
-    parsedConstMin > parsedConstMax
-  ) {
-    return '定数の最小値は最大値以下にしてください。'
   }
 
   if (isCountType && input.countMode === 'number' && parsedCount <= 0) {
