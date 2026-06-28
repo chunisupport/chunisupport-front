@@ -15,7 +15,7 @@
     "lint:check": "biome lint .",
     "check": "biome check --write .",
     "check:ci": "biome ci .",
-    "typecheck": "tsc --noEmit --pretty false",
+    "typecheck": "tsgo --noEmit --pretty false",
     "verify": "pnpm check:ci && pnpm typecheck && pnpm build && pnpm test:unit",
     "licenses:check": "node scripts/generate-licenses.mjs --check",
     "licenses:generate": "node scripts/generate-licenses.mjs",
@@ -39,8 +39,9 @@
     "@rsbuild/plugin-solid": "^1.0.6",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^25.5.2",
+    "@typescript/native-preview": "7.0.0-dev.20260627.2",
     "fake-indexeddb": "^6.2.5",
     "generate-license-file": "^4.2.1",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   }
 }
