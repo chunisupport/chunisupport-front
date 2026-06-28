@@ -13,9 +13,16 @@ import {
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../../constants/recordFilterOptions.ts'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay.ts'
-import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../../constants/rangeFilters.ts'
+import {
+  JUSTICE_COUNT_RANGE_FILTER,
+  OVER_POWER_RANGE_FILTER,
+} from '../../constants/rangeFilters.ts'
 import type { Difficulty, FilterState } from '../../types/types.ts'
-import { parseNumberInput, toggleArray, updateOptionalNumberRange } from '../../utils/filterDialog.ts'
+import {
+  parseNumberInput,
+  toggleArray,
+  updateOptionalNumberRange,
+} from '../../utils/filterDialog.ts'
 import {
   SCORE_RANK_MAX_VALUES,
   SCORE_RANK_VALUES,

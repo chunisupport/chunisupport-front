@@ -10,7 +10,10 @@ import {
   SongListGenreCell,
   SongListTitleCell,
 } from '../../components/SongListMetaCells.tsx'
-import { createVirtualizedSongsTable, sortAriaValue } from '../../components/virtualizedSongsTable.ts'
+import {
+  createVirtualizedSongsTable,
+  sortAriaValue,
+} from '../../components/virtualizedSongsTable.ts'
 import type { WorldsendSongSortKey } from '../utils/sorting.ts'
 
 const ROW_HEIGHT = 37

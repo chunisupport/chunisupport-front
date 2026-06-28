@@ -6,7 +6,10 @@ import {
   toChartLevelLabel,
 } from '../../utils/chartLevel.ts'
 import { compareMasterItemNames, createMasterItemOrderMap } from '../../utils/masterData.ts'
-import { getShortVersionName, resolveVersionNameByReleaseDate } from '../../utils/versionConverter.ts'
+import {
+  getShortVersionName,
+  resolveVersionNameByReleaseDate,
+} from '../../utils/versionConverter.ts'
 import { buildCurrentOverPowerBySongId } from './currentOpTarget.ts'
 import type {
   OverPowerDifficulty,

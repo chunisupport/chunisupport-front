@@ -13,7 +13,10 @@ import {
   FILTER_DIALOG_SELECT_ITEM_CLASS,
   FILTER_DIALOG_SELECT_TRIGGER_CLASS,
 } from '../styles.ts'
-import RangeSeparator, { RANGE_END_LABEL_SUFFIX, RANGE_START_LABEL_SUFFIX } from './RangeSeparator.tsx'
+import RangeSeparator, {
+  RANGE_END_LABEL_SUFFIX,
+  RANGE_START_LABEL_SUFFIX,
+} from './RangeSeparator.tsx'
 
 /** スコア範囲セクションの見出し。 */
 const SCORE_RANGE_TITLE = 'スコア'

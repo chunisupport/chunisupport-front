@@ -1,4 +1,8 @@
-import { BOOKMARKLET_BASE_URL, BOOKMARKLET_ENTRYPOINT, DOCUMENTATION_BASE_URL } from '../../config.ts'
+import {
+  BOOKMARKLET_BASE_URL,
+  BOOKMARKLET_ENTRYPOINT,
+  DOCUMENTATION_BASE_URL,
+} from '../../config.ts'
 
 /**
  * プレイヤーデータ登録用スクリプトを読み込むブックマークレット。

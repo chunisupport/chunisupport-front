@@ -3,7 +3,10 @@ import {
   type SortConditionColumnOption,
   SortConditionsDialog,
 } from '../../components/SortConditionsDialog.tsx'
-import { WORLDSEND_RECORD_COLUMN_DEFINITIONS, type WorldsendRecordSortKey } from '../utils/columns.ts'
+import {
+  WORLDSEND_RECORD_COLUMN_DEFINITIONS,
+  type WorldsendRecordSortKey,
+} from '../utils/columns.ts'
 import {
   DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS,
   normalizeWorldsendRecordSortConditions,

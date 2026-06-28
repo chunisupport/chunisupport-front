@@ -1,4 +1,7 @@
-import { SCORE_THEORETICAL_MAX, WEAK_CHART_INSPECTOR_DISPLAY_SCORE_MIN } from '../constants/chart.ts'
+import {
+  SCORE_THEORETICAL_MAX,
+  WEAK_CHART_INSPECTOR_DISPLAY_SCORE_MIN,
+} from '../constants/chart.ts'
 import type { PlayerRecordDTO } from '../types/api.ts'
 
 /** 箱ひげ図を構成する譜面定数単位の統計値。 */
