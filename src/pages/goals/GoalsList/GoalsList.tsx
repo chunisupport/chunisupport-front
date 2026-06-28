@@ -3,14 +3,12 @@ import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { saveStandardRecordFilterSetting } from '../../../repositories/viewSettingsRepository'
 import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../types/api'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
-import { buildUserProfilePagePath } from '../../users/UserPage/profilePageQuery'
-import { buildGoalRecordFilter } from '../utils/goalRecordFilter'
 import { GoalsListContent } from './components/GoalsListContent'
 import { GoalsListDialogs } from './components/GoalsListDialogs'
 import { RECORD_NAVIGATION_ERROR_MESSAGE } from './constants'
+import { saveGoalRecordFilterAndBuildPath } from './goalsListNavigation'
 import {
   buildGoalsWithProgress,
   resolveDraftGoalProgress as resolveDraftGoalProgressFromData,
@@ -103,9 +101,8 @@ const GoalsList: Component = () => {
 
     setActionError('')
     try {
-      const filter = buildGoalRecordFilter(goal, data.masterData, data.versions)
-      await saveStandardRecordFilterSetting(filter)
-      navigate(buildUserProfilePagePath(data.username, 'record_normal'))
+      const path = await saveGoalRecordFilterAndBuildPath(data, goal)
+      navigate(path)
     } catch (error) {
       setActionError(toUserFriendlyErrorMessage(error, RECORD_NAVIGATION_ERROR_MESSAGE))
     }
