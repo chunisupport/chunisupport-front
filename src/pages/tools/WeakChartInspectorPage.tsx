@@ -251,9 +251,9 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
             <caption class="sr-only">{WEAK_CHART_INSPECTOR_COPY.tableCaption}</caption>
             <colgroup>
               <col />
-              <col class="w-24" />
-              <col class="w-16" />
-              <col class="w-24" />
+              <col class="w-22" />
+              <col class="w-12" />
+              <col class="w-22" />
             </colgroup>
             <thead class="bg-surface-muted text-left text-text-muted">
               <tr>
@@ -285,7 +285,7 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
                       </A>
                     </td>
                     <td class="px-2 py-1.5 text-center">
-                      <DifficultyBadge difficulty={record.difficulty} compact />
+                      <DifficultyBadge difficulty={record.difficulty} />
                     </td>
                     <td class="px-2 py-1.5 text-center font-jost">{record.const.toFixed(1)}</td>
                     <td class="px-2 py-1.5 text-center font-jost">
