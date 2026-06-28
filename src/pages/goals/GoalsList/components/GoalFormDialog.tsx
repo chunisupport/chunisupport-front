@@ -16,7 +16,6 @@ import {
   SCORE_MIN,
 } from '../../../../constants/chart'
 import type {
-  GoalAchievementParams,
   GoalAchievementType,
   GoalAttributes,
   GoalCreateRequest,
@@ -25,32 +24,38 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../../types/api'
-import {
-  getScoreRank,
-  MAX_SCORE,
-  SCORE_RANK_MIN_SCORES,
-  SCORE_RANKS_ASC,
-  type ScoreRank,
-} from '../../../../utils/scoreRank'
-import { buildGoalTargetParam, type GoalTargetMode } from '../../utils/goalCountTarget'
+import { MAX_SCORE, SCORE_RANK_MIN_SCORES, SCORE_RANKS_ASC } from '../../../../utils/scoreRank'
+import type { GoalTargetMode } from '../../utils/goalCountTarget'
 import { resolveGoalAchievementTypeLabel } from '../../utils/goalForm'
 import {
   COMBO_LAMP_OPTIONS,
   type ComboLampGoalValue,
   HARD_LAMP_OPTIONS,
   type HardLampGoalValue,
-  isComboLampGoalValue,
-  isHardLampGoalValue,
 } from '../../utils/goalLamp'
 import type { GoalProgressResult } from '../../utils/goalProgress'
 import { buildGoalVersionOptions } from '../../utils/goalVersion'
-import {
-  ERROR_MESSAGE_INVALID_COUNT_TARGET,
-  GOAL_TITLE_MAX_LENGTH,
-  LABEL_INVERT_DISPLAY,
-  STEP3_DESCRIPTION,
-} from './constants'
+import { GOAL_TITLE_MAX_LENGTH, LABEL_INVERT_DISPLAY, STEP3_DESCRIPTION } from './constants'
 import { GoalCardProgress } from './GoalCard'
+import {
+  buildAllIdSelections,
+  buildAllVersionSelections,
+  buildGoalFormAchievementParams,
+  buildGoalFormAttributes,
+  canUseDynamicTotalTarget,
+  createGoalFormInitialState,
+  DEFAULT_GOAL_ACHIEVEMENT_TYPE,
+  DEFAULT_RANK_GOAL,
+  type GoalChartTargetMode,
+  type GoalFormAchievementParamsInput,
+  getDefaultTotalGoalValue,
+  getRankGoalScore,
+  isCountAchievementType,
+  type RankGoalValue,
+  THEORETICAL_RANK_GOAL,
+  toggleSelection,
+} from './goalFormModel'
+import { validateGoalForm } from './goalFormValidation'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 
@@ -139,8 +144,6 @@ interface GoalTargetModeRadioGroupProps<TValue extends string> {
   renderOptionContent?: (option: GoalSelectOption<TValue>) => JSX.Element
 }
 
-type RankGoalValue = ScoreRank | 'THEORETICAL'
-
 const GOAL_FILTER_CHECKBOX_CONTROL_CLASS =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
 /**
@@ -216,15 +219,7 @@ const GOAL_ACHIEVEMENT_TYPES = [
   'overpower_percent',
 ] as const satisfies readonly GoalAchievementType[]
 const MAX_OVERPOWER_PERCENT = 100
-const OVERPOWER_TARGET_DECIMAL_PLACES = 3
 const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
-const DEFAULT_GOAL_ACHIEVEMENT_TYPE = 'rank_count' satisfies GoalAchievementType
-const DEFAULT_TOTAL_GOAL_VALUE = '10'
-const DEFAULT_TOTAL_SCORE_GOAL_VALUE = '1000000'
-const DEFAULT_OVERPOWER_VALUE_GOAL_VALUE = '10'
-const DEFAULT_OVERPOWER_PERCENT_GOAL_VALUE = '90'
-const DEFAULT_RANK_GOAL = 'S' satisfies RankGoalValue
-const THEORETICAL_RANK_GOAL = 'THEORETICAL' satisfies RankGoalValue
 const SELECTABLE_SCORE_RANKS_DESC = [...SCORE_RANKS_ASC]
   .filter((scoreRank) => scoreRank !== 'D')
   .reverse()
@@ -239,18 +234,6 @@ const RANK_OPTIONS: GoalSelectOption<RankGoalValue>[] = [
     label: `${scoreRank}（${SCORE_RANK_MIN_SCORES[scoreRank].toLocaleString('ja-JP')}）`,
   })),
 ]
-
-/**
- * 数値が指定した小数桁数以内か判定する。
- *
- * @param value - 判定対象の数値。
- * @param decimalPlaces - 許容する小数桁数。
- * @returns 許容範囲内ならtrue。
- */
-const isWithinDecimalPlaces = (value: number, decimalPlaces: number): boolean => {
-  const scale = 10 ** decimalPlaces
-  return Math.abs(value * scale - Math.round(value * scale)) < Number.EPSILON * scale
-}
 
 /**
  * 数値入力値を指定範囲内に丸めた文字列へ変換する。
@@ -275,24 +258,6 @@ const clampNumericInput = (
   if (parsed > max) return format(max)
   return value
 }
-
-/**
- * ランク目標の選択値を保存用スコアへ変換する。
- *
- * @param value - ランク目標の選択値。
- * @returns APIへ送信するスコア目標値。
- */
-const getRankGoalScore = (value: RankGoalValue): number =>
-  value === THEORETICAL_RANK_GOAL ? MAX_SCORE : SCORE_RANK_MIN_SCORES[value]
-
-/**
- * 保存済みスコアからランク目標の選択値を復元する。
- *
- * @param score - APIから返されたスコア目標値。
- * @returns ダイアログで選択するランク目標値。
- */
-const getRankGoalValue = (score: number): RankGoalValue =>
-  score >= MAX_SCORE ? THEORETICAL_RANK_GOAL : getScoreRank(score)
 
 /**
  * 文字列が目標種別として扱える値か判定する。
@@ -488,144 +453,6 @@ const GoalTargetModeRadioGroup = <TValue extends string>(
   </RadioGroup>
 )
 
-const isCountAchievementType = (type: GoalAchievementType): boolean =>
-  type === 'score_count' ||
-  type === 'rank_count' ||
-  type === 'hardlamp_count' ||
-  type === 'combolamp_count'
-
-/**
- * 成果パラメータから有効な数値を取り出す。
- *
- * @param params - 目標種別ごとの成果パラメータ。
- * @param key - 取り出すパラメータ名。
- * @returns 数値が設定されていればその値、未指定ならundefined。
- */
-const getOptionalNumberParam = (
-  params: GoalDTO['achievement_params'],
-  key: 'count' | 'total' | 'remaining' | 'percent'
-): number | undefined => {
-  const value = (params as Record<string, unknown>)[key]
-  return typeof value === 'number' ? value : undefined
-}
-
-/**
- * 保存済み成果パラメータからフォームの目標値指定方法を解決する。
- *
- * @param params - APIから取得した成果パラメータ。
- * @param absoluteKey - 絶対値指定に使うキー。
- * @returns 保存済みキーに対応する指定方法。
- */
-const resolveGoalTargetMode = (
-  params: GoalDTO['achievement_params'],
-  absoluteKey: 'count' | 'total'
-): GoalTargetMode => {
-  if (getOptionalNumberParam(params, 'remaining') !== undefined) return 'remaining'
-  if (getOptionalNumberParam(params, 'percent') !== undefined) return 'percent'
-  if (getOptionalNumberParam(params, absoluteKey) !== undefined) return 'number'
-  return 'all'
-}
-
-/**
- * 成果種別が動的な合計上限を利用できるか判定する。
- *
- * @param type - 判定対象の成果種別。
- * @returns 動的上限を選択できる成果種別ならtrue。
- */
-const canUseDynamicTotalTarget = (type: GoalAchievementType): boolean =>
-  type === 'total_score' || type === 'overpower_value'
-
-/**
- * 目標種別ごとの目標値入力の初期値を取得する。
- *
- * @param type - 選択された目標種別。
- * @returns 目標値欄に設定する初期値文字列。
- */
-const getDefaultTotalGoalValue = (type: GoalAchievementType): string =>
-  type === 'total_score'
-    ? DEFAULT_TOTAL_SCORE_GOAL_VALUE
-    : type === 'overpower_value'
-      ? DEFAULT_OVERPOWER_VALUE_GOAL_VALUE
-      : type === 'overpower_percent'
-        ? DEFAULT_OVERPOWER_PERCENT_GOAL_VALUE
-        : DEFAULT_TOTAL_GOAL_VALUE
-
-/**
- * API属性に保存された単一IDまたはID配列をフォーム用の文字列配列へ変換する。
- *
- * @param value - API属性に保存されたID指定。
- * @returns フォームのチェック状態として扱う文字列ID配列。
- */
-const normalizeAttributeSelection = (value: number | number[] | undefined): string[] => {
-  if (typeof value === 'number') return [String(value)]
-  if (Array.isArray(value)) {
-    return value
-      .filter((item): item is number => Number.isInteger(item))
-      .map((item) => String(item))
-  }
-  return []
-}
-
-/**
- * フォームの選択値をAPI属性で使う単一IDまたはID配列へ変換する。
- *
- * @param selectedValues - フォーム上で選択されている文字列ID配列。
- * @returns 選択値が1件なら単一数値、それ以外は数値配列。
- */
-const parseAttributeSelection = (selectedValues: string[]): number | number[] => {
-  const normalized = Array.from(new Set(selectedValues))
-    .map((value) => Number(value))
-    .filter((value) => Number.isInteger(value))
-
-  if (normalized.length === 1) return normalized[0]
-  return normalized
-}
-
-/**
- * マスタデータのID一覧をフォーム用の全選択値へ変換する。
- *
- * @param items - IDを持つマスタデータ一覧。
- * @returns 全項目を選択済みにする文字列ID配列。
- */
-const buildAllIdSelections = (items: readonly { id: number }[]): string[] =>
-  items.map((item) => String(item.id))
-
-/**
- * 保存済み属性が未指定の場合だけ、現在の全選択値で補完する。
- *
- * @param value - API属性に保存されたID指定。
- * @param fallbackValues - 属性未指定時に使う全選択値。
- * @returns 編集フォームへ反映する選択値。
- */
-const resolveInitialAttributeSelection = (
-  value: number | number[] | undefined,
-  fallbackValues: string[]
-): string[] => (value === undefined ? fallbackValues : normalizeAttributeSelection(value))
-
-/**
- * バージョン選択肢をフォーム用の全選択値へ変換する。
- *
- * @param options - 目標フォームで表示するバージョン選択肢。
- * @returns 全バージョンを選択済みにする値配列。
- */
-const buildAllVersionSelections = (options: readonly GoalSelectOption<string>[]): string[] =>
-  options.map((option) => option.value)
-
-/**
- * チェックボックスの選択状態を更新する。
- *
- * @param current - 現在の選択値一覧。
- * @param value - 操作対象の選択値。
- * @param checked - チェック後の状態。
- * @returns 更新後の選択値一覧。
- */
-const toggleSelection = (current: string[], value: string, checked: boolean): string[] => {
-  if (checked) {
-    return current.includes(value) ? current : [...current, value]
-  }
-  return current.filter((item) => item !== value)
-}
-
 /**
  * 目標の作成・編集に使う入力ダイアログを表示する。
  *
@@ -647,7 +474,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [comboLamp, setComboLamp] = createSignal<ComboLampGoalValue>('FC')
   const [invert, setInvert] = createSignal(false)
 
-  const [chartTargetMode, setChartTargetMode] = createSignal<'normal' | 'op_target'>('normal')
+  const [chartTargetMode, setChartTargetMode] = createSignal<GoalChartTargetMode>('normal')
   const [diffs, setDiffs] = createSignal<string[]>([])
   const [constMin, setConstMin] = createSignal('')
   const [constMax, setConstMax] = createSignal('')
@@ -781,91 +608,59 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     if (!props.open) return
     setErrorMessage('')
 
-    const goal = props.initialGoal
-    if (!goal) {
-      setTitle('')
-      setAchievementType(DEFAULT_GOAL_ACHIEVEMENT_TYPE)
-      setScore(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
-      setRank(DEFAULT_RANK_GOAL)
-      setCount('1')
-      setCountMode('all')
-      setTotal(getDefaultTotalGoalValue(DEFAULT_GOAL_ACHIEVEMENT_TYPE))
-      setTotalMode('number')
-      setHardLamp('HRD')
-      setComboLamp('FC')
-      setInvert(false)
-      setChartTargetMode('normal')
-      setDiffs(allDifficultySelections())
-      setConstMin(String(CHART_CONST_MIN))
-      setConstMax(String(CHART_CONST_MAX))
-      setGenres(allGenreSelections())
-      setVersions(allVersionSelections())
-      return
-    }
+    const nextState = createGoalFormInitialState(props.initialGoal, {
+      allDifficultySelections: allDifficultySelections(),
+      allGenreSelections: allGenreSelections(),
+      allVersionSelections: allVersionSelections(),
+    })
 
-    setTitle(goal.title)
-    setAchievementType(goal.achievement_type)
-    if ('score' in goal.achievement_params) {
-      setScore(String(goal.achievement_params.score))
-      if (goal.achievement_type === 'rank_count') {
-        setRank(getRankGoalValue(goal.achievement_params.score))
-      }
-    }
-    const rawCount = getOptionalNumberParam(goal.achievement_params, 'count')
-    const rawRemaining = getOptionalNumberParam(goal.achievement_params, 'remaining')
-    const rawPercent = getOptionalNumberParam(goal.achievement_params, 'percent')
-    const countTargetValue = rawCount ?? rawRemaining ?? rawPercent
-    if (typeof countTargetValue === 'number') setCount(String(countTargetValue))
-    const rawTotal = getOptionalNumberParam(goal.achievement_params, 'total')
-    const totalTargetValue = rawTotal ?? rawRemaining ?? rawPercent
-    if (typeof totalTargetValue === 'number') setTotal(String(totalTargetValue))
-    if ('lamp' in goal.achievement_params && isHardLampGoalValue(goal.achievement_params.lamp)) {
-      setHardLamp(goal.achievement_params.lamp)
-    }
-    if ('lamp' in goal.achievement_params && isComboLampGoalValue(goal.achievement_params.lamp)) {
-      setComboLamp(goal.achievement_params.lamp)
-    }
-    setInvert(goal.invert)
-    setChartTargetMode(goal.attributes.chart_target === 'OP_TARGET' ? 'op_target' : 'normal')
-    setDiffs(resolveInitialAttributeSelection(goal.attributes.diff, allDifficultySelections()))
-    setConstMin(
-      typeof goal.attributes.const?.min === 'number'
-        ? String(goal.attributes.const.min)
-        : String(CHART_CONST_MIN)
-    )
-    setConstMax(
-      typeof goal.attributes.const?.max === 'number'
-        ? String(goal.attributes.const.max)
-        : String(CHART_CONST_MAX)
-    )
-    setGenres(resolveInitialAttributeSelection(goal.attributes.genre, allGenreSelections()))
-    setVersions(resolveInitialAttributeSelection(goal.attributes.ver, allVersionSelections()))
-
-    if (isCountAchievementType(goal.achievement_type)) {
-      setCountMode(resolveGoalTargetMode(goal.achievement_params, 'count'))
-    } else {
-      setCountMode('number')
-    }
-    setTotalMode(
-      canUseDynamicTotalTarget(goal.achievement_type)
-        ? resolveGoalTargetMode(goal.achievement_params, 'total')
-        : 'number'
-    )
+    setTitle(nextState.title)
+    setAchievementType(nextState.achievementType)
+    setScore(nextState.score)
+    setRank(nextState.rank)
+    setCount(nextState.count)
+    setCountMode(nextState.countMode)
+    setTotal(nextState.total)
+    setTotalMode(nextState.totalMode)
+    setHardLamp(nextState.hardLamp)
+    setComboLamp(nextState.comboLamp)
+    setInvert(nextState.invert)
+    setChartTargetMode(nextState.chartTargetMode)
+    setDiffs(nextState.diffs)
+    setConstMin(nextState.constMin)
+    setConstMax(nextState.constMax)
+    setGenres(nextState.genres)
+    setVersions(nextState.versions)
   })
 
-  const getDraftAttributes = (): GoalRequest['attributes'] => ({
-    ...(chartTargetMode() === 'op_target' ? { chart_target: 'OP_TARGET' as const } : {}),
-    ...(chartTargetMode() === 'normal' ? { diff: parseAttributeSelection(diffs()) } : {}),
-    ...(constMin() || constMax()
-      ? {
-          const: {
-            ...(constMin() ? { min: Number(constMin()) } : {}),
-            ...(constMax() ? { max: Number(constMax()) } : {}),
-          },
-        }
-      : {}),
-    genre: parseAttributeSelection(genres()),
-    ver: parseAttributeSelection(versions()),
+  const getDraftAttributes = (): GoalRequest['attributes'] =>
+    buildGoalFormAttributes({
+      chartTargetMode: chartTargetMode(),
+      diffs: diffs(),
+      constMin: constMin(),
+      constMax: constMax(),
+      genres: genres(),
+      versions: versions(),
+    })
+
+  /**
+   * 現在のフォーム入力値から成果パラメータ作成用の入力値を集める。
+   *
+   * @param type - 現在選択中の目標種別。
+   * @returns 成果パラメータ作成関数へ渡すフォーム値。
+   */
+  const getAchievementParamsInput = (
+    type: GoalAchievementType
+  ): GoalFormAchievementParamsInput => ({
+    achievementType: type,
+    score: score(),
+    rank: rank(),
+    count: count(),
+    countMode: countMode(),
+    total: total(),
+    totalMode: totalMode(),
+    hardLamp: hardLamp(),
+    comboLamp: comboLamp(),
   })
 
   /**
@@ -874,32 +669,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @param type - 現在選択中の目標種別。
    * @returns API送信値と同じ形の成果パラメータ。
    */
-  const buildDraftAchievementParams = (type: GoalAchievementType): GoalAchievementParams => {
-    const parsedScore = type === 'rank_count' ? getRankGoalScore(rank()) : Number(score())
-    const targetCountParam = buildGoalTargetParam(countMode(), count(), 'count')
-    const targetTotalParam = buildGoalTargetParam(totalMode(), total(), 'total')
-
-    return type === 'score_count' || type === 'rank_count'
-      ? {
-          score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : 0),
-          ...targetCountParam,
-        }
-      : type === 'avg_score'
-        ? { score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : 0) }
-        : type === 'hardlamp_count'
-          ? {
-              lamp: hardLamp(),
-              ...targetCountParam,
-            }
-          : type === 'combolamp_count'
-            ? {
-                lamp: comboLamp(),
-                ...targetCountParam,
-              }
-            : canUseDynamicTotalTarget(type)
-              ? targetTotalParam
-              : { total: Number.isFinite(Number(total())) ? Number(total()) : 0 }
-  }
+  const buildDraftAchievementParams = (type: GoalAchievementType) =>
+    buildGoalFormAchievementParams(getAchievementParamsInput(type))
 
   /**
    * 現在の対象譜面条件に一致する件数を表示用テキストへ変換する。
@@ -985,142 +756,26 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const handleSave = async () => {
     setErrorMessage('')
     const trimmed = title().trim()
-    if (!trimmed) {
-      setErrorMessage('タイトルを入力してください。')
-      return
-    }
-    if (trimmed.length > GOAL_TITLE_MAX_LENGTH) {
-      setErrorMessage(`タイトルは${GOAL_TITLE_MAX_LENGTH}文字以内で入力してください。`)
-      return
-    }
-
     const currentType = achievementType()
-    const parsedScore = currentType === 'rank_count' ? getRankGoalScore(rank()) : Number(score())
-    const parsedCount = Number(count())
-    const parsedTotal =
-      canUseDynamicTotalTarget(currentType) && totalMode() === 'all'
-        ? getTheoreticalTotal(currentType)
-        : Number(total())
-    const parsedConstMin = constMin() === '' ? undefined : Number(constMin())
-    const parsedConstMax = constMax() === '' ? undefined : Number(constMax())
-
-    if (
-      (currentType === 'score_count' ||
-        currentType === 'rank_count' ||
-        currentType === 'avg_score') &&
-      (!Number.isFinite(parsedScore) || parsedScore < SCORE_MIN || parsedScore > MAX_SCORE)
-    ) {
-      setErrorMessage('スコアは 0 ～ 1,010,000 の範囲で入力してください。')
-      return
-    }
-
-    const isCountType = isCountAchievementType(currentType)
-
     const attributes = getDraftAttributes()
-
     const allCount = props.resolveAllCount(attributes)
+    const validationError = validateGoalForm({
+      title: title(),
+      achievementType: currentType,
+      score: score(),
+      rank: rank(),
+      count: count(),
+      countMode: countMode(),
+      total: total(),
+      totalMode: totalMode(),
+      constMin: constMin(),
+      constMax: constMax(),
+      allCount,
+      theoreticalTotal: getTheoreticalTotal(currentType),
+    })
 
-    if (isCountType && countMode() !== 'all') {
-      const countMin = countMode() === 'number' ? 1 : 0
-      const requiresInteger = countMode() !== 'percent'
-      if (
-        !Number.isFinite(parsedCount) ||
-        (requiresInteger && !Number.isInteger(parsedCount)) ||
-        parsedCount < countMin
-      ) {
-        const inputLabel = countMode() === 'percent' ? '割合' : '件数'
-        setErrorMessage(
-          `${inputLabel}は${countMin}以上の${requiresInteger ? '整数' : '数値'}で入力してください。`
-        )
-        return
-      }
-      const countMax = countMode() === 'percent' ? MAX_OVERPOWER_PERCENT : allCount
-      if (parsedCount > countMax) {
-        const unit = countMode() === 'percent' ? '%' : '件'
-        setErrorMessage(
-          `${countMode() === 'percent' ? '割合' : '件数'}は${countMax.toLocaleString('ja-JP')}${unit}以内で入力してください。`
-        )
-        return
-      }
-    }
-
-    if (isCountType && countMode() === 'all' && allCount <= 0) {
-      setErrorMessage('条件に当てはまる譜面がありません。条件を見直してください。')
-      return
-    }
-
-    if (canUseDynamicTotalTarget(currentType) && totalMode() === 'all' && allCount <= 0) {
-      setErrorMessage('条件に当てはまる譜面がありません。条件を見直してください。')
-      return
-    }
-
-    if (
-      (currentType === 'overpower_percent' ||
-        (canUseDynamicTotalTarget(currentType) && totalMode() !== 'all')) &&
-      (!Number.isFinite(parsedTotal) || parsedTotal < 0)
-    ) {
-      setErrorMessage('合計/割合の目標値は0以上で入力してください。')
-      return
-    }
-
-    if (currentType === 'overpower_percent' && parsedTotal > MAX_OVERPOWER_PERCENT) {
-      setErrorMessage('OVER POWER達成率は100%以下で入力してください。')
-      return
-    }
-
-    if (
-      currentType === 'total_score' &&
-      (totalMode() === 'number' || totalMode() === 'remaining') &&
-      !Number.isInteger(parsedTotal)
-    ) {
-      setErrorMessage('総スコアの目標値と残数は整数で入力してください。')
-      return
-    }
-
-    if (
-      currentType === 'overpower_value' &&
-      totalMode() !== 'all' &&
-      !isWithinDecimalPlaces(parsedTotal, OVERPOWER_TARGET_DECIMAL_PLACES)
-    ) {
-      setErrorMessage(
-        `OVER POWERの目標値・残数・割合は小数第${OVERPOWER_TARGET_DECIMAL_PLACES}位以内で入力してください。`
-      )
-      return
-    }
-
-    const dynamicTotalMax = canUseDynamicTotalTarget(currentType)
-      ? totalMode() === 'percent'
-        ? MAX_OVERPOWER_PERCENT
-        : totalMode() === 'all'
-          ? undefined
-          : getTheoreticalTotal(currentType)
-      : undefined
-    if (dynamicTotalMax !== undefined && parsedTotal > dynamicTotalMax) {
-      const targetLabel = currentType === 'total_score' ? '総スコア目標' : 'OVER POWER合計目標'
-      setErrorMessage(
-        `${targetLabel}は最大 ${dynamicTotalMax.toLocaleString('ja-JP')} 以下で入力してください。`
-      )
-      return
-    }
-
-    if (
-      (typeof parsedConstMin === 'number' && !Number.isFinite(parsedConstMin)) ||
-      (typeof parsedConstMax === 'number' && !Number.isFinite(parsedConstMax))
-    ) {
-      setErrorMessage('定数範囲が不正です。')
-      return
-    }
-    if (
-      typeof parsedConstMin === 'number' &&
-      typeof parsedConstMax === 'number' &&
-      parsedConstMin > parsedConstMax
-    ) {
-      setErrorMessage('定数の最小値は最大値以下にしてください。')
-      return
-    }
-
-    if (isCountType && countMode() === 'number' && parsedCount <= 0) {
-      setErrorMessage(ERROR_MESSAGE_INVALID_COUNT_TARGET)
+    if (validationError) {
+      setErrorMessage(validationError)
       return
     }
 
