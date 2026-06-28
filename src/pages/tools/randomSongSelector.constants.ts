@@ -1,17 +1,6 @@
 import type { PlayerDataDifficulty } from '../../types/api'
 
 /**
- * ランダム選曲ツールで選択できる通常譜面難易度。
- */
-export const RANDOM_SONG_SELECTOR_DIFFICULTIES: PlayerDataDifficulty[] = [
-  'BASIC',
-  'ADVANCED',
-  'EXPERT',
-  'MASTER',
-  'ULTIMA',
-]
-
-/**
  * ランダム選曲ツールの初期値。
  */
 export const RANDOM_SONG_SELECTOR_DEFAULTS = {
@@ -56,6 +45,7 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   maxScoreLabel: 'スコア 上限',
   bestFrameLabel: 'ベスト枠',
   recordUnavailableMessage: 'ログイン時のみ利用できます。',
+  recordFetchErrorMessage: 'レコード情報を取得できませんでした。',
   drawButtonLabel: '選曲',
   resetButtonLabel: '条件を初期化',
   resetConfirmTitle: '条件を初期化しますか？',

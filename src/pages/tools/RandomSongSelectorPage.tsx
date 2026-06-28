@@ -29,14 +29,22 @@ import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import {
   buildRandomSongCandidates,
+  createRandomSongCandidateKey,
   createRandomSongChartKey,
   createRandomSongRecordMap,
   drawRandomSongs,
   filterRandomSongCandidates,
   filterRandomSongCandidatesByRecord,
+  hasInvalidRandomSongWeightValue,
+  parseOptionalRandomSongDecimal,
+  parseRandomSongDrawCount,
+  parseRandomSongWeightValues,
+  RANDOM_SONG_SELECTOR_DIFFICULTIES,
   type RandomSongCandidate,
   type RandomSongLampFilter,
   resolveRandomSongRecordLamp,
+  restoreRandomSongResults,
+  toggleRandomSongSelectionValue,
 } from '../../utils/randomSongSelector'
 import { getScoreRank } from '../../utils/scoreRank'
 import { SCORE_RANK_TEXT_CLASS } from '../users/components/recordStyleClasses'
@@ -47,7 +55,6 @@ import {
   RANDOM_SONG_SELECTOR_COPY,
   RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES,
   RANDOM_SONG_SELECTOR_DEFAULTS,
-  RANDOM_SONG_SELECTOR_DIFFICULTIES,
 } from './randomSongSelector.constants'
 
 const FIELD_INPUT_CLASS =
@@ -107,19 +114,25 @@ type RandomSongSelectOption<T extends string> = {
   label: string
 }
 
-type MyRandomSongRecordData = {
-  records: PlayerRecordDTO[]
-  bestRecords: PlayerRecordDTO[]
-}
+type MyRandomSongRecordData =
+  | {
+      status: 'available'
+      records: PlayerRecordDTO[]
+      bestRecords: PlayerRecordDTO[]
+    }
+  | {
+      status: 'unauthenticated'
+    }
+  | {
+      status: 'error'
+    }
 
-/**
- * ランダム選曲候補の譜面単位キーを生成する。
- *
- * @param candidate - 選曲候補。
- * @returns 楽曲IDと難易度からなる譜面単位キー。
- */
-const createRandomSongCandidateKey = (candidate: RandomSongCandidate): string =>
-  createRandomSongChartKey(candidate.song.id, candidate.difficulty)
+const UNAUTHENTICATED_ERROR_CODES = new Set([
+  'missing_token',
+  'unauthorized',
+  'invalid_token',
+  'token_expired',
+])
 
 /**
  * sessionStorage から保存済みの選曲結果キーを読み取る。
@@ -156,27 +169,6 @@ const writeStoredRandomSongResults = (results: readonly RandomSongCandidate[]): 
     RANDOM_SONG_RESULTS_STORAGE_KEY,
     JSON.stringify(results.map(createRandomSongCandidateKey))
   )
-}
-
-/**
- * 保存済みキーから選曲結果を復元する。
- *
- * @param candidates - 復元元になる現在の候補一覧。
- * @param keys - 保存済みの譜面単位キー。
- * @returns 現在の候補一覧に存在する選曲結果。
- */
-const restoreRandomSongResults = (
-  candidates: readonly RandomSongCandidate[],
-  keys: readonly string[]
-): RandomSongCandidate[] => {
-  const candidateByKey = new Map(
-    candidates.map((candidate) => [createRandomSongCandidateKey(candidate), candidate])
-  )
-
-  return keys.flatMap((key) => {
-    const candidate = candidateByKey.get(key)
-    return candidate ? [candidate] : []
-  })
 }
 
 /**
@@ -301,70 +293,26 @@ const RandomSongCheckbox: Component<{
 )
 
 /**
- * 入力文字列を任意の数値へ変換する。
+ * APIエラーが未認証によるものか判定する。
  *
- * @param value - 入力欄の値。
- * @returns 空欄なら null、それ以外は数値。
+ * @param error - 取得処理で発生したエラー。
+ * @returns 未認証エラーの場合は true。
  */
-const parseOptionalDecimal = (value: string): number | null => {
-  const trimmed = value.trim()
-  return trimmed === '' ? null : Number(trimmed.replace(',', '.'))
-}
+const isUnauthenticatedRandomSongRecordError = (error: unknown): boolean => {
+  if (typeof error !== 'object' || error === null) return false
 
-/**
- * 入力文字列を選曲数へ変換する。
- *
- * @param value - 曲数入力欄の値。
- * @returns 有効な選曲数。無効値の場合は null。
- */
-const parseDrawCount = (value: string): number | null => {
-  const parsed = Number(value)
-  if (!Number.isInteger(parsed) || parsed < 1) return null
-  return parsed
-}
+  const apiError = error as { status?: number; code?: string }
+  if (apiError.status === 401) return true
 
-/**
- * 重み入力値を抽選用の数値へ変換する。
- *
- * @param value - 重み入力欄の値。
- * @returns 有効な重み。無効値の場合は null。
- */
-const parseWeightValue = (value: string): number | null => {
-  const parsed = Number(value.trim().replace(',', '.'))
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+  return typeof apiError.code === 'string' && UNAUTHENTICATED_ERROR_CODES.has(apiError.code)
 }
-
-/**
- * 重み入力Mapを抽選ロジック用の数値Mapへ変換する。
- *
- * @param values - 選択肢ごとの重み入力値。
- * @returns 数値化された重みMap。
- */
-const parseWeightValues = <T extends string>(
-  values: Partial<Record<T, string>>
-): Partial<Record<T, number>> => {
-  const parsedEntries = Object.entries(values).flatMap(([key, value]) => {
-    const parsed = parseWeightValue(value)
-    return parsed === null ? [] : [[key, parsed]]
-  })
-  return Object.fromEntries(parsedEntries) as Partial<Record<T, number>>
-}
-
-/**
- * 重み入力Mapに無効値が含まれているか判定する。
- *
- * @param values - 選択肢ごとの重み入力値。
- * @returns 無効な重みが含まれている場合は true。
- */
-const hasInvalidWeightValue = <T extends string>(values: Partial<Record<T, string>>): boolean =>
-  Object.values(values).some((value) => parseWeightValue(String(value)) === null)
 
 /**
  * ログイン中ユーザーのレコード情報を取得する。
  *
- * @returns 取得できたレコード情報。未ログインや取得失敗時は null。
+ * @returns 取得できたレコード情報、または取得できなかった理由。
  */
-const fetchMyRandomSongRecordData = async (): Promise<MyRandomSongRecordData | null> => {
+const fetchMyRandomSongRecordData = async (): Promise<MyRandomSongRecordData> => {
   try {
     const me = await fetchMe({ redirectOnUnauthorized: false })
     const [rating, records] = await Promise.all([
@@ -373,23 +321,16 @@ const fetchMyRandomSongRecordData = async (): Promise<MyRandomSongRecordData | n
     ])
 
     return {
+      status: 'available',
       records: records.standard,
       bestRecords: rating.best,
     }
-  } catch {
-    return null
+  } catch (error) {
+    return isUnauthenticatedRandomSongRecordError(error)
+      ? { status: 'unauthenticated' }
+      : { status: 'error' }
   }
 }
-
-/**
- * 配列内の値を選択状態として切り替える。
- *
- * @param values - 現在の選択値。
- * @param value - 切り替える値。
- * @returns 切り替え後の選択値。
- */
-const toggleSelectionValue = <T,>(values: readonly T[], value: T): T[] =>
-  values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
 
 /**
  * レコード表示用に代表ランプのラベルを返す。
@@ -566,18 +507,22 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const versionOptions = createMemo(() => [
     ...new Set(allCandidates().map((candidate) => candidate.version)),
   ])
-  const parsedMinConst = createMemo(() => parseOptionalDecimal(minConst()))
-  const parsedMaxConst = createMemo(() => parseOptionalDecimal(maxConst()))
-  const parsedMinScore = createMemo(() => parseOptionalDecimal(minScore()))
-  const parsedMaxScore = createMemo(() => parseOptionalDecimal(maxScore()))
-  const parsedCount = createMemo(() => parseDrawCount(count()))
+  const parsedMinConst = createMemo(() => parseOptionalRandomSongDecimal(minConst()))
+  const parsedMaxConst = createMemo(() => parseOptionalRandomSongDecimal(maxConst()))
+  const parsedMinScore = createMemo(() => parseOptionalRandomSongDecimal(minScore()))
+  const parsedMaxScore = createMemo(() => parseOptionalRandomSongDecimal(maxScore()))
+  const parsedCount = createMemo(() => parseRandomSongDrawCount(count()))
+  const availableMyRecordData = createMemo(() => {
+    const data = myRecordData()
+    return data?.status === 'available' ? data : null
+  })
   const recordsByChartKey = createMemo(() =>
-    createRandomSongRecordMap(myRecordData()?.records ?? [])
+    createRandomSongRecordMap(availableMyRecordData()?.records ?? [])
   )
   const bestChartKeys = createMemo(
-    () => new Set(createRandomSongRecordMap(myRecordData()?.bestRecords ?? []).keys())
+    () => new Set(createRandomSongRecordMap(availableMyRecordData()?.bestRecords ?? []).keys())
   )
-  const hasMyRecordData = createMemo(() => myRecordData() !== null && myRecordData() !== undefined)
+  const hasMyRecordData = createMemo(() => availableMyRecordData() !== null)
   const selectedDifficultyWeightOptions = createMemo(() =>
     RANDOM_SONG_SELECTOR_DIFFICULTIES.filter((difficulty) =>
       selectedDifficulties().includes(difficulty)
@@ -662,8 +607,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
   )
   const hasInvalidWeights = createMemo(
     () =>
-      hasInvalidWeightValue(selectedDifficultyWeights()) ||
-      hasInvalidWeightValue(selectedConstWeights())
+      hasInvalidRandomSongWeightValue(selectedDifficultyWeights()) ||
+      hasInvalidRandomSongWeightValue(selectedConstWeights())
   )
   const validationMessage = createMemo(() => {
     if (parsedCount() === null) return RANDOM_SONG_SELECTOR_COPY.invalidCountMessage
@@ -675,8 +620,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
   })
 
   const randomSongWeight = createMemo(() => ({
-    difficultyWeights: parseWeightValues(selectedDifficultyWeights()),
-    constWeights: parseWeightValues(selectedConstWeights()),
+    difficultyWeights: parseRandomSongWeightValues(selectedDifficultyWeights()),
+    constWeights: parseRandomSongWeightValues(selectedConstWeights()),
   }))
 
   createEffect(() => {
@@ -869,7 +814,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       selected={selectedDifficulties()}
                       placeholder={RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
                       onToggle={(difficulty) =>
-                        setSelectedDifficulties((prev) => toggleSelectionValue(prev, difficulty))
+                        setSelectedDifficulties((prev) =>
+                          toggleRandomSongSelectionValue(prev, difficulty)
+                        )
                       }
                       onSelectAll={() =>
                         setSelectedDifficulties([...RANDOM_SONG_SELECTOR_DIFFICULTIES])
@@ -886,7 +833,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       selected={selectedGenres()}
                       placeholder={RANDOM_SONG_SELECTOR_COPY.genreLabel}
                       onToggle={(genre) =>
-                        setSelectedGenres((prev) => toggleSelectionValue(prev, genre))
+                        setSelectedGenres((prev) => toggleRandomSongSelectionValue(prev, genre))
                       }
                       onSelectAll={() => setSelectedGenres(genreOptions())}
                       onClear={() => setSelectedGenres([])}
@@ -901,7 +848,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       selected={selectedVersions()}
                       placeholder={RANDOM_SONG_SELECTOR_COPY.versionLabel}
                       onToggle={(version) =>
-                        setSelectedVersions((prev) => toggleSelectionValue(prev, version))
+                        setSelectedVersions((prev) => toggleRandomSongSelectionValue(prev, version))
                       }
                       onSelectAll={() => setSelectedVersions(versionOptions())}
                       onClear={() => setSelectedVersions([])}
@@ -994,16 +941,23 @@ const RandomSongSelectorPage = (): JSX.Element => {
                               formatLabel={formatRandomSongRecordLampLabel}
                               disabled={!hasMyRecordData()}
                               onToggle={(lamp) =>
-                                setSelectedLamps((prev) => toggleSelectionValue(prev, lamp))
+                                setSelectedLamps((prev) =>
+                                  toggleRandomSongSelectionValue(prev, lamp)
+                                )
                               }
                               onSelectAll={() => setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])}
                               onClear={() => setSelectedLamps([])}
                             />
                           </div>
                         </div>
-                        <Show when={!hasMyRecordData()}>
+                        <Show when={myRecordData()?.status === 'unauthenticated'}>
                           <p class="text-xs text-text-muted">
                             {RANDOM_SONG_SELECTOR_COPY.recordUnavailableMessage}
+                          </p>
+                        </Show>
+                        <Show when={myRecordData()?.status === 'error'}>
+                          <p class="text-xs text-danger">
+                            {RANDOM_SONG_SELECTOR_COPY.recordFetchErrorMessage}
                           </p>
                         </Show>
                       </section>

@@ -1,6 +1,17 @@
 import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter'
 
+/**
+ * ランダム選曲ツールで扱う通常譜面難易度。
+ */
+export const RANDOM_SONG_SELECTOR_DIFFICULTIES: PlayerDataDifficulty[] = [
+  'BASIC',
+  'ADVANCED',
+  'EXPERT',
+  'MASTER',
+  'ULTIMA',
+]
+
 export type RandomSongCandidate = {
   song: SongDTO
   difficulty: PlayerDataDifficulty
@@ -47,14 +58,6 @@ export type RandomSongRecordFilter = {
   lamps: readonly RandomSongLampFilter[]
 }
 
-const RANDOM_SELECTOR_DIFFICULTIES: PlayerDataDifficulty[] = [
-  'BASIC',
-  'ADVANCED',
-  'EXPERT',
-  'MASTER',
-  'ULTIMA',
-]
-
 /**
  * 楽曲IDと難易度から譜面単位のキーを生成する。
  *
@@ -66,6 +69,107 @@ export const createRandomSongChartKey = (
   songId: string,
   difficulty: PlayerDataDifficulty
 ): string => `${songId}:${difficulty}`
+
+/**
+ * ランダム選曲候補の譜面単位キーを生成する。
+ *
+ * @param candidate - 選曲候補。
+ * @returns 楽曲IDと難易度からなる譜面単位キー。
+ */
+export const createRandomSongCandidateKey = (candidate: RandomSongCandidate): string =>
+  createRandomSongChartKey(candidate.song.id, candidate.difficulty)
+
+/**
+ * 入力文字列を任意の数値へ変換する。
+ *
+ * @param value - 入力欄の値。
+ * @returns 空欄なら null、それ以外は数値。
+ */
+export const parseOptionalRandomSongDecimal = (value: string): number | null => {
+  const trimmed = value.trim()
+  return trimmed === '' ? null : Number(trimmed.replace(',', '.'))
+}
+
+/**
+ * 入力文字列を選曲数へ変換する。
+ *
+ * @param value - 曲数入力欄の値。
+ * @returns 有効な選曲数。無効値の場合は null。
+ */
+export const parseRandomSongDrawCount = (value: string): number | null => {
+  const parsed = Number(value)
+  if (!Number.isInteger(parsed) || parsed < 1) return null
+  return parsed
+}
+
+/**
+ * 倍率入力値を抽選用の数値へ変換する。
+ *
+ * @param value - 倍率入力欄の値。
+ * @returns 有効な倍率。無効値の場合は null。
+ */
+export const parseRandomSongWeightValue = (value: string): number | null => {
+  const parsed = Number(value.trim().replace(',', '.'))
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+}
+
+/**
+ * 倍率入力Mapを抽選ロジック用の数値Mapへ変換する。
+ *
+ * @param values - 選択肢ごとの倍率入力値。
+ * @returns 数値化された倍率Map。
+ */
+export const parseRandomSongWeightValues = <T extends string>(
+  values: Partial<Record<T, string>>
+): Partial<Record<T, number>> => {
+  const parsedEntries = Object.entries(values).flatMap(([key, value]) => {
+    const parsed = parseRandomSongWeightValue(value)
+    return parsed === null ? [] : [[key, parsed]]
+  })
+  return Object.fromEntries(parsedEntries) as Partial<Record<T, number>>
+}
+
+/**
+ * 倍率入力Mapに無効値が含まれているか判定する。
+ *
+ * @param values - 選択肢ごとの倍率入力値。
+ * @returns 無効な倍率が含まれている場合は true。
+ */
+export const hasInvalidRandomSongWeightValue = <T extends string>(
+  values: Partial<Record<T, string>>
+): boolean =>
+  Object.values(values).some((value) => parseRandomSongWeightValue(String(value)) === null)
+
+/**
+ * 配列内の値を選択状態として切り替える。
+ *
+ * @param values - 現在の選択値。
+ * @param value - 切り替える値。
+ * @returns 切り替え後の選択値。
+ */
+export const toggleRandomSongSelectionValue = <T>(values: readonly T[], value: T): T[] =>
+  values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
+
+/**
+ * 保存済みキーから選曲結果を復元する。
+ *
+ * @param candidates - 復元元になる現在の候補一覧。
+ * @param keys - 保存済みの譜面単位キー。
+ * @returns 現在の候補一覧に存在する選曲結果。
+ */
+export const restoreRandomSongResults = (
+  candidates: readonly RandomSongCandidate[],
+  keys: readonly string[]
+): RandomSongCandidate[] => {
+  const candidateByKey = new Map(
+    candidates.map((candidate) => [createRandomSongCandidateKey(candidate), candidate])
+  )
+
+  return keys.flatMap((key) => {
+    const candidate = candidateByKey.get(key)
+    return candidate ? [candidate] : []
+  })
+}
 
 /**
  * 譜面定数から表示レベルを生成する。
@@ -123,7 +227,7 @@ export const buildRandomSongCandidates = (
   for (const song of songs) {
     const version = getShortVersionName(resolveVersionNameByReleaseDate(song.release, versions))
 
-    for (const difficulty of RANDOM_SELECTOR_DIFFICULTIES) {
+    for (const difficulty of RANDOM_SONG_SELECTOR_DIFFICULTIES) {
       const chart = song.charts[difficulty]
       if (!chart) continue
 
