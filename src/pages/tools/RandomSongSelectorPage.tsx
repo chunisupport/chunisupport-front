@@ -71,6 +71,7 @@ const RESULT_RECORD_LAMP_BADGE_CLASS: Record<RandomSongLampFilter, string> = {
 }
 const RESULT_RECORD_SCORE_BADGE_CLASS = `${RESULT_RECORD_BADGE_CLASS} bg-surface-muted text-text`
 const RANDOM_SONG_LAMP_VALUES = RANDOM_SONG_LAMP_OPTIONS.map((option) => option.value)
+const RANDOM_SONG_RESULTS_STORAGE_KEY = 'chunisupport:random-song-selector:results'
 
 type RandomSongTextFieldProps = {
   id: string
@@ -109,6 +110,73 @@ type RandomSongSelectOption<T extends string> = {
 type MyRandomSongRecordData = {
   records: PlayerRecordDTO[]
   bestRecords: PlayerRecordDTO[]
+}
+
+/**
+ * ランダム選曲候補の譜面単位キーを生成する。
+ *
+ * @param candidate - 選曲候補。
+ * @returns 楽曲IDと難易度からなる譜面単位キー。
+ */
+const createRandomSongCandidateKey = (candidate: RandomSongCandidate): string =>
+  createRandomSongChartKey(candidate.song.id, candidate.difficulty)
+
+/**
+ * sessionStorage から保存済みの選曲結果キーを読み取る。
+ *
+ * @returns 保存されている譜面単位キー。存在しない場合は空配列。
+ */
+const readStoredRandomSongResultKeys = (): string[] => {
+  try {
+    const rawValue = sessionStorage.getItem(RANDOM_SONG_RESULTS_STORAGE_KEY)
+    if (!rawValue) return []
+
+    const parsed = JSON.parse(rawValue)
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === 'string')
+      : []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * 選曲結果を sessionStorage に保存する。
+ *
+ * @param results - 保存する選曲結果。
+ * @returns なし。
+ */
+const writeStoredRandomSongResults = (results: readonly RandomSongCandidate[]): void => {
+  if (results.length === 0) {
+    sessionStorage.removeItem(RANDOM_SONG_RESULTS_STORAGE_KEY)
+    return
+  }
+
+  sessionStorage.setItem(
+    RANDOM_SONG_RESULTS_STORAGE_KEY,
+    JSON.stringify(results.map(createRandomSongCandidateKey))
+  )
+}
+
+/**
+ * 保存済みキーから選曲結果を復元する。
+ *
+ * @param candidates - 復元元になる現在の候補一覧。
+ * @param keys - 保存済みの譜面単位キー。
+ * @returns 現在の候補一覧に存在する選曲結果。
+ */
+const restoreRandomSongResults = (
+  candidates: readonly RandomSongCandidate[],
+  keys: readonly string[]
+): RandomSongCandidate[] => {
+  const candidateByKey = new Map(
+    candidates.map((candidate) => [createRandomSongCandidateKey(candidate), candidate])
+  )
+
+  return keys.flatMap((key) => {
+    const candidate = candidateByKey.get(key)
+    return candidate ? [candidate] : []
+  })
 }
 
 /**
@@ -470,7 +538,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
     ULTIMA: RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
   })
   const [constWeights, setConstWeights] = createSignal<Record<string, string>>({})
+  const [constWeightEnabled, setConstWeightEnabled] = createSignal<Record<string, boolean>>({})
   const [filterInitialized, setFilterInitialized] = createSignal(false)
+  const [resultsRestored, setResultsRestored] = createSignal(false)
   const [results, setResults] = createSignal<RandomSongCandidate[]>([])
 
   useDocumentTitle(RANDOM_SONG_SELECTOR_COPY.title)
@@ -584,7 +654,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
       Object.fromEntries(
         constWeightOptions().map((chartConst) => [
           chartConst,
-          constWeights()[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
+          constWeightEnabled()[chartConst] === false
+            ? '0'
+            : (constWeights()[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight),
         ])
       ) as Partial<Record<string, string>>
   )
@@ -633,6 +705,27 @@ const RandomSongSelectorPage = (): JSX.Element => {
         ])
       )
     )
+    setConstWeightEnabled((prev) =>
+      Object.fromEntries(options.map((chartConst) => [chartConst, prev[chartConst] ?? true]))
+    )
+  })
+
+  createEffect(() => {
+    if (resultsRestored()) return
+
+    const candidates = allCandidates()
+    if (candidates.length === 0) return
+
+    untrack(() => {
+      setResults(restoreRandomSongResults(candidates, readStoredRandomSongResultKeys()))
+      setResultsRestored(true)
+    })
+  })
+
+  createEffect(() => {
+    if (!resultsRestored()) return
+
+    writeStoredRandomSongResults(results())
   })
 
   /**
@@ -680,6 +773,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
         ])
       )
     )
+    setConstWeightEnabled(
+      Object.fromEntries(constWeightOptions().map((chartConst) => [chartConst, true]))
+    )
     setResults([])
   }
 
@@ -703,6 +799,17 @@ const RandomSongSelectorPage = (): JSX.Element => {
    */
   const handleConstWeightChange = (chartConst: string, value: string): void => {
     setConstWeights((prev) => ({ ...prev, [chartConst]: value }))
+  }
+
+  /**
+   * 定数別の抽選対象オンオフを更新する。
+   *
+   * @param chartConst - 更新対象の譜面定数。
+   * @param enabled - 抽選対象に含める場合は true。
+   * @returns なし。
+   */
+  const handleConstWeightEnabledChange = (chartConst: string, enabled: boolean): void => {
+    setConstWeightEnabled((prev) => ({ ...prev, [chartConst]: enabled }))
   }
 
   /**
@@ -933,13 +1040,28 @@ const RandomSongSelectorPage = (): JSX.Element => {
                             <div class="grid gap-3 sm:grid-cols-4 lg:grid-cols-6">
                               <For each={constWeightOptions()}>
                                 {(chartConst) => (
-                                  <RandomSongTextField
-                                    id={`random-song-const-weight-${chartConst.replace('.', '-')}`}
-                                    label={chartConst}
-                                    value={constWeights()[chartConst] ?? '1'}
-                                    inputMode="decimal"
-                                    onChange={(value) => handleConstWeightChange(chartConst, value)}
-                                  />
+                                  <div class="rounded border border-border bg-surface p-3">
+                                    <RandomSongCheckbox
+                                      id={`random-song-const-enabled-${chartConst.replace('.', '-')}`}
+                                      checked={constWeightEnabled()[chartConst] ?? true}
+                                      label={chartConst}
+                                      onChange={(enabled) =>
+                                        handleConstWeightEnabledChange(chartConst, enabled)
+                                      }
+                                    />
+                                    <div class="mt-2">
+                                      <RandomSongTextField
+                                        id={`random-song-const-weight-${chartConst.replace('.', '-')}`}
+                                        label="倍率"
+                                        value={constWeights()[chartConst] ?? '1'}
+                                        inputMode="decimal"
+                                        disabled={constWeightEnabled()[chartConst] === false}
+                                        onChange={(value) =>
+                                          handleConstWeightChange(chartConst, value)
+                                        }
+                                      />
+                                    </div>
+                                  </div>
                                 )}
                               </For>
                             </div>
