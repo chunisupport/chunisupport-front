@@ -1,5 +1,5 @@
 import { A, Route, Router, useParams } from '@solidjs/router'
-import { Calculator, Search, Target } from 'lucide-solid'
+import { Calculator, ChartNoAxesCombined, Search, Target } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 
@@ -19,6 +19,7 @@ import {
   LOCKED_SONGS_FINDER_PATH,
   REGISTER_SCORE_PATH,
   TOOLS_PATH,
+  WEAK_CHART_INSPECTOR_PATH,
 } from './constants/routes'
 import {
   DISABLED_TOOL_BADGE_TEXT,
@@ -45,6 +46,7 @@ import {
   SongDetail,
   SongsList,
   UserPage,
+  WeakChartInspectorPage,
   WorldsendSongDetail,
   WorldsendSongsList,
 } from './pages'
@@ -232,6 +234,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Calculator class={iconClass} aria-hidden="true" />
     case 'target':
       return <Target class={iconClass} aria-hidden="true" />
+    case 'chart':
+      return <ChartNoAxesCombined class={iconClass} aria-hidden="true" />
     case 'search':
       return <Search class={iconClass} aria-hidden="true" />
   }
@@ -375,6 +379,10 @@ const App = () => {
         component={withNavBar(ChartConstantCalculatorPage)}
       />
       <Route path={BORDER_CALCULATOR_PATH} component={withNavBar(BorderCalculatorPage)} />
+      <Route
+        path={WEAK_CHART_INSPECTOR_PATH}
+        component={withNavBar(withAuth(WeakChartInspectorPage))}
+      />
       <Route path={LOCKED_SONGS_FINDER_PATH} component={withNavBar(EmptyToolPage)} />
 
       {/* 管理 */}
