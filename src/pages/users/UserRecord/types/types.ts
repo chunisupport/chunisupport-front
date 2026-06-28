@@ -31,6 +31,16 @@ export type RecordColumnId =
   | 'overpowerPercent'
   | 'updatedAt'
 export type SortDirection = 'asc' | 'desc'
+/**
+ * レコード一覧のソート条件。
+ *
+ * @property key - ソート対象の列キー。
+ * @property direction - ソート方向。
+ */
+export type RecordSortCondition = {
+  key: RecordSortKey
+  direction: SortDirection
+}
 
 /**
  * 数値範囲フィルターの型定義。
