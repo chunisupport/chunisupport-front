@@ -87,7 +87,6 @@ const WorldsendRecord = (props: Props) => {
   const [sortConditions, setSortConditions] = createSignal<WorldsendRecordSortCondition[]>(
     createInitialWorldsendRecordSortConditions(initialSortKey, initialSortOrder)
   )
-  const primarySort = () => sortConditions()[0] ?? null
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
   onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
@@ -220,8 +219,6 @@ const WorldsendRecord = (props: Props) => {
               <WorldsendRecordTable
                 records={filteredRecords()}
                 visibleColumnIds={visibleColumnIds()}
-                sortKey={primarySort()?.key ?? null}
-                sortDirection={primarySort()?.direction ?? null}
                 sortConditions={sortConditions()}
                 onSortChange={handleSortChange}
               />

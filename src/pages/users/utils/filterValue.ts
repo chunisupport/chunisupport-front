@@ -49,7 +49,8 @@ export function parseOptionalRangeNumberInput(
   const normalized = Math.max(options.min, Math.min(parsed, options.max))
   if (typeof options.decimalPlaces === 'number') {
     const factor = 10 ** options.decimalPlaces
-    return Math.round(normalized * factor) / factor
+    const rounded = Math.round(normalized * factor) / factor
+    return Math.max(options.min, Math.min(rounded, options.max))
   }
 
   return normalized
