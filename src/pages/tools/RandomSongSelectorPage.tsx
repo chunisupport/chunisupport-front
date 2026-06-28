@@ -366,9 +366,12 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const sortedSongs = createMemo(() =>
     sortSongsByReleaseDescAndIdxDesc(songsResponse()?.songs ?? [])
   )
-  const allCandidates = createMemo(() =>
-    buildRandomSongCandidates(sortedSongs(), versionsResponse()?.versions ?? [])
-  )
+  const allCandidates = createMemo(() => {
+    const versions = versionsResponse()?.versions
+    if (!versions) return []
+
+    return buildRandomSongCandidates(sortedSongs(), versions)
+  })
   const genreOptions = createMemo(() =>
     [...new Set(allCandidates().map((candidate) => candidate.genre))].sort((left, right) =>
       left.localeCompare(right, 'ja')
