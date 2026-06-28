@@ -1,16 +1,12 @@
 import { useParams, useSearchParams } from '@solidjs/router'
 import { createEffect, createMemo, createResource, createSignal, on, Show, untrack } from 'solid-js'
-import {
-  fetchOwnSongScoreHistory,
-  fetchSongByDisplayId,
-  fetchSongStats,
-  type ScoreHistoryDifficulty,
-} from '../../../api/songs'
+import { fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
 import { LoadError } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
-import type { SongDTO } from '../../../types/api'
+import type { PlayerRecordDTO, SongDTO } from '../../../types/api'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
+import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
 import { normalizeDifficultyQueryValue } from '../../../utils/difficultyUtils'
 import NotFoundPage from '../../NotFoundPage'
@@ -19,7 +15,7 @@ import { useSongDetailBase } from '../components/useSongDetailBase'
 import OwnScoreCard, { type OwnScoreItem } from './components/OwnScoreCard'
 import SongInfoCard from './components/SongInfoCard'
 import SongStatsTabs from './components/SongStatsTabs'
-import { SCORE_HISTORY_DIFFICULTIES } from './scoreHistory.constants'
+import { OWN_SCORE_DIFFICULTIES, supportsScoreHistory } from './scoreHistory.constants'
 
 type SongDetailLoadState =
   | {
@@ -53,28 +49,26 @@ const fetchSongDetailLoadState = async (displayId: string): Promise<SongDetailLo
 }
 
 /**
- * 存在する履歴対象譜面について、ログインユーザーの現行ベストを取得する。
+ * 楽曲に存在する全譜面の自己スコア表示項目を構築する。
  *
- * @param displayId - 楽曲表示ID。
- * @param username - ログインユーザー名。
- * @param difficulties - 楽曲に存在する履歴対象難易度。
- * @returns 難易度ごとの現行ベスト。未プレイ譜面は entry を持たない。
+ * @param song - 表示対象の楽曲。
+ * @param records - ログインユーザーの通常譜面レコード。
+ * @returns 難易度ごとの自己スコア表示項目。
  */
-const fetchOwnScores = async (
-  displayId: string,
-  username: string,
-  difficulties: readonly ScoreHistoryDifficulty[]
-): Promise<OwnScoreItem[]> =>
-  Promise.all(
-    difficulties.map(async (difficulty) => {
-      try {
-        const history = await fetchOwnSongScoreHistory(displayId, difficulty, username)
-        return { difficulty, entry: history.entries[0] }
-      } catch (error) {
-        if (isNotFoundApiError(error)) return { difficulty }
-        throw error
+const buildOwnScoreItems = (song: SongDTO, records: readonly PlayerRecordDTO[]): OwnScoreItem[] =>
+  OWN_SCORE_DIFFICULTIES.filter((difficulty) => Boolean(song.charts[difficulty])).map(
+    (difficulty) => {
+      const record = records.find(
+        (candidate) =>
+          candidate.id === song.id && candidate.difficulty === difficulty && candidate.is_played
+      )
+
+      return {
+        difficulty,
+        score: record?.score,
+        supportsHistory: supportsScoreHistory(difficulty),
       }
-    })
+    }
   )
 
 const SongDetail = () => {
@@ -141,24 +135,16 @@ const SongDetail = () => {
     () => (authSession.status === 'authenticated' ? authSession.user?.username : null),
     fetchUserRatingWithCache
   )
+  const [ownRecords] = createResource(
+    () => (authSession.status === 'authenticated' ? authSession.user?.username : null),
+    fetchUserRecordWithCache
+  )
   const ownBestAverage = createMemo(() => ownRating()?.best_average)
-  const ownScoreDifficulties = createMemo(() => {
+  const ownScoreItems = createMemo(() => {
     const currentSong = song()
     if (!currentSong) return []
-    return SCORE_HISTORY_DIFFICULTIES.filter((difficulty) =>
-      Boolean(currentSong.charts[difficulty])
-    )
+    return buildOwnScoreItems(currentSong, ownRecords()?.standard ?? [])
   })
-  const [ownScores] = createResource(
-    () => {
-      const username = authSession.status === 'authenticated' ? authSession.user?.username : null
-      const displayId = song()?.id
-      const difficulties = ownScoreDifficulties()
-      if (!username || !displayId || difficulties.length === 0) return null
-      return { displayId, username, difficulties }
-    },
-    (source) => fetchOwnScores(source.displayId, source.username, source.difficulties)
-  )
 
   useDocumentTitle(() => `${song()?.title ?? '楽曲'} - 楽曲詳細`)
 
@@ -180,15 +166,11 @@ const SongDetail = () => {
           )}
           renderStats={(currentSong) => (
             <>
-              <Show
-                when={authSession.status === 'authenticated' && ownScoreDifficulties().length > 0}
-              >
+              <Show when={authSession.status === 'authenticated' && ownScoreItems().length > 0}>
                 <OwnScoreCard
                   displayId={currentSong.id}
-                  items={
-                    ownScores() ?? ownScoreDifficulties().map((difficulty) => ({ difficulty }))
-                  }
-                  loading={ownScores.loading}
+                  items={ownScoreItems()}
+                  loading={ownRecords.loading}
                 />
               </Show>
               <SongStatsTabs

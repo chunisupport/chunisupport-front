@@ -1,11 +1,10 @@
 import { A } from '@solidjs/router'
 import { ChevronRight } from 'lucide-solid'
 import { For, Show } from 'solid-js'
-import type { ScoreHistoryDifficulty } from '../../../../api/songs'
 import { Loading } from '../../../../components'
 import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'
 import { buildSongScoreHistoryPath } from '../../../../constants/routes'
-import type { ScoreHistoryEntryDTO } from '../../../../types/api'
+import type { PlayerDataDifficulty } from '../../../../types/api'
 import {
   OWN_SCORE_CARD_TITLE,
   SCORE_HISTORY_LINK_LABEL,
@@ -13,15 +12,16 @@ import {
 } from '../scoreHistory.constants'
 
 export type OwnScoreItem = {
-  difficulty: ScoreHistoryDifficulty
-  entry?: ScoreHistoryEntryDTO
+  difficulty: PlayerDataDifficulty
+  score?: number
+  supportsHistory: boolean
 }
 
 /**
  * ログインユーザーの譜面別ベストスコアを表示する。
  *
  * @param props - 楽曲ID、譜面別スコア、読み込み状態。
- * @returns スコア履歴へのリンクを含むカード。
+ * @returns 譜面別の自己スコアカード。
  */
 const OwnScoreCard = (props: {
   displayId: string
@@ -40,7 +40,7 @@ const OwnScoreCard = (props: {
             return (
               <li>
                 <Show
-                  when={item.entry}
+                  when={item.score !== undefined}
                   fallback={
                     <div class={cardClass}>
                       <DifficultyBadge difficulty={item.difficulty} />
@@ -48,16 +48,26 @@ const OwnScoreCard = (props: {
                     </div>
                   }
                 >
-                  {(entry) => (
+                  <Show
+                    when={item.supportsHistory}
+                    fallback={
+                      <div class={cardClass}>
+                        <DifficultyBadge difficulty={item.difficulty} />
+                        <span class="ml-auto font-oswald text-lg font-semibold tabular-nums">
+                          {item.score?.toLocaleString('ja-JP')}
+                        </span>
+                      </div>
+                    }
+                  >
                     <A
                       href={buildSongScoreHistoryPath(props.displayId, item.difficulty)}
                       class={`${cardClass} group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus`}
-                      aria-label={`${item.difficulty} ${entry().score.toLocaleString('ja-JP')} ${SCORE_HISTORY_LINK_LABEL}`}
+                      aria-label={`${item.difficulty} ${item.score?.toLocaleString('ja-JP')} ${SCORE_HISTORY_LINK_LABEL}`}
                     >
                       <DifficultyBadge difficulty={item.difficulty} />
                       <span class="ml-auto flex items-center gap-2">
                         <span class="font-oswald text-lg font-semibold tabular-nums">
-                          {entry().score.toLocaleString('ja-JP')}
+                          {item.score?.toLocaleString('ja-JP')}
                         </span>
                         <ChevronRight
                           class="h-4 w-4 text-action-primary transition-transform group-hover:translate-x-0.5"
@@ -65,7 +75,7 @@ const OwnScoreCard = (props: {
                         />
                       </span>
                     </A>
-                  )}
+                  </Show>
                 </Show>
               </li>
             )
