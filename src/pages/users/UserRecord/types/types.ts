@@ -5,6 +5,7 @@ import type {
   HardLamp,
   NumericRangeFilter,
 } from '../../../../types/record'
+import type { SortCondition } from '../../recordTable/sortConditions'
 
 export type { ChainLamp, ComboLamp, Difficulty, HardLamp, NumericRangeFilter }
 export type RecordSortKey =
@@ -33,17 +34,9 @@ export type RecordColumnId =
   | 'overpower'
   | 'overpowerPercent'
   | 'updatedAt'
-export type SortDirection = 'asc' | 'desc'
-/**
- * レコード一覧のソート条件。
- *
- * @property key - ソート対象の列キー。
- * @property direction - ソート方向。
- */
-export type RecordSortCondition = {
-  key: RecordSortKey
-  direction: SortDirection
-}
+
+/** レコード一覧のソート条件。 */
+export type RecordSortCondition = SortCondition<RecordSortKey>
 
 /** フィルターの型定義。 */
 export interface FilterState {
