@@ -5,7 +5,7 @@ import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, PointElement, ScatterController, Tooltip } from 'chart.js'
-import { ChartNoAxesCombined, Check, ChevronDown, Settings, TriangleAlert } from 'lucide-solid'
+import { ChartNoAxesCombined, Check, ChevronRight, Settings, TriangleAlert } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -553,8 +553,8 @@ const WeakChartInspectorPage = (): JSX.Element => {
                     {/* 表示の絞り込み */}
                     <Collapsible defaultOpen={false} class="order-2">
                       <Collapsible.Trigger class="group flex w-full items-center justify-start gap-2 text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-focus-ring">
-                        <ChevronDown
-                          class="h-4 w-4 transition-transform group-data-[expanded]:rotate-180"
+                        <ChevronRight
+                          class="h-4 w-4 rotate-0 transition-transform group-data-[expanded]:rotate-90"
                           aria-hidden="true"
                         />
                         <span>{WEAK_CHART_SETTINGS_COPY.displaySection}</span>
