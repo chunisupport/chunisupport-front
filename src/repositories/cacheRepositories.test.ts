@@ -6,6 +6,7 @@ import {
   CLIENT_CACHE_SCHEMA_VERSION,
   db,
   type UserApiResponse,
+  type ViewSetting,
 } from '../lib/db/cacheDB.ts'
 import type { SongDTO, UserRatingDTO, UserRecordDTO } from '../types/api.ts'
 import { readCachedSongs, replaceCachedSongs } from './songCacheRepository.ts'
@@ -33,6 +34,7 @@ const song: SongDTO = {
   maxop: 0,
   is_maxop_unknown: false,
   op_target_difficulty: null,
+  is_new: false,
   charts: {},
 }
 
@@ -176,7 +178,7 @@ test('画面設定は現行 schemaVersion の保存値だけ読み込まれる�
     schemaVersion: CLIENT_CACHE_SCHEMA_VERSION - 1,
     savedAt: '2026-06-16T12:00:00Z',
     data: { title: 'old' },
-  })
+  } as unknown as ViewSetting)
 
   // When
   const columns = await readStandardRecordColumnsSetting()

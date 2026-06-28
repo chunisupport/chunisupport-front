@@ -128,11 +128,16 @@ const createChartGradient = (
   bar: BarElement,
   colors: readonly string[]
 ): CanvasGradient => {
+  const { x, y, base, width } = bar.getProps(['x', 'y', 'base', 'width'], true)
+  const centerX = x ?? 0
+  const topY = y ?? 0
+  const bottomY = base ?? topY
+  const barWidth = width ?? 0
   const gradient = context.createLinearGradient(
-    bar.x - bar.width / 2,
-    bar.y,
-    bar.x + bar.width / 2,
-    bar.base
+    centerX - barWidth / 2,
+    topY,
+    centerX + barWidth / 2,
+    bottomY
   )
   const lastColorIndex = colors.length - 1
 
@@ -167,8 +172,6 @@ const createBarGradientPlugin = (datasets: SongStatsChartDataset[]): Plugin<'bar
             ...bar.options,
             backgroundColor,
             borderColor: backgroundColor,
-            hoverBackgroundColor: backgroundColor,
-            hoverBorderColor: backgroundColor,
           }
         })
       })

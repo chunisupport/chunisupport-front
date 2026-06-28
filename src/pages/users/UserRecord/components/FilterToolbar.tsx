@@ -1,6 +1,6 @@
 import { Button } from '@kobalte/core/button'
 import { TextField } from '@kobalte/core/text-field'
-import { Columns3, Funnel, Search } from 'lucide-solid'
+import { ArrowUpDown, Columns3, Funnel, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 
 type FilterButtonTone = 'default' | 'active' | 'difficulty-only'
@@ -9,6 +9,7 @@ type FilterToolbarProps = {
   title: string
   onTitleChange: (value: string) => void
   onOpenFilter: () => void
+  onOpenSortSettings: () => void
   onOpenColumnSettings: () => void
   titleActive?: boolean
   filterActive?: boolean
@@ -56,7 +57,8 @@ const getTitleInputIconClass = (active?: boolean): string =>
 
 /**
  * レコード一覧の検索欄とフィルター操作ボタンを表示する。
- * @param props - 検索文字列、変更ハンドラー、各操作ダイアログを開くハンドラー。
+ *
+ * @param props - 検索文字列、変更ハンドラー、フィルター・ソート・列設定の操作状態。
  * @returns レコード一覧上部のフィルターツールバー。
  */
 const FilterToolbar: Component<FilterToolbarProps> = (props) => {
@@ -103,6 +105,15 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
         disabled={props.filterButtonDisabled}
       >
         <Funnel size={24} aria-hidden="true" />
+      </Button>
+      <Button
+        class="ml-2 flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border border-border-strong text-text-muted transition-colors hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+        onClick={props.onOpenSortSettings}
+        type="button"
+        aria-label="ソート"
+        title="ソート"
+      >
+        <ArrowUpDown size={24} aria-hidden="true" />
       </Button>
       <Button
         class="ml-2 flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover"
