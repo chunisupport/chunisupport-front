@@ -25,8 +25,8 @@ import {
   Show,
 } from 'solid-js'
 import { fetchMe } from '../../api/users.ts'
-import { LoadError, Loading } from '../../components/index.ts'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge.tsx'
+import { LoadError, Loading } from '../../components/index.ts'
 import {
   CHART_CONST_MAX,
   CHART_CONST_MIN,

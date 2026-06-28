@@ -4,9 +4,9 @@ import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 
 import { fetchMe, fetchUserProfileSummary } from './api/users.ts'
-import { LoadError, Loading, NavBar, PlayerDataEmptyState } from './components/index.ts'
 import RequireAuth from './components/guards/RequireAuth.tsx'
 import RequireRole from './components/guards/RequireRole.tsx'
+import { LoadError, Loading, NavBar, PlayerDataEmptyState } from './components/index.ts'
 
 import {
   FOOTER_COPYRIGHT_TEXT,

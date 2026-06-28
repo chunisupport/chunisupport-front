@@ -1,8 +1,8 @@
 import { A } from '@solidjs/router'
 import { ChevronRight } from 'lucide-solid'
 import { For, Show } from 'solid-js'
-import { Loading } from '../../../../components/index.ts'
 import { DifficultyBadge } from '../../../../components/common/DifficultyBadge.tsx'
+import { Loading } from '../../../../components/index.ts'
 import { buildSongScoreHistoryPath } from '../../../../constants/routes.ts'
 import type { PlayerDataDifficulty } from '../../../../types/api.ts'
 import {
