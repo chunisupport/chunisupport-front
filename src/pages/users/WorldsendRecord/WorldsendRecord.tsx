@@ -5,7 +5,6 @@ import {
   createResource,
   createSignal,
   ErrorBoundary,
-  For,
   onMount,
   Show,
   Suspense,
@@ -25,18 +24,15 @@ import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
 } from '../../../utils/versionConverter'
-import { createRecordTableVirtualizer } from '../components/createRecordTableVirtualizer'
 import FilterStats from '../components/FilterStats'
+import RecordDataTable from '../components/RecordDataTable'
 import {
   type ColumnRenderer,
   RECORD_ALPHANUMERIC_COLUMN_CLASS,
   RECORD_CELL_BASE_CLASS,
   RECORD_CELL_CENTER_TEXT_CLASS,
-  RECORD_ROW_HEIGHT,
-  RECORD_ROW_HOVER_CLASS,
   RecordFullChainCell,
   RecordHardLampCell,
-  RecordHeaderButton,
   RecordJusticeCountCell,
   RecordLampCell,
   RecordScoreCell,
@@ -46,7 +42,6 @@ import {
 import { isValidSavedWorldsendFilter } from '../components/savedRecordFilters'
 import { sanitizeSortQuery } from '../recordTable/sortingQuery'
 import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
-import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
 import FilterToolbar from '../UserRecord/components/FilterToolbar'
 import { formatJusticeCountForAj } from '../UserRecord/utils/justiceCountDisplay'
 import { formatUpdatedAt } from '../UserRecord/utils/updatedAt'
@@ -56,7 +51,6 @@ import WorldsendSortDialog from './components/WorldsendSortDialog'
 import { buildDefaultWorldsendFilter, DEFAULT_WORLDSEND_FILTER } from './types/filterDefaults'
 import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from './types/filterTypes'
 import {
-  createGridTemplateColumns,
   getDefaultVisibleWorldsendColumnIds,
   getVisibleWorldsendColumns,
   sanitizeVisibleWorldsendColumnIds,
@@ -176,103 +170,6 @@ const getWorldsendColumnRenderer = (
   const renderer = worldsendColumnRenderers[columnId]
   if (!renderer) throw new Error(`Unknown worldsend column renderer: ${columnId}`)
   return renderer
-}
-
-const WorldsendRecordTable = (props: {
-  records: WorldsendRecordWithSongMeta[]
-  sortKey: WorldsendSortKey | null
-  sortDirection: WorldsendRecordSortCondition['direction'] | null
-  sortConditions: WorldsendRecordSortCondition[]
-  onSortChange: (nextKey: WorldsendSortKey) => void
-  visibleColumnIds: WorldsendRecordColumnId[]
-}) => {
-  const visibleColumns = createMemo(() => getVisibleWorldsendColumns(props.visibleColumnIds))
-  const worldsendGridColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
-
-  let tableContainerRef: HTMLDivElement | undefined
-  let tableBodyRef: HTMLDivElement | undefined
-
-  const sortedRecords = createMemo(() =>
-    sortWorldsendRecordsByConditions(props.records, props.sortConditions)
-  )
-
-  const virtualizedTable = createRecordTableVirtualizer({
-    rowHeight: RECORD_ROW_HEIGHT,
-    rowCount: () => sortedRecords().length,
-    containerRef: () => tableContainerRef,
-    bodyRef: () => tableBodyRef,
-  })
-
-  return (
-    <div class={worldsendTableWrapperClass}>
-      <Show
-        when={props.records.length > 0}
-        fallback={
-          <p class="py-6 text-center text-text-subtle">WORLD'S END のレコードはありません。</p>
-        }
-      >
-        <div
-          ref={tableContainerRef}
-          class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-border"
-        >
-          <div class="w-fit min-w-full">
-            <div class="border-b border-border bg-surface-muted">
-              <div
-                class="grid px-2 text-xs font-semibold"
-                style={{ 'grid-template-columns': worldsendGridColumns() }}
-              >
-                <For each={visibleColumns()}>
-                  {(column) => (
-                    <RecordHeaderButton
-                      label={column.label}
-                      active={props.sortKey === column.sortKey}
-                      direction={props.sortDirection}
-                      align={column.align}
-                      class={column.id === 'title' ? 'justify-start' : 'justify-center'}
-                      onClick={() => props.onSortChange(column.sortKey)}
-                    />
-                  )}
-                </For>
-              </div>
-            </div>
-
-            <div
-              ref={tableBodyRef}
-              class="relative"
-              style={{ height: `${virtualizedTable.getTotalSize()}px` }}
-            >
-              <For each={virtualizedTable.virtualRows()}>
-                {(virtualRow) => {
-                  const record = createMemo(() => sortedRecords()[virtualRow.index])
-
-                  return (
-                    <Show when={record()} keyed>
-                      {(currentRecord) => (
-                        <div
-                          class={`absolute left-0 top-0 grid w-full border-b border-border px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
-                          style={{
-                            'grid-template-columns': worldsendGridColumns(),
-                            transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
-                          }}
-                        >
-                          <For each={visibleColumns()}>
-                            {(column) => {
-                              const renderer = getWorldsendColumnRenderer(column.id)
-                              return renderer(currentRecord)
-                            }}
-                          </For>
-                        </div>
-                      )}
-                    </Show>
-                  )
-                }}
-              </For>
-            </div>
-          </div>
-        </div>
-      </Show>
-    </div>
-  )
 }
 
 /**
@@ -401,6 +298,10 @@ const WorldsendRecord = (props: Props) => {
       isWorldsendRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle)
     )
   })
+  const sortedRecords = createMemo(() =>
+    sortWorldsendRecordsByConditions(filteredRecords(), sortConditions())
+  )
+  const visibleColumns = createMemo(() => getVisibleWorldsendColumns(visibleColumnIds()))
   const stats = createMemo(() => getRecordStats(filteredRecords()))
 
   return (
@@ -436,13 +337,14 @@ const WorldsendRecord = (props: Props) => {
                 全 {recordsWithSongMeta().length} 件中 {filteredRecords().length} 件を表示
               </p>
 
-              <WorldsendRecordTable
-                records={filteredRecords()}
+              <RecordDataTable
+                records={sortedRecords()}
+                columns={visibleColumns()}
                 sortKey={primarySort()?.key ?? null}
                 sortDirection={primarySort()?.direction ?? null}
-                sortConditions={sortConditions()}
+                emptyMessage="WORLD'S END のレコードはありません。"
+                getColumnRenderer={getWorldsendColumnRenderer}
                 onSortChange={handleSortChange}
-                visibleColumnIds={visibleColumnIds()}
               />
 
               <WorldsendColumnSettingsDialog
