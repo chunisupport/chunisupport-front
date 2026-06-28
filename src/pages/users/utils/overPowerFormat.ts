@@ -1,4 +1,4 @@
-import { formatTruncatedFixed } from '../../../utils/numberFormat'
+import { formatTruncatedFixed } from '../../../utils/numberFormat.ts'
 
 const OVER_POWER_PERCENT_DECIMAL_PLACES = 4
 const OVER_POWER_VALUE_DECIMAL_PLACES = 3

@@ -1,10 +1,10 @@
-import { fetchUserRating } from '../../api/users'
+import { fetchUserRating } from '../../api/users.ts'
 import {
   readCachedUserRating,
   saveCachedUserRating,
-} from '../../repositories/userApiCacheRepository'
-import type { UserRatingDTO } from '../../types/api'
-import { fetchUserApiCacheTimestamps, isAuthenticatedOwnUser } from './userApiCache'
+} from '../../repositories/userApiCacheRepository.ts'
+import type { UserRatingDTO } from '../../types/api.ts'
+import { fetchUserApiCacheTimestamps, isAuthenticatedOwnUser } from './userApiCache.ts'
 
 /**
  * ログインユーザー本人のレーティングを IndexedDB キャッシュ判定付きで取得する。

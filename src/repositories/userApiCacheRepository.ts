@@ -1,5 +1,5 @@
-import { CLIENT_CACHE_SCHEMA_VERSION, db, type UserApiResponse } from '../lib/db/cacheDB'
-import type { UserRatingDTO, UserRecordDTO } from '../types/api'
+import { CLIENT_CACHE_SCHEMA_VERSION, db, type UserApiResponse } from '../lib/db/cacheDB.ts'
+import type { UserRatingDTO, UserRecordDTO } from '../types/api.ts'
 
 type UserApiCacheMatch = {
   username: string

@@ -1,12 +1,12 @@
 import { Navigate, useLocation } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { Match, onMount, Switch } from 'solid-js'
-import { fetchMe } from '../../api/users'
-import { authSession } from '../../stores/authSession'
-import type { AccountType } from '../../types/api'
-import { buildLoginRedirectPath } from '../../usecases/auth/redirectPath'
-import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
-import { buildCurrentPath } from '../../utils/currentPath'
+import { fetchMe } from '../../api/users.ts'
+import { authSession } from '../../stores/authSession.ts'
+import type { AccountType } from '../../types/api.ts'
+import { buildLoginRedirectPath } from '../../usecases/auth/redirectPath.ts'
+import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession.ts'
+import { buildCurrentPath } from '../../utils/currentPath.ts'
 
 type RequireRoleProps = {
   allowedRoles: AccountType[]

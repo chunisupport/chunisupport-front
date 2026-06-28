@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { isNotFoundApiError } from './apiError'
+import { isNotFoundApiError } from './apiError.ts'
 
 test('status が 404 の場合は Not Found として判定されること', () => {
   // Given

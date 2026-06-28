@@ -7,7 +7,7 @@ import {
   getVisibleColumns as getVisibleColumnsFromDefinitions,
   sanitizeVisibleColumnIds as sanitizeVisibleColumnIdsFromDefinitions,
   sortVisibleColumnIdsByDefinitionOrder as sortVisibleColumnIdsByDefinitionOrderFromDefinitions,
-} from '../../utils/recordTableColumns'
+} from '../../utils/recordTableColumns.ts'
 
 type WorldsendRecordColumnId =
   | 'title'

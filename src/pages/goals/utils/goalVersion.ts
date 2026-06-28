@@ -1,5 +1,5 @@
-import type { VersionDTO } from '../../../types/api'
-import { getShortVersionName } from '../../../utils/versionConverter'
+import type { VersionDTO } from '../../../types/api.ts'
+import { getShortVersionName } from '../../../utils/versionConverter.ts'
 
 export type GoalVersionOption = {
   value: string

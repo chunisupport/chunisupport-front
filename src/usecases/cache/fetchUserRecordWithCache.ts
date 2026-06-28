@@ -1,10 +1,10 @@
-import { fetchUserRecord } from '../../api/users'
+import { fetchUserRecord } from '../../api/users.ts'
 import {
   readCachedUserRecord,
   saveCachedUserRecord,
-} from '../../repositories/userApiCacheRepository'
-import type { UserRecordDTO } from '../../types/api'
-import { fetchUserApiCacheTimestamps, isAuthenticatedOwnUser } from './userApiCache'
+} from '../../repositories/userApiCacheRepository.ts'
+import type { UserRecordDTO } from '../../types/api.ts'
+import { fetchUserApiCacheTimestamps, isAuthenticatedOwnUser } from './userApiCache.ts'
 
 /**
  * ログインユーザー本人の include_noplay=true レコードを IndexedDB キャッシュ判定付きで取得する。

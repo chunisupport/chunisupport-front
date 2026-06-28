@@ -7,8 +7,8 @@ import {
   getVisibleColumns as getVisibleColumnsFromDefinitions,
   sanitizeVisibleColumnIds as sanitizeVisibleColumnIdsFromDefinitions,
   sortVisibleColumnIdsByDefinitionOrder as sortVisibleColumnIdsByDefinitionOrderFromDefinitions,
-} from '../../utils/recordTableColumns'
-import type { RecordColumnId, RecordSortKey } from '../types/types'
+} from '../../utils/recordTableColumns.ts'
+import type { RecordColumnId, RecordSortKey } from '../types/types.ts'
 
 export type RecordColumnDefinition = {
   id: RecordColumnId

@@ -1,4 +1,4 @@
-import type { ScoreHistoryDifficulty } from '../api/songs'
+import type { ScoreHistoryDifficulty } from '../api/songs.ts'
 
 const scoreHistoryDateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
   dateStyle: 'medium',

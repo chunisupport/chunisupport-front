@@ -1,6 +1,6 @@
-import { API_BASE_URL } from '../config'
-import type { ApiRootResponse, ApiVersionResponse } from '../types/api'
-import { fetchWithAuth } from './fetchWithAuth'
+import { API_BASE_URL } from '../config.ts'
+import type { ApiRootResponse, ApiVersionResponse } from '../types/api.ts'
+import { fetchWithAuth } from './fetchWithAuth.ts'
 
 /**
  * API ルートから公開メタ情報を取得する。

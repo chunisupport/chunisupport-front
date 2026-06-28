@@ -1,12 +1,12 @@
 import { Navigate, useLocation } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { createSignal, Match, onMount, Switch } from 'solid-js'
-import { fetchMe } from '../../api/users'
+import { fetchMe } from '../../api/users.ts'
 import { getAuthStatus } from '../../stores/authSession.ts'
 import { buildLoginRedirectPath } from '../../usecases/auth/redirectPath.ts'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession.ts'
-import { buildCurrentPath } from '../../utils/currentPath'
-import Loading from '../Loading/Loading'
+import { buildCurrentPath } from '../../utils/currentPath.ts'
+import Loading from '../Loading/Loading.tsx'
 
 type RequireAuthProps = {
   children: JSX.Element

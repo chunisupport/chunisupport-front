@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js'
-import ColumnSettingsDialogBase from '../../components/ColumnSettingsDialogBase'
-import type { RecordColumnId } from '../types/types'
-import { RECORD_COLUMN_DEFINITIONS, sortVisibleColumnIdsByDefinitionOrder } from '../utils/columns'
+import ColumnSettingsDialogBase from '../../components/ColumnSettingsDialogBase.tsx'
+import type { RecordColumnId } from '../types/types.ts'
+import { RECORD_COLUMN_DEFINITIONS, sortVisibleColumnIdsByDefinitionOrder } from '../utils/columns.ts'
 
 type ColumnSettingsDialogProps = {
   open: boolean

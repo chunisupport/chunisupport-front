@@ -1,17 +1,17 @@
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { WORLDSEND_LEVEL_STAR_OPTIONS } from '../../../../constants/chart'
+import { WORLDSEND_LEVEL_STAR_OPTIONS } from '../../../../constants/chart.ts'
 import RangeSeparator, {
   RANGE_END_LABEL_SUFFIX,
   RANGE_START_LABEL_SUFFIX,
-} from '../../UserRecord/components/filterDialog/sections/RangeSeparator'
+} from '../../UserRecord/components/filterDialog/sections/RangeSeparator.tsx'
 import {
   FILTER_DIALOG_SELECT_CONTENT_CLASS,
   FILTER_DIALOG_SELECT_ITEM_CLASS,
   FILTER_DIALOG_SELECT_TRIGGER_CLASS,
-} from '../../UserRecord/components/filterDialog/styles'
-import { formatWorldsendLevelStar } from '../utils/filterDialog'
+} from '../../UserRecord/components/filterDialog/styles.ts'
+import { formatWorldsendLevelStar } from '../utils/filterDialog.ts'
 
 const WORLDSEND_LEVEL_RANGE_TITLE = 'レベル'
 

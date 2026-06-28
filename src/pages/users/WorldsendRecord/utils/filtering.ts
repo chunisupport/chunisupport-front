@@ -3,9 +3,9 @@ import {
   normalizeForReadingSearch,
   normalizeForSearch,
   normalizeQuery,
-} from '../../../../utils/searchUtils'
-import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from '../types/filterTypes'
-import { hasWorldsendJusticeCountFilter } from './filterDialog'
+} from '../../../../utils/searchUtils.ts'
+import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from '../types/filterTypes.ts'
+import { hasWorldsendJusticeCountFilter } from './filterDialog.ts'
 
 export type WorldsendRecordTitleMatcher = (record: WorldsendRecordWithSongMeta) => boolean
 

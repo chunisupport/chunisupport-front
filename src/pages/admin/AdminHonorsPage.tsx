@@ -5,12 +5,12 @@ import { TextField } from '@kobalte/core/text-field'
 import { Check, ChevronsUpDown, Pencil } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
-import { fetchAdminHonors, fetchHonorTypes, updateHonor } from '../../api/honors'
-import { Loading } from '../../components'
-import { getHonorTypeClassName } from '../../constants/honors'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import type { AdminHonorDTO, HonorRequestDTO, MasterItemDTO } from '../../types/api'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { fetchAdminHonors, fetchHonorTypes, updateHonor } from '../../api/honors.ts'
+import { Loading } from '../../components/index.ts'
+import { getHonorTypeClassName } from '../../constants/honors.ts'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle.ts'
+import type { AdminHonorDTO, HonorRequestDTO, MasterItemDTO } from '../../types/api.ts'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage.ts'
 
 type HonorEditDialogProps = {
   open: boolean

@@ -1,1 +1,1 @@
-export { default as GoalsList } from './GoalsList'
+export { default as GoalsList } from './GoalsList/index.ts'

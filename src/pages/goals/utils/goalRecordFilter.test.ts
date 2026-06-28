@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
-import type { PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
-import { isRecordMatched } from '../../users/UserRecord/utils/filtering'
-import { buildGoalRecordFilter, isGoalRecordNavigationEnabled } from './goalRecordFilter'
+import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api.ts'
+import type { PlayerRecordWithSongMeta } from '../../../utils/recordMerger.ts'
+import { isRecordMatched } from '../../users/UserRecord/utils/filtering.ts'
+import { buildGoalRecordFilter, isGoalRecordNavigationEnabled } from './goalRecordFilter.ts'
 
 const MASTER_DATA: MasterDataDTO = {
   difficulties: [

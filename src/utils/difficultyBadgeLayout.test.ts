@@ -4,7 +4,7 @@ import {
   DIFFICULTY_BADGE_COMPACT_WIDTH_CLASS,
   DIFFICULTY_BADGE_FIXED_WIDTH_CLASS,
   getDifficultyBadgeWidthClass,
-} from './difficultyBadgeLayout'
+} from './difficultyBadgeLayout.ts'
 
 test('通常表示の難易度バッジは文字数に左右されない固定幅クラスを返す', () => {
   // Given: 楽曲詳細画面で使う通常表示の難易度バッジ。

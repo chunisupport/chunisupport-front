@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage.ts'
 
 type Props = {
   error: unknown

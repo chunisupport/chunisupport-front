@@ -1,4 +1,4 @@
-import SongManagementPage from '../songs/SongManagementPage'
+import SongManagementPage from '../songs/SongManagementPage.tsx'
 
 const AdminSongsPage = () => {
   return <SongManagementPage title="楽曲管理（ADMIN）" />

@@ -1,4 +1,4 @@
-import type { UserDTO } from '../../types/api'
+import type { UserDTO } from '../../types/api.ts'
 
 export type HomeView =
   | { type: 'loading' }

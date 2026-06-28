@@ -17,9 +17,9 @@ import {
   restoreWorldsendSongByDisplayId,
   updateSongs,
   updateWorldsendSongs,
-} from '../../api/songs'
-import { Loading } from '../../components'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+} from '../../api/songs.ts'
+import { Loading } from '../../components/index.ts'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle.ts'
 import type {
   CreateSongRequestDTO,
   CreateWorldsendSongRequestDTO,
@@ -29,10 +29,10 @@ import type {
   SongDTO,
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
-} from '../../types/api'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-import { buildSearchableItems, filterSearchableItems } from './searchHelpers'
-import { sortByReleaseDateDescWithMissingFirst } from './utils/releaseDateSorting'
+} from '../../types/api.ts'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage.ts'
+import { buildSearchableItems, filterSearchableItems } from './searchHelpers.ts'
+import { sortByReleaseDateDescWithMissingFirst } from './utils/releaseDateSorting.ts'
 
 type SongManagementPageProps = {
   title: string

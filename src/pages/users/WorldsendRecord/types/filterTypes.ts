@@ -1,10 +1,10 @@
-import type { WorldsendRecordDTO } from '../../../../types/api'
+import type { WorldsendRecordDTO } from '../../../../types/api.ts'
 import type {
   ChainLamp,
   ComboLamp,
   HardLamp,
   NumericRangeFilter,
-} from '../../UserRecord/types/types'
+} from '../../UserRecord/types/types.ts'
 
 export type WorldsendAttribute = WorldsendRecordDTO['attribute']
 export type WorldsendLevelStar = WorldsendRecordDTO['level_star']

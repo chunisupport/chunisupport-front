@@ -1,4 +1,4 @@
-import type { HonorDTO } from '../types/api'
+import type { HonorDTO } from '../types/api.ts'
 
 export type HonorTypeName = HonorDTO['type_name']
 

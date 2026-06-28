@@ -3,7 +3,7 @@ import {
   CHART_CONSTANT_CALCULATOR_PATH,
   LOCKED_SONGS_FINDER_PATH,
   WEAK_CHART_INSPECTOR_PATH,
-} from './routes'
+} from './routes.ts'
 
 /**
  * ツールカードに表示するアイコン種別。

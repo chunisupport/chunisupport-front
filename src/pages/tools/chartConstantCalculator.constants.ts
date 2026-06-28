@@ -1,4 +1,4 @@
-import type { ChartConstantLamp } from '../../utils/chartConstantCalculator'
+import type { ChartConstantLamp } from '../../utils/chartConstantCalculator.ts'
 
 export const CHART_CONSTANT_CALCULATOR_COPY = {
   title: '譜面定数計算機',

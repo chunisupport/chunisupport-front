@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { DEFAULT_FILTER } from '../UserRecord/types/filterDefaults'
-import { DEFAULT_WORLDSEND_FILTER } from '../WorldsendRecord/types/filterDefaults'
+import { DEFAULT_FILTER } from '../UserRecord/types/filterDefaults.ts'
+import { DEFAULT_WORLDSEND_FILTER } from '../WorldsendRecord/types/filterDefaults.ts'
 import {
   buildUniqueRecordFilterName,
   hasRecordFilterNameControlCharacter,
@@ -11,7 +11,7 @@ import {
   isValidSavedStandardFilter,
   isValidSavedWorldsendFilter,
   RECORD_FILTER_NAME_MAX_LENGTH,
-} from './savedRecordFilters'
+} from './savedRecordFilters.ts'
 
 test('buildUniqueRecordFilterName は重複名へ番号を付与し文字数上限内に収めること', () => {
   // Given

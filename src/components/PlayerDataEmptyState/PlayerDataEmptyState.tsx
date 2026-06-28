@@ -6,7 +6,7 @@ import {
   CHUNISUPPORT_BOOKMARKLET,
   DATA_REGISTRATION_HELP_URL,
   PLAYER_DATA_EMPTY_STATE_TEXT,
-} from './constants'
+} from './constants.ts'
 
 type PlayerDataEmptyStateProps = {
   title?: string

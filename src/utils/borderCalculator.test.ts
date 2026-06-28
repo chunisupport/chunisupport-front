@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { calculateBorder, calculateLossBudget } from './borderCalculator'
+import { calculateBorder, calculateLossBudget } from './borderCalculator.ts'
 
 test('2800ノーツ、目標1007500の場合は許容失点が700になること', () => {
   // Given

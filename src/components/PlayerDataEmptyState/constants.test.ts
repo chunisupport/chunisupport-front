@@ -11,7 +11,7 @@ test('未登録案内の外部 URL が環境変数から生成されること', 
   process.env.PUBLIC_CF_TURNSTILE_SITE_KEY = 'test-turnstile-site-key'
 
   // When: 未登録案内の外部 URL 定数を読み込む
-  const { CHUNISUPPORT_BOOKMARKLET, DATA_REGISTRATION_HELP_URL } = await import('./constants')
+  const { CHUNISUPPORT_BOOKMARKLET, DATA_REGISTRATION_HELP_URL } = await import('./constants.ts')
 
   // Then: 配布サイトとドキュメントサイトの環境別 URL が設定される
   assert.match(CHUNISUPPORT_BOOKMARKLET, /e\.src="https:\/\/dist\.example\.com\/pek\.js"/)

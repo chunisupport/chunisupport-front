@@ -3,7 +3,7 @@ import test from 'node:test'
 import type { WorldsendRecordDTO } from '../../../../types/api.ts'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
 import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
-import { getRecordStats } from '../../utils/recordStats'
+import { getRecordStats } from '../../utils/recordStats.ts'
 
 /**
  * 統計テスト用のレコードを作成する。

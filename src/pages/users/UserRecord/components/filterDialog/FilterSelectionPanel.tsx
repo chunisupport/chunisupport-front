@@ -1,34 +1,34 @@
 import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart'
-import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
-import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
-import { MAX_SCORE } from '../../../../../utils/scoreRank'
-import { getShortVersionName } from '../../../../../utils/versionConverter'
-import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters'
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart.ts'
+import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api.ts'
+import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData.ts'
+import { MAX_SCORE } from '../../../../../utils/scoreRank.ts'
+import { getShortVersionName } from '../../../../../utils/versionConverter.ts'
+import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters.ts'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
-} from '../../../constants/recordFilterOptions'
-import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
-import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../../constants/rangeFilters'
-import type { Difficulty, FilterState } from '../../types/types'
-import { parseNumberInput, toggleArray, updateOptionalNumberRange } from '../../utils/filterDialog'
+} from '../../../constants/recordFilterOptions.ts'
+import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay.ts'
+import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../../constants/rangeFilters.ts'
+import type { Difficulty, FilterState } from '../../types/types.ts'
+import { parseNumberInput, toggleArray, updateOptionalNumberRange } from '../../utils/filterDialog.ts'
 import {
   SCORE_RANK_MAX_VALUES,
   SCORE_RANK_VALUES,
   SCORE_RANKS,
   type ScoreRank,
-} from '../../utils/scoreRank'
-import ConstRangeSection from './sections/ConstRangeSection'
-import DifficultySection from './sections/DifficultySection'
-import GenreSection from './sections/GenreSection'
-import LampSection from './sections/LampSection'
-import NumericRangeSection from './sections/NumericRangeSection'
-import ScoreSection from './sections/ScoreSection'
-import VersionSection from './sections/VersionSection'
+} from '../../utils/scoreRank.ts'
+import ConstRangeSection from './sections/ConstRangeSection.tsx'
+import DifficultySection from './sections/DifficultySection.tsx'
+import GenreSection from './sections/GenreSection.tsx'
+import LampSection from './sections/LampSection.tsx'
+import NumericRangeSection from './sections/NumericRangeSection.tsx'
+import ScoreSection from './sections/ScoreSection.tsx'
+import VersionSection from './sections/VersionSection.tsx'
 
 type FilterSelectionPanelProps = {
   open: boolean

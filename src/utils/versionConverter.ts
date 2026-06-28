@@ -1,4 +1,4 @@
-import type { VersionDTO, VersionSummaryDTO } from '../types/api'
+import type { VersionDTO, VersionSummaryDTO } from '../types/api.ts'
 
 type VersionLike = Pick<VersionDTO, 'name' | 'released_at'> | VersionSummaryDTO
 

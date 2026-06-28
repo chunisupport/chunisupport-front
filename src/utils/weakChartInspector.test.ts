@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { PlayerRecordDTO } from '../types/api'
+import type { PlayerRecordDTO } from '../types/api.ts'
 import {
   inspectWeakCharts,
   isWeakChartDisplayTarget,
   sortWeakChartOutliers,
-} from './weakChartInspector'
+} from './weakChartInspector.ts'
 
 /**
  * テスト用の通常譜面レコードを生成する。

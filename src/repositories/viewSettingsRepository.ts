@@ -1,7 +1,7 @@
-import { CLIENT_CACHE_SCHEMA_VERSION, db, type ViewSetting } from '../lib/db/cacheDB'
-import type { FilterState, RecordColumnId } from '../pages/users/UserRecord/types/types'
-import type { WorldsendFilterState } from '../pages/users/WorldsendRecord/types/filterTypes'
-import type { WorldsendRecordColumnId } from '../pages/users/WorldsendRecord/utils/columns'
+import { CLIENT_CACHE_SCHEMA_VERSION, db, type ViewSetting } from '../lib/db/cacheDB.ts'
+import type { FilterState, RecordColumnId } from '../pages/users/UserRecord/types/types.ts'
+import type { WorldsendFilterState } from '../pages/users/WorldsendRecord/types/filterTypes.ts'
+import type { WorldsendRecordColumnId } from '../pages/users/WorldsendRecord/utils/columns.ts'
 
 type ViewSettingKey = ViewSetting['key']
 

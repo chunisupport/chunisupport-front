@@ -1,5 +1,5 @@
-import type { PlayerRecordDTO } from '../../types/api'
-import type { ChartLevelLabel } from '../../utils/chartLevel'
+import type { PlayerRecordDTO } from '../../types/api.ts'
+import type { ChartLevelLabel } from '../../utils/chartLevel.ts'
 
 export type OverPowerCategory = 'genre' | 'level' | 'version' | 'difficulty'
 

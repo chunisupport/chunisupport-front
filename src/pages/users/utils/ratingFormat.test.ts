@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatNullablePlayerRating, formatPlayerRating } from './ratingFormat'
+import { formatNullablePlayerRating, formatPlayerRating } from './ratingFormat.ts'
 
 test('プレイヤーレーティングは小数点以下4桁で切り捨てられること', () => {
   // Given

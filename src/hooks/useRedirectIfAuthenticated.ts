@@ -1,9 +1,9 @@
 import { useNavigate } from '@solidjs/router'
 import { createSignal, onMount } from 'solid-js'
 
-import { fetchMe, fetchUserProfileSummary } from '../api/users'
-import { REGISTER_SCORE_TEMP_PATH } from '../constants/routes'
-import { clearAuthenticatedUser, getAuthenticatedUser, getAuthStatus } from '../stores/authSession'
+import { fetchMe, fetchUserProfileSummary } from '../api/users.ts'
+import { REGISTER_SCORE_TEMP_PATH } from '../constants/routes.ts'
+import { clearAuthenticatedUser, getAuthenticatedUser, getAuthStatus } from '../stores/authSession.ts'
 import { resolvePostLoginRedirectPath } from '../usecases/auth/redirectPath.ts'
 import { resolveAuthenticatedRedirect } from '../usecases/auth/resolveAuthenticatedRedirect.ts'
 import { resolveAuthSession } from '../usecases/auth/resolveAuthSession.ts'

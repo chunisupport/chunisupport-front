@@ -1,7 +1,7 @@
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
-import type { FilterState } from '../types/types'
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart.ts'
+import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
+import { formatFullChainLampLabel } from '../../utils/fullChainDisplay.ts'
+import type { FilterState } from '../types/types.ts'
 
 type OptionalNumberRange = {
   min: number | null

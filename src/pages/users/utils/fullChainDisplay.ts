@@ -1,4 +1,4 @@
-import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
+import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api.ts'
 
 type FullChainLamp = PlayerRecordDTO['full_chain'] | WorldsendRecordDTO['full_chain']
 

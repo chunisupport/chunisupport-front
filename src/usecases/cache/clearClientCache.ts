@@ -1,4 +1,4 @@
-import { db } from '../../lib/db/cacheDB'
+import { db } from '../../lib/db/cacheDB.ts'
 
 /**
  * IndexedDB に保存したフロントエンドキャッシュを全削除する。

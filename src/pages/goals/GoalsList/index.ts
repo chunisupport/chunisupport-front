@@ -1,1 +1,1 @@
-export { default } from './GoalsList'
+export { default } from './GoalsList.tsx'

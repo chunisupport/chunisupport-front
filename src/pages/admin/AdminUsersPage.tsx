@@ -1,14 +1,14 @@
 import { Button } from '@kobalte/core/button'
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
-import { deleteUserByUsername, fetchAdminUsers } from '../../api/users'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { deleteUserByUsername, fetchAdminUsers } from '../../api/users.ts'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle.ts'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage.ts'
 import {
   formatAccountType,
   formatAdminUserDateTime,
   formatBooleanFlag,
   formatNullableText,
-} from './adminUserDisplay'
+} from './adminUserDisplay.ts'
 
 /**
  * 管理者向けユーザー管理ページ。

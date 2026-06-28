@@ -8,13 +8,13 @@ import { TextField } from '@kobalte/core/text-field'
 import { Check, ChevronDown } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
-import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
+import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown.tsx'
 import {
   CHART_CONST_DECIMAL_PLACES,
   CHART_CONST_MAX,
   CHART_CONST_MIN,
   SCORE_MIN,
-} from '../../../../constants/chart'
+} from '../../../../constants/chart.ts'
 import type {
   GoalAchievementParams,
   GoalAchievementType,
@@ -24,29 +24,29 @@ import type {
   GoalUpdateRequest,
   MasterDataDTO,
   VersionDTO,
-} from '../../../../types/api'
+} from '../../../../types/api.ts'
 import {
   getScoreRank,
   MAX_SCORE,
   SCORE_RANK_MIN_SCORES,
   SCORE_RANKS_ASC,
   type ScoreRank,
-} from '../../../../utils/scoreRank'
-import { buildGoalTargetParam, type GoalTargetMode } from '../../utils/goalCountTarget'
+} from '../../../../utils/scoreRank.ts'
+import { buildGoalTargetParam, type GoalTargetMode } from '../../utils/goalCountTarget.ts'
 import {
   COMBO_LAMP_OPTIONS,
   HARD_LAMP_OPTIONS,
   resolveGoalAchievementTypeLabel,
-} from '../../utils/goalForm'
-import type { GoalProgressResult } from '../../utils/goalProgress'
-import { buildGoalVersionOptions } from '../../utils/goalVersion'
+} from '../../utils/goalForm.ts'
+import type { GoalProgressResult } from '../../utils/goalProgress.ts'
+import { buildGoalVersionOptions } from '../../utils/goalVersion.ts'
 import {
   ERROR_MESSAGE_INVALID_COUNT_TARGET,
   GOAL_TITLE_MAX_LENGTH,
   LABEL_INVERT_DISPLAY,
   STEP3_DESCRIPTION,
-} from './constants'
-import { GoalCardProgress } from './GoalCard'
+} from './constants.ts'
+import { GoalCardProgress } from './GoalCard.tsx'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 

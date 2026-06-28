@@ -1,1 +1,1 @@
-export { default } from './WorldsendSongDetail'
+export { default } from './WorldsendSongDetail.tsx'

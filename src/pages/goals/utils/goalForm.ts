@@ -6,8 +6,8 @@ import type {
   GoalUpdateRequest,
   MasterDataDTO,
   VersionDTO,
-} from '../../../types/api'
-import { buildGoalVersionNameMap } from './goalVersion'
+} from '../../../types/api.ts'
+import { buildGoalVersionNameMap } from './goalVersion.ts'
 
 // ID(code) -> 表示名の辞書。将来は言語キーを増やすだけでi18n対応できる
 export const GOAL_ACHIEVEMENT_TYPE_LABELS = {

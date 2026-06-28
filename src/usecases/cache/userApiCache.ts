@@ -1,7 +1,7 @@
-import { fetchSongsUpdatedAt } from '../../api/songs'
-import { fetchMe, fetchUserUpdatedAt } from '../../api/users'
-import { getAuthenticatedUser, getAuthStatus } from '../../stores/authSession'
-import { resolveAuthSession } from '../auth/resolveAuthSession'
+import { fetchSongsUpdatedAt } from '../../api/songs.ts'
+import { fetchMe, fetchUserUpdatedAt } from '../../api/users.ts'
+import { getAuthenticatedUser, getAuthStatus } from '../../stores/authSession.ts'
+import { resolveAuthSession } from '../auth/resolveAuthSession.ts'
 
 export type UserApiCacheTimestamps = {
   userUpdatedAt: string | null

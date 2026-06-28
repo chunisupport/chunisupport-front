@@ -1,4 +1,4 @@
-import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
+import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown.tsx'
 
 type WorldsendMultiSelectSectionProps<T extends string | number | null> = {
   title: string

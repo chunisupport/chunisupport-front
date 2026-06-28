@@ -1,11 +1,11 @@
-import { API_BASE_URL } from '../config'
+import { API_BASE_URL } from '../config.ts'
 import type {
   AdminHonorDTO,
   AdminHonorsResponse,
   HonorRequestDTO,
   HonorTypesResponse,
-} from '../types/api'
-import { fetchWithAuth } from './fetchWithAuth'
+} from '../types/api.ts'
+import { fetchWithAuth } from './fetchWithAuth.ts'
 
 /**
  * 管理者向けの称号一覧を取得する。

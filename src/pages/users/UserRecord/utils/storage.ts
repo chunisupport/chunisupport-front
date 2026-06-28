@@ -3,12 +3,12 @@ import {
   deleteRecordFilter,
   fetchRecordFilters,
   updateRecordFilter,
-} from '../../../../api/recordFilters'
-import type { RecordFilterDTO, RecordFilterRequest } from '../../../../types/api'
-import type { SavedRecordFilterItem } from '../../components/SavedRecordFiltersDialog'
-import { isValidSavedStandardFilter } from '../../components/savedRecordFilters'
-import { normalizeFilterState } from '../types/filterDefaults'
-import type { FilterState } from '../types/types'
+} from '../../../../api/recordFilters.ts'
+import type { RecordFilterDTO, RecordFilterRequest } from '../../../../types/api.ts'
+import type { SavedRecordFilterItem } from '../../components/SavedRecordFiltersDialog.tsx'
+import { isValidSavedStandardFilter } from '../../components/savedRecordFilters.ts'
+import { normalizeFilterState } from '../types/filterDefaults.ts'
+import type { FilterState } from '../types/types.ts'
 
 export const SAVED_FILTER_SCHEMA_VERSION = 3
 const STANDARD_RECORD_FILTER_TYPE = 'standard'

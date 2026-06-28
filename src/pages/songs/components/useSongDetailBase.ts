@@ -1,10 +1,10 @@
 import { useNavigate } from '@solidjs/router'
 import { createMemo, createResource } from 'solid-js'
-import { fetchMasterData, fetchVersions } from '../../../api/songs'
+import { fetchMasterData, fetchVersions } from '../../../api/songs.ts'
 import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
-} from '../../../utils/versionConverter'
+} from '../../../utils/versionConverter.ts'
 
 type ReleaseSong = {
   release: string | null

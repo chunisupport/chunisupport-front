@@ -2,13 +2,13 @@ import type { Component } from 'solid-js'
 import {
   type SortConditionColumnOption,
   SortConditionsDialog,
-} from '../../components/SortConditionsDialog'
-import { WORLDSEND_RECORD_COLUMN_DEFINITIONS, type WorldsendRecordSortKey } from '../utils/columns'
+} from '../../components/SortConditionsDialog.tsx'
+import { WORLDSEND_RECORD_COLUMN_DEFINITIONS, type WorldsendRecordSortKey } from '../utils/columns.ts'
 import {
   DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS,
   normalizeWorldsendRecordSortConditions,
   type WorldsendRecordSortCondition,
-} from '../utils/sorting'
+} from '../utils/sorting.ts'
 
 type WorldsendSortDialogProps = {
   open: boolean

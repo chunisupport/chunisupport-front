@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { GoalDTO, PlayerRecordDTO, SongDTO } from '../../../types/api'
-import { calculateGoalProgress, filterRecordsByAttributes } from './goalProgress'
+import type { GoalDTO, PlayerRecordDTO, SongDTO } from '../../../types/api.ts'
+import { calculateGoalProgress, filterRecordsByAttributes } from './goalProgress.ts'
 
 /**
  * 目標進捗テスト用のプレイヤーレコードを作る。

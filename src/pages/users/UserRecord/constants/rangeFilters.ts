@@ -3,7 +3,7 @@ import {
   JUSTICE_COUNT_MIN,
   OVER_POWER_MAX,
   OVER_POWER_MIN,
-} from '../../../../constants/chart'
+} from '../../../../constants/chart.ts'
 
 /** 範囲フィルターの入力欄設定。 */
 export type NumericRangeFilterConfig = {

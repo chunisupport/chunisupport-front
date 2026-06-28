@@ -3,7 +3,7 @@ import * as Tabs from '@kobalte/core/tabs'
 import { ChevronRight, Link2, ShieldCheck, Trophy } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For } from 'solid-js'
-import type { DistributionMap, RecordStats } from '../utils/recordStats'
+import type { DistributionMap, RecordStats } from '../utils/recordStats.ts'
 import {
   clearColorMap,
   clearOrder,
@@ -12,7 +12,7 @@ import {
   rankColorMap,
   rankOrder,
   UNPLAYED_DISTRIBUTION_KEY,
-} from '../utils/recordStats'
+} from '../utils/recordStats.ts'
 
 type FilterStatsProps = {
   stats: RecordStats

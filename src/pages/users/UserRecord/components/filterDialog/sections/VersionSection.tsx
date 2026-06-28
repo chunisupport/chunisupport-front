@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js'
-import MultiSelectDropdown from '../../../../../../components/common/MultiSelectDropdown'
+import MultiSelectDropdown from '../../../../../../components/common/MultiSelectDropdown.tsx'
 
 type VersionSectionProps = {
   /** バージョンの選択肢。 */

@@ -6,24 +6,24 @@ import { signInWithPopup, signOut } from 'firebase/auth'
 import { Check, Dot, Loader, X } from 'lucide-solid'
 import { createEffect, createSignal, onMount, Show } from 'solid-js'
 
-import { postSignup } from '../../../api/auth'
-import { fetchMe } from '../../../api/users'
-import { Loading, Turnstile } from '../../../components'
-import { CF_TURNSTILE_SITE_KEY } from '../../../config'
-import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
-import { auth, googleProvider } from '../../../lib/firebase'
-import { clearAuthenticatedUser } from '../../../stores/authSession'
-import { resolveGoogleRegistrationEligibility } from '../../../usecases/auth/registrationEligibility'
-import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
-import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
+import { postSignup } from '../../../api/auth.ts'
+import { fetchMe } from '../../../api/users.ts'
+import { Loading, Turnstile } from '../../../components/index.ts'
+import { CF_TURNSTILE_SITE_KEY } from '../../../config.ts'
+import { useDocumentTitle } from '../../../hooks/useDocumentTitle.ts'
+import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated.ts'
+import { auth, googleProvider } from '../../../lib/firebase.ts'
+import { clearAuthenticatedUser } from '../../../stores/authSession.ts'
+import { resolveGoogleRegistrationEligibility } from '../../../usecases/auth/registrationEligibility.ts'
+import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage.ts'
+import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect.ts'
 import {
   PRIVACY_POLICY_URL,
   REGISTERED_GOOGLE_ACCOUNT_MESSAGE,
   TERMS_URL,
   TURNSTILE_ERROR_MESSAGE,
   TURNSTILE_REQUIRED_MESSAGE,
-} from './constants'
+} from './constants.ts'
 
 /**
  * Google認証を利用する新規登録画面を表示する。

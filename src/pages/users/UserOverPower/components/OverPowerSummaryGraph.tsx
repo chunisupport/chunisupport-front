@@ -1,8 +1,8 @@
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
-import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
-import { COMBO_LAMP_BAR_CLASS, SCORE_RANK_BAR_CLASS } from '../../components/recordStyleClasses'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
+import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types.ts'
+import { COMBO_LAMP_BAR_CLASS, SCORE_RANK_BAR_CLASS } from '../../components/recordStyleClasses.ts'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat.ts'
 
 export type OverPowerScoreBand = 'MAX' | 'SSS+' | 'SSS' | 'SS+' | 'SS' | 'S+' | 'S' | 'OTHER'
 export type OverPowerComboBand = 'ALL JUSTICE' | 'FULL COMBO' | 'OTHER'

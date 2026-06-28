@@ -2,11 +2,11 @@ import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
-import FilterResetDialog from '../../UserRecord/components/filterDialog/dialogs/FilterResetDialog'
-import { normalizeWorldsendFilterState } from '../types/filterDefaults'
-import type { WorldsendFilterState } from '../types/filterTypes'
-import WorldsendFilterSelectionPanel from './WorldsendFilterSelectionPanel'
-import WorldsendSavedFiltersDialog from './WorldsendSavedFiltersDialog'
+import FilterResetDialog from '../../UserRecord/components/filterDialog/dialogs/FilterResetDialog.tsx'
+import { normalizeWorldsendFilterState } from '../types/filterDefaults.ts'
+import type { WorldsendFilterState } from '../types/filterTypes.ts'
+import WorldsendFilterSelectionPanel from './WorldsendFilterSelectionPanel.tsx'
+import WorldsendSavedFiltersDialog from './WorldsendSavedFiltersDialog.tsx'
 
 type WorldsendFilterDialogProps = {
   open: boolean

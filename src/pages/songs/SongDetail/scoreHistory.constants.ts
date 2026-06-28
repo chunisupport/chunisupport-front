@@ -1,5 +1,5 @@
-import type { ScoreHistoryDifficulty } from '../../../api/songs'
-import type { PlayerDataDifficulty } from '../../../types/api'
+import type { ScoreHistoryDifficulty } from '../../../api/songs.ts'
+import type { PlayerDataDifficulty } from '../../../types/api.ts'
 
 /** 通常譜面でスコア履歴を保持する難易度。 */
 export const SCORE_HISTORY_DIFFICULTIES: readonly ScoreHistoryDifficulty[] = [

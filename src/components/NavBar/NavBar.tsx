@@ -17,26 +17,26 @@ import {
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createSignal, For, onCleanup, onMount } from 'solid-js'
-import { isHomePath } from './navItemMatching'
+import { isHomePath } from './navItemMatching.ts'
 
 type NavBarProps = {
   children: JSX.Element
 }
 
 import { signOut } from 'firebase/auth'
-import { fetchMe } from '../../api/users'
-import { DOCUMENTATION_BASE_URL } from '../../config'
-import { auth } from '../../lib/firebase'
-import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
-import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
-import { clearClientCache } from '../../usecases/cache/clearClientCache'
+import { fetchMe } from '../../api/users.ts'
+import { DOCUMENTATION_BASE_URL } from '../../config.ts'
+import { auth } from '../../lib/firebase.ts'
+import { authSession, clearAuthenticatedUser } from '../../stores/authSession.ts'
+import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession.ts'
+import { clearClientCache } from '../../usecases/cache/clearClientCache.ts'
 import {
   applyThemePreference,
   readThemePreference,
   saveThemePreference,
   subscribeSystemThemeChange,
   type ThemePreference,
-} from '../../utils/themePreference'
+} from '../../utils/themePreference.ts'
 
 /**
  * その他メニューに表示する項目を表す。

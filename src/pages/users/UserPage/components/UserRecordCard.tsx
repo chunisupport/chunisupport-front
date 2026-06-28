@@ -2,15 +2,15 @@ import { Image } from '@kobalte/core/image'
 import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createSignal, onMount, Show } from 'solid-js'
-import type { PlayerRecordDTO } from '../../../../types/api'
+import type { PlayerRecordDTO } from '../../../../types/api.ts'
 import {
   difficultyCardBorderColor,
   difficultyToQueryValue,
-} from '../../../../utils/difficultyUtils'
-import { buildChunithmJacketUrl } from '../../../../utils/jacket'
-import { getScoreRank } from '../../../../utils/scoreRank'
-import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses'
-import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
+} from '../../../../utils/difficultyUtils.ts'
+import { buildChunithmJacketUrl } from '../../../../utils/jacket.ts'
+import { getScoreRank } from '../../../../utils/scoreRank.ts'
+import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses.ts'
+import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns.tsx'
 
 type Props = {
   record: PlayerRecordDTO

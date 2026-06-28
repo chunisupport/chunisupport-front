@@ -1,5 +1,5 @@
-import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../types/api'
-import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter'
+import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../types/api.ts'
+import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter.ts'
 
 /** 楽曲メタ情報を付与したプレイヤーレコード */
 export interface PlayerRecordWithSongMeta extends PlayerRecordDTO {

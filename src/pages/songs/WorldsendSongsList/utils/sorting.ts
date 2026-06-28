@@ -1,9 +1,9 @@
-import type { MasterItemDTO, WorldsendSongDTO } from '../../../../types/api'
-import { compareMasterItemNames, createMasterItemOrderMap } from '../../../../utils/masterData'
+import type { MasterItemDTO, WorldsendSongDTO } from '../../../../types/api.ts'
+import { compareMasterItemNames, createMasterItemOrderMap } from '../../../../utils/masterData.ts'
 import {
   nextSortState as nextSharedSortState,
   type SortDirection,
-} from '../../../users/recordTable/sortingQuery'
+} from '../../../users/recordTable/sortingQuery.ts'
 
 export type WorldsendSongSortKey =
   | 'title'

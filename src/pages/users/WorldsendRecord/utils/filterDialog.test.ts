@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { DEFAULT_WORLDSEND_FILTER } from '../types/filterDefaults'
-import type { WorldsendFilterState } from '../types/filterTypes'
-import { isWorldsendFilterChanged, isWorldsendFilterOptionsChanged } from './filterDialog'
+import { DEFAULT_WORLDSEND_FILTER } from '../types/filterDefaults.ts'
+import type { WorldsendFilterState } from '../types/filterTypes.ts'
+import { isWorldsendFilterChanged, isWorldsendFilterOptionsChanged } from './filterDialog.ts'
 
 test('isWorldsendFilterChanged は既定値と同じ条件を未変更として扱うこと', () => {
   // Given

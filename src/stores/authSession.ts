@@ -1,6 +1,6 @@
 import { createRoot } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import type { UserDTO } from '../types/api'
+import type { UserDTO } from '../types/api.ts'
 
 type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated' | 'error'
 

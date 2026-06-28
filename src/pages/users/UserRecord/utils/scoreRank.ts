@@ -2,7 +2,7 @@ import {
   HIGH_SCORE_RANKS,
   SCORE_RANK_MAX_SCORES,
   SCORE_RANK_MIN_SCORES,
-} from '../../../../utils/scoreRank'
+} from '../../../../utils/scoreRank.ts'
 
 export type ScoreRank = '0点' | (typeof HIGH_SCORE_RANKS)[number]
 

@@ -1,8 +1,8 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { FilterState, RecordColumnId } from '../../pages/users/UserRecord/types/types'
-import type { WorldsendFilterState } from '../../pages/users/WorldsendRecord/types/filterTypes'
-import type { WorldsendRecordColumnId } from '../../pages/users/WorldsendRecord/utils/columns'
-import type { SongDTO, UserRatingDTO, UserRecordDTO, WorldsendSongDTO } from '../../types/api'
+import type { FilterState, RecordColumnId } from '../../pages/users/UserRecord/types/types.ts'
+import type { WorldsendFilterState } from '../../pages/users/WorldsendRecord/types/filterTypes.ts'
+import type { WorldsendRecordColumnId } from '../../pages/users/WorldsendRecord/utils/columns.ts'
+import type { SongDTO, UserRatingDTO, UserRecordDTO, WorldsendSongDTO } from '../../types/api.ts'
 
 /** IndexedDB に保存するキャッシュデータの現行スキーマバージョン。 */
 export const CLIENT_CACHE_SCHEMA_VERSION = 4

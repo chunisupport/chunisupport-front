@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { RatingBandDTO } from '../../../../types/api'
+import type { RatingBandDTO } from '../../../../types/api.ts'
 import { isOwnBestAverageRatingBand } from './songStatsHighlight.ts'
 
 const ratingBands: RatingBandDTO[] = [

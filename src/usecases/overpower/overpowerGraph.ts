@@ -1,5 +1,5 @@
-import type { PlayerRecordDTO, SongDTO } from '../../types/api'
-import type { OverPowerDifficulty, OverPowerLockedSong } from './types'
+import type { PlayerRecordDTO, SongDTO } from '../../types/api.ts'
+import type { OverPowerDifficulty, OverPowerLockedSong } from './types.ts'
 
 const DIFFICULTY_ORDER: OverPowerDifficulty[] = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA']
 const ULTIMA_DIFFICULTY: OverPowerDifficulty = 'ULTIMA'

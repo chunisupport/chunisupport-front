@@ -10,14 +10,14 @@ import {
   fetchPrivacy,
   issueApiToken,
   updatePrivacy,
-} from '../../api/settings'
-import { fetchMe, fetchUserProfileSummary } from '../../api/users'
-import { LoadError, Loading } from '../../components'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { auth } from '../../lib/firebase'
-import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
-import { clearClientCache } from '../../usecases/cache/clearClientCache'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+} from '../../api/settings.ts'
+import { fetchMe, fetchUserProfileSummary } from '../../api/users.ts'
+import { LoadError, Loading } from '../../components/index.ts'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle.ts'
+import { auth } from '../../lib/firebase.ts'
+import { authSession, clearAuthenticatedUser } from '../../stores/authSession.ts'
+import { clearClientCache } from '../../usecases/cache/clearClientCache.ts'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage.ts'
 
 const SECTION_IDS = ['privacy', 'api-token', 'player-data', 'account-delete'] as const
 

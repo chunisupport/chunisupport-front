@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import type { RecordFilterDTO } from '../../../../types/api'
-import { DEFAULT_WORLDSEND_FILTER } from '../types/filterDefaults'
+import type { RecordFilterDTO } from '../../../../types/api.ts'
+import { DEFAULT_WORLDSEND_FILTER } from '../types/filterDefaults.ts'
 
 /**
  * API 設定に必要な環境変数を補って WORLD'S END 保存フィルターユーティリティを読み込む。

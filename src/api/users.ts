@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config'
+import { API_BASE_URL } from '../config.ts'
 import type {
   AdminUserListResponse,
   PlayerLockedSongRequest,
@@ -9,8 +9,8 @@ import type {
   UserProfileDTO,
   UserRatingDTO,
   UserRecordDTO,
-} from '../types/api'
-import { fetchWithAuth } from './fetchWithAuth'
+} from '../types/api.ts'
+import { fetchWithAuth } from './fetchWithAuth.ts'
 
 type FetchUserRecordOptions = {
   includeNoPlay?: boolean

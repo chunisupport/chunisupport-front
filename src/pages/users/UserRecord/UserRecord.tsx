@@ -10,34 +10,34 @@ import {
   Show,
   Suspense,
 } from 'solid-js'
-import { fetchMasterData, fetchVersions } from '../../../api/songs'
-import { LoadError, Loading } from '../../../components'
-import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { fetchMasterData, fetchVersions } from '../../../api/songs.ts'
+import { LoadError, Loading } from '../../../components/index.ts'
+import { useDocumentTitle } from '../../../hooks/useDocumentTitle.ts'
 import {
   readStandardRecordColumnsSetting,
   readStandardRecordFilterSetting,
   saveStandardRecordColumnsSetting,
   saveStandardRecordFilterSetting,
-} from '../../../repositories/viewSettingsRepository'
-import { useSongsData } from '../../../stores/songsData'
-import type { MasterDataDTO, UserRecordDTO, VersionSummaryDTO } from '../../../types/api'
-import FilterStats from '../components/FilterStats'
-import { isValidSavedStandardFilter } from '../components/savedRecordFilters'
-import { sanitizeSortQuery } from '../recordTable/sortingQuery'
-import ColumnSettingsDialog from './components/ColumnSettingsDialog'
-import FilterDialog from './components/FilterDialog'
-import FilterToolbar from './components/FilterToolbar'
-import RecordTable from './components/RecordTable'
-import SortDialog from './components/SortDialog'
-import { buildDefaultFilter, DEFAULT_FILTER, normalizeFilterState } from './types/filterDefaults'
-import type { FilterState, RecordColumnId, RecordSortCondition } from './types/types'
-import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
+} from '../../../repositories/viewSettingsRepository.ts'
+import { useSongsData } from '../../../stores/songsData.ts'
+import type { MasterDataDTO, UserRecordDTO, VersionSummaryDTO } from '../../../types/api.ts'
+import FilterStats from '../components/FilterStats.tsx'
+import { isValidSavedStandardFilter } from '../components/savedRecordFilters.ts'
+import { sanitizeSortQuery } from '../recordTable/sortingQuery.ts'
+import ColumnSettingsDialog from './components/ColumnSettingsDialog.tsx'
+import FilterDialog from './components/FilterDialog.tsx'
+import FilterToolbar from './components/FilterToolbar.tsx'
+import RecordTable from './components/RecordTable.tsx'
+import SortDialog from './components/SortDialog.tsx'
+import { buildDefaultFilter, DEFAULT_FILTER, normalizeFilterState } from './types/filterDefaults.ts'
+import type { FilterState, RecordColumnId, RecordSortCondition } from './types/types.ts'
+import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns.ts'
 import {
   isRecordDifficultyFilterOnlyChanged,
   isRecordFilterOptionsChanged,
-} from './utils/filterDialog'
-import { useUserRecordPageModel } from './utils/pageModel'
-import { createInitialRecordSortConditions, parseSortParams } from './utils/sorting'
+} from './utils/filterDialog.ts'
+import { useUserRecordPageModel } from './utils/pageModel.ts'
+import { createInitialRecordSortConditions, parseSortParams } from './utils/sorting.ts'
 
 type Props = {
   username: string

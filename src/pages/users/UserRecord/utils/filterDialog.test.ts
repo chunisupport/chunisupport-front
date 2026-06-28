@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { DEFAULT_FILTER } from '../types/filterDefaults'
-import type { FilterState } from '../types/types'
+import { DEFAULT_FILTER } from '../types/filterDefaults.ts'
+import type { FilterState } from '../types/types.ts'
 import {
   formatFilterSummary,
   isRecordDifficultyFilterOnlyChanged,
@@ -10,7 +10,7 @@ import {
   isRecordFilterOptionsChanged,
   parseOptionalRangeNumberInput,
   updateOptionalNumberRange,
-} from './filterDialog'
+} from './filterDialog.ts'
 
 test('FULL CHAINランプのフィルター要約は表示用ラベルで出力されること', () => {
   // Given

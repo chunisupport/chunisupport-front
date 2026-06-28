@@ -1,9 +1,9 @@
-import { LOGIN_PATH } from '../constants/routes'
-import { auth } from '../lib/firebase'
-import { clearAuthenticatedUser } from '../stores/authSession'
-import { type ErrorCode, type ErrorResponse, getErrorMessage } from '../types/api'
-import { buildLoginRedirectPath } from '../usecases/auth/redirectPath'
-import { buildCurrentPath } from '../utils/currentPath'
+import { LOGIN_PATH } from '../constants/routes.ts'
+import { auth } from '../lib/firebase.ts'
+import { clearAuthenticatedUser } from '../stores/authSession.ts'
+import { type ErrorCode, type ErrorResponse, getErrorMessage } from '../types/api.ts'
+import { buildLoginRedirectPath } from '../usecases/auth/redirectPath.ts'
+import { buildCurrentPath } from '../utils/currentPath.ts'
 
 type FetchWithAuthOptions = RequestInit & {
   requireAuthentication?: boolean

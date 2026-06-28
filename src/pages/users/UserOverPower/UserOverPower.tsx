@@ -21,41 +21,41 @@ import {
   Show,
   Suspense,
 } from 'solid-js'
-import { fetchMasterData, fetchVersions } from '../../../api/songs'
-import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
-import { LoadError, Loading } from '../../../components'
-import { authSession } from '../../../stores/authSession'
-import { useSongsData } from '../../../stores/songsData'
+import { fetchMasterData, fetchVersions } from '../../../api/songs.ts'
+import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users.ts'
+import { LoadError, Loading } from '../../../components/index.ts'
+import { authSession } from '../../../stores/authSession.ts'
+import { useSongsData } from '../../../stores/songsData.ts'
 import type {
   PlayerLockedSongRequest,
   PlayerRecordDTO,
   SongDTO,
   UserRecordDTO,
   VersionSummaryDTO,
-} from '../../../types/api'
-import { buildLockedSongsBatchPayload } from '../../../usecases/overpower/lockedSongsBatch'
+} from '../../../types/api.ts'
+import { buildLockedSongsBatchPayload } from '../../../usecases/overpower/lockedSongsBatch.ts'
 import {
   buildOverPowerLockedSongLookup,
   buildTheoreticalTargetRecordBySongId,
-} from '../../../usecases/overpower/overpowerGraph'
-import { buildOverPowerSummary } from '../../../usecases/overpower/overpowerSummary'
-import type { OverPowerDifficulty } from '../../../usecases/overpower/types'
-import { toChartLevelLabel } from '../../../utils/chartLevel'
-import { getScoreRank, MAX_SCORE } from '../../../utils/scoreRank'
+} from '../../../usecases/overpower/overpowerGraph.ts'
+import { buildOverPowerSummary } from '../../../usecases/overpower/overpowerSummary.ts'
+import type { OverPowerDifficulty } from '../../../usecases/overpower/types.ts'
+import { toChartLevelLabel } from '../../../utils/chartLevel.ts'
+import { getScoreRank, MAX_SCORE } from '../../../utils/scoreRank.ts'
 import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
-} from '../../../utils/versionConverter'
-import { buildUserOverPowerPagePath, type OverPowerSubPage } from '../UserPage/profilePageQuery'
-import LockedSongsDialog from './components/LockedSongsDialog'
-import { OverPowerAllSummary } from './components/OverPowerAllSummary'
+} from '../../../utils/versionConverter.ts'
+import { buildUserOverPowerPagePath, type OverPowerSubPage } from '../UserPage/profilePageQuery.ts'
+import LockedSongsDialog from './components/LockedSongsDialog.tsx'
+import { OverPowerAllSummary } from './components/OverPowerAllSummary.tsx'
 import {
   type OverPowerComboBand,
   type OverPowerGraphRow,
   type OverPowerScoreBand,
   OverPowerSummaryGraph,
-} from './components/OverPowerSummaryGraph'
-import { OverPowerSummaryTable } from './components/OverPowerSummaryTable'
+} from './components/OverPowerSummaryGraph.tsx'
+import { OverPowerSummaryTable } from './components/OverPowerSummaryTable.tsx'
 
 type Props = {
   record: UserRecordDTO

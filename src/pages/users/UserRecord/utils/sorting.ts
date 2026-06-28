@@ -1,15 +1,15 @@
-import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
 import {
   parseSortQuery,
   type SortDirection,
   type SortParamsSource,
-} from '../../recordTable/sortingQuery'
+} from '../../recordTable/sortingQuery.ts'
 import {
   compareMissingJusticeCountRecords,
   isJusticeCountMissing,
-} from '../../utils/justiceCountSorting'
-import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
-import type { RecordSortCondition, RecordSortKey } from '../types/types'
+} from '../../utils/justiceCountSorting.ts'
+import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting.ts'
+import type { RecordSortCondition, RecordSortKey } from '../types/types.ts'
 import { formatJusticeCountForAj } from './justiceCountDisplay.ts'
 import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
 

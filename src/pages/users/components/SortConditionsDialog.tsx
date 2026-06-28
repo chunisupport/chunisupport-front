@@ -4,11 +4,11 @@ import { Select } from '@kobalte/core/select'
 import * as Tabs from '@kobalte/core/tabs'
 import { Check, ChevronDown } from 'lucide-solid'
 import { createEffect, createMemo, createSignal, For } from 'solid-js'
-import type { SortDirection } from '../recordTable/sortingQuery'
+import type { SortDirection } from '../recordTable/sortingQuery.ts'
 import {
   FILTER_DIALOG_SELECT_ITEM_CLASS,
   FILTER_DIALOG_SELECT_TRIGGER_CLASS,
-} from '../UserRecord/components/filterDialog/styles'
+} from '../UserRecord/components/filterDialog/styles.ts'
 
 /** 複数条件ソートで使う1行分のソート条件。 */
 export type SortCondition<TSortKey extends string> = {

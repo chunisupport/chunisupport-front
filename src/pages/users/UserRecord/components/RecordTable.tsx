@@ -1,15 +1,15 @@
 import { type Component, createMemo, For, Show } from 'solid-js'
-import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
-import { createRecordTableVirtualizer } from '../../components/createRecordTableVirtualizer'
+import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
+import { createRecordTableVirtualizer } from '../../components/createRecordTableVirtualizer.ts'
 import {
   RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
   RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS,
   RecordHeaderButton,
-} from '../../components/SharedRecordTableColumns'
-import type { RecordColumnId, RecordSortKey, SortDirection } from '../types/types'
-import { getRecordColumnRenderer } from '../utils/columnRenderers'
-import { createGridTemplateColumns, getVisibleColumns } from '../utils/columns'
+} from '../../components/SharedRecordTableColumns.tsx'
+import type { RecordColumnId, RecordSortKey, SortDirection } from '../types/types.ts'
+import { getRecordColumnRenderer } from '../utils/columnRenderers.tsx'
+import { createGridTemplateColumns, getVisibleColumns } from '../utils/columns.ts'
 
 interface RecordTableProps {
   records: PlayerRecordWithSongMeta[]

@@ -1,14 +1,14 @@
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart'
-import type { MasterDataDTO, MasterItemDTO, VersionSummaryDTO } from '../../../../types/api'
-import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { getShortVersionName } from '../../../../utils/versionConverter'
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart.ts'
+import type { MasterDataDTO, MasterItemDTO, VersionSummaryDTO } from '../../../../types/api.ts'
+import { sortMasterItemsBySortOrder } from '../../../../utils/masterData.ts'
+import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
+import { getShortVersionName } from '../../../../utils/versionConverter.ts'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
-} from '../../constants/recordFilterOptions'
-import type { FilterState } from '../types/types'
+} from '../../constants/recordFilterOptions.ts'
+import type { FilterState } from '../types/types.ts'
 
 /** フィルターのデフォルト値 */
 export const DEFAULT_FILTER: FilterState = {

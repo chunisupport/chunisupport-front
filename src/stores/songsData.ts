@@ -1,6 +1,6 @@
 import { createResource, createRoot, createSignal } from 'solid-js'
-import { fetchAllSongsWithCache } from '../usecases/cache/fetchAllSongsWithCache'
-import { fetchWorldsendSongsWithCache } from '../usecases/cache/fetchWorldsendSongsWithCache'
+import { fetchAllSongsWithCache } from '../usecases/cache/fetchAllSongsWithCache.ts'
+import { fetchWorldsendSongsWithCache } from '../usecases/cache/fetchWorldsendSongsWithCache.ts'
 
 const createSongsStore = () => {
   const [songsRequested, setSongsRequested] = createSignal(false)

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { calculateChartConstant, resolveLampForScore } from './chartConstantCalculator'
+import { calculateChartConstant, resolveLampForScore } from './chartConstantCalculator.ts'
 
 test('理論値が入力された場合はALL JUSTICE CRITICALを選択すること', () => {
   // Given

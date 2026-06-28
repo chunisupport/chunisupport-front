@@ -9,20 +9,20 @@ import type {
   PlayerDataResult,
   PlayerDataStatistics,
   PlayerDataStatisticsGroup,
-} from '../../types/api'
-import { difficultyBadgeClass } from '../../utils/difficultyUtils'
+} from '../../types/api.ts'
+import { difficultyBadgeClass } from '../../utils/difficultyUtils.ts'
 import {
   HARD_LAMP_BADGE_BACKGROUND_CLASS,
   type SharedClearLamp,
   type SharedComboLamp,
-} from '../users/components/recordStyleClasses'
+} from '../users/components/recordStyleClasses.ts'
 import {
   RecordFullChainCell,
   RecordHardLampCell,
   RecordLampCell,
-} from '../users/components/SharedRecordTableColumns'
-import { formatOverPowerPercent, formatOverPowerValue } from '../users/utils/overPowerFormat'
-import { formatPlayerRating } from '../users/utils/ratingFormat'
+} from '../users/components/SharedRecordTableColumns.tsx'
+import { formatOverPowerPercent, formatOverPowerValue } from '../users/utils/overPowerFormat.ts'
+import { formatPlayerRating } from '../users/utils/ratingFormat.ts'
 
 export const REGISTER_SCORE_MESSAGES = {
   invalidToken: 'tokenが不正です。登録用URLを確認してください。',

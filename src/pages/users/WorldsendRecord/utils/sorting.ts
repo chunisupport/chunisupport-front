@@ -1,20 +1,20 @@
-import type { WorldsendRecordDTO } from '../../../../types/api'
+import type { WorldsendRecordDTO } from '../../../../types/api.ts'
 import {
   parseSortQuery,
   type SortDirection,
   type SortParamsSource,
-} from '../../recordTable/sortingQuery'
-import { formatJusticeCountForAj } from '../../UserRecord/utils/justiceCountDisplay'
+} from '../../recordTable/sortingQuery.ts'
+import { formatJusticeCountForAj } from '../../UserRecord/utils/justiceCountDisplay.ts'
 import {
   compareUpdatedAtWithMissingLast,
   updatedAtTimestamp,
-} from '../../UserRecord/utils/updatedAt'
+} from '../../UserRecord/utils/updatedAt.ts'
 import {
   compareMissingJusticeCountRecords,
   isJusticeCountMissing,
-} from '../../utils/justiceCountSorting'
-import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
-import type { WorldsendRecordSortKey } from './columns'
+} from '../../utils/justiceCountSorting.ts'
+import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting.ts'
+import type { WorldsendRecordSortKey } from './columns.ts'
 
 /** WORLD'S END レコードのソート条件。 */
 export type WorldsendRecordSortCondition = {

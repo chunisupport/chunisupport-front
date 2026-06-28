@@ -1,15 +1,15 @@
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../constants/chart'
-import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
-import { MAX_SCORE } from '../../../utils/scoreRank'
-import { buildDefaultFilter } from '../../users/UserRecord/types/filterDefaults'
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../constants/chart.ts'
+import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api.ts'
+import { MAX_SCORE } from '../../../utils/scoreRank.ts'
+import { buildDefaultFilter } from '../../users/UserRecord/types/filterDefaults.ts'
 import type {
   ComboLamp,
   Difficulty,
   FilterState,
   HardLamp,
-} from '../../users/UserRecord/types/types'
-import { isExplicitEmptyAttribute } from './goalForm'
-import { buildGoalVersionNameMap } from './goalVersion'
+} from '../../users/UserRecord/types/types.ts'
+import { isExplicitEmptyAttribute } from './goalForm.ts'
+import { buildGoalVersionNameMap } from './goalVersion.ts'
 
 const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
   'rank_count',

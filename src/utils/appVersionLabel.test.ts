@@ -4,7 +4,7 @@ import {
   formatBuildDateLabel,
   formatBuildRevisionLabel,
   normalizeBuildDate,
-} from './appVersionLabel'
+} from './appVersionLabel.ts'
 
 test('normalizeBuildDate: ISO 形式のビルド日時を YYYYMMDD に変換する', () => {
   assert.equal(normalizeBuildDate('2026-06-14T00:00:00.000Z'), '20260614')
