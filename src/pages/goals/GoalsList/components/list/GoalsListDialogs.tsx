@@ -1,10 +1,10 @@
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
-import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../../types/api'
-import type { GoalProgressResult } from '../../utils/goalProgress'
-import type { GoalsListData } from '../goalsListResource'
+import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../../../types/api'
+import type { GoalProgressResult } from '../../../utils/goalProgress'
+import type { GoalsListData } from '../../goalsListResource'
+import { GoalFormDialog } from '../form'
 import GoalDeleteDialog from './GoalDeleteDialog'
-import GoalFormDialog from './GoalFormDialog'
 
 interface GoalsListDialogsProps {
   data?: GoalsListData

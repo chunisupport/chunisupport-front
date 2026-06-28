@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { CHART_CONST_MAX, CHART_CONST_MIN } from '../../../../constants/chart'
-import type { GoalDTO } from '../../../../types/api'
+import { CHART_CONST_MAX, CHART_CONST_MIN } from '../../../../../constants/chart'
+import type { GoalDTO } from '../../../../../types/api'
 import {
   buildGoalFormAchievementParams,
   buildGoalFormAttributes,

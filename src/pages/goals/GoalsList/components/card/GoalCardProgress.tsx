@@ -1,6 +1,6 @@
 import type { Component } from 'solid-js'
-import type { GoalAchievementType } from '../../../../types/api'
-import type { GoalProgressResult } from '../../utils/goalProgress'
+import type { GoalAchievementType } from '../../../../../types/api'
+import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { resolveGoalCardDisplayProgress } from './goalCardProgressModel'
 
 interface GoalCardProgressProps {

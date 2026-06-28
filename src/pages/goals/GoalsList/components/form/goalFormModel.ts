@@ -1,23 +1,23 @@
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart'
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart'
 import type {
   GoalAchievementParams,
   GoalAchievementType,
   GoalAttributes,
   GoalDTO,
-} from '../../../../types/api'
+} from '../../../../../types/api'
 import {
   getScoreRank,
   MAX_SCORE,
   SCORE_RANK_MIN_SCORES,
   type ScoreRank,
-} from '../../../../utils/scoreRank'
-import { buildGoalTargetParam, type GoalTargetMode } from '../../utils/goalCountTarget'
+} from '../../../../../utils/scoreRank'
+import { buildGoalTargetParam, type GoalTargetMode } from '../../../utils/goalCountTarget'
 import {
   type ComboLampGoalValue,
   type HardLampGoalValue,
   isComboLampGoalValue,
   isHardLampGoalValue,
-} from '../../utils/goalLamp'
+} from '../../../utils/goalLamp'
 
 export type RankGoalValue = ScoreRank | 'THEORETICAL'
 export type GoalChartTargetMode = 'normal' | 'op_target'

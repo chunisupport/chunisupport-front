@@ -1,7 +1,7 @@
-import { SCORE_MIN } from '../../../../constants/chart'
-import type { GoalAchievementType } from '../../../../types/api'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
-import type { GoalTargetMode } from '../../utils/goalCountTarget'
+import { SCORE_MIN } from '../../../../../constants/chart'
+import type { GoalAchievementType } from '../../../../../types/api'
+import { MAX_SCORE } from '../../../../../utils/scoreRank'
+import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { ERROR_MESSAGE_INVALID_COUNT_TARGET, GOAL_TITLE_MAX_LENGTH } from './constants'
 import {
   canUseDynamicTotalTarget,

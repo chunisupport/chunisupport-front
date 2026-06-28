@@ -6,7 +6,7 @@ import {
   CHART_CONST_MAX,
   CHART_CONST_MIN,
   SCORE_MIN,
-} from '../../../../constants/chart'
+} from '../../../../../constants/chart'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -15,13 +15,13 @@ import type {
   GoalUpdateRequest,
   MasterDataDTO,
   VersionDTO,
-} from '../../../../types/api'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
-import type { GoalTargetMode } from '../../utils/goalCountTarget'
-import { resolveGoalAchievementTypeLabel } from '../../utils/goalForm'
-import type { ComboLampGoalValue, HardLampGoalValue } from '../../utils/goalLamp'
-import type { GoalProgressResult } from '../../utils/goalProgress'
-import { buildGoalVersionOptions } from '../../utils/goalVersion'
+} from '../../../../../types/api'
+import { MAX_SCORE } from '../../../../../utils/scoreRank'
+import type { GoalTargetMode } from '../../../utils/goalCountTarget'
+import { resolveGoalAchievementTypeLabel } from '../../../utils/goalForm'
+import type { ComboLampGoalValue, HardLampGoalValue } from '../../../utils/goalLamp'
+import type { GoalProgressResult } from '../../../utils/goalProgress'
+import { buildGoalVersionOptions } from '../../../utils/goalVersion'
 import { GoalAchievementSection } from './GoalAchievementSection'
 import { GoalFormFooter } from './GoalFormFooter'
 import { GoalPreviewSection } from './GoalPreviewSection'

@@ -1,9 +1,9 @@
 import { Button } from '@kobalte/core/button'
 import { ExternalLink } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import type { GoalDTO } from '../../../../types/api'
-import type { GoalProgressResult } from '../../utils/goalProgress'
-import { isGoalRecordNavigationEnabled } from '../../utils/goalRecordFilter'
+import type { GoalDTO } from '../../../../../types/api'
+import type { GoalProgressResult } from '../../../utils/goalProgress'
+import { isGoalRecordNavigationEnabled } from '../../../utils/goalRecordFilter'
 import { GoalCardActionMenu } from './GoalCardActionMenu'
 import { GoalCardProgress } from './GoalCardProgress'
 

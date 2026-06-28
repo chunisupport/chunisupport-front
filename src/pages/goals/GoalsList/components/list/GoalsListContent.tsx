@@ -1,15 +1,15 @@
 import { Button } from '@kobalte/core/button'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
-import type { GoalDTO } from '../../../../types/api'
+import type { GoalDTO } from '../../../../../types/api'
 import {
   ADD_GOAL_LABEL,
   EMPTY_GOALS_MESSAGE,
   GOALS_LIMIT,
   GOALS_LIMIT_REACHED_MESSAGE,
-} from '../constants'
-import type { GoalWithProgress } from '../goalsListProgress'
-import GoalCard from './GoalCard'
+} from '../../constants'
+import type { GoalWithProgress } from '../../goalsListProgress'
+import GoalCard from '../card/GoalCard'
 
 interface GoalsListContentProps {
   goalsCount: number

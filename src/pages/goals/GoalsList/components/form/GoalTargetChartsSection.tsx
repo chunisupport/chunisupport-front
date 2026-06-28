@@ -1,8 +1,8 @@
 import { Button } from '@kobalte/core/button'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
-import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
-import type { MasterDataDTO } from '../../../../types/api'
+import MultiSelectDropdown from '../../../../../components/common/MultiSelectDropdown'
+import type { MasterDataDTO } from '../../../../../types/api'
 import { GoalDecimalTextField, GoalFilterCheckbox } from './goalFormFields'
 import type { GoalChartTargetMode } from './goalFormModel'
 import {

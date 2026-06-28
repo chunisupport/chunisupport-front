@@ -1,5 +1,5 @@
-import type { GoalAchievementType } from '../../../../types/api'
-import type { GoalProgressResult } from '../../utils/goalProgress'
+import type { GoalAchievementType } from '../../../../../types/api'
+import type { GoalProgressResult } from '../../../utils/goalProgress'
 
 export interface GoalCardDisplayProgress {
   currentText: string

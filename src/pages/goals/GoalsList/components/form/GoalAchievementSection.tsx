@@ -2,16 +2,16 @@ import { Checkbox } from '@kobalte/core/checkbox'
 import { Check } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
-import { SCORE_MIN } from '../../../../constants/chart'
-import type { GoalAchievementType } from '../../../../types/api'
-import { MAX_SCORE, SCORE_RANK_MIN_SCORES, SCORE_RANKS_ASC } from '../../../../utils/scoreRank'
-import type { GoalTargetMode } from '../../utils/goalCountTarget'
+import { SCORE_MIN } from '../../../../../constants/chart'
+import type { GoalAchievementType } from '../../../../../types/api'
+import { MAX_SCORE, SCORE_RANK_MIN_SCORES, SCORE_RANKS_ASC } from '../../../../../utils/scoreRank'
+import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import {
   COMBO_LAMP_OPTIONS,
   type ComboLampGoalValue,
   HARD_LAMP_OPTIONS,
   type HardLampGoalValue,
-} from '../../utils/goalLamp'
+} from '../../../utils/goalLamp'
 import { LABEL_INVERT_DISPLAY, STEP3_DESCRIPTION } from './constants'
 import {
   GOAL_FILTER_CHECKBOX_CONTROL_CLASS,

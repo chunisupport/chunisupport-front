@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js'
-import type { GoalAchievementType } from '../../../../types/api'
-import type { GoalProgressResult } from '../../utils/goalProgress'
-import { GoalCardProgress } from './GoalCardProgress'
+import type { GoalAchievementType } from '../../../../../types/api'
+import type { GoalProgressResult } from '../../../utils/goalProgress'
+import { GoalCardProgress } from '../card/GoalCardProgress'
 
 interface GoalPreviewSectionProps {
   title: string
