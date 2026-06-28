@@ -33,11 +33,15 @@ import {
   type ScoreRank,
 } from '../../../../utils/scoreRank'
 import { buildGoalTargetParam, type GoalTargetMode } from '../../utils/goalCountTarget'
+import { resolveGoalAchievementTypeLabel } from '../../utils/goalForm'
 import {
   COMBO_LAMP_OPTIONS,
+  type ComboLampGoalValue,
   HARD_LAMP_OPTIONS,
-  resolveGoalAchievementTypeLabel,
-} from '../../utils/goalForm'
+  type HardLampGoalValue,
+  isComboLampGoalValue,
+  isHardLampGoalValue,
+} from '../../utils/goalLamp'
 import type { GoalProgressResult } from '../../utils/goalProgress'
 import { buildGoalVersionOptions } from '../../utils/goalVersion'
 import {
@@ -193,10 +197,11 @@ const TOTAL_MODE_OPTIONS: GoalSelectOption<GoalTargetMode>[] = [
   { value: 'percent', label: '最大値に対する割合' },
 ]
 
-const HARD_LAMP_SELECT_OPTIONS: GoalSelectOption<'HRD' | 'BRV' | 'ABS' | 'CTS'>[] =
-  HARD_LAMP_OPTIONS.map((lamp) => ({ value: lamp.value, label: lamp.label }))
+const HARD_LAMP_SELECT_OPTIONS: GoalSelectOption<HardLampGoalValue>[] = HARD_LAMP_OPTIONS.map(
+  (lamp) => ({ value: lamp.value, label: lamp.label })
+)
 
-const COMBO_LAMP_SELECT_OPTIONS: GoalSelectOption<'FC' | 'AJ'>[] = COMBO_LAMP_OPTIONS.map(
+const COMBO_LAMP_SELECT_OPTIONS: GoalSelectOption<ComboLampGoalValue>[] = COMBO_LAMP_OPTIONS.map(
   (lamp) => ({ value: lamp.value, label: lamp.label })
 )
 
@@ -210,8 +215,6 @@ const GOAL_ACHIEVEMENT_TYPES = [
   'overpower_value',
   'overpower_percent',
 ] as const satisfies readonly GoalAchievementType[]
-const HARD_LAMP_VALUES = ['HRD', 'BRV', 'ABS', 'CTS'] as const
-const COMBO_LAMP_VALUES = ['FC', 'AJ'] as const
 const MAX_OVERPOWER_PERCENT = 100
 const OVERPOWER_TARGET_DECIMAL_PLACES = 3
 const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
@@ -299,24 +302,6 @@ const getRankGoalValue = (score: number): RankGoalValue =>
  */
 const isGoalAchievementType = (value: string): value is GoalAchievementType =>
   GOAL_ACHIEVEMENT_TYPES.includes(value as GoalAchievementType)
-
-/**
- * 文字列がハードランプ目標の値か判定する。
- *
- * @param value - 成果パラメータ内のランプ値。
- * @returns ハードランプ目標で利用できる値ならtrue。
- */
-const isHardLampValue = (value: string): value is 'HRD' | 'BRV' | 'ABS' | 'CTS' =>
-  HARD_LAMP_VALUES.includes(value as 'HRD' | 'BRV' | 'ABS' | 'CTS')
-
-/**
- * 文字列がコンボランプ目標の値か判定する。
- *
- * @param value - 成果パラメータ内のランプ値。
- * @returns コンボランプ目標で利用できる値ならtrue。
- */
-const isComboLampValue = (value: string): value is 'FC' | 'AJ' =>
-  COMBO_LAMP_VALUES.includes(value as 'FC' | 'AJ')
 
 /**
  * 目標設定ダイアログで使う文字列入力欄を描画する。
@@ -658,8 +643,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [countMode, setCountMode] = createSignal<GoalTargetMode>('all')
   const [total, setTotal] = createSignal(getDefaultTotalGoalValue(DEFAULT_GOAL_ACHIEVEMENT_TYPE))
   const [totalMode, setTotalMode] = createSignal<GoalTargetMode>('number')
-  const [hardLamp, setHardLamp] = createSignal<'HRD' | 'BRV' | 'ABS' | 'CTS'>('HRD')
-  const [comboLamp, setComboLamp] = createSignal<'FC' | 'AJ'>('FC')
+  const [hardLamp, setHardLamp] = createSignal<HardLampGoalValue>('HRD')
+  const [comboLamp, setComboLamp] = createSignal<ComboLampGoalValue>('FC')
   const [invert, setInvert] = createSignal(false)
 
   const [chartTargetMode, setChartTargetMode] = createSignal<'normal' | 'op_target'>('normal')
@@ -834,10 +819,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const rawTotal = getOptionalNumberParam(goal.achievement_params, 'total')
     const totalTargetValue = rawTotal ?? rawRemaining ?? rawPercent
     if (typeof totalTargetValue === 'number') setTotal(String(totalTargetValue))
-    if ('lamp' in goal.achievement_params && isHardLampValue(goal.achievement_params.lamp)) {
+    if ('lamp' in goal.achievement_params && isHardLampGoalValue(goal.achievement_params.lamp)) {
       setHardLamp(goal.achievement_params.lamp)
     }
-    if ('lamp' in goal.achievement_params && isComboLampValue(goal.achievement_params.lamp)) {
+    if ('lamp' in goal.achievement_params && isComboLampGoalValue(goal.achievement_params.lamp)) {
       setComboLamp(goal.achievement_params.lamp)
     }
     setInvert(goal.invert)

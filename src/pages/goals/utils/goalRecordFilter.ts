@@ -2,13 +2,14 @@ import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../constants/
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
 import { MAX_SCORE } from '../../../utils/scoreRank'
 import { buildDefaultFilter } from '../../users/UserRecord/types/filterDefaults'
-import type {
-  ComboLamp,
-  Difficulty,
-  FilterState,
-  HardLamp,
-} from '../../users/UserRecord/types/types'
-import { isExplicitEmptyAttribute } from './goalForm'
+import type { Difficulty, FilterState } from '../../users/UserRecord/types/types'
+import { isExplicitEmptyGoalAttribute, normalizeGoalAttributeIds } from './goalAttributes'
+import {
+  COMBO_LAMP_UNACHIEVED_FILTERS,
+  type ComboLampGoalValue,
+  HARD_LAMP_UNACHIEVED_FILTERS,
+  type HardLampGoalValue,
+} from './goalLamp'
 import { buildGoalVersionNameMap } from './goalVersion'
 
 const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
@@ -18,29 +19,6 @@ const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
   'hardlamp_count',
   'combolamp_count',
 ])
-
-const HARD_LAMP_FILTERS: Record<'HRD' | 'BRV' | 'ABS' | 'CTS', HardLamp[]> = {
-  HRD: ['CLEAR', 'FAILED', null],
-  BRV: ['HARD', 'CLEAR', 'FAILED', null],
-  ABS: ['BRAVE', 'HARD', 'CLEAR', 'FAILED', null],
-  CTS: ['ABSOLUTE', 'BRAVE', 'HARD', 'CLEAR', 'FAILED', null],
-}
-
-const COMBO_LAMP_FILTERS: Record<'FC' | 'AJ', ComboLamp[]> = {
-  FC: [null],
-  AJ: ['FULL COMBO', null],
-}
-
-/**
- * 単一値または配列で保持された目標属性 ID を配列へ正規化する。
- *
- * @param value - 目標属性に保存された ID。
- * @returns 有効な整数 ID の配列。
- */
-const normalizeAttributeIds = (value: number | number[] | undefined): number[] => {
-  if (typeof value === 'number') return [value]
-  return Array.isArray(value) ? value.filter((id) => Number.isInteger(id)) : []
-}
 
 /**
  * 目標種別ごとの未達成条件を通常レコードフィルターへ反映する。
@@ -61,12 +39,12 @@ const applyUnachievedCondition = (filter: FilterState, goal: GoalDTO): FilterSta
       }
     }
     case 'hardlamp_count': {
-      const params = goal.achievement_params as { lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS' }
-      return { ...filter, hard_lamp: [...HARD_LAMP_FILTERS[params.lamp]] }
+      const params = goal.achievement_params as { lamp: HardLampGoalValue }
+      return { ...filter, hard_lamp: [...HARD_LAMP_UNACHIEVED_FILTERS[params.lamp]] }
     }
     case 'combolamp_count': {
-      const params = goal.achievement_params as { lamp: 'FC' | 'AJ' }
-      return { ...filter, combo_lamp: [...COMBO_LAMP_FILTERS[params.lamp]] }
+      const params = goal.achievement_params as { lamp: ComboLampGoalValue }
+      return { ...filter, combo_lamp: [...COMBO_LAMP_UNACHIEVED_FILTERS[params.lamp]] }
     }
     case 'total_score':
     case 'overpower_value':
@@ -88,9 +66,9 @@ export const buildGoalRecordFilter = (
   masterData: MasterDataDTO,
   versions: VersionDTO[]
 ): FilterState => {
-  const difficultyIds = normalizeAttributeIds(goal.attributes.diff)
-  const genreIds = normalizeAttributeIds(goal.attributes.genre)
-  const versionIds = normalizeAttributeIds(goal.attributes.ver)
+  const difficultyIds = normalizeGoalAttributeIds(goal.attributes.diff)
+  const genreIds = normalizeGoalAttributeIds(goal.attributes.genre)
+  const versionIds = normalizeGoalAttributeIds(goal.attributes.ver)
   const versionNameMap = buildGoalVersionNameMap(versions)
   const defaultFilter = buildDefaultFilter(masterData, versions)
 
@@ -100,18 +78,18 @@ export const buildGoalRecordFilter = (
     difficulties: masterData.difficulties
       .filter(
         (difficulty) =>
-          !isExplicitEmptyAttribute(goal.attributes.diff) &&
+          !isExplicitEmptyGoalAttribute(goal.attributes.diff) &&
           (difficultyIds.length === 0 || difficultyIds.includes(difficulty.id))
       )
       .map((difficulty) => difficulty.name.toUpperCase() as Difficulty),
     genres:
-      genreIds.length === 0 || isExplicitEmptyAttribute(goal.attributes.genre)
+      genreIds.length === 0 || isExplicitEmptyGoalAttribute(goal.attributes.genre)
         ? []
         : masterData.genres
             .filter((genre) => genreIds.includes(genre.id))
             .map((genre) => genre.name),
     versions:
-      versionIds.length === 0 || isExplicitEmptyAttribute(goal.attributes.ver)
+      versionIds.length === 0 || isExplicitEmptyGoalAttribute(goal.attributes.ver)
         ? []
         : versionIds.flatMap((versionId) => {
             const versionName = versionNameMap.get(versionId)

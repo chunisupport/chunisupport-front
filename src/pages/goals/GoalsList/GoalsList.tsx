@@ -13,14 +13,13 @@ import { fetchAllSongsWithCache } from '../../../usecases/cache/fetchAllSongsWit
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { buildUserProfilePagePath } from '../../users/UserPage/profilePageQuery'
+import { calculateGoalOverPowerChartMax } from '../utils/goalOverPower'
 import { calculateGoalProgress, filterRecordsByAttributes } from '../utils/goalProgress'
 import { buildGoalRecordFilter } from '../utils/goalRecordFilter'
 import GoalCard from './components/GoalCard'
 import GoalDeleteDialog from './components/GoalDeleteDialog'
 import GoalFormDialog from './components/GoalFormDialog'
 
-const OVERPOWER_CHART_CONST_BONUS = 3
-const OVERPOWER_CHART_MULTIPLIER = 5
 const RECORD_NAVIGATION_ERROR_MESSAGE = '未達成レコードの表示に失敗しました。'
 
 /**
@@ -122,13 +121,6 @@ const GoalsList: Component = () => {
     ).length
   }
 
-  /**
-   * 対象条件に一致する譜面ごとの最大OVER POWER合計を算出する。
-   * OP対象では楽曲マスタの曲別最大OP、通常指定では譜面定数から理論値を使う。
-   *
-   * @param attributes - 目標フォームで選択中の対象条件。
-   * @returns 対象譜面それぞれの最大OVER POWERを合計した値。
-   */
   const resolveOverPowerChartMax = (attributes: GoalCreateRequest['attributes']) => {
     const data = resource()
     if (!data) return 0
@@ -140,18 +132,7 @@ const GoalsList: Component = () => {
       data.versions,
       { includeAllChartsForOpTarget: attributes.chart_target === 'OP_TARGET' }
     )
-    const songMap = new Map(data.songs.map((song) => [song.id, song]))
-    const countedSongIds = new Set<string>()
-
-    return filteredRecords.reduce((acc, record) => {
-      const song = songMap.get(record.id)
-      if (attributes.chart_target === 'OP_TARGET') {
-        if (countedSongIds.has(record.id)) return acc
-        countedSongIds.add(record.id)
-        return acc + (song?.maxop ?? 0)
-      }
-      return acc + (record.const + OVERPOWER_CHART_CONST_BONUS) * OVERPOWER_CHART_MULTIPLIER
-    }, 0)
+    return calculateGoalOverPowerChartMax(filteredRecords, data.songs, attributes)
   }
 
   /**
