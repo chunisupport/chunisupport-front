@@ -13,6 +13,7 @@ import {
   For,
   onMount,
   Show,
+  untrack,
 } from 'solid-js'
 import { fetchVersions } from '../../api/songs'
 import { fetchMe, fetchUserRating } from '../../api/users'
@@ -54,17 +55,20 @@ const RESULT_RECORD_BADGE_CLASS =
   'inline-flex min-h-7 items-center rounded px-2 py-1 text-xs font-semibold'
 
 const RESULT_RECORD_LAMP_BADGE_CLASS: Record<RandomSongLampFilter, string> = {
-  AJC: '[background-image:var(--cs-gradient-lamp-all-justice-critical-bg)] text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]',
-  AJ: 'bg-lamp-all-justice-bg text-lamp-all-justice-text',
-  FC: 'bg-lamp-full-combo-bg text-lamp-full-combo-text',
-  CATASTROPHY: 'bg-lamp-catastrophy-bg text-lamp-catastrophy-text',
-  ABSOLUTE: 'bg-lamp-absolute-bg text-lamp-absolute-text',
-  BRAVE: 'bg-lamp-brave-bg text-lamp-brave-text',
-  HARD: 'bg-lamp-hard-bg text-lamp-hard-text',
-  CLEAR: 'bg-lamp-clear-bg text-lamp-clear-text',
-  FAILED: 'bg-lamp-failed-bg text-lamp-failed-text',
-  NONE: 'bg-surface-hover text-text-subtle',
+  AJC: `${RESULT_RECORD_BADGE_CLASS} [background-image:var(--cs-gradient-lamp-all-justice-critical-bg)] text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]`,
+  AJ: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-all-justice-bg text-lamp-all-justice-text`,
+  FC: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-full-combo-bg text-lamp-full-combo-text`,
+  CATASTROPHY: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-catastrophy-bg text-lamp-catastrophy-text`,
+  ABSOLUTE: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-absolute-bg text-lamp-absolute-text`,
+  BRAVE: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-brave-bg text-lamp-brave-text`,
+  HARD: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-hard-bg text-lamp-hard-text`,
+  CLEAR: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-clear-bg text-lamp-clear-text`,
+  FAILED: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-failed-bg text-lamp-failed-text`,
+  NONE: `${RESULT_RECORD_BADGE_CLASS} bg-surface-hover text-text-subtle`,
 }
+const RESULT_RECORD_SCORE_BADGE_CLASS = `${RESULT_RECORD_BADGE_CLASS} bg-surface-muted text-text`
+const RESULT_RECORD_OP_BADGE_CLASS = `${RESULT_RECORD_BADGE_CLASS} bg-surface-muted text-text-muted tabular-nums`
+const RANDOM_SONG_LAMP_VALUES = RANDOM_SONG_LAMP_OPTIONS.map((option) => option.value)
 
 type RandomSongTextFieldProps = {
   id: string
@@ -229,11 +233,7 @@ const formatRandomSongRecordLampLabel = (lamp: RandomSongLampFilter): string =>
  */
 const renderRandomSongRecordSummary = (record: PlayerRecordDTO | undefined): JSX.Element => {
   if (record?.is_played !== true) {
-    return (
-      <span class={`${RESULT_RECORD_BADGE_CLASS} ${RESULT_RECORD_LAMP_BADGE_CLASS.NONE}`}>
-        未プレイ
-      </span>
-    )
+    return <span class={RESULT_RECORD_LAMP_BADGE_CLASS.NONE}>未プレイ</span>
   }
 
   const scoreRank = getScoreRank(record.score)
@@ -241,16 +241,14 @@ const renderRandomSongRecordSummary = (record: PlayerRecordDTO | undefined): JSX
 
   return (
     <>
-      <span class={`${RESULT_RECORD_BADGE_CLASS} bg-surface-muted text-text`}>
+      <span class={RESULT_RECORD_SCORE_BADGE_CLASS}>
         {record.score.toLocaleString('ja-JP')}
         <span class={`ml-1 ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}>{scoreRank}</span>
       </span>
-      <span class={`${RESULT_RECORD_BADGE_CLASS} ${RESULT_RECORD_LAMP_BADGE_CLASS[lamp]}`}>
+      <span class={RESULT_RECORD_LAMP_BADGE_CLASS[lamp]}>
         {formatRandomSongRecordLampLabel(lamp)}
       </span>
-      <span class={`${RESULT_RECORD_BADGE_CLASS} bg-surface-muted text-text-muted tabular-nums`}>
-        OP {record.overpower.toFixed(2)}
-      </span>
+      <span class={RESULT_RECORD_OP_BADGE_CLASS}>OP {record.overpower.toFixed(2)}</span>
     </>
   )
 }
@@ -342,9 +340,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = createSignal(false)
   const [playStatus, setPlayStatus] = createSignal<RandomSongPlayStatus>('all')
   const [bestFrame, setBestFrame] = createSignal<RandomSongBestFrame>('all')
-  const [selectedLamps, setSelectedLamps] = createSignal<RandomSongLamp[]>(
-    RANDOM_SONG_LAMP_OPTIONS.map((option) => option.value)
-  )
+  const [selectedLamps, setSelectedLamps] = createSignal<RandomSongLamp[]>([
+    ...RANDOM_SONG_LAMP_VALUES,
+  ])
   const [minScore, setMinScore] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.minScore)
   const [maxScore, setMaxScore] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.maxScore)
   const [difficultyWeights, setDifficultyWeights] = createSignal<
@@ -452,9 +450,11 @@ const RandomSongSelectorPage = (): JSX.Element => {
     const versions = versionOptions()
     if (genres.length === 0 || versions.length === 0) return
 
-    setSelectedGenres(genres)
-    setSelectedVersions(versions)
-    setFilterInitialized(true)
+    untrack(() => {
+      setSelectedGenres(genres)
+      setSelectedVersions(versions)
+      setFilterInitialized(true)
+    })
   })
 
   /**
@@ -482,7 +482,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     setMaxScore(RANDOM_SONG_SELECTOR_DEFAULTS.maxScore)
     setPlayStatus('all')
     setBestFrame('all')
-    setSelectedLamps(RANDOM_SONG_LAMP_OPTIONS.map((option) => option.value))
+    setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])
     setSelectedDifficulties([...RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES])
     setSelectedGenres(genreOptions())
     setSelectedVersions(versionOptions())
@@ -685,22 +685,15 @@ const RandomSongSelectorPage = (): JSX.Element => {
                               {RANDOM_SONG_SELECTOR_COPY.lampLabel}
                             </p>
                             <MultiSelectDropdown
-                              options={RANDOM_SONG_LAMP_OPTIONS.map((option) => option.value)}
+                              options={RANDOM_SONG_LAMP_VALUES}
                               selected={selectedLamps()}
                               placeholder={RANDOM_SONG_SELECTOR_COPY.lampLabel}
-                              formatLabel={(value) =>
-                                RANDOM_SONG_LAMP_OPTIONS.find((option) => option.value === value)
-                                  ?.label ?? value
-                              }
+                              formatLabel={formatRandomSongRecordLampLabel}
                               disabled={!hasMyRecordData()}
                               onToggle={(lamp) =>
                                 setSelectedLamps((prev) => toggleSelectionValue(prev, lamp))
                               }
-                              onSelectAll={() =>
-                                setSelectedLamps(
-                                  RANDOM_SONG_LAMP_OPTIONS.map((option) => option.value)
-                                )
-                              }
+                              onSelectAll={() => setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])}
                               onClear={() => setSelectedLamps([])}
                             />
                           </div>
@@ -776,38 +769,34 @@ const RandomSongSelectorPage = (): JSX.Element => {
             >
               <div class="grid gap-3">
                 <For each={results()}>
-                  {(candidate) => {
-                    const record = createMemo(() => recordForCandidate(candidate))
-
-                    return (
-                      <article class={RESULT_CARD_CLASS}>
-                        <div class="min-w-0">
-                          <div class="mb-2 flex flex-wrap items-center gap-2">
-                            <DifficultyBadge difficulty={candidate.difficulty} compact />
-                            <span class="rounded bg-surface-muted px-2 py-0.5 text-xs font-medium text-text-muted">
-                              {candidate.levelLabel}
-                            </span>
-                            <span class="text-xs tabular-nums text-text-muted">
-                              {candidate.chartConst.toFixed(1)}
-                            </span>
-                          </div>
-                          <h3 class="truncate font-semibold text-text">{candidate.song.title}</h3>
-                          <p class="truncate text-sm text-text-muted">{candidate.song.artist}</p>
+                  {(candidate) => (
+                    <article class={RESULT_CARD_CLASS}>
+                      <div class="min-w-0">
+                        <div class="mb-2 flex flex-wrap items-center gap-2">
+                          <DifficultyBadge difficulty={candidate.difficulty} compact />
+                          <span class="rounded bg-surface-muted px-2 py-0.5 text-xs font-medium text-text-muted">
+                            {candidate.levelLabel}
+                          </span>
+                          <span class="text-xs tabular-nums text-text-muted">
+                            {candidate.chartConst.toFixed(1)}
+                          </span>
                         </div>
-                        <div class="flex flex-col gap-2 sm:items-end">
-                          <Show when={hasMyRecordData()}>
-                            <div class="flex flex-wrap gap-2 sm:justify-end">
-                              {renderRandomSongRecordSummary(record())}
-                            </div>
-                          </Show>
-                          <div class="flex flex-wrap gap-2 text-xs text-text-muted sm:justify-end">
-                            <span class="rounded bg-surface px-2 py-1">{candidate.genre}</span>
-                            <span class="rounded bg-surface px-2 py-1">{candidate.version}</span>
+                        <h3 class="truncate font-semibold text-text">{candidate.song.title}</h3>
+                        <p class="truncate text-sm text-text-muted">{candidate.song.artist}</p>
+                      </div>
+                      <div class="flex flex-col gap-2 sm:items-end">
+                        <Show when={hasMyRecordData()}>
+                          <div class="flex flex-wrap gap-2 sm:justify-end">
+                            {renderRandomSongRecordSummary(recordForCandidate(candidate))}
                           </div>
+                        </Show>
+                        <div class="flex flex-wrap gap-2 text-xs text-text-muted sm:justify-end">
+                          <span class="rounded bg-surface px-2 py-1">{candidate.genre}</span>
+                          <span class="rounded bg-surface px-2 py-1">{candidate.version}</span>
                         </div>
-                      </article>
-                    )
-                  }}
+                      </div>
+                    </article>
+                  )}
                 </For>
               </div>
             </Show>

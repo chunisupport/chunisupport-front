@@ -186,8 +186,11 @@ export const filterRandomSongCandidatesByRecord = (
     if (filter.playStatus === 'unplayed' && isPlayed) return false
     if (filter.bestFrame === 'only' && !isBest) return false
     if (filter.bestFrame === 'exclude' && isBest) return false
-    if (filter.minScore !== null && (record?.score ?? 0) < filter.minScore) return false
-    if (filter.maxScore !== null && (record?.score ?? 0) > filter.maxScore) return false
+    if (filter.minScore !== null || filter.maxScore !== null) {
+      if (record?.is_played !== true) return false
+      if (filter.minScore !== null && record.score < filter.minScore) return false
+      if (filter.maxScore !== null && record.score > filter.maxScore) return false
+    }
     if (!filter.lamps.includes(resolveRandomSongRecordLamp(record))) return false
 
     return true
