@@ -259,20 +259,16 @@ const compareRecordBySortCondition = (
 }
 
 /**
- * 指定された複数の条件を上から順に使ってレコードをソートする。
+ * 正規化済み、または単一条件のソート条件でレコードをソートする。
  *
  * @param records - ソート対象のレコード配列。
- * @param sortConditions - 優先順に並んだソート条件。
- * @returns 複数条件で並び替えたレコード配列。条件がない場合は元の配列。
+ * @param sortConditions - 適用するソート条件。
+ * @returns 指定条件で並び替えたレコード配列。
  */
-export const sortRecordsByConditions = (
+const sortRecordsByResolvedConditions = (
   records: PlayerRecordWithSongMeta[],
   sortConditions: RecordSortCondition[]
 ): PlayerRecordWithSongMeta[] => {
-  if (sortConditions.length === 0) {
-    return records
-  }
-
   return records
     .map((record, index) => ({
       record,
@@ -297,6 +293,19 @@ export const sortRecordsByConditions = (
 }
 
 /**
+ * 指定された複数の条件を上から順に使ってレコードをソートする。
+ *
+ * @param records - ソート対象のレコード配列。
+ * @param sortConditions - 優先順に並んだソート条件。
+ * @returns 正規化した複数条件で並び替えたレコード配列。
+ */
+export const sortRecordsByConditions = (
+  records: PlayerRecordWithSongMeta[],
+  sortConditions: RecordSortCondition[]
+): PlayerRecordWithSongMeta[] =>
+  sortRecordsByResolvedConditions(records, normalizeRecordSortConditions(sortConditions))
+
+/**
  * 互換用に単一条件でレコードをソートする。
  *
  * @param records - ソート対象のレコード配列。
@@ -308,10 +317,12 @@ export const sortRecords = (
   records: PlayerRecordWithSongMeta[],
   currentSortKey: RecordSortKey | null,
   currentSortDirection: SortDirection | null
-): PlayerRecordWithSongMeta[] =>
-  sortRecordsByConditions(
-    records,
-    currentSortKey && currentSortDirection
-      ? [{ key: currentSortKey, direction: currentSortDirection }]
-      : []
-  )
+): PlayerRecordWithSongMeta[] => {
+  if (!currentSortKey || !currentSortDirection) {
+    return records
+  }
+
+  return sortRecordsByResolvedConditions(records, [
+    { key: currentSortKey, direction: currentSortDirection },
+  ])
+}

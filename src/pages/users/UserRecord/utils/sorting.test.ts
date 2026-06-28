@@ -173,6 +173,36 @@ test('複数ソートは第4ソートまで評価できる', () => {
   assert.deepEqual(result, ['alpha', 'beta'])
 })
 
+test('複数ソートは空条件でも既定ソートを適用する', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'alpha', title: 'Alpha', rating: 16.5 }),
+    createRecord({ id: 'beta', title: 'Beta', rating: 17 }),
+  ]
+
+  // When
+  const result = sortRecordsByConditions(records, []).map((record) => record.id)
+
+  // Then
+  assert.deepEqual(result, ['beta', 'alpha'])
+})
+
+test('複数ソートは不足条件を補って曲名昇順まで評価する', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'beta', title: 'Beta', rating: 16.5, const: 14, difficulty: 'MASTER' }),
+    createRecord({ id: 'alpha', title: 'Alpha', rating: 16.5, const: 14, difficulty: 'MASTER' }),
+  ]
+
+  // When
+  const result = sortRecordsByConditions(records, [{ key: 'rating', direction: 'desc' }]).map(
+    (record) => record.id
+  )
+
+  // Then
+  assert.deepEqual(result, ['alpha', 'beta'])
+})
+
 test('列クリックの第1ソートはascからdesc、最後にascへ戻る', () => {
   // Given
   const ascendingScoreSort = { key: 'score', direction: 'asc' } as const
