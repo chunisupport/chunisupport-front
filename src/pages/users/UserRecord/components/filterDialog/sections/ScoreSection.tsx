@@ -6,7 +6,7 @@ import type { Component } from 'solid-js'
 import { SCORE_MIN } from '../../../../../../constants/chart'
 import { MAX_SCORE } from '../../../../../../utils/scoreRank'
 
-import { SCORE_RANKS } from '../../../utils/scoreRank'
+import { SCORE_RANKS } from '../../../../utils/scoreRank'
 import {
   FILTER_DIALOG_FIELD_INPUT_CLASS,
   FILTER_DIALOG_SELECT_CONTENT_CLASS,
