@@ -146,6 +146,62 @@ test('件数目標のpercentを最大件数に掛けて目標値にする', () =
   assert.equal(progress.achieved, true)
 })
 
+test('不正なハードランプ目標値では達成件数を0として扱う', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', clear_lamp: 'CATASTROPHY' }),
+    createRecord({ id: 'song-2', clear_lamp: 'ABSOLUTE' }),
+  ]
+  const goal = createGoal({
+    achievement_type: 'hardlamp_count',
+    achievement_params: { lamp: 'OLD', count: 1 } as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.current, 0)
+  assert.equal(progress.target, 1)
+  assert.equal(progress.achieved, false)
+})
+
+test('不正なコンボランプ目標値では達成件数を0として扱う', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', combo_lamp: 'ALL JUSTICE' }),
+    createRecord({ id: 'song-2', combo_lamp: 'FULL COMBO' }),
+  ]
+  const goal = createGoal({
+    achievement_type: 'combolamp_count',
+    achievement_params: { lamp: 'OLD', count: 1 } as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.current, 0)
+  assert.equal(progress.target, 1)
+  assert.equal(progress.achieved, false)
+})
+
+test('ランプ目標の成果パラメータ形式が不正でも未達成として扱う', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'hardlamp_count',
+    achievement_params: null as unknown as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, [], [])
+
+  // Then
+  assert.equal(progress.current, 0)
+  assert.equal(progress.target, 1)
+  assert.equal(progress.achieved, false)
+})
+
 test('総スコア目標のtotalが欠落している場合は対象譜面数から理論値を計算する', () => {
   const records = [
     createRecord({ id: 'song-1', score: 1010000 }),

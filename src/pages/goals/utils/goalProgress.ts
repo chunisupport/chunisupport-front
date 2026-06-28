@@ -10,7 +10,13 @@ import { buildCurrentOverPowerBySongId } from '../../../usecases/overpower/curre
 import { MAX_SCORE } from '../../../utils/scoreRank'
 import { normalizeGoalAttributeIds } from './goalAttributes'
 import { getNumberGoalTargetParam, resolveGoalDynamicTarget } from './goalCountTarget'
-import { COMBO_LAMP_ORDER, HARD_LAMP_ORDER, resolveHardLampRecordName } from './goalLamp'
+import {
+  COMBO_LAMP_ORDER,
+  HARD_LAMP_ORDER,
+  isComboLampGoalValue,
+  isHardLampGoalValue,
+  resolveHardLampRecordName,
+} from './goalLamp'
 import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
 
 export interface GoalProgressResult {
@@ -25,6 +31,36 @@ interface FilterRecordsByAttributesOptions {
   /** OP対象指定時に、対象曲の全譜面レコードを残すか。OVER POWER集計で曲内最大値を取るために使う。 */
   includeAllChartsForOpTarget?: boolean
 }
+
+/**
+ * API由来の成果パラメータからランプ指定値を安全に取り出す。
+ *
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @returns ランプ指定値。オブジェクト形式でない場合は undefined。
+ */
+const getGoalLampParam = (params: GoalDTO['achievement_params']): unknown => {
+  const rawParams: unknown = params
+  return rawParams && typeof rawParams === 'object' && 'lamp' in rawParams
+    ? (rawParams as { lamp?: unknown }).lamp
+    : undefined
+}
+
+/**
+ * 件数系目標の対象件数を解決する。
+ *
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @param recordCount - 目標条件に一致した譜面数。
+ * @returns 件数系目標の目標値。
+ */
+const resolveCountTarget = (params: GoalDTO['achievement_params'], recordCount: number): number =>
+  resolveGoalDynamicTarget(
+    params && typeof params === 'object' ? params : {},
+    recordCount,
+    'count',
+    {
+      rounding: 'ceil',
+    }
+  )
 
 /**
  * レコードが曲ごとのOVER POWER対象譜面かを判定する。
@@ -253,9 +289,7 @@ export const calculateGoalProgress = (
     case 'rank_count':
     case 'score_count': {
       const threshold = getNumberGoalTargetParam(goal.achievement_params, 'score')
-      target = resolveGoalDynamicTarget(goal.achievement_params, filteredRecords.length, 'count', {
-        rounding: 'ceil',
-      })
+      target = resolveCountTarget(goal.achievement_params, filteredRecords.length)
       current = filteredRecords.filter((record) => record.score >= threshold).length
       break
     }
@@ -270,15 +304,15 @@ export const calculateGoalProgress = (
       break
     }
     case 'hardlamp_count': {
-      const params = goal.achievement_params as {
-        lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'
-        count?: number
+      target = resolveCountTarget(goal.achievement_params, filteredRecords.length)
+      const lamp = getGoalLampParam(goal.achievement_params)
+      if (typeof lamp !== 'string' || !isHardLampGoalValue(lamp)) {
+        current = 0
+        target = Math.max(target, 1)
+        break
       }
-      const hardLampName = resolveHardLampRecordName(params.lamp)
+      const hardLampName = resolveHardLampRecordName(lamp)
       const required = HARD_LAMP_ORDER[hardLampName] ?? 0
-      target = resolveGoalDynamicTarget(goal.achievement_params, filteredRecords.length, 'count', {
-        rounding: 'ceil',
-      })
       current = filteredRecords.filter((record) => {
         const lamp = record.clear_lamp
         if (!lamp) return false
@@ -287,13 +321,15 @@ export const calculateGoalProgress = (
       break
     }
     case 'combolamp_count': {
-      const params = goal.achievement_params as { lamp: 'FC' | 'AJ'; count?: number }
+      target = resolveCountTarget(goal.achievement_params, filteredRecords.length)
+      const lamp = getGoalLampParam(goal.achievement_params)
+      if (typeof lamp !== 'string' || !isComboLampGoalValue(lamp)) {
+        current = 0
+        target = Math.max(target, 1)
+        break
+      }
       const required =
-        (params.lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']) ??
-        0
-      target = resolveGoalDynamicTarget(goal.achievement_params, filteredRecords.length, 'count', {
-        rounding: 'ceil',
-      })
+        (lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']) ?? 0
       current = filteredRecords.filter((record) => {
         const lamp = record.combo_lamp
         if (!lamp) return false
