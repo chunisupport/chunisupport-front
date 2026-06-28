@@ -8,7 +8,7 @@ import type {
 } from '../../../types/api'
 import { buildCurrentOverPowerBySongId } from '../../../usecases/overpower/currentOpTarget'
 import { MAX_SCORE } from '../../../utils/scoreRank'
-import { isExplicitEmptyGoalAttribute, normalizeGoalAttributeIds } from './goalAttributes'
+import { normalizeGoalAttributeIds } from './goalAttributes'
 import { getNumberGoalTargetParam, resolveGoalDynamicTarget } from './goalCountTarget'
 import { COMBO_LAMP_ORDER, HARD_LAMP_ORDER, resolveHardLampRecordName } from './goalLamp'
 import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
@@ -62,7 +62,7 @@ const isOverPowerTargetSongMatched = (
   song: SongDTO | undefined,
   attributes: GoalAttributes,
   genreNames: Set<string> | undefined,
-  versionIds: number[],
+  versionIds: number[] | undefined,
   versions: VersionDTO[]
 ): song is SongDTO => {
   if (!song?.op_target_difficulty) return false
@@ -76,7 +76,7 @@ const isOverPowerTargetSongMatched = (
 
   if (genreNames && (!song.genre || !genreNames.has(song.genre))) return false
 
-  if (versionIds.length > 0) {
+  if (versionIds && versionIds.length > 0) {
     const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
     if (!songVersionValue || !versionIds.includes(songVersionValue)) return false
   }
@@ -108,12 +108,13 @@ export const filterRecordsByAttributes = (
   const genreIds = normalizeGoalAttributeIds(attributes.genre)
   const versionIds = normalizeGoalAttributeIds(attributes.ver)
   const opTargetOnly = attributes.chart_target === 'OP_TARGET'
-  const hasExplicitEmptyDiff = !opTargetOnly && isExplicitEmptyGoalAttribute(attributes.diff)
-  const hasExplicitEmptyGenre = isExplicitEmptyGoalAttribute(attributes.genre)
-  const hasExplicitEmptyVersion = isExplicitEmptyGoalAttribute(attributes.ver)
+
+  if (diffIds?.length === 0 || genreIds?.length === 0 || versionIds?.length === 0) {
+    return []
+  }
 
   const diffNames =
-    diffIds.length > 0
+    diffIds && diffIds.length > 0
       ? new Set(
           masterData.difficulties
             .filter((difficulty) => diffIds.includes(difficulty.id))
@@ -121,17 +122,13 @@ export const filterRecordsByAttributes = (
         )
       : undefined
   const genreNames =
-    genreIds.length > 0
+    genreIds && genreIds.length > 0
       ? new Set(
           masterData.genres
             .filter((genre) => genreIds.includes(genre.id))
             .map((genre) => genre.name)
         )
       : undefined
-
-  if (hasExplicitEmptyDiff || hasExplicitEmptyGenre || hasExplicitEmptyVersion) {
-    return []
-  }
 
   return records.filter((record) => {
     const song = songMap.get(record.id)
@@ -151,7 +148,7 @@ export const filterRecordsByAttributes = (
 
     if (genreNames && (!song?.genre || !genreNames.has(song.genre))) return false
 
-    if (versionIds.length > 0) {
+    if (versionIds && versionIds.length > 0) {
       if (!song) return false
       const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
       if (!songVersionValue || !versionIds.includes(songVersionValue)) return false

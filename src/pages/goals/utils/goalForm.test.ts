@@ -17,7 +17,7 @@ const MASTER_DATA: MasterDataDTO = {
 
 const VERSIONS: VersionDTO[] = []
 
-test('OP対象条件では空の難易度を選択なしとして表示しない', () => {
+test('空配列の条件は対象譜面なしとして表示する', () => {
   // Given / When
   const result = formatGoalAttributesLabel(
     { chart_target: 'OP_TARGET', diff: [] },
@@ -26,5 +26,5 @@ test('OP対象条件では空の難易度を選択なしとして表示しない
   )
 
   // Then
-  assert.equal(result, '対象: OP対象')
+  assert.equal(result, '対象譜面なし')
 })

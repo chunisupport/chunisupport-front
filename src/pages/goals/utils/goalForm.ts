@@ -7,7 +7,7 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../types/api'
-import { isExplicitEmptyGoalAttribute, normalizeGoalAttributeIds } from './goalAttributes'
+import { normalizeGoalAttributeIds } from './goalAttributes'
 import { buildGoalVersionNameMap } from './goalVersion'
 
 // ID(code) -> 表示名の辞書。将来は言語キーを増やすだけでi18n対応できる
@@ -25,6 +25,7 @@ export const GOAL_ACHIEVEMENT_TYPE_LABELS = {
 }
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
+const NO_TARGET_CHARTS_LABEL = '対象譜面なし'
 
 export const buildGoalPayload = (goal: GoalDTO): GoalRequest => ({
   title: goal.title,
@@ -64,42 +65,38 @@ export const formatGoalAttributesLabel = (
 ): string => {
   const parts: string[] = []
 
-  const formatNames = (ids: number[], namesById: Map<number, string>): string =>
-    ids.map((id) => namesById.get(id) ?? String(id)).join(', ')
+  const formatNames = (ids: number[] | undefined, namesById: Map<number, string>): string =>
+    ids?.map((id) => namesById.get(id) ?? String(id)).join(', ') ?? ''
 
   const diffIds = normalizeGoalAttributeIds(attributes.diff)
   const genreIds = normalizeGoalAttributeIds(attributes.genre)
   const versionIds = normalizeGoalAttributeIds(attributes.ver)
+  const hasNoSelectedCharts =
+    diffIds?.length === 0 || genreIds?.length === 0 || versionIds?.length === 0
 
   const difficultyNameMap = new Map(masterData.difficulties.map((item) => [item.id, item.name]))
   const genreNameMap = new Map(masterData.genres.map((item) => [item.id, item.name]))
   const versionNameMap = buildGoalVersionNameMap(versions)
 
+  if (hasNoSelectedCharts) return NO_TARGET_CHARTS_LABEL
+
   if (attributes.chart_target === 'OP_TARGET') {
     parts.push('対象: OP対象')
   }
 
-  if (attributes.chart_target !== 'OP_TARGET') {
-    if (isExplicitEmptyGoalAttribute(attributes.diff)) {
-      parts.push('難易度: 選択なし')
-    } else if (diffIds.length > 0) {
-      parts.push(`難易度: ${formatNames(diffIds, difficultyNameMap)}`)
-    }
+  if (attributes.chart_target !== 'OP_TARGET' && diffIds && diffIds.length > 0) {
+    parts.push(`難易度: ${formatNames(diffIds, difficultyNameMap)}`)
   }
 
   if (typeof attributes.const?.min === 'number' || typeof attributes.const?.max === 'number') {
     parts.push(`定数: ${attributes.const?.min ?? '-'} ～ ${attributes.const?.max ?? '-'}`)
   }
 
-  if (isExplicitEmptyGoalAttribute(attributes.genre)) {
-    parts.push('ジャンル: 選択なし')
-  } else if (genreIds.length > 0) {
+  if (genreIds && genreIds.length > 0) {
     parts.push(`ジャンル: ${formatNames(genreIds, genreNameMap)}`)
   }
 
-  if (isExplicitEmptyGoalAttribute(attributes.ver)) {
-    parts.push('バージョン: 選択なし')
-  } else if (versionIds.length > 0) {
+  if (versionIds && versionIds.length > 0) {
     parts.push(`バージョン: ${formatNames(versionIds, versionNameMap)}`)
   }
 

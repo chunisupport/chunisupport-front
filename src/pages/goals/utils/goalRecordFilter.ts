@@ -3,7 +3,7 @@ import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
 import { MAX_SCORE } from '../../../utils/scoreRank'
 import { buildDefaultFilter } from '../../users/UserRecord/types/filterDefaults'
 import type { Difficulty, FilterState } from '../../users/UserRecord/types/types'
-import { isExplicitEmptyGoalAttribute, normalizeGoalAttributeIds } from './goalAttributes'
+import { normalizeGoalAttributeIds } from './goalAttributes'
 import {
   COMBO_LAMP_UNACHIEVED_FILTERS,
   HARD_LAMP_UNACHIEVED_FILTERS,
@@ -19,6 +19,14 @@ const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
   'hardlamp_count',
   'combolamp_count',
 ])
+
+/**
+ * 属性ID配列が空選択として保存されているか判定する。
+ *
+ * @param ids - 正規化済みの属性ID配列。
+ * @returns 空配列なら true。
+ */
+const hasNoSelectedAttributeIds = (ids: number[] | undefined): boolean => ids?.length === 0
 
 /**
  * API由来の成果パラメータからランプ指定値を安全に取り出す。
@@ -112,25 +120,27 @@ export const buildGoalRecordFilter = (
   const versionIds = normalizeGoalAttributeIds(goal.attributes.ver)
   const versionNameMap = buildGoalVersionNameMap(versions)
   const defaultFilter = buildDefaultFilter(masterData, versions)
+  const hasNoSelectedCharts =
+    hasNoSelectedAttributeIds(difficultyIds) ||
+    hasNoSelectedAttributeIds(genreIds) ||
+    hasNoSelectedAttributeIds(versionIds)
 
   const filter: FilterState = {
     ...defaultFilter,
     title: '',
-    difficulties: masterData.difficulties
-      .filter(
-        (difficulty) =>
-          !isExplicitEmptyGoalAttribute(goal.attributes.diff) &&
-          (difficultyIds.length === 0 || difficultyIds.includes(difficulty.id))
-      )
-      .map((difficulty) => difficulty.name.toUpperCase() as Difficulty),
+    difficulties: hasNoSelectedCharts
+      ? []
+      : masterData.difficulties
+          .filter((difficulty) => !difficultyIds || difficultyIds.includes(difficulty.id))
+          .map((difficulty) => difficulty.name.toUpperCase() as Difficulty),
     genres:
-      genreIds.length === 0 || isExplicitEmptyGoalAttribute(goal.attributes.genre)
+      hasNoSelectedCharts || !genreIds
         ? []
         : masterData.genres
             .filter((genre) => genreIds.includes(genre.id))
             .map((genre) => genre.name),
     versions:
-      versionIds.length === 0 || isExplicitEmptyGoalAttribute(goal.attributes.ver)
+      hasNoSelectedCharts || !versionIds
         ? []
         : versionIds.flatMap((versionId) => {
             const versionName = versionNameMap.get(versionId)
@@ -157,6 +167,9 @@ export const buildGoalRecordFilter = (
  */
 export const isGoalRecordNavigationEnabled = (goal: GoalDTO): boolean =>
   goal.attributes.chart_target !== 'OP_TARGET' &&
+  !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.diff)) &&
+  !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.genre)) &&
+  !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.ver)) &&
   NAVIGABLE_ACHIEVEMENT_TYPES.has(goal.achievement_type) &&
   (goal.achievement_type !== 'hardlamp_count' || isNavigableHardLampGoal(goal)) &&
   (goal.achievement_type !== 'combolamp_count' || isNavigableComboLampGoal(goal))

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { isExplicitEmptyGoalAttribute, normalizeGoalAttributeIds } from './goalAttributes'
+import { normalizeGoalAttributeIds } from './goalAttributes'
 
 test('単一IDは1件のID配列へ正規化される', () => {
   // Given
@@ -24,13 +24,24 @@ test('ID配列は整数だけを残して正規化される', () => {
   assert.deepEqual(result, [1, 4])
 })
 
-test('空配列は明示的な空選択として判定される', () => {
+test('未指定は条件未指定としてundefinedへ正規化される', () => {
+  // Given
+  const attributeValue = undefined
+
+  // When
+  const result = normalizeGoalAttributeIds(attributeValue)
+
+  // Then
+  assert.equal(result, undefined)
+})
+
+test('空配列は0件条件として空配列を維持する', () => {
   // Given
   const attributeValue: number[] = []
 
   // When
-  const result = isExplicitEmptyGoalAttribute(attributeValue)
+  const result = normalizeGoalAttributeIds(attributeValue)
 
   // Then
-  assert.equal(result, true)
+  assert.deepEqual(result, [])
 })
