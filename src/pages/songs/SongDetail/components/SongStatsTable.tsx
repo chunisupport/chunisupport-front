@@ -12,6 +12,7 @@ import {
 } from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
+import { completeSongStatsRatingBands } from '../../../../utils/songStats'
 import { isOwnBestAverageRatingBand } from './songStatsHighlight'
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip)
@@ -342,7 +343,17 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
  * @returns FC/AJ/AJCとCLEAR系ランプのグラフ。
  */
 const SongStatsCharts = (props: Props) => {
-  const chartStats = createMemo(() => getChartStats(props.stats))
+  const chartStats = createMemo(() => {
+    const stats = getChartStats(props.stats)
+    const ratingBands = props.ratingBands
+
+    return ratingBands
+      ? completeSongStatsRatingBands(
+          stats,
+          ratingBands.filter((band) => band.label !== CHART_EXCLUDED_RATING_BAND)
+        )
+      : stats
+  })
   const labels = createMemo(() => chartStats().map((band) => band.rating_band))
   const comboDatasets = createMemo<SongStatsChartDataset[]>(() =>
     COMBO_CHART_DATASET_DEFINITIONS.map((definition) => ({
@@ -436,7 +447,7 @@ const SongStatsTable = (props: Props) => {
           </tbody>
         </table>
       </div>
-      <SongStatsCharts stats={props.stats} />
+      <SongStatsCharts stats={props.stats} ratingBands={props.ratingBands} />
     </>
   )
 }
