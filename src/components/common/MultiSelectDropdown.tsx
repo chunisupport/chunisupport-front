@@ -20,6 +20,8 @@ type MultiSelectDropdownProps<T extends string | number | null> = {
   onClear: () => void
   /** Select のポータルコンテンツに適用する z-index クラス。 */
   contentZIndexClass?: string
+  /** トリガー内に表示する選択済み項目数の上限。 */
+  selectedPreviewLimit?: number
   /** 操作を無効化するかどうか。 */
   disabled?: boolean
 }
@@ -58,6 +60,14 @@ const MultiSelectDropdown = <T extends string | number | null>(
 
   const selectedOptions = createMemo(() =>
     props.options.filter((option) => props.selected.includes(option))
+  )
+  const visibleSelectedOptions = createMemo(() =>
+    typeof props.selectedPreviewLimit === 'number'
+      ? selectedOptions().slice(0, props.selectedPreviewLimit)
+      : selectedOptions()
+  )
+  const hiddenSelectedCount = createMemo(
+    () => selectedOptions().length - visibleSelectedOptions().length
   )
 
   /**
@@ -121,13 +131,18 @@ const MultiSelectDropdown = <T extends string | number | null>(
               when={selectedOptions().length > 0}
               fallback={<span class="text-text-subtle">{props.placeholder}</span>}
             >
-              <For each={selectedOptions()}>
+              <For each={visibleSelectedOptions()}>
                 {(option) => (
                   <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
                     {formatLabel(option)}
                   </span>
                 )}
               </For>
+              <Show when={hiddenSelectedCount() > 0}>
+                <span class="rounded-full bg-surface-muted px-2 py-0.5 text-xs text-text-muted">
+                  +{hiddenSelectedCount()}
+                </span>
+              </Show>
             </Show>
           </div>
           <span class="text-text-subtle" aria-hidden="true">

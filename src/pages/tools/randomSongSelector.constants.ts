@@ -50,7 +50,7 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   advancedSettingsLabel: '高度な設定',
   recordFilterSettingsLabel: '自分のレコードで絞る',
   drawRateLabel: RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate,
-  drawRatePercentLabel: 'グループ内',
+  drawRatePercentLabel: '確率',
   invalidDrawRatePercentLabel: '-',
   difficultyWeightLabel: '難易度別',
   constWeightLabel: '定数別',

@@ -169,19 +169,17 @@ const parseRandomSongWeightForPercent = (value: string, enabled = true): number 
 }
 
 /**
- * 出やすさの倍率が同じ設定グループ内で占める割合を表示用に変換する。
+ * 出やすさの重み総量が同じ設定グループ内で占める割合を表示用に変換する。
  *
- * @param value - 対象項目の倍率。
- * @param total - 同じ設定グループ内の倍率合計。
- * @param enabled - 抽選対象に含める場合は true。
+ * @param weightMass - 対象項目に含まれる候補の重み総量。
+ * @param total - 同じ設定グループ内の重み総量。
  * @returns 表示用のグループ内出現割合。
  */
-const formatRandomSongWeightPercent = (value: string, total: number, enabled = true): string => {
-  const parsed = parseRandomSongWeightForPercent(value, enabled)
-  if (parsed === null) return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
-  if (total <= 0 || parsed <= 0) return EMPTY_WEIGHT_PERCENT_LABEL
+const formatRandomSongWeightPercent = (weightMass: number | null, total: number): string => {
+  if (weightMass === null) return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
+  if (total <= 0 || weightMass <= 0) return EMPTY_WEIGHT_PERCENT_LABEL
 
-  return `${WEIGHT_PERCENT_FORMATTER.format((parsed / total) * 100)}%`
+  return `${WEIGHT_PERCENT_FORMATTER.format((weightMass / total) * 100)}%`
 }
 
 /**
@@ -603,12 +601,6 @@ const RandomSongSelectorPage = (): JSX.Element => {
       selectedDifficulties().includes(difficulty)
     )
   )
-  const selectedDifficultyWeightTotal = createMemo(() =>
-    selectedDifficultyWeightOptions().reduce((sum, difficulty) => {
-      const parsed = parseRandomSongWeightForPercent(difficultyWeights()[difficulty])
-      return parsed === null ? sum : sum + parsed
-    }, 0)
-  )
   const constRangeError = createMemo(() => {
     const min = parsedMinConst()
     const max = parsedMaxConst()
@@ -666,13 +658,30 @@ const RandomSongSelectorPage = (): JSX.Element => {
       (left, right) => Number(left) - Number(right)
     )
   )
-  const constWeightTotal = createMemo(() =>
-    constWeightOptions().reduce((sum, chartConst) => {
-      const parsed = parseRandomSongWeightForPercent(
-        constWeights()[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
-        constWeightEnabled()[chartConst] !== false
-      )
-      return parsed === null ? sum : sum + parsed
+  /**
+   * 候補1件に適用される出やすさの重みを取得する。
+   *
+   * @param candidate - 重みを計算する選曲候補。
+   * @returns 難易度別と定数別を掛け合わせた重み。不正値がある場合は null。
+   */
+  const weightForCandidate = (candidate: RandomSongCandidate): number | null => {
+    const chartConst = candidate.chartConst.toFixed(1)
+    const difficultyWeight = parseRandomSongWeightForPercent(
+      difficultyWeights()[candidate.difficulty]
+    )
+    const constWeight = parseRandomSongWeightForPercent(
+      constWeights()[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
+      constWeightEnabled()[chartConst] !== false
+    )
+
+    if (difficultyWeight === null || constWeight === null) return null
+
+    return difficultyWeight * constWeight
+  }
+  const totalCandidateWeight = createMemo(() =>
+    filteredCandidates().reduce((sum, candidate) => {
+      const weight = weightForCandidate(candidate)
+      return weight === null ? sum : sum + weight
     }, 0)
   )
   const selectedDifficultyWeights = createMemo(
@@ -848,26 +857,51 @@ const RandomSongSelectorPage = (): JSX.Element => {
   }
 
   /**
-   * 難易度別の出やすさが同グループ内で占める割合を取得する。
+   * 難易度別の候補重みが全候補内で占める割合を取得する。
    *
    * @param difficulty - 表示対象の難易度。
-   * @returns 難易度別設定内の出現割合。
+   * @returns 全候補の重み総量に対する難易度別の出現割合。
    */
-  const difficultyWeightPercentLabel = (difficulty: PlayerDataDifficulty): string =>
-    formatRandomSongWeightPercent(difficultyWeights()[difficulty], selectedDifficultyWeightTotal())
+  const difficultyWeightPercentLabel = (difficulty: PlayerDataDifficulty): string => {
+    if (parseRandomSongWeightForPercent(difficultyWeights()[difficulty]) === null) {
+      return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
+    }
+
+    const weightMass = filteredCandidates().reduce((sum, candidate) => {
+      if (candidate.difficulty !== difficulty) return sum
+
+      const weight = weightForCandidate(candidate)
+      return weight === null ? sum : sum + weight
+    }, 0)
+
+    return formatRandomSongWeightPercent(weightMass, totalCandidateWeight())
+  }
 
   /**
-   * 定数別の出やすさが同グループ内で占める割合を取得する。
+   * 定数別の候補重みが全候補内で占める割合を取得する。
    *
    * @param chartConst - 表示対象の譜面定数。
-   * @returns 定数別設定内の出現割合。
+   * @returns 全候補の重み総量に対する定数別の出現割合。
    */
-  const constWeightPercentLabel = (chartConst: string): string =>
-    formatRandomSongWeightPercent(
-      constWeights()[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
-      constWeightTotal(),
-      constWeightEnabled()[chartConst] !== false
-    )
+  const constWeightPercentLabel = (chartConst: string): string => {
+    if (
+      parseRandomSongWeightForPercent(
+        constWeights()[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
+        constWeightEnabled()[chartConst] !== false
+      ) === null
+    ) {
+      return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
+    }
+
+    const weightMass = filteredCandidates().reduce((sum, candidate) => {
+      if (candidate.chartConst.toFixed(1) !== chartConst) return sum
+
+      const weight = weightForCandidate(candidate)
+      return weight === null ? sum : sum + weight
+    }, 0)
+
+    return formatRandomSongWeightPercent(weightMass, totalCandidateWeight())
+  }
 
   /**
    * 選曲候補に対応する自分のレコードを取得する。
@@ -939,6 +973,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         options={genreOptions()}
                         selected={selectedGenres()}
                         placeholder={RANDOM_SONG_SELECTOR_COPY.genreLabel}
+                        selectedPreviewLimit={6}
                         onToggle={(genre) =>
                           setSelectedGenres((prev) => toggleRandomSongSelectionValue(prev, genre))
                         }
@@ -956,6 +991,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         options={versionOptions()}
                         selected={selectedVersions()}
                         placeholder={RANDOM_SONG_SELECTOR_COPY.versionLabel}
+                        selectedPreviewLimit={6}
                         onToggle={(version) =>
                           setSelectedVersions((prev) =>
                             toggleRandomSongSelectionValue(prev, version)
