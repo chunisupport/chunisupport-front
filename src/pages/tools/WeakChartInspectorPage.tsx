@@ -2,7 +2,7 @@ import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Collapsible } from '@kobalte/core/collapsible'
 import { Dialog } from '@kobalte/core/dialog'
-import { TextField } from '@kobalte/core/text-field'
+import { NumberField } from '@kobalte/core/number-field'
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, PointElement, ScatterController, Tooltip } from 'chart.js'
 import {
@@ -36,10 +36,9 @@ import {
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
+import { clampNumericInput } from '../../utils/numberInput'
 import {
-  type ChartScoreDistribution,
   inspectWeakCharts,
-  isWeakChartDisplayTarget,
   isWeakChartInspectionTarget,
   sortWeakChartOutliers,
   type WeakChartOutlier,
@@ -90,6 +89,46 @@ type InspectorPoint = {
   record: PlayerRecordDTO
 }
 
+type SettingsNumberFieldProps = {
+  /** 入力値。 */
+  value: string
+  /** 許容する最小値。 */
+  min: number
+  /** 許容する最大値。 */
+  max: number
+  /** 増減単位。 */
+  step: number
+  /** アクセシブルな入力名。 */
+  label: string
+  /** 入力値の更新処理。 */
+  onChange: (value: string) => void
+}
+
+/**
+ * グラフ設定で使用する範囲内補正付き数値入力を表示する。
+ *
+ * @param props - 入力値、数値制約、ラベル、変更ハンドラ。
+ * @returns Kobalte NumberFieldを使った数値入力。
+ */
+const SettingsNumberField = (props: SettingsNumberFieldProps): JSX.Element => (
+  <NumberField
+    class="block"
+    value={props.value}
+    onChange={(value) => props.onChange(clampNumericInput(value, props.min, props.max))}
+    format={false}
+    allowedInput={/[0-9.]/}
+    step={props.step}
+  >
+    <NumberField.Label class="sr-only">{props.label}</NumberField.Label>
+    <NumberField.Input
+      min={props.min}
+      max={props.max}
+      step={props.step}
+      class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
+    />
+  </NumberField>
+)
+
 /**
  * Chart.js の tooltip に渡された raw 値を分析グラフの点として扱う。
  *
@@ -131,15 +170,13 @@ const createChartKey = (record: PlayerRecordDTO): string => `${record.id}:${reco
 /**
  * 譜面定数別スコア分布をChart.jsで表示する。
  *
- * @param props - プレイ済みレコード、譜面定数別統計、外れ値。
+ * @param props - プレイ済みレコード、外れ値、グラフ軸設定。
  * @returns 譜面定数ごとのスコア散布図。
  */
 const WeakChartDistributionChart = (props: {
   records: PlayerRecordDTO[]
-  distributions: ChartScoreDistribution[]
   outliers: WeakChartOutlier[]
   axisSettings: ChartAxisSettings
-  onOpenSettings: () => void
 }): JSX.Element => {
   let canvasRef!: HTMLCanvasElement
   let chart: Chart<'scatter', InspectorPoint[]> | undefined
@@ -223,18 +260,9 @@ const WeakChartDistributionChart = (props: {
 
   return (
     <figure class="rounded-lg border border-border bg-surface p-4">
-      <figcaption class="mb-3 flex items-center justify-between gap-2 font-semibold">
-        <div class="flex items-center gap-2">
-          <ChartNoAxesCombined class="h-5 w-5 text-action-primary" aria-hidden="true" />
-          <span>{WEAK_CHART_INSPECTOR_COPY.chartTitle}</span>
-        </div>
-        <Button
-          aria-label="グラフ設定を開く"
-          onClick={props.onOpenSettings}
-          class="rounded p-1.5 text-text-muted transition-colors hover:bg-surface-muted hover:text-text focus:outline-none focus:ring-2 focus:ring-focus-ring"
-        >
-          <Settings class="h-5 w-5" aria-hidden="true" />
-        </Button>
+      <figcaption class="mb-3 flex items-center gap-2 font-semibold">
+        <ChartNoAxesCombined class="h-5 w-5 text-action-primary" aria-hidden="true" />
+        <span>{WEAK_CHART_INSPECTOR_COPY.chartTitle}</span>
       </figcaption>
       <div class="overflow-x-auto overscroll-x-contain">
         <div class={`relative h-[28rem] w-full ${WEAK_CHART_MIN_WIDTH_CLASS}`}>
@@ -311,9 +339,9 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
             <caption class="sr-only">{WEAK_CHART_INSPECTOR_COPY.tableCaption}</caption>
             <colgroup>
               <col />
-              <col class="w-22" />
+              <col class="w-23" />
               <col class="w-12" />
-              <col class="w-22" />
+              <col class="w-19" />
             </colgroup>
             <thead class="bg-surface-muted text-left text-text-muted">
               <tr class="[&>*:first-child]:pl-2 [&>*:last-child]:pr-2">
@@ -392,12 +420,9 @@ const WeakChartInspectorPage = (): JSX.Element => {
         r.const <= aggregationSettings().constMax
     )
   )
-  const displayedRecords = createMemo(() => aggregationRecords().filter(isWeakChartDisplayTarget))
   const inspection = createMemo(() => inspectWeakCharts(aggregationRecords()))
   const lowerOutliers = createMemo(() =>
-    inspection().outliers.filter(
-      (outlier) => outlier.direction === 'LOW' && isWeakChartDisplayTarget(outlier.record)
-    )
+    inspection().outliers.filter((outlier) => outlier.direction === 'LOW')
   )
 
   // グラフ設定 state
@@ -518,7 +543,18 @@ const WeakChartInspectorPage = (): JSX.Element => {
   return (
     <ErrorBoundary fallback={(error) => <LoadError error={error} />}>
       <main class="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4">
-        <h1 class="text-2xl font-semibold">{WEAK_CHART_INSPECTOR_COPY.title}</h1>
+        <div class="flex items-center justify-between gap-4">
+          <h1 class="text-2xl font-semibold">{WEAK_CHART_INSPECTOR_COPY.title}</h1>
+          <Show when={!records.loading && analysisRecords().length > 0}>
+            <Button
+              aria-label="グラフ設定を開く"
+              onClick={openSettings}
+              class="shrink-0 rounded p-1.5 text-text-muted transition-colors hover:bg-surface-muted hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+            >
+              <Settings class="h-5 w-5" aria-hidden="true" />
+            </Button>
+          </Show>
+        </div>
         <Show when={!records.loading} fallback={<Loading />}>
           <Show
             when={analysisRecords().length > 0}
@@ -529,11 +565,9 @@ const WeakChartInspectorPage = (): JSX.Element => {
             }
           >
             <WeakChartDistributionChart
-              records={displayedRecords()}
-              distributions={inspection().distributions}
+              records={aggregationRecords()}
               outliers={inspection().outliers}
               axisSettings={axisSettings()}
-              onOpenSettings={() => openSettings()}
             />
             <OutlierTable outliers={lowerOutliers()} />
 
@@ -609,37 +643,25 @@ const WeakChartInspectorPage = (): JSX.Element => {
                             {WEAK_CHART_SETTINGS_COPY.scoreRangeLabel}
                           </span>
                           <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-                            <TextField
-                              class="block"
+                            <SettingsNumberField
                               value={editAggScoreMin()}
+                              min={SCORE_MIN}
+                              max={SCORE_THEORETICAL_MAX}
+                              step={1}
+                              label="集計対象 スコア 最小"
                               onChange={setEditAggScoreMin}
-                            >
-                              <TextField.Input
-                                type="number"
-                                min={SCORE_MIN}
-                                max={SCORE_THEORETICAL_MAX}
-                                step="1"
-                                class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
-                                aria-label="集計対象 スコア 最小"
-                              />
-                            </TextField>
+                            />
                             <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
                               <span aria-hidden="true">～</span>
                             </div>
-                            <TextField
-                              class="block"
+                            <SettingsNumberField
                               value={editAggScoreMax()}
+                              min={SCORE_MIN}
+                              max={SCORE_THEORETICAL_MAX}
+                              step={1}
+                              label="集計対象 スコア 最大"
                               onChange={setEditAggScoreMax}
-                            >
-                              <TextField.Input
-                                type="number"
-                                min={SCORE_MIN}
-                                max={SCORE_THEORETICAL_MAX}
-                                step="1"
-                                class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
-                                aria-label="集計対象 スコア 最大"
-                              />
-                            </TextField>
+                            />
                           </div>
                         </div>
                         {/* 譜面定数範囲 */}
@@ -648,37 +670,25 @@ const WeakChartInspectorPage = (): JSX.Element => {
                             {WEAK_CHART_SETTINGS_COPY.constRangeLabel}
                           </span>
                           <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-                            <TextField
-                              class="block"
+                            <SettingsNumberField
                               value={editAggConstMin()}
+                              min={CHART_CONST_MIN}
+                              max={CHART_CONST_MAX}
+                              step={0.1}
+                              label="集計対象 譜面定数 最小"
                               onChange={setEditAggConstMin}
-                            >
-                              <TextField.Input
-                                type="number"
-                                min={CHART_CONST_MIN}
-                                max={CHART_CONST_MAX}
-                                step="0.1"
-                                class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
-                                aria-label="集計対象 譜面定数 最小"
-                              />
-                            </TextField>
+                            />
                             <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
                               <span aria-hidden="true">～</span>
                             </div>
-                            <TextField
-                              class="block"
+                            <SettingsNumberField
                               value={editAggConstMax()}
+                              min={CHART_CONST_MIN}
+                              max={CHART_CONST_MAX}
+                              step={0.1}
+                              label="集計対象 譜面定数 最大"
                               onChange={setEditAggConstMax}
-                            >
-                              <TextField.Input
-                                type="number"
-                                min={CHART_CONST_MIN}
-                                max={CHART_CONST_MAX}
-                                step="0.1"
-                                class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
-                                aria-label="集計対象 譜面定数 最大"
-                              />
-                            </TextField>
+                            />
                           </div>
                         </div>
                       </div>
@@ -703,29 +713,25 @@ const WeakChartInspectorPage = (): JSX.Element => {
                                 {WEAK_CHART_SETTINGS_COPY.scoreRangeLabel}
                               </span>
                               <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-                                <TextField class="block" value={editYMin()} onChange={setEditYMin}>
-                                  <TextField.Input
-                                    type="number"
-                                    min={SCORE_MIN}
-                                    max={SCORE_THEORETICAL_MAX}
-                                    step="1"
-                                    class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
-                                    aria-label="表示の絞り込み スコア 最小"
-                                  />
-                                </TextField>
+                                <SettingsNumberField
+                                  value={editYMin()}
+                                  min={SCORE_MIN}
+                                  max={SCORE_THEORETICAL_MAX}
+                                  step={1}
+                                  label="表示の絞り込み スコア 最小"
+                                  onChange={setEditYMin}
+                                />
                                 <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
                                   <span aria-hidden="true">～</span>
                                 </div>
-                                <TextField class="block" value={editYMax()} onChange={setEditYMax}>
-                                  <TextField.Input
-                                    type="number"
-                                    min={SCORE_MIN}
-                                    max={SCORE_THEORETICAL_MAX}
-                                    step="1"
-                                    class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
-                                    aria-label="表示の絞り込み スコア 最大"
-                                  />
-                                </TextField>
+                                <SettingsNumberField
+                                  value={editYMax()}
+                                  min={SCORE_MIN}
+                                  max={SCORE_THEORETICAL_MAX}
+                                  step={1}
+                                  label="表示の絞り込み スコア 最大"
+                                  onChange={setEditYMax}
+                                />
                               </div>
                             </div>
                             {/* 譜面定数範囲 */}
@@ -734,29 +740,25 @@ const WeakChartInspectorPage = (): JSX.Element => {
                                 {WEAK_CHART_SETTINGS_COPY.constRangeLabel}
                               </span>
                               <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-                                <TextField class="block" value={editXMin()} onChange={setEditXMin}>
-                                  <TextField.Input
-                                    type="number"
-                                    min={CHART_CONST_MIN}
-                                    max={CHART_CONST_MAX}
-                                    step="0.1"
-                                    class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
-                                    aria-label="表示の絞り込み 譜面定数 最小"
-                                  />
-                                </TextField>
+                                <SettingsNumberField
+                                  value={editXMin()}
+                                  min={CHART_CONST_MIN}
+                                  max={CHART_CONST_MAX}
+                                  step={0.1}
+                                  label="表示の絞り込み 譜面定数 最小"
+                                  onChange={setEditXMin}
+                                />
                                 <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
                                   <span aria-hidden="true">～</span>
                                 </div>
-                                <TextField class="block" value={editXMax()} onChange={setEditXMax}>
-                                  <TextField.Input
-                                    type="number"
-                                    min={CHART_CONST_MIN}
-                                    max={CHART_CONST_MAX}
-                                    step="0.1"
-                                    class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
-                                    aria-label="表示の絞り込み 譜面定数 最大"
-                                  />
-                                </TextField>
+                                <SettingsNumberField
+                                  value={editXMax()}
+                                  min={CHART_CONST_MIN}
+                                  max={CHART_CONST_MAX}
+                                  step={0.1}
+                                  label="表示の絞り込み 譜面定数 最大"
+                                  onChange={setEditXMax}
+                                />
                               </div>
                             </div>
                           </div>

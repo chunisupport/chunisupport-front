@@ -13,8 +13,8 @@ export const WEAK_CHART_INSPECTOR_COPY = {
 export const WEAK_CHART_INSPECTOR_COLORS = {
   text: '--cs-color-text-muted',
   grid: '--cs-color-border',
-  point: '--cs-color-action-primary',
-  outlier: '--cs-color-danger',
+  point: '--cs-color-weak-chart-point',
+  outlier: '--cs-color-weak-chart-outlier',
 } as const
 
 /** スコア点を重ねる際の横方向の最大ずらし幅。 */
