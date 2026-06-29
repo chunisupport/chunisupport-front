@@ -476,7 +476,7 @@ const SongStatsTable = (props: Props) => {
                         }
                       >
                         <span
-                          class={`text-xs leading-tight font-normal ${getScoreDifferenceClass(
+                          class={`text-[0.625rem] leading-tight font-normal ${getScoreDifferenceClass(
                             calculateOwnScoreDifference(props.ownScore, band.average_score) ?? 0
                           )}`}
                         >
