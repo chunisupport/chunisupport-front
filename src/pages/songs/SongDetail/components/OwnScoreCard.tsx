@@ -73,7 +73,7 @@ const OwnScoreCard = (props: {
                     fallback={
                       <div class={cardClass}>
                         <OwnScoreBadge difficulty={item.difficulty} />
-                        <span class="ml-auto font-oswald text-lg font-semibold tabular-nums">
+                        <span class="ml-auto font-oswald text-xl font-semibold tabular-nums">
                           {item.score?.toLocaleString('ja-JP')}
                         </span>
                       </div>
@@ -86,7 +86,7 @@ const OwnScoreCard = (props: {
                     >
                       <OwnScoreBadge difficulty={item.difficulty} />
                       <span class="ml-auto flex items-center gap-2">
-                        <span class="font-oswald text-lg font-semibold tabular-nums">
+                        <span class="font-oswald text-xl font-semibold tabular-nums">
                           {item.score?.toLocaleString('ja-JP')}
                         </span>
                         <ChevronRight
