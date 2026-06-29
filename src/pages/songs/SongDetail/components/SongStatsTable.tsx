@@ -10,9 +10,12 @@ import {
   type Plugin,
   Tooltip,
 } from 'chart.js'
-import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
-import { completeSongStatsRatingBands } from '../../../../utils/songStats'
+import {
+  calculateOwnScoreDifference,
+  completeSongStatsRatingBands,
+} from '../../../../utils/songStats'
 import { isOwnBestAverageRatingBand } from './songStatsHighlight'
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip)
@@ -21,6 +24,7 @@ type Props = {
   stats: SongStatsBandDTO[]
   bestAverage?: number | null
   ratingBands?: RatingBandDTO[]
+  ownScore?: number
 }
 
 type SongStatsChartDataset = {
@@ -47,6 +51,9 @@ const CHART_X_AXIS_TICK_PADDING = 8
 const HIGHLIGHTED_RATING_BAND_ROW_CLASS =
   'border-l-4 border-l-action-primary bg-action-primary-muted font-semibold'
 const NORMAL_RATING_BAND_ROW_CLASS = 'border-l-4 border-l-transparent'
+const POSITIVE_SCORE_DIFFERENCE_CLASS = 'text-success'
+const NEGATIVE_SCORE_DIFFERENCE_CLASS = 'text-info'
+const EQUAL_SCORE_DIFFERENCE_CLASS = 'text-text-muted'
 const COMBO_CHART_DATASET_DEFINITIONS = [
   { label: 'FC', valueKey: 'fc', colorVariable: '--cs-color-lamp-full-combo-bg' },
   { label: 'AJ', valueKey: 'aj', colorVariable: '--cs-color-lamp-all-justice-bg' },
@@ -100,6 +107,31 @@ const formatAverageScore = (score: number) => {
       <span class="text-[0.8em]">{formatted.slice(idx)}</span>
     </>
   )
+}
+
+/**
+ * 平均スコアとの差分を符号付きの括弧書きへ変換する。
+ *
+ * @param difference - 自分のスコアから平均スコアを引いた差分。
+ * @returns 小数第4位まで表示する差分文字列。
+ */
+const formatScoreDifference = (difference: number): string =>
+  `(${difference.toLocaleString(undefined, {
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4,
+    signDisplay: 'always',
+  })})`
+
+/**
+ * 平均スコアとの差分に応じた文字色クラスを返す。
+ *
+ * @param difference - 自分のスコアから平均スコアを引いた差分。
+ * @returns 正数は緑、負数は青、同値は補助テキスト色のクラス。
+ */
+const getScoreDifferenceClass = (difference: number): string => {
+  if (difference > 0) return POSITIVE_SCORE_DIFFERENCE_CLASS
+  if (difference < 0) return NEGATIVE_SCORE_DIFFERENCE_CLASS
+  return EQUAL_SCORE_DIFFERENCE_CLASS
 }
 
 /**
@@ -432,8 +464,28 @@ const SongStatsTable = (props: Props) => {
                 <tr class={getRowClass(band.rating_band)}>
                   <td class="px-2 py-2">{band.rating_band}</td>
                   <td class="px-2 py-2 text-right">{band.player_count.toLocaleString()}</td>
-                  <td class="px-2 py-2 text-right">
-                    {band.average_score === null ? '-' : formatAverageScore(band.average_score)}
+                  <td class="px-2 py-2 text-right tabular-nums">
+                    <div class="flex flex-col items-end">
+                      <span>
+                        {band.average_score === null ? '-' : formatAverageScore(band.average_score)}
+                      </span>
+                      <Show
+                        when={
+                          calculateOwnScoreDifference(props.ownScore, band.average_score) !==
+                          undefined
+                        }
+                      >
+                        <span
+                          class={`text-xs leading-tight font-normal ${getScoreDifferenceClass(
+                            calculateOwnScoreDifference(props.ownScore, band.average_score) ?? 0
+                          )}`}
+                        >
+                          {formatScoreDifference(
+                            calculateOwnScoreDifference(props.ownScore, band.average_score) ?? 0
+                          )}
+                        </span>
+                      </Show>
+                    </div>
                   </td>
                   <td class="px-2 py-2 text-right">{band.combo.fc.toLocaleString()}</td>
                   <td class="px-2 py-2 text-right">{band.combo.aj.toLocaleString()}</td>

@@ -1,6 +1,19 @@
 import type { RatingBandDTO, SongStatsBandDTO } from '../types/api'
 
 /**
+ * 自分のスコアと全プレイヤーの平均スコアとの差分を算出する。
+ *
+ * @param ownScore - ログインユーザーの譜面スコア。未プレイの場合は未定義。
+ * @param averageScore - 全プレイヤーの平均スコア。集計対象がない場合はnull。
+ * @returns 両方のスコアが存在する場合は自分のスコアから平均スコアを引いた値、それ以外は未定義。
+ */
+export const calculateOwnScoreDifference = (
+  ownScore: number | undefined,
+  averageScore: number | null
+): number | undefined =>
+  ownScore === undefined || averageScore === null ? undefined : ownScore - averageScore
+
+/**
  * プレイヤーが存在しないレーティング帯の統計行を生成する。
  *
  * @param ratingBand - 統計行へ設定するレーティング帯ラベル。

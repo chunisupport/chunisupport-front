@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { RatingBandDTO, SongStatsBandDTO } from '../types/api'
-import { completeSongStatsRatingBands } from './songStats'
+import { calculateOwnScoreDifference, completeSongStatsRatingBands } from './songStats'
 
 /** テスト用の楽曲統計行を生成する。 */
 const createStatsBand = (ratingBand: string, playerCount: number): SongStatsBandDTO => ({
@@ -17,6 +17,32 @@ const ratingBands: RatingBandDTO[] = [
   { id: 2, label: '16.25～16.49', min_inclusive: 16.25, max_exclusive: 16.5, sort_order: 2 },
   { id: 1, label: '16.00～16.24', min_inclusive: 16, max_exclusive: 16.25, sort_order: 1 },
 ]
+
+test('calculateOwnScoreDifference: 自分のスコアから平均スコアを引いた差分を返す', () => {
+  // Given: 自分のスコアが平均スコアを上回っている。
+  const ownScore = 1_005_000
+  const averageScore = 1_000_000.5
+
+  // When: 平均スコアとの差分を算出する。
+  const result = calculateOwnScoreDifference(ownScore, averageScore)
+
+  // Then: 小数部を維持した正の差分になる。
+  assert.equal(result, 4_999.5)
+})
+
+test('calculateOwnScoreDifference: 未プレイまたは平均スコアなしの場合は差分を返さない', () => {
+  // Given: 自分のスコアまたは平均スコアが存在しない。
+  const unplayedScore = undefined
+  const missingAverageScore = null
+
+  // When: それぞれの差分を算出する。
+  const unplayedResult = calculateOwnScoreDifference(unplayedScore, 1_000_000)
+  const missingAverageResult = calculateOwnScoreDifference(1_000_000, missingAverageScore)
+
+  // Then: どちらも表示対象外になる。
+  assert.equal(unplayedResult, undefined)
+  assert.equal(missingAverageResult, undefined)
+})
 
 test('completeSongStatsRatingBands: 欠落した帯を0人の統計行で補完する', () => {
   // Given: 片方のレーティング帯だけにプレイヤーが存在する。
