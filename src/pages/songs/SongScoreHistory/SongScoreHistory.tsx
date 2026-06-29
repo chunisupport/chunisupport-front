@@ -64,7 +64,7 @@ const SongScoreHistory = () => {
                 <h1 class="text-2xl font-semibold">{SCORE_HISTORY_PAGE_TITLE}</h1>
                 <div class="flex items-center gap-3">
                   <DifficultyBadge difficulty={difficulty() ?? 'MASTER'} />
-                  <span class="font-semibold">{song()?.title}</span>
+                  <span class="font-sans font-semibold">{song()?.title}</span>
                 </div>
               </header>
 
