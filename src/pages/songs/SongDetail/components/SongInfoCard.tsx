@@ -62,10 +62,19 @@ const SongInfoCard = (props: Props) => {
                         />
                       </td>
                       <td class={`${fixedCellClass} ${fixedColumnClass}`}>
-                        <span class="block whitespace-nowrap">
-                          {chart
-                            ? `${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}`
-                            : '-'}
+                        <span
+                          class={`block whitespace-nowrap ${chart?.is_const_unknown ? 'opacity-50' : ''}`}
+                        >
+                          {chart ? (
+                            <>
+                              {chart.const.toFixed(1)}
+                              {chart.is_const_unknown ? (
+                                <sup class="text-[0.65em] leading-none">?</sup>
+                              ) : null}
+                            </>
+                          ) : (
+                            '-'
+                          )}
                         </span>
                       </td>
                       <td class={`${fixedCellClass} ${fixedColumnClass}`}>

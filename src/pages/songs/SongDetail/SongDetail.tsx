@@ -145,6 +145,13 @@ const SongDetail = () => {
     if (!currentSong) return []
     return buildOwnScoreItems(currentSong, ownRecords()?.standard ?? [])
   })
+  /** 選択中の難易度に対応するログインユーザーのプレイ済みスコアを取得する。 */
+  const selectedOwnScore = createMemo(() => {
+    if (authSession.status !== 'authenticated') return undefined
+
+    const difficulty = selectedDifficulty().toUpperCase()
+    return ownScoreItems().find((item) => item.difficulty === difficulty)?.score
+  })
 
   useDocumentTitle(() => `${song()?.title ?? '楽曲'} - 楽曲詳細`)
 
@@ -181,6 +188,7 @@ const SongDetail = () => {
                 isStatsLoading={stats.loading}
                 bestAverage={ownBestAverage()}
                 ratingBands={masterData()?.rating_bands}
+                ownScore={selectedOwnScore()}
               />
             </>
           )}
