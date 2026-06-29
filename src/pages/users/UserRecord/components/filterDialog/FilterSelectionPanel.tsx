@@ -6,29 +6,31 @@ import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
+import LampSection from '../../../components/filter/LampSection'
+import MultiSelectFilterSection from '../../../components/filter/MultiSelectFilterSection'
+import NumericRangeSection from '../../../components/filter/NumericRangeSection'
+import ScoreSection from '../../../components/filter/ScoreSection'
 import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters'
+import {
+  JUSTICE_COUNT_RANGE_FILTER,
+  OVER_POWER_RANGE_FILTER,
+} from '../../../constants/rangeFilters'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../../constants/recordFilterOptions'
-import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
-import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../../constants/rangeFilters'
-import type { Difficulty, FilterState } from '../../types/types'
-import { parseNumberInput, toggleArray, updateOptionalNumberRange } from '../../utils/filterDialog'
 import {
-  SCORE_RANK_MAX_VALUES,
-  SCORE_RANK_VALUES,
-  SCORE_RANKS,
-  type ScoreRank,
-} from '../../utils/scoreRank'
+  parseNumberInput,
+  toggleArray,
+  toInputValue,
+  updateOptionalNumberRange,
+} from '../../../utils/filterValue'
+import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
+import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../../utils/scoreRank'
+import type { Difficulty, FilterState } from '../../types/types'
 import ConstRangeSection from './sections/ConstRangeSection'
 import DifficultySection from './sections/DifficultySection'
-import GenreSection from './sections/GenreSection'
-import LampSection from './sections/LampSection'
-import NumericRangeSection from './sections/NumericRangeSection'
-import ScoreSection from './sections/ScoreSection'
-import VersionSection from './sections/VersionSection'
 
 type FilterSelectionPanelProps = {
   open: boolean
@@ -43,10 +45,6 @@ type FilterSelectionPanelProps = {
   /** フィルター名が変更されたときのコールバック。 */
   onEditingFilterNameChange?: (name: string) => void
 }
-
-/** 数値を入力欄用の文字列に変換するユーティリティ関数 */
-const toInputValue = (value?: number | null) =>
-  value === undefined || value === null ? '' : String(value)
 
 /** フィルター名入力を API の最大文字数に丸める。 */
 const limitNameInput = (value: string): string =>
@@ -111,28 +109,6 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     return type === 'min' ? base : Number((base + 0.4).toFixed(1))
   }
 
-  const Score2Rank = (value: number) => {
-    const highestRank = SCORE_RANKS[SCORE_RANKS.length - 1]
-    const normalized = Math.max(
-      SCORE_RANK_VALUES['0点'],
-      Math.min(value, SCORE_RANK_VALUES[highestRank])
-    )
-    for (const rank of SCORE_RANKS) {
-      const maxValue = Rank2Score(rank, 'max')
-      if (normalized <= maxValue) {
-        return rank
-      }
-    }
-    return highestRank
-  }
-
-  const Rank2Score = (rank: ScoreRank, type: 'min' | 'max') => {
-    if (type === 'max') {
-      return SCORE_RANK_MAX_VALUES[rank]
-    }
-    return SCORE_RANK_VALUES[rank]
-  }
-
   // フィルターダイアログが開かれた時にフィルター状態を同期
   createEffect(() => {
     if (!props.open) return
@@ -146,8 +122,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     setOverPowerMaxInput(toInputValue(props.filters.overPower.max))
     setConstLevelMin(Const2Level(props.filters.const.min))
     setConstLevelMax(Const2Level(props.filters.const.max))
-    setScoreRankMin(Score2Rank(props.filters.score.min))
-    setScoreRankMax(Score2Rank(props.filters.score.max))
+    setScoreRankMin(scoreToFilterRank(props.filters.score.min))
+    setScoreRankMax(scoreToFilterRank(props.filters.score.max))
   })
 
   /** 定数入力モードの変更時に内部値を同期 */
@@ -199,14 +175,12 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     }
     // 数値->ランクの場合
     // 内部の保持値を変換してセット
-    const nextMinRank = Score2Rank(props.filters.score.min)
-    const nextMaxRank = Score2Rank(props.filters.score.max)
-    const nextMinValue = Rank2Score(nextMinRank, 'min')
-    const nextMaxValue = Rank2Score(nextMaxRank, 'max')
+    const nextMinRank = scoreToFilterRank(props.filters.score.min)
+    const nextMaxRank = scoreToFilterRank(props.filters.score.max)
+    const nextMinValue = filterRankToScore(nextMinRank, 'min')
+    const nextMaxValue = filterRankToScore(nextMaxRank, 'max')
     setScoreRankMin(nextMinRank)
     setScoreRankMax(nextMaxRank)
-    // setScoreMinInput(toInputValue(nextMinValue));
-    // setScoreMaxInput(toInputValue(nextMaxValue));
     // フィルター状態を更新
     props.setFilters((prev) => ({
       ...prev,
@@ -247,7 +221,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 
   /** スコアランク変更時に適切なスコアをフィルターにセット */
   const handleScoreRankChange = (type: 'min' | 'max', value: string) => {
-    const nextValue = Rank2Score(value as ScoreRank, type)
+    const nextValue = filterRankToScore(value as ScoreRank, type)
     if (type === 'min') {
       setScoreRankMin(value)
       setScoreMinInput(toInputValue(nextValue))
@@ -546,9 +520,11 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           }))
         }
       />
-      <GenreSection
-        genres={genres()}
+      <MultiSelectFilterSection
+        title="ジャンル"
+        options={genres()}
         selected={props.filters.genres}
+        placeholder="ジャンルを選択"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
         onSelectAll={() =>
           props.setFilters((prev) => ({
@@ -569,9 +545,11 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           }))
         }
       />
-      <VersionSection
-        versions={versions()}
+      <MultiSelectFilterSection
+        title="バージョン"
+        options={versions()}
         selected={props.filters.versions}
+        placeholder="バージョンを選択"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
         onSelectAll={() =>
           props.setFilters((prev) => ({

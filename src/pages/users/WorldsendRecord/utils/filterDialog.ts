@@ -4,6 +4,7 @@ import {
   WORLDSEND_LEVEL_STAR_MIN,
 } from '../../../../constants/chart'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
+import { hasSameFilterValues } from '../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
 import type { WorldsendFilterState } from '../types/filterTypes'
 
@@ -38,20 +39,6 @@ export function hasWorldsendJusticeCountFilter(filter: WorldsendFilterState): bo
 }
 
 /**
- * 2つの WORLD'S END フィルター配列が順序に依存せず同じ値を持つか判定する。
- *
- * @param left - 比較元の値配列。
- * @param right - 比較先の値配列。
- * @returns 2つの配列が同じ値集合の場合は true。
- */
-export function hasSameWorldsendFilterValues<T>(left: T[], right: T[]): boolean {
-  if (left.length !== right.length) return false
-
-  const rightValues = new Set(right)
-  return left.every((value) => rightValues.has(value))
-}
-
-/**
  * WORLD'S END レコードフィルターが既定値から変更されているか判定する。
  *
  * @param current - 現在の WORLD'S END フィルター状態。
@@ -72,12 +59,12 @@ export function isWorldsendFilterChanged(
     current.score.max !== defaultFilter.score.max ||
     current.justiceCount.min !== defaultFilter.justiceCount.min ||
     current.justiceCount.max !== defaultFilter.justiceCount.max ||
-    !hasSameWorldsendFilterValues(current.attributes, defaultFilter.attributes) ||
-    !hasSameWorldsendFilterValues(current.genres, defaultFilter.genres) ||
-    !hasSameWorldsendFilterValues(current.versions, defaultFilter.versions) ||
-    !hasSameWorldsendFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
-    !hasSameWorldsendFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
-    !hasSameWorldsendFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+    !hasSameFilterValues(current.attributes, defaultFilter.attributes) ||
+    !hasSameFilterValues(current.genres, defaultFilter.genres) ||
+    !hasSameFilterValues(current.versions, defaultFilter.versions) ||
+    !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
+    !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
+    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
   )
 }
 
@@ -101,12 +88,12 @@ export function isWorldsendFilterOptionsChanged(
     current.score.max !== defaultFilter.score.max ||
     current.justiceCount.min !== defaultFilter.justiceCount.min ||
     current.justiceCount.max !== defaultFilter.justiceCount.max ||
-    !hasSameWorldsendFilterValues(current.attributes, defaultFilter.attributes) ||
-    !hasSameWorldsendFilterValues(current.genres, defaultFilter.genres) ||
-    !hasSameWorldsendFilterValues(current.versions, defaultFilter.versions) ||
-    !hasSameWorldsendFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
-    !hasSameWorldsendFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
-    !hasSameWorldsendFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+    !hasSameFilterValues(current.attributes, defaultFilter.attributes) ||
+    !hasSameFilterValues(current.genres, defaultFilter.genres) ||
+    !hasSameFilterValues(current.versions, defaultFilter.versions) ||
+    !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
+    !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
+    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
   )
 }
 

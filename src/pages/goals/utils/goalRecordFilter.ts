@@ -1,13 +1,9 @@
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../constants/chart'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
+import type { ComboLamp, Difficulty, HardLamp } from '../../../types/record'
 import { MAX_SCORE } from '../../../utils/scoreRank'
 import { buildDefaultFilter } from '../../users/UserRecord/types/filterDefaults'
-import type {
-  ComboLamp,
-  Difficulty,
-  FilterState,
-  HardLamp,
-} from '../../users/UserRecord/types/types'
+import type { FilterState } from '../../users/UserRecord/types/types'
 import { isExplicitEmptyAttribute } from './goalForm'
 import { buildGoalVersionNameMap } from './goalVersion'
 

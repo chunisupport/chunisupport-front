@@ -1,3 +1,4 @@
+import type { ChainLamp, ComboLamp, Difficulty, HardLamp } from '../../../../types/record'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
   matchesNormalizedSearchQuery,
@@ -6,7 +7,7 @@ import {
   normalizeQuery,
 } from '../../../../utils/searchUtils'
 import { buildDefaultFilter } from '../types/filterDefaults'
-import type { ChainLamp, ComboLamp, Difficulty, FilterState, HardLamp } from '../types/types'
+import type { FilterState } from '../types/types'
 import { hasJusticeCountFilter, hasOverPowerFilter } from './filterDialog'
 
 /** フィルターのデフォルト値を取得する */

@@ -1,33 +1,29 @@
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import { SCORE_MIN } from '../../../../constants/chart'
+import type { ChainLamp, ComboLamp, HardLamp } from '../../../../types/record'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
+import LampSection from '../../components/filter/LampSection'
+import MultiSelectFilterSection from '../../components/filter/MultiSelectFilterSection'
+import NumericRangeSection from '../../components/filter/NumericRangeSection'
+import ScoreSection from '../../components/filter/ScoreSection'
+import { JUSTICE_COUNT_RANGE_FILTER } from '../../constants/rangeFilters'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../constants/recordFilterOptions'
-import LampSection from '../../UserRecord/components/filterDialog/sections/LampSection'
-import NumericRangeSection from '../../UserRecord/components/filterDialog/sections/NumericRangeSection'
-import ScoreSection from '../../UserRecord/components/filterDialog/sections/ScoreSection'
-import { JUSTICE_COUNT_RANGE_FILTER } from '../../UserRecord/constants/rangeFilters'
-import type { ChainLamp, ComboLamp, HardLamp } from '../../UserRecord/types/types'
 import {
   parseNumberInput,
   toggleArray,
+  toInputValue,
   updateOptionalNumberRange,
-} from '../../UserRecord/utils/filterDialog'
-import {
-  SCORE_RANK_MAX_VALUES,
-  SCORE_RANK_VALUES,
-  SCORE_RANKS,
-  type ScoreRank,
-} from '../../UserRecord/utils/scoreRank'
+} from '../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
+import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../utils/scoreRank'
 import type { WorldsendFilterState } from '../types/filterTypes'
 import { formatWorldsendAttribute } from '../utils/filterDialog'
 import WorldsendLevelRangeSection from './WorldsendLevelRangeSection'
-import WorldsendMultiSelectSection from './WorldsendMultiSelectSection'
 
 type WorldsendFilterSelectionPanelProps = {
   open: boolean
@@ -35,10 +31,6 @@ type WorldsendFilterSelectionPanelProps = {
   setFilters: Setter<WorldsendFilterState>
   defaultFilter: WorldsendFilterState
 }
-
-/** 数値を入力欄用の文字列に変換する。 */
-const toInputValue = (value?: number | null) =>
-  value === undefined || value === null ? '' : String(value)
 
 /**
  * WORLD'S END レコードのフィルター条件を選択するパネルを表示する。
@@ -58,49 +50,14 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
     toInputValue(props.filters.justiceCount.max)
   )
 
-  /**
-   * スコアをランク入力用のラベルへ変換する。
-   *
-   * @param value - 変換対象のスコア。
-   * @returns スコアが属するランクラベル。
-   */
-  const Score2Rank = (value: number) => {
-    const highestRank = SCORE_RANKS[SCORE_RANKS.length - 1]
-    const normalized = Math.max(
-      SCORE_RANK_VALUES['0点'],
-      Math.min(value, SCORE_RANK_VALUES[highestRank])
-    )
-    for (const rank of SCORE_RANKS) {
-      const maxValue = Rank2Score(rank, 'max')
-      if (normalized <= maxValue) {
-        return rank
-      }
-    }
-    return highestRank
-  }
-
-  /**
-   * スコアランクを範囲端のスコアへ変換する。
-   *
-   * @param rank - 変換対象のランクラベル。
-   * @param type - 下限または上限。
-   * @returns ランクに対応するスコア。
-   */
-  const Rank2Score = (rank: ScoreRank, type: 'min' | 'max') => {
-    if (type === 'max') {
-      return SCORE_RANK_MAX_VALUES[rank]
-    }
-    return SCORE_RANK_VALUES[rank]
-  }
-
   createEffect(() => {
     if (!props.open) return
     setScoreMinInput(toInputValue(props.filters.score.min))
     setScoreMaxInput(toInputValue(props.filters.score.max))
     setJusticeCountMinInput(toInputValue(props.filters.justiceCount.min))
     setJusticeCountMaxInput(toInputValue(props.filters.justiceCount.max))
-    setScoreRankMin(Score2Rank(props.filters.score.min))
-    setScoreRankMax(Score2Rank(props.filters.score.max))
+    setScoreRankMin(scoreToFilterRank(props.filters.score.min))
+    setScoreRankMax(scoreToFilterRank(props.filters.score.max))
   })
 
   /**
@@ -117,10 +74,10 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
       return
     }
 
-    const nextMinRank = Score2Rank(props.filters.score.min)
-    const nextMaxRank = Score2Rank(props.filters.score.max)
-    const nextMinValue = Rank2Score(nextMinRank, 'min')
-    const nextMaxValue = Rank2Score(nextMaxRank, 'max')
+    const nextMinRank = scoreToFilterRank(props.filters.score.min)
+    const nextMaxRank = scoreToFilterRank(props.filters.score.max)
+    const nextMinValue = filterRankToScore(nextMinRank, 'min')
+    const nextMaxValue = filterRankToScore(nextMaxRank, 'max')
     setScoreRankMin(nextMinRank)
     setScoreRankMax(nextMaxRank)
     props.setFilters((prev) => ({
@@ -141,7 +98,7 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
    * @returns なし。
    */
   const handleScoreRankChange = (type: 'min' | 'max', value: string) => {
-    const nextValue = Rank2Score(value as ScoreRank, type)
+    const nextValue = filterRankToScore(value as ScoreRank, type)
     if (type === 'min') {
       setScoreRankMin(value)
       setScoreMinInput(toInputValue(nextValue))
@@ -208,7 +165,7 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
 
   return (
     <div class="scrollbar-none min-h-0 flex-1 space-y-4 overflow-y-auto">
-      <WorldsendMultiSelectSection
+      <MultiSelectFilterSection
         title="属性"
         options={props.defaultFilter.attributes}
         selected={props.filters.attributes}
@@ -348,11 +305,10 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
           props.setFilters((prev) => ({ ...prev, excludeNoPlay: checked }))
         }
       />
-      <WorldsendMultiSelectSection
+      <MultiSelectFilterSection
         title="ジャンル"
         options={props.defaultFilter.genres}
         selected={props.filters.genres}
-        formatLabel={(genre) => genre}
         onSelectAll={() =>
           props.setFilters((prev) => ({ ...prev, genres: props.defaultFilter.genres }))
         }
@@ -361,11 +317,10 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
           props.setFilters((prev) => ({ ...prev, genres: toggleArray(prev.genres, genre) }))
         }
       />
-      <WorldsendMultiSelectSection
+      <MultiSelectFilterSection
         title="バージョン"
         options={props.defaultFilter.versions}
         selected={props.filters.versions}
-        formatLabel={(version) => version}
         onSelectAll={() =>
           props.setFilters((prev) => ({ ...prev, versions: props.defaultFilter.versions }))
         }
