@@ -44,7 +44,7 @@ export function difficultyToQueryValue(difficulty: string): string {
 }
 
 /**
- * URLクエリから取得した難易度値を比較用の小文字値へ正規化する。
+ * URLクエリから取得した難易度値を比較用の大文字値へ正規化する。
  * @param difficulty URLクエリから取得した難易度値
  * @returns 正規化済みの難易度値
  */
@@ -52,7 +52,7 @@ export function normalizeDifficultyQueryValue(
   difficulty: string | string[] | null | undefined
 ): string {
   const value = Array.isArray(difficulty) ? difficulty[0] : difficulty
-  return value?.trim().toLowerCase() ?? ''
+  return value?.trim().toUpperCase() ?? ''
 }
 
 // 難易度ごとの正規ゲームカラー（16進数）

@@ -73,6 +73,10 @@
   --cs-color-info-bg: var(--color-blue-50);
   --cs-color-info-border: var(--color-blue-300);
 
+  /* ===== 苦手譜面インスペクター（通常点 / 外れ値） ===== */
+  --cs-color-weak-chart-point: rgb(22 163 74 / 45%);
+  --cs-color-weak-chart-outlier: var(--color-blue-600);
+
   /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） ===== */
   --cs-color-overlay: rgb(0 0 0 / 30%);
   --cs-color-disabled-bg: var(--color-gray-200);
@@ -136,6 +140,10 @@
   --cs-color-info: var(--color-teal-300);
   --cs-color-info-bg: rgb(19 78 74 / 35%);
   --cs-color-info-border: var(--color-teal-800);
+
+  /* ===== 苦手譜面インスペクター（通常点 / 外れ値） ===== */
+  --cs-color-weak-chart-point: rgb(134 239 172 / 45%);
+  --cs-color-weak-chart-outlier: var(--color-blue-400);
 
   /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） ===== */
   --cs-color-overlay: rgb(0 0 0 / 60%);

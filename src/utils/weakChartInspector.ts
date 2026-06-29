@@ -1,4 +1,4 @@
-import { SCORE_THEORETICAL_MAX, WEAK_CHART_INSPECTOR_DISPLAY_SCORE_MIN } from '../constants/chart'
+import { SCORE_THEORETICAL_MAX } from '../constants/chart'
 import type { PlayerRecordDTO } from '../types/api'
 
 /** 箱ひげ図を構成する譜面定数単位の統計値。 */
@@ -35,16 +35,7 @@ export type WeakChartInspection = {
  * @returns 分析対象の場合はtrue。
  */
 export const isWeakChartInspectionTarget = (record: PlayerRecordDTO): boolean =>
-  record.is_played && record.clear_lamp !== 'FAILED' && record.score <= SCORE_THEORETICAL_MAX
-
-/**
- * 集計対象レコードをグラフと一覧へ表示するか判定する。
- *
- * @param record - 判定対象の通常譜面レコード。
- * @returns 表示下限以上の場合はtrue。
- */
-export const isWeakChartDisplayTarget = (record: PlayerRecordDTO): boolean =>
-  record.score >= WEAK_CHART_INSPECTOR_DISPLAY_SCORE_MIN
+  record.is_played && record.score <= SCORE_THEORETICAL_MAX
 
 /**
  * ソート済み数列の分位点を線形補間で算出する。

@@ -16,9 +16,6 @@ export const WEAK_CHART_INSPECTOR_DIFFICULTIES = ['MASTER', 'ULTIMA'] as const
 /** CHUNITHM のスコアとして扱う最小値。 */
 export const SCORE_MIN = 0
 
-/** 苦手譜面インスペクターでスコア点と一覧を表示する下限。 */
-export const WEAK_CHART_INSPECTOR_DISPLAY_SCORE_MIN = 1000000
-
 /** CHUNITHM の理論値スコア。 */
 export const SCORE_THEORETICAL_MAX = 1010000
 

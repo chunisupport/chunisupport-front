@@ -10,7 +10,7 @@ const OVER_POWER_VALUE_DECIMAL_PLACES = 3
  * @returns 小数点以下3桁に0埋めしたOVER POWER値の表示文字列。
  */
 export const formatOverPowerValue = (value: number): string =>
-  value.toFixed(OVER_POWER_VALUE_DECIMAL_PLACES)
+  formatTruncatedFixed(value, OVER_POWER_VALUE_DECIMAL_PLACES)
 
 /**
  * OVER POWER達成率を小数点以下4桁で切り捨てた表示文字列に整形する。

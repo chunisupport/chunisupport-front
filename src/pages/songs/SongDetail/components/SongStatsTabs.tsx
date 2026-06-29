@@ -27,12 +27,13 @@ type Props = {
   isStatsLoading: boolean
   bestAverage?: number | null
   ratingBands?: RatingBandDTO[]
+  ownScore?: number
 } & (SelectableDifficultyProps | ReadonlyDifficultyProps)
 
 /**
  * 難易度別の楽曲統計タブを表示します。
  *
- * @param props - 表示対象の難易度一覧、統計情報、読み込み状態、難易度選択設定。
+ * @param props - 表示対象の難易度一覧、統計情報、自己スコア、読み込み状態、難易度選択設定。
  * @returns 難易度タブと統計テーブル。
  */
 const SongStatsTabs = (props: Props) => {
@@ -68,6 +69,7 @@ const SongStatsTabs = (props: Props) => {
                     stats={statsData().stats}
                     bestAverage={props.bestAverage}
                     ratingBands={props.ratingBands}
+                    ownScore={props.ownScore}
                   />
                 )}
               </Show>

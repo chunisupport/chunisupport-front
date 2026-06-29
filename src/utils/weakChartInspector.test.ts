@@ -1,11 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PlayerRecordDTO } from '../types/api'
-import {
-  inspectWeakCharts,
-  isWeakChartDisplayTarget,
-  sortWeakChartOutliers,
-} from './weakChartInspector'
+import { inspectWeakCharts, sortWeakChartOutliers } from './weakChartInspector'
 
 /**
  * テスト用の通常譜面レコードを生成する。
@@ -73,7 +69,7 @@ test('未プレイ譜面を分布と外れ値の計算から除外すること',
   assert.equal(result.outliers.length, 0)
 })
 
-test('FAILED譜面を分布と外れ値の計算から除外すること', () => {
+test('FAILED譜面も分布と外れ値の計算に含めること', () => {
   // Given
   const records = [
     createRecord(800000, 14.0, true, 'FAILED'),
@@ -85,8 +81,8 @@ test('FAILED譜面を分布と外れ値の計算から除外すること', () =>
   const result = inspectWeakCharts(records)
 
   // Then
-  assert.equal(result.distributions[0].count, 2)
-  assert.equal(result.distributions[0].lowerWhisker, 1000000)
+  assert.equal(result.distributions[0].count, 3)
+  assert.equal(result.distributions[0].lowerWhisker, 800000)
   assert.equal(result.outliers.length, 0)
 })
 
@@ -106,16 +102,6 @@ test('S未満を集計に含め、理論値超過だけを除外すること', (
   assert.equal(result.distributions[0].count, 3)
   assert.equal(result.distributions[0].lowerWhisker, 900000)
   assert.equal(result.distributions[0].upperWhisker, 1010000)
-})
-
-test('表示対象を1000000以上に限定すること', () => {
-  // Given
-  const hiddenRecord = createRecord(999999)
-  const visibleRecord = createRecord(1000000)
-
-  // When & Then
-  assert.equal(isWeakChartDisplayTarget(hiddenRecord), false)
-  assert.equal(isWeakChartDisplayTarget(visibleRecord), true)
 })
 
 test('レベル10未満の譜面も分布と外れ値の計算に含めること', () => {
