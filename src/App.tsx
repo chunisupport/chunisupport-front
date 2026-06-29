@@ -46,6 +46,7 @@ import {
   RegisterScoreTempPage,
   Settings,
   SongDetail,
+  SongScoreHistory,
   SongsList,
   UserPage,
   WeakChartInspectorPage,
@@ -369,6 +370,10 @@ const App = () => {
       <Route path="/songs" component={withNavBar(SongsList)} />
       <Route path="/songs/worldsend" component={withNavBar(WorldsendSongsList)} />
       <Route path="/songs/worldsend/:displayid" component={withNavBar(WorldsendSongDetail)} />
+      <Route
+        path="/songs/:displayid/score-history"
+        component={withNavBar(withAuth(SongScoreHistory))}
+      />
       <Route path="/songs/:displayid" component={withNavBar(SongDetail)} />
 
       {/* 設定 */}

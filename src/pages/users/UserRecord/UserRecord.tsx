@@ -23,20 +23,21 @@ import { useSongsData } from '../../../stores/songsData'
 import type { MasterDataDTO, UserRecordDTO, VersionSummaryDTO } from '../../../types/api'
 import FilterStats from '../components/FilterStats'
 import { isValidSavedStandardFilter } from '../components/savedRecordFilters'
-import { type SortDirection, sanitizeSortQuery } from '../recordTable/sortingQuery'
+import { sanitizeSortQuery } from '../recordTable/sortingQuery'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FilterDialog from './components/FilterDialog'
 import FilterToolbar from './components/FilterToolbar'
 import RecordTable from './components/RecordTable'
+import SortDialog from './components/SortDialog'
 import { buildDefaultFilter, DEFAULT_FILTER, normalizeFilterState } from './types/filterDefaults'
-import type { FilterState, RecordColumnId, RecordSortKey } from './types/types'
+import type { FilterState, RecordColumnId, RecordSortCondition } from './types/types'
 import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
 import {
   isRecordDifficultyFilterOnlyChanged,
   isRecordFilterOptionsChanged,
 } from './utils/filterDialog'
 import { useUserRecordPageModel } from './utils/pageModel'
-import { parseSortParams } from './utils/sorting'
+import { createInitialRecordSortConditions, parseSortParams } from './utils/sorting'
 
 type Props = {
   username: string
@@ -87,14 +88,17 @@ const UserRecord: Component<Props> = (props) => {
   // フィルターダイアログの開閉状態
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
+  const [sortSettingsOpen, setSortSettingsOpen] = createSignal(false)
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
 
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
   const { initialSortKey, initialSortOrder } = parseSortParams(searchParams)
 
-  const [sortKey, setSortKey] = createSignal<RecordSortKey | null>(initialSortKey)
-  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(initialSortOrder)
+  const [sortConditions, setSortConditions] = createSignal<RecordSortCondition[]>(
+    createInitialRecordSortConditions(initialSortKey, initialSortOrder)
+  )
+  const primarySort = () => sortConditions()[0] ?? null
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<RecordColumnId[]>(
     sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
   )
@@ -170,10 +174,8 @@ const UserRecord: Component<Props> = (props) => {
       versions: versionData,
       sourceRecords: () => props.record.standard,
       filters,
-      sortKey,
-      sortDirection,
-      setSortKey,
-      setSortDirection,
+      sortConditions,
+      setSortConditions,
     })
 
   useDocumentTitle(() => `${props.username}さんのレコード`)
@@ -195,6 +197,7 @@ const UserRecord: Component<Props> = (props) => {
                 title={filters().title}
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
+                onOpenSortSettings={() => setSortSettingsOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
                 titleActive={hasTitleFilterChanges()}
                 filterActive={hasFilterOptionChanges()}
@@ -218,8 +221,8 @@ const UserRecord: Component<Props> = (props) => {
               <RecordTable
                 records={sortedRecords()}
                 statsOpen={filterStatsOpen()}
-                sortKey={sortKey()}
-                sortDirection={sortDirection()}
+                sortKey={primarySort()?.key ?? null}
+                sortDirection={primarySort()?.direction ?? null}
                 visibleColumnIds={visibleColumnIds()}
                 onSortChange={handleSortChange}
               />
@@ -233,6 +236,13 @@ const UserRecord: Component<Props> = (props) => {
                 masterData={masterData()}
                 versions={versionData()?.versions}
                 defaultFilter={defaultFilter()}
+              />
+
+              <SortDialog
+                open={sortSettingsOpen()}
+                onOpenChange={setSortSettingsOpen}
+                sortConditions={sortConditions()}
+                onApply={setSortConditions}
               />
 
               <ColumnSettingsDialog

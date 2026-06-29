@@ -6,6 +6,7 @@ import type {
   ManagedSongDTO,
   ManagedWorldsendSongDTO,
   MasterDataDTO,
+  ScoreHistoryResponseDTO,
   SongDTO,
   SongStatsResponseDTO,
   UpdatedAtResponseDTO,
@@ -18,6 +19,7 @@ import { sortMasterItemsBySortOrder } from '../utils/masterData'
 import { fetchWithAuth } from './fetchWithAuth'
 
 type VersionsResponse = { versions: VersionDTO[] }
+export type ScoreHistoryDifficulty = 'EXPERT' | 'MASTER' | 'ULTIMA'
 
 /** 内部向け WORLD'S END 楽曲APIのベースパス。 */
 const INTERNAL_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/worldsend-songs`
@@ -130,6 +132,28 @@ export const fetchSongStats = async (
 ): Promise<SongStatsResponseDTO> => {
   const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/songs/${encodeURIComponent(displayId)}/stats/${encodeURIComponent(difficulty)}`
+  )
+
+  return response.json()
+}
+
+/**
+ * ログインユーザーの通常譜面スコア履歴を取得する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @param difficulty - 大文字の難易度ドメイン値。
+ * @param username - 対象ユーザー名。
+ * @returns 現行ベストを先頭に含むスコア履歴。
+ */
+export const fetchOwnSongScoreHistory = async (
+  displayId: string,
+  difficulty: ScoreHistoryDifficulty,
+  username: string
+): Promise<ScoreHistoryResponseDTO> => {
+  const query = new URLSearchParams({ username })
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/songs/${encodeURIComponent(displayId)}/score-history/${difficulty.toLowerCase()}?${query.toString()}`,
+    { requireAuthentication: true }
   )
 
   return response.json()

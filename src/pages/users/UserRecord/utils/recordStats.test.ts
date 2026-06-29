@@ -166,6 +166,7 @@ test("getRecordStats はWORLD'S ENDレコードも同じ集計ロジックで処
     {
       id: 'we-1',
       title: "WORLD'S END 1",
+      artist: 'Artist',
       score: MAX_SCORE,
       justice_count: 0,
       is_played: true,
@@ -181,6 +182,7 @@ test("getRecordStats はWORLD'S ENDレコードも同じ集計ロジックで処
     {
       id: 'we-2',
       title: "WORLD'S END 2",
+      artist: 'Artist',
       score: 0,
       justice_count: null,
       is_played: false,

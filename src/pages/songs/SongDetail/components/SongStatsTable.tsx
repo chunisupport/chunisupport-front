@@ -12,6 +12,7 @@ import {
 } from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
+import { completeSongStatsRatingBands } from '../../../../utils/songStats'
 import { isOwnBestAverageRatingBand } from './songStatsHighlight'
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip)
@@ -128,11 +129,16 @@ const createChartGradient = (
   bar: BarElement,
   colors: readonly string[]
 ): CanvasGradient => {
+  const { x, y, base, width } = bar.getProps(['x', 'y', 'base', 'width'], true)
+  const centerX = x ?? 0
+  const topY = y ?? 0
+  const bottomY = base ?? topY
+  const barWidth = width ?? 0
   const gradient = context.createLinearGradient(
-    bar.x - bar.width / 2,
-    bar.y,
-    bar.x + bar.width / 2,
-    bar.base
+    centerX - barWidth / 2,
+    topY,
+    centerX + barWidth / 2,
+    bottomY
   )
   const lastColorIndex = colors.length - 1
 
@@ -167,8 +173,6 @@ const createBarGradientPlugin = (datasets: SongStatsChartDataset[]): Plugin<'bar
             ...bar.options,
             backgroundColor,
             borderColor: backgroundColor,
-            hoverBackgroundColor: backgroundColor,
-            hoverBorderColor: backgroundColor,
           }
         })
       })
@@ -339,7 +343,17 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
  * @returns FC/AJ/AJCとCLEAR系ランプのグラフ。
  */
 const SongStatsCharts = (props: Props) => {
-  const chartStats = createMemo(() => getChartStats(props.stats))
+  const chartStats = createMemo(() => {
+    const stats = getChartStats(props.stats)
+    const ratingBands = props.ratingBands
+
+    return ratingBands
+      ? completeSongStatsRatingBands(
+          stats,
+          ratingBands.filter((band) => band.label !== CHART_EXCLUDED_RATING_BAND)
+        )
+      : stats
+  })
   const labels = createMemo(() => chartStats().map((band) => band.rating_band))
   const comboDatasets = createMemo<SongStatsChartDataset[]>(() =>
     COMBO_CHART_DATASET_DEFINITIONS.map((definition) => ({
@@ -433,7 +447,7 @@ const SongStatsTable = (props: Props) => {
           </tbody>
         </table>
       </div>
-      <SongStatsCharts stats={props.stats} />
+      <SongStatsCharts stats={props.stats} ratingBands={props.ratingBands} />
     </>
   )
 }

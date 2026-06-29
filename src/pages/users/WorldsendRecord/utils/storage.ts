@@ -35,17 +35,19 @@ function isObjectRecord(value: unknown): value is Partial<WorldsendFilterState> 
  */
 export function toSavedWorldsendFilter(dto: RecordFilterDTO<unknown>): SavedWorldsendFilter {
   const validSchema = dto.schema_version === SAVED_WORLDSEND_FILTER_SCHEMA_VERSION
-  const validFilter =
+  const filter =
     validSchema && isObjectRecord(dto.filter) && isValidSavedWorldsendFilter(dto.filter)
+      ? dto.filter
+      : null
 
   return {
     id: dto.id,
     name: dto.name,
     schemaVersion: dto.schema_version,
-    filter: validSchema && validFilter ? normalizeWorldsendFilterState(dto.filter) : null,
-    isValid: validSchema && validFilter,
+    filter: filter ? normalizeWorldsendFilterState(filter) : null,
+    isValid: Boolean(filter),
     invalidReason: validSchema
-      ? validFilter
+      ? filter
         ? undefined
         : INVALID_FILTER_MESSAGE
       : INVALID_SCHEMA_MESSAGE,
