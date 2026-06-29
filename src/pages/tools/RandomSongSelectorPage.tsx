@@ -937,7 +937,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
         >
           <section class="rounded-lg border border-border bg-surface p-4 sm:p-6">
             <Show when={!isSongsLoading() && !versionsResponse.loading} fallback={<Loading />}>
-              <form class="space-y-5" onSubmit={(event) => event.preventDefault()}>
+              <form class="space-y-4" onSubmit={(event) => event.preventDefault()}>
                 <div class="grid gap-4 lg:grid-cols-2">
                   <div class="max-w-32">
                     <RandomSongTextField
@@ -951,7 +951,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                 </div>
 
                 <div class="grid gap-4 lg:grid-cols-2">
-                  <div class="grid gap-3">
+                  <div class="grid gap-4">
                     <div>
                       <p class="mb-1 text-sm font-medium text-text-muted">
                         {RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
@@ -988,7 +988,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       />
                     </div>
                   </div>
-                  <div class="grid gap-3">
+                  <div class="grid gap-4">
                     <div>
                       <p class="mb-1 text-sm font-medium text-text-muted">
                         {RANDOM_SONG_SELECTOR_COPY.versionLabel}
@@ -1022,12 +1022,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
                   </div>
                 </div>
 
-                <Show when={validationMessage()}>
-                  {(message) => <p class="text-sm text-danger">{message()}</p>}
-                </Show>
-
                 <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-                  <div class="flex flex-wrap gap-2">
+                  <div class="flex flex-wrap gap-2 justify-end">
                     <Dialog
                       open={recordFilterSettingsOpen()}
                       onOpenChange={setRecordFilterSettingsOpen}
@@ -1220,8 +1216,12 @@ const RandomSongSelectorPage = (): JSX.Element => {
                     </Dialog>
                   </div>
 
-                  <div class="flex flex-wrap items-center gap-3 lg:justify-end">
-                    <p class="text-sm text-text-muted">
+                  <Show when={validationMessage()}>
+                    {(message) => <p class="text-sm text-danger">{message()}</p>}
+                  </Show>
+
+                  <div class="mt-3 flex flex-wrap items-center gap-2 lg:justify-end">
+                    <p class="flex-1 text-sm text-text-muted">
                       {RANDOM_SONG_SELECTOR_COPY.candidateCountLabel}:{' '}
                       <span class="font-medium tabular-nums text-text">
                         {filteredCandidates().length.toLocaleString('ja-JP')}
@@ -1300,7 +1300,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                 </p>
               }
             >
-              <div class="grid gap-3">
+              <div class="flex flex-col gap-2">
                 <For each={results()}>
                   {(candidate) => (
                     <article class={RESULT_CARD_CLASS}>
@@ -1324,13 +1324,13 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         </h3>
                         <p class="truncate text-sm text-text-muted">{candidate.song.artist}</p>
                       </div>
-                      <div class="flex flex-col gap-2 sm:items-end">
-                        <Show when={shouldShowRecord()}>
-                          <div class="flex flex-wrap gap-2 sm:justify-end">
-                            {renderRandomSongRecordSummary(recordForCandidate(candidate))}
-                          </div>
-                        </Show>
-                      </div>
+                      <Show when={shouldShowRecord()}>
+                        <div class="flex flex-col gap-2 sm:items-end">
+                            <div class="flex flex-wrap gap-2 sm:justify-end">
+                              {renderRandomSongRecordSummary(recordForCandidate(candidate))}
+                            </div>
+                        </div>
+                      </Show>
                     </article>
                   )}
                 </For>
