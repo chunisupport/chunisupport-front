@@ -10,12 +10,12 @@ export const RANDOM_SONG_RESULTS_STORAGE_KEY = 'chunisupport:random-song-selecto
  */
 export const RANDOM_SONG_SELECTOR_DEFAULTS = {
   count: '3',
-  minConst: '12.0',
+  minConst: '',
   maxConst: '',
   minScore: '',
   maxScore: '',
   defaultWeight: '1',
-  showRecordScore: true,
+  showRecord: true,
 } as const
 
 /**
@@ -48,11 +48,11 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   minConstLabel: '定数 下限',
   maxConstLabel: '定数 上限',
   advancedSettingsLabel: '高度な設定',
+  recordFilterSettingsLabel: '自分のレコードで絞る',
   drawRateLabel: RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate,
   difficultyWeightLabel: '難易度別',
   constWeightLabel: '定数別',
-  recordFilterLabel: '自分のレコード',
-  scoreVisibleLabel: 'スコアを表示',
+  recordVisibleLabel: 'レコードを表示',
   playStatusLabel: 'プレイ状況',
   lampLabel: 'ランプ',
   minScoreLabel: 'スコア 下限',
@@ -61,11 +61,12 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   recordUnavailableMessage: 'ログイン時のみ利用できます。',
   recordFetchErrorMessage: 'レコード情報を取得できませんでした。',
   drawButtonLabel: '選曲',
-  resetButtonLabel: '条件を初期化',
+  resetButtonLabel: 'クリア',
   resetConfirmTitle: '条件を初期化しますか？',
   resetConfirmDescription: '現在の絞り込みと選曲結果を初期状態に戻します。',
   resetCancelLabel: 'キャンセル',
   resetConfirmLabel: '初期化',
+  closeButtonLabel: '閉じる',
   resultLabel: '選曲結果',
   candidateCountLabel: '候補',
   noCandidatesMessage: '条件に合う譜面はありません。',

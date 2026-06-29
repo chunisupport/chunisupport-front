@@ -1,11 +1,11 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
-import { Collapsible } from '@kobalte/core/collapsible'
+import { Dialog } from '@kobalte/core/dialog'
 import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
-import { Check, ChevronDown, ChevronRight, Dices, RotateCcw, SlidersHorizontal } from 'lucide-solid'
+import { Check, ChevronDown, Dices, RotateCcw, SlidersHorizontal } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import {
   createEffect,
@@ -60,7 +60,7 @@ import {
 } from './randomSongSelector.constants'
 
 const FIELD_INPUT_CLASS =
-  'w-full rounded border border-border-strong bg-input-bg px-3 py-2 text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+  'w-full rounded border border-border-strong bg-input-bg px-3 py-2 text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50'
 const RESULT_CARD_CLASS =
   'grid gap-3 rounded-lg border border-border bg-surface p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center'
 const RESULT_RECORD_BADGE_CLASS =
@@ -282,11 +282,13 @@ const RandomSongCheckbox: Component<{
   id: string
   checked: boolean
   label: string
+  disabled?: boolean
   onChange: (checked: boolean) => void
 }> = (props) => (
   <Checkbox
-    class="relative grid min-h-5 grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 text-sm text-text"
+    class="relative grid min-h-5 grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 text-sm text-text data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"
     checked={props.checked}
+    disabled={props.disabled}
     onChange={props.onChange}
   >
     <Checkbox.Input id={props.id} style={{ left: '0', top: '0' }} />
@@ -354,13 +356,9 @@ const formatRandomSongRecordLampLabel = (lamp: RandomSongLampFilter): string =>
  * ランダム選曲結果で表示するレコードバッジを生成する。
  *
  * @param record - 選曲された譜面に対応する自分のレコード。
- * @param showScore - スコアを表示するかどうか。
  * @returns スコア、ランク、ランプの表示。
  */
-const renderRandomSongRecordSummary = (
-  record: PlayerRecordDTO | undefined,
-  showScore: boolean
-): JSX.Element => {
+const renderRandomSongRecordSummary = (record: PlayerRecordDTO | undefined): JSX.Element => {
   if (record?.is_played !== true) {
     return <span class={RESULT_RECORD_LAMP_BADGE_CLASS.NONE}>未プレイ</span>
   }
@@ -370,12 +368,10 @@ const renderRandomSongRecordSummary = (
 
   return (
     <>
-      <Show when={showScore}>
-        <span class={RESULT_RECORD_SCORE_BADGE_CLASS}>
-          {record.score.toLocaleString('ja-JP')}
-          <span class={`ml-1 ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}>{scoreRank}</span>
-        </span>
-      </Show>
+      <span class={RESULT_RECORD_SCORE_BADGE_CLASS}>
+        {record.score.toLocaleString('ja-JP')}
+        <span class={`ml-1 ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}>{scoreRank}</span>
+      </span>
       <span class={RESULT_RECORD_LAMP_BADGE_CLASS[lamp]}>
         {formatRandomSongRecordLampLabel(lamp)}
       </span>
@@ -467,6 +463,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
   ])
   const [selectedGenres, setSelectedGenres] = createSignal<string[]>([])
   const [selectedVersions, setSelectedVersions] = createSignal<string[]>([])
+  const [recordFilterSettingsOpen, setRecordFilterSettingsOpen] = createSignal(false)
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = createSignal(false)
   const [playStatus, setPlayStatus] = createSignal<RandomSongPlayStatus>('all')
   const [bestFrame, setBestFrame] = createSignal<RandomSongBestFrame>('all')
@@ -475,9 +472,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
   ])
   const [minScore, setMinScore] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.minScore)
   const [maxScore, setMaxScore] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.maxScore)
-  const [showRecordScore, setShowRecordScore] = createSignal(
-    RANDOM_SONG_SELECTOR_DEFAULTS.showRecordScore
-  )
+  const [showRecord, setShowRecord] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.showRecord)
   const [difficultyWeights, setDifficultyWeights] = createSignal<
     Record<PlayerDataDifficulty, string>
   >({
@@ -705,7 +700,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     setMaxConst(RANDOM_SONG_SELECTOR_DEFAULTS.maxConst)
     setMinScore(RANDOM_SONG_SELECTOR_DEFAULTS.minScore)
     setMaxScore(RANDOM_SONG_SELECTOR_DEFAULTS.maxScore)
-    setShowRecordScore(RANDOM_SONG_SELECTOR_DEFAULTS.showRecordScore)
+    setShowRecord(RANDOM_SONG_SELECTOR_DEFAULTS.showRecord)
     setPlayStatus('all')
     setBestFrame('all')
     setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])
@@ -776,7 +771,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     recordsByChartKey().get(createRandomSongChartKey(candidate.song.id, candidate.difficulty))
 
   return (
-    <main class="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
+    <main class="mx-auto flex w-full max-w-4xl flex-col gap-4 p-4">
       <header class="flex items-start gap-3">
         <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
           <Dices class="h-5 w-5 text-action-primary" aria-hidden="true" />
@@ -795,7 +790,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
           <section class="rounded-lg border border-border bg-surface p-4 sm:p-6">
             <Show when={!isSongsLoading() && !versionsResponse.loading} fallback={<Loading />}>
               <form class="space-y-5" onSubmit={(event) => event.preventDefault()}>
-                <div class="grid gap-3 sm:grid-cols-[8rem_minmax(0,1fr)] sm:items-start">
+                <div class="max-w-32">
                   <RandomSongTextField
                     id="random-song-count"
                     label={RANDOM_SONG_SELECTOR_COPY.countLabel}
@@ -803,297 +798,346 @@ const RandomSongSelectorPage = (): JSX.Element => {
                     inputMode="numeric"
                     onChange={setCount}
                   />
-                  <div class="flex min-h-16 items-end">
-                    <p class="text-sm text-text-muted">
-                      {RANDOM_SONG_SELECTOR_COPY.candidateCountLabel}:{' '}
-                      <span class="font-medium tabular-nums text-text">
-                        {filteredCandidates().length.toLocaleString('ja-JP')}
-                      </span>
-                    </p>
+                </div>
+
+                <div class="grid gap-4 lg:grid-cols-2">
+                  <div class="grid gap-3">
+                    <div>
+                      <p class="mb-1 text-sm font-medium text-text-muted">
+                        {RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
+                      </p>
+                      <MultiSelectDropdown
+                        options={RANDOM_SONG_SELECTOR_DIFFICULTIES}
+                        selected={selectedDifficulties()}
+                        placeholder={RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
+                        onToggle={(difficulty) =>
+                          setSelectedDifficulties((prev) =>
+                            toggleRandomSongSelectionValue(prev, difficulty)
+                          )
+                        }
+                        onSelectAll={() =>
+                          setSelectedDifficulties([...RANDOM_SONG_SELECTOR_DIFFICULTIES])
+                        }
+                        onClear={() => setSelectedDifficulties([])}
+                      />
+                    </div>
+                    <div>
+                      <p class="mb-1 text-sm font-medium text-text-muted">
+                        {RANDOM_SONG_SELECTOR_COPY.genreLabel}
+                      </p>
+                      <MultiSelectDropdown
+                        options={genreOptions()}
+                        selected={selectedGenres()}
+                        placeholder={RANDOM_SONG_SELECTOR_COPY.genreLabel}
+                        onToggle={(genre) =>
+                          setSelectedGenres((prev) => toggleRandomSongSelectionValue(prev, genre))
+                        }
+                        onSelectAll={() => setSelectedGenres(genreOptions())}
+                        onClear={() => setSelectedGenres([])}
+                      />
+                    </div>
+                  </div>
+                  <div class="grid gap-3">
+                    <div>
+                      <p class="mb-1 text-sm font-medium text-text-muted">
+                        {RANDOM_SONG_SELECTOR_COPY.versionLabel}
+                      </p>
+                      <MultiSelectDropdown
+                        options={versionOptions()}
+                        selected={selectedVersions()}
+                        placeholder={RANDOM_SONG_SELECTOR_COPY.versionLabel}
+                        onToggle={(version) =>
+                          setSelectedVersions((prev) =>
+                            toggleRandomSongSelectionValue(prev, version)
+                          )
+                        }
+                        onSelectAll={() => setSelectedVersions(versionOptions())}
+                        onClear={() => setSelectedVersions([])}
+                      />
+                    </div>
+                    <RandomSongRangeField
+                      idPrefix="random-song-const"
+                      label={RANDOM_SONG_SELECTOR_FIELD_LABELS.const}
+                      minLabel={RANDOM_SONG_SELECTOR_COPY.minConstLabel}
+                      maxLabel={RANDOM_SONG_SELECTOR_COPY.maxConstLabel}
+                      minValue={minConst()}
+                      maxValue={maxConst()}
+                      inputMode="decimal"
+                      error={constRangeError()}
+                      onMinChange={setMinConst}
+                      onMaxChange={setMaxConst}
+                    />
                   </div>
                 </div>
 
-                <div class="grid gap-3 lg:grid-cols-3">
-                  <div>
-                    <p class="mb-1 text-sm font-medium text-text-muted">
-                      {RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
-                    </p>
-                    <MultiSelectDropdown
-                      options={RANDOM_SONG_SELECTOR_DIFFICULTIES}
-                      selected={selectedDifficulties()}
-                      placeholder={RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
-                      onToggle={(difficulty) =>
-                        setSelectedDifficulties((prev) =>
-                          toggleRandomSongSelectionValue(prev, difficulty)
-                        )
-                      }
-                      onSelectAll={() =>
-                        setSelectedDifficulties([...RANDOM_SONG_SELECTOR_DIFFICULTIES])
-                      }
-                      onClear={() => setSelectedDifficulties([])}
-                    />
-                  </div>
-                  <div>
-                    <p class="mb-1 text-sm font-medium text-text-muted">
-                      {RANDOM_SONG_SELECTOR_COPY.genreLabel}
-                    </p>
-                    <MultiSelectDropdown
-                      options={genreOptions()}
-                      selected={selectedGenres()}
-                      placeholder={RANDOM_SONG_SELECTOR_COPY.genreLabel}
-                      onToggle={(genre) =>
-                        setSelectedGenres((prev) => toggleRandomSongSelectionValue(prev, genre))
-                      }
-                      onSelectAll={() => setSelectedGenres(genreOptions())}
-                      onClear={() => setSelectedGenres([])}
-                    />
-                  </div>
-                  <div>
-                    <p class="mb-1 text-sm font-medium text-text-muted">
-                      {RANDOM_SONG_SELECTOR_COPY.versionLabel}
-                    </p>
-                    <MultiSelectDropdown
-                      options={versionOptions()}
-                      selected={selectedVersions()}
-                      placeholder={RANDOM_SONG_SELECTOR_COPY.versionLabel}
-                      onToggle={(version) =>
-                        setSelectedVersions((prev) => toggleRandomSongSelectionValue(prev, version))
-                      }
-                      onSelectAll={() => setSelectedVersions(versionOptions())}
-                      onClear={() => setSelectedVersions([])}
-                    />
-                  </div>
-                </div>
+                <div class="flex flex-wrap gap-2">
+                  <Dialog
+                    open={recordFilterSettingsOpen()}
+                    onOpenChange={setRecordFilterSettingsOpen}
+                  >
+                    <Dialog.Trigger
+                      as="button"
+                      type="button"
+                      class="inline-flex min-h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                    >
+                      <SlidersHorizontal size={16} aria-hidden="true" />
+                      {RANDOM_SONG_SELECTOR_COPY.recordFilterSettingsLabel}
+                    </Dialog.Trigger>
+                    <Dialog.Portal>
+                      <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
+                      <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-60 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+                        <div class="shrink-0">
+                          <Dialog.Title class="text-lg font-bold">
+                            {RANDOM_SONG_SELECTOR_COPY.recordFilterSettingsLabel}
+                          </Dialog.Title>
+                        </div>
+                        <div class="mt-4 min-h-0 flex-1 overflow-y-auto pr-1 sm:max-h-[65dvh] sm:flex-none">
+                          <div class="grid gap-3">
+                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                              <RandomSongSelect
+                                id="random-song-play-status"
+                                label={RANDOM_SONG_SELECTOR_COPY.playStatusLabel}
+                                value={playStatus()}
+                                options={RANDOM_SONG_PLAY_STATUS_OPTIONS}
+                                disabled={!hasMyRecordData()}
+                                onChange={setPlayStatus}
+                              />
+                              <RandomSongSelect
+                                id="random-song-best-frame"
+                                label={RANDOM_SONG_SELECTOR_COPY.bestFrameLabel}
+                                value={bestFrame()}
+                                options={RANDOM_SONG_BEST_FRAME_OPTIONS}
+                                disabled={!hasMyRecordData()}
+                                onChange={setBestFrame}
+                              />
+                              <RandomSongRangeField
+                                idPrefix="random-song-score"
+                                label={RANDOM_SONG_SELECTOR_FIELD_LABELS.score}
+                                minLabel={RANDOM_SONG_SELECTOR_COPY.minScoreLabel}
+                                maxLabel={RANDOM_SONG_SELECTOR_COPY.maxScoreLabel}
+                                minValue={minScore()}
+                                maxValue={maxScore()}
+                                inputMode="numeric"
+                                disabled={!hasMyRecordData()}
+                                error={scoreRangeError()}
+                                onMinChange={setMinScore}
+                                onMaxChange={setMaxScore}
+                              />
+                            </div>
+                            <div>
+                              <p class="mb-1 text-sm font-medium text-text-muted">
+                                {RANDOM_SONG_SELECTOR_COPY.lampLabel}
+                              </p>
+                              <MultiSelectDropdown
+                                options={RANDOM_SONG_LAMP_VALUES}
+                                selected={selectedLamps()}
+                                placeholder={RANDOM_SONG_SELECTOR_COPY.lampLabel}
+                                formatLabel={formatRandomSongRecordLampLabel}
+                                disabled={!hasMyRecordData()}
+                                onToggle={(lamp) =>
+                                  setSelectedLamps((prev) =>
+                                    toggleRandomSongSelectionValue(prev, lamp)
+                                  )
+                                }
+                                onSelectAll={() => setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])}
+                                onClear={() => setSelectedLamps([])}
+                              />
+                            </div>
+                            <Show when={myRecordData()?.status === 'unauthenticated'}>
+                              <p class="text-xs text-text-muted">
+                                {RANDOM_SONG_SELECTOR_COPY.recordUnavailableMessage}
+                              </p>
+                            </Show>
+                            <Show when={myRecordData()?.status === 'error'}>
+                              <p class="text-xs text-danger">
+                                {RANDOM_SONG_SELECTOR_COPY.recordFetchErrorMessage}
+                              </p>
+                            </Show>
+                          </div>
+                        </div>
+                        <div class="mt-4 flex shrink-0 justify-end">
+                          <Dialog.CloseButton class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted hover:bg-action-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring">
+                            {RANDOM_SONG_SELECTOR_COPY.closeButtonLabel}
+                          </Dialog.CloseButton>
+                        </div>
+                      </Dialog.Content>
+                    </Dialog.Portal>
+                  </Dialog>
 
-                <div class="grid gap-3 sm:grid-cols-2">
-                  <RandomSongRangeField
-                    idPrefix="random-song-const"
-                    label={RANDOM_SONG_SELECTOR_FIELD_LABELS.const}
-                    minLabel={RANDOM_SONG_SELECTOR_COPY.minConstLabel}
-                    maxLabel={RANDOM_SONG_SELECTOR_COPY.maxConstLabel}
-                    minValue={minConst()}
-                    maxValue={maxConst()}
-                    inputMode="decimal"
-                    error={constRangeError()}
-                    onMinChange={setMinConst}
-                    onMaxChange={setMaxConst}
-                  />
-                  <RandomSongRangeField
-                    idPrefix="random-song-score"
-                    label={RANDOM_SONG_SELECTOR_FIELD_LABELS.score}
-                    minLabel={RANDOM_SONG_SELECTOR_COPY.minScoreLabel}
-                    maxLabel={RANDOM_SONG_SELECTOR_COPY.maxScoreLabel}
-                    minValue={minScore()}
-                    maxValue={maxScore()}
-                    inputMode="numeric"
-                    disabled={!hasMyRecordData()}
-                    error={scoreRangeError()}
-                    onMinChange={setMinScore}
-                    onMaxChange={setMaxScore}
-                  />
-                </div>
-
-                <Collapsible
-                  open={advancedSettingsOpen()}
-                  onOpenChange={setAdvancedSettingsOpen}
-                  class="rounded-lg border border-border bg-surface-muted"
-                >
-                  <Collapsible.Trigger class="flex min-h-12 w-full items-center justify-between gap-3 px-4 text-left text-sm font-medium text-text hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring">
-                    <span class="inline-flex items-center gap-2">
+                  <Dialog open={advancedSettingsOpen()} onOpenChange={setAdvancedSettingsOpen}>
+                    <Dialog.Trigger
+                      as="button"
+                      type="button"
+                      class="inline-flex min-h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                    >
                       <SlidersHorizontal size={16} aria-hidden="true" />
                       {RANDOM_SONG_SELECTOR_COPY.advancedSettingsLabel}
-                    </span>
-                    <Show
-                      when={advancedSettingsOpen()}
-                      fallback={<ChevronRight size={16} aria-hidden="true" />}
-                    >
-                      <ChevronDown size={16} aria-hidden="true" />
-                    </Show>
-                  </Collapsible.Trigger>
-                  <Collapsible.Content class="border-t border-border p-4">
-                    <div class="grid gap-5">
-                      <section class="space-y-3">
-                        <h3 class="text-sm font-semibold text-text">
-                          {RANDOM_SONG_SELECTOR_COPY.recordFilterLabel}
-                        </h3>
-                        <RandomSongCheckbox
-                          id="random-song-show-record-score"
-                          checked={showRecordScore()}
-                          label={RANDOM_SONG_SELECTOR_COPY.scoreVisibleLabel}
-                          onChange={setShowRecordScore}
-                        />
-                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                          <RandomSongSelect
-                            id="random-song-play-status"
-                            label={RANDOM_SONG_SELECTOR_COPY.playStatusLabel}
-                            value={playStatus()}
-                            options={RANDOM_SONG_PLAY_STATUS_OPTIONS}
-                            disabled={!hasMyRecordData()}
-                            onChange={setPlayStatus}
-                          />
-                          <RandomSongSelect
-                            id="random-song-best-frame"
-                            label={RANDOM_SONG_SELECTOR_COPY.bestFrameLabel}
-                            value={bestFrame()}
-                            options={RANDOM_SONG_BEST_FRAME_OPTIONS}
-                            disabled={!hasMyRecordData()}
-                            onChange={setBestFrame}
-                          />
-                          <div class="sm:col-span-2">
-                            <p class="mb-1 text-sm font-medium text-text-muted">
-                              {RANDOM_SONG_SELECTOR_COPY.lampLabel}
-                            </p>
-                            <MultiSelectDropdown
-                              options={RANDOM_SONG_LAMP_VALUES}
-                              selected={selectedLamps()}
-                              placeholder={RANDOM_SONG_SELECTOR_COPY.lampLabel}
-                              formatLabel={formatRandomSongRecordLampLabel}
-                              disabled={!hasMyRecordData()}
-                              onToggle={(lamp) =>
-                                setSelectedLamps((prev) =>
-                                  toggleRandomSongSelectionValue(prev, lamp)
-                                )
-                              }
-                              onSelectAll={() => setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])}
-                              onClear={() => setSelectedLamps([])}
-                            />
-                          </div>
+                    </Dialog.Trigger>
+                    <Dialog.Portal>
+                      <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
+                      <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-60 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+                        <div class="shrink-0">
+                          <Dialog.Title class="text-lg font-bold">
+                            {RANDOM_SONG_SELECTOR_COPY.advancedSettingsLabel}
+                          </Dialog.Title>
                         </div>
-                        <Show when={myRecordData()?.status === 'unauthenticated'}>
-                          <p class="text-xs text-text-muted">
-                            {RANDOM_SONG_SELECTOR_COPY.recordUnavailableMessage}
-                          </p>
-                        </Show>
-                        <Show when={myRecordData()?.status === 'error'}>
-                          <p class="text-xs text-danger">
-                            {RANDOM_SONG_SELECTOR_COPY.recordFetchErrorMessage}
-                          </p>
-                        </Show>
-                      </section>
-
-                      <section class="space-y-3">
-                        <h3 class="text-sm font-semibold text-text">
-                          {RANDOM_SONG_SELECTOR_COPY.drawRateLabel}
-                        </h3>
-                        <div class="grid gap-4">
-                          <div>
-                            <div class="mb-2 text-sm font-medium text-text-muted">
-                              {RANDOM_SONG_SELECTOR_COPY.difficultyWeightLabel}
-                            </div>
-                            <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                              <For each={selectedDifficultyWeightOptions()}>
-                                {(difficulty) => (
-                                  <RandomSongTextField
-                                    id={`random-song-difficulty-weight-${difficulty.toLowerCase()}`}
-                                    label={difficulty}
-                                    value={difficultyWeights()[difficulty]}
-                                    inputMode="decimal"
-                                    onChange={(value) =>
-                                      handleDifficultyWeightChange(difficulty, value)
-                                    }
-                                  />
-                                )}
-                              </For>
-                            </div>
-                          </div>
-                          <div>
-                            <div class="mb-2 text-sm font-medium text-text-muted">
-                              {RANDOM_SONG_SELECTOR_COPY.constWeightLabel}
-                            </div>
-                            <div class="grid gap-3 sm:grid-cols-4 lg:grid-cols-6">
-                              <For each={constWeightOptions()}>
-                                {(chartConst) => (
-                                  <div class="flex h-full min-h-24 flex-col gap-2 rounded border border-border bg-surface p-3">
-                                    <RandomSongCheckbox
-                                      id={`random-song-const-enabled-${chartConst.replace('.', '-')}`}
-                                      checked={constWeightEnabled()[chartConst] ?? true}
-                                      label={chartConst}
-                                      onChange={(enabled) =>
-                                        handleConstWeightEnabledChange(chartConst, enabled)
-                                      }
-                                    />
-                                    <div class="mt-2">
+                        <div class="mt-4 min-h-0 flex-1 overflow-y-auto pr-1 sm:max-h-[65dvh] sm:flex-none">
+                          <section class="space-y-3">
+                            <h3 class="text-sm font-semibold text-text">
+                              {RANDOM_SONG_SELECTOR_COPY.drawRateLabel}
+                            </h3>
+                            <div class="grid gap-4">
+                              <div>
+                                <div class="mb-2 text-sm font-medium text-text-muted">
+                                  {RANDOM_SONG_SELECTOR_COPY.difficultyWeightLabel}
+                                </div>
+                                <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                                  <For each={selectedDifficultyWeightOptions()}>
+                                    {(difficulty) => (
                                       <RandomSongTextField
-                                        id={`random-song-const-weight-${chartConst.replace('.', '-')}`}
-                                        label={RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate}
-                                        labelHidden
-                                        value={constWeights()[chartConst] ?? '1'}
+                                        id={`random-song-difficulty-weight-${difficulty.toLowerCase()}`}
+                                        label={difficulty}
+                                        value={difficultyWeights()[difficulty]}
                                         inputMode="decimal"
-                                        disabled={constWeightEnabled()[chartConst] === false}
                                         onChange={(value) =>
-                                          handleConstWeightChange(chartConst, value)
+                                          handleDifficultyWeightChange(difficulty, value)
                                         }
                                       />
-                                    </div>
-                                  </div>
-                                )}
-                              </For>
+                                    )}
+                                  </For>
+                                </div>
+                              </div>
+                              <div>
+                                <div class="mb-2 text-sm font-medium text-text-muted">
+                                  {RANDOM_SONG_SELECTOR_COPY.constWeightLabel}
+                                </div>
+                                <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                                  <For each={constWeightOptions()}>
+                                    {(chartConst) => {
+                                      const isEnabled = () =>
+                                        constWeightEnabled()[chartConst] ?? true
+                                      return (
+                                        <div
+                                          class="flex h-full min-h-24 flex-col gap-2 rounded border p-3"
+                                          classList={{
+                                            'border-success bg-success-bg': isEnabled(),
+                                            'border-border bg-surface-muted': !isEnabled(),
+                                          }}
+                                        >
+                                          <RandomSongCheckbox
+                                            id={`random-song-const-enabled-${chartConst.replace('.', '-')}`}
+                                            checked={isEnabled()}
+                                            label={chartConst}
+                                            onChange={(enabled) =>
+                                              handleConstWeightEnabledChange(chartConst, enabled)
+                                            }
+                                          />
+                                          <div class="mt-2">
+                                            <RandomSongTextField
+                                              id={`random-song-const-weight-${chartConst.replace('.', '-')}`}
+                                              label={RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate}
+                                              labelHidden
+                                              value={constWeights()[chartConst] ?? '1'}
+                                              inputMode="decimal"
+                                              disabled={!isEnabled()}
+                                              onChange={(value) =>
+                                                handleConstWeightChange(chartConst, value)
+                                              }
+                                            />
+                                          </div>
+                                        </div>
+                                      )
+                                    }}
+                                  </For>
+                                </div>
+                              </div>
                             </div>
-                          </div>
+                          </section>
                         </div>
-                      </section>
-                    </div>
-                  </Collapsible.Content>
-                </Collapsible>
+                        <div class="mt-4 flex shrink-0 justify-end">
+                          <Dialog.CloseButton class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted hover:bg-action-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring">
+                            {RANDOM_SONG_SELECTOR_COPY.closeButtonLabel}
+                          </Dialog.CloseButton>
+                        </div>
+                      </Dialog.Content>
+                    </Dialog.Portal>
+                  </Dialog>
+                </div>
 
                 <Show when={validationMessage()}>
                   {(message) => <p class="text-sm text-danger">{message()}</p>}
                 </Show>
 
-                <div class="flex flex-wrap justify-end gap-2">
-                  <AlertDialog>
-                    <AlertDialog.Trigger
-                      as="button"
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <p class="text-sm text-text-muted">
+                    {RANDOM_SONG_SELECTOR_COPY.candidateCountLabel}:{' '}
+                    <span class="font-medium tabular-nums text-text">
+                      {filteredCandidates().length.toLocaleString('ja-JP')}
+                    </span>
+                    曲
+                  </p>
+                  <div class="flex flex-wrap justify-end gap-2">
+                    <AlertDialog>
+                      <AlertDialog.Trigger
+                        as="button"
+                        type="button"
+                        class="inline-flex min-h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                      >
+                        <RotateCcw size={16} aria-hidden="true" />
+                        {RANDOM_SONG_SELECTOR_COPY.resetButtonLabel}
+                      </AlertDialog.Trigger>
+                      <AlertDialog.Portal>
+                        <AlertDialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
+                        <AlertDialog.Content class="fixed left-1/2 top-1/2 z-60 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
+                          <AlertDialog.Title class="mb-2 text-lg font-bold">
+                            {RANDOM_SONG_SELECTOR_COPY.resetConfirmTitle}
+                          </AlertDialog.Title>
+                          <AlertDialog.Description class="mb-4 text-sm text-text-muted">
+                            {RANDOM_SONG_SELECTOR_COPY.resetConfirmDescription}
+                          </AlertDialog.Description>
+                          <div class="flex justify-end gap-2">
+                            <AlertDialog.CloseButton
+                              as="button"
+                              class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted hover:bg-action-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                            >
+                              {RANDOM_SONG_SELECTOR_COPY.resetCancelLabel}
+                            </AlertDialog.CloseButton>
+                            <AlertDialog.CloseButton
+                              as="button"
+                              class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                              onClick={handleReset}
+                            >
+                              {RANDOM_SONG_SELECTOR_COPY.resetConfirmLabel}
+                            </AlertDialog.CloseButton>
+                          </div>
+                        </AlertDialog.Content>
+                      </AlertDialog.Portal>
+                    </AlertDialog>
+                    <Button
                       type="button"
-                      class="inline-flex min-h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                      class="inline-flex min-h-10 items-center gap-2 rounded-md bg-action-primary px-4 text-sm font-medium text-text-inverse hover:bg-action-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={validationMessage() !== null || filteredCandidates().length === 0}
+                      onClick={handleDraw}
                     >
-                      <RotateCcw size={16} aria-hidden="true" />
-                      {RANDOM_SONG_SELECTOR_COPY.resetButtonLabel}
-                    </AlertDialog.Trigger>
-                    <AlertDialog.Portal>
-                      <AlertDialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
-                      <AlertDialog.Content class="fixed left-1/2 top-1/2 z-60 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
-                        <AlertDialog.Title class="mb-2 text-lg font-bold">
-                          {RANDOM_SONG_SELECTOR_COPY.resetConfirmTitle}
-                        </AlertDialog.Title>
-                        <AlertDialog.Description class="mb-4 text-sm text-text-muted">
-                          {RANDOM_SONG_SELECTOR_COPY.resetConfirmDescription}
-                        </AlertDialog.Description>
-                        <div class="flex justify-end gap-2">
-                          <AlertDialog.CloseButton
-                            as="button"
-                            class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted hover:bg-action-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                          >
-                            {RANDOM_SONG_SELECTOR_COPY.resetCancelLabel}
-                          </AlertDialog.CloseButton>
-                          <AlertDialog.CloseButton
-                            as="button"
-                            class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                            onClick={handleReset}
-                          >
-                            {RANDOM_SONG_SELECTOR_COPY.resetConfirmLabel}
-                          </AlertDialog.CloseButton>
-                        </div>
-                      </AlertDialog.Content>
-                    </AlertDialog.Portal>
-                  </AlertDialog>
-                  <Button
-                    type="button"
-                    class="inline-flex min-h-10 items-center gap-2 rounded-md bg-action-primary px-4 text-sm font-medium text-text-inverse hover:bg-action-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
-                    disabled={validationMessage() !== null || filteredCandidates().length === 0}
-                    onClick={handleDraw}
-                  >
-                    <Dices size={16} aria-hidden="true" />
-                    {RANDOM_SONG_SELECTOR_COPY.drawButtonLabel}
-                  </Button>
+                      <Dices size={16} aria-hidden="true" />
+                      {RANDOM_SONG_SELECTOR_COPY.drawButtonLabel}
+                    </Button>
+                  </div>
                 </div>
               </form>
             </Show>
           </section>
 
           <section class="rounded-lg border border-border bg-surface-muted p-4 sm:p-6">
-            <div class="mb-3">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
               <h2 class="text-lg font-semibold">{RANDOM_SONG_SELECTOR_COPY.resultLabel}</h2>
+              <RandomSongCheckbox
+                id="random-song-show-record"
+                checked={showRecord()}
+                label={RANDOM_SONG_SELECTOR_COPY.recordVisibleLabel}
+                disabled={!hasMyRecordData()}
+                onChange={setShowRecord}
+              />
             </div>
             <Show
               when={results().length > 0}
@@ -1130,12 +1174,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         <p class="truncate text-sm text-text-muted">{candidate.song.artist}</p>
                       </div>
                       <div class="flex flex-col gap-2 sm:items-end">
-                        <Show when={hasMyRecordData()}>
+                        <Show when={hasMyRecordData() && showRecord()}>
                           <div class="flex flex-wrap gap-2 sm:justify-end">
-                            {renderRandomSongRecordSummary(
-                              recordForCandidate(candidate),
-                              showRecordScore()
-                            )}
+                            {renderRandomSongRecordSummary(recordForCandidate(candidate))}
                           </div>
                         </Show>
                       </div>
