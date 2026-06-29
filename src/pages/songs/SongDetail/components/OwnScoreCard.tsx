@@ -9,13 +9,33 @@ import {
   OWN_SCORE_CARD_TITLE,
   SCORE_HISTORY_LINK_LABEL,
   UNPLAYED_SCORE_LABEL,
+  WORLDSEND_SCORE_LABEL,
 } from '../scoreHistory.constants'
 
 export type OwnScoreItem = {
-  difficulty: PlayerDataDifficulty
+  difficulty: PlayerDataDifficulty | typeof WORLDSEND_SCORE_LABEL
   score?: number
   supportsHistory: boolean
 }
+
+/**
+ * 自己スコア項目に対応する難易度バッジを表示する。
+ *
+ * @param props - 表示対象の難易度。
+ * @returns 通常難易度または WORLD'S END のバッジ。
+ */
+const OwnScoreBadge = (props: { difficulty: OwnScoreItem['difficulty'] }) => (
+  <Show
+    when={props.difficulty !== WORLDSEND_SCORE_LABEL}
+    fallback={
+      <span class="inline-flex items-center justify-center rounded bg-[image:var(--cs-color-worldsend-label-bg)] px-3 py-1 text-center text-xs font-semibold tracking-wide whitespace-nowrap text-worldsend-label-text">
+        {WORLDSEND_SCORE_LABEL}
+      </span>
+    }
+  >
+    <DifficultyBadge difficulty={props.difficulty as PlayerDataDifficulty} />
+  </Show>
+)
 
 /**
  * ログインユーザーの譜面別ベストスコアを表示する。
@@ -43,7 +63,7 @@ const OwnScoreCard = (props: {
                   when={item.score !== undefined}
                   fallback={
                     <div class={cardClass}>
-                      <DifficultyBadge difficulty={item.difficulty} />
+                      <OwnScoreBadge difficulty={item.difficulty} />
                       <span class="ml-auto text-sm text-text-muted">{UNPLAYED_SCORE_LABEL}</span>
                     </div>
                   }
@@ -52,7 +72,7 @@ const OwnScoreCard = (props: {
                     when={item.supportsHistory}
                     fallback={
                       <div class={cardClass}>
-                        <DifficultyBadge difficulty={item.difficulty} />
+                        <OwnScoreBadge difficulty={item.difficulty} />
                         <span class="ml-auto font-oswald text-lg font-semibold tabular-nums">
                           {item.score?.toLocaleString('ja-JP')}
                         </span>
@@ -64,7 +84,7 @@ const OwnScoreCard = (props: {
                       class={`${cardClass} group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus`}
                       aria-label={`${item.difficulty} ${item.score?.toLocaleString('ja-JP')} ${SCORE_HISTORY_LINK_LABEL}`}
                     >
-                      <DifficultyBadge difficulty={item.difficulty} />
+                      <OwnScoreBadge difficulty={item.difficulty} />
                       <span class="ml-auto flex items-center gap-2">
                         <span class="font-oswald text-lg font-semibold tabular-nums">
                           {item.score?.toLocaleString('ja-JP')}

@@ -34,3 +34,5 @@ export const OWN_SCORE_CARD_TITLE = '自分のスコア'
 export const UNPLAYED_SCORE_LABEL = '未プレイ'
 /** 履歴画面へ遷移するリンクの表示文言。 */
 export const SCORE_HISTORY_LINK_LABEL = '履歴を見る'
+/** WORLD'S END の自己スコアカードに表示する譜面ラベル。 */
+export const WORLDSEND_SCORE_LABEL = "WORLD'S END"
