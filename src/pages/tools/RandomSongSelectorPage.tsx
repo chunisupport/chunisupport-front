@@ -355,13 +355,13 @@ const RandomSongCheckbox: Component<{
   onChange: (checked: boolean) => void
 }> = (props) => (
   <Checkbox
-    class="relative grid min-h-5 grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 text-sm text-text data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"
+    class="relative grid min-h-5 grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 text-sm text-text data-disabled:cursor-not-allowed data-disabled:opacity-60"
     checked={props.checked}
     disabled={props.disabled}
     onChange={props.onChange}
   >
     <Checkbox.Input id={props.id} style={{ left: '0', top: '0' }} />
-    <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-surface text-success data-[checked]:border-success">
+    <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-surface text-success data-checked:border-success">
       <Checkbox.Indicator>
         <Check size={14} aria-hidden="true" />
       </Checkbox.Indicator>
@@ -478,7 +478,7 @@ const RandomSongSelect = <T extends string>(props: {
       return (
         <Select.Item
           item={itemProps.item}
-          class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
+          class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-highlighted:bg-success-bg data-selected:bg-success-bg"
         >
           <div class="flex items-center gap-2">
             <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-success">
@@ -506,7 +506,7 @@ const RandomSongSelect = <T extends string>(props: {
       </Select.Icon>
     </Select.Trigger>
     <Select.Portal>
-      <Select.Content class="z-[70] max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
+      <Select.Content class="z-70 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
         <Select.Listbox />
       </Select.Content>
     </Select.Portal>
