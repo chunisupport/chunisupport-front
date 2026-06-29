@@ -596,6 +596,12 @@ const RandomSongSelectorPage = (): JSX.Element => {
     () => new Set(createRandomSongRecordMap(availableMyRecordData()?.bestRecords ?? []).keys())
   )
   const hasMyRecordData = createMemo(() => availableMyRecordData() !== null)
+  /**
+   * 自分のレコード表示が現在有効かどうかを返します。
+   *
+   * @returns レコード取得済みかつ表示設定が有効な場合は true。
+   */
+  const shouldShowRecord = createMemo(() => hasMyRecordData() && showRecord())
   const selectedDifficultyWeightOptions = createMemo(() =>
     RANDOM_SONG_SELECTOR_DIFFICULTIES.filter((difficulty) =>
       selectedDifficulties().includes(difficulty)
@@ -1146,7 +1152,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                     <For each={selectedDifficultyWeightOptions()}>
                                       {(difficulty) => (
                                         <RandomSongWeightField
-                                          id={`random-song-difficulty-weight-${difficulty.toLowerCase()}`}
+                                          id={`random-song-difficulty-weight-${difficulty}`}
                                           label={difficulty}
                                           value={difficultyWeights()[difficulty]}
                                           percentLabel={difficultyWeightPercentLabel(difficulty)}
@@ -1278,10 +1284,10 @@ const RandomSongSelectorPage = (): JSX.Element => {
               <h2 class="text-lg font-semibold">{RANDOM_SONG_SELECTOR_COPY.resultLabel}</h2>
               <RandomSongCheckbox
                 id="random-song-show-record"
-                checked={showRecord()}
+                checked={shouldShowRecord()}
                 label={RANDOM_SONG_SELECTOR_COPY.recordVisibleLabel}
                 disabled={!hasMyRecordData()}
-                onChange={setShowRecord}
+                onChange={(checked) => setShowRecord(hasMyRecordData() && checked)}
               />
             </div>
             <Show
@@ -1319,7 +1325,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         <p class="truncate text-sm text-text-muted">{candidate.song.artist}</p>
                       </div>
                       <div class="flex flex-col gap-2 sm:items-end">
-                        <Show when={hasMyRecordData() && showRecord()}>
+                        <Show when={shouldShowRecord()}>
                           <div class="flex flex-wrap gap-2 sm:justify-end">
                             {renderRandomSongRecordSummary(recordForCandidate(candidate))}
                           </div>
