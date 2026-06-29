@@ -126,6 +126,8 @@ export const parseRandomSongWeightValues = <T extends string>(
   values: Partial<Record<T, string>>
 ): Partial<Record<T, number>> => {
   const parsedEntries = Object.entries(values).flatMap(([key, value]) => {
+    if (typeof value !== 'string') return []
+
     const parsed = parseRandomSongWeightValue(value)
     return parsed === null ? [] : [[key, parsed]]
   })

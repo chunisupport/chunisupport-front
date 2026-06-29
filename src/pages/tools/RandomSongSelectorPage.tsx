@@ -490,9 +490,7 @@ const RandomSongSelect = <T extends string>(props: {
       )
     }}
   >
-    <Select.Label class="mb-1 block font-medium text-text-muted" for={props.id}>
-      {props.label}
-    </Select.Label>
+    <Select.Label class="mb-1 block font-medium text-text-muted">{props.label}</Select.Label>
     <Select.Trigger
       id={props.id}
       class="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
@@ -541,7 +539,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
   ])
   const [minScore, setMinScore] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.minScore)
   const [maxScore, setMaxScore] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.maxScore)
-  const [showRecord, setShowRecord] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.showRecord)
+  const [showRecord, setShowRecord] = createSignal<boolean>(
+    RANDOM_SONG_SELECTOR_DEFAULTS.showRecord
+  )
   const [difficultyWeights, setDifficultyWeights] = createSignal<
     Record<PlayerDataDifficulty, string>
   >({
@@ -1326,9 +1326,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       </div>
                       <Show when={shouldShowRecord()}>
                         <div class="flex flex-col gap-2 sm:items-end">
-                            <div class="flex flex-wrap gap-2 sm:justify-end">
-                              {renderRandomSongRecordSummary(recordForCandidate(candidate))}
-                            </div>
+                          <div class="flex flex-wrap gap-2 sm:justify-end">
+                            {renderRandomSongRecordSummary(recordForCandidate(candidate))}
+                          </div>
                         </div>
                       </Show>
                     </article>
