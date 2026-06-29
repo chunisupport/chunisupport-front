@@ -9,20 +9,20 @@ import {
   WORLDSEND_LEVEL_STAR_MAX,
   WORLDSEND_LEVEL_STAR_MIN,
 } from '../../../constants/chart'
+import type {
+  ChainLamp,
+  ComboLamp,
+  Difficulty,
+  HardLamp,
+  NumericRangeFilter,
+} from '../../../types/record'
 import { MAX_SCORE } from '../../../utils/scoreRank'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
 } from '../constants/recordFilterOptions'
-import type {
-  ChainLamp,
-  ComboLamp,
-  Difficulty,
-  FilterState,
-  HardLamp,
-  NumericRangeFilter,
-} from '../UserRecord/types/types'
+import type { FilterState } from '../UserRecord/types/types'
 import type { WorldsendFilterState } from '../WorldsendRecord/types/filterTypes'
 
 /** API と同じ保存済みフィルター名の最大文字数。 */

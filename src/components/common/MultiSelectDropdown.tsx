@@ -20,6 +20,10 @@ type MultiSelectDropdownProps<T extends string | number | null> = {
   onClear: () => void
   /** Select のポータルコンテンツに適用する z-index クラス。 */
   contentZIndexClass?: string
+  /** トリガー内に表示する選択済み項目数の上限。 */
+  selectedPreviewLimit?: number
+  /** 操作を無効化するかどうか。 */
+  disabled?: boolean
 }
 
 /** Select の選択肢ポータルに共通で適用する Tailwind クラス。 */
@@ -31,7 +35,7 @@ const DEFAULT_MULTI_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
 
 /** 複数選択 Select のトリガーに適用する Tailwind クラス。 */
 const MULTI_SELECT_TRIGGER_CLASS =
-  'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+  'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60'
 
 /** 複数選択 Select の選択肢に適用する Tailwind クラス。 */
 const MULTI_SELECT_ITEM_CLASS =
@@ -57,6 +61,14 @@ const MultiSelectDropdown = <T extends string | number | null>(
   const selectedOptions = createMemo(() =>
     props.options.filter((option) => props.selected.includes(option))
   )
+  const visibleSelectedOptions = createMemo(() =>
+    typeof props.selectedPreviewLimit === 'number'
+      ? selectedOptions().slice(0, props.selectedPreviewLimit)
+      : selectedOptions()
+  )
+  const hiddenSelectedCount = createMemo(
+    () => selectedOptions().length - visibleSelectedOptions().length
+  )
 
   /**
    * 複数選択 Select の変更結果を呼び出し元の選択状態へ反映する。
@@ -77,14 +89,16 @@ const MultiSelectDropdown = <T extends string | number | null>(
       <div class="mb-1 flex gap-2">
         <Button
           type="button"
-          class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover"
+          class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={props.disabled}
           onClick={props.onSelectAll}
         >
           すべて選択
         </Button>
         <Button
           type="button"
-          class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover"
+          class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={props.disabled}
           onClick={props.onClear}
         >
           すべて解除
@@ -96,6 +110,7 @@ const MultiSelectDropdown = <T extends string | number | null>(
         value={selectedOptions()}
         onChange={handleChange}
         placeholder={props.placeholder}
+        disabled={props.disabled}
         gutter={0}
         itemComponent={(itemProps) => (
           <Select.Item item={itemProps.item} class={MULTI_SELECT_ITEM_CLASS}>
@@ -116,13 +131,18 @@ const MultiSelectDropdown = <T extends string | number | null>(
               when={selectedOptions().length > 0}
               fallback={<span class="text-text-subtle">{props.placeholder}</span>}
             >
-              <For each={selectedOptions()}>
+              <For each={visibleSelectedOptions()}>
                 {(option) => (
                   <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
                     {formatLabel(option)}
                   </span>
                 )}
               </For>
+              <Show when={hiddenSelectedCount() > 0}>
+                <span class="rounded-full bg-surface-muted px-2 py-0.5 text-xs text-text-muted">
+                  +{hiddenSelectedCount()}
+                </span>
+              </Show>
             </Show>
           </div>
           <span class="text-text-subtle" aria-hidden="true">

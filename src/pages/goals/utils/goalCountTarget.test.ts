@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildGoalTargetParam } from './goalCountTarget'
+import { buildGoalTargetParam, resolveGoalDynamicTarget } from './goalCountTarget'
 
 /**
  * 件数指定モードで入力した値が、反転表示設定に関係なく目標件数として保存されることを検証する。
@@ -58,4 +58,37 @@ test('割合指定の場合は小数を維持してpercentだけを返す', () =
 
   // Then
   assert.deepEqual(result, { percent: 75.5 })
+})
+
+test('動的目標値は残数指定を最大値との差分へ変換する', () => {
+  // Given
+  const params = { remaining: 3 }
+
+  // When
+  const result = resolveGoalDynamicTarget(params, 10, 'count')
+
+  // Then
+  assert.equal(result, 7)
+})
+
+test('動的目標値は割合指定を最大値に対する割合へ変換する', () => {
+  // Given
+  const params = { percent: 75.5 }
+
+  // When
+  const result = resolveGoalDynamicTarget(params, 200, 'total')
+
+  // Then
+  assert.equal(result, 151)
+})
+
+test('動的目標値は丸め方法を指定できる', () => {
+  // Given
+  const params = { percent: 50 }
+
+  // When
+  const result = resolveGoalDynamicTarget(params, 3, 'count', { rounding: 'ceil' })
+
+  // Then
+  assert.equal(result, 2)
 })

@@ -22,16 +22,25 @@ import {
 import { useSongsData } from '../../../stores/songsData'
 import type { MasterDataDTO, UserRecordDTO, VersionSummaryDTO } from '../../../types/api'
 import FilterStats from '../components/FilterStats'
+import RecordDataTable from '../components/RecordDataTable'
+import {
+  RECORD_ROW_HOVER_CLASS,
+  RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS,
+} from '../components/SharedRecordTableColumns'
 import { isValidSavedStandardFilter } from '../components/savedRecordFilters'
 import { sanitizeSortQuery } from '../recordTable/sortingQuery'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FilterDialog from './components/FilterDialog'
 import FilterToolbar from './components/FilterToolbar'
-import RecordTable from './components/RecordTable'
 import SortDialog from './components/SortDialog'
 import { buildDefaultFilter, DEFAULT_FILTER, normalizeFilterState } from './types/filterDefaults'
 import type { FilterState, RecordColumnId, RecordSortCondition } from './types/types'
-import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
+import { getRecordColumnRenderer } from './utils/columnRenderers'
+import {
+  getDefaultVisibleColumnIds,
+  getVisibleColumns,
+  sanitizeVisibleColumnIds,
+} from './utils/columns'
 import {
   isRecordDifficultyFilterOnlyChanged,
   isRecordFilterOptionsChanged,
@@ -102,6 +111,7 @@ const UserRecord: Component<Props> = (props) => {
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<RecordColumnId[]>(
     sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
   )
+  const visibleColumns = createMemo(() => getVisibleColumns(visibleColumnIds()))
 
   const defaultFilter = createMemo(() => {
     const md = masterData()
@@ -218,12 +228,17 @@ const UserRecord: Component<Props> = (props) => {
               </p>
 
               {/* レコード一覧 */}
-              <RecordTable
+              <RecordDataTable
                 records={sortedRecords()}
-                statsOpen={filterStatsOpen()}
+                columns={visibleColumns()}
                 sortKey={primarySort()?.key ?? null}
                 sortDirection={primarySort()?.direction ?? null}
-                visibleColumnIds={visibleColumnIds()}
+                emptyMessage="データがありません"
+                resetDeps={filterStatsOpen()}
+                getColumnRenderer={getRecordColumnRenderer}
+                getRowClass={(rowIndex) =>
+                  rowIndex === 0 ? RECORD_ROW_HOVER_CLASS : RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS
+                }
                 onSortChange={handleSortChange}
               />
 

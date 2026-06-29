@@ -16,6 +16,7 @@ export {
 export {
   BorderCalculatorPage,
   ChartConstantCalculatorPage,
+  RandomSongSelectorPage,
   WeakChartInspectorPage,
 } from './tools'
 export { UserPage } from './users'
