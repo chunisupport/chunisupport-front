@@ -109,6 +109,7 @@ type RandomSongWeightFieldProps = {
   id: string
   label: string
   value: string
+  percentLabel: string
   disabled?: boolean
   onChange: (value: string) => void
 }
@@ -147,22 +148,40 @@ const WEIGHT_PERCENT_FORMATTER = new Intl.NumberFormat('ja-JP', {
   maximumFractionDigits: 1,
 })
 
+const EMPTY_WEIGHT_PERCENT_LABEL = '0%'
+
 /**
- * 出やすさの倍率入力値を通常比のパーセント表示へ変換する。
+ * 出やすさの倍率入力値を数値へ変換する。
  *
  * @param value - 入力された倍率。
  * @param enabled - 抽選対象に含める場合は true。
- * @returns 表示用の通常比パーセント。
+ * @returns 抽選比率計算に使う倍率。無効または不正値の場合は null。
  */
-const formatRandomSongWeightPercent = (value: string, enabled = true): string => {
-  if (!enabled) return '0%'
+const parseRandomSongWeightForPercent = (value: string, enabled = true): number | null => {
+  if (!enabled) return 0
 
   const parsed = parseOptionalRandomSongDecimal(value)
   if (parsed === null || Number.isNaN(parsed)) {
-    return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
+    return null
   }
 
-  return `${WEIGHT_PERCENT_FORMATTER.format(parsed * 100)}%`
+  return parsed
+}
+
+/**
+ * 出やすさの倍率が同じ設定グループ内で占める割合を表示用に変換する。
+ *
+ * @param value - 対象項目の倍率。
+ * @param total - 同じ設定グループ内の倍率合計。
+ * @param enabled - 抽選対象に含める場合は true。
+ * @returns 表示用のグループ内出現割合。
+ */
+const formatRandomSongWeightPercent = (value: string, total: number, enabled = true): string => {
+  const parsed = parseRandomSongWeightForPercent(value, enabled)
+  if (parsed === null) return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
+  if (total <= 0 || parsed <= 0) return EMPTY_WEIGHT_PERCENT_LABEL
+
+  return `${WEIGHT_PERCENT_FORMATTER.format((parsed / total) * 100)}%`
 }
 
 /**
@@ -319,9 +338,7 @@ const RandomSongWeightField: Component<RandomSongWeightFieldProps> = (props) => 
     />
     <p class="mt-1 text-xs text-text-muted">
       {RANDOM_SONG_SELECTOR_COPY.drawRatePercentLabel}:{' '}
-      <span class="font-medium tabular-nums text-text">
-        {formatRandomSongWeightPercent(props.value, props.disabled !== true)}
-      </span>
+      <span class="font-medium tabular-nums text-text">{props.percentLabel}</span>
     </p>
   </div>
 )
@@ -493,7 +510,7 @@ const RandomSongSelect = <T extends string>(props: {
       </Select.Icon>
     </Select.Trigger>
     <Select.Portal>
-      <Select.Content class="z-50 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
+      <Select.Content class="z-[70] max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
         <Select.Listbox />
       </Select.Content>
     </Select.Portal>
@@ -586,6 +603,12 @@ const RandomSongSelectorPage = (): JSX.Element => {
       selectedDifficulties().includes(difficulty)
     )
   )
+  const selectedDifficultyWeightTotal = createMemo(() =>
+    selectedDifficultyWeightOptions().reduce((sum, difficulty) => {
+      const parsed = parseRandomSongWeightForPercent(difficultyWeights()[difficulty])
+      return parsed === null ? sum : sum + parsed
+    }, 0)
+  )
   const constRangeError = createMemo(() => {
     const min = parsedMinConst()
     const max = parsedMaxConst()
@@ -642,6 +665,15 @@ const RandomSongSelectorPage = (): JSX.Element => {
     [...new Set(filteredCandidates().map((candidate) => candidate.chartConst.toFixed(1)))].sort(
       (left, right) => Number(left) - Number(right)
     )
+  )
+  const constWeightTotal = createMemo(() =>
+    constWeightOptions().reduce((sum, chartConst) => {
+      const parsed = parseRandomSongWeightForPercent(
+        constWeights()[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
+        constWeightEnabled()[chartConst] !== false
+      )
+      return parsed === null ? sum : sum + parsed
+    }, 0)
   )
   const selectedDifficultyWeights = createMemo(
     () =>
@@ -816,6 +848,28 @@ const RandomSongSelectorPage = (): JSX.Element => {
   }
 
   /**
+   * 難易度別の出やすさが同グループ内で占める割合を取得する。
+   *
+   * @param difficulty - 表示対象の難易度。
+   * @returns 難易度別設定内の出現割合。
+   */
+  const difficultyWeightPercentLabel = (difficulty: PlayerDataDifficulty): string =>
+    formatRandomSongWeightPercent(difficultyWeights()[difficulty], selectedDifficultyWeightTotal())
+
+  /**
+   * 定数別の出やすさが同グループ内で占める割合を取得する。
+   *
+   * @param chartConst - 表示対象の譜面定数。
+   * @returns 定数別設定内の出現割合。
+   */
+  const constWeightPercentLabel = (chartConst: string): string =>
+    formatRandomSongWeightPercent(
+      constWeights()[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
+      constWeightTotal(),
+      constWeightEnabled()[chartConst] !== false
+    )
+
+  /**
    * 選曲候補に対応する自分のレコードを取得する。
    *
    * @param candidate - 選曲結果の譜面候補。
@@ -954,7 +1008,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                           </div>
                           <div class="mt-4 min-h-0 flex-1 overflow-y-auto pr-1 sm:max-h-[65dvh] sm:flex-none">
                             <div class="grid gap-3">
-                              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                              <div class="grid gap-3 sm:grid-cols-2">
                                 <RandomSongSelect
                                   id="random-song-play-status"
                                   label={RANDOM_SONG_SELECTOR_COPY.playStatusLabel}
@@ -1059,6 +1113,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                           id={`random-song-difficulty-weight-${difficulty.toLowerCase()}`}
                                           label={difficulty}
                                           value={difficultyWeights()[difficulty]}
+                                          percentLabel={difficultyWeightPercentLabel(difficulty)}
                                           onChange={(value) =>
                                             handleDifficultyWeightChange(difficulty, value)
                                           }
@@ -1097,6 +1152,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                                 id={`random-song-const-weight-${chartConst.replace('.', '-')}`}
                                                 label={RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate}
                                                 value={constWeights()[chartConst] ?? '1'}
+                                                percentLabel={constWeightPercentLabel(chartConst)}
                                                 disabled={!isEnabled()}
                                                 onChange={(value) =>
                                                   handleConstWeightChange(chartConst, value)
