@@ -23,24 +23,24 @@
   },
   "dependencies": {
     "@kobalte/core": "^0.13.11",
-    "@solidjs/router": "^0.15.4",
-    "@tanstack/solid-virtual": "^3.13.22",
+    "@solidjs/router": "^0.16.1",
+    "@tanstack/solid-virtual": "^3.13.30",
     "chart.js": "^4.5.1",
-    "dexie": "^4.4.3",
-    "firebase": "^12.11.0",
-    "lucide-solid": "^0.562.0",
-    "solid-js": "^1.9.10",
-    "tailwindcss": "^4.1.18"
+    "dexie": "^4.4.4",
+    "firebase": "^12.15.0",
+    "lucide-solid": "^1.21.0",
+    "solid-js": "^1.9.13",
+    "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.11",
-    "@rsbuild/core": "^1.7.1",
-    "@rsbuild/plugin-babel": "^1.0.6",
-    "@rsbuild/plugin-solid": "^1.0.6",
-    "@tailwindcss/postcss": "^4.1.18",
-    "@types/node": "^25.5.2",
+    "@biomejs/biome": "^2.5.1",
+    "@rsbuild/core": "^2.1.1",
+    "@rsbuild/plugin-babel": "^2.0.0",
+    "@rsbuild/plugin-solid": "^1.2.2",
+    "@tailwindcss/postcss": "^4.3.1",
+    "@types/node": "^26.0.1",
     "fake-indexeddb": "^6.2.5",
     "generate-license-file": "^4.2.1",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   }
 }
