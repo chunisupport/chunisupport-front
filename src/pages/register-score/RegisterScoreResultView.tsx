@@ -11,6 +11,8 @@ import type {
   PlayerDataStatisticsGroup,
 } from '../../types/api'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
+import { formatPlayerRating } from '../../utils/ratingFormat'
 import {
   HARD_LAMP_BADGE_BACKGROUND_CLASS,
   type SharedClearLamp,
@@ -21,8 +23,6 @@ import {
   RecordHardLampCell,
   RecordLampCell,
 } from '../users/components/SharedRecordTableColumns'
-import { formatOverPowerPercent, formatOverPowerValue } from '../users/utils/overPowerFormat'
-import { formatPlayerRating } from '../users/utils/ratingFormat'
 
 export const REGISTER_SCORE_MESSAGES = {
   invalidToken: 'tokenが不正です。登録用URLを確認してください。',

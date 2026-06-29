@@ -1,4 +1,5 @@
 import type { GoalAchievementType } from '../../../../../types/api'
+import { formatTruncatedFixed } from '../../../../../utils/numberFormat'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 
 export interface GoalCardDisplayProgress {
@@ -60,8 +61,8 @@ export const resolveGoalCardDisplayProgress = (
     ? Math.max(0, 100 - Math.min(normalizedPercent, 100))
     : normalizedPercent
   const progressValue = Math.max(0, Math.min(normalizedPercent, 100))
-  const progressValueText = `${progressValue.toFixed(2)}%`
-  const displayPercentText = `${displayPercent.toFixed(2)}%`
+  const progressValueText = `${formatTruncatedFixed(progressValue, 2)}%`
+  const displayPercentText = `${formatTruncatedFixed(displayPercent, 2)}%`
 
   return {
     currentText: formatGoalCardValue(displayCurrent, type),

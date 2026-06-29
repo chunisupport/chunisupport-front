@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 
 type Props = {
   rows: OverPowerSummaryRow[]

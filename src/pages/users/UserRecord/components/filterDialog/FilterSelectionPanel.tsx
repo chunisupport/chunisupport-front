@@ -4,6 +4,7 @@ import { createEffect, createSignal, Show } from 'solid-js'
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
+import { truncateDecimal } from '../../../../../utils/numberFormat'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
 import LampSection from '../../../components/filter/LampSection'
@@ -98,15 +99,15 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     const isPlus = level.endsWith('+')
     const base = Number.parseInt(level.replace('+', ''), 10)
     if (base <= 6) {
-      return type === 'min' ? base : Number((base + 0.9).toFixed(1))
+      return type === 'min' ? base : truncateDecimal(base + 0.9, 1)
     }
     if (isPlus) {
-      return type === 'min' ? Number((base + 0.5).toFixed(1)) : Number((base + 0.9).toFixed(1))
+      return type === 'min' ? truncateDecimal(base + 0.5, 1) : truncateDecimal(base + 0.9, 1)
     }
     if (base >= CHART_CONST_MAX) {
       return CHART_CONST_MAX
     }
-    return type === 'min' ? base : Number((base + 0.4).toFixed(1))
+    return type === 'min' ? base : truncateDecimal(base + 0.4, 1)
   }
 
   // フィルターダイアログが開かれた時にフィルター状態を同期

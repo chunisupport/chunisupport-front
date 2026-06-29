@@ -3,11 +3,14 @@ import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createSignal, onMount, Show } from 'solid-js'
 import type { PlayerRecordDTO } from '../../../../types/api'
+import { formatChartConst } from '../../../../utils/chartConstFormat'
 import {
   difficultyCardBorderColor,
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
+import { formatInteger } from '../../../../utils/numberFormat'
+import { formatRecordRating } from '../../../../utils/ratingFormat'
 import { getScoreRank } from '../../../../utils/scoreRank'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses'
 import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
@@ -100,12 +103,12 @@ export const UserRecordCard: Component<Props> = (props) => {
                 {props.record.title}
               </p>
               <p class="text-base font-oswald font-bold">
-                {props.record.const.toFixed(1)} / {props.record.score.toLocaleString('ja-JP')}{' '}
+                {formatChartConst(props.record.const)} / {formatInteger(props.record.score)}{' '}
                 <span class={SCORE_RANK_TEXT_CLASS[scoreRank()]}>{scoreRank()}</span>
               </p>
             </div>
             <div class="shrink-0 text-right font-oswald text-xl font-bold leading-none">
-              {props.record.rating.toFixed(2)}
+              {formatRecordRating(props.record.rating)}
             </div>
           </div>
         </div>

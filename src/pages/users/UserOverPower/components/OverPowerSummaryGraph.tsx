@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 import { COMBO_LAMP_BAR_CLASS, SCORE_RANK_BAR_CLASS } from '../../components/recordStyleClasses'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import type {
   OverPowerBandCount,
   OverPowerComboBand,

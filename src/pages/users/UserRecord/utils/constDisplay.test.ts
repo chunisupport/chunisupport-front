@@ -5,7 +5,7 @@ import { getConstDisplay, getRatingDisplay } from './constDisplay'
 
 describe('getConstDisplay', () => {
   test('譜面定数が不明でない場合は通常表示を返す', () => {
-    const result = getConstDisplay(13.7, false)
+    const result = getConstDisplay(13.79, false)
 
     assert.deepEqual(result, {
       valueText: '13.7',
@@ -36,7 +36,7 @@ describe('getRatingDisplay', () => {
   })
 
   test('譜面定数が既知のときは通常色で表示する', () => {
-    const result = getRatingDisplay(16.42, true, false)
+    const result = getRatingDisplay(16.429, true, false)
 
     assert.deepEqual(result, {
       text: '16.42',
