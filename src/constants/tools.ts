@@ -2,13 +2,14 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   LOCKED_SONGS_FINDER_PATH,
+  RANDOM_SONG_SELECTOR_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
 
 /**
  * ツールカードに表示するアイコン種別。
  */
-export type ToolLinkIcon = 'calculator' | 'chart' | 'target' | 'search'
+export type ToolLinkIcon = 'calculator' | 'chart' | 'target' | 'search' | 'random'
 
 /**
  * 無効化されたツールカードに表示する状態ラベル。
@@ -48,6 +49,11 @@ export const TOOL_LINKS: ToolLink[] = [
     title: '苦手譜面インスペクター',
     href: WEAK_CHART_INSPECTOR_PATH,
     icon: 'chart',
+  },
+  {
+    title: 'ランダム選曲',
+    href: RANDOM_SONG_SELECTOR_PATH,
+    icon: 'random',
   },
   {
     title: '未解禁曲探索',

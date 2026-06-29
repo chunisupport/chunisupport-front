@@ -1,5 +1,5 @@
 import { A, Route, Router, useParams } from '@solidjs/router'
-import { Calculator, ChartNoAxesCombined, Search, Target } from 'lucide-solid'
+import { Calculator, ChartNoAxesCombined, Dices, Search, Target } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 
@@ -17,6 +17,7 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   LOCKED_SONGS_FINDER_PATH,
+  RANDOM_SONG_SELECTOR_PATH,
   REGISTER_SCORE_PATH,
   TOOLS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
@@ -39,6 +40,7 @@ import {
   GoalsList,
   Login,
   NotFoundPage,
+  RandomSongSelectorPage,
   Register,
   RegisterScorePage,
   RegisterScoreTempPage,
@@ -239,6 +241,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <ChartNoAxesCombined class={iconClass} aria-hidden="true" />
     case 'search':
       return <Search class={iconClass} aria-hidden="true" />
+    case 'random':
+      return <Dices class={iconClass} aria-hidden="true" />
   }
 }
 
@@ -388,6 +392,7 @@ const App = () => {
         path={WEAK_CHART_INSPECTOR_PATH}
         component={withNavBar(withAuth(WeakChartInspectorPage))}
       />
+      <Route path={RANDOM_SONG_SELECTOR_PATH} component={withNavBar(RandomSongSelectorPage)} />
       <Route path={LOCKED_SONGS_FINDER_PATH} component={withNavBar(EmptyToolPage)} />
 
       {/* 管理 */}
