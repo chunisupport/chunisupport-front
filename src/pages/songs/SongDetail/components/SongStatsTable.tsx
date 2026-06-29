@@ -43,6 +43,7 @@ const CHART_COLOR_FALLBACK = '#6b7280'
 const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
 const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_EXCLUDED_RATING_BAND = 'ALL'
+const CHART_X_AXIS_TICK_PADDING = 8
 const HIGHLIGHTED_RATING_BAND_ROW_CLASS =
   'border-l-4 border-l-action-primary bg-action-primary-muted font-semibold'
 const NORMAL_RATING_BAND_ROW_CLASS = 'border-l-4 border-l-transparent'
@@ -213,7 +214,8 @@ const createSongStatsChartOptions = (): ChartOptions<'bar'> => {
         ticks: {
           color: textColor,
           maxRotation: 0,
-          autoSkip: false,
+          autoSkip: true,
+          autoSkipPadding: CHART_X_AXIS_TICK_PADDING,
         },
         grid: {
           display: false,
@@ -311,12 +313,12 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
       <h3 class="mb-2 text-sm font-semibold">{props.title}</h3>
       <div class={`${CHART_HEIGHT_CLASS} flex flex-col`}>
         <ul
-          class="mb-1 flex shrink-0 justify-center gap-3 text-xs"
+          class="mb-1 flex shrink-0 flex-wrap justify-center gap-x-3 gap-y-1 text-xs"
           aria-label={`${props.title}凡例`}
         >
           <For each={props.datasets}>
             {(dataset) => (
-              <li class="flex items-center gap-1">
+              <li class="flex shrink-0 items-center gap-1 whitespace-nowrap">
                 <span
                   class="size-3"
                   style={{
