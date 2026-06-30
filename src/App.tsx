@@ -1,5 +1,5 @@
 import { A, Route, Router, useParams } from '@solidjs/router'
-import { Calculator, ChartNoAxesCombined, Dices, Search, Target } from 'lucide-solid'
+import { Calculator, ChartNoAxesCombined, Dices, ImagePlus, Search, Target } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 
@@ -17,6 +17,7 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   LOCKED_SONGS_FINDER_PATH,
+  MY_SONG_SELECTION_IMAGE_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   REGISTER_SCORE_PATH,
   TOOLS_PATH,
@@ -39,6 +40,7 @@ import {
   ForbiddenPage,
   GoalsList,
   Login,
+  MySongSelectionImagePage,
   NotFoundPage,
   RandomSongSelectorPage,
   Register,
@@ -243,6 +245,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Search class={iconClass} aria-hidden="true" />
     case 'random':
       return <Dices class={iconClass} aria-hidden="true" />
+    case 'image':
+      return <ImagePlus class={iconClass} aria-hidden="true" />
   }
 }
 
@@ -393,6 +397,7 @@ const App = () => {
         component={withNavBar(withAuth(WeakChartInspectorPage))}
       />
       <Route path={RANDOM_SONG_SELECTOR_PATH} component={withNavBar(RandomSongSelectorPage)} />
+      <Route path={MY_SONG_SELECTION_IMAGE_PATH} component={withNavBar(MySongSelectionImagePage)} />
       <Route path={LOCKED_SONGS_FINDER_PATH} component={withNavBar(EmptyToolPage)} />
 
       {/* 管理 */}

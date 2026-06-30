@@ -7,6 +7,7 @@ export const CHART_CONSTANT_CALCULATOR_PATH = `${TOOLS_PATH}/chart-constant-calc
 export const BORDER_CALCULATOR_PATH = `${TOOLS_PATH}/border-calculator`
 export const WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector`
 export const RANDOM_SONG_SELECTOR_PATH = `${TOOLS_PATH}/random-song-selector`
+export const MY_SONG_SELECTION_IMAGE_PATH = `${TOOLS_PATH}/my-song-selection-image`
 export const LOCKED_SONGS_FINDER_PATH = `${TOOLS_PATH}/locked-songs-finder`
 
 /**
