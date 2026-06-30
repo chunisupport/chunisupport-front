@@ -11,8 +11,8 @@ import {
 } from 'solid-js'
 import { HONOR_TYPE_CLASS_NAMES } from '../../../../constants/honors'
 import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
-import { formatNullablePlayerRating } from '../../utils/ratingFormat'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
+import { formatNullablePlayerRating } from '../../../../utils/ratingFormat'
 
 const HONOR_ROTATION_INTERVAL_MS = 4000
 const SCROLL_AMOUNT_CSS_VARIABLE = '--honor-title-scroll-amount'

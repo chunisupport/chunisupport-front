@@ -36,6 +36,8 @@ import {
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
+import { formatChartConst, truncateChartConst } from '../../utils/chartConstFormat'
+import { formatInteger } from '../../utils/numberFormat'
 import { clampNumericInput } from '../../utils/numberInput'
 import {
   inspectWeakCharts,
@@ -154,7 +156,7 @@ const getColor = (variableName: string): string =>
  */
 const createPoints = (records: PlayerRecordDTO[]): InspectorPoint[] =>
   records.map((record, index) => ({
-    x: Number(record.const.toFixed(1)) + ((index % 7) - 3) * (WEAK_CHART_POINT_JITTER / 3),
+    x: truncateChartConst(record.const) + ((index % 7) - 3) * (WEAK_CHART_POINT_JITTER / 3),
     y: record.score,
     record,
   }))
@@ -226,7 +228,7 @@ const WeakChartDistributionChart = (props: {
               title: (items) => (items[0] ? toInspectorPoint(items[0].raw).record.title : ''),
               label: (item) => {
                 const record = toInspectorPoint(item.raw).record
-                return `${record.difficulty} / 定数 ${record.const.toFixed(1)} / ${record.score.toLocaleString('ja-JP')}`
+                return `${record.difficulty} / 定数 ${formatChartConst(record.const)} / ${formatInteger(record.score)}`
               },
             },
           },
@@ -238,7 +240,7 @@ const WeakChartDistributionChart = (props: {
             grid: { color: gridColor },
             ticks: {
               color: textColor,
-              callback: (value) => Number(value).toFixed(1),
+              callback: (value) => formatChartConst(Number(value)),
             },
           },
           y: {
@@ -375,10 +377,8 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
                     <td class="py-1.5 text-center">
                       <DifficultyBadge difficulty={record.difficulty} />
                     </td>
-                    <td class="py-1.5 text-center font-jost">{record.const.toFixed(1)}</td>
-                    <td class="py-1.5 text-center font-jost">
-                      {record.score.toLocaleString('ja-JP')}
-                    </td>
+                    <td class="py-1.5 text-center font-jost">{formatChartConst(record.const)}</td>
+                    <td class="py-1.5 text-center font-jost">{formatInteger(record.score)}</td>
                   </tr>
                 )}
               </For>

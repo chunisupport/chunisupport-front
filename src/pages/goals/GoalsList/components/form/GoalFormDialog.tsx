@@ -1,12 +1,7 @@
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal } from 'solid-js'
-import {
-  CHART_CONST_DECIMAL_PLACES,
-  CHART_CONST_MAX,
-  CHART_CONST_MIN,
-  SCORE_MIN,
-} from '../../../../../constants/chart'
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -16,6 +11,7 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../../../types/api'
+import { formatChartConst } from '../../../../../utils/chartConstFormat'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { resolveGoalAchievementTypeLabel } from '../../../utils/goalForm'
@@ -243,11 +239,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     if (!DECIMAL_INPUT_PATTERN.test(value)) return
 
     setErrorMessage('')
-    setter(
-      clampNumericInput(value, CHART_CONST_MIN, CHART_CONST_MAX, (nextValue) =>
-        nextValue.toFixed(CHART_CONST_DECIMAL_PLACES)
-      )
-    )
+    setter(clampNumericInput(value, CHART_CONST_MIN, CHART_CONST_MAX, formatChartConst))
   }
 
   /**

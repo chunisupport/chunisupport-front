@@ -1,4 +1,5 @@
 import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
+import { formatChartConst } from './chartConstFormat'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter'
 
 /**
@@ -318,7 +319,7 @@ export const resolveRandomSongWeight = (
   weight: RandomSongWeight = {}
 ): number => {
   const difficultyWeight = weight.difficultyWeights?.[candidate.difficulty] ?? 1
-  const constWeight = weight.constWeights?.[candidate.chartConst.toFixed(1)] ?? 1
+  const constWeight = weight.constWeights?.[formatChartConst(candidate.chartConst)] ?? 1
 
   return Math.max(0, difficultyWeight * constWeight)
 }

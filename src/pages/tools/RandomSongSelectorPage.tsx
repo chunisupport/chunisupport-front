@@ -27,6 +27,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
+import { formatChartConst } from '../../utils/chartConstFormat'
 import {
   buildRandomSongCandidates,
   createRandomSongCandidateKey,
@@ -660,9 +661,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
     )
   })
   const constWeightOptions = createMemo(() =>
-    [...new Set(filteredCandidates().map((candidate) => candidate.chartConst.toFixed(1)))].sort(
-      (left, right) => Number(left) - Number(right)
-    )
+    [
+      ...new Set(filteredCandidates().map((candidate) => formatChartConst(candidate.chartConst))),
+    ].sort((left, right) => Number(left) - Number(right))
   )
   /**
    * 候補1件に適用される出やすさの重みを取得する。
@@ -671,7 +672,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
    * @returns 難易度別と定数別を掛け合わせた重み。不正値がある場合は null。
    */
   const weightForCandidate = (candidate: RandomSongCandidate): number | null => {
-    const chartConst = candidate.chartConst.toFixed(1)
+    const chartConst = formatChartConst(candidate.chartConst)
     const difficultyWeight = parseRandomSongWeightForPercent(
       difficultyWeights()[candidate.difficulty]
     )
@@ -900,7 +901,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     }
 
     const weightMass = filteredCandidates().reduce((sum, candidate) => {
-      if (candidate.chartConst.toFixed(1) !== chartConst) return sum
+      if (formatChartConst(candidate.chartConst) !== chartConst) return sum
 
       const weight = weightForCandidate(candidate)
       return weight === null ? sum : sum + weight
@@ -1311,7 +1312,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                             {candidate.levelLabel}
                           </span>
                           <span class="text-xs tabular-nums text-text-muted">
-                            {candidate.chartConst.toFixed(1)}
+                            {formatChartConst(candidate.chartConst)}
                           </span>
                         </div>
                         <h3 class="truncate font-semibold text-text">

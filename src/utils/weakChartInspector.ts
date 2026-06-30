@@ -1,5 +1,6 @@
 import { SCORE_THEORETICAL_MAX } from '../constants/chart'
 import type { PlayerRecordDTO } from '../types/api'
+import { truncateChartConst } from './chartConstFormat'
 
 /** 箱ひげ図を構成する譜面定数単位の統計値。 */
 export type ChartScoreDistribution = {
@@ -64,7 +65,7 @@ export const inspectWeakCharts = (records: PlayerRecordDTO[]): WeakChartInspecti
   const groupedRecords = new Map<number, PlayerRecordDTO[]>()
 
   for (const record of playedRecords) {
-    const chartConst = Number(record.const.toFixed(1))
+    const chartConst = truncateChartConst(record.const)
     const group = groupedRecords.get(chartConst) ?? []
     group.push(record)
     groupedRecords.set(chartConst, group)

@@ -1,6 +1,7 @@
 import { For } from 'solid-js'
 import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'
 import type { SongDTO } from '../../../../types/api'
+import { formatChartConst } from '../../../../utils/chartConstFormat'
 import SongMetaCardLayout, { type SongMetaInfoItem } from '../../components/SongMetaCardLayout'
 
 const fixedColumnClass = 'w-px whitespace-nowrap'
@@ -67,7 +68,7 @@ const SongInfoCard = (props: Props) => {
                         >
                           {chart ? (
                             <>
-                              {chart.const.toFixed(1)}
+                              {formatChartConst(chart.const)}
                               {chart.is_const_unknown ? (
                                 <sup class="text-[0.65em] leading-none">?</sup>
                               ) : null}
