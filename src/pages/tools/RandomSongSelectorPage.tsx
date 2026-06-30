@@ -39,11 +39,15 @@ import {
   parseOptionalRandomSongDecimal,
   parseRandomSongDrawCount,
   parseRandomSongWeightValues,
+  RANDOM_SONG_OP_TARGET_FILTER,
   RANDOM_SONG_SELECTOR_DIFFICULTIES,
+  RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS,
   type RandomSongCandidate,
+  type RandomSongDifficultyFilter,
   type RandomSongLampFilter,
   resolveRandomSongRecordLamp,
   restoreRandomSongResults,
+  toggleRandomSongDifficultyFilter,
   toggleRandomSongSelectionValue,
 } from '../../utils/randomSongSelector'
 import { getScoreRank } from '../../utils/scoreRank'
@@ -56,6 +60,7 @@ import {
   RANDOM_SONG_SELECTOR_COPY,
   RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES,
   RANDOM_SONG_SELECTOR_DEFAULTS,
+  RANDOM_SONG_SELECTOR_DIFFICULTY_FILTER_LABELS,
   RANDOM_SONG_SELECTOR_FIELD_LABELS,
 } from './randomSongSelector.constants'
 
@@ -422,6 +427,15 @@ const formatRandomSongRecordLampLabel = (lamp: RandomSongLampFilter): string =>
   RANDOM_SONG_LAMP_OPTIONS.find((option) => option.value === lamp)?.label ?? lamp
 
 /**
+ * 難易度絞り込みの選択値を画面表示用ラベルへ変換する。
+ *
+ * @param difficulty - ランダム選曲の難易度絞り込み値。
+ * @returns 画面に表示するラベル。
+ */
+const formatRandomSongDifficultyFilterLabel = (difficulty: RandomSongDifficultyFilter): string =>
+  RANDOM_SONG_SELECTOR_DIFFICULTY_FILTER_LABELS[difficulty]
+
+/**
  * ランダム選曲結果で表示するレコードバッジを生成する。
  *
  * @param record - 選曲された譜面に対応する自分のレコード。
@@ -525,9 +539,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const [count, setCount] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.count)
   const [minConst, setMinConst] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.minConst)
   const [maxConst, setMaxConst] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.maxConst)
-  const [selectedDifficulties, setSelectedDifficulties] = createSignal<PlayerDataDifficulty[]>([
-    ...RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES,
-  ])
+  const [selectedDifficulties, setSelectedDifficulties] = createSignal<
+    RandomSongDifficultyFilter[]
+  >([...RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES])
   const [selectedGenres, setSelectedGenres] = createSignal<string[]>([])
   const [selectedVersions, setSelectedVersions] = createSignal<string[]>([])
   const [recordFilterSettingsOpen, setRecordFilterSettingsOpen] = createSignal(false)
@@ -606,6 +620,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
     RANDOM_SONG_SELECTOR_DIFFICULTIES.filter((difficulty) =>
       selectedDifficulties().includes(difficulty)
     )
+  )
+  const isOpTargetDifficultyFilterSelected = createMemo(() =>
+    selectedDifficulties().includes(RANDOM_SONG_OP_TARGET_FILTER)
   )
   const constRangeError = createMemo(() => {
     const min = parsedMinConst()
@@ -830,6 +847,25 @@ const RandomSongSelectorPage = (): JSX.Element => {
   }
 
   /**
+   * 難易度絞り込みをOP対象と通常難易度が同時選択されない形で更新する。
+   *
+   * @param difficulty - 切り替える難易度絞り込み値。
+   * @returns なし。
+   */
+  const handleDifficultyFilterToggle = (difficulty: RandomSongDifficultyFilter): void => {
+    setSelectedDifficulties((prev) => toggleRandomSongDifficultyFilter(prev, difficulty))
+  }
+
+  /**
+   * 難易度絞り込みの選択肢を無効化するか判定する。
+   *
+   * @param difficulty - 判定対象の難易度絞り込み値。
+   * @returns OP対象が選択中で、通常難易度の場合は true。
+   */
+  const isDifficultyFilterOptionDisabled = (difficulty: RandomSongDifficultyFilter): boolean =>
+    isOpTargetDifficultyFilterSelected() && difficulty !== RANDOM_SONG_OP_TARGET_FILTER
+
+  /**
    * 難易度別の重み入力値を更新する。
    *
    * @param difficulty - 更新対象の難易度。
@@ -957,16 +993,18 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         {RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
                       </p>
                       <MultiSelectDropdown
-                        options={RANDOM_SONG_SELECTOR_DIFFICULTIES}
+                        options={RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS}
                         selected={selectedDifficulties()}
                         placeholder={RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
-                        onToggle={(difficulty) =>
-                          setSelectedDifficulties((prev) =>
-                            toggleRandomSongSelectionValue(prev, difficulty)
-                          )
-                        }
+                        formatLabel={formatRandomSongDifficultyFilterLabel}
+                        isOptionDisabled={isDifficultyFilterOptionDisabled}
+                        onToggle={handleDifficultyFilterToggle}
                         onSelectAll={() =>
-                          setSelectedDifficulties([...RANDOM_SONG_SELECTOR_DIFFICULTIES])
+                          setSelectedDifficulties(
+                            isOpTargetDifficultyFilterSelected()
+                              ? [RANDOM_SONG_OP_TARGET_FILTER]
+                              : [...RANDOM_SONG_SELECTOR_DIFFICULTIES]
+                          )
                         }
                         onClear={() => setSelectedDifficulties([])}
                       />
