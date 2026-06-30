@@ -1022,8 +1022,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
                   </div>
                 </div>
 
-                <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-                  <div class="flex flex-wrap gap-2 justify-end">
+                <div class="grid gap-5 lg:gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                  <div class="flex flex-wrap gap-2 justify-end lg:justify-start">
                     <Dialog
                       open={recordFilterSettingsOpen()}
                       onOpenChange={setRecordFilterSettingsOpen}
@@ -1220,7 +1220,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                     {(message) => <p class="text-sm text-danger">{message()}</p>}
                   </Show>
 
-                  <div class="mt-3 flex flex-wrap items-center gap-2 lg:justify-end">
+                  <div class="flex flex-wrap items-center gap-2 lg:justify-end">
                     <p class="flex-1 text-sm text-text-muted">
                       {RANDOM_SONG_SELECTOR_COPY.candidateCountLabel}:{' '}
                       <span class="font-medium tabular-nums text-text">
