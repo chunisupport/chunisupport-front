@@ -1,10 +1,13 @@
-import { Button } from '@kobalte/core/button'
 import { A } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 
+import {
+  SortableHeaderButton,
+  type SortDirection,
+} from '../../../components/common/SortableTableHeader'
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
 import { getScoreRank } from '../../../utils/scoreRank'
-import { LampPlaceholderBadge, renderSortIndicator } from './RecordTableUiParts'
+import { LampPlaceholderBadge } from './RecordTableUiParts'
 import {
   getComboLampBadgeClass,
   HARD_LAMP_BADGE_BACKGROUND_CLASS,
@@ -12,7 +15,6 @@ import {
   SCORE_RANK_TEXT_CLASS,
 } from './recordStyleClasses'
 
-type SharedSortDirection = 'asc' | 'desc' | null
 type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
 type ComboLamp = SharedRecordSource['combo_lamp']
 type ClearLamp = SharedRecordSource['clear_lamp']
@@ -32,7 +34,7 @@ export type ColumnRenderer<TRecord> = (record: TRecord) => JSX.Element
 type RecordHeaderButtonProps = {
   label: string
   active: boolean
-  direction: SharedSortDirection
+  direction: SortDirection
   align?: 'start' | 'center'
   class?: string
   onClick: () => void
@@ -132,19 +134,21 @@ export const renderDefaultRecordFullChainBadge = (
   )
 }
 
+/**
+ * レコード表向けの余白と高さを適用したソート可能ヘッダーボタンを表示する。
+ *
+ * @param props - ラベル、ソート状態、配置、クリック時の処理。
+ * @returns レコード表向けのヘッダーボタン。
+ */
 export const RecordHeaderButton = (props: RecordHeaderButtonProps) => (
-  <Button
-    type="button"
+  <SortableHeaderButton
+    label={props.label}
+    active={props.active}
+    direction={props.direction}
+    align={props.align}
     class={`${RECORD_HEADER_BUTTON_CLASS} ${props.active && props.direction ? 'py-1' : ''} ${props.class ?? ''}`}
     onClick={props.onClick}
-  >
-    <span
-      class={`flex flex-col ${props.align === 'start' ? 'items-start' : 'items-center'} justify-center gap-0.5 leading-none`}
-    >
-      <span>{props.label}</span>
-      {renderSortIndicator(props.active, props.direction)}
-    </span>
-  </Button>
+  />
 )
 
 export const RecordTitleCell = (props: RecordTitleCellProps) => (

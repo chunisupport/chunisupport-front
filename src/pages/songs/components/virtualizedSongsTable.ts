@@ -5,14 +5,6 @@ const DEFAULT_OVERSCAN = 12
 
 const getScrollElement = () => document.getElementById('app-main') as HTMLDivElement | null
 
-export const sortAriaValue = (
-  active: boolean,
-  direction: 'asc' | 'desc' | null
-): 'ascending' | 'descending' | 'none' => {
-  if (!active || !direction) return 'none'
-  return direction === 'asc' ? 'ascending' : 'descending'
-}
-
 export const createVirtualizedSongsTable = (params: {
   getCount: () => number
   rowHeight: number

@@ -27,6 +27,7 @@ import {
 import { fetchMe } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
+import { SortableHeaderButton } from '../../components/common/SortableTableHeader'
 import {
   CHART_CONST_MAX,
   CHART_CONST_MIN,
@@ -47,7 +48,6 @@ import {
   type WeakChartOutlier,
   type WeakChartSortKey,
 } from '../../utils/weakChartInspector'
-import { RecordHeaderButton } from '../users/components/SharedRecordTableColumns'
 import {
   WEAK_CHART_AGGREGATION_DIFFICULTIES,
   WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT,
@@ -301,7 +301,7 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
   }
 
   /**
-   * ソート状態を反映した共通レコード表のヘッダーボタンを生成する。
+   * ソート状態を反映した共通ヘッダーボタンを生成する。
    *
    * @param label - 列の表示名。
    * @param key - 列のソートキー。
@@ -309,7 +309,7 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
    * @returns ソート操作可能なヘッダーボタン。
    */
   const header = (label: string, key: WeakChartSortKey, align?: 'start' | 'center') => (
-    <RecordHeaderButton
+    <SortableHeaderButton
       label={label}
       active={sortKey() === key}
       direction={sortDirection()}
