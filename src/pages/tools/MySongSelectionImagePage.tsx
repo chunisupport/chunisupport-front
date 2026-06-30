@@ -1,7 +1,8 @@
 import { Button } from '@kobalte/core/button'
+import { Checkbox } from '@kobalte/core/checkbox'
 import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, ChevronDown, Download, ImagePlus } from 'lucide-solid'
+import { Check, ChevronDown, Download, ImagePlus, SlidersHorizontal } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import { LoadError, Loading } from '../../components'
@@ -54,6 +55,10 @@ type CanvasTextOptions = {
   minFontSize: number
   lineHeightRatio: number
   align?: CanvasTextAlign
+}
+
+type MySongSelectionImageOptions = {
+  showArtist: boolean
 }
 
 /**
@@ -284,12 +289,14 @@ const canvasToPngBlob = (canvas: HTMLCanvasElement): Promise<Blob> =>
  * @param song - 選択中の楽曲。
  * @param difficulty - 選択中の難易度。
  * @param heading - 画像上部に表示する見出し。
+ * @param options - 画像へ反映する表示オプション。
  * @returns 生成したPNG Blob。
  */
 const generateMySongSelectionImage = async (
   song: SongDTO,
   difficulty: PlayerDataDifficulty,
-  heading: string
+  heading: string,
+  options: MySongSelectionImageOptions
 ): Promise<Blob> => {
   const chart = resolveMySongSelectionChart(song, difficulty)
   if (!chart) throw new Error(MY_SONG_SELECTION_IMAGE_COPY.noChartMessage)
@@ -319,7 +326,14 @@ const generateMySongSelectionImage = async (
   context.shadowColor = 'rgb(0 0 0 / 0.35)'
   context.shadowBlur = 48
   context.fillStyle = 'rgb(255 255 255 / 0.12)'
-  fillRoundRect(context, 90, 86, 1740, 908, 44)
+  fillRoundRect(
+    context,
+    MY_SONG_SELECTION_IMAGE_CANVAS.panelX,
+    MY_SONG_SELECTION_IMAGE_CANVAS.panelY,
+    MY_SONG_SELECTION_IMAGE_CANVAS.panelWidth,
+    MY_SONG_SELECTION_IMAGE_CANVAS.panelHeight,
+    44
+  )
   context.restore()
 
   context.fillStyle = 'rgb(255 255 255)'
@@ -373,13 +387,13 @@ const generateMySongSelectionImage = async (
   const infoX = MY_SONG_SELECTION_IMAGE_CANVAS.infoX
   context.fillStyle = 'rgb(255 255 255 / 0.9)'
   context.font = '700 34px Inter, "Noto Sans JP", sans-serif'
-  context.fillText('TITLE', infoX, 320)
+  context.fillText('TITLE', infoX, 330)
 
   context.fillStyle = 'rgb(255 255 255)'
   const titleHeight = drawFittedText(context, song.title, {
     x: infoX,
-    y: 372,
-    maxWidth: 760,
+    y: 382,
+    maxWidth: 790,
     maxLines: 3,
     fontFamily: 'Inter, "Noto Sans JP", sans-serif',
     fontWeight: 900,
@@ -388,20 +402,22 @@ const generateMySongSelectionImage = async (
     lineHeightRatio: 1.12,
   })
 
-  context.fillStyle = 'rgb(255 255 255 / 0.72)'
-  drawFittedText(context, song.artist, {
-    x: infoX,
-    y: 392 + titleHeight,
-    maxWidth: 760,
-    maxLines: 2,
-    fontFamily: 'Inter, "Noto Sans JP", sans-serif',
-    fontWeight: 600,
-    maxFontSize: 34,
-    minFontSize: 24,
-    lineHeightRatio: 1.2,
-  })
+  if (options.showArtist) {
+    context.fillStyle = 'rgb(255 255 255 / 0.72)'
+    drawFittedText(context, song.artist, {
+      x: infoX,
+      y: 402 + titleHeight,
+      maxWidth: 790,
+      maxLines: 2,
+      fontFamily: 'Inter, "Noto Sans JP", sans-serif',
+      fontWeight: 600,
+      maxFontSize: 34,
+      minFontSize: 24,
+      lineHeightRatio: 1.2,
+    })
+  }
 
-  const badgeY = 690
+  const badgeY = 700
   context.fillStyle = difficultyBorderColor(difficulty)
   fillRoundRect(context, infoX, badgeY, 285, 82, 20)
   context.fillStyle = 'rgb(255 255 255)'
@@ -414,13 +430,13 @@ const generateMySongSelectionImage = async (
   context.textBaseline = 'alphabetic'
   context.fillStyle = 'rgb(255 255 255 / 0.72)'
   context.font = '700 30px Inter, "Noto Sans JP", sans-serif'
-  context.fillText('CONST', infoX, 850)
+  context.fillText('CONST', infoX, 860)
   context.fillStyle = 'rgb(255 255 255)'
   context.font = '900 92px Inter, "Noto Sans JP", sans-serif'
   context.fillText(
     formatMySongSelectionChartConstant(chart.chart, MY_SONG_SELECTION_IMAGE_COPY.constUnknownLabel),
     infoX,
-    935
+    945
   )
 
   return canvasToPngBlob(canvas)
@@ -484,6 +500,7 @@ const MySongSelectionImagePage = (): JSX.Element => {
   const [generatedUrl, setGeneratedUrl] = createSignal<string | null>(null)
   const [errorMessage, setErrorMessage] = createSignal<string | null>(null)
   const [isGenerating, setIsGenerating] = createSignal(false)
+  const [showArtist, setShowArtist] = createSignal(false)
 
   useDocumentTitle(MY_SONG_SELECTION_IMAGE_COPY.title)
 
@@ -521,10 +538,9 @@ const MySongSelectionImagePage = (): JSX.Element => {
    * @returns なし。
    */
   const clearGeneratedImage = (): void => {
-    setGeneratedUrl((currentUrl) => {
-      if (currentUrl) URL.revokeObjectURL(currentUrl)
-      return null
-    })
+    const currentUrl = generatedUrl()
+    setGeneratedUrl(null)
+    if (currentUrl) URL.revokeObjectURL(currentUrl)
   }
 
   /**
@@ -566,6 +582,17 @@ const MySongSelectionImagePage = (): JSX.Element => {
   }
 
   /**
+   * アーティスト表示設定を更新し、入力変更前に作った画像を破棄する。
+   *
+   * @param value - アーティストを画像へ表示する場合は true。
+   * @returns なし。
+   */
+  const handleShowArtistChange = (value: boolean): void => {
+    setShowArtist(value)
+    clearGeneratedImage()
+  }
+
+  /**
    * 楽曲を選択し、検索欄を選択楽曲名へ同期する。
    *
    * @param song - 選択した楽曲。
@@ -597,12 +624,13 @@ const MySongSelectionImagePage = (): JSX.Element => {
     setIsGenerating(true)
     setErrorMessage(null)
     try {
-      const blob = await generateMySongSelectionImage(song, difficulty(), heading())
-      const nextUrl = URL.createObjectURL(blob)
-      setGeneratedUrl((currentUrl) => {
-        if (currentUrl) URL.revokeObjectURL(currentUrl)
-        return nextUrl
+      const blob = await generateMySongSelectionImage(song, difficulty(), heading(), {
+        showArtist: showArtist(),
       })
+      const nextUrl = URL.createObjectURL(blob)
+      const currentUrl = generatedUrl()
+      setGeneratedUrl(nextUrl)
+      if (currentUrl) URL.revokeObjectURL(currentUrl)
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : MY_SONG_SELECTION_IMAGE_COPY.generationErrorMessage
@@ -692,6 +720,31 @@ const MySongSelectionImagePage = (): JSX.Element => {
             </div>
 
             <SongDifficultySelect value={difficulty()} onChange={handleDifficultyChange} />
+
+            <fieldset class="space-y-2 rounded border border-border bg-surface-muted p-3">
+              <legend class="flex items-center gap-2 text-sm font-medium text-text-muted">
+                <SlidersHorizontal class="h-4 w-4" aria-hidden="true" />
+                {MY_SONG_SELECTION_IMAGE_COPY.optionsLabel}
+              </legend>
+              <Checkbox
+                checked={showArtist()}
+                onChange={handleShowArtistChange}
+                class="relative flex items-center gap-3 text-sm text-text"
+              >
+                <Checkbox.Input
+                  style={{
+                    left: '0',
+                    top: '0',
+                  }}
+                />
+                <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-input-bg data-[checked]:border-action-primary data-[checked]:bg-action-primary">
+                  <Checkbox.Indicator>
+                    <Check class="h-4 w-4 text-text-inverse" aria-hidden="true" />
+                  </Checkbox.Indicator>
+                </Checkbox.Control>
+                <Checkbox.Label>{MY_SONG_SELECTION_IMAGE_COPY.showArtistLabel}</Checkbox.Label>
+              </Checkbox>
+            </fieldset>
 
             <Show when={selectedSong()}>
               {(song) => (

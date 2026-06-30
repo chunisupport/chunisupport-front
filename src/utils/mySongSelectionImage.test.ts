@@ -5,7 +5,7 @@ import {
   formatMySongSelectionChartConstant,
   limitMySongSelectionCandidates,
   resolveMySongSelectionChart,
-} from './mySongSelectionImage'
+} from './mySongSelectionImage.ts'
 
 const baseSong: SongDTO = {
   id: 'song-1',
