@@ -1,8 +1,7 @@
 import { Button } from '@kobalte/core/button'
-import { Checkbox } from '@kobalte/core/checkbox'
 import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, ChevronDown, Download, ImagePlus, SlidersHorizontal } from 'lucide-solid'
+import { Check, ChevronDown, Download, ImagePlus } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import { LoadError, Loading } from '../../components'
@@ -31,7 +30,11 @@ const SELECT_ITEM_CLASS =
   'grid cursor-pointer grid-cols-[1fr_auto] items-center gap-3 rounded px-3 py-2 text-sm text-text outline-none hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
 const CANDIDATE_LIMIT = 12
 const DOWNLOAD_FILE_NAME = 'my-song-selection.png'
-const FALLBACK_GRADIENT_COLORS = ['#10261f', '#2c6f5d', '#07130f'] as const
+const FALLBACK_BACKGROUND_COLORS = {
+  base: '#10261f',
+  accent: '#2c6f5d',
+  shadow: '#07130f',
+} as const
 
 type CanvasColorSet = {
   base: string
@@ -55,10 +58,6 @@ type CanvasTextOptions = {
   minFontSize: number
   lineHeightRatio: number
   align?: CanvasTextAlign
-}
-
-type MySongSelectionImageOptions = {
-  showArtist: boolean
 }
 
 /**
@@ -88,7 +87,7 @@ const toRgb = (red: number, green: number, blue: number): string =>
   `rgb(${Math.round(red)} ${Math.round(green)} ${Math.round(blue)})`
 
 /**
- * ジャケット画像の代表色を抽出し、背景グラデーション用の色へ整える。
+ * ジャケット画像の代表色を抽出し、背景や装飾で使う色へ整える。
  *
  * @param image - 読み込み済みジャケット画像。
  * @returns 背景、アクセント、影色。
@@ -100,9 +99,9 @@ const extractJacketColors = (image: HTMLImageElement): CanvasColorSet => {
   const context = sampleCanvas.getContext('2d', { willReadFrequently: true })
   if (!context) {
     return {
-      base: FALLBACK_GRADIENT_COLORS[0],
-      accent: FALLBACK_GRADIENT_COLORS[1],
-      shadow: FALLBACK_GRADIENT_COLORS[2],
+      base: FALLBACK_BACKGROUND_COLORS.base,
+      accent: FALLBACK_BACKGROUND_COLORS.accent,
+      shadow: FALLBACK_BACKGROUND_COLORS.shadow,
     }
   }
 
@@ -137,9 +136,9 @@ const extractJacketColors = (image: HTMLImageElement): CanvasColorSet => {
 
   if (count === 0) {
     return {
-      base: FALLBACK_GRADIENT_COLORS[0],
-      accent: FALLBACK_GRADIENT_COLORS[1],
-      shadow: FALLBACK_GRADIENT_COLORS[2],
+      base: FALLBACK_BACKGROUND_COLORS.base,
+      accent: FALLBACK_BACKGROUND_COLORS.accent,
+      shadow: FALLBACK_BACKGROUND_COLORS.shadow,
     }
   }
 
@@ -289,14 +288,12 @@ const canvasToPngBlob = (canvas: HTMLCanvasElement): Promise<Blob> =>
  * @param song - 選択中の楽曲。
  * @param difficulty - 選択中の難易度。
  * @param heading - 画像上部に表示する見出し。
- * @param options - 画像へ反映する表示オプション。
  * @returns 生成したPNG Blob。
  */
 const generateMySongSelectionImage = async (
   song: SongDTO,
   difficulty: PlayerDataDifficulty,
-  heading: string,
-  options: MySongSelectionImageOptions
+  heading: string
 ): Promise<Blob> => {
   const chart = resolveMySongSelectionChart(song, difficulty)
   if (!chart) throw new Error(MY_SONG_SELECTION_IMAGE_COPY.noChartMessage)
@@ -312,14 +309,10 @@ const generateMySongSelectionImage = async (
   const context = canvas.getContext('2d')
   if (!context) throw new Error(MY_SONG_SELECTION_IMAGE_COPY.generationErrorMessage)
 
-  const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height)
-  gradient.addColorStop(0, colors?.accent ?? FALLBACK_GRADIENT_COLORS[1])
-  gradient.addColorStop(0.48, colors?.base ?? FALLBACK_GRADIENT_COLORS[0])
-  gradient.addColorStop(1, colors?.shadow ?? FALLBACK_GRADIENT_COLORS[2])
-  context.fillStyle = gradient
+  context.fillStyle = colors?.base ?? FALLBACK_BACKGROUND_COLORS.base
   context.fillRect(0, 0, canvas.width, canvas.height)
 
-  context.fillStyle = 'rgb(0 0 0 / 0.24)'
+  context.fillStyle = 'rgb(0 0 0 / 0.18)'
   context.fillRect(0, 0, canvas.width, canvas.height)
 
   context.save()
@@ -402,20 +395,18 @@ const generateMySongSelectionImage = async (
     lineHeightRatio: 1.12,
   })
 
-  if (options.showArtist) {
-    context.fillStyle = 'rgb(255 255 255 / 0.72)'
-    drawFittedText(context, song.artist, {
-      x: infoX,
-      y: 402 + titleHeight,
-      maxWidth: 790,
-      maxLines: 2,
-      fontFamily: 'Inter, "Noto Sans JP", sans-serif',
-      fontWeight: 600,
-      maxFontSize: 34,
-      minFontSize: 24,
-      lineHeightRatio: 1.2,
-    })
-  }
+  context.fillStyle = 'rgb(255 255 255 / 0.72)'
+  drawFittedText(context, song.artist, {
+    x: infoX,
+    y: 402 + titleHeight,
+    maxWidth: 790,
+    maxLines: 2,
+    fontFamily: 'Inter, "Noto Sans JP", sans-serif',
+    fontWeight: 600,
+    maxFontSize: 34,
+    minFontSize: 24,
+    lineHeightRatio: 1.2,
+  })
 
   const badgeY = 700
   context.fillStyle = difficultyBorderColor(difficulty)
@@ -437,6 +428,16 @@ const generateMySongSelectionImage = async (
     formatMySongSelectionChartConstant(chart.chart, MY_SONG_SELECTION_IMAGE_COPY.constUnknownLabel),
     infoX,
     945
+  )
+
+  context.textAlign = 'right'
+  context.textBaseline = 'bottom'
+  context.fillStyle = 'rgb(255 255 255 / 0.62)'
+  context.font = '600 24px Inter, "Noto Sans JP", sans-serif'
+  context.fillText(
+    MY_SONG_SELECTION_IMAGE_COPY.generatedByLabel,
+    MY_SONG_SELECTION_IMAGE_CANVAS.width - 88,
+    MY_SONG_SELECTION_IMAGE_CANVAS.height - 44
   )
 
   return canvasToPngBlob(canvas)
@@ -500,7 +501,6 @@ const MySongSelectionImagePage = (): JSX.Element => {
   const [generatedUrl, setGeneratedUrl] = createSignal<string | null>(null)
   const [errorMessage, setErrorMessage] = createSignal<string | null>(null)
   const [isGenerating, setIsGenerating] = createSignal(false)
-  const [showArtist, setShowArtist] = createSignal(false)
 
   useDocumentTitle(MY_SONG_SELECTION_IMAGE_COPY.title)
 
@@ -582,17 +582,6 @@ const MySongSelectionImagePage = (): JSX.Element => {
   }
 
   /**
-   * アーティスト表示設定を更新し、入力変更前に作った画像を破棄する。
-   *
-   * @param value - アーティストを画像へ表示する場合は true。
-   * @returns なし。
-   */
-  const handleShowArtistChange = (value: boolean): void => {
-    setShowArtist(value)
-    clearGeneratedImage()
-  }
-
-  /**
    * 楽曲を選択し、検索欄を選択楽曲名へ同期する。
    *
    * @param song - 選択した楽曲。
@@ -624,9 +613,7 @@ const MySongSelectionImagePage = (): JSX.Element => {
     setIsGenerating(true)
     setErrorMessage(null)
     try {
-      const blob = await generateMySongSelectionImage(song, difficulty(), heading(), {
-        showArtist: showArtist(),
-      })
+      const blob = await generateMySongSelectionImage(song, difficulty(), heading())
       const nextUrl = URL.createObjectURL(blob)
       const currentUrl = generatedUrl()
       setGeneratedUrl(nextUrl)
@@ -720,31 +707,6 @@ const MySongSelectionImagePage = (): JSX.Element => {
             </div>
 
             <SongDifficultySelect value={difficulty()} onChange={handleDifficultyChange} />
-
-            <fieldset class="space-y-2 rounded border border-border bg-surface-muted p-3">
-              <legend class="flex items-center gap-2 text-sm font-medium text-text-muted">
-                <SlidersHorizontal class="h-4 w-4" aria-hidden="true" />
-                {MY_SONG_SELECTION_IMAGE_COPY.optionsLabel}
-              </legend>
-              <Checkbox
-                checked={showArtist()}
-                onChange={handleShowArtistChange}
-                class="relative flex items-center gap-3 text-sm text-text"
-              >
-                <Checkbox.Input
-                  style={{
-                    left: '0',
-                    top: '0',
-                  }}
-                />
-                <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-input-bg data-[checked]:border-action-primary data-[checked]:bg-action-primary">
-                  <Checkbox.Indicator>
-                    <Check class="h-4 w-4 text-text-inverse" aria-hidden="true" />
-                  </Checkbox.Indicator>
-                </Checkbox.Control>
-                <Checkbox.Label>{MY_SONG_SELECTION_IMAGE_COPY.showArtistLabel}</Checkbox.Label>
-              </Checkbox>
-            </fieldset>
 
             <Show when={selectedSong()}>
               {(song) => (
