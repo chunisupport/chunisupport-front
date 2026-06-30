@@ -2,6 +2,8 @@ import { Image } from '@kobalte/core/image'
 import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createSignal, onMount, Show } from 'solid-js'
+import { RECORD_CARD_HOVER_CLASS } from '../../../../components/common/record/RecordDisplayParts'
+import { SCORE_RANK_TEXT_CLASS } from '../../../../components/common/record/recordStyleClasses'
 import type { PlayerRecordDTO } from '../../../../types/api'
 import { formatChartConst } from '../../../../utils/chartConstFormat'
 import {
@@ -12,8 +14,6 @@ import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import { formatInteger } from '../../../../utils/numberFormat'
 import { formatRatingFixed2 } from '../../../../utils/ratingFormat'
 import { getScoreRank } from '../../../../utils/scoreRank'
-import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses'
-import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
 
 type Props = {
   record: PlayerRecordDTO

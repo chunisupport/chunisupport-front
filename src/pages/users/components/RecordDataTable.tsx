@@ -1,14 +1,14 @@
 import type { JSX } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
-import { createGridTemplateColumns } from '../utils/recordColumnDefinitions'
-import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
-import { createRecordTableVirtualizer } from './createRecordTableVirtualizer'
 import {
   type ColumnRenderer,
   RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
   RecordHeaderButton,
-} from './SharedRecordTableColumns'
+} from '../../../components/common/record/RecordDisplayParts'
+import { createGridTemplateColumns } from '../utils/recordColumnDefinitions'
+import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
+import { createRecordTableVirtualizer } from './createRecordTableVirtualizer'
 
 type SortDirection = 'asc' | 'desc' | null
 

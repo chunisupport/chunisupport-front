@@ -12,6 +12,10 @@ import {
 } from 'solid-js'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
+import {
+  RECORD_ROW_HOVER_CLASS,
+  RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS,
+} from '../../../components/common/record/RecordDisplayParts'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import {
   readStandardRecordColumnsSetting,
@@ -30,10 +34,6 @@ import {
 import { sanitizeSortQuery } from '../../../utils/sortingQuery'
 import FilterStats from '../components/FilterStats'
 import RecordDataTable from '../components/RecordDataTable'
-import {
-  RECORD_ROW_HOVER_CLASS,
-  RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS,
-} from '../components/SharedRecordTableColumns'
 import { isValidSavedStandardFilter } from '../components/savedRecordFilters'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FilterDialog from './components/FilterDialog'

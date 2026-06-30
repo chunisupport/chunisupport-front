@@ -23,6 +23,7 @@ import { fetchMe, fetchUserRating } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import MultiSelectDropdown from '../../components/common/MultiSelectDropdown'
+import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
@@ -48,7 +49,6 @@ import {
   toggleRandomSongSelectionValue,
 } from '../../utils/randomSongSelector'
 import { getScoreRank } from '../../utils/scoreRank'
-import { SCORE_RANK_TEXT_CLASS } from '../users/components/recordStyleClasses'
 import {
   RANDOM_SONG_BEST_FRAME_OPTIONS,
   RANDOM_SONG_LAMP_OPTIONS,

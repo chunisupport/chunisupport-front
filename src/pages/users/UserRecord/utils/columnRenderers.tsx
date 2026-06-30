@@ -1,12 +1,4 @@
 import { Show } from 'solid-js'
-import type { RecordColumnId } from '../../../../types/recordFilter'
-import {
-  difficultyBadgeClass,
-  difficultyShort,
-  difficultyToQueryValue,
-} from '../../../../utils/difficultyUtils'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
-import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
   type ColumnRenderer,
   RECORD_CELL_BASE_CLASS,
@@ -18,7 +10,15 @@ import {
   RecordScoreCell,
   RecordTitleCell,
   RecordUpdatedAtCell,
-} from '../../components/SharedRecordTableColumns'
+} from '../../../../components/common/record/RecordDisplayParts'
+import type { RecordColumnId } from '../../../../types/recordFilter'
+import {
+  difficultyBadgeClass,
+  difficultyShort,
+  difficultyToQueryValue,
+} from '../../../../utils/difficultyUtils'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
+import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import { getConstDisplay, getRatingDisplay } from './constDisplay'
 import { formatJusticeCountForAj } from './justiceCountDisplay'
 import { formatUpdatedAt } from './updatedAt'
