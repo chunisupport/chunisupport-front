@@ -1232,7 +1232,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       <AlertDialog.Trigger
                         as="button"
                         type="button"
-                        class="inline-flex min-h-10 items-center gap-2 rounded-md border bg-danger-bg border-danger-border px-4 text-sm font-medium text-text-muted hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                        class="inline-flex min-h-10 items-center gap-2 rounded-md border bg-danger-bg border-danger-border px-4 text-sm font-medium text-text-muted hover:bg-danger-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                       >
                         <RotateCcw size={16} aria-hidden="true" />
                         {RANDOM_SONG_SELECTOR_COPY.resetButtonLabel}
