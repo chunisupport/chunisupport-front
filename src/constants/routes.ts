@@ -8,6 +8,8 @@ export const BORDER_CALCULATOR_PATH = `${TOOLS_PATH}/border-calculator`
 export const WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector`
 export const RANDOM_SONG_SELECTOR_PATH = `${TOOLS_PATH}/random-song-selector`
 export const LOCKED_SONGS_FINDER_PATH = `${TOOLS_PATH}/locked-songs-finder`
+/** EDITOR向け楽曲編集画面のパス。 */
+export const EDITOR_SONGS_PATH = '/editor/songs'
 
 /**
  * 通常譜面のスコア履歴画面パスを生成する。

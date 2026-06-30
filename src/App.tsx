@@ -16,6 +16,7 @@ import {
 import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
+  EDITOR_SONGS_PATH,
   LOCKED_SONGS_FINDER_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   REGISTER_SCORE_PATH,
@@ -36,6 +37,7 @@ import {
   AdminUsersPage,
   BorderCalculatorPage,
   ChartConstantCalculatorPage,
+  EditorSongsPage,
   ForbiddenPage,
   GoalsList,
   Login,
@@ -334,6 +336,17 @@ const GuardedAdminSongsPage = () => (
 )
 
 /**
+ * EDITOR権限を要求して楽曲編集画面を表示する。
+ *
+ * @returns 権限制御済みの楽曲編集画面。
+ */
+const GuardedEditorSongsPage = () => (
+  <RequireRole allowedRoles={['EDITOR']}>
+    <EditorSongsPage />
+  </RequireRole>
+)
+
+/**
  * ADMIN 権限を要求して称号管理画面を表示する。
  *
  * @returns 権限制御済みの称号管理画面。
@@ -400,6 +413,9 @@ const App = () => {
       <Route path="/admin/users" component={withNavBar(GuardedAdminUsersPage)} />
       <Route path="/admin/songs" component={withNavBar(GuardedAdminSongsPage)} />
       <Route path="/admin/honors" component={withNavBar(GuardedAdminHonorsPage)} />
+
+      {/* 編集 */}
+      <Route path={EDITOR_SONGS_PATH} component={withNavBar(GuardedEditorSongsPage)} />
 
       {/* 404 */}
       <Route path="*" component={NotFoundPage} />
