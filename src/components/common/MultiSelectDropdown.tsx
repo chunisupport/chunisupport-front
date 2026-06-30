@@ -12,8 +12,6 @@ type MultiSelectDropdownProps<T extends string | number | null> = {
   placeholder: string
   /** 選択肢の値を表示用ラベルへ変換する処理。 */
   formatLabel?: (value: T) => string
-  /** 選択肢ごとの操作可否を判定する処理。 */
-  isOptionDisabled?: (value: T) => boolean
   /** 選択状態を切り替える処理。 */
   onToggle: (value: T) => void
   /** すべての選択肢を選択する処理。 */
@@ -41,7 +39,7 @@ const MULTI_SELECT_TRIGGER_CLASS =
 
 /** 複数選択 Select の選択肢に適用する Tailwind クラス。 */
 const MULTI_SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-sm text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg aria-disabled:cursor-not-allowed aria-disabled:opacity-50'
+  'cursor-pointer px-3 py-2 text-sm text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
 
 /**
  * 複数選択用のプルダウン式チェックリストを表示する。
@@ -59,14 +57,6 @@ const MultiSelectDropdown = <T extends string | number | null>(
    * @returns 画面に表示するラベル。
    */
   const formatLabel = (value: T): string => props.formatLabel?.(value) ?? String(value)
-
-  /**
-   * 選択肢が無効化されているか判定する。
-   *
-   * @param value - 判定対象の選択肢。
-   * @returns 選択肢を操作不可にする場合は true。
-   */
-  const isOptionDisabled = (value: T): boolean => props.isOptionDisabled?.(value) ?? false
 
   const selectedOptions = createMemo(() =>
     props.options.filter((option) => props.selected.includes(option))
@@ -88,7 +78,6 @@ const MultiSelectDropdown = <T extends string | number | null>(
    */
   const handleChange = (nextSelected: T[]): void => {
     for (const option of props.options) {
-      if (isOptionDisabled(option)) continue
       if (props.selected.includes(option) !== nextSelected.includes(option)) {
         props.onToggle(option)
       }
@@ -124,11 +113,7 @@ const MultiSelectDropdown = <T extends string | number | null>(
         disabled={props.disabled}
         gutter={0}
         itemComponent={(itemProps) => (
-          <Select.Item
-            item={itemProps.item}
-            class={MULTI_SELECT_ITEM_CLASS}
-            aria-disabled={isOptionDisabled(itemProps.item.rawValue) ? 'true' : undefined}
-          >
+          <Select.Item item={itemProps.item} class={MULTI_SELECT_ITEM_CLASS}>
             <div class="flex items-center gap-2">
               <span class="inline-flex w-4 justify-center text-success">
                 <Select.ItemIndicator>

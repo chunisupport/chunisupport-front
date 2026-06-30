@@ -624,6 +624,11 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const isOpTargetDifficultyFilterSelected = createMemo(() =>
     selectedDifficulties().includes(RANDOM_SONG_OP_TARGET_FILTER)
   )
+  const difficultyFilterOptions = createMemo<RandomSongDifficultyFilter[]>(() =>
+    isOpTargetDifficultyFilterSelected()
+      ? [RANDOM_SONG_OP_TARGET_FILTER]
+      : RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS
+  )
   const constRangeError = createMemo(() => {
     const min = parsedMinConst()
     const max = parsedMaxConst()
@@ -857,15 +862,6 @@ const RandomSongSelectorPage = (): JSX.Element => {
   }
 
   /**
-   * 難易度絞り込みの選択肢を無効化するか判定する。
-   *
-   * @param difficulty - 判定対象の難易度絞り込み値。
-   * @returns OP対象が選択中で、通常難易度の場合は true。
-   */
-  const isDifficultyFilterOptionDisabled = (difficulty: RandomSongDifficultyFilter): boolean =>
-    isOpTargetDifficultyFilterSelected() && difficulty !== RANDOM_SONG_OP_TARGET_FILTER
-
-  /**
    * 難易度別の重み入力値を更新する。
    *
    * @param difficulty - 更新対象の難易度。
@@ -993,11 +989,10 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         {RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
                       </p>
                       <MultiSelectDropdown
-                        options={RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS}
+                        options={difficultyFilterOptions()}
                         selected={selectedDifficulties()}
                         placeholder={RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
                         formatLabel={formatRandomSongDifficultyFilterLabel}
-                        isOptionDisabled={isDifficultyFilterOptionDisabled}
                         onToggle={handleDifficultyFilterToggle}
                         onSelectAll={() =>
                           setSelectedDifficulties(
