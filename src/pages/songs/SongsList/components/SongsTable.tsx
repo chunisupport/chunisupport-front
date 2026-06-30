@@ -3,8 +3,8 @@ import { createEffect, createMemo, For, Show } from 'solid-js'
 import type { SongDTO } from '../../../../types/api'
 import { formatChartConst } from '../../../../utils/chartConstFormat'
 import { DIFFICULTY_SHORT_NAME_MAP, difficultyBadgeClass } from '../../../../utils/difficultyUtils'
+import type { SortDirection } from '../../../../utils/sortingQuery'
 import { renderSortIndicator } from '../../../users/components/RecordTableUiParts'
-import type { SortDirection } from '../../../users/recordTable/sortingQuery'
 import {
   SongListAddedDateCell,
   SongListArtistCell,
@@ -84,7 +84,7 @@ const SongsTable = (props: Props) => {
       ref={virtualizedTable.setTableContainerRef}
       class="overflow-x-auto overflow-y-hidden rounded-md border border-border bg-surface"
     >
-      <table class="block min-w-[45rem] text-sm" aria-rowcount={props.songs.length}>
+      <table class="block min-w-180 text-sm" aria-rowcount={props.songs.length}>
         <thead class="block">
           <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
             <SongHeaderButton

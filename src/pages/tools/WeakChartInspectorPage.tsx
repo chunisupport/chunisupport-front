@@ -39,6 +39,7 @@ import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWi
 import { formatChartConst, truncateChartConst } from '../../utils/chartConstFormat'
 import { formatInteger } from '../../utils/numberFormat'
 import { clampNumericInput } from '../../utils/numberInput'
+import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
 import {
   inspectWeakCharts,
   isWeakChartInspectionTarget,
@@ -47,7 +48,6 @@ import {
   type WeakChartSortKey,
 } from '../../utils/weakChartInspector'
 import { RecordHeaderButton } from '../users/components/SharedRecordTableColumns'
-import { nextSortState, type SortDirection } from '../users/recordTable/sortingQuery'
 import {
   WEAK_CHART_AGGREGATION_DIFFICULTIES,
   WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT,
@@ -267,7 +267,7 @@ const WeakChartDistributionChart = (props: {
         <span>{WEAK_CHART_INSPECTOR_COPY.chartTitle}</span>
       </figcaption>
       <div class="overflow-x-auto overscroll-x-contain">
-        <div class={`relative h-[28rem] w-full ${WEAK_CHART_MIN_WIDTH_CLASS}`}>
+        <div class={`relative h-112 w-full ${WEAK_CHART_MIN_WIDTH_CLASS}`}>
           <canvas ref={canvasRef} aria-label={WEAK_CHART_INSPECTOR_COPY.chartAccessibleLabel} />
         </div>
       </div>
@@ -314,7 +314,7 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
       active={sortKey() === key}
       direction={sortDirection()}
       align={align}
-      class={align === 'start' ? 'justify-start !min-h-8' : 'justify-center !min-h-8'}
+      class={align === 'start' ? 'justify-start min-h-8!' : 'justify-center min-h-8!'}
       onClick={() => handleSortChange(key)}
     />
   )
@@ -337,7 +337,7 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
         }
       >
         <div class="overflow-x-auto">
-          <table class="w-full min-w-[30rem] table-fixed border-collapse text-sm">
+          <table class="w-full min-w-120 table-fixed border-collapse text-sm">
             <caption class="sr-only">{WEAK_CHART_INSPECTOR_COPY.tableCaption}</caption>
             <colgroup>
               <col />
@@ -698,7 +698,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
                     <Collapsible defaultOpen={false}>
                       <Collapsible.Trigger class="group flex w-full items-center justify-start gap-2 text-sm font-semibold text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring">
                         <ChevronRight
-                          class="h-4 w-4 rotate-0 transition-transform group-data-[expanded]:rotate-90"
+                          class="h-4 w-4 rotate-0 transition-transform group-data-expanded:rotate-90"
                           aria-hidden="true"
                         />
                         <span>{WEAK_CHART_SETTINGS_COPY.displaySection}</span>

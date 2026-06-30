@@ -1,5 +1,5 @@
 import { Show } from 'solid-js'
-
+import type { RecordColumnId } from '../../../../types/recordFilter'
 import {
   difficultyBadgeClass,
   difficultyShort,
@@ -19,7 +19,6 @@ import {
   RecordTitleCell,
   RecordUpdatedAtCell,
 } from '../../components/SharedRecordTableColumns'
-import type { RecordColumnId } from '../types/types'
 import { getConstDisplay, getRatingDisplay } from './constDisplay'
 import { formatJusticeCountForAj } from './justiceCountDisplay'
 import { formatUpdatedAt } from './updatedAt'

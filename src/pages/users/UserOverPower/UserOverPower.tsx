@@ -22,7 +22,7 @@ import type { PlayerLockedSongRequest, UserRecordDTO } from '../../../types/api'
 import { buildLockedSongsBatchPayload } from '../../../usecases/overpower/lockedSongsBatch'
 import { buildOverPowerLockedSongLookup } from '../../../usecases/overpower/overpowerGraph'
 import { buildOverPowerSummary } from '../../../usecases/overpower/overpowerSummary'
-import { buildUserOverPowerPagePath, type OverPowerSubPage } from '../UserPage/profilePageQuery'
+import { buildUserOverPowerPagePath, type OverPowerSubPage } from '../../../utils/userProfileRoute'
 import LockedSongsDialog from './components/LockedSongsDialog'
 import LowLevelRowsToggle from './components/LowLevelRowsToggle'
 import { OverPowerAllSummary } from './components/OverPowerAllSummary'
@@ -272,7 +272,7 @@ const UserOverPower: Component<Props> = (props) => {
                           </Select.Item>
                         )}
                       >
-                        <Select.Trigger class="grid w-[200px] min-w-20 max-w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm font-medium text-text-muted">
+                        <Select.Trigger class="grid w-50 min-w-20 max-w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm font-medium text-text-muted">
                           <Select.Value<OverPowerSummaryOption> class="truncate">
                             {(state) => <span>{state.selectedOption()?.label ?? 'ジャンル'}</span>}
                           </Select.Value>

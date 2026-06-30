@@ -3,7 +3,7 @@ import { fetchMasterData } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../../stores/songsData'
-import type { SortDirection } from '../../users/recordTable/sortingQuery'
+import type { SortDirection } from '../../../utils/sortingQuery'
 import SongSearchInput from '../components/SongSearchInput'
 import SongsViewToggle from '../components/SongsViewToggle'
 import { buildSearchableItems, filterSearchableItems } from '../searchHelpers'
@@ -49,7 +49,7 @@ const SongsList = () => {
         fallback={<LoadError error={songsResponse.error ?? masterData.error} />}
       >
         <Show when={!isSongsLoading()} fallback={<Loading />}>
-          <div class="mx-auto w-full max-w-[100%] p-4 space-y-4">
+          <div class="mx-auto w-full max-w-full p-4 space-y-4">
             <div class="flex items-center justify-between">
               <h1 class="text-2xl font-semibold">楽曲一覧</h1>
               <SongsViewToggle />

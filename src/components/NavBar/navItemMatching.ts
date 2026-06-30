@@ -1,7 +1,4 @@
-import {
-  overPowerSubPageValues,
-  profilePageQueryValues,
-} from '../../pages/users/UserPage/profilePageQuery.ts'
+import { overPowerSubPageValues, profilePageQueryValues } from '../../utils/userProfileRoute'
 
 const profilePagePattern = profilePageQueryValues.filter((value) => value !== 'overpower').join('|')
 const overPowerSubPagePattern = overPowerSubPageValues.join('|')

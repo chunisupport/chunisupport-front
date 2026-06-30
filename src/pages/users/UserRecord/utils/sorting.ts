@@ -1,22 +1,22 @@
+import type { RecordSortCondition, RecordSortKey } from '../../../../types/recordFilter'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
-import { compareUnplayedRecords } from '../../recordTable/sortComparators'
 import {
   createInitialSortConditions,
   nextPrimarySortCondition,
   normalizeSortConditions,
-} from '../../recordTable/sortConditions'
+} from '../../../../utils/sortConditions'
 import {
   parseSortQuery,
   type SortDirection,
   type SortParamsSource,
-} from '../../recordTable/sortingQuery'
+} from '../../../../utils/sortingQuery'
+import { compareUnplayedRecords } from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import {
   compareMissingJusticeCountRecords,
   isJusticeCountMissing,
 } from '../../utils/justiceCountSorting'
 import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
-import type { RecordSortCondition, RecordSortKey } from '../types/types'
 import { formatJusticeCountForAj } from './justiceCountDisplay.ts'
 import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
 

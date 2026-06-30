@@ -1,3 +1,4 @@
+import type { RecordColumnId, RecordSortKey } from '../../../../types/recordFilter'
 import {
   createGridTemplateColumns,
   getRecordColumnBaseDefinition,
@@ -8,7 +9,6 @@ import {
   sanitizeVisibleColumnIds as sanitizeVisibleColumnIdsFromDefinitions,
   sortVisibleColumnIdsByDefinitionOrder as sortVisibleColumnIdsByDefinitionOrderFromDefinitions,
 } from '../../utils/recordTableColumns'
-import type { RecordColumnId, RecordSortKey } from '../types/types'
 
 export type RecordColumnDefinition = {
   id: RecordColumnId

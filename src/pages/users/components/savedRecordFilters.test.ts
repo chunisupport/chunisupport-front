@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { DEFAULT_FILTER } from '../UserRecord/types/filterDefaults'
+import { DEFAULT_FILTER } from '../../../utils/recordFilterDefaults'
 import { DEFAULT_WORLDSEND_FILTER } from '../WorldsendRecord/types/filterDefaults'
 import {
   buildUniqueRecordFilterName,

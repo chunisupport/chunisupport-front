@@ -21,6 +21,13 @@ import {
 } from '../../../repositories/viewSettingsRepository'
 import { useSongsData } from '../../../stores/songsData'
 import type { MasterDataDTO, UserRecordDTO, VersionSummaryDTO } from '../../../types/api'
+import type { FilterState, RecordColumnId, RecordSortCondition } from '../../../types/recordFilter'
+import {
+  buildDefaultFilter,
+  DEFAULT_FILTER,
+  normalizeFilterState,
+} from '../../../utils/recordFilterDefaults'
+import { sanitizeSortQuery } from '../../../utils/sortingQuery'
 import FilterStats from '../components/FilterStats'
 import RecordDataTable from '../components/RecordDataTable'
 import {
@@ -28,13 +35,10 @@ import {
   RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS,
 } from '../components/SharedRecordTableColumns'
 import { isValidSavedStandardFilter } from '../components/savedRecordFilters'
-import { sanitizeSortQuery } from '../recordTable/sortingQuery'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FilterDialog from './components/FilterDialog'
 import FilterToolbar from './components/FilterToolbar'
 import SortDialog from './components/SortDialog'
-import { buildDefaultFilter, DEFAULT_FILTER, normalizeFilterState } from './types/filterDefaults'
-import type { FilterState, RecordColumnId, RecordSortCondition } from './types/types'
 import { getRecordColumnRenderer } from './utils/columnRenderers'
 import {
   getDefaultVisibleColumnIds,
