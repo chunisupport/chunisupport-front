@@ -1,4 +1,5 @@
 import { createMemo, For, Show } from 'solid-js'
+import { createWindowVirtualTable } from '../../../../components/common/createWindowVirtualTable'
 import { SortableTableHeaderCell } from '../../../../components/common/SortableTableHeader'
 import type { WorldsendSongDTO } from '../../../../types/api'
 import type { SortDirection } from '../../../../utils/sortingQuery'
@@ -9,7 +10,6 @@ import {
   SongListGenreCell,
   SongListTitleCell,
 } from '../../components/SongListMetaCells'
-import { createVirtualizedSongsTable } from '../../components/virtualizedSongsTable'
 import type { WorldsendSongSortKey } from '../utils/sorting'
 
 const ROW_HEIGHT = 37
@@ -44,8 +44,13 @@ const StarLevel = (props: { level: number | null | undefined }) => {
 }
 
 const WorldsendSongsTable = (props: Props) => {
-  const virtualizedTable = createVirtualizedSongsTable({
-    getCount: () => props.songs.length,
+  const virtualizedTable = createWindowVirtualTable<
+    HTMLDivElement,
+    HTMLTableSectionElement,
+    HTMLDivElement,
+    HTMLTableRowElement
+  >({
+    rowCount: () => props.songs.length,
     rowHeight: ROW_HEIGHT,
   })
 

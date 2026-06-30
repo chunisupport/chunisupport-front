@@ -1,4 +1,5 @@
-import { createEffect, createMemo, For, Show } from 'solid-js'
+import { createMemo, For, Show } from 'solid-js'
+import { createWindowVirtualTable } from '../../../../components/common/createWindowVirtualTable'
 import { SortableTableHeaderCell } from '../../../../components/common/SortableTableHeader'
 import type { SongDTO } from '../../../../types/api'
 import { formatChartConst } from '../../../../utils/chartConstFormat'
@@ -11,7 +12,6 @@ import {
   SongListGenreCell,
   SongListTitleCell,
 } from '../../components/SongListMetaCells'
-import { createVirtualizedSongsTable } from '../../components/virtualizedSongsTable'
 import type { SongSortKey } from '../utils/sorting'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
@@ -45,15 +45,15 @@ const headerButtonClass = (align?: 'start' | 'center') =>
  * @returns 新曲を強調表示した楽曲一覧テーブル
  */
 const SongsTable = (props: Props) => {
-  const virtualizedTable = createVirtualizedSongsTable({
-    getCount: () => props.songs.length,
+  const virtualizedTable = createWindowVirtualTable<
+    HTMLDivElement,
+    HTMLTableSectionElement,
+    HTMLDivElement,
+    HTMLTableRowElement
+  >({
+    rowCount: () => props.songs.length,
     rowHeight: ROW_HEIGHT,
-    resetOnCountChange: true,
-  })
-
-  createEffect(() => {
-    props.songs.length
-    virtualizedTable.maybeResetScroll()
+    resetOnRowCountChange: true,
   })
 
   const virtualRows = createMemo(() => virtualizedTable.virtualRows())
