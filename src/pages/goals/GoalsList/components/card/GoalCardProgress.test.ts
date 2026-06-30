@@ -10,6 +10,28 @@ test('OVER POWER値は小数点以下3桁で表示される', () => {
   assert.equal(result, '1,234.500')
 })
 
+test('OVER POWER値は小数点以下3桁で切り捨て表示される', () => {
+  // Given
+  const roundedUpByToLocaleString = 1234.5679
+
+  // When
+  const result = formatGoalCardValue(roundedUpByToLocaleString, 'overpower_value')
+
+  // Then
+  assert.equal(result, '1,234.567')
+})
+
+test('OVER POWER達成率は小数点以下3桁で切り捨て表示される', () => {
+  // Given
+  const roundedUpByToLocaleString = 97.5369
+
+  // When
+  const result = formatGoalCardValue(roundedUpByToLocaleString, 'overpower_percent')
+
+  // Then
+  assert.equal(result, '97.536')
+})
+
 test('反転表示では残り値と残り割合を表示し、ゲージ値は通常進捗を使う', () => {
   // Given
   const progress = {

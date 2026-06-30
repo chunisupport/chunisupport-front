@@ -1,5 +1,6 @@
 import type { GoalAchievementType } from '../../../../../types/api'
-import { formatTruncatedFixed } from '../../../../../utils/numberFormat'
+import { formatTruncatedFixed, truncateDecimal } from '../../../../../utils/numberFormat'
+import { formatOverPowerPercent } from '../../../../../utils/overPowerFormat'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 
 export interface GoalCardDisplayProgress {
@@ -14,6 +15,7 @@ export interface GoalCardDisplayProgress {
  * 総OVER POWERの表示で固定する小数点以下桁数。
  */
 const OVER_POWER_VALUE_DECIMAL_PLACES = 3
+const OVER_POWER_PERCENT_DECIMAL_PLACES = 3
 
 /**
  * 目標進捗の数値を目標種別に合わせて表示用に整形する。
@@ -24,17 +26,14 @@ const OVER_POWER_VALUE_DECIMAL_PLACES = 3
  */
 export const formatGoalCardValue = (value: number, type: GoalAchievementType): string => {
   if (type === 'overpower_value') {
-    return value.toLocaleString('ja-JP', {
+    return truncateDecimal(value, OVER_POWER_VALUE_DECIMAL_PLACES).toLocaleString('ja-JP', {
       minimumFractionDigits: OVER_POWER_VALUE_DECIMAL_PLACES,
       maximumFractionDigits: OVER_POWER_VALUE_DECIMAL_PLACES,
     })
   }
 
   if (type === 'overpower_percent') {
-    return value.toLocaleString('ja-JP', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 3,
-    })
+    return formatOverPowerPercent(value, OVER_POWER_PERCENT_DECIMAL_PLACES)
   }
 
   return Math.floor(value).toLocaleString('ja-JP')
