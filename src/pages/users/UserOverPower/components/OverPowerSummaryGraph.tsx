@@ -1,22 +1,13 @@
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
-import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 import { COMBO_LAMP_BAR_CLASS, SCORE_RANK_BAR_CLASS } from '../../components/recordStyleClasses'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
-
-export type OverPowerScoreBand = 'MAX' | 'SSS+' | 'SSS' | 'SS+' | 'SS' | 'S+' | 'S' | 'OTHER'
-export type OverPowerComboBand = 'ALL JUSTICE' | 'FULL COMBO' | 'OTHER'
-
-export type OverPowerBandCount<T extends string> = {
-  label: T
-  count: number
-}
-
-export type OverPowerGraphRow = {
-  summary: OverPowerSummaryRow
-  scoreBands: OverPowerBandCount<OverPowerScoreBand>[]
-  comboBands: OverPowerBandCount<OverPowerComboBand>[]
-}
+import type {
+  OverPowerBandCount,
+  OverPowerComboBand,
+  OverPowerGraphRow,
+  OverPowerScoreBand,
+} from '../types'
 
 type Props = {
   rows: OverPowerGraphRow[]

@@ -3,6 +3,7 @@ import * as Tabs from '@kobalte/core/tabs'
 import { ChevronRight, Link2, ShieldCheck, Trophy } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For } from 'solid-js'
+import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
 import type { DistributionMap, RecordStats } from '../utils/recordStats'
 import {
   clearColorMap,
@@ -126,9 +127,9 @@ const DistributionRow: Component<{
       <span class={`${props.colorClass} h-2.5 w-2.5 shrink-0 rounded-full`} aria-hidden="true" />
       <span class="truncate">{props.label}</span>
     </div>
-    <span class="whitespace-nowrap text-right tabular-nums">{props.count.toLocaleString()}件</span>
+    <span class="whitespace-nowrap text-right tabular-nums">{formatInteger(props.count)}件</span>
     <span class="whitespace-nowrap text-right tabular-nums text-text-muted">
-      {props.percent.toFixed(1)}%
+      {formatTruncatedFixed(props.percent, 1)}%
     </span>
     <div
       class={`h-3 overflow-hidden rounded-sm ${props.hideGraph ? 'bg-transparent' : 'bg-surface-hover'}`}

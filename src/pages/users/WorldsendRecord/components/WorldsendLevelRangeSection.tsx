@@ -5,12 +5,12 @@ import { WORLDSEND_LEVEL_STAR_OPTIONS } from '../../../../constants/chart'
 import RangeSeparator, {
   RANGE_END_LABEL_SUFFIX,
   RANGE_START_LABEL_SUFFIX,
-} from '../../UserRecord/components/filterDialog/sections/RangeSeparator'
+} from '../../components/filter/RangeSeparator'
 import {
   FILTER_DIALOG_SELECT_CONTENT_CLASS,
   FILTER_DIALOG_SELECT_ITEM_CLASS,
   FILTER_DIALOG_SELECT_TRIGGER_CLASS,
-} from '../../UserRecord/components/filterDialog/styles'
+} from '../../components/filter/styles'
 import { formatWorldsendLevelStar } from '../utils/filterDialog'
 
 const WORLDSEND_LEVEL_RANGE_TITLE = 'レベル'

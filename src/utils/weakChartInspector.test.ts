@@ -150,6 +150,19 @@ test('譜面定数ごとに独立した分布を昇順で生成すること', ()
   )
 })
 
+test('譜面定数の集計キーは小数点以下1桁で切り捨てること', () => {
+  // Given
+  const records = [createRecord(1000000, 13.79), createRecord(1005000, 13.7)]
+
+  // When
+  const result = inspectWeakCharts(records)
+
+  // Then
+  assert.equal(result.distributions.length, 1)
+  assert.equal(result.distributions[0].chartConst, 13.7)
+  assert.equal(result.distributions[0].count, 2)
+})
+
 test('苦手譜面一覧を指定列と方向でソートできること', () => {
   // Given
   const lowerScore = { record: createRecord(980000, 14.0), direction: 'LOW' as const, distance: 1 }

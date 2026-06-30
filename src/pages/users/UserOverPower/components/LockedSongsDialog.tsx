@@ -27,6 +27,7 @@ import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
 } from '../../../../utils/versionConverter'
+import { hasSameFilterValues, toggleArray } from '../../utils/filterValue'
 
 type Props = {
   open: boolean
@@ -62,9 +63,6 @@ const releaseTimestamp = (release: string | null): number => {
   return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY
 }
 
-const toggleFilterValue = (values: string[], value: string): string[] =>
-  values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
-
 /**
  * 未解禁楽曲フィルターの初期値を選択肢の全選択状態から生成する。
  *
@@ -82,20 +80,6 @@ const buildDefaultLockedSongsFilter = (
 })
 
 /**
- * 2つの文字列配列が順序に依存せず同じ値を持つか判定する。
- *
- * @param left - 比較元の値配列。
- * @param right - 比較先の値配列。
- * @returns 2つの配列が同じ値集合の場合は true。
- */
-const hasSameStringValues = (left: string[], right: string[]): boolean => {
-  if (left.length !== right.length) return false
-
-  const rightValues = new Set(right)
-  return left.every((value) => rightValues.has(value))
-}
-
-/**
  * 未解禁楽曲フィルターが既定値から変更されているか判定する。
  *
  * @param current - 現在のフィルター状態。
@@ -107,8 +91,8 @@ const isLockedSongsFilterChanged = (
   defaultFilter: LockedSongsFilter
 ): boolean =>
   current.unplayedOnly !== defaultFilter.unplayedOnly ||
-  !hasSameStringValues(current.genres, defaultFilter.genres) ||
-  !hasSameStringValues(current.versions, defaultFilter.versions)
+  !hasSameFilterValues(current.genres, defaultFilter.genres) ||
+  !hasSameFilterValues(current.versions, defaultFilter.versions)
 
 /** チェックボックスの見た目を未解禁曲ダイアログ内で統一する Tailwind クラス。 */
 const FILTER_CHECKBOX_CONTROL_CLASS =
@@ -357,11 +341,11 @@ const LockedSongsDialog: Component<Props> = (props) => {
   }
 
   const handleToggleGenreFilter = (genre: string) => {
-    setFilters((prev) => ({ ...prev, genres: toggleFilterValue(prev.genres, genre) }))
+    setFilters((prev) => ({ ...prev, genres: toggleArray(prev.genres, genre) }))
   }
 
   const handleToggleVersionFilter = (version: string) => {
-    setFilters((prev) => ({ ...prev, versions: toggleFilterValue(prev.versions, version) }))
+    setFilters((prev) => ({ ...prev, versions: toggleArray(prev.versions, version) }))
   }
 
   /**

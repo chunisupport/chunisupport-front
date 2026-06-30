@@ -1,9 +1,17 @@
 import type { WorldsendRecordDTO } from '../../../../types/api'
+import { compareUnplayedRecords } from '../../recordTable/sortComparators'
+import {
+  createInitialSortConditions,
+  nextPrimarySortCondition,
+  normalizeSortConditions,
+  type SortCondition,
+} from '../../recordTable/sortConditions'
 import {
   parseSortQuery,
   type SortDirection,
   type SortParamsSource,
 } from '../../recordTable/sortingQuery'
+import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import { formatJusticeCountForAj } from '../../UserRecord/utils/justiceCountDisplay'
 import {
   compareUpdatedAtWithMissingLast,
@@ -17,10 +25,7 @@ import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../u
 import type { WorldsendRecordSortKey } from './columns'
 
 /** WORLD'S END レコードのソート条件。 */
-export type WorldsendRecordSortCondition = {
-  key: WorldsendRecordSortKey
-  direction: SortDirection
-}
+export type WorldsendRecordSortCondition = SortCondition<WorldsendRecordSortKey>
 
 type SortableWorldsendRecordEntry<TRecord extends WorldsendRecordDTO> = {
   record: TRecord
@@ -61,13 +66,7 @@ export const DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS: WorldsendRecordSortCondit
 export const normalizeWorldsendRecordSortConditions = (
   sortConditions: WorldsendRecordSortCondition[]
 ): WorldsendRecordSortCondition[] =>
-  DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS.map((defaultSortCondition, index) => {
-    if (index === DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS.length - 1) {
-      return defaultSortCondition
-    }
-
-    return sortConditions[index] ?? defaultSortCondition
-  })
+  normalizeSortConditions(sortConditions, DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS)
 
 /**
  * URLクエリから WORLD'S END レコードの初期ソート条件を取得する。
@@ -98,7 +97,7 @@ export const createInitialWorldsendRecordSortConditions = (
   sortKey: WorldsendRecordSortKey,
   sortDirection: SortDirection
 ): WorldsendRecordSortCondition[] =>
-  normalizeWorldsendRecordSortConditions([{ key: sortKey, direction: sortDirection }])
+  createInitialSortConditions(sortKey, sortDirection, DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS)
 
 /**
  * 列ヘッダークリック時に第1ソートだけを更新する。
@@ -110,39 +109,7 @@ export const createInitialWorldsendRecordSortConditions = (
 export const nextPrimaryWorldsendRecordSortCondition = (
   currentSortCondition: WorldsendRecordSortCondition | null,
   nextKey: WorldsendRecordSortKey
-): WorldsendRecordSortCondition => {
-  if (currentSortCondition?.key !== nextKey) {
-    return { key: nextKey, direction: 'asc' }
-  }
-
-  return {
-    key: nextKey,
-    direction: currentSortCondition.direction === 'asc' ? 'desc' : 'asc',
-  }
-}
-
-/**
- * 未プレイの WORLD'S END レコードをソート方向に関係なく末尾へ寄せる。
- *
- * @param leftPlayed - 左側レコードがプレイ済みかどうか。
- * @param rightPlayed - 右側レコードがプレイ済みかどうか。
- * @returns 未プレイ判定だけで順序が決まる場合は比較結果、両方プレイ済みの場合はnull。
- */
-const compareUnplayed = (leftPlayed: boolean, rightPlayed: boolean): number | null => {
-  if (!leftPlayed && !rightPlayed) {
-    return 0
-  }
-
-  if (!leftPlayed) {
-    return 1
-  }
-
-  if (!rightPlayed) {
-    return -1
-  }
-
-  return null
-}
+): WorldsendRecordSortCondition => nextPrimarySortCondition(currentSortCondition, nextKey)
 
 /**
  * 1つのソート条件で WORLD'S END レコードを比較する。
@@ -175,7 +142,7 @@ const compareWorldsendRecordBySortCondition = <TRecord extends WorldsendRecordDT
         (right.level_star ?? Number.NEGATIVE_INFINITY)
       break
     case 'score': {
-      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
+      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
       if (unplayedComparison !== null) return unplayedComparison
       comparison = left.score - right.score
       break
@@ -243,9 +210,11 @@ const compareWorldsendRecordBySortCondition = <TRecord extends WorldsendRecordDT
 const sortWorldsendRecordsByResolvedConditions = <TRecord extends WorldsendRecordDTO>(
   records: TRecord[],
   sortConditions: WorldsendRecordSortCondition[]
-): TRecord[] => {
-  return records
-    .map((record, index) => ({
+): TRecord[] =>
+  sortRecordsWithConditions(
+    records,
+    sortConditions,
+    (record, index): SortableWorldsendRecordEntry<TRecord> => ({
       record,
       index,
       updatedAtTs: updatedAtTimestamp(record.updated_at),
@@ -253,19 +222,9 @@ const sortWorldsendRecordsByResolvedConditions = <TRecord extends WorldsendRecor
         comboLamp: record.combo_lamp,
         justiceCount: record.justice_count,
       }),
-    }))
-    .sort((a, b) => {
-      for (const sortCondition of sortConditions) {
-        const comparison = compareWorldsendRecordBySortCondition(a, b, sortCondition)
-        if (comparison !== 0) {
-          return comparison
-        }
-      }
-
-      return a.index - b.index
-    })
-    .map(({ record }) => record)
-}
+    }),
+    compareWorldsendRecordBySortCondition
+  )
 
 /**
  * WORLD'S END レコードを複数条件でソートする。

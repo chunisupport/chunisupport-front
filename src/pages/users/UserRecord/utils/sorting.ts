@@ -1,9 +1,16 @@
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import { compareUnplayedRecords } from '../../recordTable/sortComparators'
+import {
+  createInitialSortConditions,
+  nextPrimarySortCondition,
+  normalizeSortConditions,
+} from '../../recordTable/sortConditions'
 import {
   parseSortQuery,
   type SortDirection,
   type SortParamsSource,
 } from '../../recordTable/sortingQuery'
+import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import {
   compareMissingJusticeCountRecords,
   isJusticeCountMissing,
@@ -55,14 +62,7 @@ export const DEFAULT_RECORD_SORT_CONDITIONS: RecordSortCondition[] = [
  */
 export const normalizeRecordSortConditions = (
   sortConditions: RecordSortCondition[]
-): RecordSortCondition[] =>
-  DEFAULT_RECORD_SORT_CONDITIONS.map((defaultSortCondition, index) => {
-    if (index === DEFAULT_RECORD_SORT_CONDITIONS.length - 1) {
-      return defaultSortCondition
-    }
-
-    return sortConditions[index] ?? defaultSortCondition
-  })
+): RecordSortCondition[] => normalizeSortConditions(sortConditions, DEFAULT_RECORD_SORT_CONDITIONS)
 
 export const parseSortParams = (searchParams: SortParamsSource) => {
   const parsed = parseSortQuery(searchParams, RECORD_SORT_COL_MAP, {
@@ -87,7 +87,7 @@ export const createInitialRecordSortConditions = (
   sortKey: RecordSortKey,
   sortDirection: SortDirection
 ): RecordSortCondition[] =>
-  normalizeRecordSortConditions([{ key: sortKey, direction: sortDirection }])
+  createInitialSortConditions(sortKey, sortDirection, DEFAULT_RECORD_SORT_CONDITIONS)
 
 /**
  * 列ヘッダークリック時に第1ソートだけを更新する。
@@ -99,45 +99,13 @@ export const createInitialRecordSortConditions = (
 export const nextPrimaryRecordSortCondition = (
   currentSortCondition: RecordSortCondition | null,
   nextKey: RecordSortKey
-): RecordSortCondition => {
-  if (currentSortCondition?.key !== nextKey) {
-    return { key: nextKey, direction: 'asc' }
-  }
-
-  return {
-    key: nextKey,
-    direction: currentSortCondition.direction === 'asc' ? 'desc' : 'asc',
-  }
-}
+): RecordSortCondition => nextPrimarySortCondition(currentSortCondition, nextKey)
 
 type SortableRecordEntry = {
   record: PlayerRecordWithSongMeta
   index: number
   updatedAtTs: number
   justiceCountForAj: number | '' | '-'
-}
-
-/**
- * 未プレイのレコードをソート方向に関係なく末尾へ寄せる。
- *
- * @param leftPlayed - 左側レコードがプレイ済みかどうか。
- * @param rightPlayed - 右側レコードがプレイ済みかどうか。
- * @returns 未プレイ判定だけで順序が決まる場合は比較結果、両方プレイ済みの場合はnull。
- */
-const compareUnplayed = (leftPlayed: boolean, rightPlayed: boolean): number | null => {
-  if (!leftPlayed && !rightPlayed) {
-    return 0
-  }
-
-  if (!leftPlayed) {
-    return 1
-  }
-
-  if (!rightPlayed) {
-    return -1
-  }
-
-  return null
 }
 
 /**
@@ -171,28 +139,28 @@ const compareRecordBySortCondition = (
       comparison = left.const - right.const
       break
     case 'rating': {
-      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
+      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
       if (unplayedComparison !== null) return unplayedComparison
 
       comparison = left.rating - right.rating
       break
     }
     case 'score': {
-      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
+      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
       if (unplayedComparison !== null) return unplayedComparison
 
       comparison = left.score - right.score
       break
     }
     case 'overpower': {
-      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
+      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
       if (unplayedComparison !== null) return unplayedComparison
 
       comparison = left.overpower - right.overpower
       break
     }
     case 'overpowerPercent': {
-      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
+      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
       if (unplayedComparison !== null) return unplayedComparison
 
       comparison = left.overpower_percent - right.overpower_percent
@@ -268,9 +236,11 @@ const compareRecordBySortCondition = (
 const sortRecordsByResolvedConditions = (
   records: PlayerRecordWithSongMeta[],
   sortConditions: RecordSortCondition[]
-): PlayerRecordWithSongMeta[] => {
-  return records
-    .map((record, index) => ({
+): PlayerRecordWithSongMeta[] =>
+  sortRecordsWithConditions(
+    records,
+    sortConditions,
+    (record, index): SortableRecordEntry => ({
       record,
       index,
       updatedAtTs: updatedAtTimestamp(record.updated_at),
@@ -278,19 +248,9 @@ const sortRecordsByResolvedConditions = (
         comboLamp: record.combo_lamp,
         justiceCount: record.justice_count,
       }),
-    }))
-    .sort((a, b) => {
-      for (const sortCondition of sortConditions) {
-        const comparison = compareRecordBySortCondition(a, b, sortCondition)
-        if (comparison !== 0) {
-          return comparison
-        }
-      }
-
-      return a.index - b.index
-    })
-    .map(({ record }) => record)
-}
+    }),
+    compareRecordBySortCondition
+  )
 
 /**
  * 指定された複数の条件を上から順に使ってレコードをソートする。

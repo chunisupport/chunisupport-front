@@ -1,6 +1,7 @@
 import { Button } from '@kobalte/core/button'
 import { createEffect, createMemo, For, Show } from 'solid-js'
 import type { SongDTO } from '../../../../types/api'
+import { formatChartConst } from '../../../../utils/chartConstFormat'
 import { DIFFICULTY_SHORT_NAME_MAP, difficultyBadgeClass } from '../../../../utils/difficultyUtils'
 import { renderSortIndicator } from '../../../users/components/RecordTableUiParts'
 import type { SortDirection } from '../../../users/recordTable/sortingQuery'
@@ -182,7 +183,7 @@ const SongsTable = (props: Props) => {
                             >
                               {chart ? (
                                 <>
-                                  <span>{chart.const.toFixed(1)}</span>
+                                  <span>{formatChartConst(chart.const)}</span>
                                   {chart.is_const_unknown ? (
                                     <sup class="text-[0.65em] leading-none">?</sup>
                                   ) : null}

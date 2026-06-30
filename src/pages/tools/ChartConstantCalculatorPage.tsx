@@ -11,6 +11,7 @@ import {
   MIN_CHART_CONSTANT_SCORE,
   resolveLampForScore,
 } from '../../utils/chartConstantCalculator'
+import { formatFixed } from '../../utils/numberFormat'
 import {
   CHART_CONSTANT_CALCULATOR_COPY,
   CHART_CONSTANT_DEFAULTS,
@@ -193,13 +194,13 @@ const ChartConstantCalculatorPage = (): JSX.Element => {
                   {CHART_CONSTANT_CALCULATOR_COPY.resultLabel}
                 </p>
                 <output class="mt-1 block text-4xl font-bold tabular-nums text-action-primary">
-                  {result().estimatedChartConstant.toFixed(1)}
+                  {formatFixed(result().estimatedChartConstant, 1)}
                 </output>
               </div>
               <p class="text-sm text-text-muted">
                 {CHART_CONSTANT_CALCULATOR_COPY.rawResultLabel}:{' '}
                 <span class="font-medium tabular-nums text-text">
-                  {result().rawChartConstant.toFixed(4)}
+                  {formatFixed(result().rawChartConstant, 4)}
                 </span>
               </p>
             </div>

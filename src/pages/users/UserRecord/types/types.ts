@@ -1,9 +1,13 @@
-import type { PlayerRecordDTO } from '../../../../types/api'
+import type {
+  ChainLamp,
+  ComboLamp,
+  Difficulty,
+  HardLamp,
+  NumericRangeFilter,
+} from '../../../../types/record'
+import type { SortCondition } from '../../recordTable/sortConditions'
 
-export type Difficulty = PlayerRecordDTO['difficulty']
-export type ComboLamp = PlayerRecordDTO['combo_lamp']
-export type ChainLamp = PlayerRecordDTO['full_chain']
-export type HardLamp = PlayerRecordDTO['clear_lamp']
+export type { ChainLamp, ComboLamp, Difficulty, HardLamp, NumericRangeFilter }
 export type RecordSortKey =
   | 'title'
   | 'difficulty'
@@ -30,28 +34,9 @@ export type RecordColumnId =
   | 'overpower'
   | 'overpowerPercent'
   | 'updatedAt'
-export type SortDirection = 'asc' | 'desc'
-/**
- * レコード一覧のソート条件。
- *
- * @property key - ソート対象の列キー。
- * @property direction - ソート方向。
- */
-export type RecordSortCondition = {
-  key: RecordSortKey
-  direction: SortDirection
-}
 
-/**
- * 数値範囲フィルターの型定義。
- *
- * @property min - 範囲の下限値。
- * @property max - 範囲の上限値。
- */
-export type NumericRangeFilter<T extends number | null = number> = {
-  min: T
-  max: T
-}
+/** レコード一覧のソート条件。 */
+export type RecordSortCondition = SortCondition<RecordSortKey>
 
 /** フィルターの型定義。 */
 export interface FilterState {

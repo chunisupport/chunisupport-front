@@ -5,6 +5,7 @@ import {
   difficultyShort,
   difficultyToQueryValue,
 } from '../../../../utils/difficultyUtils'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
   type ColumnRenderer,
@@ -18,7 +19,6 @@ import {
   RecordTitleCell,
   RecordUpdatedAtCell,
 } from '../../components/SharedRecordTableColumns'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import type { RecordColumnId } from '../types/types'
 import { getConstDisplay, getRatingDisplay } from './constDisplay'
 import { formatJusticeCountForAj } from './justiceCountDisplay'
