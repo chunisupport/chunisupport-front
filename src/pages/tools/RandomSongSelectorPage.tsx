@@ -85,6 +85,14 @@ const RESULT_RECORD_LAMP_BADGE_CLASS: Record<RandomSongLampFilter, string> = {
 }
 const RESULT_RECORD_SCORE_BADGE_CLASS = `${RESULT_RECORD_BADGE_CLASS} bg-surface-muted text-text`
 const RANDOM_SONG_LAMP_VALUES = RANDOM_SONG_LAMP_OPTIONS.map((option) => option.value)
+const DIFFICULTY_FILTER_CONTENT_CLASS =
+  'z-60 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md'
+const DIFFICULTY_FILTER_TRIGGER_CLASS =
+  'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+const DIFFICULTY_FILTER_ITEM_CLASS =
+  'cursor-pointer px-3 py-2 text-sm text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
+const DIFFICULTY_FILTER_DISABLED_ITEM_CLASS =
+  'cursor-not-allowed opacity-50 hover:bg-transparent data-[highlighted]:bg-transparent data-[selected]:bg-transparent'
 
 type RandomSongTextFieldProps = {
   id: string
@@ -117,6 +125,16 @@ type RandomSongWeightFieldProps = {
   percentLabel: string
   disabled?: boolean
   onChange: (value: string) => void
+}
+
+type RandomSongDifficultyFilterDropdownProps = {
+  options: readonly RandomSongDifficultyFilter[]
+  selected: readonly RandomSongDifficultyFilter[]
+  placeholder: string
+  isOpTargetSelected: boolean
+  onToggle: (difficulty: RandomSongDifficultyFilter) => void
+  onSelectAll: () => void
+  onClear: () => void
 }
 
 type RandomSongPlayStatus = (typeof RANDOM_SONG_PLAY_STATUS_OPTIONS)[number]['value']
@@ -436,6 +454,128 @@ const formatRandomSongDifficultyFilterLabel = (difficulty: RandomSongDifficultyF
   RANDOM_SONG_SELECTOR_DIFFICULTY_FILTER_LABELS[difficulty]
 
 /**
+ * OP対象選択中に通常難易度の選択肢を操作不可にするか判定する。
+ *
+ * @param difficulty - 判定対象の難易度絞り込み値。
+ * @param isOpTargetSelected - OP対象が現在選択されている場合は true。
+ * @returns 通常難易度を操作不可にする場合は true。
+ */
+const isRandomSongDifficultyFilterDisabled = (
+  difficulty: RandomSongDifficultyFilter,
+  isOpTargetSelected: boolean
+): boolean => isOpTargetSelected && difficulty !== RANDOM_SONG_OP_TARGET_FILTER
+
+/**
+ * OP対象選択時の排他操作を含むランダム選曲用の難易度絞り込み欄を表示する。
+ *
+ * @param props - 選択肢、選択状態、表示文言、更新ハンドラーを含む設定。
+ * @returns ランダム選曲の難易度絞り込み Select。
+ */
+const RandomSongDifficultyFilterDropdown: Component<RandomSongDifficultyFilterDropdownProps> = (
+  props
+) => {
+  const selectedOptions = createMemo(() =>
+    props.options.filter((option) => props.selected.includes(option))
+  )
+
+  /**
+   * Select の変更結果を、OP対象選択中の通常難易度操作を無視して反映する。
+   *
+   * @param nextSelected - Select が返した次の選択値。
+   * @returns なし。
+   */
+  const handleChange = (nextSelected: RandomSongDifficultyFilter[]): void => {
+    for (const option of props.options) {
+      if (isRandomSongDifficultyFilterDisabled(option, props.isOpTargetSelected)) continue
+      if (props.selected.includes(option) !== nextSelected.includes(option)) {
+        props.onToggle(option)
+      }
+    }
+  }
+
+  return (
+    <div>
+      <div class="mb-1 flex gap-2">
+        <Button
+          type="button"
+          class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover"
+          onClick={props.onSelectAll}
+        >
+          すべて選択
+        </Button>
+        <Button
+          type="button"
+          class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover"
+          onClick={props.onClear}
+        >
+          すべて解除
+        </Button>
+      </div>
+      <Select<RandomSongDifficultyFilter>
+        multiple
+        options={[...props.options]}
+        value={selectedOptions()}
+        onChange={handleChange}
+        placeholder={props.placeholder}
+        gutter={0}
+        itemComponent={(itemProps) => {
+          const disabled = isRandomSongDifficultyFilterDisabled(
+            itemProps.item.rawValue,
+            props.isOpTargetSelected
+          )
+
+          return (
+            <Select.Item
+              item={itemProps.item}
+              aria-disabled={disabled ? 'true' : undefined}
+              class={`${DIFFICULTY_FILTER_ITEM_CLASS} ${
+                disabled ? DIFFICULTY_FILTER_DISABLED_ITEM_CLASS : ''
+              }`}
+            >
+              <div class="flex items-center gap-2">
+                <span class="inline-flex w-4 justify-center text-success">
+                  <Select.ItemIndicator>
+                    <Check size={14} />
+                  </Select.ItemIndicator>
+                </span>
+                <Select.ItemLabel>
+                  {formatRandomSongDifficultyFilterLabel(itemProps.item.rawValue)}
+                </Select.ItemLabel>
+              </div>
+            </Select.Item>
+          )
+        }}
+      >
+        <Select.Trigger class={DIFFICULTY_FILTER_TRIGGER_CLASS}>
+          <div class="flex min-h-6 flex-1 flex-wrap gap-1" aria-live="polite">
+            <Show
+              when={selectedOptions().length > 0}
+              fallback={<span class="text-text-subtle">{props.placeholder}</span>}
+            >
+              <For each={selectedOptions()}>
+                {(option) => (
+                  <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
+                    {formatRandomSongDifficultyFilterLabel(option)}
+                  </span>
+                )}
+              </For>
+            </Show>
+          </div>
+          <span class="text-text-subtle" aria-hidden="true">
+            <ChevronDown size={16} />
+          </span>
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Content class={DIFFICULTY_FILTER_CONTENT_CLASS}>
+            <Select.Listbox />
+          </Select.Content>
+        </Select.Portal>
+      </Select>
+    </div>
+  )
+}
+
+/**
  * ランダム選曲結果で表示するレコードバッジを生成する。
  *
  * @param record - 選曲された譜面に対応する自分のレコード。
@@ -623,11 +763,6 @@ const RandomSongSelectorPage = (): JSX.Element => {
   )
   const isOpTargetDifficultyFilterSelected = createMemo(() =>
     selectedDifficulties().includes(RANDOM_SONG_OP_TARGET_FILTER)
-  )
-  const difficultyFilterOptions = createMemo<RandomSongDifficultyFilter[]>(() =>
-    isOpTargetDifficultyFilterSelected()
-      ? [RANDOM_SONG_OP_TARGET_FILTER]
-      : RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS
   )
   const constRangeError = createMemo(() => {
     const min = parsedMinConst()
@@ -988,11 +1123,11 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       <p class="mb-1 text-sm font-medium text-text-muted">
                         {RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
                       </p>
-                      <MultiSelectDropdown
-                        options={difficultyFilterOptions()}
+                      <RandomSongDifficultyFilterDropdown
+                        options={RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS}
                         selected={selectedDifficulties()}
                         placeholder={RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
-                        formatLabel={formatRandomSongDifficultyFilterLabel}
+                        isOpTargetSelected={isOpTargetDifficultyFilterSelected()}
                         onToggle={handleDifficultyFilterToggle}
                         onSelectAll={() =>
                           setSelectedDifficulties(
