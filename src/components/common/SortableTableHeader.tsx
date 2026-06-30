@@ -1,5 +1,5 @@
 import { Button } from '@kobalte/core/button'
-import type { JSX } from 'solid-js'
+import { type JSX, Show } from 'solid-js'
 
 export type SortDirection = 'asc' | 'desc' | null
 type HeaderAlign = 'start' | 'center'
@@ -53,23 +53,22 @@ export const getSortAriaValue = (
  * 共通のソート方向インジケーターを表示する。
  *
  * @param props - ソート対象状態と方向。
- * @returns 昇順または降順の表示要素。非アクティブ時はnull。
+ * @returns ソート状態に追従する昇順または降順の表示要素。
  */
-export const SortIndicator = (props: SortIndicatorProps): JSX.Element | null => {
-  if (!props.active || !props.direction) {
-    return null
-  }
-
-  return props.direction === 'asc' ? (
-    <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
-      <span class={`${SORT_TRIANGLE_BASE_CLASS} border-b-[3px] border-b-danger`} />
-    </span>
-  ) : (
-    <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
-      <span class={`${SORT_TRIANGLE_BASE_CLASS} border-t-[3px] border-t-info`} />
-    </span>
-  )
-}
+export const SortIndicator = (props: SortIndicatorProps): JSX.Element => (
+  <>
+    <Show when={props.active && props.direction === 'asc'}>
+      <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
+        <span class={`${SORT_TRIANGLE_BASE_CLASS} border-b-[3px] border-b-danger`} />
+      </span>
+    </Show>
+    <Show when={props.active && props.direction === 'desc'}>
+      <span class={SORT_ICON_WRAPPER_CLASS} aria-hidden="true">
+        <span class={`${SORT_TRIANGLE_BASE_CLASS} border-t-[3px] border-t-info`} />
+      </span>
+    </Show>
+  </>
+)
 
 /**
  * ソート操作可能な表ヘッダーボタンを表示する。
