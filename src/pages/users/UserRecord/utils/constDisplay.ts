@@ -1,5 +1,5 @@
 import { formatChartConst } from '../../../../utils/chartConstFormat'
-import { formatRecordRating } from '../../../../utils/ratingFormat'
+import { formatRatingFixed2 } from '../../../../utils/ratingFormat'
 
 export type ConstDisplay = {
   valueText: string
@@ -61,7 +61,7 @@ export const getRatingDisplay = (
   }
 
   return {
-    text: formatRecordRating(value),
+    text: formatRatingFixed2(value),
     className: isConstUnknown ? UNKNOWN_STYLE : NORMAL_STYLE,
   }
 }

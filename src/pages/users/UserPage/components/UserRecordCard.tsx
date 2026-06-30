@@ -10,7 +10,7 @@ import {
 } from '../../../../utils/difficultyUtils'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import { formatInteger } from '../../../../utils/numberFormat'
-import { formatRecordRating } from '../../../../utils/ratingFormat'
+import { formatRatingFixed2 } from '../../../../utils/ratingFormat'
 import { getScoreRank } from '../../../../utils/scoreRank'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses'
 import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
@@ -108,7 +108,7 @@ export const UserRecordCard: Component<Props> = (props) => {
               </p>
             </div>
             <div class="shrink-0 text-right font-oswald text-xl font-bold leading-none">
-              {formatRecordRating(props.record.rating)}
+              {formatRatingFixed2(props.record.rating)}
             </div>
           </div>
         </div>

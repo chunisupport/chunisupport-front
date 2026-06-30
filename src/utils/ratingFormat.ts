@@ -1,7 +1,7 @@
 import { formatTruncatedFixed } from './numberFormat'
 
 const PLAYER_RATING_DECIMAL_PLACES = 4
-const RECORD_RATING_DECIMAL_PLACES = 2
+const RATING_FIXED_2_DECIMAL_PLACES = 2
 const NO_RATING_TEXT = '-'
 
 /**
@@ -23,10 +23,10 @@ export const formatNullablePlayerRating = (value: number | null): string =>
   value === null ? NO_RATING_TEXT : formatPlayerRating(value)
 
 /**
- * 譜面単位のレーティングを小数点以下2桁で切り捨てた表示文字列へ整形する。
+ * レーティングを小数点以下2桁で切り捨てた表示文字列へ整形する。
  *
- * @param value 整形する譜面単位レーティング。
+ * @param value 整形するレーティング。
  * @returns 小数点以下2桁に0埋めしたレーティングの表示文字列。
  */
-export const formatRecordRating = (value: number): string =>
-  formatTruncatedFixed(value, RECORD_RATING_DECIMAL_PLACES)
+export const formatRatingFixed2 = (value: number): string =>
+  formatTruncatedFixed(value, RATING_FIXED_2_DECIMAL_PLACES)

@@ -1,6 +1,5 @@
+import { CHART_CONST_DECIMAL_PLACES } from '../constants/chart'
 import { formatTruncatedFixed, truncateDecimal } from './numberFormat'
-
-const CHART_CONST_DECIMAL_PLACES = 1
 
 /**
  * 譜面定数を小数点以下1桁で切り捨てた数値へ正規化する。

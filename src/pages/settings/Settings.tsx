@@ -18,7 +18,7 @@ import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-import { formatRecordRating } from '../../utils/ratingFormat'
+import { formatRatingFixed2 } from '../../utils/ratingFormat'
 
 const SECTION_IDS = ['privacy', 'api-token', 'player-data', 'account-delete'] as const
 
@@ -543,7 +543,7 @@ const Settings = () => {
                             レーティング
                           </p>
                           <p class="mt-2 text-base font-semibold text-text">
-                            {formatRecordRating(player().rating)}
+                            {formatRatingFixed2(player().rating)}
                           </p>
                         </div>
                         <div class="rounded-xl border border-border bg-surface-muted p-4">
