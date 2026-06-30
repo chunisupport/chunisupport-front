@@ -36,6 +36,8 @@ import { sortByReleaseDateDescWithMissingFirst } from './utils/releaseDateSortin
 
 type SongManagementPageProps = {
   title: string
+  canCreate: boolean
+  canDelete: boolean
 }
 
 type EditableChartDraft = {
@@ -540,10 +542,10 @@ const applyWorldsendDraftToManagedSong = (
 }
 
 /**
- * 管理者向けの楽曲管理画面を描画します。
+ * 権限を持つユーザー向けの楽曲管理画面を描画します。
  * 通常楽曲およびWORLD'S END楽曲の追加・更新・削除・復活操作を提供します。
  *
- * @param props 画面タイトルを含むプロパティ
+ * @param props 画面タイトルと許可する操作を含むプロパティ
  * @returns 楽曲管理UI
  */
 const SongManagementPage = (props: SongManagementPageProps) => {
@@ -1397,13 +1399,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           </Button>
                         }
                       >
-                        <Button
-                          type="button"
-                          class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover"
-                          onClick={() => handleDeleteSong(currentDraft().id)}
-                        >
-                          削除する
-                        </Button>
+                        <Show when={props.canDelete}>
+                          <Button
+                            type="button"
+                            class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover"
+                            onClick={() => handleDeleteSong(currentDraft().id)}
+                          >
+                            削除する
+                          </Button>
+                        </Show>
                       </Show>
                     </div>
                   </div>
@@ -1601,13 +1605,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           </Button>
                         }
                       >
-                        <Button
-                          type="button"
-                          class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover"
-                          onClick={() => handleDeleteWorldsendSong(currentDraft().id)}
-                        >
-                          削除する
-                        </Button>
+                        <Show when={props.canDelete}>
+                          <Button
+                            type="button"
+                            class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover"
+                            onClick={() => handleDeleteWorldsendSong(currentDraft().id)}
+                          >
+                            削除する
+                          </Button>
+                        </Show>
                       </Show>
                     </div>
                   </div>
@@ -1622,290 +1628,299 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         </Show>
       </section>
 
-      <section class="rounded-lg border border-border bg-surface p-4">
-        <h2 class="text-lg font-semibold">通常楽曲を追加</h2>
-        <div class="mt-3 space-y-4">
-          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <Show when={props.canCreate}>
+        <section class="rounded-lg border border-border bg-surface p-4">
+          <h2 class="text-lg font-semibold">通常楽曲を追加</h2>
+          <div class="mt-3 space-y-4">
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <ManagementTextField
+                label="公式ID"
+                value={createSongDraft().official_idx}
+                maxLength={10}
+                placeholder="1234567890"
+                onInput={(value) => updateCreateSongDraftField('official_idx', value)}
+              />
+              <ManagementTextField
+                label="タイトル"
+                value={createSongDraft().title}
+                inputClass={`${managementInputClass} font-sans`}
+                onInput={(value) => updateCreateSongDraftField('title', value)}
+              />
+              <ManagementTextField
+                label="読み"
+                value={createSongDraft().reading ?? ''}
+                maxLength={300}
+                inputClass={`${managementInputClass} font-sans`}
+                onInput={(value) =>
+                  updateCreateSongDraftField('reading', value.trim() === '' ? null : value)
+                }
+              />
+              <ManagementTextField
+                label="アーティスト"
+                value={createSongDraft().artist}
+                inputClass={`${managementInputClass} font-sans`}
+                onInput={(value) => updateCreateSongDraftField('artist', value)}
+              />
+              <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
+                <GenreSelectField
+                  label="ジャンル"
+                  value={createSongDraft().genre_id}
+                  genres={masterData()?.genres ?? []}
+                  placeholder="選択してください"
+                  onChange={(value) => updateCreateSongDraftField('genre_id', value)}
+                />
+                <ManagementTextField
+                  label="BPM"
+                  type="number"
+                  value={createSongDraft().bpm ?? ''}
+                  onInput={(value) =>
+                    updateCreateSongDraftField('bpm', value === '' ? null : Number(value))
+                  }
+                />
+                <ManagementTextField
+                  label="リリース日"
+                  type="date"
+                  value={toDateInputValue(createSongDraft().released_at)}
+                  onInput={(value) =>
+                    updateCreateSongDraftField('released_at', value.trim() === '' ? null : value)
+                  }
+                />
+                <ManagementTextField
+                  label="ジャケットID"
+                  value={createSongDraft().jacket ?? ''}
+                  onInput={(value) =>
+                    updateCreateSongDraftField('jacket', value.trim() === '' ? null : value)
+                  }
+                />
+                <div class="flex items-end py-2">
+                  <ManagementCheckbox
+                    checked={createSongDraft().is_new === true}
+                    ariaLabel={newSongFlagLabel}
+                    label={newSongFlagLabel}
+                    onChange={(checked) => updateCreateSongDraftField('is_new', checked)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto rounded border border-border">
+              <table class="min-w-full text-sm">
+                <thead class="bg-surface-muted">
+                  <tr>
+                    <th class="whitespace-nowrap px-3 py-2 text-left">追加</th>
+                    <th class="whitespace-nowrap px-3 py-2 text-left">難易度</th>
+                    <th class="whitespace-nowrap px-3 py-2 text-left">定数</th>
+                    <th class="whitespace-nowrap px-3 py-2 text-left">未確定</th>
+                    <th class="whitespace-nowrap px-3 py-2 text-left">ノーツ</th>
+                    <th class="whitespace-nowrap px-3 py-2 text-left">NOTES DESIGNER</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <Index each={createSongDraft().charts}>
+                    {(chart, chartIndex) => (
+                      <tr class="border-t border-border">
+                        <td class="px-3 py-2">
+                          <ManagementCheckbox
+                            checked={chart().enabled}
+                            ariaLabel={`${chart().difficulty_name}を追加対象にする`}
+                            onChange={(checked) =>
+                              updateCreateSongChart(chartIndex, 'enabled', checked)
+                            }
+                          />
+                        </td>
+                        <td class="px-3 py-2">{chart().difficulty_name}</td>
+                        <td class="px-3 py-2">
+                          <TextField disabled={!chart().enabled}>
+                            <TextField.Input
+                              type="text"
+                              inputMode="decimal"
+                              value={chart().const}
+                              onInput={(event) =>
+                                updateCreateSongChart(
+                                  chartIndex,
+                                  'const',
+                                  event.currentTarget.value
+                                )
+                              }
+                              class="w-20 rounded border border-border-strong px-2 py-1"
+                            />
+                          </TextField>
+                        </td>
+                        <td class="px-3 py-2">
+                          <ManagementCheckbox
+                            checked={chart().is_const_unknown}
+                            disabled={!chart().enabled}
+                            ariaLabel={`${chart().difficulty_name}の定数未確定`}
+                            onChange={(checked) =>
+                              updateCreateSongChart(chartIndex, 'is_const_unknown', checked)
+                            }
+                          />
+                        </td>
+                        <td class="px-3 py-2">
+                          <TextField disabled={!chart().enabled}>
+                            <TextField.Input
+                              type="number"
+                              value={chart().notes ?? ''}
+                              onInput={(event) =>
+                                updateCreateSongChart(
+                                  chartIndex,
+                                  'notes',
+                                  event.currentTarget.value === ''
+                                    ? null
+                                    : Number(event.currentTarget.value)
+                                )
+                              }
+                              class="w-24 rounded border border-border-strong px-2 py-1"
+                            />
+                          </TextField>
+                        </td>
+                        <td class="px-3 py-2">
+                          <TextField disabled={!chart().enabled}>
+                            <TextField.Input
+                              value={chart().notes_designer ?? ''}
+                              onInput={(event) =>
+                                updateCreateSongChart(
+                                  chartIndex,
+                                  'notes_designer',
+                                  event.currentTarget.value.trim() === ''
+                                    ? null
+                                    : event.currentTarget.value
+                                )
+                              }
+                              class="w-56 rounded border border-border-strong px-2 py-1 font-sans"
+                            />
+                          </TextField>
+                        </td>
+                      </tr>
+                    )}
+                  </Index>
+                </tbody>
+              </table>
+            </div>
+
+            <Button
+              type="button"
+              class="rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-text-inverse hover:bg-indigo-700"
+              onClick={handleCreateSong}
+            >
+              通常楽曲を追加する
+            </Button>
+          </div>
+        </section>
+
+        <section class="rounded-lg border border-border bg-surface p-4">
+          <h2 class="text-lg font-semibold">WORLD&apos;S END楽曲を追加</h2>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <ManagementTextField
               label="公式ID"
-              value={createSongDraft().official_idx}
+              value={createWorldsendDraft().official_idx}
               maxLength={10}
               placeholder="1234567890"
-              onInput={(value) => updateCreateSongDraftField('official_idx', value)}
+              onInput={(value) => updateCreateWorldsendDraftField('official_idx', value)}
             />
             <ManagementTextField
               label="タイトル"
-              value={createSongDraft().title}
+              value={createWorldsendDraft().title}
               inputClass={`${managementInputClass} font-sans`}
-              onInput={(value) => updateCreateSongDraftField('title', value)}
+              onInput={(value) => updateCreateWorldsendDraftField('title', value)}
             />
             <ManagementTextField
               label="読み"
-              value={createSongDraft().reading ?? ''}
+              value={createWorldsendDraft().reading ?? ''}
               maxLength={300}
               inputClass={`${managementInputClass} font-sans`}
               onInput={(value) =>
-                updateCreateSongDraftField('reading', value.trim() === '' ? null : value)
+                updateCreateWorldsendDraftField('reading', value.trim() === '' ? null : value)
               }
             />
             <ManagementTextField
               label="アーティスト"
-              value={createSongDraft().artist}
+              value={createWorldsendDraft().artist}
               inputClass={`${managementInputClass} font-sans`}
-              onInput={(value) => updateCreateSongDraftField('artist', value)}
+              onInput={(value) => updateCreateWorldsendDraftField('artist', value)}
             />
             <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
               <GenreSelectField
                 label="ジャンル"
-                value={createSongDraft().genre_id}
+                value={createWorldsendDraft().genre_id}
                 genres={masterData()?.genres ?? []}
                 placeholder="選択してください"
-                onChange={(value) => updateCreateSongDraftField('genre_id', value)}
+                onChange={(value) => updateCreateWorldsendDraftField('genre_id', value)}
               />
               <ManagementTextField
                 label="BPM"
                 type="number"
-                value={createSongDraft().bpm ?? ''}
+                value={createWorldsendDraft().bpm ?? ''}
                 onInput={(value) =>
-                  updateCreateSongDraftField('bpm', value === '' ? null : Number(value))
+                  updateCreateWorldsendDraftField('bpm', value === '' ? null : Number(value))
                 }
               />
               <ManagementTextField
                 label="リリース日"
                 type="date"
-                value={toDateInputValue(createSongDraft().released_at)}
+                value={toDateInputValue(createWorldsendDraft().released_at)}
                 onInput={(value) =>
-                  updateCreateSongDraftField('released_at', value.trim() === '' ? null : value)
+                  updateCreateWorldsendDraftField('released_at', value.trim() === '' ? null : value)
                 }
               />
               <ManagementTextField
                 label="ジャケットID"
-                value={createSongDraft().jacket ?? ''}
+                value={createWorldsendDraft().jacket ?? ''}
                 onInput={(value) =>
-                  updateCreateSongDraftField('jacket', value.trim() === '' ? null : value)
+                  updateCreateWorldsendDraftField('jacket', value.trim() === '' ? null : value)
                 }
               />
-              <div class="flex items-end py-2">
-                <ManagementCheckbox
-                  checked={createSongDraft().is_new === true}
-                  ariaLabel={newSongFlagLabel}
-                  label={newSongFlagLabel}
-                  onChange={(checked) => updateCreateSongDraftField('is_new', checked)}
-                />
-              </div>
             </div>
-          </div>
-
-          <div class="overflow-x-auto rounded border border-border">
-            <table class="min-w-full text-sm">
-              <thead class="bg-surface-muted">
-                <tr>
-                  <th class="whitespace-nowrap px-3 py-2 text-left">追加</th>
-                  <th class="whitespace-nowrap px-3 py-2 text-left">難易度</th>
-                  <th class="whitespace-nowrap px-3 py-2 text-left">定数</th>
-                  <th class="whitespace-nowrap px-3 py-2 text-left">未確定</th>
-                  <th class="whitespace-nowrap px-3 py-2 text-left">ノーツ</th>
-                  <th class="whitespace-nowrap px-3 py-2 text-left">NOTES DESIGNER</th>
-                </tr>
-              </thead>
-              <tbody>
-                <Index each={createSongDraft().charts}>
-                  {(chart, chartIndex) => (
-                    <tr class="border-t border-border">
-                      <td class="px-3 py-2">
-                        <ManagementCheckbox
-                          checked={chart().enabled}
-                          ariaLabel={`${chart().difficulty_name}を追加対象にする`}
-                          onChange={(checked) =>
-                            updateCreateSongChart(chartIndex, 'enabled', checked)
-                          }
-                        />
-                      </td>
-                      <td class="px-3 py-2">{chart().difficulty_name}</td>
-                      <td class="px-3 py-2">
-                        <TextField disabled={!chart().enabled}>
-                          <TextField.Input
-                            type="text"
-                            inputMode="decimal"
-                            value={chart().const}
-                            onInput={(event) =>
-                              updateCreateSongChart(chartIndex, 'const', event.currentTarget.value)
-                            }
-                            class="w-20 rounded border border-border-strong px-2 py-1"
-                          />
-                        </TextField>
-                      </td>
-                      <td class="px-3 py-2">
-                        <ManagementCheckbox
-                          checked={chart().is_const_unknown}
-                          disabled={!chart().enabled}
-                          ariaLabel={`${chart().difficulty_name}の定数未確定`}
-                          onChange={(checked) =>
-                            updateCreateSongChart(chartIndex, 'is_const_unknown', checked)
-                          }
-                        />
-                      </td>
-                      <td class="px-3 py-2">
-                        <TextField disabled={!chart().enabled}>
-                          <TextField.Input
-                            type="number"
-                            value={chart().notes ?? ''}
-                            onInput={(event) =>
-                              updateCreateSongChart(
-                                chartIndex,
-                                'notes',
-                                event.currentTarget.value === ''
-                                  ? null
-                                  : Number(event.currentTarget.value)
-                              )
-                            }
-                            class="w-24 rounded border border-border-strong px-2 py-1"
-                          />
-                        </TextField>
-                      </td>
-                      <td class="px-3 py-2">
-                        <TextField disabled={!chart().enabled}>
-                          <TextField.Input
-                            value={chart().notes_designer ?? ''}
-                            onInput={(event) =>
-                              updateCreateSongChart(
-                                chartIndex,
-                                'notes_designer',
-                                event.currentTarget.value.trim() === ''
-                                  ? null
-                                  : event.currentTarget.value
-                              )
-                            }
-                            class="w-56 rounded border border-border-strong px-2 py-1 font-sans"
-                          />
-                        </TextField>
-                      </td>
-                    </tr>
-                  )}
-                </Index>
-              </tbody>
-            </table>
+            <ManagementTextField
+              label="属性"
+              value={createWorldsendDraft().attribute ?? ''}
+              inputClass={`${managementInputClass} font-sans`}
+              onInput={(value) =>
+                updateCreateWorldsendDraftField('attribute', value.trim() === '' ? null : value)
+              }
+            />
+            <ManagementTextField
+              label="レベル"
+              type="number"
+              min="1"
+              max="5"
+              value={createWorldsendDraft().level_star ?? ''}
+              onInput={(value) =>
+                updateCreateWorldsendDraftField('level_star', value === '' ? null : Number(value))
+              }
+            />
+            <ManagementTextField
+              label="ノーツ"
+              type="number"
+              min="0"
+              value={createWorldsendDraft().notes ?? ''}
+              onInput={(value) =>
+                updateCreateWorldsendDraftField('notes', value === '' ? null : Number(value))
+              }
+            />
+            <ManagementTextField
+              class="text-sm sm:col-span-2 lg:col-span-1"
+              label="NOTES DESIGNER"
+              value={createWorldsendDraft().notes_designer ?? ''}
+              inputClass={`${managementInputClass} font-sans`}
+              onInput={(value) =>
+                updateCreateWorldsendDraftField(
+                  'notes_designer',
+                  value.trim() === '' ? null : value
+                )
+              }
+            />
           </div>
 
           <Button
             type="button"
-            class="rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-text-inverse hover:bg-indigo-700"
-            onClick={handleCreateSong}
+            class="mt-4 rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-text-inverse hover:bg-indigo-700"
+            onClick={handleCreateWorldsendSong}
           >
-            通常楽曲を追加する
+            WORLD&apos;S END楽曲を追加する
           </Button>
-        </div>
-      </section>
-
-      <section class="rounded-lg border border-border bg-surface p-4">
-        <h2 class="text-lg font-semibold">WORLD&apos;S END楽曲を追加</h2>
-        <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <ManagementTextField
-            label="公式ID"
-            value={createWorldsendDraft().official_idx}
-            maxLength={10}
-            placeholder="1234567890"
-            onInput={(value) => updateCreateWorldsendDraftField('official_idx', value)}
-          />
-          <ManagementTextField
-            label="タイトル"
-            value={createWorldsendDraft().title}
-            inputClass={`${managementInputClass} font-sans`}
-            onInput={(value) => updateCreateWorldsendDraftField('title', value)}
-          />
-          <ManagementTextField
-            label="読み"
-            value={createWorldsendDraft().reading ?? ''}
-            maxLength={300}
-            inputClass={`${managementInputClass} font-sans`}
-            onInput={(value) =>
-              updateCreateWorldsendDraftField('reading', value.trim() === '' ? null : value)
-            }
-          />
-          <ManagementTextField
-            label="アーティスト"
-            value={createWorldsendDraft().artist}
-            inputClass={`${managementInputClass} font-sans`}
-            onInput={(value) => updateCreateWorldsendDraftField('artist', value)}
-          />
-          <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
-            <GenreSelectField
-              label="ジャンル"
-              value={createWorldsendDraft().genre_id}
-              genres={masterData()?.genres ?? []}
-              placeholder="選択してください"
-              onChange={(value) => updateCreateWorldsendDraftField('genre_id', value)}
-            />
-            <ManagementTextField
-              label="BPM"
-              type="number"
-              value={createWorldsendDraft().bpm ?? ''}
-              onInput={(value) =>
-                updateCreateWorldsendDraftField('bpm', value === '' ? null : Number(value))
-              }
-            />
-            <ManagementTextField
-              label="リリース日"
-              type="date"
-              value={toDateInputValue(createWorldsendDraft().released_at)}
-              onInput={(value) =>
-                updateCreateWorldsendDraftField('released_at', value.trim() === '' ? null : value)
-              }
-            />
-            <ManagementTextField
-              label="ジャケットID"
-              value={createWorldsendDraft().jacket ?? ''}
-              onInput={(value) =>
-                updateCreateWorldsendDraftField('jacket', value.trim() === '' ? null : value)
-              }
-            />
-          </div>
-          <ManagementTextField
-            label="属性"
-            value={createWorldsendDraft().attribute ?? ''}
-            inputClass={`${managementInputClass} font-sans`}
-            onInput={(value) =>
-              updateCreateWorldsendDraftField('attribute', value.trim() === '' ? null : value)
-            }
-          />
-          <ManagementTextField
-            label="レベル"
-            type="number"
-            min="1"
-            max="5"
-            value={createWorldsendDraft().level_star ?? ''}
-            onInput={(value) =>
-              updateCreateWorldsendDraftField('level_star', value === '' ? null : Number(value))
-            }
-          />
-          <ManagementTextField
-            label="ノーツ"
-            type="number"
-            min="0"
-            value={createWorldsendDraft().notes ?? ''}
-            onInput={(value) =>
-              updateCreateWorldsendDraftField('notes', value === '' ? null : Number(value))
-            }
-          />
-          <ManagementTextField
-            class="text-sm sm:col-span-2 lg:col-span-1"
-            label="NOTES DESIGNER"
-            value={createWorldsendDraft().notes_designer ?? ''}
-            inputClass={`${managementInputClass} font-sans`}
-            onInput={(value) =>
-              updateCreateWorldsendDraftField('notes_designer', value.trim() === '' ? null : value)
-            }
-          />
-        </div>
-
-        <Button
-          type="button"
-          class="mt-4 rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-text-inverse hover:bg-indigo-700"
-          onClick={handleCreateWorldsendSong}
-        >
-          WORLD&apos;S END楽曲を追加する
-        </Button>
-      </section>
+        </section>
+      </Show>
     </div>
   )
 }

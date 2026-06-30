@@ -11,6 +11,7 @@ import {
   LogOut,
   Music,
   Palette,
+  PencilLine,
   Settings,
   Shield,
   Wrench,
@@ -26,7 +27,9 @@ type NavBarProps = {
 import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
 import { DOCUMENTATION_BASE_URL } from '../../config'
+import { EDITOR_SONGS_PATH } from '../../constants/routes'
 import { auth } from '../../lib/firebase'
+import { EDITOR_SONGS_TITLE } from '../../pages/editor/constants'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
@@ -116,6 +119,15 @@ const NavBar = (props: NavBarProps) => {
                     label: '管理メニュー',
                     icon: () => <Shield class="inline h-4 w-4 mr-1" aria-hidden="true" />,
                     path: '/admin',
+                  },
+                ]
+              : []),
+            ...(authSession.user?.account_type === 'EDITOR'
+              ? [
+                  {
+                    label: EDITOR_SONGS_TITLE,
+                    icon: () => <PencilLine class="inline mr-1 h-4 w-4" aria-hidden="true" />,
+                    path: EDITOR_SONGS_PATH,
                   },
                 ]
               : []),
