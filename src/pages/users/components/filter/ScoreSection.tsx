@@ -1,13 +1,16 @@
 import { Checkbox } from '@kobalte/core/checkbox'
-import { NumberField } from '@kobalte/core/number-field'
 import { Check } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { AppSelect } from '../../../../components/common/AppSelect'
+import {
+  NumberRangeInput,
+  RANGE_END_LABEL_SUFFIX,
+  RANGE_START_LABEL_SUFFIX,
+  SelectRangeInput,
+} from '../../../../components/common/RangeInput'
 import { SCORE_MIN } from '../../../../constants/chart'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 
 import { SCORE_RANKS } from '../../utils/scoreRank'
-import RangeSeparator, { RANGE_END_LABEL_SUFFIX, RANGE_START_LABEL_SUFFIX } from './RangeSeparator'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from './styles'
 
 /** スコア範囲セクションの見出し。 */
@@ -41,97 +44,46 @@ type ScoreSectionProps = {
 const ScoreSection: Component<ScoreSectionProps> = (props) => (
   <div>
     {props.scoreFilterMode === 'number' ? (
-      <>
-        <div class="mb-1 text-sm font-medium">{SCORE_RANGE_TITLE}</div>
-        <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-          <div class="min-w-0">
-            <NumberField
-              value={props.scoreMinInput}
-              onChange={(value: string) => {
-                props.onScoreMinInput(value)
-              }}
-              class="w-full"
-              format={false}
-              allowedInput={/[0-9.]/}
-              step={1}
-            >
-              <NumberField.Label class="sr-only">
-                {SCORE_RANGE_TITLE} {RANGE_START_LABEL_SUFFIX}
-              </NumberField.Label>
-              <NumberField.Input
-                id="filter-score-min"
-                min={SCORE_MIN}
-                max={MAX_SCORE}
-                step={1}
-                class={FILTER_DIALOG_FIELD_INPUT_CLASS}
-                onFocus={(event) => event.currentTarget.select()}
-                onBlur={(event) => props.onScoreMinCommit(event.currentTarget.value)}
-              />
-            </NumberField>
-          </div>
-          <RangeSeparator />
-          <div class="min-w-0">
-            <NumberField
-              value={props.scoreMaxInput}
-              onChange={(value: string) => props.onScoreMaxInput(value)}
-              class="w-full"
-              format={false}
-              allowedInput={/[0-9.]/}
-              step={1}
-            >
-              <NumberField.Label class="sr-only">
-                {SCORE_RANGE_TITLE} {RANGE_END_LABEL_SUFFIX}
-              </NumberField.Label>
-              <NumberField.Input
-                id="filter-score-max"
-                min={SCORE_MIN}
-                max={MAX_SCORE}
-                step={1}
-                class={FILTER_DIALOG_FIELD_INPUT_CLASS}
-                onFocus={(event) => event.currentTarget.select()}
-                onBlur={(event) => props.onScoreMaxCommit(event.currentTarget.value)}
-              />
-            </NumberField>
-          </div>
-        </div>
-      </>
+      <NumberRangeInput
+        title={SCORE_RANGE_TITLE}
+        inputClass={FILTER_DIALOG_FIELD_INPUT_CLASS}
+        allowedInput={/[0-9.]/}
+        step={1}
+        start={{
+          id: 'filter-score-min',
+          label: `${SCORE_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
+          value: props.scoreMinInput,
+          min: SCORE_MIN,
+          max: MAX_SCORE,
+          onInput: props.onScoreMinInput,
+          onCommit: props.onScoreMinCommit,
+        }}
+        end={{
+          id: 'filter-score-max',
+          label: `${SCORE_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
+          value: props.scoreMaxInput,
+          min: SCORE_MIN,
+          max: MAX_SCORE,
+          onInput: props.onScoreMaxInput,
+          onCommit: props.onScoreMaxCommit,
+        }}
+      />
     ) : (
-      <>
-        <div class="mb-1 text-sm font-medium">{SCORE_RANK_RANGE_TITLE}</div>
-        <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-          <div class="min-w-0">
-            <AppSelect
-              options={SCORE_RANKS}
-              value={props.scoreRankMin}
-              onChange={(value: string | null) => {
-                if (value !== null) {
-                  props.onScoreRankChange('min', value)
-                }
-              }}
-              rootClass="w-full"
-              label={`${SCORE_RANK_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`}
-              labelVariant="srOnly"
-              placeholder="選択…"
-            />
-          </div>
-          <RangeSeparator />
-          <div class="min-w-0">
-            <AppSelect
-              options={SCORE_RANKS}
-              value={props.scoreRankMax}
-              onChange={(value: string | null) => {
-                if (value !== null) {
-                  props.onScoreRankChange('max', value)
-                }
-              }}
-              rootClass="w-full"
-              label={`${SCORE_RANK_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`}
-              labelVariant="srOnly"
-              placeholder="選択…"
-            />
-          </div>
-        </div>
-      </>
+      <SelectRangeInput
+        title={SCORE_RANK_RANGE_TITLE}
+        options={SCORE_RANKS}
+        placeholder="選択…"
+        start={{
+          value: props.scoreRankMin,
+          label: `${SCORE_RANK_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
+          onChange: (value) => props.onScoreRankChange('min', value),
+        }}
+        end={{
+          value: props.scoreRankMax,
+          label: `${SCORE_RANK_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
+          onChange: (value) => props.onScoreRankChange('max', value),
+        }}
+      />
     )}
     <div class="mt-2">
       <Checkbox

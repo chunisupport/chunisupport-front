@@ -23,6 +23,7 @@ import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { FormSelect } from '../../components/common/AppSelect'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import MultiSelectDropdown from '../../components/common/MultiSelectDropdown'
+import { TextRangeInput } from '../../components/common/RangeInput'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
@@ -152,6 +153,17 @@ const WEIGHT_PERCENT_FORMATTER = new Intl.NumberFormat('ja-JP', {
 const EMPTY_WEIGHT_PERCENT_LABEL = '0%'
 
 /**
+ * ランダム選曲ツールの数値入力種別に対応する pattern 属性を返す。
+ *
+ * @param inputMode - 入力モード。
+ * @returns 入力モードに対応する pattern 属性。対応がない場合は undefined。
+ */
+const getRandomSongInputPattern = (
+  inputMode?: RandomSongTextFieldProps['inputMode']
+): string | undefined =>
+  inputMode === 'numeric' ? '[0-9]*' : inputMode === 'decimal' ? '[0-9]*[.,]?[0-9]*' : undefined
+
+/**
  * 出やすさの倍率入力値を数値へ変換する。
  *
  * @param value - 入力された倍率。
@@ -244,13 +256,7 @@ const RandomSongTextField: Component<RandomSongTextFieldProps> = (props) => (
       type="text"
       class={FIELD_INPUT_CLASS}
       inputMode={props.inputMode}
-      pattern={
-        props.inputMode === 'numeric'
-          ? '[0-9]*'
-          : props.inputMode === 'decimal'
-            ? '[0-9]*[.,]?[0-9]*'
-            : undefined
-      }
+      pattern={getRandomSongInputPattern(props.inputMode)}
       autocomplete="off"
       disabled={props.disabled}
     />
@@ -264,59 +270,35 @@ const RandomSongTextField: Component<RandomSongTextFieldProps> = (props) => (
  * @returns 下限と上限を横並びにした範囲入力欄。
  */
 const RandomSongRangeField: Component<RandomSongRangeFieldProps> = (props) => (
-  <div class="text-sm">
-    <div class="mb-1 font-medium text-text-muted">{props.label}</div>
-    <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-      <TextField value={props.minValue} onChange={props.onMinChange}>
-        <TextField.Label class="sr-only" for={`${props.idPrefix}-min`}>
-          {props.minLabel}
-        </TextField.Label>
-        <TextField.Input
-          id={`${props.idPrefix}-min`}
-          name={`${props.idPrefix}-min`}
-          type="text"
-          class={FIELD_INPUT_CLASS}
-          inputMode={props.inputMode}
-          pattern={
-            props.inputMode === 'numeric'
-              ? '[0-9]*'
-              : props.inputMode === 'decimal'
-                ? '[0-9]*[.,]?[0-9]*'
-                : undefined
-          }
-          autocomplete="off"
-          disabled={props.disabled}
-          aria-invalid={props.error ? 'true' : 'false'}
-        />
-      </TextField>
-      <div class="flex min-h-10 items-center justify-center text-sm text-text-muted">～</div>
-      <TextField value={props.maxValue} onChange={props.onMaxChange}>
-        <TextField.Label class="sr-only" for={`${props.idPrefix}-max`}>
-          {props.maxLabel}
-        </TextField.Label>
-        <TextField.Input
-          id={`${props.idPrefix}-max`}
-          name={`${props.idPrefix}-max`}
-          type="text"
-          class={FIELD_INPUT_CLASS}
-          inputMode={props.inputMode}
-          pattern={
-            props.inputMode === 'numeric'
-              ? '[0-9]*'
-              : props.inputMode === 'decimal'
-                ? '[0-9]*[.,]?[0-9]*'
-                : undefined
-          }
-          autocomplete="off"
-          disabled={props.disabled}
-          aria-invalid={props.error ? 'true' : 'false'}
-        />
-      </TextField>
-    </div>
-    <Show when={props.error}>
-      {(message) => <p class="mt-1 text-xs text-danger">{message()}</p>}
-    </Show>
-  </div>
+  <TextRangeInput
+    class="text-sm"
+    title={props.label}
+    titleClass="mb-1 font-medium text-text-muted"
+    inputClass={FIELD_INPUT_CLASS}
+    errorMessage={props.error ?? undefined}
+    start={{
+      id: `${props.idPrefix}-min`,
+      name: `${props.idPrefix}-min`,
+      label: props.minLabel,
+      value: props.minValue,
+      inputMode: props.inputMode,
+      pattern: getRandomSongInputPattern(props.inputMode),
+      disabled: props.disabled,
+      invalid: Boolean(props.error),
+      onChange: props.onMinChange,
+    }}
+    end={{
+      id: `${props.idPrefix}-max`,
+      name: `${props.idPrefix}-max`,
+      label: props.maxLabel,
+      value: props.maxValue,
+      inputMode: props.inputMode,
+      pattern: getRandomSongInputPattern(props.inputMode),
+      disabled: props.disabled,
+      invalid: Boolean(props.error),
+      onChange: props.onMaxChange,
+    }}
+  />
 )
 
 /**

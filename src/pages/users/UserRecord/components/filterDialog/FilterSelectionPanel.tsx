@@ -11,6 +11,11 @@ import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import type { Difficulty, FilterState } from '../../../../../types/recordFilter'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import { truncateDecimal } from '../../../../../utils/numberFormat'
+import {
+  parseNumberInput,
+  toInputValue,
+  updateOptionalNumberRange,
+} from '../../../../../utils/rangeInput'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
 import LampSection from '../../../components/filter/LampSection'
@@ -22,12 +27,7 @@ import {
   JUSTICE_COUNT_RANGE_FILTER,
   OVER_POWER_RANGE_FILTER,
 } from '../../../constants/rangeFilters'
-import {
-  parseNumberInput,
-  toggleArray,
-  toInputValue,
-  updateOptionalNumberRange,
-} from '../../../utils/filterValue'
+import { toggleArray } from '../../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../../utils/scoreRank'
 import ConstRangeSection from './sections/ConstRangeSection'

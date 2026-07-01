@@ -7,18 +7,18 @@ import {
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../../../constants/recordFilterOptions'
 import type { ChainLamp, ComboLamp, HardLamp } from '../../../../types/record'
+import {
+  parseNumberInput,
+  toInputValue,
+  updateOptionalNumberRange,
+} from '../../../../utils/rangeInput'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import LampSection from '../../components/filter/LampSection'
 import MultiSelectFilterSection from '../../components/filter/MultiSelectFilterSection'
 import NumericRangeSection from '../../components/filter/NumericRangeSection'
 import ScoreSection from '../../components/filter/ScoreSection'
 import { JUSTICE_COUNT_RANGE_FILTER } from '../../constants/rangeFilters'
-import {
-  parseNumberInput,
-  toggleArray,
-  toInputValue,
-  updateOptionalNumberRange,
-} from '../../utils/filterValue'
+import { toggleArray } from '../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../utils/scoreRank'
 import type { WorldsendFilterState } from '../types/filterTypes'
