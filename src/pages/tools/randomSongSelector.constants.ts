@@ -1,4 +1,8 @@
 import type { PlayerDataDifficulty } from '../../types/api'
+import {
+  RANDOM_SONG_OP_TARGET_FILTER,
+  type RandomSongDifficultyFilter,
+} from '../../utils/randomSongSelector'
 
 /**
  * ランダム選曲結果を保存する sessionStorage キー。
@@ -25,6 +29,18 @@ export const RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES: PlayerDataDifficulty[] =
   'MASTER',
   'ULTIMA',
 ]
+
+/**
+ * ランダム選曲ツールの難易度絞り込み表示名。
+ */
+export const RANDOM_SONG_SELECTOR_DIFFICULTY_FILTER_LABELS = {
+  BASIC: 'BASIC',
+  ADVANCED: 'ADVANCED',
+  EXPERT: 'EXPERT',
+  MASTER: 'MASTER',
+  ULTIMA: 'ULTIMA',
+  [RANDOM_SONG_OP_TARGET_FILTER]: 'OP対象（MAS+ULT）',
+} satisfies Record<RandomSongDifficultyFilter, string>
 
 /**
  * ランダム選曲ツールで使う短い入力項目ラベル。
