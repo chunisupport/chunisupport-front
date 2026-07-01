@@ -1,13 +1,19 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
-import { Button } from '@kobalte/core/button'
 import { RotateCcw } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createSignal } from 'solid-js'
+import { AppButton, getAppButtonClass } from '../../../../../../components/common/AppButton'
 
 type FilterResetDialogProps = {
   onReset: () => void
 }
 
+/**
+ * フィルター条件を初期状態へ戻す確認ダイアログを表示する。
+ *
+ * @param props - リセット確定時のハンドラー。
+ * @returns フィルターリセット操作の JSX 要素。
+ */
 const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
   const [resetDialogOpen, setResetDialogOpen] = createSignal(false)
 
@@ -30,20 +36,19 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
           <div class="flex justify-end gap-2">
             <AlertDialog.CloseButton
               as="button"
-              class="px-4 py-2 rounded bg-action-secondary text-text-muted hover:bg-action-secondary-hover"
+              class={getAppButtonClass({ variant: 'secondary' })}
             >
               キャンセル
             </AlertDialog.CloseButton>
-            <Button
-              type="button"
-              class="px-4 py-2 rounded bg-danger text-text-inverse hover:bg-danger-hover"
+            <AppButton
+              variant="danger"
               onClick={() => {
                 props.onReset()
                 setResetDialogOpen(false)
               }}
             >
               リセット
-            </Button>
+            </AppButton>
           </div>
         </AlertDialog.Content>
       </AlertDialog.Portal>

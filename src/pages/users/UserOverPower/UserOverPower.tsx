@@ -1,4 +1,3 @@
-import { Button } from '@kobalte/core/button'
 import { Select } from '@kobalte/core/select'
 import * as Tabs from '@kobalte/core/tabs'
 import { useLocation, useNavigate } from '@solidjs/router'
@@ -16,6 +15,7 @@ import {
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
+import { AppButton } from '../../../components/common/AppButton'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
 import type { PlayerLockedSongRequest, UserRecordDTO } from '../../../types/api'
@@ -173,8 +173,6 @@ const UserOverPower: Component<Props> = (props) => {
     if (!currentSummary || !songGroups) return []
     return buildSongBasedGraphRows(currentSummary.versions, songGroups.versions)
   })
-  const iconButtonClass =
-    'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-disabled-text'
   const lockedSongsButtonDisabled = createMemo(
     () => !canManageLockedSongs() || !allSongs() || lockedSongs.loading
   )
@@ -288,9 +286,11 @@ const UserOverPower: Component<Props> = (props) => {
                       </Select>
                     </div>
                     <div class="flex shrink-0 items-center gap-2">
-                      <Button
-                        type="button"
-                        class="inline-flex h-10 min-w-16 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-3 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
+                      <AppButton
+                        variant="surface"
+                        size="sm"
+                        shape="pill"
+                        class="h-10 min-w-16 focus-visible:ring-offset-2"
                         aria-label={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
                         title={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
                         onClick={handleToggleSummaryViewMode}
@@ -302,18 +302,20 @@ const UserOverPower: Component<Props> = (props) => {
                         >
                           <ChartBarBig class="h-4 w-4" aria-hidden="true" />
                         </Show>
-                      </Button>
-                      <Button
-                        type="button"
-                        class={`${iconButtonClass} whitespace-nowrap`}
+                      </AppButton>
+                      <AppButton
+                        variant="surface"
+                        size="sm"
+                        shape="pill"
+                        class="h-10 whitespace-nowrap focus-visible:ring-offset-2"
                         aria-label="未解禁楽曲設定"
                         title="未解禁楽曲設定"
                         disabled={lockedSongsButtonDisabled()}
                         onClick={() => setLockedSongsDialogOpen(true)}
+                        rightIcon={<LockKeyhole class="h-5 w-5" aria-hidden="true" />}
                       >
                         <span>未解禁曲</span>
-                        <LockKeyhole class="h-5 w-5" aria-hidden="true" />
-                      </Button>
+                      </AppButton>
                     </div>
                   </div>
 

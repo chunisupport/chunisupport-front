@@ -1,4 +1,3 @@
-import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate } from '@solidjs/router'
@@ -9,6 +8,7 @@ import { createEffect, createSignal, onMount, Show } from 'solid-js'
 import { postSignup } from '../../../api/auth'
 import { fetchMe } from '../../../api/users'
 import { Loading, Turnstile } from '../../../components'
+import { AppButton } from '../../../components/common/AppButton'
 import { CF_TURNSTILE_SITE_KEY } from '../../../config'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
@@ -209,9 +209,10 @@ const Register = () => {
                     <p class="text-sm text-danger">{errorMessage()}</p>
                   </div>
                 )}
-                <Button
-                  type="button"
-                  class="w-full flex items-center justify-center gap-3 px-4 py-2 border border-border-strong rounded-md bg-surface hover:bg-surface-muted disabled:opacity-50"
+                <AppButton
+                  variant="surface"
+                  fullWidth
+                  class="gap-3 rounded-md"
                   onClick={handleGoogleAuth}
                   disabled={isSubmitting()}
                 >
@@ -238,7 +239,7 @@ const Register = () => {
                     </svg>
                   )}
                   <span class="text-sm font-medium text-text-muted">Googleで続ける</span>
-                </Button>
+                </AppButton>
               </div>
             </Show>
 
@@ -321,13 +322,14 @@ const Register = () => {
                     }}
                   />
                   <div class="flex justify-center">
-                    <Button
+                    <AppButton
                       type="submit"
-                      class="px-4 py-2 bg-action-primary text-text-inverse rounded-md hover:bg-action-primary-hover disabled:opacity-50"
+                      variant="primary"
+                      class="rounded-md"
                       disabled={!(isUsernameValid() && agreedToTerms()) || isSubmitting()}
                     >
                       {isSubmitting() ? '処理中...' : '登録'}
-                    </Button>
+                    </AppButton>
                   </div>
                 </form>
               </div>

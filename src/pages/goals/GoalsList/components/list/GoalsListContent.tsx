@@ -1,6 +1,6 @@
-import { Button } from '@kobalte/core/button'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
+import { AppButton } from '../../../../../components/common/AppButton'
 import type { GoalDTO } from '../../../../../types/api'
 import {
   ADD_GOAL_LABEL,
@@ -36,14 +36,13 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => (
           {props.goalsCount} / {GOALS_LIMIT}件
         </p>
       </div>
-      <Button
-        type="button"
-        class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:opacity-60"
+      <AppButton
+        variant="primary"
         disabled={props.goalsCount >= GOALS_LIMIT}
         onClick={props.onCreate}
       >
         {ADD_GOAL_LABEL}
-      </Button>
+      </AppButton>
     </div>
 
     <Show when={props.goalsCount >= GOALS_LIMIT}>

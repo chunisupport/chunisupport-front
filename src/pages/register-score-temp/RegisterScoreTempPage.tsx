@@ -1,7 +1,7 @@
-import { Button } from '@kobalte/core/button'
 import { createSignal, Show } from 'solid-js'
 
 import { postPlayerDataCommit, postRegisterData } from '../../api/register-data'
+import { AppButton } from '../../components/common/AppButton'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 
@@ -16,6 +16,11 @@ const formatLabelMap: Record<UploadFormat, string> = {
   text: 'TXT (base64+gzip)',
 }
 
+/**
+ * スコア登録用の一時アップロードと確定保存を行う検証ページを表示する。
+ *
+ * @returns スコア登録データのアップロード画面。
+ */
 const RegisterScoreTempPage = () => {
   const [selectedFile, setSelectedFile] = createSignal<File | null>(null)
   const [format, setFormat] = createSignal<UploadFormat | null>(null)
@@ -199,14 +204,14 @@ const RegisterScoreTempPage = () => {
           <p class="text-sm text-action-primary">{successMessage()}</p>
         </Show>
 
-        <Button
-          type="button"
-          class="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse shadow-sm hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+        <AppButton
+          variant="primary"
+          class="rounded-md shadow-sm"
           onClick={handleSubmit}
           disabled={isSubmitting()}
         >
           {isSubmitting() ? '送信中...' : 'アップロードする'}
-        </Button>
+        </AppButton>
       </div>
       <div class="mt-8">
         <h2 class="text-xl font-semibold mb-4">確定保存 (commit)</h2>
@@ -232,14 +237,14 @@ const RegisterScoreTempPage = () => {
           <Show when={commitSuccessMessage()}>
             <p class="text-sm text-action-primary">{commitSuccessMessage()}</p>
           </Show>
-          <Button
-            type="button"
-            class="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse shadow-sm hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+          <AppButton
+            variant="primary"
+            class="rounded-md shadow-sm"
             onClick={handleCommit}
             disabled={isCommitting()}
           >
             {isCommitting() ? '送信中...' : '確定保存する'}
-          </Button>
+          </AppButton>
         </div>
       </div>
 
@@ -254,9 +259,9 @@ const RegisterScoreTempPage = () => {
           <Show when={copied()}>
             <span class="text-action-primary text-xs">コピーしました！</span>
           </Show>
-          <Button
-            type="button"
-            class="bg-action-primary text-text-inverse p-3 rounded hover:bg-action-primary-hover"
+          <AppButton
+            variant="primary"
+            class="p-3"
             onClick={() => {
               const code =
                 'javascript:(function(){var e=document.createElement("script");e.src="https://reiwa.f5.si/bookmarklets/chunisupport_test.js?%22+Math.floor(Date.now()/1000);document.body.appendChild(e)})();'
@@ -283,7 +288,7 @@ const RegisterScoreTempPage = () => {
             }}
           >
             コピー
-          </Button>
+          </AppButton>
         </div>
       </div>
     </div>

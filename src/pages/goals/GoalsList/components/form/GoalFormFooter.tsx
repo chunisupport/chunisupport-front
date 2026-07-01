@@ -1,6 +1,6 @@
-import { Button } from '@kobalte/core/button'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
+import { AppButton } from '../../../../../components/common/AppButton'
 
 interface GoalFormFooterProps {
   errorMessage: string
@@ -21,22 +21,12 @@ export const GoalFormFooter: Component<GoalFormFooterProps> = (props) => (
       <p class="text-sm text-danger -mt-4 mb-2">{props.errorMessage}</p>
     </Show>
     <div class="flex shrink-0 justify-end gap-2">
-      <Button
-        type="button"
-        class="rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover"
-        onClick={props.onCancel}
-        disabled={props.isSaving}
-      >
+      <AppButton onClick={props.onCancel} disabled={props.isSaving}>
         キャンセル
-      </Button>
-      <Button
-        type="button"
-        class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:opacity-60"
-        onClick={props.onSave}
-        disabled={props.isSaving}
-      >
+      </AppButton>
+      <AppButton variant="primary" onClick={props.onSave} disabled={props.isSaving}>
         {props.isSaving ? '保存中...' : '保存する'}
-      </Button>
+      </AppButton>
     </div>
   </div>
 )

@@ -1,6 +1,6 @@
-import { Button } from '@kobalte/core/button'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
+import { AppButton } from '../../../../../components/common/AppButton'
 import MultiSelectDropdown from '../../../../../components/common/MultiSelectDropdown'
 import type { MasterDataDTO } from '../../../../../types/api'
 import { GoalDecimalTextField, GoalFilterCheckbox } from './goalFormFields'
@@ -63,13 +63,14 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
         <fieldset class="block text-sm space-y-1">
           <div class="flex items-center justify-between">
             <span class="block text-text-muted">難易度</span>
-            <Button
-              type="button"
-              class="text-xs text-action-primary hover:text-action-primary"
+            <AppButton
+              variant="ghost"
+              size="xs"
+              class="text-action-primary hover:text-action-primary"
               onClick={props.onClearDifficulty}
             >
               クリア
-            </Button>
+            </AppButton>
           </div>
           <div class="space-y-1 bg-surface rounded border border-border-strong px-3 py-2">
             <GoalFilterCheckbox

@@ -1,9 +1,9 @@
-import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import { Select } from '@kobalte/core/select'
 import * as Tabs from '@kobalte/core/tabs'
 import { Check, ChevronDown } from 'lucide-solid'
 import { createEffect, createMemo, createSignal, For } from 'solid-js'
+import { AppButton, getAppButtonClass } from '../../../components/common/AppButton'
 import type { SortCondition } from '../../../utils/sortConditions'
 import type { SortDirection } from '../../../utils/sortingQuery'
 import {
@@ -42,14 +42,6 @@ const SORT_DIRECTION_OPTIONS: SortDirectionOption[] = [
   { value: 'desc', label: '降順' },
   { value: 'asc', label: '昇順' },
 ]
-
-/** ソートダイアログの操作ボタンで使う Tailwind クラス。 */
-const SORT_DIALOG_BUTTON_CLASS = {
-  secondary:
-    'rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover',
-  primary:
-    'rounded bg-action-primary px-4 py-2 text-sm text-text-inverse hover:bg-action-primary-hover',
-} as const
 
 /** ソート表示モード切り替えタブの表示クラス。 */
 const SORT_VIEW_TAB_TRIGGER_CLASS =
@@ -317,16 +309,12 @@ export function SortConditionsDialog<TSortKey extends string>(
           </Tabs.Root>
 
           <div class="mt-6 flex shrink-0 justify-end gap-2">
-            <Dialog.CloseButton class={SORT_DIALOG_BUTTON_CLASS.secondary}>
+            <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
               閉じる
             </Dialog.CloseButton>
-            <Button
-              type="button"
-              class={SORT_DIALOG_BUTTON_CLASS.primary}
-              onClick={applySortConditions}
-            >
+            <AppButton variant="primary" onClick={applySortConditions}>
               適用
-            </Button>
+            </AppButton>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

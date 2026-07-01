@@ -1,8 +1,8 @@
-import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronsUpDown } from 'lucide-solid'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { AppButton } from '../../../components/common/AppButton'
 import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
 
 const COLUMN_SETTINGS_TITLE = '列設定'
@@ -144,21 +144,14 @@ const ColumnSettingsDialogBase = <TColumnId extends string, TSortKey extends str
           </Select>
 
           <div class="mt-6 flex justify-end gap-2">
-            <Button
-              type="button"
-              class="rounded bg-action-secondary px-4 py-2 text-text-muted hover:bg-action-secondary-hover"
-              onClick={() => props.onOpenChange(false)}
-            >
-              {CANCEL_LABEL}
-            </Button>
-            <Button
-              type="button"
-              class="rounded bg-action-primary px-4 py-2 text-text-inverse hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:bg-action-secondary-hover"
+            <AppButton onClick={() => props.onOpenChange(false)}>{CANCEL_LABEL}</AppButton>
+            <AppButton
+              variant="primary"
               onClick={handleApply}
               disabled={selectedColumnIds().length === 0}
             >
               {APPLY_LABEL}
-            </Button>
+            </AppButton>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

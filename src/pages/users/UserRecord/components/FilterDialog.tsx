@@ -1,7 +1,7 @@
-import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
+import { AppButton } from '../../../../components/common/AppButton'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../types/api'
 import type { FilterState } from '../../../../types/recordFilter'
 import { normalizeFilterState } from '../../../../utils/recordFilterDefaults'
@@ -15,13 +15,6 @@ const FILTER_DIALOG_TEXT = {
   title: 'フィルター',
   cancel: 'キャンセル',
   apply: '適用',
-} as const
-
-/** フィルターダイアログの操作ボタンで使う Tailwind クラス。 */
-const FILTER_DIALOG_BUTTON_CLASS = {
-  secondary:
-    'px-4 py-2 rounded bg-action-secondary text-text-muted hover:bg-action-secondary-hover',
-  primary: 'px-4 py-2 rounded bg-action-primary text-text-inverse hover:bg-action-primary-hover',
 } as const
 
 interface FilterDialogProps {
@@ -151,20 +144,12 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
           />
           <div class="flex justify-end mt-6">
             <div class="flex gap-2">
-              <Button
-                type="button"
-                class={FILTER_DIALOG_BUTTON_CLASS.secondary}
-                onClick={() => props.onOpenChange(false)}
-              >
+              <AppButton onClick={() => props.onOpenChange(false)}>
                 {FILTER_DIALOG_TEXT.cancel}
-              </Button>
-              <Button
-                type="button"
-                class={FILTER_DIALOG_BUTTON_CLASS.primary}
-                onClick={handleApply}
-              >
+              </AppButton>
+              <AppButton variant="primary" onClick={handleApply}>
                 {FILTER_DIALOG_TEXT.apply}
-              </Button>
+              </AppButton>
             </div>
           </div>
         </Dialog.Content>

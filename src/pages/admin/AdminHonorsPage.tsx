@@ -1,4 +1,3 @@
-import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
@@ -7,6 +6,7 @@ import type { Component } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { fetchAdminHonors, fetchHonorTypes, updateHonor } from '../../api/honors'
 import { Loading } from '../../components'
+import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { getHonorTypeClassName } from '../../constants/honors'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { AdminHonorDTO, HonorRequestDTO, MasterItemDTO } from '../../types/api'
@@ -171,21 +171,16 @@ const HonorEditDialog: Component<HonorEditDialogProps> = (props) => {
             </Show>
 
             <div class="flex justify-end gap-2">
-              <Button
-                type="button"
-                class="rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover"
-                onClick={() => props.onOpenChange(false)}
-                disabled={props.saving}
-              >
+              <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
                 キャンセル
-              </Button>
-              <Button
+              </AppButton>
+              <AppButton
                 type="submit"
-                class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:bg-action-secondary-hover"
+                variant="primary"
                 disabled={props.saving || !request().name.trim() || !request().type_name.trim()}
               >
                 {props.saving ? '保存中...' : '保存'}
-              </Button>
+              </AppButton>
             </div>
           </form>
         </Dialog.Content>
@@ -312,15 +307,13 @@ const AdminHonorsPage = () => {
                 {(honor) => (
                   <tr class="border-t border-border">
                     <td class="w-0 whitespace-nowrap px-3 py-2">
-                      <Button
-                        type="button"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                      <AppIconButton
                         aria-label={`${honor.name}を編集`}
                         title="編集"
                         onClick={() => openEditDialog(honor)}
                       >
                         <Pencil class="h-4 w-4" aria-hidden="true" />
-                      </Button>
+                      </AppIconButton>
                     </td>
                     <td class="px-3 py-2">
                       <span

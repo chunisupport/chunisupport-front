@@ -1,7 +1,7 @@
-import { Button } from '@kobalte/core/button'
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronsUpDown } from 'lucide-solid'
 import { createMemo, For, Show } from 'solid-js'
+import { AppButton } from './AppButton'
 
 type MultiSelectDropdownProps<T extends string | number | null> = {
   /** 複数選択で表示する選択肢。 */
@@ -87,22 +87,12 @@ const MultiSelectDropdown = <T extends string | number | null>(
   return (
     <div>
       <div class="mb-1 flex gap-2">
-        <Button
-          type="button"
-          class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={props.disabled}
-          onClick={props.onSelectAll}
-        >
+        <AppButton size="xs" disabled={props.disabled} onClick={props.onSelectAll}>
           すべて選択
-        </Button>
-        <Button
-          type="button"
-          class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={props.disabled}
-          onClick={props.onClear}
-        >
+        </AppButton>
+        <AppButton size="xs" disabled={props.disabled} onClick={props.onClear}>
           すべて解除
-        </Button>
+        </AppButton>
       </div>
       <Select<T>
         multiple

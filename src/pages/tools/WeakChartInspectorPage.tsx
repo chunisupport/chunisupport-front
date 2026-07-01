@@ -1,4 +1,3 @@
-import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Collapsible } from '@kobalte/core/collapsible'
 import { Dialog } from '@kobalte/core/dialog'
@@ -26,6 +25,7 @@ import {
 } from 'solid-js'
 import { fetchMe } from '../../api/users'
 import { LoadError, Loading } from '../../components'
+import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { SortableHeaderButton } from '../../components/common/SortableTableHeader'
 import {
@@ -546,13 +546,14 @@ const WeakChartInspectorPage = (): JSX.Element => {
         <div class="flex items-center justify-between gap-4">
           <h1 class="text-2xl font-semibold">{WEAK_CHART_INSPECTOR_COPY.title}</h1>
           <Show when={!records.loading && analysisRecords().length > 0}>
-            <Button
+            <AppIconButton
+              tone="ghost"
               aria-label="グラフ設定を開く"
               onClick={openSettings}
-              class="shrink-0 rounded p-1.5 text-text-muted transition-colors hover:bg-surface-muted hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+              class="shrink-0"
             >
               <Settings class="h-5 w-5" aria-hidden="true" />
-            </Button>
+            </AppIconButton>
           </Show>
         </div>
         <Show when={!records.loading} fallback={<Loading />}>
@@ -588,14 +589,13 @@ const WeakChartInspectorPage = (): JSX.Element => {
                     <Dialog.Title class="text-lg font-bold">
                       {WEAK_CHART_SETTINGS_COPY.title}
                     </Dialog.Title>
-                    <Button
-                      type="button"
+                    <AppIconButton
+                      tone="danger"
                       aria-label={WEAK_CHART_SETTINGS_COPY.reset}
-                      class="rounded border border-danger-border bg-danger-bg p-2 text-text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                       onClick={resetSettings}
                     >
                       <RotateCcw class="h-5 w-5" aria-hidden="true" />
-                    </Button>
+                    </AppIconButton>
                   </div>
 
                   <div class="flex flex-col gap-5">
@@ -769,20 +769,12 @@ const WeakChartInspectorPage = (): JSX.Element => {
 
                   <div class="flex justify-end mt-6">
                     <div class="flex gap-2">
-                      <Button
-                        type="button"
-                        class="px-4 py-2 rounded bg-action-secondary text-text-muted hover:bg-action-secondary-hover"
-                        onClick={cancelSettings}
-                      >
+                      <AppButton onClick={cancelSettings}>
                         {WEAK_CHART_SETTINGS_COPY.cancel}
-                      </Button>
-                      <Button
-                        type="button"
-                        class="px-4 py-2 rounded bg-action-primary text-text-inverse hover:bg-action-primary-hover"
-                        onClick={applySettings}
-                      >
+                      </AppButton>
+                      <AppButton variant="primary" onClick={applySettings}>
                         {WEAK_CHART_SETTINGS_COPY.apply}
-                      </Button>
+                      </AppButton>
                     </div>
                   </div>
                 </Dialog.Content>

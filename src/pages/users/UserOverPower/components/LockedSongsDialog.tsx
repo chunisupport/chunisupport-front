@@ -5,6 +5,7 @@ import { TextField } from '@kobalte/core/text-field'
 import { Check, CircleSlash2, Funnel, ListChecks, LoaderCircle, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
+import { AppButton, getAppButtonClass } from '../../../../components/common/AppButton'
 import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
 import Loading from '../../../../components/Loading/Loading'
 import type {
@@ -100,14 +101,6 @@ const FILTER_CHECKBOX_CONTROL_CLASS =
 
 /** ネストしたフィルターモーダル上で Select の選択肢を前面に表示する z-index クラス。 */
 const NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-80'
-
-/** 未解禁楽曲フィルターダイアログの操作ボタンで使う Tailwind クラス。 */
-const LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS = {
-  secondary:
-    'rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover',
-  primary:
-    'rounded bg-action-primary px-4 py-2 text-sm text-text-inverse hover:bg-action-primary-hover',
-} as const
 
 /**
  * 未解禁楽曲検索欄の状態に応じた外枠クラスを返す。
@@ -552,13 +545,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
               <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex max-h-[80dvh] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
                 <div class="mb-4 flex shrink-0 items-center justify-between gap-3">
                   <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
-                  <Button
-                    type="button"
-                    class={LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS.secondary}
-                    onClick={handleResetFilter}
-                  >
-                    すべて選択
-                  </Button>
+                  <AppButton onClick={handleResetFilter}>すべて選択</AppButton>
                 </div>
 
                 <div class="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
@@ -619,10 +606,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
 
                 <div class="mt-6 flex justify-end">
                   <div class="flex gap-2">
-                    <Dialog.CloseButton class={LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS.secondary}>
+                    <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
                       閉じる
                     </Dialog.CloseButton>
-                    <Dialog.CloseButton class={LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS.primary}>
+                    <Dialog.CloseButton class={getAppButtonClass({ variant: 'primary' })}>
                       適用
                     </Dialog.CloseButton>
                   </div>
@@ -632,17 +619,17 @@ const LockedSongsDialog: Component<Props> = (props) => {
           </Dialog>
 
           <div class="mt-4 flex justify-end gap-2">
-            <Button
-              type="button"
-              class="rounded border border-border-strong px-3 py-2 text-sm text-text-muted hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
+            <AppButton
+              variant="surface"
+              size="sm"
               onClick={() => props.onOpenChange(false)}
               disabled={isSaving()}
             >
               キャンセル
-            </Button>
-            <Button
-              type="button"
-              class="inline-flex items-center gap-2 rounded bg-action-primary px-3 py-2 text-sm text-text-inverse hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+            </AppButton>
+            <AppButton
+              variant="primary"
+              size="sm"
               onClick={handleSave}
               disabled={!hasChanges() || isSaving()}
             >
@@ -650,7 +637,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 <LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />
               </Show>
               保存
-            </Button>
+            </AppButton>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

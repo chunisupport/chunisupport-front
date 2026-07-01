@@ -1,7 +1,7 @@
-import { Button } from '@kobalte/core/button'
 import { Check, Copy, ExternalLink } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createSignal, Show } from 'solid-js'
+import { AppButton } from '../common/AppButton'
 import {
   CHUNISUPPORT_BOOKMARKLET,
   DATA_REGISTRATION_HELP_URL,
@@ -67,14 +67,14 @@ const PlayerDataEmptyState: Component<PlayerDataEmptyStateProps> = (props) => {
             {CHUNISUPPORT_BOOKMARKLET}
           </code>
           <div class="mt-3 flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
+            <AppButton
+              variant="primary"
+              size="sm"
               onClick={handleCopyBookmarklet}
-              class="inline-flex items-center gap-2 rounded-md bg-action-primary px-3 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover focus:outline-none focus:ring-2 focus:ring-focus"
+              leftIcon={<Copy class="h-4 w-4" aria-hidden="true" />}
             >
-              <Copy class="h-4 w-4" aria-hidden="true" />
               {PLAYER_DATA_EMPTY_STATE_TEXT.copyButton}
-            </Button>
+            </AppButton>
             <Show when={copyState() === 'copied'}>
               <span
                 class="inline-flex items-center gap-1 text-xs text-action-primary"

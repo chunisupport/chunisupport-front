@@ -1,7 +1,7 @@
-import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
+import { AppButton } from '../../../../components/common/AppButton'
 import FilterResetDialog from '../../UserRecord/components/filterDialog/dialogs/FilterResetDialog'
 import { normalizeWorldsendFilterState } from '../types/filterDefaults'
 import type { WorldsendFilterState } from '../types/filterTypes'
@@ -109,20 +109,10 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
           />
           <div class="mt-6 flex justify-end">
             <div class="flex gap-2">
-              <Button
-                type="button"
-                class="rounded bg-action-secondary px-4 py-2 text-text-muted hover:bg-action-secondary-hover"
-                onClick={() => props.onOpenChange(false)}
-              >
-                キャンセル
-              </Button>
-              <Button
-                type="button"
-                class="rounded bg-action-primary px-4 py-2 text-text-inverse hover:bg-action-primary-hover"
-                onClick={handleApply}
-              >
+              <AppButton onClick={() => props.onOpenChange(false)}>キャンセル</AppButton>
+              <AppButton variant="primary" onClick={handleApply}>
                 適用
-              </Button>
+              </AppButton>
             </div>
           </div>
         </Dialog.Content>
