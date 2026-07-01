@@ -1191,8 +1191,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
                   </div>
                 </div>
 
-                <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-                  <div class="flex flex-wrap gap-2 justify-end">
+                <div class="grid gap-5 lg:gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                  <div class="flex flex-wrap gap-2 justify-end lg:justify-start">
                     <Dialog
                       open={recordFilterSettingsOpen()}
                       onOpenChange={setRecordFilterSettingsOpen}
@@ -1389,7 +1389,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                     {(message) => <p class="text-sm text-danger">{message()}</p>}
                   </Show>
 
-                  <div class="mt-3 flex flex-wrap items-center gap-2 lg:justify-end">
+                  <div class="flex flex-wrap items-center gap-2 lg:justify-end">
                     <p class="flex-1 text-sm text-text-muted">
                       {RANDOM_SONG_SELECTOR_COPY.candidateCountLabel}:{' '}
                       <span class="font-medium tabular-nums text-text">
@@ -1401,7 +1401,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       <AlertDialog.Trigger
                         as="button"
                         type="button"
-                        class="inline-flex min-h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                        class="inline-flex min-h-10 items-center gap-2 rounded-md border bg-danger-bg border-danger-border px-4 text-sm font-medium text-text-muted hover:bg-danger-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                       >
                         <RotateCcw size={16} aria-hidden="true" />
                         {RANDOM_SONG_SELECTOR_COPY.resetButtonLabel}
