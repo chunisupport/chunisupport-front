@@ -4,6 +4,7 @@ import { ChartColumnIncreasing } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
 import { createMemo, For, lazy, Show, Suspense } from 'solid-js'
 import { Loading } from '../../../components'
+import { getAppButtonClass } from '../../../components/common/AppButton'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import {
   buildUserOverPowerPagePath,
@@ -28,8 +29,11 @@ type Props = {
   username: string
 }
 
-const statsPageButtonClass =
-  'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-sm text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2'
+const statsPageButtonClass = getAppButtonClass({
+  variant: 'surface',
+  shape: 'pill',
+  class: 'h-10 focus-visible:ring-offset-2',
+})
 const disabledStatsPageButtonClass =
   'pointer-events-none cursor-not-allowed opacity-50 hover:bg-surface focus-visible:ring-0'
 const isStatsPageLinkDisabled = true

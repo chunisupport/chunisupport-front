@@ -2,6 +2,7 @@ import { Button } from '@kobalte/core/button'
 import { TextField } from '@kobalte/core/text-field'
 import { ArrowUpDown, Columns3, Funnel, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
+import { AppIconButton } from '../../../../components/common/AppButton'
 
 type FilterButtonTone = 'default' | 'active' | 'difficulty-only'
 
@@ -106,24 +107,22 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
       >
         <Funnel size={24} aria-hidden="true" />
       </Button>
-      <Button
-        class="ml-2 flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border border-border-strong text-text-muted transition-colors hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+      <AppIconButton
+        class="ml-2 h-9.5 w-9.5"
         onClick={props.onOpenSortSettings}
-        type="button"
         aria-label="ソート"
         title="ソート"
       >
         <ArrowUpDown size={24} aria-hidden="true" />
-      </Button>
-      <Button
-        class="ml-2 flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover"
+      </AppIconButton>
+      <AppIconButton
+        class="ml-2 h-9.5 w-9.5"
         onClick={props.onOpenColumnSettings}
-        type="button"
         aria-label="列設定"
         title="列設定"
       >
         <Columns3 size={24} />
-      </Button>
+      </AppIconButton>
     </div>
   )
 }
