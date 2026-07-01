@@ -1,7 +1,6 @@
-import { Select } from '@kobalte/core/select'
 import * as Tabs from '@kobalte/core/tabs'
 import { useLocation, useNavigate } from '@solidjs/router'
-import { ArrowLeftRight, ChartBarBig, Check, ChevronDown, LockKeyhole, Table2 } from 'lucide-solid'
+import { ArrowLeftRight, ChartBarBig, LockKeyhole, Table2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import {
   createMemo,
@@ -16,6 +15,7 @@ import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
 import { AppButton } from '../../../components/common/AppButton'
+import { AppSelect } from '../../../components/common/AppSelect'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
 import type { PlayerLockedSongRequest, UserRecordDTO } from '../../../types/api'
@@ -246,44 +246,18 @@ const UserOverPower: Component<Props> = (props) => {
                 <Tabs.Root value={selectedSummaryTab()}>
                   <div class="flex items-center justify-between gap-3">
                     <div class="min-w-0 shrink">
-                      <Select<OverPowerSummaryOption>
+                      <AppSelect<OverPowerSummaryOption>
                         options={OVER_POWER_SUMMARY_OPTIONS}
                         optionValue="value"
                         optionTextValue="label"
                         value={selectedSummaryOption()}
                         onChange={handleSummaryTabChange}
                         placeholder="ジャンル"
-                        gutter={0}
-                        itemComponent={(itemProps) => (
-                          <Select.Item
-                            item={itemProps.item}
-                            class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg-hover data-[highlighted]:bg-success-bg-hover data-[selected]:bg-success-bg data-[selected]:hover:bg-success-bg-hover data-[selected]:data-[highlighted]:bg-success-bg-hover"
-                          >
-                            <div class="flex items-center gap-2">
-                              <span class="inline-flex w-4 justify-center text-success">
-                                <Select.ItemIndicator>
-                                  <Check size={14} />
-                                </Select.ItemIndicator>
-                              </span>
-                              <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                            </div>
-                          </Select.Item>
-                        )}
-                      >
-                        <Select.Trigger class="grid w-50 min-w-20 max-w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm font-medium text-text-muted">
-                          <Select.Value<OverPowerSummaryOption> class="truncate">
-                            {(state) => <span>{state.selectedOption()?.label ?? 'ジャンル'}</span>}
-                          </Select.Value>
-                          <span class="justify-self-end text-text-subtle" aria-hidden="true">
-                            <ChevronDown size={16} />
-                          </span>
-                        </Select.Trigger>
-                        <Select.Portal>
-                          <Select.Content class="z-50 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-border bg-surface shadow-md">
-                            <Select.Listbox />
-                          </Select.Content>
-                        </Select.Portal>
-                      </Select>
+                        rootClass="w-50 min-w-20 max-w-full"
+                        triggerClass="font-medium text-text-muted"
+                        contentZIndexClass="z-50"
+                        formatLabel={(option) => option.label}
+                      />
                     </div>
                     <div class="flex shrink-0 items-center gap-2">
                       <AppButton

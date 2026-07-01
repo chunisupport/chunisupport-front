@@ -1,11 +1,11 @@
 import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
-import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, ChevronDown, Target } from 'lucide-solid'
+import { Check, Target } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, ErrorBoundary, For, onMount, Show } from 'solid-js'
 import { LoadError, Loading } from '../../components'
+import { FormSelect } from '../../components/common/AppSelect'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { SongDTO } from '../../types/api'
@@ -150,49 +150,17 @@ const DifficultySelectField: Component<{
   availableDifficulties: BorderCalculatorDifficulty[]
   onChange: (difficulty: BorderCalculatorDifficulty) => void
 }> = (props) => (
-  <Select<BorderCalculatorDifficulty>
-    class="block text-sm"
+  <FormSelect<BorderCalculatorDifficulty>
+    rootClass="block text-sm"
+    label={BORDER_CALCULATOR_COPY.difficultyLabel}
     options={props.availableDifficulties}
     value={props.value}
-    onChange={(difficulty) => {
+    onChange={(difficulty: BorderCalculatorDifficulty | null) => {
       if (difficulty && isBorderCalculatorDifficulty(difficulty)) {
         props.onChange(difficulty)
       }
     }}
-    sameWidth
-    fitViewport
-    gutter={0}
-    itemComponent={(selectProps) => (
-      <Select.Item
-        item={selectProps.item}
-        class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
-      >
-        <div class="flex items-center gap-2">
-          <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-success">
-            <Check size={14} />
-          </Select.ItemIndicator>
-          <Select.ItemLabel>{selectProps.item.rawValue}</Select.ItemLabel>
-        </div>
-      </Select.Item>
-    )}
-  >
-    <Select.Label class="mb-1 block font-medium text-text-muted">
-      {BORDER_CALCULATOR_COPY.difficultyLabel}
-    </Select.Label>
-    <Select.Trigger class="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring">
-      <Select.Value<BorderCalculatorDifficulty> class="truncate">
-        {(state) => state.selectedOption()}
-      </Select.Value>
-      <Select.Icon class="text-text-subtle">
-        <ChevronDown size={16} />
-      </Select.Icon>
-    </Select.Trigger>
-    <Select.Portal>
-      <Select.Content class="z-50 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
-        <Select.Listbox />
-      </Select.Content>
-    </Select.Portal>
-  </Select>
+  />
 )
 
 /**

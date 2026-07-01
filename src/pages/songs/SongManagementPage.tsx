@@ -1,8 +1,7 @@
 import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
-import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, ChevronDown, Plus, Search } from 'lucide-solid'
+import { Check, Plus, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Index, Show } from 'solid-js'
 import {
@@ -20,6 +19,7 @@ import {
 } from '../../api/songs'
 import { Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
+import { FormSelect } from '../../components/common/AppSelect'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type {
   CreateSongRequestDTO,
@@ -334,46 +334,19 @@ const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
   const selectedGenre = () => props.genres.find((genre) => genre.id === props.value) ?? null
 
   return (
-    <Select<MasterItemDTO>
-      class="text-sm"
+    <FormSelect<MasterItemDTO>
+      rootClass="text-sm"
+      label={props.label}
       options={props.genres}
       optionValue="id"
       optionTextValue="name"
-      sameWidth
-      fitViewport
-      gutter={0}
       value={selectedGenre()}
-      onChange={(genre) => props.onChange(genre?.id ?? null)}
+      onChange={(genre: MasterItemDTO | null) => props.onChange(genre?.id ?? null)}
       placeholder={props.placeholder}
-      itemComponent={(selectProps) => (
-        <Select.Item
-          item={selectProps.item}
-          class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
-        >
-          <div class="flex items-center gap-2">
-            <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-success">
-              <Check size={14} />
-            </Select.ItemIndicator>
-            <Select.ItemLabel>{selectProps.item.rawValue.name}</Select.ItemLabel>
-          </div>
-        </Select.Item>
-      )}
-    >
-      <Select.Label class="mb-1 block text-text-muted">{props.label}</Select.Label>
-      <Select.Trigger class="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm">
-        <Select.Value<MasterItemDTO> class="truncate data-placeholder-shown:text-text-placeholder">
-          {(state) => state.selectedOption()?.name}
-        </Select.Value>
-        <Select.Icon class="text-text-subtle">
-          <ChevronDown size={16} />
-        </Select.Icon>
-      </Select.Trigger>
-      <Select.Portal>
-        <Select.Content class="z-50 max-h-[min(16rem,var(--kb-popper-content-available-height))] w-[--kb-popper-anchor-width] overflow-auto rounded border border-border bg-surface shadow-md">
-          <Select.Listbox />
-        </Select.Content>
-      </Select.Portal>
-    </Select>
+      contentZIndexClass="z-50"
+      contentClass="max-h-[min(16rem,var(--kb-popper-content-available-height))] w-[--kb-popper-anchor-width]"
+      formatLabel={(genre) => genre.name}
+    />
   )
 }
 

@@ -1,8 +1,7 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { Select } from '@kobalte/core/select'
-import { Check, ChevronsUpDown } from 'lucide-solid'
-import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
+import { AppMultiSelect } from '../../../components/common/AppSelect'
 import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
 
 const COLUMN_SETTINGS_TITLE = '列設定'
@@ -10,17 +9,6 @@ const COLUMN_SETTINGS_DESCRIPTION = '表示する列を選択してください�
 const COLUMN_SETTINGS_PLACEHOLDER = '表示列を選択'
 const CANCEL_LABEL = 'キャンセル'
 const APPLY_LABEL = '適用'
-/**
- * 列選択トリガーのフォーカス表示を要素内側に収める共通スタイル。
- */
-const COLUMN_SETTINGS_SELECT_TRIGGER_CLASS =
-  'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
-/**
- * 目的: 列設定リストのチェック済み色とフォーカス中のホバー色を分ける共通スタイル。
- */
-const COLUMN_SETTINGS_SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-text hover:bg-success-bg-hover data-[highlighted]:bg-success-bg-hover data-[selected]:bg-success-bg data-[selected]:hover:bg-success-bg-hover data-[selected]:data-[highlighted]:bg-success-bg-hover'
-
 type ColumnOption<TColumnId extends string> = {
   id: TColumnId
   label: string
@@ -95,53 +83,16 @@ const ColumnSettingsDialogBase = <TColumnId extends string, TSortKey extends str
           <Dialog.Title class="mb-4 text-lg font-bold">{COLUMN_SETTINGS_TITLE}</Dialog.Title>
           <p class="mb-3 text-xs text-text-subtle">{COLUMN_SETTINGS_DESCRIPTION}</p>
 
-          <Select<ColumnOption<TColumnId>>
-            multiple
+          <AppMultiSelect<ColumnOption<TColumnId>>
             options={columnOptions()}
             optionValue="id"
             optionTextValue="label"
             value={selectedOptions()}
             onChange={handleChange}
             placeholder={COLUMN_SETTINGS_PLACEHOLDER}
-            gutter={0}
-            itemComponent={(props) => (
-              <Select.Item item={props.item} class={COLUMN_SETTINGS_SELECT_ITEM_CLASS}>
-                <div class="flex items-center gap-2">
-                  <span class="inline-flex w-4 justify-center text-success">
-                    <Select.ItemIndicator>
-                      <Check size={14} />
-                    </Select.ItemIndicator>
-                  </span>
-                  <Select.ItemLabel>{props.item.rawValue.label}</Select.ItemLabel>
-                </div>
-              </Select.Item>
-            )}
-          >
-            <Select.Trigger class={COLUMN_SETTINGS_SELECT_TRIGGER_CLASS}>
-              <div class="flex min-h-6 flex-1 flex-wrap gap-1" aria-live="polite">
-                <Show
-                  when={selectedOptions().length > 0}
-                  fallback={<span class="text-text-subtle">{COLUMN_SETTINGS_PLACEHOLDER}</span>}
-                >
-                  <For each={selectedOptions()}>
-                    {(option) => (
-                      <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
-                        {option.label}
-                      </span>
-                    )}
-                  </For>
-                </Show>
-              </div>
-              <span class="text-text-subtle" aria-hidden="true">
-                <ChevronsUpDown size={16} />
-              </span>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content class="z-50 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
-                <Select.Listbox />
-              </Select.Content>
-            </Select.Portal>
-          </Select>
+            contentZIndexClass="z-50"
+            formatLabel={(option) => option.label}
+          />
 
           <div class="mt-6 flex justify-end gap-2">
             <AppButton onClick={() => props.onOpenChange(false)}>{CANCEL_LABEL}</AppButton>

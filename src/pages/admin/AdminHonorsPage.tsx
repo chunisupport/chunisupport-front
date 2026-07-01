@@ -1,12 +1,12 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, ChevronsUpDown, Pencil } from 'lucide-solid'
+import { Pencil } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { fetchAdminHonors, fetchHonorTypes, updateHonor } from '../../api/honors'
 import { Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { FormSelect } from '../../components/common/AppSelect'
 import { getHonorTypeClassName } from '../../constants/honors'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { AdminHonorDTO, HonorRequestDTO, MasterItemDTO } from '../../types/api'
@@ -28,7 +28,6 @@ type HonorEditDialogProps = {
 const HONOR_EDIT_FIELD_FOCUS_CLASS =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const HONOR_EDIT_TEXT_INPUT_CLASS = `w-full rounded border border-border-strong bg-surface px-3 py-2 hover:border-input-border-hover ${HONOR_EDIT_FIELD_FOCUS_CLASS}`
-const HONOR_EDIT_SELECT_TRIGGER_CLASS = `grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover ${HONOR_EDIT_FIELD_FOCUS_CLASS}`
 
 /**
  * 称号編集フォームの初期値を作成する。
@@ -112,45 +111,19 @@ const HonorEditDialog: Component<HonorEditDialogProps> = (props) => {
               />
             </TextField>
 
-            <Select<MasterItemDTO>
+            <FormSelect<MasterItemDTO>
+              label="クラス"
               options={props.honorTypes}
               optionValue="name"
               optionTextValue="name"
               value={selectedHonorType()}
-              onChange={(type) => updateRequestField('type_name', type?.name ?? '')}
+              onChange={(type: MasterItemDTO | null) =>
+                updateRequestField('type_name', type?.name ?? '')
+              }
               placeholder="選択してください"
-              gutter={0}
-              itemComponent={(selectProps) => (
-                <Select.Item
-                  item={selectProps.item}
-                  class="cursor-pointer px-3 py-2 text-text hover:bg-surface-hover data-[selected]:bg-surface-hover"
-                >
-                  <div class="flex items-center gap-2">
-                    <span class="inline-flex w-4 justify-center text-success">
-                      <Select.ItemIndicator>
-                        <Check size={14} />
-                      </Select.ItemIndicator>
-                    </span>
-                    <Select.ItemLabel>{selectProps.item.rawValue.name}</Select.ItemLabel>
-                  </div>
-                </Select.Item>
-              )}
-            >
-              <Select.Label class="mb-1 block text-sm text-text-muted">クラス</Select.Label>
-              <Select.Trigger class={HONOR_EDIT_SELECT_TRIGGER_CLASS}>
-                <Select.Value<MasterItemDTO> class="truncate data-placeholder-shown:text-text-placeholder">
-                  {(state) => state.selectedOption().name}
-                </Select.Value>
-                <Select.Icon class="text-text-subtle">
-                  <ChevronsUpDown size={16} />
-                </Select.Icon>
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Content class="z-50 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
-                  <Select.Listbox />
-                </Select.Content>
-              </Select.Portal>
-            </Select>
+              contentZIndexClass="z-50"
+              formatLabel={(type) => type.name}
+            />
 
             <TextField>
               <TextField.Label class="mb-1 block text-sm text-text-muted">

@@ -1,10 +1,9 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
-import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
-import { Check, ChevronDown, Dices, RotateCcw, SlidersHorizontal } from 'lucide-solid'
+import { Check, Dices, RotateCcw, SlidersHorizontal } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import {
   createEffect,
@@ -21,6 +20,7 @@ import { fetchVersions } from '../../api/songs'
 import { fetchMe, fetchUserRating } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
+import { FormSelect } from '../../components/common/AppSelect'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import MultiSelectDropdown from '../../components/common/MultiSelectDropdown'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
@@ -463,55 +463,20 @@ const RandomSongSelect = <T extends string>(props: {
   disabled?: boolean
   onChange: (value: T) => void
 }) => (
-  <Select<T>
-    class="block text-sm"
+  <FormSelect<T>
+    rootClass="block text-sm"
+    label={props.label}
     options={props.options.map((option) => option.value)}
     value={props.value}
-    onChange={(value) => {
+    onChange={(value: T | null) => {
       if (value) props.onChange(value)
     }}
     disabled={props.disabled}
-    gutter={0}
-    itemComponent={(itemProps) => {
-      const label =
-        props.options.find((option) => option.value === itemProps.item.rawValue)?.label ??
-        itemProps.item.rawValue
-      return (
-        <Select.Item
-          item={itemProps.item}
-          class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-highlighted:bg-success-bg data-selected:bg-success-bg"
-        >
-          <div class="flex items-center gap-2">
-            <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-success">
-              <Check size={14} />
-            </Select.ItemIndicator>
-            <Select.ItemLabel>{label}</Select.ItemLabel>
-          </div>
-        </Select.Item>
-      )
-    }}
-  >
-    <Select.Label class="mb-1 block font-medium text-text-muted">{props.label}</Select.Label>
-    <Select.Trigger
-      id={props.id}
-      class="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
-    >
-      <Select.Value<T> class="truncate">
-        {(state) =>
-          props.options.find((option) => option.value === state.selectedOption())?.label ??
-          state.selectedOption()
-        }
-      </Select.Value>
-      <Select.Icon class="text-text-subtle">
-        <ChevronDown size={16} />
-      </Select.Icon>
-    </Select.Trigger>
-    <Select.Portal>
-      <Select.Content class="z-70 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
-        <Select.Listbox />
-      </Select.Content>
-    </Select.Portal>
-  </Select>
+    contentZIndexClass="z-70"
+    formatLabel={(value) => props.options.find((option) => option.value === value)?.label ?? value}
+    triggerId={props.id}
+    triggerClass="font-medium"
+  />
 )
 
 /**

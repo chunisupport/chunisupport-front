@@ -1,15 +1,10 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { Select } from '@kobalte/core/select'
 import * as Tabs from '@kobalte/core/tabs'
-import { Check, ChevronDown } from 'lucide-solid'
 import { createEffect, createMemo, createSignal, For } from 'solid-js'
 import { AppButton, getAppButtonClass } from '../../../components/common/AppButton'
+import { AppSelect } from '../../../components/common/AppSelect'
 import type { SortCondition } from '../../../utils/sortConditions'
 import type { SortDirection } from '../../../utils/sortingQuery'
-import {
-  FILTER_DIALOG_SELECT_ITEM_CLASS,
-  FILTER_DIALOG_SELECT_TRIGGER_CLASS,
-} from './filter/styles'
 
 export type { SortCondition } from '../../../utils/sortConditions'
 
@@ -202,78 +197,34 @@ export function SortConditionsDialog<TSortKey extends string>(
           </span>
         ) : null}
         <div class="min-w-0 flex-1">
-          <Select<SortConditionColumnOption<TSortKey>>
+          <AppSelect<SortConditionColumnOption<TSortKey>>
             options={props.columnOptions}
             optionValue="value"
             optionTextValue="label"
             value={getSortColumnOption(selectedKey())}
-            onChange={(option) => {
+            onChange={(option: SortConditionColumnOption<TSortKey> | null) => {
               if (option) updateDraftSortKey(rowIndex, option.value)
             }}
-            gutter={0}
-            itemComponent={(itemProps) => (
-              <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
-                <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
-                  <Check class="h-4 w-4" />
-                </Select.ItemIndicator>
-              </Select.Item>
-            )}
-          >
-            <Select.Label class="sr-only">第{rowIndex + 1}ソート 列</Select.Label>
-            <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
-              <Select.Value<
-                SortConditionColumnOption<TSortKey>
-              > class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
-                {(state) => state.selectedOption()?.label}
-              </Select.Value>
-              <Select.Icon class="h-5 w-5 flex items-center justify-center">
-                <ChevronDown class="h-4 w-4" />
-              </Select.Icon>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
-                <Select.Listbox class="max-h-90 overflow-y-auto p-2" />
-              </Select.Content>
-            </Select.Portal>
-          </Select>
+            label={`第${rowIndex + 1}ソート 列`}
+            labelVariant="srOnly"
+            formatLabel={(option) => option.label}
+            listboxClass="p-2"
+          />
         </div>
         <div class="w-24 shrink-0">
-          <Select<SortDirectionOption>
+          <AppSelect<SortDirectionOption>
             options={SORT_DIRECTION_OPTIONS}
             optionValue="value"
             optionTextValue="label"
             value={getSortDirectionOption(selectedDirection())}
-            onChange={(option) => {
+            onChange={(option: SortDirectionOption | null) => {
               if (option) updateDraftSortDirection(rowIndex, option.value)
             }}
-            gutter={0}
-            itemComponent={(itemProps) => (
-              <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
-                <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
-                  <Check class="h-4 w-4" />
-                </Select.ItemIndicator>
-              </Select.Item>
-            )}
-          >
-            <Select.Label class="sr-only">
-              第{rowIndex + 1}ソート {getSortDirectionLabel(selectedDirection())}
-            </Select.Label>
-            <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
-              <Select.Value<SortDirectionOption> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
-                {(state) => state.selectedOption()?.label}
-              </Select.Value>
-              <Select.Icon class="h-5 w-5 flex items-center justify-center">
-                <ChevronDown class="h-4 w-4" />
-              </Select.Icon>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
-                <Select.Listbox class="p-2" />
-              </Select.Content>
-            </Select.Portal>
-          </Select>
+            label={`第${rowIndex + 1}ソート ${getSortDirectionLabel(selectedDirection())}`}
+            labelVariant="srOnly"
+            formatLabel={(option) => option.label}
+            listboxClass="p-2"
+          />
         </div>
       </div>
     )
