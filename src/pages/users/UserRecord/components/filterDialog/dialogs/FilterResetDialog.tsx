@@ -2,7 +2,11 @@ import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { RotateCcw } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createSignal } from 'solid-js'
-import { AppButton, getAppButtonClass } from '../../../../../../components/common/AppButton'
+import {
+  AppButton,
+  getAppButtonClass,
+  getAppIconButtonClass,
+} from '../../../../../../components/common/AppButton'
 
 type FilterResetDialogProps = {
   onReset: () => void
@@ -19,10 +23,14 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
 
   return (
     <AlertDialog open={resetDialogOpen()} onOpenChange={setResetDialogOpen}>
-      <AlertDialog.Trigger>
-        <div class="p-2 rounded bg-danger-bg border border-danger-border">
-          <RotateCcw class="w-5 h-5 text-text-muted cursor-pointer" />
-        </div>
+      <AlertDialog.Trigger
+        as="button"
+        type="button"
+        class={getAppIconButtonClass({ tone: 'danger' })}
+        aria-label="フィルターをリセット"
+        title="フィルターをリセット"
+      >
+        <RotateCcw class="h-5 w-5" aria-hidden="true" />
       </AlertDialog.Trigger>
       <AlertDialog.Portal>
         <AlertDialog.Overlay class="fixed inset-0 bg-overlay z-50" />

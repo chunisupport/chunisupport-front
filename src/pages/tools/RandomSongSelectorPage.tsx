@@ -1032,7 +1032,10 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       <Dialog.Trigger
                         as="button"
                         type="button"
-                        class="inline-flex min-h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                        class={getAppButtonClass({
+                          variant: 'surface',
+                          class: 'min-h-10 rounded-md',
+                        })}
                       >
                         <SlidersHorizontal size={16} aria-hidden="true" />
                         {RANDOM_SONG_SELECTOR_COPY.recordFilterSettingsLabel}
@@ -1122,7 +1125,10 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       <Dialog.Trigger
                         as="button"
                         type="button"
-                        class="inline-flex min-h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                        class={getAppButtonClass({
+                          variant: 'surface',
+                          class: 'min-h-10 rounded-md',
+                        })}
                       >
                         <SlidersHorizontal size={16} aria-hidden="true" />
                         {RANDOM_SONG_SELECTOR_COPY.advancedSettingsLabel}
