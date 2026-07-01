@@ -620,7 +620,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
 
           <div class="mt-4 flex justify-end gap-2">
             <AppButton
-              variant="surface"
+              variant="secondary"
               size="sm"
               onClick={() => props.onOpenChange(false)}
               disabled={isSaving()}

@@ -10,6 +10,7 @@ export type AppButtonVariant =
   | 'surface'
   | 'danger'
   | 'dangerOutline'
+  | 'success'
   | 'ghost'
 
 export type AppButtonSize = 'xs' | 'sm' | 'md'
@@ -54,6 +55,7 @@ const VARIANT_CLASS: Record<AppButtonVariant, string> = {
     'border border-border-strong bg-surface text-text-muted hover:bg-surface-muted disabled:hover:bg-surface',
   danger: 'bg-danger font-semibold text-text-inverse hover:bg-danger-hover',
   dangerOutline: 'border border-danger text-danger hover:bg-danger-bg',
+  success: 'bg-success font-semibold text-text-inverse hover:bg-success',
   ghost: 'text-text-muted hover:bg-surface-muted',
 }
 

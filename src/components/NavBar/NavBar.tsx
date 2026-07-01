@@ -37,6 +37,7 @@ import {
   subscribeSystemThemeChange,
   type ThemePreference,
 } from '../../utils/themePreference'
+import { AppButton } from '../common/AppButton'
 
 /**
  * その他メニューに表示する項目を表す。
@@ -417,23 +418,16 @@ const NavBar = (props: NavBarProps) => {
                 この機能を利用するにはログインが必要です。
               </Dialog.Description>
               <div class="flex gap-4 mt-2">
-                <Button
-                  type="button"
-                  class="px-4 py-2 rounded bg-action-secondary hover:bg-action-secondary-hover"
-                  onClick={() => setShowLoginDialog(false)}
-                >
-                  戻る
-                </Button>
-                <Button
-                  type="button"
-                  class="px-4 py-2 rounded bg-action-primary text-text-inverse hover:bg-action-primary-hover"
+                <AppButton onClick={() => setShowLoginDialog(false)}>戻る</AppButton>
+                <AppButton
+                  variant="primary"
                   onClick={() => {
                     setShowLoginDialog(false)
                     navigate('/login')
                   }}
                 >
                   ログイン画面へ
-                </Button>
+                </AppButton>
               </div>
             </Dialog.Content>
           </Dialog.Portal>
@@ -451,20 +445,10 @@ const NavBar = (props: NavBarProps) => {
                 本当にログアウトしますか？
               </AlertDialog.Description>
               <div class="flex gap-4 mt-2">
-                <Button
-                  type="button"
-                  class="px-4 py-2 rounded bg-action-secondary hover:bg-action-secondary-hover"
-                  onClick={() => setShowLogoutDialog(false)}
-                >
-                  キャンセル
-                </Button>
-                <Button
-                  type="button"
-                  class="px-4 py-2 rounded bg-danger text-text-inverse hover:bg-danger-hover"
-                  onClick={handleLogout}
-                >
+                <AppButton onClick={() => setShowLogoutDialog(false)}>キャンセル</AppButton>
+                <AppButton variant="danger" onClick={handleLogout}>
                   ログアウト
-                </Button>
+                </AppButton>
               </div>
             </AlertDialog.Content>
           </AlertDialog.Portal>

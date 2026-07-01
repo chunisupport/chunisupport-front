@@ -19,6 +19,7 @@ import {
   updateWorldsendSongs,
 } from '../../api/songs'
 import { Loading } from '../../components'
+import { AppButton } from '../../components/common/AppButton'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type {
   CreateSongRequestDTO,
@@ -1270,14 +1271,13 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         !currentDraft().charts.some((chart) => chart.difficulty_name === 'ULTIMA')
                       }
                     >
-                      <Button
-                        type="button"
-                        class="inline-flex items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-sm font-medium text-text hover:bg-surface-hover"
+                      <AppButton
+                        size="sm"
+                        leftIcon={<Plus size={16} aria-hidden="true" />}
                         onClick={handleAddUltimaChart}
                       >
-                        <Plus size={16} />
                         ULTIMA譜面を追加
-                      </Button>
+                      </AppButton>
                     </Show>
 
                     <div class="overflow-x-auto rounded border border-border">
@@ -1378,32 +1378,26 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     </div>
 
                     <div class="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        class="rounded bg-info px-4 py-2 text-sm font-medium text-text-inverse hover:bg-info"
-                        onClick={handleSave}
-                      >
+                      <AppButton variant="primary" onClick={handleSave}>
                         更新する
-                      </Button>
+                      </AppButton>
                       <Show
                         when={!selectedSong()?.is_deleted}
                         fallback={
-                          <Button
-                            type="button"
-                            class="rounded bg-success px-4 py-2 text-sm font-medium text-text-inverse hover:bg-success"
+                          <AppButton
+                            variant="success"
                             onClick={() => handleRestoreSong(currentDraft().id)}
                           >
                             復活する
-                          </Button>
+                          </AppButton>
                         }
                       >
-                        <Button
-                          type="button"
-                          class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover"
+                        <AppButton
+                          variant="danger"
                           onClick={() => handleDeleteSong(currentDraft().id)}
                         >
                           削除する
-                        </Button>
+                        </AppButton>
                       </Show>
                     </div>
                   </div>
@@ -1582,32 +1576,26 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     </div>
 
                     <div class="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        class="rounded bg-info px-4 py-2 text-sm font-medium text-text-inverse hover:bg-info"
-                        onClick={handleSaveWorldsend}
-                      >
+                      <AppButton variant="primary" onClick={handleSaveWorldsend}>
                         更新する
-                      </Button>
+                      </AppButton>
                       <Show
                         when={!selectedWorldsendSong()?.is_deleted}
                         fallback={
-                          <Button
-                            type="button"
-                            class="rounded bg-success px-4 py-2 text-sm font-medium text-text-inverse hover:bg-success"
+                          <AppButton
+                            variant="success"
                             onClick={() => handleRestoreWorldsendSong(currentDraft().id)}
                           >
                             復活する
-                          </Button>
+                          </AppButton>
                         }
                       >
-                        <Button
-                          type="button"
-                          class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover"
+                        <AppButton
+                          variant="danger"
                           onClick={() => handleDeleteWorldsendSong(currentDraft().id)}
                         >
                           削除する
-                        </Button>
+                        </AppButton>
                       </Show>
                     </div>
                   </div>
@@ -1787,13 +1775,13 @@ const SongManagementPage = (props: SongManagementPageProps) => {
             </table>
           </div>
 
-          <Button
-            type="button"
-            class="rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-text-inverse hover:bg-indigo-700"
+          <AppButton
+            variant="primary"
+            leftIcon={<Plus size={16} aria-hidden="true" />}
             onClick={handleCreateSong}
           >
             通常楽曲を追加する
-          </Button>
+          </AppButton>
         </div>
       </section>
 
@@ -1898,13 +1886,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
           />
         </div>
 
-        <Button
-          type="button"
-          class="mt-4 rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-text-inverse hover:bg-indigo-700"
+        <AppButton
+          variant="primary"
+          class="mt-4"
+          leftIcon={<Plus size={16} aria-hidden="true" />}
           onClick={handleCreateWorldsendSong}
         >
           WORLD&apos;S END楽曲を追加する
-        </Button>
+        </AppButton>
       </section>
     </div>
   )

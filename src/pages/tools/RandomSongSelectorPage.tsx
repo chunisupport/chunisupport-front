@@ -1,5 +1,4 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
-import { Button } from '@kobalte/core/button'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
 import { Select } from '@kobalte/core/select'
@@ -21,6 +20,7 @@ import {
 import { fetchVersions } from '../../api/songs'
 import { fetchMe, fetchUserRating } from '../../api/users'
 import { LoadError, Loading } from '../../components'
+import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import MultiSelectDropdown from '../../components/common/MultiSelectDropdown'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
@@ -1110,7 +1110,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                             </div>
                           </div>
                           <div class="mt-4 flex shrink-0 justify-end">
-                            <Dialog.CloseButton class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted hover:bg-action-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring">
+                            <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
                               {RANDOM_SONG_SELECTOR_COPY.closeButtonLabel}
                             </Dialog.CloseButton>
                           </div>
@@ -1208,7 +1208,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                             </section>
                           </div>
                           <div class="mt-4 flex shrink-0 justify-end">
-                            <Dialog.CloseButton class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted hover:bg-action-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring">
+                            <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
                               {RANDOM_SONG_SELECTOR_COPY.closeButtonLabel}
                             </Dialog.CloseButton>
                           </div>
@@ -1233,7 +1233,10 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       <AlertDialog.Trigger
                         as="button"
                         type="button"
-                        class="inline-flex min-h-10 items-center gap-2 rounded-md border bg-danger-bg border-danger-border px-4 text-sm font-medium text-text-muted hover:bg-danger-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                        class={getAppButtonClass({
+                          variant: 'dangerOutline',
+                          class: 'min-h-10 rounded-md',
+                        })}
                       >
                         <RotateCcw size={16} aria-hidden="true" />
                         {RANDOM_SONG_SELECTOR_COPY.resetButtonLabel}
@@ -1250,13 +1253,13 @@ const RandomSongSelectorPage = (): JSX.Element => {
                           <div class="flex justify-end gap-2">
                             <AlertDialog.CloseButton
                               as="button"
-                              class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted hover:bg-action-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                              class={getAppButtonClass({ variant: 'secondary' })}
                             >
                               {RANDOM_SONG_SELECTOR_COPY.resetCancelLabel}
                             </AlertDialog.CloseButton>
                             <AlertDialog.CloseButton
                               as="button"
-                              class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                              class={getAppButtonClass({ variant: 'danger' })}
                               onClick={handleReset}
                             >
                               {RANDOM_SONG_SELECTOR_COPY.resetConfirmLabel}
@@ -1265,15 +1268,15 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         </AlertDialog.Content>
                       </AlertDialog.Portal>
                     </AlertDialog>
-                    <Button
-                      type="button"
-                      class="inline-flex min-h-10 items-center gap-2 rounded-md bg-action-primary px-4 text-sm font-medium text-text-inverse hover:bg-action-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                    <AppButton
+                      variant="primary"
+                      class="min-h-10 rounded-md"
                       disabled={validationMessage() !== null || filteredCandidates().length === 0}
                       onClick={handleDraw}
+                      leftIcon={<Dices size={16} aria-hidden="true" />}
                     >
-                      <Dices size={16} aria-hidden="true" />
                       {RANDOM_SONG_SELECTOR_COPY.drawButtonLabel}
-                    </Button>
+                    </AppButton>
                   </div>
                 </div>
               </form>
