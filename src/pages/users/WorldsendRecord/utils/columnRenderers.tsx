@@ -10,7 +10,7 @@ import {
   RecordScoreCell,
   RecordTitleCell,
   RecordUpdatedAtCell,
-} from '../../components/SharedRecordTableColumns'
+} from '../../../../components/common/record/RecordDisplayParts'
 import { buildWorldsendSongDetailPath } from '../../UserPage/worldsendNavigation'
 import { formatJusticeCountForAj } from '../../UserRecord/utils/justiceCountDisplay'
 import { formatUpdatedAt } from '../../UserRecord/utils/updatedAt'

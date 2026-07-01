@@ -5,14 +5,14 @@ import type { Accessor, Component } from 'solid-js'
 import { createMemo, For, lazy, Show, Suspense } from 'solid-js'
 import { Loading } from '../../../components'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
-import { UserNameplate } from './components/UserNameplate'
-import { UserRecordCard } from './components/UserRecordCard'
 import {
   buildUserOverPowerPagePath,
   buildUserProfilePagePath,
   type OverPowerSubPage,
   type ProfilePageQuery,
-} from './profilePageQuery'
+} from '../../../utils/userProfileRoute'
+import { UserNameplate } from './components/UserNameplate'
+import { UserRecordCard } from './components/UserRecordCard'
 import type { UserPageRatingProfile, UserPageRecordProfile } from './UserPage'
 
 const UserRecord = lazy(() => import('../UserRecord'))

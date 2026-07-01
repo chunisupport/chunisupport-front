@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
+import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
 import type { PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
-import { buildDefaultFilter } from '../../users/UserRecord/types/filterDefaults'
 import { isRecordMatched } from '../../users/UserRecord/utils/filtering'
 import { buildGoalRecordFilter, isGoalRecordNavigationEnabled } from './goalRecordFilter'
 

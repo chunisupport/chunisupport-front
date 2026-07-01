@@ -3,7 +3,7 @@ import { compareMasterItemNames, createMasterItemOrderMap } from '../../../../ut
 import {
   nextSortState as nextSharedSortState,
   type SortDirection,
-} from '../../../users/recordTable/sortingQuery'
+} from '../../../../utils/sortingQuery'
 
 export type WorldsendSongSortKey =
   | 'title'

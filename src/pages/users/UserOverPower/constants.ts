@@ -1,4 +1,4 @@
-import type { OverPowerSubPage } from '../UserPage/profilePageQuery'
+import type { OverPowerSubPage } from '../../../utils/userProfileRoute'
 import type {
   OverPowerComboBand,
   OverPowerScoreBand,

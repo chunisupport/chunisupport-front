@@ -1,8 +1,8 @@
-import { Button } from '@kobalte/core/button'
 import { createMemo, For, Show } from 'solid-js'
+import { createWindowVirtualTable } from '../../../../components/common/createWindowVirtualTable'
+import { SortableTableHeaderCell } from '../../../../components/common/SortableTableHeader'
 import type { WorldsendSongDTO } from '../../../../types/api'
-import { renderSortIndicator } from '../../../users/components/RecordTableUiParts'
-import type { SortDirection } from '../../../users/recordTable/sortingQuery'
+import type { SortDirection } from '../../../../utils/sortingQuery'
 import {
   SongListAddedDateCell,
   SongListArtistCell,
@@ -10,7 +10,6 @@ import {
   SongListGenreCell,
   SongListTitleCell,
 } from '../../components/SongListMetaCells'
-import { createVirtualizedSongsTable, sortAriaValue } from '../../components/virtualizedSongsTable'
 import type { WorldsendSongSortKey } from '../utils/sorting'
 
 const ROW_HEIGHT = 37
@@ -28,34 +27,14 @@ type Props = {
   onSortChange: (key: WorldsendSongSortKey) => void
 }
 
-type HeaderButtonProps = {
-  label: string
-  active: boolean
-  direction: SortDirection | null
-  align?: 'start' | 'center'
-  onClick: () => void
-}
-
-const WorldsendHeaderButton = (props: HeaderButtonProps) => (
-  <th
-    class={HEADER_CELL_CLASS}
-    scope="col"
-    aria-sort={sortAriaValue(props.active, props.direction)}
-  >
-    <Button
-      type="button"
-      class={`${HEADER_BUTTON_CLASS} ${props.align === 'start' ? 'justify-start' : 'justify-center'}`}
-      onClick={props.onClick}
-    >
-      <span
-        class={`flex flex-col ${props.align === 'start' ? 'items-start' : 'items-center'} justify-center gap-0.5 leading-none`}
-      >
-        <span>{props.label}</span>
-        {renderSortIndicator(props.active, props.direction)}
-      </span>
-    </Button>
-  </th>
-)
+/**
+ * WORLD'S END楽曲一覧テーブルのヘッダーボタンに適用する配置クラスを返す。
+ *
+ * @param align - ヘッダー内容の配置。
+ * @returns 基本スタイルと配置を組み合わせたクラス名。
+ */
+const headerButtonClass = (align?: 'start' | 'center') =>
+  `${HEADER_BUTTON_CLASS} ${align === 'start' ? 'justify-start' : 'justify-center'}`
 
 const StarLevel = (props: { level: number | null | undefined }) => {
   if (props.level == null) {
@@ -65,8 +44,13 @@ const StarLevel = (props: { level: number | null | undefined }) => {
 }
 
 const WorldsendSongsTable = (props: Props) => {
-  const virtualizedTable = createVirtualizedSongsTable({
-    getCount: () => props.songs.length,
+  const virtualizedTable = createWindowVirtualTable<
+    HTMLDivElement,
+    HTMLTableSectionElement,
+    HTMLDivElement,
+    HTMLTableRowElement
+  >({
+    rowCount: () => props.songs.length,
     rowHeight: ROW_HEIGHT,
   })
 
@@ -82,51 +66,65 @@ const WorldsendSongsTable = (props: Props) => {
       ref={virtualizedTable.setTableContainerRef}
       class="overflow-x-auto overflow-y-hidden rounded-md border border-border bg-surface"
     >
-      <table class="block min-w-[45rem] text-sm" aria-rowcount={props.songs.length}>
+      <table class="block min-w-180 text-sm" aria-rowcount={props.songs.length}>
         <thead class="block">
           <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
-            <WorldsendHeaderButton
+            <SortableTableHeaderCell
               label="タイトル"
               active={props.sortKey === 'title'}
               direction={props.sortDirection}
               align="start"
+              thClass={HEADER_CELL_CLASS}
+              buttonClass={headerButtonClass('start')}
               onClick={() => handleSortChange('title')}
             />
-            <WorldsendHeaderButton
+            <SortableTableHeaderCell
               label="アーティスト"
               active={props.sortKey === 'artist'}
               direction={props.sortDirection}
               align="start"
+              thClass={HEADER_CELL_CLASS}
+              buttonClass={headerButtonClass('start')}
               onClick={() => handleSortChange('artist')}
             />
-            <WorldsendHeaderButton
+            <SortableTableHeaderCell
               label="ジャンル"
               active={props.sortKey === 'genre'}
               direction={props.sortDirection}
+              thClass={HEADER_CELL_CLASS}
+              buttonClass={headerButtonClass()}
               onClick={() => handleSortChange('genre')}
             />
-            <WorldsendHeaderButton
+            <SortableTableHeaderCell
               label="追加日"
               active={props.sortKey === 'release'}
               direction={props.sortDirection}
+              thClass={HEADER_CELL_CLASS}
+              buttonClass={headerButtonClass()}
               onClick={() => handleSortChange('release')}
             />
-            <WorldsendHeaderButton
+            <SortableTableHeaderCell
               label="BPM"
               active={props.sortKey === 'bpm'}
               direction={props.sortDirection}
+              thClass={HEADER_CELL_CLASS}
+              buttonClass={headerButtonClass()}
               onClick={() => handleSortChange('bpm')}
             />
-            <WorldsendHeaderButton
+            <SortableTableHeaderCell
               label="属性"
               active={props.sortKey === 'attribute'}
               direction={props.sortDirection}
+              thClass={HEADER_CELL_CLASS}
+              buttonClass={headerButtonClass()}
               onClick={() => handleSortChange('attribute')}
             />
-            <WorldsendHeaderButton
+            <SortableTableHeaderCell
               label="レベル"
               active={props.sortKey === 'level'}
               direction={props.sortDirection}
+              thClass={HEADER_CELL_CLASS}
+              buttonClass={headerButtonClass()}
               onClick={() => handleSortChange('level')}
             />
           </tr>

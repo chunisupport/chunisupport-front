@@ -1,10 +1,10 @@
-import { Button } from '@kobalte/core/button'
-import { createEffect, createMemo, For, Show } from 'solid-js'
+import { createMemo, For, Show } from 'solid-js'
+import { createWindowVirtualTable } from '../../../../components/common/createWindowVirtualTable'
+import { SortableTableHeaderCell } from '../../../../components/common/SortableTableHeader'
 import type { SongDTO } from '../../../../types/api'
 import { formatChartConst } from '../../../../utils/chartConstFormat'
 import { DIFFICULTY_SHORT_NAME_MAP, difficultyBadgeClass } from '../../../../utils/difficultyUtils'
-import { renderSortIndicator } from '../../../users/components/RecordTableUiParts'
-import type { SortDirection } from '../../../users/recordTable/sortingQuery'
+import type { SortDirection } from '../../../../utils/sortingQuery'
 import {
   SongListAddedDateCell,
   SongListArtistCell,
@@ -12,7 +12,6 @@ import {
   SongListGenreCell,
   SongListTitleCell,
 } from '../../components/SongListMetaCells'
-import { createVirtualizedSongsTable, sortAriaValue } from '../../components/virtualizedSongsTable'
 import type { SongSortKey } from '../utils/sorting'
 
 const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
@@ -30,34 +29,14 @@ type Props = {
   onSortChange: (key: SongSortKey) => void
 }
 
-type HeaderButtonProps = {
-  label: string
-  active: boolean
-  direction: SortDirection | null
-  align?: 'start' | 'center'
-  onClick: () => void
-}
-
-const SongHeaderButton = (props: HeaderButtonProps) => (
-  <th
-    class={HEADER_CELL_CLASS}
-    scope="col"
-    aria-sort={sortAriaValue(props.active, props.direction)}
-  >
-    <Button
-      type="button"
-      class={`${HEADER_BUTTON_CLASS} ${props.align === 'start' ? 'justify-start' : 'justify-center'}`}
-      onClick={props.onClick}
-    >
-      <span
-        class={`flex flex-col ${props.align === 'start' ? 'items-start' : 'items-center'} justify-center gap-0.5 leading-none`}
-      >
-        <span>{props.label}</span>
-        {renderSortIndicator(props.active, props.direction)}
-      </span>
-    </Button>
-  </th>
-)
+/**
+ * 楽曲一覧テーブルのヘッダーボタンに適用する配置クラスを返す。
+ *
+ * @param align - ヘッダー内容の配置。
+ * @returns 基本スタイルと配置を組み合わせたクラス名。
+ */
+const headerButtonClass = (align?: 'start' | 'center') =>
+  `${HEADER_BUTTON_CLASS} ${align === 'start' ? 'justify-start' : 'justify-center'}`
 
 /**
  * 楽曲DBの楽曲一覧を仮想化テーブルとして表示します。
@@ -66,15 +45,15 @@ const SongHeaderButton = (props: HeaderButtonProps) => (
  * @returns 新曲を強調表示した楽曲一覧テーブル
  */
 const SongsTable = (props: Props) => {
-  const virtualizedTable = createVirtualizedSongsTable({
-    getCount: () => props.songs.length,
+  const virtualizedTable = createWindowVirtualTable<
+    HTMLDivElement,
+    HTMLTableSectionElement,
+    HTMLDivElement,
+    HTMLTableRowElement
+  >({
+    rowCount: () => props.songs.length,
     rowHeight: ROW_HEIGHT,
-    resetOnCountChange: true,
-  })
-
-  createEffect(() => {
-    props.songs.length
-    virtualizedTable.maybeResetScroll()
+    resetOnRowCountChange: true,
   })
 
   const virtualRows = createMemo(() => virtualizedTable.virtualRows())
@@ -84,47 +63,59 @@ const SongsTable = (props: Props) => {
       ref={virtualizedTable.setTableContainerRef}
       class="overflow-x-auto overflow-y-hidden rounded-md border border-border bg-surface"
     >
-      <table class="block min-w-[45rem] text-sm" aria-rowcount={props.songs.length}>
+      <table class="block min-w-180 text-sm" aria-rowcount={props.songs.length}>
         <thead class="block">
           <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
-            <SongHeaderButton
+            <SortableTableHeaderCell
               label="タイトル"
               active={props.sortKey === 'title'}
               direction={props.sortDirection}
               align="start"
+              thClass={HEADER_CELL_CLASS}
+              buttonClass={headerButtonClass('start')}
               onClick={() => props.onSortChange('title')}
             />
-            <SongHeaderButton
+            <SortableTableHeaderCell
               label="アーティスト"
               active={props.sortKey === 'artist'}
               direction={props.sortDirection}
               align="start"
+              thClass={HEADER_CELL_CLASS}
+              buttonClass={headerButtonClass('start')}
               onClick={() => props.onSortChange('artist')}
             />
-            <SongHeaderButton
+            <SortableTableHeaderCell
               label="ジャンル"
               active={props.sortKey === 'genre'}
               direction={props.sortDirection}
+              thClass={HEADER_CELL_CLASS}
+              buttonClass={headerButtonClass()}
               onClick={() => props.onSortChange('genre')}
             />
-            <SongHeaderButton
+            <SortableTableHeaderCell
               label="追加日"
               active={props.sortKey === 'release'}
               direction={props.sortDirection}
+              thClass={HEADER_CELL_CLASS}
+              buttonClass={headerButtonClass()}
               onClick={() => props.onSortChange('release')}
             />
-            <SongHeaderButton
+            <SortableTableHeaderCell
               label="BPM"
               active={props.sortKey === 'bpm'}
               direction={props.sortDirection}
+              thClass={HEADER_CELL_CLASS}
+              buttonClass={headerButtonClass()}
               onClick={() => props.onSortChange('bpm')}
             />
             <For each={chartOrder}>
               {(difficulty) => (
-                <SongHeaderButton
+                <SortableTableHeaderCell
                   label={DIFFICULTY_SHORT_NAME_MAP[difficulty]}
                   active={props.sortKey === difficulty.toLowerCase()}
                   direction={props.sortDirection}
+                  thClass={HEADER_CELL_CLASS}
+                  buttonClass={headerButtonClass()}
                   onClick={() => props.onSortChange(difficulty.toLowerCase() as SongSortKey)}
                 />
               )}

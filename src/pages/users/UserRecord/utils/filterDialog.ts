@@ -1,8 +1,8 @@
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart'
+import type { FilterState } from '../../../../types/recordFilter'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { hasSameFilterValues } from '../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
-import type { FilterState } from '../types/types'
 
 export {
   hasSameFilterValues,

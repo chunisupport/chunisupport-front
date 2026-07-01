@@ -1,6 +1,6 @@
 import type { Component } from 'solid-js'
+import type { RecordColumnId } from '../../../../types/recordFilter'
 import ColumnSettingsDialogBase from '../../components/ColumnSettingsDialogBase'
-import type { RecordColumnId } from '../types/types'
 import { RECORD_COLUMN_DEFINITIONS, sortVisibleColumnIdsByDefinitionOrder } from '../utils/columns'
 
 type ColumnSettingsDialogProps = {

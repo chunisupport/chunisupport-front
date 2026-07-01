@@ -1,14 +1,14 @@
 import type { JSX } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
-import { createGridTemplateColumns } from '../utils/recordColumnDefinitions'
-import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
-import { createRecordTableVirtualizer } from './createRecordTableVirtualizer'
+import { createWindowVirtualTable } from '../../../components/common/createWindowVirtualTable'
 import {
   type ColumnRenderer,
   RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
   RecordHeaderButton,
-} from './SharedRecordTableColumns'
+} from '../../../components/common/record/RecordDisplayParts'
+import { createGridTemplateColumns } from '../utils/recordColumnDefinitions'
+import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
 
 type SortDirection = 'asc' | 'desc' | null
 
@@ -47,15 +47,11 @@ type RecordDataTableProps<TRecord, TColumnId extends string, TSortKey extends st
 export function RecordDataTable<TRecord, TColumnId extends string, TSortKey extends string>(
   props: RecordDataTableProps<TRecord, TColumnId, TSortKey>
 ): JSX.Element {
-  let tableContainerRef: HTMLDivElement | undefined
-  let tableBodyRef: HTMLDivElement | undefined
-
-  const virtualizedTable = createRecordTableVirtualizer({
+  const virtualizedTable = createWindowVirtualTable<HTMLDivElement, HTMLDivElement>({
     rowHeight: RECORD_ROW_HEIGHT,
     rowCount: () => props.records.length,
-    containerRef: () => tableContainerRef,
-    bodyRef: () => tableBodyRef,
-    resetDeps: () => props.resetDeps,
+    resetOnRowCountChange: true,
+    layoutDeps: () => props.resetDeps,
   })
 
   const gridTemplateColumns = createMemo(() => createGridTemplateColumns(props.columns))
@@ -69,7 +65,7 @@ export function RecordDataTable<TRecord, TColumnId extends string, TSortKey exte
         fallback={<p class="py-6 text-center text-text-subtle">{props.emptyMessage}</p>}
       >
         <div
-          ref={tableContainerRef}
+          ref={virtualizedTable.setTableContainerRef}
           class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-border"
         >
           <div class="w-fit min-w-full">
@@ -94,7 +90,7 @@ export function RecordDataTable<TRecord, TColumnId extends string, TSortKey exte
             </div>
 
             <div
-              ref={tableBodyRef}
+              ref={virtualizedTable.setTableBodyRef}
               class="relative"
               style={{ height: `${virtualizedTable.getTotalSize()}px` }}
             >

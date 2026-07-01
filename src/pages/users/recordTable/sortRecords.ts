@@ -1,4 +1,4 @@
-import type { SortCondition } from './sortConditions'
+import type { SortCondition } from '../../../utils/sortConditions'
 
 type SortableEntry<TRecord> = {
   record: TRecord

@@ -1,6 +1,15 @@
 import { Play } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
-
+import {
+  RecordFullChainCell,
+  RecordHardLampCell,
+  RecordLampCell,
+} from '../../components/common/record/RecordDisplayParts'
+import {
+  HARD_LAMP_BADGE_BACKGROUND_CLASS,
+  type SharedClearLamp,
+  type SharedComboLamp,
+} from '../../components/common/record/recordStyleClasses'
 import type {
   PlayerDataDifficulty,
   PlayerDataNumberDiff,
@@ -13,16 +22,6 @@ import type {
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
-import {
-  HARD_LAMP_BADGE_BACKGROUND_CLASS,
-  type SharedClearLamp,
-  type SharedComboLamp,
-} from '../users/components/recordStyleClasses'
-import {
-  RecordFullChainCell,
-  RecordHardLampCell,
-  RecordLampCell,
-} from '../users/components/SharedRecordTableColumns'
 
 export const REGISTER_SCORE_MESSAGES = {
   invalidToken: 'tokenが不正です。登録用URLを確認してください。',

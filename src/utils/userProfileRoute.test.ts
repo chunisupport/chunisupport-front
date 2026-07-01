@@ -7,7 +7,7 @@ import {
   isRecordPageQuery,
   resolveOverPowerSubPage,
   resolveProfilePageQuery,
-} from './profilePageQuery.ts'
+} from './userProfileRoute.ts'
 
 test('page パラメータ未指定時は rating_best を返す', () => {
   assert.equal(resolveProfilePageQuery(undefined), DEFAULT_PROFILE_PAGE_QUERY)
