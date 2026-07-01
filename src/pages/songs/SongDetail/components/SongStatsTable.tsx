@@ -48,6 +48,17 @@ const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
 const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_EXCLUDED_RATING_BAND = 'ALL'
 const CHART_X_AXIS_TICK_PADDING = 8
+/** ランク別人数を表示する列とAPIレスポンスのキー。 */
+const RANK_STAT_COLUMN_DEFINITIONS = [
+  { label: 'AAA以下', valueKey: 'aaal' },
+  { label: 'S', valueKey: 's' },
+  { label: 'S+', valueKey: 'sp' },
+  { label: 'SS', valueKey: 'ss' },
+  { label: 'SS+', valueKey: 'ssp' },
+  { label: 'SSS', valueKey: 'sss' },
+  { label: 'SSS+', valueKey: 'sssp' },
+  { label: 'MAX', valueKey: 'max' },
+] as const
 const HIGHLIGHTED_RATING_BAND_ROW_CLASS =
   'border-l-4 border-l-action-primary bg-action-primary-muted font-semibold'
 const NORMAL_RATING_BAND_ROW_CLASS = 'border-l-4 border-l-transparent'
@@ -448,6 +459,9 @@ const SongStatsTable = (props: Props) => {
               <th class="px-2 py-2 text-left whitespace-nowrap">ベスト枠平均</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">人数</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">平均スコア</th>
+              <For each={RANK_STAT_COLUMN_DEFINITIONS}>
+                {(column) => <th class="px-2 py-2 text-right whitespace-nowrap">{column.label}</th>}
+              </For>
               <th class="px-2 py-2 text-right whitespace-nowrap">FC</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">AJ</th>
               <th class="px-2 py-2 text-right whitespace-nowrap">AJC</th>
@@ -487,6 +501,13 @@ const SongStatsTable = (props: Props) => {
                       </Show>
                     </div>
                   </td>
+                  <For each={RANK_STAT_COLUMN_DEFINITIONS}>
+                    {(column) => (
+                      <td class="px-2 py-2 text-right">
+                        {band.rank[column.valueKey].toLocaleString()}
+                      </td>
+                    )}
+                  </For>
                   <td class="px-2 py-2 text-right">{band.combo.fc.toLocaleString()}</td>
                   <td class="px-2 py-2 text-right">{band.combo.aj.toLocaleString()}</td>
                   <td class="px-2 py-2 text-right">{band.combo.ajc.toLocaleString()}</td>
