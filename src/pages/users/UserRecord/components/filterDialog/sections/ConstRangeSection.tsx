@@ -1,19 +1,14 @@
 import { Checkbox } from '@kobalte/core/checkbox'
 import { NumberField } from '@kobalte/core/number-field'
-import { Select } from '@kobalte/core/select'
-import { Check, ChevronDown } from 'lucide-solid'
+import { Check } from 'lucide-solid'
 import type { Component } from 'solid-js'
+import { AppSelect } from '../../../../../../components/common/AppSelect'
 import { CHART_CONST_MAX, CHART_CONST_MIN } from '../../../../../../constants/chart'
 import RangeSeparator, {
   RANGE_END_LABEL_SUFFIX,
   RANGE_START_LABEL_SUFFIX,
 } from '../../../../components/filter/RangeSeparator'
-import {
-  FILTER_DIALOG_FIELD_INPUT_CLASS,
-  FILTER_DIALOG_SELECT_CONTENT_CLASS,
-  FILTER_DIALOG_SELECT_ITEM_CLASS,
-  FILTER_DIALOG_SELECT_TRIGGER_CLASS,
-} from '../../../../components/filter/styles'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../components/filter/styles'
 
 /** レベル範囲セクションの見出し。 */
 const CONST_LEVEL_RANGE_TITLE = 'レベル'
@@ -126,79 +121,31 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
         <div class="mb-1 text-sm font-medium">{CONST_LEVEL_RANGE_TITLE}</div>
         <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
           <div class="min-w-0">
-            <Select
+            <AppSelect
               options={CONST_LEVEL_OPTIONS}
               value={props.constLevelMin}
-              onChange={(value) => {
+              onChange={(value: string | null) => {
                 if (value !== null) props.onConstLevelChange('min', value)
               }}
-              class="w-full"
+              rootClass="w-full"
+              label={`${CONST_LEVEL_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`}
+              labelVariant="srOnly"
               placeholder="選択…"
-              gutter={0}
-              itemComponent={(itemProps) => (
-                <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
-                  <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
-                  <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
-                    <Check />
-                  </Select.ItemIndicator>
-                </Select.Item>
-              )}
-            >
-              <Select.Label class="sr-only">
-                {CONST_LEVEL_RANGE_TITLE} {RANGE_START_LABEL_SUFFIX}
-              </Select.Label>
-              <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
-                <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
-                  {(state) => state.selectedOption()}
-                </Select.Value>
-                <Select.Icon class="h-5 w-5 flex items-center justify-center">
-                  <ChevronDown />
-                </Select.Icon>
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Content class={FILTER_DIALOG_SELECT_CONTENT_CLASS}>
-                  <Select.Listbox />
-                </Select.Content>
-              </Select.Portal>
-            </Select>
+            />
           </div>
           <RangeSeparator />
           <div class="min-w-0">
-            <Select
+            <AppSelect
               options={CONST_LEVEL_OPTIONS}
               value={props.constLevelMax}
-              onChange={(value) => {
+              onChange={(value: string | null) => {
                 if (value !== null) props.onConstLevelChange('max', value)
               }}
-              class="w-full"
+              rootClass="w-full"
+              label={`${CONST_LEVEL_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`}
+              labelVariant="srOnly"
               placeholder="選択…"
-              gutter={0}
-              itemComponent={(itemProps) => (
-                <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
-                  <Select.ItemLabel>{itemProps.item.rawValue}</Select.ItemLabel>
-                  <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
-                    <Check />
-                  </Select.ItemIndicator>
-                </Select.Item>
-              )}
-            >
-              <Select.Label class="sr-only">
-                {CONST_LEVEL_RANGE_TITLE} {RANGE_END_LABEL_SUFFIX}
-              </Select.Label>
-              <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
-                <Select.Value<string> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
-                  {(state) => state.selectedOption()}
-                </Select.Value>
-                <Select.Icon class="h-5 w-5 flex items-center justify-center">
-                  <ChevronDown />
-                </Select.Icon>
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Content class={FILTER_DIALOG_SELECT_CONTENT_CLASS}>
-                  <Select.Listbox />
-                </Select.Content>
-              </Select.Portal>
-            </Select>
+            />
           </div>
         </div>
       </>
