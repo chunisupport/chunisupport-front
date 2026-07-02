@@ -1,9 +1,17 @@
-import type { OverPowerSummaryRow } from '../../../usecases/overpower/types'
+import type {
+  OverPowerAggregationTarget,
+  OverPowerSummaryRow,
+} from '../../../usecases/overpower/types'
 
-export type OverPowerSummaryTab = 'genres' | 'difficulties' | 'levels' | 'versions'
+export type OverPowerSummaryTab = 'genres' | 'levels' | 'versions'
 
 export type OverPowerSummaryOption = {
   value: OverPowerSummaryTab
+  label: string
+}
+
+export type OverPowerAggregationTargetOption = {
+  value: OverPowerAggregationTarget
   label: string
 }
 
