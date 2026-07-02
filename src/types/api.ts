@@ -311,6 +311,7 @@ export type GoalAchievementType =
   | 'avg_score'
   | 'hardlamp_count'
   | 'combolamp_count'
+  | 'rainbow_count'
   | 'total_score'
   | 'overpower_value'
   | 'overpower_percent'
@@ -344,6 +345,11 @@ export type GoalAchievementParams =
     }
   | {
       lamp: 'FC' | 'AJ'
+      count?: number
+      remaining?: number
+      percent?: number
+    }
+  | {
       count?: number
       remaining?: number
       percent?: number

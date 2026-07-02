@@ -174,16 +174,14 @@
   --cs-color-difficulty-ultima-text: var(--color-white);
 
   /* ===== WORLD'S ENDラベル ===== */
-  --cs-color-worldsend-label-bg: linear-gradient(
-    135deg,
-    #48111d 0%,
-    #5a3609 18%,
-    #48520f 34%,
-    #0f4f32 50%,
-    #0d4a57 66%,
-    #1e3473 82%,
-    #3f1f61 100%
-  );
+  --cs-color-worldsend-label-bg: linear-gradient(135deg,
+      #48111d 0%,
+      #5a3609 18%,
+      #48520f 34%,
+      #0f4f32 50%,
+      #0d4a57 66%,
+      #1e3473 82%,
+      #3f1f61 100%);
   --cs-color-worldsend-label-text: var(--color-white);
 
   /* ===== ユーザー称号（ノーマル） ===== */
@@ -195,33 +193,27 @@
   --cs-color-ranking-silver-bg: var(--color-gray-300);
   --cs-color-ranking-bronze-bg: var(--color-orange-300);
   --cs-color-ranking-medal-text: var(--color-gray-900);
-  --cs-gradient-ranking-gold-bg: linear-gradient(
-    45deg,
-    #d6a63a 0%,
-    #f8d86a 24%,
-    #fff8bd 42%,
-    #ecc153 58%,
-    #ffe47d 76%,
-    #c99b32 100%
-  );
-  --cs-gradient-ranking-silver-bg: linear-gradient(
-    45deg,
-    #c2c8d2 0%,
-    #edf0f5 24%,
-    #ffffff 42%,
-    #d9dee7 58%,
-    #f7f9fb 76%,
-    #b5bdca 100%
-  );
-  --cs-gradient-ranking-bronze-bg: linear-gradient(
-    45deg,
-    #c8793d 0%,
-    #e39b5b 24%,
-    #ffe0bd 42%,
-    #d88a4b 58%,
-    #f0b075 76%,
-    #b86a35 100%
-  );
+  --cs-gradient-ranking-gold-bg: linear-gradient(45deg,
+      #d6a63a 0%,
+      #f8d86a 24%,
+      #fff8bd 42%,
+      #ecc153 58%,
+      #ffe47d 76%,
+      #c99b32 100%);
+  --cs-gradient-ranking-silver-bg: linear-gradient(45deg,
+      #c2c8d2 0%,
+      #edf0f5 24%,
+      #ffffff 42%,
+      #d9dee7 58%,
+      #f7f9fb 76%,
+      #b5bdca 100%);
+  --cs-gradient-ranking-bronze-bg: linear-gradient(45deg,
+      #c8793d 0%,
+      #e39b5b 24%,
+      #ffe0bd 42%,
+      #d88a4b 58%,
+      #f0b075 76%,
+      #b86a35 100%);
 
   /* ===== スコアランク（SSSP / SSS / SS / A / B / C / D） ===== */
   --cs-color-score-rank-sssp-bg: var(--color-green-500);
@@ -251,16 +243,14 @@
   --cs-color-lamp-all-justice-critical-rainbow-5: #06b6d4;
   --cs-color-lamp-all-justice-critical-rainbow-6: #3b82f6;
   --cs-color-lamp-all-justice-critical-rainbow-7: #a855f7;
-  --cs-gradient-lamp-all-justice-critical-bg: linear-gradient(
-    135deg,
-    var(--cs-color-lamp-all-justice-critical-rainbow-1) 0%,
-    var(--cs-color-lamp-all-justice-critical-rainbow-2) 16%,
-    var(--cs-color-lamp-all-justice-critical-rainbow-3) 32%,
-    var(--cs-color-lamp-all-justice-critical-rainbow-4) 48%,
-    var(--cs-color-lamp-all-justice-critical-rainbow-5) 64%,
-    var(--cs-color-lamp-all-justice-critical-rainbow-6) 80%,
-    var(--cs-color-lamp-all-justice-critical-rainbow-7) 100%
-  );
+  --cs-gradient-lamp-all-justice-critical-bg: linear-gradient(135deg,
+      var(--cs-color-lamp-all-justice-critical-rainbow-1) 0%,
+      var(--cs-color-lamp-all-justice-critical-rainbow-2) 16%,
+      var(--cs-color-lamp-all-justice-critical-rainbow-3) 32%,
+      var(--cs-color-lamp-all-justice-critical-rainbow-4) 48%,
+      var(--cs-color-lamp-all-justice-critical-rainbow-5) 64%,
+      var(--cs-color-lamp-all-justice-critical-rainbow-6) 80%,
+      var(--cs-color-lamp-all-justice-critical-rainbow-7) 100%);
   --cs-color-lamp-clear-bg: var(--color-sky-200);
   --cs-color-lamp-clear-text: var(--color-sky-900);
   --cs-color-lamp-hard-bg: var(--color-red-200);
@@ -398,6 +388,7 @@
 }
 
 @keyframes marquee {
+
   0%,
   25% {
     transform: translateX(0%);
@@ -428,6 +419,7 @@
 }
 
 @keyframes honor-title-marquee {
+
   0%,
   25% {
     transform: translateX(0%);
@@ -495,12 +487,10 @@
     font-weight: bold;
     line-height: 20px;
     text-align: center;
-    --honor-shine: linear-gradient(
-      to bottom,
-      rgb(255 255 255 / 0%),
-      rgb(255 255 255 / 50%) 47%,
-      transparent 52%
-    );
+    --honor-shine: linear-gradient(to bottom,
+        rgb(255 255 255 / 0%),
+        rgb(255 255 255 / 50%) 47%,
+        transparent 52%);
   }
 
   .user-honor-title__text {
@@ -559,7 +549,7 @@
   }
 
   .user-honor-title--silver {
-    --honor-background: var(--honor-shine), #b4d0e7;
+    --honor-background: var(--honor-shine), #ccdbe7;
   }
 
   .user-honor-title--gold {
@@ -578,26 +568,20 @@
 
   .user-honor-title--staff {
     --honor-background:
-      linear-gradient(
-        to bottom,
+      linear-gradient(to bottom,
         transparent 0% 47%,
         rgba(103, 116, 177, 0.25) 52%,
-        transparent 100%
-      ),
-      linear-gradient(
-        110deg,
+        transparent 100%),
+      linear-gradient(110deg,
         #5f7cfc 0 30px,
         transparent 30px 35px,
         #4869fa 35px 45px,
-        transparent 45px 100%
-      ),
-      linear-gradient(
-        290deg,
+        transparent 45px 100%),
+      linear-gradient(290deg,
         #5f7cfc 0 30px,
         transparent 30px 35px,
         #4869fa 35px 45px,
-        transparent 45px 100%
-      ),
+        transparent 45px 100%),
       #ebebeb;
   }
 
@@ -611,22 +595,18 @@
   .user-honor-title--maimai {
     --honor-background:
       var(--honor-shine),
-      linear-gradient(
-        150deg,
+      linear-gradient(150deg,
         #ff4646 0 10px,
         #ffa02d 10px 20px,
         #ffdc00 20px 30px,
         #9ac948 30px 40px,
-        transparent 40px 100%
-      ),
-      linear-gradient(
-        330deg,
+        transparent 40px 100%),
+      linear-gradient(330deg,
         #ff4646 0 10px,
         #ffa02d 10px 20px,
         #ffdc00 20px 30px,
         #9ac948 30px 40px,
-        transparent 40px 100%
-      ),
+        transparent 40px 100%),
       #f8f8f8;
   }
 
@@ -667,18 +647,15 @@
   .user-honor-title--ultima {
     --honor-background:
       var(--honor-shine),
-      linear-gradient(
-        135deg,
+      linear-gradient(135deg,
         #333 0 15px,
         #ee6666 15px 20px,
         #863a3a 20px 30px,
         #ee6666 30px 35px,
         #863a3a 35px 38px,
         #ee6666 38px 45px,
-        transparent 45px 100%
-      ),
-      linear-gradient(
-        315deg,
+        transparent 45px 100%),
+      linear-gradient(315deg,
         #333 0 15px,
         #863a3a 15px 25px,
         #ee6666 25px 27px,
@@ -686,8 +663,7 @@
         #ee6666 30px 32px,
         #863a3a 32px 35px,
         #ee6666 35px 45px,
-        transparent 45px 100%
-      ),
+        transparent 45px 100%),
       #fdf5a7;
   }
 

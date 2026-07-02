@@ -240,6 +240,24 @@ test('未プレイ譜面を未達成としてフィルターに含める', () =>
   assert.equal(matched, true)
 })
 
+test('虹枠目標ではAJ以外の通常譜面を未達成として表示する', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'rainbow_count',
+    achievement_params: {},
+    attributes: { genre: 10, ver: 2 },
+  })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), true)
+  assert.equal(isRecordMatched(createRecord({ combo_lamp: null }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ combo_lamp: 'FULL COMBO' }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ combo_lamp: 'ALL JUSTICE' }), filter), false)
+})
+
 test('集計系目標ではレコード遷移を無効にする', () => {
   // Given
   const goals = ['total_score', 'overpower_value', 'overpower_percent'].map((achievementType) =>

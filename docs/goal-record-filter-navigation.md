@@ -97,6 +97,10 @@ score.max = max(0, achievement_params.score - 1)
 | `FC` | `null` |
 | `AJ` | `FULL COMBO`, `null` |
 
+### `rainbow_count`
+
+虹枠目標で許可される`genre`と`ver`を反映し、通常難易度はすべて対象にします。`combo_lamp`には`FULL COMBO`と`null`を設定し、対象楽曲のうちALL JUSTICEではない譜面を表示します。未プレイ譜面も`null`として表示対象に含めます。
+
 ## 補足ルール
 
 - 未プレイ譜面は未達成候補に含めます。

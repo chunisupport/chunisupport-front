@@ -5,6 +5,7 @@ import {
   filterRecordsByAttributes,
   type GoalProgressResult,
 } from '../utils/goalProgress'
+import { calculateRainbowGoalProgress, filterRainbowTargetSongs } from '../utils/goalRainbow'
 import type { GoalsListData } from './goalsListResource'
 
 export interface GoalWithProgress {
@@ -42,6 +43,18 @@ export const buildGoalsWithProgress = (data: GoalsListData | undefined): GoalWit
   if (!data) return []
 
   return data.goals.map((goal) => {
+    if (goal.achievement_type === 'rainbow_count') {
+      const targetSongs = filterRainbowTargetSongs(
+        data.songs,
+        goal.attributes,
+        data.masterData,
+        data.versions
+      )
+      return {
+        goal,
+        progress: calculateRainbowGoalProgress(goal, targetSongs, data.records),
+      }
+    }
     const filtered = filterRecordsByAttributes(
       data.records,
       goal.attributes,
@@ -60,13 +73,18 @@ export const buildGoalsWithProgress = (data: GoalsListData | undefined): GoalWit
  *
  * @param data - 目標一覧画面で取得済みのデータ。
  * @param attributes - 件数を確認する対象条件。
- * @returns 条件に一致するレコード件数。
+ * @param achievementType - 集約単位を決める目標種別。虹枠では楽曲単位にする。
+ * @returns 条件に一致する譜面数または楽曲数。
  */
 export const resolveGoalAllCount = (
   data: GoalsListData | undefined,
-  attributes: GoalCreateRequest['attributes']
+  attributes: GoalCreateRequest['attributes'],
+  achievementType?: GoalCreateRequest['achievement_type']
 ): number => {
   if (!data) return 0
+  if (achievementType === 'rainbow_count') {
+    return filterRainbowTargetSongs(data.songs, attributes, data.masterData, data.versions).length
+  }
   return filterRecordsByAttributes(
     data.records,
     attributes,
@@ -112,6 +130,19 @@ export const resolveDraftGoalProgress = (
   draftGoal: GoalCreateRequest
 ): GoalProgressResult => {
   if (!data) return EMPTY_DRAFT_GOAL_PROGRESS
+  if (draftGoal.achievement_type === 'rainbow_count') {
+    const targetSongs = filterRainbowTargetSongs(
+      data.songs,
+      draftGoal.attributes,
+      data.masterData,
+      data.versions
+    )
+    return calculateRainbowGoalProgress(
+      { ...draftGoal, id: 0, created_at: '' },
+      targetSongs,
+      data.records
+    )
+  }
 
   const filtered = filterRecordsByAttributes(
     data.records,

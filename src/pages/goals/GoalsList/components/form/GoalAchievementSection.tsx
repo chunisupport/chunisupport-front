@@ -66,6 +66,10 @@ const COUNT_MODE_OPTIONS: GoalSelectOption<GoalTargetMode>[] = [
   { value: 'remaining', label: '最大値に対する残数' },
   { value: 'percent', label: '最大値に対する割合' },
 ]
+const RAINBOW_COUNT_MODE_OPTIONS: GoalSelectOption<GoalTargetMode>[] = [
+  { value: 'all', label: '条件に当てはまる楽曲すべて' },
+  ...COUNT_MODE_OPTIONS.slice(1),
+]
 
 const TOTAL_MODE_OPTIONS: GoalSelectOption<GoalTargetMode>[] = [
   { value: 'all', label: '理論値' },
@@ -167,16 +171,21 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
           props.achievementType === 'score_count' ||
           props.achievementType === 'rank_count' ||
           props.achievementType === 'hardlamp_count' ||
-          props.achievementType === 'combolamp_count'
+          props.achievementType === 'combolamp_count' ||
+          props.achievementType === 'rainbow_count'
         }
       >
         <div class="block text-sm">
           <div class="space-y-3">
             <GoalTargetModeRadioGroup
-              label="目標譜面数"
+              label={props.achievementType === 'rainbow_count' ? '目標楽曲数' : '目標譜面数'}
               name="goal-count-mode"
               value={props.countMode}
-              options={COUNT_MODE_OPTIONS}
+              options={
+                props.achievementType === 'rainbow_count'
+                  ? RAINBOW_COUNT_MODE_OPTIONS
+                  : COUNT_MODE_OPTIONS
+              }
               onChange={props.onCountModeChange}
               renderOptionContent={(option) =>
                 option.value === props.countMode ? (

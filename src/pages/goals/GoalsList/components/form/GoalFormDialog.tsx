@@ -56,7 +56,8 @@ interface GoalFormDialogProps {
   apiErrorMessage: string
   onOpenChange: (open: boolean) => void
   onSave: (payload: GoalRequest) => Promise<void>
-  resolveAllCount: (attributes: GoalAttributes) => number
+  /** 対象条件と目標種別に応じた譜面数または楽曲数を解決する関数。 */
+  resolveAllCount: (attributes: GoalAttributes, achievementType?: GoalAchievementType) => number
   /** 対象条件に一致する譜面ごとの最大OVER POWER合計を解決する関数。 */
   resolveOverPowerChartMax: (attributes: GoalAttributes) => number
   /** フォーム入力中の目標内容から実レコードに基づく進捗を解決する関数。 */
@@ -69,6 +70,7 @@ const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = {
   avg_score: '対象譜面の平均スコアを目標にします。',
   hardlamp_count: '指定ハードランプ以上を達成した譜面数を目標にします。',
   combolamp_count: 'FULL COMBO / ALL JUSTICE の達成数を目標にします。',
+  rainbow_count: '曲ごとにBASICからMASTER、存在する場合はULTIMAまでのAJ達成を数えます。',
   total_score: '対象譜面のスコア合計を目標にします。',
   overpower_value: '対象譜面のOVER POWER合計値を目標にします。',
   overpower_percent: '対象譜面のOVER POWER達成率を目標にします。',
@@ -80,6 +82,7 @@ const GOAL_ACHIEVEMENT_TYPES = [
   'avg_score',
   'hardlamp_count',
   'combolamp_count',
+  'rainbow_count',
   'total_score',
   'overpower_value',
   'overpower_percent',
@@ -196,7 +199,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       }))
   )
 
-  const getTotalScoreMax = (): number => props.resolveAllCount(getDraftAttributes()) * MAX_SCORE
+  const getTotalScoreMax = (): number =>
+    props.resolveAllCount(getDraftAttributes(), achievementType()) * MAX_SCORE
 
   /**
    * 現在の対象条件から譜面別に見た総OVER POWER最大値を取得する。
@@ -298,6 +302,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
   const getDraftAttributes = (): GoalRequest['attributes'] =>
     buildGoalFormAttributes({
+      achievementType: achievementType(),
       chartTargetMode: chartTargetMode(),
       diffs: diffs(),
       constMin: constMin(),
@@ -336,12 +341,15 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     buildGoalFormAchievementParams(getAchievementParamsInput(type))
 
   /**
-   * 現在の対象譜面条件に一致する件数を表示用テキストへ変換する。
+   * 現在の対象条件に一致する譜面数または楽曲数を表示用テキストへ変換する。
    *
-   * @returns 日本語ロケールで桁区切りした対象譜面数。
+   * @returns 日本語ロケールで桁区切りした対象数。
    */
-  const targetCountText = (): string =>
-    `${props.resolveAllCount(getDraftAttributes()).toLocaleString('ja-JP')} 譜面`
+  const targetCountText = (): string => {
+    const currentType = achievementType()
+    const unit = currentType === 'rainbow_count' ? '曲' : '譜面'
+    return `${props.resolveAllCount(getDraftAttributes(), currentType).toLocaleString('ja-JP')} ${unit}`
+  }
 
   /**
    * 理論値選択時に表示する目標値を組み立てる。
@@ -393,7 +401,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const countLimitText = (): string =>
     countMode() === 'percent'
       ? '100%以内'
-      : `${props.resolveAllCount(getDraftAttributes()).toLocaleString('ja-JP')}件以内`
+      : `${props
+          .resolveAllCount(getDraftAttributes(), achievementType())
+          .toLocaleString('ja-JP')}件以内`
 
   /**
    * 目標値入力で指定できる上限を表示用に組み立てる。
@@ -453,7 +463,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const trimmed = title().trim()
     const currentType = achievementType()
     const attributes = getDraftAttributes()
-    const allCount = props.resolveAllCount(attributes)
+    const allCount = props.resolveAllCount(attributes, currentType)
     const validationError = validateGoalForm({
       title: title(),
       achievementType: currentType,
@@ -499,6 +509,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
             <GoalTargetChartsSection
               difficultyItems={props.masterData.difficulties}
+              isRainbowGoal={achievementType() === 'rainbow_count'}
               chartTargetMode={chartTargetMode()}
               diffs={diffs()}
               constMin={constMin()}
@@ -545,7 +556,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               hardLamp={hardLamp()}
               comboLamp={comboLamp()}
               invert={invert()}
-              countMax={props.resolveAllCount(getDraftAttributes())}
+              countMax={props.resolveAllCount(getDraftAttributes(), achievementType())}
               countLimitText={countLimitText()}
               targetCountText={targetCountText()}
               theoreticalTotalText={theoreticalTotalText()}

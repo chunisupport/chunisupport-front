@@ -15,6 +15,8 @@ import {
 
 interface GoalTargetChartsSectionProps {
   difficultyItems: MasterDataDTO['difficulties']
+  /** 虹枠目標向けに楽曲単位の対象条件だけを表示するか。 */
+  isRainbowGoal: boolean
   chartTargetMode: GoalChartTargetMode
   diffs: string[]
   constMin: string
@@ -37,7 +39,7 @@ interface GoalTargetChartsSectionProps {
   onConstMaxChange: (value: string) => void
 }
 
-const TARGET_CHART_COUNT_LABEL = '対象となる譜面数:'
+const TARGET_CHART_COUNT_LABEL = '対象数:'
 
 /**
  * 目標フォームの対象譜面セクションを描画する。
@@ -50,8 +52,12 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
     <div class="mb-3 flex items-center gap-3">
       <span class={GOAL_STEP_BADGE_CLASS}>2</span>
       <div>
-        <h2 class={GOAL_STEP_TITLE_CLASS}>対象譜面</h2>
-        <p class={GOAL_STEP_DESCRIPTION_CLASS}>進捗を計算する譜面を絞り込みます。</p>
+        <h2 class={GOAL_STEP_TITLE_CLASS}>{props.isRainbowGoal ? '対象楽曲' : '対象譜面'}</h2>
+        <p class={GOAL_STEP_DESCRIPTION_CLASS}>
+          {props.isRainbowGoal
+            ? '進捗を計算する楽曲を絞り込みます。'
+            : '進捗を計算する譜面を絞り込みます。'}
+        </p>
       </div>
     </div>
 
@@ -60,37 +66,39 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
         {TARGET_CHART_COUNT_LABEL} {props.targetCountText}
       </div>
       <div class="grid grid-cols-1 gap-3">
-        <fieldset class="block text-sm space-y-1">
-          <div class="flex items-center justify-between">
-            <span class="block text-text-muted">難易度</span>
-            <Button
-              type="button"
-              class="text-xs text-action-primary hover:text-action-primary"
-              onClick={props.onClearDifficulty}
-            >
-              クリア
-            </Button>
-          </div>
-          <div class="space-y-1 bg-surface rounded border border-border-strong px-3 py-2">
-            <GoalFilterCheckbox
-              label="OP対象 (MAS+ULT)"
-              checked={props.chartTargetMode === 'op_target'}
-              onChange={props.onToggleOpTarget}
-            />
-            <For each={props.difficultyItems}>
-              {(item) => (
-                <GoalFilterCheckbox
-                  label={item.name}
-                  checked={
-                    props.chartTargetMode === 'normal' && props.diffs.includes(String(item.id))
-                  }
-                  disabled={props.chartTargetMode === 'op_target'}
-                  onChange={(checked) => props.onToggleDifficulty(item.id, checked)}
-                />
-              )}
-            </For>
-          </div>
-        </fieldset>
+        <Show when={!props.isRainbowGoal}>
+          <fieldset class="block text-sm space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="block text-text-muted">難易度</span>
+              <Button
+                type="button"
+                class="text-xs text-action-primary hover:text-action-primary"
+                onClick={props.onClearDifficulty}
+              >
+                クリア
+              </Button>
+            </div>
+            <div class="space-y-1 bg-surface rounded border border-border-strong px-3 py-2">
+              <GoalFilterCheckbox
+                label="OP対象 (MAS+ULT)"
+                checked={props.chartTargetMode === 'op_target'}
+                onChange={props.onToggleOpTarget}
+              />
+              <For each={props.difficultyItems}>
+                {(item) => (
+                  <GoalFilterCheckbox
+                    label={item.name}
+                    checked={
+                      props.chartTargetMode === 'normal' && props.diffs.includes(String(item.id))
+                    }
+                    disabled={props.chartTargetMode === 'op_target'}
+                    onChange={(checked) => props.onToggleDifficulty(item.id, checked)}
+                  />
+                )}
+              </For>
+            </div>
+          </fieldset>
+        </Show>
 
         <fieldset class="block space-y-1 text-sm">
           <span class="block text-text-muted">ジャンル</span>
@@ -128,18 +136,20 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
           </fieldset>
         </Show>
 
-        <div class="grid grid-cols-2 gap-2">
-          <GoalDecimalTextField
-            label="定数min"
-            value={props.constMin}
-            onChange={props.onConstMinChange}
-          />
-          <GoalDecimalTextField
-            label="定数max"
-            value={props.constMax}
-            onChange={props.onConstMaxChange}
-          />
-        </div>
+        <Show when={!props.isRainbowGoal}>
+          <div class="grid grid-cols-2 gap-2">
+            <GoalDecimalTextField
+              label="定数min"
+              value={props.constMin}
+              onChange={props.onConstMinChange}
+            />
+            <GoalDecimalTextField
+              label="定数max"
+              value={props.constMax}
+              onChange={props.onConstMaxChange}
+            />
+          </div>
+        </Show>
       </div>
     </div>
   </section>
