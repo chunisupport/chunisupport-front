@@ -7,7 +7,10 @@ import {
   type ChartOptions,
   Legend,
   LinearScale,
+  LineController,
+  LineElement,
   type Plugin,
+  PointElement,
   Tooltip,
 } from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
@@ -18,7 +21,17 @@ import {
 } from '../../../../utils/songStats'
 import { isOwnBestAverageRatingBand } from './songStatsHighlight'
 
-Chart.register(BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip)
+Chart.register(
+  BarController,
+  BarElement,
+  CategoryScale,
+  Legend,
+  LineController,
+  LineElement,
+  LinearScale,
+  PointElement,
+  Tooltip
+)
 
 type Props = {
   stats: SongStatsBandDTO[]
@@ -42,12 +55,19 @@ type SongStatsChartProps = {
   datasets: SongStatsChartDataset[]
 }
 
+type SongStatsAverageScoreChartProps = {
+  labels: string[]
+  values: (number | null)[]
+}
+
 const CHART_HEIGHT_CLASS = 'h-72'
 const CHART_COLOR_FALLBACK = '#6b7280'
 const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
 const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_EXCLUDED_RATING_BAND = 'ALL'
 const CHART_X_AXIS_TICK_PADDING = 8
+const AVERAGE_SCORE_CHART_TITLE = '平均スコア'
+const AVERAGE_SCORE_CHART_COLOR = '--cs-color-action-primary'
 /** ランク別人数を表示する列とAPIレスポンスのキー。 */
 const RANK_STAT_COLUMN_DEFINITIONS = [
   { label: 'AAA以下', valueKey: 'aaal' },
@@ -58,6 +78,17 @@ const RANK_STAT_COLUMN_DEFINITIONS = [
   { label: 'SSS', valueKey: 'sss' },
   { label: 'SSS+', valueKey: 'sssp' },
   { label: 'MAX', valueKey: 'max' },
+] as const
+/** RANK積み上げ棒グラフへ表示するデータセット定義。 */
+const RANK_CHART_DATASET_DEFINITIONS = [
+  { label: 'AAA以下', valueKey: 'aaal', colorVariable: '--cs-color-score-rank-d-bg' },
+  { label: 'S', valueKey: 's', colorVariable: '--cs-color-score-rank-ss-bg' },
+  { label: 'S+', valueKey: 'sp', colorVariable: '--cs-color-score-rank-ss-bg' },
+  { label: 'SS', valueKey: 'ss', colorVariable: '--cs-color-score-rank-ss-bg' },
+  { label: 'SS+', valueKey: 'ssp', colorVariable: '--cs-color-score-rank-ss-bg' },
+  { label: 'SSS', valueKey: 'sss', colorVariable: '--cs-color-score-rank-sss-bg' },
+  { label: 'SSS+', valueKey: 'sssp', colorVariable: '--cs-color-score-rank-sssp-bg' },
+  { label: 'MAX', valueKey: 'max', colorVariable: '--cs-color-success' },
 ] as const
 const HIGHLIGHTED_RATING_BAND_ROW_CLASS =
   'border-l-4 border-l-action-primary bg-action-primary-muted font-semibold'
@@ -383,9 +414,132 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
 }
 
 /**
- * 難易度別統計テーブルの下に表示するランプ別グラフを生成する。
+ * Chart.jsの折れ線グラフ設定を生成する。
+ * @returns レーティング帯別平均スコアグラフのオプション。
+ */
+const createAverageScoreChartOptions = (): ChartOptions<'line'> => {
+  const textColor = getChartColor(CHART_DEFAULT_TEXT_COLOR)
+  const gridColor = getChartColor(CHART_DEFAULT_GRID_COLOR)
+
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: false,
+    interaction: {
+      intersect: false,
+      mode: 'index',
+    },
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const score = context.parsed.y
+            if (score === null) return AVERAGE_SCORE_CHART_TITLE
+
+            return `${AVERAGE_SCORE_CHART_TITLE}: ${score.toLocaleString(undefined, {
+              minimumFractionDigits: 4,
+              maximumFractionDigits: 4,
+            })}`
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: textColor,
+          maxRotation: 0,
+          autoSkip: true,
+          autoSkipPadding: CHART_X_AXIS_TICK_PADDING,
+        },
+        grid: {
+          display: false,
+        },
+      },
+      y: {
+        ticks: {
+          color: textColor,
+          callback: (value) => Number(value).toLocaleString(),
+        },
+        grid: {
+          color: gridColor,
+        },
+      },
+    },
+  }
+}
+
+/**
+ * rating bandごとの平均スコアを折れ線グラフで表示する。
+ * @param props 横軸ラベルと平均スコア。
+ * @returns レーティング帯別平均スコアグラフ。
+ */
+const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
+  let canvasRef!: HTMLCanvasElement
+  let chart: Chart<'line', (number | null)[], string> | undefined
+  const [mounted, setMounted] = createSignal(false)
+
+  onMount(() => {
+    setMounted(true)
+  })
+
+  createEffect(() => {
+    if (!mounted()) return
+
+    const color = getChartColor(AVERAGE_SCORE_CHART_COLOR)
+    const chartData: ChartData<'line', (number | null)[], string> = {
+      labels: props.labels,
+      datasets: [
+        {
+          label: AVERAGE_SCORE_CHART_TITLE,
+          data: props.values,
+          borderColor: color,
+          backgroundColor: color,
+          pointBackgroundColor: color,
+          pointBorderColor: color,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          borderWidth: 2,
+          tension: 0.2,
+          spanGaps: false,
+        },
+      ],
+    }
+
+    if (!chart) {
+      chart = new Chart(canvasRef, {
+        type: 'line',
+        data: chartData,
+        options: createAverageScoreChartOptions(),
+      })
+      return
+    }
+
+    chart.data = chartData
+    chart.update('none')
+  })
+
+  onCleanup(() => {
+    chart?.destroy()
+  })
+
+  return (
+    <section class="min-w-0 rounded-md border border-border bg-surface-muted p-3">
+      <h3 class="mb-2 text-sm font-semibold">{AVERAGE_SCORE_CHART_TITLE}</h3>
+      <div class={CHART_HEIGHT_CLASS}>
+        <canvas ref={canvasRef} aria-label="レーティング帯別の平均スコア折れ線グラフ" role="img" />
+      </div>
+    </section>
+  )
+}
+
+/**
+ * 難易度別統計テーブルの下に表示する集計グラフを生成する。
  * @param props 表示対象の統計行。
- * @returns FC/AJ/AJCとCLEAR系ランプのグラフ。
+ * @returns RANK、FC/AJ/AJC、CLEAR系ランプ、平均スコアのグラフ。
  */
 const SongStatsCharts = (props: Props) => {
   const chartStats = createMemo(() => {
@@ -400,6 +554,12 @@ const SongStatsCharts = (props: Props) => {
       : stats
   })
   const labels = createMemo(() => chartStats().map((band) => band.rating_band))
+  const rankDatasets = createMemo<SongStatsChartDataset[]>(() =>
+    RANK_CHART_DATASET_DEFINITIONS.map((definition) => ({
+      ...definition,
+      values: chartStats().map((band) => band.rank[definition.valueKey]),
+    }))
+  )
   const comboDatasets = createMemo<SongStatsChartDataset[]>(() =>
     COMBO_CHART_DATASET_DEFINITIONS.map((definition) => ({
       ...definition,
@@ -412,9 +572,16 @@ const SongStatsCharts = (props: Props) => {
       values: chartStats().map((band) => band.clear[definition.valueKey]),
     }))
   )
+  const averageScores = createMemo(() => chartStats().map((band) => band.average_score))
 
   return (
     <div class="mt-4 grid gap-4 lg:grid-cols-2">
+      <SongStatsBarChart
+        title="RANK"
+        ariaLabel="レーティング帯別のスコアランク人数グラフ"
+        labels={labels()}
+        datasets={rankDatasets()}
+      />
       <SongStatsBarChart
         title="COMBO"
         ariaLabel="レーティング帯別のFC、AJ、AJC人数グラフ"
@@ -427,6 +594,7 @@ const SongStatsCharts = (props: Props) => {
         labels={labels()}
         datasets={clearDatasets()}
       />
+      <SongStatsAverageScoreChart labels={labels()} values={averageScores()} />
     </div>
   )
 }
@@ -434,7 +602,7 @@ const SongStatsCharts = (props: Props) => {
 /**
  * 楽曲詳細ページのレーティング帯別統計を表とグラフで表示する。
  * @param props 表示する統計行。
- * @returns 難易度別統計テーブルとランプ別グラフ。
+ * @returns 難易度別統計テーブルと集計グラフ。
  */
 const SongStatsTable = (props: Props) => {
   /**
