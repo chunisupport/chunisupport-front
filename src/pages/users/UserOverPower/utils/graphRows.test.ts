@@ -5,6 +5,7 @@ import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../../../ty
 import { buildOverPowerLockedSongLookup } from '../../../../usecases/overpower/overpowerGraph'
 import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
 import {
+  buildChartRecordsBySummaryTab,
   buildGraphRows,
   buildSongBasedGraphRows,
   buildSongEntriesBySummaryTab,
@@ -123,6 +124,29 @@ test('buildGraphRows はスコア帯とコンボ帯の件数をサマリー行�
   assert.equal(result?.scoreBands.find((band) => band.label === 'OTHER')?.count, 1)
   assert.equal(result?.comboBands.find((band) => band.label === 'ALL JUSTICE')?.count, 1)
   assert.equal(result?.comboBands.find((band) => band.label === 'FULL COMBO')?.count, 1)
+  assert.equal(result?.comboBands.find((band) => band.label === 'OTHER')?.count, 1)
+})
+
+test('譜面単位グラフはレコードがない未プレイ譜面をOTHERへ集計する', () => {
+  // Given
+  const song = createSong({ id: 'unplayed', genre: 'POPS' })
+  const groups = buildChartRecordsBySummaryTab([
+    {
+      song,
+      difficulty: 'MASTER',
+      chartConst: 15,
+      maxOverPower: 90,
+      level: '15',
+      versionName: 'VERSE',
+      record: null,
+    },
+  ])
+
+  // When
+  const [result] = buildGraphRows([summaryRow], groups.difficulties)
+
+  // Then
+  assert.equal(result?.scoreBands.find((band) => band.label === 'OTHER')?.count, 1)
   assert.equal(result?.comboBands.find((band) => band.label === 'OTHER')?.count, 1)
 })
 

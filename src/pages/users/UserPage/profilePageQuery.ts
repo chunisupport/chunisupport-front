@@ -10,7 +10,7 @@ export const profilePageQueryValues = [
 
 export type ProfilePageQuery = (typeof profilePageQueryValues)[number]
 
-export const overPowerSubPageValues = ['genre', 'diff', 'level', 'version'] as const
+export const overPowerSubPageValues = ['genre', 'level', 'version'] as const
 
 export type OverPowerSubPage = (typeof overPowerSubPageValues)[number]
 

@@ -3,7 +3,7 @@ import {
   type buildOverPowerLockedSongLookup,
   buildTheoreticalTargetRecordBySongId,
 } from '../../../../usecases/overpower/overpowerGraph'
-import type { OverPowerDifficulty } from '../../../../usecases/overpower/types'
+import type { OverPowerChartEntry, OverPowerDifficulty } from '../../../../usecases/overpower/types'
 import { toChartLevelLabel } from '../../../../utils/chartLevel'
 import { getScoreRank, MAX_SCORE } from '../../../../utils/scoreRank'
 import {
@@ -16,8 +16,8 @@ import type { OverPowerComboBand, OverPowerGraphRow, OverPowerScoreBand } from '
 type LockedSongLookup = ReturnType<typeof buildOverPowerLockedSongLookup>
 
 export type RecordsBySummaryTab = Record<
-  'genres' | 'difficulties' | 'levels' | 'versions',
-  Map<string, PlayerRecordDTO[]>
+  'all' | 'genres' | 'difficulties' | 'levels' | 'versions',
+  Map<string, (PlayerRecordDTO | null)[]>
 >
 
 type SongGraphEntry = {
@@ -85,9 +85,9 @@ const getHighestAvailableChartConst = (
  * @returns なし。
  */
 const addRecordToGroup = (
-  groups: Map<string, PlayerRecordDTO[]>,
+  groups: Map<string, (PlayerRecordDTO | null)[]>,
   key: string,
-  record: PlayerRecordDTO
+  record: PlayerRecordDTO | null
 ): void => {
   const group = groups.get(key) ?? []
   group.push(record)
@@ -175,6 +175,7 @@ export const buildRecordsBySummaryTab = (
 ): RecordsBySummaryTab => {
   const songById = new Map(songs.map((song) => [song.id, song]))
   const groups: RecordsBySummaryTab = {
+    all: new Map(),
     genres: new Map(),
     difficulties: new Map(),
     levels: new Map(),
@@ -184,6 +185,7 @@ export const buildRecordsBySummaryTab = (
   for (const record of records) {
     const song = songById.get(record.id)
     const levelLabel = toChartLevelLabel(record.const)
+    addRecordToGroup(groups.all, 'all', record)
     addRecordToGroup(groups.difficulties, record.difficulty, record)
     addRecordToGroup(groups.levels, levelLabel, record)
 
@@ -201,12 +203,83 @@ export const buildRecordsBySummaryTab = (
 }
 
 /**
+ * 未プレイを含む譜面エントリを表示軸ごとに分類する。
+ *
+ * @param entries - フィルター適用済みの譜面エントリ。
+ * @returns 集計軸ごとのレコード分類Map。未プレイ譜面はnullで保持する。
+ */
+export const buildChartRecordsBySummaryTab = (
+  entries: OverPowerChartEntry[]
+): RecordsBySummaryTab => {
+  const groups: RecordsBySummaryTab = {
+    all: new Map(),
+    genres: new Map(),
+    difficulties: new Map(),
+    levels: new Map(),
+    versions: new Map(),
+  }
+  for (const entry of entries) {
+    addRecordToGroup(groups.all, 'all', entry.record)
+    addRecordToGroup(groups.difficulties, entry.difficulty, entry.record)
+    addRecordToGroup(groups.levels, entry.level, entry.record)
+    if (entry.song.genre && entry.song.genre !== '不明') {
+      addRecordToGroup(groups.genres, entry.song.genre, entry.record)
+    }
+    if (entry.versionName) {
+      addRecordToGroup(groups.versions, entry.versionName, entry.record)
+    }
+  }
+  return groups
+}
+
+/**
+ * フィルター適用済み譜面から曲数ベースグラフの代表譜面を作る。
+ *
+ * @param entries - フィルター適用済みの譜面エントリ。
+ * @returns ALL・ジャンル・バージョンごとの曲グラフ用エントリ。
+ */
+export const buildFilteredSongEntriesBySummaryTab = (
+  entries: OverPowerChartEntry[]
+): SongEntriesBySummaryTab => {
+  const entriesBySongId = new Map<string, OverPowerChartEntry[]>()
+  for (const entry of entries) {
+    const songEntries = entriesBySongId.get(entry.song.id) ?? []
+    songEntries.push(entry)
+    entriesBySongId.set(entry.song.id, songEntries)
+  }
+
+  const groups: SongEntriesBySummaryTab = {
+    all: new Map(),
+    genres: new Map(),
+    versions: new Map(),
+  }
+  for (const songEntries of entriesBySongId.values()) {
+    const target = songEntries.reduce((highest, entry) =>
+      entry.chartConst > highest.chartConst ? entry : highest
+    )
+    const graphEntry: SongGraphEntry = {
+      record: target.record,
+      versionName: target.versionName,
+    }
+    addSongEntryToGroup(groups.all, 'all', graphEntry)
+    if (target.song.genre && target.song.genre !== '不明') {
+      addSongEntryToGroup(groups.genres, target.song.genre, graphEntry)
+    }
+    if (target.versionName) {
+      addSongEntryToGroup(groups.versions, target.versionName, graphEntry)
+    }
+  }
+  return groups
+}
+
+/**
  * スコアからグラフ表示用のランク帯を取得する。
  *
  * @param record - 判定対象のプレイヤーレコード。
  * @returns グラフで利用するスコア帯。
  */
-const getScoreBand = (record: PlayerRecordDTO): OverPowerScoreBand => {
+const getScoreBand = (record: PlayerRecordDTO | null): OverPowerScoreBand => {
+  if (!record) return 'OTHER'
   if (!record.is_played) return 'OTHER'
   if (record.score >= MAX_SCORE) return 'MAX'
 
@@ -240,7 +313,8 @@ const getSongScoreBand = (entry: SongGraphEntry): OverPowerScoreBand =>
  * @param record - 判定対象のプレイヤーレコード。
  * @returns グラフで利用するコンボ帯。
  */
-const getComboBand = (record: PlayerRecordDTO): OverPowerComboBand => {
+const getComboBand = (record: PlayerRecordDTO | null): OverPowerComboBand => {
+  if (!record) return 'OTHER'
   if (record.combo_lamp === 'ALL JUSTICE') return 'ALL JUSTICE'
   if (record.combo_lamp === 'FULL COMBO') return 'FULL COMBO'
   return 'OTHER'
@@ -264,7 +338,7 @@ const getSongComboBand = (entry: SongGraphEntry): OverPowerComboBand =>
  */
 export const buildGraphRows = (
   rows: OverPowerGraphRow['summary'][],
-  recordsByLabel: Map<string, PlayerRecordDTO[]>
+  recordsByLabel: Map<string, (PlayerRecordDTO | null)[]>
 ): OverPowerGraphRow[] =>
   rows.map((summary) => {
     const records = recordsByLabel.get(summary.id) ?? recordsByLabel.get(summary.label) ?? []

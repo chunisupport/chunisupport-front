@@ -2,6 +2,7 @@ import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
+import { OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES } from '../constants'
 
 type Props = {
   rows: OverPowerSummaryRow[]
@@ -9,7 +10,8 @@ type Props = {
 }
 
 const formatValue = formatOverPowerValue
-const formatPercent = formatOverPowerPercent
+const formatPercent = (value: number): string =>
+  formatOverPowerPercent(value, OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES)
 
 export const OverPowerSummaryTable: Component<Props> = (props) => (
   <section class="overflow-hidden rounded-lg border border-border bg-surface">
