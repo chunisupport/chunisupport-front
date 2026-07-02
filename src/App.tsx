@@ -4,7 +4,7 @@ import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 
 import { fetchMe, fetchUserProfileSummary } from './api/users'
-import { LoadError, Loading, NavBar, PlayerDataEmptyState } from './components'
+import { LoadError, Loading, NavBar, PlayerDataEmptyState, XTimeline } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
 
@@ -163,27 +163,24 @@ const LandingPage = () => {
           </Show>
         </Show>
 
-        <section class="rounded-lg border border-border bg-surface p-6">
-          <h2 class="mb-3 text-xl font-semibold">お知らせ</h2>
-          <ul class="space-y-2 text-sm text-text-muted">
-            <li class="rounded-md border border-border p-3">
-              [モック] 2026-04-29: 新機能の準備を進めています。
-            </li>
-            <li class="rounded-md border border-border p-3">
-              [モック] 2026-04-25: メンテナンス予定を公開しました。
-            </li>
-          </ul>
-        </section>
+        <div class="grid gap-6 md:grid-cols-2 md:items-start">
+          <section class="min-w-0 rounded-lg border border-border bg-surface p-6">
+            <h2 class="mb-3 text-xl font-semibold">お知らせ</h2>
+            <ul class="space-y-2 text-sm text-text-muted">
+              <li class="rounded-md border border-border p-3">
+                [モック] 2026-04-29: 新機能の準備を進めています。
+              </li>
+              <li class="rounded-md border border-border p-3">
+                [モック] 2026-04-25: メンテナンス予定を公開しました。
+              </li>
+            </ul>
+          </section>
 
-        <section class="rounded-lg border border-border bg-surface p-6">
-          <h2 class="mb-3 text-xl font-semibold">X公式アカウント</h2>
-          <ul class="space-y-2 text-sm text-text-muted">
-            <li class="rounded-md border border-border p-3">
-              [モック] 投稿1: アップデート予定のお知らせ
-            </li>
-            <li class="rounded-md border border-border p-3">[モック] 投稿2: 活用方法の紹介</li>
-          </ul>
-        </section>
+          <section class="min-w-0 rounded-lg border border-border bg-surface p-6">
+            <h2 class="mb-3 text-xl font-semibold">X公式アカウント</h2>
+            <XTimeline />
+          </section>
+        </div>
       </main>
       <LandingFooter />
     </div>

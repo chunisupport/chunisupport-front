@@ -3,7 +3,6 @@ import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createSignal, onMount, Show } from 'solid-js'
 import type { PlayerRecordDTO } from '../../../../types/api'
-import { formatChartConst } from '../../../../utils/chartConstFormat'
 import {
   difficultyCardBorderColor,
   difficultyToQueryValue,
@@ -14,6 +13,7 @@ import { formatRatingFixed2 } from '../../../../utils/ratingFormat'
 import { getScoreRank } from '../../../../utils/scoreRank'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/recordStyleClasses'
 import { RECORD_CARD_HOVER_CLASS } from '../../components/SharedRecordTableColumns'
+import { getConstDisplay } from '../../UserRecord/utils/constDisplay'
 
 type Props = {
   record: PlayerRecordDTO
@@ -53,6 +53,8 @@ export const UserRecordCard: Component<Props> = (props) => {
   const scoreRank = () => getScoreRank(props.record.score)
   const indexColor = () => (props.useDefaultIndexColor ? idxColor(0) : idxColor(props.index + 1))
   const jacketUrl = () => buildChunithmJacketUrl(props.record.img)
+  const constDisplay = () => getConstDisplay(props.record.const, props.record.is_const_unknown)
+  const unknownValueClass = () => (props.record.is_const_unknown ? 'text-danger' : 'text-text')
 
   // DOM上の実寸に応じて、カード幅からはみ出す楽曲名だけ横スクロールさせる。
   onMount(() => {
@@ -103,12 +105,23 @@ export const UserRecordCard: Component<Props> = (props) => {
                 {props.record.title}
               </p>
               <p class="text-base font-oswald font-bold">
-                {formatChartConst(props.record.const)} / {formatInteger(props.record.score)}{' '}
+                <span class={unknownValueClass()}>
+                  {constDisplay().valueText}
+                  <Show when={constDisplay().markerText}>
+                    {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
+                  </Show>
+                </span>{' '}
+                / {formatInteger(props.record.score)}{' '}
                 <span class={SCORE_RANK_TEXT_CLASS[scoreRank()]}>{scoreRank()}</span>
               </p>
             </div>
-            <div class="shrink-0 text-right font-oswald text-xl font-bold leading-none">
+            <div
+              class={`shrink-0 text-right font-oswald text-xl font-bold leading-none ${unknownValueClass()}`}
+            >
               {formatRatingFixed2(props.record.rating)}
+              <Show when={constDisplay().markerText}>
+                {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
+              </Show>
             </div>
           </div>
         </div>

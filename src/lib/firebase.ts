@@ -18,6 +18,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 
-export const analytics = getAnalytics(app)
+/** ブラウザ環境で初期化されたFirebase Analytics。 */
+export const analytics = typeof window === 'undefined' ? undefined : getAnalytics(app)
 export const auth = getAuth(app)
 export const googleProvider = new GoogleAuthProvider()
