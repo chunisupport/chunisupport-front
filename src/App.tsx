@@ -4,7 +4,7 @@ import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 
 import { fetchMe, fetchUserProfileSummary } from './api/users'
-import { LoadError, Loading, NavBar, PlayerDataEmptyState } from './components'
+import { LoadError, Loading, NavBar, PlayerDataEmptyState, XTimeline } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
 
@@ -177,12 +177,7 @@ const LandingPage = () => {
 
         <section class="rounded-lg border border-border bg-surface p-6">
           <h2 class="mb-3 text-xl font-semibold">X公式アカウント</h2>
-          <ul class="space-y-2 text-sm text-text-muted">
-            <li class="rounded-md border border-border p-3">
-              [モック] 投稿1: アップデート予定のお知らせ
-            </li>
-            <li class="rounded-md border border-border p-3">[モック] 投稿2: 活用方法の紹介</li>
-          </ul>
+          <XTimeline />
         </section>
       </main>
       <LandingFooter />
