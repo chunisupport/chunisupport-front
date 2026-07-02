@@ -18,6 +18,7 @@ export const GOAL_ACHIEVEMENT_TYPE_LABELS = {
     avg_score: '平均スコア',
     hardlamp_count: 'ハードランプ達成数',
     combolamp_count: 'FC/AJ達成数',
+    rainbow_count: '虹枠 (曲毎AJ) 達成楽曲数',
     total_score: 'トータルハイスコア',
     overpower_value: 'OVER POWER',
     overpower_percent: 'OVER POWER達成率',
