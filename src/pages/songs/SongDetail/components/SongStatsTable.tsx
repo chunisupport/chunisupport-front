@@ -15,6 +15,7 @@ import {
 } from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
+import { MAX_SCORE } from '../../../../utils/scoreRank'
 import {
   calculateOwnScoreDifference,
   completeSongStatsRatingBands,
@@ -66,7 +67,7 @@ const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
 const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_EXCLUDED_RATING_BAND = 'ALL'
 const CHART_X_AXIS_TICK_PADDING = 8
-const AVERAGE_SCORE_CHART_TITLE = '平均スコア'
+const AVERAGE_SCORE_CHART_TITLE = 'AVG. SCORE'
 const AVERAGE_SCORE_CHART_COLOR = '--cs-color-action-primary'
 /** ランク別人数を表示する列とAPIレスポンスのキー。 */
 const RANK_STAT_COLUMN_DEFINITIONS = [
@@ -82,8 +83,8 @@ const RANK_STAT_COLUMN_DEFINITIONS = [
 /** RANK積み上げ棒グラフへ表示するデータセット定義。 */
 const RANK_CHART_DATASET_DEFINITIONS = [
   { label: 'AAA以下', valueKey: 'aaal', colorVariable: '--cs-color-score-rank-d-bg' },
-  { label: 'S', valueKey: 's', colorVariable: '--cs-color-score-rank-ss-bg' },
-  { label: 'S+', valueKey: 'sp', colorVariable: '--cs-color-score-rank-ss-bg' },
+  { label: 'S', valueKey: 's', colorVariable: '--cs-color-score-rank-a-bg' },
+  { label: 'S+', valueKey: 'sp', colorVariable: '--cs-color-score-rank-a-bg' },
   { label: 'SS', valueKey: 'ss', colorVariable: '--cs-color-score-rank-ss-bg' },
   { label: 'SS+', valueKey: 'ssp', colorVariable: '--cs-color-score-rank-ss-bg' },
   { label: 'SSS', valueKey: 'sss', colorVariable: '--cs-color-score-rank-sss-bg' },
@@ -460,6 +461,7 @@ const createAverageScoreChartOptions = (): ChartOptions<'line'> => {
         },
       },
       y: {
+        max: MAX_SCORE,
         ticks: {
           color: textColor,
           callback: (value) => Number(value).toLocaleString(),
