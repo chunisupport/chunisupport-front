@@ -1,6 +1,7 @@
 import { SCORE_THEORETICAL_MAX } from '../constants/chart'
 import type { PlayerRecordDTO } from '../types/api'
 import { truncateChartConst } from './chartConstFormat'
+import { compareSongsByReading } from './songTitleSorting'
 
 /** 箱ひげ図を構成する譜面定数単位の統計値。 */
 export type ChartScoreDistribution = {
@@ -107,7 +108,7 @@ export const inspectWeakCharts = (records: PlayerRecordDTO[]): WeakChartInspecti
     (left, right) =>
       right.distance - left.distance ||
       left.record.const - right.record.const ||
-      left.record.title.localeCompare(right.record.title, 'ja')
+      compareSongsByReading(left.record, right.record)
   )
 
   return { distributions, outliers }
@@ -139,7 +140,7 @@ export const sortWeakChartOutliers = (
 
       switch (sortKey) {
         case 'title':
-          comparison = leftRecord.title.localeCompare(rightRecord.title, 'ja')
+          comparison = compareSongsByReading(leftRecord, rightRecord)
           break
         case 'difficulty':
           comparison = leftRecord.difficulty.localeCompare(rightRecord.difficulty)

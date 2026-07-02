@@ -1,4 +1,5 @@
 import type { WorldsendRecordDTO } from '../../../../types/api'
+import { compareSongsByReading } from '../../../../utils/songTitleSorting'
 import { compareUnplayedRecords } from '../../recordTable/sortComparators'
 import {
   createInitialSortConditions,
@@ -131,7 +132,7 @@ const compareWorldsendRecordBySortCondition = <TRecord extends WorldsendRecordDT
 
   switch (sortCondition.key) {
     case 'title':
-      comparison = left.title.localeCompare(right.title, 'ja')
+      comparison = compareSongsByReading(left, right)
       break
     case 'attribute':
       comparison = (left.attribute ?? '').localeCompare(right.attribute ?? '', 'ja')
