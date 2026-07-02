@@ -506,7 +506,7 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
           pointHoverRadius: 5,
           borderWidth: 2,
           tension: 0.2,
-          spanGaps: false,
+          spanGaps: true,
         },
       ],
     }
