@@ -1,4 +1,5 @@
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import { compareSongsByReading } from '../../../../utils/songTitleSorting'
 import { compareUnplayedRecords } from '../../recordTable/sortComparators'
 import {
   createInitialSortConditions,
@@ -128,7 +129,7 @@ const compareRecordBySortCondition = (
 
   switch (sortCondition.key) {
     case 'title':
-      comparison = left.title.localeCompare(right.title, 'ja')
+      comparison = compareSongsByReading(left, right)
       break
     case 'difficulty':
       comparison =
