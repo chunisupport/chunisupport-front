@@ -160,6 +160,26 @@ export const fetchOwnSongScoreHistory = async (
 }
 
 /**
+ * ログインユーザーの WORLD'S END スコア履歴を取得する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @param username - 対象ユーザー名。
+ * @returns 現行ベストを先頭に含むスコア履歴。
+ */
+export const fetchOwnWorldsendScoreHistory = async (
+  displayId: string,
+  username: string
+): Promise<ScoreHistoryResponseDTO> => {
+  const query = new URLSearchParams({ username })
+  const response = await fetchWithAuth(
+    `${INTERNAL_WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}/score-history?${query.toString()}`,
+    { requireAuthentication: true }
+  )
+
+  return response.json()
+}
+
+/**
  * API からバージョン一覧を取得する。
  *
  * @returns バージョン一覧レスポンス。
