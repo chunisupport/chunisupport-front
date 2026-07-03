@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  /* テーマカラー: ここを変えるだけで全体の色が変わります（アクセントカラー：ボタン・リンク・フォーカスリングなど） */
-  --color-primary-50: var(--color-green-50);
-  --color-primary-100: var(--color-green-100);
-  --color-primary-200: var(--color-green-200);
-  --color-primary-300: var(--color-green-300);
-  --color-primary-400: var(--color-green-400);
-  --color-primary-500: var(--color-green-500);
-  --color-primary-600: var(--color-green-600);
-  --color-primary-700: var(--color-green-700);
-  --color-primary-800: var(--color-green-800);
-  --color-primary-900: var(--color-green-900);
+  /* アクセントカラー: data-accentで選択した色相を操作強調色へ接続する */
+  --color-primary-50: var(--cs-color-accent-50);
+  --color-primary-100: var(--cs-color-accent-100);
+  --color-primary-200: var(--cs-color-accent-200);
+  --color-primary-300: var(--cs-color-accent-300);
+  --color-primary-400: var(--cs-color-accent-400);
+  --color-primary-500: var(--cs-color-accent-500);
+  --color-primary-600: var(--cs-color-accent-600);
+  --color-primary-700: var(--cs-color-accent-700);
+  --color-primary-800: var(--cs-color-accent-800);
+  --color-primary-900: var(--cs-color-accent-900);
 
   /* フォント: 装飾用（スコア表示など） */
   --font-oswald: "Oswald", sans-serif;
@@ -19,6 +19,49 @@
   --font-jost: "Jost", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
   /* フォント: 本文用 */
   --font-sans: "Inter", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root,
+[data-accent="green"] {
+  /* ===== アクセント色（プライマリ操作 / 選択状態 / フォーカス / リンク） ===== */
+  --cs-color-accent-50: var(--color-green-50);
+  --cs-color-accent-100: var(--color-green-100);
+  --cs-color-accent-200: var(--color-green-200);
+  --cs-color-accent-300: var(--color-green-300);
+  --cs-color-accent-400: var(--color-green-400);
+  --cs-color-accent-500: var(--color-green-500);
+  --cs-color-accent-600: var(--color-green-600);
+  --cs-color-accent-700: var(--color-green-700);
+  --cs-color-accent-800: var(--color-green-800);
+  --cs-color-accent-900: var(--color-green-900);
+}
+
+[data-accent="orange"] {
+  /* ===== アクセント色（黄から赤へつながるオレンジ系パレット） ===== */
+  --cs-color-accent-50: var(--color-orange-50);
+  --cs-color-accent-100: var(--color-orange-100);
+  --cs-color-accent-200: var(--color-orange-200);
+  --cs-color-accent-300: var(--color-orange-300);
+  --cs-color-accent-400: var(--color-orange-400);
+  --cs-color-accent-500: var(--color-orange-500);
+  --cs-color-accent-600: var(--color-orange-600);
+  --cs-color-accent-700: var(--color-orange-700);
+  --cs-color-accent-800: var(--color-orange-800);
+  --cs-color-accent-900: var(--color-orange-900);
+}
+
+[data-accent="blue"] {
+  /* ===== アクセント色（プライマリ操作 / 選択状態 / フォーカス / リンク） ===== */
+  --cs-color-accent-50: var(--color-blue-50);
+  --cs-color-accent-100: var(--color-blue-100);
+  --cs-color-accent-200: var(--color-blue-200);
+  --cs-color-accent-300: var(--color-blue-300);
+  --cs-color-accent-400: var(--color-blue-400);
+  --cs-color-accent-500: var(--color-blue-500);
+  --cs-color-accent-600: var(--color-blue-600);
+  --cs-color-accent-700: var(--color-blue-700);
+  --cs-color-accent-800: var(--color-blue-800);
+  --cs-color-accent-900: var(--color-blue-900);
 }
 
 :root,
@@ -48,6 +91,8 @@
   --cs-color-action-primary-hover: var(--color-primary-700);
   --cs-color-action-primary-muted: var(--color-primary-50);
   --cs-color-action-primary-border: var(--color-primary-200);
+  --cs-color-interactive-row-hover: var(--color-primary-100);
+  --cs-color-new-song-bg: var(--color-primary-100);
   --cs-color-action-secondary: var(--color-gray-300);
   --cs-color-action-secondary-hover: var(--color-gray-400);
 
@@ -88,7 +133,77 @@
   --cs-color-link-hover: var(--color-primary-700);
 }
 
-[data-theme="dark"] {
+[data-theme="pastel-orange"] {
+  color-scheme: light;
+
+  /* ===== 背景・サーフェス（クリームイエローからピーチ、淡い赤橙へつながる面） ===== */
+  --cs-color-bg: #fff4df;
+  --cs-color-surface: #fffaf0;
+  --cs-color-surface-muted: #ffe4bf;
+  --cs-color-surface-raised: #fffdf7;
+  --cs-color-surface-hover: #ffd3bf;
+
+  /* ===== テキスト（暖色背景の色味を濁らせないチャコール系） ===== */
+  --cs-color-text: #302d2b;
+  --cs-color-text-muted: #5f5a56;
+  --cs-color-text-subtle: #746d68;
+  --cs-color-text-inverse: var(--color-white);
+  --cs-color-text-placeholder: #7f746d;
+  --cs-color-nav-text: #46413d;
+
+  /* ===== 枠線・フォーカスリング ===== */
+  --cs-color-border: #edb889;
+  --cs-color-border-strong: #c87848;
+  --cs-color-focus-ring: var(--color-primary-600);
+
+  /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
+  --cs-color-action-primary: var(--color-primary-600);
+  --cs-color-action-primary-hover: var(--color-primary-700);
+  --cs-color-action-primary-muted: color-mix(in oklab, var(--color-primary-100) 68%, #fff2dc);
+  --cs-color-action-primary-border: var(--color-primary-300);
+  --cs-color-interactive-row-hover: color-mix(in oklab, var(--color-primary-100) 72%, #ffe0c4);
+  --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-100) 72%, #ffe0c4);
+  --cs-color-action-secondary: #edb889;
+  --cs-color-action-secondary-hover: #df9a68;
+
+  /* ===== 危険: エラー・削除操作（意味色は維持し背景だけ調整） ===== */
+  --cs-color-danger: var(--color-red-700);
+  --cs-color-danger-hover: var(--color-red-800);
+  --cs-color-danger-bg: #fee8e2;
+  --cs-color-danger-border: var(--color-red-300);
+
+  /* ===== 成功 ===== */
+  --cs-color-success: var(--color-green-700);
+  --cs-color-success-bg: #edf7e8;
+  --cs-color-success-bg-hover: #deefd6;
+  --cs-color-success-border: var(--color-green-400);
+
+  /* ===== 警告 ===== */
+  --cs-color-warning: var(--color-yellow-800);
+  --cs-color-warning-bg: #fff4ce;
+  --cs-color-warning-border: var(--color-yellow-400);
+
+  /* ===== 情報 ===== */
+  --cs-color-info: var(--color-blue-700);
+  --cs-color-info-bg: #eaf3fb;
+  --cs-color-info-border: var(--color-blue-300);
+
+  /* ===== 苦手譜面インスペクター（通常点 / 外れ値） ===== */
+  --cs-color-weak-chart-point: rgb(22 163 74 / 45%);
+  --cs-color-weak-chart-outlier: var(--color-blue-600);
+
+  /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） ===== */
+  --cs-color-overlay: rgb(48 45 43 / 32%);
+  --cs-color-disabled-bg: #f2dcc8;
+  --cs-color-disabled-text: #887a70;
+  --cs-color-input-bg: #fffdf7;
+  --cs-color-input-border: #c87848;
+  --cs-color-input-border-hover: #a95f35;
+  --cs-color-link: var(--color-primary-700);
+  --cs-color-link-hover: var(--color-primary-800);
+}
+
+:is([data-theme="dark"], [data-theme="black"]) {
   color-scheme: dark;
 
   /* ===== 背景・サーフェス（ページ全体 / カード / パネル / モーダル / ホバー） ===== */
@@ -114,8 +229,10 @@
   /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
   --cs-color-action-primary: var(--color-primary-500);
   --cs-color-action-primary-hover: var(--color-primary-400);
-  --cs-color-action-primary-muted: rgb(20 83 45 / 35%);
+  --cs-color-action-primary-muted: color-mix(in oklab, var(--color-primary-700) 35%, transparent);
   --cs-color-action-primary-border: var(--color-primary-700);
+  --cs-color-interactive-row-hover: color-mix(in oklab, var(--color-primary-900) 28%, transparent);
+  --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
   --cs-color-action-secondary: #1d4a39;
   --cs-color-action-secondary-hover: #2f6b53;
 
@@ -156,9 +273,47 @@
   --cs-color-link-hover: var(--color-primary-300);
 }
 
+[data-theme="black"] {
+  /* ===== 背景・サーフェス（ページ全体 / カード / パネル / モーダル / ホバー） ===== */
+  --cs-color-bg: #111111;
+  --cs-color-surface: #181818;
+  --cs-color-surface-muted: #222222;
+  --cs-color-surface-raised: #1d1d1d;
+  --cs-color-surface-hover: #2b2b2b;
+
+  /* ===== 背景色に依存するテキスト ===== */
+  --cs-color-text-inverse: #111111;
+
+  /* ===== 枠線（カード境界 / 強調境界） ===== */
+  --cs-color-border: #444444;
+  --cs-color-border-strong: #666666;
+
+  /* ===== 背景色に依存するアクション ===== */
+  --cs-color-action-primary-muted: color-mix(in oklab, var(--color-primary-700) 45%, transparent);
+  --cs-color-interactive-row-hover: color-mix(in oklab, var(--color-primary-900) 35%, transparent);
+  --cs-color-action-secondary: #444444;
+  --cs-color-action-secondary-hover: #555555;
+
+  /* ===== 背景色に依存する状態色 ===== */
+  --cs-color-danger-bg: rgb(127 29 29 / 45%);
+  --cs-color-success-bg: rgb(20 83 45 / 45%);
+  --cs-color-success-bg-hover: rgb(22 101 52 / 55%);
+  --cs-color-warning-bg: rgb(113 63 18 / 45%);
+  --cs-color-info-bg: rgb(19 78 74 / 45%);
+
+  /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド） ===== */
+  --cs-color-overlay: rgb(0 0 0 / 65%);
+  --cs-color-disabled-bg: #222222;
+  --cs-color-input-bg: #181818;
+  --cs-color-input-border: #666666;
+  --cs-color-input-border-hover: #7a7a7a;
+}
+
 :root,
 [data-theme="light"],
-[data-theme="dark"] {
+[data-theme="pastel-orange"],
+[data-theme="dark"],
+[data-theme="black"] {
   --cs-size-user-honor-title-max-width: 464px;
 
   /* ===== 難易度バッジ（BASIC / ADVANCED / EXPERT / MASTER / ULTIMA） ===== */
@@ -302,6 +457,8 @@
   --color-action-primary-hover: var(--cs-color-action-primary-hover);
   --color-action-primary-muted: var(--cs-color-action-primary-muted);
   --color-action-primary-border: var(--cs-color-action-primary-border);
+  --color-interactive-row-hover: var(--cs-color-interactive-row-hover);
+  --color-new-song-bg: var(--cs-color-new-song-bg);
   --color-action-secondary: var(--cs-color-action-secondary);
   --color-action-secondary-hover: var(--cs-color-action-secondary-hover);
 

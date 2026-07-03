@@ -46,11 +46,11 @@ type RecordTitleCellProps = {
 /** レコード行とカードのホバー色変化に使う共通トランジション。 */
 export const RECORD_HOVER_TRANSITION_CLASS = 'transition-colors'
 /** レコード行のホバー背景色クラス。 */
-export const RECORD_ROW_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} hover:bg-success-bg`
+export const RECORD_ROW_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} hover:bg-interactive-row-hover`
 /** ホバー背景色で直前行の区切り線が隠れる行にだけ補助線を表示するクラス。 */
 export const RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS = `${RECORD_ROW_HOVER_CLASS} hover:shadow-[inset_0_1px_0_var(--color-border)]`
 /** レコードカードのホバー背景色クラス。 */
-export const RECORD_CARD_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} group-hover:bg-success-bg`
+export const RECORD_CARD_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} group-hover:bg-interactive-row-hover`
 export const RECORD_ROW_HEIGHT = 34
 export const RECORD_ROW_MIN_HEIGHT_CLASS = 'min-h-[34px]'
 export const RECORD_HEADER_BUTTON_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} w-full items-center text-center whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset`

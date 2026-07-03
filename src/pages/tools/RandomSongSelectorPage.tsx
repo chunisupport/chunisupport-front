@@ -91,7 +91,7 @@ const DIFFICULTY_FILTER_CONTENT_CLASS =
 const DIFFICULTY_FILTER_TRIGGER_CLASS =
   'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const DIFFICULTY_FILTER_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-sm text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
+  'cursor-pointer px-3 py-2 text-sm text-text hover:bg-action-primary-muted data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted'
 const DIFFICULTY_FILTER_DISABLED_ITEM_CLASS =
   'cursor-not-allowed opacity-50 hover:bg-transparent data-[highlighted]:bg-transparent data-[selected]:bg-transparent'
 
@@ -534,7 +534,7 @@ const RandomSongDifficultyFilterDropdown: Component<RandomSongDifficultyFilterDr
               }`}
             >
               <div class="flex items-center gap-2">
-                <span class="inline-flex w-4 justify-center text-success">
+                <span class="inline-flex w-4 justify-center text-action-primary">
                   <Select.ItemIndicator>
                     <Check size={14} />
                   </Select.ItemIndicator>
@@ -555,7 +555,7 @@ const RandomSongDifficultyFilterDropdown: Component<RandomSongDifficultyFilterDr
             >
               <For each={selectedOptions()}>
                 {(option) => (
-                  <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
+                  <span class="rounded-full bg-action-primary-muted px-2 py-0.5 text-xs text-action-primary">
                     {formatRandomSongDifficultyFilterLabel(option)}
                   </span>
                 )}
@@ -633,10 +633,10 @@ const RandomSongSelect = <T extends string>(props: {
       return (
         <Select.Item
           item={itemProps.item}
-          class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-highlighted:bg-success-bg data-selected:bg-success-bg"
+          class="cursor-pointer px-3 py-2 text-text hover:bg-action-primary-muted data-highlighted:bg-action-primary-muted data-selected:bg-action-primary-muted"
         >
           <div class="flex items-center gap-2">
-            <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-success">
+            <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-action-primary">
               <Check size={14} />
             </Select.ItemIndicator>
             <Select.ItemLabel>{label}</Select.ItemLabel>

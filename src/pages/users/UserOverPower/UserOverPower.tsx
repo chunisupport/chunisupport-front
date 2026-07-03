@@ -73,7 +73,7 @@ const SELECT_TRIGGER_CLASS =
 
 /** OVER POWER画面上部のSelect選択肢共通クラス。 */
 const SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
+  'cursor-pointer px-3 py-2 text-text hover:bg-action-primary-muted data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted'
 
 /**
  * ユーザーのOVERPOWERサマリーと分布グラフを表示する。
