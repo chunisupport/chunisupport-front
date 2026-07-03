@@ -52,6 +52,7 @@ import {
   SongsList,
   UserPage,
   WeakChartInspectorPage,
+  WorldsendScoreHistory,
   WorldsendSongDetail,
   WorldsendSongsList,
 } from './pages'
@@ -379,6 +380,10 @@ const App = () => {
       {/* 楽曲 */}
       <Route path="/songs" component={withNavBar(SongsList)} />
       <Route path="/songs/worldsend" component={withNavBar(WorldsendSongsList)} />
+      <Route
+        path="/songs/worldsend/:displayid/score-history"
+        component={withNavBar(withAuth(WorldsendScoreHistory))}
+      />
       <Route path="/songs/worldsend/:displayid" component={withNavBar(WorldsendSongDetail)} />
       <Route
         path="/songs/:displayid/score-history"

@@ -4,7 +4,14 @@ import { Collapsible } from '@kobalte/core/collapsible'
 import { Dialog } from '@kobalte/core/dialog'
 import { NumberField } from '@kobalte/core/number-field'
 import { A } from '@solidjs/router'
-import { Chart, LinearScale, PointElement, ScatterController, Tooltip } from 'chart.js'
+import {
+  Chart,
+  LinearScale,
+  PointElement,
+  ScatterController,
+  Tooltip,
+  type TooltipModel,
+} from 'chart.js'
 import {
   ChartNoAxesCombined,
   Check,
@@ -37,6 +44,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { formatChartConst, truncateChartConst } from '../../utils/chartConstFormat'
+import { resolveViewportTooltipPosition } from '../../utils/chartTooltipPosition'
 import { formatInteger } from '../../utils/numberFormat'
 import { clampNumericInput } from '../../utils/numberInput'
 import {
@@ -59,6 +67,9 @@ import {
   WEAK_CHART_POINT_JITTER,
   WEAK_CHART_SCORE_TICK_INTERVAL,
   WEAK_CHART_SETTINGS_COPY,
+  WEAK_CHART_TOOLTIP_POINT_GAP,
+  WEAK_CHART_TOOLTIP_TITLE_CLASS,
+  WEAK_CHART_TOOLTIP_VIEWPORT_PADDING,
 } from './weakChartInspector.constants'
 
 Chart.register(ScatterController, LinearScale, PointElement, Tooltip)
@@ -170,6 +181,54 @@ const createPoints = (records: PlayerRecordDTO[]): InspectorPoint[] =>
 const createChartKey = (record: PlayerRecordDTO): string => `${record.id}:${record.difficulty}`
 
 /**
+ * Chart.jsの外部ツールチップ要素を点の情報で更新する。
+ *
+ * @param tooltipElement - fixed配置で表示する外部ツールチップ要素。
+ * @param canvas - ツールチップの基準になるCanvas要素。
+ * @param tooltip - Chart.jsから渡されるツールチップ状態。
+ * @returns なし。
+ */
+const updateExternalTooltip = (
+  tooltipElement: HTMLDivElement,
+  canvas: HTMLCanvasElement,
+  tooltip: TooltipModel<'scatter'>
+): void => {
+  if (tooltip.opacity === 0 || tooltip.dataPoints.length === 0) {
+    tooltipElement.style.opacity = '0'
+    return
+  }
+
+  const dataPoint = tooltip.dataPoints[0]
+  const record = toInspectorPoint(dataPoint.raw).record
+  tooltipElement.replaceChildren()
+
+  const titleElement = document.createElement('div')
+  titleElement.className = WEAK_CHART_TOOLTIP_TITLE_CLASS
+  titleElement.textContent = record.title
+
+  const detailElement = document.createElement('div')
+  detailElement.className = 'mt-1 text-text-muted'
+  detailElement.textContent = `${record.difficulty} / 定数 ${formatChartConst(record.const)} / ${formatInteger(record.score)}`
+
+  tooltipElement.append(titleElement, detailElement)
+
+  const canvasRect = canvas.getBoundingClientRect()
+  const tooltipRect = tooltipElement.getBoundingClientRect()
+  const position = resolveViewportTooltipPosition(
+    { left: tooltip.caretX, top: tooltip.caretY },
+    { left: canvasRect.left, top: canvasRect.top },
+    { width: tooltipRect.width, height: tooltipRect.height },
+    { width: window.innerWidth, height: window.innerHeight },
+    WEAK_CHART_TOOLTIP_VIEWPORT_PADDING,
+    WEAK_CHART_TOOLTIP_POINT_GAP
+  )
+
+  tooltipElement.style.opacity = '1'
+  tooltipElement.style.left = `${position.left}px`
+  tooltipElement.style.top = `${position.top}px`
+}
+
+/**
  * 譜面定数別スコア分布をChart.jsで表示する。
  *
  * @param props - プレイ済みレコード、外れ値、グラフ軸設定。
@@ -181,6 +240,7 @@ const WeakChartDistributionChart = (props: {
   axisSettings: ChartAxisSettings
 }): JSX.Element => {
   let canvasRef!: HTMLCanvasElement
+  let tooltipRef!: HTMLDivElement
   let chart: Chart<'scatter', InspectorPoint[]> | undefined
 
   createEffect(() => {
@@ -224,13 +284,8 @@ const WeakChartDistributionChart = (props: {
         interaction: { mode: 'nearest', intersect: true },
         plugins: {
           tooltip: {
-            callbacks: {
-              title: (items) => (items[0] ? toInspectorPoint(items[0].raw).record.title : ''),
-              label: (item) => {
-                const record = toInspectorPoint(item.raw).record
-                return `${record.difficulty} / 定数 ${formatChartConst(record.const)} / ${formatInteger(record.score)}`
-              },
-            },
+            enabled: false,
+            external: ({ tooltip }) => updateExternalTooltip(tooltipRef, canvasRef, tooltip),
           },
         },
         scales: {
@@ -271,6 +326,11 @@ const WeakChartDistributionChart = (props: {
           <canvas ref={canvasRef} aria-label={WEAK_CHART_INSPECTOR_COPY.chartAccessibleLabel} />
         </div>
       </div>
+      <div
+        ref={tooltipRef}
+        class="pointer-events-none fixed z-50 max-w-[min(20rem,calc(100vw-1rem))] rounded-md border border-border-strong bg-surface-raised px-3 py-2 text-sm opacity-0 shadow-lg transition-opacity"
+        role="tooltip"
+      />
     </figure>
   )
 }
