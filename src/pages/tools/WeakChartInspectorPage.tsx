@@ -68,6 +68,7 @@ import {
   WEAK_CHART_SCORE_TICK_INTERVAL,
   WEAK_CHART_SETTINGS_COPY,
   WEAK_CHART_TOOLTIP_POINT_GAP,
+  WEAK_CHART_TOOLTIP_TITLE_CLASS,
   WEAK_CHART_TOOLTIP_VIEWPORT_PADDING,
 } from './weakChartInspector.constants'
 
@@ -202,7 +203,7 @@ const updateExternalTooltip = (
   tooltipElement.replaceChildren()
 
   const titleElement = document.createElement('div')
-  titleElement.className = 'font-semibold text-text'
+  titleElement.className = WEAK_CHART_TOOLTIP_TITLE_CLASS
   titleElement.textContent = record.title
 
   const detailElement = document.createElement('div')
