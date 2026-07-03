@@ -325,6 +325,15 @@ export const filterRandomSongCandidates = (
   })
 
 /**
+ * レコードのスコア範囲絞り込みを適用するか判定する。
+ *
+ * @param filter - プレイ状況とスコアの絞り込み条件。
+ * @returns スコアを持つプレイ済み譜面へ範囲絞り込みを適用する場合は true。
+ */
+const shouldApplyRandomSongScoreFilter = (filter: RandomSongRecordFilter): boolean =>
+  filter.playStatus !== 'unplayed' && (filter.minScore !== null || filter.maxScore !== null)
+
+/**
  * ランダム選曲候補を自分のレコード条件で絞り込む。
  *
  * @param candidates - 譜面単位の候補一覧。
@@ -349,7 +358,7 @@ export const filterRandomSongCandidatesByRecord = (
     if (filter.playStatus === 'unplayed' && isPlayed) return false
     if (filter.bestFrame === 'only' && !isBest) return false
     if (filter.bestFrame === 'exclude' && isBest) return false
-    if (filter.minScore !== null || filter.maxScore !== null) {
+    if (shouldApplyRandomSongScoreFilter(filter)) {
       if (record?.is_played !== true) return false
       if (filter.minScore !== null && record.score < filter.minScore) return false
       if (filter.maxScore !== null && record.score > filter.maxScore) return false
