@@ -11,6 +11,7 @@ type Params = {
 
 export const createRecordTableVirtualizer = (params: Params) => {
   let layoutResizeObserver: ResizeObserver | undefined
+  let layoutFrameId: number | undefined
 
   const getScrollElement = () => document.getElementById('app-main') as HTMLDivElement | null
   const [scrollMargin, setScrollMargin] = createSignal(0)
@@ -40,6 +41,19 @@ export const createRecordTableVirtualizer = (params: Params) => {
     }
   }
 
+  /**
+   * ResizeObserver の通知サイクル外でテーブル位置を再計測する。
+   *
+   * @returns なし。
+   */
+  const scheduleScrollMarginUpdate = () => {
+    if (layoutFrameId !== undefined) return
+    layoutFrameId = window.requestAnimationFrame(() => {
+      layoutFrameId = undefined
+      updateScrollMargin()
+    })
+  }
+
   createEffect(() => {
     const container = params.containerRef()
     const scrollElement = getScrollElement()
@@ -49,7 +63,7 @@ export const createRecordTableVirtualizer = (params: Params) => {
     if (container && typeof ResizeObserver !== 'undefined') {
       layoutResizeObserver?.disconnect()
       layoutResizeObserver = new ResizeObserver(() => {
-        queueMicrotask(updateScrollMargin)
+        scheduleScrollMarginUpdate()
       })
 
       layoutResizeObserver.observe(container)
@@ -70,6 +84,9 @@ export const createRecordTableVirtualizer = (params: Params) => {
 
   onCleanup(() => {
     layoutResizeObserver?.disconnect()
+    if (layoutFrameId !== undefined) {
+      window.cancelAnimationFrame(layoutFrameId)
+    }
     window.removeEventListener('resize', updateScrollMargin)
   })
 
