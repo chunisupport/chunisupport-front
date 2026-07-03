@@ -17,7 +17,7 @@ import {
   Wrench,
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createSignal, For, onCleanup, onMount } from 'solid-js'
+import { createSignal, For, onMount } from 'solid-js'
 import { isHomePath } from './navItemMatching'
 
 type NavBarProps = {
@@ -33,13 +33,8 @@ import { EDITOR_SONGS_TITLE } from '../../pages/editor/constants'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
-import {
-  applyThemePreference,
-  readThemePreference,
-  saveThemePreference,
-  subscribeSystemThemeChange,
-  type ThemePreference,
-} from '../../utils/themePreference'
+import AppearanceSettings from '../common/AppearanceSettings'
+import { APPEARANCE_SETTINGS_COPY } from '../common/AppearanceSettings.constants'
 
 /**
  * その他メニューに表示する項目を表す。
@@ -54,28 +49,6 @@ type DropdownItem = {
   path?: string
   action?: 'theme'
 }
-
-const THEME_OPTIONS = [
-  {
-    value: 'system',
-    label: 'システム',
-    description: '端末の表示設定に合わせます。',
-  },
-  {
-    value: 'light',
-    label: 'ライト',
-    description: '明るい配色で固定します。',
-  },
-  {
-    value: 'dark',
-    label: 'ダーク',
-    description: '暗い配色で固定します。',
-  },
-] as const satisfies readonly {
-  value: ThemePreference
-  label: string
-  description: string
-}[]
 
 type NavItem = {
   id: 'home' | 'goals' | 'tools' | 'songs' | 'others'
@@ -97,7 +70,6 @@ const NavBar = (props: NavBarProps) => {
   const [showLoginDialog, setShowLoginDialog] = createSignal(false)
   const [showLogoutDialog, setShowLogoutDialog] = createSignal(false)
   const [showThemeDialog, setShowThemeDialog] = createSignal(false)
-  const [themePreference, setThemePreference] = createSignal<ThemePreference>(readThemePreference())
 
   const username = () => authSession.user?.username ?? null
   const isLoading = () => authSession.status === 'unknown'
@@ -206,12 +178,6 @@ const NavBar = (props: NavBarProps) => {
     resolveAuthSession(() => fetchMe({ redirectOnUnauthorized: false }))
   })
 
-  // OS側のテーマ変更を反映し、システム連動設定の表示崩れを避けるため購読する。
-  onMount(() => {
-    const unsubscribeSystemThemeChange = subscribeSystemThemeChange(themePreference)
-    onCleanup(unsubscribeSystemThemeChange)
-  })
-
   const isActive = (item: NavItem) => {
     const pathname = location.pathname
 
@@ -260,17 +226,6 @@ const NavBar = (props: NavBarProps) => {
     } else {
       navigate(path)
     }
-  }
-
-  /**
-   * テーマ設定を保存して現在の画面へ適用する。
-   * @param preference 適用するテーマ設定
-   * @returns なし
-   */
-  const handleThemePreferenceChange = (preference: ThemePreference) => {
-    setThemePreference(preference)
-    saveThemePreference(preference)
-    applyThemePreference(preference)
   }
 
   const handleLogout = async () => {
@@ -488,25 +443,10 @@ const NavBar = (props: NavBarProps) => {
             <Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
               <Dialog.Title class="text-lg font-bold text-text">表示テーマ</Dialog.Title>
               <Dialog.Description class="mt-2 text-sm text-text-muted">
-                画面の配色をライト、ダーク、システム連動から選択します。
+                {APPEARANCE_SETTINGS_COPY.dialogDescription}
               </Dialog.Description>
-              <div class="mt-4 grid gap-3">
-                <For each={THEME_OPTIONS}>
-                  {(option) => (
-                    <Button
-                      aria-pressed={themePreference() === option.value}
-                      onClick={() => handleThemePreferenceChange(option.value)}
-                      class={`rounded-lg border p-4 text-left transition hover:bg-surface-hover ${
-                        themePreference() === option.value
-                          ? 'border-action-primary bg-action-primary-muted'
-                          : 'border-border bg-surface'
-                      }`}
-                    >
-                      <span class="block text-sm font-semibold text-text">{option.label}</span>
-                      <span class="mt-1 block text-xs text-text-muted">{option.description}</span>
-                    </Button>
-                  )}
-                </For>
+              <div class="mt-4">
+                <AppearanceSettings />
               </div>
             </Dialog.Content>
           </Dialog.Portal>

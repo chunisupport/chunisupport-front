@@ -349,10 +349,10 @@ const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
       itemComponent={(selectProps) => (
         <Select.Item
           item={selectProps.item}
-          class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
+          class="cursor-pointer px-3 py-2 text-text hover:bg-action-primary-muted data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted"
         >
           <div class="flex items-center gap-2">
-            <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-success">
+            <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-action-primary">
               <Check size={14} />
             </Select.ItemIndicator>
             <Select.ItemLabel>{selectProps.item.rawValue.name}</Select.ItemLabel>

@@ -19,7 +19,7 @@ const COLUMN_SETTINGS_SELECT_TRIGGER_CLASS =
  * 目的: 列設定リストのチェック済み色とフォーカス中のホバー色を分ける共通スタイル。
  */
 const COLUMN_SETTINGS_SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-text hover:bg-success-bg-hover data-[highlighted]:bg-success-bg-hover data-[selected]:bg-success-bg data-[selected]:hover:bg-success-bg-hover data-[selected]:data-[highlighted]:bg-success-bg-hover'
+  'cursor-pointer px-3 py-2 text-text hover:bg-action-primary-muted data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted'
 
 type ColumnOption<TColumnId extends string> = {
   id: TColumnId
@@ -107,7 +107,7 @@ const ColumnSettingsDialogBase = <TColumnId extends string, TSortKey extends str
             itemComponent={(props) => (
               <Select.Item item={props.item} class={COLUMN_SETTINGS_SELECT_ITEM_CLASS}>
                 <div class="flex items-center gap-2">
-                  <span class="inline-flex w-4 justify-center text-success">
+                  <span class="inline-flex w-4 justify-center text-action-primary">
                     <Select.ItemIndicator>
                       <Check size={14} />
                     </Select.ItemIndicator>
@@ -125,7 +125,7 @@ const ColumnSettingsDialogBase = <TColumnId extends string, TSortKey extends str
                 >
                   <For each={selectedOptions()}>
                     {(option) => (
-                      <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
+                      <span class="rounded-full bg-action-primary-muted px-2 py-0.5 text-xs text-action-primary">
                         {option.label}
                       </span>
                     )}
