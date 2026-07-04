@@ -85,6 +85,9 @@ const COMPACT_ICON_BUTTON_CLASS = `${ICON_BUTTON_CLASS} min-w-14 px-2`
 /** OVER POWER画面上部の押下状態を持つ丸型アイコンボタンクラス。 */
 const TOGGLE_ICON_BUTTON_CLASS = `${ICON_BUTTON_CLASS} data-[pressed]:border-action-primary data-[pressed]:bg-action-primary data-[pressed]:text-text-inverse`
 
+/** OVER POWER画面上部のテキスト付き丸型アイコンボタンクラス。 */
+const TEXT_ICON_BUTTON_CLASS = `${ICON_BUTTON_CLASS} whitespace-nowrap`
+
 /**
  * ユーザーのOVERPOWERサマリーと分布グラフを表示する。
  *
@@ -377,7 +380,7 @@ const UserOverPower: Component<Props> = (props) => {
                         </ToggleButton>
                         <Button
                           type="button"
-                          class={`${ICON_BUTTON_CLASS} whitespace-nowrap`}
+                          class={TEXT_ICON_BUTTON_CLASS}
                           aria-label={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
                           title={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
                           disabled={lockedSongsButtonDisabled()}
