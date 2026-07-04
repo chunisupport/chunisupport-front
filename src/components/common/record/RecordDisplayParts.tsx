@@ -51,11 +51,9 @@ export const RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS = `${RECORD_ROW_HOVER_CLASS}
 export const RECORD_CARD_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} group-hover:bg-interactive-row-hover`
 /** 仮想スクロールで使うレコード1行の高さ。 */
 export const RECORD_ROW_HEIGHT = 34
-const RECORD_ROW_MIN_HEIGHT_CLASS_BY_HEIGHT = {
-  [RECORD_ROW_HEIGHT]: 'min-h-[34px]',
-} as const satisfies Record<typeof RECORD_ROW_HEIGHT, `min-h-[${typeof RECORD_ROW_HEIGHT}px]`>
 /** レコード1行分の最小高さを揃えるクラス。 */
-export const RECORD_ROW_MIN_HEIGHT_CLASS = RECORD_ROW_MIN_HEIGHT_CLASS_BY_HEIGHT[RECORD_ROW_HEIGHT]
+export const RECORD_ROW_MIN_HEIGHT_CLASS =
+  `min-h-[${RECORD_ROW_HEIGHT}px]` as const satisfies `min-h-[${typeof RECORD_ROW_HEIGHT}px]`
 /** レコード表ヘッダーボタンの共通レイアウトクラス。 */
 export const RECORD_HEADER_BUTTON_CLASS = RECORD_ROW_MIN_HEIGHT_CLASS
 /** 数値や英数字中心のレコード列に使う文字サイズクラス。 */
@@ -134,7 +132,7 @@ const renderHardLampTextBadge = (lamp: keyof typeof HARD_LAMP_LABEL): JSX.Elemen
  */
 export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element => {
   if (lamp && lamp !== 'FAILED') return renderHardLampTextBadge(lamp)
-  return <LampPlaceholderBadge class="w-[40px]" />
+  return <LampPlaceholderBadge class="w-10" />
 }
 
 /**
@@ -147,7 +145,7 @@ export const renderDefaultRecordFullChainBadge = (
 ): JSX.Element => {
   const lampType = fullChain ? FULL_CHAIN_BADGE_VARIANT[fullChain] : undefined
 
-  if (!lampType) return <LampPlaceholderBadge class="w-[40px]" />
+  if (!lampType) return <LampPlaceholderBadge class="w-10" />
 
   return (
     <span class={`${FULL_CHAIN_BADGE_CLASS} ${getComboLampBadgeClass(lampType, undefined)}`}>
@@ -185,7 +183,7 @@ export const RecordTitleCell = (props: RecordTitleCellProps) => (
     class={`font-sans flex ${RECORD_ROW_MIN_HEIGHT_CLASS} min-w-0 w-full items-center text-sm text-inherit hover:underline`}
     title={props.title}
   >
-    <span class="block w-full truncate pt-0.25">{props.title}</span>
+    <span class="block w-full truncate pt-px">{props.title}</span>
   </A>
 )
 

@@ -75,6 +75,16 @@ const SELECT_TRIGGER_CLASS =
 const SELECT_ITEM_CLASS =
   'cursor-pointer px-3 py-2 text-text hover:bg-action-primary-muted data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted'
 
+/** OVER POWER画面上部の丸型アイコンボタン共通クラス。 */
+const ICON_BUTTON_CLASS =
+  'inline-flex h-10 items-center justify-center gap-1 rounded-full border border-border-strong bg-surface px-3 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-disabled-text'
+
+/** OVER POWER画面上部の小さめな丸型アイコンボタンクラス。 */
+const COMPACT_ICON_BUTTON_CLASS = `${ICON_BUTTON_CLASS} min-w-14 px-2`
+
+/** OVER POWER画面上部の押下状態を持つ丸型アイコンボタンクラス。 */
+const TOGGLE_ICON_BUTTON_CLASS = `${ICON_BUTTON_CLASS} data-[pressed]:border-action-primary data-[pressed]:bg-action-primary data-[pressed]:text-text-inverse`
+
 /**
  * ユーザーのOVERPOWERサマリーと分布グラフを表示する。
  *
@@ -193,8 +203,6 @@ const UserOverPower: Component<Props> = (props) => {
       ? OVER_POWER_CONTROL_LABELS.songCount
       : OVER_POWER_CONTROL_LABELS.chartCount
   )
-  const iconButtonClass =
-    'inline-flex h-10 items-center justify-center gap-1 rounded-full border border-border-strong bg-surface px-3 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-disabled-text'
   const lockedSongsButtonDisabled = createMemo(
     () => !canManageLockedSongs() || !allSongs() || lockedSongs.loading
   )
@@ -336,7 +344,7 @@ const UserOverPower: Component<Props> = (props) => {
                     <div class="ml-auto flex w-full items-center justify-between gap-1.5 sm:w-auto sm:justify-start">
                       <Button
                         type="button"
-                        class="inline-flex h-10 min-w-14 items-center justify-center gap-1 rounded-full border border-border-strong bg-surface px-2 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
+                        class={COMPACT_ICON_BUTTON_CLASS}
                         aria-label={`${
                           nextSummaryViewMode() === 'graph'
                             ? OVER_POWER_CONTROL_LABELS.graph
@@ -362,14 +370,14 @@ const UserOverPower: Component<Props> = (props) => {
                         <ToggleButton
                           pressed={excludeLockedSongs()}
                           onChange={setExcludeLockedSongs}
-                          class="inline-flex h-10 items-center justify-center gap-1 rounded-full border border-border-strong bg-surface px-3 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 data-[pressed]:border-action-primary data-[pressed]:bg-action-primary data-[pressed]:text-text-inverse"
+                          class={TOGGLE_ICON_BUTTON_CLASS}
                         >
                           <span>{OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL}</span>
                           <LockKeyholeOpen class="h-5 w-5" aria-hidden="true" />
                         </ToggleButton>
                         <Button
                           type="button"
-                          class={`${iconButtonClass} whitespace-nowrap`}
+                          class={`${ICON_BUTTON_CLASS} whitespace-nowrap`}
                           aria-label={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
                           title={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
                           disabled={lockedSongsButtonDisabled()}
