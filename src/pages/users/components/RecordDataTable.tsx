@@ -7,10 +7,12 @@ import {
   RECORD_ROW_HOVER_CLASS,
   RecordHeaderButton,
 } from '../../../components/common/record/RecordDisplayParts'
+import {
+  getSortAriaValue,
+  type SortDirection,
+} from '../../../components/common/SortableTableHeader'
 import { createGridTemplateColumns } from '../utils/recordColumnDefinitions'
 import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
-
-type SortDirection = 'asc' | 'desc' | null
 
 type RecordDataTableProps<TRecord, TColumnId extends string, TSortKey extends string> = {
   /** 表示するレコード配列。 */
@@ -76,14 +78,23 @@ export function RecordDataTable<TRecord, TColumnId extends string, TSortKey exte
               >
                 <For each={props.columns}>
                   {(column) => (
-                    <RecordHeaderButton
-                      label={column.label}
-                      active={props.sortKey === column.sortKey}
-                      direction={props.sortDirection}
-                      align={column.align ?? 'center'}
-                      class={column.align === 'start' ? 'justify-start' : 'justify-center'}
-                      onClick={() => props.onSortChange(column.sortKey)}
-                    />
+                    // biome-ignore lint/a11y/useFocusableInteractive lint/a11y/useSemanticElements: div gridの仮想テーブルなのでthへ置換できない。
+                    <div
+                      role="columnheader"
+                      aria-sort={getSortAriaValue(
+                        props.sortKey === column.sortKey,
+                        props.sortDirection
+                      )}
+                    >
+                      <RecordHeaderButton
+                        label={column.label}
+                        active={props.sortKey === column.sortKey}
+                        direction={props.sortDirection}
+                        align={column.align ?? 'center'}
+                        class={column.align === 'start' ? 'justify-start' : 'justify-center'}
+                        onClick={() => props.onSortChange(column.sortKey)}
+                      />
+                    </div>
                   )}
                 </For>
               </div>

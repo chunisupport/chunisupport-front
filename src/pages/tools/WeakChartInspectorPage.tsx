@@ -27,7 +27,7 @@ import {
 import { fetchMe } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
-import { SortableHeaderButton } from '../../components/common/SortableTableHeader'
+import { getSortAriaValue, SortableHeaderButton } from '../../components/common/SortableTableHeader'
 import {
   CHART_CONST_MAX,
   CHART_CONST_MIN,
@@ -319,6 +319,15 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
     />
   )
 
+  /**
+   * ソート状態をth要素へ伝えるaria-sort値を返す。
+   *
+   * @param key - 列のソートキー。
+   * @returns aria-sortへ渡すソート状態。
+   */
+  const headerAriaSort = (key: WeakChartSortKey) =>
+    getSortAriaValue(sortKey() === key, sortDirection())
+
   return (
     <section class="rounded-lg border border-border bg-surface">
       <h2 class="flex items-center gap-2 border-b border-border px-4 py-3 text-lg font-semibold">
@@ -347,16 +356,16 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
             </colgroup>
             <thead class="bg-surface-muted text-left text-text-muted">
               <tr class="[&>*:first-child]:pl-2 [&>*:last-child]:pr-2">
-                <th scope="col" class="font-medium">
+                <th scope="col" class="font-medium" aria-sort={headerAriaSort('title')}>
                   {header('曲名', 'title', 'start')}
                 </th>
-                <th scope="col" class="font-medium">
+                <th scope="col" class="font-medium" aria-sort={headerAriaSort('difficulty')}>
                   {header('難易度', 'difficulty')}
                 </th>
-                <th scope="col" class="font-medium">
+                <th scope="col" class="font-medium" aria-sort={headerAriaSort('const')}>
                   {header('定数', 'const')}
                 </th>
-                <th scope="col" class="font-medium">
+                <th scope="col" class="font-medium" aria-sort={headerAriaSort('score')}>
                   {header('スコア', 'score')}
                 </th>
               </tr>
