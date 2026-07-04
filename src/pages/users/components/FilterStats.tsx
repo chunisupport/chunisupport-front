@@ -1,8 +1,8 @@
 import { Collapsible } from '@kobalte/core/collapsible'
-import * as Tabs from '@kobalte/core/tabs'
 import { ChevronRight, Link2, ShieldCheck, Trophy } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For } from 'solid-js'
+import { AppTabContent, SegmentedTabs } from '../../../components/common/AppTabs'
 import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
 import type { DistributionMap, RecordStats } from '../utils/recordStats'
 import {
@@ -31,33 +31,41 @@ type DistributionSectionConfig = {
   hiddenGraphKeys?: readonly string[]
 }
 
-type FilterStatsTabValue = 'score' | 'combo' | 'clear'
-
 const FILTER_STATS_CARD_CLASS =
   'overflow-hidden rounded-lg border border-border-strong bg-surface shadow-sm'
 const FILTER_STATS_HEADER_CLASS =
   'flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2 text-sm font-bold'
 const FILTER_STATS_ROW_CLASS =
   'grid grid-cols-[minmax(0,1fr)_auto_2.5rem_minmax(3.25rem,5rem)] items-center gap-2 py-1.5 text-xs'
-/** フィルター統計タブの通常、ホバー、選択中状態を表す表示クラス。 */
-const FILTER_STATS_TAB_TRIGGER_CLASS =
-  'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-text-muted transition-colors hover:bg-action-secondary hover:text-text data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm data-selected:hover:bg-action-primary data-selected:hover:text-text-inverse focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
-
-/**
- * フィルター統計タブの選択肢を表示する。
- * @param props - タブ値、ラベル、アイコン。
- * @returns タブ切り替えボタン。
- */
-const FilterStatsTabTrigger: Component<{
-  value: FilterStatsTabValue
-  label: string
-  Icon: Component<{ class?: string; 'aria-hidden'?: boolean }>
-}> = (props) => (
-  <Tabs.Trigger value={props.value} class={FILTER_STATS_TAB_TRIGGER_CLASS}>
-    <props.Icon class="h-3.5 w-3.5" aria-hidden={true} />
-    <span>{props.label}</span>
-  </Tabs.Trigger>
-)
+const FILTER_STATS_TAB_OPTIONS = [
+  {
+    value: 'score',
+    label: (
+      <>
+        <Trophy class="h-3.5 w-3.5" aria-hidden={true} />
+        <span>RANK</span>
+      </>
+    ),
+  },
+  {
+    value: 'combo',
+    label: (
+      <>
+        <Link2 class="h-3.5 w-3.5" aria-hidden={true} />
+        <span>COMBO</span>
+      </>
+    ),
+  },
+  {
+    value: 'clear',
+    label: (
+      <>
+        <ShieldCheck class="h-3.5 w-3.5" aria-hidden={true} />
+        <span>HARD</span>
+      </>
+    ),
+  },
+] as const
 
 /**
  * 分布の表示対象キーを、指定順を保ったまま取得する。
@@ -203,14 +211,13 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
 
     <Collapsible.Content>
       <div class="border-t border-border p-3">
-        <Tabs.Root defaultValue="score">
-          <Tabs.List class="mb-3 inline-flex gap-1 rounded-lg bg-surface-hover p-1">
-            <FilterStatsTabTrigger value="score" label="RANK" Icon={Trophy} />
-            <FilterStatsTabTrigger value="combo" label="COMBO" Icon={Link2} />
-            <FilterStatsTabTrigger value="clear" label="HARD" Icon={ShieldCheck} />
-          </Tabs.List>
-
-          <Tabs.Content value="score">
+        <SegmentedTabs
+          defaultValue="score"
+          options={FILTER_STATS_TAB_OPTIONS}
+          listClass="mb-3"
+          triggerClass="text-xs font-semibold"
+        >
+          <AppTabContent value="score">
             <DistributionSection
               title="RANK"
               label="RANK"
@@ -220,8 +227,8 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
               Icon={Trophy}
               hiddenGraphKeys={[UNPLAYED_DISTRIBUTION_KEY]}
             />
-          </Tabs.Content>
-          <Tabs.Content value="combo">
+          </AppTabContent>
+          <AppTabContent value="combo">
             <DistributionSection
               title="COMBO"
               label="COMBO"
@@ -231,8 +238,8 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
               Icon={Link2}
               hiddenGraphKeys={[UNPLAYED_DISTRIBUTION_KEY]}
             />
-          </Tabs.Content>
-          <Tabs.Content value="clear">
+          </AppTabContent>
+          <AppTabContent value="clear">
             <DistributionSection
               title="HARD"
               label="HARD"
@@ -242,8 +249,8 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
               Icon={ShieldCheck}
               hiddenGraphKeys={[UNPLAYED_DISTRIBUTION_KEY]}
             />
-          </Tabs.Content>
-        </Tabs.Root>
+          </AppTabContent>
+        </SegmentedTabs>
       </div>
     </Collapsible.Content>
   </Collapsible>

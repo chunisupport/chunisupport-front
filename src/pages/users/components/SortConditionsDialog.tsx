@@ -1,8 +1,8 @@
 import { Dialog } from '@kobalte/core/dialog'
-import * as Tabs from '@kobalte/core/tabs'
 import { createEffect, createMemo, createSignal, For } from 'solid-js'
 import { AppButton, getAppButtonClass } from '../../../components/common/AppButton'
 import { AppSelect } from '../../../components/common/AppSelect'
+import { AppTabContent, SegmentedTabs } from '../../../components/common/AppTabs'
 import type { SortCondition } from '../../../utils/sortConditions'
 import type { SortDirection } from '../../../utils/sortingQuery'
 
@@ -38,13 +38,13 @@ const SORT_DIRECTION_OPTIONS: SortDirectionOption[] = [
   { value: 'asc', label: '昇順' },
 ]
 
-/** ソート表示モード切り替えタブの表示クラス。 */
-const SORT_VIEW_TAB_TRIGGER_CLASS =
-  'rounded-md px-3 py-1.5 text-sm font-medium text-text-muted transition-colors hover:bg-action-secondary hover:text-text data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm data-selected:hover:bg-action-primary data-selected:hover:text-text-inverse focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
-
 /** 詳細ソート行の番号バッジ表示クラス。 */
 const SORT_CONDITION_BADGE_CLASS =
   'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-sm font-bold text-text-muted'
+const SORT_VIEW_TAB_OPTIONS = [
+  { value: 'standard', label: '通常' },
+  { value: 'detail', label: '詳細' },
+] as const
 
 /**
  * ソート方向の表示名を取得する。
@@ -239,25 +239,21 @@ export function SortConditionsDialog<TSortKey extends string>(
             <Dialog.Title class="text-lg font-bold">ソート</Dialog.Title>
           </div>
 
-          <Tabs.Root value={viewMode()} onChange={handleViewModeChange}>
-            <Tabs.List class="mb-4 inline-flex gap-1 rounded-lg bg-surface-hover p-1">
-              <Tabs.Trigger value="standard" class={SORT_VIEW_TAB_TRIGGER_CLASS}>
-                通常
-              </Tabs.Trigger>
-              <Tabs.Trigger value="detail" class={SORT_VIEW_TAB_TRIGGER_CLASS}>
-                詳細
-              </Tabs.Trigger>
-            </Tabs.List>
-
+          <SegmentedTabs
+            value={viewMode()}
+            onChange={handleViewModeChange}
+            options={SORT_VIEW_TAB_OPTIONS}
+            listClass="mb-4"
+          >
             <div class="min-h-0 flex-1 overflow-y-auto pr-1 text-sm">
-              <Tabs.Content value="standard">{renderSortConditionRow(0, false)}</Tabs.Content>
-              <Tabs.Content value="detail" class="space-y-3">
+              <AppTabContent value="standard">{renderSortConditionRow(0, false)}</AppTabContent>
+              <AppTabContent value="detail" class="space-y-3">
                 <For each={sortConditionIndices()}>
                   {(rowIndex) => renderSortConditionRow(rowIndex, true)}
                 </For>
-              </Tabs.Content>
+              </AppTabContent>
             </div>
-          </Tabs.Root>
+          </SegmentedTabs>
 
           <div class="mt-6 flex shrink-0 justify-end gap-2">
             <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
