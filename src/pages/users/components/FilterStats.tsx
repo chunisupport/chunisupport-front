@@ -1,7 +1,8 @@
 import { Collapsible } from '@kobalte/core/collapsible'
-import { ChevronRight, Link2, ShieldCheck, Trophy } from 'lucide-solid'
+import { Link2, ShieldCheck, Trophy } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For } from 'solid-js'
+import { AppDisclosureTrigger } from '../../../components/common/AppDisclosureTrigger'
 import { AppTabContent, SegmentedTabs } from '../../../components/common/AppTabs'
 import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
 import type { DistributionMap, RecordStats } from '../utils/recordStats'
@@ -198,16 +199,11 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
     open={props.open}
     onOpenChange={props.onOpenChange}
   >
-    <Collapsible.Trigger class="group flex min-h-8 w-full items-center gap-1.5 px-3 text-sm">
-      <ChevronRight
-        class="h-4 w-4 text-text-muted transition-transform group-data-expanded:rotate-90"
-        aria-hidden="true"
-      />
-      <p class="flex-1 text-left ">フィルター統計</p>
-      <p class="text-xs text-text-muted">
-        平均スコア: {props.stats.scoreStats.avg.toLocaleString()}
-      </p>
-    </Collapsible.Trigger>
+    <AppDisclosureTrigger
+      class="gap-1.5"
+      label="フィルター統計"
+      summary={`平均スコア: ${props.stats.scoreStats.avg.toLocaleString()}`}
+    />
 
     <Collapsible.Content>
       <div class="border-t border-border p-3">

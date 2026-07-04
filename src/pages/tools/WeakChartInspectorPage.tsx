@@ -3,7 +3,7 @@ import { Dialog } from '@kobalte/core/dialog'
 import { NumberField } from '@kobalte/core/number-field'
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, PointElement, ScatterController, Tooltip } from 'chart.js'
-import { ChartNoAxesCombined, ChevronRight, RotateCcw, Settings, TriangleAlert } from 'lucide-solid'
+import { ChartNoAxesCombined, RotateCcw, Settings, TriangleAlert } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -18,6 +18,7 @@ import {
 import { fetchMe } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { AppDisclosureTrigger } from '../../components/common/AppDisclosureTrigger'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { SortableHeaderButton } from '../../components/common/SortableTableHeader'
@@ -679,13 +680,11 @@ const WeakChartInspectorPage = (): JSX.Element => {
 
                     {/* 表示の絞り込み */}
                     <Collapsible defaultOpen={false}>
-                      <Collapsible.Trigger class="group flex w-full items-center justify-start gap-2 text-sm font-semibold text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring">
-                        <ChevronRight
-                          class="h-4 w-4 rotate-0 transition-transform group-data-expanded:rotate-90"
-                          aria-hidden="true"
-                        />
-                        <span>{WEAK_CHART_SETTINGS_COPY.displaySection}</span>
-                      </Collapsible.Trigger>
+                      <AppDisclosureTrigger
+                        variant="compact"
+                        label={WEAK_CHART_SETTINGS_COPY.displaySection}
+                        labelClass="flex-none"
+                      />
                       <Collapsible.Content>
                         <fieldset class="mt-3">
                           <legend class="sr-only">{WEAK_CHART_SETTINGS_COPY.displaySection}</legend>
