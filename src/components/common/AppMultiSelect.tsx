@@ -53,7 +53,7 @@ const MULTI_SELECT_TRIGGER_CLASS =
   'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60'
 
 const MULTI_SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-sm text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
+  'cursor-pointer px-3 py-2 text-sm text-text [@media(hover:hover)]:hover:bg-success-bg [@media(hover:hover)]:data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
 
 const SELECT_ALL_LABEL = 'すべて選択'
 const CLEAR_LABEL = 'すべて解除'
