@@ -18,7 +18,7 @@ export const FILTER_DIALOG_SELECT_TRIGGER_CLASS = `inline-flex w-full items-cent
  * レコードフィルターダイアログ内の単一選択項目に適用する共通スタイル。
  */
 export const FILTER_DIALOG_SELECT_ITEM_CLASS =
-  'text-sm rounded flex h-8 cursor-pointer items-center justify-between px-2 outline-none hover:bg-success-bg data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-success-bg data-selected:bg-success-bg'
+  'text-sm rounded flex h-8 cursor-pointer items-center justify-between px-2 outline-none hover:bg-action-primary-muted data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-action-primary-muted data-selected:bg-action-primary-muted'
 
 /**
  * レコードフィルターダイアログ内の単一選択ポータルに適用する共通スタイル。

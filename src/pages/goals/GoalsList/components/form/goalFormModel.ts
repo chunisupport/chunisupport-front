@@ -49,6 +49,7 @@ interface GoalFormSelectionFallbacks {
 }
 
 export interface GoalFormAttributesInput {
+  achievementType: GoalAchievementType
   chartTargetMode: GoalChartTargetMode
   diffs: string[]
   constMin: string
@@ -105,7 +106,8 @@ export const isCountAchievementType = (type: GoalAchievementType): boolean =>
   type === 'score_count' ||
   type === 'rank_count' ||
   type === 'hardlamp_count' ||
-  type === 'combolamp_count'
+  type === 'combolamp_count' ||
+  type === 'rainbow_count'
 
 /**
  * 成果パラメータから有効な数値を取り出す。
@@ -339,9 +341,13 @@ export const createGoalFormInitialState = (
  * @returns API送信値と同じ形の対象属性。
  */
 export const buildGoalFormAttributes = (input: GoalFormAttributesInput): GoalAttributes => ({
-  ...(input.chartTargetMode === 'op_target' ? { chart_target: 'OP_TARGET' as const } : {}),
-  ...(input.chartTargetMode === 'normal' ? { diff: parseAttributeSelection(input.diffs) } : {}),
-  ...(input.constMin || input.constMax
+  ...(input.achievementType !== 'rainbow_count' && input.chartTargetMode === 'op_target'
+    ? { chart_target: 'OP_TARGET' as const }
+    : {}),
+  ...(input.achievementType !== 'rainbow_count' && input.chartTargetMode === 'normal'
+    ? { diff: parseAttributeSelection(input.diffs) }
+    : {}),
+  ...(input.achievementType !== 'rainbow_count' && (input.constMin || input.constMax)
     ? {
         const: {
           ...(input.constMin ? { min: Number(input.constMin) } : {}),
@@ -384,7 +390,9 @@ export const buildGoalFormAchievementParams = (
               lamp: input.comboLamp,
               ...targetCountParam,
             }
-          : canUseDynamicTotalTarget(input.achievementType)
-            ? targetTotalParam
-            : { total: Number.isFinite(Number(input.total)) ? Number(input.total) : 0 }
+          : input.achievementType === 'rainbow_count'
+            ? targetCountParam
+            : canUseDynamicTotalTarget(input.achievementType)
+              ? targetTotalParam
+              : { total: Number.isFinite(Number(input.total)) ? Number(input.total) : 0 }
 }

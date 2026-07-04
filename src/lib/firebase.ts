@@ -1,3 +1,4 @@
+import { getAnalytics } from 'firebase/analytics'
 import { initializeApp } from 'firebase/app'
 import { GoogleAuthProvider, getAuth } from 'firebase/auth'
 
@@ -17,5 +18,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 
+/** ブラウザ環境で初期化されたFirebase Analytics。 */
+export const analytics = typeof window === 'undefined' ? undefined : getAnalytics(app)
 export const auth = getAuth(app)
 export const googleProvider = new GoogleAuthProvider()

@@ -1,5 +1,6 @@
 export { AdminHonorsPage, AdminPage, AdminSongsPage, AdminUsersPage } from './admin'
 export { Login, Register } from './auth'
+export { EditorSongsPage } from './editor'
 export { default as ForbiddenPage } from './ForbiddenPage'
 export { GoalsList } from './goals'
 export { default as NotFoundPage } from './NotFoundPage'
@@ -10,6 +11,7 @@ export {
   SongDetail,
   SongScoreHistory,
   SongsList,
+  WorldsendScoreHistory,
   WorldsendSongDetail,
   WorldsendSongsList,
 } from './songs'

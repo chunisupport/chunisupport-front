@@ -56,6 +56,7 @@ export const createWindowVirtualTable = <
   const [scrollMargin, setScrollMargin] = createSignal(0)
   const getScrollElement = (params.getScrollElement ??
     getDefaultScrollElement) as () => TScrollElement | null
+  let layoutFrameId: number | undefined
 
   const rowVirtualizer = createVirtualizer<TScrollElement, TItemElement>({
     get count() {
@@ -88,6 +89,20 @@ export const createWindowVirtualTable = <
   }
 
   /**
+   * ResizeObserverの通知後、次フレームで安全にレイアウトを再計算する。
+   *
+   * @returns なし。
+   */
+  const scheduleScrollMarginUpdate = () => {
+    if (layoutFrameId !== undefined) return
+
+    layoutFrameId = window.requestAnimationFrame(() => {
+      layoutFrameId = undefined
+      updateScrollMargin()
+    })
+  }
+
+  /**
    * レイアウト再計算後に先頭行へスクロールする。
    *
    * @returns なし。
@@ -107,9 +122,7 @@ export const createWindowVirtualTable = <
 
     if (!containerElement || typeof ResizeObserver === 'undefined') return
 
-    const observer = new ResizeObserver(() => {
-      queueMicrotask(updateScrollMargin)
-    })
+    const observer = new ResizeObserver(scheduleScrollMarginUpdate)
 
     observer.observe(containerElement)
 
@@ -139,6 +152,9 @@ export const createWindowVirtualTable = <
   })
 
   onCleanup(() => {
+    if (layoutFrameId !== undefined) {
+      window.cancelAnimationFrame(layoutFrameId)
+    }
     window.removeEventListener('resize', updateScrollMargin)
   })
 

@@ -39,7 +39,7 @@ const MULTI_SELECT_TRIGGER_CLASS =
 
 /** 複数選択 Select の選択肢に適用する Tailwind クラス。 */
 const MULTI_SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-sm text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
+  'cursor-pointer px-3 py-2 text-sm text-text hover:bg-action-primary-muted data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted'
 
 /**
  * 複数選択用のプルダウン式チェックリストを表示する。
@@ -115,7 +115,7 @@ const MultiSelectDropdown = <T extends string | number | null>(
         itemComponent={(itemProps) => (
           <Select.Item item={itemProps.item} class={MULTI_SELECT_ITEM_CLASS}>
             <div class="flex items-center gap-2">
-              <span class="inline-flex w-4 justify-center text-success">
+              <span class="inline-flex w-4 justify-center text-action-primary">
                 <Select.ItemIndicator>
                   <Check size={14} />
                 </Select.ItemIndicator>
@@ -133,7 +133,7 @@ const MultiSelectDropdown = <T extends string | number | null>(
             >
               <For each={visibleSelectedOptions()}>
                 {(option) => (
-                  <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
+                  <span class="rounded-full bg-action-primary-muted px-2 py-0.5 text-xs text-action-primary">
                     {formatLabel(option)}
                   </span>
                 )}

@@ -1,5 +1,6 @@
 import { Image } from '@kobalte/core/image'
 import { For, type JSX } from 'solid-js'
+import placeholderImageUrl from '../../../assets/placeholder.png'
 import { buildChunithmJacketUrl } from '../../../utils/jacket'
 
 export type SongMetaInfoItem = {
@@ -34,7 +35,7 @@ const SongMetaCardLayout = (props: Props) => {
           />
           <Image.Fallback>
             <img
-              src="/placeholder.png"
+              src={placeholderImageUrl}
               alt={`${props.title}のジャケット（フォールバック）`}
               class="h-full w-full object-cover"
             />

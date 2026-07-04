@@ -4,7 +4,7 @@ import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 
 import { fetchMe, fetchUserProfileSummary } from './api/users'
-import { LoadError, Loading, NavBar, PlayerDataEmptyState } from './components'
+import { LoadError, Loading, NavBar, PlayerDataEmptyState, XTimeline } from './components'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
 
@@ -16,6 +16,7 @@ import {
 import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
+  EDITOR_SONGS_PATH,
   LOCKED_SONGS_FINDER_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   REGISTER_SCORE_PATH,
@@ -36,6 +37,7 @@ import {
   AdminUsersPage,
   BorderCalculatorPage,
   ChartConstantCalculatorPage,
+  EditorSongsPage,
   ForbiddenPage,
   GoalsList,
   Login,
@@ -50,6 +52,7 @@ import {
   SongsList,
   UserPage,
   WeakChartInspectorPage,
+  WorldsendScoreHistory,
   WorldsendSongDetail,
   WorldsendSongsList,
 } from './pages'
@@ -161,27 +164,24 @@ const LandingPage = () => {
           </Show>
         </Show>
 
-        <section class="rounded-lg border border-border bg-surface p-6">
-          <h2 class="mb-3 text-xl font-semibold">お知らせ</h2>
-          <ul class="space-y-2 text-sm text-text-muted">
-            <li class="rounded-md border border-border p-3">
-              [モック] 2026-04-29: 新機能の準備を進めています。
-            </li>
-            <li class="rounded-md border border-border p-3">
-              [モック] 2026-04-25: メンテナンス予定を公開しました。
-            </li>
-          </ul>
-        </section>
+        <div class="grid gap-6 md:grid-cols-2 md:items-start">
+          <section class="min-w-0 rounded-lg border border-border bg-surface p-6">
+            <h2 class="mb-3 text-xl font-semibold">お知らせ</h2>
+            <ul class="space-y-2 text-sm text-text-muted">
+              <li class="rounded-md border border-border p-3">
+                [モック] 2026-04-29: 新機能の準備を進めています。
+              </li>
+              <li class="rounded-md border border-border p-3">
+                [モック] 2026-04-25: メンテナンス予定を公開しました。
+              </li>
+            </ul>
+          </section>
 
-        <section class="rounded-lg border border-border bg-surface p-6">
-          <h2 class="mb-3 text-xl font-semibold">X公式アカウント</h2>
-          <ul class="space-y-2 text-sm text-text-muted">
-            <li class="rounded-md border border-border p-3">
-              [モック] 投稿1: アップデート予定のお知らせ
-            </li>
-            <li class="rounded-md border border-border p-3">[モック] 投稿2: 活用方法の紹介</li>
-          </ul>
-        </section>
+          <section class="min-w-0 rounded-lg border border-border bg-surface p-6">
+            <h2 class="mb-3 text-xl font-semibold">X公式アカウント</h2>
+            <XTimeline />
+          </section>
+        </div>
       </main>
       <LandingFooter />
     </div>
@@ -334,6 +334,17 @@ const GuardedAdminSongsPage = () => (
 )
 
 /**
+ * EDITOR権限を要求して楽曲編集画面を表示する。
+ *
+ * @returns 権限制御済みの楽曲編集画面。
+ */
+const GuardedEditorSongsPage = () => (
+  <RequireRole allowedRoles={['EDITOR']}>
+    <EditorSongsPage />
+  </RequireRole>
+)
+
+/**
  * ADMIN 権限を要求して称号管理画面を表示する。
  *
  * @returns 権限制御済みの称号管理画面。
@@ -369,6 +380,10 @@ const App = () => {
       {/* 楽曲 */}
       <Route path="/songs" component={withNavBar(SongsList)} />
       <Route path="/songs/worldsend" component={withNavBar(WorldsendSongsList)} />
+      <Route
+        path="/songs/worldsend/:displayid/score-history"
+        component={withNavBar(withAuth(WorldsendScoreHistory))}
+      />
       <Route path="/songs/worldsend/:displayid" component={withNavBar(WorldsendSongDetail)} />
       <Route
         path="/songs/:displayid/score-history"
@@ -400,6 +415,9 @@ const App = () => {
       <Route path="/admin/users" component={withNavBar(GuardedAdminUsersPage)} />
       <Route path="/admin/songs" component={withNavBar(GuardedAdminSongsPage)} />
       <Route path="/admin/honors" component={withNavBar(GuardedAdminHonorsPage)} />
+
+      {/* 編集 */}
+      <Route path={EDITOR_SONGS_PATH} component={withNavBar(GuardedEditorSongsPage)} />
 
       {/* 404 */}
       <Route path="*" component={NotFoundPage} />

@@ -65,12 +65,14 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
   const isCountType = isCountAchievementType(input.achievementType)
 
   if (
-    (typeof parsedConstMin === 'number' && !Number.isFinite(parsedConstMin)) ||
-    (typeof parsedConstMax === 'number' && !Number.isFinite(parsedConstMax))
+    input.achievementType !== 'rainbow_count' &&
+    ((typeof parsedConstMin === 'number' && !Number.isFinite(parsedConstMin)) ||
+      (typeof parsedConstMax === 'number' && !Number.isFinite(parsedConstMax)))
   ) {
     return '定数範囲が不正です。'
   }
   if (
+    input.achievementType !== 'rainbow_count' &&
     typeof parsedConstMin === 'number' &&
     typeof parsedConstMax === 'number' &&
     parsedConstMin > parsedConstMax
@@ -79,7 +81,9 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
   }
 
   if (input.allCount <= 0) {
-    return '条件に当てはまる譜面がありません。条件を見直してください。'
+    return input.achievementType === 'rainbow_count'
+      ? '条件に当てはまる楽曲がありません。条件を見直してください。'
+      : '条件に当てはまる譜面がありません。条件を見直してください。'
   }
 
   if (

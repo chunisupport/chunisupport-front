@@ -13,6 +13,24 @@ export const RANDOM_SONG_SELECTOR_DIFFICULTIES: PlayerDataDifficulty[] = [
   'ULTIMA',
 ]
 
+/**
+ * ランダム選曲の難易度絞り込みでOP対象譜面を表す専用値。
+ */
+export const RANDOM_SONG_OP_TARGET_FILTER = 'OP_TARGET'
+
+/**
+ * ランダム選曲の難易度絞り込みで扱う通常難易度またはOP対象の値。
+ */
+export type RandomSongDifficultyFilter = PlayerDataDifficulty | typeof RANDOM_SONG_OP_TARGET_FILTER
+
+/**
+ * ランダム選曲の難易度絞り込みで表示する選択肢。
+ */
+export const RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS: RandomSongDifficultyFilter[] = [
+  ...RANDOM_SONG_SELECTOR_DIFFICULTIES,
+  RANDOM_SONG_OP_TARGET_FILTER,
+]
+
 export type RandomSongCandidate = {
   song: SongDTO
   difficulty: PlayerDataDifficulty
@@ -23,7 +41,7 @@ export type RandomSongCandidate = {
 }
 
 export type RandomSongFilter = {
-  difficulties: readonly PlayerDataDifficulty[]
+  difficulties: readonly RandomSongDifficultyFilter[]
   genres: readonly string[]
   versions: readonly string[]
   minConst: number | null
@@ -252,6 +270,36 @@ export const buildRandomSongCandidates = (
 }
 
 /**
+ * ランダム選曲候補が楽曲ごとのOP対象譜面か判定する。
+ *
+ * @param candidate - 判定対象のランダム選曲候補。
+ * @returns 楽曲マスタのOP対象難易度と候補難易度が一致する場合はtrue。
+ */
+export const isRandomSongOpTargetCandidate = (candidate: RandomSongCandidate): boolean =>
+  candidate.song.op_target_difficulty === candidate.difficulty
+
+/**
+ * 難易度絞り込みの排他選択を反映した次の選択状態を作る。
+ *
+ * @param current - 現在選択中の難易度絞り込み値。
+ * @param toggled - 切り替える難易度絞り込み値。
+ * @returns OP対象と通常難易度が同時に選ばれない選択状態。
+ */
+export const toggleRandomSongDifficultyFilter = (
+  current: readonly RandomSongDifficultyFilter[],
+  toggled: RandomSongDifficultyFilter
+): RandomSongDifficultyFilter[] => {
+  if (toggled === RANDOM_SONG_OP_TARGET_FILTER) {
+    return current.includes(RANDOM_SONG_OP_TARGET_FILTER) ? [] : [RANDOM_SONG_OP_TARGET_FILTER]
+  }
+
+  const withoutOpTarget = current.filter(
+    (difficulty) => difficulty !== RANDOM_SONG_OP_TARGET_FILTER
+  )
+  return toggleRandomSongSelectionValue(withoutOpTarget, toggled)
+}
+
+/**
  * ランダム選曲候補を指定条件で絞り込む。
  *
  * @param candidates - 譜面単位の候補一覧。
@@ -263,7 +311,11 @@ export const filterRandomSongCandidates = (
   filter: RandomSongFilter
 ): RandomSongCandidate[] =>
   candidates.filter((candidate) => {
-    if (!filter.difficulties.includes(candidate.difficulty)) return false
+    const matchesDifficulty =
+      filter.difficulties.includes(candidate.difficulty) ||
+      (filter.difficulties.includes(RANDOM_SONG_OP_TARGET_FILTER) &&
+        isRandomSongOpTargetCandidate(candidate))
+    if (!matchesDifficulty) return false
     if (!filter.genres.includes(candidate.genre)) return false
     if (!filter.versions.includes(candidate.version)) return false
     if (filter.minConst !== null && candidate.chartConst < filter.minConst) return false
