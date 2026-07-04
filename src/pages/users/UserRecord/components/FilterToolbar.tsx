@@ -30,7 +30,7 @@ const getFilterButtonToneClass = (tone: FilterButtonTone): string => {
   }
 
   if (tone === 'difficulty-only') {
-    return 'border-action-primary bg-success-bg text-success hover:bg-success-bg-hover'
+    return 'border-action-primary bg-action-primary-muted text-action-primary hover:bg-action-primary-muted'
   }
 
   return 'border-border-strong text-text-muted hover:bg-surface-hover'

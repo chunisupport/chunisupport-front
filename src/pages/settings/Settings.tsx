@@ -13,6 +13,8 @@ import {
 import { fetchMe, fetchUserProfileSummary } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
+import AppearanceSettings from '../../components/common/AppearanceSettings'
+import { APPEARANCE_SETTINGS_COPY } from '../../components/common/AppearanceSettings.constants'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
@@ -20,7 +22,7 @@ import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { formatRatingFixed2 } from '../../utils/ratingFormat'
 
-const SECTION_IDS = ['privacy', 'api-token', 'player-data', 'account-delete'] as const
+const SECTION_IDS = ['appearance', 'privacy', 'api-token', 'player-data', 'account-delete'] as const
 
 type SectionId = (typeof SECTION_IDS)[number]
 
@@ -284,6 +286,14 @@ const Settings = () => {
   return (
     <div class="mx-auto w-full max-w-5xl p-4 space-y-4">
       <h1 class="text-2xl font-semibold">設定</h1>
+      <section id="appearance" class="py-4">
+        <div class="rounded-xl border border-border bg-surface-muted p-4 sm:p-6">
+          <h2 class="mb-4 text-lg font-semibold text-text">
+            {APPEARANCE_SETTINGS_COPY.sectionTitle}
+          </h2>
+          <AppearanceSettings />
+        </div>
+      </section>
       <Show when={!summary.error} fallback={<LoadError error={summary.error} />}>
         <Show when={summary()} fallback={<Loading />}>
           {(loadedSummary) => (

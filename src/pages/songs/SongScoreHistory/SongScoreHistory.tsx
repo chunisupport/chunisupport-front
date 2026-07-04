@@ -1,22 +1,15 @@
 import { Button } from '@kobalte/core/button'
 import { A, useParams, useSearchParams } from '@solidjs/router'
-import { createMemo, createResource, For, Show } from 'solid-js'
+import { createMemo, createResource, Show } from 'solid-js'
 import { fetchOwnSongScoreHistory, fetchSongByDisplayId } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
-import {
-  formatScoreHistoryDateTime,
-  parseScoreHistoryDifficulty,
-} from '../../../utils/scoreHistory'
+import { parseScoreHistoryDifficulty } from '../../../utils/scoreHistory'
 import NotFoundPage from '../../NotFoundPage'
-import {
-  CURRENT_BEST_LABEL,
-  SCORE_HISTORY_PAGE_TITLE,
-  SCORE_HISTORY_SCORE_LABEL,
-  SCORE_HISTORY_UPDATED_AT_LABEL,
-} from './constants'
+import { SCORE_HISTORY_PAGE_TITLE } from './constants'
+import ScoreHistoryTable from './ScoreHistoryTable'
 
 /**
  * ログインユーザーの譜面別スコア履歴を表示する。
@@ -70,41 +63,7 @@ const SongScoreHistory = () => {
 
               <Show when={!history.error} fallback={<LoadError error={history.error} />}>
                 <Show when={!history.loading} fallback={<Loading />}>
-                  <div class="overflow-x-auto rounded-lg border border-border bg-surface">
-                    <table class="w-full min-w-md border-collapse">
-                      <thead class="bg-surface-muted text-left text-sm text-text-muted">
-                        <tr>
-                          <th scope="col" class="px-4 py-3">
-                            {SCORE_HISTORY_UPDATED_AT_LABEL}
-                          </th>
-                          <th scope="col" class="px-4 py-3 text-right">
-                            {SCORE_HISTORY_SCORE_LABEL}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody class="divide-y divide-border">
-                        <For each={history()?.entries ?? []}>
-                          {(entry, index) => (
-                            <tr>
-                              <td class="px-4 py-3 text-sm">
-                                <div class="flex items-center gap-2">
-                                  <span>{formatScoreHistoryDateTime(entry.updated_at)}</span>
-                                  <Show when={index() === 0}>
-                                    <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success-text">
-                                      {CURRENT_BEST_LABEL}
-                                    </span>
-                                  </Show>
-                                </div>
-                              </td>
-                              <td class="px-4 py-3 text-right font-oswald text-lg font-semibold tabular-nums">
-                                {entry.score.toLocaleString('ja-JP')}
-                              </td>
-                            </tr>
-                          )}
-                        </For>
-                      </tbody>
-                    </table>
-                  </div>
+                  <ScoreHistoryTable entries={history()?.entries ?? []} />
                 </Show>
               </Show>
             </main>

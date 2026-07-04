@@ -14,8 +14,11 @@ import {
   parseOptionalRandomSongDecimal,
   parseRandomSongDrawCount,
   parseRandomSongWeightValues,
+  RANDOM_SONG_OP_TARGET_FILTER,
   RANDOM_SONG_SELECTOR_DIFFICULTIES,
+  RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS,
   restoreRandomSongResults,
+  toggleRandomSongDifficultyFilter,
 } from './randomSongSelector.ts'
 
 const versions: VersionDTO[] = [
@@ -123,6 +126,24 @@ test('ランダム選曲の通常譜面難易度を共有定義で扱うこと',
   assert.deepEqual(difficultyLabels, ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'])
 })
 
+test('ランダム選曲の難易度絞り込みはOP対象を選択肢に含めること', () => {
+  // Given: ランダム選曲で表示する難易度絞り込み定義がある。
+  const difficultyFilters = RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS
+
+  // When: 画面の選択肢として扱う値を確認する。
+  const filterValues = difficultyFilters.map((difficulty) => difficulty)
+
+  // Then: 通常5難易度に加えてOP対象専用の絞り込み値が定義されている。
+  assert.deepEqual(filterValues, [
+    'BASIC',
+    'ADVANCED',
+    'EXPERT',
+    'MASTER',
+    'ULTIMA',
+    RANDOM_SONG_OP_TARGET_FILTER,
+  ])
+})
+
 test('難易度・ジャンル・バージョン・譜面定数で候補を絞り込むこと', () => {
   // Given: 条件が異なる候補がある。
   const candidates = [
@@ -155,6 +176,70 @@ test('難易度・ジャンル・バージョン・譜面定数で候補を絞�
     filtered.map((candidate) => candidate.difficulty),
     ['MASTER']
   )
+})
+
+test('OP対象の難易度絞り込みでは曲ごとのOP対象譜面だけを残すこと', () => {
+  // Given: MASTERとULTIMAのどちらがOP対象か異なる候補がある。
+  const candidates = [
+    createCandidate({
+      song: createSong({
+        id: 'song-a',
+        title: 'Song A',
+        op_target_difficulty: 'ULTIMA',
+      }),
+      difficulty: 'MASTER',
+      chartConst: 14,
+    }),
+    createCandidate({
+      song: createSong({
+        id: 'song-a',
+        title: 'Song A',
+        op_target_difficulty: 'ULTIMA',
+      }),
+      difficulty: 'ULTIMA',
+      chartConst: 15,
+    }),
+    createCandidate({
+      song: createSong({
+        id: 'song-b',
+        title: 'Song B',
+        op_target_difficulty: 'MASTER',
+      }),
+      difficulty: 'MASTER',
+      chartConst: 13.7,
+    }),
+  ]
+
+  // When: OP対象だけに絞り込む。
+  const filtered = filterRandomSongCandidates(candidates, {
+    difficulties: [RANDOM_SONG_OP_TARGET_FILTER],
+    genres: ['POPS & ANIME'],
+    versions: ['NEW'],
+    minConst: null,
+    maxConst: null,
+  })
+
+  // Then: 楽曲ごとのOP対象難易度に一致する候補だけが残る。
+  assert.deepEqual(
+    filtered.map((candidate) => `${candidate.song.id}:${candidate.difficulty}`),
+    ['song-a:ULTIMA', 'song-b:MASTER']
+  )
+})
+
+test('OP対象の難易度絞り込みは通常難易度と排他選択にすること', () => {
+  // Given: 通常難易度が複数選択されている。
+  const selectedDifficulties = ['MASTER', 'ULTIMA'] as const
+
+  // When: OP対象を選択し、その後通常難易度を選び直す。
+  const opTargetSelected = toggleRandomSongDifficultyFilter(
+    selectedDifficulties,
+    RANDOM_SONG_OP_TARGET_FILTER
+  )
+  const masterSelected = toggleRandomSongDifficultyFilter(opTargetSelected, 'MASTER')
+
+  // Then: OP対象は単独選択になり、通常難易度を選ぶとOP対象が外れる。
+  assert.deepEqual(opTargetSelected, [RANDOM_SONG_OP_TARGET_FILTER])
+  assert.deepEqual(masterSelected, ['MASTER'])
 })
 
 test('重み付き抽選は重み0の候補を除外し重複なしで選ぶこと', () => {

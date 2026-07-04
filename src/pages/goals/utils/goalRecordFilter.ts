@@ -18,6 +18,7 @@ const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
   'avg_score',
   'hardlamp_count',
   'combolamp_count',
+  'rainbow_count',
 ])
 
 /**
@@ -95,6 +96,8 @@ const applyUnachievedCondition = (filter: FilterState, goal: GoalDTO): FilterSta
       }
       return { ...filter, combo_lamp: [...COMBO_LAMP_UNACHIEVED_FILTERS[lamp]] }
     }
+    case 'rainbow_count':
+      return { ...filter, combo_lamp: ['FULL COMBO', null] }
     case 'total_score':
     case 'overpower_value':
     case 'overpower_percent':

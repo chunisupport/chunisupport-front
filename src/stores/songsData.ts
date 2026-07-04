@@ -1,6 +1,7 @@
 import { createResource, createRoot, createSignal } from 'solid-js'
 import { fetchAllSongsWithCache } from '../usecases/cache/fetchAllSongsWithCache'
 import { fetchWorldsendSongsWithCache } from '../usecases/cache/fetchWorldsendSongsWithCache'
+import { compareSongsByReading } from '../utils/songTitleSorting'
 
 const createSongsStore = () => {
   const [songsRequested, setSongsRequested] = createSignal(false)
@@ -35,8 +36,6 @@ const createSongsStore = () => {
     isWorldsendSongsLoading,
   }
 }
-
-const jaCollator = new Intl.Collator('ja')
 
 /**
  * 楽曲一覧のデフォルト表示用に、楽曲配列をリリース日降順 + official_idx の数値降順でソートする。
@@ -76,18 +75,22 @@ export const sortSongsByReleaseDescAndIdxDesc = <
       return right.idx - left.idx
     }
 
-    // 最終タイブレーク: タイトル昇順
-    return jaCollator.compare(left.song.title, right.song.title)
+    // 最終タイブレーク: 読み昇順
+    return compareSongsByReading(left.song, right.song)
   })
 
   return keyed.map(({ song }) => song)
 }
 
-export const sortSongsByTitle = <T extends { title: string }>(songs: T[]): T[] => {
-  const keyed = songs.map((song) => ({ song, key: song.title }))
-  keyed.sort((a, b) => jaCollator.compare(a.key, b.key))
-  return keyed.map(({ song }) => song)
-}
+/**
+ * 楽曲を reading の日本語辞書順でソートする。
+ *
+ * @param songs - ソート対象の楽曲配列。
+ * @returns ソート済みの新しい配列。
+ */
+export const sortSongsByTitle = <T extends { title: string; reading?: string | null }>(
+  songs: T[]
+): T[] => [...songs].sort(compareSongsByReading)
 
 let songsStore: ReturnType<typeof createSongsStore> | undefined
 

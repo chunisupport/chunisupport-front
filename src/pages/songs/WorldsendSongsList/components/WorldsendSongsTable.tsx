@@ -52,12 +52,8 @@ const WorldsendSongsTable = (props: Props) => {
   >({
     rowCount: () => props.songs.length,
     rowHeight: ROW_HEIGHT,
+    resetOnRowCountChange: true,
   })
-
-  const handleSortChange = (key: WorldsendSongSortKey) => {
-    props.onSortChange(key)
-    virtualizedTable.resetToTop()
-  }
 
   const virtualRows = createMemo(() => virtualizedTable.virtualRows())
 
@@ -66,7 +62,7 @@ const WorldsendSongsTable = (props: Props) => {
       ref={virtualizedTable.setTableContainerRef}
       class="overflow-x-auto overflow-y-hidden rounded-md border border-border bg-surface"
     >
-      <table class="block min-w-180 text-sm" aria-rowcount={props.songs.length}>
+      <table class="block min-w-180 text-sm" aria-rowcount={props.songs.length + 1}>
         <thead class="block">
           <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
             <SortableTableHeaderCell
@@ -76,7 +72,7 @@ const WorldsendSongsTable = (props: Props) => {
               align="start"
               thClass={HEADER_CELL_CLASS}
               buttonClass={headerButtonClass('start')}
-              onClick={() => handleSortChange('title')}
+              onClick={() => props.onSortChange('title')}
             />
             <SortableTableHeaderCell
               label="アーティスト"
@@ -85,7 +81,7 @@ const WorldsendSongsTable = (props: Props) => {
               align="start"
               thClass={HEADER_CELL_CLASS}
               buttonClass={headerButtonClass('start')}
-              onClick={() => handleSortChange('artist')}
+              onClick={() => props.onSortChange('artist')}
             />
             <SortableTableHeaderCell
               label="ジャンル"
@@ -93,7 +89,7 @@ const WorldsendSongsTable = (props: Props) => {
               direction={props.sortDirection}
               thClass={HEADER_CELL_CLASS}
               buttonClass={headerButtonClass()}
-              onClick={() => handleSortChange('genre')}
+              onClick={() => props.onSortChange('genre')}
             />
             <SortableTableHeaderCell
               label="追加日"
@@ -101,7 +97,7 @@ const WorldsendSongsTable = (props: Props) => {
               direction={props.sortDirection}
               thClass={HEADER_CELL_CLASS}
               buttonClass={headerButtonClass()}
-              onClick={() => handleSortChange('release')}
+              onClick={() => props.onSortChange('release')}
             />
             <SortableTableHeaderCell
               label="BPM"
@@ -109,7 +105,7 @@ const WorldsendSongsTable = (props: Props) => {
               direction={props.sortDirection}
               thClass={HEADER_CELL_CLASS}
               buttonClass={headerButtonClass()}
-              onClick={() => handleSortChange('bpm')}
+              onClick={() => props.onSortChange('bpm')}
             />
             <SortableTableHeaderCell
               label="属性"
@@ -117,7 +113,7 @@ const WorldsendSongsTable = (props: Props) => {
               direction={props.sortDirection}
               thClass={HEADER_CELL_CLASS}
               buttonClass={headerButtonClass()}
-              onClick={() => handleSortChange('attribute')}
+              onClick={() => props.onSortChange('attribute')}
             />
             <SortableTableHeaderCell
               label="レベル"
@@ -125,7 +121,7 @@ const WorldsendSongsTable = (props: Props) => {
               direction={props.sortDirection}
               thClass={HEADER_CELL_CLASS}
               buttonClass={headerButtonClass()}
-              onClick={() => handleSortChange('level')}
+              onClick={() => props.onSortChange('level')}
             />
           </tr>
         </thead>

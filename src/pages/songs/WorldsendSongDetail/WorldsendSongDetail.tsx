@@ -89,7 +89,7 @@ const WorldsendSongDetail = () => {
     {
       difficulty: WORLDSEND_SCORE_LABEL,
       score: ownRecord()?.is_played ? ownRecord()?.score : undefined,
-      supportsHistory: false,
+      supportsHistory: true,
     },
   ])
   /** 統計表との比較に使うログインユーザーのプレイ済みスコアを取得する。 */

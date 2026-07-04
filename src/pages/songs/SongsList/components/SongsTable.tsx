@@ -63,7 +63,7 @@ const SongsTable = (props: Props) => {
       ref={virtualizedTable.setTableContainerRef}
       class="overflow-x-auto overflow-y-hidden rounded-md border border-border bg-surface"
     >
-      <table class="block min-w-180 text-sm" aria-rowcount={props.songs.length}>
+      <table class="block min-w-180 text-sm" aria-rowcount={props.songs.length + 1}>
         <thead class="block">
           <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
             <SortableTableHeaderCell
@@ -136,7 +136,7 @@ const SongsTable = (props: Props) => {
                   {(currentSong) => (
                     <tr
                       class="absolute left-0 top-0 grid min-w-full border-t border-border"
-                      classList={{ 'bg-success-bg': currentSong.is_new === true }}
+                      classList={{ 'bg-new-song-bg': currentSong.is_new === true }}
                       style={{
                         'grid-template-columns': GRID_TEMPLATE_COLUMNS,
                         transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,

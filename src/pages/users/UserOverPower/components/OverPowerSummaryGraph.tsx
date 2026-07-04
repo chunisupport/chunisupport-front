@@ -5,6 +5,7 @@ import {
   SCORE_RANK_BAR_CLASS,
 } from '../../../../components/common/record/recordStyleClasses'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
+import { OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES } from '../constants'
 import type {
   OverPowerBandCount,
   OverPowerComboBand,
@@ -42,7 +43,8 @@ const comboBandClass: Record<OverPowerComboBand, string> = {
 const formatValue = formatOverPowerValue
 
 /** 達成率をグラフ表示用の固定小数点文字列に整形する。 */
-const formatPercent = formatOverPowerPercent
+const formatPercent = (value: number): string =>
+  formatOverPowerPercent(value, OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES)
 
 /** 分布バーの横幅として使う割合を算出する。 */
 const calcBandPercent = (count: number, total: number): number =>

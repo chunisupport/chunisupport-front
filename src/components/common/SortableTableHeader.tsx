@@ -1,7 +1,11 @@
 import { Button } from '@kobalte/core/button'
 import { type JSX, Show } from 'solid-js'
 
-export type SortDirection = 'asc' | 'desc' | null
+import { getSortAriaValue, type SortDirection } from './sortableTableHeaderState'
+
+export type { SortDirection }
+export { getSortAriaValue }
+
 type HeaderAlign = 'start' | 'center'
 
 const SORT_ICON_WRAPPER_CLASS = 'inline-flex h-[3px] w-[18px] shrink-0 items-center justify-center'
@@ -32,21 +36,6 @@ export type SortableTableHeaderCellProps = Omit<SortableHeaderButtonProps, 'clas
   thClass?: string
   /** ヘッダーボタンへ追加するクラス。 */
   buttonClass?: string
-}
-
-/**
- * aria-sort用の値へソート状態を変換する。
- *
- * @param active - 対象列が現在ソート対象かどうか。
- * @param direction - 現在のソート方向。
- * @returns aria-sortへ渡すソート状態。
- */
-export const getSortAriaValue = (
-  active: boolean,
-  direction: SortDirection
-): 'ascending' | 'descending' | 'none' => {
-  if (!active || !direction) return 'none'
-  return direction === 'asc' ? 'ascending' : 'descending'
 }
 
 /**

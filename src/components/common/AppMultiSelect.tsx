@@ -38,6 +38,8 @@ export type MultiSelectFieldProps<TValue extends AppMultiSelectValue> =
     label?: string
     /** 全選択ボタンの表示文言。 */
     selectAllLabel?: string
+    /** 全選択ボタンで選択する値。未指定時は全選択肢を使う。 */
+    selectAllValues?: readonly TValue[]
     /** 全解除ボタンの表示文言。 */
     clearLabel?: string
     /** ラベルへ追加で適用する Tailwind クラス。 */
@@ -184,7 +186,11 @@ export const MultiSelectField = <TValue extends AppMultiSelectValue>(
       <AppButton
         size="xs"
         disabled={props.disabled}
-        onClick={() => props.onChange(props.options.map((option) => option.value))}
+        onClick={() =>
+          props.onChange([
+            ...(props.selectAllValues ?? props.options.map((option) => option.value)),
+          ])
+        }
       >
         {props.selectAllLabel ?? SELECT_ALL_LABEL}
       </AppButton>

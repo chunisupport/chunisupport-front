@@ -38,13 +38,17 @@ const GoalsList: Component = () => {
   const goalWithProgress = createMemo(() => buildGoalsWithProgress(resource()))
 
   /**
-   * 現在の対象譜面条件に一致するレコード件数を取得する。
+   * 現在の対象条件に一致する譜面数または楽曲数を取得する。
    *
    * @param attributes - 件数を確認する対象条件。
-   * @returns 条件に一致するレコード件数。
+   * @param achievementType - 集約単位を決める目標種別。
+   * @returns 条件に一致する譜面数または楽曲数。
    */
-  const resolveAllCount = (attributes: GoalCreateRequest['attributes']) => {
-    return resolveGoalAllCount(resource(), attributes)
+  const resolveAllCount = (
+    attributes: GoalCreateRequest['attributes'],
+    achievementType?: GoalCreateRequest['achievement_type']
+  ) => {
+    return resolveGoalAllCount(resource(), attributes, achievementType)
   }
 
   /**
