@@ -38,6 +38,7 @@ import {
   type ThemePreference,
 } from '../../utils/themePreference'
 import { AppButton } from '../common/AppButton'
+import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../common/AppMenu'
 import { SelectableCardButton } from '../common/SelectableCardButton'
 
 /**
@@ -51,7 +52,7 @@ type DropdownItem = {
   label: string
   icon: () => JSX.Element
   path?: string
-  action?: 'theme'
+  action?: 'theme' | 'logout'
 }
 
 const THEME_OPTIONS = [
@@ -116,34 +117,34 @@ const NavBar = (props: NavBarProps) => {
               ? [
                   {
                     label: '管理メニュー',
-                    icon: () => <Shield class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+                    icon: () => <Shield class="h-4 w-4" aria-hidden="true" />,
                     path: '/admin',
                   },
                 ]
               : []),
             {
               label: '設定',
-              icon: () => <Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+              icon: () => <Settings class="h-4 w-4" aria-hidden="true" />,
               path: '/settings',
             },
           ]
         : []),
       {
         label: '表示テーマ',
-        icon: () => <Palette class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-        action: 'theme',
+        icon: () => <Palette class="h-4 w-4" aria-hidden="true" />,
+        action: 'theme' as const,
       },
       {
         label: 'ヘルプ',
-        icon: () => <BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+        icon: () => <BadgeQuestionMark class="h-4 w-4" aria-hidden="true" />,
         path: DOCUMENTATION_BASE_URL,
       },
       ...(uname
         ? [
             {
               label: 'ログアウト',
-              icon: () => <LogOut class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-              path: '#', // ページ遷移しない
+              icon: () => <LogOut class="h-4 w-4" aria-hidden="true" />,
+              action: 'logout' as const,
             },
           ]
         : []),
@@ -244,6 +245,11 @@ const NavBar = (props: NavBarProps) => {
       return
     }
 
+    if (item.action === 'logout') {
+      setShowLogoutDialog(true)
+      return
+    }
+
     const path = item.path ?? '#'
     if (path.startsWith('http')) {
       window.open(path, '_blank', 'noopener,noreferrer')
@@ -271,6 +277,21 @@ const NavBar = (props: NavBarProps) => {
     navigate('/login')
   }
 
+  /**
+   * その他メニューの項目を共通スタイルで描画する。
+   *
+   * @param item - 描画するメニュー項目。
+   * @returns ドロップダウンメニュー項目。
+   */
+  const renderDropdownItem = (item: DropdownItem): JSX.Element => (
+    <AppMenuItem
+      icon={item.icon()}
+      label={item.label}
+      tone={item.action === 'logout' ? 'danger' : 'default'}
+      onSelect={() => handleDropdownSelect(item)}
+    />
+  )
+
   return (
     <div class="h-dvh overflow-hidden flex md:flex-row flex-col">
       {/* PC用nav-bar 768px以上 */}
@@ -281,35 +302,13 @@ const NavBar = (props: NavBarProps) => {
             {(item) =>
               item.dropdown ? (
                 <DropdownMenu>
-                  <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-nav-text hover:bg-surface-hover focus:outline-none">
-                    <span class="text-lg">{item.icon()}</span>
-                    <span>{item.label}</span>
-                  </DropdownMenu.Trigger>
+                  <AppMenuTrigger variant="navRail" label={item.label} icon={item.icon()} />
                   <DropdownMenu.Portal>
-                    <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
+                    <AppMenuContent class="absolute left-16 -top-12 ml-2">
                       <For each={item.dropdown}>
-                        {(d) =>
-                          // ログアウト項目は赤色で表示
-                          d.label === 'ログアウト' ? (
-                            <DropdownMenu.Item
-                              onSelect={() => setShowLogoutDialog(true)}
-                              class="block px-4 py-2 text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg outline-none cursor-pointer"
-                            >
-                              <span class="pr-2">{d.icon()}</span>
-                              {d.label}
-                            </DropdownMenu.Item>
-                          ) : (
-                            <DropdownMenu.Item
-                              onSelect={() => handleDropdownSelect(d)}
-                              class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
-                            >
-                              <span class="pr-2">{d.icon()}</span>
-                              {d.label}
-                            </DropdownMenu.Item>
-                          )
-                        }
+                        {(dropdownItem) => renderDropdownItem(dropdownItem)}
                       </For>
-                    </DropdownMenu.Content>
+                    </AppMenuContent>
                   </DropdownMenu.Portal>
                 </DropdownMenu>
               ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
@@ -351,35 +350,13 @@ const NavBar = (props: NavBarProps) => {
             {(item) =>
               item.dropdown ? (
                 <DropdownMenu>
-                  <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-nav-text justify-center">
-                    <span class="text-lg">{item.icon()}</span>
-                    <span>{item.label}</span>
-                  </DropdownMenu.Trigger>
+                  <AppMenuTrigger variant="navBar" label={item.label} icon={item.icon()} />
                   <DropdownMenu.Portal>
-                    <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
+                    <AppMenuContent class="absolute bottom-full left-1/2 mb-2 -translate-x-1/2">
                       <For each={item.dropdown}>
-                        {(d) =>
-                          // ログアウト項目は赤色で表示
-                          d.label === 'ログアウト' ? (
-                            <DropdownMenu.Item
-                              onSelect={() => setShowLogoutDialog(true)}
-                              class="block px-4 py-2 text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg outline-none cursor-pointer font-semibold"
-                            >
-                              <span class="pr-2">{d.icon()}</span>
-                              {d.label}
-                            </DropdownMenu.Item>
-                          ) : (
-                            <DropdownMenu.Item
-                              onSelect={() => handleDropdownSelect(d)}
-                              class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
-                            >
-                              <span class="pr-2">{d.icon()}</span>
-                              {d.label}
-                            </DropdownMenu.Item>
-                          )
-                        }
+                        {(dropdownItem) => renderDropdownItem(dropdownItem)}
                       </For>
-                    </DropdownMenu.Content>
+                    </AppMenuContent>
                   </DropdownMenu.Portal>
                 </DropdownMenu>
               ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
