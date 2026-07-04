@@ -1,5 +1,13 @@
 import { createVirtualizer } from '@tanstack/solid-virtual'
-import { type Accessor, createEffect, createMemo, createSignal, onCleanup, onMount } from 'solid-js'
+import {
+  type Accessor,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+  untrack,
+} from 'solid-js'
 
 const DEFAULT_OVERSCAN = 12
 
@@ -43,7 +51,6 @@ export const createWindowVirtualTable = <
 >(
   params: WindowVirtualTableParams<TScrollElement>
 ) => {
-  let layoutResizeObserver: ResizeObserver | undefined
   const [containerRef, setContainerRef] = createSignal<TContainerElement>()
   const [bodyRef, setBodyRef] = createSignal<TBodyElement>()
   const [scrollMargin, setScrollMargin] = createSignal(0)
@@ -75,7 +82,7 @@ export const createWindowVirtualTable = <
     const scrollRect = scrollElement.getBoundingClientRect()
     const tableBodyRect = tableBodyElement.getBoundingClientRect()
     const next = tableBodyRect.top - scrollRect.top + scrollElement.scrollTop
-    if (Math.abs(next - scrollMargin()) >= 1) {
+    if (Math.abs(next - untrack(scrollMargin)) >= 1) {
       setScrollMargin(next)
     }
   }
@@ -97,19 +104,22 @@ export const createWindowVirtualTable = <
     const scrollElement = getScrollElement()
 
     updateScrollMargin()
-    layoutResizeObserver?.disconnect()
 
     if (!containerElement || typeof ResizeObserver === 'undefined') return
 
-    layoutResizeObserver = new ResizeObserver(() => {
+    const observer = new ResizeObserver(() => {
       queueMicrotask(updateScrollMargin)
     })
 
-    layoutResizeObserver.observe(containerElement)
+    observer.observe(containerElement)
 
     if (scrollElement) {
-      layoutResizeObserver.observe(scrollElement)
+      observer.observe(scrollElement)
     }
+
+    onCleanup(() => {
+      observer.disconnect()
+    })
   })
 
   createEffect(() => {
@@ -129,7 +139,6 @@ export const createWindowVirtualTable = <
   })
 
   onCleanup(() => {
-    layoutResizeObserver?.disconnect()
     window.removeEventListener('resize', updateScrollMargin)
   })
 
