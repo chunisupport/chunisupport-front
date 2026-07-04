@@ -1,4 +1,3 @@
-import * as Tabs from '@kobalte/core/tabs'
 import { useLocation, useNavigate } from '@solidjs/router'
 import { ArrowLeftRight, ChartBarBig, LockKeyhole, Table2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -243,66 +242,66 @@ const UserOverPower: Component<Props> = (props) => {
           <Show when={summary()} fallback={<Loading />}>
             {(currentSummary) => (
               <div class="mx-4 flex flex-col gap-4 text-sm">
-                <Tabs.Root value={selectedSummaryTab()}>
-                  <div class="flex items-center justify-between gap-3">
-                    <div class="min-w-0 shrink">
-                      <AppSelect<OverPowerSummaryOption>
-                        options={OVER_POWER_SUMMARY_OPTIONS}
-                        optionValue="value"
-                        optionTextValue="label"
-                        value={selectedSummaryOption()}
-                        onChange={handleSummaryTabChange}
-                        placeholder="ジャンル"
-                        rootClass="w-50 min-w-20 max-w-full"
-                        triggerClass="font-medium text-text-muted"
-                        contentZIndexClass="z-50"
-                        formatLabel={(option) => option.label}
-                      />
-                    </div>
-                    <div class="flex shrink-0 items-center gap-2">
-                      <AppButton
-                        variant="surface"
-                        size="sm"
-                        shape="pill"
-                        class="h-10 min-w-16 focus-visible:ring-offset-2"
-                        aria-label={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
-                        title={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
-                        onClick={handleToggleSummaryViewMode}
-                      >
-                        <ArrowLeftRight class="h-4 w-4" aria-hidden="true" />
-                        <Show
-                          when={nextSummaryViewMode() === 'graph'}
-                          fallback={<Table2 class="h-4 w-4" aria-hidden="true" />}
-                        >
-                          <ChartBarBig class="h-4 w-4" aria-hidden="true" />
-                        </Show>
-                      </AppButton>
-                      <AppButton
-                        variant="surface"
-                        size="sm"
-                        shape="pill"
-                        class="h-10 whitespace-nowrap focus-visible:ring-offset-2"
-                        aria-label="未解禁楽曲設定"
-                        title="未解禁楽曲設定"
-                        disabled={lockedSongsButtonDisabled()}
-                        onClick={() => setLockedSongsDialogOpen(true)}
-                        rightIcon={<LockKeyhole class="h-5 w-5" aria-hidden="true" />}
-                      >
-                        <span>未解禁曲</span>
-                      </AppButton>
-                    </div>
+                <div class="flex items-center justify-between gap-3">
+                  <div class="min-w-0 shrink">
+                    <AppSelect<OverPowerSummaryOption>
+                      options={OVER_POWER_SUMMARY_OPTIONS}
+                      optionValue="value"
+                      optionTextValue="label"
+                      value={selectedSummaryOption()}
+                      onChange={handleSummaryTabChange}
+                      placeholder="ジャンル"
+                      rootClass="w-50 min-w-20 max-w-full"
+                      triggerClass="font-medium text-text-muted"
+                      contentZIndexClass="z-50"
+                      formatLabel={(option) => option.label}
+                    />
                   </div>
-
-                  <div class="mt-4">
-                    <Show
-                      when={summaryViewMode() === 'graph'}
-                      fallback={<OverPowerAllSummary summary={currentSummary().all} />}
+                  <div class="flex shrink-0 items-center gap-2">
+                    <AppButton
+                      variant="surface"
+                      size="sm"
+                      shape="pill"
+                      class="h-10 min-w-16 focus-visible:ring-offset-2"
+                      aria-label={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
+                      title={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
+                      onClick={handleToggleSummaryViewMode}
                     >
-                      <OverPowerSummaryGraph rows={allGraphRows()} />
-                    </Show>
+                      <ArrowLeftRight class="h-4 w-4" aria-hidden="true" />
+                      <Show
+                        when={nextSummaryViewMode() === 'graph'}
+                        fallback={<Table2 class="h-4 w-4" aria-hidden="true" />}
+                      >
+                        <ChartBarBig class="h-4 w-4" aria-hidden="true" />
+                      </Show>
+                    </AppButton>
+                    <AppButton
+                      variant="surface"
+                      size="sm"
+                      shape="pill"
+                      class="h-10 whitespace-nowrap focus-visible:ring-offset-2"
+                      aria-label="未解禁楽曲設定"
+                      title="未解禁楽曲設定"
+                      disabled={lockedSongsButtonDisabled()}
+                      onClick={() => setLockedSongsDialogOpen(true)}
+                      rightIcon={<LockKeyhole class="h-5 w-5" aria-hidden="true" />}
+                    >
+                      <span>未解禁曲</span>
+                    </AppButton>
                   </div>
+                </div>
 
-                  <Tabs.Content value="genres" class="mt-4">
+                <div class="mt-4">
+                  <Show
+                    when={summaryViewMode() === 'graph'}
+                    fallback={<OverPowerAllSummary summary={currentSummary().all} />}
+                  >
+                    <OverPowerSummaryGraph rows={allGraphRows()} />
+                  </Show>
+                </div>
+
+                <Show when={selectedSummaryTab() === 'genres'}>
+                  <div class="mt-4">
                     <Show
                       when={summaryViewMode() === 'graph'}
                       fallback={
@@ -311,9 +310,11 @@ const UserOverPower: Component<Props> = (props) => {
                     >
                       <OverPowerSummaryGraph rows={genreGraphRows()} />
                     </Show>
-                  </Tabs.Content>
+                  </div>
+                </Show>
 
-                  <Tabs.Content value="difficulties" class="mt-4">
+                <Show when={selectedSummaryTab() === 'difficulties'}>
+                  <div class="mt-4">
                     <Show
                       when={summaryViewMode() === 'graph'}
                       fallback={
@@ -325,9 +326,11 @@ const UserOverPower: Component<Props> = (props) => {
                     >
                       <OverPowerSummaryGraph rows={difficultyGraphRows()} />
                     </Show>
-                  </Tabs.Content>
+                  </div>
+                </Show>
 
-                  <Tabs.Content value="levels" class="mt-4">
+                <Show when={selectedSummaryTab() === 'levels'}>
+                  <div class="mt-4">
                     <Show when={lowLevelRows().length > 0}>
                       <div class="mb-3">
                         <LowLevelRowsToggle
@@ -349,9 +352,11 @@ const UserOverPower: Component<Props> = (props) => {
                         <OverPowerSummaryGraph rows={levelGraphRows()} />
                       </div>
                     </Show>
-                  </Tabs.Content>
+                  </div>
+                </Show>
 
-                  <Tabs.Content value="versions" class="mt-4">
+                <Show when={selectedSummaryTab() === 'versions'}>
+                  <div class="mt-4">
                     <Show
                       when={summaryViewMode() === 'graph'}
                       fallback={
@@ -360,8 +365,8 @@ const UserOverPower: Component<Props> = (props) => {
                     >
                       <OverPowerSummaryGraph rows={versionGraphRows()} />
                     </Show>
-                  </Tabs.Content>
-                </Tabs.Root>
+                  </div>
+                </Show>
 
                 <Show when={canManageLockedSongs() && allSongs() && lockedSongs()}>
                   <LockedSongsDialog
