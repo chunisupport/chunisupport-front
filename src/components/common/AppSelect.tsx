@@ -107,22 +107,22 @@ export type AppMultiSelectProps<T> = KobalteMultipleSelectProps<T> & {
 }
 
 const APP_SELECT_TRIGGER_CLASS =
-  'grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60'
+  'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60'
 
 const APP_MULTI_SELECT_TRIGGER_CLASS =
   'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60'
 
 const APP_SELECT_VALUE_CLASS =
-  'overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder'
+  'min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-subtle'
 
 const APP_SELECT_ITEM_CLASS =
-  'flex h-8 cursor-pointer items-center justify-between rounded px-2 text-sm text-text outline-none hover:bg-success-bg data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-success-bg data-selected:bg-success-bg'
+  'cursor-pointer px-3 py-2 text-sm text-text outline-none [@media(hover:hover)]:hover:bg-success-bg data-disabled:pointer-events-none data-disabled:opacity-50 [@media(hover:hover)]:data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
 
 const APP_MULTI_SELECT_ITEM_CLASS =
   'cursor-pointer px-3 py-2 text-sm text-text outline-none hover:bg-success-bg data-disabled:pointer-events-none data-disabled:opacity-50 data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
 
 const APP_SELECT_CONTENT_BASE_CLASS =
-  'max-h-90 w-[--kb-select-content-width] overflow-y-auto rounded-md border border-border-strong bg-surface shadow-lg'
+  'max-h-90 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md'
 
 const DEFAULT_APP_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
 
@@ -146,10 +146,14 @@ const renderAppSelectItem = <T,>(props: {
   itemClass?: string
 }): JSX.Element => (
   <Select.Item item={props.item} class={`${APP_SELECT_ITEM_CLASS} ${props.itemClass ?? ''}`}>
-    <Select.ItemLabel>{props.formatLabel(props.item.rawValue)}</Select.ItemLabel>
-    <Select.ItemIndicator class="inline-flex h-5 w-5 items-center justify-center text-success">
-      <Check class="h-4 w-4" />
-    </Select.ItemIndicator>
+    <div class="flex items-center gap-2">
+      <span class="inline-flex w-4 justify-center text-success">
+        <Select.ItemIndicator>
+          <Check class="h-3.5 w-3.5" />
+        </Select.ItemIndicator>
+      </span>
+      <Select.ItemLabel>{props.formatLabel(props.item.rawValue)}</Select.ItemLabel>
+    </div>
   </Select.Item>
 )
 
@@ -238,7 +242,7 @@ export const AppSelect = <T,>(props: AppSelectProps<T>): JSX.Element => {
             return selectedOption === null ? undefined : formatLabel(selectedOption)
           }}
         </Select.Value>
-        <Select.Icon class="flex h-5 w-5 items-center justify-center text-text-subtle">
+        <Select.Icon class="text-text-subtle">
           <ChevronDown class="h-4 w-4" />
         </Select.Icon>
       </Select.Trigger>
