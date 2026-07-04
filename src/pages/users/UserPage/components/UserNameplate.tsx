@@ -106,20 +106,21 @@ const HonorTitle: Component<HonorTitleProps> = (props) => {
   // DOM上の実寸が必要なため、マウント後に称号テキストのはみ出し量を測定する。
   onMount(updateScrollAnimation)
 
-  return (
-    props.honor.name==="お気に入りからランダム" ? (
-          <span
-      class="block w-100% mb-3 in-[.user-honor-list]:mb-0 p-1 border border-gray-300 rounded-md overflow-hidden bg-surface text-center"
+  return props.honor.name === 'お気に入りからランダム' ? (
+    <span
+      class={`block w-100% mb-3 in-[.user-honor-list]:mb-0 p-1 max-h-7 border border-gray-300 rounded-md overflow-hidden bg-surface text-center"${props.isRotating ? ' user-honor-title--rotating' : ''}`}
       data-honor-type={props.honor.type_name}
     >
       <span
         ref={titleTextRef}
-        class="block w-100% whitespace-nowrap font-sans text-sm font-light italic leading-5 text-text-muted"
+        class={`block w-100% whitespace-nowrap font-sans text-sm font-light italic leading-5 text-text-muted${
+          props.isRotating ? ' user-honor-title__text--rotating' : ''
+        }`}
       >
         Favorite Random
       </span>
     </span>
-    ) : (
+  ) : (
     <span
       class={`user-honor-title${props.isRotating ? ' user-honor-title--rotating' : ''} ${
         honorTypeClassNames[props.honor.type_name]
@@ -135,7 +136,6 @@ const HonorTitle: Component<HonorTitleProps> = (props) => {
         {props.honor.name}
       </span>
     </span>
-    )
   )
 }
 
