@@ -21,6 +21,7 @@ export const createVirtualizedSongsTable = (params: {
   let tableContainerRef: HTMLDivElement | undefined
   let tableBodyRef: HTMLTableSectionElement | undefined
   let layoutResizeObserver: ResizeObserver | undefined
+  let layoutFrameId: number | undefined
 
   const [scrollMargin, setScrollMargin] = createSignal(0)
 
@@ -49,12 +50,25 @@ export const createVirtualizedSongsTable = (params: {
     }
   }
 
+  /**
+   * ResizeObserver の通知サイクル外でテーブル位置を再計測する。
+   *
+   * @returns なし。
+   */
+  const scheduleScrollMarginUpdate = () => {
+    if (layoutFrameId !== undefined) return
+    layoutFrameId = window.requestAnimationFrame(() => {
+      layoutFrameId = undefined
+      updateScrollMargin()
+    })
+  }
+
   onMount(() => {
     updateScrollMargin()
 
     if (tableContainerRef && typeof ResizeObserver !== 'undefined') {
       layoutResizeObserver = new ResizeObserver(() => {
-        queueMicrotask(updateScrollMargin)
+        scheduleScrollMarginUpdate()
       })
 
       layoutResizeObserver.observe(tableContainerRef)
@@ -70,6 +84,9 @@ export const createVirtualizedSongsTable = (params: {
 
   onCleanup(() => {
     layoutResizeObserver?.disconnect()
+    if (layoutFrameId !== undefined) {
+      window.cancelAnimationFrame(layoutFrameId)
+    }
     window.removeEventListener('resize', updateScrollMargin)
   })
 
