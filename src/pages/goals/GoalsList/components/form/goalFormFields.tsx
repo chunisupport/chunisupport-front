@@ -5,6 +5,7 @@ import type { Component, JSX } from 'solid-js'
 import { For, Show } from 'solid-js'
 import { FormSelect } from '../../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../../components/common/CheckboxField'
+import { getSelectableCardButtonClass } from '../../../../../components/common/SelectableCardButton'
 
 interface GoalFilterCheckboxProps {
   label: string
@@ -74,10 +75,6 @@ interface GoalTargetModeRadioGroupProps<TValue extends string> {
 const GOAL_FIELD_FOCUS_CLASS =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 export const GOAL_FIELD_INPUT_CLASS = `w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm hover:border-input-border-hover ${GOAL_FIELD_FOCUS_CLASS}`
-const GOAL_RADIO_CARD_BASE_CLASS =
-  'rounded border px-3 py-2 text-sm text-text-muted hover:bg-surface-muted'
-const GOAL_RADIO_CARD_UNCHECKED_CLASS = 'border-border-strong bg-surface'
-const GOAL_RADIO_CARD_CHECKED_CLASS = 'border-action-primary bg-action-primary-muted'
 const GOAL_RADIO_ITEM_CLASS = 'relative flex min-h-6 items-center gap-3'
 const GOAL_RADIO_CONTROL_CLASS =
   'pointer-events-none flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border-strong bg-input-bg data-[checked]:border-action-primary'
@@ -203,11 +200,12 @@ export const GoalTargetModeRadioGroup = <TValue extends string>(
       <For each={props.options}>
         {(option) => (
           <div
-            class={`${GOAL_RADIO_CARD_BASE_CLASS} ${
-              props.value === option.value
-                ? GOAL_RADIO_CARD_CHECKED_CLASS
-                : GOAL_RADIO_CARD_UNCHECKED_CLASS
-            }`}
+            class={getSelectableCardButtonClass({
+              layout: 'block',
+              density: 'compact',
+              selected: props.value === option.value,
+              class: 'rounded text-sm',
+            })}
           >
             <RadioGroup.Item value={option.value} class={GOAL_RADIO_ITEM_CLASS}>
               <RadioGroup.ItemInput class="peer" />

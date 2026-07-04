@@ -38,6 +38,7 @@ import {
   type ThemePreference,
 } from '../../utils/themePreference'
 import { AppButton } from '../common/AppButton'
+import { SelectableCardButton } from '../common/SelectableCardButton'
 
 /**
  * その他メニューに表示する項目を表す。
@@ -465,18 +466,12 @@ const NavBar = (props: NavBarProps) => {
               <div class="mt-4 grid gap-3">
                 <For each={THEME_OPTIONS}>
                   {(option) => (
-                    <Button
-                      aria-pressed={themePreference() === option.value}
+                    <SelectableCardButton
+                      selected={themePreference() === option.value}
                       onClick={() => handleThemePreferenceChange(option.value)}
-                      class={`rounded-lg border p-4 text-left transition hover:bg-surface-hover ${
-                        themePreference() === option.value
-                          ? 'border-action-primary bg-action-primary-muted'
-                          : 'border-border bg-surface'
-                      }`}
-                    >
-                      <span class="block text-sm font-semibold text-text">{option.label}</span>
-                      <span class="mt-1 block text-xs text-text-muted">{option.description}</span>
-                    </Button>
+                      title={option.label}
+                      description={option.description}
+                    />
                   )}
                 </For>
               </div>
