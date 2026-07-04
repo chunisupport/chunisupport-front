@@ -527,22 +527,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         selected={props.filters.genres}
         placeholder="ジャンルを選択"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-        onSelectAll={() =>
+        onChange={(selectedGenres) =>
           props.setFilters((prev) => ({
             ...prev,
-            genres: genres(),
-          }))
-        }
-        onClear={() =>
-          props.setFilters((prev) => ({
-            ...prev,
-            genres: [],
-          }))
-        }
-        onToggle={(genre) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            genres: toggleArray(prev.genres, genre),
+            genres: selectedGenres,
           }))
         }
       />
@@ -552,22 +540,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         selected={props.filters.versions}
         placeholder="バージョンを選択"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-        onSelectAll={() =>
+        onChange={(selectedVersions) =>
           props.setFilters((prev) => ({
             ...prev,
-            versions: versions(),
-          }))
-        }
-        onClear={() =>
-          props.setFilters((prev) => ({
-            ...prev,
-            versions: [],
-          }))
-        }
-        onToggle={(version) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            versions: toggleArray(prev.versions, version),
+            versions: selectedVersions,
           }))
         }
       />

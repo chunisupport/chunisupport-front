@@ -5,8 +5,12 @@ import { Check, CircleSlash2, Funnel, ListChecks, LoaderCircle, Search } from 'l
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import { AppButton, getAppButtonClass } from '../../../../components/common/AppButton'
+import { toMultiSelectOptions } from '../../../../components/common/AppMultiSelect'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
-import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
+import {
+  GenreMultiSelect,
+  VersionMultiSelect,
+} from '../../../../components/common/DomainMultiSelect'
 import Loading from '../../../../components/Loading/Loading'
 import type {
   MasterItemDTO,
@@ -28,7 +32,7 @@ import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
 } from '../../../../utils/versionConverter'
-import { hasSameFilterValues, toggleArray } from '../../utils/filterValue'
+import { hasSameFilterValues } from '../../utils/filterValue'
 
 type Props = {
   open: boolean
@@ -329,14 +333,6 @@ const LockedSongsDialog: Component<Props> = (props) => {
     }
   }
 
-  const handleToggleGenreFilter = (genre: string) => {
-    setFilters((prev) => ({ ...prev, genres: toggleArray(prev.genres, genre) }))
-  }
-
-  const handleToggleVersionFilter = (version: string) => {
-    setFilters((prev) => ({ ...prev, versions: toggleArray(prev.versions, version) }))
-  }
-
   /**
    * 未プレイのみ表示フィルターを切り替える。
    *
@@ -546,32 +542,26 @@ const LockedSongsDialog: Component<Props> = (props) => {
 
                 <div class="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
                   <div>
-                    <span class="mb-1 block text-sm font-medium">ジャンル</span>
-                    <MultiSelectDropdown
-                      options={genreOptions()}
+                    <GenreMultiSelect
+                      options={toMultiSelectOptions(genreOptions())}
                       selected={filters().genres}
-                      placeholder="ジャンルを選択"
+                      labelClass="text-text"
                       contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                      onToggle={handleToggleGenreFilter}
-                      onSelectAll={() =>
-                        setFilters((prev) => ({ ...prev, genres: genreOptions() }))
+                      onChange={(selectedGenres) =>
+                        setFilters((prev) => ({ ...prev, genres: selectedGenres }))
                       }
-                      onClear={() => setFilters((prev) => ({ ...prev, genres: [] }))}
                     />
                   </div>
 
                   <div>
-                    <span class="mb-1 block text-sm font-medium">バージョン</span>
-                    <MultiSelectDropdown
-                      options={versionOptions()}
+                    <VersionMultiSelect
+                      options={toMultiSelectOptions(versionOptions())}
                       selected={filters().versions}
-                      placeholder="バージョンを選択"
+                      labelClass="text-text"
                       contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                      onToggle={handleToggleVersionFilter}
-                      onSelectAll={() =>
-                        setFilters((prev) => ({ ...prev, versions: versionOptions() }))
+                      onChange={(selectedVersions) =>
+                        setFilters((prev) => ({ ...prev, versions: selectedVersions }))
                       }
-                      onClear={() => setFilters((prev) => ({ ...prev, versions: [] }))}
                     />
                   </div>
 

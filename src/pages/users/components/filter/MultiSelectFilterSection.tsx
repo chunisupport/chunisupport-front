@@ -1,4 +1,7 @@
-import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
+import {
+  MultiSelectField,
+  toMultiSelectOptions,
+} from '../../../../components/common/AppMultiSelect'
 
 type MultiSelectFilterSectionProps<T extends string | number | null> = {
   /** セクション見出し。 */
@@ -11,12 +14,8 @@ type MultiSelectFilterSectionProps<T extends string | number | null> = {
   placeholder?: string
   /** 選択肢の値を表示用ラベルへ変換する処理。 */
   formatLabel?: (value: T) => string
-  /** 選択状態を切り替える処理。 */
-  onToggle: (value: T) => void
-  /** すべての選択肢を選択する処理。 */
-  onSelectAll: () => void
-  /** 選択をすべて解除する処理。 */
-  onClear: () => void
+  /** 選択状態が変更されたときの通知先。 */
+  onChange: (selected: T[]) => void
   /** Select のポータルコンテンツに適用する z-index クラス。 */
   contentZIndexClass?: string
 }
@@ -30,19 +29,15 @@ type MultiSelectFilterSectionProps<T extends string | number | null> = {
 const MultiSelectFilterSection = <T extends string | number | null>(
   props: MultiSelectFilterSectionProps<T>
 ) => (
-  <div>
-    <span class="mb-1 block text-sm font-medium">{props.title}</span>
-    <MultiSelectDropdown
-      options={props.options}
-      selected={props.selected}
-      placeholder={props.placeholder ?? `${props.title}を選択`}
-      formatLabel={props.formatLabel}
-      contentZIndexClass={props.contentZIndexClass}
-      onToggle={props.onToggle}
-      onSelectAll={props.onSelectAll}
-      onClear={props.onClear}
-    />
-  </div>
+  <MultiSelectField
+    label={props.title}
+    labelClass="text-text"
+    options={toMultiSelectOptions(props.options, props.formatLabel)}
+    selected={props.selected}
+    placeholder={props.placeholder ?? `${props.title}を選択`}
+    contentZIndexClass={props.contentZIndexClass}
+    onChange={props.onChange}
+  />
 )
 
 export default MultiSelectFilterSection

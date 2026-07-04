@@ -1,7 +1,11 @@
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import { AppButton } from '../../../../../components/common/AppButton'
-import MultiSelectDropdown from '../../../../../components/common/MultiSelectDropdown'
+import type { AppMultiSelectOption } from '../../../../../components/common/AppMultiSelect'
+import {
+  GenreMultiSelect,
+  VersionMultiSelect,
+} from '../../../../../components/common/DomainMultiSelect'
 import {
   RANGE_END_LABEL_SUFFIX,
   RANGE_START_LABEL_SUFFIX,
@@ -25,20 +29,16 @@ interface GoalTargetChartsSectionProps {
   diffs: string[]
   constMin: string
   constMax: string
-  genreLabels: string[]
-  selectedGenreLabels: string[]
-  versionLabels: string[]
-  selectedVersionLabels: string[]
+  genreOptions: AppMultiSelectOption<string>[]
+  selectedGenres: string[]
+  versionOptions: AppMultiSelectOption<string>[]
+  selectedVersions: string[]
   targetCountText: string
   onClearDifficulty: () => void
   onToggleOpTarget: (checked: boolean) => void
   onToggleDifficulty: (id: number, checked: boolean) => void
-  onToggleGenre: (label: string) => void
-  onSelectAllGenres: () => void
-  onClearGenres: () => void
-  onToggleVersion: (label: string) => void
-  onSelectAllVersions: () => void
-  onClearVersions: () => void
+  onGenresChange: (genres: string[]) => void
+  onVersionsChange: (versions: string[]) => void
   onConstMinChange: (value: string) => void
   onConstMaxChange: (value: string) => void
 }
@@ -101,20 +101,16 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
         </fieldset>
 
         <fieldset class="block space-y-1 text-sm">
-          <span class="block text-text-muted">ジャンル</span>
-          <MultiSelectDropdown
-            options={props.genreLabels}
-            selected={props.selectedGenreLabels}
-            placeholder="ジャンルを選択"
+          <GenreMultiSelect
+            options={props.genreOptions}
+            selected={props.selectedGenres}
             contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
-            onToggle={props.onToggleGenre}
-            onSelectAll={props.onSelectAllGenres}
-            onClear={props.onClearGenres}
+            onChange={props.onGenresChange}
           />
         </fieldset>
 
         <Show
-          when={props.versionLabels.length > 0}
+          when={props.versionOptions.length > 0}
           fallback={
             <div class="space-y-1 text-sm">
               <span class="block text-text-muted">バージョン</span>
@@ -123,15 +119,11 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
           }
         >
           <fieldset class="block space-y-1 text-sm">
-            <span class="block text-text-muted">バージョン</span>
-            <MultiSelectDropdown
-              options={props.versionLabels}
-              selected={props.selectedVersionLabels}
-              placeholder="バージョンを選択"
+            <VersionMultiSelect
+              options={props.versionOptions}
+              selected={props.selectedVersions}
               contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
-              onToggle={props.onToggleVersion}
-              onSelectAll={props.onSelectAllVersions}
-              onClear={props.onClearVersions}
+              onChange={props.onVersionsChange}
             />
           </fieldset>
         </Show>

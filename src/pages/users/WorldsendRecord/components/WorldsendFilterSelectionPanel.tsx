@@ -170,14 +170,10 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
         options={props.defaultFilter.attributes}
         selected={props.filters.attributes}
         formatLabel={formatWorldsendAttribute}
-        onSelectAll={() =>
-          props.setFilters((prev) => ({ ...prev, attributes: props.defaultFilter.attributes }))
-        }
-        onClear={() => props.setFilters((prev) => ({ ...prev, attributes: [] }))}
-        onToggle={(attribute) =>
+        onChange={(selectedAttributes) =>
           props.setFilters((prev) => ({
             ...prev,
-            attributes: toggleArray(prev.attributes, attribute),
+            attributes: selectedAttributes,
           }))
         }
       />
@@ -309,24 +305,16 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
         title="ジャンル"
         options={props.defaultFilter.genres}
         selected={props.filters.genres}
-        onSelectAll={() =>
-          props.setFilters((prev) => ({ ...prev, genres: props.defaultFilter.genres }))
-        }
-        onClear={() => props.setFilters((prev) => ({ ...prev, genres: [] }))}
-        onToggle={(genre) =>
-          props.setFilters((prev) => ({ ...prev, genres: toggleArray(prev.genres, genre) }))
+        onChange={(selectedGenres) =>
+          props.setFilters((prev) => ({ ...prev, genres: selectedGenres }))
         }
       />
       <MultiSelectFilterSection
         title="バージョン"
         options={props.defaultFilter.versions}
         selected={props.filters.versions}
-        onSelectAll={() =>
-          props.setFilters((prev) => ({ ...prev, versions: props.defaultFilter.versions }))
-        }
-        onClear={() => props.setFilters((prev) => ({ ...prev, versions: [] }))}
-        onToggle={(version) =>
-          props.setFilters((prev) => ({ ...prev, versions: toggleArray(prev.versions, version) }))
+        onChange={(selectedVersions) =>
+          props.setFilters((prev) => ({ ...prev, versions: selectedVersions }))
         }
       />
     </div>

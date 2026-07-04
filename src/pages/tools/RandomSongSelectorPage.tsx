@@ -19,10 +19,11 @@ import { fetchVersions } from '../../api/songs'
 import { fetchMe, fetchUserRating } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
+import { MultiSelectField, toMultiSelectOptions } from '../../components/common/AppMultiSelect'
 import { FormSelect } from '../../components/common/AppSelect'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
-import MultiSelectDropdown from '../../components/common/MultiSelectDropdown'
+import { GenreMultiSelect, VersionMultiSelect } from '../../components/common/DomainMultiSelect'
 import { TextRangeInput } from '../../components/common/RangeInput'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -47,7 +48,6 @@ import {
   type RandomSongLampFilter,
   resolveRandomSongRecordLamp,
   restoreRandomSongResults,
-  toggleRandomSongSelectionValue,
 } from '../../utils/randomSongSelector'
 import { normalizeChartConstRangeInput, normalizeScoreRangeInput } from '../../utils/rangeInput'
 import { getScoreRank } from '../../utils/scoreRank'
@@ -900,58 +900,34 @@ const RandomSongSelectorPage = (): JSX.Element => {
                 <div class="grid gap-4 lg:grid-cols-2">
                   <div class="grid gap-4">
                     <div>
-                      <p class="mb-1 text-sm font-medium text-text-muted">
-                        {RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
-                      </p>
-                      <MultiSelectDropdown
-                        options={RANDOM_SONG_SELECTOR_DIFFICULTIES}
+                      <MultiSelectField
+                        label={RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
+                        options={toMultiSelectOptions(RANDOM_SONG_SELECTOR_DIFFICULTIES)}
                         selected={selectedDifficulties()}
                         placeholder={RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
-                        onToggle={(difficulty) =>
-                          setSelectedDifficulties((prev) =>
-                            toggleRandomSongSelectionValue(prev, difficulty)
-                          )
-                        }
-                        onSelectAll={() =>
-                          setSelectedDifficulties([...RANDOM_SONG_SELECTOR_DIFFICULTIES])
-                        }
-                        onClear={() => setSelectedDifficulties([])}
+                        onChange={setSelectedDifficulties}
                       />
                     </div>
                     <div>
-                      <p class="mb-1 text-sm font-medium text-text-muted">
-                        {RANDOM_SONG_SELECTOR_COPY.genreLabel}
-                      </p>
-                      <MultiSelectDropdown
-                        options={genreOptions()}
+                      <GenreMultiSelect
+                        label={RANDOM_SONG_SELECTOR_COPY.genreLabel}
+                        options={toMultiSelectOptions(genreOptions())}
                         selected={selectedGenres()}
                         placeholder={RANDOM_SONG_SELECTOR_COPY.genreLabel}
                         selectedPreviewLimit={6}
-                        onToggle={(genre) =>
-                          setSelectedGenres((prev) => toggleRandomSongSelectionValue(prev, genre))
-                        }
-                        onSelectAll={() => setSelectedGenres(genreOptions())}
-                        onClear={() => setSelectedGenres([])}
+                        onChange={setSelectedGenres}
                       />
                     </div>
                   </div>
                   <div class="grid gap-4">
                     <div>
-                      <p class="mb-1 text-sm font-medium text-text-muted">
-                        {RANDOM_SONG_SELECTOR_COPY.versionLabel}
-                      </p>
-                      <MultiSelectDropdown
-                        options={versionOptions()}
+                      <VersionMultiSelect
+                        label={RANDOM_SONG_SELECTOR_COPY.versionLabel}
+                        options={toMultiSelectOptions(versionOptions())}
                         selected={selectedVersions()}
                         placeholder={RANDOM_SONG_SELECTOR_COPY.versionLabel}
                         selectedPreviewLimit={6}
-                        onToggle={(version) =>
-                          setSelectedVersions((prev) =>
-                            toggleRandomSongSelectionValue(prev, version)
-                          )
-                        }
-                        onSelectAll={() => setSelectedVersions(versionOptions())}
-                        onClear={() => setSelectedVersions([])}
+                        onChange={setSelectedVersions}
                       />
                     </div>
                     <RandomSongRangeField
@@ -1030,22 +1006,16 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                 />
                               </div>
                               <div>
-                                <p class="mb-1 text-sm font-medium text-text-muted">
-                                  {RANDOM_SONG_SELECTOR_COPY.lampLabel}
-                                </p>
-                                <MultiSelectDropdown
-                                  options={RANDOM_SONG_LAMP_VALUES}
+                                <MultiSelectField
+                                  label={RANDOM_SONG_SELECTOR_COPY.lampLabel}
+                                  options={toMultiSelectOptions(
+                                    RANDOM_SONG_LAMP_VALUES,
+                                    formatRandomSongRecordLampLabel
+                                  )}
                                   selected={selectedLamps()}
                                   placeholder={RANDOM_SONG_SELECTOR_COPY.lampLabel}
-                                  formatLabel={formatRandomSongRecordLampLabel}
                                   disabled={!hasMyRecordData()}
-                                  onToggle={(lamp) =>
-                                    setSelectedLamps((prev) =>
-                                      toggleRandomSongSelectionValue(prev, lamp)
-                                    )
-                                  }
-                                  onSelectAll={() => setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])}
-                                  onClear={() => setSelectedLamps([])}
+                                  onChange={setSelectedLamps}
                                 />
                               </div>
                               <Show when={myRecordData()?.status === 'unauthenticated'}>

@@ -1,6 +1,7 @@
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal } from 'solid-js'
+import { createMultiSelectOption } from '../../../../../components/common/DomainMultiSelect'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -130,31 +131,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   )
   const allGenreSelections = createMemo(() => buildAllIdSelections(props.masterData.genres))
   const allVersionSelections = createMemo(() => buildAllVersionSelections(versionOptions()))
-  const genreLabels = createMemo(() => props.masterData.genres.map((genre) => genre.name))
-  const genreValueByLabel = createMemo(
-    () => new Map(props.masterData.genres.map((genre) => [genre.name, String(genre.id)]))
+  const genreSelectOptions = createMemo(() =>
+    props.masterData.genres.map((genre) => createMultiSelectOption(String(genre.id), genre.name))
   )
-  const genreLabelByValue = createMemo(
-    () => new Map(props.masterData.genres.map((genre) => [String(genre.id), genre.name]))
-  )
-  const selectedGenreLabels = createMemo(() =>
-    genres().flatMap((value) => {
-      const label = genreLabelByValue().get(value)
-      return label ? [label] : []
-    })
-  )
-  const versionLabels = createMemo(() => versionOptions().map((option) => option.label))
-  const versionValueByLabel = createMemo(
-    () => new Map(versionOptions().map((option) => [option.label, option.value]))
-  )
-  const versionLabelByValue = createMemo(
-    () => new Map(versionOptions().map((option) => [option.value, option.label]))
-  )
-  const selectedVersionLabels = createMemo(() =>
-    versions().flatMap((value) => {
-      const label = versionLabelByValue().get(value)
-      return label ? [label] : []
-    })
+  const versionSelectOptions = createMemo(() =>
+    versionOptions().map((option) => createMultiSelectOption(option.value, option.label))
   )
   const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
     props.masterData.achievement_types
@@ -202,30 +183,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const normalizedValue = normalizeScoreRangeInput(value)
     if (normalizedValue === null) return
     setScore(normalizedValue)
-  }
-
-  /**
-   * 表示名で指定されたジャンルの選択状態を内部ID値へ変換して切り替える。
-   *
-   * @param label - GenreSection から受け取ったジャンル表示名。
-   * @returns なし。
-   */
-  const handleToggleGenreLabel = (label: string): void => {
-    const value = genreValueByLabel().get(label)
-    if (!value) return
-    setGenres((prev) => toggleSelection(prev, value, !prev.includes(value)))
-  }
-
-  /**
-   * 表示名で指定されたバージョンの選択状態を内部番号値へ変換して切り替える。
-   *
-   * @param label - VersionSection から受け取ったバージョン表示名。
-   * @returns なし。
-   */
-  const handleToggleVersionLabel = (label: string): void => {
-    const value = versionValueByLabel().get(label)
-    if (!value) return
-    setVersions((prev) => toggleSelection(prev, value, !prev.includes(value)))
   }
 
   // ダイアログを開いたタイミングで作成・編集モードに応じた初期値へ同期するため。
@@ -465,10 +422,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               diffs={diffs()}
               constMin={constMin()}
               constMax={constMax()}
-              genreLabels={genreLabels()}
-              selectedGenreLabels={selectedGenreLabels()}
-              versionLabels={versionLabels()}
-              selectedVersionLabels={selectedVersionLabels()}
+              genreOptions={genreSelectOptions()}
+              selectedGenres={genres()}
+              versionOptions={versionSelectOptions()}
+              selectedVersions={versions()}
               targetCountText={targetCountText()}
               onClearDifficulty={() => {
                 setChartTargetMode('normal')
@@ -484,12 +441,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 setChartTargetMode('normal')
                 setDiffs((prev) => toggleSelection(prev, String(id), checked))
               }}
-              onToggleGenre={handleToggleGenreLabel}
-              onSelectAllGenres={() => setGenres(allGenreSelections())}
-              onClearGenres={() => setGenres([])}
-              onToggleVersion={handleToggleVersionLabel}
-              onSelectAllVersions={() => setVersions(allVersionSelections())}
-              onClearVersions={() => setVersions([])}
+              onGenresChange={setGenres}
+              onVersionsChange={setVersions}
               onConstMinChange={setConstMin}
               onConstMaxChange={setConstMax}
             />
