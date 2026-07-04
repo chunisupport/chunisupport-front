@@ -1,7 +1,7 @@
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronsUpDown } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createMemo, For, Show } from 'solid-js'
+import { createMemo, createSignal, For, Show } from 'solid-js'
 import { AppButton } from './AppButton'
 
 export type AppMultiSelectValue = string | number | null
@@ -80,6 +80,7 @@ export const toMultiSelectOptions = <TValue extends AppMultiSelectValue>(
 export const AppMultiSelect = <TValue extends AppMultiSelectValue>(
   props: AppMultiSelectProps<TValue>
 ): JSX.Element => {
+  const [contentRef, setContentRef] = createSignal<HTMLElement>()
   const optionValues = createMemo(() => props.options.map((option) => option.value))
   const labelByValue = createMemo(
     () => new Map(props.options.map((option) => [option.value, option.label]))
@@ -152,9 +153,10 @@ export const AppMultiSelect = <TValue extends AppMultiSelectValue>(
       </Select.Trigger>
       <Select.Portal>
         <Select.Content
+          ref={setContentRef}
           class={`${props.contentZIndexClass ?? DEFAULT_MULTI_SELECT_CONTENT_Z_INDEX_CLASS} ${MULTI_SELECT_CONTENT_BASE_CLASS}`}
         >
-          <Select.Listbox />
+          <Select.Listbox scrollRef={contentRef} />
         </Select.Content>
       </Select.Portal>
     </Select>

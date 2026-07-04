@@ -2,7 +2,7 @@ import type { SelectRootItemComponentProps, SelectRootProps } from '@kobalte/cor
 import { Select } from '@kobalte/core/select'
 import { Check, ChevronDown, ChevronsUpDown } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { For, Show, splitProps } from 'solid-js'
+import { createSignal, For, Show, splitProps } from 'solid-js'
 
 type KobalteSingleSelectProps<T> = Omit<
   SelectRootProps<T>,
@@ -187,6 +187,7 @@ const renderAppMultiSelectItem = <T,>(props: {
  * @returns 共通スタイルを適用した Kobalte Select。
  */
 export const AppSelect = <T,>(props: AppSelectProps<T>): JSX.Element => {
+  const [contentRef, setContentRef] = createSignal<HTMLElement>()
   const [local, selectProps] = splitProps(props, [
     'rootClass',
     'label',
@@ -262,11 +263,12 @@ export const AppSelect = <T,>(props: AppSelectProps<T>): JSX.Element => {
       </Show>
       <Select.Portal>
         <Select.Content
+          ref={setContentRef}
           class={`${local.contentZIndexClass ?? DEFAULT_APP_SELECT_CONTENT_Z_INDEX_CLASS} ${
             APP_SELECT_CONTENT_BASE_CLASS
           } ${local.contentClass ?? ''}`}
         >
-          <Select.Listbox class={local.listboxClass} />
+          <Select.Listbox class={local.listboxClass} scrollRef={contentRef} />
         </Select.Content>
       </Select.Portal>
     </Select>
@@ -290,6 +292,7 @@ export const FormSelect = <T,>(props: FormSelectProps<T>): JSX.Element => (
  * @returns 選択済み項目をチップ表示する Kobalte Select。
  */
 export const AppMultiSelect = <T,>(props: AppMultiSelectProps<T>): JSX.Element => {
+  const [contentRef, setContentRef] = createSignal<HTMLElement>()
   const [local, selectProps] = splitProps(props, [
     'rootClass',
     'placeholder',
@@ -355,11 +358,12 @@ export const AppMultiSelect = <T,>(props: AppMultiSelectProps<T>): JSX.Element =
       </Select.Trigger>
       <Select.Portal>
         <Select.Content
+          ref={setContentRef}
           class={`${local.contentZIndexClass ?? DEFAULT_APP_SELECT_CONTENT_Z_INDEX_CLASS} ${
             APP_SELECT_CONTENT_BASE_CLASS
           } ${local.contentClass ?? ''}`}
         >
-          <Select.Listbox class={local.listboxClass} />
+          <Select.Listbox class={local.listboxClass} scrollRef={contentRef} />
         </Select.Content>
       </Select.Portal>
     </Select>
