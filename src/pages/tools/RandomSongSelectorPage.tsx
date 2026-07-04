@@ -49,6 +49,7 @@ import {
   restoreRandomSongResults,
   toggleRandomSongSelectionValue,
 } from '../../utils/randomSongSelector'
+import { normalizeChartConstRangeInput, normalizeScoreRangeInput } from '../../utils/rangeInput'
 import { getScoreRank } from '../../utils/scoreRank'
 import {
   RANDOM_SONG_BEST_FRAME_OPTIONS,
@@ -103,6 +104,7 @@ type RandomSongRangeFieldProps = {
   inputMode?: 'numeric' | 'decimal'
   disabled?: boolean
   error?: string | null
+  normalizeInput?: (value: string) => string | null
   onMinChange: (value: string) => void
   onMaxChange: (value: string) => void
 }
@@ -285,6 +287,7 @@ const RandomSongRangeField: Component<RandomSongRangeFieldProps> = (props) => (
       pattern: getRandomSongInputPattern(props.inputMode),
       disabled: props.disabled,
       invalid: Boolean(props.error),
+      normalizeInput: props.normalizeInput,
       onChange: props.onMinChange,
     }}
     end={{
@@ -296,6 +299,7 @@ const RandomSongRangeField: Component<RandomSongRangeFieldProps> = (props) => (
       pattern: getRandomSongInputPattern(props.inputMode),
       disabled: props.disabled,
       invalid: Boolean(props.error),
+      normalizeInput: props.normalizeInput,
       onChange: props.onMaxChange,
     }}
   />
@@ -964,6 +968,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       maxValue={maxConst()}
                       inputMode="decimal"
                       error={constRangeError()}
+                      normalizeInput={normalizeChartConstRangeInput}
                       onMinChange={setMinConst}
                       onMaxChange={setMaxConst}
                     />
@@ -1024,6 +1029,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                   inputMode="numeric"
                                   disabled={!hasMyRecordData()}
                                   error={scoreRangeError()}
+                                  normalizeInput={normalizeScoreRangeInput}
                                   onMinChange={setMinScore}
                                   onMaxChange={setMaxScore}
                                 />

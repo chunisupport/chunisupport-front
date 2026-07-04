@@ -89,6 +89,8 @@ type RangeTextFieldProps = {
   onChange?: (value: string) => void
   /** Input の入力イベント通知。 */
   onInput?: (value: string) => void
+  /** 入力値を通知前に正規化する処理。null を返すと入力を無視する。 */
+  normalizeInput?: (value: string) => string | null
   /** 入力確定時の値を通知する処理。 */
   onCommit?: (value: string) => void
 }
@@ -247,7 +249,14 @@ export const NumberRangeInput = (props: NumberRangeInputProps): JSX.Element => (
  * @returns 範囲入力用のテキストフィールド。
  */
 const RangeTextField = (props: { field: RangeTextFieldProps; inputClass: string }): JSX.Element => (
-  <TextField value={props.field.value} onChange={props.field.onChange} class="w-full">
+  <TextField
+    value={props.field.value}
+    onChange={(value) => {
+      const normalizedValue = normalizeRangeTextFieldValue(props.field, value)
+      if (normalizedValue !== null) props.field.onChange?.(normalizedValue)
+    }}
+    class="w-full"
+  >
     <TextField.Label class="sr-only" for={props.field.id}>
       {props.field.label}
     </TextField.Label>
@@ -262,12 +271,28 @@ const RangeTextField = (props: { field: RangeTextFieldProps; inputClass: string 
       autocomplete="off"
       disabled={props.field.disabled}
       aria-invalid={props.field.invalid ? 'true' : 'false'}
-      onInput={(event) => props.field.onInput?.(event.currentTarget.value)}
+      onInput={(event) => {
+        const normalizedValue = normalizeRangeTextFieldValue(props.field, event.currentTarget.value)
+        if (normalizedValue !== null) props.field.onInput?.(normalizedValue)
+      }}
       onFocus={(event) => event.currentTarget.select()}
-      onBlur={(event) => props.field.onCommit?.(event.currentTarget.value)}
+      onBlur={(event) => {
+        const normalizedValue = normalizeRangeTextFieldValue(props.field, event.currentTarget.value)
+        if (normalizedValue !== null) props.field.onCommit?.(normalizedValue)
+      }}
     />
   </TextField>
 )
+
+/**
+ * 範囲テキスト入力値をフィールド設定に応じて正規化する。
+ *
+ * @param field - 入力欄の設定。
+ * @param value - 入力欄から受け取った文字列。
+ * @returns 正規化後の入力値。不正な入力で更新しない場合は null。
+ */
+const normalizeRangeTextFieldValue = (field: RangeTextFieldProps, value: string): string | null =>
+  field.normalizeInput?.(value) ?? value
 
 /**
  * テキストの範囲入力欄を共通レイアウトで表示する。

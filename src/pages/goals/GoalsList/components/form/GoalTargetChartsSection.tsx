@@ -2,8 +2,14 @@ import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import { AppButton } from '../../../../../components/common/AppButton'
 import MultiSelectDropdown from '../../../../../components/common/MultiSelectDropdown'
+import {
+  RANGE_END_LABEL_SUFFIX,
+  RANGE_START_LABEL_SUFFIX,
+  TextRangeInput,
+} from '../../../../../components/common/RangeInput'
 import type { MasterDataDTO } from '../../../../../types/api'
-import { GoalDecimalTextField, GoalFilterCheckbox } from './goalFormFields'
+import { normalizeChartConstRangeInput } from '../../../../../utils/rangeInput'
+import { GOAL_FIELD_INPUT_CLASS, GoalFilterCheckbox } from './goalFormFields'
 import type { GoalChartTargetMode } from './goalFormModel'
 import {
   GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS,
@@ -38,6 +44,7 @@ interface GoalTargetChartsSectionProps {
 }
 
 const TARGET_CHART_COUNT_LABEL = '対象となる譜面数:'
+const GOAL_CHART_CONST_RANGE_TITLE = '譜面定数'
 
 /**
  * 目標フォームの対象譜面セクションを描画する。
@@ -129,18 +136,29 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
           </fieldset>
         </Show>
 
-        <div class="grid grid-cols-2 gap-2">
-          <GoalDecimalTextField
-            label="定数min"
-            value={props.constMin}
-            onChange={props.onConstMinChange}
-          />
-          <GoalDecimalTextField
-            label="定数max"
-            value={props.constMax}
-            onChange={props.onConstMaxChange}
-          />
-        </div>
+        <TextRangeInput
+          title={GOAL_CHART_CONST_RANGE_TITLE}
+          titleClass="mb-1 text-sm text-text-muted"
+          inputClass={GOAL_FIELD_INPUT_CLASS}
+          start={{
+            id: 'goal-chart-const-min',
+            label: `${GOAL_CHART_CONST_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
+            value: props.constMin,
+            inputMode: 'decimal',
+            pattern: '[0-9]*[.]?[0-9]*',
+            normalizeInput: normalizeChartConstRangeInput,
+            onChange: props.onConstMinChange,
+          }}
+          end={{
+            id: 'goal-chart-const-max',
+            label: `${GOAL_CHART_CONST_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
+            value: props.constMax,
+            inputMode: 'decimal',
+            pattern: '[0-9]*[.]?[0-9]*',
+            normalizeInput: normalizeChartConstRangeInput,
+            onChange: props.onConstMaxChange,
+          }}
+        />
       </div>
     </div>
   </section>

@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   clampNumber,
+  normalizeChartConstRangeInput,
+  normalizeScoreRangeInput,
   parseNumberInput,
   parseOptionalRangeNumberInput,
   sanitizeRangeInput,
@@ -32,6 +34,23 @@ test('sanitizeRangeInput は許可された文字だけを残すこと', () => {
 
   // Then
   assert.equal(result, '1.23')
+})
+
+test('normalizeChartConstRangeInput は小数入力を保持し譜面定数範囲へ収めること', () => {
+  // Given, When & Then
+  assert.equal(normalizeChartConstRangeInput('13.'), '13.')
+  assert.equal(normalizeChartConstRangeInput('13.5'), '13.5')
+  assert.equal(normalizeChartConstRangeInput('999'), '16.0')
+  assert.equal(normalizeChartConstRangeInput('abc'), null)
+})
+
+test('normalizeScoreRangeInput は整数だけを許可しスコア範囲へ収めること', () => {
+  // Given, When & Then
+  assert.equal(normalizeScoreRangeInput(''), '')
+  assert.equal(normalizeScoreRangeInput('1007500'), '1007500')
+  assert.equal(normalizeScoreRangeInput('1023401'), '1010000')
+  assert.equal(normalizeScoreRangeInput('100.5'), null)
+  assert.equal(normalizeScoreRangeInput('abc'), null)
 })
 
 test('parseNumberInput は確定済みの数値だけを返すこと', () => {

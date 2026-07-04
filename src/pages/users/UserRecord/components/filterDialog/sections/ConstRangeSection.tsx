@@ -2,12 +2,12 @@ import { Checkbox } from '@kobalte/core/checkbox'
 import { Check } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import {
-  NumberRangeInput,
   RANGE_END_LABEL_SUFFIX,
   RANGE_START_LABEL_SUFFIX,
   SelectRangeInput,
+  TextRangeInput,
 } from '../../../../../../components/common/RangeInput'
-import { CHART_CONST_MAX, CHART_CONST_MIN } from '../../../../../../constants/chart'
+import { normalizeChartConstRangeInput } from '../../../../../../utils/rangeInput'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../components/filter/styles'
 
 /** レベル範囲セクションの見出し。 */
@@ -67,15 +67,16 @@ type ConstRangeSectionProps = {
 const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
   <div>
     {props.constFilterMode === 'number' ? (
-      <NumberRangeInput
+      <TextRangeInput
         title={CONST_VALUE_RANGE_TITLE}
         inputClass={FILTER_DIALOG_FIELD_INPUT_CLASS}
-        allowedInput={/[0-9.]/}
-        step={0.1}
         start={{
           id: 'filter-const-min',
           label: `${CONST_VALUE_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
           value: props.minValue,
+          inputMode: 'decimal',
+          pattern: '[0-9]*[.]?[0-9]*',
+          normalizeInput: normalizeChartConstRangeInput,
           onInput: props.onMinInput,
           onCommit: props.onMinCommit,
         }}
@@ -83,8 +84,9 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
           id: 'filter-const-max',
           label: `${CONST_VALUE_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
           value: props.maxValue,
-          min: CHART_CONST_MIN,
-          max: CHART_CONST_MAX,
+          inputMode: 'decimal',
+          pattern: '[0-9]*[.]?[0-9]*',
+          normalizeInput: normalizeChartConstRangeInput,
           onInput: props.onMaxInput,
           onCommit: props.onMaxCommit,
         }}

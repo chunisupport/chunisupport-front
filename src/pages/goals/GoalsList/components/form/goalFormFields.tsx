@@ -42,12 +42,6 @@ interface GoalNumberFieldProps {
   onChange: (value: string) => void
 }
 
-interface GoalDecimalTextFieldProps {
-  label: string
-  value: string
-  onChange: (value: string) => void
-}
-
 export interface GoalSelectOption<TValue extends string> {
   value: TValue
   label: string
@@ -83,7 +77,7 @@ export const GOAL_FILTER_CHECKBOX_CONTROL_CLASS =
  */
 const GOAL_FIELD_FOCUS_CLASS =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
-const GOAL_FIELD_INPUT_CLASS = `w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm hover:border-input-border-hover ${GOAL_FIELD_FOCUS_CLASS}`
+export const GOAL_FIELD_INPUT_CLASS = `w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm hover:border-input-border-hover ${GOAL_FIELD_FOCUS_CLASS}`
 const GOAL_RADIO_CARD_BASE_CLASS =
   'rounded border px-3 py-2 text-sm text-text-muted hover:bg-surface-muted'
 const GOAL_RADIO_CARD_UNCHECKED_CLASS = 'border-border-strong bg-surface'
@@ -147,19 +141,6 @@ export const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
       </NumberField.Description>
     </Show>
   </NumberField>
-)
-
-/**
- * 空欄を許可する小数入力欄を描画する。
- *
- * @param props - 表示ラベル、入力値、変更ハンドラ。
- * @returns Kobalte TextField を使った小数入力欄。
- */
-export const GoalDecimalTextField: Component<GoalDecimalTextFieldProps> = (props) => (
-  <TextField class="block text-sm" value={props.value} onChange={props.onChange}>
-    <TextField.Label class="mb-1 block text-text-muted">{props.label}</TextField.Label>
-    <TextField.Input class={GOAL_FIELD_INPUT_CLASS} inputMode="decimal" pattern="[0-9.]*" />
-  </TextField>
 )
 
 /**

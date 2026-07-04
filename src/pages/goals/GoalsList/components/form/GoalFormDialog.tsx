@@ -1,7 +1,6 @@
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal } from 'solid-js'
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -11,7 +10,7 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../../../types/api'
-import { formatChartConst } from '../../../../../utils/chartConstFormat'
+import { normalizeScoreRangeInput } from '../../../../../utils/rangeInput'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { resolveGoalAchievementTypeLabel } from '../../../utils/goalForm'
@@ -85,31 +84,6 @@ const GOAL_ACHIEVEMENT_TYPES = [
   'overpower_percent',
 ] as const satisfies readonly GoalAchievementType[]
 const MAX_OVERPOWER_PERCENT = 100
-const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
-
-/**
- * 数値入力値を指定範囲内に丸めた文字列へ変換する。
- *
- * @param value - 入力欄から受け取った文字列。
- * @param min - 許容する最小値。
- * @param max - 許容する最大値。
- * @param format - 範囲外補正時の文字列フォーマット。
- * @returns 空文字または数値でない入力はそのまま、範囲外の数値は丸めた文字列。
- */
-const clampNumericInput = (
-  value: string,
-  min: number,
-  max: number,
-  format: (value: number) => string
-): string => {
-  if (value === '') return value
-
-  const parsed = Number(value)
-  if (!Number.isFinite(parsed)) return value
-  if (parsed < min) return format(min)
-  if (parsed > max) return format(max)
-  return value
-}
 
 /**
  * 文字列が目標種別として扱える値か判定する。
@@ -225,21 +199,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @returns なし。
    */
   const handleScoreChange = (value: string): void => {
-    setScore(clampNumericInput(value, SCORE_MIN, MAX_SCORE, String))
-  }
-
-  /**
-   * 譜面定数入力値を有効な定数範囲に丸めて保持する。
-   *
-   * @param setter - 更新対象の Signal setter。
-   * @param value - 入力欄から受け取った譜面定数文字列。
-   * @returns なし。
-   */
-  const handleMusicConstChange = (setter: (value: string) => void, value: string): void => {
-    if (!DECIMAL_INPUT_PATTERN.test(value)) return
-
-    setErrorMessage('')
-    setter(clampNumericInput(value, CHART_CONST_MIN, CHART_CONST_MAX, formatChartConst))
+    const normalizedValue = normalizeScoreRangeInput(value)
+    if (normalizedValue === null) return
+    setScore(normalizedValue)
   }
 
   /**
@@ -528,8 +490,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               onToggleVersion={handleToggleVersionLabel}
               onSelectAllVersions={() => setVersions(allVersionSelections())}
               onClearVersions={() => setVersions([])}
-              onConstMinChange={(value) => handleMusicConstChange(setConstMin, value)}
-              onConstMaxChange={(value) => handleMusicConstChange(setConstMax, value)}
+              onConstMinChange={setConstMin}
+              onConstMaxChange={setConstMax}
             />
 
             <GoalAchievementSection

@@ -2,13 +2,12 @@ import { Checkbox } from '@kobalte/core/checkbox'
 import { Check } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import {
-  NumberRangeInput,
   RANGE_END_LABEL_SUFFIX,
   RANGE_START_LABEL_SUFFIX,
   SelectRangeInput,
+  TextRangeInput,
 } from '../../../../components/common/RangeInput'
-import { SCORE_MIN } from '../../../../constants/chart'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
+import { normalizeScoreRangeInput } from '../../../../utils/rangeInput'
 
 import { SCORE_RANKS } from '../../utils/scoreRank'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from './styles'
@@ -44,17 +43,16 @@ type ScoreSectionProps = {
 const ScoreSection: Component<ScoreSectionProps> = (props) => (
   <div>
     {props.scoreFilterMode === 'number' ? (
-      <NumberRangeInput
+      <TextRangeInput
         title={SCORE_RANGE_TITLE}
         inputClass={FILTER_DIALOG_FIELD_INPUT_CLASS}
-        allowedInput={/[0-9.]/}
-        step={1}
         start={{
           id: 'filter-score-min',
           label: `${SCORE_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
           value: props.scoreMinInput,
-          min: SCORE_MIN,
-          max: MAX_SCORE,
+          inputMode: 'numeric',
+          pattern: '[0-9]*',
+          normalizeInput: normalizeScoreRangeInput,
           onInput: props.onScoreMinInput,
           onCommit: props.onScoreMinCommit,
         }}
@@ -62,8 +60,9 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
           id: 'filter-score-max',
           label: `${SCORE_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
           value: props.scoreMaxInput,
-          min: SCORE_MIN,
-          max: MAX_SCORE,
+          inputMode: 'numeric',
+          pattern: '[0-9]*',
+          normalizeInput: normalizeScoreRangeInput,
           onInput: props.onScoreMaxInput,
           onCommit: props.onScoreMaxCommit,
         }}

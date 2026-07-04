@@ -1,6 +1,12 @@
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../constants/chart'
 import type { NumericRangeFilter } from '../types/record'
+import { formatChartConst } from './chartConstFormat'
+import { clampNumericInput } from './numberInput'
+import { MAX_SCORE } from './scoreRank'
 
 const DECIMAL_BASE = 10
+const DECIMAL_RANGE_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
+const INTEGER_RANGE_INPUT_PATTERN = /^\d*$/
 
 export type OptionalRangeInputOptions = {
   /** 許可する最小値。 */
@@ -47,6 +53,28 @@ export const sanitizeRangeInput = (value: string, allowedInput: RegExp): string 
       return allowedInput.test(char)
     })
     .join('')
+
+/**
+ * 譜面定数入力を、入力途中の小数を保ったまま有効範囲へ収める。
+ *
+ * @param value - 入力欄から受け取った文字列。
+ * @returns 入力を受け入れる場合は正規化後の文字列。不正な文字列の場合は null。
+ */
+export const normalizeChartConstRangeInput = (value: string): string | null => {
+  if (!DECIMAL_RANGE_INPUT_PATTERN.test(value)) return null
+  return clampNumericInput(value, CHART_CONST_MIN, CHART_CONST_MAX, formatChartConst)
+}
+
+/**
+ * スコア入力を、整数だけ許可して有効なスコア範囲へ収める。
+ *
+ * @param value - 入力欄から受け取った文字列。
+ * @returns 入力を受け入れる場合は正規化後の文字列。不正な文字列の場合は null。
+ */
+export const normalizeScoreRangeInput = (value: string): string | null => {
+  if (!INTEGER_RANGE_INPUT_PATTERN.test(value)) return null
+  return clampNumericInput(value, SCORE_MIN, MAX_SCORE)
+}
 
 /**
  * 数値入力欄の文字列を数値へ変換する。
