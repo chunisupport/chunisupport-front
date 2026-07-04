@@ -241,7 +241,7 @@ const UserOverPower: Component<Props> = (props) => {
         >
           <Show when={summary()} fallback={<Loading />}>
             {(currentSummary) => (
-              <div class="mx-4 flex flex-col gap-4 text-sm">
+              <div class="mx-4 text-sm">
                 <div class="flex items-center justify-between gap-3">
                   <div class="min-w-0 shrink">
                     <AppSelect<OverPowerSummaryOption>
