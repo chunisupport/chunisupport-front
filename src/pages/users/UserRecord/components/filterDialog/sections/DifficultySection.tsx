@@ -1,7 +1,6 @@
-import { Checkbox } from '@kobalte/core/checkbox'
-import { Check } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For } from 'solid-js'
+import { CheckboxField } from '../../../../../../components/common/CheckboxField'
 import type { Difficulty } from '../../../../../../types/recordFilter'
 
 type DifficultySectionProps = {
@@ -32,39 +31,23 @@ const DifficultySection: Component<DifficultySectionProps> = (props) => (
         {(diff, index) => {
           const id = `filter-difficulty-${index()}`
           return (
-            <Checkbox
+            <CheckboxField
+              id={id}
               checked={props.selected.includes(diff)}
               onChange={() => props.onToggle(diff)}
               class="relative flex items-center gap-2"
-            >
-              <Checkbox.Input id={id} style={{ left: '0', top: '0' }} />
-              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
-                <Checkbox.Indicator>
-                  <Check class="h-4 w-4" />
-                </Checkbox.Indicator>
-              </Checkbox.Control>
-              <Checkbox.Label class="leading-5" for={id}>
-                {diff}
-              </Checkbox.Label>
-            </Checkbox>
+              label={diff}
+            />
           )
         }}
       </For>
-      <Checkbox
+      <CheckboxField
+        id={CURRENT_OP_TARGET_ONLY_CHECKBOX_ID}
         checked={props.currentOpTargetOnly}
         onChange={(checked) => props.onCurrentOpTargetOnlyChange(checked)}
         class="relative mt-1 flex items-center gap-2"
-      >
-        <Checkbox.Input id={CURRENT_OP_TARGET_ONLY_CHECKBOX_ID} style={{ left: '0', top: '0' }} />
-        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
-          <Checkbox.Indicator>
-            <Check class="h-4 w-4" />
-          </Checkbox.Indicator>
-        </Checkbox.Control>
-        <Checkbox.Label class="leading-5" for={CURRENT_OP_TARGET_ONLY_CHECKBOX_ID}>
-          {CURRENT_OP_TARGET_ONLY_LABEL}
-        </Checkbox.Label>
-      </Checkbox>
+        label={CURRENT_OP_TARGET_ONLY_LABEL}
+      />
     </div>
   </div>
 )

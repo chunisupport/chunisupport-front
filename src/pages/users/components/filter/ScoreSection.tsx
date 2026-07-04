@@ -1,6 +1,5 @@
-import { Checkbox } from '@kobalte/core/checkbox'
-import { Check } from 'lucide-solid'
 import type { Component } from 'solid-js'
+import { CheckboxField } from '../../../../components/common/CheckboxField'
 import {
   RANGE_END_LABEL_SUFFIX,
   RANGE_START_LABEL_SUFFIX,
@@ -85,38 +84,22 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
       />
     )}
     <div class="mt-2">
-      <Checkbox
+      <CheckboxField
+        id="filter-score-mode"
         checked={props.scoreFilterMode === 'number'}
         onChange={(checked) => props.onScoreFilterModeChange(checked ? 'number' : 'rank')}
         class="flex items-center gap-2"
-      >
-        <Checkbox.Input id="filter-score-mode" />
-        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
-          <Checkbox.Indicator>
-            <Check class="h-4 w-4" />
-          </Checkbox.Indicator>
-        </Checkbox.Control>
-        <Checkbox.Label class="leading-5" for="filter-score-mode">
-          数値で指定する
-        </Checkbox.Label>
-      </Checkbox>
+        label="数値で指定する"
+      />
     </div>
     <div class="mt-2">
-      <Checkbox
+      <CheckboxField
+        id="filter-exclude-noplay"
         checked={props.excludeNoPlay}
         onChange={(checked) => props.onExcludeNoPlayChange(checked)}
         class="flex items-center gap-2"
-      >
-        <Checkbox.Input id="filter-exclude-noplay" />
-        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
-          <Checkbox.Indicator>
-            <Check class="h-4 w-4" />
-          </Checkbox.Indicator>
-        </Checkbox.Control>
-        <Checkbox.Label class="leading-5" for="filter-exclude-noplay">
-          未プレイ譜面を除外する
-        </Checkbox.Label>
-      </Checkbox>
+        label="未プレイ譜面を除外する"
+      />
     </div>
   </div>
 )

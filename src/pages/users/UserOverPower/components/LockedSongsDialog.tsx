@@ -1,11 +1,11 @@
 import { Button } from '@kobalte/core/button'
-import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { Check, CircleSlash2, Funnel, ListChecks, LoaderCircle, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import { AppButton, getAppButtonClass } from '../../../../components/common/AppButton'
+import { CheckboxField } from '../../../../components/common/CheckboxField'
 import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
 import Loading from '../../../../components/Loading/Loading'
 import type {
@@ -94,10 +94,6 @@ const isLockedSongsFilterChanged = (
   current.unplayedOnly !== defaultFilter.unplayedOnly ||
   !hasSameFilterValues(current.genres, defaultFilter.genres) ||
   !hasSameFilterValues(current.versions, defaultFilter.versions)
-
-/** チェックボックスの見た目を未解禁曲ダイアログ内で統一する Tailwind クラス。 */
-const FILTER_CHECKBOX_CONTROL_CLASS =
-  'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
 
 /** ネストしたフィルターモーダル上で Select の選択肢を前面に表示する z-index クラス。 */
 const NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-80'
@@ -580,27 +576,14 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   </div>
 
                   <section>
-                    <Checkbox
+                    <CheckboxField
+                      id="locked-song-filter-unplayed-only"
                       checked={filters().unplayedOnly}
                       onChange={handleUnplayedOnlyFilterChange}
                       class="relative flex items-center gap-2"
-                    >
-                      <Checkbox.Input
-                        id="locked-song-filter-unplayed-only"
-                        style={{ left: '0', top: '0' }}
-                      />
-                      <Checkbox.Control class={FILTER_CHECKBOX_CONTROL_CLASS}>
-                        <Checkbox.Indicator>
-                          <Check class="h-4 w-4" />
-                        </Checkbox.Indicator>
-                      </Checkbox.Control>
-                      <Checkbox.Label
-                        class="min-w-0 leading-5"
-                        for="locked-song-filter-unplayed-only"
-                      >
-                        未プレイのみ表示
-                      </Checkbox.Label>
-                    </Checkbox>
+                      labelClass="min-w-0 leading-5"
+                      label="未プレイのみ表示"
+                    />
                   </section>
                 </div>
 

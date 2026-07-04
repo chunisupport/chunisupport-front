@@ -1,17 +1,9 @@
-import { Checkbox } from '@kobalte/core/checkbox'
 import { Collapsible } from '@kobalte/core/collapsible'
 import { Dialog } from '@kobalte/core/dialog'
 import { NumberField } from '@kobalte/core/number-field'
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, PointElement, ScatterController, Tooltip } from 'chart.js'
-import {
-  ChartNoAxesCombined,
-  Check,
-  ChevronRight,
-  RotateCcw,
-  Settings,
-  TriangleAlert,
-} from 'lucide-solid'
+import { ChartNoAxesCombined, ChevronRight, RotateCcw, Settings, TriangleAlert } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -26,6 +18,7 @@ import {
 import { fetchMe } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { CheckboxField } from '../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { SortableHeaderButton } from '../../components/common/SortableTableHeader'
 import {
@@ -611,7 +604,8 @@ const WeakChartInspectorPage = (): JSX.Element => {
                           <div class="flex flex-col items-start gap-1">
                             <For each={WEAK_CHART_AGGREGATION_DIFFICULTIES}>
                               {(diff) => (
-                                <Checkbox
+                                <CheckboxField
+                                  id={`agg-difficulty-${diff}`}
                                   checked={editAggDifficulties().includes(diff)}
                                   onChange={(checked) => {
                                     setEditAggDifficulties((prev) =>
@@ -619,20 +613,9 @@ const WeakChartInspectorPage = (): JSX.Element => {
                                     )
                                   }}
                                   class="relative flex items-center gap-2"
-                                >
-                                  <Checkbox.Input
-                                    id={`agg-difficulty-${diff}`}
-                                    style={{ left: '0', top: '0' }}
-                                  />
-                                  <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
-                                    <Checkbox.Indicator>
-                                      <Check class="h-4 w-4" />
-                                    </Checkbox.Indicator>
-                                  </Checkbox.Control>
-                                  <Checkbox.Label class="leading-5" for={`agg-difficulty-${diff}`}>
-                                    {diff}
-                                  </Checkbox.Label>
-                                </Checkbox>
+                                  labelClass="leading-5"
+                                  label={diff}
+                                />
                               )}
                             </For>
                           </div>

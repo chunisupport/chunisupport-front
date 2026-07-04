@@ -1,11 +1,10 @@
-import { Checkbox } from '@kobalte/core/checkbox'
 import { NumberField } from '@kobalte/core/number-field'
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
-import { Check } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { For, Show } from 'solid-js'
 import { FormSelect } from '../../../../../components/common/AppSelect'
+import { CheckboxField } from '../../../../../components/common/CheckboxField'
 
 interface GoalFilterCheckboxProps {
   label: string
@@ -68,9 +67,6 @@ interface GoalTargetModeRadioGroupProps<TValue extends string> {
   /** 選択肢カード内へ追加表示する入力欄などの内容。 */
   renderOptionContent?: (option: GoalSelectOption<TValue>) => JSX.Element
 }
-
-export const GOAL_FILTER_CHECKBOX_CONTROL_CLASS =
-  'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
 
 /**
  * 入力系コントロールのフォーカス表示を要素内側に収める共通スタイル。
@@ -178,20 +174,13 @@ export const GoalSelectField = <TValue extends string>(props: GoalSelectFieldPro
  * @returns Kobalte Checkbox を使ったチェックボックス要素。
  */
 export const GoalFilterCheckbox: Component<GoalFilterCheckboxProps> = (props) => (
-  <Checkbox
+  <CheckboxField
     class="relative flex items-center gap-2 text-sm text-text-muted data-disabled:cursor-not-allowed data-disabled:opacity-45"
     checked={props.checked}
     disabled={props.disabled}
     onChange={props.onChange}
-  >
-    <Checkbox.Input style={{ left: '0', top: '0' }} />
-    <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
-      <Checkbox.Indicator>
-        <Check class="h-4 w-4" />
-      </Checkbox.Indicator>
-    </Checkbox.Control>
-    <Checkbox.Label>{props.label}</Checkbox.Label>
-  </Checkbox>
+    label={props.label}
+  />
 )
 
 /**

@@ -1,9 +1,8 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
-import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
-import { Check, Dices, RotateCcw, SlidersHorizontal } from 'lucide-solid'
+import { Dices, RotateCcw, SlidersHorizontal } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import {
   createEffect,
@@ -21,6 +20,7 @@ import { fetchMe, fetchUserRating } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { FormSelect } from '../../components/common/AppSelect'
+import { CheckboxField } from '../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import MultiSelectDropdown from '../../components/common/MultiSelectDropdown'
 import { TextRangeInput } from '../../components/common/RangeInput'
@@ -332,7 +332,7 @@ const RandomSongWeightField: Component<RandomSongWeightFieldProps> = (props) => 
  * ランダム選曲ツールで使うチェックボックスを表示する。
  *
  * @param props - チェック状態、ラベル、変更ハンドラ。
- * @returns Kobalte Checkbox の JSX 要素。
+ * @returns 共通 CheckboxField の JSX 要素。
  */
 const RandomSongCheckbox: Component<{
   id: string
@@ -341,22 +341,17 @@ const RandomSongCheckbox: Component<{
   disabled?: boolean
   onChange: (checked: boolean) => void
 }> = (props) => (
-  <Checkbox
+  <CheckboxField
+    id={props.id}
     class="relative grid min-h-5 grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 text-sm text-text data-disabled:cursor-not-allowed data-disabled:opacity-60"
     checked={props.checked}
     disabled={props.disabled}
     onChange={props.onChange}
-  >
-    <Checkbox.Input id={props.id} style={{ left: '0', top: '0' }} />
-    <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-surface text-success data-checked:border-success">
-      <Checkbox.Indicator>
-        <Check size={14} aria-hidden="true" />
-      </Checkbox.Indicator>
-    </Checkbox.Control>
-    <Checkbox.Label class="min-w-0 leading-5" for={props.id}>
-      {props.label}
-    </Checkbox.Label>
-  </Checkbox>
+    controlVariant="success"
+    indicatorClass="h-3.5 w-3.5"
+    labelClass="min-w-0 leading-5"
+    label={props.label}
+  />
 )
 
 /**

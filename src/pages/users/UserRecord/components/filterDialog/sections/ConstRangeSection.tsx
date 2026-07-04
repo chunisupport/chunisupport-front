@@ -1,6 +1,5 @@
-import { Checkbox } from '@kobalte/core/checkbox'
-import { Check } from 'lucide-solid'
 import type { Component } from 'solid-js'
+import { CheckboxField } from '../../../../../../components/common/CheckboxField'
 import {
   RANGE_END_LABEL_SUFFIX,
   RANGE_START_LABEL_SUFFIX,
@@ -109,21 +108,13 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
       />
     )}
     <div class="mt-2">
-      <Checkbox
+      <CheckboxField
+        id="filter-const-mode"
         checked={props.constFilterMode === 'number'}
         onChange={(checked) => props.onConstFilterModeChange(checked ? 'number' : 'level')}
         class="flex items-center gap-2"
-      >
-        <Checkbox.Input id="filter-const-mode" />
-        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
-          <Checkbox.Indicator>
-            <Check class="h-4 w-4" />
-          </Checkbox.Indicator>
-        </Checkbox.Control>
-        <Checkbox.Label class="leading-5" for="filter-const-mode">
-          譜面定数で指定
-        </Checkbox.Label>
-      </Checkbox>
+        label="譜面定数で指定"
+      />
     </div>
   </div>
 )

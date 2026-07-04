@@ -1,7 +1,6 @@
 import { Button } from '@kobalte/core/button'
-import { Checkbox } from '@kobalte/core/checkbox'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, Plus, Search } from 'lucide-solid'
+import { Plus, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Index, Show } from 'solid-js'
 import {
@@ -20,6 +19,7 @@ import {
 import { Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { FormSelect } from '../../components/common/AppSelect'
+import { CheckboxField } from '../../components/common/CheckboxField'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type {
   CreateSongRequestDTO,
@@ -296,8 +296,6 @@ const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
 }
 
 const managementInputClass = 'w-full rounded border border-border-strong px-3 py-2'
-const checkboxControlClass =
-  'flex h-5 w-5 items-center justify-center rounded border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse data-disabled:opacity-50'
 /** 通常楽曲の新曲判定を編集するチェックボックスの表示名。 */
 const newSongFlagLabel = '新曲フラグ'
 
@@ -354,26 +352,20 @@ const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
  * 楽曲管理画面で利用する Kobalte Checkbox ベースのチェック欄を描画します。
  *
  * @param props 選択状態、無効状態、表示ラベル、アクセシブル名、変更ハンドラを含むプロパティ
- * @returns Kobalte Checkbox を利用したチェック欄
+ * @returns 共通 CheckboxField を利用したチェック欄
  */
 const ManagementCheckbox: Component<ManagementCheckboxProps> = (props) => (
-  <Checkbox
+  <CheckboxField
     checked={props.checked}
     disabled={props.disabled}
     onChange={props.onChange}
-    aria-label={props.label ? undefined : props.ariaLabel}
+    ariaLabel={props.ariaLabel}
     class={props.class ?? 'relative inline-flex items-center gap-2'}
-  >
-    <Checkbox.Input style={{ left: '0', top: '0' }} />
-    <Checkbox.Control class={checkboxControlClass}>
-      <Checkbox.Indicator>
-        <Check size={14} />
-      </Checkbox.Indicator>
-    </Checkbox.Control>
-    <Show when={props.label}>
-      {(label) => <Checkbox.Label class="text-sm text-text">{label()}</Checkbox.Label>}
-    </Show>
-  </Checkbox>
+    controlClass="rounded data-disabled:opacity-50"
+    indicatorClass="h-3.5 w-3.5"
+    labelClass="text-sm text-text"
+    label={props.label}
+  />
 )
 
 const toSongDraft = (
