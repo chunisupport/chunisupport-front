@@ -78,6 +78,7 @@
 
 ### CheckboxField の文字サイズ
 - チェックボックスは原則として共通コンポーネント `src/components/common/CheckboxField.tsx` を利用し、`textVariant` は基本的に既定値の `normal` を使ってください。
+- 難易度選択は MultiSelect ではなく、原則として `CheckboxField` を縦に並べる UI を優先してください。特に `BASIC`〜`ULTIMA` や `OP対象` のように排他制御・disabled制御が絡む選択では、Kobalte Select ベースの MultiSelect を避けてください。
 - レコードのフィルター画面と苦手譜面インスペクターのグラフ設定ウィンドウでは、画面内のチェックボックスを `textVariant="large"` で統一してください。
 - 今後、難易度やハードランプなど、選択肢そのものをチェックボックスで選ぶ UI を追加する場合は、`textVariant="large"` に統一してください。
 - **最重要**: 1画面内で `normal` と `large` を混在させないでください。画面単位で文字サイズを揃えてください。
