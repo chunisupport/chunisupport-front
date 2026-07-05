@@ -1,7 +1,8 @@
 import { Button } from '@kobalte/core/button'
 import { TextField } from '@kobalte/core/text-field'
-import { ArrowUpDown, Columns3, Funnel, Search } from 'lucide-solid'
+import { ArrowUpDown, Columns3, Funnel, Search, Star } from 'lucide-solid'
 import type { Component } from 'solid-js'
+import { Show } from 'solid-js'
 
 type FilterButtonTone = 'default' | 'active' | 'difficulty-only'
 
@@ -11,10 +12,12 @@ type FilterToolbarProps = {
   onOpenFilter: () => void
   onOpenSortSettings: () => void
   onOpenColumnSettings: () => void
+  onOpenFavoriteSongs?: () => void
   titleActive?: boolean
   filterActive?: boolean
   filterButtonTone?: FilterButtonTone
   filterButtonDisabled?: boolean
+  favoriteSongsDisabled?: boolean
 }
 
 /**
@@ -124,6 +127,20 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
       >
         <Columns3 size={24} />
       </Button>
+      <Show when={props.onOpenFavoriteSongs}>
+        {(onOpenFavoriteSongs) => (
+          <Button
+            class="ml-2 flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded border border-border-strong text-text-muted transition-colors hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:text-disabled-text disabled:hover:bg-transparent"
+            onClick={onOpenFavoriteSongs()}
+            type="button"
+            aria-label="お気に入り楽曲設定"
+            title="お気に入り楽曲設定"
+            disabled={props.favoriteSongsDisabled}
+          >
+            <Star size={24} aria-hidden="true" />
+          </Button>
+        )}
+      </Show>
     </div>
   )
 }

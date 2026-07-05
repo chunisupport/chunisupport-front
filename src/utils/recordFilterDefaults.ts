@@ -1,20 +1,21 @@
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart'
-import type { MasterDataDTO, MasterItemDTO, VersionSummaryDTO } from '../../../../types/api'
-import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { getShortVersionName } from '../../../../utils/versionConverter'
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../constants/chart'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
-} from '../../constants/recordFilterOptions'
-import type { FilterState } from '../types/types'
+} from '../constants/recordFilterOptions'
+import type { MasterDataDTO, MasterItemDTO, VersionSummaryDTO } from '../types/api'
+import type { FilterState } from '../types/recordFilter'
+import { sortMasterItemsBySortOrder } from './masterData'
+import { MAX_SCORE } from './scoreRank'
+import { getShortVersionName } from './versionConverter'
 
 /** フィルターのデフォルト値 */
 export const DEFAULT_FILTER: FilterState = {
   title: '',
   difficulties: ['MASTER', 'ULTIMA'],
   currentOpTargetOnly: false,
+  favoriteSongsOnly: false,
   genres: [],
   versions: [],
   const: {
@@ -41,7 +42,13 @@ export const DEFAULT_FILTER: FilterState = {
   excludeNoPlay: false,
 }
 
-/** マスタデータに依存するデフォルト値 */
+/**
+ * マスタデータに依存するフィルター初期値を作成する。
+ *
+ * @param masterData - ジャンルなどのマスタデータ。
+ * @param versions - バージョン一覧。
+ * @returns マスタデータから作成したジャンルとバージョンの初期値。
+ */
 export const getMasterDataDefaults = (
   masterData?: MasterDataDTO,
   versions?: VersionSummaryDTO[]
@@ -50,7 +57,13 @@ export const getMasterDataDefaults = (
   versions: versions?.map((version) => getShortVersionName(version.name)) ?? [],
 })
 
-/** フィルターのデフォルト値を取得する */
+/**
+ * レコードフィルターのデフォルト状態を作成する。
+ *
+ * @param masterData - ジャンルなどのマスタデータ。
+ * @param versions - バージョン一覧。
+ * @returns 配列と範囲条件を複製したレコードフィルターの初期状態。
+ */
 export const buildDefaultFilter = (
   masterData?: MasterDataDTO,
   versions?: VersionSummaryDTO[]
@@ -80,6 +93,7 @@ export const normalizeFilterState = (filter: Partial<FilterState>): FilterState 
   justiceCount: filter.justiceCount ?? { ...DEFAULT_FILTER.justiceCount },
   overPower: filter.overPower ?? { ...DEFAULT_FILTER.overPower },
   currentOpTargetOnly: filter.currentOpTargetOnly ?? DEFAULT_FILTER.currentOpTargetOnly,
+  favoriteSongsOnly: filter.favoriteSongsOnly ?? DEFAULT_FILTER.favoriteSongsOnly,
   combo_lamp: filter.combo_lamp ?? [...RECORD_COMBO_LAMP_OPTIONS],
   chain_lamp: filter.chain_lamp ?? [...RECORD_CHAIN_LAMP_OPTIONS],
   hard_lamp: filter.hard_lamp ?? [...RECORD_HARD_LAMP_OPTIONS],

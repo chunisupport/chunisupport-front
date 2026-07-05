@@ -1,10 +1,9 @@
-import { Button } from '@kobalte/core/button'
 import { A } from '@solidjs/router'
 import type { JSX } from 'solid-js'
-
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
 import { getScoreRank } from '../../../utils/scoreRank'
-import { LampPlaceholderBadge, renderSortIndicator } from './RecordTableUiParts'
+import { SortableHeaderButton, type SortDirection } from '../SortableTableHeader'
+import { LampPlaceholderBadge } from './RecordBadges'
 import {
   getComboLampBadgeClass,
   HARD_LAMP_BADGE_BACKGROUND_CLASS,
@@ -12,7 +11,6 @@ import {
   SCORE_RANK_TEXT_CLASS,
 } from './recordStyleClasses'
 
-type SharedSortDirection = 'asc' | 'desc' | null
 type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
 type ComboLamp = SharedRecordSource['combo_lamp']
 type ClearLamp = SharedRecordSource['clear_lamp']
@@ -32,7 +30,7 @@ export type ColumnRenderer<TRecord> = (record: TRecord) => JSX.Element
 type RecordHeaderButtonProps = {
   label: string
   active: boolean
-  direction: SharedSortDirection
+  direction: SortDirection
   align?: 'start' | 'center'
   class?: string
   onClick: () => void
@@ -51,12 +49,22 @@ export const RECORD_ROW_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} hover:bg
 export const RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS = `${RECORD_ROW_HOVER_CLASS} hover:shadow-[inset_0_1px_0_var(--color-border)]`
 /** レコードカードのホバー背景色クラス。 */
 export const RECORD_CARD_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} group-hover:bg-interactive-row-hover`
+/** 仮想スクロールで使うレコード1行の高さ。 */
 export const RECORD_ROW_HEIGHT = 34
-export const RECORD_ROW_MIN_HEIGHT_CLASS = 'min-h-[34px]'
-export const RECORD_HEADER_BUTTON_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} w-full items-center text-center whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset`
+const RECORD_ROW_MIN_HEIGHT_CLASS_BY_HEIGHT = {
+  [RECORD_ROW_HEIGHT]: 'min-h-[34px]',
+} as const satisfies Record<typeof RECORD_ROW_HEIGHT, `min-h-[${typeof RECORD_ROW_HEIGHT}px]`>
+/** レコード1行分の最小高さを揃えるクラス。 */
+export const RECORD_ROW_MIN_HEIGHT_CLASS = RECORD_ROW_MIN_HEIGHT_CLASS_BY_HEIGHT[RECORD_ROW_HEIGHT]
+/** レコード表ヘッダーボタンの共通レイアウトクラス。 */
+export const RECORD_HEADER_BUTTON_CLASS = RECORD_ROW_MIN_HEIGHT_CLASS
+/** 数値や英数字中心のレコード列に使う文字サイズクラス。 */
 export const RECORD_ALPHANUMERIC_COLUMN_CLASS = 'text-sm'
+/** レコード表セルの中央寄せレイアウトに使う基礎クラス。 */
 export const RECORD_CELL_BASE_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap`
+/** レコード表セルの中央寄せテキストに使う共通クラス。 */
 export const RECORD_CELL_CENTER_TEXT_CLASS = `${RECORD_CELL_BASE_CLASS} text-center ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`
+/** レコードのランプ列に使うフォントと文字サイズの共通クラス。 */
 export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
 const HARD_LAMP_BADGE_CLASS =
   'inline-flex w-[40px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
@@ -76,7 +84,13 @@ const FULL_CHAIN_BADGE_VARIANT: Partial<
   'FULL CHAIN PLATINUM': 'ALL JUSTICE',
 }
 
-/** レコードのコンボランプ値から表示用バッジを生成する。 */
+/**
+ * レコードのコンボランプ値から表示用バッジを生成する。
+ *
+ * @param lamp - コンボランプ値。
+ * @param _record - スコア参照が必要なレコード。
+ * @returns コンボランプバッジまたはプレースホルダー。
+ */
 export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, _record) => {
   if (lamp === 'FULL COMBO')
     return (
@@ -98,7 +112,12 @@ export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, _record) =
   return <LampPlaceholderBadge />
 }
 
-/** レコードのハードランプバッジに共通する色とラベルを組み立てる。 */
+/**
+ * レコードのハードランプバッジに共通する色とラベルを組み立てる。
+ *
+ * @param lamp - FAILED以外のハードランプ値。
+ * @returns ハードランプのテキストバッジ。
+ */
 const renderHardLampTextBadge = (lamp: keyof typeof HARD_LAMP_LABEL): JSX.Element => (
   <span
     class={`${HARD_LAMP_BADGE_CLASS} ${HARD_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${HARD_LAMP_BADGE_TEXT_CLASS[lamp]}`}
@@ -107,10 +126,15 @@ const renderHardLampTextBadge = (lamp: keyof typeof HARD_LAMP_LABEL): JSX.Elemen
   </span>
 )
 
-/** レコードのハードランプ値から表示用バッジを生成する。 */
+/**
+ * レコードのハードランプ値から表示用バッジを生成する。
+ *
+ * @param lamp - ハードランプ値。
+ * @returns ハードランプバッジまたはプレースホルダー。
+ */
 export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element => {
   if (lamp && lamp !== 'FAILED') return renderHardLampTextBadge(lamp)
-  return <LampPlaceholderBadge class="w-[40px]" />
+  return <LampPlaceholderBadge class="w-10" />
 }
 
 /**
@@ -123,7 +147,7 @@ export const renderDefaultRecordFullChainBadge = (
 ): JSX.Element => {
   const lampType = fullChain ? FULL_CHAIN_BADGE_VARIANT[fullChain] : undefined
 
-  if (!lampType) return <LampPlaceholderBadge class="w-[40px]" />
+  if (!lampType) return <LampPlaceholderBadge class="w-10" />
 
   return (
     <span class={`${FULL_CHAIN_BADGE_CLASS} ${getComboLampBadgeClass(lampType, undefined)}`}>
@@ -132,31 +156,45 @@ export const renderDefaultRecordFullChainBadge = (
   )
 }
 
+/**
+ * レコード表向けの余白と高さを適用したソート可能ヘッダーボタンを表示する。
+ *
+ * @param props - ラベル、ソート状態、配置、クリック時の処理。
+ * @returns レコード表向けのヘッダーボタン。
+ */
 export const RecordHeaderButton = (props: RecordHeaderButtonProps) => (
-  <Button
-    type="button"
+  <SortableHeaderButton
+    label={props.label}
+    active={props.active}
+    direction={props.direction}
+    align={props.align}
     class={`${RECORD_HEADER_BUTTON_CLASS} ${props.active && props.direction ? 'py-1' : ''} ${props.class ?? ''}`}
     onClick={props.onClick}
-  >
-    <span
-      class={`flex flex-col ${props.align === 'start' ? 'items-start' : 'items-center'} justify-center gap-0.5 leading-none`}
-    >
-      <span>{props.label}</span>
-      {renderSortIndicator(props.active, props.direction)}
-    </span>
-  </Button>
+  />
 )
 
+/**
+ * 曲名をリンク付きのレコード表セルとして表示する。
+ *
+ * @param props - 遷移先URLと曲名。
+ * @returns 曲名リンクセル。
+ */
 export const RecordTitleCell = (props: RecordTitleCellProps) => (
   <A
     href={props.href}
     class={`font-sans flex ${RECORD_ROW_MIN_HEIGHT_CLASS} min-w-0 w-full items-center text-sm text-inherit hover:underline`}
     title={props.title}
   >
-    <span class="block w-full truncate pt-0.25">{props.title}</span>
+    <span class="block w-full truncate pt-px">{props.title}</span>
   </A>
 )
 
+/**
+ * レコードのスコアとランクを表示する。
+ *
+ * @param props - プレイ状態とスコアを含むレコード。
+ * @returns スコアセル。未プレイ時は空セル。
+ */
 export const RecordScoreCell = (props: { record: ScoreRecord }): JSX.Element => {
   if (!props.record.is_played) {
     return (
@@ -184,6 +222,12 @@ export const RecordScoreCell = (props: { record: ScoreRecord }): JSX.Element => 
   )
 }
 
+/**
+ * レコードのコンボランプバッジを表示する。
+ *
+ * @param props - プレイ状態、ランプ、任意のランプ描画関数を含む設定。
+ * @returns コンボランプセル。
+ */
 export const RecordLampCell = (props: {
   record: LampRecord
   renderLampBadge?: LampBadgeRenderer
@@ -200,6 +244,12 @@ export const RecordLampCell = (props: {
   </div>
 )
 
+/**
+ * レコードのハードランプバッジを表示する。
+ *
+ * @param props - プレイ状態とハードランプを含むレコード。
+ * @returns ハードランプセル。
+ */
 export const RecordHardLampCell = (props: { record: HardLampRecord }) => (
   <div
     class={`flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap ${RECORD_LAMP_COLUMN_CLASS}`}
@@ -222,6 +272,12 @@ export const RecordFullChainCell = (props: { record: FullChainRecord }) => (
   </div>
 )
 
+/**
+ * レコードのJUSTICE数を表示する。
+ *
+ * @param props - JUSTICE数計算対象のレコードと計算関数。
+ * @returns JUSTICE数セル。
+ */
 export const RecordJusticeCountCell = (props: {
   record: JusticeCountRecord
   calcJusticeCount: (record: JusticeCountRecord) => number | '' | '-'
@@ -237,6 +293,12 @@ export const RecordJusticeCountCell = (props: {
   )
 }
 
+/**
+ * レコード更新日を表示する。
+ *
+ * @param props - プレイ状態、更新日時、表示整形関数。
+ * @returns 更新日セル。未プレイ時は空セル。
+ */
 export const RecordUpdatedAtCell = (props: {
   record: UpdatedAtRecord
   formatUpdatedAt: (updatedAt: string | null) => string

@@ -4,7 +4,7 @@ import { compareSongsByReading } from '../../../../utils/songTitleSorting'
 import {
   nextSortState as nextSharedSortState,
   type SortDirection,
-} from '../../../users/recordTable/sortingQuery'
+} from '../../../../utils/sortingQuery'
 
 export type WorldsendSongSortKey =
   | 'title'

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { DEFAULT_FILTER } from '../UserRecord/types/filterDefaults'
+import { DEFAULT_FILTER } from '../../../utils/recordFilterDefaults'
 import { DEFAULT_WORLDSEND_FILTER } from '../WorldsendRecord/types/filterDefaults'
 import {
   buildUniqueRecordFilterName,
@@ -70,6 +70,15 @@ test('isValidSavedStandardFilter はOP対象条件の省略を旧保存値とし
     isValidSavedStandardFilter({ ...DEFAULT_FILTER, currentOpTargetOnly: 'true' }),
     false
   )
+})
+
+test('isValidSavedStandardFilter はお気に入り条件の省略を旧保存値として許可すること', () => {
+  // Given
+  const { favoriteSongsOnly: _favoriteSongsOnly, ...legacyFilter } = DEFAULT_FILTER
+
+  // When & Then
+  assert.equal(isValidSavedStandardFilter(legacyFilter), true)
+  assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, favoriteSongsOnly: 'true' }), false)
 })
 
 test('isValidSavedWorldsendFilter は型が違う保存値を壊れたフィルターとして拒否すること', () => {

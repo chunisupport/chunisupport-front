@@ -1,8 +1,8 @@
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../constants/chart'
 import type { NumericRangeFilter } from '../../../../types/record'
+import type { FilterState } from '../../../../types/recordFilter'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../../constants/rangeFilters'
-import type { FilterState } from '../types/types'
 
 export type FilterRangeQuery = {
   constMin?: string

@@ -2,7 +2,13 @@ import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart'
+import {
+  RECORD_CHAIN_LAMP_OPTIONS,
+  RECORD_COMBO_LAMP_OPTIONS,
+  RECORD_HARD_LAMP_OPTIONS,
+} from '../../../../../constants/recordFilterOptions'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
+import type { Difficulty, FilterState } from '../../../../../types/recordFilter'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import { truncateDecimal } from '../../../../../utils/numberFormat'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
@@ -17,11 +23,6 @@ import {
   OVER_POWER_RANGE_FILTER,
 } from '../../../constants/rangeFilters'
 import {
-  RECORD_CHAIN_LAMP_OPTIONS,
-  RECORD_COMBO_LAMP_OPTIONS,
-  RECORD_HARD_LAMP_OPTIONS,
-} from '../../../constants/recordFilterOptions'
-import {
   parseNumberInput,
   toggleArray,
   toInputValue,
@@ -29,7 +30,6 @@ import {
 } from '../../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../../utils/scoreRank'
-import type { Difficulty, FilterState } from '../../types/types'
 import ConstRangeSection from './sections/ConstRangeSection'
 import DifficultySection from './sections/DifficultySection'
 
@@ -351,6 +351,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         difficulties={difficulties()}
         selected={props.filters.difficulties}
         currentOpTargetOnly={props.filters.currentOpTargetOnly}
+        favoriteSongsOnly={props.filters.favoriteSongsOnly}
         onToggle={(diff) =>
           props.setFilters((prev) => ({
             ...prev,
@@ -361,6 +362,12 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           props.setFilters((prev) => ({
             ...prev,
             currentOpTargetOnly: checked,
+          }))
+        }
+        onFavoriteSongsOnlyChange={(checked) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            favoriteSongsOnly: checked,
           }))
         }
       />

@@ -27,6 +27,10 @@ import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
 } from '../../../../utils/versionConverter'
+import {
+  buildDefaultSongSelectionFilter,
+  sortSongSelectionCandidates,
+} from '../../components/songSelectionDialog'
 import { hasSameFilterValues, toggleArray } from '../../utils/filterValue'
 
 type Props = {
@@ -53,16 +57,6 @@ type LockedSongsFilter = {
 
 const hasUltimaChart = (song: SongDTO): boolean => Boolean(song.charts.ULTIMA)
 
-const parseOfficialIdx = (officialIdx: string | undefined): number => {
-  const parsed = Number(officialIdx)
-  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY
-}
-
-const releaseTimestamp = (release: string | null): number => {
-  const parsed = Date.parse(release ?? '')
-  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY
-}
-
 /**
  * 未解禁楽曲フィルターの初期値を選択肢の全選択状態から生成する。
  *
@@ -74,8 +68,7 @@ const buildDefaultLockedSongsFilter = (
   genres: string[],
   versions: string[]
 ): LockedSongsFilter => ({
-  genres,
-  versions,
+  ...buildDefaultSongSelectionFilter(genres, versions),
   unplayedOnly: false,
 })
 
@@ -210,21 +203,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
     return songRecords.length === 0 || songRecords.every((record) => !record.is_played)
   }
   const songListItems = createMemo<LockedSongListItem[]>(() =>
-    props.songs
-      .map((song, index) => ({ song, index }))
-      .sort((left, right) => {
-        const releaseComparison =
-          releaseTimestamp(right.song.release) - releaseTimestamp(left.song.release)
-        if (releaseComparison !== 0) return releaseComparison
-
-        const idxComparison =
-          parseOfficialIdx(right.song.official_idx) - parseOfficialIdx(left.song.official_idx)
-        return idxComparison || left.index - right.index
-      })
-      .flatMap(({ song }) => [
-        { song, isUltima: false },
-        ...(hasUltimaChart(song) ? [{ song, isUltima: true }] : []),
-      ])
+    sortSongSelectionCandidates(props.songs).flatMap((song) => [
+      { song, isUltima: false },
+      ...(hasUltimaChart(song) ? [{ song, isUltima: true }] : []),
+    ])
   )
   const searchableSongListItems = createMemo(() =>
     songListItems().map((item) => {
@@ -387,15 +369,15 @@ const LockedSongsDialog: Component<Props> = (props) => {
     <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
-          <div class="mb-4">
+        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+          <div class="mb-4 shrink-0">
             <Dialog.Title class="text-lg font-bold">未解禁楽曲設定</Dialog.Title>
             <Dialog.Description class="mt-1 text-sm text-text-muted">
               チェックした曲・譜面はOVER POWER計算対象から除外されます。
             </Dialog.Description>
           </div>
 
-          <div class="mb-3 flex min-w-0 items-center">
+          <div class="mb-3 flex min-w-0 shrink-0 items-center">
             <TextField class="min-w-0 flex-1">
               <div
                 class={`flex min-w-0 items-center gap-2 rounded-l border px-2 transition-colors ${getLockedSongsSearchFrameClass(
@@ -446,11 +428,11 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </Button>
           </div>
 
-          <div class="mb-2 text-xs text-text-subtle">
+          <div class="mb-2 shrink-0 text-xs text-text-subtle">
             {props.lockedSongs.length}件設定中 / {filteredSongListItems().length}件表示
           </div>
 
-          <div class="min-h-0 flex-1 overflow-y-auto rounded border border-border">
+          <div class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border">
             <Show
               when={isListReady()}
               fallback={

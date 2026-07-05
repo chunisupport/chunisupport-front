@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-
+import type { FilterState } from '../../../../types/recordFilter'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
-import type { FilterState } from '../types/types'
 import {
   createRecordTitleMatcher,
   getDefaultFilter,
@@ -100,6 +99,32 @@ test('isRecordMatched は現在のOP対象譜面だけに絞り込める', () =>
   // When & Then
   assert.equal(isRecordMatched(createRecord({ is_op_target: true }), matchedFilters), true)
   assert.equal(isRecordMatched(createRecord({ is_op_target: false }), matchedFilters), false)
+})
+
+test('isRecordMatchedWithTitleMatcher はお気に入り楽曲だけに絞り込める', () => {
+  // Given
+  const filters: FilterState = { ...getDefaultFilter(), favoriteSongsOnly: true }
+  const matcher = createRecordTitleMatcher(filters.title)
+
+  // When & Then
+  assert.equal(
+    isRecordMatchedWithTitleMatcher(
+      createRecord({ id: 'favorite' }),
+      filters,
+      matcher,
+      new Set(['favorite'])
+    ),
+    true
+  )
+  assert.equal(
+    isRecordMatchedWithTitleMatcher(
+      createRecord({ id: 'other' }),
+      filters,
+      matcher,
+      new Set(['favorite'])
+    ),
+    false
+  )
 })
 
 test('isRecordMatched は譜面定数とスコアの範囲を判定できる', () => {

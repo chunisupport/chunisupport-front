@@ -1,12 +1,16 @@
 import type { Accessor, Setter } from 'solid-js'
 import { createMemo } from 'solid-js'
 import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../../../../types/api'
+import type {
+  FilterState,
+  RecordSortCondition,
+  RecordSortKey,
+} from '../../../../types/recordFilter'
 import {
   attachSongMetaToRecords,
   type PlayerRecordWithSongMeta,
 } from '../../../../utils/recordMerger'
 import { getRecordStats, type RecordStats } from '../../utils/recordStats'
-import type { FilterState, RecordSortCondition, RecordSortKey } from '../types/types'
 import { createRecordTitleMatcher, isRecordMatchedWithTitleMatcher } from './filtering'
 import {
   nextPrimaryRecordSortCondition,
@@ -20,6 +24,7 @@ type UserRecordPageModelParams = {
   versions: Accessor<{ versions: VersionDTO[] } | undefined>
   sourceRecords: Accessor<PlayerRecordDTO[]>
   filters: Accessor<FilterState>
+  favoriteSongIds: Accessor<ReadonlySet<string>>
   sortConditions: Accessor<RecordSortCondition[]>
   setSortConditions: Setter<RecordSortCondition[]>
 }
@@ -54,8 +59,9 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
     const records = recordsWithSongMeta()
     const currentFilters = params.filters()
     const matchTitle = createRecordTitleMatcher(currentFilters.title)
+    const favoriteSongIds = params.favoriteSongIds()
     return records.filter((record) =>
-      isRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle)
+      isRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle, favoriteSongIds)
     )
   })
 

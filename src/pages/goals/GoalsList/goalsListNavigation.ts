@@ -1,6 +1,6 @@
 import { saveStandardRecordFilterSetting } from '../../../repositories/viewSettingsRepository'
 import type { GoalDTO } from '../../../types/api'
-import { buildUserProfilePagePath } from '../../users/UserPage/profilePageQuery'
+import { buildUserProfilePagePath } from '../../../utils/userProfileRoute'
 import { buildGoalRecordFilter } from '../utils/goalRecordFilter'
 import type { GoalsListData } from './goalsListResource'
 

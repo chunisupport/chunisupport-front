@@ -1,7 +1,10 @@
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
+import {
+  COMBO_LAMP_BAR_CLASS,
+  SCORE_RANK_BAR_CLASS,
+} from '../../../../components/common/record/recordStyleClasses'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
-import { COMBO_LAMP_BAR_CLASS, SCORE_RANK_BAR_CLASS } from '../../components/recordStyleClasses'
 import { OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES } from '../constants'
 import type {
   OverPowerBandCount,
@@ -67,7 +70,7 @@ const DistributionBar: Component<{
       <div class={labelListClass()}>
         <For each={props.bands}>
           {(band) => (
-            <p class="flex min-w-[80px] items-baseline gap-1.5 whitespace-nowrap text-text">
+            <p class="flex min-w-20 items-baseline gap-1.5 whitespace-nowrap text-text">
               <span class="shrink-0 text-xs">{band.label}:</span>
               <span class="shrink-0 text-base font-bold tabular-nums text-text sm:text-lg">
                 {band.count}
