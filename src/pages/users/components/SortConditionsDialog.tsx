@@ -208,7 +208,6 @@ export function SortConditionsDialog<TSortKey extends string>(
             label={`第${rowIndex + 1}ソート 列`}
             labelVariant="srOnly"
             formatLabel={(option) => option.label}
-            listboxClass="p-2"
           />
         </div>
         <div class="w-24 shrink-0">
@@ -223,7 +222,6 @@ export function SortConditionsDialog<TSortKey extends string>(
             label={`第${rowIndex + 1}ソート ${getSortDirectionLabel(selectedDirection())}`}
             labelVariant="srOnly"
             formatLabel={(option) => option.label}
-            listboxClass="p-2"
           />
         </div>
       </div>
