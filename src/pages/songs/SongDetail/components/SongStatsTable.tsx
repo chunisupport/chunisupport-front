@@ -16,10 +16,7 @@ import {
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
-import {
-  calculateOwnScoreDifference,
-  completeSongStatsRatingBands,
-} from '../../../../utils/songStats'
+import { completeSongStatsRatingBands } from '../../../../utils/songStats'
 import { isOwnBestAverageRatingBand } from './songStatsHighlight'
 
 Chart.register(
@@ -174,12 +171,25 @@ const formatAverageScore = (score: number): string => Math.trunc(score).toLocale
  * 平均スコアとの差分を符号付きの整数表示へ変換する。
  *
  * @param difference - 自分のスコアから平均スコアを引いた差分。
- * @returns 小数点以下を除いた差分文字列。
+ * @returns 符号付きの差分文字列。
  */
 const formatScoreDifference = (difference: number): string =>
-  Math.trunc(difference).toLocaleString(undefined, {
+  difference.toLocaleString(undefined, {
     signDisplay: 'always',
   })
+
+/**
+ * 表示上の平均スコアとの差分を算出する。
+ *
+ * @param ownScore 自分の譜面スコア。未プレイの場合は未定義。
+ * @param averageScore 集計された平均スコア。集計対象がない場合はnull。
+ * @returns 表示用に切り捨てた平均スコアとの差分。表示できない場合は未定義。
+ */
+const calculateDisplayedAverageScoreDifference = (
+  ownScore: number | undefined,
+  averageScore: number | null
+): number | undefined =>
+  ownScore === undefined || averageScore === null ? undefined : ownScore - Math.trunc(averageScore)
 
 /**
  * 平均スコアとの差分に応じた文字色クラスを返す。
@@ -219,11 +229,17 @@ const getTableColumnDefinitions = (
         {
           label: '自分との差',
           getValue: (band) => {
-            const difference = calculateOwnScoreDifference(ownScore, band.average_score)
+            const difference = calculateDisplayedAverageScoreDifference(
+              ownScore,
+              band.average_score
+            )
             return difference === undefined ? '-' : formatScoreDifference(difference)
           },
           getClass: (band) => {
-            const difference = calculateOwnScoreDifference(ownScore, band.average_score)
+            const difference = calculateDisplayedAverageScoreDifference(
+              ownScore,
+              band.average_score
+            )
             return difference === undefined ? undefined : getScoreDifferenceClass(difference)
           },
         },
