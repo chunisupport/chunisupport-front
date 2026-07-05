@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { SortCondition } from '../../../utils/sortConditions.ts'
-import { compareUnplayedRecords } from './sortComparators.ts'
+import { compareNumberWithUnplayedBelowZero } from './sortComparators.ts'
 import { sortRecordsWithConditions } from './sortRecords.ts'
 
 type TestSortKey = 'score' | 'level' | 'title'
@@ -40,14 +40,34 @@ test('sortRecordsWithConditions は複数条件で安定ソートする', () => 
   assert.deepEqual(result, ['a', 'b', 'c'])
 })
 
-test('compareUnplayedRecords は未プレイを常に末尾へ寄せる', () => {
+test('compareNumberWithUnplayedBelowZero は未プレイをプレイ済み0より低い側として比較する', () => {
   // Given
-  const played = true
-  const unplayed = false
+  const playedZero = { isPlayed: true, value: 0 }
+  const unplayed = { isPlayed: false, value: 0 }
 
   // When & Then
-  assert.equal(compareUnplayedRecords(played, unplayed), -1)
-  assert.equal(compareUnplayedRecords(unplayed, played), 1)
-  assert.equal(compareUnplayedRecords(unplayed, unplayed), 0)
-  assert.equal(compareUnplayedRecords(played, played), null)
+  assert.equal(compareNumberWithUnplayedBelowZero(unplayed, playedZero), -1)
+  assert.equal(compareNumberWithUnplayedBelowZero(playedZero, unplayed), 1)
+  assert.equal(compareNumberWithUnplayedBelowZero(unplayed, unplayed), 0)
+})
+
+test('compareNumberWithUnplayedBelowZero はプレイ済みの負数より未プレイを低い側として比較する', () => {
+  // Given
+  const playedNegative = { isPlayed: true, value: -100 }
+  const unplayed = { isPlayed: false, value: 0 }
+
+  // When & Then
+  assert.equal(compareNumberWithUnplayedBelowZero(unplayed, playedNegative), -1)
+  assert.equal(compareNumberWithUnplayedBelowZero(playedNegative, unplayed), 1)
+})
+
+test('compareNumberWithUnplayedBelowZero はプレイ済み同士では数値を比較する', () => {
+  // Given
+  const playedLow = { isPlayed: true, value: 10 }
+  const playedHigh = { isPlayed: true, value: 20 }
+
+  // When & Then
+  assert.equal(compareNumberWithUnplayedBelowZero(playedLow, playedHigh), -10)
+  assert.equal(compareNumberWithUnplayedBelowZero(playedHigh, playedLow), 10)
+  assert.equal(compareNumberWithUnplayedBelowZero(playedLow, playedLow), 0)
 })

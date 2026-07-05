@@ -24,6 +24,7 @@ type UserRecordPageModelParams = {
   versions: Accessor<{ versions: VersionDTO[] } | undefined>
   sourceRecords: Accessor<PlayerRecordDTO[]>
   filters: Accessor<FilterState>
+  favoriteSongIds: Accessor<ReadonlySet<string>>
   sortConditions: Accessor<RecordSortCondition[]>
   setSortConditions: Setter<RecordSortCondition[]>
 }
@@ -58,8 +59,9 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
     const records = recordsWithSongMeta()
     const currentFilters = params.filters()
     const matchTitle = createRecordTitleMatcher(currentFilters.title)
+    const favoriteSongIds = params.favoriteSongIds()
     return records.filter((record) =>
-      isRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle)
+      isRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle, favoriteSongIds)
     )
   })
 

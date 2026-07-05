@@ -205,6 +205,7 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
     typeof value.title === 'string' &&
     isArrayOfOptions(value.difficulties, DIFFICULTY_OPTIONS) &&
     (value.currentOpTargetOnly === undefined || typeof value.currentOpTargetOnly === 'boolean') &&
+    (value.favoriteSongsOnly === undefined || typeof value.favoriteSongsOnly === 'boolean') &&
     isStringArray(value.genres) &&
     isStringArray(value.versions) &&
     isRequiredNumberRange(value.const, CHART_CONST_MIN, CHART_CONST_MAX) &&

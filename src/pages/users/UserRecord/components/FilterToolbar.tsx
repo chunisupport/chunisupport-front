@@ -1,8 +1,13 @@
 import { Button } from '@kobalte/core/button'
 import { TextField } from '@kobalte/core/text-field'
-import { ArrowUpDown, Columns3, Funnel, Search } from 'lucide-solid'
+import { ArrowUpDown, Columns3, Funnel, Search, Star } from 'lucide-solid'
 import type { Component } from 'solid-js'
+import { Show } from 'solid-js'
 import { AppIconButton } from '../../../../components/common/AppButton'
+import {
+  getSongSelectionSearchFrameClass,
+  getSongSelectionSearchIconClass,
+} from '../../components/songSelectionDialog'
 
 type FilterButtonTone = 'default' | 'active' | 'difficulty-only'
 
@@ -12,10 +17,12 @@ type FilterToolbarProps = {
   onOpenFilter: () => void
   onOpenSortSettings: () => void
   onOpenColumnSettings: () => void
+  onOpenFavoriteSongs?: () => void
   titleActive?: boolean
   filterActive?: boolean
   filterButtonTone?: FilterButtonTone
   filterButtonDisabled?: boolean
+  favoriteSongsDisabled?: boolean
 }
 
 /**
@@ -35,26 +42,6 @@ const getFilterButtonToneClass = (tone: FilterButtonTone): string => {
 
   return 'border-border-strong text-text-muted hover:bg-surface-hover'
 }
-
-/**
- * 曲名検索欄の状態に応じた外枠クラスを返す。
- *
- * @param active - 曲名検索が既定値から変更されているか。
- * @returns 曲名検索欄の外枠へ適用する Tailwind クラス。
- */
-const getTitleInputFrameClass = (active?: boolean): string =>
-  active
-    ? 'border-action-primary bg-success-bg focus-within:border-action-primary'
-    : 'border-border-strong focus-within:border-focus-ring'
-
-/**
- * 曲名検索欄の状態に応じたアイコンクラスを返す。
- *
- * @param active - 曲名検索が既定値から変更されているか。
- * @returns 検索アイコンへ適用する Tailwind クラス。
- */
-const getTitleInputIconClass = (active?: boolean): string =>
-  active ? 'text-success' : 'text-text-subtle'
 
 /**
  * レコード一覧の検索欄とフィルター操作ボタンを表示する。
@@ -78,12 +65,14 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
     <div class="flex items-center mb-2">
       <TextField class="min-w-0 flex-1" value={props.title} onChange={props.onTitleChange}>
         <div
-          class={`flex min-w-0 items-center gap-2 rounded-l border-t border-b border-l px-2 transition-colors ${getTitleInputFrameClass(
-            props.titleActive
+          class={`flex min-w-0 items-center gap-2 rounded-l border-t border-b border-l px-2 transition-colors ${getSongSelectionSearchFrameClass(
+            Boolean(props.titleActive)
           )}`}
         >
           <Search
-            class={`h-4 w-4 shrink-0 ${getTitleInputIconClass(props.titleActive)}`}
+            class={`h-4 w-4 shrink-0 ${getSongSelectionSearchIconClass(
+              Boolean(props.titleActive)
+            )}`}
             aria-hidden="true"
           />
           <TextField.Input
@@ -123,6 +112,19 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
       >
         <Columns3 size={24} />
       </AppIconButton>
+      <Show when={props.onOpenFavoriteSongs}>
+        {(onOpenFavoriteSongs) => (
+          <AppIconButton
+            class="ml-2 h-9.5 w-9.5"
+            onClick={onOpenFavoriteSongs()}
+            aria-label="お気に入り楽曲設定"
+            title="お気に入り楽曲設定"
+            disabled={props.favoriteSongsDisabled}
+          >
+            <Star size={24} aria-hidden="true" />
+          </AppIconButton>
+        )}
+      </Show>
     </div>
   )
 }

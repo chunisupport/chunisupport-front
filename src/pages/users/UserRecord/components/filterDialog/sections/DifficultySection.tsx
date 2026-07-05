@@ -7,8 +7,10 @@ type DifficultySectionProps = {
   difficulties: Difficulty[]
   selected: Difficulty[]
   currentOpTargetOnly: boolean
+  favoriteSongsOnly: boolean
   onToggle: (difficulty: Difficulty) => void
   onCurrentOpTargetOnlyChange: (checked: boolean) => void
+  onFavoriteSongsOnlyChange: (checked: boolean) => void
 }
 
 /** OP対象フィルターのチェックボックスID。 */
@@ -16,6 +18,12 @@ const CURRENT_OP_TARGET_ONLY_CHECKBOX_ID = 'filter-current-op-target-only'
 
 /** OP計算対象譜面フィルターのラベル。 */
 const CURRENT_OP_TARGET_ONLY_LABEL = 'OP計算対象の譜面のみ表示'
+
+/** お気に入り楽曲フィルターのチェックボックスID。 */
+const FAVORITE_SONGS_ONLY_CHECKBOX_ID = 'filter-favorite-songs-only'
+
+/** お気に入り楽曲フィルターのラベル。 */
+const FAVORITE_SONGS_ONLY_LABEL = 'お気に入り楽曲のみ表示'
 
 /**
  * 通常レコードの難易度条件と現在のOP対象条件を表示する。
@@ -49,6 +57,14 @@ const DifficultySection: Component<DifficultySectionProps> = (props) => (
         class="relative mt-1 flex items-center gap-2"
         textVariant="large"
         label={CURRENT_OP_TARGET_ONLY_LABEL}
+      />
+      <CheckboxField
+        id={FAVORITE_SONGS_ONLY_CHECKBOX_ID}
+        checked={props.favoriteSongsOnly}
+        onChange={(checked) => props.onFavoriteSongsOnlyChange(checked)}
+        class="relative flex items-center gap-2"
+        textVariant="large"
+        label={FAVORITE_SONGS_ONLY_LABEL}
       />
     </div>
   </div>

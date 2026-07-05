@@ -1,6 +1,8 @@
 import { API_BASE_URL } from '../config'
 import type {
   AdminUserListResponse,
+  PlayerFavoriteSongRequest,
+  PlayerFavoriteSongsResponse,
   PlayerLockedSongRequest,
   PlayerLockedSongsBatchRequest,
   PlayerLockedSongsResponse,
@@ -115,6 +117,49 @@ export const deleteMyLockedSong = async (request: PlayerLockedSongRequest): Prom
   await fetchWithAuth(url, {
     method: 'DELETE',
   })
+}
+
+/**
+ * 対象ユーザーのお気に入り楽曲一覧を取得する。
+ *
+ * @param username - 取得対象のユーザー名。
+ * @returns お気に入り楽曲一覧。
+ */
+export const fetchUserFavoriteSongs = async (
+  username: string
+): Promise<PlayerFavoriteSongsResponse> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/favorite-songs`
+  )
+
+  return response.json()
+}
+
+/**
+ * 現在のユーザーのお気に入りへ楽曲を追加する。
+ *
+ * @param request - 追加する楽曲ID。
+ * @returns 登録完了時に解決されるPromise。
+ */
+export const addMyFavoriteSong = async (request: PlayerFavoriteSongRequest): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/me/favorite-songs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+}
+
+/**
+ * 現在のユーザーのお気に入りから楽曲を解除する。
+ *
+ * @param displayId - 解除する楽曲ID。
+ * @returns 解除完了時に解決されるPromise。
+ */
+export const deleteMyFavoriteSong = async (displayId: string): Promise<void> => {
+  await fetchWithAuth(
+    `${API_BASE_URL}/internal/me/favorite-songs/${encodeURIComponent(displayId)}`,
+    { method: 'DELETE' }
+  )
 }
 
 type FetchAdminUsersOptions = {

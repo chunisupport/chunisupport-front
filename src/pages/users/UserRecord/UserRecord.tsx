@@ -11,6 +11,7 @@ import {
   Suspense,
 } from 'solid-js'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
+import { addMyFavoriteSong, deleteMyFavoriteSong, fetchUserFavoriteSongs } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
 import {
   RECORD_ROW_HOVER_CLASS,
@@ -23,6 +24,7 @@ import {
   saveStandardRecordColumnsSetting,
   saveStandardRecordFilterSetting,
 } from '../../../repositories/viewSettingsRepository'
+import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
 import type { MasterDataDTO, UserRecordDTO, VersionSummaryDTO } from '../../../types/api'
 import type { FilterState, RecordColumnId, RecordSortCondition } from '../../../types/recordFilter'
@@ -36,6 +38,7 @@ import FilterStats from '../components/FilterStats'
 import RecordDataTable from '../components/RecordDataTable'
 import { isValidSavedStandardFilter } from '../components/savedRecordFilters'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
+import FavoriteSongsDialog from './components/FavoriteSongsDialog'
 import FilterDialog from './components/FilterDialog'
 import FilterToolbar from './components/FilterToolbar'
 import SortDialog from './components/SortDialog'
@@ -103,6 +106,24 @@ const UserRecord: Component<Props> = (props) => {
   const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
   const [sortSettingsOpen, setSortSettingsOpen] = createSignal(false)
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
+  const [favoriteSongsOpen, setFavoriteSongsOpen] = createSignal(false)
+  const [favoriteSongsUnavailable, setFavoriteSongsUnavailable] = createSignal(false)
+  const canManageFavoriteSongs = createMemo(
+    () => authSession.status === 'authenticated' && authSession.user?.username === props.username
+  )
+  const [favoriteSongs, { refetch: refetchFavoriteSongs }] = createResource(
+    () => props.username,
+    async (username) => {
+      try {
+        const response = await fetchUserFavoriteSongs(username)
+        setFavoriteSongsUnavailable(false)
+        return response
+      } catch {
+        setFavoriteSongsUnavailable(true)
+        return { items: [] }
+      }
+    }
+  )
 
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
@@ -116,6 +137,9 @@ const UserRecord: Component<Props> = (props) => {
     sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
   )
   const visibleColumns = createMemo(() => getVisibleColumns(visibleColumnIds()))
+  const favoriteSongIds = createMemo<ReadonlySet<string>>(
+    () => new Set(favoriteSongs()?.items.map((item) => item.display_id) ?? [])
+  )
 
   const defaultFilter = createMemo(() => {
     const md = masterData()
@@ -147,6 +171,11 @@ const UserRecord: Component<Props> = (props) => {
     void restoreInitialStandardRecordFilter(md, versions.versions)
       .then(setFilters)
       .finally(() => setFilterReady(true))
+  })
+
+  createEffect(() => {
+    if (!favoriteSongsUnavailable() || !filters().favoriteSongsOnly) return
+    setFilters((current) => ({ ...current, favoriteSongsOnly: false }))
   })
 
   onMount(() => {
@@ -188,11 +217,37 @@ const UserRecord: Component<Props> = (props) => {
       versions: versionData,
       sourceRecords: () => props.record.standard,
       filters,
+      favoriteSongIds,
       sortConditions,
       setSortConditions,
     })
 
   useDocumentTitle(() => `${props.username}さんのレコード`)
+
+  /**
+   * お気に入り楽曲の差分を解除、追加の順に保存する。
+   *
+   * @param nextDisplayIds - 保存後のお気に入り楽曲ID。
+   * @returns 保存と再取得の完了時に解決されるPromise。
+   */
+  const handleSaveFavoriteSongs = async (nextDisplayIds: string[]): Promise<void> => {
+    const currentItems = favoriteSongs()?.items
+    if (!currentItems) {
+      throw new Error('お気に入り楽曲の読み込みが完了していません。')
+    }
+
+    const currentIds = new Set(currentItems.map((item) => item.display_id))
+    const nextIds = new Set(nextDisplayIds)
+    const deletedIds = [...currentIds].filter((id) => !nextIds.has(id))
+    const addedIds = [...nextIds].filter((id) => !currentIds.has(id))
+
+    try {
+      await Promise.all(deletedIds.map(deleteMyFavoriteSong))
+      await Promise.all(addedIds.map((displayId) => addMyFavoriteSong({ display_id: displayId })))
+    } finally {
+      await Promise.resolve(refetchFavoriteSongs()).catch(() => undefined)
+    }
+  }
 
   return (
     <Suspense fallback={<Loading />}>
@@ -213,9 +268,13 @@ const UserRecord: Component<Props> = (props) => {
                 onOpenFilter={() => setFilterOpen(true)}
                 onOpenSortSettings={() => setSortSettingsOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
+                onOpenFavoriteSongs={() => setFavoriteSongsOpen(true)}
                 titleActive={hasTitleFilterChanges()}
                 filterActive={hasFilterOptionChanges()}
                 filterButtonTone={filterButtonTone()}
+                favoriteSongsDisabled={
+                  !canManageFavoriteSongs() || favoriteSongs.loading || favoriteSongsUnavailable()
+                }
               />
 
               {/* フィルター統計 */}
@@ -270,6 +329,18 @@ const UserRecord: Component<Props> = (props) => {
                 visibleColumnIds={visibleColumnIds()}
                 onApply={applyVisibleColumns}
               />
+
+              <Show when={canManageFavoriteSongs() && allSongs() && favoriteSongs()}>
+                <FavoriteSongsDialog
+                  open={favoriteSongsOpen()}
+                  songs={allSongs()?.songs ?? []}
+                  genres={masterData()?.genres ?? []}
+                  versions={versionData()?.versions ?? []}
+                  favoriteSongs={favoriteSongs()?.items ?? []}
+                  onOpenChange={setFavoriteSongsOpen}
+                  onSave={handleSaveFavoriteSongs}
+                />
+              </Show>
             </div>
           </Show>
         </Show>

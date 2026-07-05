@@ -11,7 +11,7 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../../../utils/sortingQuery'
-import { compareUnplayedRecords } from '../../recordTable/sortComparators'
+import { compareNumberWithUnplayedBelowZero } from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import { formatJusticeCountForAj } from '../../UserRecord/utils/justiceCountDisplay'
 import {
@@ -143,9 +143,10 @@ const compareWorldsendRecordBySortCondition = <TRecord extends WorldsendRecordDT
         (right.level_star ?? Number.NEGATIVE_INFINITY)
       break
     case 'score': {
-      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-      comparison = left.score - right.score
+      comparison = compareNumberWithUnplayedBelowZero(
+        { isPlayed: left.is_played, value: left.score },
+        { isPlayed: right.is_played, value: right.score }
+      )
       break
     }
     case 'updatedAt': {

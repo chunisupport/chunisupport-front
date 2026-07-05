@@ -653,6 +653,24 @@ export interface PlayerLockedSongsBatchRequest {
   delete?: PlayerLockedSongRequest[]
 }
 
+/** ユーザーがお気に入りに登録した楽曲。 */
+export interface PlayerFavoriteSongResponseItem {
+  display_id: string
+  title: string
+  jacket: string | null
+  favorited_at: string
+}
+
+/** お気に入り楽曲一覧APIのレスポンス。 */
+export interface PlayerFavoriteSongsResponse {
+  items: PlayerFavoriteSongResponseItem[]
+}
+
+/** お気に入り楽曲登録APIのリクエスト。 */
+export interface PlayerFavoriteSongRequest {
+  display_id: string
+}
+
 export interface UserProfileWithRecordsDTO {
   username: string
   player: PlayerDTO | null

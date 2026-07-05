@@ -351,6 +351,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         difficulties={difficulties()}
         selected={props.filters.difficulties}
         currentOpTargetOnly={props.filters.currentOpTargetOnly}
+        favoriteSongsOnly={props.filters.favoriteSongsOnly}
         onToggle={(diff) =>
           props.setFilters((prev) => ({
             ...prev,
@@ -361,6 +362,12 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           props.setFilters((prev) => ({
             ...prev,
             currentOpTargetOnly: checked,
+          }))
+        }
+        onFavoriteSongsOnlyChange={(checked) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            favoriteSongsOnly: checked,
           }))
         }
       />
