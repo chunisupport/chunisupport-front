@@ -22,3 +22,12 @@ export const buildSongScoreHistoryPath = (displayId: string, difficulty: string)
   `/songs/${encodeURIComponent(displayId)}/score-history?${new URLSearchParams({
     diff: difficulty.toLowerCase(),
   }).toString()}`
+
+/**
+ * WORLD'S END のスコア履歴画面パスを生成する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @returns WORLD'S END スコア履歴画面パス。
+ */
+export const buildWorldsendScoreHistoryPath = (displayId: string): string =>
+  `/songs/worldsend/${encodeURIComponent(displayId)}/score-history`

@@ -1,11 +1,11 @@
-import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
-import type { PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
-import { getScoreRank, MAX_SCORE } from '../../../utils/scoreRank'
 import {
   COMBO_LAMP_BAR_CLASS,
   HARD_LAMP_BAR_CLASS,
   SCORE_RANK_BAR_CLASS,
-} from '../components/recordStyleClasses'
+} from '../../../components/common/record/recordStyleClasses'
+import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
+import type { PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
+import { getScoreRank, MAX_SCORE } from '../../../utils/scoreRank'
 
 /** 未プレイレコードを分布で表す共通カテゴリ名。 */
 export const UNPLAYED_DISTRIBUTION_KEY = '未プレイ'

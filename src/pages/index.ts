@@ -11,6 +11,7 @@ export {
   SongDetail,
   SongScoreHistory,
   SongsList,
+  WorldsendScoreHistory,
   WorldsendSongDetail,
   WorldsendSongsList,
 } from './songs'

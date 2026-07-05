@@ -9,12 +9,12 @@ import type { PlayerDTO, UserRatingDTO, UserRecordDTO } from '../../../types/api
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
-import NotFoundPage from '../../NotFoundPage'
 import {
   isRecordPageQuery,
   resolveOverPowerSubPage,
   resolveProfilePageQuery,
-} from './profilePageQuery'
+} from '../../../utils/userProfileRoute'
+import NotFoundPage from '../../NotFoundPage'
 import { UserProfileView } from './UserProfileView'
 
 export type UserPageRatingProfile = {

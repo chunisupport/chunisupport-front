@@ -2,8 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import { CHART_CONST_MAX } from '../../../../constants/chart'
+import { DEFAULT_FILTER } from '../../../../utils/recordFilterDefaults'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { DEFAULT_FILTER } from '../types/filterDefaults'
 import {
   parseFilterRangeQuery,
   parseScoreRangeQuery,

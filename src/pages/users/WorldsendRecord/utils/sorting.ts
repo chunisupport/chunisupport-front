@@ -1,17 +1,17 @@
 import type { WorldsendRecordDTO } from '../../../../types/api'
 import { compareSongsByReading } from '../../../../utils/songTitleSorting'
-import { compareUnplayedRecords } from '../../recordTable/sortComparators'
 import {
   createInitialSortConditions,
   nextPrimarySortCondition,
   normalizeSortConditions,
   type SortCondition,
-} from '../../recordTable/sortConditions'
+} from '../../../../utils/sortConditions'
 import {
   parseSortQuery,
   type SortDirection,
   type SortParamsSource,
-} from '../../recordTable/sortingQuery'
+} from '../../../../utils/sortingQuery'
+import { compareUnplayedRecords } from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import { formatJusticeCountForAj } from '../../UserRecord/utils/justiceCountDisplay'
 import {

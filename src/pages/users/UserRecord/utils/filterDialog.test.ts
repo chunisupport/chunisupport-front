@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-
-import { DEFAULT_FILTER } from '../types/filterDefaults'
-import type { FilterState } from '../types/types'
+import type { FilterState } from '../../../../types/recordFilter'
+import { DEFAULT_FILTER } from '../../../../utils/recordFilterDefaults'
 import {
   formatFilterSummary,
   isRecordDifficultyFilterOnlyChanged,

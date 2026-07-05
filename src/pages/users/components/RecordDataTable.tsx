@@ -1,16 +1,18 @@
 import type { JSX } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
-import { createGridTemplateColumns } from '../utils/recordColumnDefinitions'
-import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
-import { createRecordTableVirtualizer } from './createRecordTableVirtualizer'
+import { createWindowVirtualTable } from '../../../components/common/createWindowVirtualTable'
 import {
   type ColumnRenderer,
   RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
   RecordHeaderButton,
-} from './SharedRecordTableColumns'
-
-type SortDirection = 'asc' | 'desc' | null
+} from '../../../components/common/record/RecordDisplayParts'
+import {
+  getSortAriaValue,
+  type SortDirection,
+} from '../../../components/common/SortableTableHeader'
+import { createGridTemplateColumns } from '../utils/recordColumnDefinitions'
+import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
 
 type RecordDataTableProps<TRecord, TColumnId extends string, TSortKey extends string> = {
   /** 表示するレコード配列。 */
@@ -47,15 +49,11 @@ type RecordDataTableProps<TRecord, TColumnId extends string, TSortKey extends st
 export function RecordDataTable<TRecord, TColumnId extends string, TSortKey extends string>(
   props: RecordDataTableProps<TRecord, TColumnId, TSortKey>
 ): JSX.Element {
-  let tableContainerRef: HTMLDivElement | undefined
-  let tableBodyRef: HTMLDivElement | undefined
-
-  const virtualizedTable = createRecordTableVirtualizer({
+  const virtualizedTable = createWindowVirtualTable<HTMLDivElement, HTMLDivElement>({
     rowHeight: RECORD_ROW_HEIGHT,
     rowCount: () => props.records.length,
-    containerRef: () => tableContainerRef,
-    bodyRef: () => tableBodyRef,
-    resetDeps: () => props.resetDeps,
+    resetOnRowCountChange: true,
+    layoutDeps: () => props.resetDeps,
   })
 
   const gridTemplateColumns = createMemo(() => createGridTemplateColumns(props.columns))
@@ -69,7 +67,7 @@ export function RecordDataTable<TRecord, TColumnId extends string, TSortKey exte
         fallback={<p class="py-6 text-center text-text-subtle">{props.emptyMessage}</p>}
       >
         <div
-          ref={tableContainerRef}
+          ref={virtualizedTable.setTableContainerRef}
           class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-border"
         >
           <div class="w-fit min-w-full">
@@ -80,21 +78,30 @@ export function RecordDataTable<TRecord, TColumnId extends string, TSortKey exte
               >
                 <For each={props.columns}>
                   {(column) => (
-                    <RecordHeaderButton
-                      label={column.label}
-                      active={props.sortKey === column.sortKey}
-                      direction={props.sortDirection}
-                      align={column.align ?? 'center'}
-                      class={column.align === 'start' ? 'justify-start' : 'justify-center'}
-                      onClick={() => props.onSortChange(column.sortKey)}
-                    />
+                    // biome-ignore lint/a11y/useFocusableInteractive lint/a11y/useSemanticElements: div gridの仮想テーブルなのでthへ置換できない。
+                    <div
+                      role="columnheader"
+                      aria-sort={getSortAriaValue(
+                        props.sortKey === column.sortKey,
+                        props.sortDirection
+                      )}
+                    >
+                      <RecordHeaderButton
+                        label={column.label}
+                        active={props.sortKey === column.sortKey}
+                        direction={props.sortDirection}
+                        align={column.align ?? 'center'}
+                        class={column.align === 'start' ? 'justify-start' : 'justify-center'}
+                        onClick={() => props.onSortChange(column.sortKey)}
+                      />
+                    </div>
                   )}
                 </For>
               </div>
             </div>
 
             <div
-              ref={tableBodyRef}
+              ref={virtualizedTable.setTableBodyRef}
               class="relative"
               style={{ height: `${virtualizedTable.getTotalSize()}px` }}
             >
