@@ -202,12 +202,14 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
               <div
                 class={`flex min-w-0 items-center gap-2 rounded-l border px-2 transition-colors ${
                   hasQuery()
-                    ? 'border-action-primary bg-success-bg'
+                    ? 'border-action-primary bg-action-primary-muted'
                     : 'border-border-strong focus-within:border-focus-ring'
                 }`}
               >
                 <Search
-                  class={`h-4 w-4 shrink-0 ${hasQuery() ? 'text-success' : 'text-text-subtle'}`}
+                  class={`h-4 w-4 shrink-0 ${
+                    hasQuery() ? 'text-action-primary' : 'text-text-subtle'
+                  }`}
                   aria-hidden="true"
                 />
                 <TextField.Input
@@ -289,7 +291,7 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
                             type="button"
                             class={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60 ${
                               selected()
-                                ? 'bg-success text-text-inverse hover:bg-success'
+                                ? 'bg-action-primary text-text-inverse hover:bg-action-primary-hover'
                                 : 'bg-surface text-text hover:bg-surface-muted'
                             }`}
                             aria-pressed={selected()}
