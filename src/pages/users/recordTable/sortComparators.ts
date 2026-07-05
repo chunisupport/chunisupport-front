@@ -1,25 +1,25 @@
 /**
- * 未プレイのレコードをソート方向に関係なく末尾へ寄せる。
+ * 未プレイを0より低い数値として扱い、数値列の昇降順に従って比較する。
  *
- * @param leftPlayed - 左側レコードがプレイ済みかどうか。
- * @param rightPlayed - 右側レコードがプレイ済みかどうか。
- * @returns 未プレイ判定だけで順序が決まる場合は比較結果、両方プレイ済みの場合は null。
+ * @param left - 左側レコードの数値とプレイ状態。
+ * @param right - 右側レコードの数値とプレイ状態。
+ * @returns 数値列で利用する比較結果。
  */
-export const compareUnplayedRecords = (
-  leftPlayed: boolean,
-  rightPlayed: boolean
-): number | null => {
-  if (!leftPlayed && !rightPlayed) {
+export const compareNumberWithUnplayedBelowZero = (
+  left: { isPlayed: boolean; value: number },
+  right: { isPlayed: boolean; value: number }
+): number => {
+  if (!left.isPlayed && !right.isPlayed) {
     return 0
   }
 
-  if (!leftPlayed) {
-    return 1
-  }
-
-  if (!rightPlayed) {
+  if (!left.isPlayed) {
     return -1
   }
 
-  return null
+  if (!right.isPlayed) {
+    return 1
+  }
+
+  return left.value - right.value
 }

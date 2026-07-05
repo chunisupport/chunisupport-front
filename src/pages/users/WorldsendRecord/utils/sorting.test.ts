@@ -139,6 +139,23 @@ test("WORLD'S ENDの複数ソートは前の条件が同値の場合に次の条
   assert.deepEqual(result, ['score-high', 'air', 'fire-high', 'fire-low'])
 })
 
+test("WORLD'S ENDのスコアソートは未プレイを0点より低い側としてソート方向に従って並べる", () => {
+  const records = [
+    createRecord({ id: 'played-zero', score: 0 }),
+    createRecord({ id: 'unplayed', is_played: false, score: 0 }),
+    createRecord({ id: 'played-high', score: 1010000 }),
+  ]
+
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'score', 'asc').map((record) => record.id),
+    ['unplayed', 'played-zero', 'played-high']
+  )
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'score', 'desc').map((record) => record.id),
+    ['played-high', 'played-zero', 'unplayed']
+  )
+})
+
 test("WORLD'S ENDの第4ソートは曲名指定でも方向を昇順へ固定する", () => {
   // Given
   const sortConditions = [
