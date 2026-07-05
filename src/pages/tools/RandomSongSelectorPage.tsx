@@ -1003,8 +1003,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
                   </div>
                 </div>
 
-                <div class="grid gap-5 lg:gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-                  <div class="flex flex-wrap gap-2 justify-end lg:justify-start">
+                <div class="flex flex-col gap-5 lg:flex-row lg:justify-between lg:gap-2 lg:items-end">
+                  <div class="flex flex-wrap gap-2 shrink-0 justify-end lg:justify-start">
                     <Dialog
                       open={recordFilterSettingsOpen()}
                       onOpenChange={setRecordFilterSettingsOpen}
@@ -1197,67 +1197,67 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       </Dialog.Portal>
                     </Dialog>
                   </div>
-
-                  <Show when={validationMessage()}>
-                    {(message) => <p class="text-sm text-danger">{message()}</p>}
-                  </Show>
-
-                  <div class="flex flex-wrap items-center gap-2 lg:justify-end">
-                    <p class="flex-1 text-sm text-text-muted">
-                      {RANDOM_SONG_SELECTOR_COPY.candidateCountLabel}:{' '}
-                      <span class="font-medium tabular-nums text-text">
-                        {filteredCandidates().length.toLocaleString('ja-JP')}
-                      </span>
-                      曲
-                    </p>
-                    <AlertDialog>
-                      <AlertDialog.Trigger
-                        as="button"
-                        type="button"
-                        class={getAppButtonClass({
-                          variant: 'dangerOutline',
-                          class: 'min-h-10 rounded-md',
-                        })}
+                  <div>
+                    <Show when={validationMessage()}>
+                      {(message) => <p class="text-sm text-danger mb-1 text-right">{message()}</p>}
+                    </Show>
+                    <div class="flex flex-wrap items-center gap-2 lg:justify-end">
+                      <p class="flex-1 text-sm text-text-muted">
+                        {RANDOM_SONG_SELECTOR_COPY.candidateCountLabel}:{' '}
+                        <span class="font-medium tabular-nums text-text">
+                          {filteredCandidates().length.toLocaleString('ja-JP')}
+                        </span>
+                        曲
+                      </p>
+                      <AlertDialog>
+                        <AlertDialog.Trigger
+                          as="button"
+                          type="button"
+                          class={getAppButtonClass({
+                            variant: 'dangerOutline',
+                            class: 'min-h-10 rounded-md',
+                          })}
+                        >
+                          <RotateCcw size={16} aria-hidden="true" />
+                          {RANDOM_SONG_SELECTOR_COPY.resetButtonLabel}
+                        </AlertDialog.Trigger>
+                        <AlertDialog.Portal>
+                          <AlertDialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
+                          <AlertDialog.Content class="fixed left-1/2 top-1/2 z-60 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
+                            <AlertDialog.Title class="mb-2 text-lg font-bold">
+                              {RANDOM_SONG_SELECTOR_COPY.resetConfirmTitle}
+                            </AlertDialog.Title>
+                            <AlertDialog.Description class="mb-4 text-sm text-text-muted">
+                              {RANDOM_SONG_SELECTOR_COPY.resetConfirmDescription}
+                            </AlertDialog.Description>
+                            <div class="flex justify-end gap-2">
+                              <AlertDialog.CloseButton
+                                as="button"
+                                class={getAppButtonClass({ variant: 'secondary' })}
+                              >
+                                {RANDOM_SONG_SELECTOR_COPY.resetCancelLabel}
+                              </AlertDialog.CloseButton>
+                              <AlertDialog.CloseButton
+                                as="button"
+                                class={getAppButtonClass({ variant: 'danger' })}
+                                onClick={handleReset}
+                              >
+                                {RANDOM_SONG_SELECTOR_COPY.resetConfirmLabel}
+                              </AlertDialog.CloseButton>
+                            </div>
+                          </AlertDialog.Content>
+                        </AlertDialog.Portal>
+                      </AlertDialog>
+                      <AppButton
+                        variant="primary"
+                        class="min-h-10 rounded-md"
+                        disabled={validationMessage() !== null || filteredCandidates().length === 0}
+                        onClick={handleDraw}
+                        leftIcon={<Dices size={16} aria-hidden="true" />}
                       >
-                        <RotateCcw size={16} aria-hidden="true" />
-                        {RANDOM_SONG_SELECTOR_COPY.resetButtonLabel}
-                      </AlertDialog.Trigger>
-                      <AlertDialog.Portal>
-                        <AlertDialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
-                        <AlertDialog.Content class="fixed left-1/2 top-1/2 z-60 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
-                          <AlertDialog.Title class="mb-2 text-lg font-bold">
-                            {RANDOM_SONG_SELECTOR_COPY.resetConfirmTitle}
-                          </AlertDialog.Title>
-                          <AlertDialog.Description class="mb-4 text-sm text-text-muted">
-                            {RANDOM_SONG_SELECTOR_COPY.resetConfirmDescription}
-                          </AlertDialog.Description>
-                          <div class="flex justify-end gap-2">
-                            <AlertDialog.CloseButton
-                              as="button"
-                              class={getAppButtonClass({ variant: 'secondary' })}
-                            >
-                              {RANDOM_SONG_SELECTOR_COPY.resetCancelLabel}
-                            </AlertDialog.CloseButton>
-                            <AlertDialog.CloseButton
-                              as="button"
-                              class={getAppButtonClass({ variant: 'danger' })}
-                              onClick={handleReset}
-                            >
-                              {RANDOM_SONG_SELECTOR_COPY.resetConfirmLabel}
-                            </AlertDialog.CloseButton>
-                          </div>
-                        </AlertDialog.Content>
-                      </AlertDialog.Portal>
-                    </AlertDialog>
-                    <AppButton
-                      variant="primary"
-                      class="min-h-10 rounded-md"
-                      disabled={validationMessage() !== null || filteredCandidates().length === 0}
-                      onClick={handleDraw}
-                      leftIcon={<Dices size={16} aria-hidden="true" />}
-                    >
-                      {RANDOM_SONG_SELECTOR_COPY.drawButtonLabel}
-                    </AppButton>
+                        {RANDOM_SONG_SELECTOR_COPY.drawButtonLabel}
+                      </AppButton>
+                    </div>
                   </div>
                 </div>
               </form>
