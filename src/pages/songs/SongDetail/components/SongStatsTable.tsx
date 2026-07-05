@@ -697,7 +697,7 @@ const SongStatsTable = (props: Props) => {
 
   return (
     <>
-      <div class="max-h-128 overflow-auto">
+      <div class="max-h-[75vh] overflow-auto">
         <table class="min-w-full text-sm">
           <thead>
             <tr>
