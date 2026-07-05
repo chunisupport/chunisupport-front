@@ -9,8 +9,17 @@ export const compareNumberWithUnplayedBelowZero = (
   left: { isPlayed: boolean; value: number },
   right: { isPlayed: boolean; value: number }
 ): number => {
-  const leftValue = left.isPlayed ? left.value : -1
-  const rightValue = right.isPlayed ? right.value : -1
+  if (!left.isPlayed && !right.isPlayed) {
+    return 0
+  }
 
-  return leftValue - rightValue
+  if (!left.isPlayed) {
+    return -1
+  }
+
+  if (!right.isPlayed) {
+    return 1
+  }
+
+  return left.value - right.value
 }
