@@ -1,4 +1,3 @@
-import { Select } from '@kobalte/core/select'
 import {
   BarController,
   BarElement,
@@ -14,7 +13,6 @@ import {
   PointElement,
   Tooltip,
 } from 'chart.js'
-import { ChevronDown } from 'lucide-solid'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
@@ -38,6 +36,7 @@ Chart.register(
 
 type Props = {
   stats: SongStatsBandDTO[]
+  selectedView: SongStatsTableView
   bestAverage?: number | null
   ratingBands?: RatingBandDTO[]
   ownScore?: number
@@ -63,9 +62,14 @@ type SongStatsAverageScoreChartProps = {
   values: (number | null)[]
 }
 
-type SongStatsTableView = 'averageScore' | 'scoreRank' | 'combo' | 'clear'
+type SongStatsChartsProps = {
+  stats: SongStatsBandDTO[]
+  ratingBands?: RatingBandDTO[]
+}
 
-type SongStatsTableViewOption = {
+export type SongStatsTableView = 'averageScore' | 'scoreRank' | 'combo' | 'clear'
+
+export type SongStatsTableViewOption = {
   label: string
   value: SongStatsTableView
 }
@@ -85,7 +89,7 @@ const CHART_X_AXIS_TICK_PADDING = 8
 const AVERAGE_SCORE_CHART_TITLE = 'AVG. SCORE'
 const AVERAGE_SCORE_CHART_COLOR = '--cs-color-action-primary'
 /** 統計テーブルの表示カテゴリ選択肢。 */
-const TABLE_VIEW_OPTIONS: SongStatsTableViewOption[] = [
+export const TABLE_VIEW_OPTIONS: SongStatsTableViewOption[] = [
   { label: '平均スコア', value: 'averageScore' },
   { label: 'スコアランク', value: 'scoreRank' },
   { label: 'FC/AJ/AJC', value: 'combo' },
@@ -119,15 +123,6 @@ const NORMAL_RATING_BAND_ROW_CLASS = 'border-l-4 border-l-transparent'
 const POSITIVE_SCORE_DIFFERENCE_CLASS = 'text-success'
 const NEGATIVE_SCORE_DIFFERENCE_CLASS = 'text-info'
 const EQUAL_SCORE_DIFFERENCE_CLASS = 'text-text-muted'
-/** 統計テーブルの表示カテゴリSelectのトリガーに適用するTailwindクラス。 */
-const TABLE_VIEW_SELECT_TRIGGER_CLASS =
-  'grid h-10 w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 text-left text-sm text-text-muted hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring sm:w-44'
-/** 統計テーブルの表示カテゴリSelectの選択肢に適用するTailwindクラス。 */
-const TABLE_VIEW_SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-sm text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
-/** 統計テーブルの表示カテゴリSelectのポータルに適用するTailwindクラス。 */
-const TABLE_VIEW_SELECT_CONTENT_CLASS =
-  'z-40 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md'
 /** 統計テーブルのヘッダーセルに適用するTailwindクラス。 */
 const TABLE_HEADER_CELL_CLASS =
   'sticky top-0 z-10 bg-surface-muted px-2 py-2 text-right whitespace-nowrap'
@@ -619,7 +614,7 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
  * @param props 表示対象の統計行。
  * @returns RANK、FC/AJ/AJC、CLEAR系ランプ、平均スコアのグラフ。
  */
-const SongStatsCharts = (props: Props) => {
+const SongStatsCharts = (props: SongStatsChartsProps) => {
   const chartStats = createMemo(() => {
     const stats = getChartStats(props.stats)
     const ratingBands = props.ratingBands
@@ -683,13 +678,8 @@ const SongStatsCharts = (props: Props) => {
  * @returns 難易度別統計テーブルと集計グラフ。
  */
 const SongStatsTable = (props: Props) => {
-  const [selectedView, setSelectedView] = createSignal<SongStatsTableView>('averageScore')
-  const selectedViewOption = createMemo(
-    () =>
-      TABLE_VIEW_OPTIONS.find((option) => option.value === selectedView()) ?? TABLE_VIEW_OPTIONS[0]
-  )
   const displayedColumns = createMemo(() =>
-    getTableColumnDefinitions(selectedView(), props.ownScore)
+    getTableColumnDefinitions(props.selectedView, props.ownScore)
   )
 
   /**
@@ -705,49 +695,8 @@ const SongStatsTable = (props: Props) => {
         : NORMAL_RATING_BAND_ROW_CLASS
     }`
 
-  /**
-   * 表示カテゴリSelectの変更結果をテーブル表示へ反映する。
-   *
-   * @param option - 選択された表示カテゴリ。選択解除時はnull。
-   * @returns なし。
-   */
-  const handleViewChange = (option: SongStatsTableViewOption | null): void => {
-    if (option) setSelectedView(option.value)
-  }
-
   return (
     <>
-      <div class="flex justify-end">
-        <Select<SongStatsTableViewOption>
-          options={TABLE_VIEW_OPTIONS}
-          optionValue="value"
-          optionTextValue="label"
-          value={selectedViewOption()}
-          onChange={handleViewChange}
-          gutter={0}
-          itemComponent={(itemProps) => (
-            <Select.Item item={itemProps.item} class={TABLE_VIEW_SELECT_ITEM_CLASS}>
-              <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-            </Select.Item>
-          )}
-        >
-          <Select.Label class="sr-only">統計テーブルの表示カテゴリ</Select.Label>
-          <Select.Trigger class={TABLE_VIEW_SELECT_TRIGGER_CLASS}>
-            <Select.Value<SongStatsTableViewOption> class="truncate">
-              {(state) => state.selectedOption()?.label}
-            </Select.Value>
-            <Select.Icon class="text-text-subtle">
-              <ChevronDown size={16} aria-hidden="true" />
-            </Select.Icon>
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Content class={TABLE_VIEW_SELECT_CONTENT_CLASS}>
-              <Select.Listbox />
-            </Select.Content>
-          </Select.Portal>
-        </Select>
-      </div>
-
       <div class="max-h-128 overflow-auto">
         <table class="min-w-full text-sm">
           <thead>
