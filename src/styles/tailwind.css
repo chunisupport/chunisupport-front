@@ -852,7 +852,7 @@
     color: var(--color-text-subtle);
   }
 
-  [data-theme="dark"] .goal-card-progress-secondary {
+  :is([data-theme="dark"], [data-theme="black"]) .goal-card-progress-secondary {
     color: var(--color-primary-300);
   }
 }
