@@ -11,7 +11,7 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../../../utils/sortingQuery'
-import { compareUnplayedRecords } from '../../recordTable/sortComparators'
+import { compareNumberWithUnplayedBelowZero } from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import {
   compareMissingJusticeCountRecords,
@@ -140,31 +140,31 @@ const compareRecordBySortCondition = (
       comparison = left.const - right.const
       break
     case 'rating': {
-      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-
-      comparison = left.rating - right.rating
+      comparison = compareNumberWithUnplayedBelowZero(
+        { isPlayed: left.is_played, value: left.rating },
+        { isPlayed: right.is_played, value: right.rating }
+      )
       break
     }
     case 'score': {
-      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-
-      comparison = left.score - right.score
+      comparison = compareNumberWithUnplayedBelowZero(
+        { isPlayed: left.is_played, value: left.score },
+        { isPlayed: right.is_played, value: right.score }
+      )
       break
     }
     case 'overpower': {
-      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-
-      comparison = left.overpower - right.overpower
+      comparison = compareNumberWithUnplayedBelowZero(
+        { isPlayed: left.is_played, value: left.overpower },
+        { isPlayed: right.is_played, value: right.overpower }
+      )
       break
     }
     case 'overpowerPercent': {
-      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-
-      comparison = left.overpower_percent - right.overpower_percent
+      comparison = compareNumberWithUnplayedBelowZero(
+        { isPlayed: left.is_played, value: left.overpower_percent },
+        { isPlayed: right.is_played, value: right.overpower_percent }
+      )
       break
     }
     case 'updatedAt': {
