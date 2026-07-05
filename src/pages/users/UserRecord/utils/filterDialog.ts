@@ -22,6 +22,7 @@ export function formatFilterSummary(filter: FilterState): string {
   if (filter.excludeNoPlay) parts.push('未プレイ譜面を除外')
   if (filter.difficulties.length > 0) parts.push(`難易度: ${filter.difficulties.join(',')}`)
   if (filter.currentOpTargetOnly) parts.push('OP対象の楽曲のみ')
+  if (filter.favoriteSongsOnly) parts.push('お気に入り楽曲のみ')
   if (filter.const.min !== CHART_CONST_MIN || filter.const.max !== CHART_CONST_MAX)
     parts.push(`定数: ${filter.const.min}-${filter.const.max}`)
   if (filter.score.min !== SCORE_MIN || filter.score.max !== MAX_SCORE)
@@ -89,6 +90,7 @@ export function isRecordFilterChanged(current: FilterState, defaultFilter: Filte
   return (
     current.title !== defaultFilter.title ||
     current.currentOpTargetOnly !== defaultFilter.currentOpTargetOnly ||
+    current.favoriteSongsOnly !== defaultFilter.favoriteSongsOnly ||
     current.constFilterMode !== defaultFilter.constFilterMode ||
     current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
     current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
@@ -122,6 +124,7 @@ export function isRecordFilterOptionsChanged(
 ): boolean {
   return (
     current.currentOpTargetOnly !== defaultFilter.currentOpTargetOnly ||
+    current.favoriteSongsOnly !== defaultFilter.favoriteSongsOnly ||
     current.constFilterMode !== defaultFilter.constFilterMode ||
     current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
     current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
@@ -155,6 +158,7 @@ export function isRecordDifficultyFilterOnlyChanged(
 ): boolean {
   return (
     current.currentOpTargetOnly === defaultFilter.currentOpTargetOnly &&
+    current.favoriteSongsOnly === defaultFilter.favoriteSongsOnly &&
     current.constFilterMode === defaultFilter.constFilterMode &&
     current.scoreFilterMode === defaultFilter.scoreFilterMode &&
     current.excludeNoPlay === defaultFilter.excludeNoPlay &&

@@ -72,6 +72,15 @@ test('isValidSavedStandardFilter はOP対象条件の省略を旧保存値とし
   )
 })
 
+test('isValidSavedStandardFilter はお気に入り条件の省略を旧保存値として許可すること', () => {
+  // Given
+  const { favoriteSongsOnly: _favoriteSongsOnly, ...legacyFilter } = DEFAULT_FILTER
+
+  // When & Then
+  assert.equal(isValidSavedStandardFilter(legacyFilter), true)
+  assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, favoriteSongsOnly: 'true' }), false)
+})
+
 test('isValidSavedWorldsendFilter は型が違う保存値を壊れたフィルターとして拒否すること', () => {
   // Given
   const brokenFilter = {

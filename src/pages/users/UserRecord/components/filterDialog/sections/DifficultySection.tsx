@@ -8,8 +8,10 @@ type DifficultySectionProps = {
   difficulties: Difficulty[]
   selected: Difficulty[]
   currentOpTargetOnly: boolean
+  favoriteSongsOnly: boolean
   onToggle: (difficulty: Difficulty) => void
   onCurrentOpTargetOnlyChange: (checked: boolean) => void
+  onFavoriteSongsOnlyChange: (checked: boolean) => void
 }
 
 /** OP対象フィルターのチェックボックスID。 */
@@ -17,6 +19,8 @@ const CURRENT_OP_TARGET_ONLY_CHECKBOX_ID = 'filter-current-op-target-only'
 
 /** OP計算対象譜面フィルターのラベル。 */
 const CURRENT_OP_TARGET_ONLY_LABEL = 'OP計算対象の譜面のみ表示'
+const FAVORITE_SONGS_ONLY_CHECKBOX_ID = 'filter-favorite-songs-only'
+const FAVORITE_SONGS_ONLY_LABEL = 'お気に入り楽曲のみ表示'
 
 /**
  * 通常レコードの難易度条件と現在のOP対象条件を表示する。
@@ -63,6 +67,21 @@ const DifficultySection: Component<DifficultySectionProps> = (props) => (
         </Checkbox.Control>
         <Checkbox.Label class="leading-5" for={CURRENT_OP_TARGET_ONLY_CHECKBOX_ID}>
           {CURRENT_OP_TARGET_ONLY_LABEL}
+        </Checkbox.Label>
+      </Checkbox>
+      <Checkbox
+        checked={props.favoriteSongsOnly}
+        onChange={(checked) => props.onFavoriteSongsOnlyChange(checked)}
+        class="relative flex items-center gap-2"
+      >
+        <Checkbox.Input id={FAVORITE_SONGS_ONLY_CHECKBOX_ID} style={{ left: '0', top: '0' }} />
+        <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
+          <Checkbox.Indicator>
+            <Check class="h-4 w-4" />
+          </Checkbox.Indicator>
+        </Checkbox.Control>
+        <Checkbox.Label class="leading-5" for={FAVORITE_SONGS_ONLY_CHECKBOX_ID}>
+          {FAVORITE_SONGS_ONLY_LABEL}
         </Checkbox.Label>
       </Checkbox>
     </div>
