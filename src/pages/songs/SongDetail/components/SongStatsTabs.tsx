@@ -44,6 +44,10 @@ const STATS_CONTROL_ROW_CLASS = 'grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:
 /** 難易度別統計の各Select幅を揃えるラッパークラス。 */
 const STATS_CONTROL_ITEM_CLASS = 'min-w-0 sm:w-44'
 
+/** 統計テーブル再取得中に表示するオーバーレイのクラス。 */
+const STATS_LOADING_OVERLAY_CLASS =
+  'absolute inset-0 z-10 flex items-center justify-center rounded bg-surface/70'
+
 /**
  * 難易度別の楽曲統計を表示します。
  *
@@ -129,15 +133,22 @@ const SongStatsTabs = (props: Props) => {
       </div>
 
       <div class="mt-3">
-        <Show when={!props.isStatsLoading && props.stats} fallback={<Loading />}>
+        <Show when={props.stats} fallback={<Loading />}>
           {(statsData) => (
-            <SongStatsTable
-              stats={statsData().stats}
-              selectedView={selectedTableView()}
-              bestAverage={props.bestAverage}
-              ratingBands={props.ratingBands}
-              ownScore={props.ownScore}
-            />
+            <div class="relative">
+              <Show when={props.isStatsLoading}>
+                <div class={STATS_LOADING_OVERLAY_CLASS}>
+                  <Loading />
+                </div>
+              </Show>
+              <SongStatsTable
+                stats={statsData().stats}
+                selectedView={selectedTableView()}
+                bestAverage={props.bestAverage}
+                ratingBands={props.ratingBands}
+                ownScore={props.ownScore}
+              />
+            </div>
           )}
         </Show>
       </div>
