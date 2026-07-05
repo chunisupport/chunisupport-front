@@ -35,7 +35,7 @@ const LampSection = <TLamp extends LampValue = LampValue>(props: LampSectionProp
                 props.onToggle(lamp)
               }}
               class="flex items-center gap-2"
-              textVariant="choice"
+              textVariant="large"
               label={props.formatLabel ? props.formatLabel(lamp) : (lamp ?? 'なし')}
             />
           )

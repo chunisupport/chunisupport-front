@@ -89,7 +89,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
         checked={props.scoreFilterMode === 'number'}
         onChange={(checked) => props.onScoreFilterModeChange(checked ? 'number' : 'rank')}
         class="flex items-center gap-2"
-        textVariant="choice"
+        textVariant="large"
         label="数値で指定する"
       />
     </div>
@@ -99,7 +99,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
         checked={props.excludeNoPlay}
         onChange={(checked) => props.onExcludeNoPlayChange(checked)}
         class="flex items-center gap-2"
-        textVariant="choice"
+        textVariant="large"
         label="未プレイ譜面を除外する"
       />
     </div>
