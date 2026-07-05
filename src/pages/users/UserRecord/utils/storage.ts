@@ -5,10 +5,10 @@ import {
   updateRecordFilter,
 } from '../../../../api/recordFilters'
 import type { RecordFilterDTO, RecordFilterRequest } from '../../../../types/api'
+import type { FilterState } from '../../../../types/recordFilter'
+import { normalizeFilterState } from '../../../../utils/recordFilterDefaults'
 import type { SavedRecordFilterItem } from '../../components/SavedRecordFiltersDialog'
 import { isValidSavedStandardFilter } from '../../components/savedRecordFilters'
-import { normalizeFilterState } from '../types/filterDefaults'
-import type { FilterState } from '../types/types'
 
 export const SAVED_FILTER_SCHEMA_VERSION = 3
 const STANDARD_RECORD_FILTER_TYPE = 'standard'

@@ -1,6 +1,11 @@
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import { SCORE_MIN } from '../../../../constants/chart'
+import {
+  RECORD_CHAIN_LAMP_OPTIONS,
+  RECORD_COMBO_LAMP_OPTIONS,
+  RECORD_HARD_LAMP_OPTIONS,
+} from '../../../../constants/recordFilterOptions'
 import type { ChainLamp, ComboLamp, HardLamp } from '../../../../types/record'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import LampSection from '../../components/filter/LampSection'
@@ -8,11 +13,6 @@ import MultiSelectFilterSection from '../../components/filter/MultiSelectFilterS
 import NumericRangeSection from '../../components/filter/NumericRangeSection'
 import ScoreSection from '../../components/filter/ScoreSection'
 import { JUSTICE_COUNT_RANGE_FILTER } from '../../constants/rangeFilters'
-import {
-  RECORD_CHAIN_LAMP_OPTIONS,
-  RECORD_COMBO_LAMP_OPTIONS,
-  RECORD_HARD_LAMP_OPTIONS,
-} from '../../constants/recordFilterOptions'
 import {
   parseNumberInput,
   toggleArray,

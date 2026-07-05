@@ -34,6 +34,7 @@ import {
 import { fetchMe } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
+import { getSortAriaValue, SortableHeaderButton } from '../../components/common/SortableTableHeader'
 import {
   CHART_CONST_MAX,
   CHART_CONST_MIN,
@@ -47,6 +48,7 @@ import { formatChartConst, truncateChartConst } from '../../utils/chartConstForm
 import { resolveViewportTooltipPosition } from '../../utils/chartTooltipPosition'
 import { formatInteger } from '../../utils/numberFormat'
 import { clampNumericInput } from '../../utils/numberInput'
+import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
 import {
   inspectWeakCharts,
   isWeakChartInspectionTarget,
@@ -54,8 +56,6 @@ import {
   type WeakChartOutlier,
   type WeakChartSortKey,
 } from '../../utils/weakChartInspector'
-import { RecordHeaderButton } from '../users/components/SharedRecordTableColumns'
-import { nextSortState, type SortDirection } from '../users/recordTable/sortingQuery'
 import {
   WEAK_CHART_AGGREGATION_DIFFICULTIES,
   WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT,
@@ -322,7 +322,7 @@ const WeakChartDistributionChart = (props: {
         <span>{WEAK_CHART_INSPECTOR_COPY.chartTitle}</span>
       </figcaption>
       <div class="overflow-x-auto overscroll-x-contain">
-        <div class={`relative h-[28rem] w-full ${WEAK_CHART_MIN_WIDTH_CLASS}`}>
+        <div class={`relative h-112 w-full ${WEAK_CHART_MIN_WIDTH_CLASS}`}>
           <canvas ref={canvasRef} aria-label={WEAK_CHART_INSPECTOR_COPY.chartAccessibleLabel} />
         </div>
       </div>
@@ -361,7 +361,7 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
   }
 
   /**
-   * ソート状態を反映した共通レコード表のヘッダーボタンを生成する。
+   * ソート状態を反映した共通ヘッダーボタンを生成する。
    *
    * @param label - 列の表示名。
    * @param key - 列のソートキー。
@@ -369,15 +369,24 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
    * @returns ソート操作可能なヘッダーボタン。
    */
   const header = (label: string, key: WeakChartSortKey, align?: 'start' | 'center') => (
-    <RecordHeaderButton
+    <SortableHeaderButton
       label={label}
       active={sortKey() === key}
       direction={sortDirection()}
       align={align}
-      class={align === 'start' ? 'justify-start !min-h-8' : 'justify-center !min-h-8'}
+      class={align === 'start' ? 'justify-start min-h-8!' : 'justify-center min-h-8!'}
       onClick={() => handleSortChange(key)}
     />
   )
+
+  /**
+   * ソート状態をth要素へ伝えるaria-sort値を返す。
+   *
+   * @param key - 列のソートキー。
+   * @returns aria-sortへ渡すソート状態。
+   */
+  const headerAriaSort = (key: WeakChartSortKey) =>
+    getSortAriaValue(sortKey() === key, sortDirection())
 
   return (
     <section class="rounded-lg border border-border bg-surface">
@@ -397,7 +406,7 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
         }
       >
         <div class="overflow-x-auto">
-          <table class="w-full min-w-[30rem] table-fixed border-collapse text-sm">
+          <table class="w-full min-w-120 table-fixed border-collapse text-sm">
             <caption class="sr-only">{WEAK_CHART_INSPECTOR_COPY.tableCaption}</caption>
             <colgroup>
               <col />
@@ -407,16 +416,16 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
             </colgroup>
             <thead class="bg-surface-muted text-left text-text-muted">
               <tr class="[&>*:first-child]:pl-2 [&>*:last-child]:pr-2">
-                <th scope="col" class="font-medium">
+                <th scope="col" class="font-medium" aria-sort={headerAriaSort('title')}>
                   {header('曲名', 'title', 'start')}
                 </th>
-                <th scope="col" class="font-medium">
+                <th scope="col" class="font-medium" aria-sort={headerAriaSort('difficulty')}>
                   {header('難易度', 'difficulty')}
                 </th>
-                <th scope="col" class="font-medium">
+                <th scope="col" class="font-medium" aria-sort={headerAriaSort('const')}>
                   {header('定数', 'const')}
                 </th>
-                <th scope="col" class="font-medium">
+                <th scope="col" class="font-medium" aria-sort={headerAriaSort('score')}>
                   {header('スコア', 'score')}
                 </th>
               </tr>
@@ -758,7 +767,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
                     <Collapsible defaultOpen={false}>
                       <Collapsible.Trigger class="group flex w-full items-center justify-start gap-2 text-sm font-semibold text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring">
                         <ChevronRight
-                          class="h-4 w-4 rotate-0 transition-transform group-data-[expanded]:rotate-90"
+                          class="h-4 w-4 rotate-0 transition-transform group-data-expanded:rotate-90"
                           aria-hidden="true"
                         />
                         <span>{WEAK_CHART_SETTINGS_COPY.displaySection}</span>

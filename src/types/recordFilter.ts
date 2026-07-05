@@ -1,11 +1,5 @@
-import type {
-  ChainLamp,
-  ComboLamp,
-  Difficulty,
-  HardLamp,
-  NumericRangeFilter,
-} from '../../../../types/record'
-import type { SortCondition } from '../../recordTable/sortConditions'
+import type { SortCondition } from '../utils/sortConditions'
+import type { ChainLamp, ComboLamp, Difficulty, HardLamp, NumericRangeFilter } from './record'
 
 export type { ChainLamp, ComboLamp, Difficulty, HardLamp, NumericRangeFilter }
 export type RecordSortKey =

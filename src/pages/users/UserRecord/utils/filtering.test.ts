@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-
+import type { FilterState } from '../../../../types/recordFilter'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
-import type { FilterState } from '../types/types'
 import {
   createRecordTitleMatcher,
   getDefaultFilter,

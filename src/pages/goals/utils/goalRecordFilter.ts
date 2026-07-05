@@ -1,8 +1,8 @@
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../constants/chart'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
+import type { Difficulty, FilterState } from '../../../types/recordFilter'
+import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
 import { MAX_SCORE } from '../../../utils/scoreRank'
-import { buildDefaultFilter } from '../../users/UserRecord/types/filterDefaults'
-import type { Difficulty, FilterState } from '../../users/UserRecord/types/types'
 import { normalizeGoalAttributeIds } from './goalAttributes'
 import {
   COMBO_LAMP_UNACHIEVED_FILTERS,

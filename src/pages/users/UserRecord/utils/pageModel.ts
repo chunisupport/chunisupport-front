@@ -1,12 +1,16 @@
 import type { Accessor, Setter } from 'solid-js'
 import { createMemo } from 'solid-js'
 import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../../../../types/api'
+import type {
+  FilterState,
+  RecordSortCondition,
+  RecordSortKey,
+} from '../../../../types/recordFilter'
 import {
   attachSongMetaToRecords,
   type PlayerRecordWithSongMeta,
 } from '../../../../utils/recordMerger'
 import { getRecordStats, type RecordStats } from '../../utils/recordStats'
-import type { FilterState, RecordSortCondition, RecordSortKey } from '../types/types'
 import { createRecordTitleMatcher, isRecordMatchedWithTitleMatcher } from './filtering'
 import {
   nextPrimaryRecordSortCondition,
