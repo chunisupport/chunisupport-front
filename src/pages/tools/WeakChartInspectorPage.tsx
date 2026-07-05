@@ -683,6 +683,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
                                     )
                                   }}
                                   class="relative flex items-center gap-2"
+                                  textVariant="choice"
                                   labelClass="leading-5"
                                   label={diff}
                                 />

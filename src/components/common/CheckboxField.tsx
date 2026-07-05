@@ -4,6 +4,7 @@ import type { Component, JSX } from 'solid-js'
 import { Show } from 'solid-js'
 
 export type CheckboxFieldControlVariant = 'action' | 'success'
+export type CheckboxFieldTextVariant = 'option' | 'choice'
 
 type CheckboxFieldProps = {
   /** チェックボックスの input id。 */
@@ -40,10 +41,14 @@ type CheckboxFieldProps = {
   indicatorClass?: string
   /** control の既定配色。 */
   controlVariant?: CheckboxFieldControlVariant
+  /** ラベル領域の文字スタイル用途。 */
+  textVariant?: CheckboxFieldTextVariant
 }
 
 const CHECKBOX_FIELD_ROOT_CLASS =
-  'relative flex items-center gap-2 text-sm text-text-muted data-disabled:cursor-not-allowed data-disabled:opacity-60'
+  'relative flex items-center gap-2 data-disabled:cursor-not-allowed data-disabled:opacity-60'
+
+const CHECKBOX_FIELD_OPTION_TEXT_CLASS = 'text-sm text-text-muted'
 
 const CHECKBOX_FIELD_LABEL_CLASS = 'min-w-0 leading-5'
 
@@ -69,6 +74,15 @@ const getCheckboxFieldControlClass = (variant: CheckboxFieldControlVariant): str
   variant === 'success' ? CHECKBOX_FIELD_SUCCESS_CONTROL_CLASS : CHECKBOX_FIELD_ACTION_CONTROL_CLASS
 
 /**
+ * ラベル領域の既定文字スタイルを用途から取得する。
+ *
+ * @param variant - ラベル領域の文字スタイル用途。
+ * @returns Checkbox.Root に適用する Tailwind クラス。
+ */
+const getCheckboxFieldTextClass = (variant: CheckboxFieldTextVariant): string =>
+  variant === 'option' ? CHECKBOX_FIELD_OPTION_TEXT_CLASS : ''
+
+/**
  * アプリ全体で使う Kobalte Checkbox ベースのチェック欄を表示する。
  *
  * @param props - チェック状態、ラベル、補足内容、無効状態、変更ハンドラ、スタイル設定。
@@ -80,7 +94,9 @@ export const CheckboxField: Component<CheckboxFieldProps> = (props) => (
     disabled={props.disabled}
     onChange={props.onChange}
     aria-label={props.label ? undefined : props.ariaLabel}
-    class={`${CHECKBOX_FIELD_ROOT_CLASS} ${props.class ?? ''}`}
+    class={`${CHECKBOX_FIELD_ROOT_CLASS} ${getCheckboxFieldTextClass(
+      props.textVariant ?? 'option'
+    )} ${props.class ?? ''}`}
   >
     <Checkbox.Input id={props.id} class={props.inputClass} style={{ left: '0', top: '0' }} />
     <Checkbox.Control

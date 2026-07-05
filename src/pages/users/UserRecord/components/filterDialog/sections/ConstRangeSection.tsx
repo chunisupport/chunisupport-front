@@ -113,6 +113,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
         checked={props.constFilterMode === 'number'}
         onChange={(checked) => props.onConstFilterModeChange(checked ? 'number' : 'level')}
         class="flex items-center gap-2"
+        textVariant="choice"
         label="譜面定数で指定"
       />
     </div>

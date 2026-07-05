@@ -36,6 +36,7 @@ const DifficultySection: Component<DifficultySectionProps> = (props) => (
               checked={props.selected.includes(diff)}
               onChange={() => props.onToggle(diff)}
               class="relative flex items-center gap-2"
+              textVariant="choice"
               label={diff}
             />
           )
@@ -46,6 +47,7 @@ const DifficultySection: Component<DifficultySectionProps> = (props) => (
         checked={props.currentOpTargetOnly}
         onChange={(checked) => props.onCurrentOpTargetOnlyChange(checked)}
         class="relative mt-1 flex items-center gap-2"
+        textVariant="choice"
         label={CURRENT_OP_TARGET_ONLY_LABEL}
       />
     </div>
