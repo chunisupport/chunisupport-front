@@ -1,3 +1,4 @@
+import { Select } from '@kobalte/core/select'
 import {
   BarController,
   BarElement,
@@ -13,7 +14,8 @@ import {
   PointElement,
   Tooltip,
 } from 'chart.js'
-import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
+import { ChevronDown } from 'lucide-solid'
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import {
@@ -61,6 +63,19 @@ type SongStatsAverageScoreChartProps = {
   values: (number | null)[]
 }
 
+type SongStatsTableView = 'averageScore' | 'scoreRank' | 'combo' | 'clear'
+
+type SongStatsTableViewOption = {
+  label: string
+  value: SongStatsTableView
+}
+
+type SongStatsTableColumnDefinition = {
+  label: string
+  getValue: (band: SongStatsBandDTO) => number | string
+  getClass?: (band: SongStatsBandDTO) => string | undefined
+}
+
 const CHART_HEIGHT_CLASS = 'h-72'
 const CHART_COLOR_FALLBACK = '#6b7280'
 const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
@@ -69,16 +84,23 @@ const CHART_EXCLUDED_RATING_BAND = 'ALL'
 const CHART_X_AXIS_TICK_PADDING = 8
 const AVERAGE_SCORE_CHART_TITLE = 'AVG. SCORE'
 const AVERAGE_SCORE_CHART_COLOR = '--cs-color-action-primary'
+/** 統計テーブルの表示カテゴリ選択肢。 */
+const TABLE_VIEW_OPTIONS: SongStatsTableViewOption[] = [
+  { label: '平均スコア', value: 'averageScore' },
+  { label: 'スコアランク', value: 'scoreRank' },
+  { label: 'FC/AJ/AJC', value: 'combo' },
+  { label: 'ハードランプ', value: 'clear' },
+]
 /** ランク別人数を表示する列とAPIレスポンスのキー。 */
 const RANK_STAT_COLUMN_DEFINITIONS = [
-  { label: 'AAA以下', valueKey: 'aaal' },
-  { label: 'S', valueKey: 's' },
-  { label: 'S+', valueKey: 'sp' },
-  { label: 'SS', valueKey: 'ss' },
-  { label: 'SS+', valueKey: 'ssp' },
-  { label: 'SSS', valueKey: 'sss' },
-  { label: 'SSS+', valueKey: 'sssp' },
   { label: 'MAX', valueKey: 'max' },
+  { label: 'SSS+', valueKey: 'sssp' },
+  { label: 'SSS', valueKey: 'sss' },
+  { label: 'SS+', valueKey: 'ssp' },
+  { label: 'SS', valueKey: 'ss' },
+  { label: 'S+', valueKey: 'sp' },
+  { label: 'S', valueKey: 's' },
+  { label: 'AAA以下', valueKey: 'aaal' },
 ] as const
 /** RANK積み上げ棒グラフへ表示するデータセット定義。 */
 const RANK_CHART_DATASET_DEFINITIONS = [
@@ -97,6 +119,23 @@ const NORMAL_RATING_BAND_ROW_CLASS = 'border-l-4 border-l-transparent'
 const POSITIVE_SCORE_DIFFERENCE_CLASS = 'text-success'
 const NEGATIVE_SCORE_DIFFERENCE_CLASS = 'text-info'
 const EQUAL_SCORE_DIFFERENCE_CLASS = 'text-text-muted'
+/** 統計テーブルの表示カテゴリSelectのトリガーに適用するTailwindクラス。 */
+const TABLE_VIEW_SELECT_TRIGGER_CLASS =
+  'grid h-10 w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 text-left text-sm text-text-muted hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring sm:w-44'
+/** 統計テーブルの表示カテゴリSelectの選択肢に適用するTailwindクラス。 */
+const TABLE_VIEW_SELECT_ITEM_CLASS =
+  'cursor-pointer px-3 py-2 text-sm text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
+/** 統計テーブルの表示カテゴリSelectのポータルに適用するTailwindクラス。 */
+const TABLE_VIEW_SELECT_CONTENT_CLASS =
+  'z-40 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md'
+/** 統計テーブルのヘッダーセルに適用するTailwindクラス。 */
+const TABLE_HEADER_CELL_CLASS =
+  'sticky top-0 z-10 bg-surface-muted px-2 py-2 text-right whitespace-nowrap'
+/** 統計テーブルの左寄せヘッダーセルに適用するTailwindクラス。 */
+const TABLE_LEFT_HEADER_CELL_CLASS =
+  'sticky top-0 z-10 bg-surface-muted px-2 py-2 text-left whitespace-nowrap'
+/** 統計テーブルの通常セルに適用するTailwindクラス。 */
+const TABLE_VALUE_CELL_CLASS = 'px-2 py-2 text-right tabular-nums'
 const COMBO_CHART_DATASET_DEFINITIONS = [
   { label: 'FC', valueKey: 'fc', colorVariable: '--cs-color-lamp-full-combo-bg' },
   { label: 'AJ', valueKey: 'aj', colorVariable: '--cs-color-lamp-all-justice-bg' },
@@ -128,42 +167,24 @@ const CLEAR_CHART_DATASET_DEFINITIONS = [
   },
 ] as const
 
-/** 現在のロケールにおける小数点セパレータを取得する。 */
-const getDecimalSeparator = (): string => (1.1).toLocaleString().charAt(1)
-
 /**
- * 平均スコアを整数部と小数部に分割して表示する。
+ * 平均スコアを整数部のみの表示文字列へ変換する。
+ *
  * @param score 表示するスコア値。
- * @returns 小数部のみフォントサイズを小さくした JSX。
+ * @returns 小数点以下を除いた平均スコア文字列。
  */
-const formatAverageScore = (score: number) => {
-  const formatted = score.toLocaleString(undefined, {
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 4,
-  })
-  const sep = getDecimalSeparator()
-  const idx = formatted.lastIndexOf(sep)
-  if (idx === -1) return formatted
-  return (
-    <>
-      {formatted.slice(0, idx)}
-      <span class="text-[0.8em]">{formatted.slice(idx)}</span>
-    </>
-  )
-}
+const formatAverageScore = (score: number): string => Math.trunc(score).toLocaleString()
 
 /**
- * 平均スコアとの差分を符号付きの括弧書きへ変換する。
+ * 平均スコアとの差分を符号付きの整数表示へ変換する。
  *
  * @param difference - 自分のスコアから平均スコアを引いた差分。
- * @returns 小数第4位まで表示する差分文字列。
+ * @returns 小数点以下を除いた差分文字列。
  */
 const formatScoreDifference = (difference: number): string =>
-  `(${difference.toLocaleString(undefined, {
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 4,
+  Math.trunc(difference).toLocaleString(undefined, {
     signDisplay: 'always',
-  })})`
+  })
 
 /**
  * 平均スコアとの差分に応じた文字色クラスを返す。
@@ -175,6 +196,61 @@ const getScoreDifferenceClass = (difference: number): string => {
   if (difference > 0) return POSITIVE_SCORE_DIFFERENCE_CLASS
   if (difference < 0) return NEGATIVE_SCORE_DIFFERENCE_CLASS
   return EQUAL_SCORE_DIFFERENCE_CLASS
+}
+
+/**
+ * 統計表に表示する列定義をカテゴリごとに取得する。
+ *
+ * @param view 表示対象の統計カテゴリ。
+ * @returns 共通列の右側に表示する列定義。
+ */
+const getTableColumnDefinitions = (
+  view: SongStatsTableView,
+  ownScore: number | undefined
+): SongStatsTableColumnDefinition[] => {
+  switch (view) {
+    case 'averageScore':
+      return [
+        {
+          label: '平均スコア',
+          getValue: (band) =>
+            band.average_score === null ? '-' : formatAverageScore(band.average_score),
+        },
+        {
+          label: '自分との差',
+          getValue: (band) => {
+            const difference = calculateOwnScoreDifference(ownScore, band.average_score)
+            return difference === undefined ? '-' : formatScoreDifference(difference)
+          },
+          getClass: (band) => {
+            const difference = calculateOwnScoreDifference(ownScore, band.average_score)
+            return difference === undefined ? undefined : getScoreDifferenceClass(difference)
+          },
+        },
+      ]
+    case 'scoreRank':
+      return RANK_STAT_COLUMN_DEFINITIONS.map((column) => ({
+        label: column.label,
+        getValue: (band: SongStatsBandDTO) => band.rank[column.valueKey].toLocaleString(),
+      }))
+    case 'combo':
+      return [
+        { label: 'FC', getValue: (band) => band.combo.fc.toLocaleString() },
+        { label: 'AJ', getValue: (band) => band.combo.aj.toLocaleString() },
+        { label: 'AJC', getValue: (band) => band.combo.ajc.toLocaleString() },
+      ]
+    case 'clear':
+      return [
+        { label: 'CLEAR', getValue: (band) => band.clear.clear.toLocaleString() },
+        { label: 'HARD', getValue: (band) => band.clear.hard.toLocaleString() },
+        { label: 'BRAVE', getValue: (band) => band.clear.brave.toLocaleString() },
+        { label: 'ABSOLUTE', getValue: (band) => band.clear.absolute.toLocaleString() },
+        {
+          label: 'CATASTROPHY',
+          getValue: (band) => band.clear.catastrophy.toLocaleString(),
+        },
+      ]
+  }
 }
 
 /**
@@ -607,6 +683,15 @@ const SongStatsCharts = (props: Props) => {
  * @returns 難易度別統計テーブルと集計グラフ。
  */
 const SongStatsTable = (props: Props) => {
+  const [selectedView, setSelectedView] = createSignal<SongStatsTableView>('averageScore')
+  const selectedViewOption = createMemo(
+    () =>
+      TABLE_VIEW_OPTIONS.find((option) => option.value === selectedView()) ?? TABLE_VIEW_OPTIONS[0]
+  )
+  const displayedColumns = createMemo(() =>
+    getTableColumnDefinitions(selectedView(), props.ownScore)
+  )
+
   /**
    * 統計行に適用するハイライト状態を含むクラスを返す。
    *
@@ -620,26 +705,58 @@ const SongStatsTable = (props: Props) => {
         : NORMAL_RATING_BAND_ROW_CLASS
     }`
 
+  /**
+   * 表示カテゴリSelectの変更結果をテーブル表示へ反映する。
+   *
+   * @param option - 選択された表示カテゴリ。選択解除時はnull。
+   * @returns なし。
+   */
+  const handleViewChange = (option: SongStatsTableViewOption | null): void => {
+    if (option) setSelectedView(option.value)
+  }
+
   return (
     <>
-      <div class="overflow-x-auto">
+      <div class="flex justify-end">
+        <Select<SongStatsTableViewOption>
+          options={TABLE_VIEW_OPTIONS}
+          optionValue="value"
+          optionTextValue="label"
+          value={selectedViewOption()}
+          onChange={handleViewChange}
+          gutter={0}
+          itemComponent={(itemProps) => (
+            <Select.Item item={itemProps.item} class={TABLE_VIEW_SELECT_ITEM_CLASS}>
+              <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
+            </Select.Item>
+          )}
+        >
+          <Select.Label class="sr-only">統計テーブルの表示カテゴリ</Select.Label>
+          <Select.Trigger class={TABLE_VIEW_SELECT_TRIGGER_CLASS}>
+            <Select.Value<SongStatsTableViewOption> class="truncate">
+              {(state) => state.selectedOption()?.label}
+            </Select.Value>
+            <Select.Icon class="text-text-subtle">
+              <ChevronDown size={16} aria-hidden="true" />
+            </Select.Icon>
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Content class={TABLE_VIEW_SELECT_CONTENT_CLASS}>
+              <Select.Listbox />
+            </Select.Content>
+          </Select.Portal>
+        </Select>
+      </div>
+
+      <div class="max-h-128 overflow-auto">
         <table class="min-w-full text-sm">
-          <thead class="bg-surface-muted">
+          <thead>
             <tr>
-              <th class="px-2 py-2 text-left whitespace-nowrap">ベスト枠平均</th>
-              <th class="px-2 py-2 text-right whitespace-nowrap">人数</th>
-              <th class="px-2 py-2 text-right whitespace-nowrap">平均スコア</th>
-              <For each={RANK_STAT_COLUMN_DEFINITIONS}>
-                {(column) => <th class="px-2 py-2 text-right whitespace-nowrap">{column.label}</th>}
+              <th class={TABLE_LEFT_HEADER_CELL_CLASS}>実力帯</th>
+              <th class={TABLE_HEADER_CELL_CLASS}>人数</th>
+              <For each={displayedColumns()}>
+                {(column) => <th class={TABLE_HEADER_CELL_CLASS}>{column.label}</th>}
               </For>
-              <th class="px-2 py-2 text-right whitespace-nowrap">FC</th>
-              <th class="px-2 py-2 text-right whitespace-nowrap">AJ</th>
-              <th class="px-2 py-2 text-right whitespace-nowrap">AJC</th>
-              <th class="px-2 py-2 text-right whitespace-nowrap">CLEAR</th>
-              <th class="px-2 py-2 text-right whitespace-nowrap">HARD</th>
-              <th class="px-2 py-2 text-right whitespace-nowrap">BRAVE</th>
-              <th class="px-2 py-2 text-right whitespace-nowrap">ABSOLUTE</th>
-              <th class="px-2 py-2 text-right whitespace-nowrap">CATASTROPHY</th>
             </tr>
           </thead>
           <tbody>
@@ -647,45 +764,14 @@ const SongStatsTable = (props: Props) => {
               {(band) => (
                 <tr class={getRowClass(band.rating_band)}>
                   <td class="px-2 py-2">{band.rating_band}</td>
-                  <td class="px-2 py-2 text-right">{band.player_count.toLocaleString()}</td>
-                  <td class="px-2 py-2 text-right tabular-nums">
-                    <div class="flex flex-col items-end">
-                      <span>
-                        {band.average_score === null ? '-' : formatAverageScore(band.average_score)}
-                      </span>
-                      <Show
-                        when={
-                          calculateOwnScoreDifference(props.ownScore, band.average_score) !==
-                          undefined
-                        }
-                      >
-                        <span
-                          class={`text-[0.625rem] leading-tight font-normal ${getScoreDifferenceClass(
-                            calculateOwnScoreDifference(props.ownScore, band.average_score) ?? 0
-                          )}`}
-                        >
-                          {formatScoreDifference(
-                            calculateOwnScoreDifference(props.ownScore, band.average_score) ?? 0
-                          )}
-                        </span>
-                      </Show>
-                    </div>
-                  </td>
-                  <For each={RANK_STAT_COLUMN_DEFINITIONS}>
+                  <td class={TABLE_VALUE_CELL_CLASS}>{band.player_count.toLocaleString()}</td>
+                  <For each={displayedColumns()}>
                     {(column) => (
-                      <td class="px-2 py-2 text-right">
-                        {band.rank[column.valueKey].toLocaleString()}
+                      <td class={`${TABLE_VALUE_CELL_CLASS} ${column.getClass?.(band) ?? ''}`}>
+                        {column.getValue(band)}
                       </td>
                     )}
                   </For>
-                  <td class="px-2 py-2 text-right">{band.combo.fc.toLocaleString()}</td>
-                  <td class="px-2 py-2 text-right">{band.combo.aj.toLocaleString()}</td>
-                  <td class="px-2 py-2 text-right">{band.combo.ajc.toLocaleString()}</td>
-                  <td class="px-2 py-2 text-right">{band.clear.clear.toLocaleString()}</td>
-                  <td class="px-2 py-2 text-right">{band.clear.hard.toLocaleString()}</td>
-                  <td class="px-2 py-2 text-right">{band.clear.brave.toLocaleString()}</td>
-                  <td class="px-2 py-2 text-right">{band.clear.absolute.toLocaleString()}</td>
-                  <td class="px-2 py-2 text-right">{band.clear.catastrophy.toLocaleString()}</td>
                 </tr>
               )}
             </For>
