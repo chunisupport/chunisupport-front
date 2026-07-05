@@ -7,6 +7,25 @@ export type SongSelectionFilter = {
   versions: string[]
 }
 
+/** 楽曲選択フィルターダイアログ内の Select を前面へ表示するクラス。 */
+export const SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-80'
+
+/** 楽曲選択フィルターダイアログの操作ボタンで使うクラス。 */
+export const SONG_SELECTION_FILTER_DIALOG_BUTTON_CLASS = {
+  secondary:
+    'rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover',
+  primary:
+    'rounded bg-action-primary px-4 py-2 text-sm text-text-inverse hover:bg-action-primary-hover',
+} as const
+
+/** 楽曲選択ツールバーボタンの選択状態へ適用するクラス。 */
+export const SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS =
+  'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
+
+/** 楽曲選択ツールバーボタンの未選択状態へ適用するクラス。 */
+export const SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS =
+  'border-border-strong text-text-muted hover:bg-surface-hover'
+
 /**
  * 楽曲選択フィルターの初期値を生成する。
  *
@@ -32,6 +51,37 @@ export const hasSongSelectionFilterChanges = (
 ): boolean =>
   !hasSameFilterValues(current.genres, defaultFilter.genres) ||
   !hasSameFilterValues(current.versions, defaultFilter.versions)
+
+/**
+ * 楽曲検索欄の状態に応じた外枠クラスを返す。
+ *
+ * @param active - 検索文字列が入力されているか。
+ * @returns 検索欄の外枠へ適用するクラス。
+ */
+export const getSongSelectionSearchFrameClass = (active: boolean): string =>
+  active
+    ? 'border-action-primary bg-action-primary-muted focus-within:border-action-primary'
+    : 'border-border-strong focus-within:border-focus-ring'
+
+/**
+ * 楽曲検索欄の状態に応じたアイコンクラスを返す。
+ *
+ * @param active - 検索文字列が入力されているか。
+ * @returns 検索アイコンへ適用するクラス。
+ */
+export const getSongSelectionSearchIconClass = (active: boolean): string =>
+  active ? 'text-action-primary' : 'text-text-subtle'
+
+/**
+ * 楽曲選択行の状態に応じたクラスを返す。
+ *
+ * @param selected - 楽曲が選択されているか。
+ * @returns 楽曲選択行へ適用するクラス。
+ */
+export const getSongSelectionRowClass = (selected: boolean): string =>
+  selected
+    ? 'bg-action-primary text-text-inverse hover:bg-action-primary-hover'
+    : 'bg-surface text-text hover:bg-surface-muted'
 
 /**
  * 楽曲をリリース日、公式番号の新しい順で安定ソートする。

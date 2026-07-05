@@ -25,7 +25,14 @@ import {
 } from '../../../../utils/versionConverter'
 import {
   buildDefaultSongSelectionFilter,
+  getSongSelectionRowClass,
+  getSongSelectionSearchFrameClass,
+  getSongSelectionSearchIconClass,
   hasSongSelectionFilterChanges,
+  SONG_SELECTION_FILTER_DIALOG_BUTTON_CLASS,
+  SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
+  SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS,
+  SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS,
   type SongSelectionFilter,
   sortSongSelectionCandidates,
 } from '../../components/songSelectionDialog'
@@ -43,13 +50,6 @@ type Props = {
 
 const FAVORITE_SONG_LIMIT = 100
 const FAVORITE_SONG_DESCRIPTION = `お気に入りは${FAVORITE_SONG_LIMIT}曲まで登録できます。`
-const FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-80'
-const FILTER_DIALOG_BUTTON_CLASS = {
-  secondary:
-    'rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover',
-  primary:
-    'rounded bg-action-primary px-4 py-2 text-sm text-text-inverse hover:bg-action-primary-hover',
-} as const
 
 /**
  * お気に入り楽曲を検索・絞り込みして編集するダイアログ。
@@ -200,16 +200,12 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
           <div class="mb-3 flex min-w-0 shrink-0 items-center">
             <TextField class="min-w-0 flex-1">
               <div
-                class={`flex min-w-0 items-center gap-2 rounded-l border px-2 transition-colors ${
+                class={`flex min-w-0 items-center gap-2 rounded-l border px-2 transition-colors ${getSongSelectionSearchFrameClass(
                   hasQuery()
-                    ? 'border-action-primary bg-action-primary-muted'
-                    : 'border-border-strong focus-within:border-focus-ring'
-                }`}
+                )}`}
               >
                 <Search
-                  class={`h-4 w-4 shrink-0 ${
-                    hasQuery() ? 'text-action-primary' : 'text-text-subtle'
-                  }`}
+                  class={`h-4 w-4 shrink-0 ${getSongSelectionSearchIconClass(hasQuery())}`}
                   aria-hidden="true"
                 />
                 <TextField.Input
@@ -226,8 +222,8 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
               type="button"
               class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center border focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 filterChanged()
-                  ? 'border-action-primary bg-action-primary text-text-inverse'
-                  : 'border-border-strong text-text-muted hover:bg-surface-hover'
+                  ? SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS
+                  : SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS
               }`}
               aria-label={filterChanged() ? 'フィルター適用中' : 'フィルター'}
               aria-pressed={filterChanged()}
@@ -240,8 +236,8 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
               type="button"
               class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 showSelectedOnly()
-                  ? 'border-action-primary bg-action-primary text-text-inverse'
-                  : 'border-border-strong text-text-muted hover:bg-surface-hover'
+                  ? SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS
+                  : SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS
               }`}
               aria-label="選択済み楽曲のみ表示"
               aria-pressed={showSelectedOnly()}
@@ -289,11 +285,9 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
                         <li>
                           <Button
                             type="button"
-                            class={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60 ${
+                            class={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60 ${getSongSelectionRowClass(
                               selected()
-                                ? 'bg-action-primary text-text-inverse hover:bg-action-primary-hover'
-                                : 'bg-surface text-text hover:bg-surface-muted'
-                            }`}
+                            )}`}
                             aria-pressed={selected()}
                             aria-label={`${song.title}のお気に入り設定を切り替え`}
                             title={
@@ -348,7 +342,7 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
                   <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
                   <Button
                     type="button"
-                    class={FILTER_DIALOG_BUTTON_CLASS.secondary}
+                    class={SONG_SELECTION_FILTER_DIALOG_BUTTON_CLASS.secondary}
                     onClick={() => setFilters(defaultFilter())}
                   >
                     すべて選択
@@ -361,7 +355,7 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
                       options={genreOptions()}
                       selected={filters().genres}
                       placeholder="ジャンルを選択"
-                      contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+                      contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
                       onToggle={(genre) =>
                         setFilters((current) => ({
                           ...current,
@@ -380,7 +374,7 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
                       options={versionOptions()}
                       selected={filters().versions}
                       placeholder="バージョンを選択"
-                      contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+                      contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
                       onToggle={(version) =>
                         setFilters((current) => ({
                           ...current,
@@ -395,7 +389,7 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
                   </div>
                 </div>
                 <div class="mt-6 flex justify-end">
-                  <Dialog.CloseButton class={FILTER_DIALOG_BUTTON_CLASS.primary}>
+                  <Dialog.CloseButton class={SONG_SELECTION_FILTER_DIALOG_BUTTON_CLASS.primary}>
                     適用
                   </Dialog.CloseButton>
                 </div>

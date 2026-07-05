@@ -3,6 +3,9 @@ import test from 'node:test'
 import type { SongDTO } from '../../../types/api'
 import {
   buildDefaultSongSelectionFilter,
+  getSongSelectionRowClass,
+  getSongSelectionSearchFrameClass,
+  getSongSelectionSearchIconClass,
   hasSongSelectionFilterChanges,
   sortSongSelectionCandidates,
 } from './songSelectionDialog'
@@ -54,4 +57,22 @@ test('楽曲選択フィルターはジャンルとバージョンの差分を�
   // When & Then
   assert.equal(hasSongSelectionFilterChanges(defaultFilter, defaultFilter), false)
   assert.equal(hasSongSelectionFilterChanges({ ...defaultFilter, genres: [] }, defaultFilter), true)
+})
+
+test('楽曲選択UIは状態に応じてアクセントカラーのクラスを返すこと', () => {
+  // Given
+  const active = true
+  const inactive = false
+
+  // When
+  const activeSearchFrameClass = getSongSelectionSearchFrameClass(active)
+  const activeSearchIconClass = getSongSelectionSearchIconClass(active)
+  const selectedRowClass = getSongSelectionRowClass(active)
+  const inactiveRowClass = getSongSelectionRowClass(inactive)
+
+  // Then
+  assert.match(activeSearchFrameClass, /bg-action-primary-muted/)
+  assert.match(activeSearchIconClass, /text-action-primary/)
+  assert.match(selectedRowClass, /bg-action-primary/)
+  assert.doesNotMatch(inactiveRowClass, /action-primary/)
 })
