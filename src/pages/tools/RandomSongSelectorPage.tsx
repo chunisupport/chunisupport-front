@@ -51,6 +51,7 @@ import {
   type RandomSongLampFilter,
   resolveRandomSongRecordLamp,
   restoreRandomSongResults,
+  toggleRandomSongDifficultyFilter,
 } from '../../utils/randomSongSelector'
 import { normalizeChartConstRangeInput, normalizeScoreRangeInput } from '../../utils/rangeInput'
 import { getScoreRank } from '../../utils/scoreRank'
@@ -87,6 +88,9 @@ const RESULT_RECORD_LAMP_BADGE_CLASS: Record<RandomSongLampFilter, string> = {
 }
 const RESULT_RECORD_SCORE_BADGE_CLASS = `${RESULT_RECORD_BADGE_CLASS} bg-surface-muted text-text`
 const RANDOM_SONG_LAMP_VALUES = RANDOM_SONG_LAMP_OPTIONS.map((option) => option.value)
+
+const RANDOM_SONG_DIFFICULTY_FILTER_CHECKBOX_ID_PREFIX = 'random-song-difficulty-filter'
+
 type RandomSongTextFieldProps = {
   id: string
   label: string
@@ -416,29 +420,18 @@ const formatRandomSongDifficultyFilterLabel = (difficulty: RandomSongDifficultyF
   RANDOM_SONG_SELECTOR_DIFFICULTY_FILTER_LABELS[difficulty]
 
 /**
- * OP対象と通常難易度が同時選択されないように選択結果を正規化する。
+ * OP対象選択中に通常難易度のチェックボックスを操作不可にするか判定する。
  *
- * @param currentSelected - 現在の選択値。
- * @param nextSelected - AppMultiSelect から受け取った次の選択値。
- * @returns 排他条件を反映した選択値。
+ * @param difficulty - 判定対象の難易度絞り込み値。
+ * @param selectedDifficulties - 現在選択中の難易度絞り込み値。
+ * @returns OP対象選択中の通常難易度であればtrue。
  */
-const normalizeRandomSongDifficultySelection = (
-  currentSelected: readonly RandomSongDifficultyFilter[],
-  nextSelected: readonly RandomSongDifficultyFilter[]
-): RandomSongDifficultyFilter[] => {
-  const currentlyIncludesOpTarget = currentSelected.includes(RANDOM_SONG_OP_TARGET_FILTER)
-  const nextIncludesOpTarget = nextSelected.includes(RANDOM_SONG_OP_TARGET_FILTER)
-
-  if (!nextIncludesOpTarget) {
-    return [...nextSelected]
-  }
-
-  if (!currentlyIncludesOpTarget) {
-    return [RANDOM_SONG_OP_TARGET_FILTER]
-  }
-
-  return nextSelected.filter((difficulty) => difficulty !== RANDOM_SONG_OP_TARGET_FILTER)
-}
+const isRandomSongDifficultyFilterDisabled = (
+  difficulty: RandomSongDifficultyFilter,
+  selectedDifficulties: readonly RandomSongDifficultyFilter[]
+): boolean =>
+  selectedDifficulties.includes(RANDOM_SONG_OP_TARGET_FILTER) &&
+  difficulty !== RANDOM_SONG_OP_TARGET_FILTER
 
 /**
  * ランダム選曲結果で表示するレコードバッジを生成する。
@@ -814,15 +807,13 @@ const RandomSongSelectorPage = (): JSX.Element => {
   }
 
   /**
-   * 難易度絞り込みをOP対象と通常難易度が同時選択されない形で更新する。
+   * 難易度絞り込みをOP対象と通常難易度が同時選択されない形で切り替える。
    *
-   * @param nextSelected - 複数選択欄から受け取った次の選択値。
+   * @param difficulty - 切り替える難易度絞り込み値。
    * @returns なし。
    */
-  const handleDifficultyFiltersChange = (nextSelected: RandomSongDifficultyFilter[]): void => {
-    setSelectedDifficulties((current) =>
-      normalizeRandomSongDifficultySelection(current, nextSelected)
-    )
+  const handleDifficultyFilterToggle = (difficulty: RandomSongDifficultyFilter): void => {
+    setSelectedDifficulties((current) => toggleRandomSongDifficultyFilter(current, difficulty))
   }
 
   /**
@@ -946,21 +937,34 @@ const RandomSongSelectorPage = (): JSX.Element => {
                   </div>
                 </div>
 
-                <div class="grid gap-4 lg:grid-cols-2">
-                  <div class="grid gap-4">
-                    <div>
-                      <MultiSelectField
-                        label={RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
-                        options={toMultiSelectOptions(
-                          RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS,
-                          formatRandomSongDifficultyFilterLabel
-                        )}
-                        selected={selectedDifficulties()}
-                        placeholder={RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
-                        onChange={handleDifficultyFiltersChange}
-                        selectAllValues={RANDOM_SONG_SELECTOR_DIFFICULTIES}
-                      />
+                <div class="grid gap-4 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
+                  <div>
+                    <span class="mb-1 block text-sm font-medium text-text-muted">
+                      {RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
+                    </span>
+                    <div class="flex flex-col gap-2">
+                      <For each={RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS}>
+                        {(difficulty, index) => {
+                          const id = `${RANDOM_SONG_DIFFICULTY_FILTER_CHECKBOX_ID_PREFIX}-${index()}`
+                          return (
+                            <CheckboxField
+                              id={id}
+                              checked={selectedDifficulties().includes(difficulty)}
+                              disabled={isRandomSongDifficultyFilterDisabled(
+                                difficulty,
+                                selectedDifficulties()
+                              )}
+                              onChange={() => handleDifficultyFilterToggle(difficulty)}
+                              class="relative flex items-center gap-2"
+                              textVariant="large"
+                              label={formatRandomSongDifficultyFilterLabel(difficulty)}
+                            />
+                          )
+                        }}
+                      </For>
                     </div>
+                  </div>
+                  <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                       <GenreMultiSelect
                         label={RANDOM_SONG_SELECTOR_COPY.genreLabel}
@@ -971,8 +975,6 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         onChange={setSelectedGenres}
                       />
                     </div>
-                  </div>
-                  <div class="grid gap-4">
                     <div>
                       <VersionMultiSelect
                         label={RANDOM_SONG_SELECTOR_COPY.versionLabel}
@@ -983,19 +985,21 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         onChange={setSelectedVersions}
                       />
                     </div>
-                    <RandomSongRangeField
-                      idPrefix="random-song-const"
-                      label={RANDOM_SONG_SELECTOR_FIELD_LABELS.const}
-                      minLabel={RANDOM_SONG_SELECTOR_COPY.minConstLabel}
-                      maxLabel={RANDOM_SONG_SELECTOR_COPY.maxConstLabel}
-                      minValue={minConst()}
-                      maxValue={maxConst()}
-                      inputMode="decimal"
-                      error={constRangeError()}
-                      normalizeInput={normalizeChartConstRangeInput}
-                      onMinChange={setMinConst}
-                      onMaxChange={setMaxConst}
-                    />
+                    <div class="sm:col-span-2">
+                      <RandomSongRangeField
+                        idPrefix="random-song-const"
+                        label={RANDOM_SONG_SELECTOR_FIELD_LABELS.const}
+                        minLabel={RANDOM_SONG_SELECTOR_COPY.minConstLabel}
+                        maxLabel={RANDOM_SONG_SELECTOR_COPY.maxConstLabel}
+                        minValue={minConst()}
+                        maxValue={maxConst()}
+                        inputMode="decimal"
+                        error={constRangeError()}
+                        normalizeInput={normalizeChartConstRangeInput}
+                        onMinChange={setMinConst}
+                        onMaxChange={setMaxConst}
+                      />
+                    </div>
                   </div>
                 </div>
 
