@@ -197,6 +197,7 @@ const getScoreDifferenceClass = (difference: number): string => {
  * 統計表に表示する列定義をカテゴリごとに取得する。
  *
  * @param view 表示対象の統計カテゴリ。
+ * @param ownScore 平均スコアとの差分表示に利用する自分のスコア。
  * @returns 共通列の右側に表示する列定義。
  */
 const getTableColumnDefinitions = (

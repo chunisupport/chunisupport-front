@@ -1,7 +1,6 @@
 import { Select } from '@kobalte/core/select'
-import * as Tabs from '@kobalte/core/tabs'
 import { ChevronDown } from 'lucide-solid'
-import { createMemo, createSignal, For, Show } from 'solid-js'
+import { createMemo, createSignal, Show } from 'solid-js'
 import { Loading } from '../../../../components'
 import type { RatingBandDTO, SongStatsResponseDTO } from '../../../../types/api'
 import SongStatsTable, {
@@ -104,48 +103,15 @@ const SongStatsTabs = (props: Props) => {
         <p class="text-xs text-text-muted">{SONG_STATS_DESCRIPTION}</p>
       </div>
 
-      <Tabs.Root value={selectedDifficulty()}>
-        <div class={STATS_CONTROL_ROW_CLASS}>
-          <Show when={props.readonlyDifficulty === undefined}>
-            <div class={STATS_CONTROL_ITEM_CLASS}>
-              <Select<DifficultyOption>
-                options={props.difficulties}
-                optionValue="value"
-                optionTextValue="label"
-                value={selectedDifficultyOption()}
-                onChange={handleDifficultyChange}
-                gutter={0}
-                itemComponent={(itemProps) => (
-                  <Select.Item item={itemProps.item} class={DIFFICULTY_SELECT_ITEM_CLASS}>
-                    <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                  </Select.Item>
-                )}
-              >
-                <Select.Label class="sr-only">統計に表示する難易度</Select.Label>
-                <Select.Trigger class={DIFFICULTY_SELECT_TRIGGER_CLASS}>
-                  <Select.Value<DifficultyOption> class="truncate">
-                    {(state) => state.selectedOption()?.label}
-                  </Select.Value>
-                  <Select.Icon class="text-text-subtle">
-                    <ChevronDown size={16} aria-hidden="true" />
-                  </Select.Icon>
-                </Select.Trigger>
-                <Select.Portal>
-                  <Select.Content class={DIFFICULTY_SELECT_CONTENT_CLASS}>
-                    <Select.Listbox />
-                  </Select.Content>
-                </Select.Portal>
-              </Select>
-            </div>
-          </Show>
-
+      <div class={STATS_CONTROL_ROW_CLASS}>
+        <Show when={props.readonlyDifficulty === undefined}>
           <div class={STATS_CONTROL_ITEM_CLASS}>
-            <Select<SongStatsTableViewOption>
-              options={TABLE_VIEW_OPTIONS}
+            <Select<DifficultyOption>
+              options={props.difficulties}
               optionValue="value"
               optionTextValue="label"
-              value={selectedTableViewOption()}
-              onChange={handleTableViewChange}
+              value={selectedDifficultyOption()}
+              onChange={handleDifficultyChange}
               gutter={0}
               itemComponent={(itemProps) => (
                 <Select.Item item={itemProps.item} class={DIFFICULTY_SELECT_ITEM_CLASS}>
@@ -153,9 +119,9 @@ const SongStatsTabs = (props: Props) => {
                 </Select.Item>
               )}
             >
-              <Select.Label class="sr-only">統計テーブルの表示内容</Select.Label>
+              <Select.Label class="sr-only">統計に表示する難易度</Select.Label>
               <Select.Trigger class={DIFFICULTY_SELECT_TRIGGER_CLASS}>
-                <Select.Value<SongStatsTableViewOption> class="truncate">
+                <Select.Value<DifficultyOption> class="truncate">
                   {(state) => state.selectedOption()?.label}
                 </Select.Value>
                 <Select.Icon class="text-text-subtle">
@@ -169,26 +135,57 @@ const SongStatsTabs = (props: Props) => {
               </Select.Portal>
             </Select>
           </div>
-        </div>
+        </Show>
 
-        <For each={props.difficulties}>
-          {(difficulty) => (
-            <Tabs.Content value={difficulty.value} class="mt-3">
-              <Show when={!props.isStatsLoading && props.stats} fallback={<Loading />}>
-                {(statsData) => (
-                  <SongStatsTable
-                    stats={statsData().stats}
-                    selectedView={selectedTableView()}
-                    bestAverage={props.bestAverage}
-                    ratingBands={props.ratingBands}
-                    ownScore={props.ownScore}
-                  />
-                )}
-              </Show>
-            </Tabs.Content>
+        <div
+          class={`${STATS_CONTROL_ITEM_CLASS} ${
+            props.readonlyDifficulty === undefined ? '' : 'col-span-2'
+          }`}
+        >
+          <Select<SongStatsTableViewOption>
+            options={TABLE_VIEW_OPTIONS}
+            optionValue="value"
+            optionTextValue="label"
+            value={selectedTableViewOption()}
+            onChange={handleTableViewChange}
+            gutter={0}
+            itemComponent={(itemProps) => (
+              <Select.Item item={itemProps.item} class={DIFFICULTY_SELECT_ITEM_CLASS}>
+                <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
+              </Select.Item>
+            )}
+          >
+            <Select.Label class="sr-only">統計テーブルの表示内容</Select.Label>
+            <Select.Trigger class={DIFFICULTY_SELECT_TRIGGER_CLASS}>
+              <Select.Value<SongStatsTableViewOption> class="truncate">
+                {(state) => state.selectedOption()?.label}
+              </Select.Value>
+              <Select.Icon class="text-text-subtle">
+                <ChevronDown size={16} aria-hidden="true" />
+              </Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content class={DIFFICULTY_SELECT_CONTENT_CLASS}>
+                <Select.Listbox />
+              </Select.Content>
+            </Select.Portal>
+          </Select>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <Show when={!props.isStatsLoading && props.stats} fallback={<Loading />}>
+          {(statsData) => (
+            <SongStatsTable
+              stats={statsData().stats}
+              selectedView={selectedTableView()}
+              bestAverage={props.bestAverage}
+              ratingBands={props.ratingBands}
+              ownScore={props.ownScore}
+            />
           )}
-        </For>
-      </Tabs.Root>
+        </Show>
+      </div>
     </div>
   )
 }
