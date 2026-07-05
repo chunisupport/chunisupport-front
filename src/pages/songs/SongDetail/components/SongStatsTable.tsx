@@ -207,6 +207,10 @@ const getTableColumnDefinitions = (
     case 'averageScore':
       return [
         {
+          label: '人数',
+          getValue: (band) => band.player_count.toLocaleString(),
+        },
+        {
           label: '平均スコア',
           getValue: (band) =>
             band.average_score === null ? '-' : formatAverageScore(band.average_score),
@@ -702,7 +706,6 @@ const SongStatsTable = (props: Props) => {
           <thead>
             <tr>
               <th class={TABLE_LEFT_HEADER_CELL_CLASS}>実力帯</th>
-              <th class={TABLE_HEADER_CELL_CLASS}>人数</th>
               <For each={displayedColumns()}>
                 {(column) => <th class={TABLE_HEADER_CELL_CLASS}>{column.label}</th>}
               </For>
@@ -713,7 +716,6 @@ const SongStatsTable = (props: Props) => {
               {(band) => (
                 <tr class={getRowClass(band.rating_band)}>
                   <td class="px-2 py-2">{band.rating_band}</td>
-                  <td class={TABLE_VALUE_CELL_CLASS}>{band.player_count.toLocaleString()}</td>
                   <For each={displayedColumns()}>
                     {(column) => (
                       <td class={`${TABLE_VALUE_CELL_CLASS} ${column.getClass?.(band) ?? ''}`}>
