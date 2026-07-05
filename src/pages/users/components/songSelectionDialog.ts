@@ -10,14 +10,6 @@ export type SongSelectionFilter = {
 /** 楽曲選択フィルターダイアログ内の Select を前面へ表示するクラス。 */
 export const SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-80'
 
-/** 楽曲選択フィルターダイアログの操作ボタンで使うクラス。 */
-export const SONG_SELECTION_FILTER_DIALOG_BUTTON_CLASS = {
-  secondary:
-    'rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover',
-  primary:
-    'rounded bg-action-primary px-4 py-2 text-sm text-text-inverse hover:bg-action-primary-hover',
-} as const
-
 /** 楽曲選択ツールバーボタンの選択状態へ適用するクラス。 */
 export const SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS =
   'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
