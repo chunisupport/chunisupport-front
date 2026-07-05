@@ -121,7 +121,7 @@ export const AppMultiSelect = <TValue extends AppMultiSelectValue>(
           <div class="flex items-center gap-2">
             <span class="inline-flex w-4 justify-center text-success">
               <Select.ItemIndicator>
-                <Check size={14} />
+                <Check size={14} aria-hidden="true" />
               </Select.ItemIndicator>
             </span>
             <Select.ItemLabel>{formatLabel(itemProps.item.rawValue)}</Select.ItemLabel>

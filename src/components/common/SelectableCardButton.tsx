@@ -245,7 +245,12 @@ export const SelectableCardLink = (props: SelectableCardLinkProps): JSX.Element 
     'class',
   ])
 
-  const content = (
+  /**
+   * リンクまたは無効表示のカード内コンテンツを生成する。
+   *
+   * @returns カード内に表示するアイコン、見出し、説明、子要素。
+   */
+  const renderContent = (): JSX.Element => (
     <SelectableCardContent
       icon={local.icon}
       title={local.title}
@@ -273,7 +278,7 @@ export const SelectableCardLink = (props: SelectableCardLinkProps): JSX.Element 
             class: local.class,
           })}
         >
-          {content}
+          {renderContent()}
         </span>
       }
     >
@@ -287,7 +292,7 @@ export const SelectableCardLink = (props: SelectableCardLinkProps): JSX.Element 
           class: local.class,
         })}
       >
-        {content}
+        {renderContent()}
       </A>
     </Show>
   )

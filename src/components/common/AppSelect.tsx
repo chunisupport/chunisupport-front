@@ -98,7 +98,7 @@ const renderAppSelectItem = <T,>(props: {
     <div class="flex items-center gap-2">
       <span class="inline-flex w-4 justify-center text-success">
         <Select.ItemIndicator>
-          <Check class="h-3.5 w-3.5" />
+          <Check class="h-3.5 w-3.5" aria-hidden="true" />
         </Select.ItemIndicator>
       </span>
       <Select.ItemLabel>{props.formatLabel(props.item.rawValue)}</Select.ItemLabel>
@@ -166,11 +166,13 @@ export const AppSelect = <T,>(props: AppSelectProps<T>): JSX.Element => {
         <Select.Value<T> class={`${APP_SELECT_VALUE_CLASS} ${local.valueClass ?? ''}`}>
           {(state) => {
             const selectedOption = state.selectedOption()
-            return selectedOption === null ? undefined : formatLabel(selectedOption)
+            return selectedOption === null || selectedOption === undefined
+              ? undefined
+              : formatLabel(selectedOption)
           }}
         </Select.Value>
         <Select.Icon class="text-text-subtle">
-          <ChevronDown class="h-4 w-4" />
+          <ChevronDown class="h-4 w-4" aria-hidden="true" />
         </Select.Icon>
       </Select.Trigger>
       <Show when={local.description}>

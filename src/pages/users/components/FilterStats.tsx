@@ -38,35 +38,41 @@ const FILTER_STATS_HEADER_CLASS =
   'flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2 text-sm font-bold'
 const FILTER_STATS_ROW_CLASS =
   'grid grid-cols-[minmax(0,1fr)_auto_2.5rem_minmax(3.25rem,5rem)] items-center gap-2 py-1.5 text-xs'
-const FILTER_STATS_TAB_OPTIONS = [
-  {
-    value: 'score',
-    label: (
-      <>
-        <Trophy class="h-3.5 w-3.5" aria-hidden={true} />
-        <span>RANK</span>
-      </>
-    ),
-  },
-  {
-    value: 'combo',
-    label: (
-      <>
-        <Link2 class="h-3.5 w-3.5" aria-hidden={true} />
-        <span>COMBO</span>
-      </>
-    ),
-  },
-  {
-    value: 'clear',
-    label: (
-      <>
-        <ShieldCheck class="h-3.5 w-3.5" aria-hidden={true} />
-        <span>HARD</span>
-      </>
-    ),
-  },
-] as const
+/**
+ * フィルター統計タブの選択肢を生成する。
+ *
+ * @returns タブ値と表示ラベルの配列。
+ */
+const getFilterStatsTabOptions = () =>
+  [
+    {
+      value: 'score',
+      label: (
+        <>
+          <Trophy class="h-3.5 w-3.5" aria-hidden={true} />
+          <span>RANK</span>
+        </>
+      ),
+    },
+    {
+      value: 'combo',
+      label: (
+        <>
+          <Link2 class="h-3.5 w-3.5" aria-hidden={true} />
+          <span>COMBO</span>
+        </>
+      ),
+    },
+    {
+      value: 'clear',
+      label: (
+        <>
+          <ShieldCheck class="h-3.5 w-3.5" aria-hidden={true} />
+          <span>HARD</span>
+        </>
+      ),
+    },
+  ] as const
 
 /**
  * 分布の表示対象キーを、指定順を保ったまま取得する。
@@ -209,7 +215,7 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
       <div class="border-t border-border p-3">
         <SegmentedTabs
           defaultValue="score"
-          options={FILTER_STATS_TAB_OPTIONS}
+          options={getFilterStatsTabOptions()}
           listClass="mb-3"
           triggerClass="text-xs font-semibold"
         >
