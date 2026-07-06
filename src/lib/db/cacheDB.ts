@@ -11,7 +11,7 @@ import type {
 import type { FilterState, RecordColumnId } from '../../types/recordFilter'
 
 /** IndexedDB に保存するキャッシュデータの現行スキーマバージョン。 */
-export const CLIENT_CACHE_SCHEMA_VERSION = 5
+export const CLIENT_CACHE_SCHEMA_VERSION = 6
 
 /** フロントエンドキャッシュ用 IndexedDB の DB 名。 */
 export const CLIENT_CACHE_DB_NAME = 'ChuniSupportCache'
