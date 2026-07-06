@@ -1150,24 +1150,36 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                       {(chartConst) => {
                                         const isEnabled = () =>
                                           constWeightEnabled()[chartConst] ?? true
+                                        const checkboxId = `random-song-const-enabled-${chartConst.replace('.', '-')}`
                                         return (
                                           <div
-                                            class="flex h-full min-h-32 flex-col gap-2 rounded border p-3"
+                                            class="relative flex h-full min-h-32 flex-col gap-2 rounded border p-3"
                                             classList={{
                                               'border-action-primary bg-action-primary-muted':
                                                 isEnabled(),
                                               'border-border bg-surface-muted': !isEnabled(),
                                             }}
                                           >
-                                            <RandomSongCheckbox
-                                              id={`random-song-const-enabled-${chartConst.replace('.', '-')}`}
-                                              checked={isEnabled()}
-                                              label={chartConst}
-                                              onChange={(enabled) =>
-                                                handleConstWeightEnabledChange(chartConst, enabled)
-                                              }
-                                            />
-                                            <div class="mt-auto">
+                                            <label
+                                              for={checkboxId}
+                                              class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                                            >
+                                              <span class="sr-only">{chartConst}</span>
+                                            </label>
+                                            <div class="pointer-events-none relative z-20">
+                                              <RandomSongCheckbox
+                                                id={checkboxId}
+                                                checked={isEnabled()}
+                                                label={chartConst}
+                                                onChange={(enabled) =>
+                                                  handleConstWeightEnabledChange(
+                                                    chartConst,
+                                                    enabled
+                                                  )
+                                                }
+                                              />
+                                            </div>
+                                            <div class="pointer-events-auto relative z-20 mt-auto">
                                               <RandomSongWeightField
                                                 id={`random-song-const-weight-${chartConst.replace('.', '-')}`}
                                                 label={RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate}

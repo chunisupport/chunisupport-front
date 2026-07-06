@@ -75,7 +75,7 @@ interface GoalTargetModeRadioGroupProps<TValue extends string> {
 const GOAL_FIELD_FOCUS_CLASS =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 export const GOAL_FIELD_INPUT_CLASS = `w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm hover:border-input-border-hover ${GOAL_FIELD_FOCUS_CLASS}`
-const GOAL_RADIO_ITEM_CLASS = 'relative flex min-h-6 items-center gap-3'
+const GOAL_RADIO_ITEM_HEADER_CLASS = 'pointer-events-none flex min-h-6 items-center gap-3'
 const GOAL_RADIO_CONTROL_CLASS =
   'pointer-events-none flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border-strong bg-input-bg data-[checked]:border-action-primary'
 
@@ -207,18 +207,24 @@ export const GoalTargetModeRadioGroup = <TValue extends string>(
               class: 'rounded text-sm',
             })}
           >
-            <RadioGroup.Item value={option.value} class={GOAL_RADIO_ITEM_CLASS}>
+            <RadioGroup.Item value={option.value} class="contents">
               <RadioGroup.ItemInput class="peer" />
-              <RadioGroup.ItemControl class={GOAL_RADIO_CONTROL_CLASS}>
-                <RadioGroup.ItemIndicator class="h-2.5 w-2.5 rounded-full bg-action-primary" />
-              </RadioGroup.ItemControl>
-              <span class="pointer-events-none">{option.label}</span>
-              <RadioGroup.ItemLabel class="absolute inset-0 cursor-pointer rounded focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring">
+              <div class={GOAL_RADIO_ITEM_HEADER_CLASS}>
+                <RadioGroup.ItemControl class={GOAL_RADIO_CONTROL_CLASS}>
+                  <RadioGroup.ItemIndicator class="h-2.5 w-2.5 rounded-full bg-action-primary" />
+                </RadioGroup.ItemControl>
+                <span class="pointer-events-none">{option.label}</span>
+              </div>
+              <RadioGroup.ItemLabel class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring">
                 <span class="sr-only">{option.label}</span>
               </RadioGroup.ItemLabel>
             </RadioGroup.Item>
             <Show when={props.renderOptionContent?.(option)}>
-              {(content) => <div class="relative z-10 mt-3 pl-8">{content()}</div>}
+              {(content) => (
+                <div class="pointer-events-none relative z-20 mt-3 pl-8">
+                  <div class="pointer-events-auto">{content()}</div>
+                </div>
+              )}
             </Show>
           </div>
         )}
