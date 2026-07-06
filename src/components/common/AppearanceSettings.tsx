@@ -17,13 +17,40 @@ const APPEARANCE_SELECT_TRIGGER_CLASS = 'min-h-11 px-4 py-3 font-semibold'
 const APPEARANCE_SELECT_LABEL_CLASS = 'font-semibold'
 
 /**
+ * 背景テーマの選択値を表示ラベルへ変換する。
+ *
+ * @param value - 表示対象の背景テーマ。
+ * @returns 背景テーマの表示ラベル。
+ */
+const formatThemeOptionLabel = (value: ThemePreference): string =>
+  THEME_OPTIONS.find((option) => option.value === value)?.label ?? value
+
+/**
+ * アクセントカラーの選択肢定義を取得する。
+ *
+ * @param value - 検索対象のアクセントカラー。
+ * @returns 一致するアクセントカラー選択肢。存在しない場合は undefined。
+ */
+const findAccentOption = (value: AccentPreference) =>
+  ACCENT_OPTIONS.find((candidate) => candidate.value === value)
+
+/**
+ * アクセントカラーの選択値をテキストラベルへ変換する。
+ *
+ * @param value - 表示対象のアクセントカラー。
+ * @returns アクセントカラーの表示ラベル。
+ */
+const formatAccentOptionText = (value: AccentPreference): string =>
+  findAccentOption(value)?.label ?? value
+
+/**
  * アクセントカラーの選択値をラベルと色見本で表示する。
  *
  * @param value - 表示対象のアクセントカラー。
  * @returns 色見本を含むアクセントカラーラベル。
  */
 const formatAccentOptionLabel = (value: AccentPreference): JSX.Element => {
-  const option = ACCENT_OPTIONS.find((candidate) => candidate.value === value)
+  const option = findAccentOption(value)
 
   return (
     <span class="flex items-center gap-3">
@@ -31,7 +58,7 @@ const formatAccentOptionLabel = (value: AccentPreference): JSX.Element => {
         class={`h-5 w-5 shrink-0 rounded-full border border-border-strong ${option?.swatchClass ?? ''}`}
         aria-hidden="true"
       />
-      {option?.label ?? value}
+      {formatAccentOptionText(value)}
     </span>
   )
 }
@@ -67,25 +94,19 @@ const AppearanceSettings = (): JSX.Element => {
     <div class="grid gap-6">
       <AppSelect<ThemePreference>
         options={THEME_OPTIONS.map((option) => option.value)}
-        optionTextValue={(value) =>
-          THEME_OPTIONS.find((option) => option.value === value)?.label ?? value
-        }
+        optionTextValue={formatThemeOptionLabel}
         value={themePreference()}
         onChange={handleThemeChange}
         label={APPEARANCE_SETTINGS_COPY.themeLabel}
         labelVariant="visible"
-        formatLabel={(value) =>
-          THEME_OPTIONS.find((option) => option.value === value)?.label ?? value
-        }
+        formatLabel={formatThemeOptionLabel}
         triggerClass={APPEARANCE_SELECT_TRIGGER_CLASS}
         valueClass={APPEARANCE_SELECT_LABEL_CLASS}
       />
 
       <AppSelect<AccentPreference>
         options={ACCENT_OPTIONS.map((option) => option.value)}
-        optionTextValue={(value) =>
-          ACCENT_OPTIONS.find((option) => option.value === value)?.label ?? value
-        }
+        optionTextValue={formatAccentOptionText}
         value={accentPreference()}
         onChange={handleAccentChange}
         label={APPEARANCE_SETTINGS_COPY.accentLabel}
