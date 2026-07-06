@@ -81,6 +81,12 @@ const FILTER_RESET_INNER_RING_STROKE_WIDTH =
 const FILTER_RESET_INNER_RING_RADIUS =
   FILTER_RESET_INNER_RING_INNER_RADIUS + FILTER_RESET_INNER_RING_STROKE_WIDTH / 2
 
+/** リセット操作中に外側リングの上へ表示する文言。 */
+const FILTER_RESET_HOLDING_LABEL = 'フィルター・ソート クリア'
+
+/** リセット可能になった後にリング内へ表示する文言。 */
+const FILTER_RESET_READY_LABEL = 'RELEASE'
+
 type FilterToolbarProps = {
   title: string
   onTitleChange: (value: string) => void
@@ -351,6 +357,21 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
                 transform={`rotate(${resetIndicatorArcStartRotation()} ${FILTER_RESET_INDICATOR_CENTER} ${FILTER_RESET_INDICATOR_CENTER})`}
               />
             </svg>
+            <div class="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap bg-danger-bg  rounded border border-danger-border px-3 py-2 text-lg font-semibold text-danger shadow-md">
+              {FILTER_RESET_HOLDING_LABEL}
+            </div>
+            <Show when={resetReady()}>
+              <div
+                class="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xl font-bold text-text-inverse"
+                style={{
+                  top: `0rem`,
+                  'text-shadow':
+                    '0 0 3px var(--cs-color-danger), 0 0 6px var(--cs-color-danger), 0 0 10px var(--cs-color-danger)',
+                }}
+              >
+                {FILTER_RESET_READY_LABEL}
+              </div>
+            </Show>
           </div>
         </Show>
         <Button
