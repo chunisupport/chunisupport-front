@@ -23,6 +23,7 @@ import {
   TERMS_URL,
   TURNSTILE_ERROR_MESSAGE,
   TURNSTILE_REQUIRED_MESSAGE,
+  USERNAME_FORBIDDEN_WORD_REQUIREMENT,
 } from './constants'
 
 /**
@@ -267,6 +268,7 @@ const Register = () => {
                     <ValidationItem status={isAlphanumeric()} text="小文字の英数字のみ" />
                     <ValidationItem status={isValidLength()} text="5文字〜50文字" />
                     <ValidationItem status={null} text="他ユーザーと重複しないもの" />
+                    <ValidationItem status={null} text={USERNAME_FORBIDDEN_WORD_REQUIREMENT} />
                   </TextField.Description>
                 </TextField>
                 {/* 利用規約 */}
