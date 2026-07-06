@@ -292,7 +292,7 @@ const RangeTextField = (props: { field: RangeTextFieldProps; inputClass: string 
  * @returns 正規化後の入力値。不正な入力で更新しない場合は null。
  */
 const normalizeRangeTextFieldValue = (field: RangeTextFieldProps, value: string): string | null =>
-  field.normalizeInput?.(value) ?? value
+  field.normalizeInput ? field.normalizeInput(value) : value
 
 /**
  * テキストの範囲入力欄を共通レイアウトで表示する。
