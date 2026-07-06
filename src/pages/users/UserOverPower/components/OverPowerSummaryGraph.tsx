@@ -86,7 +86,7 @@ const DistributionBar: Component<{
             const z = () => visibleBands.length - index()
             return (
               <div
-                class={`${props.colorClassByLabel[band.label] ?? 'bg-action-secondary-hover'} relative shadow-[2px_0_3px_-1px_rgba(0,0,0,0.4)]`}
+                class={`${props.colorClassByLabel[band.label] ?? 'bg-action-secondary-hover'} relative ${index() === visibleBands.length - 1 ? '' : 'shadow-[2px_0_3px_-1px_rgba(0,0,0,0.4)]'}`}
                 style={{
                   width: `${calcBandPercent(band.count, props.total)}%`,
                   'z-index': z(),
