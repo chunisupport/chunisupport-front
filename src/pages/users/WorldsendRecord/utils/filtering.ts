@@ -1,3 +1,4 @@
+import { isDateInRange } from '../../../../utils/dateFilter'
 import {
   matchesNormalizedSearchQuery,
   normalizeForReadingSearch,
@@ -84,6 +85,9 @@ export function isWorldsendRecordMatchedWithTitleMatcher(
 
   const hardLamp = record.is_played ? (record.clear_lamp ?? null) : null
   if (!filters.hard_lamp.includes(hardLamp)) return false
+
+  // 最終更新日
+  if (!isDateInRange(record.updated_at, filters.updatedAt)) return false
 
   return true
 }

@@ -10,8 +10,9 @@ import { normalizeFilterState } from '../../../../utils/recordFilterDefaults'
 import type { SavedRecordFilterItem } from '../../components/SavedRecordFiltersDialog'
 import { isValidSavedStandardFilter } from '../../components/savedRecordFilters'
 
-export const SAVED_FILTER_SCHEMA_VERSION = 4
+export const SAVED_FILTER_SCHEMA_VERSION = 5
 const LEGACY_SAVED_FILTER_SCHEMA_VERSION = 3
+const LEGACY_SAVED_FILTER_SCHEMA_VERSION_4 = 4
 const STANDARD_RECORD_FILTER_TYPE = 'standard'
 const INVALID_SCHEMA_MESSAGE = '古い形式のため無効です。'
 const INVALID_FILTER_MESSAGE = '保存値が壊れているため無効です。'
@@ -37,7 +38,8 @@ function isObjectRecord(value: unknown): value is Partial<FilterState> {
 export function toSavedFilter(dto: RecordFilterDTO<unknown>): SavedFilter {
   const validSchema =
     dto.schema_version === SAVED_FILTER_SCHEMA_VERSION ||
-    dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION
+    dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION ||
+    dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_4
   const filter =
     validSchema && isObjectRecord(dto.filter) && isValidSavedStandardFilter(dto.filter)
       ? dto.filter

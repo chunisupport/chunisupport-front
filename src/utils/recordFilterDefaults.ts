@@ -40,6 +40,10 @@ export const DEFAULT_FILTER: FilterState = {
   chain_lamp: [...RECORD_CHAIN_LAMP_OPTIONS],
   hard_lamp: [...RECORD_HARD_LAMP_OPTIONS],
   excludeNoPlay: false,
+  updatedAt: {
+    min: '',
+    max: '',
+  },
 }
 
 /**
@@ -77,6 +81,7 @@ export const buildDefaultFilter = (
   combo_lamp: [...RECORD_COMBO_LAMP_OPTIONS],
   chain_lamp: [...RECORD_CHAIN_LAMP_OPTIONS],
   hard_lamp: [...RECORD_HARD_LAMP_OPTIONS],
+  updatedAt: { ...DEFAULT_FILTER.updatedAt },
 })
 
 /**
@@ -97,4 +102,5 @@ export const normalizeFilterState = (filter: Partial<FilterState>): FilterState 
   combo_lamp: filter.combo_lamp ?? [...RECORD_COMBO_LAMP_OPTIONS],
   chain_lamp: filter.chain_lamp ?? [...RECORD_CHAIN_LAMP_OPTIONS],
   hard_lamp: filter.hard_lamp ?? [...RECORD_HARD_LAMP_OPTIONS],
+  updatedAt: filter.updatedAt ?? { ...DEFAULT_FILTER.updatedAt },
 })

@@ -45,6 +45,9 @@ export function formatFilterSummary(filter: FilterState): string {
   if (filter.hard_lamp.length > 0)
     parts.push(`ハードランプ: ${filter.hard_lamp.map((lamp) => lamp ?? 'なし').join(',')}`)
   if (filter.versions.length > 0) parts.push(`バージョン: ${filter.versions.join(',')}`)
+  if (filter.updatedAt.min || filter.updatedAt.max) {
+    parts.push(`更新日: ${filter.updatedAt.min || '…'}～${filter.updatedAt.max || '…'}`)
+  }
   return parts.join('\n')
 }
 
@@ -107,7 +110,9 @@ export function isRecordFilterChanged(current: FilterState, defaultFilter: Filte
     !hasSameFilterValues(current.versions, defaultFilter.versions) ||
     !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
     !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
-    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp) ||
+    current.updatedAt.min !== defaultFilter.updatedAt.min ||
+    current.updatedAt.max !== defaultFilter.updatedAt.max
   )
 }
 
@@ -141,7 +146,9 @@ export function isRecordFilterOptionsChanged(
     !hasSameFilterValues(current.versions, defaultFilter.versions) ||
     !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
     !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
-    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp) ||
+    current.updatedAt.min !== defaultFilter.updatedAt.min ||
+    current.updatedAt.max !== defaultFilter.updatedAt.max
   )
 }
 
@@ -175,6 +182,8 @@ export function isRecordDifficultyFilterOnlyChanged(
     hasSameFilterValues(current.versions, defaultFilter.versions) &&
     hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) &&
     hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) &&
-    hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+    hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp) &&
+    current.updatedAt.min === defaultFilter.updatedAt.min &&
+    current.updatedAt.max === defaultFilter.updatedAt.max
   )
 }

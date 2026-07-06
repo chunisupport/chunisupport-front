@@ -18,6 +18,7 @@ import {
 } from '../../../../../utils/rangeInput'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
+import DateRangeSection from '../../../components/filter/DateRangeSection'
 import LampSection from '../../../components/filter/LampSection'
 import MultiSelectFilterSection from '../../../components/filter/MultiSelectFilterSection'
 import NumericRangeSection from '../../../components/filter/NumericRangeSection'
@@ -82,6 +83,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const [overPowerMaxInput, setOverPowerMaxInput] = createSignal(
     toInputValue(props.filters.overPower.max)
   )
+  const [updatedAtMinInput, setUpdatedAtMinInput] = createSignal(props.filters.updatedAt.min)
+  const [updatedAtMaxInput, setUpdatedAtMaxInput] = createSignal(props.filters.updatedAt.max)
 
   const Const2Level = (value: number) => {
     const normalized = Math.max(CHART_CONST_MIN, Math.min(value, CHART_CONST_MAX))
@@ -122,6 +125,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     setJusticeCountMaxInput(toInputValue(props.filters.justiceCount.max))
     setOverPowerMinInput(toInputValue(props.filters.overPower.min))
     setOverPowerMaxInput(toInputValue(props.filters.overPower.max))
+    setUpdatedAtMinInput(props.filters.updatedAt.min)
+    setUpdatedAtMaxInput(props.filters.updatedAt.max)
     setConstLevelMin(Const2Level(props.filters.const.min))
     setConstLevelMax(Const2Level(props.filters.const.max))
     setScoreRankMin(scoreToFilterRank(props.filters.score.min))
@@ -458,6 +463,26 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         onMaxInput={setOverPowerMaxInput}
         onMinCommit={(value) => commitOverPowerRange('min', value)}
         onMaxCommit={(value) => commitOverPowerRange('max', value)}
+      />
+      <DateRangeSection
+        minValue={updatedAtMinInput()}
+        maxValue={updatedAtMaxInput()}
+        onMinInput={setUpdatedAtMinInput}
+        onMaxInput={setUpdatedAtMaxInput}
+        onMinCommit={(value) => {
+          setUpdatedAtMinInput(value)
+          props.setFilters((prev) => ({
+            ...prev,
+            updatedAt: { ...prev.updatedAt, min: value },
+          }))
+        }}
+        onMaxCommit={(value) => {
+          setUpdatedAtMaxInput(value)
+          props.setFilters((prev) => ({
+            ...prev,
+            updatedAt: { ...prev.updatedAt, max: value },
+          }))
+        }}
       />
       <LampSection
         title="コンボランプ"

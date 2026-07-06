@@ -36,7 +36,7 @@ test('buildSavedFilterRequest は通常レコード用の保存リクエスト�
   // Then
   assert.equal(result.name, '高難度FC狙い')
   assert.equal(result.filter_type, 'standard')
-  assert.equal(result.schema_version, 4)
+  assert.equal(result.schema_version, 5)
   assert.deepEqual(result.filter, filter)
 })
 
