@@ -69,7 +69,7 @@ const APP_SELECT_VALUE_CLASS =
 
 /** AppSelect の選択肢に適用する状態別スタイル。 */
 const APP_SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-sm text-text outline-none transition-colors [&:not([data-selected]):hover]:bg-surface-muted [&:not([data-selected])[data-highlighted]]:bg-surface-muted data-disabled:pointer-events-none data-disabled:opacity-50 data-[selected]:bg-action-primary-muted data-[selected]:font-medium data-[selected]:text-action-primary'
+  'cursor-pointer px-3 py-2 text-sm text-text outline-none transition-colors [&:not([data-selected]):hover]:bg-surface-muted [&:not([data-selected])[data-highlighted]]:bg-surface-muted data-disabled:pointer-events-none data-disabled:opacity-50 data-[selected]:bg-action-primary-muted data-[selected]:font-medium data-[selected]:text-action-primary [&[data-selected]:hover]:bg-select-selected-hover-bg [&[data-selected][data-highlighted]]:bg-select-selected-hover-bg'
 
 const APP_SELECT_CONTENT_BASE_CLASS =
   'max-h-90 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md'
