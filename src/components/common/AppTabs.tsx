@@ -60,7 +60,7 @@ type AppTabsListProps<TValue extends string> = Pick<
 const SEGMENTED_TABS_LIST_CLASS = 'inline-flex gap-1 rounded-lg bg-surface-hover p-1'
 
 const SEGMENTED_TABS_TRIGGER_CLASS =
-  'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-text-muted transition-colors hover:bg-action-secondary hover:text-text data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm data-selected:hover:bg-action-primary data-selected:hover:text-text-inverse focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50'
+  'inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-text-muted transition-colors hover:bg-action-secondary hover:text-text data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm data-selected:hover:bg-action-primary data-selected:hover:text-text-inverse focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50'
 
 const UNDERLINE_TABS_LIST_CLASS = 'flex gap-2 border-b border-border-strong'
 
