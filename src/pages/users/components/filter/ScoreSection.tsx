@@ -100,7 +100,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
         onChange={(checked) => props.onExcludeNoPlayChange(checked)}
         class="flex items-center gap-2"
         textVariant="large"
-        label="未プレイ譜面を除外する"
+        label="未プレイ譜面を除外"
       />
     </div>
   </div>
