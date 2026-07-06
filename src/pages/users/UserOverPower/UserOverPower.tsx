@@ -265,7 +265,7 @@ const UserOverPower: Component<Props> = (props) => {
                       onChange={handleSummaryTabChange}
                       placeholder="ジャンル"
                       rootClass="w-full sm:w-28"
-                      triggerClass="h-10 font-medium text-text-muted"
+                      triggerClass="h-10 text-text-muted"
                       contentZIndexClass="z-50"
                       formatLabel={(option) => option.label}
                     />
@@ -277,7 +277,7 @@ const UserOverPower: Component<Props> = (props) => {
                       onChange={handleAggregationTargetChange}
                       placeholder={OVER_POWER_CONTROL_LABELS.aggregationTarget}
                       rootClass="w-full sm:w-44"
-                      triggerClass="h-10 font-medium text-text-muted"
+                      triggerClass="h-10 text-text-muted"
                       triggerId="over-power-aggregation-target"
                       contentZIndexClass="z-50"
                       formatLabel={(option) => option.label}

@@ -105,7 +105,7 @@ const SongStatsTabs = (props: Props) => {
               onChange={handleDifficultyChange}
               label="統計に表示する難易度"
               labelVariant="srOnly"
-              triggerClass="h-10 font-medium text-text-muted"
+              triggerClass="h-10 text-text-muted"
               contentZIndexClass="z-50"
               formatLabel={(difficulty) => difficulty.label}
             />
@@ -125,7 +125,7 @@ const SongStatsTabs = (props: Props) => {
             onChange={handleTableViewChange}
             label="統計テーブルの表示内容"
             labelVariant="srOnly"
-            triggerClass="h-10 font-medium text-text-muted"
+            triggerClass="h-10 text-text-muted"
             contentZIndexClass="z-50"
             formatLabel={(option) => option.label}
           />
