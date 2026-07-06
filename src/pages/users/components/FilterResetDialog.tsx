@@ -44,6 +44,7 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
           <div class="flex justify-end gap-2">
             <AlertDialog.CloseButton
               as="button"
+              type="button"
               class={getAppButtonClass({ variant: 'secondary' })}
             >
               キャンセル
