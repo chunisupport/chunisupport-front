@@ -254,7 +254,7 @@ const UserOverPower: Component<Props> = (props) => {
         >
           <Show when={summary()} fallback={<Loading />}>
             {(currentSummary) => (
-              <div class="mx-4 flex flex-col gap-4 text-sm">
+              <div class="mx-4 flex flex-col 0 text-sm">
                 <div class="flex flex-wrap items-center justify-between gap-x-1.5 gap-y-2">
                   <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0">
                     <AppSelect<OverPowerSummaryOption>
@@ -373,7 +373,7 @@ const UserOverPower: Component<Props> = (props) => {
                 <Show when={selectedSummaryTab() === 'levels'}>
                   <div class="mt-4">
                     <Show when={lowLevelRows().length > 0}>
-                      <div class="mb-3">
+                      <div class="mb-4">
                         <LowLevelRowsToggle
                           expanded={lowLevelRowsExpanded()}
                           chartCount={lowLevelChartCount()}
