@@ -633,6 +633,18 @@ export interface UserRecordDTO {
   meta: UserRecordMetaDTO
 }
 
+/** 通常楽曲1曲分のユーザーレコードレスポンス。 */
+export interface UserStandardSongRecordDTO {
+  standard: PlayerRecordDTO[]
+  meta: UserRecordMetaDTO
+}
+
+/** WORLD'S END楽曲1曲分のユーザーレコードレスポンス。 */
+export interface UserWorldsendSongRecordDTO {
+  worldsend: WorldsendRecordDTO | null
+  meta: UserRecordMetaDTO
+}
+
 export interface PlayerLockedSongResponseItem {
   display_id: string
   title: string
