@@ -90,7 +90,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
         onChange={(checked) => props.onScoreFilterModeChange(checked ? 'number' : 'rank')}
         class="flex items-center gap-2"
         textVariant="large"
-        label="数値で指定する"
+        label="数値で指定"
       />
     </div>
     <div class="mt-2">
