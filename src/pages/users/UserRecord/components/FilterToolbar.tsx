@@ -1,16 +1,48 @@
 import { Button } from '@kobalte/core/button'
 import { ArrowUpDown, Columns3, Funnel, Star } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { Show } from 'solid-js'
+import { createSignal, onCleanup, Show } from 'solid-js'
 import { AppIconButton } from '../../../../components/common/AppButton'
 import { SearchTextField } from '../../../../components/common/SearchTextField'
 
-type FilterButtonTone = 'default' | 'active' | 'difficulty-only'
+type FilterButtonTone = 'default' | 'active' | 'difficulty-only' | 'danger'
+
+/** 単押しと長押しを判定するため、見た目を変えずに待つ時間。 */
+const FILTER_RESET_PRESS_JUDGE_MS = 320
+
+/** リセット操作として扱う長押しインジケータの進行時間。 */
+const FILTER_RESET_INDICATOR_DURATION_MS = 400
+
+/** フィルターリセットを実行可能にする合計長押し時間。 */
+const FILTER_RESET_HOLD_DURATION_MS =
+  FILTER_RESET_PRESS_JUDGE_MS + FILTER_RESET_INDICATOR_DURATION_MS
+
+/** 長押し成立後の互換クリックを抑止する時間。 */
+const FILTER_RESET_CLICK_SUPPRESSION_MS = 500
+
+/** フィルターボタンの1辺。リングサイズ算出の基準に使う。 */
+const FILTER_BUTTON_SIZE_REM = 2.375 / 2.0
+
+/** フィルターボタンの対角線。 */
+const FILTER_BUTTON_DIAGONAL_REM = FILTER_BUTTON_SIZE_REM * Math.SQRT2
+
+/** 内側の濃いドーナツ円の外径。 */
+const FILTER_RESET_INNER_RING_OUTER_SIZE_REM = FILTER_BUTTON_DIAGONAL_REM * 1.7 * 2
+
+/** 内側の濃いドーナツ円の内径。 */
+const FILTER_RESET_INNER_RING_INNER_SIZE_REM = FILTER_BUTTON_DIAGONAL_REM * 1.2 * 2
+
+/** 外側の進行ドーナツ円の外径。 */
+const FILTER_RESET_OUTER_RING_OUTER_SIZE_REM = FILTER_BUTTON_DIAGONAL_REM * 3.4 * 2
+
+/** 外側の進行ドーナツ円の内径。 */
+const FILTER_RESET_OUTER_RING_INNER_SIZE_REM = FILTER_BUTTON_DIAGONAL_REM * 1.9 * 2
 
 type FilterToolbarProps = {
   title: string
   onTitleChange: (value: string) => void
   onOpenFilter: () => void
+  onResetFilter: () => void
   onOpenSortSettings: () => void
   onOpenColumnSettings: () => void
   onOpenFavoriteSongs?: () => void
@@ -36,6 +68,10 @@ const getFilterButtonToneClass = (tone: FilterButtonTone): string => {
     return 'border-action-primary bg-action-primary-muted text-action-primary hover:bg-action-primary-muted'
   }
 
+  if (tone === 'danger') {
+    return 'border-danger bg-danger text-text-inverse hover:bg-danger-hover'
+  }
+
   return 'border-border-strong bg-surface text-text-muted hover:bg-surface-hover'
 }
 
@@ -46,8 +82,21 @@ const getFilterButtonToneClass = (tone: FilterButtonTone): string => {
  * @returns レコード一覧上部のフィルターツールバー。
  */
 const FilterToolbar: Component<FilterToolbarProps> = (props) => {
+  const [resetHintVisible, setResetHintVisible] = createSignal(false)
+  const [resetProgress, setResetProgress] = createSignal(0)
+  const [resetReady, setResetReady] = createSignal(false)
+  let pressStartedAt = 0
+  let hintTimerId: number | undefined
+  let readyTimerId: number | undefined
+  let progressFrameId: number | undefined
+  let suppressClickTimerId: number | undefined
+  let pressing = false
+  let suppressNextClick = false
+
   const filterButtonTone = () =>
     props.filterButtonTone ?? (props.filterActive ? 'active' : 'default')
+
+  const filterButtonVisualTone = () => (resetHintVisible() ? 'danger' : filterButtonTone())
 
   /**
    * フィルター状態に応じたボタン表示名を返す。
@@ -56,6 +105,161 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
    */
   const filterButtonLabel = () =>
     filterButtonTone() === 'default' ? 'フィルター' : 'フィルター適用中'
+
+  /**
+   * 長押しゲージのアニメーションを現在時刻から再計算する。
+   *
+   * @param currentTime - requestAnimationFrame から渡される現在時刻。
+   * @returns なし。
+   */
+  const updateResetProgress = (currentTime: number) => {
+    if (!pressing) return
+
+    const progress =
+      (currentTime - pressStartedAt - FILTER_RESET_PRESS_JUDGE_MS) /
+      FILTER_RESET_INDICATOR_DURATION_MS
+    const nextProgress = Math.min(Math.max(progress, 0), 1)
+    setResetProgress(nextProgress)
+
+    if (nextProgress < 1) {
+      progressFrameId = requestAnimationFrame(updateResetProgress)
+    }
+  }
+
+  /**
+   * 長押し表示とタイマーを停止する。
+   *
+   * @returns なし。
+   */
+  const stopFilterResetPress = () => {
+    pressing = false
+    setResetHintVisible(false)
+    setResetProgress(0)
+    setResetReady(false)
+
+    if (hintTimerId !== undefined) {
+      window.clearTimeout(hintTimerId)
+      hintTimerId = undefined
+    }
+
+    if (readyTimerId !== undefined) {
+      window.clearTimeout(readyTimerId)
+      readyTimerId = undefined
+    }
+
+    if (progressFrameId !== undefined) {
+      cancelAnimationFrame(progressFrameId)
+      progressFrameId = undefined
+    }
+  }
+
+  /**
+   * 長押し直後に発生する click だけを抑止対象として登録する。
+   *
+   * @returns なし。
+   */
+  const suppressLongPressClick = () => {
+    suppressNextClick = true
+
+    if (suppressClickTimerId !== undefined) {
+      window.clearTimeout(suppressClickTimerId)
+    }
+
+    suppressClickTimerId = window.setTimeout(() => {
+      suppressNextClick = false
+      suppressClickTimerId = undefined
+    }, FILTER_RESET_CLICK_SUPPRESSION_MS)
+  }
+
+  /**
+   * フィルターボタンの長押し判定を開始する。
+   *
+   * @param event - フィルターボタンのポインター押下イベント。
+   * @returns なし。
+   */
+  const handleFilterPointerDown = (event: PointerEvent & { currentTarget: HTMLButtonElement }) => {
+    if (props.filterButtonDisabled || event.button !== 0) return
+
+    stopFilterResetPress()
+    pressing = true
+    pressStartedAt = performance.now()
+    event.currentTarget.setPointerCapture(event.pointerId)
+
+    hintTimerId = window.setTimeout(() => {
+      if (!pressing) return
+      setResetHintVisible(true)
+      setResetProgress(0)
+      progressFrameId = requestAnimationFrame(updateResetProgress)
+    }, FILTER_RESET_PRESS_JUDGE_MS)
+
+    readyTimerId = window.setTimeout(() => {
+      if (!pressing) return
+      setResetReady(true)
+      setResetProgress(1)
+    }, FILTER_RESET_HOLD_DURATION_MS)
+  }
+
+  /**
+   * フィルターボタンのポインター解放時に長押し操作を確定またはキャンセルする。
+   *
+   * @param event - フィルターボタンのポインター解放イベント。
+   * @returns なし。
+   */
+  const handleFilterPointerUp = (event: PointerEvent) => {
+    const shouldReset = pressing && resetReady()
+    const shouldSuppressClick = resetHintVisible()
+    stopFilterResetPress()
+
+    if (!shouldSuppressClick) return
+
+    suppressLongPressClick()
+    event.preventDefault()
+
+    if (shouldReset) {
+      props.onResetFilter()
+    }
+  }
+
+  /**
+   * フィルターボタンの通常クリックか長押し後クリックかを振り分ける。
+   *
+   * @param event - フィルターボタンのクリックイベント。
+   * @returns なし。
+   */
+  const handleFilterClick = (event: MouseEvent) => {
+    if (suppressNextClick) {
+      suppressNextClick = false
+      if (suppressClickTimerId !== undefined) {
+        window.clearTimeout(suppressClickTimerId)
+        suppressClickTimerId = undefined
+      }
+      event.preventDefault()
+      return
+    }
+
+    props.onOpenFilter()
+  }
+
+  /**
+   * 外側のドーナツ円で表示する進行扇型の背景を返す。
+   *
+   * @returns 現在の長押し進捗を反映した conic-gradient。
+   */
+  const resetIndicatorBackground = () => {
+    const progress = resetProgress()
+    const startAngle = 180 - 180 * progress
+    const endAngle = 180 + 180 * progress
+
+    return `conic-gradient(from 0deg, transparent 0deg ${startAngle}deg, color-mix(in oklab, var(--cs-color-danger) 30%, transparent) ${startAngle}deg ${endAngle}deg, transparent ${endAngle}deg 360deg)`
+  }
+
+  onCleanup(() => {
+    stopFilterResetPress()
+
+    if (suppressClickTimerId !== undefined) {
+      window.clearTimeout(suppressClickTimerId)
+    }
+  })
 
   return (
     <div class="flex items-center mb-2">
@@ -68,19 +272,50 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
         ariaLabel="曲名・アーティスト名検索"
         placeholder="曲名・アーティスト名で検索"
       />
-      <Button
-        class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent ${getFilterButtonToneClass(
-          filterButtonTone()
-        )}`}
-        onClick={props.onOpenFilter}
-        type="button"
-        aria-label={filterButtonLabel()}
-        aria-pressed={filterButtonTone() !== 'default'}
-        title={filterButtonLabel()}
-        disabled={props.filterButtonDisabled}
-      >
-        <Funnel size={24} aria-hidden="true" />
-      </Button>
+      <div class="-ml-px relative shrink-0">
+        <Show when={resetHintVisible()}>
+          <div
+            class="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{
+              width: `${FILTER_RESET_OUTER_RING_OUTER_SIZE_REM}rem`,
+              height: `${FILTER_RESET_OUTER_RING_OUTER_SIZE_REM}rem`,
+            }}
+          >
+            <div
+              class="absolute inset-0 rounded-full"
+              style={{
+                background: resetIndicatorBackground(),
+                mask: `radial-gradient(circle, transparent 0 ${FILTER_RESET_OUTER_RING_INNER_SIZE_REM / 2}rem, #000 ${FILTER_RESET_OUTER_RING_INNER_SIZE_REM / 2}rem ${FILTER_RESET_OUTER_RING_OUTER_SIZE_REM / 2}rem, transparent ${FILTER_RESET_OUTER_RING_OUTER_SIZE_REM / 2}rem)`,
+                '-webkit-mask': `radial-gradient(circle, transparent 0 ${FILTER_RESET_OUTER_RING_INNER_SIZE_REM / 2}rem, #000 ${FILTER_RESET_OUTER_RING_INNER_SIZE_REM / 2}rem ${FILTER_RESET_OUTER_RING_OUTER_SIZE_REM / 2}rem, transparent ${FILTER_RESET_OUTER_RING_OUTER_SIZE_REM / 2}rem)`,
+              }}
+            />
+            <div
+              class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                width: `${FILTER_RESET_INNER_RING_OUTER_SIZE_REM}rem`,
+                height: `${FILTER_RESET_INNER_RING_OUTER_SIZE_REM}rem`,
+                background: `radial-gradient(circle, transparent 0 ${FILTER_RESET_INNER_RING_INNER_SIZE_REM / 2}rem, color-mix(in oklab, var(--cs-color-danger) 80%, transparent) ${FILTER_RESET_INNER_RING_INNER_SIZE_REM / 2}rem ${FILTER_RESET_INNER_RING_OUTER_SIZE_REM / 2}rem, transparent ${FILTER_RESET_INNER_RING_OUTER_SIZE_REM / 2}rem)`,
+              }}
+            />
+          </div>
+        </Show>
+        <Button
+          class={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent ${getFilterButtonToneClass(
+            filterButtonVisualTone()
+          )}`}
+          onClick={handleFilterClick}
+          onPointerDown={handleFilterPointerDown}
+          onPointerUp={handleFilterPointerUp}
+          onPointerCancel={stopFilterResetPress}
+          type="button"
+          aria-label={filterButtonLabel()}
+          aria-pressed={filterButtonTone() !== 'default'}
+          title={filterButtonLabel()}
+          disabled={props.filterButtonDisabled}
+        >
+          <Funnel size={24} aria-hidden="true" />
+        </Button>
+      </div>
       <AppIconButton
         class="ml-2 h-9.5 w-9.5"
         onClick={props.onOpenSortSettings}

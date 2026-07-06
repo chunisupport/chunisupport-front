@@ -138,6 +138,15 @@ const WorldsendRecord = (props: Props) => {
   }
 
   /**
+   * WORLD'S END レコードのフィルターを既定値へ戻し、保存済み設定へ反映する。
+   *
+   * @returns なし。
+   */
+  const resetFilters = () => {
+    applyFilters(defaultFilter())
+  }
+
+  /**
    * WORLD'S END レコードの表示列設定を画面へ反映し、IndexedDB へ保存する。
    *
    * @param nextVisibleColumnIds - 次に表示する列 ID 配列。
@@ -199,6 +208,7 @@ const WorldsendRecord = (props: Props) => {
                 title={filters().title}
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
+                onResetFilter={resetFilters}
                 onOpenSortSettings={() => setSortSettingsOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
                 titleActive={hasTitleFilterChanges()}

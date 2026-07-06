@@ -200,6 +200,15 @@ const UserRecord: Component<Props> = (props) => {
   }
 
   /**
+   * 通常レコードのフィルターを既定値へ戻し、保存済み設定へ反映する。
+   *
+   * @returns なし。
+   */
+  const resetFilters = () => {
+    applyFilters(defaultFilter())
+  }
+
+  /**
    * 通常レコードの表示列設定を画面へ反映し、IndexedDB へ保存する。
    *
    * @param nextVisibleColumnIds - 次に表示する列 ID 配列。
@@ -266,6 +275,7 @@ const UserRecord: Component<Props> = (props) => {
                 title={filters().title}
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
+                onResetFilter={resetFilters}
                 onOpenSortSettings={() => setSortSettingsOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
                 onOpenFavoriteSongs={() => setFavoriteSongsOpen(true)}
