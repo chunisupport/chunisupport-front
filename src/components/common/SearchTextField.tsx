@@ -12,7 +12,7 @@ type SearchTextFieldProps = {
   id?: string
   /** 表示ラベル。 */
   label?: string
-  /** スクリーンリーダー向けラベル。 */
+  /** 表示ラベルがない場合に使うスクリーンリーダー向けラベル。 */
   ariaLabel: string
   /** 現在の検索文字列。 */
   value: string
@@ -67,7 +67,7 @@ export const SearchTextField: Component<SearchTextFieldProps> = (props) => (
         id={props.id}
         type="search"
         class={SEARCH_TEXT_FIELD_INPUT_CLASS}
-        aria-label={props.ariaLabel}
+        aria-label={props.label ? undefined : props.ariaLabel}
         placeholder={props.placeholder}
       />
     </div>
