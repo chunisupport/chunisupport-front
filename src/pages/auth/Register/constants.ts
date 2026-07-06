@@ -15,3 +15,6 @@ export const TURNSTILE_REQUIRED_MESSAGE = '認証確認を完了してから登�
 /** Turnstileの検証に失敗した場合に表示するメッセージ。 */
 export const TURNSTILE_ERROR_MESSAGE =
   '認証確認に失敗しました。しばらく待ってから再度お試しください。'
+
+/** ユーザー名が登録禁止語に該当しないことを示す入力条件。 */
+export const USERNAME_FORBIDDEN_WORD_REQUIREMENT = '登録禁止語に該当しないもの'

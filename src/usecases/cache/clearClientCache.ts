@@ -8,16 +8,20 @@ import { db } from '../../lib/db/cacheDB'
 export const clearClientCache = async (): Promise<void> => {
   await db.transaction(
     'rw',
-    db.cacheMetadata,
-    db.songs,
-    db.worldsendSongs,
-    db.userApiResponses,
-    db.viewSettings,
+    [
+      db.cacheMetadata,
+      db.songs,
+      db.worldsendSongs,
+      db.userSongRecords,
+      db.userApiResponses,
+      db.viewSettings,
+    ],
     async () => {
       await Promise.all([
         db.cacheMetadata.clear(),
         db.songs.clear(),
         db.worldsendSongs.clear(),
+        db.userSongRecords.clear(),
         db.userApiResponses.clear(),
         db.viewSettings.clear(),
       ])

@@ -1,11 +1,17 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { WorldsendFilterState } from '../../pages/users/WorldsendRecord/types/filterTypes'
 import type { WorldsendRecordColumnId } from '../../pages/users/WorldsendRecord/utils/columns'
-import type { SongDTO, UserRatingDTO, UserRecordDTO, WorldsendSongDTO } from '../../types/api'
+import type {
+  PlayerRecordDTO,
+  SongDTO,
+  UserRatingDTO,
+  WorldsendRecordDTO,
+  WorldsendSongDTO,
+} from '../../types/api'
 import type { FilterState, RecordColumnId } from '../../types/recordFilter'
 
 /** IndexedDB に保存するキャッシュデータの現行スキーマバージョン。 */
-export const CLIENT_CACHE_SCHEMA_VERSION = 4
+export const CLIENT_CACHE_SCHEMA_VERSION = 5
 
 /** フロントエンドキャッシュ用 IndexedDB の DB 名。 */
 export const CLIENT_CACHE_DB_NAME = 'ChuniSupportCache'
@@ -25,8 +31,10 @@ export type CacheMetadata = {
   schemaVersion: number
   songsUpdatedAt?: string | null
   userUpdatedAt?: string | null
+  username?: string
   fetchedAt?: string
   savedAt?: string
+  recordUpdatedAt?: string | null
 }
 
 export type CachedSong = {
@@ -41,25 +49,41 @@ export type CachedWorldsendSong = {
   data: WorldsendSongDTO
 }
 
-export type UserApiResponse =
+export type CachedUserSongRecord =
   | {
-      key: 'userRating'
+      key: string
+      kind: 'standard'
       username: string
+      songId: string
+      sortOrder: number
       schemaVersion: number
       userUpdatedAt: string | null
       songsUpdatedAt: string | null
       fetchedAt: string
-      data: UserRatingDTO
+      data: PlayerRecordDTO[]
     }
   | {
-      key: 'userRecord'
+      key: string
+      kind: 'worldsend'
       username: string
+      songId: string
+      sortOrder: number
       schemaVersion: number
       userUpdatedAt: string | null
       songsUpdatedAt: string | null
       fetchedAt: string
-      data: UserRecordDTO
+      data: WorldsendRecordDTO | null
     }
+
+export type UserApiResponse = {
+  key: 'userRating'
+  username: string
+  schemaVersion: number
+  userUpdatedAt: string | null
+  songsUpdatedAt: string | null
+  fetchedAt: string
+  data: UserRatingDTO
+}
 
 export type ViewSetting =
   | {
@@ -91,6 +115,7 @@ export type CacheDB = Dexie & {
   cacheMetadata: EntityTable<CacheMetadata, 'key'>
   songs: EntityTable<CachedSong, 'id'>
   worldsendSongs: EntityTable<CachedWorldsendSong, 'id'>
+  userSongRecords: EntityTable<CachedUserSongRecord, 'key'>
   userApiResponses: EntityTable<UserApiResponse, 'key'>
   viewSettings: EntityTable<ViewSetting, 'key'>
 }
@@ -104,3 +129,14 @@ db.version(1).stores({
   userApiResponses: 'key, username, schemaVersion, userUpdatedAt, songsUpdatedAt, fetchedAt',
   viewSettings: 'key, schemaVersion, savedAt',
 })
+
+db.version(2)
+  .stores({
+    cacheMetadata:
+      'key, schemaVersion, songsUpdatedAt, userUpdatedAt, username, fetchedAt, savedAt, recordUpdatedAt',
+    userSongRecords:
+      'key, [username+kind], username, kind, songId, sortOrder, schemaVersion, userUpdatedAt, songsUpdatedAt, fetchedAt',
+  })
+  .upgrade(async (transaction) => {
+    await transaction.table('userApiResponses').delete('userRecord')
+  })
