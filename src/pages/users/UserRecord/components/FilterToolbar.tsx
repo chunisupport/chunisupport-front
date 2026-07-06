@@ -38,6 +38,49 @@ const FILTER_RESET_OUTER_RING_OUTER_SIZE_REM = FILTER_BUTTON_DIAGONAL_REM * 3.4 
 /** 外側の進行ドーナツ円の内径。 */
 const FILTER_RESET_OUTER_RING_INNER_SIZE_REM = FILTER_BUTTON_DIAGONAL_REM * 1.9 * 2
 
+/** リセットインジケータSVGのビューボックスサイズ。 */
+const FILTER_RESET_INDICATOR_VIEWBOX_SIZE = 100
+
+/** リセットインジケータSVGの中心座標。 */
+const FILTER_RESET_INDICATOR_CENTER = FILTER_RESET_INDICATOR_VIEWBOX_SIZE / 2
+
+/** 外側リングの外周半径。 */
+const FILTER_RESET_OUTER_RING_OUTER_RADIUS = FILTER_RESET_INDICATOR_VIEWBOX_SIZE / 2
+
+/** 外側リングの内周半径。 */
+const FILTER_RESET_OUTER_RING_INNER_RADIUS =
+  (FILTER_RESET_OUTER_RING_INNER_SIZE_REM / FILTER_RESET_OUTER_RING_OUTER_SIZE_REM) *
+  FILTER_RESET_OUTER_RING_OUTER_RADIUS
+
+/** 外側リングの線幅。 */
+const FILTER_RESET_OUTER_RING_STROKE_WIDTH =
+  FILTER_RESET_OUTER_RING_OUTER_RADIUS - FILTER_RESET_OUTER_RING_INNER_RADIUS
+
+/** 外側リングの中心線半径。 */
+const FILTER_RESET_OUTER_RING_RADIUS =
+  FILTER_RESET_OUTER_RING_INNER_RADIUS + FILTER_RESET_OUTER_RING_STROKE_WIDTH / 2
+
+/** 外側リングの円周。 */
+const FILTER_RESET_OUTER_RING_CIRCUMFERENCE = 2 * Math.PI * FILTER_RESET_OUTER_RING_RADIUS
+
+/** 内側リングの外周半径。 */
+const FILTER_RESET_INNER_RING_OUTER_RADIUS =
+  (FILTER_RESET_INNER_RING_OUTER_SIZE_REM / FILTER_RESET_OUTER_RING_OUTER_SIZE_REM) *
+  FILTER_RESET_OUTER_RING_OUTER_RADIUS
+
+/** 内側リングの内周半径。 */
+const FILTER_RESET_INNER_RING_INNER_RADIUS =
+  (FILTER_RESET_INNER_RING_INNER_SIZE_REM / FILTER_RESET_OUTER_RING_OUTER_SIZE_REM) *
+  FILTER_RESET_OUTER_RING_OUTER_RADIUS
+
+/** 内側リングの線幅。 */
+const FILTER_RESET_INNER_RING_STROKE_WIDTH =
+  FILTER_RESET_INNER_RING_OUTER_RADIUS - FILTER_RESET_INNER_RING_INNER_RADIUS
+
+/** 内側リングの中心線半径。 */
+const FILTER_RESET_INNER_RING_RADIUS =
+  FILTER_RESET_INNER_RING_INNER_RADIUS + FILTER_RESET_INNER_RING_STROKE_WIDTH / 2
+
 type FilterToolbarProps = {
   title: string
   onTitleChange: (value: string) => void
@@ -241,17 +284,18 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
   }
 
   /**
-   * 外側のドーナツ円で表示する進行扇型の背景を返す。
+   * 外側リングで表示する現在の円弧長を返す。
    *
-   * @returns 現在の長押し進捗を反映した conic-gradient。
+   * @returns 長押し進捗に応じたSVG円周上の表示長。
    */
-  const resetIndicatorBackground = () => {
-    const progress = resetProgress()
-    const startAngle = 180 - 180 * progress
-    const endAngle = 180 + 180 * progress
+  const resetIndicatorArcLength = () => FILTER_RESET_OUTER_RING_CIRCUMFERENCE * resetProgress()
 
-    return `conic-gradient(from 0deg, transparent 0deg ${startAngle}deg, color-mix(in oklab, var(--cs-color-danger) 30%, transparent) ${startAngle}deg ${endAngle}deg, transparent ${endAngle}deg 360deg)`
-  }
+  /**
+   * 外側リングの円弧開始角度をSVG座標系で返す。
+   *
+   * @returns ユーザー指定の角度定義をSVGの右始点へ変換した回転角。
+   */
+  const resetIndicatorArcStartRotation = () => 90 - 180 * resetProgress()
 
   onCleanup(() => {
     stopFilterResetPress()
@@ -281,22 +325,32 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
               height: `${FILTER_RESET_OUTER_RING_OUTER_SIZE_REM}rem`,
             }}
           >
-            <div
-              class="absolute inset-0 rounded-full"
-              style={{
-                background: resetIndicatorBackground(),
-                mask: `radial-gradient(circle, transparent 0 ${FILTER_RESET_OUTER_RING_INNER_SIZE_REM / 2}rem, #000 ${FILTER_RESET_OUTER_RING_INNER_SIZE_REM / 2}rem ${FILTER_RESET_OUTER_RING_OUTER_SIZE_REM / 2}rem, transparent ${FILTER_RESET_OUTER_RING_OUTER_SIZE_REM / 2}rem)`,
-                '-webkit-mask': `radial-gradient(circle, transparent 0 ${FILTER_RESET_OUTER_RING_INNER_SIZE_REM / 2}rem, #000 ${FILTER_RESET_OUTER_RING_INNER_SIZE_REM / 2}rem ${FILTER_RESET_OUTER_RING_OUTER_SIZE_REM / 2}rem, transparent ${FILTER_RESET_OUTER_RING_OUTER_SIZE_REM / 2}rem)`,
-              }}
-            />
-            <div
-              class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{
-                width: `${FILTER_RESET_INNER_RING_OUTER_SIZE_REM}rem`,
-                height: `${FILTER_RESET_INNER_RING_OUTER_SIZE_REM}rem`,
-                background: `radial-gradient(circle, transparent 0 ${FILTER_RESET_INNER_RING_INNER_SIZE_REM / 2}rem, color-mix(in oklab, var(--cs-color-danger) 80%, transparent) ${FILTER_RESET_INNER_RING_INNER_SIZE_REM / 2}rem ${FILTER_RESET_INNER_RING_OUTER_SIZE_REM / 2}rem, transparent ${FILTER_RESET_INNER_RING_OUTER_SIZE_REM / 2}rem)`,
-              }}
-            />
+            <svg
+              class="absolute inset-0 overflow-visible"
+              viewBox={`0 0 ${FILTER_RESET_INDICATOR_VIEWBOX_SIZE} ${FILTER_RESET_INDICATOR_VIEWBOX_SIZE}`}
+              aria-hidden="true"
+              shape-rendering="geometricPrecision"
+            >
+              <circle
+                cx={FILTER_RESET_INDICATOR_CENTER}
+                cy={FILTER_RESET_INDICATOR_CENTER}
+                r={FILTER_RESET_INNER_RING_RADIUS}
+                fill="none"
+                stroke="color-mix(in oklab, var(--cs-color-danger) 85%, transparent)"
+                stroke-width={FILTER_RESET_INNER_RING_STROKE_WIDTH}
+              />
+              <circle
+                cx={FILTER_RESET_INDICATOR_CENTER}
+                cy={FILTER_RESET_INDICATOR_CENTER}
+                r={FILTER_RESET_OUTER_RING_RADIUS}
+                fill="none"
+                stroke="color-mix(in oklab, var(--cs-color-danger) 40%, transparent)"
+                stroke-width={FILTER_RESET_OUTER_RING_STROKE_WIDTH}
+                stroke-dasharray={`${resetIndicatorArcLength()} ${FILTER_RESET_OUTER_RING_CIRCUMFERENCE}`}
+                stroke-linecap="butt"
+                transform={`rotate(${resetIndicatorArcStartRotation()} ${FILTER_RESET_INDICATOR_CENTER} ${FILTER_RESET_INDICATOR_CENTER})`}
+              />
+            </svg>
           </div>
         </Show>
         <Button
