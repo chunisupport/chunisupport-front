@@ -17,6 +17,7 @@ import {
 import type {
   ChainLamp,
   ComboLamp,
+  DateRangeFilter,
   Difficulty,
   HardLamp,
   NumericRangeFilter,
@@ -194,6 +195,17 @@ const isArrayOfOptions = <T>(value: unknown, options: readonly T[]): value is T[
   Array.isArray(value) && value.every((item) => options.includes(item as T))
 
 /**
+ * 日付範囲オブジェクト (min/max が空文字列を許す文字列) かを判定する。
+ *
+ * @param value - 判定対象の値。
+ * @returns 有効な日付範囲オブジェクトの場合は true。
+ */
+const isDateRangeFilter = (value: unknown): value is DateRangeFilter => {
+  if (!isObjectRecord(value)) return false
+  return typeof value.min === 'string' && typeof value.max === 'string'
+}
+
+/**
  * 保存済み通常レコードフィルターが現行スキーマとして読み込めるか判定する。
  *
  * @param value - API から受け取った filter 値。
@@ -217,9 +229,12 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
     isArrayOfOptions<ComboLamp>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
     isArrayOfOptions<ChainLamp>(value.chain_lamp, RECORD_CHAIN_LAMP_OPTIONS) &&
     isArrayOfOptions<HardLamp>(value.hard_lamp, RECORD_HARD_LAMP_OPTIONS) &&
-    typeof value.excludeNoPlay === 'boolean'
+    typeof value.excludeNoPlay === 'boolean' &&
+    (value.updatedAt === undefined || isDateRangeFilter(value.updatedAt))
   )
 }
+
+/**
 
 /**
  * 保存済み WORLD'S END フィルターが現行スキーマとして読み込めるか判定する。
@@ -248,6 +263,7 @@ export const isValidSavedWorldsendFilter = (value: unknown): value is WorldsendF
     isArrayOfOptions<ComboLamp>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
     isArrayOfOptions<ChainLamp>(value.chain_lamp, RECORD_CHAIN_LAMP_OPTIONS) &&
     isArrayOfOptions<HardLamp>(value.hard_lamp, RECORD_HARD_LAMP_OPTIONS) &&
-    typeof value.excludeNoPlay === 'boolean'
+    typeof value.excludeNoPlay === 'boolean' &&
+    (value.updatedAt === undefined || isDateRangeFilter(value.updatedAt))
   )
 }

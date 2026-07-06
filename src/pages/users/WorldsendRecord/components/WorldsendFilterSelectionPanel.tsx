@@ -13,6 +13,7 @@ import {
   updateOptionalNumberRange,
 } from '../../../../utils/rangeInput'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
+import DateRangeSection from '../../components/filter/DateRangeSection'
 import LampSection from '../../components/filter/LampSection'
 import MultiSelectFilterSection from '../../components/filter/MultiSelectFilterSection'
 import NumericRangeSection from '../../components/filter/NumericRangeSection'
@@ -49,6 +50,8 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
   const [justiceCountMaxInput, setJusticeCountMaxInput] = createSignal(
     toInputValue(props.filters.justiceCount.max)
   )
+  const [updatedAtMinInput, setUpdatedAtMinInput] = createSignal(props.filters.updatedAt.min)
+  const [updatedAtMaxInput, setUpdatedAtMaxInput] = createSignal(props.filters.updatedAt.max)
 
   createEffect(() => {
     if (!props.open) return
@@ -56,6 +59,8 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
     setScoreMaxInput(toInputValue(props.filters.score.max))
     setJusticeCountMinInput(toInputValue(props.filters.justiceCount.min))
     setJusticeCountMaxInput(toInputValue(props.filters.justiceCount.max))
+    setUpdatedAtMinInput(props.filters.updatedAt.min)
+    setUpdatedAtMaxInput(props.filters.updatedAt.max)
     setScoreRankMin(scoreToFilterRank(props.filters.score.min))
     setScoreRankMax(scoreToFilterRank(props.filters.score.max))
   })
@@ -239,6 +244,26 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
         onMaxInput={setJusticeCountMaxInput}
         onMinCommit={(value) => commitJusticeCountRange('min', value)}
         onMaxCommit={(value) => commitJusticeCountRange('max', value)}
+      />
+      <DateRangeSection
+        minValue={updatedAtMinInput()}
+        maxValue={updatedAtMaxInput()}
+        onMinInput={setUpdatedAtMinInput}
+        onMaxInput={setUpdatedAtMaxInput}
+        onMinCommit={(value) => {
+          setUpdatedAtMinInput(value)
+          props.setFilters((prev) => ({
+            ...prev,
+            updatedAt: { ...prev.updatedAt, min: value },
+          }))
+        }}
+        onMaxCommit={(value) => {
+          setUpdatedAtMaxInput(value)
+          props.setFilters((prev) => ({
+            ...prev,
+            updatedAt: { ...prev.updatedAt, max: value },
+          }))
+        }}
       />
       <LampSection
         title="コンボランプ"

@@ -1,5 +1,6 @@
 import type { ChainLamp, ComboLamp, Difficulty, HardLamp } from '../../../../types/record'
 import type { FilterState } from '../../../../types/recordFilter'
+import { isDateInRange } from '../../../../utils/dateFilter'
 import { buildDefaultFilter } from '../../../../utils/recordFilterDefaults'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
@@ -119,6 +120,9 @@ export function isRecordMatchedWithTitleMatcher(
   // ハードランプ
   const hardLamp = record.is_played ? (record.clear_lamp ?? null) : null
   if (!filters.hard_lamp.includes(hardLamp as HardLamp)) return false
+
+  // 最終更新日
+  if (!isDateInRange(record.updated_at, filters.updatedAt)) return false
 
   return true
 }

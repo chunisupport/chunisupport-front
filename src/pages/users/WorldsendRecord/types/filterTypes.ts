@@ -1,5 +1,11 @@
 import type { WorldsendRecordDTO } from '../../../../types/api'
-import type { ChainLamp, ComboLamp, HardLamp, NumericRangeFilter } from '../../../../types/record'
+import type {
+  ChainLamp,
+  ComboLamp,
+  DateRangeFilter,
+  HardLamp,
+  NumericRangeFilter,
+} from '../../../../types/record'
 
 export type WorldsendAttribute = WorldsendRecordDTO['attribute']
 export type WorldsendLevelStar = WorldsendRecordDTO['level_star']
@@ -26,4 +32,6 @@ export interface WorldsendFilterState {
   chain_lamp: ChainLamp[]
   hard_lamp: HardLamp[]
   excludeNoPlay: boolean
+  /** 最終更新日の範囲フィルター。空文字列は未指定を意味する。 */
+  updatedAt: DateRangeFilter
 }
