@@ -6,7 +6,7 @@ import {
   AppButton,
   getAppButtonClass,
   getAppIconButtonClass,
-} from '../../../../../../components/common/AppButton'
+} from '../../../components/common/AppButton'
 
 type FilterResetDialogProps = {
   onReset: () => void

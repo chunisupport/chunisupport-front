@@ -36,7 +36,10 @@ export type AppButtonProps = Omit<KobalteButtonProps, 'class'> & {
 export type AppIconButtonTone = 'surface' | 'primary' | 'danger' | 'ghost'
 export type AppIconButtonSize = 'sm' | 'md'
 
-export type AppIconButtonProps = Omit<AppButtonProps, 'children' | 'leftIcon' | 'rightIcon'> & {
+export type AppIconButtonProps = Omit<
+  AppButtonProps,
+  'children' | 'fullWidth' | 'leftIcon' | 'rightIcon' | 'shape' | 'variant'
+> & {
   /** アイコンボタンの色調。 */
   tone?: AppIconButtonTone
   /** アイコンボタンの大きさ。 */

@@ -223,7 +223,9 @@ const NavBar = (props: NavBarProps) => {
     }
 
     if (item.action === 'logout') {
-      setShowLogoutDialog(true)
+      window.setTimeout(() => {
+        setShowLogoutDialog(true)
+      }, 0)
       return
     }
 

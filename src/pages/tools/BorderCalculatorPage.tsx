@@ -73,15 +73,6 @@ const parseOptionalNumber = (value: string): number | undefined => {
 const formatNumber = (value: number): string => value.toLocaleString('ja-JP')
 
 /**
- * ボーダー計算機で選択可能な譜面か判定する。
- *
- * @param value - 判定対象の難易度文字列。
- * @returns BASIC～ULTIMA の通常譜面であれば true。
- */
-const isBorderCalculatorDifficulty = (value: string): value is BorderCalculatorDifficulty =>
-  BORDER_CALCULATOR_DIFFICULTIES.some((difficulty) => difficulty === value)
-
-/**
  * 選択中の楽曲で利用できる通常譜面の難易度候補を返す。
  *
  * @param song - 選択中の楽曲。未選択の場合は全難易度を返す。
@@ -141,7 +132,7 @@ const BorderFormField: Component<BorderFormFieldProps> = (props) => (
  * ボーダー計算機で利用する譜面選択欄をコンパクトに表示する。
  *
  * @param props - 選択中の難易度と変更ハンドラ。
- * @returns Kobalte Select を使った譜面選択欄。
+ * @returns 共通 FormSelect を使った譜面選択欄。
  */
 const DifficultySelectField: Component<{
   value: BorderCalculatorDifficulty
@@ -154,7 +145,7 @@ const DifficultySelectField: Component<{
     options={props.availableDifficulties}
     value={props.value}
     onChange={(difficulty: BorderCalculatorDifficulty | null) => {
-      if (difficulty && isBorderCalculatorDifficulty(difficulty)) {
+      if (difficulty) {
         props.onChange(difficulty)
       }
     }}

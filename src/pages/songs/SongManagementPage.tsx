@@ -328,7 +328,7 @@ const ManagementTextField: Component<ManagementTextFieldProps> = (props) => (
  * 楽曲管理画面で利用するジャンル選択欄を描画します。
  *
  * @param props 表示ラベル、現在値、ジャンル候補、変更ハンドラを含むプロパティ
- * @returns Kobalte Select を利用したジャンル選択欄
+ * @returns 共通 FormSelect を利用したジャンル選択欄
  */
 const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
   const selectedGenre = () => props.genres.find((genre) => genre.id === props.value) ?? null
@@ -351,7 +351,7 @@ const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
 }
 
 /**
- * 楽曲管理画面で利用する Kobalte Checkbox ベースのチェック欄を描画します。
+ * 楽曲管理画面で利用する共通チェック欄を描画します。
  *
  * @param props 選択状態、無効状態、表示ラベル、アクセシブル名、変更ハンドラを含むプロパティ
  * @returns 共通 CheckboxField を利用したチェック欄

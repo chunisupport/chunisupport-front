@@ -252,6 +252,7 @@ const RangeTextField = (props: { field: RangeTextFieldProps; inputClass: string 
   <TextField
     value={props.field.value}
     onChange={(value) => {
+      if (props.field.onInput) return
       const normalizedValue = normalizeRangeTextFieldValue(props.field, value)
       if (normalizedValue !== null) props.field.onChange?.(normalizedValue)
     }}
@@ -273,7 +274,9 @@ const RangeTextField = (props: { field: RangeTextFieldProps; inputClass: string 
       aria-invalid={props.field.invalid ? 'true' : 'false'}
       onInput={(event) => {
         const normalizedValue = normalizeRangeTextFieldValue(props.field, event.currentTarget.value)
-        if (normalizedValue !== null) props.field.onInput?.(normalizedValue)
+        if (normalizedValue !== null) {
+          props.field.onInput?.(normalizedValue)
+        }
       }}
       onFocus={(event) => event.currentTarget.select()}
       onBlur={(event) => {
