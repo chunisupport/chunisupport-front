@@ -54,8 +54,9 @@ const DEFAULT_MULTI_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
 const MULTI_SELECT_TRIGGER_CLASS =
   'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60'
 
+/** AppMultiSelect の選択肢に適用する状態別スタイル。 */
 const MULTI_SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-sm text-text [@media(hover:hover)]:hover:bg-action-primary-muted [@media(hover:hover)]:data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted'
+  'cursor-pointer px-3 py-2 text-sm text-text transition-colors [&:not([data-selected]):hover]:bg-surface-muted [&:not([data-selected])[data-highlighted]]:bg-surface-muted data-[selected]:bg-action-primary-muted data-[selected]:font-medium data-[selected]:text-action-primary'
 
 const SELECT_ALL_LABEL = 'すべて選択'
 const CLEAR_LABEL = 'すべて解除'

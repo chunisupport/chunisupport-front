@@ -67,8 +67,9 @@ const APP_SELECT_TRIGGER_CLASS =
 const APP_SELECT_VALUE_CLASS =
   'min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-subtle'
 
+/** AppSelect の選択肢に適用する状態別スタイル。 */
 const APP_SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-sm text-text outline-none [@media(hover:hover)]:hover:bg-action-primary-muted data-disabled:pointer-events-none data-disabled:opacity-50 [@media(hover:hover)]:data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted'
+  'cursor-pointer px-3 py-2 text-sm text-text outline-none transition-colors [&:not([data-selected]):hover]:bg-surface-muted [&:not([data-selected])[data-highlighted]]:bg-surface-muted data-disabled:pointer-events-none data-disabled:opacity-50 data-[selected]:bg-action-primary-muted data-[selected]:font-medium data-[selected]:text-action-primary'
 
 const APP_SELECT_CONTENT_BASE_CLASS =
   'max-h-90 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md'
