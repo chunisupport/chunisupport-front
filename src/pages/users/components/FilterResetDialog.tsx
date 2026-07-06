@@ -1,22 +1,36 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
-import { Button } from '@kobalte/core/button'
 import { RotateCcw } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createSignal } from 'solid-js'
+import {
+  AppButton,
+  getAppButtonClass,
+  getAppIconButtonClass,
+} from '../../../components/common/AppButton'
 
 type FilterResetDialogProps = {
   onReset: () => void
 }
 
+/**
+ * フィルター条件を初期状態へ戻す確認ダイアログを表示する。
+ *
+ * @param props - リセット確定時のハンドラー。
+ * @returns フィルターリセット操作の JSX 要素。
+ */
 const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
   const [resetDialogOpen, setResetDialogOpen] = createSignal(false)
 
   return (
     <AlertDialog open={resetDialogOpen()} onOpenChange={setResetDialogOpen}>
-      <AlertDialog.Trigger>
-        <div class="p-2 rounded bg-danger-bg border border-danger-border">
-          <RotateCcw class="w-5 h-5 text-text-muted cursor-pointer" />
-        </div>
+      <AlertDialog.Trigger
+        as="button"
+        type="button"
+        class={getAppIconButtonClass({ tone: 'danger' })}
+        aria-label="フィルターをリセット"
+        title="フィルターをリセット"
+      >
+        <RotateCcw class="h-5 w-5" aria-hidden="true" />
       </AlertDialog.Trigger>
       <AlertDialog.Portal>
         <AlertDialog.Overlay class="fixed inset-0 bg-overlay z-50" />
@@ -30,20 +44,20 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
           <div class="flex justify-end gap-2">
             <AlertDialog.CloseButton
               as="button"
-              class="px-4 py-2 rounded bg-action-secondary text-text-muted hover:bg-action-secondary-hover"
+              type="button"
+              class={getAppButtonClass({ variant: 'secondary' })}
             >
               キャンセル
             </AlertDialog.CloseButton>
-            <Button
-              type="button"
-              class="px-4 py-2 rounded bg-danger text-text-inverse hover:bg-danger-hover"
+            <AppButton
+              variant="danger"
               onClick={() => {
                 props.onReset()
                 setResetDialogOpen(false)
               }}
             >
               リセット
-            </Button>
+            </AppButton>
           </div>
         </AlertDialog.Content>
       </AlertDialog.Portal>

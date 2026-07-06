@@ -1,6 +1,6 @@
-import { Button } from '@kobalte/core/button'
 import { ChevronRight } from 'lucide-solid'
 import type { Component } from 'solid-js'
+import { AppButton } from '../../../../components/common/AppButton'
 import { LOW_LEVEL_SUMMARY_LABEL } from '../constants'
 
 type LowLevelRowsToggleProps = {
@@ -16,9 +16,11 @@ type LowLevelRowsToggleProps = {
  * @returns レベル1から9+の表示を切り替えるボタン。
  */
 const LowLevelRowsToggle: Component<LowLevelRowsToggleProps> = (props) => (
-  <Button
-    type="button"
-    class="group inline-flex min-h-9 items-center gap-2 rounded-full border border-border-strong bg-surface px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
+  <AppButton
+    variant="surface"
+    size="sm"
+    shape="pill"
+    class="group min-h-9 font-semibold focus-visible:ring-offset-2"
     aria-expanded={props.expanded}
     aria-controls="over-power-low-level-summary"
     title={`${LOW_LEVEL_SUMMARY_LABEL}を${props.expanded ? '折りたたむ' : '展開'}`}
@@ -32,7 +34,7 @@ const LowLevelRowsToggle: Component<LowLevelRowsToggleProps> = (props) => (
     <span class="rounded-full bg-surface-muted px-2 py-0.5 text-xs tabular-nums text-text-subtle">
       {props.chartCount}
     </span>
-  </Button>
+  </AppButton>
 )
 
 export default LowLevelRowsToggle

@@ -1,11 +1,11 @@
-import { Checkbox } from '@kobalte/core/checkbox'
 import { NumberField } from '@kobalte/core/number-field'
 import { RadioGroup } from '@kobalte/core/radio-group'
-import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, ChevronDown } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { For, Show } from 'solid-js'
+import { FormSelect } from '../../../../../components/common/AppSelect'
+import { CheckboxField } from '../../../../../components/common/CheckboxField'
+import { getSelectableCardButtonClass } from '../../../../../components/common/SelectableCardButton'
 
 interface GoalFilterCheckboxProps {
   label: string
@@ -42,12 +42,6 @@ interface GoalNumberFieldProps {
   onChange: (value: string) => void
 }
 
-interface GoalDecimalTextFieldProps {
-  label: string
-  value: string
-  onChange: (value: string) => void
-}
-
 export interface GoalSelectOption<TValue extends string> {
   value: TValue
   label: string
@@ -75,24 +69,13 @@ interface GoalTargetModeRadioGroupProps<TValue extends string> {
   renderOptionContent?: (option: GoalSelectOption<TValue>) => JSX.Element
 }
 
-export const GOAL_FILTER_CHECKBOX_CONTROL_CLASS =
-  'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
-
 /**
  * 入力系コントロールのフォーカス表示を要素内側に収める共通スタイル。
  */
 const GOAL_FIELD_FOCUS_CLASS =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
-const GOAL_FIELD_INPUT_CLASS = `w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm hover:border-input-border-hover ${GOAL_FIELD_FOCUS_CLASS}`
-const GOAL_SELECT_ITEM_CLASS =
-  'flex h-8 cursor-pointer items-center justify-between rounded px-2 text-sm outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-action-primary data-highlighted:text-text-inverse'
-const GOAL_SELECT_CONTENT_CLASS =
-  'z-60 max-h-64 w-[--kb-select-content-width] overflow-y-auto rounded-md border border-border-strong bg-surface shadow-lg'
-const GOAL_RADIO_CARD_BASE_CLASS =
-  'rounded border px-3 py-2 text-sm text-text-muted hover:bg-surface-muted'
-const GOAL_RADIO_CARD_UNCHECKED_CLASS = 'border-border-strong bg-surface'
-const GOAL_RADIO_CARD_CHECKED_CLASS = 'border-action-primary bg-action-primary-muted'
-const GOAL_RADIO_ITEM_CLASS = 'relative flex min-h-6 items-center gap-3'
+export const GOAL_FIELD_INPUT_CLASS = `w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm hover:border-input-border-hover ${GOAL_FIELD_FOCUS_CLASS}`
+const GOAL_RADIO_ITEM_HEADER_CLASS = 'pointer-events-none flex min-h-6 items-center gap-3'
 const GOAL_RADIO_CONTROL_CLASS =
   'pointer-events-none flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border-strong bg-input-bg data-[checked]:border-action-primary'
 
@@ -154,19 +137,6 @@ export const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
 )
 
 /**
- * 空欄を許可する小数入力欄を描画する。
- *
- * @param props - 表示ラベル、入力値、変更ハンドラ。
- * @returns Kobalte TextField を使った小数入力欄。
- */
-export const GoalDecimalTextField: Component<GoalDecimalTextFieldProps> = (props) => (
-  <TextField class="block text-sm" value={props.value} onChange={props.onChange}>
-    <TextField.Label class="mb-1 block text-text-muted">{props.label}</TextField.Label>
-    <TextField.Input class={GOAL_FIELD_INPUT_CLASS} inputMode="decimal" pattern="[0-9.]*" />
-  </TextField>
-)
-
-/**
  * 目標設定ダイアログで使う単一選択欄を描画する。
  *
  * @param props - 表示ラベル、選択値、選択肢、変更ハンドラ。
@@ -176,47 +146,21 @@ export const GoalSelectField = <TValue extends string>(props: GoalSelectFieldPro
   const selectedOption = () => props.options.find((option) => option.value === props.value) ?? null
 
   return (
-    <Select<GoalSelectOption<TValue>>
-      class="block text-sm"
+    <FormSelect<GoalSelectOption<TValue>>
+      rootClass="block text-sm"
+      label={props.label}
       options={props.options}
       optionValue="value"
       optionTextValue="label"
       value={selectedOption()}
-      onChange={(option) => {
+      onChange={(option: GoalSelectOption<TValue> | null) => {
         if (option) {
           props.onChange(option.value)
         }
       }}
       placeholder="選択..."
-      gutter={0}
-      itemComponent={(itemProps) => (
-        <Select.Item item={itemProps.item} class={GOAL_SELECT_ITEM_CLASS}>
-          <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-          <Select.ItemIndicator class="inline-flex h-5 w-5 items-center justify-center">
-            <Check class="h-4 w-4" />
-          </Select.ItemIndicator>
-        </Select.Item>
-      )}
-    >
-      <Select.Label class="mb-1 block text-text-muted">{props.label}</Select.Label>
-      <Select.Trigger
-        class={`inline-flex w-full items-center justify-between rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover ${GOAL_FIELD_FOCUS_CLASS}`}
-      >
-        <Select.Value<
-          GoalSelectOption<TValue>
-        > class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
-          {(state) => state.selectedOption()?.label}
-        </Select.Value>
-        <Select.Icon class="flex h-5 w-5 items-center justify-center text-text-subtle">
-          <ChevronDown class="h-4 w-4" />
-        </Select.Icon>
-      </Select.Trigger>
-      <Select.Portal>
-        <Select.Content class={GOAL_SELECT_CONTENT_CLASS}>
-          <Select.Listbox />
-        </Select.Content>
-      </Select.Portal>
-    </Select>
+      formatLabel={(option) => option.label}
+    />
   )
 }
 
@@ -227,20 +171,13 @@ export const GoalSelectField = <TValue extends string>(props: GoalSelectFieldPro
  * @returns Kobalte Checkbox を使ったチェックボックス要素。
  */
 export const GoalFilterCheckbox: Component<GoalFilterCheckboxProps> = (props) => (
-  <Checkbox
+  <CheckboxField
     class="relative flex items-center gap-2 text-sm text-text-muted data-disabled:cursor-not-allowed data-disabled:opacity-45"
     checked={props.checked}
     disabled={props.disabled}
     onChange={props.onChange}
-  >
-    <Checkbox.Input style={{ left: '0', top: '0' }} />
-    <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
-      <Checkbox.Indicator>
-        <Check class="h-4 w-4" />
-      </Checkbox.Indicator>
-    </Checkbox.Control>
-    <Checkbox.Label>{props.label}</Checkbox.Label>
-  </Checkbox>
+    label={props.label}
+  />
 )
 
 /**
@@ -263,24 +200,31 @@ export const GoalTargetModeRadioGroup = <TValue extends string>(
       <For each={props.options}>
         {(option) => (
           <div
-            class={`${GOAL_RADIO_CARD_BASE_CLASS} ${
-              props.value === option.value
-                ? GOAL_RADIO_CARD_CHECKED_CLASS
-                : GOAL_RADIO_CARD_UNCHECKED_CLASS
-            }`}
+            class={getSelectableCardButtonClass({
+              layout: 'block',
+              density: 'compact',
+              selected: props.value === option.value,
+              class: 'rounded text-sm',
+            })}
           >
-            <RadioGroup.Item value={option.value} class={GOAL_RADIO_ITEM_CLASS}>
+            <RadioGroup.Item value={option.value} class="contents">
               <RadioGroup.ItemInput class="peer" />
-              <RadioGroup.ItemControl class={GOAL_RADIO_CONTROL_CLASS}>
-                <RadioGroup.ItemIndicator class="h-2.5 w-2.5 rounded-full bg-action-primary" />
-              </RadioGroup.ItemControl>
-              <span class="pointer-events-none">{option.label}</span>
-              <RadioGroup.ItemLabel class="absolute inset-0 cursor-pointer rounded focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring">
+              <div class={GOAL_RADIO_ITEM_HEADER_CLASS}>
+                <RadioGroup.ItemControl class={GOAL_RADIO_CONTROL_CLASS}>
+                  <RadioGroup.ItemIndicator class="h-2.5 w-2.5 rounded-full bg-action-primary" />
+                </RadioGroup.ItemControl>
+                <span class="pointer-events-none">{option.label}</span>
+              </div>
+              <RadioGroup.ItemLabel class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring">
                 <span class="sr-only">{option.label}</span>
               </RadioGroup.ItemLabel>
             </RadioGroup.Item>
             <Show when={props.renderOptionContent?.(option)}>
-              {(content) => <div class="relative z-10 mt-3 pl-8">{content()}</div>}
+              {(content) => (
+                <div class="pointer-events-none relative z-20 mt-3 pl-8">
+                  <div class="pointer-events-auto">{content()}</div>
+                </div>
+              )}
             </Show>
           </div>
         )}

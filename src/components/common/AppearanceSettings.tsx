@@ -1,5 +1,3 @@
-import { Select } from '@kobalte/core/select'
-import { Check, ChevronsUpDown } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   accentPreference,
@@ -13,18 +11,57 @@ import {
   APPEARANCE_SETTINGS_COPY,
   THEME_OPTIONS,
 } from './AppearanceSettings.constants'
+import { AppSelect } from './AppSelect'
 
-/** 外観設定 Select のトリガーに適用するクラス。 */
-const SELECT_TRIGGER_CLASS =
-  'flex min-h-11 w-full items-center justify-between rounded-lg border border-border-strong bg-surface px-4 py-3 text-left text-sm font-semibold text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+const APPEARANCE_SELECT_TRIGGER_CLASS = 'min-h-11 px-4 py-3 font-semibold'
+const APPEARANCE_SELECT_LABEL_CLASS = 'font-semibold'
 
-/** 外観設定 Select の選択肢ポータルに適用するクラス。 */
-const SELECT_CONTENT_CLASS =
-  'z-60 w-[--kb-select-content-width] overflow-hidden rounded-lg border border-border bg-surface shadow-md'
+/**
+ * 背景テーマの選択値を表示ラベルへ変換する。
+ *
+ * @param value - 表示対象の背景テーマ。
+ * @returns 背景テーマの表示ラベル。
+ */
+const formatThemeOptionLabel = (value: ThemePreference): string =>
+  THEME_OPTIONS.find((option) => option.value === value)?.label ?? value
 
-/** 外観設定 Select の選択肢に適用するクラス。 */
-const SELECT_ITEM_CLASS =
-  'flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-text outline-none hover:bg-action-primary-muted data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted'
+/**
+ * アクセントカラーの選択肢定義を取得する。
+ *
+ * @param value - 検索対象のアクセントカラー。
+ * @returns 一致するアクセントカラー選択肢。存在しない場合は undefined。
+ */
+const findAccentOption = (value: AccentPreference) =>
+  ACCENT_OPTIONS.find((candidate) => candidate.value === value)
+
+/**
+ * アクセントカラーの選択値をテキストラベルへ変換する。
+ *
+ * @param value - 表示対象のアクセントカラー。
+ * @returns アクセントカラーの表示ラベル。
+ */
+const formatAccentOptionText = (value: AccentPreference): string =>
+  findAccentOption(value)?.label ?? value
+
+/**
+ * アクセントカラーの選択値をラベルと色見本で表示する。
+ *
+ * @param value - 表示対象のアクセントカラー。
+ * @returns 色見本を含むアクセントカラーラベル。
+ */
+const formatAccentOptionLabel = (value: AccentPreference): JSX.Element => {
+  const option = findAccentOption(value)
+
+  return (
+    <span class="flex items-center gap-3">
+      <span
+        class={`h-5 w-5 shrink-0 rounded-full border border-border-strong ${option?.swatchClass ?? ''}`}
+        aria-hidden="true"
+      />
+      {formatAccentOptionText(value)}
+    </span>
+  )
+}
 
 /**
  * 背景テーマとアクセントカラーを独立して選択するUIを表示する。
@@ -55,105 +92,29 @@ const AppearanceSettings = (): JSX.Element => {
 
   return (
     <div class="grid gap-6">
-      <Select<ThemePreference>
+      <AppSelect<ThemePreference>
         options={THEME_OPTIONS.map((option) => option.value)}
-        optionTextValue={(value) =>
-          THEME_OPTIONS.find((option) => option.value === value)?.label ?? value
-        }
+        optionTextValue={formatThemeOptionLabel}
         value={themePreference()}
         onChange={handleThemeChange}
-        gutter={0}
-        itemComponent={(itemProps) => (
-          <Select.Item item={itemProps.item} class={SELECT_ITEM_CLASS}>
-            <Select.ItemLabel>
-              {THEME_OPTIONS.find((option) => option.value === itemProps.item.rawValue)?.label}
-            </Select.ItemLabel>
-            <Select.ItemIndicator class="text-action-primary">
-              <Check size={16} />
-            </Select.ItemIndicator>
-          </Select.Item>
-        )}
-      >
-        <Select.Label class="text-sm font-semibold text-text">
-          {APPEARANCE_SETTINGS_COPY.themeLabel}
-        </Select.Label>
-        <Select.Trigger class={SELECT_TRIGGER_CLASS}>
-          <Select.Value<ThemePreference>>
-            {(state) =>
-              THEME_OPTIONS.find((option) => option.value === state.selectedOption())?.label
-            }
-          </Select.Value>
-          <Select.Icon class="text-text-subtle">
-            <ChevronsUpDown size={16} />
-          </Select.Icon>
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Content class={SELECT_CONTENT_CLASS}>
-            <Select.Listbox />
-          </Select.Content>
-        </Select.Portal>
-      </Select>
+        label={APPEARANCE_SETTINGS_COPY.themeLabel}
+        labelVariant="visible"
+        formatLabel={formatThemeOptionLabel}
+        triggerClass={APPEARANCE_SELECT_TRIGGER_CLASS}
+        valueClass={APPEARANCE_SELECT_LABEL_CLASS}
+      />
 
-      <Select<AccentPreference>
+      <AppSelect<AccentPreference>
         options={ACCENT_OPTIONS.map((option) => option.value)}
-        optionTextValue={(value) =>
-          ACCENT_OPTIONS.find((option) => option.value === value)?.label ?? value
-        }
+        optionTextValue={formatAccentOptionText}
         value={accentPreference()}
         onChange={handleAccentChange}
-        gutter={0}
-        itemComponent={(itemProps) => {
-          const option = ACCENT_OPTIONS.find(
-            (candidate) => candidate.value === itemProps.item.rawValue
-          )
-
-          return (
-            <Select.Item item={itemProps.item} class={SELECT_ITEM_CLASS}>
-              <div class="flex items-center gap-3">
-                <span
-                  class={`h-5 w-5 shrink-0 rounded-full border border-border-strong ${option?.swatchClass ?? ''}`}
-                  aria-hidden="true"
-                />
-                <Select.ItemLabel>{option?.label}</Select.ItemLabel>
-              </div>
-              <Select.ItemIndicator class="text-action-primary">
-                <Check size={16} />
-              </Select.ItemIndicator>
-            </Select.Item>
-          )
-        }}
-      >
-        <Select.Label class="text-sm font-semibold text-text">
-          {APPEARANCE_SETTINGS_COPY.accentLabel}
-        </Select.Label>
-        <Select.Trigger class={SELECT_TRIGGER_CLASS}>
-          <Select.Value<AccentPreference>>
-            {(state) => {
-              const option = ACCENT_OPTIONS.find(
-                (candidate) => candidate.value === state.selectedOption()
-              )
-
-              return (
-                <span class="flex items-center gap-3">
-                  <span
-                    class={`h-5 w-5 shrink-0 rounded-full border border-border-strong ${option?.swatchClass ?? ''}`}
-                    aria-hidden="true"
-                  />
-                  {option?.label}
-                </span>
-              )
-            }}
-          </Select.Value>
-          <Select.Icon class="text-text-subtle">
-            <ChevronsUpDown size={16} />
-          </Select.Icon>
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Content class={SELECT_CONTENT_CLASS}>
-            <Select.Listbox />
-          </Select.Content>
-        </Select.Portal>
-      </Select>
+        label={APPEARANCE_SETTINGS_COPY.accentLabel}
+        labelVariant="visible"
+        formatLabel={formatAccentOptionLabel}
+        triggerClass={APPEARANCE_SELECT_TRIGGER_CLASS}
+        valueClass={APPEARANCE_SELECT_LABEL_CLASS}
+      />
     </div>
   )
 }

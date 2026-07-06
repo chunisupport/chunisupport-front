@@ -6,7 +6,7 @@ import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
 import type { WorldsendSongDTO } from '../../../types/api'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
-import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
+import { fetchUserWorldsendSongRecordWithCache } from '../../../usecases/cache/fetchUserSongRecordWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
 import NotFoundPage from '../../NotFoundPage'
 import SongDetailLayout from '../components/SongDetailLayout'
@@ -76,14 +76,17 @@ const WorldsendSongDetail = () => {
     fetchUserRatingWithCache
   )
   const [ownRecords] = createResource(
-    () => (authSession.status === 'authenticated' ? authSession.user?.username : null),
-    fetchUserRecordWithCache
+    () => {
+      const username =
+        authSession.status === 'authenticated' ? authSession.user?.username : undefined
+      const displayId = displayIdSource()
+      return username && displayId ? { username, displayId } : null
+    },
+    ({ username, displayId }) => fetchUserWorldsendSongRecordWithCache(username, displayId)
   )
   const ownBestAverage = createMemo(() => ownRating()?.best_average)
   /** 表示中の楽曲に対応するログインユーザーの WORLD'S END レコードを取得する。 */
-  const ownRecord = createMemo(() =>
-    ownRecords()?.worldsend?.find((record) => record.id === song()?.id)
-  )
+  const ownRecord = createMemo(() => ownRecords())
   /** WORLD'S END の自己スコアカード表示項目を構築する。 */
   const ownScoreItems = createMemo<OwnScoreItem[]>(() => [
     {

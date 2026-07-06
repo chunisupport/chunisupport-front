@@ -11,23 +11,24 @@ import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import type { Difficulty, FilterState } from '../../../../../types/recordFilter'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import { truncateDecimal } from '../../../../../utils/numberFormat'
+import {
+  parseNumberInput,
+  toInputValue,
+  updateOptionalNumberRange,
+} from '../../../../../utils/rangeInput'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
 import LampSection from '../../../components/filter/LampSection'
 import MultiSelectFilterSection from '../../../components/filter/MultiSelectFilterSection'
 import NumericRangeSection from '../../../components/filter/NumericRangeSection'
 import ScoreSection from '../../../components/filter/ScoreSection'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../components/filter/styles'
 import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters'
 import {
   JUSTICE_COUNT_RANGE_FILTER,
   OVER_POWER_RANGE_FILTER,
 } from '../../../constants/rangeFilters'
-import {
-  parseNumberInput,
-  toggleArray,
-  toInputValue,
-  updateOptionalNumberRange,
-} from '../../../utils/filterValue'
+import { toggleArray } from '../../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../../utils/scoreRank'
 import ConstRangeSection from './sections/ConstRangeSection'
@@ -337,7 +338,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           <span class="block text-sm font-medium mb-1">フィルター名</span>
           <TextField>
             <TextField.Input
-              class="w-full rounded border border-border-strong bg-surface px-3 py-2 font-sans text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+              class={`${FILTER_DIALOG_FIELD_INPUT_CLASS} font-sans`}
               maxLength={RECORD_FILTER_NAME_MAX_LENGTH}
               value={props.editingFilterName ?? ''}
               onInput={(event) =>
@@ -534,22 +535,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         selected={props.filters.genres}
         placeholder="ジャンルを選択"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-        onSelectAll={() =>
+        onChange={(selectedGenres) =>
           props.setFilters((prev) => ({
             ...prev,
-            genres: genres(),
-          }))
-        }
-        onClear={() =>
-          props.setFilters((prev) => ({
-            ...prev,
-            genres: [],
-          }))
-        }
-        onToggle={(genre) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            genres: toggleArray(prev.genres, genre),
+            genres: selectedGenres,
           }))
         }
       />
@@ -559,22 +548,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         selected={props.filters.versions}
         placeholder="バージョンを選択"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-        onSelectAll={() =>
+        onChange={(selectedVersions) =>
           props.setFilters((prev) => ({
             ...prev,
-            versions: versions(),
-          }))
-        }
-        onClear={() =>
-          props.setFilters((prev) => ({
-            ...prev,
-            versions: [],
-          }))
-        }
-        onToggle={(version) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            versions: toggleArray(prev.versions, version),
+            versions: selectedVersions,
           }))
         }
       />

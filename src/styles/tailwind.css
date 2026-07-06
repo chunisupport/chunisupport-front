@@ -91,6 +91,7 @@
   --cs-color-action-primary-hover: var(--color-primary-700);
   --cs-color-action-primary-muted: var(--color-primary-50);
   --cs-color-action-primary-border: var(--color-primary-200);
+  --cs-color-select-selected-hover-bg: var(--color-primary-100);
   --cs-color-interactive-row-hover: var(--color-primary-100);
   --cs-color-new-song-bg: var(--color-primary-100);
   --cs-color-action-secondary: var(--color-gray-300);
@@ -161,6 +162,7 @@
   --cs-color-action-primary-hover: var(--color-primary-700);
   --cs-color-action-primary-muted: color-mix(in oklab, var(--color-primary-100) 68%, #fff2dc);
   --cs-color-action-primary-border: var(--color-primary-300);
+  --cs-color-select-selected-hover-bg: color-mix(in oklab, var(--color-primary-100) 82%, #ffe0c4);
   --cs-color-interactive-row-hover: color-mix(in oklab, var(--color-primary-100) 72%, #ffe0c4);
   --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-100) 72%, #ffe0c4);
   --cs-color-action-secondary: #edb889;
@@ -231,6 +233,11 @@
   --cs-color-action-primary-hover: var(--color-primary-400);
   --cs-color-action-primary-muted: color-mix(in oklab, var(--color-primary-700) 35%, transparent);
   --cs-color-action-primary-border: var(--color-primary-700);
+  --cs-color-select-selected-hover-bg: color-mix(
+    in oklab,
+    var(--color-primary-600) 42%,
+    transparent
+  );
   --cs-color-interactive-row-hover: color-mix(in oklab, var(--color-primary-900) 28%, transparent);
   --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
   --cs-color-action-secondary: #1d4a39;
@@ -290,6 +297,11 @@
 
   /* ===== 背景色に依存するアクション ===== */
   --cs-color-action-primary-muted: color-mix(in oklab, var(--color-primary-700) 45%, transparent);
+  --cs-color-select-selected-hover-bg: color-mix(
+    in oklab,
+    var(--color-primary-600) 50%,
+    transparent
+  );
   --cs-color-interactive-row-hover: color-mix(in oklab, var(--color-primary-900) 35%, transparent);
   --cs-color-action-secondary: #444444;
   --cs-color-action-secondary-hover: #555555;
@@ -457,6 +469,7 @@
   --color-action-primary-hover: var(--cs-color-action-primary-hover);
   --color-action-primary-muted: var(--cs-color-action-primary-muted);
   --color-action-primary-border: var(--cs-color-action-primary-border);
+  --color-select-selected-hover-bg: var(--cs-color-select-selected-hover-bg);
   --color-interactive-row-hover: var(--cs-color-interactive-row-hover);
   --color-new-song-bg: var(--cs-color-new-song-bg);
   --color-action-secondary: var(--cs-color-action-secondary);

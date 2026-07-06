@@ -1,6 +1,6 @@
-import { Button } from '@kobalte/core/button'
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { deleteUserByUsername, fetchAdminUsers } from '../../api/users'
+import { AppButton } from '../../components/common/AppButton'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
@@ -90,13 +90,9 @@ const AdminUsersPage = () => {
               placeholder="例: user"
             />
           </label>
-          <Button
-            type="button"
-            class="rounded bg-info px-4 py-2 text-sm font-medium text-text-inverse hover:bg-info"
-            onClick={handleSearch}
-          >
+          <AppButton variant="primary" onClick={handleSearch}>
             検索
-          </Button>
+          </AppButton>
         </div>
       </div>
 
@@ -144,13 +140,13 @@ const AdminUsersPage = () => {
                   </td>
                   <td class="whitespace-nowrap px-3 py-2">{formatBooleanFlag(user.is_private)}</td>
                   <td class="whitespace-nowrap px-3 py-2">
-                    <Button
-                      type="button"
-                      class="rounded bg-danger px-3 py-1 text-xs font-medium text-text-inverse hover:bg-danger-hover"
+                    <AppButton
+                      variant="danger"
+                      size="xs"
                       onClick={() => handleDelete(user.username)}
                     >
                       削除
-                    </Button>
+                    </AppButton>
                   </td>
                 </tr>
               )}

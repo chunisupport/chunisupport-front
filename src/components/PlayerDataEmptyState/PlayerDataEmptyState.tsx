@@ -1,7 +1,7 @@
-import { Button } from '@kobalte/core/button'
 import { Check, Copy, ExternalLink } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createSignal, Show } from 'solid-js'
+import { AppButton } from '../common/AppButton'
 import {
   CHUNISUPPORT_BOOKMARKLET,
   DATA_REGISTRATION_HELP_URL,
@@ -40,7 +40,7 @@ const PlayerDataEmptyState: Component<PlayerDataEmptyStateProps> = (props) => {
   return (
     <section class="mx-auto flex w-full max-w-3xl flex-col items-center justify-center px-4 py-12">
       <div class="w-full rounded-2xl border border-action-primary-border bg-gradient-to-br from-surface to-action-primary-muted p-8 text-center shadow-sm">
-        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border-2 border-success-border bg-success-bg text-action-primary shadow-sm">
+        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border-2 border-action-primary-border bg-action-primary-muted text-action-primary shadow-sm">
           <span class="text-2xl font-semibold" aria-hidden="true">
             !
           </span>
@@ -67,14 +67,14 @@ const PlayerDataEmptyState: Component<PlayerDataEmptyStateProps> = (props) => {
             {CHUNISUPPORT_BOOKMARKLET}
           </code>
           <div class="mt-3 flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
+            <AppButton
+              variant="primary"
+              size="sm"
               onClick={handleCopyBookmarklet}
-              class="inline-flex items-center gap-2 rounded-md bg-action-primary px-3 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover focus:outline-none focus:ring-2 focus:ring-focus"
+              leftIcon={<Copy class="h-4 w-4" aria-hidden="true" />}
             >
-              <Copy class="h-4 w-4" aria-hidden="true" />
               {PLAYER_DATA_EMPTY_STATE_TEXT.copyButton}
-            </Button>
+            </AppButton>
             <Show when={copyState() === 'copied'}>
               <span
                 class="inline-flex items-center gap-1 text-xs text-action-primary"

@@ -5,6 +5,7 @@ import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 
 import { fetchMe, fetchUserProfileSummary } from './api/users'
 import { LoadError, Loading, NavBar, PlayerDataEmptyState, XTimeline } from './components'
+import { SelectableCardLink } from './components/common/SelectableCardButton'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
 
@@ -253,19 +254,24 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
  */
 const ToolCardContent = (props: { tool: ToolLink }) => {
   return (
-    <>
-      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
-        <ToolCardIcon icon={props.tool.icon} disabled={props.tool.disabled} />
-      </span>
-      <span class="flex min-w-0 flex-1 flex-row gap-2">
-        <span class="text-base font-semibold text-text">{props.tool.title}</span>
-        <Show when={props.tool.disabled === true}>
-          <span class="w-fit rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text-muted">
-            {DISABLED_TOOL_BADGE_TEXT}
-          </span>
-        </Show>
-      </span>
-    </>
+    <SelectableCardLink
+      href={props.tool.href}
+      disabled={props.tool.disabled}
+      class="min-h-24"
+      icon={
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+          <ToolCardIcon icon={props.tool.icon} disabled={props.tool.disabled} />
+        </span>
+      }
+      title={props.tool.title}
+      titleClass="text-base"
+    >
+      <Show when={props.tool.disabled === true}>
+        <span class="w-fit rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text-muted">
+          {DISABLED_TOOL_BADGE_TEXT}
+        </span>
+      </Show>
+    </SelectableCardLink>
   )
 }
 
@@ -280,28 +286,7 @@ const ToolsPage = () => {
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
       <h1 class="text-2xl font-semibold">ツール</h1>
       <div class="grid gap-3 sm:grid-cols-2">
-        <For each={TOOL_LINKS}>
-          {(tool) => (
-            <Show
-              when={tool.disabled !== true}
-              fallback={
-                <div
-                  aria-disabled="true"
-                  class="flex min-h-24 cursor-not-allowed items-center gap-4 rounded-lg border border-border bg-surface-muted p-4 opacity-70"
-                >
-                  <ToolCardContent tool={tool} />
-                </div>
-              }
-            >
-              <A
-                href={tool.href}
-                class="flex min-h-24 items-center gap-4 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-              >
-                <ToolCardContent tool={tool} />
-              </A>
-            </Show>
-          )}
-        </For>
+        <For each={TOOL_LINKS}>{(tool) => <ToolCardContent tool={tool} />}</For>
       </div>
     </div>
   )

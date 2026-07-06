@@ -1,4 +1,3 @@
-import { Button } from '@kobalte/core/button'
 import { Switch } from '@kobalte/core/switch'
 import { useNavigate, useParams } from '@solidjs/router'
 import { createEffect, createResource, createSignal, Show } from 'solid-js'
@@ -13,8 +12,10 @@ import {
 } from '../../api/settings'
 import { fetchMe, fetchUserProfileSummary } from '../../api/users'
 import { LoadError, Loading } from '../../components'
+import { AppButton } from '../../components/common/AppButton'
 import AppearanceSettings from '../../components/common/AppearanceSettings'
 import { APPEARANCE_SETTINGS_COPY } from '../../components/common/AppearanceSettings.constants'
+import { CheckboxField } from '../../components/common/CheckboxField'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
@@ -458,26 +459,26 @@ const Settings = () => {
                     </Show>
 
                     <div class="mt-4 flex flex-wrap gap-2">
-                      <Button
-                        type="button"
+                      <AppButton
+                        variant="primary"
+                        class="rounded-md"
                         onClick={handleIssueApiToken}
                         disabled={apiTokenIssuing()}
-                        class="rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {apiTokenIssuing()
                           ? '発行中...'
                           : apiTokenStatus()?.has_token
                             ? 'APIトークンを再発行'
                             : 'APIトークンを発行'}
-                      </Button>
-                      <Button
-                        type="button"
+                      </AppButton>
+                      <AppButton
+                        variant="danger"
+                        class="rounded-md"
                         onClick={handleDeleteApiToken}
                         disabled={apiTokenDeleting() || !apiTokenStatus()?.has_token}
-                        class="rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {apiTokenDeleting() ? '削除中...' : 'APIトークンを削除'}
-                      </Button>
+                      </AppButton>
                     </div>
 
                     <Show when={apiTokenError()}>
@@ -498,13 +499,9 @@ const Settings = () => {
                           {token()}
                         </p>
                         <div class="mt-3 flex items-center gap-2">
-                          <Button
-                            type="button"
-                            onClick={handleCopyToken}
-                            class="rounded-md bg-border-strong px-3 py-1.5 text-xs font-semibold text-text-inverse hover:bg-surface-hover"
-                          >
+                          <AppButton size="xs" onClick={handleCopyToken} class="rounded-md">
                             コピー
-                          </Button>
+                          </AppButton>
                           <Show when={copied()}>
                             <span class="text-xs text-action-primary">コピーしました</span>
                           </Show>
@@ -568,18 +565,16 @@ const Settings = () => {
                     )}
                   </Show>
 
-                  <label class="mt-4 flex cursor-pointer items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={playerDeleteConfirmed()}
-                      onChange={(event) => setPlayerDeleteConfirmed(event.currentTarget.checked)}
-                      disabled={playerDeleting()}
-                      class="h-4 w-4"
-                    />
-                    <span class="text-sm text-text-muted">
-                      上記の内容を理解し、プレイヤーデータを削除することに同意します
-                    </span>
-                  </label>
+                  <CheckboxField
+                    checked={playerDeleteConfirmed()}
+                    onChange={setPlayerDeleteConfirmed}
+                    disabled={playerDeleting()}
+                    label="上記の内容を理解し、プレイヤーデータを削除することに同意します"
+                    class="mt-4 cursor-pointer gap-3"
+                    controlClass="h-4 w-4"
+                    indicatorClass="h-3 w-3"
+                    labelClass="text-sm text-text-muted"
+                  />
 
                   <Show when={playerDataError()}>
                     <p class="mt-3 text-sm text-danger" aria-live="polite">
@@ -592,14 +587,14 @@ const Settings = () => {
                     </p>
                   </Show>
 
-                  <Button
-                    type="button"
+                  <AppButton
+                    variant="danger"
+                    class="mt-4 rounded-md"
                     onClick={handleDeletePlayerData}
                     disabled={!playerDeleteConfirmed() || playerDeleting()}
-                    class="mt-4 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {playerDeleting() ? '削除中...' : 'プレイヤーデータを削除'}
-                  </Button>
+                  </AppButton>
                 </section>
 
                 <section id="account-delete" class="py-4">
@@ -622,18 +617,16 @@ const Settings = () => {
                     </ul>
                   </div>
 
-                  <label class="mt-4 flex cursor-pointer items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={accountDeleteConfirmed()}
-                      onChange={(event) => setAccountDeleteConfirmed(event.currentTarget.checked)}
-                      disabled={accountDeleting()}
-                      class="h-4 w-4"
-                    />
-                    <span class="text-sm text-text-muted">
-                      上記の内容を理解し、退会することに同意します
-                    </span>
-                  </label>
+                  <CheckboxField
+                    checked={accountDeleteConfirmed()}
+                    onChange={setAccountDeleteConfirmed}
+                    disabled={accountDeleting()}
+                    label="上記の内容を理解し、退会することに同意します"
+                    class="mt-4 cursor-pointer gap-3"
+                    controlClass="h-4 w-4"
+                    indicatorClass="h-3 w-3"
+                    labelClass="text-sm text-text-muted"
+                  />
 
                   <Show when={accountDeleteError()}>
                     <p class="mt-3 text-sm text-danger" aria-live="polite">
@@ -645,14 +638,14 @@ const Settings = () => {
                     退会ボタンを押すと、本人確認のためGoogleアカウントでの再認証が求められます。
                   </p>
 
-                  <Button
-                    type="button"
+                  <AppButton
+                    variant="danger"
+                    class="mt-3 rounded-md"
                     onClick={handleDeleteAccount}
                     disabled={!accountDeleteConfirmed() || accountDeleting()}
-                    class="mt-3 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {accountDeleting() ? '処理中...' : '退会する'}
-                  </Button>
+                  </AppButton>
                 </section>
               </div>
             </>

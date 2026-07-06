@@ -1,6 +1,6 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
-import { Button } from '@kobalte/core/button'
 import type { Component } from 'solid-js'
+import { AppButton } from '../../../../../components/common/AppButton'
 import type { GoalDTO } from '../../../../../types/api'
 
 interface GoalDeleteDialogProps {
@@ -29,22 +29,12 @@ const GoalDeleteDialog: Component<GoalDeleteDialogProps> = (props) => {
           </AlertDialog.Description>
 
           <div class="mt-5 flex justify-end gap-2">
-            <Button
-              type="button"
-              class="rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover"
-              disabled={props.isDeleting}
-              onClick={() => props.onOpenChange(false)}
-            >
+            <AppButton disabled={props.isDeleting} onClick={() => props.onOpenChange(false)}>
               キャンセル
-            </Button>
-            <Button
-              type="button"
-              class="rounded bg-danger px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-danger-hover disabled:opacity-60"
-              disabled={props.isDeleting}
-              onClick={props.onConfirm}
-            >
+            </AppButton>
+            <AppButton variant="danger" disabled={props.isDeleting} onClick={props.onConfirm}>
               {props.isDeleting ? '削除中...' : '削除する'}
-            </Button>
+            </AppButton>
           </div>
         </AlertDialog.Content>
       </AlertDialog.Portal>

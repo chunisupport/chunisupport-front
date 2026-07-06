@@ -3,6 +3,7 @@ import { TextField } from '@kobalte/core/text-field'
 import { Calculator } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createSignal, For, Show } from 'solid-js'
+import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   type ChartConstantLamp,
@@ -162,19 +163,13 @@ const ChartConstantCalculatorPage = (): JSX.Element => {
             <div class="grid gap-x-4 gap-y-2 sm:grid-cols-2">
               <For each={CHART_CONSTANT_LAMP_OPTIONS}>
                 {(option) => (
-                  <RadioGroup.Item
+                  <SelectableCardItem
                     value={option.value}
-                    class={`${FIELD_CONTROL_CLASS} relative flex items-center gap-3 py-3 hover:bg-surface-muted data-[checked]:border-action-primary data-[checked]:bg-action-primary-muted`}
-                  >
-                    <RadioGroup.ItemInput class="peer" />
-                    <RadioGroup.ItemControl class="pointer-events-none flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border-strong bg-input-bg data-[checked]:border-action-primary">
-                      <RadioGroup.ItemIndicator class="h-2.5 w-2.5 rounded-full bg-action-primary" />
-                    </RadioGroup.ItemControl>
-                    <span class="pointer-events-none">{option.label}</span>
-                    <RadioGroup.ItemLabel class="absolute inset-0 cursor-pointer rounded focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring">
-                      <span class="sr-only">{option.label}</span>
-                    </RadioGroup.ItemLabel>
-                  </RadioGroup.Item>
+                    title={option.label}
+                    ariaLabel={option.label}
+                    density="compact"
+                    class="rounded-md py-3"
+                  />
                 )}
               </For>
             </div>
