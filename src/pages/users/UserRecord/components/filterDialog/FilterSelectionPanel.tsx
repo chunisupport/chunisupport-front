@@ -22,6 +22,7 @@ import LampSection from '../../../components/filter/LampSection'
 import MultiSelectFilterSection from '../../../components/filter/MultiSelectFilterSection'
 import NumericRangeSection from '../../../components/filter/NumericRangeSection'
 import ScoreSection from '../../../components/filter/ScoreSection'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../components/filter/styles'
 import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters'
 import {
   JUSTICE_COUNT_RANGE_FILTER,
@@ -337,7 +338,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           <span class="block text-sm font-medium mb-1">フィルター名</span>
           <TextField>
             <TextField.Input
-              class="w-full rounded border border-border-strong bg-surface px-3 py-2 font-sans text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+              class={`${FILTER_DIALOG_FIELD_INPUT_CLASS} font-sans`}
               maxLength={RECORD_FILTER_NAME_MAX_LENGTH}
               value={props.editingFilterName ?? ''}
               onInput={(event) =>

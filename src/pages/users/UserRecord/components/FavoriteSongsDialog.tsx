@@ -1,7 +1,6 @@
 import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
-import { TextField } from '@kobalte/core/text-field'
-import { CircleSlash2, Funnel, ListChecks, LoaderCircle, Search, Star } from 'lucide-solid'
+import { CircleSlash2, Funnel, ListChecks, LoaderCircle, Star } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import { AppButton, getAppButtonClass } from '../../../../components/common/AppButton'
@@ -10,6 +9,7 @@ import {
   GenreMultiSelect,
   VersionMultiSelect,
 } from '../../../../components/common/DomainMultiSelect'
+import { SearchTextField } from '../../../../components/common/SearchTextField'
 import Loading from '../../../../components/Loading/Loading'
 import type {
   MasterItemDTO,
@@ -31,8 +31,6 @@ import {
 import {
   buildDefaultSongSelectionFilter,
   getSongSelectionRowClass,
-  getSongSelectionSearchFrameClass,
-  getSongSelectionSearchIconClass,
   hasSongSelectionFilterChanges,
   SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
   SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS,
@@ -201,26 +199,15 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
           </div>
 
           <div class="mb-3 flex min-w-0 shrink-0 items-center">
-            <TextField class="min-w-0 flex-1">
-              <div
-                class={`flex min-w-0 items-center gap-2 rounded-l border px-2 transition-colors ${getSongSelectionSearchFrameClass(
-                  hasQuery()
-                )}`}
-              >
-                <Search
-                  class={`h-4 w-4 shrink-0 ${getSongSelectionSearchIconClass(hasQuery())}`}
-                  aria-hidden="true"
-                />
-                <TextField.Input
-                  type="search"
-                  class="min-w-0 flex-1 bg-transparent py-2 font-sans text-sm outline-none"
-                  aria-label="お気に入り楽曲検索"
-                  placeholder="曲名・アーティストで検索..."
-                  value={query()}
-                  onInput={(event) => setQuery(event.currentTarget.value)}
-                />
-              </div>
-            </TextField>
+            <SearchTextField
+              class="min-w-0 flex-1"
+              frameClass="rounded-l"
+              value={query()}
+              active={hasQuery()}
+              onChange={setQuery}
+              ariaLabel="お気に入り楽曲検索"
+              placeholder="曲名・アーティストで検索..."
+            />
             <Button
               type="button"
               class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center border focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
@@ -254,7 +241,7 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
             {selectedCount()} / {FAVORITE_SONG_LIMIT}曲選択中・{filteredSongs().length}曲表示
           </div>
 
-          <div class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border">
+          <div class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border bg-surface">
             <Show
               when={isListReady()}
               fallback={
@@ -278,7 +265,7 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
                   </div>
                 }
               >
-                <ul class="divide-y divide-border">
+                <ul class="divide-y divide-border bg-surface">
                   <For each={filteredSongs()}>
                     {(song) => {
                       const selected = () => draftIds().has(song.id)

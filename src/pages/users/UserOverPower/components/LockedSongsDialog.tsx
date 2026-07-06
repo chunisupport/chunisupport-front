@@ -1,7 +1,6 @@
 import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
-import { TextField } from '@kobalte/core/text-field'
-import { Check, CircleSlash2, Funnel, ListChecks, LoaderCircle, Search } from 'lucide-solid'
+import { Check, CircleSlash2, Funnel, ListChecks, LoaderCircle } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import { AppButton, getAppButtonClass } from '../../../../components/common/AppButton'
@@ -11,6 +10,7 @@ import {
   GenreMultiSelect,
   VersionMultiSelect,
 } from '../../../../components/common/DomainMultiSelect'
+import { SearchTextField } from '../../../../components/common/SearchTextField'
 import Loading from '../../../../components/Loading/Loading'
 import type {
   MasterItemDTO,
@@ -35,8 +35,6 @@ import {
 import {
   buildDefaultSongSelectionFilter,
   getSongSelectionRowClass,
-  getSongSelectionSearchFrameClass,
-  getSongSelectionSearchIconClass,
   SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
   SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS,
   SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS,
@@ -346,26 +344,15 @@ const LockedSongsDialog: Component<Props> = (props) => {
           </div>
 
           <div class="mb-3 flex min-w-0 shrink-0 items-center">
-            <TextField class="min-w-0 flex-1">
-              <div
-                class={`flex min-w-0 items-center gap-2 rounded-l border px-2 transition-colors ${getSongSelectionSearchFrameClass(
-                  hasSearchQuery()
-                )}`}
-              >
-                <Search
-                  class={`h-4 w-4 shrink-0 ${getSongSelectionSearchIconClass(hasSearchQuery())}`}
-                  aria-hidden="true"
-                />
-                <TextField.Input
-                  type="search"
-                  class="min-w-0 flex-1 bg-transparent py-2 font-sans text-sm outline-none"
-                  aria-label="未解禁楽曲検索"
-                  placeholder="曲名・アーティストで検索..."
-                  value={query()}
-                  onInput={(event) => setQuery(event.currentTarget.value)}
-                />
-              </div>
-            </TextField>
+            <SearchTextField
+              class="min-w-0 flex-1"
+              frameClass="rounded-l"
+              value={query()}
+              active={hasSearchQuery()}
+              onChange={setQuery}
+              ariaLabel="未解禁楽曲検索"
+              placeholder="曲名・アーティストで検索..."
+            />
             <Button
               type="button"
               class={`-ml-px flex h-9.5 min-w-9.5 shrink-0 items-center justify-center gap-1.5 border px-2 text-sm transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
@@ -400,7 +387,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
             {props.lockedSongs.length}件設定中 / {filteredSongListItems().length}件表示
           </div>
 
-          <div class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border">
+          <div class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border bg-surface">
             <Show
               when={isListReady()}
               fallback={
@@ -424,7 +411,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   </div>
                 }
               >
-                <ul class="divide-y divide-border">
+                <ul class="divide-y divide-border bg-surface">
                   <For each={filteredSongListItems()}>
                     {(item) => {
                       const selected = () => isLocked(item.song.id, item.isUltima)

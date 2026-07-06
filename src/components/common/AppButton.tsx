@@ -78,7 +78,8 @@ const ICON_BUTTON_TONE_CLASS: Record<AppIconButtonTone, string> = {
     'border border-border-strong bg-surface text-text-muted hover:bg-surface-hover disabled:hover:bg-surface',
   primary:
     'border border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover',
-  danger: 'border border-danger text-danger hover:bg-danger-bg',
+  danger:
+    'border border-danger-border bg-surface text-danger hover:border-danger hover:bg-danger-bg',
   ghost: 'text-text-muted hover:bg-surface-hover',
 }
 

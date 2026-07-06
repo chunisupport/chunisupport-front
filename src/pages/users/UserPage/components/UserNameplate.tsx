@@ -170,7 +170,7 @@ export const UserNameplate: Component<Props> = (props) => {
   })
 
   return (
-    <div class="mb-2 mx-auto w-[min(420px,calc(100%-2rem))] px-3 py-3 border border-border shadow-sm rounded-md ">
+    <div class="mb-2 mx-auto w-[min(420px,calc(100%-2rem))] rounded-md border border-border bg-surface px-3 py-3 shadow-sm">
       <Show when={visibleHonors().length > 0}>
         <Show
           when={hasMultipleVisibleHonors()}

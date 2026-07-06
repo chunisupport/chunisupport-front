@@ -1,3 +1,7 @@
+import {
+  getSearchTextFieldFrameStateClass,
+  getSearchTextFieldIconClass,
+} from '../../../components/common/searchTextFieldStyles'
 import type { SongDTO } from '../../../types/api'
 import { hasSameFilterValues } from '../utils/filterValue'
 
@@ -16,7 +20,7 @@ export const SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS =
 
 /** 楽曲選択ツールバーボタンの未選択状態へ適用するクラス。 */
 export const SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS =
-  'border-border-strong text-text-muted hover:bg-surface-hover'
+  'border-border-strong bg-surface text-text-muted hover:bg-surface-hover'
 
 /**
  * 楽曲選択フィルターの初期値を生成する。
@@ -51,9 +55,7 @@ export const hasSongSelectionFilterChanges = (
  * @returns 検索欄の外枠へ適用するクラス。
  */
 export const getSongSelectionSearchFrameClass = (active: boolean): string =>
-  active
-    ? 'border-action-primary bg-action-primary-muted focus-within:border-action-primary'
-    : 'border-border-strong focus-within:border-focus-ring'
+  getSearchTextFieldFrameStateClass(active)
 
 /**
  * 楽曲検索欄の状態に応じたアイコンクラスを返す。
@@ -62,7 +64,7 @@ export const getSongSelectionSearchFrameClass = (active: boolean): string =>
  * @returns 検索アイコンへ適用するクラス。
  */
 export const getSongSelectionSearchIconClass = (active: boolean): string =>
-  active ? 'text-action-primary' : 'text-text-subtle'
+  getSearchTextFieldIconClass(active)
 
 /**
  * 楽曲選択行の状態に応じたクラスを返す。

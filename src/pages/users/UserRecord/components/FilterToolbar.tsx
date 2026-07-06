@@ -1,13 +1,9 @@
 import { Button } from '@kobalte/core/button'
-import { TextField } from '@kobalte/core/text-field'
-import { ArrowUpDown, Columns3, Funnel, Search, Star } from 'lucide-solid'
+import { ArrowUpDown, Columns3, Funnel, Star } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import { AppIconButton } from '../../../../components/common/AppButton'
-import {
-  getSongSelectionSearchFrameClass,
-  getSongSelectionSearchIconClass,
-} from '../../components/songSelectionDialog'
+import { SearchTextField } from '../../../../components/common/SearchTextField'
 
 type FilterButtonTone = 'default' | 'active' | 'difficulty-only'
 
@@ -40,7 +36,7 @@ const getFilterButtonToneClass = (tone: FilterButtonTone): string => {
     return 'border-action-primary bg-action-primary-muted text-action-primary hover:bg-action-primary-muted'
   }
 
-  return 'border-border-strong text-text-muted hover:bg-surface-hover'
+  return 'border-border-strong bg-surface text-text-muted hover:bg-surface-hover'
 }
 
 /**
@@ -63,28 +59,17 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
 
   return (
     <div class="flex items-center mb-2">
-      <TextField class="min-w-0 flex-1" value={props.title} onChange={props.onTitleChange}>
-        <div
-          class={`flex min-w-0 items-center gap-2 rounded-l border-t border-b border-l px-2 transition-colors ${getSongSelectionSearchFrameClass(
-            Boolean(props.titleActive)
-          )}`}
-        >
-          <Search
-            class={`h-4 w-4 shrink-0 ${getSongSelectionSearchIconClass(
-              Boolean(props.titleActive)
-            )}`}
-            aria-hidden="true"
-          />
-          <TextField.Input
-            type="search"
-            class="min-w-0 flex-1 bg-transparent py-2 font-sans text-sm outline-none"
-            aria-label="曲名・アーティスト名検索"
-            placeholder="曲名・アーティスト名で検索"
-          />
-        </div>
-      </TextField>
+      <SearchTextField
+        class="min-w-0 flex-1"
+        frameClass="rounded-l"
+        value={props.title}
+        onChange={props.onTitleChange}
+        active={Boolean(props.titleActive)}
+        ariaLabel="曲名・アーティスト名検索"
+        placeholder="曲名・アーティスト名で検索"
+      />
       <Button
-        class={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent ${getFilterButtonToneClass(
+        class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent ${getFilterButtonToneClass(
           filterButtonTone()
         )}`}
         onClick={props.onOpenFilter}
