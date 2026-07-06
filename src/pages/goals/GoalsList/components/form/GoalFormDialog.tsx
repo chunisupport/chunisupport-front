@@ -1,7 +1,7 @@
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal } from 'solid-js'
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart'
+import { createMultiSelectOption } from '../../../../../components/common/DomainMultiSelect'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -11,7 +11,7 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../../../types/api'
-import { formatChartConst } from '../../../../../utils/chartConstFormat'
+import { normalizeScoreRangeInput } from '../../../../../utils/rangeInput'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { resolveGoalAchievementTypeLabel } from '../../../utils/goalForm'
@@ -88,31 +88,6 @@ const GOAL_ACHIEVEMENT_TYPES = [
   'overpower_percent',
 ] as const satisfies readonly GoalAchievementType[]
 const MAX_OVERPOWER_PERCENT = 100
-const DECIMAL_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
-
-/**
- * 数値入力値を指定範囲内に丸めた文字列へ変換する。
- *
- * @param value - 入力欄から受け取った文字列。
- * @param min - 許容する最小値。
- * @param max - 許容する最大値。
- * @param format - 範囲外補正時の文字列フォーマット。
- * @returns 空文字または数値でない入力はそのまま、範囲外の数値は丸めた文字列。
- */
-const clampNumericInput = (
-  value: string,
-  min: number,
-  max: number,
-  format: (value: number) => string
-): string => {
-  if (value === '') return value
-
-  const parsed = Number(value)
-  if (!Number.isFinite(parsed)) return value
-  if (parsed < min) return format(min)
-  if (parsed > max) return format(max)
-  return value
-}
 
 /**
  * 文字列が目標種別として扱える値か判定する。
@@ -159,31 +134,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   )
   const allGenreSelections = createMemo(() => buildAllIdSelections(props.masterData.genres))
   const allVersionSelections = createMemo(() => buildAllVersionSelections(versionOptions()))
-  const genreLabels = createMemo(() => props.masterData.genres.map((genre) => genre.name))
-  const genreValueByLabel = createMemo(
-    () => new Map(props.masterData.genres.map((genre) => [genre.name, String(genre.id)]))
+  const genreSelectOptions = createMemo(() =>
+    props.masterData.genres.map((genre) => createMultiSelectOption(String(genre.id), genre.name))
   )
-  const genreLabelByValue = createMemo(
-    () => new Map(props.masterData.genres.map((genre) => [String(genre.id), genre.name]))
-  )
-  const selectedGenreLabels = createMemo(() =>
-    genres().flatMap((value) => {
-      const label = genreLabelByValue().get(value)
-      return label ? [label] : []
-    })
-  )
-  const versionLabels = createMemo(() => versionOptions().map((option) => option.label))
-  const versionValueByLabel = createMemo(
-    () => new Map(versionOptions().map((option) => [option.label, option.value]))
-  )
-  const versionLabelByValue = createMemo(
-    () => new Map(versionOptions().map((option) => [option.value, option.label]))
-  )
-  const selectedVersionLabels = createMemo(() =>
-    versions().flatMap((value) => {
-      const label = versionLabelByValue().get(value)
-      return label ? [label] : []
-    })
+  const versionSelectOptions = createMemo(() =>
+    versionOptions().map((option) => createMultiSelectOption(option.value, option.label))
   )
   const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
     props.masterData.achievement_types
@@ -229,45 +184,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    * @returns なし。
    */
   const handleScoreChange = (value: string): void => {
-    setScore(clampNumericInput(value, SCORE_MIN, MAX_SCORE, String))
-  }
-
-  /**
-   * 譜面定数入力値を有効な定数範囲に丸めて保持する。
-   *
-   * @param setter - 更新対象の Signal setter。
-   * @param value - 入力欄から受け取った譜面定数文字列。
-   * @returns なし。
-   */
-  const handleMusicConstChange = (setter: (value: string) => void, value: string): void => {
-    if (!DECIMAL_INPUT_PATTERN.test(value)) return
-
-    setErrorMessage('')
-    setter(clampNumericInput(value, CHART_CONST_MIN, CHART_CONST_MAX, formatChartConst))
-  }
-
-  /**
-   * 表示名で指定されたジャンルの選択状態を内部ID値へ変換して切り替える。
-   *
-   * @param label - GenreSection から受け取ったジャンル表示名。
-   * @returns なし。
-   */
-  const handleToggleGenreLabel = (label: string): void => {
-    const value = genreValueByLabel().get(label)
-    if (!value) return
-    setGenres((prev) => toggleSelection(prev, value, !prev.includes(value)))
-  }
-
-  /**
-   * 表示名で指定されたバージョンの選択状態を内部番号値へ変換して切り替える。
-   *
-   * @param label - VersionSection から受け取ったバージョン表示名。
-   * @returns なし。
-   */
-  const handleToggleVersionLabel = (label: string): void => {
-    const value = versionValueByLabel().get(label)
-    if (!value) return
-    setVersions((prev) => toggleSelection(prev, value, !prev.includes(value)))
+    const normalizedValue = normalizeScoreRangeInput(value)
+    if (normalizedValue === null) return
+    setScore(normalizedValue)
   }
 
   // ダイアログを開いたタイミングで作成・編集モードに応じた初期値へ同期するため。
@@ -514,10 +433,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               diffs={diffs()}
               constMin={constMin()}
               constMax={constMax()}
-              genreLabels={genreLabels()}
-              selectedGenreLabels={selectedGenreLabels()}
-              versionLabels={versionLabels()}
-              selectedVersionLabels={selectedVersionLabels()}
+              genreOptions={genreSelectOptions()}
+              selectedGenres={genres()}
+              versionOptions={versionSelectOptions()}
+              selectedVersions={versions()}
               targetCountText={targetCountText()}
               onClearDifficulty={() => {
                 setChartTargetMode('normal')
@@ -533,14 +452,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
                 setChartTargetMode('normal')
                 setDiffs((prev) => toggleSelection(prev, String(id), checked))
               }}
-              onToggleGenre={handleToggleGenreLabel}
-              onSelectAllGenres={() => setGenres(allGenreSelections())}
-              onClearGenres={() => setGenres([])}
-              onToggleVersion={handleToggleVersionLabel}
-              onSelectAllVersions={() => setVersions(allVersionSelections())}
-              onClearVersions={() => setVersions([])}
-              onConstMinChange={(value) => handleMusicConstChange(setConstMin, value)}
-              onConstMaxChange={(value) => handleMusicConstChange(setConstMax, value)}
+              onGenresChange={setGenres}
+              onVersionsChange={setVersions}
+              onConstMinChange={setConstMin}
+              onConstMaxChange={setConstMax}
             />
 
             <GoalAchievementSection

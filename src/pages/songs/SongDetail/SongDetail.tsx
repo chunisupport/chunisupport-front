@@ -145,6 +145,8 @@ const SongDetail = () => {
     ({ username, displayId }) => fetchUserStandardSongRecordWithCache(username, displayId)
   )
   const ownBestAverage = createMemo(() => ownRating()?.best_average)
+  /** 統計再取得中も直前の表示データを残し、画面高さの急変を防ぐ。 */
+  const displayedStats = createMemo(() => stats.latest ?? stats())
   const ownScoreItems = createMemo(() => {
     const currentSong = song()
     if (!currentSong) return []
@@ -189,7 +191,7 @@ const SongDetail = () => {
                 difficulties={availableDifficulties()}
                 selectedDifficulty={selectedDifficulty()}
                 onDifficultyChange={setSelectedDifficulty}
-                stats={stats()}
+                stats={displayedStats()}
                 isStatsLoading={stats.loading}
                 bestAverage={ownBestAverage()}
                 ratingBands={masterData()?.rating_bands}

@@ -34,7 +34,7 @@ const ScoreHistoryTable = (props: { entries: readonly ScoreHistoryEntryDTO[] }) 
                 <div class="flex items-center gap-2">
                   <span>{formatScoreHistoryDateTime(entry.updated_at)}</span>
                   <Show when={index() === 0}>
-                    <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success-text">
+                    <span class="rounded-full bg-action-primary-muted px-2 py-0.5 text-xs font-semibold text-action-primary">
                       {CURRENT_BEST_LABEL}
                     </span>
                   </Show>

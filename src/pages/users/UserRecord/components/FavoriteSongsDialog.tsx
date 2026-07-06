@@ -1,10 +1,15 @@
 import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
-import { TextField } from '@kobalte/core/text-field'
-import { CircleSlash2, Funnel, ListChecks, LoaderCircle, Search, Star } from 'lucide-solid'
+import { CircleSlash2, Funnel, ListChecks, LoaderCircle, Star } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
-import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
+import { AppButton, getAppButtonClass } from '../../../../components/common/AppButton'
+import { toMultiSelectOptions } from '../../../../components/common/AppMultiSelect'
+import {
+  GenreMultiSelect,
+  VersionMultiSelect,
+} from '../../../../components/common/DomainMultiSelect'
+import { SearchTextField } from '../../../../components/common/SearchTextField'
 import Loading from '../../../../components/Loading/Loading'
 import type {
   MasterItemDTO,
@@ -26,17 +31,13 @@ import {
 import {
   buildDefaultSongSelectionFilter,
   getSongSelectionRowClass,
-  getSongSelectionSearchFrameClass,
-  getSongSelectionSearchIconClass,
   hasSongSelectionFilterChanges,
-  SONG_SELECTION_FILTER_DIALOG_BUTTON_CLASS,
   SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
   SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS,
   SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS,
   type SongSelectionFilter,
   sortSongSelectionCandidates,
 } from '../../components/songSelectionDialog'
-import { toggleArray } from '../../utils/filterValue'
 
 type Props = {
   open: boolean
@@ -198,26 +199,15 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
           </div>
 
           <div class="mb-3 flex min-w-0 shrink-0 items-center">
-            <TextField class="min-w-0 flex-1">
-              <div
-                class={`flex min-w-0 items-center gap-2 rounded-l border px-2 transition-colors ${getSongSelectionSearchFrameClass(
-                  hasQuery()
-                )}`}
-              >
-                <Search
-                  class={`h-4 w-4 shrink-0 ${getSongSelectionSearchIconClass(hasQuery())}`}
-                  aria-hidden="true"
-                />
-                <TextField.Input
-                  type="search"
-                  class="min-w-0 flex-1 bg-transparent py-2 font-sans text-sm outline-none"
-                  aria-label="お気に入り楽曲検索"
-                  placeholder="曲名・アーティストで検索..."
-                  value={query()}
-                  onInput={(event) => setQuery(event.currentTarget.value)}
-                />
-              </div>
-            </TextField>
+            <SearchTextField
+              class="min-w-0 flex-1"
+              frameClass="rounded-l"
+              value={query()}
+              active={hasQuery()}
+              onChange={setQuery}
+              ariaLabel="お気に入り楽曲検索"
+              placeholder="曲名・アーティストで検索..."
+            />
             <Button
               type="button"
               class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center border focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
@@ -251,7 +241,7 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
             {selectedCount()} / {FAVORITE_SONG_LIMIT}曲選択中・{filteredSongs().length}曲表示
           </div>
 
-          <div class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border">
+          <div class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border bg-surface">
             <Show
               when={isListReady()}
               fallback={
@@ -275,7 +265,7 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
                   </div>
                 }
               >
-                <ul class="divide-y divide-border">
+                <ul class="divide-y divide-border bg-surface">
                   <For each={filteredSongs()}>
                     {(song) => {
                       const selected = () => draftIds().has(song.id)
@@ -340,56 +330,40 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
               <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex max-h-[80dvh] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
                 <div class="mb-4 flex shrink-0 items-center justify-between gap-3">
                   <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
-                  <Button
-                    type="button"
-                    class={SONG_SELECTION_FILTER_DIALOG_BUTTON_CLASS.secondary}
-                    onClick={() => setFilters(defaultFilter())}
-                  >
-                    すべて選択
-                  </Button>
+                  <AppButton onClick={() => setFilters(defaultFilter())}>すべて選択</AppButton>
                 </div>
                 <div class="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
                   <div>
-                    <span class="mb-1 block font-medium">ジャンル</span>
-                    <MultiSelectDropdown
-                      options={genreOptions()}
+                    <GenreMultiSelect
+                      options={toMultiSelectOptions(genreOptions())}
                       selected={filters().genres}
-                      placeholder="ジャンルを選択"
+                      labelClass="text-text"
                       contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                      onToggle={(genre) =>
+                      onChange={(selectedGenres) =>
                         setFilters((current) => ({
                           ...current,
-                          genres: toggleArray(current.genres, genre),
+                          genres: selectedGenres,
                         }))
                       }
-                      onSelectAll={() =>
-                        setFilters((current) => ({ ...current, genres: genreOptions() }))
-                      }
-                      onClear={() => setFilters((current) => ({ ...current, genres: [] }))}
                     />
                   </div>
                   <div>
-                    <span class="mb-1 block font-medium">バージョン</span>
-                    <MultiSelectDropdown
-                      options={versionOptions()}
+                    <VersionMultiSelect
+                      options={toMultiSelectOptions(versionOptions())}
                       selected={filters().versions}
-                      placeholder="バージョンを選択"
+                      labelClass="text-text"
                       contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                      onToggle={(version) =>
+                      onChange={(selectedVersions) =>
                         setFilters((current) => ({
                           ...current,
-                          versions: toggleArray(current.versions, version),
+                          versions: selectedVersions,
                         }))
                       }
-                      onSelectAll={() =>
-                        setFilters((current) => ({ ...current, versions: versionOptions() }))
-                      }
-                      onClear={() => setFilters((current) => ({ ...current, versions: [] }))}
                     />
                   </div>
                 </div>
                 <div class="mt-6 flex justify-end">
-                  <Dialog.CloseButton class={SONG_SELECTION_FILTER_DIALOG_BUTTON_CLASS.primary}>
+                  <Dialog.CloseButton class={getAppButtonClass({ variant: 'primary' })}>
                     適用
                   </Dialog.CloseButton>
                 </div>
@@ -398,25 +372,15 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
           </Dialog>
 
           <div class="mt-4 flex shrink-0 justify-end gap-2">
-            <Button
-              type="button"
-              class="rounded border border-border-strong px-3 py-2 text-sm text-text-muted hover:bg-surface-muted disabled:opacity-60"
-              onClick={() => props.onOpenChange(false)}
-              disabled={isSaving()}
-            >
+            <AppButton onClick={() => props.onOpenChange(false)} disabled={isSaving()}>
               キャンセル
-            </Button>
-            <Button
-              type="button"
-              class="inline-flex items-center gap-2 rounded bg-action-primary px-3 py-2 text-sm text-text-inverse hover:bg-action-primary-hover disabled:opacity-60"
-              onClick={handleSave}
-              disabled={!changed() || isSaving()}
-            >
+            </AppButton>
+            <AppButton variant="primary" onClick={handleSave} disabled={!changed() || isSaving()}>
               <Show when={isSaving()}>
                 <LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />
               </Show>
               保存
-            </Button>
+            </AppButton>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

@@ -1,11 +1,8 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
-import { Button } from '@kobalte/core/button'
-import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
-import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
-import { Check, ChevronDown, Dices, RotateCcw, SlidersHorizontal } from 'lucide-solid'
+import { Dices, RotateCcw, SlidersHorizontal } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import {
   createEffect,
@@ -21,8 +18,13 @@ import {
 import { fetchVersions } from '../../api/songs'
 import { fetchMe, fetchUserRating } from '../../api/users'
 import { LoadError, Loading } from '../../components'
+import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
+import { MultiSelectField, toMultiSelectOptions } from '../../components/common/AppMultiSelect'
+import { FormSelect } from '../../components/common/AppSelect'
+import { CheckboxField } from '../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
-import MultiSelectDropdown from '../../components/common/MultiSelectDropdown'
+import { GenreMultiSelect, VersionMultiSelect } from '../../components/common/DomainMultiSelect'
+import { TextRangeInput } from '../../components/common/RangeInput'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
@@ -50,8 +52,8 @@ import {
   resolveRandomSongRecordLamp,
   restoreRandomSongResults,
   toggleRandomSongDifficultyFilter,
-  toggleRandomSongSelectionValue,
 } from '../../utils/randomSongSelector'
+import { normalizeChartConstRangeInput, normalizeScoreRangeInput } from '../../utils/rangeInput'
 import { getScoreRank } from '../../utils/scoreRank'
 import {
   RANDOM_SONG_BEST_FRAME_OPTIONS,
@@ -86,14 +88,8 @@ const RESULT_RECORD_LAMP_BADGE_CLASS: Record<RandomSongLampFilter, string> = {
 }
 const RESULT_RECORD_SCORE_BADGE_CLASS = `${RESULT_RECORD_BADGE_CLASS} bg-surface-muted text-text`
 const RANDOM_SONG_LAMP_VALUES = RANDOM_SONG_LAMP_OPTIONS.map((option) => option.value)
-const DIFFICULTY_FILTER_CONTENT_CLASS =
-  'z-60 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md'
-const DIFFICULTY_FILTER_TRIGGER_CLASS =
-  'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
-const DIFFICULTY_FILTER_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-sm text-text hover:bg-action-primary-muted data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted'
-const DIFFICULTY_FILTER_DISABLED_ITEM_CLASS =
-  'cursor-not-allowed opacity-50 hover:bg-transparent data-[highlighted]:bg-transparent data-[selected]:bg-transparent'
+
+const RANDOM_SONG_DIFFICULTY_FILTER_CHECKBOX_ID_PREFIX = 'random-song-difficulty-filter'
 
 type RandomSongTextFieldProps = {
   id: string
@@ -115,6 +111,7 @@ type RandomSongRangeFieldProps = {
   inputMode?: 'numeric' | 'decimal'
   disabled?: boolean
   error?: string | null
+  normalizeInput?: (value: string) => string | null
   onMinChange: (value: string) => void
   onMaxChange: (value: string) => void
 }
@@ -126,16 +123,6 @@ type RandomSongWeightFieldProps = {
   percentLabel: string
   disabled?: boolean
   onChange: (value: string) => void
-}
-
-type RandomSongDifficultyFilterDropdownProps = {
-  options: readonly RandomSongDifficultyFilter[]
-  selected: readonly RandomSongDifficultyFilter[]
-  placeholder: string
-  isOpTargetSelected: boolean
-  onToggle: (difficulty: RandomSongDifficultyFilter) => void
-  onSelectAll: () => void
-  onClear: () => void
 }
 
 type RandomSongPlayStatus = (typeof RANDOM_SONG_PLAY_STATUS_OPTIONS)[number]['value']
@@ -173,6 +160,17 @@ const WEIGHT_PERCENT_FORMATTER = new Intl.NumberFormat('ja-JP', {
 })
 
 const EMPTY_WEIGHT_PERCENT_LABEL = '0%'
+
+/**
+ * ランダム選曲ツールの数値入力種別に対応する pattern 属性を返す。
+ *
+ * @param inputMode - 入力モード。
+ * @returns 入力モードに対応する pattern 属性。対応がない場合は undefined。
+ */
+const getRandomSongInputPattern = (
+  inputMode?: RandomSongTextFieldProps['inputMode']
+): string | undefined =>
+  inputMode === 'numeric' ? '[0-9]*' : inputMode === 'decimal' ? '[0-9]*[.,]?[0-9]*' : undefined
 
 /**
  * 出やすさの倍率入力値を数値へ変換する。
@@ -267,13 +265,7 @@ const RandomSongTextField: Component<RandomSongTextFieldProps> = (props) => (
       type="text"
       class={FIELD_INPUT_CLASS}
       inputMode={props.inputMode}
-      pattern={
-        props.inputMode === 'numeric'
-          ? '[0-9]*'
-          : props.inputMode === 'decimal'
-            ? '[0-9]*[.,]?[0-9]*'
-            : undefined
-      }
+      pattern={getRandomSongInputPattern(props.inputMode)}
       autocomplete="off"
       disabled={props.disabled}
     />
@@ -287,59 +279,37 @@ const RandomSongTextField: Component<RandomSongTextFieldProps> = (props) => (
  * @returns 下限と上限を横並びにした範囲入力欄。
  */
 const RandomSongRangeField: Component<RandomSongRangeFieldProps> = (props) => (
-  <div class="text-sm">
-    <div class="mb-1 font-medium text-text-muted">{props.label}</div>
-    <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-      <TextField value={props.minValue} onChange={props.onMinChange}>
-        <TextField.Label class="sr-only" for={`${props.idPrefix}-min`}>
-          {props.minLabel}
-        </TextField.Label>
-        <TextField.Input
-          id={`${props.idPrefix}-min`}
-          name={`${props.idPrefix}-min`}
-          type="text"
-          class={FIELD_INPUT_CLASS}
-          inputMode={props.inputMode}
-          pattern={
-            props.inputMode === 'numeric'
-              ? '[0-9]*'
-              : props.inputMode === 'decimal'
-                ? '[0-9]*[.,]?[0-9]*'
-                : undefined
-          }
-          autocomplete="off"
-          disabled={props.disabled}
-          aria-invalid={props.error ? 'true' : 'false'}
-        />
-      </TextField>
-      <div class="flex min-h-10 items-center justify-center text-sm text-text-muted">～</div>
-      <TextField value={props.maxValue} onChange={props.onMaxChange}>
-        <TextField.Label class="sr-only" for={`${props.idPrefix}-max`}>
-          {props.maxLabel}
-        </TextField.Label>
-        <TextField.Input
-          id={`${props.idPrefix}-max`}
-          name={`${props.idPrefix}-max`}
-          type="text"
-          class={FIELD_INPUT_CLASS}
-          inputMode={props.inputMode}
-          pattern={
-            props.inputMode === 'numeric'
-              ? '[0-9]*'
-              : props.inputMode === 'decimal'
-                ? '[0-9]*[.,]?[0-9]*'
-                : undefined
-          }
-          autocomplete="off"
-          disabled={props.disabled}
-          aria-invalid={props.error ? 'true' : 'false'}
-        />
-      </TextField>
-    </div>
-    <Show when={props.error}>
-      {(message) => <p class="mt-1 text-xs text-danger">{message()}</p>}
-    </Show>
-  </div>
+  <TextRangeInput
+    class="text-sm"
+    title={props.label}
+    titleClass="mb-1 font-medium text-text-muted"
+    inputClass={FIELD_INPUT_CLASS}
+    errorMessage={props.error ?? undefined}
+    start={{
+      id: `${props.idPrefix}-min`,
+      name: `${props.idPrefix}-min`,
+      label: props.minLabel,
+      value: props.minValue,
+      inputMode: props.inputMode,
+      pattern: getRandomSongInputPattern(props.inputMode),
+      disabled: props.disabled,
+      invalid: Boolean(props.error),
+      normalizeInput: props.normalizeInput,
+      onChange: props.onMinChange,
+    }}
+    end={{
+      id: `${props.idPrefix}-max`,
+      name: `${props.idPrefix}-max`,
+      label: props.maxLabel,
+      value: props.maxValue,
+      inputMode: props.inputMode,
+      pattern: getRandomSongInputPattern(props.inputMode),
+      disabled: props.disabled,
+      invalid: Boolean(props.error),
+      normalizeInput: props.normalizeInput,
+      onChange: props.onMaxChange,
+    }}
+  />
 )
 
 /**
@@ -369,7 +339,7 @@ const RandomSongWeightField: Component<RandomSongWeightFieldProps> = (props) => 
  * ランダム選曲ツールで使うチェックボックスを表示する。
  *
  * @param props - チェック状態、ラベル、変更ハンドラ。
- * @returns Kobalte Checkbox の JSX 要素。
+ * @returns 共通 CheckboxField の JSX 要素。
  */
 const RandomSongCheckbox: Component<{
   id: string
@@ -378,22 +348,16 @@ const RandomSongCheckbox: Component<{
   disabled?: boolean
   onChange: (checked: boolean) => void
 }> = (props) => (
-  <Checkbox
+  <CheckboxField
+    id={props.id}
     class="relative grid min-h-5 grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 text-sm text-text data-disabled:cursor-not-allowed data-disabled:opacity-60"
     checked={props.checked}
     disabled={props.disabled}
     onChange={props.onChange}
-  >
-    <Checkbox.Input id={props.id} style={{ left: '0', top: '0' }} />
-    <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-surface text-success data-checked:border-success">
-      <Checkbox.Indicator>
-        <Check size={14} aria-hidden="true" />
-      </Checkbox.Indicator>
-    </Checkbox.Control>
-    <Checkbox.Label class="min-w-0 leading-5" for={props.id}>
-      {props.label}
-    </Checkbox.Label>
-  </Checkbox>
+    indicatorClass="h-3.5 w-3.5"
+    labelClass="min-w-0 leading-5"
+    label={props.label}
+  />
 )
 
 /**
@@ -455,126 +419,18 @@ const formatRandomSongDifficultyFilterLabel = (difficulty: RandomSongDifficultyF
   RANDOM_SONG_SELECTOR_DIFFICULTY_FILTER_LABELS[difficulty]
 
 /**
- * OP対象選択中に通常難易度の選択肢を操作不可にするか判定する。
+ * OP対象選択中に通常難易度のチェックボックスを操作不可にするか判定する。
  *
  * @param difficulty - 判定対象の難易度絞り込み値。
- * @param isOpTargetSelected - OP対象が現在選択されている場合は true。
- * @returns 通常難易度を操作不可にする場合は true。
+ * @param selectedDifficulties - 現在選択中の難易度絞り込み値。
+ * @returns OP対象選択中の通常難易度であればtrue。
  */
 const isRandomSongDifficultyFilterDisabled = (
   difficulty: RandomSongDifficultyFilter,
-  isOpTargetSelected: boolean
-): boolean => isOpTargetSelected && difficulty !== RANDOM_SONG_OP_TARGET_FILTER
-
-/**
- * OP対象選択時の排他操作を含むランダム選曲用の難易度絞り込み欄を表示する。
- *
- * @param props - 選択肢、選択状態、表示文言、更新ハンドラーを含む設定。
- * @returns ランダム選曲の難易度絞り込み Select。
- */
-const RandomSongDifficultyFilterDropdown: Component<RandomSongDifficultyFilterDropdownProps> = (
-  props
-) => {
-  const selectedOptions = createMemo(() =>
-    props.options.filter((option) => props.selected.includes(option))
-  )
-
-  /**
-   * Select の変更結果を、OP対象選択中の通常難易度操作を無視して反映する。
-   *
-   * @param nextSelected - Select が返した次の選択値。
-   * @returns なし。
-   */
-  const handleChange = (nextSelected: RandomSongDifficultyFilter[]): void => {
-    for (const option of props.options) {
-      if (isRandomSongDifficultyFilterDisabled(option, props.isOpTargetSelected)) continue
-      if (props.selected.includes(option) !== nextSelected.includes(option)) {
-        props.onToggle(option)
-      }
-    }
-  }
-
-  return (
-    <div>
-      <div class="mb-1 flex gap-2">
-        <Button
-          type="button"
-          class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover"
-          onClick={props.onSelectAll}
-        >
-          すべて選択
-        </Button>
-        <Button
-          type="button"
-          class="rounded bg-action-secondary px-2 py-1 text-xs text-text-muted hover:bg-action-secondary-hover"
-          onClick={props.onClear}
-        >
-          すべて解除
-        </Button>
-      </div>
-      <Select<RandomSongDifficultyFilter>
-        multiple
-        options={[...props.options]}
-        value={selectedOptions()}
-        onChange={handleChange}
-        placeholder={props.placeholder}
-        gutter={0}
-        itemComponent={(itemProps) => {
-          const disabled = isRandomSongDifficultyFilterDisabled(
-            itemProps.item.rawValue,
-            props.isOpTargetSelected
-          )
-
-          return (
-            <Select.Item
-              item={itemProps.item}
-              aria-disabled={disabled ? 'true' : undefined}
-              class={`${DIFFICULTY_FILTER_ITEM_CLASS} ${
-                disabled ? DIFFICULTY_FILTER_DISABLED_ITEM_CLASS : ''
-              }`}
-            >
-              <div class="flex items-center gap-2">
-                <span class="inline-flex w-4 justify-center text-action-primary">
-                  <Select.ItemIndicator>
-                    <Check size={14} />
-                  </Select.ItemIndicator>
-                </span>
-                <Select.ItemLabel>
-                  {formatRandomSongDifficultyFilterLabel(itemProps.item.rawValue)}
-                </Select.ItemLabel>
-              </div>
-            </Select.Item>
-          )
-        }}
-      >
-        <Select.Trigger class={DIFFICULTY_FILTER_TRIGGER_CLASS}>
-          <div class="flex min-h-6 flex-1 flex-wrap gap-1" aria-live="polite">
-            <Show
-              when={selectedOptions().length > 0}
-              fallback={<span class="text-text-subtle">{props.placeholder}</span>}
-            >
-              <For each={selectedOptions()}>
-                {(option) => (
-                  <span class="rounded-full bg-action-primary-muted px-2 py-0.5 text-xs text-action-primary">
-                    {formatRandomSongDifficultyFilterLabel(option)}
-                  </span>
-                )}
-              </For>
-            </Show>
-          </div>
-          <span class="text-text-subtle" aria-hidden="true">
-            <ChevronDown size={16} />
-          </span>
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Content class={DIFFICULTY_FILTER_CONTENT_CLASS}>
-            <Select.Listbox />
-          </Select.Content>
-        </Select.Portal>
-      </Select>
-    </div>
-  )
-}
+  selectedDifficulties: readonly RandomSongDifficultyFilter[]
+): boolean =>
+  selectedDifficulties.includes(RANDOM_SONG_OP_TARGET_FILTER) &&
+  difficulty !== RANDOM_SONG_OP_TARGET_FILTER
 
 /**
  * ランダム選曲結果で表示するレコードバッジを生成する。
@@ -617,55 +473,20 @@ const RandomSongSelect = <T extends string>(props: {
   disabled?: boolean
   onChange: (value: T) => void
 }) => (
-  <Select<T>
-    class="block text-sm"
+  <FormSelect<T>
+    rootClass="block text-sm"
+    label={props.label}
     options={props.options.map((option) => option.value)}
     value={props.value}
-    onChange={(value) => {
+    onChange={(value: T | null) => {
       if (value) props.onChange(value)
     }}
     disabled={props.disabled}
-    gutter={0}
-    itemComponent={(itemProps) => {
-      const label =
-        props.options.find((option) => option.value === itemProps.item.rawValue)?.label ??
-        itemProps.item.rawValue
-      return (
-        <Select.Item
-          item={itemProps.item}
-          class="cursor-pointer px-3 py-2 text-text hover:bg-action-primary-muted data-highlighted:bg-action-primary-muted data-selected:bg-action-primary-muted"
-        >
-          <div class="flex items-center gap-2">
-            <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-action-primary">
-              <Check size={14} />
-            </Select.ItemIndicator>
-            <Select.ItemLabel>{label}</Select.ItemLabel>
-          </div>
-        </Select.Item>
-      )
-    }}
-  >
-    <Select.Label class="mb-1 block font-medium text-text-muted">{props.label}</Select.Label>
-    <Select.Trigger
-      id={props.id}
-      class="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
-    >
-      <Select.Value<T> class="truncate">
-        {(state) =>
-          props.options.find((option) => option.value === state.selectedOption())?.label ??
-          state.selectedOption()
-        }
-      </Select.Value>
-      <Select.Icon class="text-text-subtle">
-        <ChevronDown size={16} />
-      </Select.Icon>
-    </Select.Trigger>
-    <Select.Portal>
-      <Select.Content class="z-70 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
-        <Select.Listbox />
-      </Select.Content>
-    </Select.Portal>
-  </Select>
+    contentZIndexClass="z-70"
+    formatLabel={(value) => props.options.find((option) => option.value === value)?.label ?? value}
+    triggerId={props.id}
+    triggerClass="font-medium"
+  />
 )
 
 /**
@@ -761,9 +582,6 @@ const RandomSongSelectorPage = (): JSX.Element => {
     RANDOM_SONG_SELECTOR_DIFFICULTIES.filter((difficulty) =>
       selectedDifficulties().includes(difficulty)
     )
-  )
-  const isOpTargetDifficultyFilterSelected = createMemo(() =>
-    selectedDifficulties().includes(RANDOM_SONG_OP_TARGET_FILTER)
   )
   const constRangeError = createMemo(() => {
     const min = parsedMinConst()
@@ -988,13 +806,13 @@ const RandomSongSelectorPage = (): JSX.Element => {
   }
 
   /**
-   * 難易度絞り込みをOP対象と通常難易度が同時選択されない形で更新する。
+   * 難易度絞り込みをOP対象と通常難易度が同時選択されない形で切り替える。
    *
    * @param difficulty - 切り替える難易度絞り込み値。
    * @returns なし。
    */
   const handleDifficultyFilterToggle = (difficulty: RandomSongDifficultyFilter): void => {
-    setSelectedDifficulties((prev) => toggleRandomSongDifficultyFilter(prev, difficulty))
+    setSelectedDifficulties((current) => toggleRandomSongDifficultyFilter(current, difficulty))
   }
 
   /**
@@ -1118,81 +936,74 @@ const RandomSongSelectorPage = (): JSX.Element => {
                   </div>
                 </div>
 
-                <div class="grid gap-4 lg:grid-cols-2">
-                  <div class="grid gap-4">
-                    <div>
-                      <p class="mb-1 text-sm font-medium text-text-muted">
-                        {RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
-                      </p>
-                      <RandomSongDifficultyFilterDropdown
-                        options={RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS}
-                        selected={selectedDifficulties()}
-                        placeholder={RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
-                        isOpTargetSelected={isOpTargetDifficultyFilterSelected()}
-                        onToggle={handleDifficultyFilterToggle}
-                        onSelectAll={() =>
-                          setSelectedDifficulties(
-                            isOpTargetDifficultyFilterSelected()
-                              ? [RANDOM_SONG_OP_TARGET_FILTER]
-                              : [...RANDOM_SONG_SELECTOR_DIFFICULTIES]
+                <div class="grid gap-4 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
+                  <div>
+                    <span class="mb-1 block text-sm font-medium text-text-muted">
+                      {RANDOM_SONG_SELECTOR_COPY.difficultyLabel}
+                    </span>
+                    <div class="flex flex-col gap-2">
+                      <For each={RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS}>
+                        {(difficulty, index) => {
+                          const id = `${RANDOM_SONG_DIFFICULTY_FILTER_CHECKBOX_ID_PREFIX}-${index()}`
+                          return (
+                            <CheckboxField
+                              id={id}
+                              checked={selectedDifficulties().includes(difficulty)}
+                              disabled={isRandomSongDifficultyFilterDisabled(
+                                difficulty,
+                                selectedDifficulties()
+                              )}
+                              onChange={() => handleDifficultyFilterToggle(difficulty)}
+                              class="relative flex items-center gap-2"
+                              textVariant="large"
+                              label={formatRandomSongDifficultyFilterLabel(difficulty)}
+                            />
                           )
-                        }
-                        onClear={() => setSelectedDifficulties([])}
-                      />
+                        }}
+                      </For>
                     </div>
+                  </div>
+                  <div class="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <p class="mb-1 text-sm font-medium text-text-muted">
-                        {RANDOM_SONG_SELECTOR_COPY.genreLabel}
-                      </p>
-                      <MultiSelectDropdown
-                        options={genreOptions()}
+                      <GenreMultiSelect
+                        label={RANDOM_SONG_SELECTOR_COPY.genreLabel}
+                        options={toMultiSelectOptions(genreOptions())}
                         selected={selectedGenres()}
                         placeholder={RANDOM_SONG_SELECTOR_COPY.genreLabel}
                         selectedPreviewLimit={6}
-                        onToggle={(genre) =>
-                          setSelectedGenres((prev) => toggleRandomSongSelectionValue(prev, genre))
-                        }
-                        onSelectAll={() => setSelectedGenres(genreOptions())}
-                        onClear={() => setSelectedGenres([])}
+                        onChange={setSelectedGenres}
                       />
                     </div>
-                  </div>
-                  <div class="grid gap-4">
                     <div>
-                      <p class="mb-1 text-sm font-medium text-text-muted">
-                        {RANDOM_SONG_SELECTOR_COPY.versionLabel}
-                      </p>
-                      <MultiSelectDropdown
-                        options={versionOptions()}
+                      <VersionMultiSelect
+                        label={RANDOM_SONG_SELECTOR_COPY.versionLabel}
+                        options={toMultiSelectOptions(versionOptions())}
                         selected={selectedVersions()}
                         placeholder={RANDOM_SONG_SELECTOR_COPY.versionLabel}
                         selectedPreviewLimit={6}
-                        onToggle={(version) =>
-                          setSelectedVersions((prev) =>
-                            toggleRandomSongSelectionValue(prev, version)
-                          )
-                        }
-                        onSelectAll={() => setSelectedVersions(versionOptions())}
-                        onClear={() => setSelectedVersions([])}
+                        onChange={setSelectedVersions}
                       />
                     </div>
-                    <RandomSongRangeField
-                      idPrefix="random-song-const"
-                      label={RANDOM_SONG_SELECTOR_FIELD_LABELS.const}
-                      minLabel={RANDOM_SONG_SELECTOR_COPY.minConstLabel}
-                      maxLabel={RANDOM_SONG_SELECTOR_COPY.maxConstLabel}
-                      minValue={minConst()}
-                      maxValue={maxConst()}
-                      inputMode="decimal"
-                      error={constRangeError()}
-                      onMinChange={setMinConst}
-                      onMaxChange={setMaxConst}
-                    />
+                    <div class="sm:col-span-2">
+                      <RandomSongRangeField
+                        idPrefix="random-song-const"
+                        label={RANDOM_SONG_SELECTOR_FIELD_LABELS.const}
+                        minLabel={RANDOM_SONG_SELECTOR_COPY.minConstLabel}
+                        maxLabel={RANDOM_SONG_SELECTOR_COPY.maxConstLabel}
+                        minValue={minConst()}
+                        maxValue={maxConst()}
+                        inputMode="decimal"
+                        error={constRangeError()}
+                        normalizeInput={normalizeChartConstRangeInput}
+                        onMinChange={setMinConst}
+                        onMaxChange={setMaxConst}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div class="grid gap-5 lg:gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-                  <div class="flex flex-wrap gap-2 justify-end lg:justify-start">
+                <div class="flex flex-col gap-5 lg:flex-row lg:justify-between lg:gap-2 lg:items-end">
+                  <div class="flex flex-wrap gap-2 shrink-0 justify-end lg:justify-start">
                     <Dialog
                       open={recordFilterSettingsOpen()}
                       onOpenChange={setRecordFilterSettingsOpen}
@@ -1200,7 +1011,10 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       <Dialog.Trigger
                         as="button"
                         type="button"
-                        class="inline-flex min-h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                        class={getAppButtonClass({
+                          variant: 'surface',
+                          class: 'min-h-10 rounded-md',
+                        })}
                       >
                         <SlidersHorizontal size={16} aria-hidden="true" />
                         {RANDOM_SONG_SELECTOR_COPY.recordFilterSettingsLabel}
@@ -1242,27 +1056,22 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                   inputMode="numeric"
                                   disabled={!hasMyRecordData()}
                                   error={scoreRangeError()}
+                                  normalizeInput={normalizeScoreRangeInput}
                                   onMinChange={setMinScore}
                                   onMaxChange={setMaxScore}
                                 />
                               </div>
                               <div>
-                                <p class="mb-1 text-sm font-medium text-text-muted">
-                                  {RANDOM_SONG_SELECTOR_COPY.lampLabel}
-                                </p>
-                                <MultiSelectDropdown
-                                  options={RANDOM_SONG_LAMP_VALUES}
+                                <MultiSelectField
+                                  label={RANDOM_SONG_SELECTOR_COPY.lampLabel}
+                                  options={toMultiSelectOptions(
+                                    RANDOM_SONG_LAMP_VALUES,
+                                    formatRandomSongRecordLampLabel
+                                  )}
                                   selected={selectedLamps()}
                                   placeholder={RANDOM_SONG_SELECTOR_COPY.lampLabel}
-                                  formatLabel={formatRandomSongRecordLampLabel}
                                   disabled={!hasMyRecordData()}
-                                  onToggle={(lamp) =>
-                                    setSelectedLamps((prev) =>
-                                      toggleRandomSongSelectionValue(prev, lamp)
-                                    )
-                                  }
-                                  onSelectAll={() => setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])}
-                                  onClear={() => setSelectedLamps([])}
+                                  onChange={setSelectedLamps}
                                 />
                               </div>
                               <Show when={myRecordData()?.status === 'unauthenticated'}>
@@ -1278,7 +1087,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                             </div>
                           </div>
                           <div class="mt-4 flex shrink-0 justify-end">
-                            <Dialog.CloseButton class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted hover:bg-action-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring">
+                            <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
                               {RANDOM_SONG_SELECTOR_COPY.closeButtonLabel}
                             </Dialog.CloseButton>
                           </div>
@@ -1290,7 +1099,10 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       <Dialog.Trigger
                         as="button"
                         type="button"
-                        class="inline-flex min-h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                        class={getAppButtonClass({
+                          variant: 'surface',
+                          class: 'min-h-10 rounded-md',
+                        })}
                       >
                         <SlidersHorizontal size={16} aria-hidden="true" />
                         {RANDOM_SONG_SELECTOR_COPY.advancedSettingsLabel}
@@ -1338,23 +1150,36 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                       {(chartConst) => {
                                         const isEnabled = () =>
                                           constWeightEnabled()[chartConst] ?? true
+                                        const checkboxId = `random-song-const-enabled-${chartConst.replace('.', '-')}`
                                         return (
                                           <div
-                                            class="flex h-full min-h-32 flex-col gap-2 rounded border p-3"
+                                            class="relative flex h-full min-h-32 flex-col gap-2 rounded border p-3"
                                             classList={{
-                                              'border-success bg-success-bg': isEnabled(),
+                                              'border-action-primary bg-action-primary-muted':
+                                                isEnabled(),
                                               'border-border bg-surface-muted': !isEnabled(),
                                             }}
                                           >
-                                            <RandomSongCheckbox
-                                              id={`random-song-const-enabled-${chartConst.replace('.', '-')}`}
-                                              checked={isEnabled()}
-                                              label={chartConst}
-                                              onChange={(enabled) =>
-                                                handleConstWeightEnabledChange(chartConst, enabled)
-                                              }
-                                            />
-                                            <div class="mt-auto">
+                                            <label
+                                              for={checkboxId}
+                                              class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                                            >
+                                              <span class="sr-only">{chartConst}</span>
+                                            </label>
+                                            <div class="pointer-events-none relative z-20">
+                                              <RandomSongCheckbox
+                                                id={checkboxId}
+                                                checked={isEnabled()}
+                                                label={chartConst}
+                                                onChange={(enabled) =>
+                                                  handleConstWeightEnabledChange(
+                                                    chartConst,
+                                                    enabled
+                                                  )
+                                                }
+                                              />
+                                            </div>
+                                            <div class="pointer-events-auto relative z-20 mt-auto">
                                               <RandomSongWeightField
                                                 id={`random-song-const-weight-${chartConst.replace('.', '-')}`}
                                                 label={RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate}
@@ -1376,7 +1201,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                             </section>
                           </div>
                           <div class="mt-4 flex shrink-0 justify-end">
-                            <Dialog.CloseButton class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted hover:bg-action-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring">
+                            <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
                               {RANDOM_SONG_SELECTOR_COPY.closeButtonLabel}
                             </Dialog.CloseButton>
                           </div>
@@ -1384,64 +1209,67 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       </Dialog.Portal>
                     </Dialog>
                   </div>
-
-                  <Show when={validationMessage()}>
-                    {(message) => <p class="text-sm text-danger">{message()}</p>}
-                  </Show>
-
-                  <div class="flex flex-wrap items-center gap-2 lg:justify-end">
-                    <p class="flex-1 text-sm text-text-muted">
-                      {RANDOM_SONG_SELECTOR_COPY.candidateCountLabel}:{' '}
-                      <span class="font-medium tabular-nums text-text">
-                        {filteredCandidates().length.toLocaleString('ja-JP')}
-                      </span>
-                      曲
-                    </p>
-                    <AlertDialog>
-                      <AlertDialog.Trigger
-                        as="button"
-                        type="button"
-                        class="inline-flex min-h-10 items-center gap-2 rounded-md border bg-danger-bg border-danger-border px-4 text-sm font-medium text-text-muted hover:bg-danger-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                  <div>
+                    <Show when={validationMessage()}>
+                      {(message) => <p class="text-sm text-danger mb-1 text-right">{message()}</p>}
+                    </Show>
+                    <div class="flex flex-wrap items-center gap-2 lg:justify-end">
+                      <p class="flex-1 text-sm text-text-muted">
+                        {RANDOM_SONG_SELECTOR_COPY.candidateCountLabel}:{' '}
+                        <span class="font-medium tabular-nums text-text">
+                          {filteredCandidates().length.toLocaleString('ja-JP')}
+                        </span>
+                        曲
+                      </p>
+                      <AlertDialog>
+                        <AlertDialog.Trigger
+                          as="button"
+                          type="button"
+                          class={getAppButtonClass({
+                            variant: 'dangerOutline',
+                            class: 'min-h-10 rounded-md',
+                          })}
+                        >
+                          <RotateCcw size={16} aria-hidden="true" />
+                          {RANDOM_SONG_SELECTOR_COPY.resetButtonLabel}
+                        </AlertDialog.Trigger>
+                        <AlertDialog.Portal>
+                          <AlertDialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
+                          <AlertDialog.Content class="fixed left-1/2 top-1/2 z-60 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
+                            <AlertDialog.Title class="mb-2 text-lg font-bold">
+                              {RANDOM_SONG_SELECTOR_COPY.resetConfirmTitle}
+                            </AlertDialog.Title>
+                            <AlertDialog.Description class="mb-4 text-sm text-text-muted">
+                              {RANDOM_SONG_SELECTOR_COPY.resetConfirmDescription}
+                            </AlertDialog.Description>
+                            <div class="flex justify-end gap-2">
+                              <AlertDialog.CloseButton
+                                as="button"
+                                class={getAppButtonClass({ variant: 'secondary' })}
+                              >
+                                {RANDOM_SONG_SELECTOR_COPY.resetCancelLabel}
+                              </AlertDialog.CloseButton>
+                              <AlertDialog.CloseButton
+                                as="button"
+                                class={getAppButtonClass({ variant: 'danger' })}
+                                onClick={handleReset}
+                              >
+                                {RANDOM_SONG_SELECTOR_COPY.resetConfirmLabel}
+                              </AlertDialog.CloseButton>
+                            </div>
+                          </AlertDialog.Content>
+                        </AlertDialog.Portal>
+                      </AlertDialog>
+                      <AppButton
+                        variant="primary"
+                        class="min-h-10 rounded-md"
+                        disabled={validationMessage() !== null || filteredCandidates().length === 0}
+                        onClick={handleDraw}
+                        leftIcon={<Dices size={16} aria-hidden="true" />}
                       >
-                        <RotateCcw size={16} aria-hidden="true" />
-                        {RANDOM_SONG_SELECTOR_COPY.resetButtonLabel}
-                      </AlertDialog.Trigger>
-                      <AlertDialog.Portal>
-                        <AlertDialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
-                        <AlertDialog.Content class="fixed left-1/2 top-1/2 z-60 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
-                          <AlertDialog.Title class="mb-2 text-lg font-bold">
-                            {RANDOM_SONG_SELECTOR_COPY.resetConfirmTitle}
-                          </AlertDialog.Title>
-                          <AlertDialog.Description class="mb-4 text-sm text-text-muted">
-                            {RANDOM_SONG_SELECTOR_COPY.resetConfirmDescription}
-                          </AlertDialog.Description>
-                          <div class="flex justify-end gap-2">
-                            <AlertDialog.CloseButton
-                              as="button"
-                              class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted hover:bg-action-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                            >
-                              {RANDOM_SONG_SELECTOR_COPY.resetCancelLabel}
-                            </AlertDialog.CloseButton>
-                            <AlertDialog.CloseButton
-                              as="button"
-                              class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                              onClick={handleReset}
-                            >
-                              {RANDOM_SONG_SELECTOR_COPY.resetConfirmLabel}
-                            </AlertDialog.CloseButton>
-                          </div>
-                        </AlertDialog.Content>
-                      </AlertDialog.Portal>
-                    </AlertDialog>
-                    <Button
-                      type="button"
-                      class="inline-flex min-h-10 items-center gap-2 rounded-md bg-action-primary px-4 text-sm font-medium text-text-inverse hover:bg-action-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
-                      disabled={validationMessage() !== null || filteredCandidates().length === 0}
-                      onClick={handleDraw}
-                    >
-                      <Dices size={16} aria-hidden="true" />
-                      {RANDOM_SONG_SELECTOR_COPY.drawButtonLabel}
-                    </Button>
+                        {RANDOM_SONG_SELECTOR_COPY.drawButtonLabel}
+                      </AppButton>
+                    </div>
                   </div>
                 </div>
               </form>
