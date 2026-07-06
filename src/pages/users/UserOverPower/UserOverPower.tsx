@@ -276,7 +276,7 @@ const UserOverPower: Component<Props> = (props) => {
                       value={selectedAggregationTargetOption()}
                       onChange={handleAggregationTargetChange}
                       placeholder={OVER_POWER_CONTROL_LABELS.aggregationTarget}
-                      rootClass="w-full sm:w-40"
+                      rootClass="w-full sm:w-44"
                       triggerClass="h-10 font-medium text-text-muted"
                       triggerId="over-power-aggregation-target"
                       contentZIndexClass="z-50"
@@ -316,7 +316,7 @@ const UserOverPower: Component<Props> = (props) => {
                         variant={excludeLockedSongs() ? 'primary' : 'surface'}
                         size="sm"
                         shape="pill"
-                        class="h-10 whitespace-nowrap focus-visible:ring-offset-2"
+                        class="h-10 w-35 whitespace-nowrap focus-visible:ring-offset-2"
                         aria-pressed={excludeLockedSongs()}
                         onClick={() => setExcludeLockedSongs((excluded) => !excluded)}
                         rightIcon={<LockKeyholeOpen class="h-5 w-5" aria-hidden="true" />}
