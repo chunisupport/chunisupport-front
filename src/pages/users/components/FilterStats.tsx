@@ -166,7 +166,7 @@ const DistributionRow: Component<{
 const DistributionSection: Component<DistributionSectionConfig> = (props) => (
   <section class={FILTER_STATS_CARD_CLASS} aria-label={props.label}>
     <div class={FILTER_STATS_HEADER_CLASS}>
-      <props.Icon class="h-4 w-4 text-success" aria-hidden={true} />
+      <props.Icon class="h-4 w-4 text-action-primary" aria-hidden={true} />
       <h3>{props.title}</h3>
     </div>
     <div class="space-y-3 p-3">

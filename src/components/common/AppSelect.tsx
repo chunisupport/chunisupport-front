@@ -68,7 +68,7 @@ const APP_SELECT_VALUE_CLASS =
   'min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-subtle'
 
 const APP_SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-sm text-text outline-none [@media(hover:hover)]:hover:bg-success-bg data-disabled:pointer-events-none data-disabled:opacity-50 [@media(hover:hover)]:data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
+  'cursor-pointer px-3 py-2 text-sm text-text outline-none [@media(hover:hover)]:hover:bg-action-primary-muted data-disabled:pointer-events-none data-disabled:opacity-50 [@media(hover:hover)]:data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted'
 
 const APP_SELECT_CONTENT_BASE_CLASS =
   'max-h-90 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md'
@@ -96,7 +96,7 @@ const renderAppSelectItem = <T,>(props: {
 }): JSX.Element => (
   <Select.Item item={props.item} class={`${APP_SELECT_ITEM_CLASS} ${props.itemClass ?? ''}`}>
     <div class="flex items-center gap-2">
-      <span class="inline-flex w-4 justify-center text-success">
+      <span class="inline-flex w-4 justify-center text-action-primary">
         <Select.ItemIndicator>
           <Check class="h-3.5 w-3.5" aria-hidden="true" />
         </Select.ItemIndicator>

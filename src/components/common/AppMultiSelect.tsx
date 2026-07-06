@@ -55,7 +55,7 @@ const MULTI_SELECT_TRIGGER_CLASS =
   'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60'
 
 const MULTI_SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-sm text-text [@media(hover:hover)]:hover:bg-success-bg [@media(hover:hover)]:data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg'
+  'cursor-pointer px-3 py-2 text-sm text-text [@media(hover:hover)]:hover:bg-action-primary-muted [@media(hover:hover)]:data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted'
 
 const SELECT_ALL_LABEL = 'すべて選択'
 const CLEAR_LABEL = 'すべて解除'
@@ -119,7 +119,7 @@ export const AppMultiSelect = <TValue extends AppMultiSelectValue>(
       itemComponent={(itemProps) => (
         <Select.Item item={itemProps.item} class={MULTI_SELECT_ITEM_CLASS}>
           <div class="flex items-center gap-2">
-            <span class="inline-flex w-4 justify-center text-success">
+            <span class="inline-flex w-4 justify-center text-action-primary">
               <Select.ItemIndicator>
                 <Check size={14} aria-hidden="true" />
               </Select.ItemIndicator>
@@ -137,7 +137,7 @@ export const AppMultiSelect = <TValue extends AppMultiSelectValue>(
           >
             <For each={visibleSelectedOptions()}>
               {(option) => (
-                <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
+                <span class="rounded-full bg-action-primary-muted px-2 py-0.5 text-xs text-action-primary">
                   {formatLabel(option)}
                 </span>
               )}

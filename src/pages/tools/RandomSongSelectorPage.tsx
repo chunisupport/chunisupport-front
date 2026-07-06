@@ -354,7 +354,6 @@ const RandomSongCheckbox: Component<{
     checked={props.checked}
     disabled={props.disabled}
     onChange={props.onChange}
-    controlVariant="success"
     indicatorClass="h-3.5 w-3.5"
     labelClass="min-w-0 leading-5"
     label={props.label}
@@ -1155,7 +1154,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                           <div
                                             class="flex h-full min-h-32 flex-col gap-2 rounded border p-3"
                                             classList={{
-                                              'border-success bg-success-bg': isEnabled(),
+                                              'border-action-primary bg-action-primary-muted':
+                                                isEnabled(),
                                               'border-border bg-surface-muted': !isEnabled(),
                                             }}
                                           >

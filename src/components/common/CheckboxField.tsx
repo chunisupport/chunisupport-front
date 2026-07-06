@@ -3,7 +3,6 @@ import { Check } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { Show } from 'solid-js'
 
-export type CheckboxFieldControlVariant = 'action' | 'success'
 export type CheckboxFieldTextVariant = 'normal' | 'large'
 
 type CheckboxFieldProps = {
@@ -39,8 +38,6 @@ type CheckboxFieldProps = {
   extraClass?: string
   /** check アイコンに追加で適用する Tailwind クラス。 */
   indicatorClass?: string
-  /** control の既定配色。 */
-  controlVariant?: CheckboxFieldControlVariant
   /** ラベル領域の文字サイズ。 */
   textVariant?: CheckboxFieldTextVariant
 }
@@ -60,18 +57,6 @@ const CHECKBOX_FIELD_EXTRA_CLASS = 'mt-1'
 
 const CHECKBOX_FIELD_ACTION_CONTROL_CLASS =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
-
-const CHECKBOX_FIELD_SUCCESS_CONTROL_CLASS =
-  'flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-surface text-success data-checked:border-success'
-
-/**
- * control の既定スタイルを配色種別から取得する。
- *
- * @param variant - control の配色種別。
- * @returns Checkbox.Control に適用する Tailwind クラス。
- */
-const getCheckboxFieldControlClass = (variant: CheckboxFieldControlVariant): string =>
-  variant === 'success' ? CHECKBOX_FIELD_SUCCESS_CONTROL_CLASS : CHECKBOX_FIELD_ACTION_CONTROL_CLASS
 
 /**
  * ラベル領域の既定文字スタイルを文字サイズから取得する。
@@ -99,11 +84,7 @@ export const CheckboxField: Component<CheckboxFieldProps> = (props) => (
     )} ${props.class ?? ''}`}
   >
     <Checkbox.Input id={props.id} class={props.inputClass} style={{ left: '0', top: '0' }} />
-    <Checkbox.Control
-      class={`${getCheckboxFieldControlClass(props.controlVariant ?? 'action')} ${
-        props.controlClass ?? ''
-      }`}
-    >
+    <Checkbox.Control class={`${CHECKBOX_FIELD_ACTION_CONTROL_CLASS} ${props.controlClass ?? ''}`}>
       <Checkbox.Indicator>
         <Check class={props.indicatorClass ?? 'h-4 w-4'} aria-hidden="true" />
       </Checkbox.Indicator>

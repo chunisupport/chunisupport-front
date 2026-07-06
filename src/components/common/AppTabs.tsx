@@ -65,7 +65,7 @@ const SEGMENTED_TABS_TRIGGER_CLASS =
 const UNDERLINE_TABS_LIST_CLASS = 'flex gap-2 border-b border-border-strong'
 
 const UNDERLINE_TABS_TRIGGER_CLASS =
-  'rounded-t border-b-2 border-transparent px-3 py-1 text-sm text-text-muted transition-colors hover:border-success hover:text-text data-selected:border-focus-ring data-selected:bg-bg data-selected:text-text data-selected:hover:border-focus-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+  'rounded-t border-b-2 border-transparent px-3 py-1 text-sm text-text-muted transition-colors hover:border-action-primary hover:text-text data-selected:border-focus-ring data-selected:bg-bg data-selected:text-text data-selected:hover:border-focus-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
 
 /**
  * タブリストと任意の同列表示要素を描画する。
