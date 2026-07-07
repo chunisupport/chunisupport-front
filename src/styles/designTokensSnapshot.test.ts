@@ -88,9 +88,11 @@ test('アクセントカラーが背景テーマから独立したトークン�
   assert.match(tailwindCssContent, /\[data-accent="green"\]\s*{/)
   assert.match(tailwindCssContent, /\[data-accent="orange"\]\s*{/)
   assert.match(tailwindCssContent, /\[data-accent="blue"\]\s*{/)
+  assert.match(tailwindCssContent, /\[data-accent="violet"\]\s*{/)
   assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-green-500\);/)
   assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-orange-500\);/)
   assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-blue-500\);/)
+  assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-violet-500\);/)
   assert.match(tailwindCssContent, /--color-primary-500:\s*var\(--cs-color-accent-500\);/)
 })
 

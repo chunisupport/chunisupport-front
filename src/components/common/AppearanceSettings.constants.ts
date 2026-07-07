@@ -14,6 +14,7 @@ export const ACCENT_OPTIONS = [
   { value: 'green', label: 'グリーン', swatchClass: 'bg-green-500' },
   { value: 'orange', label: 'オレンジ', swatchClass: 'bg-orange-500' },
   { value: 'blue', label: 'ブルー', swatchClass: 'bg-blue-500' },
+  { value: 'violet', label: 'バイオレット', swatchClass: 'bg-violet-500' },
 ] as const satisfies readonly {
   value: AccentPreference
   label: string

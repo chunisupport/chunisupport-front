@@ -5,7 +5,7 @@ export type ThemePreference = 'light' | 'pastel-orange' | 'dark' | 'dark-blue' |
 export type AppliedTheme = ThemePreference
 
 /** 背景テーマから独立して適用する操作強調色。 */
-export type AccentPreference = 'green' | 'orange' | 'blue'
+export type AccentPreference = 'green' | 'orange' | 'blue' | 'violet'
 
 export const THEME_STORAGE_KEY = 'chunisupport-theme'
 export const ACCENT_STORAGE_KEY = 'chunisupport-accent'
@@ -82,7 +82,7 @@ export const saveThemePreference = (preference: ThemePreference): void => {
 export const readAccentPreference = (): AccentPreference => {
   try {
     const value = window.localStorage.getItem(ACCENT_STORAGE_KEY)
-    if (value === 'green' || value === 'orange' || value === 'blue') {
+    if (value === 'green' || value === 'orange' || value === 'blue' || value === 'violet') {
       return value
     }
   } catch {

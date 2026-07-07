@@ -241,6 +241,39 @@ test('保存済みのオレンジアクセントを読み取って適用する',
   }
 })
 
+test('保存済みのバイオレットアクセントを読み取って適用する', () => {
+  const previousWindow = globalThis.window
+  const previousDocument = globalThis.document
+  const documentElement = { dataset: {} as Record<string, string> }
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: {
+      localStorage: {
+        getItem: () => 'violet',
+      },
+    },
+  })
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { documentElement },
+  })
+
+  try {
+    assert.equal(readAccentPreference(), 'violet')
+    assert.equal(applyInitialAccent(), 'violet')
+    assert.equal(documentElement.dataset.accent, 'violet')
+  } finally {
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: previousWindow,
+    })
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: previousDocument,
+    })
+  }
+})
+
 test('保存済みのブルーアクセントを読み取って適用する', () => {
   const previousWindow = globalThis.window
   const previousDocument = globalThis.document
