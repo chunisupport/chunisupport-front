@@ -388,7 +388,7 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
       <Dialog open={listDialogOpen()} onOpenChange={setListDialogOpen} preventScroll={false}>
         <Dialog.Portal>
           <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
-          <Dialog.Content class="fixed left-1/2 top-1/2 z-70 flex h-[40rem] max-h-[calc(100vh-2rem)] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
+          <Dialog.Content class="fixed left-1/2 top-1/2 z-70 flex h-160 max-h-[calc(100vh-2rem)] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
             <Dialog.Title class="mb-4 shrink-0 text-lg font-bold">
               {SAVED_RECORD_FILTER_DIALOG_TEXT.listTitle}
             </Dialog.Title>
