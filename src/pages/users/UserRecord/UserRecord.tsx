@@ -53,7 +53,11 @@ import {
   isRecordFilterOptionsChanged,
 } from './utils/filterDialog'
 import { useUserRecordPageModel } from './utils/pageModel'
-import { createInitialRecordSortConditions, parseSortParams } from './utils/sorting'
+import {
+  createInitialRecordSortConditions,
+  DEFAULT_RECORD_SORT_CONDITIONS,
+  parseSortParams,
+} from './utils/sorting'
 
 type Props = {
   username: string
@@ -200,12 +204,13 @@ const UserRecord: Component<Props> = (props) => {
   }
 
   /**
-   * 通常レコードのフィルターを既定値へ戻し、保存済み設定へ反映する。
+   * 通常レコードのフィルターとソート条件を既定値へ戻し、保存済み設定へ反映する。
    *
    * @returns なし。
    */
-  const resetFilters = () => {
+  const resetFiltersAndSort = () => {
     applyFilters(defaultFilter())
+    setSortConditions(DEFAULT_RECORD_SORT_CONDITIONS.map((condition) => ({ ...condition })))
   }
 
   /**
@@ -275,7 +280,7 @@ const UserRecord: Component<Props> = (props) => {
                 title={filters().title}
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
-                onResetFilter={resetFilters}
+                onResetFilter={resetFiltersAndSort}
                 onOpenSortSettings={() => setSortSettingsOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
                 onOpenFavoriteSongs={() => setFavoriteSongsOpen(true)}

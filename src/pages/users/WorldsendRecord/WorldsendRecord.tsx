@@ -43,6 +43,7 @@ import { restoreInitialWorldsendRecordFilter } from './utils/initialFilter'
 import { attachWorldsendSongMetaToRecords } from './utils/songMeta'
 import {
   createInitialWorldsendRecordSortConditions,
+  DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS,
   nextPrimaryWorldsendRecordSortCondition,
   normalizeWorldsendRecordSortConditions,
   parseWorldsendSortParams,
@@ -138,12 +139,15 @@ const WorldsendRecord = (props: Props) => {
   }
 
   /**
-   * WORLD'S END レコードのフィルターを既定値へ戻し、保存済み設定へ反映する。
+   * WORLD'S END レコードのフィルターとソート条件を既定値へ戻し、保存済み設定へ反映する。
    *
    * @returns なし。
    */
-  const resetFilters = () => {
+  const resetFiltersAndSort = () => {
     applyFilters(defaultFilter())
+    setSortConditions(
+      DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS.map((condition) => ({ ...condition }))
+    )
   }
 
   /**
@@ -208,7 +212,7 @@ const WorldsendRecord = (props: Props) => {
                 title={filters().title}
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
-                onResetFilter={resetFilters}
+                onResetFilter={resetFiltersAndSort}
                 onOpenSortSettings={() => setSortSettingsOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
                 titleActive={hasTitleFilterChanges()}
