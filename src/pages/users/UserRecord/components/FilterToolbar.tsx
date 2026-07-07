@@ -1,5 +1,5 @@
 import { Button } from '@kobalte/core/button'
-import { ArrowUpDown, Columns3, Funnel, Star } from 'lucide-solid'
+import { ArrowUpDown, Columns3, Funnel } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createSignal, onCleanup, Show } from 'solid-js'
 import { AppIconButton } from '../../../../components/common/AppButton'
@@ -94,12 +94,10 @@ type FilterToolbarProps = {
   onResetFilter: () => void
   onOpenSortSettings: () => void
   onOpenColumnSettings: () => void
-  onOpenFavoriteSongs?: () => void
   titleActive?: boolean
   filterActive?: boolean
   filterButtonTone?: FilterButtonTone
   filterButtonDisabled?: boolean
-  favoriteSongsDisabled?: boolean
 }
 
 /**
@@ -407,19 +405,6 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
       >
         <Columns3 size={24} />
       </AppIconButton>
-      <Show when={props.onOpenFavoriteSongs}>
-        {(onOpenFavoriteSongs) => (
-          <AppIconButton
-            class="ml-2 h-9.5 w-9.5"
-            onClick={onOpenFavoriteSongs()}
-            aria-label="お気に入り楽曲設定"
-            title="お気に入り楽曲設定"
-            disabled={props.favoriteSongsDisabled}
-          >
-            <Star size={24} aria-hidden="true" />
-          </AppIconButton>
-        )}
-      </Show>
     </div>
   )
 }

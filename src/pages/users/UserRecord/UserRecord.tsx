@@ -283,13 +283,9 @@ const UserRecord: Component<Props> = (props) => {
                 onResetFilter={resetFiltersAndSort}
                 onOpenSortSettings={() => setSortSettingsOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
-                onOpenFavoriteSongs={() => setFavoriteSongsOpen(true)}
                 titleActive={hasTitleFilterChanges()}
                 filterActive={hasFilterOptionChanges()}
                 filterButtonTone={filterButtonTone()}
-                favoriteSongsDisabled={
-                  !canManageFavoriteSongs() || favoriteSongs.loading || favoriteSongsUnavailable()
-                }
               />
 
               {/* フィルター統計 */}
@@ -329,6 +325,10 @@ const UserRecord: Component<Props> = (props) => {
                 masterData={masterData()}
                 versions={versionData()?.versions}
                 defaultFilter={defaultFilter()}
+                onOpenFavoriteSongs={() => setFavoriteSongsOpen(true)}
+                favoriteSongsDisabled={
+                  !canManageFavoriteSongs() || favoriteSongs.loading || favoriteSongsUnavailable()
+                }
               />
 
               <SortDialog

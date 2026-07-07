@@ -25,6 +25,10 @@ interface FilterDialogProps {
   masterData?: MasterDataDTO
   versions?: VersionSummaryDTO[]
   defaultFilter: FilterState
+  /** お気に入り楽曲設定を開く。 */
+  onOpenFavoriteSongs?: () => void
+  /** お気に入り楽曲設定を無効化するか。 */
+  favoriteSongsDisabled?: boolean
 }
 
 /**
@@ -141,6 +145,8 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
             onEditingFilterNameChange={(name) =>
               setEditingFilter((prev) => (prev ? { ...prev, name } : null))
             }
+            onOpenFavoriteSongs={props.onOpenFavoriteSongs}
+            favoriteSongsDisabled={props.favoriteSongsDisabled}
           />
           <div class="flex justify-end mt-6">
             <div class="flex gap-2">
