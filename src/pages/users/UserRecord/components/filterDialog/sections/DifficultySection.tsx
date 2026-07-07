@@ -74,7 +74,7 @@ const DifficultySection: Component<DifficultySectionProps> = (props) => (
         textVariant="large"
         label={CURRENT_OP_TARGET_ONLY_LABEL}
       />
-      <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+      <div class="-mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
         <CheckboxField
           id={FAVORITE_SONGS_ONLY_CHECKBOX_ID}
           checked={props.favoriteSongsOnly}
