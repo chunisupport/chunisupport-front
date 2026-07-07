@@ -35,12 +35,12 @@ import {
 } from '../../../utils/recordFilterDefaults'
 import { sanitizeSortQuery } from '../../../utils/sortingQuery'
 import FilterStats from '../components/FilterStats'
+import FilterToolbar from '../components/FilterToolbar'
 import RecordDataTable from '../components/RecordDataTable'
 import { isValidSavedStandardFilter } from '../components/savedRecordFilters'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FavoriteSongsDialog from './components/FavoriteSongsDialog'
 import FilterDialog from './components/FilterDialog'
-import FilterToolbar from './components/FilterToolbar'
 import SortDialog from './components/SortDialog'
 import { getRecordColumnRenderer } from './utils/columnRenderers'
 import {
