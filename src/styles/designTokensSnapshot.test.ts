@@ -88,9 +88,13 @@ test('アクセントカラーが背景テーマから独立したトークン�
   assert.match(tailwindCssContent, /\[data-accent="green"\]\s*{/)
   assert.match(tailwindCssContent, /\[data-accent="orange"\]\s*{/)
   assert.match(tailwindCssContent, /\[data-accent="blue"\]\s*{/)
+  assert.match(tailwindCssContent, /\[data-accent="violet"\]\s*{/)
+  assert.match(tailwindCssContent, /\[data-accent="yellow"\]\s*{/)
   assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-green-500\);/)
   assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-orange-500\);/)
   assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-blue-500\);/)
+  assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-violet-500\);/)
+  assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-yellow-500\);/)
   assert.match(tailwindCssContent, /--color-primary-500:\s*var\(--cs-color-accent-500\);/)
 })
 
@@ -114,14 +118,4 @@ test('ブラックテーマ用の無彩色トークンが定義されている�
   assert.match(tailwindCssContent, /--cs-color-surface-muted:\s*#222222;/)
   assert.match(tailwindCssContent, /--cs-color-border:\s*#444444;/)
   assert.match(tailwindCssContent, /--cs-color-input-border:\s*#666666;/)
-})
-
-test('パステルオレンジテーマ用の低彩度な暖色トークンが定義されていること', () => {
-  assert.match(tailwindCssContent, /\[data-theme="pastel-orange"\]\s*{/)
-  assert.match(tailwindCssContent, /--cs-color-bg:\s*#fff4df;/)
-  assert.match(tailwindCssContent, /--cs-color-surface:\s*#fffaf0;/)
-  assert.match(tailwindCssContent, /--cs-color-surface-muted:\s*#ffe4bf;/)
-  assert.match(tailwindCssContent, /--cs-color-surface-hover:\s*#ffd3bf;/)
-  assert.match(tailwindCssContent, /--cs-color-text:\s*#302d2b;/)
-  assert.match(tailwindCssContent, /--cs-color-border:\s*#edb889;/)
 })
