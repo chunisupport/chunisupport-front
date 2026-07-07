@@ -5,6 +5,7 @@ import { AppSelect } from '../../../components/common/AppSelect'
 import { AppTabContent, SegmentedTabs } from '../../../components/common/AppTabs'
 import type { SortCondition } from '../../../utils/sortConditions'
 import type { SortDirection } from '../../../utils/sortingQuery'
+import FilterResetDialog from './FilterResetDialog'
 
 export type { SortCondition } from '../../../utils/sortConditions'
 
@@ -149,6 +150,15 @@ export function SortConditionsDialog<TSortKey extends string>(
   }
 
   /**
+   * 下書き中のソート条件を既定値へ戻す。
+   *
+   * @returns なし。
+   */
+  const resetSortConditions = (): void => {
+    setDraftSortConditions(props.normalizeSortConditions(props.defaultSortConditions))
+  }
+
+  /**
    * ソート表示モードを切り替える。
    *
    * @param value - Kobalte Tabs から渡されるタブ値。
@@ -233,8 +243,13 @@ export function SortConditionsDialog<TSortKey extends string>(
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
         <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[80dvh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
-          <div class="mb-4 shrink-0">
+          <div class="mb-4 flex shrink-0 items-center justify-between">
             <Dialog.Title class="text-lg font-bold">ソート</Dialog.Title>
+            <FilterResetDialog
+              triggerLabel="ソートをリセット"
+              title="ソートをリセットしますか？"
+              onReset={resetSortConditions}
+            />
           </div>
 
           <SegmentedTabs

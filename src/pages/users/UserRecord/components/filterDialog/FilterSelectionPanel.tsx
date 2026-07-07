@@ -47,6 +47,10 @@ type FilterSelectionPanelProps = {
   editingFilterName?: string | null
   /** フィルター名が変更されたときのコールバック。 */
   onEditingFilterNameChange?: (name: string) => void
+  /** お気に入り楽曲設定を開く。 */
+  onOpenFavoriteSongs?: () => void
+  /** お気に入り楽曲設定を無効化するか。 */
+  favoriteSongsDisabled?: boolean
 }
 
 /** フィルター名入力を API の最大文字数に丸める。 */
@@ -376,6 +380,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             favoriteSongsOnly: checked,
           }))
         }
+        onOpenFavoriteSongs={props.onOpenFavoriteSongs}
+        favoriteSongsDisabled={props.favoriteSongsDisabled}
       />
       <ConstRangeSection
         constFilterMode={props.filters.constFilterMode}

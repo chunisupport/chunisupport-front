@@ -2,7 +2,7 @@ import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
-import { Check, FolderOpen, Pencil, Save, Trash2 } from 'lucide-solid'
+import { Bookmark, Check, Pencil, SavePlus, Trash2 } from 'lucide-solid'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { AppButton, AppIconButton } from '../../../components/common/AppButton'
@@ -299,22 +299,30 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
   return (
     <>
       <div class="flex items-center gap-2">
-        <AppButton
-          disabled={!isAuthenticated() || pendingAction() !== null}
-          onClick={handleSaveButtonClick}
-          leftIcon={<Save class="h-4 w-4" aria-hidden="true" />}
-        >
-          {SAVED_RECORD_FILTER_DIALOG_TEXT.save}
-        </AppButton>
-        <Show when={!editingFilter()}>
+        <div class="flex items-center gap-0">
           <AppButton
+            variant="surface"
+            size="sm"
+            class={`${editingFilter() ? '' : 'rounded-r-none'} h-9`}
             disabled={!isAuthenticated() || pendingAction() !== null}
-            onClick={openListDialog}
-            leftIcon={<FolderOpen class="h-4 w-4" aria-hidden="true" />}
+            title={SAVED_RECORD_FILTER_DIALOG_TEXT.save}
+            onClick={handleSaveButtonClick}
+            leftIcon={<SavePlus class="h-4 w-4" aria-hidden="true" />}
           >
-            {SAVED_RECORD_FILTER_DIALOG_TEXT.openList}
+            {SAVED_RECORD_FILTER_DIALOG_TEXT.save}
           </AppButton>
-        </Show>
+          <Show when={!editingFilter()}>
+            <AppIconButton
+              class="-ml-px rounded-l-none"
+              disabled={!isAuthenticated() || pendingAction() !== null}
+              aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.openList}
+              title={SAVED_RECORD_FILTER_DIALOG_TEXT.openList}
+              onClick={openListDialog}
+            >
+              <Bookmark class="h-4 w-4" aria-hidden="true" />
+            </AppIconButton>
+          </Show>
+        </div>
         <Show when={shouldShowLoginLink()}>
           <A
             href={loginHref()}
@@ -380,7 +388,7 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
       <Dialog open={listDialogOpen()} onOpenChange={setListDialogOpen} preventScroll={false}>
         <Dialog.Portal>
           <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
-          <Dialog.Content class="fixed left-1/2 top-1/2 z-70 flex h-[40rem] max-h-[calc(100vh-2rem)] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
+          <Dialog.Content class="fixed left-1/2 top-1/2 z-70 flex h-160 max-h-[calc(100vh-2rem)] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
             <Dialog.Title class="mb-4 shrink-0 text-lg font-bold">
               {SAVED_RECORD_FILTER_DIALOG_TEXT.listTitle}
             </Dialog.Title>

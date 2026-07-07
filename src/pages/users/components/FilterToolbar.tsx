@@ -1,24 +1,25 @@
 import { Button } from '@kobalte/core/button'
-import { ArrowUpDown, Columns3, Funnel, Star } from 'lucide-solid'
+import { ArrowUpDown, Columns3, Funnel } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
-import { AppIconButton } from '../../../../components/common/AppButton'
-import { SearchTextField } from '../../../../components/common/SearchTextField'
+import { AppIconButton } from '../../../components/common/AppButton'
+import { SearchTextField } from '../../../components/common/SearchTextField'
+import FilterResetHoldIndicator from './filterToolbar/FilterResetHoldIndicator'
+import { useFilterResetLongPress } from './filterToolbar/useFilterResetLongPress'
 
-type FilterButtonTone = 'default' | 'active' | 'difficulty-only'
+type FilterButtonTone = 'default' | 'active' | 'difficulty-only' | 'danger'
 
 type FilterToolbarProps = {
   title: string
   onTitleChange: (value: string) => void
   onOpenFilter: () => void
+  onResetFilter: () => void
   onOpenSortSettings: () => void
   onOpenColumnSettings: () => void
-  onOpenFavoriteSongs?: () => void
   titleActive?: boolean
   filterActive?: boolean
   filterButtonTone?: FilterButtonTone
   filterButtonDisabled?: boolean
-  favoriteSongsDisabled?: boolean
 }
 
 /**
@@ -36,6 +37,10 @@ const getFilterButtonToneClass = (tone: FilterButtonTone): string => {
     return 'border-action-primary bg-action-primary-muted text-action-primary hover:bg-action-primary-muted'
   }
 
+  if (tone === 'danger') {
+    return 'border-danger bg-danger text-text-inverse hover:bg-danger-hover'
+  }
+
   return 'border-border-strong bg-surface text-text-muted hover:bg-surface-hover'
 }
 
@@ -48,6 +53,14 @@ const getFilterButtonToneClass = (tone: FilterButtonTone): string => {
 const FilterToolbar: Component<FilterToolbarProps> = (props) => {
   const filterButtonTone = () =>
     props.filterButtonTone ?? (props.filterActive ? 'active' : 'default')
+  const filterResetLongPress = useFilterResetLongPress({
+    isDisabled: () => Boolean(props.filterButtonDisabled),
+    onReset: () => props.onResetFilter(),
+    onClick: () => props.onOpenFilter(),
+  })
+
+  const filterButtonVisualTone = () =>
+    filterResetLongPress.hintVisible() ? 'danger' : filterButtonTone()
 
   /**
    * フィルター状態に応じたボタン表示名を返す。
@@ -68,19 +81,30 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
         ariaLabel="曲名・アーティスト名検索"
         placeholder="曲名・アーティスト名で検索"
       />
-      <Button
-        class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent ${getFilterButtonToneClass(
-          filterButtonTone()
-        )}`}
-        onClick={props.onOpenFilter}
-        type="button"
-        aria-label={filterButtonLabel()}
-        aria-pressed={filterButtonTone() !== 'default'}
-        title={filterButtonLabel()}
-        disabled={props.filterButtonDisabled}
-      >
-        <Funnel size={24} aria-hidden="true" />
-      </Button>
+      <div class="-ml-px relative shrink-0">
+        <Show when={filterResetLongPress.hintVisible()}>
+          <FilterResetHoldIndicator
+            progress={filterResetLongPress.progress()}
+            ready={filterResetLongPress.ready()}
+          />
+        </Show>
+        <Button
+          class={`flex h-9.5 w-9.5 shrink-0 touch-none items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent ${getFilterButtonToneClass(
+            filterButtonVisualTone()
+          )}`}
+          onClick={filterResetLongPress.handleClick}
+          onPointerDown={filterResetLongPress.handlePointerDown}
+          onPointerUp={filterResetLongPress.handlePointerUp}
+          onPointerCancel={filterResetLongPress.stopPress}
+          type="button"
+          aria-label={filterButtonLabel()}
+          aria-pressed={filterButtonTone() !== 'default'}
+          title={filterButtonLabel()}
+          disabled={props.filterButtonDisabled}
+        >
+          <Funnel size={24} aria-hidden="true" />
+        </Button>
+      </div>
       <AppIconButton
         class="ml-2 h-9.5 w-9.5"
         onClick={props.onOpenSortSettings}
@@ -97,19 +121,6 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
       >
         <Columns3 size={24} />
       </AppIconButton>
-      <Show when={props.onOpenFavoriteSongs}>
-        {(onOpenFavoriteSongs) => (
-          <AppIconButton
-            class="ml-2 h-9.5 w-9.5"
-            onClick={onOpenFavoriteSongs()}
-            aria-label="お気に入り楽曲設定"
-            title="お気に入り楽曲設定"
-            disabled={props.favoriteSongsDisabled}
-          >
-            <Star size={24} aria-hidden="true" />
-          </AppIconButton>
-        )}
-      </Show>
     </div>
   )
 }

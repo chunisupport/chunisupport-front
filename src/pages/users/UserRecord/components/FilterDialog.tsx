@@ -25,6 +25,10 @@ interface FilterDialogProps {
   masterData?: MasterDataDTO
   versions?: VersionSummaryDTO[]
   defaultFilter: FilterState
+  /** お気に入り楽曲設定を開く。 */
+  onOpenFavoriteSongs?: () => void
+  /** お気に入り楽曲設定を無効化するか。 */
+  favoriteSongsDisabled?: boolean
 }
 
 /**
@@ -116,17 +120,17 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
         <Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface rounded-lg shadow-lg p-6 w-[90vw] max-w-md max-h-11/12 flex flex-col select-none">
           <div class="flex items-center justify-between mb-4 shrink-0">
             <Dialog.Title class="text-lg font-bold">{FILTER_DIALOG_TEXT.title}</Dialog.Title>
-            <FilterResetDialog onReset={handleReset} />
-          </div>
-          <div class="mb-4">
-            <SavedFiltersDialog
-              open={props.open}
-              currentFilters={filters()}
-              onApplyFilter={handleApplySavedFilter}
-              onEditFilter={handleEditSavedFilter}
-              onEditingChange={handleEditingChange}
-              editedFilterName={editingFilter()?.name}
-            />
+            <div class="flex items-center gap-2">
+              <SavedFiltersDialog
+                open={props.open}
+                currentFilters={filters()}
+                onApplyFilter={handleApplySavedFilter}
+                onEditFilter={handleEditSavedFilter}
+                onEditingChange={handleEditingChange}
+                editedFilterName={editingFilter()?.name}
+              />
+              <FilterResetDialog onReset={handleReset} />
+            </div>
           </div>
           {/* メインのフィルター選択部分 */}
           <FilterSelectionPanel
@@ -141,6 +145,8 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
             onEditingFilterNameChange={(name) =>
               setEditingFilter((prev) => (prev ? { ...prev, name } : null))
             }
+            onOpenFavoriteSongs={props.onOpenFavoriteSongs}
+            favoriteSongsDisabled={props.favoriteSongsDisabled}
           />
           <div class="flex justify-end mt-6">
             <div class="flex gap-2">
