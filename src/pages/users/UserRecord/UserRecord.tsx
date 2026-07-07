@@ -35,12 +35,12 @@ import {
 } from '../../../utils/recordFilterDefaults'
 import { sanitizeSortQuery } from '../../../utils/sortingQuery'
 import FilterStats from '../components/FilterStats'
+import FilterToolbar from '../components/FilterToolbar'
 import RecordDataTable from '../components/RecordDataTable'
 import { isValidSavedStandardFilter } from '../components/savedRecordFilters'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FavoriteSongsDialog from './components/FavoriteSongsDialog'
 import FilterDialog from './components/FilterDialog'
-import FilterToolbar from './components/FilterToolbar'
 import SortDialog from './components/SortDialog'
 import { getRecordColumnRenderer } from './utils/columnRenderers'
 import {
@@ -53,7 +53,11 @@ import {
   isRecordFilterOptionsChanged,
 } from './utils/filterDialog'
 import { useUserRecordPageModel } from './utils/pageModel'
-import { createInitialRecordSortConditions, parseSortParams } from './utils/sorting'
+import {
+  createInitialRecordSortConditions,
+  DEFAULT_RECORD_SORT_CONDITIONS,
+  parseSortParams,
+} from './utils/sorting'
 
 type Props = {
   username: string
@@ -200,6 +204,16 @@ const UserRecord: Component<Props> = (props) => {
   }
 
   /**
+   * 通常レコードのフィルターとソート条件を既定値へ戻し、保存済み設定へ反映する。
+   *
+   * @returns なし。
+   */
+  const resetFiltersAndSort = () => {
+    applyFilters(defaultFilter())
+    setSortConditions(DEFAULT_RECORD_SORT_CONDITIONS.map((condition) => ({ ...condition })))
+  }
+
+  /**
    * 通常レコードの表示列設定を画面へ反映し、IndexedDB へ保存する。
    *
    * @param nextVisibleColumnIds - 次に表示する列 ID 配列。
@@ -266,15 +280,12 @@ const UserRecord: Component<Props> = (props) => {
                 title={filters().title}
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
+                onResetFilter={resetFiltersAndSort}
                 onOpenSortSettings={() => setSortSettingsOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
-                onOpenFavoriteSongs={() => setFavoriteSongsOpen(true)}
                 titleActive={hasTitleFilterChanges()}
                 filterActive={hasFilterOptionChanges()}
                 filterButtonTone={filterButtonTone()}
-                favoriteSongsDisabled={
-                  !canManageFavoriteSongs() || favoriteSongs.loading || favoriteSongsUnavailable()
-                }
               />
 
               {/* フィルター統計 */}
@@ -314,6 +325,10 @@ const UserRecord: Component<Props> = (props) => {
                 masterData={masterData()}
                 versions={versionData()?.versions}
                 defaultFilter={defaultFilter()}
+                onOpenFavoriteSongs={() => setFavoriteSongsOpen(true)}
+                favoriteSongsDisabled={
+                  !canManageFavoriteSongs() || favoriteSongs.loading || favoriteSongsUnavailable()
+                }
               />
 
               <SortDialog
