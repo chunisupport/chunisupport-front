@@ -2,7 +2,7 @@ import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
-import { ArrowDownToLine, Check, Pencil, SavePlus, Trash2 } from 'lucide-solid'
+import { Bookmark, Check, Pencil, SavePlus, Trash2 } from 'lucide-solid'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { AppButton, AppIconButton } from '../../../components/common/AppButton'
@@ -319,7 +319,7 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
               title={SAVED_RECORD_FILTER_DIALOG_TEXT.openList}
               onClick={openListDialog}
             >
-              <ArrowDownToLine class="h-4 w-4" aria-hidden="true" />
+              <Bookmark class="h-4 w-4" aria-hidden="true" />
             </AppIconButton>
           </Show>
         </div>
