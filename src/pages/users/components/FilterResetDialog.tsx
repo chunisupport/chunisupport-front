@@ -28,7 +28,17 @@ const RESET_DIALOG_DESCRIPTION_SUFFIX = 'を長押しすると、フィルター
  */
 const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
   const [resetDialogOpen, setResetDialogOpen] = createSignal(false)
+  /**
+   * リセット操作トリガーの表示名を返す。
+   *
+   * @returns トリガーのアクセシブル名とタイトル。
+   */
   const triggerLabel = () => props.triggerLabel ?? 'フィルターをリセット'
+  /**
+   * リセット確認ダイアログの見出しを返す。
+   *
+   * @returns ダイアログタイトル。
+   */
   const title = () => props.title ?? 'フィルターをリセットしますか？'
 
   return (
@@ -48,7 +58,7 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
           <AlertDialog.Title class="text-lg font-bold mb-2">{title()}</AlertDialog.Title>
           <AlertDialog.Description class="mb-4 text-sm text-text-muted">
             {RESET_DIALOG_DESCRIPTION_PREFIX}
-            <Funnel class="mx-1 inline-block h-4 w-4 align-[-0.125em]" aria-label="フィルター" />
+            <Funnel class="mx-1 inline-block h-4 w-4 align-[-0.125em]" aria-hidden="true" />
             {RESET_DIALOG_DESCRIPTION_SUFFIX}
           </AlertDialog.Description>
           <div class="flex justify-end gap-2">

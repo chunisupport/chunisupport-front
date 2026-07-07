@@ -176,7 +176,7 @@ export const useFilterResetLongPress = (params: UseFilterResetLongPressParams) =
     pressing = true
     disableTextSelection()
     pressStartedAt = performance.now()
-    event.currentTarget.setPointerCapture(event.pointerId)
+    event.currentTarget.setPointerCapture?.(event.pointerId)
 
     hintTimerId = window.setTimeout(() => {
       if (!pressing) return

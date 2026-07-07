@@ -130,7 +130,7 @@ const FilterResetHoldIndicator: Component<FilterResetHoldIndicatorProps> = (prop
           transform={`rotate(${resetIndicatorArcStartRotation()} ${FILTER_RESET_INDICATOR_CENTER} ${FILTER_RESET_INDICATOR_CENTER})`}
         />
       </svg>
-      <div class="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded border border-danger-border bg-danger-bg px-3 py-2 text-md font-semibold text-danger shadow-md">
+      <div class="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded border border-danger-border bg-danger-bg px-3 py-2 text-base font-semibold text-danger shadow-md">
         {FILTER_RESET_HOLDING_LABEL}
       </div>
       <Show when={props.ready}>

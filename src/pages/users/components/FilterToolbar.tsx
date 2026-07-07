@@ -89,7 +89,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
           />
         </Show>
         <Button
-          class={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent ${getFilterButtonToneClass(
+          class={`flex h-9.5 w-9.5 shrink-0 touch-none items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:border-border-strong disabled:text-disabled-text disabled:hover:bg-transparent ${getFilterButtonToneClass(
             filterButtonVisualTone()
           )}`}
           onClick={filterResetLongPress.handleClick}

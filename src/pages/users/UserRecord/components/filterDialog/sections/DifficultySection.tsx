@@ -84,7 +84,7 @@ const DifficultySection: Component<DifficultySectionProps> = (props) => (
           textVariant="large"
           label={FAVORITE_SONGS_ONLY_LABEL}
         />
-        <Show when={props.onOpenFavoriteSongs}>
+        <Show when={props.onOpenFavoriteSongs} keyed>
           {(onOpenFavoriteSongs) => (
             <div class="ml-auto flex shrink-0 justify-end">
               <AppButton
@@ -92,7 +92,7 @@ const DifficultySection: Component<DifficultySectionProps> = (props) => (
                 variant="surface"
                 size="xs"
                 leftIcon={<Star size={20} aria-hidden="true" />}
-                onClick={onOpenFavoriteSongs()}
+                onClick={onOpenFavoriteSongs}
                 disabled={props.favoriteSongsDisabled}
               >
                 {FAVORITE_SONGS_SETTINGS_LABEL}
