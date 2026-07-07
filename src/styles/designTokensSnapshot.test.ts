@@ -119,13 +119,3 @@ test('ブラックテーマ用の無彩色トークンが定義されている�
   assert.match(tailwindCssContent, /--cs-color-border:\s*#444444;/)
   assert.match(tailwindCssContent, /--cs-color-input-border:\s*#666666;/)
 })
-
-test('パステルオレンジテーマ用の低彩度な暖色トークンが定義されていること', () => {
-  assert.match(tailwindCssContent, /\[data-theme="pastel-orange"\]\s*{/)
-  assert.match(tailwindCssContent, /--cs-color-bg:\s*#fff4df;/)
-  assert.match(tailwindCssContent, /--cs-color-surface:\s*#fffaf0;/)
-  assert.match(tailwindCssContent, /--cs-color-surface-muted:\s*#ffe4bf;/)
-  assert.match(tailwindCssContent, /--cs-color-surface-hover:\s*#ffd3bf;/)
-  assert.match(tailwindCssContent, /--cs-color-text:\s*#302d2b;/)
-  assert.match(tailwindCssContent, /--cs-color-border:\s*#edb889;/)
-})

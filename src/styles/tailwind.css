@@ -92,6 +92,20 @@
   --cs-color-accent-900: var(--color-yellow-900);
 }
 
+[data-accent="red"] {
+  /* ===== アクセント色（赤 / プライマリ操作 / 選択状態 / フォーカス / リンク） ===== */
+  --cs-color-accent-50: var(--color-red-50);
+  --cs-color-accent-100: var(--color-red-100);
+  --cs-color-accent-200: var(--color-red-200);
+  --cs-color-accent-300: var(--color-red-300);
+  --cs-color-accent-400: var(--color-red-400);
+  --cs-color-accent-500: var(--color-red-500);
+  --cs-color-accent-600: var(--color-red-600);
+  --cs-color-accent-700: var(--color-red-700);
+  --cs-color-accent-800: var(--color-red-800);
+  --cs-color-accent-900: var(--color-red-900);
+}
+
 :root,
 [data-theme="light"] {
   /* ===== 背景・サーフェス（ページ全体 / カード / パネル / モーダル / ホバー） ===== */
@@ -160,77 +174,6 @@
   --cs-color-input-border-hover: var(--color-gray-500);
   --cs-color-link: var(--color-primary-600);
   --cs-color-link-hover: var(--color-primary-700);
-}
-
-[data-theme="pastel-orange"] {
-  color-scheme: light;
-
-  /* ===== 背景・サーフェス（クリームイエローからピーチ、淡い赤橙へつながる面） ===== */
-  --cs-color-bg: #fff4df;
-  --cs-color-surface: #fffaf0;
-  --cs-color-surface-muted: #ffe4bf;
-  --cs-color-surface-raised: #fffdf7;
-  --cs-color-surface-hover: #ffd3bf;
-
-  /* ===== テキスト（暖色背景の色味を濁らせないチャコール系） ===== */
-  --cs-color-text: #302d2b;
-  --cs-color-text-muted: #5f5a56;
-  --cs-color-text-subtle: #746d68;
-  --cs-color-text-inverse: var(--color-white);
-  --cs-color-text-placeholder: #7f746d;
-  --cs-color-nav-text: #46413d;
-
-  /* ===== 枠線・フォーカスリング ===== */
-  --cs-color-border: #edb889;
-  --cs-color-border-strong: #c87848;
-  --cs-color-focus-ring: var(--color-primary-600);
-
-  /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
-  --cs-color-action-primary: var(--color-primary-600);
-  --cs-color-action-primary-hover: var(--color-primary-700);
-  --cs-color-action-primary-muted: color-mix(in oklab, var(--color-primary-100) 68%, #fff2dc);
-  --cs-color-action-primary-border: var(--color-primary-300);
-  --cs-color-select-selected-hover-bg: color-mix(in oklab, var(--color-primary-100) 82%, #ffe0c4);
-  --cs-color-interactive-row-hover: color-mix(in oklab, var(--color-primary-100) 72%, #ffe0c4);
-  --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-100) 72%, #ffe0c4);
-  --cs-color-action-secondary: #edb889;
-  --cs-color-action-secondary-hover: #df9a68;
-
-  /* ===== 危険: エラー・削除操作（意味色は維持し背景だけ調整） ===== */
-  --cs-color-danger: var(--color-red-700);
-  --cs-color-danger-hover: var(--color-red-800);
-  --cs-color-danger-bg: #fee8e2;
-  --cs-color-danger-border: var(--color-red-300);
-
-  /* ===== 成功 ===== */
-  --cs-color-success: var(--color-green-700);
-  --cs-color-success-bg: #edf7e8;
-  --cs-color-success-bg-hover: #deefd6;
-  --cs-color-success-border: var(--color-green-400);
-
-  /* ===== 警告 ===== */
-  --cs-color-warning: var(--color-yellow-800);
-  --cs-color-warning-bg: #fff4ce;
-  --cs-color-warning-border: var(--color-yellow-400);
-
-  /* ===== 情報 ===== */
-  --cs-color-info: var(--color-blue-700);
-  --cs-color-info-bg: #eaf3fb;
-  --cs-color-info-border: var(--color-blue-300);
-
-  /* ===== 苦手譜面インスペクター（通常点 / 外れ値） ===== */
-  --cs-color-weak-chart-point: rgb(22 163 74 / 45%);
-  --cs-color-weak-chart-outlier: var(--color-blue-600);
-
-  /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） ===== */
-  --cs-color-overlay: rgb(48 45 43 / 32%);
-  --cs-color-disabled-bg: #f2dcc8;
-  --cs-color-disabled-text: #887a70;
-  --cs-color-input-bg: #fffdf7;
-  --cs-color-input-border: #c87848;
-  --cs-color-input-border-hover: #a95f35;
-  --cs-color-link: var(--color-primary-700);
-  --cs-color-link-hover: var(--color-primary-800);
 }
 
 :is([data-theme="dark"], [data-theme="black"]) {
@@ -424,12 +367,83 @@
   --cs-color-link-hover: var(--color-primary-300);
 }
 
+[data-theme="pastel-orange"] {
+  color-scheme: light;
+
+  /* ===== 背景・サーフェス（ページ全体 / カード / パネル / モーダル / ホバー） ===== */
+  --cs-color-bg: #fcf0e0;
+  --cs-color-surface: #fef6eb;
+  --cs-color-surface-muted: #fceddc;
+  --cs-color-surface-raised: #fffaf2;
+  --cs-color-surface-hover: #fce3c8;
+
+  /* ===== テキスト（本文 / 補助 / メタ情報 / 反転 / プレースホルダー / ナビ） ===== */
+  --cs-color-text: #3d2e24;
+  --cs-color-text-muted: var(--color-gray-600);
+  --cs-color-text-subtle: var(--color-gray-500);
+  --cs-color-text-inverse: var(--color-white);
+  --cs-color-text-placeholder: var(--color-gray-400);
+  --cs-color-nav-text: var(--color-gray-700);
+
+  /* ===== 枠線・フォーカスリング（カード境界 / 強調境界 / フォーカスリング） ===== */
+  --cs-color-border: #f5d5bc;
+  --cs-color-border-strong: #ecc09f;
+  --cs-color-focus-ring: var(--color-primary-500);
+
+  /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
+  --cs-color-action-primary: var(--color-primary-600);
+  --cs-color-action-primary-hover: var(--color-primary-700);
+  --cs-color-action-primary-muted: var(--color-primary-50);
+  --cs-color-action-primary-border: var(--color-primary-200);
+  --cs-color-select-selected-hover-bg: var(--color-primary-100);
+  --cs-color-interactive-row-hover: var(--color-primary-100);
+  --cs-color-new-song-bg: var(--color-primary-100);
+  --cs-color-action-secondary: #f5d5bc;
+  --cs-color-action-secondary-hover: #ecc09f;
+
+  /* ===== 危険: エラー・削除操作（テキスト / 背景 / 枠線） ===== */
+  --cs-color-danger: var(--color-red-600);
+  --cs-color-danger-hover: var(--color-red-700);
+  --cs-color-danger-bg: var(--color-red-50);
+  --cs-color-danger-border: var(--color-red-300);
+
+  /* ===== 成功（テキスト / 背景 / 枠線） ===== */
+  --cs-color-success: var(--color-green-700);
+  --cs-color-success-bg: var(--color-green-50);
+  --cs-color-success-bg-hover: var(--color-green-100);
+  --cs-color-success-border: var(--color-green-300);
+
+  /* ===== 警告（テキスト / 背景 / 枠線） ===== */
+  --cs-color-warning: var(--color-yellow-700);
+  --cs-color-warning-bg: var(--color-yellow-50);
+  --cs-color-warning-border: var(--color-yellow-300);
+
+  /* ===== 情報（テキスト / 背景 / 枠線） ===== */
+  --cs-color-info: var(--color-blue-700);
+  --cs-color-info-bg: var(--color-blue-50);
+  --cs-color-info-border: var(--color-blue-300);
+
+  /* ===== 苦手譜面インスペクター（通常点 / 外れ値） ===== */
+  --cs-color-weak-chart-point: rgb(22 163 74 / 45%);
+  --cs-color-weak-chart-outlier: var(--color-blue-600);
+
+  /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） ===== */
+  --cs-color-overlay: rgb(0 0 0 / 30%);
+  --cs-color-disabled-bg: #fceddc;
+  --cs-color-disabled-text: var(--color-gray-400);
+  --cs-color-input-bg: #fef6eb;
+  --cs-color-input-border: #ecc09f;
+  --cs-color-input-border-hover: #dda878;
+  --cs-color-link: var(--color-primary-600);
+  --cs-color-link-hover: var(--color-primary-700);
+}
+
 :root,
 [data-theme="light"],
-[data-theme="pastel-orange"],
 [data-theme="dark"],
 [data-theme="dark-blue"],
-[data-theme="black"] {
+[data-theme="black"],
+[data-theme="pastel-orange"] {
   --cs-size-user-honor-title-max-width: 464px;
 
   /* ===== 難易度バッジ（BASIC / ADVANCED / EXPERT / MASTER / ULTIMA） ===== */

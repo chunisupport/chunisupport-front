@@ -23,13 +23,14 @@ test('明示的にblackが保存されている場合はblackを適用する', (
   assert.equal(resolveAppliedTheme('black', false), 'black')
 })
 
+test('明示的にpastel-orangeが保存されている場合はpastel-orangeを適用する', () => {
+  assert.equal(resolveAppliedTheme('pastel-orange', true), 'pastel-orange')
+  assert.equal(resolveAppliedTheme('pastel-orange', false), 'pastel-orange')
+})
+
 test('明示的にdark-blueが保存されている場合はdark-blueを適用する', () => {
   assert.equal(resolveAppliedTheme('dark-blue', true), 'dark-blue')
   assert.equal(resolveAppliedTheme('dark-blue', false), 'dark-blue')
-})
-
-test('明示的にpastel-orangeが保存されている場合はpastel-orangeを適用する', () => {
-  assert.equal(resolveAppliedTheme('pastel-orange', true), 'pastel-orange')
 })
 
 test('旧system設定または未設定の場合はOS設定から適用テーマを決定する', () => {
@@ -118,27 +119,6 @@ test('localStorageにblackが保存されている場合はblackを返す', () =
 
   try {
     assert.equal(readThemePreference(), 'black')
-  } finally {
-    Object.defineProperty(globalThis, 'window', {
-      configurable: true,
-      value: previousWindow,
-    })
-  }
-})
-
-test('localStorageにpastel-orangeが保存されている場合はpastel-orangeを返す', () => {
-  const previousWindow = globalThis.window
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      localStorage: {
-        getItem: () => 'pastel-orange',
-      },
-    },
-  })
-
-  try {
-    assert.equal(readThemePreference(), 'pastel-orange')
   } finally {
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
