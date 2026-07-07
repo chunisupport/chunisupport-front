@@ -13,6 +13,12 @@ const FILTER_RESET_HOLD_DURATION_MS =
 /** 長押し成立後の互換クリックを抑止する時間。 */
 const FILTER_RESET_CLICK_SUPPRESSION_MS = 500
 
+/** 長押し中に一時適用するテキスト選択抑止値。 */
+const FILTER_RESET_USER_SELECT_DISABLED_VALUE = 'none'
+
+/** WebKit系ブラウザ向けのテキスト選択抑止プロパティ名。 */
+const FILTER_RESET_WEBKIT_USER_SELECT_PROPERTY = '-webkit-user-select'
+
 type UseFilterResetLongPressParams = {
   /** 長押し判定を開始できない状態か。 */
   isDisabled: () => boolean
@@ -37,8 +43,59 @@ export const useFilterResetLongPress = (params: UseFilterResetLongPressParams) =
   let readyTimerId: number | undefined
   let progressFrameId: number | undefined
   let suppressClickTimerId: number | undefined
+  let previousBodyUserSelect = ''
+  let previousBodyWebkitUserSelect = ''
+  let textSelectionDisabled = false
   let pressing = false
   let suppressNextClick = false
+
+  /**
+   * 長押し中に発生するテキスト選択開始を抑止する。
+   *
+   * @param event - 文書上の選択開始イベント。
+   * @returns なし。
+   */
+  const preventTextSelection = (event: Event) => {
+    event.preventDefault()
+  }
+
+  /**
+   * 長押し操作中だけページ全体のテキスト選択を無効化する。
+   *
+   * @returns なし。
+   */
+  const disableTextSelection = () => {
+    if (textSelectionDisabled) return
+
+    previousBodyUserSelect = document.body.style.userSelect
+    previousBodyWebkitUserSelect = document.body.style.getPropertyValue(
+      FILTER_RESET_WEBKIT_USER_SELECT_PROPERTY
+    )
+    document.body.style.userSelect = FILTER_RESET_USER_SELECT_DISABLED_VALUE
+    document.body.style.setProperty(
+      FILTER_RESET_WEBKIT_USER_SELECT_PROPERTY,
+      FILTER_RESET_USER_SELECT_DISABLED_VALUE
+    )
+    document.addEventListener('selectstart', preventTextSelection)
+    textSelectionDisabled = true
+  }
+
+  /**
+   * 長押し操作中に無効化したテキスト選択を元に戻す。
+   *
+   * @returns なし。
+   */
+  const restoreTextSelection = () => {
+    if (!textSelectionDisabled) return
+
+    document.body.style.userSelect = previousBodyUserSelect
+    document.body.style.setProperty(
+      FILTER_RESET_WEBKIT_USER_SELECT_PROPERTY,
+      previousBodyWebkitUserSelect
+    )
+    document.removeEventListener('selectstart', preventTextSelection)
+    textSelectionDisabled = false
+  }
 
   /**
    * 長押しゲージのアニメーションを現在時刻から再計算する。
@@ -67,6 +124,7 @@ export const useFilterResetLongPress = (params: UseFilterResetLongPressParams) =
    */
   const stopPress = () => {
     pressing = false
+    restoreTextSelection()
     setHintVisible(false)
     setProgress(0)
     setReady(false)
@@ -116,6 +174,7 @@ export const useFilterResetLongPress = (params: UseFilterResetLongPressParams) =
 
     stopPress()
     pressing = true
+    disableTextSelection()
     pressStartedAt = performance.now()
     event.currentTarget.setPointerCapture(event.pointerId)
 
