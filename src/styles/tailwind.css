@@ -321,10 +321,86 @@
   --cs-color-input-border-hover: #7a7a7a;
 }
 
+[data-theme="dark-blue"] {
+  color-scheme: dark;
+
+  /* ===== 背景・サーフェス（ページ全体 / カード / パネル / モーダル / ホバー） ===== */
+  --cs-color-bg: #0a0e1a;
+  --cs-color-surface: #0f1526;
+  --cs-color-surface-muted: #151b30;
+  --cs-color-surface-raised: #12182a;
+  --cs-color-surface-hover: #1c2340;
+
+  /* ===== テキスト（本文 / 補助 / メタ情報 / 反転 / プレースホルダー / ナビ） ===== */
+  --cs-color-text: var(--color-gray-50);
+  --cs-color-text-muted: var(--color-gray-300);
+  --cs-color-text-subtle: var(--color-gray-500);
+  --cs-color-text-inverse: #0a0e1a;
+  --cs-color-text-placeholder: var(--color-gray-500);
+  --cs-color-nav-text: var(--color-gray-100);
+
+  /* ===== 枠線・フォーカスリング（カード境界 / 強調境界 / フォーカスリング） ===== */
+  --cs-color-border: #1e2d5e;
+  --cs-color-border-strong: #2f4480;
+  --cs-color-focus-ring: var(--color-primary-400);
+
+  /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
+  --cs-color-action-primary: var(--color-primary-500);
+  --cs-color-action-primary-hover: var(--color-primary-400);
+  --cs-color-action-primary-muted: color-mix(in oklab, var(--color-primary-700) 35%, transparent);
+  --cs-color-action-primary-border: var(--color-primary-700);
+  --cs-color-select-selected-hover-bg: color-mix(
+    in oklab,
+    var(--color-primary-600) 42%,
+    transparent
+  );
+  --cs-color-interactive-row-hover: color-mix(in oklab, var(--color-primary-900) 28%, transparent);
+  --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
+  --cs-color-action-secondary: #1e2d5e;
+  --cs-color-action-secondary-hover: #2f4480;
+
+  /* ===== 危険: エラー・削除操作（テキスト / 背景 / 枠線） ===== */
+  --cs-color-danger: var(--color-red-400);
+  --cs-color-danger-hover: var(--color-red-300);
+  --cs-color-danger-bg: rgb(127 29 29 / 35%);
+  --cs-color-danger-border: var(--color-red-800);
+
+  /* ===== 成功（テキスト / 背景 / 枠線） ===== */
+  --cs-color-success: var(--color-green-300);
+  --cs-color-success-bg: rgb(20 83 45 / 35%);
+  --cs-color-success-bg-hover: rgb(22 101 52 / 45%);
+  --cs-color-success-border: var(--color-green-800);
+
+  /* ===== 警告（テキスト / 背景 / 枠線） ===== */
+  --cs-color-warning: var(--color-yellow-300);
+  --cs-color-warning-bg: rgb(113 63 18 / 35%);
+  --cs-color-warning-border: var(--color-yellow-800);
+
+  /* ===== 情報（テキスト / 背景 / 枠線） ===== */
+  --cs-color-info: var(--color-blue-300);
+  --cs-color-info-bg: rgb(30 64 175 / 35%);
+  --cs-color-info-border: var(--color-blue-800);
+
+  /* ===== 苦手譜面インスペクター（通常点 / 外れ値） ===== */
+  --cs-color-weak-chart-point: rgb(134 239 172 / 45%);
+  --cs-color-weak-chart-outlier: var(--color-blue-400);
+
+  /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） ===== */
+  --cs-color-overlay: rgb(0 0 0 / 60%);
+  --cs-color-disabled-bg: #151b30;
+  --cs-color-disabled-text: var(--color-gray-600);
+  --cs-color-input-bg: #0f1526;
+  --cs-color-input-border: #2f4480;
+  --cs-color-input-border-hover: #3f5aa0;
+  --cs-color-link: var(--color-primary-400);
+  --cs-color-link-hover: var(--color-primary-300);
+}
+
 :root,
 [data-theme="light"],
 [data-theme="pastel-orange"],
 [data-theme="dark"],
+[data-theme="dark-blue"],
 [data-theme="black"] {
   --cs-size-user-honor-title-max-width: 464px;
 
@@ -865,7 +941,8 @@
     color: var(--color-text-subtle);
   }
 
-  :is([data-theme="dark"], [data-theme="black"]) .goal-card-progress-secondary {
+  :is([data-theme="dark"], [data-theme="dark-blue"], [data-theme="black"])
+    .goal-card-progress-secondary {
     color: var(--color-primary-300);
   }
 }

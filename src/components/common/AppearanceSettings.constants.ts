@@ -5,6 +5,7 @@ export const THEME_OPTIONS = [
   { value: 'light', label: 'ホワイト' },
   { value: 'pastel-orange', label: 'パステルオレンジ' },
   { value: 'dark', label: 'ダークグリーン' },
+  { value: 'dark-blue', label: 'ダークブルー' },
   { value: 'black', label: 'ブラック' },
 ] as const satisfies readonly { value: ThemePreference; label: string }[]
 

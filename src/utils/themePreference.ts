@@ -1,5 +1,5 @@
 /** ユーザーが選択・保存できる背景テーマ。 */
-export type ThemePreference = 'light' | 'pastel-orange' | 'dark' | 'black'
+export type ThemePreference = 'light' | 'pastel-orange' | 'dark' | 'dark-blue' | 'black'
 
 /** ルート要素へ実際に適用する背景テーマ。 */
 export type AppliedTheme = ThemePreference
@@ -27,6 +27,7 @@ export const resolveAppliedTheme = (
     preference === 'light' ||
     preference === 'pastel-orange' ||
     preference === 'dark' ||
+    preference === 'dark-blue' ||
     preference === 'black'
   ) {
     return preference
@@ -43,7 +44,13 @@ export const resolveAppliedTheme = (
 export const readThemePreference = (): ThemePreference => {
   try {
     const value = window.localStorage.getItem(THEME_STORAGE_KEY)
-    if (value === 'light' || value === 'pastel-orange' || value === 'dark' || value === 'black') {
+    if (
+      value === 'light' ||
+      value === 'pastel-orange' ||
+      value === 'dark' ||
+      value === 'dark-blue' ||
+      value === 'black'
+    ) {
       return value
     }
   } catch {

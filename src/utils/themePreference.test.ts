@@ -23,6 +23,11 @@ test('明示的にblackが保存されている場合はblackを適用する', (
   assert.equal(resolveAppliedTheme('black', false), 'black')
 })
 
+test('明示的にdark-blueが保存されている場合はdark-blueを適用する', () => {
+  assert.equal(resolveAppliedTheme('dark-blue', true), 'dark-blue')
+  assert.equal(resolveAppliedTheme('dark-blue', false), 'dark-blue')
+})
+
 test('明示的にpastel-orangeが保存されている場合はpastel-orangeを適用する', () => {
   assert.equal(resolveAppliedTheme('pastel-orange', true), 'pastel-orange')
 })
@@ -71,6 +76,27 @@ test('localStorageへ保存できない場合でも例外を投げない', () =>
 
   try {
     assert.doesNotThrow(() => saveThemePreference('dark'))
+  } finally {
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: previousWindow,
+    })
+  }
+})
+
+test('localStorageにdark-blueが保存されている場合はdark-blueを返す', () => {
+  const previousWindow = globalThis.window
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: {
+      localStorage: {
+        getItem: () => 'dark-blue',
+      },
+    },
+  })
+
+  try {
+    assert.equal(readThemePreference(), 'dark-blue')
   } finally {
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
