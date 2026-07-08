@@ -83,7 +83,7 @@ const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
 const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_EXCLUDED_RATING_BAND = 'ALL'
 const CHART_X_AXIS_TICK_PADDING = 8
-const AVERAGE_SCORE_CHART_TITLE = 'AVG. SCORE'
+const AVERAGE_SCORE_CHART_TITLE = '平均スコア'
 const AVERAGE_SCORE_CHART_COLOR = '--cs-color-action-primary'
 /** 統計テーブルの表示カテゴリ選択肢。 */
 export const TABLE_VIEW_OPTIONS: SongStatsTableViewOption[] = [
@@ -101,11 +101,11 @@ const RANK_STAT_COLUMN_DEFINITIONS = [
   { label: 'SS', valueKey: 'ss' },
   { label: 'S+', valueKey: 'sp' },
   { label: 'S', valueKey: 's' },
-  { label: 'AAA以下', valueKey: 'aaal' },
+  { label: '～AAA', valueKey: 'aaal' },
 ] as const
 /** RANK積み上げ棒グラフへ表示するデータセット定義。 */
 const RANK_CHART_DATASET_DEFINITIONS = [
-  { label: 'AAA以下', valueKey: 'aaal', colorVariable: '--cs-color-score-rank-d-bg' },
+  { label: '～AAA', valueKey: 'aaal', colorVariable: '--cs-color-score-rank-d-bg' },
   { label: 'S', valueKey: 's', colorVariable: '--cs-color-score-rank-a-bg' },
   { label: 'S+', valueKey: 'sp', colorVariable: '--cs-color-score-rank-a-bg' },
   { label: 'SS', valueKey: 'ss', colorVariable: '--cs-color-score-rank-ss-bg' },
