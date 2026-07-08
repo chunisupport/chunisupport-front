@@ -114,7 +114,7 @@ const SELECTABLE_CARD_DISABLED_CLASS =
 
 const SELECTABLE_CARD_CONTENT_CLASS = 'flex min-w-0 flex-1 flex-col gap-1'
 const SELECTABLE_CARD_TITLE_ROW_CLASS = 'flex min-w-0 flex-wrap items-center gap-2'
-const SELECTABLE_CARD_TITLE_CLASS = 'min-w-0 text-sm font-semibold text-text'
+const SELECTABLE_CARD_TITLE_CLASS = 'min-w-0 font-semibold text-text'
 const SELECTABLE_CARD_DESCRIPTION_CLASS = 'text-xs text-text-muted'
 
 const SELECTABLE_CARD_RADIO_CONTROL_CLASS =
