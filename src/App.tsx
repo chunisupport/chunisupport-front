@@ -18,6 +18,7 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   EDITOR_SONGS_PATH,
+  FRIENDS_PATH,
   LOCKED_SONGS_FINDER_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   REGISTER_SCORE_PATH,
@@ -40,6 +41,7 @@ import {
   ChartConstantCalculatorPage,
   EditorSongsPage,
   ForbiddenPage,
+  FriendsPage,
   GoalsList,
   Login,
   NotFoundPage,
@@ -380,6 +382,7 @@ const App = () => {
       <Route path="/settings/:section?" component={withNavBar(withAuth(Settings))} />
 
       {/* その他 */}
+      <Route path={FRIENDS_PATH} component={withNavBar(withAuth(FriendsPage))} />
       <Route path={REGISTER_SCORE_PATH} component={withNavBar(withAuth(RegisterScorePage))} />
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />

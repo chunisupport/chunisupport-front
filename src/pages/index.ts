@@ -2,6 +2,7 @@ export { AdminHonorsPage, AdminPage, AdminSongsPage, AdminUsersPage } from './ad
 export { Login, Register } from './auth'
 export { EditorSongsPage } from './editor'
 export { default as ForbiddenPage } from './ForbiddenPage'
+export { FriendsPage } from './friends'
 export { GoalsList } from './goals'
 export { default as NotFoundPage } from './NotFoundPage'
 export { RegisterScorePage } from './register-score'

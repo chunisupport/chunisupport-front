@@ -14,6 +14,7 @@ import {
   PencilLine,
   Settings,
   Shield,
+  UsersRound,
   Wrench,
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
@@ -27,9 +28,10 @@ type NavBarProps = {
 import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
 import { DOCUMENTATION_BASE_URL } from '../../config'
-import { EDITOR_SONGS_PATH } from '../../constants/routes'
+import { EDITOR_SONGS_PATH, FRIENDS_PATH } from '../../constants/routes'
 import { auth } from '../../lib/firebase'
 import { EDITOR_SONGS_TITLE } from '../../pages/editor/constants'
+import { FRIENDS_PAGE_TITLE } from '../../pages/friends'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
@@ -105,6 +107,11 @@ const NavBar = (props: NavBarProps) => {
                   },
                 ]
               : []),
+            {
+              label: FRIENDS_PAGE_TITLE,
+              icon: () => <UsersRound class="h-4 w-4" aria-hidden="true" />,
+              path: FRIENDS_PATH,
+            },
             {
               label: '設定',
               icon: () => <Settings class="h-4 w-4" aria-hidden="true" />,

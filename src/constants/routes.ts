@@ -3,6 +3,8 @@ export const REGISTER_PATH = '/register'
 export const REGISTER_SCORE_PATH = '/register-score'
 export const REGISTER_SCORE_TEMP_PATH = '/register-score-temp'
 export const TOOLS_PATH = '/tools'
+/** フレンド画面のパス。 */
+export const FRIENDS_PATH = '/friends'
 export const CHART_CONSTANT_CALCULATOR_PATH = `${TOOLS_PATH}/chart-constant-calculator`
 export const BORDER_CALCULATOR_PATH = `${TOOLS_PATH}/border-calculator`
 export const WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector`
