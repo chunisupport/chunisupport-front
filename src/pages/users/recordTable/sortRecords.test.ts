@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { SortCondition } from '../../../utils/sortConditions.ts'
-import { compareNumberWithUnplayedBelowZero } from './sortComparators.ts'
+import {
+  compareNumberWithUnplayedBelowZero,
+  compareNumberWithUnplayedLast,
+} from './sortComparators.ts'
 import { sortRecordsWithConditions } from './sortRecords.ts'
 
 type TestSortKey = 'score' | 'level' | 'title'
@@ -70,4 +73,29 @@ test('compareNumberWithUnplayedBelowZero はプレイ済み同士では数値を
   assert.equal(compareNumberWithUnplayedBelowZero(playedLow, playedHigh), -10)
   assert.equal(compareNumberWithUnplayedBelowZero(playedHigh, playedLow), 10)
   assert.equal(compareNumberWithUnplayedBelowZero(playedLow, playedLow), 0)
+})
+
+test('compareNumberWithUnplayedLast は方向に関係なく未プレイを末尾として比較する', () => {
+  // Given
+  const playedZero = { isPlayed: true, value: 0 }
+  const unplayed = { isPlayed: false, value: 0 }
+
+  // When & Then
+  assert.equal(compareNumberWithUnplayedLast(unplayed, playedZero, 1), 1)
+  assert.equal(compareNumberWithUnplayedLast(playedZero, unplayed, 1), -1)
+  assert.equal(compareNumberWithUnplayedLast(unplayed, playedZero, -1), 1)
+  assert.equal(compareNumberWithUnplayedLast(playedZero, unplayed, -1), -1)
+  assert.equal(compareNumberWithUnplayedLast(unplayed, unplayed, 1), 0)
+})
+
+test('compareNumberWithUnplayedLast はプレイ済み同士では方向を反映して数値を比較する', () => {
+  // Given
+  const playedLow = { isPlayed: true, value: 10 }
+  const playedHigh = { isPlayed: true, value: 20 }
+
+  // When & Then
+  assert.equal(compareNumberWithUnplayedLast(playedLow, playedHigh, 1), -10)
+  assert.equal(compareNumberWithUnplayedLast(playedLow, playedHigh, -1), 10)
+  assert.equal(compareNumberWithUnplayedLast(playedHigh, playedLow, 1), 10)
+  assert.equal(compareNumberWithUnplayedLast(playedHigh, playedLow, -1), -10)
 })

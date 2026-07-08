@@ -262,7 +262,7 @@ test('レート値ソートは未プレイを0より低い側としてソート�
   )
 })
 
-test('OPソートは未プレイを0より低い側としてソート方向に従って並べる', () => {
+test('OPソートは昇順でも未プレイを末尾に寄せる', () => {
   const records = [
     createRecord({ id: 'played-zero', overpower: 0 }),
     createRecord({ id: 'unplayed', is_played: false, overpower: 0 }),
@@ -271,7 +271,7 @@ test('OPソートは未プレイを0より低い側としてソート方向に�
 
   assert.deepEqual(
     sortRecords(records, 'overpower', 'asc').map((record) => record.id),
-    ['unplayed', 'played-zero', 'played-high']
+    ['played-zero', 'played-high', 'unplayed']
   )
   assert.deepEqual(
     sortRecords(records, 'overpower', 'desc').map((record) => record.id),
@@ -279,7 +279,7 @@ test('OPソートは未プレイを0より低い側としてソート方向に�
   )
 })
 
-test('OP%ソートはAPIのOVER POWER達成率で並べ、未プレイを0より低い側として扱う', () => {
+test('OP%ソートはAPIのOVER POWER達成率で並べ、昇順でも未プレイを末尾に寄せる', () => {
   const records = [
     createRecord({ id: 'played-zero-percent', const: 7, overpower: 0, overpower_percent: 0 }),
     createRecord({
@@ -294,7 +294,7 @@ test('OP%ソートはAPIのOVER POWER達成率で並べ、未プレイを0より
 
   assert.deepEqual(
     sortRecords(records, 'overpowerPercent', 'asc').map((record) => record.id),
-    ['unplayed', 'played-zero-percent', 'played-high-percent']
+    ['played-zero-percent', 'played-high-percent', 'unplayed']
   )
   assert.deepEqual(
     sortRecords(records, 'overpowerPercent', 'desc').map((record) => record.id),
