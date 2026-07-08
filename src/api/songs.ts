@@ -25,6 +25,8 @@ export type ScoreHistoryDifficulty = 'EXPERT' | 'MASTER' | 'ULTIMA'
 const INTERNAL_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/worldsend-songs`
 /** 編集者向け WORLD'S END 楽曲APIのベースパス。 */
 const INTERNAL_EDITOR_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/editor/worldsend-songs`
+/** 内部向けユーザーAPIのベースパス。 */
+const INTERNAL_USERS_PATH = `${API_BASE_URL}/internal/users`
 
 let cachedVersionsResponse: VersionsResponse | undefined
 let versionsResponsePromise: Promise<VersionsResponse> | undefined
@@ -150,10 +152,8 @@ export const fetchOwnSongScoreHistory = async (
   difficulty: ScoreHistoryDifficulty,
   username: string
 ): Promise<ScoreHistoryResponseDTO> => {
-  const query = new URLSearchParams({ username })
   const response = await fetchWithAuth(
-    `${API_BASE_URL}/internal/songs/${encodeURIComponent(displayId)}/score-history/${difficulty.toLowerCase()}?${query.toString()}`,
-    { requireAuthentication: true }
+    `${INTERNAL_USERS_PATH}/${encodeURIComponent(username)}/record/songs/${encodeURIComponent(displayId)}/${difficulty.toLowerCase()}/history`
   )
 
   return response.json()
@@ -170,10 +170,8 @@ export const fetchOwnWorldsendScoreHistory = async (
   displayId: string,
   username: string
 ): Promise<ScoreHistoryResponseDTO> => {
-  const query = new URLSearchParams({ username })
   const response = await fetchWithAuth(
-    `${INTERNAL_WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}/score-history?${query.toString()}`,
-    { requireAuthentication: true }
+    `${INTERNAL_USERS_PATH}/${encodeURIComponent(username)}/record/worldsend-songs/${encodeURIComponent(displayId)}/history`
   )
 
   return response.json()
