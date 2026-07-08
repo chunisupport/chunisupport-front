@@ -157,22 +157,18 @@ const compareRecordBySortCondition = (
       break
     }
     case 'overpower': {
-      const result = compareNumberWithUnplayedLast(
+      return compareNumberWithUnplayedLast(
         { isPlayed: left.is_played, value: left.overpower },
-        { isPlayed: right.is_played, value: right.overpower }
+        { isPlayed: right.is_played, value: right.overpower },
+        direction
       )
-      if (result.skipDirection) return result.comparison
-      comparison = result.comparison
-      break
     }
     case 'overpowerPercent': {
-      const result = compareNumberWithUnplayedLast(
+      return compareNumberWithUnplayedLast(
         { isPlayed: left.is_played, value: left.overpower_percent },
-        { isPlayed: right.is_played, value: right.overpower_percent }
+        { isPlayed: right.is_played, value: right.overpower_percent },
+        direction
       )
-      if (result.skipDirection) return result.comparison
-      comparison = result.comparison
-      break
     }
     case 'updatedAt': {
       const leftMissing = isUpdatedAtMissing(left.is_played, a.updatedAtTs)
