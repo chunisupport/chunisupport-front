@@ -89,6 +89,10 @@ export type ErrorCode =
   | 'record_filter_limit_exceeded'
   | 'invalid_record_filter_input'
   | 'invalid_record_filter_id'
+  // Friends
+  | 'friendship_limit_exceeded'
+  | 'friendship_conflict'
+  | 'friend_request_not_found'
   // 入力検証
   | 'username_empty'
   | 'username_too_short'
@@ -146,6 +150,9 @@ export const errorMessages: Record<ErrorCode, string> = {
   record_filter_limit_exceeded: '保存済みフィルターの上限件数に達しています',
   invalid_record_filter_input: '保存済みフィルターの入力内容が不正です',
   invalid_record_filter_id: '保存済みフィルターIDが不正です',
+  friendship_limit_exceeded: 'フレンド枠の上限に達しています',
+  friendship_conflict: '既に申請中、またはフレンドになっています',
+  friend_request_not_found: '対象のフレンド申請が見つかりません',
   username_empty: 'ユーザー名が空です',
   username_too_short: 'ユーザー名は5文字以上である必要があります',
   username_too_long: 'ユーザー名は50文字以内である必要があります',
@@ -409,6 +416,36 @@ export interface UserDTO {
   account_type: AccountType
   is_private: boolean
   last_score_update: string | null
+}
+
+/** フレンド・申請一覧に表示する相手ユーザー概要。 */
+export interface FriendshipUserDTO {
+  /** 内部ユーザーID。申請承認などの操作対象ID。 */
+  user_id: number
+  /** ユーザー名。プロフィール遷移に使用する公開ID。 */
+  username: string
+  /** プレイヤーレベル。プレイヤーデータ未連携の場合は null。 */
+  player_level: number | null
+  /** プレイヤー名。プレイヤーデータ未連携の場合は null。 */
+  player_name: string | null
+  /** 計算済みレーティング。プレイヤーデータ未連携の場合は null。 */
+  rating: number | null
+  /** 申請日時。 */
+  requested_at: string
+  /** 承認日時。申請中の場合は null または未返却。 */
+  accepted_at?: string | null
+}
+
+/** フレンド・申請一覧APIのレスポンス。 */
+export interface FriendshipListResponse {
+  /** フレンドまたは申請ユーザー概要の一覧。 */
+  items: FriendshipUserDTO[]
+}
+
+/** フレンド申請APIのリクエスト。 */
+export interface FriendRequestCreateRequest {
+  /** 完全一致で検索する申請先ユーザー名。 */
+  username: string
 }
 
 export interface PlayerDataResult {
