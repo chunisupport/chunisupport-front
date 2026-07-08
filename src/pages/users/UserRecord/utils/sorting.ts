@@ -11,7 +11,10 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../../../utils/sortingQuery'
-import { compareNumberWithUnplayedBelowZero } from '../../recordTable/sortComparators'
+import {
+  compareNumberWithUnplayedBelowZero,
+  compareNumberWithUnplayedLast,
+} from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import {
   compareMissingJusticeCountRecords,
@@ -154,18 +157,18 @@ const compareRecordBySortCondition = (
       break
     }
     case 'overpower': {
-      comparison = compareNumberWithUnplayedBelowZero(
+      return compareNumberWithUnplayedLast(
         { isPlayed: left.is_played, value: left.overpower },
-        { isPlayed: right.is_played, value: right.overpower }
+        { isPlayed: right.is_played, value: right.overpower },
+        direction
       )
-      break
     }
     case 'overpowerPercent': {
-      comparison = compareNumberWithUnplayedBelowZero(
+      return compareNumberWithUnplayedLast(
         { isPlayed: left.is_played, value: left.overpower_percent },
-        { isPlayed: right.is_played, value: right.overpower_percent }
+        { isPlayed: right.is_played, value: right.overpower_percent },
+        direction
       )
-      break
     }
     case 'updatedAt': {
       const leftMissing = isUpdatedAtMissing(left.is_played, a.updatedAtTs)
