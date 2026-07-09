@@ -18,7 +18,7 @@ import {
   Wrench,
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createSignal, For, onMount } from 'solid-js'
+import { createEffect, createSignal, For, onMount } from 'solid-js'
 import { isHomePath } from './navItemMatching'
 
 type NavBarProps = {
@@ -33,6 +33,13 @@ import { auth } from '../../lib/firebase'
 import { EDITOR_SONGS_TITLE } from '../../pages/editor/constants'
 import { FRIENDS_PAGE_TITLE } from '../../pages/friends'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
+import {
+  clearFriendRequestNotification,
+  friendRequestNotification,
+  hydrateFriendRequestNotification,
+  refreshFriendRequestNotificationIfStale,
+  setActiveFriendRequestNotificationUser,
+} from '../../stores/friendRequestNotification'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { AppButton } from '../common/AppButton'
@@ -46,12 +53,14 @@ import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../common/AppMenu'
  * @property icon 項目名の左側に表示するアイコン要素を返す関数
  * @property path 選択時に遷移する内部パスまたは外部URL
  * @property action 遷移以外に実行するメニュー固有の操作
+ * @property hasNotificationDot 通知ドットを表示するか
  */
 type DropdownItem = {
   label: string
   icon: () => JSX.Element
   path?: string
   action?: 'theme' | 'logout'
+  hasNotificationDot?: boolean
 }
 
 type NavItem = {
@@ -111,6 +120,7 @@ const NavBar = (props: NavBarProps) => {
               label: FRIENDS_PAGE_TITLE,
               icon: () => <UsersRound class="h-4 w-4" aria-hidden="true" />,
               path: FRIENDS_PATH,
+              hasNotificationDot: friendRequestNotification.hasPendingReceivedRequest,
             },
             {
               label: '設定',
@@ -187,6 +197,22 @@ const NavBar = (props: NavBarProps) => {
     resolveAuthSession(() => fetchMe({ redirectOnUnauthorized: false }))
   })
 
+  createEffect(() => {
+    const uname = username()
+
+    if (authSession.status === 'authenticated' && uname) {
+      setActiveFriendRequestNotificationUser(uname)
+      void hydrateFriendRequestNotification(uname)
+        .then(() => refreshFriendRequestNotificationIfStale(uname))
+        .catch(() => undefined)
+      return
+    }
+
+    if (authSession.status === 'unauthenticated') {
+      clearFriendRequestNotification()
+    }
+  })
+
   const isActive = (item: NavItem) => {
     const pathname = location.pathname
 
@@ -244,9 +270,23 @@ const NavBar = (props: NavBarProps) => {
     }
   }
 
+  /**
+   * その他メニューを開いた時に、期限切れのフレンド申請通知だけ更新する。
+   *
+   * @param open - その他メニューが開かれたか。
+   * @returns なし。
+   */
+  const handleOthersMenuOpenChange = (open: boolean): void => {
+    const uname = username()
+    if (open && uname) {
+      void refreshFriendRequestNotificationIfStale(uname).catch(() => undefined)
+    }
+  }
+
   const handleLogout = async () => {
     await signOut(auth)
     await clearClientCache().catch(() => undefined)
+    clearFriendRequestNotification()
     clearAuthenticatedUser()
     setShowLogoutDialog(false)
     navigate('/login')
@@ -262,6 +302,7 @@ const NavBar = (props: NavBarProps) => {
     <AppMenuItem
       icon={item.icon()}
       label={item.label}
+      hasNotificationDot={item.hasNotificationDot}
       tone={item.action === 'logout' ? 'danger' : 'default'}
       onSelect={() => handleDropdownSelect(item)}
     />
@@ -276,8 +317,13 @@ const NavBar = (props: NavBarProps) => {
           <For each={getNavItems()}>
             {(item) =>
               item.dropdown ? (
-                <DropdownMenu>
-                  <AppMenuTrigger variant="navRail" label={item.label} icon={item.icon()} />
+                <DropdownMenu onOpenChange={handleOthersMenuOpenChange}>
+                  <AppMenuTrigger
+                    variant="navRail"
+                    label={item.label}
+                    icon={item.icon()}
+                    hasNotificationDot={friendRequestNotification.hasPendingReceivedRequest}
+                  />
                   <DropdownMenu.Portal>
                     <AppMenuContent class="absolute left-16 -top-12 ml-2">
                       <For each={item.dropdown}>
@@ -324,8 +370,13 @@ const NavBar = (props: NavBarProps) => {
           <For each={getNavItems()}>
             {(item) =>
               item.dropdown ? (
-                <DropdownMenu>
-                  <AppMenuTrigger variant="navBar" label={item.label} icon={item.icon()} />
+                <DropdownMenu onOpenChange={handleOthersMenuOpenChange}>
+                  <AppMenuTrigger
+                    variant="navBar"
+                    label={item.label}
+                    icon={item.icon()}
+                    hasNotificationDot={friendRequestNotification.hasPendingReceivedRequest}
+                  />
                   <DropdownMenu.Portal>
                     <AppMenuContent class="absolute bottom-full left-1/2 mb-2 -translate-x-1/2">
                       <For each={item.dropdown}>

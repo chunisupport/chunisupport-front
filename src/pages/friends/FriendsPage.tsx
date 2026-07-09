@@ -30,6 +30,10 @@ import { showErrorToast, showSuccessToast } from '../../components/common/AppToa
 import { Loading } from '../../components/Loading'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
+import {
+  setActiveFriendRequestNotificationUser,
+  syncFriendRequestNotificationFromReceivedCount,
+} from '../../stores/friendRequestNotification'
 import type { FriendshipUserDTO } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
@@ -407,6 +411,18 @@ const FriendsPage = () => {
   createEffect(() => {
     if (pageData.error) {
       showErrorToast(toUserFriendlyErrorMessage(pageData.error))
+    }
+  })
+
+  createEffect(() => {
+    const data = pageData()
+    const username = ownUsername()
+
+    if (data && username) {
+      setActiveFriendRequestNotificationUser(username)
+      void syncFriendRequestNotificationFromReceivedCount(username, data.received.length).catch(
+        () => undefined
+      )
     }
   })
 

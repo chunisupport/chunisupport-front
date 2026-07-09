@@ -15,6 +15,7 @@ export const clearClientCache = async (): Promise<void> => {
       db.userSongRecords,
       db.userApiResponses,
       db.viewSettings,
+      db.friendRequestNotificationStates,
     ],
     async () => {
       await Promise.all([
@@ -24,6 +25,7 @@ export const clearClientCache = async (): Promise<void> => {
         db.userSongRecords.clear(),
         db.userApiResponses.clear(),
         db.viewSettings.clear(),
+        db.friendRequestNotificationStates.clear(),
       ])
     }
   )

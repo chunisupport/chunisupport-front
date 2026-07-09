@@ -111,6 +111,14 @@ export type ViewSetting =
       data: WorldsendRecordColumnId[]
     }
 
+export type FriendRequestNotificationState = {
+  key: string
+  username: string
+  schemaVersion: number
+  hasPendingReceivedRequest: boolean
+  fetchedAt: string
+}
+
 export type CacheDB = Dexie & {
   cacheMetadata: EntityTable<CacheMetadata, 'key'>
   songs: EntityTable<CachedSong, 'id'>
@@ -118,6 +126,7 @@ export type CacheDB = Dexie & {
   userSongRecords: EntityTable<CachedUserSongRecord, 'key'>
   userApiResponses: EntityTable<UserApiResponse, 'key'>
   viewSettings: EntityTable<ViewSetting, 'key'>
+  friendRequestNotificationStates: EntityTable<FriendRequestNotificationState, 'key'>
 }
 
 export const db = new Dexie(CLIENT_CACHE_DB_NAME) as CacheDB
@@ -140,3 +149,7 @@ db.version(2)
   .upgrade(async (transaction) => {
     await transaction.table('userApiResponses').delete('userRecord')
   })
+
+db.version(3).stores({
+  friendRequestNotificationStates: 'key, username, schemaVersion, fetchedAt',
+})
