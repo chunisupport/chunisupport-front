@@ -272,6 +272,70 @@ export interface ScoreHistoryResponseDTO {
   entries: ScoreHistoryEntryDTO[]
 }
 
+/** フレンドランキングの対象楽曲概要。 */
+export interface FriendRankingSongDTO {
+  /** 楽曲表示ID。 */
+  id: string
+  /** 楽曲名。 */
+  title: string
+  /** アーティスト名。 */
+  artist: string
+}
+
+/** フレンドランキングの対象譜面概要。 */
+export interface FriendRankingChartDTO {
+  /** 大文字の難易度ドメイン値。 */
+  difficulty: PlayerDataDifficulty
+  /** 譜面定数。 */
+  const: number
+  /** 譜面定数が推定値か。 */
+  is_const_unknown: boolean
+}
+
+/** フレンドランキング1行分の現在スコア。 */
+export interface FriendRankingEntryDTO {
+  /** 同点を考慮した順位。 */
+  rank: number
+  /** 内部ユーザーID。 */
+  user_id: number
+  /** ユーザー名。 */
+  username: string
+  /** プレイヤー名。 */
+  player_name: string
+  /** 現在スコア。 */
+  score: number
+  /** 単曲レーティング。 */
+  rating: number
+  /** OVER POWER値。 */
+  overpower: number
+  /** OVER POWER達成率。 */
+  overpower_percent: number
+  /** クリアランプ。 */
+  clear_lamp: PlayerRecordDTO['clear_lamp']
+  /** コンボランプ。 */
+  combo_lamp: PlayerRecordDTO['combo_lamp']
+  /** フルチェインランプ。 */
+  full_chain: PlayerRecordDTO['full_chain']
+  /** レコード更新日時。 */
+  updated_at: string
+  /** ログインユーザー自身の行か。 */
+  is_self: boolean
+}
+
+/** 通常譜面のフレンドランキングレスポンス。 */
+export interface FriendRankingResponseDTO {
+  /** 対象楽曲。 */
+  song: FriendRankingSongDTO
+  /** 対象譜面。 */
+  chart: FriendRankingChartDTO
+  /** 自分とフレンドのランキング。 */
+  ranking: FriendRankingEntryDTO[]
+  /** 自分の順位。未プレイの場合は null。 */
+  my_rank: number | null
+  /** ランキング対象人数。 */
+  total: number
+}
+
 // --- マスターデータ用型定義 ---
 export interface MasterItemDTO {
   id: number

@@ -1,7 +1,11 @@
 import { Button } from '@kobalte/core/button'
-import { A, useLocation, useNavigate, useParams, useSearchParams } from '@solidjs/router'
-import { createMemo, createResource, type JSX, Show } from 'solid-js'
-import { fetchOwnSongScoreHistory, fetchSongByDisplayId } from '../../../api/songs'
+import { useLocation, useNavigate, useParams, useSearchParams } from '@solidjs/router'
+import { createMemo, createResource, Show } from 'solid-js'
+import {
+  fetchOwnSongScoreHistory,
+  fetchSongByDisplayId,
+  fetchSongFriendRanking,
+} from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
 import { buildSongDetailPath, isScoreHistoryFromSongDetailState } from '../../../constants/routes'
@@ -9,13 +13,19 @@ import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
 import { parseScoreHistoryDifficulty } from '../../../utils/scoreHistory'
 import NotFoundPage from '../../NotFoundPage'
-import { SCORE_HISTORY_PAGE_TITLE } from './constants'
+import {
+  CHART_DETAIL_PAGE_TITLE,
+  FRIEND_RANKING_SECTION_LABEL,
+  SCORE_HISTORY_SECTION_LABEL,
+} from './constants'
+import FriendRankingTable from './FriendRankingTable'
+import ScoreHistoryChart from './ScoreHistoryChart'
 import ScoreHistoryTable from './ScoreHistoryTable'
 
 /**
- * ログインユーザーの譜面別スコア履歴を表示する。
+ * ログインユーザーの譜面詳細を表示する。
  *
- * @returns 現行ベストと過去のベストを新しい順に表示する画面。
+ * @returns 対象譜面のスコア履歴とフレンドランキングを表示する画面。
  */
 const SongScoreHistory = () => {
   const params = useParams<{ displayid: string }>()
@@ -36,6 +46,14 @@ const SongScoreHistory = () => {
     },
     (source) => fetchOwnSongScoreHistory(source.displayId, source.difficulty, source.username)
   )
+  const [friendRanking] = createResource(
+    () => {
+      const selectedDifficulty = difficulty()
+      if (!selectedDifficulty) return null
+      return { displayId: params.displayid, difficulty: selectedDifficulty }
+    },
+    (source) => fetchSongFriendRanking(source.displayId, source.difficulty)
+  )
 
   const isValidChart = createMemo(() => {
     const currentSong = song()
@@ -43,19 +61,20 @@ const SongScoreHistory = () => {
     return Boolean(currentSong && selectedDifficulty && currentSong.charts[selectedDifficulty])
   })
 
-  useDocumentTitle(() => `${song()?.title ?? '楽曲'} - ${SCORE_HISTORY_PAGE_TITLE}`)
+  useDocumentTitle(() => `${song()?.title ?? '楽曲'} - ${CHART_DETAIL_PAGE_TITLE}`)
 
   /**
    * 楽曲詳細から入った履歴では詳細URLを積まず、元の詳細履歴へ戻す。
    *
-   * @param event - 楽曲詳細へ戻るリンクのクリックイベント。
    * @returns なし。
    */
-  const handleSongDetailReturn: JSX.EventHandler<HTMLAnchorElement, MouseEvent> = (event) => {
-    if (!isScoreHistoryFromSongDetailState(location.state)) return
+  const handleSongDetailReturn = (): void => {
+    if (isScoreHistoryFromSongDetailState(location.state)) {
+      navigate(-1)
+      return
+    }
 
-    event.preventDefault()
-    navigate(-1)
+    navigate(songDetailPath())
   }
 
   return (
@@ -63,10 +82,9 @@ const SongScoreHistory = () => {
       <Show when={!song.error} fallback={<LoadError error={song.error} />}>
         <Show when={!song.loading} fallback={<Loading />}>
           <Show when={isValidChart()} fallback={<NotFoundPage />}>
-            <main class="mx-auto w-full max-w-4xl space-y-4 p-4">
+            <main class="mx-auto w-full max-w-5xl space-y-6 p-4">
               <Button
-                as={A}
-                href={songDetailPath()}
+                type="button"
                 onClick={handleSongDetailReturn}
                 class="cursor-pointer border-0 bg-transparent p-0 text-sm text-action-primary hover:underline"
               >
@@ -74,18 +92,34 @@ const SongScoreHistory = () => {
               </Button>
 
               <header class="space-y-2">
-                <h1 class="text-2xl font-semibold">{SCORE_HISTORY_PAGE_TITLE}</h1>
-                <div class="flex items-center gap-3">
+                <h1 class="font-sans text-2xl font-semibold">{song()?.title}</h1>
+                <div class="flex flex-wrap items-center gap-3 text-sm text-text-muted">
                   <DifficultyBadge difficulty={difficulty() ?? 'MASTER'} />
-                  <span class="font-semibold font-sans">{song()?.title}</span>
+                  <span>{song()?.artist || '-'}</span>
                 </div>
               </header>
 
-              <Show when={!history.error} fallback={<LoadError error={history.error} />}>
-                <Show when={!history.loading} fallback={<Loading />}>
-                  <ScoreHistoryTable entries={history()?.entries ?? []} />
+              <section class="space-y-4">
+                <h2 class="text-lg font-semibold">{SCORE_HISTORY_SECTION_LABEL}</h2>
+                <Show when={!history.error} fallback={<LoadError error={history.error} />}>
+                  <Show when={!history.loading} fallback={<Loading />}>
+                    <ScoreHistoryChart entries={history()?.entries ?? []} />
+                    <ScoreHistoryTable entries={history()?.entries ?? []} />
+                  </Show>
                 </Show>
-              </Show>
+              </section>
+
+              <section class="space-y-4">
+                <h2 class="text-lg font-semibold">{FRIEND_RANKING_SECTION_LABEL}</h2>
+                <Show
+                  when={!friendRanking.error}
+                  fallback={<LoadError error={friendRanking.error} />}
+                >
+                  <Show when={!friendRanking.loading} fallback={<Loading />}>
+                    <FriendRankingTable entries={friendRanking()?.ranking ?? []} />
+                  </Show>
+                </Show>
+              </section>
             </main>
           </Show>
         </Show>
