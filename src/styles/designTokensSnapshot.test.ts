@@ -84,6 +84,44 @@ test('Tailwind公開トークンがcsトークンへ接続されていること'
   }
 })
 
+test('AJCランプの虹色は虹称号と同じ色列で定義されていること', () => {
+  const expectedRainbowColors = [
+    '#aeefff',
+    '#b7ceff',
+    '#d0b5ff',
+    '#ffb8e8',
+    '#ffc4ad',
+    '#fff0a8',
+    '#b9eeb7',
+  ]
+
+  for (const [index, color] of expectedRainbowColors.entries()) {
+    assert.equal(
+      readCustomProperty(
+        tailwindCssContent,
+        `--cs-color-lamp-all-justice-critical-rainbow-${index + 1}`
+      ),
+      color
+    )
+  }
+
+  assert.match(
+    tailwindCssContent,
+    /linear-gradient\(45deg, #aeefff, #b7ceff, #d0b5ff, #ffb8e8, #ffc4ad, #fff0a8, #b9eeb7\)/
+  )
+})
+
+test('AJCランプの文字色は虹背景向けの専用色で定義されていること', () => {
+  assert.equal(
+    readCustomProperty(tailwindCssContent, '--cs-color-lamp-all-justice-critical-text'),
+    '#3f2a63'
+  )
+  assert.equal(
+    readCustomProperty(tailwindCssContent, '--color-lamp-all-justice-critical-text'),
+    'var(--cs-color-lamp-all-justice-critical-text)'
+  )
+})
+
 test('アクセントカラーが背景テーマから独立したトークンとして定義されていること', () => {
   assert.match(tailwindCssContent, /\[data-accent="green"\]\s*{/)
   assert.match(tailwindCssContent, /\[data-accent="orange"\]\s*{/)

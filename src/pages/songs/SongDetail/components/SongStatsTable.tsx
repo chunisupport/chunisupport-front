@@ -106,8 +106,8 @@ const RANK_STAT_COLUMN_DEFINITIONS = [
 /** RANK積み上げ棒グラフへ表示するデータセット定義。 */
 const RANK_CHART_DATASET_DEFINITIONS = [
   { label: '～AAA', valueKey: 'aaal', colorVariable: '--cs-color-score-rank-d-bg' },
-  { label: 'S', valueKey: 's', colorVariable: '--cs-color-score-rank-a-bg' },
-  { label: 'S+', valueKey: 'sp', colorVariable: '--cs-color-score-rank-a-bg' },
+  { label: 'S', valueKey: 's', colorVariable: '--cs-color-score-rank-s-bg' },
+  { label: 'S+', valueKey: 'sp', colorVariable: '--cs-color-score-rank-s-bg' },
   { label: 'SS', valueKey: 'ss', colorVariable: '--cs-color-score-rank-ss-bg' },
   { label: 'SS+', valueKey: 'ssp', colorVariable: '--cs-color-score-rank-ss-bg' },
   { label: 'SSS', valueKey: 'sss', colorVariable: '--cs-color-score-rank-sss-bg' },

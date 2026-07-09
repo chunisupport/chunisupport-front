@@ -365,22 +365,23 @@ test('J数ソートは降順でもAJCを先頭にし、J数なし行は常に末
   )
 })
 
-test('ランプソートはランプなし、FC、AJ、未プレイの順で並べる', () => {
+test('ランプソートはランプなし、FC、AJ、AJC、未プレイの順で並べる', () => {
   const records = [
     createRecord({ id: 'none', combo_lamp: null }),
     createRecord({ id: 'fc', combo_lamp: 'FULL COMBO' }),
-    createRecord({ id: 'aj', combo_lamp: 'ALL JUSTICE' }),
+    createRecord({ id: 'aj', combo_lamp: 'ALL JUSTICE', score: 1009999 }),
+    createRecord({ id: 'ajc', combo_lamp: 'ALL JUSTICE', score: 1010000 }),
     createRecord({ id: 'unplayed', is_played: false, combo_lamp: null }),
   ]
 
   assert.deepEqual(
     sortRecords(records, 'lamp', 'asc').map((record) => record.id),
-    ['none', 'fc', 'aj', 'unplayed']
+    ['none', 'fc', 'aj', 'ajc', 'unplayed']
   )
 
   assert.deepEqual(
     sortRecords(records, 'lamp', 'desc').map((record) => record.id),
-    ['aj', 'fc', 'none', 'unplayed']
+    ['ajc', 'aj', 'fc', 'none', 'unplayed']
   )
 })
 

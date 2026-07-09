@@ -4,6 +4,7 @@ import test from 'node:test'
 import { MAX_SCORE } from '../../../utils/scoreRank'
 import {
   ALL_JUSTICE_CRITICAL_BADGE_CLASS,
+  ALL_JUSTICE_CRITICAL_BG_CLASS,
   COMBO_LAMP_BADGE_BACKGROUND_CLASS,
   COMBO_LAMP_BADGE_TEXT_CLASS,
   COMBO_LAMP_BAR_CLASS,
@@ -63,6 +64,17 @@ test('COMBOのなしとHARDのFAILEDはRANKのOTHERS色を返すこと', () => {
 
   // Then: どちらもOTHERS色に統一される
   assert.deepEqual(result, [othersClass, othersClass])
+})
+
+test('フィルター統計のMAXはAJCと同じ虹色グラデーションを返すこと', () => {
+  // Given: AJC表示で共通利用する虹色グラデーションクラス
+  const expectedClass = ALL_JUSTICE_CRITICAL_BG_CLASS
+
+  // When: RANKのMAX色クラスを取得する
+  const result = SCORE_RANK_BAR_CLASS.MAX
+
+  // Then: AJCと同じ虹色グラデーションが返る
+  assert.equal(result, expectedClass)
 })
 
 test('フィルター統計の未プレイは背景と同じ色クラスを返すこと', () => {

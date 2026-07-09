@@ -214,6 +214,26 @@ test("WORLD'S ENDのFCHソートはなし、GOLD、PLATINUM、未プレイの順
   )
 })
 
+test("WORLD'S ENDのランプソートはランプなし、FC、AJ、AJC、未プレイの順で並べる", () => {
+  const records = [
+    createRecord({ id: 'none', combo_lamp: null }),
+    createRecord({ id: 'fc', combo_lamp: 'FULL COMBO' }),
+    createRecord({ id: 'aj', combo_lamp: 'ALL JUSTICE', score: 1009999 }),
+    createRecord({ id: 'ajc', combo_lamp: 'ALL JUSTICE', score: 1010000 }),
+    createRecord({ id: 'unplayed', is_played: false, combo_lamp: null }),
+  ]
+
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'lamp', 'asc').map((record) => record.id),
+    ['none', 'fc', 'aj', 'ajc', 'unplayed']
+  )
+
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'lamp', 'desc').map((record) => record.id),
+    ['ajc', 'aj', 'fc', 'none', 'unplayed']
+  )
+})
+
 test("WORLD'S ENDのJ数ソートは降順でもAJCを先頭にし、J数なし行をスコア降順で並べる", () => {
   const records = [
     createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2, score: 1008000 }),
