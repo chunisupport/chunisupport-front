@@ -1,6 +1,7 @@
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import type { ComponentProps, JSX } from 'solid-js'
 import { Show, splitProps } from 'solid-js'
+import { NotificationDot } from './NotificationDot'
 
 type DropdownMenuTriggerProps = ComponentProps<typeof DropdownMenu.Trigger>
 type DropdownMenuContentProps = ComponentProps<typeof DropdownMenu.Content>
@@ -17,6 +18,8 @@ export type AppMenuTriggerProps = Omit<DropdownMenuTriggerProps, 'class' | 'chil
   icon: JSX.Element
   /** トリガーの表示用途。 */
   variant?: AppMenuTriggerVariant
+  /** トリガー右上に通知ドットを表示するか。 */
+  hasNotificationDot?: boolean
   /** 追加で適用する Tailwind クラス。 */
   class?: string
 }
@@ -35,12 +38,14 @@ export type AppMenuItemProps = Omit<DropdownMenuItemProps, 'class' | 'children'>
   icon?: JSX.Element
   /** メニュー項目の色調。 */
   tone?: AppMenuItemTone
+  /** メニュー項目右上に通知ドットを表示するか。 */
+  hasNotificationDot?: boolean
   /** 追加で適用する Tailwind クラス。 */
   class?: string
 }
 
 const APP_MENU_TRIGGER_BASE_CLASS =
-  'focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
+  'relative focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
 
 const APP_MENU_TRIGGER_VARIANT_CLASS: Record<AppMenuTriggerVariant, string> = {
   navRail:
@@ -78,7 +83,13 @@ const APP_MENU_ITEM_TONE_CLASS: Record<AppMenuItemTone, string> = {
  * @returns 共通スタイルを適用した DropdownMenu.Trigger。
  */
 export const AppMenuTrigger = (props: AppMenuTriggerProps): JSX.Element => {
-  const [local, triggerProps] = splitProps(props, ['label', 'icon', 'variant', 'class'])
+  const [local, triggerProps] = splitProps(props, [
+    'label',
+    'icon',
+    'variant',
+    'hasNotificationDot',
+    'class',
+  ])
   const variant = () => local.variant ?? 'icon'
 
   return (
@@ -92,6 +103,7 @@ export const AppMenuTrigger = (props: AppMenuTriggerProps): JSX.Element => {
       <Show when={variant() === 'icon'} fallback={<span>{local.label}</span>}>
         <span class="sr-only">{local.label}</span>
       </Show>
+      <NotificationDot visible={local.hasNotificationDot === true} class="right-2 top-1" />
     </DropdownMenu.Trigger>
   )
 }
@@ -122,17 +134,24 @@ export const AppMenuContent = (props: AppMenuContentProps): JSX.Element => {
  * @returns 共通スタイルを適用した DropdownMenu.Item。
  */
 export const AppMenuItem = (props: AppMenuItemProps): JSX.Element => {
-  const [local, itemProps] = splitProps(props, ['label', 'icon', 'tone', 'class'])
+  const [local, itemProps] = splitProps(props, [
+    'label',
+    'icon',
+    'tone',
+    'hasNotificationDot',
+    'class',
+  ])
 
   return (
     <DropdownMenu.Item
       {...itemProps}
-      class={`${APP_MENU_ITEM_BASE_CLASS} ${APP_MENU_ITEM_TONE_CLASS[local.tone ?? 'default']} ${
-        local.class ?? ''
-      }`}
+      class={`relative ${APP_MENU_ITEM_BASE_CLASS} ${
+        APP_MENU_ITEM_TONE_CLASS[local.tone ?? 'default']
+      } ${local.class ?? ''}`}
     >
       <Show when={local.icon}>{(icon) => <span class="shrink-0">{icon()}</span>}</Show>
       <span>{local.label}</span>
+      <NotificationDot visible={local.hasNotificationDot === true} class="right-2 top-1" />
     </DropdownMenu.Item>
   )
 }

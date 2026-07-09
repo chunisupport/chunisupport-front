@@ -78,6 +78,7 @@ const clearStores = async (): Promise<void> => {
     db.userSongRecords.clear(),
     db.userApiResponses.clear(),
     db.viewSettings.clear(),
+    db.friendRequestNotificationStates.clear(),
   ])
 }
 
