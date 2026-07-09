@@ -1,6 +1,7 @@
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { deleteUserByUsername, fetchAdminUsers } from '../../api/users'
 import { AppButton } from '../../components/common/AppButton'
+import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
@@ -22,8 +23,6 @@ const AdminUsersPage = () => {
   const [searchInput, setSearchInput] = createSignal('')
   const [searchName, setSearchName] = createSignal('')
   const [refreshKey, setRefreshKey] = createSignal(0)
-  const [message, setMessage] = createSignal('')
-  const [errorMessage, setErrorMessage] = createSignal('')
 
   const [usersResponse] = createResource(
     () => ({ name: searchName(), refresh: refreshKey() }),
@@ -48,14 +47,12 @@ const AdminUsersPage = () => {
   const handleDelete = async (username: string) => {
     if (!window.confirm(`ユーザー ${username} を物理削除しますか？この操作は取り消せません。`))
       return
-    setMessage('')
-    setErrorMessage('')
     try {
       await deleteUserByUsername(username)
-      setMessage(`ユーザー ${username} を削除しました。`)
+      showSuccessToast(`ユーザー ${username} を削除しました。`)
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
   }
 
@@ -67,17 +64,6 @@ const AdminUsersPage = () => {
           API仕様準拠: 一覧・検索・物理削除に対応。ユーザー情報の管理者編集APIは未提供です。
         </p>
       </div>
-
-      <Show when={message()}>
-        <p class="rounded border border-success-border bg-success-bg px-3 py-2 text-sm text-success">
-          {message()}
-        </p>
-      </Show>
-      <Show when={errorMessage()}>
-        <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-          {errorMessage()}
-        </p>
-      </Show>
 
       <div class="rounded-lg border border-border bg-surface p-4">
         <div class="flex flex-wrap items-end gap-2">

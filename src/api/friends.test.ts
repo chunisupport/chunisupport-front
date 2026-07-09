@@ -112,10 +112,12 @@ test('フレンド操作APIはuser_idをエンコードして呼び出す', asyn
     return new Response(null, { status: 204 })
   }
 
-  // When: 承認、拒否、解除APIを呼び出す。
-  const { acceptFriendRequest, rejectFriendRequest, deleteFriend } = await loadFriendsApi()
+  // When: 承認、拒否、申請取り消し、解除APIを呼び出す。
+  const { acceptFriendRequest, rejectFriendRequest, cancelFriendRequest, deleteFriend } =
+    await loadFriendsApi()
   await acceptFriendRequest(123)
   await rejectFriendRequest(456)
+  await cancelFriendRequest(654)
   await deleteFriend(789)
 
   // Then: user_idパスパラメータを使うAPI仕様どおりに呼び出す。
@@ -127,6 +129,10 @@ test('フレンド操作APIはuser_idをエンコードして呼び出す', asyn
     {
       url: 'http://localhost:3000/internal/friends/requests/456/reject',
       method: 'POST',
+    },
+    {
+      url: 'http://localhost:3000/internal/friends/requests/654',
+      method: 'DELETE',
     },
     {
       url: 'http://localhost:3000/internal/friends/789',

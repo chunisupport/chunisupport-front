@@ -88,6 +88,19 @@ export const rejectFriendRequest = async (userId: number): Promise<void> => {
 }
 
 /**
+ * 自分が送ったフレンド申請を取り消す。
+ *
+ * @param userId - 申請先ユーザーの内部ID。
+ * @returns 取り消し完了時に解決されるPromise。
+ */
+export const cancelFriendRequest = async (userId: number): Promise<void> => {
+  await fetchWithAuth(`${FRIENDS_API_PATH}/requests/${encodeURIComponent(userId)}`, {
+    method: 'DELETE',
+    requireAuthentication: true,
+  })
+}
+
+/**
  * 指定ユーザーとのフレンド関係を解除する。
  *
  * @param userId - 解除対象ユーザーの内部ID。

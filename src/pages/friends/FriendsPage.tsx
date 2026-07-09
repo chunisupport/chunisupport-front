@@ -15,6 +15,7 @@ import {
 } from 'solid-js'
 import {
   acceptFriendRequest,
+  cancelFriendRequest,
   createFriendRequest,
   deleteFriend,
   fetchFriends,
@@ -25,6 +26,7 @@ import {
 import { AppButton } from '../../components/common/AppButton'
 import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../../components/common/AppMenu'
 import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
+import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { Loading } from '../../components/Loading'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
@@ -183,7 +185,7 @@ const FriendRequestActions = (props: {
   <Show when={props.variant !== 'friends'}>
     <div class="mt-4 flex w-full flex-col gap-2">
       <Show when={props.variant === 'received'}>
-        <div class="flex flex-col gap-2">
+        <div class="grid grid-cols-2 gap-2">
           <AppButton
             variant="primary"
             size="sm"
@@ -348,9 +350,7 @@ const FriendsPage = () => {
   const navigate = useNavigate()
 
   const [usernameInput, setUsernameInput] = createSignal('')
-  const [message, setMessage] = createSignal('')
   const [requestErrorMessage, setRequestErrorMessage] = createSignal('')
-  const [errorMessage, setErrorMessage] = createSignal('')
   const [operation, setOperation] = createSignal<FriendshipOperation | null>(null)
   const [isOwnUsernameCopied, setIsOwnUsernameCopied] = createSignal(false)
   const [pendingConfirmAction, setPendingConfirmAction] = createSignal<PendingConfirmAction | null>(
@@ -404,6 +404,12 @@ const FriendsPage = () => {
     }
   })
 
+  createEffect(() => {
+    if (pageData.error) {
+      showErrorToast(toUserFriendlyErrorMessage(pageData.error))
+    }
+  })
+
   /**
    * 一覧を再取得する。
    *
@@ -420,7 +426,7 @@ const FriendsPage = () => {
    * @returns 一覧再取得完了時に解決されるPromise。
    */
   const completeOperation = async (successMessage: string): Promise<void> => {
-    setMessage(successMessage)
+    showSuccessToast(successMessage)
     await refresh()
   }
 
@@ -433,8 +439,6 @@ const FriendsPage = () => {
     const username = ownUsername()
     if (!username) return
 
-    setErrorMessage('')
-
     try {
       await navigator.clipboard.writeText(username)
       setIsOwnUsernameCopied(true)
@@ -446,7 +450,7 @@ const FriendsPage = () => {
         ownUsernameCopyResetTimer = undefined
       }, FRIENDS_COPY_FEEDBACK_DURATION_MS)
     } catch {
-      setErrorMessage(FRIENDS_COPY.copyOwnUsernameFailure)
+      showErrorToast(FRIENDS_COPY.copyOwnUsernameFailure)
     }
   }
 
@@ -462,7 +466,6 @@ const FriendsPage = () => {
     if (!username || operation() !== null) return
 
     setOperation('request')
-    setMessage('')
     setRequestErrorMessage('')
 
     try {
@@ -492,14 +495,12 @@ const FriendsPage = () => {
     if (operation() !== null) return
 
     setOperation(nextOperation)
-    setMessage('')
-    setErrorMessage('')
 
     try {
       await action()
       await completeOperation(successMessage)
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, FRIENDS_COPY.operationFailure))
+      showErrorToast(toUserFriendlyErrorMessage(error, FRIENDS_COPY.operationFailure))
     } finally {
       setOperation(null)
     }
@@ -532,7 +533,7 @@ const FriendsPage = () => {
    * @returns 取り消し完了時に解決されるPromise。
    */
   const handleCancel = (user: FriendshipUserDTO): Promise<void> =>
-    runUserOperation('cancel', () => rejectFriendRequest(user.user_id), FRIENDS_COPY.cancelSuccess)
+    runUserOperation('cancel', () => cancelFriendRequest(user.user_id), FRIENDS_COPY.cancelSuccess)
 
   /**
    * フレンド関係を解除する。
@@ -585,23 +586,6 @@ const FriendsPage = () => {
           {FRIENDS_COPY.retry}
         </AppButton>
       </header>
-
-      <Show when={message()}>
-        <p
-          class="mb-4 rounded border border-success-border bg-success-bg px-3 py-2 text-sm text-success"
-          aria-live="polite"
-        >
-          {message()}
-        </p>
-      </Show>
-      <Show when={errorMessage() || pageData.error}>
-        <p
-          class="mb-4 rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger"
-          role="alert"
-        >
-          {errorMessage() || toUserFriendlyErrorMessage(pageData.error)}
-        </p>
-      </Show>
 
       <form
         class="mx-auto mb-6 w-full max-w-[350px] rounded-lg border border-border bg-surface p-4"
