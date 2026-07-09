@@ -1,6 +1,7 @@
 import * as Tabs from '@kobalte/core/tabs'
 import type { JSX } from 'solid-js'
 import { For } from 'solid-js'
+import { NotificationDot } from './NotificationDot'
 
 export type AppTabOption<TValue extends string> = {
   /** タブの値。 */
@@ -9,6 +10,8 @@ export type AppTabOption<TValue extends string> = {
   label: JSX.Element
   /** タブを無効化するか。 */
   disabled?: boolean
+  /** タブ右上に通知ドットを表示するか。 */
+  hasNotificationDot?: boolean
 }
 
 type AppTabsBaseProps<TValue extends string> = {
@@ -60,12 +63,12 @@ type AppTabsListProps<TValue extends string> = Pick<
 const SEGMENTED_TABS_LIST_CLASS = 'inline-flex gap-1 rounded-lg bg-surface-hover p-1'
 
 const SEGMENTED_TABS_TRIGGER_CLASS =
-  'inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-text-muted transition-colors hover:bg-action-secondary hover:text-text data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm data-selected:hover:bg-action-primary data-selected:hover:text-text-inverse focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50'
+  'relative inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-text-muted transition-colors hover:bg-action-secondary hover:text-text data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm data-selected:hover:bg-action-primary data-selected:hover:text-text-inverse focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50'
 
 const UNDERLINE_TABS_LIST_CLASS = 'flex gap-2 border-b border-border-strong'
 
 const UNDERLINE_TABS_TRIGGER_CLASS =
-  'rounded-t border-b-2 border-transparent px-3 py-1 text-sm text-text-muted transition-colors hover:border-action-primary hover:text-text data-selected:border-focus-ring data-selected:bg-bg data-selected:text-text data-selected:hover:border-focus-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+  'relative rounded-t border-b-2 border-transparent px-3 py-1 text-sm text-text-muted transition-colors hover:border-action-primary hover:text-text data-selected:border-focus-ring data-selected:bg-bg data-selected:text-text data-selected:hover:border-focus-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
 
 /**
  * タブリストと任意の同列表示要素を描画する。
@@ -84,6 +87,7 @@ const AppTabsList = <TValue extends string>(props: AppTabsListProps<TValue>): JS
             class={`${props.defaultTriggerClass} ${props.triggerClass ?? ''}`}
           >
             {option.label}
+            <NotificationDot visible={option.hasNotificationDot === true} class="right-1 top-1" />
           </Tabs.Trigger>
         )}
       </For>

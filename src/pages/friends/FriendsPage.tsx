@@ -2,7 +2,7 @@ import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { Check, Copy, EllipsisVertical, RotateCw, UserMinus, UserPlus, X } from 'lucide-solid'
+import { Check, Copy, EllipsisVertical, Lock, RotateCw, UserMinus, UserPlus, X } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -31,18 +31,19 @@ import { Loading } from '../../components/Loading'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
 import {
+  friendRequestNotification,
   setActiveFriendRequestNotificationUser,
   syncFriendRequestNotificationFromReceivedCount,
 } from '../../stores/friendRequestNotification'
 import type { FriendshipUserDTO } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
+  buildFriendsTabOptions,
   buildFriendsTabPath,
   FRIEND_REQUEST_USERNAME_ERROR_ID,
   FRIENDS_COPY,
   FRIENDS_COPY_FEEDBACK_DURATION_MS,
   FRIENDS_PAGE_TITLE,
-  FRIENDS_TAB_OPTIONS,
   type FriendsTabValue,
   resolveFriendsTabValue,
 } from './constants'
@@ -128,6 +129,16 @@ const fetchFriendshipPageData = async (): Promise<FriendshipPageData> => {
  * @returns 前後空白を除いたユーザー名。
  */
 const normalizeFriendRequestUsername = (value: string): string => value.trim()
+
+/**
+ * フレンドカードでプロフィール情報とリンクを非表示にするか判定する。
+ *
+ * @param variant - 表示中のフレンド画面タブ。
+ * @param user - 表示対象ユーザー。
+ * @returns 非公開の送信済み申請先なら true。
+ */
+const shouldHideFriendProfile = (variant: FriendsTabValue, user: FriendshipUserDTO): boolean =>
+  variant === 'sent' && user.is_private
 
 /**
  * フレンド申請失敗時の表示文言を生成する。
@@ -294,50 +305,79 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
       </p>
     }
   >
-    <ul class="flex flex-wrap justify-center gap-3 sm:justify-start">
+    <ul class="grid justify-center gap-3 [grid-template-columns:repeat(auto-fit,15rem)]">
       <For each={props.items}>
-        {(user) => (
-          <li class="relative flex w-full max-w-56 flex-col rounded-lg border border-border bg-surface p-4 sm:w-56">
-            <Show when={props.variant === 'friends'}>
-              <div class="absolute right-2 top-2">
-                <FriendMenuActions
-                  busy={props.actionsDisabled}
-                  onRemove={() => props.onRemove(user)}
-                />
-              </div>
-            </Show>
-            <div class="min-w-0">
-              <div class={`min-w-0 ${props.variant === 'friends' ? 'pr-8' : ''}`}>
-                <A
-                  href={buildFriendProfilePath(user.username)}
-                  class="block min-w-0 max-w-full truncate text-xl font-bold text-action-primary underline-offset-4 hover:text-action-primary-hover hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                >
-                  {formatFriendPlayerName(user.player_name)}
-                </A>
-                <span class="mt-0.5 block min-w-0 truncate text-xs text-text-muted">
-                  @{user.username}
-                </span>
-              </div>
-              <dl class="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
-                <div>
-                  <dt class="text-text-subtle">{FRIENDS_COPY.levelLabel}</dt>
-                  <dd class="font-medium">{formatFriendPlayerLevel(user.player_level)}</dd>
+        {(user) => {
+          const hidesProfile = createMemo(() => shouldHideFriendProfile(props.variant, user))
+          const playerNameClass =
+            'min-w-0 truncate text-xl font-bold underline-offset-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
+
+          return (
+            <li class="relative flex min-w-60 flex-col rounded-lg border border-border bg-surface p-4">
+              <Show when={props.variant === 'friends'}>
+                <div class="absolute right-2 top-2">
+                  <FriendMenuActions
+                    busy={props.actionsDisabled}
+                    onRemove={() => props.onRemove(user)}
+                  />
                 </div>
-                <div>
-                  <dt class="text-text-subtle">{FRIENDS_COPY.ratingLabel}</dt>
-                  <dd class="font-medium">{formatFriendRating(user.rating)}</dd>
+              </Show>
+              <div class="min-w-0">
+                <div class={`min-w-0 ${props.variant === 'friends' ? 'pr-8' : ''}`}>
+                  <div class="flex min-w-0 items-center gap-1">
+                    <Show
+                      when={!hidesProfile()}
+                      fallback={
+                        <span class={`${playerNameClass} text-text`}>
+                          {formatFriendPlayerName(user.player_name)}
+                        </span>
+                      }
+                    >
+                      <A
+                        href={buildFriendProfilePath(user.username)}
+                        class={`${playerNameClass} text-action-primary hover:text-action-primary-hover hover:underline`}
+                      >
+                        {formatFriendPlayerName(user.player_name)}
+                      </A>
+                    </Show>
+                    <Show when={hidesProfile()}>
+                      <span
+                        class="shrink-0 text-text-muted"
+                        role="img"
+                        aria-label={FRIENDS_COPY.privateAccountLabel}
+                        title={FRIENDS_COPY.privateAccountLabel}
+                      >
+                        <Lock class="h-4 w-4" aria-hidden="true" />
+                      </span>
+                    </Show>
+                  </div>
+                  <span class="mt-0.5 block min-w-0 truncate text-xs text-text-muted">
+                    @{user.username}
+                  </span>
                 </div>
-              </dl>
-            </div>
-            <FriendRequestActions
-              variant={props.variant}
-              busy={props.actionsDisabled}
-              onAccept={() => props.onAccept(user)}
-              onReject={() => props.onReject(user)}
-              onCancel={() => props.onCancel(user)}
-            />
-          </li>
-        )}
+                <Show when={!hidesProfile()}>
+                  <dl class="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                    <div>
+                      <dt class="text-text-subtle">{FRIENDS_COPY.levelLabel}</dt>
+                      <dd class="font-medium">{formatFriendPlayerLevel(user.player_level)}</dd>
+                    </div>
+                    <div>
+                      <dt class="text-text-subtle">{FRIENDS_COPY.ratingLabel}</dt>
+                      <dd class="font-medium">{formatFriendRating(user.rating)}</dd>
+                    </div>
+                  </dl>
+                </Show>
+              </div>
+              <FriendRequestActions
+                variant={props.variant}
+                busy={props.actionsDisabled}
+                onAccept={() => props.onAccept(user)}
+                onReject={() => props.onReject(user)}
+                onCancel={() => props.onCancel(user)}
+              />
+            </li>
+          )
+        }}
       </For>
     </ul>
   </Show>
@@ -371,6 +411,12 @@ const FriendsPage = () => {
   const ownUsername = createMemo(() => authSession.user?.username ?? '')
   const resolvedActiveTab = createMemo(() => resolveFriendsTabValue(params.tab))
   const activeTab = createMemo(() => resolvedActiveTab() ?? 'friends')
+  const hasPendingReceivedRequest = createMemo(() =>
+    pageData() !== undefined
+      ? currentData().received.length > 0
+      : friendRequestNotification.hasPendingReceivedRequest
+  )
+  const friendTabOptions = createMemo(() => buildFriendsTabOptions(hasPendingReceivedRequest()))
   const canSubmitRequest = createMemo(
     () => normalizeFriendRequestUsername(usernameInput()).length > 0 && operation() === null
   )
@@ -688,7 +734,7 @@ const FriendsPage = () => {
       </form>
 
       <UnderlineTabs
-        options={FRIENDS_TAB_OPTIONS}
+        options={friendTabOptions()}
         value={activeTab()}
         onChange={changeActiveTab}
         class="space-y-4"

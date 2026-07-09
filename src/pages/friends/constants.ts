@@ -13,10 +13,17 @@ export const FRIEND_REQUEST_USERNAME_ERROR_ID = 'friend-request-username-error'
 /** フレンド画面のタブ値。 */
 export type FriendsTabValue = 'friends' | 'received' | 'sent'
 
-/** フレンド画面のタブ選択肢。 */
-export const FRIENDS_TAB_OPTIONS: readonly AppTabOption<FriendsTabValue>[] = [
+/**
+ * フレンド画面のタブ選択肢を通知状態つきで生成する。
+ *
+ * @param hasPendingReceivedRequest - 受付中タブへ通知ドットを表示するか。
+ * @returns フレンド画面のタブ選択肢。
+ */
+export const buildFriendsTabOptions = (
+  hasPendingReceivedRequest: boolean
+): readonly AppTabOption<FriendsTabValue>[] => [
   { value: 'friends', label: 'フレンド' },
-  { value: 'received', label: '受付中' },
+  { value: 'received', label: '受付中', hasNotificationDot: hasPendingReceivedRequest },
   { value: 'sent', label: '申請中' },
 ]
 
@@ -90,6 +97,7 @@ export const FRIENDS_COPY = {
   remove: '解除',
   levelLabel: 'Lv',
   ratingLabel: 'Rating',
+  privateAccountLabel: '非公開アカウント',
   playerNotLinked: '未連携',
   noRating: '-',
   rejectConfirm: 'このフレンド申請を拒否しますか？',
