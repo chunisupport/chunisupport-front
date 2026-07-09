@@ -75,7 +75,7 @@ const RESULT_RECORD_BADGE_CLASS =
   'inline-flex min-h-7 items-center rounded px-2 py-1 text-xs font-semibold'
 
 const RESULT_RECORD_LAMP_BADGE_CLASS: Record<RandomSongLampFilter, string> = {
-  AJC: `${RESULT_RECORD_BADGE_CLASS} [background-image:var(--cs-gradient-lamp-all-justice-critical-bg)] text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]`,
+  AJC: `${RESULT_RECORD_BADGE_CLASS} [background-image:var(--cs-gradient-lamp-all-justice-critical-bg)] text-lamp-all-justice-critical-text`,
   AJ: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-all-justice-bg text-lamp-all-justice-text`,
   FC: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-full-combo-bg text-lamp-full-combo-text`,
   CATASTROPHY: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-catastrophy-bg text-lamp-catastrophy-text`,

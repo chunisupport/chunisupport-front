@@ -508,15 +508,17 @@
     #b86a35 100%
   );
 
-  /* ===== スコアランク（SSSP / SSS / SS / A / B / C / D） ===== */
+  /* ===== スコアランク（SSSP / SSS / SS / S / A / B / C / D） ===== */
   --cs-color-score-rank-sssp-bg: var(--color-green-500);
   --cs-color-score-rank-sssp-text: var(--color-green-500);
   --cs-color-score-rank-sss-bg: var(--color-yellow-500);
   --cs-color-score-rank-sss-text: var(--color-yellow-500);
   --cs-color-score-rank-ss-bg: var(--color-orange-500);
   --cs-color-score-rank-ss-text: var(--color-orange-500);
-  --cs-color-score-rank-a-bg: var(--color-red-500);
-  --cs-color-score-rank-a-text: var(--color-red-500);
+  --cs-color-score-rank-s-bg: var(--color-red-500);
+  --cs-color-score-rank-s-text: var(--color-red-500);
+  --cs-color-score-rank-a-bg: var(--color-amber-800);
+  --cs-color-score-rank-a-text: var(--color-amber-800);
   --cs-color-score-rank-b-bg: var(--color-sky-500);
   --cs-color-score-rank-b-text: var(--color-sky-500);
   --cs-color-score-rank-c-text: var(--color-amber-700);
@@ -528,23 +530,24 @@
   --cs-color-lamp-full-combo-text: var(--color-yellow-900);
   --cs-color-lamp-all-justice-bg: #fdf5a7;
   --cs-color-lamp-all-justice-text: var(--color-yellow-900);
-  --cs-color-lamp-all-justice-critical-bg: var(--color-violet-500);
-  --cs-color-lamp-all-justice-critical-rainbow-1: #ef4444;
-  --cs-color-lamp-all-justice-critical-rainbow-2: #f97316;
-  --cs-color-lamp-all-justice-critical-rainbow-3: #eab308;
-  --cs-color-lamp-all-justice-critical-rainbow-4: #22c55e;
-  --cs-color-lamp-all-justice-critical-rainbow-5: #06b6d4;
-  --cs-color-lamp-all-justice-critical-rainbow-6: #3b82f6;
-  --cs-color-lamp-all-justice-critical-rainbow-7: #a855f7;
+  --cs-color-lamp-all-justice-critical-bg: #aeefff;
+  --cs-color-lamp-all-justice-critical-text: #3f2a63;
+  --cs-color-lamp-all-justice-critical-rainbow-1: #aeefff;
+  --cs-color-lamp-all-justice-critical-rainbow-2: #b7ceff;
+  --cs-color-lamp-all-justice-critical-rainbow-3: #d0b5ff;
+  --cs-color-lamp-all-justice-critical-rainbow-4: #ffb8e8;
+  --cs-color-lamp-all-justice-critical-rainbow-5: #ffc4ad;
+  --cs-color-lamp-all-justice-critical-rainbow-6: #fff0a8;
+  --cs-color-lamp-all-justice-critical-rainbow-7: #b9eeb7;
   --cs-gradient-lamp-all-justice-critical-bg: linear-gradient(
-    135deg,
-    var(--cs-color-lamp-all-justice-critical-rainbow-1) 0%,
-    var(--cs-color-lamp-all-justice-critical-rainbow-2) 16%,
-    var(--cs-color-lamp-all-justice-critical-rainbow-3) 32%,
-    var(--cs-color-lamp-all-justice-critical-rainbow-4) 48%,
-    var(--cs-color-lamp-all-justice-critical-rainbow-5) 64%,
-    var(--cs-color-lamp-all-justice-critical-rainbow-6) 80%,
-    var(--cs-color-lamp-all-justice-critical-rainbow-7) 100%
+    45deg,
+    var(--cs-color-lamp-all-justice-critical-rainbow-1),
+    var(--cs-color-lamp-all-justice-critical-rainbow-2),
+    var(--cs-color-lamp-all-justice-critical-rainbow-3),
+    var(--cs-color-lamp-all-justice-critical-rainbow-4),
+    var(--cs-color-lamp-all-justice-critical-rainbow-5),
+    var(--cs-color-lamp-all-justice-critical-rainbow-6),
+    var(--cs-color-lamp-all-justice-critical-rainbow-7)
   );
   --cs-color-lamp-clear-bg: var(--color-sky-200);
   --cs-color-lamp-clear-text: var(--color-sky-900);
@@ -657,6 +660,8 @@
   --color-score-rank-sssp-text: var(--cs-color-score-rank-sssp-text);
   --color-score-rank-ss-bg: var(--cs-color-score-rank-ss-bg);
   --color-score-rank-ss-text: var(--cs-color-score-rank-ss-text);
+  --color-score-rank-s-bg: var(--cs-color-score-rank-s-bg);
+  --color-score-rank-s-text: var(--cs-color-score-rank-s-text);
   --color-score-rank-a-bg: var(--cs-color-score-rank-a-bg);
   --color-score-rank-a-text: var(--cs-color-score-rank-a-text);
   --color-score-rank-b-bg: var(--cs-color-score-rank-b-bg);
@@ -670,6 +675,7 @@
   --color-lamp-full-combo-text: var(--cs-color-lamp-full-combo-text);
   --color-lamp-all-justice-bg: var(--cs-color-lamp-all-justice-bg);
   --color-lamp-all-justice-text: var(--cs-color-lamp-all-justice-text);
+  --color-lamp-all-justice-critical-text: var(--cs-color-lamp-all-justice-critical-text);
   --color-lamp-clear-bg: var(--cs-color-lamp-clear-bg);
   --color-lamp-clear-text: var(--cs-color-lamp-clear-text);
   --color-lamp-hard-bg: var(--cs-color-lamp-hard-bg);

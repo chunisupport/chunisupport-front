@@ -4,6 +4,7 @@ import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
 import { getScoreRank } from '../../../utils/scoreRank'
 import { SortableHeaderButton, type SortDirection } from '../SortableTableHeader'
 import { LampPlaceholderBadge } from './RecordBadges'
+import { getDefaultRecordLampLabel } from './recordLampLabel'
 import {
   getComboLampBadgeClass,
   HARD_LAMP_BADGE_BACKGROUND_CLASS,
@@ -66,8 +67,10 @@ export const RECORD_CELL_BASE_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items
 export const RECORD_CELL_CENTER_TEXT_CLASS = `${RECORD_CELL_BASE_CLASS} text-center ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`
 /** レコードのランプ列に使うフォントと文字サイズの共通クラス。 */
 export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
-const HARD_LAMP_BADGE_CLASS =
-  'inline-flex w-[40px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
+/** レコードのランプバッジに共通する固定幅と文字配置のクラス。 */
+const RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS =
+  'inline-flex w-[34px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
+const HARD_LAMP_BADGE_CLASS = RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS
 const HARD_LAMP_LABEL: Record<Exclude<NonNullable<ClearLamp>, 'FAILED'>, string> = {
   CLEAR: 'CLR',
   HARD: 'HRD',
@@ -75,8 +78,7 @@ const HARD_LAMP_LABEL: Record<Exclude<NonNullable<ClearLamp>, 'FAILED'>, string>
   ABSOLUTE: 'ABS',
   CATASTROPHY: 'CTS',
 }
-const FULL_CHAIN_BADGE_CLASS =
-  'inline-flex w-[40px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
+const FULL_CHAIN_BADGE_CLASS = RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS
 const FULL_CHAIN_BADGE_VARIANT: Partial<
   Record<NonNullable<SharedRecordSource['full_chain']>, NonNullable<ComboLamp>>
 > = {
@@ -92,24 +94,17 @@ const FULL_CHAIN_BADGE_VARIANT: Partial<
  * @returns コンボランプバッジまたはプレースホルダー。
  */
 export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, _record) => {
-  if (lamp === 'FULL COMBO')
+  const label = getDefaultRecordLampLabel(lamp, _record?.score)
+  if (lamp && label) {
     return (
       <span
-        class={`rounded-lg px-2 py-1 text-sm font-extrabold ${getComboLampBadgeClass(lamp, _record?.score)}`}
+        class={`${RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS} ${getComboLampBadgeClass(lamp, _record?.score)}`}
       >
-        FC
-      </span>
-    )
-  if (lamp === 'ALL JUSTICE') {
-    return (
-      <span
-        class={`rounded-lg px-2 py-1 text-sm font-extrabold ${getComboLampBadgeClass(lamp, _record?.score)}`}
-      >
-        AJ
+        {label}
       </span>
     )
   }
-  return <LampPlaceholderBadge />
+  return <LampPlaceholderBadge class="w-[34px]" />
 }
 
 /**
@@ -134,7 +129,7 @@ const renderHardLampTextBadge = (lamp: keyof typeof HARD_LAMP_LABEL): JSX.Elemen
  */
 export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element => {
   if (lamp && lamp !== 'FAILED') return renderHardLampTextBadge(lamp)
-  return <LampPlaceholderBadge class="w-10" />
+  return <LampPlaceholderBadge class="w-[34px]" />
 }
 
 /**
@@ -147,7 +142,7 @@ export const renderDefaultRecordFullChainBadge = (
 ): JSX.Element => {
   const lampType = fullChain ? FULL_CHAIN_BADGE_VARIANT[fullChain] : undefined
 
-  if (!lampType) return <LampPlaceholderBadge class="w-10" />
+  if (!lampType) return <LampPlaceholderBadge class="w-[34px]" />
 
   return (
     <span class={`${FULL_CHAIN_BADGE_CLASS} ${getComboLampBadgeClass(lampType, undefined)}`}>

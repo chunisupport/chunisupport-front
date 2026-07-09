@@ -22,8 +22,8 @@ export const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
   SSS: 'text-score-rank-sss-text',
   'SS+': 'text-score-rank-ss-text',
   SS: 'text-score-rank-ss-text',
-  'S+': 'text-score-rank-ss-text',
-  S: 'text-score-rank-ss-text',
+  'S+': 'text-score-rank-s-text',
+  S: 'text-score-rank-s-text',
   AAA: 'text-score-rank-a-text',
   AA: 'text-score-rank-a-text',
   A: 'text-score-rank-a-text',
@@ -34,15 +34,19 @@ export const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
   D: 'text-score-rank-d-text',
 }
 
+/** ALL JUSTICE CRITICAL表示で共通利用するグラデーション背景クラス。 */
+export const ALL_JUSTICE_CRITICAL_BG_CLASS =
+  '[background-image:var(--cs-gradient-lamp-all-justice-critical-bg)]'
+
 /** レコードのスコアランク文字色に合わせたフィルター統計グラフ用背景色クラス。 */
 export const SCORE_RANK_BAR_CLASS: Record<FilterStatsRank, string> = {
-  MAX: 'bg-success',
+  MAX: ALL_JUSTICE_CRITICAL_BG_CLASS,
   'SSS+': 'bg-score-rank-sssp-bg',
   SSS: 'bg-score-rank-sss-bg',
   'SS+': 'bg-score-rank-ss-bg',
   SS: 'bg-score-rank-ss-bg',
-  'S+': 'bg-score-rank-ss-bg',
-  S: 'bg-score-rank-ss-bg',
+  'S+': 'bg-score-rank-s-bg',
+  S: 'bg-score-rank-s-bg',
   OTHERS: 'bg-score-rank-d-bg',
   未プレイ: 'bg-surface-hover',
 }
@@ -59,12 +63,8 @@ export const COMBO_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedComboLamp>, s
   'ALL JUSTICE': 'text-lamp-all-justice-text',
 }
 
-/** ALL JUSTICE CRITICAL表示で共通利用するグラデーション背景クラス。 */
-export const ALL_JUSTICE_CRITICAL_BG_CLASS =
-  '[background-image:var(--cs-gradient-lamp-all-justice-critical-bg)]'
-
-/** ALL JUSTICE CRITICALバッジで使う背景・文字・装飾クラス。 */
-export const ALL_JUSTICE_CRITICAL_BADGE_CLASS = `${ALL_JUSTICE_CRITICAL_BG_CLASS} text-white shadow-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.65)]`
+/** ALL JUSTICE CRITICALバッジで使う背景と文字色のクラス。 */
+export const ALL_JUSTICE_CRITICAL_BADGE_CLASS = `${ALL_JUSTICE_CRITICAL_BG_CLASS} text-lamp-all-justice-critical-text`
 
 /**
  * コンボランプとスコアから、レコード用コンボランプバッジの色クラスを返す。

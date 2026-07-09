@@ -10,7 +10,11 @@ test('getComboLampKey はプレイ済みかつnullランプをNONEとして返�
   assert.equal(getComboLampKey(true, null), 'NONE')
 })
 
-test('compareComboLamp は NONE -> FC -> AJ -> UNPLAYED の順で比較する', () => {
+test('getComboLampKey はAJかつ理論値をALL JUSTICE CRITICALとして返す', () => {
+  assert.equal(getComboLampKey(true, 'ALL JUSTICE', 1010000), 'ALL JUSTICE CRITICAL')
+})
+
+test('compareComboLamp は NONE -> FC -> AJ -> AJC -> UNPLAYED の順で比較する', () => {
   const noneVsFc = compareComboLamp(
     { is_played: true, combo_lamp: null },
     { is_played: true, combo_lamp: 'FULL COMBO' }
@@ -19,6 +23,10 @@ test('compareComboLamp は NONE -> FC -> AJ -> UNPLAYED の順で比較する', 
     { is_played: true, combo_lamp: 'FULL COMBO' },
     { is_played: true, combo_lamp: 'ALL JUSTICE' }
   )
+  const ajVsAjc = compareComboLamp(
+    { is_played: true, combo_lamp: 'ALL JUSTICE', score: 1009999 },
+    { is_played: true, combo_lamp: 'ALL JUSTICE', score: 1010000 }
+  )
   const ajVsUnplayed = compareComboLamp(
     { is_played: true, combo_lamp: 'ALL JUSTICE' },
     { is_played: false, combo_lamp: null }
@@ -26,8 +34,10 @@ test('compareComboLamp は NONE -> FC -> AJ -> UNPLAYED の順で比較する', 
 
   assert.equal(noneVsFc.skipDirection, false)
   assert.equal(fcVsAj.skipDirection, false)
+  assert.equal(ajVsAjc.skipDirection, false)
   assert.equal(ajVsUnplayed.skipDirection, true)
   assert.equal(noneVsFc.comparison < 0, true)
   assert.equal(fcVsAj.comparison < 0, true)
+  assert.equal(ajVsAjc.comparison < 0, true)
   assert.equal(ajVsUnplayed.comparison, -1)
 })
