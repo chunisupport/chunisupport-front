@@ -24,18 +24,18 @@ test('OVER POWER値は小数点以下3桁まで0埋めされること', () => {
   assert.equal(result, '123.450')
 })
 
-test('OVER POWER達成率は小数点以下4桁で切り捨てられること', () => {
+test('OVER POWER達成率は小数点以下5桁で切り捨てられること', () => {
   // Given
-  const roundedUpByToFixed = 99.99999
+  const roundedUpByToFixed = 99.999999
 
   // When
   const result = formatOverPowerPercent(roundedUpByToFixed)
 
   // Then
-  assert.equal(result, '99.9999')
+  assert.equal(result, '99.99999')
 })
 
-test('OVER POWER達成率は小数点以下4桁まで0埋めされること', () => {
+test('OVER POWER達成率は小数点以下5桁まで0埋めされること', () => {
   // Given
   const shortDecimal = 12.3
 
@@ -43,7 +43,7 @@ test('OVER POWER達成率は小数点以下4桁まで0埋めされること', ()
   const result = formatOverPowerPercent(shortDecimal)
 
   // Then
-  assert.equal(result, '12.3000')
+  assert.equal(result, '12.30000')
 })
 
 test('OVER POWER達成率は指定した小数点以下桁数で切り捨てられること', () => {
@@ -74,13 +74,13 @@ for (const { value, expected } of overPowerValueCases) {
 }
 
 const overPowerPercentCases = [
-  { value: 0.57, expected: '0.5700' },
-  { value: 99.99999, expected: '99.9999' },
-  { value: 100.00009, expected: '100.0000' },
+  { value: 0.57, expected: '0.57000' },
+  { value: 99.99999, expected: '99.99999' },
+  { value: 100.000009, expected: '100.00000' },
 ] as const
 
 for (const { value, expected } of overPowerPercentCases) {
-  test(`OVER POWER達成率 ${value} を小数点以下4桁で切り捨て表示すること`, () => {
+  test(`OVER POWER達成率 ${value} を小数点以下5桁で切り捨て表示すること`, () => {
     // Given / When
     const result = formatOverPowerPercent(value)
 

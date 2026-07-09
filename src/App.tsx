@@ -382,7 +382,7 @@ const App = () => {
       <Route path="/settings/:section?" component={withNavBar(withAuth(Settings))} />
 
       {/* その他 */}
-      <Route path={FRIENDS_PATH} component={withNavBar(withAuth(FriendsPage))} />
+      <Route path={`${FRIENDS_PATH}/:tab?`} component={withNavBar(withAuth(FriendsPage))} />
       <Route path={REGISTER_SCORE_PATH} component={withNavBar(withAuth(RegisterScorePage))} />
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />

@@ -1,6 +1,6 @@
 import { formatTruncatedFixed } from './numberFormat'
 
-const OVER_POWER_PERCENT_DECIMAL_PLACES = 4
+const OVER_POWER_PERCENT_DECIMAL_PLACES = 5
 const OVER_POWER_VALUE_DECIMAL_PLACES = 3
 
 /**

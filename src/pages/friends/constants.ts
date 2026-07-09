@@ -1,7 +1,14 @@
 import type { AppTabOption } from '../../components/common/AppTabs'
+import { FRIENDS_PATH } from '../../constants/routes'
 
 /** フレンド画面に表示するタイトル。 */
 export const FRIENDS_PAGE_TITLE = 'フレンド'
+
+/** ユーザー名コピー成功表示を維持する時間(ms)。 */
+export const FRIENDS_COPY_FEEDBACK_DURATION_MS = 1200
+
+/** フレンド申請 username 入力のエラー表示ID。 */
+export const FRIEND_REQUEST_USERNAME_ERROR_ID = 'friend-request-username-error'
 
 /** フレンド画面のタブ値。 */
 export type FriendsTabValue = 'friends' | 'received' | 'sent'
@@ -9,18 +16,62 @@ export type FriendsTabValue = 'friends' | 'received' | 'sent'
 /** フレンド画面のタブ選択肢。 */
 export const FRIENDS_TAB_OPTIONS: readonly AppTabOption<FriendsTabValue>[] = [
   { value: 'friends', label: 'フレンド' },
-  { value: 'received', label: '受信申請' },
-  { value: 'sent', label: '送信申請' },
+  { value: 'received', label: '受付中' },
+  { value: 'sent', label: '申請中' },
 ]
+
+/** フレンド画面タブに対応するURLパスセグメント。 */
+const FRIENDS_TAB_PATH_SEGMENTS: Record<FriendsTabValue, string> = {
+  friends: '',
+  received: 'receive',
+  sent: 'request',
+}
+
+/**
+ * フレンド画面タブのURLパスを生成する。
+ *
+ * @param tab - URLへ反映するタブ値。
+ * @returns 対象タブを表示するURLパス。
+ */
+export const buildFriendsTabPath = (tab: FriendsTabValue): string => {
+  const segment = FRIENDS_TAB_PATH_SEGMENTS[tab]
+  return segment ? `${FRIENDS_PATH}/${segment}` : FRIENDS_PATH
+}
+
+/**
+ * URLパスセグメントからフレンド画面タブ値を復元する。
+ *
+ * @param segment - URLパスのタブ部分。
+ * @returns 対応するタブ値。未対応の場合は null。
+ */
+export const resolveFriendsTabValue = (segment: string | undefined): FriendsTabValue | null => {
+  switch (segment) {
+    case undefined:
+      return 'friends'
+    case FRIENDS_TAB_PATH_SEGMENTS.friends:
+      return 'friends'
+    case FRIENDS_TAB_PATH_SEGMENTS.received:
+      return 'received'
+    case FRIENDS_TAB_PATH_SEGMENTS.sent:
+      return 'sent'
+    default:
+      return null
+  }
+}
 
 /** フレンド画面で使う固定文言。 */
 export const FRIENDS_COPY = {
   requestFormTitle: 'フレンド申請',
   usernameLabel: 'ユーザー名',
-  usernamePlaceholder: 'targetuser',
+  usernamePlaceholder: 'username',
+  ownUsernameLabel: 'あなたのユーザー名',
+  copyOwnUsername: 'ユーザー名をコピー',
+  copyOwnUsernameSuccess: 'ユーザー名をコピーしました。',
+  copyOwnUsernameFailure: 'ユーザー名のコピーに失敗しました。',
   submitRequest: '申請',
   submittingRequest: '申請中',
   requestSuccess: 'フレンド申請を送信しました。',
+  requestUserNotFound: 'ユーザーが見つかりません',
   acceptSuccess: 'フレンド申請を承認しました。',
   rejectSuccess: 'フレンド申請を拒否しました。',
   removeSuccess: 'フレンドを解除しました。',
@@ -28,8 +79,8 @@ export const FRIENDS_COPY = {
   operationFailure: '操作に失敗しました。',
   loadingLabel: 'フレンド情報を読み込んでいます',
   emptyFriends: 'フレンドはいません。',
-  emptyReceived: '受信申請はありません。',
-  emptySent: '送信申請はありません。',
+  emptyReceived: '受付中のフレンドリクエストはありません。',
+  emptySent: '送信済みのフレンドリクエストはありません。',
   retry: '再読み込み',
   profile: 'プロフィール',
   accept: '承認',

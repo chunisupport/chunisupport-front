@@ -1,9 +1,17 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { TextField } from '@kobalte/core/text-field'
-import { A } from '@solidjs/router'
-import { Check, RotateCw, UserMinus, UserPlus, X } from 'lucide-solid'
+import { A, useNavigate, useParams } from '@solidjs/router'
+import { Check, Copy, RotateCw, UserMinus, UserPlus, X } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  onCleanup,
+  Show,
+} from 'solid-js'
 import {
   acceptFriendRequest,
   createFriendRequest,
@@ -17,13 +25,18 @@ import { AppButton } from '../../components/common/AppButton'
 import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { Loading } from '../../components/Loading'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { authSession } from '../../stores/authSession'
 import type { FriendshipUserDTO } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
+  buildFriendsTabPath,
+  FRIEND_REQUEST_USERNAME_ERROR_ID,
   FRIENDS_COPY,
+  FRIENDS_COPY_FEEDBACK_DURATION_MS,
   FRIENDS_PAGE_TITLE,
   FRIENDS_TAB_OPTIONS,
   type FriendsTabValue,
+  resolveFriendsTabValue,
 } from './constants'
 import {
   formatFriendDateTime,
@@ -39,6 +52,11 @@ type FriendshipPageData = {
 }
 
 type FriendshipOperation = 'request' | 'accept' | 'reject' | 'remove'
+
+type ApiErrorLike = {
+  /** APIエラーコード。 */
+  code?: unknown
+}
 
 type PendingConfirmAction = {
   /** 確認後に実行する操作種別。 */
@@ -78,7 +96,7 @@ type FriendConfirmDialogProps = {
 /**
  * フレンド画面に必要な3種類の一覧をまとめて取得する。
  *
- * @returns 承認済みフレンド、受信申請、送信申請。
+ * @returns 承認済みフレンド、受信済みフレンドリクエスト、送信済みフレンドリクエスト。
  */
 const fetchFriendshipPageData = async (): Promise<FriendshipPageData> => {
   const [friends, received, sent] = await Promise.all([
@@ -101,6 +119,23 @@ const fetchFriendshipPageData = async (): Promise<FriendshipPageData> => {
  * @returns 前後空白を除いたユーザー名。
  */
 const normalizeFriendRequestUsername = (value: string): string => value.trim()
+
+/**
+ * フレンド申請失敗時の表示文言を生成する。
+ *
+ * @param error - API操作で発生したエラー。
+ * @returns フレンド申請欄に表示するエラーメッセージ。
+ */
+const formatFriendRequestErrorMessage = (error: unknown): string => {
+  const errorCode =
+    typeof error === 'object' && error !== null ? (error as ApiErrorLike).code : undefined
+
+  if (errorCode === 'validation_failed') {
+    return FRIENDS_COPY.requestUserNotFound
+  }
+
+  return toUserFriendlyErrorMessage(error, FRIENDS_COPY.requestFailure)
+}
 
 /**
  * フレンド画面のユーザー行に表示する操作ボタン群を生成する。
@@ -270,15 +305,19 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
  */
 const FriendsPage = () => {
   useDocumentTitle(FRIENDS_PAGE_TITLE)
+  const params = useParams<{ tab?: string }>()
+  const navigate = useNavigate()
 
-  const [activeTab, setActiveTab] = createSignal<FriendsTabValue>('friends')
   const [usernameInput, setUsernameInput] = createSignal('')
   const [message, setMessage] = createSignal('')
+  const [requestErrorMessage, setRequestErrorMessage] = createSignal('')
   const [errorMessage, setErrorMessage] = createSignal('')
   const [operation, setOperation] = createSignal<FriendshipOperation | null>(null)
+  const [isOwnUsernameCopied, setIsOwnUsernameCopied] = createSignal(false)
   const [pendingConfirmAction, setPendingConfirmAction] = createSignal<PendingConfirmAction | null>(
     null
   )
+  let ownUsernameCopyResetTimer: number | undefined
 
   const [pageData, { refetch }] = createResource(fetchFriendshipPageData)
 
@@ -286,9 +325,45 @@ const FriendsPage = () => {
   const isInitialLoading = createMemo(() => pageData.loading && pageData() === undefined)
   const hasInitialLoadError = createMemo(() => Boolean(pageData.error && pageData() === undefined))
   const isRequesting = createMemo(() => operation() === 'request')
+  const ownUsername = createMemo(() => authSession.user?.username ?? '')
+  const resolvedActiveTab = createMemo(() => resolveFriendsTabValue(params.tab))
+  const activeTab = createMemo(() => resolvedActiveTab() ?? 'friends')
   const canSubmitRequest = createMemo(
     () => normalizeFriendRequestUsername(usernameInput()).length > 0 && operation() === null
   )
+
+  /**
+   * フレンド申請用 username 入力を更新し、申請欄のエラーを解除する。
+   *
+   * @param value - 入力されたユーザー名。
+   * @returns なし。
+   */
+  const updateUsernameInput = (value: string): void => {
+    setUsernameInput(value)
+    setRequestErrorMessage('')
+  }
+
+  /**
+   * タブ選択をURLへ反映する。
+   *
+   * @param tab - 選択されたフレンド画面タブ。
+   * @returns なし。
+   */
+  const changeActiveTab = (tab: FriendsTabValue): void => {
+    navigate(buildFriendsTabPath(tab))
+  }
+
+  onCleanup(() => {
+    if (ownUsernameCopyResetTimer !== undefined) {
+      window.clearTimeout(ownUsernameCopyResetTimer)
+    }
+  })
+
+  createEffect(() => {
+    if (resolvedActiveTab() === null) {
+      navigate(buildFriendsTabPath('friends'), { replace: true })
+    }
+  })
 
   /**
    * 一覧を再取得する。
@@ -311,6 +386,32 @@ const FriendsPage = () => {
   }
 
   /**
+   * ログイン中ユーザーの username をクリップボードへコピーする。
+   *
+   * @returns コピー処理完了時に解決されるPromise。
+   */
+  const copyOwnUsername = async (): Promise<void> => {
+    const username = ownUsername()
+    if (!username) return
+
+    setErrorMessage('')
+
+    try {
+      await navigator.clipboard.writeText(username)
+      setIsOwnUsernameCopied(true)
+      if (ownUsernameCopyResetTimer !== undefined) {
+        window.clearTimeout(ownUsernameCopyResetTimer)
+      }
+      ownUsernameCopyResetTimer = window.setTimeout(() => {
+        setIsOwnUsernameCopied(false)
+        ownUsernameCopyResetTimer = undefined
+      }, FRIENDS_COPY_FEEDBACK_DURATION_MS)
+    } catch {
+      setErrorMessage(FRIENDS_COPY.copyOwnUsernameFailure)
+    }
+  }
+
+  /**
    * フレンド申請フォームの送信を処理する。
    *
    * @param event - フォーム送信イベント。
@@ -323,14 +424,14 @@ const FriendsPage = () => {
 
     setOperation('request')
     setMessage('')
-    setErrorMessage('')
+    setRequestErrorMessage('')
 
     try {
       await createFriendRequest({ username })
       setUsernameInput('')
       await completeOperation(FRIENDS_COPY.requestSuccess)
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, FRIENDS_COPY.requestFailure))
+      setRequestErrorMessage(formatFriendRequestErrorMessage(error))
     } finally {
       setOperation(null)
     }
@@ -424,10 +525,8 @@ const FriendsPage = () => {
 
   return (
     <div class="mx-auto w-full max-w-5xl p-4">
-      <header class="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 class="text-2xl font-semibold">{FRIENDS_PAGE_TITLE}</h1>
-        </div>
+      <header class="mb-4 flex items-center justify-between gap-3">
+        <h1 class="text-2xl font-semibold">{FRIENDS_PAGE_TITLE}</h1>
         <AppButton
           variant="surface"
           size="sm"
@@ -457,27 +556,81 @@ const FriendsPage = () => {
       </Show>
 
       <form
-        class="mb-6 rounded-lg border border-border bg-surface p-4"
+        class="mx-auto mb-6 w-full max-w-[350px] rounded-lg border border-border bg-surface p-4"
         onSubmit={(event) => void handleSubmitRequest(event)}
       >
-        <h2 class="mb-3 text-lg font-semibold">{FRIENDS_COPY.requestFormTitle}</h2>
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <TextField class="min-w-0 flex-1" value={usernameInput()} onChange={setUsernameInput}>
-            <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
-              {FRIENDS_COPY.usernameLabel}
+        <h2 class="sr-only">{FRIENDS_COPY.requestFormTitle}</h2>
+        <Show when={ownUsername()}>
+          {(username) => (
+            <AppButton
+              variant="ghost"
+              size="sm"
+              fullWidth
+              class={`mb-4 justify-between text-left transition-colors ${
+                isOwnUsernameCopied()
+                  ? 'bg-action-primary-muted text-action-primary'
+                  : 'text-text-muted'
+              }`}
+              aria-label={FRIENDS_COPY.copyOwnUsername}
+              onClick={() => void copyOwnUsername()}
+            >
+              <span class="min-w-0 truncate">
+                {FRIENDS_COPY.ownUsernameLabel}:{' '}
+                <span
+                  class={`font-medium transition-colors ${
+                    isOwnUsernameCopied() ? 'text-action-primary' : 'text-text'
+                  }`}
+                >
+                  @{username()}
+                </span>
+              </span>
+              <span class="shrink-0 text-action-primary" aria-hidden="true">
+                <Show
+                  when={isOwnUsernameCopied()}
+                  fallback={<Copy class="h-4 w-4" aria-hidden="true" />}
+                >
+                  <Check class="h-4 w-4" aria-hidden="true" />
+                </Show>
+              </span>
+              <span class="sr-only" aria-live="polite">
+                {isOwnUsernameCopied() ? FRIENDS_COPY.copyOwnUsernameSuccess : ''}
+              </span>
+            </AppButton>
+          )}
+        </Show>
+        <div class="flex flex-col gap-2">
+          <TextField class="min-w-0" value={usernameInput()} onChange={updateUsernameInput}>
+            <TextField.Label class="mb-1 flex items-center justify-between gap-2 text-sm font-medium text-text-muted">
+              <span>{FRIENDS_COPY.usernameLabel}</span>
+              <span
+                id={FRIEND_REQUEST_USERNAME_ERROR_ID}
+                class="text-xs font-normal text-danger"
+                aria-live="polite"
+              >
+                {requestErrorMessage()}
+              </span>
             </TextField.Label>
-            <TextField.Input
-              class="w-full rounded border border-input-border bg-input-bg px-3 py-2 font-sans text-sm outline-none transition-colors hover:border-input-border-hover focus:ring-2 focus:ring-focus-ring"
-              placeholder={FRIENDS_COPY.usernamePlaceholder}
-              autocomplete="off"
-              required
-            />
+            <div class="flex min-h-10 items-center rounded border border-input-border bg-input-bg transition-colors hover:border-input-border-hover focus-within:ring-2 focus-within:ring-focus-ring">
+              <span
+                class="shrink-0 pl-3 pr-1 text-sm font-medium text-text-muted"
+                aria-hidden="true"
+              >
+                @
+              </span>
+              <TextField.Input
+                class="min-w-0 flex-1 bg-transparent px-2 py-2 font-sans text-sm outline-none"
+                placeholder={FRIENDS_COPY.usernamePlaceholder}
+                autocomplete="off"
+                aria-errormessage={FRIEND_REQUEST_USERNAME_ERROR_ID}
+                aria-invalid={requestErrorMessage() ? 'true' : undefined}
+                required
+              />
+            </div>
           </TextField>
           <AppButton
             type="submit"
             variant="primary"
             fullWidth
-            class="sm:w-auto"
             leftIcon={<UserPlus class="h-4 w-4" aria-hidden="true" />}
             disabled={!canSubmitRequest()}
           >
@@ -489,7 +642,7 @@ const FriendsPage = () => {
       <UnderlineTabs
         options={FRIENDS_TAB_OPTIONS}
         value={activeTab()}
-        onChange={setActiveTab}
+        onChange={changeActiveTab}
         class="space-y-4"
       >
         <Show
