@@ -4,9 +4,9 @@ import { For, Show } from 'solid-js'
 import { Loading } from '../../../../components'
 import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'
 import {
-  buildSongScoreHistoryPath,
-  buildWorldsendScoreHistoryPath,
-  SCORE_HISTORY_FROM_SONG_DETAIL_STATE,
+  buildSongChartDetailPath,
+  buildWorldsendChartDetailPath,
+  CHART_DETAIL_FROM_SONG_DETAIL_STATE,
 } from '../../../../constants/routes'
 import type { PlayerDataDifficulty } from '../../../../types/api'
 import {
@@ -42,19 +42,16 @@ const OwnScoreBadge = (props: { difficulty: OwnScoreItem['difficulty'] }) => (
 )
 
 /**
- * 自己スコア項目に対応する履歴画面パスを生成する。
+ * 自己スコア項目に対応する譜面詳細画面パスを生成する。
  *
  * @param displayId - 楽曲表示ID。
  * @param difficulty - 通常難易度または WORLD'S END の表示値。
- * @returns 対応するスコア履歴画面パス。
+ * @returns 対応する譜面詳細画面パス。
  */
-const buildScoreHistoryPath = (
-  displayId: string,
-  difficulty: OwnScoreItem['difficulty']
-): string =>
+const buildChartDetailPath = (displayId: string, difficulty: OwnScoreItem['difficulty']): string =>
   difficulty === WORLDSEND_SCORE_LABEL
-    ? buildWorldsendScoreHistoryPath(displayId)
-    : buildSongScoreHistoryPath(displayId, difficulty)
+    ? buildWorldsendChartDetailPath(displayId)
+    : buildSongChartDetailPath(displayId, difficulty)
 
 /**
  * ログインユーザーの譜面別ベストスコアを表示する。
@@ -99,8 +96,8 @@ const OwnScoreCard = (props: {
                     }
                   >
                     <A
-                      href={buildScoreHistoryPath(props.displayId, item.difficulty)}
-                      state={SCORE_HISTORY_FROM_SONG_DETAIL_STATE}
+                      href={buildChartDetailPath(props.displayId, item.difficulty)}
+                      state={CHART_DETAIL_FROM_SONG_DETAIL_STATE}
                       class={`${cardClass} group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus`}
                       aria-label={`${item.difficulty} ${item.score?.toLocaleString('ja-JP')} ${SCORE_HISTORY_LINK_LABEL}`}
                     >

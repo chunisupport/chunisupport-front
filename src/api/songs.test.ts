@@ -168,6 +168,23 @@ test('フレンドランキングAPIは通常譜面ランキングのパスを�
   ])
 })
 
+test("フレンドランキングAPIはWORLD'S END譜面ランキングのパスを呼び出す", async () => {
+  const calledUrls: string[] = []
+
+  globalThis.fetch = async (input) => {
+    calledUrls.push(String(input))
+    return Response.json({ ranking: [], my_rank: null, total: 0 })
+  }
+
+  const { fetchWorldsendFriendRanking } = await loadSongsApi()
+
+  await fetchWorldsendFriendRanking('WE/A B')
+
+  assert.deepEqual(calledUrls, [
+    'http://localhost:3000/internal/friend-rankings/worldsend-songs/WE%2FA%20B',
+  ])
+})
+
 test('fetchVersions は同時呼び出しを同じリクエストにまとめる', async () => {
   const responseBody = {
     versions: [{ name: 'CHUNITHM LUMINOUS', released_at: '2023-12-14' }],

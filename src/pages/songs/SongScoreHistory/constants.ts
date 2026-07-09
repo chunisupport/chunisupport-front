@@ -16,15 +16,9 @@ export const FRIEND_RANKING_EMPTY_LABEL = 'ランキング対象がありませ�
 export const FRIEND_RANKING_RANK_LABEL = '順位'
 /** フレンドランキングのプレイヤー列ラベル。 */
 export const FRIEND_RANKING_PLAYER_LABEL = 'プレイヤー'
-/** フレンドランキングのレーティング列ラベル。 */
-export const FRIEND_RANKING_RATING_LABEL = 'Rating'
-/** フレンドランキングのOVER POWER列ラベル。 */
-export const FRIEND_RANKING_OVERPOWER_LABEL = 'OP'
 /** 履歴一覧の日時列ラベル。 */
 export const SCORE_HISTORY_UPDATED_AT_LABEL = '更新日時'
 /** 履歴一覧のスコア列ラベル。 */
 export const SCORE_HISTORY_SCORE_LABEL = 'スコア'
 /** 現行ベストに表示するラベル。 */
 export const CURRENT_BEST_LABEL = '現在'
-/** 自分のランキング行に表示するラベル。 */
-export const FRIEND_RANKING_SELF_LABEL = '自分'

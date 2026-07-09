@@ -375,12 +375,12 @@ const App = () => {
       <Route path="/songs" component={withNavBar(SongsList)} />
       <Route path="/songs/worldsend" component={withNavBar(WorldsendSongsList)} />
       <Route
-        path="/songs/worldsend/:displayid/score-history"
+        path="/songs/worldsend/:displayid/chart-detail"
         component={withNavBar(withAuth(WorldsendScoreHistory))}
       />
       <Route path="/songs/worldsend/:displayid" component={withNavBar(WorldsendSongDetail)} />
       <Route
-        path="/songs/:displayid/score-history"
+        path="/songs/:displayid/chart-detail"
         component={withNavBar(withAuth(SongScoreHistory))}
       />
       <Route path="/songs/:displayid" component={withNavBar(SongDetail)} />

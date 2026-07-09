@@ -14,6 +14,7 @@ import type {
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
   VersionDTO,
+  WorldsendFriendRankingResponseDTO,
   WorldsendSongDTO,
 } from '../types/api'
 import { sortMasterItemsBySortOrder } from '../utils/masterData'
@@ -193,6 +194,22 @@ export const fetchSongFriendRanking = async (
 ): Promise<FriendRankingResponseDTO> => {
   const response = await fetchWithAuth(
     `${INTERNAL_FRIEND_RANKINGS_PATH}/songs/${encodeURIComponent(displayId)}/charts/${encodeURIComponent(difficulty)}`
+  )
+
+  return response.json()
+}
+
+/**
+ * WORLD'S END譜面のフレンドランキングを取得する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @returns 自分と承認済みフレンドの現在スコアランキング。
+ */
+export const fetchWorldsendFriendRanking = async (
+  displayId: string
+): Promise<WorldsendFriendRankingResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${INTERNAL_FRIEND_RANKINGS_PATH}/worldsend-songs/${encodeURIComponent(displayId)}`
   )
 
   return response.json()
