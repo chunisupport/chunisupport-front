@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildFriendsTabPath, resolveFriendsTabValue } from './constants'
+import { buildFriendsTabOptions, buildFriendsTabPath, resolveFriendsTabValue } from './constants'
 
 test('buildFriendsTabPath: フレンド画面タブに対応するURLを生成する', () => {
   // Given: フレンド画面の各タブ値。
@@ -37,4 +37,25 @@ test('resolveFriendsTabValue: URLセグメントからフレンド画面タブ�
   assert.equal(receivedTab, 'received')
   assert.equal(sentTab, 'sent')
   assert.equal(unknownTab, null)
+})
+
+test('buildFriendsTabOptions: 受付中タブだけ通知ドット状態を反映する', () => {
+  // Given: 受信済みフレンド申請がある状態。
+  const hasPendingReceivedRequest = true
+
+  // When: フレンド画面タブ選択肢を生成する。
+  const options = buildFriendsTabOptions(hasPendingReceivedRequest)
+
+  // Then: 受付中タブだけ通知ドット表示対象になる。
+  assert.deepEqual(
+    options.map((option) => ({
+      value: option.value,
+      hasNotificationDot: option.hasNotificationDot ?? false,
+    })),
+    [
+      { value: 'friends', hasNotificationDot: false },
+      { value: 'received', hasNotificationDot: true },
+      { value: 'sent', hasNotificationDot: false },
+    ]
+  )
 })

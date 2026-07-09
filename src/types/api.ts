@@ -430,6 +430,8 @@ export interface FriendshipUserDTO {
   player_name: string | null
   /** 計算済みレーティング。プレイヤーデータ未連携の場合は null。 */
   rating: number | null
+  /** 非公開アカウントかどうか。 */
+  is_private: boolean
   /** 申請日時。 */
   requested_at: string
   /** 承認日時。申請中の場合は null または未返却。 */
