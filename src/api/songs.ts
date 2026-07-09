@@ -3,6 +3,7 @@ import type {
   AchievementTypeDTO,
   CreateSongRequestDTO,
   CreateWorldsendSongRequestDTO,
+  FriendRankingResponseDTO,
   ManagedSongDTO,
   ManagedWorldsendSongDTO,
   MasterDataDTO,
@@ -27,6 +28,8 @@ const INTERNAL_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/worldsend-songs`
 const INTERNAL_EDITOR_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/editor/worldsend-songs`
 /** 内部向けユーザーAPIのベースパス。 */
 const INTERNAL_USERS_PATH = `${API_BASE_URL}/internal/users`
+/** 内部向けフレンドランキングAPIのベースパス。 */
+const INTERNAL_FRIEND_RANKINGS_PATH = `${API_BASE_URL}/internal/friend-rankings`
 
 let cachedVersionsResponse: VersionsResponse | undefined
 let versionsResponsePromise: Promise<VersionsResponse> | undefined
@@ -172,6 +175,24 @@ export const fetchOwnWorldsendScoreHistory = async (
 ): Promise<ScoreHistoryResponseDTO> => {
   const response = await fetchWithAuth(
     `${INTERNAL_USERS_PATH}/${encodeURIComponent(username)}/record/worldsend-songs/${encodeURIComponent(displayId)}/history`
+  )
+
+  return response.json()
+}
+
+/**
+ * 通常譜面のフレンドランキングを取得する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @param difficulty - 大文字の難易度ドメイン値。
+ * @returns 自分と承認済みフレンドの現在スコアランキング。
+ */
+export const fetchSongFriendRanking = async (
+  displayId: string,
+  difficulty: ScoreHistoryDifficulty
+): Promise<FriendRankingResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${INTERNAL_FRIEND_RANKINGS_PATH}/songs/${encodeURIComponent(displayId)}/charts/${encodeURIComponent(difficulty)}`
   )
 
   return response.json()
