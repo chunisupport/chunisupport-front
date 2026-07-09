@@ -4,7 +4,14 @@ import type { JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
 
 import { fetchMe, fetchUserProfileSummary } from './api/users'
-import { LoadError, Loading, NavBar, PlayerDataEmptyState, XTimeline } from './components'
+import {
+  AppToastRegion,
+  LoadError,
+  Loading,
+  NavBar,
+  PlayerDataEmptyState,
+  XTimeline,
+} from './components'
 import { SelectableCardLink } from './components/common/SelectableCardButton'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
@@ -409,6 +416,7 @@ const App = () => {
 
       {/* 404 */}
       <Route path="*" component={NotFoundPage} />
+      <AppToastRegion />
     </Router>
   )
 }

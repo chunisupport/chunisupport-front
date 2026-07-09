@@ -7,6 +7,7 @@ import { fetchAdminHonors, fetchHonorTypes, updateHonor } from '../../api/honors
 import { Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { FormSelect } from '../../components/common/AppSelect'
+import { showSuccessToast } from '../../components/common/AppToast'
 import { getHonorTypeClassName } from '../../constants/honors'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { AdminHonorDTO, HonorRequestDTO, MasterItemDTO } from '../../types/api'
@@ -174,8 +175,6 @@ const AdminHonorsPage = () => {
   const [editingHonor, setEditingHonor] = createSignal<AdminHonorDTO | null>(null)
   const [editDialogOpen, setEditDialogOpen] = createSignal(false)
   const [saving, setSaving] = createSignal(false)
-  const [message, setMessage] = createSignal('')
-  const [errorMessage, setErrorMessage] = createSignal('')
   const [formErrorMessage, setFormErrorMessage] = createSignal('')
 
   const [honorsResponse] = createResource(() => refreshKey(), fetchAdminHonors)
@@ -229,14 +228,12 @@ const AdminHonorsPage = () => {
     const honor = editingHonor()
     if (!honor) return
 
-    setMessage('')
-    setErrorMessage('')
     setFormErrorMessage('')
     setSaving(true)
 
     try {
       await updateHonor(honor.id, request)
-      setMessage('称号を更新しました。')
+      showSuccessToast('称号を更新しました。')
       handleEditDialogOpenChange(false)
       refresh()
     } catch (error) {
@@ -252,17 +249,6 @@ const AdminHonorsPage = () => {
         <h1 class="text-2xl font-semibold">称号管理</h1>
         <p class="mt-1 text-sm text-text-muted">称号、クラス、image_url を一覧で確認します。</p>
       </div>
-
-      <Show when={message()}>
-        <p class="rounded border border-success-border bg-success-bg px-3 py-2 text-sm text-success">
-          {message()}
-        </p>
-      </Show>
-      <Show when={errorMessage()}>
-        <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-          {errorMessage()}
-        </p>
-      </Show>
 
       <Show when={!honorsResponse.loading} fallback={<Loading />}>
         <div class="overflow-x-auto rounded-lg border border-border bg-surface">

@@ -19,6 +19,7 @@ import {
 import { Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { FormSelect } from '../../components/common/AppSelect'
+import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type {
@@ -538,8 +539,6 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const [createWorldsendDraft, setCreateWorldsendDraft] = createSignal<CreateWorldsendDraft>(
     buildCreateWorldsendDraft()
   )
-  const [message, setMessage] = createSignal('')
-  const [errorMessage, setErrorMessage] = createSignal('')
   const [songSearchQuery, setSongSearchQuery] = createSignal('')
   const [worldsendSearchQuery, setWorldsendSearchQuery] = createSignal('')
 
@@ -633,7 +632,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const handleAddUltimaChart = () => {
     const md = masterData()
     if (!md) {
-      setErrorMessage('マスターデータの取得前のためULTIMA譜面を追加できません。')
+      showErrorToast('マスターデータの取得前のためULTIMA譜面を追加できません。')
       return
     }
 
@@ -642,7 +641,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       return isEditableDifficultyName(difficultyName) && difficultyName === 'ULTIMA'
     })
     if (!ultimaDifficulty) {
-      setErrorMessage('ULTIMA難易度のマスターデータが見つかりません。')
+      showErrorToast('ULTIMA難易度のマスターデータが見つかりません。')
       return
     }
 
@@ -701,23 +700,20 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     const current = draft()
     if (!current) return
 
-    setMessage('')
-    setErrorMessage('')
-
     const md = masterData()
     if (!md) {
-      setErrorMessage('マスターデータの取得前のため更新できません。再読み込みしてください。')
+      showErrorToast('マスターデータの取得前のため更新できません。再読み込みしてください。')
       return
     }
 
     const normalizedReleasedAt = toDateOnly(current.released_at)
     if (current.released_at && !normalizedReleasedAt) {
-      setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
+      showErrorToast('リリース日の形式が不正です。日付を入力し直してください。')
       return
     }
 
     if (hasInvalidEditableChart(current.charts)) {
-      setErrorMessage('譜面の定数・ノーツは0以上で入力してください。')
+      showErrorToast('譜面の定数・ノーツは0以上で入力してください。')
       return
     }
 
@@ -758,9 +754,9 @@ const SongManagementPage = (props: SongManagementPageProps) => {
             }
           : prev
       )
-      setMessage('楽曲を更新しました。')
+      showSuccessToast('楽曲を更新しました。')
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
     }
   }
 
@@ -772,33 +768,30 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const handleCreateSong = async () => {
     const current = createSongDraft()
 
-    setMessage('')
-    setErrorMessage('')
-
     const md = masterData()
     if (!md) {
-      setErrorMessage('マスターデータの取得前のため追加できません。再読み込みしてください。')
+      showErrorToast('マスターデータの取得前のため追加できません。再読み込みしてください。')
       return
     }
 
     if (!current.official_idx.trim() || !current.title.trim() || !current.artist.trim()) {
-      setErrorMessage('公式ID・タイトル・アーティストは必須です。')
+      showErrorToast('公式ID・タイトル・アーティストは必須です。')
       return
     }
 
     if (current.official_idx.trim().length > 10) {
-      setErrorMessage('公式IDは10文字以内で入力してください。')
+      showErrorToast('公式IDは10文字以内で入力してください。')
       return
     }
 
     const genreName = md.genres.find((genre) => genre.id === current.genre_id)?.name
     if (!genreName) {
-      setErrorMessage('ジャンルを選択してください。')
+      showErrorToast('ジャンルを選択してください。')
       return
     }
 
     if (current.bpm !== null && current.bpm < 0) {
-      setErrorMessage('BPMは0以上で入力してください。')
+      showErrorToast('BPMは0以上で入力してください。')
       return
     }
 
@@ -807,13 +800,13 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         chart.enabled && (parseFloat(chart.const) < 0 || (chart.notes !== null && chart.notes < 0))
     )
     if (invalidChart) {
-      setErrorMessage('追加する譜面の定数・ノーツは0以上で入力してください。')
+      showErrorToast('追加する譜面の定数・ノーツは0以上で入力してください。')
       return
     }
 
     const normalizedReleasedAt = toDateOnly(current.released_at)
     if (current.released_at && !normalizedReleasedAt) {
-      setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
+      showErrorToast('リリース日の形式が不正です。日付を入力し直してください。')
       return
     }
 
@@ -840,11 +833,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
     try {
       await createSong(request)
-      setMessage('通常楽曲を追加しました。')
+      showSuccessToast('通常楽曲を追加しました。')
       setCreateSongDraft(buildCreateSongDraft())
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '追加に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '追加に失敗しました。'))
     }
   }
 
@@ -856,49 +849,46 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const handleCreateWorldsendSong = async () => {
     const current = createWorldsendDraft()
 
-    setMessage('')
-    setErrorMessage('')
-
     const md = masterData()
     if (!md) {
-      setErrorMessage('マスターデータの取得前のため追加できません。再読み込みしてください。')
+      showErrorToast('マスターデータの取得前のため追加できません。再読み込みしてください。')
       return
     }
 
     if (!current.official_idx.trim() || !current.title.trim() || !current.artist.trim()) {
-      setErrorMessage('公式ID・タイトル・アーティストは必須です。')
+      showErrorToast('公式ID・タイトル・アーティストは必須です。')
       return
     }
 
     if (current.official_idx.trim().length > 10) {
-      setErrorMessage('公式IDは10文字以内で入力してください。')
+      showErrorToast('公式IDは10文字以内で入力してください。')
       return
     }
 
     const genreName = md.genres.find((genre) => genre.id === current.genre_id)?.name
     if (!genreName) {
-      setErrorMessage('ジャンルを選択してください。')
+      showErrorToast('ジャンルを選択してください。')
       return
     }
 
     if (current.bpm !== null && current.bpm < 0) {
-      setErrorMessage('BPMは0以上で入力してください。')
+      showErrorToast('BPMは0以上で入力してください。')
       return
     }
 
     if (current.level_star !== null && (current.level_star < 1 || current.level_star > 5)) {
-      setErrorMessage("WORLD'S ENDレベルは1〜5で入力してください。")
+      showErrorToast("WORLD'S ENDレベルは1〜5で入力してください。")
       return
     }
 
     if (current.notes !== null && current.notes < 0) {
-      setErrorMessage('ノーツは0以上で入力してください。')
+      showErrorToast('ノーツは0以上で入力してください。')
       return
     }
 
     const normalizedReleasedAt = toDateOnly(current.released_at)
     if (current.released_at && !normalizedReleasedAt) {
-      setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
+      showErrorToast('リリース日の形式が不正です。日付を入力し直してください。')
       return
     }
 
@@ -930,11 +920,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
     try {
       await createWorldsendSong(request)
-      setMessage("WORLD'S END楽曲を追加しました。")
+      showSuccessToast("WORLD'S END楽曲を追加しました。")
       setCreateWorldsendDraft(buildCreateWorldsendDraft())
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '追加に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '追加に失敗しました。'))
     }
   }
 
@@ -947,18 +937,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     const current = worldsendDraft()
     if (!current) return
 
-    setMessage('')
-    setErrorMessage('')
-
     const md = masterData()
     if (!md) {
-      setErrorMessage('マスターデータの取得前のため更新できません。再読み込みしてください。')
+      showErrorToast('マスターデータの取得前のため更新できません。再読み込みしてください。')
       return
     }
 
     const normalizedReleasedAt = toDateOnly(current.released_at)
     if (current.released_at && !normalizedReleasedAt) {
-      setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
+      showErrorToast('リリース日の形式が不正です。日付を入力し直してください。')
       return
     }
 
@@ -995,9 +982,9 @@ const SongManagementPage = (props: SongManagementPageProps) => {
             }
           : prev
       )
-      setMessage("WORLD'S END楽曲を更新しました。")
+      showSuccessToast("WORLD'S END楽曲を更新しました。")
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
     }
   }
 
@@ -1009,14 +996,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
    */
   const handleDeleteSong = async (displayId: string) => {
     if (!window.confirm('この楽曲を削除しますか？')) return
-    setMessage('')
-    setErrorMessage('')
     try {
       await deleteSongByDisplayId(displayId)
-      setMessage('楽曲を削除しました。')
+      showSuccessToast('楽曲を削除しました。')
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
   }
 
@@ -1027,14 +1012,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
    * @returns 処理完了後に解決されるPromise。
    */
   const handleRestoreSong = async (displayId: string) => {
-    setMessage('')
-    setErrorMessage('')
     try {
       await restoreSongByDisplayId(displayId)
-      setMessage('楽曲を復活しました。')
+      showSuccessToast('楽曲を復活しました。')
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
     }
   }
 
@@ -1046,14 +1029,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
    */
   const handleDeleteWorldsendSong = async (displayId: string) => {
     if (!window.confirm("このWORLD'S END楽曲を削除しますか？")) return
-    setMessage('')
-    setErrorMessage('')
     try {
       await deleteWorldsendSongByDisplayId(displayId)
-      setMessage("WORLD'S END楽曲を削除しました。")
+      showSuccessToast("WORLD'S END楽曲を削除しました。")
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
   }
 
@@ -1064,14 +1045,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
    * @returns 処理完了後に解決されるPromise。
    */
   const handleRestoreWorldsendSong = async (displayId: string) => {
-    setMessage('')
-    setErrorMessage('')
     try {
       await restoreWorldsendSongByDisplayId(displayId)
-      setMessage("WORLD'S END楽曲を復活しました。")
+      showSuccessToast("WORLD'S END楽曲を復活しました。")
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
     }
   }
 
@@ -1095,17 +1074,6 @@ const SongManagementPage = (props: SongManagementPageProps) => {
           API仕様準拠: 通常楽曲・WORLD&apos;S END ともに追加・編集・削除・復活に対応します。
         </p>
       </div>
-
-      <Show when={message()}>
-        <p class="rounded border border-success-border bg-success-bg px-3 py-2 text-sm text-success">
-          {message()}
-        </p>
-      </Show>
-      <Show when={errorMessage()}>
-        <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-          {errorMessage()}
-        </p>
-      </Show>
 
       <section class="rounded-lg border border-border bg-surface p-4">
         <h2 class="text-lg font-semibold">通常楽曲（編集 / 削除 / 復活）</h2>
