@@ -1,4 +1,9 @@
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart'
+import {
+  CHART_CONST_MAX,
+  CHART_CONST_MIN,
+  GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES,
+  SCORE_MIN,
+} from '../../../../../constants/chart'
 import type {
   GoalAchievementParams,
   GoalAchievementType,
@@ -46,6 +51,8 @@ interface GoalFormSelectionFallbacks {
   allDifficultySelections: string[]
   allGenreSelections: string[]
   allVersionSelections: string[]
+  /** 作成フォームで初期選択する難易度ID。 */
+  defaultDifficultySelections: string[]
 }
 
 export interface GoalFormAttributesInput {
@@ -206,6 +213,23 @@ export const buildAllIdSelections = (items: readonly { id: number }[]): string[]
   items.map((item) => String(item.id))
 
 /**
+ * 目標作成フォームで初期選択する難易度（MASTER・ULTIMA）のID配列を作成する。
+ *
+ * @param items - 難易度マスタデータ一覧。
+ * @returns MASTERとULTIMAの文字列ID配列。
+ */
+export const buildDefaultDifficultySelections = (
+  items: readonly { id: number; name: string }[]
+): string[] =>
+  items
+    .filter((item) =>
+      GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES.includes(
+        item.name.toUpperCase() as (typeof GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES)[number]
+      )
+    )
+    .map((item) => String(item.id))
+
+/**
  * 保存済み属性が未指定の場合だけ、現在の全選択値で補完する。
  *
  * @param value - API属性に保存されたID指定。
@@ -244,7 +268,7 @@ export const toggleSelection = (current: string[], value: string, checked: boole
 /**
  * 作成フォームで使う初期状態を作成する。
  *
- * @param fallbacks - マスタデータ由来の全選択値。
+ * @param fallbacks - マスタデータ由来の全選択値と、作成時の難易度初期選択値。
  * @returns 作成フォームの初期状態。
  */
 export const createDefaultGoalFormState = (
@@ -262,7 +286,7 @@ export const createDefaultGoalFormState = (
   comboLamp: 'FC',
   invert: false,
   chartTargetMode: 'normal',
-  diffs: fallbacks.allDifficultySelections,
+  diffs: fallbacks.defaultDifficultySelections,
   constMin: String(CHART_CONST_MIN),
   constMax: String(CHART_CONST_MAX),
   genres: fallbacks.allGenreSelections,
