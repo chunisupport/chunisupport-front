@@ -27,6 +27,7 @@ import type { GoalSelectOption } from './goalFormFields'
 import {
   buildAllIdSelections,
   buildAllVersionSelections,
+  buildDefaultDifficultySelections,
   buildGoalFormAchievementParams,
   buildGoalFormAttributes,
   canUseDynamicTotalTarget,
@@ -132,6 +133,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const allDifficultySelections = createMemo(() =>
     buildAllIdSelections(props.masterData.difficulties)
   )
+  const defaultDifficultySelections = createMemo(() =>
+    buildDefaultDifficultySelections(props.masterData.difficulties)
+  )
   const allGenreSelections = createMemo(() => buildAllIdSelections(props.masterData.genres))
   const allVersionSelections = createMemo(() => buildAllVersionSelections(versionOptions()))
   const genreSelectOptions = createMemo(() =>
@@ -198,6 +202,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       allDifficultySelections: allDifficultySelections(),
       allGenreSelections: allGenreSelections(),
       allVersionSelections: allVersionSelections(),
+      defaultDifficultySelections: defaultDifficultySelections(),
     })
 
     setTitle(nextState.title)

@@ -3,6 +3,7 @@ import test from 'node:test'
 import { CHART_CONST_MAX, CHART_CONST_MIN } from '../../../../../constants/chart'
 import type { GoalDTO } from '../../../../../types/api'
 import {
+  buildDefaultDifficultySelections,
   buildGoalFormAchievementParams,
   buildGoalFormAttributes,
   createGoalFormInitialState,
@@ -12,9 +13,10 @@ const selectionFallbacks = {
   allDifficultySelections: ['1', '2', '3'],
   allGenreSelections: ['10', '20'],
   allVersionSelections: ['1', '2'],
+  defaultDifficultySelections: ['3'],
 }
 
-test('作成フォームの初期状態は全選択と標準値で作成される', () => {
+test('作成フォームの初期状態はMASTER/ULTIMA選択と標準値で作成される', () => {
   // Given / When
   const result = createGoalFormInitialState(undefined, selectionFallbacks)
 
@@ -26,9 +28,45 @@ test('作成フォームの初期状態は全選択と標準値で作成され�
   assert.equal(result.chartTargetMode, 'normal')
   assert.equal(result.constMin, String(CHART_CONST_MIN))
   assert.equal(result.constMax, String(CHART_CONST_MAX))
-  assert.deepEqual(result.diffs, selectionFallbacks.allDifficultySelections)
+  assert.deepEqual(result.diffs, selectionFallbacks.defaultDifficultySelections)
   assert.deepEqual(result.genres, selectionFallbacks.allGenreSelections)
   assert.deepEqual(result.versions, selectionFallbacks.allVersionSelections)
+})
+
+test('作成フォームの難易度初期選択はMASTERとULTIMAだけを含む', () => {
+  // Given: BASIC〜ULTIMA を含む難易度マスタデータ（表記揺れを含む）
+  const difficulties = [
+    { id: 1, name: 'basic' },
+    { id: 2, name: 'ADVANCED' },
+    { id: 3, name: 'EXPERT' },
+    { id: 4, name: 'master' },
+    { id: 5, name: 'ULTIMA' },
+  ]
+
+  // When: 初期選択難易度を構築する
+  const result = buildDefaultDifficultySelections(difficulties)
+
+  // Then: 大文字正規化のうえ MASTER と ULTIMA だけが選択される
+  assert.deepEqual(result, ['4', '5'])
+})
+
+test('編集フォームでdiffが未指定の場合は全難易度が選択される', () => {
+  // Given: diff を含まない保存済み目標
+  const goal = {
+    id: 1,
+    title: '全難易度目標',
+    achievement_type: 'rank_count',
+    achievement_params: { score: 1000000 },
+    attributes: { genre: [10], ver: [2] },
+    invert: false,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When: 編集用初期状態を作成する
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then: 未指定の難易度は全選択のフォールバックで補完される
+  assert.deepEqual(result.diffs, selectionFallbacks.allDifficultySelections)
 })
 
 test('編集フォームの初期状態は保存済み目標から復元される', () => {
