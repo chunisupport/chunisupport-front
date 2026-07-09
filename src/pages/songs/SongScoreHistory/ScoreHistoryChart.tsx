@@ -42,6 +42,7 @@ const CHART_TEXT_COLOR_VARIABLE = '--cs-color-text'
 const CHART_GRID_COLOR_VARIABLE = '--cs-color-border'
 const CHART_MIN_PADDING = 5_000
 const CHART_MIN_STEP = 1_000
+const SCORE_HISTORY_TICK_INTERVAL = 1_000
 const CHART_POINT_RADIUS = 3
 const CHART_POINT_HOVER_RADIUS = 5
 const CHART_BORDER_WIDTH = 2
@@ -87,6 +88,15 @@ const getScoreAxisMin = (entries: readonly ScoreHistoryEntryDTO[]): number => {
   const minScore = Math.min(...entries.map((entry) => entry.score))
   return Math.max(0, Math.floor((minScore - CHART_MIN_PADDING) / CHART_MIN_STEP) * CHART_MIN_STEP)
 }
+
+/**
+ * スコア軸の目盛りを苦手譜面インスペクターと同じk表記へ整形する。
+ *
+ * @param value - Chart.jsから渡される目盛り値。
+ * @returns 1004k のような短縮スコア表記。
+ */
+const formatScoreAxisTick = (value: string | number): string =>
+  `${Number(value) / SCORE_HISTORY_TICK_INTERVAL}k`
 
 /**
  * スコア推移グラフのChart.js設定を生成する。
@@ -139,7 +149,8 @@ const createScoreHistoryChartOptions = (
         max: MAX_SCORE,
         ticks: {
           color: textColor,
-          callback: (value) => Number(value).toLocaleString('ja-JP'),
+          stepSize: SCORE_HISTORY_TICK_INTERVAL,
+          callback: formatScoreAxisTick,
         },
         grid: {
           color: gridColor,

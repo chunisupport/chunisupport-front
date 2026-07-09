@@ -13,8 +13,8 @@ export const LOCKED_SONGS_FINDER_PATH = `${TOOLS_PATH}/locked-songs-finder`
 /** EDITOR向け楽曲編集画面のパス。 */
 export const EDITOR_SONGS_PATH = '/editor/songs'
 
-/** 楽曲詳細からスコア履歴へ遷移したことを表すルーター state。 */
-export const SCORE_HISTORY_FROM_SONG_DETAIL_STATE = {
+/** 楽曲詳細から譜面詳細へ遷移したことを表すルーター state。 */
+export const CHART_DETAIL_FROM_SONG_DETAIL_STATE = {
   source: 'song-detail',
 } as const
 
@@ -42,36 +42,36 @@ export const buildWorldsendSongDetailPath = (displayId: string): string =>
   `/songs/worldsend/${encodeURIComponent(displayId)}`
 
 /**
- * 楽曲詳細からスコア履歴へ遷移した state か判定する。
+ * 楽曲詳細から譜面詳細へ遷移した state か判定する。
  *
  * @param value - ルーター location state。
  * @returns 楽曲詳細からの遷移 state の場合は true。
  */
-export const isScoreHistoryFromSongDetailState = (
+export const isChartDetailFromSongDetailState = (
   value: unknown
-): value is typeof SCORE_HISTORY_FROM_SONG_DETAIL_STATE =>
+): value is typeof CHART_DETAIL_FROM_SONG_DETAIL_STATE =>
   typeof value === 'object' &&
   value !== null &&
   'source' in value &&
-  value.source === SCORE_HISTORY_FROM_SONG_DETAIL_STATE.source
+  value.source === CHART_DETAIL_FROM_SONG_DETAIL_STATE.source
 
 /**
- * 通常譜面のスコア履歴画面パスを生成する。
+ * 通常譜面の譜面詳細画面パスを生成する。
  *
  * @param displayId - 楽曲表示ID。
  * @param difficulty - 大文字の難易度ドメイン値。
- * @returns 難易度クエリを含むスコア履歴画面パス。
+ * @returns 難易度クエリを含む譜面詳細画面パス。
  */
-export const buildSongScoreHistoryPath = (displayId: string, difficulty: string): string =>
-  `/songs/${encodeURIComponent(displayId)}/score-history?${new URLSearchParams({
+export const buildSongChartDetailPath = (displayId: string, difficulty: string): string =>
+  `/songs/${encodeURIComponent(displayId)}/chart-detail?${new URLSearchParams({
     diff: difficulty.toLowerCase(),
   }).toString()}`
 
 /**
- * WORLD'S END のスコア履歴画面パスを生成する。
+ * WORLD'S END の譜面詳細画面パスを生成する。
  *
  * @param displayId - 楽曲表示ID。
- * @returns WORLD'S END スコア履歴画面パス。
+ * @returns WORLD'S END 譜面詳細画面パス。
  */
-export const buildWorldsendScoreHistoryPath = (displayId: string): string =>
-  `/songs/worldsend/${encodeURIComponent(displayId)}/score-history`
+export const buildWorldsendChartDetailPath = (displayId: string): string =>
+  `/songs/worldsend/${encodeURIComponent(displayId)}/chart-detail`

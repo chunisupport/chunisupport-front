@@ -336,6 +336,38 @@ export interface FriendRankingResponseDTO {
   total: number
 }
 
+/** WORLD'S ENDのフレンドランキング1行分。 */
+export interface WorldsendFriendRankingEntryDTO {
+  /** 同点を考慮した順位。 */
+  rank: number
+  /** 内部ユーザーID。自分の行は0。 */
+  user_id: number
+  /** ユーザー名。 */
+  username: string
+  /** プレイヤー名。 */
+  player_name: string
+  /** 現在スコア。 */
+  score: number
+  /** クリアランプ。 */
+  clear_lamp: WorldsendRecordDTO['clear_lamp']
+  /** コンボランプ。 */
+  combo_lamp: WorldsendRecordDTO['combo_lamp']
+  /** フルチェインランプ。 */
+  full_chain: WorldsendRecordDTO['full_chain']
+  /** ログインユーザー自身の行か。 */
+  is_self: boolean
+}
+
+/** WORLD'S ENDのフレンドランキングレスポンス。 */
+export interface WorldsendFriendRankingResponseDTO {
+  /** 自分とフレンドのランキング。 */
+  ranking: WorldsendFriendRankingEntryDTO[]
+  /** 自分の順位。未プレイの場合は null。 */
+  my_rank: number | null
+  /** ランキング対象人数。 */
+  total: number
+}
+
 // --- マスターデータ用型定義 ---
 export interface MasterItemDTO {
   id: number

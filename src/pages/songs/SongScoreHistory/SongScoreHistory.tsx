@@ -8,7 +8,7 @@ import {
 } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
-import { buildSongDetailPath, isScoreHistoryFromSongDetailState } from '../../../constants/routes'
+import { buildSongDetailPath, isChartDetailFromSongDetailState } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
 import { parseScoreHistoryDifficulty } from '../../../utils/scoreHistory'
@@ -69,7 +69,7 @@ const SongScoreHistory = () => {
    * @returns なし。
    */
   const handleSongDetailReturn = (): void => {
-    if (isScoreHistoryFromSongDetailState(location.state)) {
+    if (isChartDetailFromSongDetailState(location.state)) {
       navigate(-1)
       return
     }

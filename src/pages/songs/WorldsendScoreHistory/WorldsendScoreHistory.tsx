@@ -1,16 +1,25 @@
 import { Button } from '@kobalte/core/button'
 import { A, useLocation, useNavigate, useParams } from '@solidjs/router'
 import { createResource, type JSX, Show } from 'solid-js'
-import { fetchOwnWorldsendScoreHistory, fetchWorldsendSongByDisplayId } from '../../../api/songs'
+import {
+  fetchOwnWorldsendScoreHistory,
+  fetchWorldsendFriendRanking,
+  fetchWorldsendSongByDisplayId,
+} from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import {
   buildWorldsendSongDetailPath,
-  isScoreHistoryFromSongDetailState,
+  isChartDetailFromSongDetailState,
 } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
 import { WORLDSEND_SCORE_LABEL } from '../SongDetail/scoreHistory.constants'
-import { SCORE_HISTORY_PAGE_TITLE } from '../SongScoreHistory/constants'
+import {
+  FRIEND_RANKING_SECTION_LABEL,
+  SCORE_HISTORY_PAGE_TITLE,
+  SCORE_HISTORY_SECTION_LABEL,
+} from '../SongScoreHistory/constants'
+import FriendRankingTable from '../SongScoreHistory/FriendRankingTable'
 import ScoreHistoryTable from '../SongScoreHistory/ScoreHistoryTable'
 
 /**
@@ -30,6 +39,7 @@ const WorldsendScoreHistory = () => {
     },
     (source) => fetchOwnWorldsendScoreHistory(source.displayId, source.username)
   )
+  const [friendRanking] = createResource(() => params.displayid, fetchWorldsendFriendRanking)
 
   useDocumentTitle(() => `${song()?.title ?? WORLDSEND_SCORE_LABEL} - ${SCORE_HISTORY_PAGE_TITLE}`)
 
@@ -40,7 +50,7 @@ const WorldsendScoreHistory = () => {
    * @returns なし。
    */
   const handleSongDetailReturn: JSX.EventHandler<HTMLAnchorElement, MouseEvent> = (event) => {
-    if (!isScoreHistoryFromSongDetailState(location.state)) return
+    if (!isChartDetailFromSongDetailState(location.state)) return
 
     event.preventDefault()
     navigate(-1)
@@ -49,7 +59,7 @@ const WorldsendScoreHistory = () => {
   return (
     <Show when={!song.error} fallback={<LoadError error={song.error} />}>
       <Show when={!song.loading} fallback={<Loading />}>
-        <main class="mx-auto w-full max-w-4xl space-y-4 p-4">
+        <main class="mx-auto w-full max-w-4xl space-y-6 p-4">
           <Button
             as={A}
             href={buildWorldsendSongDetailPath(params.displayid)}
@@ -69,11 +79,23 @@ const WorldsendScoreHistory = () => {
             </div>
           </header>
 
-          <Show when={!history.error} fallback={<LoadError error={history.error} />}>
-            <Show when={!history.loading} fallback={<Loading />}>
-              <ScoreHistoryTable entries={history()?.entries ?? []} />
+          <section class="space-y-4">
+            <h2 class="text-lg font-semibold">{SCORE_HISTORY_SECTION_LABEL}</h2>
+            <Show when={!history.error} fallback={<LoadError error={history.error} />}>
+              <Show when={!history.loading} fallback={<Loading />}>
+                <ScoreHistoryTable entries={history()?.entries ?? []} />
+              </Show>
             </Show>
-          </Show>
+          </section>
+
+          <section class="space-y-4">
+            <h2 class="text-lg font-semibold">{FRIEND_RANKING_SECTION_LABEL}</h2>
+            <Show when={!friendRanking.error} fallback={<LoadError error={friendRanking.error} />}>
+              <Show when={!friendRanking.loading} fallback={<Loading />}>
+                <FriendRankingTable entries={friendRanking()?.ranking ?? []} />
+              </Show>
+            </Show>
+          </section>
         </main>
       </Show>
     </Show>
