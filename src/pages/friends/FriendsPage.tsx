@@ -37,6 +37,7 @@ import {
 } from '../../stores/friendRequestNotification'
 import type { FriendshipUserDTO } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { sanitizeFriendUsernameInput } from '../../utils/friendUsernameInput'
 import {
   buildFriendsTabOptions,
   buildFriendsTabPath,
@@ -428,7 +429,7 @@ const FriendsPage = () => {
    * @returns なし。
    */
   const updateUsernameInput = (value: string): void => {
-    setUsernameInput(value)
+    setUsernameInput(sanitizeFriendUsernameInput(value))
     setRequestErrorMessage('')
   }
 
