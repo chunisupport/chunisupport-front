@@ -85,6 +85,16 @@ const CHART_EXCLUDED_RATING_BAND = 'ALL'
 const CHART_X_AXIS_TICK_PADDING = 8
 const AVERAGE_SCORE_CHART_TITLE = '平均スコア'
 const AVERAGE_SCORE_CHART_COLOR = '--cs-color-action-primary'
+/** AJC表現と同じ淡い虹色グラデーションをChart.jsへ渡すCSS変数列。 */
+const ALL_JUSTICE_CRITICAL_CHART_GRADIENT_COLOR_VARIABLES = [
+  '--cs-color-lamp-all-justice-critical-rainbow-1',
+  '--cs-color-lamp-all-justice-critical-rainbow-2',
+  '--cs-color-lamp-all-justice-critical-rainbow-3',
+  '--cs-color-lamp-all-justice-critical-rainbow-4',
+  '--cs-color-lamp-all-justice-critical-rainbow-5',
+  '--cs-color-lamp-all-justice-critical-rainbow-6',
+  '--cs-color-lamp-all-justice-critical-rainbow-7',
+] as const
 /** 統計テーブルの表示カテゴリ選択肢。 */
 export const TABLE_VIEW_OPTIONS: SongStatsTableViewOption[] = [
   { label: '平均スコア', value: 'averageScore' },
@@ -112,7 +122,13 @@ const RANK_CHART_DATASET_DEFINITIONS = [
   { label: 'SS+', valueKey: 'ssp', colorVariable: '--cs-color-score-rank-ss-bg' },
   { label: 'SSS', valueKey: 'sss', colorVariable: '--cs-color-score-rank-sss-bg' },
   { label: 'SSS+', valueKey: 'sssp', colorVariable: '--cs-color-score-rank-sssp-bg' },
-  { label: 'MAX', valueKey: 'max', colorVariable: '--cs-color-success' },
+  {
+    label: 'MAX',
+    valueKey: 'max',
+    colorVariable: '--cs-color-lamp-all-justice-critical-bg',
+    legendBackgroundVariable: '--cs-gradient-lamp-all-justice-critical-bg',
+    gradientColorVariables: ALL_JUSTICE_CRITICAL_CHART_GRADIENT_COLOR_VARIABLES,
+  },
 ] as const
 const HIGHLIGHTED_RATING_BAND_ROW_CLASS =
   'border-l-4 border-l-action-primary bg-action-primary-muted font-semibold'
@@ -136,15 +152,7 @@ const COMBO_CHART_DATASET_DEFINITIONS = [
     valueKey: 'ajc',
     colorVariable: '--cs-color-lamp-all-justice-critical-bg',
     legendBackgroundVariable: '--cs-gradient-lamp-all-justice-critical-bg',
-    gradientColorVariables: [
-      '--cs-color-lamp-all-justice-critical-rainbow-1',
-      '--cs-color-lamp-all-justice-critical-rainbow-2',
-      '--cs-color-lamp-all-justice-critical-rainbow-3',
-      '--cs-color-lamp-all-justice-critical-rainbow-4',
-      '--cs-color-lamp-all-justice-critical-rainbow-5',
-      '--cs-color-lamp-all-justice-critical-rainbow-6',
-      '--cs-color-lamp-all-justice-critical-rainbow-7',
-    ],
+    gradientColorVariables: ALL_JUSTICE_CRITICAL_CHART_GRADIENT_COLOR_VARIABLES,
   },
 ] as const
 const CLEAR_CHART_DATASET_DEFINITIONS = [

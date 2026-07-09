@@ -13,6 +13,48 @@ export const LOCKED_SONGS_FINDER_PATH = `${TOOLS_PATH}/locked-songs-finder`
 /** EDITOR向け楽曲編集画面のパス。 */
 export const EDITOR_SONGS_PATH = '/editor/songs'
 
+/** 楽曲詳細からスコア履歴へ遷移したことを表すルーター state。 */
+export const SCORE_HISTORY_FROM_SONG_DETAIL_STATE = {
+  source: 'song-detail',
+} as const
+
+/**
+ * 通常楽曲詳細画面パスを生成する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @param difficulty - 初期選択する難易度ドメイン値。
+ * @returns 通常楽曲詳細画面パス。
+ */
+export const buildSongDetailPath = (displayId: string, difficulty?: string): string => {
+  const path = `/songs/${encodeURIComponent(displayId)}`
+  if (!difficulty) return path
+
+  return `${path}?${new URLSearchParams({ diff: difficulty.toLowerCase() }).toString()}`
+}
+
+/**
+ * WORLD'S END 楽曲詳細画面パスを生成する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @returns WORLD'S END 楽曲詳細画面パス。
+ */
+export const buildWorldsendSongDetailPath = (displayId: string): string =>
+  `/songs/worldsend/${encodeURIComponent(displayId)}`
+
+/**
+ * 楽曲詳細からスコア履歴へ遷移した state か判定する。
+ *
+ * @param value - ルーター location state。
+ * @returns 楽曲詳細からの遷移 state の場合は true。
+ */
+export const isScoreHistoryFromSongDetailState = (
+  value: unknown
+): value is typeof SCORE_HISTORY_FROM_SONG_DETAIL_STATE =>
+  typeof value === 'object' &&
+  value !== null &&
+  'source' in value &&
+  value.source === SCORE_HISTORY_FROM_SONG_DETAIL_STATE.source
+
 /**
  * 通常譜面のスコア履歴画面パスを生成する。
  *
