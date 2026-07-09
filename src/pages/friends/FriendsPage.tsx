@@ -1,7 +1,8 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
+import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { Check, Copy, RotateCw, UserMinus, UserPlus, X } from 'lucide-solid'
+import { Check, Copy, EllipsisVertical, RotateCw, UserMinus, UserPlus, X } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -22,6 +23,7 @@ import {
   rejectFriendRequest,
 } from '../../api/friends'
 import { AppButton } from '../../components/common/AppButton'
+import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../../components/common/AppMenu'
 import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { Loading } from '../../components/Loading'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -39,7 +41,6 @@ import {
   resolveFriendsTabValue,
 } from './constants'
 import {
-  formatFriendDateTime,
   formatFriendPlayerLevel,
   formatFriendPlayerName,
   formatFriendRating,
@@ -51,7 +52,7 @@ type FriendshipPageData = {
   sent: FriendshipUserDTO[]
 }
 
-type FriendshipOperation = 'request' | 'accept' | 'reject' | 'remove'
+type FriendshipOperation = 'request' | 'accept' | 'reject' | 'cancel' | 'remove'
 
 type ApiErrorLike = {
   /** APIエラーコード。 */
@@ -80,6 +81,8 @@ type FriendshipListProps = {
   onReject: (user: FriendshipUserDTO) => void
   /** フレンド解除時の処理。 */
   onRemove: (user: FriendshipUserDTO) => void
+  /** 送信済み申請取り消し時の処理。 */
+  onCancel: (user: FriendshipUserDTO) => void
 }
 
 type FriendConfirmDialogProps = {
@@ -138,59 +141,95 @@ const formatFriendRequestErrorMessage = (error: unknown): string => {
 }
 
 /**
- * フレンド画面のユーザー行に表示する操作ボタン群を生成する。
+ * フレンドカード右上のメニュー操作を表示する。
  *
- * @param props - 表示種別、対象ユーザー、操作状態、イベントハンドラー。
- * @returns 対象行に対応する操作ボタン。
+ * @param props - 操作状態とフレンド解除ハンドラー。
+ * @returns フレンドカード用のドロップダウンメニュー。
  */
-const FriendActions = (props: {
+const FriendMenuActions = (props: { busy: boolean; onRemove: () => void }): JSX.Element => (
+  <DropdownMenu gutter={4}>
+    <AppMenuTrigger
+      label={FRIENDS_COPY.openFriendMenu}
+      icon={<EllipsisVertical class="h-5 w-5" aria-hidden="true" />}
+      disabled={props.busy}
+    />
+    <DropdownMenu.Portal>
+      <AppMenuContent variant="compact">
+        <AppMenuItem
+          icon={<UserMinus class="h-4 w-4" aria-hidden="true" />}
+          label={FRIENDS_COPY.remove}
+          tone="danger"
+          disabled={props.busy}
+          onSelect={props.onRemove}
+        />
+      </AppMenuContent>
+    </DropdownMenu.Portal>
+  </DropdownMenu>
+)
+
+/**
+ * フレンド申請カード下部の操作ボタン群を表示する。
+ *
+ * @param props - 表示種別、操作状態、イベントハンドラー。
+ * @returns 申請カード用の操作ボタン。
+ */
+const FriendRequestActions = (props: {
   variant: FriendsTabValue
-  user: FriendshipUserDTO
   busy: boolean
   onAccept: () => void
   onReject: () => void
-  onRemove: () => void
+  onCancel: () => void
 }): JSX.Element => (
-  <div class="flex flex-wrap items-center gap-2">
-    <A
-      href={`/users/${encodeURIComponent(props.user.username)}`}
-      class="inline-flex items-center justify-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-sm font-medium text-text-muted transition-colors hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-    >
-      {FRIENDS_COPY.profile}
-    </A>
-    <Show when={props.variant === 'received'}>
-      <AppButton
-        variant="primary"
-        size="sm"
-        leftIcon={<Check class="h-4 w-4" aria-hidden="true" />}
-        disabled={props.busy}
-        onClick={props.onAccept}
-      >
-        {FRIENDS_COPY.accept}
-      </AppButton>
-      <AppButton
-        variant="dangerOutline"
-        size="sm"
-        leftIcon={<X class="h-4 w-4" aria-hidden="true" />}
-        disabled={props.busy}
-        onClick={props.onReject}
-      >
-        {FRIENDS_COPY.reject}
-      </AppButton>
-    </Show>
-    <Show when={props.variant === 'friends'}>
-      <AppButton
-        variant="dangerOutline"
-        size="sm"
-        leftIcon={<UserMinus class="h-4 w-4" aria-hidden="true" />}
-        disabled={props.busy}
-        onClick={props.onRemove}
-      >
-        {FRIENDS_COPY.remove}
-      </AppButton>
-    </Show>
-  </div>
+  <Show when={props.variant !== 'friends'}>
+    <div class="mt-4 flex w-full flex-col gap-2">
+      <Show when={props.variant === 'received'}>
+        <div class="flex flex-col gap-2">
+          <AppButton
+            variant="primary"
+            size="sm"
+            fullWidth
+            leftIcon={<Check class="h-4 w-4" aria-hidden="true" />}
+            disabled={props.busy}
+            onClick={props.onAccept}
+          >
+            {FRIENDS_COPY.accept}
+          </AppButton>
+          <AppButton
+            variant="dangerOutline"
+            size="sm"
+            fullWidth
+            leftIcon={<X class="h-4 w-4" aria-hidden="true" />}
+            disabled={props.busy}
+            onClick={props.onReject}
+          >
+            {FRIENDS_COPY.reject}
+          </AppButton>
+        </div>
+      </Show>
+      <Show when={props.variant === 'sent'}>
+        <AppButton
+          variant="dangerOutline"
+          size="sm"
+          fullWidth
+          leftIcon={<X class="h-4 w-4" aria-hidden="true" />}
+          disabled={props.busy}
+          onClick={props.onCancel}
+        >
+          {FRIENDS_COPY.cancelRequest}
+        </AppButton>
+      </Show>
+    </div>
+  </Show>
 )
+
+/**
+ * フレンドユーザーのプロフィールURLを生成する。
+ *
+ * @param username - 遷移先ユーザー名。
+ * @returns プロフィール画面のURL。
+ */
+const buildFriendProfilePath = (username: string): string =>
+  `/users/${encodeURIComponent(username)}`
 
 /**
  * フレンド申請拒否またはフレンド解除の確認ダイアログを表示する。
@@ -249,48 +288,48 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
       </p>
     }
   >
-    <ul class="space-y-3">
+    <ul class="flex flex-wrap justify-center gap-3 sm:justify-start">
       <For each={props.items}>
         {(user) => (
-          <li class="rounded-lg border border-border bg-surface p-4">
-            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div class="min-w-0">
-                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <p class="text-lg font-semibold text-text">{user.username}</p>
-                  <span class="text-sm text-text-muted">
-                    {formatFriendPlayerName(user.player_name)}
-                  </span>
-                </div>
-                <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
-                  <div>
-                    <dt class="text-text-subtle">{FRIENDS_COPY.levelLabel}</dt>
-                    <dd class="font-medium">{formatFriendPlayerLevel(user.player_level)}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-text-subtle">{FRIENDS_COPY.ratingLabel}</dt>
-                    <dd class="font-medium">{formatFriendRating(user.rating)}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-text-subtle">{FRIENDS_COPY.requestedAt}</dt>
-                    <dd class="font-medium">{formatFriendDateTime(user.requested_at)}</dd>
-                  </div>
-                  <Show when={props.variant === 'friends'}>
-                    <div>
-                      <dt class="text-text-subtle">{FRIENDS_COPY.acceptedAt}</dt>
-                      <dd class="font-medium">{formatFriendDateTime(user.accepted_at)}</dd>
-                    </div>
-                  </Show>
-                </dl>
+          <li class="relative flex w-full max-w-56 flex-col rounded-lg border border-border bg-surface p-4 sm:w-56">
+            <Show when={props.variant === 'friends'}>
+              <div class="absolute right-2 top-2">
+                <FriendMenuActions
+                  busy={props.actionsDisabled}
+                  onRemove={() => props.onRemove(user)}
+                />
               </div>
-              <FriendActions
-                variant={props.variant}
-                user={user}
-                busy={props.actionsDisabled}
-                onAccept={() => props.onAccept(user)}
-                onReject={() => props.onReject(user)}
-                onRemove={() => props.onRemove(user)}
-              />
+            </Show>
+            <div class="min-w-0">
+              <div class={`min-w-0 ${props.variant === 'friends' ? 'pr-8' : ''}`}>
+                <A
+                  href={buildFriendProfilePath(user.username)}
+                  class="block min-w-0 max-w-full truncate text-xl font-bold text-action-primary underline-offset-4 hover:text-action-primary-hover hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                >
+                  {formatFriendPlayerName(user.player_name)}
+                </A>
+                <span class="mt-0.5 block min-w-0 truncate text-xs text-text-muted">
+                  @{user.username}
+                </span>
+              </div>
+              <dl class="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                <div>
+                  <dt class="text-text-subtle">{FRIENDS_COPY.levelLabel}</dt>
+                  <dd class="font-medium">{formatFriendPlayerLevel(user.player_level)}</dd>
+                </div>
+                <div>
+                  <dt class="text-text-subtle">{FRIENDS_COPY.ratingLabel}</dt>
+                  <dd class="font-medium">{formatFriendRating(user.rating)}</dd>
+                </div>
+              </dl>
             </div>
+            <FriendRequestActions
+              variant={props.variant}
+              busy={props.actionsDisabled}
+              onAccept={() => props.onAccept(user)}
+              onReject={() => props.onReject(user)}
+              onCancel={() => props.onCancel(user)}
+            />
           </li>
         )}
       </For>
@@ -487,6 +526,15 @@ const FriendsPage = () => {
   }
 
   /**
+   * 送信済みフレンド申請を取り消す。
+   *
+   * @param user - 申請先ユーザー。
+   * @returns 取り消し完了時に解決されるPromise。
+   */
+  const handleCancel = (user: FriendshipUserDTO): Promise<void> =>
+    runUserOperation('cancel', () => rejectFriendRequest(user.user_id), FRIENDS_COPY.cancelSuccess)
+
+  /**
    * フレンド関係を解除する。
    *
    * @param user - 解除対象ユーザー。
@@ -664,6 +712,7 @@ const FriendsPage = () => {
                 onAccept={handleAccept}
                 onReject={handleReject}
                 onRemove={handleRemove}
+                onCancel={handleCancel}
               />
             </AppTabContent>
             <AppTabContent value="received">
@@ -675,6 +724,7 @@ const FriendsPage = () => {
                 onAccept={handleAccept}
                 onReject={handleReject}
                 onRemove={handleRemove}
+                onCancel={handleCancel}
               />
             </AppTabContent>
             <AppTabContent value="sent">
@@ -686,6 +736,7 @@ const FriendsPage = () => {
                 onAccept={handleAccept}
                 onReject={handleReject}
                 onRemove={handleRemove}
+                onCancel={handleCancel}
               />
             </AppTabContent>
           </Show>

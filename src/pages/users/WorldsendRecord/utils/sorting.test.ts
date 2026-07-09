@@ -139,7 +139,7 @@ test("WORLD'S ENDの複数ソートは前の条件が同値の場合に次の条
   assert.deepEqual(result, ['score-high', 'air', 'fire-high', 'fire-low'])
 })
 
-test("WORLD'S ENDのスコアソートは未プレイを0点より低い側としてソート方向に従って並べる", () => {
+test("WORLD'S ENDのスコアソートは昇順でも未プレイを末尾に寄せる", () => {
   const records = [
     createRecord({ id: 'played-zero', score: 0 }),
     createRecord({ id: 'unplayed', is_played: false, score: 0 }),
@@ -148,7 +148,7 @@ test("WORLD'S ENDのスコアソートは未プレイを0点より低い側と�
 
   assert.deepEqual(
     sortWorldsendRecords(records, 'score', 'asc').map((record) => record.id),
-    ['unplayed', 'played-zero', 'played-high']
+    ['played-zero', 'played-high', 'unplayed']
   )
   assert.deepEqual(
     sortWorldsendRecords(records, 'score', 'desc').map((record) => record.id),
@@ -214,7 +214,7 @@ test("WORLD'S ENDのFCHソートはなし、GOLD、PLATINUM、未プレイの順
   )
 })
 
-test("WORLD'S ENDのJ数ソートはJ数なし行をスコア降順で並べ、未プレイを末尾に寄せる", () => {
+test("WORLD'S ENDのJ数ソートは降順でもAJCを先頭にし、J数なし行をスコア降順で並べる", () => {
   const records = [
     createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2, score: 1008000 }),
     createRecord({ id: 'fc-high', combo_lamp: 'FULL COMBO', score: 1009500 }),
@@ -231,6 +231,6 @@ test("WORLD'S ENDのJ数ソートはJ数なし行をスコア降順で並べ、�
 
   assert.deepEqual(
     sortWorldsendRecords(records, 'justiceCount', 'desc').map((record) => record.id),
-    ['aj-j2', 'aj-j0', 'fc-high', 'aj-null', 'none-low', 'unplayed']
+    ['aj-j0', 'aj-j2', 'fc-high', 'aj-null', 'none-low', 'unplayed']
   )
 })

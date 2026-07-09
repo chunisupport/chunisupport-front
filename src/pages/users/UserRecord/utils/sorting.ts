@@ -11,10 +11,7 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../../../utils/sortingQuery'
-import {
-  compareNumberWithUnplayedBelowZero,
-  compareNumberWithUnplayedLast,
-} from '../../recordTable/sortComparators'
+import { compareNumberWithUnplayedLast } from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import {
   compareMissingJusticeCountRecords,
@@ -143,18 +140,18 @@ const compareRecordBySortCondition = (
       comparison = left.const - right.const
       break
     case 'rating': {
-      comparison = compareNumberWithUnplayedBelowZero(
+      return compareNumberWithUnplayedLast(
         { isPlayed: left.is_played, value: left.rating },
-        { isPlayed: right.is_played, value: right.rating }
+        { isPlayed: right.is_played, value: right.rating },
+        direction
       )
-      break
     }
     case 'score': {
-      comparison = compareNumberWithUnplayedBelowZero(
+      return compareNumberWithUnplayedLast(
         { isPlayed: left.is_played, value: left.score },
-        { isPlayed: right.is_played, value: right.score }
+        { isPlayed: right.is_played, value: right.score },
+        direction
       )
-      break
     }
     case 'overpower': {
       return compareNumberWithUnplayedLast(
@@ -202,6 +199,15 @@ const compareRecordBySortCondition = (
 
       if (rightMissing) {
         return -1
+      }
+
+      if (sortCondition.direction === 'desc') {
+        const leftIsAllJusticeCritical = leftJusticeCount === 0
+        const rightIsAllJusticeCritical = rightJusticeCount === 0
+
+        if (leftIsAllJusticeCritical !== rightIsAllJusticeCritical) {
+          return leftIsAllJusticeCritical ? -1 : 1
+        }
       }
 
       comparison = leftJusticeCount - rightJusticeCount

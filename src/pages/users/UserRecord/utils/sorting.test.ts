@@ -228,7 +228,7 @@ test('列クリックの第1ソートはascからdesc、最後にascへ戻る', 
   })
 })
 
-test('スコアソートは未プレイを0点より低い側としてソート方向に従って並べる', () => {
+test('スコアソートは昇順でも未プレイを末尾に寄せる', () => {
   const records = [
     createRecord({ id: 'played-zero', score: 0, title: 'Played Zero' }),
     createRecord({ id: 'unplayed', is_played: false, score: 0, rating: 0, title: 'Unplayed' }),
@@ -237,7 +237,7 @@ test('スコアソートは未プレイを0点より低い側としてソート�
 
   assert.deepEqual(
     sortRecords(records, 'score', 'asc').map((record) => record.id),
-    ['unplayed', 'played-zero', 'played-high']
+    ['played-zero', 'played-high', 'unplayed']
   )
   assert.deepEqual(
     sortRecords(records, 'score', 'desc').map((record) => record.id),
@@ -245,7 +245,7 @@ test('スコアソートは未プレイを0点より低い側としてソート�
   )
 })
 
-test('レート値ソートは未プレイを0より低い側としてソート方向に従って並べる', () => {
+test('レート値ソートは昇順でも未プレイを末尾に寄せる', () => {
   const records = [
     createRecord({ id: 'played-zero', rating: 0 }),
     createRecord({ id: 'unplayed', is_played: false, rating: 0 }),
@@ -254,7 +254,7 @@ test('レート値ソートは未プレイを0より低い側としてソート�
 
   assert.deepEqual(
     sortRecords(records, 'rating', 'asc').map((record) => record.id),
-    ['unplayed', 'played-zero', 'played-high']
+    ['played-zero', 'played-high', 'unplayed']
   )
   assert.deepEqual(
     sortRecords(records, 'rating', 'desc').map((record) => record.id),
@@ -344,7 +344,7 @@ test('複数ソートは前の条件が同値の場合に次の条件で並べ�
   )
 })
 
-test('J数ソートはJ数を基準に並べ、J数なし行は常に末尾に寄せる', () => {
+test('J数ソートは降順でもAJCを先頭にし、J数なし行は常に末尾に寄せる', () => {
   const records = [
     createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2 }),
     createRecord({ id: 'aj-j1', combo_lamp: 'ALL JUSTICE', justice_count: 1 }),
@@ -361,7 +361,7 @@ test('J数ソートはJ数を基準に並べ、J数なし行は常に末尾に�
 
   assert.deepEqual(
     sortRecords(records, 'justiceCount', 'desc').map((record) => record.id),
-    ['aj-j2', 'aj-j1', 'aj-j0', 'fc', 'aj-null', 'unplayed']
+    ['aj-j0', 'aj-j2', 'aj-j1', 'fc', 'aj-null', 'unplayed']
   )
 })
 
