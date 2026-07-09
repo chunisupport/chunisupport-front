@@ -21,7 +21,7 @@ export const fetchFriends = async (): Promise<FriendshipListResponse> => {
 /**
  * 自分宛てのフレンド申請一覧を取得する。
  *
- * @returns 申請日時降順の受信申請一覧。
+ * @returns 申請日時降順の受信済みフレンドリクエスト一覧。
  */
 export const fetchReceivedFriendRequests = async (): Promise<FriendshipListResponse> => {
   const response = await fetchWithAuth(`${FRIENDS_API_PATH}/requests/received`, {
