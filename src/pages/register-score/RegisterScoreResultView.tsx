@@ -77,10 +77,10 @@ const SCORE_CHANGE_CARD_CLASS =
   'min-w-0 max-w-full rounded-md border border-border bg-surface-muted px-2.5 py-2'
 
 /**
- * 更新前後のスコア領域を安定した3カラムにする共通クラス。
+ * 更新前後のスコア領域を等間隔に並べる共通クラス。
  */
 const SCORE_CHANGE_SCORE_GRID_CLASS =
-  'mt-1.5 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-2 text-lg leading-6'
+  'mt-1.5 flex items-start justify-around gap-x-2 text-lg leading-6'
 
 type RegisterScoreLampRecord = {
   is_played: boolean
@@ -251,17 +251,6 @@ const formatScoreDelta = (change: PlayerDataRecordChange): string => {
   if (delta <= 0) return ''
 
   return `+${formatScore(delta)}`
-}
-
-/**
- * スコア増分を括弧付きの表示文字列へ変換する。
- *
- * @param change - APIから返却された1譜面分の差分。
- * @returns 増分がある場合は括弧付きの文字列、それ以外は空文字。
- */
-const formatScoreDeltaWithParens = (change: PlayerDataRecordChange): string => {
-  const delta = formatScoreDelta(change)
-  return delta ? `(${delta})` : ''
 }
 
 /**
@@ -536,24 +525,25 @@ const RegisterScoreChangeRow = (props: {
         <h3 class="min-w-0 truncate font-sans text-base font-bold">{props.songTitle}</h3>
       </div>
       <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
-        <div class="min-w-0">
-          <span class="font-oswald font-semibold">
+        <div class="w-fit">
+          <span class="font-jost font-semibold">
             {props.change.before ? formatScore(props.change.before.score) : NO_DATA_TEXT}
           </span>
           <Show when={props.change.before}>
             {(before) => <RecordLampBadges state={before()} />}
           </Show>
         </div>
-        <Play
-          class="mt-1.5 h-3.5 w-3.5 justify-self-center fill-current text-action-primary"
-          aria-hidden="true"
-        />
-        <div class="min-w-0">
-          <span class="font-oswald font-semibold">
-            {formatScore(props.change.after.score)}{' '}
-            <Show when={formatScoreDeltaWithParens(props.change)}>
-              {(delta) => <span class="font-sans text-xs font-bold text-blue-700">{delta()}</span>}
-            </Show>
+        <div class="flex flex-col items-center gap-1">
+          <Play class="mt-1.5 h-3.5 w-3.5 fill-current text-blue-700" aria-hidden="true" />
+          <Show when={formatScoreDelta(props.change)}>
+            {(delta) => (
+              <span class="font-sans text-sm font-bold leading-4 text-blue-700">{delta()}</span>
+            )}
+          </Show>
+        </div>
+        <div class="w-fit">
+          <span class="font-jost font-semibold">
+            {formatScore(props.change.after.score)}
           </span>
           <RecordLampBadges state={props.change.after} />
         </div>
