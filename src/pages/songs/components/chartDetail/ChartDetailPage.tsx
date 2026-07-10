@@ -14,14 +14,7 @@ import ScoreHistoryTable from './ScoreHistoryTable'
 
 type FriendRankingTableEntry = Pick<
   FriendRankingEntryDTO | WorldsendFriendRankingEntryDTO,
-  | 'rank'
-  | 'username'
-  | 'player_name'
-  | 'score'
-  | 'clear_lamp'
-  | 'combo_lamp'
-  | 'full_chain'
-  | 'is_self'
+  'rank' | 'username' | 'player_name' | 'score' | 'is_self'
 >
 
 type Props = {

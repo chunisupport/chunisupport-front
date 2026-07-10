@@ -1,8 +1,9 @@
 import type { ScoreHistoryDifficulty } from '../api/songs'
 
 const scoreHistoryDateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
+  year: '2-digit',
+  month: '2-digit',
+  day: '2-digit',
 })
 
 /**
@@ -22,10 +23,10 @@ export const parseScoreHistoryDifficulty = (
 }
 
 /**
- * スコア履歴の更新日時を日本語表示へ整形する。
+ * スコア履歴の更新日時を年月日の短縮表示へ整形する。
  *
  * @param value - ISO 8601形式の更新日時。
- * @returns 整形済み日時。不正値の場合はハイフン。
+ * @returns yy/MM/dd形式の日付。不正値の場合はハイフン。
  */
 export const formatScoreHistoryDateTime = (value: string): string => {
   const date = new Date(value)

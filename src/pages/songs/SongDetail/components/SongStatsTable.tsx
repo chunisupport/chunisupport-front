@@ -15,6 +15,7 @@ import {
 } from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
+import { formatScoreDifference, getScoreDifferenceClass } from '../../../../utils/scoreDifference'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { completeSongStatsRatingBands } from '../../../../utils/songStats'
 import { isOwnBestAverageRatingBand } from './songStatsHighlight'
@@ -133,9 +134,6 @@ const RANK_CHART_DATASET_DEFINITIONS = [
 const HIGHLIGHTED_RATING_BAND_ROW_CLASS =
   'border-l-4 border-l-action-primary bg-action-primary-muted font-semibold'
 const NORMAL_RATING_BAND_ROW_CLASS = 'border-l-4 border-l-transparent'
-const POSITIVE_SCORE_DIFFERENCE_CLASS = 'text-success'
-const NEGATIVE_SCORE_DIFFERENCE_CLASS = 'text-info'
-const EQUAL_SCORE_DIFFERENCE_CLASS = 'text-text-muted'
 /** 統計テーブルのヘッダーセルに適用するTailwindクラス。 */
 const TABLE_HEADER_CELL_CLASS =
   'sticky top-0 z-10 bg-surface-muted px-2 py-2 text-right whitespace-nowrap'
@@ -176,17 +174,6 @@ const CLEAR_CHART_DATASET_DEFINITIONS = [
 const formatAverageScore = (score: number): string => Math.trunc(score).toLocaleString()
 
 /**
- * 平均スコアとの差分を符号付きの整数表示へ変換する。
- *
- * @param difference - 自分のスコアから平均スコアを引いた差分。
- * @returns 符号付きの差分文字列。
- */
-const formatScoreDifference = (difference: number): string =>
-  difference.toLocaleString(undefined, {
-    signDisplay: 'always',
-  })
-
-/**
  * 表示上の平均スコアとの差分を算出する。
  *
  * @param ownScore 自分の譜面スコア。未プレイの場合は未定義。
@@ -198,18 +185,6 @@ const calculateDisplayedAverageScoreDifference = (
   averageScore: number | null
 ): number | undefined =>
   ownScore === undefined || averageScore === null ? undefined : ownScore - Math.trunc(averageScore)
-
-/**
- * 平均スコアとの差分に応じた文字色クラスを返す。
- *
- * @param difference - 自分のスコアから平均スコアを引いた差分。
- * @returns 正数は緑、負数は青、同値は補助テキスト色のクラス。
- */
-const getScoreDifferenceClass = (difference: number): string => {
-  if (difference > 0) return POSITIVE_SCORE_DIFFERENCE_CLASS
-  if (difference < 0) return NEGATIVE_SCORE_DIFFERENCE_CLASS
-  return EQUAL_SCORE_DIFFERENCE_CLASS
-}
 
 /**
  * 統計表に表示する列定義をカテゴリごとに取得する。
