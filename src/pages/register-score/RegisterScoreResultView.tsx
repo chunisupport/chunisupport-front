@@ -5,6 +5,7 @@ import {
   RecordHardLampCell,
   RecordLampCell,
 } from '../../components/common/record/RecordDisplayParts'
+import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
 import {
   HARD_LAMP_BADGE_BACKGROUND_CLASS,
   type SharedClearLamp,
@@ -80,7 +81,7 @@ const SCORE_CHANGE_CARD_CLASS =
  * 更新前後のスコア領域を等間隔に並べる共通クラス。
  */
 const SCORE_CHANGE_SCORE_GRID_CLASS =
-  'mt-1.5 flex items-start justify-around gap-x-2 text-lg leading-6'
+  'mt-1.5 flex items-center justify-around gap-x-2 text-lg leading-6'
 
 type RegisterScoreLampRecord = {
   is_played: boolean
@@ -257,20 +258,19 @@ const formatScoreDelta = (change: PlayerDataRecordChange): string => {
  * ISO日時を画面表示用の日時文字列へ変換する。
  *
  * @param isoDateTime - APIから返却されたISO形式の日時。
- * @returns `YYYY-MM-DD HH:mm:ss` 形式の日時文字列。
+ * @returns `YYYY/MM/DD HH:mm:ss` 形式の日時文字列。
  */
 const formatImportedAt = (isoDateTime: string): string => {
   const date = new Date(isoDateTime)
 
-  return new Intl.DateTimeFormat('sv-SE', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).format(date)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+
+  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`
 }
 
 /**
@@ -529,11 +529,20 @@ const RegisterScoreChangeRow = (props: {
           <span class="font-jost font-semibold">
             {props.change.before ? formatScore(props.change.before.score) : NO_DATA_TEXT}
           </span>
-          <Show when={props.change.before}>
+          <Show
+            when={props.change.before}
+            fallback={
+              <div class="mt-1 flex min-h-6 flex-wrap items-center gap-1">
+                <LampPlaceholderBadge class="w-[34px]" />
+                <LampPlaceholderBadge class="w-[34px]" />
+                <LampPlaceholderBadge class="w-[34px]" />
+              </div>
+            }
+          >
             {(before) => <RecordLampBadges state={before()} />}
           </Show>
         </div>
-        <div class="flex flex-col items-center gap-1">
+        <div class="flex w-20 flex-col items-center gap-1">
           <Play class="mt-1.5 h-3.5 w-3.5 fill-current text-blue-700" aria-hidden="true" />
           <Show when={formatScoreDelta(props.change)}>
             {(delta) => (
@@ -542,9 +551,7 @@ const RegisterScoreChangeRow = (props: {
           </Show>
         </div>
         <div class="w-fit">
-          <span class="font-jost font-semibold">
-            {formatScore(props.change.after.score)}
-          </span>
+          <span class="font-jost font-semibold">{formatScore(props.change.after.score)}</span>
           <RecordLampBadges state={props.change.after} />
         </div>
       </div>
@@ -562,7 +569,7 @@ const RegisterScoreReportHeader = (props: { result: PlayerDataResult }) => (
   <header class="border-b border-border bg-surface-muted px-3 py-3">
     <h1 class="text-2xl font-bold">{REGISTER_SCORE_MESSAGES.reportTitle}</h1>
     <p class="mt-1 text-sm">
-      更新日時: <span class="font-jost">{formatImportedAt(props.result.imported_at)}</span>
+      <span class="font-jost">{formatImportedAt(props.result.imported_at)}</span>
     </p>
   </header>
 )

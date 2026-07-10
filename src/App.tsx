@@ -28,6 +28,7 @@ import {
   FRIENDS_PATH,
   LOCKED_SONGS_FINDER_PATH,
   RANDOM_SONG_SELECTOR_PATH,
+  REGISTER_SCORE_MOCK_PATH,
   REGISTER_SCORE_PATH,
   TOOLS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
@@ -54,6 +55,7 @@ import {
   NotFoundPage,
   RandomSongSelectorPage,
   Register,
+  RegisterScoreMockPage,
   RegisterScorePage,
   RegisterScoreTempPage,
   Settings,
@@ -390,6 +392,7 @@ const App = () => {
 
       {/* その他 */}
       <Route path={`${FRIENDS_PATH}/:tab?`} component={withNavBar(withAuth(FriendsPage))} />
+      <Route path={REGISTER_SCORE_MOCK_PATH} component={withNavBar(RegisterScoreMockPage)} />
       <Route path={REGISTER_SCORE_PATH} component={withNavBar(withAuth(RegisterScorePage))} />
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />
