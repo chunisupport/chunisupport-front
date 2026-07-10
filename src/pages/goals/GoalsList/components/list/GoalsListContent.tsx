@@ -4,9 +4,10 @@ import {
   DragDropSensors,
   type DragEvent,
   SortableProvider,
+  useDragDropContext,
 } from '@thisbeyond/solid-dnd'
 import type { Component } from 'solid-js'
-import { For, Show } from 'solid-js'
+import { For, onCleanup, Show } from 'solid-js'
 import { AppButton } from '../../../../../components/common/AppButton'
 import type { GoalDTO } from '../../../../../types/api'
 import {
@@ -17,6 +18,10 @@ import {
 } from '../../constants'
 import type { GoalWithProgress } from '../../goalsListProgress'
 import GoalCard from '../card/GoalCard'
+import { createAutoScroll } from './goalsListAutoScroll'
+
+/** solid-dnd の active draggable に付与するスクロール補正 transformer の ID。 */
+const AUTO_SCROLL_TRANSFORMER_ID = 'goals-list-auto-scroll'
 
 interface GoalsListContentProps {
   goalsCount: number
@@ -32,12 +37,92 @@ interface GoalsListContentProps {
 }
 
 /**
+ * DragDropProvider の子として配置し、自動スクロールと solid-dnd を接続する。
+ *
+ * スクロール差分を active draggable の transform に加算し、カードがカーソルから
+ * 置き去りにならないようにする。あわせて layout 再計算と衝突判定を行う。
+ *
+ * @param props - 自動スクロール制御オブジェクト。
+ * @param props.autoScroll - `createAutoScroll` の戻り値。
+ * @returns 描画要素なし（副作用のみ）。
+ */
+function AutoScrollSetup(props: { autoScroll: ReturnType<typeof createAutoScroll> }) {
+  const context = useDragDropContext()
+  if (!context) return null
+
+  const [
+    state,
+    {
+      addTransformer,
+      removeTransformer,
+      recomputeLayouts,
+      detectCollisions,
+      onDragStart,
+      onDragEnd,
+    },
+  ] = context
+
+  /** ドラッグ開始時からの scrollTop 差分。transformer コールバックから参照する。 */
+  let scrollDeltaY = 0
+
+  /**
+   * スクロール補正用 transformer を active draggable に設定（または更新）する。
+   *
+   * @param draggableId - 補正対象の draggable ID。
+   * @returns なし。
+   */
+  const applyScrollCompensationTransformer = (draggableId: string | number): void => {
+    addTransformer('draggables', draggableId, {
+      id: AUTO_SCROLL_TRANSFORMER_ID,
+      order: 50,
+      callback: (transform) => ({
+        x: transform.x,
+        y: transform.y + scrollDeltaY,
+      }),
+    })
+  }
+
+  onDragStart(({ draggable }) => {
+    scrollDeltaY = 0
+    const clientY = state.active.sensor?.coordinates.current.y
+    props.autoScroll.start({ clientY })
+    applyScrollCompensationTransformer(draggable.id)
+  })
+
+  onDragEnd(({ draggable }) => {
+    props.autoScroll.stop()
+    removeTransformer('draggables', draggable.id, AUTO_SCROLL_TRANSFORMER_ID)
+    scrollDeltaY = 0
+  })
+
+  props.autoScroll.setOnScrollDeltaChange((deltaY) => {
+    scrollDeltaY = deltaY
+    const draggableId = state.active.draggableId
+    if (draggableId == null) return
+
+    // layout を先に更新してから transform を差し替え、衝突判定に両方を反映する。
+    recomputeLayouts()
+    applyScrollCompensationTransformer(draggableId)
+    detectCollisions()
+  })
+
+  onCleanup(() => {
+    props.autoScroll.setOnScrollDeltaChange(null)
+    props.autoScroll.stop()
+  })
+
+  return null
+}
+
+/**
  * 目標一覧画面のヘッダー、エラー、カード一覧を描画する。
  *
  * @param props - 目標件数、進捗付き目標一覧、各操作ハンドラ。
  * @returns 目標一覧本体の JSX 要素。
  */
 export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
+  const autoScroll = createAutoScroll()
+
   /**
    * ドロップ位置を目標一覧の並び順に反映する。
    *
@@ -108,6 +193,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
       >
         <DragDropProvider collisionDetector={closestCenter} onDragEnd={handleDragEnd}>
           <DragDropSensors>
+            <AutoScrollSetup autoScroll={autoScroll} />
             <SortableProvider ids={props.goalWithProgress.map(({ goal }) => goal.id)}>
               <div class="grid grid-cols-1 gap-3">
                 <For each={props.goalWithProgress}>
