@@ -138,7 +138,7 @@ export const resolveDraftGoalProgress = (
       data.versions
     )
     return calculateRainbowGoalProgress(
-      { ...draftGoal, id: 0, created_at: '' },
+      { ...draftGoal, id: 0, sort_order: 0, created_at: '' },
       targetSongs,
       data.records
     )
@@ -157,6 +157,7 @@ export const resolveDraftGoalProgress = (
     {
       ...draftGoal,
       id: 0,
+      sort_order: 0,
       created_at: '',
     },
     filtered,

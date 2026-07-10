@@ -1,11 +1,11 @@
 import { Play } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
+import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
 import {
   RecordFullChainCell,
   RecordHardLampCell,
   RecordLampCell,
 } from '../../components/common/record/RecordDisplayParts'
-import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
 import {
   HARD_LAMP_BADGE_BACKGROUND_CLASS,
   type SharedClearLamp,

@@ -83,6 +83,7 @@ export type ErrorCode =
   | 'goal_invalid_achievement_type'
   | 'goal_invalid_achievement_params'
   | 'goal_invalid_attributes'
+  | 'goal_invalid_order'
   | 'invalid_goal_input'
   // Record Filters
   | 'record_filter_not_found'
@@ -145,6 +146,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   goal_invalid_achievement_type: '目標種別が不正です',
   goal_invalid_achievement_params: '目標パラメータが不正です',
   goal_invalid_attributes: '目標条件が不正です',
+  goal_invalid_order: '目標の並び順が不正です',
   invalid_goal_input: '目標入力が不正です',
   record_filter_not_found: '保存済みフィルターが見つかりません',
   record_filter_limit_exceeded: '保存済みフィルターの上限件数に達しています',
@@ -470,11 +472,12 @@ export interface GoalDTO {
   achievement_params: GoalAchievementParams
   attributes: GoalAttributes
   invert: boolean
+  sort_order: number
   created_at: string
 }
 
-export type GoalCreateRequest = Omit<GoalDTO, 'id' | 'created_at'>
-export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'created_at'>
+export type GoalCreateRequest = Omit<GoalDTO, 'id' | 'sort_order' | 'created_at'>
+export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'sort_order' | 'created_at'>
 
 // --------------------------------
 
