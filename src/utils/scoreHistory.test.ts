@@ -18,3 +18,8 @@ test('不正な更新日時をハイフンへ変換する', () => {
   // Given / When / Then
   assert.equal(formatScoreHistoryDateTime('not-a-date'), '-')
 })
+
+test('更新日時を年2桁の日付だけで表示する', () => {
+  // Given / When / Then
+  assert.equal(formatScoreHistoryDateTime('2026-06-22T12:00:00+09:00'), '26/06/22')
+})

@@ -37,6 +37,9 @@ export const OVER_POWER_MAX = (CHART_CONST_MAX + 3) * 5
 /** WORLD'S END の星数レベルとして扱う最小値。 */
 export const WORLDSEND_LEVEL_STAR_MIN = 1
 
+/** WORLD'S END 譜面の表示ラベル。 */
+export const WORLDSEND_SCORE_LABEL = "WORLD'S END"
+
 /** WORLD'S END の星数レベルとして扱う最大値。 */
 export const WORLDSEND_LEVEL_STAR_MAX = 5
 

@@ -1,6 +1,6 @@
 import { For, Show } from 'solid-js'
-import type { ScoreHistoryEntryDTO } from '../../../types/api'
-import { formatScoreHistoryDateTime } from '../../../utils/scoreHistory'
+import type { ScoreHistoryEntryDTO } from '../../../../types/api'
+import { formatScoreHistoryDateTime } from '../../../../utils/scoreHistory'
 import {
   CURRENT_BEST_LABEL,
   SCORE_HISTORY_SCORE_LABEL,
@@ -21,7 +21,7 @@ const ScoreHistoryTable = (props: { entries: readonly ScoreHistoryEntryDTO[] }) 
           <th scope="col" class="px-3 py-3 text-left sm:px-4">
             {SCORE_HISTORY_UPDATED_AT_LABEL}
           </th>
-          <th scope="col" class="w-32 px-3 py-3 sm:w-44 sm:px-4">
+          <th scope="col" class="w-32 px-3 py-3 text-right sm:w-44 sm:px-4">
             {SCORE_HISTORY_SCORE_LABEL}
           </th>
         </tr>
@@ -40,7 +40,7 @@ const ScoreHistoryTable = (props: { entries: readonly ScoreHistoryEntryDTO[] }) 
                   </Show>
                 </div>
               </td>
-              <td class="px-3 py-3 text-center font-jost text-lg font-semibold tabular-nums sm:px-4">
+              <td class="px-3 py-3 text-right font-jost text-lg font-semibold tabular-nums sm:px-4">
                 {entry.score.toLocaleString('ja-JP')}
               </td>
             </tr>

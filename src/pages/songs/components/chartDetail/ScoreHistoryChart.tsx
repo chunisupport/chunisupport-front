@@ -11,14 +11,10 @@ import {
   Tooltip,
 } from 'chart.js'
 import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js'
-import type { ScoreHistoryEntryDTO } from '../../../types/api'
-import { formatScoreHistoryDateTime } from '../../../utils/scoreHistory'
-import { MAX_SCORE } from '../../../utils/scoreRank'
-import {
-  SCORE_HISTORY_CHART_TITLE,
-  SCORE_HISTORY_EMPTY_LABEL,
-  SCORE_HISTORY_SCORE_LABEL,
-} from './constants'
+import type { ScoreHistoryEntryDTO } from '../../../../types/api'
+import { formatScoreHistoryDateTime } from '../../../../utils/scoreHistory'
+import { MAX_SCORE } from '../../../../utils/scoreRank'
+import { SCORE_HISTORY_EMPTY_LABEL, SCORE_HISTORY_SCORE_LABEL } from './constants'
 
 Chart.register(
   CategoryScale,
@@ -218,7 +214,6 @@ const ScoreHistoryChart = (props: Props) => {
 
   return (
     <section class="rounded-md border border-border bg-surface p-4">
-      <h2 class="mb-3 text-lg font-semibold">{SCORE_HISTORY_CHART_TITLE}</h2>
       <Show
         when={props.entries.length > 0}
         fallback={
