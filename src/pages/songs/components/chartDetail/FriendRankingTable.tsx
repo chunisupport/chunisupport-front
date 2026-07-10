@@ -31,7 +31,7 @@ const FriendRankingRow = (props: {
   ownScore: number | undefined
 }) => {
   const difference = () =>
-    props.ownScore === undefined ? undefined : props.entry.score - props.ownScore
+    props.ownScore === undefined ? undefined : props.ownScore - props.entry.score
 
   return (
     <tr class={props.entry.is_self ? 'bg-action-primary-muted/50' : undefined}>

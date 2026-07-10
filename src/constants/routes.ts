@@ -2,6 +2,7 @@ export const LOGIN_PATH = '/login'
 export const REGISTER_PATH = '/register'
 export const REGISTER_SCORE_PATH = '/register-score'
 export const REGISTER_SCORE_TEMP_PATH = '/register-score-temp'
+export const REGISTER_SCORE_MOCK_PATH = '/register-score-mock'
 export const TOOLS_PATH = '/tools'
 /** フレンド画面のパス。 */
 export const FRIENDS_PATH = '/friends'

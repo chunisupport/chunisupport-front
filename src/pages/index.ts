@@ -6,6 +6,7 @@ export { FriendsPage } from './friends'
 export { GoalsList } from './goals'
 export { default as NotFoundPage } from './NotFoundPage'
 export { RegisterScorePage } from './register-score'
+export { RegisterScoreMockPage } from './register-score-mock'
 export { RegisterScoreTempPage } from './register-score-temp'
 export { Settings } from './settings'
 export {
