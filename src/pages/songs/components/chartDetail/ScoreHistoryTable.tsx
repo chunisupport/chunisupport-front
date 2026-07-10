@@ -1,6 +1,6 @@
 import { For, Show } from 'solid-js'
-import type { ScoreHistoryEntryDTO } from '../../../types/api'
-import { formatScoreHistoryDateTime } from '../../../utils/scoreHistory'
+import type { ScoreHistoryEntryDTO } from '../../../../types/api'
+import { formatScoreHistoryDateTime } from '../../../../utils/scoreHistory'
 import {
   CURRENT_BEST_LABEL,
   SCORE_HISTORY_SCORE_LABEL,

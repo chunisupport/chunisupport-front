@@ -11,9 +11,9 @@ import {
   Tooltip,
 } from 'chart.js'
 import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js'
-import type { ScoreHistoryEntryDTO } from '../../../types/api'
-import { formatScoreHistoryDateTime } from '../../../utils/scoreHistory'
-import { MAX_SCORE } from '../../../utils/scoreRank'
+import type { ScoreHistoryEntryDTO } from '../../../../types/api'
+import { formatScoreHistoryDateTime } from '../../../../utils/scoreHistory'
+import { MAX_SCORE } from '../../../../utils/scoreRank'
 import {
   SCORE_HISTORY_CHART_TITLE,
   SCORE_HISTORY_EMPTY_LABEL,

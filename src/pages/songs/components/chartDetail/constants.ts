@@ -1,5 +1,3 @@
-/** スコア履歴画面のタイトル。 */
-export const SCORE_HISTORY_PAGE_TITLE = 'スコア履歴'
 /** 譜面詳細画面のタイトル。 */
 export const CHART_DETAIL_PAGE_TITLE = '譜面詳細'
 /** スコア履歴セクションのラベル。 */

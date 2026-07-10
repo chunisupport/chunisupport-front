@@ -4,9 +4,9 @@ import {
   RecordFullChainCell,
   RecordHardLampCell,
   RecordLampCell,
-} from '../../../components/common/record/RecordDisplayParts'
-import type { FriendRankingEntryDTO, WorldsendFriendRankingEntryDTO } from '../../../types/api'
-import { buildUserProfilePagePath } from '../../../utils/userProfileRoute'
+} from '../../../../components/common/record/RecordDisplayParts'
+import type { FriendRankingEntryDTO, WorldsendFriendRankingEntryDTO } from '../../../../types/api'
+import { buildUserProfilePagePath } from '../../../../utils/userProfileRoute'
 import {
   FRIEND_RANKING_EMPTY_LABEL,
   FRIEND_RANKING_PLAYER_LABEL,
