@@ -93,7 +93,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
       style={{
         transform: `translate3d(${sortable.transform.x}px, ${sortable.transform.y}px, 0)`,
       }}
-      class={`rounded-lg border p-4 shadow-sm ${
+      class={`select-none rounded-lg border p-4 shadow-sm ${
         props.progress.achieved
           ? 'border-action-primary-border bg-action-primary-muted'
           : 'border-border bg-surface'
