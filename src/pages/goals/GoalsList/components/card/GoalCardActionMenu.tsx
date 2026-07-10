@@ -10,6 +10,7 @@ import {
 interface GoalCardActionMenuProps {
   onEdit: () => void
   onDelete: () => void
+  disabled: boolean
 }
 
 /**
@@ -23,6 +24,7 @@ export const GoalCardActionMenu: Component<GoalCardActionMenuProps> = (props) =>
     <AppMenuTrigger
       label="メニューを開く"
       icon={<EllipsisVertical size={20} aria-hidden="true" />}
+      disabled={props.disabled}
     />
     <DropdownMenu.Portal>
       <AppMenuContent variant="compact">

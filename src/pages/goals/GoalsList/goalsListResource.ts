@@ -1,4 +1,4 @@
-import { createGoal, deleteGoal, fetchGoals, updateGoal } from '../../../api/goals'
+import { createGoal, deleteGoal, fetchGoals, reorderGoals, updateGoal } from '../../../api/goals'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchMe, fetchUserProfileSummary } from '../../../api/users'
 import type {
@@ -84,4 +84,14 @@ export const saveGoalRequest = async (
  */
 export const deleteGoalRequest = async (goal: GoalDTO): Promise<void> => {
   await deleteGoal(goal.id)
+}
+
+/**
+ * 現在所有する全目標の表示順を保存する。
+ *
+ * @param goals - 保存する表示順で並んだ目標。
+ * @returns 並び順の保存完了後に解決される Promise。
+ */
+export const reorderGoalsRequest = async (goals: readonly GoalDTO[]): Promise<void> => {
+  await reorderGoals(goals.map(({ id }) => id))
 }

@@ -68,6 +68,7 @@ const createGoal = (overrides: Partial<GoalDTO>): GoalDTO => ({
   achievement_params: { score: 1000000 },
   attributes: {},
   invert: false,
+  sort_order: 1,
   created_at: '2026-01-01T00:00:00Z',
   ...overrides,
 })

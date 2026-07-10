@@ -73,6 +73,7 @@ const createGoal = (params: GoalDTO['achievement_params']): GoalDTO => ({
   achievement_params: params,
   attributes: {},
   invert: false,
+  sort_order: 1,
   created_at: '2026-01-01',
 })
 

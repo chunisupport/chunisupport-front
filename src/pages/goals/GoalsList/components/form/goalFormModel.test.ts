@@ -59,6 +59,7 @@ test('編集フォームでdiffが未指定の場合は全難易度が選択さ�
     achievement_params: { score: 1000000 },
     attributes: { genre: [10], ver: [2] },
     invert: false,
+    sort_order: 1,
     created_at: '2026-01-01T00:00:00Z',
   } satisfies GoalDTO
 
@@ -83,6 +84,7 @@ test('編集フォームの初期状態は保存済み目標から復元され�
       ver: [2],
     },
     invert: true,
+    sort_order: 1,
     created_at: '2026-01-01T00:00:00Z',
   } satisfies GoalDTO
 
