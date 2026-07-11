@@ -85,10 +85,17 @@ const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
 const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_EXCLUDED_RATING_BAND = 'ALL'
 const CHART_X_AXIS_TICK_PADDING = 8
-const AVERAGE_SCORE_CHART_TITLE = '平均スコア'
+/** 平均・中央値グラフのセクション見出し。 */
+const AVERAGE_SCORE_CHART_TITLE = '平均・中央値'
+/** 平均スコア系列の凡例・ツールチップ表示名。 */
+const AVERAGE_SCORE_CHART_LABEL = '平均スコア'
 const MEDIAN_SCORE_CHART_LABEL = '中央値スコア'
 const AVERAGE_SCORE_CHART_COLOR = '--cs-color-action-primary'
 const MEDIAN_SCORE_CHART_BORDER_DASH = [6, 4]
+/** 平均・中央値グラフに常時表示するデータ点の半径。 */
+const AVERAGE_SCORE_CHART_POINT_RADIUS = 2
+/** 平均・中央値グラフのデータ点をホバーした際の半径。 */
+const AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS = 4
 /** AJC表現と同じ淡い虹色グラデーションをChart.jsへ渡すCSS変数列。 */
 const ALL_JUSTICE_CRITICAL_CHART_GRADIENT_COLOR_VARIABLES = [
   '--cs-color-lamp-all-justice-critical-rainbow-1',
@@ -143,6 +150,8 @@ const TABLE_HEADER_CELL_CLASS =
 /** 統計テーブルの左寄せヘッダーセルに適用するTailwindクラス。 */
 const TABLE_LEFT_HEADER_CELL_CLASS =
   'sticky top-0 z-10 bg-surface-muted px-2 py-2 text-left whitespace-nowrap'
+/** 統計テーブルの実力帯セルに適用するTailwindクラス。 */
+const TABLE_RATING_BAND_CELL_CLASS = 'px-2 py-2 text-left'
 /** 統計テーブルの通常セルに適用するTailwindクラス。 */
 const TABLE_VALUE_CELL_CLASS = 'px-2 py-2 text-right tabular-nums'
 const COMBO_CHART_DATASET_DEFINITIONS = [
@@ -518,7 +527,7 @@ const createAverageScoreChartOptions = (): ChartOptions<'line'> => {
         callbacks: {
           label: (context) => {
             const score = context.parsed.y
-            const label = context.dataset.label ?? AVERAGE_SCORE_CHART_TITLE
+            const label = context.dataset.label ?? AVERAGE_SCORE_CHART_LABEL
             if (score === null) return label
 
             return `${label}: ${score.toLocaleString(undefined, {
@@ -577,14 +586,16 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
       labels: props.labels,
       datasets: [
         {
-          label: AVERAGE_SCORE_CHART_TITLE,
+          label: AVERAGE_SCORE_CHART_LABEL,
           data: props.averageScores,
           borderColor: color,
           backgroundColor: color,
           pointBackgroundColor: color,
           pointBorderColor: color,
-          pointRadius: 0,
-          pointHoverRadius: 0,
+          pointHoverBackgroundColor: color,
+          pointHoverBorderColor: color,
+          pointRadius: AVERAGE_SCORE_CHART_POINT_RADIUS,
+          pointHoverRadius: AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS,
           borderWidth: 2,
           tension: 0.2,
           spanGaps: true,
@@ -596,8 +607,10 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
           backgroundColor: color,
           pointBackgroundColor: color,
           pointBorderColor: color,
-          pointRadius: 0,
-          pointHoverRadius: 0,
+          pointHoverBackgroundColor: color,
+          pointHoverBorderColor: color,
+          pointRadius: AVERAGE_SCORE_CHART_POINT_RADIUS,
+          pointHoverRadius: AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS,
           borderWidth: 2,
           borderDash: MEDIAN_SCORE_CHART_BORDER_DASH,
           tension: 0.2,
@@ -744,7 +757,7 @@ const SongStatsTable = (props: Props) => {
             <For each={props.stats}>
               {(band) => (
                 <tr class={getRowClass(band.rating_band)}>
-                  <td class="px-2 py-2">{band.rating_band}</td>
+                  <td class={TABLE_RATING_BAND_CELL_CLASS}>{band.rating_band}</td>
                   <For each={displayedColumns()}>
                     {(column) => (
                       <td class={`${TABLE_VALUE_CELL_CLASS} ${column.getClass?.(band) ?? ''}`}>

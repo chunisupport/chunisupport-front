@@ -190,6 +190,8 @@ const ScoreHistoryChart = (props: Props) => {
           backgroundColor: color,
           pointBackgroundColor: color,
           pointBorderColor: color,
+          pointHoverBackgroundColor: color,
+          pointHoverBorderColor: color,
           pointRadius: CHART_POINT_RADIUS,
           pointHoverRadius: CHART_POINT_HOVER_RADIUS,
           borderWidth: CHART_BORDER_WIDTH,
