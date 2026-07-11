@@ -100,7 +100,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
       aria-label={buildGoalDragLabel(props.goal.title, props.position, props.total)}
       aria-roledescription="並び替え可能な目標"
       onKeyDown={handleKeyDown}
-      class={`cursor-grab touch-none select-none rounded-lg border p-4 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+      class={`cursor-grab select-none rounded-lg border p-4 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
         props.progress.achieved
           ? 'border-action-primary-border bg-action-primary-muted'
           : 'border-border bg-surface'

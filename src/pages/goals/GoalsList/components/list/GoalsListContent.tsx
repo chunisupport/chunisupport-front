@@ -1,7 +1,6 @@
 import {
   closestCenter,
   DragDropProvider,
-  DragDropSensors,
   type DragEvent,
   SortableProvider,
   useDragDropContext,
@@ -18,6 +17,7 @@ import {
 } from '../../constants'
 import type { GoalWithProgress } from '../../goalsListProgress'
 import GoalCard from '../card/GoalCard'
+import { GoalsListLongPressSensor } from './GoalsListLongPressSensor'
 import { createAutoScroll } from './goalsListAutoScroll'
 
 /** solid-dnd の active draggable に付与するスクロール補正 transformer の ID。 */
@@ -192,28 +192,27 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
         }
       >
         <DragDropProvider collisionDetector={closestCenter} onDragEnd={handleDragEnd}>
-          <DragDropSensors>
-            <AutoScrollSetup autoScroll={autoScroll} />
-            <SortableProvider ids={props.goalWithProgress.map(({ goal }) => goal.id)}>
-              <div class="grid grid-cols-1 gap-3">
-                <For each={props.goalWithProgress}>
-                  {({ goal, progress }, index) => (
-                    <GoalCard
-                      goal={goal}
-                      progress={progress}
-                      isReordering={props.isReordering}
-                      position={index() + 1}
-                      total={props.goalWithProgress.length}
-                      onEdit={props.onEdit}
-                      onDelete={props.onDelete}
-                      onOpenRecords={props.onOpenRecords}
-                      onKeyboardMove={handleKeyboardMove}
-                    />
-                  )}
-                </For>
-              </div>
-            </SortableProvider>
-          </DragDropSensors>
+          <GoalsListLongPressSensor />
+          <AutoScrollSetup autoScroll={autoScroll} />
+          <SortableProvider ids={props.goalWithProgress.map(({ goal }) => goal.id)}>
+            <div class="grid grid-cols-1 gap-3">
+              <For each={props.goalWithProgress}>
+                {({ goal, progress }, index) => (
+                  <GoalCard
+                    goal={goal}
+                    progress={progress}
+                    isReordering={props.isReordering}
+                    position={index() + 1}
+                    total={props.goalWithProgress.length}
+                    onEdit={props.onEdit}
+                    onDelete={props.onDelete}
+                    onOpenRecords={props.onOpenRecords}
+                    onKeyboardMove={handleKeyboardMove}
+                  />
+                )}
+              </For>
+            </div>
+          </SortableProvider>
         </DragDropProvider>
       </Show>
     </div>
