@@ -1,12 +1,12 @@
 import { Button } from '@kobalte/core/button'
 import { createSortable } from '@thisbeyond/solid-dnd'
-import { ExternalLink, GripVertical } from 'lucide-solid'
+import { ExternalLink } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, onCleanup } from 'solid-js'
 import type { GoalDTO } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { isGoalRecordNavigationEnabled } from '../../../utils/goalRecordFilter'
-import { buildGoalDragHandleLabel } from '../../constants'
+import { buildGoalDragLabel } from '../../constants'
 import { GoalCardActionMenu } from './GoalCardActionMenu'
 import { GoalCardProgress } from './GoalCardProgress'
 
@@ -30,11 +30,11 @@ interface GoalCardProps {
  */
 const GoalCard: Component<GoalCardProps> = (props) => {
   const sortable = createSortable(props.goal.id)
-  let dragHandle: HTMLButtonElement | undefined
+  let cardElement: HTMLElement | undefined
 
   createEffect(() => {
     const activators = sortable.dragActivators
-    if (!dragHandle) return
+    if (!cardElement) return
 
     const entries = Object.entries(activators).map(([handlerName, listener]) => [
       handlerName.startsWith('on') ? handlerName.slice(2) : handlerName,
@@ -42,12 +42,12 @@ const GoalCard: Component<GoalCardProps> = (props) => {
     ]) as Array<[string, EventListener]>
 
     for (const [eventName, listener] of entries) {
-      dragHandle.addEventListener(eventName, listener)
+      cardElement.addEventListener(eventName, listener)
     }
 
     onCleanup(() => {
       for (const [eventName, listener] of entries) {
-        dragHandle?.removeEventListener(eventName, listener)
+        cardElement?.removeEventListener(eventName, listener)
       }
     })
   })
@@ -76,7 +76,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
    * @returns なし。
    */
   const handleKeyDown = (event: KeyboardEvent): void => {
-    if (props.isReordering) return
+    if (props.isReordering || event.target !== event.currentTarget) return
 
     if (event.key === 'ArrowUp') {
       event.preventDefault()
@@ -89,11 +89,18 @@ const GoalCard: Component<GoalCardProps> = (props) => {
 
   return (
     <article
-      ref={sortable.ref}
+      ref={(element) => {
+        cardElement = element
+        sortable.ref(element)
+      }}
       style={{
         transform: `translate3d(${sortable.transform.x}px, ${sortable.transform.y}px, 0)`,
       }}
-      class={`select-none rounded-lg border p-4 shadow-sm ${
+      tabIndex={props.isReordering ? -1 : 0}
+      aria-label={buildGoalDragLabel(props.goal.title, props.position, props.total)}
+      aria-roledescription="並び替え可能な目標"
+      onKeyDown={handleKeyDown}
+      class={`cursor-grab touch-none select-none rounded-lg border p-4 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
         props.progress.achieved
           ? 'border-action-primary-border bg-action-primary-muted'
           : 'border-border bg-surface'
@@ -105,7 +112,8 @@ const GoalCard: Component<GoalCardProps> = (props) => {
             <Button
               type="button"
               disabled={props.isReordering}
-              class="inline-flex items-center gap-1.5 rounded text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+              class="inline-flex cursor-pointer items-center gap-1.5 rounded text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+              onPointerDown={(event) => event.stopPropagation()}
               onClick={handleOpenRecords}
             >
               <span>{props.goal.title}</span>
@@ -122,28 +130,13 @@ const GoalCard: Component<GoalCardProps> = (props) => {
         />
       </div>
 
-      <div class="relative">
-        <Button
-          ref={(element) => {
-            dragHandle = element
-          }}
-          type="button"
-          disabled={props.isReordering}
-          aria-label={buildGoalDragHandleLabel(props.goal.title, props.position, props.total)}
-          aria-roledescription="並び替えハンドル"
-          class="absolute right-0 top-2 z-1 touch-none cursor-grab rounded text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-60"
-          onKeyDown={handleKeyDown}
-        >
-          <GripVertical size={20} aria-hidden="true" />
-        </Button>
-        <div class="pr-7">
-          <GoalCardProgress
-            title={props.goal.title}
-            achievementType={props.goal.achievement_type}
-            invert={props.goal.invert}
-            progress={props.progress}
-          />
-        </div>
+      <div>
+        <GoalCardProgress
+          title={props.goal.title}
+          achievementType={props.goal.achievement_type}
+          invert={props.goal.invert}
+          progress={props.progress}
+        />
       </div>
     </article>
   )
