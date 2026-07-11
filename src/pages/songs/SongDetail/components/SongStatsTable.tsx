@@ -57,7 +57,8 @@ type SongStatsChartProps = {
 
 type SongStatsAverageScoreChartProps = {
   labels: string[]
-  values: (number | null)[]
+  averageScores: (number | null)[]
+  medianScores: (number | null)[]
 }
 
 type SongStatsChartsProps = {
@@ -85,7 +86,9 @@ const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_EXCLUDED_RATING_BAND = 'ALL'
 const CHART_X_AXIS_TICK_PADDING = 8
 const AVERAGE_SCORE_CHART_TITLE = '平均スコア'
+const MEDIAN_SCORE_CHART_LABEL = '中央値スコア'
 const AVERAGE_SCORE_CHART_COLOR = '--cs-color-action-primary'
+const MEDIAN_SCORE_CHART_BORDER_DASH = [6, 4]
 /** AJC表現と同じ淡い虹色グラデーションをChart.jsへ渡すCSS変数列。 */
 const ALL_JUSTICE_CRITICAL_CHART_GRADIENT_COLOR_VARIABLES = [
   '--cs-color-lamp-all-justice-critical-rainbow-1',
@@ -507,15 +510,18 @@ const createAverageScoreChartOptions = (): ChartOptions<'line'> => {
     },
     plugins: {
       legend: {
-        display: false,
+        labels: {
+          color: textColor,
+        },
       },
       tooltip: {
         callbacks: {
           label: (context) => {
             const score = context.parsed.y
-            if (score === null) return AVERAGE_SCORE_CHART_TITLE
+            const label = context.dataset.label ?? AVERAGE_SCORE_CHART_TITLE
+            if (score === null) return label
 
-            return `${AVERAGE_SCORE_CHART_TITLE}: ${score.toLocaleString(undefined, {
+            return `${label}: ${score.toLocaleString(undefined, {
               minimumFractionDigits: 4,
               maximumFractionDigits: 4,
             })}`
@@ -550,9 +556,9 @@ const createAverageScoreChartOptions = (): ChartOptions<'line'> => {
 }
 
 /**
- * rating bandごとの平均スコアを折れ線グラフで表示する。
- * @param props 横軸ラベルと平均スコア。
- * @returns レーティング帯別平均スコアグラフ。
+ * rating bandごとの平均スコアと中央値スコアを折れ線グラフで表示する。
+ * @param props 横軸ラベル、平均スコア、中央値スコア。
+ * @returns レーティング帯別の平均・中央値スコアグラフ。
  */
 const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
   let canvasRef!: HTMLCanvasElement
@@ -572,7 +578,7 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
       datasets: [
         {
           label: AVERAGE_SCORE_CHART_TITLE,
-          data: props.values,
+          data: props.averageScores,
           borderColor: color,
           backgroundColor: color,
           pointBackgroundColor: color,
@@ -580,6 +586,20 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
           pointRadius: 3,
           pointHoverRadius: 5,
           borderWidth: 2,
+          tension: 0.2,
+          spanGaps: true,
+        },
+        {
+          label: MEDIAN_SCORE_CHART_LABEL,
+          data: props.medianScores,
+          borderColor: color,
+          backgroundColor: color,
+          pointBackgroundColor: color,
+          pointBorderColor: color,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          borderWidth: 2,
+          borderDash: MEDIAN_SCORE_CHART_BORDER_DASH,
           tension: 0.2,
           spanGaps: true,
         },
@@ -607,7 +627,11 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
     <section class="min-w-0 rounded-md border border-border bg-surface-muted p-3">
       <h3 class="mb-2 text-sm font-semibold">{AVERAGE_SCORE_CHART_TITLE}</h3>
       <div class={CHART_HEIGHT_CLASS}>
-        <canvas ref={canvasRef} aria-label="レーティング帯別の平均スコア折れ線グラフ" role="img" />
+        <canvas
+          ref={canvasRef}
+          aria-label="レーティング帯別の平均スコアと中央値スコアの折れ線グラフ"
+          role="img"
+        />
       </div>
     </section>
   )
@@ -650,6 +674,7 @@ const SongStatsCharts = (props: SongStatsChartsProps) => {
     }))
   )
   const averageScores = createMemo(() => chartStats().map((band) => band.average_score))
+  const medianScores = createMemo(() => chartStats().map((band) => band.median_score))
 
   return (
     <div class="mt-4 grid gap-4 lg:grid-cols-2">
@@ -671,7 +696,11 @@ const SongStatsCharts = (props: SongStatsChartsProps) => {
         labels={labels()}
         datasets={clearDatasets()}
       />
-      <SongStatsAverageScoreChart labels={labels()} values={averageScores()} />
+      <SongStatsAverageScoreChart
+        labels={labels()}
+        averageScores={averageScores()}
+        medianScores={medianScores()}
+      />
     </div>
   )
 }

@@ -252,6 +252,8 @@ export interface SongStatsBandDTO {
   combo: SongStatsComboDTO
   clear: SongStatsClearDTO
   average_score: number | null
+  /** レーティング帯別の中央値スコア。集計対象がない場合はnull。 */
+  median_score: number | null
   player_count: number
 }
 
