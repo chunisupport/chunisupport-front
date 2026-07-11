@@ -328,10 +328,19 @@ export const filterRandomSongCandidates = (
  * レコードのスコア範囲絞り込みを適用するか判定する。
  *
  * @param filter - プレイ状況とスコアの絞り込み条件。
- * @returns スコアを持つプレイ済み譜面へ範囲絞り込みを適用する場合は true。
+ * @returns スコア範囲絞り込みを適用する場合は true。
  */
 const shouldApplyRandomSongScoreFilter = (filter: RandomSongRecordFilter): boolean =>
   filter.playStatus !== 'unplayed' && (filter.minScore !== null || filter.maxScore !== null)
+
+/**
+ * ランダム選曲のスコア範囲比較に使うスコアを取得する。
+ *
+ * @param record - 判定対象のユーザーレコード。
+ * @returns プレイ済みなら実スコア、未プレイなら 0。
+ */
+const getRandomSongComparableScore = (record: PlayerRecordDTO | undefined): number =>
+  record?.is_played === true ? record.score : 0
 
 /**
  * ランダム選曲候補を自分のレコード条件で絞り込む。
@@ -359,9 +368,9 @@ export const filterRandomSongCandidatesByRecord = (
     if (filter.bestFrame === 'only' && !isBest) return false
     if (filter.bestFrame === 'exclude' && isBest) return false
     if (shouldApplyRandomSongScoreFilter(filter)) {
-      if (record?.is_played !== true) return false
-      if (filter.minScore !== null && record.score < filter.minScore) return false
-      if (filter.maxScore !== null && record.score > filter.maxScore) return false
+      const score = getRandomSongComparableScore(record)
+      if (filter.minScore !== null && score < filter.minScore) return false
+      if (filter.maxScore !== null && score > filter.maxScore) return false
     }
     if (!filter.lamps.includes(resolveRandomSongRecordLamp(record))) return false
 

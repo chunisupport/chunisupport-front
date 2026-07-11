@@ -5,7 +5,7 @@ import { Dialog } from '@kobalte/core/dialog'
 import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
-import { Check, ChevronDown, Dices, RotateCcw, SlidersHorizontal } from 'lucide-solid'
+import { Check, ChevronDown, Dices, Funnel, RotateCcw, SlidersHorizontal } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import {
   createEffect,
@@ -740,6 +740,19 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const parsedMinScore = createMemo(() => parseOptionalRandomSongDecimal(minScore()))
   const parsedMaxScore = createMemo(() => parseOptionalRandomSongDecimal(maxScore()))
   const parsedCount = createMemo(() => parseRandomSongDrawCount(count()))
+  /**
+   * 自分のレコード絞り込みが初期条件から変更されているかを返す。
+   *
+   * @returns いずれかのレコード絞り込み条件が有効な場合は true。
+   */
+  const isRecordFilterActive = createMemo(
+    () =>
+      playStatus() !== 'all' ||
+      bestFrame() !== 'all' ||
+      parsedMinScore() !== null ||
+      parsedMaxScore() !== null ||
+      selectedLamps().length !== RANDOM_SONG_LAMP_VALUES.length
+  )
   const availableMyRecordData = createMemo(() => {
     const data = myRecordData()
     return data?.status === 'available' ? data : null
@@ -1200,9 +1213,14 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       <Dialog.Trigger
                         as="button"
                         type="button"
-                        class="inline-flex min-h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                        class={`inline-flex min-h-10 items-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+                          isRecordFilterActive()
+                            ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
+                            : 'border-border-strong bg-surface text-text hover:bg-surface-muted'
+                        }`}
+                        aria-pressed={isRecordFilterActive()}
                       >
-                        <SlidersHorizontal size={16} aria-hidden="true" />
+                        <Funnel size={16} aria-hidden="true" />
                         {RANDOM_SONG_SELECTOR_COPY.recordFilterSettingsLabel}
                       </Dialog.Trigger>
                       <Dialog.Portal>
