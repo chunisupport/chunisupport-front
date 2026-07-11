@@ -997,7 +997,7 @@
 
 @layer base {
   html {
-    font-family: var(--font-sans);
+    font-family: var(--font-jost);
     overscroll-behavior-y: auto;
   }
 
