@@ -10,6 +10,7 @@ const createStatsBand = (ratingBand: string, playerCount: number): SongStatsBand
   combo: { none: 1, fc: 1, aj: 1, ajc: 1 },
   clear: { failed: 1, clear: 1, hard: 1, brave: 1, absolute: 1, catastrophy: 1 },
   average_score: 1_000_000,
+  median_score: 1_001_000,
   player_count: playerCount,
 })
 
@@ -58,6 +59,7 @@ test('completeSongStatsRatingBands: 欠落した帯を0人の統計行で補完�
   )
   assert.equal(result[0]?.player_count, 0)
   assert.equal(result[0]?.average_score, null)
+  assert.equal(result[0]?.median_score, null)
   assert.equal(result[0]?.combo.ajc, 0)
   assert.equal(result[0]?.clear.catastrophy, 0)
   assert.equal(result[1], stats[0])

@@ -46,6 +46,7 @@ const createEmptySongStatsBand = (ratingBand: string): SongStatsBandDTO => ({
     catastrophy: 0,
   },
   average_score: null,
+  median_score: null,
   player_count: 0,
 })
 
