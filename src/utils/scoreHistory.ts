@@ -32,3 +32,14 @@ export const formatScoreHistoryDateTime = (value: string): string => {
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? '-' : scoreHistoryDateTimeFormatter.format(date)
 }
+
+/**
+ * スコア履歴グラフの横軸値を年月日の短縮表示へ整形する。
+ *
+ * @param value - UNIXエポックからの経過ミリ秒。
+ * @returns yy/MM/dd形式の日付。不正値の場合はハイフン。
+ */
+export const formatScoreHistoryTimestamp = (value: number): string => {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '-' : scoreHistoryDateTimeFormatter.format(date)
+}
