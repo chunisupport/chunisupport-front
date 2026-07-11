@@ -2,7 +2,7 @@ import { useDragDropContext } from '@thisbeyond/solid-dnd'
 import { onCleanup, onMount } from 'solid-js'
 
 /** タッチ操作でドラッグ開始とみなす長押し時間（ms）。 */
-const TOUCH_DRAG_ACTIVATION_DELAY_MS = 150
+const TOUCH_DRAG_ACTIVATION_DELAY_MS = 300
 
 /** 長押し前にこの距離（px）以上動いたらスクロール操作として扱う。 */
 const TOUCH_SCROLL_DISTANCE_THRESHOLD_PX = 10
