@@ -132,6 +132,59 @@ test("WORLD'S END 楽曲APIは独立リソースの新パスを呼び出す", as
   ])
 })
 
+test('スコア履歴APIはユーザーレコード配下の新パスを呼び出す', async () => {
+  const calledUrls: string[] = []
+
+  globalThis.fetch = async (input) => {
+    calledUrls.push(String(input))
+    return Response.json({ entries: [] })
+  }
+
+  const { fetchOwnSongScoreHistory, fetchOwnWorldsendScoreHistory } = await loadSongsApi()
+
+  await fetchOwnSongScoreHistory('A/B C', 'MASTER', 'test_user')
+  await fetchOwnWorldsendScoreHistory('WE/A B', 'test_user')
+
+  assert.deepEqual(calledUrls, [
+    'http://localhost:3000/internal/users/test_user/record/songs/A%2FB%20C/master/history',
+    'http://localhost:3000/internal/users/test_user/record/worldsend-songs/WE%2FA%20B/history',
+  ])
+})
+
+test('フレンドランキングAPIは通常譜面ランキングのパスを呼び出す', async () => {
+  const calledUrls: string[] = []
+
+  globalThis.fetch = async (input) => {
+    calledUrls.push(String(input))
+    return Response.json({ ranking: [], my_rank: null, total: 0 })
+  }
+
+  const { fetchSongFriendRanking } = await loadSongsApi()
+
+  await fetchSongFriendRanking('A/B C', 'ULTIMA')
+
+  assert.deepEqual(calledUrls, [
+    'http://localhost:3000/internal/friend-rankings/songs/A%2FB%20C/charts/ULTIMA',
+  ])
+})
+
+test("フレンドランキングAPIはWORLD'S END譜面ランキングのパスを呼び出す", async () => {
+  const calledUrls: string[] = []
+
+  globalThis.fetch = async (input) => {
+    calledUrls.push(String(input))
+    return Response.json({ ranking: [], my_rank: null, total: 0 })
+  }
+
+  const { fetchWorldsendFriendRanking } = await loadSongsApi()
+
+  await fetchWorldsendFriendRanking('WE/A B')
+
+  assert.deepEqual(calledUrls, [
+    'http://localhost:3000/internal/friend-rankings/worldsend-songs/WE%2FA%20B',
+  ])
+})
+
 test('fetchVersions は同時呼び出しを同じリクエストにまとめる', async () => {
   const responseBody = {
     versions: [{ name: 'CHUNITHM LUMINOUS', released_at: '2023-12-14' }],

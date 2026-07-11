@@ -1,15 +1,11 @@
-import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
-import { Select } from '@kobalte/core/select'
-import * as Tabs from '@kobalte/core/tabs'
-import { Check, ChevronDown } from 'lucide-solid'
 import { createEffect, createMemo, createSignal, For } from 'solid-js'
+import { AppButton, getAppButtonClass } from '../../../components/common/AppButton'
+import { AppSelect } from '../../../components/common/AppSelect'
+import { AppTabContent, SegmentedTabs } from '../../../components/common/AppTabs'
 import type { SortCondition } from '../../../utils/sortConditions'
 import type { SortDirection } from '../../../utils/sortingQuery'
-import {
-  FILTER_DIALOG_SELECT_ITEM_CLASS,
-  FILTER_DIALOG_SELECT_TRIGGER_CLASS,
-} from './filter/styles'
+import FilterResetDialog from './FilterResetDialog'
 
 export type { SortCondition } from '../../../utils/sortConditions'
 
@@ -43,21 +39,13 @@ const SORT_DIRECTION_OPTIONS: SortDirectionOption[] = [
   { value: 'asc', label: '昇順' },
 ]
 
-/** ソートダイアログの操作ボタンで使う Tailwind クラス。 */
-const SORT_DIALOG_BUTTON_CLASS = {
-  secondary:
-    'rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover',
-  primary:
-    'rounded bg-action-primary px-4 py-2 text-sm text-text-inverse hover:bg-action-primary-hover',
-} as const
-
-/** ソート表示モード切り替えタブの表示クラス。 */
-const SORT_VIEW_TAB_TRIGGER_CLASS =
-  'rounded-md px-3 py-1.5 text-sm font-medium text-text-muted transition-colors hover:bg-action-secondary hover:text-text data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm data-selected:hover:bg-action-primary data-selected:hover:text-text-inverse focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
-
 /** 詳細ソート行の番号バッジ表示クラス。 */
 const SORT_CONDITION_BADGE_CLASS =
   'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-sm font-bold text-text-muted'
+const SORT_VIEW_TAB_OPTIONS = [
+  { value: 'standard', label: '通常' },
+  { value: 'detail', label: '詳細' },
+] as const
 
 /**
  * ソート方向の表示名を取得する。
@@ -162,6 +150,15 @@ export function SortConditionsDialog<TSortKey extends string>(
   }
 
   /**
+   * 下書き中のソート条件を既定値へ戻す。
+   *
+   * @returns なし。
+   */
+  const resetSortConditions = (): void => {
+    setDraftSortConditions(props.normalizeSortConditions(props.defaultSortConditions))
+  }
+
+  /**
    * ソート表示モードを切り替える。
    *
    * @param value - Kobalte Tabs から渡されるタブ値。
@@ -210,78 +207,32 @@ export function SortConditionsDialog<TSortKey extends string>(
           </span>
         ) : null}
         <div class="min-w-0 flex-1">
-          <Select<SortConditionColumnOption<TSortKey>>
+          <AppSelect<SortConditionColumnOption<TSortKey>>
             options={props.columnOptions}
             optionValue="value"
             optionTextValue="label"
             value={getSortColumnOption(selectedKey())}
-            onChange={(option) => {
+            onChange={(option: SortConditionColumnOption<TSortKey> | null) => {
               if (option) updateDraftSortKey(rowIndex, option.value)
             }}
-            gutter={0}
-            itemComponent={(itemProps) => (
-              <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
-                <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
-                  <Check class="h-4 w-4" />
-                </Select.ItemIndicator>
-              </Select.Item>
-            )}
-          >
-            <Select.Label class="sr-only">第{rowIndex + 1}ソート 列</Select.Label>
-            <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
-              <Select.Value<
-                SortConditionColumnOption<TSortKey>
-              > class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
-                {(state) => state.selectedOption()?.label}
-              </Select.Value>
-              <Select.Icon class="h-5 w-5 flex items-center justify-center">
-                <ChevronDown class="h-4 w-4" />
-              </Select.Icon>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
-                <Select.Listbox class="max-h-90 overflow-y-auto p-2" />
-              </Select.Content>
-            </Select.Portal>
-          </Select>
+            label={`第${rowIndex + 1}ソート 列`}
+            labelVariant="srOnly"
+            formatLabel={(option) => option.label}
+          />
         </div>
         <div class="w-24 shrink-0">
-          <Select<SortDirectionOption>
+          <AppSelect<SortDirectionOption>
             options={SORT_DIRECTION_OPTIONS}
             optionValue="value"
             optionTextValue="label"
             value={getSortDirectionOption(selectedDirection())}
-            onChange={(option) => {
+            onChange={(option: SortDirectionOption | null) => {
               if (option) updateDraftSortDirection(rowIndex, option.value)
             }}
-            gutter={0}
-            itemComponent={(itemProps) => (
-              <Select.Item item={itemProps.item} class={FILTER_DIALOG_SELECT_ITEM_CLASS}>
-                <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                <Select.ItemIndicator class="indicator h-5 w-5 inline-flex items-center justify-center">
-                  <Check class="h-4 w-4" />
-                </Select.ItemIndicator>
-              </Select.Item>
-            )}
-          >
-            <Select.Label class="sr-only">
-              第{rowIndex + 1}ソート {getSortDirectionLabel(selectedDirection())}
-            </Select.Label>
-            <Select.Trigger class={FILTER_DIALOG_SELECT_TRIGGER_CLASS}>
-              <Select.Value<SortDirectionOption> class="overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-placeholder">
-                {(state) => state.selectedOption()?.label}
-              </Select.Value>
-              <Select.Icon class="h-5 w-5 flex items-center justify-center">
-                <ChevronDown class="h-4 w-4" />
-              </Select.Icon>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content class="z-60 bg-surface rounded-md border border-border-strong shadow-lg">
-                <Select.Listbox class="p-2" />
-              </Select.Content>
-            </Select.Portal>
-          </Select>
+            label={`第${rowIndex + 1}ソート ${getSortDirectionLabel(selectedDirection())}`}
+            labelVariant="srOnly"
+            formatLabel={(option) => option.label}
+          />
         </div>
       </div>
     )
@@ -292,41 +243,38 @@ export function SortConditionsDialog<TSortKey extends string>(
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
         <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[80dvh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
-          <div class="mb-4 shrink-0">
+          <div class="mb-4 flex shrink-0 items-center justify-between">
             <Dialog.Title class="text-lg font-bold">ソート</Dialog.Title>
+            <FilterResetDialog
+              triggerLabel="ソートをリセット"
+              title="ソートをリセットしますか？"
+              onReset={resetSortConditions}
+            />
           </div>
 
-          <Tabs.Root value={viewMode()} onChange={handleViewModeChange}>
-            <Tabs.List class="mb-4 inline-flex gap-1 rounded-lg bg-surface-hover p-1">
-              <Tabs.Trigger value="standard" class={SORT_VIEW_TAB_TRIGGER_CLASS}>
-                通常
-              </Tabs.Trigger>
-              <Tabs.Trigger value="detail" class={SORT_VIEW_TAB_TRIGGER_CLASS}>
-                詳細
-              </Tabs.Trigger>
-            </Tabs.List>
-
+          <SegmentedTabs
+            value={viewMode()}
+            onChange={handleViewModeChange}
+            options={SORT_VIEW_TAB_OPTIONS}
+            listClass="mb-4"
+          >
             <div class="min-h-0 flex-1 overflow-y-auto pr-1 text-sm">
-              <Tabs.Content value="standard">{renderSortConditionRow(0, false)}</Tabs.Content>
-              <Tabs.Content value="detail" class="space-y-3">
+              <AppTabContent value="standard">{renderSortConditionRow(0, false)}</AppTabContent>
+              <AppTabContent value="detail" class="space-y-3">
                 <For each={sortConditionIndices()}>
                   {(rowIndex) => renderSortConditionRow(rowIndex, true)}
                 </For>
-              </Tabs.Content>
+              </AppTabContent>
             </div>
-          </Tabs.Root>
+          </SegmentedTabs>
 
           <div class="mt-6 flex shrink-0 justify-end gap-2">
-            <Dialog.CloseButton class={SORT_DIALOG_BUTTON_CLASS.secondary}>
+            <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
               閉じる
             </Dialog.CloseButton>
-            <Button
-              type="button"
-              class={SORT_DIALOG_BUTTON_CLASS.primary}
-              onClick={applySortConditions}
-            >
+            <AppButton variant="primary" onClick={applySortConditions}>
               適用
-            </Button>
+            </AppButton>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

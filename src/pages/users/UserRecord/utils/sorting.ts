@@ -11,7 +11,7 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../../../utils/sortingQuery'
-import { compareUnplayedRecords } from '../../recordTable/sortComparators'
+import { compareNumberWithUnplayedLast } from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import {
   compareMissingJusticeCountRecords,
@@ -140,32 +140,32 @@ const compareRecordBySortCondition = (
       comparison = left.const - right.const
       break
     case 'rating': {
-      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-
-      comparison = left.rating - right.rating
-      break
+      return compareNumberWithUnplayedLast(
+        { isPlayed: left.is_played, value: left.rating },
+        { isPlayed: right.is_played, value: right.rating },
+        direction
+      )
     }
     case 'score': {
-      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-
-      comparison = left.score - right.score
-      break
+      return compareNumberWithUnplayedLast(
+        { isPlayed: left.is_played, value: left.score },
+        { isPlayed: right.is_played, value: right.score },
+        direction
+      )
     }
     case 'overpower': {
-      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-
-      comparison = left.overpower - right.overpower
-      break
+      return compareNumberWithUnplayedLast(
+        { isPlayed: left.is_played, value: left.overpower },
+        { isPlayed: right.is_played, value: right.overpower },
+        direction
+      )
     }
     case 'overpowerPercent': {
-      const unplayedComparison = compareUnplayedRecords(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-
-      comparison = left.overpower_percent - right.overpower_percent
-      break
+      return compareNumberWithUnplayedLast(
+        { isPlayed: left.is_played, value: left.overpower_percent },
+        { isPlayed: right.is_played, value: right.overpower_percent },
+        direction
+      )
     }
     case 'updatedAt': {
       const leftMissing = isUpdatedAtMissing(left.is_played, a.updatedAtTs)
@@ -199,6 +199,15 @@ const compareRecordBySortCondition = (
 
       if (rightMissing) {
         return -1
+      }
+
+      if (sortCondition.direction === 'desc') {
+        const leftIsAllJusticeCritical = leftJusticeCount === 0
+        const rightIsAllJusticeCritical = rightJusticeCount === 0
+
+        if (leftIsAllJusticeCritical !== rightIsAllJusticeCritical) {
+          return leftIsAllJusticeCritical ? -1 : 1
+        }
       }
 
       comparison = leftJusticeCount - rightJusticeCount

@@ -13,6 +13,9 @@ export const CHART_LEVEL_10_CONST_MIN = 10.0
 /** 苦手譜面インスペクターの分析対象難易度。 */
 export const WEAK_CHART_INSPECTOR_DIFFICULTIES = ['MASTER', 'ULTIMA'] as const
 
+/** 目標フォームの対象譜面で初期選択する難易度。 */
+export const GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES = ['MASTER', 'ULTIMA'] as const
+
 /** CHUNITHM のスコアとして扱う最小値。 */
 export const SCORE_MIN = 0
 
@@ -33,6 +36,9 @@ export const OVER_POWER_MAX = (CHART_CONST_MAX + 3) * 5
 
 /** WORLD'S END の星数レベルとして扱う最小値。 */
 export const WORLDSEND_LEVEL_STAR_MIN = 1
+
+/** WORLD'S END 譜面の表示ラベル。 */
+export const WORLDSEND_SCORE_LABEL = "WORLD'S END"
 
 /** WORLD'S END の星数レベルとして扱う最大値。 */
 export const WORLDSEND_LEVEL_STAR_MAX = 5

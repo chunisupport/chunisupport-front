@@ -1,5 +1,6 @@
 import type { ChainLamp, ComboLamp, Difficulty, HardLamp } from '../../../../types/record'
 import type { FilterState } from '../../../../types/recordFilter'
+import { isDateInRange } from '../../../../utils/dateFilter'
 import { buildDefaultFilter } from '../../../../utils/recordFilterDefaults'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
@@ -44,7 +45,8 @@ export function isRecordMatched(record: PlayerRecordWithSongMeta, filters: Filte
 export function isRecordMatchedWithTitleMatcher(
   record: PlayerRecordWithSongMeta,
   filters: FilterState,
-  matchTitle: RecordTitleMatcher
+  matchTitle: RecordTitleMatcher,
+  favoriteSongIds: ReadonlySet<string> = new Set()
 ): boolean {
   // 未プレイ除外
   if (filters.excludeNoPlay && !record.is_played) {
@@ -63,6 +65,11 @@ export function isRecordMatchedWithTitleMatcher(
 
   // 現在のOVER POWER集計対象
   if (filters.currentOpTargetOnly && !record.is_op_target) {
+    return false
+  }
+
+  // お気に入り楽曲
+  if (filters.favoriteSongsOnly && !favoriteSongIds.has(record.id)) {
     return false
   }
 
@@ -113,6 +120,9 @@ export function isRecordMatchedWithTitleMatcher(
   // ハードランプ
   const hardLamp = record.is_played ? (record.clear_lamp ?? null) : null
   if (!filters.hard_lamp.includes(hardLamp as HardLamp)) return false
+
+  // 最終更新日
+  if (!isDateInRange(record.updated_at, filters.updatedAt)) return false
 
   return true
 }

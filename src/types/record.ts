@@ -13,6 +13,18 @@ export type ChainLamp = PlayerRecordDTO['full_chain']
 export type HardLamp = PlayerRecordDTO['clear_lamp']
 
 /**
+ * 下限と上限を持つ日付範囲フィルター。
+ *
+ * 空文字列は「未指定（フィルタリングしない）」を意味する。
+ * @property min - 範囲の下限日付 (YYYY-MM-DD)。
+ * @property max - 範囲の上限日付 (YYYY-MM-DD)。
+ */
+export type DateRangeFilter = {
+  min: string
+  max: string
+}
+
+/**
  * 下限と上限を持つ数値範囲フィルター。
  *
  * @template T - 範囲端に許可する数値型。未指定を許す場合は number | null。

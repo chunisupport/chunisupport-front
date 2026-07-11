@@ -11,23 +11,25 @@ import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import type { Difficulty, FilterState } from '../../../../../types/recordFilter'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import { truncateDecimal } from '../../../../../utils/numberFormat'
+import {
+  parseNumberInput,
+  toInputValue,
+  updateOptionalNumberRange,
+} from '../../../../../utils/rangeInput'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
+import DateRangeSection from '../../../components/filter/DateRangeSection'
 import LampSection from '../../../components/filter/LampSection'
 import MultiSelectFilterSection from '../../../components/filter/MultiSelectFilterSection'
 import NumericRangeSection from '../../../components/filter/NumericRangeSection'
 import ScoreSection from '../../../components/filter/ScoreSection'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../components/filter/styles'
 import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters'
 import {
   JUSTICE_COUNT_RANGE_FILTER,
   OVER_POWER_RANGE_FILTER,
 } from '../../../constants/rangeFilters'
-import {
-  parseNumberInput,
-  toggleArray,
-  toInputValue,
-  updateOptionalNumberRange,
-} from '../../../utils/filterValue'
+import { toggleArray } from '../../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../../utils/scoreRank'
 import ConstRangeSection from './sections/ConstRangeSection'
@@ -45,6 +47,10 @@ type FilterSelectionPanelProps = {
   editingFilterName?: string | null
   /** フィルター名が変更されたときのコールバック。 */
   onEditingFilterNameChange?: (name: string) => void
+  /** お気に入り楽曲設定を開く。 */
+  onOpenFavoriteSongs?: () => void
+  /** お気に入り楽曲設定を無効化するか。 */
+  favoriteSongsDisabled?: boolean
 }
 
 /** フィルター名入力を API の最大文字数に丸める。 */
@@ -81,6 +87,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const [overPowerMaxInput, setOverPowerMaxInput] = createSignal(
     toInputValue(props.filters.overPower.max)
   )
+  const [updatedAtMinInput, setUpdatedAtMinInput] = createSignal(props.filters.updatedAt.min)
+  const [updatedAtMaxInput, setUpdatedAtMaxInput] = createSignal(props.filters.updatedAt.max)
 
   const Const2Level = (value: number) => {
     const normalized = Math.max(CHART_CONST_MIN, Math.min(value, CHART_CONST_MAX))
@@ -121,6 +129,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     setJusticeCountMaxInput(toInputValue(props.filters.justiceCount.max))
     setOverPowerMinInput(toInputValue(props.filters.overPower.min))
     setOverPowerMaxInput(toInputValue(props.filters.overPower.max))
+    setUpdatedAtMinInput(props.filters.updatedAt.min)
+    setUpdatedAtMaxInput(props.filters.updatedAt.max)
     setConstLevelMin(Const2Level(props.filters.const.min))
     setConstLevelMax(Const2Level(props.filters.const.max))
     setScoreRankMin(scoreToFilterRank(props.filters.score.min))
@@ -337,7 +347,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           <span class="block text-sm font-medium mb-1">フィルター名</span>
           <TextField>
             <TextField.Input
-              class="w-full rounded border border-border-strong bg-surface px-3 py-2 font-sans text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+              class={`${FILTER_DIALOG_FIELD_INPUT_CLASS} font-sans`}
               maxLength={RECORD_FILTER_NAME_MAX_LENGTH}
               value={props.editingFilterName ?? ''}
               onInput={(event) =>
@@ -351,6 +361,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         difficulties={difficulties()}
         selected={props.filters.difficulties}
         currentOpTargetOnly={props.filters.currentOpTargetOnly}
+        favoriteSongsOnly={props.filters.favoriteSongsOnly}
         onToggle={(diff) =>
           props.setFilters((prev) => ({
             ...prev,
@@ -363,6 +374,14 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             currentOpTargetOnly: checked,
           }))
         }
+        onFavoriteSongsOnlyChange={(checked) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            favoriteSongsOnly: checked,
+          }))
+        }
+        onOpenFavoriteSongs={props.onOpenFavoriteSongs}
+        favoriteSongsDisabled={props.favoriteSongsDisabled}
       />
       <ConstRangeSection
         constFilterMode={props.filters.constFilterMode}
@@ -451,6 +470,26 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         onMinCommit={(value) => commitOverPowerRange('min', value)}
         onMaxCommit={(value) => commitOverPowerRange('max', value)}
       />
+      <DateRangeSection
+        minValue={updatedAtMinInput()}
+        maxValue={updatedAtMaxInput()}
+        onMinInput={setUpdatedAtMinInput}
+        onMaxInput={setUpdatedAtMaxInput}
+        onMinCommit={(value) => {
+          setUpdatedAtMinInput(value)
+          props.setFilters((prev) => ({
+            ...prev,
+            updatedAt: { ...prev.updatedAt, min: value },
+          }))
+        }}
+        onMaxCommit={(value) => {
+          setUpdatedAtMaxInput(value)
+          props.setFilters((prev) => ({
+            ...prev,
+            updatedAt: { ...prev.updatedAt, max: value },
+          }))
+        }}
+      />
       <LampSection
         title="コンボランプ"
         idPrefix="combo-lamp"
@@ -527,22 +566,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         selected={props.filters.genres}
         placeholder="ジャンルを選択"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-        onSelectAll={() =>
+        onChange={(selectedGenres) =>
           props.setFilters((prev) => ({
             ...prev,
-            genres: genres(),
-          }))
-        }
-        onClear={() =>
-          props.setFilters((prev) => ({
-            ...prev,
-            genres: [],
-          }))
-        }
-        onToggle={(genre) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            genres: toggleArray(prev.genres, genre),
+            genres: selectedGenres,
           }))
         }
       />
@@ -552,22 +579,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         selected={props.filters.versions}
         placeholder="バージョンを選択"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-        onSelectAll={() =>
+        onChange={(selectedVersions) =>
           props.setFilters((prev) => ({
             ...prev,
-            versions: versions(),
-          }))
-        }
-        onClear={() =>
-          props.setFilters((prev) => ({
-            ...prev,
-            versions: [],
-          }))
-        }
-        onToggle={(version) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            versions: toggleArray(prev.versions, version),
+            versions: selectedVersions,
           }))
         }
       />

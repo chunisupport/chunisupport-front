@@ -1,6 +1,7 @@
-import { Button } from '@kobalte/core/button'
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { deleteUserByUsername, fetchAdminUsers } from '../../api/users'
+import { AppButton } from '../../components/common/AppButton'
+import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
@@ -22,8 +23,6 @@ const AdminUsersPage = () => {
   const [searchInput, setSearchInput] = createSignal('')
   const [searchName, setSearchName] = createSignal('')
   const [refreshKey, setRefreshKey] = createSignal(0)
-  const [message, setMessage] = createSignal('')
-  const [errorMessage, setErrorMessage] = createSignal('')
 
   const [usersResponse] = createResource(
     () => ({ name: searchName(), refresh: refreshKey() }),
@@ -48,14 +47,12 @@ const AdminUsersPage = () => {
   const handleDelete = async (username: string) => {
     if (!window.confirm(`ユーザー ${username} を物理削除しますか？この操作は取り消せません。`))
       return
-    setMessage('')
-    setErrorMessage('')
     try {
       await deleteUserByUsername(username)
-      setMessage(`ユーザー ${username} を削除しました。`)
+      showSuccessToast(`ユーザー ${username} を削除しました。`)
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
   }
 
@@ -68,17 +65,6 @@ const AdminUsersPage = () => {
         </p>
       </div>
 
-      <Show when={message()}>
-        <p class="rounded border border-success-border bg-success-bg px-3 py-2 text-sm text-success">
-          {message()}
-        </p>
-      </Show>
-      <Show when={errorMessage()}>
-        <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-          {errorMessage()}
-        </p>
-      </Show>
-
       <div class="rounded-lg border border-border bg-surface p-4">
         <div class="flex flex-wrap items-end gap-2">
           <label class="text-sm">
@@ -90,13 +76,9 @@ const AdminUsersPage = () => {
               placeholder="例: user"
             />
           </label>
-          <Button
-            type="button"
-            class="rounded bg-info px-4 py-2 text-sm font-medium text-text-inverse hover:bg-info"
-            onClick={handleSearch}
-          >
+          <AppButton variant="primary" onClick={handleSearch}>
             検索
-          </Button>
+          </AppButton>
         </div>
       </div>
 
@@ -144,13 +126,13 @@ const AdminUsersPage = () => {
                   </td>
                   <td class="whitespace-nowrap px-3 py-2">{formatBooleanFlag(user.is_private)}</td>
                   <td class="whitespace-nowrap px-3 py-2">
-                    <Button
-                      type="button"
-                      class="rounded bg-danger px-3 py-1 text-xs font-medium text-text-inverse hover:bg-danger-hover"
+                    <AppButton
+                      variant="danger"
+                      size="xs"
                       onClick={() => handleDelete(user.username)}
                     >
                       削除
-                    </Button>
+                    </AppButton>
                   </td>
                 </tr>
               )}

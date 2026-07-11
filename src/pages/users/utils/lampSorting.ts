@@ -1,3 +1,5 @@
+import { MAX_SCORE } from '../../../utils/scoreRank'
+
 export type HardLampKey =
   | 'FAILED'
   | 'CLEAR'
@@ -21,18 +23,33 @@ export const HARD_LAMP_ORDER: Record<HardLampKey, number> = {
 
 export const NO_HARD_CLEAR_LAMPS = new Set<HardLampKey>(['NONE', 'UNPLAYED'])
 
-export type ComboLampKey = 'NONE' | 'FULL COMBO' | 'ALL JUSTICE' | 'UNPLAYED'
+export type ComboLampKey =
+  | 'NONE'
+  | 'FULL COMBO'
+  | 'ALL JUSTICE'
+  | 'ALL JUSTICE CRITICAL'
+  | 'UNPLAYED'
 
 export const COMBO_LAMP_ORDER: Record<ComboLampKey, number> = {
   NONE: 0,
   'FULL COMBO': 1,
   'ALL JUSTICE': 2,
-  UNPLAYED: 3,
+  'ALL JUSTICE CRITICAL': 3,
+  UNPLAYED: 4,
 }
 
+/**
+ * コンボランプをソート用のキーに正規化する。
+ *
+ * @param isPlayed - プレイ済みかどうか。
+ * @param comboLamp - APIのコンボランプ値。
+ * @param score - AJC判定に使うスコア。
+ * @returns NONE、FULL COMBO、ALL JUSTICE、ALL JUSTICE CRITICAL、UNPLAYED のいずれか。
+ */
 export const getComboLampKey = (
   isPlayed: boolean,
-  comboLamp: string | null | undefined
+  comboLamp: string | null | undefined,
+  score?: number
 ): ComboLampKey => {
   if (!isPlayed) {
     return 'UNPLAYED'
@@ -40,6 +57,10 @@ export const getComboLampKey = (
 
   if (comboLamp === null || comboLamp === undefined) {
     return 'NONE'
+  }
+
+  if (comboLamp === 'ALL JUSTICE' && score === MAX_SCORE) {
+    return 'ALL JUSTICE CRITICAL'
   }
 
   if (
@@ -54,9 +75,16 @@ export const getComboLampKey = (
   return 'NONE'
 }
 
+/**
+ * コンボランプを比較する。
+ *
+ * @param left - 左側の比較対象。
+ * @param right - 右側の比較対象。
+ * @returns 比較結果と方向反転をスキップするかどうか。
+ */
 export const compareComboLamp = (
-  left: { is_played: boolean; combo_lamp: string | null | undefined },
-  right: { is_played: boolean; combo_lamp: string | null | undefined }
+  left: { is_played: boolean; combo_lamp: string | null | undefined; score?: number },
+  right: { is_played: boolean; combo_lamp: string | null | undefined; score?: number }
 ): { comparison: number; skipDirection: boolean } => {
   const leftMissing = !left.is_played
   const rightMissing = !right.is_played
@@ -65,8 +93,8 @@ export const compareComboLamp = (
   if (leftMissing) return { comparison: 1, skipDirection: true }
   if (rightMissing) return { comparison: -1, skipDirection: true }
 
-  const leftKey = getComboLampKey(left.is_played, left.combo_lamp)
-  const rightKey = getComboLampKey(right.is_played, right.combo_lamp)
+  const leftKey = getComboLampKey(left.is_played, left.combo_lamp, left.score)
+  const rightKey = getComboLampKey(right.is_played, right.combo_lamp, right.score)
 
   return {
     comparison:

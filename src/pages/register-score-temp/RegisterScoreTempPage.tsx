@@ -1,7 +1,8 @@
-import { Button } from '@kobalte/core/button'
 import { createSignal, Show } from 'solid-js'
 
 import { postPlayerDataCommit, postRegisterData } from '../../api/register-data'
+import { AppButton } from '../../components/common/AppButton'
+import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 
@@ -16,23 +17,19 @@ const formatLabelMap: Record<UploadFormat, string> = {
   text: 'TXT (base64+gzip)',
 }
 
+/**
+ * スコア登録用の一時アップロードと確定保存を行う検証ページを表示する。
+ *
+ * @returns スコア登録データのアップロード画面。
+ */
 const RegisterScoreTempPage = () => {
   const [selectedFile, setSelectedFile] = createSignal<File | null>(null)
   const [format, setFormat] = createSignal<UploadFormat | null>(null)
-  const [errorMessage, setErrorMessage] = createSignal('')
-  const [successMessage, setSuccessMessage] = createSignal('')
   const [isSubmitting, setIsSubmitting] = createSignal(false)
   const [copied, setCopied] = createSignal(false)
 
   const [uploadToken, setUploadToken] = createSignal('')
-  const [commitErrorMessage, setCommitErrorMessage] = createSignal('')
-  const [commitSuccessMessage, setCommitSuccessMessage] = createSignal('')
   const [isCommitting, setIsCommitting] = createSignal(false)
-
-  const resetMessages = () => {
-    setErrorMessage('')
-    setSuccessMessage('')
-  }
 
   const detectFormat = (file: File): UploadFormat | null => {
     const extension = file.name.split('.').pop()?.toLowerCase()
@@ -46,7 +43,6 @@ const RegisterScoreTempPage = () => {
   }
 
   const handleFileChange = (event: Event) => {
-    resetMessages()
     const target = event.currentTarget as HTMLInputElement
     const file = target.files?.[0] ?? null
 
@@ -59,7 +55,7 @@ const RegisterScoreTempPage = () => {
     if (file.size > MAX_FILE_SIZE) {
       setSelectedFile(null)
       setFormat(null)
-      setErrorMessage('ファイルサイズは5MB以下にしてください。')
+      showErrorToast('ファイルサイズは5MB以下にしてください。')
       return
     }
 
@@ -67,7 +63,7 @@ const RegisterScoreTempPage = () => {
     if (!detectedFormat) {
       setSelectedFile(null)
       setFormat(null)
-      setErrorMessage('アップロードできるのは .json または .txt のみです。')
+      showErrorToast('アップロードできるのは .json または .txt のみです。')
       return
     }
 
@@ -81,10 +77,8 @@ const RegisterScoreTempPage = () => {
    * @returns 処理完了後に解決されるPromise。
    */
   const handleSubmit = async () => {
-    resetMessages()
-
     if (!selectedFile() || !format()) {
-      setErrorMessage('アップロードするファイルを選択してください。')
+      showErrorToast('アップロードするファイルを選択してください。')
       return
     }
 
@@ -97,7 +91,7 @@ const RegisterScoreTempPage = () => {
         try {
           JSON.parse(fileText ?? '')
         } catch {
-          setErrorMessage('JSONの形式が正しくありません。')
+          showErrorToast('JSONの形式が正しくありません。')
           return
         }
       }
@@ -106,9 +100,9 @@ const RegisterScoreTempPage = () => {
         data: fileText ?? '',
         format: uploadFormat as RegisterDataFormat,
       })
-      setSuccessMessage('スコアデータを送信しました。')
+      showSuccessToast('スコアデータを送信しました。')
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, 'アップロードに失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, 'アップロードに失敗しました。'))
     } finally {
       setIsSubmitting(false)
     }
@@ -120,26 +114,23 @@ const RegisterScoreTempPage = () => {
    * @returns 処理完了後に解決されるPromise。
    */
   const handleCommit = async () => {
-    setCommitErrorMessage('')
-    setCommitSuccessMessage('')
-
     const token = uploadToken().trim()
     if (!token) {
-      setCommitErrorMessage('uploadToken を入力してください。')
+      showErrorToast('uploadToken を入力してください。')
       return
     }
 
     setIsCommitting(true)
     try {
       await postPlayerDataCommit(token)
-      setCommitSuccessMessage('スコアデータを確定保存しました。')
+      showSuccessToast('スコアデータを確定保存しました。')
       setUploadToken('')
     } catch (error) {
       const apiError = error as Error & { status?: number }
       if (apiError.status === 404) {
-        setCommitErrorMessage('アップロードトークンが見つかりません。')
+        showErrorToast('アップロードトークンが見つかりません。')
       } else {
-        setCommitErrorMessage(toUserFriendlyErrorMessage(error, '保存に失敗しました。'))
+        showErrorToast(toUserFriendlyErrorMessage(error, '保存に失敗しました。'))
       }
     } finally {
       setIsCommitting(false)
@@ -192,21 +183,14 @@ const RegisterScoreTempPage = () => {
           </div>
         </div>
 
-        <Show when={errorMessage()}>
-          <p class="text-sm text-danger">{errorMessage()}</p>
-        </Show>
-        <Show when={successMessage()}>
-          <p class="text-sm text-action-primary">{successMessage()}</p>
-        </Show>
-
-        <Button
-          type="button"
-          class="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse shadow-sm hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+        <AppButton
+          variant="primary"
+          class="rounded-md shadow-sm"
           onClick={handleSubmit}
           disabled={isSubmitting()}
         >
           {isSubmitting() ? '送信中...' : 'アップロードする'}
-        </Button>
+        </AppButton>
       </div>
       <div class="mt-8">
         <h2 class="text-xl font-semibold mb-4">確定保存 (commit)</h2>
@@ -226,20 +210,14 @@ const RegisterScoreTempPage = () => {
             onInput={(e) => setUploadToken((e.currentTarget as HTMLInputElement).value)}
             class="block w-full rounded-md border border-border-strong px-3 py-2 text-sm placeholder-text-placeholder focus:border-focus-ring focus:outline-none focus:ring-1 focus:ring-focus-ring"
           />
-          <Show when={commitErrorMessage()}>
-            <p class="text-sm text-danger">{commitErrorMessage()}</p>
-          </Show>
-          <Show when={commitSuccessMessage()}>
-            <p class="text-sm text-action-primary">{commitSuccessMessage()}</p>
-          </Show>
-          <Button
-            type="button"
-            class="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse shadow-sm hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+          <AppButton
+            variant="primary"
+            class="rounded-md shadow-sm"
             onClick={handleCommit}
             disabled={isCommitting()}
           >
             {isCommitting() ? '送信中...' : '確定保存する'}
-          </Button>
+          </AppButton>
         </div>
       </div>
 
@@ -254,9 +232,9 @@ const RegisterScoreTempPage = () => {
           <Show when={copied()}>
             <span class="text-action-primary text-xs">コピーしました！</span>
           </Show>
-          <Button
-            type="button"
-            class="bg-action-primary text-text-inverse p-3 rounded hover:bg-action-primary-hover"
+          <AppButton
+            variant="primary"
+            class="p-3"
             onClick={() => {
               const code =
                 'javascript:(function(){var e=document.createElement("script");e.src="https://reiwa.f5.si/bookmarklets/chunisupport_test.js?%22+Math.floor(Date.now()/1000);document.body.appendChild(e)})();'
@@ -283,7 +261,7 @@ const RegisterScoreTempPage = () => {
             }}
           >
             コピー
-          </Button>
+          </AppButton>
         </div>
       </div>
     </div>

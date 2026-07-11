@@ -21,7 +21,7 @@ import { useSongsData } from '../../../stores/songsData'
 import type { WorldsendRecordDTO } from '../../../types/api'
 import { sanitizeSortQuery } from '../../../utils/sortingQuery'
 import FilterStats from '../components/FilterStats'
-import FilterToolbar from '../UserRecord/components/FilterToolbar'
+import FilterToolbar from '../components/FilterToolbar'
 import { getRecordStats } from '../utils/recordStats'
 import WorldsendFilterDialog from './components/WorldsendFilterDialog'
 import WorldsendRecordTable from './components/WorldsendRecordTable'
@@ -43,6 +43,7 @@ import { restoreInitialWorldsendRecordFilter } from './utils/initialFilter'
 import { attachWorldsendSongMetaToRecords } from './utils/songMeta'
 import {
   createInitialWorldsendRecordSortConditions,
+  DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS,
   nextPrimaryWorldsendRecordSortCondition,
   normalizeWorldsendRecordSortConditions,
   parseWorldsendSortParams,
@@ -138,6 +139,18 @@ const WorldsendRecord = (props: Props) => {
   }
 
   /**
+   * WORLD'S END レコードのフィルターとソート条件を既定値へ戻し、保存済み設定へ反映する。
+   *
+   * @returns なし。
+   */
+  const resetFiltersAndSort = () => {
+    applyFilters(defaultFilter())
+    setSortConditions(
+      DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS.map((condition) => ({ ...condition }))
+    )
+  }
+
+  /**
    * WORLD'S END レコードの表示列設定を画面へ反映し、IndexedDB へ保存する。
    *
    * @param nextVisibleColumnIds - 次に表示する列 ID 配列。
@@ -199,6 +212,7 @@ const WorldsendRecord = (props: Props) => {
                 title={filters().title}
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
+                onResetFilter={resetFiltersAndSort}
                 onOpenSortSettings={() => setSortSettingsOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
                 titleActive={hasTitleFilterChanges()}

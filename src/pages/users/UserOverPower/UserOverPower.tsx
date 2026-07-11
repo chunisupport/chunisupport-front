@@ -1,16 +1,5 @@
-import { Button } from '@kobalte/core/button'
-import { Select } from '@kobalte/core/select'
-import * as Tabs from '@kobalte/core/tabs'
-import { ToggleButton } from '@kobalte/core/toggle-button'
 import { useLocation, useNavigate } from '@solidjs/router'
-import {
-  ArrowLeftRight,
-  ChartBarBig,
-  ChevronDown,
-  LockKeyhole,
-  LockKeyholeOpen,
-  Table2,
-} from 'lucide-solid'
+import { ArrowLeftRight, ChartBarBig, LockKeyhole, LockKeyholeOpen, Table2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import {
   createMemo,
@@ -24,6 +13,8 @@ import {
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
+import { AppButton } from '../../../components/common/AppButton'
+import { AppSelect } from '../../../components/common/AppSelect'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
 import type { PlayerLockedSongRequest, UserRecordDTO } from '../../../types/api'
@@ -66,27 +57,6 @@ type Props = {
   selectedSubPage: OverPowerSubPage
   username: string
 }
-
-/** OVER POWER画面上部のSelectトリガー共通クラス。 */
-const SELECT_TRIGGER_CLASS =
-  'grid h-10 min-w-0 grid-cols-[1fr_auto] items-center gap-1 rounded border border-border-strong bg-surface px-2 text-left text-sm text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
-
-/** OVER POWER画面上部のSelect選択肢共通クラス。 */
-const SELECT_ITEM_CLASS =
-  'cursor-pointer px-3 py-2 text-text hover:bg-action-primary-muted data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted'
-
-/** OVER POWER画面上部の丸型アイコンボタン共通クラス。 */
-const ICON_BUTTON_CLASS =
-  'inline-flex h-10 items-center justify-center gap-1 rounded-full border border-border-strong bg-surface px-3 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-disabled-text'
-
-/** OVER POWER画面上部の小さめな丸型アイコンボタンクラス。 */
-const COMPACT_ICON_BUTTON_CLASS = `${ICON_BUTTON_CLASS} min-w-14 px-2`
-
-/** OVER POWER画面上部の押下状態を持つ丸型アイコンボタンクラス。 */
-const TOGGLE_ICON_BUTTON_CLASS = `${ICON_BUTTON_CLASS} data-[pressed]:border-action-primary data-[pressed]:bg-action-primary data-[pressed]:text-text-inverse`
-
-/** OVER POWER画面上部のテキスト付き丸型アイコンボタンクラス。 */
-const TEXT_ICON_BUTTON_CLASS = `${ICON_BUTTON_CLASS} whitespace-nowrap`
 
 /**
  * ユーザーのOVERPOWERサマリーと分布グラフを表示する。
@@ -284,130 +254,108 @@ const UserOverPower: Component<Props> = (props) => {
         >
           <Show when={summary()} fallback={<Loading />}>
             {(currentSummary) => (
-              <div class="mx-4 flex flex-col gap-4 text-sm">
-                <Tabs.Root value={selectedSummaryTab()}>
-                  <div class="flex flex-wrap items-center justify-between gap-x-1.5 gap-y-2">
-                    <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0">
-                      <Select<OverPowerSummaryOption>
-                        options={OVER_POWER_SUMMARY_OPTIONS}
-                        optionValue="value"
-                        optionTextValue="label"
-                        value={selectedSummaryOption()}
-                        onChange={handleSummaryTabChange}
-                        gutter={0}
-                        itemComponent={(itemProps) => (
-                          <Select.Item item={itemProps.item} class={SELECT_ITEM_CLASS}>
-                            <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                          </Select.Item>
-                        )}
-                      >
-                        <Select.Trigger class={`${SELECT_TRIGGER_CLASS} w-full sm:w-28`}>
-                          <Select.Value<OverPowerSummaryOption>>
-                            {(state) => state.selectedOption()?.label}
-                          </Select.Value>
-                          <ChevronDown size={16} aria-hidden="true" />
-                        </Select.Trigger>
-                        <Select.Portal>
-                          <Select.Content class="z-40 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-border bg-surface shadow-md">
-                            <Select.Listbox />
-                          </Select.Content>
-                        </Select.Portal>
-                      </Select>
-
-                      <Select<OverPowerAggregationTargetOption>
-                        options={OVER_POWER_AGGREGATION_TARGET_OPTIONS}
-                        optionValue="value"
-                        optionTextValue="label"
-                        value={selectedAggregationTargetOption()}
-                        onChange={handleAggregationTargetChange}
-                        gutter={0}
-                        itemComponent={(itemProps) => (
-                          <Select.Item item={itemProps.item} class={SELECT_ITEM_CLASS}>
-                            <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                          </Select.Item>
-                        )}
-                      >
-                        <Select.Trigger
-                          class={`${SELECT_TRIGGER_CLASS} w-full sm:w-40`}
-                          aria-label={OVER_POWER_CONTROL_LABELS.aggregationTarget}
-                        >
-                          <Select.Value<OverPowerAggregationTargetOption>>
-                            {(state) => state.selectedOption()?.label}
-                          </Select.Value>
-                          <ChevronDown size={16} aria-hidden="true" />
-                        </Select.Trigger>
-                        <Select.Portal>
-                          <Select.Content class="z-40 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-border bg-surface shadow-md">
-                            <Select.Listbox />
-                          </Select.Content>
-                        </Select.Portal>
-                      </Select>
-                    </div>
-
-                    <div class="ml-auto flex w-full items-center justify-between gap-1.5 sm:w-auto sm:justify-start">
-                      <Button
-                        type="button"
-                        class={COMPACT_ICON_BUTTON_CLASS}
-                        aria-label={`${
-                          nextSummaryViewMode() === 'graph'
-                            ? OVER_POWER_CONTROL_LABELS.graph
-                            : OVER_POWER_CONTROL_LABELS.table
-                        }表示に切り替え`}
-                        title={`${
-                          nextSummaryViewMode() === 'graph'
-                            ? OVER_POWER_CONTROL_LABELS.graph
-                            : OVER_POWER_CONTROL_LABELS.table
-                        }表示に切り替え`}
-                        onClick={handleToggleSummaryViewMode}
-                      >
-                        <ArrowLeftRight class="h-4 w-4" aria-hidden="true" />
-                        <Show
-                          when={nextSummaryViewMode() === 'graph'}
-                          fallback={<Table2 class="h-4 w-4" aria-hidden="true" />}
-                        >
-                          <ChartBarBig class="h-4 w-4" aria-hidden="true" />
-                        </Show>
-                      </Button>
-
-                      <div class="flex shrink-0 items-center gap-1">
-                        <ToggleButton
-                          pressed={excludeLockedSongs()}
-                          onChange={setExcludeLockedSongs}
-                          class={TOGGLE_ICON_BUTTON_CLASS}
-                        >
-                          <span>{OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL}</span>
-                          <LockKeyholeOpen class="h-5 w-5" aria-hidden="true" />
-                        </ToggleButton>
-                        <Button
-                          type="button"
-                          class={TEXT_ICON_BUTTON_CLASS}
-                          aria-label={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
-                          title={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
-                          disabled={lockedSongsButtonDisabled()}
-                          onClick={() => setLockedSongsDialogOpen(true)}
-                        >
-                          <span>{OVER_POWER_CONTROL_LABELS.lockedSongs}</span>
-                          <LockKeyhole class="h-5 w-5" aria-hidden="true" />
-                        </Button>
-                      </div>
-                    </div>
+              <div class="mx-4 flex flex-col 0 text-sm">
+                <div class="flex flex-wrap items-center justify-between gap-x-1.5 gap-y-2">
+                  <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0">
+                    <AppSelect<OverPowerSummaryOption>
+                      options={OVER_POWER_SUMMARY_OPTIONS}
+                      optionValue="value"
+                      optionTextValue="label"
+                      value={selectedSummaryOption()}
+                      onChange={handleSummaryTabChange}
+                      placeholder="ジャンル"
+                      rootClass="w-full sm:w-28"
+                      triggerClass="h-10 text-text-muted"
+                      contentZIndexClass="z-50"
+                      formatLabel={(option) => option.label}
+                    />
+                    <AppSelect<OverPowerAggregationTargetOption>
+                      options={OVER_POWER_AGGREGATION_TARGET_OPTIONS}
+                      optionValue="value"
+                      optionTextValue="label"
+                      value={selectedAggregationTargetOption()}
+                      onChange={handleAggregationTargetChange}
+                      placeholder={OVER_POWER_CONTROL_LABELS.aggregationTarget}
+                      rootClass="w-full sm:w-44"
+                      triggerClass="h-10 text-text-muted"
+                      triggerId="over-power-aggregation-target"
+                      contentZIndexClass="z-50"
+                      formatLabel={(option) => option.label}
+                    />
                   </div>
 
-                  <div class="mt-4">
-                    <Show
-                      when={summaryViewMode() === 'graph'}
-                      fallback={
-                        <OverPowerSummaryTable
-                          rows={[currentSummary().all]}
-                          countLabel={countLabel()}
-                        />
-                      }
+                  <div class="ml-auto flex w-full items-center justify-between gap-1 sm:w-auto sm:justify-start">
+                    <AppButton
+                      variant="surface"
+                      size="sm"
+                      shape="pill"
+                      class="h-10 min-w-16 focus-visible:ring-offset-2"
+                      aria-label={`${
+                        nextSummaryViewMode() === 'graph'
+                          ? OVER_POWER_CONTROL_LABELS.graph
+                          : OVER_POWER_CONTROL_LABELS.table
+                      }表示に切り替え`}
+                      title={`${
+                        nextSummaryViewMode() === 'graph'
+                          ? OVER_POWER_CONTROL_LABELS.graph
+                          : OVER_POWER_CONTROL_LABELS.table
+                      }表示に切り替え`}
+                      onClick={handleToggleSummaryViewMode}
                     >
-                      <OverPowerSummaryGraph rows={allGraphRows()} />
-                    </Show>
-                  </div>
+                      <ArrowLeftRight class="h-4 w-4" aria-hidden="true" />
+                      <Show
+                        when={nextSummaryViewMode() === 'graph'}
+                        fallback={<Table2 class="h-4 w-4" aria-hidden="true" />}
+                      >
+                        <ChartBarBig class="h-4 w-4" aria-hidden="true" />
+                      </Show>
+                    </AppButton>
 
-                  <Tabs.Content value="genres" class="mt-4">
+                    <div class="flex shrink-0 items-center gap-1">
+                      <AppButton
+                        variant={excludeLockedSongs() ? 'primary' : 'surface'}
+                        size="sm"
+                        shape="pill"
+                        class="h-10 w-35 whitespace-nowrap focus-visible:ring-offset-2"
+                        aria-pressed={excludeLockedSongs()}
+                        onClick={() => setExcludeLockedSongs((excluded) => !excluded)}
+                        rightIcon={<LockKeyholeOpen class="h-5 w-5" aria-hidden="true" />}
+                      >
+                        <span>{OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL}</span>
+                      </AppButton>
+                      <AppButton
+                        variant="surface"
+                        size="sm"
+                        shape="pill"
+                        class="h-10 whitespace-nowrap focus-visible:ring-offset-2"
+                        aria-label={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
+                        title={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
+                        disabled={lockedSongsButtonDisabled()}
+                        onClick={() => setLockedSongsDialogOpen(true)}
+                        rightIcon={<LockKeyhole class="h-5 w-5" aria-hidden="true" />}
+                      >
+                        <span>{OVER_POWER_CONTROL_LABELS.lockedSongs}</span>
+                      </AppButton>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-4">
+                  <Show
+                    when={summaryViewMode() === 'graph'}
+                    fallback={
+                      <OverPowerSummaryTable
+                        rows={[currentSummary().all]}
+                        countLabel={countLabel()}
+                      />
+                    }
+                  >
+                    <OverPowerSummaryGraph rows={allGraphRows()} />
+                  </Show>
+                </div>
+
+                <Show when={selectedSummaryTab() === 'genres'}>
+                  <div class="mt-4">
                     <Show
                       when={summaryViewMode() === 'graph'}
                       fallback={
@@ -419,11 +367,13 @@ const UserOverPower: Component<Props> = (props) => {
                     >
                       <OverPowerSummaryGraph rows={genreGraphRows()} />
                     </Show>
-                  </Tabs.Content>
+                  </div>
+                </Show>
 
-                  <Tabs.Content value="levels" class="mt-4">
+                <Show when={selectedSummaryTab() === 'levels'}>
+                  <div class="mt-4">
                     <Show when={lowLevelRows().length > 0}>
-                      <div class="mb-3">
+                      <div class="mb-4">
                         <LowLevelRowsToggle
                           expanded={lowLevelRowsExpanded()}
                           chartCount={lowLevelChartCount()}
@@ -446,9 +396,11 @@ const UserOverPower: Component<Props> = (props) => {
                         <OverPowerSummaryGraph rows={levelGraphRows()} />
                       </div>
                     </Show>
-                  </Tabs.Content>
+                  </div>
+                </Show>
 
-                  <Tabs.Content value="versions" class="mt-4">
+                <Show when={selectedSummaryTab() === 'versions'}>
+                  <div class="mt-4">
                     <Show
                       when={summaryViewMode() === 'graph'}
                       fallback={
@@ -460,8 +412,8 @@ const UserOverPower: Component<Props> = (props) => {
                     >
                       <OverPowerSummaryGraph rows={versionGraphRows()} />
                     </Show>
-                  </Tabs.Content>
-                </Tabs.Root>
+                  </div>
+                </Show>
 
                 <Show when={canManageLockedSongs() && allSongs() && lockedSongs()}>
                   <LockedSongsDialog

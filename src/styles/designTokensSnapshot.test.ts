@@ -28,6 +28,7 @@ test('既存色と同じ値でデザイントークンが定義されている�
     ['--cs-color-border', 'var(--color-gray-300)'],
     ['--cs-color-action-primary', 'var(--color-primary-600)'],
     ['--cs-color-action-primary-hover', 'var(--color-primary-700)'],
+    ['--cs-color-select-selected-hover-bg', 'var(--color-primary-100)'],
     ['--cs-color-danger', 'var(--color-red-600)'],
     ['--cs-color-danger-bg', 'var(--color-red-50)'],
     ['--cs-color-success-bg', 'var(--color-green-50)'],
@@ -60,6 +61,7 @@ test('Tailwind公開トークンがcsトークンへ接続されていること'
     ['--color-border', 'var(--cs-color-border)'],
     ['--color-action-primary', 'var(--cs-color-action-primary)'],
     ['--color-action-primary-hover', 'var(--cs-color-action-primary-hover)'],
+    ['--color-select-selected-hover-bg', 'var(--cs-color-select-selected-hover-bg)'],
     ['--color-new-song-bg', 'var(--cs-color-new-song-bg)'],
     ['--color-danger', 'var(--cs-color-danger)'],
     ['--color-danger-bg', 'var(--cs-color-danger-bg)'],
@@ -82,13 +84,55 @@ test('Tailwind公開トークンがcsトークンへ接続されていること'
   }
 })
 
+test('AJCランプの虹色は虹称号と同じ色列で定義されていること', () => {
+  const expectedRainbowColors = [
+    '#aeefff',
+    '#b7ceff',
+    '#d0b5ff',
+    '#ffb8e8',
+    '#ffc4ad',
+    '#fff0a8',
+    '#b9eeb7',
+  ]
+
+  for (const [index, color] of expectedRainbowColors.entries()) {
+    assert.equal(
+      readCustomProperty(
+        tailwindCssContent,
+        `--cs-color-lamp-all-justice-critical-rainbow-${index + 1}`
+      ),
+      color
+    )
+  }
+
+  assert.match(
+    tailwindCssContent,
+    /linear-gradient\(45deg, #aeefff, #b7ceff, #d0b5ff, #ffb8e8, #ffc4ad, #fff0a8, #b9eeb7\)/
+  )
+})
+
+test('AJCランプの文字色は虹背景向けの専用色で定義されていること', () => {
+  assert.equal(
+    readCustomProperty(tailwindCssContent, '--cs-color-lamp-all-justice-critical-text'),
+    '#3f2a63'
+  )
+  assert.equal(
+    readCustomProperty(tailwindCssContent, '--color-lamp-all-justice-critical-text'),
+    'var(--cs-color-lamp-all-justice-critical-text)'
+  )
+})
+
 test('アクセントカラーが背景テーマから独立したトークンとして定義されていること', () => {
   assert.match(tailwindCssContent, /\[data-accent="green"\]\s*{/)
   assert.match(tailwindCssContent, /\[data-accent="orange"\]\s*{/)
   assert.match(tailwindCssContent, /\[data-accent="blue"\]\s*{/)
+  assert.match(tailwindCssContent, /\[data-accent="violet"\]\s*{/)
+  assert.match(tailwindCssContent, /\[data-accent="yellow"\]\s*{/)
   assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-green-500\);/)
   assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-orange-500\);/)
   assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-blue-500\);/)
+  assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-violet-500\);/)
+  assert.match(tailwindCssContent, /--cs-color-accent-500:\s*var\(--color-yellow-500\);/)
   assert.match(tailwindCssContent, /--color-primary-500:\s*var\(--cs-color-accent-500\);/)
 })
 
@@ -112,14 +156,4 @@ test('ブラックテーマ用の無彩色トークンが定義されている�
   assert.match(tailwindCssContent, /--cs-color-surface-muted:\s*#222222;/)
   assert.match(tailwindCssContent, /--cs-color-border:\s*#444444;/)
   assert.match(tailwindCssContent, /--cs-color-input-border:\s*#666666;/)
-})
-
-test('パステルオレンジテーマ用の低彩度な暖色トークンが定義されていること', () => {
-  assert.match(tailwindCssContent, /\[data-theme="pastel-orange"\]\s*{/)
-  assert.match(tailwindCssContent, /--cs-color-bg:\s*#fff4df;/)
-  assert.match(tailwindCssContent, /--cs-color-surface:\s*#fffaf0;/)
-  assert.match(tailwindCssContent, /--cs-color-surface-muted:\s*#ffe4bf;/)
-  assert.match(tailwindCssContent, /--cs-color-surface-hover:\s*#ffd3bf;/)
-  assert.match(tailwindCssContent, /--cs-color-text:\s*#302d2b;/)
-  assert.match(tailwindCssContent, /--cs-color-border:\s*#edb889;/)
 })

@@ -1,6 +1,5 @@
-import { Checkbox } from '@kobalte/core/checkbox'
-import { Check } from 'lucide-solid'
 import { For } from 'solid-js'
+import { CheckboxField } from '../../../../components/common/CheckboxField'
 
 type LampValue = string | null
 
@@ -29,23 +28,16 @@ const LampSection = <TLamp extends LampValue = LampValue>(props: LampSectionProp
         {(lamp, index) => {
           const id = `filter-${props.idPrefix}-${index()}`
           return (
-            <Checkbox
+            <CheckboxField
+              id={id}
               checked={props.selected.includes(lamp)}
               onChange={() => {
                 props.onToggle(lamp)
               }}
               class="flex items-center gap-2"
-            >
-              <Checkbox.Input id={id} />
-              <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
-                <Checkbox.Indicator>
-                  <Check class="h-4 w-4" />
-                </Checkbox.Indicator>
-              </Checkbox.Control>
-              <Checkbox.Label class="leading-5" for={id}>
-                {props.formatLabel ? props.formatLabel(lamp) : (lamp ?? 'なし')}
-              </Checkbox.Label>
-            </Checkbox>
+              textVariant="large"
+              label={props.formatLabel ? props.formatLabel(lamp) : (lamp ?? 'なし')}
+            />
           )
         }}
       </For>

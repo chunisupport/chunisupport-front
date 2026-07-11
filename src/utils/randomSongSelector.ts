@@ -165,16 +165,6 @@ export const hasInvalidRandomSongWeightValue = <T extends string>(
   Object.values(values).some((value) => parseRandomSongWeightValue(String(value)) === null)
 
 /**
- * 配列内の値を選択状態として切り替える。
- *
- * @param values - 現在の選択値。
- * @param value - 切り替える値。
- * @returns 切り替え後の選択値。
- */
-export const toggleRandomSongSelectionValue = <T>(values: readonly T[], value: T): T[] =>
-  values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
-
-/**
  * 保存済みキーから選曲結果を復元する。
  *
  * @param candidates - 復元元になる現在の候補一覧。
@@ -296,7 +286,9 @@ export const toggleRandomSongDifficultyFilter = (
   const withoutOpTarget = current.filter(
     (difficulty) => difficulty !== RANDOM_SONG_OP_TARGET_FILTER
   )
-  return toggleRandomSongSelectionValue(withoutOpTarget, toggled)
+  return withoutOpTarget.includes(toggled)
+    ? withoutOpTarget.filter((difficulty) => difficulty !== toggled)
+    : [...withoutOpTarget, toggled]
 }
 
 /**

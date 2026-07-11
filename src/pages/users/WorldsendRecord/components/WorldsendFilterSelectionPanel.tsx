@@ -7,18 +7,19 @@ import {
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../../../constants/recordFilterOptions'
 import type { ChainLamp, ComboLamp, HardLamp } from '../../../../types/record'
+import {
+  parseNumberInput,
+  toInputValue,
+  updateOptionalNumberRange,
+} from '../../../../utils/rangeInput'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
+import DateRangeSection from '../../components/filter/DateRangeSection'
 import LampSection from '../../components/filter/LampSection'
 import MultiSelectFilterSection from '../../components/filter/MultiSelectFilterSection'
 import NumericRangeSection from '../../components/filter/NumericRangeSection'
 import ScoreSection from '../../components/filter/ScoreSection'
 import { JUSTICE_COUNT_RANGE_FILTER } from '../../constants/rangeFilters'
-import {
-  parseNumberInput,
-  toggleArray,
-  toInputValue,
-  updateOptionalNumberRange,
-} from '../../utils/filterValue'
+import { toggleArray } from '../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../utils/scoreRank'
 import type { WorldsendFilterState } from '../types/filterTypes'
@@ -49,6 +50,8 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
   const [justiceCountMaxInput, setJusticeCountMaxInput] = createSignal(
     toInputValue(props.filters.justiceCount.max)
   )
+  const [updatedAtMinInput, setUpdatedAtMinInput] = createSignal(props.filters.updatedAt.min)
+  const [updatedAtMaxInput, setUpdatedAtMaxInput] = createSignal(props.filters.updatedAt.max)
 
   createEffect(() => {
     if (!props.open) return
@@ -56,6 +59,8 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
     setScoreMaxInput(toInputValue(props.filters.score.max))
     setJusticeCountMinInput(toInputValue(props.filters.justiceCount.min))
     setJusticeCountMaxInput(toInputValue(props.filters.justiceCount.max))
+    setUpdatedAtMinInput(props.filters.updatedAt.min)
+    setUpdatedAtMaxInput(props.filters.updatedAt.max)
     setScoreRankMin(scoreToFilterRank(props.filters.score.min))
     setScoreRankMax(scoreToFilterRank(props.filters.score.max))
   })
@@ -170,14 +175,10 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
         options={props.defaultFilter.attributes}
         selected={props.filters.attributes}
         formatLabel={formatWorldsendAttribute}
-        onSelectAll={() =>
-          props.setFilters((prev) => ({ ...prev, attributes: props.defaultFilter.attributes }))
-        }
-        onClear={() => props.setFilters((prev) => ({ ...prev, attributes: [] }))}
-        onToggle={(attribute) =>
+        onChange={(selectedAttributes) =>
           props.setFilters((prev) => ({
             ...prev,
-            attributes: toggleArray(prev.attributes, attribute),
+            attributes: selectedAttributes,
           }))
         }
       />
@@ -244,6 +245,26 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
         onMinCommit={(value) => commitJusticeCountRange('min', value)}
         onMaxCommit={(value) => commitJusticeCountRange('max', value)}
       />
+      <DateRangeSection
+        minValue={updatedAtMinInput()}
+        maxValue={updatedAtMaxInput()}
+        onMinInput={setUpdatedAtMinInput}
+        onMaxInput={setUpdatedAtMaxInput}
+        onMinCommit={(value) => {
+          setUpdatedAtMinInput(value)
+          props.setFilters((prev) => ({
+            ...prev,
+            updatedAt: { ...prev.updatedAt, min: value },
+          }))
+        }}
+        onMaxCommit={(value) => {
+          setUpdatedAtMaxInput(value)
+          props.setFilters((prev) => ({
+            ...prev,
+            updatedAt: { ...prev.updatedAt, max: value },
+          }))
+        }}
+      />
       <LampSection
         title="コンボランプ"
         idPrefix="worldsend-combo-lamp"
@@ -309,24 +330,16 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
         title="ジャンル"
         options={props.defaultFilter.genres}
         selected={props.filters.genres}
-        onSelectAll={() =>
-          props.setFilters((prev) => ({ ...prev, genres: props.defaultFilter.genres }))
-        }
-        onClear={() => props.setFilters((prev) => ({ ...prev, genres: [] }))}
-        onToggle={(genre) =>
-          props.setFilters((prev) => ({ ...prev, genres: toggleArray(prev.genres, genre) }))
+        onChange={(selectedGenres) =>
+          props.setFilters((prev) => ({ ...prev, genres: selectedGenres }))
         }
       />
       <MultiSelectFilterSection
         title="バージョン"
         options={props.defaultFilter.versions}
         selected={props.filters.versions}
-        onSelectAll={() =>
-          props.setFilters((prev) => ({ ...prev, versions: props.defaultFilter.versions }))
-        }
-        onClear={() => props.setFilters((prev) => ({ ...prev, versions: [] }))}
-        onToggle={(version) =>
-          props.setFilters((prev) => ({ ...prev, versions: toggleArray(prev.versions, version) }))
+        onChange={(selectedVersions) =>
+          props.setFilters((prev) => ({ ...prev, versions: selectedVersions }))
         }
       />
     </div>

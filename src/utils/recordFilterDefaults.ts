@@ -15,6 +15,7 @@ export const DEFAULT_FILTER: FilterState = {
   title: '',
   difficulties: ['MASTER', 'ULTIMA'],
   currentOpTargetOnly: false,
+  favoriteSongsOnly: false,
   genres: [],
   versions: [],
   const: {
@@ -39,6 +40,10 @@ export const DEFAULT_FILTER: FilterState = {
   chain_lamp: [...RECORD_CHAIN_LAMP_OPTIONS],
   hard_lamp: [...RECORD_HARD_LAMP_OPTIONS],
   excludeNoPlay: false,
+  updatedAt: {
+    min: '',
+    max: '',
+  },
 }
 
 /**
@@ -76,6 +81,7 @@ export const buildDefaultFilter = (
   combo_lamp: [...RECORD_COMBO_LAMP_OPTIONS],
   chain_lamp: [...RECORD_CHAIN_LAMP_OPTIONS],
   hard_lamp: [...RECORD_HARD_LAMP_OPTIONS],
+  updatedAt: { ...DEFAULT_FILTER.updatedAt },
 })
 
 /**
@@ -92,7 +98,9 @@ export const normalizeFilterState = (filter: Partial<FilterState>): FilterState 
   justiceCount: filter.justiceCount ?? { ...DEFAULT_FILTER.justiceCount },
   overPower: filter.overPower ?? { ...DEFAULT_FILTER.overPower },
   currentOpTargetOnly: filter.currentOpTargetOnly ?? DEFAULT_FILTER.currentOpTargetOnly,
+  favoriteSongsOnly: filter.favoriteSongsOnly ?? DEFAULT_FILTER.favoriteSongsOnly,
   combo_lamp: filter.combo_lamp ?? [...RECORD_COMBO_LAMP_OPTIONS],
   chain_lamp: filter.chain_lamp ?? [...RECORD_CHAIN_LAMP_OPTIONS],
   hard_lamp: filter.hard_lamp ?? [...RECORD_HARD_LAMP_OPTIONS],
+  updatedAt: filter.updatedAt ?? { ...DEFAULT_FILTER.updatedAt },
 })

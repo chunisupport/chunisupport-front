@@ -3,16 +3,18 @@ import { ChevronRight } from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import { Loading } from '../../../../components'
 import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'
+import { WORLDSEND_SCORE_LABEL } from '../../../../constants/chart'
 import {
-  buildSongScoreHistoryPath,
-  buildWorldsendScoreHistoryPath,
+  buildSongChartDetailPath,
+  buildWorldsendChartDetailPath,
+  CHART_DETAIL_FROM_SONG_DETAIL_STATE,
 } from '../../../../constants/routes'
 import type { PlayerDataDifficulty } from '../../../../types/api'
+import WorldsendBadge from '../../components/WorldsendBadge'
 import {
   OWN_SCORE_CARD_TITLE,
   SCORE_HISTORY_LINK_LABEL,
   UNPLAYED_SCORE_LABEL,
-  WORLDSEND_SCORE_LABEL,
 } from '../scoreHistory.constants'
 
 export type OwnScoreItem = {
@@ -28,32 +30,22 @@ export type OwnScoreItem = {
  * @returns 通常難易度または WORLD'S END のバッジ。
  */
 const OwnScoreBadge = (props: { difficulty: OwnScoreItem['difficulty'] }) => (
-  <Show
-    when={props.difficulty !== WORLDSEND_SCORE_LABEL}
-    fallback={
-      <span class="inline-flex items-center justify-center rounded bg-[image:var(--cs-color-worldsend-label-bg)] px-3 py-1 text-center text-xs font-semibold tracking-wide whitespace-nowrap text-worldsend-label-text">
-        {WORLDSEND_SCORE_LABEL}
-      </span>
-    }
-  >
+  <Show when={props.difficulty !== WORLDSEND_SCORE_LABEL} fallback={<WorldsendBadge />}>
     <DifficultyBadge difficulty={props.difficulty as PlayerDataDifficulty} />
   </Show>
 )
 
 /**
- * 自己スコア項目に対応する履歴画面パスを生成する。
+ * 自己スコア項目に対応する譜面詳細画面パスを生成する。
  *
  * @param displayId - 楽曲表示ID。
  * @param difficulty - 通常難易度または WORLD'S END の表示値。
- * @returns 対応するスコア履歴画面パス。
+ * @returns 対応する譜面詳細画面パス。
  */
-const buildScoreHistoryPath = (
-  displayId: string,
-  difficulty: OwnScoreItem['difficulty']
-): string =>
+const buildChartDetailPath = (displayId: string, difficulty: OwnScoreItem['difficulty']): string =>
   difficulty === WORLDSEND_SCORE_LABEL
-    ? buildWorldsendScoreHistoryPath(displayId)
-    : buildSongScoreHistoryPath(displayId, difficulty)
+    ? buildWorldsendChartDetailPath(displayId)
+    : buildSongChartDetailPath(displayId, difficulty)
 
 /**
  * ログインユーザーの譜面別ベストスコアを表示する。
@@ -98,7 +90,8 @@ const OwnScoreCard = (props: {
                     }
                   >
                     <A
-                      href={buildScoreHistoryPath(props.displayId, item.difficulty)}
+                      href={buildChartDetailPath(props.displayId, item.difficulty)}
+                      state={CHART_DETAIL_FROM_SONG_DETAIL_STATE}
                       class={`${cardClass} group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus`}
                       aria-label={`${item.difficulty} ${item.score?.toLocaleString('ja-JP')} ${SCORE_HISTORY_LINK_LABEL}`}
                     >

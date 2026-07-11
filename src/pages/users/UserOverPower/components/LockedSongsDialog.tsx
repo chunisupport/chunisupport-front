@@ -1,11 +1,16 @@
 import { Button } from '@kobalte/core/button'
-import { Checkbox } from '@kobalte/core/checkbox'
 import { Dialog } from '@kobalte/core/dialog'
-import { TextField } from '@kobalte/core/text-field'
-import { Check, CircleSlash2, Funnel, ListChecks, LoaderCircle, Search } from 'lucide-solid'
+import { Check, CircleSlash2, Funnel, ListChecks, LoaderCircle } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
-import MultiSelectDropdown from '../../../../components/common/MultiSelectDropdown'
+import { AppButton, getAppButtonClass } from '../../../../components/common/AppButton'
+import { toMultiSelectOptions } from '../../../../components/common/AppMultiSelect'
+import { CheckboxField } from '../../../../components/common/CheckboxField'
+import {
+  GenreMultiSelect,
+  VersionMultiSelect,
+} from '../../../../components/common/DomainMultiSelect'
+import { SearchTextField } from '../../../../components/common/SearchTextField'
 import Loading from '../../../../components/Loading/Loading'
 import type {
   MasterItemDTO,
@@ -27,7 +32,15 @@ import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
 } from '../../../../utils/versionConverter'
-import { hasSameFilterValues, toggleArray } from '../../utils/filterValue'
+import {
+  buildDefaultSongSelectionFilter,
+  getSongSelectionRowClass,
+  SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
+  SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS,
+  SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS,
+  sortSongSelectionCandidates,
+} from '../../components/songSelectionDialog'
+import { hasSameFilterValues } from '../../utils/filterValue'
 
 type Props = {
   open: boolean
@@ -53,16 +66,6 @@ type LockedSongsFilter = {
 
 const hasUltimaChart = (song: SongDTO): boolean => Boolean(song.charts.ULTIMA)
 
-const parseOfficialIdx = (officialIdx: string | undefined): number => {
-  const parsed = Number(officialIdx)
-  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY
-}
-
-const releaseTimestamp = (release: string | null): number => {
-  const parsed = Date.parse(release ?? '')
-  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY
-}
-
 /**
  * 未解禁楽曲フィルターの初期値を選択肢の全選択状態から生成する。
  *
@@ -74,8 +77,7 @@ const buildDefaultLockedSongsFilter = (
   genres: string[],
   versions: string[]
 ): LockedSongsFilter => ({
-  genres,
-  versions,
+  ...buildDefaultSongSelectionFilter(genres, versions),
   unplayedOnly: false,
 })
 
@@ -93,41 +95,6 @@ const isLockedSongsFilterChanged = (
   current.unplayedOnly !== defaultFilter.unplayedOnly ||
   !hasSameFilterValues(current.genres, defaultFilter.genres) ||
   !hasSameFilterValues(current.versions, defaultFilter.versions)
-
-/** チェックボックスの見た目を未解禁曲ダイアログ内で統一する Tailwind クラス。 */
-const FILTER_CHECKBOX_CONTROL_CLASS =
-  'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
-
-/** ネストしたフィルターモーダル上で Select の選択肢を前面に表示する z-index クラス。 */
-const NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-80'
-
-/** 未解禁楽曲フィルターダイアログの操作ボタンで使う Tailwind クラス。 */
-const LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS = {
-  secondary:
-    'rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover',
-  primary:
-    'rounded bg-action-primary px-4 py-2 text-sm text-text-inverse hover:bg-action-primary-hover',
-} as const
-
-/**
- * 未解禁楽曲検索欄の状態に応じた外枠クラスを返す。
- *
- * @param active - 検索文字列が入力されているか。
- * @returns 検索欄の外枠へ適用する Tailwind クラス。
- */
-const getLockedSongsSearchFrameClass = (active: boolean): string =>
-  active
-    ? 'border-action-primary bg-success-bg focus-within:border-action-primary'
-    : 'border-border-strong focus-within:border-focus-ring'
-
-/**
- * 未解禁楽曲検索欄の状態に応じたアイコンクラスを返す。
- *
- * @param active - 検索文字列が入力されているか。
- * @returns 検索アイコンへ適用する Tailwind クラス。
- */
-const getLockedSongsSearchIconClass = (active: boolean): string =>
-  active ? 'text-success' : 'text-text-subtle'
 
 /**
  * OVER POWER計算から除外する未解禁楽曲を検索・絞り込みしながら編集するダイアログ。
@@ -210,21 +177,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
     return songRecords.length === 0 || songRecords.every((record) => !record.is_played)
   }
   const songListItems = createMemo<LockedSongListItem[]>(() =>
-    props.songs
-      .map((song, index) => ({ song, index }))
-      .sort((left, right) => {
-        const releaseComparison =
-          releaseTimestamp(right.song.release) - releaseTimestamp(left.song.release)
-        if (releaseComparison !== 0) return releaseComparison
-
-        const idxComparison =
-          parseOfficialIdx(right.song.official_idx) - parseOfficialIdx(left.song.official_idx)
-        return idxComparison || left.index - right.index
-      })
-      .flatMap(({ song }) => [
-        { song, isUltima: false },
-        ...(hasUltimaChart(song) ? [{ song, isUltima: true }] : []),
-      ])
+    sortSongSelectionCandidates(props.songs).flatMap((song) => [
+      { song, isUltima: false },
+      ...(hasUltimaChart(song) ? [{ song, isUltima: true }] : []),
+    ])
   )
   const searchableSongListItems = createMemo(() =>
     songListItems().map((item) => {
@@ -340,14 +296,6 @@ const LockedSongsDialog: Component<Props> = (props) => {
     }
   }
 
-  const handleToggleGenreFilter = (genre: string) => {
-    setFilters((prev) => ({ ...prev, genres: toggleArray(prev.genres, genre) }))
-  }
-
-  const handleToggleVersionFilter = (version: string) => {
-    setFilters((prev) => ({ ...prev, versions: toggleArray(prev.versions, version) }))
-  }
-
   /**
    * 未プレイのみ表示フィルターを切り替える。
    *
@@ -387,41 +335,30 @@ const LockedSongsDialog: Component<Props> = (props) => {
     <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
-          <div class="mb-4">
+        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+          <div class="mb-4 shrink-0">
             <Dialog.Title class="text-lg font-bold">未解禁楽曲設定</Dialog.Title>
             <Dialog.Description class="mt-1 text-sm text-text-muted">
               チェックした曲・譜面はOVER POWER計算対象から除外されます。
             </Dialog.Description>
           </div>
 
-          <div class="mb-3 flex min-w-0 items-center">
-            <TextField class="min-w-0 flex-1">
-              <div
-                class={`flex min-w-0 items-center gap-2 rounded-l border px-2 transition-colors ${getLockedSongsSearchFrameClass(
-                  hasSearchQuery()
-                )}`}
-              >
-                <Search
-                  class={`h-4 w-4 shrink-0 ${getLockedSongsSearchIconClass(hasSearchQuery())}`}
-                  aria-hidden="true"
-                />
-                <TextField.Input
-                  type="search"
-                  class="min-w-0 flex-1 bg-transparent py-2 font-sans text-sm outline-none"
-                  aria-label="未解禁楽曲検索"
-                  placeholder="曲名・アーティストで検索..."
-                  value={query()}
-                  onInput={(event) => setQuery(event.currentTarget.value)}
-                />
-              </div>
-            </TextField>
+          <div class="mb-3 flex min-w-0 shrink-0 items-center">
+            <SearchTextField
+              class="min-w-0 flex-1"
+              frameClass="rounded-l"
+              value={query()}
+              active={hasSearchQuery()}
+              onChange={setQuery}
+              ariaLabel="未解禁楽曲検索"
+              placeholder="曲名・アーティストで検索..."
+            />
             <Button
               type="button"
               class={`-ml-px flex h-9.5 min-w-9.5 shrink-0 items-center justify-center gap-1.5 border px-2 text-sm transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 hasFilterChanges()
-                  ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
-                  : 'border-border-strong text-text-muted hover:bg-surface-hover'
+                  ? SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS
+                  : SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS
               }`}
               aria-label={filterButtonLabel()}
               aria-pressed={hasFilterChanges()}
@@ -434,8 +371,8 @@ const LockedSongsDialog: Component<Props> = (props) => {
               type="button"
               class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
                 showLockedOnly()
-                  ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
-                  : 'border-border-strong text-text-muted hover:bg-surface-hover'
+                  ? SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS
+                  : SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS
               }`}
               aria-label="選択済み楽曲のみ表示"
               aria-pressed={showLockedOnly()}
@@ -446,11 +383,11 @@ const LockedSongsDialog: Component<Props> = (props) => {
             </Button>
           </div>
 
-          <div class="mb-2 text-xs text-text-subtle">
+          <div class="mb-2 shrink-0 text-xs text-text-subtle">
             {props.lockedSongs.length}件設定中 / {filteredSongListItems().length}件表示
           </div>
 
-          <div class="min-h-0 flex-1 overflow-y-auto rounded border border-border">
+          <div class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border bg-surface">
             <Show
               when={isListReady()}
               fallback={
@@ -474,7 +411,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                   </div>
                 }
               >
-                <ul class="divide-y divide-border">
+                <ul class="divide-y divide-border bg-surface">
                   <For each={filteredSongListItems()}>
                     {(item) => {
                       const selected = () => isLocked(item.song.id, item.isUltima)
@@ -483,11 +420,9 @@ const LockedSongsDialog: Component<Props> = (props) => {
                         <li>
                           <Button
                             type="button"
-                            class={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60 ${
+                            class={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60 ${getSongSelectionRowClass(
                               selected()
-                                ? 'bg-success text-text-inverse hover:bg-success'
-                                : 'bg-surface text-text hover:bg-surface-muted'
-                            }`}
+                            )}`}
                             aria-pressed={selected()}
                             aria-label={`${item.song.title} ${item.isUltima ? 'ULTIMA' : '通常'}の未解禁設定を切り替え`}
                             disabled={isSaving()}
@@ -552,77 +487,52 @@ const LockedSongsDialog: Component<Props> = (props) => {
               <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex max-h-[80dvh] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
                 <div class="mb-4 flex shrink-0 items-center justify-between gap-3">
                   <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
-                  <Button
-                    type="button"
-                    class={LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS.secondary}
-                    onClick={handleResetFilter}
-                  >
-                    すべて選択
-                  </Button>
+                  <AppButton onClick={handleResetFilter}>すべて選択</AppButton>
                 </div>
 
                 <div class="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
                   <div>
-                    <span class="mb-1 block text-sm font-medium">ジャンル</span>
-                    <MultiSelectDropdown
-                      options={genreOptions()}
+                    <GenreMultiSelect
+                      options={toMultiSelectOptions(genreOptions())}
                       selected={filters().genres}
-                      placeholder="ジャンルを選択"
-                      contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                      onToggle={handleToggleGenreFilter}
-                      onSelectAll={() =>
-                        setFilters((prev) => ({ ...prev, genres: genreOptions() }))
+                      labelClass="text-text"
+                      contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+                      onChange={(selectedGenres) =>
+                        setFilters((prev) => ({ ...prev, genres: selectedGenres }))
                       }
-                      onClear={() => setFilters((prev) => ({ ...prev, genres: [] }))}
                     />
                   </div>
 
                   <div>
-                    <span class="mb-1 block text-sm font-medium">バージョン</span>
-                    <MultiSelectDropdown
-                      options={versionOptions()}
+                    <VersionMultiSelect
+                      options={toMultiSelectOptions(versionOptions())}
                       selected={filters().versions}
-                      placeholder="バージョンを選択"
-                      contentZIndexClass={NESTED_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                      onToggle={handleToggleVersionFilter}
-                      onSelectAll={() =>
-                        setFilters((prev) => ({ ...prev, versions: versionOptions() }))
+                      labelClass="text-text"
+                      contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+                      onChange={(selectedVersions) =>
+                        setFilters((prev) => ({ ...prev, versions: selectedVersions }))
                       }
-                      onClear={() => setFilters((prev) => ({ ...prev, versions: [] }))}
                     />
                   </div>
 
                   <section>
-                    <Checkbox
+                    <CheckboxField
+                      id="locked-song-filter-unplayed-only"
                       checked={filters().unplayedOnly}
                       onChange={handleUnplayedOnlyFilterChange}
                       class="relative flex items-center gap-2"
-                    >
-                      <Checkbox.Input
-                        id="locked-song-filter-unplayed-only"
-                        style={{ left: '0', top: '0' }}
-                      />
-                      <Checkbox.Control class={FILTER_CHECKBOX_CONTROL_CLASS}>
-                        <Checkbox.Indicator>
-                          <Check class="h-4 w-4" />
-                        </Checkbox.Indicator>
-                      </Checkbox.Control>
-                      <Checkbox.Label
-                        class="min-w-0 leading-5"
-                        for="locked-song-filter-unplayed-only"
-                      >
-                        未プレイのみ表示
-                      </Checkbox.Label>
-                    </Checkbox>
+                      labelClass="min-w-0 leading-5"
+                      label="未プレイのみ表示"
+                    />
                   </section>
                 </div>
 
                 <div class="mt-6 flex justify-end">
                   <div class="flex gap-2">
-                    <Dialog.CloseButton class={LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS.secondary}>
+                    <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
                       閉じる
                     </Dialog.CloseButton>
-                    <Dialog.CloseButton class={LOCKED_SONGS_FILTER_DIALOG_BUTTON_CLASS.primary}>
+                    <Dialog.CloseButton class={getAppButtonClass({ variant: 'primary' })}>
                       適用
                     </Dialog.CloseButton>
                   </div>
@@ -632,17 +542,17 @@ const LockedSongsDialog: Component<Props> = (props) => {
           </Dialog>
 
           <div class="mt-4 flex justify-end gap-2">
-            <Button
-              type="button"
-              class="rounded border border-border-strong px-3 py-2 text-sm text-text-muted hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
+            <AppButton
+              variant="secondary"
+              size="sm"
               onClick={() => props.onOpenChange(false)}
               disabled={isSaving()}
             >
               キャンセル
-            </Button>
-            <Button
-              type="button"
-              class="inline-flex items-center gap-2 rounded bg-action-primary px-3 py-2 text-sm text-text-inverse hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+            </AppButton>
+            <AppButton
+              variant="primary"
+              size="sm"
               onClick={handleSave}
               disabled={!hasChanges() || isSaving()}
             >
@@ -650,7 +560,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
                 <LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />
               </Show>
               保存
-            </Button>
+            </AppButton>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

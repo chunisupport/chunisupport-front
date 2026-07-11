@@ -1,11 +1,11 @@
 import { Button } from '@kobalte/core/button'
-import { Checkbox } from '@kobalte/core/checkbox'
-import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, ChevronDown, Target } from 'lucide-solid'
+import { Target } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, ErrorBoundary, For, onMount, Show } from 'solid-js'
 import { LoadError, Loading } from '../../components'
+import { FormSelect } from '../../components/common/AppSelect'
+import { CheckboxField } from '../../components/common/CheckboxField'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { SongDTO } from '../../types/api'
@@ -37,8 +37,6 @@ const FIELD_INPUT_CLASS =
   'w-full rounded border border-border-strong bg-input-bg px-3 py-2 text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const COMPACT_FIELD_INPUT_CLASS =
   'w-full rounded border border-border-strong bg-input-bg px-3 py-2 font-sans text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
-const CHECKBOX_CONTROL_CLASS =
-  'flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
 const SONG_CANDIDATE_BUTTON_CLASS =
   'block w-full border-b border-border px-3 py-2.5 text-left text-sm last:border-b-0 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const EMPTY_STATE_CLASS =
@@ -73,15 +71,6 @@ const parseOptionalNumber = (value: string): number | undefined => {
  * @returns 桁区切り済みの文字列。
  */
 const formatNumber = (value: number): string => value.toLocaleString('ja-JP')
-
-/**
- * ボーダー計算機で選択可能な譜面か判定する。
- *
- * @param value - 判定対象の難易度文字列。
- * @returns BASIC～ULTIMA の通常譜面であれば true。
- */
-const isBorderCalculatorDifficulty = (value: string): value is BorderCalculatorDifficulty =>
-  BORDER_CALCULATOR_DIFFICULTIES.some((difficulty) => difficulty === value)
 
 /**
  * 選択中の楽曲で利用できる通常譜面の難易度候補を返す。
@@ -143,56 +132,24 @@ const BorderFormField: Component<BorderFormFieldProps> = (props) => (
  * ボーダー計算機で利用する譜面選択欄をコンパクトに表示する。
  *
  * @param props - 選択中の難易度と変更ハンドラ。
- * @returns Kobalte Select を使った譜面選択欄。
+ * @returns 共通 FormSelect を使った譜面選択欄。
  */
 const DifficultySelectField: Component<{
   value: BorderCalculatorDifficulty
   availableDifficulties: BorderCalculatorDifficulty[]
   onChange: (difficulty: BorderCalculatorDifficulty) => void
 }> = (props) => (
-  <Select<BorderCalculatorDifficulty>
-    class="block text-sm"
+  <FormSelect<BorderCalculatorDifficulty>
+    rootClass="block text-sm"
+    label={BORDER_CALCULATOR_COPY.difficultyLabel}
     options={props.availableDifficulties}
     value={props.value}
-    onChange={(difficulty) => {
-      if (difficulty && isBorderCalculatorDifficulty(difficulty)) {
+    onChange={(difficulty: BorderCalculatorDifficulty | null) => {
+      if (difficulty) {
         props.onChange(difficulty)
       }
     }}
-    sameWidth
-    fitViewport
-    gutter={0}
-    itemComponent={(selectProps) => (
-      <Select.Item
-        item={selectProps.item}
-        class="cursor-pointer px-3 py-2 text-text hover:bg-action-primary-muted data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted"
-      >
-        <div class="flex items-center gap-2">
-          <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-action-primary">
-            <Check size={14} />
-          </Select.ItemIndicator>
-          <Select.ItemLabel>{selectProps.item.rawValue}</Select.ItemLabel>
-        </div>
-      </Select.Item>
-    )}
-  >
-    <Select.Label class="mb-1 block font-medium text-text-muted">
-      {BORDER_CALCULATOR_COPY.difficultyLabel}
-    </Select.Label>
-    <Select.Trigger class="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring">
-      <Select.Value<BorderCalculatorDifficulty> class="truncate">
-        {(state) => state.selectedOption()}
-      </Select.Value>
-      <Select.Icon class="text-text-subtle">
-        <ChevronDown size={16} />
-      </Select.Icon>
-    </Select.Trigger>
-    <Select.Portal>
-      <Select.Content class="z-50 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
-        <Select.Listbox />
-      </Select.Content>
-    </Select.Portal>
-  </Select>
+  />
 )
 
 /**
@@ -555,19 +512,13 @@ const BorderCalculatorPage = (): JSX.Element => {
                     />
                   </div>
 
-                  <Checkbox
+                  <CheckboxField
                     class="relative flex min-h-12 items-center gap-2 text-sm text-text-muted"
                     checked={fullComboOnly()}
                     onChange={setFullComboOnly}
-                  >
-                    <Checkbox.Input style={{ left: '0', top: '0' }} />
-                    <Checkbox.Control class={CHECKBOX_CONTROL_CLASS}>
-                      <Checkbox.Indicator>
-                        <Check class="h-4 w-4" />
-                      </Checkbox.Indicator>
-                    </Checkbox.Control>
-                    <Checkbox.Label>{BORDER_CALCULATOR_COPY.fullComboOnlyLabel}</Checkbox.Label>
-                  </Checkbox>
+                    controlClass="rounded"
+                    label={BORDER_CALCULATOR_COPY.fullComboOnlyLabel}
+                  />
                 </fieldset>
               </form>
             </Show>

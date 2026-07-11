@@ -36,7 +36,7 @@ test("buildSavedWorldsendFilterRequest は WORLD'S END 用の保存リクエス�
   // Then
   assert.equal(result.name, 'WE高難度')
   assert.equal(result.filter_type, 'worldsend')
-  assert.equal(result.schema_version, 2)
+  assert.equal(result.schema_version, 3)
   assert.deepEqual(result.filter, filter)
 })
 

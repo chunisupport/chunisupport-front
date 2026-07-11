@@ -139,6 +139,23 @@ test("WORLD'S ENDの複数ソートは前の条件が同値の場合に次の条
   assert.deepEqual(result, ['score-high', 'air', 'fire-high', 'fire-low'])
 })
 
+test("WORLD'S ENDのスコアソートは昇順でも未プレイを末尾に寄せる", () => {
+  const records = [
+    createRecord({ id: 'played-zero', score: 0 }),
+    createRecord({ id: 'unplayed', is_played: false, score: 0 }),
+    createRecord({ id: 'played-high', score: 1010000 }),
+  ]
+
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'score', 'asc').map((record) => record.id),
+    ['played-zero', 'played-high', 'unplayed']
+  )
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'score', 'desc').map((record) => record.id),
+    ['played-high', 'played-zero', 'unplayed']
+  )
+})
+
 test("WORLD'S ENDの第4ソートは曲名指定でも方向を昇順へ固定する", () => {
   // Given
   const sortConditions = [
@@ -197,7 +214,27 @@ test("WORLD'S ENDのFCHソートはなし、GOLD、PLATINUM、未プレイの順
   )
 })
 
-test("WORLD'S ENDのJ数ソートはJ数なし行をスコア降順で並べ、未プレイを末尾に寄せる", () => {
+test("WORLD'S ENDのランプソートはランプなし、FC、AJ、AJC、未プレイの順で並べる", () => {
+  const records = [
+    createRecord({ id: 'none', combo_lamp: null }),
+    createRecord({ id: 'fc', combo_lamp: 'FULL COMBO' }),
+    createRecord({ id: 'aj', combo_lamp: 'ALL JUSTICE', score: 1009999 }),
+    createRecord({ id: 'ajc', combo_lamp: 'ALL JUSTICE', score: 1010000 }),
+    createRecord({ id: 'unplayed', is_played: false, combo_lamp: null }),
+  ]
+
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'lamp', 'asc').map((record) => record.id),
+    ['none', 'fc', 'aj', 'ajc', 'unplayed']
+  )
+
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'lamp', 'desc').map((record) => record.id),
+    ['ajc', 'aj', 'fc', 'none', 'unplayed']
+  )
+})
+
+test("WORLD'S ENDのJ数ソートは降順でもAJCを先頭にし、J数なし行をスコア降順で並べる", () => {
   const records = [
     createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2, score: 1008000 }),
     createRecord({ id: 'fc-high', combo_lamp: 'FULL COMBO', score: 1009500 }),
@@ -214,6 +251,6 @@ test("WORLD'S ENDのJ数ソートはJ数なし行をスコア降順で並べ、�
 
   assert.deepEqual(
     sortWorldsendRecords(records, 'justiceCount', 'desc').map((record) => record.id),
-    ['aj-j2', 'aj-j0', 'fc-high', 'aj-null', 'none-low', 'unplayed']
+    ['aj-j0', 'aj-j2', 'fc-high', 'aj-null', 'none-low', 'unplayed']
   )
 })

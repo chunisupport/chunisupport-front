@@ -36,14 +36,20 @@ const formatAddedDate = (release: string | null): string => {
   return `${year.slice(-2)}/${month}/${day}`
 }
 
+/**
+ * 楽曲一覧テーブルのセル全体をリンクにしたタイトルセルを描画する。
+ *
+ * @param props - 遷移先、楽曲タイトル、セルのスタイル情報。
+ * @returns セル全体で楽曲詳細へ遷移できるタイトルセル。
+ */
 export const SongListTitleCell = (props: SongListTitleCellProps) => (
-  <td class={props.class}>
+  <td class={`${props.class} relative`}>
     <A
       href={props.href}
-      class="block min-w-0 truncate font-sans text-action-primary hover:underline"
+      class="absolute inset-0 flex min-w-0 items-center px-3 font-sans text-action-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
       title={props.title}
     >
-      {props.title}
+      <span class="min-w-0 truncate">{props.title}</span>
     </A>
   </td>
 )

@@ -228,43 +228,60 @@ test('列クリックの第1ソートはascからdesc、最後にascへ戻る', 
   })
 })
 
-test('スコアソートは未プレイを末尾に固定する', () => {
+test('スコアソートは昇順でも未プレイを末尾に寄せる', () => {
   const records = [
-    createRecord({ id: 'played-low', score: 1000000, title: 'Played Low' }),
+    createRecord({ id: 'played-zero', score: 0, title: 'Played Zero' }),
     createRecord({ id: 'unplayed', is_played: false, score: 0, rating: 0, title: 'Unplayed' }),
     createRecord({ id: 'played-high', score: 1010000, title: 'Played High' }),
   ]
 
   assert.deepEqual(
     sortRecords(records, 'score', 'asc').map((record) => record.id),
-    ['played-low', 'played-high', 'unplayed']
+    ['played-zero', 'played-high', 'unplayed']
   )
   assert.deepEqual(
     sortRecords(records, 'score', 'desc').map((record) => record.id),
-    ['played-high', 'played-low', 'unplayed']
+    ['played-high', 'played-zero', 'unplayed']
   )
 })
 
-test('OPソートは未プレイを末尾に固定する', () => {
+test('レート値ソートは昇順でも未プレイを末尾に寄せる', () => {
   const records = [
-    createRecord({ id: 'played-low', overpower: 50.123 }),
+    createRecord({ id: 'played-zero', rating: 0 }),
+    createRecord({ id: 'unplayed', is_played: false, rating: 0 }),
+    createRecord({ id: 'played-high', rating: 16.5 }),
+  ]
+
+  assert.deepEqual(
+    sortRecords(records, 'rating', 'asc').map((record) => record.id),
+    ['played-zero', 'played-high', 'unplayed']
+  )
+  assert.deepEqual(
+    sortRecords(records, 'rating', 'desc').map((record) => record.id),
+    ['played-high', 'played-zero', 'unplayed']
+  )
+})
+
+test('OPソートは昇順でも未プレイを末尾に寄せる', () => {
+  const records = [
+    createRecord({ id: 'played-zero', overpower: 0 }),
     createRecord({ id: 'unplayed', is_played: false, overpower: 0 }),
     createRecord({ id: 'played-high', overpower: 80.456 }),
   ]
 
   assert.deepEqual(
     sortRecords(records, 'overpower', 'asc').map((record) => record.id),
-    ['played-low', 'played-high', 'unplayed']
+    ['played-zero', 'played-high', 'unplayed']
   )
   assert.deepEqual(
     sortRecords(records, 'overpower', 'desc').map((record) => record.id),
-    ['played-high', 'played-low', 'unplayed']
+    ['played-high', 'played-zero', 'unplayed']
   )
 })
 
-test('OP%ソートはAPIのOVER POWER達成率で並べ、未プレイを末尾に固定する', () => {
+test('OP%ソートはAPIのOVER POWER達成率で並べ、昇順でも未プレイを末尾に寄せる', () => {
   const records = [
-    createRecord({ id: 'played-low-percent', const: 7, overpower: 40, overpower_percent: 30 }),
+    createRecord({ id: 'played-zero-percent', const: 7, overpower: 0, overpower_percent: 0 }),
     createRecord({
       id: 'unplayed',
       is_played: false,
@@ -277,11 +294,11 @@ test('OP%ソートはAPIのOVER POWER達成率で並べ、未プレイを末尾�
 
   assert.deepEqual(
     sortRecords(records, 'overpowerPercent', 'asc').map((record) => record.id),
-    ['played-low-percent', 'played-high-percent', 'unplayed']
+    ['played-zero-percent', 'played-high-percent', 'unplayed']
   )
   assert.deepEqual(
     sortRecords(records, 'overpowerPercent', 'desc').map((record) => record.id),
-    ['played-high-percent', 'played-low-percent', 'unplayed']
+    ['played-high-percent', 'played-zero-percent', 'unplayed']
   )
 })
 
@@ -327,7 +344,7 @@ test('複数ソートは前の条件が同値の場合に次の条件で並べ�
   )
 })
 
-test('J数ソートはJ数を基準に並べ、J数なし行は常に末尾に寄せる', () => {
+test('J数ソートは降順でもAJCを先頭にし、J数なし行は常に末尾に寄せる', () => {
   const records = [
     createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2 }),
     createRecord({ id: 'aj-j1', combo_lamp: 'ALL JUSTICE', justice_count: 1 }),
@@ -344,26 +361,27 @@ test('J数ソートはJ数を基準に並べ、J数なし行は常に末尾に�
 
   assert.deepEqual(
     sortRecords(records, 'justiceCount', 'desc').map((record) => record.id),
-    ['aj-j2', 'aj-j1', 'aj-j0', 'fc', 'aj-null', 'unplayed']
+    ['aj-j0', 'aj-j2', 'aj-j1', 'fc', 'aj-null', 'unplayed']
   )
 })
 
-test('ランプソートはランプなし、FC、AJ、未プレイの順で並べる', () => {
+test('ランプソートはランプなし、FC、AJ、AJC、未プレイの順で並べる', () => {
   const records = [
     createRecord({ id: 'none', combo_lamp: null }),
     createRecord({ id: 'fc', combo_lamp: 'FULL COMBO' }),
-    createRecord({ id: 'aj', combo_lamp: 'ALL JUSTICE' }),
+    createRecord({ id: 'aj', combo_lamp: 'ALL JUSTICE', score: 1009999 }),
+    createRecord({ id: 'ajc', combo_lamp: 'ALL JUSTICE', score: 1010000 }),
     createRecord({ id: 'unplayed', is_played: false, combo_lamp: null }),
   ]
 
   assert.deepEqual(
     sortRecords(records, 'lamp', 'asc').map((record) => record.id),
-    ['none', 'fc', 'aj', 'unplayed']
+    ['none', 'fc', 'aj', 'ajc', 'unplayed']
   )
 
   assert.deepEqual(
     sortRecords(records, 'lamp', 'desc').map((record) => record.id),
-    ['aj', 'fc', 'none', 'unplayed']
+    ['ajc', 'aj', 'fc', 'none', 'unplayed']
   )
 })
 

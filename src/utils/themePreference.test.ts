@@ -25,6 +25,12 @@ test('明示的にblackが保存されている場合はblackを適用する', (
 
 test('明示的にpastel-orangeが保存されている場合はpastel-orangeを適用する', () => {
   assert.equal(resolveAppliedTheme('pastel-orange', true), 'pastel-orange')
+  assert.equal(resolveAppliedTheme('pastel-orange', false), 'pastel-orange')
+})
+
+test('明示的にdark-blueが保存されている場合はdark-blueを適用する', () => {
+  assert.equal(resolveAppliedTheme('dark-blue', true), 'dark-blue')
+  assert.equal(resolveAppliedTheme('dark-blue', false), 'dark-blue')
 })
 
 test('旧system設定または未設定の場合はOS設定から適用テーマを決定する', () => {
@@ -79,6 +85,27 @@ test('localStorageへ保存できない場合でも例外を投げない', () =>
   }
 })
 
+test('localStorageにdark-blueが保存されている場合はdark-blueを返す', () => {
+  const previousWindow = globalThis.window
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: {
+      localStorage: {
+        getItem: () => 'dark-blue',
+      },
+    },
+  })
+
+  try {
+    assert.equal(readThemePreference(), 'dark-blue')
+  } finally {
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: previousWindow,
+    })
+  }
+})
+
 test('localStorageにblackが保存されている場合はblackを返す', () => {
   const previousWindow = globalThis.window
   Object.defineProperty(globalThis, 'window', {
@@ -92,27 +119,6 @@ test('localStorageにblackが保存されている場合はblackを返す', () =
 
   try {
     assert.equal(readThemePreference(), 'black')
-  } finally {
-    Object.defineProperty(globalThis, 'window', {
-      configurable: true,
-      value: previousWindow,
-    })
-  }
-})
-
-test('localStorageにpastel-orangeが保存されている場合はpastel-orangeを返す', () => {
-  const previousWindow = globalThis.window
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      localStorage: {
-        getItem: () => 'pastel-orange',
-      },
-    },
-  })
-
-  try {
-    assert.equal(readThemePreference(), 'pastel-orange')
   } finally {
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
@@ -203,6 +209,39 @@ test('保存済みのオレンジアクセントを読み取って適用する',
     assert.equal(readAccentPreference(), 'orange')
     assert.equal(applyInitialAccent(), 'orange')
     assert.equal(documentElement.dataset.accent, 'orange')
+  } finally {
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: previousWindow,
+    })
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: previousDocument,
+    })
+  }
+})
+
+test('保存済みのバイオレットアクセントを読み取って適用する', () => {
+  const previousWindow = globalThis.window
+  const previousDocument = globalThis.document
+  const documentElement = { dataset: {} as Record<string, string> }
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: {
+      localStorage: {
+        getItem: () => 'violet',
+      },
+    },
+  })
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { documentElement },
+  })
+
+  try {
+    assert.equal(readAccentPreference(), 'violet')
+    assert.equal(applyInitialAccent(), 'violet')
+    assert.equal(documentElement.dataset.accent, 'violet')
   } finally {
     Object.defineProperty(globalThis, 'window', {
       configurable: true,

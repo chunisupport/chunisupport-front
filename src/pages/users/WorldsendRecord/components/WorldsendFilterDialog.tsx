@@ -1,8 +1,8 @@
-import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
-import FilterResetDialog from '../../UserRecord/components/filterDialog/dialogs/FilterResetDialog'
+import { AppButton } from '../../../../components/common/AppButton'
+import FilterResetDialog from '../../components/FilterResetDialog'
 import { normalizeWorldsendFilterState } from '../types/filterDefaults'
 import type { WorldsendFilterState } from '../types/filterTypes'
 import WorldsendFilterSelectionPanel from './WorldsendFilterSelectionPanel'
@@ -91,15 +91,15 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
         <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-11/12 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 select-none flex-col rounded-lg bg-surface p-6 shadow-lg">
           <div class="mb-4 flex shrink-0 items-center justify-between">
             <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
-            <FilterResetDialog onReset={handleReset} />
-          </div>
-          <div class="mb-4">
-            <WorldsendSavedFiltersDialog
-              open={props.open}
-              currentFilters={filters()}
-              onApplyFilter={handleApplySavedFilter}
-              onEditFilter={handleEditSavedFilter}
-            />
+            <div class="flex items-center gap-2">
+              <WorldsendSavedFiltersDialog
+                open={props.open}
+                currentFilters={filters()}
+                onApplyFilter={handleApplySavedFilter}
+                onEditFilter={handleEditSavedFilter}
+              />
+              <FilterResetDialog onReset={handleReset} />
+            </div>
           </div>
           <WorldsendFilterSelectionPanel
             open={props.open}
@@ -109,20 +109,10 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
           />
           <div class="mt-6 flex justify-end">
             <div class="flex gap-2">
-              <Button
-                type="button"
-                class="rounded bg-action-secondary px-4 py-2 text-text-muted hover:bg-action-secondary-hover"
-                onClick={() => props.onOpenChange(false)}
-              >
-                キャンセル
-              </Button>
-              <Button
-                type="button"
-                class="rounded bg-action-primary px-4 py-2 text-text-inverse hover:bg-action-primary-hover"
-                onClick={handleApply}
-              >
+              <AppButton onClick={() => props.onOpenChange(false)}>キャンセル</AppButton>
+              <AppButton variant="primary" onClick={handleApply}>
                 適用
-              </Button>
+              </AppButton>
             </div>
           </div>
         </Dialog.Content>

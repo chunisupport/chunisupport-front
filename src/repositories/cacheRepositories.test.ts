@@ -11,10 +11,14 @@ import {
 import type { SongDTO, UserRatingDTO, UserRecordDTO } from '../types/api.ts'
 import { readCachedSongs, replaceCachedSongs } from './songCacheRepository.ts'
 import {
+  clearCachedUserApiResponses,
+  readCachedStandardSongRecord,
   readCachedUserRating,
   readCachedUserRecord,
+  readCachedWorldsendSongRecord,
   saveCachedUserRating,
   saveCachedUserRecord,
+  saveCachedWorldsendSongRecord,
 } from './userApiCacheRepository.ts'
 import {
   readStandardRecordColumnsSetting,
@@ -71,8 +75,10 @@ const clearStores = async (): Promise<void> => {
     db.cacheMetadata.clear(),
     db.songs.clear(),
     db.worldsendSongs.clear(),
+    db.userSongRecords.clear(),
     db.userApiResponses.clear(),
     db.viewSettings.clear(),
+    db.friendRequestNotificationStates.clear(),
   ])
 }
 
@@ -134,11 +140,102 @@ test('ユーザー API キャッシュは username と updated-at が一致す�
     userUpdatedAt: 'user-1',
     songsUpdatedAt: 'songs-1',
   })
+  const mismatchedRecord = await readCachedUserRecord({
+    username: 'bob',
+    userUpdatedAt: 'user-1',
+    songsUpdatedAt: 'songs-1',
+  })
 
   // Then
   assert.deepEqual(matchedRating, rating)
   assert.equal(mismatchedRating, null)
   assert.deepEqual(matchedRecord, record)
+  assert.equal(mismatchedRecord, null)
+})
+
+test('全件レコードキャッシュは曲単位に分割して保存されること', async () => {
+  // Given
+  const songRecord = {
+    is_played: true,
+    is_op_target: true,
+    updated_at: '2026-06-16T12:00:00Z',
+    difficulty: 'MASTER',
+    id: 'song-1',
+    title: 'テスト楽曲',
+    artist: 'テスト',
+    const: 14.5,
+    is_const_unknown: false,
+    score: 1_009_500,
+    rating: 17.14,
+    overpower: 5.67,
+    justice_count: null,
+    overpower_percent: 98.2857,
+    img: '',
+    clear_lamp: 'CLEAR',
+    combo_lamp: 'FULL COMBO',
+    full_chain: null,
+    slot: 'best',
+  } as const
+  await saveCachedUserRecord('alice', 'user-1', 'songs-1', {
+    standard: [songRecord],
+    worldsend: [],
+    meta: { updated_at: '2026-06-16T12:00:00Z' },
+  })
+
+  // When
+  const cached = await readCachedStandardSongRecord(
+    {
+      username: 'alice',
+      userUpdatedAt: 'user-1',
+      songsUpdatedAt: 'songs-1',
+    },
+    'song-1'
+  )
+
+  // Then
+  assert.deepEqual(cached, [songRecord])
+  assert.equal(await db.userApiResponses.count(), 0)
+})
+
+test("WORLD'S END未プレイはキャッシュなしと区別して保存されること", async () => {
+  // Given
+  const match = {
+    username: 'alice',
+    userUpdatedAt: 'user-1',
+    songsUpdatedAt: 'songs-1',
+  }
+  await saveCachedWorldsendSongRecord(match, 'worldsend-1', null)
+
+  // When
+  const cachedNoPlay = await readCachedWorldsendSongRecord(match, 'worldsend-1')
+  const missing = await readCachedWorldsendSongRecord(match, 'worldsend-2')
+
+  // Then
+  assert.equal(cachedNoPlay, null)
+  assert.equal(missing, undefined)
+})
+
+test('ユーザーAPIキャッシュの全削除はレーティング・曲別レコード・全件メタデータを削除すること', async () => {
+  // Given
+  await saveCachedUserRating('alice', 'user-1', 'songs-1', rating)
+  await saveCachedUserRecord('alice', 'user-1', 'songs-1', record)
+  await saveCachedWorldsendSongRecord(
+    {
+      username: 'alice',
+      userUpdatedAt: 'user-1',
+      songsUpdatedAt: 'songs-1',
+    },
+    'worldsend-1',
+    null
+  )
+
+  // When
+  await clearCachedUserApiResponses()
+
+  // Then
+  assert.equal(await db.userApiResponses.count(), 0)
+  assert.equal(await db.userSongRecords.count(), 0)
+  assert.equal(await db.cacheMetadata.get('userRecord'), undefined)
 })
 
 test('集計値がない旧形式のレーティングキャッシュは読み込まれないこと', async () => {

@@ -1,9 +1,9 @@
-import { Button } from '@kobalte/core/button'
 import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import { signInWithPopup } from 'firebase/auth'
 import { createSignal } from 'solid-js'
 import { postLogin } from '../../../api/auth'
 import { Loading, Turnstile } from '../../../components'
+import { AppButton } from '../../../components/common/AppButton'
 import { CF_TURNSTILE_SITE_KEY } from '../../../config'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
@@ -31,6 +31,11 @@ const normalizeRedirectParam = (redirect: string | string[] | undefined): string
 const isUnregisteredLoginError = (error: Error & { code?: string }): boolean =>
   error.code === 'user_not_found' || error.code === 'invalid_token'
 
+/**
+ * Google認証を利用するログイン画面を表示する。
+ *
+ * @returns ログインフォームの JSX 要素。
+ */
 const Login = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -114,10 +119,12 @@ const Login = () => {
                     setErrorMessage(TURNSTILE_ERROR_MESSAGE)
                   }}
                 />
-                <Button
+                <AppButton
                   type="submit"
+                  variant="surface"
+                  fullWidth
                   disabled={isSubmitting() || !turnstileToken()}
-                  class="flex w-full items-center justify-center gap-2 rounded-md border border-border-strong bg-surface px-4 py-2 text-sm font-semibold text-text-muted shadow-sm hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
+                  class="rounded-md shadow-sm"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -143,7 +150,7 @@ const Login = () => {
                     />
                   </svg>
                   {isSubmitting() ? '処理中...' : 'Googleでログイン'}
-                </Button>
+                </AppButton>
               </form>
             </div>
 

@@ -1,11 +1,11 @@
 /** ユーザーが選択・保存できる背景テーマ。 */
-export type ThemePreference = 'light' | 'pastel-orange' | 'dark' | 'black'
+export type ThemePreference = 'light' | 'dark' | 'dark-blue' | 'black' | 'pastel-orange'
 
 /** ルート要素へ実際に適用する背景テーマ。 */
 export type AppliedTheme = ThemePreference
 
 /** 背景テーマから独立して適用する操作強調色。 */
-export type AccentPreference = 'green' | 'orange' | 'blue'
+export type AccentPreference = 'green' | 'orange' | 'blue' | 'violet' | 'yellow' | 'red'
 
 export const THEME_STORAGE_KEY = 'chunisupport-theme'
 export const ACCENT_STORAGE_KEY = 'chunisupport-accent'
@@ -25,9 +25,10 @@ export const resolveAppliedTheme = (
 ): AppliedTheme => {
   if (
     preference === 'light' ||
-    preference === 'pastel-orange' ||
     preference === 'dark' ||
-    preference === 'black'
+    preference === 'dark-blue' ||
+    preference === 'black' ||
+    preference === 'pastel-orange'
   ) {
     return preference
   }
@@ -43,7 +44,13 @@ export const resolveAppliedTheme = (
 export const readThemePreference = (): ThemePreference => {
   try {
     const value = window.localStorage.getItem(THEME_STORAGE_KEY)
-    if (value === 'light' || value === 'pastel-orange' || value === 'dark' || value === 'black') {
+    if (
+      value === 'light' ||
+      value === 'dark' ||
+      value === 'dark-blue' ||
+      value === 'black' ||
+      value === 'pastel-orange'
+    ) {
       return value
     }
   } catch {
@@ -75,7 +82,14 @@ export const saveThemePreference = (preference: ThemePreference): void => {
 export const readAccentPreference = (): AccentPreference => {
   try {
     const value = window.localStorage.getItem(ACCENT_STORAGE_KEY)
-    if (value === 'green' || value === 'orange' || value === 'blue') {
+    if (
+      value === 'green' ||
+      value === 'orange' ||
+      value === 'blue' ||
+      value === 'violet' ||
+      value === 'yellow' ||
+      value === 'red'
+    ) {
       return value
     }
   } catch {

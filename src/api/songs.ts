@@ -3,6 +3,7 @@ import type {
   AchievementTypeDTO,
   CreateSongRequestDTO,
   CreateWorldsendSongRequestDTO,
+  FriendRankingResponseDTO,
   ManagedSongDTO,
   ManagedWorldsendSongDTO,
   MasterDataDTO,
@@ -13,6 +14,7 @@ import type {
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
   VersionDTO,
+  WorldsendFriendRankingResponseDTO,
   WorldsendSongDTO,
 } from '../types/api'
 import { sortMasterItemsBySortOrder } from '../utils/masterData'
@@ -25,6 +27,10 @@ export type ScoreHistoryDifficulty = 'EXPERT' | 'MASTER' | 'ULTIMA'
 const INTERNAL_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/worldsend-songs`
 /** 編集者向け WORLD'S END 楽曲APIのベースパス。 */
 const INTERNAL_EDITOR_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/editor/worldsend-songs`
+/** 内部向けユーザーAPIのベースパス。 */
+const INTERNAL_USERS_PATH = `${API_BASE_URL}/internal/users`
+/** 内部向けフレンドランキングAPIのベースパス。 */
+const INTERNAL_FRIEND_RANKINGS_PATH = `${API_BASE_URL}/internal/friend-rankings`
 
 let cachedVersionsResponse: VersionsResponse | undefined
 let versionsResponsePromise: Promise<VersionsResponse> | undefined
@@ -150,10 +156,8 @@ export const fetchOwnSongScoreHistory = async (
   difficulty: ScoreHistoryDifficulty,
   username: string
 ): Promise<ScoreHistoryResponseDTO> => {
-  const query = new URLSearchParams({ username })
   const response = await fetchWithAuth(
-    `${API_BASE_URL}/internal/songs/${encodeURIComponent(displayId)}/score-history/${difficulty.toLowerCase()}?${query.toString()}`,
-    { requireAuthentication: true }
+    `${INTERNAL_USERS_PATH}/${encodeURIComponent(username)}/record/songs/${encodeURIComponent(displayId)}/${difficulty.toLowerCase()}/history`
   )
 
   return response.json()
@@ -170,10 +174,42 @@ export const fetchOwnWorldsendScoreHistory = async (
   displayId: string,
   username: string
 ): Promise<ScoreHistoryResponseDTO> => {
-  const query = new URLSearchParams({ username })
   const response = await fetchWithAuth(
-    `${INTERNAL_WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}/score-history?${query.toString()}`,
-    { requireAuthentication: true }
+    `${INTERNAL_USERS_PATH}/${encodeURIComponent(username)}/record/worldsend-songs/${encodeURIComponent(displayId)}/history`
+  )
+
+  return response.json()
+}
+
+/**
+ * 通常譜面のフレンドランキングを取得する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @param difficulty - 大文字の難易度ドメイン値。
+ * @returns 自分と承認済みフレンドの現在スコアランキング。
+ */
+export const fetchSongFriendRanking = async (
+  displayId: string,
+  difficulty: ScoreHistoryDifficulty
+): Promise<FriendRankingResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${INTERNAL_FRIEND_RANKINGS_PATH}/songs/${encodeURIComponent(displayId)}/charts/${encodeURIComponent(difficulty)}`
+  )
+
+  return response.json()
+}
+
+/**
+ * WORLD'S END譜面のフレンドランキングを取得する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @returns 自分と承認済みフレンドの現在スコアランキング。
+ */
+export const fetchWorldsendFriendRanking = async (
+  displayId: string
+): Promise<WorldsendFriendRankingResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${INTERNAL_FRIEND_RANKINGS_PATH}/worldsend-songs/${encodeURIComponent(displayId)}`
   )
 
   return response.json()

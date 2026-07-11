@@ -1,8 +1,6 @@
 import { Button } from '@kobalte/core/button'
-import { Checkbox } from '@kobalte/core/checkbox'
-import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, ChevronDown, Plus, Search } from 'lucide-solid'
+import { Plus, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Index, Show } from 'solid-js'
 import {
@@ -19,6 +17,10 @@ import {
   updateWorldsendSongs,
 } from '../../api/songs'
 import { Loading } from '../../components'
+import { AppButton } from '../../components/common/AppButton'
+import { FormSelect } from '../../components/common/AppSelect'
+import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
+import { CheckboxField } from '../../components/common/CheckboxField'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type {
   CreateSongRequestDTO,
@@ -297,8 +299,6 @@ const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
 }
 
 const managementInputClass = 'w-full rounded border border-border-strong px-3 py-2'
-const checkboxControlClass =
-  'flex h-5 w-5 items-center justify-center rounded border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse data-disabled:opacity-50'
 /** 通常楽曲の新曲判定を編集するチェックボックスの表示名。 */
 const newSongFlagLabel = '新曲フラグ'
 
@@ -329,79 +329,46 @@ const ManagementTextField: Component<ManagementTextFieldProps> = (props) => (
  * 楽曲管理画面で利用するジャンル選択欄を描画します。
  *
  * @param props 表示ラベル、現在値、ジャンル候補、変更ハンドラを含むプロパティ
- * @returns Kobalte Select を利用したジャンル選択欄
+ * @returns 共通 FormSelect を利用したジャンル選択欄
  */
 const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
   const selectedGenre = () => props.genres.find((genre) => genre.id === props.value) ?? null
 
   return (
-    <Select<MasterItemDTO>
-      class="text-sm"
+    <FormSelect<MasterItemDTO>
+      rootClass="text-sm"
+      label={props.label}
       options={props.genres}
       optionValue="id"
       optionTextValue="name"
-      sameWidth
-      fitViewport
-      gutter={0}
       value={selectedGenre()}
-      onChange={(genre) => props.onChange(genre?.id ?? null)}
+      onChange={(genre: MasterItemDTO | null) => props.onChange(genre?.id ?? null)}
       placeholder={props.placeholder}
-      itemComponent={(selectProps) => (
-        <Select.Item
-          item={selectProps.item}
-          class="cursor-pointer px-3 py-2 text-text hover:bg-action-primary-muted data-[highlighted]:bg-action-primary-muted data-[selected]:bg-action-primary-muted"
-        >
-          <div class="flex items-center gap-2">
-            <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-action-primary">
-              <Check size={14} />
-            </Select.ItemIndicator>
-            <Select.ItemLabel>{selectProps.item.rawValue.name}</Select.ItemLabel>
-          </div>
-        </Select.Item>
-      )}
-    >
-      <Select.Label class="mb-1 block text-text-muted">{props.label}</Select.Label>
-      <Select.Trigger class="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm">
-        <Select.Value<MasterItemDTO> class="truncate data-placeholder-shown:text-text-placeholder">
-          {(state) => state.selectedOption()?.name}
-        </Select.Value>
-        <Select.Icon class="text-text-subtle">
-          <ChevronDown size={16} />
-        </Select.Icon>
-      </Select.Trigger>
-      <Select.Portal>
-        <Select.Content class="z-50 max-h-[min(16rem,var(--kb-popper-content-available-height))] w-[--kb-popper-anchor-width] overflow-auto rounded border border-border bg-surface shadow-md">
-          <Select.Listbox />
-        </Select.Content>
-      </Select.Portal>
-    </Select>
+      contentZIndexClass="z-50"
+      contentClass="max-h-[min(16rem,var(--kb-popper-content-available-height))] w-[--kb-popper-anchor-width]"
+      formatLabel={(genre) => genre.name}
+    />
   )
 }
 
 /**
- * 楽曲管理画面で利用する Kobalte Checkbox ベースのチェック欄を描画します。
+ * 楽曲管理画面で利用する共通チェック欄を描画します。
  *
  * @param props 選択状態、無効状態、表示ラベル、アクセシブル名、変更ハンドラを含むプロパティ
- * @returns Kobalte Checkbox を利用したチェック欄
+ * @returns 共通 CheckboxField を利用したチェック欄
  */
 const ManagementCheckbox: Component<ManagementCheckboxProps> = (props) => (
-  <Checkbox
+  <CheckboxField
     checked={props.checked}
     disabled={props.disabled}
     onChange={props.onChange}
-    aria-label={props.label ? undefined : props.ariaLabel}
+    ariaLabel={props.ariaLabel}
     class={props.class ?? 'relative inline-flex items-center gap-2'}
-  >
-    <Checkbox.Input style={{ left: '0', top: '0' }} />
-    <Checkbox.Control class={checkboxControlClass}>
-      <Checkbox.Indicator>
-        <Check size={14} />
-      </Checkbox.Indicator>
-    </Checkbox.Control>
-    <Show when={props.label}>
-      {(label) => <Checkbox.Label class="text-sm text-text">{label()}</Checkbox.Label>}
-    </Show>
-  </Checkbox>
+    controlClass="rounded data-disabled:opacity-50"
+    indicatorClass="h-3.5 w-3.5"
+    labelClass="text-sm text-text"
+    label={props.label}
+  />
 )
 
 const toSongDraft = (
@@ -572,8 +539,6 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const [createWorldsendDraft, setCreateWorldsendDraft] = createSignal<CreateWorldsendDraft>(
     buildCreateWorldsendDraft()
   )
-  const [message, setMessage] = createSignal('')
-  const [errorMessage, setErrorMessage] = createSignal('')
   const [songSearchQuery, setSongSearchQuery] = createSignal('')
   const [worldsendSearchQuery, setWorldsendSearchQuery] = createSignal('')
 
@@ -667,7 +632,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const handleAddUltimaChart = () => {
     const md = masterData()
     if (!md) {
-      setErrorMessage('マスターデータの取得前のためULTIMA譜面を追加できません。')
+      showErrorToast('マスターデータの取得前のためULTIMA譜面を追加できません。')
       return
     }
 
@@ -676,7 +641,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       return isEditableDifficultyName(difficultyName) && difficultyName === 'ULTIMA'
     })
     if (!ultimaDifficulty) {
-      setErrorMessage('ULTIMA難易度のマスターデータが見つかりません。')
+      showErrorToast('ULTIMA難易度のマスターデータが見つかりません。')
       return
     }
 
@@ -735,23 +700,20 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     const current = draft()
     if (!current) return
 
-    setMessage('')
-    setErrorMessage('')
-
     const md = masterData()
     if (!md) {
-      setErrorMessage('マスターデータの取得前のため更新できません。再読み込みしてください。')
+      showErrorToast('マスターデータの取得前のため更新できません。再読み込みしてください。')
       return
     }
 
     const normalizedReleasedAt = toDateOnly(current.released_at)
     if (current.released_at && !normalizedReleasedAt) {
-      setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
+      showErrorToast('リリース日の形式が不正です。日付を入力し直してください。')
       return
     }
 
     if (hasInvalidEditableChart(current.charts)) {
-      setErrorMessage('譜面の定数・ノーツは0以上で入力してください。')
+      showErrorToast('譜面の定数・ノーツは0以上で入力してください。')
       return
     }
 
@@ -792,9 +754,9 @@ const SongManagementPage = (props: SongManagementPageProps) => {
             }
           : prev
       )
-      setMessage('楽曲を更新しました。')
+      showSuccessToast('楽曲を更新しました。')
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
     }
   }
 
@@ -806,33 +768,30 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const handleCreateSong = async () => {
     const current = createSongDraft()
 
-    setMessage('')
-    setErrorMessage('')
-
     const md = masterData()
     if (!md) {
-      setErrorMessage('マスターデータの取得前のため追加できません。再読み込みしてください。')
+      showErrorToast('マスターデータの取得前のため追加できません。再読み込みしてください。')
       return
     }
 
     if (!current.official_idx.trim() || !current.title.trim() || !current.artist.trim()) {
-      setErrorMessage('公式ID・タイトル・アーティストは必須です。')
+      showErrorToast('公式ID・タイトル・アーティストは必須です。')
       return
     }
 
     if (current.official_idx.trim().length > 10) {
-      setErrorMessage('公式IDは10文字以内で入力してください。')
+      showErrorToast('公式IDは10文字以内で入力してください。')
       return
     }
 
     const genreName = md.genres.find((genre) => genre.id === current.genre_id)?.name
     if (!genreName) {
-      setErrorMessage('ジャンルを選択してください。')
+      showErrorToast('ジャンルを選択してください。')
       return
     }
 
     if (current.bpm !== null && current.bpm < 0) {
-      setErrorMessage('BPMは0以上で入力してください。')
+      showErrorToast('BPMは0以上で入力してください。')
       return
     }
 
@@ -841,13 +800,13 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         chart.enabled && (parseFloat(chart.const) < 0 || (chart.notes !== null && chart.notes < 0))
     )
     if (invalidChart) {
-      setErrorMessage('追加する譜面の定数・ノーツは0以上で入力してください。')
+      showErrorToast('追加する譜面の定数・ノーツは0以上で入力してください。')
       return
     }
 
     const normalizedReleasedAt = toDateOnly(current.released_at)
     if (current.released_at && !normalizedReleasedAt) {
-      setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
+      showErrorToast('リリース日の形式が不正です。日付を入力し直してください。')
       return
     }
 
@@ -874,11 +833,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
     try {
       await createSong(request)
-      setMessage('通常楽曲を追加しました。')
+      showSuccessToast('通常楽曲を追加しました。')
       setCreateSongDraft(buildCreateSongDraft())
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '追加に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '追加に失敗しました。'))
     }
   }
 
@@ -890,49 +849,46 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const handleCreateWorldsendSong = async () => {
     const current = createWorldsendDraft()
 
-    setMessage('')
-    setErrorMessage('')
-
     const md = masterData()
     if (!md) {
-      setErrorMessage('マスターデータの取得前のため追加できません。再読み込みしてください。')
+      showErrorToast('マスターデータの取得前のため追加できません。再読み込みしてください。')
       return
     }
 
     if (!current.official_idx.trim() || !current.title.trim() || !current.artist.trim()) {
-      setErrorMessage('公式ID・タイトル・アーティストは必須です。')
+      showErrorToast('公式ID・タイトル・アーティストは必須です。')
       return
     }
 
     if (current.official_idx.trim().length > 10) {
-      setErrorMessage('公式IDは10文字以内で入力してください。')
+      showErrorToast('公式IDは10文字以内で入力してください。')
       return
     }
 
     const genreName = md.genres.find((genre) => genre.id === current.genre_id)?.name
     if (!genreName) {
-      setErrorMessage('ジャンルを選択してください。')
+      showErrorToast('ジャンルを選択してください。')
       return
     }
 
     if (current.bpm !== null && current.bpm < 0) {
-      setErrorMessage('BPMは0以上で入力してください。')
+      showErrorToast('BPMは0以上で入力してください。')
       return
     }
 
     if (current.level_star !== null && (current.level_star < 1 || current.level_star > 5)) {
-      setErrorMessage("WORLD'S ENDレベルは1〜5で入力してください。")
+      showErrorToast("WORLD'S ENDレベルは1〜5で入力してください。")
       return
     }
 
     if (current.notes !== null && current.notes < 0) {
-      setErrorMessage('ノーツは0以上で入力してください。')
+      showErrorToast('ノーツは0以上で入力してください。')
       return
     }
 
     const normalizedReleasedAt = toDateOnly(current.released_at)
     if (current.released_at && !normalizedReleasedAt) {
-      setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
+      showErrorToast('リリース日の形式が不正です。日付を入力し直してください。')
       return
     }
 
@@ -964,11 +920,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
     try {
       await createWorldsendSong(request)
-      setMessage("WORLD'S END楽曲を追加しました。")
+      showSuccessToast("WORLD'S END楽曲を追加しました。")
       setCreateWorldsendDraft(buildCreateWorldsendDraft())
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '追加に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '追加に失敗しました。'))
     }
   }
 
@@ -981,18 +937,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     const current = worldsendDraft()
     if (!current) return
 
-    setMessage('')
-    setErrorMessage('')
-
     const md = masterData()
     if (!md) {
-      setErrorMessage('マスターデータの取得前のため更新できません。再読み込みしてください。')
+      showErrorToast('マスターデータの取得前のため更新できません。再読み込みしてください。')
       return
     }
 
     const normalizedReleasedAt = toDateOnly(current.released_at)
     if (current.released_at && !normalizedReleasedAt) {
-      setErrorMessage('リリース日の形式が不正です。日付を入力し直してください。')
+      showErrorToast('リリース日の形式が不正です。日付を入力し直してください。')
       return
     }
 
@@ -1029,9 +982,9 @@ const SongManagementPage = (props: SongManagementPageProps) => {
             }
           : prev
       )
-      setMessage("WORLD'S END楽曲を更新しました。")
+      showSuccessToast("WORLD'S END楽曲を更新しました。")
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
     }
   }
 
@@ -1043,14 +996,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
    */
   const handleDeleteSong = async (displayId: string) => {
     if (!window.confirm('この楽曲を削除しますか？')) return
-    setMessage('')
-    setErrorMessage('')
     try {
       await deleteSongByDisplayId(displayId)
-      setMessage('楽曲を削除しました。')
+      showSuccessToast('楽曲を削除しました。')
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
   }
 
@@ -1061,14 +1012,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
    * @returns 処理完了後に解決されるPromise。
    */
   const handleRestoreSong = async (displayId: string) => {
-    setMessage('')
-    setErrorMessage('')
     try {
       await restoreSongByDisplayId(displayId)
-      setMessage('楽曲を復活しました。')
+      showSuccessToast('楽曲を復活しました。')
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
     }
   }
 
@@ -1080,14 +1029,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
    */
   const handleDeleteWorldsendSong = async (displayId: string) => {
     if (!window.confirm("このWORLD'S END楽曲を削除しますか？")) return
-    setMessage('')
-    setErrorMessage('')
     try {
       await deleteWorldsendSongByDisplayId(displayId)
-      setMessage("WORLD'S END楽曲を削除しました。")
+      showSuccessToast("WORLD'S END楽曲を削除しました。")
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
   }
 
@@ -1098,14 +1045,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
    * @returns 処理完了後に解決されるPromise。
    */
   const handleRestoreWorldsendSong = async (displayId: string) => {
-    setMessage('')
-    setErrorMessage('')
     try {
       await restoreWorldsendSongByDisplayId(displayId)
-      setMessage("WORLD'S END楽曲を復活しました。")
+      showSuccessToast("WORLD'S END楽曲を復活しました。")
       refresh()
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
+      showErrorToast(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
     }
   }
 
@@ -1129,17 +1074,6 @@ const SongManagementPage = (props: SongManagementPageProps) => {
           API仕様準拠: 通常楽曲・WORLD&apos;S END ともに追加・編集・削除・復活に対応します。
         </p>
       </div>
-
-      <Show when={message()}>
-        <p class="rounded border border-success-border bg-success-bg px-3 py-2 text-sm text-success">
-          {message()}
-        </p>
-      </Show>
-      <Show when={errorMessage()}>
-        <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-          {errorMessage()}
-        </p>
-      </Show>
 
       <section class="rounded-lg border border-border bg-surface p-4">
         <h2 class="text-lg font-semibold">通常楽曲（編集 / 削除 / 復活）</h2>
@@ -1272,14 +1206,13 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         !currentDraft().charts.some((chart) => chart.difficulty_name === 'ULTIMA')
                       }
                     >
-                      <Button
-                        type="button"
-                        class="inline-flex items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-sm font-medium text-text hover:bg-surface-hover"
+                      <AppButton
+                        size="sm"
+                        leftIcon={<Plus size={16} aria-hidden="true" />}
                         onClick={handleAddUltimaChart}
                       >
-                        <Plus size={16} />
                         ULTIMA譜面を追加
-                      </Button>
+                      </AppButton>
                     </Show>
 
                     <div class="overflow-x-auto rounded border border-border">
@@ -1380,33 +1313,27 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     </div>
 
                     <div class="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        class="rounded bg-info px-4 py-2 text-sm font-medium text-text-inverse hover:bg-info"
-                        onClick={handleSave}
-                      >
+                      <AppButton variant="primary" onClick={handleSave}>
                         更新する
-                      </Button>
+                      </AppButton>
                       <Show
                         when={!selectedSong()?.is_deleted}
                         fallback={
-                          <Button
-                            type="button"
-                            class="rounded bg-success px-4 py-2 text-sm font-medium text-text-inverse hover:bg-success"
+                          <AppButton
+                            variant="success"
                             onClick={() => handleRestoreSong(currentDraft().id)}
                           >
                             復活する
-                          </Button>
+                          </AppButton>
                         }
                       >
                         <Show when={props.canDelete}>
-                          <Button
-                            type="button"
-                            class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover"
+                          <AppButton
+                            variant="danger"
                             onClick={() => handleDeleteSong(currentDraft().id)}
                           >
                             削除する
-                          </Button>
+                          </AppButton>
                         </Show>
                       </Show>
                     </div>
@@ -1586,33 +1513,27 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     </div>
 
                     <div class="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        class="rounded bg-info px-4 py-2 text-sm font-medium text-text-inverse hover:bg-info"
-                        onClick={handleSaveWorldsend}
-                      >
+                      <AppButton variant="primary" onClick={handleSaveWorldsend}>
                         更新する
-                      </Button>
+                      </AppButton>
                       <Show
                         when={!selectedWorldsendSong()?.is_deleted}
                         fallback={
-                          <Button
-                            type="button"
-                            class="rounded bg-success px-4 py-2 text-sm font-medium text-text-inverse hover:bg-success"
+                          <AppButton
+                            variant="success"
                             onClick={() => handleRestoreWorldsendSong(currentDraft().id)}
                           >
                             復活する
-                          </Button>
+                          </AppButton>
                         }
                       >
                         <Show when={props.canDelete}>
-                          <Button
-                            type="button"
-                            class="rounded bg-danger px-4 py-2 text-sm font-medium text-text-inverse hover:bg-danger-hover"
+                          <AppButton
+                            variant="danger"
                             onClick={() => handleDeleteWorldsendSong(currentDraft().id)}
                           >
                             削除する
-                          </Button>
+                          </AppButton>
                         </Show>
                       </Show>
                     </div>
@@ -1798,13 +1719,13 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               </table>
             </div>
 
-            <Button
-              type="button"
-              class="rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-text-inverse hover:bg-indigo-700"
+            <AppButton
+              variant="primary"
+              leftIcon={<Plus size={16} aria-hidden="true" />}
               onClick={handleCreateSong}
             >
               通常楽曲を追加する
-            </Button>
+            </AppButton>
           </div>
         </section>
 
@@ -1912,13 +1833,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
             />
           </div>
 
-          <Button
-            type="button"
-            class="mt-4 rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-text-inverse hover:bg-indigo-700"
+          <AppButton
+            variant="primary"
+            class="mt-4"
+            leftIcon={<Plus size={16} aria-hidden="true" />}
             onClick={handleCreateWorldsendSong}
           >
             WORLD&apos;S END楽曲を追加する
-          </Button>
+          </AppButton>
         </section>
       </Show>
     </div>

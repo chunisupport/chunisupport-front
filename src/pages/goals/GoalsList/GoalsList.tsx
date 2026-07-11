@@ -1,13 +1,25 @@
 import { useNavigate } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  ErrorBoundary,
+  Show,
+} from 'solid-js'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../types/api'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { GoalsListContent } from './components/list/GoalsListContent'
 import { GoalsListDialogs } from './components/list/GoalsListDialogs'
-import { RECORD_NAVIGATION_ERROR_MESSAGE } from './constants'
+import {
+  buildGoalReorderAnnouncement,
+  GOAL_REORDER_ERROR_MESSAGE,
+  RECORD_NAVIGATION_ERROR_MESSAGE,
+} from './constants'
+import { moveGoal } from './goalOrder'
 import { saveGoalRecordFilterAndBuildPath } from './goalsListNavigation'
 import {
   buildGoalsWithProgress,
@@ -15,7 +27,12 @@ import {
   resolveGoalAllCount,
   resolveGoalOverPowerChartMax,
 } from './goalsListProgress'
-import { deleteGoalRequest, fetchGoalsListData, saveGoalRequest } from './goalsListResource'
+import {
+  deleteGoalRequest,
+  fetchGoalsListData,
+  reorderGoalsRequest,
+  saveGoalRequest,
+} from './goalsListResource'
 
 const GoalsList: Component = () => {
   const navigate = useNavigate()
@@ -27,7 +44,9 @@ const GoalsList: Component = () => {
   const [deletingGoal, setDeletingGoal] = createSignal<GoalDTO | undefined>(undefined)
   const [isSaving, setIsSaving] = createSignal(false)
   const [isDeleting, setIsDeleting] = createSignal(false)
+  const [isReordering, setIsReordering] = createSignal(false)
   const [actionError, setActionError] = createSignal('')
+  const [reorderAnnouncement, setReorderAnnouncement] = createSignal('')
   const [formError, setFormError] = createSignal('')
 
   const [resource] = createResource(
@@ -36,6 +55,11 @@ const GoalsList: Component = () => {
   )
 
   const goalWithProgress = createMemo(() => buildGoalsWithProgress(resource()))
+  const [orderedGoals, setOrderedGoals] = createSignal(goalWithProgress())
+
+  createEffect(() => {
+    setOrderedGoals(goalWithProgress())
+  })
 
   /**
    * 現在の対象条件に一致する譜面数または楽曲数を取得する。
@@ -160,6 +184,41 @@ const GoalsList: Component = () => {
     }
   }
 
+  /**
+   * 目標カードを画面上で即時に並び替え、APIへ表示順を保存する。
+   *
+   * @param activeId - 移動する目標ID。
+   * @param overId - 移動先の目標ID。
+   * @returns なし。
+   */
+  const handleReorder = (activeId: number, overId: number): void => {
+    if (isReordering() || activeId === overId) return
+
+    const previousGoals = orderedGoals()
+    const nextGoals = moveGoal(previousGoals, activeId, overId)
+    if (nextGoals.every(({ goal }, index) => goal.id === previousGoals[index]?.goal.id)) return
+
+    setActionError('')
+    setOrderedGoals(nextGoals)
+    const movedIndex = nextGoals.findIndex(({ goal }) => goal.id === activeId)
+    const movedGoal = nextGoals[movedIndex]?.goal
+    if (movedGoal) {
+      setReorderAnnouncement(
+        buildGoalReorderAnnouncement(movedGoal.title, movedIndex + 1, nextGoals.length)
+      )
+    }
+    setIsReordering(true)
+
+    void reorderGoalsRequest(nextGoals.map(({ goal }) => goal))
+      .catch((error: unknown) => {
+        setOrderedGoals(previousGoals)
+        setActionError(toUserFriendlyErrorMessage(error, GOAL_REORDER_ERROR_MESSAGE))
+      })
+      .finally(() => {
+        setIsReordering(false)
+      })
+  }
+
   return (
     <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
       <Show when={!resource.error} fallback={<LoadError error={resource.error} />}>
@@ -167,14 +226,17 @@ const GoalsList: Component = () => {
           <Show when={!resource()?.noPlayerData} fallback={<PlayerDataEmptyState />}>
             <GoalsListContent
               goalsCount={resource()?.goals.length ?? 0}
-              goalWithProgress={goalWithProgress()}
+              goalWithProgress={orderedGoals()}
               actionError={actionError()}
+              isReordering={isReordering()}
+              reorderAnnouncement={reorderAnnouncement()}
               onCreate={openCreateDialog}
               onEdit={handleEdit}
               onDelete={handleDeleteAsk}
               onOpenRecords={(selectedGoal) => {
                 void handleOpenUnachievedRecords(selectedGoal)
               }}
+              onReorder={handleReorder}
             />
 
             <GoalsListDialogs

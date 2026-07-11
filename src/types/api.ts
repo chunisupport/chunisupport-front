@@ -83,12 +83,17 @@ export type ErrorCode =
   | 'goal_invalid_achievement_type'
   | 'goal_invalid_achievement_params'
   | 'goal_invalid_attributes'
+  | 'goal_invalid_order'
   | 'invalid_goal_input'
   // Record Filters
   | 'record_filter_not_found'
   | 'record_filter_limit_exceeded'
   | 'invalid_record_filter_input'
   | 'invalid_record_filter_id'
+  // Friends
+  | 'friendship_limit_exceeded'
+  | 'friendship_conflict'
+  | 'friend_request_not_found'
   // 入力検証
   | 'username_empty'
   | 'username_too_short'
@@ -141,11 +146,15 @@ export const errorMessages: Record<ErrorCode, string> = {
   goal_invalid_achievement_type: '目標種別が不正です',
   goal_invalid_achievement_params: '目標パラメータが不正です',
   goal_invalid_attributes: '目標条件が不正です',
+  goal_invalid_order: '目標の並び順が不正です',
   invalid_goal_input: '目標入力が不正です',
   record_filter_not_found: '保存済みフィルターが見つかりません',
   record_filter_limit_exceeded: '保存済みフィルターの上限件数に達しています',
   invalid_record_filter_input: '保存済みフィルターの入力内容が不正です',
   invalid_record_filter_id: '保存済みフィルターIDが不正です',
+  friendship_limit_exceeded: 'フレンド枠の上限に達しています',
+  friendship_conflict: '既に申請中、またはフレンドになっています',
+  friend_request_not_found: '対象のフレンド申請が見つかりません',
   username_empty: 'ユーザー名が空です',
   username_too_short: 'ユーザー名は5文字以上である必要があります',
   username_too_long: 'ユーザー名は50文字以内である必要があります',
@@ -243,6 +252,8 @@ export interface SongStatsBandDTO {
   combo: SongStatsComboDTO
   clear: SongStatsClearDTO
   average_score: number | null
+  /** レーティング帯別の中央値スコア。集計対象がない場合はnull。 */
+  median_score: number | null
   player_count: number
 }
 
@@ -263,6 +274,102 @@ export interface ScoreHistoryEntryDTO {
 /** 譜面単位のスコア履歴レスポンス。 */
 export interface ScoreHistoryResponseDTO {
   entries: ScoreHistoryEntryDTO[]
+}
+
+/** フレンドランキングの対象楽曲概要。 */
+export interface FriendRankingSongDTO {
+  /** 楽曲表示ID。 */
+  id: string
+  /** 楽曲名。 */
+  title: string
+  /** アーティスト名。 */
+  artist: string
+}
+
+/** フレンドランキングの対象譜面概要。 */
+export interface FriendRankingChartDTO {
+  /** 大文字の難易度ドメイン値。 */
+  difficulty: PlayerDataDifficulty
+  /** 譜面定数。 */
+  const: number
+  /** 譜面定数が推定値か。 */
+  is_const_unknown: boolean
+}
+
+/** フレンドランキング1行分の現在スコア。 */
+export interface FriendRankingEntryDTO {
+  /** 同点を考慮した順位。 */
+  rank: number
+  /** 内部ユーザーID。 */
+  user_id: number
+  /** ユーザー名。 */
+  username: string
+  /** プレイヤー名。 */
+  player_name: string
+  /** 現在スコア。 */
+  score: number
+  /** 単曲レーティング。 */
+  rating: number
+  /** OVER POWER値。 */
+  overpower: number
+  /** OVER POWER達成率。 */
+  overpower_percent: number
+  /** クリアランプ。 */
+  clear_lamp: PlayerRecordDTO['clear_lamp']
+  /** コンボランプ。 */
+  combo_lamp: PlayerRecordDTO['combo_lamp']
+  /** フルチェインランプ。 */
+  full_chain: PlayerRecordDTO['full_chain']
+  /** レコード更新日時。 */
+  updated_at: string
+  /** ログインユーザー自身の行か。 */
+  is_self: boolean
+}
+
+/** 通常譜面のフレンドランキングレスポンス。 */
+export interface FriendRankingResponseDTO {
+  /** 対象楽曲。 */
+  song: FriendRankingSongDTO
+  /** 対象譜面。 */
+  chart: FriendRankingChartDTO
+  /** 自分とフレンドのランキング。 */
+  ranking: FriendRankingEntryDTO[]
+  /** 自分の順位。未プレイの場合は null。 */
+  my_rank: number | null
+  /** ランキング対象人数。 */
+  total: number
+}
+
+/** WORLD'S ENDのフレンドランキング1行分。 */
+export interface WorldsendFriendRankingEntryDTO {
+  /** 同点を考慮した順位。 */
+  rank: number
+  /** 内部ユーザーID。自分の行は0。 */
+  user_id: number
+  /** ユーザー名。 */
+  username: string
+  /** プレイヤー名。 */
+  player_name: string
+  /** 現在スコア。 */
+  score: number
+  /** クリアランプ。 */
+  clear_lamp: WorldsendRecordDTO['clear_lamp']
+  /** コンボランプ。 */
+  combo_lamp: WorldsendRecordDTO['combo_lamp']
+  /** フルチェインランプ。 */
+  full_chain: WorldsendRecordDTO['full_chain']
+  /** ログインユーザー自身の行か。 */
+  is_self: boolean
+}
+
+/** WORLD'S ENDのフレンドランキングレスポンス。 */
+export interface WorldsendFriendRankingResponseDTO {
+  /** 自分とフレンドのランキング。 */
+  ranking: WorldsendFriendRankingEntryDTO[]
+  /** 自分の順位。未プレイの場合は null。 */
+  my_rank: number | null
+  /** ランキング対象人数。 */
+  total: number
 }
 
 // --- マスターデータ用型定義 ---
@@ -367,11 +474,12 @@ export interface GoalDTO {
   achievement_params: GoalAchievementParams
   attributes: GoalAttributes
   invert: boolean
+  sort_order: number
   created_at: string
 }
 
-export type GoalCreateRequest = Omit<GoalDTO, 'id' | 'created_at'>
-export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'created_at'>
+export type GoalCreateRequest = Omit<GoalDTO, 'id' | 'sort_order' | 'created_at'>
+export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'sort_order' | 'created_at'>
 
 // --------------------------------
 
@@ -409,6 +517,38 @@ export interface UserDTO {
   account_type: AccountType
   is_private: boolean
   last_score_update: string | null
+}
+
+/** フレンド・申請一覧に表示する相手ユーザー概要。 */
+export interface FriendshipUserDTO {
+  /** 内部ユーザーID。申請承認などの操作対象ID。 */
+  user_id: number
+  /** ユーザー名。プロフィール遷移に使用する公開ID。 */
+  username: string
+  /** プレイヤーレベル。プレイヤーデータ未連携の場合は null。 */
+  player_level: number | null
+  /** プレイヤー名。プレイヤーデータ未連携の場合は null。 */
+  player_name: string | null
+  /** 計算済みレーティング。プレイヤーデータ未連携の場合は null。 */
+  rating: number | null
+  /** 非公開アカウントかどうか。 */
+  is_private: boolean
+  /** 申請日時。 */
+  requested_at: string
+  /** 承認日時。申請中の場合は null または未返却。 */
+  accepted_at?: string | null
+}
+
+/** フレンド・申請一覧APIのレスポンス。 */
+export interface FriendshipListResponse {
+  /** フレンドまたは申請ユーザー概要の一覧。 */
+  items: FriendshipUserDTO[]
+}
+
+/** フレンド申請APIのリクエスト。 */
+export interface FriendRequestCreateRequest {
+  /** 完全一致で検索する申請先ユーザー名。 */
+  username: string
 }
 
 export interface PlayerDataResult {
@@ -633,6 +773,18 @@ export interface UserRecordDTO {
   meta: UserRecordMetaDTO
 }
 
+/** 通常楽曲1曲分のユーザーレコードレスポンス。 */
+export interface UserStandardSongRecordDTO {
+  standard: PlayerRecordDTO[]
+  meta: UserRecordMetaDTO
+}
+
+/** WORLD'S END楽曲1曲分のユーザーレコードレスポンス。 */
+export interface UserWorldsendSongRecordDTO {
+  worldsend: WorldsendRecordDTO | null
+  meta: UserRecordMetaDTO
+}
+
 export interface PlayerLockedSongResponseItem {
   display_id: string
   title: string
@@ -651,6 +803,24 @@ export interface PlayerLockedSongRequest {
 export interface PlayerLockedSongsBatchRequest {
   add?: PlayerLockedSongRequest[]
   delete?: PlayerLockedSongRequest[]
+}
+
+/** ユーザーがお気に入りに登録した楽曲。 */
+export interface PlayerFavoriteSongResponseItem {
+  display_id: string
+  title: string
+  jacket: string | null
+  favorited_at: string
+}
+
+/** お気に入り楽曲一覧APIのレスポンス。 */
+export interface PlayerFavoriteSongsResponse {
+  items: PlayerFavoriteSongResponseItem[]
+}
+
+/** お気に入り楽曲登録APIのリクエスト。 */
+export interface PlayerFavoriteSongRequest {
+  display_id: string
 }
 
 export interface UserProfileWithRecordsDTO {

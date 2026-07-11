@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import {
+  ALL_JUSTICE_CRITICAL_BG_CLASS,
   COMBO_LAMP_BAR_CLASS,
   SCORE_RANK_BAR_CLASS,
 } from '../../../../components/common/record/recordStyleClasses'
@@ -22,7 +23,7 @@ const OVER_POWER_OTHER_BAR_CLASS = SCORE_RANK_BAR_CLASS.未プレイ
 
 /** OVERPOWERグラフのスコア帯ごとの背景色クラス。 */
 const scoreBandClass: Record<OverPowerScoreBand, string> = {
-  MAX: 'bg-success',
+  MAX: ALL_JUSTICE_CRITICAL_BG_CLASS,
   'SSS+': SCORE_RANK_BAR_CLASS['SSS+'],
   SSS: SCORE_RANK_BAR_CLASS.SSS,
   'SS+': SCORE_RANK_BAR_CLASS['SS+'],
@@ -86,7 +87,7 @@ const DistributionBar: Component<{
             const z = () => visibleBands.length - index()
             return (
               <div
-                class={`${props.colorClassByLabel[band.label] ?? 'bg-action-secondary-hover'} relative shadow-[2px_0_3px_-1px_rgba(0,0,0,0.4)]`}
+                class={`${props.colorClassByLabel[band.label] ?? 'bg-action-secondary-hover'} relative ${index() === visibleBands.length - 1 ? '' : 'shadow-[2px_0_3px_-1px_rgba(0,0,0,0.4)]'}`}
                 style={{
                   width: `${calcBandPercent(band.count, props.total)}%`,
                   'z-index': z(),

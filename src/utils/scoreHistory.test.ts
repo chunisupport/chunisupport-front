@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatScoreHistoryDateTime, parseScoreHistoryDifficulty } from './scoreHistory'
+import {
+  formatScoreHistoryDateTime,
+  formatScoreHistoryTimestamp,
+  parseScoreHistoryDifficulty,
+} from './scoreHistory'
 
 test('難易度クエリを大文字のドメイン値へ変換する', () => {
   // Given / When / Then
@@ -17,4 +21,20 @@ test('履歴対象外の難易度を拒否する', () => {
 test('不正な更新日時をハイフンへ変換する', () => {
   // Given / When / Then
   assert.equal(formatScoreHistoryDateTime('not-a-date'), '-')
+})
+
+test('更新日時を年2桁の日付だけで表示する', () => {
+  // Given / When / Then
+  assert.equal(formatScoreHistoryDateTime('2026-06-22T12:00:00+09:00'), '26/06/22')
+})
+
+test('横軸のUNIX時刻を年2桁の日付だけで表示する', () => {
+  // Given
+  const timestamp = new Date('2026-06-22T12:00:00+09:00').getTime()
+
+  // When
+  const result = formatScoreHistoryTimestamp(timestamp)
+
+  // Then
+  assert.equal(result, '26/06/22')
 })

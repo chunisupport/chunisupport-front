@@ -1,7 +1,14 @@
 import type { SortCondition } from '../utils/sortConditions'
-import type { ChainLamp, ComboLamp, Difficulty, HardLamp, NumericRangeFilter } from './record'
+import type {
+  ChainLamp,
+  ComboLamp,
+  DateRangeFilter,
+  Difficulty,
+  HardLamp,
+  NumericRangeFilter,
+} from './record'
 
-export type { ChainLamp, ComboLamp, Difficulty, HardLamp, NumericRangeFilter }
+export type { ChainLamp, ComboLamp, DateRangeFilter, Difficulty, HardLamp, NumericRangeFilter }
 export type RecordSortKey =
   | 'title'
   | 'difficulty'
@@ -38,6 +45,8 @@ export interface FilterState {
   difficulties: Difficulty[]
   /** 現在のOVER POWER集計対象譜面だけを表示するか。 */
   currentOpTargetOnly: boolean
+  /** お気に入り登録済みの楽曲だけを表示するか。 */
+  favoriteSongsOnly: boolean
   genres: string[]
   versions: string[]
   const: NumericRangeFilter
@@ -50,4 +59,6 @@ export interface FilterState {
   chain_lamp: ChainLamp[]
   hard_lamp: HardLamp[]
   excludeNoPlay: boolean
+  /** 最終更新日の範囲フィルター。空文字列は未指定を意味する。 */
+  updatedAt: DateRangeFilter
 }

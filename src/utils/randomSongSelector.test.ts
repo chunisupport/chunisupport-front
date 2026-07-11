@@ -19,7 +19,6 @@ import {
   RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS,
   restoreRandomSongResults,
   toggleRandomSongDifficultyFilter,
-  toggleRandomSongSelectionValue,
 } from './randomSongSelector.ts'
 
 const versions: VersionDTO[] = [
@@ -338,22 +337,18 @@ test('ランダム選曲の入力値が無効な場合は検出すること', ()
   assert.equal(hasInvalidWeight, true)
 })
 
-test('選択値の切り替えと保存済み選曲結果の復元を行うこと', () => {
-  // Given: 選択中の難易度と保存済みの譜面キーがある。
+test('保存済み選曲結果の復元を行うこと', () => {
+  // Given: 保存済みの譜面キーがある。
   const candidates = [
     createCandidate({ song: createSong({ id: 'song-a', title: 'Song A' }) }),
     createCandidate({ song: createSong({ id: 'song-b', title: 'Song B' }) }),
   ]
   const storedKeys = [createRandomSongCandidateKey(candidates[1]), 'missing:MASTER']
 
-  // When: 選択値を切り替え、保存済みキーから結果を復元する。
-  const removed = toggleRandomSongSelectionValue(['MASTER', 'ULTIMA'], 'ULTIMA')
-  const added = toggleRandomSongSelectionValue(removed, 'EXPERT')
+  // When: 保存済みキーから結果を復元する。
   const restored = restoreRandomSongResults(candidates, storedKeys)
 
-  // Then: 選択値は重複せず切り替わり、存在する候補だけが復元される。
-  assert.deepEqual(removed, ['MASTER'])
-  assert.deepEqual(added, ['MASTER', 'EXPERT'])
+  // Then: 存在する候補だけが復元される。
   assert.deepEqual(
     restored.map((candidate) => candidate.song.id),
     ['song-b']

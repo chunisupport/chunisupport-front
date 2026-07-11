@@ -22,6 +22,7 @@ export function formatFilterSummary(filter: FilterState): string {
   if (filter.excludeNoPlay) parts.push('未プレイ譜面を除外')
   if (filter.difficulties.length > 0) parts.push(`難易度: ${filter.difficulties.join(',')}`)
   if (filter.currentOpTargetOnly) parts.push('OP対象の楽曲のみ')
+  if (filter.favoriteSongsOnly) parts.push('お気に入り楽曲のみ')
   if (filter.const.min !== CHART_CONST_MIN || filter.const.max !== CHART_CONST_MAX)
     parts.push(`定数: ${filter.const.min}-${filter.const.max}`)
   if (filter.score.min !== SCORE_MIN || filter.score.max !== MAX_SCORE)
@@ -44,6 +45,9 @@ export function formatFilterSummary(filter: FilterState): string {
   if (filter.hard_lamp.length > 0)
     parts.push(`ハードランプ: ${filter.hard_lamp.map((lamp) => lamp ?? 'なし').join(',')}`)
   if (filter.versions.length > 0) parts.push(`バージョン: ${filter.versions.join(',')}`)
+  if (filter.updatedAt.min || filter.updatedAt.max) {
+    parts.push(`更新日: ${filter.updatedAt.min || '…'}～${filter.updatedAt.max || '…'}`)
+  }
   return parts.join('\n')
 }
 
@@ -89,6 +93,7 @@ export function isRecordFilterChanged(current: FilterState, defaultFilter: Filte
   return (
     current.title !== defaultFilter.title ||
     current.currentOpTargetOnly !== defaultFilter.currentOpTargetOnly ||
+    current.favoriteSongsOnly !== defaultFilter.favoriteSongsOnly ||
     current.constFilterMode !== defaultFilter.constFilterMode ||
     current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
     current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
@@ -105,7 +110,9 @@ export function isRecordFilterChanged(current: FilterState, defaultFilter: Filte
     !hasSameFilterValues(current.versions, defaultFilter.versions) ||
     !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
     !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
-    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp) ||
+    current.updatedAt.min !== defaultFilter.updatedAt.min ||
+    current.updatedAt.max !== defaultFilter.updatedAt.max
   )
 }
 
@@ -122,6 +129,7 @@ export function isRecordFilterOptionsChanged(
 ): boolean {
   return (
     current.currentOpTargetOnly !== defaultFilter.currentOpTargetOnly ||
+    current.favoriteSongsOnly !== defaultFilter.favoriteSongsOnly ||
     current.constFilterMode !== defaultFilter.constFilterMode ||
     current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
     current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
@@ -138,7 +146,9 @@ export function isRecordFilterOptionsChanged(
     !hasSameFilterValues(current.versions, defaultFilter.versions) ||
     !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
     !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
-    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp) ||
+    current.updatedAt.min !== defaultFilter.updatedAt.min ||
+    current.updatedAt.max !== defaultFilter.updatedAt.max
   )
 }
 
@@ -155,6 +165,7 @@ export function isRecordDifficultyFilterOnlyChanged(
 ): boolean {
   return (
     current.currentOpTargetOnly === defaultFilter.currentOpTargetOnly &&
+    current.favoriteSongsOnly === defaultFilter.favoriteSongsOnly &&
     current.constFilterMode === defaultFilter.constFilterMode &&
     current.scoreFilterMode === defaultFilter.scoreFilterMode &&
     current.excludeNoPlay === defaultFilter.excludeNoPlay &&
@@ -171,6 +182,8 @@ export function isRecordDifficultyFilterOnlyChanged(
     hasSameFilterValues(current.versions, defaultFilter.versions) &&
     hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) &&
     hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) &&
-    hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp)
+    hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp) &&
+    current.updatedAt.min === defaultFilter.updatedAt.min &&
+    current.updatedAt.max === defaultFilter.updatedAt.max
   )
 }

@@ -1,7 +1,6 @@
-import { Checkbox } from '@kobalte/core/checkbox'
-import { Check } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
+import { CheckboxField } from '../../../../../components/common/CheckboxField'
 import { SCORE_MIN } from '../../../../../constants/chart'
 import type { GoalAchievementType } from '../../../../../types/api'
 import { MAX_SCORE, SCORE_RANK_MIN_SCORES, SCORE_RANKS_ASC } from '../../../../../utils/scoreRank'
@@ -14,7 +13,6 @@ import {
 } from '../../../utils/goalLamp'
 import { LABEL_INVERT_DISPLAY, STEP3_DESCRIPTION } from './constants'
 import {
-  GOAL_FILTER_CHECKBOX_CONTROL_CLASS,
   GoalNumberField,
   GoalSelectField,
   type GoalSelectOption,
@@ -266,19 +264,12 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
 
       <div class="block text-sm">
         <p class="mb-1 block text-text-muted">表示形式</p>
-        <Checkbox
+        <CheckboxField
           class="relative flex items-center gap-2 text-sm text-text-muted"
           checked={props.invert}
           onChange={props.onInvertChange}
-        >
-          <Checkbox.Input style={{ left: '0', top: '0' }} />
-          <Checkbox.Control class={GOAL_FILTER_CHECKBOX_CONTROL_CLASS}>
-            <Checkbox.Indicator>
-              <Check class="h-4 w-4" />
-            </Checkbox.Indicator>
-          </Checkbox.Control>
-          <Checkbox.Label>{LABEL_INVERT_DISPLAY}</Checkbox.Label>
-        </Checkbox>
+          label={LABEL_INVERT_DISPLAY}
+        />
       </div>
     </div>
   </section>

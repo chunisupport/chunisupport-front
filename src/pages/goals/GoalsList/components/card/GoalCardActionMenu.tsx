@@ -1,10 +1,26 @@
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
+import {
+  AppMenuContent,
+  AppMenuItem,
+  AppMenuTrigger,
+} from '../../../../../components/common/AppMenu'
 
 interface GoalCardActionMenuProps {
   onEdit: () => void
   onDelete: () => void
+  disabled: boolean
+}
+
+/**
+ * メニュートリガーのポインター操作が親カードのドラッグ開始処理へ伝播するのを防ぐ。
+ *
+ * @param event - メニュートリガーで発生したポインターイベント。
+ * @returns なし。
+ */
+const stopDragActivation = (event: PointerEvent): void => {
+  event.stopPropagation()
 }
 
 /**
@@ -15,27 +31,27 @@ interface GoalCardActionMenuProps {
  */
 export const GoalCardActionMenu: Component<GoalCardActionMenuProps> = (props) => (
   <DropdownMenu gutter={4}>
-    <DropdownMenu.Trigger class="rounded p-1 text-text-subtle hover:bg-surface-hover hover:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring">
-      <EllipsisVertical size={20} aria-hidden="true" />
-      <span class="sr-only">メニューを開く</span>
-    </DropdownMenu.Trigger>
+    <AppMenuTrigger
+      label="メニューを開く"
+      icon={<EllipsisVertical size={20} aria-hidden="true" />}
+      disabled={props.disabled}
+      class="cursor-pointer"
+      onPointerDown={stopDragActivation}
+    />
     <DropdownMenu.Portal>
-      <DropdownMenu.Content class="z-10 min-w-28 rounded-md border border-border bg-surface py-1 shadow-lg">
-        <DropdownMenu.Item
-          class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-muted hover:bg-surface-muted focus:bg-surface-muted focus:outline-none"
+      <AppMenuContent variant="compact">
+        <AppMenuItem
+          icon={<Pencil size={16} aria-hidden="true" />}
+          label="編集"
           onSelect={props.onEdit}
-        >
-          <Pencil size={16} aria-hidden="true" />
-          編集
-        </DropdownMenu.Item>
-        <DropdownMenu.Item
-          class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg focus:outline-none"
+        />
+        <AppMenuItem
+          icon={<Trash2 size={16} aria-hidden="true" />}
+          label="削除"
+          tone="danger"
           onSelect={props.onDelete}
-        >
-          <Trash2 size={16} aria-hidden="true" />
-          削除
-        </DropdownMenu.Item>
-      </DropdownMenu.Content>
+        />
+      </AppMenuContent>
     </DropdownMenu.Portal>
   </DropdownMenu>
 )

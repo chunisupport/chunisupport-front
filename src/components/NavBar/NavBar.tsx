@@ -14,10 +14,11 @@ import {
   PencilLine,
   Settings,
   Shield,
+  UsersRound,
   Wrench,
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createSignal, For, onMount } from 'solid-js'
+import { createEffect, createSignal, For, onMount } from 'solid-js'
 import { isHomePath } from './navItemMatching'
 
 type NavBarProps = {
@@ -27,14 +28,24 @@ type NavBarProps = {
 import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
 import { DOCUMENTATION_BASE_URL } from '../../config'
-import { EDITOR_SONGS_PATH } from '../../constants/routes'
+import { EDITOR_SONGS_PATH, FRIENDS_PATH } from '../../constants/routes'
 import { auth } from '../../lib/firebase'
 import { EDITOR_SONGS_TITLE } from '../../pages/editor/constants'
+import { FRIENDS_PAGE_TITLE } from '../../pages/friends'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
+import {
+  clearFriendRequestNotification,
+  friendRequestNotification,
+  hydrateFriendRequestNotification,
+  refreshFriendRequestNotificationIfStale,
+  setActiveFriendRequestNotificationUser,
+} from '../../stores/friendRequestNotification'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
+import { AppButton } from '../common/AppButton'
 import AppearanceSettings from '../common/AppearanceSettings'
 import { APPEARANCE_SETTINGS_COPY } from '../common/AppearanceSettings.constants'
+import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../common/AppMenu'
 
 /**
  * その他メニューに表示する項目を表す。
@@ -42,12 +53,14 @@ import { APPEARANCE_SETTINGS_COPY } from '../common/AppearanceSettings.constants
  * @property icon 項目名の左側に表示するアイコン要素を返す関数
  * @property path 選択時に遷移する内部パスまたは外部URL
  * @property action 遷移以外に実行するメニュー固有の操作
+ * @property hasNotificationDot 通知ドットを表示するか
  */
 type DropdownItem = {
   label: string
   icon: () => JSX.Element
   path?: string
-  action?: 'theme'
+  action?: 'theme' | 'logout'
+  hasNotificationDot?: boolean
 }
 
 type NavItem = {
@@ -89,7 +102,7 @@ const NavBar = (props: NavBarProps) => {
               ? [
                   {
                     label: '管理メニュー',
-                    icon: () => <Shield class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+                    icon: () => <Shield class="h-4 w-4" aria-hidden="true" />,
                     path: '/admin',
                   },
                 ]
@@ -104,28 +117,34 @@ const NavBar = (props: NavBarProps) => {
                 ]
               : []),
             {
+              label: FRIENDS_PAGE_TITLE,
+              icon: () => <UsersRound class="h-4 w-4" aria-hidden="true" />,
+              path: FRIENDS_PATH,
+              hasNotificationDot: friendRequestNotification.hasPendingReceivedRequest,
+            },
+            {
               label: '設定',
-              icon: () => <Settings class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+              icon: () => <Settings class="h-4 w-4" aria-hidden="true" />,
               path: '/settings',
             },
           ]
         : []),
       {
         label: '表示テーマ',
-        icon: () => <Palette class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-        action: 'theme',
+        icon: () => <Palette class="h-4 w-4" aria-hidden="true" />,
+        action: 'theme' as const,
       },
       {
         label: 'ヘルプ',
-        icon: () => <BadgeQuestionMark class="inline h-4 w-4 mr-1" aria-hidden="true" />,
+        icon: () => <BadgeQuestionMark class="h-4 w-4" aria-hidden="true" />,
         path: DOCUMENTATION_BASE_URL,
       },
       ...(uname
         ? [
             {
               label: 'ログアウト',
-              icon: () => <LogOut class="inline h-4 w-4 mr-1" aria-hidden="true" />,
-              path: '#', // ページ遷移しない
+              icon: () => <LogOut class="h-4 w-4" aria-hidden="true" />,
+              action: 'logout' as const,
             },
           ]
         : []),
@@ -178,6 +197,22 @@ const NavBar = (props: NavBarProps) => {
     resolveAuthSession(() => fetchMe({ redirectOnUnauthorized: false }))
   })
 
+  createEffect(() => {
+    const uname = username()
+
+    if (authSession.status === 'authenticated' && uname) {
+      setActiveFriendRequestNotificationUser(uname)
+      void hydrateFriendRequestNotification(uname)
+        .then(() => refreshFriendRequestNotificationIfStale(uname))
+        .catch(() => undefined)
+      return
+    }
+
+    if (authSession.status === 'unauthenticated') {
+      clearFriendRequestNotification()
+    }
+  })
+
   const isActive = (item: NavItem) => {
     const pathname = location.pathname
 
@@ -220,6 +255,13 @@ const NavBar = (props: NavBarProps) => {
       return
     }
 
+    if (item.action === 'logout') {
+      window.setTimeout(() => {
+        setShowLogoutDialog(true)
+      }, 0)
+      return
+    }
+
     const path = item.path ?? '#'
     if (path.startsWith('http')) {
       window.open(path, '_blank', 'noopener,noreferrer')
@@ -228,13 +270,43 @@ const NavBar = (props: NavBarProps) => {
     }
   }
 
+  /**
+   * その他メニューを開いた時に、期限切れのフレンド申請通知だけ更新する。
+   *
+   * @param open - その他メニューが開かれたか。
+   * @returns なし。
+   */
+  const handleOthersMenuOpenChange = (open: boolean): void => {
+    const uname = username()
+    if (open && uname) {
+      void refreshFriendRequestNotificationIfStale(uname).catch(() => undefined)
+    }
+  }
+
   const handleLogout = async () => {
     await signOut(auth)
     await clearClientCache().catch(() => undefined)
+    clearFriendRequestNotification()
     clearAuthenticatedUser()
     setShowLogoutDialog(false)
     navigate('/login')
   }
+
+  /**
+   * その他メニューの項目を共通スタイルで描画する。
+   *
+   * @param item - 描画するメニュー項目。
+   * @returns ドロップダウンメニュー項目。
+   */
+  const renderDropdownItem = (item: DropdownItem): JSX.Element => (
+    <AppMenuItem
+      icon={item.icon()}
+      label={item.label}
+      hasNotificationDot={item.hasNotificationDot}
+      tone={item.action === 'logout' ? 'danger' : 'default'}
+      onSelect={() => handleDropdownSelect(item)}
+    />
+  )
 
   return (
     <div class="h-dvh overflow-hidden flex md:flex-row flex-col">
@@ -245,36 +317,19 @@ const NavBar = (props: NavBarProps) => {
           <For each={getNavItems()}>
             {(item) =>
               item.dropdown ? (
-                <DropdownMenu>
-                  <DropdownMenu.Trigger class="flex flex-col items-center gap-1 w-full rounded-md px-3 py-2 text-xs font-semibold text-nav-text hover:bg-surface-hover focus:outline-none">
-                    <span class="text-lg">{item.icon()}</span>
-                    <span>{item.label}</span>
-                  </DropdownMenu.Trigger>
+                <DropdownMenu onOpenChange={handleOthersMenuOpenChange}>
+                  <AppMenuTrigger
+                    variant="navRail"
+                    label={item.label}
+                    icon={item.icon()}
+                    hasNotificationDot={friendRequestNotification.hasPendingReceivedRequest}
+                  />
                   <DropdownMenu.Portal>
-                    <DropdownMenu.Content class="absolute left-16 -top-12 ml-2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
+                    <AppMenuContent class="absolute left-16 -top-12 ml-2">
                       <For each={item.dropdown}>
-                        {(d) =>
-                          // ログアウト項目は赤色で表示
-                          d.label === 'ログアウト' ? (
-                            <DropdownMenu.Item
-                              onSelect={() => setShowLogoutDialog(true)}
-                              class="block px-4 py-2 text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg outline-none cursor-pointer"
-                            >
-                              <span class="pr-2">{d.icon()}</span>
-                              {d.label}
-                            </DropdownMenu.Item>
-                          ) : (
-                            <DropdownMenu.Item
-                              onSelect={() => handleDropdownSelect(d)}
-                              class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
-                            >
-                              <span class="pr-2">{d.icon()}</span>
-                              {d.label}
-                            </DropdownMenu.Item>
-                          )
-                        }
+                        {(dropdownItem) => renderDropdownItem(dropdownItem)}
                       </For>
-                    </DropdownMenu.Content>
+                    </AppMenuContent>
                   </DropdownMenu.Portal>
                 </DropdownMenu>
               ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
@@ -315,36 +370,19 @@ const NavBar = (props: NavBarProps) => {
           <For each={getNavItems()}>
             {(item) =>
               item.dropdown ? (
-                <DropdownMenu>
-                  <DropdownMenu.Trigger class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-nav-text justify-center">
-                    <span class="text-lg">{item.icon()}</span>
-                    <span>{item.label}</span>
-                  </DropdownMenu.Trigger>
+                <DropdownMenu onOpenChange={handleOthersMenuOpenChange}>
+                  <AppMenuTrigger
+                    variant="navBar"
+                    label={item.label}
+                    icon={item.icon()}
+                    hasNotificationDot={friendRequestNotification.hasPendingReceivedRequest}
+                  />
                   <DropdownMenu.Portal>
-                    <DropdownMenu.Content class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-45 rounded-lg border border-border bg-surface shadow-sm py-2 z-50">
+                    <AppMenuContent class="absolute bottom-full left-1/2 mb-2 -translate-x-1/2">
                       <For each={item.dropdown}>
-                        {(d) =>
-                          // ログアウト項目は赤色で表示
-                          d.label === 'ログアウト' ? (
-                            <DropdownMenu.Item
-                              onSelect={() => setShowLogoutDialog(true)}
-                              class="block px-4 py-2 text-sm text-danger hover:bg-danger-bg focus:bg-danger-bg outline-none cursor-pointer font-semibold"
-                            >
-                              <span class="pr-2">{d.icon()}</span>
-                              {d.label}
-                            </DropdownMenu.Item>
-                          ) : (
-                            <DropdownMenu.Item
-                              onSelect={() => handleDropdownSelect(d)}
-                              class="block px-4 py-2 text-sm text-text-muted hover:bg-surface-hover focus:bg-surface-hover outline-none cursor-pointer"
-                            >
-                              <span class="pr-2">{d.icon()}</span>
-                              {d.label}
-                            </DropdownMenu.Item>
-                          )
-                        }
+                        {(dropdownItem) => renderDropdownItem(dropdownItem)}
                       </For>
-                    </DropdownMenu.Content>
+                    </AppMenuContent>
                   </DropdownMenu.Portal>
                 </DropdownMenu>
               ) : // 未ログイン時はrequiresAuthがtrueの項目を押すと警告ダイアログを表示
@@ -384,23 +422,16 @@ const NavBar = (props: NavBarProps) => {
                 この機能を利用するにはログインが必要です。
               </Dialog.Description>
               <div class="flex gap-4 mt-2">
-                <Button
-                  type="button"
-                  class="px-4 py-2 rounded bg-action-secondary hover:bg-action-secondary-hover"
-                  onClick={() => setShowLoginDialog(false)}
-                >
-                  戻る
-                </Button>
-                <Button
-                  type="button"
-                  class="px-4 py-2 rounded bg-action-primary text-text-inverse hover:bg-action-primary-hover"
+                <AppButton onClick={() => setShowLoginDialog(false)}>戻る</AppButton>
+                <AppButton
+                  variant="primary"
                   onClick={() => {
                     setShowLoginDialog(false)
                     navigate('/login')
                   }}
                 >
                   ログイン画面へ
-                </Button>
+                </AppButton>
               </div>
             </Dialog.Content>
           </Dialog.Portal>
@@ -418,20 +449,10 @@ const NavBar = (props: NavBarProps) => {
                 本当にログアウトしますか？
               </AlertDialog.Description>
               <div class="flex gap-4 mt-2">
-                <Button
-                  type="button"
-                  class="px-4 py-2 rounded bg-action-secondary hover:bg-action-secondary-hover"
-                  onClick={() => setShowLogoutDialog(false)}
-                >
-                  キャンセル
-                </Button>
-                <Button
-                  type="button"
-                  class="px-4 py-2 rounded bg-danger text-text-inverse hover:bg-danger-hover"
-                  onClick={handleLogout}
-                >
+                <AppButton onClick={() => setShowLogoutDialog(false)}>キャンセル</AppButton>
+                <AppButton variant="danger" onClick={handleLogout}>
                   ログアウト
-                </Button>
+                </AppButton>
               </div>
             </AlertDialog.Content>
           </AlertDialog.Portal>

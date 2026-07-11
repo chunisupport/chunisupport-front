@@ -8,6 +8,7 @@ import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepo
 import { useSongsData } from '../../stores/songsData'
 import type { PlayerDataRecordChange, PlayerDataResult } from '../../types/api'
 import { commitRegisterScore } from '../../usecases/registerScoreCommit'
+import { toChartLevelLabel } from '../../utils/chartLevel'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { REGISTER_SCORE_MESSAGES, RegisterScoreResultView } from './RegisterScoreResultView'
 import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreToken'
@@ -76,6 +77,28 @@ const RegisterScorePage = () => {
     )
   }
 
+  /**
+   * 差分に含まれる楽曲idxと難易度から譜面レベル文字列を解決する。
+   *
+   * @param change - APIから返却された1譜面分の差分。
+   * @returns 譜面レベル文字列（例: "15+"）。WORLD'S ENDの場合はundefined。
+   */
+  const chartLevelByIdx = (change: PlayerDataRecordChange) => {
+    if (change.record_type === 'worldsend') {
+      return undefined
+    }
+
+    const standardSongs = songsData.songsResponse.latest?.songs ?? []
+    const song = standardSongs.find((s) => s.official_idx === change.idx)
+    const chart = song?.charts?.[change.diff as keyof typeof song.charts]
+
+    if (!chart) {
+      return undefined
+    }
+
+    return toChartLevelLabel(chart.const)
+  }
+
   onMount(async () => {
     const uploadToken = normalizeUploadTokenParam(searchParams.token)
     if (!uploadToken || !isValidUploadToken(uploadToken)) {
@@ -124,6 +147,7 @@ const RegisterScorePage = () => {
               <RegisterScoreResultView
                 result={successState.result}
                 resolveSongTitle={songTitleByIdx}
+                resolveChartLevel={chartLevelByIdx}
               />
             )
           }}

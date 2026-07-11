@@ -101,6 +101,32 @@ test('isRecordMatched は現在のOP対象譜面だけに絞り込める', () =>
   assert.equal(isRecordMatched(createRecord({ is_op_target: false }), matchedFilters), false)
 })
 
+test('isRecordMatchedWithTitleMatcher はお気に入り楽曲だけに絞り込める', () => {
+  // Given
+  const filters: FilterState = { ...getDefaultFilter(), favoriteSongsOnly: true }
+  const matcher = createRecordTitleMatcher(filters.title)
+
+  // When & Then
+  assert.equal(
+    isRecordMatchedWithTitleMatcher(
+      createRecord({ id: 'favorite' }),
+      filters,
+      matcher,
+      new Set(['favorite'])
+    ),
+    true
+  )
+  assert.equal(
+    isRecordMatchedWithTitleMatcher(
+      createRecord({ id: 'other' }),
+      filters,
+      matcher,
+      new Set(['favorite'])
+    ),
+    false
+  )
+})
+
 test('isRecordMatched は譜面定数とスコアの範囲を判定できる', () => {
   const record = createRecord({ const: 14.7, score: 1007500 })
   const matchedFilters: FilterState = {

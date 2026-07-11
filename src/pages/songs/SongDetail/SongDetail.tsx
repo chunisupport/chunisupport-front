@@ -6,7 +6,7 @@ import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
 import type { PlayerRecordDTO, SongDTO } from '../../../types/api'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
-import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
+import { fetchUserStandardSongRecordWithCache } from '../../../usecases/cache/fetchUserSongRecordWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
 import { normalizeDifficultyQueryValue } from '../../../utils/difficultyUtils'
 import NotFoundPage from '../../NotFoundPage'
@@ -136,14 +136,21 @@ const SongDetail = () => {
     fetchUserRatingWithCache
   )
   const [ownRecords] = createResource(
-    () => (authSession.status === 'authenticated' ? authSession.user?.username : null),
-    fetchUserRecordWithCache
+    () => {
+      const username =
+        authSession.status === 'authenticated' ? authSession.user?.username : undefined
+      const displayId = params.displayid
+      return username && displayId ? { username, displayId } : null
+    },
+    ({ username, displayId }) => fetchUserStandardSongRecordWithCache(username, displayId)
   )
   const ownBestAverage = createMemo(() => ownRating()?.best_average)
+  /** 統計再取得中も直前の表示データを残し、画面高さの急変を防ぐ。 */
+  const displayedStats = createMemo(() => stats.latest ?? stats())
   const ownScoreItems = createMemo(() => {
     const currentSong = song()
     if (!currentSong) return []
-    return buildOwnScoreItems(currentSong, ownRecords()?.standard ?? [])
+    return buildOwnScoreItems(currentSong, ownRecords() ?? [])
   })
   /** 選択中の難易度に対応するログインユーザーのプレイ済みスコアを取得する。 */
   const selectedOwnScore = createMemo(() => {
@@ -184,7 +191,7 @@ const SongDetail = () => {
                 difficulties={availableDifficulties()}
                 selectedDifficulty={selectedDifficulty()}
                 onDifficultyChange={setSelectedDifficulty}
-                stats={stats()}
+                stats={displayedStats()}
                 isStatsLoading={stats.loading}
                 bestAverage={ownBestAverage()}
                 ratingBands={masterData()?.rating_bands}

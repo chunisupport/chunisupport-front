@@ -1,5 +1,3 @@
-import { Button } from '@kobalte/core/button'
-import { Checkbox } from '@kobalte/core/checkbox'
 import { Collapsible } from '@kobalte/core/collapsible'
 import { Dialog } from '@kobalte/core/dialog'
 import { NumberField } from '@kobalte/core/number-field'
@@ -12,14 +10,7 @@ import {
   Tooltip,
   type TooltipModel,
 } from 'chart.js'
-import {
-  ChartNoAxesCombined,
-  Check,
-  ChevronRight,
-  RotateCcw,
-  Settings,
-  TriangleAlert,
-} from 'lucide-solid'
+import { ChartNoAxesCombined, RotateCcw, Settings, TriangleAlert } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -33,6 +24,9 @@ import {
 } from 'solid-js'
 import { fetchMe } from '../../api/users'
 import { LoadError, Loading } from '../../components'
+import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { AppDisclosureTrigger } from '../../components/common/AppDisclosureTrigger'
+import { CheckboxField } from '../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { getSortAriaValue, SortableHeaderButton } from '../../components/common/SortableTableHeader'
 import {
@@ -615,13 +609,14 @@ const WeakChartInspectorPage = (): JSX.Element => {
         <div class="flex items-center justify-between gap-4">
           <h1 class="text-2xl font-semibold">{WEAK_CHART_INSPECTOR_COPY.title}</h1>
           <Show when={!records.loading && analysisRecords().length > 0}>
-            <Button
+            <AppIconButton
+              tone="ghost"
               aria-label="グラフ設定を開く"
               onClick={openSettings}
-              class="shrink-0 rounded p-1.5 text-text-muted transition-colors hover:bg-surface-muted hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+              class="shrink-0"
             >
               <Settings class="h-5 w-5" aria-hidden="true" />
-            </Button>
+            </AppIconButton>
           </Show>
         </div>
         <Show when={!records.loading} fallback={<Loading />}>
@@ -657,14 +652,13 @@ const WeakChartInspectorPage = (): JSX.Element => {
                     <Dialog.Title class="text-lg font-bold">
                       {WEAK_CHART_SETTINGS_COPY.title}
                     </Dialog.Title>
-                    <Button
-                      type="button"
+                    <AppIconButton
+                      tone="danger"
                       aria-label={WEAK_CHART_SETTINGS_COPY.reset}
-                      class="rounded border border-danger-border bg-danger-bg p-2 text-text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                       onClick={resetSettings}
                     >
                       <RotateCcw class="h-5 w-5" aria-hidden="true" />
-                    </Button>
+                    </AppIconButton>
                   </div>
 
                   <div class="flex flex-col gap-5">
@@ -680,7 +674,8 @@ const WeakChartInspectorPage = (): JSX.Element => {
                           <div class="flex flex-col items-start gap-1">
                             <For each={WEAK_CHART_AGGREGATION_DIFFICULTIES}>
                               {(diff) => (
-                                <Checkbox
+                                <CheckboxField
+                                  id={`agg-difficulty-${diff}`}
                                   checked={editAggDifficulties().includes(diff)}
                                   onChange={(checked) => {
                                     setEditAggDifficulties((prev) =>
@@ -688,20 +683,10 @@ const WeakChartInspectorPage = (): JSX.Element => {
                                     )
                                   }}
                                   class="relative flex items-center gap-2"
-                                >
-                                  <Checkbox.Input
-                                    id={`agg-difficulty-${diff}`}
-                                    style={{ left: '0', top: '0' }}
-                                  />
-                                  <Checkbox.Control class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse">
-                                    <Checkbox.Indicator>
-                                      <Check class="h-4 w-4" />
-                                    </Checkbox.Indicator>
-                                  </Checkbox.Control>
-                                  <Checkbox.Label class="leading-5" for={`agg-difficulty-${diff}`}>
-                                    {diff}
-                                  </Checkbox.Label>
-                                </Checkbox>
+                                  textVariant="large"
+                                  labelClass="leading-5"
+                                  label={diff}
+                                />
                               )}
                             </For>
                           </div>
@@ -765,13 +750,11 @@ const WeakChartInspectorPage = (): JSX.Element => {
 
                     {/* 表示の絞り込み */}
                     <Collapsible defaultOpen={false}>
-                      <Collapsible.Trigger class="group flex w-full items-center justify-start gap-2 text-sm font-semibold text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring">
-                        <ChevronRight
-                          class="h-4 w-4 rotate-0 transition-transform group-data-expanded:rotate-90"
-                          aria-hidden="true"
-                        />
-                        <span>{WEAK_CHART_SETTINGS_COPY.displaySection}</span>
-                      </Collapsible.Trigger>
+                      <AppDisclosureTrigger
+                        variant="compact"
+                        label={WEAK_CHART_SETTINGS_COPY.displaySection}
+                        labelClass="flex-none"
+                      />
                       <Collapsible.Content>
                         <fieldset class="mt-3">
                           <legend class="sr-only">{WEAK_CHART_SETTINGS_COPY.displaySection}</legend>
@@ -838,20 +821,12 @@ const WeakChartInspectorPage = (): JSX.Element => {
 
                   <div class="flex justify-end mt-6">
                     <div class="flex gap-2">
-                      <Button
-                        type="button"
-                        class="px-4 py-2 rounded bg-action-secondary text-text-muted hover:bg-action-secondary-hover"
-                        onClick={cancelSettings}
-                      >
+                      <AppButton onClick={cancelSettings}>
                         {WEAK_CHART_SETTINGS_COPY.cancel}
-                      </Button>
-                      <Button
-                        type="button"
-                        class="px-4 py-2 rounded bg-action-primary text-text-inverse hover:bg-action-primary-hover"
-                        onClick={applySettings}
-                      >
+                      </AppButton>
+                      <AppButton variant="primary" onClick={applySettings}>
                         {WEAK_CHART_SETTINGS_COPY.apply}
-                      </Button>
+                      </AppButton>
                     </div>
                   </div>
                 </Dialog.Content>
