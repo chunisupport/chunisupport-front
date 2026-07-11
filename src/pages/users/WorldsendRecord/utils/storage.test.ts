@@ -36,8 +36,34 @@ test("buildSavedWorldsendFilterRequest は WORLD'S END 用の保存リクエス�
   // Then
   assert.equal(result.name, 'WE高難度')
   assert.equal(result.filter_type, 'worldsend')
-  assert.equal(result.schema_version, 3)
+  assert.equal(result.schema_version, 4)
   assert.deepEqual(result.filter, filter)
+})
+
+test('toSavedWorldsendFilter は旧スキーマのALL JUSTICE選択にAJCを補完する', async () => {
+  // Given: AJC の選択肢がなかった旧形式の保存フィルター。
+  const { toSavedWorldsendFilter } = await loadStorageModule()
+  const { combo_lamp: _comboLamp, ...filter } = DEFAULT_WORLDSEND_FILTER
+  const dto: RecordFilterDTO = {
+    id: '11111111-1111-1111-1111-111111111111',
+    name: '旧WE',
+    filter_type: 'worldsend',
+    schema_version: 3,
+    filter: { ...filter, combo_lamp: ['ALL JUSTICE', 'FULL COMBO', null] },
+    created_at: '2026-06-15T12:00:00Z',
+    updated_at: '2026-06-15T12:00:00Z',
+  }
+
+  // When: 保存フィルターを読み込む。
+  const result = toSavedWorldsendFilter(dto)
+
+  // Then: 旧形式の ALL JUSTICE には AJC が補完される。
+  assert.deepEqual(result.filter?.combo_lamp, [
+    'ALL JUSTICE',
+    'FULL COMBO',
+    null,
+    'ALL JUSTICE CRITICAL',
+  ])
 })
 
 test('toSavedWorldsendFilter は旧スキーマのDTOを古くて無効な保存フィルターとして残す', async () => {

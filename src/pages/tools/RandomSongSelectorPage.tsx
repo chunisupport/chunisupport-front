@@ -2,7 +2,7 @@ import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
-import { Dices, RotateCcw, SlidersHorizontal } from 'lucide-solid'
+import { Dices, Funnel, RotateCcw, SlidersHorizontal } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import {
   createEffect,
@@ -561,6 +561,19 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const parsedMinScore = createMemo(() => parseOptionalRandomSongDecimal(minScore()))
   const parsedMaxScore = createMemo(() => parseOptionalRandomSongDecimal(maxScore()))
   const parsedCount = createMemo(() => parseRandomSongDrawCount(count()))
+  /**
+   * 自分のレコード絞り込みが初期条件から変更されているかを返す。
+   *
+   * @returns いずれかのレコード絞り込み条件が有効な場合は true。
+   */
+  const isRecordFilterActive = createMemo(
+    () =>
+      playStatus() !== 'all' ||
+      bestFrame() !== 'all' ||
+      parsedMinScore() !== null ||
+      parsedMaxScore() !== null ||
+      selectedLamps().length !== RANDOM_SONG_LAMP_VALUES.length
+  )
   const availableMyRecordData = createMemo(() => {
     const data = myRecordData()
     return data?.status === 'available' ? data : null
@@ -1012,11 +1025,12 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         as="button"
                         type="button"
                         class={getAppButtonClass({
-                          variant: 'surface',
+                          variant: isRecordFilterActive() ? 'primary' : 'surface',
                           class: 'min-h-10 rounded-md',
                         })}
+                        aria-pressed={isRecordFilterActive()}
                       >
-                        <SlidersHorizontal size={16} aria-hidden="true" />
+                        <Funnel size={16} aria-hidden="true" />
                         {RANDOM_SONG_SELECTOR_COPY.recordFilterSettingsLabel}
                       </Dialog.Trigger>
                       <Dialog.Portal>

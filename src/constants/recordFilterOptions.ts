@@ -1,8 +1,10 @@
 import type { PlayerRecordDTO } from '../types/api'
+import type { ComboLampFilter } from '../types/record'
 
 // TODO: これらの定数がハードコードされていていいのか？サーバから取ってこなくていいのか？
 /** 通常レコードと WORLD'S END レコードのコンボランプフィルター選択肢。 */
-export const RECORD_COMBO_LAMP_OPTIONS: PlayerRecordDTO['combo_lamp'][] = [
+export const RECORD_COMBO_LAMP_OPTIONS: ComboLampFilter[] = [
+  'ALL JUSTICE CRITICAL',
   'ALL JUSTICE',
   'FULL COMBO',
   null,

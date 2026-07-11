@@ -1,5 +1,6 @@
-import type { ChainLamp, ComboLamp, Difficulty, HardLamp } from '../../../../types/record'
+import type { ChainLamp, Difficulty, HardLamp } from '../../../../types/record'
 import type { FilterState } from '../../../../types/recordFilter'
+import { getComboLampFilterValue } from '../../../../utils/comboLampFilter'
 import { isDateInRange } from '../../../../utils/dateFilter'
 import { buildDefaultFilter } from '../../../../utils/recordFilterDefaults'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
@@ -109,9 +110,10 @@ export function isRecordMatchedWithTitleMatcher(
   }
 
   // コンボランプ
-  const comboLamp = record.is_played ? (record.combo_lamp ?? null) : null
-  if (!hasJusticeCountFilter(filters) && !filters.combo_lamp.includes(comboLamp as ComboLamp))
-    return false
+  const comboLamp = record.is_played
+    ? getComboLampFilterValue(record.combo_lamp ?? null, record.score)
+    : null
+  if (!hasJusticeCountFilter(filters) && !filters.combo_lamp.includes(comboLamp)) return false
 
   // FULL CHAINランプ
   const chainLamp = record.is_played ? (record.full_chain ?? null) : null

@@ -1,3 +1,4 @@
+import { getComboLampFilterValue } from '../../../../utils/comboLampFilter'
 import { isDateInRange } from '../../../../utils/dateFilter'
 import {
   matchesNormalizedSearchQuery,
@@ -75,7 +76,9 @@ export function isWorldsendRecordMatchedWithTitleMatcher(
     }
   }
 
-  const comboLamp = record.is_played ? (record.combo_lamp ?? null) : null
+  const comboLamp = record.is_played
+    ? getComboLampFilterValue(record.combo_lamp ?? null, record.score)
+    : null
   if (!hasWorldsendJusticeCountFilter(filters) && !filters.combo_lamp.includes(comboLamp)) {
     return false
   }

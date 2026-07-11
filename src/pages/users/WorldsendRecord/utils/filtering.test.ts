@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
 import { normalizeWorldsendFilterState } from '../types/filterDefaults.ts'
 import type { WorldsendRecordWithSongMeta } from '../types/filterTypes.ts'
 import {
@@ -119,4 +120,29 @@ test("WORLD'S END フィルターはスコア・JUSTICE数・ランプ・未プ�
   // Then: 条件を満たすプレイ済みレコードだけが残る。
   assert.equal(matched, true)
   assert.equal(noPlayed, false)
+})
+
+test("WORLD'S END フィルターはALL JUSTICE CRITICALをコンボランプ条件として判定できる", () => {
+  // Given: AJC だけを選択したフィルター。
+  const filters = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: 4, max: 4 },
+    combo_lamp: ['ALL JUSTICE CRITICAL'],
+  })
+
+  // When: 理論値と非理論値の ALL JUSTICE レコードをフィルターする。
+  const matched = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ combo_lamp: 'ALL JUSTICE', score: MAX_SCORE }),
+    filters,
+    matcher()
+  )
+  const nonCritical = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ combo_lamp: 'ALL JUSTICE', score: MAX_SCORE - 1 }),
+    filters,
+    matcher()
+  )
+
+  // Then: 理論値の ALL JUSTICE だけが一致する。
+  assert.equal(matched, true)
+  assert.equal(nonCritical, false)
 })

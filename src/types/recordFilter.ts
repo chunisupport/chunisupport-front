@@ -2,13 +2,22 @@ import type { SortCondition } from '../utils/sortConditions'
 import type {
   ChainLamp,
   ComboLamp,
+  ComboLampFilter,
   DateRangeFilter,
   Difficulty,
   HardLamp,
   NumericRangeFilter,
 } from './record'
 
-export type { ChainLamp, ComboLamp, DateRangeFilter, Difficulty, HardLamp, NumericRangeFilter }
+export type {
+  ChainLamp,
+  ComboLamp,
+  ComboLampFilter,
+  DateRangeFilter,
+  Difficulty,
+  HardLamp,
+  NumericRangeFilter,
+}
 export type RecordSortKey =
   | 'title'
   | 'difficulty'
@@ -55,7 +64,7 @@ export interface FilterState {
   scoreFilterMode: 'number' | 'rank'
   justiceCount: NumericRangeFilter<number | null>
   overPower: NumericRangeFilter<number | null>
-  combo_lamp: ComboLamp[]
+  combo_lamp: ComboLampFilter[]
   chain_lamp: ChainLamp[]
   hard_lamp: HardLamp[]
   excludeNoPlay: boolean

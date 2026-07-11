@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { FilterState } from '../../../../types/recordFilter'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
+import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
 import {
   createRecordTitleMatcher,
   getDefaultFilter,
@@ -259,6 +260,26 @@ test('isRecordMatched はランプ条件を判定できる', () => {
     false
   )
   assert.equal(isRecordMatched(record, { ...matchedFilters, hard_lamp: ['CLEAR'] }), false)
+})
+
+test('isRecordMatched はALL JUSTICE CRITICALをコンボランプ条件として判定できる', () => {
+  // Given: 理論値の ALL JUSTICE レコードと AJC だけを選択したフィルター。
+  const record = createRecord({ combo_lamp: 'ALL JUSTICE', score: MAX_SCORE })
+  const filters: FilterState = {
+    ...getDefaultFilter(),
+    combo_lamp: ['ALL JUSTICE CRITICAL'],
+  }
+
+  // When: レコードをフィルターする。
+  const matched = isRecordMatched(record, filters)
+  const nonCritical = isRecordMatched(
+    createRecord({ combo_lamp: 'ALL JUSTICE', score: MAX_SCORE - 1 }),
+    filters
+  )
+
+  // Then: 理論値の ALL JUSTICE だけが一致する。
+  assert.equal(matched, true)
+  assert.equal(nonCritical, false)
 })
 
 test('isRecordMatched は未プレイ除外と未プレイのスコア0扱いを判定できる', () => {

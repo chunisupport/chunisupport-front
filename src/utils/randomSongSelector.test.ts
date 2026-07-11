@@ -383,7 +383,7 @@ test('自分のレコード条件でプレイ状況とスコアを絞り込む�
   )
 })
 
-test('自分のレコード条件でスコア範囲を指定した場合は未プレイを除外すること', () => {
+test('自分のレコード条件でスコア上限を指定した場合は未プレイを0点として残すこと', () => {
   // Given: 未プレイ候補とスコア上限内のプレイ済み候補がある。
   const candidates = [
     createCandidate({ song: createSong({ id: 'song-a', title: 'Song A' }) }),
@@ -391,19 +391,43 @@ test('自分のレコード条件でスコア範囲を指定した場合は未�
   ]
   const records = createRandomSongRecordMap([createRecord({ id: 'song-b', score: 995000 })])
 
-  // When: プレイ状況はすべてのまま、スコア100万以下に絞り込む。
+  // When: プレイ状況はすべてのまま、スコア10点以下に絞り込む。
   const filtered = filterRandomSongCandidatesByRecord(candidates, records, new Set(), {
     playStatus: 'all',
     bestFrame: 'all',
     minScore: null,
-    maxScore: 1000000,
+    maxScore: 10,
     lamps: allLampFilters,
   })
 
-  // Then: スコアを持つプレイ済み候補だけが残る。
+  // Then: 未プレイ候補が0点として扱われて残る。
   assert.deepEqual(
     filtered.map((candidate) => candidate.song.id),
-    ['song-b']
+    ['song-a']
+  )
+})
+
+test('自分のレコード条件で未プレイ指定時はスコア上限を指定しても未プレイ候補を残すこと', () => {
+  // Given: 未プレイ候補とスコア上限内のプレイ済み候補がある。
+  const candidates = [
+    createCandidate({ song: createSong({ id: 'song-a', title: 'Song A' }) }),
+    createCandidate({ song: createSong({ id: 'song-b', title: 'Song B' }) }),
+  ]
+  const records = createRandomSongRecordMap([createRecord({ id: 'song-b', score: 995000 })])
+
+  // When: 未プレイのみ、かつスコア999,999以下に絞り込む。
+  const filtered = filterRandomSongCandidatesByRecord(candidates, records, new Set(), {
+    playStatus: 'unplayed',
+    bestFrame: 'all',
+    minScore: null,
+    maxScore: 999999,
+    lamps: allLampFilters,
+  })
+
+  // Then: スコアを持たない未プレイ候補が残る。
+  assert.deepEqual(
+    filtered.map((candidate) => candidate.song.id),
+    ['song-a']
   )
 })
 
