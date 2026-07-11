@@ -16,7 +16,7 @@ import {
 } from '../../../constants/recordFilterOptions'
 import type {
   ChainLamp,
-  ComboLamp,
+  ComboLampFilter,
   DateRangeFilter,
   Difficulty,
   HardLamp,
@@ -226,7 +226,7 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
     (value.scoreFilterMode === 'rank' || value.scoreFilterMode === 'number') &&
     isOptionalNumberRange(value.justiceCount, JUSTICE_COUNT_MIN, JUSTICE_COUNT_MAX, true) &&
     isOptionalNumberRange(value.overPower, OVER_POWER_MIN, OVER_POWER_MAX) &&
-    isArrayOfOptions<ComboLamp>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
+    isArrayOfOptions<ComboLampFilter>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
     isArrayOfOptions<ChainLamp>(value.chain_lamp, RECORD_CHAIN_LAMP_OPTIONS) &&
     isArrayOfOptions<HardLamp>(value.hard_lamp, RECORD_HARD_LAMP_OPTIONS) &&
     typeof value.excludeNoPlay === 'boolean' &&
@@ -260,7 +260,7 @@ export const isValidSavedWorldsendFilter = (value: unknown): value is WorldsendF
     isRequiredNumberRange(value.score, SCORE_MIN, MAX_SCORE, true) &&
     (value.scoreFilterMode === 'rank' || value.scoreFilterMode === 'number') &&
     isOptionalNumberRange(value.justiceCount, JUSTICE_COUNT_MIN, JUSTICE_COUNT_MAX, true) &&
-    isArrayOfOptions<ComboLamp>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
+    isArrayOfOptions<ComboLampFilter>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
     isArrayOfOptions<ChainLamp>(value.chain_lamp, RECORD_CHAIN_LAMP_OPTIONS) &&
     isArrayOfOptions<HardLamp>(value.hard_lamp, RECORD_HARD_LAMP_OPTIONS) &&
     typeof value.excludeNoPlay === 'boolean' &&

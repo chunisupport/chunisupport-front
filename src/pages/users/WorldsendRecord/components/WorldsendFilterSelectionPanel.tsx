@@ -6,7 +6,7 @@ import {
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../../../constants/recordFilterOptions'
-import type { ChainLamp, ComboLamp, HardLamp } from '../../../../types/record'
+import type { ChainLamp, ComboLampFilter, HardLamp } from '../../../../types/record'
 import {
   parseNumberInput,
   toInputValue,
@@ -274,8 +274,11 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
           props.setFilters((prev) => ({
             ...prev,
             combo_lamp: toggleArray(prev.combo_lamp, lamp).filter(
-              (value): value is ComboLamp =>
-                value === 'FULL COMBO' || value === 'ALL JUSTICE' || value === null
+              (value): value is ComboLampFilter =>
+                value === 'FULL COMBO' ||
+                value === 'ALL JUSTICE' ||
+                value === 'ALL JUSTICE CRITICAL' ||
+                value === null
             ),
           }))
         }

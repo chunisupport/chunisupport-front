@@ -499,8 +499,11 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           props.setFilters((prev) => ({
             ...prev,
             combo_lamp: toggleArray(prev.combo_lamp, lamp).filter(
-              (l): l is 'FULL COMBO' | 'ALL JUSTICE' | null =>
-                l === 'FULL COMBO' || l === 'ALL JUSTICE' || l === null
+              (l): l is FilterState['combo_lamp'][number] =>
+                l === 'FULL COMBO' ||
+                l === 'ALL JUSTICE' ||
+                l === 'ALL JUSTICE CRITICAL' ||
+                l === null
             ),
           }))
         }

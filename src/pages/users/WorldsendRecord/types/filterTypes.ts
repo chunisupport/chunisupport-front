@@ -1,7 +1,7 @@
 import type { WorldsendRecordDTO } from '../../../../types/api'
 import type {
   ChainLamp,
-  ComboLamp,
+  ComboLampFilter,
   DateRangeFilter,
   HardLamp,
   NumericRangeFilter,
@@ -28,7 +28,7 @@ export interface WorldsendFilterState {
   score: NumericRangeFilter
   scoreFilterMode: 'number' | 'rank'
   justiceCount: NumericRangeFilter<number | null>
-  combo_lamp: ComboLamp[]
+  combo_lamp: ComboLampFilter[]
   chain_lamp: ChainLamp[]
   hard_lamp: HardLamp[]
   excludeNoPlay: boolean

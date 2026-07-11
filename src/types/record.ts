@@ -6,6 +6,9 @@ export type Difficulty = PlayerRecordDTO['difficulty']
 /** プレイヤーレコードで扱うコンボランプ。 */
 export type ComboLamp = PlayerRecordDTO['combo_lamp']
 
+/** レコードフィルターで扱うコンボランプ。 */
+export type ComboLampFilter = ComboLamp | 'ALL JUSTICE CRITICAL'
+
 /** プレイヤーレコードで扱うFULL CHAINランプ。 */
 export type ChainLamp = PlayerRecordDTO['full_chain']
 
