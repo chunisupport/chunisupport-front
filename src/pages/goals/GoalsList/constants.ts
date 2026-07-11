@@ -14,14 +14,14 @@ export const RECORD_NAVIGATION_ERROR_MESSAGE = '未達成レコードの表示�
 export const GOAL_REORDER_ERROR_MESSAGE = '並び順の保存に失敗しました。'
 
 /**
- * 並び替えハンドルのアクセシブルラベルを作る。
+ * カード全体の並び替え操作を案内するアクセシブルラベルを作る。
  *
  * @param title - 目標タイトル。
  * @param position - 現在の表示位置。
  * @param total - 目標の総数。
  * @returns ドラッグとキーボード操作を案内するラベル。
  */
-export const buildGoalDragHandleLabel = (title: string, position: number, total: number): string =>
+export const buildGoalDragLabel = (title: string, position: number, total: number): string =>
   `${title}の並び替え、${total}件中${position}番目。ドラッグまたは上下矢印キーで移動`
 
 /**
