@@ -1,5 +1,4 @@
 import {
-  CategoryScale,
   Chart,
   type ChartData,
   type ChartOptions,
@@ -12,23 +11,20 @@ import {
 } from 'chart.js'
 import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js'
 import type { ScoreHistoryEntryDTO } from '../../../../types/api'
-import { formatScoreHistoryDateTime } from '../../../../utils/scoreHistory'
+import { formatScoreHistoryTimestamp } from '../../../../utils/scoreHistory'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { SCORE_HISTORY_EMPTY_LABEL, SCORE_HISTORY_SCORE_LABEL } from './constants'
 
-Chart.register(
-  CategoryScale,
-  Legend,
-  LineController,
-  LineElement,
-  LinearScale,
-  PointElement,
-  Tooltip
-)
+Chart.register(Legend, LineController, LineElement, LinearScale, PointElement, Tooltip)
 
 type Props = {
   /** 表示対象のスコア履歴。 */
   entries: readonly ScoreHistoryEntryDTO[]
+}
+
+type ScoreHistoryChartPoint = {
+  x: number
+  y: number
 }
 
 const CHART_HEIGHT_CLASS = 'h-80'
@@ -120,6 +116,10 @@ const createScoreHistoryChartOptions = (
       },
       tooltip: {
         callbacks: {
+          title: (items) => {
+            const timestamp = items[0]?.parsed.x
+            return typeof timestamp !== 'number' ? '' : formatScoreHistoryTimestamp(timestamp)
+          },
           label: (context) => {
             const score = context.parsed.y
             return score === null
@@ -131,10 +131,12 @@ const createScoreHistoryChartOptions = (
     },
     scales: {
       x: {
+        type: 'linear',
         ticks: {
           color: textColor,
           maxRotation: 0,
           autoSkip: true,
+          callback: (value) => formatScoreHistoryTimestamp(Number(value)),
         },
         grid: {
           display: false,
@@ -164,7 +166,7 @@ const createScoreHistoryChartOptions = (
  */
 const ScoreHistoryChart = (props: Props) => {
   let canvasRef!: HTMLCanvasElement
-  let chart: Chart<'line', number[], string> | undefined
+  let chart: Chart<'line', ScoreHistoryChartPoint[], number> | undefined
   const [mounted, setMounted] = createSignal(false)
 
   onMount(() => {
@@ -176,12 +178,14 @@ const ScoreHistoryChart = (props: Props) => {
 
     const entries = sortEntriesByUpdatedAt(props.entries)
     const color = getChartColor(CHART_LINE_COLOR_VARIABLE)
-    const chartData: ChartData<'line', number[], string> = {
-      labels: entries.map((entry) => formatScoreHistoryDateTime(entry.updated_at)),
+    const chartData: ChartData<'line', ScoreHistoryChartPoint[], number> = {
       datasets: [
         {
           label: SCORE_HISTORY_SCORE_LABEL,
-          data: entries.map((entry) => entry.score),
+          data: entries.map((entry) => ({
+            x: new Date(entry.updated_at).getTime(),
+            y: entry.score,
+          })),
           borderColor: color,
           backgroundColor: color,
           pointBackgroundColor: color,
