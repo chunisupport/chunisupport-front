@@ -53,7 +53,7 @@ const fetchSongDetailLoadState = async (displayId: string): Promise<SongDetailLo
  *
  * @param song - 表示対象の楽曲。
  * @param records - ログインユーザーの通常譜面レコード。
- * @returns 難易度ごとの自己スコア表示項目。
+ * @returns 難易度ごとの自己スコアとランプの表示項目。
  */
 const buildOwnScoreItems = (song: SongDTO, records: readonly PlayerRecordDTO[]): OwnScoreItem[] =>
   OWN_SCORE_DIFFICULTIES.filter((difficulty) => Boolean(song.charts[difficulty])).map(
@@ -66,6 +66,9 @@ const buildOwnScoreItems = (song: SongDTO, records: readonly PlayerRecordDTO[]):
       return {
         difficulty,
         score: record?.score,
+        comboLamp: record?.combo_lamp,
+        clearLamp: record?.clear_lamp,
+        fullChain: record?.full_chain,
         supportsHistory: supportsScoreHistory(difficulty),
       }
     }

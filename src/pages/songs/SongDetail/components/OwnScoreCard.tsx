@@ -3,6 +3,13 @@ import { ChevronRight } from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import { Loading } from '../../../../components'
 import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'
+import {
+  RECORD_LAMP_COLUMN_CLASS,
+  renderDefaultRecordFullChainBadge,
+  renderDefaultRecordHardLampBadge,
+  renderDefaultRecordLampBadge,
+} from '../../../../components/common/record/RecordDisplayParts'
+import { getDefaultRecordLampLabel } from '../../../../components/common/record/recordLampLabel'
 import { WORLDSEND_SCORE_LABEL } from '../../../../constants/chart'
 import {
   buildSongChartDetailPath,
@@ -17,11 +24,28 @@ import {
   UNPLAYED_SCORE_LABEL,
 } from '../scoreHistory.constants'
 
+/** 楽曲詳細で表示する難易度別の自己スコアとランプ状態。 */
 export type OwnScoreItem = {
   difficulty: PlayerDataDifficulty | typeof WORLDSEND_SCORE_LABEL
   score?: number
+  comboLamp?: Parameters<typeof renderDefaultRecordLampBadge>[0]
+  clearLamp?: Parameters<typeof renderDefaultRecordHardLampBadge>[0]
+  fullChain?: Parameters<typeof renderDefaultRecordFullChainBadge>[0]
   supportsHistory: boolean
 }
+
+/** プレイ済み自己スコアカードの共通レイアウトクラス。 */
+const OWN_SCORE_CARD_CLASS =
+  'flex min-h-24 items-center gap-3 rounded-lg border border-border bg-surface p-4'
+/** 自己スコア数値の共通フォント・レイアウトクラス。 */
+const OWN_SCORE_VALUE_CLASS = 'font-jost text-xl font-semibold tabular-nums'
+/** 自己スコアとランプを縦並びにする共通レイアウトクラス。 */
+const OWN_SCORE_VALUE_STACK_CLASS = 'ml-auto flex flex-col items-end gap-1'
+/** 自己スコアカード内のランプ表示領域クラス。 */
+const OWN_SCORE_LAMPS_CLASS = 'flex gap-2'
+/** 未プレイ自己スコアカードの共通レイアウトクラス。 */
+const UNPLAYED_OWN_SCORE_CARD_CLASS =
+  'flex min-h-24 items-center gap-3 rounded-lg border border-border bg-surface p-4'
 
 /**
  * 自己スコア項目に対応する難易度バッジを表示する。
@@ -34,6 +58,42 @@ const OwnScoreBadge = (props: { difficulty: OwnScoreItem['difficulty'] }) => (
     <DifficultyBadge difficulty={props.difficulty as PlayerDataDifficulty} />
   </Show>
 )
+
+/**
+ * 自己スコアに紐づくコンボ・ハード・FULL CHAINランプを表示する。
+ *
+ * @param props - スコアと3種類のランプ状態。
+ * @returns ランプバッジ群。
+ */
+const OwnScoreLamps = (
+  props: Pick<OwnScoreItem, 'score' | 'comboLamp' | 'clearLamp' | 'fullChain'>
+) => (
+  <div class={`${OWN_SCORE_LAMPS_CLASS} ${RECORD_LAMP_COLUMN_CLASS}`}>
+    {renderDefaultRecordLampBadge(props.comboLamp ?? null, {
+      is_played: true,
+      combo_lamp: props.comboLamp ?? null,
+      score: props.score ?? 0,
+    })}
+    {renderDefaultRecordHardLampBadge(props.clearLamp ?? null)}
+    {renderDefaultRecordFullChainBadge(props.fullChain ?? null)}
+  </div>
+)
+
+/**
+ * 自己スコアカードへのリンクに使う、ランプ状態を含むアクセシブル名を生成する。
+ *
+ * @param item - 表示対象の自己スコアとランプ状態。
+ * @returns スコア履歴へのリンク内容を説明するアクセシブル名。
+ */
+const buildOwnScoreLinkAriaLabel = (item: OwnScoreItem): string =>
+  [
+    item.difficulty,
+    item.score?.toLocaleString('ja-JP'),
+    `コンボ ${getDefaultRecordLampLabel(item.comboLamp ?? null, item.score) || 'なし'}`,
+    `ハード ${item.clearLamp ?? 'なし'}`,
+    `FULL CHAIN ${item.fullChain ?? 'なし'}`,
+    SCORE_HISTORY_LINK_LABEL,
+  ].join(' ')
 
 /**
  * 自己スコア項目に対応する譜面詳細画面パスを生成する。
@@ -64,15 +124,12 @@ const OwnScoreCard = (props: {
       <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <For each={props.items}>
           {(item) => {
-            const cardClass =
-              'flex min-h-20 items-center gap-3 rounded-lg border border-border bg-surface p-4'
-
             return (
               <li>
                 <Show
                   when={item.score !== undefined}
                   fallback={
-                    <div class={cardClass}>
+                    <div class={UNPLAYED_OWN_SCORE_CARD_CLASS}>
                       <OwnScoreBadge difficulty={item.difficulty} />
                       <span class="ml-auto text-sm text-text-muted">{UNPLAYED_SCORE_LABEL}</span>
                     </div>
@@ -81,30 +138,34 @@ const OwnScoreCard = (props: {
                   <Show
                     when={item.supportsHistory}
                     fallback={
-                      <div class={cardClass}>
+                      <div class={OWN_SCORE_CARD_CLASS}>
                         <OwnScoreBadge difficulty={item.difficulty} />
-                        <span class="ml-auto font-oswald text-xl font-semibold tabular-nums">
-                          {item.score?.toLocaleString('ja-JP')}
-                        </span>
+                        <div class={OWN_SCORE_VALUE_STACK_CLASS}>
+                          <span class={OWN_SCORE_VALUE_CLASS}>
+                            {item.score?.toLocaleString('ja-JP')}
+                          </span>
+                          <OwnScoreLamps {...item} />
+                        </div>
                       </div>
                     }
                   >
                     <A
                       href={buildChartDetailPath(props.displayId, item.difficulty)}
                       state={CHART_DETAIL_FROM_SONG_DETAIL_STATE}
-                      class={`${cardClass} group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus`}
-                      aria-label={`${item.difficulty} ${item.score?.toLocaleString('ja-JP')} ${SCORE_HISTORY_LINK_LABEL}`}
+                      class={`${OWN_SCORE_CARD_CLASS} group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus`}
+                      aria-label={buildOwnScoreLinkAriaLabel(item)}
                     >
                       <OwnScoreBadge difficulty={item.difficulty} />
-                      <span class="ml-auto flex items-center gap-2">
-                        <span class="font-oswald text-xl font-semibold tabular-nums">
+                      <div class={OWN_SCORE_VALUE_STACK_CLASS}>
+                        <span class={OWN_SCORE_VALUE_CLASS}>
                           {item.score?.toLocaleString('ja-JP')}
                         </span>
-                        <ChevronRight
-                          class="h-4 w-4 text-action-primary transition-transform group-hover:translate-x-0.5"
-                          aria-hidden="true"
-                        />
-                      </span>
+                        <OwnScoreLamps {...item} />
+                      </div>
+                      <ChevronRight
+                        class="h-4 w-4 shrink-0 text-action-primary transition-transform group-hover:translate-x-0.5"
+                        aria-hidden="true"
+                      />
                     </A>
                   </Show>
                 </Show>
