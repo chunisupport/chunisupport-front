@@ -12,11 +12,14 @@ import {
   type SharedComboLamp,
 } from '../../components/common/record/recordStyleClasses'
 import type {
+  PlayerDataCourseRecordChange,
+  PlayerDataCourseRecordState,
   PlayerDataDifficulty,
   PlayerDataNumberDiff,
   PlayerDataRecordChange,
   PlayerDataRecordState,
   PlayerDataResult,
+  PlayerDataSongRecordChange,
   PlayerDataStatistics,
   PlayerDataStatisticsGroup,
 } from '../../types/api'
@@ -32,6 +35,8 @@ export const REGISTER_SCORE_MESSAGES = {
   processing: 'スコアデータを登録しています。',
   changedSongsTitle: 'NEW RECORDS',
   changedSongsEmpty: '今回更新された楽曲はありません。',
+  changedCoursesTitle: 'COURSE RECORDS',
+  courseClassPrefix: 'CLASS',
   totalHighScoreTitle: 'TOTAL HIGH SCORE',
   recordStatsTitle: 'RECORD STATISTICS',
   unknownSongTitle: '-',
@@ -82,6 +87,9 @@ const SCORE_CHANGE_CARD_CLASS =
  */
 const SCORE_CHANGE_SCORE_GRID_CLASS =
   'mt-1.5 flex items-center justify-around gap-x-2 text-lg leading-6'
+/** コースクラスバッジの共通レイアウトクラス。 */
+const COURSE_CLASS_BADGE_CLASS =
+  'inline-flex min-w-10 shrink-0 items-center justify-center rounded bg-success-bg px-2 py-0.5 text-xs font-bold uppercase leading-5 text-success'
 
 type RegisterScoreLampRecord = {
   is_played: boolean
@@ -279,7 +287,7 @@ const formatImportedAt = (isoDateTime: string): string => {
  * @param change - APIから返却された1譜面分の差分。
  * @returns 難易度の短縮表記。
  */
-const getShortDifficultyLabel = (change: PlayerDataRecordChange): string => {
+const getShortDifficultyLabel = (change: PlayerDataSongRecordChange): string => {
   if (change.record_type === 'worldsend') return 'WE'
 
   switch (change.diff) {
@@ -304,7 +312,7 @@ const getShortDifficultyLabel = (change: PlayerDataRecordChange): string => {
  * @param change - APIから返却された1譜面分の差分。
  * @returns Tailwindの背景色・文字色クラス。
  */
-const getDifficultyBadgeClass = (change: PlayerDataRecordChange): string => {
+const getDifficultyBadgeClass = (change: PlayerDataSongRecordChange): string => {
   if (change.record_type === 'worldsend') return WORLD_END_BADGE_CLASS
 
   return difficultyBadgeClass(change.diff)
@@ -352,6 +360,37 @@ const RecordLampBadges = (props: { state: PlayerDataRecordState }) => {
       <RecordHardLampCell record={record()} />
       <RecordLampCell record={record()} />
       <RecordFullChainCell record={record()} />
+    </div>
+  )
+}
+
+/**
+ * コースレコードのCLEAR状態とコンボランプだけを表示する。
+ *
+ * @param props - 表示対象のコースレコード状態。
+ * @returns コース用ランプバッジ群。
+ */
+const CourseRecordLampBadges = (props: { state: PlayerDataCourseRecordState }) => {
+  const record = createMemo<RegisterScoreLampRecord>(() => {
+    const comboLamp = normalizeLamp(props.state.combo_lamp)
+
+    return {
+      is_played: true,
+      score: props.state.score,
+      clear_lamp: null,
+      combo_lamp: comboLamp && isSharedComboLamp(comboLamp) ? comboLamp : null,
+      full_chain: null,
+    }
+  })
+
+  return (
+    <div class="mt-1 flex min-h-6 flex-wrap items-center gap-1">
+      <Show fallback={<LampPlaceholderBadge class="w-[34px]" />} when={props.state.is_clear}>
+        <span class="inline-flex h-6 items-center rounded bg-success-bg px-2 text-xs font-bold text-success">
+          CLEAR
+        </span>
+      </Show>
+      <RecordLampCell record={record()} />
     </div>
   )
 }
@@ -505,7 +544,7 @@ const RegisterScoreLampStatistics = (props: { rows: RegisterScoreStatisticRow[] 
  * @returns 差分行。
  */
 const RegisterScoreChangeRow = (props: {
-  change: PlayerDataRecordChange
+  change: PlayerDataSongRecordChange
   songTitle: string
   chartLevel?: string
 }) => {
@@ -560,6 +599,53 @@ const RegisterScoreChangeRow = (props: {
 }
 
 /**
+ * 1コース分の登録差分を、コース固有の状態だけで表示する。
+ *
+ * @param props - 表示対象のコース差分。
+ * @returns コース差分行。
+ */
+const RegisterCourseChangeRow = (props: { change: PlayerDataCourseRecordChange }) => (
+  <article class={`${SCORE_CHANGE_CARD_CLASS} font-jost`}>
+    <div class="flex min-w-0 items-center gap-2 text-base">
+      <span class={COURSE_CLASS_BADGE_CLASS}>
+        {REGISTER_SCORE_MESSAGES.courseClassPrefix} {props.change.course_class}
+      </span>
+      <h3 class="min-w-0 truncate font-sans text-base font-bold">No. {props.change.idx}</h3>
+    </div>
+    <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
+      <div class="w-fit">
+        <span class="font-jost font-semibold">
+          {props.change.before ? formatScore(props.change.before.score) : NO_DATA_TEXT}
+        </span>
+        <Show
+          when={props.change.before}
+          fallback={
+            <div class="mt-1 flex min-h-6 flex-wrap items-center gap-1">
+              <LampPlaceholderBadge class="w-[34px]" />
+              <LampPlaceholderBadge class="w-[34px]" />
+            </div>
+          }
+        >
+          {(before) => <CourseRecordLampBadges state={before()} />}
+        </Show>
+      </div>
+      <div class="flex w-20 flex-col items-center gap-1">
+        <Play class="mt-1.5 h-3.5 w-3.5 fill-current text-blue-700" aria-hidden="true" />
+        <Show when={formatScoreDelta(props.change)}>
+          {(delta) => (
+            <span class="font-sans text-sm font-bold leading-4 text-blue-700">{delta()}</span>
+          )}
+        </Show>
+      </div>
+      <div class="w-fit">
+        <span class="font-jost font-semibold">{formatScore(props.change.after.score)}</span>
+        <CourseRecordLampBadges state={props.change.after} />
+      </div>
+    </div>
+  </article>
+)
+
+/**
  * スコア登録結果のヘッダーを表示する。
  *
  * @param props - APIから返却された登録結果。
@@ -581,7 +667,7 @@ const RegisterScoreReportHeader = (props: { result: PlayerDataResult }) => (
  * @returns 更新レコードセクション。
  */
 const RegisterScoreChangesSection = (props: {
-  changes: PlayerDataRecordChange[]
+  changes: PlayerDataSongRecordChange[]
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
 }) => (
@@ -611,6 +697,23 @@ const RegisterScoreChangesSection = (props: {
 )
 
 /**
+ * 更新されたコースレコードをレポート末尾へ表示する。
+ *
+ * @param props - コースレコード差分。
+ * @returns コースレコードセクション。差分がない場合は何も表示しない。
+ */
+const RegisterCourseChangesSection = (props: { changes: PlayerDataCourseRecordChange[] }) => (
+  <Show when={props.changes.length > 0}>
+    <section class="min-w-0 pt-4">
+      <h2 class="mb-1 text-xl font-bold">{REGISTER_SCORE_MESSAGES.changedCoursesTitle}</h2>
+      <div class="mt-2 grid min-w-0 max-w-full gap-2">
+        <For each={props.changes}>{(change) => <RegisterCourseChangeRow change={change} />}</For>
+      </div>
+    </section>
+  </Show>
+)
+
+/**
  * スコア登録完了後の結果と差分一覧を表示する。
  *
  * @param props - 登録結果、楽曲名解決関数、譜面レベル解決関数。
@@ -621,7 +724,16 @@ export const RegisterScoreResultView = (props: {
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
 }) => {
-  const changes = createMemo(() => props.result.changes)
+  const songChanges = createMemo(() =>
+    props.result.changes.filter(
+      (change): change is PlayerDataSongRecordChange => change.record_type !== 'course'
+    )
+  )
+  const courseChanges = createMemo(() =>
+    props.result.changes.filter(
+      (change): change is PlayerDataCourseRecordChange => change.record_type === 'course'
+    )
+  )
   const [reportScale, setReportScale] = createSignal(1)
   const [scaledReportHeight, setScaledReportHeight] = createSignal<number>()
   let scaleContainerRef!: HTMLDivElement
@@ -668,10 +780,11 @@ export const RegisterScoreResultView = (props: {
             <RegisterScoreProfileSummary result={props.result} />
             <RegisterScoreAggregateSummary result={props.result} />
             <RegisterScoreChangesSection
-              changes={changes()}
+              changes={songChanges()}
               resolveSongTitle={props.resolveSongTitle}
               resolveChartLevel={props.resolveChartLevel}
             />
+            <RegisterCourseChangesSection changes={courseChanges()} />
           </div>
         </section>
       </div>
