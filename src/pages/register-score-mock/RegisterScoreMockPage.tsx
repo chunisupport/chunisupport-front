@@ -162,6 +162,9 @@ const createMockPlayerDataResult = (): PlayerDataResult => ({
     honors_skipped: 0,
     standard_records_actually_changed: 18,
     worldsend_records_actually_changed: 2,
+    course_records_upserted: 2,
+    course_records_skipped: 0,
+    course_records_actually_changed: 2,
   },
   changes: createMockChanges(),
   skipped_records: [],
@@ -333,6 +336,23 @@ const createMockChanges = (): PlayerDataRecordChange[] => [
     before: { score: 400000, clear_lamp: 'FAILED', combo_lamp: null, full_chain: null },
     after: { score: 520000, clear_lamp: 'CLEAR', combo_lamp: null, full_chain: null },
   },
+  // --- コース ---
+  {
+    record_type: 'course',
+    change_type: 'new',
+    idx: '50020',
+    course_class: '1',
+    before: null,
+    after: { score: 3023238, is_clear: true, combo_lamp: 'FULL COMBO' },
+  },
+  {
+    record_type: 'course',
+    change_type: 'updated',
+    idx: '50029',
+    course_class: 'extra',
+    before: { score: 2800000, is_clear: false, combo_lamp: null },
+    after: { score: 3000000, is_clear: true, combo_lamp: 'ALL JUSTICE' },
+  },
 ]
 
 /**
@@ -391,7 +411,7 @@ const resolveMockSongTitle = (change: PlayerDataRecordChange): string => {
  * @returns 譜面レベル文字列（例: "15+"）。WORLD'S ENDまたは定数不明の場合はundefined。
  */
 const resolveMockChartLevel = (change: PlayerDataRecordChange): string | undefined => {
-  if (change.record_type === 'worldsend') return undefined
+  if (change.record_type !== 'standard') return undefined
 
   return MOCK_CHART_LEVELS[change.idx]
 }

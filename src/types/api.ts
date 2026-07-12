@@ -638,9 +638,16 @@ export interface PlayerDataCounts {
   standard_records_actually_changed: number
   /** WORLD'S END レコードの実更新件数。 */
   worldsend_records_actually_changed: number
+  /** コースレコードの保存対象件数。 */
+  course_records_upserted: number
+  /** コースレコードのスキップ件数。 */
+  course_records_skipped: number
+  /** コースレコードの実更新件数。 */
+  course_records_actually_changed: number
 }
 
-export interface PlayerDataRecordChange {
+/** 通常譜面・WORLD'S ENDの登録差分。 */
+export interface PlayerDataSongRecordChange {
   /** 登録差分のレコード種別。 */
   record_type: 'standard' | 'worldsend'
   change_type: 'new' | 'updated'
@@ -651,6 +658,23 @@ export interface PlayerDataRecordChange {
   after: PlayerDataRecordState
 }
 
+/** コースレコードの登録差分。 */
+export interface PlayerDataCourseRecordChange {
+  /** 登録差分のレコード種別。 */
+  record_type: 'course'
+  change_type: 'new' | 'updated'
+  /** コースの公式インデックス。 */
+  idx: string
+  /** コースクラス。 */
+  course_class: string
+  before: PlayerDataCourseRecordState | null
+  after: PlayerDataCourseRecordState
+}
+
+/** プレイヤーデータ登録で返されるレコード差分。 */
+export type PlayerDataRecordChange = PlayerDataSongRecordChange | PlayerDataCourseRecordChange
+
+/** 通常譜面・WORLD'S ENDの差分状態。 */
 export interface PlayerDataRecordState {
   score: number
   clear_lamp: string | null
@@ -658,9 +682,16 @@ export interface PlayerDataRecordState {
   full_chain: string | null
 }
 
+/** ハード・フルチェインを持たないコースレコードの差分状態。 */
+export interface PlayerDataCourseRecordState {
+  score: number
+  is_clear: boolean
+  combo_lamp: string | null
+}
+
 export interface SkippedRecord {
   /** スキップされたレコード種別。 */
-  record_type: 'standard' | 'worldsend' | 'honor'
+  record_type: 'standard' | 'worldsend' | 'course' | 'honor'
   reason: string
   details: string
 }

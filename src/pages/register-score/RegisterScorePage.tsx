@@ -66,6 +66,10 @@ const RegisterScorePage = () => {
    * @returns 楽曲名。未取得の場合はプレースホルダー。
    */
   const songTitleByIdx = (change: PlayerDataRecordChange) => {
+    if (change.record_type === 'course') {
+      return REGISTER_SCORE_MESSAGES.unknownSongTitle
+    }
+
     const standardSongs = songsData.songsResponse.latest?.songs ?? []
     const worldsendSongs = songsData.worldsendSongsResponse.latest?.songs ?? []
 
@@ -84,7 +88,7 @@ const RegisterScorePage = () => {
    * @returns 譜面レベル文字列（例: "15+"）。WORLD'S ENDの場合はundefined。
    */
   const chartLevelByIdx = (change: PlayerDataRecordChange) => {
-    if (change.record_type === 'worldsend') {
+    if (change.record_type !== 'standard') {
       return undefined
     }
 
