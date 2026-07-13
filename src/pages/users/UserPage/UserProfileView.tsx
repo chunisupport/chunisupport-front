@@ -218,6 +218,7 @@ export const UserProfileView: Component<Props> = (props) => {
             options={RATING_TAB_OPTIONS}
             listClass="rounded-xl"
             listWrapperClass="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3"
+            listAside={<StatsPageLink href={statsPagePath()} />}
             triggerClass="p-2"
           >
             <AppTabContent value="best">
@@ -244,7 +245,6 @@ export const UserProfileView: Component<Props> = (props) => {
             options={RECORD_TAB_OPTIONS}
             listClass="rounded-xl"
             listWrapperClass="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3"
-            listAside={<StatsPageLink href={statsPagePath()} />}
             triggerClass="p-2"
           >
             <AppTabContent value="standard" forceMount class={forceMountedTabContentClass}>
