@@ -22,7 +22,7 @@
 - `pnpm typecheck`: 成功
 - `pnpm build`: 成功
 - `pnpm test:unit`: 成功
-- 本番ビルドの初期 HTML が直接読み込む JavaScript は 2 ファイル、非圧縮で合計 1,060,946 bytes です。既存の非同期 chunk はユーザーページ内の一部画面に限られ、トップレベル route の大半は初期依存グラフへ含まれています。
+- 本番ビルドの初期 HTML が直接読み込む JavaScript は 2 ファイル、非圧縮で合計 485,483 bytes です。トップレベル route のページ本体は非同期 chunk へ分割され、変更前の 1,061,015 bytes から 54.24% 削減されています。
 - 静的検査と既存の純粋関数テストでは検出されない、SolidJS のリアクティビティ、画面状態、キャッシュ無効化、feature 境界、ブラウザ操作フローを中心に記載しています。
 
 ## 作業者へ注意
@@ -38,7 +38,6 @@
 
 | ID | 優先度 | 概要 | 詳細・対応方針 |
 |---|---|---|---|
-| **PERF-001** | **High** | トップレベル route がほぼすべて初期 bundle へ含まれる | `src/App.tsx:43-70` はページ群を `./pages` から静的 import し、`src/pages/index.ts:1-26` も各 feature を静的に再 export しています。現行ビルドでは初期 HTML が非圧縮で約 405 KB と約 655 KB の JavaScript を直接読み込み、Chart.js を使う画面、管理画面、検証用画面も初期依存グラフへ入ります。トップレベルページを `lazy(() => import(...))` で route 単位に分割し、ページ barrel 経由の一括 import を廃止すべきです。共通の認証 guard、NavBar、loading fallback は小さな shell として初期側に残してください。 |
 | **PERF-002** | **Low** | ランダム選曲の出現割合計算が候補全件を選択肢ごとに再走査 | `src/pages/tools/RandomSongSelectorPage.tsx:676-683` は候補全体の重みを集計し、さらに `:870-912` の難易度別・定数別ラベル関数がそれぞれ `filteredCandidates()` を `reduce` します。これらは `:1144-1201` で全難易度・全譜面定数に対して呼ばれるため、入力変更ごとに候補数 N × 定数選択肢数 C の走査が発生します。候補を一度だけ走査して全体・難易度別・定数別の重みを同時集計する `createMemo` を用意し、表示関数は集計済み Map を参照すべきです。 |
 
 ### データ整合性・キャッシュ (DATA)
@@ -56,7 +55,7 @@
 
 | ID | 優先度 | 概要 | 詳細・対応方針 |
 |---|---|---|---|
-| **OPS-001** | **Medium** | mock・一時検証画面が本番 route に常設されている | `src/App.tsx:395-397` は `RegisterScoreMockPage` と `RegisterScoreTempPage` を build mode に関係なく登録しています。一時画面は `src/pages/register-score-temp/RegisterScoreTempPage.tsx:20-25` 自身を検証ページと定義し、`:228-240` に外部 test bookmarklet URL、`:246-259` に旧 clipboard fallback を保持しています。`src/pages/register-score-mock/RegisterScoreMockPage.tsx:34-396` にインライン定義された大きな fixture も、ページの静的 import に伴い初期依存グラフへ含まれています。現行スコア登録へ役割を統合して削除するか、明示的な開発用 entry / build flag で本番成果物から除外すべきです。bundle への影響は `PERF-001` で扱います。 |
+| **OPS-001** | **Medium** | mock・一時検証画面が本番 route に常設されている | `src/App.tsx:487-494` は `RegisterScoreMockPage` と `RegisterScoreTempPage` を build mode に関係なく登録しています。一時画面は `src/pages/register-score-temp/RegisterScoreTempPage.tsx:20-25` 自身を検証ページと定義し、`:228-240` に外部 test bookmarklet URL、`:246-259` に旧 clipboard fallback を保持しています。`src/pages/register-score-mock/RegisterScoreMockPage.tsx:34-396` にインライン定義された大きな fixture も本番成果物の非同期 chunk に含まれ、route 訪問時には取得されます。現行スコア登録へ役割を統合して削除するか、明示的な開発用 entry / build flag で本番成果物から除外すべきです。 |
 | **TEST-001** | **Medium** | 重要な画面状態・操作フローを検証する component / E2E テスト基盤がない | `package.json:22` の標準テストは `src/**/*.test.ts` だけを対象とし、リポジトリ内に first-party の `.test.tsx` やブラウザ E2E テストはありません。`src/pages/settings/Settings.tsx:72-285` のプライバシー・API token・データ削除・退会、`src/pages/friends/FriendsPage.tsx:397-630` の申請状態遷移、`src/pages/songs/SongManagementPage.tsx:699-1055` の CRUD は、API wrapper や一部 pure function のテストだけでは focus、loading、二重送信、成功後の再取得、SolidJS の反応性を固定できません。状態遷移を primitive / usecase に抽出して Given-When-Then の単体テストを追加し、少数の重要フローには Solid 対応 component test またはブラウザテストを導入すべきです。 |
 
 ### アーキテクチャ・責務 (ARCH)
@@ -81,7 +80,7 @@
 
 ## まとめ
 
-- 最優先は、**トップレベル route の code splitting (`PERF-001`)** と **楽曲管理画面の責務分割 (`ARCH-001`)** です。初期 bundle と変更影響範囲の双方を直接縮小できます。
+- 最優先は、**楽曲管理画面の責務分割 (`ARCH-001`)** です。変更影響範囲を直接縮小できます。
 - 次に、**楽曲更新時の共有キャッシュ無効化 (`DATA-001`)** を行い、同一セッション内で表示が古いまま残る問題を解消すべきです。
 - record view-state、楽曲選択ダイアログ、Dialog shell、難易度定義は複数 feature へ広がっているため、新しい個別実装を足す前に共通領域へ寄せる必要があります。
 - 旧 `REF-F05` は、保存フィルターの API 化、schema version、shape 検証、旧 schema 移行、テストが実装済みのため削除しました。

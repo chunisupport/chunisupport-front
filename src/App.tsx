@@ -1,7 +1,7 @@
 import { A, Route, Router, useParams } from '@solidjs/router'
 import { Calculator, ChartNoAxesCombined, Dices, Search, Target } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createMemo, createResource, ErrorBoundary, For, Show } from 'solid-js'
+import { createMemo, createResource, ErrorBoundary, For, lazy, Show, Suspense } from 'solid-js'
 
 import { fetchMe, fetchUserProfileSummary } from './api/users'
 import {
@@ -40,39 +40,59 @@ import {
   type ToolLinkIcon,
 } from './constants/tools'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
-import {
-  AdminHonorsPage,
-  AdminPage,
-  AdminSongsPage,
-  AdminUsersPage,
-  BorderCalculatorPage,
-  ChartConstantCalculatorPage,
-  EditorSongsPage,
-  ForbiddenPage,
-  FriendsPage,
-  GoalsList,
-  Login,
-  NotFoundPage,
-  RandomSongSelectorPage,
-  Register,
-  RegisterScoreMockPage,
-  RegisterScorePage,
-  RegisterScoreTempPage,
-  Settings,
-  SongDetail,
-  SongScoreHistory,
-  SongsList,
-  UserPage,
-  WeakChartInspectorPage,
-  WorldsendScoreHistory,
-  WorldsendSongDetail,
-  WorldsendSongsList,
-} from './pages'
+import NotFoundPage from './pages/NotFoundPage'
 import { getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
 import { resolveHomeView } from './usecases/auth/resolveHomeView'
 import { isNotFoundApiError } from './utils/apiError'
 
+const Login = lazy(() => import('./pages/auth/Login/Login'))
+const Register = lazy(() => import('./pages/auth/Register/Register'))
+const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'))
+
+const UserPage = lazy(() => import('./pages/users/UserPage/UserPage'))
+const GoalsList = lazy(() => import('./pages/goals/GoalsList/GoalsList'))
+
+const SongsList = lazy(() => import('./pages/songs/SongsList/SongsList'))
+const WorldsendSongsList = lazy(() => import('./pages/songs/WorldsendSongsList/WorldsendSongsList'))
+const SongDetail = lazy(() => import('./pages/songs/SongDetail/SongDetail'))
+const WorldsendSongDetail = lazy(
+  () => import('./pages/songs/WorldsendSongDetail/WorldsendSongDetail')
+)
+const SongScoreHistory = lazy(() => import('./pages/songs/SongScoreHistory/SongScoreHistory'))
+const WorldsendScoreHistory = lazy(
+  () => import('./pages/songs/WorldsendScoreHistory/WorldsendScoreHistory')
+)
+
+const Settings = lazy(() => import('./pages/settings/Settings'))
+const FriendsPage = lazy(() => import('./pages/friends/FriendsPage'))
+
+const RegisterScorePage = lazy(() => import('./pages/register-score/RegisterScorePage'))
+const RegisterScoreMockPage = lazy(
+  () => import('./pages/register-score-mock/RegisterScoreMockPage')
+)
+const RegisterScoreTempPage = lazy(
+  () => import('./pages/register-score-temp/RegisterScoreTempPage')
+)
+
+const ChartConstantCalculatorPage = lazy(() => import('./pages/tools/ChartConstantCalculatorPage'))
+const BorderCalculatorPage = lazy(() => import('./pages/tools/BorderCalculatorPage'))
+const WeakChartInspectorPage = lazy(() => import('./pages/tools/WeakChartInspectorPage'))
+const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelectorPage'))
+
+const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
+const AdminSongsPage = lazy(() => import('./pages/admin/AdminSongsPage'))
+const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
+const EditorSongsPage = lazy(() => import('./pages/editor/EditorSongsPage'))
+
+/**
+ * 指定された画面を共通ナビゲーション内に表示する。
+ *
+ * @typeParam P - 対象画面の props 型。
+ * @param Component - 共通ナビゲーション内へ配置する画面。
+ * @returns 共通ナビゲーションを付与した route component。
+ */
 const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
   return (props: P) => (
     <NavBar>
@@ -81,11 +101,35 @@ const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
   )
 }
 
+/**
+ * 指定された画面を認証 guard の許可分岐内に表示する。
+ *
+ * @typeParam P - 対象画面の props 型。
+ * @param Component - 認証を要求する画面。
+ * @returns 認証 guard を付与した route component。
+ */
 const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
   return (props: P) => (
     <RequireAuth>
       <Component {...props} />
     </RequireAuth>
+  )
+}
+
+/**
+ * route module の取得待ちと取得失敗を共通表示へ接続する。
+ *
+ * @typeParam P - 対象画面の props 型。
+ * @param Component - 遅延読み込みする route component。
+ * @returns 共通の loading・error boundary を付与した route component。
+ */
+const withRouteLoadBoundary = <P extends object>(Component: (props: P) => JSX.Element) => {
+  return (props: P) => (
+    <ErrorBoundary fallback={(error) => <LoadError error={error} />}>
+      <Suspense fallback={<Loading />}>
+        <Component {...props} />
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 
@@ -311,21 +355,43 @@ const EmptyToolPage = () => {
   return <div />
 }
 
+const LoadableAdminPage = withRouteLoadBoundary(AdminPage)
+const LoadableAdminUsersPage = withRouteLoadBoundary(AdminUsersPage)
+const LoadableAdminSongsPage = withRouteLoadBoundary(AdminSongsPage)
+const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
+const LoadableEditorSongsPage = withRouteLoadBoundary(EditorSongsPage)
+const LoadableRegisterScoreTempPage = withRouteLoadBoundary(RegisterScoreTempPage)
+
+/**
+ * ADMIN 権限を要求して管理メニューを表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与した管理メニュー。
+ */
 const GuardedAdminPage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
-    <AdminPage />
+    <LoadableAdminPage />
   </RequireRole>
 )
 
+/**
+ * ADMIN 権限を要求してユーザー管理画面を表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与したユーザー管理画面。
+ */
 const GuardedAdminUsersPage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
-    <AdminUsersPage />
+    <LoadableAdminUsersPage />
   </RequireRole>
 )
 
+/**
+ * ADMIN 権限を要求して楽曲管理画面を表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与した楽曲管理画面。
+ */
 const GuardedAdminSongsPage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
-    <AdminSongsPage />
+    <LoadableAdminSongsPage />
   </RequireRole>
 )
 
@@ -336,7 +402,7 @@ const GuardedAdminSongsPage = () => (
  */
 const GuardedEditorSongsPage = () => (
   <RequireRole allowedRoles={['EDITOR']}>
-    <EditorSongsPage />
+    <LoadableEditorSongsPage />
   </RequireRole>
 )
 
@@ -347,16 +413,26 @@ const GuardedEditorSongsPage = () => (
  */
 const GuardedAdminHonorsPage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
-    <AdminHonorsPage />
+    <LoadableAdminHonorsPage />
   </RequireRole>
 )
 
+/**
+ * 認証を要求してスコア登録の一時検証画面を表示する。
+ *
+ * @returns 認証 guard と route module 読み込み境界を付与した一時検証画面。
+ */
 const GuardedRegisterScoreTempPage = () => (
   <RequireAuth>
-    <RegisterScoreTempPage />
+    <LoadableRegisterScoreTempPage />
   </RequireAuth>
 )
 
+/**
+ * アプリ全体の route と共通 shell を構成する。
+ *
+ * @returns トップレベル route、toast 領域を含むアプリケーション。
+ */
 const App = () => {
   return (
     <Router>
@@ -364,48 +440,75 @@ const App = () => {
       <Route path="/" component={LandingPage} />
 
       {/* 認証 */}
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
-      <Route path="/403" component={ForbiddenPage} />
+      <Route path="/login" component={withRouteLoadBoundary(Login)} />
+      <Route path="/register" component={withRouteLoadBoundary(Register)} />
+      <Route path="/403" component={withRouteLoadBoundary(ForbiddenPage)} />
 
       {/* ユーザ */}
       <Route path="/users/:username/stats" component={withNavBar(withAuth(UserStatsPage))} />
-      <Route path="/users/:username/:page?/:subPage?" component={withNavBar(UserPage)} />
-      <Route path="/goals" component={withNavBar(withAuth(GoalsList))} />
+      <Route
+        path="/users/:username/:page?/:subPage?"
+        component={withNavBar(withRouteLoadBoundary(UserPage))}
+      />
+      <Route path="/goals" component={withNavBar(withAuth(withRouteLoadBoundary(GoalsList)))} />
 
       {/* 楽曲 */}
-      <Route path="/songs" component={withNavBar(SongsList)} />
-      <Route path="/songs/worldsend" component={withNavBar(WorldsendSongsList)} />
+      <Route path="/songs" component={withNavBar(withRouteLoadBoundary(SongsList))} />
+      <Route
+        path="/songs/worldsend"
+        component={withNavBar(withRouteLoadBoundary(WorldsendSongsList))}
+      />
       <Route
         path="/songs/worldsend/:displayid/chart-detail"
-        component={withNavBar(withAuth(WorldsendScoreHistory))}
+        component={withNavBar(withAuth(withRouteLoadBoundary(WorldsendScoreHistory)))}
       />
-      <Route path="/songs/worldsend/:displayid" component={withNavBar(WorldsendSongDetail)} />
+      <Route
+        path="/songs/worldsend/:displayid"
+        component={withNavBar(withRouteLoadBoundary(WorldsendSongDetail))}
+      />
       <Route
         path="/songs/:displayid/chart-detail"
-        component={withNavBar(withAuth(SongScoreHistory))}
+        component={withNavBar(withAuth(withRouteLoadBoundary(SongScoreHistory)))}
       />
-      <Route path="/songs/:displayid" component={withNavBar(SongDetail)} />
+      <Route path="/songs/:displayid" component={withNavBar(withRouteLoadBoundary(SongDetail))} />
 
       {/* 設定 */}
-      <Route path="/settings/:section?" component={withNavBar(withAuth(Settings))} />
+      <Route
+        path="/settings/:section?"
+        component={withNavBar(withAuth(withRouteLoadBoundary(Settings)))}
+      />
 
       {/* その他 */}
-      <Route path={`${FRIENDS_PATH}/:tab?`} component={withNavBar(withAuth(FriendsPage))} />
-      <Route path={REGISTER_SCORE_MOCK_PATH} component={withNavBar(RegisterScoreMockPage)} />
-      <Route path={REGISTER_SCORE_PATH} component={withNavBar(withAuth(RegisterScorePage))} />
+      <Route
+        path={`${FRIENDS_PATH}/:tab?`}
+        component={withNavBar(withAuth(withRouteLoadBoundary(FriendsPage)))}
+      />
+      <Route
+        path={REGISTER_SCORE_MOCK_PATH}
+        component={withNavBar(withRouteLoadBoundary(RegisterScoreMockPage))}
+      />
+      <Route
+        path={REGISTER_SCORE_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(RegisterScorePage)))}
+      />
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />
       <Route
         path={CHART_CONSTANT_CALCULATOR_PATH}
-        component={withNavBar(ChartConstantCalculatorPage)}
+        component={withNavBar(withRouteLoadBoundary(ChartConstantCalculatorPage))}
       />
-      <Route path={BORDER_CALCULATOR_PATH} component={withNavBar(BorderCalculatorPage)} />
+      <Route
+        path={BORDER_CALCULATOR_PATH}
+        component={withNavBar(withRouteLoadBoundary(BorderCalculatorPage))}
+      />
       <Route
         path={WEAK_CHART_INSPECTOR_PATH}
-        component={withNavBar(withAuth(WeakChartInspectorPage))}
+        component={withNavBar(withAuth(withRouteLoadBoundary(WeakChartInspectorPage)))}
       />
-      <Route path={RANDOM_SONG_SELECTOR_PATH} component={withNavBar(RandomSongSelectorPage)} />
+      <Route
+        path={RANDOM_SONG_SELECTOR_PATH}
+        component={withNavBar(withRouteLoadBoundary(RandomSongSelectorPage))}
+      />
       <Route path={LOCKED_SONGS_FINDER_PATH} component={withNavBar(EmptyToolPage)} />
 
       {/* 管理 */}
