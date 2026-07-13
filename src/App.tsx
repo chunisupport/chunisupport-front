@@ -1,7 +1,7 @@
 import { A, Route, Router, useParams } from '@solidjs/router'
 import { Calculator, ChartNoAxesCombined, Dices, Search, Target } from 'lucide-solid'
-import type { JSX } from 'solid-js'
-import { createMemo, createResource, ErrorBoundary, For, lazy, Show, Suspense } from 'solid-js'
+import type { Component, JSX } from 'solid-js'
+import { createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
 
 import { fetchMe, fetchUserProfileSummary } from './api/users'
 import {
@@ -87,6 +87,15 @@ const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
 const EditorSongsPage = lazy(() => import('./pages/editor/EditorSongsPage'))
 
 /**
+ * route module を事前取得できる遅延コンポーネント。
+ *
+ * @typeParam P - route component の props 型。
+ */
+type LazyRouteComponent<P extends object> = Component<P> & {
+  preload: () => Promise<{ default: Component<P> }>
+}
+
+/**
  * 指定された画面を共通ナビゲーション内に表示する。
  *
  * @typeParam P - 対象画面の props 型。
@@ -117,20 +126,37 @@ const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
 }
 
 /**
- * route module の取得待ちと取得失敗を共通表示へ接続する。
+ * route module の取得待ちと取得失敗を、ページ内の非同期処理とは独立して共通表示へ接続する。
  *
  * @typeParam P - 対象画面の props 型。
  * @param Component - 遅延読み込みする route component。
  * @returns 共通の loading・error boundary を付与した route component。
  */
-const withRouteLoadBoundary = <P extends object>(Component: (props: P) => JSX.Element) => {
-  return (props: P) => (
-    <ErrorBoundary fallback={(error) => <LoadError error={error} />}>
-      <Suspense fallback={<Loading />}>
-        <Component {...props} />
-      </Suspense>
-    </ErrorBoundary>
-  )
+const withRouteLoadBoundary = <P extends object>(Component: LazyRouteComponent<P>) => {
+  let loadedModule: { default: Component<P> } | undefined
+
+  return (props: P) => {
+    // route 全体を Suspense で囲むとページ内 resource の待機まで捕捉するため、module だけを明示的に待つ。
+    const [routeModule] = createResource(
+      () =>
+        loadedModule ??
+        Component.preload().then((module) => {
+          loadedModule = module
+          return module
+        })
+    )
+
+    return (
+      <ErrorBoundary fallback={(error) => <LoadError error={error} />}>
+        <Show when={routeModule()} fallback={<Loading />}>
+          {(module) => {
+            const RouteComponent = module().default
+            return <RouteComponent {...props} />
+          }}
+        </Show>
+      </ErrorBoundary>
+    )
+  }
 }
 
 /**
