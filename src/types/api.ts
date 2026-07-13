@@ -671,6 +671,16 @@ export interface PlayerDataCourseRecordChange {
   after: PlayerDataCourseRecordState
 }
 
+/** コースマスタの表示に必要な情報。 */
+export interface CourseDTO {
+  /** コースの公式インデックス。 */
+  idx: string
+  /** コースタイトル。 */
+  name: string
+  /** コースクラス。 */
+  class: string
+}
+
 /** プレイヤーデータ登録で返されるレコード差分。 */
 export type PlayerDataRecordChange = PlayerDataSongRecordChange | PlayerDataCourseRecordChange
 

@@ -2,15 +2,22 @@ import { useSearchParams } from '@solidjs/router'
 import { createSignal, Match, onMount, Switch } from 'solid-js'
 
 import { postPlayerDataCommit } from '../../api/register-data'
+import { fetchCourses } from '../../api/songs'
 import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
 import { useSongsData } from '../../stores/songsData'
-import type { PlayerDataRecordChange, PlayerDataResult } from '../../types/api'
+import type {
+  CourseDTO,
+  PlayerDataCourseRecordChange,
+  PlayerDataRecordChange,
+  PlayerDataResult,
+} from '../../types/api'
 import { commitRegisterScore } from '../../usecases/registerScoreCommit'
 import { toChartLevelLabel } from '../../utils/chartLevel'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { REGISTER_SCORE_MESSAGES, RegisterScoreResultView } from './RegisterScoreResultView'
+import { formatWorldsendChartLevel } from './registerScoreDisplay'
 import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreToken'
 
 /**
@@ -25,6 +32,9 @@ type SongLookupItem = {
   official_idx?: string
   title: string
 }
+
+/** コースタイトル検索に必要なコースマスタ項目。 */
+type CourseLookupItem = Pick<CourseDTO, 'idx' | 'name'>
 
 /**
  * エラー表示に利用するメッセージへ変換する。
@@ -48,6 +58,17 @@ const findSongTitleByOfficialIdx = (songs: SongLookupItem[], idx: string): strin
 }
 
 /**
+ * コース一覧から公式idxに対応するタイトルを検索する。
+ *
+ * @param courses - 検索対象のコース一覧。
+ * @param idx - API差分に含まれる公式idx。
+ * @returns 見つかったコースタイトル。見つからない場合はundefined。
+ */
+const findCourseTitleByIdx = (courses: CourseLookupItem[], idx: string): string | undefined => {
+  return courses.find((course) => course.idx === idx)?.name
+}
+
+/**
  * `/register-score` でアップロードトークンを確定保存する画面を表示する。
  *
  * @returns スコア登録画面。
@@ -56,6 +77,7 @@ const RegisterScorePage = () => {
   const [searchParams] = useSearchParams<{ token: string | string[] }>()
   const songsData = useSongsData()
   const [viewState, setViewState] = createSignal<RegisterScoreViewState>({ type: 'committing' })
+  let courses: CourseLookupItem[] = []
 
   useDocumentTitle(REGISTER_SCORE_MESSAGES.title)
 
@@ -85,9 +107,17 @@ const RegisterScorePage = () => {
    * 差分に含まれる楽曲idxと難易度から譜面レベル文字列を解決する。
    *
    * @param change - APIから返却された1譜面分の差分。
-   * @returns 譜面レベル文字列（例: "15+"）。WORLD'S ENDの場合はundefined。
+   * @returns 譜面レベル文字列（例: "15+"、"★5"）。譜面情報がない場合はundefined。
    */
   const chartLevelByIdx = (change: PlayerDataRecordChange) => {
+    if (change.record_type === 'worldsend') {
+      const worldsendSongs = songsData.worldsendSongsResponse.latest?.songs ?? []
+      const song = worldsendSongs.find((item) => item.official_idx === change.idx)
+      const levelStar = song?.charts.WORLDSEND?.level_star
+
+      return formatWorldsendChartLevel(levelStar)
+    }
+
     if (change.record_type !== 'standard') {
       return undefined
     }
@@ -101,6 +131,17 @@ const RegisterScorePage = () => {
     }
 
     return toChartLevelLabel(chart.const)
+  }
+
+  /**
+   * 差分に含まれるコースidxから表示用のコースタイトルを解決する。
+   *
+   * @param change - APIから返却されたコース差分。
+   * @param courses - 取得済みコース一覧。
+   * @returns コースタイトル。未取得の場合はプレースホルダー。
+   */
+  const courseTitleByIdx = (change: PlayerDataCourseRecordChange, courses: CourseLookupItem[]) => {
+    return findCourseTitleByIdx(courses, change.idx) ?? REGISTER_SCORE_MESSAGES.unknownSongTitle
   }
 
   onMount(async () => {
@@ -120,6 +161,12 @@ const RegisterScorePage = () => {
           ensureWorldsendSongsLoaded: songsData.ensureWorldsendSongsLoaded,
         }
       )
+      courses = result.changes.some((change) => change.record_type === 'course')
+        ? await fetchCourses()
+            .then((response) => response.courses)
+            .catch(() => [])
+        : []
+
       setViewState({ type: 'success', result })
     } catch (error) {
       setViewState({ type: 'error', message: resolveRegisterScoreErrorMessage(error) })
@@ -152,6 +199,7 @@ const RegisterScorePage = () => {
                 result={successState.result}
                 resolveSongTitle={songTitleByIdx}
                 resolveChartLevel={chartLevelByIdx}
+                resolveCourseTitle={(change) => courseTitleByIdx(change, courses)}
               />
             )
           }}

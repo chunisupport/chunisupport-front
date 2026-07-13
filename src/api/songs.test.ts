@@ -87,6 +87,24 @@ test('fetchSongsUpdatedAt は一度取得した更新日時をセッション中
   assert.deepEqual(second, responseBody)
 })
 
+test('コースマスタAPIはコース一覧を取得する', async () => {
+  // Given
+  const responseBody = { courses: [{ idx: '50020', name: 'CLASS I COURSE', class: '1' }] }
+  let calledUrl = ''
+  globalThis.fetch = async (input) => {
+    calledUrl = String(input)
+    return Response.json(responseBody)
+  }
+  const { fetchCourses } = await loadSongsApi()
+
+  // When
+  const result = await fetchCourses()
+
+  // Then
+  assert.equal(calledUrl, 'http://localhost:3000/internal/courses')
+  assert.deepEqual(result, responseBody)
+})
+
 test("WORLD'S END 楽曲APIは独立リソースの新パスを呼び出す", async () => {
   const calledUrls: string[] = []
 

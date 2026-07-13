@@ -26,6 +26,7 @@ import type {
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
+import { courseClassBadgeClass, formatCourseClass } from './registerScoreDisplay'
 
 export const REGISTER_SCORE_MESSAGES = {
   invalidToken: 'tokenが不正です。登録用URLを確認してください。',
@@ -36,7 +37,6 @@ export const REGISTER_SCORE_MESSAGES = {
   changedSongsTitle: 'NEW RECORDS',
   changedSongsEmpty: '今回更新された楽曲はありません。',
   changedCoursesTitle: 'COURSE RECORDS',
-  courseClassPrefix: 'CLASS',
   totalHighScoreTitle: 'TOTAL HIGH SCORE',
   recordStatsTitle: 'RECORD STATISTICS',
   unknownSongTitle: '-',
@@ -87,9 +87,11 @@ const SCORE_CHANGE_CARD_CLASS =
  */
 const SCORE_CHANGE_SCORE_GRID_CLASS =
   'mt-1.5 flex items-center justify-around gap-x-2 text-lg leading-6'
+/** コース差分のスコアとランプ表示領域を固定幅にするクラス。 */
+const COURSE_CHANGE_SCORE_VALUE_CLASS = 'w-[95px] shrink-0'
 /** コースクラスバッジの共通レイアウトクラス。 */
-const COURSE_CLASS_BADGE_CLASS =
-  'inline-flex min-w-10 shrink-0 items-center justify-center rounded bg-success-bg px-2 py-0.5 text-xs font-bold uppercase leading-5 text-success'
+const COURSE_CLASS_BADGE_LAYOUT_CLASS =
+  'inline-flex min-w-6 shrink-0 items-center justify-center rounded font-sans text-xs font-bold uppercase leading-5 [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]'
 
 type RegisterScoreLampRecord = {
   is_played: boolean
@@ -107,6 +109,8 @@ type RegisterScoreStatisticRow = {
 
 export type RegisterScoreSongTitleResolver = (change: PlayerDataRecordChange) => string
 export type RegisterScoreChartLevelResolver = (change: PlayerDataRecordChange) => string | undefined
+/** コース差分からコースタイトルを解決する関数。 */
+export type RegisterScoreCourseTitleResolver = (change: PlayerDataCourseRecordChange) => string
 
 /**
  * 1統計グループを表示用の統計行へ変換する。
@@ -377,7 +381,7 @@ const CourseRecordLampBadges = (props: { state: PlayerDataCourseRecordState }) =
     return {
       is_played: true,
       score: props.state.score,
-      clear_lamp: null,
+      clear_lamp: props.state.is_clear ? 'CLEAR' : null,
       combo_lamp: comboLamp && isSharedComboLamp(comboLamp) ? comboLamp : null,
       full_chain: null,
     }
@@ -385,11 +389,7 @@ const CourseRecordLampBadges = (props: { state: PlayerDataCourseRecordState }) =
 
   return (
     <div class="mt-1 flex min-h-6 flex-wrap items-center gap-1">
-      <Show fallback={<LampPlaceholderBadge class="w-[34px]" />} when={props.state.is_clear}>
-        <span class="inline-flex h-6 items-center rounded bg-success-bg px-2 text-xs font-bold text-success">
-          CLEAR
-        </span>
-      </Show>
+      <RecordHardLampCell record={record()} />
       <RecordLampCell record={record()} />
     </div>
   )
@@ -538,6 +538,26 @@ const RegisterScoreLampStatistics = (props: { rows: RegisterScoreStatisticRow[] 
 )
 
 /**
+ * プレイ前スコアを表示する。
+ *
+ * 未プレイの場合は薄い文字でハイフンを表示し、プレイ済みの場合はスコアを通常表示する。
+ * プレイ済みでスコアが 0 の場合も本来の 0 として表示する。
+ *
+ * @param props.before - 差分前の譜面状態。`null` の場合は未プレイとして扱う。
+ * @returns プレイ前スコアまたはハイフンの表示要素。
+ */
+const BeforeRecordScore = (props: {
+  before: PlayerDataRecordState | PlayerDataCourseRecordState | null
+}) => (
+  <Show
+    when={props.before}
+    fallback={<span class="font-jost font-semibold text-text-subtle">{NO_DATA_TEXT}</span>}
+  >
+    {(before) => <span class="font-jost font-semibold">{formatScore(before().score)}</span>}
+  </Show>
+)
+
+/**
  * 1譜面分の登録差分をスクリーンショットに近い行表示にする。
  *
  * @param props - 表示対象の差分、解決済み楽曲タイトル、譜面レベル。
@@ -565,9 +585,7 @@ const RegisterScoreChangeRow = (props: {
       </div>
       <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
         <div class="w-fit">
-          <span class="font-jost font-semibold">
-            {props.change.before ? formatScore(props.change.before.score) : NO_DATA_TEXT}
-          </span>
+          <BeforeRecordScore before={props.change.before} />
           <Show
             when={props.change.before}
             fallback={
@@ -601,22 +619,25 @@ const RegisterScoreChangeRow = (props: {
 /**
  * 1コース分の登録差分を、コース固有の状態だけで表示する。
  *
- * @param props - 表示対象のコース差分。
+ * @param props - 表示対象のコース差分と解決済みコースタイトル。
  * @returns コース差分行。
  */
-const RegisterCourseChangeRow = (props: { change: PlayerDataCourseRecordChange }) => (
+const RegisterCourseChangeRow = (props: {
+  change: PlayerDataCourseRecordChange
+  courseTitle: string
+}) => (
   <article class={`${SCORE_CHANGE_CARD_CLASS} font-jost`}>
     <div class="flex min-w-0 items-center gap-2 text-base">
-      <span class={COURSE_CLASS_BADGE_CLASS}>
-        {REGISTER_SCORE_MESSAGES.courseClassPrefix} {props.change.course_class}
+      <span
+        class={`${COURSE_CLASS_BADGE_LAYOUT_CLASS} ${courseClassBadgeClass(props.change.course_class)}`}
+      >
+        {formatCourseClass(props.change.course_class)}
       </span>
-      <h3 class="min-w-0 truncate font-sans text-base font-bold">No. {props.change.idx}</h3>
+      <h3 class="min-w-0 truncate font-sans text-base font-bold">{props.courseTitle}</h3>
     </div>
     <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
-      <div class="w-fit">
-        <span class="font-jost font-semibold">
-          {props.change.before ? formatScore(props.change.before.score) : NO_DATA_TEXT}
-        </span>
+      <div class={COURSE_CHANGE_SCORE_VALUE_CLASS}>
+        <BeforeRecordScore before={props.change.before} />
         <Show
           when={props.change.before}
           fallback={
@@ -637,7 +658,7 @@ const RegisterCourseChangeRow = (props: { change: PlayerDataCourseRecordChange }
           )}
         </Show>
       </div>
-      <div class="w-fit">
+      <div class={COURSE_CHANGE_SCORE_VALUE_CLASS}>
         <span class="font-jost font-semibold">{formatScore(props.change.after.score)}</span>
         <CourseRecordLampBadges state={props.change.after} />
       </div>
@@ -699,15 +720,25 @@ const RegisterScoreChangesSection = (props: {
 /**
  * 更新されたコースレコードをレポート末尾へ表示する。
  *
- * @param props - コースレコード差分。
+ * @param props - コースレコード差分とコースタイトル解決関数。
  * @returns コースレコードセクション。差分がない場合は何も表示しない。
  */
-const RegisterCourseChangesSection = (props: { changes: PlayerDataCourseRecordChange[] }) => (
+const RegisterCourseChangesSection = (props: {
+  changes: PlayerDataCourseRecordChange[]
+  resolveCourseTitle: RegisterScoreCourseTitleResolver
+}) => (
   <Show when={props.changes.length > 0}>
     <section class="min-w-0 pt-4">
       <h2 class="mb-1 text-xl font-bold">{REGISTER_SCORE_MESSAGES.changedCoursesTitle}</h2>
       <div class="mt-2 grid min-w-0 max-w-full gap-2">
-        <For each={props.changes}>{(change) => <RegisterCourseChangeRow change={change} />}</For>
+        <For each={props.changes}>
+          {(change) => (
+            <RegisterCourseChangeRow
+              change={change}
+              courseTitle={props.resolveCourseTitle(change)}
+            />
+          )}
+        </For>
       </div>
     </section>
   </Show>
@@ -716,13 +747,14 @@ const RegisterCourseChangesSection = (props: { changes: PlayerDataCourseRecordCh
 /**
  * スコア登録完了後の結果と差分一覧を表示する。
  *
- * @param props - 登録結果、楽曲名解決関数、譜面レベル解決関数。
+ * @param props - 登録結果、楽曲名・コースタイトル解決関数、譜面レベル解決関数。
  * @returns 登録結果パネル。
  */
 export const RegisterScoreResultView = (props: {
   result: PlayerDataResult
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
+  resolveCourseTitle: RegisterScoreCourseTitleResolver
 }) => {
   const songChanges = createMemo(() =>
     props.result.changes.filter(
@@ -784,7 +816,10 @@ export const RegisterScoreResultView = (props: {
               resolveSongTitle={props.resolveSongTitle}
               resolveChartLevel={props.resolveChartLevel}
             />
-            <RegisterCourseChangesSection changes={courseChanges()} />
+            <RegisterCourseChangesSection
+              changes={courseChanges()}
+              resolveCourseTitle={props.resolveCourseTitle}
+            />
           </div>
         </section>
       </div>

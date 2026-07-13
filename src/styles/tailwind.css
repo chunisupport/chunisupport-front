@@ -458,6 +458,24 @@
   --cs-color-difficulty-ultima-bg: #000000;
   --cs-color-difficulty-ultima-text: var(--color-white);
 
+  /* ===== コースクラスバッジ ===== */
+  --cs-color-course-class-text: #facc15;
+  --cs-color-course-class-1-bg: #1e3a8a;
+  --cs-color-course-class-2-bg: #0d9488;
+  --cs-color-course-class-3-bg: #a16207;
+  --cs-color-course-class-4-bg: #dc2626;
+  --cs-color-course-class-5-bg: #3b0764;
+  --cs-color-course-class-inf-bg: linear-gradient(
+    45deg,
+    var(--cs-color-lamp-all-justice-critical-rainbow-1),
+    var(--cs-color-lamp-all-justice-critical-rainbow-2),
+    var(--cs-color-lamp-all-justice-critical-rainbow-3),
+    var(--cs-color-lamp-all-justice-critical-rainbow-4),
+    var(--cs-color-lamp-all-justice-critical-rainbow-5),
+    var(--cs-color-lamp-all-justice-critical-rainbow-6),
+    var(--cs-color-lamp-all-justice-critical-rainbow-7)
+  );
+
   /* ===== WORLD'S ENDラベル ===== */
   --cs-color-worldsend-label-bg: linear-gradient(
     135deg,
@@ -639,6 +657,14 @@
   --color-difficulty-master-text: var(--cs-color-difficulty-master-text);
   --color-difficulty-ultima-bg: var(--cs-color-difficulty-ultima-bg);
   --color-difficulty-ultima-text: var(--cs-color-difficulty-ultima-text);
+
+  /* コースクラスバッジ */
+  --color-course-class-text: var(--cs-color-course-class-text);
+  --color-course-class-1-bg: var(--cs-color-course-class-1-bg);
+  --color-course-class-2-bg: var(--cs-color-course-class-2-bg);
+  --color-course-class-3-bg: var(--cs-color-course-class-3-bg);
+  --color-course-class-4-bg: var(--cs-color-course-class-4-bg);
+  --color-course-class-5-bg: var(--cs-color-course-class-5-bg);
 
   /* WORLD'S ENDラベル */
   --color-worldsend-label-text: var(--cs-color-worldsend-label-text);

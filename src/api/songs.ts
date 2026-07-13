@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config'
 import type {
   AchievementTypeDTO,
+  CourseDTO,
   CreateSongRequestDTO,
   CreateWorldsendSongRequestDTO,
   FriendRankingResponseDTO,
@@ -41,6 +42,17 @@ let masterDataResponsePromise: Promise<MasterDataDTO> | undefined
 
 export const fetchAllSongs = async (): Promise<{ songs: SongDTO[] }> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs`)
+
+  return response.json()
+}
+
+/**
+ * APIから有効なコースマスタ一覧を取得する。
+ *
+ * @returns コース一覧レスポンス。
+ */
+export const fetchCourses = async (): Promise<{ courses: CourseDTO[] }> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/courses`)
 
   return response.json()
 }
