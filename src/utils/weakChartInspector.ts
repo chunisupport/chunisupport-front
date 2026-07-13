@@ -21,7 +21,7 @@ export type WeakChartOutlier = {
   distance: number
 }
 
-/** 苦手譜面一覧で利用できるソートキー。 */
+/** 外れ値表で利用できるソートキー。 */
 export type WeakChartSortKey = 'title' | 'difficulty' | 'const' | 'score'
 
 /** 苦手譜面分析の算出結果。 */
@@ -115,9 +115,9 @@ export const inspectWeakCharts = (records: PlayerRecordDTO[]): WeakChartInspecti
 }
 
 /**
- * 苦手譜面一覧を指定列でソートする。
+ * 外れ値表を指定列でソートする。
  *
- * @param outliers - 下側外れ値の一覧。
+ * @param outliers - 外れ値の一覧。
  * @param sortKey - ソート対象列。
  * @param sortDirection - ソート方向。
  * @returns ソート済みの新しい外れ値配列。ソート未指定時は元の配列。

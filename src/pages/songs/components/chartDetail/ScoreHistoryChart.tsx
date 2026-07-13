@@ -10,7 +10,9 @@ import {
   Tooltip,
 } from 'chart.js'
 import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js'
+import { accentPreference, themePreference } from '../../../../stores/themePreferences'
 import type { ScoreHistoryEntryDTO } from '../../../../types/api'
+import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../../../utils/chartTheme'
 import { formatScoreHistoryTimestamp } from '../../../../utils/scoreHistory'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { SCORE_HISTORY_EMPTY_LABEL, SCORE_HISTORY_SCORE_LABEL } from './constants'
@@ -28,7 +30,6 @@ type ScoreHistoryChartPoint = {
 }
 
 const CHART_HEIGHT_CLASS = 'h-80'
-const CHART_COLOR_FALLBACK = '#6b7280'
 const CHART_LINE_COLOR_VARIABLE = '--cs-color-action-primary'
 const CHART_TEXT_COLOR_VARIABLE = '--cs-color-text'
 const CHART_GRID_COLOR_VARIABLE = '--cs-color-border'
@@ -39,23 +40,6 @@ const CHART_POINT_RADIUS = 3
 const CHART_POINT_HOVER_RADIUS = 5
 const CHART_BORDER_WIDTH = 2
 const CHART_TENSION = 0.2
-
-/**
- * CSSカスタムプロパティからChart.jsで利用する色値を取得する。
- *
- * @param variableName - 取得対象のCSSカスタムプロパティ名。
- * @returns 解決済みのCSS色値。
- */
-const getChartColor = (variableName: string): string => {
-  const colorProbe = document.createElement('span')
-  colorProbe.style.color = `var(${variableName}, ${CHART_COLOR_FALLBACK})`
-  document.documentElement.append(colorProbe)
-
-  const color = getComputedStyle(colorProbe).color || CHART_COLOR_FALLBACK
-  colorProbe.remove()
-
-  return color
-}
 
 /**
  * スコア履歴を横軸日時の昇順へ並べ替える。
@@ -99,8 +83,8 @@ const formatScoreAxisTick = (value: string | number): string =>
 const createScoreHistoryChartOptions = (
   entries: readonly ScoreHistoryEntryDTO[]
 ): ChartOptions<'line'> => {
-  const textColor = getChartColor(CHART_TEXT_COLOR_VARIABLE)
-  const gridColor = getChartColor(CHART_GRID_COLOR_VARIABLE)
+  const textColor = resolveChartColor(CHART_TEXT_COLOR_VARIABLE, CHART_COLOR_FALLBACK)
+  const gridColor = resolveChartColor(CHART_GRID_COLOR_VARIABLE, CHART_COLOR_FALLBACK)
 
   return {
     responsive: true,
@@ -176,8 +160,11 @@ const ScoreHistoryChart = (props: Props) => {
   createEffect(() => {
     if (!mounted() || props.entries.length === 0) return
 
+    themePreference()
+    accentPreference()
+
     const entries = sortEntriesByUpdatedAt(props.entries)
-    const color = getChartColor(CHART_LINE_COLOR_VARIABLE)
+    const color = resolveChartColor(CHART_LINE_COLOR_VARIABLE, CHART_COLOR_FALLBACK)
     const chartData: ChartData<'line', ScoreHistoryChartPoint[], number> = {
       datasets: [
         {

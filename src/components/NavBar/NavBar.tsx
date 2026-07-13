@@ -31,7 +31,7 @@ import { DOCUMENTATION_BASE_URL } from '../../config'
 import { EDITOR_SONGS_PATH, FRIENDS_PATH } from '../../constants/routes'
 import { auth } from '../../lib/firebase'
 import { EDITOR_SONGS_TITLE } from '../../pages/editor/constants'
-import { FRIENDS_PAGE_TITLE } from '../../pages/friends'
+import { FRIENDS_PAGE_TITLE } from '../../pages/friends/constants'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import {
   clearFriendRequestNotification,

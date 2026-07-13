@@ -14,7 +14,9 @@ import {
   Tooltip,
 } from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
+import { accentPreference, themePreference } from '../../../../stores/themePreferences'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
+import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../../../utils/chartTheme'
 import { formatScoreDifference, getScoreDifferenceClass } from '../../../../utils/scoreDifference'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { completeSongStatsRatingBands } from '../../../../utils/songStats'
@@ -80,7 +82,6 @@ type SongStatsTableColumnDefinition = {
 }
 
 const CHART_HEIGHT_CLASS = 'h-72'
-const CHART_COLOR_FALLBACK = '#6b7280'
 const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
 const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_EXCLUDED_RATING_BAND = 'ALL'
@@ -265,22 +266,6 @@ const getTableColumnDefinitions = (
 }
 
 /**
- * CSSカスタムプロパティからChart.jsへ渡す解決済みの色値を取得する。
- * @param variableName 取得対象のCSSカスタムプロパティ名。
- * @returns Chart.jsで利用するCSS色値。
- */
-const getChartColor = (variableName: string): string => {
-  const colorProbe = document.createElement('span')
-  colorProbe.style.color = `var(${variableName}, ${CHART_COLOR_FALLBACK})`
-  document.documentElement.append(colorProbe)
-
-  const color = getComputedStyle(colorProbe).color || CHART_COLOR_FALLBACK
-  colorProbe.remove()
-
-  return color
-}
-
-/**
  * 棒の左上から右下へ向かうCanvasグラデーションを生成する。
  * @param context グラデーションを生成するCanvasコンテキスト。
  * @param bar グラデーションの描画範囲に利用する棒要素。
@@ -319,7 +304,9 @@ const createChartGradient = (
  */
 const createBarGradientPlugin = (datasets: SongStatsChartDataset[]): Plugin<'bar'> => {
   const gradientColors = datasets.map((dataset) =>
-    dataset.gradientColorVariables?.map(getChartColor)
+    dataset.gradientColorVariables?.map((variableName) =>
+      resolveChartColor(variableName, CHART_COLOR_FALLBACK)
+    )
   )
 
   return {
@@ -348,8 +335,8 @@ const createBarGradientPlugin = (datasets: SongStatsChartDataset[]): Plugin<'bar
  * @returns 統計グラフで共通利用するChart.jsオプション。
  */
 const createSongStatsChartOptions = (): ChartOptions<'bar'> => {
-  const textColor = getChartColor(CHART_DEFAULT_TEXT_COLOR)
-  const gridColor = getChartColor(CHART_DEFAULT_GRID_COLOR)
+  const textColor = resolveChartColor(CHART_DEFAULT_TEXT_COLOR, CHART_COLOR_FALLBACK)
+  const gridColor = resolveChartColor(CHART_DEFAULT_GRID_COLOR, CHART_COLOR_FALLBACK)
 
   return {
     responsive: true,
@@ -410,7 +397,7 @@ const createSongStatsChartData = (
 ): ChartData<'bar', number[], string> => ({
   labels,
   datasets: datasets.map((dataset) => {
-    const color = getChartColor(dataset.colorVariable)
+    const color = resolveChartColor(dataset.colorVariable, CHART_COLOR_FALLBACK)
 
     return {
       label: dataset.label,
@@ -450,20 +437,20 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
   createEffect(() => {
     if (!mounted()) return
 
+    themePreference()
+    accentPreference()
+
     const chartData = createSongStatsChartData(props.labels, props.datasets)
+    const chartOptions = createSongStatsChartOptions()
+    const chartPlugins = [createBarGradientPlugin(props.datasets)]
 
-    if (!chart) {
-      chart = new Chart(canvasRef, {
-        type: 'bar',
-        data: chartData,
-        options: createSongStatsChartOptions(),
-        plugins: [createBarGradientPlugin(props.datasets)],
-      })
-      return
-    }
-
-    chart.data = chartData
-    chart.update('none')
+    chart?.destroy()
+    chart = new Chart(canvasRef, {
+      type: 'bar',
+      data: chartData,
+      options: chartOptions,
+      plugins: chartPlugins,
+    })
   })
 
   onCleanup(() => {
@@ -506,8 +493,8 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
  * @returns レーティング帯別平均スコアグラフのオプション。
  */
 const createAverageScoreChartOptions = (): ChartOptions<'line'> => {
-  const textColor = getChartColor(CHART_DEFAULT_TEXT_COLOR)
-  const gridColor = getChartColor(CHART_DEFAULT_GRID_COLOR)
+  const textColor = resolveChartColor(CHART_DEFAULT_TEXT_COLOR, CHART_COLOR_FALLBACK)
+  const gridColor = resolveChartColor(CHART_DEFAULT_GRID_COLOR, CHART_COLOR_FALLBACK)
 
   return {
     responsive: true,
@@ -581,7 +568,10 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
   createEffect(() => {
     if (!mounted()) return
 
-    const color = getChartColor(AVERAGE_SCORE_CHART_COLOR)
+    themePreference()
+    accentPreference()
+
+    const color = resolveChartColor(AVERAGE_SCORE_CHART_COLOR, CHART_COLOR_FALLBACK)
     const chartData: ChartData<'line', (number | null)[], string> = {
       labels: props.labels,
       datasets: [
@@ -629,6 +619,7 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
     }
 
     chart.data = chartData
+    chart.options = createAverageScoreChartOptions()
     chart.update('none')
   })
 

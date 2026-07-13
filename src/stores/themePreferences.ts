@@ -23,9 +23,9 @@ export const [accentPreference, setAccentPreferenceSignal] = createSignal<Accent
  * @returns なし
  */
 export const updateThemePreference = (preference: ThemePreference): void => {
-  setThemePreferenceSignal(preference)
   saveThemePreference(preference)
   applyThemePreference(preference)
+  setThemePreferenceSignal(preference)
 }
 
 /**
@@ -34,7 +34,7 @@ export const updateThemePreference = (preference: ThemePreference): void => {
  * @returns なし
  */
 export const updateAccentPreference = (preference: AccentPreference): void => {
-  setAccentPreferenceSignal(preference)
   saveAccentPreference(preference)
   applyAccentPreference(preference)
+  setAccentPreferenceSignal(preference)
 }

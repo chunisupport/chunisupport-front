@@ -10,7 +10,13 @@ import {
   Tooltip,
   type TooltipModel,
 } from 'chart.js'
-import { ChartNoAxesCombined, RotateCcw, Settings, TriangleAlert } from 'lucide-solid'
+import {
+  ChartNoAxesCombined,
+  CircleCheckBig,
+  RotateCcw,
+  Settings,
+  TriangleAlert,
+} from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -36,9 +42,11 @@ import {
   SCORE_THEORETICAL_MAX,
 } from '../../constants/chart'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { accentPreference, themePreference } from '../../stores/themePreferences'
 import type { PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { formatChartConst, truncateChartConst } from '../../utils/chartConstFormat'
+import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { resolveViewportTooltipPosition } from '../../utils/chartTooltipPosition'
 import { formatInteger } from '../../utils/numberFormat'
 import { clampNumericInput } from '../../utils/numberInput'
@@ -111,6 +119,18 @@ type SettingsNumberFieldProps = {
   onChange: (value: string) => void
 }
 
+/** 外れ値表の表示内容。 */
+type OutlierTableProps = {
+  /** 表題に表示するアイコン。 */
+  icon: JSX.Element
+  /** 表題。 */
+  title: string
+  /** スクリーンリーダー向けの表題。 */
+  caption: string
+  /** 表示する外れ値譜面一覧。 */
+  outliers: WeakChartOutlier[]
+}
+
 /**
  * グラフ設定で使用する範囲内補正付き数値入力を表示する。
  *
@@ -143,15 +163,6 @@ const SettingsNumberField = (props: SettingsNumberFieldProps): JSX.Element => (
  * @returns 苦手譜面分析グラフのデータ点。
  */
 const toInspectorPoint = (raw: unknown): InspectorPoint => raw as InspectorPoint
-
-/**
- * CSSカスタムプロパティの解決済み色値を取得する。
- *
- * @param variableName - CSSカスタムプロパティ名。
- * @returns Chart.jsへ渡す色値。
- */
-const getColor = (variableName: string): string =>
-  getComputedStyle(document.documentElement).getPropertyValue(variableName).trim()
 
 /**
  * レコードの並びから重なりを抑えた散布図座標を作成する。
@@ -238,16 +249,22 @@ const WeakChartDistributionChart = (props: {
   let chart: Chart<'scatter', InspectorPoint[]> | undefined
 
   createEffect(() => {
+    themePreference()
+    accentPreference()
+
     const records = props.records
     const axisSettings = props.axisSettings
     const outlierKeys = new Set(props.outliers.map(({ record }) => createChartKey(record)))
     const points = createPoints(records)
     const normalPoints = points.filter(({ record }) => !outlierKeys.has(createChartKey(record)))
     const outlierPoints = points.filter(({ record }) => outlierKeys.has(createChartKey(record)))
-    const textColor = getColor(WEAK_CHART_INSPECTOR_COLORS.text)
-    const gridColor = getColor(WEAK_CHART_INSPECTOR_COLORS.grid)
-    const pointColor = getColor(WEAK_CHART_INSPECTOR_COLORS.point)
-    const outlierColor = getColor(WEAK_CHART_INSPECTOR_COLORS.outlier)
+    const textColor = resolveChartColor(WEAK_CHART_INSPECTOR_COLORS.text, CHART_COLOR_FALLBACK)
+    const gridColor = resolveChartColor(WEAK_CHART_INSPECTOR_COLORS.grid, CHART_COLOR_FALLBACK)
+    const pointColor = resolveChartColor(WEAK_CHART_INSPECTOR_COLORS.point, CHART_COLOR_FALLBACK)
+    const outlierColor = resolveChartColor(
+      WEAK_CHART_INSPECTOR_COLORS.outlier,
+      CHART_COLOR_FALLBACK
+    )
 
     chart?.destroy()
     chart = new Chart(canvasRef, {
@@ -332,10 +349,10 @@ const WeakChartDistributionChart = (props: {
 /**
  * 外れ値に該当した譜面を表で表示する。
  *
- * @param props.outliers - 外れ値譜面一覧。
+ * @param props - 表題、アイコン、外れ値譜面一覧。
  * @returns 外れ値のセマンティックなデータ表。
  */
-const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
+const OutlierTable = (props: OutlierTableProps): JSX.Element => {
   const [sortKey, setSortKey] = createSignal<WeakChartSortKey | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
   const sortedOutliers = createMemo(() =>
@@ -385,8 +402,8 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
   return (
     <section class="rounded-lg border border-border bg-surface">
       <h2 class="flex items-center gap-2 border-b border-border px-4 py-3 text-lg font-semibold">
-        <TriangleAlert class="h-5 w-5 text-warning" aria-hidden="true" />
-        {WEAK_CHART_INSPECTOR_COPY.outlierTitle}
+        {props.icon}
+        {props.title}
         <span class="rounded-full bg-surface-muted px-2 py-0.5 text-sm text-text-muted">
           {props.outliers.length}
         </span>
@@ -401,7 +418,7 @@ const OutlierTable = (props: { outliers: WeakChartOutlier[] }): JSX.Element => {
       >
         <div class="overflow-x-auto">
           <table class="w-full min-w-120 table-fixed border-collapse text-sm">
-            <caption class="sr-only">{WEAK_CHART_INSPECTOR_COPY.tableCaption}</caption>
+            <caption class="sr-only">{props.caption}</caption>
             <colgroup>
               <col />
               <col class="w-23" />
@@ -484,8 +501,13 @@ const WeakChartInspectorPage = (): JSX.Element => {
     )
   )
   const inspection = createMemo(() => inspectWeakCharts(aggregationRecords()))
+  /** 下方向の外れ値だけを苦手候補として抽出する。 */
   const lowerOutliers = createMemo(() =>
     inspection().outliers.filter((outlier) => outlier.direction === 'LOW')
+  )
+  /** 上方向の外れ値だけを得意候補として抽出する。 */
+  const higherOutliers = createMemo(() =>
+    inspection().outliers.filter((outlier) => outlier.direction === 'HIGH')
   )
 
   // グラフ設定 state
@@ -633,7 +655,20 @@ const WeakChartInspectorPage = (): JSX.Element => {
               outliers={inspection().outliers}
               axisSettings={axisSettings()}
             />
-            <OutlierTable outliers={lowerOutliers()} />
+            <Show when={higherOutliers().length > 0}>
+              <OutlierTable
+                icon={<CircleCheckBig class="h-5 w-5 text-success" aria-hidden="true" />}
+                title={WEAK_CHART_INSPECTOR_COPY.highOutlierTitle}
+                caption={WEAK_CHART_INSPECTOR_COPY.highOutlierTableCaption}
+                outliers={higherOutliers()}
+              />
+            </Show>
+            <OutlierTable
+              icon={<TriangleAlert class="h-5 w-5 text-warning" aria-hidden="true" />}
+              title={WEAK_CHART_INSPECTOR_COPY.outlierTitle}
+              caption={WEAK_CHART_INSPECTOR_COPY.tableCaption}
+              outliers={lowerOutliers()}
+            />
 
             {/* グラフ設定ダイアログ */}
             <Dialog

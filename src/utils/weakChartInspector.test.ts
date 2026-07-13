@@ -52,6 +52,19 @@ test('Tukey法の下側外れ値を苦手譜面として抽出すること', () 
   assert.equal(result.outliers[0].direction, 'LOW')
 })
 
+test('Tukey法の上側外れ値を得意かもしれない譜面として抽出すること', () => {
+  // Given
+  const records = [1000000, 1001000, 1002000, 1003000, 1010000].map((score) => createRecord(score))
+
+  // When
+  const result = inspectWeakCharts(records)
+
+  // Then
+  assert.equal(result.outliers.length, 1)
+  assert.equal(result.outliers[0].record.score, 1010000)
+  assert.equal(result.outliers[0].direction, 'HIGH')
+})
+
 test('未プレイ譜面を分布と外れ値の計算から除外すること', () => {
   // Given
   const records = [
