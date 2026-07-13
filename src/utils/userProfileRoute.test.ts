@@ -21,6 +21,7 @@ test('page パスパラメータが許可値ならそのまま返す', () => {
   assert.equal(resolveProfilePageQuery('rating_new'), 'rating_new')
   assert.equal(resolveProfilePageQuery('record_normal'), 'record_normal')
   assert.equal(resolveProfilePageQuery('record_we'), 'record_we')
+  assert.equal(resolveProfilePageQuery('record_course'), 'record_course')
   assert.equal(resolveProfilePageQuery('overpower'), 'overpower')
 })
 
@@ -31,6 +32,7 @@ test('page パスパラメータが無効でもクエリパラメータが有効
 test('record 系ページかどうかを判定できる', () => {
   assert.equal(isRecordPageQuery('record_normal'), true)
   assert.equal(isRecordPageQuery('record_we'), true)
+  assert.equal(isRecordPageQuery('record_course'), true)
   assert.equal(isRecordPageQuery('rating_best'), false)
   assert.equal(isRecordPageQuery('overpower'), false)
   assert.equal(isRecordPageQuery(undefined), false)
@@ -43,6 +45,7 @@ test('デフォルトタブはユーザールート直下に正規化する', ()
 test('デフォルト以外のタブはパスセグメントとして表現する', () => {
   assert.equal(buildUserProfilePagePath('alice', 'rating_new'), '/users/alice/rating_new')
   assert.equal(buildUserProfilePagePath('alice', 'record_normal'), '/users/alice/record_normal')
+  assert.equal(buildUserProfilePagePath('alice', 'record_course'), '/users/alice/record_course')
 })
 
 test('OVER POWERサブページを解決できる', () => {

@@ -1,3 +1,7 @@
+/** 難易度など短いドメイン値をレコード表で表示する共通バッジ寸法。 */
+export const RECORD_COMPACT_BADGE_CLASS =
+  'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
+
 /**
  * 未プレイ状態を示す小さなバッジを表示する。
  *

@@ -2,18 +2,19 @@ import { useParams, useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
 
-import { fetchUserProfileSummary } from '../../../api/users'
+import { fetchUserCourseRecords, fetchUserProfileSummary } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import type { PlayerDTO, UserRatingDTO, UserRecordDTO } from '../../../types/api'
+import type {
+  PlayerDTO,
+  UserCourseRecordsDTO,
+  UserRatingDTO,
+  UserRecordDTO,
+} from '../../../types/api'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
-import {
-  isRecordPageQuery,
-  resolveOverPowerSubPage,
-  resolveProfilePageQuery,
-} from '../../../utils/userProfileRoute'
+import { resolveOverPowerSubPage, resolveProfilePageQuery } from '../../../utils/userProfileRoute'
 import NotFoundPage from '../../NotFoundPage'
 import { UserProfileView } from './UserProfileView'
 
@@ -27,6 +28,14 @@ export type UserPageRecordProfile = {
   username: string
   player: PlayerDTO
   record: UserRecordDTO
+}
+
+/** ユーザー名とコースレコード取得結果を関連付けた表示用データ。 */
+export type UserPageCourseRecordProfile = {
+  /** 取得対象のユーザー名。 */
+  username: string
+  /** コースレコード一覧レスポンス。 */
+  records: UserCourseRecordsDTO
 }
 
 type UserPageLoadState =
@@ -82,20 +91,40 @@ const fetchUserRecordLoadState = async (username: string): Promise<UserPageRecor
   record: await fetchUserRecordWithCache(username),
 })
 
+/**
+ * ユーザーの未プレイを含むコースレコードを取得する。
+ *
+ * @param username - コースレコード取得対象のユーザー名。
+ * @returns 取得対象ユーザー名付きのコースレコード取得結果。
+ */
+const fetchUserCourseRecordLoadState = async (
+  username: string
+): Promise<UserPageCourseRecordProfile> => ({
+  username,
+  records: await fetchUserCourseRecords(username, { includeNoPlay: true }),
+})
+
 const UserPage: Component = () => {
   const params = useParams<{ username: string; page?: string; subPage?: string }>()
   const [searchParams] = useSearchParams()
   const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
 
   const [pageState] = createResource(() => params.username, fetchUserPageLoadState)
-  const [recordProfile] = createResource(
+  const [recordProfile] = createResource(() => {
+    const selectedPage = resolveProfilePageQuery(params.page, searchParams.page)
+    return shouldFetchRecordProfile() ||
+      selectedPage === 'record_normal' ||
+      selectedPage === 'record_we' ||
+      selectedPage === 'overpower'
+      ? params.username
+      : undefined
+  }, fetchUserRecordLoadState)
+  const [courseRecordProfile] = createResource(
     () =>
-      shouldFetchRecordProfile() ||
-      isRecordPageQuery(params.page, searchParams.page) ||
-      resolveProfilePageQuery(params.page, searchParams.page) === 'overpower'
+      resolveProfilePageQuery(params.page, searchParams.page) === 'record_course'
         ? params.username
         : undefined,
-    fetchUserRecordLoadState
+    fetchUserCourseRecordLoadState
   )
 
   const linkedRatingProfile = createMemo<UserPageRatingProfile | undefined>(() => {
@@ -174,6 +203,7 @@ const UserPage: Component = () => {
                   <UserProfileView
                     profile={linkedProfile()}
                     recordProfile={linkedRecordProfile}
+                    courseRecordProfile={courseRecordProfile}
                     onShowRecords={() => setShouldFetchRecordProfile(true)}
                     selectedPage={resolveProfilePageQuery(params.page, searchParams.page)}
                     selectedOverPowerSubPage={resolveOverPowerSubPage(params.subPage)}

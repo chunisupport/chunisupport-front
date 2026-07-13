@@ -12,6 +12,7 @@ test('ホームタブはプロフィール配下のタブパスでもアクテ�
   assert.equal(isHomePath('/users/alice/rating_new'), true)
   assert.equal(isHomePath('/users/alice/record_normal'), true)
   assert.equal(isHomePath('/users/alice/record_we'), true)
+  assert.equal(isHomePath('/users/alice/record_course'), true)
   assert.equal(isHomePath('/users/alice/overpower'), true)
   assert.equal(isHomePath('/users/alice/overpower/genre'), true)
   assert.equal(isHomePath('/users/alice/overpower/level'), true)

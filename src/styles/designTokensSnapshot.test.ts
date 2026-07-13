@@ -122,6 +122,17 @@ test('AJCランプの文字色は虹背景向けの専用色で定義されて�
   )
 })
 
+test('コースクラスバッジの文字影が共通トークンで定義されていること', () => {
+  assert.equal(
+    readCustomProperty(tailwindCssContent, '--cs-shadow-course-class-text'),
+    '0 1px 2px rgb(0 0 0 / 50%)'
+  )
+  assert.match(
+    tailwindCssContent,
+    /\.text-shadow-badge\s*{\s*text-shadow:\s*var\(--cs-shadow-course-class-text\);/
+  )
+})
+
 test('アクセントカラーが背景テーマから独立したトークンとして定義されていること', () => {
   assert.match(tailwindCssContent, /\[data-accent="green"\]\s*{/)
   assert.match(tailwindCssContent, /\[data-accent="orange"\]\s*{/)

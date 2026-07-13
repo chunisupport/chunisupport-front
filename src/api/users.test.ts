@@ -100,3 +100,22 @@ test('fetchUserUpdatedAtは失敗した同時リクエストの完了後に再�
   assert.ok(failedRequests.every((result) => result.status === 'rejected'))
   assert.equal(retried.updated_at, '2026-07-06T00:00:00Z')
 })
+
+test('fetchUserCourseRecordsは未プレイを含むコースレコード一覧を取得できること', async () => {
+  // Given
+  const responseBody = { courses: [], meta: { updated_at: null } }
+  globalThis.fetch = async (input) => {
+    assert.equal(
+      String(input),
+      'http://localhost:3000/internal/users/alice%20bob/record/courses?include_noplay=true'
+    )
+    return Response.json(responseBody)
+  }
+  const { fetchUserCourseRecords } = await loadUsersApi()
+
+  // When
+  const response = await fetchUserCourseRecords('alice bob', { includeNoPlay: true })
+
+  // Then
+  assert.deepEqual(response, responseBody)
+})

@@ -7,6 +7,7 @@ import type {
   PlayerLockedSongsBatchRequest,
   PlayerLockedSongsResponse,
   UpdatedAtResponseDTO,
+  UserCourseRecordsDTO,
   UserDTO,
   UserProfileDTO,
   UserRatingDTO,
@@ -80,6 +81,28 @@ export const fetchUserRecord = async (
   }
   const response = await fetchWithAuth(url)
 
+  return response.json()
+}
+
+/**
+ * 指定したユーザーのコースレコード一覧を取得する。
+ *
+ * @param username - レコード取得対象のユーザー名。
+ * @param options - 未プレイコースの補完設定。
+ * @returns コースレコード一覧レスポンス。
+ */
+export const fetchUserCourseRecords = async (
+  username: string,
+  options: FetchUserRecordOptions = {}
+): Promise<UserCourseRecordsDTO> => {
+  const url = new URL(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record/courses`
+  )
+  if (options.includeNoPlay) {
+    url.searchParams.set('include_noplay', 'true')
+  }
+
+  const response = await fetchWithAuth(url)
   return response.json()
 }
 

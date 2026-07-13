@@ -5,6 +5,7 @@ export const profilePageQueryValues = [
   'rating_new',
   'record_normal',
   'record_we',
+  'record_course',
   'overpower',
 ] as const
 
@@ -62,14 +63,18 @@ export const resolveProfilePageQuery = (
  *
  * @param pagePathParam - URLから取得したページのパスパラメータ。
  * @param pageQueryParam - 互換用に読む旧pageクエリパラメータ。
- * @returns 通常またはWORLD'S ENDレコードページならtrue。
+ * @returns 通常、WORLD'S END、コースのいずれかのレコードページならtrue。
  */
 export const isRecordPageQuery = (
   pagePathParam: string | string[] | undefined,
   pageQueryParam?: string | string[] | undefined
 ): boolean => {
   const resolvedPage = resolveProfilePageQuery(pagePathParam, pageQueryParam)
-  return resolvedPage === 'record_normal' || resolvedPage === 'record_we'
+  return (
+    resolvedPage === 'record_normal' ||
+    resolvedPage === 'record_we' ||
+    resolvedPage === 'record_course'
+  )
 }
 
 /**
