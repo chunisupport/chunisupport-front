@@ -42,9 +42,11 @@ import {
   SCORE_THEORETICAL_MAX,
 } from '../../constants/chart'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { accentPreference, themePreference } from '../../stores/themePreferences'
 import type { PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { formatChartConst, truncateChartConst } from '../../utils/chartConstFormat'
+import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { resolveViewportTooltipPosition } from '../../utils/chartTooltipPosition'
 import { formatInteger } from '../../utils/numberFormat'
 import { clampNumericInput } from '../../utils/numberInput'
@@ -163,15 +165,6 @@ const SettingsNumberField = (props: SettingsNumberFieldProps): JSX.Element => (
 const toInspectorPoint = (raw: unknown): InspectorPoint => raw as InspectorPoint
 
 /**
- * CSSカスタムプロパティの解決済み色値を取得する。
- *
- * @param variableName - CSSカスタムプロパティ名。
- * @returns Chart.jsへ渡す色値。
- */
-const getColor = (variableName: string): string =>
-  getComputedStyle(document.documentElement).getPropertyValue(variableName).trim()
-
-/**
  * レコードの並びから重なりを抑えた散布図座標を作成する。
  *
  * @param records - プレイ済み譜面レコード。
@@ -256,16 +249,22 @@ const WeakChartDistributionChart = (props: {
   let chart: Chart<'scatter', InspectorPoint[]> | undefined
 
   createEffect(() => {
+    themePreference()
+    accentPreference()
+
     const records = props.records
     const axisSettings = props.axisSettings
     const outlierKeys = new Set(props.outliers.map(({ record }) => createChartKey(record)))
     const points = createPoints(records)
     const normalPoints = points.filter(({ record }) => !outlierKeys.has(createChartKey(record)))
     const outlierPoints = points.filter(({ record }) => outlierKeys.has(createChartKey(record)))
-    const textColor = getColor(WEAK_CHART_INSPECTOR_COLORS.text)
-    const gridColor = getColor(WEAK_CHART_INSPECTOR_COLORS.grid)
-    const pointColor = getColor(WEAK_CHART_INSPECTOR_COLORS.point)
-    const outlierColor = getColor(WEAK_CHART_INSPECTOR_COLORS.outlier)
+    const textColor = resolveChartColor(WEAK_CHART_INSPECTOR_COLORS.text, CHART_COLOR_FALLBACK)
+    const gridColor = resolveChartColor(WEAK_CHART_INSPECTOR_COLORS.grid, CHART_COLOR_FALLBACK)
+    const pointColor = resolveChartColor(WEAK_CHART_INSPECTOR_COLORS.point, CHART_COLOR_FALLBACK)
+    const outlierColor = resolveChartColor(
+      WEAK_CHART_INSPECTOR_COLORS.outlier,
+      CHART_COLOR_FALLBACK
+    )
 
     chart?.destroy()
     chart = new Chart(canvasRef, {

@@ -51,7 +51,6 @@
 
 | ID | 優先度 | 概要 | 詳細・対応方針 |
 |---|---|---|---|
-| **UI-001** | **Medium** | Chart.js の Canvas がテーマ・アクセント変更へ追随しない | `src/stores/themePreferences.ts:13-39` はテーマとアクセントを reactive signal として更新しますが、`src/pages/songs/components/chartDetail/ScoreHistoryChart.tsx:176-215`、`src/pages/songs/SongDetail/components/SongStatsTable.tsx:450-481`、`src/pages/tools/WeakChartInspectorPage.tsx:258-326` の effect はこれらの signal を購読せず、実行時に CSS 変数を一度解決するだけです。そのためテーマを切り替えても各 Canvas の effect は再実行されません。さらに `SongStatsTable.tsx:455-466` はデータ変更時も `chart.data` だけを更新し、options と gradient plugin を再生成しないため、一部の色が旧テーマのまま残ります。重複している CSS 色解決も含めて chart theme utility / primitive へ集約し、`themePreference()` と `accentPreference()` の変更時に options・dataset・gradient を更新すべきです。 |
 
 ### 信頼性・運用 (OPS / TEST)
 
@@ -83,7 +82,7 @@
 ## まとめ
 
 - 最優先は、**トップレベル route の code splitting (`PERF-001`)** と **楽曲管理画面の責務分割 (`ARCH-001`)** です。初期 bundle と変更影響範囲の双方を直接縮小できます。
-- 次に、**楽曲更新時の共有キャッシュ無効化 (`DATA-001`)** と **Chart.js のテーマ追随 (`UI-001`)** を行い、同一セッション内で表示が古いまま残る問題を解消すべきです。
+- 次に、**楽曲更新時の共有キャッシュ無効化 (`DATA-001`)** を行い、同一セッション内で表示が古いまま残る問題を解消すべきです。
 - record view-state、楽曲選択ダイアログ、Dialog shell、難易度定義は複数 feature へ広がっているため、新しい個別実装を足す前に共通領域へ寄せる必要があります。
 - 旧 `REF-F05` は、保存フィルターの API 化、schema version、shape 検証、旧 schema 移行、テストが実装済みのため削除しました。
 - 旧 `REF-F09` と `REF-F12` は、OVER POWER 集計・グラフ生成が `src/usecases/overpower` と `UserOverPower/utils/graphRows.ts` へ抽出され、境界ケースのテストも追加済みのため削除しました。抽出後の未使用 helper だけを `QUAL-002` として残しています。
