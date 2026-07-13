@@ -465,6 +465,7 @@
   --cs-color-course-class-3-bg: #a16207;
   --cs-color-course-class-4-bg: #dc2626;
   --cs-color-course-class-5-bg: #3b0764;
+  --cs-shadow-course-class-text: 0 1px 2px rgb(0 0 0 / 50%);
   --cs-color-course-class-inf-bg: linear-gradient(
     45deg,
     var(--cs-color-lamp-all-justice-critical-rainbow-1),
@@ -770,6 +771,10 @@
 }
 
 @layer utilities {
+  .text-shadow-badge {
+    text-shadow: var(--cs-shadow-course-class-text);
+  }
+
   .animate-marquee {
     animation: marquee 5s linear infinite;
   }

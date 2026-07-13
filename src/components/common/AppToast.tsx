@@ -12,7 +12,7 @@ type AppToastOptions = {
   message: string
 }
 
-const APP_TOAST_DURATION_MS = 5000
+const APP_TOAST_DURATION_MS = 3000
 const APP_TOAST_REGION_LABEL = '通知'
 const APP_TOAST_CLOSE_LABEL = '通知を閉じる'
 
@@ -87,7 +87,7 @@ export const showAppToast = (options: AppToastOptions): number =>
         </Toast.CloseButton>
       </div>
       <Toast.ProgressTrack class="h-1 bg-surface-muted">
-        <Toast.ProgressFill class="h-full bg-current" />
+        <Toast.ProgressFill class="h-full w-[var(--kb-toast-progress-fill-width)] bg-current" />
       </Toast.ProgressTrack>
     </Toast>
   ))

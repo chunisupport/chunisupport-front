@@ -1,4 +1,5 @@
 import { Show } from 'solid-js'
+import { RECORD_COMPACT_BADGE_CLASS } from '../../../../components/common/record/RecordBadges'
 import {
   type ColumnRenderer,
   RECORD_CELL_BASE_CLASS,
@@ -23,8 +24,6 @@ import { getConstDisplay, getRatingDisplay } from './constDisplay'
 import { formatJusticeCountForAj } from './justiceCountDisplay'
 import { formatUpdatedAt } from './updatedAt'
 
-const DIFFICULTY_BADGE_CLASS =
-  'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
 const DIFFICULTY_COLUMN_CLASS = `${RECORD_CELL_BASE_CLASS} font-oswald text-sm font-semibold`
 
 export const recordColumnRenderers: Record<
@@ -39,7 +38,7 @@ export const recordColumnRenderers: Record<
   ),
   difficulty: (record) => (
     <div class={DIFFICULTY_COLUMN_CLASS}>
-      <span class={`${DIFFICULTY_BADGE_CLASS} ${difficultyBadgeClass(record.difficulty)}`}>
+      <span class={`${RECORD_COMPACT_BADGE_CLASS} ${difficultyBadgeClass(record.difficulty)}`}>
         {difficultyShort(record.difficulty)}
       </span>
     </div>

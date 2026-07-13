@@ -1,7 +1,7 @@
 import { A } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
-import { getScoreRank } from '../../../utils/scoreRank'
+import { getScoreRank, type ScoreRank } from '../../../utils/scoreRank'
 import { SortableHeaderButton, type SortDirection } from '../SortableTableHeader'
 import { LampPlaceholderBadge } from './RecordBadges'
 import { getDefaultRecordLampLabel } from './recordLampLabel'
@@ -38,7 +38,7 @@ type RecordHeaderButtonProps = {
 }
 
 type RecordTitleCellProps = {
-  href: string
+  href?: string
   title: string
 }
 
@@ -169,28 +169,42 @@ export const RecordHeaderButton = (props: RecordHeaderButtonProps) => (
 )
 
 /**
- * 曲名をリンク付きのレコード表セルとして表示する。
+ * 曲名をレコード表セルとして表示する。
  *
- * @param props - 遷移先URLと曲名。
- * @returns 曲名リンクセル。
+ * @param props - 曲名と任意の遷移先URL。
+ * @returns 遷移先があればリンク、なければテキストの曲名セル。
  */
-export const RecordTitleCell = (props: RecordTitleCellProps) => (
-  <A
-    href={props.href}
-    class={`font-sans flex ${RECORD_ROW_MIN_HEIGHT_CLASS} min-w-0 w-full items-center text-sm text-inherit hover:underline`}
-    title={props.title}
-  >
-    <span class="block w-full truncate pt-px">{props.title}</span>
-  </A>
-)
+export const RecordTitleCell = (props: RecordTitleCellProps) => {
+  const className = `font-sans flex ${RECORD_ROW_MIN_HEIGHT_CLASS} min-w-0 w-full items-center text-sm text-inherit`
+  const content = <span class="block w-full truncate pt-px">{props.title}</span>
+
+  if (props.href) {
+    return (
+      <A href={props.href} class={`${className} hover:underline`} title={props.title}>
+        {content}
+      </A>
+    )
+  }
+
+  return (
+    <div class={className} title={props.title}>
+      {content}
+    </div>
+  )
+}
 
 /**
  * レコードのスコアとランクを表示する。
  *
- * @param props - プレイ状態とスコアを含むレコード。
+ * @param props - プレイ状態とスコアを含むレコード、および任意のランク判定関数。
  * @returns スコアセル。未プレイ時は空セル。
  */
-export const RecordScoreCell = (props: { record: ScoreRecord }): JSX.Element => {
+export const RecordScoreCell = (props: {
+  /** 表示するプレイ状態とスコア。 */
+  record: ScoreRecord
+  /** 通常スコア以外の尺度で使うランク判定関数。 */
+  getRank?: (score: number) => ScoreRank
+}): JSX.Element => {
   if (!props.record.is_played) {
     return (
       <div
@@ -199,11 +213,11 @@ export const RecordScoreCell = (props: { record: ScoreRecord }): JSX.Element => 
     )
   }
 
-  const scoreRank = getScoreRank(props.record.score)
+  const scoreRank = (props.getRank ?? getScoreRank)(props.record.score)
 
   return (
     <div
-      class={`flex ${RECORD_ROW_MIN_HEIGHT_CLASS} flex-col items-end justify-center px-1 text-right whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
+      class={`font-jost flex ${RECORD_ROW_MIN_HEIGHT_CLASS} flex-col items-end justify-center px-1 text-right whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
     >
       <span class="w-full text-right leading-none">
         {props.record.score.toLocaleString('ja-JP')}

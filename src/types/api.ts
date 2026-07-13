@@ -826,6 +826,32 @@ export interface UserWorldsendSongRecordDTO {
   meta: UserRecordMetaDTO
 }
 
+/** コースモード1件分のユーザーレコード。 */
+export interface CourseRecordDTO {
+  /** コースの公式インデックス。 */
+  idx: string
+  /** コースタイトル。 */
+  name: string
+  /** コースクラス。 */
+  class: string
+  /** プレイ済みか。 */
+  is_played: boolean
+  /** 3曲合計スコア。 */
+  score: number
+  /** コースをクリア済みか。 */
+  is_clear: boolean
+  /** コースのコンボランプ。 */
+  combo_lamp: 'FULL COMBO' | 'ALL JUSTICE' | null
+  /** レコード更新日時。 */
+  updated_at: string | null
+}
+
+/** ユーザーのコースレコード一覧レスポンス。 */
+export interface UserCourseRecordsDTO {
+  courses: CourseRecordDTO[]
+  meta: UserRecordMetaDTO
+}
+
 export interface PlayerLockedSongResponseItem {
   display_id: string
   title: string

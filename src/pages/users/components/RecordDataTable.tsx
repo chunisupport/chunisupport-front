@@ -25,6 +25,8 @@ type RecordDataTableProps<TRecord, TColumnId extends string, TSortKey extends st
   sortDirection: SortDirection
   /** データが空のときに表示する文言。 */
   emptyMessage: string
+  /** 支援技術へ伝えるレコード表の名前。 */
+  ariaLabel?: string
   /** テーブル外枠に適用するクラス。 */
   wrapperClass?: string
   /** 仮想スクロール位置の再計算トリガー。 */
@@ -36,6 +38,9 @@ type RecordDataTableProps<TRecord, TColumnId extends string, TSortKey extends st
   /** 行番号ごとの追加クラスを返す処理。 */
   getRowClass?: (rowIndex: number) => string
 }
+
+/** 共通レコード表の既定アクセシブル名。 */
+const DEFAULT_RECORD_TABLE_ARIA_LABEL = 'レコード一覧'
 
 /**
  * レコード配列を仮想スクロール付きのデータテーブルとして表示する。
@@ -66,21 +71,31 @@ export function RecordDataTable<TRecord, TColumnId extends string, TSortKey exte
         when={props.records.length > 0}
         fallback={<p class="py-6 text-center text-text-subtle">{props.emptyMessage}</p>}
       >
+        {/* biome-ignore lint/a11y/useSemanticElements: 仮想スクロール表はtable要素へ置換できないためARIA tableを使う。 */}
         <div
           ref={virtualizedTable.setTableContainerRef}
           class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-border"
+          role="table"
+          aria-label={props.ariaLabel ?? DEFAULT_RECORD_TABLE_ARIA_LABEL}
+          aria-rowcount={props.records.length + 1}
+          aria-colcount={props.columns.length}
         >
-          <div class="w-fit min-w-full">
-            <div class="border-b border-border bg-surface-muted">
+          <div class="w-fit min-w-full" role="presentation">
+            {/* biome-ignore lint/a11y/useSemanticElements: 仮想スクロール表のヘッダーグループとしてARIA roleを使う。 */}
+            <div class="border-b border-border bg-surface-muted" role="rowgroup">
+              {/* biome-ignore lint/a11y/useFocusableInteractive lint/a11y/useSemanticElements: div gridの仮想テーブルなのでtrへ置換できない。 */}
               <div
                 class="grid px-2 text-xs font-semibold"
                 style={{ 'grid-template-columns': gridTemplateColumns() }}
+                role="row"
+                aria-rowindex={1}
               >
                 <For each={props.columns}>
-                  {(column) => (
+                  {(column, columnIndex) => (
                     // biome-ignore lint/a11y/useFocusableInteractive lint/a11y/useSemanticElements: div gridの仮想テーブルなのでthへ置換できない。
                     <div
                       role="columnheader"
+                      aria-colindex={columnIndex() + 1}
                       aria-sort={getSortAriaValue(
                         props.sortKey === column.sortKey,
                         props.sortDirection
@@ -100,10 +115,12 @@ export function RecordDataTable<TRecord, TColumnId extends string, TSortKey exte
               </div>
             </div>
 
+            {/* biome-ignore lint/a11y/useSemanticElements: 仮想行の絶対配置を維持するためtbodyへ置換できない。 */}
             <div
               ref={virtualizedTable.setTableBodyRef}
               class="relative"
               style={{ height: `${virtualizedTable.getTotalSize()}px` }}
+              role="rowgroup"
             >
               <For each={virtualizedTable.virtualRows()}>
                 {(virtualRow) => {
@@ -112,15 +129,23 @@ export function RecordDataTable<TRecord, TColumnId extends string, TSortKey exte
                   return (
                     <Show when={record()} keyed>
                       {(currentRecord) => (
+                        // biome-ignore lint/a11y/useFocusableInteractive lint/a11y/useSemanticElements: div gridの仮想テーブルなのでtrへ置換できない。
                         <div
                           class={`absolute left-0 top-0 grid w-full border-b border-border px-2 text-xs ${getRowClass(virtualRow.index)}`}
                           style={{
                             'grid-template-columns': gridTemplateColumns(),
                             transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
                           }}
+                          role="row"
+                          aria-rowindex={virtualRow.index + 2}
                         >
                           <For each={props.columns}>
-                            {(column) => props.getColumnRenderer(column.id)(currentRecord)}
+                            {(column, columnIndex) => (
+                              // biome-ignore lint/a11y/useSemanticElements: 共通セル描画を保持する仮想テーブルなのでtdへ置換できない。
+                              <div class="min-w-0" role="cell" aria-colindex={columnIndex() + 1}>
+                                {props.getColumnRenderer(column.id)(currentRecord)}
+                              </div>
+                            )}
                           </For>
                         </div>
                       )}

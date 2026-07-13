@@ -1,8 +1,8 @@
 import { A, useLocation, useNavigate } from '@solidjs/router'
 import { ChartColumnIncreasing } from 'lucide-solid'
-import type { Accessor, Component } from 'solid-js'
+import type { Accessor, Component, Resource } from 'solid-js'
 import { createMemo, For, lazy, Show, Suspense } from 'solid-js'
-import { Loading } from '../../../components'
+import { LoadError, Loading } from '../../../components'
 import { getAppButtonClass } from '../../../components/common/AppButton'
 import { AppTabContent, SegmentedTabs, UnderlineTabs } from '../../../components/common/AppTabs'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
@@ -14,15 +14,21 @@ import {
 } from '../../../utils/userProfileRoute'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
-import type { UserPageRatingProfile, UserPageRecordProfile } from './UserPage'
+import type {
+  UserPageCourseRecordProfile,
+  UserPageRatingProfile,
+  UserPageRecordProfile,
+} from './UserPage'
 
 const UserRecord = lazy(() => import('../UserRecord'))
 const UserOverPower = lazy(() => import('../UserOverPower/UserOverPower'))
 const WorldsendRecord = lazy(() => import('../WorldsendRecord'))
+const CourseRecord = lazy(() => import('../CourseRecord'))
 
 type Props = {
   profile: UserPageRatingProfile
   recordProfile: Accessor<UserPageRecordProfile | undefined>
+  courseRecordProfile: Resource<UserPageCourseRecordProfile>
   onShowRecords: () => void
   selectedOverPowerSubPage: OverPowerSubPage
   selectedPage: ProfilePageQuery
@@ -51,6 +57,7 @@ const RATING_TAB_OPTIONS = [
 const RECORD_TAB_OPTIONS = [
   { value: 'standard', label: 'STANDARD' },
   { value: 'worldsend', label: "WORLD'S END" },
+  { value: 'course', label: 'COURSE' },
 ] as const
 
 /**
@@ -108,10 +115,23 @@ export const UserProfileView: Component<Props> = (props) => {
   const newRecords = (): PlayerRecordDTO[] => props.profile.rating.new
   const newCandidateRecords = (): PlayerRecordDTO[] => props.profile.rating.new_candidate
   const recordProfile = () => props.recordProfile()
+  /**
+   * 現在表示中のユーザーに一致するコースレコードだけを返す。
+   *
+   * @returns 表示対象ユーザーのコースレコード。取得前または別ユーザーの値ならundefined。
+   */
+  const courseRecordProfile = () => {
+    const profile = props.courseRecordProfile()
+    return profile?.username === props.username ? profile : undefined
+  }
   const navigate = useNavigate()
   const location = useLocation()
   const selectedPageTab = createMemo<'rating' | 'records' | 'overpower'>(() => {
-    if (props.selectedPage === 'record_normal' || props.selectedPage === 'record_we') {
+    if (
+      props.selectedPage === 'record_normal' ||
+      props.selectedPage === 'record_we' ||
+      props.selectedPage === 'record_course'
+    ) {
       return 'records'
     }
 
@@ -124,9 +144,11 @@ export const UserProfileView: Component<Props> = (props) => {
   const selectedRatingTab = createMemo<'best' | 'new'>(() =>
     props.selectedPage === 'rating_new' ? 'new' : 'best'
   )
-  const selectedRecordTab = createMemo<'standard' | 'worldsend'>(() =>
-    props.selectedPage === 'record_we' ? 'worldsend' : 'standard'
-  )
+  const selectedRecordTab = createMemo<'standard' | 'worldsend' | 'course'>(() => {
+    if (props.selectedPage === 'record_we') return 'worldsend'
+    if (props.selectedPage === 'record_course') return 'course'
+    return 'standard'
+  })
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
@@ -170,7 +192,11 @@ export const UserProfileView: Component<Props> = (props) => {
     } else if (value === 'records') {
       navigate(
         buildProfileNavigationTarget(
-          selectedRecordTab() === 'worldsend' ? 'record_we' : 'record_normal'
+          selectedRecordTab() === 'worldsend'
+            ? 'record_we'
+            : selectedRecordTab() === 'course'
+              ? 'record_course'
+              : 'record_normal'
         )
       )
       props.onShowRecords()
@@ -189,9 +215,11 @@ export const UserProfileView: Component<Props> = (props) => {
   }
 
   const handleRecordTabChange = (value: string) => {
-    if (value !== 'standard' && value !== 'worldsend') return
-    navigate(buildProfileNavigationTarget(value === 'worldsend' ? 'record_we' : 'record_normal'))
-    props.onShowRecords()
+    if (value !== 'standard' && value !== 'worldsend' && value !== 'course') return
+    const page =
+      value === 'worldsend' ? 'record_we' : value === 'course' ? 'record_course' : 'record_normal'
+    navigate(buildProfileNavigationTarget(page))
+    if (value !== 'course') props.onShowRecords()
     scrollToRecordList()
   }
 
@@ -260,6 +288,18 @@ export const UserProfileView: Component<Props> = (props) => {
               <Suspense fallback={<Loading />}>
                 <Show when={recordProfile()} fallback={<Loading />}>
                   {(profile) => <WorldsendRecord records={profile().record.worldsend ?? []} />}
+                </Show>
+              </Suspense>
+            </AppTabContent>
+            <AppTabContent value="course">
+              <Suspense fallback={<Loading />}>
+                <Show
+                  when={!props.courseRecordProfile.error}
+                  fallback={<LoadError error={props.courseRecordProfile.error} />}
+                >
+                  <Show when={courseRecordProfile()} fallback={<Loading />}>
+                    {(profile) => <CourseRecord records={profile().records.courses} />}
+                  </Show>
                 </Show>
               </Suspense>
             </AppTabContent>
