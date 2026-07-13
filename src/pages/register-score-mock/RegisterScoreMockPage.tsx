@@ -162,9 +162,9 @@ const createMockPlayerDataResult = (): PlayerDataResult => ({
     honors_skipped: 0,
     standard_records_actually_changed: 18,
     worldsend_records_actually_changed: 2,
-    course_records_upserted: 2,
+    course_records_upserted: 7,
     course_records_skipped: 0,
-    course_records_actually_changed: 2,
+    course_records_actually_changed: 7,
   },
   changes: createMockChanges(),
   skipped_records: [],
@@ -305,7 +305,7 @@ const createMockChanges = (): PlayerDataRecordChange[] => [
       full_chain: 'FULL CHAIN GOLD',
     },
   },
-  // --- 通常譜面：譜面定数不明（chartLevelなし） ---
+  // --- 通常譜面：譜面定数不明（レベルは判明済み） ---
   {
     record_type: 'standard',
     change_type: 'new',
@@ -344,6 +344,46 @@ const createMockChanges = (): PlayerDataRecordChange[] => [
     course_class: '1',
     before: null,
     after: { score: 3023238, is_clear: true, combo_lamp: 'FULL COMBO' },
+  },
+  {
+    record_type: 'course',
+    change_type: 'updated',
+    idx: '50021',
+    course_class: '2',
+    before: { score: 2865000, is_clear: true, combo_lamp: null },
+    after: { score: 2900000, is_clear: true, combo_lamp: 'FULL COMBO' },
+  },
+  {
+    record_type: 'course',
+    change_type: 'new',
+    idx: '50022',
+    course_class: '3',
+    before: null,
+    after: { score: 2700000, is_clear: true, combo_lamp: null },
+  },
+  {
+    record_type: 'course',
+    change_type: 'updated',
+    idx: '50023',
+    course_class: '4',
+    before: { score: 2490000, is_clear: false, combo_lamp: null },
+    after: { score: 2600000, is_clear: true, combo_lamp: null },
+  },
+  {
+    record_type: 'course',
+    change_type: 'new',
+    idx: '50024',
+    course_class: '5',
+    before: null,
+    after: { score: 2550000, is_clear: true, combo_lamp: 'ALL JUSTICE' },
+  },
+  {
+    record_type: 'course',
+    change_type: 'updated',
+    idx: '50025',
+    course_class: 'inf',
+    before: { score: 2400000, is_clear: true, combo_lamp: 'FULL COMBO' },
+    after: { score: 2500000, is_clear: true, combo_lamp: 'ALL JUSTICE' },
   },
   {
     record_type: 'course',
@@ -392,6 +432,20 @@ const MOCK_CHART_LEVELS: Record<string, string> = {
   '4002': '15',
   '5001': '15',
   '5002': '15+',
+  '9001': '15',
+  WE001: '★3',
+  WE002: '★5',
+}
+
+/** コースidxとモック表示タイトルの対応表。 */
+const MOCK_COURSE_TITLES: Record<string, string> = {
+  '50020': 'CLASS I COURSE',
+  '50021': 'CLASS II COURSE',
+  '50022': 'CLASS III COURSE',
+  '50023': 'CLASS IV COURSE',
+  '50024': 'CLASS V COURSE',
+  '50025': 'INFINITE COURSE',
+  '50029': 'EXTRA COURSE',
 }
 
 /**
@@ -408,12 +462,22 @@ const resolveMockSongTitle = (change: PlayerDataRecordChange): string => {
  * idx からモックの譜面レベル文字列を解決する。
  *
  * @param change - APIから返却された1譜面分の差分。
- * @returns 譜面レベル文字列（例: "15+"）。WORLD'S ENDまたは定数不明の場合はundefined。
+ * @returns 譜面レベル文字列（例: "15+"、"★5"）。譜面情報がない場合はundefined。
  */
 const resolveMockChartLevel = (change: PlayerDataRecordChange): string | undefined => {
-  if (change.record_type !== 'standard') return undefined
-
   return MOCK_CHART_LEVELS[change.idx]
+}
+
+/**
+ * idxからモックのコースタイトルを解決する。
+ *
+ * @param change - APIから返却されたコース差分。
+ * @returns コースタイトル。
+ */
+const resolveMockCourseTitle = (
+  change: Extract<PlayerDataRecordChange, { record_type: 'course' }>
+) => {
+  return MOCK_COURSE_TITLES[change.idx] ?? REGISTER_SCORE_MESSAGES.unknownSongTitle
 }
 
 /**
@@ -455,6 +519,7 @@ const RegisterScoreMockPage = () => {
               result={emptyResult()}
               resolveSongTitle={resolveMockSongTitle}
               resolveChartLevel={resolveMockChartLevel}
+              resolveCourseTitle={resolveMockCourseTitle}
             />
           </div>
         }
@@ -463,6 +528,7 @@ const RegisterScoreMockPage = () => {
           result={mockResult()}
           resolveSongTitle={resolveMockSongTitle}
           resolveChartLevel={resolveMockChartLevel}
+          resolveCourseTitle={resolveMockCourseTitle}
         />
       </Show>
     </main>
