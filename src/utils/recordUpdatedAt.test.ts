@@ -5,7 +5,7 @@ import {
   formatUpdatedAt,
   hasValidUpdatedAtTimestamp,
   updatedAtTimestamp,
-} from './updatedAt.ts'
+} from './recordUpdatedAt.ts'
 
 test('更新日をyy/mm/dd形式で表示する', () => {
   assert.equal(formatUpdatedAt('2026-04-14T11:22:33Z'), '26/04/14')

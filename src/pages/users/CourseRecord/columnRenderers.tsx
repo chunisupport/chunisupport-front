@@ -6,10 +6,12 @@ import {
   RecordLampCell,
   RecordScoreCell,
   RecordTitleCell,
+  RecordUpdatedAtCell,
 } from '../../../components/common/record/RecordDisplayParts'
 import type { CourseRecordDTO } from '../../../types/api'
 import { courseClassBadgeClass, formatCourseClass } from '../../../utils/courseClassDisplay'
 import { getCourseScoreRank } from '../../../utils/courseScoreRank'
+import { formatUpdatedAt } from '../../../utils/recordUpdatedAt'
 import type { CourseRecordColumnId } from './columns'
 
 /** コースレコードの列IDごとのセル描画処理。 */
@@ -40,6 +42,7 @@ const courseRecordColumnRenderers: Record<CourseRecordColumnId, ColumnRenderer<C
       }}
     />
   ),
+  updatedAt: (record) => <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />,
 }
 
 /**

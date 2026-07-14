@@ -15,6 +15,7 @@ test('コースレコード列は既存レコード表と同じ列幅と短い�
     { id: 'score', label: 'スコア', width: getRecordColumnBaseDefinition('score').width },
     { id: 'lamp', label: 'AJ', width: getRecordColumnBaseDefinition('lamp').width },
     { id: 'hardLamp', label: 'ハード', width: getRecordColumnBaseDefinition('hardLamp').width },
+    { id: 'updatedAt', label: '更新日', width: getRecordColumnBaseDefinition('updatedAt').width },
   ]
 
   // When: コース列のID、見出し、幅を取り出す。

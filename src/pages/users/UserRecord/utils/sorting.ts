@@ -1,5 +1,9 @@
 import type { RecordSortCondition, RecordSortKey } from '../../../../types/recordFilter'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import {
+  compareUpdatedAtWithMissingLast,
+  updatedAtTimestamp,
+} from '../../../../utils/recordUpdatedAt'
 import { compareSongsByReading } from '../../../../utils/songTitleSorting'
 import {
   createInitialSortConditions,
@@ -19,7 +23,6 @@ import {
 } from '../../utils/justiceCountSorting'
 import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
 import { formatJusticeCountForAj } from './justiceCountDisplay.ts'
-import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
 
 const DIFFICULTY_ORDER: Record<string, number> = {
   BASIC: 0,
