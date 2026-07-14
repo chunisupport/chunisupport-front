@@ -10,6 +10,7 @@ import { DEFAULT_COURSE_RECORD_SORT_CONDITION, sortCourseRecords } from './sorti
  * @returns 必須項目を持つコースレコード。
  */
 const createCourseRecord = (overrides: Partial<CourseRecordDTO> = {}): CourseRecordDTO => ({
+  display_id: '0123456789abcdef',
   idx: '50001',
   name: 'コースA',
   class: '1',

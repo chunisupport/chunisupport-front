@@ -89,7 +89,16 @@ test('fetchSongsUpdatedAt は一度取得した更新日時をセッション中
 
 test('コースマスタAPIはコース一覧を取得する', async () => {
   // Given
-  const responseBody = { courses: [{ idx: '50020', name: 'CLASS I COURSE', class: '1' }] }
+  const responseBody = {
+    courses: [
+      {
+        display_id: '0123456789abcdef',
+        idx: '50020',
+        name: 'CLASS I COURSE',
+        class: '1',
+      },
+    ],
+  }
   let calledUrl = ''
   globalThis.fetch = async (input) => {
     calledUrl = String(input)

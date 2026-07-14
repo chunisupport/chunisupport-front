@@ -103,7 +103,22 @@ test('fetchUserUpdatedAtは失敗した同時リクエストの完了後に再�
 
 test('fetchUserCourseRecordsは未プレイを含むコースレコード一覧を取得できること', async () => {
   // Given
-  const responseBody = { courses: [], meta: { updated_at: null } }
+  const responseBody = {
+    courses: [
+      {
+        display_id: '0123456789abcdef',
+        idx: '50020',
+        name: 'CLASS I COURSE',
+        class: '1',
+        is_played: false,
+        score: 0,
+        is_clear: false,
+        combo_lamp: null,
+        updated_at: null,
+      },
+    ],
+    meta: { updated_at: null },
+  }
   globalThis.fetch = async (input) => {
     assert.equal(
       String(input),
