@@ -179,7 +179,7 @@ export const readCachedWorldsendSongRecord = async (
 }
 
 /**
- * RATINGと曲単位レコードのユーザーAPIキャッシュをすべて削除する。
+ * RATING、曲単位レコード、コースレコードのユーザーAPIキャッシュをすべて削除する。
  *
  * @returns キャッシュ削除完了後に解決されるPromise。
  */
@@ -188,12 +188,15 @@ export const clearCachedUserApiResponses = async (): Promise<void> => {
     'rw',
     db.userApiResponses,
     db.userSongRecords,
+    db.userCourseRecords,
     db.cacheMetadata,
     async () => {
       await Promise.all([
         db.userApiResponses.clear(),
         db.userSongRecords.clear(),
+        db.userCourseRecords.clear(),
         db.cacheMetadata.delete('userRecord'),
+        db.cacheMetadata.delete('userCourseRecords'),
       ])
     }
   )

@@ -37,6 +37,7 @@ let cachedVersionsResponse: VersionsResponse | undefined
 let versionsResponsePromise: Promise<VersionsResponse> | undefined
 let cachedSongsUpdatedAtResponse: UpdatedAtResponseDTO | undefined
 let songsUpdatedAtResponsePromise: Promise<UpdatedAtResponseDTO> | undefined
+let coursesUpdatedAtResponsePromise: Promise<UpdatedAtResponseDTO> | undefined
 let cachedMasterDataResponse: MasterDataDTO | undefined
 let masterDataResponsePromise: Promise<MasterDataDTO> | undefined
 
@@ -55,6 +56,40 @@ export const fetchCourses = async (): Promise<{ courses: CourseDTO[] }> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/courses`)
 
   return response.json()
+}
+
+/**
+ * APIからコースマスタ更新日時を取得する。
+ *
+ * @returns コースマスタ更新日時レスポンス。
+ */
+const fetchCoursesUpdatedAtFromApi = async (): Promise<UpdatedAtResponseDTO> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/courses/updated-at`)
+
+  return response.json()
+}
+
+/**
+ * コースマスタ更新日時の同時呼び出しを同一リクエストにまとめる。
+ *
+ * @returns APIから取得した更新日時レスポンス。
+ */
+export const fetchCoursesUpdatedAt = async (): Promise<UpdatedAtResponseDTO> => {
+  const existingPromise = coursesUpdatedAtResponsePromise
+  if (existingPromise) {
+    return existingPromise
+  }
+
+  const responsePromise = fetchCoursesUpdatedAtFromApi()
+  coursesUpdatedAtResponsePromise = responsePromise
+
+  try {
+    return await responsePromise
+  } finally {
+    if (coursesUpdatedAtResponsePromise === responsePromise) {
+      coursesUpdatedAtResponsePromise = undefined
+    }
+  }
 }
 
 /**

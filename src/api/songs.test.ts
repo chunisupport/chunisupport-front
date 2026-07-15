@@ -114,6 +114,47 @@ test('コースマスタAPIはコース一覧を取得する', async () => {
   assert.deepEqual(result, responseBody)
 })
 
+test('fetchCoursesUpdatedAtは完了後の呼び出しで最新更新日時を再取得する', async () => {
+  // Given: コースマスタ更新日時APIが成功する。
+  const responseBody = { updated_at: '2026-07-15T09:00:00Z' }
+  let fetchCount = 0
+  globalThis.fetch = async (input) => {
+    assert.equal(String(input), 'http://localhost:3000/internal/courses/updated-at')
+    fetchCount += 1
+    return Response.json(responseBody)
+  }
+  const { fetchCoursesUpdatedAt } = await loadSongsApi()
+
+  // When: 直列に2回取得する。
+  const first = await fetchCoursesUpdatedAt()
+  const second = await fetchCoursesUpdatedAt()
+
+  // Then: 呼び出しごとにAPIから最新値を取得する。
+  assert.equal(fetchCount, 2)
+  assert.deepEqual(second, responseBody)
+  assert.deepEqual(first, responseBody)
+})
+
+test('fetchCoursesUpdatedAtは同時呼び出しを1リクエストにまとめる', async () => {
+  // Given: 応答まで待機するコースマスタ更新日時API。
+  const responseBody = { updated_at: '2026-07-15T09:00:00Z' }
+  let fetchCount = 0
+  globalThis.fetch = async (input) => {
+    assert.equal(String(input), 'http://localhost:3000/internal/courses/updated-at')
+    fetchCount += 1
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    return Response.json(responseBody)
+  }
+  const { fetchCoursesUpdatedAt } = await loadSongsApi()
+
+  // When: 同時に2回取得する。
+  const [first, second] = await Promise.all([fetchCoursesUpdatedAt(), fetchCoursesUpdatedAt()])
+
+  // Then: 1リクエストを共有する。
+  assert.equal(fetchCount, 1)
+  assert.equal(first, second)
+})
+
 test("WORLD'S END 楽曲APIは独立リソースの新パスを呼び出す", async () => {
   const calledUrls: string[] = []
 

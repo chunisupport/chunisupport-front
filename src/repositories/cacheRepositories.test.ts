@@ -2,13 +2,26 @@ import 'fake-indexeddb/auto'
 import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
 import {
+  type CachedCourse,
   type CachedSong,
   CLIENT_CACHE_SCHEMA_VERSION,
   db,
   type UserApiResponse,
   type ViewSetting,
 } from '../lib/db/cacheDB.ts'
-import type { SongDTO, UserRatingDTO, UserRecordDTO } from '../types/api.ts'
+import type {
+  CourseDTO,
+  SongDTO,
+  UserCourseRecordsDTO,
+  UserRatingDTO,
+  UserRecordDTO,
+} from '../types/api.ts'
+import {
+  readCachedCourses,
+  readCachedUserCourseRecords,
+  replaceCachedCourses,
+  replaceCachedUserCourseRecords,
+} from './courseCacheRepository.ts'
 import { readCachedSongs, replaceCachedSongs } from './songCacheRepository.ts'
 import {
   clearCachedUserApiResponses,
@@ -48,6 +61,27 @@ const previousIdSong: SongDTO = {
   title: '前方ID楽曲',
 }
 
+const course: CourseDTO = {
+  display_id: 'course-1',
+  idx: '50001',
+  name: 'CLASS I COURSE',
+  class: '1',
+}
+
+const courseRecordResponse: UserCourseRecordsDTO = {
+  courses: [
+    {
+      ...course,
+      is_played: true,
+      score: 3_020_000,
+      is_clear: true,
+      combo_lamp: 'FULL COMBO',
+      updated_at: '2026-07-15T10:00:00Z',
+    },
+  ],
+  meta: { updated_at: '2026-07-15T10:00:00Z' },
+}
+
 const rating = {
   rating: 17.1234,
   best_average: 17.2345,
@@ -75,7 +109,9 @@ const clearStores = async (): Promise<void> => {
     db.cacheMetadata.clear(),
     db.songs.clear(),
     db.worldsendSongs.clear(),
+    db.courses.clear(),
     db.userSongRecords.clear(),
+    db.userCourseRecords.clear(),
     db.userApiResponses.clear(),
     db.viewSettings.clear(),
     db.friendRequestNotificationStates.clear(),
@@ -117,6 +153,63 @@ test('楽曲キャッシュは順序情報がない旧形式の場合は読み�
 
   // Then
   assert.equal(cachedSongs, null)
+})
+
+test('コースマスタキャッシュは専用updated-atが一致する場合だけ読み込まれること', async () => {
+  // Given: コースマスタを専用更新日時とともに保存する。
+  await replaceCachedCourses([course], '2026-07-15T09:00:00Z')
+
+  // When: 一致する更新日時と異なる更新日時で読み込む。
+  const matched = await readCachedCourses('2026-07-15T09:00:00Z')
+  const mismatched = await readCachedCourses('2026-07-15T09:01:00Z')
+
+  // Then: 一致する場合だけ保存順で復元される。
+  assert.deepEqual(matched, [course])
+  assert.equal(mismatched, null)
+})
+
+test('コースマスタキャッシュは順序情報がない旧形式の場合は読み込まれないこと', async () => {
+  // Given: 現行メタデータと旧形式のコースマスタを保存する。
+  await db.cacheMetadata.put({
+    key: 'courses',
+    schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
+    coursesUpdatedAt: '2026-07-15T09:00:00Z',
+    fetchedAt: '2026-07-15T09:00:00Z',
+  })
+  await db.courses.put({ id: course.display_id, data: course } as CachedCourse)
+
+  // When: キャッシュを読み込む。
+  const cachedCourses = await readCachedCourses('2026-07-15T09:00:00Z')
+
+  // Then: 配列順を保証できないため利用しない。
+  assert.equal(cachedCourses, null)
+})
+
+test('コースレコードキャッシュはマスタ情報を除いてユーザー単位で保存されること', async () => {
+  // Given: マスタ情報を含むAPIレスポンスを保存する。
+  await replaceCachedUserCourseRecords('alice', 'user-1', courseRecordResponse)
+
+  // When: 同じユーザー更新日時でキャッシュを読み込む。
+  const cached = await readCachedUserCourseRecords({
+    username: 'alice',
+    userUpdatedAt: 'user-1',
+  })
+  const stored = await db.userCourseRecords.get(JSON.stringify(['alice', course.display_id]))
+
+  // Then: プレイ状態だけを復元し、名称などのマスタ情報は保存しない。
+  assert.deepEqual(cached, {
+    courses: [
+      {
+        display_id: course.display_id,
+        score: 3_020_000,
+        is_clear: true,
+        combo_lamp: 'FULL COMBO',
+        updated_at: '2026-07-15T10:00:00Z',
+      },
+    ],
+    meta: courseRecordResponse.meta,
+  })
+  assert.equal('name' in (stored?.data ?? {}), false)
 })
 
 test('ユーザー API キャッシュは username と updated-at が一致する場合だけ読み込まれること', async () => {
@@ -228,6 +321,7 @@ test('ユーザーAPIキャッシュの全削除はレーティング・曲別�
     'worldsend-1',
     null
   )
+  await replaceCachedUserCourseRecords('alice', 'user-1', courseRecordResponse)
 
   // When
   await clearCachedUserApiResponses()
@@ -235,7 +329,9 @@ test('ユーザーAPIキャッシュの全削除はレーティング・曲別�
   // Then
   assert.equal(await db.userApiResponses.count(), 0)
   assert.equal(await db.userSongRecords.count(), 0)
+  assert.equal(await db.userCourseRecords.count(), 0)
   assert.equal(await db.cacheMetadata.get('userRecord'), undefined)
+  assert.equal(await db.cacheMetadata.get('userCourseRecords'), undefined)
 })
 
 test('集計値がない旧形式のレーティングキャッシュは読み込まれないこと', async () => {

@@ -2,7 +2,6 @@ import { useSearchParams } from '@solidjs/router'
 import { createSignal, Match, onMount, Switch } from 'solid-js'
 
 import { postPlayerDataCommit } from '../../api/register-data'
-import { fetchCourses } from '../../api/songs'
 import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
@@ -13,6 +12,7 @@ import type {
   PlayerDataRecordChange,
   PlayerDataResult,
 } from '../../types/api'
+import { fetchCoursesWithCache } from '../../usecases/cache/fetchCoursesWithCache'
 import { commitRegisterScore } from '../../usecases/registerScoreCommit'
 import { toChartLevelLabel } from '../../utils/chartLevel'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
@@ -162,7 +162,7 @@ const RegisterScorePage = () => {
         }
       )
       courses = result.changes.some((change) => change.record_type === 'course')
-        ? await fetchCourses()
+        ? await fetchCoursesWithCache()
             .then((response) => response.courses)
             .catch(() => [])
         : []
