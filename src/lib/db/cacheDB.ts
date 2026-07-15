@@ -2,12 +2,14 @@ import Dexie, { type EntityTable } from 'dexie'
 import type { WorldsendFilterState } from '../../pages/users/WorldsendRecord/types/filterTypes'
 import type { WorldsendRecordColumnId } from '../../pages/users/WorldsendRecord/utils/columns'
 import type {
+  CourseDTO,
   PlayerRecordDTO,
   SongDTO,
   UserRatingDTO,
   WorldsendRecordDTO,
   WorldsendSongDTO,
 } from '../../types/api'
+import type { PlayedCourseRecord } from '../../types/courseRecord'
 import type { FilterState, RecordColumnId } from '../../types/recordFilter'
 
 /** IndexedDB に保存するキャッシュデータの現行スキーマバージョン。 */
@@ -19,8 +21,10 @@ export const CLIENT_CACHE_DB_NAME = 'ChuniSupportCache'
 export type CacheMetadataKey =
   | 'songs'
   | 'worldsendSongs'
+  | 'courses'
   | 'userRating'
   | 'userRecord'
+  | 'userCourseRecords'
   | 'standardRecordFilter'
   | 'standardRecordColumns'
   | 'worldsendRecordFilter'
@@ -30,6 +34,7 @@ export type CacheMetadata = {
   key: CacheMetadataKey
   schemaVersion: number
   songsUpdatedAt?: string | null
+  coursesUpdatedAt?: string | null
   userUpdatedAt?: string | null
   username?: string
   fetchedAt?: string
@@ -47,6 +52,25 @@ export type CachedWorldsendSong = {
   id: string
   sortOrder: number
   data: WorldsendSongDTO
+}
+
+/** IndexedDB に保存するコースマスタ1件。 */
+export type CachedCourse = {
+  id: string
+  sortOrder: number
+  data: CourseDTO
+}
+
+/** マスタ情報を除いて IndexedDB に保存するプレイ済みコースレコード。 */
+export type CachedUserCourseRecord = {
+  key: string
+  username: string
+  courseId: string
+  sortOrder: number
+  schemaVersion: number
+  userUpdatedAt: string | null
+  fetchedAt: string
+  data: PlayedCourseRecord
 }
 
 export type CachedUserSongRecord =
@@ -123,7 +147,9 @@ export type CacheDB = Dexie & {
   cacheMetadata: EntityTable<CacheMetadata, 'key'>
   songs: EntityTable<CachedSong, 'id'>
   worldsendSongs: EntityTable<CachedWorldsendSong, 'id'>
+  courses: EntityTable<CachedCourse, 'id'>
   userSongRecords: EntityTable<CachedUserSongRecord, 'key'>
+  userCourseRecords: EntityTable<CachedUserCourseRecord, 'key'>
   userApiResponses: EntityTable<UserApiResponse, 'key'>
   viewSettings: EntityTable<ViewSetting, 'key'>
   friendRequestNotificationStates: EntityTable<FriendRequestNotificationState, 'key'>
@@ -152,4 +178,11 @@ db.version(2)
 
 db.version(3).stores({
   friendRequestNotificationStates: 'key, username, schemaVersion, fetchedAt',
+})
+
+db.version(4).stores({
+  cacheMetadata:
+    'key, schemaVersion, songsUpdatedAt, coursesUpdatedAt, userUpdatedAt, username, fetchedAt, savedAt, recordUpdatedAt',
+  courses: 'id',
+  userCourseRecords: 'key, username, courseId, sortOrder, schemaVersion, userUpdatedAt, fetchedAt',
 })

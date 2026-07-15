@@ -1,8 +1,15 @@
 import { useParams, useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  ErrorBoundary,
+  Show,
+} from 'solid-js'
 
-import { fetchUserCourseRecords, fetchUserProfileSummary } from '../../../api/users'
+import { fetchUserProfileSummary } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type {
@@ -11,6 +18,7 @@ import type {
   UserRatingDTO,
   UserRecordDTO,
 } from '../../../types/api'
+import { fetchUserCourseRecordsWithCache } from '../../../usecases/cache/fetchUserCourseRecordsWithCache'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
@@ -101,13 +109,21 @@ const fetchUserCourseRecordLoadState = async (
   username: string
 ): Promise<UserPageCourseRecordProfile> => ({
   username,
-  records: await fetchUserCourseRecords(username, { includeNoPlay: true }),
+  records: await fetchUserCourseRecordsWithCache(username),
 })
 
 const UserPage: Component = () => {
   const params = useParams<{ username: string; page?: string; subPage?: string }>()
   const [searchParams] = useSearchParams()
   const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
+  const [courseRecordProfileUsername, setCourseRecordProfileUsername] = createSignal<string>()
+
+  /** COURSEタブを一度開いたユーザー名を記録し、そのユーザーのページ内でリソースを保持する。 */
+  createEffect(() => {
+    if (resolveProfilePageQuery(params.page, searchParams.page) === 'record_course') {
+      setCourseRecordProfileUsername(params.username)
+    }
+  })
 
   const [pageState] = createResource(() => params.username, fetchUserPageLoadState)
   const [recordProfile] = createResource(() => {
@@ -120,10 +136,7 @@ const UserPage: Component = () => {
       : undefined
   }, fetchUserRecordLoadState)
   const [courseRecordProfile] = createResource(
-    () =>
-      resolveProfilePageQuery(params.page, searchParams.page) === 'record_course'
-        ? params.username
-        : undefined,
+    () => (courseRecordProfileUsername() === params.username ? params.username : undefined),
     fetchUserCourseRecordLoadState
   )
 
