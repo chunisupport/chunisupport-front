@@ -20,9 +20,9 @@ import {
 } from '../../../../utils/difficultyUtils'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import { formatUpdatedAt } from '../../../../utils/recordUpdatedAt'
 import { getConstDisplay, getRatingDisplay } from './constDisplay'
 import { formatJusticeCountForAj } from './justiceCountDisplay'
-import { formatUpdatedAt } from './updatedAt'
 
 const DIFFICULTY_COLUMN_CLASS = `${RECORD_CELL_BASE_CLASS} font-oswald text-sm font-semibold`
 

@@ -1,4 +1,9 @@
 import type { CourseRecordDTO } from '../../../types/api'
+import {
+  compareUpdatedAtWithMissingLast,
+  hasValidUpdatedAtTimestamp,
+  updatedAtTimestamp,
+} from '../../../utils/recordUpdatedAt'
 import type { SortCondition } from '../../../utils/sortConditions'
 import { compareNumberWithUnplayedLast } from '../recordTable/sortComparators'
 import { compareComboLamp } from '../utils/lampSorting'
@@ -75,6 +80,19 @@ export const sortCourseRecords = (
             direction
           )
           break
+        case 'updatedAt': {
+          const leftTimestamp = updatedAtTimestamp(left.updated_at)
+          const rightTimestamp = updatedAtTimestamp(right.updated_at)
+          const leftMissing = !left.is_played || !hasValidUpdatedAtTimestamp(leftTimestamp)
+          const rightMissing = !right.is_played || !hasValidUpdatedAtTimestamp(rightTimestamp)
+
+          comparison = compareUpdatedAtWithMissingLast(
+            { isPlayed: left.is_played, updatedAtTimestamp: leftTimestamp },
+            { isPlayed: right.is_played, updatedAtTimestamp: rightTimestamp }
+          )
+          if (!leftMissing && !rightMissing) comparison *= direction
+          break
+        }
       }
 
       return comparison || leftEntry.index - rightEntry.index

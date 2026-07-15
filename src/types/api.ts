@@ -673,6 +673,8 @@ export interface PlayerDataCourseRecordChange {
 
 /** コースマスタの表示に必要な情報。 */
 export interface CourseDTO {
+  /** コースの表示用ID。 */
+  display_id: string
   /** コースの公式インデックス。 */
   idx: string
   /** コースタイトル。 */
@@ -828,6 +830,8 @@ export interface UserWorldsendSongRecordDTO {
 
 /** コースモード1件分のユーザーレコード。 */
 export interface CourseRecordDTO {
+  /** コースの表示用ID。 */
+  display_id: string
   /** コースの公式インデックス。 */
   idx: string
   /** コースタイトル。 */

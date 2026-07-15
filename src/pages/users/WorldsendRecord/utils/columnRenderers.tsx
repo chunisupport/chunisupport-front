@@ -11,9 +11,9 @@ import {
   RecordTitleCell,
   RecordUpdatedAtCell,
 } from '../../../../components/common/record/RecordDisplayParts'
+import { formatUpdatedAt } from '../../../../utils/recordUpdatedAt'
 import { buildWorldsendSongDetailPath } from '../../UserPage/worldsendNavigation'
 import { formatJusticeCountForAj } from '../../UserRecord/utils/justiceCountDisplay'
-import { formatUpdatedAt } from '../../UserRecord/utils/updatedAt'
 import type { WorldsendRecordWithSongMeta } from '../types/filterTypes'
 import type { WorldsendRecordColumnId } from './columns'
 

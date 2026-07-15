@@ -1,4 +1,8 @@
 import type { WorldsendRecordDTO } from '../../../../types/api'
+import {
+  compareUpdatedAtWithMissingLast,
+  updatedAtTimestamp,
+} from '../../../../utils/recordUpdatedAt'
 import { compareSongsByReading } from '../../../../utils/songTitleSorting'
 import {
   createInitialSortConditions,
@@ -14,10 +18,6 @@ import {
 import { compareNumberWithUnplayedLast } from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import { formatJusticeCountForAj } from '../../UserRecord/utils/justiceCountDisplay'
-import {
-  compareUpdatedAtWithMissingLast,
-  updatedAtTimestamp,
-} from '../../UserRecord/utils/updatedAt'
 import {
   compareMissingJusticeCountRecords,
   isJusticeCountMissing,
