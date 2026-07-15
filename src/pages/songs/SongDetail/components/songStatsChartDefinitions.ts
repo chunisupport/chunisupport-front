@@ -25,9 +25,12 @@ export const ALL_JUSTICE_CRITICAL_CHART_GRADIENT_COLOR_VARIABLES = [
   '--cs-color-lamp-all-justice-critical-rainbow-7',
 ] as const
 
+/** 未達成系ランプをRANKグラフの〜AAAと同じ濃い灰色で表示するためのCSS変数名。 */
+const UNACHIEVED_LAMP_CHART_COLOR_VARIABLE = '--cs-color-score-rank-d-bg'
+
 /** COMBOグラフに表示するデータセット定義。 */
 export const COMBO_CHART_DATASET_DEFINITIONS = [
-  { label: 'NONE', valueKey: 'none', colorVariable: '--cs-color-lamp-none-bg' },
+  { label: 'NONE', valueKey: 'none', colorVariable: UNACHIEVED_LAMP_CHART_COLOR_VARIABLE },
   { label: 'FC', valueKey: 'fc', colorVariable: '--cs-color-lamp-full-combo-bg' },
   { label: 'AJ', valueKey: 'aj', colorVariable: '--cs-color-lamp-all-justice-bg' },
   {
@@ -41,7 +44,7 @@ export const COMBO_CHART_DATASET_DEFINITIONS = [
 
 /** HARDグラフに表示するデータセット定義。 */
 export const CLEAR_CHART_DATASET_DEFINITIONS = [
-  { label: 'FAILED', valueKey: 'failed', colorVariable: '--cs-color-lamp-failed-bg' },
+  { label: 'FAILED', valueKey: 'failed', colorVariable: UNACHIEVED_LAMP_CHART_COLOR_VARIABLE },
   { label: 'CLEAR', valueKey: 'clear', colorVariable: '--cs-color-lamp-clear-bg' },
   { label: 'HARD', valueKey: 'hard', colorVariable: '--cs-color-lamp-hard-bg' },
   { label: 'BRAVE', valueKey: 'brave', colorVariable: '--cs-color-lamp-brave-bg' },

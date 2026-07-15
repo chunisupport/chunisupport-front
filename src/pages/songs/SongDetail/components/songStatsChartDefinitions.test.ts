@@ -15,6 +15,7 @@ test('COMBOグラフ定義: どのコンボランプも未達成のNONEを先頭
   // Then: NONEからFC、AJ、AJCの順で積み上げられる。
   assert.deepEqual(labels, ['NONE', 'FC', 'AJ', 'AJC'])
   assert.equal(definitions[0]?.valueKey, 'none')
+  assert.equal(definitions[0]?.colorVariable, '--cs-color-score-rank-d-bg')
 })
 
 test('HARDグラフ定義: 未クリア者のFAILEDを先頭に表示する', () => {
@@ -27,4 +28,5 @@ test('HARDグラフ定義: 未クリア者のFAILEDを先頭に表示する', ()
   // Then: FAILEDから各ハードランプの順で積み上げられる。
   assert.deepEqual(labels, ['FAILED', 'CLEAR', 'HARD', 'BRAVE', 'ABSOLUTE', 'CATASTROPHY'])
   assert.equal(definitions[0]?.valueKey, 'failed')
+  assert.equal(definitions[0]?.colorVariable, '--cs-color-score-rank-d-bg')
 })
