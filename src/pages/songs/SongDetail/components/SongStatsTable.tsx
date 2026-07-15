@@ -20,6 +20,11 @@ import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../../../utils/chart
 import { formatScoreDifference, getScoreDifferenceClass } from '../../../../utils/scoreDifference'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { completeSongStatsRatingBands } from '../../../../utils/songStats'
+import {
+  ALL_JUSTICE_CRITICAL_CHART_GRADIENT_COLOR_VARIABLES,
+  CLEAR_CHART_DATASET_DEFINITIONS,
+  COMBO_CHART_DATASET_DEFINITIONS,
+} from './songStatsChartDefinitions'
 import { isOwnBestAverageRatingBand } from './songStatsHighlight'
 
 Chart.register(
@@ -97,16 +102,6 @@ const MEDIAN_SCORE_CHART_BORDER_DASH = [6, 4]
 const AVERAGE_SCORE_CHART_POINT_RADIUS = 2
 /** 平均・中央値グラフのデータ点をホバーした際の半径。 */
 const AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS = 4
-/** AJC表現と同じ淡い虹色グラデーションをChart.jsへ渡すCSS変数列。 */
-const ALL_JUSTICE_CRITICAL_CHART_GRADIENT_COLOR_VARIABLES = [
-  '--cs-color-lamp-all-justice-critical-rainbow-1',
-  '--cs-color-lamp-all-justice-critical-rainbow-2',
-  '--cs-color-lamp-all-justice-critical-rainbow-3',
-  '--cs-color-lamp-all-justice-critical-rainbow-4',
-  '--cs-color-lamp-all-justice-critical-rainbow-5',
-  '--cs-color-lamp-all-justice-critical-rainbow-6',
-  '--cs-color-lamp-all-justice-critical-rainbow-7',
-] as const
 /** 統計テーブルの表示カテゴリ選択肢。 */
 export const TABLE_VIEW_OPTIONS: SongStatsTableViewOption[] = [
   { label: '平均スコア', value: 'averageScore' },
@@ -155,29 +150,6 @@ const TABLE_LEFT_HEADER_CELL_CLASS =
 const TABLE_RATING_BAND_CELL_CLASS = 'px-2 py-2 text-left'
 /** 統計テーブルの通常セルに適用するTailwindクラス。 */
 const TABLE_VALUE_CELL_CLASS = 'px-2 py-2 text-right tabular-nums'
-const COMBO_CHART_DATASET_DEFINITIONS = [
-  { label: 'FC', valueKey: 'fc', colorVariable: '--cs-color-lamp-full-combo-bg' },
-  { label: 'AJ', valueKey: 'aj', colorVariable: '--cs-color-lamp-all-justice-bg' },
-  {
-    label: 'AJC',
-    valueKey: 'ajc',
-    colorVariable: '--cs-color-lamp-all-justice-critical-bg',
-    legendBackgroundVariable: '--cs-gradient-lamp-all-justice-critical-bg',
-    gradientColorVariables: ALL_JUSTICE_CRITICAL_CHART_GRADIENT_COLOR_VARIABLES,
-  },
-] as const
-const CLEAR_CHART_DATASET_DEFINITIONS = [
-  { label: 'CLEAR', valueKey: 'clear', colorVariable: '--cs-color-lamp-clear-bg' },
-  { label: 'HARD', valueKey: 'hard', colorVariable: '--cs-color-lamp-hard-bg' },
-  { label: 'BRAVE', valueKey: 'brave', colorVariable: '--cs-color-lamp-brave-bg' },
-  { label: 'ABSOLUTE', valueKey: 'absolute', colorVariable: '--cs-color-lamp-absolute-bg' },
-  {
-    label: 'CATASTROPHY',
-    valueKey: 'catastrophy',
-    colorVariable: '--cs-color-lamp-catastrophy-bg',
-  },
-] as const
-
 /**
  * 平均スコアを整数部のみの表示文字列へ変換する。
  *
@@ -690,7 +662,7 @@ const SongStatsCharts = (props: SongStatsChartsProps) => {
       />
       <SongStatsBarChart
         title="COMBO"
-        ariaLabel="レーティング帯別のFC、AJ、AJC人数グラフ"
+        ariaLabel="レーティング帯別のNONE、FC、AJ、AJC人数グラフ"
         labels={labels()}
         datasets={comboDatasets()}
       />
