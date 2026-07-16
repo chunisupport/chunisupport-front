@@ -13,6 +13,7 @@ import {
   RecordUpdatedAtCell,
 } from '../../../../components/common/record/RecordDisplayParts'
 import type { RecordColumnId } from '../../../../types/recordFilter'
+import { getConstDisplay, getRatingDisplay } from '../../../../utils/constDisplay'
 import {
   difficultyBadgeClass,
   difficultyShort,
@@ -21,7 +22,6 @@ import {
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import { formatUpdatedAt } from '../../../../utils/recordUpdatedAt'
-import { getConstDisplay, getRatingDisplay } from './constDisplay'
 import { formatJusticeCountForAj } from './justiceCountDisplay'
 
 const DIFFICULTY_COLUMN_CLASS = `${RECORD_CELL_BASE_CLASS} font-oswald text-sm font-semibold`

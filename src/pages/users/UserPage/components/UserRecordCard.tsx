@@ -5,6 +5,7 @@ import { createSignal, onMount, Show } from 'solid-js'
 import { RECORD_CARD_HOVER_CLASS } from '../../../../components/common/record/RecordDisplayParts'
 import { SCORE_RANK_TEXT_CLASS } from '../../../../components/common/record/recordStyleClasses'
 import type { PlayerRecordDTO } from '../../../../types/api'
+import { getConstDisplay } from '../../../../utils/constDisplay'
 import {
   difficultyCardBorderColor,
   difficultyToQueryValue,
@@ -14,7 +15,6 @@ import { formatInteger } from '../../../../utils/numberFormat'
 import { getRankingPositionClass } from '../../../../utils/rankingPosition'
 import { formatRatingFixed2 } from '../../../../utils/ratingFormat'
 import { getScoreRank } from '../../../../utils/scoreRank'
-import { getConstDisplay } from '../../UserRecord/utils/constDisplay'
 
 type Props = {
   record: PlayerRecordDTO

@@ -1,5 +1,5 @@
-import { formatChartConst } from '../../../../utils/chartConstFormat'
-import { formatRatingFixed2 } from '../../../../utils/ratingFormat'
+import { formatChartConst } from './chartConstFormat'
+import { formatRatingFixed2 } from './ratingFormat'
 
 export type ConstDisplay = {
   valueText: string

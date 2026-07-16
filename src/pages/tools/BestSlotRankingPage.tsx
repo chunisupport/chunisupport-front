@@ -11,12 +11,12 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
 import type { BestSlotRankingEntryDTO, RatingBandDTO } from '../../types/api'
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
-import { formatChartConst } from '../../utils/chartConstFormat'
-import { formatInteger } from '../../utils/numberFormat'
+import { getConstDisplay } from '../../utils/constDisplay'
+import { formatTruncatedFixed } from '../../utils/numberFormat'
 import { getRankingPositionClass } from '../../utils/rankingPosition'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import {
-  BEST_SLOT_PERCENTAGE_MAX_DECIMAL_PLACES,
+  BEST_SLOT_PERCENTAGE_DECIMAL_PLACES,
   BEST_SLOT_RANKING_COPY,
 } from './bestSlotRanking.constants'
 
@@ -25,27 +25,25 @@ type RatingBandOption = {
   value: string
 }
 
-const percentageFormatter = new Intl.NumberFormat('ja-JP', {
-  maximumFractionDigits: BEST_SLOT_PERCENTAGE_MAX_DECIMAL_PLACES,
-})
-
 /**
- * ベスト枠採用率をパーセント表記へ整形する。
+ * ベスト枠採用率を指定桁数で切り捨てたパーセント表記へ整形する。
  *
  * @param percentage - APIが返す0から100までの採用率。
- * @returns パーセント記号を含む表示文字列。
+ * @returns 小数点以下を固定桁数にしたパーセント記号付き表示文字列。
  */
 const formatPercentage = (percentage: number): string =>
-  `${percentageFormatter.format(percentage)}%`
+  `${formatTruncatedFixed(percentage, BEST_SLOT_PERCENTAGE_DECIMAL_PLACES)}%`
 
 /**
  * ランキングの譜面1件を表形式で表示する。
  *
  * @param props.entry - 表示対象のランキング項目。
- * @returns 順位、譜面情報、採用人数、採用率を含む行。
+ * @returns 順位、譜面情報、採用率を含む行。
  */
 const BestSlotRankingRow = (props: { entry: BestSlotRankingEntryDTO }) => {
   const percentageBarWidth = () => `${Math.min(100, props.entry.best_player_percentage)}%`
+  const constDisplay = () =>
+    getConstDisplay(props.entry.chart.const, props.entry.chart.is_const_unknown)
 
   return (
     <tr class="border-t border-border hover:bg-surface-muted">
@@ -73,17 +71,13 @@ const BestSlotRankingRow = (props: { entry: BestSlotRankingEntryDTO }) => {
           </span>
         </A>
       </td>
-      <td class="px-3 py-2 text-center font-jost text-sm whitespace-nowrap">
-        {formatChartConst(props.entry.chart.const)}
-        <Show when={props.entry.chart.is_const_unknown}>
-          <span class="ml-1 text-xs text-text-muted">
-            ({BEST_SLOT_RANKING_COPY.estimatedConstLabel})
-          </span>
-        </Show>
-      </td>
-      <td class="px-3 py-2 text-right font-jost text-sm whitespace-nowrap">
-        {formatInteger(props.entry.best_player_count)}
-        {BEST_SLOT_RANKING_COPY.playersUnit}
+      <td class="w-px px-2 py-2 text-center font-jost text-sm whitespace-nowrap">
+        <span class={`leading-none ${constDisplay().className}`}>
+          {constDisplay().valueText}
+          <Show when={constDisplay().markerText}>
+            {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
+          </Show>
+        </span>
       </td>
       <td class="min-w-36 px-3 py-2">
         <div class="flex items-center gap-3">
@@ -259,23 +253,12 @@ const BestSlotRankingPage = () => {
                 <div class="overflow-x-auto rounded-lg border border-border bg-surface">
                   <table class="w-full border-collapse text-left">
                     <caption class="sr-only">{BEST_SLOT_RANKING_COPY.tableCaption}</caption>
-                    <thead class="bg-surface-muted text-xs text-text-muted">
+                    <thead class="sr-only">
                       <tr>
-                        <th scope="col" class="px-3 py-2 text-center">
-                          {BEST_SLOT_RANKING_COPY.rankColumn}
-                        </th>
-                        <th scope="col" class="px-3 py-2">
-                          {BEST_SLOT_RANKING_COPY.chartColumn}
-                        </th>
-                        <th scope="col" class="px-3 py-2 text-center">
-                          {BEST_SLOT_RANKING_COPY.constColumn}
-                        </th>
-                        <th scope="col" class="px-3 py-2 text-right">
-                          {BEST_SLOT_RANKING_COPY.playerCountColumn}
-                        </th>
-                        <th scope="col" class="px-3 py-2 text-right">
-                          {BEST_SLOT_RANKING_COPY.percentageColumn}
-                        </th>
+                        <th scope="col">{BEST_SLOT_RANKING_COPY.rankColumn}</th>
+                        <th scope="col">{BEST_SLOT_RANKING_COPY.chartColumn}</th>
+                        <th scope="col">{BEST_SLOT_RANKING_COPY.constColumn}</th>
+                        <th scope="col">{BEST_SLOT_RANKING_COPY.percentageColumn}</th>
                       </tr>
                     </thead>
                     <tbody>
