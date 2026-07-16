@@ -111,6 +111,33 @@ test('AJCランプの虹色は虹称号と同じ色列で定義されている�
   )
 })
 
+test('SP称号の背景は虹称号と同じ7色を0.35秒ごとに循環すること', () => {
+  const expectedKeyframes = [
+    ['0', 1],
+    ['14.285', 2],
+    ['28.57', 3],
+    ['42.855', 4],
+    ['57.14', 5],
+    ['71.425', 6],
+    ['85.71', 7],
+    ['100', 1],
+  ] as const
+
+  for (const [progress, colorIndex] of expectedKeyframes) {
+    assert.match(
+      tailwindCssContent,
+      new RegExp(
+        `${progress}%\\s*{\\s*background-color: var\\(--cs-color-lamp-all-justice-critical-rainbow-${colorIndex}\\);`
+      )
+    )
+  }
+
+  assert.match(
+    tailwindCssContent,
+    /\.user-honor-title--sp\s*{\s*--honor-background: var\(--honor-shine\);\s*animation: honor-title-sp-rainbow 2\.45s linear infinite;/
+  )
+})
+
 test('AJCランプの文字色は虹背景向けの専用色で定義されていること', () => {
   assert.equal(
     readCustomProperty(tailwindCssContent, '--cs-color-lamp-all-justice-critical-text'),
