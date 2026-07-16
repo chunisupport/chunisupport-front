@@ -47,9 +47,9 @@ const BestSlotRankingRow = (props: { entry: BestSlotRankingEntryDTO }) => {
 
   return (
     <tr class="border-t border-border hover:bg-surface-muted">
-      <th scope="row" class="px-3 py-2 text-center font-normal">
+      <th scope="row" class="w-7 p-0 text-center font-normal">
         <span
-          class={`font-jost inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-sm font-semibold ${getRankingPositionClass(
+          class={`inline-flex h-7 w-7 items-center justify-center rounded-full font-oswald text-sm font-semibold ${getRankingPositionClass(
             props.entry.rank,
             'bg-surface-muted text-text-muted'
           )}`}
@@ -253,6 +253,9 @@ const BestSlotRankingPage = () => {
                 <div class="overflow-x-auto rounded-lg border border-border bg-surface">
                   <table class="w-full border-collapse text-left">
                     <caption class="sr-only">{BEST_SLOT_RANKING_COPY.tableCaption}</caption>
+                    <colgroup>
+                      <col class="w-7" />
+                    </colgroup>
                     <thead class="sr-only">
                       <tr>
                         <th scope="col">{BEST_SLOT_RANKING_COPY.rankColumn}</th>
