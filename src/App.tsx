@@ -1,5 +1,5 @@
 import { A, Route, Router, useParams } from '@solidjs/router'
-import { Calculator, ChartNoAxesCombined, Dices, Search, Target } from 'lucide-solid'
+import { Calculator, ChartNoAxesCombined, Dices, Search, Target, Trophy } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
 
@@ -22,6 +22,7 @@ import {
   FOOTER_DISCLAIMER_TEXT,
 } from './constants/footer'
 import {
+  BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   EDITOR_SONGS_PATH,
@@ -79,6 +80,7 @@ const ChartConstantCalculatorPage = lazy(() => import('./pages/tools/ChartConsta
 const BorderCalculatorPage = lazy(() => import('./pages/tools/BorderCalculatorPage'))
 const WeakChartInspectorPage = lazy(() => import('./pages/tools/WeakChartInspectorPage'))
 const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelectorPage'))
+const BestSlotRankingPage = lazy(() => import('./pages/tools/BestSlotRankingPage'))
 
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
@@ -325,6 +327,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Search class={iconClass} aria-hidden="true" />
     case 'random':
       return <Dices class={iconClass} aria-hidden="true" />
+    case 'ranking':
+      return <Trophy class={iconClass} aria-hidden="true" />
   }
 }
 
@@ -534,6 +538,10 @@ const App = () => {
       <Route
         path={RANDOM_SONG_SELECTOR_PATH}
         component={withNavBar(withRouteLoadBoundary(RandomSongSelectorPage))}
+      />
+      <Route
+        path={BEST_SLOT_RANKING_PATH}
+        component={withNavBar(withRouteLoadBoundary(BestSlotRankingPage))}
       />
       <Route path={LOCKED_SONGS_FINDER_PATH} component={withNavBar(EmptyToolPage)} />
 
