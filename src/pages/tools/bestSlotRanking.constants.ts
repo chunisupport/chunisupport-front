@@ -1,7 +1,7 @@
 /** ベスト枠ランキング画面の表示文言。 */
 export const BEST_SLOT_RANKING_COPY = {
   title: 'ベスト枠ランキング',
-  ratingBandLabel: 'ベスト枠平均レート帯',
+  ratingBandLabel: 'ベスト枠平均',
   tableCaption: 'ベスト枠採用率ランキング',
   rankColumn: '順位',
   chartColumn: '譜面',
