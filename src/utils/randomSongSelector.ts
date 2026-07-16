@@ -242,38 +242,43 @@ export const formatRandomSongLevel = (chartConst: number): string => {
 }
 
 /**
+ * 候補一覧をレベルごとの譜面定数セットへ変換する。
+ *
+ * @param candidates - 変換対象のランダム選曲候補。
+ * @returns レベル表記をキー、譜面定数の集合を値とするMap。
+ */
+export const createChartConstsByLevelMap = (
+  candidates: readonly RandomSongCandidate[]
+): Map<string, Set<string>> => {
+  const values = new Map<string, Set<string>>()
+
+  for (const candidate of candidates) {
+    const levelLabel = formatRandomSongLevel(candidate.chartConst)
+    const chartConsts = values.get(levelLabel) ?? new Set<string>()
+    chartConsts.add(formatChartConst(candidate.chartConst))
+    values.set(levelLabel, chartConsts)
+  }
+
+  return values
+}
+
+/**
  * 絞り込み結果にレベル内の全譜面定数が残っているレベルを取得する。
  *
- * @param allCandidates - 絞り込み前の全候補。
+ * @param allChartConstsByLevel - 絞り込み前の全候補から作成したレベル別譜面定数。
  * @param filteredCandidates - 現在の絞り込み後候補。
  * @returns 一括設定できるレベルと含まれる譜面定数。
  */
 export const getRandomSongCompleteLevelWeightOptions = (
-  allCandidates: readonly RandomSongCandidate[],
+  allChartConstsByLevel: ReadonlyMap<string, ReadonlySet<string>>,
   filteredCandidates: readonly RandomSongCandidate[]
 ): RandomSongLevelWeightOption[] => {
-  const chartConstsByLevel = (candidates: readonly RandomSongCandidate[]) => {
-    const values = new Map<string, Set<string>>()
-
-    for (const candidate of candidates) {
-      const levelLabel = formatRandomSongLevel(candidate.chartConst)
-      const chartConsts = values.get(levelLabel) ?? new Set<string>()
-      chartConsts.add(formatChartConst(candidate.chartConst))
-      values.set(levelLabel, chartConsts)
-    }
-
-    return values
-  }
-  const allChartConstsByLevel = chartConstsByLevel(allCandidates)
-  const filteredChartConstsByLevel = chartConstsByLevel(filteredCandidates)
+  const filteredChartConstsByLevel = createChartConstsByLevelMap(filteredCandidates)
 
   return [...allChartConstsByLevel.entries()]
     .flatMap(([levelLabel, allChartConsts]) => {
       const filteredChartConsts = filteredChartConstsByLevel.get(levelLabel)
-      if (
-        !filteredChartConsts ||
-        ![...allChartConsts].every((value) => filteredChartConsts.has(value))
-      ) {
+      if (!filteredChartConsts || filteredChartConsts.size !== allChartConsts.size) {
         return []
       }
 

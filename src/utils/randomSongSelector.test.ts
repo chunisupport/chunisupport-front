@@ -5,6 +5,7 @@ import type { RandomSongCandidate, RandomSongLampFilter } from './randomSongSele
 import {
   aggregateRandomSongCandidateWeights,
   buildRandomSongCandidates,
+  createChartConstsByLevelMap,
   createRandomSongCandidateKey,
   createRandomSongChartKey,
   createRandomSongRecordMap,
@@ -335,7 +336,8 @@ test('レベル内の全譜面定数を含む場合だけレベル別重み設�
   ]
 
   // When: 13は全定数、13+は一部の定数だけを絞り込み結果に含める。
-  const options = getRandomSongCompleteLevelWeightOptions(allCandidates, [
+  const allChartConstsByLevel = createChartConstsByLevelMap(allCandidates)
+  const options = getRandomSongCompleteLevelWeightOptions(allChartConstsByLevel, [
     allCandidates[0],
     allCandidates[1],
     allCandidates[2],
