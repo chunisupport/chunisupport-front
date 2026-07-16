@@ -163,6 +163,12 @@ type MyRandomSongFavoriteData =
       status: 'error'
     }
 
+/** ランダム選曲で利用するログイン中ユーザーデータの取得状態。 */
+type MyRandomSongUserData = {
+  record: MyRandomSongRecordData
+  favorite: MyRandomSongFavoriteData
+}
+
 const UNAUTHENTICATED_ERROR_CODES = new Set([
   'missing_token',
   'unauthorized',
@@ -390,16 +396,16 @@ const isUnauthenticatedRandomSongError = (error: unknown): boolean => {
 }
 
 /**
- * ログイン中ユーザーのレコード情報を取得する。
+ * 指定ユーザーのレコード情報を取得する。
  *
+ * @param username - 取得対象のユーザー名。
  * @returns 取得できたレコード情報、または取得できなかった理由。
  */
-const fetchMyRandomSongRecordData = async (): Promise<MyRandomSongRecordData> => {
+const fetchMyRandomSongRecordData = async (username: string): Promise<MyRandomSongRecordData> => {
   try {
-    const me = await fetchMe({ redirectOnUnauthorized: false })
     const [rating, records] = await Promise.all([
-      fetchUserRating(me.username),
-      fetchUserRecordWithCache(me.username),
+      fetchUserRating(username),
+      fetchUserRecordWithCache(username),
     ])
 
     return {
@@ -415,14 +421,16 @@ const fetchMyRandomSongRecordData = async (): Promise<MyRandomSongRecordData> =>
 }
 
 /**
- * ログイン中ユーザーのお気に入り楽曲を取得する。
+ * 指定ユーザーのお気に入り楽曲を取得する。
  *
+ * @param username - 取得対象のユーザー名。
  * @returns 取得できたお気に入り楽曲ID、または取得できなかった理由。
  */
-const fetchMyRandomSongFavoriteData = async (): Promise<MyRandomSongFavoriteData> => {
+const fetchMyRandomSongFavoriteData = async (
+  username: string
+): Promise<MyRandomSongFavoriteData> => {
   try {
-    const me = await fetchMe({ redirectOnUnauthorized: false })
-    const favoriteSongs = await fetchUserFavoriteSongs(me.username)
+    const favoriteSongs = await fetchUserFavoriteSongs(username)
 
     return {
       status: 'available',
@@ -432,6 +440,26 @@ const fetchMyRandomSongFavoriteData = async (): Promise<MyRandomSongFavoriteData
     return isUnauthenticatedRandomSongError(error)
       ? { status: 'unauthenticated' }
       : { status: 'error' }
+  }
+}
+
+/**
+ * ログイン中ユーザーのレコード情報とお気に入り楽曲を取得する。
+ *
+ * @returns レコード情報とお気に入り楽曲それぞれの取得状態。
+ */
+const fetchMyRandomSongUserData = async (): Promise<MyRandomSongUserData> => {
+  try {
+    const me = await fetchMe({ redirectOnUnauthorized: false })
+    const [record, favorite] = await Promise.all([
+      fetchMyRandomSongRecordData(me.username),
+      fetchMyRandomSongFavoriteData(me.username),
+    ])
+
+    return { record, favorite }
+  } catch (error) {
+    const status = isUnauthenticatedRandomSongError(error) ? 'unauthenticated' : 'error'
+    return { record: { status }, favorite: { status } }
   }
 }
 
@@ -532,8 +560,9 @@ const RandomSongSelect = <T extends string>(props: {
 const RandomSongSelectorPage = (): JSX.Element => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [versionsResponse] = createResource(fetchVersions)
-  const [myRecordData] = createResource(fetchMyRandomSongRecordData)
-  const [myFavoriteData] = createResource(fetchMyRandomSongFavoriteData)
+  const [myUserData] = createResource(fetchMyRandomSongUserData)
+  const myRecordData = (): MyRandomSongRecordData | undefined => myUserData()?.record
+  const myFavoriteData = (): MyRandomSongFavoriteData | undefined => myUserData()?.favorite
   const [count, setCount] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.count)
   const [minConst, setMinConst] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.minConst)
   const [maxConst, setMaxConst] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.maxConst)
@@ -1005,7 +1034,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       id="random-song-favorite-only"
                       checked={favoriteOnly()}
                       disabled={!hasMyFavoriteData()}
-                      onChange={(checked) => setFavoriteOnly(hasMyFavoriteData() && checked)}
+                      onChange={setFavoriteOnly}
                       class="relative flex items-center gap-2"
                       textVariant="large"
                       label={RANDOM_SONG_SELECTOR_COPY.favoriteOnlyLabel}
