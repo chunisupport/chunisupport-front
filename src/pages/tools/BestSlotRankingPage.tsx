@@ -65,7 +65,10 @@ const BestSlotRankingRow = (props: { entry: BestSlotRankingEntryDTO }) => {
           class="flex w-fit min-w-0 items-center gap-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
         >
           <DifficultyBadge difficulty={props.entry.chart.difficulty} />
-          <span class="font-sans font-medium text-text hover:text-action-primary hover:underline">
+          <span
+            class="block max-w-48 truncate font-sans font-medium text-text hover:text-action-primary hover:underline sm:max-w-96"
+            title={props.entry.song.title}
+          >
             {props.entry.song.title}
           </span>
         </A>
