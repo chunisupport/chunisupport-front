@@ -27,6 +27,7 @@ import {
   CHART_CONSTANT_CALCULATOR_PATH,
   EDITOR_SONGS_PATH,
   FRIENDS_PATH,
+  LATEST_SCORE_UPDATE_PATH,
   LOCKED_SONGS_FINDER_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   REGISTER_SCORE_MOCK_PATH,
@@ -69,6 +70,7 @@ const Settings = lazy(() => import('./pages/settings/Settings'))
 const FriendsPage = lazy(() => import('./pages/friends/FriendsPage'))
 
 const RegisterScorePage = lazy(() => import('./pages/register-score/RegisterScorePage'))
+const LatestScoreUpdatePage = lazy(() => import('./pages/register-score/LatestScoreUpdatePage'))
 const RegisterScoreMockPage = lazy(
   () => import('./pages/register-score-mock/RegisterScoreMockPage')
 )
@@ -520,6 +522,10 @@ const App = () => {
       <Route
         path={REGISTER_SCORE_PATH}
         component={withNavBar(withAuth(withRouteLoadBoundary(RegisterScorePage)))}
+      />
+      <Route
+        path={LATEST_SCORE_UPDATE_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(LatestScoreUpdatePage)))}
       />
       <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />

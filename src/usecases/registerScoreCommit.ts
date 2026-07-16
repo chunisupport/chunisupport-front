@@ -3,6 +3,8 @@ import type {
   PlayerDataNumberDiff,
   PlayerDataResult,
   PlayerDataStatisticsGroup,
+  PlayerDataUpdateResult,
+  SkippedRecord,
 } from '../types/api'
 
 type RegisterScoreCommitDependencies = {
@@ -72,10 +74,12 @@ const normalizeStatisticsGroup = (
 /**
  * APIレスポンスの配列フィールドを画面で扱いやすい形へ正規化する。
  *
- * @param result - スコア登録APIから返却された登録結果。
+ * @param result - スコア登録APIまたは保存済み最新更新結果APIから返却された更新結果。
  * @returns 差分配列、スキップ配列、固定難易度の統計が常に表示可能な登録結果。
  */
-export const normalizePlayerDataResult = (result: PlayerDataResult): PlayerDataResult => {
+export const normalizePlayerDataResult = (
+  result: PlayerDataUpdateResult & { skipped_records?: SkippedRecord[] }
+): PlayerDataResult => {
   const byDifficulty = Object.fromEntries(
     PLAYER_DATA_DIFFICULTIES.map((difficulty) => [
       difficulty,
@@ -102,7 +106,7 @@ export const normalizePlayerDataResult = (result: PlayerDataResult): PlayerDataR
  * @returns 戻り値はありません。
  */
 export const requestChangedSongMasters = (
-  result: PlayerDataResult,
+  result: PlayerDataUpdateResult,
   dependencies: Pick<
     RegisterScoreCommitDependencies,
     'ensureSongsLoaded' | 'ensureWorldsendSongsLoaded'

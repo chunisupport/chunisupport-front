@@ -83,6 +83,17 @@ test('normalizePlayerDataResult: 配列フィールドがAPI型とずれてnull�
   assert.deepEqual(normalized.skipped_records, [])
 })
 
+test('normalizePlayerDataResult: 最新更新結果にskipped_recordsがなくても空配列で補完する', () => {
+  // Given: 最新更新結果APIと同様に診断用スキップ詳細を含まないレスポンス。
+  const { skipped_records: _skippedRecords, ...latestUpdate } = createPlayerDataResult()
+
+  // When: 既存の更新差分レポート用に結果を正規化する。
+  const normalized = normalizePlayerDataResult(latestUpdate)
+
+  // Then: 登録直後と同じ表示用結果として扱える。
+  assert.deepEqual(normalized.skipped_records, [])
+})
+
 test('normalizePlayerDataResult: 難易度別統計が欠落した場合も固定5難易度へ正規化する', () => {
   // Given: 一部難易度の統計だけが返った状態。
   const result = createPlayerDataResult({

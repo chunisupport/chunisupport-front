@@ -7,6 +7,7 @@ import {
   BadgeQuestionMark,
   Ellipsis,
   FlagTriangleRight,
+  History,
   House,
   LogOut,
   Music,
@@ -28,7 +29,8 @@ type NavBarProps = {
 import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
 import { DOCUMENTATION_BASE_URL } from '../../config'
-import { EDITOR_SONGS_PATH, FRIENDS_PATH } from '../../constants/routes'
+import { LATEST_SCORE_UPDATE_TITLE } from '../../constants/playerLatestUpdate'
+import { EDITOR_SONGS_PATH, FRIENDS_PATH, LATEST_SCORE_UPDATE_PATH } from '../../constants/routes'
 import { auth } from '../../lib/firebase'
 import { EDITOR_SONGS_TITLE } from '../../pages/editor/constants'
 import { FRIENDS_PAGE_TITLE } from '../../pages/friends/constants'
@@ -121,6 +123,11 @@ const NavBar = (props: NavBarProps) => {
               icon: () => <UsersRound class="h-4 w-4" aria-hidden="true" />,
               path: FRIENDS_PATH,
               hasNotificationDot: friendRequestNotification.hasPendingReceivedRequest,
+            },
+            {
+              label: LATEST_SCORE_UPDATE_TITLE,
+              icon: () => <History class="h-4 w-4" aria-hidden="true" />,
+              path: LATEST_SCORE_UPDATE_PATH,
             },
             {
               label: '設定',

@@ -581,7 +581,8 @@ export interface FriendRequestCreateRequest {
   username: string
 }
 
-export interface PlayerDataResult {
+/** 登録直後と保存済み最新結果で共通するプレイヤーデータ更新結果。 */
+export interface PlayerDataUpdateResult {
   player_id: number
   app_ver: string
   imported_at: string
@@ -593,7 +594,17 @@ export interface PlayerDataResult {
   counts: PlayerDataCounts
   /** 実際に新規追加または更新されたスコア差分。0件の場合は空配列。 */
   changes: PlayerDataRecordChange[]
+}
+
+/** プレイヤーデータ登録APIが返す更新結果。 */
+export interface PlayerDataResult extends PlayerDataUpdateResult {
   skipped_records: SkippedRecord[]
+}
+
+/** 保存済みの最新プレイヤーデータ更新結果。 */
+export interface PlayerLatestUpdateResult extends PlayerDataUpdateResult {
+  /** 保存形式のスキーマバージョン。 */
+  schema_version: number
 }
 
 export interface PlayerDataProfile {
