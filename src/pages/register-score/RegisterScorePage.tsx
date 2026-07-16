@@ -6,18 +6,16 @@ import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
 import { useSongsData } from '../../stores/songsData'
-import type {
-  CourseDTO,
-  PlayerDataCourseRecordChange,
-  PlayerDataRecordChange,
-  PlayerDataResult,
-} from '../../types/api'
+import type { CourseDTO, PlayerDataResult } from '../../types/api'
 import { fetchCoursesWithCache } from '../../usecases/cache/fetchCoursesWithCache'
 import { commitRegisterScore } from '../../usecases/registerScoreCommit'
-import { toChartLevelLabel } from '../../utils/chartLevel'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { REGISTER_SCORE_MESSAGES, RegisterScoreResultView } from './RegisterScoreResultView'
-import { formatWorldsendChartLevel } from './registerScoreDisplay'
+import {
+  resolveRegisterScoreChartLevel,
+  resolveRegisterScoreCourseTitle,
+  resolveRegisterScoreSongTitle,
+} from './registerScoreResolvers'
 import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreToken'
 
 /**
@@ -27,11 +25,6 @@ type RegisterScoreViewState =
   | { type: 'committing' }
   | { type: 'success'; result: PlayerDataResult }
   | { type: 'error'; message: string }
-
-type SongLookupItem = {
-  official_idx?: string
-  title: string
-}
 
 /** コースタイトル検索に必要なコースマスタ項目。 */
 type CourseLookupItem = Pick<CourseDTO, 'idx' | 'name'>
@@ -44,28 +37,6 @@ type CourseLookupItem = Pick<CourseDTO, 'idx' | 'name'>
  */
 const resolveRegisterScoreErrorMessage = (error: unknown): string => {
   return toUserFriendlyErrorMessage(error, REGISTER_SCORE_MESSAGES.fallbackError)
-}
-
-/**
- * 楽曲一覧から公式idxに対応するタイトルを検索する。
- *
- * @param songs - 検索対象の楽曲一覧。
- * @param idx - API差分に含まれる公式idx。
- * @returns 見つかった楽曲タイトル。見つからない場合はundefined。
- */
-const findSongTitleByOfficialIdx = (songs: SongLookupItem[], idx: string): string | undefined => {
-  return songs.find((song) => song.official_idx === idx)?.title
-}
-
-/**
- * コース一覧から公式idxに対応するタイトルを検索する。
- *
- * @param courses - 検索対象のコース一覧。
- * @param idx - API差分に含まれる公式idx。
- * @returns 見つかったコースタイトル。見つからない場合はundefined。
- */
-const findCourseTitleByIdx = (courses: CourseLookupItem[], idx: string): string | undefined => {
-  return courses.find((course) => course.idx === idx)?.name
 }
 
 /**
@@ -87,20 +58,10 @@ const RegisterScorePage = () => {
    * @param change - APIから返却された1譜面分の差分。
    * @returns 楽曲名。未取得の場合はプレースホルダー。
    */
-  const songTitleByIdx = (change: PlayerDataRecordChange) => {
-    if (change.record_type === 'course') {
-      return REGISTER_SCORE_MESSAGES.unknownSongTitle
-    }
-
+  const songTitleByIdx = (change: Parameters<typeof resolveRegisterScoreSongTitle>[0]) => {
     const standardSongs = songsData.songsResponse.latest?.songs ?? []
     const worldsendSongs = songsData.worldsendSongsResponse.latest?.songs ?? []
-
-    return (
-      findSongTitleByOfficialIdx(
-        change.record_type === 'worldsend' ? worldsendSongs : standardSongs,
-        change.idx
-      ) ?? REGISTER_SCORE_MESSAGES.unknownSongTitle
-    )
+    return resolveRegisterScoreSongTitle(change, standardSongs, worldsendSongs)
   }
 
   /**
@@ -109,28 +70,10 @@ const RegisterScorePage = () => {
    * @param change - APIから返却された1譜面分の差分。
    * @returns 譜面レベル文字列（例: "15+"、"★5"）。譜面情報がない場合はundefined。
    */
-  const chartLevelByIdx = (change: PlayerDataRecordChange) => {
-    if (change.record_type === 'worldsend') {
-      const worldsendSongs = songsData.worldsendSongsResponse.latest?.songs ?? []
-      const song = worldsendSongs.find((item) => item.official_idx === change.idx)
-      const levelStar = song?.charts.WORLDSEND?.level_star
-
-      return formatWorldsendChartLevel(levelStar)
-    }
-
-    if (change.record_type !== 'standard') {
-      return undefined
-    }
-
+  const chartLevelByIdx = (change: Parameters<typeof resolveRegisterScoreChartLevel>[0]) => {
     const standardSongs = songsData.songsResponse.latest?.songs ?? []
-    const song = standardSongs.find((s) => s.official_idx === change.idx)
-    const chart = song?.charts?.[change.diff as keyof typeof song.charts]
-
-    if (!chart) {
-      return undefined
-    }
-
-    return toChartLevelLabel(chart.const)
+    const worldsendSongs = songsData.worldsendSongsResponse.latest?.songs ?? []
+    return resolveRegisterScoreChartLevel(change, standardSongs, worldsendSongs)
   }
 
   /**
@@ -140,9 +83,10 @@ const RegisterScorePage = () => {
    * @param courses - 取得済みコース一覧。
    * @returns コースタイトル。未取得の場合はプレースホルダー。
    */
-  const courseTitleByIdx = (change: PlayerDataCourseRecordChange, courses: CourseLookupItem[]) => {
-    return findCourseTitleByIdx(courses, change.idx) ?? REGISTER_SCORE_MESSAGES.unknownSongTitle
-  }
+  const courseTitleByIdx = (
+    change: Parameters<typeof resolveRegisterScoreCourseTitle>[0],
+    courses: CourseLookupItem[]
+  ) => resolveRegisterScoreCourseTitle(change, courses)
 
   onMount(async () => {
     const uploadToken = normalizeUploadTokenParam(searchParams.token)

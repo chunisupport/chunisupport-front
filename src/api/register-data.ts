@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config'
-import type { PlayerDataResult } from '../types/api'
+import { LATEST_SCORE_UPDATE_SCHEMA_VERSION } from '../constants/playerLatestUpdate'
+import type { PlayerDataResult, PlayerLatestUpdateResult } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 
 type RegisterDataFormat = 'json' | 'text'
@@ -36,4 +37,26 @@ export const postPlayerDataCommit = async (uploadToken: string): Promise<PlayerD
   })
 
   return response.json()
+}
+
+/**
+ * 認証済みユーザーの保存済み最新プレイヤーデータ更新結果を取得する。
+ *
+ * @returns 最新更新結果。保存済みの結果がない場合はnull。
+ */
+export const fetchLatestPlayerDataUpdate = async (): Promise<PlayerLatestUpdateResult | null> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/me/player-data/latest-update`, {
+    requireAuthentication: true,
+  })
+
+  if (response.status === 204) {
+    return null
+  }
+
+  const result: PlayerLatestUpdateResult = await response.json()
+  if (result.schema_version !== LATEST_SCORE_UPDATE_SCHEMA_VERSION) {
+    throw new Error('保存済み更新結果の形式に対応していません。')
+  }
+
+  return result
 }

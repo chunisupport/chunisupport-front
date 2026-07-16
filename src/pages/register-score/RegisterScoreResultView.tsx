@@ -18,15 +18,19 @@ import type {
   PlayerDataNumberDiff,
   PlayerDataRecordChange,
   PlayerDataRecordState,
-  PlayerDataResult,
   PlayerDataSongRecordChange,
   PlayerDataStatistics,
   PlayerDataStatisticsGroup,
+  PlayerDataUpdateResult,
 } from '../../types/api'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
-import { courseClassBadgeClass, formatCourseClass } from './registerScoreDisplay'
+import {
+  courseClassBadgeClass,
+  formatCourseClass,
+  REGISTER_SCORE_UNKNOWN_TITLE,
+} from './registerScoreDisplay'
 
 export const REGISTER_SCORE_MESSAGES = {
   invalidToken: 'tokenが不正です。登録用URLを確認してください。',
@@ -39,7 +43,7 @@ export const REGISTER_SCORE_MESSAGES = {
   changedCoursesTitle: 'COURSE RECORDS',
   totalHighScoreTitle: 'TOTAL HIGH SCORE',
   recordStatsTitle: 'RECORD STATISTICS',
-  unknownSongTitle: '-',
+  unknownSongTitle: REGISTER_SCORE_UNKNOWN_TITLE,
 } as const
 
 const NO_DATA_TEXT = '-'
@@ -401,7 +405,7 @@ const CourseRecordLampBadges = (props: { state: PlayerDataCourseRecordState }) =
  * @param props - APIから返却された登録結果。
  * @returns プロフィール概要。
  */
-const RegisterScoreProfileSummary = (props: { result: PlayerDataResult }) => (
+const RegisterScoreProfileSummary = (props: { result: PlayerDataUpdateResult }) => (
   <section class="pb-3">
     <div class="flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2.5">
       <p class="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 font-sans text-xl font-extrabold leading-none">
@@ -435,7 +439,7 @@ const RegisterScoreProfileSummary = (props: { result: PlayerDataResult }) => (
  * @param props - APIから返却された通常譜面集計。
  * @returns 集計値セクション。
  */
-const RegisterScoreAggregateSummary = (props: { result: PlayerDataResult }) => {
+const RegisterScoreAggregateSummary = (props: { result: PlayerDataUpdateResult }) => {
   const statisticRows = createMemo(() => toRegisterScoreStatisticRows(props.result.statistics))
   const totalHighScoreRows = createMemo(() => [
     {
@@ -672,7 +676,7 @@ const RegisterCourseChangeRow = (props: {
  * @param props - APIから返却された登録結果。
  * @returns レポートヘッダー。
  */
-const RegisterScoreReportHeader = (props: { result: PlayerDataResult }) => (
+const RegisterScoreReportHeader = (props: { result: PlayerDataUpdateResult }) => (
   <header class="border-b border-border bg-surface-muted px-3 py-3">
     <h1 class="text-2xl font-bold">{REGISTER_SCORE_MESSAGES.reportTitle}</h1>
     <p class="mt-1 text-sm">
@@ -691,6 +695,7 @@ const RegisterScoreChangesSection = (props: {
   changes: PlayerDataSongRecordChange[]
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
+  emptyMessage?: string
 }) => (
   <section class="min-w-0 pt-4">
     <h2 class="mb-1 text-xl font-bold">{REGISTER_SCORE_MESSAGES.changedSongsTitle}</h2>
@@ -698,7 +703,7 @@ const RegisterScoreChangesSection = (props: {
       when={props.changes.length > 0}
       fallback={
         <p class="px-2 py-6 text-center text-sm text-text-muted">
-          {REGISTER_SCORE_MESSAGES.changedSongsEmpty}
+          {props.emptyMessage ?? REGISTER_SCORE_MESSAGES.changedSongsEmpty}
         </p>
       }
     >
@@ -747,14 +752,15 @@ const RegisterCourseChangesSection = (props: {
 /**
  * スコア登録完了後の結果と差分一覧を表示する。
  *
- * @param props - 登録結果、楽曲名・コースタイトル解決関数、譜面レベル解決関数。
+ * @param props - 登録結果、楽曲名・コースタイトル解決関数、譜面レベル解決関数、空状態文言。
  * @returns 登録結果パネル。
  */
 export const RegisterScoreResultView = (props: {
-  result: PlayerDataResult
+  result: PlayerDataUpdateResult
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
   resolveCourseTitle: RegisterScoreCourseTitleResolver
+  changedSongsEmptyMessage?: string
 }) => {
   const songChanges = createMemo(() =>
     props.result.changes.filter(
@@ -815,6 +821,7 @@ export const RegisterScoreResultView = (props: {
               changes={songChanges()}
               resolveSongTitle={props.resolveSongTitle}
               resolveChartLevel={props.resolveChartLevel}
+              emptyMessage={props.changedSongsEmptyMessage}
             />
             <RegisterCourseChangesSection
               changes={courseChanges()}
