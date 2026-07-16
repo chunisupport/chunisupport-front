@@ -770,6 +770,41 @@
   }
 }
 
+/* SP称号の背景を虹称号と共通の7色で0.35秒ずつ循環させる。 */
+@keyframes honor-title-sp-rainbow {
+  0% {
+    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-1);
+  }
+
+  14.285% {
+    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-2);
+  }
+
+  28.57% {
+    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-3);
+  }
+
+  42.855% {
+    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-4);
+  }
+
+  57.14% {
+    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-5);
+  }
+
+  71.425% {
+    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-6);
+  }
+
+  85.71% {
+    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-7);
+  }
+
+  100% {
+    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-1);
+  }
+}
+
 @layer utilities {
   .text-shadow-badge {
     text-shadow: var(--cs-shadow-course-class-text);
@@ -956,7 +991,8 @@
   }
 
   .user-honor-title--sp {
-    --honor-background: var(--honor-shine), #a7fdc1;
+    --honor-background: var(--honor-shine);
+    animation: honor-title-sp-rainbow 2.45s linear infinite;
   }
 
   .user-honor-title--phoenix-g {

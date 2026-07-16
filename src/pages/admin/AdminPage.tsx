@@ -79,7 +79,7 @@ const AdminPage = () => {
           {(link) => (
             <A
               href={link.href}
-              class="rounded-lg border border-border bg-surface p-4 shadow-sm transition hover:border-info-border hover:bg-info-bg"
+              class="rounded-lg border border-border bg-surface p-4 shadow-sm transition hover:border-action-primary-border hover:bg-action-primary-muted"
             >
               <h2 class="text-lg font-semibold text-text">{link.title}</h2>
               <p class="mt-1 text-sm text-text-muted">{link.description}</p>

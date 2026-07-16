@@ -19,6 +19,7 @@ import { getScoreRank } from '../../../../utils/scoreRank'
 type Props = {
   record: PlayerRecordDTO
   index: number
+  showJackets: boolean
   useDefaultIndexColor?: boolean
 }
 
@@ -59,7 +60,7 @@ export const UserRecordCard: Component<Props> = (props) => {
         <div
           class={`relative isolate select-none overflow-hidden border-y border-r border-border bg-surface p-2 pl-4 ${RECORD_CARD_HOVER_CLASS} before:absolute before:top-0 before:bottom-0 before:left-0 before:z-20 before:w-2 ${difficultyCardBorderColor(props.record.difficulty)}`}
         >
-          <Show when={jacketUrl()}>
+          <Show when={props.showJackets && jacketUrl()}>
             {(url) => (
               <Image
                 class="pointer-events-none absolute inset-y-0 right-0 z-0 block w-1/2 overflow-hidden [mask-image:linear-gradient(to_right,transparent_0%,black_33%)]"
