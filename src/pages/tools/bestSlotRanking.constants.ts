@@ -2,14 +2,12 @@
 export const BEST_SLOT_RANKING_COPY = {
   title: 'ベスト枠ランキング',
   ratingBandLabel: 'ベスト枠平均レート帯',
-  playersUnit: '人',
   tableCaption: 'ベスト枠採用率ランキング',
   rankColumn: '順位',
   chartColumn: '譜面',
   constColumn: '定数',
   playerCountColumn: '人数',
   percentageColumn: '割合',
-  estimatedConstLabel: '推定',
   empty: 'このレート帯にはランキングデータがありません。',
   loadMore: 'さらに表示',
 } as const

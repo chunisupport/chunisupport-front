@@ -11,7 +11,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
 import type { BestSlotRankingEntryDTO, RatingBandDTO } from '../../types/api'
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
-import { formatChartConst } from '../../utils/chartConstFormat'
+import { getConstDisplay } from '../../utils/constDisplay'
 import { formatInteger } from '../../utils/numberFormat'
 import { getRankingPositionClass } from '../../utils/rankingPosition'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
@@ -46,6 +46,8 @@ const formatPercentage = (percentage: number): string =>
  */
 const BestSlotRankingRow = (props: { entry: BestSlotRankingEntryDTO }) => {
   const percentageBarWidth = () => `${Math.min(100, props.entry.best_player_percentage)}%`
+  const constDisplay = () =>
+    getConstDisplay(props.entry.chart.const, props.entry.chart.is_const_unknown)
 
   return (
     <tr class="border-t border-border hover:bg-surface-muted">
@@ -74,29 +76,25 @@ const BestSlotRankingRow = (props: { entry: BestSlotRankingEntryDTO }) => {
         </A>
       </td>
       <td class="px-3 py-2 text-center font-jost text-sm whitespace-nowrap">
-        {formatChartConst(props.entry.chart.const)}
-        <Show when={props.entry.chart.is_const_unknown}>
-          <span class="ml-1 text-xs text-text-muted">
-            ({BEST_SLOT_RANKING_COPY.estimatedConstLabel})
-          </span>
-        </Show>
+        <span class={`leading-none ${constDisplay().className}`}>
+          {constDisplay().valueText}
+          <Show when={constDisplay().markerText}>
+            {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
+          </Show>
+        </span>
       </td>
       <td class="px-3 py-2 text-right font-jost text-sm whitespace-nowrap">
         {formatInteger(props.entry.best_player_count)}
-        {BEST_SLOT_RANKING_COPY.playersUnit}
       </td>
-      <td class="min-w-36 px-3 py-2">
-        <div class="flex items-center gap-3">
-          <div
-            class="h-2 min-w-16 flex-1 overflow-hidden rounded-full bg-surface-muted"
-            aria-hidden="true"
-          >
+      <td class="min-w-36 p-0">
+        <div class="flex min-h-11 items-stretch">
+          <div class="relative min-w-16 flex-1 bg-surface-muted" aria-hidden="true">
             <div
-              class="h-full rounded-full bg-action-primary"
+              class="absolute inset-y-0 left-0 bg-action-primary"
               style={{ width: percentageBarWidth() }}
             />
           </div>
-          <span class="w-16 text-right font-jost text-sm font-semibold whitespace-nowrap">
+          <span class="flex w-16 items-center pl-2 font-jost text-sm font-semibold whitespace-nowrap">
             {formatPercentage(props.entry.best_player_percentage)}
           </span>
         </div>
