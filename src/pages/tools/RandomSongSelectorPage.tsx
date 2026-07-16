@@ -33,6 +33,7 @@ import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWi
 import { formatChartConst } from '../../utils/chartConstFormat'
 import {
   buildRandomSongCandidates,
+  createChartConstsByLevelMap,
   createRandomSongCandidateKey,
   createRandomSongChartKey,
   createRandomSongRecordMap,
@@ -659,8 +660,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
       ...new Set(filteredCandidates().map((candidate) => formatChartConst(candidate.chartConst))),
     ].sort((left, right) => Number(left) - Number(right))
   )
+  const allChartConstsByLevel = createMemo(() => createChartConstsByLevelMap(allCandidates()))
   const completeLevelWeightOptions = createMemo(() =>
-    getRandomSongCompleteLevelWeightOptions(allCandidates(), filteredCandidates())
+    getRandomSongCompleteLevelWeightOptions(allChartConstsByLevel(), filteredCandidates())
   )
   /**
    * 候補1件に適用される出やすさの重みを取得する。
@@ -956,7 +958,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
    */
   const levelWeightPercentLabel = (option: RandomSongLevelWeightOption): string => {
     const weightMass = filteredCandidates().reduce((sum, candidate) => {
-      if (!option.chartConsts.includes(formatChartConst(candidate.chartConst))) return sum
+      if (candidate.levelLabel !== option.levelLabel) return sum
 
       const weight = weightForCandidate(candidate)
       return weight === null ? sum : sum + weight
