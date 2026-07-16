@@ -49,7 +49,7 @@ const BestSlotRankingRow = (props: { entry: BestSlotRankingEntryDTO }) => {
     <tr class="border-t border-border hover:bg-surface-muted">
       <th scope="row" class="w-7 p-0 text-center font-normal">
         <span
-          class={`inline-flex h-7 w-7 items-center justify-center rounded-full font-oswald text-sm font-semibold ${getRankingPositionClass(
+          class={`ml-3 inline-flex h-7 w-7 items-center justify-center rounded-full font-oswald text-sm font-semibold ${getRankingPositionClass(
             props.entry.rank,
             'bg-surface-muted text-text-muted'
           )}`}
