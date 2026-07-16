@@ -1,9 +1,9 @@
 import { A, useLocation, useNavigate } from '@solidjs/router'
-import { ChartColumnIncreasing } from 'lucide-solid'
+import { ChartColumnIncreasing, ImageOff } from 'lucide-solid'
 import type { Accessor, Component, Resource } from 'solid-js'
-import { createMemo, For, lazy, Show, Suspense } from 'solid-js'
+import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
-import { getAppButtonClass } from '../../../components/common/AppButton'
+import { AppIconButton, getAppButtonClass } from '../../../components/common/AppButton'
 import { AppTabContent, SegmentedTabs, UnderlineTabs } from '../../../components/common/AppTabs'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import {
@@ -45,6 +45,9 @@ const disabledStatsPageButtonClass =
 const isStatsPageLinkDisabled = true
 const BEST_CANDIDATE_HEADING = 'ベスト枠候補'
 const NEW_CANDIDATE_HEADING = '新曲枠候補'
+const JACKET_VISIBILITY_LABEL = 'ジャケット画像を非表示'
+const HIDE_JACKETS_LABEL = 'ジャケット画像を非表示'
+const SHOW_JACKETS_LABEL = 'ジャケット画像を表示'
 const PAGE_TAB_OPTIONS = [
   { value: 'rating', label: 'レーティング' },
   { value: 'records', label: 'レコード' },
@@ -84,6 +87,32 @@ const StatsPageLink: Component<{ href: string }> = (props) => (
 )
 
 /**
+ * レーティングカードのジャケット画像表示を切り替える。
+ *
+ * @param props - ジャケット画像の表示状態と切り替え処理。
+ * @returns ジャケット画像表示を切り替える丸形アイコンボタン。
+ */
+const JacketVisibilityToggle: Component<{
+  showJackets: boolean
+  onToggle: () => void
+}> = (props) => {
+  const actionLabel = () => (props.showJackets ? HIDE_JACKETS_LABEL : SHOW_JACKETS_LABEL)
+
+  return (
+    <AppIconButton
+      class="rounded-full data-[jackets-hidden=true]:border-action-primary data-[jackets-hidden=true]:bg-action-primary data-[jackets-hidden=true]:text-text-inverse data-[jackets-hidden=true]:hover:bg-action-primary-hover"
+      aria-label={JACKET_VISIBILITY_LABEL}
+      aria-pressed={!props.showJackets}
+      data-jackets-hidden={!props.showJackets}
+      title={actionLabel()}
+      onClick={props.onToggle}
+    >
+      <ImageOff class="h-5 w-5" aria-hidden="true" />
+    </AppIconButton>
+  )
+}
+
+/**
  * レーティング対象レコードと候補レコードを一覧表示する。
  *
  * @param props - レーティング対象レコード、候補レコード、候補見出し。
@@ -93,21 +122,34 @@ const RecordList: Component<{
   records: PlayerRecordDTO[]
   candidates?: PlayerRecordDTO[]
   candidateHeading: string
+  showJackets: boolean
 }> = (props) => (
   <div class="mx-4 flex flex-col gap-2">
-    <For each={props.records}>{(record, i) => <UserRecordCard record={record} index={i()} />}</For>
+    <For each={props.records}>
+      {(record, i) => (
+        <UserRecordCard record={record} index={i()} showJackets={props.showJackets} />
+      )}
+    </For>
     <Show when={(props.candidates?.length ?? 0) > 0}>
       <h3 class="mt-4 border-t-2 border-border-strong pt-4 text-base font-bold text-text">
         {props.candidateHeading}
       </h3>
       <For each={props.candidates}>
-        {(record, i) => <UserRecordCard record={record} index={i()} useDefaultIndexColor />}
+        {(record, i) => (
+          <UserRecordCard
+            record={record}
+            index={i()}
+            showJackets={props.showJackets}
+            useDefaultIndexColor
+          />
+        )}
       </For>
     </Show>
   </div>
 )
 
 export const UserProfileView: Component<Props> = (props) => {
+  const [showJackets, setShowJackets] = createSignal(true)
   const playerInfo = (): PlayerDTO => props.profile.player
   const honors = (): HonorDTO[] => playerInfo().honors
   const bestRecords = (): PlayerRecordDTO[] => props.profile.rating.best
@@ -214,6 +256,15 @@ export const UserProfileView: Component<Props> = (props) => {
     scrollToRecordList()
   }
 
+  /**
+   * レーティングカードのジャケット画像表示を切り替える。
+   *
+   * @returns ジャケット画像表示の状態を反転する。
+   */
+  const handleJacketVisibilityToggle = () => {
+    setShowJackets((current) => !current)
+  }
+
   const handleRecordTabChange = (value: string) => {
     if (value !== 'standard' && value !== 'worldsend' && value !== 'course') return
     const page =
@@ -246,7 +297,15 @@ export const UserProfileView: Component<Props> = (props) => {
             options={RATING_TAB_OPTIONS}
             listClass="rounded-xl"
             listWrapperClass="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3"
-            listAside={<StatsPageLink href={statsPagePath()} />}
+            listAside={
+              <div class="flex items-center gap-2">
+                <JacketVisibilityToggle
+                  showJackets={showJackets()}
+                  onToggle={handleJacketVisibilityToggle}
+                />
+                <StatsPageLink href={statsPagePath()} />
+              </div>
+            }
             triggerClass="p-2"
           >
             <AppTabContent value="best">
@@ -254,6 +313,7 @@ export const UserProfileView: Component<Props> = (props) => {
                 records={bestRecords()}
                 candidates={bestCandidateRecords()}
                 candidateHeading={BEST_CANDIDATE_HEADING}
+                showJackets={showJackets()}
               />
             </AppTabContent>
             <AppTabContent value="new">
@@ -261,6 +321,7 @@ export const UserProfileView: Component<Props> = (props) => {
                 records={newRecords()}
                 candidates={newCandidateRecords()}
                 candidateHeading={NEW_CANDIDATE_HEADING}
+                showJackets={showJackets()}
               />
             </AppTabContent>
           </SegmentedTabs>
