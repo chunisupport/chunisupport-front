@@ -11,6 +11,7 @@ import {
 } from '../../../../utils/difficultyUtils'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import { formatInteger } from '../../../../utils/numberFormat'
+import { getRankingPositionClass } from '../../../../utils/rankingPosition'
 import { formatRatingFixed2 } from '../../../../utils/ratingFormat'
 import { getScoreRank } from '../../../../utils/scoreRank'
 import { getConstDisplay } from '../../UserRecord/utils/constDisplay'
@@ -19,26 +20,6 @@ type Props = {
   record: PlayerRecordDTO
   index: number
   useDefaultIndexColor?: boolean
-}
-
-// FIXME: 色使いすぎ？
-/**
- * レコード順位の表示色クラスを返す。
- *
- * @param index - 1始まりの順位。
- * @returns 順位に対応する背景色と文字色のTailwindクラス。
- */
-const idxColor = (index: number) => {
-  switch (index) {
-    case 1:
-      return 'bg-ranking-gold-bg text-ranking-medal-text'
-    case 2:
-      return 'bg-ranking-silver-bg text-ranking-medal-text'
-    case 3:
-      return 'bg-ranking-bronze-bg text-ranking-medal-text'
-    default:
-      return 'bg-surface-hover'
-  }
 }
 
 /**
@@ -51,7 +32,8 @@ export const UserRecordCard: Component<Props> = (props) => {
   const [shouldAnimate, setShouldAnimate] = createSignal(false)
   let titleRef: HTMLParagraphElement | undefined
   const scoreRank = () => getScoreRank(props.record.score)
-  const indexColor = () => (props.useDefaultIndexColor ? idxColor(0) : idxColor(props.index + 1))
+  const indexColor = () =>
+    getRankingPositionClass(props.useDefaultIndexColor ? 0 : props.index + 1, 'bg-surface-hover')
   const jacketUrl = () => buildChunithmJacketUrl(props.record.img)
   const constDisplay = () => getConstDisplay(props.record.const, props.record.is_const_unknown)
   const unknownValueClass = () => (props.record.is_const_unknown ? 'text-danger' : 'text-text')

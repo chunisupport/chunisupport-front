@@ -387,6 +387,36 @@ export interface RatingBandDTO {
   sort_order: number
 }
 
+/** ベスト枠ランキングに表示する楽曲概要。 */
+export interface BestSlotRankingSongDTO {
+  id: string
+  title: string
+}
+
+/** ベスト枠ランキングに表示する譜面概要。 */
+export interface BestSlotRankingChartDTO {
+  difficulty: PlayerDataDifficulty
+  const: number
+  is_const_unknown: boolean
+}
+
+/** ベスト枠採用率ランキングの1件。 */
+export interface BestSlotRankingEntryDTO {
+  rank: number
+  song: BestSlotRankingSongDTO
+  chart: BestSlotRankingChartDTO
+  best_player_count: number
+  best_player_percentage: number
+}
+
+/** ベスト枠平均レート帯別ランキングAPIのレスポンス。 */
+export interface BestSlotRankingResponseDTO {
+  rating_band: string
+  eligible_player_count: number
+  ranking: BestSlotRankingEntryDTO[]
+  next_cursor: string | null
+}
+
 export interface AchievementTypeDTO {
   code: string
   label?: string

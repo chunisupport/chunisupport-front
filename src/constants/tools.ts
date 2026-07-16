@@ -1,4 +1,5 @@
 import {
+  BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   LOCKED_SONGS_FINDER_PATH,
@@ -9,7 +10,7 @@ import {
 /**
  * ツールカードに表示するアイコン種別。
  */
-export type ToolLinkIcon = 'calculator' | 'chart' | 'target' | 'search' | 'random'
+export type ToolLinkIcon = 'calculator' | 'chart' | 'target' | 'search' | 'random' | 'ranking'
 
 /**
  * 無効化されたツールカードに表示する状態ラベル。
@@ -54,6 +55,11 @@ export const TOOL_LINKS: ToolLink[] = [
     title: 'ランダム選曲',
     href: RANDOM_SONG_SELECTOR_PATH,
     icon: 'random',
+  },
+  {
+    title: 'ベスト枠ランキング',
+    href: BEST_SLOT_RANKING_PATH,
+    icon: 'ranking',
   },
   {
     title: '未解禁曲探索',
