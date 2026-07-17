@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { CHUNITHM_JACKET_BASE_URL } from '../constants/jackets.ts'
-import { buildChunithmJacketUrl } from './jacket.ts'
+
+const TEST_CHUNITHM_JACKET_BASE_URL = 'https://jacket.example.com/chunithm'
+process.env.PUBLIC_CHUNITHM_JACKET_BASE_URL = TEST_CHUNITHM_JACKET_BASE_URL
+
+const { buildChunithmJacketUrl } = await import('./jacket.ts')
 
 test('ジャケット画像IDからCHUNITHMジャケットURLを組み立てること', () => {
   // Given: APIから返されたジャケット画像ID。
@@ -11,7 +14,7 @@ test('ジャケット画像IDからCHUNITHMジャケットURLを組み立てる�
   const result = buildChunithmJacketUrl(imageId)
 
   // Then: CHUNITHMジャケット配信先のwebp URLになる。
-  assert.equal(result, `${CHUNITHM_JACKET_BASE_URL}/music-jacket.webp`)
+  assert.equal(result, `${TEST_CHUNITHM_JACKET_BASE_URL}/music-jacket.webp`)
 })
 
 test('空白だけのジャケット画像IDはジャケットURLを返さないこと', () => {
