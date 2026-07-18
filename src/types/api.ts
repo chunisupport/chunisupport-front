@@ -407,6 +407,8 @@ export interface BestSlotRankingEntryDTO {
   chart: BestSlotRankingChartDTO
   best_player_count: number
   best_player_percentage: number
+  /** 選択レート帯でこの譜面をプレイした全プレイヤーの平均スコア。 */
+  average_score: number | null
 }
 
 /** ベスト枠平均レート帯別ランキングAPIのレスポンス。 */

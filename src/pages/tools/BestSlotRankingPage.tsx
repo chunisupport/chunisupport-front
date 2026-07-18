@@ -12,7 +12,7 @@ import { authSession } from '../../stores/authSession'
 import type { BestSlotRankingEntryDTO, RatingBandDTO } from '../../types/api'
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
 import { getConstDisplay } from '../../utils/constDisplay'
-import { formatTruncatedFixed } from '../../utils/numberFormat'
+import { formatInteger, formatTruncatedFixed } from '../../utils/numberFormat'
 import { getRankingPositionClass } from '../../utils/rankingPosition'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import {
@@ -38,7 +38,7 @@ const formatPercentage = (percentage: number): string =>
  * ランキングの譜面1件を表形式で表示する。
  *
  * @param props.entry - 表示対象のランキング項目。
- * @returns 順位、譜面情報、採用率を含む行。
+ * @returns 順位、譜面情報、平均スコア、採用率を含む行。
  */
 const BestSlotRankingRow = (props: { entry: BestSlotRankingEntryDTO }) => {
   const percentageBarWidth = () => `${Math.min(100, props.entry.best_player_percentage)}%`
@@ -78,6 +78,11 @@ const BestSlotRankingRow = (props: { entry: BestSlotRankingEntryDTO }) => {
             {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
           </Show>
         </span>
+      </td>
+      <td class="w-px px-3 py-2 text-right font-jost text-sm whitespace-nowrap">
+        {props.entry.average_score === null
+          ? '-'
+          : formatInteger(Math.trunc(props.entry.average_score))}
       </td>
       <td class="min-w-36 px-3 py-2">
         <div class="flex items-center gap-3">
@@ -256,12 +261,23 @@ const BestSlotRankingPage = () => {
                     <colgroup>
                       <col class="w-7" />
                     </colgroup>
-                    <thead class="sr-only">
+                    <thead class="border-b border-border bg-surface-muted text-xs text-text-muted">
                       <tr>
-                        <th scope="col">{BEST_SLOT_RANKING_COPY.rankColumn}</th>
-                        <th scope="col">{BEST_SLOT_RANKING_COPY.chartColumn}</th>
-                        <th scope="col">{BEST_SLOT_RANKING_COPY.constColumn}</th>
-                        <th scope="col">{BEST_SLOT_RANKING_COPY.percentageColumn}</th>
+                        <th scope="col" class="px-3 py-2 text-center font-medium">
+                          {BEST_SLOT_RANKING_COPY.rankColumn}
+                        </th>
+                        <th scope="col" class="px-3 py-2 font-medium">
+                          {BEST_SLOT_RANKING_COPY.chartColumn}
+                        </th>
+                        <th scope="col" class="px-2 py-2 text-center font-medium">
+                          {BEST_SLOT_RANKING_COPY.constColumn}
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-right font-medium whitespace-nowrap">
+                          {BEST_SLOT_RANKING_COPY.averageScoreColumn}
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-right font-medium">
+                          {BEST_SLOT_RANKING_COPY.percentageColumn}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>

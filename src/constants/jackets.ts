@@ -1,2 +1,4 @@
+import { getRequiredEnv } from '../lib/env'
+
 /** CHUNITHM ジャケット画像のベース URL。 */
-export const CHUNITHM_JACKET_BASE_URL = 'https://reiwa.f5.si/jackets/chunithm'
+export const CHUNITHM_JACKET_BASE_URL = getRequiredEnv('PUBLIC_CHUNITHM_JACKET_BASE_URL')
