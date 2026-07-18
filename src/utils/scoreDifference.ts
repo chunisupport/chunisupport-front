@@ -14,6 +14,19 @@ export const formatScoreDifference = (difference: number): string =>
   })
 
 /**
+ * 画面表示に使う整数の平均スコアと自分のスコアとの差分を算出する。
+ *
+ * @param ownScore - ログインユーザーの譜面スコア。未プレイの場合は未定義。
+ * @param averageScore - 集計された平均スコア。集計対象がない場合はnull。
+ * @returns 自分のスコアから切り捨て後の平均スコアを引いた値。算出できない場合は未定義。
+ */
+export const calculateDisplayedScoreDifference = (
+  ownScore: number | undefined,
+  averageScore: number | null
+): number | undefined =>
+  ownScore === undefined || averageScore === null ? undefined : ownScore - Math.trunc(averageScore)
+
+/**
  * スコア差に応じた共通の文字色クラスを返す。
  *
  * @param difference - 基準スコアとの差。

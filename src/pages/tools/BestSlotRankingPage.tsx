@@ -9,12 +9,18 @@ import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { buildSongDetailPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
-import type { BestSlotRankingEntryDTO, RatingBandDTO } from '../../types/api'
+import type { BestSlotRankingEntryDTO, PlayerRecordDTO, RatingBandDTO } from '../../types/api'
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
+import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { getConstDisplay } from '../../utils/constDisplay'
 import { formatInteger, formatTruncatedFixed } from '../../utils/numberFormat'
 import { getRankingPositionClass } from '../../utils/rankingPosition'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
+import {
+  calculateDisplayedScoreDifference,
+  formatScoreDifference,
+  getScoreDifferenceClass,
+} from '../../utils/scoreDifference'
 import {
   BEST_SLOT_PERCENTAGE_DECIMAL_PLACES,
   BEST_SLOT_RANKING_COPY,
@@ -24,6 +30,16 @@ type RatingBandOption = {
   label: string
   value: string
 }
+
+/**
+ * 楽曲IDと難易度からユーザーレコード参照用の譜面キーを生成する。
+ *
+ * @param songId - 楽曲ID。
+ * @param difficulty - 譜面難易度。
+ * @returns 大文字難易度で正規化した譜面キー。
+ */
+const createChartKey = (songId: string, difficulty: string): string =>
+  `${songId}:${difficulty.toUpperCase()}`
 
 /**
  * ベスト枠採用率を指定桁数で切り捨てたパーセント表記へ整形する。
@@ -38,12 +54,20 @@ const formatPercentage = (percentage: number): string =>
  * ランキングの譜面1件を表形式で表示する。
  *
  * @param props.entry - 表示対象のランキング項目。
+ * @param props.ownScore - 同じ譜面におけるログインユーザーのスコア。
  * @returns 順位、譜面情報、平均スコア、採用率を含む行。
  */
-const BestSlotRankingRow = (props: { entry: BestSlotRankingEntryDTO }) => {
+const BestSlotRankingRow = (props: {
+  entry: BestSlotRankingEntryDTO
+  ownScore: number | undefined
+}) => {
   const percentageBarWidth = () => `${Math.min(100, props.entry.best_player_percentage)}%`
   const constDisplay = () =>
     getConstDisplay(props.entry.chart.const, props.entry.chart.is_const_unknown)
+  const averageScore = () =>
+    props.entry.average_score === null ? undefined : Math.trunc(props.entry.average_score)
+  const scoreDifference = () =>
+    calculateDisplayedScoreDifference(props.ownScore, props.entry.average_score)
 
   return (
     <tr class="border-t border-border hover:bg-surface-muted">
@@ -57,10 +81,10 @@ const BestSlotRankingRow = (props: { entry: BestSlotRankingEntryDTO }) => {
           {props.entry.rank}
         </span>
       </th>
-      <td class="min-w-64 px-3 py-2">
+      <td class="relative min-w-64 p-0">
         <A
           href={buildSongDetailPath(props.entry.song.id, props.entry.chart.difficulty)}
-          class="flex w-fit min-w-0 items-center gap-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+          class="absolute inset-0 flex min-w-0 items-center gap-2 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
         >
           <DifficultyBadge difficulty={props.entry.chart.difficulty} />
           <span
@@ -79,10 +103,15 @@ const BestSlotRankingRow = (props: { entry: BestSlotRankingEntryDTO }) => {
           </Show>
         </span>
       </td>
-      <td class="w-px px-3 py-2 text-right font-jost text-sm whitespace-nowrap">
-        {props.entry.average_score === null
-          ? '-'
-          : formatInteger(Math.trunc(props.entry.average_score))}
+      <td class="w-px px-3 py-2 whitespace-nowrap">
+        <div class="flex items-baseline justify-end gap-1 font-jost text-sm tabular-nums">
+          <span>{averageScore() === undefined ? '-' : formatInteger(averageScore() ?? 0)}</span>
+          <Show when={scoreDifference() !== undefined}>
+            <span class={`text-xs ${getScoreDifferenceClass(scoreDifference() ?? 0)}`}>
+              ({formatScoreDifference(scoreDifference() ?? 0)})
+            </span>
+          </Show>
+        </div>
       </td>
       <td class="min-w-36 px-3 py-2">
         <div class="flex items-center gap-3">
@@ -114,6 +143,10 @@ const BestSlotRankingPage = () => {
   const [ownRating] = createResource(
     () => (authSession.status === 'authenticated' ? authSession.user?.username : null),
     fetchUserRatingWithCache
+  )
+  const [ownRecords] = createResource(
+    () => (authSession.status === 'authenticated' ? authSession.user?.username : null),
+    fetchUserRecordWithCache
   )
   const [selectedRatingBand, setSelectedRatingBand] = createSignal<RatingBandOption | null>(null)
   const [hasResolvedInitialBand, setHasResolvedInitialBand] = createSignal(false)
@@ -179,6 +212,14 @@ const BestSlotRankingPage = () => {
     ...(currentRanking()?.ranking ?? []),
     ...additionalEntries(),
   ])
+  const ownRecordsByChart = createMemo(
+    () =>
+      new Map<string, PlayerRecordDTO>(
+        (ownRecords()?.standard ?? [])
+          .filter((record) => record.is_played)
+          .map((record) => [createChartKey(record.id, record.difficulty), record])
+      )
+  )
 
   /** 選択中レート帯のランキングを次のカーソルから追加取得する。 */
   const handleLoadMore = async (): Promise<void> => {
@@ -261,7 +302,7 @@ const BestSlotRankingPage = () => {
                     <colgroup>
                       <col class="w-7" />
                     </colgroup>
-                    <thead class="border-b border-border bg-surface-muted text-xs text-text-muted">
+                    <thead class="sr-only">
                       <tr>
                         <th scope="col" class="px-3 py-2 text-center font-medium">
                           {BEST_SLOT_RANKING_COPY.rankColumn}
@@ -282,7 +323,16 @@ const BestSlotRankingPage = () => {
                     </thead>
                     <tbody>
                       <For each={displayedEntries()}>
-                        {(entry) => <BestSlotRankingRow entry={entry} />}
+                        {(entry) => (
+                          <BestSlotRankingRow
+                            entry={entry}
+                            ownScore={
+                              ownRecordsByChart().get(
+                                createChartKey(entry.song.id, entry.chart.difficulty)
+                              )?.score
+                            }
+                          />
+                        )}
                       </For>
                     </tbody>
                   </table>
