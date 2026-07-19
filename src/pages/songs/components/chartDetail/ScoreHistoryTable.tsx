@@ -16,12 +16,12 @@ import {
 const ScoreHistoryTable = (props: { entries: readonly ScoreHistoryEntryDTO[] }) => (
   <div class="rounded-lg border border-border bg-surface">
     <table class="w-full table-fixed border-collapse">
-      <thead class="bg-surface-muted text-center text-sm text-text-muted">
+      <thead class="bg-surface-muted text-center text-xs text-text-muted">
         <tr>
-          <th scope="col" class="px-3 py-3 text-left sm:px-4">
+          <th scope="col" class="px-3 py-2 text-left sm:px-4">
             {SCORE_HISTORY_UPDATED_AT_LABEL}
           </th>
-          <th scope="col" class="w-32 px-3 py-3 text-right sm:w-44 sm:px-4">
+          <th scope="col" class="w-32 px-3 py-2 text-right sm:w-44 sm:px-4">
             {SCORE_HISTORY_SCORE_LABEL}
           </th>
         </tr>
