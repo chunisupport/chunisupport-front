@@ -5,7 +5,7 @@ import { fetchRatingBands } from '../../api/ratingBands'
 import { LoadError, Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
-import { DifficultyBadge } from '../../components/common/DifficultyBadge'
+import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
 import { buildSongDetailPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
@@ -86,7 +86,7 @@ const BestSlotRankingRow = (props: {
           href={buildSongDetailPath(props.entry.song.id, props.entry.chart.difficulty)}
           class="group absolute inset-0 flex min-w-0 items-center gap-2 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
         >
-          <DifficultyBadge difficulty={props.entry.chart.difficulty} />
+          <RecordDifficultyBadge difficulty={props.entry.chart.difficulty} />
           <span
             class="block max-w-48 truncate font-sans font-medium text-text group-hover:underline group-focus-visible:underline sm:max-w-96"
             title={props.entry.song.title}

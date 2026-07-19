@@ -1,5 +1,5 @@
 import { Show } from 'solid-js'
-import { RECORD_COMPACT_BADGE_CLASS } from '../../../../components/common/record/RecordBadges'
+import { RecordDifficultyBadge } from '../../../../components/common/record/RecordBadges'
 import {
   type ColumnRenderer,
   RECORD_CELL_BASE_CLASS,
@@ -14,11 +14,7 @@ import {
 } from '../../../../components/common/record/RecordDisplayParts'
 import type { RecordColumnId } from '../../../../types/recordFilter'
 import { getConstDisplay, getRatingDisplay } from '../../../../utils/constDisplay'
-import {
-  difficultyBadgeClass,
-  difficultyShort,
-  difficultyToQueryValue,
-} from '../../../../utils/difficultyUtils'
+import { difficultyToQueryValue } from '../../../../utils/difficultyUtils'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import { formatUpdatedAt } from '../../../../utils/recordUpdatedAt'
@@ -38,9 +34,7 @@ export const recordColumnRenderers: Record<
   ),
   difficulty: (record) => (
     <div class={DIFFICULTY_COLUMN_CLASS}>
-      <span class={`${RECORD_COMPACT_BADGE_CLASS} ${difficultyBadgeClass(record.difficulty)}`}>
-        {difficultyShort(record.difficulty)}
-      </span>
+      <RecordDifficultyBadge difficulty={record.difficulty} />
     </div>
   ),
   const: (record) => {
