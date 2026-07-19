@@ -55,7 +55,7 @@ const formatPercentage = (percentage: number): string =>
  *
  * @param props.entry - 表示対象のランキング項目。
  * @param props.ownScore - 同じ譜面におけるログインユーザーのスコア。
- * @returns 順位、譜面情報、平均スコア、採用率を含む行。
+ * @returns 順位、譜面情報、平均スコア、自分との差、採用率を含む行。
  */
 const BestSlotRankingRow = (props: {
   entry: BestSlotRankingEntryDTO
@@ -88,7 +88,7 @@ const BestSlotRankingRow = (props: {
         >
           <DifficultyBadge difficulty={props.entry.chart.difficulty} />
           <span
-            class="block max-w-48 truncate font-sans font-medium text-text hover:text-action-primary hover:underline sm:max-w-96"
+            class="block max-w-48 truncate font-sans font-medium text-text sm:max-w-96"
             title={props.entry.song.title}
           >
             {props.entry.song.title}
@@ -104,14 +104,16 @@ const BestSlotRankingRow = (props: {
         </span>
       </td>
       <td class="w-px px-3 py-2 whitespace-nowrap">
-        <div class="flex items-baseline justify-end gap-1 font-jost text-sm tabular-nums">
-          <span>{averageScore() === undefined ? '-' : formatInteger(averageScore() ?? 0)}</span>
-          <Show when={scoreDifference() !== undefined}>
-            <span class={`text-xs ${getScoreDifferenceClass(scoreDifference() ?? 0)}`}>
-              ({formatScoreDifference(scoreDifference() ?? 0)})
-            </span>
-          </Show>
+        <div class="text-right font-jost text-sm tabular-nums">
+          {averageScore() === undefined ? '-' : formatInteger(averageScore() ?? 0)}
         </div>
+      </td>
+      <td class="w-px px-3 py-2 text-right font-jost text-xs whitespace-nowrap tabular-nums">
+        <Show when={scoreDifference() !== undefined} fallback="-">
+          <span class={getScoreDifferenceClass(scoreDifference() ?? 0)}>
+            {formatScoreDifference(scoreDifference() ?? 0)}
+          </span>
+        </Show>
       </td>
       <td class="min-w-36 px-3 py-2">
         <div class="flex items-center gap-3">
@@ -315,6 +317,9 @@ const BestSlotRankingPage = () => {
                         </th>
                         <th scope="col" class="px-3 py-2 text-right font-medium whitespace-nowrap">
                           {BEST_SLOT_RANKING_COPY.averageScoreColumn}
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-right font-medium whitespace-nowrap">
+                          {BEST_SLOT_RANKING_COPY.scoreDifferenceColumn}
                         </th>
                         <th scope="col" class="px-3 py-2 text-right font-medium">
                           {BEST_SLOT_RANKING_COPY.percentageColumn}
