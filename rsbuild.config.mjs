@@ -83,6 +83,7 @@ export default defineConfig(({ env, envMode }) => {
       title: 'ChuniSupport',
       meta: {
         robots: 'noindex',
+        'format-detection': 'telephone=no',
       },
       tags: [
         {
