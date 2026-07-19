@@ -96,7 +96,7 @@ const HonorFormDialog: Component<HonorFormDialogProps> = (props) => {
     <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex h-[min(90dvh,36rem)] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
+        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
           <Dialog.Title class="shrink-0 text-lg font-bold text-text">
             {props.mode === 'create'
               ? ADMIN_HONORS_COPY.createDialogTitle
@@ -106,8 +106,8 @@ const HonorFormDialog: Component<HonorFormDialogProps> = (props) => {
             {ADMIN_HONORS_COPY.formDescription}
           </Dialog.Description>
 
-          <form class="mt-5 flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
-            <div class="min-h-0 flex-1 basis-0 space-y-4 overflow-y-auto">
+          <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit}>
+            <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
               <TextField>
                 <TextField.Label class="mb-1 block text-sm text-text-muted">
                   {ADMIN_HONORS_COPY.honorLabel}

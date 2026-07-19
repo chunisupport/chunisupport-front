@@ -1,5 +1,6 @@
 import { Play } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
+import { CheckboxField } from '../../components/common/CheckboxField'
 import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
 import {
   RecordFullChainCell,
@@ -15,12 +16,9 @@ import type {
   PlayerDataCourseRecordChange,
   PlayerDataCourseRecordState,
   PlayerDataDifficulty,
-  PlayerDataNumberDiff,
   PlayerDataRecordChange,
   PlayerDataRecordState,
   PlayerDataSongRecordChange,
-  PlayerDataStatistics,
-  PlayerDataStatisticsGroup,
   PlayerDataUpdateResult,
 } from '../../types/api'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
@@ -31,6 +29,17 @@ import {
   formatCourseClass,
   REGISTER_SCORE_UNKNOWN_TITLE,
 } from './registerScoreDisplay'
+import {
+  createDefaultRegisterScoreStatisticRowVisibility,
+  REGISTER_SCORE_DIFFICULTIES,
+  REGISTER_SCORE_MAIN_STAT_ROW_KEY,
+  REGISTER_SCORE_STAT_COLUMNS,
+  REGISTER_SCORE_STATISTIC_ROW_OPTIONS,
+  type RegisterScoreStatisticRow,
+  type RegisterScoreStatisticRowKey,
+  type RegisterScoreStatisticRowVisibility,
+  toRegisterScoreStatisticRows,
+} from './registerScoreStatistics'
 
 export const REGISTER_SCORE_MESSAGES = {
   invalidToken: 'tokenが不正です。登録用URLを確認してください。',
@@ -43,31 +52,13 @@ export const REGISTER_SCORE_MESSAGES = {
   changedCoursesTitle: 'COURSE RECORDS',
   totalHighScoreTitle: 'TOTAL HIGH SCORE',
   recordStatsTitle: 'RECORD STATISTICS',
+  displaySettingsTitle: '表示設定',
   unknownSongTitle: REGISTER_SCORE_UNKNOWN_TITLE,
 } as const
 
 const NO_DATA_TEXT = '-'
 const WORLD_END_BADGE_CLASS =
   'bg-[image:var(--cs-color-worldsend-label-bg)] text-worldsend-label-text'
-const REGISTER_SCORE_DIFFICULTIES: readonly PlayerDataDifficulty[] = [
-  'BASIC',
-  'ADVANCED',
-  'EXPERT',
-  'MASTER',
-  'ULTIMA',
-]
-const REGISTER_SCORE_STAT_COLUMNS = [
-  'AJ',
-  'FC',
-  'MAX',
-  'SSS+',
-  'SSS',
-  'SS+',
-  'SS',
-  'S+',
-  'S',
-] as const
-const REGISTER_SCORE_MAIN_STAT_ROW_LABEL = 'ALL'
 const PROFILE_VALUE_CLASS = 'font-jost text-base font-normal leading-6'
 /** 更新差分レポートの原寸幅を固定するクラス。 */
 const REGISTER_SCORE_REPORT_WIDTH_CLASS = 'w-[31rem]'
@@ -105,62 +96,10 @@ type RegisterScoreLampRecord = {
   full_chain: 'FULL CHAIN GOLD' | 'FULL CHAIN PLATINUM' | null
 }
 
-type RegisterScoreStatisticRow = {
-  label: string
-  difficulty: PlayerDataDifficulty | null
-  values: Record<(typeof REGISTER_SCORE_STAT_COLUMNS)[number], PlayerDataNumberDiff>
-}
-
 export type RegisterScoreSongTitleResolver = (change: PlayerDataRecordChange) => string
 export type RegisterScoreChartLevelResolver = (change: PlayerDataRecordChange) => string | undefined
 /** コース差分からコースタイトルを解決する関数。 */
 export type RegisterScoreCourseTitleResolver = (change: PlayerDataCourseRecordChange) => string
-
-/**
- * 1統計グループを表示用の統計行へ変換する。
- *
- * @param label - 行見出し。
- * @param group - APIが返す統計グループ。
- * @returns 表示用の統計行。
- */
-const toRegisterScoreStatisticRow = (
-  label: string,
-  group: PlayerDataStatisticsGroup,
-  difficulty: PlayerDataDifficulty | null = null
-): RegisterScoreStatisticRow => ({
-  label,
-  difficulty,
-  values: {
-    AJ: group.record_statistics.aj,
-    FC: group.record_statistics.fc,
-    MAX: group.record_statistics.max,
-    'SSS+': group.record_statistics.sss_plus,
-    SSS: group.record_statistics.sss,
-    'SS+': group.record_statistics.ss_plus,
-    SS: group.record_statistics.ss,
-    'S+': group.record_statistics.s_plus,
-    S: group.record_statistics.s,
-  },
-})
-
-/**
- * 全体と固定5難易度の統計行を生成する。
- *
- * @param statistics - APIが返す全体および難易度別の統計差分。
- * @returns 全体、BASIC、ADVANCED、EXPERT、MASTER、ULTIMAの表示行。
- */
-const toRegisterScoreStatisticRows = (
-  statistics: PlayerDataStatistics
-): RegisterScoreStatisticRow[] => [
-  toRegisterScoreStatisticRow(REGISTER_SCORE_MAIN_STAT_ROW_LABEL, statistics.overall),
-  ...REGISTER_SCORE_DIFFICULTIES.map((difficulty) =>
-    toRegisterScoreStatisticRow(
-      difficulty.slice(0, 3),
-      statistics.by_difficulty[difficulty],
-      difficulty
-    )
-  ),
-]
 
 /**
  * 難易度ラベルへゲーム公式色の文字色クラスを適用する。
@@ -434,16 +373,75 @@ const RegisterScoreProfileSummary = (props: { result: PlayerDataUpdateResult }) 
 )
 
 /**
+ * 更新差分レポートに含める集計セクションと統計行を選択する設定を表示する。
+ *
+ * @param props - 各セクションと統計行の表示状態、および変更ハンドラー。
+ * @returns 更新差分の表示設定。
+ */
+const RegisterScoreDisplaySettings = (props: {
+  showTotalHighScore: boolean
+  showRecordStatistics: boolean
+  statisticRowVisibility: RegisterScoreStatisticRowVisibility
+  onShowTotalHighScoreChange: (checked: boolean) => void
+  onShowRecordStatisticsChange: (checked: boolean) => void
+  onStatisticRowVisibilityChange: (key: RegisterScoreStatisticRowKey, checked: boolean) => void
+}) => (
+  <fieldset class="rounded-md border border-border bg-surface px-4 pb-4 pt-3">
+    <legend class="px-1 text-lg font-semibold text-text">
+      {REGISTER_SCORE_MESSAGES.displaySettingsTitle}
+    </legend>
+    <div class="mt-1 flex flex-col items-start gap-3">
+      <CheckboxField
+        checked={props.showTotalHighScore}
+        onChange={props.onShowTotalHighScoreChange}
+        textVariant="large"
+        label={REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
+      />
+      <div class="flex flex-col items-start gap-2">
+        <CheckboxField
+          checked={props.showRecordStatistics}
+          onChange={props.onShowRecordStatisticsChange}
+          textVariant="large"
+          label={REGISTER_SCORE_MESSAGES.recordStatsTitle}
+        />
+        <div class="ml-7 flex flex-col items-start gap-2">
+          <For each={REGISTER_SCORE_STATISTIC_ROW_OPTIONS}>
+            {(option) => (
+              <CheckboxField
+                checked={props.statisticRowVisibility[option.key]}
+                disabled={!props.showRecordStatistics}
+                onChange={(checked) => props.onStatisticRowVisibilityChange(option.key, checked)}
+                textVariant="large"
+                label={option.label}
+              />
+            )}
+          </For>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+)
+
+/**
  * 登録後の通常譜面集計を表示する。
  *
- * @param props - APIから返却された通常譜面集計。
+ * @param props - APIから返却された通常譜面集計と表示設定。
  * @returns 集計値セクション。
  */
-const RegisterScoreAggregateSummary = (props: { result: PlayerDataUpdateResult }) => {
-  const statisticRows = createMemo(() => toRegisterScoreStatisticRows(props.result.statistics))
+const RegisterScoreAggregateSummary = (props: {
+  result: PlayerDataUpdateResult
+  showTotalHighScore: boolean
+  showRecordStatistics: boolean
+  statisticRowVisibility: RegisterScoreStatisticRowVisibility
+}) => {
+  const statisticRows = createMemo(() =>
+    toRegisterScoreStatisticRows(props.result.statistics).filter(
+      (row) => props.statisticRowVisibility[row.key]
+    )
+  )
   const totalHighScoreRows = createMemo(() => [
     {
-      label: REGISTER_SCORE_MAIN_STAT_ROW_LABEL,
+      label: REGISTER_SCORE_MAIN_STAT_ROW_KEY,
       difficulty: null,
       value: props.result.statistics.overall.total_high_score,
     },
@@ -456,39 +454,43 @@ const RegisterScoreAggregateSummary = (props: { result: PlayerDataUpdateResult }
 
   return (
     <>
-      <section class="py-4">
-        <h2 class="mb-3 text-xl font-extrabold leading-6">
-          {REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
-        </h2>
-        <div class="grid grid-cols-3 gap-x-4 gap-y-1 text-sm">
-          <For each={totalHighScoreRows()}>
-            {(row, _index) => (
-              <p class="grid grid-cols-[2.25rem_1fr] items-baseline gap-1">
-                <span class={`font-extrabold ${getDifficultyTextClass(row.difficulty)}`}>
-                  {row.label}
-                </span>
-                <span class="min-w-0">
-                  <span class="block font-jost font-medium">{formatScore(row.value.after)}</span>
-                  <Show when={row.value.delta !== 0}>
-                    <span
-                      class={`block font-jost text-xs font-bold ${getTotalHighScoreDeltaClass(row.value.delta)}`}
-                    >
-                      ({formatStatisticDelta(row.value.delta)})
-                    </span>
-                  </Show>
-                </span>
-              </p>
-            )}
-          </For>
-        </div>
-      </section>
+      <Show when={props.showTotalHighScore}>
+        <section class="py-4">
+          <h2 class="mb-3 text-xl font-extrabold leading-6">
+            {REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
+          </h2>
+          <div class="grid grid-cols-3 gap-x-4 gap-y-1 text-sm">
+            <For each={totalHighScoreRows()}>
+              {(row) => (
+                <p class="grid grid-cols-[2.25rem_1fr] items-baseline gap-1">
+                  <span class={`font-extrabold ${getDifficultyTextClass(row.difficulty)}`}>
+                    {row.label}
+                  </span>
+                  <span class="min-w-0">
+                    <span class="block font-jost font-medium">{formatScore(row.value.after)}</span>
+                    <Show when={row.value.delta !== 0}>
+                      <span
+                        class={`block font-jost text-xs font-bold ${getTotalHighScoreDeltaClass(row.value.delta)}`}
+                      >
+                        ({formatStatisticDelta(row.value.delta)})
+                      </span>
+                    </Show>
+                  </span>
+                </p>
+              )}
+            </For>
+          </div>
+        </section>
+      </Show>
 
-      <section class="py-4">
-        <h2 class="mb-3 text-xl font-extrabold leading-6">
-          {REGISTER_SCORE_MESSAGES.recordStatsTitle}
-        </h2>
-        <RegisterScoreLampStatistics rows={statisticRows()} />
-      </section>
+      <Show when={props.showRecordStatistics && statisticRows().length > 0}>
+        <section class="py-4">
+          <h2 class="mb-3 text-xl font-extrabold leading-6">
+            {REGISTER_SCORE_MESSAGES.recordStatsTitle}
+          </h2>
+          <RegisterScoreLampStatistics rows={statisticRows()} />
+        </section>
+      </Show>
     </>
   )
 }
@@ -772,10 +774,30 @@ export const RegisterScoreResultView = (props: {
       (change): change is PlayerDataCourseRecordChange => change.record_type === 'course'
     )
   )
+  const [showTotalHighScore, setShowTotalHighScore] = createSignal(true)
+  const [showRecordStatistics, setShowRecordStatistics] = createSignal(true)
+  const [statisticRowVisibility, setStatisticRowVisibility] =
+    createSignal<RegisterScoreStatisticRowVisibility>(
+      createDefaultRegisterScoreStatisticRowVisibility(props.result.statistics)
+    )
   const [reportScale, setReportScale] = createSignal(1)
   const [scaledReportHeight, setScaledReportHeight] = createSignal<number>()
   let scaleContainerRef!: HTMLDivElement
   let reportRef!: HTMLElement
+
+  /**
+   * RECORD STATISTICSの1行分の表示状態を更新する。
+   *
+   * @param key - 更新する統計行のキー。
+   * @param checked - 更新後の表示状態。
+   * @returns なし。
+   */
+  const updateStatisticRowVisibility = (
+    key: RegisterScoreStatisticRowKey,
+    checked: boolean
+  ): void => {
+    setStatisticRowVisibility((current) => ({ ...current, [key]: checked }))
+  }
 
   onMount(() => {
     /**
@@ -799,36 +821,51 @@ export const RegisterScoreResultView = (props: {
   })
 
   return (
-    <div
-      ref={scaleContainerRef}
-      class={`mx-auto w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} overflow-hidden`}
-      style={{ height: scaledReportHeight() ? `${scaledReportHeight()}px` : undefined }}
-    >
+    <div class={`mx-auto flex w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} flex-col gap-4`}>
+      <RegisterScoreDisplaySettings
+        showTotalHighScore={showTotalHighScore()}
+        showRecordStatistics={showRecordStatistics()}
+        statisticRowVisibility={statisticRowVisibility()}
+        onShowTotalHighScoreChange={setShowTotalHighScore}
+        onShowRecordStatisticsChange={setShowRecordStatistics}
+        onStatisticRowVisibilityChange={updateStatisticRowVisibility}
+      />
       <div
-        class={`${REGISTER_SCORE_REPORT_WIDTH_CLASS} origin-top-left`}
-        style={{ transform: `scale(${reportScale()})` }}
+        ref={scaleContainerRef}
+        class={`w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} overflow-hidden`}
+        style={{ height: scaledReportHeight() ? `${scaledReportHeight()}px` : undefined }}
       >
-        <section
-          ref={reportRef}
-          data-theme="light"
-          class="w-full overflow-hidden rounded-md border border-border bg-surface px-0 pb-4 pt-0 font-sans text-text shadow-sm"
+        <div
+          class={`${REGISTER_SCORE_REPORT_WIDTH_CLASS} origin-top-left`}
+          style={{ transform: `scale(${reportScale()})` }}
         >
-          <RegisterScoreReportHeader result={props.result} />
-          <div class="px-4 pt-3">
-            <RegisterScoreProfileSummary result={props.result} />
-            <RegisterScoreAggregateSummary result={props.result} />
-            <RegisterScoreChangesSection
-              changes={songChanges()}
-              resolveSongTitle={props.resolveSongTitle}
-              resolveChartLevel={props.resolveChartLevel}
-              emptyMessage={props.changedSongsEmptyMessage}
-            />
-            <RegisterCourseChangesSection
-              changes={courseChanges()}
-              resolveCourseTitle={props.resolveCourseTitle}
-            />
-          </div>
-        </section>
+          <section
+            ref={reportRef}
+            data-theme="light"
+            class="w-full overflow-hidden rounded-md border border-border bg-surface px-0 pb-4 pt-0 font-sans text-text shadow-sm"
+          >
+            <RegisterScoreReportHeader result={props.result} />
+            <div class="px-4 pt-3">
+              <RegisterScoreProfileSummary result={props.result} />
+              <RegisterScoreAggregateSummary
+                result={props.result}
+                showTotalHighScore={showTotalHighScore()}
+                showRecordStatistics={showRecordStatistics()}
+                statisticRowVisibility={statisticRowVisibility()}
+              />
+              <RegisterScoreChangesSection
+                changes={songChanges()}
+                resolveSongTitle={props.resolveSongTitle}
+                resolveChartLevel={props.resolveChartLevel}
+                emptyMessage={props.changedSongsEmptyMessage}
+              />
+              <RegisterCourseChangesSection
+                changes={courseChanges()}
+                resolveCourseTitle={props.resolveCourseTitle}
+              />
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   )
