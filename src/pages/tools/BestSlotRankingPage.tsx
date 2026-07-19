@@ -84,11 +84,11 @@ const BestSlotRankingRow = (props: {
       <td class="relative min-w-64 p-0">
         <A
           href={buildSongDetailPath(props.entry.song.id, props.entry.chart.difficulty)}
-          class="absolute inset-0 flex min-w-0 items-center gap-2 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
+          class="group absolute inset-0 flex min-w-0 items-center gap-2 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
         >
           <DifficultyBadge difficulty={props.entry.chart.difficulty} />
           <span
-            class="block max-w-48 truncate font-sans font-medium text-text sm:max-w-96"
+            class="block max-w-48 truncate font-sans font-medium text-text group-hover:underline group-focus-visible:underline sm:max-w-96"
             title={props.entry.song.title}
           >
             {props.entry.song.title}

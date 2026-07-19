@@ -1,5 +1,5 @@
-/** 楽曲詳細で難易度ラベル幅を揃える通常表示用クラス。 */
-export const DIFFICULTY_BADGE_FIXED_WIDTH_CLASS = 'w-[5.75rem]'
+/** 楽曲詳細で難易度ラベル幅を揃え、Flex配置でも縮小させない通常表示用クラス。 */
+export const DIFFICULTY_BADGE_FIXED_WIDTH_CLASS = 'w-[5.75rem] shrink-0'
 
 /** 分析表など狭い領域で使う省スペース表示用クラス。 */
 export const DIFFICULTY_BADGE_COMPACT_WIDTH_CLASS = 'min-w-fit'

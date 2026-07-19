@@ -6,15 +6,15 @@ import {
   getDifficultyBadgeWidthClass,
 } from './difficultyBadgeLayout'
 
-test('通常表示の難易度バッジは文字数に左右されない固定幅クラスを返す', () => {
+test('通常表示の難易度バッジは文字数やFlex配置に左右されない固定幅クラスを返す', () => {
   // Given: 楽曲詳細画面で使う通常表示の難易度バッジ。
   const compact = undefined
 
   // When: 表示密度に応じた幅クラスを取得する。
   const result = getDifficultyBadgeWidthClass(compact)
 
-  // Then: BASICやADVANCEDなど文字数が異なる難易度でも同じ幅になる。
-  assert.equal(result, 'w-[5.75rem]')
+  // Then: BASICやADVANCEDなど文字数が異なる難易度でも同じ幅を保ち、縮小しない。
+  assert.equal(result, 'w-[5.75rem] shrink-0')
   assert.equal(result, DIFFICULTY_BADGE_FIXED_WIDTH_CLASS)
 })
 
