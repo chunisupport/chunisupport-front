@@ -7,6 +7,7 @@ export const BEST_SLOT_RANKING_COPY = {
   chartColumn: '譜面',
   constColumn: '定数',
   averageScoreColumn: '平均スコア',
+  scoreDifferenceColumn: '自分との差',
   percentageColumn: '割合',
   empty: 'このレート帯にはランキングデータがありません。',
   loadMore: 'さらに表示',
