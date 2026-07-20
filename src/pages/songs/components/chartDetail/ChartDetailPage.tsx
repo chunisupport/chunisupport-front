@@ -60,7 +60,7 @@ const ChartDetailPage = (props: Props) => (
       <h1 class="font-sans text-2xl font-semibold">{props.title}</h1>
       <div class="flex flex-wrap items-center gap-3 text-sm text-text-muted">
         {props.badge}
-        <span>{props.artist}</span>
+        <span class="font-sans">{props.artist}</span>
       </div>
     </header>
 
