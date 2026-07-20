@@ -114,15 +114,33 @@ export const fetchSongsUpdatedAt = async (): Promise<UpdatedAtResponseDTO> => {
     return cachedSongsUpdatedAtResponse
   }
 
-  songsUpdatedAtResponsePromise ??= fetchSongsUpdatedAtFromApi()
+  const responsePromise = songsUpdatedAtResponsePromise ?? fetchSongsUpdatedAtFromApi()
+  songsUpdatedAtResponsePromise = responsePromise
 
   try {
-    cachedSongsUpdatedAtResponse = await songsUpdatedAtResponsePromise
-    return cachedSongsUpdatedAtResponse
+    const response = await responsePromise
+    if (songsUpdatedAtResponsePromise === responsePromise) {
+      cachedSongsUpdatedAtResponse = response
+      songsUpdatedAtResponsePromise = undefined
+    }
+    return response
   } catch (error) {
-    songsUpdatedAtResponsePromise = undefined
+    if (songsUpdatedAtResponsePromise === responsePromise) {
+      songsUpdatedAtResponsePromise = undefined
+    }
     throw error
   }
+}
+
+/**
+ * 楽曲更新後に、セッション中の楽曲更新日時キャッシュを無効化する。
+ * 無効化前に開始したリクエストの結果も、以後のキャッシュには採用しない。
+ *
+ * @returns なし。
+ */
+export const invalidateSongsUpdatedAtCache = (): void => {
+  cachedSongsUpdatedAtResponse = undefined
+  songsUpdatedAtResponsePromise = undefined
 }
 
 export const fetchManagedSongs = async (): Promise<{ songs: ManagedSongDTO[] }> => {

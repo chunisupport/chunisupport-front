@@ -22,6 +22,7 @@ import { FormSelect } from '../../components/common/AppSelect'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useSongsData } from '../../stores/songsData'
 import type {
   CreateSongRequestDTO,
   CreateWorldsendSongRequestDTO,
@@ -33,6 +34,7 @@ import type {
   UpdateWorldsendSongRequestDTO,
 } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { SONG_DATA_REFRESH_ERROR_MESSAGE } from './constants'
 import { buildSearchableItems, filterSearchableItems } from './searchHelpers'
 import { sortByReleaseDateDescWithMissingFirst } from './utils/releaseDateSorting'
 
@@ -433,82 +435,6 @@ const toWorldsendDraft = (
 }
 
 /**
- * 保存済みの通常楽曲ドラフトを一覧表示用DTOへ反映する。
- *
- * @param song 更新前の一覧表示用DTO
- * @param current 保存に成功した通常楽曲ドラフト
- * @param genres ジャンル名解決に使うマスターデータ
- * @returns 保存内容を反映した一覧表示用DTO
- */
-const applySongDraftToManagedSong = (
-  song: ManagedSongDTO,
-  current: SongDraft,
-  genres: MasterItemDTO[]
-): ManagedSongDTO => {
-  return {
-    ...song,
-    title: current.title,
-    reading: toNullableTrimmedString(current.reading),
-    artist: current.artist,
-    genre: genres.find((genre) => genre.id === current.genre_id)?.name ?? '',
-    bpm: current.bpm,
-    release: toDateOnly(current.released_at),
-    jacket: current.jacket,
-    is_new: current.is_new,
-    charts: {
-      ...song.charts,
-      ...Object.fromEntries(
-        current.charts.map((chart) => [
-          chart.difficulty_name,
-          {
-            const: parseFloat(chart.const),
-            is_const_unknown: chart.is_const_unknown,
-            notes: chart.notes,
-            notes_designer: chart.notes_designer?.trim() ? chart.notes_designer.trim() : null,
-            updated_at: chart.updated_at,
-          },
-        ])
-      ),
-    },
-  }
-}
-
-/**
- * 保存済みのWORLD'S END楽曲ドラフトを一覧表示用DTOへ反映する。
- *
- * @param song 更新前の一覧表示用DTO
- * @param current 保存に成功したWORLD'S END楽曲ドラフト
- * @param genres ジャンル名解決に使うマスターデータ
- * @returns 保存内容を反映した一覧表示用DTO
- */
-const applyWorldsendDraftToManagedSong = (
-  song: ManagedWorldsendSongDTO,
-  current: WorldsendDraft,
-  genres: MasterItemDTO[]
-): ManagedWorldsendSongDTO => {
-  return {
-    ...song,
-    title: current.title,
-    reading: toNullableTrimmedString(current.reading),
-    artist: current.artist,
-    genre: genres.find((genre) => genre.id === current.genre_id)?.name ?? null,
-    bpm: current.bpm,
-    release: toDateOnly(current.released_at),
-    jacket: current.jacket,
-    charts: {
-      ...song.charts,
-      WORLDSEND: {
-        attribute: current.attribute?.trim() ? current.attribute.trim() : null,
-        level_star: current.level_star,
-        notes: current.notes,
-        notes_designer: current.notes_designer?.trim() ? current.notes_designer.trim() : null,
-        updated_at: current.chart_updated_at,
-      },
-    },
-  }
-}
-
-/**
  * 権限を持つユーザー向けの楽曲管理画面を描画します。
  * 通常楽曲およびWORLD'S END楽曲の追加・更新・削除・復活操作を提供します。
  *
@@ -518,13 +444,9 @@ const applyWorldsendDraftToManagedSong = (
 const SongManagementPage = (props: SongManagementPageProps) => {
   useDocumentTitle(props.title)
 
-  const [refreshKey, setRefreshKey] = createSignal(0)
-  const [songsResponse, { mutate: mutateSongsResponse }] = createResource(
-    () => refreshKey(),
-    fetchManagedSongs
-  )
-  const [worldsendResponse, { mutate: mutateWorldsendResponse }] = createResource(
-    () => refreshKey(),
+  const songsData = useSongsData()
+  const [songsResponse, { refetch: refetchManagedSongs }] = createResource(fetchManagedSongs)
+  const [worldsendResponse, { refetch: refetchManagedWorldsendSongs }] = createResource(
     fetchManagedWorldsendSongs
   )
   const [masterData] = createResource(fetchMasterData)
@@ -689,7 +611,31 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     setCreateWorldsendDraft((prev) => ({ ...prev, [key]: value }))
   }
 
-  const refresh = () => setRefreshKey((prev) => prev + 1)
+  /**
+   * 通常楽曲 CRUD 後に管理画面と公開画面のデータをサーバー正規 DTO で更新する。
+   *
+   * @returns 再取得処理完了後に解決される Promise。
+   */
+  const refreshStandardSongData = async (): Promise<void> => {
+    try {
+      await Promise.all([refetchManagedSongs(), songsData.refreshSongs()])
+    } catch (error) {
+      showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+    }
+  }
+
+  /**
+   * WORLD'S END 楽曲 CRUD 後に管理画面と公開画面のデータを正規 DTO で更新する。
+   *
+   * @returns 再取得処理完了後に解決される Promise。
+   */
+  const refreshWorldsendSongData = async (): Promise<void> => {
+    try {
+      await Promise.all([refetchManagedWorldsendSongs(), songsData.refreshWorldsendSongs()])
+    } catch (error) {
+      showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+    }
+  }
 
   /**
    * 編集中の通常楽曲を検証して保存する。
@@ -742,19 +688,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
     try {
       await updateSongs([request])
-      mutateSongsResponse((prev) =>
-        prev
-          ? {
-              ...prev,
-              songs: prev.songs.map((song) =>
-                song.id === current.id
-                  ? applySongDraftToManagedSong(song, current, md.genres)
-                  : song
-              ),
-            }
-          : prev
-      )
       showSuccessToast('楽曲を更新しました。')
+      await refreshStandardSongData()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
     }
@@ -835,7 +770,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       await createSong(request)
       showSuccessToast('通常楽曲を追加しました。')
       setCreateSongDraft(buildCreateSongDraft())
-      refresh()
+      await refreshStandardSongData()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '追加に失敗しました。'))
     }
@@ -922,7 +857,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       await createWorldsendSong(request)
       showSuccessToast("WORLD'S END楽曲を追加しました。")
       setCreateWorldsendDraft(buildCreateWorldsendDraft())
-      refresh()
+      await refreshWorldsendSongData()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '追加に失敗しました。'))
     }
@@ -970,19 +905,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
     try {
       await updateWorldsendSongs([request])
-      mutateWorldsendResponse((prev) =>
-        prev
-          ? {
-              ...prev,
-              songs: prev.songs.map((song) =>
-                song.id === current.id
-                  ? applyWorldsendDraftToManagedSong(song, current, md.genres)
-                  : song
-              ),
-            }
-          : prev
-      )
       showSuccessToast("WORLD'S END楽曲を更新しました。")
+      await refreshWorldsendSongData()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
     }
@@ -999,7 +923,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     try {
       await deleteSongByDisplayId(displayId)
       showSuccessToast('楽曲を削除しました。')
-      refresh()
+      await refreshStandardSongData()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
@@ -1015,7 +939,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     try {
       await restoreSongByDisplayId(displayId)
       showSuccessToast('楽曲を復活しました。')
-      refresh()
+      await refreshStandardSongData()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
     }
@@ -1032,7 +956,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     try {
       await deleteWorldsendSongByDisplayId(displayId)
       showSuccessToast("WORLD'S END楽曲を削除しました。")
-      refresh()
+      await refreshWorldsendSongData()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
@@ -1048,7 +972,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     try {
       await restoreWorldsendSongByDisplayId(displayId)
       showSuccessToast("WORLD'S END楽曲を復活しました。")
-      refresh()
+      await refreshWorldsendSongData()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
     }

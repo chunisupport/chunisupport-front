@@ -15,6 +15,7 @@ import type {
   UserCourseRecordsDTO,
   UserRatingDTO,
   UserRecordDTO,
+  WorldsendSongDTO,
 } from '../types/api.ts'
 import {
   readCachedCourses,
@@ -22,7 +23,12 @@ import {
   replaceCachedCourses,
   replaceCachedUserCourseRecords,
 } from './courseCacheRepository.ts'
-import { readCachedSongs, replaceCachedSongs } from './songCacheRepository.ts'
+import {
+  clearCachedSongData,
+  readCachedSongs,
+  replaceCachedSongs,
+  replaceCachedWorldsendSongs,
+} from './songCacheRepository.ts'
 import {
   clearCachedUserApiResponses,
   readCachedStandardSongRecord,
@@ -59,6 +65,19 @@ const previousIdSong: SongDTO = {
   ...song,
   id: 'song-0',
   title: '前方ID楽曲',
+}
+
+const worldsendSong: WorldsendSongDTO = {
+  id: 'worldsend-song-1',
+  title: "テストWORLD'S END楽曲",
+  reading: null,
+  artist: 'テスト',
+  genre: 'POPS & ANIME',
+  bpm: null,
+  release: null,
+  official_idx: '90001',
+  jacket: null,
+  charts: {},
 }
 
 const course: CourseDTO = {
@@ -133,6 +152,22 @@ test('楽曲キャッシュは schemaVersion と updated-at が一致する場�
   // Then
   assert.deepEqual(matched, [song, previousIdSong])
   assert.equal(mismatched, null)
+})
+
+test("楽曲キャッシュ無効化は通常楽曲とWORLD'S END楽曲をまとめて削除すること", async () => {
+  // Given: 共通の更新日時で両方の楽曲キャッシュを保存する。
+  const songsUpdatedAt = '2026-06-16T12:00:00Z'
+  await replaceCachedSongs([song], songsUpdatedAt)
+  await replaceCachedWorldsendSongs([worldsendSong], songsUpdatedAt)
+
+  // When: 楽曲 CRUD 後のキャッシュ無効化を実行する。
+  await clearCachedSongData()
+
+  // Then: データと対応するメタデータが両方削除される。
+  assert.equal(await db.songs.count(), 0)
+  assert.equal(await db.worldsendSongs.count(), 0)
+  assert.equal(await db.cacheMetadata.get('songs'), undefined)
+  assert.equal(await db.cacheMetadata.get('worldsendSongs'), undefined)
 })
 
 test('楽曲キャッシュは順序情報がない旧形式の場合は読み込まれないこと', async () => {

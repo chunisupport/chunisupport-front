@@ -87,6 +87,68 @@ test('fetchSongsUpdatedAt は一度取得した更新日時をセッション中
   assert.deepEqual(second, responseBody)
 })
 
+test('楽曲更新日時キャッシュは無効化後にAPIから最新値を再取得する', async () => {
+  // Given: 初回の更新日時を取得してメモリへキャッシュする。
+  const responseBodies = [
+    { updated_at: '2026-06-16T12:00:00Z' },
+    { updated_at: '2026-07-20T09:00:00Z' },
+  ]
+  let fetchCount = 0
+  globalThis.fetch = async (input) => {
+    assert.equal(String(input), 'http://localhost:3000/internal/songs/updated-at')
+    const responseBody = responseBodies[fetchCount]
+    fetchCount += 1
+    return Response.json(responseBody)
+  }
+  const { fetchSongsUpdatedAt, invalidateSongsUpdatedAtCache } = await loadSongsApi()
+  const beforeMutation = await fetchSongsUpdatedAt()
+
+  // When: 楽曲 CRUD 後を想定して更新日時キャッシュを無効化し、再取得する。
+  invalidateSongsUpdatedAtCache()
+  const afterMutation = await fetchSongsUpdatedAt()
+
+  // Then: API が再実行され、更新後の値へ置き換わる。
+  assert.equal(fetchCount, 2)
+  assert.deepEqual(beforeMutation, responseBodies[0])
+  assert.deepEqual(afterMutation, responseBodies[1])
+})
+
+test('無効化前に開始した楽曲更新日時リクエストは解決後もキャッシュへ戻さない', async () => {
+  // Given: 無効化前の更新日時リクエストを応答待ちにする。
+  const beforeMutation = { updated_at: '2026-06-16T12:00:00Z' }
+  const afterMutation = { updated_at: '2026-07-20T09:00:00Z' }
+  let fetchCount = 0
+  let resolveBeforeMutation!: (response: Response) => void
+  let notifyRequestStarted!: () => void
+  const requestStarted = new Promise<void>((resolve) => {
+    notifyRequestStarted = resolve
+  })
+  globalThis.fetch = async (input) => {
+    assert.equal(String(input), 'http://localhost:3000/internal/songs/updated-at')
+    fetchCount += 1
+    if (fetchCount === 1) {
+      notifyRequestStarted()
+      return new Promise<Response>((resolve) => {
+        resolveBeforeMutation = resolve
+      })
+    }
+    return Response.json(afterMutation)
+  }
+  const { fetchSongsUpdatedAt, invalidateSongsUpdatedAtCache } = await loadSongsApi()
+  const staleRequest = fetchSongsUpdatedAt()
+  await requestStarted
+
+  // When: リクエスト中に無効化してから古い応答を解決し、再取得する。
+  invalidateSongsUpdatedAtCache()
+  resolveBeforeMutation(Response.json(beforeMutation))
+  await staleRequest
+  const latest = await fetchSongsUpdatedAt()
+
+  // Then: 古い応答は再キャッシュされず、APIから更新後の値を取得する。
+  assert.equal(fetchCount, 2)
+  assert.deepEqual(latest, afterMutation)
+})
+
 test('コースマスタAPIはコース一覧を取得する', async () => {
   // Given
   const responseBody = {
