@@ -7,6 +7,7 @@ import type {
 } from '../../types/api'
 import {
   createDefaultRegisterScoreStatisticRowVisibility,
+  createDefaultRegisterScoreTotalHighScoreRowVisibility,
   hasRegisterScoreStatisticRowUpdate,
   toRegisterScoreStatisticRows,
 } from './registerScoreStatistics'
@@ -17,13 +18,16 @@ const ZERO_DIFF: PlayerDataNumberDiff = { before: 10, after: 10, delta: 0 }
 /**
  * 指定した集計項目だけに差分を持つ統計グループを生成する。
  *
- * @param overrides - レコード統計へ上書きする差分値。
+ * @param overrides - TOTAL HIGH SCOREとレコード統計へ上書きする差分値。
  * @returns テスト用の統計グループ。
  */
 const createStatisticsGroup = (
-  overrides: Partial<PlayerDataStatisticsGroup['record_statistics']> = {}
+  overrides: {
+    totalHighScore?: PlayerDataNumberDiff
+    recordStatistics?: Partial<PlayerDataStatisticsGroup['record_statistics']>
+  } = {}
 ): PlayerDataStatisticsGroup => ({
-  total_high_score: ZERO_DIFF,
+  total_high_score: overrides.totalHighScore ?? ZERO_DIFF,
   record_statistics: {
     aj: ZERO_DIFF,
     fc: ZERO_DIFF,
@@ -36,7 +40,7 @@ const createStatisticsGroup = (
     ss: ZERO_DIFF,
     s_plus: ZERO_DIFF,
     s: ZERO_DIFF,
-    ...overrides,
+    ...overrides.recordStatistics,
   },
 })
 
@@ -70,9 +74,9 @@ test('RECORD STATISTICSは差分がある行だけをデフォルト表示にす
   // Given: ALL、BASIC、MASTERの表示対象列に差分がある。
   const positiveDiff: PlayerDataNumberDiff = { before: 10, after: 11, delta: 1 }
   const statistics = createStatistics({
-    overall: createStatisticsGroup({ aj: positiveDiff }),
-    basic: createStatisticsGroup({ fc: positiveDiff }),
-    master: createStatisticsGroup({ sss_plus: positiveDiff }),
+    overall: createStatisticsGroup({ recordStatistics: { aj: positiveDiff } }),
+    basic: createStatisticsGroup({ recordStatistics: { fc: positiveDiff } }),
+    master: createStatisticsGroup({ recordStatistics: { sss_plus: positiveDiff } }),
   })
 
   // When: 行ごとの初期表示状態を生成する。
@@ -93,7 +97,7 @@ test('表に表示しない統計項目だけの差分は行の更新として�
   // Given: BASICのCLRだけに差分がある。
   const positiveDiff: PlayerDataNumberDiff = { before: 10, after: 11, delta: 1 }
   const statistics = createStatistics({
-    basic: createStatisticsGroup({ clr: positiveDiff }),
+    basic: createStatisticsGroup({ recordStatistics: { clr: positiveDiff } }),
   })
   const basicRow = toRegisterScoreStatisticRows(statistics).find((row) => row.key === 'BASIC')
 
@@ -102,4 +106,27 @@ test('表に表示しない統計項目だけの差分は行の更新として�
 
   // Then: 表示されないCLRの差分だけでは更新行にならない。
   assert.equal(result, false)
+})
+
+test('TOTAL HIGH SCOREは差分がある行だけをデフォルト表示にすること', () => {
+  // Given: ALL、ADVANCED、ULTIMAのTOTAL HIGH SCOREに差分がある。
+  const positiveDiff: PlayerDataNumberDiff = { before: 10, after: 11, delta: 1 }
+  const statistics = createStatistics({
+    overall: createStatisticsGroup({ totalHighScore: positiveDiff }),
+    advanced: createStatisticsGroup({ totalHighScore: positiveDiff }),
+    ultima: createStatisticsGroup({ totalHighScore: positiveDiff }),
+  })
+
+  // When: 行ごとの初期表示状態を生成する。
+  const result = createDefaultRegisterScoreTotalHighScoreRowVisibility(statistics)
+
+  // Then: 差分がある3行だけが表示対象になる。
+  assert.deepEqual(result, {
+    ALL: true,
+    BASIC: false,
+    ADVANCED: true,
+    EXPERT: false,
+    MASTER: false,
+    ULTIMA: true,
+  })
 })

@@ -28,30 +28,36 @@ export const REGISTER_SCORE_DIFFICULTIES: readonly PlayerDataDifficulty[] = [
 ]
 
 /** 全難易度集計を表す設定キー。 */
-export const REGISTER_SCORE_MAIN_STAT_ROW_KEY = 'ALL' as const
+export const REGISTER_SCORE_ALL_ROW_KEY = 'ALL' as const
 
-/** RECORD STATISTICSの行を識別するキー。 */
-export type RegisterScoreStatisticRowKey =
-  | typeof REGISTER_SCORE_MAIN_STAT_ROW_KEY
-  | PlayerDataDifficulty
+/** 更新差分の集計行を識別するキー。 */
+export type RegisterScoreAggregateRowKey = typeof REGISTER_SCORE_ALL_ROW_KEY | PlayerDataDifficulty
+
+/** 更新差分の集計行ごとの表示状態。 */
+export type RegisterScoreAggregateRowVisibility = Record<RegisterScoreAggregateRowKey, boolean>
+
+/** TOTAL HIGH SCOREの1行分の表示データ。 */
+export type RegisterScoreTotalHighScoreRow = {
+  key: RegisterScoreAggregateRowKey
+  label: string
+  difficulty: PlayerDataDifficulty | null
+  value: PlayerDataNumberDiff
+}
 
 /** RECORD STATISTICSの1行分の表示データ。 */
 export type RegisterScoreStatisticRow = {
-  key: RegisterScoreStatisticRowKey
+  key: RegisterScoreAggregateRowKey
   label: string
   difficulty: PlayerDataDifficulty | null
   values: Record<(typeof REGISTER_SCORE_STAT_COLUMNS)[number], PlayerDataNumberDiff>
 }
 
-/** RECORD STATISTICSの行ごとの表示状態。 */
-export type RegisterScoreStatisticRowVisibility = Record<RegisterScoreStatisticRowKey, boolean>
-
-/** RECORD STATISTICSの設定項目。 */
-export const REGISTER_SCORE_STATISTIC_ROW_OPTIONS: readonly {
-  key: RegisterScoreStatisticRowKey
+/** 集計セクションで共通利用する行ごとの設定項目。 */
+export const REGISTER_SCORE_AGGREGATE_ROW_OPTIONS: readonly {
+  key: RegisterScoreAggregateRowKey
   label: string
 }[] = [
-  { key: REGISTER_SCORE_MAIN_STAT_ROW_KEY, label: 'ALL' },
+  { key: REGISTER_SCORE_ALL_ROW_KEY, label: 'ALL' },
   { key: 'BASIC', label: 'BAS' },
   { key: 'ADVANCED', label: 'ADV' },
   { key: 'EXPERT', label: 'EXP' },
@@ -69,7 +75,7 @@ export const REGISTER_SCORE_STATISTIC_ROW_OPTIONS: readonly {
  * @returns 表示用の統計行。
  */
 const toRegisterScoreStatisticRow = (
-  key: RegisterScoreStatisticRowKey,
+  key: RegisterScoreAggregateRowKey,
   label: string,
   group: PlayerDataStatisticsGroup,
   difficulty: PlayerDataDifficulty | null = null
@@ -100,8 +106,8 @@ export const toRegisterScoreStatisticRows = (
   statistics: PlayerDataStatistics
 ): RegisterScoreStatisticRow[] => [
   toRegisterScoreStatisticRow(
-    REGISTER_SCORE_MAIN_STAT_ROW_KEY,
-    REGISTER_SCORE_MAIN_STAT_ROW_KEY,
+    REGISTER_SCORE_ALL_ROW_KEY,
+    REGISTER_SCORE_ALL_ROW_KEY,
     statistics.overall
   ),
   ...REGISTER_SCORE_DIFFICULTIES.map((difficulty) =>
@@ -113,6 +119,42 @@ export const toRegisterScoreStatisticRows = (
     )
   ),
 ]
+
+/**
+ * 全体と固定5難易度のTOTAL HIGH SCORE行を生成する。
+ *
+ * @param statistics - APIが返す全体および難易度別の統計差分。
+ * @returns 全体、BASIC、ADVANCED、EXPERT、MASTER、ULTIMAの表示行。
+ */
+export const toRegisterScoreTotalHighScoreRows = (
+  statistics: PlayerDataStatistics
+): RegisterScoreTotalHighScoreRow[] => [
+  {
+    key: REGISTER_SCORE_ALL_ROW_KEY,
+    label: REGISTER_SCORE_ALL_ROW_KEY,
+    difficulty: null,
+    value: statistics.overall.total_high_score,
+  },
+  ...REGISTER_SCORE_DIFFICULTIES.map((difficulty) => ({
+    key: difficulty,
+    label: difficulty.slice(0, 3),
+    difficulty,
+    value: statistics.by_difficulty[difficulty].total_high_score,
+  })),
+]
+
+/**
+ * 更新があるTOTAL HIGH SCORE行だけを有効にした初期表示状態を生成する。
+ *
+ * @param statistics - APIが返す全体および難易度別の統計差分。
+ * @returns TOTAL HIGH SCOREの行ごとの初期表示状態。
+ */
+export const createDefaultRegisterScoreTotalHighScoreRowVisibility = (
+  statistics: PlayerDataStatistics
+): RegisterScoreAggregateRowVisibility =>
+  Object.fromEntries(
+    toRegisterScoreTotalHighScoreRows(statistics).map((row) => [row.key, row.value.delta !== 0])
+  ) as RegisterScoreAggregateRowVisibility
 
 /**
  * RECORD STATISTICSの行に表示対象の更新があるか判定する。
@@ -131,10 +173,10 @@ export const hasRegisterScoreStatisticRowUpdate = (row: RegisterScoreStatisticRo
  */
 export const createDefaultRegisterScoreStatisticRowVisibility = (
   statistics: PlayerDataStatistics
-): RegisterScoreStatisticRowVisibility => {
+): RegisterScoreAggregateRowVisibility => {
   const rows = toRegisterScoreStatisticRows(statistics)
 
   return Object.fromEntries(
     rows.map((row) => [row.key, hasRegisterScoreStatisticRowUpdate(row)])
-  ) as RegisterScoreStatisticRowVisibility
+  ) as RegisterScoreAggregateRowVisibility
 }
