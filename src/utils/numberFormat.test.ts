@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatInteger, formatTruncatedFixed, truncateDecimal } from './numberFormat'
+import {
+  formatInteger,
+  formatScoreKilo,
+  formatTruncatedFixed,
+  truncateDecimal,
+} from './numberFormat'
 
 test('指定した小数点以下桁数で切り捨てられること', () => {
   // Given
@@ -124,4 +129,37 @@ test('整数を日本語ロケールの区切り文字列へ整形すること',
 
   // Then
   assert.equal(result, '1,007,500')
+})
+
+test('千単位で割り切れるスコアは小数点なしのk表記になること', () => {
+  // Given
+  const score = 1010000
+
+  // When
+  const result = formatScoreKilo(score)
+
+  // Then
+  assert.equal(result, '1010k')
+})
+
+test('千単位で割り切れないスコアは小数点以下最大1桁のk表記になること', () => {
+  // Given
+  const score = 1009166.6666666666
+
+  // When
+  const result = formatScoreKilo(score)
+
+  // Then
+  assert.equal(result, '1009.2k')
+})
+
+test('小数点以下1桁で表せるスコアには不要な0を追加しないこと', () => {
+  // Given
+  const score = 1007500
+
+  // When
+  const result = formatScoreKilo(score)
+
+  // Then
+  assert.equal(result, '1007.5k')
 })
