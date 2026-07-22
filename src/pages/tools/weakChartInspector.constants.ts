@@ -1,6 +1,7 @@
 /** 苦手譜面インスペクターの画面表示文言。 */
 export const WEAK_CHART_INSPECTOR_COPY = {
   title: '苦手譜面インスペクター',
+  description: 'プレイ記録から、苦手・得意な可能性のある譜面を見つけます。',
   chartTitle: '譜面定数別スコア分布',
   chartAccessibleLabel: '譜面定数ごとの獲得スコア散布図',
   outlierTitle: '苦手かもしれない譜面',

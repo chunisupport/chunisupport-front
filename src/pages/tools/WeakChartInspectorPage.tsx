@@ -629,7 +629,15 @@ const WeakChartInspectorPage = (): JSX.Element => {
     <ErrorBoundary fallback={(error) => <LoadError error={error} />}>
       <main class="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4">
         <div class="flex items-center justify-between gap-4">
-          <h1 class="text-2xl font-semibold">{WEAK_CHART_INSPECTOR_COPY.title}</h1>
+          <header class="flex items-start gap-3">
+            <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+              <ChartNoAxesCombined class="h-5 w-5 text-action-primary" aria-hidden="true" />
+            </span>
+            <div>
+              <h1 class="text-2xl font-semibold">{WEAK_CHART_INSPECTOR_COPY.title}</h1>
+              <p class="mt-1 text-sm text-text-muted">{WEAK_CHART_INSPECTOR_COPY.description}</p>
+            </div>
+          </header>
           <Show when={!records.loading && analysisRecords().length > 0}>
             <AppIconButton
               tone="ghost"
