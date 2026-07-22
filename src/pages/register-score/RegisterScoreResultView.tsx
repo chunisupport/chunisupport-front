@@ -31,14 +31,14 @@ import {
 } from './registerScoreDisplay'
 import {
   createDefaultRegisterScoreStatisticRowVisibility,
-  REGISTER_SCORE_DIFFICULTIES,
-  REGISTER_SCORE_MAIN_STAT_ROW_KEY,
+  createDefaultRegisterScoreTotalHighScoreRowVisibility,
+  REGISTER_SCORE_AGGREGATE_ROW_OPTIONS,
   REGISTER_SCORE_STAT_COLUMNS,
-  REGISTER_SCORE_STATISTIC_ROW_OPTIONS,
+  type RegisterScoreAggregateRowKey,
+  type RegisterScoreAggregateRowVisibility,
   type RegisterScoreStatisticRow,
-  type RegisterScoreStatisticRowKey,
-  type RegisterScoreStatisticRowVisibility,
   toRegisterScoreStatisticRows,
+  toRegisterScoreTotalHighScoreRows,
 } from './registerScoreStatistics'
 
 export const REGISTER_SCORE_MESSAGES = {
@@ -373,6 +373,42 @@ const RegisterScoreProfileSummary = (props: { result: PlayerDataUpdateResult }) 
 )
 
 /**
+ * 集計セクションと行ごとの表示設定を共通レイアウトで表示する。
+ *
+ * @param props - セクション名、表示状態、および変更ハンドラー。
+ * @returns 集計セクション用の表示設定。
+ */
+const RegisterScoreAggregateVisibilitySettings = (props: {
+  label: string
+  checked: boolean
+  rowVisibility: RegisterScoreAggregateRowVisibility
+  onChange: (checked: boolean) => void
+  onRowVisibilityChange: (key: RegisterScoreAggregateRowKey, checked: boolean) => void
+}) => (
+  <div class="flex flex-col items-start gap-2">
+    <CheckboxField
+      checked={props.checked}
+      onChange={props.onChange}
+      textVariant="large"
+      label={props.label}
+    />
+    <div class="ml-7 flex flex-col items-start gap-2">
+      <For each={REGISTER_SCORE_AGGREGATE_ROW_OPTIONS}>
+        {(option) => (
+          <CheckboxField
+            checked={props.rowVisibility[option.key]}
+            disabled={!props.checked}
+            onChange={(checked) => props.onRowVisibilityChange(option.key, checked)}
+            textVariant="large"
+            label={option.label}
+          />
+        )}
+      </For>
+    </div>
+  </div>
+)
+
+/**
  * 更新差分レポートに含める集計セクションと統計行を選択する設定を表示する。
  *
  * @param props - 各セクションと統計行の表示状態、および変更ハンドラー。
@@ -381,43 +417,32 @@ const RegisterScoreProfileSummary = (props: { result: PlayerDataUpdateResult }) 
 const RegisterScoreDisplaySettings = (props: {
   showTotalHighScore: boolean
   showRecordStatistics: boolean
-  statisticRowVisibility: RegisterScoreStatisticRowVisibility
+  totalHighScoreRowVisibility: RegisterScoreAggregateRowVisibility
+  statisticRowVisibility: RegisterScoreAggregateRowVisibility
   onShowTotalHighScoreChange: (checked: boolean) => void
   onShowRecordStatisticsChange: (checked: boolean) => void
-  onStatisticRowVisibilityChange: (key: RegisterScoreStatisticRowKey, checked: boolean) => void
+  onTotalHighScoreRowVisibilityChange: (key: RegisterScoreAggregateRowKey, checked: boolean) => void
+  onStatisticRowVisibilityChange: (key: RegisterScoreAggregateRowKey, checked: boolean) => void
 }) => (
   <fieldset class="rounded-md border border-border bg-surface px-4 pb-4 pt-3">
     <legend class="px-1 text-lg font-semibold text-text">
       {REGISTER_SCORE_MESSAGES.displaySettingsTitle}
     </legend>
     <div class="mt-1 flex flex-col items-start gap-3">
-      <CheckboxField
-        checked={props.showTotalHighScore}
-        onChange={props.onShowTotalHighScoreChange}
-        textVariant="large"
+      <RegisterScoreAggregateVisibilitySettings
         label={REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
+        checked={props.showTotalHighScore}
+        rowVisibility={props.totalHighScoreRowVisibility}
+        onChange={props.onShowTotalHighScoreChange}
+        onRowVisibilityChange={props.onTotalHighScoreRowVisibilityChange}
       />
-      <div class="flex flex-col items-start gap-2">
-        <CheckboxField
-          checked={props.showRecordStatistics}
-          onChange={props.onShowRecordStatisticsChange}
-          textVariant="large"
-          label={REGISTER_SCORE_MESSAGES.recordStatsTitle}
-        />
-        <div class="ml-7 flex flex-col items-start gap-2">
-          <For each={REGISTER_SCORE_STATISTIC_ROW_OPTIONS}>
-            {(option) => (
-              <CheckboxField
-                checked={props.statisticRowVisibility[option.key]}
-                disabled={!props.showRecordStatistics}
-                onChange={(checked) => props.onStatisticRowVisibilityChange(option.key, checked)}
-                textVariant="large"
-                label={option.label}
-              />
-            )}
-          </For>
-        </div>
-      </div>
+      <RegisterScoreAggregateVisibilitySettings
+        label={REGISTER_SCORE_MESSAGES.recordStatsTitle}
+        checked={props.showRecordStatistics}
+        rowVisibility={props.statisticRowVisibility}
+        onChange={props.onShowRecordStatisticsChange}
+        onRowVisibilityChange={props.onStatisticRowVisibilityChange}
+      />
     </div>
   </fieldset>
 )
@@ -432,29 +457,23 @@ const RegisterScoreAggregateSummary = (props: {
   result: PlayerDataUpdateResult
   showTotalHighScore: boolean
   showRecordStatistics: boolean
-  statisticRowVisibility: RegisterScoreStatisticRowVisibility
+  totalHighScoreRowVisibility: RegisterScoreAggregateRowVisibility
+  statisticRowVisibility: RegisterScoreAggregateRowVisibility
 }) => {
   const statisticRows = createMemo(() =>
     toRegisterScoreStatisticRows(props.result.statistics).filter(
       (row) => props.statisticRowVisibility[row.key]
     )
   )
-  const totalHighScoreRows = createMemo(() => [
-    {
-      label: REGISTER_SCORE_MAIN_STAT_ROW_KEY,
-      difficulty: null,
-      value: props.result.statistics.overall.total_high_score,
-    },
-    ...REGISTER_SCORE_DIFFICULTIES.map((difficulty) => ({
-      label: difficulty.slice(0, 3),
-      difficulty,
-      value: props.result.statistics.by_difficulty[difficulty].total_high_score,
-    })),
-  ])
+  const totalHighScoreRows = createMemo(() =>
+    toRegisterScoreTotalHighScoreRows(props.result.statistics).filter(
+      (row) => props.totalHighScoreRowVisibility[row.key]
+    )
+  )
 
   return (
     <>
-      <Show when={props.showTotalHighScore}>
+      <Show when={props.showTotalHighScore && totalHighScoreRows().length > 0}>
         <section class="py-4">
           <h2 class="mb-3 text-xl font-extrabold leading-6">
             {REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
@@ -776,14 +795,32 @@ export const RegisterScoreResultView = (props: {
   )
   const [showTotalHighScore, setShowTotalHighScore] = createSignal(true)
   const [showRecordStatistics, setShowRecordStatistics] = createSignal(true)
+  const [totalHighScoreRowVisibility, setTotalHighScoreRowVisibility] =
+    createSignal<RegisterScoreAggregateRowVisibility>(
+      createDefaultRegisterScoreTotalHighScoreRowVisibility(props.result.statistics)
+    )
   const [statisticRowVisibility, setStatisticRowVisibility] =
-    createSignal<RegisterScoreStatisticRowVisibility>(
+    createSignal<RegisterScoreAggregateRowVisibility>(
       createDefaultRegisterScoreStatisticRowVisibility(props.result.statistics)
     )
   const [reportScale, setReportScale] = createSignal(1)
   const [scaledReportHeight, setScaledReportHeight] = createSignal<number>()
   let scaleContainerRef!: HTMLDivElement
   let reportRef!: HTMLElement
+
+  /**
+   * TOTAL HIGH SCOREの1行分の表示状態を更新する。
+   *
+   * @param key - 更新する集計行のキー。
+   * @param checked - 更新後の表示状態。
+   * @returns なし。
+   */
+  const updateTotalHighScoreRowVisibility = (
+    key: RegisterScoreAggregateRowKey,
+    checked: boolean
+  ): void => {
+    setTotalHighScoreRowVisibility((current) => ({ ...current, [key]: checked }))
+  }
 
   /**
    * RECORD STATISTICSの1行分の表示状態を更新する。
@@ -793,7 +830,7 @@ export const RegisterScoreResultView = (props: {
    * @returns なし。
    */
   const updateStatisticRowVisibility = (
-    key: RegisterScoreStatisticRowKey,
+    key: RegisterScoreAggregateRowKey,
     checked: boolean
   ): void => {
     setStatisticRowVisibility((current) => ({ ...current, [key]: checked }))
@@ -825,9 +862,11 @@ export const RegisterScoreResultView = (props: {
       <RegisterScoreDisplaySettings
         showTotalHighScore={showTotalHighScore()}
         showRecordStatistics={showRecordStatistics()}
+        totalHighScoreRowVisibility={totalHighScoreRowVisibility()}
         statisticRowVisibility={statisticRowVisibility()}
         onShowTotalHighScoreChange={setShowTotalHighScore}
         onShowRecordStatisticsChange={setShowRecordStatistics}
+        onTotalHighScoreRowVisibilityChange={updateTotalHighScoreRowVisibility}
         onStatisticRowVisibilityChange={updateStatisticRowVisibility}
       />
       <div
@@ -851,6 +890,7 @@ export const RegisterScoreResultView = (props: {
                 result={props.result}
                 showTotalHighScore={showTotalHighScore()}
                 showRecordStatistics={showRecordStatistics()}
+                totalHighScoreRowVisibility={totalHighScoreRowVisibility()}
                 statisticRowVisibility={statisticRowVisibility()}
               />
               <RegisterScoreChangesSection
