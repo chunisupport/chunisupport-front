@@ -1,15 +1,7 @@
 import { Switch } from '@kobalte/core/switch'
 import { useNavigate, useParams } from '@solidjs/router'
 import { createEffect, createResource, createSignal, Show } from 'solid-js'
-import {
-  deleteAccount,
-  deleteApiToken,
-  deletePlayerData,
-  fetchApiTokenStatus,
-  fetchPrivacy,
-  issueApiToken,
-  updatePrivacy,
-} from '../../api/settings'
+import { deleteAccount, deletePlayerData, fetchPrivacy, updatePrivacy } from '../../api/settings'
 import { fetchMe, fetchUserProfileSummary } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
@@ -22,6 +14,8 @@ import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { formatRatingFixed2 } from '../../utils/ratingFormat'
+import { ApiTokenSettingsSection } from './ApiTokenSettingsSection'
+import { formatSettingsDateTime } from './settingsDateTime'
 
 const SECTION_IDS = ['appearance', 'privacy', 'api-token', 'player-data', 'account-delete'] as const
 
@@ -42,25 +36,6 @@ const normalizeSection = (section?: string): SectionId | null => {
   return SECTION_IDS.find((value) => value === section) ?? null
 }
 
-const formatDateTime = (value: string | null): string => {
-  if (!value) {
-    return '未登録'
-  }
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return '未登録'
-  }
-
-  return new Intl.DateTimeFormat('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
-}
-
 /**
  * ユーザー設定画面を表示する。
  *
@@ -69,16 +44,10 @@ const formatDateTime = (value: string | null): string => {
 const Settings = () => {
   const navigate = useNavigate()
   const params = useParams<{ section?: string }>()
-  const [token, setToken] = createSignal('')
-  const [copied, setCopied] = createSignal(false)
   const [privacyValue, setPrivacyValue] = createSignal(false)
   const [privacySubmitting, setPrivacySubmitting] = createSignal(false)
   const [privacyError, setPrivacyError] = createSignal('')
   const [privacySuccess, setPrivacySuccess] = createSignal('')
-  const [apiTokenIssuing, setApiTokenIssuing] = createSignal(false)
-  const [apiTokenDeleting, setApiTokenDeleting] = createSignal(false)
-  const [apiTokenError, setApiTokenError] = createSignal('')
-  const [apiTokenSuccess, setApiTokenSuccess] = createSignal('')
   const [playerDeleteConfirmed, setPlayerDeleteConfirmed] = createSignal(false)
   const [playerDeleting, setPlayerDeleting] = createSignal(false)
   const [playerDataError, setPlayerDataError] = createSignal('')
@@ -99,11 +68,6 @@ const Settings = () => {
       return { me, profile }
     }
   )
-  const [apiTokenStatus, { refetch: refetchApiTokenStatus }] = createResource(
-    () => authSession.user?.username,
-    async () => fetchApiTokenStatus()
-  )
-
   createEffect(() => {
     const currentSummary = summary()
     if (currentSummary) {
@@ -160,68 +124,6 @@ const Settings = () => {
       await handlePrivacyRefresh()
     } finally {
       setPrivacySubmitting(false)
-    }
-  }
-
-  /**
-   * 新しいAPIトークンを発行して画面へ反映する。
-   *
-   * @returns 処理完了後に解決されるPromise。
-   */
-  const handleIssueApiToken = async () => {
-    setApiTokenError('')
-    setApiTokenSuccess('')
-    setApiTokenIssuing(true)
-    try {
-      const result = await issueApiToken()
-      setToken(result.token)
-      setCopied(false)
-      setApiTokenSuccess('APIトークンを発行しました。表示はこの1回のみです。')
-      await refetchApiTokenStatus()
-    } catch (error) {
-      setApiTokenError(toUserFriendlyErrorMessage(error, 'APIトークン発行に失敗しました。'))
-    } finally {
-      setApiTokenIssuing(false)
-    }
-  }
-
-  /**
-   * 確認後にAPIトークンを削除して発行状態を更新する。
-   *
-   * @returns 処理完了後に解決されるPromise。
-   */
-  const handleDeleteApiToken = async () => {
-    setApiTokenError('')
-    setApiTokenSuccess('')
-    if (!window.confirm('現在のAPIトークンを削除します。よろしいですか？')) {
-      return
-    }
-
-    setApiTokenDeleting(true)
-    try {
-      await deleteApiToken()
-      setToken('')
-      setCopied(false)
-      setApiTokenSuccess('APIトークンを削除しました。')
-      await refetchApiTokenStatus()
-    } catch (error) {
-      setApiTokenError(toUserFriendlyErrorMessage(error, 'APIトークン削除に失敗しました。'))
-    } finally {
-      setApiTokenDeleting(false)
-    }
-  }
-
-  const handleCopyToken = async () => {
-    if (!token()) {
-      return
-    }
-
-    try {
-      await navigator.clipboard.writeText(token())
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      setApiTokenError('コピーに失敗しました。手動でコピーしてください。')
     }
   }
 
@@ -401,114 +303,7 @@ const Settings = () => {
                     </div>
                   </section>
 
-                  <section id="api-token" class="py-4">
-                    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <h2 class="text-lg font-semibold text-text">APIトークン管理</h2>
-                        <p class="mt-1 text-sm text-text-muted">
-                          外部連携用の API
-                          トークンを発行・削除します。トークン文字列は発行時にのみ確認できます。
-                        </p>
-                      </div>
-                      <Show
-                        when={apiTokenStatus()}
-                        fallback={
-                          <Show
-                            when={apiTokenStatus.error}
-                            fallback={
-                              <span class="inline-flex w-fit rounded-full bg-surface-hover px-3 py-1 text-sm font-semibold text-text-muted">
-                                状態を確認中...
-                              </span>
-                            }
-                          >
-                            <span class="inline-flex w-fit rounded-full bg-danger-bg px-3 py-1 text-sm font-semibold text-danger">
-                              状態取得に失敗
-                            </span>
-                          </Show>
-                        }
-                      >
-                        {(status) => (
-                          <span
-                            class={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-semibold ${
-                              status().has_token
-                                ? 'bg-success-bg text-success'
-                                : 'bg-surface-hover text-text-muted'
-                            }`}
-                          >
-                            現在: {status().has_token ? '発行済み' : '未発行'}
-                          </span>
-                        )}
-                      </Show>
-                    </div>
-
-                    <Show when={apiTokenStatus()}>
-                      {(status) => (
-                        <div class="mt-4 rounded-lg border border-border bg-surface-muted p-4">
-                          <p class="text-sm font-medium text-text">
-                            {status().has_token
-                              ? '現在有効なAPIトークンが発行されています。'
-                              : '現在有効なAPIトークンは発行されていません。'}
-                          </p>
-                          <Show when={status().has_token}>
-                            <p class="mt-1 text-sm text-text-muted">
-                              発行日時: {formatDateTime(status().created_at)}
-                            </p>
-                          </Show>
-                        </div>
-                      )}
-                    </Show>
-
-                    <div class="mt-4 flex flex-wrap gap-2">
-                      <AppButton
-                        variant="primary"
-                        class="rounded-md"
-                        onClick={handleIssueApiToken}
-                        disabled={apiTokenIssuing()}
-                      >
-                        {apiTokenIssuing()
-                          ? '発行中...'
-                          : apiTokenStatus()?.has_token
-                            ? 'APIトークンを再発行'
-                            : 'APIトークンを発行'}
-                      </AppButton>
-                      <AppButton
-                        variant="danger"
-                        class="rounded-md"
-                        onClick={handleDeleteApiToken}
-                        disabled={apiTokenDeleting() || !apiTokenStatus()?.has_token}
-                      >
-                        {apiTokenDeleting() ? '削除中...' : 'APIトークンを削除'}
-                      </AppButton>
-                    </div>
-
-                    <Show when={apiTokenError()}>
-                      <p class="mt-3 text-sm text-danger" aria-live="polite">
-                        {apiTokenError()}
-                      </p>
-                    </Show>
-                    <Show when={apiTokenSuccess()}>
-                      <p class="mt-3 text-sm text-action-primary" aria-live="polite">
-                        {apiTokenSuccess()}
-                      </p>
-                    </Show>
-
-                    <Show when={token()}>
-                      <div class="mt-4 rounded-lg border border-border bg-surface-muted p-4">
-                        <p class="text-sm font-medium text-text-muted">発行されたAPIトークン</p>
-                        <p class="mt-2 break-all rounded border border-border bg-surface p-2 font-mono text-xs text-text">
-                          {token()}
-                        </p>
-                        <div class="mt-3 flex items-center gap-2">
-                          <AppButton size="xs" onClick={handleCopyToken} class="rounded-md">
-                            コピー
-                          </AppButton>
-                          <Show when={copied()}>
-                            <span class="text-xs text-action-primary">コピーしました</span>
-                          </Show>
-                        </div>
-                      </div>
-                    </Show>
-                  </section>
+                  <ApiTokenSettingsSection username={loadedSummary().me.username} />
                 </div>
 
                 <section id="player-data" class="py-4">
@@ -520,7 +315,7 @@ const Settings = () => {
                       </p>
                     </div>
                     <span class="text-sm font-medium text-text-subtle">
-                      最終更新: {formatDateTime(loadedSummary().me.last_score_update)}
+                      最終更新: {formatSettingsDateTime(loadedSummary().me.last_score_update)}
                     </span>
                   </div>
 
@@ -558,7 +353,7 @@ const Settings = () => {
                             最終プレイ
                           </p>
                           <p class="mt-2 text-base font-semibold text-text">
-                            {formatDateTime(player().last_played_at)}
+                            {formatSettingsDateTime(player().last_played_at)}
                           </p>
                         </div>
                       </div>
