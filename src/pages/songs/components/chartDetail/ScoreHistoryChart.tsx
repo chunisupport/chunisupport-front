@@ -13,6 +13,7 @@ import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js'
 import { accentPreference, themePreference } from '../../../../stores/themePreferences'
 import type { ScoreHistoryEntryDTO } from '../../../../types/api'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../../../utils/chartTheme'
+import { formatScoreKilo } from '../../../../utils/numberFormat'
 import { formatScoreHistoryTimestamp } from '../../../../utils/scoreHistory'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { SCORE_HISTORY_EMPTY_LABEL, SCORE_HISTORY_SCORE_LABEL } from './constants'
@@ -64,15 +65,6 @@ const getScoreAxisMin = (entries: readonly ScoreHistoryEntryDTO[]): number => {
   const minScore = Math.min(...entries.map((entry) => entry.score))
   return Math.max(0, Math.floor((minScore - CHART_MIN_PADDING) / CHART_MIN_STEP) * CHART_MIN_STEP)
 }
-
-/**
- * スコア軸の目盛りを苦手譜面インスペクターと同じk表記へ整形する。
- *
- * @param value - Chart.jsから渡される目盛り値。
- * @returns 1004k のような短縮スコア表記。
- */
-const formatScoreAxisTick = (value: string | number): string =>
-  `${Number(value) / SCORE_HISTORY_TICK_INTERVAL}k`
 
 /**
  * スコア推移グラフのChart.js設定を生成する。
@@ -132,7 +124,7 @@ const createScoreHistoryChartOptions = (
         ticks: {
           color: textColor,
           stepSize: SCORE_HISTORY_TICK_INTERVAL,
-          callback: formatScoreAxisTick,
+          callback: (value) => formatScoreKilo(Number(value)),
         },
         grid: {
           color: gridColor,

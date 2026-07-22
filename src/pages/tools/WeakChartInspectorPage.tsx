@@ -48,7 +48,7 @@ import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWi
 import { formatChartConst, truncateChartConst } from '../../utils/chartConstFormat'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { resolveViewportTooltipPosition } from '../../utils/chartTooltipPosition'
-import { formatInteger } from '../../utils/numberFormat'
+import { formatInteger, formatScoreKilo } from '../../utils/numberFormat'
 import { clampNumericInput } from '../../utils/numberInput'
 import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
 import {
@@ -316,7 +316,7 @@ const WeakChartDistributionChart = (props: {
             ticks: {
               color: textColor,
               stepSize: WEAK_CHART_SCORE_TICK_INTERVAL,
-              callback: (value) => `${Number(value) / WEAK_CHART_SCORE_TICK_INTERVAL}k`,
+              callback: (value) => formatScoreKilo(Number(value)),
             },
           },
         },

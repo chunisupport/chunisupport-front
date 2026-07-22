@@ -1,5 +1,11 @@
 const DECIMAL_BASE = 10
 const FLOATING_POINT_EPSILON_SCALE = 8
+const SCORE_KILO_DIVISOR = 1_000
+const SCORE_KILO_MAXIMUM_FRACTION_DIGITS = 1
+const SCORE_KILO_FORMATTER = new Intl.NumberFormat('ja-JP', {
+  maximumFractionDigits: SCORE_KILO_MAXIMUM_FRACTION_DIGITS,
+  useGrouping: false,
+})
 
 /**
  * 小数点以下桁数として扱える値か検証する。
@@ -57,3 +63,12 @@ export const formatFixed = (value: number, decimalPlaces: number): string =>
  * @returns 3桁区切りの整数表示文字列。
  */
 export const formatInteger = (value: number): string => value.toLocaleString('ja-JP')
+
+/**
+ * スコアを小数点以下最大1桁のk表記へ整形する。
+ *
+ * @param value 整形するスコア。
+ * @returns 1009.2k のような短縮スコア表記。
+ */
+export const formatScoreKilo = (value: number): string =>
+  `${SCORE_KILO_FORMATTER.format(value / SCORE_KILO_DIVISOR)}k`
