@@ -75,6 +75,10 @@ export type ErrorCode =
   | 'resource_not_found'
   | 'conflict'
   | 'api_token_not_found'
+  | 'api_token_limit_exceeded'
+  | 'api_token_name_conflict'
+  | 'invalid_api_token_name'
+  | 'invalid_api_token_id'
   | 'payload_too_large'
   // Goals
   | 'goal_not_found'
@@ -85,6 +89,11 @@ export type ErrorCode =
   | 'goal_invalid_attributes'
   | 'goal_invalid_order'
   | 'invalid_goal_input'
+  | 'goal_group_not_found'
+  | 'goal_group_limit_exceeded'
+  | 'goal_group_invalid_name'
+  | 'goal_group_conflict'
+  | 'goal_group_invalid_order'
   // Record Filters
   | 'record_filter_not_found'
   | 'record_filter_limit_exceeded'
@@ -94,6 +103,7 @@ export type ErrorCode =
   | 'friendship_limit_exceeded'
   | 'friendship_conflict'
   | 'friend_request_not_found'
+  | 'favorite_song_limit_exceeded'
   // 入力検証
   | 'username_empty'
   | 'username_too_short'
@@ -103,6 +113,7 @@ export type ErrorCode =
   | 'password_too_long'
   | 'invalid_password'
   | 'app_version_unsupported'
+  | 'duplicate_official_idx'
   // その他
   | 'not_found'
   | 'method_not_allowed'
@@ -139,6 +150,10 @@ export const errorMessages: Record<ErrorCode, string> = {
   resource_not_found: 'データが見つかりません',
   conflict: 'データが競合しています',
   api_token_not_found: 'APIトークンが見つかりません',
+  api_token_limit_exceeded: 'APIトークンの発行上限に達しています',
+  api_token_name_conflict: '同じ名前のAPIトークンがすでに存在します',
+  invalid_api_token_name: 'APIトークン名は1〜50文字で入力してください',
+  invalid_api_token_id: 'APIトークンの指定が不正です',
   payload_too_large: 'データサイズが大きすぎます',
   goal_not_found: '目標が見つかりません',
   goal_limit_exceeded: '目標の上限件数に達しています',
@@ -148,6 +163,11 @@ export const errorMessages: Record<ErrorCode, string> = {
   goal_invalid_attributes: '目標条件が不正です',
   goal_invalid_order: '目標の並び順が不正です',
   invalid_goal_input: '目標入力が不正です',
+  goal_group_not_found: '目標グループが見つかりません',
+  goal_group_limit_exceeded: '目標グループの上限件数に達しています',
+  goal_group_invalid_name: '目標グループ名が不正です',
+  goal_group_conflict: '同じ名前の目標グループがすでに存在します',
+  goal_group_invalid_order: '目標グループの並び順が不正です',
   record_filter_not_found: '保存済みフィルターが見つかりません',
   record_filter_limit_exceeded: '保存済みフィルターの上限件数に達しています',
   invalid_record_filter_input: '保存済みフィルターの入力内容が不正です',
@@ -155,6 +175,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   friendship_limit_exceeded: 'フレンド枠の上限に達しています',
   friendship_conflict: '既に申請中、またはフレンドになっています',
   friend_request_not_found: '対象のフレンド申請が見つかりません',
+  favorite_song_limit_exceeded: 'お気に入り楽曲の上限件数に達しています',
   username_empty: 'ユーザー名が空です',
   username_too_short: 'ユーザー名は5文字以上である必要があります',
   username_too_long: 'ユーザー名は50文字以内である必要があります',
@@ -163,6 +184,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   password_too_long: 'パスワードは128文字以内である必要があります',
   invalid_password: 'パスワードが無効です',
   app_version_unsupported: 'データが古くなっています',
+  duplicate_official_idx: '同じ公式IDの楽曲がすでに存在します',
   not_found: 'リソースが見つかりません',
   method_not_allowed: '許可されていない操作です',
   unsupported_media_type: 'サポートされていないメディアタイプです',
@@ -1111,11 +1133,34 @@ export interface UpdateWorldsendSongRequestDTO {
 
 // --------------------------------
 
-export interface ApiTokenResponse {
+/** APIトークンの管理画面用情報。 */
+export interface ApiToken {
+  /** APIトークンID。名称変更・削除時に使用する。 */
+  id: number
+  /** ユーザーが指定した表示名。 */
+  name: string
+  /** 表示用のトークン先頭5文字。旧仕様からの移行データは null。 */
+  token_prefix: string | null
+  /** 最終利用日時。未使用の場合は null。 */
+  last_used_at: string | null
+  /** 発行日時。 */
+  created_at: string
+}
+
+/** APIトークン発行時に一度だけ返る平文トークン付きレスポンス。 */
+export interface ApiTokenIssueResponse extends ApiToken {
+  /** 発行された平文APIトークン。 */
   token: string
 }
 
-export interface ApiTokenStatusResponse {
-  has_token: boolean
-  created_at: string | null
+/** APIトークン一覧レスポンス。 */
+export interface ApiTokenListResponse {
+  /** 新しい順に並んだAPIトークン一覧。 */
+  tokens: ApiToken[]
+}
+
+/** APIトークン名称変更リクエスト。 */
+export interface ApiTokenRenameRequest {
+  /** 前後空白を除いて1〜50文字の新しい表示名。 */
+  name: string
 }
