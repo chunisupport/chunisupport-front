@@ -14,19 +14,21 @@ import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import { formatInteger } from '../../../../utils/numberFormat'
 import { getRankingPositionClass } from '../../../../utils/rankingPosition'
 import { formatRatingFixed2 } from '../../../../utils/ratingFormat'
+import { formatScoreDifference } from '../../../../utils/scoreDifference'
 import { getScoreRank } from '../../../../utils/scoreRank'
 
 type Props = {
   record: PlayerRecordDTO
   index: number
   showJackets: boolean
+  scoreDifference?: number
   useDefaultIndexColor?: boolean
 }
 
 /**
  * ユーザーのプレイレコードをカード形式で表示する。
  *
- * @param props - 表示対象のレコードと一覧内の0始まりインデックス。
+ * @param props - 表示対象のレコード、一覧内の0始まりインデックス、候補枠までのスコア差。
  * @returns 楽曲詳細へ遷移できるレコードカード。
  */
 export const UserRecordCard: Component<Props> = (props) => {
@@ -96,6 +98,11 @@ export const UserRecordCard: Component<Props> = (props) => {
                 </span>{' '}
                 / {formatInteger(props.record.score)}{' '}
                 <span class={SCORE_RANK_TEXT_CLASS[scoreRank()]}>{scoreRank()}</span>
+                <Show when={props.scoreDifference !== undefined}>
+                  <span class="relative -top-px ml-1 font-jost text-xs font-medium text-rating-candidate-gap">
+                    ({formatScoreDifference(props.scoreDifference ?? 0)})
+                  </span>
+                </Show>
               </p>
             </div>
             <div

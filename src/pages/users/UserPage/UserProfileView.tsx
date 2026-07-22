@@ -7,6 +7,10 @@ import { AppIconButton, getAppButtonClass } from '../../../components/common/App
 import { AppTabContent, SegmentedTabs, UnderlineTabs } from '../../../components/common/AppTabs'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import {
+  calculateCandidateScoreDifference,
+  calculateCandidateTargetRating,
+} from '../../../utils/candidateScoreDifference'
+import {
   buildUserOverPowerPagePath,
   buildUserProfilePagePath,
   type OverPowerSubPage,
@@ -115,13 +119,14 @@ const JacketVisibilityToggle: Component<{
 /**
  * レーティング対象レコードと候補レコードを一覧表示する。
  *
- * @param props - レーティング対象レコード、候補レコード、候補見出し。
+ * @param props - レーティング対象・候補レコード、候補見出し、候補の目標レーティング。
  * @returns レコードカードの一覧。
  */
 const RecordList: Component<{
   records: PlayerRecordDTO[]
   candidates?: PlayerRecordDTO[]
   candidateHeading: string
+  candidateTargetRating?: number
   showJackets: boolean
 }> = (props) => (
   <div class="mx-4 flex flex-col gap-2">
@@ -140,6 +145,15 @@ const RecordList: Component<{
             record={record}
             index={i()}
             showJackets={props.showJackets}
+            scoreDifference={
+              props.candidateTargetRating === undefined
+                ? undefined
+                : calculateCandidateScoreDifference(
+                    record.score,
+                    record.const,
+                    props.candidateTargetRating
+                  )
+            }
             useDefaultIndexColor
           />
         )}
@@ -156,6 +170,12 @@ export const UserProfileView: Component<Props> = (props) => {
   const bestCandidateRecords = (): PlayerRecordDTO[] => props.profile.rating.best_candidate
   const newRecords = (): PlayerRecordDTO[] => props.profile.rating.new
   const newCandidateRecords = (): PlayerRecordDTO[] => props.profile.rating.new_candidate
+  const bestCandidateTargetRating = createMemo(() =>
+    calculateCandidateTargetRating(bestRecords().map((record) => record.rating))
+  )
+  const newCandidateTargetRating = createMemo(() =>
+    calculateCandidateTargetRating(newRecords().map((record) => record.rating))
+  )
   const recordProfile = () => props.recordProfile()
   /**
    * 現在表示中のユーザーに一致するコースレコードだけを返す。
@@ -313,6 +333,7 @@ export const UserProfileView: Component<Props> = (props) => {
                 records={bestRecords()}
                 candidates={bestCandidateRecords()}
                 candidateHeading={BEST_CANDIDATE_HEADING}
+                candidateTargetRating={bestCandidateTargetRating()}
                 showJackets={showJackets()}
               />
             </AppTabContent>
@@ -321,6 +342,7 @@ export const UserProfileView: Component<Props> = (props) => {
                 records={newRecords()}
                 candidates={newCandidateRecords()}
                 candidateHeading={NEW_CANDIDATE_HEADING}
+                candidateTargetRating={newCandidateTargetRating()}
                 showJackets={showJackets()}
               />
             </AppTabContent>
