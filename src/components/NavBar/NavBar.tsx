@@ -6,6 +6,7 @@ import { A, useLocation, useNavigate } from '@solidjs/router'
 import {
   BadgeQuestionMark,
   Ellipsis,
+  ExternalLink,
   FlagTriangleRight,
   History,
   House,
@@ -308,7 +309,12 @@ const NavBar = (props: NavBarProps) => {
   const renderDropdownItem = (item: DropdownItem): JSX.Element => (
     <AppMenuItem
       icon={item.icon()}
-      label={item.label}
+      label={
+        <span class="inline-flex items-center gap-1">
+          {item.label}
+          {item.path?.startsWith('http') && <ExternalLink class="h-3.5 w-3.5" aria-hidden="true" />}
+        </span>
+      }
       hasNotificationDot={item.hasNotificationDot}
       tone={item.action === 'logout' ? 'danger' : 'default'}
       onSelect={() => handleDropdownSelect(item)}

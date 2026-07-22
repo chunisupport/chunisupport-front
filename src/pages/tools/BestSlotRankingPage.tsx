@@ -1,4 +1,5 @@
 import { A } from '@solidjs/router'
+import { Trophy } from 'lucide-solid'
 import { createEffect, createMemo, createResource, createSignal, For, on, Show } from 'solid-js'
 import { fetchBestSlotRanking } from '../../api/bestSlotRankings'
 import { fetchRatingBands } from '../../api/ratingBands'
@@ -54,11 +55,13 @@ const formatPercentage = (percentage: number): string =>
  * ランキングの譜面1件を表形式で表示する。
  *
  * @param props.entry - 表示対象のランキング項目。
+ * @param props.isOwnBest - ログインユーザーのベスト枠に含まれる譜面か。
  * @param props.ownScore - 同じ譜面におけるログインユーザーのスコア。
  * @returns 順位、譜面情報、平均スコア、自分との差、採用率を含む行。
  */
 const BestSlotRankingRow = (props: {
   entry: BestSlotRankingEntryDTO
+  isOwnBest: boolean
   ownScore: number | undefined
 }) => {
   const percentageBarWidth = () => `${Math.min(100, props.entry.best_player_percentage)}%`
@@ -70,7 +73,14 @@ const BestSlotRankingRow = (props: {
     calculateDisplayedScoreDifference(props.ownScore, props.entry.average_score)
 
   return (
-    <tr class="border-t border-border hover:bg-surface-muted">
+    <tr
+      class="border-t border-border"
+      classList={{
+        'bg-action-primary-muted': props.isOwnBest,
+        'hover:bg-interactive-row-hover': props.isOwnBest,
+        'hover:bg-surface-muted': !props.isOwnBest,
+      }}
+    >
       <th scope="row" class="w-7 p-0 text-center font-normal">
         <span
           class={`ml-3 inline-flex h-7 w-7 items-center justify-center rounded-full font-oswald text-sm font-semibold ${getRankingPositionClass(
@@ -93,6 +103,9 @@ const BestSlotRankingRow = (props: {
           >
             {props.entry.song.title}
           </span>
+          <Show when={props.isOwnBest}>
+            <span class="sr-only">{BEST_SLOT_RANKING_COPY.ownBestLabel}</span>
+          </Show>
         </A>
       </td>
       <td class="w-px px-2 py-2 text-center font-jost text-sm whitespace-nowrap">
@@ -222,6 +235,13 @@ const BestSlotRankingPage = () => {
           .map((record) => [createChartKey(record.id, record.difficulty), record])
       )
   )
+  /** ログインユーザーのベスト枠に含まれる譜面キー集合。 */
+  const ownBestChartKeys = createMemo(
+    () =>
+      new Set(
+        (ownRating()?.best ?? []).map((record) => createChartKey(record.id, record.difficulty))
+      )
+  )
 
   /** 選択中レート帯のランキングを次のカーソルから追加取得する。 */
   const handleLoadMore = async (): Promise<void> => {
@@ -259,8 +279,16 @@ const BestSlotRankingPage = () => {
 
   return (
     <div class="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <h1 class="text-2xl font-semibold">{BEST_SLOT_RANKING_COPY.title}</h1>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <header class="flex items-start gap-3">
+          <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+            <Trophy class="h-5 w-5 text-action-primary" aria-hidden="true" />
+          </span>
+          <div>
+            <h1 class="text-2xl font-semibold">{BEST_SLOT_RANKING_COPY.title}</h1>
+            <p class="mt-1 text-sm text-text-muted">{BEST_SLOT_RANKING_COPY.description}</p>
+          </div>
+        </header>
         <Show when={selectedRatingBand()}>
           <AppSelect<RatingBandOption>
             options={ratingBandOptions()}
@@ -331,6 +359,9 @@ const BestSlotRankingPage = () => {
                         {(entry) => (
                           <BestSlotRankingRow
                             entry={entry}
+                            isOwnBest={ownBestChartKeys().has(
+                              createChartKey(entry.song.id, entry.chart.difficulty)
+                            )}
                             ownScore={
                               ownRecordsByChart().get(
                                 createChartKey(entry.song.id, entry.chart.difficulty)
