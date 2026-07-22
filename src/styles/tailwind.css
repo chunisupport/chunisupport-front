@@ -160,6 +160,7 @@
   --cs-color-info: var(--color-blue-700);
   --cs-color-info-bg: var(--color-blue-50);
   --cs-color-info-border: var(--color-blue-300);
+  --cs-color-rating-candidate-gap: var(--color-blue-700);
 
   /* ===== 苦手譜面インスペクター（通常点 / 外れ値） ===== */
   --cs-color-weak-chart-point: rgb(22 163 74 / 45%);
@@ -235,6 +236,7 @@
   --cs-color-info: var(--color-teal-300);
   --cs-color-info-bg: rgb(19 78 74 / 35%);
   --cs-color-info-border: var(--color-teal-800);
+  --cs-color-rating-candidate-gap: var(--color-blue-300);
 
   /* ===== 苦手譜面インスペクター（通常点 / 外れ値） ===== */
   --cs-color-weak-chart-point: rgb(134 239 172 / 45%);
@@ -351,6 +353,7 @@
   --cs-color-info: var(--color-blue-300);
   --cs-color-info-bg: rgb(30 64 175 / 35%);
   --cs-color-info-border: var(--color-blue-800);
+  --cs-color-rating-candidate-gap: var(--color-blue-300);
 
   /* ===== 苦手譜面インスペクター（通常点 / 外れ値） ===== */
   --cs-color-weak-chart-point: rgb(134 239 172 / 45%);
@@ -422,6 +425,7 @@
   --cs-color-info: var(--color-blue-700);
   --cs-color-info-bg: var(--color-blue-50);
   --cs-color-info-border: var(--color-blue-300);
+  --cs-color-rating-candidate-gap: var(--color-blue-700);
 
   /* ===== 苦手譜面インスペクター（通常点 / 外れ値） ===== */
   --cs-color-weak-chart-point: rgb(22 163 74 / 45%);
@@ -636,6 +640,7 @@
   --color-info: var(--cs-color-info);
   --color-info-bg: var(--cs-color-info-bg);
   --color-info-border: var(--cs-color-info-border);
+  --color-rating-candidate-gap: var(--cs-color-rating-candidate-gap);
 
   /* その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） */
   --color-overlay: var(--cs-color-overlay);
