@@ -79,9 +79,7 @@ export function isWorldsendRecordMatchedWithTitleMatcher(
   const comboLamp = record.is_played
     ? getComboLampFilterValue(record.combo_lamp ?? null, record.score)
     : null
-  if (!hasWorldsendJusticeCountFilter(filters) && !filters.combo_lamp.includes(comboLamp)) {
-    return false
-  }
+  if (!filters.combo_lamp.includes(comboLamp)) return false
 
   const chainLamp = record.is_played ? (record.full_chain ?? null) : null
   if (!filters.chain_lamp.includes(chainLamp)) return false

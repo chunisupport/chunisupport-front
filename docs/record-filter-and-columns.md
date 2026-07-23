@@ -141,7 +141,7 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
     "min": null,
     "max": null
   },
-  "combo_lamp": ["ALL JUSTICE", "FULL COMBO", null],
+  "combo_lamp": ["ALL JUSTICE CRITICAL", "ALL JUSTICE", "FULL COMBO", null],
   "chain_lamp": ["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null],
   "hard_lamp": ["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null],
   "excludeNoPlay": false
@@ -178,9 +178,9 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
 5. `versions` が空でないとき、レコードのバージョンが `versions` に含まれること。
 6. 譜面定数が `const.min` 以上かつ `const.max` 以下であること。
 7. スコアが `score.min` 以上かつ `score.max` 以下であること。
-8. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。この場合、`combo_lamp` の選択状態は判定に使いません。
+8. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。
 9. `overPower.min` または `overPower.max` が `null` でないとき、プレイ済み譜面で、`overpower` が指定範囲内であること。
-10. JUSTICE 数フィルターが有効でないとき、コンボランプが `combo_lamp` に含まれること。
+10. AJC 判定後のコンボランプが `combo_lamp` に含まれること。JUSTICE 数フィルターの有効・無効にかかわらず判定します。
 11. FULL CHAIN ランプが `chain_lamp` に含まれること。
 12. クリアランプが `hard_lamp` に含まれること。
 
@@ -200,7 +200,7 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
 - `justiceCount.max`: `null`
 - `overPower.min`: `null`
 - `overPower.max`: `null`
-- `combo_lamp`: `["ALL JUSTICE", "FULL COMBO", null]`
+- `combo_lamp`: `["ALL JUSTICE CRITICAL", "ALL JUSTICE", "FULL COMBO", null]`
 - `chain_lamp`: `["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null]`
 - `hard_lamp`: `["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null]`
 - `excludeNoPlay`: `false`
@@ -226,7 +226,7 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
     "min": null,
     "max": null
   },
-  "combo_lamp": ["ALL JUSTICE", "FULL COMBO", null],
+  "combo_lamp": ["ALL JUSTICE CRITICAL", "ALL JUSTICE", "FULL COMBO", null],
   "chain_lamp": ["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null],
   "hard_lamp": ["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null],
   "excludeNoPlay": false
@@ -261,8 +261,8 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
 5. `genres` が空でないとき、レコードのジャンルが `genres` に含まれること。
 6. `versions` が空でないとき、レコードのリリースバージョンが `versions` に含まれること。
 7. スコアが `score.min` 以上かつ `score.max` 以下であること。
-8. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。この場合、`combo_lamp` の選択状態は判定に使いません。
-9. JUSTICE 数フィルターが有効でないとき、コンボランプが `combo_lamp` に含まれること。
+8. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。
+9. AJC 判定後のコンボランプが `combo_lamp` に含まれること。JUSTICE 数フィルターの有効・無効にかかわらず判定します。
 10. FULL CHAIN ランプが `chain_lamp` に含まれること。
 11. クリアランプが `hard_lamp` に含まれること。
 
@@ -279,7 +279,7 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
 - `scoreFilterMode`: `"rank"`
 - `justiceCount.min`: `null`
 - `justiceCount.max`: `null`
-- `combo_lamp`: `["ALL JUSTICE", "FULL COMBO", null]`
+- `combo_lamp`: `["ALL JUSTICE CRITICAL", "ALL JUSTICE", "FULL COMBO", null]`
 - `chain_lamp`: `["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null]`
 - `hard_lamp`: `["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null]`
 - `excludeNoPlay`: `false`
@@ -289,10 +289,11 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
 ### `combo_lamp`
 
 ```json
-["ALL JUSTICE", "FULL COMBO", null]
+["ALL JUSTICE CRITICAL", "ALL JUSTICE", "FULL COMBO", null]
 ```
 
 `null` は JSON 上で文字列ではなく null 値です。
+`ALL JUSTICE CRITICAL` はフィルター専用値です。レコードの `combo_lamp` が `ALL JUSTICE` かつスコアが理論値の場合に、この値として判定します。
 
 ### `chain_lamp`
 
@@ -314,7 +315,7 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
 
 入力値は 0 以上の整数です。
 どちらか一方でも `null` でない場合、AJ 済み譜面のみが検索対象になります。
-この条件は判定時の暗黙条件であり、`combo_lamp` の保存値や選択状態は変更せず、コンボランプ条件の判定をスキップします。
+`justiceCount` と `combo_lamp` は AND 条件で判定し、両方の条件を満たすレコードだけを表示します。
 
 ### `overPower`
 
@@ -342,7 +343,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 {
   "name": "高難度FC狙い",
   "filter_type": "standard",
-  "schema_version": 3,
+  "schema_version": 6,
   "filter": {
     "title": "",
     "difficulties": ["MASTER", "ULTIMA"],
@@ -360,7 +361,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
     "scoreFilterMode": "number",
     "justiceCount": {
       "min": null,
-      "max": 20
+      "max": null
     },
     "overPower": {
       "min": 80,
@@ -378,7 +379,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 | --- | --- | --- |
 | `name` | `string` | 保存済みフィルター名です。前後空白を除いて1〜30文字、制御文字不可です。 |
 | `filter_type` | `"standard"` \| `"worldsend"` | 通常レコードは `"standard"`、WORLD'S END は `"worldsend"` を使います。 |
-| `schema_version` | `number` | フロント側フィルタースキーマのバージョンです。通常レコードは `3`、WORLD'S END は `2` です。 |
+| `schema_version` | `number` | フロント側フィルタースキーマのバージョンです。現行値は通常レコードが `6`、WORLD'S END が `4` です。 |
 | `filter` | `object` | `filter_type` に対応するフィルター状態 JSON です。 |
 
 サーバーは `filter` の内部フィールドを解釈しません。
@@ -394,7 +395,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
       "id": "11111111-1111-1111-1111-111111111111",
       "name": "高難度FC狙い",
       "filter_type": "standard",
-      "schema_version": 3,
+      "schema_version": 6,
       "filter": {
         "title": "",
         "difficulties": ["MASTER", "ULTIMA"]
@@ -414,11 +415,12 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 
 ### フロント側の復元ルール
 
-- 通常レコードは `schema_version: 3` の保存値を有効として扱います。
-- WORLD'S END は `schema_version: 2` の保存値を有効として扱います。
+- 通常レコードは現行の `schema_version: 6` に加え、互換対象の `3`, `4`, `5` を有効として扱います。
+- WORLD'S END は現行の `schema_version: 4` に加え、互換対象の `2`, `3` を有効として扱います。
+- 互換対象の旧スキーマでは、保存済みの `ALL JUSTICE` 条件へ `ALL JUSTICE CRITICAL` を補完し、AJC 選択肢追加前と同じ対象範囲を維持します。
 - `filter` が `null` ではないオブジェクトの場合だけ、各画面の `normalizeFilterState` / `normalizeWorldsendFilterState` で補完します。
-- スキーマバージョンが違う保存値は一覧には残しますが、`filter: null`、`isValid: false` として扱い、呼び出しや名前変更はできません。
-- 旧スキーマや不正スキーマの保存値は、削除操作だけ可能です。
+- 未対応のスキーマバージョンは一覧には残しますが、`filter: null`、`isValid: false` として扱い、呼び出しや名前変更はできません。
+- 未対応または不正なスキーマの保存値は、削除操作だけ可能です。
 
 ### フロント側の操作
 

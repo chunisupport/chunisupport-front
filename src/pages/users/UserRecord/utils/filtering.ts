@@ -43,6 +43,15 @@ export function isRecordMatched(record: PlayerRecordWithSongMeta, filters: Filte
   return isRecordMatchedWithTitleMatcher(record, filters, matchTitle)
 }
 
+/**
+ * 事前生成した曲名検索マッチャーを使って、通常レコードが全フィルター条件に一致するか判定する。
+ *
+ * @param record - 判定対象の通常レコード。
+ * @param filters - 適用する通常レコードフィルター。
+ * @param matchTitle - 曲名・アーティスト・読み検索の判定関数。
+ * @param favoriteSongIds - お気に入りに登録されている楽曲ID。
+ * @returns レコードが全条件に一致する場合はtrue。
+ */
 export function isRecordMatchedWithTitleMatcher(
   record: PlayerRecordWithSongMeta,
   filters: FilterState,
@@ -113,7 +122,7 @@ export function isRecordMatchedWithTitleMatcher(
   const comboLamp = record.is_played
     ? getComboLampFilterValue(record.combo_lamp ?? null, record.score)
     : null
-  if (!hasJusticeCountFilter(filters) && !filters.combo_lamp.includes(comboLamp)) return false
+  if (!filters.combo_lamp.includes(comboLamp)) return false
 
   // FULL CHAINランプ
   const chainLamp = record.is_played ? (record.full_chain ?? null) : null
