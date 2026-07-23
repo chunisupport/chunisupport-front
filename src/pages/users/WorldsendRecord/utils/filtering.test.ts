@@ -122,6 +122,38 @@ test("WORLD'S END フィルターはスコア・JUSTICE数・ランプ・未プ�
   assert.equal(noPlayed, false)
 })
 
+test("WORLD'S END フィルターはJUSTICE数指定中もAJCのコンボランプ条件を適用する", () => {
+  // Given: JUSTICE数が範囲内にあるAJCと通常AJ、およびAJCだけを選択したフィルター。
+  const filters = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: 4, max: 4 },
+    justiceCount: { min: 0, max: 5 },
+    combo_lamp: ['ALL JUSTICE CRITICAL'],
+  })
+  const allJusticeCritical = createRecord({
+    combo_lamp: 'ALL JUSTICE',
+    score: MAX_SCORE,
+    justice_count: 0,
+  })
+  const allJustice = createRecord({
+    combo_lamp: 'ALL JUSTICE',
+    score: MAX_SCORE - 1,
+    justice_count: 2,
+  })
+
+  // When: JUSTICE数とコンボランプの複合条件でレコードを判定する。
+  const criticalMatched = isWorldsendRecordMatchedWithTitleMatcher(
+    allJusticeCritical,
+    filters,
+    matcher()
+  )
+  const justiceMatched = isWorldsendRecordMatchedWithTitleMatcher(allJustice, filters, matcher())
+
+  // Then: 両方の条件を満たすAJCだけが残る。
+  assert.equal(criticalMatched, true)
+  assert.equal(justiceMatched, false)
+})
+
 test("WORLD'S END フィルターはALL JUSTICE CRITICALをコンボランプ条件として判定できる", () => {
   // Given: AJC だけを選択したフィルター。
   const filters = normalizeWorldsendFilterState({
