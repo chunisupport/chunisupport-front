@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PlayerRecordDTO } from '../types/api'
-import { inspectWeakCharts, sortWeakChartOutliers } from './weakChartInspector'
+import {
+  filterWeakChartAggregationRecords,
+  inspectWeakCharts,
+  sortWeakChartOutliers,
+  toggleWeakChartAggregationDifficulty,
+  WEAK_CHART_OP_TARGET_FILTER,
+} from './weakChartInspector'
 
 /**
  * テスト用の通常譜面レコードを生成する。
@@ -10,13 +16,15 @@ import { inspectWeakCharts, sortWeakChartOutliers } from './weakChartInspector'
  * @param chartConst - 譜面定数。
  * @param isPlayed - プレイ済みか。
  * @param clearLamp - クリアランプ。
+ * @param overrides - 上書きするレコード項目。
  * @returns テスト用レコード。
  */
 const createRecord = (
   score: number,
   chartConst = 14.0,
   isPlayed = true,
-  clearLamp: PlayerRecordDTO['clear_lamp'] = null
+  clearLamp: PlayerRecordDTO['clear_lamp'] = null,
+  overrides: Partial<PlayerRecordDTO> = {}
 ): PlayerRecordDTO => ({
   is_played: isPlayed,
   is_op_target: false,
@@ -37,6 +45,166 @@ const createRecord = (
   combo_lamp: null,
   full_chain: null,
   slot: null,
+  ...overrides,
+})
+
+/** 集計対象範囲を制限しないテスト用設定。 */
+const FULL_AGGREGATION_RANGE = {
+  scoreMin: 0,
+  scoreMax: 1010000,
+  constMin: 1,
+  constMax: 16,
+} as const
+
+test('理論値OP対象では現在のOP対象フラグではなく楽曲マスタの対象難易度を使う', () => {
+  // Given: 現在のOP対象と理論値OP対象が反対になっている2曲。
+  const records = [
+    createRecord(1000000, 14, true, null, {
+      id: 'song-1',
+      difficulty: 'MASTER',
+      is_op_target: true,
+    }),
+    createRecord(1005000, 15, true, null, {
+      id: 'song-1',
+      difficulty: 'ULTIMA',
+      is_op_target: false,
+    }),
+    createRecord(1004000, 14.5, true, null, {
+      id: 'song-2',
+      difficulty: 'MASTER',
+      is_op_target: false,
+    }),
+    createRecord(1001000, 14, true, null, {
+      id: 'song-2',
+      difficulty: 'ULTIMA',
+      is_op_target: true,
+    }),
+  ]
+  const targetDifficultyBySongId = new Map([
+    ['song-1', 'ULTIMA'] as const,
+    ['song-2', 'MASTER'] as const,
+  ])
+
+  // When: 理論値OP対象だけに絞り込む。
+  const result = filterWeakChartAggregationRecords(
+    records,
+    targetDifficultyBySongId,
+    [WEAK_CHART_OP_TARGET_FILTER],
+    FULL_AGGREGATION_RANGE
+  )
+
+  // Then: 各曲の楽曲マスタが示す難易度だけが残る。
+  assert.deepEqual(
+    result.map((record) => `${record.id}:${record.difficulty}`),
+    ['song-1:ULTIMA', 'song-2:MASTER']
+  )
+})
+
+test('理論値OP対象では未プレイ譜面と対象難易度を解決できないレコードを除外する', () => {
+  // Given: 未プレイの理論値対象譜面、対象難易度なし、楽曲マスタなしのレコード。
+  const records = [
+    createRecord(0, 15, false, null, {
+      id: 'unplayed',
+      difficulty: 'ULTIMA',
+    }),
+    createRecord(1000000, 14, true, null, {
+      id: 'without-target',
+      difficulty: 'MASTER',
+    }),
+    createRecord(1000000, 14, true, null, {
+      id: 'missing-song',
+      difficulty: 'MASTER',
+    }),
+  ]
+  const targetDifficultyBySongId = new Map([['unplayed', 'ULTIMA'] as const])
+
+  // When: 理論値OP対象だけに絞り込む。
+  const result = filterWeakChartAggregationRecords(
+    records,
+    targetDifficultyBySongId,
+    [WEAK_CHART_OP_TARGET_FILTER],
+    FULL_AGGREGATION_RANGE
+  )
+
+  // Then: フォールバックせず全件が除外される。
+  assert.deepEqual(result, [])
+})
+
+test('通常難易度選択ではOP対象フラグに関係なく選択難易度だけを残す', () => {
+  // Given: 現在のOP対象フラグが異なるMASTERとULTIMA。
+  const records = [
+    createRecord(1000000, 14, true, null, {
+      id: 'song-1',
+      difficulty: 'MASTER',
+      is_op_target: false,
+    }),
+    createRecord(1005000, 15, true, null, {
+      id: 'song-1',
+      difficulty: 'ULTIMA',
+      is_op_target: true,
+    }),
+  ]
+
+  // When: MASTERを通常難易度として選択する。
+  const result = filterWeakChartAggregationRecords(
+    records,
+    new Map([['song-1', 'ULTIMA']]),
+    ['MASTER'],
+    FULL_AGGREGATION_RANGE
+  )
+
+  // Then: OP対象フラグに関係なくMASTERだけが残る。
+  assert.deepEqual(
+    result.map((record) => record.difficulty),
+    ['MASTER']
+  )
+})
+
+test('集計対象のスコアと譜面定数は境界値を含む範囲で絞り込む', () => {
+  // Given: スコアと譜面定数が集計範囲の内外にあるMASTER譜面。
+  const records = [
+    createRecord(999999, 14, true, null, { id: 'low-score' }),
+    createRecord(1000000, 14, true, null, { id: 'lower-bound' }),
+    createRecord(1005000, 15, true, null, { id: 'upper-bound' }),
+    createRecord(1005001, 15, true, null, { id: 'high-score' }),
+    createRecord(1001000, 13.9, true, null, { id: 'low-const' }),
+    createRecord(1001000, 15.1, true, null, { id: 'high-const' }),
+  ]
+
+  // When: スコア1,000,000～1,005,000、定数14.0～15.0で絞り込む。
+  const result = filterWeakChartAggregationRecords(records, new Map(), ['MASTER'], {
+    scoreMin: 1000000,
+    scoreMax: 1005000,
+    constMin: 14,
+    constMax: 15,
+  })
+
+  // Then: 両方の範囲に収まる境界値の譜面だけが残る。
+  assert.deepEqual(
+    result.map((record) => record.id),
+    ['lower-bound', 'upper-bound']
+  )
+})
+
+test('理論値OP対象と通常難易度は排他選択になる', () => {
+  // Given: MASTERとULTIMAを選択中。
+  const selected = ['MASTER', 'ULTIMA'] as const
+
+  // When: 理論値OP対象を選び、解除後にMASTERを選び直す。
+  const opTargetSelected = toggleWeakChartAggregationDifficulty(
+    selected,
+    WEAK_CHART_OP_TARGET_FILTER
+  )
+  const opTargetCleared = toggleWeakChartAggregationDifficulty(
+    opTargetSelected,
+    WEAK_CHART_OP_TARGET_FILTER
+  )
+  const masterSelected = toggleWeakChartAggregationDifficulty(opTargetSelected, 'MASTER')
+
+  // Then: 理論値OP対象は単独選択となり、解除と通常難易度への切り替えができる。
+  assert.deepEqual(opTargetSelected, [WEAK_CHART_OP_TARGET_FILTER])
+  assert.deepEqual(opTargetCleared, [])
+  assert.deepEqual(masterSelected, ['MASTER'])
 })
 
 test('Tukey法の下側外れ値を苦手譜面として抽出すること', () => {

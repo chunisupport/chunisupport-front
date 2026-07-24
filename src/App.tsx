@@ -30,7 +30,6 @@ import {
   LATEST_SCORE_UPDATE_PATH,
   LOCKED_SONGS_FINDER_PATH,
   RANDOM_SONG_SELECTOR_PATH,
-  REGISTER_SCORE_MOCK_PATH,
   REGISTER_SCORE_PATH,
   TOOLS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
@@ -71,9 +70,6 @@ const FriendsPage = lazy(() => import('./pages/friends/FriendsPage'))
 
 const RegisterScorePage = lazy(() => import('./pages/register-score/RegisterScorePage'))
 const LatestScoreUpdatePage = lazy(() => import('./pages/register-score/LatestScoreUpdatePage'))
-const RegisterScoreMockPage = lazy(
-  () => import('./pages/register-score-mock/RegisterScoreMockPage')
-)
 const RegisterScoreTempPage = lazy(
   () => import('./pages/register-score-temp/RegisterScoreTempPage')
 )
@@ -514,10 +510,6 @@ const App = () => {
       <Route
         path={`${FRIENDS_PATH}/:tab?`}
         component={withNavBar(withAuth(withRouteLoadBoundary(FriendsPage)))}
-      />
-      <Route
-        path={REGISTER_SCORE_MOCK_PATH}
-        component={withNavBar(withRouteLoadBoundary(RegisterScoreMockPage))}
       />
       <Route
         path={REGISTER_SCORE_PATH}

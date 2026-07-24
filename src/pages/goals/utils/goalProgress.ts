@@ -9,6 +9,7 @@ import type {
 } from '../../../types/api'
 import { buildCurrentOverPowerBySongId } from '../../../usecases/overpower/currentOpTarget'
 import { MAX_SCORE } from '../../../utils/scoreRank'
+import { isTheoreticalOverPowerTargetDifficulty } from '../../../utils/theoreticalOverPowerTarget'
 import { normalizeGoalAttributeIds } from './goalAttributes'
 import { getNumberGoalTargetParam, resolveGoalDynamicTarget } from './goalCountTarget'
 import {
@@ -62,16 +63,6 @@ const resolveCountTarget = (params: GoalDTO['achievement_params'], recordCount: 
       rounding: 'ceil',
     }
   )
-
-/**
- * レコードが曲ごとのOVER POWER対象譜面かを判定する。
- *
- * @param record - 判定対象のプレイヤーレコード。
- * @param song - レコードに対応する楽曲マスタ。
- * @returns 楽曲のOP対象難易度とレコード難易度が一致する場合はtrue。
- */
-const isOverPowerTargetRecord = (record: PlayerRecordDTO, song: SongDTO | undefined): boolean =>
-  song?.op_target_difficulty === record.difficulty
 
 /**
  * 楽曲マスタからOP対象譜面の定数を取得する。
@@ -177,7 +168,10 @@ export const filterRecordsByAttributes = (
       if (!isOverPowerTargetSongMatched(song, attributes, genreNames, versionIds, versions)) {
         return false
       }
-      return options.includeAllChartsForOpTarget || isOverPowerTargetRecord(record, song)
+      return (
+        options.includeAllChartsForOpTarget ||
+        isTheoreticalOverPowerTargetDifficulty(song?.op_target_difficulty, record.difficulty)
+      )
     }
     if (diffNames && !diffNames.has(record.difficulty)) return false
 

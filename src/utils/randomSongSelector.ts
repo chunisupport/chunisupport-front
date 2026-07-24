@@ -1,6 +1,7 @@
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
 import { formatChartConst } from './chartConstFormat'
+import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter'
 
 /**
@@ -299,7 +300,7 @@ export const buildRandomSongCandidates = (
  * @returns 楽曲マスタのOP対象難易度と候補難易度が一致する場合はtrue。
  */
 export const isRandomSongOpTargetCandidate = (candidate: RandomSongCandidate): boolean =>
-  candidate.song.op_target_difficulty === candidate.difficulty
+  isTheoreticalOverPowerTargetDifficulty(candidate.song.op_target_difficulty, candidate.difficulty)
 
 /**
  * 難易度絞り込みの排他選択を反映した次の選択状態を作る。

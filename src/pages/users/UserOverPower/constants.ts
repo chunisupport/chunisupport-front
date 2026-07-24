@@ -1,3 +1,4 @@
+import { OVER_POWER_MASTER_ULTIMA_TARGET } from '../../../usecases/overpower/constants'
 import type { OverPowerSubPage } from '../../../utils/userProfileRoute'
 import type {
   OverPowerAggregationTargetOption,
@@ -29,6 +30,7 @@ export const OVER_POWER_AGGREGATION_TARGET_OPTIONS: OverPowerAggregationTargetOp
   { value: 'EXPERT', label: 'EXPERT' },
   { value: 'MASTER', label: 'MASTER' },
   { value: 'ULTIMA', label: 'ULTIMA' },
+  { value: OVER_POWER_MASTER_ULTIMA_TARGET, label: 'MASTER + ULTIMA' },
   { value: 'ALL', label: '全難易度' },
 ]
 

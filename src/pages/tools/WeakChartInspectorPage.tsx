@@ -43,8 +43,9 @@ import {
 } from '../../constants/chart'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { accentPreference, themePreference } from '../../stores/themePreferences'
-import type { PlayerRecordDTO } from '../../types/api'
+import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
+import { fetchTheoreticalTargetDifficultyBySongId } from '../../usecases/overpower/fetchTheoreticalTargetDifficulties'
 import { formatChartConst, truncateChartConst } from '../../utils/chartConstFormat'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { resolveViewportTooltipPosition } from '../../utils/chartTooltipPosition'
@@ -52,15 +53,20 @@ import { formatInteger, formatScoreKilo } from '../../utils/numberFormat'
 import { clampNumericInput } from '../../utils/numberInput'
 import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
 import {
+  filterWeakChartAggregationRecords,
   inspectWeakCharts,
   isWeakChartInspectionTarget,
   sortWeakChartOutliers,
+  toggleWeakChartAggregationDifficulty,
+  WEAK_CHART_OP_TARGET_FILTER,
+  type WeakChartAggregationDifficulty,
+  type WeakChartAggregationRange,
   type WeakChartOutlier,
   type WeakChartSortKey,
 } from '../../utils/weakChartInspector'
 import {
-  WEAK_CHART_AGGREGATION_DIFFICULTIES,
   WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT,
+  WEAK_CHART_AGGREGATION_DIFFICULTY_OPTIONS,
   WEAK_CHART_AGGREGATION_SETTINGS_DEFAULT,
   WEAK_CHART_AXIS_SETTINGS_DEFAULT,
   WEAK_CHART_INSPECTOR_COLORS,
@@ -85,17 +91,6 @@ type ChartAxisSettings = {
   xMin: number
   /** 横軸（譜面定数）の最大値。 */
   xMax: number
-}
-
-type ChartAggregationSettings = {
-  /** 集計対象とするスコアの最小値。 */
-  scoreMin: number
-  /** 集計対象とするスコアの最大値。 */
-  scoreMax: number
-  /** 集計対象とする譜面定数の最小値。 */
-  constMin: number
-  /** 集計対象とする譜面定数の最大値。 */
-  constMax: number
 }
 
 type InspectorPoint = {
@@ -470,6 +465,32 @@ const OutlierTable = (props: OutlierTableProps): JSX.Element => {
   )
 }
 
+/** 苦手譜面インスペクターの表示と集計に必要な取得データ。 */
+type WeakChartInspectorData = {
+  /** ログインユーザーの通常譜面レコード。 */
+  records: PlayerRecordDTO[]
+  /** 曲IDごとの理論値OVER POWER対象難易度。 */
+  targetDifficultyBySongId: Map<string, PlayerDataDifficulty>
+}
+
+/**
+ * ログインユーザーのレコードと楽曲マスタを取得する。
+ *
+ * @returns 苦手譜面インスペクターで使用するレコードと楽曲マスタ。
+ */
+const fetchWeakChartInspectorData = async (): Promise<WeakChartInspectorData> => {
+  const me = await fetchMe()
+  const [records, targetDifficultyBySongId] = await Promise.all([
+    fetchUserRecordWithCache(me.username),
+    fetchTheoreticalTargetDifficultyBySongId(),
+  ])
+
+  return {
+    records: records.standard,
+    targetDifficultyBySongId,
+  }
+}
+
 /**
  * ログイン中ユーザーの苦手譜面分析画面を表示する。
  *
@@ -477,29 +498,27 @@ const OutlierTable = (props: OutlierTableProps): JSX.Element => {
  */
 const WeakChartInspectorPage = (): JSX.Element => {
   useDocumentTitle(WEAK_CHART_INSPECTOR_COPY.title)
-  const [records] = createResource(async () => {
-    const me = await fetchMe()
-    return fetchUserRecordWithCache(me.username)
-  })
+  const [data] = createResource(fetchWeakChartInspectorData)
   const analysisRecords = createMemo(() =>
-    (records()?.standard ?? []).filter(isWeakChartInspectionTarget)
+    (data()?.records ?? []).filter(isWeakChartInspectionTarget)
   )
-  const [aggregationSettings, setAggregationSettings] = createSignal<ChartAggregationSettings>({
+  const [aggregationSettings, setAggregationSettings] = createSignal<WeakChartAggregationRange>({
     ...WEAK_CHART_AGGREGATION_SETTINGS_DEFAULT,
   })
-  const [aggregationDifficulties, setAggregationDifficulties] = createSignal<string[]>([
-    ...WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT,
-  ])
-  const aggregationRecords = createMemo(() =>
-    analysisRecords().filter(
-      (r) =>
-        aggregationDifficulties().includes(r.difficulty) &&
-        r.score >= aggregationSettings().scoreMin &&
-        r.score <= aggregationSettings().scoreMax &&
-        r.const >= aggregationSettings().constMin &&
-        r.const <= aggregationSettings().constMax
+  const [aggregationDifficulties, setAggregationDifficulties] = createSignal<
+    WeakChartAggregationDifficulty[]
+  >([...WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT])
+  const aggregationRecords = createMemo(() => {
+    const currentData = data()
+    if (!currentData) return []
+
+    return filterWeakChartAggregationRecords(
+      currentData.records,
+      currentData.targetDifficultyBySongId,
+      aggregationDifficulties(),
+      aggregationSettings()
     )
-  )
+  })
   const inspection = createMemo(() => inspectWeakCharts(aggregationRecords()))
   /** 下方向の外れ値だけを苦手候補として抽出する。 */
   const lowerOutliers = createMemo(() =>
@@ -530,9 +549,9 @@ const WeakChartInspectorPage = (): JSX.Element => {
   const [editAggConstMax, setEditAggConstMax] = createSignal('')
 
   /** 集計対象難易度 編集中 */
-  const [editAggDifficulties, setEditAggDifficulties] = createSignal<string[]>([
-    ...WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT,
-  ])
+  const [editAggDifficulties, setEditAggDifficulties] = createSignal<
+    WeakChartAggregationDifficulty[]
+  >([...WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT])
 
   /**
    * 設定ダイアログを開き、現在の値を編集状態へ反映する。
@@ -638,7 +657,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
               <p class="mt-1 text-sm text-text-muted">{WEAK_CHART_INSPECTOR_COPY.description}</p>
             </div>
           </header>
-          <Show when={!records.loading && analysisRecords().length > 0}>
+          <Show when={!data.loading && analysisRecords().length > 0}>
             <AppIconButton
               tone="ghost"
               aria-label="グラフ設定を開く"
@@ -649,7 +668,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
             </AppIconButton>
           </Show>
         </div>
-        <Show when={!records.loading} fallback={<Loading />}>
+        <Show when={!data.loading} fallback={<Loading />}>
           <Show
             when={analysisRecords().length > 0}
             fallback={
@@ -715,20 +734,24 @@ const WeakChartInspectorPage = (): JSX.Element => {
                         <div>
                           <span class="mb-1 block text-sm font-medium text-text-muted">難易度</span>
                           <div class="flex flex-col items-start gap-1">
-                            <For each={WEAK_CHART_AGGREGATION_DIFFICULTIES}>
-                              {(diff) => (
+                            <For each={WEAK_CHART_AGGREGATION_DIFFICULTY_OPTIONS}>
+                              {(option) => (
                                 <CheckboxField
-                                  id={`agg-difficulty-${diff}`}
-                                  checked={editAggDifficulties().includes(diff)}
-                                  onChange={(checked) => {
+                                  id={`agg-difficulty-${option.value}`}
+                                  checked={editAggDifficulties().includes(option.value)}
+                                  disabled={
+                                    editAggDifficulties().includes(WEAK_CHART_OP_TARGET_FILTER) &&
+                                    option.value !== WEAK_CHART_OP_TARGET_FILTER
+                                  }
+                                  onChange={() => {
                                     setEditAggDifficulties((prev) =>
-                                      checked ? [...prev, diff] : prev.filter((d) => d !== diff)
+                                      toggleWeakChartAggregationDifficulty(prev, option.value)
                                     )
                                   }}
                                   class="relative flex items-center gap-2"
                                   textVariant="large"
                                   labelClass="leading-5"
-                                  label={diff}
+                                  label={option.label}
                                 />
                               )}
                             </For>

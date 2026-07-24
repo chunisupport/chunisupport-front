@@ -1,4 +1,9 @@
+import { THEORETICAL_OVER_POWER_TARGET_LABEL } from '../../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
+import {
+  WEAK_CHART_OP_TARGET_FILTER,
+  type WeakChartAggregationDifficulty,
+} from '../../utils/weakChartInspector'
 
 /** 苦手譜面インスペクターの画面表示文言。 */
 export const WEAK_CHART_INSPECTOR_COPY = {
@@ -69,7 +74,22 @@ export const WEAK_CHART_AGGREGATION_SETTINGS_DEFAULT = {
 } as const
 
 /** 苦手譜面インスペクターの集計対象難易度選択肢。 */
-export const WEAK_CHART_AGGREGATION_DIFFICULTIES = PLAYER_DATA_DIFFICULTIES
+export const WEAK_CHART_AGGREGATION_DIFFICULTY_OPTIONS: readonly {
+  /** 選択状態で保持する値。 */
+  value: WeakChartAggregationDifficulty
+  /** チェックボックスに表示する名前。 */
+  label: string
+}[] = [
+  {
+    value: WEAK_CHART_OP_TARGET_FILTER,
+    label: THEORETICAL_OVER_POWER_TARGET_LABEL,
+  },
+  ...PLAYER_DATA_DIFFICULTIES.map((difficulty) => ({
+    value: difficulty,
+    label: difficulty,
+  })),
+]
 
 /** 集計対象とする初期難易度。 */
-export const WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT: readonly string[] = ['MASTER', 'ULTIMA']
+export const WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT: readonly WeakChartAggregationDifficulty[] =
+  ['MASTER', 'ULTIMA']

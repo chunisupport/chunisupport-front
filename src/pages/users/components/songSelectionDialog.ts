@@ -49,6 +49,40 @@ export const hasSongSelectionFilterChanges = (
   !hasSameFilterValues(current.versions, defaultFilter.versions)
 
 /**
+ * 保存済みとdraftの選択キーが一致するか判定する。
+ *
+ * @param saved - 保存済みの選択キー。
+ * @param draft - 編集中の選択キー。
+ * @returns 両方のキーが一致する場合はtrue。
+ */
+export const hasSameSelectionKeys = (
+  saved: ReadonlySet<string>,
+  draft: ReadonlySet<string>
+): boolean => saved.size === draft.size && [...saved].every((key) => draft.has(key))
+
+/**
+ * Setを直接変更せずに指定キーの選択状態を切り替える。
+ *
+ * @param current - 現在の選択キー。
+ * @param key - 切り替える選択キー。
+ * @param limit - 選択数の上限。省略時は無制限。
+ * @returns 選択状態を反映した新しいSet。
+ */
+export const toggleSelectionKey = (
+  current: ReadonlySet<string>,
+  key: string,
+  limit?: number
+): Set<string> => {
+  const next = new Set(current)
+  if (next.has(key)) {
+    next.delete(key)
+  } else if (limit === undefined || next.size < limit) {
+    next.add(key)
+  }
+  return next
+}
+
+/**
  * 楽曲検索欄の状態に応じた外枠クラスを返す。
  *
  * @param active - 検索文字列が入力されているか。

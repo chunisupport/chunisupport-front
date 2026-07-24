@@ -1,12 +1,14 @@
 import { Button } from '@kobalte/core/button'
+import { Collapsible } from '@kobalte/core/collapsible'
 import { createSortable } from '@thisbeyond/solid-dnd'
-import { ExternalLink } from 'lucide-solid'
+import { ChevronRight, ExternalLink } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createEffect, onCleanup } from 'solid-js'
+import { createEffect, onCleanup, Show } from 'solid-js'
+import { getAppIconButtonClass } from '../../../../../components/common/AppButton'
 import type { GoalDTO } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { isGoalRecordNavigationEnabled } from '../../../utils/goalRecordFilter'
-import { buildGoalDragLabel } from '../../constants'
+import { buildGoalDisclosureLabel, buildGoalDragLabel } from '../../constants'
 import { GoalCardActionMenu } from './GoalCardActionMenu'
 import { GoalCardProgress } from './GoalCardProgress'
 
@@ -20,6 +22,18 @@ interface GoalCardProps {
   position: number
   total: number
   onKeyboardMove: (goalId: number, offset: -1 | 1) => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+/**
+ * カード内ボタンのポインター操作が並び替え開始処理へ伝播するのを防ぐ。
+ *
+ * @param event - カード内ボタンで発生したポインターイベント。
+ * @returns なし。
+ */
+const stopDragActivation = (event: PointerEvent): void => {
+  event.stopPropagation()
 }
 
 /**
@@ -52,11 +66,21 @@ const GoalCard: Component<GoalCardProps> = (props) => {
     })
   })
 
-  const handleEdit = () => {
+  /**
+   * 現在の目標を編集対象として親へ通知する。
+   *
+   * @returns なし。
+   */
+  const handleEdit = (): void => {
     props.onEdit(props.goal)
   }
 
-  const handleDelete = () => {
+  /**
+   * 現在の目標を削除対象として親へ通知する。
+   *
+   * @returns なし。
+   */
+  const handleDelete = (): void => {
     props.onDelete(props.goal)
   }
 
@@ -88,7 +112,11 @@ const GoalCard: Component<GoalCardProps> = (props) => {
   }
 
   return (
-    <article
+    <Collapsible
+      as="article"
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      disabled={props.isReordering}
       ref={(element) => {
         cardElement = element
         sortable.ref(element)
@@ -107,38 +135,67 @@ const GoalCard: Component<GoalCardProps> = (props) => {
       } ${sortable.isActiveDraggable ? 'relative z-10 cursor-grabbing opacity-80 shadow-lg' : ''}`}
     >
       <div class="flex items-start justify-between gap-3">
-        <h2 class="min-w-0 font-sans text-lg font-bold text-text">
-          {isGoalRecordNavigationEnabled(props.goal) && props.onOpenRecords ? (
-            <Button
-              type="button"
-              disabled={props.isReordering}
-              class="inline-flex cursor-pointer items-center gap-1.5 rounded text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={handleOpenRecords}
-            >
-              <span>{props.goal.title}</span>
-              <ExternalLink class="shrink-0" size={18} aria-hidden="true" />
-            </Button>
-          ) : (
-            props.goal.title
-          )}
-        </h2>
-        <GoalCardActionMenu
-          disabled={props.isReordering}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+        <div class="flex min-w-0 flex-1 items-start gap-1">
+          <Collapsible.Trigger
+            type="button"
+            aria-label={buildGoalDisclosureLabel(props.goal.title, props.open)}
+            class={getAppIconButtonClass({
+              tone: 'ghost',
+              size: 'sm',
+              class: 'group -ml-1 shrink-0',
+            })}
+            onPointerDown={stopDragActivation}
+          >
+            <ChevronRight
+              class="transition-transform group-data-expanded:rotate-90"
+              size={20}
+              aria-hidden="true"
+            />
+          </Collapsible.Trigger>
+          <h2 class="min-w-0 pt-1.5 font-sans text-lg font-bold text-text">
+            {isGoalRecordNavigationEnabled(props.goal) && props.onOpenRecords ? (
+              <Button
+                type="button"
+                disabled={props.isReordering}
+                class="inline-flex cursor-pointer items-center gap-1.5 rounded text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                onPointerDown={stopDragActivation}
+                onClick={handleOpenRecords}
+              >
+                <span>{props.goal.title}</span>
+                <ExternalLink class="shrink-0" size={18} aria-hidden="true" />
+              </Button>
+            ) : (
+              props.goal.title
+            )}
+          </h2>
+        </div>
+        <Show when={props.open}>
+          <GoalCardActionMenu
+            disabled={props.isReordering}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </Show>
       </div>
 
-      <div>
+      <Collapsible.Content>
         <GoalCardProgress
           title={props.goal.title}
           achievementType={props.goal.achievement_type}
           invert={props.goal.invert}
           progress={props.progress}
         />
-      </div>
-    </article>
+      </Collapsible.Content>
+      <Show when={!props.open}>
+        <GoalCardProgress
+          title={props.goal.title}
+          achievementType={props.goal.achievement_type}
+          invert={props.goal.invert}
+          progress={props.progress}
+          showValues={false}
+        />
+      </Show>
+    </Collapsible>
   )
 }
 

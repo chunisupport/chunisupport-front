@@ -16,6 +16,9 @@ export const WEAK_CHART_INSPECTOR_DIFFICULTIES = ['MASTER', 'ULTIMA'] as const
 /** 目標フォームの対象譜面で初期選択する難易度。 */
 export const GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES = ['MASTER', 'ULTIMA'] as const
 
+/** 理論値OVER POWERが最大となる譜面を選ぶ項目の表示名。 */
+export const THEORETICAL_OVER_POWER_TARGET_LABEL = 'OP対象（MAS+ULT）'
+
 /** CHUNITHM のスコアとして扱う最小値。 */
 export const SCORE_MIN = 0
 
