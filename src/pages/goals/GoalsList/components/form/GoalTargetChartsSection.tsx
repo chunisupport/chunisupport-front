@@ -11,6 +11,7 @@ import {
   RANGE_START_LABEL_SUFFIX,
   TextRangeInput,
 } from '../../../../../components/common/RangeInput'
+import { THEORETICAL_OVER_POWER_TARGET_LABEL } from '../../../../../constants/chart'
 import type { MasterDataDTO } from '../../../../../types/api'
 import { normalizeChartConstRangeInput } from '../../../../../utils/rangeInput'
 import { GOAL_FIELD_INPUT_CLASS, GoalFilterCheckbox } from './goalFormFields'
@@ -88,7 +89,7 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
             </div>
             <div class="space-y-1 bg-surface rounded border border-border-strong px-3 py-2">
               <GoalFilterCheckbox
-                label="OP対象 (MAS+ULT)"
+                label={THEORETICAL_OVER_POWER_TARGET_LABEL}
                 checked={props.chartTargetMode === 'op_target'}
                 onChange={props.onToggleOpTarget}
               />

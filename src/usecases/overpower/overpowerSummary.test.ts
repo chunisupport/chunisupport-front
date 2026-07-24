@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
+import { OVER_POWER_MASTER_ULTIMA_TARGET } from './constants'
 import { buildOverPowerSummary } from './overpowerSummary'
 
 const versions: VersionSummaryDTO[] = [
@@ -282,6 +283,56 @@ test('指定難易度は楽曲マスタに存在する譜面単位で現在値�
   )
 
   assert.deepEqual([summary.all.current, summary.all.max, summary.all.count], [85, 90, 1])
+})
+
+test('MASTER + ULTIMAはOP対象に関係なく両難易度の譜面を単純加算する', () => {
+  // Given: 同じ曲にEXPERT、MASTER、ULTIMAがあり、ULTIMAだけOP対象外になっている。
+  const songs = [
+    createSong({
+      id: 'master-ultima',
+      charts: {
+        EXPERT: { const: 13, is_const_unknown: false, notes: null },
+        MASTER: { const: 14, is_const_unknown: false, notes: null },
+        ULTIMA: { const: 15, is_const_unknown: false, notes: null },
+      },
+    }),
+  ]
+  const records = [
+    createRecord({
+      id: 'master-ultima',
+      difficulty: 'EXPERT',
+      const: 13,
+      overpower: 70,
+      is_op_target: false,
+    }),
+    createRecord({
+      id: 'master-ultima',
+      difficulty: 'MASTER',
+      const: 14,
+      overpower: 80,
+      is_op_target: true,
+    }),
+    createRecord({
+      id: 'master-ultima',
+      difficulty: 'ULTIMA',
+      const: 15,
+      overpower: 88,
+      is_op_target: false,
+    }),
+  ]
+
+  // When: MASTER + ULTIMAを集計対象にする。
+  const summary = buildOverPowerSummary(
+    songs,
+    records,
+    versions,
+    [],
+    undefined,
+    OVER_POWER_MASTER_ULTIMA_TARGET
+  )
+
+  // Then: EXPERTを除き、同じ曲のMASTERとULTIMAをそれぞれ1譜面として加算する。
+  assert.deepEqual([summary.all.current, summary.all.max, summary.all.count], [168, 175, 2])
 })
 
 test('全難易度とレベル別はレコードがない未プレイ譜面も集計する', () => {

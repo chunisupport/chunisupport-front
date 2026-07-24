@@ -2,6 +2,7 @@ import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
 import { toChartLevelLabel } from '../../utils/chartLevel'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
+import { OVER_POWER_MASTER_ULTIMA_DIFFICULTIES, OVER_POWER_MASTER_ULTIMA_TARGET } from './constants'
 import type {
   OverPowerAggregationTarget,
   OverPowerChartEntry,
@@ -82,7 +83,7 @@ export const buildOverPowerChartEntries = (
  * 譜面エントリから選択された集計対象を抽出する。
  *
  * @param entries - 抽出前の全譜面エントリ。
- * @param target - OVER POWER対象、指定難易度、または全難易度。
+ * @param target - OVER POWER対象、指定難易度、MASTERとULTIMAの合算、または全難易度。
  * @returns 選択された集計対象に合致する譜面エントリ。
  */
 export const selectOverPowerChartEntries = (
@@ -90,6 +91,12 @@ export const selectOverPowerChartEntries = (
   target: OverPowerAggregationTarget
 ): OverPowerChartEntry[] => {
   if (target === 'ALL') return entries
+
+  if (target === OVER_POWER_MASTER_ULTIMA_TARGET) {
+    return entries.filter((entry) =>
+      OVER_POWER_MASTER_ULTIMA_DIFFICULTIES.some((difficulty) => difficulty === entry.difficulty)
+    )
+  }
 
   if (target !== 'OP_TARGET') {
     return entries.filter((entry) => entry.difficulty === target)

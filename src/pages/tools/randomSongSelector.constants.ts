@@ -1,3 +1,4 @@
+import { THEORETICAL_OVER_POWER_TARGET_LABEL } from '../../constants/chart'
 import type { PlayerDataDifficulty } from '../../types/api'
 import {
   RANDOM_SONG_OP_TARGET_FILTER,
@@ -39,7 +40,7 @@ export const RANDOM_SONG_SELECTOR_DIFFICULTY_FILTER_LABELS = {
   EXPERT: 'EXPERT',
   MASTER: 'MASTER',
   ULTIMA: 'ULTIMA',
-  [RANDOM_SONG_OP_TARGET_FILTER]: 'OP対象（MAS+ULT）',
+  [RANDOM_SONG_OP_TARGET_FILTER]: THEORETICAL_OVER_POWER_TARGET_LABEL,
 } satisfies Record<RandomSongDifficultyFilter, string>
 
 /**

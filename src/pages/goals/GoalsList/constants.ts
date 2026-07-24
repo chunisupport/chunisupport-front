@@ -44,6 +44,31 @@ export const buildGoalReorderAnnouncement = (
 export const ADD_GOAL_LABEL = '目標を追加'
 
 /**
+ * 全目標カードを展開するボタンのラベル。
+ */
+export const EXPAND_ALL_GOALS_LABEL = 'すべて開く'
+
+/**
+ * 全目標カードを折りたたむボタンのラベル。
+ */
+export const COLLAPSE_ALL_GOALS_LABEL = 'すべて閉じる'
+
+/**
+ * 目標カードの一括開閉ボタングループを説明するラベル。
+ */
+export const GOAL_DISCLOSURE_CONTROLS_LABEL = '目標カードの表示'
+
+/**
+ * 目標カードの開閉ボタンに付与するアクセシブルラベルを作る。
+ *
+ * @param title - 開閉対象の目標タイトル。
+ * @param open - 現在カードが開いているか。
+ * @returns 次に実行する開閉操作を表すラベル。
+ */
+export const buildGoalDisclosureLabel = (title: string, open: boolean): string =>
+  `${title}を${open ? '閉じる' : '開く'}`
+
+/**
  * 目標数が上限に達したときに表示するメッセージ。
  */
 export const GOALS_LIMIT_REACHED_MESSAGE = `目標は${GOALS_LIMIT}件まで作成できます。不要な目標を削除してください。`

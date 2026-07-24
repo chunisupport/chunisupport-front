@@ -1,6 +1,6 @@
 import { createSignal, Show } from 'solid-js'
 
-import { postPlayerDataCommit, postRegisterData } from '../../api/register-data'
+import { postRegisterData } from '../../api/register-data'
 import { AppButton } from '../../components/common/AppButton'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -18,7 +18,7 @@ const formatLabelMap: Record<UploadFormat, string> = {
 }
 
 /**
- * スコア登録用の一時アップロードと確定保存を行う検証ページを表示する。
+ * スコア登録用データを一時アップロードする検証ページを表示する。
  *
  * @returns スコア登録データのアップロード画面。
  */
@@ -27,9 +27,6 @@ const RegisterScoreTempPage = () => {
   const [format, setFormat] = createSignal<UploadFormat | null>(null)
   const [isSubmitting, setIsSubmitting] = createSignal(false)
   const [copied, setCopied] = createSignal(false)
-
-  const [uploadToken, setUploadToken] = createSignal('')
-  const [isCommitting, setIsCommitting] = createSignal(false)
 
   const detectFormat = (file: File): UploadFormat | null => {
     const extension = file.name.split('.').pop()?.toLowerCase()
@@ -108,35 +105,6 @@ const RegisterScoreTempPage = () => {
     }
   }
 
-  /**
-   * 入力されたアップロードトークンのスコアデータを確定保存する。
-   *
-   * @returns 処理完了後に解決されるPromise。
-   */
-  const handleCommit = async () => {
-    const token = uploadToken().trim()
-    if (!token) {
-      showErrorToast('uploadToken を入力してください。')
-      return
-    }
-
-    setIsCommitting(true)
-    try {
-      await postPlayerDataCommit(token)
-      showSuccessToast('スコアデータを確定保存しました。')
-      setUploadToken('')
-    } catch (error) {
-      const apiError = error as Error & { status?: number }
-      if (apiError.status === 404) {
-        showErrorToast('アップロードトークンが見つかりません。')
-      } else {
-        showErrorToast(toUserFriendlyErrorMessage(error, '保存に失敗しました。'))
-      }
-    } finally {
-      setIsCommitting(false)
-    }
-  }
-
   useDocumentTitle('スコア登録(一時)')
 
   return (
@@ -191,34 +159,6 @@ const RegisterScoreTempPage = () => {
         >
           {isSubmitting() ? '送信中...' : 'アップロードする'}
         </AppButton>
-      </div>
-      <div class="mt-8">
-        <h2 class="text-xl font-semibold mb-4">確定保存 (commit)</h2>
-        <div class="rounded-lg border border-border bg-surface p-4 shadow-sm space-y-3">
-          <p class="text-sm text-text-muted">
-            ブックマークレットが発行した <span class="font-semibold">uploadToken</span>{' '}
-            を入力して確定保存します。Cookie認証が必要なのでログイン済みで操作してください。
-          </p>
-          <label class="block text-sm font-medium text-text-muted" for="upload-token">
-            uploadToken
-          </label>
-          <input
-            id="upload-token"
-            type="text"
-            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-            value={uploadToken()}
-            onInput={(e) => setUploadToken((e.currentTarget as HTMLInputElement).value)}
-            class="block w-full rounded-md border border-border-strong px-3 py-2 text-sm placeholder-text-placeholder focus:border-focus-ring focus:outline-none focus:ring-1 focus:ring-focus-ring"
-          />
-          <AppButton
-            variant="primary"
-            class="rounded-md shadow-sm"
-            onClick={handleCommit}
-            disabled={isCommitting()}
-          >
-            {isCommitting() ? '送信中...' : '確定保存する'}
-          </AppButton>
-        </div>
       </div>
 
       <div class="mt-8">

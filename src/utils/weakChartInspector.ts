@@ -1,7 +1,28 @@
 import { SCORE_THEORETICAL_MAX } from '../constants/chart'
-import type { PlayerRecordDTO } from '../types/api'
+import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import { truncateChartConst } from './chartConstFormat'
 import { compareSongsByReading } from './songTitleSorting'
+import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
+
+/** 苦手譜面インスペクターで理論値OVER POWER対象を表す選択値。 */
+export const WEAK_CHART_OP_TARGET_FILTER = 'OP_TARGET' as const
+
+/** 苦手譜面インスペクターで選択できる通常難易度または理論値OVER POWER対象。 */
+export type WeakChartAggregationDifficulty =
+  | PlayerDataDifficulty
+  | typeof WEAK_CHART_OP_TARGET_FILTER
+
+/** 苦手譜面インスペクターの集計対象範囲。 */
+export type WeakChartAggregationRange = {
+  /** 集計対象とするスコアの最小値。 */
+  scoreMin: number
+  /** 集計対象とするスコアの最大値。 */
+  scoreMax: number
+  /** 集計対象とする譜面定数の最小値。 */
+  constMin: number
+  /** 集計対象とする譜面定数の最大値。 */
+  constMax: number
+}
 
 /** 箱ひげ図を構成する譜面定数単位の統計値。 */
 export type ChartScoreDistribution = {
@@ -38,6 +59,64 @@ export type WeakChartInspection = {
  */
 export const isWeakChartInspectionTarget = (record: PlayerRecordDTO): boolean =>
   record.is_played && record.score <= SCORE_THEORETICAL_MAX
+
+/**
+ * 理論値OVER POWER対象と通常難易度が同時に選ばれない次の選択状態を作る。
+ *
+ * @param current - 現在選択中の集計対象難易度。
+ * @param toggled - 切り替える集計対象難易度。
+ * @returns 切り替え後の集計対象難易度。
+ */
+export const toggleWeakChartAggregationDifficulty = (
+  current: readonly WeakChartAggregationDifficulty[],
+  toggled: WeakChartAggregationDifficulty
+): WeakChartAggregationDifficulty[] => {
+  if (toggled === WEAK_CHART_OP_TARGET_FILTER) {
+    return current.includes(WEAK_CHART_OP_TARGET_FILTER) ? [] : [WEAK_CHART_OP_TARGET_FILTER]
+  }
+
+  const withoutOpTarget = current.filter((difficulty) => difficulty !== WEAK_CHART_OP_TARGET_FILTER)
+  return withoutOpTarget.includes(toggled)
+    ? withoutOpTarget.filter((difficulty) => difficulty !== toggled)
+    : [...withoutOpTarget, toggled]
+}
+
+/**
+ * レコードを選択難易度と集計範囲で絞り込む。
+ *
+ * @param records - 絞り込み前の通常譜面レコード。
+ * @param targetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
+ * @param difficulties - 通常難易度または理論値OVER POWER対象の選択値。
+ * @param range - スコアと譜面定数の集計対象範囲。
+ * @returns 苦手譜面分析の集計対象となるプレイ済みレコード。
+ */
+export const filterWeakChartAggregationRecords = (
+  records: readonly PlayerRecordDTO[],
+  targetDifficultyBySongId: ReadonlyMap<string, PlayerDataDifficulty>,
+  difficulties: readonly WeakChartAggregationDifficulty[],
+  range: WeakChartAggregationRange
+): PlayerRecordDTO[] => {
+  const opTargetOnly = difficulties.includes(WEAK_CHART_OP_TARGET_FILTER)
+
+  return records.filter((record) => {
+    if (!isWeakChartInspectionTarget(record)) return false
+
+    const difficultyMatched = opTargetOnly
+      ? isTheoreticalOverPowerTargetDifficulty(
+          targetDifficultyBySongId.get(record.id),
+          record.difficulty
+        )
+      : difficulties.includes(record.difficulty)
+
+    return (
+      difficultyMatched &&
+      record.score >= range.scoreMin &&
+      record.score <= range.scoreMax &&
+      record.const >= range.constMin &&
+      record.const <= range.constMax
+    )
+  })
+}
 
 /**
  * ソート済み数列の分位点を線形補間で算出する。
