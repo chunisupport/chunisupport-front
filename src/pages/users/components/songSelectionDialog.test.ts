@@ -6,8 +6,10 @@ import {
   getSongSelectionRowClass,
   getSongSelectionSearchFrameClass,
   getSongSelectionSearchIconClass,
+  hasSameSelectionKeys,
   hasSongSelectionFilterChanges,
   sortSongSelectionCandidates,
+  toggleSelectionKey,
 } from './songSelectionDialog'
 
 /**
@@ -75,4 +77,28 @@ test('楽曲選択UIは状態に応じてアクセントカラーのクラスを
   assert.match(activeSearchIconClass, /text-action-primary/)
   assert.match(selectedRowClass, /bg-action-primary/)
   assert.doesNotMatch(inactiveRowClass, /action-primary/)
+})
+
+test('保存済みとdraftの選択キーは順序に依存せず比較できること', () => {
+  // Given
+  const saved = new Set(['song-1', 'song-2'])
+
+  // When & Then
+  assert.equal(hasSameSelectionKeys(saved, new Set(['song-2', 'song-1'])), true)
+  assert.equal(hasSameSelectionKeys(saved, new Set(['song-1'])), false)
+  assert.equal(hasSameSelectionKeys(saved, new Set(['song-1', 'song-3'])), false)
+})
+
+test('選択キーの切り替えは元のSetを変更せず上限を守ること', () => {
+  // Given
+  const selected = new Set(['song-1'])
+
+  // When
+  const limited = toggleSelectionKey(selected, 'song-2', 1)
+  const removed = toggleSelectionKey(selected, 'song-1', 1)
+
+  // Then
+  assert.deepEqual([...selected], ['song-1'])
+  assert.deepEqual([...limited], ['song-1'])
+  assert.deepEqual([...removed], [])
 })

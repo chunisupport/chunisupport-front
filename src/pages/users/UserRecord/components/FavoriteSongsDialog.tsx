@@ -1,23 +1,13 @@
 import { Button } from '@kobalte/core/button'
-import { Dialog } from '@kobalte/core/dialog'
-import { CircleSlash2, Funnel, ListChecks, LoaderCircle, Star } from 'lucide-solid'
-import type { Component } from 'solid-js'
-import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
-import { AppButton, getAppButtonClass } from '../../../../components/common/AppButton'
-import { toMultiSelectOptions } from '../../../../components/common/AppMultiSelect'
-import {
-  GenreMultiSelect,
-  VersionMultiSelect,
-} from '../../../../components/common/DomainMultiSelect'
-import { SearchTextField } from '../../../../components/common/SearchTextField'
-import Loading from '../../../../components/Loading/Loading'
+import { Star } from 'lucide-solid'
+import type { Component, JSX } from 'solid-js'
+import { createMemo } from 'solid-js'
 import type {
   MasterItemDTO,
   PlayerFavoriteSongResponseItem,
   SongDTO,
   VersionDTO,
 } from '../../../../types/api'
-import { toUserFriendlyErrorMessage } from '../../../../utils/errorMessage'
 import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
 import {
   normalizeForReadingSearch,
@@ -28,14 +18,12 @@ import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
 } from '../../../../utils/versionConverter'
+import { createSongSelectionDialogModel } from '../../components/createSongSelectionDialogModel'
+import { SongSelectionDialogBase } from '../../components/SongSelectionDialogBase'
 import {
   buildDefaultSongSelectionFilter,
   getSongSelectionRowClass,
   hasSongSelectionFilterChanges,
-  SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
-  SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS,
-  SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS,
-  type SongSelectionFilter,
   sortSongSelectionCandidates,
 } from '../../components/songSelectionDialog'
 
@@ -59,16 +47,6 @@ const FAVORITE_SONG_DESCRIPTION = `お気に入りは${FAVORITE_SONG_LIMIT}曲�
  * @returns お気に入り楽曲設定UI。
  */
 const FavoriteSongsDialog: Component<Props> = (props) => {
-  const [query, setQuery] = createSignal('')
-  const [filterDialogOpen, setFilterDialogOpen] = createSignal(false)
-  const [showSelectedOnly, setShowSelectedOnly] = createSignal(false)
-  const [isListReady, setIsListReady] = createSignal(false)
-  const [filterInitialized, setFilterInitialized] = createSignal(false)
-  const [filters, setFilters] = createSignal<SongSelectionFilter>({ genres: [], versions: [] })
-  const [draftIds, setDraftIds] = createSignal<Set<string>>(new Set())
-  const [isSaving, setIsSaving] = createSignal(false)
-  const [saveError, setSaveError] = createSignal<string | null>(null)
-
   const genreOptions = createMemo(() =>
     sortMasterItemsBySortOrder(props.genres).map((genre) => genre.name)
   )
@@ -78,10 +56,20 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
   const defaultFilter = createMemo(() =>
     buildDefaultSongSelectionFilter(genreOptions(), versionOptions())
   )
-  const filterChanged = createMemo(() => hasSongSelectionFilterChanges(filters(), defaultFilter()))
-  const hasQuery = createMemo(() => query().trim().length > 0)
   const originalIds = createMemo(() => new Set(props.favoriteSongs.map((item) => item.display_id)))
-  const selectedCount = createMemo(() => draftIds().size)
+  const model = createSongSelectionDialogModel({
+    open: () => props.open,
+    selectedKeys: originalIds,
+    defaultFilter,
+    isFilterReady: (filter) => filter.genres.length > 0 && filter.versions.length > 0,
+    save: (keys) => props.onSave(keys),
+    onSaved: () => props.onOpenChange(false),
+    saveErrorMessage: 'お気に入り楽曲設定の保存に失敗しました。',
+    resetDraftOnError: true,
+  })
+  const filterChanged = createMemo(() =>
+    hasSongSelectionFilterChanges(model.filters(), defaultFilter())
+  )
   const songVersionById = createMemo(
     () =>
       new Map(
@@ -101,12 +89,12 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
     }))
   )
   const filteredSongs = createMemo(() => {
-    const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query())
-    const currentFilters = filters()
+    const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(model.query())
+    const currentFilters = model.filters()
 
     return searchableSongs()
       .filter(({ song, searchableText, searchableReading }) => {
-        if (showSelectedOnly() && !draftIds().has(song.id)) return false
+        if (model.showSelectedOnly() && !model.draftKeys().has(song.id)) return false
         if (!currentFilters.genres.includes(song.genre)) return false
         if (!currentFilters.versions.includes(songVersionById().get(song.id) ?? '不明'))
           return false
@@ -118,273 +106,87 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
       })
       .map(({ song }) => song)
   })
-  const changed = createMemo(() => {
-    const original = originalIds()
-    const draft = draftIds()
-    if (original.size !== draft.size) return true
-    return [...original].some((id) => !draft.has(id))
-  })
-
-  createEffect(() => {
-    if (filterInitialized() || genreOptions().length === 0 || versionOptions().length === 0) return
-    setFilters(defaultFilter())
-    setFilterInitialized(true)
-  })
-
-  createEffect<boolean>((wasOpen = false) => {
-    const open = props.open
-    if (open && !wasOpen) {
-      setDraftIds(new Set(originalIds()))
-      setSaveError(null)
-    }
-    return open
-  })
-
-  createEffect(() => {
-    if (!props.open) {
-      setIsListReady(false)
-      return
-    }
-    const timerId = window.setTimeout(() => setIsListReady(true), 0)
-    onCleanup(() => window.clearTimeout(timerId))
-  })
+  const selectionSummary = createMemo(
+    () =>
+      `${model.selectedCount()} / ${FAVORITE_SONG_LIMIT}曲選択中・${filteredSongs().length}曲表示`
+  )
 
   /**
-   * 楽曲の選択状態を切り替える。
+   * お気に入り候補の選択行を描画する。
    *
-   * @param displayId - 対象楽曲ID。
-   * @returns なし。
+   * @param song - 描画対象の楽曲。
+   * @returns お気に入り選択ボタン。
    */
-  const toggleFavorite = (displayId: string): void => {
-    setDraftIds((current) => {
-      const next = new Set(current)
-      if (next.has(displayId)) {
-        next.delete(displayId)
-      } else if (next.size < FAVORITE_SONG_LIMIT) {
-        next.add(displayId)
-      }
-      return next
-    })
-  }
+  const renderSong = (song: SongDTO): JSX.Element => {
+    const selected = (): boolean => model.draftKeys().has(song.id)
+    const limitReached = (): boolean => !selected() && model.selectedCount() >= FAVORITE_SONG_LIMIT
 
-  /**
-   * 編集したお気に入り楽曲を保存する。
-   *
-   * @returns 保存完了時に解決されるPromise。
-   */
-  const handleSave = async (): Promise<void> => {
-    setIsSaving(true)
-    setSaveError(null)
-    try {
-      await props.onSave([...draftIds()])
-      props.onOpenChange(false)
-    } catch (error) {
-      setDraftIds(new Set(originalIds()))
-      setSaveError(toUserFriendlyErrorMessage(error, 'お気に入り楽曲設定の保存に失敗しました。'))
-    } finally {
-      setIsSaving(false)
-    }
+    return (
+      <Button
+        type="button"
+        class={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60 ${getSongSelectionRowClass(
+          selected()
+        )}`}
+        aria-pressed={selected()}
+        aria-label={`${song.title}のお気に入り設定を切り替え`}
+        title={limitReached() ? `お気に入りは${FAVORITE_SONG_LIMIT}曲までです` : undefined}
+        disabled={model.isSaving() || limitReached()}
+        onClick={() => model.toggleDraftKey(song.id, FAVORITE_SONG_LIMIT)}
+      >
+        <div class="min-w-0">
+          <p class="truncate font-sans text-sm font-medium">{song.title}</p>
+          <p
+            class={`truncate font-sans text-xs ${
+              selected() ? 'text-text-inverse/80' : 'text-text-subtle'
+            }`}
+          >
+            {song.artist}
+          </p>
+        </div>
+        <span
+          class={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+            selected() ? 'bg-surface/20 opacity-100' : 'opacity-0'
+          }`}
+          aria-hidden="true"
+        >
+          <Star class="h-4 w-4 fill-current" />
+        </span>
+      </Button>
+    )
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
-          <div class="mb-4 shrink-0">
-            <Dialog.Title class="text-lg font-bold">お気に入り楽曲設定</Dialog.Title>
-            <Dialog.Description class="mt-1 text-sm text-text-muted">
-              {FAVORITE_SONG_DESCRIPTION}
-            </Dialog.Description>
-          </div>
-
-          <div class="mb-3 flex min-w-0 shrink-0 items-center">
-            <SearchTextField
-              class="min-w-0 flex-1"
-              frameClass="rounded-l"
-              value={query()}
-              active={hasQuery()}
-              onChange={setQuery}
-              ariaLabel="お気に入り楽曲検索"
-              placeholder="曲名・アーティストで検索..."
-            />
-            <Button
-              type="button"
-              class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center border focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
-                filterChanged()
-                  ? SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS
-                  : SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS
-              }`}
-              aria-label={filterChanged() ? 'フィルター適用中' : 'フィルター'}
-              aria-pressed={filterChanged()}
-              title={filterChanged() ? 'フィルター適用中' : 'フィルター'}
-              onClick={() => setFilterDialogOpen(true)}
-            >
-              <Funnel size={20} aria-hidden="true" />
-            </Button>
-            <Button
-              type="button"
-              class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
-                showSelectedOnly()
-                  ? SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS
-                  : SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS
-              }`}
-              aria-label="選択済み楽曲のみ表示"
-              aria-pressed={showSelectedOnly()}
-              onClick={() => setShowSelectedOnly((value) => !value)}
-            >
-              <ListChecks size={24} aria-hidden="true" />
-            </Button>
-          </div>
-
-          <div class="mb-2 shrink-0 text-xs text-text-subtle" aria-live="polite">
-            {selectedCount()} / {FAVORITE_SONG_LIMIT}曲選択中・{filteredSongs().length}曲表示
-          </div>
-
-          <div class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border bg-surface">
-            <Show
-              when={isListReady()}
-              fallback={
-                <div
-                  class="flex h-full min-h-32 items-center justify-center"
-                  role="status"
-                  aria-label="読み込み中"
-                  aria-live="polite"
-                  aria-busy="true"
-                >
-                  <Loading />
-                </div>
-              }
-            >
-              <Show
-                when={filteredSongs().length > 0}
-                fallback={
-                  <div class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-text-subtle">
-                    <CircleSlash2 class="h-6 w-6" aria-hidden="true" />
-                    <p>該当する曲がありません</p>
-                  </div>
-                }
-              >
-                <ul class="divide-y divide-border bg-surface">
-                  <For each={filteredSongs()}>
-                    {(song) => {
-                      const selected = () => draftIds().has(song.id)
-                      const limitReached = () =>
-                        !selected() && selectedCount() >= FAVORITE_SONG_LIMIT
-                      return (
-                        <li>
-                          <Button
-                            type="button"
-                            class={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60 ${getSongSelectionRowClass(
-                              selected()
-                            )}`}
-                            aria-pressed={selected()}
-                            aria-label={`${song.title}のお気に入り設定を切り替え`}
-                            title={
-                              limitReached()
-                                ? `お気に入りは${FAVORITE_SONG_LIMIT}曲までです`
-                                : undefined
-                            }
-                            disabled={isSaving() || limitReached()}
-                            onClick={() => toggleFavorite(song.id)}
-                          >
-                            <div class="min-w-0">
-                              <p class="truncate font-sans text-sm font-medium">{song.title}</p>
-                              <p
-                                class={`truncate font-sans text-xs ${
-                                  selected() ? 'text-text-inverse/80' : 'text-text-subtle'
-                                }`}
-                              >
-                                {song.artist}
-                              </p>
-                            </div>
-                            <span
-                              class={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                                selected() ? 'bg-surface/20 opacity-100' : 'opacity-0'
-                              }`}
-                              aria-hidden="true"
-                            >
-                              <Star class="h-4 w-4 fill-current" />
-                            </span>
-                          </Button>
-                        </li>
-                      )
-                    }}
-                  </For>
-                </ul>
-              </Show>
-            </Show>
-          </div>
-
-          <Show when={saveError()}>
-            {(message) => <p class="mt-3 shrink-0 text-sm text-danger">{message()}</p>}
-          </Show>
-
-          <Dialog
-            open={filterDialogOpen()}
-            onOpenChange={setFilterDialogOpen}
-            preventScroll={false}
-          >
-            <Dialog.Portal>
-              <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
-              <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex max-h-[80dvh] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
-                <div class="mb-4 flex shrink-0 items-center justify-between gap-3">
-                  <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
-                  <AppButton onClick={() => setFilters(defaultFilter())}>すべて選択</AppButton>
-                </div>
-                <div class="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
-                  <div>
-                    <GenreMultiSelect
-                      options={toMultiSelectOptions(genreOptions())}
-                      selected={filters().genres}
-                      labelClass="text-text"
-                      contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                      onChange={(selectedGenres) =>
-                        setFilters((current) => ({
-                          ...current,
-                          genres: selectedGenres,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <VersionMultiSelect
-                      options={toMultiSelectOptions(versionOptions())}
-                      selected={filters().versions}
-                      labelClass="text-text"
-                      contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                      onChange={(selectedVersions) =>
-                        setFilters((current) => ({
-                          ...current,
-                          versions: selectedVersions,
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-                <div class="mt-6 flex justify-end">
-                  <Dialog.CloseButton class={getAppButtonClass({ variant: 'primary' })}>
-                    適用
-                  </Dialog.CloseButton>
-                </div>
-              </Dialog.Content>
-            </Dialog.Portal>
-          </Dialog>
-
-          <div class="mt-4 flex shrink-0 justify-end gap-2">
-            <AppButton onClick={() => props.onOpenChange(false)} disabled={isSaving()}>
-              キャンセル
-            </AppButton>
-            <AppButton variant="primary" onClick={handleSave} disabled={!changed() || isSaving()}>
-              <Show when={isSaving()}>
-                <LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />
-              </Show>
-              保存
-            </AppButton>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+    <SongSelectionDialogBase
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      title="お気に入り楽曲設定"
+      description={FAVORITE_SONG_DESCRIPTION}
+      searchAriaLabel="お気に入り楽曲検索"
+      query={model.query}
+      setQuery={model.setQuery}
+      filterDialogOpen={model.filterDialogOpen}
+      setFilterDialogOpen={model.setFilterDialogOpen}
+      filterChanged={filterChanged}
+      showSelectedOnly={model.showSelectedOnly}
+      setShowSelectedOnly={model.setShowSelectedOnly}
+      selectionSummary={selectionSummary}
+      announceSelectionSummary={true}
+      items={filteredSongs}
+      isListReady={model.isListReady}
+      isSaving={model.isSaving}
+      saveError={model.saveError}
+      hasChanges={model.hasChanges}
+      genres={genreOptions}
+      versions={versionOptions}
+      filters={model.filters}
+      selectedGenres={(filter) => filter.genres}
+      selectedVersions={(filter) => filter.versions}
+      setGenres={(genres) => model.setFilters((current) => ({ ...current, genres }))}
+      setVersions={(versions) => model.setFilters((current) => ({ ...current, versions }))}
+      resetFilters={model.resetFilters}
+      renderItem={renderSong}
+      onSave={model.save}
+    />
   )
 }
 
