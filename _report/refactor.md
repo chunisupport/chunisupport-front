@@ -36,9 +36,7 @@
 
 ### パフォーマンス (PERF)
 
-| ID | 優先度 | 概要 | 詳細・対応方針 |
-|---|---|---|---|
-| **PERF-002** | **Low** | ランダム選曲の出現割合計算が候補全件を選択肢ごとに再走査 | `src/pages/tools/RandomSongSelectorPage.tsx:676-683` は候補全体の重みを集計し、さらに `:870-912` の難易度別・定数別ラベル関数がそれぞれ `filteredCandidates()` を `reduce` します。これらは `:1144-1201` で全難易度・全譜面定数に対して呼ばれるため、入力変更ごとに候補数 N × 定数選択肢数 C の走査が発生します。候補を一度だけ走査して全体・難易度別・定数別の重みを同時集計する `createMemo` を用意し、表示関数は集計済み Map を参照すべきです。 |
+-
 
 ### UI・リアクティビティ (UI)
 
@@ -59,24 +57,19 @@
 | **ARCH-002** | **Medium** | 通常・WORLD'S END レコード画面の view-state 管理が重複 | 通常レコードの filtering・sorting・stats は抽出済みですが、`src/pages/users/UserRecord/UserRecord.tsx:97-146,167-226` には resource、フィルター復元・保存、列設定、sort、複数ダイアログの状態が残ります。`src/pages/users/WorldsendRecord/WorldsendRecord.tsx:72-180` も同じ初期復元、IndexedDB 永続化、列・sort・dialog 状態を別実装しています。両画面で共通する restore / persist / reset / visible-columns / primary-sort の状態遷移を小さな record view-state primitive へ切り出し、各ページは種別固有の filter と renderer を注入する構成にすべきです。 |
 | **ARCH-003** | **Medium** | `RandomSongSelectorPage` に設定状態・永続化・表示が集中 | `src/pages/tools/RandomSongSelectorPage.tsx` は 1,357 行あり、ローカル UI helper と API 接続 (`:170-496`)、多数の signal・memo (`:497-719`)、初期化・sessionStorage・handler (`:721-918`)、設定ダイアログと結果 UI (`:920-1355`) が同居しています。抽選 core は `src/utils/randomSongSelector.ts` へ抽出・テスト済みですが、ページ固有の状態遷移は直接検証できません。`createRandomSongSelectorModel` 相当の primitive、基本条件、レコード条件、重み設定、結果一覧のコンポーネントへ段階的に分割すべきです。 |
 | **ARCH-004** | **Medium** | お気に入り曲・未解禁曲の選択ダイアログが大幅に重複 | `src/pages/users/UserRecord/components/FavoriteSongsDialog.tsx:61-385` と `src/pages/users/UserOverPower/components/LockedSongsDialog.tsx:105-565` は、全画面 Dialog、検索、ジャンル・バージョン絞り込み、選択済み表示、遅延リスト、draft Set、保存・エラー、入れ子フィルターダイアログを別実装しています。`src/pages/users/components/songSelectionDialog.ts:8-100` には一部 pure helper だけが共通化されています。検索・絞り込み・draft 選択・保存状態を shared primitive にし、共通 `SongSelectionDialogBase` へ種別固有の行、上限、追加条件、payload 変換を渡す構成にすべきです。 |
-| **ARCH-005** | **Medium** | 下位層の feature 逆依存と users 内共通 utility の配置が混在 | `src/lib/db/cacheDB.ts:2-3` と `src/repositories/viewSettingsRepository.ts:2-3` が `pages/users/WorldsendRecord` の型を import しています。さらに `WorldsendRecord/utils/sorting.ts:16-20` と `columnRenderers.tsx:14-16`、`UserPage/components/UserRecordCard.tsx:16` は別の users sub-feature の utility を直接参照し、`src/components/NavBar/NavBar.tsx:33-34` は editor / friends ページ定数へ依存しています。永続化型は `src/types`、共用 formatter・比較・route helper は `src/utils` または `pages/users/utils`、画面タイトルは `src/constants` へ移し、common / infrastructure から feature 実装への依存を解消すべきです。 |
 | **ARCH-006** | **Medium** | 一括マスターデータへの直接依存が複数 feature に残る | `fetchMasterData` はメモリキャッシュ済みですが、`src/pages/goals/GoalsList/goalsListResource.ts:44`、`UserOverPower.tsx:69`、`UserRecord.tsx:98`、`SongManagementPage.tsx:530`、通常・WORLD'S END 楽曲一覧、`useSongDetailBase.ts:15` など 7 箇所で一括 DTO を直接取得しています。各画面が genres、difficulties、rating bands、achievement types の一部だけを必要とするにもかかわらず、API shape と更新単位へ広く結合しています。既存の `versions` と同様に用途別 API / accessor へ分離し、移行中も `useGenres`、`useDifficulties` などカプセル化された単位を通して参照すべきです。 |
 
 ### 実装品質・共通化 (QUAL)
 
 | ID | 優先度 | 概要 | 詳細・対応方針 |
 |---|---|---|---|
-| **QUAL-001** | **Medium** | 難易度の型・順序・表示定義が散在 | 難易度順は `src/pages/users/UserRecord/utils/sorting.ts:24-30` と `src/usecases/overpower/overpowerGraph.ts:4` に重複し、5 難易度配列も `src/usecases/overpower/aggregation.ts:12-18`、`src/pages/songs/SongsList/components/SongsTable.tsx:17`、`SongManagementPage.tsx:202`、`src/utils/randomSongSelector.ts:8-14`、`src/pages/users/components/savedRecordFilters.ts:35` などへ散在しています。`src/pages/users/UserRecord/components/filterDialog/FilterSelectionPanel.tsx:259` はマスター名を正規化せず `Difficulty` へ cast しています。大文字の domain 型、正規順配列、順序 Map、短縮名、外部入力の `toUpperCase()` 正規化を単一モジュールへ集約し、用途固有の subset だけをそこから導出すべきです。 |
-| **QUAL-002** | **Low** | OVER POWER 抽出後の旧 helper と未使用 difficulty utility が残存 | `src/pages/users/UserOverPower/utils/graphRows.ts:124-203,241-273,365-382` の song-based helper は本番コードから参照されず、一部が旧方式のテストからだけ利用されています。`src/utils/difficultyUtils.ts:60-66,97-121` の色定数・関数も定義元以外から参照されません。現行の chart-entry ベース処理に不要なら関連テストとともに削除し、必要なロジックだけを現在の usecase へ統合すべきです。 |
 | **QUAL-003** | **Medium** | Dialog shell と破壊的操作 UI の共通基盤が未整備 | Overlay、固定高 Content、header/body/footer、z-index を各画面が直接組み立てており、`src/pages/tools/RandomSongSelectorPage.tsx:1037-1038,1125-1126` や前述の 2 つの楽曲選択ダイアログで同型 shell が重複しています。一方、ユーザー物理削除、API token 削除、楽曲削除は `src/pages/admin/AdminUsersPage.tsx:48`、`src/pages/settings/Settings.tsx:196`、`src/pages/songs/SongManagementPage.tsx:998,1031` で `window.confirm` を使います。プロジェクトの focus・scroll・デザイントークン規約を一元適用できる `AppDialog` / `AppAlertDialog` shell を共通化し、破壊的操作も Kobalte ベースへ統一すべきです。 |
-| **QUAL-004** | **Low** | TODO / FIXME が設計課題とデザイン案を混在させたまま残る | 現存するタスク系コメントは `src/constants/recordFilterOptions.ts:4`、`src/components/NavBar/NavBar.tsx:314`、`src/pages/users/UserPage/components/UserRecordCard.tsx:24`、`UserNameplate.tsx:218` の 4 件です。定数の出所、responsive layout、配色判断、将来 UI 案が同じ TODO / FIXME として残っています。実装課題は issue / 本レポートへ移し、採用条件のないアイデアコメントは削除し、コード内に残す場合は判断条件と責任範囲を明記すべきです。 |
+| **QUAL-004** | **Low** | TODO / FIXME が設計課題とデザイン案を混在させたまま残る | 現存するタスク系コメントは `src/constants/recordFilterOptions.ts:4`、`src/components/NavBar/NavBar.tsx:326`、`src/pages/users/UserPage/components/UserNameplate.tsx:218` の 3 件です。定数の出所、responsive layout、将来 UI 案が同じ TODO / FIXME として残っています。実装課題は issue / 本レポートへ移し、採用条件のないアイデアコメントは削除し、コード内に残す場合は判断条件と責任範囲を明記すべきです。 |
 
 ## まとめ
 
 - 最優先は、**楽曲管理画面の責務分割 (`ARCH-001`)** です。変更影響範囲を直接縮小できます。
-- record view-state、楽曲選択ダイアログ、Dialog shell、難易度定義は複数 feature へ広がっているため、新しい個別実装を足す前に共通領域へ寄せる必要があります。
+- record view-state、楽曲選択ダイアログ、Dialog shell は複数 feature へ広がっているため、新しい個別実装を足す前に共通領域へ寄せる必要があります。
 - 旧 `REF-F05` は、保存フィルターの API 化、schema version、shape 検証、旧 schema 移行、テストが実装済みのため削除しました。
-- 旧 `REF-F09` と `REF-F12` は、OVER POWER 集計・グラフ生成が `src/usecases/overpower` と `UserOverPower/utils/graphRows.ts` へ抽出され、境界ケースのテストも追加済みのため削除しました。抽出後の未使用 helper だけを `QUAL-002` として残しています。
-- 旧 `REF-F07` のランプ定義は共通化済みで、残る難易度定義の問題を旧 `REF-F10` と統合し `QUAL-001` へ更新しました。
 - 旧 `REF-F04` は pure logic の抽出が進んだため、通常・WORLD'S END の view-state 重複へ焦点を絞って `ARCH-002` へ更新し、優先度を High から Medium へ見直しました。
-- 旧 `REF-F08` は現存 4 件へ更新して `QUAL-004`、旧 `REF-F11` は 1,850 行の現状と feature 越境利用を反映して `ARCH-001` へ移しました。
+- 旧 `REF-F08` は現存 3 件へ更新して `QUAL-004`、旧 `REF-F11` は大規模な画面実装と feature 越境利用を反映して `ARCH-001` へ移しました。

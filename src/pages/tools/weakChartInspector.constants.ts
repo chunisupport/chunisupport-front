@@ -1,3 +1,5 @@
+import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
+
 /** 苦手譜面インスペクターの画面表示文言。 */
 export const WEAK_CHART_INSPECTOR_COPY = {
   title: '苦手譜面インスペクター',
@@ -67,13 +69,7 @@ export const WEAK_CHART_AGGREGATION_SETTINGS_DEFAULT = {
 } as const
 
 /** 苦手譜面インスペクターの集計対象難易度選択肢。 */
-export const WEAK_CHART_AGGREGATION_DIFFICULTIES = [
-  'BASIC',
-  'ADVANCED',
-  'EXPERT',
-  'MASTER',
-  'ULTIMA',
-] as const
+export const WEAK_CHART_AGGREGATION_DIFFICULTIES = PLAYER_DATA_DIFFICULTIES
 
 /** 集計対象とする初期難易度。 */
 export const WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT: readonly string[] = ['MASTER', 'ULTIMA']

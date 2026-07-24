@@ -1,3 +1,4 @@
+import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type {
   PlayerDataDifficulty,
   PlayerDataNumberDiff,
@@ -21,14 +22,6 @@ type RegisterScoreCommitInput = {
 type RegisterScoreCommitResult = {
   result: PlayerDataResult
 }
-
-const PLAYER_DATA_DIFFICULTIES: readonly PlayerDataDifficulty[] = [
-  'BASIC',
-  'ADVANCED',
-  'EXPERT',
-  'MASTER',
-  'ULTIMA',
-]
 
 /** 数値差分のゼロ値を生成する。 */
 const createEmptyDiff = (): PlayerDataNumberDiff => ({ before: 0, after: 0, delta: 0 })

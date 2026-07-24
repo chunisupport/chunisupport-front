@@ -1,9 +1,13 @@
 import { createMemo, For, Show } from 'solid-js'
 import { createWindowVirtualTable } from '../../../../components/common/createWindowVirtualTable'
 import { SortableTableHeaderCell } from '../../../../components/common/SortableTableHeader'
+import {
+  DIFFICULTY_SHORT_NAME_MAP,
+  PLAYER_DATA_DIFFICULTIES,
+} from '../../../../constants/difficulty'
 import type { SongDTO } from '../../../../types/api'
 import { formatChartConst } from '../../../../utils/chartConstFormat'
-import { DIFFICULTY_SHORT_NAME_MAP, difficultyBadgeClass } from '../../../../utils/difficultyUtils'
+import { difficultyBadgeClass } from '../../../../utils/difficultyUtils'
 import type { SortDirection } from '../../../../utils/sortingQuery'
 import {
   SongListAddedDateCell,
@@ -14,7 +18,7 @@ import {
 } from '../../components/SongListMetaCells'
 import type { SongSortKey } from '../utils/sorting'
 
-const chartOrder = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
+const chartOrder = PLAYER_DATA_DIFFICULTIES
 const ROW_HEIGHT = 37
 const GRID_TEMPLATE_COLUMNS =
   'minmax(15rem, 1fr) minmax(15rem, 1fr) 8.1rem 5.2rem 3.75rem repeat(5, 3.4rem)'

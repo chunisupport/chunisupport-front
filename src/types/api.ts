@@ -222,16 +222,10 @@ export interface SongDTO {
   maxop: number
   is_maxop_unknown: boolean
   /** 理論値OVER POWERが最大となる譜面の難易度。譜面がない場合は null。 */
-  op_target_difficulty: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA' | null
+  op_target_difficulty: PlayerDataDifficulty | null
   /** 新曲かどうか。 */
   is_new: boolean
-  charts: {
-    BASIC?: ChartDTO
-    ADVANCED?: ChartDTO
-    EXPERT?: ChartDTO
-    MASTER?: ChartDTO
-    ULTIMA?: ChartDTO
-  }
+  charts: Partial<Record<PlayerDataDifficulty, ChartDTO>>
 }
 
 export interface ManagedSongDTO extends SongDTO {
@@ -718,7 +712,7 @@ export interface PlayerDataSongRecordChange {
   change_type: 'new' | 'updated'
   idx: string
   /** 通常譜面は大文字難易度名、WORLD'S ENDはWE。 */
-  diff: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA' | 'WE'
+  diff: PlayerDataDifficulty | 'WE'
   before: PlayerDataRecordState | null
   after: PlayerDataRecordState
 }
@@ -988,7 +982,7 @@ export interface PlayerRecordDTO {
   /** 曲ごとの現在OVER POWER集計対象か。楽曲マスタ上の理論値対象譜面ではない。 */
   is_op_target: boolean
   updated_at: string | null
-  difficulty: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
+  difficulty: PlayerDataDifficulty
   id: string
   title: string
   artist: string
@@ -1063,7 +1057,7 @@ export interface UpdateChartRequestDTO {
 }
 
 export interface CreateSongChartRequestDTO {
-  difficulty: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
+  difficulty: PlayerDataDifficulty
   const: number
   is_const_unknown: boolean
   notes: number | null

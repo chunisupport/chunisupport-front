@@ -1,3 +1,4 @@
+import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import type {
   GoalAttributes,
   GoalDTO,
@@ -154,7 +155,10 @@ export const filterRecordsByAttributes = (
       ? new Set(
           masterData.difficulties
             .filter((difficulty) => diffIds.includes(difficulty.id))
-            .map((difficulty) => difficulty.name)
+            .flatMap((difficulty) => {
+              const normalized = normalizePlayerDataDifficulty(difficulty.name)
+              return normalized ? [normalized] : []
+            })
         )
       : undefined
   const genreNames =

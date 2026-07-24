@@ -1,3 +1,4 @@
+import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
 import { toChartLevelLabel } from '../../utils/chartLevel'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
@@ -9,13 +10,7 @@ import type {
 } from './types'
 
 /** OVER POWERで扱う難易度の表示順。 */
-export const OVER_POWER_DIFFICULTIES: OverPowerDifficulty[] = [
-  'BASIC',
-  'ADVANCED',
-  'EXPERT',
-  'MASTER',
-  'ULTIMA',
-]
+export const OVER_POWER_DIFFICULTIES: readonly OverPowerDifficulty[] = PLAYER_DATA_DIFFICULTIES
 
 type LockedSongLookup = {
   lockedSongIds: Set<string>

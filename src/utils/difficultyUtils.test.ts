@@ -26,3 +26,14 @@ test('normalizeDifficultyQueryValue は配列クエリの先頭値を正規化�
   // Then: 先頭値が大文字のドメイン値として扱われる。
   assert.equal(normalized, 'EXPERT')
 })
+
+test('normalizeDifficultyQueryValue は未知の難易度を空文字列へ正規化する', () => {
+  // Given
+  const difficulty = 'worldsend'
+
+  // When
+  const normalized = normalizeDifficultyQueryValue(difficulty)
+
+  // Then
+  assert.equal(normalized, '')
+})

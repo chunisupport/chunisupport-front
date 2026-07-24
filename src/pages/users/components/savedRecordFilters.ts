@@ -9,6 +9,7 @@ import {
   WORLDSEND_LEVEL_STAR_MAX,
   WORLDSEND_LEVEL_STAR_MIN,
 } from '../../../constants/chart'
+import { PLAYER_DATA_DIFFICULTIES } from '../../../constants/difficulty'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
@@ -23,8 +24,8 @@ import type {
   NumericRangeFilter,
 } from '../../../types/record'
 import type { FilterState } from '../../../types/recordFilter'
+import type { WorldsendFilterState } from '../../../types/worldsendRecord'
 import { MAX_SCORE } from '../../../utils/scoreRank'
-import type { WorldsendFilterState } from '../WorldsendRecord/types/filterTypes'
 
 /** API と同じ保存済みフィルター名の最大文字数。 */
 export const RECORD_FILTER_NAME_MAX_LENGTH = 30
@@ -32,7 +33,6 @@ export const RECORD_FILTER_NAME_MAX_LENGTH = 30
 /** API と同じ保存済みフィルターペイロードの最大バイト数。 */
 export const RECORD_FILTER_MAX_PAYLOAD_BYTES = 8 * 1024
 
-const DIFFICULTY_OPTIONS: Difficulty[] = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA']
 /**
  * 文字列を Unicode コードポイント単位で指定文字数へ丸める。
  *
@@ -215,7 +215,7 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
   if (!isObjectRecord(value)) return false
   return (
     typeof value.title === 'string' &&
-    isArrayOfOptions(value.difficulties, DIFFICULTY_OPTIONS) &&
+    isArrayOfOptions<Difficulty>(value.difficulties, PLAYER_DATA_DIFFICULTIES) &&
     (value.currentOpTargetOnly === undefined || typeof value.currentOpTargetOnly === 'boolean') &&
     (value.favoriteSongsOnly === undefined || typeof value.favoriteSongsOnly === 'boolean') &&
     isStringArray(value.genres) &&

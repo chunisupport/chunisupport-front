@@ -1,3 +1,4 @@
+import { PLAYER_DATA_DIFFICULTY_ORDER } from '../../../../constants/difficulty'
 import type { RecordSortCondition, RecordSortKey } from '../../../../types/recordFilter'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
@@ -17,20 +18,12 @@ import {
 } from '../../../../utils/sortingQuery'
 import { compareNumberWithUnplayedLast } from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
+import { formatJusticeCountForAj } from '../../utils/justiceCountDisplay.ts'
 import {
   compareMissingJusticeCountRecords,
   isJusticeCountMissing,
 } from '../../utils/justiceCountSorting'
 import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
-import { formatJusticeCountForAj } from './justiceCountDisplay.ts'
-
-const DIFFICULTY_ORDER: Record<string, number> = {
-  BASIC: 0,
-  ADVANCED: 1,
-  EXPERT: 2,
-  MASTER: 3,
-  ULTIMA: 4,
-}
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
   !isPlayed || timestamp === Number.NEGATIVE_INFINITY
@@ -136,8 +129,8 @@ const compareRecordBySortCondition = (
       break
     case 'difficulty':
       comparison =
-        (DIFFICULTY_ORDER[left.difficulty] ?? Number.MAX_SAFE_INTEGER) -
-        (DIFFICULTY_ORDER[right.difficulty] ?? Number.MAX_SAFE_INTEGER)
+        (PLAYER_DATA_DIFFICULTY_ORDER[left.difficulty] ?? Number.MAX_SAFE_INTEGER) -
+        (PLAYER_DATA_DIFFICULTY_ORDER[right.difficulty] ?? Number.MAX_SAFE_INTEGER)
       break
     case 'const':
       comparison = left.const - right.const

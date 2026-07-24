@@ -4,6 +4,7 @@ import {
   GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES,
   SCORE_MIN,
 } from '../../../../../constants/chart'
+import { normalizePlayerDataDifficulty } from '../../../../../constants/difficulty'
 import type {
   GoalAchievementParams,
   GoalAchievementType,
@@ -222,11 +223,10 @@ export const buildDefaultDifficultySelections = (
   items: readonly { id: number; name: string }[]
 ): string[] =>
   items
-    .filter((item) =>
-      GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES.includes(
-        item.name.toUpperCase() as (typeof GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES)[number]
-      )
-    )
+    .filter((item) => {
+      const difficulty = normalizePlayerDataDifficulty(item.name)
+      return GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES.some((target) => target === difficulty)
+    })
     .map((item) => String(item.id))
 
 /**

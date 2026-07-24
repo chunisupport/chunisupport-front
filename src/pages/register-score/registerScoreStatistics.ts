@@ -1,3 +1,4 @@
+import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import type {
   PlayerDataDifficulty,
   PlayerDataNumberDiff,
@@ -19,13 +20,7 @@ export const REGISTER_SCORE_STAT_COLUMNS = [
 ] as const
 
 /** 更新差分レポートで扱う固定難易度。 */
-export const REGISTER_SCORE_DIFFICULTIES: readonly PlayerDataDifficulty[] = [
-  'BASIC',
-  'ADVANCED',
-  'EXPERT',
-  'MASTER',
-  'ULTIMA',
-]
+export const REGISTER_SCORE_DIFFICULTIES: readonly PlayerDataDifficulty[] = PLAYER_DATA_DIFFICULTIES
 
 /** 全難易度集計を表す設定キー。 */
 export const REGISTER_SCORE_ALL_ROW_KEY = 'ALL' as const

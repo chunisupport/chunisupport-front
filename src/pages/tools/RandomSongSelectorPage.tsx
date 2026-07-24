@@ -32,6 +32,7 @@ import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { formatChartConst } from '../../utils/chartConstFormat'
 import {
+  aggregateRandomSongCandidateWeights,
   buildRandomSongCandidates,
   createRandomSongCandidateKey,
   createRandomSongChartKey,
@@ -654,31 +655,29 @@ const RandomSongSelectorPage = (): JSX.Element => {
     ].sort((left, right) => Number(left) - Number(right))
   )
   /**
-   * 候補1件に適用される出やすさの重みを取得する。
+   * 候補全体を一度だけ走査し、出現割合表示用の重みを分類別に集計する。
    *
-   * @param candidate - 重みを計算する選曲候補。
-   * @returns 難易度別と定数別を掛け合わせた重み。不正値がある場合は null。
+   * @returns 全体・難易度別・譜面定数別の候補重み。
    */
-  const weightForCandidate = (candidate: RandomSongCandidate): number | null => {
-    const chartConst = formatChartConst(candidate.chartConst)
-    const difficultyWeight = parseRandomSongWeightForPercent(
-      difficultyWeights()[candidate.difficulty]
-    )
-    const constWeight = parseRandomSongWeightForPercent(
-      constWeights()[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
-      constWeightEnabled()[chartConst] !== false
-    )
+  const candidateWeightSummary = createMemo(() => {
+    const currentDifficultyWeights = difficultyWeights()
+    const currentConstWeights = constWeights()
+    const currentConstWeightEnabled = constWeightEnabled()
 
-    if (difficultyWeight === null || constWeight === null) return null
+    return aggregateRandomSongCandidateWeights(filteredCandidates(), (candidate) => {
+      const chartConst = formatChartConst(candidate.chartConst)
+      const difficultyWeight = parseRandomSongWeightForPercent(
+        currentDifficultyWeights[candidate.difficulty]
+      )
+      const constWeight = parseRandomSongWeightForPercent(
+        currentConstWeights[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
+        currentConstWeightEnabled[chartConst] !== false
+      )
 
-    return difficultyWeight * constWeight
-  }
-  const totalCandidateWeight = createMemo(() =>
-    filteredCandidates().reduce((sum, candidate) => {
-      const weight = weightForCandidate(candidate)
-      return weight === null ? sum : sum + weight
-    }, 0)
-  )
+      if (difficultyWeight === null || constWeight === null) return null
+      return difficultyWeight * constWeight
+    })
+  })
   const selectedDifficultyWeights = createMemo(
     () =>
       Object.fromEntries(
@@ -872,14 +871,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
       return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
     }
 
-    const weightMass = filteredCandidates().reduce((sum, candidate) => {
-      if (candidate.difficulty !== difficulty) return sum
-
-      const weight = weightForCandidate(candidate)
-      return weight === null ? sum : sum + weight
-    }, 0)
-
-    return formatRandomSongWeightPercent(weightMass, totalCandidateWeight())
+    const summary = candidateWeightSummary()
+    return formatRandomSongWeightPercent(summary.byDifficulty.get(difficulty) ?? 0, summary.total)
   }
 
   /**
@@ -898,14 +891,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
       return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
     }
 
-    const weightMass = filteredCandidates().reduce((sum, candidate) => {
-      if (formatChartConst(candidate.chartConst) !== chartConst) return sum
-
-      const weight = weightForCandidate(candidate)
-      return weight === null ? sum : sum + weight
-    }, 0)
-
-    return formatRandomSongWeightPercent(weightMass, totalCandidateWeight())
+    const summary = candidateWeightSummary()
+    return formatRandomSongWeightPercent(summary.byChartConst.get(chartConst) ?? 0, summary.total)
   }
 
   /**

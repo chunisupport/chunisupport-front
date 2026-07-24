@@ -2,13 +2,14 @@ import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart'
+import { normalizePlayerDataDifficulty } from '../../../../../constants/difficulty'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../../../../constants/recordFilterOptions'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
-import type { Difficulty, FilterState } from '../../../../../types/recordFilter'
+import type { FilterState } from '../../../../../types/recordFilter'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import { truncateDecimal } from '../../../../../utils/numberFormat'
 import {
@@ -256,7 +257,12 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     }))
   }
 
-  const difficulties = () => props.masterData?.difficulties?.map((d) => d.name as Difficulty) ?? []
+  /** @returns マスターデータを大文字の正規難易度へ変換した選択肢。 */
+  const difficulties = () =>
+    props.masterData?.difficulties.flatMap((difficulty) => {
+      const normalized = normalizePlayerDataDifficulty(difficulty.name)
+      return normalized ? [normalized] : []
+    }) ?? []
   const genres = () => sortMasterItemsBySortOrder(props.masterData?.genres ?? []).map((g) => g.name)
   const versions = () => props.versions?.map((version) => getShortVersionName(version.name)) ?? []
 

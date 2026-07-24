@@ -1,6 +1,7 @@
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../constants/chart'
+import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
-import type { Difficulty, FilterState } from '../../../types/recordFilter'
+import type { FilterState } from '../../../types/recordFilter'
 import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
 import { MAX_SCORE } from '../../../utils/scoreRank'
 import { normalizeGoalAttributeIds } from './goalAttributes'
@@ -135,7 +136,10 @@ export const buildGoalRecordFilter = (
       ? []
       : masterData.difficulties
           .filter((difficulty) => !difficultyIds || difficultyIds.includes(difficulty.id))
-          .map((difficulty) => difficulty.name.toUpperCase() as Difficulty),
+          .flatMap((difficulty) => {
+            const normalized = normalizePlayerDataDifficulty(difficulty.name)
+            return normalized ? [normalized] : []
+          }),
     genres:
       hasNoSelectedCharts || !genreIds
         ? []
