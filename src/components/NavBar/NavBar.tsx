@@ -30,11 +30,10 @@ type NavBarProps = {
 import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
 import { DOCUMENTATION_BASE_URL } from '../../config'
+import { EDITOR_SONGS_TITLE, FRIENDS_PAGE_TITLE } from '../../constants/pageTitles'
 import { LATEST_SCORE_UPDATE_TITLE } from '../../constants/playerLatestUpdate'
 import { EDITOR_SONGS_PATH, FRIENDS_PATH, LATEST_SCORE_UPDATE_PATH } from '../../constants/routes'
 import { auth } from '../../lib/firebase'
-import { EDITOR_SONGS_TITLE } from '../../pages/editor/constants'
-import { FRIENDS_PAGE_TITLE } from '../../pages/friends/constants'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import {
   clearFriendRequestNotification,

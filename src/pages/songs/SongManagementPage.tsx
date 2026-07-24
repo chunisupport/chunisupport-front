@@ -21,6 +21,7 @@ import { AppButton } from '../../components/common/AppButton'
 import { FormSelect } from '../../components/common/AppSelect'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { CheckboxField } from '../../components/common/CheckboxField'
+import { normalizePlayerDataDifficulty, PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useSongsData } from '../../stores/songsData'
 import type {
@@ -29,6 +30,7 @@ import type {
   ManagedSongDTO,
   ManagedWorldsendSongDTO,
   MasterItemDTO,
+  PlayerDataDifficulty,
   SongDTO,
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
@@ -86,7 +88,7 @@ type WorldsendDraft = {
 }
 
 type CreateSongChartDraft = {
-  difficulty_name: 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
+  difficulty_name: EditableDifficultyName
   enabled: boolean
   const: string
   is_const_unknown: boolean
@@ -201,18 +203,8 @@ const formatUpdatedAt = (value: string | null | undefined): string => {
   return dateTimeFormatter.format(date)
 }
 
-const editableDifficulties = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
-type EditableDifficultyName = (typeof editableDifficulties)[number]
-
-/**
- * 通常譜面として編集可能な難易度名か判定する。
- *
- * @param value 判定対象の難易度名
- * @returns 編集可能な通常譜面難易度名であれば true
- */
-const isEditableDifficultyName = (value: string): value is EditableDifficultyName => {
-  return editableDifficulties.some((difficulty) => difficulty === value)
-}
+const editableDifficulties = PLAYER_DATA_DIFFICULTIES
+type EditableDifficultyName = PlayerDataDifficulty
 
 const toNullableTrimmedString = (value: string | null): string | null => {
   return value?.trim() ? value.trim() : null
@@ -391,8 +383,8 @@ const toSongDraft = (
     updated_at: song.updated_at,
     charts: difficulties
       .map((difficulty) => {
-        const difficultyName = difficulty.name.toUpperCase()
-        if (!isEditableDifficultyName(difficultyName)) return null
+        const difficultyName = normalizePlayerDataDifficulty(difficulty.name)
+        if (!difficultyName) return null
 
         const chart = song.charts[difficultyName]
         if (!chart) return null
@@ -558,10 +550,9 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       return
     }
 
-    const ultimaDifficulty = md.difficulties.find((difficulty) => {
-      const difficultyName = difficulty.name.toUpperCase()
-      return isEditableDifficultyName(difficultyName) && difficultyName === 'ULTIMA'
-    })
+    const ultimaDifficulty = md.difficulties.find(
+      (difficulty) => normalizePlayerDataDifficulty(difficulty.name) === 'ULTIMA'
+    )
     if (!ultimaDifficulty) {
       showErrorToast('ULTIMA難易度のマスターデータが見つかりません。')
       return

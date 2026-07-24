@@ -2,6 +2,7 @@ import { useParams, useSearchParams } from '@solidjs/router'
 import { createEffect, createMemo, createResource, createSignal, on, Show, untrack } from 'solid-js'
 import { fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
 import { LoadError } from '../../../components'
+import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
 import type { PlayerRecordDTO, SongDTO } from '../../../types/api'
@@ -96,16 +97,11 @@ const SongDetail = () => {
     const md = masterData()
     if (!currentSong || !md) return []
 
-    return md.difficulties
-      .map((difficulty) => difficulty.name)
-      .filter((difficultyName) => {
-        const key = difficultyName as keyof typeof currentSong.charts
-        return Boolean(currentSong.charts[key])
-      })
-      .map((difficultyName) => ({
-        label: difficultyName,
-        value: difficultyName,
-      }))
+    return md.difficulties.flatMap((difficulty) => {
+      const difficultyName = normalizePlayerDataDifficulty(difficulty.name)
+      if (!difficultyName || !currentSong.charts[difficultyName]) return []
+      return [{ label: difficultyName, value: difficultyName }]
+    })
   })
 
   createEffect(
@@ -159,7 +155,8 @@ const SongDetail = () => {
   const selectedOwnScore = createMemo(() => {
     if (authSession.status !== 'authenticated') return undefined
 
-    const difficulty = selectedDifficulty().toUpperCase()
+    const difficulty = normalizePlayerDataDifficulty(selectedDifficulty())
+    if (!difficulty) return undefined
     return ownScoreItems().find((item) => item.difficulty === difficulty)?.score
   })
 

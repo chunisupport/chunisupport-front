@@ -1,7 +1,7 @@
-import type { PlayerRecordDTO } from './api'
+import type { PlayerDataDifficulty, PlayerRecordDTO } from './api'
 
 /** プレイヤーレコードで扱う難易度。 */
-export type Difficulty = PlayerRecordDTO['difficulty']
+export type Difficulty = PlayerDataDifficulty
 
 /** プレイヤーレコードで扱うコンボランプ。 */
 export type ComboLamp = PlayerRecordDTO['combo_lamp']

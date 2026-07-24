@@ -1,3 +1,7 @@
+import type {
+  WorldsendRecordColumnId,
+  WorldsendRecordSortKey,
+} from '../../../../types/worldsendRecord'
 import { getRecordColumnBaseDefinition } from '../../utils/recordColumnDefinitions.ts'
 import {
   getDefaultVisibleColumnIds as getDefaultVisibleColumnIdsFromDefinitions,
@@ -5,18 +9,6 @@ import {
   sanitizeVisibleColumnIds as sanitizeVisibleColumnIdsFromDefinitions,
   sortVisibleColumnIdsByDefinitionOrder as sortVisibleColumnIdsByDefinitionOrderFromDefinitions,
 } from '../../utils/recordTableColumns'
-
-type WorldsendRecordColumnId =
-  | 'title'
-  | 'attribute'
-  | 'level'
-  | 'score'
-  | 'lamp'
-  | 'hardLamp'
-  | 'fullChain'
-  | 'justiceCount'
-  | 'updatedAt'
-type WorldsendRecordSortKey = WorldsendRecordColumnId
 
 type WorldsendRecordColumnDefinition = {
   id: WorldsendRecordColumnId
@@ -77,4 +69,8 @@ export const getVisibleWorldsendColumns = (
 ): WorldsendRecordColumnDefinition[] =>
   getVisibleColumnsFromDefinitions(WORLDSEND_RECORD_COLUMN_DEFINITIONS, visibleColumnIds)
 
-export type { WorldsendRecordColumnDefinition, WorldsendRecordColumnId, WorldsendRecordSortKey }
+export type {
+  WorldsendRecordColumnId,
+  WorldsendRecordSortKey,
+} from '../../../../types/worldsendRecord'
+export type { WorldsendRecordColumnDefinition }

@@ -3,6 +3,7 @@ import test from 'node:test'
 import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
 import type { RandomSongCandidate, RandomSongLampFilter } from './randomSongSelector.ts'
 import {
+  aggregateRandomSongCandidateWeights,
   buildRandomSongCandidates,
   createRandomSongCandidateKey,
   createRandomSongChartKey,
@@ -55,6 +56,33 @@ const createCandidate = (overrides: Partial<RandomSongCandidate>): RandomSongCan
   genre: 'POPS & ANIME',
   version: 'NEW',
   ...overrides,
+})
+
+test('候補の重みを全体・難易度別・譜面定数別に1回で集計する', () => {
+  // Given
+  const candidates = [
+    createCandidate({ difficulty: 'MASTER', chartConst: 13.7 }),
+    createCandidate({ difficulty: 'MASTER', chartConst: 14 }),
+    createCandidate({ difficulty: 'ULTIMA', chartConst: 14 }),
+  ]
+  const weights = new Map<RandomSongCandidate, number | null>([
+    [candidates[0], 2],
+    [candidates[1], null],
+    [candidates[2], 3],
+  ])
+
+  // When
+  const result = aggregateRandomSongCandidateWeights(
+    candidates,
+    (candidate) => weights.get(candidate) ?? null
+  )
+
+  // Then
+  assert.equal(result.total, 5)
+  assert.equal(result.byDifficulty.get('MASTER'), 2)
+  assert.equal(result.byDifficulty.get('ULTIMA'), 3)
+  assert.equal(result.byChartConst.get('13.7'), 2)
+  assert.equal(result.byChartConst.get('14.0'), 3)
 })
 
 const createRecord = (overrides: Partial<PlayerRecordDTO>): PlayerRecordDTO => ({

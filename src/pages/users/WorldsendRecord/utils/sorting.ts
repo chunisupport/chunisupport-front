@@ -17,7 +17,7 @@ import {
 } from '../../../../utils/sortingQuery'
 import { compareNumberWithUnplayedLast } from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
-import { formatJusticeCountForAj } from '../../UserRecord/utils/justiceCountDisplay'
+import { formatJusticeCountForAj } from '../../utils/justiceCountDisplay'
 import {
   compareMissingJusticeCountRecords,
   isJusticeCountMissing,

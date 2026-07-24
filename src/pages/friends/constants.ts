@@ -1,8 +1,7 @@
 import type { AppTabOption } from '../../components/common/AppTabs'
 import { FRIENDS_PATH } from '../../constants/routes'
 
-/** フレンド画面に表示するタイトル。 */
-export const FRIENDS_PAGE_TITLE = 'フレンド'
+export { FRIENDS_PAGE_TITLE } from '../../constants/pageTitles'
 
 /** ユーザー名コピー成功表示を維持する時間(ms)。 */
 export const FRIENDS_COPY_FEEDBACK_DURATION_MS = 1200

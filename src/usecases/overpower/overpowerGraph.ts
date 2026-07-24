@@ -1,7 +1,7 @@
+import { PLAYER_DATA_DIFFICULTY_ORDER } from '../../constants/difficulty'
 import type { PlayerRecordDTO, SongDTO } from '../../types/api'
 import type { OverPowerDifficulty, OverPowerLockedSong } from './types'
 
-const DIFFICULTY_ORDER: OverPowerDifficulty[] = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA']
 const ULTIMA_DIFFICULTY: OverPowerDifficulty = 'ULTIMA'
 
 /** 未解禁設定をOVER POWERグラフ集計で参照するための検索セット。 */
@@ -69,8 +69,8 @@ const getHighestTheoreticalChart = (
       !target ||
       currentChart.chartConst > target.chartConst ||
       (currentChart.chartConst === target.chartConst &&
-        DIFFICULTY_ORDER.indexOf(currentChart.difficulty) >
-          DIFFICULTY_ORDER.indexOf(target.difficulty))
+        PLAYER_DATA_DIFFICULTY_ORDER[currentChart.difficulty] >
+          PLAYER_DATA_DIFFICULTY_ORDER[target.difficulty])
     ) {
       target = currentChart
     }

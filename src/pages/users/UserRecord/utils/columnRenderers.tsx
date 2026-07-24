@@ -18,7 +18,7 @@ import { difficultyToQueryValue } from '../../../../utils/difficultyUtils'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import { formatUpdatedAt } from '../../../../utils/recordUpdatedAt'
-import { formatJusticeCountForAj } from './justiceCountDisplay'
+import { formatJusticeCountForAj } from '../../utils/justiceCountDisplay'
 
 const DIFFICULTY_COLUMN_CLASS = `${RECORD_CELL_BASE_CLASS} font-oswald text-sm font-semibold`
 

@@ -6,6 +6,7 @@ import { createEffect, createMemo, createSignal, ErrorBoundary, For, onMount, Sh
 import { LoadError, Loading } from '../../components'
 import { FormSelect } from '../../components/common/AppSelect'
 import { CheckboxField } from '../../components/common/CheckboxField'
+import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { SongDTO } from '../../types/api'
@@ -32,7 +33,7 @@ const BORDER_CALCULATOR_COPY = {
 const DEFAULT_NOTES = '2500'
 const DEFAULT_TARGET_SCORE = '1007500'
 const SONG_CANDIDATE_LIMIT = 8
-const BORDER_CALCULATOR_DIFFICULTIES = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
+const BORDER_CALCULATOR_DIFFICULTIES = PLAYER_DATA_DIFFICULTIES
 const FIELD_INPUT_CLASS =
   'w-full rounded border border-border-strong bg-input-bg px-3 py-2 text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const COMPACT_FIELD_INPUT_CLASS =

@@ -1,3 +1,4 @@
+import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
 import { formatChartConst } from './chartConstFormat'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter'
@@ -6,11 +7,7 @@ import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionC
  * ランダム選曲ツールで扱う通常譜面難易度。
  */
 export const RANDOM_SONG_SELECTOR_DIFFICULTIES: PlayerDataDifficulty[] = [
-  'BASIC',
-  'ADVANCED',
-  'EXPERT',
-  'MASTER',
-  'ULTIMA',
+  ...PLAYER_DATA_DIFFICULTIES,
 ]
 
 /**
@@ -38,6 +35,13 @@ export type RandomSongCandidate = {
   levelLabel: string
   genre: string
   version: string
+}
+
+/** ランダム選曲候補の重みを全体・難易度・譜面定数ごとに集計した結果。 */
+export type RandomSongCandidateWeightSummary = {
+  total: number
+  byDifficulty: ReadonlyMap<PlayerDataDifficulty, number>
+  byChartConst: ReadonlyMap<string, number>
 }
 
 export type RandomSongFilter = {
@@ -97,6 +101,35 @@ export const createRandomSongChartKey = (
  */
 export const createRandomSongCandidateKey = (candidate: RandomSongCandidate): string =>
   createRandomSongChartKey(candidate.song.id, candidate.difficulty)
+
+/**
+ * 選曲候補を一度だけ走査し、出現割合表示に使う重みを集計する。
+ *
+ * @param candidates - 集計対象の選曲候補。
+ * @param resolveWeight - 候補1件の重みを返す関数。不正値を除外する場合は null を返す。
+ * @returns 全候補・難易度別・譜面定数別の重み合計。
+ */
+export const aggregateRandomSongCandidateWeights = (
+  candidates: readonly RandomSongCandidate[],
+  resolveWeight: (candidate: RandomSongCandidate) => number | null
+): RandomSongCandidateWeightSummary => {
+  let total = 0
+  const byDifficulty = new Map<PlayerDataDifficulty, number>()
+  const byChartConst = new Map<string, number>()
+
+  for (const candidate of candidates) {
+    const weight = resolveWeight(candidate)
+    if (weight === null) continue
+
+    total += weight
+    byDifficulty.set(candidate.difficulty, (byDifficulty.get(candidate.difficulty) ?? 0) + weight)
+
+    const chartConst = formatChartConst(candidate.chartConst)
+    byChartConst.set(chartConst, (byChartConst.get(chartConst) ?? 0) + weight)
+  }
+
+  return { total, byDifficulty, byChartConst }
+}
 
 /**
  * 入力文字列を任意の数値へ変換する。

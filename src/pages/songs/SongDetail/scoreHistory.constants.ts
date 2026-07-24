@@ -1,4 +1,5 @@
 import type { ScoreHistoryDifficulty } from '../../../api/songs'
+import { PLAYER_DATA_DIFFICULTIES } from '../../../constants/difficulty'
 import type { PlayerDataDifficulty } from '../../../types/api'
 
 /** 通常譜面でスコア履歴を保持する難易度。 */
@@ -9,13 +10,7 @@ export const SCORE_HISTORY_DIFFICULTIES: readonly ScoreHistoryDifficulty[] = [
 ]
 
 /** 楽曲詳細で自己スコアを表示する難易度。 */
-export const OWN_SCORE_DIFFICULTIES: readonly PlayerDataDifficulty[] = [
-  'BASIC',
-  'ADVANCED',
-  'EXPERT',
-  'MASTER',
-  'ULTIMA',
-]
+export const OWN_SCORE_DIFFICULTIES: readonly PlayerDataDifficulty[] = PLAYER_DATA_DIFFICULTIES
 
 /**
  * 指定した難易度がスコア履歴に対応するか判定する。

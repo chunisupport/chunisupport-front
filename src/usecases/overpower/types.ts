@@ -1,4 +1,4 @@
-import type { PlayerRecordDTO, SongDTO } from '../../types/api'
+import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO } from '../../types/api'
 import type { ChartLevelLabel } from '../../utils/chartLevel'
 
 export type OverPowerCategory = 'genre' | 'level' | 'version' | 'difficulty'
@@ -24,7 +24,7 @@ export type OverPowerSummary = {
   versions: OverPowerSummaryRow[]
 }
 
-export type OverPowerDifficulty = PlayerRecordDTO['difficulty']
+export type OverPowerDifficulty = PlayerDataDifficulty
 
 /** OVER POWER画面で選択できる集計対象。 */
 export type OverPowerAggregationTarget = OverPowerDifficulty | 'OP_TARGET' | 'ALL'

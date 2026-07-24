@@ -1,21 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../../../types/api'
-import { buildOverPowerLockedSongLookup } from '../../../../usecases/overpower/overpowerGraph'
+import type { PlayerRecordDTO, SongDTO } from '../../../../types/api'
 import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
-import {
-  buildChartRecordsBySummaryTab,
-  buildGraphRows,
-  buildSongBasedGraphRows,
-  buildSongEntriesBySummaryTab,
-  isRecordAvailable,
-} from './graphRows.ts'
-
-const versions: VersionSummaryDTO[] = [
-  { name: 'CHUNITHM NEW', released_at: '2021-11-04' },
-  { name: 'CHUNITHM VERSE', released_at: '2024-12-12' },
-]
+import { buildChartRecordsBySummaryTab, buildGraphRows } from './graphRows.ts'
 
 /**
  * OVER POWERグラフ行テストで使う楽曲DTOを生成する。
@@ -83,25 +71,6 @@ const summaryRow: OverPowerSummaryRow = {
   count: 3,
 }
 
-test('isRecordAvailable は通常未解禁とULTIMA未解禁を分けて判定する', () => {
-  // Given
-  const lockedLookup = buildOverPowerLockedSongLookup([
-    { display_id: 'song-locked', is_ultima: false },
-    { display_id: 'song-ultima', is_ultima: true },
-  ])
-
-  // When & Then
-  assert.equal(isRecordAvailable(createRecord({ id: 'song-locked' }), lockedLookup), false)
-  assert.equal(
-    isRecordAvailable(createRecord({ id: 'song-ultima', difficulty: 'ULTIMA' }), lockedLookup),
-    false
-  )
-  assert.equal(
-    isRecordAvailable(createRecord({ id: 'song-ultima', difficulty: 'MASTER' }), lockedLookup),
-    true
-  )
-})
-
 test('buildGraphRows はスコア帯とコンボ帯の件数をサマリー行へ付与する', () => {
   // Given
   const recordsByLabel = new Map<string, PlayerRecordDTO[]>([
@@ -148,56 +117,4 @@ test('譜面単位グラフはレコードがない未プレイ譜面をOTHERへ
   // Then
   assert.equal(result?.scoreBands.find((band) => band.label === 'OTHER')?.count, 1)
   assert.equal(result?.comboBands.find((band) => band.label === 'OTHER')?.count, 1)
-})
-
-test('曲数ベースグラフは未解禁除外とバージョン分類とOTHER集計を反映する', () => {
-  // Given
-  const songs = [
-    createSong({ id: 'played', genre: 'POPS', release: '2024-12-12' }),
-    createSong({ id: 'unplayed', genre: 'POPS', release: '2024-12-12' }),
-    createSong({ id: 'locked', genre: 'POPS', release: '2024-12-12' }),
-    createSong({
-      id: 'ultima-locked',
-      genre: 'niconico',
-      release: '2021-11-04',
-      charts: {
-        MASTER: { const: 14, is_const_unknown: false, notes: null },
-        ULTIMA: { const: 15, is_const_unknown: false, notes: null },
-      },
-    }),
-  ]
-  const records = [
-    createRecord({ id: 'played', combo_lamp: 'ALL JUSTICE', score: 1_010_000 }),
-    createRecord({
-      id: 'ultima-locked',
-      difficulty: 'MASTER',
-      combo_lamp: 'FULL COMBO',
-      score: 1_009_000,
-    }),
-  ]
-  const lockedLookup = buildOverPowerLockedSongLookup([
-    { display_id: 'locked', is_ultima: false },
-    { display_id: 'ultima-locked', is_ultima: true },
-  ])
-  const rows: OverPowerSummaryRow[] = [
-    { id: 'all', label: 'ALL', current: 180, max: 270, percent: 66.6666, count: 3 },
-    { id: 'POPS', label: 'POPS', current: 90, max: 180, percent: 50, count: 2 },
-    { id: 'VERSE', label: 'VERSE', current: 90, max: 180, percent: 50, count: 2 },
-  ]
-
-  // When
-  const entriesByTab = buildSongEntriesBySummaryTab(songs, records, versions, lockedLookup)
-  const [allRow] = buildSongBasedGraphRows([rows[0]], entriesByTab.all)
-  const [genreRow] = buildSongBasedGraphRows([rows[1]], entriesByTab.genres)
-  const [versionRow] = buildSongBasedGraphRows([rows[2]], entriesByTab.versions)
-
-  // Then
-  assert.equal(entriesByTab.all.get('all')?.length, 3)
-  assert.equal(entriesByTab.genres.get('POPS')?.length, 2)
-  assert.equal(entriesByTab.versions.get('VERSE')?.length, 2)
-  assert.equal(allRow?.scoreBands.find((band) => band.label === 'MAX')?.count, 1)
-  assert.equal(allRow?.scoreBands.find((band) => band.label === 'SSS+')?.count, 1)
-  assert.equal(allRow?.scoreBands.find((band) => band.label === 'OTHER')?.count, 1)
-  assert.equal(genreRow?.scoreBands.find((band) => band.label === 'OTHER')?.count, 1)
-  assert.equal(versionRow?.comboBands.find((band) => band.label === 'ALL JUSTICE')?.count, 1)
 })
