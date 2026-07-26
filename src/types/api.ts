@@ -39,6 +39,28 @@ export interface UpdatedAtResponseDTO {
   updated_at: string | null
 }
 
+/** APIが返すシステムの運用状態。 */
+export type SystemStatus = 'operational' | 'maintenance'
+
+/** GET /internal/system/status が返すシステム状態。 */
+export interface SystemStatusDTO {
+  /** 現在の運用状態。 */
+  status: SystemStatus
+  /** メンテナンス中に一般利用者へ表示するコメント。通常稼働中は空文字。 */
+  comment: string
+  /** 状態を最後に更新した日時。 */
+  updated_at: string
+}
+
+/** PUT /internal/admin/maintenance に送信する状態更新内容。 */
+export interface UpdateMaintenanceRequest {
+  /** メンテナンスを有効にする場合は true。 */
+  enabled: boolean
+  /** 有効化時に一般利用者へ表示するコメント。無効化時は空文字。 */
+  comment: string
+}
+
+/** APIが返すエラーコード。 */
 export type ErrorCode =
   // 汎用
   | 'bad_request'
@@ -120,7 +142,9 @@ export type ErrorCode =
   | 'unsupported_media_type'
   | 'too_many_requests'
   | 'service_unavailable'
+  | 'maintenance_mode'
 
+/** APIエラーコードに対応する利用者向けメッセージ。 */
 export const errorMessages: Record<ErrorCode, string> = {
   bad_request: 'リクエスト形式が不正です',
   internal_error: 'サーバーエラーが発生しました',
@@ -190,6 +214,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   unsupported_media_type: 'サポートされていないメディアタイプです',
   too_many_requests: 'リクエストが多すぎます。しばらく待ってから再試行してください',
   service_unavailable: 'サービスが一時的に利用できません',
+  maintenance_mode: '現在メンテナンス中です',
 }
 
 // エラーコードからメッセージを取得するヘルパー関数
@@ -558,7 +583,8 @@ export interface RecordFiltersResponse<TFilter = unknown> {
 
 // --------------------------------
 
-export type AccountType = 'PLAYER' | 'EDITOR' | 'ADMIN'
+/** APIが返すアカウント種別。 */
+export type AccountType = 'PLAYER' | 'EDITOR' | 'ADMIN' | 'EXTDEV'
 
 export interface UserDTO {
   username: string

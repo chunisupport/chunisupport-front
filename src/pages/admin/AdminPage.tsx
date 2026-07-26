@@ -8,24 +8,7 @@ import {
 } from '../../constants/appBuild'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { formatBuildRevisionLabel } from '../../utils/appVersionLabel'
-
-const links = [
-  {
-    href: '/admin/users',
-    title: 'ユーザー管理',
-    description: 'ユーザー一覧、検索、削除、復活を行います。',
-  },
-  {
-    href: '/admin/songs',
-    title: '楽曲管理',
-    description: '楽曲一覧、編集、削除、復活を行います。',
-  },
-  {
-    href: '/admin/honors',
-    title: '称号管理',
-    description: '称号一覧、クラス、画像URLを確認します。',
-  },
-]
+import { ADMIN_PAGE_LINKS } from './adminPage.constants'
 
 /**
  * 管理者向けの API とフロントエンドのビルド情報を描画する。
@@ -75,7 +58,7 @@ const AdminPage = () => {
       <AdminBuildInfo />
 
       <div class="mt-6 grid gap-4 sm:grid-cols-2">
-        <For each={links}>
+        <For each={ADMIN_PAGE_LINKS}>
           {(link) => (
             <A
               href={link.href}

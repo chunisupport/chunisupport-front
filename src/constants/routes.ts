@@ -1,4 +1,6 @@
 export const LOGIN_PATH = '/login'
+/** スタッフ向けメンテナンス時ログイン画面のパス。 */
+export const MAINTENANCE_LOGIN_PATH = '/maintenance/login'
 export const REGISTER_PATH = '/register'
 export const REGISTER_SCORE_PATH = '/register-score'
 export const REGISTER_SCORE_TEMP_PATH = '/register-score-temp'
@@ -16,6 +18,10 @@ export const BEST_SLOT_RANKING_PATH = `${TOOLS_PATH}/best-slot-ranking`
 export const LOCKED_SONGS_FINDER_PATH = `${TOOLS_PATH}/locked-songs-finder`
 /** EDITOR向け楽曲編集画面のパス。 */
 export const EDITOR_SONGS_PATH = '/editor/songs'
+/** ADMIN向け管理メニューのパス。 */
+export const ADMIN_PATH = '/admin'
+/** ADMIN向けメンテナンス管理画面のパス。 */
+export const ADMIN_MAINTENANCE_PATH = `${ADMIN_PATH}/maintenance`
 
 /** 楽曲詳細から譜面詳細へ遷移したことを表すルーター state。 */
 export const CHART_DETAIL_FROM_SONG_DETAIL_STATE = {
