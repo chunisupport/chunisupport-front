@@ -17,16 +17,18 @@ const READING_CATEGORY = {
  * 楽曲の読みをソート用に正規化する。
  *
  * @param song - 読み順の比較対象となる楽曲。
- * @returns 前後の空白を除去してNFKC正規化した読み。未設定の場合は空文字。
+ * @returns 前後の空白を除去してNFKC正規化した読み。未設定または空欄の場合は曲名。
  */
-const getNormalizedReading = (song: SongTitleSortItem): string =>
-  song.reading?.trim().normalize('NFKC') ?? ''
+const getNormalizedReading = (song: SongTitleSortItem): string => {
+  const reading = song.reading?.trim()
+  return (reading || song.title.trim()).normalize('NFKC')
+}
 
 /**
  * reading の先頭文字からソート分類を取得する。
  *
  * @param reading - 正規化済みの読み。
- * @returns カタカナ、英字、数字、その他・未設定の順序値。
+ * @returns カタカナ、英字、数字、その他の順序値。
  */
 const getReadingCategory = (reading: string): number => {
   if (/^[\u30a0-\u30ff]/u.test(reading)) return READING_CATEGORY.KATAKANA
