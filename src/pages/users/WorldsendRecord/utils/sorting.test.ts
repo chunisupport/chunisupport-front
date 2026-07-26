@@ -234,7 +234,7 @@ test("WORLD'S ENDのランプソートはランプなし、FC、AJ、AJC、未�
   )
 })
 
-test("WORLD'S ENDのJ数ソートは降順でもAJCを先頭にし、J数なし行をスコア降順で並べる", () => {
+test("WORLD'S ENDのJ数ソートは数値順に並べ、J数なし行をスコア降順で並べる", () => {
   const records = [
     createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2, score: 1008000 }),
     createRecord({ id: 'fc-high', combo_lamp: 'FULL COMBO', score: 1009500 }),
@@ -251,6 +251,6 @@ test("WORLD'S ENDのJ数ソートは降順でもAJCを先頭にし、J数なし�
 
   assert.deepEqual(
     sortWorldsendRecords(records, 'justiceCount', 'desc').map((record) => record.id),
-    ['aj-j0', 'aj-j2', 'fc-high', 'aj-null', 'none-low', 'unplayed']
+    ['aj-j2', 'aj-j0', 'fc-high', 'aj-null', 'none-low', 'unplayed']
   )
 })

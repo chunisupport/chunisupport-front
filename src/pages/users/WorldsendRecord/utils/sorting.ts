@@ -176,15 +176,6 @@ const compareWorldsendRecordBySortCondition = <TRecord extends WorldsendRecordDT
       if (leftMissing) return 1
       if (rightMissing) return -1
 
-      if (sortCondition.direction === 'desc') {
-        const leftIsAllJusticeCritical = leftJusticeCount === 0
-        const rightIsAllJusticeCritical = rightJusticeCount === 0
-
-        if (leftIsAllJusticeCritical !== rightIsAllJusticeCritical) {
-          return leftIsAllJusticeCritical ? -1 : 1
-        }
-      }
-
       comparison = leftJusticeCount - rightJusticeCount
       break
     }
