@@ -1,35 +1,12 @@
 import { A, useNavigate, useSearchParams } from '@solidjs/router'
-import { signInWithPopup } from 'firebase/auth'
-import { createSignal } from 'solid-js'
-import { postLogin } from '../../../api/auth'
-import { Loading, Turnstile } from '../../../components'
-import { AppButton } from '../../../components/common/AppButton'
-import { CF_TURNSTILE_SITE_KEY } from '../../../config'
+import { Loading } from '../../../components'
+import { GoogleLoginForm } from '../../../components/auth/GoogleLoginForm'
+import { REGISTER_PATH } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
-import { auth, googleProvider } from '../../../lib/firebase'
+import { isUnregisteredLoginError, normalizeRedirectParam } from '../../../usecases/auth/loginFlow'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
-
-const TURNSTILE_ERROR_MESSAGE = '認証確認に失敗しました。しばらく待ってから再度お試しください。'
-
-/**
- * URLクエリのredirect値を単一の文字列へ正規化する。
- *
- * @param redirect - Solid Router から取得したredirectクエリ値。
- * @returns 利用可能なredirect値。複数指定時は先頭を採用する。
- */
-const normalizeRedirectParam = (redirect: string | string[] | undefined): string | undefined =>
-  Array.isArray(redirect) ? redirect[0] : redirect
-
-/**
- * Google認証直後のバックエンドログイン失敗が未登録ユーザー扱いか判定する。
- *
- * @param error - API呼び出しで発生したエラー。
- * @returns 新規登録画面へ進めるべき場合は true。
- */
-const isUnregisteredLoginError = (error: Error & { code?: string }): boolean =>
-  error.code === 'user_not_found' || error.code === 'invalid_token'
 
 /**
  * Google認証を利用するログイン画面を表示する。
@@ -39,56 +16,32 @@ const isUnregisteredLoginError = (error: Error & { code?: string }): boolean =>
 const Login = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [errorMessage, setErrorMessage] = createSignal('')
-  const [isSubmitting, setIsSubmitting] = createSignal(false)
-  const [turnstileToken, setTurnstileToken] = createSignal('')
-  const [turnstileResetKey, setTurnstileResetKey] = createSignal(0)
   const redirectParam = () => normalizeRedirectParam(searchParams.redirect)
 
   // すでにログインしている場合はユーザーページへリダイレクト
   const { isCheckingAuth } = useRedirectIfAuthenticated(redirectParam())
 
   /**
-   * Turnstile の応答トークンを破棄し、ウィジェットの再検証を要求する。
+   * Google認証成功後に既存のログイン後遷移を実行する。
    *
-   * @returns なし。
+   * @returns ログイン後のユーザー確認と遷移が完了した後に解決されるPromise。
    */
-  const resetTurnstile = () => {
-    setTurnstileToken('')
-    setTurnstileResetKey((current) => current + 1)
-  }
+  const handleLoginSuccess = async (): Promise<void> =>
+    redirectAfterAuthentication(navigate, redirectParam())
 
   /**
-   * Google認証後にログイン後の遷移先へ移動する。
+   * 通常ログイン固有の失敗を処理し、フォームに表示する文言を返す。
    *
-   * @param event - ログインフォームの送信イベント。
-   * @returns 処理完了後に解決されるPromise。
+   * @param error - 共通ログインフォームから受け取った不明なエラー値。
+   * @returns エラーメッセージ。新規登録画面へ遷移した場合はnull。
    */
-  const handleGoogleLogin = async (event: SubmitEvent) => {
-    event.preventDefault()
-    const verifiedToken = turnstileToken()
-    if (!verifiedToken) {
-      return
+  const handleLoginFailure = (error: unknown): string | null => {
+    if (isUnregisteredLoginError(error)) {
+      navigate(REGISTER_PATH)
+      return null
     }
 
-    setIsSubmitting(true)
-    setErrorMessage('')
-    try {
-      await signInWithPopup(auth, googleProvider)
-      await postLogin({ turnstile_token: verifiedToken })
-      await redirectAfterAuthentication(navigate, redirectParam())
-    } catch (error) {
-      resetTurnstile()
-      const apiError = error as Error & { code?: string }
-      if (isUnregisteredLoginError(apiError)) {
-        // バックエンドに未登録のFirebaseユーザーは新規登録画面へ
-        navigate('/register')
-        return
-      }
-      setErrorMessage(toUserFriendlyErrorMessage(error, 'Googleログインに失敗しました。'))
-    } finally {
-      setIsSubmitting(false)
-    }
+    return toUserFriendlyErrorMessage(error, 'Googleログインに失敗しました。')
   }
 
   useDocumentTitle('ログイン')
@@ -106,58 +59,13 @@ const Login = () => {
             </div>
 
             <div class="mb-6">
-              {errorMessage() && <p class="text-sm text-danger mb-4">{errorMessage()}</p>}
-              <form onSubmit={handleGoogleLogin}>
-                <Turnstile
-                  siteKey={CF_TURNSTILE_SITE_KEY}
-                  resetKey={turnstileResetKey()}
-                  class="mb-4 flex justify-center"
-                  onVerify={setTurnstileToken}
-                  onExpire={() => setTurnstileToken('')}
-                  onError={() => {
-                    setTurnstileToken('')
-                    setErrorMessage(TURNSTILE_ERROR_MESSAGE)
-                  }}
-                />
-                <AppButton
-                  type="submit"
-                  variant="surface"
-                  fullWidth
-                  disabled={isSubmitting() || !turnstileToken()}
-                  class="rounded-md shadow-sm"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 48 48"
-                    class="h-5 w-5"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fill="#4285F4"
-                      d="M47.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h13.2c-.6 3-2.3 5.5-4.9 7.2v6h7.9c4.6-4.3 7.3-10.6 7.3-17.2z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.9-6c-2.1 1.4-4.9 2.3-8 2.3-6.1 0-11.3-4.1-13.2-9.7H2.7v6.2C6.7 42.9 14.8 48 24 48z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M10.8 28.8A14.4 14.4 0 0 1 10 24c0-1.7.3-3.3.8-4.8v-6.2H2.7A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.7 10.8l8.1-6z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M24 9.5c3.5 0 6.6 1.2 9.1 3.5l6.8-6.8C35.9 2.2 30.4 0 24 0 14.8 0 6.7 5.1 2.7 13.2l8.1 6.2C12.7 13.6 17.9 9.5 24 9.5z"
-                    />
-                  </svg>
-                  {isSubmitting() ? '処理中...' : 'Googleでログイン'}
-                </AppButton>
-              </form>
+              <GoogleLoginForm onSuccess={handleLoginSuccess} onFailure={handleLoginFailure} />
             </div>
 
             <div class="text-center">
               <p class="mb-5 text-sm text-text-muted">
                 新規アカウント作成は
-                <A href="/register" class="text-link underline ml-1">
+                <A href={REGISTER_PATH} class="text-link underline ml-1">
                   こちら
                 </A>
               </p>

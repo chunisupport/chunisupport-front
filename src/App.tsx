@@ -10,8 +10,10 @@ import {
   Loading,
   NavBar,
   PlayerDataEmptyState,
+  X_TIMELINE_HEADING,
   XTimeline,
 } from './components'
+import ApplicationAvailabilityGate from './components/availability/ApplicationAvailabilityGate'
 import { SelectableCardLink } from './components/common/SelectableCardButton'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
@@ -22,6 +24,8 @@ import {
   FOOTER_DISCLAIMER_TEXT,
 } from './constants/footer'
 import {
+  ADMIN_MAINTENANCE_PATH,
+  ADMIN_PATH,
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
@@ -29,6 +33,7 @@ import {
   FRIENDS_PATH,
   LATEST_SCORE_UPDATE_PATH,
   LOCKED_SONGS_FINDER_PATH,
+  MAINTENANCE_LOGIN_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   REGISTER_SCORE_PATH,
   TOOLS_PATH,
@@ -50,6 +55,7 @@ import { isNotFoundApiError } from './utils/apiError'
 const Login = lazy(() => import('./pages/auth/Login/Login'))
 const Register = lazy(() => import('./pages/auth/Register/Register'))
 const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'))
+const MaintenanceLoginPage = lazy(() => import('./pages/maintenance/MaintenanceLoginPage'))
 
 const UserPage = lazy(() => import('./pages/users/UserPage/UserPage'))
 const GoalsList = lazy(() => import('./pages/goals/GoalsList/GoalsList'))
@@ -84,6 +90,7 @@ const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
 const AdminSongsPage = lazy(() => import('./pages/admin/AdminSongsPage'))
 const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
+const AdminMaintenancePage = lazy(() => import('./pages/admin/AdminMaintenancePage'))
 const EditorSongsPage = lazy(() => import('./pages/editor/EditorSongsPage'))
 
 /**
@@ -260,7 +267,7 @@ const LandingPage = () => {
           </section>
 
           <section class="min-w-0 rounded-lg border border-border bg-surface p-6">
-            <h2 class="mb-3 text-xl font-semibold">X公式アカウント</h2>
+            <h2 class="mb-3 text-xl font-semibold">{X_TIMELINE_HEADING}</h2>
             <XTimeline />
           </section>
         </div>
@@ -387,6 +394,7 @@ const LoadableAdminPage = withRouteLoadBoundary(AdminPage)
 const LoadableAdminUsersPage = withRouteLoadBoundary(AdminUsersPage)
 const LoadableAdminSongsPage = withRouteLoadBoundary(AdminSongsPage)
 const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
+const LoadableAdminMaintenancePage = withRouteLoadBoundary(AdminMaintenancePage)
 const LoadableEditorSongsPage = withRouteLoadBoundary(EditorSongsPage)
 const LoadableRegisterScoreTempPage = withRouteLoadBoundary(RegisterScoreTempPage)
 
@@ -446,6 +454,17 @@ const GuardedAdminHonorsPage = () => (
 )
 
 /**
+ * ADMIN 権限を要求してメンテナンス管理画面を表示する。
+ *
+ * @returns 権限制御済みのメンテナンス管理画面。
+ */
+const GuardedAdminMaintenancePage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableAdminMaintenancePage />
+  </RequireRole>
+)
+
+/**
  * 認証を要求してスコア登録の一時検証画面を表示する。
  *
  * @returns 認証 guard と route module 読み込み境界を付与した一時検証画面。
@@ -457,13 +476,26 @@ const GuardedRegisterScoreTempPage = () => (
 )
 
 /**
+ * ルーター配下の画面をAPI可用性ゲートと共通トースト領域で包む。
+ *
+ * @param props - 現在のrouteが解決した画面。
+ * @returns 可用性制御を適用したアプリケーションルート。
+ */
+const ApplicationRoot = (props: { children?: JSX.Element }) => (
+  <ApplicationAvailabilityGate>
+    {props.children}
+    <AppToastRegion />
+  </ApplicationAvailabilityGate>
+)
+
+/**
  * アプリ全体の route と共通 shell を構成する。
  *
  * @returns トップレベル route、toast 領域を含むアプリケーション。
  */
 const App = () => {
   return (
-    <Router>
+    <Router root={ApplicationRoot}>
       {/* ランディングページ */}
       <Route path="/" component={LandingPage} />
 
@@ -471,6 +503,10 @@ const App = () => {
       <Route path="/login" component={withRouteLoadBoundary(Login)} />
       <Route path="/register" component={withRouteLoadBoundary(Register)} />
       <Route path="/403" component={withRouteLoadBoundary(ForbiddenPage)} />
+      <Route
+        path={MAINTENANCE_LOGIN_PATH}
+        component={withRouteLoadBoundary(MaintenanceLoginPage)}
+      />
 
       {/* ユーザ */}
       <Route path="/users/:username/stats" component={withNavBar(withAuth(UserStatsPage))} />
@@ -544,17 +580,17 @@ const App = () => {
       <Route path={LOCKED_SONGS_FINDER_PATH} component={withNavBar(EmptyToolPage)} />
 
       {/* 管理 */}
-      <Route path="/admin" component={withNavBar(GuardedAdminPage)} />
+      <Route path={ADMIN_PATH} component={withNavBar(GuardedAdminPage)} />
       <Route path="/admin/users" component={withNavBar(GuardedAdminUsersPage)} />
       <Route path="/admin/songs" component={withNavBar(GuardedAdminSongsPage)} />
       <Route path="/admin/honors" component={withNavBar(GuardedAdminHonorsPage)} />
+      <Route path={ADMIN_MAINTENANCE_PATH} component={withNavBar(GuardedAdminMaintenancePage)} />
 
       {/* 編集 */}
       <Route path={EDITOR_SONGS_PATH} component={withNavBar(GuardedEditorSongsPage)} />
 
       {/* 404 */}
       <Route path="*" component={NotFoundPage} />
-      <AppToastRegion />
     </Router>
   )
 }

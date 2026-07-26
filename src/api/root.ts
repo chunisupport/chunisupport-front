@@ -8,7 +8,7 @@ import { fetchWithAuth } from './fetchWithAuth'
  * @returns API のアプリケーション名やビルド情報。
  */
 export const fetchApiRoot = async (): Promise<ApiRootResponse> => {
-  const response = await fetch(API_BASE_URL)
+  const response = await fetchWithAuth(API_BASE_URL)
   if (!response.ok) {
     throw new Error('APIバージョン情報の取得に失敗しました')
   }
