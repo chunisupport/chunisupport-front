@@ -20,10 +20,9 @@ test('compareSongsByReading は漢字の曲名ではなく reading の順に比�
   )
 })
 
-test('compareSongsByReading はカタカナ、英字、数字、その他・未設定の順に比較する', () => {
+test('compareSongsByReading はカタカナ、英字、数字、その他の順に比較する', () => {
   // Given
   const songs = [
-    { title: '未設定', reading: null },
     { title: '数字', reading: '39ミュージック' },
     { title: 'その他', reading: '♥ソング' },
     { title: '英字', reading: 'Brand New Day' },
@@ -36,7 +35,25 @@ test('compareSongsByReading はカタカナ、英字、数字、その他・未�
   // Then
   assert.deepEqual(
     sorted.map((song) => song.title),
-    ['カタカナ', '英字', '数字', '未設定', 'その他']
+    ['カタカナ', '英字', '数字', 'その他']
+  )
+})
+
+test('compareSongsByReading は reading が未設定または空欄の場合に title を使用する', () => {
+  // Given
+  const songs = [
+    { title: '39 Music', reading: null },
+    { title: 'Brand New Day', reading: '  ' },
+    { title: 'ワールド', reading: 'ワールド' },
+  ]
+
+  // When
+  const sorted = [...songs].sort(compareSongsByReading)
+
+  // Then
+  assert.deepEqual(
+    sorted.map((song) => song.title),
+    ['ワールド', 'Brand New Day', '39 Music']
   )
 })
 

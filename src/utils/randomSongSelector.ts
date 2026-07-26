@@ -1,6 +1,7 @@
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
 import { formatChartConst } from './chartConstFormat'
+import { getComboLampFilterValue } from './comboLampFilter'
 import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter'
 
@@ -252,7 +253,8 @@ export const resolveRandomSongRecordLamp = (
   record: PlayerRecordDTO | undefined
 ): RandomSongLampFilter => {
   if (record?.is_played !== true) return 'NONE'
-  if (record.combo_lamp === 'ALL JUSTICE' && record.justice_count === 0) return 'AJC'
+  if (getComboLampFilterValue(record.combo_lamp, record.score) === 'ALL JUSTICE CRITICAL')
+    return 'AJC'
   if (record.combo_lamp === 'ALL JUSTICE') return 'AJ'
   if (record.combo_lamp === 'FULL COMBO') return 'FC'
 

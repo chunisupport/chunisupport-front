@@ -18,9 +18,11 @@ import {
   RANDOM_SONG_OP_TARGET_FILTER,
   RANDOM_SONG_SELECTOR_DIFFICULTIES,
   RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS,
+  resolveRandomSongRecordLamp,
   restoreRandomSongResults,
   toggleRandomSongDifficultyFilter,
 } from './randomSongSelector.ts'
+import { MAX_SCORE } from './scoreRank.ts'
 
 const versions: VersionDTO[] = [
   { id: 1, name: 'CHUNITHM', released_at: '2015-07-16' },
@@ -495,7 +497,12 @@ test('自分のレコード条件でランプを絞り込むこと', () => {
     createCandidate({ song: createSong({ id: 'song-c', title: 'Song C' }) }),
   ]
   const records = createRandomSongRecordMap([
-    createRecord({ id: 'song-a', combo_lamp: 'ALL JUSTICE', justice_count: 0 }),
+    createRecord({
+      id: 'song-a',
+      combo_lamp: 'ALL JUSTICE',
+      justice_count: 0,
+      score: MAX_SCORE,
+    }),
     createRecord({ id: 'song-b', combo_lamp: 'FULL COMBO' }),
     createRecord({ id: 'song-c', clear_lamp: 'HARD' }),
   ])
@@ -514,4 +521,26 @@ test('自分のレコード条件でランプを絞り込むこと', () => {
     filtered.map((candidate) => candidate.song.id),
     ['song-a', 'song-b']
   )
+})
+
+test('AJC判定はJ数0ではなく理論値スコアを基準にすること', () => {
+  // Given: J数0のALL JUSTICEで、理論値と理論値未満のレコードがある。
+  const theoreticalRecord = createRecord({
+    combo_lamp: 'ALL JUSTICE',
+    justice_count: 0,
+    score: MAX_SCORE,
+  })
+  const belowTheoreticalRecord = createRecord({
+    combo_lamp: 'ALL JUSTICE',
+    justice_count: 0,
+    score: MAX_SCORE - 1,
+  })
+
+  // When: ランダム選曲用の代表ランプへ変換する。
+  const theoreticalLamp = resolveRandomSongRecordLamp(theoreticalRecord)
+  const belowTheoreticalLamp = resolveRandomSongRecordLamp(belowTheoreticalRecord)
+
+  // Then: 理論値だけがAJCになり、J数0でも理論値未満ならAJになる。
+  assert.equal(theoreticalLamp, 'AJC')
+  assert.equal(belowTheoreticalLamp, 'AJ')
 })

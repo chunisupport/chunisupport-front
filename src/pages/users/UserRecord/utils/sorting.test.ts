@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
+import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
 import {
   createInitialRecordSortConditions,
   DEFAULT_RECORD_SORT_CONDITIONS,
@@ -344,11 +345,16 @@ test('複数ソートは前の条件が同値の場合に次の条件で並べ�
   )
 })
 
-test('J数ソートは降順でもAJCを先頭にし、J数なし行は常に末尾に寄せる', () => {
+test('J数ソートは数値順に並べ、J数なし行は常に末尾に寄せる', () => {
   const records = [
     createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2 }),
     createRecord({ id: 'aj-j1', combo_lamp: 'ALL JUSTICE', justice_count: 1 }),
-    createRecord({ id: 'aj-j0', combo_lamp: 'ALL JUSTICE', justice_count: 0 }),
+    createRecord({
+      id: 'aj-j0',
+      combo_lamp: 'ALL JUSTICE',
+      justice_count: 0,
+      score: MAX_SCORE,
+    }),
     createRecord({ id: 'aj-null', combo_lamp: 'ALL JUSTICE', justice_count: null }),
     createRecord({ id: 'fc', combo_lamp: 'FULL COMBO', notes: 1000, score: 1009990 }),
     createRecord({ id: 'unplayed', is_played: false, combo_lamp: null, notes: 1000, score: 0 }),
@@ -361,7 +367,7 @@ test('J数ソートは降順でもAJCを先頭にし、J数なし行は常に末
 
   assert.deepEqual(
     sortRecords(records, 'justiceCount', 'desc').map((record) => record.id),
-    ['aj-j0', 'aj-j2', 'aj-j1', 'fc', 'aj-null', 'unplayed']
+    ['aj-j2', 'aj-j1', 'aj-j0', 'fc', 'aj-null', 'unplayed']
   )
 })
 

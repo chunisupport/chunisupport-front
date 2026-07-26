@@ -1,11 +1,4 @@
-import {
-  SCORE_MIN,
-  WORLDSEND_LEVEL_STAR_MAX,
-  WORLDSEND_LEVEL_STAR_MIN,
-} from '../../../../constants/chart'
-import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { hasSameFilterValues } from '../../utils/filterValue'
-import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
 import type { WorldsendFilterState } from '../types/filterTypes'
 
 /**
@@ -39,38 +32,6 @@ export function hasWorldsendJusticeCountFilter(filter: WorldsendFilterState): bo
 }
 
 /**
- * WORLD'S END レコードフィルターが既定値から変更されているか判定する。
- *
- * @param current - 現在の WORLD'S END フィルター状態。
- * @param defaultFilter - 比較対象の既定フィルター状態。
- * @returns 既定値との差分がある場合は true。
- */
-export function isWorldsendFilterChanged(
-  current: WorldsendFilterState,
-  defaultFilter: WorldsendFilterState
-): boolean {
-  return (
-    current.title !== defaultFilter.title ||
-    current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
-    current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
-    current.levelStarRange.min !== defaultFilter.levelStarRange.min ||
-    current.levelStarRange.max !== defaultFilter.levelStarRange.max ||
-    current.score.min !== defaultFilter.score.min ||
-    current.score.max !== defaultFilter.score.max ||
-    current.justiceCount.min !== defaultFilter.justiceCount.min ||
-    current.justiceCount.max !== defaultFilter.justiceCount.max ||
-    !hasSameFilterValues(current.attributes, defaultFilter.attributes) ||
-    !hasSameFilterValues(current.genres, defaultFilter.genres) ||
-    !hasSameFilterValues(current.versions, defaultFilter.versions) ||
-    !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
-    !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
-    !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp) ||
-    current.updatedAt.min !== defaultFilter.updatedAt.min ||
-    current.updatedAt.max !== defaultFilter.updatedAt.max
-  )
-}
-
-/**
  * WORLD'S END レコードフィルターのうち、検索文字列以外が既定値から変更されているか判定する。
  *
  * @param current - 現在の WORLD'S END フィルター状態。
@@ -99,49 +60,4 @@ export function isWorldsendFilterOptionsChanged(
     current.updatedAt.min !== defaultFilter.updatedAt.min ||
     current.updatedAt.max !== defaultFilter.updatedAt.max
   )
-}
-
-/**
- * WORLD'S END フィルター条件を保存ダイアログ用の要約へ変換する。
- *
- * @param filter - 要約対象の WORLD'S END フィルター。
- * @returns 画面表示用のフィルター要約。
- */
-export function formatWorldsendFilterSummary(filter: WorldsendFilterState): string {
-  const parts: string[] = []
-  if (filter.excludeNoPlay) parts.push('未プレイ譜面を除外')
-  if (filter.attributes.length > 0) {
-    parts.push(`属性: ${filter.attributes.map(formatWorldsendAttribute).join(',')}`)
-  }
-  if (
-    filter.levelStarRange.min !== WORLDSEND_LEVEL_STAR_MIN ||
-    filter.levelStarRange.max !== WORLDSEND_LEVEL_STAR_MAX
-  ) {
-    parts.push(
-      `レベル: ${formatWorldsendLevelStar(filter.levelStarRange.min)}-${formatWorldsendLevelStar(
-        filter.levelStarRange.max
-      )}`
-    )
-  }
-  if (filter.score.min !== SCORE_MIN || filter.score.max !== MAX_SCORE) {
-    parts.push(`スコア: ${filter.score.min}-${filter.score.max}`)
-  }
-  if (filter.justiceCount.min !== null || filter.justiceCount.max !== null) {
-    parts.push(`JUSTICE数: ${filter.justiceCount.min ?? ''}-${filter.justiceCount.max ?? ''}`)
-  }
-  if (filter.genres.length > 0) parts.push(`ジャンル: ${filter.genres.join(',')}`)
-  if (filter.combo_lamp.length > 0) {
-    parts.push(`コンボランプ: ${filter.combo_lamp.map((lamp) => lamp ?? 'なし').join(',')}`)
-  }
-  if (filter.chain_lamp.length > 0) {
-    parts.push(`FULL CHAIN: ${filter.chain_lamp.map(formatFullChainLampLabel).join(',')}`)
-  }
-  if (filter.hard_lamp.length > 0) {
-    parts.push(`ハードランプ: ${filter.hard_lamp.map((lamp) => lamp ?? 'なし').join(',')}`)
-  }
-  if (filter.versions.length > 0) parts.push(`バージョン: ${filter.versions.join(',')}`)
-  if (filter.updatedAt.min || filter.updatedAt.max) {
-    parts.push(`更新日: ${filter.updatedAt.min || '…'}～${filter.updatedAt.max || '…'}`)
-  }
-  return parts.join('\n')
 }
