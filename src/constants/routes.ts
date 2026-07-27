@@ -20,6 +20,8 @@ export const LOCKED_SONGS_FINDER_PATH = `${TOOLS_PATH}/locked-songs-finder`
 export const EDITOR_SONGS_PATH = '/editor/songs'
 /** ADMIN向け管理メニューのパス。 */
 export const ADMIN_PATH = '/admin'
+/** ADMIN向けデータ充足状況画面のパス。 */
+export const ADMIN_DATA_COVERAGE_PATH = `${ADMIN_PATH}/data-coverage`
 /** ADMIN向けメンテナンス管理画面のパス。 */
 export const ADMIN_MAINTENANCE_PATH = `${ADMIN_PATH}/maintenance`
 
