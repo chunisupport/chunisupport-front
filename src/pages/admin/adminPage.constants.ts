@@ -1,7 +1,12 @@
-import { ADMIN_MAINTENANCE_PATH } from '../../constants/routes'
+import { ADMIN_DATA_COVERAGE_PATH, ADMIN_MAINTENANCE_PATH } from '../../constants/routes'
 
 /** 管理メニューに表示する各管理画面へのリンク。 */
 export const ADMIN_PAGE_LINKS = [
+  {
+    href: ADMIN_DATA_COVERAGE_PATH,
+    title: 'データ充足状況',
+    description: '譜面定数の判明状況を難易度・レベル別に確認します。',
+  },
   {
     href: ADMIN_MAINTENANCE_PATH,
     title: 'メンテナンス管理',

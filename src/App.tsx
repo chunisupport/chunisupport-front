@@ -24,6 +24,7 @@ import {
   FOOTER_DISCLAIMER_TEXT,
 } from './constants/footer'
 import {
+  ADMIN_DATA_COVERAGE_PATH,
   ADMIN_MAINTENANCE_PATH,
   ADMIN_PATH,
   BEST_SLOT_RANKING_PATH,
@@ -87,6 +88,7 @@ const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelect
 const BestSlotRankingPage = lazy(() => import('./pages/tools/BestSlotRankingPage'))
 
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
+const AdminDataCoveragePage = lazy(() => import('./pages/admin/AdminDataCoveragePage'))
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
 const AdminSongsPage = lazy(() => import('./pages/admin/AdminSongsPage'))
 const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
@@ -391,6 +393,7 @@ const EmptyToolPage = () => {
 }
 
 const LoadableAdminPage = withRouteLoadBoundary(AdminPage)
+const LoadableAdminDataCoveragePage = withRouteLoadBoundary(AdminDataCoveragePage)
 const LoadableAdminUsersPage = withRouteLoadBoundary(AdminUsersPage)
 const LoadableAdminSongsPage = withRouteLoadBoundary(AdminSongsPage)
 const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
@@ -406,6 +409,17 @@ const LoadableRegisterScoreTempPage = withRouteLoadBoundary(RegisterScoreTempPag
 const GuardedAdminPage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
     <LoadableAdminPage />
+  </RequireRole>
+)
+
+/**
+ * ADMIN 権限を要求してデータ充足状況画面を表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与したデータ充足状況画面。
+ */
+const GuardedAdminDataCoveragePage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableAdminDataCoveragePage />
   </RequireRole>
 )
 
@@ -581,6 +595,7 @@ const App = () => {
 
       {/* 管理 */}
       <Route path={ADMIN_PATH} component={withNavBar(GuardedAdminPage)} />
+      <Route path={ADMIN_DATA_COVERAGE_PATH} component={withNavBar(GuardedAdminDataCoveragePage)} />
       <Route path="/admin/users" component={withNavBar(GuardedAdminUsersPage)} />
       <Route path="/admin/songs" component={withNavBar(GuardedAdminSongsPage)} />
       <Route path="/admin/honors" component={withNavBar(GuardedAdminHonorsPage)} />

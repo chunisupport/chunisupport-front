@@ -87,6 +87,27 @@ test('fetchSongsUpdatedAt は一度取得した更新日時をセッション中
   assert.deepEqual(second, responseBody)
 })
 
+test('全曲APIは指定されたHTTPキャッシュ設定を利用する', async () => {
+  // Given
+  const responseBody = { songs: [] }
+  let calledUrl = ''
+  let calledCache: RequestCache | undefined
+  globalThis.fetch = async (input, init) => {
+    calledUrl = String(input)
+    calledCache = init?.cache
+    return Response.json(responseBody)
+  }
+  const { fetchAllSongs } = await loadSongsApi()
+
+  // When
+  const result = await fetchAllSongs({ cache: 'no-store' })
+
+  // Then
+  assert.equal(calledUrl, 'http://localhost:3000/internal/songs')
+  assert.equal(calledCache, 'no-store')
+  assert.deepEqual(result, responseBody)
+})
+
 test('楽曲更新日時キャッシュは無効化後にAPIから最新値を再取得する', async () => {
   // Given: 初回の更新日時を取得してメモリへキャッシュする。
   const responseBodies = [

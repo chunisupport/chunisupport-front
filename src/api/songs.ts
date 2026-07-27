@@ -41,8 +41,16 @@ let coursesUpdatedAtResponsePromise: Promise<UpdatedAtResponseDTO> | undefined
 let cachedMasterDataResponse: MasterDataDTO | undefined
 let masterDataResponsePromise: Promise<MasterDataDTO> | undefined
 
-export const fetchAllSongs = async (): Promise<{ songs: SongDTO[] }> => {
-  const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs`)
+/**
+ * APIから有効な通常楽曲をすべて取得する。
+ *
+ * @param options - ブラウザのHTTPキャッシュ利用方法。
+ * @returns 有効な通常楽曲一覧レスポンス。
+ */
+export const fetchAllSongs = async (
+  options: Pick<RequestInit, 'cache'> = {}
+): Promise<{ songs: SongDTO[] }> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs`, options)
 
   return response.json()
 }
