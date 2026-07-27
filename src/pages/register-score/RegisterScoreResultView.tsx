@@ -1,5 +1,6 @@
 import { Play } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
+import logoSingle from '../../assets/logo_single.svg'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
 import {
@@ -34,6 +35,7 @@ import {
   createDefaultRegisterScoreTotalHighScoreRowVisibility,
   REGISTER_SCORE_AGGREGATE_ROW_OPTIONS,
   REGISTER_SCORE_STAT_COLUMNS,
+  REGISTER_SCORE_STATISTIC_DIVIDER_START_COLUMN,
   type RegisterScoreAggregateRowKey,
   type RegisterScoreAggregateRowVisibility,
   type RegisterScoreStatisticRow,
@@ -64,6 +66,8 @@ const PROFILE_VALUE_CLASS = 'font-jost text-base font-normal leading-6'
 const REGISTER_SCORE_REPORT_WIDTH_CLASS = 'w-[31rem]'
 /** 更新差分レポートの表示領域を原寸幅以下に制限するクラス。 */
 const REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS = 'max-w-[31rem]'
+/** 更新差分レポートヘッダに表示するロゴの色。 */
+const REGISTER_SCORE_REPORT_LOGO_COLOR = '#444444'
 
 /**
  * 難易度バッジを固定幅で中央揃えにする共通レイアウトクラス。
@@ -100,6 +104,17 @@ export type RegisterScoreSongTitleResolver = (change: PlayerDataRecordChange) =>
 export type RegisterScoreChartLevelResolver = (change: PlayerDataRecordChange) => string | undefined
 /** コース差分からコースタイトルを解決する関数。 */
 export type RegisterScoreCourseTitleResolver = (change: PlayerDataCourseRecordChange) => string
+
+/**
+ * RECORD STATISTICSの列に適用する区切り線クラスを返す。
+ *
+ * @param column - 表示対象の統計列。
+ * @returns FC列の直後へ区切り線を描画するTailwindクラス。対象外なら空文字。
+ */
+const getRegisterScoreStatisticColumnDividerClass = (
+  column: (typeof REGISTER_SCORE_STAT_COLUMNS)[number]
+): string =>
+  column === REGISTER_SCORE_STATISTIC_DIVIDER_START_COLUMN ? 'border-l border-border' : ''
 
 /**
  * 難易度ラベルへゲーム公式色の文字色クラスを適用する。
@@ -525,9 +540,13 @@ const RegisterScoreLampStatistics = (props: { rows: RegisterScoreStatisticRow[] 
     <table class="w-full table-fixed border-collapse text-center text-sm">
       <thead>
         <tr class="border-b border-border text-xs font-extrabold">
-          <th class="w-12 px-1 py-1 text-left"></th>
+          <th class="w-12 border-r border-border px-1 py-1 text-center"></th>
           <For each={REGISTER_SCORE_STAT_COLUMNS}>
-            {(column) => <th class="px-1 py-1">{column}</th>}
+            {(column) => (
+              <th class={`px-1 py-1 ${getRegisterScoreStatisticColumnDividerClass(column)}`}>
+                {column}
+              </th>
+            )}
           </For>
         </tr>
       </thead>
@@ -538,13 +557,15 @@ const RegisterScoreLampStatistics = (props: { rows: RegisterScoreStatisticRow[] 
               class={`${index() < props.rows.length - 1 ? 'border-b border-border ' : ''}align-top`}
             >
               <th
-                class={`px-1 py-2 text-left text-sm font-extrabold ${getDifficultyTextClass(row.difficulty)}`}
+                class={`border-r border-border px-1 py-2 text-center text-sm font-extrabold ${getDifficultyTextClass(row.difficulty)}`}
               >
                 {row.label}
               </th>
               <For each={REGISTER_SCORE_STAT_COLUMNS}>
                 {(column) => (
-                  <td class="px-1 py-2 leading-4">
+                  <td
+                    class={`px-1 py-2 leading-4 ${getRegisterScoreStatisticColumnDividerClass(column)}`}
+                  >
                     <div class="font-jost">{row.values[column].after}</div>
                     <Show when={row.values[column].delta !== 0}>
                       <div class="font-jost text-[0.65rem] font-bold text-blue-700">
@@ -698,11 +719,24 @@ const RegisterCourseChangeRow = (props: {
  * @returns レポートヘッダー。
  */
 const RegisterScoreReportHeader = (props: { result: PlayerDataUpdateResult }) => (
-  <header class="border-b border-border bg-surface-muted px-3 py-3">
-    <h1 class="text-2xl font-bold">{REGISTER_SCORE_MESSAGES.reportTitle}</h1>
-    <p class="mt-1 text-sm">
-      <span class="font-jost">{formatImportedAt(props.result.imported_at)}</span>
-    </p>
+  <header class="flex items-center justify-between border-b border-border bg-surface-muted px-3 py-3">
+    <span
+      aria-hidden="true"
+      class="h-12 w-12 shrink-0"
+      style={{
+        'background-color': REGISTER_SCORE_REPORT_LOGO_COLOR,
+        'mask-image': `url(${logoSingle})`,
+        'mask-position': 'center',
+        'mask-repeat': 'no-repeat',
+        'mask-size': 'contain',
+      }}
+    />
+    <div class="min-w-0 text-right">
+      <h1 class="text-2xl font-bold">{REGISTER_SCORE_MESSAGES.reportTitle}</h1>
+      <p class="mt-1 text-sm">
+        <span class="font-jost">{formatImportedAt(props.result.imported_at)}</span>
+      </p>
+    </div>
   </header>
 )
 

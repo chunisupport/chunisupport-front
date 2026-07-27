@@ -19,6 +19,9 @@ export const REGISTER_SCORE_STAT_COLUMNS = [
   'S',
 ] as const
 
+/** RECORD STATISTICSでFC列の後ろに区切り線を設ける列。 */
+export const REGISTER_SCORE_STATISTIC_DIVIDER_START_COLUMN = 'MAX' as const
+
 /** 更新差分レポートで扱う固定難易度。 */
 export const REGISTER_SCORE_DIFFICULTIES: readonly PlayerDataDifficulty[] = PLAYER_DATA_DIFFICULTIES
 
