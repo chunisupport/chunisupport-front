@@ -5,6 +5,9 @@
     "clientKind": "git",
     "useIgnoreFile": true
   },
+  "files": {
+    "includes": ["**", "!src/assets/logo_colored.svg", "!src/assets/logo_single.svg"]
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
