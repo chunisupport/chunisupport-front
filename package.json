@@ -26,6 +26,7 @@
     "@solidjs/router": "^0.16.1",
     "@tanstack/solid-virtual": "^3.13.30",
     "@thisbeyond/solid-dnd": "^0.7.5",
+    "@zumer/snapdom": "^2.23.1",
     "chart.js": "^4.5.1",
     "dexie": "^4.4.4",
     "firebase": "^12.15.0",
