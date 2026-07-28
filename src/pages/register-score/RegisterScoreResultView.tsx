@@ -1,6 +1,8 @@
-import { Play } from 'lucide-solid'
+import { Download, Play } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import logoSingle from '../../assets/logo_single.svg'
+import { Loading } from '../../components'
+import { AppButton } from '../../components/common/AppButton'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
 import {
@@ -55,6 +57,9 @@ export const REGISTER_SCORE_MESSAGES = {
   totalHighScoreTitle: 'TOTAL HIGH SCORE',
   recordStatsTitle: 'RECORD STATISTICS',
   displaySettingsTitle: '表示設定',
+  downloadImage: '画像をダウンロード',
+  downloadingImage: '画像を作成中',
+  downloadImageError: '画像のダウンロードに失敗しました。',
   unknownSongTitle: REGISTER_SCORE_UNKNOWN_TITLE,
 } as const
 
@@ -68,6 +73,14 @@ const REGISTER_SCORE_REPORT_WIDTH_CLASS = 'w-[31rem]'
 const REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS = 'max-w-[31rem]'
 /** 更新差分レポートヘッダに表示するロゴの色。 */
 const REGISTER_SCORE_REPORT_LOGO_COLOR = '#444444'
+/** 更新差分画像を原寸の2倍で出力するピクセル比。 */
+const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 2
+/** 2倍出力時もCanvasの一辺を16,000px以内へ収めるレポート寸法。 */
+const REGISTER_SCORE_IMAGE_MAX_CSS_SIDE = 8_000
+/** ダウンロード開始後にObject URLを解放するまでの待機時間。 */
+const REGISTER_SCORE_IMAGE_OBJECT_URL_REVOKE_DELAY_MS = 1_000
+/** 更新差分画像のファイル名へ付与する接頭辞。 */
+const REGISTER_SCORE_IMAGE_FILENAME_PREFIX = 'chunisupport-score-update'
 
 /**
  * 難易度バッジを固定幅で中央揃えにする共通レイアウトクラス。
@@ -241,6 +254,90 @@ const formatImportedAt = (isoDateTime: string): string => {
   const seconds = String(date.getSeconds()).padStart(2, '0')
 
   return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`
+}
+
+/**
+ * 更新日時からPNG画像のダウンロードファイル名を生成する。
+ *
+ * @param isoDateTime - APIから返却されたISO形式の更新日時。
+ * @returns `chunisupport-score-update-YYYYMMDD-HHmmss.png` 形式のファイル名。
+ */
+const formatRegisterScoreImageFilename = (isoDateTime: string): string => {
+  const timestamp = formatImportedAt(isoDateTime)
+    .replaceAll('/', '')
+    .replaceAll(':', '')
+    .replace(' ', '-')
+
+  return `${REGISTER_SCORE_IMAGE_FILENAME_PREFIX}-${timestamp}.png`
+}
+
+/**
+ * 画像化対象を祖先の表示用transformから切り離し、Canvas上限内の寸法で複製する。
+ *
+ * @param reportElement - 画面に表示中の更新差分レポート。
+ * @returns 画像化対象の複製と破棄処理。
+ */
+const createRegisterScoreImageCapture = (
+  reportElement: HTMLElement
+): { element: HTMLDivElement; dispose: () => void } => {
+  const reportWidth = reportElement.offsetWidth
+  const reportHeight = reportElement.offsetHeight
+  const captureScale = Math.min(
+    1,
+    REGISTER_SCORE_IMAGE_MAX_CSS_SIDE / reportWidth,
+    REGISTER_SCORE_IMAGE_MAX_CSS_SIDE / reportHeight
+  )
+  const captureHost = document.createElement('div')
+  const captureElement = document.createElement('div')
+  const reportClone = reportElement.cloneNode(true) as HTMLElement
+
+  Object.assign(captureHost.style, {
+    left: '-100000px',
+    pointerEvents: 'none',
+    position: 'fixed',
+    top: '0',
+  })
+  Object.assign(captureElement.style, {
+    height: `${Math.ceil(reportHeight * captureScale)}px`,
+    overflow: 'hidden',
+    width: `${Math.ceil(reportWidth * captureScale)}px`,
+  })
+  Object.assign(reportClone.style, {
+    maxWidth: 'none',
+    transform: `scale(${captureScale})`,
+    transformOrigin: 'top left',
+    width: `${reportWidth}px`,
+  })
+  captureHost.setAttribute('aria-hidden', 'true')
+  captureElement.appendChild(reportClone)
+  captureHost.appendChild(captureElement)
+  document.body.appendChild(captureHost)
+
+  return {
+    element: captureElement,
+    dispose: () => captureHost.remove(),
+  }
+}
+
+/**
+ * Blobを指定ファイル名でダウンロードする。
+ *
+ * @param blob - ダウンロードするファイル内容。
+ * @param filename - ダウンロード時に使用する拡張子付きファイル名。
+ * @returns なし。
+ */
+const downloadRegisterScoreFile = (blob: Blob, filename: string): void => {
+  const objectUrl = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.download = filename
+  link.href = objectUrl
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.setTimeout(
+    () => URL.revokeObjectURL(objectUrl),
+    REGISTER_SCORE_IMAGE_OBJECT_URL_REVOKE_DELAY_MS
+  )
 }
 
 /**
@@ -839,6 +936,8 @@ export const RegisterScoreResultView = (props: {
     )
   const [reportScale, setReportScale] = createSignal(1)
   const [scaledReportHeight, setScaledReportHeight] = createSignal<number>()
+  const [isDownloadingImage, setIsDownloadingImage] = createSignal(false)
+  const [downloadImageError, setDownloadImageError] = createSignal<string>()
   let scaleContainerRef!: HTMLDivElement
   let reportRef!: HTMLElement
 
@@ -870,6 +969,50 @@ export const RegisterScoreResultView = (props: {
     setStatisticRowVisibility((current) => ({ ...current, [key]: checked }))
   }
 
+  /**
+   * 現在表示中の更新差分レポートを1枚のPNG画像としてダウンロードする。
+   *
+   * @returns ダウンロード処理の完了時に解決されるPromise。
+   */
+  const downloadReportImage = async (): Promise<void> => {
+    setIsDownloadingImage(true)
+    setDownloadImageError(undefined)
+
+    try {
+      await document.fonts.ready
+      const capture = createRegisterScoreImageCapture(reportRef)
+
+      try {
+        const { snapdom } = await import('@zumer/snapdom')
+        const captureResult = await snapdom(capture.element, {
+          backgroundColor: getComputedStyle(reportRef).backgroundColor,
+          dpr: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
+          embedFonts: true,
+          format: 'png',
+          reconcile: true,
+        })
+        const rasterizeOptions = {
+          dpr: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
+          type: 'png' as const,
+        }
+
+        // ChromeがSVG内の埋め込みフォントを初回描画で準備するため、1回目は破棄する。
+        await captureResult.toBlob(rasterizeOptions)
+        const imageBlob = await captureResult.toBlob(rasterizeOptions)
+        downloadRegisterScoreFile(
+          imageBlob,
+          formatRegisterScoreImageFilename(props.result.imported_at)
+        )
+      } finally {
+        capture.dispose()
+      }
+    } catch {
+      setDownloadImageError(REGISTER_SCORE_MESSAGES.downloadImageError)
+    } finally {
+      setIsDownloadingImage(false)
+    }
+  }
+
   onMount(() => {
     /**
      * 固定幅レポートを親要素の表示幅へ収める縮小率と占有高さを更新する。
@@ -893,6 +1036,30 @@ export const RegisterScoreResultView = (props: {
 
   return (
     <div class={`mx-auto flex w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} flex-col gap-4`}>
+      <div class="flex flex-col items-end gap-2">
+        <AppButton
+          variant="primary"
+          disabled={isDownloadingImage()}
+          aria-busy={isDownloadingImage()}
+          onClick={downloadReportImage}
+          leftIcon={
+            <Show when={!isDownloadingImage()} fallback={<Loading size="inline" ariaHidden />}>
+              <Download class="h-4 w-4" aria-hidden="true" />
+            </Show>
+          }
+        >
+          {isDownloadingImage()
+            ? REGISTER_SCORE_MESSAGES.downloadingImage
+            : REGISTER_SCORE_MESSAGES.downloadImage}
+        </AppButton>
+        <Show when={downloadImageError()}>
+          {(message) => (
+            <p class="text-sm text-danger" role="alert">
+              {message()}
+            </p>
+          )}
+        </Show>
+      </div>
       <RegisterScoreDisplaySettings
         showTotalHighScore={showTotalHighScore()}
         showRecordStatistics={showRecordStatistics()}
