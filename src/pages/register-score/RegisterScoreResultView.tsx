@@ -1,4 +1,4 @@
-import { Bug, Download, Play } from 'lucide-solid'
+import { Download, Play } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import logoSingle from '../../assets/logo_single.svg'
 import { Loading } from '../../components'
@@ -33,11 +33,6 @@ import {
   REGISTER_SCORE_UNKNOWN_TITLE,
 } from './registerScoreDisplay'
 import {
-  collectRegisterScoreElementDiagnostics,
-  collectRegisterScoreEnvironmentDiagnostics,
-  inspectRegisterScoreSnapdomSvg,
-} from './registerScoreImageDiagnostics'
-import {
   createDefaultRegisterScoreStatisticRowVisibility,
   createDefaultRegisterScoreTotalHighScoreRowVisibility,
   REGISTER_SCORE_AGGREGATE_ROW_OPTIONS,
@@ -65,13 +60,6 @@ export const REGISTER_SCORE_MESSAGES = {
   downloadImage: '画像をダウンロード',
   downloadingImage: '画像を作成中',
   downloadImageError: '画像のダウンロードに失敗しました。',
-  downloadDiagnostics: 'SnapDOM診断を実行',
-  downloadingDiagnostics: '診断中',
-  downloadDiagnosticsError: 'SnapDOM診断データの作成に失敗しました。',
-  downloadDiagnosticsPartialError: '一部の比較処理に失敗しました。診断JSONを確認してください。',
-  downloadDiagnosticsAllError: '比較処理に失敗しました。診断JSONを確認してください。',
-  downloadDiagnosticJson: '診断JSONをダウンロード',
-  downloadDiagnosticImage: '比較画像をダウンロード',
   unknownSongTitle: REGISTER_SCORE_UNKNOWN_TITLE,
 } as const
 
@@ -93,34 +81,6 @@ const REGISTER_SCORE_IMAGE_MAX_CSS_SIDE = 8_000
 const REGISTER_SCORE_IMAGE_OBJECT_URL_REVOKE_DELAY_MS = 1_000
 /** 更新差分画像のファイル名へ付与する接頭辞。 */
 const REGISTER_SCORE_IMAGE_FILENAME_PREFIX = 'chunisupport-score-update'
-/** SnapDOM診断JSONのスキーマバージョン。 */
-const REGISTER_SCORE_DIAGNOSTIC_SCHEMA_VERSION = 2
-/** キャッシュによる順序差を判定するために実行するreconcileの順番。 */
-const REGISTER_SCORE_DIAGNOSTIC_RECONCILE_ORDERS = [
-  [false, true],
-  [true, false],
-] as const
-/** スマートフォンのメモリ負荷を抑えてレイアウトを比較する診断画像の倍率。 */
-const REGISTER_SCORE_DIAGNOSTIC_PIXEL_RATIO = 1
-
-type RegisterScoreDiagnosticArtifact = {
-  label: string
-  filename: string
-  blob: Blob
-}
-
-/**
- * 診断中に発生した例外をJSONへ保存可能な情報へ変換する。
- *
- * @param error - 診断処理から送出された値。
- * @returns 例外の名前とメッセージ。
- */
-const serializeRegisterScoreDiagnosticError = (
-  error: unknown
-): { name: string; message: string } =>
-  error instanceof Error
-    ? { name: error.name, message: error.message }
-    : { name: 'UnknownError', message: String(error) }
 
 /**
  * 難易度バッジを固定幅で中央揃えにする共通レイアウトクラス。
@@ -500,10 +460,7 @@ const RegisterScoreProfileSummary = (props: { result: PlayerDataUpdateResult }) 
   <section class="pb-3">
     <div class="flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2.5">
       <p class="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 font-sans text-xl font-extrabold leading-none">
-        <span
-          data-snapdom-debug-target="profile-level"
-          class="shrink-0 whitespace-nowrap tracking-normal"
-        >
+        <span class="shrink-0 whitespace-nowrap tracking-normal">
           Lv. {props.result.profile.level}
         </span>
         <span class="min-w-0 truncate text-center">{props.result.profile.name}</span>
@@ -757,30 +714,19 @@ const RegisterScoreChangeRow = (props: {
   chartLevel?: string
 }) => {
   return (
-    <article data-snapdom-debug-target="song-row" class={`${SCORE_CHANGE_CARD_CLASS} font-jost`}>
+    <article class={`${SCORE_CHANGE_CARD_CLASS} font-jost`}>
       <div class="flex min-w-0 items-center gap-2 text-base">
-        <span
-          data-snapdom-debug-target="difficulty-label"
-          class={`${DIFFICULTY_BADGE_LAYOUT_CLASS} ${getDifficultyBadgeClass(props.change)}`}
-        >
+        <span class={`${DIFFICULTY_BADGE_LAYOUT_CLASS} ${getDifficultyBadgeClass(props.change)}`}>
           {getShortDifficultyLabel(props.change)}
         </span>
         <Show when={props.chartLevel}>
           {(level) => (
-            <span
-              data-snapdom-debug-target="chart-level"
-              class="shrink-0 whitespace-nowrap rounded bg-surface px-2 py-0.5 text-xs font-bold leading-5"
-            >
+            <span class="shrink-0 whitespace-nowrap rounded bg-surface px-2 py-0.5 text-xs font-bold leading-5">
               {level()}
             </span>
           )}
         </Show>
-        <h3
-          data-snapdom-debug-target="song-title"
-          class="min-w-0 flex-1 truncate font-sans text-base font-bold"
-        >
-          {props.songTitle}
-        </h3>
+        <h3 class="min-w-0 flex-1 truncate font-sans text-base font-bold">{props.songTitle}</h3>
       </div>
       <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
         <div class="w-fit">
@@ -825,22 +771,16 @@ const RegisterCourseChangeRow = (props: {
   change: PlayerDataCourseRecordChange
   courseTitle: string
 }) => (
-  <article data-snapdom-debug-target="course-row" class={`${SCORE_CHANGE_CARD_CLASS} font-jost`}>
+  <article class={`${SCORE_CHANGE_CARD_CLASS} font-jost`}>
     <div class="flex min-w-0 items-center gap-2 text-base">
       <span
-        data-snapdom-debug-target="course-class"
         class={`${COURSE_CLASS_BADGE_LAYOUT_CLASS} whitespace-nowrap ${courseClassBadgeClass(
           props.change.course_class
         )}`}
       >
         {formatCourseClass(props.change.course_class)}
       </span>
-      <h3
-        data-snapdom-debug-target="course-title"
-        class="min-w-0 flex-1 truncate font-sans text-base font-bold"
-      >
-        {props.courseTitle}
-      </h3>
+      <h3 class="min-w-0 flex-1 truncate font-sans text-base font-bold">{props.courseTitle}</h3>
     </div>
     <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
       <div class={COURSE_CHANGE_SCORE_VALUE_CLASS}>
@@ -880,10 +820,7 @@ const RegisterCourseChangeRow = (props: {
  * @returns レポートヘッダー。
  */
 const RegisterScoreReportHeader = (props: { result: PlayerDataUpdateResult }) => (
-  <header
-    data-snapdom-debug-target="report-header"
-    class="flex items-center justify-between border-b border-border bg-surface-muted px-3 py-3"
-  >
+  <header class="flex items-center justify-between border-b border-border bg-surface-muted px-3 py-3">
     <span
       aria-hidden="true"
       class="h-12 w-12 shrink-0"
@@ -896,9 +833,7 @@ const RegisterScoreReportHeader = (props: { result: PlayerDataUpdateResult }) =>
       }}
     />
     <div class="min-w-0 text-right">
-      <h1 data-snapdom-debug-target="report-title" class="whitespace-nowrap text-2xl font-bold">
-        {REGISTER_SCORE_MESSAGES.reportTitle}
-      </h1>
+      <h1 class="whitespace-nowrap text-2xl font-bold">{REGISTER_SCORE_MESSAGES.reportTitle}</h1>
       <p class="mt-1 text-sm">
         <span class="font-jost">{formatImportedAt(props.result.imported_at)}</span>
       </p>
@@ -1007,12 +942,6 @@ export const RegisterScoreResultView = (props: {
   const [scaledReportHeight, setScaledReportHeight] = createSignal<number>()
   const [isDownloadingImage, setIsDownloadingImage] = createSignal(false)
   const [downloadImageError, setDownloadImageError] = createSignal<string>()
-  const [isCreatingDiagnostics, setIsCreatingDiagnostics] = createSignal(false)
-  const [diagnosticError, setDiagnosticError] = createSignal<string>()
-  const [diagnosticJson, setDiagnosticJson] = createSignal<RegisterScoreDiagnosticArtifact>()
-  const [diagnosticPreviews, setDiagnosticPreviews] = createSignal<
-    RegisterScoreDiagnosticArtifact[]
-  >([])
   let scaleContainerRef!: HTMLDivElement
   let reportRef!: HTMLElement
 
@@ -1088,167 +1017,6 @@ export const RegisterScoreResultView = (props: {
     }
   }
 
-  /**
-   * reconcile無効・有効のSnapDOM出力と各段階のレイアウト測定値をJSONへ保存する。
-   *
-   * @returns 診断データと比較用PNGの作成完了時に解決されるPromise。
-   */
-  const downloadSnapdomDiagnostics = async (): Promise<void> => {
-    setIsCreatingDiagnostics(true)
-    setDiagnosticError(undefined)
-    setDiagnosticJson(undefined)
-    setDiagnosticPreviews([])
-
-    try {
-      await document.fonts.ready
-      const { snapdom } = await import('@zumer/snapdom')
-      const startedAt = performance.now()
-      const filenameBase = formatRegisterScoreImageFilename(props.result.imported_at).replace(
-        /\.png$/u,
-        '-snapdom-layout-debug'
-      )
-      const variants = []
-      const previews: RegisterScoreDiagnosticArtifact[] = []
-
-      for (const [
-        roundIndex,
-        reconcileOrder,
-      ] of REGISTER_SCORE_DIAGNOSTIC_RECONCILE_ORDERS.entries()) {
-        for (const [orderIndex, reconcile] of reconcileOrder.entries()) {
-          let capture: ReturnType<typeof createRegisterScoreImageCapture> | undefined
-          let stage = 'create-capture'
-          const roundNumber = roundIndex + 1
-          const orderNumber = orderIndex + 1
-          const variant: Record<string, unknown> = {
-            result: 'running',
-            roundNumber,
-            orderNumber,
-            reconcileOrder,
-            reconcile,
-          }
-
-          variants.push(variant)
-
-          try {
-            capture = createRegisterScoreImageCapture(reportRef)
-            variant.capture = {
-              offsetWidth: capture.element.offsetWidth,
-              offsetHeight: capture.element.offsetHeight,
-              rect: {
-                width: Number(capture.element.getBoundingClientRect().width.toFixed(3)),
-                height: Number(capture.element.getBoundingClientRect().height.toFixed(3)),
-              },
-            }
-            stage = 'measure-before-snapdom'
-            const beforeElements = collectRegisterScoreElementDiagnostics(
-              capture.element,
-              'capture-before-snapdom'
-            )
-            variant.elementsBeforeSnapdom = beforeElements
-            stage = 'snapdom'
-            const captureStartedAt = performance.now()
-            const captureResult = await snapdom(capture.element, {
-              backgroundColor: getComputedStyle(reportRef).backgroundColor,
-              dpr: REGISTER_SCORE_DIAGNOSTIC_PIXEL_RATIO,
-              embedFonts: true,
-              format: 'png',
-              reconcile,
-            })
-            const capturedAt = performance.now()
-            variant.snapdomTimingMs = Number((capturedAt - captureStartedAt).toFixed(3))
-            stage = 'measure-after-snapdom'
-            const afterElements = collectRegisterScoreElementDiagnostics(
-              capture.element,
-              'capture-after-snapdom'
-            )
-            variant.elementsAfterSnapdom = afterElements
-            stage = 'inspect-svg'
-            const svg = inspectRegisterScoreSnapdomSvg(captureResult.toRaw())
-            variant.svg = svg
-            const rasterizeOptions = {
-              dpr: REGISTER_SCORE_DIAGNOSTIC_PIXEL_RATIO,
-              type: 'png' as const,
-            }
-            stage = 'first-rasterization'
-            const firstRasterStartedAt = performance.now()
-            const firstBlob = await captureResult.toBlob(rasterizeOptions)
-            const firstRasterCompletedAt = performance.now()
-            variant.firstRasterization = {
-              timingMs: Number((firstRasterCompletedAt - firstRasterStartedAt).toFixed(3)),
-              blobSize: firstBlob.size,
-              blobType: firstBlob.type,
-            }
-            stage = 'second-rasterization'
-            const secondRasterStartedAt = performance.now()
-            const secondBlob = await captureResult.toBlob(rasterizeOptions)
-            const completedAt = performance.now()
-            const variantName = reconcile ? 'reconcile-on' : 'reconcile-off'
-
-            variant.result = 'success'
-            variant.completedStage = 'second-rasterization'
-            variant.secondRasterization = {
-              timingMs: Number((completedAt - secondRasterStartedAt).toFixed(3)),
-              blobSize: secondBlob.size,
-              blobType: secondBlob.type,
-            }
-            previews.push({
-              label: `${roundNumber}-${orderNumber} ${reconcile ? 'reconcileあり' : 'reconcileなし'}`,
-              filename: `${filenameBase}-round-${roundNumber}-order-${orderNumber}-${variantName}.png`,
-              blob: secondBlob,
-            })
-          } catch (error) {
-            variant.result = 'error'
-            variant.failedStage = stage
-            variant.error = serializeRegisterScoreDiagnosticError(error)
-          } finally {
-            capture?.dispose()
-          }
-        }
-      }
-
-      const successCount = variants.filter((variant) => variant.result === 'success').length
-      const diagnosticResult =
-        successCount === variants.length ? 'success' : successCount > 0 ? 'partial' : 'error'
-      const diagnostic = {
-        schemaVersion: REGISTER_SCORE_DIAGNOSTIC_SCHEMA_VERSION,
-        capturedAt: new Date().toISOString(),
-        result: diagnosticResult,
-        environment: collectRegisterScoreEnvironmentDiagnostics(),
-        reportDisplay: {
-          scale: reportScale(),
-          scaledHeight: scaledReportHeight() ?? null,
-          containerWidth: scaleContainerRef.clientWidth,
-          reportOffsetWidth: reportRef.offsetWidth,
-          reportOffsetHeight: reportRef.offsetHeight,
-          elements: collectRegisterScoreElementDiagnostics(reportRef, 'displayed-report'),
-        },
-        variants,
-        totalTimingMs: Number((performance.now() - startedAt).toFixed(3)),
-      }
-      const diagnosticBlob = new Blob([JSON.stringify(diagnostic, null, 2)], {
-        type: 'application/json;charset=utf-8',
-      })
-
-      setDiagnosticPreviews(previews)
-      setDiagnosticJson({
-        label: 'diagnostic-json',
-        filename: `${filenameBase}.json`,
-        blob: diagnosticBlob,
-      })
-      if (diagnosticResult !== 'success') {
-        setDiagnosticError(
-          diagnosticResult === 'partial'
-            ? REGISTER_SCORE_MESSAGES.downloadDiagnosticsPartialError
-            : REGISTER_SCORE_MESSAGES.downloadDiagnosticsAllError
-        )
-      }
-    } catch {
-      setDiagnosticError(REGISTER_SCORE_MESSAGES.downloadDiagnosticsError)
-    } finally {
-      setIsCreatingDiagnostics(false)
-    }
-  }
-
   onMount(() => {
     /**
      * 固定幅レポートを親要素の表示幅へ収める縮小率と占有高さを更新する。
@@ -1273,72 +1041,22 @@ export const RegisterScoreResultView = (props: {
   return (
     <div class={`mx-auto flex w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} flex-col gap-4`}>
       <div class="flex flex-col items-end gap-2">
-        <div class="flex flex-wrap justify-end gap-2">
-          <AppButton
-            variant="secondary"
-            disabled={isDownloadingImage() || isCreatingDiagnostics()}
-            aria-busy={isCreatingDiagnostics()}
-            onClick={downloadSnapdomDiagnostics}
-            leftIcon={
-              <Show when={!isCreatingDiagnostics()} fallback={<Loading size="inline" ariaHidden />}>
-                <Bug class="h-4 w-4" aria-hidden="true" />
-              </Show>
-            }
-          >
-            {isCreatingDiagnostics()
-              ? REGISTER_SCORE_MESSAGES.downloadingDiagnostics
-              : REGISTER_SCORE_MESSAGES.downloadDiagnostics}
-          </AppButton>
-          <AppButton
-            variant="primary"
-            disabled={isDownloadingImage() || isCreatingDiagnostics()}
-            aria-busy={isDownloadingImage()}
-            onClick={downloadReportImage}
-            leftIcon={
-              <Show when={!isDownloadingImage()} fallback={<Loading size="inline" ariaHidden />}>
-                <Download class="h-4 w-4" aria-hidden="true" />
-              </Show>
-            }
-          >
-            {isDownloadingImage()
-              ? REGISTER_SCORE_MESSAGES.downloadingImage
-              : REGISTER_SCORE_MESSAGES.downloadImage}
-          </AppButton>
-        </div>
-        <Show when={diagnosticJson()}>
-          {(artifact) => (
-            <div class="flex flex-wrap justify-end gap-2">
-              <AppButton
-                variant="surface"
-                size="sm"
-                onClick={() => downloadRegisterScoreFile(artifact().blob, artifact().filename)}
-                leftIcon={<Download class="h-4 w-4" aria-hidden="true" />}
-              >
-                {REGISTER_SCORE_MESSAGES.downloadDiagnosticJson}
-              </AppButton>
-              <For each={diagnosticPreviews()}>
-                {(preview) => (
-                  <AppButton
-                    variant="surface"
-                    size="sm"
-                    onClick={() => downloadRegisterScoreFile(preview.blob, preview.filename)}
-                    leftIcon={<Download class="h-4 w-4" aria-hidden="true" />}
-                  >
-                    {REGISTER_SCORE_MESSAGES.downloadDiagnosticImage}（{preview.label}）
-                  </AppButton>
-                )}
-              </For>
-            </div>
-          )}
-        </Show>
+        <AppButton
+          variant="primary"
+          disabled={isDownloadingImage()}
+          aria-busy={isDownloadingImage()}
+          onClick={downloadReportImage}
+          leftIcon={
+            <Show when={!isDownloadingImage()} fallback={<Loading size="inline" ariaHidden />}>
+              <Download class="h-4 w-4" aria-hidden="true" />
+            </Show>
+          }
+        >
+          {isDownloadingImage()
+            ? REGISTER_SCORE_MESSAGES.downloadingImage
+            : REGISTER_SCORE_MESSAGES.downloadImage}
+        </AppButton>
         <Show when={downloadImageError()}>
-          {(message) => (
-            <p class="text-sm text-danger" role="alert">
-              {message()}
-            </p>
-          )}
-        </Show>
-        <Show when={diagnosticError()}>
           {(message) => (
             <p class="text-sm text-danger" role="alert">
               {message()}
@@ -1368,7 +1086,6 @@ export const RegisterScoreResultView = (props: {
           <section
             ref={reportRef}
             data-theme="light"
-            data-snapdom-debug-target="report"
             class="w-full overflow-hidden rounded-md border border-border bg-surface px-0 pb-4 pt-0 font-sans text-text shadow-sm"
           >
             <RegisterScoreReportHeader result={props.result} />
