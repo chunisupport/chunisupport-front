@@ -469,8 +469,8 @@ const RegisterScoreProfileSummary = (props: { result: PlayerDataUpdateResult }) 
     <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
       <dt class="font-extrabold text-text-muted">RATING</dt>
       <dd class={PROFILE_VALUE_CLASS}>{formatNullableRating(props.result.summary.rating)}</dd>
-      <dt class="font-extrabold text-text-muted">OVER POWER</dt>
-      <dd class={PROFILE_VALUE_CLASS}>
+      <dt class="whitespace-nowrap font-extrabold text-text-muted">OVER POWER</dt>
+      <dd class={`${PROFILE_VALUE_CLASS} whitespace-nowrap`}>
         <Show
           when={
             props.result.summary.overpower_value !== null &&
@@ -589,7 +589,7 @@ const RegisterScoreAggregateSummary = (props: {
     <>
       <Show when={props.showTotalHighScore && totalHighScoreRows().length > 0}>
         <section class="py-4">
-          <h2 class="mb-3 text-xl font-extrabold leading-6">
+          <h2 class="mb-3 whitespace-nowrap text-xl font-extrabold leading-6">
             {REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
           </h2>
           <div class="grid grid-cols-3 gap-x-4 gap-y-1 text-sm">
@@ -618,7 +618,7 @@ const RegisterScoreAggregateSummary = (props: {
 
       <Show when={props.showRecordStatistics && statisticRows().length > 0}>
         <section class="py-4">
-          <h2 class="mb-3 text-xl font-extrabold leading-6">
+          <h2 class="mb-3 whitespace-nowrap text-xl font-extrabold leading-6">
             {REGISTER_SCORE_MESSAGES.recordStatsTitle}
           </h2>
           <RegisterScoreLampStatistics rows={statisticRows()} />
@@ -835,7 +835,9 @@ const RegisterScoreReportHeader = (props: { result: PlayerDataUpdateResult }) =>
     <div class="min-w-0 text-right">
       <h1 class="whitespace-nowrap text-2xl font-bold">{REGISTER_SCORE_MESSAGES.reportTitle}</h1>
       <p class="mt-1 text-sm">
-        <span class="font-jost">{formatImportedAt(props.result.imported_at)}</span>
+        <span class="whitespace-nowrap font-jost">
+          {formatImportedAt(props.result.imported_at)}
+        </span>
       </p>
     </div>
   </header>
@@ -854,7 +856,9 @@ const RegisterScoreChangesSection = (props: {
   emptyMessage?: string
 }) => (
   <section class="min-w-0 pt-4">
-    <h2 class="mb-1 text-xl font-bold">{REGISTER_SCORE_MESSAGES.changedSongsTitle}</h2>
+    <h2 class="mb-1 whitespace-nowrap text-xl font-bold">
+      {REGISTER_SCORE_MESSAGES.changedSongsTitle}
+    </h2>
     <Show
       when={props.changes.length > 0}
       fallback={
@@ -890,7 +894,9 @@ const RegisterCourseChangesSection = (props: {
 }) => (
   <Show when={props.changes.length > 0}>
     <section class="min-w-0 pt-4">
-      <h2 class="mb-1 text-xl font-bold">{REGISTER_SCORE_MESSAGES.changedCoursesTitle}</h2>
+      <h2 class="mb-1 whitespace-nowrap text-xl font-bold">
+        {REGISTER_SCORE_MESSAGES.changedCoursesTitle}
+      </h2>
       <div class="mt-2 grid min-w-0 max-w-full gap-2">
         <For each={props.changes}>
           {(change) => (
