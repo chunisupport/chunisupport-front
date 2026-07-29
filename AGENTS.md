@@ -101,6 +101,12 @@
 - スコアの数値表示には、原則として `font-jost` を使用してください。
 - ユーザーの自由入力、ノーツデザイナー名、曲名、アーティスト名など、あらゆるテキストが入りうる入力・表示箇所には、必ず sans 系フォント（`font-sans`）を使用してください。
 
+### SnapDOMによる画像化
+
+- SnapDOMを使ってDOMを画像化する実装を追加・変更する場合は、必ず [SnapDOMによるDOM画像化ガイド](./docs/snapdom-image-capture.md) を確認してください。
+- SnapDOMによるすべての画像化で `reconcile: true` を必ず指定してください。
+- 特に、固定論理サイズと表示用transformの分離、Flexbox・Grid内の文字幅、改行禁止、フォント準備、Canvasのメモリ上限、実機スマートフォンでの検証に注意してください。
+
 ### プルダウンの色合い
 - Kobalte Select の選択肢は、通常時の背景を `bg-surface` 系に揃え、未選択状態専用の背景色を追加しないでください。ライトテーマでは白、ダークテーマでは深緑の面に見えるように、Select.Content やダイアログ背景と同じトーンを維持してください。
 - 選択肢の hover / highlighted / selected 状態は、OVER POWERページの集計軸セレクトと同じく `hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg` を基準にしてください。
@@ -204,6 +210,7 @@ test('スコアが負の値の場合はエラーをスローすること', () =>
 
 ## 7. Resources & References (ドキュメント)
 
+- **SnapDOMによるDOM画像化ガイド**: [docs/snapdom-image-capture.md](./docs/snapdom-image-capture.md)
 - **Rsbuild Documentation**: https://rsbuild.rs/llms.txt
 - **Rspack Documentation**: https://rspack.rs/llms.txt
 - **API 管理リポジトリ**: https://github.com/chunisupport/chunisupport-api
