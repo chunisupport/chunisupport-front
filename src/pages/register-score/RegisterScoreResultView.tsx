@@ -500,7 +500,10 @@ const RegisterScoreProfileSummary = (props: { result: PlayerDataUpdateResult }) 
   <section class="pb-3">
     <div class="flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2.5">
       <p class="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 font-sans text-xl font-extrabold leading-none">
-        <span data-snapdom-debug-target="profile-level" class="shrink-0 tracking-normal">
+        <span
+          data-snapdom-debug-target="profile-level"
+          class="shrink-0 whitespace-nowrap tracking-normal"
+        >
           Lv. {props.result.profile.level}
         </span>
         <span class="min-w-0 truncate text-center">{props.result.profile.name}</span>
@@ -766,7 +769,7 @@ const RegisterScoreChangeRow = (props: {
           {(level) => (
             <span
               data-snapdom-debug-target="chart-level"
-              class="shrink-0 rounded bg-surface px-2 py-0.5 text-xs font-bold leading-5"
+              class="shrink-0 whitespace-nowrap rounded bg-surface px-2 py-0.5 text-xs font-bold leading-5"
             >
               {level()}
             </span>
@@ -774,7 +777,7 @@ const RegisterScoreChangeRow = (props: {
         </Show>
         <h3
           data-snapdom-debug-target="song-title"
-          class="min-w-0 truncate font-sans text-base font-bold"
+          class="min-w-0 flex-1 truncate font-sans text-base font-bold"
         >
           {props.songTitle}
         </h3>
@@ -826,13 +829,15 @@ const RegisterCourseChangeRow = (props: {
     <div class="flex min-w-0 items-center gap-2 text-base">
       <span
         data-snapdom-debug-target="course-class"
-        class={`${COURSE_CLASS_BADGE_LAYOUT_CLASS} ${courseClassBadgeClass(props.change.course_class)}`}
+        class={`${COURSE_CLASS_BADGE_LAYOUT_CLASS} whitespace-nowrap ${courseClassBadgeClass(
+          props.change.course_class
+        )}`}
       >
         {formatCourseClass(props.change.course_class)}
       </span>
       <h3
         data-snapdom-debug-target="course-title"
-        class="min-w-0 truncate font-sans text-base font-bold"
+        class="min-w-0 flex-1 truncate font-sans text-base font-bold"
       >
         {props.courseTitle}
       </h3>
@@ -891,7 +896,7 @@ const RegisterScoreReportHeader = (props: { result: PlayerDataUpdateResult }) =>
       }}
     />
     <div class="min-w-0 text-right">
-      <h1 data-snapdom-debug-target="report-title" class="text-2xl font-bold">
+      <h1 data-snapdom-debug-target="report-title" class="whitespace-nowrap text-2xl font-bold">
         {REGISTER_SCORE_MESSAGES.reportTitle}
       </h1>
       <p class="mt-1 text-sm">
