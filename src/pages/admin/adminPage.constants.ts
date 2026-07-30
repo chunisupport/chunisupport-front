@@ -1,5 +1,12 @@
 import { ADMIN_DATA_COVERAGE_PATH, ADMIN_MAINTENANCE_PATH } from '../../constants/routes'
 
+/** 管理メニュー画面に表示する文言。 */
+export const ADMIN_PAGE_COPY = {
+  pageTitle: '管理',
+  heading: '管理ページ',
+  description: '管理者向けのメニューです。',
+} as const
+
 /** 管理メニューに表示する各管理画面へのリンク。 */
 export const ADMIN_PAGE_LINKS = [
   {

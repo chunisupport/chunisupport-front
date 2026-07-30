@@ -1,14 +1,13 @@
-import { A } from '@solidjs/router'
-import { createResource, For, Show } from 'solid-js'
+import { createResource, Show } from 'solid-js'
 import { fetchApiVersion } from '../../api/root'
+import { StaffMenuPage } from '../../components/common/StaffMenuPage'
 import {
   FRONTEND_APP_NAME,
   FRONTEND_BUILD_DATE,
   FRONTEND_COMMIT_HASH,
 } from '../../constants/appBuild'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { formatBuildRevisionLabel } from '../../utils/appVersionLabel'
-import { ADMIN_PAGE_LINKS } from './adminPage.constants'
+import { ADMIN_PAGE_COPY, ADMIN_PAGE_LINKS } from './adminPage.constants'
 
 /**
  * 管理者向けの API とフロントエンドのビルド情報を描画する。
@@ -49,28 +48,14 @@ const AdminBuildInfo = () => {
  * @returns 管理メニューUI。
  */
 const AdminPage = () => {
-  useDocumentTitle('管理')
-
   return (
-    <div class="mx-auto w-full max-w-4xl p-6">
-      <h1 class="text-2xl font-semibold">管理ページ</h1>
-      <p class="mt-2 text-sm text-text-muted">管理者向けのメニューです。</p>
-      <AdminBuildInfo />
-
-      <div class="mt-6 grid gap-4 sm:grid-cols-2">
-        <For each={ADMIN_PAGE_LINKS}>
-          {(link) => (
-            <A
-              href={link.href}
-              class="rounded-lg border border-border bg-surface p-4 shadow-sm transition hover:border-action-primary-border hover:bg-action-primary-muted"
-            >
-              <h2 class="text-lg font-semibold text-text">{link.title}</h2>
-              <p class="mt-1 text-sm text-text-muted">{link.description}</p>
-            </A>
-          )}
-        </For>
-      </div>
-    </div>
+    <StaffMenuPage
+      pageTitle={ADMIN_PAGE_COPY.pageTitle}
+      heading={ADMIN_PAGE_COPY.heading}
+      description={ADMIN_PAGE_COPY.description}
+      links={ADMIN_PAGE_LINKS}
+      supplementaryContent={<AdminBuildInfo />}
+    />
   )
 }
 

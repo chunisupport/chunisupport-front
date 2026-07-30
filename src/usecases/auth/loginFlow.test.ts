@@ -73,12 +73,12 @@ test('resolveMaintenanceLoginDestination: ADMINは既定で管理画面へ遷移
   assert.deepEqual(result, { kind: 'allowed', path: '/admin' })
 })
 
-test('resolveMaintenanceLoginDestination: EDITORは既定で楽曲編集画面へ遷移する', () => {
+test('resolveMaintenanceLoginDestination: EDITORは既定で編集メニューへ遷移する', () => {
   // Given & When
   const result = resolveMaintenanceLoginDestination('EDITOR')
 
   // Then
-  assert.deepEqual(result, { kind: 'allowed', path: '/editor/songs' })
+  assert.deepEqual(result, { kind: 'allowed', path: '/editor' })
 })
 
 test('resolveMaintenanceLoginDestination: 安全なredirectを既定遷移先より優先する', () => {
@@ -100,7 +100,7 @@ test('resolveMaintenanceLoginDestination: 外部redirectは拒否して既定遷
   const result = resolveMaintenanceLoginDestination('EDITOR', redirect)
 
   // Then
-  assert.deepEqual(result, { kind: 'allowed', path: '/editor/songs' })
+  assert.deepEqual(result, { kind: 'allowed', path: '/editor' })
 })
 
 test('resolveMaintenanceLoginDestination: スタッフログイン画面自身へのredirectは拒否する', () => {

@@ -13,7 +13,6 @@ import {
   LogOut,
   Music,
   Palette,
-  PencilLine,
   Settings,
   Shield,
   UsersRound,
@@ -30,9 +29,9 @@ type NavBarProps = {
 import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
 import { DOCUMENTATION_BASE_URL } from '../../config'
-import { EDITOR_SONGS_TITLE, FRIENDS_PAGE_TITLE } from '../../constants/pageTitles'
+import { EDITOR_MENU_TITLE, FRIENDS_PAGE_TITLE } from '../../constants/pageTitles'
 import { LATEST_SCORE_UPDATE_TITLE } from '../../constants/playerLatestUpdate'
-import { EDITOR_SONGS_PATH, FRIENDS_PATH, LATEST_SCORE_UPDATE_PATH } from '../../constants/routes'
+import { EDITOR_PATH, FRIENDS_PATH, LATEST_SCORE_UPDATE_PATH } from '../../constants/routes'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import {
@@ -112,9 +111,9 @@ const NavBar = (props: NavBarProps) => {
             ...(authSession.user?.account_type === 'EDITOR'
               ? [
                   {
-                    label: EDITOR_SONGS_TITLE,
-                    icon: () => <PencilLine class="inline mr-1 h-4 w-4" aria-hidden="true" />,
-                    path: EDITOR_SONGS_PATH,
+                    label: EDITOR_MENU_TITLE,
+                    icon: () => <Shield class="h-4 w-4" aria-hidden="true" />,
+                    path: EDITOR_PATH,
                   },
                 ]
               : []),
