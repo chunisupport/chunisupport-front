@@ -18,11 +18,13 @@ import {
 } from '../../../utils/userProfileRoute'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
+import { UserRecordPlaceholderCard } from './components/UserRecordPlaceholderCard'
 import type {
   UserPageCourseRecordProfile,
   UserPageRatingProfile,
   UserPageRecordProfile,
 } from './UserPage'
+import { RATING_SLOT_COUNT } from './UserProfileView.constants'
 
 const UserRecord = lazy(() => import('../UserRecord'))
 const UserOverPower = lazy(() => import('../UserOverPower/UserOverPower'))
@@ -128,39 +130,55 @@ const RecordList: Component<{
   candidateHeading: string
   candidateTargetRating?: number
   showJackets: boolean
-}> = (props) => (
-  <div class="mx-4 flex flex-col gap-2">
-    <For each={props.records}>
-      {(record, i) => (
-        <UserRecordCard record={record} index={i()} showJackets={props.showJackets} />
-      )}
-    </For>
-    <Show when={(props.candidates?.length ?? 0) > 0}>
-      <h3 class="mt-4 border-t-2 border-border-strong pt-4 text-base font-bold text-text">
-        {props.candidateHeading}
-      </h3>
-      <For each={props.candidates}>
+  /** レーティング対象として表示する規定枠数。 */
+  slotCount: number
+}> = (props) => {
+  /**
+   * 実レコードの後ろに表示する空き枠のインデックスを返す。
+   *
+   * @returns 実レコード件数から規定枠数までの0始まりインデックス。
+   */
+  const emptySlotIndexes = (): number[] =>
+    Array.from(
+      { length: Math.max(props.slotCount - props.records.length, 0) },
+      (_, index) => props.records.length + index
+    )
+
+  return (
+    <div class="mx-4 flex flex-col gap-2">
+      <For each={props.records}>
         {(record, i) => (
-          <UserRecordCard
-            record={record}
-            index={i()}
-            showJackets={props.showJackets}
-            scoreDifference={
-              props.candidateTargetRating === undefined
-                ? undefined
-                : calculateCandidateScoreDifference(
-                    record.score,
-                    record.const,
-                    props.candidateTargetRating
-                  )
-            }
-            useDefaultIndexColor
-          />
+          <UserRecordCard record={record} index={i()} showJackets={props.showJackets} />
         )}
       </For>
-    </Show>
-  </div>
-)
+      <For each={emptySlotIndexes()}>{(index) => <UserRecordPlaceholderCard index={index} />}</For>
+      <Show when={(props.candidates?.length ?? 0) > 0}>
+        <h3 class="mt-4 border-t-2 border-border-strong pt-4 text-base font-bold text-text">
+          {props.candidateHeading}
+        </h3>
+        <For each={props.candidates}>
+          {(record, i) => (
+            <UserRecordCard
+              record={record}
+              index={i()}
+              showJackets={props.showJackets}
+              scoreDifference={
+                props.candidateTargetRating === undefined
+                  ? undefined
+                  : calculateCandidateScoreDifference(
+                      record.score,
+                      record.const,
+                      props.candidateTargetRating
+                    )
+              }
+              useDefaultIndexColor
+            />
+          )}
+        </For>
+      </Show>
+    </div>
+  )
+}
 
 export const UserProfileView: Component<Props> = (props) => {
   const [showJackets, setShowJackets] = createSignal(true)
@@ -335,6 +353,7 @@ export const UserProfileView: Component<Props> = (props) => {
                 candidateHeading={BEST_CANDIDATE_HEADING}
                 candidateTargetRating={bestCandidateTargetRating()}
                 showJackets={showJackets()}
+                slotCount={RATING_SLOT_COUNT.best}
               />
             </AppTabContent>
             <AppTabContent value="new">
@@ -344,6 +363,7 @@ export const UserProfileView: Component<Props> = (props) => {
                 candidateHeading={NEW_CANDIDATE_HEADING}
                 candidateTargetRating={newCandidateTargetRating()}
                 showJackets={showJackets()}
+                slotCount={RATING_SLOT_COUNT.new}
               />
             </AppTabContent>
           </SegmentedTabs>
