@@ -164,7 +164,7 @@ const CoverageMatrix = (props: CoverageMatrixProps) => {
 }
 
 /**
- * 管理者向けの譜面定数充足状況ダッシュボードを表示する。
+ * ADMINとEDITOR向けの譜面定数充足状況ダッシュボードを表示する。
  *
  * 画面を開くたびに全曲APIを直接呼び、ブラウザキャッシュとは独立した最新の有効楽曲を集計する。
  *

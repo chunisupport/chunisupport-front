@@ -30,6 +30,7 @@ import {
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
+  EDITOR_PATH,
   EDITOR_SONGS_PATH,
   FRIENDS_PATH,
   LATEST_SCORE_UPDATE_PATH,
@@ -93,6 +94,7 @@ const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
 const AdminSongsPage = lazy(() => import('./pages/admin/AdminSongsPage'))
 const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
 const AdminMaintenancePage = lazy(() => import('./pages/admin/AdminMaintenancePage'))
+const EditorPage = lazy(() => import('./pages/editor/EditorPage'))
 const EditorSongsPage = lazy(() => import('./pages/editor/EditorSongsPage'))
 
 /**
@@ -398,6 +400,7 @@ const LoadableAdminUsersPage = withRouteLoadBoundary(AdminUsersPage)
 const LoadableAdminSongsPage = withRouteLoadBoundary(AdminSongsPage)
 const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
 const LoadableAdminMaintenancePage = withRouteLoadBoundary(AdminMaintenancePage)
+const LoadableEditorPage = withRouteLoadBoundary(EditorPage)
 const LoadableEditorSongsPage = withRouteLoadBoundary(EditorSongsPage)
 const LoadableRegisterScoreTempPage = withRouteLoadBoundary(RegisterScoreTempPage)
 
@@ -413,12 +416,12 @@ const GuardedAdminPage = () => (
 )
 
 /**
- * ADMIN 権限を要求してデータ充足状況画面を表示する。
+ * ADMINまたはEDITOR権限を要求してデータ充足状況画面を表示する。
  *
  * @returns 権限制御と route module 読み込み境界を付与したデータ充足状況画面。
  */
 const GuardedAdminDataCoveragePage = () => (
-  <RequireRole allowedRoles={['ADMIN']}>
+  <RequireRole allowedRoles={['ADMIN', 'EDITOR']}>
     <LoadableAdminDataCoveragePage />
   </RequireRole>
 )
@@ -453,6 +456,17 @@ const GuardedAdminSongsPage = () => (
 const GuardedEditorSongsPage = () => (
   <RequireRole allowedRoles={['EDITOR']}>
     <LoadableEditorSongsPage />
+  </RequireRole>
+)
+
+/**
+ * EDITOR権限を要求して編集メニューを表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与した編集メニュー。
+ */
+const GuardedEditorPage = () => (
+  <RequireRole allowedRoles={['EDITOR']}>
+    <LoadableEditorPage />
   </RequireRole>
 )
 
@@ -602,6 +616,7 @@ const App = () => {
       <Route path={ADMIN_MAINTENANCE_PATH} component={withNavBar(GuardedAdminMaintenancePage)} />
 
       {/* 編集 */}
+      <Route path={EDITOR_PATH} component={withNavBar(GuardedEditorPage)} />
       <Route path={EDITOR_SONGS_PATH} component={withNavBar(GuardedEditorSongsPage)} />
 
       {/* 404 */}

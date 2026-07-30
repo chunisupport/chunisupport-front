@@ -1,4 +1,4 @@
-import { ADMIN_PATH, EDITOR_SONGS_PATH, MAINTENANCE_LOGIN_PATH } from '../../constants/routes.ts'
+import { ADMIN_PATH, EDITOR_PATH, MAINTENANCE_LOGIN_PATH } from '../../constants/routes.ts'
 import type { AccountType } from '../../types/api.ts'
 import { isMaintenanceStaff } from '../../utils/maintenanceRole.ts'
 import { normalizeRoutePathname } from '../../utils/routePathname.ts'
@@ -129,6 +129,6 @@ export const resolveMaintenanceLoginDestination = (
 
   return {
     kind: 'allowed',
-    path: accountType === 'ADMIN' ? ADMIN_PATH : EDITOR_SONGS_PATH,
+    path: accountType === 'ADMIN' ? ADMIN_PATH : EDITOR_PATH,
   }
 }

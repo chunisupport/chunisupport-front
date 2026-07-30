@@ -16,11 +16,13 @@ export const RANDOM_SONG_SELECTOR_PATH = `${TOOLS_PATH}/random-song-selector`
 /** ベスト枠ランキング画面のパス。 */
 export const BEST_SLOT_RANKING_PATH = `${TOOLS_PATH}/best-slot-ranking`
 export const LOCKED_SONGS_FINDER_PATH = `${TOOLS_PATH}/locked-songs-finder`
+/** EDITOR向け編集メニューのパス。 */
+export const EDITOR_PATH = '/editor'
 /** EDITOR向け楽曲編集画面のパス。 */
-export const EDITOR_SONGS_PATH = '/editor/songs'
+export const EDITOR_SONGS_PATH = `${EDITOR_PATH}/songs`
 /** ADMIN向け管理メニューのパス。 */
 export const ADMIN_PATH = '/admin'
-/** ADMIN向けデータ充足状況画面のパス。 */
+/** スタッフ向けデータ充足状況画面のパス。 */
 export const ADMIN_DATA_COVERAGE_PATH = `${ADMIN_PATH}/data-coverage`
 /** ADMIN向けメンテナンス管理画面のパス。 */
 export const ADMIN_MAINTENANCE_PATH = `${ADMIN_PATH}/maintenance`
