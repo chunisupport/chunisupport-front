@@ -6,9 +6,12 @@ import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
 import { useSongsData } from '../../stores/songsData'
-import type { CourseDTO, PlayerDataResult } from '../../types/api'
+import type { CourseDTO } from '../../types/api'
 import { fetchCoursesWithCache } from '../../usecases/cache/fetchCoursesWithCache'
-import { commitRegisterScore } from '../../usecases/registerScoreCommit'
+import {
+  commitRegisterScore,
+  type NormalizedPlayerDataResult,
+} from '../../usecases/registerScoreCommit'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { REGISTER_SCORE_MESSAGES, RegisterScoreResultView } from './RegisterScoreResultView'
 import {
@@ -23,7 +26,7 @@ import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreTo
  */
 type RegisterScoreViewState =
   | { type: 'committing' }
-  | { type: 'success'; result: PlayerDataResult }
+  | { type: 'success'; result: NormalizedPlayerDataResult }
   | { type: 'error'; message: string }
 
 /** コースタイトル検索に必要なコースマスタ項目。 */

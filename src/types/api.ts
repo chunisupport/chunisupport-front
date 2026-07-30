@@ -633,6 +633,8 @@ export interface PlayerDataUpdateResult {
   /** 登録後のプレイヤープロフィール情報。 */
   profile: PlayerDataProfile
   summary: PlayerDataSummary
+  /** 登録前後のレート・OVER POWER差分。旧保存形式では未返却。 */
+  metric_diffs?: PlayerDataMetricDiffs
   /** 登録前後の通常譜面集計差分。 */
   statistics: PlayerDataStatistics
   counts: PlayerDataCounts
@@ -673,6 +675,19 @@ export interface PlayerDataSummary {
 }
 
 export type PlayerDataDifficulty = 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
+
+/** 登録前後のnullableな小数差分。 */
+export interface PlayerDataFloat64Diff {
+  before: number | null
+  after: number | null
+  delta: number | null
+}
+
+/** レートとOVER POWER値の登録前後差分。 */
+export interface PlayerDataMetricDiffs {
+  rating: PlayerDataFloat64Diff
+  overpower_value: PlayerDataFloat64Diff
+}
 
 /** 登録前後の整数差分。 */
 export interface PlayerDataNumberDiff {
