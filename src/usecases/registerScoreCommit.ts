@@ -1,12 +1,23 @@
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type {
   PlayerDataDifficulty,
+  PlayerDataMetricDiffs,
   PlayerDataNumberDiff,
   PlayerDataResult,
   PlayerDataStatisticsGroup,
   PlayerDataUpdateResult,
   SkippedRecord,
 } from '../types/api'
+
+/** 旧保存形式を正規化した、メトリクス差分を必ず持つ更新結果。 */
+export type NormalizedPlayerDataUpdateResult = Omit<PlayerDataUpdateResult, 'metric_diffs'> & {
+  metric_diffs: PlayerDataMetricDiffs
+}
+
+/** 画面表示用に正規化した登録結果。 */
+export type NormalizedPlayerDataResult = NormalizedPlayerDataUpdateResult & {
+  skipped_records: SkippedRecord[]
+}
 
 type RegisterScoreCommitDependencies = {
   commitPlayerData: (uploadToken: string) => Promise<PlayerDataResult>
@@ -20,11 +31,28 @@ type RegisterScoreCommitInput = {
 }
 
 type RegisterScoreCommitResult = {
-  result: PlayerDataResult
+  result: NormalizedPlayerDataResult
 }
 
 /** 数値差分のゼロ値を生成する。 */
 const createEmptyDiff = (): PlayerDataNumberDiff => ({ before: 0, after: 0, delta: 0 })
+
+/**
+ * nullableな小数差分の空値を生成する。
+ *
+ * @returns 更新前後と差分がすべてnullの値。
+ */
+const createEmptyFloat64Diff = () => ({ before: null, after: null, delta: null })
+
+/**
+ * 旧保存形式に補完するメトリクス差分の空値を生成する。
+ *
+ * @returns レートとOVER POWER値を空差分で初期化した値。
+ */
+const createEmptyMetricDiffs = (): PlayerDataMetricDiffs => ({
+  rating: createEmptyFloat64Diff(),
+  overpower_value: createEmptyFloat64Diff(),
+})
 
 /** 統計グループのゼロ値を生成する。 */
 const createEmptyStatisticsGroup = (): PlayerDataStatisticsGroup => ({
@@ -72,7 +100,7 @@ const normalizeStatisticsGroup = (
  */
 export const normalizePlayerDataResult = (
   result: PlayerDataUpdateResult & { skipped_records?: SkippedRecord[] }
-): PlayerDataResult => {
+): NormalizedPlayerDataResult => {
   const byDifficulty = Object.fromEntries(
     PLAYER_DATA_DIFFICULTIES.map((difficulty) => [
       difficulty,
@@ -86,6 +114,7 @@ export const normalizePlayerDataResult = (
       overall: normalizeStatisticsGroup(result.statistics?.overall),
       by_difficulty: byDifficulty,
     },
+    metric_diffs: result.metric_diffs ?? createEmptyMetricDiffs(),
     changes: Array.isArray(result.changes) ? result.changes : [],
     skipped_records: Array.isArray(result.skipped_records) ? result.skipped_records : [],
   }

@@ -80,7 +80,7 @@ test('最新更新結果APIは保存済み結果がない204レスポンスをnu
 
 test('最新更新結果APIは未対応のスキーマバージョンを拒否する', async () => {
   // Given: フロントエンドが対応していない形式の保存済み結果。
-  globalThis.fetch = async () => Response.json({ schema_version: 2 })
+  globalThis.fetch = async () => Response.json({ schema_version: 3 })
 
   // When: 最新更新結果を取得する。
   const { fetchLatestPlayerDataUpdate } = await loadRegisterDataApi()

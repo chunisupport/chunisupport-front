@@ -22,8 +22,8 @@ import type {
   PlayerDataRecordChange,
   PlayerDataRecordState,
   PlayerDataSongRecordChange,
-  PlayerDataUpdateResult,
 } from '../../types/api'
+import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
@@ -32,6 +32,11 @@ import {
   formatCourseClass,
   REGISTER_SCORE_UNKNOWN_TITLE,
 } from './registerScoreDisplay'
+import {
+  formatRegisterScoreOverPowerDelta,
+  formatRegisterScoreRatingDelta,
+  getRegisterScoreMetricDeltaClass,
+} from './registerScoreMetricDiff'
 import {
   createDefaultRegisterScoreStatisticRowVisibility,
   createDefaultRegisterScoreTotalHighScoreRowVisibility,
@@ -456,35 +461,70 @@ const CourseRecordLampBadges = (props: { state: PlayerDataCourseRecordState }) =
  * @param props - APIから返却された登録結果。
  * @returns プロフィール概要。
  */
-const RegisterScoreProfileSummary = (props: { result: PlayerDataUpdateResult }) => (
-  <section class="pb-3">
-    <div class="flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2.5">
-      <p class="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 font-sans text-xl font-extrabold leading-none">
-        <span class="shrink-0 whitespace-nowrap tracking-normal">
-          Lv. {props.result.profile.level}
-        </span>
-        <span class="min-w-0 truncate text-center">{props.result.profile.name}</span>
-      </p>
-    </div>
-    <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
-      <dt class="font-extrabold text-text-muted">RATING</dt>
-      <dd class={PROFILE_VALUE_CLASS}>{formatNullableRating(props.result.summary.rating)}</dd>
-      <dt class="whitespace-nowrap font-extrabold text-text-muted">OVER POWER</dt>
-      <dd class={`${PROFILE_VALUE_CLASS} whitespace-nowrap`}>
-        <Show
-          when={
-            props.result.summary.overpower_value !== null &&
-            props.result.summary.overpower_percentage !== null
-          }
-          fallback={NO_DATA_TEXT}
-        >
-          {formatOverPowerValue(props.result.summary.overpower_value ?? 0)} (
-          {formatOverPowerPercent(props.result.summary.overpower_percentage ?? 0)}%)
-        </Show>
-      </dd>
-    </dl>
-  </section>
-)
+const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdateResult }) => {
+  const ratingDelta = createMemo(() =>
+    formatRegisterScoreRatingDelta(props.result.metric_diffs.rating.delta)
+  )
+  const overPowerDelta = createMemo(() =>
+    formatRegisterScoreOverPowerDelta(props.result.metric_diffs.overpower_value.delta)
+  )
+
+  return (
+    <section class="pb-3">
+      <div class="flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2.5">
+        <p class="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 font-sans text-xl font-extrabold leading-none">
+          <span class="shrink-0 whitespace-nowrap tracking-normal">
+            Lv. {props.result.profile.level}
+          </span>
+          <span class="min-w-0 truncate text-center">{props.result.profile.name}</span>
+        </p>
+      </div>
+      <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
+        <dt class="font-extrabold text-text-muted">RATING</dt>
+        <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
+          <span>{formatNullableRating(props.result.summary.rating)}</span>
+          <Show when={ratingDelta()}>
+            {(delta) => (
+              <span
+                class={`text-sm font-bold ${getRegisterScoreMetricDeltaClass(
+                  props.result.metric_diffs.rating.delta
+                )}`}
+              >
+                ({delta()})
+              </span>
+            )}
+          </Show>
+        </dd>
+        <dt class="whitespace-nowrap font-extrabold text-text-muted">OVER POWER</dt>
+        <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
+          <Show
+            when={
+              props.result.summary.overpower_value !== null &&
+              props.result.summary.overpower_percentage !== null
+            }
+            fallback={NO_DATA_TEXT}
+          >
+            <span>
+              {formatOverPowerValue(props.result.summary.overpower_value ?? 0)} (
+              {formatOverPowerPercent(props.result.summary.overpower_percentage ?? 0)}%)
+            </span>
+          </Show>
+          <Show when={overPowerDelta()}>
+            {(delta) => (
+              <span
+                class={`text-sm font-bold ${getRegisterScoreMetricDeltaClass(
+                  props.result.metric_diffs.overpower_value.delta
+                )}`}
+              >
+                ({delta()})
+              </span>
+            )}
+          </Show>
+        </dd>
+      </dl>
+    </section>
+  )
+}
 
 /**
  * 集計セクションと行ごとの表示設定を共通レイアウトで表示する。
@@ -568,7 +608,7 @@ const RegisterScoreDisplaySettings = (props: {
  * @returns 集計値セクション。
  */
 const RegisterScoreAggregateSummary = (props: {
-  result: PlayerDataUpdateResult
+  result: NormalizedPlayerDataUpdateResult
   showTotalHighScore: boolean
   showRecordStatistics: boolean
   totalHighScoreRowVisibility: RegisterScoreAggregateRowVisibility
@@ -819,7 +859,7 @@ const RegisterCourseChangeRow = (props: {
  * @param props - APIから返却された登録結果。
  * @returns レポートヘッダー。
  */
-const RegisterScoreReportHeader = (props: { result: PlayerDataUpdateResult }) => (
+const RegisterScoreReportHeader = (props: { result: NormalizedPlayerDataUpdateResult }) => (
   <header class="flex items-center justify-between border-b border-border bg-surface-muted px-3 py-3">
     <span
       aria-hidden="true"
@@ -918,7 +958,7 @@ const RegisterCourseChangesSection = (props: {
  * @returns 登録結果パネル。
  */
 export const RegisterScoreResultView = (props: {
-  result: PlayerDataUpdateResult
+  result: NormalizedPlayerDataUpdateResult
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
   resolveCourseTitle: RegisterScoreCourseTitleResolver

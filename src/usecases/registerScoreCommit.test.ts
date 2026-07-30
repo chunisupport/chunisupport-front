@@ -41,6 +41,10 @@ const createPlayerDataResult = (overrides: Partial<PlayerDataResult> = {}): Play
     overpower_value: null,
     overpower_percentage: null,
   },
+  metric_diffs: {
+    rating: { before: null, after: null, delta: null },
+    overpower_value: { before: null, after: null, delta: null },
+  },
   statistics: {
     overall: createStatisticsGroup(),
     by_difficulty: {
@@ -92,6 +96,20 @@ test('normalizePlayerDataResult: 最新更新結果にskipped_recordsがなく�
 
   // Then: 登録直後と同じ表示用結果として扱える。
   assert.deepEqual(normalized.skipped_records, [])
+})
+
+test('normalizePlayerDataResult: 旧形式の最新更新結果ではメトリクス差分をnullで補完する', () => {
+  // Given: schema version 1と同様にメトリクス差分を持たない保存済み結果。
+  const { metric_diffs: _metricDiffs, ...legacyUpdate } = createPlayerDataResult()
+
+  // When: 既存の更新差分レポート用に結果を正規化する。
+  const normalized = normalizePlayerDataResult(legacyUpdate)
+
+  // Then: 現在値を維持しつつ、レートとOVER POWERの差分は非表示にできる。
+  assert.deepEqual(normalized.metric_diffs, {
+    rating: { before: null, after: null, delta: null },
+    overpower_value: { before: null, after: null, delta: null },
+  })
 })
 
 test('normalizePlayerDataResult: 難易度別統計が欠落した場合も固定5難易度へ正規化する', () => {
