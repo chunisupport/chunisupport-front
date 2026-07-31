@@ -87,7 +87,6 @@ const AdminUsersPage = () => {
           <thead class="bg-surface-muted">
             <tr>
               <th class="whitespace-nowrap px-3 py-2 text-left">username</th>
-              <th class="whitespace-nowrap px-3 py-2 text-left">uid</th>
               <th class="whitespace-nowrap px-3 py-2 text-left">account_type</th>
               <th class="whitespace-nowrap px-3 py-2 text-left">created_at</th>
               <th class="whitespace-nowrap px-3 py-2 text-left">updated_at</th>
@@ -104,9 +103,6 @@ const AdminUsersPage = () => {
               {(user) => (
                 <tr class="border-t border-border">
                   <td class="whitespace-nowrap px-3 py-2 font-mono text-xs">{user.username}</td>
-                  <td class="whitespace-nowrap px-3 py-2 font-mono text-xs">
-                    {formatNullableText(user.firebase_uid)}
-                  </td>
                   <td class="whitespace-nowrap px-3 py-2">
                     {formatAccountType(user.account_type)}
                   </td>

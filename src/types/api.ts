@@ -813,9 +813,9 @@ export interface UserProfileDTO {
   player: PlayerDTO | null
 }
 
+/** 管理者向けユーザー一覧APIが返すユーザー情報。 */
 export interface AdminUserListResponse {
   username: string
-  firebase_uid?: string | null
   last_sign_in_time?: string | null
   last_refresh_time?: string | null
   account_type: 'ADMIN' | 'PLAYER'
