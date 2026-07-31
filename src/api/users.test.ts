@@ -134,3 +134,23 @@ test('fetchUserCourseRecordsは未プレイを含むコースレコード一覧�
   // Then
   assert.deepEqual(response, responseBody)
 })
+
+test('fetchAdminUserStatisticsは管理者向けユーザー集計を取得すること', async () => {
+  // Given
+  const responseBody = {
+    total_users: 100,
+    users_with_player_data: 80,
+    active_player_data_last_30_days: 50,
+  }
+  globalThis.fetch = async (input) => {
+    assert.equal(String(input), 'http://localhost:3000/internal/admin/user-stats')
+    return Response.json(responseBody)
+  }
+  const { fetchAdminUserStatistics } = await loadUsersApi()
+
+  // When
+  const response = await fetchAdminUserStatistics()
+
+  // Then
+  assert.deepEqual(response, responseBody)
+})
