@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config'
 import type {
   AdminUserListResponse,
+  AdminUserStatisticsResponse,
   PlayerFavoriteSongRequest,
   PlayerFavoriteSongsResponse,
   PlayerLockedSongRequest,
@@ -268,6 +269,17 @@ export const fetchAdminUsers = async (
   }
 
   const response = await fetchWithAuth(url)
+
+  return response.json()
+}
+
+/**
+ * 管理者向けユーザー集計を取得する。
+ *
+ * @returns 全ユーザー数、プレイヤーデータ連携済み数、直近30日の更新数。
+ */
+export const fetchAdminUserStatistics = async (): Promise<AdminUserStatisticsResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/admin/user-stats`)
 
   return response.json()
 }

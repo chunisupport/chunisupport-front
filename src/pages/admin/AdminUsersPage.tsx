@@ -1,9 +1,12 @@
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
-import { deleteUserByUsername, fetchAdminUsers } from '../../api/users'
+import { deleteUserByUsername, fetchAdminUserStatistics, fetchAdminUsers } from '../../api/users'
+import { Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { formatInteger } from '../../utils/numberFormat'
+import { ADMIN_USER_STATISTICS_COPY } from './AdminUsersPage.constants'
 import {
   formatAccountType,
   formatAdminUserDateTime,
@@ -13,9 +16,11 @@ import {
 
 /**
  * 管理者向けユーザー管理ページ。
- * ユーザー一覧の検索・表示・物理削除を提供する。
+ * ユーザー集計と、ユーザー一覧の検索・表示・物理削除を提供する。
  * テーブルヘッダおよび全データ行のセルでテキストの自動改行（折り返し）を禁止し、
  * 内容が長い場合は親要素の overflow-x-auto により横スクロールで表示する。
+ *
+ * @returns ユーザー集計とユーザー管理操作を表示するページ。
  */
 const AdminUsersPage = () => {
   useDocumentTitle('ユーザー管理')
@@ -27,6 +32,10 @@ const AdminUsersPage = () => {
   const [usersResponse] = createResource(
     () => ({ name: searchName(), refresh: refreshKey() }),
     ({ name }) => fetchAdminUsers({ name })
+  )
+  const [statisticsResponse] = createResource(
+    () => ({ refresh: refreshKey() }),
+    fetchAdminUserStatistics
   )
 
   const users = createMemo(() => usersResponse() ?? [])
@@ -65,6 +74,61 @@ const AdminUsersPage = () => {
         </p>
       </div>
 
+      <section aria-labelledby="admin-user-statistics-heading">
+        <h2 id="admin-user-statistics-heading" class="sr-only">
+          {ADMIN_USER_STATISTICS_COPY.heading}
+        </h2>
+        <Show
+          when={!statisticsResponse.loading}
+          fallback={
+            <div class="h-28 rounded-lg border border-border bg-surface p-4">
+              <Loading ariaLabel={ADMIN_USER_STATISTICS_COPY.loadingLabel} />
+            </div>
+          }
+        >
+          <Show
+            when={!statisticsResponse.error}
+            fallback={
+              <p
+                class="rounded-lg border border-danger-border bg-danger-bg p-4 text-sm text-danger"
+                role="alert"
+              >
+                {ADMIN_USER_STATISTICS_COPY.loadError}
+              </p>
+            }
+          >
+            <Show when={statisticsResponse()} keyed>
+              {(statistics) => (
+                <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div class="rounded-lg border border-border bg-surface p-4 shadow-sm">
+                    <dt class="text-sm text-text-muted">{ADMIN_USER_STATISTICS_COPY.totalUsers}</dt>
+                    <dd class="mt-1 font-jost text-3xl font-semibold text-text tabular-nums">
+                      {formatInteger(statistics.total_users)}
+                    </dd>
+                  </div>
+                  <div class="rounded-lg border border-border bg-surface p-4 shadow-sm">
+                    <dt class="text-sm text-text-muted">
+                      {ADMIN_USER_STATISTICS_COPY.usersWithPlayerData}
+                    </dt>
+                    <dd class="mt-1 font-jost text-3xl font-semibold text-text tabular-nums">
+                      {formatInteger(statistics.users_with_player_data)}
+                    </dd>
+                  </div>
+                  <div class="rounded-lg border border-border bg-surface p-4 shadow-sm">
+                    <dt class="text-sm text-text-muted">
+                      {ADMIN_USER_STATISTICS_COPY.activePlayerDataLast30Days}
+                    </dt>
+                    <dd class="mt-1 font-jost text-3xl font-semibold text-text tabular-nums">
+                      {formatInteger(statistics.active_player_data_last_30_days)}
+                    </dd>
+                  </div>
+                </dl>
+              )}
+            </Show>
+          </Show>
+        </Show>
+      </section>
+
       <div class="rounded-lg border border-border bg-surface p-4">
         <div class="flex flex-wrap items-end gap-2">
           <label class="text-sm">
@@ -87,7 +151,6 @@ const AdminUsersPage = () => {
           <thead class="bg-surface-muted">
             <tr>
               <th class="whitespace-nowrap px-3 py-2 text-left">username</th>
-              <th class="whitespace-nowrap px-3 py-2 text-left">uid</th>
               <th class="whitespace-nowrap px-3 py-2 text-left">account_type</th>
               <th class="whitespace-nowrap px-3 py-2 text-left">created_at</th>
               <th class="whitespace-nowrap px-3 py-2 text-left">updated_at</th>
@@ -104,9 +167,6 @@ const AdminUsersPage = () => {
               {(user) => (
                 <tr class="border-t border-border">
                   <td class="whitespace-nowrap px-3 py-2 font-mono text-xs">{user.username}</td>
-                  <td class="whitespace-nowrap px-3 py-2 font-mono text-xs">
-                    {formatNullableText(user.firebase_uid)}
-                  </td>
                   <td class="whitespace-nowrap px-3 py-2">
                     {formatAccountType(user.account_type)}
                   </td>

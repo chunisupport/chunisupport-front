@@ -813,9 +813,9 @@ export interface UserProfileDTO {
   player: PlayerDTO | null
 }
 
+/** 管理者向けユーザー一覧APIが返すユーザー情報。 */
 export interface AdminUserListResponse {
   username: string
-  firebase_uid?: string | null
   last_sign_in_time?: string | null
   last_refresh_time?: string | null
   account_type: 'ADMIN' | 'PLAYER'
@@ -826,6 +826,16 @@ export interface AdminUserListResponse {
   overpower_value: number | null
   is_suspicious: boolean
   is_private: boolean
+}
+
+/** 管理者向けユーザー集計APIが返す件数。 */
+export interface AdminUserStatisticsResponse {
+  /** 全ユーザー数。 */
+  total_users: number
+  /** プレイヤーデータが紐付けられているユーザー数。 */
+  users_with_player_data: number
+  /** 直近30日以内に更新されたプレイヤーデータ数。 */
+  active_player_data_last_30_days: number
 }
 
 export interface UserRatingMetaDTO {
