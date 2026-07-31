@@ -1,13 +1,19 @@
 import { Button } from '@kobalte/core/button'
 import type { JSX } from 'solid-js'
-import { Show } from 'solid-js'
+import { createMemo, createResource, createSignal, Show } from 'solid-js'
+import { fetchVersions } from '../../../../api/songs'
 import { LoadError, Loading } from '../../../../components'
+import { CheckboxField } from '../../../../components/common/CheckboxField'
 import type {
   FriendRankingEntryDTO,
   ScoreHistoryEntryDTO,
   WorldsendFriendRankingEntryDTO,
 } from '../../../../types/api'
-import { FRIEND_RANKING_SECTION_LABEL, SCORE_HISTORY_SECTION_LABEL } from './constants'
+import {
+  FRIEND_RANKING_SECTION_LABEL,
+  SCORE_HISTORY_SECTION_LABEL,
+  SCORE_HISTORY_VERSION_LABEL_TOGGLE,
+} from './constants'
 import FriendRankingTable from './FriendRankingTable'
 import ScoreHistoryChart from './ScoreHistoryChart'
 import ScoreHistoryTable from './ScoreHistoryTable'
@@ -46,46 +52,67 @@ type Props = {
  * @param props - 楽曲情報、履歴、ランキングと読み込み状態。
  * @returns スコア推移とフレンドランキングを含む譜面詳細画面。
  */
-const ChartDetailPage = (props: Props) => (
-  <main class="mx-auto w-full max-w-5xl space-y-6 p-4">
-    <Button
-      type="button"
-      onClick={props.onBack}
-      class="cursor-pointer border-0 bg-transparent p-0 text-sm text-action-primary hover:underline"
-    >
-      ← 楽曲詳細へ戻る
-    </Button>
+const ChartDetailPage = (props: Props) => {
+  const [versions] = createResource(fetchVersions)
+  const [showVersions, setShowVersions] = createSignal(true)
+  const availableVersions = createMemo(() => (versions.error ? [] : (versions()?.versions ?? [])))
 
-    <header class="space-y-2">
-      <h1 class="font-sans text-2xl font-semibold">{props.title}</h1>
-      <div class="flex flex-wrap items-center gap-3 text-sm text-text-muted">
-        {props.badge}
-        <span class="font-sans">{props.artist}</span>
-      </div>
-    </header>
-
-    <section class="space-y-4">
-      <h2 class="text-lg font-semibold">{SCORE_HISTORY_SECTION_LABEL}</h2>
-      <Show when={!props.historyError} fallback={<LoadError error={props.historyError} />}>
-        <Show when={!props.isHistoryLoading} fallback={<Loading />}>
-          <ScoreHistoryChart entries={props.historyEntries} />
-          <ScoreHistoryTable entries={props.historyEntries} />
-        </Show>
-      </Show>
-    </section>
-
-    <section class="space-y-4">
-      <h2 class="text-lg font-semibold">{FRIEND_RANKING_SECTION_LABEL}</h2>
-      <Show
-        when={!props.friendRankingError}
-        fallback={<LoadError error={props.friendRankingError} />}
+  return (
+    <main class="mx-auto w-full max-w-5xl space-y-6 p-4">
+      <Button
+        type="button"
+        onClick={props.onBack}
+        class="cursor-pointer border-0 bg-transparent p-0 text-sm text-action-primary hover:underline"
       >
-        <Show when={!props.isFriendRankingLoading} fallback={<Loading />}>
-          <FriendRankingTable entries={props.friendRankingEntries} />
+        ← 楽曲詳細へ戻る
+      </Button>
+
+      <header class="space-y-2">
+        <h1 class="font-sans text-2xl font-semibold">{props.title}</h1>
+        <div class="flex flex-wrap items-center gap-3 text-sm text-text-muted">
+          {props.badge}
+          <span class="font-sans">{props.artist}</span>
+        </div>
+      </header>
+
+      <section class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold">{SCORE_HISTORY_SECTION_LABEL}</h2>
+          <Show when={!versions.error}>
+            <CheckboxField
+              id="score-history-version-label-toggle"
+              checked={showVersions()}
+              label={SCORE_HISTORY_VERSION_LABEL_TOGGLE}
+              disabled={versions.loading}
+              onChange={setShowVersions}
+            />
+          </Show>
+        </div>
+        <Show when={!props.historyError} fallback={<LoadError error={props.historyError} />}>
+          <Show when={!props.isHistoryLoading} fallback={<Loading />}>
+            <ScoreHistoryChart entries={props.historyEntries} />
+            <ScoreHistoryTable
+              entries={props.historyEntries}
+              versions={availableVersions()}
+              showVersions={showVersions()}
+            />
+          </Show>
         </Show>
-      </Show>
-    </section>
-  </main>
-)
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-lg font-semibold">{FRIEND_RANKING_SECTION_LABEL}</h2>
+        <Show
+          when={!props.friendRankingError}
+          fallback={<LoadError error={props.friendRankingError} />}
+        >
+          <Show when={!props.isFriendRankingLoading} fallback={<Loading />}>
+            <FriendRankingTable entries={props.friendRankingEntries} />
+          </Show>
+        </Show>
+      </section>
+    </main>
+  )
+}
 
 export default ChartDetailPage

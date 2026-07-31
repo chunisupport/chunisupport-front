@@ -16,5 +16,7 @@ export const FRIEND_RANKING_PLAYER_LABEL = 'プレイヤー'
 export const SCORE_HISTORY_UPDATED_AT_LABEL = '更新日'
 /** 履歴一覧のスコア列ラベル。 */
 export const SCORE_HISTORY_SCORE_LABEL = 'スコア'
+/** スコア履歴のバージョン境界を表示する切替ラベル。 */
+export const SCORE_HISTORY_VERSION_LABEL_TOGGLE = 'バージョン表記'
 /** 現行ベストに表示するラベル。 */
 export const CURRENT_BEST_LABEL = '現在'
