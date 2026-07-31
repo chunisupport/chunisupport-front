@@ -1,4 +1,10 @@
 import type { ScoreHistoryDifficulty } from '../api/songs'
+import type { ScoreHistoryEntryDTO, VersionSummaryDTO } from '../types/api'
+
+/** スコア履歴テーブルに表示するスコア行またはバージョン境界行。 */
+export type ScoreHistoryTableRow =
+  | { type: 'score'; entry: ScoreHistoryEntryDTO }
+  | { type: 'version'; name: string }
 
 const scoreHistoryDateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
   year: '2-digit',
@@ -42,4 +48,68 @@ export const formatScoreHistoryDateTime = (value: string): string => {
 export const formatScoreHistoryTimestamp = (value: number): string => {
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? '-' : scoreHistoryDateTimeFormatter.format(date)
+}
+
+/**
+ * スコア履歴へ、バージョン稼働日を表す境界行を時系列順に差し込む。
+ *
+ * @param entries - 新しい順に並んだスコア履歴。
+ * @param versions - バージョン名と稼働日の一覧。
+ * @returns スコア行とバージョン境界行を含む表示行。
+ */
+export const buildScoreHistoryTableRows = (
+  entries: readonly ScoreHistoryEntryDTO[],
+  versions: readonly VersionSummaryDTO[]
+): ScoreHistoryTableRow[] => {
+  const versionBoundaries = versions
+    .map((version) => ({
+      name: version.name,
+      timestamp: new Date(`${version.released_at.slice(0, 10)}T00:00:00+09:00`).getTime(),
+    }))
+    .filter((version) => !Number.isNaN(version.timestamp))
+    .sort((left, right) => right.timestamp - left.timestamp)
+
+  const rows: ScoreHistoryTableRow[] = []
+  const emittedVersionBoundaries = new Set<number>()
+
+  entries.forEach((entry, index) => {
+    rows.push({ type: 'score', entry })
+
+    const entryTimestamp = new Date(entry.updated_at).getTime()
+    if (Number.isNaN(entryTimestamp)) return
+
+    const nextTimestamp = entries
+      .slice(index + 1)
+      .map((nextEntry) => new Date(nextEntry.updated_at).getTime())
+      .find((timestamp) => !Number.isNaN(timestamp))
+    if (nextTimestamp === undefined) return
+
+    versionBoundaries.forEach((version, versionIndex) => {
+      if (
+        !emittedVersionBoundaries.has(versionIndex) &&
+        version.timestamp <= entryTimestamp &&
+        version.timestamp > nextTimestamp
+      ) {
+        rows.push({ type: 'version', name: version.name })
+        emittedVersionBoundaries.add(versionIndex)
+      }
+    })
+  })
+
+  const oldestEntryTimestamp = [...entries]
+    .reverse()
+    .map((entry) => new Date(entry.updated_at).getTime())
+    .find((timestamp) => !Number.isNaN(timestamp))
+  const oldestEntryVersionIndex = versionBoundaries.findIndex(
+    (version, versionIndex) =>
+      oldestEntryTimestamp !== undefined &&
+      !emittedVersionBoundaries.has(versionIndex) &&
+      version.timestamp <= oldestEntryTimestamp
+  )
+  const oldestEntryVersion = versionBoundaries[oldestEntryVersionIndex]
+  if (oldestEntryVersion) {
+    rows.push({ type: 'version', name: oldestEntryVersion.name })
+  }
+
+  return rows
 }
