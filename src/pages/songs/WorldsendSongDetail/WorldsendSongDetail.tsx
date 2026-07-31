@@ -2,7 +2,6 @@ import { useParams } from '@solidjs/router'
 import { createMemo, createResource, Show } from 'solid-js'
 import { fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
 import { LoadError } from '../../../components'
-import { WORLDSEND_SCORE_LABEL } from '../../../constants/chart'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
 import type { WorldsendSongDTO } from '../../../types/api'
@@ -14,7 +13,7 @@ import SongDetailLayout from '../components/SongDetailLayout'
 import { useSongDetailBase } from '../components/useSongDetailBase'
 import OwnScoreCard, { type OwnScoreItem } from '../SongDetail/components/OwnScoreCard'
 import SongStatsTabs from '../SongDetail/components/SongStatsTabs'
-import { getWorldsendTitleMeta } from '../worldsendDetailModel'
+import { buildWorldsendOwnScoreItem, getWorldsendTitleMeta } from '../worldsendDetailModel'
 import WorldsendSongInfoCard from './components/WorldsendSongInfoCard'
 import { getWorldsendDisplayIdSource } from './worldsendRouteParams'
 
@@ -88,13 +87,7 @@ const WorldsendSongDetail = () => {
   /** 表示中の楽曲に対応するログインユーザーの WORLD'S END レコードを取得する。 */
   const ownRecord = createMemo(() => ownRecords())
   /** WORLD'S END の自己スコアカード表示項目を構築する。 */
-  const ownScoreItems = createMemo<OwnScoreItem[]>(() => [
-    {
-      difficulty: WORLDSEND_SCORE_LABEL,
-      score: ownRecord()?.is_played ? ownRecord()?.score : undefined,
-      supportsHistory: true,
-    },
-  ])
+  const ownScoreItems = createMemo<OwnScoreItem[]>(() => [buildWorldsendOwnScoreItem(ownRecord())])
   /** 統計表との比較に使うログインユーザーのプレイ済みスコアを取得する。 */
   const ownScore = createMemo(() =>
     authSession.status === 'authenticated' && ownRecord()?.is_played
