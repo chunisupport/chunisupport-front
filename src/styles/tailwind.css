@@ -497,6 +497,12 @@
   /* ===== ユーザー称号（ノーマル） ===== */
   --cs-color-honor-title-normal-bg: var(--color-yellow-200);
   --cs-color-honor-title-normal-text: var(--color-gray-900);
+  --cs-gradient-rating-image-sp-honor-bg: linear-gradient(
+    135deg,
+    #d8f7e2 0%,
+    #7bd89a 50%,
+    #38b968 100%
+  );
 
   /* ===== ランキングメダル（金 / 銀 / 銅） ===== */
   --cs-color-ranking-gold-bg: var(--color-yellow-300);
@@ -809,7 +815,6 @@
     background-color: var(--cs-color-lamp-all-justice-critical-rainbow-1);
   }
 }
-
 @layer utilities {
   .text-shadow-badge {
     text-shadow: var(--cs-shadow-course-class-text);
@@ -998,6 +1003,11 @@
   .user-honor-title--sp {
     --honor-background: var(--honor-shine);
     animation: honor-title-sp-rainbow 2.45s linear infinite;
+  }
+
+  .rating-image-honor-title.user-honor-title--sp {
+    --honor-background: var(--honor-shine), var(--cs-gradient-rating-image-sp-honor-bg);
+    animation: none;
   }
 
   .user-honor-title--phoenix-g {

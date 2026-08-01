@@ -1,8 +1,10 @@
+import { Button } from '@kobalte/core/button'
 import { Download, Play } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import logoSingle from '../../assets/logo_single.svg'
 import { Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
+import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
 import {
@@ -25,6 +27,7 @@ import type {
 } from '../../types/api'
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
+import { captureElementAsPng, downloadBlobFile } from '../../utils/domImageCapture'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
 import {
@@ -65,6 +68,8 @@ export const REGISTER_SCORE_MESSAGES = {
   downloadImage: '画像をダウンロード',
   downloadingImage: '画像を作成中',
   downloadImageError: '画像のダウンロードに失敗しました。',
+  copySongTitleSuccess: '曲名をコピーしました。',
+  copySongTitleError: '曲名のコピーに失敗しました。',
   unknownSongTitle: REGISTER_SCORE_UNKNOWN_TITLE,
 } as const
 
@@ -80,12 +85,10 @@ const REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS = 'max-w-[31rem]'
 const REGISTER_SCORE_REPORT_LOGO_COLOR = '#444444'
 /** 更新差分画像を原寸の2倍で出力するピクセル比。 */
 const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 2
-/** 2倍出力時もCanvasの一辺を16,000px以内へ収めるレポート寸法。 */
-const REGISTER_SCORE_IMAGE_MAX_CSS_SIDE = 8_000
-/** ダウンロード開始後にObject URLを解放するまでの待機時間。 */
-const REGISTER_SCORE_IMAGE_OBJECT_URL_REVOKE_DELAY_MS = 1_000
 /** 更新差分画像のファイル名へ付与する接頭辞。 */
 const REGISTER_SCORE_IMAGE_FILENAME_PREFIX = 'chunisupport-score-update'
+/** コピー成功時に曲名をアクセントカラーで保持する時間。 */
+const REGISTER_SCORE_COPY_HIGHLIGHT_MS = 100
 
 /**
  * 難易度バッジを固定幅で中央揃えにする共通レイアウトクラス。
@@ -276,75 +279,6 @@ const formatRegisterScoreImageFilename = (isoDateTime: string): string => {
     .replace(' ', '-')
 
   return `${REGISTER_SCORE_IMAGE_FILENAME_PREFIX}-${timestamp}.png`
-}
-
-/**
- * 画像化対象を祖先の表示用transformから切り離し、Canvas上限内の寸法で複製する。
- *
- * @param reportElement - 画面に表示中の更新差分レポート。
- * @returns 画像化対象の複製と破棄処理。
- */
-const createRegisterScoreImageCapture = (
-  reportElement: HTMLElement
-): { element: HTMLDivElement; dispose: () => void } => {
-  const reportWidth = reportElement.offsetWidth
-  const reportHeight = reportElement.offsetHeight
-  const captureScale = Math.min(
-    1,
-    REGISTER_SCORE_IMAGE_MAX_CSS_SIDE / reportWidth,
-    REGISTER_SCORE_IMAGE_MAX_CSS_SIDE / reportHeight
-  )
-  const captureHost = document.createElement('div')
-  const captureElement = document.createElement('div')
-  const reportClone = reportElement.cloneNode(true) as HTMLElement
-
-  Object.assign(captureHost.style, {
-    left: '-100000px',
-    pointerEvents: 'none',
-    position: 'fixed',
-    top: '0',
-  })
-  Object.assign(captureElement.style, {
-    height: `${Math.ceil(reportHeight * captureScale)}px`,
-    overflow: 'hidden',
-    width: `${Math.ceil(reportWidth * captureScale)}px`,
-  })
-  Object.assign(reportClone.style, {
-    maxWidth: 'none',
-    transform: `scale(${captureScale})`,
-    transformOrigin: 'top left',
-    width: `${reportWidth}px`,
-  })
-  captureHost.setAttribute('aria-hidden', 'true')
-  captureElement.appendChild(reportClone)
-  captureHost.appendChild(captureElement)
-  document.body.appendChild(captureHost)
-
-  return {
-    element: captureElement,
-    dispose: () => captureHost.remove(),
-  }
-}
-
-/**
- * Blobを指定ファイル名でダウンロードする。
- *
- * @param blob - ダウンロードするファイル内容。
- * @param filename - ダウンロード時に使用する拡張子付きファイル名。
- * @returns なし。
- */
-const downloadRegisterScoreFile = (blob: Blob, filename: string): void => {
-  const objectUrl = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.download = filename
-  link.href = objectUrl
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  window.setTimeout(
-    () => URL.revokeObjectURL(objectUrl),
-    REGISTER_SCORE_IMAGE_OBJECT_URL_REVOKE_DELAY_MS
-  )
 }
 
 /**
@@ -747,14 +681,44 @@ const BeforeRecordScore = (props: {
 /**
  * 1譜面分の登録差分をスクリーンショットに近い行表示にする。
  *
- * @param props - 表示対象の差分、解決済み楽曲タイトル、譜面レベル。
+ * @param props - 表示対象の差分、解決済み楽曲タイトル、譜面レベル、曲名コピー処理。
  * @returns 差分行。
  */
 const RegisterScoreChangeRow = (props: {
   change: PlayerDataSongRecordChange
   songTitle: string
   chartLevel?: string
+  onCopySongTitle: (songTitle: string) => Promise<boolean>
 }) => {
+  const [isCopyHighlighted, setIsCopyHighlighted] = createSignal(false)
+  let copyHighlightTimerId: number | undefined
+
+  /**
+   * 曲名をコピーし、成功時に曲名を一時的にアクセントカラーへ変更する。
+   *
+   * @returns コピー処理の完了時に解決されるPromise。
+   */
+  const handleCopySongTitle = async (): Promise<void> => {
+    const copied = await props.onCopySongTitle(props.songTitle)
+    if (!copied) return
+
+    if (copyHighlightTimerId !== undefined) {
+      window.clearTimeout(copyHighlightTimerId)
+    }
+
+    setIsCopyHighlighted(true)
+    copyHighlightTimerId = window.setTimeout(() => {
+      setIsCopyHighlighted(false)
+      copyHighlightTimerId = undefined
+    }, REGISTER_SCORE_COPY_HIGHLIGHT_MS)
+  }
+
+  onCleanup(() => {
+    if (copyHighlightTimerId !== undefined) {
+      window.clearTimeout(copyHighlightTimerId)
+    }
+  })
+
   return (
     <article class={`${SCORE_CHANGE_CARD_CLASS} font-jost`}>
       <div class="flex min-w-0 items-center gap-2 text-base">
@@ -768,7 +732,20 @@ const RegisterScoreChangeRow = (props: {
             </span>
           )}
         </Show>
-        <h3 class="min-w-0 flex-1 truncate font-sans text-base font-bold">{props.songTitle}</h3>
+        <h3 class="min-w-0 flex-1">
+          <Button
+            class={`block w-full min-w-0 truncate border-0 bg-transparent p-0 text-left font-sans text-base font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 ${
+              isCopyHighlighted()
+                ? 'text-action-primary transition-none'
+                : 'text-text transition-colors duration-700 motion-reduce:transition-none'
+            }`}
+            aria-label={`「${props.songTitle}」をコピー`}
+            title={props.songTitle}
+            onClick={handleCopySongTitle}
+          >
+            {props.songTitle}
+          </Button>
+        </h3>
       </div>
       <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
         <div class="w-fit">
@@ -888,7 +865,7 @@ const RegisterScoreReportHeader = (props: { result: NormalizedPlayerDataUpdateRe
 /**
  * 更新レコード一覧を表示する。
  *
- * @param props - 更新差分、楽曲名解決関数、譜面レベル解決関数。
+ * @param props - 更新差分、楽曲名解決関数、譜面レベル解決関数、曲名コピー処理。
  * @returns 更新レコードセクション。
  */
 const RegisterScoreChangesSection = (props: {
@@ -896,6 +873,7 @@ const RegisterScoreChangesSection = (props: {
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
   emptyMessage?: string
+  onCopySongTitle: (songTitle: string) => Promise<boolean>
 }) => (
   <section class="min-w-0 pt-4">
     <h2 class="mb-1 whitespace-nowrap text-xl font-bold">
@@ -916,6 +894,7 @@ const RegisterScoreChangesSection = (props: {
               change={change}
               songTitle={props.resolveSongTitle(change)}
               chartLevel={props.resolveChartLevel?.(change)}
+              onCopySongTitle={props.onCopySongTitle}
             />
           )}
         </For>
@@ -1022,6 +1001,23 @@ export const RegisterScoreResultView = (props: {
   }
 
   /**
+   * 曲名をクリップボードへコピーし、結果をトーストで通知する。
+   *
+   * @param songTitle - コピーする省略前の曲名。
+   * @returns コピーに成功した場合はtrue、それ以外はfalse。
+   */
+  const copySongTitle = async (songTitle: string): Promise<boolean> => {
+    try {
+      await navigator.clipboard.writeText(songTitle)
+      showSuccessToast(REGISTER_SCORE_MESSAGES.copySongTitleSuccess)
+      return true
+    } catch {
+      showErrorToast(REGISTER_SCORE_MESSAGES.copySongTitleError)
+      return false
+    }
+  }
+
+  /**
    * 現在表示中の更新差分レポートを1枚のPNG画像としてダウンロードする。
    *
    * @returns ダウンロード処理の完了時に解決されるPromise。
@@ -1031,33 +1027,10 @@ export const RegisterScoreResultView = (props: {
     setDownloadImageError(undefined)
 
     try {
-      await document.fonts.ready
-      const capture = createRegisterScoreImageCapture(reportRef)
-
-      try {
-        const { snapdom } = await import('@zumer/snapdom')
-        const captureResult = await snapdom(capture.element, {
-          backgroundColor: getComputedStyle(reportRef).backgroundColor,
-          dpr: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
-          embedFonts: true,
-          format: 'png',
-          reconcile: true,
-        })
-        const rasterizeOptions = {
-          dpr: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
-          type: 'png' as const,
-        }
-
-        // ChromeがSVG内の埋め込みフォントを初回描画で準備するため、1回目は破棄する。
-        await captureResult.toBlob(rasterizeOptions)
-        const imageBlob = await captureResult.toBlob(rasterizeOptions)
-        downloadRegisterScoreFile(
-          imageBlob,
-          formatRegisterScoreImageFilename(props.result.imported_at)
-        )
-      } finally {
-        capture.dispose()
-      }
+      const imageBlob = await captureElementAsPng(reportRef, {
+        pixelRatio: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
+      })
+      downloadBlobFile(imageBlob, formatRegisterScoreImageFilename(props.result.imported_at))
     } catch {
       setDownloadImageError(REGISTER_SCORE_MESSAGES.downloadImageError)
     } finally {
@@ -1151,6 +1124,7 @@ export const RegisterScoreResultView = (props: {
                 resolveSongTitle={props.resolveSongTitle}
                 resolveChartLevel={props.resolveChartLevel}
                 emptyMessage={props.changedSongsEmptyMessage}
+                onCopySongTitle={copySongTitle}
               />
               <RegisterCourseChangesSection
                 changes={courseChanges()}
