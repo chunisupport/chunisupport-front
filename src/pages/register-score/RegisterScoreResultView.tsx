@@ -18,10 +18,10 @@ import {
 import type {
   PlayerDataCourseRecordChange,
   PlayerDataCourseRecordState,
-  PlayerDataDifficulty,
   PlayerDataRecordChange,
   PlayerDataRecordState,
   PlayerDataSongRecordChange,
+  PlayerDataStatisticsDifficulty,
 } from '../../types/api'
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
@@ -140,7 +140,7 @@ const getRegisterScoreStatisticColumnDividerClass = (
  * @param difficulty - 表示対象の難易度。全体行の場合はnull。
  * @returns 難易度色のTailwindクラス。全体行の場合は空文字。
  */
-const getDifficultyTextClass = (difficulty: PlayerDataDifficulty | null): string => {
+const getDifficultyTextClass = (difficulty: PlayerDataStatisticsDifficulty | null): string => {
   switch (difficulty) {
     case 'BASIC':
       return 'text-[var(--cs-color-difficulty-basic-bg)]'
@@ -152,6 +152,8 @@ const getDifficultyTextClass = (difficulty: PlayerDataDifficulty | null): string
       return 'text-[var(--cs-color-difficulty-master-bg)]'
     case 'ULTIMA':
       return 'text-[var(--cs-color-difficulty-ultima-bg)]'
+    case 'WE':
+      return 'text-[var(--cs-color-worldsend-label-bg)]'
     default:
       return ''
   }
@@ -602,9 +604,9 @@ const RegisterScoreDisplaySettings = (props: {
 )
 
 /**
- * 登録後の通常譜面集計を表示する。
+ * 登録後の通常譜面およびWORLD'S END集計を表示する。
  *
- * @param props - APIから返却された通常譜面集計と表示設定。
+ * @param props - APIから返却された通常譜面およびWORLD'S END集計と表示設定。
  * @returns 集計値セクション。
  */
 const RegisterScoreAggregateSummary = (props: {

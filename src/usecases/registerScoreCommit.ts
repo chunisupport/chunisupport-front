@@ -1,9 +1,9 @@
-import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
+import { PLAYER_DATA_STATISTICS_DIFFICULTIES } from '../constants/difficulty'
 import type {
-  PlayerDataDifficulty,
   PlayerDataMetricDiffs,
   PlayerDataNumberDiff,
   PlayerDataResult,
+  PlayerDataStatisticsDifficulty,
   PlayerDataStatisticsGroup,
   PlayerDataUpdateResult,
   SkippedRecord,
@@ -96,17 +96,17 @@ const normalizeStatisticsGroup = (
  * APIレスポンスの配列フィールドを画面で扱いやすい形へ正規化する。
  *
  * @param result - スコア登録APIまたは保存済み最新更新結果APIから返却された更新結果。
- * @returns 差分配列、スキップ配列、固定難易度の統計が常に表示可能な登録結果。
+ * @returns 差分配列、スキップ配列、固定統計グループが常に表示可能な登録結果。
  */
 export const normalizePlayerDataResult = (
   result: PlayerDataUpdateResult & { skipped_records?: SkippedRecord[] }
 ): NormalizedPlayerDataResult => {
   const byDifficulty = Object.fromEntries(
-    PLAYER_DATA_DIFFICULTIES.map((difficulty) => [
+    PLAYER_DATA_STATISTICS_DIFFICULTIES.map((difficulty) => [
       difficulty,
       normalizeStatisticsGroup(result.statistics?.by_difficulty?.[difficulty]),
     ])
-  ) as Record<PlayerDataDifficulty, PlayerDataStatisticsGroup>
+  ) as Record<PlayerDataStatisticsDifficulty, PlayerDataStatisticsGroup>
 
   return {
     ...result,

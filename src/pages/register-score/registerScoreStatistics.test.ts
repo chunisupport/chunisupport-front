@@ -58,6 +58,7 @@ const createStatistics = (
     expert: PlayerDataStatisticsGroup
     master: PlayerDataStatisticsGroup
     ultima: PlayerDataStatisticsGroup
+    worldsend: PlayerDataStatisticsGroup
   }> = {}
 ): PlayerDataStatistics => ({
   overall: groups.overall ?? createStatisticsGroup(),
@@ -67,6 +68,7 @@ const createStatistics = (
     EXPERT: groups.expert ?? createStatisticsGroup(),
     MASTER: groups.master ?? createStatisticsGroup(),
     ULTIMA: groups.ultima ?? createStatisticsGroup(),
+    WE: groups.worldsend ?? createStatisticsGroup(),
   },
 })
 
@@ -90,6 +92,7 @@ test('RECORD STATISTICSは差分がある行だけをデフォルト表示にす
     EXPERT: false,
     MASTER: true,
     ULTIMA: false,
+    WE: false,
   })
 })
 
@@ -109,12 +112,13 @@ test('表に表示しない統計項目だけの差分は行の更新として�
 })
 
 test('TOTAL HIGH SCOREは差分がある行だけをデフォルト表示にすること', () => {
-  // Given: ALL、ADVANCED、ULTIMAのTOTAL HIGH SCOREに差分がある。
+  // Given: ALL、ADVANCED、ULTIMA、WORLD'S ENDのTOTAL HIGH SCOREに差分がある。
   const positiveDiff: PlayerDataNumberDiff = { before: 10, after: 11, delta: 1 }
   const statistics = createStatistics({
     overall: createStatisticsGroup({ totalHighScore: positiveDiff }),
     advanced: createStatisticsGroup({ totalHighScore: positiveDiff }),
     ultima: createStatisticsGroup({ totalHighScore: positiveDiff }),
+    worldsend: createStatisticsGroup({ totalHighScore: positiveDiff }),
   })
 
   // When: 行ごとの初期表示状態を生成する。
@@ -128,5 +132,6 @@ test('TOTAL HIGH SCOREは差分がある行だけをデフォルト表示にす�
     EXPERT: false,
     MASTER: false,
     ULTIMA: true,
+    WE: true,
   })
 })
