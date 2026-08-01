@@ -27,6 +27,7 @@ import type {
 } from '../../types/api'
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
+import { captureElementAsPng, downloadBlobFile } from '../../utils/domImageCapture'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
 import {
@@ -84,10 +85,6 @@ const REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS = 'max-w-[31rem]'
 const REGISTER_SCORE_REPORT_LOGO_COLOR = '#444444'
 /** 更新差分画像を原寸の2倍で出力するピクセル比。 */
 const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 2
-/** 2倍出力時もCanvasの一辺を16,000px以内へ収めるレポート寸法。 */
-const REGISTER_SCORE_IMAGE_MAX_CSS_SIDE = 8_000
-/** ダウンロード開始後にObject URLを解放するまでの待機時間。 */
-const REGISTER_SCORE_IMAGE_OBJECT_URL_REVOKE_DELAY_MS = 1_000
 /** 更新差分画像のファイル名へ付与する接頭辞。 */
 const REGISTER_SCORE_IMAGE_FILENAME_PREFIX = 'chunisupport-score-update'
 /** コピー成功時に曲名をアクセントカラーで保持する時間。 */
@@ -282,75 +279,6 @@ const formatRegisterScoreImageFilename = (isoDateTime: string): string => {
     .replace(' ', '-')
 
   return `${REGISTER_SCORE_IMAGE_FILENAME_PREFIX}-${timestamp}.png`
-}
-
-/**
- * 画像化対象を祖先の表示用transformから切り離し、Canvas上限内の寸法で複製する。
- *
- * @param reportElement - 画面に表示中の更新差分レポート。
- * @returns 画像化対象の複製と破棄処理。
- */
-const createRegisterScoreImageCapture = (
-  reportElement: HTMLElement
-): { element: HTMLDivElement; dispose: () => void } => {
-  const reportWidth = reportElement.offsetWidth
-  const reportHeight = reportElement.offsetHeight
-  const captureScale = Math.min(
-    1,
-    REGISTER_SCORE_IMAGE_MAX_CSS_SIDE / reportWidth,
-    REGISTER_SCORE_IMAGE_MAX_CSS_SIDE / reportHeight
-  )
-  const captureHost = document.createElement('div')
-  const captureElement = document.createElement('div')
-  const reportClone = reportElement.cloneNode(true) as HTMLElement
-
-  Object.assign(captureHost.style, {
-    left: '-100000px',
-    pointerEvents: 'none',
-    position: 'fixed',
-    top: '0',
-  })
-  Object.assign(captureElement.style, {
-    height: `${Math.ceil(reportHeight * captureScale)}px`,
-    overflow: 'hidden',
-    width: `${Math.ceil(reportWidth * captureScale)}px`,
-  })
-  Object.assign(reportClone.style, {
-    maxWidth: 'none',
-    transform: `scale(${captureScale})`,
-    transformOrigin: 'top left',
-    width: `${reportWidth}px`,
-  })
-  captureHost.setAttribute('aria-hidden', 'true')
-  captureElement.appendChild(reportClone)
-  captureHost.appendChild(captureElement)
-  document.body.appendChild(captureHost)
-
-  return {
-    element: captureElement,
-    dispose: () => captureHost.remove(),
-  }
-}
-
-/**
- * Blobを指定ファイル名でダウンロードする。
- *
- * @param blob - ダウンロードするファイル内容。
- * @param filename - ダウンロード時に使用する拡張子付きファイル名。
- * @returns なし。
- */
-const downloadRegisterScoreFile = (blob: Blob, filename: string): void => {
-  const objectUrl = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.download = filename
-  link.href = objectUrl
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  window.setTimeout(
-    () => URL.revokeObjectURL(objectUrl),
-    REGISTER_SCORE_IMAGE_OBJECT_URL_REVOKE_DELAY_MS
-  )
 }
 
 /**
@@ -1099,33 +1027,10 @@ export const RegisterScoreResultView = (props: {
     setDownloadImageError(undefined)
 
     try {
-      await document.fonts.ready
-      const capture = createRegisterScoreImageCapture(reportRef)
-
-      try {
-        const { snapdom } = await import('@zumer/snapdom')
-        const captureResult = await snapdom(capture.element, {
-          backgroundColor: getComputedStyle(reportRef).backgroundColor,
-          dpr: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
-          embedFonts: true,
-          format: 'png',
-          reconcile: true,
-        })
-        const rasterizeOptions = {
-          dpr: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
-          type: 'png' as const,
-        }
-
-        // ChromeがSVG内の埋め込みフォントを初回描画で準備するため、1回目は破棄する。
-        await captureResult.toBlob(rasterizeOptions)
-        const imageBlob = await captureResult.toBlob(rasterizeOptions)
-        downloadRegisterScoreFile(
-          imageBlob,
-          formatRegisterScoreImageFilename(props.result.imported_at)
-        )
-      } finally {
-        capture.dispose()
-      }
+      const imageBlob = await captureElementAsPng(reportRef, {
+        pixelRatio: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
+      })
+      downloadBlobFile(imageBlob, formatRegisterScoreImageFilename(props.result.imported_at))
     } catch {
       setDownloadImageError(REGISTER_SCORE_MESSAGES.downloadImageError)
     } finally {

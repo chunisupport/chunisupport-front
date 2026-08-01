@@ -16,6 +16,7 @@ import {
   type OverPowerSubPage,
   type ProfilePageQuery,
 } from '../../../utils/userProfileRoute'
+import { RatingImagePreviewDialog } from './components/RatingImagePreviewDialog'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
 import { UserRecordPlaceholderCard } from './components/UserRecordPlaceholderCard'
@@ -180,6 +181,12 @@ const RecordList: Component<{
   )
 }
 
+/**
+ * ユーザープロフィールとレーティング・レコード・OVER POWERの各タブを表示する。
+ *
+ * @param props - プロフィール表示と各タブの取得状態・選択状態。
+ * @returns ユーザープロフィール画面。
+ */
 export const UserProfileView: Component<Props> = (props) => {
   const [showJackets, setShowJackets] = createSignal(true)
   const playerInfo = (): PlayerDTO => props.profile.player
@@ -340,6 +347,12 @@ export const UserProfileView: Component<Props> = (props) => {
                 <JacketVisibilityToggle
                   showJackets={showJackets()}
                   onToggle={handleJacketVisibilityToggle}
+                />
+                <RatingImagePreviewDialog
+                  playerInfo={playerInfo()}
+                  honors={honors()}
+                  rating={props.profile.rating}
+                  showJackets={showJackets()}
                 />
                 <StatsPageLink href={statsPagePath()} />
               </div>

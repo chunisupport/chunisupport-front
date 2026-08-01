@@ -99,7 +99,7 @@ export const UserRecordCard: Component<Props> = (props) => {
                 / {formatInteger(props.record.score)}{' '}
                 <span class={SCORE_RANK_TEXT_CLASS[scoreRank()]}>{scoreRank()}</span>
                 <Show when={props.scoreDifference !== undefined}>
-                  <span class="relative -top-px ml-1 font-jost text-xs font-medium text-rating-candidate-gap">
+                  <span class="relative -top-px ml-1 font-oswald text-xs font-medium text-rating-candidate-gap">
                     ({formatScoreDifference(props.scoreDifference ?? 0)})
                   </span>
                 </Show>
