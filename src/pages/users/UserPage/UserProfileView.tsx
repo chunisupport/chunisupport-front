@@ -1,9 +1,9 @@
-import { A, useLocation, useNavigate } from '@solidjs/router'
-import { ChartColumnIncreasing, ImageOff } from 'lucide-solid'
+import { useLocation, useNavigate } from '@solidjs/router'
+import { ImageOff } from 'lucide-solid'
 import type { Accessor, Component, Resource } from 'solid-js'
 import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
-import { AppIconButton, getAppButtonClass } from '../../../components/common/AppButton'
+import { AppIconButton } from '../../../components/common/AppButton'
 import { AppTabContent, SegmentedTabs, UnderlineTabs } from '../../../components/common/AppTabs'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import {
@@ -42,14 +42,6 @@ type Props = {
   username: string
 }
 
-const statsPageButtonClass = getAppButtonClass({
-  variant: 'surface',
-  shape: 'pill',
-  class: 'h-10 focus-visible:ring-offset-2',
-})
-const disabledStatsPageButtonClass =
-  'pointer-events-none cursor-not-allowed opacity-50 hover:bg-surface focus-visible:ring-0'
-const isStatsPageLinkDisabled = true
 const BEST_CANDIDATE_HEADING = 'ベスト枠候補'
 const NEW_CANDIDATE_HEADING = '新曲枠候補'
 const JACKET_VISIBILITY_LABEL = 'ジャケット画像を非表示'
@@ -69,29 +61,6 @@ const RECORD_TAB_OPTIONS = [
   { value: 'worldsend', label: "WORLD'S END" },
   { value: 'course', label: 'COURSE' },
 ] as const
-
-/**
- * ユーザー統計ページへのリンクを表示する。
- *
- * @param props - 統計ページのリンク先。
- * @returns 統計ページへのリンク。
- */
-const StatsPageLink: Component<{ href: string }> = (props) => (
-  <A
-    href={props.href}
-    class={`${statsPageButtonClass} ${isStatsPageLinkDisabled ? disabledStatsPageButtonClass : ''}`}
-    aria-disabled={isStatsPageLinkDisabled ? 'true' : undefined}
-    aria-label={isStatsPageLinkDisabled ? '統計ページ（開発中）' : '統計ページ'}
-    tabIndex={isStatsPageLinkDisabled ? -1 : undefined}
-    title={isStatsPageLinkDisabled ? '統計ページ（開発中）' : '統計ページ'}
-    onClick={(event) => {
-      if (isStatsPageLinkDisabled) event.preventDefault()
-    }}
-  >
-    <span>統計</span>
-    <ChartColumnIncreasing class="h-5 w-5" aria-hidden="true" />
-  </A>
-)
 
 /**
  * レーティングカードのジャケット画像表示を切り替える。
@@ -267,8 +236,6 @@ export const UserProfileView: Component<Props> = (props) => {
     return `${normalizedPath}${queryString ? `?${queryString}` : ''}${location.hash}`
   }
 
-  const statsPagePath = () => `/users/${encodeURIComponent(props.username)}/stats`
-
   const handlePageTabChange = (value: string) => {
     if (value !== 'rating' && value !== 'records' && value !== 'overpower') return
 
@@ -349,12 +316,12 @@ export const UserProfileView: Component<Props> = (props) => {
                   onToggle={handleJacketVisibilityToggle}
                 />
                 <RatingImagePreviewDialog
+                  username={props.username}
                   playerInfo={playerInfo()}
                   honors={honors()}
                   rating={props.profile.rating}
                   showJackets={showJackets()}
                 />
-                <StatsPageLink href={statsPagePath()} />
               </div>
             }
             triggerClass="p-2"

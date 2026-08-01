@@ -138,6 +138,20 @@ test('SP称号の背景は虹称号と同じ7色を0.35秒ごとに循環する�
   )
 })
 
+test('画像内のSP称号だけは専用の緑グラデーションで静止表示されること', () => {
+  assert.equal(
+    readCustomProperty(tailwindCssContent, '--cs-gradient-rating-image-sp-honor-bg').replace(
+      /\s+/g,
+      ' '
+    ),
+    'linear-gradient( 135deg, #d8f7e2 0%, #7bd89a 50%, #38b968 100% )'
+  )
+  assert.match(
+    tailwindCssContent,
+    /\.rating-image-honor-title\.user-honor-title--sp\s*{\s*--honor-background: var\(--honor-shine\), var\(--cs-gradient-rating-image-sp-honor-bg\);\s*animation: none;/
+  )
+})
+
 test('AJCランプの文字色は虹背景向けの専用色で定義されていること', () => {
   assert.equal(
     readCustomProperty(tailwindCssContent, '--cs-color-lamp-all-justice-critical-text'),

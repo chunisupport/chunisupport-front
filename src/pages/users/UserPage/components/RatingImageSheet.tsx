@@ -196,7 +196,7 @@ export const RatingImageSheet: Component<RatingImageSheetProps> = (props) => {
   const overPowerPercent = () =>
     props.playerInfo.overpower_percent === null
       ? '-'
-      : `${formatOverPowerPercent(props.playerInfo.overpower_percent)}%`
+      : formatOverPowerPercent(props.playerInfo.overpower_percent)
 
   return (
     <div
@@ -204,49 +204,50 @@ export const RatingImageSheet: Component<RatingImageSheetProps> = (props) => {
       class="box-border bg-bg px-6 py-5 font-sans text-text"
       style={{ width: `${RATING_IMAGE_WIDTH_PX}px` }}
     >
-      <header class="rounded-lg border border-border bg-surface px-5 py-4 shadow-sm">
+      <header class="mx-auto w-full max-w-xl rounded-lg border border-border bg-surface px-5 py-4 shadow-sm">
         <Show when={primaryHonor()}>
           {(honor) => (
             <div
-              class={`mb-3 truncate whitespace-nowrap rounded px-3 py-1 text-center font-sans text-sm font-bold ${getHonorTypeClassName(
-                honor().type_name
-              )}`}
+              class={`rating-image-honor-title user-honor-title mx-auto mb-3 ${getHonorTypeClassName(honor().type_name)}`}
             >
-              {honor().name}
+              <span class="user-honor-title__text truncate">{honor().name}</span>
             </div>
           )}
         </Show>
-        <div class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-end gap-4">
+        <div class="flex items-baseline justify-center gap-4">
           <p class="whitespace-nowrap font-jost text-lg font-medium">
             Lv. {props.playerInfo.level}
           </p>
-          <h1 class="min-w-0 truncate text-center font-sans text-3xl font-bold">
+          <h1 class="min-w-0 truncate text-center font-sans text-2xl font-bold">
             {props.playerInfo.name}
           </h1>
-          <p class="whitespace-nowrap font-jost text-lg font-medium">
-            {RATING_IMAGE_COPY.ratingLabel}{' '}
-            <strong class="text-2xl">{formatNullablePlayerRating(props.rating.rating)}</strong>
-          </p>
         </div>
-        <div class="mt-4 grid grid-cols-3 divide-x divide-border border-t border-border pt-3 text-center">
-          <p class="whitespace-nowrap font-jost text-base text-text-muted">
-            {RATING_IMAGE_COPY.bestAverageLabel}{' '}
-            <strong class="text-lg text-text">
-              {formatNullablePlayerRating(props.rating.best_average)}
-            </strong>
-          </p>
-          <p class="whitespace-nowrap font-jost text-base text-text-muted">
-            {RATING_IMAGE_COPY.newAverageLabel}{' '}
-            <strong class="text-lg text-text">
-              {formatNullablePlayerRating(props.rating.new_average)}
-            </strong>
-          </p>
-          <p class="whitespace-nowrap font-jost text-base text-text-muted">
-            {RATING_IMAGE_COPY.overPowerLabel}{' '}
-            <strong class="text-lg text-text">{overPowerValue()}</strong>{' '}
-            <span>({overPowerPercent()})</span>
-          </p>
-        </div>
+        <dl class="mt-3 grid grid-cols-3 divide-x divide-border border-t border-border pt-3 text-center">
+          <div>
+            <dt class="whitespace-nowrap text-xs font-bold text-text-muted">
+              {RATING_IMAGE_COPY.ratingLabel}
+            </dt>
+            <dd class="whitespace-nowrap font-jost text-xl font-semibold text-text">
+              {formatNullablePlayerRating(props.rating.rating)}
+            </dd>
+          </div>
+          <div>
+            <dt class="whitespace-nowrap text-xs font-bold text-text-muted">
+              {RATING_IMAGE_COPY.overPowerLabel}
+            </dt>
+            <dd class="whitespace-nowrap font-jost text-xl font-semibold text-text">
+              {overPowerValue()}
+            </dd>
+          </div>
+          <div>
+            <dt class="whitespace-nowrap text-xs font-bold text-text-muted">
+              {RATING_IMAGE_COPY.overPowerPercentLabel}
+            </dt>
+            <dd class="whitespace-nowrap font-jost text-xl font-semibold text-text">
+              {overPowerPercent()}
+            </dd>
+          </div>
+        </dl>
       </header>
 
       <main class="mt-5 grid grid-cols-2 items-start gap-4">

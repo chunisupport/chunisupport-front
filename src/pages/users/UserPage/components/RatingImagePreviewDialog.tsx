@@ -12,13 +12,15 @@ import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
 import { captureElementAsPng, downloadBlobFile } from '../../../../utils/domImageCapture'
 import {
   RATING_IMAGE_COPY,
-  RATING_IMAGE_FILENAME,
   RATING_IMAGE_PIXEL_RATIO,
   RATING_IMAGE_WIDTH_PX,
 } from '../UserProfileView.constants'
 import { RatingImageSheet } from './RatingImageSheet'
+import { formatRatingImageFilename } from './ratingImageFilename'
 
 type Props = {
+  /** プロフィールURLに使用するユーザー名。 */
+  username: string
   /** 画像上部へ表示するプレイヤー情報。 */
   playerInfo: PlayerDTO
   /** 画像上部へ表示する称号。 */
@@ -33,7 +35,7 @@ type Props = {
  * ベスト枠・新曲枠画像を縮小プレビューし、PNGとして保存できるダイアログを表示する。
  *
  * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定。
- * @returns 画像プレビューを開くボタンとダイアログ。
+ * @returns 画像化プレビューを開くボタンとダイアログ。
  */
 export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const [open, setOpen] = createSignal(false)
@@ -73,7 +75,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
       const blob = await captureElementAsPng(sheet, {
         pixelRatio: RATING_IMAGE_PIXEL_RATIO,
       })
-      downloadBlobFile(blob, RATING_IMAGE_FILENAME)
+      downloadBlobFile(blob, formatRatingImageFilename(props.username))
     } catch {
       setDownloadError(RATING_IMAGE_COPY.downloadError)
     } finally {
@@ -94,18 +96,29 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
      *
      * @returns なし。
      */
+    let animationFrameId: number | undefined
+
     const updatePreviewSize = (): void => {
-      const scale = Math.min(1, viewport.clientWidth / RATING_IMAGE_WIDTH_PX)
-      setPreviewScale(scale)
-      setPreviewHeight(sheet.offsetHeight * scale)
+      if (animationFrameId !== undefined) cancelAnimationFrame(animationFrameId)
+
+      animationFrameId = requestAnimationFrame(() => {
+        const scale = Math.min(1, viewport.clientWidth / RATING_IMAGE_WIDTH_PX)
+        const height = sheet.offsetHeight * scale
+
+        setPreviewScale((current) => (current === scale ? current : scale))
+        setPreviewHeight((current) => (current === height ? current : height))
+        animationFrameId = undefined
+      })
     }
 
     const resizeObserver = new ResizeObserver(updatePreviewSize)
     resizeObserver.observe(viewport)
-    resizeObserver.observe(sheet)
     updatePreviewSize()
 
-    onCleanup(() => resizeObserver.disconnect())
+    onCleanup(() => {
+      resizeObserver.disconnect()
+      if (animationFrameId !== undefined) cancelAnimationFrame(animationFrameId)
+    })
   })
 
   return (
@@ -122,87 +135,89 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
         <ImageDown class="h-5 w-5" aria-hidden="true" />
         <span>{RATING_IMAGE_COPY.openPreview}</span>
       </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-60 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[92dvh] sm:max-h-[92dvh] sm:w-[94vw] sm:max-w-6xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
-          <div class="flex shrink-0 items-start justify-between gap-4">
-            <div class="min-w-0">
-              <Dialog.Title class="text-lg font-bold text-text">
-                {RATING_IMAGE_COPY.dialogTitle}
-              </Dialog.Title>
-              <Dialog.Description class="mt-1 text-sm text-text-muted">
-                {RATING_IMAGE_COPY.dialogDescription}
-              </Dialog.Description>
+      <Show when={open()}>
+        <Dialog.Portal>
+          <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
+          <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-60 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[92dvh] sm:max-h-[92dvh] sm:w-[94vw] sm:max-w-6xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+            <div class="flex shrink-0 items-start justify-between gap-4">
+              <div class="min-w-0">
+                <Dialog.Title class="text-lg font-bold text-text">
+                  {RATING_IMAGE_COPY.dialogTitle}
+                </Dialog.Title>
+                <Dialog.Description class="mt-1 text-sm text-text-muted">
+                  {RATING_IMAGE_COPY.dialogDescription}
+                </Dialog.Description>
+              </div>
+              <Dialog.CloseButton
+                class={getAppIconButtonClass({ tone: 'ghost', class: 'shrink-0' })}
+                aria-label={RATING_IMAGE_COPY.close}
+                disabled={isDownloading()}
+              >
+                <X class="h-5 w-5" aria-hidden="true" />
+              </Dialog.CloseButton>
             </div>
-            <Dialog.CloseButton
-              class={getAppIconButtonClass({ tone: 'ghost', class: 'shrink-0' })}
-              aria-label={RATING_IMAGE_COPY.close}
-              disabled={isDownloading()}
-            >
-              <X class="h-5 w-5" aria-hidden="true" />
-            </Dialog.CloseButton>
-          </div>
 
-          <div class="mt-4 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain rounded-md bg-bg p-3">
-            <div
-              ref={(element) => setPreviewViewport(element)}
-              class="mx-auto w-full overflow-hidden"
-            >
+            <div class="mt-4 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain rounded-md bg-bg p-3">
               <div
-                class="relative min-h-40 overflow-hidden"
-                style={{ height: `${previewHeight()}px` }}
+                ref={(element) => setPreviewViewport(element)}
+                class="mx-auto w-full overflow-hidden"
               >
                 <div
-                  class="absolute left-0 top-0"
-                  style={{
-                    transform: `scale(${previewScale()})`,
-                    'transform-origin': 'top left',
-                  }}
+                  class="relative min-h-40 select-none overflow-hidden"
+                  style={{ height: `${previewHeight()}px` }}
                 >
-                  <RatingImageSheet
-                    captureRef={(element) => setImageSheet(element)}
-                    playerInfo={props.playerInfo}
-                    honors={props.honors}
-                    rating={props.rating}
-                    showJackets={props.showJackets}
-                  />
+                  <div
+                    class="absolute left-0 top-0"
+                    style={{
+                      transform: `scale(${previewScale()})`,
+                      'transform-origin': 'top left',
+                    }}
+                  >
+                    <RatingImageSheet
+                      captureRef={(element) => setImageSheet(element)}
+                      playerInfo={props.playerInfo}
+                      honors={props.honors}
+                      rating={props.rating}
+                      showJackets={props.showJackets}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div class="mt-4 flex shrink-0 flex-col items-end gap-2">
-            <Show when={downloadError()}>
-              {(message) => (
-                <p class="text-sm text-danger" role="alert">
-                  {message()}
-                </p>
-              )}
-            </Show>
-            <div class="flex flex-wrap justify-end gap-2">
-              <Dialog.CloseButton
-                class={getAppButtonClass({ variant: 'secondary' })}
-                disabled={isDownloading()}
-              >
-                {RATING_IMAGE_COPY.close}
-              </Dialog.CloseButton>
-              <AppButton
-                variant="primary"
-                disabled={isDownloading()}
-                aria-busy={isDownloading()}
-                onClick={downloadRatingImage}
-                leftIcon={
-                  <Show when={!isDownloading()} fallback={<Loading size="inline" ariaHidden />}>
-                    <Download class="h-4 w-4" aria-hidden="true" />
-                  </Show>
-                }
-              >
-                {isDownloading() ? RATING_IMAGE_COPY.downloading : RATING_IMAGE_COPY.download}
-              </AppButton>
+            <div class="mt-4 flex shrink-0 flex-col items-end gap-2">
+              <Show when={downloadError()}>
+                {(message) => (
+                  <p class="text-sm text-danger" role="alert">
+                    {message()}
+                  </p>
+                )}
+              </Show>
+              <div class="flex flex-wrap justify-end gap-2">
+                <Dialog.CloseButton
+                  class={getAppButtonClass({ variant: 'secondary' })}
+                  disabled={isDownloading()}
+                >
+                  {RATING_IMAGE_COPY.close}
+                </Dialog.CloseButton>
+                <AppButton
+                  variant="primary"
+                  disabled={isDownloading()}
+                  aria-busy={isDownloading()}
+                  onClick={downloadRatingImage}
+                  leftIcon={
+                    <Show when={!isDownloading()} fallback={<Loading size="inline" ariaHidden />}>
+                      <Download class="h-4 w-4" aria-hidden="true" />
+                    </Show>
+                  }
+                >
+                  {isDownloading() ? RATING_IMAGE_COPY.downloading : RATING_IMAGE_COPY.download}
+                </AppButton>
+              </div>
             </div>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Show>
     </Dialog>
   )
 }
