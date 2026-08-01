@@ -1,4 +1,4 @@
-import type { PlayerDataDifficulty } from '../types/api'
+import type { PlayerDataDifficulty, PlayerDataStatisticsDifficulty } from '../types/api'
 
 /** 通常譜面で扱う難易度の正規順序。 */
 export const PLAYER_DATA_DIFFICULTIES = [
@@ -8,6 +8,12 @@ export const PLAYER_DATA_DIFFICULTIES = [
   'MASTER',
   'ULTIMA',
 ] as const satisfies readonly PlayerDataDifficulty[]
+
+/** 更新差分統計で扱う通常難易度とWORLD'S ENDの正規順序。 */
+export const PLAYER_DATA_STATISTICS_DIFFICULTIES = [
+  ...PLAYER_DATA_DIFFICULTIES,
+  'WE',
+] as const satisfies readonly PlayerDataStatisticsDifficulty[]
 
 /** 難易度の外部入力を検証するための正規値Set。 */
 const PLAYER_DATA_DIFFICULTY_SET: ReadonlySet<string> = new Set(PLAYER_DATA_DIFFICULTIES)

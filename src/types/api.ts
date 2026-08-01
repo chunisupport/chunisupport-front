@@ -635,7 +635,7 @@ export interface PlayerDataUpdateResult {
   summary: PlayerDataSummary
   /** 登録前後のレート・OVER POWER差分。旧保存形式では未返却。 */
   metric_diffs?: PlayerDataMetricDiffs
-  /** 登録前後の通常譜面集計差分。 */
+  /** 登録前後の通常譜面およびWORLD'S END集計差分。 */
   statistics: PlayerDataStatistics
   counts: PlayerDataCounts
   /** 実際に新規追加または更新されたスコア差分。0件の場合は空配列。 */
@@ -676,6 +676,9 @@ export interface PlayerDataSummary {
 
 export type PlayerDataDifficulty = 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
 
+/** 更新差分の統計グループとして返る通常難易度とWORLD'S END。 */
+export type PlayerDataStatisticsDifficulty = PlayerDataDifficulty | 'WE'
+
 /** 登録前後のnullableな小数差分。 */
 export interface PlayerDataFloat64Diff {
   before: number | null
@@ -711,16 +714,16 @@ export interface PlayerDataRecordStatisticsDiff {
   s: PlayerDataNumberDiff
 }
 
-/** 全体または1難易度分の通常譜面集計差分。 */
+/** 全体、通常難易度、またはWORLD'S ENDの集計差分。 */
 export interface PlayerDataStatisticsGroup {
   total_high_score: PlayerDataNumberDiff
   record_statistics: PlayerDataRecordStatisticsDiff
 }
 
-/** 全体および固定5難易度の通常譜面集計差分。 */
+/** 通常譜面全体、固定5難易度、およびWORLD'S ENDの集計差分。 */
 export interface PlayerDataStatistics {
   overall: PlayerDataStatisticsGroup
-  by_difficulty: Record<PlayerDataDifficulty, PlayerDataStatisticsGroup>
+  by_difficulty: Record<PlayerDataStatisticsDifficulty, PlayerDataStatisticsGroup>
 }
 
 export interface PlayerDataCounts {

@@ -53,6 +53,7 @@ const createPlayerDataResult = (overrides: Partial<PlayerDataResult> = {}): Play
       EXPERT: createStatisticsGroup(),
       MASTER: createStatisticsGroup(),
       ULTIMA: createStatisticsGroup(),
+      WE: createStatisticsGroup(),
     },
   },
   counts: {
@@ -112,7 +113,7 @@ test('normalizePlayerDataResult: 旧形式の最新更新結果ではメトリ�
   })
 })
 
-test('normalizePlayerDataResult: 難易度別統計が欠落した場合も固定5難易度へ正規化する', () => {
+test("normalizePlayerDataResult: 難易度別統計が欠落した場合も固定5難易度とWORLD'S ENDへ正規化する", () => {
   // Given: 一部難易度の統計だけが返った状態。
   const result = createPlayerDataResult({
     statistics: {
@@ -134,6 +135,7 @@ test('normalizePlayerDataResult: 難易度別統計が欠落した場合も固�
     'EXPERT',
     'MASTER',
     'ULTIMA',
+    'WE',
   ])
 })
 

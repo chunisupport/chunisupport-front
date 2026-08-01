@@ -1,8 +1,8 @@
-import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
+import { PLAYER_DATA_STATISTICS_DIFFICULTIES } from '../../constants/difficulty'
 import type {
-  PlayerDataDifficulty,
   PlayerDataNumberDiff,
   PlayerDataStatistics,
+  PlayerDataStatisticsDifficulty,
   PlayerDataStatisticsGroup,
 } from '../../types/api'
 
@@ -23,13 +23,16 @@ export const REGISTER_SCORE_STAT_COLUMNS = [
 export const REGISTER_SCORE_STATISTIC_DIVIDER_START_COLUMN = 'MAX' as const
 
 /** 更新差分レポートで扱う固定難易度。 */
-export const REGISTER_SCORE_DIFFICULTIES: readonly PlayerDataDifficulty[] = PLAYER_DATA_DIFFICULTIES
+export const REGISTER_SCORE_DIFFICULTIES: readonly PlayerDataStatisticsDifficulty[] =
+  PLAYER_DATA_STATISTICS_DIFFICULTIES
 
-/** 全難易度集計を表す設定キー。 */
+/** 通常譜面の全難易度集計を表す設定キー。 */
 export const REGISTER_SCORE_ALL_ROW_KEY = 'ALL' as const
 
 /** 更新差分の集計行を識別するキー。 */
-export type RegisterScoreAggregateRowKey = typeof REGISTER_SCORE_ALL_ROW_KEY | PlayerDataDifficulty
+export type RegisterScoreAggregateRowKey =
+  | typeof REGISTER_SCORE_ALL_ROW_KEY
+  | PlayerDataStatisticsDifficulty
 
 /** 更新差分の集計行ごとの表示状態。 */
 export type RegisterScoreAggregateRowVisibility = Record<RegisterScoreAggregateRowKey, boolean>
@@ -38,7 +41,7 @@ export type RegisterScoreAggregateRowVisibility = Record<RegisterScoreAggregateR
 export type RegisterScoreTotalHighScoreRow = {
   key: RegisterScoreAggregateRowKey
   label: string
-  difficulty: PlayerDataDifficulty | null
+  difficulty: PlayerDataStatisticsDifficulty | null
   value: PlayerDataNumberDiff
 }
 
@@ -46,7 +49,7 @@ export type RegisterScoreTotalHighScoreRow = {
 export type RegisterScoreStatisticRow = {
   key: RegisterScoreAggregateRowKey
   label: string
-  difficulty: PlayerDataDifficulty | null
+  difficulty: PlayerDataStatisticsDifficulty | null
   values: Record<(typeof REGISTER_SCORE_STAT_COLUMNS)[number], PlayerDataNumberDiff>
 }
 
@@ -61,7 +64,18 @@ export const REGISTER_SCORE_AGGREGATE_ROW_OPTIONS: readonly {
   { key: 'EXPERT', label: 'EXP' },
   { key: 'MASTER', label: 'MAS' },
   { key: 'ULTIMA', label: 'ULT' },
+  { key: 'WE', label: 'WE' },
 ]
+
+/** 更新差分統計に表示する難易度キーの短縮ラベル。 */
+const REGISTER_SCORE_DIFFICULTY_LABELS: Readonly<Record<PlayerDataStatisticsDifficulty, string>> = {
+  BASIC: 'BAS',
+  ADVANCED: 'ADV',
+  EXPERT: 'EXP',
+  MASTER: 'MAS',
+  ULTIMA: 'ULT',
+  WE: 'WE',
+}
 
 /**
  * 1統計グループを表示用の統計行へ変換する。
@@ -76,7 +90,7 @@ const toRegisterScoreStatisticRow = (
   key: RegisterScoreAggregateRowKey,
   label: string,
   group: PlayerDataStatisticsGroup,
-  difficulty: PlayerDataDifficulty | null = null
+  difficulty: PlayerDataStatisticsDifficulty | null = null
 ): RegisterScoreStatisticRow => ({
   key,
   label,
@@ -95,10 +109,10 @@ const toRegisterScoreStatisticRow = (
 })
 
 /**
- * 全体と固定5難易度の統計行を生成する。
+ * 通常譜面全体、固定5難易度、WORLD'S ENDの統計行を生成する。
  *
  * @param statistics - APIが返す全体および難易度別の統計差分。
- * @returns 全体、BASIC、ADVANCED、EXPERT、MASTER、ULTIMAの表示行。
+ * @returns 全体、BASIC、ADVANCED、EXPERT、MASTER、ULTIMA、WEの表示行。
  */
 export const toRegisterScoreStatisticRows = (
   statistics: PlayerDataStatistics
@@ -111,7 +125,7 @@ export const toRegisterScoreStatisticRows = (
   ...REGISTER_SCORE_DIFFICULTIES.map((difficulty) =>
     toRegisterScoreStatisticRow(
       difficulty,
-      difficulty.slice(0, 3),
+      REGISTER_SCORE_DIFFICULTY_LABELS[difficulty],
       statistics.by_difficulty[difficulty],
       difficulty
     )
@@ -119,10 +133,10 @@ export const toRegisterScoreStatisticRows = (
 ]
 
 /**
- * 全体と固定5難易度のTOTAL HIGH SCORE行を生成する。
+ * 通常譜面全体、固定5難易度、WORLD'S ENDのTOTAL HIGH SCORE行を生成する。
  *
  * @param statistics - APIが返す全体および難易度別の統計差分。
- * @returns 全体、BASIC、ADVANCED、EXPERT、MASTER、ULTIMAの表示行。
+ * @returns 全体、BASIC、ADVANCED、EXPERT、MASTER、ULTIMA、WEの表示行。
  */
 export const toRegisterScoreTotalHighScoreRows = (
   statistics: PlayerDataStatistics
@@ -135,7 +149,7 @@ export const toRegisterScoreTotalHighScoreRows = (
   },
   ...REGISTER_SCORE_DIFFICULTIES.map((difficulty) => ({
     key: difficulty,
-    label: difficulty.slice(0, 3),
+    label: REGISTER_SCORE_DIFFICULTY_LABELS[difficulty],
     difficulty,
     value: statistics.by_difficulty[difficulty].total_high_score,
   })),
