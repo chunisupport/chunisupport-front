@@ -89,6 +89,7 @@ const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => 
             aria-hidden="true"
           >
             <Image.Img
+              crossOrigin="anonymous"
               src={url()}
               alt=""
               class="h-full w-full object-cover object-center opacity-15"
