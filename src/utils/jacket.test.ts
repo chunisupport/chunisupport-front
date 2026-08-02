@@ -13,8 +13,8 @@ test('ジャケット画像IDからCHUNITHMジャケットURLを組み立てる�
   // When: CHUNITHMジャケットURLを組み立てる。
   const result = buildChunithmJacketUrl(imageId)
 
-  // Then: CHUNITHMジャケット配信先のキャッシュバージョン付きwebp URLになる。
-  assert.equal(result, `${TEST_CHUNITHM_JACKET_BASE_URL}/music-jacket.webp?v=20260802`)
+  // Then: CHUNITHMジャケット配信先のwebp URLになる。
+  assert.equal(result, `${TEST_CHUNITHM_JACKET_BASE_URL}/music-jacket.webp`)
 })
 
 test('空白だけのジャケット画像IDはジャケットURLを返さないこと', () => {
