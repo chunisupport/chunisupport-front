@@ -10,10 +10,12 @@ import {
 } from '../../../../components/common/AppButton'
 import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
 import { captureElementAsPng, downloadBlobFile } from '../../../../utils/domImageCapture'
+import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import {
   RATING_IMAGE_COPY,
   RATING_IMAGE_PIXEL_RATIO,
   RATING_IMAGE_WIDTH_PX,
+  RATING_SLOT_COUNT,
 } from '../UserProfileView.constants'
 import { RatingImageSheet } from './RatingImageSheet'
 import { formatRatingImageFilename } from './ratingImageFilename'
@@ -45,6 +47,45 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const [imageSheet, setImageSheet] = createSignal<HTMLDivElement>()
   const [previewScale, setPreviewScale] = createSignal(1)
   const [previewHeight, setPreviewHeight] = createSignal(0)
+  const [readyJacketCount, setReadyJacketCount] = createSignal(0)
+  const readyJacketKeys = new Set<string>()
+
+  /**
+   * 画像化対象に含まれる、URLが有効なジャケット画像の件数を返す。
+   *
+   * @returns 読み込み完了を待つジャケット画像の件数。
+   */
+  const expectedJacketCount = (): number => {
+    if (!props.showJackets) return 0
+
+    return [
+      ...props.rating.best.slice(0, RATING_SLOT_COUNT.best),
+      ...props.rating.new.slice(0, RATING_SLOT_COUNT.new),
+    ].filter((record) => buildChunithmJacketUrl(record.img) !== null).length
+  }
+
+  /**
+   * 全ジャケットが元画像またはプレースホルダーで表示可能になったかを返す。
+   *
+   * @returns プレビューを表示可能な場合はtrue。
+   */
+  const isPreviewReady = (): boolean => readyJacketCount() >= expectedJacketCount()
+
+  /**
+   * ジャケット画像ごとの準備状態を集約する。
+   *
+   * @param key - 画像化対象内でジャケット画像を識別するキー。
+   * @param ready - 元画像またはプレースホルダーを表示可能かどうか。
+   * @returns なし。
+   */
+  const handleJacketReadyChange = (key: string, ready: boolean): void => {
+    if (ready) {
+      readyJacketKeys.add(key)
+    } else {
+      readyJacketKeys.delete(key)
+    }
+    setReadyJacketCount(readyJacketKeys.size)
+  }
 
   /**
    * ダイアログの開閉状態を更新し、閉じるときは一時エラーを破棄する。
@@ -55,6 +96,10 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const handleOpenChange = (nextOpen: boolean): void => {
     if (!nextOpen && isDownloading()) return
 
+    if (nextOpen) {
+      readyJacketKeys.clear()
+      setReadyJacketCount(0)
+    }
     setOpen(nextOpen)
     if (!nextOpen) setDownloadError(undefined)
   }
@@ -164,10 +209,17 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
               >
                 <div
                   class="relative min-h-40 select-none overflow-hidden"
+                  aria-busy={!isPreviewReady()}
                   style={{ height: `${previewHeight()}px` }}
                 >
+                  <Show when={!isPreviewReady()}>
+                    <div class="absolute inset-0 z-10 min-h-40">
+                      <Loading ariaLabel={RATING_IMAGE_COPY.preparingPreview} />
+                    </div>
+                  </Show>
                   <div
                     class="absolute left-0 top-0"
+                    classList={{ invisible: !isPreviewReady() }}
                     style={{
                       transform: `scale(${previewScale()})`,
                       'transform-origin': 'top left',
@@ -179,6 +231,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                       honors={props.honors}
                       rating={props.rating}
                       showJackets={props.showJackets}
+                      onJacketReadyChange={handleJacketReadyChange}
                     />
                   </div>
                 </div>
@@ -202,7 +255,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                 </Dialog.CloseButton>
                 <AppButton
                   variant="primary"
-                  disabled={isDownloading()}
+                  disabled={isDownloading() || !isPreviewReady()}
                   aria-busy={isDownloading()}
                   onClick={downloadRatingImage}
                   leftIcon={
