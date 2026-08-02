@@ -1,6 +1,7 @@
 import { Image } from '@kobalte/core/image'
-import type { Component } from 'solid-js'
-import { For, Show } from 'solid-js'
+import type { Component, JSX } from 'solid-js'
+import { createSignal, For, Show } from 'solid-js'
+import placeholderImageUrl from '../../../../assets/placeholder.png'
 import { SCORE_RANK_TEXT_CLASS } from '../../../../components/common/record/recordStyleClasses'
 import { getHonorTypeClassName } from '../../../../constants/honors'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO, UserRatingDTO } from '../../../../types/api'
@@ -30,6 +31,8 @@ type RatingImageSheetProps = {
   showJackets: boolean
   /** 画像化対象のルート要素を受け取るコールバック。 */
   captureRef: (element: HTMLDivElement) => void
+  /** ジャケット画像ごとの準備状態を通知するコールバック。 */
+  onJacketReadyChange: (key: string, ready: boolean) => void
 }
 
 type RatingImageRecordCardProps = {
@@ -39,6 +42,10 @@ type RatingImageRecordCardProps = {
   index: number
   /** カード背景へジャケット画像を表示するかどうか。 */
   showJackets: boolean
+  /** 画像化対象内でジャケット画像を識別するキー。 */
+  jacketKey: string
+  /** ジャケット画像の準備状態を通知するコールバック。 */
+  onJacketReadyChange: (key: string, ready: boolean) => void
 }
 
 type RatingImageColumnProps = {
@@ -52,7 +59,16 @@ type RatingImageColumnProps = {
   slotCount: number
   /** カード背景へジャケット画像を表示するかどうか。 */
   showJackets: boolean
+  /** 枠を識別するキー。 */
+  columnKey: 'best' | 'new'
+  /** ジャケット画像の準備状態を通知するコールバック。 */
+  onJacketReadyChange: (key: string, ready: boolean) => void
 }
+
+type JacketLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error'
+
+/** ジャケット画像の再取得時にキャッシュキーへ使用するクエリ名。 */
+const JACKET_RETRY_QUERY_PARAM = 'retry'
 
 /**
  * プロフィール画像へ表示する代表称号を取得する。
@@ -64,17 +80,92 @@ const getPrimaryHonor = (honors: HonorDTO[]): HonorDTO | undefined =>
   honors.find((honor) => honor.slot === 1) ?? honors[0]
 
 /**
+ * ジャケット画像をキャッシュから切り離して再取得するURLを生成する。
+ *
+ * @param sourceUrl - 最初の取得に失敗したジャケット画像URL。
+ * @returns 現在時刻を再試行キーとして付与したURL。
+ */
+const buildJacketRetryUrl = (sourceUrl: string): string => {
+  const retryUrl = new URL(sourceUrl)
+  retryUrl.searchParams.set(JACKET_RETRY_QUERY_PARAM, Date.now().toString())
+  return retryUrl.toString()
+}
+
+/**
  * レーティング枠画像用の静的レコードカードを表示する。
  *
  * @param props - レコード、順位、ジャケット表示設定。
  * @returns 画像化時にリンクやアニメーションを含まないレコードカード。
  */
 const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => {
+  const [jacketLoadingStatus, setJacketLoadingStatus] = createSignal<JacketLoadingStatus>('idle')
   const scoreRank = () => getScoreRank(props.record.score)
   const indexColor = () => getRankingPositionClass(props.index + 1, 'bg-surface-hover')
   const jacketUrl = () => buildChunithmJacketUrl(props.record.img)
+  const [jacketSource, setJacketSource] = createSignal(jacketUrl())
   const constDisplay = () => getConstDisplay(props.record.const, props.record.is_const_unknown)
   const unknownValueClass = () => (props.record.is_const_unknown ? 'text-danger' : 'text-text')
+  let fallbackLoaded = false
+  let retried = false
+
+  /**
+   * 元ジャケットの読み込み状態を反映し、表示可能になったカードを通知する。
+   *
+   * @param status - Kobalte Imageが通知した読み込み状態。
+   * @returns なし。
+   */
+  const handleJacketLoadingStatusChange = (status: JacketLoadingStatus): void => {
+    if (status === 'error' && !retried) {
+      const sourceUrl = jacketUrl()
+      if (sourceUrl) {
+        retried = true
+        setJacketLoadingStatus('loading')
+        props.onJacketReadyChange(props.jacketKey, false)
+        setJacketSource(buildJacketRetryUrl(sourceUrl))
+        return
+      }
+    }
+
+    setJacketLoadingStatus(status)
+
+    if (status === 'error' && fallbackLoaded) {
+      props.onJacketReadyChange(props.jacketKey, true)
+      return
+    }
+
+    props.onJacketReadyChange(props.jacketKey, false)
+  }
+
+  /**
+   * DOMへ追加された元ジャケットのデコード完了後に準備完了を通知する。
+   *
+   * @param event - 読み込みを完了したジャケット画像のイベント。
+   * @returns なし。
+   */
+  const handleJacketLoad: JSX.EventHandlerUnion<HTMLImageElement, Event> = (event): void => {
+    void event.currentTarget
+      .decode()
+      .catch(() => undefined)
+      .then(() => props.onJacketReadyChange(props.jacketKey, true))
+  }
+
+  /**
+   * プレースホルダーの読み込み完了を記録し、元画像が失敗済みなら準備完了を通知する。
+   *
+   * @param event - 読み込みを完了したプレースホルダー画像のイベント。
+   * @returns なし。
+   */
+  const handleFallbackLoad: JSX.EventHandlerUnion<HTMLImageElement, Event> = (event): void => {
+    void event.currentTarget
+      .decode()
+      .catch(() => undefined)
+      .then(() => {
+        fallbackLoaded = true
+        if (jacketLoadingStatus() === 'error') {
+          props.onJacketReadyChange(props.jacketKey, true)
+        }
+      })
+  }
 
   return (
     <div
@@ -87,13 +178,23 @@ const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => 
           <Image
             class="pointer-events-none absolute inset-y-0 right-0 z-0 block w-1/2 overflow-hidden [mask-image:linear-gradient(to_right,transparent_0%,black_33%)]"
             aria-hidden="true"
+            onLoadingStatusChange={handleJacketLoadingStatusChange}
           >
             <Image.Img
               crossOrigin="anonymous"
-              src={url()}
+              src={jacketSource() ?? url()}
               alt=""
               class="h-full w-full object-cover object-center opacity-15"
+              onLoad={handleJacketLoad}
             />
+            <Image.Fallback class="block h-full w-full">
+              <img
+                src={placeholderImageUrl}
+                alt=""
+                class="h-full w-full object-cover object-center opacity-15"
+                onLoad={handleFallbackLoad}
+              />
+            </Image.Fallback>
           </Image>
         )}
       </Show>
@@ -166,6 +267,8 @@ const RatingImageColumn: Component<RatingImageColumnProps> = (props) => {
                 record={record}
                 index={index()}
                 showJackets={props.showJackets}
+                jacketKey={`${props.columnKey}-${index()}`}
+                onJacketReadyChange={props.onJacketReadyChange}
               />
             </li>
           )}
@@ -258,6 +361,8 @@ export const RatingImageSheet: Component<RatingImageSheetProps> = (props) => {
           records={props.rating.best}
           slotCount={RATING_SLOT_COUNT.best}
           showJackets={props.showJackets}
+          columnKey="best"
+          onJacketReadyChange={props.onJacketReadyChange}
         />
         <RatingImageColumn
           heading={RATING_IMAGE_COPY.newHeading}
@@ -265,6 +370,8 @@ export const RatingImageSheet: Component<RatingImageSheetProps> = (props) => {
           records={props.rating.new}
           slotCount={RATING_SLOT_COUNT.new}
           showJackets={props.showJackets}
+          columnKey="new"
+          onJacketReadyChange={props.onJacketReadyChange}
         />
       </main>
 

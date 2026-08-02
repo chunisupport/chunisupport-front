@@ -14,6 +14,7 @@ export const RATING_IMAGE_COPY = {
   openPreview: '画像化',
   dialogTitle: '画像化プレビュー',
   dialogDescription: '現在のテーマとジャケット表示設定で画像を作成します。',
+  preparingPreview: '画像化プレビューを準備中',
   bestHeading: 'ベスト枠',
   newHeading: '新曲枠',
   averageLabel: 'Avg.',
