@@ -281,7 +281,7 @@ export const GoalGroupsManageDialog: Component<GoalGroupsManageDialogProps> = (p
       >
         <Dialog.Portal>
           <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
-          <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex max-h-[calc(100dvh-2rem)] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
+          <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] -translate-y-1/2 flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:h-128 sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
             <Dialog.Title class="shrink-0 text-lg font-bold">
               {GOAL_GROUP_COPY.manageDialogTitle}
             </Dialog.Title>
