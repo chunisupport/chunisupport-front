@@ -10,15 +10,30 @@ import {
 } from 'solid-js'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../types/api'
+import type {
+  GoalCreateRequest,
+  GoalDTO,
+  GoalGroupDTO,
+  GoalUpdateRequest,
+} from '../../../types/api'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
+import { GoalGroupsManageDialog } from './components/list/GoalGroupsManageDialog'
 import { GoalsListContent } from './components/list/GoalsListContent'
 import { GoalsListDialogs } from './components/list/GoalsListDialogs'
 import {
   buildGoalReorderAnnouncement,
+  GOAL_GROUP_COPY,
   GOAL_REORDER_ERROR_MESSAGE,
   RECORD_NAVIGATION_ERROR_MESSAGE,
 } from './constants'
+import {
+  buildGoalGroupViews,
+  moveDeletedGroupGoalsToUngrouped,
+  moveGoalGroup,
+  orderGoalsByPersistedGroupOrder,
+  resolveCyclicGoalGroupId,
+  UNGROUPED_GOALS_LABEL,
+} from './goalGroupsModel'
 import { moveGoal } from './goalOrder'
 import { saveGoalRecordFilterAndBuildPath } from './goalsListNavigation'
 import {
@@ -28,10 +43,14 @@ import {
   resolveGoalOverPowerChartMax,
 } from './goalsListProgress'
 import {
+  createGoalGroupRequest,
+  deleteGoalGroupRequest,
   deleteGoalRequest,
   fetchGoalsListData,
+  reorderGoalGroupsRequest,
   reorderGoalsRequest,
   saveGoalRequest,
+  updateGoalGroupRequest,
 } from './goalsListResource'
 
 const GoalsList: Component = () => {
@@ -39,15 +58,19 @@ const GoalsList: Component = () => {
   const [refreshKey, setRefreshKey] = createSignal(0)
 
   const [formOpen, setFormOpen] = createSignal(false)
+  const [groupsManageOpen, setGroupsManageOpen] = createSignal(false)
   const [deleteOpen, setDeleteOpen] = createSignal(false)
   const [editingGoal, setEditingGoal] = createSignal<GoalDTO | undefined>(undefined)
   const [deletingGoal, setDeletingGoal] = createSignal<GoalDTO | undefined>(undefined)
   const [isSaving, setIsSaving] = createSignal(false)
   const [isDeleting, setIsDeleting] = createSignal(false)
   const [isReordering, setIsReordering] = createSignal(false)
+  const [isGroupMutating, setIsGroupMutating] = createSignal(false)
   const [actionError, setActionError] = createSignal('')
   const [reorderAnnouncement, setReorderAnnouncement] = createSignal('')
   const [formError, setFormError] = createSignal('')
+  const [groupError, setGroupError] = createSignal('')
+  const [selectedGroupId, setSelectedGroupId] = createSignal<number | null>(null)
 
   const [resource] = createResource(
     () => refreshKey(),
@@ -56,9 +79,43 @@ const GoalsList: Component = () => {
 
   const goalWithProgress = createMemo(() => buildGoalsWithProgress(resource()))
   const [orderedGoals, setOrderedGoals] = createSignal(goalWithProgress())
+  const [orderedGroups, setOrderedGroups] = createSignal<GoalGroupDTO[]>([])
+  let hasInitializedGroupSelection = false
 
   createEffect(() => {
-    setOrderedGoals(goalWithProgress())
+    setOrderedGoals(orderGoalsByPersistedGroupOrder(goalWithProgress()))
+  })
+
+  createEffect(() => {
+    const groups = resource()?.groups
+    if (!groups) return
+    setOrderedGroups([...groups].sort((left, right) => left.sort_order - right.sort_order))
+  })
+
+  const groupViews = createMemo(() => buildGoalGroupViews(orderedGroups(), orderedGoals()))
+  const currentGroupView = createMemo(() => {
+    const views = groupViews()
+    return (
+      views.find(({ groupId }) => groupId === selectedGroupId()) ??
+      views[0] ?? { groupId: null, name: UNGROUPED_GOALS_LABEL, goals: [] }
+    )
+  })
+
+  createEffect(() => {
+    const data = resource()
+    if (!data) return
+    const views = groupViews()
+    if (!hasInitializedGroupSelection) {
+      const firstGroup = [...data.groups].sort(
+        (left, right) => left.sort_order - right.sort_order
+      )[0]
+      setSelectedGroupId(firstGroup?.id ?? null)
+      hasInitializedGroupSelection = true
+      return
+    }
+    if (!views.some(({ groupId }) => groupId === selectedGroupId())) {
+      setSelectedGroupId(views[0]?.groupId ?? null)
+    }
   })
 
   /**
@@ -102,6 +159,16 @@ const GoalsList: Component = () => {
     setActionError('')
     setFormError('')
     setFormOpen(true)
+  }
+
+  /**
+   * 指定方向へ目標グループを循環切替する。
+   *
+   * @param offset - 前後どちらへ切り替えるか。
+   * @returns なし。
+   */
+  const changeSelectedGroup = (offset: -1 | 1): void => {
+    setSelectedGroupId(resolveCyclicGoalGroupId(groupViews(), selectedGroupId(), offset))
   }
 
   const handleEdit = (goal: GoalDTO) => {
@@ -192,24 +259,35 @@ const GoalsList: Component = () => {
    * @returns なし。
    */
   const handleReorder = (activeId: number, overId: number): void => {
-    if (isReordering() || activeId === overId) return
+    if (isReordering() || isGroupMutating() || activeId === overId) return
 
+    const groupId = currentGroupView().groupId
     const previousGoals = orderedGoals()
-    const nextGoals = moveGoal(previousGoals, activeId, overId)
-    if (nextGoals.every(({ goal }, index) => goal.id === previousGoals[index]?.goal.id)) return
+    const previousGroupGoals = currentGroupView().goals
+    const nextGroupGoals = moveGoal(previousGroupGoals, activeId, overId)
+    if (nextGroupGoals.every(({ goal }, index) => goal.id === previousGroupGoals[index]?.goal.id)) {
+      return
+    }
+    let nextGroupIndex = 0
+    const nextGoals = previousGoals.map((item) =>
+      item.goal.group_id === groupId ? nextGroupGoals[nextGroupIndex++] : item
+    )
 
     setActionError('')
     setOrderedGoals(nextGoals)
-    const movedIndex = nextGoals.findIndex(({ goal }) => goal.id === activeId)
-    const movedGoal = nextGoals[movedIndex]?.goal
+    const movedIndex = nextGroupGoals.findIndex(({ goal }) => goal.id === activeId)
+    const movedGoal = nextGroupGoals[movedIndex]?.goal
     if (movedGoal) {
       setReorderAnnouncement(
-        buildGoalReorderAnnouncement(movedGoal.title, movedIndex + 1, nextGoals.length)
+        buildGoalReorderAnnouncement(movedGoal.title, movedIndex + 1, nextGroupGoals.length)
       )
     }
     setIsReordering(true)
 
-    void reorderGoalsRequest(nextGoals.map(({ goal }) => goal))
+    void reorderGoalsRequest(
+      groupId,
+      nextGroupGoals.map(({ goal }) => goal)
+    )
       .catch((error: unknown) => {
         setOrderedGoals(previousGoals)
         setActionError(toUserFriendlyErrorMessage(error, GOAL_REORDER_ERROR_MESSAGE))
@@ -219,6 +297,94 @@ const GoalsList: Component = () => {
       })
   }
 
+  /**
+   * 目標グループを作成し、作成したグループへ表示を切り替える。
+   *
+   * @param name - 作成するグループ名。
+   * @returns 作成完了後に解決されるPromise。
+   */
+  const handleCreateGroup = async (name: string): Promise<void> => {
+    setGroupError('')
+    setIsGroupMutating(true)
+    try {
+      const group = await createGoalGroupRequest(name)
+      setOrderedGroups((groups) => [...groups, group])
+      setSelectedGroupId(group.id)
+    } catch (error) {
+      setGroupError(toUserFriendlyErrorMessage(error, GOAL_GROUP_COPY.createError))
+      throw error
+    } finally {
+      setIsGroupMutating(false)
+    }
+  }
+
+  /**
+   * 目標グループ名を更新する。
+   *
+   * @param group - 更新対象のグループ。
+   * @param name - 更新後のグループ名。
+   * @returns 更新完了後に解決されるPromise。
+   */
+  const handleUpdateGroup = async (group: GoalGroupDTO, name: string): Promise<void> => {
+    setGroupError('')
+    setIsGroupMutating(true)
+    try {
+      const updated = await updateGoalGroupRequest(group, name)
+      setOrderedGroups((groups) => groups.map((item) => (item.id === updated.id ? updated : item)))
+    } catch (error) {
+      setGroupError(toUserFriendlyErrorMessage(error, GOAL_GROUP_COPY.updateError))
+      throw error
+    } finally {
+      setIsGroupMutating(false)
+    }
+  }
+
+  /**
+   * 目標グループを削除し、所属目標を未分類へ移動する。
+   *
+   * @param group - 削除するグループ。
+   * @returns 削除完了後に解決されるPromise。
+   */
+  const handleDeleteGroup = async (group: GoalGroupDTO): Promise<void> => {
+    setGroupError('')
+    setIsGroupMutating(true)
+    try {
+      await deleteGoalGroupRequest(group)
+      setOrderedGroups((groups) => groups.filter(({ id }) => id !== group.id))
+      setOrderedGoals((goals) => moveDeletedGroupGoalsToUngrouped(goals, group.id))
+      if (selectedGroupId() === group.id) setSelectedGroupId(null)
+    } catch (error) {
+      setGroupError(toUserFriendlyErrorMessage(error, GOAL_GROUP_COPY.deleteError))
+      throw error
+    } finally {
+      setIsGroupMutating(false)
+    }
+  }
+
+  /**
+   * グループを画面上で即時に並び替え、APIへ保存する。
+   *
+   * @param activeId - 移動するグループID。
+   * @param overId - 移動先のグループID。
+   * @returns なし。
+   */
+  const handleReorderGroups = (activeId: number, overId: number): void => {
+    if (isGroupMutating() || activeId === overId) return
+    const previousGroups = orderedGroups()
+    const nextGroups = moveGoalGroup(previousGroups, activeId, overId)
+    if (nextGroups.every(({ id }, index) => id === previousGroups[index]?.id)) return
+
+    setGroupError('')
+    setOrderedGroups(nextGroups)
+    setIsGroupMutating(true)
+    void reorderGoalGroupsRequest(nextGroups)
+      .catch((error: unknown) => {
+        setOrderedGroups(previousGroups)
+        setGroupError(toUserFriendlyErrorMessage(error, GOAL_GROUP_COPY.reorderError))
+      })
+      .finally(() => setIsGroupMutating(false))
+  }
+
   return (
     <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
       <Show when={!resource.error} fallback={<LoadError error={resource.error} />}>
@@ -226,11 +392,18 @@ const GoalsList: Component = () => {
           <Show when={!resource()?.noPlayerData} fallback={<PlayerDataEmptyState />}>
             <GoalsListContent
               goalsCount={resource()?.goals.length ?? 0}
-              goalWithProgress={orderedGoals()}
+              groupView={currentGroupView()}
+              groupCount={groupViews().length}
               actionError={actionError()}
               isReordering={isReordering()}
               reorderAnnouncement={reorderAnnouncement()}
               onCreate={openCreateDialog}
+              onManageGroups={() => {
+                setGroupError('')
+                setGroupsManageOpen(true)
+              }}
+              onPreviousGroup={() => changeSelectedGroup(-1)}
+              onNextGroup={() => changeSelectedGroup(1)}
               onEdit={handleEdit}
               onDelete={handleDeleteAsk}
               onOpenRecords={(selectedGoal) => {
@@ -242,6 +415,8 @@ const GoalsList: Component = () => {
             <GoalsListDialogs
               data={resource()}
               formOpen={formOpen()}
+              initialGroupId={selectedGroupId()}
+              groups={orderedGroups()}
               deleteOpen={deleteOpen()}
               editingGoal={editingGoal()}
               deletingGoal={deletingGoal()}
@@ -257,6 +432,18 @@ const GoalsList: Component = () => {
               resolveAllCount={resolveAllCount}
               resolveOverPowerChartMax={resolveOverPowerChartMax}
               resolveDraftGoalProgress={resolveDraftGoalProgress}
+            />
+
+            <GoalGroupsManageDialog
+              open={groupsManageOpen()}
+              groups={orderedGroups()}
+              isMutating={isGroupMutating()}
+              errorMessage={groupError()}
+              onOpenChange={setGroupsManageOpen}
+              onCreate={handleCreateGroup}
+              onUpdate={handleUpdateGroup}
+              onDelete={handleDeleteGroup}
+              onReorder={handleReorderGroups}
             />
           </Show>
         </Show>

@@ -12,6 +12,7 @@ import type { GoalWithProgress } from './goalsListProgress'
 const createGoalWithProgress = (id: number): GoalWithProgress => ({
   goal: {
     id,
+    group_id: null,
     title: `目標${id}`,
     achievement_type: 'score_count',
     achievement_params: { score: 1_000_000, count: 1 },

@@ -7,6 +7,7 @@ import type {
   GoalAttributes,
   GoalCreateRequest,
   GoalDTO,
+  GoalGroupDTO,
   GoalUpdateRequest,
   MasterDataDTO,
   VersionDTO,
@@ -18,8 +19,10 @@ import { resolveGoalAchievementTypeLabel } from '../../../utils/goalForm'
 import type { ComboLampGoalValue, HardLampGoalValue } from '../../../utils/goalLamp'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { buildGoalVersionOptions } from '../../../utils/goalVersion'
+import { resolveGoalFormGroupId } from '../../goalGroupsModel'
 import { GoalAchievementSection } from './GoalAchievementSection'
 import { GoalFormFooter } from './GoalFormFooter'
+import { GoalGroupSection } from './GoalGroupSection'
 import { GoalPreviewSection } from './GoalPreviewSection'
 import { GoalTargetChartsSection } from './GoalTargetChartsSection'
 import { GoalTitleSection } from './GoalTitleSection'
@@ -50,6 +53,10 @@ interface GoalFormDialogProps {
   open: boolean
   mode: 'create' | 'edit'
   initialGoal?: GoalDTO
+  /** 新規作成時に初期選択するグループID。 */
+  initialGroupId: number | null
+  /** 所属先として選択できる目標グループ。 */
+  groups: GoalGroupDTO[]
   masterData: MasterDataDTO
   versions: VersionDTO[]
   isSaving: boolean
@@ -107,6 +114,7 @@ const isGoalAchievementType = (value: string): value is GoalAchievementType =>
  */
 const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [title, setTitle] = createSignal('')
+  const [groupId, setGroupId] = createSignal<number | null>(null)
   const [achievementType, setAchievementType] = createSignal<GoalAchievementType>(
     DEFAULT_GOAL_ACHIEVEMENT_TYPE
   )
@@ -206,6 +214,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     })
 
     setTitle(nextState.title)
+    setGroupId(resolveGoalFormGroupId(props.initialGoal, props.initialGroupId))
     setAchievementType(nextState.achievementType)
     setScore(nextState.score)
     setRank(nextState.rank)
@@ -309,6 +318,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const currentType = achievementType()
     const attributes = getDraftAttributes()
     return props.resolveDraftGoalProgress({
+      group_id: groupId(),
       title: previewTitle(),
       achievement_type: currentType,
       achievement_params: buildDraftAchievementParams(currentType),
@@ -411,6 +421,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     const achievement_params = buildDraftAchievementParams(currentType)
 
     await props.onSave({
+      group_id: groupId(),
       title: trimmed,
       achievement_type: currentType,
       achievement_params,
@@ -430,6 +441,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
           <div class="scrollbar-none mt-4 min-h-0 flex-1 basis-0 space-y-4 overflow-y-auto pr-1">
             <GoalTitleSection title={title()} onTitleChange={setTitle} />
+
+            <GoalGroupSection
+              groups={props.groups}
+              groupId={groupId()}
+              onGroupIdChange={setGroupId}
+            />
 
             <GoalTargetChartsSection
               difficultyItems={props.masterData.difficulties}

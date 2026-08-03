@@ -54,6 +54,7 @@ test('編集フォームでdiffが未指定の場合は全難易度が選択さ�
   // Given: diff を含まない保存済み目標
   const goal = {
     id: 1,
+    group_id: null,
     title: '全難易度目標',
     achievement_type: 'rank_count',
     achievement_params: { score: 1000000 },
@@ -74,6 +75,7 @@ test('編集フォームの初期状態は保存済み目標から復元され�
   // Given
   const goal = {
     id: 1,
+    group_id: 2,
     title: '虹レ目標',
     achievement_type: 'hardlamp_count',
     achievement_params: { lamp: 'ABS', remaining: 2 },

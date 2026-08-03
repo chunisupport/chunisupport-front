@@ -1,9 +1,17 @@
+import {
+  createGoalGroup,
+  deleteGoalGroup,
+  fetchGoalGroups,
+  reorderGoalGroups,
+  updateGoalGroup,
+} from '../../../api/goalGroups'
 import { createGoal, deleteGoal, fetchGoals, reorderGoals, updateGoal } from '../../../api/goals'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchMe, fetchUserProfileSummary } from '../../../api/users'
 import type {
   GoalCreateRequest,
   GoalDTO,
+  GoalGroupDTO,
   GoalUpdateRequest,
   MasterDataDTO,
   PlayerRecordDTO,
@@ -17,6 +25,7 @@ export interface GoalsListData {
   username: string
   noPlayerData: boolean
   goals: GoalDTO[]
+  groups: GoalGroupDTO[]
   songs: SongDTO[]
   masterData: MasterDataDTO
   versions: VersionDTO[]
@@ -37,9 +46,10 @@ export const fetchGoalsListData = async (onUnauthorized: () => void): Promise<Go
     throw error
   })
 
-  const [goalsResponse, songsResponse, masterData, versionData, profile, record] =
+  const [goalsResponse, groupsResponse, songsResponse, masterData, versionData, profile, record] =
     await Promise.all([
       fetchGoals(),
+      fetchGoalGroups(),
       fetchAllSongsWithCache(),
       fetchMasterData(),
       fetchVersions(),
@@ -51,6 +61,7 @@ export const fetchGoalsListData = async (onUnauthorized: () => void): Promise<Go
     username: me.username,
     noPlayerData: !profile.player,
     goals: goalsResponse.goals,
+    groups: groupsResponse.groups,
     songs: songsResponse.songs,
     masterData,
     versions: versionData.versions ?? [],
@@ -87,11 +98,57 @@ export const deleteGoalRequest = async (goal: GoalDTO): Promise<void> => {
 }
 
 /**
- * 現在所有する全目標の表示順を保存する。
+ * 指定したグループに属する全目標の表示順を保存する。
  *
+ * @param groupId - 保存対象のグループID。未分類の場合はnull。
  * @param goals - 保存する表示順で並んだ目標。
  * @returns 並び順の保存完了後に解決される Promise。
  */
-export const reorderGoalsRequest = async (goals: readonly GoalDTO[]): Promise<void> => {
-  await reorderGoals(goals.map(({ id }) => id))
+export const reorderGoalsRequest = async (
+  groupId: number | null,
+  goals: readonly GoalDTO[]
+): Promise<void> => {
+  await reorderGoals(
+    groupId,
+    goals.map(({ id }) => id)
+  )
 }
+
+/**
+ * 目標グループを作成する。
+ *
+ * @param name - 作成するグループ名。
+ * @returns 作成されたグループ。
+ */
+export const createGoalGroupRequest = async (name: string): Promise<GoalGroupDTO> =>
+  createGoalGroup({ name })
+
+/**
+ * 目標グループ名を更新する。
+ *
+ * @param group - 更新対象のグループ。
+ * @param name - 更新後の名前。
+ * @returns 更新されたグループ。
+ */
+export const updateGoalGroupRequest = async (
+  group: GoalGroupDTO,
+  name: string
+): Promise<GoalGroupDTO> => updateGoalGroup(group.id, { name })
+
+/**
+ * 目標グループを削除する。
+ *
+ * @param group - 削除するグループ。
+ * @returns 削除完了後に解決されるPromise。
+ */
+export const deleteGoalGroupRequest = async (group: GoalGroupDTO): Promise<void> =>
+  deleteGoalGroup(group.id)
+
+/**
+ * 目標グループの表示順を保存する。
+ *
+ * @param groups - 保存する表示順の全グループ。
+ * @returns 並び替え完了後に解決されるPromise。
+ */
+export const reorderGoalGroupsRequest = async (groups: readonly GoalGroupDTO[]): Promise<void> =>
+  reorderGoalGroups(groups.map(({ id }) => id))

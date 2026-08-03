@@ -29,6 +29,7 @@ type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 const NO_TARGET_CHARTS_LABEL = '対象譜面なし'
 
 export const buildGoalPayload = (goal: GoalDTO): GoalRequest => ({
+  group_id: goal.group_id,
   title: goal.title,
   achievement_type: goal.achievement_type,
   achievement_params: goal.achievement_params,

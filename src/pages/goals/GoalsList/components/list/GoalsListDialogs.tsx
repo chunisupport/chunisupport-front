@@ -1,6 +1,11 @@
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
-import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../../../types/api'
+import type {
+  GoalCreateRequest,
+  GoalDTO,
+  GoalGroupDTO,
+  GoalUpdateRequest,
+} from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import type { GoalsListData } from '../../goalsListResource'
 import { GoalFormDialog } from '../form'
@@ -9,6 +14,8 @@ import GoalDeleteDialog from './GoalDeleteDialog'
 interface GoalsListDialogsProps {
   data?: GoalsListData
   formOpen: boolean
+  initialGroupId: number | null
+  groups: GoalGroupDTO[]
   deleteOpen: boolean
   editingGoal?: GoalDTO
   deletingGoal?: GoalDTO
@@ -38,6 +45,8 @@ export const GoalsListDialogs: Component<GoalsListDialogsProps> = (props) => (
           open={props.formOpen}
           mode={props.editingGoal ? 'edit' : 'create'}
           initialGoal={props.editingGoal}
+          initialGroupId={props.initialGroupId}
+          groups={props.groups}
           masterData={data().masterData}
           versions={data().versions}
           isSaving={props.isSaving}

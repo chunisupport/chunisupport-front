@@ -77,3 +77,86 @@ export const GOALS_LIMIT_REACHED_MESSAGE = `目標は${GOALS_LIMIT}件まで作�
  * 目標が未登録のときに表示するメッセージ。
  */
 export const EMPTY_GOALS_MESSAGE = `目標がありません。「${ADD_GOAL_LABEL}」から作成してください。`
+
+/** 目標グループ機能で画面表示する固定文言。 */
+export const GOAL_GROUP_COPY = {
+  fieldLabel: 'グループ',
+  manageButtonLabel: '目標グループを管理',
+  previousButtonLabel: '前の目標グループ',
+  nextButtonLabel: '次の目標グループ',
+  manageDialogTitle: '目標グループを管理',
+  newNameLabel: '新しいグループ名',
+  nameLabel: 'グループ名',
+  sortableRoleDescription: '並び替え可能な目標グループ',
+  addAction: '追加',
+  emptyMessage: 'グループはありません。',
+  editCancelAction: '取消',
+  saveAction: '保存',
+  closeAction: '閉じる',
+  deleteDialogTitle: 'グループを削除しますか？',
+  cancelAction: 'キャンセル',
+  deleteAction: '削除する',
+  createError: 'グループの作成に失敗しました。',
+  updateError: 'グループ名の更新に失敗しました。',
+  deleteError: 'グループの削除に失敗しました。',
+  reorderError: 'グループの並び替えに失敗しました。',
+} as const
+
+/**
+ * 目標グループ数が上限に達したときの文言を作る。
+ *
+ * @param limit - 作成可能なグループ数。
+ * @returns グループ数の上限を示す文言。
+ */
+export const buildGoalGroupLimitMessage = (limit: number): string =>
+  `グループは${limit}件までです。`
+
+/**
+ * 目標グループのドラッグ操作を案内するラベルを作る。
+ *
+ * @param name - グループ名。
+ * @param position - 現在位置。
+ * @param total - グループ総数。
+ * @returns 並び替え操作用のラベル。
+ */
+export const buildGoalGroupDragLabel = (name: string, position: number, total: number): string =>
+  `${name}を並び替え。${position}/${total}`
+
+/**
+ * 目標グループの改名ボタン用ラベルを作る。
+ *
+ * @param name - グループ名。
+ * @returns 改名操作用のラベル。
+ */
+export const buildGoalGroupEditLabel = (name: string): string => `${name}を改名`
+
+/**
+ * 目標グループの削除ボタン用ラベルを作る。
+ *
+ * @param name - グループ名。
+ * @returns 削除操作用のラベル。
+ */
+export const buildGoalGroupDeleteLabel = (name: string): string => `${name}を削除`
+
+/**
+ * 目標グループ削除時の影響を説明する文言を作る。
+ *
+ * @param name - 削除対象のグループ名。
+ * @returns 未分類への移動を示す確認文言。
+ */
+export const buildGoalGroupDeleteDescription = (name: string): string =>
+  `「${name}」内の目標は未分類の末尾へ移動します。`
+
+/**
+ * 目標グループ並び替え後の読み上げ文言を作る。
+ *
+ * @param name - 移動したグループ名。
+ * @param position - 移動後の位置。
+ * @param total - グループ総数。
+ * @returns 移動結果を伝える文言。
+ */
+export const buildGoalGroupReorderAnnouncement = (
+  name: string,
+  position: number,
+  total: number
+): string => `${name}を${total}件中${position}番目に移動しました`

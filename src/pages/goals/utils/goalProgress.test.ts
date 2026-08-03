@@ -63,6 +63,7 @@ const createSong = (overrides: Partial<SongDTO>): SongDTO => ({
  */
 const createGoal = (overrides: Partial<GoalDTO>): GoalDTO => ({
   id: 1,
+  group_id: null,
   title: 'goal',
   achievement_type: 'score_count',
   achievement_params: { score: 1000000 },
