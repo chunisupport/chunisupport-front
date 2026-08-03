@@ -5,10 +5,11 @@ import {
   closestCenter,
   createSortable,
   DragDropProvider,
+  DragDropSensors,
   type DragEvent,
   SortableProvider,
 } from '@thisbeyond/solid-dnd'
-import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-solid'
+import { Check, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js'
 import { AppButton, AppIconButton } from '../../../../../components/common/AppButton'
@@ -113,7 +114,7 @@ const SortableGroupRow: Component<SortableGroupRowProps> = (props) => {
         aria-roledescription={GOAL_GROUP_COPY.sortableRoleDescription}
         disabled={props.isMutating || props.editing}
         tone="ghost"
-        class="shrink-0 cursor-grab"
+        class="shrink-0 touch-none cursor-grab active:cursor-grabbing"
         onKeyDown={handleKeyDown}
       >
         <GripVertical size={18} aria-hidden="true" />
@@ -164,17 +165,22 @@ const SortableGroupRow: Component<SortableGroupRowProps> = (props) => {
           </>
         }
       >
-        <AppButton size="xs" disabled={props.isMutating} onClick={props.onCancelEdit}>
-          {GOAL_GROUP_COPY.editCancelAction}
-        </AppButton>
-        <AppButton
-          variant="primary"
-          size="xs"
+        <AppIconButton
+          aria-label={GOAL_GROUP_COPY.editCancelAction}
           disabled={props.isMutating}
+          tone="ghost"
+          onClick={props.onCancelEdit}
+        >
+          <X size={18} aria-hidden="true" />
+        </AppIconButton>
+        <AppIconButton
+          aria-label={GOAL_GROUP_COPY.saveAction}
+          disabled={props.isMutating}
+          tone="primary"
           onClick={props.onSaveEdit}
         >
-          {GOAL_GROUP_COPY.saveAction}
-        </AppButton>
+          <Check size={18} aria-hidden="true" />
+        </AppIconButton>
       </Show>
     </div>
   )
@@ -328,43 +334,45 @@ export const GoalGroupsManageDialog: Component<GoalGroupsManageDialogProps> = (p
                 }
               >
                 <DragDropProvider collisionDetector={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableProvider ids={props.groups.map(({ id }) => id)}>
-                    <div class="space-y-2">
-                      <For each={props.groups}>
-                        {(group, index) => (
-                          <SortableGroupRow
-                            group={group}
-                            position={index() + 1}
-                            total={props.groups.length}
-                            editing={editingGroupId() === group.id}
-                            editingName={editingName()}
-                            editingError={
-                              editingGroupId() === group.id
-                                ? validationError() || props.errorMessage
-                                : ''
-                            }
-                            isMutating={props.isMutating}
-                            onEditingNameChange={setEditingName}
-                            onEdit={() => {
-                              setValidationError('')
-                              setEditingGroupId(group.id)
-                              setEditingName(group.name)
-                            }}
-                            onCancelEdit={() => {
-                              setValidationError('')
-                              setEditingGroupId(undefined)
-                            }}
-                            onSaveEdit={() => void handleUpdate()}
-                            onDelete={() => setDeletingGroup(group)}
-                            onKeyboardMove={(offset) => {
-                              const destination = props.groups[index() + offset]
-                              if (destination) handleReorder(group.id, destination.id)
-                            }}
-                          />
-                        )}
-                      </For>
-                    </div>
-                  </SortableProvider>
+                  <DragDropSensors>
+                    <SortableProvider ids={props.groups.map(({ id }) => id)}>
+                      <div class="space-y-2">
+                        <For each={props.groups}>
+                          {(group, index) => (
+                            <SortableGroupRow
+                              group={group}
+                              position={index() + 1}
+                              total={props.groups.length}
+                              editing={editingGroupId() === group.id}
+                              editingName={editingName()}
+                              editingError={
+                                editingGroupId() === group.id
+                                  ? validationError() || props.errorMessage
+                                  : ''
+                              }
+                              isMutating={props.isMutating}
+                              onEditingNameChange={setEditingName}
+                              onEdit={() => {
+                                setValidationError('')
+                                setEditingGroupId(group.id)
+                                setEditingName(group.name)
+                              }}
+                              onCancelEdit={() => {
+                                setValidationError('')
+                                setEditingGroupId(undefined)
+                              }}
+                              onSaveEdit={() => void handleUpdate()}
+                              onDelete={() => setDeletingGroup(group)}
+                              onKeyboardMove={(offset) => {
+                                const destination = props.groups[index() + offset]
+                                if (destination) handleReorder(group.id, destination.id)
+                              }}
+                            />
+                          )}
+                        </For>
+                      </div>
+                    </SortableProvider>
+                  </DragDropSensors>
                 </DragDropProvider>
               </Show>
             </div>
