@@ -68,6 +68,7 @@ const createRecord = (
 
 const createGoal = (params: GoalDTO['achievement_params']): GoalDTO => ({
   id: 1,
+  group_id: null,
   title: '虹枠',
   achievement_type: 'rainbow_count',
   achievement_params: params,

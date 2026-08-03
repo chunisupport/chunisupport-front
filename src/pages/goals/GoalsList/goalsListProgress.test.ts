@@ -24,6 +24,7 @@ test('OP対象かつOVER POWER系目標では曲単位集計を使う', () => {
 test('データ未取得時の下書き進捗は未達成の初期値を返す', () => {
   // Given
   const draftGoal = {
+    group_id: null,
     title: '下書き',
     achievement_type: 'score_count',
     achievement_params: { score: 1000000, count: 1 },

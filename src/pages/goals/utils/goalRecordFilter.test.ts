@@ -36,6 +36,7 @@ const VERSIONS: VersionDTO[] = [
  */
 const createGoal = (overrides: Partial<GoalDTO> = {}): GoalDTO => ({
   id: 1,
+  group_id: null,
   title: 'SSを目指す',
   achievement_type: 'score_count',
   achievement_params: { score: 1000000, count: 1 },

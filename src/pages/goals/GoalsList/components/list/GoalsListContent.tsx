@@ -5,10 +5,10 @@ import {
   SortableProvider,
   useDragDropContext,
 } from '@thisbeyond/solid-dnd'
-import { ChevronsDown, ChevronsRight } from 'lucide-solid'
+import { ChevronLeft, ChevronRight, ChevronsDown, ChevronsRight, Settings2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createSignal, For, onCleanup, Show } from 'solid-js'
-import { AppButton } from '../../../../../components/common/AppButton'
+import { AppButton, AppIconButton } from '../../../../../components/common/AppButton'
 import type { GoalDTO } from '../../../../../types/api'
 import {
   ADD_GOAL_LABEL,
@@ -16,10 +16,11 @@ import {
   EMPTY_GOALS_MESSAGE,
   EXPAND_ALL_GOALS_LABEL,
   GOAL_DISCLOSURE_CONTROLS_LABEL,
+  GOAL_GROUP_COPY,
   GOALS_LIMIT,
   GOALS_LIMIT_REACHED_MESSAGE,
 } from '../../constants'
-import type { GoalWithProgress } from '../../goalsListProgress'
+import type { GoalGroupView } from '../../goalGroupsModel'
 import GoalCard from '../card/GoalCard'
 import { GoalsListLongPressSensor } from './GoalsListLongPressSensor'
 import { createAutoScroll } from './goalsListAutoScroll'
@@ -29,9 +30,13 @@ const AUTO_SCROLL_TRANSFORMER_ID = 'goals-list-auto-scroll'
 
 interface GoalsListContentProps {
   goalsCount: number
-  goalWithProgress: GoalWithProgress[]
+  groupView: GoalGroupView
+  groupCount: number
   actionError: string
   onCreate: () => void
+  onManageGroups: () => void
+  onPreviousGroup: () => void
+  onNextGroup: () => void
   onEdit: (goal: GoalDTO) => void
   onDelete: (goal: GoalDTO) => void
   onOpenRecords: (goal: GoalDTO) => void
@@ -144,7 +149,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
    * @returns 全カードが開いていればtrue。
    */
   const areAllGoalsOpen = (): boolean =>
-    props.goalWithProgress.every(({ goal }) => isGoalOpen(goal.id))
+    props.groupView.goals.every(({ goal }) => isGoalOpen(goal.id))
 
   /**
    * 表示中の全目標カードが閉じているか判定する。
@@ -152,7 +157,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
    * @returns 全カードが閉じていればtrue。
    */
   const areAllGoalsClosed = (): boolean =>
-    props.goalWithProgress.every(({ goal }) => !isGoalOpen(goal.id))
+    props.groupView.goals.every(({ goal }) => !isGoalOpen(goal.id))
 
   /**
    * 指定した目標カードの開閉状態を更新する。
@@ -188,7 +193,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
    * @returns なし。
    */
   const handleCollapseAll = (): void => {
-    setCollapsedGoalIds(new Set(props.goalWithProgress.map(({ goal }) => goal.id)))
+    setCollapsedGoalIds(new Set(props.groupView.goals.map(({ goal }) => goal.id)))
   }
 
   /**
@@ -210,8 +215,8 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
    * @returns なし。
    */
   const handleKeyboardMove = (goalId: number, offset: -1 | 1): void => {
-    const currentIndex = props.goalWithProgress.findIndex(({ goal }) => goal.id === goalId)
-    const destination = props.goalWithProgress[currentIndex + offset]
+    const currentIndex = props.groupView.goals.findIndex(({ goal }) => goal.id === goalId)
+    const destination = props.groupView.goals[currentIndex + offset]
     if (destination) {
       props.onReorder(goalId, destination.goal.id)
     }
@@ -227,7 +232,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
           </p>
         </div>
         <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
-          <Show when={props.goalsCount > 0}>
+          <Show when={props.groupView.goals.length > 0}>
             <fieldset class="m-0 flex min-w-0 items-center gap-1 border-0 p-0">
               <legend class="sr-only">{GOAL_DISCLOSURE_CONTROLS_LABEL}</legend>
               <AppButton
@@ -250,6 +255,13 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
               </AppButton>
             </fieldset>
           </Show>
+          <AppIconButton
+            aria-label={GOAL_GROUP_COPY.manageButtonLabel}
+            disabled={props.isReordering}
+            onClick={props.onManageGroups}
+          >
+            <Settings2 size={18} aria-hidden="true" />
+          </AppIconButton>
           <AppButton
             variant="primary"
             disabled={props.isReordering || props.goalsCount >= GOALS_LIMIT}
@@ -258,6 +270,27 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
             {ADD_GOAL_LABEL}
           </AppButton>
         </div>
+      </div>
+
+      <div class="grid grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-2 rounded-lg border border-border bg-surface p-2">
+        <AppIconButton
+          aria-label={GOAL_GROUP_COPY.previousButtonLabel}
+          disabled={props.groupCount <= 1 || props.isReordering}
+          onClick={props.onPreviousGroup}
+        >
+          <ChevronLeft size={20} aria-hidden="true" />
+        </AppIconButton>
+        <div class="min-w-0 text-center" role="status" aria-live="polite" aria-atomic="true">
+          <h2 class="truncate font-sans text-lg font-semibold">{props.groupView.name}</h2>
+          <p class="text-xs text-text-muted">{props.groupView.goals.length}件</p>
+        </div>
+        <AppIconButton
+          aria-label={GOAL_GROUP_COPY.nextButtonLabel}
+          disabled={props.groupCount <= 1 || props.isReordering}
+          onClick={props.onNextGroup}
+        >
+          <ChevronRight size={20} aria-hidden="true" />
+        </AppIconButton>
       </div>
 
       <Show when={props.goalsCount >= GOALS_LIMIT}>
@@ -277,7 +310,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
       </p>
 
       <Show
-        when={props.goalWithProgress.length > 0}
+        when={props.groupView.goals.length > 0}
         fallback={
           <p class="rounded border border-border bg-surface p-4 text-sm text-text-muted">
             {EMPTY_GOALS_MESSAGE}
@@ -287,16 +320,16 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
         <DragDropProvider collisionDetector={closestCenter} onDragEnd={handleDragEnd}>
           <GoalsListLongPressSensor />
           <AutoScrollSetup autoScroll={autoScroll} />
-          <SortableProvider ids={props.goalWithProgress.map(({ goal }) => goal.id)}>
+          <SortableProvider ids={props.groupView.goals.map(({ goal }) => goal.id)}>
             <div class="grid grid-cols-1 gap-3">
-              <For each={props.goalWithProgress}>
+              <For each={props.groupView.goals}>
                 {({ goal, progress }, index) => (
                   <GoalCard
                     goal={goal}
                     progress={progress}
                     isReordering={props.isReordering}
                     position={index() + 1}
-                    total={props.goalWithProgress.length}
+                    total={props.groupView.goals.length}
                     onEdit={props.onEdit}
                     onDelete={props.onDelete}
                     onOpenRecords={props.onOpenRecords}

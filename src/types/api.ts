@@ -542,6 +542,7 @@ export type GoalAchievementParams =
 
 export interface GoalDTO {
   id: number
+  group_id: number | null
   title: string
   achievement_type: GoalAchievementType
   achievement_params: GoalAchievementParams
@@ -553,6 +554,19 @@ export interface GoalDTO {
 
 export type GoalCreateRequest = Omit<GoalDTO, 'id' | 'sort_order' | 'created_at'>
 export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'sort_order' | 'created_at'>
+
+/** API が返す目標グループ。 */
+export interface GoalGroupDTO {
+  id: number
+  name: string
+  sort_order: number
+  created_at: string
+}
+
+/** 目標グループの作成・更新リクエスト。 */
+export interface GoalGroupRequest {
+  name: string
+}
 
 // --------------------------------
 
