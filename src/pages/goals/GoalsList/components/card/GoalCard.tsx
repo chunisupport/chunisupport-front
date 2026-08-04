@@ -16,9 +16,11 @@ interface GoalCardProps {
   goal: GoalDTO
   progress: GoalProgressResult
   onEdit: (goal: GoalDTO) => void
+  onCopy: (goal: GoalDTO) => void
   onDelete: (goal: GoalDTO) => void
   onOpenRecords?: (goal: GoalDTO) => void
   isReordering: boolean
+  copyDisabled: boolean
   position: number
   total: number
   onKeyboardMove: (goalId: number, offset: -1 | 1) => void
@@ -73,6 +75,15 @@ const GoalCard: Component<GoalCardProps> = (props) => {
    */
   const handleEdit = (): void => {
     props.onEdit(props.goal)
+  }
+
+  /**
+   * 現在の目標を複製対象として親へ通知する。
+   *
+   * @returns なし。
+   */
+  const handleCopy = (): void => {
+    props.onCopy(props.goal)
   }
 
   /**
@@ -172,7 +183,9 @@ const GoalCard: Component<GoalCardProps> = (props) => {
         <Show when={props.open}>
           <GoalCardActionMenu
             disabled={props.isReordering}
+            copyDisabled={props.copyDisabled}
             onEdit={handleEdit}
+            onCopy={handleCopy}
             onDelete={handleDelete}
           />
         </Show>

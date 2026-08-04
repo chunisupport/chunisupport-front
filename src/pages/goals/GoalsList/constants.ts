@@ -4,6 +4,26 @@
 export const GOALS_LIMIT = 100
 
 /**
+ * 目標タイトルとして入力できる最大文字数。
+ */
+export const GOAL_TITLE_MAX_LENGTH = 30
+
+/**
+ * 複製した目標タイトルの末尾に付ける文言。
+ */
+export const GOAL_COPY_TITLE_SUFFIX = '（コピー）'
+
+/**
+ * 目標のコピーに失敗したときの既定エラーメッセージ。
+ */
+export const GOAL_COPY_ERROR_MESSAGE = '目標のコピーに失敗しました。'
+
+/**
+ * 目標コピー中のプレースホルダーを説明するアクセシブルラベル。
+ */
+export const GOAL_COPY_LOADING_LABEL = '目標をコピー中'
+
+/**
  * 未達成レコード表示へ遷移できない場合の既定エラーメッセージ。
  */
 export const RECORD_NAVIGATION_ERROR_MESSAGE = '未達成レコードの表示に失敗しました。'

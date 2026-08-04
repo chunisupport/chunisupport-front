@@ -22,8 +22,10 @@ import { GoalsListContent } from './components/list/GoalsListContent'
 import { GoalsListDialogs } from './components/list/GoalsListDialogs'
 import {
   buildGoalReorderAnnouncement,
+  GOAL_COPY_ERROR_MESSAGE,
   GOAL_GROUP_COPY,
   GOAL_REORDER_ERROR_MESSAGE,
+  GOALS_LIMIT,
   RECORD_NAVIGATION_ERROR_MESSAGE,
 } from './constants'
 import {
@@ -43,6 +45,7 @@ import {
   resolveGoalOverPowerChartMax,
 } from './goalsListProgress'
 import {
+  copyGoalRequest,
   createGoalGroupRequest,
   deleteGoalGroupRequest,
   deleteGoalRequest,
@@ -64,6 +67,7 @@ const GoalsList: Component = () => {
   const [deletingGoal, setDeletingGoal] = createSignal<GoalDTO | undefined>(undefined)
   const [isSaving, setIsSaving] = createSignal(false)
   const [isDeleting, setIsDeleting] = createSignal(false)
+  const [copyingGoal, setCopyingGoal] = createSignal<GoalDTO | undefined>(undefined)
   const [isReordering, setIsReordering] = createSignal(false)
   const [isGroupMutating, setIsGroupMutating] = createSignal(false)
   const [actionError, setActionError] = createSignal('')
@@ -72,7 +76,7 @@ const GoalsList: Component = () => {
   const [groupError, setGroupError] = createSignal('')
   const [selectedGroupId, setSelectedGroupId] = createSignal<number | null>(null)
 
-  const [resource] = createResource(
+  const [resource, { mutate: mutateResource }] = createResource(
     () => refreshKey(),
     async () => fetchGoalsListData(() => navigate('/login', { replace: true }))
   )
@@ -81,6 +85,13 @@ const GoalsList: Component = () => {
   const [orderedGoals, setOrderedGoals] = createSignal(goalWithProgress())
   const [orderedGroups, setOrderedGroups] = createSignal<GoalGroupDTO[]>([])
   let hasInitializedGroupSelection = false
+
+  /**
+   * 目標のコピーAPIが処理中か判定する。
+   *
+   * @returns コピー処理中ならtrue。
+   */
+  const isCopying = (): boolean => copyingGoal() !== undefined
 
   createEffect(() => {
     setOrderedGoals(orderGoalsByPersistedGroupOrder(goalWithProgress()))
@@ -178,6 +189,29 @@ const GoalsList: Component = () => {
     setFormOpen(true)
   }
 
+  /**
+   * 指定した目標を同じグループへ複製する。
+   *
+   * @param goal - 複製元の目標。
+   * @returns 複製完了後に解決されるPromise。
+   */
+  const handleCopy = async (goal: GoalDTO): Promise<void> => {
+    if (isCopying() || (resource()?.goals.length ?? 0) >= GOALS_LIMIT) return
+
+    setActionError('')
+    setCopyingGoal(goal)
+    try {
+      const copiedGoal = await copyGoalRequest(goal)
+      mutateResource((currentData) =>
+        currentData ? { ...currentData, goals: [...currentData.goals, copiedGoal] } : currentData
+      )
+    } catch (error) {
+      setActionError(toUserFriendlyErrorMessage(error, GOAL_COPY_ERROR_MESSAGE))
+    } finally {
+      setCopyingGoal(undefined)
+    }
+  }
+
   const handleDeleteAsk = (goal: GoalDTO) => {
     setDeletingGoal(goal)
     setActionError('')
@@ -259,7 +293,7 @@ const GoalsList: Component = () => {
    * @returns なし。
    */
   const handleReorder = (activeId: number, overId: number): void => {
-    if (isReordering() || isGroupMutating() || activeId === overId) return
+    if (isReordering() || isCopying() || isGroupMutating() || activeId === overId) return
 
     const groupId = currentGroupView().groupId
     const previousGoals = orderedGoals()
@@ -396,6 +430,8 @@ const GoalsList: Component = () => {
               groupCount={groupViews().length}
               actionError={actionError()}
               isReordering={isReordering()}
+              isCopying={isCopying()}
+              showCopyPlaceholder={copyingGoal()?.group_id === currentGroupView().groupId}
               reorderAnnouncement={reorderAnnouncement()}
               onCreate={openCreateDialog}
               onManageGroups={() => {
@@ -405,6 +441,9 @@ const GoalsList: Component = () => {
               onPreviousGroup={() => changeSelectedGroup(-1)}
               onNextGroup={() => changeSelectedGroup(1)}
               onEdit={handleEdit}
+              onCopy={(selectedGoal) => {
+                void handleCopy(selectedGoal)
+              }}
               onDelete={handleDeleteAsk}
               onOpenRecords={(selectedGoal) => {
                 void handleOpenUnachievedRecords(selectedGoal)
