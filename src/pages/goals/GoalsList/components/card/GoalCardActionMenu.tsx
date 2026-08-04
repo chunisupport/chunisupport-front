@@ -1,5 +1,5 @@
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
-import { EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
+import { Copy, EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import {
   AppMenuContent,
@@ -9,8 +9,10 @@ import {
 
 interface GoalCardActionMenuProps {
   onEdit: () => void
+  onCopy: () => void
   onDelete: () => void
   disabled: boolean
+  copyDisabled: boolean
 }
 
 /**
@@ -24,9 +26,9 @@ const stopDragActivation = (event: PointerEvent): void => {
 }
 
 /**
- * 目標カード右上の編集/削除メニューを描画する。
+ * 目標カード右上の編集・コピー・削除メニューを描画する。
  *
- * @param props - 編集と削除の選択ハンドラ。
+ * @param props - 編集・コピー・削除の選択ハンドラと無効状態。
  * @returns 目標カード操作メニューの JSX 要素。
  */
 export const GoalCardActionMenu: Component<GoalCardActionMenuProps> = (props) => (
@@ -44,6 +46,13 @@ export const GoalCardActionMenu: Component<GoalCardActionMenuProps> = (props) =>
           icon={<Pencil size={16} aria-hidden="true" />}
           label="編集"
           onSelect={props.onEdit}
+        />
+        <AppMenuItem
+          icon={<Copy size={16} aria-hidden="true" />}
+          label="コピー"
+          disabled={props.copyDisabled}
+          class="data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50"
+          onSelect={props.onCopy}
         />
         <AppMenuItem
           icon={<Trash2 size={16} aria-hidden="true" />}

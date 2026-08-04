@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js'
-import { GOAL_TITLE_MAX_LENGTH } from './constants'
+import { GOAL_TITLE_MAX_LENGTH } from '../../constants'
 import { GoalTextField } from './goalFormFields'
 import {
   GOAL_STEP_BADGE_CLASS,

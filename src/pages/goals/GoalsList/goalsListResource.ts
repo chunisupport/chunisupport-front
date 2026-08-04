@@ -20,6 +20,7 @@ import type {
 } from '../../../types/api'
 import { fetchAllSongsWithCache } from '../../../usecases/cache/fetchAllSongsWithCache'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
+import { buildGoalCopyRequest } from './goalCopy'
 
 export interface GoalsListData {
   username: string
@@ -86,6 +87,15 @@ export const saveGoalRequest = async (
   }
   await createGoal(payload)
 }
+
+/**
+ * 指定した目標を同じグループへ複製する。
+ *
+ * @param goal - 複製元の目標。
+ * @returns 作成された目標。
+ */
+export const copyGoalRequest = async (goal: GoalDTO): Promise<GoalDTO> =>
+  createGoal(buildGoalCopyRequest(goal))
 
 /**
  * 指定した目標を削除する。

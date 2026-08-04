@@ -22,6 +22,7 @@ import {
 } from '../../constants'
 import type { GoalGroupView } from '../../goalGroupsModel'
 import GoalCard from '../card/GoalCard'
+import { GoalCopyPlaceholder } from '../card/GoalCopyPlaceholder'
 import { GoalsListLongPressSensor } from './GoalsListLongPressSensor'
 import { createAutoScroll } from './goalsListAutoScroll'
 
@@ -38,9 +39,12 @@ interface GoalsListContentProps {
   onPreviousGroup: () => void
   onNextGroup: () => void
   onEdit: (goal: GoalDTO) => void
+  onCopy: (goal: GoalDTO) => void
   onDelete: (goal: GoalDTO) => void
   onOpenRecords: (goal: GoalDTO) => void
   isReordering: boolean
+  isCopying: boolean
+  showCopyPlaceholder: boolean
   onReorder: (activeId: number, overId: number) => void
   reorderAnnouncement: string
 }
@@ -203,7 +207,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
    * @returns なし。
    */
   const handleDragEnd = (event: DragEvent): void => {
-    if (props.isReordering || !event.droppable) return
+    if (props.isReordering || props.isCopying || !event.droppable) return
     props.onReorder(Number(event.draggable.id), Number(event.droppable.id))
   }
 
@@ -215,6 +219,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
    * @returns なし。
    */
   const handleKeyboardMove = (goalId: number, offset: -1 | 1): void => {
+    if (props.isCopying) return
     const currentIndex = props.groupView.goals.findIndex(({ goal }) => goal.id === goalId)
     const destination = props.groupView.goals[currentIndex + offset]
     if (destination) {
@@ -264,7 +269,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
           </AppIconButton>
           <AppButton
             variant="primary"
-            disabled={props.isReordering || props.goalsCount >= GOALS_LIMIT}
+            disabled={props.isReordering || props.isCopying || props.goalsCount >= GOALS_LIMIT}
             onClick={props.onCreate}
           >
             {ADD_GOAL_LABEL}
@@ -327,18 +332,23 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
                   <GoalCard
                     goal={goal}
                     progress={progress}
-                    isReordering={props.isReordering}
+                    isReordering={props.isReordering || props.isCopying}
                     position={index() + 1}
                     total={props.groupView.goals.length}
                     onEdit={props.onEdit}
+                    onCopy={props.onCopy}
                     onDelete={props.onDelete}
                     onOpenRecords={props.onOpenRecords}
                     onKeyboardMove={handleKeyboardMove}
+                    copyDisabled={props.isCopying || props.goalsCount >= GOALS_LIMIT}
                     open={isGoalOpen(goal.id)}
                     onOpenChange={(open) => handleGoalOpenChange(goal.id, open)}
                   />
                 )}
               </For>
+              <Show when={props.showCopyPlaceholder}>
+                <GoalCopyPlaceholder />
+              </Show>
             </div>
           </SortableProvider>
         </DragDropProvider>
