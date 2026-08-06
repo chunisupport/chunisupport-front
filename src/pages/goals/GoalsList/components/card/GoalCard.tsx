@@ -4,6 +4,7 @@ import { createSortable } from '@thisbeyond/solid-dnd'
 import { ChevronRight, ExternalLink } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, onCleanup, Show } from 'solid-js'
+
 import { getAppIconButtonClass } from '../../../../../components/common/AppButton'
 import type { GoalDTO } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
@@ -13,8 +14,12 @@ import { GoalCardActionMenu } from './GoalCardActionMenu'
 import { GoalCardProgress } from './GoalCardProgress'
 
 interface GoalCardProps {
+  /** 表示する目標。 */
   goal: GoalDTO
+  /** 目標の進捗。 */
   progress: GoalProgressResult
+  /** カードタイトルに使う見出しレベル。 */
+  headingLevel?: 2 | 3
   onEdit: (goal: GoalDTO) => void
   onCopy: (goal: GoalDTO) => void
   onDelete: (goal: GoalDTO) => void
@@ -163,22 +168,44 @@ const GoalCard: Component<GoalCardProps> = (props) => {
               aria-hidden="true"
             />
           </Collapsible.Trigger>
-          <h2 class="min-w-0 pt-1.5 font-sans text-lg font-bold text-text">
-            {isGoalRecordNavigationEnabled(props.goal) && props.onOpenRecords ? (
-              <Button
-                type="button"
-                disabled={props.isReordering}
-                class="inline-flex cursor-pointer items-center gap-1.5 rounded text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                onPointerDown={stopDragActivation}
-                onClick={handleOpenRecords}
-              >
-                <span>{props.goal.title}</span>
-                <ExternalLink class="shrink-0" size={18} aria-hidden="true" />
-              </Button>
-            ) : (
-              props.goal.title
-            )}
-          </h2>
+          <Show
+            when={props.headingLevel === 3}
+            fallback={
+              <h2 class="min-w-0 pt-1.5 font-sans text-lg font-bold text-text">
+                {isGoalRecordNavigationEnabled(props.goal) && props.onOpenRecords ? (
+                  <Button
+                    type="button"
+                    disabled={props.isReordering}
+                    class="inline-flex cursor-pointer items-center gap-1.5 rounded text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                    onPointerDown={stopDragActivation}
+                    onClick={handleOpenRecords}
+                  >
+                    <span>{props.goal.title}</span>
+                    <ExternalLink class="shrink-0" size={18} aria-hidden="true" />
+                  </Button>
+                ) : (
+                  props.goal.title
+                )}
+              </h2>
+            }
+          >
+            <h3 class="min-w-0 pt-1.5 font-sans text-lg font-bold text-text">
+              {isGoalRecordNavigationEnabled(props.goal) && props.onOpenRecords ? (
+                <Button
+                  type="button"
+                  disabled={props.isReordering}
+                  class="inline-flex cursor-pointer items-center gap-1.5 rounded text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                  onPointerDown={stopDragActivation}
+                  onClick={handleOpenRecords}
+                >
+                  <span>{props.goal.title}</span>
+                  <ExternalLink class="shrink-0" size={18} aria-hidden="true" />
+                </Button>
+              ) : (
+                props.goal.title
+              )}
+            </h3>
+          </Show>
         </div>
         <Show when={props.open}>
           <GoalCardActionMenu

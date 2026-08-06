@@ -26,6 +26,7 @@ import {
   GOAL_GROUP_COPY,
   GOAL_REORDER_ERROR_MESSAGE,
   GOALS_LIMIT,
+  type GoalGroupDisplayMode,
   RECORD_NAVIGATION_ERROR_MESSAGE,
 } from './constants'
 import {
@@ -75,6 +76,7 @@ const GoalsList: Component = () => {
   const [formError, setFormError] = createSignal('')
   const [groupError, setGroupError] = createSignal('')
   const [selectedGroupId, setSelectedGroupId] = createSignal<number | null>(null)
+  const [groupDisplayMode, setGroupDisplayMode] = createSignal<GoalGroupDisplayMode>('horizontal')
 
   const [resource, { mutate: mutateResource }] = createResource(
     () => refreshKey(),
@@ -288,16 +290,19 @@ const GoalsList: Component = () => {
   /**
    * 目標カードを画面上で即時に並び替え、APIへ表示順を保存する。
    *
+   * @param groupId - 並び替える目標が属するグループID。
    * @param activeId - 移動する目標ID。
    * @param overId - 移動先の目標ID。
    * @returns なし。
    */
-  const handleReorder = (activeId: number, overId: number): void => {
+  const handleReorder = (groupId: number | null, activeId: number, overId: number): void => {
     if (isReordering() || isCopying() || isGroupMutating() || activeId === overId) return
 
-    const groupId = currentGroupView().groupId
+    const groupView = groupViews().find((view) => view.groupId === groupId)
+    if (!groupView) return
+
     const previousGoals = orderedGoals()
-    const previousGroupGoals = currentGroupView().goals
+    const previousGroupGoals = groupView.goals
     const nextGroupGoals = moveGoal(previousGroupGoals, activeId, overId)
     if (nextGroupGoals.every(({ goal }, index) => goal.id === previousGroupGoals[index]?.goal.id)) {
       return
@@ -427,11 +432,12 @@ const GoalsList: Component = () => {
             <GoalsListContent
               goalsCount={resource()?.goals.length ?? 0}
               groupView={currentGroupView()}
-              groupCount={groupViews().length}
+              groupViews={groupViews()}
+              groupDisplayMode={groupDisplayMode()}
               actionError={actionError()}
               isReordering={isReordering()}
               isCopying={isCopying()}
-              showCopyPlaceholder={copyingGoal()?.group_id === currentGroupView().groupId}
+              copyingGroupId={copyingGoal()?.group_id}
               reorderAnnouncement={reorderAnnouncement()}
               onCreate={openCreateDialog}
               onManageGroups={() => {
@@ -440,6 +446,7 @@ const GoalsList: Component = () => {
               }}
               onPreviousGroup={() => changeSelectedGroup(-1)}
               onNextGroup={() => changeSelectedGroup(1)}
+              onGroupDisplayModeChange={setGroupDisplayMode}
               onEdit={handleEdit}
               onCopy={(selectedGoal) => {
                 void handleCopy(selectedGoal)

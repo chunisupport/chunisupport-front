@@ -122,6 +122,16 @@ export const GOAL_GROUP_COPY = {
   reorderError: 'グループの並び替えに失敗しました。',
 } as const
 
+/** 目標グループ一覧で選択できる表示モード。 */
+export type GoalGroupDisplayMode = 'horizontal' | 'all'
+
+/** 目標グループ表示モード切り替えで使う固定文言。 */
+export const GOAL_GROUP_DISPLAY_MODE_COPY = {
+  label: '目標グループの表示形式',
+  horizontal: '横切り替え',
+  all: '1画面',
+} as const
+
 /**
  * 目標グループ数が上限に達したときの文言を作る。
  *
