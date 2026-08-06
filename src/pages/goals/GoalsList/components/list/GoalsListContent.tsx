@@ -218,17 +218,17 @@ const GoalGroupDisplayModeToggle: Component<GoalGroupDisplayModeToggleProps> = (
   >
     <ToggleGroup.Item
       value="horizontal"
-      class="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-sm font-medium text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring data-[pressed]:bg-action-primary data-[pressed]:text-text-inverse"
+      aria-label={GOAL_GROUP_DISPLAY_MODE_COPY.horizontal}
+      class="inline-flex items-center rounded p-2 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring data-[pressed]:bg-action-primary data-[pressed]:text-text-inverse"
     >
       <GalleryHorizontal size={16} aria-hidden="true" />
-      {GOAL_GROUP_DISPLAY_MODE_COPY.horizontal}
     </ToggleGroup.Item>
     <ToggleGroup.Item
       value="all"
-      class="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-sm font-medium text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring data-[pressed]:bg-action-primary data-[pressed]:text-text-inverse"
+      aria-label={GOAL_GROUP_DISPLAY_MODE_COPY.all}
+      class="inline-flex items-center rounded p-2 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring data-[pressed]:bg-action-primary data-[pressed]:text-text-inverse"
     >
       <LayoutList size={16} aria-hidden="true" />
-      {GOAL_GROUP_DISPLAY_MODE_COPY.all}
     </ToggleGroup.Item>
   </ToggleGroup>
 )
