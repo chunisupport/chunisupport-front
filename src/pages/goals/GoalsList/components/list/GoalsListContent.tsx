@@ -18,7 +18,7 @@ import {
   Settings2,
 } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import { AppButton, AppIconButton } from '../../../../../components/common/AppButton'
 import { AppDisclosureTrigger } from '../../../../../components/common/AppDisclosureTrigger'
 import type { GoalDTO } from '../../../../../types/api'
@@ -344,12 +344,17 @@ const GoalGroupCards: Component<GoalGroupCardsProps> = (props) => {
 }
 
 /**
- * 目標一覧画面のヘッダー、エラー、カード一覧を描画する。
+ * 目標一覧画面の固定ヘッダー、エラー、カード一覧を描画する。
  *
  * @param props - 目標件数、進捗付き目標一覧、各操作ハンドラ。
  * @returns 目標一覧本体の JSX 要素。
  */
 export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
+  /** 一覧表示のグループ見出しを配置する基準となる固定ヘッダー要素。 */
+  let stickyHeaderRef!: HTMLDivElement
+
+  /** レスポンシブな固定ヘッダーの実測高。 */
+  const [stickyHeaderHeight, setStickyHeaderHeight] = createSignal(0)
   const [collapsedGoalIds, setCollapsedGoalIds] = createSignal<ReadonlySet<number>>(
     new Set<number>()
   )
@@ -456,163 +461,188 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
     )
   }
 
+  onMount(() => {
+    /**
+     * 固定ヘッダーの実測高を一覧表示のグループ見出しへ反映する。
+     *
+     * @returns なし。
+     */
+    const updateStickyHeaderHeight = (): void => {
+      setStickyHeaderHeight(stickyHeaderRef.offsetHeight)
+    }
+
+    const resizeObserver = new ResizeObserver(updateStickyHeaderHeight)
+    resizeObserver.observe(stickyHeaderRef)
+    updateStickyHeaderHeight()
+
+    onCleanup(() => resizeObserver.disconnect())
+  })
+
   return (
-    <div class="mx-auto w-full max-w-3xl p-4 space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 class="text-2xl font-semibold">目標</h1>
-          <p class="text-sm text-text-muted">
-            {props.goalsCount} / {GOALS_LIMIT}件
-          </p>
-        </div>
-        <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
-          <Show when={displayedGoals().length > 0}>
-            <fieldset class="m-0 flex min-w-0 items-center gap-1 border-0 p-0">
-              <legend class="sr-only">{GOAL_DISCLOSURE_CONTROLS_LABEL}</legend>
-              <AppButton
-                variant="ghost"
-                size="xs"
-                disabled={props.isReordering || areAllGoalsOpen()}
-                leftIcon={<ChevronsDown size={16} aria-hidden="true" />}
-                onClick={handleExpandAll}
-              >
-                {EXPAND_ALL_GOALS_LABEL}
-              </AppButton>
-              <AppButton
-                variant="ghost"
-                size="xs"
-                disabled={props.isReordering || areAllGoalsClosed()}
-                leftIcon={<ChevronsRight size={16} aria-hidden="true" />}
-                onClick={handleCollapseAll}
-              >
-                {COLLAPSE_ALL_GOALS_LABEL}
-              </AppButton>
-            </fieldset>
-          </Show>
-          <AppIconButton
-            aria-label={GOAL_GROUP_COPY.manageButtonLabel}
-            disabled={props.isReordering}
-            onClick={props.onManageGroups}
-          >
-            <Settings2 size={18} aria-hidden="true" />
-          </AppIconButton>
-          <AppButton
-            variant="primary"
-            disabled={props.isReordering || props.isCopying || props.goalsCount >= GOALS_LIMIT}
-            onClick={props.onCreate}
-          >
-            {ADD_GOAL_LABEL}
-          </AppButton>
-        </div>
-      </div>
-
-      <div class="flex justify-end">
-        <GoalGroupDisplayModeToggle
-          value={props.groupDisplayMode}
-          disabled={props.isReordering}
-          onChange={props.onGroupDisplayModeChange}
-        />
-      </div>
-
-      <Show when={props.groupDisplayMode === 'horizontal'}>
-        <div class="grid grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-2 rounded-lg border border-border bg-surface p-2">
-          <AppIconButton
-            aria-label={GOAL_GROUP_COPY.previousButtonLabel}
-            disabled={props.groupViews.length <= 1 || props.isReordering}
-            onClick={props.onPreviousGroup}
-          >
-            <ChevronLeft size={20} aria-hidden="true" />
-          </AppIconButton>
-          <div class="min-w-0 text-center" role="status" aria-live="polite" aria-atomic="true">
-            <h2 class="truncate font-sans text-lg font-semibold">{props.groupView.name}</h2>
-            <p class="text-xs text-text-muted">{props.groupView.goals.length}件</p>
+    <div class="mx-auto w-full max-w-3xl px-4 pb-4">
+      <div ref={stickyHeaderRef} class="sticky top-0 z-20 space-y-4 bg-bg py-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 class="text-2xl font-semibold">目標</h1>
+            <p class="text-sm text-text-muted">
+              {props.goalsCount} / {GOALS_LIMIT}件
+            </p>
           </div>
-          <AppIconButton
-            aria-label={GOAL_GROUP_COPY.nextButtonLabel}
-            disabled={props.groupViews.length <= 1 || props.isReordering}
-            onClick={props.onNextGroup}
-          >
-            <ChevronRight size={20} aria-hidden="true" />
-          </AppIconButton>
-        </div>
-      </Show>
-
-      <Show when={props.goalsCount >= GOALS_LIMIT}>
-        <p class="rounded border border-warning-border bg-warning-bg px-3 py-2 text-sm text-score-rank-c-text">
-          {GOALS_LIMIT_REACHED_MESSAGE}
-        </p>
-      </Show>
-
-      <Show when={props.actionError}>
-        <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-          {props.actionError}
-        </p>
-      </Show>
-
-      <p class="sr-only" role="status" aria-live="polite">
-        {props.reorderAnnouncement}
-      </p>
-
-      <Show
-        when={props.groupDisplayMode === 'horizontal'}
-        fallback={
-          <div class="space-y-6">
-            <For each={props.groupViews}>
-              {(groupView) => (
-                <Collapsible
-                  open={isGroupOpen(groupView.groupId)}
-                  onOpenChange={(open) => handleGroupOpenChange(groupView.groupId, open)}
+          <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+            <Show when={displayedGoals().length > 0}>
+              <fieldset class="m-0 flex min-w-0 items-center gap-1 border-0 p-0">
+                <legend class="sr-only">{GOAL_DISCLOSURE_CONTROLS_LABEL}</legend>
+                <AppButton
+                  variant="ghost"
+                  size="xs"
+                  disabled={props.isReordering || areAllGoalsOpen()}
+                  leftIcon={<ChevronsDown size={16} aria-hidden="true" />}
+                  onClick={handleExpandAll}
                 >
-                  <section aria-labelledby={`goal-group-${groupView.groupId ?? 'none'}`}>
-                    <h2 id={`goal-group-${groupView.groupId ?? 'none'}`}>
-                      <AppDisclosureTrigger
-                        variant="compact"
-                        label={groupView.name}
-                        summary={`${groupView.goals.length}件`}
-                        class="border-b border-border pb-2"
-                        labelClass="truncate font-sans text-lg font-semibold"
-                      />
-                    </h2>
-                    <Collapsible.Content class="pt-3">
-                      <GoalGroupCards
-                        groupView={groupView}
-                        headingLevel={3}
-                        goalsCount={props.goalsCount}
-                        isReordering={props.isReordering}
-                        isCopying={props.isCopying}
-                        copyingGroupId={props.copyingGroupId}
-                        collapsedGoalIds={collapsedGoalIds()}
-                        onGoalOpenChange={handleGoalOpenChange}
-                        onEdit={props.onEdit}
-                        onCopy={props.onCopy}
-                        onDelete={props.onDelete}
-                        onOpenRecords={props.onOpenRecords}
-                        onReorder={props.onReorder}
-                      />
-                    </Collapsible.Content>
-                  </section>
-                </Collapsible>
-              )}
-            </For>
+                  {EXPAND_ALL_GOALS_LABEL}
+                </AppButton>
+                <AppButton
+                  variant="ghost"
+                  size="xs"
+                  disabled={props.isReordering || areAllGoalsClosed()}
+                  leftIcon={<ChevronsRight size={16} aria-hidden="true" />}
+                  onClick={handleCollapseAll}
+                >
+                  {COLLAPSE_ALL_GOALS_LABEL}
+                </AppButton>
+              </fieldset>
+            </Show>
+            <AppIconButton
+              aria-label={GOAL_GROUP_COPY.manageButtonLabel}
+              disabled={props.isReordering}
+              onClick={props.onManageGroups}
+            >
+              <Settings2 size={18} aria-hidden="true" />
+            </AppIconButton>
+            <AppButton
+              variant="primary"
+              disabled={props.isReordering || props.isCopying || props.goalsCount >= GOALS_LIMIT}
+              onClick={props.onCreate}
+            >
+              {ADD_GOAL_LABEL}
+            </AppButton>
           </div>
-        }
-      >
-        <GoalGroupCards
-          groupView={props.groupView}
-          headingLevel={2}
-          goalsCount={props.goalsCount}
-          isReordering={props.isReordering}
-          isCopying={props.isCopying}
-          copyingGroupId={props.copyingGroupId}
-          collapsedGoalIds={collapsedGoalIds()}
-          onGoalOpenChange={handleGoalOpenChange}
-          onEdit={props.onEdit}
-          onCopy={props.onCopy}
-          onDelete={props.onDelete}
-          onOpenRecords={props.onOpenRecords}
-          onReorder={props.onReorder}
-        />
-      </Show>
+        </div>
+
+        <div class="flex justify-end">
+          <GoalGroupDisplayModeToggle
+            value={props.groupDisplayMode}
+            disabled={props.isReordering}
+            onChange={props.onGroupDisplayModeChange}
+          />
+        </div>
+
+        <Show when={props.groupDisplayMode === 'horizontal'}>
+          <div class="grid grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-2 rounded-lg border border-border bg-surface p-2">
+            <AppIconButton
+              aria-label={GOAL_GROUP_COPY.previousButtonLabel}
+              disabled={props.groupViews.length <= 1 || props.isReordering}
+              onClick={props.onPreviousGroup}
+            >
+              <ChevronLeft size={20} aria-hidden="true" />
+            </AppIconButton>
+            <div class="min-w-0 text-center" role="status" aria-live="polite" aria-atomic="true">
+              <h2 class="truncate font-sans text-lg font-semibold">{props.groupView.name}</h2>
+              <p class="text-xs text-text-muted">{props.groupView.goals.length}件</p>
+            </div>
+            <AppIconButton
+              aria-label={GOAL_GROUP_COPY.nextButtonLabel}
+              disabled={props.groupViews.length <= 1 || props.isReordering}
+              onClick={props.onNextGroup}
+            >
+              <ChevronRight size={20} aria-hidden="true" />
+            </AppIconButton>
+          </div>
+        </Show>
+      </div>
+
+      <div class="space-y-4">
+        <Show when={props.goalsCount >= GOALS_LIMIT}>
+          <p class="rounded border border-warning-border bg-warning-bg px-3 py-2 text-sm text-score-rank-c-text">
+            {GOALS_LIMIT_REACHED_MESSAGE}
+          </p>
+        </Show>
+
+        <Show when={props.actionError}>
+          <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
+            {props.actionError}
+          </p>
+        </Show>
+
+        <p class="sr-only" role="status" aria-live="polite">
+          {props.reorderAnnouncement}
+        </p>
+
+        <Show
+          when={props.groupDisplayMode === 'horizontal'}
+          fallback={
+            <div class="space-y-6">
+              <For each={props.groupViews}>
+                {(groupView) => (
+                  <Collapsible
+                    open={isGroupOpen(groupView.groupId)}
+                    onOpenChange={(open) => handleGroupOpenChange(groupView.groupId, open)}
+                  >
+                    <section aria-labelledby={`goal-group-${groupView.groupId ?? 'none'}`}>
+                      <h2
+                        id={`goal-group-${groupView.groupId ?? 'none'}`}
+                        class="sticky z-10 bg-bg"
+                        style={{ top: `${stickyHeaderHeight()}px` }}
+                      >
+                        <AppDisclosureTrigger
+                          variant="compact"
+                          label={groupView.name}
+                          summary={`${groupView.goals.length}件`}
+                          class="border-b border-border pb-2"
+                          labelClass="truncate font-sans text-lg font-semibold"
+                        />
+                      </h2>
+                      <Collapsible.Content class="pt-3">
+                        <GoalGroupCards
+                          groupView={groupView}
+                          headingLevel={3}
+                          goalsCount={props.goalsCount}
+                          isReordering={props.isReordering}
+                          isCopying={props.isCopying}
+                          copyingGroupId={props.copyingGroupId}
+                          collapsedGoalIds={collapsedGoalIds()}
+                          onGoalOpenChange={handleGoalOpenChange}
+                          onEdit={props.onEdit}
+                          onCopy={props.onCopy}
+                          onDelete={props.onDelete}
+                          onOpenRecords={props.onOpenRecords}
+                          onReorder={props.onReorder}
+                        />
+                      </Collapsible.Content>
+                    </section>
+                  </Collapsible>
+                )}
+              </For>
+            </div>
+          }
+        >
+          <GoalGroupCards
+            groupView={props.groupView}
+            headingLevel={2}
+            goalsCount={props.goalsCount}
+            isReordering={props.isReordering}
+            isCopying={props.isCopying}
+            copyingGroupId={props.copyingGroupId}
+            collapsedGoalIds={collapsedGoalIds()}
+            onGoalOpenChange={handleGoalOpenChange}
+            onEdit={props.onEdit}
+            onCopy={props.onCopy}
+            onDelete={props.onDelete}
+            onOpenRecords={props.onOpenRecords}
+            onReorder={props.onReorder}
+          />
+        </Show>
+      </div>
     </div>
   )
 }
