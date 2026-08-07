@@ -6,6 +6,7 @@ import type { GoalProgressResult } from '../../../utils/goalProgress'
 export interface GoalCardDisplayProgress {
   currentText: string
   targetText: string
+  percentPrefixText: string
   percentText: string
   ariaValueText: string
   progressValue: number
@@ -16,6 +17,7 @@ export interface GoalCardDisplayProgress {
  */
 const OVER_POWER_VALUE_DECIMAL_PLACES = 3
 const OVER_POWER_PERCENT_DECIMAL_PLACES = 3
+const REMAINING_PERCENTAGE_PREFIX = 'あと'
 
 /**
  * 目標進捗の数値を目標種別に合わせて表示用に整形する。
@@ -44,19 +46,23 @@ export const formatGoalCardValue = (value: number, type: GoalAchievementType): s
  *
  * @param progress - 目標進捗の現在値、目標値、達成率。
  * @param type - 目標種別。
- * @param invert - 反転表示が有効か。
+ * @param invertValue - 実数値の反転表示が有効か。
+ * @param invertPercentage - 割合の反転表示が有効か。
  * @returns カードに表示する現在値、目標値、達成率、ゲージ値。
  */
 export const resolveGoalCardDisplayProgress = (
   progress: GoalProgressResult,
   type: GoalAchievementType,
-  invert: boolean
+  invertValue: boolean,
+  invertPercentage: boolean
 ): GoalCardDisplayProgress => {
-  const displayCurrent = invert ? Math.max(progress.target - progress.current, 0) : progress.current
+  const displayCurrent = invertValue
+    ? Math.max(progress.target - progress.current, 0)
+    : progress.current
   const safeTarget = progress.target <= 0 ? 1 : progress.target
   const raw = (progress.current / safeTarget) * 100
   const normalizedPercent = Number.isFinite(raw) ? Math.max(0, raw) : 0
-  const displayPercent = invert
+  const displayPercent = invertPercentage
     ? Math.max(0, 100 - Math.min(normalizedPercent, 100))
     : normalizedPercent
   const progressValue = Math.max(0, Math.min(normalizedPercent, 100))
@@ -66,9 +72,10 @@ export const resolveGoalCardDisplayProgress = (
   return {
     currentText: formatGoalCardValue(displayCurrent, type),
     targetText: formatGoalCardValue(progress.target, type),
+    percentPrefixText: invertPercentage ? REMAINING_PERCENTAGE_PREFIX : '',
     percentText: displayPercentText,
-    ariaValueText: invert
-      ? `達成率 ${progressValueText}、残り ${displayPercentText}`
+    ariaValueText: invertPercentage
+      ? `達成率 ${progressValueText}、${REMAINING_PERCENTAGE_PREFIX}${displayPercentText}`
       : `達成率 ${progressValueText}`,
     progressValue,
   }

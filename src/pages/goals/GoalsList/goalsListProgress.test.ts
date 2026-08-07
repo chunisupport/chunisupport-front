@@ -29,7 +29,8 @@ test('データ未取得時の下書き進捗は未達成の初期値を返す',
     achievement_type: 'score_count',
     achievement_params: { score: 1000000, count: 1 },
     attributes: {},
-    invert: false,
+    invert_value: false,
+    invert_percentage: false,
   } satisfies GoalCreateRequest
 
   // When

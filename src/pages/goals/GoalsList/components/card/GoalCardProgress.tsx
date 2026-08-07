@@ -7,7 +7,8 @@ import { resolveGoalCardDisplayProgress } from './goalCardProgressModel'
 interface GoalCardProgressProps {
   title: string
   achievementType: GoalAchievementType
-  invert: boolean
+  invertValue: boolean
+  invertPercentage: boolean
   progress: GoalProgressResult
   /** 現在値、目標値、達成率の数値表示を含めるか。 */
   showValues?: boolean
@@ -21,18 +22,23 @@ const INVERT_PROGRESS_LABEL = '残り'
 /**
  * 目標カード共通の進捗数値とゲージを表示する。
  *
- * @param props - タイトル、目標種別、反転表示、進捗情報、数値表示の有無。
+ * @param props - タイトル、目標種別、実数値・割合の反転表示、進捗情報、数値表示の有無。
  * @returns 目標カードの進捗表示 JSX 要素。
  */
 export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
   const displayProgress = () =>
-    resolveGoalCardDisplayProgress(props.progress, props.achievementType, props.invert)
+    resolveGoalCardDisplayProgress(
+      props.progress,
+      props.achievementType,
+      props.invertValue,
+      props.invertPercentage
+    )
 
   return (
     <div class="mt-2">
       <Show when={props.showValues ?? true}>
         <div class="flex items-baseline gap-1">
-          {props.invert && (
+          {props.invertValue && (
             <span class="text-base font-medium leading-none text-text">
               {INVERT_PROGRESS_LABEL}
             </span>
@@ -47,8 +53,11 @@ export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
             <div class="goal-card-progress-secondary pb-0.5 font-oswald text-xl font-bold leading-none">
               {displayProgress().targetText}
             </div>
-            <div class="goal-card-progress-secondary ml-auto pb-0.5 text-right font-oswald text-lg font-semibold leading-none">
-              {displayProgress().percentText}
+            <div class="goal-card-progress-secondary ml-auto flex items-baseline pb-0.5 text-right font-oswald font-semibold leading-none">
+              <Show when={displayProgress().percentPrefixText}>
+                <span class="text-sm">{displayProgress().percentPrefixText}</span>
+              </Show>
+              <span class="text-lg">{displayProgress().percentText}</span>
             </div>
           </div>
         </div>

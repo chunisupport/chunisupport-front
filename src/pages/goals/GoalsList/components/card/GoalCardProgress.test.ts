@@ -32,7 +32,7 @@ test('OVER POWER達成率は小数点以下3桁で切り捨て表示される', 
   assert.equal(result, '97.536')
 })
 
-test('反転表示では残り値と残り割合を表示し、ゲージ値は通常進捗を使う', () => {
+test('実数値と割合の反転表示を独立して適用し、ゲージ値は通常進捗を使う', () => {
   // Given
   const progress = {
     current: 30,
@@ -43,14 +43,24 @@ test('反転表示では残り値と残り割合を表示し、ゲージ値は�
   }
 
   // When
-  const result = resolveGoalCardDisplayProgress(progress, 'score_count', true)
+  const valueOnly = resolveGoalCardDisplayProgress(progress, 'score_count', true, false)
+  const percentageOnly = resolveGoalCardDisplayProgress(progress, 'score_count', false, true)
 
   // Then
-  assert.deepEqual(result, {
+  assert.deepEqual(valueOnly, {
     currentText: '70',
     targetText: '100',
+    percentPrefixText: '',
+    percentText: '30.00%',
+    ariaValueText: '達成率 30.00%',
+    progressValue: 30,
+  })
+  assert.deepEqual(percentageOnly, {
+    currentText: '30',
+    targetText: '100',
+    percentPrefixText: 'あと',
     percentText: '70.00%',
-    ariaValueText: '達成率 30.00%、残り 70.00%',
+    ariaValueText: '達成率 30.00%、あと70.00%',
     progressValue: 30,
   })
 })

@@ -34,5 +34,6 @@ export const buildGoalCopyRequest = (goal: GoalDTO): GoalCreateRequest => ({
   achievement_type: goal.achievement_type,
   achievement_params: goal.achievement_params,
   attributes: goal.attributes,
-  invert: goal.invert,
+  invert_value: goal.invert_value,
+  invert_percentage: goal.invert_percentage,
 })

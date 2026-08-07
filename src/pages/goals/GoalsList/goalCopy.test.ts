@@ -17,7 +17,8 @@ const createGoal = (overrides: Partial<GoalDTO> = {}): GoalDTO => ({
   achievement_type: 'score_count',
   achievement_params: { score: 1_009_000, count: 10 },
   attributes: { diff: [3], const: { min: 14, max: 15 } },
-  invert: false,
+  invert_value: true,
+  invert_percentage: false,
   sort_order: 2,
   created_at: '2026-08-04T00:00:00Z',
   ...overrides,
@@ -73,6 +74,7 @@ test('複製リクエストは同じグループと目標条件を引き継ぐ',
     achievement_type: goal.achievement_type,
     achievement_params: goal.achievement_params,
     attributes: goal.attributes,
-    invert: goal.invert,
+    invert_value: goal.invert_value,
+    invert_percentage: goal.invert_percentage,
   })
 })

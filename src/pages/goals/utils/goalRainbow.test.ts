@@ -73,7 +73,8 @@ const createGoal = (params: GoalDTO['achievement_params']): GoalDTO => ({
   achievement_type: 'rainbow_count',
   achievement_params: params,
   attributes: {},
-  invert: false,
+  invert_value: false,
+  invert_percentage: false,
   sort_order: 1,
   created_at: '2026-01-01',
 })

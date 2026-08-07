@@ -25,6 +25,8 @@ test('作成フォームの初期状態はMASTER/ULTIMA選択と標準値で作�
   assert.equal(result.achievementType, 'rank_count')
   assert.equal(result.rank, 'S')
   assert.equal(result.countMode, 'all')
+  assert.equal(result.invertValue, false)
+  assert.equal(result.invertPercentage, false)
   assert.equal(result.chartTargetMode, 'normal')
   assert.equal(result.constMin, String(CHART_CONST_MIN))
   assert.equal(result.constMax, String(CHART_CONST_MAX))
@@ -59,7 +61,8 @@ test('編集フォームでdiffが未指定の場合は全難易度が選択さ�
     achievement_type: 'rank_count',
     achievement_params: { score: 1000000 },
     attributes: { genre: [10], ver: [2] },
-    invert: false,
+    invert_value: false,
+    invert_percentage: false,
     sort_order: 1,
     created_at: '2026-01-01T00:00:00Z',
   } satisfies GoalDTO
@@ -85,7 +88,8 @@ test('編集フォームの初期状態は保存済み目標から復元され�
       genre: [10],
       ver: [2],
     },
-    invert: true,
+    invert_value: true,
+    invert_percentage: false,
     sort_order: 1,
     created_at: '2026-01-01T00:00:00Z',
   } satisfies GoalDTO
@@ -99,7 +103,8 @@ test('編集フォームの初期状態は保存済み目標から復元され�
   assert.equal(result.hardLamp, 'ABS')
   assert.equal(result.count, '2')
   assert.equal(result.countMode, 'remaining')
-  assert.equal(result.invert, true)
+  assert.equal(result.invertValue, true)
+  assert.equal(result.invertPercentage, false)
   assert.deepEqual(result.diffs, ['3'])
   assert.equal(result.constMin, '13.5')
   assert.equal(result.constMax, '15')

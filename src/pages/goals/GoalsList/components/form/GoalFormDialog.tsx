@@ -126,7 +126,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [totalMode, setTotalMode] = createSignal<GoalTargetMode>('number')
   const [hardLamp, setHardLamp] = createSignal<HardLampGoalValue>('HRD')
   const [comboLamp, setComboLamp] = createSignal<ComboLampGoalValue>('FC')
-  const [invert, setInvert] = createSignal(false)
+  const [invertValue, setInvertValue] = createSignal(false)
+  const [invertPercentage, setInvertPercentage] = createSignal(false)
 
   const [chartTargetMode, setChartTargetMode] = createSignal<GoalChartTargetMode>('normal')
   const [diffs, setDiffs] = createSignal<string[]>([])
@@ -224,7 +225,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setTotalMode(nextState.totalMode)
     setHardLamp(nextState.hardLamp)
     setComboLamp(nextState.comboLamp)
-    setInvert(nextState.invert)
+    setInvertValue(nextState.invertValue)
+    setInvertPercentage(nextState.invertPercentage)
     setChartTargetMode(nextState.chartTargetMode)
     setDiffs(nextState.diffs)
     setConstMin(nextState.constMin)
@@ -323,7 +325,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       achievement_type: currentType,
       achievement_params: buildDraftAchievementParams(currentType),
       attributes,
-      invert: invert(),
+      invert_value: invertValue(),
+      invert_percentage: invertPercentage(),
     })
   })
 
@@ -426,7 +429,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       achievement_type: currentType,
       achievement_params,
       attributes,
-      invert: invert(),
+      invert_value: invertValue(),
+      invert_percentage: invertPercentage(),
     })
   }
 
@@ -492,7 +496,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               totalMode={totalMode()}
               hardLamp={hardLamp()}
               comboLamp={comboLamp()}
-              invert={invert()}
+              invertValue={invertValue()}
+              invertPercentage={invertPercentage()}
               countMax={props.resolveAllCount(getDraftAttributes(), achievementType())}
               countLimitText={countLimitText()}
               targetCountText={targetCountText()}
@@ -508,14 +513,16 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               onTotalModeChange={setTotalMode}
               onHardLampChange={setHardLamp}
               onComboLampChange={setComboLamp}
-              onInvertChange={setInvert}
+              onInvertValueChange={setInvertValue}
+              onInvertPercentageChange={setInvertPercentage}
               canUseDynamicTotalTarget={canUseDynamicTotalTarget}
             />
 
             <GoalPreviewSection
               title={previewTitle()}
               achievementType={achievementType()}
-              invert={invert()}
+              invertValue={invertValue()}
+              invertPercentage={invertPercentage()}
               progress={previewProgress()}
             />
           </div>

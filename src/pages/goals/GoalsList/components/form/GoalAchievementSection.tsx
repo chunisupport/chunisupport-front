@@ -11,7 +11,7 @@ import {
   HARD_LAMP_OPTIONS,
   type HardLampGoalValue,
 } from '../../../utils/goalLamp'
-import { LABEL_INVERT_DISPLAY, STEP3_DESCRIPTION } from './constants'
+import { LABEL_INVERT_PERCENTAGE, LABEL_INVERT_VALUE, STEP3_DESCRIPTION } from './constants'
 import {
   GoalNumberField,
   GoalSelectField,
@@ -38,7 +38,8 @@ interface GoalAchievementSectionProps {
   totalMode: GoalTargetMode
   hardLamp: HardLampGoalValue
   comboLamp: ComboLampGoalValue
-  invert: boolean
+  invertValue: boolean
+  invertPercentage: boolean
   countMax: number
   countLimitText: string
   targetCountText: string
@@ -54,7 +55,8 @@ interface GoalAchievementSectionProps {
   onTotalModeChange: (mode: GoalTargetMode) => void
   onHardLampChange: (lamp: HardLampGoalValue) => void
   onComboLampChange: (lamp: ComboLampGoalValue) => void
-  onInvertChange: (invert: boolean) => void
+  onInvertValueChange: (invertValue: boolean) => void
+  onInvertPercentageChange: (invertPercentage: boolean) => void
   canUseDynamicTotalTarget: (type: GoalAchievementType) => boolean
 }
 
@@ -262,13 +264,19 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
         </div>
       </Show>
 
-      <div class="block text-sm">
+      <div class="block space-y-2 text-sm">
         <p class="mb-1 block text-text-muted">表示形式</p>
         <CheckboxField
           class="relative flex items-center gap-2 text-sm text-text-muted"
-          checked={props.invert}
-          onChange={props.onInvertChange}
-          label={LABEL_INVERT_DISPLAY}
+          checked={props.invertValue}
+          onChange={props.onInvertValueChange}
+          label={LABEL_INVERT_VALUE}
+        />
+        <CheckboxField
+          class="relative flex items-center gap-2 text-sm text-text-muted"
+          checked={props.invertPercentage}
+          onChange={props.onInvertPercentageChange}
+          label={LABEL_INVERT_PERCENTAGE}
         />
       </div>
     </div>
