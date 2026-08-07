@@ -10,6 +10,11 @@ export const ERROR_MESSAGE_INVALID_COUNT_TARGET =
 export const STEP3_DESCRIPTION = '目標の種別と値を設定します。'
 
 /**
- * 進捗プレビューで達成済みではなく達成までの残数を表示するチェックボックスのラベル。
+ * 進捗プレビューで現在値ではなく達成までの残量を表示するチェックボックスのラベル。
  */
-export const LABEL_INVERT_DISPLAY = '達成までの残数を表示'
+export const LABEL_INVERT_VALUE = '達成までの残数を表示'
+
+/**
+ * 進捗プレビューで達成率ではなく達成までの残り割合を表示するチェックボックスのラベル。
+ */
+export const LABEL_INVERT_PERCENTAGE = '達成までの残り割合を表示'

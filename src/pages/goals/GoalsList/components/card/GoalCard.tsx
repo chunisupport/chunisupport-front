@@ -222,7 +222,8 @@ const GoalCard: Component<GoalCardProps> = (props) => {
         <GoalCardProgress
           title={props.goal.title}
           achievementType={props.goal.achievement_type}
-          invert={props.goal.invert}
+          invertValue={props.goal.invert_value}
+          invertPercentage={props.goal.invert_percentage}
           progress={props.progress}
         />
       </Collapsible.Content>
@@ -230,7 +231,8 @@ const GoalCard: Component<GoalCardProps> = (props) => {
         <GoalCardProgress
           title={props.goal.title}
           achievementType={props.goal.achievement_type}
-          invert={props.goal.invert}
+          invertValue={props.goal.invert_value}
+          invertPercentage={props.goal.invert_percentage}
           progress={props.progress}
           showValues={false}
         />

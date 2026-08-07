@@ -28,13 +28,20 @@ export const GOAL_ACHIEVEMENT_TYPE_LABELS = {
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 const NO_TARGET_CHARTS_LABEL = '対象譜面なし'
 
+/**
+ * 保存済み目標から作成・更新APIへ送信できるペイロードを作る。
+ *
+ * @param goal - APIから取得した保存済み目標。
+ * @returns レスポンス専用項目を除いた目標ペイロード。
+ */
 export const buildGoalPayload = (goal: GoalDTO): GoalRequest => ({
   group_id: goal.group_id,
   title: goal.title,
   achievement_type: goal.achievement_type,
   achievement_params: goal.achievement_params,
   attributes: goal.attributes,
-  invert: goal.invert,
+  invert_value: goal.invert_value,
+  invert_percentage: goal.invert_percentage,
 })
 
 export const resolveGoalAchievementTypeLabel = (

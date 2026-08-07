@@ -39,7 +39,8 @@ export interface GoalFormState {
   totalMode: GoalTargetMode
   hardLamp: HardLampGoalValue
   comboLamp: ComboLampGoalValue
-  invert: boolean
+  invertValue: boolean
+  invertPercentage: boolean
   chartTargetMode: GoalChartTargetMode
   diffs: string[]
   constMin: string
@@ -284,7 +285,8 @@ export const createDefaultGoalFormState = (
   totalMode: 'number',
   hardLamp: 'HRD',
   comboLamp: 'FC',
-  invert: false,
+  invertValue: false,
+  invertPercentage: false,
   chartTargetMode: 'normal',
   diffs: fallbacks.defaultDifficultySelections,
   constMin: String(CHART_CONST_MIN),
@@ -339,7 +341,8 @@ export const createGoalFormInitialState = (
       : 'number',
     hardLamp: hardLampValue ?? defaultState.hardLamp,
     comboLamp: comboLampValue ?? defaultState.comboLamp,
-    invert: goal.invert,
+    invertValue: goal.invert_value,
+    invertPercentage: goal.invert_percentage,
     chartTargetMode: goal.attributes.chart_target === 'OP_TARGET' ? 'op_target' : 'normal',
     diffs: resolveInitialAttributeSelection(
       goal.attributes.diff,

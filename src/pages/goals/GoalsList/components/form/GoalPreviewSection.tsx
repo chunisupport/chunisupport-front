@@ -6,7 +6,8 @@ import { GoalCardProgress } from '../card/GoalCardProgress'
 interface GoalPreviewSectionProps {
   title: string
   achievementType: GoalAchievementType
-  invert: boolean
+  invertValue: boolean
+  invertPercentage: boolean
   progress: GoalProgressResult
 }
 
@@ -34,7 +35,8 @@ export const GoalPreviewSection: Component<GoalPreviewSectionProps> = (props) =>
       <GoalCardProgress
         title={props.title}
         achievementType={props.achievementType}
-        invert={props.invert}
+        invertValue={props.invertValue}
+        invertPercentage={props.invertPercentage}
         progress={props.progress}
       />
     </article>

@@ -547,7 +547,10 @@ export interface GoalDTO {
   achievement_type: GoalAchievementType
   achievement_params: GoalAchievementParams
   attributes: GoalAttributes
-  invert: boolean
+  /** 現在値を目標までの残量として表示するか。 */
+  invert_value: boolean
+  /** 達成率を残り割合として表示するか。 */
+  invert_percentage: boolean
   sort_order: number
   created_at: string
 }
