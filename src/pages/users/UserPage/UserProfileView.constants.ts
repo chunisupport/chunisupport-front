@@ -4,6 +4,17 @@ export const RATING_SLOT_COUNT = {
   new: 20,
 } as const
 
+/** 新曲枠レーティング理論値サマリーで使用する文言。 */
+export const NEW_SONG_RATING_SUMMARY_COPY = {
+  ariaLabel: '新曲枠レーティング理論値',
+  theoreticalRating: '理論値',
+  currentGap: '現在との差',
+  loadingLabel: '新曲枠レーティング理論値を計算中',
+  noData: '新曲枠対象譜面がありません',
+  emptyValue: '-',
+  unknownChartConstant: '未確定の譜面定数を含む推定値',
+} as const
+
 /** レーティング枠画像の固定論理幅。 */
 export const RATING_IMAGE_WIDTH_PX = 1_024
 /** レーティング枠画像を原寸の2倍で出力するピクセル比。 */
