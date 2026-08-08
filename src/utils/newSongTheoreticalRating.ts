@@ -41,7 +41,11 @@ export const calculateNewSongTheoreticalRating = (
 ): NewSongTheoreticalRating | undefined => {
   const theoreticalRatings = songs
     .filter((song) => song.is_new)
-    .flatMap((song) => Object.values(song.charts).map(buildTheoreticalChartRating))
+    .flatMap((song) =>
+      Object.values(song.charts)
+        .filter((chart): chart is ChartDTO => chart !== null)
+        .map(buildTheoreticalChartRating)
+    )
     .sort((left, right) => right.ratingHundredths - left.ratingHundredths)
     .slice(0, slotCount)
 

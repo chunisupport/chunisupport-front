@@ -250,7 +250,8 @@ export interface SongDTO {
   op_target_difficulty: PlayerDataDifficulty | null
   /** 新曲かどうか。 */
   is_new: boolean
-  charts: Partial<Record<PlayerDataDifficulty, ChartDTO>>
+  /** 難易度別譜面。APIは存在しない難易度をnullで返す場合がある。 */
+  charts: Partial<Record<PlayerDataDifficulty, ChartDTO | null>>
 }
 
 export interface ManagedSongDTO extends SongDTO {

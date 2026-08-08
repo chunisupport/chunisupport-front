@@ -97,6 +97,21 @@ test('新曲譜面がない場合は理論値を返さないこと', () => {
   assert.equal(result, undefined)
 })
 
+test('APIが存在しない難易度をnullで返しても理論値計算から除外すること', () => {
+  // Given: 譜面が存在しない難易度をnullで含む新曲。
+  const song = createSong('new', true, [{ value: 15 }])
+  song.charts.ULTIMA = null
+
+  // When: 新曲枠理論値を算出する。
+  const result = calculateNewSongTheoreticalRating([song], 1)
+
+  // Then: nullを除外し、存在する譜面だけから理論値を返す。
+  assert.deepEqual(result, {
+    rating: 17.15,
+    hasUnknownChartConstants: false,
+  })
+})
+
 test('現在値との差を小数点以下4桁単位で正確に返すこと', () => {
   // Given: 理論値と現在値に浮動小数点誤差が起きうる値を指定する。
   const theoreticalRating = 17.5005
