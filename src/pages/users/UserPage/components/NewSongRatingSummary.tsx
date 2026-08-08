@@ -2,19 +2,30 @@ import { Collapsible } from '@kobalte/core/collapsible'
 import { A } from '@solidjs/router'
 import { Gauge, TrendingUp } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import { For, Show } from 'solid-js'
+import { createMemo, For, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../../components'
 import { AppDisclosureTrigger } from '../../../../components/common/AppDisclosureTrigger'
 import { RecordDifficultyBadge } from '../../../../components/common/record/RecordBadges'
 import { buildSongDetailPath } from '../../../../constants/routes'
+import type { PlayerRecordDTO } from '../../../../types/api'
 import { formatChartConst } from '../../../../utils/chartConstFormat'
-import type { NewSongTheoreticalRating } from '../../../../utils/newSongTheoreticalRating'
-import { calculateNewSongTheoreticalRatingGap } from '../../../../utils/newSongTheoreticalRating'
+import type {
+  NewSongTheoreticalRating,
+  NewSongTheoreticalRatingEntry,
+} from '../../../../utils/newSongTheoreticalRating'
+import {
+  calculateNewSongTheoreticalRatingGap,
+  resolveNewSongTheoreticalRatingProgress,
+} from '../../../../utils/newSongTheoreticalRating'
+import { formatInteger } from '../../../../utils/numberFormat'
 import { formatPlayerRating, formatRatingFixed2 } from '../../../../utils/ratingFormat'
+import { formatScoreDifference } from '../../../../utils/scoreDifference'
 import { NEW_SONG_RATING_SUMMARY_COPY } from '../UserProfileView.constants'
 
 type Props = {
+  candidateRecords: readonly PlayerRecordDTO[]
   currentRating: number | null
+  currentRecords: readonly PlayerRecordDTO[]
   error: unknown
   loading: boolean
   theoreticalRating: NewSongTheoreticalRating | undefined
@@ -59,12 +70,79 @@ const RatingMetric: Component<RatingMetricProps> = (props) => (
 )
 
 /**
+ * 理論値対象譜面の現在スコアと理論スコアまでの差を表示する。
+ *
+ * @param props - 対象譜面と現在の新曲枠・候補枠レコード。
+ * @returns 現在スコアの所属、スコア、理論スコアまでの差。
+ */
+const TheoreticalChartProgress: Component<{
+  candidateRecords: readonly PlayerRecordDTO[]
+  currentRecords: readonly PlayerRecordDTO[]
+  entry: NewSongTheoreticalRatingEntry
+}> = (props) => {
+  const progress = createMemo(() => {
+    const resolved = resolveNewSongTheoreticalRatingProgress(
+      props.entry,
+      props.currentRecords,
+      props.candidateRecords
+    )
+    if (resolved.slot === null || resolved.currentScore === null || resolved.scoreGap === null) {
+      return undefined
+    }
+    return {
+      slot: resolved.slot,
+      currentScore: resolved.currentScore,
+      scoreGap: resolved.scoreGap,
+    }
+  })
+
+  return (
+    <span class="col-span-2 col-start-3 flex min-w-0 flex-wrap items-center justify-end gap-x-3 gap-y-0.5 font-oswald text-xs tabular-nums text-text-muted">
+      <Show
+        when={progress()}
+        keyed
+        fallback={
+          <span class="font-sans text-text-subtle">
+            {NEW_SONG_RATING_SUMMARY_COPY.recordUnavailable}
+          </span>
+        }
+      >
+        {(current) => (
+          <>
+            <span class="whitespace-nowrap">
+              <span
+                class="mr-1 rounded bg-surface-hover px-1 py-0.5 font-sans text-[0.65rem] data-[current=true]:bg-success-bg data-[current=true]:text-success"
+                data-current={current.slot === 'new'}
+              >
+                {current.slot === 'new'
+                  ? NEW_SONG_RATING_SUMMARY_COPY.currentSlotLabel
+                  : NEW_SONG_RATING_SUMMARY_COPY.candidateSlotLabel}
+              </span>
+              <span class="sr-only">{NEW_SONG_RATING_SUMMARY_COPY.currentScoreLabel}</span>
+              {formatInteger(current.currentScore)}
+            </span>
+            <span class="whitespace-nowrap text-rating-candidate-gap">
+              <span class="mr-1 font-sans text-text-muted">
+                {NEW_SONG_RATING_SUMMARY_COPY.scoreGapLabel}
+              </span>
+              {formatScoreDifference(current.scoreGap)}
+            </span>
+          </>
+        )}
+      </Show>
+    </span>
+  )
+}
+
+/**
  * 新曲枠理論値へ採用された譜面を単曲レーティング順に表示する。
  *
- * @param props - 理論値へ採用された譜面一覧。
+ * @param props - 理論値へ採用された譜面一覧と現在の新曲枠・候補枠レコード。
  * @returns 楽曲詳細へ遷移できる折りたたみ一覧。
  */
 const TheoreticalChartList: Component<{
+  candidateRecords: readonly PlayerRecordDTO[]
+  currentRecords: readonly PlayerRecordDTO[]
   entries: NewSongTheoreticalRating['entries']
 }> = (props) => (
   <Collapsible class="border-t border-border" defaultOpen={false}>
@@ -115,6 +193,11 @@ const TheoreticalChartList: Component<{
                     </Show>
                   </span>
                 </span>
+                <TheoreticalChartProgress
+                  candidateRecords={props.candidateRecords}
+                  currentRecords={props.currentRecords}
+                  entry={entry}
+                />
               </A>
             </li>
           )}
@@ -127,7 +210,7 @@ const TheoreticalChartList: Component<{
 /**
  * 新曲枠レーティングの理論値と現在値からの差を表示する。
  *
- * @param props - 現在値、理論値、楽曲データの取得状態。
+ * @param props - 現在値、理論値、現在レコード、楽曲データの取得状態。
  * @returns 新曲枠の理論値サマリー。
  */
 export const NewSongRatingSummary: Component<Props> = (props) => {
@@ -185,7 +268,11 @@ export const NewSongRatingSummary: Component<Props> = (props) => {
                     value={formattedRatingGap()}
                   />
                 </div>
-                <TheoreticalChartList entries={theoreticalRating().entries} />
+                <TheoreticalChartList
+                  candidateRecords={props.candidateRecords}
+                  currentRecords={props.currentRecords}
+                  entries={theoreticalRating().entries}
+                />
               </>
             )}
           </Show>

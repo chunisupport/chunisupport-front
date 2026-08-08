@@ -345,6 +345,8 @@ export const UserProfileView: Component<Props> = (props) => {
             <AppTabContent value="new">
               <NewSongRatingSummary
                 currentRating={props.profile.rating.new_average}
+                currentRecords={newRecords()}
+                candidateRecords={newCandidateRecords()}
                 error={newSongTheoreticalRating.error()}
                 loading={newSongTheoreticalRating.isLoading()}
                 theoreticalRating={newSongTheoreticalRating.theoreticalRating()}

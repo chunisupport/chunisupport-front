@@ -14,10 +14,15 @@ export const NEW_SONG_RATING_SUMMARY_COPY = {
   emptyValue: '-',
   unknownChartConstant: '未確定の譜面定数を含む推定値',
   unknownMarker: '?',
-  detailsLabel: '理論値対象譜面',
+  detailsLabel: '最高到達対象譜面',
   chartCountSuffix: '譜面',
   singleRatingLabel: '単曲RATING',
   chartConstantLabel: '譜面定数',
+  currentSlotLabel: '新曲枠',
+  candidateSlotLabel: '候補',
+  currentScoreLabel: '現在スコア',
+  scoreGapLabel: '理論まで',
+  recordUnavailable: '現在枠外',
 } as const
 
 /** レーティング枠画像の固定論理幅。 */
