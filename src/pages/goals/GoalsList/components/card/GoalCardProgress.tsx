@@ -14,10 +14,38 @@ interface GoalCardProgressProps {
   showValues?: boolean
 }
 
+type GoalCardProgressPercentageProps = Pick<
+  GoalCardProgressProps,
+  'achievementType' | 'invertValue' | 'invertPercentage' | 'progress'
+>
+
 /**
  * 反転表示時に現在値へ添える未達量ラベル。
  */
 const INVERT_PROGRESS_LABEL = '残り'
+
+/**
+ * 折りたたんだ目標カード向けに、設定を反映した割合だけを表示する。
+ *
+ * @param props - 目標種別、反転設定、進捗情報。
+ * @returns 折りたたみ時の割合表示 JSX 要素。
+ */
+export const GoalCardProgressPercentage: Component<GoalCardProgressPercentageProps> = (props) => {
+  const displayProgress = () =>
+    resolveGoalCardDisplayProgress(
+      props.progress,
+      props.achievementType,
+      props.invertValue,
+      props.invertPercentage
+    )
+
+  return (
+    <span class="shrink-0 pt-1.5 text-right font-oswald text-lg font-semibold leading-none text-text-subtle">
+      {displayProgress().percentPrefixText}
+      {displayProgress().percentText}
+    </span>
+  )
+}
 
 /**
  * 目標カード共通の進捗数値とゲージを表示する。
