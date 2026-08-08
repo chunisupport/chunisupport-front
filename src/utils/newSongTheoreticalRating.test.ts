@@ -10,14 +10,16 @@ import {
  * 理論値計算テスト用の楽曲を生成する。
  *
  * @param id - 楽曲ID。
- * @param isNew - 新曲枠対象かどうか。
+ * @param release - 楽曲のリリース日。
  * @param chartConstants - BASICから難易度順に登録する譜面定数一覧。
+ * @param isNew - 直近追加曲フラグ。
  * @returns 理論値計算に必要な項目を持つ楽曲。
  */
 const createSong = (
   id: string,
-  isNew: boolean,
-  chartConstants: ReadonlyArray<{ value: number; unknown?: boolean }>
+  release: string,
+  chartConstants: ReadonlyArray<{ value: number; unknown?: boolean }>,
+  isNew = false
 ): SongDTO => ({
   id,
   title: id,
@@ -25,7 +27,7 @@ const createSong = (
   artist: 'artist',
   genre: 'POPS & ANIME',
   bpm: null,
-  release: null,
+  release,
   jacket: null,
   maxop: 0,
   is_maxop_unknown: false,
@@ -39,17 +41,19 @@ const createSong = (
   ),
 })
 
+const CURRENT_VERSION = [{ released_at: '2026-07-02' }] as const
+
 test('全新曲譜面の単曲理論値から上位20件の平均を返すこと', () => {
-  // Given: 新曲21譜面と、より高い譜面定数を持つ旧曲1譜面。
+  // Given: 現行バージョンの新曲21譜面と、より高い譜面定数を持つ旧曲1譜面。
   const songs = [
     ...Array.from({ length: 21 }, (_, index) =>
-      createSong(`new-${index}`, true, [{ value: 13 + index / 10 }])
+      createSong(`new-${index}`, '2026-07-02', [{ value: 13 + index / 10 }])
     ),
-    createSong('old', false, [{ value: 16 }]),
+    createSong('old', '2026-07-01', [{ value: 16 }], true),
   ]
 
   // When: 20枠分の新曲枠理論値を算出する。
-  const result = calculateNewSongTheoreticalRating(songs, 20)
+  const result = calculateNewSongTheoreticalRating(songs, CURRENT_VERSION, 20)
 
   // Then: 旧曲と最も低い新曲を除いた上位20譜面の理論値平均になる。
   assert.equal(result?.rating, 16.2)
@@ -60,27 +64,27 @@ test('全新曲譜面の単曲理論値から上位20件の平均を返すこと
   )
 })
 
-test('規定枠数未満の新曲譜面は空き枠を0として平均すること', () => {
+test('規定枠数未満の新曲譜面は採用した譜面数で平均すること', () => {
   // Given: 定数15.0の新曲譜面が1件だけ存在する。
-  const songs = [createSong('new', true, [{ value: 15 }])]
+  const songs = [createSong('new', '2026-07-02', [{ value: 15 }])]
 
   // When: 20枠分の新曲枠理論値を算出する。
-  const result = calculateNewSongTheoreticalRating(songs, 20)
+  const result = calculateNewSongTheoreticalRating(songs, CURRENT_VERSION, 20)
 
-  // Then: 単曲理論値17.15を20枠で割った値になる。
-  assert.equal(result?.rating, 0.8575)
+  // Then: API側の新曲枠平均と同じく、採用した1譜面で平均する。
+  assert.equal(result?.rating, 17.15)
   assert.equal(result?.hasUnknownChartConstants, false)
   assert.equal(result?.entries.length, 1)
 })
 
 test('同率譜面はAPIの楽曲配列順にかかわらず楽曲IDと難易度順で採用すること', () => {
   // Given: 同じ理論単曲レーティングの譜面が規定枠数を超えて存在する。
-  const songA = createSong('song-a', true, [{ value: 15, unknown: true }, { value: 15 }])
-  const songB = createSong('song-b', true, [{ value: 15 }])
+  const songA = createSong('song-a', '2026-07-02', [{ value: 15, unknown: true }, { value: 15 }])
+  const songB = createSong('song-b', '2026-07-02', [{ value: 15 }])
 
   // When: APIの楽曲配列順を入れ替えて2枠分の理論値を算出する。
-  const forwardResult = calculateNewSongTheoreticalRating([songA, songB], 2)
-  const reverseResult = calculateNewSongTheoreticalRating([songB, songA], 2)
+  const forwardResult = calculateNewSongTheoreticalRating([songA, songB], CURRENT_VERSION, 2)
+  const reverseResult = calculateNewSongTheoreticalRating([songB, songA], CURRENT_VERSION, 2)
 
   // Then: どちらも楽曲IDと難易度順で同じ譜面を採用し、推定値状態も一致する。
   assert.deepEqual(reverseResult, forwardResult)
@@ -96,10 +100,10 @@ test('同率譜面はAPIの楽曲配列順にかかわらず楽曲IDと難易度
 
 test('上位枠に推定譜面定数が含まれることを返すこと', () => {
   // Given: 推定譜面定数を持つ譜面が理論値上位に入る新曲。
-  const songs = [createSong('new', true, [{ value: 15, unknown: true }, { value: 14 }])]
+  const songs = [createSong('new', '2026-07-02', [{ value: 15, unknown: true }, { value: 14 }])]
 
   // When: 1枠分の新曲枠理論値を算出する。
-  const result = calculateNewSongTheoreticalRating(songs, 1)
+  const result = calculateNewSongTheoreticalRating(songs, CURRENT_VERSION, 1)
 
   // Then: 理論値と推定値フラグを返す。
   assert.equal(result?.rating, 17.15)
@@ -117,10 +121,10 @@ test('上位枠に推定譜面定数が含まれることを返すこと', () =>
 
 test('新曲譜面がない場合は理論値を返さないこと', () => {
   // Given: 旧曲だけが存在する。
-  const songs = [createSong('old', false, [{ value: 15 }])]
+  const songs = [createSong('old', '2026-07-01', [{ value: 15 }], true)]
 
   // When: 新曲枠理論値を算出する。
-  const result = calculateNewSongTheoreticalRating(songs, 20)
+  const result = calculateNewSongTheoreticalRating(songs, CURRENT_VERSION, 20)
 
   // Then: 理論値は未定義になる。
   assert.equal(result, undefined)
@@ -128,11 +132,11 @@ test('新曲譜面がない場合は理論値を返さないこと', () => {
 
 test('APIが存在しない難易度をnullで返しても理論値計算から除外すること', () => {
   // Given: 譜面が存在しない難易度をnullで含む新曲。
-  const song = createSong('new', true, [{ value: 15 }])
+  const song = createSong('new', '2026-07-02', [{ value: 15 }])
   song.charts.ULTIMA = null
 
   // When: 新曲枠理論値を算出する。
-  const result = calculateNewSongTheoreticalRating([song], 1)
+  const result = calculateNewSongTheoreticalRating([song], CURRENT_VERSION, 1)
 
   // Then: nullを除外し、存在する譜面だけから理論値を返す。
   assert.equal(result?.rating, 17.15)

@@ -1,5 +1,6 @@
 import type { Accessor } from 'solid-js'
-import { createEffect, createMemo } from 'solid-js'
+import { createEffect, createMemo, createResource } from 'solid-js'
+import { fetchVersions } from '../api/songs'
 import { useSongsData } from '../stores/songsData'
 import {
   calculateNewSongTheoreticalRating,
@@ -17,7 +18,7 @@ export type NewSongTheoreticalRatingState = {
 }
 
 /**
- * 新曲枠の表示時だけ共有楽曲データを取得し、理論値へ変換する。
+ * 新曲枠の表示時だけ共有楽曲データとバージョン一覧を取得し、理論値へ変換する。
  *
  * @param enabled - 新曲枠理論値を必要とする表示状態。
  * @param slotCount - 新曲枠の規定枠数。
@@ -28,6 +29,7 @@ export const useNewSongTheoreticalRating = (
   slotCount: number
 ): NewSongTheoreticalRatingState => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
+  const [versionsResponse] = createResource(() => (enabled() ? true : undefined), fetchVersions)
 
   // 新曲タブを開くまで全楽曲マスタの取得を遅延し、プロフィール初期表示を妨げない。
   createEffect(() => {
@@ -36,15 +38,18 @@ export const useNewSongTheoreticalRating = (
 
   const theoreticalRating = createMemo(() => {
     // Resource失敗時は値Accessorを読まず、プロフィール全体への例外伝播を防ぐ。
-    if (songsResponse.error) return undefined
+    if (songsResponse.error || versionsResponse.error) return undefined
 
-    const response = songsResponse()
-    return response ? calculateNewSongTheoreticalRating(response.songs, slotCount) : undefined
+    const songs = songsResponse()?.songs
+    const versions = versionsResponse()?.versions
+    return songs && versions
+      ? calculateNewSongTheoreticalRating(songs, versions, slotCount)
+      : undefined
   })
 
   return {
     theoreticalRating,
-    isLoading: () => enabled() && isSongsLoading(),
-    error: () => (enabled() ? songsResponse.error : undefined),
+    isLoading: () => enabled() && (isSongsLoading() || versionsResponse.loading),
+    error: () => (enabled() ? (songsResponse.error ?? versionsResponse.error) : undefined),
   }
 }

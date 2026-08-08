@@ -1,5 +1,5 @@
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
-import type { ChartDTO, PlayerDataDifficulty, SongDTO } from '../types/api'
+import type { ChartDTO, PlayerDataDifficulty, SongDTO, VersionDTO } from '../types/api'
 import { THEORETICAL_RATING_BONUS_HUNDREDTHS, toRatingHundredths } from './singleRating'
 
 const RATING_SCALE = 100
@@ -88,18 +88,41 @@ const compareTheoreticalChartRating = (
 }
 
 /**
+ * バージョン一覧から最新バージョンの稼働開始日を返す。
+ *
+ * @param versions - 稼働開始日を持つバージョン一覧。
+ * @returns 最新バージョンのYYYY-MM-DD形式の稼働開始日。一覧が空なら未定義。
+ */
+const resolveLatestVersionReleaseDate = (
+  versions: readonly Pick<VersionDTO, 'released_at'>[]
+): string | undefined =>
+  versions.reduce<string | undefined>((latestReleaseDate, version) => {
+    const releaseDate = version.released_at.slice(0, 10)
+    return latestReleaseDate === undefined || releaseDate > latestReleaseDate
+      ? releaseDate
+      : latestReleaseDate
+  }, undefined)
+
+/**
  * 全新曲の譜面から新曲枠レーティング理論値を算出する。
  *
- * @param songs - 新曲判定と譜面定数を含む通常楽曲一覧。
+ * @param songs - リリース日と譜面定数を含む通常楽曲一覧。
+ * @param versions - 新曲枠対象の開始日を解決するバージョン一覧。
  * @param slotCount - 新曲枠の規定枠数。
- * @returns 上位譜面を規定枠数で平均した理論値。新曲譜面がなければ未定義。
+ * @returns 規定枠数までの上位譜面を採用譜面数で平均した理論値。新曲譜面がなければ未定義。
  */
 export const calculateNewSongTheoreticalRating = (
-  songs: readonly Pick<SongDTO, 'id' | 'title' | 'artist' | 'is_new' | 'charts'>[],
+  songs: readonly Pick<SongDTO, 'id' | 'title' | 'artist' | 'release' | 'charts'>[],
+  versions: readonly Pick<VersionDTO, 'released_at'>[],
   slotCount: number
 ): NewSongTheoreticalRating | undefined => {
+  const latestVersionReleaseDate = resolveLatestVersionReleaseDate(versions)
+  if (latestVersionReleaseDate === undefined) return undefined
+
   const theoreticalRatings = songs
-    .filter((song) => song.is_new)
+    .filter(
+      (song) => song.release !== null && song.release.slice(0, 10) >= latestVersionReleaseDate
+    )
     .flatMap((song) =>
       PLAYER_DATA_DIFFICULTIES.flatMap((difficulty) => {
         const chart = song.charts[difficulty]
@@ -116,7 +139,7 @@ export const calculateNewSongTheoreticalRating = (
     0
   )
   const theoreticalRatingUnits = Math.round(
-    (totalRatingHundredths * PLAYER_RATING_SCALE) / RATING_SCALE / slotCount
+    (totalRatingHundredths * PLAYER_RATING_SCALE) / RATING_SCALE / theoreticalRatings.length
   )
 
   return {
