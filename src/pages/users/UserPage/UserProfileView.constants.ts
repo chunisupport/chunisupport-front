@@ -13,6 +13,11 @@ export const NEW_SONG_RATING_SUMMARY_COPY = {
   noData: '新曲枠対象譜面がありません',
   emptyValue: '-',
   unknownChartConstant: '未確定の譜面定数を含む推定値',
+  unknownMarker: '?',
+  detailsLabel: '理論値対象譜面',
+  chartCountSuffix: '譜面',
+  singleRatingLabel: '単曲RATING',
+  chartConstantLabel: '譜面定数',
 } as const
 
 /** レーティング枠画像の固定論理幅。 */

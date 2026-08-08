@@ -11,7 +11,7 @@ import {
  *
  * @param id - 楽曲ID。
  * @param isNew - 新曲枠対象かどうか。
- * @param chartConstants - MASTER譜面として登録する譜面定数一覧。
+ * @param chartConstants - BASICから難易度順に登録する譜面定数一覧。
  * @returns 理論値計算に必要な項目を持つ楽曲。
  */
 const createSong = (
@@ -52,10 +52,12 @@ test('全新曲譜面の単曲理論値から上位20件の平均を返すこと
   const result = calculateNewSongTheoreticalRating(songs, 20)
 
   // Then: 旧曲と最も低い新曲を除いた上位20譜面の理論値平均になる。
-  assert.deepEqual(result, {
-    rating: 16.2,
-    hasUnknownChartConstants: false,
-  })
+  assert.equal(result?.rating, 16.2)
+  assert.equal(result?.hasUnknownChartConstants, false)
+  assert.deepEqual(
+    result?.entries.map((entry) => entry.songId),
+    Array.from({ length: 20 }, (_, index) => `new-${20 - index}`)
+  )
 })
 
 test('規定枠数未満の新曲譜面は空き枠を0として平均すること', () => {
@@ -66,10 +68,30 @@ test('規定枠数未満の新曲譜面は空き枠を0として平均するこ�
   const result = calculateNewSongTheoreticalRating(songs, 20)
 
   // Then: 単曲理論値17.15を20枠で割った値になる。
-  assert.deepEqual(result, {
-    rating: 0.8575,
-    hasUnknownChartConstants: false,
-  })
+  assert.equal(result?.rating, 0.8575)
+  assert.equal(result?.hasUnknownChartConstants, false)
+  assert.equal(result?.entries.length, 1)
+})
+
+test('同率譜面はAPIの楽曲配列順にかかわらず楽曲IDと難易度順で採用すること', () => {
+  // Given: 同じ理論単曲レーティングの譜面が規定枠数を超えて存在する。
+  const songA = createSong('song-a', true, [{ value: 15, unknown: true }, { value: 15 }])
+  const songB = createSong('song-b', true, [{ value: 15 }])
+
+  // When: APIの楽曲配列順を入れ替えて2枠分の理論値を算出する。
+  const forwardResult = calculateNewSongTheoreticalRating([songA, songB], 2)
+  const reverseResult = calculateNewSongTheoreticalRating([songB, songA], 2)
+
+  // Then: どちらも楽曲IDと難易度順で同じ譜面を採用し、推定値状態も一致する。
+  assert.deepEqual(reverseResult, forwardResult)
+  assert.deepEqual(
+    forwardResult?.entries.map((entry) => [entry.songId, entry.difficulty]),
+    [
+      ['song-a', 'BASIC'],
+      ['song-a', 'ADVANCED'],
+    ]
+  )
+  assert.equal(forwardResult?.hasUnknownChartConstants, true)
 })
 
 test('上位枠に推定譜面定数が含まれることを返すこと', () => {
@@ -80,9 +102,16 @@ test('上位枠に推定譜面定数が含まれることを返すこと', () =>
   const result = calculateNewSongTheoreticalRating(songs, 1)
 
   // Then: 理論値と推定値フラグを返す。
-  assert.deepEqual(result, {
+  assert.equal(result?.rating, 17.15)
+  assert.equal(result?.hasUnknownChartConstants, true)
+  assert.deepEqual(result?.entries[0], {
+    songId: 'new',
+    title: 'new',
+    artist: 'artist',
+    difficulty: 'BASIC',
+    chartConstant: 15,
+    isChartConstantUnknown: true,
     rating: 17.15,
-    hasUnknownChartConstants: true,
   })
 })
 
@@ -106,10 +135,9 @@ test('APIが存在しない難易度をnullで返しても理論値計算から�
   const result = calculateNewSongTheoreticalRating([song], 1)
 
   // Then: nullを除外し、存在する譜面だけから理論値を返す。
-  assert.deepEqual(result, {
-    rating: 17.15,
-    hasUnknownChartConstants: false,
-  })
+  assert.equal(result?.rating, 17.15)
+  assert.equal(result?.hasUnknownChartConstants, false)
+  assert.equal(result?.entries.length, 1)
 })
 
 test('現在値との差を小数点以下4桁単位で正確に返すこと', () => {
