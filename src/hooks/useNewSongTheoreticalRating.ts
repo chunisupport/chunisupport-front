@@ -35,6 +35,9 @@ export const useNewSongTheoreticalRating = (
   })
 
   const theoreticalRating = createMemo(() => {
+    // Resource失敗時は値Accessorを読まず、プロフィール全体への例外伝播を防ぐ。
+    if (songsResponse.error) return undefined
+
     const response = songsResponse()
     return response ? calculateNewSongTheoreticalRating(response.songs, slotCount) : undefined
   })
