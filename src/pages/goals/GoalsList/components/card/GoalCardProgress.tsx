@@ -4,16 +4,23 @@ import type { GoalAchievementType } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { resolveGoalCardDisplayProgress } from './goalCardProgressModel'
 
+/** 目標カードの進捗表示に必要なプロパティ。 */
 interface GoalCardProgressProps {
+  /** 進捗ゲージのアクセシブル名に使う目標タイトル。 */
   title: string
+  /** 数値の表示形式を決める目標種別。 */
   achievementType: GoalAchievementType
+  /** 現在値を達成までの残量として表示するか。 */
   invertValue: boolean
+  /** 達成率を達成までの残り割合として表示するか。 */
   invertPercentage: boolean
+  /** 現在値、目標値、達成率を含む進捗情報。 */
   progress: GoalProgressResult
   /** 現在値、目標値、達成率の数値表示を含めるか。 */
   showValues?: boolean
 }
 
+/** 折りたたみ時の割合表示に必要なプロパティ。 */
 type GoalCardProgressPercentageProps = Pick<
   GoalCardProgressProps,
   'achievementType' | 'invertValue' | 'invertPercentage' | 'progress'
@@ -31,6 +38,11 @@ const INVERT_PROGRESS_LABEL = '残り'
  * @returns 折りたたみ時の割合表示 JSX 要素。
  */
 export const GoalCardProgressPercentage: Component<GoalCardProgressPercentageProps> = (props) => {
+  /**
+   * 目標の設定を反映した表示用進捗を取得する。
+   *
+   * @returns 反転設定を適用した割合表示情報。
+   */
   const displayProgress = () =>
     resolveGoalCardDisplayProgress(
       props.progress,
@@ -40,9 +52,11 @@ export const GoalCardProgressPercentage: Component<GoalCardProgressPercentagePro
     )
 
   return (
-    <span class="shrink-0 pt-1.5 text-right font-oswald text-lg font-semibold leading-none text-text-subtle">
-      {displayProgress().percentPrefixText}
-      {displayProgress().percentText}
+    <span class="goal-card-progress-secondary flex shrink-0 items-baseline pt-1.5 text-right font-oswald font-semibold leading-none">
+      <Show when={displayProgress().percentPrefixText}>
+        <span class="text-sm">{displayProgress().percentPrefixText}</span>
+      </Show>
+      <span class="text-lg">{displayProgress().percentText}</span>
     </span>
   )
 }
