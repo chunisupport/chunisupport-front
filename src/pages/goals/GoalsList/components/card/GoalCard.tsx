@@ -171,7 +171,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
           <Show
             when={props.headingLevel === 3}
             fallback={
-              <h2 class="min-w-0 pt-1.5 font-sans text-lg font-bold text-text">
+              <h2 class="min-w-0 pt-1 font-sans text-lg font-bold text-text">
                 {isGoalRecordNavigationEnabled(props.goal) && props.onOpenRecords ? (
                   <Button
                     type="button"
@@ -189,7 +189,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
               </h2>
             }
           >
-            <h3 class="min-w-0 pt-1.5 font-sans text-lg font-bold text-text">
+            <h3 class="min-w-0 pt-1 font-sans text-lg font-bold text-text">
               {isGoalRecordNavigationEnabled(props.goal) && props.onOpenRecords ? (
                 <Button
                   type="button"

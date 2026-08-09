@@ -52,7 +52,7 @@ export const GoalCardProgressPercentage: Component<GoalCardProgressPercentagePro
     )
 
   return (
-    <span class="goal-card-progress-secondary flex shrink-0 items-baseline pt-1.5 text-right font-oswald font-semibold leading-none">
+    <span class="goal-card-progress-secondary flex shrink-0 items-baseline pt-1 text-right font-oswald font-semibold leading-none">
       <Show when={displayProgress().percentPrefixText}>
         <span class="text-sm">{displayProgress().percentPrefixText}</span>
       </Show>
@@ -89,7 +89,7 @@ export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
             {displayProgress().currentText}
           </span>
         </div>
-        <div class="mb-2 mt-1 flex items-end justify-between gap-3">
+        <div class="-mt-1.5 mb-2 flex items-end justify-between gap-3">
           <div class="flex min-w-0 w-full items-end gap-3 text-text-subtle">
             <div class="pb-0.5 font-oswald text-lg font-bold leading-none">/</div>
             <div class="goal-card-progress-secondary pb-0.5 font-oswald text-xl font-bold leading-none">
