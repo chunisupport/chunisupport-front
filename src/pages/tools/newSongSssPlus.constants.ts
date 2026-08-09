@@ -19,10 +19,17 @@ export const NEW_SONG_SSS_PLUS_COPY = {
   currentScoreLabel: '現在スコア',
   scoreGapLabel: 'SSS+まで',
   recordUnavailable: 'スコアなし',
+  scoreSourceLabel: '反映するスコア',
 } as const
 
 /** 理論値チェッカーの表示枠タブ。 */
 export const RATING_THEORETICAL_TAB_OPTIONS = [
   { value: 'best', label: 'ベスト枠' },
   { value: 'new', label: '新曲枠' },
+] as const
+
+/** 理論値対象譜面へ反映するスコアの取得範囲。 */
+export const RATING_SCORE_SOURCE_OPTIONS = [
+  { value: 'frame', label: '枠状況', description: '採用枠・候補枠' },
+  { value: 'records', label: 'レコード状況', description: '全レコード' },
 ] as const

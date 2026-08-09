@@ -1,4 +1,5 @@
 import { Collapsible } from '@kobalte/core/collapsible'
+import { RadioGroup } from '@kobalte/core/radio-group'
 import { A } from '@solidjs/router'
 import { Gauge, TrendingUp, TriangleAlert } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
@@ -8,12 +9,14 @@ import { AppDisclosureTrigger } from '../../components/common/AppDisclosureTrigg
 import { AppTabContent, SegmentedTabs } from '../../components/common/AppTabs'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
+import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import { buildSongDetailPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useRatingTheoretical } from '../../hooks/useNewSongTheoreticalRating'
 import { authSession } from '../../stores/authSession'
 import type { PlayerRecordDTO } from '../../types/api'
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
+import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { formatChartConst } from '../../utils/chartConstFormat'
 import type {
   RatingTheoretical,
@@ -27,7 +30,14 @@ import { formatInteger } from '../../utils/numberFormat'
 import { formatPlayerRating, formatRatingFixed2 } from '../../utils/ratingFormat'
 import { formatScoreDifference } from '../../utils/scoreDifference'
 import { getScoreRank } from '../../utils/scoreRank'
-import { NEW_SONG_SSS_PLUS_COPY, RATING_THEORETICAL_TAB_OPTIONS } from './newSongSssPlus.constants'
+import {
+  NEW_SONG_SSS_PLUS_COPY,
+  RATING_SCORE_SOURCE_OPTIONS,
+  RATING_THEORETICAL_TAB_OPTIONS,
+} from './newSongSssPlus.constants'
+
+/** 理論値対象譜面へ反映するスコアの取得範囲。 */
+type RatingScoreSource = (typeof RATING_SCORE_SOURCE_OPTIONS)[number]['value']
 
 /** 枠理論値サマリーの計算結果、現在レコード、取得状態を受け取るプロパティ。 */
 type RatingTheoreticalSummaryProps = {
@@ -322,6 +332,21 @@ const RatingTheoreticalCheckerPage: Component = () => {
   const [rating] = createResource(username, fetchUserRatingWithCache)
   const theoreticalRatings = useRatingTheoretical()
   const [selectedFrame, setSelectedFrame] = createSignal<'best' | 'new'>('best')
+  const [selectedScoreSource, setSelectedScoreSource] = createSignal<RatingScoreSource>('frame')
+  const [record] = createResource(
+    () => (selectedScoreSource() === 'records' ? username() : undefined),
+    fetchUserRecordWithCache
+  )
+  /** 未プレイ補完を除いた全通常譜面レコード。 */
+  const playedRecords = createMemo(
+    () => record()?.standard.filter((playerRecord) => playerRecord.score > 0) ?? []
+  )
+  /** 全レコードのスコアを反映する選択状態か。 */
+  const isRecordSource = (): boolean => selectedScoreSource() === 'records'
+  /** 選択中のスコア取得範囲で発生したエラー。 */
+  const scoreSourceError = (): unknown => (isRecordSource() ? record.error : undefined)
+  /** 選択中のスコア取得範囲を読み込み中か。 */
+  const isScoreSourceLoading = (): boolean => isRecordSource() && record.loading
 
   useDocumentTitle(NEW_SONG_SSS_PLUS_COPY.title)
 
@@ -337,6 +362,30 @@ const RatingTheoreticalCheckerPage: Component = () => {
         </div>
       </header>
 
+      <RadioGroup
+        value={selectedScoreSource()}
+        onChange={(value) => setSelectedScoreSource(value as RatingScoreSource)}
+        aria-label={NEW_SONG_SSS_PLUS_COPY.scoreSourceLabel}
+      >
+        <RadioGroup.Label class="mb-2 block font-sans text-sm font-medium text-text-muted">
+          {NEW_SONG_SSS_PLUS_COPY.scoreSourceLabel}
+        </RadioGroup.Label>
+        <div class="grid grid-cols-2 gap-2">
+          <For each={RATING_SCORE_SOURCE_OPTIONS}>
+            {(option) => (
+              <SelectableCardItem
+                value={option.value}
+                title={option.label}
+                description={option.description}
+                ariaLabel={option.label}
+                density="compact"
+                class="rounded-md"
+              />
+            )}
+          </For>
+        </div>
+      </RadioGroup>
+
       <SegmentedTabs
         class="flex flex-col gap-3"
         value={selectedFrame()}
@@ -348,22 +397,22 @@ const RatingTheoreticalCheckerPage: Component = () => {
         <AppTabContent value="best">
           <RatingTheoreticalSummary
             currentRating={rating()?.best_average ?? null}
-            currentRecords={rating()?.best ?? []}
-            candidateRecords={rating()?.best_candidate ?? []}
+            currentRecords={isRecordSource() ? playedRecords() : (rating()?.best ?? [])}
+            candidateRecords={isRecordSource() ? [] : (rating()?.best_candidate ?? [])}
             detailsLabel={NEW_SONG_SSS_PLUS_COPY.bestDetailsLabel}
-            error={rating.error ?? theoreticalRatings.bestError()}
-            loading={rating.loading || theoreticalRatings.isBestLoading()}
+            error={rating.error ?? scoreSourceError() ?? theoreticalRatings.bestError()}
+            loading={rating.loading || isScoreSourceLoading() || theoreticalRatings.isBestLoading()}
             theoreticalRating={theoreticalRatings.bestTheoreticalRating()}
           />
         </AppTabContent>
         <AppTabContent value="new">
           <RatingTheoreticalSummary
             currentRating={rating()?.new_average ?? null}
-            currentRecords={rating()?.new ?? []}
-            candidateRecords={rating()?.new_candidate ?? []}
+            currentRecords={isRecordSource() ? playedRecords() : (rating()?.new ?? [])}
+            candidateRecords={isRecordSource() ? [] : (rating()?.new_candidate ?? [])}
             detailsLabel={NEW_SONG_SSS_PLUS_COPY.newDetailsLabel}
-            error={rating.error ?? theoreticalRatings.newError()}
-            loading={rating.loading || theoreticalRatings.isNewLoading()}
+            error={rating.error ?? scoreSourceError() ?? theoreticalRatings.newError()}
+            loading={rating.loading || isScoreSourceLoading() || theoreticalRatings.isNewLoading()}
             theoreticalRating={theoreticalRatings.newTheoreticalRating()}
           />
         </AppTabContent>
