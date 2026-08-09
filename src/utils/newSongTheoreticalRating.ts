@@ -7,7 +7,7 @@ import type {
   SongDTO,
   VersionDTO,
 } from '../types/api'
-import { THEORETICAL_RATING_BONUS_HUNDREDTHS, toRatingHundredths } from './singleRating'
+import { calculateSingleRatingHundredths, MAX_RATING_SCORE } from './singleRating'
 
 const RATING_SCALE = 100
 const PLAYER_RATING_SCALE = 10_000
@@ -72,7 +72,7 @@ const buildTheoreticalChartRating = (
   difficulty: PlayerDataDifficulty,
   chart: ChartDTO
 ): TheoreticalChartRating => {
-  const ratingHundredths = toRatingHundredths(chart.const) + THEORETICAL_RATING_BONUS_HUNDREDTHS
+  const ratingHundredths = calculateSingleRatingHundredths(MAX_RATING_SCORE, chart.const)
 
   return {
     songId: song.id,

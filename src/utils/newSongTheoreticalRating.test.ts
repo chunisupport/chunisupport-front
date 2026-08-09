@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { SongDTO } from '../types/api.ts'
+import { calculateCandidateScoreDifference } from './candidateScoreDifference.ts'
 import {
   calculateNewSongTheoreticalRating,
   calculateNewSongTheoreticalRatingGap,
@@ -84,6 +85,23 @@ test('規定枠数未満の新曲譜面は採用した譜面数で平均する�
   assert.equal(result?.rating, 17.15)
   assert.equal(result?.hasUnknownChartConstants, false)
   assert.equal(result?.entries.length, 1)
+})
+
+test('譜面定数15.05の表示レーティングと候補スコア計算が一致すること', () => {
+  // Given: APIから小数第2位を含む譜面定数15.05が返る新曲譜面。
+  const songs = [createSong('new', '2026-07-02', [{ value: 15.05 }])]
+
+  // When: SSS+到達時のレーティングと、その1点手前から必要なスコア差を算出する。
+  const result = calculateNewSongTheoreticalRating(songs, CURRENT_VERSIONS, CURRENT_DATE, 1)
+  const scoreDifference = calculateCandidateScoreDifference(
+    1_008_999,
+    15.05,
+    result?.entries[0]?.rating ?? 0
+  )
+
+  // Then: 共有計算と同じ17.25を表示し、SSS+到達にはあと1点と判定する。
+  assert.equal(result?.entries[0]?.rating, 17.25)
+  assert.equal(scoreDifference, -1)
 })
 
 test('同率譜面はAPIの楽曲配列順にかかわらず楽曲IDと難易度順で採用すること', () => {
