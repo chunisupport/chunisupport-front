@@ -7,6 +7,7 @@ import { LoadError, Loading } from '../../components'
 import { AppDisclosureTrigger } from '../../components/common/AppDisclosureTrigger'
 import { AppTabContent, SegmentedTabs } from '../../components/common/AppTabs'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
+import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
 import { buildSongDetailPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useRatingTheoretical } from '../../hooks/useNewSongTheoreticalRating'
@@ -25,6 +26,7 @@ import {
 import { formatInteger } from '../../utils/numberFormat'
 import { formatPlayerRating, formatRatingFixed2 } from '../../utils/ratingFormat'
 import { formatScoreDifference } from '../../utils/scoreDifference'
+import { getScoreRank } from '../../utils/scoreRank'
 import { NEW_SONG_SSS_PLUS_COPY, RATING_THEORETICAL_TAB_OPTIONS } from './newSongSssPlus.constants'
 
 type RatingTheoreticalSummaryProps = {
@@ -76,7 +78,7 @@ const RatingMetric: Component<RatingMetricProps> = (props) => (
 )
 
 /**
- * SSS+対象譜面の現在スコアとSSS+ボーダーとの差を表示する。
+ * SSS+対象譜面の現在スコアとSSS+ボーダーとの差をランク色付きで表示する。
  *
  * @param props - 対象譜面と現在のレーティング枠・候補枠レコード。
  * @returns 現在スコアの所属、スコア、SSS+ボーダーとの差。
@@ -98,6 +100,7 @@ const SssPlusChartProgress: Component<{
     return {
       slot: resolved.slot,
       currentScore: resolved.currentScore,
+      scoreRank: getScoreRank(resolved.currentScore),
       scoreGap: resolved.scoreGap,
     }
   })
@@ -113,9 +116,11 @@ const SssPlusChartProgress: Component<{
       >
         {(current) => (
           <>
-            <span class="whitespace-nowrap">
+            <span
+              class={`whitespace-nowrap font-semibold ${SCORE_RANK_TEXT_CLASS[current.scoreRank]}`}
+            >
               <Show when={current.slot === 'candidate'}>
-                <span class="mr-1 rounded bg-surface-hover px-1 py-0.5 font-sans text-[0.65rem]">
+                <span class="mr-1 rounded bg-surface-hover px-1 py-0.5 font-sans text-[0.65rem] font-normal text-text-muted">
                   {NEW_SONG_SSS_PLUS_COPY.candidateSlotLabel}
                 </span>
               </Show>
@@ -123,7 +128,9 @@ const SssPlusChartProgress: Component<{
               {formatInteger(current.currentScore)}
             </span>
             <Show when={current.scoreGap !== null}>
-              <span class="whitespace-nowrap text-rating-candidate-gap">
+              <span
+                class={`whitespace-nowrap font-semibold ${SCORE_RANK_TEXT_CLASS[current.scoreRank]}`}
+              >
                 <span class="mr-1 font-sans text-text-muted">
                   {NEW_SONG_SSS_PLUS_COPY.scoreGapLabel}
                 </span>
