@@ -12,7 +12,9 @@ import { calculateSingleRatingHundredths, MAX_RATING_SCORE } from './singleRatin
 const RATING_SCALE = 100
 const PLAYER_RATING_SCALE = 10_000
 
+/** 枠理論値の集計中に使用する、表示用譜面情報と整数化した単曲レーティング。 */
 type TheoreticalChartRating = RatingTheoreticalEntry & {
+  /** 浮動小数点誤差を避けて並べ替え・合計するための100倍単曲レーティング。 */
   ratingHundredths: number
 }
 

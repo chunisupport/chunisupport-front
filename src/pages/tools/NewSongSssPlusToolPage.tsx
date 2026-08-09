@@ -29,20 +29,33 @@ import { formatScoreDifference } from '../../utils/scoreDifference'
 import { getScoreRank } from '../../utils/scoreRank'
 import { NEW_SONG_SSS_PLUS_COPY, RATING_THEORETICAL_TAB_OPTIONS } from './newSongSssPlus.constants'
 
+/** 枠理論値サマリーの計算結果、現在レコード、取得状態を受け取るプロパティ。 */
 type RatingTheoreticalSummaryProps = {
+  /** 理論値対象譜面との照合に使う現在の候補枠レコード。 */
   candidateRecords: readonly PlayerRecordDTO[]
+  /** 現在の枠平均レーティング。未計算の場合はnull。 */
   currentRating: number | null
+  /** 理論値対象譜面との照合に使う現在の採用枠レコード。 */
   currentRecords: readonly PlayerRecordDTO[]
+  /** 理論値対象譜面一覧の開閉見出し。 */
   detailsLabel: string
+  /** データ取得で発生したエラー。正常時は未定義。 */
   error: unknown
+  /** 現在データを取得または理論値を計算しているか。 */
   loading: boolean
+  /** 計算済みの枠理論値。対象譜面がない場合は未定義。 */
   theoreticalRating: RatingTheoretical | undefined
 }
 
+/** 理論値サマリー内の1指標に表示するアイコン、文言、値、推定状態。 */
 type RatingMetricProps = {
+  /** 指標名の前に表示する装飾アイコン。 */
   icon: JSX.Element
+  /** 指標の表示名。 */
   label: string
+  /** 未確定の譜面定数を含む推定値として強調するか。 */
   unknown: boolean
+  /** 指標として表示する整形済みの値。 */
   value: string
 }
 
