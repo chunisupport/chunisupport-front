@@ -1,10 +1,12 @@
 import type { Accessor } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, onCleanup } from 'solid-js'
 import { fetchVersions } from '../api/songs'
+import { RATING_SLOT_COUNT } from '../constants/rating'
 import { useSongsData } from '../stores/songsData'
 import {
+  calculateBestTheoreticalRating,
   calculateNewSongTheoreticalRating,
-  type NewSongTheoreticalRating,
+  type RatingTheoretical,
 } from '../utils/newSongTheoreticalRating'
 
 /** CHUNITHMの現行日付判定に使うIANAタイムゾーン。 */
@@ -25,40 +27,37 @@ const CURRENT_DATE_REFRESH_INTERVAL_MS = 60_000
  */
 const getCurrentChunithmDate = (): string => CHUNITHM_DATE_FORMATTER.format(new Date())
 
-/** 新曲枠理論値の遅延取得状態。 */
-export type NewSongTheoreticalRatingState = {
+/** ベスト枠・新曲枠理論値の取得状態。 */
+export type RatingTheoreticalState = {
+  /** ベスト枠理論値の計算結果。 */
+  bestTheoreticalRating: Accessor<RatingTheoretical | undefined>
   /** 新曲枠理論値の計算結果。 */
-  theoreticalRating: Accessor<NewSongTheoreticalRating | undefined>
-  /** 楽曲・バージョンデータを取得中か。 */
-  isLoading: Accessor<boolean>
-  /** 楽曲・バージョンデータの取得エラー。 */
-  error: Accessor<unknown>
+  newTheoreticalRating: Accessor<RatingTheoretical | undefined>
+  /** ベスト枠に必要な楽曲データを取得中か。 */
+  isBestLoading: Accessor<boolean>
+  /** 新曲枠に必要な楽曲・バージョンデータを取得中か。 */
+  isNewLoading: Accessor<boolean>
+  /** ベスト枠に必要な楽曲データの取得エラー。 */
+  bestError: Accessor<unknown>
+  /** 新曲枠に必要な楽曲・バージョンデータの取得エラー。 */
+  newError: Accessor<unknown>
 }
 
 /**
- * 必要な表示で共有楽曲データとバージョン一覧を取得し、新曲枠の上限値へ変換する。
+ * 共有楽曲データとバージョン一覧を取得し、ベスト枠・新曲枠の理論値へ変換する。
  *
- * @param enabled - 新曲枠理論値を必要とする表示状態。
- * @param slotCount - 新曲枠の規定枠数。
- * @returns 理論値、読み込み状態、取得エラーのAccessor。
+ * @returns 両レーティング枠の理論値と枠別の読み込み・エラー状態。
  */
-export const useNewSongTheoreticalRating = (
-  enabled: Accessor<boolean>,
-  slotCount: number
-): NewSongTheoreticalRatingState => {
+export const useRatingTheoretical = (): RatingTheoreticalState => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [referenceDate, setReferenceDate] = createSignal(getCurrentChunithmDate())
-  const [versionsResponse] = createResource(() => (enabled() ? true : undefined), fetchVersions)
+  const [versionsResponse] = createResource(fetchVersions)
 
-  // 呼び出し側が表示を必要とするまで全楽曲マスタの取得を遅延する。
+  // ツールページのマウント時に共有楽曲マスタを取得する。
+  createEffect(ensureSongsLoaded)
+
+  // 表示中の日付またぎを対象譜面へ反映する。
   createEffect(() => {
-    if (enabled()) ensureSongsLoaded()
-  })
-
-  // 表示を開くたびに基準日を更新し、表示中の日付またぎも対象譜面へ反映する。
-  createEffect(() => {
-    if (!enabled()) return
-
     setReferenceDate(getCurrentChunithmDate())
     const intervalId = window.setInterval(
       () => setReferenceDate(getCurrentChunithmDate()),
@@ -67,20 +66,32 @@ export const useNewSongTheoreticalRating = (
     onCleanup(() => window.clearInterval(intervalId))
   })
 
-  const theoreticalRating = createMemo(() => {
-    // Resource失敗時は値Accessorを読まず、プロフィール全体への例外伝播を防ぐ。
+  const bestTheoreticalRating = createMemo(() => {
+    if (songsResponse.error) return undefined
+
+    const songs = songsResponse()?.songs
+    return songs
+      ? calculateBestTheoreticalRating(songs, referenceDate(), RATING_SLOT_COUNT.best)
+      : undefined
+  })
+
+  const newTheoreticalRating = createMemo(() => {
+    // Resource失敗時は値Accessorを読まず、ツールページへの例外伝播を防ぐ。
     if (songsResponse.error || versionsResponse.error) return undefined
 
     const songs = songsResponse()?.songs
     const versions = versionsResponse()?.versions
     return songs && versions
-      ? calculateNewSongTheoreticalRating(songs, versions, referenceDate(), slotCount)
+      ? calculateNewSongTheoreticalRating(songs, versions, referenceDate(), RATING_SLOT_COUNT.new)
       : undefined
   })
 
   return {
-    theoreticalRating,
-    isLoading: () => enabled() && (isSongsLoading() || versionsResponse.loading),
-    error: () => (enabled() ? (songsResponse.error ?? versionsResponse.error) : undefined),
+    bestTheoreticalRating,
+    newTheoreticalRating,
+    isBestLoading: isSongsLoading,
+    isNewLoading: () => isSongsLoading() || versionsResponse.loading,
+    bestError: () => songsResponse.error,
+    newError: () => songsResponse.error ?? versionsResponse.error,
   }
 }

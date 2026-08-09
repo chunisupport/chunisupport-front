@@ -3,9 +3,10 @@ import test from 'node:test'
 import type { SongDTO } from '../types/api.ts'
 import { calculateCandidateScoreDifference } from './candidateScoreDifference.ts'
 import {
+  calculateBestTheoreticalRating,
   calculateNewSongTheoreticalRating,
-  calculateNewSongTheoreticalRatingGap,
-  resolveNewSongTheoreticalRatingProgress,
+  calculateRatingTheoreticalGap,
+  resolveRatingTheoreticalProgress,
 } from './newSongTheoreticalRating.ts'
 import { formatScoreDifference } from './scoreDifference.ts'
 
@@ -73,6 +74,33 @@ test('全新曲譜面の単曲理論値から上位20件の平均を返すこと
     result?.entries.map((entry) => entry.songId),
     Array.from({ length: 20 }, (_, index) => `new-${20 - index}`)
   )
+})
+
+test('配信済み全譜面の単曲理論値からベスト枠上位30件を返すこと', () => {
+  // Given: 配信済み31譜面と、それらより定数が高い未配信譜面。
+  const songs = [
+    ...Array.from({ length: 31 }, (_, index) =>
+      createSong(`released-${index}`, '2026-07-02', [
+        { value: 13 + index / 10, unknown: index === 30 },
+      ])
+    ),
+    createSong('future', '2026-08-09', [{ value: 16 }]),
+  ]
+
+  // When: 基準日時点のベスト枠30枠分の理論値を算出する。
+  const result = calculateBestTheoreticalRating(songs, CURRENT_DATE, 30)
+
+  // Then: 未配信譜面と最下位譜面を除き、未確定定数を含む上位30譜面を返す。
+  assert.equal(result?.entries.length, 30)
+  assert.equal(
+    result?.entries.some((entry) => entry.songId === 'future'),
+    false
+  )
+  assert.equal(
+    result?.entries.some((entry) => entry.songId === 'released-0'),
+    false
+  )
+  assert.equal(result?.hasUnknownChartConstants, true)
 })
 
 test('規定枠数未満の新曲譜面は採用した譜面数で平均すること', () => {
@@ -189,13 +217,13 @@ test('SSS+対象譜面の現在スコアとSSS+ボーダーとの差を返すこ
   const candidateRecords = [{ id: 'song', difficulty: 'MASTER', score: 1_008_000 }] as const
 
   // When: 理論値対象譜面の進捗を解決する。
-  const result = resolveNewSongTheoreticalRatingProgress(entry, currentRecords, candidateRecords)
+  const result = resolveRatingTheoreticalProgress(entry, currentRecords, candidateRecords)
 
-  // Then: 現在の新曲枠を優先し、SSS+到達済みの差を0で返す。
+  // Then: 現在の新曲枠を優先し、SSS+到達済みの差は返さない。
   assert.deepEqual(result, {
-    slot: 'new',
+    slot: 'current',
     currentScore: 1_009_000,
-    scoreGap: 0,
+    scoreGap: null,
   })
 })
 
@@ -205,11 +233,11 @@ test('現在の新曲枠にない理論値対象譜面は候補枠のスコア�
   const candidateRecords = [{ id: 'song', difficulty: 'MASTER', score: 1_008_000 }] as const
 
   // When: 理論値対象譜面の進捗を解決する。
-  const result = resolveNewSongTheoreticalRatingProgress(entry, [], candidateRecords)
+  const result = resolveRatingTheoreticalProgress(entry, [], candidateRecords)
 
   // Then: 候補枠の現在スコアとSSS+までの不足分を負数で返す。
   assert.deepEqual(result, {
-    slot: 'new_candidate',
+    slot: 'candidate',
     currentScore: 1_008_000,
     scoreGap: -1_000,
   })
@@ -221,7 +249,7 @@ test('理論値対象譜面のレコードがない場合はスコア進捗を�
   const entry = { songId: 'song', difficulty: 'MASTER' } as const
 
   // When: 理論値対象譜面の進捗を解決する。
-  const result = resolveNewSongTheoreticalRatingProgress(entry, [], [])
+  const result = resolveRatingTheoreticalProgress(entry, [], [])
 
   // Then: 現在スコアと差分は未計算になる。
   assert.deepEqual(result, {
@@ -237,7 +265,7 @@ test('現在値との差を小数点以下4桁単位で正確に返すこと', (
   const currentRating = 17.1604
 
   // When: 理論値と現在値の差を算出する。
-  const result = calculateNewSongTheoreticalRatingGap(theoreticalRating, currentRating)
+  const result = calculateRatingTheoreticalGap(theoreticalRating, currentRating)
 
   // Then: 表示精度と同じ4桁単位で差を返す。
   assert.equal(result, 0.3401)
@@ -248,7 +276,7 @@ test('現在値が未計算の場合は差を返さないこと', () => {
   const currentRating = null
 
   // When: 理論値との差を算出する。
-  const result = calculateNewSongTheoreticalRatingGap(17.5, currentRating)
+  const result = calculateRatingTheoreticalGap(17.5, currentRating)
 
   // Then: 差は未定義になる。
   assert.equal(result, undefined)

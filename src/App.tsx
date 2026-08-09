@@ -36,8 +36,8 @@ import {
   LATEST_SCORE_UPDATE_PATH,
   LOCKED_SONGS_FINDER_PATH,
   MAINTENANCE_LOGIN_PATH,
-  NEW_SONG_SSS_PLUS_TOOL_PATH,
   RANDOM_SONG_SELECTOR_PATH,
+  RATING_THEORETICAL_CHECKER_PATH,
   REGISTER_SCORE_PATH,
   TOOLS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
@@ -88,7 +88,7 @@ const BorderCalculatorPage = lazy(() => import('./pages/tools/BorderCalculatorPa
 const WeakChartInspectorPage = lazy(() => import('./pages/tools/WeakChartInspectorPage'))
 const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelectorPage'))
 const BestSlotRankingPage = lazy(() => import('./pages/tools/BestSlotRankingPage'))
-const NewSongSssPlusToolPage = lazy(() => import('./pages/tools/NewSongSssPlusToolPage'))
+const RatingTheoreticalCheckerPage = lazy(() => import('./pages/tools/NewSongSssPlusToolPage'))
 
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
 const AdminDataCoveragePage = lazy(() => import('./pages/admin/AdminDataCoveragePage'))
@@ -610,8 +610,8 @@ const App = () => {
         component={withNavBar(withRouteLoadBoundary(BestSlotRankingPage))}
       />
       <Route
-        path={NEW_SONG_SSS_PLUS_TOOL_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(NewSongSssPlusToolPage)))}
+        path={RATING_THEORETICAL_CHECKER_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(RatingTheoreticalCheckerPage)))}
       />
       <Route path={LOCKED_SONGS_FINDER_PATH} component={withNavBar(EmptyToolPage)} />
 

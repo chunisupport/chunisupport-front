@@ -3,8 +3,8 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   LOCKED_SONGS_FINDER_PATH,
-  NEW_SONG_SSS_PLUS_TOOL_PATH,
   RANDOM_SONG_SELECTOR_PATH,
+  RATING_THEORETICAL_CHECKER_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
 
@@ -70,8 +70,8 @@ export const TOOL_LINKS: ToolLink[] = [
     icon: 'ranking',
   },
   {
-    title: '新曲枠SSS+チェッカー',
-    href: NEW_SONG_SSS_PLUS_TOOL_PATH,
+    title: 'ベスト枠・新曲枠理論値チェッカー',
+    href: RATING_THEORETICAL_CHECKER_PATH,
     icon: 'gauge',
   },
   {

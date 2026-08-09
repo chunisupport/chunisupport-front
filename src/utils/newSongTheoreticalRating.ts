@@ -12,12 +12,12 @@ import { calculateSingleRatingHundredths, MAX_RATING_SCORE } from './singleRatin
 const RATING_SCALE = 100
 const PLAYER_RATING_SCALE = 10_000
 
-type TheoreticalChartRating = NewSongTheoreticalRatingEntry & {
+type TheoreticalChartRating = RatingTheoreticalEntry & {
   ratingHundredths: number
 }
 
-/** 新曲枠レーティング理論値へ採用された譜面。 */
-export type NewSongTheoreticalRatingEntry = {
+/** レーティング枠の理論値へ採用された譜面。 */
+export type RatingTheoreticalEntry = {
   /** 楽曲詳細への遷移に使う楽曲ID。 */
   songId: string
   /** 楽曲名。 */
@@ -34,30 +34,30 @@ export type NewSongTheoreticalRatingEntry = {
   rating: number
 }
 
-/** 新曲枠の理論レーティング計算結果。 */
-export type NewSongTheoreticalRating = {
-  /** 規定枠数までの採用譜面数で平均した新曲枠レーティング理論値。 */
+/** レーティング枠の理論値計算結果。 */
+export type RatingTheoretical = {
+  /** 規定枠数までの採用譜面数で平均したレーティング理論値。 */
   rating: number
   /** 採用譜面に推定譜面定数が含まれるか。 */
   hasUnknownChartConstants: boolean
   /** 理論値へ採用された単曲レーティング降順の譜面一覧。 */
-  entries: NewSongTheoreticalRatingEntry[]
+  entries: RatingTheoreticalEntry[]
 }
 
 /** 理論値対象譜面に対応する現在レコードの所属。 */
-export type NewSongTheoreticalRatingProgressSlot = 'new' | 'new_candidate'
+export type RatingTheoreticalProgressSlot = 'current' | 'candidate'
 
 /** SSS+対象譜面の現在スコアとSSS+ボーダーとの差。 */
-export type NewSongTheoreticalRatingProgress = {
+export type RatingTheoreticalProgress = {
   /** 現在スコアを取得した枠。レコードがなければnull。 */
-  slot: NewSongTheoreticalRatingProgressSlot | null
+  slot: RatingTheoreticalProgressSlot | null
   /** 現在スコア。レコードがなければnull。 */
   currentScore: number | null
-  /** 現在スコアからSSS+ボーダーを引いた差。レコードがなければnull。 */
+  /** 現在スコアからSSS+ボーダーを引いた不足差。到達済みまたはレコードなしならnull。 */
   scoreGap: number | null
 }
 
-type NewSongRatingRecord = Pick<PlayerRecordDTO, 'id' | 'difficulty' | 'score'>
+type RatingRecord = Pick<PlayerRecordDTO, 'id' | 'difficulty' | 'score'>
 
 /**
  * 譜面定数から理論スコア時の単曲レーティングを組み立てる。
@@ -136,36 +136,23 @@ const resolveCurrentVersionReleaseDate = (
  * @returns 一致する先頭レコード。存在しなければ未定義。
  */
 const findTheoreticalChartRecord = (
-  entry: Pick<NewSongTheoreticalRatingEntry, 'songId' | 'difficulty'>,
-  records: readonly NewSongRatingRecord[]
-): NewSongRatingRecord | undefined =>
+  entry: Pick<RatingTheoreticalEntry, 'songId' | 'difficulty'>,
+  records: readonly RatingRecord[]
+): RatingRecord | undefined =>
   records.find((record) => record.id === entry.songId && record.difficulty === entry.difficulty)
 
 /**
- * 全新曲の譜面から新曲枠レーティング理論値を算出する。
+ * 対象楽曲の全譜面から規定枠数分のレーティング理論値を算出する。
  *
- * @param songs - リリース日と譜面定数を含む通常楽曲一覧。
- * @param versions - 新曲枠対象の開始日を解決するバージョン一覧。
- * @param referenceDate - 現行バージョンと配信済み楽曲を判定する基準日。
- * @param slotCount - 新曲枠の規定枠数。
- * @returns 規定枠数までの上位譜面を採用譜面数で平均した理論値。新曲譜面がなければ未定義。
+ * @param songs - 理論値計算の対象楽曲一覧。
+ * @param slotCount - 採用するレーティング枠数。
+ * @returns 上位譜面を採用譜面数で平均した理論値。対象譜面がなければ未定義。
  */
-export const calculateNewSongTheoreticalRating = (
-  songs: readonly Pick<SongDTO, 'id' | 'title' | 'artist' | 'release' | 'charts'>[],
-  versions: readonly Pick<VersionDTO, 'released_at'>[],
-  referenceDate: string,
+const calculateTheoreticalRating = (
+  songs: readonly Pick<SongDTO, 'id' | 'title' | 'artist' | 'charts'>[],
   slotCount: number
-): NewSongTheoreticalRating | undefined => {
-  const currentVersionReleaseDate = resolveCurrentVersionReleaseDate(versions, referenceDate)
-  if (currentVersionReleaseDate === undefined) return undefined
-
+): RatingTheoretical | undefined => {
   const theoreticalRatings = songs
-    .filter(
-      (song) =>
-        song.release !== null &&
-        song.release.slice(0, 10) >= currentVersionReleaseDate &&
-        song.release.slice(0, 10) <= referenceDate
-    )
     .flatMap((song) =>
       PLAYER_DATA_DIFFICULTIES.flatMap((difficulty) => {
         const chart = song.charts[difficulty]
@@ -193,18 +180,65 @@ export const calculateNewSongTheoreticalRating = (
 }
 
 /**
- * 理論値対象譜面に対応する現在の新曲枠・候補枠レコードを解決する。
+ * 配信済みの全通常楽曲からベスト枠レーティング理論値を算出する。
+ *
+ * @param songs - リリース日と譜面定数を含む通常楽曲一覧。
+ * @param referenceDate - 配信済み楽曲を判定するYYYY-MM-DD形式の基準日。
+ * @param slotCount - ベスト枠の規定枠数。
+ * @returns 規定枠数までの上位譜面を採用譜面数で平均した理論値。
+ */
+export const calculateBestTheoreticalRating = (
+  songs: readonly Pick<SongDTO, 'id' | 'title' | 'artist' | 'release' | 'charts'>[],
+  referenceDate: string,
+  slotCount: number
+): RatingTheoretical | undefined =>
+  calculateTheoreticalRating(
+    songs.filter((song) => song.release === null || song.release.slice(0, 10) <= referenceDate),
+    slotCount
+  )
+
+/**
+ * 全新曲の譜面から新曲枠レーティング理論値を算出する。
+ *
+ * @param songs - リリース日と譜面定数を含む通常楽曲一覧。
+ * @param versions - 新曲枠対象の開始日を解決するバージョン一覧。
+ * @param referenceDate - 現行バージョンと配信済み楽曲を判定する基準日。
+ * @param slotCount - 新曲枠の規定枠数。
+ * @returns 規定枠数までの上位譜面を採用譜面数で平均した理論値。新曲譜面がなければ未定義。
+ */
+export const calculateNewSongTheoreticalRating = (
+  songs: readonly Pick<SongDTO, 'id' | 'title' | 'artist' | 'release' | 'charts'>[],
+  versions: readonly Pick<VersionDTO, 'released_at'>[],
+  referenceDate: string,
+  slotCount: number
+): RatingTheoretical | undefined => {
+  const currentVersionReleaseDate = resolveCurrentVersionReleaseDate(versions, referenceDate)
+  if (currentVersionReleaseDate === undefined) return undefined
+
+  return calculateTheoreticalRating(
+    songs.filter(
+      (song) =>
+        song.release !== null &&
+        song.release.slice(0, 10) >= currentVersionReleaseDate &&
+        song.release.slice(0, 10) <= referenceDate
+    ),
+    slotCount
+  )
+}
+
+/**
+ * 理論値対象譜面に対応する現在のレーティング枠・候補枠レコードを解決する。
  *
  * @param entry - 理論値対象の楽曲IDと難易度。
- * @param currentRecords - 現在の新曲枠レコード。
- * @param candidateRecords - 現在の新曲候補枠レコード。
+ * @param currentRecords - 現在のレーティング枠レコード。
+ * @param candidateRecords - 現在の候補枠レコード。
  * @returns 現在スコア、SSS+ボーダーとの差、レコードの所属枠。
  */
-export const resolveNewSongTheoreticalRatingProgress = (
-  entry: Pick<NewSongTheoreticalRatingEntry, 'songId' | 'difficulty'>,
-  currentRecords: readonly NewSongRatingRecord[],
-  candidateRecords: readonly NewSongRatingRecord[]
-): NewSongTheoreticalRatingProgress => {
+export const resolveRatingTheoreticalProgress = (
+  entry: Pick<RatingTheoreticalEntry, 'songId' | 'difficulty'>,
+  currentRecords: readonly RatingRecord[],
+  candidateRecords: readonly RatingRecord[]
+): RatingTheoreticalProgress => {
   const currentRecord = findTheoreticalChartRecord(entry, currentRecords)
   const candidateRecord = findTheoreticalChartRecord(entry, candidateRecords)
   const record = currentRecord ?? candidateRecord
@@ -214,20 +248,23 @@ export const resolveNewSongTheoreticalRatingProgress = (
   }
 
   return {
-    slot: currentRecord ? 'new' : 'new_candidate',
+    slot: currentRecord ? 'current' : 'candidate',
     currentScore: record.score,
-    scoreGap: record.score - SCORE_RANK_MIN_SCORES['SSS+'],
+    scoreGap:
+      record.score < SCORE_RANK_MIN_SCORES['SSS+']
+        ? record.score - SCORE_RANK_MIN_SCORES['SSS+']
+        : null,
   }
 }
 
 /**
- * 新曲枠レーティング理論値と現在値の差を小数点以下4桁単位で算出する。
+ * レーティング枠理論値と現在値の差を小数点以下4桁単位で算出する。
  *
- * @param theoreticalRating - 新曲枠レーティング理論値。
- * @param currentRating - 現在の新曲枠レーティング。未計算の場合はnull。
+ * @param theoreticalRating - レーティング枠理論値。
+ * @param currentRating - 現在のレーティング枠平均。未計算の場合はnull。
  * @returns 理論値から現在値を引いた差。現在値が未計算の場合は未定義。
  */
-export const calculateNewSongTheoreticalRatingGap = (
+export const calculateRatingTheoreticalGap = (
   theoreticalRating: number,
   currentRating: number | null
 ): number | undefined => {

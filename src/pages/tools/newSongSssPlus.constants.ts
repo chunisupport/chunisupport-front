@@ -1,16 +1,17 @@
-/** 新曲枠SSS+チェッカーで使用する文言。 */
+/** ベスト枠・新曲枠理論値チェッカーで使用する文言。 */
 export const NEW_SONG_SSS_PLUS_COPY = {
-  title: '新曲枠SSS+チェッカー',
-  description: '現行バージョンの新曲から、SSS+到達時に新曲枠へ入る譜面を確認できます。',
-  ariaLabel: '新曲枠SSS+対象チェック',
-  targetRating: '全譜面SSS+時',
+  title: 'ベスト枠・新曲枠理論値チェッカー',
+  description: '全譜面SSS+時の理論値と、対象譜面の現在スコアを確認できます。',
+  ariaLabel: 'レーティング枠理論値チェック',
+  targetRating: '理論値',
   currentGap: '現在との差',
-  loadingLabel: '新曲枠SSS+対象譜面を計算中',
-  noData: '新曲枠対象譜面がありません',
+  loadingLabel: 'レーティング枠理論値を計算中',
+  noData: '対象譜面がありません',
   emptyValue: '-',
   unknownChartConstant: '未確定の譜面定数を含む推定値',
   unknownMarker: '?',
-  detailsLabel: '新曲枠SSS+対象譜面',
+  bestDetailsLabel: 'ベスト枠理論値対象譜面',
+  newDetailsLabel: '新曲枠理論値対象譜面',
   chartCountSuffix: '譜面',
   singleRatingLabel: '単曲RATING',
   chartConstantLabel: '譜面定数',
@@ -19,3 +20,9 @@ export const NEW_SONG_SSS_PLUS_COPY = {
   scoreGapLabel: 'SSS+まで',
   recordUnavailable: 'スコアなし',
 } as const
+
+/** 理論値チェッカーの表示枠タブ。 */
+export const RATING_THEORETICAL_TAB_OPTIONS = [
+  { value: 'best', label: 'ベスト枠' },
+  { value: 'new', label: '新曲枠' },
+] as const
