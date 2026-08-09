@@ -36,7 +36,7 @@ export type NewSongTheoreticalRatingState = {
 }
 
 /**
- * 新曲枠の表示時だけ共有楽曲データとバージョン一覧を取得し、理論値へ変換する。
+ * 必要な表示で共有楽曲データとバージョン一覧を取得し、新曲枠の上限値へ変換する。
  *
  * @param enabled - 新曲枠理論値を必要とする表示状態。
  * @param slotCount - 新曲枠の規定枠数。
@@ -50,12 +50,12 @@ export const useNewSongTheoreticalRating = (
   const [referenceDate, setReferenceDate] = createSignal(getCurrentChunithmDate())
   const [versionsResponse] = createResource(() => (enabled() ? true : undefined), fetchVersions)
 
-  // 新曲タブを開くまで全楽曲マスタの取得を遅延し、プロフィール初期表示を妨げない。
+  // 呼び出し側が表示を必要とするまで全楽曲マスタの取得を遅延する。
   createEffect(() => {
     if (enabled()) ensureSongsLoaded()
   })
 
-  // 新曲タブを開くたびに基準日を更新し、表示中の日付またぎも理論値へ反映する。
+  // 表示を開くたびに基準日を更新し、表示中の日付またぎも対象譜面へ反映する。
   createEffect(() => {
     if (!enabled()) return
 

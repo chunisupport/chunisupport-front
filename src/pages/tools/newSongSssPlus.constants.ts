@@ -1,0 +1,21 @@
+/** 新曲枠SSS+チェッカーで使用する文言。 */
+export const NEW_SONG_SSS_PLUS_COPY = {
+  title: '新曲枠SSS+チェッカー',
+  description: '現行バージョンの新曲から、SSS+到達時に新曲枠へ入る譜面を確認できます。',
+  ariaLabel: '新曲枠SSS+対象チェック',
+  targetRating: '全譜面SSS+時',
+  currentGap: '現在との差',
+  loadingLabel: '新曲枠SSS+対象譜面を計算中',
+  noData: '新曲枠対象譜面がありません',
+  emptyValue: '-',
+  unknownChartConstant: '未確定の譜面定数を含む推定値',
+  unknownMarker: '?',
+  detailsLabel: '新曲枠SSS+対象譜面',
+  chartCountSuffix: '譜面',
+  singleRatingLabel: '単曲RATING',
+  chartConstantLabel: '譜面定数',
+  candidateSlotLabel: '候補',
+  currentScoreLabel: '現在スコア',
+  scoreGapLabel: 'SSS+まで',
+  recordUnavailable: 'スコアなし',
+} as const

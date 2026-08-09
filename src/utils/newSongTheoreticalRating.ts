@@ -1,4 +1,3 @@
-import { SCORE_THEORETICAL_MAX } from '../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type {
   ChartDTO,
@@ -7,6 +6,7 @@ import type {
   SongDTO,
   VersionDTO,
 } from '../types/api'
+import { SCORE_RANK_MIN_SCORES } from './scoreRank'
 import { calculateSingleRatingHundredths, MAX_RATING_SCORE } from './singleRating'
 
 const RATING_SCALE = 100
@@ -47,13 +47,13 @@ export type NewSongTheoreticalRating = {
 /** 理論値対象譜面に対応する現在レコードの所属。 */
 export type NewSongTheoreticalRatingProgressSlot = 'new' | 'new_candidate'
 
-/** 理論値対象譜面の現在スコアと理論スコアまでの差。 */
+/** SSS+対象譜面の現在スコアとSSS+ボーダーとの差。 */
 export type NewSongTheoreticalRatingProgress = {
   /** 現在スコアを取得した枠。レコードがなければnull。 */
   slot: NewSongTheoreticalRatingProgressSlot | null
   /** 現在スコア。レコードがなければnull。 */
   currentScore: number | null
-  /** CHUNITHM理論スコアまでに必要なスコア差。レコードがなければnull。 */
+  /** 現在スコアからSSS+ボーダーを引いた差。レコードがなければnull。 */
   scoreGap: number | null
 }
 
@@ -198,7 +198,7 @@ export const calculateNewSongTheoreticalRating = (
  * @param entry - 理論値対象の楽曲IDと難易度。
  * @param currentRecords - 現在の新曲枠レコード。
  * @param candidateRecords - 現在の新曲候補枠レコード。
- * @returns 現在スコア、理論スコアまでの差、レコードの所属枠。
+ * @returns 現在スコア、SSS+ボーダーとの差、レコードの所属枠。
  */
 export const resolveNewSongTheoreticalRatingProgress = (
   entry: Pick<NewSongTheoreticalRatingEntry, 'songId' | 'difficulty'>,
@@ -216,7 +216,7 @@ export const resolveNewSongTheoreticalRatingProgress = (
   return {
     slot: currentRecord ? 'new' : 'new_candidate',
     currentScore: record.score,
-    scoreGap: SCORE_THEORETICAL_MAX - record.score,
+    scoreGap: record.score - SCORE_RANK_MIN_SCORES['SSS+'],
   }
 }
 

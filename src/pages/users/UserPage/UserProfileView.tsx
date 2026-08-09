@@ -5,7 +5,7 @@ import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
 import { AppIconButton } from '../../../components/common/AppButton'
 import { AppTabContent, SegmentedTabs, UnderlineTabs } from '../../../components/common/AppTabs'
-import { useNewSongTheoreticalRating } from '../../../hooks/useNewSongTheoreticalRating'
+import { RATING_SLOT_COUNT } from '../../../constants/rating'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import {
   calculateCandidateScoreDifference,
@@ -17,7 +17,6 @@ import {
   type OverPowerSubPage,
   type ProfilePageQuery,
 } from '../../../utils/userProfileRoute'
-import { NewSongRatingSummary } from './components/NewSongRatingSummary'
 import { RatingImagePreviewDialog } from './components/RatingImagePreviewDialog'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
@@ -27,7 +26,6 @@ import type {
   UserPageRatingProfile,
   UserPageRecordProfile,
 } from './UserPage'
-import { RATING_SLOT_COUNT } from './UserProfileView.constants'
 
 const UserRecord = lazy(() => import('../UserRecord'))
 const UserOverPower = lazy(() => import('../UserOverPower/UserOverPower'))
@@ -202,10 +200,6 @@ export const UserProfileView: Component<Props> = (props) => {
   const selectedRatingTab = createMemo<'best' | 'new'>(() =>
     props.selectedPage === 'rating_new' ? 'new' : 'best'
   )
-  const newSongTheoreticalRating = useNewSongTheoreticalRating(
-    () => selectedRatingTab() === 'new',
-    RATING_SLOT_COUNT.new
-  )
   const selectedRecordTab = createMemo<'standard' | 'worldsend' | 'course'>(() => {
     if (props.selectedPage === 'record_we') return 'worldsend'
     if (props.selectedPage === 'record_course') return 'course'
@@ -343,14 +337,6 @@ export const UserProfileView: Component<Props> = (props) => {
               />
             </AppTabContent>
             <AppTabContent value="new">
-              <NewSongRatingSummary
-                currentRating={props.profile.rating.new_average}
-                currentRecords={newRecords()}
-                candidateRecords={newCandidateRecords()}
-                error={newSongTheoreticalRating.error()}
-                loading={newSongTheoreticalRating.isLoading()}
-                theoreticalRating={newSongTheoreticalRating.theoreticalRating()}
-              />
               <RecordList
                 records={newRecords()}
                 candidates={newCandidateRecords()}

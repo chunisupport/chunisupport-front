@@ -1,30 +1,3 @@
-/** レーティング対象として表示する規定枠数。 */
-export const RATING_SLOT_COUNT = {
-  best: 30,
-  new: 20,
-} as const
-
-/** 新曲枠レーティング理論値サマリーで使用する文言。 */
-export const NEW_SONG_RATING_SUMMARY_COPY = {
-  ariaLabel: '新曲枠レーティング理論値',
-  theoreticalRating: '理論値',
-  currentGap: '現在との差',
-  loadingLabel: '新曲枠レーティング理論値を計算中',
-  noData: '新曲枠対象譜面がありません',
-  emptyValue: '-',
-  unknownChartConstant: '未確定の譜面定数を含む推定値',
-  unknownMarker: '?',
-  detailsLabel: '最高到達対象譜面',
-  chartCountSuffix: '譜面',
-  singleRatingLabel: '単曲RATING',
-  chartConstantLabel: '譜面定数',
-  currentSlotLabel: '新曲枠',
-  candidateSlotLabel: '候補',
-  currentScoreLabel: '現在スコア',
-  scoreGapLabel: '理論まで',
-  recordUnavailable: '現在枠外',
-} as const
-
 /** レーティング枠画像の固定論理幅。 */
 export const RATING_IMAGE_WIDTH_PX = 1_024
 /** レーティング枠画像を原寸の2倍で出力するピクセル比。 */

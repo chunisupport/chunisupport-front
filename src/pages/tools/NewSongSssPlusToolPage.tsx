@@ -2,25 +2,30 @@ import { Collapsible } from '@kobalte/core/collapsible'
 import { A } from '@solidjs/router'
 import { Gauge, TrendingUp } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import { createMemo, For, Show } from 'solid-js'
-import { LoadError, Loading } from '../../../../components'
-import { AppDisclosureTrigger } from '../../../../components/common/AppDisclosureTrigger'
-import { RecordDifficultyBadge } from '../../../../components/common/record/RecordBadges'
-import { buildSongDetailPath } from '../../../../constants/routes'
-import type { PlayerRecordDTO } from '../../../../types/api'
-import { formatChartConst } from '../../../../utils/chartConstFormat'
+import { createMemo, createResource, For, Show } from 'solid-js'
+import { LoadError, Loading } from '../../components'
+import { AppDisclosureTrigger } from '../../components/common/AppDisclosureTrigger'
+import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
+import { RATING_SLOT_COUNT } from '../../constants/rating'
+import { buildSongDetailPath } from '../../constants/routes'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useNewSongTheoreticalRating } from '../../hooks/useNewSongTheoreticalRating'
+import { authSession } from '../../stores/authSession'
+import type { PlayerRecordDTO } from '../../types/api'
+import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
+import { formatChartConst } from '../../utils/chartConstFormat'
 import type {
   NewSongTheoreticalRating,
   NewSongTheoreticalRatingEntry,
-} from '../../../../utils/newSongTheoreticalRating'
+} from '../../utils/newSongTheoreticalRating'
 import {
   calculateNewSongTheoreticalRatingGap,
   resolveNewSongTheoreticalRatingProgress,
-} from '../../../../utils/newSongTheoreticalRating'
-import { formatInteger } from '../../../../utils/numberFormat'
-import { formatPlayerRating, formatRatingFixed2 } from '../../../../utils/ratingFormat'
-import { formatScoreDifference } from '../../../../utils/scoreDifference'
-import { NEW_SONG_RATING_SUMMARY_COPY } from '../UserProfileView.constants'
+} from '../../utils/newSongTheoreticalRating'
+import { formatInteger } from '../../utils/numberFormat'
+import { formatPlayerRating, formatRatingFixed2 } from '../../utils/ratingFormat'
+import { formatScoreDifference } from '../../utils/scoreDifference'
+import { NEW_SONG_SSS_PLUS_COPY } from './newSongSssPlus.constants'
 
 type Props = {
   candidateRecords: readonly PlayerRecordDTO[]
@@ -58,24 +63,24 @@ const RatingMetric: Component<RatingMetricProps> = (props) => (
       <Show when={props.unknown}>
         <sup
           class="ml-0.5 align-super font-sans text-[0.55em]"
-          title={NEW_SONG_RATING_SUMMARY_COPY.unknownChartConstant}
+          title={NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}
           aria-hidden="true"
         >
-          {NEW_SONG_RATING_SUMMARY_COPY.unknownMarker}
+          {NEW_SONG_SSS_PLUS_COPY.unknownMarker}
         </sup>
-        <span class="sr-only">{NEW_SONG_RATING_SUMMARY_COPY.unknownChartConstant}</span>
+        <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
       </Show>
     </p>
   </div>
 )
 
 /**
- * 理論値対象譜面の現在スコアと理論スコアまでの差を表示する。
+ * SSS+対象譜面の現在スコアとSSS+ボーダーとの差を表示する。
  *
  * @param props - 対象譜面と現在の新曲枠・候補枠レコード。
- * @returns 現在スコアの所属、スコア、理論スコアまでの差。
+ * @returns 現在スコアの所属、スコア、SSS+ボーダーとの差。
  */
-const TheoreticalChartProgress: Component<{
+const SssPlusChartProgress: Component<{
   candidateRecords: readonly PlayerRecordDTO[]
   currentRecords: readonly PlayerRecordDTO[]
   entry: NewSongTheoreticalRatingEntry
@@ -102,28 +107,23 @@ const TheoreticalChartProgress: Component<{
         when={progress()}
         keyed
         fallback={
-          <span class="font-sans text-text-subtle">
-            {NEW_SONG_RATING_SUMMARY_COPY.recordUnavailable}
-          </span>
+          <span class="font-sans text-text-subtle">{NEW_SONG_SSS_PLUS_COPY.recordUnavailable}</span>
         }
       >
         {(current) => (
           <>
             <span class="whitespace-nowrap">
-              <span
-                class="mr-1 rounded bg-surface-hover px-1 py-0.5 font-sans text-[0.65rem] data-[current=true]:bg-success-bg data-[current=true]:text-success"
-                data-current={current.slot === 'new'}
-              >
-                {current.slot === 'new'
-                  ? NEW_SONG_RATING_SUMMARY_COPY.currentSlotLabel
-                  : NEW_SONG_RATING_SUMMARY_COPY.candidateSlotLabel}
-              </span>
-              <span class="sr-only">{NEW_SONG_RATING_SUMMARY_COPY.currentScoreLabel}</span>
+              <Show when={current.slot === 'new_candidate'}>
+                <span class="mr-1 rounded bg-surface-hover px-1 py-0.5 font-sans text-[0.65rem]">
+                  {NEW_SONG_SSS_PLUS_COPY.candidateSlotLabel}
+                </span>
+              </Show>
+              <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.currentScoreLabel}</span>
               {formatInteger(current.currentScore)}
             </span>
             <span class="whitespace-nowrap text-rating-candidate-gap">
               <span class="mr-1 font-sans text-text-muted">
-                {NEW_SONG_RATING_SUMMARY_COPY.scoreGapLabel}
+                {NEW_SONG_SSS_PLUS_COPY.scoreGapLabel}
               </span>
               {formatScoreDifference(current.scoreGap)}
             </span>
@@ -135,20 +135,20 @@ const TheoreticalChartProgress: Component<{
 }
 
 /**
- * 新曲枠理論値へ採用された譜面を単曲レーティング順に表示する。
+ * 新曲枠で全譜面SSS+時に採用される譜面を単曲レーティング順に表示する。
  *
- * @param props - 理論値へ採用された譜面一覧と現在の新曲枠・候補枠レコード。
+ * @param props - SSS+時に採用される譜面一覧と現在の新曲枠・候補枠レコード。
  * @returns 楽曲詳細へ遷移できる折りたたみ一覧。
  */
-const TheoreticalChartList: Component<{
+const SssPlusChartList: Component<{
   candidateRecords: readonly PlayerRecordDTO[]
   currentRecords: readonly PlayerRecordDTO[]
   entries: NewSongTheoreticalRating['entries']
 }> = (props) => (
-  <Collapsible class="border-t border-border" defaultOpen={false}>
+  <Collapsible class="border-t border-border" defaultOpen>
     <AppDisclosureTrigger
-      label={NEW_SONG_RATING_SUMMARY_COPY.detailsLabel}
-      summary={`${props.entries.length}${NEW_SONG_RATING_SUMMARY_COPY.chartCountSuffix}`}
+      label={NEW_SONG_SSS_PLUS_COPY.detailsLabel}
+      summary={`${props.entries.length}${NEW_SONG_SSS_PLUS_COPY.chartCountSuffix}`}
       class="py-1"
     />
     <Collapsible.Content>
@@ -170,30 +170,28 @@ const TheoreticalChartList: Component<{
                 </span>
                 <span class="text-right font-oswald tabular-nums">
                   <span class="block text-base font-bold text-text">
-                    <span class="sr-only">{NEW_SONG_RATING_SUMMARY_COPY.singleRatingLabel}</span>
+                    <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.singleRatingLabel}</span>
                     {formatRatingFixed2(entry.rating)}
                   </span>
                   <span
                     class="block text-xs text-text-muted data-[unknown=true]:italic data-[unknown=true]:text-danger"
                     data-unknown={entry.isChartConstantUnknown}
                   >
-                    <span class="sr-only">{NEW_SONG_RATING_SUMMARY_COPY.chartConstantLabel}</span>
+                    <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.chartConstantLabel}</span>
                     {formatChartConst(entry.chartConstant)}
                     <Show when={entry.isChartConstantUnknown}>
                       <sup
                         class="ml-0.5 align-super font-sans text-[0.65em]"
-                        title={NEW_SONG_RATING_SUMMARY_COPY.unknownChartConstant}
+                        title={NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}
                         aria-hidden="true"
                       >
-                        {NEW_SONG_RATING_SUMMARY_COPY.unknownMarker}
+                        {NEW_SONG_SSS_PLUS_COPY.unknownMarker}
                       </sup>
-                      <span class="sr-only">
-                        {NEW_SONG_RATING_SUMMARY_COPY.unknownChartConstant}
-                      </span>
+                      <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
                     </Show>
                   </span>
                 </span>
-                <TheoreticalChartProgress
+                <SssPlusChartProgress
                   candidateRecords={props.candidateRecords}
                   currentRecords={props.currentRecords}
                   entry={entry}
@@ -208,25 +206,25 @@ const TheoreticalChartList: Component<{
 )
 
 /**
- * 新曲枠レーティングの理論値と現在値からの差を表示する。
+ * 新曲枠の全譜面SSS+時レーティングと現在値からの差を表示する。
  *
- * @param props - 現在値、理論値、現在レコード、楽曲データの取得状態。
- * @returns 新曲枠の理論値サマリー。
+ * @param props - 現在値、SSS+時レーティング、現在レコード、楽曲データの取得状態。
+ * @returns 新曲枠SSS+対象のサマリー。
  */
-export const NewSongRatingSummary: Component<Props> = (props) => {
+const NewSongSssPlusSummary: Component<Props> = (props) => {
   const ratingGap = () =>
     props.theoreticalRating
       ? calculateNewSongTheoreticalRatingGap(props.theoreticalRating.rating, props.currentRating)
       : undefined
   const formattedRatingGap = () => {
     const gap = ratingGap()
-    return gap === undefined ? NEW_SONG_RATING_SUMMARY_COPY.emptyValue : formatPlayerRating(gap)
+    return gap === undefined ? NEW_SONG_SSS_PLUS_COPY.emptyValue : formatPlayerRating(gap)
   }
 
   return (
     <section
-      class="mx-4 mb-4 overflow-hidden rounded-lg border border-border bg-surface shadow-sm"
-      aria-label={NEW_SONG_RATING_SUMMARY_COPY.ariaLabel}
+      class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm"
+      aria-label={NEW_SONG_SSS_PLUS_COPY.ariaLabel}
     >
       <Show
         when={!props.error}
@@ -240,7 +238,7 @@ export const NewSongRatingSummary: Component<Props> = (props) => {
           when={!props.loading}
           fallback={
             <div class="h-20 py-3">
-              <Loading size="inline" ariaLabel={NEW_SONG_RATING_SUMMARY_COPY.loadingLabel} />
+              <Loading size="inline" ariaLabel={NEW_SONG_SSS_PLUS_COPY.loadingLabel} />
             </div>
           }
         >
@@ -248,7 +246,7 @@ export const NewSongRatingSummary: Component<Props> = (props) => {
             when={props.theoreticalRating}
             fallback={
               <p class="px-3 py-4 text-center font-sans text-sm text-text-subtle">
-                {NEW_SONG_RATING_SUMMARY_COPY.noData}
+                {NEW_SONG_SSS_PLUS_COPY.noData}
               </p>
             }
           >
@@ -257,18 +255,18 @@ export const NewSongRatingSummary: Component<Props> = (props) => {
                 <div class="grid grid-cols-2 divide-x divide-border">
                   <RatingMetric
                     icon={<Gauge class="h-4 w-4" aria-hidden="true" />}
-                    label={NEW_SONG_RATING_SUMMARY_COPY.theoreticalRating}
+                    label={NEW_SONG_SSS_PLUS_COPY.targetRating}
                     unknown={theoreticalRating().hasUnknownChartConstants}
                     value={formatPlayerRating(theoreticalRating().rating)}
                   />
                   <RatingMetric
                     icon={<TrendingUp class="h-4 w-4" aria-hidden="true" />}
-                    label={NEW_SONG_RATING_SUMMARY_COPY.currentGap}
+                    label={NEW_SONG_SSS_PLUS_COPY.currentGap}
                     unknown={theoreticalRating().hasUnknownChartConstants}
                     value={formattedRatingGap()}
                   />
                 </div>
-                <TheoreticalChartList
+                <SssPlusChartList
                   candidateRecords={props.candidateRecords}
                   currentRecords={props.currentRecords}
                   entries={theoreticalRating().entries}
@@ -281,3 +279,42 @@ export const NewSongRatingSummary: Component<Props> = (props) => {
     </section>
   )
 }
+
+/**
+ * ログインユーザーの新曲枠に対するSSS+対象譜面と現在スコア差を表示する。
+ *
+ * @returns 新曲枠SSS+チェッカーのツールページ。
+ */
+const NewSongSssPlusToolPage: Component = () => {
+  const username = (): string | undefined =>
+    authSession.status === 'authenticated' ? authSession.user?.username : undefined
+  const [rating] = createResource(username, fetchUserRatingWithCache)
+  const sssPlusRating = useNewSongTheoreticalRating(() => true, RATING_SLOT_COUNT.new)
+
+  useDocumentTitle(NEW_SONG_SSS_PLUS_COPY.title)
+
+  return (
+    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+      <header class="flex items-start gap-3">
+        <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+          <Gauge class="h-5 w-5 text-action-primary" aria-hidden="true" />
+        </span>
+        <div>
+          <h1 class="text-2xl font-semibold">{NEW_SONG_SSS_PLUS_COPY.title}</h1>
+          <p class="mt-1 font-sans text-sm text-text-muted">{NEW_SONG_SSS_PLUS_COPY.description}</p>
+        </div>
+      </header>
+
+      <NewSongSssPlusSummary
+        currentRating={rating()?.new_average ?? null}
+        currentRecords={rating()?.new ?? []}
+        candidateRecords={rating()?.new_candidate ?? []}
+        error={rating.error ?? sssPlusRating.error()}
+        loading={rating.loading || sssPlusRating.isLoading()}
+        theoreticalRating={sssPlusRating.theoreticalRating()}
+      />
+    </div>
+  )
+}
+
+export default NewSongSssPlusToolPage

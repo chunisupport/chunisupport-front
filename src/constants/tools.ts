@@ -3,6 +3,7 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   LOCKED_SONGS_FINDER_PATH,
+  NEW_SONG_SSS_PLUS_TOOL_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
@@ -10,7 +11,14 @@ import {
 /**
  * ツールカードに表示するアイコン種別。
  */
-export type ToolLinkIcon = 'calculator' | 'chart' | 'target' | 'search' | 'random' | 'ranking'
+export type ToolLinkIcon =
+  | 'calculator'
+  | 'chart'
+  | 'target'
+  | 'search'
+  | 'random'
+  | 'ranking'
+  | 'gauge'
 
 /**
  * 無効化されたツールカードに表示する状態ラベル。
@@ -60,6 +68,11 @@ export const TOOL_LINKS: ToolLink[] = [
     title: 'ベスト枠ランキング',
     href: BEST_SLOT_RANKING_PATH,
     icon: 'ranking',
+  },
+  {
+    title: '新曲枠SSS+チェッカー',
+    href: NEW_SONG_SSS_PLUS_TOOL_PATH,
+    icon: 'gauge',
   },
   {
     title: '未解禁曲探索',

@@ -7,6 +7,7 @@ import {
   calculateNewSongTheoreticalRatingGap,
   resolveNewSongTheoreticalRatingProgress,
 } from './newSongTheoreticalRating.ts'
+import { formatScoreDifference } from './scoreDifference.ts'
 
 /**
  * 理論値計算テスト用の楽曲を生成する。
@@ -181,7 +182,7 @@ test('APIが存在しない難易度をnullで返しても理論値計算から�
   assert.equal(result?.entries.length, 1)
 })
 
-test('理論値対象譜面の現在スコアと理論スコアまでの差を返すこと', () => {
+test('SSS+対象譜面の現在スコアとSSS+ボーダーとの差を返すこと', () => {
   // Given: 同じ譜面が現在の新曲枠と候補枠の両方に存在する。
   const entry = { songId: 'song', difficulty: 'MASTER' } as const
   const currentRecords = [{ id: 'song', difficulty: 'MASTER', score: 1_009_000 }] as const
@@ -190,11 +191,11 @@ test('理論値対象譜面の現在スコアと理論スコアまでの差を�
   // When: 理論値対象譜面の進捗を解決する。
   const result = resolveNewSongTheoreticalRatingProgress(entry, currentRecords, candidateRecords)
 
-  // Then: 現在の新曲枠を優先し、理論スコアまでの差を返す。
+  // Then: 現在の新曲枠を優先し、SSS+到達済みの差を0で返す。
   assert.deepEqual(result, {
     slot: 'new',
     currentScore: 1_009_000,
-    scoreGap: 1_000,
+    scoreGap: 0,
   })
 })
 
@@ -206,12 +207,13 @@ test('現在の新曲枠にない理論値対象譜面は候補枠のスコア�
   // When: 理論値対象譜面の進捗を解決する。
   const result = resolveNewSongTheoreticalRatingProgress(entry, [], candidateRecords)
 
-  // Then: 候補枠の現在スコアと理論スコアまでの差を返す。
+  // Then: 候補枠の現在スコアとSSS+までの不足分を負数で返す。
   assert.deepEqual(result, {
     slot: 'new_candidate',
     currentScore: 1_008_000,
-    scoreGap: 2_000,
+    scoreGap: -1_000,
   })
+  assert.equal(formatScoreDifference(result.scoreGap ?? 0), '-1,000')
 })
 
 test('理論値対象譜面のレコードがない場合はスコア進捗を返さないこと', () => {
