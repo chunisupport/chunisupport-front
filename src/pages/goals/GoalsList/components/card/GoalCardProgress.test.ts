@@ -2,6 +2,28 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { formatGoalCardValue, resolveGoalCardDisplayProgress } from './goalCardProgressModel'
 
+test('折りたたみ表示の達成率は反転設定に応じた接頭辞を含む', () => {
+  // Given
+  const progress = {
+    current: 30,
+    target: 100,
+    percent: 30,
+    achieved: false,
+    hasUnknownMaxOp: false,
+  }
+
+  // When
+  const normalProgress = resolveGoalCardDisplayProgress(progress, 'score_count', false, false)
+  const invertedProgress = resolveGoalCardDisplayProgress(progress, 'score_count', false, true)
+
+  // Then
+  assert.deepEqual([normalProgress.percentPrefixText, normalProgress.percentText], ['', '30.00%'])
+  assert.deepEqual(
+    [invertedProgress.percentPrefixText, invertedProgress.percentText],
+    ['あと', '70.00%']
+  )
+})
+
 test('OVER POWER値は小数点以下3桁で表示される', () => {
   // Given / When
   const result = formatGoalCardValue(1234.5, 'overpower_value')
