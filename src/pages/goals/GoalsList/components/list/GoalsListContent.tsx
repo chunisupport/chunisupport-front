@@ -1,5 +1,6 @@
 import { Collapsible } from '@kobalte/core/collapsible'
 import { ToggleGroup } from '@kobalte/core/toggle-group'
+import { Tooltip } from '@kobalte/core/tooltip'
 import {
   type CollisionDetector,
   closestCenter,
@@ -27,7 +28,6 @@ import {
   COLLAPSE_ALL_GOALS_LABEL,
   EMPTY_GOALS_MESSAGE,
   EXPAND_ALL_GOALS_LABEL,
-  GOAL_DISCLOSURE_CONTROLS_LABEL,
   GOAL_GROUP_COPY,
   GOAL_GROUP_DISPLAY_MODE_COPY,
   GOALS_LIMIT,
@@ -405,13 +405,6 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
   }
 
   /**
-   * 表示中の全目標カードが開いているか判定する。
-   *
-   * @returns 全カードが開いていればtrue。
-   */
-  const areAllGoalsOpen = (): boolean => displayedGoals().every(({ goal }) => isGoalOpen(goal.id))
-
-  /**
    * 表示中の全目標カードが閉じているか判定する。
    *
    * @returns 全カードが閉じていればtrue。
@@ -461,6 +454,19 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
     )
   }
 
+  /**
+   * 表示中のカードがすべて閉じていれば開き、それ以外は閉じる。
+   *
+   * @returns なし。
+   */
+  const handleToggleAll = (): void => {
+    if (areAllGoalsClosed()) {
+      handleExpandAll()
+      return
+    }
+    handleCollapseAll()
+  }
+
   onMount(() => {
     /**
      * 固定ヘッダーの実測高を一覧表示のグループ見出しへ反映する。
@@ -488,30 +494,37 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
               {props.goalsCount} / {GOALS_LIMIT}件
             </p>
           </div>
-          <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+          <div class="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
             <Show when={displayedGoals().length > 0}>
-              <fieldset class="m-0 flex min-w-0 items-center gap-1 border-0 p-0">
-                <legend class="sr-only">{GOAL_DISCLOSURE_CONTROLS_LABEL}</legend>
-                <AppButton
-                  variant="ghost"
-                  size="xs"
-                  disabled={props.isReordering || areAllGoalsOpen()}
-                  leftIcon={<ChevronsDown size={16} aria-hidden="true" />}
-                  onClick={handleExpandAll}
+              <Tooltip placement="bottom" gutter={4} openDelay={400}>
+                <Tooltip.Trigger
+                  as={AppIconButton}
+                  tone="ghost"
+                  aria-label={
+                    areAllGoalsClosed() ? EXPAND_ALL_GOALS_LABEL : COLLAPSE_ALL_GOALS_LABEL
+                  }
+                  disabled={props.isReordering}
+                  onClick={handleToggleAll}
                 >
-                  {EXPAND_ALL_GOALS_LABEL}
-                </AppButton>
-                <AppButton
-                  variant="ghost"
-                  size="xs"
-                  disabled={props.isReordering || areAllGoalsClosed()}
-                  leftIcon={<ChevronsRight size={16} aria-hidden="true" />}
-                  onClick={handleCollapseAll}
-                >
-                  {COLLAPSE_ALL_GOALS_LABEL}
-                </AppButton>
-              </fieldset>
+                  <Show
+                    when={areAllGoalsClosed()}
+                    fallback={<ChevronsRight size={18} aria-hidden="true" />}
+                  >
+                    <ChevronsDown size={18} aria-hidden="true" />
+                  </Show>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content class="z-50 rounded-md border border-border-strong bg-surface-raised px-2 py-1 text-xs text-text shadow-lg">
+                    {areAllGoalsClosed() ? EXPAND_ALL_GOALS_LABEL : COLLAPSE_ALL_GOALS_LABEL}
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip>
             </Show>
+            <GoalGroupDisplayModeToggle
+              value={props.groupDisplayMode}
+              disabled={props.isReordering}
+              onChange={props.onGroupDisplayModeChange}
+            />
             <AppIconButton
               aria-label={GOAL_GROUP_COPY.manageButtonLabel}
               disabled={props.isReordering}
@@ -527,14 +540,6 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
               {ADD_GOAL_LABEL}
             </AppButton>
           </div>
-        </div>
-
-        <div class="flex justify-end">
-          <GoalGroupDisplayModeToggle
-            value={props.groupDisplayMode}
-            disabled={props.isReordering}
-            onChange={props.onGroupDisplayModeChange}
-          />
         </div>
 
         <Show when={props.groupDisplayMode === 'horizontal'}>

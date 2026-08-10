@@ -74,11 +74,6 @@ export const EXPAND_ALL_GOALS_LABEL = 'すべて開く'
 export const COLLAPSE_ALL_GOALS_LABEL = 'すべて閉じる'
 
 /**
- * 目標カードの一括開閉ボタングループを説明するラベル。
- */
-export const GOAL_DISCLOSURE_CONTROLS_LABEL = '目標カードの表示'
-
-/**
  * 目標カードの開閉ボタンに付与するアクセシブルラベルを作る。
  *
  * @param title - 開閉対象の目標タイトル。
