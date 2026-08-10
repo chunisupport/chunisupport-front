@@ -5,6 +5,7 @@ import {
   type ColumnRenderer,
   RECORD_ROW_HEIGHT,
   RECORD_ROW_HOVER_CLASS,
+  RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS,
   RecordHeaderButton,
 } from '../../../components/common/record/RecordDisplayParts'
 import {
@@ -35,8 +36,6 @@ type RecordDataTableProps<TRecord, TColumnId extends string, TSortKey extends st
   getColumnRenderer: (columnId: TColumnId) => ColumnRenderer<TRecord>
   /** ヘッダークリック時にソートキーを通知する処理。 */
   onSortChange: (key: TSortKey) => void
-  /** 行番号ごとの追加クラスを返す処理。 */
-  getRowClass?: (rowIndex: number) => string
 }
 
 /** 共通レコード表の既定アクセシブル名。 */
@@ -62,8 +61,14 @@ export function RecordDataTable<TRecord, TColumnId extends string, TSortKey exte
   })
 
   const gridTemplateColumns = createMemo(() => createGridTemplateColumns(props.columns))
+  /**
+   * 行番号に応じた背景と補助線のクラスを返す。
+   *
+   * @param rowIndex - 0始まりのレコード行番号。
+   * @returns 共通のレコード行クラス。
+   */
   const getRowClass = (rowIndex: number): string =>
-    props.getRowClass?.(rowIndex) ?? RECORD_ROW_HOVER_CLASS
+    rowIndex === 0 ? RECORD_ROW_HOVER_CLASS : RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS
 
   return (
     <div class={props.wrapperClass ?? 'w-full'}>
@@ -74,7 +79,7 @@ export function RecordDataTable<TRecord, TColumnId extends string, TSortKey exte
         {/* biome-ignore lint/a11y/useSemanticElements: 仮想スクロール表はtable要素へ置換できないためARIA tableを使う。 */}
         <div
           ref={virtualizedTable.setTableContainerRef}
-          class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-border"
+          class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-border bg-surface"
           role="table"
           aria-label={props.ariaLabel ?? DEFAULT_RECORD_TABLE_ARIA_LABEL}
           aria-rowcount={props.records.length + 1}
@@ -131,7 +136,7 @@ export function RecordDataTable<TRecord, TColumnId extends string, TSortKey exte
                       {(currentRecord) => (
                         // biome-ignore lint/a11y/useFocusableInteractive lint/a11y/useSemanticElements: div gridの仮想テーブルなのでtrへ置換できない。
                         <div
-                          class={`absolute left-0 top-0 grid w-full border-b border-border px-2 text-xs ${getRowClass(virtualRow.index)}`}
+                          class={`absolute left-0 top-0 grid w-full px-2 text-xs ${getRowClass(virtualRow.index)}`}
                           style={{
                             'grid-template-columns': gridTemplateColumns(),
                             transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,

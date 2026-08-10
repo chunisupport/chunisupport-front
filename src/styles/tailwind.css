@@ -448,6 +448,10 @@
 [data-theme="dark-blue"],
 [data-theme="black"],
 [data-theme="pastel-orange"] {
+  /* ===== ページ背景の市松模様（模様色 / 2マス分の周期） ===== */
+  --cs-color-page-bg-pattern: color-mix(in oklab, var(--cs-color-bg) 92%, var(--cs-color-border));
+  --cs-size-page-bg-pattern: 16px;
+
   --cs-size-user-honor-title-max-width: 464px;
 
   /* ===== 難易度バッジ（BASIC / ADVANCED / EXPERT / MASTER / ULTIMA） ===== */
@@ -1088,7 +1092,12 @@
   }
 
   body {
-    background: var(--color-bg);
+    background-color: var(--color-bg);
+    background-image: repeating-conic-gradient(
+      var(--color-bg) 0 25%,
+      var(--cs-color-page-bg-pattern) 0 50%
+    );
+    background-size: var(--cs-size-page-bg-pattern) var(--cs-size-page-bg-pattern);
     color: var(--color-text);
     overscroll-behavior-y: auto;
   }
