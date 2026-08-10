@@ -66,6 +66,21 @@ test('最新更新結果APIは保存済み結果を認証付きで取得する',
   })
 })
 
+for (const schemaVersion of [2, 3] as const) {
+  test(`最新更新結果APIはschema version ${schemaVersion}を受け入れる`, async () => {
+    // Given: 対応済みスキーマバージョンの保存済み結果。
+    const responseBody = { schema_version: schemaVersion, changes: [] }
+    globalThis.fetch = async () => Response.json(responseBody)
+
+    // When: 最新更新結果を取得する。
+    const { fetchLatestPlayerDataUpdate } = await loadRegisterDataApi()
+    const result = await fetchLatestPlayerDataUpdate()
+
+    // Then: 対応済み形式としてレスポンスを返す。
+    assert.deepEqual(result, responseBody)
+  })
+}
+
 test('最新更新結果APIは保存済み結果がない204レスポンスをnullへ変換する', async () => {
   // Given: 保存済み結果がないAPIレスポンス。
   globalThis.fetch = async () => new Response(null, { status: 204 })
@@ -80,7 +95,7 @@ test('最新更新結果APIは保存済み結果がない204レスポンスをnu
 
 test('最新更新結果APIは未対応のスキーマバージョンを拒否する', async () => {
   // Given: フロントエンドが対応していない形式の保存済み結果。
-  globalThis.fetch = async () => Response.json({ schema_version: 3 })
+  globalThis.fetch = async () => Response.json({ schema_version: 4 })
 
   // When: 最新更新結果を取得する。
   const { fetchLatestPlayerDataUpdate } = await loadRegisterDataApi()

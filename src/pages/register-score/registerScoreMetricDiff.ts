@@ -1,4 +1,4 @@
-import { formatOverPowerValue } from '../../utils/overPowerFormat'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
 
 /**
@@ -39,12 +39,21 @@ export const formatRegisterScoreOverPowerDelta = (delta: number | null): string 
   formatSignedMetricDelta(delta, formatOverPowerValue)
 
 /**
+ * OP%差分を現在値と同じ精度で表示する。
+ *
+ * @param delta - APIが返したOP%差分。
+ * @returns 小数点以下5桁の符号付き差分。表示対象外の場合はnull。
+ */
+export const formatRegisterScoreOverPowerPercentDelta = (delta: number | null): string | null =>
+  formatSignedMetricDelta(delta, formatOverPowerPercent)
+
+/**
  * メトリクス差分の増減に応じたデザイントークン由来の文字色を返す。
  *
  * @param delta - APIが返した更新前後の差分。
- * @returns 増加時は青、減少時は危険色、差分なしは通常文字色のクラス。
+ * @returns 増加時は情報色、減少時は危険色、差分なしは通常文字色のクラス。
  */
 export const getRegisterScoreMetricDeltaClass = (delta: number | null): string => {
   if (delta === null || delta === 0) return 'text-text'
-  return delta > 0 ? 'text-blue-700' : 'text-danger'
+  return delta > 0 ? 'text-info' : 'text-danger'
 }

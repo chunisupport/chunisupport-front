@@ -37,6 +37,7 @@ import {
 } from './registerScoreDisplay'
 import {
   formatRegisterScoreOverPowerDelta,
+  formatRegisterScoreOverPowerPercentDelta,
   formatRegisterScoreRatingDelta,
   getRegisterScoreMetricDeltaClass,
 } from './registerScoreMetricDiff'
@@ -54,6 +55,12 @@ import {
 } from './registerScoreStatistics'
 
 export const REGISTER_SCORE_MESSAGES = {
+  ratingLabel: 'RATING',
+  overPowerLabel: 'OVER POWER',
+  overPowerPercentLabel: 'OP%',
+  overPowerPercentAccessibleLabel: 'OVER POWER達成率',
+  percentagePointUnit: 'pt',
+  percentagePointAccessibleUnit: 'パーセントポイント',
   invalidToken: 'tokenが不正です。登録用URLを確認してください。',
   fallbackError: '登録に失敗しました。',
   reportTitle: '更新差分',
@@ -391,6 +398,39 @@ const CourseRecordLampBadges = (props: { state: PlayerDataCourseRecordState }) =
   )
 }
 
+/** プレイヤーメトリクス差分の表示情報。 */
+type RegisterScoreMetricDeltaProps = {
+  /** APIが返した更新前後の差分。 */
+  delta: number | null
+  /** 表示精度へ整形した符号付き差分。 */
+  formattedDelta: string | null
+  /** 差分の後ろへ表示する単位。 */
+  unit?: string
+  /** 単位を読み上げる際の名称。 */
+  accessibleUnit?: string
+}
+
+/**
+ * プレイヤーメトリクスの符号付き差分を共通形式で表示する。
+ *
+ * @param props - 生の差分値、整形済み差分、および任意の単位。
+ * @returns 表示対象の差分がある場合は括弧付き差分、それ以外は何も表示しない。
+ */
+const RegisterScoreMetricDelta = (props: RegisterScoreMetricDeltaProps) => (
+  <Show when={props.formattedDelta}>
+    {(formattedDelta) => (
+      <span class={`text-sm font-bold ${getRegisterScoreMetricDeltaClass(props.delta)}`}>
+        ({formattedDelta()}
+        <Show when={props.unit}>{(unit) => <span aria-hidden="true"> {unit()}</span>}</Show>
+        <Show when={props.accessibleUnit}>
+          {(accessibleUnit) => <span class="sr-only"> {accessibleUnit()}</span>}
+        </Show>
+        )
+      </span>
+    )}
+  </Show>
+)
+
 /**
  * プレイヤー概要をレポート形式で表示する。
  *
@@ -404,6 +444,9 @@ const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdate
   const overPowerDelta = createMemo(() =>
     formatRegisterScoreOverPowerDelta(props.result.metric_diffs.overpower_value.delta)
   )
+  const overPowerPercentDelta = createMemo(() =>
+    formatRegisterScoreOverPowerPercentDelta(props.result.metric_diffs.overpower_percent.delta)
+  )
 
   return (
     <section class="pb-3">
@@ -416,46 +459,40 @@ const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdate
         </p>
       </div>
       <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
-        <dt class="font-extrabold text-text-muted">RATING</dt>
+        <dt class="font-extrabold text-text-muted">{REGISTER_SCORE_MESSAGES.ratingLabel}</dt>
         <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
           <span>{formatNullableRating(props.result.summary.rating)}</span>
-          <Show when={ratingDelta()}>
-            {(delta) => (
-              <span
-                class={`text-sm font-bold ${getRegisterScoreMetricDeltaClass(
-                  props.result.metric_diffs.rating.delta
-                )}`}
-              >
-                ({delta()})
-              </span>
-            )}
-          </Show>
+          <RegisterScoreMetricDelta
+            delta={props.result.metric_diffs.rating.delta}
+            formattedDelta={ratingDelta()}
+          />
         </dd>
-        <dt class="whitespace-nowrap font-extrabold text-text-muted">OVER POWER</dt>
+        <dt class="whitespace-nowrap font-extrabold text-text-muted">
+          {REGISTER_SCORE_MESSAGES.overPowerLabel}
+        </dt>
         <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
-          <Show
-            when={
-              props.result.summary.overpower_value !== null &&
-              props.result.summary.overpower_percentage !== null
-            }
-            fallback={NO_DATA_TEXT}
-          >
-            <span>
-              {formatOverPowerValue(props.result.summary.overpower_value ?? 0)} (
-              {formatOverPowerPercent(props.result.summary.overpower_percentage ?? 0)}%)
-            </span>
+          <Show when={props.result.summary.overpower_value !== null} fallback={NO_DATA_TEXT}>
+            <span>{formatOverPowerValue(props.result.summary.overpower_value ?? 0)}</span>
           </Show>
-          <Show when={overPowerDelta()}>
-            {(delta) => (
-              <span
-                class={`text-sm font-bold ${getRegisterScoreMetricDeltaClass(
-                  props.result.metric_diffs.overpower_value.delta
-                )}`}
-              >
-                ({delta()})
-              </span>
-            )}
+          <RegisterScoreMetricDelta
+            delta={props.result.metric_diffs.overpower_value.delta}
+            formattedDelta={overPowerDelta()}
+          />
+        </dd>
+        <dt class="font-extrabold text-text-muted">
+          <span aria-hidden="true">{REGISTER_SCORE_MESSAGES.overPowerPercentLabel}</span>
+          <span class="sr-only">{REGISTER_SCORE_MESSAGES.overPowerPercentAccessibleLabel}</span>
+        </dt>
+        <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
+          <Show when={props.result.summary.overpower_percentage !== null} fallback={NO_DATA_TEXT}>
+            <span>{formatOverPowerPercent(props.result.summary.overpower_percentage ?? 0)}%</span>
           </Show>
+          <RegisterScoreMetricDelta
+            delta={props.result.metric_diffs.overpower_percent.delta}
+            formattedDelta={overPowerPercentDelta()}
+            unit={REGISTER_SCORE_MESSAGES.percentagePointUnit}
+            accessibleUnit={REGISTER_SCORE_MESSAGES.percentagePointAccessibleUnit}
+          />
         </dd>
       </dl>
     </section>

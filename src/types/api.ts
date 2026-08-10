@@ -650,7 +650,7 @@ export interface PlayerDataUpdateResult {
   /** 登録後のプレイヤープロフィール情報。 */
   profile: PlayerDataProfile
   summary: PlayerDataSummary
-  /** 登録前後のレート・OVER POWER差分。旧保存形式では未返却。 */
+  /** 登録前後のレート・OVER POWER値・OP%差分。schema version 1では未返却。 */
   metric_diffs?: PlayerDataMetricDiffs
   /** 登録前後の通常譜面およびWORLD'S END集計差分。 */
   statistics: PlayerDataStatistics
@@ -703,10 +703,12 @@ export interface PlayerDataFloat64Diff {
   delta: number | null
 }
 
-/** レートとOVER POWER値の登録前後差分。 */
+/** レート、OVER POWER値、OP%の登録前後差分。 */
 export interface PlayerDataMetricDiffs {
   rating: PlayerDataFloat64Diff
   overpower_value: PlayerDataFloat64Diff
+  /** OP%の差分。schema version 1、2では未返却。 */
+  overpower_percent?: PlayerDataFloat64Diff
 }
 
 /** 登録前後の整数差分。 */
