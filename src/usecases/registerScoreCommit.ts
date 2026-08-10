@@ -9,9 +9,12 @@ import type {
   SkippedRecord,
 } from '../types/api'
 
+/** 旧保存形式を正規化した、すべての項目を必ず持つメトリクス差分。 */
+type NormalizedPlayerDataMetricDiffs = Required<PlayerDataMetricDiffs>
+
 /** 旧保存形式を正規化した、メトリクス差分を必ず持つ更新結果。 */
 export type NormalizedPlayerDataUpdateResult = Omit<PlayerDataUpdateResult, 'metric_diffs'> & {
-  metric_diffs: PlayerDataMetricDiffs
+  metric_diffs: NormalizedPlayerDataMetricDiffs
 }
 
 /** 画面表示用に正規化した登録結果。 */
@@ -47,11 +50,12 @@ const createEmptyFloat64Diff = () => ({ before: null, after: null, delta: null }
 /**
  * 旧保存形式に補完するメトリクス差分の空値を生成する。
  *
- * @returns レートとOVER POWER値を空差分で初期化した値。
+ * @returns レート、OVER POWER値、OP%を空差分で初期化した値。
  */
-const createEmptyMetricDiffs = (): PlayerDataMetricDiffs => ({
+const createEmptyMetricDiffs = (): NormalizedPlayerDataMetricDiffs => ({
   rating: createEmptyFloat64Diff(),
   overpower_value: createEmptyFloat64Diff(),
+  overpower_percent: createEmptyFloat64Diff(),
 })
 
 /** 統計グループのゼロ値を生成する。 */
@@ -101,6 +105,7 @@ const normalizeStatisticsGroup = (
 export const normalizePlayerDataResult = (
   result: PlayerDataUpdateResult & { skipped_records?: SkippedRecord[] }
 ): NormalizedPlayerDataResult => {
+  const emptyMetricDiffs = createEmptyMetricDiffs()
   const byDifficulty = Object.fromEntries(
     PLAYER_DATA_STATISTICS_DIFFICULTIES.map((difficulty) => [
       difficulty,
@@ -114,7 +119,12 @@ export const normalizePlayerDataResult = (
       overall: normalizeStatisticsGroup(result.statistics?.overall),
       by_difficulty: byDifficulty,
     },
-    metric_diffs: result.metric_diffs ?? createEmptyMetricDiffs(),
+    metric_diffs: {
+      rating: result.metric_diffs?.rating ?? emptyMetricDiffs.rating,
+      overpower_value: result.metric_diffs?.overpower_value ?? emptyMetricDiffs.overpower_value,
+      overpower_percent:
+        result.metric_diffs?.overpower_percent ?? emptyMetricDiffs.overpower_percent,
+    },
     changes: Array.isArray(result.changes) ? result.changes : [],
     skipped_records: Array.isArray(result.skipped_records) ? result.skipped_records : [],
   }
