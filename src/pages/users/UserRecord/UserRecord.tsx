@@ -13,10 +13,6 @@ import {
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { addMyFavoriteSong, deleteMyFavoriteSong, fetchUserFavoriteSongs } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
-import {
-  RECORD_ROW_HOVER_CLASS,
-  RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS,
-} from '../../../components/common/record/RecordDisplayParts'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import {
   readStandardRecordColumnsSetting,
@@ -310,9 +306,6 @@ const UserRecord: Component<Props> = (props) => {
                 emptyMessage="データがありません"
                 resetDeps={filterStatsOpen()}
                 getColumnRenderer={getRecordColumnRenderer}
-                getRowClass={(rowIndex) =>
-                  rowIndex === 0 ? RECORD_ROW_HOVER_CLASS : RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS
-                }
                 onSortChange={handleSortChange}
               />
 
