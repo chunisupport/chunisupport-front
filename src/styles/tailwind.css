@@ -203,14 +203,22 @@
   /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
   --cs-color-action-primary: var(--color-primary-500);
   --cs-color-action-primary-hover: var(--color-primary-400);
-  --cs-color-action-primary-muted: color-mix(in oklab, var(--color-primary-700) 35%, transparent);
+  --cs-color-action-primary-muted: color-mix(
+    in oklab,
+    var(--color-primary-700) 35%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-primary-border: var(--color-primary-700);
   --cs-color-select-selected-hover-bg: color-mix(
     in oklab,
     var(--color-primary-600) 42%,
-    transparent
+    var(--cs-color-surface)
   );
-  --cs-color-interactive-row-hover: color-mix(in oklab, var(--color-primary-900) 28%, transparent);
+  --cs-color-interactive-row-hover: color-mix(
+    in oklab,
+    var(--color-primary-900) 28%,
+    var(--cs-color-surface)
+  );
   --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
   --cs-color-action-secondary: #1d4a39;
   --cs-color-action-secondary-hover: #2f6b53;
@@ -218,23 +226,27 @@
   /* ===== 危険: エラー・削除操作（テキスト / 背景 / 枠線） ===== */
   --cs-color-danger: var(--color-red-400);
   --cs-color-danger-hover: var(--color-red-300);
-  --cs-color-danger-bg: rgb(127 29 29 / 35%);
+  --cs-color-danger-bg: color-mix(in oklab, var(--color-red-900) 35%, var(--cs-color-surface));
   --cs-color-danger-border: var(--color-red-800);
 
   /* ===== 成功（テキスト / 背景 / 枠線） ===== */
   --cs-color-success: var(--color-green-300);
-  --cs-color-success-bg: rgb(20 83 45 / 35%);
-  --cs-color-success-bg-hover: rgb(22 101 52 / 45%);
+  --cs-color-success-bg: color-mix(in oklab, var(--color-green-900) 35%, var(--cs-color-surface));
+  --cs-color-success-bg-hover: color-mix(
+    in oklab,
+    var(--color-green-800) 45%,
+    var(--cs-color-surface)
+  );
   --cs-color-success-border: var(--color-green-800);
 
   /* ===== 警告（テキスト / 背景 / 枠線） ===== */
   --cs-color-warning: var(--color-yellow-300);
-  --cs-color-warning-bg: rgb(113 63 18 / 35%);
+  --cs-color-warning-bg: color-mix(in oklab, var(--color-yellow-900) 35%, var(--cs-color-surface));
   --cs-color-warning-border: var(--color-yellow-800);
 
   /* ===== 情報（テキスト / 背景 / 枠線） ===== */
   --cs-color-info: var(--color-teal-300);
-  --cs-color-info-bg: rgb(19 78 74 / 35%);
+  --cs-color-info-bg: color-mix(in oklab, var(--color-teal-900) 35%, var(--cs-color-surface));
   --cs-color-info-border: var(--color-teal-800);
   --cs-color-rating-candidate-gap: var(--color-blue-300);
 
@@ -269,22 +281,34 @@
   --cs-color-border-strong: #666666;
 
   /* ===== 背景色に依存するアクション ===== */
-  --cs-color-action-primary-muted: color-mix(in oklab, var(--color-primary-700) 45%, transparent);
+  --cs-color-action-primary-muted: color-mix(
+    in oklab,
+    var(--color-primary-700) 45%,
+    var(--cs-color-surface)
+  );
   --cs-color-select-selected-hover-bg: color-mix(
     in oklab,
     var(--color-primary-600) 50%,
-    transparent
+    var(--cs-color-surface)
   );
-  --cs-color-interactive-row-hover: color-mix(in oklab, var(--color-primary-900) 35%, transparent);
+  --cs-color-interactive-row-hover: color-mix(
+    in oklab,
+    var(--color-primary-900) 35%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-secondary: #444444;
   --cs-color-action-secondary-hover: #555555;
 
   /* ===== 背景色に依存する状態色 ===== */
-  --cs-color-danger-bg: rgb(127 29 29 / 45%);
-  --cs-color-success-bg: rgb(20 83 45 / 45%);
-  --cs-color-success-bg-hover: rgb(22 101 52 / 55%);
-  --cs-color-warning-bg: rgb(113 63 18 / 45%);
-  --cs-color-info-bg: rgb(19 78 74 / 45%);
+  --cs-color-danger-bg: color-mix(in oklab, var(--color-red-900) 45%, var(--cs-color-surface));
+  --cs-color-success-bg: color-mix(in oklab, var(--color-green-900) 45%, var(--cs-color-surface));
+  --cs-color-success-bg-hover: color-mix(
+    in oklab,
+    var(--color-green-800) 55%,
+    var(--cs-color-surface)
+  );
+  --cs-color-warning-bg: color-mix(in oklab, var(--color-yellow-900) 45%, var(--cs-color-surface));
+  --cs-color-info-bg: color-mix(in oklab, var(--color-teal-900) 45%, var(--cs-color-surface));
 
   /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド） ===== */
   --cs-color-overlay: rgb(0 0 0 / 65%);
@@ -320,14 +344,22 @@
   /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
   --cs-color-action-primary: var(--color-primary-500);
   --cs-color-action-primary-hover: var(--color-primary-400);
-  --cs-color-action-primary-muted: color-mix(in oklab, var(--color-primary-700) 35%, transparent);
+  --cs-color-action-primary-muted: color-mix(
+    in oklab,
+    var(--color-primary-700) 35%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-primary-border: var(--color-primary-700);
   --cs-color-select-selected-hover-bg: color-mix(
     in oklab,
     var(--color-primary-600) 42%,
-    transparent
+    var(--cs-color-surface)
   );
-  --cs-color-interactive-row-hover: color-mix(in oklab, var(--color-primary-900) 28%, transparent);
+  --cs-color-interactive-row-hover: color-mix(
+    in oklab,
+    var(--color-primary-900) 28%,
+    var(--cs-color-surface)
+  );
   --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
   --cs-color-action-secondary: #1e2d5e;
   --cs-color-action-secondary-hover: #2f4480;
@@ -335,23 +367,27 @@
   /* ===== 危険: エラー・削除操作（テキスト / 背景 / 枠線） ===== */
   --cs-color-danger: var(--color-red-400);
   --cs-color-danger-hover: var(--color-red-300);
-  --cs-color-danger-bg: rgb(127 29 29 / 35%);
+  --cs-color-danger-bg: color-mix(in oklab, var(--color-red-900) 35%, var(--cs-color-surface));
   --cs-color-danger-border: var(--color-red-800);
 
   /* ===== 成功（テキスト / 背景 / 枠線） ===== */
   --cs-color-success: var(--color-green-300);
-  --cs-color-success-bg: rgb(20 83 45 / 35%);
-  --cs-color-success-bg-hover: rgb(22 101 52 / 45%);
+  --cs-color-success-bg: color-mix(in oklab, var(--color-green-900) 35%, var(--cs-color-surface));
+  --cs-color-success-bg-hover: color-mix(
+    in oklab,
+    var(--color-green-800) 45%,
+    var(--cs-color-surface)
+  );
   --cs-color-success-border: var(--color-green-800);
 
   /* ===== 警告（テキスト / 背景 / 枠線） ===== */
   --cs-color-warning: var(--color-yellow-300);
-  --cs-color-warning-bg: rgb(113 63 18 / 35%);
+  --cs-color-warning-bg: color-mix(in oklab, var(--color-yellow-900) 35%, var(--cs-color-surface));
   --cs-color-warning-border: var(--color-yellow-800);
 
   /* ===== 情報（テキスト / 背景 / 枠線） ===== */
   --cs-color-info: var(--color-blue-300);
-  --cs-color-info-bg: rgb(30 64 175 / 35%);
+  --cs-color-info-bg: color-mix(in oklab, var(--color-blue-800) 35%, var(--cs-color-surface));
   --cs-color-info-border: var(--color-blue-800);
   --cs-color-rating-candidate-gap: var(--color-blue-300);
 

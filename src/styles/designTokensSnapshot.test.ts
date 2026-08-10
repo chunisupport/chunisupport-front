@@ -19,6 +19,19 @@ const readCustomProperty = (css: string, property: string): string => {
   return matched[1].trim()
 }
 
+/**
+ * CSSファイルから指定されたカスタムプロパティの全定義値を抽出する。
+ * @param css CSS全文
+ * @param property 取得対象のプロパティ名
+ * @returns テーマごとに定義された値
+ */
+const readCustomProperties = (css: string, property: string): string[] => {
+  const escapedProperty = property.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return Array.from(css.matchAll(new RegExp(`${escapedProperty}:\\s*([^;]+);`, 'g')), ([, value]) =>
+    value.trim()
+  )
+}
+
 test('既存色と同じ値でデザイントークンが定義されていること', () => {
   const expectedMappings = [
     ['--cs-color-bg', 'var(--color-white)'],
@@ -81,6 +94,28 @@ test('Tailwind公開トークンがcsトークンへ接続されていること'
 
   for (const [colorName, expectedValue] of expectedBindings) {
     assert.equal(readCustomProperty(tailwindCssContent, colorName), expectedValue)
+  }
+})
+
+test('ホバーに使う背景トークンがすべてのテーマで不透明に定義されていること', () => {
+  const hoverBackgroundTokens = [
+    '--cs-color-action-primary-muted',
+    '--cs-color-select-selected-hover-bg',
+    '--cs-color-interactive-row-hover',
+    '--cs-color-danger-bg',
+    '--cs-color-success-bg',
+    '--cs-color-success-bg-hover',
+    '--cs-color-warning-bg',
+    '--cs-color-info-bg',
+  ]
+
+  for (const tokenName of hoverBackgroundTokens) {
+    const definitions = readCustomProperties(tailwindCssContent, tokenName)
+    assert.ok(definitions.length > 0, `${tokenName} が定義されている必要があります`)
+
+    for (const definition of definitions) {
+      assert.doesNotMatch(definition, /transparent|rgb\([^)]*\//)
+    }
   }
 })
 
