@@ -299,7 +299,7 @@ export const UserProfileView: Component<Props> = (props) => {
         class="mb-4"
         onChange={handlePageTabChange}
         options={PAGE_TAB_OPTIONS}
-        listClass="sticky top-0 z-10 mb-4 bg-bg px-4 pt-2"
+        listClass="sticky top-0 z-10 mb-4 bg-page-pattern px-4 pt-2"
         triggerClass="data-selected:!bg-transparent"
         listAfter={<div class="flex-1" />}
       >
