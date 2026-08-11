@@ -5,6 +5,7 @@ import { createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'soli
 
 import { fetchMe, fetchUserProfileSummary } from './api/users'
 import {
+  Announcements,
   AppToastRegion,
   LoadError,
   Loading,
@@ -258,17 +259,7 @@ const LandingPage = () => {
         </Show>
 
         <div class="grid gap-6 md:grid-cols-2 md:items-start">
-          <section class="min-w-0 rounded-lg border border-border bg-surface p-6">
-            <h2 class="mb-3 text-xl font-semibold">お知らせ</h2>
-            <ul class="space-y-2 text-sm text-text-muted">
-              <li class="rounded-md border border-border p-3">
-                [モック] 2026-04-29: 新機能の準備を進めています。
-              </li>
-              <li class="rounded-md border border-border p-3">
-                [モック] 2026-04-25: メンテナンス予定を公開しました。
-              </li>
-            </ul>
-          </section>
+          <Announcements />
 
           <section class="min-w-0 rounded-lg border border-border bg-surface p-6">
             <h2 class="mb-3 text-xl font-semibold">{X_TIMELINE_HEADING}</h2>
