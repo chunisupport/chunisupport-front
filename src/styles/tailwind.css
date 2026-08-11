@@ -1127,13 +1127,18 @@
     cursor: pointer;
   }
 
-  body {
+  body,
+  .bg-page-pattern {
     background-color: var(--color-bg);
     background-image: repeating-conic-gradient(
       var(--color-bg) 0 25%,
       var(--cs-color-page-bg-pattern) 0 50%
     );
     background-size: var(--cs-size-page-bg-pattern) var(--cs-size-page-bg-pattern);
+    background-attachment: fixed;
+  }
+
+  body {
     color: var(--color-text);
     overscroll-behavior-y: auto;
   }

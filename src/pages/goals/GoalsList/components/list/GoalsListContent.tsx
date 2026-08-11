@@ -489,7 +489,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
 
   return (
     <div class="mx-auto w-full max-w-3xl px-4 pb-4">
-      <div ref={stickyHeaderRef} class="sticky top-0 z-20 space-y-4 bg-bg py-4">
+      <div ref={stickyHeaderRef} class="sticky top-0 z-20 space-y-4 bg-page-pattern pt-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 class="text-2xl font-semibold">目標</h1>
@@ -570,7 +570,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
         </Show>
       </div>
 
-      <div class="space-y-4">
+      <div class="space-y-4 pt-4">
         <Show when={props.goalsCount >= GOALS_LIMIT}>
           <p class="rounded border border-warning-border bg-warning-bg px-3 py-2 text-sm text-score-rank-c-text">
             {GOALS_LIMIT_REACHED_MESSAGE}
@@ -600,7 +600,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
                     <section aria-labelledby={`goal-group-${groupView.groupId ?? 'none'}`}>
                       <h2
                         id={`goal-group-${groupView.groupId ?? 'none'}`}
-                        class="sticky z-10 bg-bg"
+                        class="sticky z-10 bg-page-pattern"
                         style={{ top: `${stickyHeaderHeight()}px` }}
                       >
                         <AppDisclosureTrigger
