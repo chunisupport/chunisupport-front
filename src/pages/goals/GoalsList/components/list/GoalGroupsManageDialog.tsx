@@ -8,7 +8,6 @@ import {
   DragDropSensors,
   type DragEvent,
   SortableProvider,
-  useDragDropContext,
 } from '@thisbeyond/solid-dnd'
 import { Check, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -29,6 +28,7 @@ import {
   GOAL_GROUPS_LIMIT,
   validateGoalGroupName,
 } from '../../goalGroupsModel'
+import { VerticalAxisConstraint } from './VerticalAxisConstraint'
 
 interface GoalGroupsManageDialogProps {
   open: boolean
@@ -56,42 +56,6 @@ interface SortableGroupRowProps {
   onSaveEdit: () => void
   onDelete: () => void
   onKeyboardMove: (offset: -1 | 1) => void
-}
-
-/** グループ並び替え時に適用するY軸制約transformerのID。 */
-const VERTICAL_AXIS_CONSTRAINT_ID = 'goal-groups-vertical-axis-constraint'
-
-/**
- * グループのドラッグ変位をY軸だけに制限する。
- *
- * @returns 描画要素なし（ドラッグ中のtransformer登録のみ）。
- */
-const VerticalAxisConstraint: Component = () => {
-  const context = useDragDropContext()
-  if (!context) return null
-
-  const [state, { addTransformer, removeTransformer, onDragStart, onDragEnd }] = context
-
-  onDragStart(({ draggable }) => {
-    addTransformer('draggables', draggable.id, {
-      id: VERTICAL_AXIS_CONSTRAINT_ID,
-      order: 10,
-      callback: (transform) => ({ x: 0, y: transform.y }),
-    })
-  })
-
-  onDragEnd(({ draggable }) => {
-    removeTransformer('draggables', draggable.id, VERTICAL_AXIS_CONSTRAINT_ID)
-  })
-
-  onCleanup(() => {
-    const draggableId = state.active.draggableId
-    if (draggableId !== null) {
-      removeTransformer('draggables', draggableId, VERTICAL_AXIS_CONSTRAINT_ID)
-    }
-  })
-
-  return null
 }
 
 /**

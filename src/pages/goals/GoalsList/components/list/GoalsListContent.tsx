@@ -16,11 +16,12 @@ import {
   ChevronsRight,
   GalleryHorizontal,
   LayoutList,
+  Plus,
   Settings2,
 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
-import { AppButton, AppIconButton } from '../../../../../components/common/AppButton'
+import { AppIconButton } from '../../../../../components/common/AppButton'
 import { AppDisclosureTrigger } from '../../../../../components/common/AppDisclosureTrigger'
 import type { GoalDTO } from '../../../../../types/api'
 import {
@@ -39,6 +40,7 @@ import GoalCard from '../card/GoalCard'
 import { GoalCopyPlaceholder } from '../card/GoalCopyPlaceholder'
 import { GoalsListLongPressSensor } from './GoalsListLongPressSensor'
 import { createAutoScroll } from './goalsListAutoScroll'
+import { VerticalAxisConstraint } from './VerticalAxisConstraint'
 
 /** solid-dnd の active draggable に付与するスクロール補正 transformer の ID。 */
 const AUTO_SCROLL_TRANSFORMER_ID = 'goals-list-auto-scroll'
@@ -304,6 +306,7 @@ const GoalGroupCards: Component<GoalGroupCardsProps> = (props) => {
       >
         <DragDropProvider collisionDetector={detectGroupCollision} onDragEnd={handleDragEnd}>
           <GoalsListLongPressSensor />
+          <VerticalAxisConstraint />
           <AutoScrollSetup autoScroll={autoScroll} />
           <SortableProvider ids={props.groupView.goals.map(({ goal }) => goal.id)}>
             <div class="grid grid-cols-1 gap-3">
@@ -532,13 +535,14 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
             >
               <Settings2 size={18} aria-hidden="true" />
             </AppIconButton>
-            <AppButton
-              variant="primary"
+            <AppIconButton
+              aria-label={ADD_GOAL_LABEL}
+              tone="primary"
               disabled={props.isReordering || props.isCopying || props.goalsCount >= GOALS_LIMIT}
               onClick={props.onCreate}
             >
-              {ADD_GOAL_LABEL}
-            </AppButton>
+              <Plus size={20} aria-hidden="true" />
+            </AppIconButton>
           </div>
         </div>
 
