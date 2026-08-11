@@ -46,7 +46,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const [previewViewport, setPreviewViewport] = createSignal<HTMLDivElement>()
   const [imageSheet, setImageSheet] = createSignal<HTMLDivElement>()
   const [previewScale, setPreviewScale] = createSignal(1)
-  const [previewHeight, setPreviewHeight] = createSignal(0)
+
   const [readyJacketCount, setReadyJacketCount] = createSignal(0)
   const readyJacketKeys = new Set<string>()
 
@@ -128,7 +128,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     }
   }
 
-  // 固定幅の画像本体をダイアログ本文の表示幅だけ縮小し、占有高さを同期する。
+  // 画像の論理サイズを保存したまま、プレビューだけをダイアログの表示領域へ収める。
   createEffect(() => {
     if (!open()) return
 
@@ -137,7 +137,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     if (!viewport || !sheet) return
 
     /**
-     * 画像本体を表示領域へ収める縮小率と、変形後の占有高さを更新する。
+     * 画像本体を表示領域の幅と高さへ収める縮小率を更新する。
      *
      * @returns なし。
      */
@@ -147,17 +147,20 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
       if (animationFrameId !== undefined) cancelAnimationFrame(animationFrameId)
 
       animationFrameId = requestAnimationFrame(() => {
-        const scale = Math.min(1, viewport.clientWidth / RATING_IMAGE_WIDTH_PX)
-        const height = sheet.offsetHeight * scale
+        const scale = Math.min(
+          1,
+          viewport.clientWidth / RATING_IMAGE_WIDTH_PX,
+          viewport.clientHeight / sheet.offsetHeight
+        )
 
         setPreviewScale((current) => (current === scale ? current : scale))
-        setPreviewHeight((current) => (current === height ? current : height))
         animationFrameId = undefined
       })
     }
 
     const resizeObserver = new ResizeObserver(updatePreviewSize)
     resizeObserver.observe(viewport)
+    resizeObserver.observe(sheet)
     updatePreviewSize()
 
     onCleanup(() => {
@@ -183,7 +186,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
       <Show when={open()}>
         <Dialog.Portal>
           <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
-          <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-60 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[92dvh] sm:max-h-[92dvh] sm:w-[94vw] sm:max-w-6xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+          <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-60 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[92dvh] sm:max-h-[92dvh] sm:w-[94vw] sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
             <div class="flex shrink-0 items-start justify-between gap-4">
               <div class="min-w-0">
                 <Dialog.Title class="text-lg font-bold text-text">
@@ -202,38 +205,33 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
               </Dialog.CloseButton>
             </div>
 
-            <div class="mt-4 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain rounded-md bg-bg p-3">
+            <div class="mt-4 min-h-0 flex-1 basis-0 overflow-hidden rounded-md bg-bg p-3">
               <div
                 ref={(element) => setPreviewViewport(element)}
-                class="mx-auto w-full overflow-hidden"
+                class="relative mx-auto h-full w-full overflow-hidden"
               >
-                <div
-                  class="relative min-h-40 select-none overflow-hidden"
-                  aria-busy={!isPreviewReady()}
-                  style={{ height: `${previewHeight()}px` }}
-                >
-                  <Show when={!isPreviewReady()}>
-                    <div class="absolute inset-0 z-10 min-h-40">
-                      <Loading ariaLabel={RATING_IMAGE_COPY.preparingPreview} />
-                    </div>
-                  </Show>
-                  <div
-                    class="absolute left-0 top-0"
-                    classList={{ invisible: !isPreviewReady() }}
-                    style={{
-                      transform: `scale(${previewScale()})`,
-                      'transform-origin': 'top left',
-                    }}
-                  >
-                    <RatingImageSheet
-                      captureRef={(element) => setImageSheet(element)}
-                      playerInfo={props.playerInfo}
-                      honors={props.honors}
-                      rating={props.rating}
-                      showJackets={props.showJackets}
-                      onJacketReadyChange={handleJacketReadyChange}
-                    />
+                <Show when={!isPreviewReady()}>
+                  <div class="absolute inset-0 z-10">
+                    <Loading ariaLabel={RATING_IMAGE_COPY.preparingPreview} />
                   </div>
+                </Show>
+                <div
+                  class="absolute left-1/2 top-1/2 select-none"
+                  classList={{ invisible: !isPreviewReady() }}
+                  aria-busy={!isPreviewReady()}
+                  style={{
+                    transform: `translate(-50%, -50%) scale(${previewScale()})`,
+                    'transform-origin': 'center',
+                  }}
+                >
+                  <RatingImageSheet
+                    captureRef={(element) => setImageSheet(element)}
+                    playerInfo={props.playerInfo}
+                    honors={props.honors}
+                    rating={props.rating}
+                    showJackets={props.showJackets}
+                    onJacketReadyChange={handleJacketReadyChange}
+                  />
                 </div>
               </div>
             </div>
