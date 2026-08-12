@@ -4,8 +4,12 @@ const DEFAULT_IMAGE_CAPTURE_MAX_CSS_SIDE = 8_000
 const IMAGE_OBJECT_URL_REVOKE_DELAY_MS = 1_000
 
 type ImageCaptureOptions = {
-  /** PNGへ出力するときのデバイスピクセル比。 */
+  /** ラスター画像へ出力するときのデバイスピクセル比。 */
   pixelRatio: number
+  /** 出力するラスター画像形式。 */
+  format: 'png' | 'jpeg'
+  /** JPEG出力時の圧縮品質。 */
+  quality?: number
   /** 画像化用DOMの一辺へ許容する最大CSSピクセル数。 */
   maxCssSide?: number
 }
@@ -89,13 +93,13 @@ const waitForElementImages = async (element: HTMLElement): Promise<void> => {
 }
 
 /**
- * 表示中のDOM要素をテーマと埋め込みフォントを維持したPNGへ変換する。
+ * 表示中のDOM要素をテーマと埋め込みフォントを維持したラスター画像へ変換する。
  *
- * @param sourceElement - PNGへ変換する表示中のDOM要素。
- * @param options - 出力ピクセル比とCanvas上限。
- * @returns 生成したPNG Blob。
+ * @param sourceElement - ラスター画像へ変換する表示中のDOM要素。
+ * @param options - 出力形式、ピクセル比、品質、Canvas上限。
+ * @returns 生成した画像Blob。
  */
-export const captureElementAsPng = async (
+export const captureElementAsImage = async (
   sourceElement: HTMLElement,
   options: ImageCaptureOptions
 ): Promise<Blob> => {
@@ -111,12 +115,14 @@ export const captureElementAsPng = async (
       backgroundColor: getComputedStyle(sourceElement).backgroundColor,
       dpr: options.pixelRatio,
       embedFonts: true,
-      format: 'png',
+      format: options.format,
+      quality: options.quality,
       reconcile: true,
     })
     const rasterizeOptions = {
       dpr: options.pixelRatio,
-      type: 'png' as const,
+      quality: options.quality,
+      type: options.format,
     }
 
     // ChromeがSVG内の埋め込みフォントを初回描画で準備するため、1回目は破棄する。

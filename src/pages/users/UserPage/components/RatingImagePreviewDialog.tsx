@@ -9,10 +9,11 @@ import {
   getAppIconButtonClass,
 } from '../../../../components/common/AppButton'
 import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
-import { captureElementAsPng, downloadBlobFile } from '../../../../utils/domImageCapture'
+import { captureElementAsImage, downloadBlobFile } from '../../../../utils/domImageCapture'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import {
   RATING_IMAGE_COPY,
+  RATING_IMAGE_JPEG_QUALITY,
   RATING_IMAGE_PIXEL_RATIO,
   RATING_IMAGE_WIDTH_PX,
   RATING_SLOT_COUNT,
@@ -105,7 +106,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   }
 
   /**
-   * 現在のプレビュー内容を2倍解像度のPNGとしてダウンロードする。
+   * 現在のプレビュー内容を原寸解像度のJPEGとしてダウンロードする。
    *
    * @returns ダウンロード処理の完了時に解決されるPromise。
    */
@@ -117,8 +118,10 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     setDownloadError(undefined)
 
     try {
-      const blob = await captureElementAsPng(sheet, {
+      const blob = await captureElementAsImage(sheet, {
+        format: 'jpeg',
         pixelRatio: RATING_IMAGE_PIXEL_RATIO,
+        quality: RATING_IMAGE_JPEG_QUALITY,
       })
       downloadBlobFile(blob, formatRatingImageFilename(props.username))
     } catch {

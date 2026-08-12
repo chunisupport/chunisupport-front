@@ -10,6 +10,6 @@ test('ユーザー名とローカル日時を含むレーティング画像フ�
   // When: ダウンロードファイル名を生成する。
   const filename = formatRatingImageFilename(username, date)
 
-  // Then: 指定された形式のPNGファイル名になる。
-  assert.equal(filename, 'chunisupport-best-new-chuni_player-20260802030405.png')
+  // Then: 指定された形式のJPGファイル名になる。
+  assert.equal(filename, 'chunisupport-best-new-chuni_player-20260802030405.jpg')
 })

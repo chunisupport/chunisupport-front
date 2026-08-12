@@ -27,7 +27,7 @@ import type {
 } from '../../types/api'
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
-import { captureElementAsPng, downloadBlobFile } from '../../utils/domImageCapture'
+import { captureElementAsImage, downloadBlobFile } from '../../utils/domImageCapture'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
 import {
@@ -1064,7 +1064,8 @@ export const RegisterScoreResultView = (props: {
     setDownloadImageError(undefined)
 
     try {
-      const imageBlob = await captureElementAsPng(reportRef, {
+      const imageBlob = await captureElementAsImage(reportRef, {
+        format: 'png',
         pixelRatio: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
       })
       downloadBlobFile(imageBlob, formatRegisterScoreImageFilename(props.result.imported_at))
