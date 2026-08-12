@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   buildUserOverPowerPagePath,
   buildUserProfilePagePath,
+  buildUserStatsPagePath,
   DEFAULT_PROFILE_PAGE_QUERY,
   isRecordPageQuery,
   resolveOverPowerSubPage,
@@ -46,6 +47,17 @@ test('デフォルト以外のタブはパスセグメントとして表現す�
   assert.equal(buildUserProfilePagePath('alice', 'rating_new'), '/users/alice/rating_new')
   assert.equal(buildUserProfilePagePath('alice', 'record_normal'), '/users/alice/record_normal')
   assert.equal(buildUserProfilePagePath('alice', 'record_course'), '/users/alice/record_course')
+})
+
+test('RATING・OVER POWER履歴ページはユーザー名をエンコードしたパスで表現する', () => {
+  // Given
+  const username = 'alice bob'
+
+  // When
+  const result = buildUserStatsPagePath(username)
+
+  // Then
+  assert.equal(result, '/users/alice%20bob/stats')
 })
 
 test('OVER POWERサブページを解決できる', () => {

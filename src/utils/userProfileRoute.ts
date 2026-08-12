@@ -94,6 +94,15 @@ export const buildUserProfilePagePath = (username: string, page: ProfilePageQuer
 }
 
 /**
+ * ユーザーのRATING・OVER POWER履歴ページへの内部リンク用パスを生成する。
+ *
+ * @param username - パスへ埋め込むユーザー名。
+ * @returns ユーザー名をエンコード済みの履歴ページパス。
+ */
+export const buildUserStatsPagePath = (username: string): string =>
+  `/users/${encodeURIComponent(username)}/stats`
+
+/**
  * OVER POWERサブページの内部リンク用パスを生成する。
  *
  * @param username - パスへ埋め込むユーザー名。
