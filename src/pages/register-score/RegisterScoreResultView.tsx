@@ -1,5 +1,5 @@
 import { Button } from '@kobalte/core/button'
-import { Download, Play } from 'lucide-solid'
+import { Download, Play, Share2 } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import logoSingle from '../../assets/logo_single.svg'
 import { Loading } from '../../components'
@@ -72,6 +72,11 @@ export const REGISTER_SCORE_MESSAGES = {
   totalHighScoreTitle: 'TOTAL HIGH SCORE',
   recordStatsTitle: 'RECORD STATISTICS',
   displaySettingsTitle: '表示設定',
+  shareImage: '画像を共有',
+  prepareShareImage: '共有画像を準備',
+  preparingShareImage: '共有画像を準備中',
+  sharingImage: '画像を共有中',
+  shareImageError: '画像の共有に失敗しました。',
   downloadImage: '画像をダウンロード',
   downloadingImage: '画像を作成中',
   downloadImageError: '画像のダウンロードに失敗しました。',
@@ -90,10 +95,14 @@ const REGISTER_SCORE_REPORT_WIDTH_CLASS = 'w-[31rem]'
 const REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS = 'max-w-[31rem]'
 /** 更新差分レポートヘッダに表示するロゴの色。 */
 const REGISTER_SCORE_REPORT_LOGO_COLOR = '#444444'
-/** 更新差分画像を原寸の2倍で出力するピクセル比。 */
-const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 2
+/** 更新差分画像を原寸で出力するピクセル比。 */
+const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 1
+/** 更新差分JPEG画像の圧縮品質。 */
+const REGISTER_SCORE_IMAGE_JPEG_QUALITY = 0.9
 /** 更新差分画像のファイル名へ付与する接頭辞。 */
 const REGISTER_SCORE_IMAGE_FILENAME_PREFIX = 'chunisupport-score-update'
+/** 共有用画像をレポート更新後に再生成するまでの待機時間。 */
+const REGISTER_SCORE_SHARE_PREPARE_DELAY_MS = 300
 /** コピー成功時に曲名をアクセントカラーで保持する時間。 */
 const REGISTER_SCORE_COPY_HIGHLIGHT_MS = 100
 
@@ -274,10 +283,10 @@ const formatImportedAt = (isoDateTime: string): string => {
 }
 
 /**
- * 更新日時からPNG画像のダウンロードファイル名を生成する。
+ * 更新日時からJPEG画像のファイル名を生成する。
  *
  * @param isoDateTime - APIから返却されたISO形式の更新日時。
- * @returns `chunisupport-score-update-YYYYMMDD-HHmmss.png` 形式のファイル名。
+ * @returns `chunisupport-score-update-YYYYMMDD-HHmmss.jpg` 形式のファイル名。
  */
 const formatRegisterScoreImageFilename = (isoDateTime: string): string => {
   const timestamp = formatImportedAt(isoDateTime)
@@ -285,7 +294,7 @@ const formatRegisterScoreImageFilename = (isoDateTime: string): string => {
     .replaceAll(':', '')
     .replace(' ', '-')
 
-  return `${REGISTER_SCORE_IMAGE_FILENAME_PREFIX}-${timestamp}.png`
+  return `${REGISTER_SCORE_IMAGE_FILENAME_PREFIX}-${timestamp}.jpg`
 }
 
 /**
@@ -1005,7 +1014,34 @@ export const RegisterScoreResultView = (props: {
   const [reportScale, setReportScale] = createSignal(1)
   const [scaledReportHeight, setScaledReportHeight] = createSignal<number>()
   const [isDownloadingImage, setIsDownloadingImage] = createSignal(false)
-  const [downloadImageError, setDownloadImageError] = createSignal<string>()
+  const [isPreparingShareImage, setIsPreparingShareImage] = createSignal(false)
+  const [isSharingImage, setIsSharingImage] = createSignal(false)
+  const [shareImageFile, setShareImageFile] = createSignal<File>()
+  const [imageActionError, setImageActionError] = createSignal<string>()
+  let shareImagePreparationRequested = false
+  let shareImagePrepareTimer: number | undefined
+
+  /**
+   * ダウンロードまたは共有用の画像を生成中かどうかを返す。
+   *
+   * @returns いずれかの画像生成処理中の場合はtrue。
+   */
+  const isGeneratingImage = (): boolean =>
+    isDownloadingImage() || isPreparingShareImage() || isSharingImage()
+
+  /**
+   * 現在のブラウザがJPEGファイルの共有に対応しているかを返す。
+   *
+   * @returns Web Share APIでJPEGファイルを共有できる場合はtrue。
+   */
+  const canShareReportImage = (): boolean => {
+    if (typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function') {
+      return false
+    }
+
+    const testFile = new File([], 'share-test.jpg', { type: 'image/jpeg' })
+    return navigator.canShare({ files: [testFile] })
+  }
   let scaleContainerRef!: HTMLDivElement
   let reportRef!: HTMLElement
 
@@ -1055,28 +1091,123 @@ export const RegisterScoreResultView = (props: {
   }
 
   /**
-   * 現在表示中の更新差分レポートを1枚のPNG画像としてダウンロードする。
+   * 現在表示中の更新差分レポートを原寸のJPEG画像として生成する。
+   *
+   * @returns 生成した画像ファイル。
+   */
+  const createReportImageFile = async (): Promise<File> => {
+    const imageBlob = await captureElementAsImage(reportRef, {
+      format: 'jpeg',
+      pixelRatio: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
+      quality: REGISTER_SCORE_IMAGE_JPEG_QUALITY,
+    })
+    const filename = formatRegisterScoreImageFilename(props.result.imported_at)
+
+    return new File([imageBlob], filename, { type: 'image/jpeg' })
+  }
+
+  /**
+   * Web Share APIの一時的なユーザー操作を保てるよう、共有用画像を事前生成する。
+   *
+   * @returns 画像生成処理の完了時に解決されるPromise。
+   */
+  const prepareShareImage = async (): Promise<void> => {
+    shareImagePreparationRequested = true
+    if (isPreparingShareImage()) return
+
+    setIsPreparingShareImage(true)
+    setImageActionError(undefined)
+
+    try {
+      while (shareImagePreparationRequested) {
+        shareImagePreparationRequested = false
+        const imageFile = await createReportImageFile()
+        if (!shareImagePreparationRequested) setShareImageFile(imageFile)
+      }
+    } catch {
+      setShareImageFile(undefined)
+      setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+    } finally {
+      setIsPreparingShareImage(false)
+    }
+  }
+
+  /**
+   * レポートDOMの更新をまとめ、共有用画像の再生成を予約する。
+   *
+   * @returns なし。
+   */
+  const scheduleShareImagePreparation = (): void => {
+    setShareImageFile(undefined)
+    if (shareImagePrepareTimer !== undefined) window.clearTimeout(shareImagePrepareTimer)
+
+    shareImagePrepareTimer = window.setTimeout(() => {
+      shareImagePrepareTimer = undefined
+      void prepareShareImage()
+    }, REGISTER_SCORE_SHARE_PREPARE_DELAY_MS)
+  }
+
+  /**
+   * 現在表示中の更新差分レポートを1枚のJPEG画像としてダウンロードする。
    *
    * @returns ダウンロード処理の完了時に解決されるPromise。
    */
   const downloadReportImage = async (): Promise<void> => {
     setIsDownloadingImage(true)
-    setDownloadImageError(undefined)
+    setImageActionError(undefined)
 
     try {
-      const imageBlob = await captureElementAsImage(reportRef, {
-        format: 'png',
-        pixelRatio: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
-      })
-      downloadBlobFile(imageBlob, formatRegisterScoreImageFilename(props.result.imported_at))
+      const imageFile = await createReportImageFile()
+      downloadBlobFile(imageFile, imageFile.name)
     } catch {
-      setDownloadImageError(REGISTER_SCORE_MESSAGES.downloadImageError)
+      setImageActionError(REGISTER_SCORE_MESSAGES.downloadImageError)
     } finally {
       setIsDownloadingImage(false)
     }
   }
 
+  /**
+   * 現在表示中の更新差分レポートをWeb Share APIで共有する。
+   *
+   * @returns 共有処理の完了時に解決されるPromise。
+   */
+  const shareReportImage = async (): Promise<void> => {
+    const imageFile = shareImageFile()
+    if (!imageFile) {
+      void prepareShareImage()
+      return
+    }
+    if (!navigator.canShare({ files: [imageFile] })) {
+      setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+      return
+    }
+
+    setIsSharingImage(true)
+    setImageActionError(undefined)
+
+    try {
+      await navigator.share({ files: [imageFile], title: REGISTER_SCORE_MESSAGES.reportTitle })
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+      }
+    } finally {
+      setIsSharingImage(false)
+    }
+  }
+
   onMount(() => {
+    const shareImageObserver = canShareReportImage()
+      ? new MutationObserver(scheduleShareImagePreparation)
+      : undefined
+    shareImageObserver?.observe(reportRef, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true,
+    })
+    if (shareImageObserver) scheduleShareImagePreparation()
+
     /**
      * 固定幅レポートを親要素の表示幅へ収める縮小率と占有高さを更新する。
      *
@@ -1094,28 +1225,58 @@ export const RegisterScoreResultView = (props: {
     resizeObserver.observe(reportRef)
     updateReportScale()
 
-    onCleanup(() => resizeObserver.disconnect())
+    onCleanup(() => {
+      if (shareImagePrepareTimer !== undefined) window.clearTimeout(shareImagePrepareTimer)
+      shareImageObserver?.disconnect()
+      resizeObserver.disconnect()
+    })
   })
 
   return (
     <div class={`mx-auto flex w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} flex-col gap-4`}>
       <div class="flex flex-col items-end gap-2">
-        <AppButton
-          variant="primary"
-          disabled={isDownloadingImage()}
-          aria-busy={isDownloadingImage()}
-          onClick={downloadReportImage}
-          leftIcon={
-            <Show when={!isDownloadingImage()} fallback={<Loading size="inline" ariaHidden />}>
-              <Download class="h-4 w-4" aria-hidden="true" />
-            </Show>
-          }
-        >
-          {isDownloadingImage()
-            ? REGISTER_SCORE_MESSAGES.downloadingImage
-            : REGISTER_SCORE_MESSAGES.downloadImage}
-        </AppButton>
-        <Show when={downloadImageError()}>
+        <div class="flex flex-wrap justify-end gap-2">
+          <Show when={canShareReportImage()}>
+            <AppButton
+              variant="secondary"
+              disabled={isGeneratingImage()}
+              aria-busy={isPreparingShareImage() || isSharingImage()}
+              onClick={shareReportImage}
+              leftIcon={
+                <Show
+                  when={!isPreparingShareImage() && !isSharingImage()}
+                  fallback={<Loading size="inline" ariaHidden />}
+                >
+                  <Share2 class="h-4 w-4" aria-hidden="true" />
+                </Show>
+              }
+            >
+              {isPreparingShareImage()
+                ? REGISTER_SCORE_MESSAGES.preparingShareImage
+                : isSharingImage()
+                  ? REGISTER_SCORE_MESSAGES.sharingImage
+                  : shareImageFile()
+                    ? REGISTER_SCORE_MESSAGES.shareImage
+                    : REGISTER_SCORE_MESSAGES.prepareShareImage}
+            </AppButton>
+          </Show>
+          <AppButton
+            variant="primary"
+            disabled={isGeneratingImage()}
+            aria-busy={isDownloadingImage()}
+            onClick={downloadReportImage}
+            leftIcon={
+              <Show when={!isDownloadingImage()} fallback={<Loading size="inline" ariaHidden />}>
+                <Download class="h-4 w-4" aria-hidden="true" />
+              </Show>
+            }
+          >
+            {isDownloadingImage()
+              ? REGISTER_SCORE_MESSAGES.downloadingImage
+              : REGISTER_SCORE_MESSAGES.downloadImage}
+          </AppButton>
+        </div>
+        <Show when={imageActionError()}>
           {(message) => (
             <p class="text-sm text-danger" role="alert">
               {message()}
