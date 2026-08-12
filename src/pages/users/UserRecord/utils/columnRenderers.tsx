@@ -13,6 +13,7 @@ import {
   RecordUpdatedAtCell,
 } from '../../../../components/common/record/RecordDisplayParts'
 import type { RecordColumnId } from '../../../../types/recordFilter'
+import { toChartLevelLabel } from '../../../../utils/chartLevel'
 import { getConstDisplay, getRatingDisplay } from '../../../../utils/constDisplay'
 import { difficultyToQueryValue } from '../../../../utils/difficultyUtils'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
@@ -22,6 +23,7 @@ import { formatJusticeCountForAj } from '../../utils/justiceCountDisplay'
 
 const DIFFICULTY_COLUMN_CLASS = `${RECORD_CELL_BASE_CLASS} font-oswald text-sm font-semibold`
 
+/** 通常レコードの列IDごとのセル描画処理。 */
 export const recordColumnRenderers: Record<
   RecordColumnId,
   ColumnRenderer<PlayerRecordWithSongMeta>
@@ -35,6 +37,13 @@ export const recordColumnRenderers: Record<
   difficulty: (record) => (
     <div class={DIFFICULTY_COLUMN_CLASS}>
       <RecordDifficultyBadge difficulty={record.difficulty} />
+    </div>
+  ),
+  level: (record) => (
+    <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+      <span class="inline-block w-full text-center leading-none">
+        {toChartLevelLabel(record.const)}
+      </span>
     </div>
   ),
   const: (record) => {

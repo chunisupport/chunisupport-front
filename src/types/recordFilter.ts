@@ -18,9 +18,11 @@ export type {
   HardLamp,
   NumericRangeFilter,
 }
+/** 通常レコード一覧で選択できるソートキー。 */
 export type RecordSortKey =
   | 'title'
   | 'difficulty'
+  | 'level'
   | 'const'
   | 'rating'
   | 'score'
@@ -31,9 +33,11 @@ export type RecordSortKey =
   | 'lamp'
   | 'hardLamp'
   | 'fullChain'
+/** 通常レコード一覧で表示を切り替えられる列ID。 */
 export type RecordColumnId =
   | 'title'
   | 'difficulty'
+  | 'level'
   | 'const'
   | 'score'
   | 'rating'

@@ -263,6 +263,22 @@ test('レート値ソートは昇順でも未プレイを末尾に寄せる', ()
   )
 })
 
+test('レベルソートは譜面定数を整数とプラス付きの表示レベルへまとめて並べる', () => {
+  // Given: 同じ表示レベル内で定数が異なるレコードを含む一覧。
+  const records = [
+    createRecord({ id: 'level-15-plus-high', const: 15.9 }),
+    createRecord({ id: 'level-15', const: 15.4 }),
+    createRecord({ id: 'level-15-plus-low', const: 15.5 }),
+    createRecord({ id: 'level-14-plus', const: 14.9 }),
+  ]
+
+  // When: 表示レベルで昇順にソートする。
+  const result = sortRecords(records, 'level', 'asc').map((record) => record.id)
+
+  // Then: 定数ではなく 14+、15、15+ の表示レベル順になり、同レベルは入力順を保つ。
+  assert.deepEqual(result, ['level-14-plus', 'level-15', 'level-15-plus-high', 'level-15-plus-low'])
+})
+
 test('OPソートは昇順でも未プレイを末尾に寄せる', () => {
   const records = [
     createRecord({ id: 'played-zero', overpower: 0 }),
