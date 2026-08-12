@@ -3,7 +3,11 @@ import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createSignal, onMount, Show } from 'solid-js'
 import { RECORD_CARD_HOVER_CLASS } from '../../../../components/common/record/RecordDisplayParts'
-import { SCORE_RANK_TEXT_CLASS } from '../../../../components/common/record/recordStyleClasses'
+import { getDefaultRecordLampLabel } from '../../../../components/common/record/recordLampLabel'
+import {
+  COMBO_LAMP_ACCENT_TEXT_CLASS,
+  SCORE_RANK_TEXT_CLASS,
+} from '../../../../components/common/record/recordStyleClasses'
 import type { PlayerRecordDTO } from '../../../../types/api'
 import { getConstDisplay } from '../../../../utils/constDisplay'
 import {
@@ -102,6 +106,16 @@ export const UserRecordCard: Component<Props> = (props) => {
                   <span class="relative -top-px ml-1 font-oswald text-xs font-medium text-rating-candidate-gap">
                     ({formatScoreDifference(props.scoreDifference ?? 0)})
                   </span>
+                </Show>
+                <Show when={props.record.combo_lamp}>
+                  {(lamp) => (
+                    <>
+                      <span class="ml-1">/ </span>
+                      <span class={COMBO_LAMP_ACCENT_TEXT_CLASS[lamp()]}>
+                        {getDefaultRecordLampLabel(lamp())}
+                      </span>
+                    </>
+                  )}
                 </Show>
               </p>
             </div>

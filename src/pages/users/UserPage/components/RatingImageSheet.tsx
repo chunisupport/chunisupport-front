@@ -3,7 +3,10 @@ import { Play } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createSignal, For, Show } from 'solid-js'
 import placeholderImageUrl from '../../../../assets/placeholder.png'
-import { SCORE_RANK_TEXT_CLASS } from '../../../../components/common/record/recordStyleClasses'
+import {
+  COMBO_LAMP_SCORE_ACCENT_CLASS,
+  SCORE_RANK_TEXT_CLASS,
+} from '../../../../components/common/record/recordStyleClasses'
 import { getHonorTypeClassName } from '../../../../constants/honors'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO, UserRatingDTO } from '../../../../types/api'
 import { getConstDisplay } from '../../../../utils/constDisplay'
@@ -106,6 +109,9 @@ const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => 
   const [jacketSource, setJacketSource] = createSignal(jacketUrl())
   const constDisplay = () => getConstDisplay(props.record.const, props.record.is_const_unknown)
   const unknownValueClass = () => (props.record.is_const_unknown ? 'text-danger' : 'text-text')
+  /** @returns コンボランプがある場合はスコアへ重ねるアクセントバーの背景クラス。 */
+  const comboLampScoreAccentClass = () =>
+    props.record.combo_lamp ? COMBO_LAMP_SCORE_ACCENT_CLASS[props.record.combo_lamp] : undefined
   let fallbackLoaded = false
   let retried = false
 
@@ -209,8 +215,18 @@ const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => 
           {props.record.title}
         </p>
         <div class="flex w-21 shrink-0 flex-col items-end justify-center whitespace-nowrap text-right font-oswald leading-none">
-          <span class={`text-xl font-bold ${SCORE_RANK_TEXT_CLASS[scoreRank()]}`}>
-            {formatInteger(props.record.score)}
+          <span
+            class={`relative inline-block text-xl font-bold ${SCORE_RANK_TEXT_CLASS[scoreRank()]}`}
+          >
+            <span class="relative z-10">{formatInteger(props.record.score)}</span>
+            <Show when={comboLampScoreAccentClass()}>
+              {(accentClass) => (
+                <span
+                  class={`absolute inset-x-0 bottom-px h-1.5 ${accentClass()}`}
+                  aria-hidden="true"
+                />
+              )}
+            </Show>
           </span>
           <span class={`text-xl font-bold ${unknownValueClass()}`}>
             {constDisplay().valueText}

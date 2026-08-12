@@ -57,6 +57,18 @@ export const COMBO_LAMP_BADGE_BACKGROUND_CLASS: Record<NonNullable<SharedComboLa
   'ALL JUSTICE': 'bg-lamp-all-justice-bg',
 }
 
+/** レコードのコンボランプ背景色を文字色として使うクラス。 */
+export const COMBO_LAMP_ACCENT_TEXT_CLASS: Record<NonNullable<SharedComboLamp>, string> = {
+  'FULL COMBO': 'text-lamp-full-combo-bg',
+  'ALL JUSTICE': 'text-lamp-all-justice-bg',
+}
+
+/** レコードのスコアへ重ねるコンボランプ色のアクセントバー背景クラス。 */
+export const COMBO_LAMP_SCORE_ACCENT_CLASS: Record<NonNullable<SharedComboLamp>, string> = {
+  'FULL COMBO': 'bg-gradient-to-b from-transparent to-lamp-full-combo-bg',
+  'ALL JUSTICE': 'bg-gradient-to-b from-transparent to-lamp-all-justice-bg',
+}
+
 /** レコードのコンボランプバッジで使う文字色クラス。 */
 export const COMBO_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedComboLamp>, string> = {
   'FULL COMBO': 'text-lamp-full-combo-text',
