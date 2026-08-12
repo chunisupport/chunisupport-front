@@ -19,12 +19,12 @@ test('レベル列は難易度と定数の間に配置し、既定では非表�
   const defaultColumnIds = getDefaultVisibleColumnIds()
 
   // Then: レベル列は指定位置とレート列と同じ幅を持ち、既定表示には含まれない。
+  const ratingColumn = RECORD_COLUMN_DEFINITIONS.find((column) => column.id === 'rating')
+  const hardLampColumn = RECORD_COLUMN_DEFINITIONS.find((column) => column.id === 'hardLamp')
   assert.equal(columnIds.indexOf('level'), columnIds.indexOf('difficulty') + 1)
   assert.equal(columnIds.indexOf('const'), columnIds.indexOf('level') + 1)
-  assert.equal(
-    levelColumn?.width,
-    RECORD_COLUMN_DEFINITIONS.find((column) => column.id === 'rating')?.width
-  )
+  assert.equal(levelColumn?.width, ratingColumn?.width)
+  assert.equal(ratingColumn?.width, hardLampColumn?.width)
   assert.equal(defaultColumnIds.includes('level'), false)
 })
 
