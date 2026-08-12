@@ -24,9 +24,13 @@ type RecordColumnSetting = {
   defaultVisible: boolean
 }
 
+/** 通常譜面のレベル列へ適用するレート列と同じ幅。 */
+const STANDARD_RECORD_LEVEL_COLUMN_WIDTH = getRecordColumnBaseDefinition('rating').width
+
 const RECORD_COLUMN_SETTINGS: RecordColumnSetting[] = [
   { id: 'title', defaultVisible: true },
   { id: 'difficulty', defaultVisible: true },
+  { id: 'level', defaultVisible: false },
   { id: 'const', defaultVisible: true },
   { id: 'score', defaultVisible: true },
   { id: 'rating', defaultVisible: true },
@@ -46,6 +50,7 @@ export const RECORD_COLUMN_DEFINITIONS: RecordColumnDefinition[] = RECORD_COLUMN
     return {
       ...baseDefinition,
       id: setting.id,
+      width: setting.id === 'level' ? STANDARD_RECORD_LEVEL_COLUMN_WIDTH : baseDefinition.width,
       sortKey: baseDefinition.sortKey as RecordSortKey,
       defaultVisible: setting.defaultVisible,
     }
