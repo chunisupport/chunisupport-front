@@ -27,7 +27,7 @@ import type {
 } from '../../types/api'
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
-import { captureElementAsImage, downloadBlobFile } from '../../utils/domImageCapture'
+import { canShareFiles, captureElementAsImage, downloadBlobFile } from '../../utils/domImageCapture'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
 import {
@@ -1035,12 +1035,8 @@ export const RegisterScoreResultView = (props: {
    * @returns Web Share APIでJPEGファイルを共有できる場合はtrue。
    */
   const canShareReportImage = (): boolean => {
-    if (typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function') {
-      return false
-    }
-
     const testFile = new File([], 'share-test.jpg', { type: 'image/jpeg' })
-    return navigator.canShare({ files: [testFile] })
+    return canShareFiles([testFile])
   }
   let scaleContainerRef!: HTMLDivElement
   let reportRef!: HTMLElement
@@ -1177,7 +1173,7 @@ export const RegisterScoreResultView = (props: {
       void prepareShareImage()
       return
     }
-    if (!navigator.canShare({ files: [imageFile] })) {
+    if (!canShareFiles([imageFile])) {
       setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
       return
     }
