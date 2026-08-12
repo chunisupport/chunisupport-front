@@ -150,3 +150,14 @@ export const downloadBlobFile = (blob: Blob, filename: string): void => {
   link.remove()
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), IMAGE_OBJECT_URL_REVOKE_DELAY_MS)
 }
+/**
+ * 現在のブラウザが指定ファイルのWeb Share API共有に対応しているかを返す。
+ *
+ * @param files - 共有可否を確認するファイル。
+ * @returns 指定ファイルを共有できる場合はtrue。
+ */
+export const canShareFiles = (files: File[]): boolean =>
+  typeof navigator !== 'undefined' &&
+  typeof navigator.share === 'function' &&
+  typeof navigator.canShare === 'function' &&
+  navigator.canShare({ files })

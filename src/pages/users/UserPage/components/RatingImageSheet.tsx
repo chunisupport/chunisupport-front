@@ -308,7 +308,7 @@ const RatingImageColumn: Component<RatingImageColumnProps> = (props) => {
 }
 
 /**
- * プレビューとPNG出力で共有するベスト枠・新曲枠画像本体を表示する。
+ * プレビューとJPEG出力で共有するベスト枠・新曲枠画像本体を表示する。
  *
  * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定、参照コールバック。
  * @returns 固定論理幅の縦長画像レイアウト。
