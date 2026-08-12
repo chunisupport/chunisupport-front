@@ -1,16 +1,15 @@
-import { A, Route, Router, useParams } from '@solidjs/router'
+import { A, Route, Router } from '@solidjs/router'
 import { Calculator, ChartNoAxesCombined, Dices, Search, Target, Trophy } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
 
-import { fetchMe, fetchUserProfileSummary } from './api/users'
+import { fetchMe } from './api/users'
 import {
   Announcements,
   AppToastRegion,
   LoadError,
   Loading,
   NavBar,
-  PlayerDataEmptyState,
   X_TIMELINE_HEADING,
   XTimeline,
 } from './components'
@@ -53,7 +52,6 @@ import NotFoundPage from './pages/NotFoundPage'
 import { getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
 import { resolveHomeView } from './usecases/auth/resolveHomeView'
-import { isNotFoundApiError } from './utils/apiError'
 
 const Login = lazy(() => import('./pages/auth/Login/Login'))
 const Register = lazy(() => import('./pages/auth/Register/Register'))
@@ -61,6 +59,7 @@ const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'))
 const MaintenanceLoginPage = lazy(() => import('./pages/maintenance/MaintenanceLoginPage'))
 
 const UserPage = lazy(() => import('./pages/users/UserPage/UserPage'))
+const UserStatsPage = lazy(() => import('./pages/users/UserStats/UserStatsPage'))
 const GoalsList = lazy(() => import('./pages/goals/GoalsList/GoalsList'))
 
 const SongsList = lazy(() => import('./pages/songs/SongsList/SongsList'))
@@ -269,41 +268,6 @@ const LandingPage = () => {
       </main>
       <LandingFooter />
     </div>
-  )
-}
-
-const UserStatsPage = () => {
-  const params = useParams<{ username: string }>()
-  useDocumentTitle('統計')
-
-  const [resource] = createResource(() => params.username, fetchUserProfileSummary)
-
-  return (
-    <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
-      <Show
-        when={!resource.error}
-        fallback={
-          <Show
-            when={isNotFoundApiError(resource.error)}
-            fallback={
-              <div class="mx-auto w-full max-w-3xl p-4">
-                <LoadError error={resource.error} />
-              </div>
-            }
-          >
-            <NotFoundPage />
-          </Show>
-        }
-      >
-        <Show when={!resource.loading} fallback={<Loading />}>
-          <Show when={resource()?.player} fallback={<PlayerDataEmptyState />}>
-            <div class="mx-auto w-full max-w-3xl p-4">
-              <h1 class="text-2xl font-semibold">統計</h1>
-            </div>
-          </Show>
-        </Show>
-      </Show>
-    </ErrorBoundary>
   )
 }
 
@@ -528,7 +492,10 @@ const App = () => {
       />
 
       {/* ユーザ */}
-      <Route path="/users/:username/stats" component={withNavBar(withAuth(UserStatsPage))} />
+      <Route
+        path="/users/:username/stats"
+        component={withNavBar(withRouteLoadBoundary(UserStatsPage))}
+      />
       <Route
         path="/users/:username/:page?/:subPage?"
         component={withNavBar(withRouteLoadBoundary(UserPage))}

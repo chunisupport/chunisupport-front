@@ -5,3 +5,8 @@ export const USER_NAMEPLATE_METRIC_LABELS = {
   new: 'NEW',
   overPower: 'OVER POWER',
 } as const
+
+/** プロフィールカードの履歴導線で使用する文言。 */
+export const USER_NAMEPLATE_HISTORY_LINK_LABEL = '履歴'
+/** プロフィールカードの履歴導線を説明するアクセシブル名。 */
+export const USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL = 'RATING・OVER POWER履歴を見る'

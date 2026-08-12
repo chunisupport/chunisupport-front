@@ -7,6 +7,7 @@ import type {
   PlayerLockedSongRequest,
   PlayerLockedSongsBatchRequest,
   PlayerLockedSongsResponse,
+  PlayerMetricHistoryResponseDTO,
   UpdatedAtResponseDTO,
   UserCourseRecordsDTO,
   UserDTO,
@@ -40,6 +41,22 @@ export const fetchUserProfileSummary = async (username: string): Promise<UserPro
 export const fetchUserRating = async (username: string): Promise<UserRatingDTO> => {
   const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/rating`
+  )
+
+  return response.json()
+}
+
+/**
+ * 指定したユーザーの公式RATING・公式OVER POWER履歴を取得する。
+ *
+ * @param username - 履歴取得対象のユーザー名。
+ * @returns 現在値を先頭に新しい順で並んだ公式指標履歴。
+ */
+export const fetchUserRatingOpHistory = async (
+  username: string
+): Promise<PlayerMetricHistoryResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/rating-op-history`
   )
 
   return response.json()
