@@ -1,5 +1,5 @@
 import { A, Route, Router } from '@solidjs/router'
-import { Calculator, ChartNoAxesCombined, Dices, Search, Target, Trophy } from 'lucide-solid'
+import { Calculator, ChartNoAxesCombined, Dices, Target, Trophy } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
 
@@ -34,10 +34,10 @@ import {
   EDITOR_SONGS_PATH,
   FRIENDS_PATH,
   LATEST_SCORE_UPDATE_PATH,
-  LOCKED_SONGS_FINDER_PATH,
   MAINTENANCE_LOGIN_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   REGISTER_SCORE_PATH,
+  TOOL_STATS_PATH,
   TOOLS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './constants/routes'
@@ -287,8 +287,7 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Target class={iconClass} aria-hidden="true" />
     case 'chart':
       return <ChartNoAxesCombined class={iconClass} aria-hidden="true" />
-    case 'search':
-      return <Search class={iconClass} aria-hidden="true" />
+
     case 'random':
       return <Dices class={iconClass} aria-hidden="true" />
     case 'ranking':
@@ -563,7 +562,7 @@ const App = () => {
         path={BEST_SLOT_RANKING_PATH}
         component={withNavBar(withRouteLoadBoundary(BestSlotRankingPage))}
       />
-      <Route path={LOCKED_SONGS_FINDER_PATH} component={withNavBar(EmptyToolPage)} />
+      <Route path={TOOL_STATS_PATH} component={withNavBar(EmptyToolPage)} />
 
       {/* 管理 */}
       <Route path={ADMIN_PATH} component={withNavBar(GuardedAdminPage)} />

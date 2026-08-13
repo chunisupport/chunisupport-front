@@ -15,7 +15,8 @@ export const WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector`
 export const RANDOM_SONG_SELECTOR_PATH = `${TOOLS_PATH}/random-song-selector`
 /** ベスト枠ランキング画面のパス。 */
 export const BEST_SLOT_RANKING_PATH = `${TOOLS_PATH}/best-slot-ranking`
-export const LOCKED_SONGS_FINDER_PATH = `${TOOLS_PATH}/locked-songs-finder`
+/** 統計画面のパス。 */
+export const TOOL_STATS_PATH = `${TOOLS_PATH}/stats`
 /** EDITOR向け編集メニューのパス。 */
 export const EDITOR_PATH = '/editor'
 /** EDITOR向け楽曲編集画面のパス。 */
