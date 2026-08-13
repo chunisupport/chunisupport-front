@@ -23,9 +23,9 @@ export const UserRecordPlaceholderCard: Component<Props> = (props) => {
   return (
     <div class="relative h-16 select-none overflow-hidden border-y border-r border-border bg-surface opacity-50 before:absolute before:inset-y-0 before:left-0 before:w-2 before:bg-surface-hover">
       <span class="sr-only">{buildEmptyRatingSlotLabel(slotNumber())}</span>
-      <div class="flex h-full items-center p-2 pl-4">
+      <div class="flex h-full items-center p-1.5 pl-4">
         <div
-          class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-hover font-oswald text-disabled-text text-lg font-bold"
+          class="flex h-11 w-11 items-center justify-center rounded-full bg-surface-hover font-oswald text-2xl font-bold leading-none text-disabled-text"
           aria-hidden="true"
         >
           {slotNumber()}

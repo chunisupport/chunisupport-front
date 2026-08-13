@@ -1,5 +1,6 @@
 import { Collapsible } from '@kobalte/core/collapsible'
 import { ToggleGroup } from '@kobalte/core/toggle-group'
+import { Tooltip } from '@kobalte/core/tooltip'
 import {
   type CollisionDetector,
   closestCenter,
@@ -15,11 +16,12 @@ import {
   ChevronsRight,
   GalleryHorizontal,
   LayoutList,
+  Plus,
   Settings2,
 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
-import { AppButton, AppIconButton } from '../../../../../components/common/AppButton'
+import { AppIconButton } from '../../../../../components/common/AppButton'
 import { AppDisclosureTrigger } from '../../../../../components/common/AppDisclosureTrigger'
 import type { GoalDTO } from '../../../../../types/api'
 import {
@@ -27,7 +29,6 @@ import {
   COLLAPSE_ALL_GOALS_LABEL,
   EMPTY_GOALS_MESSAGE,
   EXPAND_ALL_GOALS_LABEL,
-  GOAL_DISCLOSURE_CONTROLS_LABEL,
   GOAL_GROUP_COPY,
   GOAL_GROUP_DISPLAY_MODE_COPY,
   GOALS_LIMIT,
@@ -39,6 +40,7 @@ import GoalCard from '../card/GoalCard'
 import { GoalCopyPlaceholder } from '../card/GoalCopyPlaceholder'
 import { GoalsListLongPressSensor } from './GoalsListLongPressSensor'
 import { createAutoScroll } from './goalsListAutoScroll'
+import { VerticalAxisConstraint } from './VerticalAxisConstraint'
 
 /** solid-dnd の active draggable に付与するスクロール補正 transformer の ID。 */
 const AUTO_SCROLL_TRANSFORMER_ID = 'goals-list-auto-scroll'
@@ -304,6 +306,7 @@ const GoalGroupCards: Component<GoalGroupCardsProps> = (props) => {
       >
         <DragDropProvider collisionDetector={detectGroupCollision} onDragEnd={handleDragEnd}>
           <GoalsListLongPressSensor />
+          <VerticalAxisConstraint />
           <AutoScrollSetup autoScroll={autoScroll} />
           <SortableProvider ids={props.groupView.goals.map(({ goal }) => goal.id)}>
             <div class="grid grid-cols-1 gap-3">
@@ -405,13 +408,6 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
   }
 
   /**
-   * 表示中の全目標カードが開いているか判定する。
-   *
-   * @returns 全カードが開いていればtrue。
-   */
-  const areAllGoalsOpen = (): boolean => displayedGoals().every(({ goal }) => isGoalOpen(goal.id))
-
-  /**
    * 表示中の全目標カードが閉じているか判定する。
    *
    * @returns 全カードが閉じていればtrue。
@@ -461,6 +457,19 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
     )
   }
 
+  /**
+   * 表示中のカードがすべて閉じていれば開き、それ以外は閉じる。
+   *
+   * @returns なし。
+   */
+  const handleToggleAll = (): void => {
+    if (areAllGoalsClosed()) {
+      handleExpandAll()
+      return
+    }
+    handleCollapseAll()
+  }
+
   onMount(() => {
     /**
      * 固定ヘッダーの実測高を一覧表示のグループ見出しへ反映する。
@@ -480,7 +489,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
 
   return (
     <div class="mx-auto w-full max-w-3xl px-4 pb-4">
-      <div ref={stickyHeaderRef} class="sticky top-0 z-20 space-y-4 bg-bg py-4">
+      <div ref={stickyHeaderRef} class="sticky top-0 z-20 space-y-4 bg-page-pattern pt-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 class="text-2xl font-semibold">目標</h1>
@@ -488,30 +497,37 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
               {props.goalsCount} / {GOALS_LIMIT}件
             </p>
           </div>
-          <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+          <div class="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
             <Show when={displayedGoals().length > 0}>
-              <fieldset class="m-0 flex min-w-0 items-center gap-1 border-0 p-0">
-                <legend class="sr-only">{GOAL_DISCLOSURE_CONTROLS_LABEL}</legend>
-                <AppButton
-                  variant="ghost"
-                  size="xs"
-                  disabled={props.isReordering || areAllGoalsOpen()}
-                  leftIcon={<ChevronsDown size={16} aria-hidden="true" />}
-                  onClick={handleExpandAll}
+              <Tooltip placement="bottom" gutter={4} openDelay={400}>
+                <Tooltip.Trigger
+                  as={AppIconButton}
+                  tone="ghost"
+                  aria-label={
+                    areAllGoalsClosed() ? EXPAND_ALL_GOALS_LABEL : COLLAPSE_ALL_GOALS_LABEL
+                  }
+                  disabled={props.isReordering}
+                  onClick={handleToggleAll}
                 >
-                  {EXPAND_ALL_GOALS_LABEL}
-                </AppButton>
-                <AppButton
-                  variant="ghost"
-                  size="xs"
-                  disabled={props.isReordering || areAllGoalsClosed()}
-                  leftIcon={<ChevronsRight size={16} aria-hidden="true" />}
-                  onClick={handleCollapseAll}
-                >
-                  {COLLAPSE_ALL_GOALS_LABEL}
-                </AppButton>
-              </fieldset>
+                  <Show
+                    when={areAllGoalsClosed()}
+                    fallback={<ChevronsRight size={18} aria-hidden="true" />}
+                  >
+                    <ChevronsDown size={18} aria-hidden="true" />
+                  </Show>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content class="z-50 rounded-md border border-border-strong bg-surface-raised px-2 py-1 text-xs text-text shadow-lg">
+                    {areAllGoalsClosed() ? EXPAND_ALL_GOALS_LABEL : COLLAPSE_ALL_GOALS_LABEL}
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip>
             </Show>
+            <GoalGroupDisplayModeToggle
+              value={props.groupDisplayMode}
+              disabled={props.isReordering}
+              onChange={props.onGroupDisplayModeChange}
+            />
             <AppIconButton
               aria-label={GOAL_GROUP_COPY.manageButtonLabel}
               disabled={props.isReordering}
@@ -519,22 +535,15 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
             >
               <Settings2 size={18} aria-hidden="true" />
             </AppIconButton>
-            <AppButton
-              variant="primary"
+            <AppIconButton
+              aria-label={ADD_GOAL_LABEL}
+              tone="primary"
               disabled={props.isReordering || props.isCopying || props.goalsCount >= GOALS_LIMIT}
               onClick={props.onCreate}
             >
-              {ADD_GOAL_LABEL}
-            </AppButton>
+              <Plus size={20} aria-hidden="true" />
+            </AppIconButton>
           </div>
-        </div>
-
-        <div class="flex justify-end">
-          <GoalGroupDisplayModeToggle
-            value={props.groupDisplayMode}
-            disabled={props.isReordering}
-            onChange={props.onGroupDisplayModeChange}
-          />
         </div>
 
         <Show when={props.groupDisplayMode === 'horizontal'}>
@@ -561,7 +570,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
         </Show>
       </div>
 
-      <div class="space-y-4">
+      <div class="space-y-4 pt-4">
         <Show when={props.goalsCount >= GOALS_LIMIT}>
           <p class="rounded border border-warning-border bg-warning-bg px-3 py-2 text-sm text-score-rank-c-text">
             {GOALS_LIMIT_REACHED_MESSAGE}
@@ -591,7 +600,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
                     <section aria-labelledby={`goal-group-${groupView.groupId ?? 'none'}`}>
                       <h2
                         id={`goal-group-${groupView.groupId ?? 'none'}`}
-                        class="sticky z-10 bg-bg"
+                        class="sticky z-10 bg-page-pattern"
                         style={{ top: `${stickyHeaderHeight()}px` }}
                       >
                         <AppDisclosureTrigger

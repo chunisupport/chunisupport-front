@@ -101,6 +101,33 @@ test('fetchUserUpdatedAtは失敗した同時リクエストの完了後に再�
   assert.equal(retried.updated_at, '2026-07-06T00:00:00Z')
 })
 
+test('fetchUserRatingOpHistoryはURLエンコードしたユーザー名の公式指標履歴を取得すること', async () => {
+  // Given
+  const responseBody = {
+    entries: [
+      {
+        rating: 17.25,
+        overpower: 12345.67,
+        data_collected_at: '2026-08-08T12:00:00Z',
+      },
+    ],
+  }
+  globalThis.fetch = async (input) => {
+    assert.equal(
+      String(input),
+      'http://localhost:3000/internal/users/alice%20bob/rating-op-history'
+    )
+    return Response.json(responseBody)
+  }
+  const { fetchUserRatingOpHistory } = await loadUsersApi()
+
+  // When
+  const response = await fetchUserRatingOpHistory('alice bob')
+
+  // Then
+  assert.deepEqual(response, responseBody)
+})
+
 test('fetchUserCourseRecordsは未プレイを含むコースレコード一覧を取得できること', async () => {
   // Given
   const responseBody = {

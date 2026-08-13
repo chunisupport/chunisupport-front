@@ -1,7 +1,7 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { Download, ImageDown, X } from 'lucide-solid'
+import { Download, ImageDown, Share2, X } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createEffect, createSignal, onCleanup, Show } from 'solid-js'
+import { createEffect, createSignal, onCleanup, Show, untrack } from 'solid-js'
 import { Loading } from '../../../../components'
 import {
   AppButton,
@@ -10,10 +10,15 @@ import {
 } from '../../../../components/common/AppButton'
 import { RATING_SLOT_COUNT } from '../../../../constants/rating'
 import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
-import { captureElementAsPng, downloadBlobFile } from '../../../../utils/domImageCapture'
+import {
+  canShareFiles,
+  captureElementAsImage,
+  downloadBlobFile,
+} from '../../../../utils/domImageCapture'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import {
   RATING_IMAGE_COPY,
+  RATING_IMAGE_JPEG_QUALITY,
   RATING_IMAGE_PIXEL_RATIO,
   RATING_IMAGE_WIDTH_PX,
 } from '../UserProfileView.constants'
@@ -34,7 +39,7 @@ type Props = {
 }
 
 /**
- * ベスト枠・新曲枠画像を縮小プレビューし、PNGとして保存できるダイアログを表示する。
+ * ベスト枠・新曲枠画像を縮小プレビューし、JPEGとして共有・保存できるダイアログを表示する。
  *
  * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定。
  * @returns 画像化プレビューを開くボタンとダイアログ。
@@ -42,11 +47,14 @@ type Props = {
 export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [isDownloading, setIsDownloading] = createSignal(false)
-  const [downloadError, setDownloadError] = createSignal<string>()
+  const [isPreparingShare, setIsPreparingShare] = createSignal(false)
+  const [isSharing, setIsSharing] = createSignal(false)
+  const [shareImageFile, setShareImageFile] = createSignal<File>()
+  const [imageActionError, setImageActionError] = createSignal<string>()
   const [previewViewport, setPreviewViewport] = createSignal<HTMLDivElement>()
   const [imageSheet, setImageSheet] = createSignal<HTMLDivElement>()
   const [previewScale, setPreviewScale] = createSignal(1)
-  const [previewHeight, setPreviewHeight] = createSignal(0)
+
   const [readyJacketCount, setReadyJacketCount] = createSignal(0)
   const readyJacketKeys = new Set<string>()
 
@@ -72,6 +80,21 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const isPreviewReady = (): boolean => readyJacketCount() >= expectedJacketCount()
 
   /**
+   * ダウンロード・共有・共有用画像生成のいずれかを実行中か返す。
+   *
+   * @returns 画像に関する処理を実行中の場合はtrue。
+   */
+  const isImageActionRunning = (): boolean => isDownloading() || isPreparingShare() || isSharing()
+
+  /**
+   * 現在のブラウザがJPEGファイルの共有に対応しているかを返す。
+   *
+   * @returns Web Share APIでJPEGファイルを共有できる場合はtrue。
+   */
+  const canShareRatingImage = (): boolean =>
+    canShareFiles([new File([], 'share-test.jpg', { type: 'image/jpeg' })])
+
+  /**
    * ジャケット画像ごとの準備状態を集約する。
    *
    * @param key - 画像化対象内でジャケット画像を識別するキー。
@@ -94,41 +117,113 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
    * @returns なし。
    */
   const handleOpenChange = (nextOpen: boolean): void => {
-    if (!nextOpen && isDownloading()) return
+    if (!nextOpen && isImageActionRunning()) return
 
     if (nextOpen) {
       readyJacketKeys.clear()
       setReadyJacketCount(0)
+      setShareImageFile(undefined)
     }
     setOpen(nextOpen)
-    if (!nextOpen) setDownloadError(undefined)
+    if (!nextOpen) setImageActionError(undefined)
   }
 
   /**
-   * 現在のプレビュー内容を2倍解像度のPNGとしてダウンロードする。
+   * 現在のプレビュー内容を原寸解像度のJPEGファイルとして生成する。
+   *
+   * @returns ファイル名を設定したJPEGファイル。
+   */
+  const createRatingImageFile = async (): Promise<File> => {
+    const sheet = imageSheet()
+    if (!sheet) throw new Error('Rating image sheet is not ready')
+
+    const blob = await captureElementAsImage(sheet, {
+      format: 'jpeg',
+      pixelRatio: RATING_IMAGE_PIXEL_RATIO,
+      quality: RATING_IMAGE_JPEG_QUALITY,
+    })
+
+    return new File([blob], formatRatingImageFilename(props.username), { type: 'image/jpeg' })
+  }
+
+  /**
+   * Web Share APIのユーザー操作を保てるよう、共有用画像を事前生成する。
+   *
+   * @returns 画像生成処理の完了時に解決されるPromise。
+   */
+  const prepareShareImage = async (): Promise<void> => {
+    if (isPreparingShare() || shareImageFile()) return
+
+    setIsPreparingShare(true)
+    setImageActionError(undefined)
+
+    try {
+      setShareImageFile(await createRatingImageFile())
+    } catch {
+      setShareImageFile(undefined)
+      setImageActionError(RATING_IMAGE_COPY.shareError)
+    } finally {
+      setIsPreparingShare(false)
+    }
+  }
+
+  /**
+   * 現在のプレビュー内容を原寸解像度のJPEGとしてダウンロードする。
    *
    * @returns ダウンロード処理の完了時に解決されるPromise。
    */
   const downloadRatingImage = async (): Promise<void> => {
-    const sheet = imageSheet()
-    if (!sheet) return
-
     setIsDownloading(true)
-    setDownloadError(undefined)
+    setImageActionError(undefined)
 
     try {
-      const blob = await captureElementAsPng(sheet, {
-        pixelRatio: RATING_IMAGE_PIXEL_RATIO,
-      })
-      downloadBlobFile(blob, formatRatingImageFilename(props.username))
+      const imageFile = await createRatingImageFile()
+      downloadBlobFile(imageFile, imageFile.name)
     } catch {
-      setDownloadError(RATING_IMAGE_COPY.downloadError)
+      setImageActionError(RATING_IMAGE_COPY.downloadError)
     } finally {
       setIsDownloading(false)
     }
   }
 
-  // 固定幅の画像本体をダイアログ本文の表示幅だけ縮小し、占有高さを同期する。
+  /**
+   * 現在のプレビュー画像をWeb Share APIで共有する。
+   *
+   * @returns 共有処理の完了時に解決されるPromise。
+   */
+  const shareRatingImage = async (): Promise<void> => {
+    const imageFile = shareImageFile()
+    if (!imageFile) {
+      void prepareShareImage()
+      return
+    }
+    if (!canShareFiles([imageFile])) {
+      setImageActionError(RATING_IMAGE_COPY.shareError)
+      return
+    }
+
+    setIsSharing(true)
+    setImageActionError(undefined)
+
+    try {
+      await navigator.share({ files: [imageFile], title: RATING_IMAGE_COPY.dialogTitle })
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        setImageActionError(RATING_IMAGE_COPY.shareError)
+      }
+    } finally {
+      setIsSharing(false)
+    }
+  }
+
+  // 共有ダイアログをクリック直後に開けるよう、プレビュー完成時点でファイルを準備する。
+  createEffect(() => {
+    if (!open() || !isPreviewReady() || !canShareRatingImage()) return
+
+    untrack(() => void prepareShareImage())
+  })
+
+  // 画像の論理サイズを保存したまま、プレビューだけをダイアログの表示領域へ収める。
   createEffect(() => {
     if (!open()) return
 
@@ -137,7 +232,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     if (!viewport || !sheet) return
 
     /**
-     * 画像本体を表示領域へ収める縮小率と、変形後の占有高さを更新する。
+     * 画像本体を表示領域の幅と高さへ収める縮小率を更新する。
      *
      * @returns なし。
      */
@@ -147,17 +242,20 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
       if (animationFrameId !== undefined) cancelAnimationFrame(animationFrameId)
 
       animationFrameId = requestAnimationFrame(() => {
-        const scale = Math.min(1, viewport.clientWidth / RATING_IMAGE_WIDTH_PX)
-        const height = sheet.offsetHeight * scale
+        const scale = Math.min(
+          1,
+          viewport.clientWidth / RATING_IMAGE_WIDTH_PX,
+          viewport.clientHeight / sheet.offsetHeight
+        )
 
         setPreviewScale((current) => (current === scale ? current : scale))
-        setPreviewHeight((current) => (current === height ? current : height))
         animationFrameId = undefined
       })
     }
 
     const resizeObserver = new ResizeObserver(updatePreviewSize)
     resizeObserver.observe(viewport)
+    resizeObserver.observe(sheet)
     updatePreviewSize()
 
     onCleanup(() => {
@@ -183,7 +281,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
       <Show when={open()}>
         <Dialog.Portal>
           <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
-          <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-60 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[92dvh] sm:max-h-[92dvh] sm:w-[94vw] sm:max-w-6xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+          <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-60 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[92dvh] sm:max-h-[92dvh] sm:w-[94vw] sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
             <div class="flex shrink-0 items-start justify-between gap-4">
               <div class="min-w-0">
                 <Dialog.Title class="text-lg font-bold text-text">
@@ -196,50 +294,45 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
               <Dialog.CloseButton
                 class={getAppIconButtonClass({ tone: 'ghost', class: 'shrink-0' })}
                 aria-label={RATING_IMAGE_COPY.close}
-                disabled={isDownloading()}
+                disabled={isImageActionRunning()}
               >
                 <X class="h-5 w-5" aria-hidden="true" />
               </Dialog.CloseButton>
             </div>
 
-            <div class="mt-4 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain rounded-md bg-bg p-3">
+            <div class="mt-4 min-h-0 flex-1 basis-0 overflow-hidden rounded-md bg-bg p-3">
               <div
                 ref={(element) => setPreviewViewport(element)}
-                class="mx-auto w-full overflow-hidden"
+                class="relative mx-auto h-full w-full overflow-hidden"
               >
-                <div
-                  class="relative min-h-40 select-none overflow-hidden"
-                  aria-busy={!isPreviewReady()}
-                  style={{ height: `${previewHeight()}px` }}
-                >
-                  <Show when={!isPreviewReady()}>
-                    <div class="absolute inset-0 z-10 min-h-40">
-                      <Loading ariaLabel={RATING_IMAGE_COPY.preparingPreview} />
-                    </div>
-                  </Show>
-                  <div
-                    class="absolute left-0 top-0"
-                    classList={{ invisible: !isPreviewReady() }}
-                    style={{
-                      transform: `scale(${previewScale()})`,
-                      'transform-origin': 'top left',
-                    }}
-                  >
-                    <RatingImageSheet
-                      captureRef={(element) => setImageSheet(element)}
-                      playerInfo={props.playerInfo}
-                      honors={props.honors}
-                      rating={props.rating}
-                      showJackets={props.showJackets}
-                      onJacketReadyChange={handleJacketReadyChange}
-                    />
+                <Show when={!isPreviewReady()}>
+                  <div class="absolute inset-0 z-10">
+                    <Loading ariaLabel={RATING_IMAGE_COPY.preparingPreview} />
                   </div>
+                </Show>
+                <div
+                  class="absolute left-1/2 top-1/2 select-none"
+                  classList={{ invisible: !isPreviewReady() }}
+                  aria-busy={!isPreviewReady()}
+                  style={{
+                    transform: `translate(-50%, -50%) scale(${previewScale()})`,
+                    'transform-origin': 'center',
+                  }}
+                >
+                  <RatingImageSheet
+                    captureRef={(element) => setImageSheet(element)}
+                    playerInfo={props.playerInfo}
+                    honors={props.honors}
+                    rating={props.rating}
+                    showJackets={props.showJackets}
+                    onJacketReadyChange={handleJacketReadyChange}
+                  />
                 </div>
               </div>
             </div>
 
             <div class="mt-4 flex shrink-0 flex-col items-end gap-2">
-              <Show when={downloadError()}>
+              <Show when={imageActionError()}>
                 {(message) => (
                   <p class="text-sm text-danger" role="alert">
                     {message()}
@@ -247,15 +340,29 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                 )}
               </Show>
               <div class="flex flex-wrap justify-end gap-2">
-                <Dialog.CloseButton
-                  class={getAppButtonClass({ variant: 'secondary' })}
-                  disabled={isDownloading()}
+                <AppButton
+                  variant="secondary"
+                  disabled={!canShareRatingImage() || isImageActionRunning() || !isPreviewReady()}
+                  aria-busy={isPreparingShare() || isSharing()}
+                  onClick={shareRatingImage}
+                  leftIcon={
+                    <Show
+                      when={!isPreparingShare() && !isSharing()}
+                      fallback={<Loading size="inline" ariaHidden />}
+                    >
+                      <Share2 class="h-4 w-4" aria-hidden="true" />
+                    </Show>
+                  }
                 >
-                  {RATING_IMAGE_COPY.close}
-                </Dialog.CloseButton>
+                  {isPreparingShare()
+                    ? RATING_IMAGE_COPY.preparingShare
+                    : isSharing()
+                      ? RATING_IMAGE_COPY.sharing
+                      : RATING_IMAGE_COPY.share}
+                </AppButton>
                 <AppButton
                   variant="primary"
-                  disabled={isDownloading() || !isPreviewReady()}
+                  disabled={isImageActionRunning() || !isPreviewReady()}
                   aria-busy={isDownloading()}
                   onClick={downloadRatingImage}
                   leftIcon={

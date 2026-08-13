@@ -2,12 +2,17 @@ import { useNavigate } from '@solidjs/router'
 import { createSignal, onMount } from 'solid-js'
 
 import { fetchMe, fetchUserProfileSummary } from '../api/users'
-import { REGISTER_SCORE_TEMP_PATH } from '../constants/routes'
 import { clearAuthenticatedUser, getAuthenticatedUser, getAuthStatus } from '../stores/authSession'
 import { resolvePostLoginRedirectPath } from '../usecases/auth/redirectPath.ts'
 import { resolveAuthenticatedRedirect } from '../usecases/auth/resolveAuthenticatedRedirect.ts'
 import { resolveAuthSession } from '../usecases/auth/resolveAuthSession.ts'
 
+/**
+ * 認証済みユーザーをログイン・登録画面から適切な画面へ移動させる。
+ *
+ * @param redirectPath - 認証後に復帰する候補パス。
+ * @returns 認証状態を確認中かどうかを表すSignal。
+ */
 const useRedirectIfAuthenticated = (redirectPath?: string) => {
   const navigate = useNavigate()
   const [isCheckingAuth, setIsCheckingAuth] = createSignal(getAuthStatus() !== 'authenticated')
@@ -23,11 +28,6 @@ const useRedirectIfAuthenticated = (redirectPath?: string) => {
           getAuthenticatedUser(),
           fetchUserProfileSummary
         )
-
-        if (fallbackRedirectPath === REGISTER_SCORE_TEMP_PATH) {
-          navigate(fallbackRedirectPath)
-          return
-        }
 
         const safeRedirectPath = resolvePostLoginRedirectPath(redirectPath)
         if (safeRedirectPath) {

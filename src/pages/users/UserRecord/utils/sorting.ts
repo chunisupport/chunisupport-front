@@ -1,5 +1,6 @@
 import { PLAYER_DATA_DIFFICULTY_ORDER } from '../../../../constants/difficulty'
 import type { RecordSortCondition, RecordSortKey } from '../../../../types/recordFilter'
+import { getChartLevelSortKey, toChartLevelLabel } from '../../../../utils/chartLevel'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
   compareUpdatedAtWithMissingLast,
@@ -31,6 +32,7 @@ const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
 const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   title: 'title',
   diff: 'difficulty',
+  level: 'level',
   const: 'const',
   rating: 'rating',
   score: 'score',
@@ -134,6 +136,11 @@ const compareRecordBySortCondition = (
       break
     case 'const':
       comparison = left.const - right.const
+      break
+    case 'level':
+      comparison =
+        getChartLevelSortKey(toChartLevelLabel(left.const)) -
+        getChartLevelSortKey(toChartLevelLabel(right.const))
       break
     case 'rating': {
       return compareNumberWithUnplayedLast(

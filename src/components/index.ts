@@ -1,3 +1,4 @@
+export { Announcements } from './Announcements'
 export { AppToastRegion } from './common/AppToast'
 export { LoadError } from './LoadError'
 export { Loading } from './Loading'

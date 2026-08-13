@@ -84,6 +84,7 @@ export type ErrorCode =
   // プレイヤー
   | 'player_not_linked'
   | 'player_not_found'
+  | 'player_metric_history_not_found'
   // 楽曲・譜面
   | 'song_not_found'
   | 'chart_not_found'
@@ -163,6 +164,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   operation_failed: '操作に失敗しました',
   player_not_linked: 'プレイヤーデータが連携されていません',
   player_not_found: 'プレイヤーが見つかりません',
+  player_metric_history_not_found: 'RATING・OVER POWER履歴が見つかりません',
   song_not_found: '楽曲が見つかりません',
   chart_not_found: '譜面が見つかりません',
   invalid_genre_id: 'ジャンルIDが不正です',
@@ -651,7 +653,7 @@ export interface PlayerDataUpdateResult {
   /** 登録後のプレイヤープロフィール情報。 */
   profile: PlayerDataProfile
   summary: PlayerDataSummary
-  /** 登録前後のレート・OVER POWER差分。旧保存形式では未返却。 */
+  /** 登録前後のレート・OVER POWER値・OP%差分。schema version 1では未返却。 */
   metric_diffs?: PlayerDataMetricDiffs
   /** 登録前後の通常譜面およびWORLD'S END集計差分。 */
   statistics: PlayerDataStatistics
@@ -704,10 +706,12 @@ export interface PlayerDataFloat64Diff {
   delta: number | null
 }
 
-/** レートとOVER POWER値の登録前後差分。 */
+/** レート、OVER POWER値、OP%の登録前後差分。 */
 export interface PlayerDataMetricDiffs {
   rating: PlayerDataFloat64Diff
   overpower_value: PlayerDataFloat64Diff
+  /** OP%の差分。schema version 1、2では未返却。 */
+  overpower_percent?: PlayerDataFloat64Diff
 }
 
 /** 登録前後の整数差分。 */
@@ -872,6 +876,22 @@ export interface UserRatingDTO {
   new: PlayerRecordDTO[]
   new_candidate: PlayerRecordDTO[]
   meta: UserRatingMetaDTO
+}
+
+/** 公式RATING・公式OVER POWER履歴の1件を表す。 */
+export interface PlayerMetricHistoryEntryDTO {
+  /** CHUNITHM-NETから取得した公式RATING。 */
+  rating: number
+  /** CHUNITHM-NETから取得した公式OVER POWER。 */
+  overpower: number
+  /** CHUNITHM-NETからのデータ取得完了日時。 */
+  data_collected_at: string
+}
+
+/** プレイヤー単位の公式RATING・公式OVER POWER履歴レスポンス。 */
+export interface PlayerMetricHistoryResponseDTO {
+  /** 現在値を先頭に新しい順で並んだ公式指標のスナップショット。 */
+  entries: PlayerMetricHistoryEntryDTO[]
 }
 
 export interface PlayerDTO {

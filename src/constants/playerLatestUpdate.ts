@@ -5,11 +5,12 @@ export const LATEST_SCORE_UPDATE_TITLE = '前回のスコア更新'
 export const LATEST_SCORE_UPDATE_EMPTY_MESSAGE = '保存された更新差分はありません。'
 
 /** 新規保存される更新結果のスキーマバージョン。 */
-export const LATEST_SCORE_UPDATE_SCHEMA_VERSION = 2
+export const LATEST_SCORE_UPDATE_SCHEMA_VERSION = 3
 
 /** 画面で読み込み可能な保存済み更新結果のスキーマバージョン。 */
 export const SUPPORTED_LATEST_SCORE_UPDATE_SCHEMA_VERSIONS = [
   1,
+  2,
   LATEST_SCORE_UPDATE_SCHEMA_VERSION,
 ] as const
 

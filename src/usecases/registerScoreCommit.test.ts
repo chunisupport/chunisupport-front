@@ -44,6 +44,7 @@ const createPlayerDataResult = (overrides: Partial<PlayerDataResult> = {}): Play
   metric_diffs: {
     rating: { before: null, after: null, delta: null },
     overpower_value: { before: null, after: null, delta: null },
+    overpower_percent: { before: null, after: null, delta: null },
   },
   statistics: {
     overall: createStatisticsGroup(),
@@ -99,18 +100,60 @@ test('normalizePlayerDataResult: 最新更新結果にskipped_recordsがなく�
   assert.deepEqual(normalized.skipped_records, [])
 })
 
-test('normalizePlayerDataResult: 旧形式の最新更新結果ではメトリクス差分をnullで補完する', () => {
-  // Given: schema version 1と同様にメトリクス差分を持たない保存済み結果。
-  const { metric_diffs: _metricDiffs, ...legacyUpdate } = createPlayerDataResult()
+test('normalizePlayerDataResult: schema version 1では全メトリクス差分をnullで補完する', () => {
+  // Given: メトリクス差分を持たないschema version 1の保存済み結果。
+  const { metric_diffs: _metricDiffs, ...updateWithoutMetricDiffs } = createPlayerDataResult()
+  const version1Update = { ...updateWithoutMetricDiffs, schema_version: 1 }
 
   // When: 既存の更新差分レポート用に結果を正規化する。
-  const normalized = normalizePlayerDataResult(legacyUpdate)
+  const normalized = normalizePlayerDataResult(version1Update)
 
-  // Then: 現在値を維持しつつ、レートとOVER POWERの差分は非表示にできる。
+  // Then: 現在値を維持しつつ、すべてのメトリクス差分を非表示にできる。
   assert.deepEqual(normalized.metric_diffs, {
     rating: { before: null, after: null, delta: null },
     overpower_value: { before: null, after: null, delta: null },
+    overpower_percent: { before: null, after: null, delta: null },
   })
+})
+
+test('normalizePlayerDataResult: schema version 2では欠落したOP%差分だけをnullで補完する', () => {
+  // Given: レートとOVER POWER値の差分だけを持つschema version 2の保存済み結果。
+  const version2MetricDiffs = {
+    rating: { before: 16, after: 16.0125, delta: 0.0125 },
+    overpower_value: { before: 100, after: 103.787, delta: 3.787 },
+  }
+  const version2Update = {
+    ...createPlayerDataResult({ metric_diffs: version2MetricDiffs }),
+    schema_version: 2,
+  }
+
+  // When: 既存の更新差分レポート用に結果を正規化する。
+  const normalized = normalizePlayerDataResult(version2Update)
+
+  // Then: 既存差分は維持し、未保存だったOP%差分だけを非表示にできる。
+  assert.deepEqual(normalized.metric_diffs, {
+    ...version2MetricDiffs,
+    overpower_percent: { before: null, after: null, delta: null },
+  })
+})
+
+test('normalizePlayerDataResult: schema version 3ではOP%差分を維持する', () => {
+  // Given: OP%を含む全メトリクス差分を持つschema version 3の保存済み結果。
+  const version3MetricDiffs = {
+    rating: { before: 16, after: 16.0125, delta: 0.0125 },
+    overpower_value: { before: 100, after: 103.787, delta: 3.787 },
+    overpower_percent: { before: 98.75309, after: 98.76543, delta: 0.01234 },
+  }
+  const version3Update = {
+    ...createPlayerDataResult({ metric_diffs: version3MetricDiffs }),
+    schema_version: 3,
+  }
+
+  // When: 最新形式の更新差分レポート用に結果を正規化する。
+  const normalized = normalizePlayerDataResult(version3Update)
+
+  // Then: APIが返したOP%差分を含む全メトリクス差分をそのまま利用できる。
+  assert.deepEqual(normalized.metric_diffs, version3MetricDiffs)
 })
 
 test("normalizePlayerDataResult: 難易度別統計が欠落した場合も固定5難易度とWORLD'S ENDへ正規化する", () => {

@@ -1,4 +1,6 @@
 import { Button } from '@kobalte/core/button'
+import { A } from '@solidjs/router'
+import { ChartColumnIncreasing } from 'lucide-solid'
 import {
   type Component,
   createEffect,
@@ -9,10 +11,16 @@ import {
   onMount,
   Show,
 } from 'solid-js'
+import { getAppButtonClass } from '../../../../components/common/AppButton'
 import { HONOR_TYPE_CLASS_NAMES } from '../../../../constants/honors'
 import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 import { formatNullablePlayerRating } from '../../../../utils/ratingFormat'
+import {
+  USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL,
+  USER_NAMEPLATE_HISTORY_LINK_LABEL,
+  USER_NAMEPLATE_METRIC_LABELS,
+} from './UserNameplate.constants'
 
 const HONOR_ROTATION_INTERVAL_MS = 4000
 const SCROLL_AMOUNT_CSS_VARIABLE = '--honor-title-scroll-amount'
@@ -23,6 +31,8 @@ type Props = {
   playerInfo: PlayerDTO
   honors: HonorDTO[]
   rating: UserRatingDTO
+  /** RATING・OVER POWER履歴ページへのリンク先。 */
+  historyHref: string
 }
 
 type HonorTitleProps = {
@@ -126,9 +136,9 @@ const HonorTitle: Component<HonorTitleProps> = (props) => {
 }
 
 /**
- * ユーザーの称号、レベル、レーティング、OVER POWERをまとめたプロフィールカードを表示する。
+ * ユーザーの称号、レベル、指標とRATING・OVER POWER履歴への導線を表示する。
  *
- * @param props - 表示対象のプレイヤー情報、称号、APIで計算済みのレーティング。
+ * @param props - プレイヤー情報、称号、計算済みレーティング、履歴ページのリンク先。
  * @returns プロフィールカードの JSX 要素。
  */
 export const UserNameplate: Component<Props> = (props) => {
@@ -170,7 +180,7 @@ export const UserNameplate: Component<Props> = (props) => {
   })
 
   return (
-    <div class="mb-2 mx-auto w-[min(420px,calc(100%-2rem))] rounded-md border border-border bg-surface px-3 py-3 shadow-sm">
+    <div class="relative mb-2 mx-auto w-[min(380px,calc(100%-2rem))] rounded-md border border-border bg-surface px-3 py-3 shadow-sm">
       <Show when={visibleHonors().length > 0}>
         <Show
           when={hasMultipleVisibleHonors()}
@@ -209,26 +219,51 @@ export const UserNameplate: Component<Props> = (props) => {
         <h1 class="flex-1 text-xl font-medium text-center">{props.playerInfo.name}</h1>
       </div>
       <hr class="mb-2 border-t border-border" />
-      <p>
-        RATING <b>{playerRatingText()}</b>{' '}
-        <span class="goal-card-progress-secondary">
-          (BEST <b>{bestRatingText()}</b> / NEW <b>{newRatingText()}</b>)
-        </span>
-      </p>
-      {/* TODO: OVER POWERのゲージみたいなのあるといいよね */}
-      <p>
-        OVER POWER{' '}
-        <b>
-          {props.playerInfo.overpower_value == null
-            ? undefined
-            : formatOverPowerValue(props.playerInfo.overpower_value)}
-        </b>{' '}
-        (
-        <Show when={props.playerInfo.overpower_percent !== null}>
-          {formatOverPowerPercent(props.playerInfo.overpower_percent ?? 0)}
-        </Show>
-        %)
-      </p>
+      <dl class="space-y-2">
+        <div>
+          <dt class="text-sm font-medium leading-tight">{USER_NAMEPLATE_METRIC_LABELS.rating}</dt>
+          <dd class="flex flex-wrap items-baseline gap-x-2 leading-none">
+            <strong class="font-jost text-2xl font-semibold tracking-tight">
+              {playerRatingText()}
+            </strong>
+            <span class="goal-card-progress-secondary font-jost text-base font-semibold">
+              {USER_NAMEPLATE_METRIC_LABELS.best} {bestRatingText()} /{' '}
+              {USER_NAMEPLATE_METRIC_LABELS.new} {newRatingText()}
+            </span>
+          </dd>
+        </div>
+        <div class="pr-20">
+          <dt class="text-sm font-medium leading-tight">
+            {USER_NAMEPLATE_METRIC_LABELS.overPower}
+          </dt>
+          <dd class="flex flex-wrap items-baseline gap-x-2 leading-none">
+            <strong class="font-jost text-2xl font-semibold tracking-tight">
+              {props.playerInfo.overpower_value == null
+                ? undefined
+                : formatOverPowerValue(props.playerInfo.overpower_value)}
+            </strong>
+            <span class="font-jost text-base font-semibold">
+              <Show when={props.playerInfo.overpower_percent !== null}>
+                {formatOverPowerPercent(props.playerInfo.overpower_percent ?? 0)}
+              </Show>
+              %
+            </span>
+          </dd>
+        </div>
+      </dl>
+      <A
+        href={props.historyHref}
+        class={getAppButtonClass({
+          variant: 'surface',
+          size: 'xs',
+          shape: 'pill',
+          class: 'absolute right-3 bottom-3',
+        })}
+        aria-label={USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL}
+      >
+        <ChartColumnIncreasing class="h-4 w-4" aria-hidden="true" />
+        <span>{USER_NAMEPLATE_HISTORY_LINK_LABEL}</span>
+      </A>
     </div>
   )
 }

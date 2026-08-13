@@ -37,7 +37,7 @@ const BORDER_CALCULATOR_DIFFICULTIES = PLAYER_DATA_DIFFICULTIES
 const FIELD_INPUT_CLASS =
   'w-full rounded border border-border-strong bg-input-bg px-3 py-2 text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const COMPACT_FIELD_INPUT_CLASS =
-  'w-full rounded border border-border-strong bg-input-bg px-3 py-2 font-sans text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+  'w-full rounded border border-border-strong bg-input-bg px-3 py-2 text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const SONG_CANDIDATE_BUTTON_CLASS =
   'block w-full border-b border-border px-3 py-2.5 text-left text-sm last:border-b-0 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const EMPTY_STATE_CLASS =
@@ -171,7 +171,7 @@ const CompactNotesField: Component<{
     <TextField.Input
       id="notes"
       name="notes"
-      class={`${COMPACT_FIELD_INPUT_CLASS} text-right`}
+      class={`${COMPACT_FIELD_INPUT_CLASS} text-right font-jost tabular-nums`}
       inputMode="numeric"
       pattern="[0-9]*"
       required
@@ -212,7 +212,7 @@ const SongSearchField: Component<{
         id="border-song-search"
         name="border-song-search"
         type="search"
-        class={`${COMPACT_FIELD_INPUT_CLASS} truncate`}
+        class={`${COMPACT_FIELD_INPUT_CLASS} truncate font-sans`}
         placeholder={BORDER_CALCULATOR_COPY.songSearchPlaceholder}
         autocomplete="off"
       />

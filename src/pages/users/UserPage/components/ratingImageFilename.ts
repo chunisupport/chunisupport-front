@@ -22,7 +22,7 @@ const formatRatingImageTimestamp = (date: Date): string => {
  *
  * @param username - プロフィールURLに使用するユーザー名。
  * @param date - ファイル名へ付与する日時。省略時は現在時刻。
- * @returns `chunisupport-best-new-{username}-{YYYYMMDDhhmmss}.png` 形式のファイル名。
+ * @returns `chunisupport-best-new-{username}-{YYYYMMDDhhmmss}.jpg` 形式のファイル名。
  */
 export const formatRatingImageFilename = (username: string, date: Date = new Date()): string =>
-  `${RATING_IMAGE_FILENAME_PREFIX}-${username}-${formatRatingImageTimestamp(date)}.png`
+  `${RATING_IMAGE_FILENAME_PREFIX}-${username}-${formatRatingImageTimestamp(date)}.jpg`

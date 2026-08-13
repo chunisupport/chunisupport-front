@@ -14,6 +14,7 @@ import {
 import {
   buildUserOverPowerPagePath,
   buildUserProfilePagePath,
+  buildUserStatsPagePath,
   type OverPowerSubPage,
   type ProfilePageQuery,
 } from '../../../utils/userProfileRoute'
@@ -291,7 +292,12 @@ export const UserProfileView: Component<Props> = (props) => {
       {/* ↑と↓について: stickyScrollの関係でmy-4を使わず、mb-4とmt-4を別の箇所で指定しています */}
       <div class="mt-4">
         {/* ネームプレート */}
-        <UserNameplate playerInfo={playerInfo()} honors={honors()} rating={props.profile.rating} />
+        <UserNameplate
+          playerInfo={playerInfo()}
+          honors={honors()}
+          rating={props.profile.rating}
+          historyHref={buildUserStatsPagePath(props.username)}
+        />
       </div>
 
       <UnderlineTabs
@@ -299,7 +305,8 @@ export const UserProfileView: Component<Props> = (props) => {
         class="mb-4"
         onChange={handlePageTabChange}
         options={PAGE_TAB_OPTIONS}
-        listClass="sticky top-0 z-10 mb-4 bg-bg px-4 pt-2"
+        listClass="sticky top-0 z-10 mb-4 bg-page-pattern px-4 pt-2"
+        triggerClass="data-selected:!bg-transparent"
         listAfter={<div class="flex-1" />}
       >
         <AppTabContent value="rating" forceMount class={forceMountedTabContentClass}>

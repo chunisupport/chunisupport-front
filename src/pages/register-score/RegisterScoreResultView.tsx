@@ -1,5 +1,5 @@
 import { Button } from '@kobalte/core/button'
-import { Download, Play } from 'lucide-solid'
+import { Download, Play, Share2 } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import logoSingle from '../../assets/logo_single.svg'
 import { Loading } from '../../components'
@@ -27,7 +27,7 @@ import type {
 } from '../../types/api'
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
-import { captureElementAsPng, downloadBlobFile } from '../../utils/domImageCapture'
+import { canShareFiles, captureElementAsImage, downloadBlobFile } from '../../utils/domImageCapture'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
 import {
@@ -37,6 +37,7 @@ import {
 } from './registerScoreDisplay'
 import {
   formatRegisterScoreOverPowerDelta,
+  formatRegisterScoreOverPowerPercentDelta,
   formatRegisterScoreRatingDelta,
   getRegisterScoreMetricDeltaClass,
 } from './registerScoreMetricDiff'
@@ -54,6 +55,12 @@ import {
 } from './registerScoreStatistics'
 
 export const REGISTER_SCORE_MESSAGES = {
+  ratingLabel: 'RATING',
+  overPowerLabel: 'OVER POWER',
+  overPowerPercentLabel: 'OP%',
+  overPowerPercentAccessibleLabel: 'OVER POWER達成率',
+  percentagePointUnit: 'pt',
+  percentagePointAccessibleUnit: 'パーセントポイント',
   invalidToken: 'tokenが不正です。登録用URLを確認してください。',
   fallbackError: '登録に失敗しました。',
   reportTitle: '更新差分',
@@ -65,8 +72,13 @@ export const REGISTER_SCORE_MESSAGES = {
   totalHighScoreTitle: 'TOTAL HIGH SCORE',
   recordStatsTitle: 'RECORD STATISTICS',
   displaySettingsTitle: '表示設定',
-  downloadImage: '画像をダウンロード',
-  downloadingImage: '画像を作成中',
+  shareImage: '共有',
+  prepareShareImage: '共有画像を準備',
+  preparingShareImage: '共有画像を準備中',
+  sharingImage: '共有中',
+  shareImageError: '画像の共有に失敗しました。',
+  downloadImage: 'ダウンロード',
+  downloadingImage: '作成中',
   downloadImageError: '画像のダウンロードに失敗しました。',
   copySongTitleSuccess: '曲名をコピーしました。',
   copySongTitleError: '曲名のコピーに失敗しました。',
@@ -83,10 +95,14 @@ const REGISTER_SCORE_REPORT_WIDTH_CLASS = 'w-[31rem]'
 const REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS = 'max-w-[31rem]'
 /** 更新差分レポートヘッダに表示するロゴの色。 */
 const REGISTER_SCORE_REPORT_LOGO_COLOR = '#444444'
-/** 更新差分画像を原寸の2倍で出力するピクセル比。 */
-const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 2
+/** 更新差分画像を原寸で出力するピクセル比。 */
+const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 1
+/** 更新差分JPEG画像の圧縮品質。 */
+const REGISTER_SCORE_IMAGE_JPEG_QUALITY = 0.9
 /** 更新差分画像のファイル名へ付与する接頭辞。 */
 const REGISTER_SCORE_IMAGE_FILENAME_PREFIX = 'chunisupport-score-update'
+/** 共有用画像をレポート更新後に再生成するまでの待機時間。 */
+const REGISTER_SCORE_SHARE_PREPARE_DELAY_MS = 300
 /** コピー成功時に曲名をアクセントカラーで保持する時間。 */
 const REGISTER_SCORE_COPY_HIGHLIGHT_MS = 100
 
@@ -267,10 +283,10 @@ const formatImportedAt = (isoDateTime: string): string => {
 }
 
 /**
- * 更新日時からPNG画像のダウンロードファイル名を生成する。
+ * 更新日時からJPEG画像のファイル名を生成する。
  *
  * @param isoDateTime - APIから返却されたISO形式の更新日時。
- * @returns `chunisupport-score-update-YYYYMMDD-HHmmss.png` 形式のファイル名。
+ * @returns `chunisupport-score-update-YYYYMMDD-HHmmss.jpg` 形式のファイル名。
  */
 const formatRegisterScoreImageFilename = (isoDateTime: string): string => {
   const timestamp = formatImportedAt(isoDateTime)
@@ -278,7 +294,7 @@ const formatRegisterScoreImageFilename = (isoDateTime: string): string => {
     .replaceAll(':', '')
     .replace(' ', '-')
 
-  return `${REGISTER_SCORE_IMAGE_FILENAME_PREFIX}-${timestamp}.png`
+  return `${REGISTER_SCORE_IMAGE_FILENAME_PREFIX}-${timestamp}.jpg`
 }
 
 /**
@@ -391,6 +407,39 @@ const CourseRecordLampBadges = (props: { state: PlayerDataCourseRecordState }) =
   )
 }
 
+/** プレイヤーメトリクス差分の表示情報。 */
+type RegisterScoreMetricDeltaProps = {
+  /** APIが返した更新前後の差分。 */
+  delta: number | null
+  /** 表示精度へ整形した符号付き差分。 */
+  formattedDelta: string | null
+  /** 差分の後ろへ表示する単位。 */
+  unit?: string
+  /** 単位を読み上げる際の名称。 */
+  accessibleUnit?: string
+}
+
+/**
+ * プレイヤーメトリクスの符号付き差分を共通形式で表示する。
+ *
+ * @param props - 生の差分値、整形済み差分、および任意の単位。
+ * @returns 表示対象の差分がある場合は括弧付き差分、それ以外は何も表示しない。
+ */
+const RegisterScoreMetricDelta = (props: RegisterScoreMetricDeltaProps) => (
+  <Show when={props.formattedDelta}>
+    {(formattedDelta) => (
+      <span class={`text-sm font-bold ${getRegisterScoreMetricDeltaClass(props.delta)}`}>
+        ({formattedDelta()}
+        <Show when={props.unit}>{(unit) => <span aria-hidden="true"> {unit()}</span>}</Show>
+        <Show when={props.accessibleUnit}>
+          {(accessibleUnit) => <span class="sr-only"> {accessibleUnit()}</span>}
+        </Show>
+        )
+      </span>
+    )}
+  </Show>
+)
+
 /**
  * プレイヤー概要をレポート形式で表示する。
  *
@@ -404,6 +453,9 @@ const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdate
   const overPowerDelta = createMemo(() =>
     formatRegisterScoreOverPowerDelta(props.result.metric_diffs.overpower_value.delta)
   )
+  const overPowerPercentDelta = createMemo(() =>
+    formatRegisterScoreOverPowerPercentDelta(props.result.metric_diffs.overpower_percent.delta)
+  )
 
   return (
     <section class="pb-3">
@@ -416,46 +468,40 @@ const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdate
         </p>
       </div>
       <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
-        <dt class="font-extrabold text-text-muted">RATING</dt>
+        <dt class="font-extrabold text-text-muted">{REGISTER_SCORE_MESSAGES.ratingLabel}</dt>
         <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
           <span>{formatNullableRating(props.result.summary.rating)}</span>
-          <Show when={ratingDelta()}>
-            {(delta) => (
-              <span
-                class={`text-sm font-bold ${getRegisterScoreMetricDeltaClass(
-                  props.result.metric_diffs.rating.delta
-                )}`}
-              >
-                ({delta()})
-              </span>
-            )}
-          </Show>
+          <RegisterScoreMetricDelta
+            delta={props.result.metric_diffs.rating.delta}
+            formattedDelta={ratingDelta()}
+          />
         </dd>
-        <dt class="whitespace-nowrap font-extrabold text-text-muted">OVER POWER</dt>
+        <dt class="whitespace-nowrap font-extrabold text-text-muted">
+          {REGISTER_SCORE_MESSAGES.overPowerLabel}
+        </dt>
         <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
-          <Show
-            when={
-              props.result.summary.overpower_value !== null &&
-              props.result.summary.overpower_percentage !== null
-            }
-            fallback={NO_DATA_TEXT}
-          >
-            <span>
-              {formatOverPowerValue(props.result.summary.overpower_value ?? 0)} (
-              {formatOverPowerPercent(props.result.summary.overpower_percentage ?? 0)}%)
-            </span>
+          <Show when={props.result.summary.overpower_value !== null} fallback={NO_DATA_TEXT}>
+            <span>{formatOverPowerValue(props.result.summary.overpower_value ?? 0)}</span>
           </Show>
-          <Show when={overPowerDelta()}>
-            {(delta) => (
-              <span
-                class={`text-sm font-bold ${getRegisterScoreMetricDeltaClass(
-                  props.result.metric_diffs.overpower_value.delta
-                )}`}
-              >
-                ({delta()})
-              </span>
-            )}
+          <RegisterScoreMetricDelta
+            delta={props.result.metric_diffs.overpower_value.delta}
+            formattedDelta={overPowerDelta()}
+          />
+        </dd>
+        <dt class="font-extrabold text-text-muted">
+          <span aria-hidden="true">{REGISTER_SCORE_MESSAGES.overPowerPercentLabel}</span>
+          <span class="sr-only">{REGISTER_SCORE_MESSAGES.overPowerPercentAccessibleLabel}</span>
+        </dt>
+        <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
+          <Show when={props.result.summary.overpower_percentage !== null} fallback={NO_DATA_TEXT}>
+            <span>{formatOverPowerPercent(props.result.summary.overpower_percentage ?? 0)}%</span>
           </Show>
+          <RegisterScoreMetricDelta
+            delta={props.result.metric_diffs.overpower_percent.delta}
+            formattedDelta={overPowerPercentDelta()}
+            unit={REGISTER_SCORE_MESSAGES.percentagePointUnit}
+            accessibleUnit={REGISTER_SCORE_MESSAGES.percentagePointAccessibleUnit}
+          />
         </dd>
       </dl>
     </section>
@@ -968,7 +1014,30 @@ export const RegisterScoreResultView = (props: {
   const [reportScale, setReportScale] = createSignal(1)
   const [scaledReportHeight, setScaledReportHeight] = createSignal<number>()
   const [isDownloadingImage, setIsDownloadingImage] = createSignal(false)
-  const [downloadImageError, setDownloadImageError] = createSignal<string>()
+  const [isPreparingShareImage, setIsPreparingShareImage] = createSignal(false)
+  const [isSharingImage, setIsSharingImage] = createSignal(false)
+  const [shareImageFile, setShareImageFile] = createSignal<File>()
+  const [imageActionError, setImageActionError] = createSignal<string>()
+  let shareImagePreparationRequested = false
+  let shareImagePrepareTimer: number | undefined
+
+  /**
+   * ダウンロードまたは共有用の画像を生成中かどうかを返す。
+   *
+   * @returns いずれかの画像生成処理中の場合はtrue。
+   */
+  const isGeneratingImage = (): boolean =>
+    isDownloadingImage() || isPreparingShareImage() || isSharingImage()
+
+  /**
+   * 現在のブラウザがJPEGファイルの共有に対応しているかを返す。
+   *
+   * @returns Web Share APIでJPEGファイルを共有できる場合はtrue。
+   */
+  const canShareReportImage = (): boolean => {
+    const testFile = new File([], 'share-test.jpg', { type: 'image/jpeg' })
+    return canShareFiles([testFile])
+  }
   let scaleContainerRef!: HTMLDivElement
   let reportRef!: HTMLElement
 
@@ -1018,27 +1087,123 @@ export const RegisterScoreResultView = (props: {
   }
 
   /**
-   * 現在表示中の更新差分レポートを1枚のPNG画像としてダウンロードする。
+   * 現在表示中の更新差分レポートを原寸のJPEG画像として生成する。
+   *
+   * @returns 生成した画像ファイル。
+   */
+  const createReportImageFile = async (): Promise<File> => {
+    const imageBlob = await captureElementAsImage(reportRef, {
+      format: 'jpeg',
+      pixelRatio: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
+      quality: REGISTER_SCORE_IMAGE_JPEG_QUALITY,
+    })
+    const filename = formatRegisterScoreImageFilename(props.result.imported_at)
+
+    return new File([imageBlob], filename, { type: 'image/jpeg' })
+  }
+
+  /**
+   * Web Share APIの一時的なユーザー操作を保てるよう、共有用画像を事前生成する。
+   *
+   * @returns 画像生成処理の完了時に解決されるPromise。
+   */
+  const prepareShareImage = async (): Promise<void> => {
+    shareImagePreparationRequested = true
+    if (isPreparingShareImage()) return
+
+    setIsPreparingShareImage(true)
+    setImageActionError(undefined)
+
+    try {
+      while (shareImagePreparationRequested) {
+        shareImagePreparationRequested = false
+        const imageFile = await createReportImageFile()
+        if (!shareImagePreparationRequested) setShareImageFile(imageFile)
+      }
+    } catch {
+      setShareImageFile(undefined)
+      setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+    } finally {
+      setIsPreparingShareImage(false)
+    }
+  }
+
+  /**
+   * レポートDOMの更新をまとめ、共有用画像の再生成を予約する。
+   *
+   * @returns なし。
+   */
+  const scheduleShareImagePreparation = (): void => {
+    setShareImageFile(undefined)
+    if (shareImagePrepareTimer !== undefined) window.clearTimeout(shareImagePrepareTimer)
+
+    shareImagePrepareTimer = window.setTimeout(() => {
+      shareImagePrepareTimer = undefined
+      void prepareShareImage()
+    }, REGISTER_SCORE_SHARE_PREPARE_DELAY_MS)
+  }
+
+  /**
+   * 現在表示中の更新差分レポートを1枚のJPEG画像としてダウンロードする。
    *
    * @returns ダウンロード処理の完了時に解決されるPromise。
    */
   const downloadReportImage = async (): Promise<void> => {
     setIsDownloadingImage(true)
-    setDownloadImageError(undefined)
+    setImageActionError(undefined)
 
     try {
-      const imageBlob = await captureElementAsPng(reportRef, {
-        pixelRatio: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
-      })
-      downloadBlobFile(imageBlob, formatRegisterScoreImageFilename(props.result.imported_at))
+      const imageFile = await createReportImageFile()
+      downloadBlobFile(imageFile, imageFile.name)
     } catch {
-      setDownloadImageError(REGISTER_SCORE_MESSAGES.downloadImageError)
+      setImageActionError(REGISTER_SCORE_MESSAGES.downloadImageError)
     } finally {
       setIsDownloadingImage(false)
     }
   }
 
+  /**
+   * 現在表示中の更新差分レポートをWeb Share APIで共有する。
+   *
+   * @returns 共有処理の完了時に解決されるPromise。
+   */
+  const shareReportImage = async (): Promise<void> => {
+    const imageFile = shareImageFile()
+    if (!imageFile) {
+      void prepareShareImage()
+      return
+    }
+    if (!canShareFiles([imageFile])) {
+      setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+      return
+    }
+
+    setIsSharingImage(true)
+    setImageActionError(undefined)
+
+    try {
+      await navigator.share({ files: [imageFile], title: REGISTER_SCORE_MESSAGES.reportTitle })
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+      }
+    } finally {
+      setIsSharingImage(false)
+    }
+  }
+
   onMount(() => {
+    const shareImageObserver = canShareReportImage()
+      ? new MutationObserver(scheduleShareImagePreparation)
+      : undefined
+    shareImageObserver?.observe(reportRef, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true,
+    })
+    if (shareImageObserver) scheduleShareImagePreparation()
+
     /**
      * 固定幅レポートを親要素の表示幅へ収める縮小率と占有高さを更新する。
      *
@@ -1056,28 +1221,58 @@ export const RegisterScoreResultView = (props: {
     resizeObserver.observe(reportRef)
     updateReportScale()
 
-    onCleanup(() => resizeObserver.disconnect())
+    onCleanup(() => {
+      if (shareImagePrepareTimer !== undefined) window.clearTimeout(shareImagePrepareTimer)
+      shareImageObserver?.disconnect()
+      resizeObserver.disconnect()
+    })
   })
 
   return (
     <div class={`mx-auto flex w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} flex-col gap-4`}>
       <div class="flex flex-col items-end gap-2">
-        <AppButton
-          variant="primary"
-          disabled={isDownloadingImage()}
-          aria-busy={isDownloadingImage()}
-          onClick={downloadReportImage}
-          leftIcon={
-            <Show when={!isDownloadingImage()} fallback={<Loading size="inline" ariaHidden />}>
-              <Download class="h-4 w-4" aria-hidden="true" />
-            </Show>
-          }
-        >
-          {isDownloadingImage()
-            ? REGISTER_SCORE_MESSAGES.downloadingImage
-            : REGISTER_SCORE_MESSAGES.downloadImage}
-        </AppButton>
-        <Show when={downloadImageError()}>
+        <div class="flex flex-wrap justify-end gap-2">
+          <Show when={canShareReportImage()}>
+            <AppButton
+              variant="secondary"
+              disabled={isGeneratingImage()}
+              aria-busy={isPreparingShareImage() || isSharingImage()}
+              onClick={shareReportImage}
+              leftIcon={
+                <Show
+                  when={!isPreparingShareImage() && !isSharingImage()}
+                  fallback={<Loading size="inline" ariaHidden />}
+                >
+                  <Share2 class="h-4 w-4" aria-hidden="true" />
+                </Show>
+              }
+            >
+              {isPreparingShareImage()
+                ? REGISTER_SCORE_MESSAGES.preparingShareImage
+                : isSharingImage()
+                  ? REGISTER_SCORE_MESSAGES.sharingImage
+                  : shareImageFile()
+                    ? REGISTER_SCORE_MESSAGES.shareImage
+                    : REGISTER_SCORE_MESSAGES.prepareShareImage}
+            </AppButton>
+          </Show>
+          <AppButton
+            variant="primary"
+            disabled={isGeneratingImage()}
+            aria-busy={isDownloadingImage()}
+            onClick={downloadReportImage}
+            leftIcon={
+              <Show when={!isDownloadingImage()} fallback={<Loading size="inline" ariaHidden />}>
+                <Download class="h-4 w-4" aria-hidden="true" />
+              </Show>
+            }
+          >
+            {isDownloadingImage()
+              ? REGISTER_SCORE_MESSAGES.downloadingImage
+              : REGISTER_SCORE_MESSAGES.downloadImage}
+          </AppButton>
+        </div>
+        <Show when={imageActionError()}>
           {(message) => (
             <p class="text-sm text-danger" role="alert">
               {message()}

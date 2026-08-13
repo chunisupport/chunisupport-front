@@ -11,7 +11,7 @@ import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { isGoalRecordNavigationEnabled } from '../../../utils/goalRecordFilter'
 import { buildGoalDisclosureLabel, buildGoalDragLabel } from '../../constants'
 import { GoalCardActionMenu } from './GoalCardActionMenu'
-import { GoalCardProgress } from './GoalCardProgress'
+import { GoalCardProgress, GoalCardProgressPercentage } from './GoalCardProgress'
 
 interface GoalCardProps {
   /** 表示する目標。 */
@@ -171,7 +171,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
           <Show
             when={props.headingLevel === 3}
             fallback={
-              <h2 class="min-w-0 pt-1.5 font-sans text-lg font-bold text-text">
+              <h2 class="min-w-0 pt-1 font-sans text-lg font-bold text-text">
                 {isGoalRecordNavigationEnabled(props.goal) && props.onOpenRecords ? (
                   <Button
                     type="button"
@@ -189,7 +189,7 @@ const GoalCard: Component<GoalCardProps> = (props) => {
               </h2>
             }
           >
-            <h3 class="min-w-0 pt-1.5 font-sans text-lg font-bold text-text">
+            <h3 class="min-w-0 pt-1 font-sans text-lg font-bold text-text">
               {isGoalRecordNavigationEnabled(props.goal) && props.onOpenRecords ? (
                 <Button
                   type="button"
@@ -207,7 +207,17 @@ const GoalCard: Component<GoalCardProps> = (props) => {
             </h3>
           </Show>
         </div>
-        <Show when={props.open}>
+        <Show
+          when={props.open}
+          fallback={
+            <GoalCardProgressPercentage
+              achievementType={props.goal.achievement_type}
+              invertValue={props.goal.invert_value}
+              invertPercentage={props.goal.invert_percentage}
+              progress={props.progress}
+            />
+          }
+        >
           <GoalCardActionMenu
             disabled={props.isReordering}
             copyDisabled={props.copyDisabled}
