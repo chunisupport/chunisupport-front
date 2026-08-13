@@ -4,9 +4,34 @@ import type {
   ApiTokenIssueResponse,
   ApiTokenListResponse,
   ApiTokenRenameRequest,
+  DataTransferExportFile,
+  DataTransferImportResponse,
+  DataTransferValidationResponse,
 } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 import { reauthenticateAndGetToken } from './reauthenticate'
+
+const DATA_TRANSFER_API_PATH = `${API_BASE_URL}/internal/me/data-transfer`
+const DATA_TRANSFER_FILENAME_PREFIX = 'chunisupport-transfer'
+
+/**
+ * Content-Dispositionから安全なJSONファイル名を取得する。
+ *
+ * @param contentDisposition - APIが返したContent-Dispositionヘッダー。
+ * @returns 利用可能なJSONファイル名。取得できない場合は現在日時を含む既定名。
+ */
+const resolveDataTransferFilename = (contentDisposition: string | null): string => {
+  const matchedFilename = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1]
+  if (matchedFilename && /^[a-zA-Z0-9._-]+\.json$/.test(matchedFilename)) {
+    return matchedFilename
+  }
+
+  const timestamp = new Date()
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}Z$/, 'Z')
+  return `${DATA_TRANSFER_FILENAME_PREFIX}-${timestamp}.json`
+}
 
 export const fetchPrivacy = async (): Promise<{ is_private: boolean }> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/me`, {
@@ -86,6 +111,56 @@ export const deleteApiToken = async (id: number): Promise<void> => {
   await fetchWithAuth(`${API_BASE_URL}/internal/auth/api-tokens/${id}`, {
     method: 'DELETE',
   })
+}
+
+/**
+ * 認証ユーザーの移行対象データを署名付きJSONとしてエクスポートする。
+ *
+ * @returns ダウンロードするJSON Blobとファイル名。
+ */
+export const exportUserDataTransfer = async (): Promise<DataTransferExportFile> => {
+  const response = await fetchWithAuth(`${DATA_TRANSFER_API_PATH}/export`, {
+    method: 'POST',
+  })
+
+  return {
+    blob: await response.blob(),
+    filename: resolveDataTransferFilename(response.headers.get('Content-Disposition')),
+  }
+}
+
+/**
+ * 選択された移行ファイルを検証する。
+ *
+ * @param file - エクスポートAPIで作成された署名付きJSONファイル。
+ * @returns 移行可否、対象プレイヤー、件数、阻害理由を含む検証結果。
+ */
+export const validateUserDataTransfer = async (
+  file: Blob
+): Promise<DataTransferValidationResponse> => {
+  const response = await fetchWithAuth(`${DATA_TRANSFER_API_PATH}/validate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: file,
+  })
+
+  return response.json()
+}
+
+/**
+ * 検証済みの移行ファイルを現在のアカウントへインポートする。
+ *
+ * @param file - 検証時と同じ署名付きJSONファイル。
+ * @returns 新しいプレイヤーIDと保存件数を含む移行結果。
+ */
+export const importUserDataTransfer = async (file: Blob): Promise<DataTransferImportResponse> => {
+  const response = await fetchWithAuth(`${DATA_TRANSFER_API_PATH}/import`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: file,
+  })
+
+  return response.json()
 }
 
 export const deletePlayerData = async (): Promise<void> => {
