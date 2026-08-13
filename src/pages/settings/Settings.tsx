@@ -15,9 +15,17 @@ import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { formatRatingFixed2 } from '../../utils/ratingFormat'
 import { ApiTokenSettingsSection } from './ApiTokenSettingsSection'
+import { DataTransferSettingsSection } from './DataTransferSettingsSection'
 import { formatSettingsDateTime } from './settingsDateTime'
 
-const SECTION_IDS = ['appearance', 'privacy', 'api-token', 'player-data', 'account-delete'] as const
+const SECTION_IDS = [
+  'appearance',
+  'privacy',
+  'api-token',
+  'data-transfer',
+  'player-data',
+  'account-delete',
+] as const
 
 type SectionId = (typeof SECTION_IDS)[number]
 
@@ -305,6 +313,12 @@ const Settings = () => {
 
                   <ApiTokenSettingsSection username={loadedSummary().me.username} />
                 </div>
+
+                <DataTransferSettingsSection
+                  onImported={async () => {
+                    await refetchSummary()
+                  }}
+                />
 
                 <section id="player-data" class="py-4">
                   <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">

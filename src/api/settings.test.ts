@@ -141,3 +141,98 @@ test('APIトークンの名称変更と削除はID指定エンドポイントを
     },
   ])
 })
+
+test('データエクスポートはPOSTして添付ファイル名とBlobを返す', async () => {
+  // Given: 署名付きJSONとContent-Dispositionヘッダー。
+  const exportedJson = '{"signed":true}'
+  let request: { url: string; method: string | undefined } | undefined
+  globalThis.fetch = async (input, init) => {
+    request = { url: String(input), method: init?.method }
+    return new Response(exportedJson, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Disposition': 'attachment; filename="chunisupport-transfer.json"',
+      },
+    })
+  }
+
+  // When: ユーザーデータをエクスポートする。
+  const { exportUserDataTransfer } = await loadSettingsApi()
+  const result = await exportUserDataTransfer()
+
+  // Then: exportをPOSTし、API指定名とJSON Blobを返す。
+  assert.deepEqual(request, {
+    url: 'http://localhost:3000/internal/me/data-transfer/export',
+    method: 'POST',
+  })
+  assert.equal(result.filename, 'chunisupport-transfer.json')
+  assert.equal(await result.blob.text(), exportedJson)
+})
+
+test('データ移行の検証と確定は同じJSON BlobをPOSTする', async () => {
+  // Given: 移行JSON Blobと検証・確定レスポンス。
+  const file = new Blob(['{"signed":true}'], { type: 'application/json' })
+  const validationResponse = {
+    importable: true,
+    player_name: 'テスト',
+    counts: {
+      records: 1,
+      record_histories: 2,
+      worldsend_records: 3,
+      worldsend_record_histories: 4,
+      metric_histories: 5,
+      course_records: 6,
+      honors: 7,
+      favorite_songs: 8,
+      locked_songs: 9,
+      goal_groups: 10,
+      goals: 11,
+      record_filters: 12,
+    },
+    blockers: [],
+    unresolved_references: [],
+    unresolved_reference_count: 0,
+  }
+  const importResponse = {
+    player_id: 42,
+    counts: validationResponse.counts,
+  }
+  const requests: {
+    url: string
+    method: string | undefined
+    contentType: string | null
+    body: BodyInit | null | undefined
+  }[] = []
+  globalThis.fetch = async (input, init) => {
+    requests.push({
+      url: String(input),
+      method: init?.method,
+      contentType: new Headers(init?.headers).get('Content-Type'),
+      body: init?.body,
+    })
+    return Response.json(String(input).endsWith('/validate') ? validationResponse : importResponse)
+  }
+
+  // When: 移行ファイルを検証してからインポートする。
+  const { importUserDataTransfer, validateUserDataTransfer } = await loadSettingsApi()
+  const validation = await validateUserDataTransfer(file)
+  const imported = await importUserDataTransfer(file)
+
+  // Then: 両エンドポイントへ同じBlobをapplication/jsonで送信する。
+  assert.deepEqual(validation, validationResponse)
+  assert.deepEqual(imported, importResponse)
+  assert.deepEqual(requests, [
+    {
+      url: 'http://localhost:3000/internal/me/data-transfer/validate',
+      method: 'POST',
+      contentType: 'application/json',
+      body: file,
+    },
+    {
+      url: 'http://localhost:3000/internal/me/data-transfer/import',
+      method: 'POST',
+      contentType: 'application/json',
+      body: file,
+    },
+  ])
+})

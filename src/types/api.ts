@@ -85,6 +85,14 @@ export type ErrorCode =
   | 'player_not_linked'
   | 'player_not_found'
   | 'player_metric_history_not_found'
+  // ユーザーデータ移行
+  | 'data_transfer_player_not_found'
+  | 'data_transfer_invalid_file'
+  | 'data_transfer_invalid_signature'
+  | 'data_transfer_unsupported_schema'
+  | 'data_transfer_invalid_data'
+  | 'data_transfer_unresolved_reference'
+  | 'data_transfer_destination_not_empty'
   // 楽曲・譜面
   | 'song_not_found'
   | 'chart_not_found'
@@ -165,6 +173,13 @@ export const errorMessages: Record<ErrorCode, string> = {
   player_not_linked: 'プレイヤーデータが連携されていません',
   player_not_found: 'プレイヤーが見つかりません',
   player_metric_history_not_found: 'RATING・OVER POWER履歴が見つかりません',
+  data_transfer_player_not_found: 'エクスポートできるプレイヤーデータがありません',
+  data_transfer_invalid_file: '選択した移行ファイルを読み込めません',
+  data_transfer_invalid_signature: '移行ファイルの署名を確認できません',
+  data_transfer_unsupported_schema: 'この移行ファイル形式には対応していません',
+  data_transfer_invalid_data: '移行ファイル内のデータが不正です',
+  data_transfer_unresolved_reference: '移行先で参照できないデータが含まれています',
+  data_transfer_destination_not_empty: '移行先アカウントには既に対象データがあります',
   song_not_found: '楽曲が見つかりません',
   chart_not_found: '譜面が見つかりません',
   invalid_genre_id: 'ジャンルIDが不正です',
@@ -1214,6 +1229,59 @@ export interface UpdateWorldsendSongRequestDTO {
   charts?: {
     WORLDSEND?: UpdateWorldsendChartRequestDTO
   } | null
+}
+
+// --------------------------------
+
+/** 移行対象に含まれるセクション別データ件数。 */
+export interface DataTransferCountsResponse {
+  records: number
+  record_histories: number
+  worldsend_records: number
+  worldsend_record_histories: number
+  metric_histories: number
+  course_records: number
+  honors: number
+  favorite_songs: number
+  locked_songs: number
+  goal_groups: number
+  goals: number
+  record_filters: number
+}
+
+/** 移行を確定できない理由。 */
+export type DataTransferBlocker = 'destination_not_empty' | 'unresolved_references'
+
+/** 移行ファイル検証結果。 */
+export interface DataTransferValidationResponse {
+  /** 現在のアカウントへ移行できる場合は true。 */
+  importable: boolean
+  /** 移行対象のプレイヤー名。 */
+  player_name: string
+  /** 移行対象のデータ件数。 */
+  counts: DataTransferCountsResponse
+  /** 移行を確定できない理由。 */
+  blockers: DataTransferBlocker[]
+  /** 移行先マスターで解決できない参照。 */
+  unresolved_references: string[]
+  /** 解決できない参照の総数。 */
+  unresolved_reference_count: number
+}
+
+/** ユーザーデータ移行の確定結果。 */
+export interface DataTransferImportResponse {
+  /** 移行先で新規採番されたプレイヤーID。 */
+  player_id: number
+  /** 保存されたデータ件数。 */
+  counts: DataTransferCountsResponse
+}
+
+/** エクスポートAPIから受け取ったダウンロード情報。 */
+export interface DataTransferExportFile {
+  /** 署名付き移行JSON。 */
+  blob: Blob
+  /** ダウンロード時に使用するファイル名。 */
+  filename: string
 }
 
 // --------------------------------
