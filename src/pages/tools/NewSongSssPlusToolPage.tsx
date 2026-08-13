@@ -1,4 +1,3 @@
-import { RadioGroup } from '@kobalte/core/radio-group'
 import { A } from '@solidjs/router'
 import { Gauge, TrendingUp, TriangleAlert } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
@@ -7,7 +6,6 @@ import { LoadError, Loading } from '../../components'
 import { AppTabContent, SegmentedTabs } from '../../components/common/AppTabs'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
-import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import { buildSongDetailPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useRatingTheoretical } from '../../hooks/useNewSongTheoreticalRating'
@@ -25,27 +23,17 @@ import {
   resolveRatingTheoreticalProgress,
 } from '../../utils/newSongTheoreticalRating'
 import { formatInteger } from '../../utils/numberFormat'
-import { getRankingPositionClass } from '../../utils/rankingPosition'
 import { formatPlayerRating, formatRatingFixed2 } from '../../utils/ratingFormat'
 import { formatScoreDifference } from '../../utils/scoreDifference'
 import { getScoreRank } from '../../utils/scoreRank'
-import {
-  NEW_SONG_SSS_PLUS_COPY,
-  RATING_SCORE_SOURCE_OPTIONS,
-  RATING_THEORETICAL_TAB_OPTIONS,
-} from './newSongSssPlus.constants'
-
-/** 理論値対象譜面へ反映するスコアの取得範囲。 */
-type RatingScoreSource = (typeof RATING_SCORE_SOURCE_OPTIONS)[number]['value']
+import { NEW_SONG_SSS_PLUS_COPY, RATING_THEORETICAL_TAB_OPTIONS } from './newSongSssPlus.constants'
 
 /** 枠理論値サマリーの計算結果、現在レコード、取得状態を受け取るプロパティ。 */
 type RatingTheoreticalSummaryProps = {
-  /** 理論値対象譜面との照合に使う現在の候補枠レコード。 */
-  candidateRecords: readonly PlayerRecordDTO[]
   /** 現在の枠平均レーティング。未計算の場合はnull。 */
   currentRating: number | null
-  /** 理論値対象譜面との照合に使う現在の採用枠レコード。 */
-  currentRecords: readonly PlayerRecordDTO[]
+  /** 理論値対象譜面との照合に使う全通常譜面レコード。 */
+  records: readonly PlayerRecordDTO[]
   /** 理論値対象譜面一覧の見出し。 */
   detailsLabel: string
   /** データ取得で発生したエラー。正常時は未定義。 */
@@ -102,25 +90,19 @@ const RatingMetric: Component<RatingMetricProps> = (props) => (
 /**
  * SSS+対象譜面の現在スコアをランク色、SSS+ボーダーとの差を差分色で表示する。
  *
- * @param props - 対象譜面と現在のレーティング枠・候補枠レコード。
- * @returns 現在スコアの所属、スコア、SSS+ボーダーとの差。
+ * @param props - 対象譜面と全通常譜面レコード。
+ * @returns 現在スコアとSSS+ボーダーとの差。
  */
 const SssPlusChartProgress: Component<{
-  candidateRecords: readonly PlayerRecordDTO[]
-  currentRecords: readonly PlayerRecordDTO[]
   entry: RatingTheoreticalEntry
+  records: readonly PlayerRecordDTO[]
 }> = (props) => {
   const progress = createMemo(() => {
-    const resolved = resolveRatingTheoreticalProgress(
-      props.entry,
-      props.currentRecords,
-      props.candidateRecords
-    )
+    const resolved = resolveRatingTheoreticalProgress(props.entry, props.records, [])
     if (resolved.slot === null || resolved.currentScore === null) {
       return undefined
     }
     return {
-      slot: resolved.slot,
       currentScore: resolved.currentScore,
       scoreRank: getScoreRank(resolved.currentScore),
       scoreGap: resolved.scoreGap,
@@ -128,7 +110,7 @@ const SssPlusChartProgress: Component<{
   })
 
   return (
-    <span class="col-span-2 col-start-3 flex min-w-0 flex-wrap items-center justify-end gap-x-3 gap-y-0.5 font-oswald text-xs tabular-nums text-text-muted">
+    <span class="flex min-w-0 flex-wrap items-center justify-end gap-x-3 gap-y-0.5 font-oswald text-xs tabular-nums text-text-muted">
       <Show
         when={progress()}
         keyed
@@ -141,11 +123,6 @@ const SssPlusChartProgress: Component<{
             <span
               class={`whitespace-nowrap font-semibold ${SCORE_RANK_TEXT_CLASS[current.scoreRank]}`}
             >
-              <Show when={current.slot === 'candidate'}>
-                <span class="mr-1 rounded bg-surface-hover px-1 py-0.5 font-sans text-[0.65rem] font-normal text-text-muted">
-                  {NEW_SONG_SSS_PLUS_COPY.candidateSlotLabel}
-                </span>
-              </Show>
               <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.currentScoreLabel}</span>
               {formatInteger(current.currentScore)}
             </span>
@@ -167,14 +144,13 @@ const SssPlusChartProgress: Component<{
 /**
  * 全譜面SSS+時にレーティング枠へ採用される譜面を単曲レーティング順に表示する。
  *
- * @param props - SSS+時に採用される譜面一覧と現在のレーティング枠・候補枠レコード。
+ * @param props - SSS+時に採用される譜面一覧と全通常譜面レコード。
  * @returns 楽曲詳細へ遷移できる常時表示の一覧。
  */
 const TheoreticalChartList: Component<{
-  candidateRecords: readonly PlayerRecordDTO[]
-  currentRecords: readonly PlayerRecordDTO[]
   detailsLabel: string
   entries: RatingTheoretical['entries']
+  records: readonly PlayerRecordDTO[]
 }> = (props) => (
   <section class="border-t border-border" aria-label={props.detailsLabel}>
     <div class="flex items-center justify-between px-3 py-2 font-sans">
@@ -192,12 +168,7 @@ const TheoreticalChartList: Component<{
               href={buildSongDetailPath(entry.songId, entry.difficulty)}
               class="grid grid-cols-[2rem_1.75rem_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 text-inherit hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
             >
-              <span
-                class={`row-span-2 flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full font-oswald text-lg font-bold ${getRankingPositionClass(
-                  index() + 1,
-                  'bg-surface-muted text-text-muted'
-                )}`}
-              >
+              <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-muted font-oswald text-lg font-bold text-text-muted">
                 {index() + 1}
               </span>
               <RecordDifficultyBadge difficulty={entry.difficulty} />
@@ -205,34 +176,32 @@ const TheoreticalChartList: Component<{
                 <span class="block truncate text-sm font-semibold text-text">{entry.title}</span>
                 <span class="block truncate text-xs text-text-muted">{entry.artist}</span>
               </span>
-              <span class="text-right font-oswald tabular-nums">
-                <span class="block text-base font-bold text-text">
-                  <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.singleRatingLabel}</span>
-                  {formatRatingFixed2(entry.rating)}
+              <span class="flex shrink-0 flex-col items-end gap-0.5 text-right">
+                <span class="font-oswald tabular-nums">
+                  <span class="block text-base font-bold text-text">
+                    <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.singleRatingLabel}</span>
+                    {formatRatingFixed2(entry.rating)}
+                  </span>
+                  <span
+                    class="block text-xs text-text-muted data-[unknown=true]:italic data-[unknown=true]:text-danger"
+                    data-unknown={entry.isChartConstantUnknown}
+                  >
+                    <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.chartConstantLabel}</span>
+                    {formatChartConst(entry.chartConstant)}
+                    <Show when={entry.isChartConstantUnknown}>
+                      <sup
+                        class="ml-0.5 align-super font-sans text-[0.65em]"
+                        title={NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}
+                        aria-hidden="true"
+                      >
+                        {NEW_SONG_SSS_PLUS_COPY.unknownMarker}
+                      </sup>
+                      <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
+                    </Show>
+                  </span>
                 </span>
-                <span
-                  class="block text-xs text-text-muted data-[unknown=true]:italic data-[unknown=true]:text-danger"
-                  data-unknown={entry.isChartConstantUnknown}
-                >
-                  <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.chartConstantLabel}</span>
-                  {formatChartConst(entry.chartConstant)}
-                  <Show when={entry.isChartConstantUnknown}>
-                    <sup
-                      class="ml-0.5 align-super font-sans text-[0.65em]"
-                      title={NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}
-                      aria-hidden="true"
-                    >
-                      {NEW_SONG_SSS_PLUS_COPY.unknownMarker}
-                    </sup>
-                    <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
-                  </Show>
-                </span>
+                <SssPlusChartProgress records={props.records} entry={entry} />
               </span>
-              <SssPlusChartProgress
-                candidateRecords={props.candidateRecords}
-                currentRecords={props.currentRecords}
-                entry={entry}
-              />
             </A>
           </li>
         )}
@@ -309,10 +278,9 @@ const RatingTheoreticalSummary: Component<RatingTheoreticalSummaryProps> = (prop
                   </div>
                 </Show>
                 <TheoreticalChartList
-                  candidateRecords={props.candidateRecords}
-                  currentRecords={props.currentRecords}
                   detailsLabel={props.detailsLabel}
                   entries={theoreticalRating().entries}
+                  records={props.records}
                 />
               </>
             )}
@@ -332,23 +300,13 @@ const RatingTheoreticalCheckerPage: Component = () => {
   const username = (): string | undefined =>
     authSession.status === 'authenticated' ? authSession.user?.username : undefined
   const [rating] = createResource(username, fetchUserRatingWithCache)
+  const [record] = createResource(username, fetchUserRecordWithCache)
   const theoreticalRatings = useRatingTheoretical()
   const [selectedFrame, setSelectedFrame] = createSignal<'best' | 'new'>('best')
-  const [selectedScoreSource, setSelectedScoreSource] = createSignal<RatingScoreSource>('frame')
-  const [record] = createResource(
-    () => (selectedScoreSource() === 'records' ? username() : undefined),
-    fetchUserRecordWithCache
-  )
   /** 未プレイ補完を除いた全通常譜面レコード。 */
   const playedRecords = createMemo(
     () => record()?.standard.filter((playerRecord) => playerRecord.score > 0) ?? []
   )
-  /** 全レコードのスコアを反映する選択状態か。 */
-  const isRecordSource = (): boolean => selectedScoreSource() === 'records'
-  /** 選択中のスコア取得範囲で発生したエラー。 */
-  const scoreSourceError = (): unknown => (isRecordSource() ? record.error : undefined)
-  /** 選択中のスコア取得範囲を読み込み中か。 */
-  const isScoreSourceLoading = (): boolean => isRecordSource() && record.loading
 
   useDocumentTitle(NEW_SONG_SSS_PLUS_COPY.title)
 
@@ -364,30 +322,6 @@ const RatingTheoreticalCheckerPage: Component = () => {
         </div>
       </header>
 
-      <RadioGroup
-        value={selectedScoreSource()}
-        onChange={(value) => setSelectedScoreSource(value as RatingScoreSource)}
-        aria-label={NEW_SONG_SSS_PLUS_COPY.scoreSourceLabel}
-      >
-        <RadioGroup.Label class="mb-2 block font-sans text-sm font-medium text-text-muted">
-          {NEW_SONG_SSS_PLUS_COPY.scoreSourceLabel}
-        </RadioGroup.Label>
-        <div class="grid grid-cols-2 gap-2">
-          <For each={RATING_SCORE_SOURCE_OPTIONS}>
-            {(option) => (
-              <SelectableCardItem
-                value={option.value}
-                title={option.label}
-                description={option.description}
-                ariaLabel={option.label}
-                density="compact"
-                class="rounded-md"
-              />
-            )}
-          </For>
-        </div>
-      </RadioGroup>
-
       <SegmentedTabs
         class="flex flex-col gap-3"
         value={selectedFrame()}
@@ -399,22 +333,20 @@ const RatingTheoreticalCheckerPage: Component = () => {
         <AppTabContent value="best">
           <RatingTheoreticalSummary
             currentRating={rating()?.best_average ?? null}
-            currentRecords={isRecordSource() ? playedRecords() : (rating()?.best ?? [])}
-            candidateRecords={isRecordSource() ? [] : (rating()?.best_candidate ?? [])}
             detailsLabel={NEW_SONG_SSS_PLUS_COPY.bestDetailsLabel}
-            error={rating.error ?? scoreSourceError() ?? theoreticalRatings.bestError()}
-            loading={rating.loading || isScoreSourceLoading() || theoreticalRatings.isBestLoading()}
+            error={rating.error ?? record.error ?? theoreticalRatings.bestError()}
+            loading={rating.loading || record.loading || theoreticalRatings.isBestLoading()}
+            records={playedRecords()}
             theoreticalRating={theoreticalRatings.bestTheoreticalRating()}
           />
         </AppTabContent>
         <AppTabContent value="new">
           <RatingTheoreticalSummary
             currentRating={rating()?.new_average ?? null}
-            currentRecords={isRecordSource() ? playedRecords() : (rating()?.new ?? [])}
-            candidateRecords={isRecordSource() ? [] : (rating()?.new_candidate ?? [])}
             detailsLabel={NEW_SONG_SSS_PLUS_COPY.newDetailsLabel}
-            error={rating.error ?? scoreSourceError() ?? theoreticalRatings.newError()}
-            loading={rating.loading || isScoreSourceLoading() || theoreticalRatings.isNewLoading()}
+            error={rating.error ?? record.error ?? theoreticalRatings.newError()}
+            loading={rating.loading || record.loading || theoreticalRatings.isNewLoading()}
+            records={playedRecords()}
             theoreticalRating={theoreticalRatings.newTheoreticalRating()}
           />
         </AppTabContent>
