@@ -37,6 +37,7 @@ import {
   MAINTENANCE_LOGIN_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   REGISTER_SCORE_PATH,
+  REGISTER_SCORE_TEMP_PATH,
   TOOL_STATS_PATH,
   TOOLS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
@@ -540,7 +541,7 @@ const App = () => {
         path={LATEST_SCORE_UPDATE_PATH}
         component={withNavBar(withAuth(withRouteLoadBoundary(LatestScoreUpdatePage)))}
       />
-      <Route path="/register-score-temp" component={withNavBar(GuardedRegisterScoreTempPage)} />
+      <Route path={REGISTER_SCORE_TEMP_PATH} component={withNavBar(GuardedRegisterScoreTempPage)} />
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />
       <Route
         path={CHART_CONSTANT_CALCULATOR_PATH}
