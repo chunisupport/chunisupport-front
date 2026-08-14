@@ -236,3 +236,25 @@ test('データ移行の検証と確定は同じJSON BlobをPOSTする', async (
     },
   ])
 })
+
+test('データ移行の検証はnullの配列フィールドを空配列へ正規化する', async () => {
+  // Given: 検証上の問題なしをnullで返すレスポンス。
+  const file = new Blob(['{"signed":true}'], { type: 'application/json' })
+  globalThis.fetch = async () =>
+    Response.json({
+      importable: true,
+      player_name: 'TEST',
+      counts: {},
+      blockers: null,
+      unresolved_references: null,
+      unresolved_reference_count: 0,
+    })
+
+  // When: 移行ファイルを検証する。
+  const { validateUserDataTransfer } = await loadSettingsApi()
+  const validation = await validateUserDataTransfer(file)
+
+  // Then: 描画側が常に配列として扱える結果を返す。
+  assert.deepEqual(validation.blockers, [])
+  assert.deepEqual(validation.unresolved_references, [])
+})
