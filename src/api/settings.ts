@@ -144,7 +144,19 @@ export const validateUserDataTransfer = async (
     body: file,
   })
 
-  return response.json()
+  const validation = (await response.json()) as Omit<
+    DataTransferValidationResponse,
+    'blockers' | 'unresolved_references'
+  > & {
+    blockers: DataTransferValidationResponse['blockers'] | null
+    unresolved_references: DataTransferValidationResponse['unresolved_references'] | null
+  }
+
+  return {
+    ...validation,
+    blockers: validation.blockers ?? [],
+    unresolved_references: validation.unresolved_references ?? [],
+  }
 }
 
 /**
