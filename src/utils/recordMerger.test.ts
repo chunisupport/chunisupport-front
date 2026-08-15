@@ -16,6 +16,7 @@ const createSong = (overrides: Partial<SongDTO> = {}): SongDTO => ({
   maxop: 100,
   is_maxop_unknown: false,
   op_target_difficulty: 'MASTER',
+  is_new: false,
   charts: {
     MASTER: {
       const: 14.5,

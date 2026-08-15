@@ -1,20 +1,29 @@
 import { useParams, useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  ErrorBoundary,
+  Show,
+} from 'solid-js'
 
 import { fetchUserProfileSummary } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import type { PlayerDTO, UserRatingDTO, UserRecordDTO } from '../../../types/api'
+import type {
+  PlayerDTO,
+  UserCourseRecordsDTO,
+  UserRatingDTO,
+  UserRecordDTO,
+} from '../../../types/api'
+import { fetchUserCourseRecordsWithCache } from '../../../usecases/cache/fetchUserCourseRecordsWithCache'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
+import { resolveOverPowerSubPage, resolveProfilePageQuery } from '../../../utils/userProfileRoute'
 import NotFoundPage from '../../NotFoundPage'
-import {
-  isRecordPageQuery,
-  resolveOverPowerSubPage,
-  resolveProfilePageQuery,
-} from './profilePageQuery'
 import { UserProfileView } from './UserProfileView'
 
 export type UserPageRatingProfile = {
@@ -27,6 +36,14 @@ export type UserPageRecordProfile = {
   username: string
   player: PlayerDTO
   record: UserRecordDTO
+}
+
+/** ユーザー名とコースレコード取得結果を関連付けた表示用データ。 */
+export type UserPageCourseRecordProfile = {
+  /** 取得対象のユーザー名。 */
+  username: string
+  /** コースレコード一覧レスポンス。 */
+  records: UserCourseRecordsDTO
 }
 
 type UserPageLoadState =
@@ -82,20 +99,45 @@ const fetchUserRecordLoadState = async (username: string): Promise<UserPageRecor
   record: await fetchUserRecordWithCache(username),
 })
 
+/**
+ * ユーザーの未プレイを含むコースレコードを取得する。
+ *
+ * @param username - コースレコード取得対象のユーザー名。
+ * @returns 取得対象ユーザー名付きのコースレコード取得結果。
+ */
+const fetchUserCourseRecordLoadState = async (
+  username: string
+): Promise<UserPageCourseRecordProfile> => ({
+  username,
+  records: await fetchUserCourseRecordsWithCache(username),
+})
+
 const UserPage: Component = () => {
   const params = useParams<{ username: string; page?: string; subPage?: string }>()
   const [searchParams] = useSearchParams()
   const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
+  const [courseRecordProfileUsername, setCourseRecordProfileUsername] = createSignal<string>()
+
+  /** COURSEタブを一度開いたユーザー名を記録し、そのユーザーのページ内でリソースを保持する。 */
+  createEffect(() => {
+    if (resolveProfilePageQuery(params.page, searchParams.page) === 'record_course') {
+      setCourseRecordProfileUsername(params.username)
+    }
+  })
 
   const [pageState] = createResource(() => params.username, fetchUserPageLoadState)
-  const [recordProfile] = createResource(
-    () =>
-      shouldFetchRecordProfile() ||
-      isRecordPageQuery(params.page, searchParams.page) ||
-      resolveProfilePageQuery(params.page, searchParams.page) === 'overpower'
-        ? params.username
-        : undefined,
-    fetchUserRecordLoadState
+  const [recordProfile] = createResource(() => {
+    const selectedPage = resolveProfilePageQuery(params.page, searchParams.page)
+    return shouldFetchRecordProfile() ||
+      selectedPage === 'record_normal' ||
+      selectedPage === 'record_we' ||
+      selectedPage === 'overpower'
+      ? params.username
+      : undefined
+  }, fetchUserRecordLoadState)
+  const [courseRecordProfile] = createResource(
+    () => (courseRecordProfileUsername() === params.username ? params.username : undefined),
+    fetchUserCourseRecordLoadState
   )
 
   const linkedRatingProfile = createMemo<UserPageRatingProfile | undefined>(() => {
@@ -174,6 +216,7 @@ const UserPage: Component = () => {
                   <UserProfileView
                     profile={linkedProfile()}
                     recordProfile={linkedRecordProfile}
+                    courseRecordProfile={courseRecordProfile}
                     onShowRecords={() => setShouldFetchRecordProfile(true)}
                     selectedPage={resolveProfilePageQuery(params.page, searchParams.page)}
                     selectedOverPowerSubPage={resolveOverPowerSubPage(params.subPage)}

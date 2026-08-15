@@ -1,21 +1,39 @@
 import type { WorldsendRecordDTO } from '../../../../types/api'
 import {
-  nextSortState as nextSharedSortState,
+  compareUpdatedAtWithMissingLast,
+  updatedAtTimestamp,
+} from '../../../../utils/recordUpdatedAt'
+import { compareSongsByReading } from '../../../../utils/songTitleSorting'
+import {
+  createInitialSortConditions,
+  nextPrimarySortCondition,
+  normalizeSortConditions,
+  type SortCondition,
+} from '../../../../utils/sortConditions'
+import {
   parseSortQuery,
   type SortDirection,
   type SortParamsSource,
-} from '../../recordTable/sortingQuery'
-import { formatJusticeCountForAj } from '../../UserRecord/utils/justiceCountDisplay'
-import {
-  compareUpdatedAtWithMissingLast,
-  updatedAtTimestamp,
-} from '../../UserRecord/utils/updatedAt'
+} from '../../../../utils/sortingQuery'
+import { compareNumberWithUnplayedLast } from '../../recordTable/sortComparators'
+import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
+import { formatJusticeCountForAj } from '../../utils/justiceCountDisplay'
 import {
   compareMissingJusticeCountRecords,
   isJusticeCountMissing,
 } from '../../utils/justiceCountSorting'
 import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
 import type { WorldsendRecordSortKey } from './columns'
+
+/** WORLD'S END レコードのソート条件。 */
+export type WorldsendRecordSortCondition = SortCondition<WorldsendRecordSortKey>
+
+type SortableWorldsendRecordEntry<TRecord extends WorldsendRecordDTO> = {
+  record: TRecord
+  index: number
+  updatedAtTs: number
+  justiceCountForAj: number | '' | '-'
+}
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
   !isPlayed || timestamp === Number.NEGATIVE_INFINITY
@@ -32,6 +50,31 @@ const WE_SORT_COL_MAP: Record<string, WorldsendRecordSortKey> = {
   justice_count: 'justiceCount',
 }
 
+/** WORLD'S END レコード一覧で常に適用する既定ソート条件。 */
+export const DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS: WorldsendRecordSortCondition[] = [
+  { key: 'score', direction: 'desc' },
+  { key: 'attribute', direction: 'asc' },
+  { key: 'level', direction: 'desc' },
+  { key: 'title', direction: 'asc' },
+]
+
+/**
+ * WORLD'S END のソート条件を常に4条件へ補正する。
+ *
+ * @param sortConditions - 補正対象のソート条件。
+ * @returns 不足分を既定値で補い、第4ソートを曲名昇順固定にした4条件のソート条件。
+ */
+export const normalizeWorldsendRecordSortConditions = (
+  sortConditions: WorldsendRecordSortCondition[]
+): WorldsendRecordSortCondition[] =>
+  normalizeSortConditions(sortConditions, DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS)
+
+/**
+ * URLクエリから WORLD'S END レコードの初期ソート条件を取得する。
+ *
+ * @param searchParams - URLクエリパラメータ。
+ * @returns 初期ソート列と初期ソート方向。
+ */
 export const parseWorldsendSortParams = (searchParams: SortParamsSource) => {
   const parsed = parseSortQuery(searchParams, WE_SORT_COL_MAP, {
     sortKey: 'score',
@@ -44,27 +87,170 @@ export const parseWorldsendSortParams = (searchParams: SortParamsSource) => {
   }
 }
 
-export const nextWorldsendSortState = (
-  currentSortKey: WorldsendRecordSortKey | null,
-  currentSortDirection: SortDirection | null,
-  nextKey: WorldsendRecordSortKey
-): {
-  sortKey: WorldsendRecordSortKey | null
-  sortDirection: SortDirection | null
-} => nextSharedSortState(currentSortKey, currentSortDirection, nextKey)
+/**
+ * クエリ文字列から取得した第1ソートと既定の第2〜第4ソートを組み合わせる。
+ *
+ * @param sortKey - 初期表示で第1ソートにする列キー。
+ * @param sortDirection - 初期表示で第1ソートにする方向。
+ * @returns 4条件を持つ初期ソート条件。
+ */
+export const createInitialWorldsendRecordSortConditions = (
+  sortKey: WorldsendRecordSortKey,
+  sortDirection: SortDirection
+): WorldsendRecordSortCondition[] =>
+  createInitialSortConditions(sortKey, sortDirection, DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS)
 
 /**
- * Sorts worldsend records with multiple comparison modes including full chain lamp status.
+ * 列ヘッダークリック時に第1ソートだけを更新する。
  *
- * This function supports various sorting modes such as title, attribute, level, score, and
- * lamp-based comparisons. The 'fullChain' sort key delegates to compareFullChainLamp which
- * may return early when result.skipDirection is true, bypassing the standard direction multiplier
- * to handle special ordering requirements for full chain lamp values.
+ * @param currentSortCondition - 現在の第1ソート条件。
+ * @param nextKey - 次に第1ソート対象にする列キー。
+ * @returns 空状態を作らない次の第1ソート条件。
+ */
+export const nextPrimaryWorldsendRecordSortCondition = (
+  currentSortCondition: WorldsendRecordSortCondition | null,
+  nextKey: WorldsendRecordSortKey
+): WorldsendRecordSortCondition => nextPrimarySortCondition(currentSortCondition, nextKey)
+
+/**
+ * 1つのソート条件で WORLD'S END レコードを比較する。
  *
- * @param records - The array of worldsend records to sort
- * @param currentSortKey - The key to sort by (e.g., 'title', 'score', 'fullChain'), or null to skip sorting
- * @param currentSortDirection - The direction to sort ('asc' or 'desc'), or null to skip sorting
- * @returns The sorted array of worldsend records, or the original array if no sort key/direction is provided
+ * @param leftEntry - 左側の比較対象。
+ * @param rightEntry - 右側の比較対象。
+ * @param sortCondition - 適用するソート条件。
+ * @returns ソート条件に基づく比較結果。
+ */
+const compareWorldsendRecordBySortCondition = <TRecord extends WorldsendRecordDTO>(
+  leftEntry: SortableWorldsendRecordEntry<TRecord>,
+  rightEntry: SortableWorldsendRecordEntry<TRecord>,
+  sortCondition: WorldsendRecordSortCondition
+): number => {
+  const left = leftEntry.record
+  const right = rightEntry.record
+  const direction = sortCondition.direction === 'asc' ? 1 : -1
+  let comparison = 0
+
+  switch (sortCondition.key) {
+    case 'title':
+      comparison = compareSongsByReading(left, right)
+      break
+    case 'attribute':
+      comparison = (left.attribute ?? '').localeCompare(right.attribute ?? '', 'ja')
+      break
+    case 'level':
+      comparison =
+        (left.level_star ?? Number.NEGATIVE_INFINITY) -
+        (right.level_star ?? Number.NEGATIVE_INFINITY)
+      break
+    case 'score': {
+      return compareNumberWithUnplayedLast(
+        { isPlayed: left.is_played, value: left.score },
+        { isPlayed: right.is_played, value: right.score },
+        direction
+      )
+    }
+    case 'updatedAt': {
+      const leftMissing = isUpdatedAtMissing(left.is_played, leftEntry.updatedAtTs)
+      const rightMissing = isUpdatedAtMissing(right.is_played, rightEntry.updatedAtTs)
+
+      comparison = compareUpdatedAtWithMissingLast(
+        { isPlayed: left.is_played, updatedAtTimestamp: leftEntry.updatedAtTs },
+        { isPlayed: right.is_played, updatedAtTimestamp: rightEntry.updatedAtTs }
+      )
+
+      if (leftMissing || rightMissing) {
+        return comparison
+      }
+      break
+    }
+    case 'justiceCount': {
+      const leftJusticeCount = leftEntry.justiceCountForAj
+      const rightJusticeCount = rightEntry.justiceCountForAj
+
+      const leftMissing = isJusticeCountMissing(leftJusticeCount)
+      const rightMissing = isJusticeCountMissing(rightJusticeCount)
+
+      if (leftMissing && rightMissing) {
+        return compareMissingJusticeCountRecords(left, right)
+      }
+      if (leftMissing) return 1
+      if (rightMissing) return -1
+
+      comparison = leftJusticeCount - rightJusticeCount
+      break
+    }
+    case 'lamp': {
+      const result = compareComboLamp(left, right)
+      if (result.skipDirection) return result.comparison
+      comparison = result.comparison
+      break
+    }
+    case 'hardLamp': {
+      const result = compareHardLamp(left, right)
+      if (result.skipDirection) return result.comparison
+      comparison = result.comparison
+      break
+    }
+    case 'fullChain': {
+      const result = compareFullChainLamp(left, right)
+      if (result.skipDirection) return result.comparison
+      comparison = result.comparison
+      break
+    }
+  }
+
+  return comparison * direction
+}
+
+/**
+ * WORLD'S END レコードを指定済みソート条件でソートする。
+ *
+ * @param records - ソート対象の WORLD'S END レコード配列。
+ * @param sortConditions - 正規化済み、または単一条件のソート条件。
+ * @returns 指定条件で並べ替えた WORLD'S END レコード配列。
+ */
+const sortWorldsendRecordsByResolvedConditions = <TRecord extends WorldsendRecordDTO>(
+  records: TRecord[],
+  sortConditions: WorldsendRecordSortCondition[]
+): TRecord[] =>
+  sortRecordsWithConditions(
+    records,
+    sortConditions,
+    (record, index): SortableWorldsendRecordEntry<TRecord> => ({
+      record,
+      index,
+      updatedAtTs: updatedAtTimestamp(record.updated_at),
+      justiceCountForAj: formatJusticeCountForAj({
+        comboLamp: record.combo_lamp,
+        justiceCount: record.justice_count,
+      }),
+    }),
+    compareWorldsendRecordBySortCondition
+  )
+
+/**
+ * WORLD'S END レコードを複数条件でソートする。
+ *
+ * @param records - ソート対象の WORLD'S END レコード配列。
+ * @param sortConditions - 適用するソート条件。
+ * @returns 複数条件で並べ替えた WORLD'S END レコード配列。
+ */
+export const sortWorldsendRecordsByConditions = <TRecord extends WorldsendRecordDTO>(
+  records: TRecord[],
+  sortConditions: WorldsendRecordSortCondition[]
+): TRecord[] =>
+  sortWorldsendRecordsByResolvedConditions(
+    records,
+    normalizeWorldsendRecordSortConditions(sortConditions)
+  )
+
+/**
+ * WORLD'S END レコードを単一条件でソートする。
+ *
+ * @param records - ソート対象の WORLD'S END レコード配列。
+ * @param currentSortKey - ソート対象の列キー。未指定の場合はソートしない。
+ * @param currentSortDirection - ソート方向。未指定の場合はソートしない。
+ * @returns 単一条件で並べ替えた WORLD'S END レコード配列。
  */
 export const sortWorldsendRecords = <TRecord extends WorldsendRecordDTO>(
   records: TRecord[],
@@ -75,106 +261,7 @@ export const sortWorldsendRecords = <TRecord extends WorldsendRecordDTO>(
     return records
   }
 
-  const direction = currentSortDirection === 'asc' ? 1 : -1
-
-  return records
-    .map((record, index) => ({
-      record,
-      index,
-      updatedAtTs: updatedAtTimestamp(record.updated_at),
-      justiceCountForAj: formatJusticeCountForAj({
-        comboLamp: record.combo_lamp,
-        justiceCount: record.justice_count,
-      }),
-    }))
-    .sort((a, b) => {
-      const left = a.record
-      const right = b.record
-      let comparison = 0
-
-      switch (currentSortKey) {
-        case 'title':
-          comparison = left.title.localeCompare(right.title, 'ja')
-          break
-        case 'attribute':
-          comparison = (left.attribute ?? '').localeCompare(right.attribute ?? '', 'ja')
-          break
-        case 'level':
-          comparison =
-            (left.level_star ?? Number.NEGATIVE_INFINITY) -
-            (right.level_star ?? Number.NEGATIVE_INFINITY)
-          break
-        case 'score': {
-          const leftUnplayed = !left.is_played
-          const rightUnplayed = !right.is_played
-
-          if (leftUnplayed && rightUnplayed) {
-            comparison = 0
-          } else if (leftUnplayed) {
-            return 1
-          } else if (rightUnplayed) {
-            return -1
-          } else {
-            comparison = left.score - right.score
-          }
-          break
-        }
-        case 'updatedAt': {
-          const leftMissing = isUpdatedAtMissing(left.is_played, a.updatedAtTs)
-          const rightMissing = isUpdatedAtMissing(right.is_played, b.updatedAtTs)
-
-          comparison = compareUpdatedAtWithMissingLast(
-            { isPlayed: left.is_played, updatedAtTimestamp: a.updatedAtTs },
-            { isPlayed: right.is_played, updatedAtTimestamp: b.updatedAtTs }
-          )
-
-          if (leftMissing || rightMissing) {
-            return comparison
-          }
-          break
-        }
-
-        case 'justiceCount': {
-          const leftJusticeCount = a.justiceCountForAj
-          const rightJusticeCount = b.justiceCountForAj
-
-          const leftMissing = isJusticeCountMissing(leftJusticeCount)
-          const rightMissing = isJusticeCountMissing(rightJusticeCount)
-
-          if (leftMissing && rightMissing) {
-            return compareMissingJusticeCountRecords(left, right) || a.index - b.index
-          }
-          if (leftMissing) return 1
-          if (rightMissing) return -1
-
-          comparison = leftJusticeCount - rightJusticeCount
-          break
-        }
-        case 'lamp': {
-          const result = compareComboLamp(left, right)
-          if (result.skipDirection) return result.comparison
-          comparison = result.comparison
-          break
-        }
-        case 'hardLamp': {
-          const result = compareHardLamp(left, right)
-          if (result.skipDirection) return result.comparison
-          comparison = result.comparison
-          break
-        }
-        case 'fullChain': {
-          const result = compareFullChainLamp(left, right)
-          if (result.skipDirection) return result.comparison
-          comparison = result.comparison
-          break
-        }
-      }
-
-      if (comparison !== 0) {
-        return comparison * direction
-      }
-
-      return a.index - b.index
-    })
-    .map(({ record }) => record)
+  return sortWorldsendRecordsByResolvedConditions(records, [
+    { key: currentSortKey, direction: currentSortDirection },
+  ])
 }

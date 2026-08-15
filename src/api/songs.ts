@@ -1,40 +1,103 @@
 import { API_BASE_URL } from '../config'
 import type {
   AchievementTypeDTO,
+  CourseDTO,
   CreateSongRequestDTO,
   CreateWorldsendSongRequestDTO,
+  FriendRankingResponseDTO,
   ManagedSongDTO,
   ManagedWorldsendSongDTO,
   MasterDataDTO,
+  ScoreHistoryResponseDTO,
   SongDTO,
   SongStatsResponseDTO,
   UpdatedAtResponseDTO,
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
   VersionDTO,
+  WorldsendFriendRankingResponseDTO,
   WorldsendSongDTO,
 } from '../types/api'
 import { sortMasterItemsBySortOrder } from '../utils/masterData'
 import { fetchWithAuth } from './fetchWithAuth'
 
 type VersionsResponse = { versions: VersionDTO[] }
+export type ScoreHistoryDifficulty = 'EXPERT' | 'MASTER' | 'ULTIMA'
 
 /** 内部向け WORLD'S END 楽曲APIのベースパス。 */
 const INTERNAL_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/worldsend-songs`
 /** 編集者向け WORLD'S END 楽曲APIのベースパス。 */
 const INTERNAL_EDITOR_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/editor/worldsend-songs`
+/** 内部向けユーザーAPIのベースパス。 */
+const INTERNAL_USERS_PATH = `${API_BASE_URL}/internal/users`
+/** 内部向けフレンドランキングAPIのベースパス。 */
+const INTERNAL_FRIEND_RANKINGS_PATH = `${API_BASE_URL}/internal/friend-rankings`
 
 let cachedVersionsResponse: VersionsResponse | undefined
 let versionsResponsePromise: Promise<VersionsResponse> | undefined
 let cachedSongsUpdatedAtResponse: UpdatedAtResponseDTO | undefined
 let songsUpdatedAtResponsePromise: Promise<UpdatedAtResponseDTO> | undefined
+let coursesUpdatedAtResponsePromise: Promise<UpdatedAtResponseDTO> | undefined
 let cachedMasterDataResponse: MasterDataDTO | undefined
 let masterDataResponsePromise: Promise<MasterDataDTO> | undefined
 
-export const fetchAllSongs = async (): Promise<{ songs: SongDTO[] }> => {
-  const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs`)
+/**
+ * APIから有効な通常楽曲をすべて取得する。
+ *
+ * @param options - ブラウザのHTTPキャッシュ利用方法。
+ * @returns 有効な通常楽曲一覧レスポンス。
+ */
+export const fetchAllSongs = async (
+  options: Pick<RequestInit, 'cache'> = {}
+): Promise<{ songs: SongDTO[] }> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs`, options)
 
   return response.json()
+}
+
+/**
+ * APIから有効なコースマスタ一覧を取得する。
+ *
+ * @returns コース一覧レスポンス。
+ */
+export const fetchCourses = async (): Promise<{ courses: CourseDTO[] }> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/courses`)
+
+  return response.json()
+}
+
+/**
+ * APIからコースマスタ更新日時を取得する。
+ *
+ * @returns コースマスタ更新日時レスポンス。
+ */
+const fetchCoursesUpdatedAtFromApi = async (): Promise<UpdatedAtResponseDTO> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/courses/updated-at`)
+
+  return response.json()
+}
+
+/**
+ * コースマスタ更新日時の同時呼び出しを同一リクエストにまとめる。
+ *
+ * @returns APIから取得した更新日時レスポンス。
+ */
+export const fetchCoursesUpdatedAt = async (): Promise<UpdatedAtResponseDTO> => {
+  const existingPromise = coursesUpdatedAtResponsePromise
+  if (existingPromise) {
+    return existingPromise
+  }
+
+  const responsePromise = fetchCoursesUpdatedAtFromApi()
+  coursesUpdatedAtResponsePromise = responsePromise
+
+  try {
+    return await responsePromise
+  } finally {
+    if (coursesUpdatedAtResponsePromise === responsePromise) {
+      coursesUpdatedAtResponsePromise = undefined
+    }
+  }
 }
 
 /**
@@ -59,15 +122,33 @@ export const fetchSongsUpdatedAt = async (): Promise<UpdatedAtResponseDTO> => {
     return cachedSongsUpdatedAtResponse
   }
 
-  songsUpdatedAtResponsePromise ??= fetchSongsUpdatedAtFromApi()
+  const responsePromise = songsUpdatedAtResponsePromise ?? fetchSongsUpdatedAtFromApi()
+  songsUpdatedAtResponsePromise = responsePromise
 
   try {
-    cachedSongsUpdatedAtResponse = await songsUpdatedAtResponsePromise
-    return cachedSongsUpdatedAtResponse
+    const response = await responsePromise
+    if (songsUpdatedAtResponsePromise === responsePromise) {
+      cachedSongsUpdatedAtResponse = response
+      songsUpdatedAtResponsePromise = undefined
+    }
+    return response
   } catch (error) {
-    songsUpdatedAtResponsePromise = undefined
+    if (songsUpdatedAtResponsePromise === responsePromise) {
+      songsUpdatedAtResponsePromise = undefined
+    }
     throw error
   }
+}
+
+/**
+ * 楽曲更新後に、セッション中の楽曲更新日時キャッシュを無効化する。
+ * 無効化前に開始したリクエストの結果も、以後のキャッシュには採用しない。
+ *
+ * @returns なし。
+ */
+export const invalidateSongsUpdatedAtCache = (): void => {
+  cachedSongsUpdatedAtResponse = undefined
+  songsUpdatedAtResponsePromise = undefined
 }
 
 export const fetchManagedSongs = async (): Promise<{ songs: ManagedSongDTO[] }> => {
@@ -130,6 +211,78 @@ export const fetchSongStats = async (
 ): Promise<SongStatsResponseDTO> => {
   const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/songs/${encodeURIComponent(displayId)}/stats/${encodeURIComponent(difficulty)}`
+  )
+
+  return response.json()
+}
+
+/**
+ * ログインユーザーの通常譜面スコア履歴を取得する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @param difficulty - 大文字の難易度ドメイン値。
+ * @param username - 対象ユーザー名。
+ * @returns 現行ベストを先頭に含むスコア履歴。
+ */
+export const fetchOwnSongScoreHistory = async (
+  displayId: string,
+  difficulty: ScoreHistoryDifficulty,
+  username: string
+): Promise<ScoreHistoryResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${INTERNAL_USERS_PATH}/${encodeURIComponent(username)}/record/songs/${encodeURIComponent(displayId)}/${difficulty.toLowerCase()}/history`
+  )
+
+  return response.json()
+}
+
+/**
+ * ログインユーザーの WORLD'S END スコア履歴を取得する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @param username - 対象ユーザー名。
+ * @returns 現行ベストを先頭に含むスコア履歴。
+ */
+export const fetchOwnWorldsendScoreHistory = async (
+  displayId: string,
+  username: string
+): Promise<ScoreHistoryResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${INTERNAL_USERS_PATH}/${encodeURIComponent(username)}/record/worldsend-songs/${encodeURIComponent(displayId)}/history`
+  )
+
+  return response.json()
+}
+
+/**
+ * 通常譜面のフレンドランキングを取得する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @param difficulty - 大文字の難易度ドメイン値。
+ * @returns 自分と承認済みフレンドの現在スコアランキング。
+ */
+export const fetchSongFriendRanking = async (
+  displayId: string,
+  difficulty: ScoreHistoryDifficulty
+): Promise<FriendRankingResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${INTERNAL_FRIEND_RANKINGS_PATH}/songs/${encodeURIComponent(displayId)}/charts/${encodeURIComponent(difficulty)}`
+  )
+
+  return response.json()
+}
+
+/**
+ * WORLD'S END譜面のフレンドランキングを取得する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @returns 自分と承認済みフレンドの現在スコアランキング。
+ */
+export const fetchWorldsendFriendRanking = async (
+  displayId: string
+): Promise<WorldsendFriendRankingResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${INTERNAL_FRIEND_RANKINGS_PATH}/worldsend-songs/${encodeURIComponent(displayId)}`
   )
 
   return response.json()

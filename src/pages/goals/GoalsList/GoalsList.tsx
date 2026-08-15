@@ -1,157 +1,158 @@
-import { Button } from '@kobalte/core/button'
 import { useNavigate } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createMemo, createResource, createSignal, ErrorBoundary, For, Show } from 'solid-js'
-import { createGoal, deleteGoal, fetchGoals, updateGoal } from '../../../api/goals'
-import { fetchMasterData, fetchVersions } from '../../../api/songs'
-import { fetchMe, fetchUserProfileSummary } from '../../../api/users'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  ErrorBoundary,
+  Show,
+} from 'solid-js'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { saveStandardRecordFilterSetting } from '../../../repositories/viewSettingsRepository'
-import type { GoalCreateRequest, GoalDTO, GoalUpdateRequest } from '../../../types/api'
-import { fetchAllSongsWithCache } from '../../../usecases/cache/fetchAllSongsWithCache'
-import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
+import type {
+  GoalCreateRequest,
+  GoalDTO,
+  GoalGroupDTO,
+  GoalUpdateRequest,
+} from '../../../types/api'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
-import { buildUserProfilePagePath } from '../../users/UserPage/profilePageQuery'
-import { calculateGoalProgress, filterRecordsByAttributes } from '../utils/goalProgress'
-import { buildGoalRecordFilter } from '../utils/goalRecordFilter'
-import GoalCard from './components/GoalCard'
-import GoalDeleteDialog from './components/GoalDeleteDialog'
-import GoalFormDialog from './components/GoalFormDialog'
-
-const OVERPOWER_CHART_CONST_BONUS = 3
-const OVERPOWER_CHART_MULTIPLIER = 5
-const RECORD_NAVIGATION_ERROR_MESSAGE = '未達成レコードの表示に失敗しました。'
-
-/**
- * OP対象のOVER POWER目標で曲内最大値を使うべきか判定する。
- *
- * @param goal - 判定対象の目標。
- * @returns OP対象かつOVER POWER系の目標ならtrue。
- */
-const shouldUseOpTargetSongAggregation = (
-  goal: Pick<GoalCreateRequest, 'achievement_type' | 'attributes'>
-): boolean =>
-  goal.attributes.chart_target === 'OP_TARGET' &&
-  (goal.achievement_type === 'overpower_value' || goal.achievement_type === 'overpower_percent')
+import { GoalGroupsManageDialog } from './components/list/GoalGroupsManageDialog'
+import { GoalsListContent } from './components/list/GoalsListContent'
+import { GoalsListDialogs } from './components/list/GoalsListDialogs'
+import {
+  buildGoalReorderAnnouncement,
+  GOAL_COPY_ERROR_MESSAGE,
+  GOAL_GROUP_COPY,
+  GOAL_REORDER_ERROR_MESSAGE,
+  GOALS_LIMIT,
+  type GoalGroupDisplayMode,
+  RECORD_NAVIGATION_ERROR_MESSAGE,
+} from './constants'
+import {
+  buildGoalGroupViews,
+  moveDeletedGroupGoalsToUngrouped,
+  moveGoalGroup,
+  orderGoalsByPersistedGroupOrder,
+  resolveCyclicGoalGroupId,
+  UNGROUPED_GOALS_LABEL,
+} from './goalGroupsModel'
+import { moveGoal } from './goalOrder'
+import { saveGoalRecordFilterAndBuildPath } from './goalsListNavigation'
+import {
+  buildGoalsWithProgress,
+  resolveDraftGoalProgress as resolveDraftGoalProgressFromData,
+  resolveGoalAllCount,
+  resolveGoalOverPowerChartMax,
+} from './goalsListProgress'
+import {
+  copyGoalRequest,
+  createGoalGroupRequest,
+  deleteGoalGroupRequest,
+  deleteGoalRequest,
+  fetchGoalsListData,
+  reorderGoalGroupsRequest,
+  reorderGoalsRequest,
+  saveGoalRequest,
+  updateGoalGroupRequest,
+} from './goalsListResource'
 
 const GoalsList: Component = () => {
   const navigate = useNavigate()
   const [refreshKey, setRefreshKey] = createSignal(0)
 
   const [formOpen, setFormOpen] = createSignal(false)
+  const [groupsManageOpen, setGroupsManageOpen] = createSignal(false)
   const [deleteOpen, setDeleteOpen] = createSignal(false)
   const [editingGoal, setEditingGoal] = createSignal<GoalDTO | undefined>(undefined)
   const [deletingGoal, setDeletingGoal] = createSignal<GoalDTO | undefined>(undefined)
   const [isSaving, setIsSaving] = createSignal(false)
   const [isDeleting, setIsDeleting] = createSignal(false)
+  const [copyingGoal, setCopyingGoal] = createSignal<GoalDTO | undefined>(undefined)
+  const [isReordering, setIsReordering] = createSignal(false)
+  const [isGroupMutating, setIsGroupMutating] = createSignal(false)
   const [actionError, setActionError] = createSignal('')
+  const [reorderAnnouncement, setReorderAnnouncement] = createSignal('')
   const [formError, setFormError] = createSignal('')
+  const [groupError, setGroupError] = createSignal('')
+  const [selectedGroupId, setSelectedGroupId] = createSignal<number | null>(null)
+  const [groupDisplayMode, setGroupDisplayMode] = createSignal<GoalGroupDisplayMode>('horizontal')
 
-  const [resource] = createResource(
+  const [resource, { mutate: mutateResource }] = createResource(
     () => refreshKey(),
-    async () => {
-      const me = await fetchMe().catch((error: Error & { status?: number }) => {
-        if (error?.status === 401) {
-          navigate('/login', { replace: true })
-        }
-        throw error
-      })
-
-      const [goalsResponse, songsResponse, masterData, versionData, profile, record] =
-        await Promise.all([
-          fetchGoals(),
-          fetchAllSongsWithCache(),
-          fetchMasterData(),
-          fetchVersions(),
-          fetchUserProfileSummary(me.username),
-          fetchUserRecordWithCache(me.username),
-        ])
-
-      if (!profile.player) {
-        return {
-          username: me.username,
-          noPlayerData: true,
-          goals: goalsResponse.goals,
-          songs: songsResponse.songs,
-          masterData,
-          versions: versionData.versions ?? [],
-          records: [],
-        }
-      }
-
-      return {
-        username: me.username,
-        noPlayerData: false,
-        goals: goalsResponse.goals,
-        songs: songsResponse.songs,
-        masterData,
-        versions: versionData.versions ?? [],
-        records: record.standard,
-      }
-    }
+    async () => fetchGoalsListData(() => navigate('/login', { replace: true }))
   )
 
-  const goalWithProgress = createMemo(() => {
-    const data = resource()
-    if (!data) return []
+  const goalWithProgress = createMemo(() => buildGoalsWithProgress(resource()))
+  const [orderedGoals, setOrderedGoals] = createSignal(goalWithProgress())
+  const [orderedGroups, setOrderedGroups] = createSignal<GoalGroupDTO[]>([])
+  let hasInitializedGroupSelection = false
 
-    return data.goals.map((goal) => {
-      const filtered = filterRecordsByAttributes(
-        data.records,
-        goal.attributes,
-        data.masterData,
-        data.songs,
-        data.versions,
-        { includeAllChartsForOpTarget: shouldUseOpTargetSongAggregation(goal) }
-      )
-      const progress = calculateGoalProgress(goal, filtered, data.songs)
-      return { goal, progress }
-    })
+  /**
+   * 目標のコピーAPIが処理中か判定する。
+   *
+   * @returns コピー処理中ならtrue。
+   */
+  const isCopying = (): boolean => copyingGoal() !== undefined
+
+  createEffect(() => {
+    setOrderedGoals(orderGoalsByPersistedGroupOrder(goalWithProgress()))
   })
 
-  const resolveAllCount = (attributes: GoalCreateRequest['attributes']) => {
+  createEffect(() => {
+    const groups = resource()?.groups
+    if (!groups) return
+    setOrderedGroups([...groups].sort((left, right) => left.sort_order - right.sort_order))
+  })
+
+  const groupViews = createMemo(() => buildGoalGroupViews(orderedGroups(), orderedGoals()))
+  const currentGroupView = createMemo(() => {
+    const views = groupViews()
+    return (
+      views.find(({ groupId }) => groupId === selectedGroupId()) ??
+      views[0] ?? { groupId: null, name: UNGROUPED_GOALS_LABEL, goals: [] }
+    )
+  })
+
+  createEffect(() => {
     const data = resource()
-    if (!data) return 0
-    return filterRecordsByAttributes(
-      data.records,
-      attributes,
-      data.masterData,
-      data.songs,
-      data.versions
-    ).length
+    if (!data) return
+    const views = groupViews()
+    if (!hasInitializedGroupSelection) {
+      const firstGroup = [...data.groups].sort(
+        (left, right) => left.sort_order - right.sort_order
+      )[0]
+      setSelectedGroupId(firstGroup?.id ?? null)
+      hasInitializedGroupSelection = true
+      return
+    }
+    if (!views.some(({ groupId }) => groupId === selectedGroupId())) {
+      setSelectedGroupId(views[0]?.groupId ?? null)
+    }
+  })
+
+  /**
+   * 現在の対象条件に一致する譜面数または楽曲数を取得する。
+   *
+   * @param attributes - 件数を確認する対象条件。
+   * @param achievementType - 集約単位を決める目標種別。
+   * @returns 条件に一致する譜面数または楽曲数。
+   */
+  const resolveAllCount = (
+    attributes: GoalCreateRequest['attributes'],
+    achievementType?: GoalCreateRequest['achievement_type']
+  ) => {
+    return resolveGoalAllCount(resource(), attributes, achievementType)
   }
 
   /**
-   * 対象条件に一致する譜面ごとの最大OVER POWER合計を算出する。
-   * OP対象では楽曲マスタの曲別最大OP、通常指定では譜面定数から理論値を使う。
+   * 現在の対象譜面条件で到達可能なOVER POWER合計最大値を取得する。
    *
-   * @param attributes - 目標フォームで選択中の対象条件。
-   * @returns 対象譜面それぞれの最大OVER POWERを合計した値。
+   * @param attributes - 最大値を確認する対象条件。
+   * @returns 譜面ごとの最大OVER POWER合計値。
    */
   const resolveOverPowerChartMax = (attributes: GoalCreateRequest['attributes']) => {
-    const data = resource()
-    if (!data) return 0
-    const filteredRecords = filterRecordsByAttributes(
-      data.records,
-      attributes,
-      data.masterData,
-      data.songs,
-      data.versions,
-      { includeAllChartsForOpTarget: attributes.chart_target === 'OP_TARGET' }
-    )
-    const songMap = new Map(data.songs.map((song) => [song.id, song]))
-    const countedSongIds = new Set<string>()
-
-    return filteredRecords.reduce((acc, record) => {
-      const song = songMap.get(record.id)
-      if (attributes.chart_target === 'OP_TARGET') {
-        if (countedSongIds.has(record.id)) return acc
-        countedSongIds.add(record.id)
-        return acc + (song?.maxop ?? 0)
-      }
-      return acc + (record.const + OVERPOWER_CHART_CONST_BONUS) * OVERPOWER_CHART_MULTIPLIER
-    }, 0)
+    return resolveGoalOverPowerChartMax(resource(), attributes)
   }
 
   /**
@@ -161,35 +162,7 @@ const GoalsList: Component = () => {
    * @returns 実際の目標カードと同じ計算で作った進捗情報。
    */
   const resolveDraftGoalProgress = (draftGoal: GoalCreateRequest) => {
-    const data = resource()
-    if (!data) {
-      return {
-        current: 0,
-        target: 1,
-        percent: 0,
-        achieved: false,
-        hasUnknownMaxOp: false,
-      }
-    }
-
-    const filtered = filterRecordsByAttributes(
-      data.records,
-      draftGoal.attributes,
-      data.masterData,
-      data.songs,
-      data.versions,
-      { includeAllChartsForOpTarget: shouldUseOpTargetSongAggregation(draftGoal) }
-    )
-
-    return calculateGoalProgress(
-      {
-        ...draftGoal,
-        id: 0,
-        created_at: '',
-      },
-      filtered,
-      data.songs
-    )
+    return resolveDraftGoalProgressFromData(resource(), draftGoal)
   }
 
   useDocumentTitle('目標')
@@ -201,11 +174,44 @@ const GoalsList: Component = () => {
     setFormOpen(true)
   }
 
+  /**
+   * 指定方向へ目標グループを循環切替する。
+   *
+   * @param offset - 前後どちらへ切り替えるか。
+   * @returns なし。
+   */
+  const changeSelectedGroup = (offset: -1 | 1): void => {
+    setSelectedGroupId(resolveCyclicGoalGroupId(groupViews(), selectedGroupId(), offset))
+  }
+
   const handleEdit = (goal: GoalDTO) => {
     setEditingGoal(goal)
     setActionError('')
     setFormError('')
     setFormOpen(true)
+  }
+
+  /**
+   * 指定した目標を同じグループへ複製する。
+   *
+   * @param goal - 複製元の目標。
+   * @returns 複製完了後に解決されるPromise。
+   */
+  const handleCopy = async (goal: GoalDTO): Promise<void> => {
+    if (isCopying() || (resource()?.goals.length ?? 0) >= GOALS_LIMIT) return
+
+    setActionError('')
+    setCopyingGoal(goal)
+    try {
+      const copiedGoal = await copyGoalRequest(goal)
+      mutateResource((currentData) =>
+        currentData ? { ...currentData, goals: [...currentData.goals, copiedGoal] } : currentData
+      )
+    } catch (error) {
+      setActionError(toUserFriendlyErrorMessage(error, GOAL_COPY_ERROR_MESSAGE))
+    } finally {
+      setCopyingGoal(undefined)
+    }
   }
 
   const handleDeleteAsk = (goal: GoalDTO) => {
@@ -226,9 +232,8 @@ const GoalsList: Component = () => {
 
     setActionError('')
     try {
-      const filter = buildGoalRecordFilter(goal, data.masterData, data.versions)
-      await saveStandardRecordFilterSetting(filter)
-      navigate(buildUserProfilePagePath(data.username, 'record_normal'))
+      const path = await saveGoalRecordFilterAndBuildPath(data, goal)
+      navigate(path)
     } catch (error) {
       setActionError(toUserFriendlyErrorMessage(error, RECORD_NAVIGATION_ERROR_MESSAGE))
     }
@@ -253,11 +258,7 @@ const GoalsList: Component = () => {
     setIsSaving(true)
     try {
       const goal = editingGoal()
-      if (goal) {
-        await updateGoal(goal.id, payload)
-      } else {
-        await createGoal(payload)
-      }
+      await saveGoalRequest(goal, payload)
       setFormOpen(false)
       setEditingGoal(undefined)
       setRefreshKey((prev) => prev + 1)
@@ -275,7 +276,7 @@ const GoalsList: Component = () => {
     setActionError('')
     setIsDeleting(true)
     try {
-      await deleteGoal(goal.id)
+      await deleteGoalRequest(goal)
       setDeleteOpen(false)
       setDeletingGoal(undefined)
       setRefreshKey((prev) => prev + 1)
@@ -286,92 +287,209 @@ const GoalsList: Component = () => {
     }
   }
 
+  /**
+   * 目標カードを画面上で即時に並び替え、APIへ表示順を保存する。
+   *
+   * @param groupId - 並び替える目標が属するグループID。
+   * @param activeId - 移動する目標ID。
+   * @param overId - 移動先の目標ID。
+   * @returns なし。
+   */
+  const handleReorder = (groupId: number | null, activeId: number, overId: number): void => {
+    if (isReordering() || isCopying() || isGroupMutating() || activeId === overId) return
+
+    const groupView = groupViews().find((view) => view.groupId === groupId)
+    if (!groupView) return
+
+    const previousGoals = orderedGoals()
+    const previousGroupGoals = groupView.goals
+    const nextGroupGoals = moveGoal(previousGroupGoals, activeId, overId)
+    if (nextGroupGoals.every(({ goal }, index) => goal.id === previousGroupGoals[index]?.goal.id)) {
+      return
+    }
+    let nextGroupIndex = 0
+    const nextGoals = previousGoals.map((item) =>
+      item.goal.group_id === groupId ? nextGroupGoals[nextGroupIndex++] : item
+    )
+
+    setActionError('')
+    setOrderedGoals(nextGoals)
+    const movedIndex = nextGroupGoals.findIndex(({ goal }) => goal.id === activeId)
+    const movedGoal = nextGroupGoals[movedIndex]?.goal
+    if (movedGoal) {
+      setReorderAnnouncement(
+        buildGoalReorderAnnouncement(movedGoal.title, movedIndex + 1, nextGroupGoals.length)
+      )
+    }
+    setIsReordering(true)
+
+    void reorderGoalsRequest(
+      groupId,
+      nextGroupGoals.map(({ goal }) => goal)
+    )
+      .catch((error: unknown) => {
+        setOrderedGoals(previousGoals)
+        setActionError(toUserFriendlyErrorMessage(error, GOAL_REORDER_ERROR_MESSAGE))
+      })
+      .finally(() => {
+        setIsReordering(false)
+      })
+  }
+
+  /**
+   * 目標グループを作成し、作成したグループへ表示を切り替える。
+   *
+   * @param name - 作成するグループ名。
+   * @returns 作成完了後に解決されるPromise。
+   */
+  const handleCreateGroup = async (name: string): Promise<void> => {
+    setGroupError('')
+    setIsGroupMutating(true)
+    try {
+      const group = await createGoalGroupRequest(name)
+      setOrderedGroups((groups) => [...groups, group])
+      setSelectedGroupId(group.id)
+    } catch (error) {
+      setGroupError(toUserFriendlyErrorMessage(error, GOAL_GROUP_COPY.createError))
+      throw error
+    } finally {
+      setIsGroupMutating(false)
+    }
+  }
+
+  /**
+   * 目標グループ名を更新する。
+   *
+   * @param group - 更新対象のグループ。
+   * @param name - 更新後のグループ名。
+   * @returns 更新完了後に解決されるPromise。
+   */
+  const handleUpdateGroup = async (group: GoalGroupDTO, name: string): Promise<void> => {
+    setGroupError('')
+    setIsGroupMutating(true)
+    try {
+      const updated = await updateGoalGroupRequest(group, name)
+      setOrderedGroups((groups) => groups.map((item) => (item.id === updated.id ? updated : item)))
+    } catch (error) {
+      setGroupError(toUserFriendlyErrorMessage(error, GOAL_GROUP_COPY.updateError))
+      throw error
+    } finally {
+      setIsGroupMutating(false)
+    }
+  }
+
+  /**
+   * 目標グループを削除し、所属目標を未分類へ移動する。
+   *
+   * @param group - 削除するグループ。
+   * @returns 削除完了後に解決されるPromise。
+   */
+  const handleDeleteGroup = async (group: GoalGroupDTO): Promise<void> => {
+    setGroupError('')
+    setIsGroupMutating(true)
+    try {
+      await deleteGoalGroupRequest(group)
+      setOrderedGroups((groups) => groups.filter(({ id }) => id !== group.id))
+      setOrderedGoals((goals) => moveDeletedGroupGoalsToUngrouped(goals, group.id))
+      if (selectedGroupId() === group.id) setSelectedGroupId(null)
+    } catch (error) {
+      setGroupError(toUserFriendlyErrorMessage(error, GOAL_GROUP_COPY.deleteError))
+      throw error
+    } finally {
+      setIsGroupMutating(false)
+    }
+  }
+
+  /**
+   * グループを画面上で即時に並び替え、APIへ保存する。
+   *
+   * @param activeId - 移動するグループID。
+   * @param overId - 移動先のグループID。
+   * @returns なし。
+   */
+  const handleReorderGroups = (activeId: number, overId: number): void => {
+    if (isGroupMutating() || activeId === overId) return
+    const previousGroups = orderedGroups()
+    const nextGroups = moveGoalGroup(previousGroups, activeId, overId)
+    if (nextGroups.every(({ id }, index) => id === previousGroups[index]?.id)) return
+
+    setGroupError('')
+    setOrderedGroups(nextGroups)
+    setIsGroupMutating(true)
+    void reorderGoalGroupsRequest(nextGroups)
+      .catch((error: unknown) => {
+        setOrderedGroups(previousGroups)
+        setGroupError(toUserFriendlyErrorMessage(error, GOAL_GROUP_COPY.reorderError))
+      })
+      .finally(() => setIsGroupMutating(false))
+  }
+
   return (
     <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
       <Show when={!resource.error} fallback={<LoadError error={resource.error} />}>
         <Show when={!resource.loading} fallback={<Loading />}>
           <Show when={!resource()?.noPlayerData} fallback={<PlayerDataEmptyState />}>
-            <div class="mx-auto w-full max-w-3xl p-4 space-y-4">
-              <div class="flex items-center justify-between gap-3">
-                <div>
-                  <h1 class="text-2xl font-semibold">目標</h1>
-                  <p class="text-sm text-text-muted">{resource()?.goals.length ?? 0} / 100件</p>
-                </div>
-                <Button
-                  type="button"
-                  class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:opacity-60"
-                  disabled={(resource()?.goals.length ?? 0) >= 100}
-                  onClick={openCreateDialog}
-                >
-                  目標を追加
-                </Button>
-              </div>
+            <GoalsListContent
+              goalsCount={resource()?.goals.length ?? 0}
+              groupView={currentGroupView()}
+              groupViews={groupViews()}
+              groupDisplayMode={groupDisplayMode()}
+              actionError={actionError()}
+              isReordering={isReordering()}
+              isCopying={isCopying()}
+              copyingGroupId={copyingGoal()?.group_id}
+              reorderAnnouncement={reorderAnnouncement()}
+              onCreate={openCreateDialog}
+              onManageGroups={() => {
+                setGroupError('')
+                setGroupsManageOpen(true)
+              }}
+              onPreviousGroup={() => changeSelectedGroup(-1)}
+              onNextGroup={() => changeSelectedGroup(1)}
+              onGroupDisplayModeChange={setGroupDisplayMode}
+              onEdit={handleEdit}
+              onCopy={(selectedGoal) => {
+                void handleCopy(selectedGoal)
+              }}
+              onDelete={handleDeleteAsk}
+              onOpenRecords={(selectedGoal) => {
+                void handleOpenUnachievedRecords(selectedGoal)
+              }}
+              onReorder={handleReorder}
+            />
 
-              <Show when={(resource()?.goals.length ?? 0) >= 100}>
-                <p class="rounded border border-warning-border bg-warning-bg px-3 py-2 text-sm text-score-rank-c-text">
-                  目標は100件まで作成できます。不要な目標を削除してください。
-                </p>
-              </Show>
-
-              <Show when={actionError()}>
-                <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-                  {actionError()}
-                </p>
-              </Show>
-
-              <Show
-                when={goalWithProgress().length > 0}
-                fallback={
-                  <p class="rounded border border-border bg-surface p-4 text-sm text-text-muted">
-                    目標がありません。「目標を追加」から作成してください。
-                  </p>
-                }
-              >
-                <div class="grid grid-cols-1 gap-3">
-                  <For each={goalWithProgress()}>
-                    {({ goal, progress }) => (
-                      <GoalCard
-                        goal={goal}
-                        progress={progress}
-                        onEdit={handleEdit}
-                        onDelete={handleDeleteAsk}
-                        onOpenRecords={(selectedGoal) => {
-                          void handleOpenUnachievedRecords(selectedGoal)
-                        }}
-                      />
-                    )}
-                  </For>
-                </div>
-              </Show>
-            </div>
-
-            <Show when={resource()}>
-              {(data) => (
-                <GoalFormDialog
-                  open={formOpen()}
-                  mode={editingGoal() ? 'edit' : 'create'}
-                  initialGoal={editingGoal()}
-                  masterData={data().masterData}
-                  versions={data().versions}
-                  isSaving={isSaving()}
-                  apiErrorMessage={formError()}
-                  onOpenChange={handleFormOpenChange}
-                  onSave={handleSave}
-                  resolveAllCount={resolveAllCount}
-                  resolveOverPowerChartMax={resolveOverPowerChartMax}
-                  resolveDraftGoalProgress={resolveDraftGoalProgress}
-                />
-              )}
-            </Show>
-
-            <GoalDeleteDialog
-              open={deleteOpen()}
-              goal={deletingGoal()}
+            <GoalsListDialogs
+              data={resource()}
+              formOpen={formOpen()}
+              initialGroupId={selectedGroupId()}
+              groups={orderedGroups()}
+              deleteOpen={deleteOpen()}
+              editingGoal={editingGoal()}
+              deletingGoal={deletingGoal()}
+              isSaving={isSaving()}
               isDeleting={isDeleting()}
-              onOpenChange={setDeleteOpen}
-              onConfirm={() => {
+              formError={formError()}
+              onFormOpenChange={handleFormOpenChange}
+              onDeleteOpenChange={setDeleteOpen}
+              onSave={handleSave}
+              onDeleteConfirm={() => {
                 void handleDelete()
               }}
+              resolveAllCount={resolveAllCount}
+              resolveOverPowerChartMax={resolveOverPowerChartMax}
+              resolveDraftGoalProgress={resolveDraftGoalProgress}
+            />
+
+            <GoalGroupsManageDialog
+              open={groupsManageOpen()}
+              groups={orderedGroups()}
+              isMutating={isGroupMutating()}
+              errorMessage={groupError()}
+              onOpenChange={setGroupsManageOpen}
+              onCreate={handleCreateGroup}
+              onUpdate={handleUpdateGroup}
+              onDelete={handleDeleteGroup}
+              onReorder={handleReorderGroups}
             />
           </Show>
         </Show>

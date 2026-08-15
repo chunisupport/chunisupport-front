@@ -1,4 +1,4 @@
-import { Search } from 'lucide-solid'
+import { SearchTextField } from '../../../components/common/SearchTextField'
 
 type SongSearchInputProps = {
   id: string
@@ -13,22 +13,16 @@ type SongSearchInputProps = {
  */
 const SongSearchInput = (props: SongSearchInputProps) => {
   return (
-    <div class="max-w-md">
-      <label class="mb-1 block text-sm font-medium text-text-muted" for={props.id}>
-        楽曲検索
-      </label>
-      <div class="flex items-center gap-2 rounded-md border border-border-strong px-2 focus-within:border-focus-ring focus-within:ring-2 focus-within:ring-focus-ring/30">
-        <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
-        <input
-          id={props.id}
-          type="search"
-          value={props.value}
-          onInput={(event) => props.onInput(event.currentTarget.value)}
-          placeholder="曲名・アーティスト名で検索"
-          class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
-        />
-      </div>
-    </div>
+    <SearchTextField
+      id={props.id}
+      class="max-w-md"
+      label="楽曲検索"
+      ariaLabel="楽曲検索"
+      value={props.value}
+      active={props.value.trim().length > 0}
+      onChange={props.onInput}
+      placeholder="曲名・アーティスト名で検索"
+    />
   )
 }
 

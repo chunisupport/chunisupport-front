@@ -2,7 +2,8 @@ import { createRoot } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import type { UserDTO } from '../types/api'
 
-type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated' | 'error'
+/** フロントエンドが保持する認証セッションの解決状態。 */
+export type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated' | 'error'
 
 type AuthState = {
   status: AuthStatus
@@ -25,6 +26,11 @@ export const clearAuthenticatedUser = () => {
   setAuthSession({ status: 'unauthenticated', user: null })
 }
 
+/**
+ * 既知ユーザーを保持したまま、APIによる認証再検証が必要な状態へ移す。
+ *
+ * @returns なし。
+ */
 export const setAuthSessionError = () => {
   setAuthSession({ status: 'error' })
 }

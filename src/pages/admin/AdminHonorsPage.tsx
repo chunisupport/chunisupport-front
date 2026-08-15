@@ -1,19 +1,22 @@
-import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
-import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, ChevronsUpDown, Pencil } from 'lucide-solid'
+import { Pencil, Plus } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
-import { fetchAdminHonors, fetchHonorTypes, updateHonor } from '../../api/honors'
+import { createHonor, fetchAdminHonors, fetchHonorTypes, updateHonor } from '../../api/honors'
 import { Loading } from '../../components'
+import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { FormSelect } from '../../components/common/AppSelect'
+import { showSuccessToast } from '../../components/common/AppToast'
 import { getHonorTypeClassName } from '../../constants/honors'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { AdminHonorDTO, HonorRequestDTO, MasterItemDTO } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { ADMIN_HONORS_COPY, HONOR_INPUT_LIMITS } from './AdminHonorsPage.constants'
 
-type HonorEditDialogProps = {
+type HonorFormDialogProps = {
   open: boolean
+  mode: 'create' | 'edit'
   honor: AdminHonorDTO | null
   honorTypes: MasterItemDTO[]
   saving: boolean
@@ -23,12 +26,11 @@ type HonorEditDialogProps = {
 }
 
 /**
- * 称号編集ダイアログ内の入力系コントロールに適用する共通スタイル。
+ * 称号フォーム内の入力系コントロールに適用する共通スタイル。
  */
 const HONOR_EDIT_FIELD_FOCUS_CLASS =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const HONOR_EDIT_TEXT_INPUT_CLASS = `w-full rounded border border-border-strong bg-surface px-3 py-2 hover:border-input-border-hover ${HONOR_EDIT_FIELD_FOCUS_CLASS}`
-const HONOR_EDIT_SELECT_TRIGGER_CLASS = `grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover ${HONOR_EDIT_FIELD_FOCUS_CLASS}`
 
 /**
  * 称号編集フォームの初期値を作成する。
@@ -43,12 +45,12 @@ const buildHonorRequest = (honor: AdminHonorDTO | null): HonorRequestDTO => ({
 })
 
 /**
- * 管理者向け称号編集ダイアログを描画する。
+ * 管理者向け称号の追加・編集ダイアログを描画する。
  *
  * @param props - ダイアログ状態、編集対象、称号タイプ候補、保存ハンドラ。
- * @returns 称号編集ダイアログ。
+ * @returns 称号フォームダイアログ。
  */
-const HonorEditDialog: Component<HonorEditDialogProps> = (props) => {
+const HonorFormDialog: Component<HonorFormDialogProps> = (props) => {
   const [request, setRequest] = createSignal<HonorRequestDTO>(buildHonorRequest(props.honor))
   const selectedHonorType = createMemo(
     () => props.honorTypes.find((type) => type.name === request().type_name) ?? null
@@ -91,100 +93,82 @@ const HonorEditDialog: Component<HonorEditDialogProps> = (props) => {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 max-h-[90dvh] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-surface p-6 shadow-lg">
-          <Dialog.Title class="text-lg font-bold text-text">称号を編集</Dialog.Title>
-          <Dialog.Description class="mt-1 text-sm text-text-muted">
-            称号名、クラス、画像URLを更新します。
+        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
+          <Dialog.Title class="shrink-0 text-lg font-bold text-text">
+            {props.mode === 'create'
+              ? ADMIN_HONORS_COPY.createDialogTitle
+              : ADMIN_HONORS_COPY.editDialogTitle}
+          </Dialog.Title>
+          <Dialog.Description class="mt-1 shrink-0 text-sm text-text-muted">
+            {ADMIN_HONORS_COPY.formDescription}
           </Dialog.Description>
 
-          <form class="mt-5 space-y-4" onSubmit={handleSubmit}>
-            <TextField>
-              <TextField.Label class="mb-1 block text-sm text-text-muted">称号</TextField.Label>
-              <TextField.Input
-                value={request().name}
-                maxLength={500}
-                required
-                onInput={(event) => updateRequestField('name', event.currentTarget.value)}
-                class={`${HONOR_EDIT_TEXT_INPUT_CLASS} font-sans`}
+          <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit}>
+            <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
+              <TextField>
+                <TextField.Label class="mb-1 block text-sm text-text-muted">
+                  {ADMIN_HONORS_COPY.honorLabel}
+                </TextField.Label>
+                <TextField.Input
+                  value={request().name}
+                  maxLength={HONOR_INPUT_LIMITS.name}
+                  required
+                  onInput={(event) => updateRequestField('name', event.currentTarget.value)}
+                  class={`${HONOR_EDIT_TEXT_INPUT_CLASS} font-sans`}
+                />
+              </TextField>
+
+              <FormSelect<MasterItemDTO>
+                label={ADMIN_HONORS_COPY.typeLabel}
+                options={props.honorTypes}
+                optionValue="name"
+                optionTextValue="name"
+                value={selectedHonorType()}
+                onChange={(type: MasterItemDTO | null) =>
+                  updateRequestField('type_name', type?.name ?? '')
+                }
+                placeholder={ADMIN_HONORS_COPY.selectPlaceholder}
+                contentZIndexClass="z-60"
+                formatLabel={(type) => type.name}
               />
-            </TextField>
 
-            <Select<MasterItemDTO>
-              options={props.honorTypes}
-              optionValue="name"
-              optionTextValue="name"
-              value={selectedHonorType()}
-              onChange={(type) => updateRequestField('type_name', type?.name ?? '')}
-              placeholder="選択してください"
-              itemComponent={(selectProps) => (
-                <Select.Item
-                  item={selectProps.item}
-                  class="cursor-pointer px-3 py-2 text-text hover:bg-surface-hover data-[selected]:bg-surface-hover"
-                >
-                  <div class="flex items-center gap-2">
-                    <span class="inline-flex w-4 justify-center text-success">
-                      <Select.ItemIndicator>
-                        <Check size={14} />
-                      </Select.ItemIndicator>
-                    </span>
-                    <Select.ItemLabel>{selectProps.item.rawValue.name}</Select.ItemLabel>
-                  </div>
-                </Select.Item>
-              )}
-            >
-              <Select.Label class="mb-1 block text-sm text-text-muted">クラス</Select.Label>
-              <Select.Trigger class={HONOR_EDIT_SELECT_TRIGGER_CLASS}>
-                <Select.Value<MasterItemDTO> class="truncate data-placeholder-shown:text-text-placeholder">
-                  {(state) => state.selectedOption().name}
-                </Select.Value>
-                <Select.Icon class="text-text-subtle">
-                  <ChevronsUpDown size={16} />
-                </Select.Icon>
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Content class="z-50 mt-1 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
-                  <Select.Listbox />
-                </Select.Content>
-              </Select.Portal>
-            </Select>
+              <TextField>
+                <TextField.Label class="mb-1 block text-sm text-text-muted">
+                  {ADMIN_HONORS_COPY.imageUrlLabel}
+                </TextField.Label>
+                <TextField.Input
+                  value={request().image_url}
+                  maxLength={HONOR_INPUT_LIMITS.imageUrl}
+                  onInput={(event) => updateRequestField('image_url', event.currentTarget.value)}
+                  class={`${HONOR_EDIT_TEXT_INPUT_CLASS} font-mono text-xs`}
+                />
+              </TextField>
 
-            <TextField>
-              <TextField.Label class="mb-1 block text-sm text-text-muted">
-                image_url
-              </TextField.Label>
-              <TextField.Input
-                value={request().image_url}
-                maxLength={255}
-                onInput={(event) => updateRequestField('image_url', event.currentTarget.value)}
-                class={`${HONOR_EDIT_TEXT_INPUT_CLASS} font-mono text-xs`}
-              />
-            </TextField>
+              <Show when={props.apiErrorMessage}>
+                <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
+                  {props.apiErrorMessage}
+                </p>
+              </Show>
+            </div>
 
-            <Show when={props.apiErrorMessage}>
-              <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-                {props.apiErrorMessage}
-              </p>
-            </Show>
-
-            <div class="flex justify-end gap-2">
-              <Button
-                type="button"
-                class="rounded bg-action-secondary px-4 py-2 text-sm text-text-muted hover:bg-action-secondary-hover"
-                onClick={() => props.onOpenChange(false)}
-                disabled={props.saving}
-              >
-                キャンセル
-              </Button>
-              <Button
+            <div class="mt-5 flex shrink-0 justify-end gap-2">
+              <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
+                {ADMIN_HONORS_COPY.cancelButton}
+              </AppButton>
+              <AppButton
                 type="submit"
-                class="rounded bg-action-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:bg-action-secondary-hover"
+                variant="primary"
                 disabled={props.saving || !request().name.trim() || !request().type_name.trim()}
               >
-                {props.saving ? '保存中...' : '保存'}
-              </Button>
+                {props.saving
+                  ? ADMIN_HONORS_COPY.savingButton
+                  : props.mode === 'create'
+                    ? ADMIN_HONORS_COPY.createButtonLabel
+                    : ADMIN_HONORS_COPY.saveButton}
+              </AppButton>
             </div>
           </form>
         </Dialog.Content>
@@ -199,14 +183,12 @@ const HonorEditDialog: Component<HonorEditDialogProps> = (props) => {
  * @returns 称号管理UI。
  */
 const AdminHonorsPage = () => {
-  useDocumentTitle('称号管理')
+  useDocumentTitle(ADMIN_HONORS_COPY.pageTitle)
 
   const [refreshKey, setRefreshKey] = createSignal(0)
+  const [dialogMode, setDialogMode] = createSignal<'create' | 'edit' | null>(null)
   const [editingHonor, setEditingHonor] = createSignal<AdminHonorDTO | null>(null)
-  const [editDialogOpen, setEditDialogOpen] = createSignal(false)
   const [saving, setSaving] = createSignal(false)
-  const [message, setMessage] = createSignal('')
-  const [errorMessage, setErrorMessage] = createSignal('')
   const [formErrorMessage, setFormErrorMessage] = createSignal('')
 
   const [honorsResponse] = createResource(() => refreshKey(), fetchAdminHonors)
@@ -233,7 +215,18 @@ const AdminHonorsPage = () => {
   const openEditDialog = (honor: AdminHonorDTO): void => {
     setEditingHonor(honor)
     setFormErrorMessage('')
-    setEditDialogOpen(true)
+    setDialogMode('edit')
+  }
+
+  /**
+   * 称号追加ダイアログを開く。
+   *
+   * @returns なし。
+   */
+  const openCreateDialog = (): void => {
+    setEditingHonor(null)
+    setFormErrorMessage('')
+    setDialogMode('create')
   }
 
   /**
@@ -242,11 +235,33 @@ const AdminHonorsPage = () => {
    * @param open - 次の開閉状態。
    * @returns なし。
    */
-  const handleEditDialogOpenChange = (open: boolean): void => {
-    setEditDialogOpen(open)
+  const handleDialogOpenChange = (open: boolean): void => {
     if (!open) {
+      setDialogMode(null)
       setEditingHonor(null)
       setFormErrorMessage('')
+    }
+  }
+
+  /**
+   * 称号を新規作成する。
+   *
+   * @param request - 作成する称号の内容。
+   * @returns なし。
+   */
+  const handleSubmitCreate = async (request: HonorRequestDTO): Promise<void> => {
+    setFormErrorMessage('')
+    setSaving(true)
+
+    try {
+      await createHonor(request)
+      showSuccessToast(ADMIN_HONORS_COPY.createSuccess)
+      handleDialogOpenChange(false)
+      refresh()
+    } catch (error) {
+      setFormErrorMessage(toUserFriendlyErrorMessage(error, ADMIN_HONORS_COPY.createError))
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -260,18 +275,16 @@ const AdminHonorsPage = () => {
     const honor = editingHonor()
     if (!honor) return
 
-    setMessage('')
-    setErrorMessage('')
     setFormErrorMessage('')
     setSaving(true)
 
     try {
       await updateHonor(honor.id, request)
-      setMessage('称号を更新しました。')
-      handleEditDialogOpenChange(false)
+      showSuccessToast(ADMIN_HONORS_COPY.editSuccess)
+      handleDialogOpenChange(false)
       refresh()
     } catch (error) {
-      setFormErrorMessage(toUserFriendlyErrorMessage(error, '称号の更新に失敗しました。'))
+      setFormErrorMessage(toUserFriendlyErrorMessage(error, ADMIN_HONORS_COPY.editError))
     } finally {
       setSaving(false)
     }
@@ -279,21 +292,19 @@ const AdminHonorsPage = () => {
 
   return (
     <div class="mx-auto w-full max-w-6xl space-y-4 p-4">
-      <div>
-        <h1 class="text-2xl font-semibold">称号管理</h1>
-        <p class="mt-1 text-sm text-text-muted">称号、クラス、image_url を一覧で確認します。</p>
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h1 class="text-2xl font-semibold">{ADMIN_HONORS_COPY.pageTitle}</h1>
+          <p class="mt-1 text-sm text-text-muted">{ADMIN_HONORS_COPY.pageDescription}</p>
+        </div>
+        <AppButton
+          variant="primary"
+          leftIcon={<Plus class="h-4 w-4" aria-hidden="true" />}
+          onClick={openCreateDialog}
+        >
+          {ADMIN_HONORS_COPY.createButton}
+        </AppButton>
       </div>
-
-      <Show when={message()}>
-        <p class="rounded border border-success-border bg-success-bg px-3 py-2 text-sm text-success">
-          {message()}
-        </p>
-      </Show>
-      <Show when={errorMessage()}>
-        <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-          {errorMessage()}
-        </p>
-      </Show>
 
       <Show when={!honorsResponse.loading} fallback={<Loading />}>
         <div class="overflow-x-auto rounded-lg border border-border bg-surface">
@@ -311,15 +322,13 @@ const AdminHonorsPage = () => {
                 {(honor) => (
                   <tr class="border-t border-border">
                     <td class="w-0 whitespace-nowrap px-3 py-2">
-                      <Button
-                        type="button"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded border border-border-strong text-text-muted hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                      <AppIconButton
                         aria-label={`${honor.name}を編集`}
-                        title="編集"
+                        title={ADMIN_HONORS_COPY.editAction}
                         onClick={() => openEditDialog(honor)}
                       >
                         <Pencil class="h-4 w-4" aria-hidden="true" />
-                      </Button>
+                      </AppIconButton>
                     </td>
                     <td class="px-3 py-2">
                       <span
@@ -338,18 +347,21 @@ const AdminHonorsPage = () => {
         </div>
 
         <Show when={!hasRows()}>
-          <p class="text-sm text-text-subtle">登録されている称号がありません。</p>
+          <p class="text-sm text-text-subtle">{ADMIN_HONORS_COPY.emptyState}</p>
         </Show>
       </Show>
 
-      <HonorEditDialog
-        open={editDialogOpen()}
+      <HonorFormDialog
+        open={dialogMode() !== null}
+        mode={dialogMode() ?? 'create'}
         honor={editingHonor()}
         honorTypes={honorTypes()}
         saving={saving()}
         apiErrorMessage={formErrorMessage()}
-        onOpenChange={handleEditDialogOpenChange}
-        onSubmit={handleSubmitEdit}
+        onOpenChange={handleDialogOpenChange}
+        onSubmit={(request) =>
+          dialogMode() === 'create' ? handleSubmitCreate(request) : handleSubmitEdit(request)
+        }
       />
     </div>
   )

@@ -36,20 +36,27 @@ test('buildSavedFilterRequest は通常レコード用の保存リクエスト�
   // Then
   assert.equal(result.name, '高難度FC狙い')
   assert.equal(result.filter_type, 'standard')
-  assert.equal(result.schema_version, 3)
+  assert.equal(result.schema_version, 6)
   assert.deepEqual(result.filter, filter)
 })
 
-test('toSavedFilter は現行スキーマのDTOを呼び出し可能な保存フィルターへ変換する', async () => {
+test('toSavedFilter は旧スキーマの不足項目をfalseで補完する', async () => {
   // Given
   const { toSavedFilter } = await loadStorageModule()
-  const filter = { ...getDefaultFilter(), title: 'アルファ' }
+  const {
+    favoriteSongsOnly: _favoriteSongsOnly,
+    combo_lamp: _comboLamp,
+    ...legacyFilter
+  } = {
+    ...getDefaultFilter(),
+    title: 'アルファ',
+  }
   const dto: RecordFilterDTO = {
     id: '11111111-1111-1111-1111-111111111111',
     name: '高難度',
     filter_type: 'standard',
     schema_version: 3,
-    filter,
+    filter: { ...legacyFilter, combo_lamp: ['ALL JUSTICE', 'FULL COMBO', null] },
     created_at: '2026-06-15T12:00:00Z',
     updated_at: '2026-06-15T12:00:00Z',
   }
@@ -62,7 +69,11 @@ test('toSavedFilter は現行スキーマのDTOを呼び出し可能な保存フ
   assert.equal(result.name, dto.name)
   assert.equal(result.schemaVersion, 3)
   assert.equal(result.isValid, true)
-  assert.deepEqual(result.filter, filter)
+  assert.deepEqual(result.filter, {
+    ...legacyFilter,
+    combo_lamp: ['ALL JUSTICE', 'FULL COMBO', null, 'ALL JUSTICE CRITICAL'],
+    favoriteSongsOnly: false,
+  })
 })
 
 test('toSavedFilter は旧スキーマのDTOを古くて無効な保存フィルターとして残す', async () => {

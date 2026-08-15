@@ -6,10 +6,19 @@ import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
 import { useSongsData } from '../../stores/songsData'
-import type { PlayerDataRecordChange, PlayerDataResult } from '../../types/api'
-import { commitRegisterScore } from '../../usecases/registerScoreCommit'
+import type { CourseDTO } from '../../types/api'
+import { fetchCoursesWithCache } from '../../usecases/cache/fetchCoursesWithCache'
+import {
+  commitRegisterScore,
+  type NormalizedPlayerDataResult,
+} from '../../usecases/registerScoreCommit'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { REGISTER_SCORE_MESSAGES, RegisterScoreResultView } from './RegisterScoreResultView'
+import {
+  resolveRegisterScoreChartLevel,
+  resolveRegisterScoreCourseTitle,
+  resolveRegisterScoreSongTitle,
+} from './registerScoreResolvers'
 import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreToken'
 
 /**
@@ -17,13 +26,11 @@ import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreTo
  */
 type RegisterScoreViewState =
   | { type: 'committing' }
-  | { type: 'success'; result: PlayerDataResult }
+  | { type: 'success'; result: NormalizedPlayerDataResult }
   | { type: 'error'; message: string }
 
-type SongLookupItem = {
-  official_idx?: string
-  title: string
-}
+/** コースタイトル検索に必要なコースマスタ項目。 */
+type CourseLookupItem = Pick<CourseDTO, 'idx' | 'name'>
 
 /**
  * エラー表示に利用するメッセージへ変換する。
@@ -36,17 +43,6 @@ const resolveRegisterScoreErrorMessage = (error: unknown): string => {
 }
 
 /**
- * 楽曲一覧から公式idxに対応するタイトルを検索する。
- *
- * @param songs - 検索対象の楽曲一覧。
- * @param idx - API差分に含まれる公式idx。
- * @returns 見つかった楽曲タイトル。見つからない場合はundefined。
- */
-const findSongTitleByOfficialIdx = (songs: SongLookupItem[], idx: string): string | undefined => {
-  return songs.find((song) => song.official_idx === idx)?.title
-}
-
-/**
  * `/register-score` でアップロードトークンを確定保存する画面を表示する。
  *
  * @returns スコア登録画面。
@@ -55,6 +51,7 @@ const RegisterScorePage = () => {
   const [searchParams] = useSearchParams<{ token: string | string[] }>()
   const songsData = useSongsData()
   const [viewState, setViewState] = createSignal<RegisterScoreViewState>({ type: 'committing' })
+  let courses: CourseLookupItem[] = []
 
   useDocumentTitle(REGISTER_SCORE_MESSAGES.title)
 
@@ -64,17 +61,35 @@ const RegisterScorePage = () => {
    * @param change - APIから返却された1譜面分の差分。
    * @returns 楽曲名。未取得の場合はプレースホルダー。
    */
-  const songTitleByIdx = (change: PlayerDataRecordChange) => {
+  const songTitleByIdx = (change: Parameters<typeof resolveRegisterScoreSongTitle>[0]) => {
     const standardSongs = songsData.songsResponse.latest?.songs ?? []
     const worldsendSongs = songsData.worldsendSongsResponse.latest?.songs ?? []
-
-    return (
-      findSongTitleByOfficialIdx(
-        change.record_type === 'worldsend' ? worldsendSongs : standardSongs,
-        change.idx
-      ) ?? REGISTER_SCORE_MESSAGES.unknownSongTitle
-    )
+    return resolveRegisterScoreSongTitle(change, standardSongs, worldsendSongs)
   }
+
+  /**
+   * 差分に含まれる楽曲idxと難易度から譜面レベル文字列を解決する。
+   *
+   * @param change - APIから返却された1譜面分の差分。
+   * @returns 譜面レベル文字列（例: "15+"、"★5"）。譜面情報がない場合はundefined。
+   */
+  const chartLevelByIdx = (change: Parameters<typeof resolveRegisterScoreChartLevel>[0]) => {
+    const standardSongs = songsData.songsResponse.latest?.songs ?? []
+    const worldsendSongs = songsData.worldsendSongsResponse.latest?.songs ?? []
+    return resolveRegisterScoreChartLevel(change, standardSongs, worldsendSongs)
+  }
+
+  /**
+   * 差分に含まれるコースidxから表示用のコースタイトルを解決する。
+   *
+   * @param change - APIから返却されたコース差分。
+   * @param courses - 取得済みコース一覧。
+   * @returns コースタイトル。未取得の場合はプレースホルダー。
+   */
+  const courseTitleByIdx = (
+    change: Parameters<typeof resolveRegisterScoreCourseTitle>[0],
+    courses: CourseLookupItem[]
+  ) => resolveRegisterScoreCourseTitle(change, courses)
 
   onMount(async () => {
     const uploadToken = normalizeUploadTokenParam(searchParams.token)
@@ -93,6 +108,12 @@ const RegisterScorePage = () => {
           ensureWorldsendSongsLoaded: songsData.ensureWorldsendSongsLoaded,
         }
       )
+      courses = result.changes.some((change) => change.record_type === 'course')
+        ? await fetchCoursesWithCache()
+            .then((response) => response.courses)
+            .catch(() => [])
+        : []
+
       setViewState({ type: 'success', result })
     } catch (error) {
       setViewState({ type: 'error', message: resolveRegisterScoreErrorMessage(error) })
@@ -124,6 +145,8 @@ const RegisterScorePage = () => {
               <RegisterScoreResultView
                 result={successState.result}
                 resolveSongTitle={songTitleByIdx}
+                resolveChartLevel={chartLevelByIdx}
+                resolveCourseTitle={(change) => courseTitleByIdx(change, courses)}
               />
             )
           }}

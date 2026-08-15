@@ -1,3 +1,8 @@
+import type { ChainLamp, Difficulty, HardLamp } from '../../../../types/record'
+import type { FilterState } from '../../../../types/recordFilter'
+import { getComboLampFilterValue } from '../../../../utils/comboLampFilter'
+import { isDateInRange } from '../../../../utils/dateFilter'
+import { buildDefaultFilter } from '../../../../utils/recordFilterDefaults'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
   matchesNormalizedSearchQuery,
@@ -5,8 +10,6 @@ import {
   normalizeForSearch,
   normalizeQuery,
 } from '../../../../utils/searchUtils'
-import { buildDefaultFilter } from '../types/filterDefaults'
-import type { ChainLamp, ComboLamp, Difficulty, FilterState, HardLamp } from '../types/types'
 import { hasJusticeCountFilter, hasOverPowerFilter } from './filterDialog'
 
 /** フィルターのデフォルト値を取得する */
@@ -40,10 +43,20 @@ export function isRecordMatched(record: PlayerRecordWithSongMeta, filters: Filte
   return isRecordMatchedWithTitleMatcher(record, filters, matchTitle)
 }
 
+/**
+ * 事前生成した曲名検索マッチャーを使って、通常レコードが全フィルター条件に一致するか判定する。
+ *
+ * @param record - 判定対象の通常レコード。
+ * @param filters - 適用する通常レコードフィルター。
+ * @param matchTitle - 曲名・アーティスト・読み検索の判定関数。
+ * @param favoriteSongIds - お気に入りに登録されている楽曲ID。
+ * @returns レコードが全条件に一致する場合はtrue。
+ */
 export function isRecordMatchedWithTitleMatcher(
   record: PlayerRecordWithSongMeta,
   filters: FilterState,
-  matchTitle: RecordTitleMatcher
+  matchTitle: RecordTitleMatcher,
+  favoriteSongIds: ReadonlySet<string> = new Set()
 ): boolean {
   // 未プレイ除外
   if (filters.excludeNoPlay && !record.is_played) {
@@ -62,6 +75,11 @@ export function isRecordMatchedWithTitleMatcher(
 
   // 現在のOVER POWER集計対象
   if (filters.currentOpTargetOnly && !record.is_op_target) {
+    return false
+  }
+
+  // お気に入り楽曲
+  if (filters.favoriteSongsOnly && !favoriteSongIds.has(record.id)) {
     return false
   }
 
@@ -101,9 +119,10 @@ export function isRecordMatchedWithTitleMatcher(
   }
 
   // コンボランプ
-  const comboLamp = record.is_played ? (record.combo_lamp ?? null) : null
-  if (!hasJusticeCountFilter(filters) && !filters.combo_lamp.includes(comboLamp as ComboLamp))
-    return false
+  const comboLamp = record.is_played
+    ? getComboLampFilterValue(record.combo_lamp ?? null, record.score)
+    : null
+  if (!filters.combo_lamp.includes(comboLamp)) return false
 
   // FULL CHAINランプ
   const chainLamp = record.is_played ? (record.full_chain ?? null) : null
@@ -112,6 +131,9 @@ export function isRecordMatchedWithTitleMatcher(
   // ハードランプ
   const hardLamp = record.is_played ? (record.clear_lamp ?? null) : null
   if (!filters.hard_lamp.includes(hardLamp as HardLamp)) return false
+
+  // 最終更新日
+  if (!isDateInRange(record.updated_at, filters.updatedAt)) return false
 
   return true
 }

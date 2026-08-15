@@ -1,30 +1,66 @@
-import { Play } from 'lucide-solid'
+import { Button } from '@kobalte/core/button'
+import { Download, Play, Share2 } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
-
-import type {
-  PlayerDataDifficulty,
-  PlayerDataNumberDiff,
-  PlayerDataRecordChange,
-  PlayerDataRecordState,
-  PlayerDataResult,
-  PlayerDataStatistics,
-  PlayerDataStatisticsGroup,
-} from '../../types/api'
-import { difficultyBadgeClass } from '../../utils/difficultyUtils'
-import {
-  HARD_LAMP_BADGE_BACKGROUND_CLASS,
-  type SharedClearLamp,
-  type SharedComboLamp,
-} from '../users/components/recordStyleClasses'
+import logoSingle from '../../assets/logo_single.svg'
+import { Loading } from '../../components'
+import { AppButton } from '../../components/common/AppButton'
+import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
+import { CheckboxField } from '../../components/common/CheckboxField'
+import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
 import {
   RecordFullChainCell,
   RecordHardLampCell,
   RecordLampCell,
-} from '../users/components/SharedRecordTableColumns'
-import { formatOverPowerPercent, formatOverPowerValue } from '../users/utils/overPowerFormat'
-import { formatPlayerRating } from '../users/utils/ratingFormat'
+} from '../../components/common/record/RecordDisplayParts'
+import {
+  HARD_LAMP_BADGE_BACKGROUND_CLASS,
+  type SharedClearLamp,
+  type SharedComboLamp,
+} from '../../components/common/record/recordStyleClasses'
+import type {
+  PlayerDataCourseRecordChange,
+  PlayerDataCourseRecordState,
+  PlayerDataRecordChange,
+  PlayerDataRecordState,
+  PlayerDataSongRecordChange,
+  PlayerDataStatisticsDifficulty,
+} from '../../types/api'
+import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
+import { difficultyBadgeClass } from '../../utils/difficultyUtils'
+import { canShareFiles, captureElementAsImage, downloadBlobFile } from '../../utils/domImageCapture'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
+import { formatPlayerRating } from '../../utils/ratingFormat'
+import {
+  courseClassBadgeClass,
+  formatCourseClass,
+  REGISTER_SCORE_UNKNOWN_TITLE,
+} from './registerScoreDisplay'
+import {
+  formatRegisterScoreOverPowerDelta,
+  formatRegisterScoreOverPowerPercentDelta,
+  formatRegisterScoreRatingDelta,
+  getRegisterScoreMetricDeltaClass,
+} from './registerScoreMetricDiff'
+import {
+  createDefaultRegisterScoreStatisticRowVisibility,
+  createDefaultRegisterScoreTotalHighScoreRowVisibility,
+  REGISTER_SCORE_AGGREGATE_ROW_OPTIONS,
+  REGISTER_SCORE_STAT_COLUMNS,
+  REGISTER_SCORE_STATISTIC_DIVIDER_START_COLUMN,
+  type RegisterScoreAggregateRowKey,
+  type RegisterScoreAggregateRowVisibility,
+  type RegisterScoreStatisticRow,
+  toRegisterScoreStatisticRows,
+  toRegisterScoreTotalHighScoreRows,
+} from './registerScoreStatistics'
 
 export const REGISTER_SCORE_MESSAGES = {
+  ratingLabel: 'RATING',
+  overPowerLabel: 'OVER POWER',
+  overPowerPercentLabel: 'OP%',
+  overPowerPercentAccessibleLabel: 'OVER POWER達成率',
+  percentagePointUnit: 'pt',
+  percentagePointAccessibleUnit: 'パーセントポイント',
   invalidToken: 'tokenが不正です。登録用URLを確認してください。',
   fallbackError: '登録に失敗しました。',
   reportTitle: '更新差分',
@@ -32,38 +68,43 @@ export const REGISTER_SCORE_MESSAGES = {
   processing: 'スコアデータを登録しています。',
   changedSongsTitle: 'NEW RECORDS',
   changedSongsEmpty: '今回更新された楽曲はありません。',
+  changedCoursesTitle: 'COURSE RECORDS',
   totalHighScoreTitle: 'TOTAL HIGH SCORE',
   recordStatsTitle: 'RECORD STATISTICS',
-  unknownSongTitle: '-',
+  displaySettingsTitle: '表示設定',
+  shareImage: '共有',
+  prepareShareImage: '共有画像を準備',
+  preparingShareImage: '共有画像を準備中',
+  sharingImage: '共有中',
+  shareImageError: '画像の共有に失敗しました。',
+  downloadImage: 'ダウンロード',
+  downloadingImage: '作成中',
+  downloadImageError: '画像のダウンロードに失敗しました。',
+  copySongTitleSuccess: '曲名をコピーしました。',
+  copySongTitleError: '曲名のコピーに失敗しました。',
+  unknownSongTitle: REGISTER_SCORE_UNKNOWN_TITLE,
 } as const
 
 const NO_DATA_TEXT = '-'
 const WORLD_END_BADGE_CLASS =
   'bg-[image:var(--cs-color-worldsend-label-bg)] text-worldsend-label-text'
-const REGISTER_SCORE_DIFFICULTIES: readonly PlayerDataDifficulty[] = [
-  'BASIC',
-  'ADVANCED',
-  'EXPERT',
-  'MASTER',
-  'ULTIMA',
-]
-const REGISTER_SCORE_STAT_COLUMNS = [
-  'AJ',
-  'FC',
-  'MAX',
-  'SSS+',
-  'SSS',
-  'SS+',
-  'SS',
-  'S+',
-  'S',
-] as const
-const REGISTER_SCORE_MAIN_STAT_ROW_LABEL = 'ALL'
 const PROFILE_VALUE_CLASS = 'font-jost text-base font-normal leading-6'
 /** 更新差分レポートの原寸幅を固定するクラス。 */
 const REGISTER_SCORE_REPORT_WIDTH_CLASS = 'w-[31rem]'
 /** 更新差分レポートの表示領域を原寸幅以下に制限するクラス。 */
 const REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS = 'max-w-[31rem]'
+/** 更新差分レポートヘッダに表示するロゴの色。 */
+const REGISTER_SCORE_REPORT_LOGO_COLOR = '#444444'
+/** 更新差分画像を原寸で出力するピクセル比。 */
+const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 1
+/** 更新差分JPEG画像の圧縮品質。 */
+const REGISTER_SCORE_IMAGE_JPEG_QUALITY = 0.9
+/** 更新差分画像のファイル名へ付与する接頭辞。 */
+const REGISTER_SCORE_IMAGE_FILENAME_PREFIX = 'chunisupport-score-update'
+/** 共有用画像をレポート更新後に再生成するまでの待機時間。 */
+const REGISTER_SCORE_SHARE_PREPARE_DELAY_MS = 300
+/** コピー成功時に曲名をアクセントカラーで保持する時間。 */
+const REGISTER_SCORE_COPY_HIGHLIGHT_MS = 100
 
 /**
  * 難易度バッジを固定幅で中央揃えにする共通レイアウトクラス。
@@ -78,10 +119,15 @@ const SCORE_CHANGE_CARD_CLASS =
   'min-w-0 max-w-full rounded-md border border-border bg-surface-muted px-2.5 py-2'
 
 /**
- * 更新前後のスコア領域を安定した3カラムにする共通クラス。
+ * 更新前後のスコア領域を等間隔に並べる共通クラス。
  */
 const SCORE_CHANGE_SCORE_GRID_CLASS =
-  'mt-1.5 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-2 text-lg leading-6'
+  'mt-1.5 flex items-center justify-around gap-x-2 text-lg leading-6'
+/** コース差分のスコアとランプ表示領域を固定幅にするクラス。 */
+const COURSE_CHANGE_SCORE_VALUE_CLASS = 'w-[95px] shrink-0'
+/** コースクラスバッジの共通レイアウトクラス。 */
+const COURSE_CLASS_BADGE_LAYOUT_CLASS =
+  'inline-flex min-w-6 shrink-0 items-center justify-center rounded font-sans text-xs font-bold uppercase leading-5 [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]'
 
 type RegisterScoreLampRecord = {
   is_played: boolean
@@ -91,60 +137,21 @@ type RegisterScoreLampRecord = {
   full_chain: 'FULL CHAIN GOLD' | 'FULL CHAIN PLATINUM' | null
 }
 
-type RegisterScoreStatisticRow = {
-  label: string
-  difficulty: PlayerDataDifficulty | null
-  values: Record<(typeof REGISTER_SCORE_STAT_COLUMNS)[number], PlayerDataNumberDiff>
-}
-
 export type RegisterScoreSongTitleResolver = (change: PlayerDataRecordChange) => string
 export type RegisterScoreChartLevelResolver = (change: PlayerDataRecordChange) => string | undefined
+/** コース差分からコースタイトルを解決する関数。 */
+export type RegisterScoreCourseTitleResolver = (change: PlayerDataCourseRecordChange) => string
 
 /**
- * 1統計グループを表示用の統計行へ変換する。
+ * RECORD STATISTICSの列に適用する区切り線クラスを返す。
  *
- * @param label - 行見出し。
- * @param group - APIが返す統計グループ。
- * @returns 表示用の統計行。
+ * @param column - 表示対象の統計列。
+ * @returns FC列の直後へ区切り線を描画するTailwindクラス。対象外なら空文字。
  */
-const toRegisterScoreStatisticRow = (
-  label: string,
-  group: PlayerDataStatisticsGroup,
-  difficulty: PlayerDataDifficulty | null = null
-): RegisterScoreStatisticRow => ({
-  label,
-  difficulty,
-  values: {
-    AJ: group.record_statistics.aj,
-    FC: group.record_statistics.fc,
-    MAX: group.record_statistics.max,
-    'SSS+': group.record_statistics.sss_plus,
-    SSS: group.record_statistics.sss,
-    'SS+': group.record_statistics.ss_plus,
-    SS: group.record_statistics.ss,
-    'S+': group.record_statistics.s_plus,
-    S: group.record_statistics.s,
-  },
-})
-
-/**
- * 全体と固定5難易度の統計行を生成する。
- *
- * @param statistics - APIが返す全体および難易度別の統計差分。
- * @returns 全体、BASIC、ADVANCED、EXPERT、MASTER、ULTIMAの表示行。
- */
-const toRegisterScoreStatisticRows = (
-  statistics: PlayerDataStatistics
-): RegisterScoreStatisticRow[] => [
-  toRegisterScoreStatisticRow(REGISTER_SCORE_MAIN_STAT_ROW_LABEL, statistics.overall),
-  ...REGISTER_SCORE_DIFFICULTIES.map((difficulty) =>
-    toRegisterScoreStatisticRow(
-      difficulty.slice(0, 3),
-      statistics.by_difficulty[difficulty],
-      difficulty
-    )
-  ),
-]
+const getRegisterScoreStatisticColumnDividerClass = (
+  column: (typeof REGISTER_SCORE_STAT_COLUMNS)[number]
+): string =>
+  column === REGISTER_SCORE_STATISTIC_DIVIDER_START_COLUMN ? 'border-l border-border' : ''
 
 /**
  * 難易度ラベルへゲーム公式色の文字色クラスを適用する。
@@ -152,7 +159,7 @@ const toRegisterScoreStatisticRows = (
  * @param difficulty - 表示対象の難易度。全体行の場合はnull。
  * @returns 難易度色のTailwindクラス。全体行の場合は空文字。
  */
-const getDifficultyTextClass = (difficulty: PlayerDataDifficulty | null): string => {
+const getDifficultyTextClass = (difficulty: PlayerDataStatisticsDifficulty | null): string => {
   switch (difficulty) {
     case 'BASIC':
       return 'text-[var(--cs-color-difficulty-basic-bg)]'
@@ -164,6 +171,8 @@ const getDifficultyTextClass = (difficulty: PlayerDataDifficulty | null): string
       return 'text-[var(--cs-color-difficulty-master-bg)]'
     case 'ULTIMA':
       return 'text-[var(--cs-color-difficulty-ultima-bg)]'
+    case 'WE':
+      return 'text-[var(--cs-color-worldsend-label-bg)]'
     default:
       return ''
   }
@@ -255,34 +264,37 @@ const formatScoreDelta = (change: PlayerDataRecordChange): string => {
 }
 
 /**
- * スコア増分を括弧付きの表示文字列へ変換する。
- *
- * @param change - APIから返却された1譜面分の差分。
- * @returns 増分がある場合は括弧付きの文字列、それ以外は空文字。
- */
-const formatScoreDeltaWithParens = (change: PlayerDataRecordChange): string => {
-  const delta = formatScoreDelta(change)
-  return delta ? `(${delta})` : ''
-}
-
-/**
  * ISO日時を画面表示用の日時文字列へ変換する。
  *
  * @param isoDateTime - APIから返却されたISO形式の日時。
- * @returns `YYYY-MM-DD HH:mm:ss` 形式の日時文字列。
+ * @returns `YYYY/MM/DD HH:mm:ss` 形式の日時文字列。
  */
 const formatImportedAt = (isoDateTime: string): string => {
   const date = new Date(isoDateTime)
 
-  return new Intl.DateTimeFormat('sv-SE', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).format(date)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+
+  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`
+}
+
+/**
+ * 更新日時からJPEG画像のファイル名を生成する。
+ *
+ * @param isoDateTime - APIから返却されたISO形式の更新日時。
+ * @returns `chunisupport-score-update-YYYYMMDD-HHmmss.jpg` 形式のファイル名。
+ */
+const formatRegisterScoreImageFilename = (isoDateTime: string): string => {
+  const timestamp = formatImportedAt(isoDateTime)
+    .replaceAll('/', '')
+    .replaceAll(':', '')
+    .replace(' ', '-')
+
+  return `${REGISTER_SCORE_IMAGE_FILENAME_PREFIX}-${timestamp}.jpg`
 }
 
 /**
@@ -291,7 +303,7 @@ const formatImportedAt = (isoDateTime: string): string => {
  * @param change - APIから返却された1譜面分の差分。
  * @returns 難易度の短縮表記。
  */
-const getShortDifficultyLabel = (change: PlayerDataRecordChange): string => {
+const getShortDifficultyLabel = (change: PlayerDataSongRecordChange): string => {
   if (change.record_type === 'worldsend') return 'WE'
 
   switch (change.diff) {
@@ -316,7 +328,7 @@ const getShortDifficultyLabel = (change: PlayerDataRecordChange): string => {
  * @param change - APIから返却された1譜面分の差分。
  * @returns Tailwindの背景色・文字色クラス。
  */
-const getDifficultyBadgeClass = (change: PlayerDataRecordChange): string => {
+const getDifficultyBadgeClass = (change: PlayerDataSongRecordChange): string => {
   if (change.record_type === 'worldsend') return WORLD_END_BADGE_CLASS
 
   return difficultyBadgeClass(change.diff)
@@ -369,95 +381,271 @@ const RecordLampBadges = (props: { state: PlayerDataRecordState }) => {
 }
 
 /**
+ * コースレコードのCLEAR状態とコンボランプだけを表示する。
+ *
+ * @param props - 表示対象のコースレコード状態。
+ * @returns コース用ランプバッジ群。
+ */
+const CourseRecordLampBadges = (props: { state: PlayerDataCourseRecordState }) => {
+  const record = createMemo<RegisterScoreLampRecord>(() => {
+    const comboLamp = normalizeLamp(props.state.combo_lamp)
+
+    return {
+      is_played: true,
+      score: props.state.score,
+      clear_lamp: props.state.is_clear ? 'CLEAR' : null,
+      combo_lamp: comboLamp && isSharedComboLamp(comboLamp) ? comboLamp : null,
+      full_chain: null,
+    }
+  })
+
+  return (
+    <div class="mt-1 flex min-h-6 flex-wrap items-center gap-1">
+      <RecordHardLampCell record={record()} />
+      <RecordLampCell record={record()} />
+    </div>
+  )
+}
+
+/** プレイヤーメトリクス差分の表示情報。 */
+type RegisterScoreMetricDeltaProps = {
+  /** APIが返した更新前後の差分。 */
+  delta: number | null
+  /** 表示精度へ整形した符号付き差分。 */
+  formattedDelta: string | null
+  /** 差分の後ろへ表示する単位。 */
+  unit?: string
+  /** 単位を読み上げる際の名称。 */
+  accessibleUnit?: string
+}
+
+/**
+ * プレイヤーメトリクスの符号付き差分を共通形式で表示する。
+ *
+ * @param props - 生の差分値、整形済み差分、および任意の単位。
+ * @returns 表示対象の差分がある場合は括弧付き差分、それ以外は何も表示しない。
+ */
+const RegisterScoreMetricDelta = (props: RegisterScoreMetricDeltaProps) => (
+  <Show when={props.formattedDelta}>
+    {(formattedDelta) => (
+      <span class={`text-sm font-bold ${getRegisterScoreMetricDeltaClass(props.delta)}`}>
+        ({formattedDelta()}
+        <Show when={props.unit}>{(unit) => <span aria-hidden="true"> {unit()}</span>}</Show>
+        <Show when={props.accessibleUnit}>
+          {(accessibleUnit) => <span class="sr-only"> {accessibleUnit()}</span>}
+        </Show>
+        )
+      </span>
+    )}
+  </Show>
+)
+
+/**
  * プレイヤー概要をレポート形式で表示する。
  *
  * @param props - APIから返却された登録結果。
  * @returns プロフィール概要。
  */
-const RegisterScoreProfileSummary = (props: { result: PlayerDataResult }) => (
-  <section class="pb-3">
-    <div class="flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2.5">
-      <p class="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 font-sans text-xl font-extrabold leading-none">
-        <span class="shrink-0 tracking-normal">Lv. {props.result.profile.level}</span>
-        <span class="min-w-0 truncate text-center">{props.result.profile.name}</span>
-      </p>
+const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdateResult }) => {
+  const ratingDelta = createMemo(() =>
+    formatRegisterScoreRatingDelta(props.result.metric_diffs.rating.delta)
+  )
+  const overPowerDelta = createMemo(() =>
+    formatRegisterScoreOverPowerDelta(props.result.metric_diffs.overpower_value.delta)
+  )
+  const overPowerPercentDelta = createMemo(() =>
+    formatRegisterScoreOverPowerPercentDelta(props.result.metric_diffs.overpower_percent.delta)
+  )
+
+  return (
+    <section class="pb-3">
+      <div class="flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2.5">
+        <p class="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 font-sans text-xl font-extrabold leading-none">
+          <span class="shrink-0 whitespace-nowrap tracking-normal">
+            Lv. {props.result.profile.level}
+          </span>
+          <span class="min-w-0 truncate text-center">{props.result.profile.name}</span>
+        </p>
+      </div>
+      <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
+        <dt class="font-extrabold text-text-muted">{REGISTER_SCORE_MESSAGES.ratingLabel}</dt>
+        <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
+          <span>{formatNullableRating(props.result.summary.rating)}</span>
+          <RegisterScoreMetricDelta
+            delta={props.result.metric_diffs.rating.delta}
+            formattedDelta={ratingDelta()}
+          />
+        </dd>
+        <dt class="whitespace-nowrap font-extrabold text-text-muted">
+          {REGISTER_SCORE_MESSAGES.overPowerLabel}
+        </dt>
+        <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
+          <Show when={props.result.summary.overpower_value !== null} fallback={NO_DATA_TEXT}>
+            <span>{formatOverPowerValue(props.result.summary.overpower_value ?? 0)}</span>
+          </Show>
+          <RegisterScoreMetricDelta
+            delta={props.result.metric_diffs.overpower_value.delta}
+            formattedDelta={overPowerDelta()}
+          />
+        </dd>
+        <dt class="font-extrabold text-text-muted">
+          <span aria-hidden="true">{REGISTER_SCORE_MESSAGES.overPowerPercentLabel}</span>
+          <span class="sr-only">{REGISTER_SCORE_MESSAGES.overPowerPercentAccessibleLabel}</span>
+        </dt>
+        <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
+          <Show when={props.result.summary.overpower_percentage !== null} fallback={NO_DATA_TEXT}>
+            <span>{formatOverPowerPercent(props.result.summary.overpower_percentage ?? 0)}%</span>
+          </Show>
+          <RegisterScoreMetricDelta
+            delta={props.result.metric_diffs.overpower_percent.delta}
+            formattedDelta={overPowerPercentDelta()}
+            unit={REGISTER_SCORE_MESSAGES.percentagePointUnit}
+            accessibleUnit={REGISTER_SCORE_MESSAGES.percentagePointAccessibleUnit}
+          />
+        </dd>
+      </dl>
+    </section>
+  )
+}
+
+/**
+ * 集計セクションと行ごとの表示設定を共通レイアウトで表示する。
+ *
+ * @param props - セクション名、表示状態、および変更ハンドラー。
+ * @returns 集計セクション用の表示設定。
+ */
+const RegisterScoreAggregateVisibilitySettings = (props: {
+  label: string
+  checked: boolean
+  rowVisibility: RegisterScoreAggregateRowVisibility
+  onChange: (checked: boolean) => void
+  onRowVisibilityChange: (key: RegisterScoreAggregateRowKey, checked: boolean) => void
+}) => (
+  <div class="flex flex-col items-start gap-2">
+    <CheckboxField
+      checked={props.checked}
+      onChange={props.onChange}
+      textVariant="large"
+      label={props.label}
+    />
+    <div class="ml-7 flex flex-col items-start gap-2">
+      <For each={REGISTER_SCORE_AGGREGATE_ROW_OPTIONS}>
+        {(option) => (
+          <CheckboxField
+            checked={props.rowVisibility[option.key]}
+            disabled={!props.checked}
+            onChange={(checked) => props.onRowVisibilityChange(option.key, checked)}
+            textVariant="large"
+            label={option.label}
+          />
+        )}
+      </For>
     </div>
-    <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
-      <dt class="font-extrabold text-text-muted">RATING</dt>
-      <dd class={PROFILE_VALUE_CLASS}>{formatNullableRating(props.result.summary.rating)}</dd>
-      <dt class="font-extrabold text-text-muted">OVER POWER</dt>
-      <dd class={PROFILE_VALUE_CLASS}>
-        <Show
-          when={
-            props.result.summary.overpower_value !== null &&
-            props.result.summary.overpower_percentage !== null
-          }
-          fallback={NO_DATA_TEXT}
-        >
-          {formatOverPowerValue(props.result.summary.overpower_value ?? 0)} (
-          {formatOverPowerPercent(props.result.summary.overpower_percentage ?? 0)}%)
-        </Show>
-      </dd>
-    </dl>
-  </section>
+  </div>
 )
 
 /**
- * 登録後の通常譜面集計を表示する。
+ * 更新差分レポートに含める集計セクションと統計行を選択する設定を表示する。
  *
- * @param props - APIから返却された通常譜面集計。
+ * @param props - 各セクションと統計行の表示状態、および変更ハンドラー。
+ * @returns 更新差分の表示設定。
+ */
+const RegisterScoreDisplaySettings = (props: {
+  showTotalHighScore: boolean
+  showRecordStatistics: boolean
+  totalHighScoreRowVisibility: RegisterScoreAggregateRowVisibility
+  statisticRowVisibility: RegisterScoreAggregateRowVisibility
+  onShowTotalHighScoreChange: (checked: boolean) => void
+  onShowRecordStatisticsChange: (checked: boolean) => void
+  onTotalHighScoreRowVisibilityChange: (key: RegisterScoreAggregateRowKey, checked: boolean) => void
+  onStatisticRowVisibilityChange: (key: RegisterScoreAggregateRowKey, checked: boolean) => void
+}) => (
+  <fieldset class="rounded-md border border-border bg-surface px-4 pb-4 pt-3">
+    <legend class="px-1 text-lg font-semibold text-text">
+      {REGISTER_SCORE_MESSAGES.displaySettingsTitle}
+    </legend>
+    <div class="mt-1 flex flex-col items-start gap-3">
+      <RegisterScoreAggregateVisibilitySettings
+        label={REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
+        checked={props.showTotalHighScore}
+        rowVisibility={props.totalHighScoreRowVisibility}
+        onChange={props.onShowTotalHighScoreChange}
+        onRowVisibilityChange={props.onTotalHighScoreRowVisibilityChange}
+      />
+      <RegisterScoreAggregateVisibilitySettings
+        label={REGISTER_SCORE_MESSAGES.recordStatsTitle}
+        checked={props.showRecordStatistics}
+        rowVisibility={props.statisticRowVisibility}
+        onChange={props.onShowRecordStatisticsChange}
+        onRowVisibilityChange={props.onStatisticRowVisibilityChange}
+      />
+    </div>
+  </fieldset>
+)
+
+/**
+ * 登録後の通常譜面およびWORLD'S END集計を表示する。
+ *
+ * @param props - APIから返却された通常譜面およびWORLD'S END集計と表示設定。
  * @returns 集計値セクション。
  */
-const RegisterScoreAggregateSummary = (props: { result: PlayerDataResult }) => {
-  const statisticRows = createMemo(() => toRegisterScoreStatisticRows(props.result.statistics))
-  const totalHighScoreRows = createMemo(() => [
-    {
-      label: REGISTER_SCORE_MAIN_STAT_ROW_LABEL,
-      difficulty: null,
-      value: props.result.statistics.overall.total_high_score,
-    },
-    ...REGISTER_SCORE_DIFFICULTIES.map((difficulty) => ({
-      label: difficulty.slice(0, 3),
-      difficulty,
-      value: props.result.statistics.by_difficulty[difficulty].total_high_score,
-    })),
-  ])
+const RegisterScoreAggregateSummary = (props: {
+  result: NormalizedPlayerDataUpdateResult
+  showTotalHighScore: boolean
+  showRecordStatistics: boolean
+  totalHighScoreRowVisibility: RegisterScoreAggregateRowVisibility
+  statisticRowVisibility: RegisterScoreAggregateRowVisibility
+}) => {
+  const statisticRows = createMemo(() =>
+    toRegisterScoreStatisticRows(props.result.statistics).filter(
+      (row) => props.statisticRowVisibility[row.key]
+    )
+  )
+  const totalHighScoreRows = createMemo(() =>
+    toRegisterScoreTotalHighScoreRows(props.result.statistics).filter(
+      (row) => props.totalHighScoreRowVisibility[row.key]
+    )
+  )
 
   return (
     <>
-      <section class="py-4">
-        <h2 class="mb-3 text-xl font-extrabold leading-6">
-          {REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
-        </h2>
-        <div class="grid grid-cols-3 gap-x-4 gap-y-1 text-sm">
-          <For each={totalHighScoreRows()}>
-            {(row, _index) => (
-              <p class="grid grid-cols-[2.25rem_1fr] items-baseline gap-1">
-                <span class={`font-extrabold ${getDifficultyTextClass(row.difficulty)}`}>
-                  {row.label}
-                </span>
-                <span class="min-w-0">
-                  <span class="block font-jost font-medium">{formatScore(row.value.after)}</span>
-                  <Show when={row.value.delta !== 0}>
-                    <span
-                      class={`block font-jost text-xs font-bold ${getTotalHighScoreDeltaClass(row.value.delta)}`}
-                    >
-                      ({formatStatisticDelta(row.value.delta)})
-                    </span>
-                  </Show>
-                </span>
-              </p>
-            )}
-          </For>
-        </div>
-      </section>
+      <Show when={props.showTotalHighScore && totalHighScoreRows().length > 0}>
+        <section class="py-4">
+          <h2 class="mb-3 whitespace-nowrap text-xl font-extrabold leading-6">
+            {REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
+          </h2>
+          <div class="grid grid-cols-3 gap-x-4 gap-y-1 text-sm">
+            <For each={totalHighScoreRows()}>
+              {(row) => (
+                <p class="grid grid-cols-[2.25rem_1fr] items-baseline gap-1">
+                  <span class={`font-extrabold ${getDifficultyTextClass(row.difficulty)}`}>
+                    {row.label}
+                  </span>
+                  <span class="min-w-0">
+                    <span class="block font-jost font-medium">{formatScore(row.value.after)}</span>
+                    <Show when={row.value.delta !== 0}>
+                      <span
+                        class={`block font-jost text-xs font-bold ${getTotalHighScoreDeltaClass(row.value.delta)}`}
+                      >
+                        ({formatStatisticDelta(row.value.delta)})
+                      </span>
+                    </Show>
+                  </span>
+                </p>
+              )}
+            </For>
+          </div>
+        </section>
+      </Show>
 
-      <section class="py-4">
-        <h2 class="mb-3 text-xl font-extrabold leading-6">
-          {REGISTER_SCORE_MESSAGES.recordStatsTitle}
-        </h2>
-        <RegisterScoreLampStatistics rows={statisticRows()} />
-      </section>
+      <Show when={props.showRecordStatistics && statisticRows().length > 0}>
+        <section class="py-4">
+          <h2 class="mb-3 whitespace-nowrap text-xl font-extrabold leading-6">
+            {REGISTER_SCORE_MESSAGES.recordStatsTitle}
+          </h2>
+          <RegisterScoreLampStatistics rows={statisticRows()} />
+        </section>
+      </Show>
     </>
   )
 }
@@ -473,9 +661,13 @@ const RegisterScoreLampStatistics = (props: { rows: RegisterScoreStatisticRow[] 
     <table class="w-full table-fixed border-collapse text-center text-sm">
       <thead>
         <tr class="border-b border-border text-xs font-extrabold">
-          <th class="w-12 px-1 py-1 text-left"></th>
+          <th class="w-12 border-r border-border px-1 py-1 text-center"></th>
           <For each={REGISTER_SCORE_STAT_COLUMNS}>
-            {(column) => <th class="px-1 py-1">{column}</th>}
+            {(column) => (
+              <th class={`px-1 py-1 ${getRegisterScoreStatisticColumnDividerClass(column)}`}>
+                {column}
+              </th>
+            )}
           </For>
         </tr>
       </thead>
@@ -486,13 +678,15 @@ const RegisterScoreLampStatistics = (props: { rows: RegisterScoreStatisticRow[] 
               class={`${index() < props.rows.length - 1 ? 'border-b border-border ' : ''}align-top`}
             >
               <th
-                class={`px-1 py-2 text-left text-sm font-extrabold ${getDifficultyTextClass(row.difficulty)}`}
+                class={`border-r border-border px-1 py-2 text-center text-sm font-extrabold ${getDifficultyTextClass(row.difficulty)}`}
               >
                 {row.label}
               </th>
               <For each={REGISTER_SCORE_STAT_COLUMNS}>
                 {(column) => (
-                  <td class="px-1 py-2 leading-4">
+                  <td
+                    class={`px-1 py-2 leading-4 ${getRegisterScoreStatisticColumnDividerClass(column)}`}
+                  >
                     <div class="font-jost">{row.values[column].after}</div>
                     <Show when={row.values[column].delta !== 0}>
                       <div class="font-jost text-[0.65rem] font-bold text-blue-700">
@@ -511,16 +705,66 @@ const RegisterScoreLampStatistics = (props: { rows: RegisterScoreStatisticRow[] 
 )
 
 /**
+ * プレイ前スコアを表示する。
+ *
+ * 未プレイの場合は薄い文字でハイフンを表示し、プレイ済みの場合はスコアを通常表示する。
+ * プレイ済みでスコアが 0 の場合も本来の 0 として表示する。
+ *
+ * @param props.before - 差分前の譜面状態。`null` の場合は未プレイとして扱う。
+ * @returns プレイ前スコアまたはハイフンの表示要素。
+ */
+const BeforeRecordScore = (props: {
+  before: PlayerDataRecordState | PlayerDataCourseRecordState | null
+}) => (
+  <Show
+    when={props.before}
+    fallback={<span class="font-jost font-semibold text-text-subtle">{NO_DATA_TEXT}</span>}
+  >
+    {(before) => <span class="font-jost font-semibold">{formatScore(before().score)}</span>}
+  </Show>
+)
+
+/**
  * 1譜面分の登録差分をスクリーンショットに近い行表示にする。
  *
- * @param props - 表示対象の差分、解決済み楽曲タイトル、譜面レベル。
+ * @param props - 表示対象の差分、解決済み楽曲タイトル、譜面レベル、曲名コピー処理。
  * @returns 差分行。
  */
 const RegisterScoreChangeRow = (props: {
-  change: PlayerDataRecordChange
+  change: PlayerDataSongRecordChange
   songTitle: string
   chartLevel?: string
+  onCopySongTitle: (songTitle: string) => Promise<boolean>
 }) => {
+  const [isCopyHighlighted, setIsCopyHighlighted] = createSignal(false)
+  let copyHighlightTimerId: number | undefined
+
+  /**
+   * 曲名をコピーし、成功時に曲名を一時的にアクセントカラーへ変更する。
+   *
+   * @returns コピー処理の完了時に解決されるPromise。
+   */
+  const handleCopySongTitle = async (): Promise<void> => {
+    const copied = await props.onCopySongTitle(props.songTitle)
+    if (!copied) return
+
+    if (copyHighlightTimerId !== undefined) {
+      window.clearTimeout(copyHighlightTimerId)
+    }
+
+    setIsCopyHighlighted(true)
+    copyHighlightTimerId = window.setTimeout(() => {
+      setIsCopyHighlighted(false)
+      copyHighlightTimerId = undefined
+    }, REGISTER_SCORE_COPY_HIGHLIGHT_MS)
+  }
+
+  onCleanup(() => {
+    if (copyHighlightTimerId !== undefined) {
+      window.clearTimeout(copyHighlightTimerId)
+    }
+  })
+
   return (
     <article class={`${SCORE_CHANGE_CARD_CLASS} font-jost`}>
       <div class="flex min-w-0 items-center gap-2 text-base">
@@ -529,33 +773,52 @@ const RegisterScoreChangeRow = (props: {
         </span>
         <Show when={props.chartLevel}>
           {(level) => (
-            <span class="shrink-0 rounded bg-surface px-2 py-0.5 text-xs font-bold leading-5">
+            <span class="shrink-0 whitespace-nowrap rounded bg-surface px-2 py-0.5 text-xs font-bold leading-5">
               {level()}
             </span>
           )}
         </Show>
-        <h3 class="min-w-0 truncate font-sans text-base font-bold">{props.songTitle}</h3>
+        <h3 class="min-w-0 flex-1">
+          <Button
+            class={`block w-full min-w-0 truncate border-0 bg-transparent p-0 text-left font-sans text-base font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 ${
+              isCopyHighlighted()
+                ? 'text-action-primary transition-none'
+                : 'text-text transition-colors duration-700 motion-reduce:transition-none'
+            }`}
+            aria-label={`「${props.songTitle}」をコピー`}
+            title={props.songTitle}
+            onClick={handleCopySongTitle}
+          >
+            {props.songTitle}
+          </Button>
+        </h3>
       </div>
       <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
-        <div class="min-w-0">
-          <span class="font-oswald font-semibold">
-            {props.change.before ? formatScore(props.change.before.score) : NO_DATA_TEXT}
-          </span>
-          <Show when={props.change.before}>
+        <div class="w-fit">
+          <BeforeRecordScore before={props.change.before} />
+          <Show
+            when={props.change.before}
+            fallback={
+              <div class="mt-1 flex min-h-6 flex-wrap items-center gap-1">
+                <LampPlaceholderBadge class="w-[34px]" />
+                <LampPlaceholderBadge class="w-[34px]" />
+                <LampPlaceholderBadge class="w-[34px]" />
+              </div>
+            }
+          >
             {(before) => <RecordLampBadges state={before()} />}
           </Show>
         </div>
-        <Play
-          class="mt-1.5 h-3.5 w-3.5 justify-self-center fill-current text-action-primary"
-          aria-hidden="true"
-        />
-        <div class="min-w-0">
-          <span class="font-oswald font-semibold">
-            {formatScore(props.change.after.score)}{' '}
-            <Show when={formatScoreDeltaWithParens(props.change)}>
-              {(delta) => <span class="font-sans text-xs font-bold text-blue-700">{delta()}</span>}
-            </Show>
-          </span>
+        <div class="flex w-20 flex-col items-center gap-1">
+          <Play class="mt-1.5 h-3.5 w-3.5 fill-current text-blue-700" aria-hidden="true" />
+          <Show when={formatScoreDelta(props.change)}>
+            {(delta) => (
+              <span class="font-sans text-sm font-bold leading-4 text-blue-700">{delta()}</span>
+            )}
+          </Show>
+        </div>
+        <div class="w-fit">
+          <span class="font-jost font-semibold">{formatScore(props.change.after.score)}</span>
           <RecordLampBadges state={props.change.after} />
         </div>
       </div>
@@ -564,38 +827,109 @@ const RegisterScoreChangeRow = (props: {
 }
 
 /**
+ * 1コース分の登録差分を、コース固有の状態だけで表示する。
+ *
+ * @param props - 表示対象のコース差分と解決済みコースタイトル。
+ * @returns コース差分行。
+ */
+const RegisterCourseChangeRow = (props: {
+  change: PlayerDataCourseRecordChange
+  courseTitle: string
+}) => (
+  <article class={`${SCORE_CHANGE_CARD_CLASS} font-jost`}>
+    <div class="flex min-w-0 items-center gap-2 text-base">
+      <span
+        class={`${COURSE_CLASS_BADGE_LAYOUT_CLASS} whitespace-nowrap ${courseClassBadgeClass(
+          props.change.course_class
+        )}`}
+      >
+        {formatCourseClass(props.change.course_class)}
+      </span>
+      <h3 class="min-w-0 flex-1 truncate font-sans text-base font-bold">{props.courseTitle}</h3>
+    </div>
+    <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
+      <div class={COURSE_CHANGE_SCORE_VALUE_CLASS}>
+        <BeforeRecordScore before={props.change.before} />
+        <Show
+          when={props.change.before}
+          fallback={
+            <div class="mt-1 flex min-h-6 flex-wrap items-center gap-1">
+              <LampPlaceholderBadge class="w-[34px]" />
+              <LampPlaceholderBadge class="w-[34px]" />
+            </div>
+          }
+        >
+          {(before) => <CourseRecordLampBadges state={before()} />}
+        </Show>
+      </div>
+      <div class="flex w-20 flex-col items-center gap-1">
+        <Play class="mt-1.5 h-3.5 w-3.5 fill-current text-blue-700" aria-hidden="true" />
+        <Show when={formatScoreDelta(props.change)}>
+          {(delta) => (
+            <span class="font-sans text-sm font-bold leading-4 text-blue-700">{delta()}</span>
+          )}
+        </Show>
+      </div>
+      <div class={COURSE_CHANGE_SCORE_VALUE_CLASS}>
+        <span class="font-jost font-semibold">{formatScore(props.change.after.score)}</span>
+        <CourseRecordLampBadges state={props.change.after} />
+      </div>
+    </div>
+  </article>
+)
+
+/**
  * スコア登録結果のヘッダーを表示する。
  *
  * @param props - APIから返却された登録結果。
  * @returns レポートヘッダー。
  */
-const RegisterScoreReportHeader = (props: { result: PlayerDataResult }) => (
-  <header class="border-b border-border bg-surface-muted px-3 py-3">
-    <h1 class="text-2xl font-bold">{REGISTER_SCORE_MESSAGES.reportTitle}</h1>
-    <p class="mt-1 text-sm">
-      更新日時: <span class="font-jost">{formatImportedAt(props.result.imported_at)}</span>
-    </p>
+const RegisterScoreReportHeader = (props: { result: NormalizedPlayerDataUpdateResult }) => (
+  <header class="flex items-center justify-between border-b border-border bg-surface-muted px-3 py-3">
+    <span
+      aria-hidden="true"
+      class="h-12 w-12 shrink-0"
+      style={{
+        'background-color': REGISTER_SCORE_REPORT_LOGO_COLOR,
+        'mask-image': `url(${logoSingle})`,
+        'mask-position': 'center',
+        'mask-repeat': 'no-repeat',
+        'mask-size': 'contain',
+      }}
+    />
+    <div class="min-w-0 text-right">
+      <h1 class="whitespace-nowrap text-2xl font-bold">{REGISTER_SCORE_MESSAGES.reportTitle}</h1>
+      <p class="mt-1 text-sm">
+        <span class="whitespace-nowrap font-jost">
+          {formatImportedAt(props.result.imported_at)}
+        </span>
+      </p>
+    </div>
   </header>
 )
 
 /**
  * 更新レコード一覧を表示する。
  *
- * @param props - 更新差分、楽曲名解決関数、譜面レベル解決関数。
+ * @param props - 更新差分、楽曲名解決関数、譜面レベル解決関数、曲名コピー処理。
  * @returns 更新レコードセクション。
  */
 const RegisterScoreChangesSection = (props: {
-  changes: PlayerDataRecordChange[]
+  changes: PlayerDataSongRecordChange[]
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
+  emptyMessage?: string
+  onCopySongTitle: (songTitle: string) => Promise<boolean>
 }) => (
   <section class="min-w-0 pt-4">
-    <h2 class="mb-1 text-xl font-bold">{REGISTER_SCORE_MESSAGES.changedSongsTitle}</h2>
+    <h2 class="mb-1 whitespace-nowrap text-xl font-bold">
+      {REGISTER_SCORE_MESSAGES.changedSongsTitle}
+    </h2>
     <Show
       when={props.changes.length > 0}
       fallback={
         <p class="px-2 py-6 text-center text-sm text-text-muted">
-          {REGISTER_SCORE_MESSAGES.changedSongsEmpty}
+          {props.emptyMessage ?? REGISTER_SCORE_MESSAGES.changedSongsEmpty}
         </p>
       }
     >
@@ -606,6 +940,7 @@ const RegisterScoreChangesSection = (props: {
               change={change}
               songTitle={props.resolveSongTitle(change)}
               chartLevel={props.resolveChartLevel?.(change)}
+              onCopySongTitle={props.onCopySongTitle}
             />
           )}
         </For>
@@ -615,23 +950,260 @@ const RegisterScoreChangesSection = (props: {
 )
 
 /**
+ * 更新されたコースレコードをレポート末尾へ表示する。
+ *
+ * @param props - コースレコード差分とコースタイトル解決関数。
+ * @returns コースレコードセクション。差分がない場合は何も表示しない。
+ */
+const RegisterCourseChangesSection = (props: {
+  changes: PlayerDataCourseRecordChange[]
+  resolveCourseTitle: RegisterScoreCourseTitleResolver
+}) => (
+  <Show when={props.changes.length > 0}>
+    <section class="min-w-0 pt-4">
+      <h2 class="mb-1 whitespace-nowrap text-xl font-bold">
+        {REGISTER_SCORE_MESSAGES.changedCoursesTitle}
+      </h2>
+      <div class="mt-2 grid min-w-0 max-w-full gap-2">
+        <For each={props.changes}>
+          {(change) => (
+            <RegisterCourseChangeRow
+              change={change}
+              courseTitle={props.resolveCourseTitle(change)}
+            />
+          )}
+        </For>
+      </div>
+    </section>
+  </Show>
+)
+
+/**
  * スコア登録完了後の結果と差分一覧を表示する。
  *
- * @param props - 登録結果、楽曲名解決関数、譜面レベル解決関数。
+ * @param props - 登録結果、楽曲名・コースタイトル解決関数、譜面レベル解決関数、空状態文言。
  * @returns 登録結果パネル。
  */
 export const RegisterScoreResultView = (props: {
-  result: PlayerDataResult
+  result: NormalizedPlayerDataUpdateResult
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
+  resolveCourseTitle: RegisterScoreCourseTitleResolver
+  changedSongsEmptyMessage?: string
 }) => {
-  const changes = createMemo(() => props.result.changes)
+  const songChanges = createMemo(() =>
+    props.result.changes.filter(
+      (change): change is PlayerDataSongRecordChange => change.record_type !== 'course'
+    )
+  )
+  const courseChanges = createMemo(() =>
+    props.result.changes.filter(
+      (change): change is PlayerDataCourseRecordChange => change.record_type === 'course'
+    )
+  )
+  const [showTotalHighScore, setShowTotalHighScore] = createSignal(true)
+  const [showRecordStatistics, setShowRecordStatistics] = createSignal(true)
+  const [totalHighScoreRowVisibility, setTotalHighScoreRowVisibility] =
+    createSignal<RegisterScoreAggregateRowVisibility>(
+      createDefaultRegisterScoreTotalHighScoreRowVisibility(props.result.statistics)
+    )
+  const [statisticRowVisibility, setStatisticRowVisibility] =
+    createSignal<RegisterScoreAggregateRowVisibility>(
+      createDefaultRegisterScoreStatisticRowVisibility(props.result.statistics)
+    )
   const [reportScale, setReportScale] = createSignal(1)
   const [scaledReportHeight, setScaledReportHeight] = createSignal<number>()
+  const [isDownloadingImage, setIsDownloadingImage] = createSignal(false)
+  const [isPreparingShareImage, setIsPreparingShareImage] = createSignal(false)
+  const [isSharingImage, setIsSharingImage] = createSignal(false)
+  const [shareImageFile, setShareImageFile] = createSignal<File>()
+  const [imageActionError, setImageActionError] = createSignal<string>()
+  let shareImagePreparationRequested = false
+  let shareImagePrepareTimer: number | undefined
+
+  /**
+   * ダウンロードまたは共有用の画像を生成中かどうかを返す。
+   *
+   * @returns いずれかの画像生成処理中の場合はtrue。
+   */
+  const isGeneratingImage = (): boolean =>
+    isDownloadingImage() || isPreparingShareImage() || isSharingImage()
+
+  /**
+   * 現在のブラウザがJPEGファイルの共有に対応しているかを返す。
+   *
+   * @returns Web Share APIでJPEGファイルを共有できる場合はtrue。
+   */
+  const canShareReportImage = (): boolean => {
+    const testFile = new File([], 'share-test.jpg', { type: 'image/jpeg' })
+    return canShareFiles([testFile])
+  }
   let scaleContainerRef!: HTMLDivElement
   let reportRef!: HTMLElement
 
+  /**
+   * TOTAL HIGH SCOREの1行分の表示状態を更新する。
+   *
+   * @param key - 更新する集計行のキー。
+   * @param checked - 更新後の表示状態。
+   * @returns なし。
+   */
+  const updateTotalHighScoreRowVisibility = (
+    key: RegisterScoreAggregateRowKey,
+    checked: boolean
+  ): void => {
+    setTotalHighScoreRowVisibility((current) => ({ ...current, [key]: checked }))
+  }
+
+  /**
+   * RECORD STATISTICSの1行分の表示状態を更新する。
+   *
+   * @param key - 更新する統計行のキー。
+   * @param checked - 更新後の表示状態。
+   * @returns なし。
+   */
+  const updateStatisticRowVisibility = (
+    key: RegisterScoreAggregateRowKey,
+    checked: boolean
+  ): void => {
+    setStatisticRowVisibility((current) => ({ ...current, [key]: checked }))
+  }
+
+  /**
+   * 曲名をクリップボードへコピーし、結果をトーストで通知する。
+   *
+   * @param songTitle - コピーする省略前の曲名。
+   * @returns コピーに成功した場合はtrue、それ以外はfalse。
+   */
+  const copySongTitle = async (songTitle: string): Promise<boolean> => {
+    try {
+      await navigator.clipboard.writeText(songTitle)
+      showSuccessToast(REGISTER_SCORE_MESSAGES.copySongTitleSuccess)
+      return true
+    } catch {
+      showErrorToast(REGISTER_SCORE_MESSAGES.copySongTitleError)
+      return false
+    }
+  }
+
+  /**
+   * 現在表示中の更新差分レポートを原寸のJPEG画像として生成する。
+   *
+   * @returns 生成した画像ファイル。
+   */
+  const createReportImageFile = async (): Promise<File> => {
+    const imageBlob = await captureElementAsImage(reportRef, {
+      format: 'jpeg',
+      pixelRatio: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
+      quality: REGISTER_SCORE_IMAGE_JPEG_QUALITY,
+    })
+    const filename = formatRegisterScoreImageFilename(props.result.imported_at)
+
+    return new File([imageBlob], filename, { type: 'image/jpeg' })
+  }
+
+  /**
+   * Web Share APIの一時的なユーザー操作を保てるよう、共有用画像を事前生成する。
+   *
+   * @returns 画像生成処理の完了時に解決されるPromise。
+   */
+  const prepareShareImage = async (): Promise<void> => {
+    shareImagePreparationRequested = true
+    if (isPreparingShareImage()) return
+
+    setIsPreparingShareImage(true)
+    setImageActionError(undefined)
+
+    try {
+      while (shareImagePreparationRequested) {
+        shareImagePreparationRequested = false
+        const imageFile = await createReportImageFile()
+        if (!shareImagePreparationRequested) setShareImageFile(imageFile)
+      }
+    } catch {
+      setShareImageFile(undefined)
+      setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+    } finally {
+      setIsPreparingShareImage(false)
+    }
+  }
+
+  /**
+   * レポートDOMの更新をまとめ、共有用画像の再生成を予約する。
+   *
+   * @returns なし。
+   */
+  const scheduleShareImagePreparation = (): void => {
+    setShareImageFile(undefined)
+    if (shareImagePrepareTimer !== undefined) window.clearTimeout(shareImagePrepareTimer)
+
+    shareImagePrepareTimer = window.setTimeout(() => {
+      shareImagePrepareTimer = undefined
+      void prepareShareImage()
+    }, REGISTER_SCORE_SHARE_PREPARE_DELAY_MS)
+  }
+
+  /**
+   * 現在表示中の更新差分レポートを1枚のJPEG画像としてダウンロードする。
+   *
+   * @returns ダウンロード処理の完了時に解決されるPromise。
+   */
+  const downloadReportImage = async (): Promise<void> => {
+    setIsDownloadingImage(true)
+    setImageActionError(undefined)
+
+    try {
+      const imageFile = await createReportImageFile()
+      downloadBlobFile(imageFile, imageFile.name)
+    } catch {
+      setImageActionError(REGISTER_SCORE_MESSAGES.downloadImageError)
+    } finally {
+      setIsDownloadingImage(false)
+    }
+  }
+
+  /**
+   * 現在表示中の更新差分レポートをWeb Share APIで共有する。
+   *
+   * @returns 共有処理の完了時に解決されるPromise。
+   */
+  const shareReportImage = async (): Promise<void> => {
+    const imageFile = shareImageFile()
+    if (!imageFile) {
+      void prepareShareImage()
+      return
+    }
+    if (!canShareFiles([imageFile])) {
+      setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+      return
+    }
+
+    setIsSharingImage(true)
+    setImageActionError(undefined)
+
+    try {
+      await navigator.share({ files: [imageFile], title: REGISTER_SCORE_MESSAGES.reportTitle })
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+      }
+    } finally {
+      setIsSharingImage(false)
+    }
+  }
+
   onMount(() => {
+    const shareImageObserver = canShareReportImage()
+      ? new MutationObserver(scheduleShareImagePreparation)
+      : undefined
+    shareImageObserver?.observe(reportRef, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true,
+    })
+    if (shareImageObserver) scheduleShareImagePreparation()
+
     /**
      * 固定幅レポートを親要素の表示幅へ収める縮小率と占有高さを更新する。
      *
@@ -649,35 +1221,113 @@ export const RegisterScoreResultView = (props: {
     resizeObserver.observe(reportRef)
     updateReportScale()
 
-    onCleanup(() => resizeObserver.disconnect())
+    onCleanup(() => {
+      if (shareImagePrepareTimer !== undefined) window.clearTimeout(shareImagePrepareTimer)
+      shareImageObserver?.disconnect()
+      resizeObserver.disconnect()
+    })
   })
 
   return (
-    <div
-      ref={scaleContainerRef}
-      class={`mx-auto w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} overflow-hidden`}
-      style={{ height: scaledReportHeight() ? `${scaledReportHeight()}px` : undefined }}
-    >
+    <div class={`mx-auto flex w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} flex-col gap-4`}>
+      <div class="flex flex-col items-end gap-2">
+        <div class="flex flex-wrap justify-end gap-2">
+          <Show when={canShareReportImage()}>
+            <AppButton
+              variant="secondary"
+              disabled={isGeneratingImage()}
+              aria-busy={isPreparingShareImage() || isSharingImage()}
+              onClick={shareReportImage}
+              leftIcon={
+                <Show
+                  when={!isPreparingShareImage() && !isSharingImage()}
+                  fallback={<Loading size="inline" ariaHidden />}
+                >
+                  <Share2 class="h-4 w-4" aria-hidden="true" />
+                </Show>
+              }
+            >
+              {isPreparingShareImage()
+                ? REGISTER_SCORE_MESSAGES.preparingShareImage
+                : isSharingImage()
+                  ? REGISTER_SCORE_MESSAGES.sharingImage
+                  : shareImageFile()
+                    ? REGISTER_SCORE_MESSAGES.shareImage
+                    : REGISTER_SCORE_MESSAGES.prepareShareImage}
+            </AppButton>
+          </Show>
+          <AppButton
+            variant="primary"
+            disabled={isGeneratingImage()}
+            aria-busy={isDownloadingImage()}
+            onClick={downloadReportImage}
+            leftIcon={
+              <Show when={!isDownloadingImage()} fallback={<Loading size="inline" ariaHidden />}>
+                <Download class="h-4 w-4" aria-hidden="true" />
+              </Show>
+            }
+          >
+            {isDownloadingImage()
+              ? REGISTER_SCORE_MESSAGES.downloadingImage
+              : REGISTER_SCORE_MESSAGES.downloadImage}
+          </AppButton>
+        </div>
+        <Show when={imageActionError()}>
+          {(message) => (
+            <p class="text-sm text-danger" role="alert">
+              {message()}
+            </p>
+          )}
+        </Show>
+      </div>
+      <RegisterScoreDisplaySettings
+        showTotalHighScore={showTotalHighScore()}
+        showRecordStatistics={showRecordStatistics()}
+        totalHighScoreRowVisibility={totalHighScoreRowVisibility()}
+        statisticRowVisibility={statisticRowVisibility()}
+        onShowTotalHighScoreChange={setShowTotalHighScore}
+        onShowRecordStatisticsChange={setShowRecordStatistics}
+        onTotalHighScoreRowVisibilityChange={updateTotalHighScoreRowVisibility}
+        onStatisticRowVisibilityChange={updateStatisticRowVisibility}
+      />
       <div
-        class={`${REGISTER_SCORE_REPORT_WIDTH_CLASS} origin-top-left`}
-        style={{ transform: `scale(${reportScale()})` }}
+        ref={scaleContainerRef}
+        class={`w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} overflow-hidden`}
+        style={{ height: scaledReportHeight() ? `${scaledReportHeight()}px` : undefined }}
       >
-        <section
-          ref={reportRef}
-          data-theme="light"
-          class="w-full overflow-hidden rounded-md border border-border bg-surface px-0 pb-4 pt-0 font-sans text-text shadow-sm"
+        <div
+          class={`${REGISTER_SCORE_REPORT_WIDTH_CLASS} origin-top-left`}
+          style={{ transform: `scale(${reportScale()})` }}
         >
-          <RegisterScoreReportHeader result={props.result} />
-          <div class="px-4 pt-3">
-            <RegisterScoreProfileSummary result={props.result} />
-            <RegisterScoreAggregateSummary result={props.result} />
-            <RegisterScoreChangesSection
-              changes={changes()}
-              resolveSongTitle={props.resolveSongTitle}
-              resolveChartLevel={props.resolveChartLevel}
-            />
-          </div>
-        </section>
+          <section
+            ref={reportRef}
+            data-theme="light"
+            class="w-full overflow-hidden rounded-md border border-border bg-surface px-0 pb-4 pt-0 font-sans text-text shadow-sm"
+          >
+            <RegisterScoreReportHeader result={props.result} />
+            <div class="px-4 pt-3">
+              <RegisterScoreProfileSummary result={props.result} />
+              <RegisterScoreAggregateSummary
+                result={props.result}
+                showTotalHighScore={showTotalHighScore()}
+                showRecordStatistics={showRecordStatistics()}
+                totalHighScoreRowVisibility={totalHighScoreRowVisibility()}
+                statisticRowVisibility={statisticRowVisibility()}
+              />
+              <RegisterScoreChangesSection
+                changes={songChanges()}
+                resolveSongTitle={props.resolveSongTitle}
+                resolveChartLevel={props.resolveChartLevel}
+                emptyMessage={props.changedSongsEmptyMessage}
+                onCopySongTitle={copySongTitle}
+              />
+              <RegisterCourseChangesSection
+                changes={courseChanges()}
+                resolveCourseTitle={props.resolveCourseTitle}
+              />
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   )

@@ -13,6 +13,16 @@ type SongDataByKind = {
   worldsendSongs: WorldsendSongDTO
 }
 
+/** 楽曲キャッシュを最後に一括無効化した世代。 */
+let songCacheGeneration = 0
+
+/**
+ * 非同期取得開始時点の楽曲キャッシュ世代を返す。
+ *
+ * @returns 現在の楽曲キャッシュ世代。
+ */
+export const getSongCacheGeneration = (): number => songCacheGeneration
+
 /**
  * 保存済み楽曲キャッシュが配列順復元に必要な順序情報を持つか判定する。
  *
@@ -92,17 +102,27 @@ export const readCachedWorldsendSongs = async (
  * @param kind - 保存対象の楽曲キャッシュ種別。
  * @param songs - 保存する楽曲一覧。
  * @param songsUpdatedAt - API から取得した楽曲更新日時。
+ * @param expectedGeneration - 一覧取得開始時点の楽曲キャッシュ世代。
  * @returns 保存完了後に解決される Promise。
  */
 const replaceSongCache = async <TKind extends SongCacheKind>(
   kind: TKind,
   songs: SongDataByKind[TKind][],
-  songsUpdatedAt: string | null
+  songsUpdatedAt: string | null,
+  expectedGeneration: number
 ): Promise<void> => {
+  if (expectedGeneration !== songCacheGeneration) {
+    return
+  }
+
   const now = new Date().toISOString()
 
   if (kind === 'songs') {
     await db.transaction('rw', db.songs, db.cacheMetadata, async () => {
+      if (expectedGeneration !== songCacheGeneration) {
+        return
+      }
+
       await db.songs.clear()
       await db.songs.bulkPut(
         (songs as SongDTO[]).map(
@@ -124,6 +144,10 @@ const replaceSongCache = async <TKind extends SongCacheKind>(
   }
 
   await db.transaction('rw', db.worldsendSongs, db.cacheMetadata, async () => {
+    if (expectedGeneration !== songCacheGeneration) {
+      return
+    }
+
     await db.worldsendSongs.clear()
     await db.worldsendSongs.bulkPut(
       (songs as WorldsendSongDTO[]).map(
@@ -148,21 +172,43 @@ const replaceSongCache = async <TKind extends SongCacheKind>(
  *
  * @param songs - 保存する通常楽曲一覧。
  * @param songsUpdatedAt - API から取得した楽曲更新日時。
+ * @param expectedGeneration - 一覧取得開始時点の楽曲キャッシュ世代。
  * @returns 保存完了後に解決される Promise。
  */
 export const replaceCachedSongs = (
   songs: SongDTO[],
-  songsUpdatedAt: string | null
-): Promise<void> => replaceSongCache('songs', songs, songsUpdatedAt)
+  songsUpdatedAt: string | null,
+  expectedGeneration: number = songCacheGeneration
+): Promise<void> => replaceSongCache('songs', songs, songsUpdatedAt, expectedGeneration)
 
 /**
  * WORLD'S END 楽曲一覧キャッシュを保存する。
  *
  * @param songs - 保存する WORLD'S END 楽曲一覧。
  * @param songsUpdatedAt - API から取得した楽曲更新日時。
+ * @param expectedGeneration - 一覧取得開始時点の楽曲キャッシュ世代。
  * @returns 保存完了後に解決される Promise。
  */
 export const replaceCachedWorldsendSongs = (
   songs: WorldsendSongDTO[],
-  songsUpdatedAt: string | null
-): Promise<void> => replaceSongCache('worldsendSongs', songs, songsUpdatedAt)
+  songsUpdatedAt: string | null,
+  expectedGeneration: number = songCacheGeneration
+): Promise<void> => replaceSongCache('worldsendSongs', songs, songsUpdatedAt, expectedGeneration)
+
+/**
+ * 共通の楽曲更新日時に紐づく通常楽曲・WORLD'S END楽曲キャッシュをすべて削除する。
+ *
+ * @returns キャッシュ削除完了後に解決される Promise。
+ */
+export const clearCachedSongData = async (): Promise<void> => {
+  songCacheGeneration += 1
+
+  await db.transaction('rw', db.songs, db.worldsendSongs, db.cacheMetadata, async () => {
+    await Promise.all([
+      db.songs.clear(),
+      db.worldsendSongs.clear(),
+      db.cacheMetadata.delete('songs'),
+      db.cacheMetadata.delete('worldsendSongs'),
+    ])
+  })
+}

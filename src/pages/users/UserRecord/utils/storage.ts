@@ -5,12 +5,16 @@ import {
   updateRecordFilter,
 } from '../../../../api/recordFilters'
 import type { RecordFilterDTO, RecordFilterRequest } from '../../../../types/api'
+import type { FilterState } from '../../../../types/recordFilter'
+import { migrateLegacyComboLampFilters } from '../../../../utils/comboLampFilter'
+import { normalizeFilterState } from '../../../../utils/recordFilterDefaults'
 import type { SavedRecordFilterItem } from '../../components/SavedRecordFiltersDialog'
 import { isValidSavedStandardFilter } from '../../components/savedRecordFilters'
-import { normalizeFilterState } from '../types/filterDefaults'
-import type { FilterState } from '../types/types'
 
-export const SAVED_FILTER_SCHEMA_VERSION = 3
+export const SAVED_FILTER_SCHEMA_VERSION = 6
+const LEGACY_SAVED_FILTER_SCHEMA_VERSION = 3
+const LEGACY_SAVED_FILTER_SCHEMA_VERSION_4 = 4
+const LEGACY_SAVED_FILTER_SCHEMA_VERSION_5 = 5
 const STANDARD_RECORD_FILTER_TYPE = 'standard'
 const INVALID_SCHEMA_MESSAGE = '古い形式のため無効です。'
 const INVALID_FILTER_MESSAGE = '保存値が壊れているため無効です。'
@@ -34,18 +38,32 @@ function isObjectRecord(value: unknown): value is Partial<FilterState> {
  * @returns 画面表示用の保存済み通常フィルター。
  */
 export function toSavedFilter(dto: RecordFilterDTO<unknown>): SavedFilter {
-  const validSchema = dto.schema_version === SAVED_FILTER_SCHEMA_VERSION
-  const validFilter =
+  const validSchema =
+    dto.schema_version === SAVED_FILTER_SCHEMA_VERSION ||
+    dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION ||
+    dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_4 ||
+    dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_5
+  const filter =
     validSchema && isObjectRecord(dto.filter) && isValidSavedStandardFilter(dto.filter)
+      ? dto.filter
+      : null
 
   return {
     id: dto.id,
     name: dto.name,
     schemaVersion: dto.schema_version,
-    filter: validSchema && validFilter ? normalizeFilterState(dto.filter) : null,
-    isValid: validSchema && validFilter,
+    filter: filter
+      ? normalizeFilterState({
+          ...filter,
+          combo_lamp:
+            dto.schema_version === SAVED_FILTER_SCHEMA_VERSION
+              ? filter.combo_lamp
+              : migrateLegacyComboLampFilters(filter.combo_lamp),
+        })
+      : null,
+    isValid: Boolean(filter),
     invalidReason: validSchema
-      ? validFilter
+      ? filter
         ? undefined
         : INVALID_FILTER_MESSAGE
       : INVALID_SCHEMA_MESSAGE,

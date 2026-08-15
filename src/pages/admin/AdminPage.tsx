@@ -1,31 +1,13 @@
-import { A } from '@solidjs/router'
-import { createResource, For, Show } from 'solid-js'
+import { createResource, Show } from 'solid-js'
 import { fetchApiVersion } from '../../api/root'
+import { StaffMenuPage } from '../../components/common/StaffMenuPage'
 import {
   FRONTEND_APP_NAME,
   FRONTEND_BUILD_DATE,
   FRONTEND_COMMIT_HASH,
 } from '../../constants/appBuild'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { formatBuildRevisionLabel } from '../../utils/appVersionLabel'
-
-const links = [
-  {
-    href: '/admin/users',
-    title: 'ユーザー管理',
-    description: 'ユーザー一覧、検索、削除、復活を行います。',
-  },
-  {
-    href: '/admin/songs',
-    title: '楽曲管理',
-    description: '楽曲一覧、編集、削除、復活を行います。',
-  },
-  {
-    href: '/admin/honors',
-    title: '称号管理',
-    description: '称号一覧、クラス、画像URLを確認します。',
-  },
-]
+import { ADMIN_PAGE_COPY, ADMIN_PAGE_LINKS } from './adminPage.constants'
 
 /**
  * 管理者向けの API とフロントエンドのビルド情報を描画する。
@@ -66,28 +48,14 @@ const AdminBuildInfo = () => {
  * @returns 管理メニューUI。
  */
 const AdminPage = () => {
-  useDocumentTitle('管理')
-
   return (
-    <div class="mx-auto w-full max-w-4xl p-6">
-      <h1 class="text-2xl font-semibold">管理ページ</h1>
-      <p class="mt-2 text-sm text-text-muted">管理者向けのメニューです。</p>
-      <AdminBuildInfo />
-
-      <div class="mt-6 grid gap-4 sm:grid-cols-2">
-        <For each={links}>
-          {(link) => (
-            <A
-              href={link.href}
-              class="rounded-lg border border-border bg-surface p-4 shadow-sm transition hover:border-info-border hover:bg-info-bg"
-            >
-              <h2 class="text-lg font-semibold text-text">{link.title}</h2>
-              <p class="mt-1 text-sm text-text-muted">{link.description}</p>
-            </A>
-          )}
-        </For>
-      </div>
-    </div>
+    <StaffMenuPage
+      pageTitle={ADMIN_PAGE_COPY.pageTitle}
+      heading={ADMIN_PAGE_COPY.heading}
+      description={ADMIN_PAGE_COPY.description}
+      links={ADMIN_PAGE_LINKS}
+      supplementaryContent={<AdminBuildInfo />}
+    />
   )
 }
 

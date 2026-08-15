@@ -1,15 +1,22 @@
 import type { Accessor, Setter } from 'solid-js'
 import { createMemo } from 'solid-js'
 import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../../../../types/api'
+import type {
+  FilterState,
+  RecordSortCondition,
+  RecordSortKey,
+} from '../../../../types/recordFilter'
 import {
   attachSongMetaToRecords,
   type PlayerRecordWithSongMeta,
 } from '../../../../utils/recordMerger'
-import type { SortDirection } from '../../recordTable/sortingQuery'
 import { getRecordStats, type RecordStats } from '../../utils/recordStats'
-import type { FilterState, RecordSortKey } from '../types/types'
 import { createRecordTitleMatcher, isRecordMatchedWithTitleMatcher } from './filtering'
-import { nextSortState, sortRecords } from './sorting'
+import {
+  nextPrimaryRecordSortCondition,
+  normalizeRecordSortConditions,
+  sortRecordsByConditions,
+} from './sorting'
 
 /** UserRecordページモデルの入力値 */
 type UserRecordPageModelParams = {
@@ -17,10 +24,9 @@ type UserRecordPageModelParams = {
   versions: Accessor<{ versions: VersionDTO[] } | undefined>
   sourceRecords: Accessor<PlayerRecordDTO[]>
   filters: Accessor<FilterState>
-  sortKey: Accessor<RecordSortKey | null>
-  sortDirection: Accessor<SortDirection | null>
-  setSortKey: Setter<RecordSortKey | null>
-  setSortDirection: Setter<SortDirection | null>
+  favoriteSongIds: Accessor<ReadonlySet<string>>
+  sortConditions: Accessor<RecordSortCondition[]>
+  setSortConditions: Setter<RecordSortCondition[]>
 }
 
 /** UserRecordページモデルが画面へ返す導出値と操作 */
@@ -53,13 +59,14 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
     const records = recordsWithSongMeta()
     const currentFilters = params.filters()
     const matchTitle = createRecordTitleMatcher(currentFilters.title)
+    const favoriteSongIds = params.favoriteSongIds()
     return records.filter((record) =>
-      isRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle)
+      isRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle, favoriteSongIds)
     )
   })
 
   const sortedRecords = createMemo(() => {
-    return sortRecords(filteredRecords(), params.sortKey(), params.sortDirection())
+    return sortRecordsByConditions(filteredRecords(), params.sortConditions())
   })
 
   // 件数表示
@@ -70,13 +77,20 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
   const stats = createMemo(() => getRecordStats(filteredRecords()))
 
   /**
-   * 指定された列へソート状態を進める。
-   * @param nextKey 次にソート対象にする列ID
+   * 指定された列で第1ソート状態を進める。
+   *
+   * @param nextKey - 次に第1ソート対象にする列ID。
+   * @returns なし。
    */
   const handleSortChange = (nextKey: RecordSortKey) => {
-    const nextSort = nextSortState(params.sortKey(), params.sortDirection(), nextKey)
-    params.setSortKey(nextSort.sortKey)
-    params.setSortDirection(nextSort.sortDirection)
+    const nextPrimarySort = nextPrimaryRecordSortCondition(
+      params.sortConditions()[0] ?? null,
+      nextKey
+    )
+
+    params.setSortConditions((currentSortConditions) =>
+      normalizeRecordSortConditions([nextPrimarySort, ...currentSortConditions.slice(1)])
+    )
   }
 
   return {

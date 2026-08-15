@@ -1,22 +1,18 @@
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
-import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
-import { COMBO_LAMP_BAR_CLASS, SCORE_RANK_BAR_CLASS } from '../../components/recordStyleClasses'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
-
-export type OverPowerScoreBand = 'MAX' | 'SSS+' | 'SSS' | 'SS+' | 'SS' | 'S+' | 'S' | 'OTHER'
-export type OverPowerComboBand = 'ALL JUSTICE' | 'FULL COMBO' | 'OTHER'
-
-export type OverPowerBandCount<T extends string> = {
-  label: T
-  count: number
-}
-
-export type OverPowerGraphRow = {
-  summary: OverPowerSummaryRow
-  scoreBands: OverPowerBandCount<OverPowerScoreBand>[]
-  comboBands: OverPowerBandCount<OverPowerComboBand>[]
-}
+import {
+  ALL_JUSTICE_CRITICAL_BG_CLASS,
+  COMBO_LAMP_BAR_CLASS,
+  SCORE_RANK_BAR_CLASS,
+} from '../../../../components/common/record/recordStyleClasses'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
+import { OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES } from '../constants'
+import type {
+  OverPowerBandCount,
+  OverPowerComboBand,
+  OverPowerGraphRow,
+  OverPowerScoreBand,
+} from '../types'
 
 type Props = {
   rows: OverPowerGraphRow[]
@@ -27,7 +23,7 @@ const OVER_POWER_OTHER_BAR_CLASS = SCORE_RANK_BAR_CLASS.未プレイ
 
 /** OVERPOWERグラフのスコア帯ごとの背景色クラス。 */
 const scoreBandClass: Record<OverPowerScoreBand, string> = {
-  MAX: 'bg-success',
+  MAX: ALL_JUSTICE_CRITICAL_BG_CLASS,
   'SSS+': SCORE_RANK_BAR_CLASS['SSS+'],
   SSS: SCORE_RANK_BAR_CLASS.SSS,
   'SS+': SCORE_RANK_BAR_CLASS['SS+'],
@@ -48,7 +44,8 @@ const comboBandClass: Record<OverPowerComboBand, string> = {
 const formatValue = formatOverPowerValue
 
 /** 達成率をグラフ表示用の固定小数点文字列に整形する。 */
-const formatPercent = formatOverPowerPercent
+const formatPercent = (value: number): string =>
+  formatOverPowerPercent(value, OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES)
 
 /** 分布バーの横幅として使う割合を算出する。 */
 const calcBandPercent = (count: number, total: number): number =>
@@ -74,7 +71,7 @@ const DistributionBar: Component<{
       <div class={labelListClass()}>
         <For each={props.bands}>
           {(band) => (
-            <p class="flex min-w-[80px] items-baseline gap-1.5 whitespace-nowrap text-text">
+            <p class="flex min-w-20 items-baseline gap-1.5 whitespace-nowrap text-text">
               <span class="shrink-0 text-xs">{band.label}:</span>
               <span class="shrink-0 text-base font-bold tabular-nums text-text sm:text-lg">
                 {band.count}
@@ -90,7 +87,7 @@ const DistributionBar: Component<{
             const z = () => visibleBands.length - index()
             return (
               <div
-                class={`${props.colorClassByLabel[band.label] ?? 'bg-action-secondary-hover'} relative shadow-[2px_0_3px_-1px_rgba(0,0,0,0.4)]`}
+                class={`${props.colorClassByLabel[band.label] ?? 'bg-action-secondary-hover'} relative ${index() === visibleBands.length - 1 ? '' : 'shadow-[2px_0_3px_-1px_rgba(0,0,0,0.4)]'}`}
                 style={{
                   width: `${calcBandPercent(band.count, props.total)}%`,
                   'z-index': z(),

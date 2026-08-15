@@ -5,7 +5,6 @@ import {
   createResource,
   createSignal,
   ErrorBoundary,
-  For,
   onMount,
   Show,
   Suspense,
@@ -15,61 +14,40 @@ import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import {
   readWorldsendRecordColumnsSetting,
-  readWorldsendRecordFilterSetting,
   saveWorldsendRecordColumnsSetting,
   saveWorldsendRecordFilterSetting,
 } from '../../../repositories/viewSettingsRepository'
 import { useSongsData } from '../../../stores/songsData'
-import type { VersionSummaryDTO, WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
-import {
-  getShortVersionName,
-  resolveVersionNameByReleaseDate,
-} from '../../../utils/versionConverter'
-import { createRecordTableVirtualizer } from '../components/createRecordTableVirtualizer'
+import type { WorldsendRecordDTO } from '../../../types/api'
+import { sanitizeSortQuery } from '../../../utils/sortingQuery'
 import FilterStats from '../components/FilterStats'
-import {
-  type ColumnRenderer,
-  RECORD_ALPHANUMERIC_COLUMN_CLASS,
-  RECORD_CELL_BASE_CLASS,
-  RECORD_CELL_CENTER_TEXT_CLASS,
-  RECORD_ROW_HEIGHT,
-  RECORD_ROW_HOVER_CLASS,
-  RecordFullChainCell,
-  RecordHardLampCell,
-  RecordHeaderButton,
-  RecordJusticeCountCell,
-  RecordLampCell,
-  RecordScoreCell,
-  RecordTitleCell,
-  RecordUpdatedAtCell,
-} from '../components/SharedRecordTableColumns'
-import { isValidSavedWorldsendFilter } from '../components/savedRecordFilters'
-import { type SortDirection, sanitizeSortQuery } from '../recordTable/sortingQuery'
-import { buildWorldsendSongDetailPath } from '../UserPage/worldsendNavigation'
-import { worldsendTableWrapperClass } from '../UserPage/worldsendTableStyles'
-import FilterToolbar from '../UserRecord/components/FilterToolbar'
-import { formatJusticeCountForAj } from '../UserRecord/utils/justiceCountDisplay'
-import { formatUpdatedAt } from '../UserRecord/utils/updatedAt'
+import FilterToolbar from '../components/FilterToolbar'
 import { getRecordStats } from '../utils/recordStats'
 import WorldsendFilterDialog from './components/WorldsendFilterDialog'
+import WorldsendRecordTable from './components/WorldsendRecordTable'
+import WorldsendSortDialog from './components/WorldsendSortDialog'
 import { buildDefaultWorldsendFilter, DEFAULT_WORLDSEND_FILTER } from './types/filterDefaults'
-import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from './types/filterTypes'
+import type { WorldsendFilterState } from './types/filterTypes'
 import {
-  createGridTemplateColumns,
   getDefaultVisibleWorldsendColumnIds,
-  getVisibleWorldsendColumns,
   sanitizeVisibleWorldsendColumnIds,
   type WorldsendRecordColumnId,
   type WorldsendRecordSortKey,
 } from './utils/columns'
+import { isWorldsendFilterOptionsChanged } from './utils/filterDialog'
 import {
   createWorldsendRecordTitleMatcher,
   isWorldsendRecordMatchedWithTitleMatcher,
 } from './utils/filtering'
+import { restoreInitialWorldsendRecordFilter } from './utils/initialFilter'
+import { attachWorldsendSongMetaToRecords } from './utils/songMeta'
 import {
-  nextWorldsendSortState,
+  createInitialWorldsendRecordSortConditions,
+  DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS,
+  nextPrimaryWorldsendRecordSortCondition,
+  normalizeWorldsendRecordSortConditions,
   parseWorldsendSortParams,
-  sortWorldsendRecords,
+  type WorldsendRecordSortCondition,
 } from './utils/sorting'
 import WorldsendColumnSettingsDialog from './WorldsendColumnSettingsDialog'
 
@@ -78,196 +56,6 @@ type Props = {
 }
 
 type WorldsendSortKey = WorldsendRecordSortKey
-
-/**
- * WORLD'S END レコードの初期フィルターを保存済み設定、または既定値から決定する。
- *
- * @param songs - フィルター既定値の構築に使う WORLD'S END 楽曲一覧。
- * @param versions - フィルター既定値の構築に使うバージョン一覧。
- * @returns 初回表示に適用する WORLD'S END フィルター状態。
- */
-const restoreInitialWorldsendRecordFilter = async (
-  songs: WorldsendSongDTO[],
-  versions: VersionSummaryDTO[]
-): Promise<WorldsendFilterState> => {
-  const defaultFilter = buildDefaultWorldsendFilter(songs, versions)
-
-  try {
-    const savedFilter = await readWorldsendRecordFilterSetting()
-    return isValidSavedWorldsendFilter(savedFilter) ? savedFilter : defaultFilter
-  } catch {
-    return defaultFilter
-  }
-}
-
-const worldsendLevelLabel = (levelStar: number | null | undefined) => {
-  if (typeof levelStar !== 'number' || levelStar <= 0) {
-    return '-'
-  }
-
-  return `★${levelStar}`
-}
-
-const attachWorldsendSongMetaToRecords = (
-  songs: WorldsendSongDTO[],
-  records: WorldsendRecordDTO[],
-  versions: VersionSummaryDTO[]
-): WorldsendRecordWithSongMeta[] => {
-  const songMap = new Map(songs.map((song) => [song.id, song]))
-
-  return records.map((record) => {
-    const song = songMap.get(record.id)
-
-    return {
-      ...record,
-      genre: song?.genre ?? null,
-      reading: song?.reading ?? null,
-      release: song?.release ?? null,
-      release_version: getShortVersionName(
-        resolveVersionNameByReleaseDate(song?.release ?? null, versions)
-      ),
-    }
-  })
-}
-
-const worldsendColumnRenderers: Record<
-  WorldsendRecordColumnId,
-  ColumnRenderer<WorldsendRecordWithSongMeta>
-> = {
-  title: (record) => (
-    <RecordTitleCell href={buildWorldsendSongDetailPath(record.id)} title={record.title} />
-  ),
-  attribute: (record) => (
-    <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
-      <span class="inline-block w-full text-center leading-none">{record.attribute ?? '-'}</span>
-    </div>
-  ),
-  level: (record) => (
-    <div class={`${RECORD_CELL_BASE_CLASS} ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}>
-      <span class="inline-block leading-none">{worldsendLevelLabel(record.level_star)}</span>
-    </div>
-  ),
-  score: (record) => <RecordScoreCell record={record} />,
-  lamp: (record) => <RecordLampCell record={record} />,
-  hardLamp: (record) => <RecordHardLampCell record={record} />,
-  fullChain: (record) => <RecordFullChainCell record={record} />,
-  justiceCount: (record) => (
-    <RecordJusticeCountCell
-      record={record}
-      calcJusticeCount={(target) =>
-        formatJusticeCountForAj({
-          comboLamp: target.combo_lamp,
-          justiceCount: target.justice_count,
-        })
-      }
-    />
-  ),
-  updatedAt: (record) => <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />,
-}
-
-const getWorldsendColumnRenderer = (
-  columnId: WorldsendRecordColumnId
-): ColumnRenderer<WorldsendRecordWithSongMeta> => {
-  const renderer = worldsendColumnRenderers[columnId]
-  if (!renderer) throw new Error(`Unknown worldsend column renderer: ${columnId}`)
-  return renderer
-}
-
-const WorldsendRecordTable = (props: {
-  records: WorldsendRecordWithSongMeta[]
-  sortKey: WorldsendSortKey | null
-  sortDirection: SortDirection | null
-  onSortChange: (nextKey: WorldsendSortKey) => void
-  visibleColumnIds: WorldsendRecordColumnId[]
-}) => {
-  const visibleColumns = createMemo(() => getVisibleWorldsendColumns(props.visibleColumnIds))
-  const worldsendGridColumns = createMemo(() => createGridTemplateColumns(visibleColumns()))
-
-  let tableContainerRef: HTMLDivElement | undefined
-  let tableBodyRef: HTMLDivElement | undefined
-
-  const sortedRecords = createMemo(() =>
-    sortWorldsendRecords(props.records, props.sortKey, props.sortDirection)
-  )
-
-  const virtualizedTable = createRecordTableVirtualizer({
-    rowHeight: RECORD_ROW_HEIGHT,
-    rowCount: () => sortedRecords().length,
-    containerRef: () => tableContainerRef,
-    bodyRef: () => tableBodyRef,
-  })
-
-  return (
-    <div class={worldsendTableWrapperClass}>
-      <Show
-        when={props.records.length > 0}
-        fallback={
-          <p class="py-6 text-center text-text-subtle">WORLD'S END のレコードはありません。</p>
-        }
-      >
-        <div
-          ref={tableContainerRef}
-          class="select-none overflow-x-auto overflow-y-hidden rounded-md border border-border"
-        >
-          <div class="w-fit min-w-full">
-            <div class="border-b border-border bg-surface-muted">
-              <div
-                class="grid px-2 text-xs font-semibold"
-                style={{ 'grid-template-columns': worldsendGridColumns() }}
-              >
-                <For each={visibleColumns()}>
-                  {(column) => (
-                    <RecordHeaderButton
-                      label={column.label}
-                      active={props.sortKey === column.sortKey}
-                      direction={props.sortDirection}
-                      align={column.align}
-                      class={column.id === 'title' ? 'justify-start' : 'justify-center'}
-                      onClick={() => props.onSortChange(column.sortKey)}
-                    />
-                  )}
-                </For>
-              </div>
-            </div>
-
-            <div
-              ref={tableBodyRef}
-              class="relative"
-              style={{ height: `${virtualizedTable.getTotalSize()}px` }}
-            >
-              <For each={virtualizedTable.virtualRows()}>
-                {(virtualRow) => {
-                  const record = createMemo(() => sortedRecords()[virtualRow.index])
-
-                  return (
-                    <Show when={record()} keyed>
-                      {(currentRecord) => (
-                        <div
-                          class={`absolute left-0 top-0 grid w-full border-b border-border px-2 text-xs ${RECORD_ROW_HOVER_CLASS}`}
-                          style={{
-                            'grid-template-columns': worldsendGridColumns(),
-                            transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
-                          }}
-                        >
-                          <For each={visibleColumns()}>
-                            {(column) => {
-                              const renderer = getWorldsendColumnRenderer(column.id)
-                              return renderer(currentRecord)
-                            }}
-                          </For>
-                        </div>
-                      )}
-                    </Show>
-                  )
-                }}
-              </For>
-            </div>
-          </div>
-        </div>
-      </Show>
-    </div>
-  )
-}
 
 /**
  * WORLD'S END レコード一覧とフィルター操作 UI を表示する。
@@ -287,6 +75,7 @@ const WorldsendRecord = (props: Props) => {
   })
   const [filterReady, setFilterReady] = createSignal(false)
   const [filterOpen, setFilterOpen] = createSignal(false)
+  const [sortSettingsOpen, setSortSettingsOpen] = createSignal(false)
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
   const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<WorldsendRecordColumnId[]>(
@@ -296,8 +85,9 @@ const WorldsendRecord = (props: Props) => {
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
   const { initialSortKey, initialSortOrder } = parseWorldsendSortParams(searchParams)
-  const [sortKey, setSortKey] = createSignal<WorldsendSortKey | null>(initialSortKey)
-  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(initialSortOrder)
+  const [sortConditions, setSortConditions] = createSignal<WorldsendRecordSortCondition[]>(
+    createInitialWorldsendRecordSortConditions(initialSortKey, initialSortOrder)
+  )
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
   onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
@@ -307,6 +97,10 @@ const WorldsendRecord = (props: Props) => {
 
   const defaultFilter = createMemo(() =>
     buildDefaultWorldsendFilter(worldsendSongs()?.songs ?? [], versionData()?.versions ?? [])
+  )
+  const hasTitleFilterChanges = createMemo(() => filters().title !== defaultFilter().title)
+  const hasFilterOptionChanges = createMemo(() =>
+    isWorldsendFilterOptionsChanged(filters(), defaultFilter())
   )
 
   let filterRestored = false
@@ -345,6 +139,18 @@ const WorldsendRecord = (props: Props) => {
   }
 
   /**
+   * WORLD'S END レコードのフィルターとソート条件を既定値へ戻し、保存済み設定へ反映する。
+   *
+   * @returns なし。
+   */
+  const resetFiltersAndSort = () => {
+    applyFilters(defaultFilter())
+    setSortConditions(
+      DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS.map((condition) => ({ ...condition }))
+    )
+  }
+
+  /**
    * WORLD'S END レコードの表示列設定を画面へ反映し、IndexedDB へ保存する。
    *
    * @param nextVisibleColumnIds - 次に表示する列 ID 配列。
@@ -354,6 +160,23 @@ const WorldsendRecord = (props: Props) => {
     const sanitizedColumnIds = sanitizeVisibleWorldsendColumnIds(nextVisibleColumnIds)
     setVisibleColumnIds(sanitizedColumnIds)
     void saveWorldsendRecordColumnsSetting(sanitizedColumnIds).catch(() => undefined)
+  }
+
+  /**
+   * 指定された列で WORLD'S END レコードの第1ソート状態を進める。
+   *
+   * @param nextKey - 次に第1ソート対象にする列ID。
+   * @returns なし。
+   */
+  const handleSortChange = (nextKey: WorldsendSortKey): void => {
+    const nextPrimarySort = nextPrimaryWorldsendRecordSortCondition(
+      sortConditions()[0] ?? null,
+      nextKey
+    )
+
+    setSortConditions((currentSortConditions) =>
+      normalizeWorldsendRecordSortConditions([nextPrimarySort, ...currentSortConditions.slice(1)])
+    )
   }
 
   const recordsWithSongMeta = createMemo(() => {
@@ -389,7 +212,11 @@ const WorldsendRecord = (props: Props) => {
                 title={filters().title}
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
+                onResetFilter={resetFiltersAndSort}
+                onOpenSortSettings={() => setSortSettingsOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
+                titleActive={hasTitleFilterChanges()}
+                filterActive={hasFilterOptionChanges()}
               />
               {filteredRecords().length > 0 && (
                 <FilterStats
@@ -405,14 +232,9 @@ const WorldsendRecord = (props: Props) => {
 
               <WorldsendRecordTable
                 records={filteredRecords()}
-                sortKey={sortKey()}
-                sortDirection={sortDirection()}
-                onSortChange={(nextKey) => {
-                  const nextSort = nextWorldsendSortState(sortKey(), sortDirection(), nextKey)
-                  setSortKey(nextSort.sortKey)
-                  setSortDirection(nextSort.sortDirection)
-                }}
                 visibleColumnIds={visibleColumnIds()}
+                sortConditions={sortConditions()}
+                onSortChange={handleSortChange}
               />
 
               <WorldsendColumnSettingsDialog
@@ -428,6 +250,13 @@ const WorldsendRecord = (props: Props) => {
                 filters={filters()}
                 onChange={applyFilters}
                 defaultFilter={defaultFilter()}
+              />
+
+              <WorldsendSortDialog
+                open={sortSettingsOpen()}
+                onOpenChange={setSortSettingsOpen}
+                sortConditions={sortConditions()}
+                onApply={setSortConditions}
               />
             </div>
           </Show>

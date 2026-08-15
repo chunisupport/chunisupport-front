@@ -1,11 +1,11 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
-import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
-import { Check, FolderOpen, Pencil, Save, Trash2 } from 'lucide-solid'
+import { Bookmark, Check, Pencil, SavePlus, Trash2 } from 'lucide-solid'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { Loading } from '../../../components'
+import { AppButton, AppIconButton } from '../../../components/common/AppButton'
 import { LOGIN_PATH } from '../../../constants/routes'
 import { authSession } from '../../../stores/authSession'
 import { buildLoginRedirectPath } from '../../../usecases/auth/redirectPath'
@@ -299,30 +299,30 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
   return (
     <>
       <div class="flex items-center gap-2">
-        <Button
-          type="button"
-          class={SAVED_RECORD_FILTER_DIALOG_CLASS.secondaryButton}
-          disabled={!isAuthenticated() || pendingAction() !== null}
-          onClick={handleSaveButtonClick}
-        >
-          <div class="mb-0.5 flex items-center justify-center text-sm">
-            <Save class="mr-1 h-4 w-4" aria-hidden="true" />
-            <div>{SAVED_RECORD_FILTER_DIALOG_TEXT.save}</div>
-          </div>
-        </Button>
-        <Show when={!editingFilter()}>
-          <Button
-            type="button"
-            class={SAVED_RECORD_FILTER_DIALOG_CLASS.secondaryButton}
+        <div class="flex items-center gap-0">
+          <AppButton
+            variant="surface"
+            size="sm"
+            class={`${editingFilter() ? '' : 'rounded-r-none'} h-9`}
             disabled={!isAuthenticated() || pendingAction() !== null}
-            onClick={openListDialog}
+            title={SAVED_RECORD_FILTER_DIALOG_TEXT.save}
+            onClick={handleSaveButtonClick}
+            leftIcon={<SavePlus class="h-4 w-4" aria-hidden="true" />}
           >
-            <div class="mb-0.5 flex items-center justify-center text-sm">
-              <FolderOpen class="mr-1 h-4 w-4" aria-hidden="true" />
-              <div>{SAVED_RECORD_FILTER_DIALOG_TEXT.openList}</div>
-            </div>
-          </Button>
-        </Show>
+            {SAVED_RECORD_FILTER_DIALOG_TEXT.save}
+          </AppButton>
+          <Show when={!editingFilter()}>
+            <AppIconButton
+              class="-ml-px rounded-l-none"
+              disabled={!isAuthenticated() || pendingAction() !== null}
+              aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.openList}
+              title={SAVED_RECORD_FILTER_DIALOG_TEXT.openList}
+              onClick={openListDialog}
+            >
+              <Bookmark class="h-4 w-4" aria-hidden="true" />
+            </AppIconButton>
+          </Show>
+        </div>
         <Show when={shouldShowLoginLink()}>
           <A
             href={loginHref()}
@@ -340,7 +340,11 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
         )}
       </Show>
 
-      <Dialog open={saveNameDialogOpen()} onOpenChange={setSaveNameDialogOpen}>
+      <Dialog
+        open={saveNameDialogOpen()}
+        onOpenChange={setSaveNameDialogOpen}
+        preventScroll={false}
+      >
         <Dialog.Portal>
           <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
           <Dialog.Content class="fixed left-1/2 top-1/2 z-70 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
@@ -369,30 +373,22 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
                 )}
               </Show>
               <div class="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  class={SAVED_RECORD_FILTER_DIALOG_CLASS.secondaryButton}
-                  onClick={() => setSaveNameDialogOpen(false)}
-                >
+                <AppButton onClick={() => setSaveNameDialogOpen(false)}>
                   {SAVED_RECORD_FILTER_DIALOG_TEXT.cancel}
-                </Button>
-                <Button
-                  type="submit"
-                  class={SAVED_RECORD_FILTER_DIALOG_CLASS.primaryButton}
-                  disabled={!canSubmitName()}
-                >
+                </AppButton>
+                <AppButton type="submit" variant="primary" disabled={!canSubmitName()}>
                   {SAVED_RECORD_FILTER_DIALOG_TEXT.save}
-                </Button>
+                </AppButton>
               </div>
             </form>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog>
 
-      <Dialog open={listDialogOpen()} onOpenChange={setListDialogOpen}>
+      <Dialog open={listDialogOpen()} onOpenChange={setListDialogOpen} preventScroll={false}>
         <Dialog.Portal>
           <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
-          <Dialog.Content class="fixed left-1/2 top-1/2 z-70 flex h-[40rem] max-h-[calc(100vh-2rem)] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
+          <Dialog.Content class="fixed left-1/2 top-1/2 z-70 flex h-160 max-h-[calc(100vh-2rem)] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
             <Dialog.Title class="mb-4 shrink-0 text-lg font-bold">
               {SAVED_RECORD_FILTER_DIALOG_TEXT.listTitle}
             </Dialog.Title>
@@ -411,36 +407,31 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
                     <div class="mb-2 grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded border border-border-strong bg-surface-muted p-3">
                       <div class="min-w-0 truncate font-semibold leading-5">{item.name}</div>
                       <div class="flex shrink-0 gap-1">
-                        <Button
-                          type="button"
-                          class={SAVED_RECORD_FILTER_DIALOG_CLASS.iconButton}
+                        <AppIconButton
                           disabled={!item.filter || pendingAction() !== null}
                           aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.apply}
                           title={SAVED_RECORD_FILTER_DIALOG_TEXT.apply}
                           onClick={() => handleApplySavedFilter(item)}
                         >
                           <Check class="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                        <Button
-                          type="button"
-                          class={SAVED_RECORD_FILTER_DIALOG_CLASS.iconButton}
+                        </AppIconButton>
+                        <AppIconButton
                           disabled={!item.filter || pendingAction() !== null}
                           aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.edit}
                           title={SAVED_RECORD_FILTER_DIALOG_TEXT.edit}
                           onClick={() => handleEditSavedFilter(item)}
                         >
                           <Pencil class="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                        <Button
-                          type="button"
-                          class={SAVED_RECORD_FILTER_DIALOG_CLASS.dangerIconButton}
+                        </AppIconButton>
+                        <AppIconButton
+                          tone="danger"
                           disabled={pendingAction() !== null}
                           aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.delete}
                           title={SAVED_RECORD_FILTER_DIALOG_TEXT.delete}
                           onClick={() => setDeleteTarget(item)}
                         >
                           <Trash2 class="h-4 w-4" aria-hidden="true" />
-                        </Button>
+                        </AppIconButton>
                       </div>
                     </div>
                   )}
@@ -460,13 +451,9 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
               )}
             </Show>
             <div class="mt-4 flex shrink-0 justify-end">
-              <Button
-                type="button"
-                class={SAVED_RECORD_FILTER_DIALOG_CLASS.secondaryButton}
-                onClick={() => setListDialogOpen(false)}
-              >
+              <AppButton onClick={() => setListDialogOpen(false)}>
                 {SAVED_RECORD_FILTER_DIALOG_TEXT.close}
-              </Button>
+              </AppButton>
             </div>
           </Dialog.Content>
         </Dialog.Portal>
@@ -491,14 +478,13 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
               <AlertDialog.CloseButton class={SAVED_RECORD_FILTER_DIALOG_CLASS.secondaryButton}>
                 {SAVED_RECORD_FILTER_DIALOG_TEXT.cancel}
               </AlertDialog.CloseButton>
-              <Button
-                type="button"
-                class={SAVED_RECORD_FILTER_DIALOG_CLASS.dangerButton}
+              <AppButton
+                variant="dangerOutline"
                 disabled={pendingAction() !== null}
                 onClick={() => void handleDeleteSavedFilter()}
               >
                 {SAVED_RECORD_FILTER_DIALOG_TEXT.delete}
-              </Button>
+              </AppButton>
             </div>
           </AlertDialog.Content>
         </AlertDialog.Portal>

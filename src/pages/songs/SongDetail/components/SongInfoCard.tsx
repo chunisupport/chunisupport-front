@@ -1,6 +1,7 @@
 import { For } from 'solid-js'
+import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'
 import type { SongDTO } from '../../../../types/api'
-import { difficultyBadgeClass } from '../../../../utils/difficultyUtils'
+import { formatChartConst } from '../../../../utils/chartConstFormat'
 import SongMetaCardLayout, { type SongMetaInfoItem } from '../../components/SongMetaCardLayout'
 
 const fixedColumnClass = 'w-px whitespace-nowrap'
@@ -57,17 +58,24 @@ const SongInfoCard = (props: Props) => {
                   return (
                     <tr class="border-t border-border">
                       <td class={`${fixedCellClass} ${fixedColumnClass}`}>
-                        <div
-                          class={`rounded px-3 py-1 text-center text-xs font-semibold tracking-wide whitespace-nowrap ${difficultyBadgeClass(difficulty.label)}`}
-                        >
-                          {difficulty.label}
-                        </div>
+                        <DifficultyBadge
+                          difficulty={difficulty.label as keyof typeof props.song.charts}
+                        />
                       </td>
                       <td class={`${fixedCellClass} ${fixedColumnClass}`}>
-                        <span class="block whitespace-nowrap">
-                          {chart
-                            ? `${chart.const.toFixed(1)}${chart.is_const_unknown ? '?' : ''}`
-                            : '-'}
+                        <span
+                          class={`block whitespace-nowrap ${chart?.is_const_unknown ? 'opacity-50' : ''}`}
+                        >
+                          {chart ? (
+                            <>
+                              {formatChartConst(chart.const)}
+                              {chart.is_const_unknown ? (
+                                <sup class="text-[0.65em] leading-none">?</sup>
+                              ) : null}
+                            </>
+                          ) : (
+                            '-'
+                          )}
                         </span>
                       </td>
                       <td class={`${fixedCellClass} ${fixedColumnClass}`}>

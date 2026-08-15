@@ -1,3 +1,5 @@
+import { getComboLampFilterValue } from '../../../../utils/comboLampFilter'
+import { isDateInRange } from '../../../../utils/dateFilter'
 import {
   matchesNormalizedSearchQuery,
   normalizeForReadingSearch,
@@ -74,16 +76,19 @@ export function isWorldsendRecordMatchedWithTitleMatcher(
     }
   }
 
-  const comboLamp = record.is_played ? (record.combo_lamp ?? null) : null
-  if (!hasWorldsendJusticeCountFilter(filters) && !filters.combo_lamp.includes(comboLamp)) {
-    return false
-  }
+  const comboLamp = record.is_played
+    ? getComboLampFilterValue(record.combo_lamp ?? null, record.score)
+    : null
+  if (!filters.combo_lamp.includes(comboLamp)) return false
 
   const chainLamp = record.is_played ? (record.full_chain ?? null) : null
   if (!filters.chain_lamp.includes(chainLamp)) return false
 
   const hardLamp = record.is_played ? (record.clear_lamp ?? null) : null
   if (!filters.hard_lamp.includes(hardLamp)) return false
+
+  // 最終更新日
+  if (!isDateInRange(record.updated_at, filters.updatedAt)) return false
 
   return true
 }

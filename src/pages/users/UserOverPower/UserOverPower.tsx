@@ -1,8 +1,5 @@
-import { Button } from '@kobalte/core/button'
-import { Select } from '@kobalte/core/select'
-import * as Tabs from '@kobalte/core/tabs'
 import { useLocation, useNavigate } from '@solidjs/router'
-import { ArrowLeftRight, ChartBarBig, Check, ChevronDown, LockKeyhole, Table2 } from 'lucide-solid'
+import { ArrowLeftRight, ChartBarBig, LockKeyhole, LockKeyholeOpen, Table2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import {
   createMemo,
@@ -16,303 +13,50 @@ import {
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
+import { AppButton } from '../../../components/common/AppButton'
+import { AppSelect } from '../../../components/common/AppSelect'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
-import type {
-  PlayerLockedSongRequest,
-  PlayerRecordDTO,
-  SongDTO,
-  UserRecordDTO,
-  VersionSummaryDTO,
-} from '../../../types/api'
+import type { PlayerLockedSongRequest, UserRecordDTO } from '../../../types/api'
+import {
+  buildOverPowerChartEntries,
+  selectOverPowerChartEntries,
+} from '../../../usecases/overpower/aggregation'
 import { buildLockedSongsBatchPayload } from '../../../usecases/overpower/lockedSongsBatch'
-import {
-  buildOverPowerLockedSongLookup,
-  buildTheoreticalTargetRecordBySongId,
-} from '../../../usecases/overpower/overpowerGraph'
 import { buildOverPowerSummary } from '../../../usecases/overpower/overpowerSummary'
-import type { OverPowerDifficulty } from '../../../usecases/overpower/types'
-import { toChartLevelLabel } from '../../../utils/chartLevel'
-import { getScoreRank, MAX_SCORE } from '../../../utils/scoreRank'
-import {
-  getShortVersionName,
-  resolveVersionNameByReleaseDate,
-} from '../../../utils/versionConverter'
-import { buildUserOverPowerPagePath, type OverPowerSubPage } from '../UserPage/profilePageQuery'
+import type { OverPowerAggregationTarget } from '../../../usecases/overpower/types'
+import { buildUserOverPowerPagePath, type OverPowerSubPage } from '../../../utils/userProfileRoute'
 import LockedSongsDialog from './components/LockedSongsDialog'
-import { OverPowerAllSummary } from './components/OverPowerAllSummary'
-import {
-  type OverPowerComboBand,
-  type OverPowerGraphRow,
-  type OverPowerScoreBand,
-  OverPowerSummaryGraph,
-} from './components/OverPowerSummaryGraph'
+import LowLevelRowsToggle from './components/LowLevelRowsToggle'
+import { OverPowerSummaryGraph } from './components/OverPowerSummaryGraph'
 import { OverPowerSummaryTable } from './components/OverPowerSummaryTable'
+import {
+  DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE,
+  OVER_POWER_AGGREGATION_TARGET_OPTIONS,
+  OVER_POWER_CONTROL_LABELS,
+  OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL,
+  OVER_POWER_SUMMARY_OPTIONS,
+  overPowerSubPageBySummaryTab,
+  overPowerSummaryTabBySubPage,
+} from './constants'
+import type {
+  OverPowerAggregationTargetOption,
+  OverPowerGraphRow,
+  OverPowerSummaryOption,
+  OverPowerSummaryTab,
+  OverPowerSummaryViewMode,
+} from './types'
+import {
+  buildChartRecordsBySummaryTab,
+  buildGraphRows,
+  type RecordsBySummaryTab,
+} from './utils/graphRows'
 
 type Props = {
   record: UserRecordDTO
   selectedSubPage: OverPowerSubPage
   username: string
 }
-
-type OverPowerSummaryTab = 'genres' | 'difficulties' | 'levels' | 'versions'
-type OverPowerSummaryOption = {
-  value: OverPowerSummaryTab
-  label: string
-}
-type OverPowerSummaryViewMode = 'table' | 'graph'
-type LockedSongLookup = {
-  lockedSongIds: Set<string>
-  ultimaLockedSongIds: Set<string>
-}
-type RecordsBySummaryTab = Record<OverPowerSummaryTab, Map<string, PlayerRecordDTO[]>>
-type SongGraphEntry = {
-  song: SongDTO
-  record: PlayerRecordDTO | null
-  versionName: string | null
-}
-type SongEntriesBySummaryTab = Pick<
-  Record<OverPowerSummaryTab, Map<string, SongGraphEntry[]>>,
-  'genres' | 'versions'
-> & {
-  all: Map<string, SongGraphEntry[]>
-}
-
-/** OVERPOWERサマリーを開いたときに最初に表示する表示形式。 */
-const DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE: OverPowerSummaryViewMode = 'graph'
-
-const OVER_POWER_SUMMARY_OPTIONS: OverPowerSummaryOption[] = [
-  { value: 'genres', label: 'ジャンル' },
-  { value: 'difficulties', label: '難易度' },
-  { value: 'levels', label: 'レベル' },
-  { value: 'versions', label: 'バージョン' },
-]
-
-const overPowerSummaryTabBySubPage: Record<OverPowerSubPage, OverPowerSummaryTab> = {
-  genre: 'genres',
-  diff: 'difficulties',
-  level: 'levels',
-  version: 'versions',
-}
-
-const overPowerSubPageBySummaryTab: Record<OverPowerSummaryTab, OverPowerSubPage> = {
-  genres: 'genre',
-  difficulties: 'diff',
-  levels: 'level',
-  versions: 'version',
-}
-
-const OVER_POWER_SCORE_BANDS: OverPowerScoreBand[] = [
-  'MAX',
-  'SSS+',
-  'SSS',
-  'SS+',
-  'SS',
-  'S+',
-  'S',
-  'OTHER',
-]
-const OVER_POWER_COMBO_BANDS: OverPowerComboBand[] = ['ALL JUSTICE', 'FULL COMBO', 'OTHER']
-const ULTIMA_DIFFICULTY: OverPowerDifficulty = 'ULTIMA'
-
-/** レコードが未解禁設定の対象外で、OVERPOWER集計に含められるかを判定する。 */
-const isRecordAvailable = (record: PlayerRecordDTO, lockedLookup: LockedSongLookup): boolean => {
-  if (lockedLookup.lockedSongIds.has(record.id)) return false
-  return !(
-    record.difficulty === ULTIMA_DIFFICULTY && lockedLookup.ultimaLockedSongIds.has(record.id)
-  )
-}
-
-/** 未解禁設定を反映した曲内の最高譜面定数を取得する。 */
-const getHighestAvailableChartConst = (
-  song: SongDTO,
-  lockedLookup: LockedSongLookup
-): number | null => {
-  const chartEntries = Object.entries(song.charts) as [
-    OverPowerDifficulty,
-    SongDTO['charts'][OverPowerDifficulty],
-  ][]
-  const chartConsts = chartEntries
-    .filter(
-      ([difficulty]) =>
-        !(difficulty === ULTIMA_DIFFICULTY && lockedLookup.ultimaLockedSongIds.has(song.id))
-    )
-    .map(([, chart]) => chart?.const)
-    .filter((chartConst): chartConst is number => typeof chartConst === 'number')
-  if (chartConsts.length === 0) return null
-  return Math.max(...chartConsts)
-}
-
-/** 曲数ベースのグラフ分布を作るため、楽曲を表示タブごとに分類する。 */
-const buildSongEntriesBySummaryTab = (
-  songs: SongDTO[],
-  records: PlayerRecordDTO[],
-  versions: VersionSummaryDTO[],
-  lockedLookup: LockedSongLookup
-): SongEntriesBySummaryTab => {
-  const targetRecordBySongId = buildTheoreticalTargetRecordBySongId(songs, records, lockedLookup)
-  const groups: SongEntriesBySummaryTab = {
-    all: new Map(),
-    genres: new Map(),
-    versions: new Map(),
-  }
-
-  for (const song of songs) {
-    if (lockedLookup.lockedSongIds.has(song.id)) continue
-    if (getHighestAvailableChartConst(song, lockedLookup) === null) continue
-
-    const resolvedVersion = resolveVersionNameByReleaseDate(song.release, versions)
-    const baseEntry = {
-      song,
-      versionName: resolvedVersion === '不明' ? null : getShortVersionName(resolvedVersion),
-    }
-    const allEntry: SongGraphEntry = {
-      ...baseEntry,
-      record: targetRecordBySongId.get(song.id) ?? null,
-    }
-    addSongEntryToGroup(groups.all, 'all', allEntry)
-
-    if (song.genre && song.genre !== '不明') {
-      addSongEntryToGroup(groups.genres, song.genre, allEntry)
-    }
-
-    if (allEntry.versionName) {
-      addSongEntryToGroup(groups.versions, allEntry.versionName, allEntry)
-    }
-  }
-
-  return groups
-}
-
-/** グラフのカテゴリ別分布を作るため、レコードを表示タブごとに分類する。 */
-const buildRecordsBySummaryTab = (
-  records: PlayerRecordDTO[],
-  songs: SongDTO[],
-  versions: VersionSummaryDTO[]
-): RecordsBySummaryTab => {
-  const songById = new Map(songs.map((song) => [song.id, song]))
-  const groups: RecordsBySummaryTab = {
-    genres: new Map(),
-    difficulties: new Map(),
-    levels: new Map(),
-    versions: new Map(),
-  }
-
-  for (const record of records) {
-    const song = songById.get(record.id)
-    const levelLabel = toChartLevelLabel(record.const)
-    addRecordToGroup(groups.difficulties, record.difficulty, record)
-    addRecordToGroup(groups.levels, levelLabel, record)
-
-    if (song?.genre && song.genre !== '不明') {
-      addRecordToGroup(groups.genres, song.genre, record)
-    }
-
-    const resolvedVersion = resolveVersionNameByReleaseDate(song?.release ?? null, versions)
-    if (resolvedVersion !== '不明') {
-      addRecordToGroup(groups.versions, getShortVersionName(resolvedVersion), record)
-    }
-  }
-
-  return groups
-}
-
-/** Map内のレコード配列へ対象レコードを追加する。 */
-const addRecordToGroup = (
-  groups: Map<string, PlayerRecordDTO[]>,
-  key: string,
-  record: PlayerRecordDTO
-) => {
-  const group = groups.get(key) ?? []
-  group.push(record)
-  groups.set(key, group)
-}
-
-/** Map内の曲エントリ配列へ対象曲を追加する。 */
-const addSongEntryToGroup = (
-  groups: Map<string, SongGraphEntry[]>,
-  key: string,
-  entry: SongGraphEntry
-) => {
-  const group = groups.get(key) ?? []
-  group.push(entry)
-  groups.set(key, group)
-}
-
-/** スコアからグラフ表示用のランク帯を取得する。 */
-const getScoreBand = (record: PlayerRecordDTO): OverPowerScoreBand => {
-  if (!record.is_played) return 'OTHER'
-  if (record.score >= MAX_SCORE) return 'MAX'
-
-  const rank = getScoreRank(record.score)
-  if (
-    rank === 'SSS+' ||
-    rank === 'SSS' ||
-    rank === 'SS+' ||
-    rank === 'SS' ||
-    rank === 'S+' ||
-    rank === 'S'
-  ) {
-    return rank
-  }
-
-  return 'OTHER'
-}
-
-/** 曲数ベース集計用に、代表レコードがない曲をOTHER扱いでランク帯へ分類する。 */
-const getSongScoreBand = (entry: SongGraphEntry): OverPowerScoreBand =>
-  entry.record ? getScoreBand(entry.record) : 'OTHER'
-
-/** コンボランプからグラフ表示用のランプ帯を取得する。 */
-const getComboBand = (record: PlayerRecordDTO): OverPowerComboBand => {
-  if (record.combo_lamp === 'ALL JUSTICE') return 'ALL JUSTICE'
-  if (record.combo_lamp === 'FULL COMBO') return 'FULL COMBO'
-  return 'OTHER'
-}
-
-/** 曲数ベース集計用に、代表レコードがない曲をOTHER扱いでランプ帯へ分類する。 */
-const getSongComboBand = (entry: SongGraphEntry): OverPowerComboBand =>
-  entry.record ? getComboBand(entry.record) : 'OTHER'
-
-/** グラフ表示に必要なランク・コンボ分布をサマリー行へ付与する。 */
-const buildGraphRows = (
-  rows: OverPowerGraphRow['summary'][],
-  recordsByLabel: Map<string, PlayerRecordDTO[]>
-): OverPowerGraphRow[] =>
-  rows.map((summary) => {
-    const records = recordsByLabel.get(summary.id) ?? recordsByLabel.get(summary.label) ?? []
-    return {
-      summary,
-      scoreBands: OVER_POWER_SCORE_BANDS.map((label) => ({
-        label,
-        count: records.filter((record) => getScoreBand(record) === label).length,
-      })),
-      comboBands: OVER_POWER_COMBO_BANDS.map((label) => ({
-        label,
-        count: records.filter((record) => getComboBand(record) === label).length,
-      })),
-    }
-  })
-
-/** 曲数ベースのランク・コンボ分布をサマリー行へ付与する。 */
-const buildSongBasedGraphRows = (
-  rows: OverPowerGraphRow['summary'][],
-  entriesByLabel: Map<string, SongGraphEntry[]>
-): OverPowerGraphRow[] =>
-  rows.map((summary) => {
-    const entries = entriesByLabel.get(summary.id) ?? entriesByLabel.get(summary.label) ?? []
-    return {
-      summary,
-      scoreBands: OVER_POWER_SCORE_BANDS.map((label) => ({
-        label,
-        count: entries.filter((entry) => getSongScoreBand(entry) === label).length,
-      })),
-      comboBands: OVER_POWER_COMBO_BANDS.map((label) => ({
-        label,
-        count: entries.filter((entry) => getSongComboBand(entry) === label).length,
-      })),
-    }
-  })
 
 /**
  * ユーザーのOVERPOWERサマリーと分布グラフを表示する。
@@ -327,6 +71,13 @@ const UserOverPower: Component<Props> = (props) => {
   const [summaryViewMode, setSummaryViewMode] = createSignal<OverPowerSummaryViewMode>(
     DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE
   )
+  const [lowLevelRowsExpanded, setLowLevelRowsExpanded] = createSignal(false)
+  const selectedSummaryTab = createMemo<OverPowerSummaryTab>(
+    () => overPowerSummaryTabBySubPage[props.selectedSubPage]
+  )
+  const [aggregationTarget, setAggregationTarget] =
+    createSignal<OverPowerAggregationTarget>('OP_TARGET')
+  const [excludeLockedSongs, setExcludeLockedSongs] = createSignal(true)
   const canManageLockedSongs = createMemo(
     () => authSession.status === 'authenticated' && authSession.user?.username === props.username
   )
@@ -342,13 +93,21 @@ const UserOverPower: Component<Props> = (props) => {
     ensureSongsLoaded()
   })
 
-  const selectedSummaryTab = createMemo<OverPowerSummaryTab>(
-    () => overPowerSummaryTabBySubPage[props.selectedSubPage]
-  )
-  const selectedSummaryOption = createMemo(
-    () =>
-      OVER_POWER_SUMMARY_OPTIONS.find((option) => option.value === selectedSummaryTab()) ??
-      OVER_POWER_SUMMARY_OPTIONS[0]
+  const allChartEntries = createMemo(() => {
+    const songs = allSongs()
+    const versions = versionData()
+    const currentLockedSongs = lockedSongs()
+    if (!songs || !versions || !currentLockedSongs) return []
+    return buildOverPowerChartEntries(
+      songs.songs,
+      props.record.standard,
+      versions.versions,
+      excludeLockedSongs() ? currentLockedSongs.items : []
+    )
+  })
+
+  const filteredChartEntries = createMemo(() =>
+    selectOverPowerChartEntries(allChartEntries(), aggregationTarget())
   )
 
   const summary = createMemo(() => {
@@ -361,70 +120,62 @@ const UserOverPower: Component<Props> = (props) => {
       songs.songs,
       props.record.standard,
       versions.versions,
-      currentLockedSongs.items,
-      md.genres
+      excludeLockedSongs() ? currentLockedSongs.items : [],
+      md.genres,
+      aggregationTarget()
     )
   })
 
   const highLevelRows = createMemo(() => summary()?.levels.filter((row) => !row.isLowLevel) ?? [])
-  const availableRecords = createMemo(() => {
-    const currentLockedSongs = lockedSongs()
-    if (!currentLockedSongs) return []
-
-    const lockedLookup = buildOverPowerLockedSongLookup(currentLockedSongs.items)
-    return props.record.standard.filter((record) => isRecordAvailable(record, lockedLookup))
-  })
+  const lowLevelRows = createMemo(() => summary()?.levels.filter((row) => row.isLowLevel) ?? [])
+  const displayedLevelRows = createMemo(() =>
+    lowLevelRowsExpanded() ? (summary()?.levels ?? []) : highLevelRows()
+  )
+  const lowLevelChartCount = createMemo(() =>
+    lowLevelRows().reduce((sum, row) => sum + row.count, 0)
+  )
   const graphRecordsByTab = createMemo<RecordsBySummaryTab | undefined>(() => {
-    const songs = allSongs()
-    const versions = versionData()
-    if (!songs || !versions) return undefined
-    return buildRecordsBySummaryTab(availableRecords(), songs.songs, versions.versions)
-  })
-  const graphSongEntriesByTab = createMemo<SongEntriesBySummaryTab | undefined>(() => {
-    const songs = allSongs()
-    const versions = versionData()
-    const currentLockedSongs = lockedSongs()
-    if (!songs || !versions || !currentLockedSongs) return undefined
-
-    const lockedLookup = buildOverPowerLockedSongLookup(currentLockedSongs.items)
-    return buildSongEntriesBySummaryTab(
-      songs.songs,
-      availableRecords(),
-      versions.versions,
-      lockedLookup
-    )
+    return buildChartRecordsBySummaryTab(filteredChartEntries())
   })
   const allGraphRows = createMemo<OverPowerGraphRow[]>(() => {
     const currentSummary = summary()
-    const songGroups = graphSongEntriesByTab()
-    if (!currentSummary || !songGroups) return []
-    return buildSongBasedGraphRows([currentSummary.all], songGroups.all)
+    const recordGroups = graphRecordsByTab()
+    if (!currentSummary || !recordGroups) return []
+    return buildGraphRows([currentSummary.all], recordGroups.all)
   })
   const genreGraphRows = createMemo<OverPowerGraphRow[]>(() => {
     const currentSummary = summary()
-    const songGroups = graphSongEntriesByTab()
-    if (!currentSummary || !songGroups) return []
-    return buildSongBasedGraphRows(currentSummary.genres, songGroups.genres)
-  })
-  const difficultyGraphRows = createMemo<OverPowerGraphRow[]>(() => {
-    const currentSummary = summary()
     const recordGroups = graphRecordsByTab()
     if (!currentSummary || !recordGroups) return []
-    return buildGraphRows(currentSummary.difficulties, recordGroups.difficulties)
+    return buildGraphRows(currentSummary.genres, recordGroups.genres)
   })
   const levelGraphRows = createMemo<OverPowerGraphRow[]>(() => {
     const recordGroups = graphRecordsByTab()
     if (!recordGroups) return []
-    return buildGraphRows(highLevelRows(), recordGroups.levels)
+    return buildGraphRows(displayedLevelRows(), recordGroups.levels)
   })
   const versionGraphRows = createMemo<OverPowerGraphRow[]>(() => {
     const currentSummary = summary()
-    const songGroups = graphSongEntriesByTab()
-    if (!currentSummary || !songGroups) return []
-    return buildSongBasedGraphRows(currentSummary.versions, songGroups.versions)
+    const recordGroups = graphRecordsByTab()
+    if (!currentSummary || !recordGroups) return []
+    return buildGraphRows(currentSummary.versions, recordGroups.versions)
   })
-  const iconButtonClass =
-    'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-disabled-text'
+  const selectedSummaryOption = createMemo(
+    () =>
+      OVER_POWER_SUMMARY_OPTIONS.find((option) => option.value === selectedSummaryTab()) ??
+      OVER_POWER_SUMMARY_OPTIONS[0]
+  )
+  const selectedAggregationTargetOption = createMemo(
+    () =>
+      OVER_POWER_AGGREGATION_TARGET_OPTIONS.find(
+        (option) => option.value === aggregationTarget()
+      ) ?? OVER_POWER_AGGREGATION_TARGET_OPTIONS[0]
+  )
+  const countLabel = createMemo(() =>
+    aggregationTarget() === 'OP_TARGET'
+      ? OVER_POWER_CONTROL_LABELS.songCount
+      : OVER_POWER_CONTROL_LABELS.chartCount
+  )
   const lockedSongsButtonDisabled = createMemo(
     () => !canManageLockedSongs() || !allSongs() || lockedSongs.loading
   )
@@ -437,21 +188,49 @@ const UserOverPower: Component<Props> = (props) => {
     setSummaryViewMode(nextSummaryViewMode())
   }
 
-  const handleSummaryTabChange = (option: OverPowerSummaryOption | null) => {
+  /** レベル別集計の低レベル帯表示を切り替える。 */
+  const handleToggleLowLevelRows = () => {
+    setLowLevelRowsExpanded((expanded) => !expanded)
+  }
+
+  /**
+   * 表示軸を更新し、対応するOVER POWERサブページへ遷移する。
+   *
+   * @param option - 選択された表示軸。選択解除時はnull。
+   * @returns なし。
+   */
+  const handleSummaryTabChange = (option: OverPowerSummaryOption | null): void => {
     if (!option) return
 
     const queryParams = new URLSearchParams(location.search)
     queryParams.delete('page')
     const queryString = queryParams.toString()
-    const normalizedPath = buildUserOverPowerPagePath(
+    const path = buildUserOverPowerPagePath(
       props.username,
       overPowerSubPageBySummaryTab[option.value]
     )
-
-    navigate(`${normalizedPath}${queryString ? `?${queryString}` : ''}${location.hash}`)
+    navigate(`${path}${queryString ? `?${queryString}` : ''}${location.hash}`)
   }
 
-  const handleSaveLockedSongs = async (nextLockedSongs: PlayerLockedSongRequest[]) => {
+  /**
+   * OVER POWERの集計対象を更新する。
+   *
+   * @param option - 選択された集計対象。選択解除時はnull。
+   * @returns なし。
+   */
+  const handleAggregationTargetChange = (option: OverPowerAggregationTargetOption | null): void => {
+    if (option) setAggregationTarget(option.value)
+  }
+
+  /**
+   * 未解禁楽曲設定の差分を保存し、保存後に設定を再取得する。
+   *
+   * @param nextLockedSongs - 次に保存する未解禁楽曲設定一覧。
+   * @returns 保存処理の完了を表すPromise。
+   */
+  const handleSaveLockedSongs = async (
+    nextLockedSongs: PlayerLockedSongRequest[]
+  ): Promise<void> => {
     const currentLockedSongs = lockedSongs()?.items
     if (!currentLockedSongs) return
 
@@ -475,139 +254,172 @@ const UserOverPower: Component<Props> = (props) => {
         >
           <Show when={summary()} fallback={<Loading />}>
             {(currentSummary) => (
-              <div class="mx-4 flex flex-col gap-4 text-sm">
-                <Tabs.Root value={selectedSummaryTab()}>
-                  <div class="flex items-center justify-between gap-3">
-                    <div class="min-w-0 shrink">
-                      <Select<OverPowerSummaryOption>
-                        options={OVER_POWER_SUMMARY_OPTIONS}
-                        optionValue="value"
-                        optionTextValue="label"
-                        value={selectedSummaryOption()}
-                        onChange={handleSummaryTabChange}
-                        placeholder="ジャンル"
-                        itemComponent={(itemProps) => (
-                          <Select.Item
-                            item={itemProps.item}
-                            class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg-hover data-[highlighted]:bg-success-bg-hover data-[selected]:bg-success-bg data-[selected]:hover:bg-success-bg-hover data-[selected]:data-[highlighted]:bg-success-bg-hover"
-                          >
-                            <div class="flex items-center gap-2">
-                              <span class="inline-flex w-4 justify-center text-success">
-                                <Select.ItemIndicator>
-                                  <Check size={14} />
-                                </Select.ItemIndicator>
-                              </span>
-                              <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
-                            </div>
-                          </Select.Item>
-                        )}
+              <div class="mx-4 flex flex-col 0 text-sm">
+                <div class="flex flex-wrap items-center justify-between gap-x-1.5 gap-y-2">
+                  <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0">
+                    <AppSelect<OverPowerSummaryOption>
+                      options={OVER_POWER_SUMMARY_OPTIONS}
+                      optionValue="value"
+                      optionTextValue="label"
+                      value={selectedSummaryOption()}
+                      onChange={handleSummaryTabChange}
+                      placeholder="ジャンル"
+                      rootClass="w-full sm:w-28"
+                      triggerClass="h-10 text-text-muted"
+                      contentZIndexClass="z-50"
+                      formatLabel={(option) => option.label}
+                    />
+                    <AppSelect<OverPowerAggregationTargetOption>
+                      options={OVER_POWER_AGGREGATION_TARGET_OPTIONS}
+                      optionValue="value"
+                      optionTextValue="label"
+                      value={selectedAggregationTargetOption()}
+                      onChange={handleAggregationTargetChange}
+                      placeholder={OVER_POWER_CONTROL_LABELS.aggregationTarget}
+                      rootClass="w-full sm:w-44"
+                      triggerClass="h-10 text-text-muted"
+                      triggerId="over-power-aggregation-target"
+                      contentZIndexClass="z-50"
+                      formatLabel={(option) => option.label}
+                    />
+                  </div>
+
+                  <div class="ml-auto flex w-full items-center justify-between gap-1 sm:w-auto sm:justify-start">
+                    <AppButton
+                      variant="surface"
+                      size="sm"
+                      shape="pill"
+                      class="h-10 min-w-16 focus-visible:ring-offset-2"
+                      aria-label={`${
+                        nextSummaryViewMode() === 'graph'
+                          ? OVER_POWER_CONTROL_LABELS.graph
+                          : OVER_POWER_CONTROL_LABELS.table
+                      }表示に切り替え`}
+                      title={`${
+                        nextSummaryViewMode() === 'graph'
+                          ? OVER_POWER_CONTROL_LABELS.graph
+                          : OVER_POWER_CONTROL_LABELS.table
+                      }表示に切り替え`}
+                      onClick={handleToggleSummaryViewMode}
+                    >
+                      <ArrowLeftRight class="h-4 w-4" aria-hidden="true" />
+                      <Show
+                        when={nextSummaryViewMode() === 'graph'}
+                        fallback={<Table2 class="h-4 w-4" aria-hidden="true" />}
                       >
-                        <Select.Trigger class="grid w-[200px] min-w-20 max-w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm font-medium text-text-muted">
-                          <Select.Value<OverPowerSummaryOption> class="truncate">
-                            {(state) => <span>{state.selectedOption()?.label ?? 'ジャンル'}</span>}
-                          </Select.Value>
-                          <span class="justify-self-end text-text-subtle" aria-hidden="true">
-                            <ChevronDown size={16} />
-                          </span>
-                        </Select.Trigger>
-                        <Select.Portal>
-                          <Select.Content class="z-50 mt-1 max-h-64 w-(--kb-select-content-width) overflow-auto rounded border border-border bg-surface shadow-md">
-                            <Select.Listbox />
-                          </Select.Content>
-                        </Select.Portal>
-                      </Select>
-                    </div>
-                    <div class="flex shrink-0 items-center gap-2">
-                      <Button
-                        type="button"
-                        class="inline-flex h-10 min-w-16 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-3 text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
-                        aria-label={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
-                        title={`${nextSummaryViewMode() === 'graph' ? 'グラフ' : 'テーブル'}表示に切り替え`}
-                        onClick={handleToggleSummaryViewMode}
+                        <ChartBarBig class="h-4 w-4" aria-hidden="true" />
+                      </Show>
+                    </AppButton>
+
+                    <div class="flex shrink-0 items-center gap-1">
+                      <AppButton
+                        variant={excludeLockedSongs() ? 'primary' : 'surface'}
+                        size="sm"
+                        shape="pill"
+                        class="h-10 w-35 whitespace-nowrap focus-visible:ring-offset-2"
+                        aria-pressed={excludeLockedSongs()}
+                        onClick={() => setExcludeLockedSongs((excluded) => !excluded)}
+                        rightIcon={<LockKeyholeOpen class="h-5 w-5" aria-hidden="true" />}
                       >
-                        <ArrowLeftRight class="h-4 w-4" aria-hidden="true" />
-                        <Show
-                          when={nextSummaryViewMode() === 'graph'}
-                          fallback={<Table2 class="h-4 w-4" aria-hidden="true" />}
-                        >
-                          <ChartBarBig class="h-4 w-4" aria-hidden="true" />
-                        </Show>
-                      </Button>
-                      <Button
-                        type="button"
-                        class={`${iconButtonClass} whitespace-nowrap`}
-                        aria-label="未解禁楽曲設定"
-                        title="未解禁楽曲設定"
+                        <span>{OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL}</span>
+                      </AppButton>
+                      <AppButton
+                        variant="surface"
+                        size="sm"
+                        shape="pill"
+                        class="h-10 whitespace-nowrap focus-visible:ring-offset-2"
+                        aria-label={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
+                        title={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
                         disabled={lockedSongsButtonDisabled()}
                         onClick={() => setLockedSongsDialogOpen(true)}
+                        rightIcon={<LockKeyhole class="h-5 w-5" aria-hidden="true" />}
                       >
-                        <span>未解禁曲</span>
-                        <LockKeyhole class="h-5 w-5" aria-hidden="true" />
-                      </Button>
+                        <span>{OVER_POWER_CONTROL_LABELS.lockedSongs}</span>
+                      </AppButton>
                     </div>
                   </div>
+                </div>
 
+                <div class="mt-4">
+                  <Show
+                    when={summaryViewMode() === 'graph'}
+                    fallback={
+                      <OverPowerSummaryTable
+                        rows={[currentSummary().all]}
+                        countLabel={countLabel()}
+                      />
+                    }
+                  >
+                    <OverPowerSummaryGraph rows={allGraphRows()} />
+                  </Show>
+                </div>
+
+                <Show when={selectedSummaryTab() === 'genres'}>
                   <div class="mt-4">
-                    <Show
-                      when={summaryViewMode() === 'graph'}
-                      fallback={<OverPowerAllSummary summary={currentSummary().all} />}
-                    >
-                      <OverPowerSummaryGraph rows={allGraphRows()} />
-                    </Show>
-                  </div>
-
-                  <Tabs.Content value="genres" class="mt-4">
-                    <Show
-                      when={summaryViewMode() === 'graph'}
-                      fallback={
-                        <OverPowerSummaryTable rows={currentSummary().genres} countLabel="曲数" />
-                      }
-                    >
-                      <OverPowerSummaryGraph rows={genreGraphRows()} />
-                    </Show>
-                  </Tabs.Content>
-
-                  <Tabs.Content value="difficulties" class="mt-4">
                     <Show
                       when={summaryViewMode() === 'graph'}
                       fallback={
                         <OverPowerSummaryTable
-                          rows={currentSummary().difficulties}
-                          countLabel="譜面数"
+                          rows={currentSummary().genres}
+                          countLabel={countLabel()}
                         />
                       }
                     >
-                      <OverPowerSummaryGraph rows={difficultyGraphRows()} />
+                      <OverPowerSummaryGraph rows={genreGraphRows()} />
                     </Show>
-                  </Tabs.Content>
+                  </div>
+                </Show>
 
-                  <Tabs.Content value="levels" class="mt-4">
+                <Show when={selectedSummaryTab() === 'levels'}>
+                  <div class="mt-4">
+                    <Show when={lowLevelRows().length > 0}>
+                      <div class="mb-4">
+                        <LowLevelRowsToggle
+                          expanded={lowLevelRowsExpanded()}
+                          chartCount={lowLevelChartCount()}
+                          onClick={handleToggleLowLevelRows}
+                        />
+                      </div>
+                    </Show>
                     <Show
                       when={summaryViewMode() === 'graph'}
                       fallback={
-                        <OverPowerSummaryTable rows={highLevelRows()} countLabel="譜面数" />
+                        <div id="over-power-low-level-summary">
+                          <OverPowerSummaryTable
+                            rows={displayedLevelRows()}
+                            countLabel={countLabel()}
+                          />
+                        </div>
                       }
                     >
-                      <OverPowerSummaryGraph rows={levelGraphRows()} />
+                      <div id="over-power-low-level-summary">
+                        <OverPowerSummaryGraph rows={levelGraphRows()} />
+                      </div>
                     </Show>
-                  </Tabs.Content>
+                  </div>
+                </Show>
 
-                  <Tabs.Content value="versions" class="mt-4">
+                <Show when={selectedSummaryTab() === 'versions'}>
+                  <div class="mt-4">
                     <Show
                       when={summaryViewMode() === 'graph'}
                       fallback={
-                        <OverPowerSummaryTable rows={currentSummary().versions} countLabel="曲数" />
+                        <OverPowerSummaryTable
+                          rows={currentSummary().versions}
+                          countLabel={countLabel()}
+                        />
                       }
                     >
                       <OverPowerSummaryGraph rows={versionGraphRows()} />
                     </Show>
-                  </Tabs.Content>
-                </Tabs.Root>
+                  </div>
+                </Show>
 
                 <Show when={canManageLockedSongs() && allSongs() && lockedSongs()}>
                   <LockedSongsDialog
                     open={lockedSongsDialogOpen()}
                     songs={allSongs()?.songs ?? []}
+                    records={props.record.standard}
                     genres={masterData()?.genres ?? []}
                     versions={versionData()?.versions ?? []}
                     lockedSongs={lockedSongs()?.items ?? []}

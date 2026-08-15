@@ -1,11 +1,5 @@
 import { Show } from 'solid-js'
-
-import {
-  difficultyBadgeClass,
-  difficultyShort,
-  difficultyToQueryValue,
-} from '../../../../utils/difficultyUtils'
-import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import { RecordDifficultyBadge } from '../../../../components/common/record/RecordBadges'
 import {
   type ColumnRenderer,
   RECORD_CELL_BASE_CLASS,
@@ -17,17 +11,19 @@ import {
   RecordScoreCell,
   RecordTitleCell,
   RecordUpdatedAtCell,
-} from '../../components/SharedRecordTableColumns'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
-import type { RecordColumnId } from '../types/types'
-import { getConstDisplay, getRatingDisplay } from './constDisplay'
-import { formatJusticeCountForAj } from './justiceCountDisplay'
-import { formatUpdatedAt } from './updatedAt'
+} from '../../../../components/common/record/RecordDisplayParts'
+import type { RecordColumnId } from '../../../../types/recordFilter'
+import { toChartLevelLabel } from '../../../../utils/chartLevel'
+import { getConstDisplay, getRatingDisplay } from '../../../../utils/constDisplay'
+import { difficultyToQueryValue } from '../../../../utils/difficultyUtils'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
+import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import { formatUpdatedAt } from '../../../../utils/recordUpdatedAt'
+import { formatJusticeCountForAj } from '../../utils/justiceCountDisplay'
 
-const DIFFICULTY_BADGE_CLASS =
-  'inline-flex h-6 w-7 items-center justify-center rounded-lg px-1 text-sm font-bold leading-none'
 const DIFFICULTY_COLUMN_CLASS = `${RECORD_CELL_BASE_CLASS} font-oswald text-sm font-semibold`
 
+/** 通常レコードの列IDごとのセル描画処理。 */
 export const recordColumnRenderers: Record<
   RecordColumnId,
   ColumnRenderer<PlayerRecordWithSongMeta>
@@ -40,8 +36,13 @@ export const recordColumnRenderers: Record<
   ),
   difficulty: (record) => (
     <div class={DIFFICULTY_COLUMN_CLASS}>
-      <span class={`${DIFFICULTY_BADGE_CLASS} ${difficultyBadgeClass(record.difficulty)}`}>
-        {difficultyShort(record.difficulty)}
+      <RecordDifficultyBadge difficulty={record.difficulty} />
+    </div>
+  ),
+  level: (record) => (
+    <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+      <span class="inline-block w-full text-center leading-none">
+        {toChartLevelLabel(record.const)}
       </span>
     </div>
   ),

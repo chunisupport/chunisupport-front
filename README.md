@@ -27,35 +27,41 @@ Solid.js + Rsbuild をベースに、CHUNITHM プレイデータの閲覧・管�
 
 ## 必要要件
 
-- Node.js 20 以上（推奨）
-- npm
+- Node.js 24 以上
+- pnpm
 
 ## セットアップ
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## 開発コマンド
 
 ```bash
 # 開発サーバー起動
-npm run dev
+pnpm dev
 
 # 本番ビルド
-npm run build
+pnpm build
 
 # ビルド結果のプレビュー
-npm run preview
+pnpm preview
 
 # Lint + Format（自動修正あり）
-npm run check
+pnpm check
 
 # CI 用チェック（自動修正なし）
-npm run check:ci
+pnpm check:ci
+
+# 型チェック
+pnpm typecheck
+
+# 品質チェック一括実行
+pnpm verify
 
 # 単体テスト
-npm run test:unit
+pnpm test:unit
 ```
 
 ## ディレクトリ構成（抜粋）
@@ -76,21 +82,23 @@ src/
 変更時は次のコマンドを実行してください。
 
 ```bash
-npm run check:ci
-npm run build
+pnpm verify
 ```
 
-必要に応じて単体テストも実行してください。
+個別に確認する場合は次のコマンドを実行してください。
 
 ```bash
-npm run test:unit
+pnpm check:ci
+pnpm typecheck
+pnpm build
+pnpm test:unit
 ```
 
 ## OSSライセンス
 
 本プロジェクトで使用しているサードパーティ製ソフトウェアのライセンス情報は、
 リポジトリルートの `THIRD-PARTY-NOTICES.txt` に集約されています。
-依存関係を更新した場合は必ず `npm run licenses:generate` を実行し、
+依存関係を更新した場合は必ず `pnpm licenses:generate` を実行し、
 ファイルを更新した上でコミットしてください（CIで差分チェックを行っています）。
 
 ## 関連資料

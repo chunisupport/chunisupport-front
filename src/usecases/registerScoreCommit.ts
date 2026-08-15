@@ -1,9 +1,26 @@
+import { PLAYER_DATA_STATISTICS_DIFFICULTIES } from '../constants/difficulty'
 import type {
-  PlayerDataDifficulty,
+  PlayerDataMetricDiffs,
   PlayerDataNumberDiff,
   PlayerDataResult,
+  PlayerDataStatisticsDifficulty,
   PlayerDataStatisticsGroup,
+  PlayerDataUpdateResult,
+  SkippedRecord,
 } from '../types/api'
+
+/** 旧保存形式を正規化した、すべての項目を必ず持つメトリクス差分。 */
+type NormalizedPlayerDataMetricDiffs = Required<PlayerDataMetricDiffs>
+
+/** 旧保存形式を正規化した、メトリクス差分を必ず持つ更新結果。 */
+export type NormalizedPlayerDataUpdateResult = Omit<PlayerDataUpdateResult, 'metric_diffs'> & {
+  metric_diffs: NormalizedPlayerDataMetricDiffs
+}
+
+/** 画面表示用に正規化した登録結果。 */
+export type NormalizedPlayerDataResult = NormalizedPlayerDataUpdateResult & {
+  skipped_records: SkippedRecord[]
+}
 
 type RegisterScoreCommitDependencies = {
   commitPlayerData: (uploadToken: string) => Promise<PlayerDataResult>
@@ -17,19 +34,29 @@ type RegisterScoreCommitInput = {
 }
 
 type RegisterScoreCommitResult = {
-  result: PlayerDataResult
+  result: NormalizedPlayerDataResult
 }
-
-const PLAYER_DATA_DIFFICULTIES: readonly PlayerDataDifficulty[] = [
-  'BASIC',
-  'ADVANCED',
-  'EXPERT',
-  'MASTER',
-  'ULTIMA',
-]
 
 /** 数値差分のゼロ値を生成する。 */
 const createEmptyDiff = (): PlayerDataNumberDiff => ({ before: 0, after: 0, delta: 0 })
+
+/**
+ * nullableな小数差分の空値を生成する。
+ *
+ * @returns 更新前後と差分がすべてnullの値。
+ */
+const createEmptyFloat64Diff = () => ({ before: null, after: null, delta: null })
+
+/**
+ * 旧保存形式に補完するメトリクス差分の空値を生成する。
+ *
+ * @returns レート、OVER POWER値、OP%を空差分で初期化した値。
+ */
+const createEmptyMetricDiffs = (): NormalizedPlayerDataMetricDiffs => ({
+  rating: createEmptyFloat64Diff(),
+  overpower_value: createEmptyFloat64Diff(),
+  overpower_percent: createEmptyFloat64Diff(),
+})
 
 /** 統計グループのゼロ値を生成する。 */
 const createEmptyStatisticsGroup = (): PlayerDataStatisticsGroup => ({
@@ -72,22 +99,31 @@ const normalizeStatisticsGroup = (
 /**
  * APIレスポンスの配列フィールドを画面で扱いやすい形へ正規化する。
  *
- * @param result - スコア登録APIから返却された登録結果。
- * @returns 差分配列、スキップ配列、固定難易度の統計が常に表示可能な登録結果。
+ * @param result - スコア登録APIまたは保存済み最新更新結果APIから返却された更新結果。
+ * @returns 差分配列、スキップ配列、固定統計グループが常に表示可能な登録結果。
  */
-export const normalizePlayerDataResult = (result: PlayerDataResult): PlayerDataResult => {
+export const normalizePlayerDataResult = (
+  result: PlayerDataUpdateResult & { skipped_records?: SkippedRecord[] }
+): NormalizedPlayerDataResult => {
+  const emptyMetricDiffs = createEmptyMetricDiffs()
   const byDifficulty = Object.fromEntries(
-    PLAYER_DATA_DIFFICULTIES.map((difficulty) => [
+    PLAYER_DATA_STATISTICS_DIFFICULTIES.map((difficulty) => [
       difficulty,
       normalizeStatisticsGroup(result.statistics?.by_difficulty?.[difficulty]),
     ])
-  ) as Record<PlayerDataDifficulty, PlayerDataStatisticsGroup>
+  ) as Record<PlayerDataStatisticsDifficulty, PlayerDataStatisticsGroup>
 
   return {
     ...result,
     statistics: {
       overall: normalizeStatisticsGroup(result.statistics?.overall),
       by_difficulty: byDifficulty,
+    },
+    metric_diffs: {
+      rating: result.metric_diffs?.rating ?? emptyMetricDiffs.rating,
+      overpower_value: result.metric_diffs?.overpower_value ?? emptyMetricDiffs.overpower_value,
+      overpower_percent:
+        result.metric_diffs?.overpower_percent ?? emptyMetricDiffs.overpower_percent,
     },
     changes: Array.isArray(result.changes) ? result.changes : [],
     skipped_records: Array.isArray(result.skipped_records) ? result.skipped_records : [],
@@ -102,7 +138,7 @@ export const normalizePlayerDataResult = (result: PlayerDataResult): PlayerDataR
  * @returns 戻り値はありません。
  */
 export const requestChangedSongMasters = (
-  result: PlayerDataResult,
+  result: PlayerDataUpdateResult,
   dependencies: Pick<
     RegisterScoreCommitDependencies,
     'ensureSongsLoaded' | 'ensureWorldsendSongsLoaded'

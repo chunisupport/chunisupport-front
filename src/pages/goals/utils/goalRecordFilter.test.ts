@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
+import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
 import type { PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
 import { isRecordMatched } from '../../users/UserRecord/utils/filtering'
 import { buildGoalRecordFilter, isGoalRecordNavigationEnabled } from './goalRecordFilter'
@@ -35,11 +36,14 @@ const VERSIONS: VersionDTO[] = [
  */
 const createGoal = (overrides: Partial<GoalDTO> = {}): GoalDTO => ({
   id: 1,
+  group_id: null,
   title: 'SSを目指す',
   achievement_type: 'score_count',
   achievement_params: { score: 1000000, count: 1 },
   attributes: {},
-  invert: false,
+  invert_value: false,
+  invert_percentage: false,
+  sort_order: 1,
   created_at: '2026-01-01T00:00:00Z',
   ...overrides,
 })
@@ -112,6 +116,22 @@ test('属性未指定時は全難易度・全定数・全ジャンル・全バ�
   assert.deepEqual(filter.versions, [])
 })
 
+test('属性が空配列の場合はレコード遷移を無効にし、どの譜面にも一致しない条件にする', () => {
+  // Given
+  const goal = createGoal({
+    attributes: { diff: [], genre: [], ver: [] },
+  })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.deepEqual(filter.difficulties, [])
+  assert.deepEqual(filter.genres, [])
+  assert.deepEqual(filter.versions, [])
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+})
+
 test('スコア件数目標では目標スコア未満の譜面だけに一致する', () => {
   // Given
   const filter = buildGoalRecordFilter(createGoal(), MASTER_DATA, VERSIONS)
@@ -160,6 +180,54 @@ test('コンボランプ目標では要求ランプ未満の譜面だけに一�
   assert.equal(isRecordMatched(createRecord({ combo_lamp: 'ALL JUSTICE' }), filter), false)
 })
 
+test('不正なハードランプ値ではレコード遷移を無効にし、フィルター変換で例外を投げない', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'hardlamp_count',
+    achievement_params: { lamp: 'OLD', count: 1 } as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+  const defaultFilter = buildDefaultFilter(MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  assert.deepEqual(filter.hard_lamp, defaultFilter.hard_lamp)
+})
+
+test('不正なコンボランプ値ではレコード遷移を無効にし、フィルター変換で例外を投げない', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'combolamp_count',
+    achievement_params: { lamp: 'OLD', count: 1 } as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+  const defaultFilter = buildDefaultFilter(MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  assert.deepEqual(filter.combo_lamp, defaultFilter.combo_lamp)
+})
+
+test('ランプ目標の成果パラメータ形式が不正でもフィルター変換で例外を投げない', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'hardlamp_count',
+    achievement_params: null as unknown as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+  const defaultFilter = buildDefaultFilter(MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  assert.deepEqual(filter.hard_lamp, defaultFilter.hard_lamp)
+})
+
 test('未プレイ譜面を未達成としてフィルターに含める', () => {
   // Given
   const filter = buildGoalRecordFilter(createGoal(), MASTER_DATA, VERSIONS)
@@ -173,6 +241,24 @@ test('未プレイ譜面を未達成としてフィルターに含める', () =>
   // Then
   assert.equal(filter.excludeNoPlay, false)
   assert.equal(matched, true)
+})
+
+test('虹枠目標ではAJ以外の通常譜面を未達成として表示する', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'rainbow_count',
+    achievement_params: {},
+    attributes: { genre: 10, ver: 2 },
+  })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), true)
+  assert.equal(isRecordMatched(createRecord({ combo_lamp: null }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ combo_lamp: 'FULL COMBO' }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ combo_lamp: 'ALL JUSTICE' }), filter), false)
 })
 
 test('集計系目標ではレコード遷移を無効にする', () => {

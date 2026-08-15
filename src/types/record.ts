@@ -1,0 +1,40 @@
+import type { PlayerDataDifficulty, PlayerRecordDTO } from './api'
+
+/** プレイヤーレコードで扱う難易度。 */
+export type Difficulty = PlayerDataDifficulty
+
+/** プレイヤーレコードで扱うコンボランプ。 */
+export type ComboLamp = PlayerRecordDTO['combo_lamp']
+
+/** レコードフィルターで扱うコンボランプ。 */
+export type ComboLampFilter = ComboLamp | 'ALL JUSTICE CRITICAL'
+
+/** プレイヤーレコードで扱うFULL CHAINランプ。 */
+export type ChainLamp = PlayerRecordDTO['full_chain']
+
+/** プレイヤーレコードで扱うハードランプ。 */
+export type HardLamp = PlayerRecordDTO['clear_lamp']
+
+/**
+ * 下限と上限を持つ日付範囲フィルター。
+ *
+ * 空文字列は「未指定（フィルタリングしない）」を意味する。
+ * @property min - 範囲の下限日付 (YYYY-MM-DD)。
+ * @property max - 範囲の上限日付 (YYYY-MM-DD)。
+ */
+export type DateRangeFilter = {
+  min: string
+  max: string
+}
+
+/**
+ * 下限と上限を持つ数値範囲フィルター。
+ *
+ * @template T - 範囲端に許可する数値型。未指定を許す場合は number | null。
+ * @property min - 範囲の下限値。
+ * @property max - 範囲の上限値。
+ */
+export type NumericRangeFilter<T extends number | null = number> = {
+  min: T
+  max: T
+}

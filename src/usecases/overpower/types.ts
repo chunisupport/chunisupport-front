@@ -1,5 +1,6 @@
-import type { PlayerRecordDTO } from '../../types/api'
+import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO } from '../../types/api'
 import type { ChartLevelLabel } from '../../utils/chartLevel'
+import type { OverPowerMasterUltimaTarget } from './constants'
 
 export type OverPowerCategory = 'genre' | 'level' | 'version' | 'difficulty'
 
@@ -22,12 +23,29 @@ export type OverPowerSummary = {
   genres: OverPowerSummaryRow[]
   levels: OverPowerLevelSummaryRow[]
   versions: OverPowerSummaryRow[]
-  difficulties: OverPowerSummaryRow[]
 }
 
-export type OverPowerDifficulty = PlayerRecordDTO['difficulty']
+export type OverPowerDifficulty = PlayerDataDifficulty
+
+/** OVER POWER画面で選択できる曲単位または譜面単位の集計対象。 */
+export type OverPowerAggregationTarget =
+  | OverPowerDifficulty
+  | OverPowerMasterUltimaTarget
+  | 'OP_TARGET'
+  | 'ALL'
 
 export type OverPowerLockedSong = {
   display_id: string
   is_ultima: boolean
+}
+
+/** 楽曲マスタを基準に生成した譜面単位の集計エントリ。 */
+export type OverPowerChartEntry = {
+  song: SongDTO
+  difficulty: OverPowerDifficulty
+  chartConst: number
+  maxOverPower: number
+  level: ChartLevelLabel
+  versionName: string | null
+  record: PlayerRecordDTO | null
 }

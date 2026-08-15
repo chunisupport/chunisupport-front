@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
 import { normalizeWorldsendFilterState } from '../types/filterDefaults.ts'
 import type { WorldsendRecordWithSongMeta } from '../types/filterTypes.ts'
 import {
@@ -119,4 +120,61 @@ test("WORLD'S END フィルターはスコア・JUSTICE数・ランプ・未プ�
   // Then: 条件を満たすプレイ済みレコードだけが残る。
   assert.equal(matched, true)
   assert.equal(noPlayed, false)
+})
+
+test("WORLD'S END フィルターはJUSTICE数指定中もAJCのコンボランプ条件を適用する", () => {
+  // Given: JUSTICE数が範囲内にあるAJCと通常AJ、およびAJCだけを選択したフィルター。
+  const filters = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: 4, max: 4 },
+    justiceCount: { min: 0, max: 5 },
+    combo_lamp: ['ALL JUSTICE CRITICAL'],
+  })
+  const allJusticeCritical = createRecord({
+    combo_lamp: 'ALL JUSTICE',
+    score: MAX_SCORE,
+    justice_count: 0,
+  })
+  const allJustice = createRecord({
+    combo_lamp: 'ALL JUSTICE',
+    score: MAX_SCORE - 1,
+    justice_count: 2,
+  })
+
+  // When: JUSTICE数とコンボランプの複合条件でレコードを判定する。
+  const criticalMatched = isWorldsendRecordMatchedWithTitleMatcher(
+    allJusticeCritical,
+    filters,
+    matcher()
+  )
+  const justiceMatched = isWorldsendRecordMatchedWithTitleMatcher(allJustice, filters, matcher())
+
+  // Then: 両方の条件を満たすAJCだけが残る。
+  assert.equal(criticalMatched, true)
+  assert.equal(justiceMatched, false)
+})
+
+test("WORLD'S END フィルターはALL JUSTICE CRITICALをコンボランプ条件として判定できる", () => {
+  // Given: AJC だけを選択したフィルター。
+  const filters = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: 4, max: 4 },
+    combo_lamp: ['ALL JUSTICE CRITICAL'],
+  })
+
+  // When: 理論値と非理論値の ALL JUSTICE レコードをフィルターする。
+  const matched = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ combo_lamp: 'ALL JUSTICE', score: MAX_SCORE }),
+    filters,
+    matcher()
+  )
+  const nonCritical = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ combo_lamp: 'ALL JUSTICE', score: MAX_SCORE - 1 }),
+    filters,
+    matcher()
+  )
+
+  // Then: 理論値の ALL JUSTICE だけが一致する。
+  assert.equal(matched, true)
+  assert.equal(nonCritical, false)
 })

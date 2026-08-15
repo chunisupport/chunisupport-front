@@ -3,13 +3,17 @@ import { createMemo, createResource, Show } from 'solid-js'
 import { fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
 import { LoadError } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { authSession } from '../../../stores/authSession'
 import type { WorldsendSongDTO } from '../../../types/api'
+import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
+import { fetchUserWorldsendSongRecordWithCache } from '../../../usecases/cache/fetchUserSongRecordWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
 import NotFoundPage from '../../NotFoundPage'
 import SongDetailLayout from '../components/SongDetailLayout'
 import { useSongDetailBase } from '../components/useSongDetailBase'
+import OwnScoreCard, { type OwnScoreItem } from '../SongDetail/components/OwnScoreCard'
 import SongStatsTabs from '../SongDetail/components/SongStatsTabs'
-import { getWorldsendTitleMeta } from '../worldsendDetailModel'
+import { buildWorldsendOwnScoreItem, getWorldsendTitleMeta } from '../worldsendDetailModel'
 import WorldsendSongInfoCard from './components/WorldsendSongInfoCard'
 import { getWorldsendDisplayIdSource } from './worldsendRouteParams'
 
@@ -62,9 +66,33 @@ const WorldsendSongDetail = () => {
     const state = songState()
     return state?.type === 'error' ? state.error : undefined
   })
-  const { songVersionName, handleBack } = useSongDetailBase(() => song())
+  const { masterData, songVersionName, handleBack } = useSongDetailBase(() => song())
   const [stats] = createResource(displayIdSource, (displayId) =>
     fetchSongStats(displayId, worldsendDifficulty[0].value)
+  )
+  const [ownRating] = createResource(
+    () => (authSession.status === 'authenticated' ? authSession.user?.username : null),
+    fetchUserRatingWithCache
+  )
+  const [ownRecords] = createResource(
+    () => {
+      const username =
+        authSession.status === 'authenticated' ? authSession.user?.username : undefined
+      const displayId = displayIdSource()
+      return username && displayId ? { username, displayId } : null
+    },
+    ({ username, displayId }) => fetchUserWorldsendSongRecordWithCache(username, displayId)
+  )
+  const ownBestAverage = createMemo(() => ownRating()?.best_average)
+  /** 表示中の楽曲に対応するログインユーザーの WORLD'S END レコードを取得する。 */
+  const ownRecord = createMemo(() => ownRecords())
+  /** WORLD'S END の自己スコアカード表示項目を構築する。 */
+  const ownScoreItems = createMemo<OwnScoreItem[]>(() => [buildWorldsendOwnScoreItem(ownRecord())])
+  /** 統計表との比較に使うログインユーザーのプレイ済みスコアを取得する。 */
+  const ownScore = createMemo(() =>
+    authSession.status === 'authenticated' && ownRecord()?.is_played
+      ? ownRecord()?.score
+      : undefined
   )
 
   const titleMeta = createMemo(() => {
@@ -87,8 +115,15 @@ const WorldsendSongDetail = () => {
           renderInfoCard={(currentSong) => (
             <WorldsendSongInfoCard song={currentSong} versionName={songVersionName()} />
           )}
-          renderStats={() => (
+          renderStats={(currentSong) => (
             <>
+              <Show when={authSession.status === 'authenticated'}>
+                <OwnScoreCard
+                  displayId={currentSong.id}
+                  items={ownScoreItems()}
+                  loading={ownRecords.loading}
+                />
+              </Show>
               <Show when={stats.error} keyed>
                 {(err) => <LoadError error={err} />}
               </Show>
@@ -98,6 +133,9 @@ const WorldsendSongDetail = () => {
                   readonlyDifficulty={worldsendDifficulty[0].value}
                   stats={stats()}
                   isStatsLoading={stats.loading}
+                  bestAverage={ownBestAverage()}
+                  ratingBands={masterData()?.rating_bands}
+                  ownScore={ownScore()}
                 />
               </Show>
             </>

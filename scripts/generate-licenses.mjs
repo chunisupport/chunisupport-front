@@ -6,7 +6,7 @@
  * - プロジェクト固有のヘッダーを先頭に付与
  * - リポジトリルートと public/ の両方に出力（配布物にも含めるため）
  *
- * 実行: npm run licenses:generate
+ * 実行: pnpm licenses:generate
  */
 
 import { execFileSync } from 'node:child_process'

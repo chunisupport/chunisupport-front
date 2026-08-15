@@ -1,0 +1,405 @@
+import { Image } from '@kobalte/core/image'
+import { Play } from 'lucide-solid'
+import type { Component, JSX } from 'solid-js'
+import { createSignal, For, Show } from 'solid-js'
+import placeholderImageUrl from '../../../../assets/placeholder.png'
+import {
+  COMBO_LAMP_SCORE_ACCENT_CLASS,
+  SCORE_RANK_TEXT_CLASS,
+} from '../../../../components/common/record/recordStyleClasses'
+import { getHonorTypeClassName } from '../../../../constants/honors'
+import type { HonorDTO, PlayerDTO, PlayerRecordDTO, UserRatingDTO } from '../../../../types/api'
+import { getConstDisplay } from '../../../../utils/constDisplay'
+import { difficultyCardBorderColor } from '../../../../utils/difficultyUtils'
+import { buildChunithmJacketUrl } from '../../../../utils/jacket'
+import { formatInteger } from '../../../../utils/numberFormat'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
+import { getRankingPositionClass } from '../../../../utils/rankingPosition'
+import { formatNullablePlayerRating, formatRatingFixed2 } from '../../../../utils/ratingFormat'
+import { getScoreRank } from '../../../../utils/scoreRank'
+import {
+  RATING_IMAGE_COPY,
+  RATING_IMAGE_WIDTH_PX,
+  RATING_SLOT_COUNT,
+} from '../UserProfileView.constants'
+import { UserRecordPlaceholderCard } from './UserRecordPlaceholderCard'
+
+type RatingImageSheetProps = {
+  /** 画像上部へ表示するプレイヤー情報。 */
+  playerInfo: PlayerDTO
+  /** 画像上部へ表示する称号。 */
+  honors: HonorDTO[]
+  /** ベスト枠・新曲枠と集計値。 */
+  rating: UserRatingDTO
+  /** カード背景へジャケット画像を表示するかどうか。 */
+  showJackets: boolean
+  /** 画像化対象のルート要素を受け取るコールバック。 */
+  captureRef: (element: HTMLDivElement) => void
+  /** ジャケット画像ごとの準備状態を通知するコールバック。 */
+  onJacketReadyChange: (key: string, ready: boolean) => void
+}
+
+type RatingImageRecordCardProps = {
+  /** 表示対象のレコード。 */
+  record: PlayerRecordDTO
+  /** 一覧内の0始まりインデックス。 */
+  index: number
+  /** カード背景へジャケット画像を表示するかどうか。 */
+  showJackets: boolean
+  /** 画像化対象内でジャケット画像を識別するキー。 */
+  jacketKey: string
+  /** ジャケット画像の準備状態を通知するコールバック。 */
+  onJacketReadyChange: (key: string, ready: boolean) => void
+}
+
+type RatingImageColumnProps = {
+  /** 枠見出し。 */
+  heading: string
+  /** 枠の平均レーティング。 */
+  average: number | null
+  /** 枠へ採用されたレコード。 */
+  records: PlayerRecordDTO[]
+  /** 枠の規定件数。 */
+  slotCount: number
+  /** カード背景へジャケット画像を表示するかどうか。 */
+  showJackets: boolean
+  /** 枠を識別するキー。 */
+  columnKey: 'best' | 'new'
+  /** ジャケット画像の準備状態を通知するコールバック。 */
+  onJacketReadyChange: (key: string, ready: boolean) => void
+}
+
+type JacketLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error'
+
+/** ジャケット画像の再取得時にキャッシュキーへ使用するクエリ名。 */
+const JACKET_RETRY_QUERY_PARAM = 'retry'
+
+/**
+ * プロフィール画像へ表示する代表称号を取得する。
+ *
+ * @param honors - APIから取得した称号一覧。
+ * @returns 1枠目を優先した代表称号。称号がない場合はundefined。
+ */
+const getPrimaryHonor = (honors: HonorDTO[]): HonorDTO | undefined =>
+  honors.find((honor) => honor.slot === 1) ?? honors[0]
+
+/**
+ * ジャケット画像をキャッシュから切り離して再取得するURLを生成する。
+ *
+ * @param sourceUrl - 最初の取得に失敗したジャケット画像URL。
+ * @returns 現在時刻を再試行キーとして付与したURL。
+ */
+const buildJacketRetryUrl = (sourceUrl: string): string => {
+  const retryUrl = new URL(sourceUrl)
+  retryUrl.searchParams.set(JACKET_RETRY_QUERY_PARAM, Date.now().toString())
+  return retryUrl.toString()
+}
+
+/**
+ * レーティング枠画像用の静的レコードカードを表示する。
+ *
+ * @param props - レコード、順位、ジャケット表示設定。
+ * @returns 画像化時にリンクやアニメーションを含まないレコードカード。
+ */
+const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => {
+  const [jacketLoadingStatus, setJacketLoadingStatus] = createSignal<JacketLoadingStatus>('idle')
+  const scoreRank = () => getScoreRank(props.record.score)
+  const indexColor = () => getRankingPositionClass(props.index + 1, 'bg-surface-hover')
+  const jacketUrl = () => buildChunithmJacketUrl(props.record.img)
+  const [jacketSource, setJacketSource] = createSignal(jacketUrl())
+  const constDisplay = () => getConstDisplay(props.record.const, props.record.is_const_unknown)
+  const unknownValueClass = () => (props.record.is_const_unknown ? 'text-danger' : 'text-text')
+  /** @returns コンボランプがある場合はスコアへ重ねるアクセントバーの背景クラス。 */
+  const comboLampScoreAccentClass = () =>
+    props.record.combo_lamp ? COMBO_LAMP_SCORE_ACCENT_CLASS[props.record.combo_lamp] : undefined
+  let fallbackLoaded = false
+  let retried = false
+
+  /**
+   * 元ジャケットの読み込み状態を反映し、表示可能になったカードを通知する。
+   *
+   * @param status - Kobalte Imageが通知した読み込み状態。
+   * @returns なし。
+   */
+  const handleJacketLoadingStatusChange = (status: JacketLoadingStatus): void => {
+    if (status === 'error' && !retried) {
+      const sourceUrl = jacketUrl()
+      if (sourceUrl) {
+        retried = true
+        setJacketLoadingStatus('loading')
+        props.onJacketReadyChange(props.jacketKey, false)
+        setJacketSource(buildJacketRetryUrl(sourceUrl))
+        return
+      }
+    }
+
+    setJacketLoadingStatus(status)
+
+    if (status === 'error' && fallbackLoaded) {
+      props.onJacketReadyChange(props.jacketKey, true)
+      return
+    }
+
+    props.onJacketReadyChange(props.jacketKey, false)
+  }
+
+  /**
+   * DOMへ追加された元ジャケットのデコード完了後に準備完了を通知する。
+   *
+   * @param event - 読み込みを完了したジャケット画像のイベント。
+   * @returns なし。
+   */
+  const handleJacketLoad: JSX.EventHandlerUnion<HTMLImageElement, Event> = (event): void => {
+    void event.currentTarget
+      .decode()
+      .catch(() => undefined)
+      .then(() => props.onJacketReadyChange(props.jacketKey, true))
+  }
+
+  /**
+   * プレースホルダーの読み込み完了を記録し、元画像が失敗済みなら準備完了を通知する。
+   *
+   * @param event - 読み込みを完了したプレースホルダー画像のイベント。
+   * @returns なし。
+   */
+  const handleFallbackLoad: JSX.EventHandlerUnion<HTMLImageElement, Event> = (event): void => {
+    void event.currentTarget
+      .decode()
+      .catch(() => undefined)
+      .then(() => {
+        fallbackLoaded = true
+        if (jacketLoadingStatus() === 'error') {
+          props.onJacketReadyChange(props.jacketKey, true)
+        }
+      })
+  }
+
+  return (
+    <div
+      class={`relative isolate h-16 select-none overflow-hidden border-y border-r border-border bg-surface p-1.5 pl-4 before:absolute before:inset-y-0 before:left-0 before:z-20 before:w-2 ${difficultyCardBorderColor(
+        props.record.difficulty
+      )}`}
+    >
+      <Show when={props.showJackets && jacketUrl()}>
+        {(url) => (
+          <Image
+            class="pointer-events-none absolute inset-y-0 right-0 z-0 block w-1/2 overflow-hidden [mask-image:linear-gradient(to_right,transparent_0%,black_33%)]"
+            aria-hidden="true"
+            onLoadingStatusChange={handleJacketLoadingStatusChange}
+          >
+            <Image.Img
+              crossOrigin="anonymous"
+              src={jacketSource() ?? url()}
+              alt=""
+              class="h-full w-full object-cover object-center opacity-15"
+              onLoad={handleJacketLoad}
+            />
+            <Image.Fallback class="block h-full w-full">
+              <img
+                src={placeholderImageUrl}
+                alt=""
+                class="h-full w-full object-cover object-center opacity-15"
+                onLoad={handleFallbackLoad}
+              />
+            </Image.Fallback>
+          </Image>
+        )}
+      </Show>
+      <div class="relative z-10 flex h-full items-center gap-1">
+        <div
+          class={`mr-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${indexColor()} font-oswald text-2xl font-bold leading-none`}
+        >
+          {props.index + 1}
+        </div>
+        <p class="min-w-0 flex-1 truncate whitespace-nowrap font-sans text-xl font-semibold leading-tight">
+          {props.record.title}
+        </p>
+        <div class="flex w-21 shrink-0 flex-col items-end justify-center whitespace-nowrap text-right font-oswald leading-none">
+          <span
+            class={`relative inline-block text-xl font-bold ${SCORE_RANK_TEXT_CLASS[scoreRank()]}`}
+          >
+            <span class="relative z-10">{formatInteger(props.record.score)}</span>
+            <Show when={comboLampScoreAccentClass()}>
+              {(accentClass) => (
+                <span
+                  class={`absolute inset-x-0 bottom-px h-1.5 ${accentClass()}`}
+                  aria-hidden="true"
+                />
+              )}
+            </Show>
+          </span>
+          <span class={`text-xl font-bold ${unknownValueClass()}`}>
+            {constDisplay().valueText}
+            <Show when={constDisplay().markerText}>
+              {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
+            </Show>
+          </span>
+        </div>
+        <Play
+          class="h-3 w-3 shrink-0 text-text-muted"
+          fill="currentColor"
+          strokeWidth={0}
+          aria-hidden="true"
+        />
+        <div
+          class={`min-w-12.5 shrink-0 whitespace-nowrap text-right font-oswald text-2xl font-bold leading-none ${unknownValueClass()}`}
+        >
+          {formatRatingFixed2(props.record.rating)}
+          <Show when={constDisplay().markerText}>
+            {(marker) => <sup class="align-super text-[0.6em]">{marker()}</sup>}
+          </Show>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * レーティング画像へ1種類の採用枠と空き枠を縦に表示する。
+ *
+ * @param props - 見出し、平均値、採用レコード、規定件数、ジャケット表示設定。
+ * @returns ベスト枠または新曲枠の列。
+ */
+const RatingImageColumn: Component<RatingImageColumnProps> = (props) => {
+  /**
+   * 規定件数へ足りない空き枠のインデックスを返す。
+   *
+   * @returns 実レコードの末尾から始まる0始まりインデックス。
+   */
+  const emptySlotIndexes = (): number[] =>
+    Array.from(
+      { length: Math.max(props.slotCount - props.records.length, 0) },
+      (_, index) => props.records.length + index
+    )
+
+  return (
+    <section class="min-w-0">
+      <div class="mb-3 flex items-baseline justify-between gap-3 border-b-2 border-border-strong pb-2">
+        <h2 class="whitespace-nowrap text-xl font-bold text-text">{props.heading}</h2>
+        <p class="whitespace-nowrap font-jost text-base font-medium text-text-muted">
+          {RATING_IMAGE_COPY.averageLabel}{' '}
+          <strong class="text-lg text-text">{formatNullablePlayerRating(props.average)}</strong>
+        </p>
+      </div>
+      <ol class="flex list-none flex-col gap-2">
+        <For each={props.records.slice(0, props.slotCount)}>
+          {(record, index) => (
+            <li>
+              <RatingImageRecordCard
+                record={record}
+                index={index()}
+                showJackets={props.showJackets}
+                jacketKey={`${props.columnKey}-${index()}`}
+                onJacketReadyChange={props.onJacketReadyChange}
+              />
+            </li>
+          )}
+        </For>
+        <For each={emptySlotIndexes()}>
+          {(index) => (
+            <li>
+              <UserRecordPlaceholderCard index={index} />
+            </li>
+          )}
+        </For>
+      </ol>
+    </section>
+  )
+}
+
+/**
+ * プレビューとJPEG出力で共有するベスト枠・新曲枠画像本体を表示する。
+ *
+ * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定、参照コールバック。
+ * @returns 固定論理幅の縦長画像レイアウト。
+ */
+export const RatingImageSheet: Component<RatingImageSheetProps> = (props) => {
+  const primaryHonor = () => getPrimaryHonor(props.honors)
+  const overPowerValue = () =>
+    props.playerInfo.overpower_value === null
+      ? '-'
+      : formatOverPowerValue(props.playerInfo.overpower_value)
+  const overPowerPercent = () =>
+    props.playerInfo.overpower_percent === null
+      ? '-'
+      : formatOverPowerPercent(props.playerInfo.overpower_percent)
+
+  return (
+    <div
+      ref={props.captureRef}
+      class="box-border bg-bg px-6 py-5 font-sans text-text"
+      style={{ width: `${RATING_IMAGE_WIDTH_PX}px` }}
+    >
+      <header class="mx-auto w-full max-w-xl rounded-lg border border-border bg-surface px-5 py-4 shadow-sm">
+        <Show when={primaryHonor()}>
+          {(honor) => (
+            <div
+              class={`rating-image-honor-title user-honor-title mx-auto mb-3 ${getHonorTypeClassName(honor().type_name)}`}
+            >
+              <span class="user-honor-title__text truncate">{honor().name}</span>
+            </div>
+          )}
+        </Show>
+        <div class="flex items-baseline justify-center gap-4">
+          <p class="whitespace-nowrap font-jost text-lg font-medium">
+            Lv. {props.playerInfo.level}
+          </p>
+          <h1 class="min-w-0 truncate text-center font-sans text-2xl font-bold">
+            {props.playerInfo.name}
+          </h1>
+        </div>
+        <dl class="mt-3 grid grid-cols-3 divide-x divide-border border-t border-border pt-3 text-center">
+          <div>
+            <dt class="whitespace-nowrap text-xs font-bold text-text-muted">
+              {RATING_IMAGE_COPY.ratingLabel}
+            </dt>
+            <dd class="whitespace-nowrap font-jost text-xl font-semibold text-text">
+              {formatNullablePlayerRating(props.rating.rating)}
+            </dd>
+          </div>
+          <div>
+            <dt class="whitespace-nowrap text-xs font-bold text-text-muted">
+              {RATING_IMAGE_COPY.overPowerLabel}
+            </dt>
+            <dd class="whitespace-nowrap font-jost text-xl font-semibold text-text">
+              {overPowerValue()}
+            </dd>
+          </div>
+          <div>
+            <dt class="whitespace-nowrap text-xs font-bold text-text-muted">
+              {RATING_IMAGE_COPY.overPowerPercentLabel}
+            </dt>
+            <dd class="whitespace-nowrap font-jost text-xl font-semibold text-text">
+              {overPowerPercent()}
+            </dd>
+          </div>
+        </dl>
+      </header>
+
+      <main class="mt-5 grid grid-cols-2 items-start gap-4">
+        <RatingImageColumn
+          heading={RATING_IMAGE_COPY.bestHeading}
+          average={props.rating.best_average}
+          records={props.rating.best}
+          slotCount={RATING_SLOT_COUNT.best}
+          showJackets={props.showJackets}
+          columnKey="best"
+          onJacketReadyChange={props.onJacketReadyChange}
+        />
+        <RatingImageColumn
+          heading={RATING_IMAGE_COPY.newHeading}
+          average={props.rating.new_average}
+          records={props.rating.new}
+          slotCount={RATING_SLOT_COUNT.new}
+          showJackets={props.showJackets}
+          columnKey="new"
+          onJacketReadyChange={props.onJacketReadyChange}
+        />
+      </main>
+
+      <footer class="mt-6 border-t-2 border-border-strong pt-4">
+        <p class="font-sans text-base font-bold text-text-muted">{RATING_IMAGE_COPY.generatedBy}</p>
+      </footer>
+    </div>
+  )
+}

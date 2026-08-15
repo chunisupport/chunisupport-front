@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { defineConfig, loadEnv } from '@rsbuild/core'
 import { pluginBabel } from '@rsbuild/plugin-babel'
 import { pluginSolid } from '@rsbuild/plugin-solid'
@@ -8,6 +11,7 @@ const REQUIRED_PUBLIC_ENV_KEYS = [
   'PUBLIC_DOCUMENTATION_URL',
   'PUBLIC_BOOKMARKLET_URL',
   'PUBLIC_BOOKMARKLET_ENTRYPOINT',
+  'PUBLIC_CHUNITHM_JACKET_BASE_URL',
   'PUBLIC_FB_API_KEY',
   'PUBLIC_FB_AUTH_DOMAIN',
   'PUBLIC_FB_PROJECT_ID',
@@ -17,6 +21,21 @@ const REQUIRED_PUBLIC_ENV_KEYS = [
 ]
 
 const FRONTEND_BUILD_DATE = new Date().toISOString().slice(0, 10).replaceAll('-', '')
+
+/** ハッシュ生成と出力コピーの対象にする favicon の絶対パス。 */
+const FAVICON_PATH = path.resolve(import.meta.dirname, 'src/assets/favicon.png')
+const ASSET_HASH_LENGTH = 10
+
+/**
+ * ファイル内容からキャッシュバスティング用の短縮ハッシュを生成する。
+ *
+ * @param filePath - ハッシュを生成するファイルの絶対パス。
+ * @returns SHA-256から生成した短縮ハッシュ。
+ */
+const createAssetHash = (filePath) =>
+  createHash('sha256').update(readFileSync(filePath)).digest('hex').slice(0, ASSET_HASH_LENGTH)
+
+const FAVICON_FILE_NAME = `favicon.${createAssetHash(FAVICON_PATH)}.png`
 
 /**
  * CI 環境変数からフロントエンドの短縮コミットハッシュを取得する。
@@ -64,8 +83,17 @@ export default defineConfig(({ env, envMode }) => {
       title: 'ChuniSupport',
       meta: {
         robots: 'noindex',
+        'format-detection': 'telephone=no',
       },
       tags: [
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'icon',
+            href: `/${FAVICON_FILE_NAME}`,
+            type: 'image/png',
+          },
+        },
         {
           tag: 'link',
           attrs: {
@@ -85,7 +113,8 @@ export default defineConfig(({ env, envMode }) => {
           tag: 'link',
           attrs: {
             rel: 'stylesheet',
-            href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Jost:ital,wght@0,100..900;1,100..900&family=Noto+Sans:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Oswald:wght@200..700&display=swap',
+            href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Jost:ital,wght@0,100..900;1,100..900&family=Noto+Sans:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700;800&family=Oswald:wght@200..700&display=swap',
+            crossorigin: true,
           },
         },
         {
@@ -136,6 +165,14 @@ export default defineConfig(({ env, envMode }) => {
             name: 'apple-mobile-web-app-status-bar-style',
             content: 'default',
           },
+        },
+      ],
+    },
+    output: {
+      copy: [
+        {
+          from: FAVICON_PATH,
+          to: FAVICON_FILE_NAME,
         },
       ],
     },

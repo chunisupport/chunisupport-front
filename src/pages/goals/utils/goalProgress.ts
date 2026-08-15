@@ -1,5 +1,5 @@
+import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import type {
-  GoalAchievementParams,
   GoalAttributes,
   GoalDTO,
   MasterDataDTO,
@@ -8,6 +8,17 @@ import type {
   VersionDTO,
 } from '../../../types/api'
 import { buildCurrentOverPowerBySongId } from '../../../usecases/overpower/currentOpTarget'
+import { MAX_SCORE } from '../../../utils/scoreRank'
+import { isTheoreticalOverPowerTargetDifficulty } from '../../../utils/theoreticalOverPowerTarget'
+import { normalizeGoalAttributeIds } from './goalAttributes'
+import { getNumberGoalTargetParam, resolveGoalDynamicTarget } from './goalCountTarget'
+import {
+  COMBO_LAMP_ORDER,
+  HARD_LAMP_ORDER,
+  isComboLampGoalValue,
+  isHardLampGoalValue,
+  resolveHardLampRecordName,
+} from './goalLamp'
 import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
 
 export interface GoalProgressResult {
@@ -23,35 +34,35 @@ interface FilterRecordsByAttributesOptions {
   includeAllChartsForOpTarget?: boolean
 }
 
-const HARD_LAMP_ORDER: Record<string, number> = {
-  HARD: 1,
-  BRAVE: 2,
-  ABSOLUTE: 3,
-  CATASTROPHY: 4,
-}
-
-const COMBO_LAMP_ORDER: Record<string, number> = {
-  'FULL COMBO': 1,
-  'ALL JUSTICE': 2,
-}
-
-const normalizeAttributeIds = (value: number | number[] | undefined): number[] => {
-  if (typeof value === 'number') return [value]
-  if (Array.isArray(value)) {
-    return value.filter((id): id is number => Number.isInteger(id))
-  }
-  return []
+/**
+ * API由来の成果パラメータからランプ指定値を安全に取り出す。
+ *
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @returns ランプ指定値。オブジェクト形式でない場合は undefined。
+ */
+const getGoalLampParam = (params: GoalDTO['achievement_params']): unknown => {
+  const rawParams: unknown = params
+  return rawParams && typeof rawParams === 'object' && 'lamp' in rawParams
+    ? (rawParams as { lamp?: unknown }).lamp
+    : undefined
 }
 
 /**
- * レコードが曲ごとのOVER POWER対象譜面かを判定する。
+ * 件数系目標の対象件数を解決する。
  *
- * @param record - 判定対象のプレイヤーレコード。
- * @param song - レコードに対応する楽曲マスタ。
- * @returns 楽曲のOP対象難易度とレコード難易度が一致する場合はtrue。
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @param recordCount - 目標条件に一致した譜面数。
+ * @returns 件数系目標の目標値。
  */
-const isOverPowerTargetRecord = (record: PlayerRecordDTO, song: SongDTO | undefined): boolean =>
-  song?.op_target_difficulty === record.difficulty
+const resolveCountTarget = (params: GoalDTO['achievement_params'], recordCount: number): number =>
+  resolveGoalDynamicTarget(
+    params && typeof params === 'object' ? params : {},
+    recordCount,
+    'count',
+    {
+      rounding: 'ceil',
+    }
+  )
 
 /**
  * 楽曲マスタからOP対象譜面の定数を取得する。
@@ -79,7 +90,7 @@ const isOverPowerTargetSongMatched = (
   song: SongDTO | undefined,
   attributes: GoalAttributes,
   genreNames: Set<string> | undefined,
-  versionIds: number[],
+  versionIds: number[] | undefined,
   versions: VersionDTO[]
 ): song is SongDTO => {
   if (!song?.op_target_difficulty) return false
@@ -93,7 +104,7 @@ const isOverPowerTargetSongMatched = (
 
   if (genreNames && (!song.genre || !genreNames.has(song.genre))) return false
 
-  if (versionIds.length > 0) {
+  if (versionIds && versionIds.length > 0) {
     const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
     if (!songVersionValue || !versionIds.includes(songVersionValue)) return false
   }
@@ -121,21 +132,28 @@ export const filterRecordsByAttributes = (
   options: FilterRecordsByAttributesOptions = {}
 ): PlayerRecordDTO[] => {
   const songMap = new Map(songs.map((song) => [song.id, song]))
-  const diffIds = normalizeAttributeIds(attributes.diff)
-  const genreIds = normalizeAttributeIds(attributes.genre)
-  const versionIds = normalizeAttributeIds(attributes.ver)
+  const diffIds = normalizeGoalAttributeIds(attributes.diff)
+  const genreIds = normalizeGoalAttributeIds(attributes.genre)
+  const versionIds = normalizeGoalAttributeIds(attributes.ver)
   const opTargetOnly = attributes.chart_target === 'OP_TARGET'
 
+  if (diffIds?.length === 0 || genreIds?.length === 0 || versionIds?.length === 0) {
+    return []
+  }
+
   const diffNames =
-    diffIds.length > 0
+    diffIds && diffIds.length > 0
       ? new Set(
           masterData.difficulties
             .filter((difficulty) => diffIds.includes(difficulty.id))
-            .map((difficulty) => difficulty.name)
+            .flatMap((difficulty) => {
+              const normalized = normalizePlayerDataDifficulty(difficulty.name)
+              return normalized ? [normalized] : []
+            })
         )
       : undefined
   const genreNames =
-    genreIds.length > 0
+    genreIds && genreIds.length > 0
       ? new Set(
           masterData.genres
             .filter((genre) => genreIds.includes(genre.id))
@@ -150,7 +168,10 @@ export const filterRecordsByAttributes = (
       if (!isOverPowerTargetSongMatched(song, attributes, genreNames, versionIds, versions)) {
         return false
       }
-      return options.includeAllChartsForOpTarget || isOverPowerTargetRecord(record, song)
+      return (
+        options.includeAllChartsForOpTarget ||
+        isTheoreticalOverPowerTargetDifficulty(song?.op_target_difficulty, record.difficulty)
+      )
     }
     if (diffNames && !diffNames.has(record.difficulty)) return false
 
@@ -161,7 +182,7 @@ export const filterRecordsByAttributes = (
 
     if (genreNames && (!song?.genre || !genreNames.has(song.genre))) return false
 
-    if (versionIds.length > 0) {
+    if (versionIds && versionIds.length > 0) {
       if (!song) return false
       const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
       if (!songVersionValue || !versionIds.includes(songVersionValue)) return false
@@ -169,29 +190,6 @@ export const filterRecordsByAttributes = (
 
     return true
   })
-}
-
-const getNumberParam = (
-  params: GoalAchievementParams,
-  key: 'score' | 'count' | 'total'
-): number => {
-  const value = (params as Record<string, unknown>)[key]
-  return typeof value === 'number' ? value : 0
-}
-
-/**
- * 対象譜面数を動的上限として扱う件数目標値を解決する。
- *
- * @param params - 目標種別ごとの成果パラメータ。
- * @param filteredRecords - 現在の条件に一致した譜面レコード一覧。
- * @returns 明示された件数、または現在の対象譜面数。
- */
-const resolveCountTarget = (
-  params: GoalAchievementParams,
-  filteredRecords: PlayerRecordDTO[]
-): number => {
-  const value = (params as Record<string, unknown>).count
-  return typeof value === 'number' ? value : filteredRecords.length
 }
 
 /**
@@ -202,11 +200,12 @@ const resolveCountTarget = (
  * @returns 明示された総スコア、または対象譜面数に基づく理論値。
  */
 const resolveTotalScoreTarget = (
-  params: GoalAchievementParams,
+  params: GoalDTO['achievement_params'],
   filteredRecords: PlayerRecordDTO[]
 ): number => {
-  const value = (params as Record<string, unknown>).total
-  return typeof value === 'number' ? value : filteredRecords.length * 1010000
+  return resolveGoalDynamicTarget(params, filteredRecords.length * MAX_SCORE, 'total', {
+    rounding: 'ceil',
+  })
 }
 
 /**
@@ -218,19 +217,21 @@ const resolveTotalScoreTarget = (
  * @returns 明示されたOVER POWER合計、または対象譜面の理論値合計。
  */
 const resolveOverPowerValueTarget = (
-  params: GoalAchievementParams,
+  params: GoalDTO['achievement_params'],
   filteredRecords: PlayerRecordDTO[],
   songMap: Map<string, SongDTO>,
   useSongMaxOverPower: boolean
 ): number => {
-  const value = (params as Record<string, unknown>).total
-  if (typeof value === 'number') return value
-
+  let maxValue: number
   if (useSongMaxOverPower) {
-    return sumUniqueSongMaxOverPower(filteredRecords, songMap)
+    maxValue = sumUniqueSongMaxOverPower(filteredRecords, songMap)
+  } else {
+    maxValue = filteredRecords.reduce(
+      (acc, record) => acc + (songMap.get(record.id)?.maxop ?? 0),
+      0
+    )
   }
-
-  return filteredRecords.reduce((acc, record) => acc + (songMap.get(record.id)?.maxop ?? 0), 0)
+  return resolveGoalDynamicTarget(params, maxValue, 'total')
 }
 
 /**
@@ -285,13 +286,13 @@ export const calculateGoalProgress = (
   switch (goal.achievement_type) {
     case 'rank_count':
     case 'score_count': {
-      const threshold = getNumberParam(goal.achievement_params, 'score')
-      target = resolveCountTarget(goal.achievement_params, filteredRecords)
+      const threshold = getNumberGoalTargetParam(goal.achievement_params, 'score')
+      target = resolveCountTarget(goal.achievement_params, filteredRecords.length)
       current = filteredRecords.filter((record) => record.score >= threshold).length
       break
     }
     case 'avg_score': {
-      target = getNumberParam(goal.achievement_params, 'score')
+      target = getNumberGoalTargetParam(goal.achievement_params, 'score')
       if (filteredRecords.length === 0) {
         current = 0
       } else {
@@ -301,20 +302,15 @@ export const calculateGoalProgress = (
       break
     }
     case 'hardlamp_count': {
-      const params = goal.achievement_params as {
-        lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'
-        count?: number
+      target = resolveCountTarget(goal.achievement_params, filteredRecords.length)
+      const lamp = getGoalLampParam(goal.achievement_params)
+      if (typeof lamp !== 'string' || !isHardLampGoalValue(lamp)) {
+        current = 0
+        target = Math.max(target, 1)
+        break
       }
-      const hardLampName =
-        params.lamp === 'HRD'
-          ? 'HARD'
-          : params.lamp === 'BRV'
-            ? 'BRAVE'
-            : params.lamp === 'ABS'
-              ? 'ABSOLUTE'
-              : 'CATASTROPHY'
-      const required = HARD_LAMP_ORDER[hardLampName]
-      target = resolveCountTarget(goal.achievement_params, filteredRecords)
+      const hardLampName = resolveHardLampRecordName(lamp)
+      const required = HARD_LAMP_ORDER[hardLampName] ?? 0
       current = filteredRecords.filter((record) => {
         const lamp = record.clear_lamp
         if (!lamp) return false
@@ -323,10 +319,15 @@ export const calculateGoalProgress = (
       break
     }
     case 'combolamp_count': {
-      const params = goal.achievement_params as { lamp: 'FC' | 'AJ'; count?: number }
+      target = resolveCountTarget(goal.achievement_params, filteredRecords.length)
+      const lamp = getGoalLampParam(goal.achievement_params)
+      if (typeof lamp !== 'string' || !isComboLampGoalValue(lamp)) {
+        current = 0
+        target = Math.max(target, 1)
+        break
+      }
       const required =
-        params.lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']
-      target = resolveCountTarget(goal.achievement_params, filteredRecords)
+        (lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']) ?? 0
       current = filteredRecords.filter((record) => {
         const lamp = record.combo_lamp
         if (!lamp) return false
@@ -353,7 +354,7 @@ export const calculateGoalProgress = (
       break
     }
     case 'overpower_percent': {
-      target = getNumberParam(goal.achievement_params, 'total')
+      target = getNumberGoalTargetParam(goal.achievement_params, 'total')
       const useSongAggregation = goal.attributes.chart_target === 'OP_TARGET'
       const totalOp = useSongAggregation
         ? sumCurrentOpTargetOverPowerBySong(filteredRecords)

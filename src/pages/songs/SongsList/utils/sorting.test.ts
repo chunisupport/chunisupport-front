@@ -16,6 +16,7 @@ const createSong = (overrides: Partial<SongDTO>): SongDTO => ({
   maxop: overrides.maxop ?? 0,
   is_maxop_unknown: overrides.is_maxop_unknown ?? false,
   op_target_difficulty: overrides.op_target_difficulty ?? null,
+  is_new: overrides.is_new ?? false,
   charts: overrides.charts ?? {},
 })
 
@@ -29,11 +30,11 @@ test('楽曲一覧のソート状態はascからdesc、最後に解除へ遷移�
   assert.deepEqual(third, { sortKey: null, sortDirection: null })
 })
 
-test('タイトルで日本語順にソートする', () => {
+test('タイトル列は reading の日本語順にソートする', () => {
   const songs = [
-    createSong({ id: 'b', title: 'ウタ' }),
-    createSong({ id: 'a', title: 'アイ' }),
-    createSong({ id: 'c', title: 'オト' }),
+    createSong({ id: 'b', title: '愛', reading: 'ラブ' }),
+    createSong({ id: 'a', title: '空', reading: 'ソラ' }),
+    createSong({ id: 'c', title: '林檎', reading: 'リンゴ' }),
   ]
 
   assert.deepEqual(

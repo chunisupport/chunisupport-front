@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
+import { OVER_POWER_MASTER_ULTIMA_TARGET } from './constants'
 import { buildOverPowerSummary } from './overpowerSummary'
 
 const versions: VersionSummaryDTO[] = [
@@ -28,6 +29,7 @@ const createSong = (overrides: Partial<SongDTO> & Pick<SongDTO, 'id'>): SongDTO 
   maxop: overrides.maxop ?? 90,
   is_maxop_unknown: overrides.is_maxop_unknown ?? false,
   op_target_difficulty: overrides.op_target_difficulty ?? 'MASTER',
+  is_new: overrides.is_new ?? false,
   charts: overrides.charts ?? {
     MASTER: {
       const: 15,
@@ -120,6 +122,30 @@ test('現在OP対象フラグが全てfalseでも曲内最大OPへフォール�
   assert.equal(summary.all.max, 90)
 })
 
+test('未プレイ曲は理論値対象難易度のレベルへ分類する', () => {
+  // Given
+  const songs = [
+    createSong({
+      id: 'unplayed',
+      maxop: 90,
+      op_target_difficulty: 'MASTER',
+      charts: {
+        BASIC: { const: 3, is_const_unknown: false, notes: null },
+        MASTER: { const: 15, is_const_unknown: false, notes: null },
+      },
+    }),
+  ]
+
+  // When
+  const summary = buildOverPowerSummary(songs, [], versions)
+
+  // Then
+  assert.deepEqual(
+    summary.levels.map((row) => [row.label, row.current, row.max, row.count]),
+    [['15', 0, 90, 1]]
+  )
+})
+
 test('ジャンル不明とバージョン不明はALLに含め、各内訳から除外する', () => {
   const summary = buildOverPowerSummary(
     [
@@ -184,7 +210,7 @@ test('ジャンル別はマスタのsort_order順で並ぶ', () => {
   )
 })
 
-test('レベル別は譜面単位で表示レベルへ変換して集計し、同曲重複を含める', () => {
+test('全難易度のレベル別は譜面単位で表示レベルへ変換して集計し、同曲重複を含める', () => {
   const summary = buildOverPowerSummary(
     [
       createSong({
@@ -206,7 +232,10 @@ test('レベル別は譜面単位で表示レベルへ変換して集計し、�
       createRecord({ id: 'same-song', difficulty: 'MASTER', const: 14.5, overpower: 80 }),
       createRecord({ id: 'low', difficulty: 'MASTER', const: 9.5, overpower: 10 }),
     ],
-    versions
+    versions,
+    [],
+    undefined,
+    'ALL'
   )
 
   assert.deepEqual(
@@ -240,21 +269,101 @@ test('曲マスタにnull譜面が含まれていてもレベル別集計で落�
   )
 })
 
-test('難易度別は譜面単位で現在値と理論値を集計する', () => {
+test('指定難易度は楽曲マスタに存在する譜面単位で現在値と理論値を集計する', () => {
   const summary = buildOverPowerSummary(
     [createSong({ id: 'song-a' })],
     [
       createRecord({ id: 'song-a', difficulty: 'BASIC', const: 2, overpower: 20 }),
       createRecord({ id: 'song-a', difficulty: 'MASTER', const: 15, overpower: 85 }),
     ],
-    versions
+    versions,
+    [],
+    undefined,
+    'MASTER'
   )
 
+  assert.deepEqual([summary.all.current, summary.all.max, summary.all.count], [85, 90, 1])
+})
+
+test('MASTER + ULTIMAはOP対象に関係なく両難易度の譜面を単純加算する', () => {
+  // Given: 同じ曲にEXPERT、MASTER、ULTIMAがあり、ULTIMAだけOP対象外になっている。
+  const songs = [
+    createSong({
+      id: 'master-ultima',
+      charts: {
+        EXPERT: { const: 13, is_const_unknown: false, notes: null },
+        MASTER: { const: 14, is_const_unknown: false, notes: null },
+        ULTIMA: { const: 15, is_const_unknown: false, notes: null },
+      },
+    }),
+  ]
+  const records = [
+    createRecord({
+      id: 'master-ultima',
+      difficulty: 'EXPERT',
+      const: 13,
+      overpower: 70,
+      is_op_target: false,
+    }),
+    createRecord({
+      id: 'master-ultima',
+      difficulty: 'MASTER',
+      const: 14,
+      overpower: 80,
+      is_op_target: true,
+    }),
+    createRecord({
+      id: 'master-ultima',
+      difficulty: 'ULTIMA',
+      const: 15,
+      overpower: 88,
+      is_op_target: false,
+    }),
+  ]
+
+  // When: MASTER + ULTIMAを集計対象にする。
+  const summary = buildOverPowerSummary(
+    songs,
+    records,
+    versions,
+    [],
+    undefined,
+    OVER_POWER_MASTER_ULTIMA_TARGET
+  )
+
+  // Then: EXPERTを除き、同じ曲のMASTERとULTIMAをそれぞれ1譜面として加算する。
+  assert.deepEqual([summary.all.current, summary.all.max, summary.all.count], [168, 175, 2])
+})
+
+test('全難易度とレベル別はレコードがない未プレイ譜面も集計する', () => {
+  // Given
+  const songs = [
+    createSong({
+      id: 'unplayed-chart',
+      charts: {
+        EXPERT: { const: 13, is_const_unknown: false, notes: null },
+        MASTER: { const: 15, is_const_unknown: false, notes: null },
+      },
+    }),
+  ]
+
+  // When
+  const summary = buildOverPowerSummary(
+    songs,
+    [createRecord({ id: 'unplayed-chart', difficulty: 'MASTER', const: 15, overpower: 80 })],
+    versions,
+    [],
+    undefined,
+    'ALL'
+  )
+
+  // Then
+  assert.deepEqual([summary.all.current, summary.all.max, summary.all.count], [80, 170, 2])
   assert.deepEqual(
-    summary.difficulties.map((row) => [row.label, row.current, row.max, row.count]),
+    summary.levels.map((row) => [row.label, row.current, row.count]),
     [
-      ['BASIC', 20, 25, 1],
-      ['MASTER', 85, 90, 1],
+      ['13', 0, 1],
+      ['15', 80, 1],
     ]
   )
 })
@@ -274,8 +383,8 @@ test('通常未解禁楽曲は曲単位と譜面単位の集計から除外す�
   assert.equal(summary.all.max, 80)
   assert.equal(summary.all.count, 1)
   assert.deepEqual(
-    summary.difficulties.map((row) => [row.label, row.current, row.max, row.count]),
-    [['MASTER', 70, 80, 1]]
+    summary.levels.map((row) => row.label),
+    ['15']
   )
 })
 
@@ -304,9 +413,5 @@ test('ULTIMA未解禁はULTIMA譜面だけを集計から除外する', () => {
   assert.deepEqual(
     summary.levels.map((row) => row.label),
     ['14']
-  )
-  assert.deepEqual(
-    summary.difficulties.map((row) => row.label),
-    ['MASTER']
   )
 })

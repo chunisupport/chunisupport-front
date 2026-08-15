@@ -1,34 +1,40 @@
 import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart'
+import { normalizePlayerDataDifficulty } from '../../../../../constants/difficulty'
+import {
+  RECORD_CHAIN_LAMP_OPTIONS,
+  RECORD_COMBO_LAMP_OPTIONS,
+  RECORD_HARD_LAMP_OPTIONS,
+} from '../../../../../constants/recordFilterOptions'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
+import type { FilterState } from '../../../../../types/recordFilter'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
+import { truncateDecimal } from '../../../../../utils/numberFormat'
+import {
+  parseNumberInput,
+  toInputValue,
+  updateOptionalNumberRange,
+} from '../../../../../utils/rangeInput'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../../utils/versionConverter'
+import DateRangeSection from '../../../components/filter/DateRangeSection'
+import LampSection from '../../../components/filter/LampSection'
+import MultiSelectFilterSection from '../../../components/filter/MultiSelectFilterSection'
+import NumericRangeSection from '../../../components/filter/NumericRangeSection'
+import ScoreSection from '../../../components/filter/ScoreSection'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../components/filter/styles'
 import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters'
+import {
+  JUSTICE_COUNT_RANGE_FILTER,
+  OVER_POWER_RANGE_FILTER,
+} from '../../../constants/rangeFilters'
+import { toggleArray } from '../../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
-import { CONST_MAX, CONST_MIN } from '../../constants/constRange'
-import { JUSTICE_COUNT_RANGE_FILTER, OVER_POWER_RANGE_FILTER } from '../../constants/rangeFilters'
-import {
-  CHAIN_LAMP_OPTIONS,
-  COMBO_LAMP_OPTIONS,
-  HARD_LAMP_OPTIONS,
-} from '../../types/filterDefaults'
-import type { Difficulty, FilterState } from '../../types/types'
-import { parseNumberInput, toggleArray, updateOptionalNumberRange } from '../../utils/filterDialog'
-import {
-  SCORE_RANK_MAX_VALUES,
-  SCORE_RANK_VALUES,
-  SCORE_RANKS,
-  type ScoreRank,
-} from '../../utils/scoreRank'
+import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../../utils/scoreRank'
 import ConstRangeSection from './sections/ConstRangeSection'
 import DifficultySection from './sections/DifficultySection'
-import GenreSection from './sections/GenreSection'
-import LampSection from './sections/LampSection'
-import NumericRangeSection from './sections/NumericRangeSection'
-import ScoreSection from './sections/ScoreSection'
-import VersionSection from './sections/VersionSection'
 
 type FilterSelectionPanelProps = {
   open: boolean
@@ -42,15 +48,18 @@ type FilterSelectionPanelProps = {
   editingFilterName?: string | null
   /** フィルター名が変更されたときのコールバック。 */
   onEditingFilterNameChange?: (name: string) => void
+  /** お気に入り楽曲設定を開く。 */
+  onOpenFavoriteSongs?: () => void
+  /** お気に入り楽曲設定を無効化するか。 */
+  favoriteSongsDisabled?: boolean
 }
-
-/** 数値を入力欄用の文字列に変換するユーティリティ関数 */
-const toInputValue = (value?: number | null) =>
-  value === undefined || value === null ? '' : String(value)
 
 /** フィルター名入力を API の最大文字数に丸める。 */
 const limitNameInput = (value: string): string =>
   Array.from(value).slice(0, RECORD_FILTER_NAME_MAX_LENGTH).join('')
+
+/** 通常のフィルターダイアログ上で Select の選択肢を前面に表示する z-index クラス。 */
+const FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
 
 /**
  * プレイヤーレコードのフィルター条件を選択するパネルを描画する。
@@ -79,9 +88,11 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const [overPowerMaxInput, setOverPowerMaxInput] = createSignal(
     toInputValue(props.filters.overPower.max)
   )
+  const [updatedAtMinInput, setUpdatedAtMinInput] = createSignal(props.filters.updatedAt.min)
+  const [updatedAtMaxInput, setUpdatedAtMaxInput] = createSignal(props.filters.updatedAt.max)
 
   const Const2Level = (value: number) => {
-    const normalized = Math.max(CONST_MIN, Math.min(value, CONST_MAX))
+    const normalized = Math.max(CHART_CONST_MIN, Math.min(value, CHART_CONST_MAX))
     if (normalized <= 6.9) {
       return String(Math.floor(normalized))
     }
@@ -97,37 +108,15 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     const isPlus = level.endsWith('+')
     const base = Number.parseInt(level.replace('+', ''), 10)
     if (base <= 6) {
-      return type === 'min' ? base : Number((base + 0.9).toFixed(1))
+      return type === 'min' ? base : truncateDecimal(base + 0.9, 1)
     }
     if (isPlus) {
-      return type === 'min' ? Number((base + 0.5).toFixed(1)) : Number((base + 0.9).toFixed(1))
+      return type === 'min' ? truncateDecimal(base + 0.5, 1) : truncateDecimal(base + 0.9, 1)
     }
-    if (base >= CONST_MAX) {
-      return CONST_MAX
+    if (base >= CHART_CONST_MAX) {
+      return CHART_CONST_MAX
     }
-    return type === 'min' ? base : Number((base + 0.4).toFixed(1))
-  }
-
-  const Score2Rank = (value: number) => {
-    const highestRank = SCORE_RANKS[SCORE_RANKS.length - 1]
-    const normalized = Math.max(
-      SCORE_RANK_VALUES['0点'],
-      Math.min(value, SCORE_RANK_VALUES[highestRank])
-    )
-    for (const rank of SCORE_RANKS) {
-      const maxValue = Rank2Score(rank, 'max')
-      if (normalized <= maxValue) {
-        return rank
-      }
-    }
-    return highestRank
-  }
-
-  const Rank2Score = (rank: ScoreRank, type: 'min' | 'max') => {
-    if (type === 'max') {
-      return SCORE_RANK_MAX_VALUES[rank]
-    }
-    return SCORE_RANK_VALUES[rank]
+    return type === 'min' ? base : truncateDecimal(base + 0.4, 1)
   }
 
   // フィルターダイアログが開かれた時にフィルター状態を同期
@@ -141,10 +130,12 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     setJusticeCountMaxInput(toInputValue(props.filters.justiceCount.max))
     setOverPowerMinInput(toInputValue(props.filters.overPower.min))
     setOverPowerMaxInput(toInputValue(props.filters.overPower.max))
+    setUpdatedAtMinInput(props.filters.updatedAt.min)
+    setUpdatedAtMaxInput(props.filters.updatedAt.max)
     setConstLevelMin(Const2Level(props.filters.const.min))
     setConstLevelMax(Const2Level(props.filters.const.max))
-    setScoreRankMin(Score2Rank(props.filters.score.min))
-    setScoreRankMax(Score2Rank(props.filters.score.max))
+    setScoreRankMin(scoreToFilterRank(props.filters.score.min))
+    setScoreRankMax(scoreToFilterRank(props.filters.score.max))
   })
 
   /** 定数入力モードの変更時に内部値を同期 */
@@ -196,14 +187,12 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     }
     // 数値->ランクの場合
     // 内部の保持値を変換してセット
-    const nextMinRank = Score2Rank(props.filters.score.min)
-    const nextMaxRank = Score2Rank(props.filters.score.max)
-    const nextMinValue = Rank2Score(nextMinRank, 'min')
-    const nextMaxValue = Rank2Score(nextMaxRank, 'max')
+    const nextMinRank = scoreToFilterRank(props.filters.score.min)
+    const nextMaxRank = scoreToFilterRank(props.filters.score.max)
+    const nextMinValue = filterRankToScore(nextMinRank, 'min')
+    const nextMaxValue = filterRankToScore(nextMaxRank, 'max')
     setScoreRankMin(nextMinRank)
     setScoreRankMax(nextMaxRank)
-    // setScoreMinInput(toInputValue(nextMinValue));
-    // setScoreMaxInput(toInputValue(nextMaxValue));
     // フィルター状態を更新
     props.setFilters((prev) => ({
       ...prev,
@@ -244,7 +233,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
 
   /** スコアランク変更時に適切なスコアをフィルターにセット */
   const handleScoreRankChange = (type: 'min' | 'max', value: string) => {
-    const nextValue = Rank2Score(value as ScoreRank, type)
+    const nextValue = filterRankToScore(value as ScoreRank, type)
     if (type === 'min') {
       setScoreRankMin(value)
       setScoreMinInput(toInputValue(nextValue))
@@ -268,7 +257,12 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     }))
   }
 
-  const difficulties = () => props.masterData?.difficulties?.map((d) => d.name as Difficulty) ?? []
+  /** @returns マスターデータを大文字の正規難易度へ変換した選択肢。 */
+  const difficulties = () =>
+    props.masterData?.difficulties.flatMap((difficulty) => {
+      const normalized = normalizePlayerDataDifficulty(difficulty.name)
+      return normalized ? [normalized] : []
+    }) ?? []
   const genres = () => sortMasterItemsBySortOrder(props.masterData?.genres ?? []).map((g) => g.name)
   const versions = () => props.versions?.map((version) => getShortVersionName(version.name)) ?? []
 
@@ -359,7 +353,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           <span class="block text-sm font-medium mb-1">フィルター名</span>
           <TextField>
             <TextField.Input
-              class="w-full rounded border border-border-strong bg-surface px-3 py-2 font-sans text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+              class={`${FILTER_DIALOG_FIELD_INPUT_CLASS} font-sans`}
               maxLength={RECORD_FILTER_NAME_MAX_LENGTH}
               value={props.editingFilterName ?? ''}
               onInput={(event) =>
@@ -373,6 +367,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         difficulties={difficulties()}
         selected={props.filters.difficulties}
         currentOpTargetOnly={props.filters.currentOpTargetOnly}
+        favoriteSongsOnly={props.filters.favoriteSongsOnly}
         onToggle={(diff) =>
           props.setFilters((prev) => ({
             ...prev,
@@ -385,6 +380,14 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             currentOpTargetOnly: checked,
           }))
         }
+        onFavoriteSongsOnlyChange={(checked) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            favoriteSongsOnly: checked,
+          }))
+        }
+        onOpenFavoriteSongs={props.onOpenFavoriteSongs}
+        favoriteSongsDisabled={props.favoriteSongsDisabled}
       />
       <ConstRangeSection
         constFilterMode={props.filters.constFilterMode}
@@ -400,7 +403,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             ...prev,
             const: {
               ...prev.const,
-              min: parseNumberInput(value) ?? CONST_MIN,
+              min: parseNumberInput(value) ?? CHART_CONST_MIN,
             },
           }))
         }}
@@ -410,7 +413,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             ...prev,
             const: {
               ...prev.const,
-              max: parseNumberInput(value) ?? CONST_MAX,
+              max: parseNumberInput(value) ?? CHART_CONST_MAX,
             },
           }))
         }}
@@ -433,7 +436,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             ...prev,
             score: {
               ...prev.score,
-              min: parseNumberInput(value) ?? 0,
+              min: parseNumberInput(value) ?? SCORE_MIN,
             },
           }))
         }}
@@ -473,17 +476,40 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         onMinCommit={(value) => commitOverPowerRange('min', value)}
         onMaxCommit={(value) => commitOverPowerRange('max', value)}
       />
+      <DateRangeSection
+        minValue={updatedAtMinInput()}
+        maxValue={updatedAtMaxInput()}
+        onMinInput={setUpdatedAtMinInput}
+        onMaxInput={setUpdatedAtMaxInput}
+        onMinCommit={(value) => {
+          setUpdatedAtMinInput(value)
+          props.setFilters((prev) => ({
+            ...prev,
+            updatedAt: { ...prev.updatedAt, min: value },
+          }))
+        }}
+        onMaxCommit={(value) => {
+          setUpdatedAtMaxInput(value)
+          props.setFilters((prev) => ({
+            ...prev,
+            updatedAt: { ...prev.updatedAt, max: value },
+          }))
+        }}
+      />
       <LampSection
         title="コンボランプ"
         idPrefix="combo-lamp"
-        lamps={COMBO_LAMP_OPTIONS}
+        lamps={RECORD_COMBO_LAMP_OPTIONS}
         selected={props.filters.combo_lamp}
         onToggle={(lamp) =>
           props.setFilters((prev) => ({
             ...prev,
             combo_lamp: toggleArray(prev.combo_lamp, lamp).filter(
-              (l): l is 'FULL COMBO' | 'ALL JUSTICE' | null =>
-                l === 'FULL COMBO' || l === 'ALL JUSTICE' || l === null
+              (l): l is FilterState['combo_lamp'][number] =>
+                l === 'FULL COMBO' ||
+                l === 'ALL JUSTICE' ||
+                l === 'ALL JUSTICE CRITICAL' ||
+                l === null
             ),
           }))
         }
@@ -497,7 +523,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       <LampSection
         title="FULL CHAIN"
         idPrefix="chain-lamp"
-        lamps={CHAIN_LAMP_OPTIONS}
+        lamps={RECORD_CHAIN_LAMP_OPTIONS}
         selected={props.filters.chain_lamp}
         formatLabel={formatFullChainLampLabel}
         onToggle={(lamp) =>
@@ -519,7 +545,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       <LampSection
         title="ハードランプ"
         idPrefix="hard-lamp"
-        lamps={HARD_LAMP_OPTIONS}
+        lamps={RECORD_HARD_LAMP_OPTIONS}
         selected={props.filters.hard_lamp}
         onToggle={(lamp) =>
           props.setFilters((prev) => ({
@@ -543,47 +569,29 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           }))
         }
       />
-      <GenreSection
-        genres={genres()}
+      <MultiSelectFilterSection
+        title="ジャンル"
+        options={genres()}
         selected={props.filters.genres}
-        onSelectAll={() =>
+        placeholder="ジャンルを選択"
+        contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+        onChange={(selectedGenres) =>
           props.setFilters((prev) => ({
             ...prev,
-            genres: genres(),
-          }))
-        }
-        onClear={() =>
-          props.setFilters((prev) => ({
-            ...prev,
-            genres: [],
-          }))
-        }
-        onToggle={(genre) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            genres: toggleArray(prev.genres, genre),
+            genres: selectedGenres,
           }))
         }
       />
-      <VersionSection
-        versions={versions()}
+      <MultiSelectFilterSection
+        title="バージョン"
+        options={versions()}
         selected={props.filters.versions}
-        onSelectAll={() =>
+        placeholder="バージョンを選択"
+        contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+        onChange={(selectedVersions) =>
           props.setFilters((prev) => ({
             ...prev,
-            versions: versions(),
-          }))
-        }
-        onClear={() =>
-          props.setFilters((prev) => ({
-            ...prev,
-            versions: [],
-          }))
-        }
-        onToggle={(version) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            versions: toggleArray(prev.versions, version),
+            versions: selectedVersions,
           }))
         }
       />

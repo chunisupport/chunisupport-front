@@ -1,5 +1,3 @@
-import { Button } from '@kobalte/core/button'
-import { Checkbox } from '@kobalte/core/checkbox'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate } from '@solidjs/router'
 import { signInWithPopup, signOut } from 'firebase/auth'
@@ -9,6 +7,8 @@ import { createEffect, createSignal, onMount, Show } from 'solid-js'
 import { postSignup } from '../../../api/auth'
 import { fetchMe } from '../../../api/users'
 import { Loading, Turnstile } from '../../../components'
+import { AppButton } from '../../../components/common/AppButton'
+import { CheckboxField } from '../../../components/common/CheckboxField'
 import { CF_TURNSTILE_SITE_KEY } from '../../../config'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
@@ -23,6 +23,7 @@ import {
   TERMS_URL,
   TURNSTILE_ERROR_MESSAGE,
   TURNSTILE_REQUIRED_MESSAGE,
+  USERNAME_FORBIDDEN_WORD_REQUIREMENT,
 } from './constants'
 
 /**
@@ -209,9 +210,10 @@ const Register = () => {
                     <p class="text-sm text-danger">{errorMessage()}</p>
                   </div>
                 )}
-                <Button
-                  type="button"
-                  class="w-full flex items-center justify-center gap-3 px-4 py-2 border border-border-strong rounded-md bg-surface hover:bg-surface-muted disabled:opacity-50"
+                <AppButton
+                  variant="surface"
+                  fullWidth
+                  class="gap-3 rounded-md"
                   onClick={handleGoogleAuth}
                   disabled={isSubmitting()}
                 >
@@ -238,7 +240,7 @@ const Register = () => {
                     </svg>
                   )}
                   <span class="text-sm font-medium text-text-muted">Googleで続ける</span>
-                </Button>
+                </AppButton>
               </div>
             </Show>
 
@@ -267,41 +269,39 @@ const Register = () => {
                     <ValidationItem status={isAlphanumeric()} text="小文字の英数字のみ" />
                     <ValidationItem status={isValidLength()} text="5文字〜50文字" />
                     <ValidationItem status={null} text="他ユーザーと重複しないもの" />
+                    <ValidationItem status={null} text={USERNAME_FORBIDDEN_WORD_REQUIREMENT} />
                   </TextField.Description>
                 </TextField>
                 {/* 利用規約 */}
-                <Checkbox
+                <CheckboxField
                   class="relative mt-4 mb-3 flex items-center"
+                  inputClass="sr-only"
                   checked={agreedToTerms()}
                   onChange={setAgreedToTerms}
-                >
-                  <Checkbox.Input class="sr-only" style={{ left: '0', top: '0' }} />
-                  <Checkbox.Control class="h-5 w-5 rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse flex items-center justify-center">
-                    <Checkbox.Indicator>
-                      <Check class="h-4 w-4" />
-                    </Checkbox.Indicator>
-                  </Checkbox.Control>
-                  <Checkbox.Label class="ml-2 text-text text-sm select-none">
-                    <a
-                      href={TERMS_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-link underline"
-                    >
-                      利用規約
-                    </a>
-                    と
-                    <a
-                      href={PRIVACY_POLICY_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-link underline"
-                    >
-                      プライバシーポリシー
-                    </a>
-                    に同意します
-                  </Checkbox.Label>
-                </Checkbox>
+                  labelClass="ml-2 text-text text-sm select-none"
+                  label={
+                    <>
+                      <a
+                        href={TERMS_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-link underline"
+                      >
+                        利用規約
+                      </a>
+                      と
+                      <a
+                        href={PRIVACY_POLICY_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-link underline"
+                      >
+                        プライバシーポリシー
+                      </a>
+                      に同意します
+                    </>
+                  }
+                />
                 {errorMessage() && (
                   <div class="mb-4 p-3 bg-danger-bg border border-danger-border rounded-md flex items-center">
                     <X class="w-5 h-5 text-danger mr-2 shrink-0" />
@@ -321,13 +321,14 @@ const Register = () => {
                     }}
                   />
                   <div class="flex justify-center">
-                    <Button
+                    <AppButton
                       type="submit"
-                      class="px-4 py-2 bg-action-primary text-text-inverse rounded-md hover:bg-action-primary-hover disabled:opacity-50"
+                      variant="primary"
+                      class="rounded-md"
                       disabled={!(isUsernameValid() && agreedToTerms()) || isSubmitting()}
                     >
                       {isSubmitting() ? '処理中...' : '登録'}
-                    </Button>
+                    </AppButton>
                   </div>
                 </form>
               </div>

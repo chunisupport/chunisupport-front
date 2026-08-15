@@ -50,6 +50,7 @@ const createSong = (overrides: Partial<SongDTO>): SongDTO => ({
   maxop: 10,
   is_maxop_unknown: false,
   op_target_difficulty: null,
+  is_new: false,
   charts: {},
   ...overrides,
 })
@@ -62,11 +63,14 @@ const createSong = (overrides: Partial<SongDTO>): SongDTO => ({
  */
 const createGoal = (overrides: Partial<GoalDTO>): GoalDTO => ({
   id: 1,
+  group_id: null,
   title: 'goal',
   achievement_type: 'score_count',
   achievement_params: { score: 1000000 },
   attributes: {},
-  invert: false,
+  invert_value: false,
+  invert_percentage: false,
+  sort_order: 1,
   created_at: '2026-01-01T00:00:00Z',
   ...overrides,
 })
@@ -106,6 +110,101 @@ test('件数目標のcountが指定されている場合は固定目標値を維
   assert.equal(progress.achieved, true)
 })
 
+test('件数目標のremainingを最大件数から差し引いて目標値にする', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', score: 1000000 }),
+    createRecord({ id: 'song-2', score: 1000000 }),
+    createRecord({ id: 'song-3', score: 990000 }),
+  ]
+  const goal = createGoal({
+    achievement_params: { score: 1000000, remaining: 1 },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.target, 2)
+  assert.equal(progress.achieved, true)
+})
+
+test('件数目標のpercentを最大件数に掛けて目標値にする', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', score: 1000000 }),
+    createRecord({ id: 'song-2', score: 990000 }),
+    createRecord({ id: 'song-3', score: 990000 }),
+    createRecord({ id: 'song-4', score: 1000000 }),
+  ]
+  const goal = createGoal({
+    achievement_params: { score: 1000000, percent: 50 },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.target, 2)
+  assert.equal(progress.achieved, true)
+})
+
+test('不正なハードランプ目標値では達成件数を0として扱う', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', clear_lamp: 'CATASTROPHY' }),
+    createRecord({ id: 'song-2', clear_lamp: 'ABSOLUTE' }),
+  ]
+  const goal = createGoal({
+    achievement_type: 'hardlamp_count',
+    achievement_params: { lamp: 'OLD', count: 1 } as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.current, 0)
+  assert.equal(progress.target, 1)
+  assert.equal(progress.achieved, false)
+})
+
+test('不正なコンボランプ目標値では達成件数を0として扱う', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', combo_lamp: 'ALL JUSTICE' }),
+    createRecord({ id: 'song-2', combo_lamp: 'FULL COMBO' }),
+  ]
+  const goal = createGoal({
+    achievement_type: 'combolamp_count',
+    achievement_params: { lamp: 'OLD', count: 1 } as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.current, 0)
+  assert.equal(progress.target, 1)
+  assert.equal(progress.achieved, false)
+})
+
+test('ランプ目標の成果パラメータ形式が不正でも未達成として扱う', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'hardlamp_count',
+    achievement_params: null as unknown as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, [], [])
+
+  // Then
+  assert.equal(progress.current, 0)
+  assert.equal(progress.target, 1)
+  assert.equal(progress.achieved, false)
+})
+
 test('総スコア目標のtotalが欠落している場合は対象譜面数から理論値を計算する', () => {
   const records = [
     createRecord({ id: 'song-1', score: 1010000 }),
@@ -120,6 +219,25 @@ test('総スコア目標のtotalが欠落している場合は対象譜面数か
 
   assert.equal(progress.current, 2010000)
   assert.equal(progress.target, 2020000)
+})
+
+test('総スコア目標のremainingを理論値から差し引いて目標値にする', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', score: 1010000 }),
+    createRecord({ id: 'song-2', score: 1000000 }),
+  ]
+  const goal = createGoal({
+    achievement_type: 'total_score',
+    achievement_params: { remaining: 10000 },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.target, 2010000)
+  assert.equal(progress.achieved, true)
 })
 
 test('OVER POWER合計目標のtotalが欠落している場合は対象譜面の理論値合計を使う', () => {
@@ -181,6 +299,73 @@ test('OP対象条件では曲ごとのOP対象難易度に一致するレコー�
     filtered.map((record) => `${record.id}:${record.difficulty}`),
     ['song-1:ULTIMA', 'song-2:MASTER']
   )
+})
+
+test('属性が空配列の場合は対象レコードなしとして扱う', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', difficulty: 'MASTER' }),
+    createRecord({ id: 'song-2', difficulty: 'ULTIMA' }),
+  ]
+
+  // When
+  const filtered = filterRecordsByAttributes(
+    records,
+    { diff: [] },
+    {
+      genres: [],
+      difficulties: [
+        { id: 1, name: 'MASTER' },
+        { id: 2, name: 'ULTIMA' },
+      ],
+      versions: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+    },
+    [],
+    []
+  )
+
+  // Then
+  assert.deepEqual(filtered, [])
+})
+
+test('OP対象条件でも難易度属性が空配列の場合は対象レコードなしとして扱う', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', difficulty: 'MASTER' }),
+    createRecord({ id: 'song-1', difficulty: 'ULTIMA' }),
+  ]
+  const songs = [
+    createSong({
+      id: 'song-1',
+      op_target_difficulty: 'ULTIMA',
+      charts: { ULTIMA: { const: 15, is_const_unknown: false, notes: null } },
+    }),
+  ]
+
+  // When
+  const filtered = filterRecordsByAttributes(
+    records,
+    { chart_target: 'OP_TARGET', diff: [] },
+    {
+      genres: [],
+      difficulties: [
+        { id: 1, name: 'MASTER' },
+        { id: 2, name: 'ULTIMA' },
+      ],
+      versions: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+    },
+    songs,
+    []
+  )
+
+  // Then
+  assert.deepEqual(filtered, [])
 })
 
 test('OP対象のOVER POWER合計は曲ごとの現在OP対象レコードOPを現在値にする', () => {

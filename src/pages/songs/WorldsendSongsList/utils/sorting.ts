@@ -1,9 +1,10 @@
 import type { MasterItemDTO, WorldsendSongDTO } from '../../../../types/api'
 import { compareMasterItemNames, createMasterItemOrderMap } from '../../../../utils/masterData'
+import { compareSongsByReading } from '../../../../utils/songTitleSorting'
 import {
   nextSortState as nextSharedSortState,
   type SortDirection,
-} from '../../../users/recordTable/sortingQuery'
+} from '../../../../utils/sortingQuery'
 
 export type WorldsendSongSortKey =
   | 'title'
@@ -84,7 +85,7 @@ export const sortWorldsendSongs = (
 
       switch (currentSortKey) {
         case 'title':
-          comparison = jaCollator.compare(left.title, right.title)
+          comparison = compareSongsByReading(left, right)
           break
         case 'artist':
           comparison = jaCollator.compare(left.artist, right.artist)

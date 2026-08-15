@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-
+import type { FilterState } from '../../../../types/recordFilter'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
-import type { FilterState } from '../types/types'
+import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
 import {
   createRecordTitleMatcher,
   getDefaultFilter,
@@ -102,6 +102,32 @@ test('isRecordMatched は現在のOP対象譜面だけに絞り込める', () =>
   assert.equal(isRecordMatched(createRecord({ is_op_target: false }), matchedFilters), false)
 })
 
+test('isRecordMatchedWithTitleMatcher はお気に入り楽曲だけに絞り込める', () => {
+  // Given
+  const filters: FilterState = { ...getDefaultFilter(), favoriteSongsOnly: true }
+  const matcher = createRecordTitleMatcher(filters.title)
+
+  // When & Then
+  assert.equal(
+    isRecordMatchedWithTitleMatcher(
+      createRecord({ id: 'favorite' }),
+      filters,
+      matcher,
+      new Set(['favorite'])
+    ),
+    true
+  )
+  assert.equal(
+    isRecordMatchedWithTitleMatcher(
+      createRecord({ id: 'other' }),
+      filters,
+      matcher,
+      new Set(['favorite'])
+    ),
+    false
+  )
+})
+
 test('isRecordMatched は譜面定数とスコアの範囲を判定できる', () => {
   const record = createRecord({ const: 14.7, score: 1007500 })
   const matchedFilters: FilterState = {
@@ -155,7 +181,7 @@ test('isRecordMatched はJUSTICE数の範囲をAJ済み譜面だけに適用す�
   }
 
   assert.equal(isRecordMatched(record, matchedFilters), true)
-  assert.equal(isRecordMatched(record, { ...matchedFilters, combo_lamp: ['FULL COMBO'] }), true)
+  assert.equal(isRecordMatched(record, { ...matchedFilters, combo_lamp: ['FULL COMBO'] }), false)
   assert.equal(
     isRecordMatched(record, {
       ...matchedFilters,
@@ -181,6 +207,36 @@ test('isRecordMatched はJUSTICE数の範囲をAJ済み譜面だけに適用す�
     ),
     false
   )
+})
+
+test('isRecordMatched はJUSTICE数指定中もAJCのコンボランプ条件を適用する', () => {
+  // Given: JUSTICE数が範囲内にあるAJCと通常AJ、およびAJCだけを選択したフィルター。
+  const filters: FilterState = {
+    ...getDefaultFilter(),
+    justiceCount: {
+      min: 0,
+      max: 5,
+    },
+    combo_lamp: ['ALL JUSTICE CRITICAL'],
+  }
+  const allJusticeCritical = createRecord({
+    combo_lamp: 'ALL JUSTICE',
+    score: MAX_SCORE,
+    justice_count: 0,
+  })
+  const allJustice = createRecord({
+    combo_lamp: 'ALL JUSTICE',
+    score: MAX_SCORE - 1,
+    justice_count: 2,
+  })
+
+  // When: JUSTICE数とコンボランプの複合条件でレコードを判定する。
+  const criticalMatched = isRecordMatched(allJusticeCritical, filters)
+  const justiceMatched = isRecordMatched(allJustice, filters)
+
+  // Then: 両方の条件を満たすAJCだけが残る。
+  assert.equal(criticalMatched, true)
+  assert.equal(justiceMatched, false)
 })
 
 test('isRecordMatched はOVER POWERの範囲をプレイ済み譜面だけに適用する', () => {
@@ -234,6 +290,26 @@ test('isRecordMatched はランプ条件を判定できる', () => {
     false
   )
   assert.equal(isRecordMatched(record, { ...matchedFilters, hard_lamp: ['CLEAR'] }), false)
+})
+
+test('isRecordMatched はALL JUSTICE CRITICALをコンボランプ条件として判定できる', () => {
+  // Given: 理論値の ALL JUSTICE レコードと AJC だけを選択したフィルター。
+  const record = createRecord({ combo_lamp: 'ALL JUSTICE', score: MAX_SCORE })
+  const filters: FilterState = {
+    ...getDefaultFilter(),
+    combo_lamp: ['ALL JUSTICE CRITICAL'],
+  }
+
+  // When: レコードをフィルターする。
+  const matched = isRecordMatched(record, filters)
+  const nonCritical = isRecordMatched(
+    createRecord({ combo_lamp: 'ALL JUSTICE', score: MAX_SCORE - 1 }),
+    filters
+  )
+
+  // Then: 理論値の ALL JUSTICE だけが一致する。
+  assert.equal(matched, true)
+  assert.equal(nonCritical, false)
 })
 
 test('isRecordMatched は未プレイ除外と未プレイのスコア0扱いを判定できる', () => {

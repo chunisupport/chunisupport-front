@@ -1,9 +1,11 @@
 import { LOGIN_PATH } from '../constants/routes'
 import { auth } from '../lib/firebase'
 import { clearAuthenticatedUser } from '../stores/authSession'
+import { markMaintenanceDetected } from '../stores/availability'
 import { type ErrorCode, type ErrorResponse, getErrorMessage } from '../types/api'
 import { buildLoginRedirectPath } from '../usecases/auth/redirectPath'
 import { buildCurrentPath } from '../utils/currentPath'
+import { isMaintenanceModeError, parseRetryAfterSeconds } from '../utils/maintenanceError'
 
 type FetchWithAuthOptions = RequestInit & {
   requireAuthentication?: boolean
@@ -84,7 +86,9 @@ export const fetchWithAuth = async (
       redirectToLogin()
     }
 
-    const error = new Error(getErrorMessage({ error: { code: 'missing_token' } })) as Error & {
+    const error = new Error(
+      getErrorMessage({ error: { status: 401, code: 'missing_token' } })
+    ) as Error & {
       status?: number
       code?: string
     }
@@ -110,6 +114,10 @@ export const fetchWithAuth = async (
       error = (await response.json()) as ErrorResponse
     } catch {
       // ignore
+    }
+
+    if (isMaintenanceModeError(response.status, error)) {
+      markMaintenanceDetected(parseRetryAfterSeconds(response.headers.get('Retry-After')))
     }
 
     if (

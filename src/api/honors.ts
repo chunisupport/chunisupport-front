@@ -30,6 +30,22 @@ export const fetchHonorTypes = async (): Promise<HonorTypesResponse> => {
 }
 
 /**
+ * 称号を新規作成する。
+ *
+ * @param request - 作成する称号の内容。
+ * @returns 作成後の称号。
+ */
+export const createHonor = async (request: HonorRequestDTO): Promise<AdminHonorDTO> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/honors`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+
+  return response.json()
+}
+
+/**
  * 指定した称号を更新する。
  *
  * @param id - 更新対象の称号ID。

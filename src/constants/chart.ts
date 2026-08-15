@@ -1,0 +1,53 @@
+/** 譜面定数として扱う最小値。 */
+export const CHART_CONST_MIN = 1.0
+
+/** 譜面定数として扱う最大値。 */
+export const CHART_CONST_MAX = 16.0
+
+/** 譜面定数を表示・入力するときの小数桁数。 */
+export const CHART_CONST_DECIMAL_PLACES = 1
+
+/** 表示レベル10として扱う譜面定数の下限。 */
+export const CHART_LEVEL_10_CONST_MIN = 10.0
+
+/** 苦手譜面インスペクターの分析対象難易度。 */
+export const WEAK_CHART_INSPECTOR_DIFFICULTIES = ['MASTER', 'ULTIMA'] as const
+
+/** 目標フォームの対象譜面で初期選択する難易度。 */
+export const GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES = ['MASTER', 'ULTIMA'] as const
+
+/** 理論値OVER POWERが最大となる譜面を選ぶ項目の表示名。 */
+export const THEORETICAL_OVER_POWER_TARGET_LABEL = 'OP対象（MAS+ULT）'
+
+/** CHUNITHM のスコアとして扱う最小値。 */
+export const SCORE_MIN = 0
+
+/** CHUNITHM の理論値スコア。 */
+export const SCORE_THEORETICAL_MAX = 1010000
+
+/** レコードフィルターで許可する JUSTICE 数の最小値。 */
+export const JUSTICE_COUNT_MIN = 0
+
+/** レコードフィルターで許可する JUSTICE 数の最大値。 */
+export const JUSTICE_COUNT_MAX = Number.MAX_SAFE_INTEGER
+
+/** レコードフィルターで許可する OVER POWER の最小値。 */
+export const OVER_POWER_MIN = 0
+
+/** レコードフィルターで許可する OVER POWER の最大値。 */
+export const OVER_POWER_MAX = (CHART_CONST_MAX + 3) * 5
+
+/** WORLD'S END の星数レベルとして扱う最小値。 */
+export const WORLDSEND_LEVEL_STAR_MIN = 1
+
+/** WORLD'S END 譜面の表示ラベル。 */
+export const WORLDSEND_SCORE_LABEL = "WORLD'S END"
+
+/** WORLD'S END の星数レベルとして扱う最大値。 */
+export const WORLDSEND_LEVEL_STAR_MAX = 5
+
+/** WORLD'S END の星数レベル選択肢。 */
+export const WORLDSEND_LEVEL_STAR_OPTIONS = Array.from(
+  { length: WORLDSEND_LEVEL_STAR_MAX - WORLDSEND_LEVEL_STAR_MIN + 1 },
+  (_, index) => WORLDSEND_LEVEL_STAR_MIN + index
+)

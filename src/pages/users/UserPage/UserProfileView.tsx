@@ -1,100 +1,194 @@
-import * as Tabs from '@kobalte/core/tabs'
-import { A, useLocation, useNavigate } from '@solidjs/router'
-import { ChartColumnIncreasing } from 'lucide-solid'
-import type { Accessor, Component } from 'solid-js'
-import { createMemo, For, lazy, Show, Suspense } from 'solid-js'
-import { Loading } from '../../../components'
+import { useLocation, useNavigate } from '@solidjs/router'
+import { ImageOff } from 'lucide-solid'
+import type { Accessor, Component, Resource } from 'solid-js'
+import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
+import { LoadError, Loading } from '../../../components'
+import { AppIconButton } from '../../../components/common/AppButton'
+import { AppTabContent, SegmentedTabs, UnderlineTabs } from '../../../components/common/AppTabs'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
-import { UserNameplate } from './components/UserNameplate'
-import { UserRecordCard } from './components/UserRecordCard'
+import {
+  calculateCandidateScoreDifference,
+  calculateCandidateTargetRating,
+} from '../../../utils/candidateScoreDifference'
 import {
   buildUserOverPowerPagePath,
   buildUserProfilePagePath,
+  buildUserStatsPagePath,
   type OverPowerSubPage,
   type ProfilePageQuery,
-} from './profilePageQuery'
-import type { UserPageRatingProfile, UserPageRecordProfile } from './UserPage'
+} from '../../../utils/userProfileRoute'
+import { RatingImagePreviewDialog } from './components/RatingImagePreviewDialog'
+import { UserNameplate } from './components/UserNameplate'
+import { UserRecordCard } from './components/UserRecordCard'
+import { UserRecordPlaceholderCard } from './components/UserRecordPlaceholderCard'
+import type {
+  UserPageCourseRecordProfile,
+  UserPageRatingProfile,
+  UserPageRecordProfile,
+} from './UserPage'
+import { RATING_SLOT_COUNT } from './UserProfileView.constants'
 
 const UserRecord = lazy(() => import('../UserRecord'))
 const UserOverPower = lazy(() => import('../UserOverPower/UserOverPower'))
 const WorldsendRecord = lazy(() => import('../WorldsendRecord'))
+const CourseRecord = lazy(() => import('../CourseRecord'))
 
 type Props = {
   profile: UserPageRatingProfile
   recordProfile: Accessor<UserPageRecordProfile | undefined>
+  courseRecordProfile: Resource<UserPageCourseRecordProfile>
   onShowRecords: () => void
   selectedOverPowerSubPage: OverPowerSubPage
   selectedPage: ProfilePageQuery
   username: string
 }
 
-const statsPageButtonClass =
-  'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-sm text-text-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2'
-const disabledStatsPageButtonClass =
-  'pointer-events-none cursor-not-allowed opacity-50 hover:bg-surface focus-visible:ring-0'
-const isStatsPageLinkDisabled = true
 const BEST_CANDIDATE_HEADING = 'ベスト枠候補'
 const NEW_CANDIDATE_HEADING = '新曲枠候補'
+const JACKET_VISIBILITY_LABEL = 'ジャケット画像を非表示'
+const HIDE_JACKETS_LABEL = 'ジャケット画像を非表示'
+const SHOW_JACKETS_LABEL = 'ジャケット画像を表示'
+const PAGE_TAB_OPTIONS = [
+  { value: 'rating', label: 'レーティング' },
+  { value: 'records', label: 'レコード' },
+  { value: 'overpower', label: 'OVER POWER' },
+] as const
+const RATING_TAB_OPTIONS = [
+  { value: 'best', label: 'ベスト枠' },
+  { value: 'new', label: '新曲枠' },
+] as const
+const RECORD_TAB_OPTIONS = [
+  { value: 'standard', label: 'STANDARD' },
+  { value: 'worldsend', label: "WORLD'S END" },
+  { value: 'course', label: 'COURSE' },
+] as const
 
 /**
- * ユーザー統計ページへのリンクを表示する。
+ * レーティングカードのジャケット画像表示を切り替える。
  *
- * @param props - 統計ページのリンク先。
- * @returns 統計ページへのリンク。
+ * @param props - ジャケット画像の表示状態と切り替え処理。
+ * @returns ジャケット画像表示を切り替える丸形アイコンボタン。
  */
-const StatsPageLink: Component<{ href: string }> = (props) => (
-  <A
-    href={props.href}
-    class={`${statsPageButtonClass} ${isStatsPageLinkDisabled ? disabledStatsPageButtonClass : ''}`}
-    aria-disabled={isStatsPageLinkDisabled ? 'true' : undefined}
-    aria-label={isStatsPageLinkDisabled ? '統計ページ（開発中）' : '統計ページ'}
-    tabIndex={isStatsPageLinkDisabled ? -1 : undefined}
-    title={isStatsPageLinkDisabled ? '統計ページ（開発中）' : '統計ページ'}
-    onClick={(event) => {
-      if (isStatsPageLinkDisabled) event.preventDefault()
-    }}
-  >
-    <span>統計</span>
-    <ChartColumnIncreasing class="h-5 w-5" aria-hidden="true" />
-  </A>
-)
+const JacketVisibilityToggle: Component<{
+  showJackets: boolean
+  onToggle: () => void
+}> = (props) => {
+  const actionLabel = () => (props.showJackets ? HIDE_JACKETS_LABEL : SHOW_JACKETS_LABEL)
+
+  return (
+    <AppIconButton
+      class="rounded-full data-[jackets-hidden=true]:border-action-primary data-[jackets-hidden=true]:bg-action-primary data-[jackets-hidden=true]:text-text-inverse data-[jackets-hidden=true]:hover:bg-action-primary-hover"
+      aria-label={JACKET_VISIBILITY_LABEL}
+      aria-pressed={!props.showJackets}
+      data-jackets-hidden={!props.showJackets}
+      title={actionLabel()}
+      onClick={props.onToggle}
+    >
+      <ImageOff class="h-5 w-5" aria-hidden="true" />
+    </AppIconButton>
+  )
+}
 
 /**
  * レーティング対象レコードと候補レコードを一覧表示する。
  *
- * @param props - レーティング対象レコード、候補レコード、候補見出し。
+ * @param props - レーティング対象・候補レコード、候補見出し、候補の目標レーティング。
  * @returns レコードカードの一覧。
  */
 const RecordList: Component<{
   records: PlayerRecordDTO[]
   candidates?: PlayerRecordDTO[]
   candidateHeading: string
-}> = (props) => (
-  <div class="mx-4 flex flex-col gap-2">
-    <For each={props.records}>{(record, i) => <UserRecordCard record={record} index={i()} />}</For>
-    <Show when={(props.candidates?.length ?? 0) > 0}>
-      <h3 class="mt-4 border-t-2 border-border-strong pt-4 text-base font-bold text-text">
-        {props.candidateHeading}
-      </h3>
-      <For each={props.candidates}>
-        {(record, i) => <UserRecordCard record={record} index={i()} useDefaultIndexColor />}
-      </For>
-    </Show>
-  </div>
-)
+  candidateTargetRating?: number
+  showJackets: boolean
+  /** レーティング対象として表示する規定枠数。 */
+  slotCount: number
+}> = (props) => {
+  /**
+   * 実レコードの後ろに表示する空き枠のインデックスを返す。
+   *
+   * @returns 実レコード件数から規定枠数までの0始まりインデックス。
+   */
+  const emptySlotIndexes = (): number[] =>
+    Array.from(
+      { length: Math.max(props.slotCount - props.records.length, 0) },
+      (_, index) => props.records.length + index
+    )
 
+  return (
+    <div class="mx-4 flex flex-col gap-2">
+      <For each={props.records}>
+        {(record, i) => (
+          <UserRecordCard record={record} index={i()} showJackets={props.showJackets} />
+        )}
+      </For>
+      <For each={emptySlotIndexes()}>{(index) => <UserRecordPlaceholderCard index={index} />}</For>
+      <Show when={(props.candidates?.length ?? 0) > 0}>
+        <h3 class="mt-4 border-t-2 border-border-strong pt-4 text-base font-bold text-text">
+          {props.candidateHeading}
+        </h3>
+        <For each={props.candidates}>
+          {(record, i) => (
+            <UserRecordCard
+              record={record}
+              index={i()}
+              showJackets={props.showJackets}
+              scoreDifference={
+                props.candidateTargetRating === undefined
+                  ? undefined
+                  : calculateCandidateScoreDifference(
+                      record.score,
+                      record.const,
+                      props.candidateTargetRating
+                    )
+              }
+              useDefaultIndexColor
+            />
+          )}
+        </For>
+      </Show>
+    </div>
+  )
+}
+
+/**
+ * ユーザープロフィールとレーティング・レコード・OVER POWERの各タブを表示する。
+ *
+ * @param props - プロフィール表示と各タブの取得状態・選択状態。
+ * @returns ユーザープロフィール画面。
+ */
 export const UserProfileView: Component<Props> = (props) => {
+  const [showJackets, setShowJackets] = createSignal(true)
   const playerInfo = (): PlayerDTO => props.profile.player
   const honors = (): HonorDTO[] => playerInfo().honors
   const bestRecords = (): PlayerRecordDTO[] => props.profile.rating.best
   const bestCandidateRecords = (): PlayerRecordDTO[] => props.profile.rating.best_candidate
   const newRecords = (): PlayerRecordDTO[] => props.profile.rating.new
   const newCandidateRecords = (): PlayerRecordDTO[] => props.profile.rating.new_candidate
+  const bestCandidateTargetRating = createMemo(() =>
+    calculateCandidateTargetRating(bestRecords().map((record) => record.rating))
+  )
+  const newCandidateTargetRating = createMemo(() =>
+    calculateCandidateTargetRating(newRecords().map((record) => record.rating))
+  )
   const recordProfile = () => props.recordProfile()
+  /**
+   * 現在表示中のユーザーに一致するコースレコードだけを返す。
+   *
+   * @returns 表示対象ユーザーのコースレコード。取得前または別ユーザーの値ならundefined。
+   */
+  const courseRecordProfile = () => {
+    const profile = props.courseRecordProfile()
+    return profile?.username === props.username ? profile : undefined
+  }
   const navigate = useNavigate()
   const location = useLocation()
   const selectedPageTab = createMemo<'rating' | 'records' | 'overpower'>(() => {
-    if (props.selectedPage === 'record_normal' || props.selectedPage === 'record_we') {
+    if (
+      props.selectedPage === 'record_normal' ||
+      props.selectedPage === 'record_we' ||
+      props.selectedPage === 'record_course'
+    ) {
       return 'records'
     }
 
@@ -107,18 +201,14 @@ export const UserProfileView: Component<Props> = (props) => {
   const selectedRatingTab = createMemo<'best' | 'new'>(() =>
     props.selectedPage === 'rating_new' ? 'new' : 'best'
   )
-  const selectedRecordTab = createMemo<'standard' | 'worldsend'>(() =>
-    props.selectedPage === 'record_we' ? 'worldsend' : 'standard'
-  )
+  const selectedRecordTab = createMemo<'standard' | 'worldsend' | 'course'>(() => {
+    if (props.selectedPage === 'record_we') return 'worldsend'
+    if (props.selectedPage === 'record_course') return 'course'
+    return 'standard'
+  })
 
   // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
   const NAMEPLATE_SCROLL_OFFSET = 183
-  /** プロフィールページ上部のメインタブに適用する表示クラス。 */
-  const tabTriggerClass =
-    'rounded-t border-b-2 border-transparent px-3 py-1 text-sm text-text-muted transition-colors hover:border-success data-selected:border-focus-ring data-selected:bg-bg data-selected:text-text data-selected:hover:border-focus-ring'
-  /** レーティング枠とレコード種別を切り替えるサブタブの表示クラス。 */
-  const ratingTabTriggerClass =
-    'rounded-lg p-2 text-sm font-medium text-text-muted transition-colors hover:bg-action-secondary hover:text-text data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm data-selected:hover:bg-action-primary data-selected:hover:text-text-inverse focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
   const forceMountedTabContentClass = 'hidden data-selected:block'
 
   const scrollToRecordList = () => {
@@ -147,8 +237,6 @@ export const UserProfileView: Component<Props> = (props) => {
     return `${normalizedPath}${queryString ? `?${queryString}` : ''}${location.hash}`
   }
 
-  const statsPagePath = () => `/users/${encodeURIComponent(props.username)}/stats`
-
   const handlePageTabChange = (value: string) => {
     if (value !== 'rating' && value !== 'records' && value !== 'overpower') return
 
@@ -159,7 +247,11 @@ export const UserProfileView: Component<Props> = (props) => {
     } else if (value === 'records') {
       navigate(
         buildProfileNavigationTarget(
-          selectedRecordTab() === 'worldsend' ? 'record_we' : 'record_normal'
+          selectedRecordTab() === 'worldsend'
+            ? 'record_we'
+            : selectedRecordTab() === 'course'
+              ? 'record_course'
+              : 'record_normal'
         )
       )
       props.onShowRecords()
@@ -177,10 +269,21 @@ export const UserProfileView: Component<Props> = (props) => {
     scrollToRecordList()
   }
 
+  /**
+   * レーティングカードのジャケット画像表示を切り替える。
+   *
+   * @returns ジャケット画像表示の状態を反転する。
+   */
+  const handleJacketVisibilityToggle = () => {
+    setShowJackets((current) => !current)
+  }
+
   const handleRecordTabChange = (value: string) => {
-    if (value !== 'standard' && value !== 'worldsend') return
-    navigate(buildProfileNavigationTarget(value === 'worldsend' ? 'record_we' : 'record_normal'))
-    props.onShowRecords()
+    if (value !== 'standard' && value !== 'worldsend' && value !== 'course') return
+    const page =
+      value === 'worldsend' ? 'record_we' : value === 'course' ? 'record_course' : 'record_normal'
+    navigate(buildProfileNavigationTarget(page))
+    if (value !== 'course') props.onShowRecords()
     scrollToRecordList()
   }
 
@@ -189,69 +292,80 @@ export const UserProfileView: Component<Props> = (props) => {
       {/* ↑と↓について: stickyScrollの関係でmy-4を使わず、mb-4とmt-4を別の箇所で指定しています */}
       <div class="mt-4">
         {/* ネームプレート */}
-        <UserNameplate playerInfo={playerInfo()} honors={honors()} rating={props.profile.rating} />
+        <UserNameplate
+          playerInfo={playerInfo()}
+          honors={honors()}
+          rating={props.profile.rating}
+          historyHref={buildUserStatsPagePath(props.username)}
+        />
       </div>
 
-      <Tabs.Root value={selectedPageTab()} class="mb-4" onChange={handlePageTabChange}>
-        <Tabs.List class="sticky top-0 z-10 bg-bg flex gap-2 mb-4 px-4 pt-2 border-b border-border-strong">
-          <Tabs.Trigger value="rating" class={tabTriggerClass}>
-            レーティング
-          </Tabs.Trigger>
-          <Tabs.Trigger value="records" class={tabTriggerClass}>
-            レコード
-          </Tabs.Trigger>
-          <Tabs.Trigger value="overpower" class={tabTriggerClass}>
-            OVER POWER
-          </Tabs.Trigger>
-          <div class="flex-1"></div>
-        </Tabs.List>
-
-        <Tabs.Content value="rating" forceMount class={forceMountedTabContentClass}>
-          <Tabs.Root value={selectedRatingTab()} onChange={handleRatingTabChange}>
-            <div class="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3">
-              <Tabs.List class="inline-flex gap-1 rounded-xl bg-surface-hover p-1">
-                <Tabs.Trigger value="best" class={ratingTabTriggerClass}>
-                  ベスト枠
-                </Tabs.Trigger>
-                <Tabs.Trigger value="new" class={ratingTabTriggerClass}>
-                  新曲枠
-                </Tabs.Trigger>
-              </Tabs.List>
-              <StatsPageLink href={statsPagePath()} />
-            </div>
-
-            <Tabs.Content value="best">
+      <UnderlineTabs
+        value={selectedPageTab()}
+        class="mb-4"
+        onChange={handlePageTabChange}
+        options={PAGE_TAB_OPTIONS}
+        listClass="sticky top-0 z-10 mb-4 bg-page-pattern px-4 pt-2"
+        triggerClass="data-selected:!bg-transparent"
+        listAfter={<div class="flex-1" />}
+      >
+        <AppTabContent value="rating" forceMount class={forceMountedTabContentClass}>
+          <SegmentedTabs
+            value={selectedRatingTab()}
+            onChange={handleRatingTabChange}
+            options={RATING_TAB_OPTIONS}
+            listClass="rounded-xl"
+            listWrapperClass="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3"
+            listAside={
+              <div class="flex items-center gap-2">
+                <JacketVisibilityToggle
+                  showJackets={showJackets()}
+                  onToggle={handleJacketVisibilityToggle}
+                />
+                <RatingImagePreviewDialog
+                  username={props.username}
+                  playerInfo={playerInfo()}
+                  honors={honors()}
+                  rating={props.profile.rating}
+                  showJackets={showJackets()}
+                />
+              </div>
+            }
+            triggerClass="p-2"
+          >
+            <AppTabContent value="best">
               <RecordList
                 records={bestRecords()}
                 candidates={bestCandidateRecords()}
                 candidateHeading={BEST_CANDIDATE_HEADING}
+                candidateTargetRating={bestCandidateTargetRating()}
+                showJackets={showJackets()}
+                slotCount={RATING_SLOT_COUNT.best}
               />
-            </Tabs.Content>
-            <Tabs.Content value="new">
+            </AppTabContent>
+            <AppTabContent value="new">
               <RecordList
                 records={newRecords()}
                 candidates={newCandidateRecords()}
                 candidateHeading={NEW_CANDIDATE_HEADING}
+                candidateTargetRating={newCandidateTargetRating()}
+                showJackets={showJackets()}
+                slotCount={RATING_SLOT_COUNT.new}
               />
-            </Tabs.Content>
-          </Tabs.Root>
-        </Tabs.Content>
+            </AppTabContent>
+          </SegmentedTabs>
+        </AppTabContent>
 
-        <Tabs.Content value="records" forceMount class={forceMountedTabContentClass}>
-          <Tabs.Root value={selectedRecordTab()} onChange={handleRecordTabChange}>
-            <div class="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3">
-              <Tabs.List class="inline-flex gap-1 rounded-xl bg-surface-hover p-1">
-                <Tabs.Trigger value="standard" class={ratingTabTriggerClass}>
-                  STANDARD
-                </Tabs.Trigger>
-                <Tabs.Trigger value="worldsend" class={ratingTabTriggerClass}>
-                  WORLD'S END
-                </Tabs.Trigger>
-              </Tabs.List>
-              <StatsPageLink href={statsPagePath()} />
-            </div>
-
-            <Tabs.Content value="standard" forceMount class={forceMountedTabContentClass}>
+        <AppTabContent value="records" forceMount class={forceMountedTabContentClass}>
+          <SegmentedTabs
+            value={selectedRecordTab()}
+            onChange={handleRecordTabChange}
+            options={RECORD_TAB_OPTIONS}
+            listClass="rounded-xl"
+            listWrapperClass="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3"
+            triggerClass="p-2"
+          >
+            <AppTabContent value="standard" forceMount class={forceMountedTabContentClass}>
               <Suspense fallback={<Loading />}>
                 <Show when={recordProfile()} fallback={<Loading />}>
                   {(profile) => (
@@ -259,18 +373,30 @@ export const UserProfileView: Component<Props> = (props) => {
                   )}
                 </Show>
               </Suspense>
-            </Tabs.Content>
-            <Tabs.Content value="worldsend" forceMount class={forceMountedTabContentClass}>
+            </AppTabContent>
+            <AppTabContent value="worldsend" forceMount class={forceMountedTabContentClass}>
               <Suspense fallback={<Loading />}>
                 <Show when={recordProfile()} fallback={<Loading />}>
                   {(profile) => <WorldsendRecord records={profile().record.worldsend ?? []} />}
                 </Show>
               </Suspense>
-            </Tabs.Content>
-          </Tabs.Root>
-        </Tabs.Content>
+            </AppTabContent>
+            <AppTabContent value="course">
+              <Suspense fallback={<Loading />}>
+                <Show
+                  when={!props.courseRecordProfile.error}
+                  fallback={<LoadError error={props.courseRecordProfile.error} />}
+                >
+                  <Show when={courseRecordProfile()} fallback={<Loading />}>
+                    {(profile) => <CourseRecord records={profile().records.courses} />}
+                  </Show>
+                </Show>
+              </Suspense>
+            </AppTabContent>
+          </SegmentedTabs>
+        </AppTabContent>
 
-        <Tabs.Content value="overpower" forceMount class={forceMountedTabContentClass}>
+        <AppTabContent value="overpower" forceMount class={forceMountedTabContentClass}>
           <Suspense fallback={<Loading />}>
             <Show when={recordProfile()} fallback={<Loading />}>
               {(profile) => (
@@ -282,8 +408,8 @@ export const UserProfileView: Component<Props> = (props) => {
               )}
             </Show>
           </Suspense>
-        </Tabs.Content>
-      </Tabs.Root>
+        </AppTabContent>
+      </UnderlineTabs>
     </div>
   )
 }

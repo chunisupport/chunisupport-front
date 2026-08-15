@@ -7,6 +7,7 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../types/api'
+import { normalizeGoalAttributeIds } from './goalAttributes'
 import { buildGoalVersionNameMap } from './goalVersion'
 
 // ID(code) -> 表示名の辞書。将来は言語キーを増やすだけでi18n対応できる
@@ -17,32 +18,30 @@ export const GOAL_ACHIEVEMENT_TYPE_LABELS = {
     avg_score: '平均スコア',
     hardlamp_count: 'ハードランプ達成数',
     combolamp_count: 'FC/AJ達成数',
+    rainbow_count: '虹枠 (曲毎AJ) 達成楽曲数',
     total_score: 'トータルハイスコア',
     overpower_value: 'OVER POWER',
     overpower_percent: 'OVER POWER達成率',
   } satisfies Record<GoalAchievementType, string>,
 }
 
-export const HARD_LAMP_OPTIONS = [
-  { value: 'HRD', label: 'HARD以上' },
-  { value: 'BRV', label: 'BRAVE以上' },
-  { value: 'ABS', label: 'ABSOLUTE以上' },
-  { value: 'CTS', label: 'CATASTROPHY以上' },
-] as const
-
-export const COMBO_LAMP_OPTIONS = [
-  { value: 'FC', label: 'FULL COMBO以上' },
-  { value: 'AJ', label: 'ALL JUSTICE' },
-] as const
-
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
+const NO_TARGET_CHARTS_LABEL = '対象譜面なし'
 
+/**
+ * 保存済み目標から作成・更新APIへ送信できるペイロードを作る。
+ *
+ * @param goal - APIから取得した保存済み目標。
+ * @returns レスポンス専用項目を除いた目標ペイロード。
+ */
 export const buildGoalPayload = (goal: GoalDTO): GoalRequest => ({
+  group_id: goal.group_id,
   title: goal.title,
   achievement_type: goal.achievement_type,
   achievement_params: goal.achievement_params,
   attributes: goal.attributes,
-  invert: goal.invert,
+  invert_value: goal.invert_value,
+  invert_percentage: goal.invert_percentage,
 })
 
 export const resolveGoalAchievementTypeLabel = (
@@ -75,30 +74,26 @@ export const formatGoalAttributesLabel = (
 ): string => {
   const parts: string[] = []
 
-  const normalizeIds = (value: number | number[] | undefined): number[] => {
-    if (typeof value === 'number') return [value]
-    if (Array.isArray(value)) {
-      return value.filter((id): id is number => Number.isInteger(id))
-    }
-    return []
-  }
+  const formatNames = (ids: number[] | undefined, namesById: Map<number, string>): string =>
+    ids?.map((id) => namesById.get(id) ?? String(id)).join(', ') ?? ''
 
-  const formatNames = (ids: number[], namesById: Map<number, string>): string =>
-    ids.map((id) => namesById.get(id) ?? String(id)).join(', ')
-
-  const diffIds = normalizeIds(attributes.diff)
-  const genreIds = normalizeIds(attributes.genre)
-  const versionIds = normalizeIds(attributes.ver)
+  const diffIds = normalizeGoalAttributeIds(attributes.diff)
+  const genreIds = normalizeGoalAttributeIds(attributes.genre)
+  const versionIds = normalizeGoalAttributeIds(attributes.ver)
+  const hasNoSelectedCharts =
+    diffIds?.length === 0 || genreIds?.length === 0 || versionIds?.length === 0
 
   const difficultyNameMap = new Map(masterData.difficulties.map((item) => [item.id, item.name]))
   const genreNameMap = new Map(masterData.genres.map((item) => [item.id, item.name]))
   const versionNameMap = buildGoalVersionNameMap(versions)
 
+  if (hasNoSelectedCharts) return NO_TARGET_CHARTS_LABEL
+
   if (attributes.chart_target === 'OP_TARGET') {
     parts.push('対象: OP対象')
   }
 
-  if (diffIds.length > 0) {
+  if (attributes.chart_target !== 'OP_TARGET' && diffIds && diffIds.length > 0) {
     parts.push(`難易度: ${formatNames(diffIds, difficultyNameMap)}`)
   }
 
@@ -106,11 +101,11 @@ export const formatGoalAttributesLabel = (
     parts.push(`定数: ${attributes.const?.min ?? '-'} ～ ${attributes.const?.max ?? '-'}`)
   }
 
-  if (genreIds.length > 0) {
+  if (genreIds && genreIds.length > 0) {
     parts.push(`ジャンル: ${formatNames(genreIds, genreNameMap)}`)
   }
 
-  if (versionIds.length > 0) {
+  if (versionIds && versionIds.length > 0) {
     parts.push(`バージョン: ${formatNames(versionIds, versionNameMap)}`)
   }
 

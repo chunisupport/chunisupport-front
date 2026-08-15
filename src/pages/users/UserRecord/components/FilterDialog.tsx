@@ -1,12 +1,12 @@
-import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
+import { AppButton } from '../../../../components/common/AppButton'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../types/api'
-import type { EditingFilter } from '../../../components/SavedRecordFiltersDialog'
-import { normalizeFilterState } from '../types/filterDefaults'
-import type { FilterState } from '../types/types'
-import FilterResetDialog from './filterDialog/dialogs/FilterResetDialog'
+import type { FilterState } from '../../../../types/recordFilter'
+import { normalizeFilterState } from '../../../../utils/recordFilterDefaults'
+import FilterResetDialog from '../../components/FilterResetDialog'
+import type { EditingFilter } from '../../components/SavedRecordFiltersDialog'
 import SavedFiltersDialog from './filterDialog/dialogs/SavedFiltersDialog'
 import FilterSelectionPanel from './filterDialog/FilterSelectionPanel'
 
@@ -17,13 +17,6 @@ const FILTER_DIALOG_TEXT = {
   apply: '適用',
 } as const
 
-/** フィルターダイアログの操作ボタンで使う Tailwind クラス。 */
-const FILTER_DIALOG_BUTTON_CLASS = {
-  secondary:
-    'px-4 py-2 rounded bg-action-secondary text-text-muted hover:bg-action-secondary-hover',
-  primary: 'px-4 py-2 rounded bg-action-primary text-text-inverse hover:bg-action-primary-hover',
-} as const
-
 interface FilterDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -32,6 +25,10 @@ interface FilterDialogProps {
   masterData?: MasterDataDTO
   versions?: VersionSummaryDTO[]
   defaultFilter: FilterState
+  /** お気に入り楽曲設定を開く。 */
+  onOpenFavoriteSongs?: () => void
+  /** お気に入り楽曲設定を無効化するか。 */
+  favoriteSongsDisabled?: boolean
 }
 
 /**
@@ -117,23 +114,23 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={handleOpenChange}>
+    <Dialog open={props.open} onOpenChange={handleOpenChange} preventScroll={false}>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
         <Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface rounded-lg shadow-lg p-6 w-[90vw] max-w-md max-h-11/12 flex flex-col select-none">
           <div class="flex items-center justify-between mb-4 shrink-0">
             <Dialog.Title class="text-lg font-bold">{FILTER_DIALOG_TEXT.title}</Dialog.Title>
-            <FilterResetDialog onReset={handleReset} />
-          </div>
-          <div class="mb-4">
-            <SavedFiltersDialog
-              open={props.open}
-              currentFilters={filters()}
-              onApplyFilter={handleApplySavedFilter}
-              onEditFilter={handleEditSavedFilter}
-              onEditingChange={handleEditingChange}
-              editedFilterName={editingFilter()?.name}
-            />
+            <div class="flex items-center gap-2">
+              <SavedFiltersDialog
+                open={props.open}
+                currentFilters={filters()}
+                onApplyFilter={handleApplySavedFilter}
+                onEditFilter={handleEditSavedFilter}
+                onEditingChange={handleEditingChange}
+                editedFilterName={editingFilter()?.name}
+              />
+              <FilterResetDialog onReset={handleReset} />
+            </div>
           </div>
           {/* メインのフィルター選択部分 */}
           <FilterSelectionPanel
@@ -148,23 +145,17 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
             onEditingFilterNameChange={(name) =>
               setEditingFilter((prev) => (prev ? { ...prev, name } : null))
             }
+            onOpenFavoriteSongs={props.onOpenFavoriteSongs}
+            favoriteSongsDisabled={props.favoriteSongsDisabled}
           />
           <div class="flex justify-end mt-6">
             <div class="flex gap-2">
-              <Button
-                type="button"
-                class={FILTER_DIALOG_BUTTON_CLASS.secondary}
-                onClick={() => props.onOpenChange(false)}
-              >
+              <AppButton onClick={() => props.onOpenChange(false)}>
                 {FILTER_DIALOG_TEXT.cancel}
-              </Button>
-              <Button
-                type="button"
-                class={FILTER_DIALOG_BUTTON_CLASS.primary}
-                onClick={handleApply}
-              >
+              </AppButton>
+              <AppButton variant="primary" onClick={handleApply}>
                 {FILTER_DIALOG_TEXT.apply}
-              </Button>
+              </AppButton>
             </div>
           </div>
         </Dialog.Content>
