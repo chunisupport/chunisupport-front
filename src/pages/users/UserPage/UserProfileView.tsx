@@ -5,6 +5,7 @@ import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
 import { AppIconButton } from '../../../components/common/AppButton'
 import { AppTabContent, SegmentedTabs, UnderlineTabs } from '../../../components/common/AppTabs'
+import { RATING_SLOT_COUNT } from '../../../constants/rating'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import {
   calculateCandidateScoreDifference,
@@ -26,7 +27,6 @@ import type {
   UserPageRatingProfile,
   UserPageRecordProfile,
 } from './UserPage'
-import { RATING_SLOT_COUNT } from './UserProfileView.constants'
 
 const UserRecord = lazy(() => import('../UserRecord'))
 const UserOverPower = lazy(() => import('../UserOverPower/UserOverPower'))

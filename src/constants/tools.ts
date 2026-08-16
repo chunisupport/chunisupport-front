@@ -3,6 +3,7 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   RANDOM_SONG_SELECTOR_PATH,
+  RATING_THEORETICAL_CHECKER_PATH,
   TOOL_STATS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
@@ -10,7 +11,7 @@ import {
 /**
  * ツールカードに表示するアイコン種別。
  */
-export type ToolLinkIcon = 'calculator' | 'chart' | 'target' | 'random' | 'ranking'
+export type ToolLinkIcon = 'calculator' | 'chart' | 'target' | 'random' | 'ranking' | 'gauge'
 
 /**
  * 無効化されたツールカードに表示する状態ラベル。
@@ -60,6 +61,11 @@ export const TOOL_LINKS: ToolLink[] = [
     title: 'ベスト枠ランキング',
     href: BEST_SLOT_RANKING_PATH,
     icon: 'ranking',
+  },
+  {
+    title: 'ベスト枠・新曲枠理論値チェッカー',
+    href: RATING_THEORETICAL_CHECKER_PATH,
+    icon: 'gauge',
   },
   {
     title: '統計',
