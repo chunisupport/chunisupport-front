@@ -71,6 +71,5 @@ export const TOOL_LINKS: ToolLink[] = [
     title: '統計',
     href: TOOL_STATS_PATH,
     icon: 'chart',
-    disabled: true,
   },
 ]

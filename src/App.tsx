@@ -90,6 +90,7 @@ const WeakChartInspectorPage = lazy(() => import('./pages/tools/WeakChartInspect
 const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelectorPage'))
 const BestSlotRankingPage = lazy(() => import('./pages/tools/BestSlotRankingPage'))
 const RatingTheoreticalCheckerPage = lazy(() => import('./pages/tools/NewSongSssPlusToolPage'))
+const PlayerStatsDashboardPage = lazy(() => import('./pages/tools/PlayerStatsDashboard'))
 
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
 const AdminDataCoveragePage = lazy(() => import('./pages/admin/AdminDataCoveragePage'))
@@ -345,14 +346,6 @@ const ToolsPage = () => {
   )
 }
 
-/**
- * 未実装ツールの空ページを表示する。
- * @returns 空のツールページ
- */
-const EmptyToolPage = () => {
-  return <div />
-}
-
 const LoadableAdminPage = withRouteLoadBoundary(AdminPage)
 const LoadableAdminDataCoveragePage = withRouteLoadBoundary(AdminDataCoveragePage)
 const LoadableAdminUsersPage = withRouteLoadBoundary(AdminUsersPage)
@@ -571,7 +564,10 @@ const App = () => {
         path={RATING_THEORETICAL_CHECKER_PATH}
         component={withNavBar(withAuth(withRouteLoadBoundary(RatingTheoreticalCheckerPage)))}
       />
-      <Route path={TOOL_STATS_PATH} component={withNavBar(EmptyToolPage)} />
+      <Route
+        path={TOOL_STATS_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(PlayerStatsDashboardPage)))}
+      />
 
       {/* 管理 */}
       <Route path={ADMIN_PATH} component={withNavBar(GuardedAdminPage)} />
