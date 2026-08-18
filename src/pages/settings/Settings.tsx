@@ -315,6 +315,7 @@ const Settings = () => {
                 </div>
 
                 <DataTransferSettingsSection
+                  hasUserData={Boolean(loadedSummary().profile.player)}
                   onImported={async () => {
                     await refetchSummary()
                   }}
