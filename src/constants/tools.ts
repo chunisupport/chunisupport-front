@@ -68,7 +68,7 @@ export const TOOL_LINKS: ToolLink[] = [
     icon: 'gauge',
   },
   {
-    title: '統計',
+    title: 'ダッシュボード',
     href: TOOL_STATS_PATH,
     icon: 'chart',
   },
