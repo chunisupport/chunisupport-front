@@ -14,26 +14,33 @@ import { createMemo, createResource, createSignal, ErrorBoundary, For, Show } fr
 import { fetchMe } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { AppSelect } from '../../../components/common/AppSelect'
-import { AppTabContent, SegmentedTabs } from '../../../components/common/AppTabs'
+import {
+  AppTabContent,
+  SegmentedTabs,
+  SegmentedToggleGroup,
+} from '../../../components/common/AppTabs'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
 import { buildSongDetailPath } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../../types/api'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
 import { fetchPlayerStatsChartMetadata } from '../../../usecases/overpower/fetchTheoreticalTargetDifficulties'
+import { formatChartConst } from '../../../utils/chartConstFormat'
 import { getConstDisplay } from '../../../utils/constDisplay'
 import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
 import {
   buildPlayerStatsAchievementProgress,
+  buildPlayerStatsChartConstantRows,
   buildPlayerStatsLevelRows,
   buildPlayerStatsMilestone,
   buildPlayerStatsSummary,
   filterPlayerStatsRecords,
   findPlayerStatsCandidates,
-  type PlayerStatsAchievement,
   type PlayerStatsCandidate,
   type PlayerStatsCandidateTarget,
+  type PlayerStatsChartConstantRow,
   type PlayerStatsDifficulty,
+  type PlayerStatsHeatmapRow,
   type PlayerStatsLevelAchievement,
   type PlayerStatsLevelRow,
   type PlayerStatsNotesBySongId,
@@ -50,10 +57,13 @@ import {
   PLAYER_STATS_COPY,
   PLAYER_STATS_DEFAULT_DIFFICULTY,
   PLAYER_STATS_DIFFICULTY_OPTIONS,
+  PLAYER_STATS_HEATMAP_AXIS_OPTIONS,
   PLAYER_STATS_HEATMAP_MAX_MIX_PERCENT,
-  PLAYER_STATS_LEVEL_METRICS,
+  PLAYER_STATS_HEATMAP_METRICS,
+  PLAYER_STATS_MILESTONE_OPTIONS,
   type PlayerStatsAchievementGroup,
   type PlayerStatsDifficultyOption,
+  type PlayerStatsHeatmapAxis,
 } from './constants'
 
 /** 統計画面の表示に必要なログインユーザーのレコード情報。 */
@@ -172,29 +182,27 @@ const SummaryCards = (props: { summary: PlayerStatsSummary }): JSX.Element => (
 /**
  * 達成条件1件分の累計件数と割合を表示する。
  *
- * @param props.achievement - 表示する到達条件。
+ * @param props.label - タブ内で表示する到達条件名。
  * @param props.count - 達成譜面数。
  * @param props.total - 集計対象の全譜面数。
  * @param props.percent - 全譜面に対する達成率。
  * @returns ラベル、件数、割合、進捗バーを含む行。
  */
 const AchievementRow = (props: {
-  achievement: PlayerStatsAchievement
+  label: string
   count: number
   total: number
   percent: number
 }): JSX.Element => (
   <li class="grid gap-2 border-b border-border py-3 last:border-b-0 sm:grid-cols-[8rem_6rem_minmax(10rem,1fr)] sm:items-center sm:gap-4">
-    <span class="text-sm font-semibold text-text">
-      {PLAYER_STATS_ACHIEVEMENT_LABEL[props.achievement]}
-    </span>
+    <span class="text-sm font-semibold text-text">{props.label}</span>
     <span class="font-jost text-right text-sm tabular-nums text-text-muted">
       {formatInteger(props.count)} {PLAYER_STATS_COPY.heatmapCountSeparator}{' '}
       {formatInteger(props.total)}
     </span>
     <div class="flex items-center gap-3">
       <progress
-        aria-label={`${PLAYER_STATS_ACHIEVEMENT_LABEL[props.achievement]}${PLAYER_STATS_COPY.achievementRateSuffix}`}
+        aria-label={`${props.label}${PLAYER_STATS_COPY.achievementRateSuffix}`}
         class="h-2 flex-1 appearance-none overflow-hidden rounded bg-action-secondary [&::-moz-progress-bar]:rounded [&::-moz-progress-bar]:bg-action-primary [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-action-secondary [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-action-primary"
         max={100}
         value={props.percent}
@@ -220,7 +228,18 @@ const AchievementSection = (props: { records: PlayerRecordDTO[] }): JSX.Element 
       <For
         each={buildPlayerStatsAchievementProgress(props.records, PLAYER_STATS_ACHIEVEMENTS[group])}
       >
-        {(progress) => <AchievementRow {...progress} total={props.records.length} />}
+        {(progress) => (
+          <AchievementRow
+            label={
+              group === 'combo' && progress.achievement === 'max'
+                ? PLAYER_STATS_ACHIEVEMENT_LABEL.ajc
+                : PLAYER_STATS_ACHIEVEMENT_LABEL[progress.achievement]
+            }
+            count={progress.count}
+            percent={progress.percent}
+            total={props.records.length}
+          />
+        )}
       </For>
     </ul>
   )
@@ -263,112 +282,133 @@ const getHeatmapBackground = (count: number, total: number): string => {
 }
 
 /**
- * レベル行の達成セルを件数と割合で表示する。
+ * 達成率分布行の達成セルを達成数と総数の2段で表示する。
  *
- * @param props.row - 表示するレベル統計行。
+ * @param props.row - 表示する達成率分布行。
  * @param props.metric - 表示する到達条件。
  * @returns 色の濃淡と数値を併用した表セル。
  */
 const HeatmapCell = (props: {
-  row: PlayerStatsLevelRow
+  row: PlayerStatsHeatmapRow
   metric: PlayerStatsLevelAchievement
 }): JSX.Element => {
   const count = () => props.row[props.metric]
-  const percent = () => (props.row.total > 0 ? (count() / props.row.total) * 100 : 0)
   return (
     <td
-      class="min-w-24 border-l border-border px-3 py-2 text-center"
+      class="min-w-16 border-l border-border px-2 py-1.5 text-center"
       style={{ background: getHeatmapBackground(count(), props.row.total) }}
     >
-      <span class="block font-jost text-sm font-semibold tabular-nums text-text">
+      <span class="block font-jost text-sm font-semibold leading-tight tabular-nums text-text">
         {formatInteger(count())}
-        <span class="font-normal text-text-muted">
-          {PLAYER_STATS_COPY.heatmapCountSeparator}
-          {formatInteger(props.row.total)}
-        </span>
       </span>
-      <span class="block font-jost text-xs tabular-nums text-text-muted">
-        {formatTruncatedFixed(percent(), 1)}%
+      <span class="block font-jost text-xs leading-tight tabular-nums text-text-muted">
+        {PLAYER_STATS_COPY.heatmapCountSeparator}
+        {formatInteger(props.row.total)}
       </span>
     </td>
   )
 }
 
 /**
- * 譜面定数から換算したレベルごとの達成率を表形式で表示する。
+ * 選択した集計軸ごとの達成率を表形式で表示する。
  *
- * @param props.rows - レベルが高い順の統計行。
+ * @param props.group - RANK、COMBO、HARDのいずれか。
+ * @param props.rows - 集計軸の値が高い順の統計行。
+ * @param props.caption - 表の読み上げ用説明。
  * @returns 横スクロール可能なアクセシブルデータ表。
  */
-const LevelHeatmap = (props: { rows: PlayerStatsLevelRow[] }): JSX.Element => {
-  /**
-   * 選択した達成種別のレベル別集計表を表示する。
-   *
-   * @param group - RANK、COMBO、HARDのいずれか。
-   * @returns 指定種別の到達条件を列にした表。
-   */
-  const renderTable = (group: PlayerStatsAchievementGroup): JSX.Element => {
-    const metrics = PLAYER_STATS_LEVEL_METRICS[group]
-    return (
-      <div class="mt-4 overflow-x-auto rounded-lg border border-border">
-        <table class="w-full min-w-[34rem] border-collapse">
-          <caption class="sr-only">{PLAYER_STATS_COPY.levelCaption}</caption>
-          <thead class="bg-surface-muted text-xs text-text-muted">
-            <tr>
-              <th scope="col" class="px-3 py-2 text-center font-semibold">
-                {PLAYER_STATS_COPY.level}
+const HeatmapTable = (props: {
+  group: PlayerStatsAchievementGroup
+  rows: (PlayerStatsLevelRow | PlayerStatsChartConstantRow)[]
+  caption: string
+}): JSX.Element => (
+  <div class="mt-4 overflow-x-auto rounded-lg border border-border">
+    <table class="w-full min-w-[34rem] border-collapse">
+      <caption class="sr-only">{props.caption}</caption>
+      <thead class="bg-surface-muted text-xs text-text-muted">
+        <tr>
+          <th scope="col" class="px-3 py-2 text-center font-semibold">
+            <span class="sr-only">{PLAYER_STATS_COPY.achievementTitle}</span>
+          </th>
+          <For each={props.rows}>
+            {(row) => (
+              <th
+                scope="col"
+                class="border-l border-border px-3 py-2 text-center font-jost font-semibold"
+              >
+                {'level' in row ? row.level : formatChartConst(row.chartConstant)}
               </th>
-              <For each={metrics}>
-                {(metric) => (
-                  <th
-                    scope="col"
-                    class="border-l border-border px-3 py-2 text-center font-semibold"
-                  >
-                    {metric.label}
-                  </th>
-                )}
-              </For>
+            )}
+          </For>
+        </tr>
+      </thead>
+      <tbody>
+        <For each={PLAYER_STATS_HEATMAP_METRICS[props.group]}>
+          {(metric) => (
+            <tr class="border-t border-border">
+              <th scope="row" class="px-3 py-2 text-center font-semibold text-text">
+                {metric.label}
+              </th>
+              <For each={props.rows}>{(row) => <HeatmapCell row={row} metric={metric.key} />}</For>
             </tr>
-          </thead>
-          <tbody>
-            <For each={props.rows}>
-              {(row) => (
-                <tr class="border-t border-border">
-                  <th scope="row" class="px-3 py-2 text-center font-jost font-semibold text-text">
-                    {row.level}
-                  </th>
-                  <For each={metrics}>
-                    {(metric) => <HeatmapCell row={row} metric={metric.key} />}
-                  </For>
-                </tr>
-              )}
-            </For>
-          </tbody>
-        </table>
-      </div>
-    )
-  }
+          )}
+        </For>
+      </tbody>
+    </table>
+  </div>
+)
+
+/**
+ * レベル別と譜面定数別の達成率分布をサブタブで切り替える。
+ *
+ * @param props.levelRows - レベルが高い順の統計行。
+ * @param props.chartConstantRows - 譜面定数が高い順の統計行。
+ * @returns 達成種別と集計軸を切り替えられる達成率分布表。
+ */
+const AchievementHeatmap = (props: {
+  levelRows: PlayerStatsLevelRow[]
+  chartConstantRows: PlayerStatsChartConstantRow[]
+}): JSX.Element => {
+  const [axis, setAxis] = createSignal<PlayerStatsHeatmapAxis>('level')
+  const axisTabs = (
+    <SegmentedToggleGroup
+      value={axis()}
+      onChange={setAxis}
+      options={PLAYER_STATS_HEATMAP_AXIS_OPTIONS}
+      class="w-full sm:w-auto"
+      itemClass="flex-1 sm:flex-none"
+    />
+  )
 
   return (
-    <section class={PAGE_SECTION_CLASS} aria-labelledby="player-stats-level-title">
-      <div class="mb-4 flex items-start gap-2">
-        <Grid3X3 class="mt-0.5 h-5 w-5 shrink-0 text-action-primary" aria-hidden={true} />
-        <div>
-          <h2 id="player-stats-level-title" class="font-semibold text-text">
-            {PLAYER_STATS_COPY.levelTitle}
-          </h2>
-          <p class="text-xs text-text-muted">{PLAYER_STATS_COPY.levelNotice}</p>
-        </div>
+    <section class={PAGE_SECTION_CLASS} aria-labelledby="player-stats-heatmap-title">
+      <div class="mb-4 flex items-center gap-2">
+        <Grid3X3 class="h-5 w-5 shrink-0 text-action-primary" aria-hidden={true} />
+        <h2 id="player-stats-heatmap-title" class="font-semibold text-text">
+          {PLAYER_STATS_COPY.heatmapTitle}
+        </h2>
       </div>
       <SegmentedTabs
         defaultValue="rank"
         options={PLAYER_STATS_ACHIEVEMENT_GROUP_OPTIONS}
         listClass="w-full sm:w-auto"
+        listWrapperClass="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+        listAside={axisTabs}
         triggerClass="flex-1 sm:flex-none"
       >
         <For each={PLAYER_STATS_ACHIEVEMENT_GROUP_OPTIONS}>
           {(option) => (
-            <AppTabContent value={option.value}>{renderTable(option.value)}</AppTabContent>
+            <AppTabContent value={option.value}>
+              <HeatmapTable
+                group={option.value}
+                rows={axis() === 'level' ? props.levelRows : props.chartConstantRows}
+                caption={
+                  axis() === 'level'
+                    ? PLAYER_STATS_COPY.levelCaption
+                    : PLAYER_STATS_COPY.chartConstantCaption
+                }
+              />
+            </AppTabContent>
           )}
         </For>
       </SegmentedTabs>
@@ -403,7 +443,7 @@ const MilestoneCards = (props: { summary: PlayerStatsSummary }): JSX.Element => 
       </h2>
     </div>
     <ul class="grid gap-3 sm:grid-cols-3">
-      <For each={PLAYER_STATS_CANDIDATE_OPTIONS}>
+      <For each={PLAYER_STATS_MILESTONE_OPTIONS}>
         {(option) => {
           const milestone = () =>
             buildPlayerStatsMilestone(
@@ -444,9 +484,12 @@ const MilestoneCards = (props: { summary: PlayerStatsSummary }): JSX.Element => 
  * 候補譜面の現在状態を目標種別に合わせて表示する。
  *
  * @param candidate - 表示対象の候補譜面。
- * @returns スコア差またはAJ候補理由の表示。
+ * @returns スコア差、AJ済みMAX候補のJUSTICE数、またはAJ候補理由の表示。
  */
 const formatCandidateStatus = (candidate: PlayerStatsCandidate): string => {
+  if (candidate.justiceGap !== null) {
+    return `${PLAYER_STATS_COPY.scoreGapPrefix}${formatInteger(candidate.justiceGap)}${PLAYER_STATS_COPY.justiceGapSuffix}`
+  }
   if (candidate.scoreGap !== null) {
     return `${PLAYER_STATS_COPY.scoreGapPrefix}${formatInteger(candidate.scoreGap)}${PLAYER_STATS_COPY.scoreGapSuffix}`
   }
@@ -590,6 +633,7 @@ const PlayerStatsDashboardPage: Component = () => {
   )
   const summary = createMemo(() => buildPlayerStatsSummary(filteredRecords()))
   const levelRows = createMemo(() => buildPlayerStatsLevelRows(filteredRecords()))
+  const chartConstantRows = createMemo(() => buildPlayerStatsChartConstantRows(filteredRecords()))
   const selectedDifficultyOption = createMemo(
     () =>
       PLAYER_STATS_DIFFICULTY_OPTIONS.find((option) => option.value === difficulty()) ??
@@ -637,7 +681,7 @@ const PlayerStatsDashboardPage: Component = () => {
                 <MilestoneCards summary={summary()} />
               </div>
 
-              <LevelHeatmap rows={levelRows()} />
+              <AchievementHeatmap levelRows={levelRows()} chartConstantRows={chartConstantRows()} />
               <CandidateSection records={filteredRecords()} notesBySongId={data().notesBySongId} />
             </main>
           </Show>

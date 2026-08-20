@@ -1,4 +1,5 @@
 import * as Tabs from '@kobalte/core/tabs'
+import { ToggleGroup } from '@kobalte/core/toggle-group'
 import type { JSX } from 'solid-js'
 import { For } from 'solid-js'
 import { NotificationDot } from './NotificationDot'
@@ -60,10 +61,27 @@ type AppTabsListProps<TValue extends string> = Pick<
   defaultTriggerClass: string
 }
 
+type AppSegmentedToggleGroupProps<TValue extends string> = {
+  /** 表示する単一選択の選択肢。 */
+  options: readonly AppTabOption<TValue>[]
+  /** 現在選択中の値。 */
+  value: TValue
+  /** 選択変更時の通知先。 */
+  onChange: (value: TValue) => void
+  /** ToggleGroupへ追加で適用するTailwindクラス。 */
+  class?: string
+  /** ToggleGroup.Itemへ追加で適用するTailwindクラス。 */
+  itemClass?: string
+}
+
 const SEGMENTED_TABS_LIST_CLASS = 'inline-flex gap-1 rounded-lg bg-surface-hover p-1'
 
-const SEGMENTED_TABS_TRIGGER_CLASS =
-  'relative inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-text-muted transition-colors hover:bg-action-secondary hover:text-text data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm data-selected:hover:bg-action-primary data-selected:hover:text-text-inverse focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50'
+const SEGMENTED_CONTROL_CLASS =
+  'relative inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-text-muted transition-colors hover:bg-action-secondary hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50'
+
+const SEGMENTED_TABS_TRIGGER_CLASS = `${SEGMENTED_CONTROL_CLASS} data-selected:bg-action-primary data-selected:text-text-inverse data-selected:shadow-sm data-selected:hover:bg-action-primary data-selected:hover:text-text-inverse`
+
+const SEGMENTED_TOGGLE_ITEM_CLASS = `${SEGMENTED_CONTROL_CLASS} data-pressed:bg-action-primary data-pressed:text-text-inverse data-pressed:shadow-sm data-pressed:hover:bg-action-primary data-pressed:hover:text-text-inverse`
 
 const UNDERLINE_TABS_LIST_CLASS = 'flex gap-2 border-b border-border-strong'
 
@@ -132,6 +150,34 @@ export const SegmentedTabs = <TValue extends string>(
     />
     {props.children}
   </Tabs.Root>
+)
+
+/**
+ * タブと同じ外観の単一選択ToggleGroupを表示する。
+ *
+ * @param props - 選択肢、現在値、変更ハンドラ、追加クラス。
+ * @returns Kobalte ToggleGroupを使った単一選択コントロール。
+ */
+export const SegmentedToggleGroup = <TValue extends string>(
+  props: AppSegmentedToggleGroupProps<TValue>
+): JSX.Element => (
+  <ToggleGroup
+    value={props.value}
+    onChange={(value) => typeof value === 'string' && value && props.onChange(value as TValue)}
+    class={`${SEGMENTED_TABS_LIST_CLASS} ${props.class ?? ''}`}
+  >
+    <For each={props.options}>
+      {(option) => (
+        <ToggleGroup.Item
+          value={option.value}
+          disabled={option.disabled}
+          class={`${SEGMENTED_TOGGLE_ITEM_CLASS} ${props.itemClass ?? ''}`}
+        >
+          {option.label}
+        </ToggleGroup.Item>
+      )}
+    </For>
+  </ToggleGroup>
 )
 
 /**
