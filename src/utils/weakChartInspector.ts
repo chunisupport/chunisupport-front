@@ -1,11 +1,11 @@
-import { SCORE_THEORETICAL_MAX } from '../constants/chart'
+import { SCORE_THEORETICAL_MAX, THEORETICAL_OVER_POWER_TARGET_FILTER } from '../constants/chart'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import { truncateChartConst } from './chartConstFormat'
 import { compareSongsByReading } from './songTitleSorting'
 import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
 
 /** 苦手譜面インスペクターで理論値OVER POWER対象を表す選択値。 */
-export const WEAK_CHART_OP_TARGET_FILTER = 'OP_TARGET' as const
+export const WEAK_CHART_OP_TARGET_FILTER = THEORETICAL_OVER_POWER_TARGET_FILTER
 
 /** 苦手譜面インスペクターで選択できる通常難易度または理論値OVER POWER対象。 */
 export type WeakChartAggregationDifficulty =

@@ -1,9 +1,19 @@
+import {
+  MASTER_ULTIMA_DIFFICULTIES,
+  MASTER_ULTIMA_FILTER,
+  THEORETICAL_OVER_POWER_TARGET_FILTER,
+} from '../constants/chart'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import { type ChartLevelLabel, getChartLevelSortKey, toChartLevelLabel } from './chartLevel'
 import { MAX_SCORE, SCORE_RANK_MIN_SCORES } from './scoreRank'
+import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
 
-/** 統計画面で選択できる難易度。 */
-export type PlayerStatsDifficulty = PlayerDataDifficulty | 'ALL'
+/** 統計画面で選択できる難易度または派生条件。 */
+export type PlayerStatsDifficulty =
+  | PlayerDataDifficulty
+  | 'ALL'
+  | typeof MASTER_ULTIMA_FILTER
+  | typeof THEORETICAL_OVER_POWER_TARGET_FILTER
 
 /** 達成階段とヒートマップで扱う到達条件。 */
 export type PlayerStatsAchievement =
@@ -161,16 +171,34 @@ export const hasPlayerStatsAchievement = (
  * 統計画面で選択した難易度にレコードを絞り込む。
  *
  * @param records - 集計元の通常譜面レコード。
- * @param difficulty - ALLまたは大文字の難易度ドメイン値。
+ * @param difficulty - 全難易度、通常難易度、MASTERとULTIMAの合算、または理論値OP対象。
+ * @param targetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
  * @returns 選択難易度に一致する新しい配列。
  */
 export const filterPlayerStatsRecords = (
   records: PlayerRecordDTO[],
-  difficulty: PlayerStatsDifficulty
-): PlayerRecordDTO[] =>
-  difficulty === 'ALL'
-    ? [...records]
-    : records.filter((record) => record.difficulty.toUpperCase() === difficulty)
+  difficulty: PlayerStatsDifficulty,
+  targetDifficultyBySongId: ReadonlyMap<string, PlayerDataDifficulty> = new Map()
+): PlayerRecordDTO[] => {
+  if (difficulty === 'ALL') return [...records]
+
+  return records.filter((record) => {
+    const recordDifficulty = record.difficulty.toUpperCase() as PlayerDataDifficulty
+
+    if (difficulty === MASTER_ULTIMA_FILTER) {
+      return MASTER_ULTIMA_DIFFICULTIES.some(
+        (targetDifficulty) => targetDifficulty === recordDifficulty
+      )
+    }
+    if (difficulty === THEORETICAL_OVER_POWER_TARGET_FILTER) {
+      return isTheoreticalOverPowerTargetDifficulty(
+        targetDifficultyBySongId.get(record.id),
+        recordDifficulty
+      )
+    }
+    return recordDifficulty === difficulty
+  })
+}
 
 /**
  * 通常譜面レコードから統計画面上部のサマリーを算出する。
