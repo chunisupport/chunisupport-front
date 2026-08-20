@@ -102,7 +102,7 @@ const REGISTER_SCORE_IMAGE_JPEG_QUALITY = 0.9
 /** 更新差分画像のファイル名へ付与する接頭辞。 */
 const REGISTER_SCORE_IMAGE_FILENAME_PREFIX = 'chunisupport-score-update'
 /** 共有用画像をレポート更新後に再生成するまでの待機時間。 */
-const REGISTER_SCORE_SHARE_PREPARE_DELAY_MS = 300
+const REGISTER_SCORE_SHARE_PREPARE_DELAY_MS = 1_000
 /** コピー成功時に曲名をアクセントカラーで保持する時間。 */
 const REGISTER_SCORE_COPY_HIGHLIGHT_MS = 100
 
@@ -1018,7 +1018,9 @@ export const RegisterScoreResultView = (props: {
   const [isSharingImage, setIsSharingImage] = createSignal(false)
   const [shareImageFile, setShareImageFile] = createSignal<File>()
   const [imageActionError, setImageActionError] = createSignal<string>()
-  let shareImagePreparationRequested = false
+  /** 生成対象となるレポートDOMの更新世代。 */
+  let shareImageRevision = 0
+  /** 共有用画像の生成を開始するタイマー。 */
   let shareImagePrepareTimer: number | undefined
 
   /**
@@ -1108,39 +1110,60 @@ export const RegisterScoreResultView = (props: {
    * @returns 画像生成処理の完了時に解決されるPromise。
    */
   const prepareShareImage = async (): Promise<void> => {
-    shareImagePreparationRequested = true
     if (isPreparingShareImage()) return
+
+    if (shareImagePrepareTimer !== undefined) {
+      window.clearTimeout(shareImagePrepareTimer)
+      shareImagePrepareTimer = undefined
+    }
+
+    const targetRevision = shareImageRevision
 
     setIsPreparingShareImage(true)
     setImageActionError(undefined)
 
     try {
-      while (shareImagePreparationRequested) {
-        shareImagePreparationRequested = false
-        const imageFile = await createReportImageFile()
-        if (!shareImagePreparationRequested) setShareImageFile(imageFile)
-      }
+      const imageFile = await createReportImageFile()
+      if (targetRevision === shareImageRevision) setShareImageFile(imageFile)
     } catch {
-      setShareImageFile(undefined)
-      setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+      if (targetRevision === shareImageRevision) {
+        setShareImageFile(undefined)
+        setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+      }
     } finally {
       setIsPreparingShareImage(false)
     }
   }
 
   /**
-   * レポートDOMの更新をまとめ、共有用画像の再生成を予約する。
+   * 共有用画像の生成を待機時間後へ予約する。
    *
    * @returns なし。
    */
-  const scheduleShareImagePreparation = (): void => {
-    setShareImageFile(undefined)
+  const queueShareImagePreparation = (): void => {
     if (shareImagePrepareTimer !== undefined) window.clearTimeout(shareImagePrepareTimer)
 
     shareImagePrepareTimer = window.setTimeout(() => {
       shareImagePrepareTimer = undefined
+
+      if (isGeneratingImage()) {
+        queueShareImagePreparation()
+        return
+      }
+
       void prepareShareImage()
     }, REGISTER_SCORE_SHARE_PREPARE_DELAY_MS)
+  }
+
+  /**
+   * レポートDOMの更新を記録し、共有用画像の再生成を予約する。
+   *
+   * @returns なし。
+   */
+  const scheduleShareImagePreparation = (): void => {
+    shareImageRevision += 1
+    setShareImageFile(undefined)
+    queueShareImagePreparation()
   }
 
   /**
