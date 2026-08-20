@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { MASTER_ULTIMA_FILTER, THEORETICAL_OVER_POWER_TARGET_FILTER } from '../constants/chart'
 import type { PlayerRecordDTO } from '../types/api'
 import {
   buildPlayerStatsAchievementProgress,
@@ -85,6 +86,51 @@ test('難易度フィルターは大文字ドメイン値で対象譜面だけ�
     ['ultima']
   )
   assert.equal(filterPlayerStatsRecords(records, 'ALL').length, 2)
+})
+
+test('MASTERとULTIMAの合算フィルターは両難易度だけを返す', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'expert', difficulty: 'EXPERT' }),
+    createRecord({ id: 'master', difficulty: 'MASTER' }),
+    createRecord({ id: 'ultima', difficulty: 'ULTIMA' }),
+  ]
+
+  // When
+  const filtered = filterPlayerStatsRecords(records, MASTER_ULTIMA_FILTER)
+
+  // Then
+  assert.deepEqual(
+    filtered.map((record) => record.id),
+    ['master', 'ultima']
+  )
+})
+
+test('OP対象フィルターは楽曲マスタの理論値対象難易度だけを曲ごとに返す', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', difficulty: 'MASTER', is_op_target: true }),
+    createRecord({ id: 'song-1', difficulty: 'ULTIMA', is_op_target: false }),
+    createRecord({ id: 'song-2', difficulty: 'MASTER', is_op_target: false }),
+    createRecord({ id: 'song-2', difficulty: 'ULTIMA', is_op_target: true }),
+  ]
+  const targetDifficultyBySongId = new Map([
+    ['song-1', 'ULTIMA'],
+    ['song-2', 'MASTER'],
+  ] as const)
+
+  // When
+  const filtered = filterPlayerStatsRecords(
+    records,
+    THEORETICAL_OVER_POWER_TARGET_FILTER,
+    targetDifficultyBySongId
+  )
+
+  // Then
+  assert.deepEqual(
+    filtered.map((record) => `${record.id}:${record.difficulty}`),
+    ['song-1:ULTIMA', 'song-2:MASTER']
+  )
 })
 
 test('サマリーは未プレイを母数に含め、平均スコアからは除外する', () => {
