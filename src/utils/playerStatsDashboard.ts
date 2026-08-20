@@ -3,6 +3,7 @@ import {
   MASTER_ULTIMA_FILTER,
   THEORETICAL_OVER_POWER_TARGET_FILTER,
 } from '../constants/chart'
+import { PLAYER_DATA_DIFFICULTY_ORDER } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import { type ChartLevelLabel, getChartLevelSortKey, toChartLevelLabel } from './chartLevel'
 import { MAX_SCORE, SCORE_RANK_MIN_SCORES } from './scoreRank'
@@ -88,6 +89,12 @@ export type PlayerStatsMilestone = {
 
 /** 目標候補リストの種別。 */
 export type PlayerStatsCandidateTarget = 'sssPlus' | 'aj' | 'max'
+
+/** 曲IDと難易度から総ノーツ数を参照する統計候補用マップ。 */
+export type PlayerStatsNotesBySongId = ReadonlyMap<
+  string,
+  Readonly<Partial<Record<PlayerDataDifficulty, number | null>>>
+>
 
 /** 次の目標達成に近い譜面と数値上の残量。 */
 export type PlayerStatsCandidate = {
@@ -362,12 +369,14 @@ export const buildPlayerStatsMilestone = (
  * @param left - 比較する左側のレコード。
  * @param right - 比較する右側のレコード。
  * @param target - 候補を抽出する目標種別。
+ * @param notesBySongId - MAX候補の失点を正規化するための譜面別ノーツ数。
  * @returns Array.sortで使用する比較値。
  */
 const compareCandidateRecords = (
   left: PlayerRecordDTO,
   right: PlayerRecordDTO,
-  target: PlayerStatsCandidateTarget
+  target: PlayerStatsCandidateTarget,
+  notesBySongId: PlayerStatsNotesBySongId
 ): number => {
   if (target === 'aj') {
     const leftHasFullCombo = left.combo_lamp === 'FULL COMBO' ? 1 : 0
@@ -375,22 +384,61 @@ const compareCandidateRecords = (
     if (leftHasFullCombo !== rightHasFullCombo) return rightHasFullCombo - leftHasFullCombo
   }
 
+  if (target === 'max') {
+    const leftNotes = notesBySongId.get(left.id)?.[left.difficulty]
+    const rightNotes = notesBySongId.get(right.id)?.[right.difficulty]
+    const leftDroppedNotes = leftNotes ? ((MAX_SCORE - left.score) * leftNotes) / MAX_SCORE : null
+    const rightDroppedNotes = rightNotes
+      ? ((MAX_SCORE - right.score) * rightNotes) / MAX_SCORE
+      : null
+
+    if (leftDroppedNotes !== null && rightDroppedNotes !== null) {
+      if (leftDroppedNotes !== rightDroppedNotes) return leftDroppedNotes - rightDroppedNotes
+    } else if (leftDroppedNotes !== null) {
+      return -1
+    } else if (rightDroppedNotes !== null) {
+      return 1
+    }
+  }
+
   if (left.score !== right.score) return right.score - left.score
   return right.const - left.const
 }
 
 /**
- * SSS+、AJ、MAXの次の達成候補を現在記録に近い順で抽出する。
+ * 候補譜面を難易度、表示レベル、譜面定数の低い順に比較する。
+ *
+ * @param left - 比較する左側のレコード。
+ * @param right - 比較する右側のレコード。
+ * @returns Array.sortで使用する比較値。
+ */
+const compareCandidateDisplayOrder = (left: PlayerRecordDTO, right: PlayerRecordDTO): number => {
+  const difficultyDifference =
+    PLAYER_DATA_DIFFICULTY_ORDER[left.difficulty] - PLAYER_DATA_DIFFICULTY_ORDER[right.difficulty]
+  if (difficultyDifference !== 0) return difficultyDifference
+
+  const levelDifference =
+    getChartLevelSortKey(toChartLevelLabel(left.const)) -
+    getChartLevelSortKey(toChartLevelLabel(right.const))
+  if (levelDifference !== 0) return levelDifference
+  if (left.const !== right.const) return left.const - right.const
+  return left.title.localeCompare(right.title, 'ja')
+}
+
+/**
+ * SSS+、AJ、MAXの次の達成候補を抽出し、難易度とレベルが低い順に並べる。
  *
  * @param records - 集計対象の通常譜面レコード。
  * @param target - 候補を抽出する目標種別。
  * @param limit - 返す候補の最大件数。
+ * @param notesBySongId - MAX候補の失点をノーツ数で正規化するための譜面情報。
  * @returns 候補譜面と、スコア目標の場合は必要スコア差。
  */
 export const findPlayerStatsCandidates = (
   records: PlayerRecordDTO[],
   target: PlayerStatsCandidateTarget,
-  limit: number
+  limit: number,
+  notesBySongId: PlayerStatsNotesBySongId = new Map()
 ): PlayerStatsCandidate[] => {
   const candidates = records
     .filter((record) => {
@@ -399,8 +447,9 @@ export const findPlayerStatsCandidates = (
       if (target === 'aj') return !hasPlayerStatsAchievement(record, 'aj')
       return !hasPlayerStatsAchievement(record, 'max')
     })
-    .sort((left, right) => compareCandidateRecords(left, right, target))
+    .sort((left, right) => compareCandidateRecords(left, right, target, notesBySongId))
     .slice(0, limit)
+    .sort(compareCandidateDisplayOrder)
 
   const targetScore = target === 'sssPlus' ? SCORE_RANK_MIN_SCORES['SSS+'] : MAX_SCORE
   return candidates.map((record) => ({

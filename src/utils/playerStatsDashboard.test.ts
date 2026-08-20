@@ -315,3 +315,42 @@ test('AJ候補はFULL COMBO済みを優先しスコア差を返さない', () =>
     ]
   )
 })
+
+test('MAX候補はノーツ数で正規化した失点が少ない譜面を選出する', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'few-dropped-notes', score: 1_009_000 }),
+    createRecord({ id: 'many-dropped-notes', score: 1_009_500 }),
+  ]
+  const notesBySongId = new Map([
+    ['few-dropped-notes', { MASTER: 500 }],
+    ['many-dropped-notes', { MASTER: 2_000 }],
+  ])
+
+  // When
+  const candidates = findPlayerStatsCandidates(records, 'max', 1, notesBySongId)
+
+  // Then
+  assert.deepEqual(
+    candidates.map(({ record }) => record.id),
+    ['few-dropped-notes']
+  )
+})
+
+test('候補譜面は選出後に難易度とレベルが低い順で返す', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'master-14', difficulty: 'MASTER', const: 14.2, score: 1_008_900 }),
+    createRecord({ id: 'expert-13-plus', difficulty: 'EXPERT', const: 13.7, score: 1_008_700 }),
+    createRecord({ id: 'expert-13', difficulty: 'EXPERT', const: 13.2, score: 1_008_500 }),
+  ]
+
+  // When
+  const candidates = findPlayerStatsCandidates(records, 'sssPlus', 3)
+
+  // Then
+  assert.deepEqual(
+    candidates.map(({ record }) => record.id),
+    ['expert-13', 'expert-13-plus', 'master-14']
+  )
+})
