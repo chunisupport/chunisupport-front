@@ -5,6 +5,7 @@ import {
 } from '../constants/chart'
 import { PLAYER_DATA_DIFFICULTY_ORDER } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
+import { truncateChartConst } from './chartConstFormat'
 import { type ChartLevelLabel, getChartLevelSortKey, toChartLevelLabel } from './chartLevel'
 import { MAX_SCORE, SCORE_RANK_MIN_SCORES } from './scoreRank'
 import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
@@ -73,10 +74,19 @@ export type PlayerStatsLevelAchievement =
   | 'absolute'
   | 'catastrophe'
 
-/** レベル別達成率で表示する到達条件別の件数。 */
-export type PlayerStatsLevelRow = Record<PlayerStatsLevelAchievement, number> & {
-  level: ChartLevelLabel
+/** 達成率分布で表示する到達条件別の件数。 */
+export type PlayerStatsHeatmapRow = Record<PlayerStatsLevelAchievement, number> & {
   total: number
+}
+
+/** 表示レベル単位の達成率分布行。 */
+export type PlayerStatsLevelRow = PlayerStatsHeatmapRow & {
+  level: ChartLevelLabel
+}
+
+/** 譜面定数単位の達成率分布行。 */
+export type PlayerStatsChartConstantRow = PlayerStatsHeatmapRow & {
+  chartConstant: number
 }
 
 /** 次の区切りとなる達成曲数。 */
@@ -100,6 +110,7 @@ export type PlayerStatsNotesBySongId = ReadonlyMap<
 export type PlayerStatsCandidate = {
   record: PlayerRecordDTO
   scoreGap: number | null
+  justiceGap: number | null
 }
 
 const CLEAR_LAMP_LEVEL: Record<NonNullable<PlayerRecordDTO['clear_lamp']>, number> = {
@@ -259,16 +270,16 @@ export const buildPlayerStatsAchievementProgress = (
   })
 
 /**
- * レベル行へ譜面1件分の到達状況を加算する。
+ * 達成率分布行へ譜面1件分の到達状況を加算する。
  *
- * @param row - 加算先のレベル行。
+ * @param row - 加算先の達成率分布行。
  * @param record - 加算する通常譜面レコード。
  * @returns 同じ行オブジェクト。
  */
-const addRecordToLevelRow = (
-  row: PlayerStatsLevelRow,
+const addRecordToHeatmapRow = <TRow extends PlayerStatsHeatmapRow>(
+  row: TRow,
   record: PlayerRecordDTO
-): PlayerStatsLevelRow => {
+): TRow => {
   row.total += 1
   for (const achievement of PLAYER_STATS_LEVEL_ACHIEVEMENTS) {
     if (hasPlayerStatsAchievement(record, achievement)) {
@@ -297,13 +308,11 @@ const PLAYER_STATS_LEVEL_ACHIEVEMENTS: readonly PlayerStatsLevelAchievement[] = 
 ]
 
 /**
- * 空のレベル別集計行を生成する。
+ * 空の達成率分布行を生成する。
  *
- * @param level - 集計対象の表示レベル。
  * @returns 全到達条件を0件で初期化した集計行。
  */
-const createPlayerStatsLevelRow = (level: ChartLevelLabel): PlayerStatsLevelRow => ({
-  level,
+const createPlayerStatsHeatmapRow = (): PlayerStatsHeatmapRow => ({
   total: 0,
   s: 0,
   sPlus: 0,
@@ -322,6 +331,28 @@ const createPlayerStatsLevelRow = (level: ChartLevelLabel): PlayerStatsLevelRow 
 })
 
 /**
+ * 空のレベル別集計行を生成する。
+ *
+ * @param level - 集計対象の表示レベル。
+ * @returns 全到達条件を0件で初期化した集計行。
+ */
+const createPlayerStatsLevelRow = (level: ChartLevelLabel): PlayerStatsLevelRow => ({
+  ...createPlayerStatsHeatmapRow(),
+  level,
+})
+
+/**
+ * 空の譜面定数別集計行を生成する。
+ *
+ * @param chartConstant - 集計対象の譜面定数。
+ * @returns 全到達条件を0件で初期化した集計行。
+ */
+const createPlayerStatsChartConstantRow = (chartConstant: number): PlayerStatsChartConstantRow => ({
+  ...createPlayerStatsHeatmapRow(),
+  chartConstant,
+})
+
+/**
  * 通常譜面レコードを譜面定数から換算した表示レベル単位に集計する。
  *
  * @param records - 集計対象の通常譜面レコード。
@@ -333,12 +364,32 @@ export const buildPlayerStatsLevelRows = (records: PlayerRecordDTO[]): PlayerSta
   for (const record of records) {
     const level = toChartLevelLabel(record.const)
     const row = rows.get(level) ?? createPlayerStatsLevelRow(level)
-    rows.set(level, addRecordToLevelRow(row, record))
+    rows.set(level, addRecordToHeatmapRow(row, record))
   }
 
   return [...rows.values()].sort(
     (left, right) => getChartLevelSortKey(right.level) - getChartLevelSortKey(left.level)
   )
+}
+
+/**
+ * 通常譜面レコードを譜面定数単位に集計する。
+ *
+ * @param records - 集計対象の通常譜面レコード。
+ * @returns 譜面定数が高い順に並んだRANK、COMBO、HARD到達件数。
+ */
+export const buildPlayerStatsChartConstantRows = (
+  records: PlayerRecordDTO[]
+): PlayerStatsChartConstantRow[] => {
+  const rows = new Map<number, PlayerStatsChartConstantRow>()
+
+  for (const record of records) {
+    const chartConstant = truncateChartConst(record.const)
+    const row = rows.get(chartConstant) ?? createPlayerStatsChartConstantRow(chartConstant)
+    rows.set(chartConstant, addRecordToHeatmapRow(row, record))
+  }
+
+  return [...rows.values()].sort((left, right) => right.chartConstant - left.chartConstant)
 }
 
 /**
@@ -432,7 +483,7 @@ const compareCandidateDisplayOrder = (left: PlayerRecordDTO, right: PlayerRecord
  * @param target - 候補を抽出する目標種別。
  * @param limit - 返す候補の最大件数。
  * @param notesBySongId - MAX候補の失点をノーツ数で正規化するための譜面情報。
- * @returns 候補譜面と、スコア目標の場合は必要スコア差。
+ * @returns 候補譜面と、目標までのスコア差またはAJ済みMAX候補のJUSTICE数。
  */
 export const findPlayerStatsCandidates = (
   records: PlayerRecordDTO[],
@@ -455,5 +506,7 @@ export const findPlayerStatsCandidates = (
   return candidates.map((record) => ({
     record,
     scoreGap: target === 'aj' ? null : Math.max(targetScore - record.score, 0),
+    justiceGap:
+      target === 'max' && record.combo_lamp === 'ALL JUSTICE' ? record.justice_count : null,
   }))
 }
