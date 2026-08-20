@@ -4,10 +4,10 @@ import type {
   PlayerStatsDifficulty,
 } from '../../../utils/playerStatsDashboard'
 
-/** 統計画面の表示文言。 */
+/** ダッシュボード画面の表示文言。 */
 export const PLAYER_STATS_COPY = {
-  pageTitle: 'プレイヤー統計',
-  documentTitle: 'プレイヤー統計',
+  pageTitle: 'ダッシュボード',
+  documentTitle: 'ダッシュボード',
   updatedAt: 'レコード更新',
   difficultyLabel: '集計する難易度',
   overviewTitle: '現在地',
