@@ -4,6 +4,7 @@ import { MASTER_ULTIMA_FILTER, THEORETICAL_OVER_POWER_TARGET_FILTER } from '../c
 import type { PlayerRecordDTO } from '../types/api'
 import {
   buildPlayerStatsAchievementProgress,
+  buildPlayerStatsChartConstantRows,
   buildPlayerStatsLevelRows,
   buildPlayerStatsMilestone,
   buildPlayerStatsSummary,
@@ -234,6 +235,27 @@ test('レベル別集計はRANK・COMBO・HARDの累計件数をレベルが高�
   ])
 })
 
+test('譜面定数別集計は定数を正規化して高い順に累計件数を返す', () => {
+  // Given
+  const records = [
+    createRecord({ id: '14.3', const: 14.3, score: 1_009_000 }),
+    createRecord({ id: '14.29', const: 14.29, score: 1_010_000, combo_lamp: 'ALL JUSTICE' }),
+    createRecord({ id: '14.2', const: 14.2, is_played: false, score: 0 }),
+  ]
+
+  // When
+  const rows = buildPlayerStatsChartConstantRows(records)
+
+  // Then
+  assert.equal(rows[0].chartConstant, 14.3)
+  assert.equal(rows[0].total, 1)
+  assert.equal(rows[0].sssPlus, 1)
+  assert.equal(rows[1].chartConstant, 14.2)
+  assert.equal(rows[1].total, 2)
+  assert.equal(rows[1].sssPlus, 1)
+  assert.equal(rows[1].aj, 1)
+})
+
 test('次のマイルストーンは現在値が区切り上でも次の区切りを返す', () => {
   // Given & When
   const milestone = buildPlayerStatsMilestone(20, 'sssPlus', 100)
@@ -334,6 +356,35 @@ test('MAX候補はノーツ数で正規化した失点が少ない譜面を選�
   assert.deepEqual(
     candidates.map(({ record }) => record.id),
     ['few-dropped-notes']
+  )
+})
+
+test('AJ済みのMAX候補は残り表示用のJUSTICE数を返す', () => {
+  // Given
+  const records = [createRecord({ combo_lamp: 'ALL JUSTICE', justice_count: 12, score: 1_009_988 })]
+
+  // When
+  const [candidate] = findPlayerStatsCandidates(records, 'max', 1)
+
+  // Then
+  assert.equal(candidate.justiceGap, 12)
+  assert.equal(candidate.scoreGap, 12)
+})
+
+test('AJ未達またはJUSTICE数不明のMAX候補はJUSTICE数を返さない', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'not-aj', justice_count: 12 }),
+    createRecord({ id: 'unknown', combo_lamp: 'ALL JUSTICE', justice_count: null }),
+  ]
+
+  // When
+  const candidates = findPlayerStatsCandidates(records, 'max', 2)
+
+  // Then
+  assert.deepEqual(
+    candidates.map(({ justiceGap }) => justiceGap),
+    [null, null]
   )
 })
 
