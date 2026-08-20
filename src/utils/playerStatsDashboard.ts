@@ -9,11 +9,14 @@ export type PlayerStatsDifficulty = PlayerDataDifficulty | 'ALL'
 export type PlayerStatsAchievement =
   | 'played'
   | 's'
+  | 'sPlus'
   | 'ss'
+  | 'ssPlus'
   | 'sss'
   | 'sssPlus'
   | 'fc'
   | 'aj'
+  | 'ajc'
   | 'max'
   | 'clear'
   | 'hard'
@@ -43,13 +46,26 @@ export type PlayerStatsAchievementProgress = {
 }
 
 /** 譜面定数から換算した表示レベル単位の統計。 */
-export type PlayerStatsLevelRow = {
+export type PlayerStatsLevelAchievement =
+  | 's'
+  | 'sPlus'
+  | 'ss'
+  | 'ssPlus'
+  | 'sss'
+  | 'sssPlus'
+  | 'fc'
+  | 'aj'
+  | 'ajc'
+  | 'clear'
+  | 'hard'
+  | 'brave'
+  | 'absolute'
+  | 'catastrophe'
+
+/** レベル別達成率で表示する到達条件別の件数。 */
+export type PlayerStatsLevelRow = Record<PlayerStatsLevelAchievement, number> & {
   level: ChartLevelLabel
   total: number
-  played: number
-  sssPlus: number
-  aj: number
-  max: number
 }
 
 /** 次の区切りとなる達成曲数。 */
@@ -88,7 +104,9 @@ const CLEAR_ACHIEVEMENT_LEVEL: Partial<Record<PlayerStatsAchievement, number>> =
 
 const SCORE_ACHIEVEMENT_MINIMUM: Partial<Record<PlayerStatsAchievement, number>> = {
   s: SCORE_RANK_MIN_SCORES.S,
+  sPlus: SCORE_RANK_MIN_SCORES['S+'],
   ss: SCORE_RANK_MIN_SCORES.SS,
+  ssPlus: SCORE_RANK_MIN_SCORES['SS+'],
   sss: SCORE_RANK_MIN_SCORES.SSS,
   sssPlus: SCORE_RANK_MIN_SCORES['SSS+'],
   max: MAX_SCORE,
@@ -125,6 +143,9 @@ export const hasPlayerStatsAchievement = (
   if (achievement === 'played') return true
   if (achievement === 'fc') return record.combo_lamp !== null
   if (achievement === 'aj') return record.combo_lamp === 'ALL JUSTICE'
+  if (achievement === 'ajc') {
+    return record.combo_lamp === 'ALL JUSTICE' && record.score === MAX_SCORE
+  }
 
   const minimumScore = SCORE_ACHIEVEMENT_MINIMUM[achievement]
   if (minimumScore !== undefined) return record.score >= minimumScore
@@ -214,7 +235,7 @@ const addRecordToLevelRow = (
   record: PlayerRecordDTO
 ): PlayerStatsLevelRow => {
   row.total += 1
-  for (const achievement of ['played', 'sssPlus', 'aj', 'max'] as const) {
+  for (const achievement of PLAYER_STATS_LEVEL_ACHIEVEMENTS) {
     if (hasPlayerStatsAchievement(record, achievement)) {
       row[achievement] += 1
     }
@@ -222,18 +243,61 @@ const addRecordToLevelRow = (
   return row
 }
 
+/** レベル別達成率へ集計する全到達条件。 */
+const PLAYER_STATS_LEVEL_ACHIEVEMENTS: readonly PlayerStatsLevelAchievement[] = [
+  's',
+  'sPlus',
+  'ss',
+  'ssPlus',
+  'sss',
+  'sssPlus',
+  'fc',
+  'aj',
+  'ajc',
+  'clear',
+  'hard',
+  'brave',
+  'absolute',
+  'catastrophe',
+]
+
+/**
+ * 空のレベル別集計行を生成する。
+ *
+ * @param level - 集計対象の表示レベル。
+ * @returns 全到達条件を0件で初期化した集計行。
+ */
+const createPlayerStatsLevelRow = (level: ChartLevelLabel): PlayerStatsLevelRow => ({
+  level,
+  total: 0,
+  s: 0,
+  sPlus: 0,
+  ss: 0,
+  ssPlus: 0,
+  sss: 0,
+  sssPlus: 0,
+  fc: 0,
+  aj: 0,
+  ajc: 0,
+  clear: 0,
+  hard: 0,
+  brave: 0,
+  absolute: 0,
+  catastrophe: 0,
+})
+
 /**
  * 通常譜面レコードを譜面定数から換算した表示レベル単位に集計する。
  *
  * @param records - 集計対象の通常譜面レコード。
- * @returns レベルが高い順に並んだプレイ、SSS+、AJ、MAX件数。
+ * @returns レベルが高い順に並んだRANK、COMBO、HARD到達件数。
  */
 export const buildPlayerStatsLevelRows = (records: PlayerRecordDTO[]): PlayerStatsLevelRow[] => {
   const rows = new Map<ChartLevelLabel, PlayerStatsLevelRow>()
 
   for (const record of records) {
     const level = toChartLevelLabel(record.const)
-    const row = rows.get(level) ?? { level, total: 0, played: 0, sssPlus: 0, aj: 0, max: 0 }
+    const row = rows.get(level) ?? createPlayerStatsLevelRow(level)
     rows.set(level, addRecordToLevelRow(row, record))
   }
 

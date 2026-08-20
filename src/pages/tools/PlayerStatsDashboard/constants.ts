@@ -2,6 +2,7 @@ import type {
   PlayerStatsAchievement,
   PlayerStatsCandidateTarget,
   PlayerStatsDifficulty,
+  PlayerStatsLevelAchievement,
 } from '../../../utils/playerStatsDashboard'
 
 /** ダッシュボード画面の表示文言。 */
@@ -28,7 +29,6 @@ export const PLAYER_STATS_COPY = {
   allJustice: 'ALL JUSTICE',
   max: 'MAX',
   level: 'LEVEL',
-  play: 'PLAY',
   achievementCountSuffix: '譜面',
   scoreGapPrefix: 'あと',
   scoreGapSuffix: '点',
@@ -81,11 +81,14 @@ export const PLAYER_STATS_ACHIEVEMENTS: Record<
 export const PLAYER_STATS_ACHIEVEMENT_LABEL: Record<PlayerStatsAchievement, string> = {
   played: 'プレイ済み',
   s: 'S以上',
+  sPlus: 'S+以上',
   ss: 'SS以上',
+  ssPlus: 'SS+以上',
   sss: 'SSS以上',
   sssPlus: 'SSS+',
   fc: 'FULL COMBO以上',
   aj: 'ALL JUSTICE',
+  ajc: 'ALL JUSTICE CRITICAL',
   max: 'MAX',
   clear: 'CLEAR以上',
   hard: 'HARD以上',
@@ -107,16 +110,29 @@ export const PLAYER_STATS_CANDIDATE_LIMIT = 5
 /** ヒートマップ背景色へ混ぜるアクセント色の最大割合。 */
 export const PLAYER_STATS_HEATMAP_MAX_MIX_PERCENT = 55
 
-/** ヒートマップに表示する累計到達条件。 */
-export type PlayerStatsHeatmapMetric = 'played' | 'sssPlus' | 'aj' | 'max'
-
-/** ヒートマップ列のキーと表示名。 */
-export const PLAYER_STATS_HEATMAP_METRICS: readonly {
-  key: PlayerStatsHeatmapMetric
-  label: string
-}[] = [
-  { key: 'played', label: PLAYER_STATS_COPY.play },
-  { key: 'sssPlus', label: PLAYER_STATS_COPY.sssPlus },
-  { key: 'aj', label: 'AJ' },
-  { key: 'max', label: PLAYER_STATS_COPY.max },
-]
+/** レベル別達成率の列定義。 */
+export const PLAYER_STATS_LEVEL_METRICS: Record<
+  PlayerStatsAchievementGroup,
+  readonly { key: PlayerStatsLevelAchievement; label: string }[]
+> = {
+  rank: [
+    { key: 's', label: 'S' },
+    { key: 'sPlus', label: 'S+' },
+    { key: 'ss', label: 'SS' },
+    { key: 'ssPlus', label: 'SS+' },
+    { key: 'sss', label: 'SSS' },
+    { key: 'sssPlus', label: 'SSS+' },
+  ],
+  combo: [
+    { key: 'fc', label: 'FC' },
+    { key: 'aj', label: 'AJ' },
+    { key: 'ajc', label: 'AJC' },
+  ],
+  hard: [
+    { key: 'clear', label: 'CLEAR' },
+    { key: 'hard', label: 'HARD' },
+    { key: 'brave', label: 'BRAVE' },
+    { key: 'absolute', label: 'ABSOLUTE' },
+    { key: 'catastrophe', label: 'CATASTROPHY' },
+  ],
+}

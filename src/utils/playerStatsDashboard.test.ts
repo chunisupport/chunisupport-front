@@ -50,9 +50,12 @@ test('到達条件はスコア・コンボ・ハードランプをそれぞれ�
 
   // When & Then
   assert.equal(hasPlayerStatsAchievement(record, 'sssPlus'), true)
+  assert.equal(hasPlayerStatsAchievement(record, 'sPlus'), true)
+  assert.equal(hasPlayerStatsAchievement(record, 'ssPlus'), true)
   assert.equal(hasPlayerStatsAchievement(record, 'max'), true)
   assert.equal(hasPlayerStatsAchievement(record, 'fc'), true)
   assert.equal(hasPlayerStatsAchievement(record, 'aj'), true)
+  assert.equal(hasPlayerStatsAchievement(record, 'ajc'), true)
   assert.equal(hasPlayerStatsAchievement(record, 'hard'), true)
   assert.equal(hasPlayerStatsAchievement(record, 'catastrophe'), false)
 })
@@ -127,11 +130,17 @@ test('達成階段は指定順を保ち全譜面を母数にする', () => {
   assert.equal(progress[0].percent, (2 / 3) * 100)
 })
 
-test('レベル別集計は譜面定数をレベルへ変換し高い順に返す', () => {
+test('レベル別集計はRANK・COMBO・HARDの累計件数をレベルが高い順に返す', () => {
   // Given
   const records = [
     createRecord({ id: '14plus', const: 14.7, score: 1_009_000 }),
-    createRecord({ id: '14', const: 14.4, score: 1_010_000, combo_lamp: 'ALL JUSTICE' }),
+    createRecord({
+      id: '14',
+      const: 14.4,
+      score: 1_010_000,
+      combo_lamp: 'ALL JUSTICE',
+      clear_lamp: 'CATASTROPHY',
+    }),
     createRecord({ id: '14-second', const: 14.2, is_played: false, score: 0 }),
   ]
 
@@ -140,8 +149,42 @@ test('レベル別集計は譜面定数をレベルへ変換し高い順に返�
 
   // Then
   assert.deepEqual(rows, [
-    { level: '14+', total: 1, played: 1, sssPlus: 1, aj: 0, max: 0 },
-    { level: '14', total: 2, played: 1, sssPlus: 1, aj: 1, max: 1 },
+    {
+      level: '14+',
+      total: 1,
+      s: 1,
+      sPlus: 1,
+      ss: 1,
+      ssPlus: 1,
+      sss: 1,
+      sssPlus: 1,
+      fc: 0,
+      aj: 0,
+      ajc: 0,
+      clear: 1,
+      hard: 0,
+      brave: 0,
+      absolute: 0,
+      catastrophe: 0,
+    },
+    {
+      level: '14',
+      total: 2,
+      s: 1,
+      sPlus: 1,
+      ss: 1,
+      ssPlus: 1,
+      sss: 1,
+      sssPlus: 1,
+      fc: 1,
+      aj: 1,
+      ajc: 1,
+      clear: 1,
+      hard: 1,
+      brave: 1,
+      absolute: 1,
+      catastrophe: 1,
+    },
   ])
 })
 

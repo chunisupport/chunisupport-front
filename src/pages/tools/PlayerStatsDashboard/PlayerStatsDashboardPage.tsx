@@ -32,6 +32,7 @@ import {
   type PlayerStatsCandidate,
   type PlayerStatsCandidateTarget,
   type PlayerStatsDifficulty,
+  type PlayerStatsLevelAchievement,
   type PlayerStatsLevelRow,
   type PlayerStatsSummary,
 } from '../../../utils/playerStatsDashboard'
@@ -46,10 +47,9 @@ import {
   PLAYER_STATS_COPY,
   PLAYER_STATS_DIFFICULTY_OPTIONS,
   PLAYER_STATS_HEATMAP_MAX_MIX_PERCENT,
-  PLAYER_STATS_HEATMAP_METRICS,
+  PLAYER_STATS_LEVEL_METRICS,
   type PlayerStatsAchievementGroup,
   type PlayerStatsDifficultyOption,
-  type PlayerStatsHeatmapMetric,
 } from './constants'
 
 /** 統計画面の表示に必要なログインユーザーのレコード情報。 */
@@ -253,7 +253,7 @@ const getHeatmapBackground = (count: number, total: number): string => {
  */
 const HeatmapCell = (props: {
   row: PlayerStatsLevelRow
-  metric: PlayerStatsHeatmapMetric
+  metric: PlayerStatsLevelAchievement
 }): JSX.Element => {
   const count = () => props.row[props.metric]
   const percent = () => (props.row.total > 0 ? (count() / props.row.total) * 100 : 0)
@@ -282,52 +282,81 @@ const HeatmapCell = (props: {
  * @param props.rows - レベルが高い順の統計行。
  * @returns 横スクロール可能なアクセシブルデータ表。
  */
-const LevelHeatmap = (props: { rows: PlayerStatsLevelRow[] }): JSX.Element => (
-  <section class={PAGE_SECTION_CLASS} aria-labelledby="player-stats-level-title">
-    <div class="mb-4 flex items-start gap-2">
-      <Grid3X3 class="mt-0.5 h-5 w-5 shrink-0 text-action-primary" aria-hidden={true} />
-      <div>
-        <h2 id="player-stats-level-title" class="font-semibold text-text">
-          {PLAYER_STATS_COPY.levelTitle}
-        </h2>
-        <p class="text-xs text-text-muted">{PLAYER_STATS_COPY.levelNotice}</p>
-      </div>
-    </div>
-    <div class="overflow-x-auto rounded-lg border border-border">
-      <table class="w-full min-w-[34rem] border-collapse">
-        <caption class="sr-only">{PLAYER_STATS_COPY.levelCaption}</caption>
-        <thead class="bg-surface-muted text-xs text-text-muted">
-          <tr>
-            <th scope="col" class="px-3 py-2 text-left font-semibold">
-              {PLAYER_STATS_COPY.level}
-            </th>
-            <For each={PLAYER_STATS_HEATMAP_METRICS}>
-              {(metric) => (
-                <th scope="col" class="border-l border-border px-3 py-2 text-center font-semibold">
-                  {metric.label}
-                </th>
+const LevelHeatmap = (props: { rows: PlayerStatsLevelRow[] }): JSX.Element => {
+  /**
+   * 選択した達成種別のレベル別集計表を表示する。
+   *
+   * @param group - RANK、COMBO、HARDのいずれか。
+   * @returns 指定種別の到達条件を列にした表。
+   */
+  const renderTable = (group: PlayerStatsAchievementGroup): JSX.Element => {
+    const metrics = PLAYER_STATS_LEVEL_METRICS[group]
+    return (
+      <div class="mt-4 overflow-x-auto rounded-lg border border-border">
+        <table class="w-full min-w-[34rem] border-collapse">
+          <caption class="sr-only">{PLAYER_STATS_COPY.levelCaption}</caption>
+          <thead class="bg-surface-muted text-xs text-text-muted">
+            <tr>
+              <th scope="col" class="px-3 py-2 text-center font-semibold">
+                {PLAYER_STATS_COPY.level}
+              </th>
+              <For each={metrics}>
+                {(metric) => (
+                  <th
+                    scope="col"
+                    class="border-l border-border px-3 py-2 text-center font-semibold"
+                  >
+                    {metric.label}
+                  </th>
+                )}
+              </For>
+            </tr>
+          </thead>
+          <tbody>
+            <For each={props.rows}>
+              {(row) => (
+                <tr class="border-t border-border">
+                  <th scope="row" class="px-3 py-2 text-center font-jost font-semibold text-text">
+                    {row.level}
+                  </th>
+                  <For each={metrics}>
+                    {(metric) => <HeatmapCell row={row} metric={metric.key} />}
+                  </For>
+                </tr>
               )}
             </For>
-          </tr>
-        </thead>
-        <tbody>
-          <For each={props.rows}>
-            {(row) => (
-              <tr class="border-t border-border">
-                <th scope="row" class="px-3 py-2 text-left font-jost font-semibold text-text">
-                  {row.level}
-                </th>
-                <For each={PLAYER_STATS_HEATMAP_METRICS}>
-                  {(metric) => <HeatmapCell row={row} metric={metric.key} />}
-                </For>
-              </tr>
-            )}
-          </For>
-        </tbody>
-      </table>
-    </div>
-  </section>
-)
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
+  return (
+    <section class={PAGE_SECTION_CLASS} aria-labelledby="player-stats-level-title">
+      <div class="mb-4 flex items-start gap-2">
+        <Grid3X3 class="mt-0.5 h-5 w-5 shrink-0 text-action-primary" aria-hidden={true} />
+        <div>
+          <h2 id="player-stats-level-title" class="font-semibold text-text">
+            {PLAYER_STATS_COPY.levelTitle}
+          </h2>
+          <p class="text-xs text-text-muted">{PLAYER_STATS_COPY.levelNotice}</p>
+        </div>
+      </div>
+      <SegmentedTabs
+        defaultValue="rank"
+        options={PLAYER_STATS_ACHIEVEMENT_GROUP_OPTIONS}
+        listClass="w-full sm:w-auto"
+        triggerClass="flex-1 sm:flex-none"
+      >
+        <For each={PLAYER_STATS_ACHIEVEMENT_GROUP_OPTIONS}>
+          {(option) => (
+            <AppTabContent value={option.value}>{renderTable(option.value)}</AppTabContent>
+          )}
+        </For>
+      </SegmentedTabs>
+    </section>
+  )
+}
 
 /**
  * 目標種別に対応する現在の達成件数をサマリーから取得する。
