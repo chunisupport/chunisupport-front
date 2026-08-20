@@ -59,7 +59,7 @@ test('FCのコンボランプバッジはFC用トークン色を返すこと', (
 test('画像用スコアアクセントはFCだけを粗い破線で表示すること', () => {
   // Given: FCとAJの画像用スコアアクセント
   const expectedFullComboClass =
-    'bg-[repeating-linear-gradient(90deg,var(--color-lamp-full-combo-bg)_0_6px,transparent_6px_10px)]'
+    'bg-gradient-to-b from-transparent to-lamp-full-combo-bg [-webkit-mask-image:repeating-linear-gradient(90deg,black_0_6px,transparent_6px_10px)] [mask-image:repeating-linear-gradient(90deg,black_0_6px,transparent_6px_10px)]'
   const expectedAllJusticeClass = 'bg-gradient-to-b from-transparent to-lamp-all-justice-bg'
 
   // When & Then: FCだけが固定周期の破線になり、AJは連続したグラデーションを維持する
