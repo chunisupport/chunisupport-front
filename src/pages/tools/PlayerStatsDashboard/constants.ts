@@ -1,3 +1,7 @@
+import {
+  MASTER_ULTIMA_FILTER,
+  THEORETICAL_OVER_POWER_TARGET_FILTER,
+} from '../../../constants/chart'
 import type {
   PlayerStatsAchievement,
   PlayerStatsCandidateTarget,
@@ -14,7 +18,6 @@ export const PLAYER_STATS_COPY = {
   overviewTitle: '現在地',
   overviewCaption: '選択した難易度の主要な達成状況',
   achievementTitle: '達成状況',
-  achievementCaption: '全譜面数を母数とした累計達成率',
   achievementRateSuffix: 'の達成率',
   levelTitle: 'レベル別達成率',
   levelCaption: '譜面定数から換算したレベル別の累計達成状況',
@@ -50,6 +53,8 @@ export type PlayerStatsDifficultyOption = {
 /** 統計画面の難易度選択肢。 */
 export const PLAYER_STATS_DIFFICULTY_OPTIONS: PlayerStatsDifficultyOption[] = [
   { value: 'ALL', label: '全難易度' },
+  { value: MASTER_ULTIMA_FILTER, label: 'MASTER+ULTIMA' },
+  { value: THEORETICAL_OVER_POWER_TARGET_FILTER, label: 'OP対象' },
   { value: 'BASIC', label: 'BASIC' },
   { value: 'ADVANCED', label: 'ADVANCED' },
   { value: 'EXPERT', label: 'EXPERT' },
@@ -80,20 +85,20 @@ export const PLAYER_STATS_ACHIEVEMENTS: Record<
 /** 累計到達条件の表示名。 */
 export const PLAYER_STATS_ACHIEVEMENT_LABEL: Record<PlayerStatsAchievement, string> = {
   played: 'プレイ済み',
-  s: 'S以上',
-  sPlus: 'S+以上',
-  ss: 'SS以上',
-  ssPlus: 'SS+以上',
-  sss: 'SSS以上',
+  s: 'S',
+  sPlus: 'S+',
+  ss: 'SS',
+  ssPlus: 'SS+',
+  sss: 'SSS',
   sssPlus: 'SSS+',
-  fc: 'FULL COMBO以上',
+  fc: 'FULL COMBO',
   aj: 'ALL JUSTICE',
   ajc: 'ALL JUSTICE CRITICAL',
   max: 'MAX',
-  clear: 'CLEAR以上',
-  hard: 'HARD以上',
-  brave: 'BRAVE以上',
-  absolute: 'ABSOLUTE以上',
+  clear: 'CLEAR',
+  hard: 'HARD',
+  brave: 'BRAVE',
+  absolute: 'ABSOLUTE',
   catastrophe: 'CATASTROPHY',
 }
 

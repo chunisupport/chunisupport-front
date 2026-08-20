@@ -1,3 +1,5 @@
+import type { PlayerDataDifficulty } from '../types/api'
+
 /** 譜面定数として扱う最小値。 */
 export const CHART_CONST_MIN = 1.0
 
@@ -18,6 +20,18 @@ export const GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES = ['MASTER', 'ULTIMA'] as cons
 
 /** 理論値OVER POWERが最大となる譜面を選ぶ項目の表示名。 */
 export const THEORETICAL_OVER_POWER_TARGET_LABEL = 'OP対象（MAS+ULT）'
+
+/** 理論値OVER POWERが最大となる譜面を選ぶ共通フィルター値。 */
+export const THEORETICAL_OVER_POWER_TARGET_FILTER = 'OP_TARGET' as const
+
+/** MASTERとULTIMAをまとめて選ぶ共通フィルター値。 */
+export const MASTER_ULTIMA_FILTER = 'MASTER_ULTIMA' as const
+
+/** MASTERとULTIMAをまとめた集計で対象とする難易度。 */
+export const MASTER_ULTIMA_DIFFICULTIES = [
+  'MASTER',
+  'ULTIMA',
+] as const satisfies readonly PlayerDataDifficulty[]
 
 /** CHUNITHM のスコアとして扱う最小値。 */
 export const SCORE_MIN = 0

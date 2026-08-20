@@ -1,3 +1,4 @@
+import { THEORETICAL_OVER_POWER_TARGET_FILTER } from '../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
 import { formatChartConst } from './chartConstFormat'
@@ -15,7 +16,7 @@ export const RANDOM_SONG_SELECTOR_DIFFICULTIES: PlayerDataDifficulty[] = [
 /**
  * ランダム選曲の難易度絞り込みでOP対象譜面を表す専用値。
  */
-export const RANDOM_SONG_OP_TARGET_FILTER = 'OP_TARGET'
+export const RANDOM_SONG_OP_TARGET_FILTER = THEORETICAL_OVER_POWER_TARGET_FILTER
 
 /**
  * ランダム選曲の難易度絞り込みで扱う通常難易度またはOP対象の値。

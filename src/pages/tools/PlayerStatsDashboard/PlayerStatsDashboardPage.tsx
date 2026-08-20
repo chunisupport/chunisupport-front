@@ -1,6 +1,7 @@
 import { A } from '@solidjs/router'
 import {
   Award,
+  BadgeCheck,
   ChartNoAxesCombined,
   CheckCircle2,
   Gauge,
@@ -17,8 +18,9 @@ import { AppTabContent, SegmentedTabs } from '../../../components/common/AppTabs
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
 import { buildSongDetailPath } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import type { PlayerRecordDTO } from '../../../types/api'
+import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../../types/api'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
+import { fetchTheoreticalTargetDifficultyBySongId } from '../../../usecases/overpower/fetchTheoreticalTargetDifficulties'
 import { getConstDisplay } from '../../../utils/constDisplay'
 import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
 import {
@@ -56,6 +58,7 @@ import {
 type PlayerStatsPageData = {
   username: string
   records: PlayerRecordDTO[]
+  targetDifficultyBySongId: Map<string, PlayerDataDifficulty>
   updatedAt: string | null
 }
 
@@ -73,12 +76,20 @@ const PAGE_SECTION_CLASS = 'rounded-xl border border-border bg-surface p-4 shado
 /**
  * ログインユーザー本人の統計画面用レコードを取得する。
  *
- * @returns ユーザー名、未プレイを含む通常譜面レコード、更新日時。
+ * @returns ユーザー名、未プレイを含む通常譜面レコード、理論値OP対象難易度、更新日時。
  */
 const fetchPlayerStatsPageData = async (): Promise<PlayerStatsPageData> => {
   const user = await fetchMe()
-  const record = await fetchUserRecordWithCache(user.username)
-  return { username: user.username, records: record.standard, updatedAt: record.meta.updated_at }
+  const [record, targetDifficultyBySongId] = await Promise.all([
+    fetchUserRecordWithCache(user.username),
+    fetchTheoreticalTargetDifficultyBySongId(),
+  ])
+  return {
+    username: user.username,
+    records: record.standard,
+    targetDifficultyBySongId,
+    updatedAt: record.meta.updated_at,
+  }
 }
 
 /**
@@ -159,20 +170,23 @@ const SummaryCards = (props: { summary: PlayerStatsSummary }): JSX.Element => (
  *
  * @param props.achievement - 表示する到達条件。
  * @param props.count - 達成譜面数。
+ * @param props.total - 集計対象の全譜面数。
  * @param props.percent - 全譜面に対する達成率。
  * @returns ラベル、件数、割合、進捗バーを含む行。
  */
 const AchievementRow = (props: {
   achievement: PlayerStatsAchievement
   count: number
+  total: number
   percent: number
 }): JSX.Element => (
-  <li class="grid gap-2 border-b border-border py-3 last:border-b-0 sm:grid-cols-[minmax(8rem,1fr)_auto_minmax(10rem,1fr)] sm:items-center sm:gap-4">
+  <li class="grid gap-2 border-b border-border py-3 last:border-b-0 sm:grid-cols-[8rem_6rem_minmax(10rem,1fr)] sm:items-center sm:gap-4">
     <span class="text-sm font-semibold text-text">
       {PLAYER_STATS_ACHIEVEMENT_LABEL[props.achievement]}
     </span>
-    <span class="font-jost text-sm tabular-nums text-text-muted">
-      {formatInteger(props.count)} {PLAYER_STATS_COPY.achievementCountSuffix}
+    <span class="font-jost text-right text-sm tabular-nums text-text-muted">
+      {formatInteger(props.count)} {PLAYER_STATS_COPY.heatmapCountSeparator}{' '}
+      {formatInteger(props.total)}
     </span>
     <div class="flex items-center gap-3">
       <progress
@@ -202,18 +216,18 @@ const AchievementSection = (props: { records: PlayerRecordDTO[] }): JSX.Element 
       <For
         each={buildPlayerStatsAchievementProgress(props.records, PLAYER_STATS_ACHIEVEMENTS[group])}
       >
-        {(progress) => <AchievementRow {...progress} />}
+        {(progress) => <AchievementRow {...progress} total={props.records.length} />}
       </For>
     </ul>
   )
 
   return (
     <section class={PAGE_SECTION_CLASS} aria-labelledby="player-stats-achievement-title">
-      <div class="mb-4">
+      <div class="mb-4 flex items-center gap-2">
+        <BadgeCheck class="h-5 w-5 text-action-primary" aria-hidden={true} />
         <h2 id="player-stats-achievement-title" class="font-semibold text-text">
           {PLAYER_STATS_COPY.achievementTitle}
         </h2>
-        <p class="text-xs text-text-muted">{PLAYER_STATS_COPY.achievementCaption}</p>
       </div>
       <SegmentedTabs
         defaultValue="rank"
@@ -547,7 +561,11 @@ const PlayerStatsDashboardPage: Component = () => {
   const [difficulty, setDifficulty] = createSignal<PlayerStatsDifficulty>('ALL')
   const [pageData] = createResource(fetchPlayerStatsPageData)
   const filteredRecords = createMemo(() =>
-    filterPlayerStatsRecords(pageData()?.records ?? [], difficulty())
+    filterPlayerStatsRecords(
+      pageData()?.records ?? [],
+      difficulty(),
+      pageData()?.targetDifficultyBySongId
+    )
   )
   const summary = createMemo(() => buildPlayerStatsSummary(filteredRecords()))
   const levelRows = createMemo(() => buildPlayerStatsLevelRows(filteredRecords()))
