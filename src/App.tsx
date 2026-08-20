@@ -1,5 +1,5 @@
 import { A, Route, Router } from '@solidjs/router'
-import { Calculator, ChartNoAxesCombined, Dices, Target, Trophy } from 'lucide-solid'
+import { Calculator, ChartNoAxesCombined, Dices, Gauge, Target, Trophy } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
 
@@ -36,6 +36,7 @@ import {
   LATEST_SCORE_UPDATE_PATH,
   MAINTENANCE_LOGIN_PATH,
   RANDOM_SONG_SELECTOR_PATH,
+  RATING_THEORETICAL_CHECKER_PATH,
   REGISTER_SCORE_PATH,
   REGISTER_SCORE_TEMP_PATH,
   TOOL_STATS_PATH,
@@ -88,6 +89,8 @@ const BorderCalculatorPage = lazy(() => import('./pages/tools/BorderCalculatorPa
 const WeakChartInspectorPage = lazy(() => import('./pages/tools/WeakChartInspectorPage'))
 const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelectorPage'))
 const BestSlotRankingPage = lazy(() => import('./pages/tools/BestSlotRankingPage'))
+const RatingTheoreticalCheckerPage = lazy(() => import('./pages/tools/NewSongSssPlusToolPage'))
+const PlayerStatsDashboardPage = lazy(() => import('./pages/tools/PlayerStatsDashboard'))
 
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
 const AdminDataCoveragePage = lazy(() => import('./pages/admin/AdminDataCoveragePage'))
@@ -293,6 +296,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Dices class={iconClass} aria-hidden="true" />
     case 'ranking':
       return <Trophy class={iconClass} aria-hidden="true" />
+    case 'gauge':
+      return <Gauge class={iconClass} aria-hidden="true" />
   }
 }
 
@@ -339,14 +344,6 @@ const ToolsPage = () => {
       </div>
     </div>
   )
-}
-
-/**
- * 未実装ツールの空ページを表示する。
- * @returns 空のツールページ
- */
-const EmptyToolPage = () => {
-  return <div />
 }
 
 const LoadableAdminPage = withRouteLoadBoundary(AdminPage)
@@ -563,7 +560,14 @@ const App = () => {
         path={BEST_SLOT_RANKING_PATH}
         component={withNavBar(withRouteLoadBoundary(BestSlotRankingPage))}
       />
-      <Route path={TOOL_STATS_PATH} component={withNavBar(EmptyToolPage)} />
+      <Route
+        path={RATING_THEORETICAL_CHECKER_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(RatingTheoreticalCheckerPage)))}
+      />
+      <Route
+        path={TOOL_STATS_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(PlayerStatsDashboardPage)))}
+      />
 
       {/* 管理 */}
       <Route path={ADMIN_PATH} component={withNavBar(GuardedAdminPage)} />

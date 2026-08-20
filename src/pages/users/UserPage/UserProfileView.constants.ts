@@ -1,9 +1,3 @@
-/** レーティング対象として表示する規定枠数。 */
-export const RATING_SLOT_COUNT = {
-  best: 30,
-  new: 20,
-} as const
-
 /** レーティング枠画像の固定論理幅。 */
 export const RATING_IMAGE_WIDTH_PX = 1_024
 /** レーティング枠画像を原寸で出力するピクセル比。 */

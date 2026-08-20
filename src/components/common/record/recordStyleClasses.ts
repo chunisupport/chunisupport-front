@@ -63,9 +63,10 @@ export const COMBO_LAMP_ACCENT_TEXT_CLASS: Record<NonNullable<SharedComboLamp>, 
   'ALL JUSTICE': 'text-lamp-all-justice-bg',
 }
 
-/** レコードのスコアへ重ねるコンボランプ色のアクセントバー背景クラス。 */
+/** レコードのスコアへ重ねるコンボランプ別アクセントバーの背景クラス。 */
 export const COMBO_LAMP_SCORE_ACCENT_CLASS: Record<NonNullable<SharedComboLamp>, string> = {
-  'FULL COMBO': 'bg-gradient-to-b from-transparent to-lamp-full-combo-bg',
+  'FULL COMBO':
+    'bg-[repeating-linear-gradient(90deg,var(--color-lamp-full-combo-bg)_0_6px,transparent_6px_10px)]',
   'ALL JUSTICE': 'bg-gradient-to-b from-transparent to-lamp-all-justice-bg',
 }
 

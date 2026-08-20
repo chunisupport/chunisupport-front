@@ -8,6 +8,7 @@ import {
   getAppButtonClass,
   getAppIconButtonClass,
 } from '../../../../components/common/AppButton'
+import { RATING_SLOT_COUNT } from '../../../../constants/rating'
 import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
 import {
   canShareFiles,
@@ -20,7 +21,6 @@ import {
   RATING_IMAGE_JPEG_QUALITY,
   RATING_IMAGE_PIXEL_RATIO,
   RATING_IMAGE_WIDTH_PX,
-  RATING_SLOT_COUNT,
 } from '../UserProfileView.constants'
 import { RatingImageSheet } from './RatingImageSheet'
 import { formatRatingImageFilename } from './ratingImageFilename'

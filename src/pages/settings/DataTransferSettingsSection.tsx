@@ -21,6 +21,8 @@ import {
 } from './DataTransferSettings.constants'
 
 type DataTransferSettingsSectionProps = {
+  /** 現在のアカウントがプレイヤーデータを保持しているか。 */
+  hasUserData: boolean
   /** インポート後に設定画面のユーザー情報を再取得する処理。 */
   onImported: () => Promise<void>
 }
@@ -92,6 +94,10 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
    * @returns 処理完了後に解決されるPromise。
    */
   const handleExport = async (): Promise<void> => {
+    if (!props.hasUserData) {
+      return
+    }
+
     setExportError('')
     setExportSuccess('')
     setExporting(true)
@@ -133,6 +139,10 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
    * @returns 処理完了後に解決されるPromise。
    */
   const handleValidate = async (): Promise<void> => {
+    if (props.hasUserData) {
+      return
+    }
+
     const file = selectedFile()
     if (!file) {
       setFileError(DATA_TRANSFER_COPY.invalidFile)
@@ -161,7 +171,7 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
   const handleImport = async (): Promise<void> => {
     const file = selectedFile()
     const currentValidation = validation()
-    if (!file || !currentValidation?.importable) {
+    if (props.hasUserData || !file || !currentValidation?.importable) {
       return
     }
 
@@ -197,7 +207,7 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
             variant="primary"
             class="mt-4"
             onClick={handleExport}
-            disabled={exporting()}
+            disabled={!props.hasUserData || exporting()}
             aria-busy={exporting()}
             leftIcon={
               exporting() ? (
@@ -231,7 +241,7 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
             <FileField
               accept={[...DATA_TRANSFER_ACCEPT]}
               maxFileSize={DATA_TRANSFER_MAX_FILE_SIZE_BYTES}
-              disabled={validating() || importing()}
+              disabled={props.hasUserData || validating() || importing()}
               validationState={fileError() ? 'invalid' : undefined}
               onFileChange={handleFileChange}
             >
@@ -275,7 +285,7 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
             <AppButton
               type="submit"
               class="mt-4"
-              disabled={!selectedFile() || validating() || importing()}
+              disabled={props.hasUserData || !selectedFile() || validating() || importing()}
               aria-busy={validating()}
               leftIcon={validating() ? <Loading size="inline" ariaHidden /> : undefined}
             >
@@ -348,7 +358,7 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
                 variant="primary"
                 class="mt-4"
                 onClick={handleImport}
-                disabled={importing() || Boolean(importSuccess())}
+                disabled={props.hasUserData || importing() || Boolean(importSuccess())}
                 aria-busy={importing()}
                 leftIcon={importing() ? <Loading size="inline" ariaHidden /> : undefined}
               >

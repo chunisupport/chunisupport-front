@@ -8,6 +8,7 @@ import {
   SCORE_RANK_TEXT_CLASS,
 } from '../../../../components/common/record/recordStyleClasses'
 import { getHonorTypeClassName } from '../../../../constants/honors'
+import { RATING_SLOT_COUNT } from '../../../../constants/rating'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO, UserRatingDTO } from '../../../../types/api'
 import { getConstDisplay } from '../../../../utils/constDisplay'
 import { difficultyCardBorderColor } from '../../../../utils/difficultyUtils'
@@ -17,11 +18,7 @@ import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/
 import { getRankingPositionClass } from '../../../../utils/rankingPosition'
 import { formatNullablePlayerRating, formatRatingFixed2 } from '../../../../utils/ratingFormat'
 import { getScoreRank } from '../../../../utils/scoreRank'
-import {
-  RATING_IMAGE_COPY,
-  RATING_IMAGE_WIDTH_PX,
-  RATING_SLOT_COUNT,
-} from '../UserProfileView.constants'
+import { RATING_IMAGE_COPY, RATING_IMAGE_WIDTH_PX } from '../UserProfileView.constants'
 import { UserRecordPlaceholderCard } from './UserRecordPlaceholderCard'
 
 type RatingImageSheetProps = {
