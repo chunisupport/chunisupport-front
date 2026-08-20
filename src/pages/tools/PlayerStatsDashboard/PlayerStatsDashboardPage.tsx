@@ -20,7 +20,7 @@ import { buildSongDetailPath } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../../types/api'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
-import { fetchTheoreticalTargetDifficultyBySongId } from '../../../usecases/overpower/fetchTheoreticalTargetDifficulties'
+import { fetchPlayerStatsChartMetadata } from '../../../usecases/overpower/fetchTheoreticalTargetDifficulties'
 import { getConstDisplay } from '../../../utils/constDisplay'
 import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
 import {
@@ -36,6 +36,7 @@ import {
   type PlayerStatsDifficulty,
   type PlayerStatsLevelAchievement,
   type PlayerStatsLevelRow,
+  type PlayerStatsNotesBySongId,
   type PlayerStatsSummary,
 } from '../../../utils/playerStatsDashboard'
 import { formatUpdatedAt } from '../../../utils/recordUpdatedAt'
@@ -47,6 +48,7 @@ import {
   PLAYER_STATS_CANDIDATE_LIMIT,
   PLAYER_STATS_CANDIDATE_OPTIONS,
   PLAYER_STATS_COPY,
+  PLAYER_STATS_DEFAULT_DIFFICULTY,
   PLAYER_STATS_DIFFICULTY_OPTIONS,
   PLAYER_STATS_HEATMAP_MAX_MIX_PERCENT,
   PLAYER_STATS_LEVEL_METRICS,
@@ -59,6 +61,7 @@ type PlayerStatsPageData = {
   username: string
   records: PlayerRecordDTO[]
   targetDifficultyBySongId: Map<string, PlayerDataDifficulty>
+  notesBySongId: PlayerStatsNotesBySongId
   updatedAt: string | null
 }
 
@@ -76,18 +79,19 @@ const PAGE_SECTION_CLASS = 'rounded-xl border border-border bg-surface p-4 shado
 /**
  * ログインユーザー本人の統計画面用レコードを取得する。
  *
- * @returns ユーザー名、未プレイを含む通常譜面レコード、理論値OP対象難易度、更新日時。
+ * @returns ユーザー名、未プレイを含む通常譜面レコード、譜面メタ情報、更新日時。
  */
 const fetchPlayerStatsPageData = async (): Promise<PlayerStatsPageData> => {
   const user = await fetchMe()
-  const [record, targetDifficultyBySongId] = await Promise.all([
+  const [record, chartMetadata] = await Promise.all([
     fetchUserRecordWithCache(user.username),
-    fetchTheoreticalTargetDifficultyBySongId(),
+    fetchPlayerStatsChartMetadata(),
   ])
   return {
     username: user.username,
     records: record.standard,
-    targetDifficultyBySongId,
+    targetDifficultyBySongId: chartMetadata.targetDifficultyBySongId,
+    notesBySongId: chartMetadata.notesBySongId,
     updatedAt: record.meta.updated_at,
   }
 }
@@ -463,7 +467,7 @@ const CandidateRow = (props: { candidate: PlayerStatsCandidate }): JSX.Element =
     <li>
       <A
         href={buildSongDetailPath(props.candidate.record.id, props.candidate.record.difficulty)}
-        class="grid gap-3 rounded-lg border border-border bg-surface-muted p-3 transition-colors hover:border-action-primary-border hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+        class="grid h-full gap-3 rounded-lg border border-border bg-surface-muted p-3 transition-colors hover:border-action-primary-border hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
       >
         <div class="min-w-0">
           <p class="truncate font-sans text-sm font-semibold text-text">
@@ -495,14 +499,21 @@ const CandidateRow = (props: { candidate: PlayerStatsCandidate }): JSX.Element =
  *
  * @param props.records - 選択難易度の通常譜面レコード。
  * @param props.target - SSS+、AJ、MAXのいずれか。
+ * @param props.notesBySongId - 曲IDと難易度ごとのノーツ数。
  * @returns 上位候補譜面一覧または空表示。
  */
 const CandidateList = (props: {
   records: PlayerRecordDTO[]
   target: PlayerStatsCandidateTarget
+  notesBySongId: PlayerStatsNotesBySongId
 }): JSX.Element => {
   const candidates = () =>
-    findPlayerStatsCandidates(props.records, props.target, PLAYER_STATS_CANDIDATE_LIMIT)
+    findPlayerStatsCandidates(
+      props.records,
+      props.target,
+      PLAYER_STATS_CANDIDATE_LIMIT,
+      props.notesBySongId
+    )
   return (
     <Show
       when={candidates().length > 0 ? candidates() : undefined}
@@ -513,7 +524,7 @@ const CandidateList = (props: {
       }
     >
       {(items) => (
-        <ul class="space-y-2">
+        <ul class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
           <For each={items()}>{(candidate) => <CandidateRow candidate={candidate} />}</For>
         </ul>
       )}
@@ -525,9 +536,13 @@ const CandidateList = (props: {
  * SSS+、AJ、MAXの次の候補譜面をタブで表示する。
  *
  * @param props.records - 選択難易度の通常譜面レコード。
+ * @param props.notesBySongId - 曲IDと難易度ごとのノーツ数。
  * @returns 目標別の候補譜面一覧。
  */
-const CandidateSection = (props: { records: PlayerRecordDTO[] }): JSX.Element => (
+const CandidateSection = (props: {
+  records: PlayerRecordDTO[]
+  notesBySongId: PlayerStatsNotesBySongId
+}): JSX.Element => (
   <section class={PAGE_SECTION_CLASS} aria-labelledby="player-stats-candidate-title">
     <div class="mb-4 flex items-center gap-2">
       <Trophy class="h-5 w-5 text-action-primary" aria-hidden={true} />
@@ -544,7 +559,11 @@ const CandidateSection = (props: { records: PlayerRecordDTO[] }): JSX.Element =>
       <For each={PLAYER_STATS_CANDIDATE_OPTIONS}>
         {(option) => (
           <AppTabContent value={option.value}>
-            <CandidateList records={props.records} target={option.value} />
+            <CandidateList
+              records={props.records}
+              target={option.value}
+              notesBySongId={props.notesBySongId}
+            />
           </AppTabContent>
         )}
       </For>
@@ -558,7 +577,9 @@ const CandidateSection = (props: { records: PlayerRecordDTO[] }): JSX.Element =>
  * @returns 難易度連動の概要、達成階段、ヒートマップ、目標候補を含むページ。
  */
 const PlayerStatsDashboardPage: Component = () => {
-  const [difficulty, setDifficulty] = createSignal<PlayerStatsDifficulty>('ALL')
+  const [difficulty, setDifficulty] = createSignal<PlayerStatsDifficulty>(
+    PLAYER_STATS_DEFAULT_DIFFICULTY
+  )
   const [pageData] = createResource(fetchPlayerStatsPageData)
   const filteredRecords = createMemo(() =>
     filterPlayerStatsRecords(
@@ -617,7 +638,7 @@ const PlayerStatsDashboardPage: Component = () => {
               </div>
 
               <LevelHeatmap rows={levelRows()} />
-              <CandidateSection records={filteredRecords()} />
+              <CandidateSection records={filteredRecords()} notesBySongId={data().notesBySongId} />
             </main>
           </Show>
         )}

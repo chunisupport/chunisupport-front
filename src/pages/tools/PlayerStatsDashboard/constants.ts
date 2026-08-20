@@ -62,6 +62,9 @@ export const PLAYER_STATS_DIFFICULTY_OPTIONS: PlayerStatsDifficultyOption[] = [
   { value: 'ULTIMA', label: 'ULTIMA' },
 ]
 
+/** 統計画面で初期集計する難易度。 */
+export const PLAYER_STATS_DEFAULT_DIFFICULTY: PlayerStatsDifficulty = MASTER_ULTIMA_FILTER
+
 /** 達成状況タブの種別。 */
 export type PlayerStatsAchievementGroup = 'rank' | 'combo' | 'hard'
 
@@ -110,7 +113,7 @@ export const PLAYER_STATS_CANDIDATE_OPTIONS = [
 ] as const satisfies readonly { value: PlayerStatsCandidateTarget; label: string }[]
 
 /** 候補リストに表示する最大譜面数。 */
-export const PLAYER_STATS_CANDIDATE_LIMIT = 5
+export const PLAYER_STATS_CANDIDATE_LIMIT = 15
 
 /** ヒートマップ背景色へ混ぜるアクセント色の最大割合。 */
 export const PLAYER_STATS_HEATMAP_MAX_MIX_PERCENT = 55
