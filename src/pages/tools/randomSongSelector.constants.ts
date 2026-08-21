@@ -21,6 +21,7 @@ export const RANDOM_SONG_SELECTOR_DEFAULTS = {
   maxScore: '',
   defaultWeight: '1',
   showRecord: true,
+  favoriteOnly: false,
 } as const
 
 /**
@@ -60,6 +61,7 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   description: '条件に合う通常譜面から指定曲数をランダムに選びます。',
   countLabel: '曲数',
   difficultyLabel: '難易度',
+  favoriteOnlyLabel: 'お気に入りからランダム',
   genreLabel: 'ジャンル',
   versionLabel: 'バージョン',
   minConstLabel: '定数 下限',
@@ -79,6 +81,7 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   bestFrameLabel: 'ベスト枠',
   recordUnavailableMessage: 'ログイン時のみ利用できます。',
   recordFetchErrorMessage: 'レコード情報を取得できませんでした。',
+  favoriteFetchErrorMessage: 'お気に入り楽曲を取得できませんでした。',
   drawButtonLabel: '選曲',
   resetButtonLabel: 'クリア',
   resetConfirmTitle: '条件を初期化しますか？',

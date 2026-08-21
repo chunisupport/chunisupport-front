@@ -16,7 +16,7 @@ import {
   untrack,
 } from 'solid-js'
 import { fetchVersions } from '../../api/songs'
-import { fetchMe, fetchUserRating } from '../../api/users'
+import { fetchMe, fetchUserFavoriteSongs, fetchUserRating } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { MultiSelectField, toMultiSelectOptions } from '../../components/common/AppMultiSelect'
@@ -39,6 +39,7 @@ import {
   createRandomSongRecordMap,
   drawRandomSongs,
   filterRandomSongCandidates,
+  filterRandomSongCandidatesByFavorite,
   filterRandomSongCandidatesByRecord,
   hasInvalidRandomSongWeightValue,
   parseOptionalRandomSongDecimal,
@@ -149,6 +150,25 @@ type MyRandomSongRecordData =
   | {
       status: 'error'
     }
+
+/** ランダム選曲で利用するお気に入り楽曲の取得状態。 */
+type MyRandomSongFavoriteData =
+  | {
+      status: 'available'
+      favoriteSongIds: ReadonlySet<string>
+    }
+  | {
+      status: 'unauthenticated'
+    }
+  | {
+      status: 'error'
+    }
+
+/** ランダム選曲で利用するログイン中ユーザーデータの取得状態。 */
+type MyRandomSongUserData = {
+  record: MyRandomSongRecordData
+  favorite: MyRandomSongFavoriteData
+}
 
 const UNAUTHENTICATED_ERROR_CODES = new Set([
   'missing_token',
@@ -367,7 +387,7 @@ const RandomSongCheckbox: Component<{
  * @param error - 取得処理で発生したエラー。
  * @returns 未認証エラーの場合は true。
  */
-const isUnauthenticatedRandomSongRecordError = (error: unknown): boolean => {
+const isUnauthenticatedRandomSongError = (error: unknown): boolean => {
   if (typeof error !== 'object' || error === null) return false
 
   const apiError = error as { status?: number; code?: string }
@@ -377,16 +397,16 @@ const isUnauthenticatedRandomSongRecordError = (error: unknown): boolean => {
 }
 
 /**
- * ログイン中ユーザーのレコード情報を取得する。
+ * 指定ユーザーのレコード情報を取得する。
  *
+ * @param username - 取得対象のユーザー名。
  * @returns 取得できたレコード情報、または取得できなかった理由。
  */
-const fetchMyRandomSongRecordData = async (): Promise<MyRandomSongRecordData> => {
+const fetchMyRandomSongRecordData = async (username: string): Promise<MyRandomSongRecordData> => {
   try {
-    const me = await fetchMe({ redirectOnUnauthorized: false })
     const [rating, records] = await Promise.all([
-      fetchUserRating(me.username),
-      fetchUserRecordWithCache(me.username),
+      fetchUserRating(username),
+      fetchUserRecordWithCache(username),
     ])
 
     return {
@@ -395,9 +415,52 @@ const fetchMyRandomSongRecordData = async (): Promise<MyRandomSongRecordData> =>
       bestRecords: rating.best,
     }
   } catch (error) {
-    return isUnauthenticatedRandomSongRecordError(error)
+    return isUnauthenticatedRandomSongError(error)
       ? { status: 'unauthenticated' }
       : { status: 'error' }
+  }
+}
+
+/**
+ * 指定ユーザーのお気に入り楽曲を取得する。
+ *
+ * @param username - 取得対象のユーザー名。
+ * @returns 取得できたお気に入り楽曲ID、または取得できなかった理由。
+ */
+const fetchMyRandomSongFavoriteData = async (
+  username: string
+): Promise<MyRandomSongFavoriteData> => {
+  try {
+    const favoriteSongs = await fetchUserFavoriteSongs(username)
+
+    return {
+      status: 'available',
+      favoriteSongIds: new Set(favoriteSongs.items.map((item) => item.display_id)),
+    }
+  } catch (error) {
+    return isUnauthenticatedRandomSongError(error)
+      ? { status: 'unauthenticated' }
+      : { status: 'error' }
+  }
+}
+
+/**
+ * ログイン中ユーザーのレコード情報とお気に入り楽曲を取得する。
+ *
+ * @returns レコード情報とお気に入り楽曲それぞれの取得状態。
+ */
+const fetchMyRandomSongUserData = async (): Promise<MyRandomSongUserData> => {
+  try {
+    const me = await fetchMe({ redirectOnUnauthorized: false })
+    const [record, favorite] = await Promise.all([
+      fetchMyRandomSongRecordData(me.username),
+      fetchMyRandomSongFavoriteData(me.username),
+    ])
+
+    return { record, favorite }
+  } catch (error) {
+    const status = isUnauthenticatedRandomSongError(error) ? 'unauthenticated' : 'error'
+    return { record: { status }, favorite: { status } }
   }
 }
 
@@ -498,7 +561,9 @@ const RandomSongSelect = <T extends string>(props: {
 const RandomSongSelectorPage = (): JSX.Element => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [versionsResponse] = createResource(fetchVersions)
-  const [myRecordData] = createResource(fetchMyRandomSongRecordData)
+  const [myUserData] = createResource(fetchMyRandomSongUserData)
+  const myRecordData = (): MyRandomSongRecordData | undefined => myUserData()?.record
+  const myFavoriteData = (): MyRandomSongFavoriteData | undefined => myUserData()?.favorite
   const [count, setCount] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.count)
   const [minConst, setMinConst] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.minConst)
   const [maxConst, setMaxConst] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.maxConst)
@@ -509,6 +574,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const [selectedVersions, setSelectedVersions] = createSignal<string[]>([])
   const [recordFilterSettingsOpen, setRecordFilterSettingsOpen] = createSignal(false)
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = createSignal(false)
+  const [favoriteOnly, setFavoriteOnly] = createSignal<boolean>(
+    RANDOM_SONG_SELECTOR_DEFAULTS.favoriteOnly
+  )
   const [playStatus, setPlayStatus] = createSignal<RandomSongPlayStatus>('all')
   const [bestFrame, setBestFrame] = createSignal<RandomSongBestFrame>('all')
   const [selectedLamps, setSelectedLamps] = createSignal<RandomSongLamp[]>([
@@ -586,6 +654,14 @@ const RandomSongSelectorPage = (): JSX.Element => {
     () => new Set(createRandomSongRecordMap(availableMyRecordData()?.bestRecords ?? []).keys())
   )
   const hasMyRecordData = createMemo(() => availableMyRecordData() !== null)
+  const availableMyFavoriteData = createMemo(() => {
+    const data = myFavoriteData()
+    return data?.status === 'available' ? data : null
+  })
+  const hasMyFavoriteData = createMemo(() => availableMyFavoriteData() !== null)
+  const favoriteSongIds = createMemo<ReadonlySet<string>>(
+    () => availableMyFavoriteData()?.favoriteSongIds ?? new Set()
+  )
   /**
    * 自分のレコード表示が現在有効かどうかを返します。
    *
@@ -633,11 +709,16 @@ const RandomSongSelectorPage = (): JSX.Element => {
       minConst: parsedMinConst(),
       maxConst: parsedMaxConst(),
     })
+    const favoriteFilteredCandidates = filterRandomSongCandidatesByFavorite(
+      basicFilteredCandidates,
+      favoriteSongIds(),
+      favoriteOnly()
+    )
 
-    if (!hasMyRecordData()) return basicFilteredCandidates
+    if (!hasMyRecordData()) return favoriteFilteredCandidates
 
     return filterRandomSongCandidatesByRecord(
-      basicFilteredCandidates,
+      favoriteFilteredCandidates,
       recordsByChartKey(),
       bestChartKeys(),
       {
@@ -790,6 +871,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     setMinScore(RANDOM_SONG_SELECTOR_DEFAULTS.minScore)
     setMaxScore(RANDOM_SONG_SELECTOR_DEFAULTS.maxScore)
     setShowRecord(RANDOM_SONG_SELECTOR_DEFAULTS.showRecord)
+    setFavoriteOnly(RANDOM_SONG_SELECTOR_DEFAULTS.favoriteOnly)
     setPlayStatus('all')
     setBestFrame('all')
     setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])
@@ -924,7 +1006,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
           <section class="rounded-lg border border-border bg-surface p-4 sm:p-6">
             <Show when={!isSongsLoading() && !versionsResponse.loading} fallback={<Loading />}>
               <form class="space-y-4" onSubmit={(event) => event.preventDefault()}>
-                <div class="grid gap-4 lg:grid-cols-2">
+                <div class="grid items-end gap-4 sm:grid-cols-[8rem_minmax(0,1fr)]">
                   <div class="max-w-32">
                     <RandomSongTextField
                       id="random-song-count"
@@ -933,6 +1015,27 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       inputMode="numeric"
                       onChange={setCount}
                     />
+                  </div>
+                  <div class="pb-2">
+                    <CheckboxField
+                      id="random-song-favorite-only"
+                      checked={favoriteOnly()}
+                      disabled={!hasMyFavoriteData()}
+                      onChange={setFavoriteOnly}
+                      class="relative flex items-center gap-2"
+                      textVariant="large"
+                      label={RANDOM_SONG_SELECTOR_COPY.favoriteOnlyLabel}
+                    />
+                    <Show when={myFavoriteData()?.status === 'unauthenticated'}>
+                      <p class="mt-1 text-xs text-text-muted">
+                        {RANDOM_SONG_SELECTOR_COPY.recordUnavailableMessage}
+                      </p>
+                    </Show>
+                    <Show when={myFavoriteData()?.status === 'error'}>
+                      <p class="mt-1 text-xs text-danger">
+                        {RANDOM_SONG_SELECTOR_COPY.favoriteFetchErrorMessage}
+                      </p>
+                    </Show>
                   </div>
                 </div>
 
