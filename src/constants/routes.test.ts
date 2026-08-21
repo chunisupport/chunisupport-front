@@ -6,8 +6,15 @@ import {
   buildWorldsendChartDetailPath,
   buildWorldsendSongDetailPath,
   CHART_DETAIL_FROM_SONG_DETAIL_STATE,
+  DASHBOARD_PATH,
   isChartDetailFromSongDetailState,
 } from './routes'
+
+test('ダッシュボードパスは tools 配下の dashboard である', () => {
+  const result = DASHBOARD_PATH
+
+  assert.equal(result, '/tools/dashboard')
+})
 
 test('通常楽曲詳細パスは表示IDと難易度をエンコードする', () => {
   // Given: URLエンコードが必要な表示IDと大文字難易度。

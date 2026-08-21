@@ -2,9 +2,9 @@ import {
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
+  DASHBOARD_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
-  TOOL_STATS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
 
@@ -69,7 +69,7 @@ export const TOOL_LINKS: ToolLink[] = [
   },
   {
     title: 'ダッシュボード',
-    href: TOOL_STATS_PATH,
+    href: DASHBOARD_PATH,
     icon: 'chart',
   },
 ]
