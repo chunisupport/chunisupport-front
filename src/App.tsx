@@ -30,6 +30,7 @@ import {
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
+  DASHBOARD_PATH,
   EDITOR_PATH,
   EDITOR_SONGS_PATH,
   FRIENDS_PATH,
@@ -39,7 +40,6 @@ import {
   RATING_THEORETICAL_CHECKER_PATH,
   REGISTER_SCORE_PATH,
   REGISTER_SCORE_TEMP_PATH,
-  TOOL_STATS_PATH,
   TOOLS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './constants/routes'
@@ -565,7 +565,7 @@ const App = () => {
         component={withNavBar(withAuth(withRouteLoadBoundary(RatingTheoreticalCheckerPage)))}
       />
       <Route
-        path={TOOL_STATS_PATH}
+        path={DASHBOARD_PATH}
         component={withNavBar(withAuth(withRouteLoadBoundary(PlayerStatsDashboardPage)))}
       />
 

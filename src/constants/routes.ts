@@ -18,7 +18,7 @@ export const RATING_THEORETICAL_CHECKER_PATH = `${TOOLS_PATH}/rating-theoretical
 /** ベスト枠ランキング画面のパス。 */
 export const BEST_SLOT_RANKING_PATH = `${TOOLS_PATH}/best-slot-ranking`
 /** ダッシュボード画面のパス。 */
-export const TOOL_STATS_PATH = `${TOOLS_PATH}/stats`
+export const DASHBOARD_PATH = `${TOOLS_PATH}/dashboard`
 /** EDITOR向け編集メニューのパス。 */
 export const EDITOR_PATH = '/editor'
 /** EDITOR向け楽曲編集画面のパス。 */

@@ -153,7 +153,7 @@ const MILESTONE_STEP: Record<PlayerStatsCandidateTarget, number> = {
  * @param total - 集計対象の全譜面数。
  * @returns 0から100までの達成率。
  */
-const calculatePercent = (count: number, total: number): number =>
+export const calculatePlayerStatsPercent = (count: number, total: number): number =>
   total > 0 ? (count / total) * 100 : 0
 
 /**
@@ -238,14 +238,14 @@ export const buildPlayerStatsSummary = (records: PlayerRecordDTO[]): PlayerStats
   return {
     total,
     played,
-    playedPercent: calculatePercent(played, total),
+    playedPercent: calculatePlayerStatsPercent(played, total),
     averageScore,
     sssPlus,
-    sssPlusPercent: calculatePercent(sssPlus, total),
+    sssPlusPercent: calculatePlayerStatsPercent(sssPlus, total),
     aj,
-    ajPercent: calculatePercent(aj, total),
+    ajPercent: calculatePlayerStatsPercent(aj, total),
     max,
-    maxPercent: calculatePercent(max, total),
+    maxPercent: calculatePlayerStatsPercent(max, total),
   }
 }
 
@@ -265,7 +265,7 @@ export const buildPlayerStatsAchievementProgress = (
     return {
       achievement,
       count,
-      percent: calculatePercent(count, records.length),
+      percent: calculatePlayerStatsPercent(count, records.length),
     }
   })
 

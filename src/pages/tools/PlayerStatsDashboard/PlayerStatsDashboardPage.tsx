@@ -19,6 +19,7 @@ import {
   SegmentedTabs,
   SegmentedToggleGroup,
 } from '../../../components/common/AppTabs'
+import { CheckboxField } from '../../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
 import { buildSongDetailPath } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
@@ -34,6 +35,7 @@ import {
   buildPlayerStatsLevelRows,
   buildPlayerStatsMilestone,
   buildPlayerStatsSummary,
+  calculatePlayerStatsPercent,
   filterPlayerStatsRecords,
   findPlayerStatsCandidates,
   type PlayerStatsCandidate,
@@ -282,26 +284,30 @@ const getHeatmapBackground = (count: number, total: number): string => {
 }
 
 /**
- * 達成率分布行の達成セルを達成数と総数の2段で表示する。
+ * 達成率分布行の達成セルを件数または達成率の2段表示へ整形する。
  *
  * @param props.row - 表示する達成率分布行。
  * @param props.metric - 表示する到達条件。
- * @returns 色の濃淡と数値を併用した表セル。
+ * @param props.showPercent - 上段を達成率で表示するか。
+ * @returns 色の濃淡と件数または達成率を併用した表セル。
  */
 const HeatmapCell = (props: {
   row: PlayerStatsHeatmapRow
   metric: PlayerStatsLevelAchievement
+  showPercent: boolean
 }): JSX.Element => {
   const count = () => props.row[props.metric]
+  const percent = () => calculatePlayerStatsPercent(count(), props.row.total)
   return (
     <td
       class="min-w-16 border-l border-border px-2 py-1.5 text-center"
       style={{ background: getHeatmapBackground(count(), props.row.total) }}
     >
       <span class="block font-jost text-sm font-semibold leading-tight tabular-nums text-text">
-        {formatInteger(count())}
+        {props.showPercent ? `${formatTruncatedFixed(percent(), 2)}%` : formatInteger(count())}
       </span>
       <span class="block font-jost text-xs leading-tight tabular-nums text-text-muted">
+        <Show when={props.showPercent}>{formatInteger(count())}</Show>
         {PLAYER_STATS_COPY.heatmapCountSeparator}
         {formatInteger(props.row.total)}
       </span>
@@ -315,12 +321,14 @@ const HeatmapCell = (props: {
  * @param props.group - RANK、COMBO、HARDのいずれか。
  * @param props.rows - 集計軸の値が高い順の統計行。
  * @param props.caption - 表の読み上げ用説明。
+ * @param props.showPercent - 上段を達成率で表示するか。
  * @returns 横スクロール可能なアクセシブルデータ表。
  */
 const HeatmapTable = (props: {
   group: PlayerStatsAchievementGroup
   rows: (PlayerStatsLevelRow | PlayerStatsChartConstantRow)[]
   caption: string
+  showPercent: boolean
 }): JSX.Element => (
   <div class="mt-4 overflow-x-auto rounded-lg border border-border">
     <table class="w-full min-w-[34rem] border-collapse">
@@ -349,7 +357,11 @@ const HeatmapTable = (props: {
               <th scope="row" class="px-3 py-2 text-center font-semibold text-text">
                 {metric.label}
               </th>
-              <For each={props.rows}>{(row) => <HeatmapCell row={row} metric={metric.key} />}</For>
+              <For each={props.rows}>
+                {(row) => (
+                  <HeatmapCell row={row} metric={metric.key} showPercent={props.showPercent} />
+                )}
+              </For>
             </tr>
           )}
         </For>
@@ -370,14 +382,23 @@ const AchievementHeatmap = (props: {
   chartConstantRows: PlayerStatsChartConstantRow[]
 }): JSX.Element => {
   const [axis, setAxis] = createSignal<PlayerStatsHeatmapAxis>('level')
+  const [showPercent, setShowPercent] = createSignal(false)
   const axisTabs = (
-    <SegmentedToggleGroup
-      value={axis()}
-      onChange={setAxis}
-      options={PLAYER_STATS_HEATMAP_AXIS_OPTIONS}
-      class="w-full sm:w-auto"
-      itemClass="flex-1 sm:flex-none"
-    />
+    <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+      <CheckboxField
+        checked={showPercent()}
+        onChange={setShowPercent}
+        label={PLAYER_STATS_COPY.heatmapPercentToggle}
+        class="min-h-8"
+      />
+      <SegmentedToggleGroup
+        value={axis()}
+        onChange={setAxis}
+        options={PLAYER_STATS_HEATMAP_AXIS_OPTIONS}
+        class="w-full sm:w-auto"
+        itemClass="flex-1 sm:flex-none"
+      />
+    </div>
   )
 
   return (
@@ -407,6 +428,7 @@ const AchievementHeatmap = (props: {
                     ? PLAYER_STATS_COPY.levelCaption
                     : PLAYER_STATS_COPY.chartConstantCaption
                 }
+                showPercent={showPercent()}
               />
             </AppTabContent>
           )}
