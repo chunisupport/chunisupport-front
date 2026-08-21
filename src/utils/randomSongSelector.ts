@@ -60,6 +60,14 @@ export type RandomSongWeight = {
   constWeights?: Partial<Record<string, number>>
 }
 
+/**
+ * レベル単位でまとめて重みを設定できる譜面定数のグループ。
+ */
+export type RandomSongLevelWeightOption = {
+  levelLabel: string
+  chartConsts: string[]
+}
+
 export type RandomSongPlayStatusFilter = 'all' | 'played' | 'unplayed'
 
 export type RandomSongBestFrameFilter = 'all' | 'only' | 'exclude'
@@ -231,6 +239,57 @@ export const formatRandomSongLevel = (chartConst: number): string => {
   const baseLevel = Math.floor(chartConst)
   const decimal = Math.round((chartConst - baseLevel) * 10)
   return decimal >= 5 ? `${baseLevel}+` : String(baseLevel)
+}
+
+/**
+ * 候補一覧をレベルごとの譜面定数セットへ変換する。
+ *
+ * @param candidates - 変換対象のランダム選曲候補。
+ * @returns レベル表記をキー、譜面定数の集合を値とするMap。
+ */
+export const createChartConstsByLevelMap = (
+  candidates: readonly RandomSongCandidate[]
+): Map<string, Set<string>> => {
+  const values = new Map<string, Set<string>>()
+
+  for (const candidate of candidates) {
+    const levelLabel = formatRandomSongLevel(candidate.chartConst)
+    const chartConsts = values.get(levelLabel) ?? new Set<string>()
+    chartConsts.add(formatChartConst(candidate.chartConst))
+    values.set(levelLabel, chartConsts)
+  }
+
+  return values
+}
+
+/**
+ * 絞り込み結果にレベル内の全譜面定数が残っているレベルを取得する。
+ *
+ * @param allChartConstsByLevel - 絞り込み前の全候補から作成したレベル別譜面定数。
+ * @param filteredCandidates - 現在の絞り込み後候補。
+ * @returns 一括設定できるレベルと含まれる譜面定数。
+ */
+export const getRandomSongCompleteLevelWeightOptions = (
+  allChartConstsByLevel: ReadonlyMap<string, ReadonlySet<string>>,
+  filteredCandidates: readonly RandomSongCandidate[]
+): RandomSongLevelWeightOption[] => {
+  const filteredChartConstsByLevel = createChartConstsByLevelMap(filteredCandidates)
+
+  return [...allChartConstsByLevel.entries()]
+    .flatMap(([levelLabel, allChartConsts]) => {
+      const filteredChartConsts = filteredChartConstsByLevel.get(levelLabel)
+      if (!filteredChartConsts || filteredChartConsts.size !== allChartConsts.size) {
+        return []
+      }
+
+      return [
+        {
+          levelLabel,
+          chartConsts: [...allChartConsts].sort((left, right) => Number(left) - Number(right)),
+        },
+      ]
+    })
+    .sort((left, right) => Number(left.chartConsts[0]) - Number(right.chartConsts[0]))
 }
 
 /**

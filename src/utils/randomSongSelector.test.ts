@@ -5,12 +5,14 @@ import type { RandomSongCandidate, RandomSongLampFilter } from './randomSongSele
 import {
   aggregateRandomSongCandidateWeights,
   buildRandomSongCandidates,
+  createChartConstsByLevelMap,
   createRandomSongCandidateKey,
   createRandomSongChartKey,
   createRandomSongRecordMap,
   drawRandomSongs,
   filterRandomSongCandidates,
   filterRandomSongCandidatesByRecord,
+  getRandomSongCompleteLevelWeightOptions,
   hasInvalidRandomSongWeightValue,
   parseOptionalRandomSongDecimal,
   parseRandomSongDrawCount,
@@ -322,6 +324,27 @@ test('定数別の倍率は難易度倍率と掛け合わせて抽選対象を�
     selected.map((candidate) => candidate.song.id),
     ['song-b']
   )
+})
+
+test('レベル内の全譜面定数を含む場合だけレベル別重み設定の対象にすること', () => {
+  // Given: 13と13+にそれぞれ複数の譜面定数がある。
+  const allCandidates = [
+    createCandidate({ chartConst: 13 }),
+    createCandidate({ chartConst: 13.4 }),
+    createCandidate({ chartConst: 13.5 }),
+    createCandidate({ chartConst: 13.8 }),
+  ]
+
+  // When: 13は全定数、13+は一部の定数だけを絞り込み結果に含める。
+  const allChartConstsByLevel = createChartConstsByLevelMap(allCandidates)
+  const options = getRandomSongCompleteLevelWeightOptions(allChartConstsByLevel, [
+    allCandidates[0],
+    allCandidates[1],
+    allCandidates[2],
+  ])
+
+  // Then: 全定数が残る13だけを一括設定できる。
+  assert.deepEqual(options, [{ levelLabel: '13', chartConsts: ['13.0', '13.4'] }])
 })
 
 test('抽選数が候補数を超える場合は候補数までに制限すること', () => {
