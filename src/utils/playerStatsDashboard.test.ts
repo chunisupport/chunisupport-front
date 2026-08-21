@@ -8,10 +8,29 @@ import {
   buildPlayerStatsLevelRows,
   buildPlayerStatsMilestone,
   buildPlayerStatsSummary,
+  calculatePlayerStatsPercent,
   filterPlayerStatsRecords,
   findPlayerStatsCandidates,
   hasPlayerStatsAchievement,
 } from './playerStatsDashboard'
+
+test('達成率は件数を総数に対する百分率へ変換する', () => {
+  const count = 1
+  const total = 4
+
+  const result = calculatePlayerStatsPercent(count, total)
+
+  assert.equal(result, 25)
+})
+
+test('総数が0件の場合の達成率は0になる', () => {
+  const count = 0
+  const total = 0
+
+  const result = calculatePlayerStatsPercent(count, total)
+
+  assert.equal(result, 0)
+})
 
 /**
  * 統計テスト用の通常譜面レコードを生成する。

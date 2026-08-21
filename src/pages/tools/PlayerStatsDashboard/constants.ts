@@ -20,6 +20,7 @@ export const PLAYER_STATS_COPY = {
   achievementTitle: '達成状況',
   achievementRateSuffix: 'の達成率',
   heatmapTitle: '達成率分布',
+  heatmapPercentToggle: '%表示',
   levelCaption: '譜面定数から換算したレベル別の累計達成状況',
   chartConstantCaption: '譜面定数別の累計達成状況',
   milestoneTitle: '次のマイルストーン',
@@ -117,14 +118,14 @@ export const PLAYER_STATS_ACHIEVEMENT_LABEL: Record<PlayerStatsAchievement, stri
 /** 次のマイルストーンの表示選択肢。 */
 export const PLAYER_STATS_MILESTONE_OPTIONS = [
   { value: 'sssPlus', label: 'SSS+' },
-  { value: 'aj', label: 'AJ（参考）' },
+  { value: 'aj', label: 'AJ' },
   { value: 'max', label: 'MAX' },
 ] as const satisfies readonly { value: PlayerStatsCandidateTarget; label: string }[]
 
 /** 次に狙う譜面タブの表示選択肢。 */
 export const PLAYER_STATS_CANDIDATE_OPTIONS = [
   { value: 'sssPlus', label: 'SSS+' },
-  { value: 'aj', label: 'AJ（参考）' },
+  { value: 'aj', label: 'AJ' },
   { value: 'max', label: 'AJC' },
 ] as const satisfies readonly { value: PlayerStatsCandidateTarget; label: string }[]
 
