@@ -124,6 +124,7 @@ export const buildGoalRecordFilter = (
   const versionIds = normalizeGoalAttributeIds(goal.attributes.ver)
   const versionNameMap = buildGoalVersionNameMap(versions)
   const defaultFilter = buildDefaultFilter(masterData, versions)
+  const isOpTargetGoal = goal.attributes.chart_target === 'OP_TARGET'
   const hasNoSelectedCharts =
     hasNoSelectedAttributeIds(difficultyIds) ||
     hasNoSelectedAttributeIds(genreIds) ||
@@ -132,6 +133,8 @@ export const buildGoalRecordFilter = (
   const filter: FilterState = {
     ...defaultFilter,
     title: '',
+    opTargetOnly: isOpTargetGoal,
+    opTargetType: isOpTargetGoal ? 'theoretical' : defaultFilter.opTargetType,
     difficulties: hasNoSelectedCharts
       ? []
       : masterData.difficulties
@@ -173,7 +176,6 @@ export const buildGoalRecordFilter = (
  * @returns 通常レコードへのフィルター付き遷移が可能な場合は true。
  */
 export const isGoalRecordNavigationEnabled = (goal: GoalDTO): boolean =>
-  goal.attributes.chart_target !== 'OP_TARGET' &&
   !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.diff)) &&
   !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.genre)) &&
   !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.ver)) &&
