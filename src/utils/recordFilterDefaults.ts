@@ -14,7 +14,8 @@ import { getShortVersionName } from './versionConverter'
 export const DEFAULT_FILTER: FilterState = {
   title: '',
   difficulties: ['MASTER', 'ULTIMA'],
-  currentOpTargetOnly: false,
+  opTargetOnly: false,
+  opTargetType: 'current',
   favoriteSongsOnly: false,
   genres: [],
   versions: [],
@@ -90,17 +91,24 @@ export const buildDefaultFilter = (
  * @param filter - 補完対象のフィルター情報。
  * @returns 現行フィールドをすべて持つフィルター状態。
  */
-export const normalizeFilterState = (filter: Partial<FilterState>): FilterState => ({
-  ...DEFAULT_FILTER,
-  ...filter,
-  const: filter.const ?? { ...DEFAULT_FILTER.const },
-  score: filter.score ?? { ...DEFAULT_FILTER.score },
-  justiceCount: filter.justiceCount ?? { ...DEFAULT_FILTER.justiceCount },
-  overPower: filter.overPower ?? { ...DEFAULT_FILTER.overPower },
-  currentOpTargetOnly: filter.currentOpTargetOnly ?? DEFAULT_FILTER.currentOpTargetOnly,
-  favoriteSongsOnly: filter.favoriteSongsOnly ?? DEFAULT_FILTER.favoriteSongsOnly,
-  combo_lamp: filter.combo_lamp ?? [...RECORD_COMBO_LAMP_OPTIONS],
-  chain_lamp: filter.chain_lamp ?? [...RECORD_CHAIN_LAMP_OPTIONS],
-  hard_lamp: filter.hard_lamp ?? [...RECORD_HARD_LAMP_OPTIONS],
-  updatedAt: filter.updatedAt ?? { ...DEFAULT_FILTER.updatedAt },
-})
+export const normalizeFilterState = (
+  filter: Partial<FilterState> & { currentOpTargetOnly?: boolean }
+): FilterState => {
+  const { currentOpTargetOnly, ...currentFilter } = filter
+
+  return {
+    ...DEFAULT_FILTER,
+    ...currentFilter,
+    const: filter.const ?? { ...DEFAULT_FILTER.const },
+    score: filter.score ?? { ...DEFAULT_FILTER.score },
+    justiceCount: filter.justiceCount ?? { ...DEFAULT_FILTER.justiceCount },
+    overPower: filter.overPower ?? { ...DEFAULT_FILTER.overPower },
+    opTargetOnly: filter.opTargetOnly ?? currentOpTargetOnly ?? DEFAULT_FILTER.opTargetOnly,
+    opTargetType: filter.opTargetType ?? DEFAULT_FILTER.opTargetType,
+    favoriteSongsOnly: filter.favoriteSongsOnly ?? DEFAULT_FILTER.favoriteSongsOnly,
+    combo_lamp: filter.combo_lamp ?? [...RECORD_COMBO_LAMP_OPTIONS],
+    chain_lamp: filter.chain_lamp ?? [...RECORD_CHAIN_LAMP_OPTIONS],
+    hard_lamp: filter.hard_lamp ?? [...RECORD_HARD_LAMP_OPTIONS],
+    updatedAt: filter.updatedAt ?? { ...DEFAULT_FILTER.updatedAt },
+  }
+}

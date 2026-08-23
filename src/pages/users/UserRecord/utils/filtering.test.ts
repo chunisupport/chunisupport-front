@@ -94,12 +94,61 @@ test('isRecordMatched は現在のOP対象譜面だけに絞り込める', () =>
   // Given
   const matchedFilters: FilterState = {
     ...getDefaultFilter(),
-    currentOpTargetOnly: true,
+    opTargetOnly: true,
+    opTargetType: 'current',
   }
 
   // When & Then
   assert.equal(isRecordMatched(createRecord({ is_op_target: true }), matchedFilters), true)
   assert.equal(isRecordMatched(createRecord({ is_op_target: false }), matchedFilters), false)
+})
+
+test('isRecordMatched はOP理論値対象と選択中の難易度をAND条件で判定する', () => {
+  // Given
+  const theoreticalFilters: FilterState = {
+    ...getDefaultFilter(),
+    difficulties: ['EXPERT', 'MASTER', 'ULTIMA'],
+    opTargetOnly: true,
+    opTargetType: 'theoretical',
+  }
+  const theoreticalTargetDifficultyBySongId = new Map([
+    ['master-song', 'MASTER' as const],
+    ['ultima-song', 'ULTIMA' as const],
+  ])
+
+  // When & Then
+  assert.equal(
+    isRecordMatched(
+      createRecord({ id: 'master-song', difficulty: 'MASTER', is_op_target: false }),
+      theoreticalFilters,
+      theoreticalTargetDifficultyBySongId
+    ),
+    true
+  )
+  assert.equal(
+    isRecordMatched(
+      createRecord({ id: 'ultima-song', difficulty: 'ULTIMA', is_op_target: false }),
+      theoreticalFilters,
+      theoreticalTargetDifficultyBySongId
+    ),
+    true
+  )
+  assert.equal(
+    isRecordMatched(
+      createRecord({ id: 'ultima-song', difficulty: 'MASTER', is_op_target: true }),
+      theoreticalFilters,
+      theoreticalTargetDifficultyBySongId
+    ),
+    false
+  )
+  assert.equal(
+    isRecordMatched(
+      createRecord({ id: 'ultima-song', difficulty: 'ULTIMA' }),
+      { ...theoreticalFilters, difficulties: ['MASTER'] },
+      theoreticalTargetDifficultyBySongId
+    ),
+    false
+  )
 })
 
 test('isRecordMatchedWithTitleMatcher はお気に入り楽曲だけに絞り込める', () => {

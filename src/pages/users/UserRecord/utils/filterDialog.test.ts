@@ -63,6 +63,34 @@ test('isRecordFilterOptionsChanged はタイトル検索以外の変更を検出
   assert.equal(result, true)
 })
 
+test('isRecordFilterOptionsChanged は有効なOP対象種別の変更を検出すること', () => {
+  // Given
+  const defaultFilter = { ...DEFAULT_FILTER }
+  const currentFilter = {
+    ...DEFAULT_FILTER,
+    opTargetOnly: true,
+    opTargetType: 'theoretical' as const,
+  }
+
+  // When
+  const result = isRecordFilterOptionsChanged(currentFilter, defaultFilter)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('isRecordFilterOptionsChanged は無効なOP対象種別の保持値を対象外にすること', () => {
+  // Given
+  const defaultFilter = { ...DEFAULT_FILTER }
+  const currentFilter = { ...DEFAULT_FILTER, opTargetType: 'theoretical' as const }
+
+  // When
+  const result = isRecordFilterOptionsChanged(currentFilter, defaultFilter)
+
+  // Then
+  assert.equal(result, false)
+})
+
 test('isRecordDifficultyFilterOnlyChanged は難易度選択だけの変更を検出すること', () => {
   // Given
   const defaultFilter: FilterState = {

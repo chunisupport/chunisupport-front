@@ -38,6 +38,11 @@ export type ToolLink = {
  */
 export const TOOL_LINKS: ToolLink[] = [
   {
+    title: 'ダッシュボード',
+    href: DASHBOARD_PATH,
+    icon: 'chart',
+  },
+  {
     title: '譜面定数計算機',
     href: CHART_CONSTANT_CALCULATOR_PATH,
     icon: 'calculator',
@@ -66,10 +71,5 @@ export const TOOL_LINKS: ToolLink[] = [
     title: 'ベスト枠・新曲枠理論値チェッカー',
     href: RATING_THEORETICAL_CHECKER_PATH,
     icon: 'gauge',
-  },
-  {
-    title: 'ダッシュボード',
-    href: DASHBOARD_PATH,
-    icon: 'chart',
   },
 ]

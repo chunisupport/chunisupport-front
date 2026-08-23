@@ -36,21 +36,24 @@ test('buildSavedFilterRequest は通常レコード用の保存リクエスト�
   // Then
   assert.equal(result.name, '高難度FC狙い')
   assert.equal(result.filter_type, 'standard')
-  assert.equal(result.schema_version, 6)
+  assert.equal(result.schema_version, 7)
   assert.deepEqual(result.filter, filter)
 })
 
-test('toSavedFilter は旧スキーマの不足項目をfalseで補完する', async () => {
+test('toSavedFilter は旧スキーマのOP対象条件と不足項目を現行形式へ補完する', async () => {
   // Given
   const { toSavedFilter } = await loadStorageModule()
   const {
     favoriteSongsOnly: _favoriteSongsOnly,
     combo_lamp: _comboLamp,
-    ...legacyFilter
+    opTargetOnly: _opTargetOnly,
+    opTargetType: _opTargetType,
+    ...legacyFilterBase
   } = {
     ...getDefaultFilter(),
     title: 'アルファ',
   }
+  const legacyFilter = { ...legacyFilterBase, currentOpTargetOnly: true }
   const dto: RecordFilterDTO = {
     id: '11111111-1111-1111-1111-111111111111',
     name: '高難度',
@@ -70,10 +73,44 @@ test('toSavedFilter は旧スキーマの不足項目をfalseで補完する', a
   assert.equal(result.schemaVersion, 3)
   assert.equal(result.isValid, true)
   assert.deepEqual(result.filter, {
-    ...legacyFilter,
+    ...legacyFilterBase,
     combo_lamp: ['ALL JUSTICE', 'FULL COMBO', null, 'ALL JUSTICE CRITICAL'],
+    opTargetOnly: true,
+    opTargetType: 'current',
     favoriteSongsOnly: false,
   })
+})
+
+test('toSavedFilter はschema 6のOP対象条件を移行しコンボランプをそのまま保持する', async () => {
+  // Given
+  const { toSavedFilter } = await loadStorageModule()
+  const {
+    opTargetOnly: _opTargetOnly,
+    opTargetType: _opTargetType,
+    ...legacyFilterBase
+  } = getDefaultFilter()
+  const dto: RecordFilterDTO = {
+    id: '22222222-2222-2222-2222-222222222222',
+    name: 'schema 6',
+    filter_type: 'standard',
+    schema_version: 6,
+    filter: {
+      ...legacyFilterBase,
+      currentOpTargetOnly: true,
+      combo_lamp: ['ALL JUSTICE'],
+    },
+    created_at: '2026-06-15T12:00:00Z',
+    updated_at: '2026-06-15T12:00:00Z',
+  }
+
+  // When
+  const result = toSavedFilter(dto)
+
+  // Then
+  assert.equal(result.isValid, true)
+  assert.equal(result.filter?.opTargetOnly, true)
+  assert.equal(result.filter?.opTargetType, 'current')
+  assert.deepEqual(result.filter?.combo_lamp, ['ALL JUSTICE'])
 })
 
 test('toSavedFilter は旧スキーマのDTOを古くて無効な保存フィルターとして残す', async () => {
