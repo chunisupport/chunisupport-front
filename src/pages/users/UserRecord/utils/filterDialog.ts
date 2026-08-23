@@ -41,7 +41,9 @@ export function isRecordFilterOptionsChanged(
   defaultFilter: FilterState
 ): boolean {
   return (
-    current.currentOpTargetOnly !== defaultFilter.currentOpTargetOnly ||
+    current.opTargetOnly !== defaultFilter.opTargetOnly ||
+    ((current.opTargetOnly || defaultFilter.opTargetOnly) &&
+      current.opTargetType !== defaultFilter.opTargetType) ||
     current.favoriteSongsOnly !== defaultFilter.favoriteSongsOnly ||
     current.constFilterMode !== defaultFilter.constFilterMode ||
     current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
@@ -77,7 +79,8 @@ export function isRecordDifficultyFilterOnlyChanged(
   defaultFilter: FilterState
 ): boolean {
   return (
-    current.currentOpTargetOnly === defaultFilter.currentOpTargetOnly &&
+    current.opTargetOnly === defaultFilter.opTargetOnly &&
+    (!current.opTargetOnly || current.opTargetType === defaultFilter.opTargetType) &&
     current.favoriteSongsOnly === defaultFilter.favoriteSongsOnly &&
     current.constFilterMode === defaultFilter.constFilterMode &&
     current.scoreFilterMode === defaultFilter.scoreFilterMode &&

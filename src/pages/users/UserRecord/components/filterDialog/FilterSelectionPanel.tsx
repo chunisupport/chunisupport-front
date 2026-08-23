@@ -366,7 +366,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       <DifficultySection
         difficulties={difficulties()}
         selected={props.filters.difficulties}
-        currentOpTargetOnly={props.filters.currentOpTargetOnly}
+        opTargetOnly={props.filters.opTargetOnly}
+        opTargetType={props.filters.opTargetType}
         favoriteSongsOnly={props.filters.favoriteSongsOnly}
         onToggle={(diff) =>
           props.setFilters((prev) => ({
@@ -374,10 +375,16 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             difficulties: toggleArray(prev.difficulties, diff),
           }))
         }
-        onCurrentOpTargetOnlyChange={(checked) =>
+        onOpTargetOnlyChange={(checked) =>
           props.setFilters((prev) => ({
             ...prev,
-            currentOpTargetOnly: checked,
+            opTargetOnly: checked,
+          }))
+        }
+        onOpTargetTypeChange={(type) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            opTargetType: type,
           }))
         }
         onFavoriteSongsOnlyChange={(checked) =>

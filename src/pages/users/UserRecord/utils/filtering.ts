@@ -1,3 +1,4 @@
+import type { PlayerDataDifficulty } from '../../../../types/api'
 import type { ChainLamp, Difficulty, HardLamp } from '../../../../types/record'
 import type { FilterState } from '../../../../types/recordFilter'
 import { getComboLampFilterValue } from '../../../../utils/comboLampFilter'
@@ -10,6 +11,7 @@ import {
   normalizeForSearch,
   normalizeQuery,
 } from '../../../../utils/searchUtils'
+import { isTheoreticalOverPowerTargetDifficulty } from '../../../../utils/theoreticalOverPowerTarget'
 import { hasJusticeCountFilter, hasOverPowerFilter } from './filterDialog'
 
 /** フィルターのデフォルト値を取得する */
@@ -37,10 +39,27 @@ export function createRecordTitleMatcher(query: string): RecordTitleMatcher {
   }
 }
 
-/** レコードがフィルター条件にマッチするか判定する */
-export function isRecordMatched(record: PlayerRecordWithSongMeta, filters: FilterState): boolean {
+/**
+ * 通常レコードがフィルター条件に一致するか判定する。
+ *
+ * @param record - 判定対象の通常レコード。
+ * @param filters - 適用する通常レコードフィルター。
+ * @param theoreticalTargetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
+ * @returns レコードが全条件に一致する場合はtrue。
+ */
+export function isRecordMatched(
+  record: PlayerRecordWithSongMeta,
+  filters: FilterState,
+  theoreticalTargetDifficultyBySongId: ReadonlyMap<string, PlayerDataDifficulty> = new Map()
+): boolean {
   const matchTitle = createRecordTitleMatcher(filters.title)
-  return isRecordMatchedWithTitleMatcher(record, filters, matchTitle)
+  return isRecordMatchedWithTitleMatcher(
+    record,
+    filters,
+    matchTitle,
+    new Set(),
+    theoreticalTargetDifficultyBySongId
+  )
 }
 
 /**
@@ -50,13 +69,15 @@ export function isRecordMatched(record: PlayerRecordWithSongMeta, filters: Filte
  * @param filters - 適用する通常レコードフィルター。
  * @param matchTitle - 曲名・アーティスト・読み検索の判定関数。
  * @param favoriteSongIds - お気に入りに登録されている楽曲ID。
+ * @param theoreticalTargetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
  * @returns レコードが全条件に一致する場合はtrue。
  */
 export function isRecordMatchedWithTitleMatcher(
   record: PlayerRecordWithSongMeta,
   filters: FilterState,
   matchTitle: RecordTitleMatcher,
-  favoriteSongIds: ReadonlySet<string> = new Set()
+  favoriteSongIds: ReadonlySet<string> = new Set(),
+  theoreticalTargetDifficultyBySongId: ReadonlyMap<string, PlayerDataDifficulty> = new Map()
 ): boolean {
   // 未プレイ除外
   if (filters.excludeNoPlay && !record.is_played) {
@@ -73,9 +94,18 @@ export function isRecordMatchedWithTitleMatcher(
     return false
   }
 
-  // 現在のOVER POWER集計対象
-  if (filters.currentOpTargetOnly && !record.is_op_target) {
-    return false
+  // OVER POWER対象
+  if (filters.opTargetOnly) {
+    if (filters.opTargetType === 'current' && !record.is_op_target) return false
+    if (
+      filters.opTargetType === 'theoretical' &&
+      !isTheoreticalOverPowerTargetDifficulty(
+        theoreticalTargetDifficultyBySongId.get(record.id),
+        record.difficulty.toUpperCase() as PlayerDataDifficulty
+      )
+    ) {
+      return false
+    }
   }
 
   // お気に入り楽曲

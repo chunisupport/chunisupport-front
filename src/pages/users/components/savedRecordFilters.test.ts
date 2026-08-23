@@ -60,16 +60,20 @@ test('isValidSavedStandardFilter は範囲外の定数を壊れたフィルタ�
   assert.equal(isValidSavedStandardFilter(brokenFilter), false)
 })
 
-test('isValidSavedStandardFilter はOP対象条件の省略を旧保存値として許可すること', () => {
+test('isValidSavedStandardFilter は現行と旧形式のOP対象条件を検証すること', () => {
   // Given
-  const { currentOpTargetOnly: _currentOpTargetOnly, ...legacyFilter } = DEFAULT_FILTER
+  const {
+    opTargetOnly: _opTargetOnly,
+    opTargetType: _opTargetType,
+    ...legacyFilter
+  } = DEFAULT_FILTER
 
   // When & Then
   assert.equal(isValidSavedStandardFilter(legacyFilter), true)
-  assert.equal(
-    isValidSavedStandardFilter({ ...DEFAULT_FILTER, currentOpTargetOnly: 'true' }),
-    false
-  )
+  assert.equal(isValidSavedStandardFilter({ ...legacyFilter, currentOpTargetOnly: true }), true)
+  assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, opTargetOnly: 'true' }), false)
+  assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, opTargetType: 'all' }), false)
+  assert.equal(isValidSavedStandardFilter({ ...legacyFilter, currentOpTargetOnly: 'true' }), false)
 })
 
 test('isValidSavedStandardFilter はお気に入り条件の省略を旧保存値として許可すること', () => {

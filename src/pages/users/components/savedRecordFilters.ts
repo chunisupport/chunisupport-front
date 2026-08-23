@@ -216,6 +216,10 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
   return (
     typeof value.title === 'string' &&
     isArrayOfOptions<Difficulty>(value.difficulties, PLAYER_DATA_DIFFICULTIES) &&
+    (value.opTargetOnly === undefined || typeof value.opTargetOnly === 'boolean') &&
+    (value.opTargetType === undefined ||
+      value.opTargetType === 'current' ||
+      value.opTargetType === 'theoretical') &&
     (value.currentOpTargetOnly === undefined || typeof value.currentOpTargetOnly === 'boolean') &&
     (value.favoriteSongsOnly === undefined || typeof value.favoriteSongsOnly === 'boolean') &&
     isStringArray(value.genres) &&
