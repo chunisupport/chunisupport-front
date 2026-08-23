@@ -52,12 +52,17 @@ export type RecordColumnId =
 /** レコード一覧のソート条件。 */
 export type RecordSortCondition = SortCondition<RecordSortKey>
 
+/** OP対象譜面フィルターで選択できる対象種別。 */
+export type OpTargetType = 'current' | 'theoretical'
+
 /** フィルターの型定義。 */
 export interface FilterState {
   title: string
   difficulties: Difficulty[]
-  /** 現在のOVER POWER集計対象譜面だけを表示するか。 */
-  currentOpTargetOnly: boolean
+  /** OVER POWER対象譜面だけを表示するか。 */
+  opTargetOnly: boolean
+  /** OVER POWER対象譜面を現在の集計対象と理論値対象のどちらで判定するか。 */
+  opTargetType: OpTargetType
   /** お気に入り登録済みの楽曲だけを表示するか。 */
   favoriteSongsOnly: boolean
   genres: string[]

@@ -10,6 +10,7 @@ import {
   attachSongMetaToRecords,
   type PlayerRecordWithSongMeta,
 } from '../../../../utils/recordMerger'
+import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../../../utils/theoreticalOverPowerTarget'
 import { getRecordStats, type RecordStats } from '../../utils/recordStats'
 import { createRecordTitleMatcher, isRecordMatchedWithTitleMatcher } from './filtering'
 import {
@@ -54,14 +55,26 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
     return attachSongMetaToRecords(songs.songs, params.sourceRecords(), versions.versions)
   })
 
+  /** 曲IDごとの理論値OVER POWER対象難易度。 */
+  const theoreticalTargetDifficultyBySongId = createMemo(() =>
+    buildTheoreticalOverPowerTargetDifficultyBySongId(params.songs()?.songs ?? [])
+  )
+
   /** フィルター適用後のレコード */
   const filteredRecords = createMemo(() => {
     const records = recordsWithSongMeta()
     const currentFilters = params.filters()
     const matchTitle = createRecordTitleMatcher(currentFilters.title)
     const favoriteSongIds = params.favoriteSongIds()
+    const targetDifficultyBySongId = theoreticalTargetDifficultyBySongId()
     return records.filter((record) =>
-      isRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle, favoriteSongIds)
+      isRecordMatchedWithTitleMatcher(
+        record,
+        currentFilters,
+        matchTitle,
+        favoriteSongIds,
+        targetDifficultyBySongId
+      )
     )
   })
 

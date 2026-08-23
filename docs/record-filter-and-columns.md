@@ -63,6 +63,8 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
 }
 ```
 
+`opTargetOnly` が `true` の場合だけOP対象条件を適用します。`opTargetType` は `current` で現在の集計対象、`theoretical` で楽曲ごとの理論値対象難易度を表します。理論値対象条件は `difficulties` など他の条件とANDで適用します。
+
 読み書きは `src/repositories/viewSettingsRepository.ts` に集約しています。
 
 ## 列表示設定
@@ -343,10 +345,12 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 {
   "name": "高難度FC狙い",
   "filter_type": "standard",
-  "schema_version": 6,
+  "schema_version": 7,
   "filter": {
     "title": "",
     "difficulties": ["MASTER", "ULTIMA"],
+    "opTargetOnly": true,
+    "opTargetType": "theoretical",
     "genres": [],
     "versions": ["CHUNITHM VERSE", "CHUNITHM X-VERSE"],
     "const": {
@@ -379,7 +383,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 | --- | --- | --- |
 | `name` | `string` | 保存済みフィルター名です。前後空白を除いて1〜30文字、制御文字不可です。 |
 | `filter_type` | `"standard"` \| `"worldsend"` | 通常レコードは `"standard"`、WORLD'S END は `"worldsend"` を使います。 |
-| `schema_version` | `number` | フロント側フィルタースキーマのバージョンです。現行値は通常レコードが `6`、WORLD'S END が `4` です。 |
+| `schema_version` | `number` | フロント側フィルタースキーマのバージョンです。現行値は通常レコードが `7`、WORLD'S END が `4` です。 |
 | `filter` | `object` | `filter_type` に対応するフィルター状態 JSON です。 |
 
 サーバーは `filter` の内部フィールドを解釈しません。
@@ -415,9 +419,9 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 
 ### フロント側の復元ルール
 
-- 通常レコードは現行の `schema_version: 6` に加え、互換対象の `3`, `4`, `5` を有効として扱います。
+- 通常レコードは現行の `schema_version: 7` に加え、互換対象の `3`, `4`, `5`, `6` を有効として扱います。
 - WORLD'S END は現行の `schema_version: 4` に加え、互換対象の `2`, `3` を有効として扱います。
-- 互換対象の旧スキーマでは、保存済みの `ALL JUSTICE` 条件へ `ALL JUSTICE CRITICAL` を補完し、AJC 選択肢追加前と同じ対象範囲を維持します。
+- 互換対象の `schema_version: 3`, `4`, `5` では、保存済みの `ALL JUSTICE` 条件へ `ALL JUSTICE CRITICAL` を補完し、AJC 選択肢追加前と同じ対象範囲を維持します。
 - `filter` が `null` ではないオブジェクトの場合だけ、各画面の `normalizeFilterState` / `normalizeWorldsendFilterState` で補完します。
 - 未対応のスキーマバージョンは一覧には残しますが、`filter: null`、`isValid: false` として扱い、呼び出しや名前変更はできません。
 - 未対応または不正なスキーマの保存値は、削除操作だけ可能です。
