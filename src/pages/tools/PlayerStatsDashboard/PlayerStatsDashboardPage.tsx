@@ -49,6 +49,7 @@ import {
   type PlayerStatsSummary,
 } from '../../../utils/playerStatsDashboard'
 import { formatUpdatedAt } from '../../../utils/recordUpdatedAt'
+import { formatScoreDifference } from '../../../utils/scoreDifference'
 import { getScoreRank } from '../../../utils/scoreRank'
 import {
   PLAYER_STATS_ACHIEVEMENT_GROUP_OPTIONS,
@@ -506,17 +507,32 @@ const MilestoneCards = (props: { summary: PlayerStatsSummary }): JSX.Element => 
  * 候補譜面の現在状態を目標種別に合わせて表示する。
  *
  * @param candidate - 表示対象の候補譜面。
- * @returns スコア差、AJ済みMAX候補のJUSTICE数、またはAJ候補理由の表示。
+ * @returns 候補の状態を表す文言と文字色クラス。
  */
-const formatCandidateStatus = (candidate: PlayerStatsCandidate): string => {
+const formatCandidateStatus = (
+  candidate: PlayerStatsCandidate
+): { text: string; className: string } => {
   if (candidate.justiceGap !== null) {
-    return `${PLAYER_STATS_COPY.scoreGapPrefix}${formatInteger(candidate.justiceGap)}${PLAYER_STATS_COPY.justiceGapSuffix}`
+    const difference = -candidate.justiceGap
+    return {
+      text: `${formatScoreDifference(difference)}${PLAYER_STATS_COPY.justiceGapSuffix}`,
+      className: 'text-rating-candidate-gap',
+    }
   }
   if (candidate.scoreGap !== null) {
-    return `${PLAYER_STATS_COPY.scoreGapPrefix}${formatInteger(candidate.scoreGap)}${PLAYER_STATS_COPY.scoreGapSuffix}`
+    const difference = -candidate.scoreGap
+    return {
+      text: formatScoreDifference(difference),
+      className: 'text-rating-candidate-gap',
+    }
   }
-  if (candidate.record.combo_lamp === 'FULL COMBO') return PLAYER_STATS_COPY.fullComboCandidate
-  return `${PLAYER_STATS_COPY.currentRankPrefix} ${getScoreRank(candidate.record.score)}`
+  return {
+    text:
+      candidate.record.combo_lamp === 'FULL COMBO'
+        ? PLAYER_STATS_COPY.fullComboCandidate
+        : getScoreRank(candidate.record.score),
+    className: 'text-action-primary',
+  }
 }
 
 /**
@@ -528,11 +544,12 @@ const formatCandidateStatus = (candidate: PlayerStatsCandidate): string => {
 const CandidateRow = (props: { candidate: PlayerStatsCandidate }): JSX.Element => {
   const constDisplay = () =>
     getConstDisplay(props.candidate.record.const, props.candidate.record.is_const_unknown)
+  const status = createMemo(() => formatCandidateStatus(props.candidate))
   return (
     <li>
       <A
         href={buildSongDetailPath(props.candidate.record.id, props.candidate.record.difficulty)}
-        class="grid h-full gap-3 rounded-lg border border-border bg-surface-muted p-3 transition-colors hover:border-action-primary-border hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+        class="grid h-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-surface-muted p-3 transition-colors hover:border-action-primary-border hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
       >
         <div class="min-w-0">
           <p class="truncate font-sans text-sm font-semibold text-text">
@@ -546,12 +563,12 @@ const CandidateRow = (props: { candidate: PlayerStatsCandidate }): JSX.Element =
             </span>
           </div>
         </div>
-        <div class="text-left sm:text-right">
-          <p class="font-oswald text-lg font-semibold tabular-nums text-text">
+        <div class="text-right whitespace-nowrap">
+          <p class="font-oswald text-lg font-semibold text-text tabular-nums">
             {formatInteger(props.candidate.record.score)}
           </p>
-          <p class="text-xs font-semibold text-action-primary">
-            {formatCandidateStatus(props.candidate)}
+          <p class={`font-oswald text-xs font-semibold tabular-nums ${status().className}`}>
+            {status().text}
           </p>
         </div>
       </A>
