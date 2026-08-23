@@ -274,12 +274,33 @@ test('集計系目標ではレコード遷移を無効にする', () => {
   assert.equal(isGoalRecordNavigationEnabled(createGoal()), true)
 })
 
-test('OP対象目標では通常レコードへのフィルター付き遷移を無効にする', () => {
+test('OP対象目標ではOP理論値対象を固定した通常レコードフィルターへ遷移できる', () => {
   // Given
   const goal = createGoal({
     attributes: { chart_target: 'OP_TARGET' },
   })
 
-  // When & Then
-  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), true)
+  assert.equal(filter.opTargetOnly, true)
+  assert.equal(filter.opTargetType, 'theoretical')
+  assert.equal(
+    isRecordMatched(
+      createRecord({ id: 'song-1', difficulty: 'MASTER', is_op_target: false }),
+      filter,
+      new Map([['song-1', 'MASTER']])
+    ),
+    true
+  )
+  assert.equal(
+    isRecordMatched(
+      createRecord({ id: 'song-1', difficulty: 'ULTIMA', is_op_target: true }),
+      filter,
+      new Map([['song-1', 'MASTER']])
+    ),
+    false
+  )
 })
