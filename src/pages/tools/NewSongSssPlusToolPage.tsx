@@ -110,7 +110,7 @@ const SssPlusChartProgress: Component<{
   })
 
   return (
-    <span class="flex min-w-0 flex-wrap items-center justify-end gap-x-3 gap-y-0.5 font-oswald text-xs tabular-nums text-text-muted">
+    <span class="flex min-w-0 flex-wrap items-center justify-end gap-x-1 gap-y-0.5 font-oswald text-xs tabular-nums text-text-muted sm:gap-x-3">
       <Show
         when={progress()}
         keyed
@@ -128,10 +128,16 @@ const SssPlusChartProgress: Component<{
             </span>
             <Show when={current.scoreGap !== null}>
               <span class="whitespace-nowrap font-medium text-rating-candidate-gap">
-                <span class="mr-1 font-sans text-text-muted">
+                <span class="sr-only font-sans text-text-muted sm:not-sr-only sm:mr-1">
                   {NEW_SONG_SSS_PLUS_COPY.scoreGapLabel}
                 </span>
+                <span class="sm:hidden" aria-hidden="true">
+                  (
+                </span>
                 {formatScoreDifference(current.scoreGap ?? 0)}
+                <span class="sm:hidden" aria-hidden="true">
+                  )
+                </span>
               </span>
             </Show>
           </>
