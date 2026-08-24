@@ -5,6 +5,7 @@ import {
   formatFriendPlayerLevel,
   formatFriendPlayerName,
   formatFriendRating,
+  shouldHideFriendProfile,
 } from './friendshipDisplay'
 
 test('formatFriendDateTime: 不正な日時はハイフンを返す', () => {
@@ -82,4 +83,23 @@ test('formatFriendPlayerLevel: プレイヤー未連携時は未連携を返す'
 
   // Then: 未連携であることを短く表示する。
   assert.equal(result, '未連携')
+})
+
+test('shouldHideFriendProfile: 非公開ユーザーは未承認中だけプロフィールを隠す', () => {
+  // Given: 非公開ユーザーと各フレンド状態。
+  const privateUser = { is_private: true }
+
+  // When & Then: 送受信申請では隠し、承認済みフレンドでは表示する。
+  assert.equal(shouldHideFriendProfile('received', privateUser), true)
+  assert.equal(shouldHideFriendProfile('sent', privateUser), true)
+  assert.equal(shouldHideFriendProfile('friends', privateUser), false)
+})
+
+test('shouldHideFriendProfile: 公開ユーザーは未承認中でもプロフィールを表示する', () => {
+  // Given: 公開ユーザー。
+  const publicUser = { is_private: false }
+
+  // When & Then: 送受信申請でもプロフィールを表示する。
+  assert.equal(shouldHideFriendProfile('received', publicUser), false)
+  assert.equal(shouldHideFriendProfile('sent', publicUser), false)
 })

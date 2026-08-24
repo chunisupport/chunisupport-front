@@ -359,8 +359,6 @@ export interface FriendRankingChartDTO {
 export interface FriendRankingEntryDTO {
   /** 同点を考慮した順位。 */
   rank: number
-  /** 内部ユーザーID。 */
-  user_id: number
   /** ユーザー名。 */
   username: string
   /** プレイヤー名。 */
@@ -403,8 +401,6 @@ export interface FriendRankingResponseDTO {
 export interface WorldsendFriendRankingEntryDTO {
   /** 同点を考慮した順位。 */
   rank: number
-  /** 内部ユーザーID。自分の行は0。 */
-  user_id: number
   /** ユーザー名。 */
   username: string
   /** プレイヤー名。 */
@@ -630,8 +626,6 @@ export interface UserDTO {
 
 /** フレンド・申請一覧に表示する相手ユーザー概要。 */
 export interface FriendshipUserDTO {
-  /** 内部ユーザーID。申請承認などの操作対象ID。 */
-  user_id: number
   /** ユーザー名。プロフィール遷移に使用する公開ID。 */
   username: string
   /** プレイヤーレベル。プレイヤーデータ未連携の場合は null。 */
