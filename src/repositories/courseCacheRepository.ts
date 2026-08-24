@@ -8,7 +8,7 @@ import type { CourseDTO, UserCourseRecordsDTO } from '../types/api'
 import type { PlayedCourseRecords } from '../types/courseRecord'
 import { toPlayedCourseRecords } from '../utils/courseRecordMerger'
 
-/** ユーザー別コースレコードキャッシュの照合条件。 */
+/** ユーザー別コースレコードキャッシュの照合条件 */
 export type UserCourseRecordCacheMatch = {
   username: string
   userUpdatedAt: string | null

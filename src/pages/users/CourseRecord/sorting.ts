@@ -9,18 +9,18 @@ import { compareNumberWithUnplayedLast } from '../recordTable/sortComparators'
 import { compareComboLamp } from '../utils/lampSorting'
 import type { CourseRecordSortKey } from './columns'
 
-/** コースレコード表のソート条件。 */
+/** コースレコード表のソート条件 */
 export type CourseRecordSortCondition = SortCondition<CourseRecordSortKey>
 
-/** コースクラスの表示順。 */
+/** コースクラスの表示順 */
 const COURSE_CLASS_ORDER = ['1', '2', '3', '4', '5', 'inf', 'extra'] as const
 
-/** コースクラスごとのソート用番号。 */
+/** コースクラスごとのソート用番号 */
 const COURSE_CLASS_SORT_VALUE = new Map<string, number>(
   COURSE_CLASS_ORDER.map((courseClass, index) => [courseClass, index])
 )
 
-/** コースレコード表の既定ソート条件。 */
+/** コースレコード表の既定ソート条件 */
 export const DEFAULT_COURSE_RECORD_SORT_CONDITION: CourseRecordSortCondition = {
   key: 'courseClass',
   direction: 'asc',

@@ -1,4 +1,4 @@
-/** 読み順ソートに必要な楽曲情報。 */
+/** 読み順ソートに必要な楽曲情報 */
 export type SongTitleSortItem = {
   title: string
   reading?: string | null

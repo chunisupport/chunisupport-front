@@ -27,7 +27,7 @@ export type OverPowerSummary = {
 
 export type OverPowerDifficulty = PlayerDataDifficulty
 
-/** OVER POWER画面で選択できる曲単位または譜面単位の集計対象。 */
+/** OVER POWER画面で選択できる曲単位または譜面単位の集計対象 */
 export type OverPowerAggregationTarget =
   | OverPowerDifficulty
   | OverPowerMasterUltimaTarget
@@ -39,7 +39,7 @@ export type OverPowerLockedSong = {
   is_ultima: boolean
 }
 
-/** 楽曲マスタを基準に生成した譜面単位の集計エントリ。 */
+/** 楽曲マスタを基準に生成した譜面単位の集計エントリ */
 export type OverPowerChartEntry = {
   song: SongDTO
   difficulty: OverPowerDifficulty

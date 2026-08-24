@@ -2,10 +2,10 @@ import { API_BASE_URL } from '../config'
 import type { BestSlotRankingResponseDTO } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 
-/** ベスト枠ランキングAPIで1回に取得する件数。 */
+/** ベスト枠ランキングAPIで1回に取得する件数 */
 export const BEST_SLOT_RANKING_PAGE_SIZE = 50
 
-/** ベスト枠ランキング取得条件。 */
+/** ベスト枠ランキング取得条件 */
 export type FetchBestSlotRankingOptions = {
   ratingBand: string
   cursor?: string

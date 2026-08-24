@@ -1,22 +1,22 @@
-/** 画面内に収める対象の矩形サイズ。 */
+/** 画面内に収める対象の矩形サイズ */
 export type TooltipSize = {
   width: number
   height: number
 }
 
-/** ツールチップの基準になるCanvas矩形。 */
+/** ツールチップの基準になるCanvas矩形 */
 export type TooltipCanvasRect = {
   left: number
   top: number
 }
 
-/** ツールチップを収める表示領域サイズ。 */
+/** ツールチップを収める表示領域サイズ */
 export type TooltipViewport = {
   width: number
   height: number
 }
 
-/** 画面内に補正したツールチップ座標。 */
+/** 画面内に補正したツールチップ座標 */
 export type TooltipPosition = {
   left: number
   top: number

@@ -2,7 +2,7 @@ import { fetchCourses, fetchCoursesUpdatedAt } from '../../api/songs'
 import { readCachedCourses, replaceCachedCourses } from '../../repositories/courseCacheRepository'
 import type { CourseDTO } from '../../types/api'
 
-/** キャッシュ判定に使用した更新日時付きコースマスタ取得結果。 */
+/** キャッシュ判定に使用した更新日時付きコースマスタ取得結果 */
 export type CoursesWithCacheResponse = {
   courses: CourseDTO[]
   updatedAt: string | null

@@ -27,10 +27,10 @@ import type { FilterState } from '../../../types/recordFilter'
 import type { WorldsendFilterState } from '../../../types/worldsendRecord'
 import { MAX_SCORE } from '../../../utils/scoreRank'
 
-/** API と同じ保存済みフィルター名の最大文字数。 */
+/** API と同じ保存済みフィルター名の最大文字数 */
 export const RECORD_FILTER_NAME_MAX_LENGTH = 30
 
-/** API と同じ保存済みフィルターペイロードの最大バイト数。 */
+/** API と同じ保存済みフィルターペイロードの最大バイト数 */
 export const RECORD_FILTER_MAX_PAYLOAD_BYTES = 8 * 1024
 
 /**

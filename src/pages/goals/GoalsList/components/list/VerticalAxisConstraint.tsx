@@ -2,7 +2,7 @@ import { useDragDropContext } from '@thisbeyond/solid-dnd'
 import type { Component } from 'solid-js'
 import { onCleanup } from 'solid-js'
 
-/** Y軸制約に適用するtransformerのID。 */
+/** Y軸制約に適用するtransformerのID */
 const VERTICAL_AXIS_CONSTRAINT_ID = 'vertical-axis-constraint'
 
 /**

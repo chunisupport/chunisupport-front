@@ -1,4 +1,4 @@
-/** Chart.jsの斜線背景生成に必要な描画設定。 */
+/** Chart.jsの斜線背景生成に必要な描画設定 */
 export type ChartStripePatternOptions = {
   baseColor: string
   stripeColor: string

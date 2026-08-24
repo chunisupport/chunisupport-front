@@ -42,85 +42,85 @@ import { GoalsListLongPressSensor } from './GoalsListLongPressSensor'
 import { createAutoScroll } from './goalsListAutoScroll'
 import { VerticalAxisConstraint } from './VerticalAxisConstraint'
 
-/** solid-dnd の active draggable に付与するスクロール補正 transformer の ID。 */
+/** solid-dnd の active draggable に付与するスクロール補正 transformer の ID */
 const AUTO_SCROLL_TRANSFORMER_ID = 'goals-list-auto-scroll'
 
 interface GoalsListContentProps {
-  /** 登録済みの全目標件数。 */
+  /** 登録済みの全目標件数 */
   goalsCount: number
-  /** 横切り替えで現在表示するグループ。 */
+  /** 横切り替えで現在表示するグループ */
   groupView: GoalGroupView
-  /** 表示順に並んだ全グループ。 */
+  /** 表示順に並んだ全グループ */
   groupViews: readonly GoalGroupView[]
-  /** 現在選択中のグループ表示形式。 */
+  /** 現在選択中のグループ表示形式 */
   groupDisplayMode: GoalGroupDisplayMode
-  /** 一覧操作に紐づくエラーメッセージ。 */
+  /** 一覧操作に紐づくエラーメッセージ */
   actionError: string
-  /** 目標作成を開始する処理。 */
+  /** 目標作成を開始する処理 */
   onCreate: () => void
-  /** グループ管理を開始する処理。 */
+  /** グループ管理を開始する処理 */
   onManageGroups: () => void
-  /** 前のグループへ切り替える処理。 */
+  /** 前のグループへ切り替える処理 */
   onPreviousGroup: () => void
-  /** 次のグループへ切り替える処理。 */
+  /** 次のグループへ切り替える処理 */
   onNextGroup: () => void
-  /** 目標編集を開始する処理。 */
+  /** 目標編集を開始する処理 */
   onEdit: (goal: GoalDTO) => void
-  /** 目標をコピーする処理。 */
+  /** 目標をコピーする処理 */
   onCopy: (goal: GoalDTO) => void
-  /** 目標削除を開始する処理。 */
+  /** 目標削除を開始する処理 */
   onDelete: (goal: GoalDTO) => void
-  /** 未達成レコードを開く処理。 */
+  /** 未達成レコードを開く処理 */
   onOpenRecords: (goal: GoalDTO) => void
-  /** 目標の並び替え中か。 */
+  /** 目標の並び替え中か */
   isReordering: boolean
-  /** 目標のコピー中か。 */
+  /** 目標のコピー中か */
   isCopying: boolean
-  /** コピー中の目標が属するグループID。 */
+  /** コピー中の目標が属するグループID */
   copyingGroupId: number | null | undefined
-  /** グループ内で目標を並び替える処理。 */
+  /** グループ内で目標を並び替える処理 */
   onReorder: (groupId: number | null, activeId: number, overId: number) => void
-  /** 並び替え結果の読み上げ文言。 */
+  /** 並び替え結果の読み上げ文言 */
   reorderAnnouncement: string
-  /** グループ表示形式を変更する処理。 */
+  /** グループ表示形式を変更する処理 */
   onGroupDisplayModeChange: (mode: GoalGroupDisplayMode) => void
 }
 
 interface GoalGroupCardsProps {
-  /** カードを描画するグループ。 */
+  /** カードを描画するグループ */
   groupView: GoalGroupView
-  /** 目標カードの見出しレベル。 */
+  /** 目標カードの見出しレベル */
   headingLevel: 2 | 3
-  /** 登録済みの全目標件数。 */
+  /** 登録済みの全目標件数 */
   goalsCount: number
-  /** 目標の並び替え中か。 */
+  /** 目標の並び替え中か */
   isReordering: boolean
-  /** 目標のコピー中か。 */
+  /** 目標のコピー中か */
   isCopying: boolean
-  /** コピー中の目標が属するグループID。 */
+  /** コピー中の目標が属するグループID */
   copyingGroupId: number | null | undefined
-  /** 折りたたまれている目標ID。 */
+  /** 折りたたまれている目標ID */
   collapsedGoalIds: ReadonlySet<number>
-  /** 目標カードの開閉状態を変更する処理。 */
+  /** 目標カードの開閉状態を変更する処理 */
   onGoalOpenChange: (goalId: number, open: boolean) => void
-  /** 目標編集を開始する処理。 */
+  /** 目標編集を開始する処理 */
   onEdit: (goal: GoalDTO) => void
-  /** 目標をコピーする処理。 */
+  /** 目標をコピーする処理 */
   onCopy: (goal: GoalDTO) => void
-  /** 目標削除を開始する処理。 */
+  /** 目標削除を開始する処理 */
   onDelete: (goal: GoalDTO) => void
-  /** 未達成レコードを開く処理。 */
+  /** 未達成レコードを開く処理 */
   onOpenRecords: (goal: GoalDTO) => void
-  /** グループ内で目標を並び替える処理。 */
+  /** グループ内で目標を並び替える処理 */
   onReorder: (groupId: number | null, activeId: number, overId: number) => void
 }
 
 interface GoalGroupDisplayModeToggleProps {
-  /** 現在選択中の表示形式。 */
+  /** 現在選択中の表示形式 */
   value: GoalGroupDisplayMode
-  /** 表示形式を変更できない状態か。 */
+  /** 表示形式を変更できない状態か */
   disabled: boolean
-  /** 表示形式を変更する処理。 */
+  /** 表示形式を変更する処理 */
   onChange: (mode: GoalGroupDisplayMode) => void
 }
 
@@ -150,7 +150,7 @@ function AutoScrollSetup(props: { autoScroll: ReturnType<typeof createAutoScroll
     },
   ] = context
 
-  /** ドラッグ開始時からの scrollTop 差分。transformer コールバックから参照する。 */
+  /** ドラッグ開始時からの scrollTop 差分。transformer コールバックから参照する */
   let scrollDeltaY = 0
 
   /**
@@ -353,10 +353,10 @@ const GoalGroupCards: Component<GoalGroupCardsProps> = (props) => {
  * @returns 目標一覧本体の JSX 要素。
  */
 export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
-  /** 一覧表示のグループ見出しを配置する基準となる固定ヘッダー要素。 */
+  /** 一覧表示のグループ見出しを配置する基準となる固定ヘッダー要素 */
   let stickyHeaderRef!: HTMLDivElement
 
-  /** レスポンシブな固定ヘッダーの実測高。 */
+  /** レスポンシブな固定ヘッダーの実測高 */
   const [stickyHeaderHeight, setStickyHeaderHeight] = createSignal(0)
   const [collapsedGoalIds, setCollapsedGoalIds] = createSignal<ReadonlySet<number>>(
     new Set<number>()
@@ -365,7 +365,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
     new Set<number | null>()
   )
 
-  /** 現在の表示形式で画面に含まれる目標一覧。 */
+  /** 現在の表示形式で画面に含まれる目標一覧 */
   const displayedGoals = createMemo(() =>
     props.groupDisplayMode === 'all'
       ? props.groupViews.flatMap(({ goals }) => goals)

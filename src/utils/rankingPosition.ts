@@ -1,4 +1,4 @@
-/** 上位順位に共通で適用するメダル色クラス。 */
+/** 上位順位に共通で適用するメダル色クラス */
 const RANKING_MEDAL_CLASS: Readonly<Record<number, string>> = {
   1: 'bg-ranking-gold-bg text-ranking-medal-text',
   2: 'bg-ranking-silver-bg text-ranking-medal-text',

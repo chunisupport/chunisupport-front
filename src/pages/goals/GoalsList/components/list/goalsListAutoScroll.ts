@@ -1,12 +1,12 @@
 import { onCleanup } from 'solid-js'
 
-/** メインコンテンツのスクロールコンテナ ID。 */
+/** メインコンテンツのスクロールコンテナ ID */
 const APP_MAIN_ID = 'app-main'
 
-/** 画面端からこの距離（px）以内で自動スクロールを開始する。 */
+/** 画面端からこの距離（px）以内で自動スクロールを開始する */
 const SCROLL_THRESHOLD_PX = 100
 
-/** 自動スクロールの最大速度（px/秒）。約 60fps 時に 15px/frame 相当。 */
+/** 自動スクロールの最大速度（px/秒）。約 60fps 時に 15px/frame 相当 */
 const MAX_SCROLL_SPEED_PX_PER_SEC = 900
 
 /**
@@ -87,7 +87,7 @@ export function createAutoScroll() {
   let isActive = false
   let container: HTMLElement | null = null
   let baseScrollTop = 0
-  /** transform 膨張前の最大 scrollTop。無限スクロール防止に使う。 */
+  /** transform 膨張前の最大 scrollTop。無限スクロール防止に使う */
   let naturalMaxScrollTop = 0
   let lastTimestampMs: number | null = null
   let onScrollDeltaChange: AutoScrollDeltaHandler | null = null

@@ -18,7 +18,7 @@ import {
   SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS,
 } from './songSelectionDialog'
 
-/** 共通楽曲選択ダイアログへ渡す表示状態と画面固有の描画処理。 */
+/** 共通楽曲選択ダイアログへ渡す表示状態と画面固有の描画処理 */
 type SongSelectionDialogBaseProps<TItem, TFilter> = {
   open: boolean
   onOpenChange: (open: boolean) => void

@@ -13,7 +13,7 @@ import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { getShortVersionName } from '../../../../utils/versionConverter'
 import type { WorldsendFilterState } from './filterTypes'
 
-/** WORLD'S END フィルターの初期値。 */
+/** WORLD'S END フィルターの初期値 */
 export const DEFAULT_WORLDSEND_FILTER: WorldsendFilterState = {
   title: '',
   attributes: [],

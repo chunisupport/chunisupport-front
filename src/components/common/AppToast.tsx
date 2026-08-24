@@ -6,9 +6,9 @@ import { Portal } from 'solid-js/web'
 type AppToastTone = 'success' | 'error' | 'info'
 
 type AppToastOptions = {
-  /** トーストの見た目と読み上げ優先度を決める種別。 */
+  /** トーストの見た目と読み上げ優先度を決める種別 */
   tone: AppToastTone
-  /** トースト本文として表示する文言。 */
+  /** トースト本文として表示する文言 */
   message: string
 }
 

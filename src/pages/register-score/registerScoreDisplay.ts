@@ -1,6 +1,6 @@
 export { courseClassBadgeClass, formatCourseClass } from '../../utils/courseClassDisplay'
 
-/** 楽曲またはコース名を解決できない場合の表示名。 */
+/** 楽曲またはコース名を解決できない場合の表示名 */
 export const REGISTER_SCORE_UNKNOWN_TITLE = '-'
 
 /**

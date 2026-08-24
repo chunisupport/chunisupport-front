@@ -1,14 +1,14 @@
-/** 最大値を基準にした目標値の指定方法。 */
+/** 最大値を基準にした目標値の指定方法 */
 export type GoalTargetMode = 'all' | 'number' | 'remaining' | 'percent'
 
-/** 動的に解決した目標値の丸め方法。 */
+/** 動的に解決した目標値の丸め方法 */
 export type GoalTargetRounding = 'none' | 'ceil' | 'floor' | 'round'
 
 type GoalAbsoluteTargetParam<TAbsoluteKey extends 'count' | 'total'> = TAbsoluteKey extends 'count'
   ? { count: number }
   : { total: number }
 
-/** APIへ送る目標値パラメータ。 */
+/** APIへ送る目標値パラメータ */
 export type GoalTargetParam<TAbsoluteKey extends 'count' | 'total' = 'count' | 'total'> =
   | GoalAbsoluteTargetParam<TAbsoluteKey>
   | { remaining: number }

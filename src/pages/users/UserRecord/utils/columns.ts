@@ -24,7 +24,7 @@ type RecordColumnSetting = {
   defaultVisible: boolean
 }
 
-/** 通常譜面のレベル列へ適用するレート列と同じ幅。 */
+/** 通常譜面のレベル列へ適用するレート列と同じ幅 */
 const STANDARD_RECORD_LEVEL_COLUMN_WIDTH = getRecordColumnBaseDefinition('rating').width
 
 const RECORD_COLUMN_SETTINGS: RecordColumnSetting[] = [

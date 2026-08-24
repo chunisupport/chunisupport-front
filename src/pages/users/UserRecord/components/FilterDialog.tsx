@@ -10,7 +10,7 @@ import type { EditingFilter } from '../../components/SavedRecordFiltersDialog'
 import SavedFiltersDialog from './filterDialog/dialogs/SavedFiltersDialog'
 import FilterSelectionPanel from './filterDialog/FilterSelectionPanel'
 
-/** フィルターダイアログで表示する文言。 */
+/** フィルターダイアログで表示する文言 */
 const FILTER_DIALOG_TEXT = {
   title: 'フィルター',
   cancel: 'キャンセル',
@@ -25,9 +25,9 @@ interface FilterDialogProps {
   masterData?: MasterDataDTO
   versions?: VersionSummaryDTO[]
   defaultFilter: FilterState
-  /** お気に入り楽曲設定を開く。 */
+  /** お気に入り楽曲設定を開く */
   onOpenFavoriteSongs?: () => void
-  /** お気に入り楽曲設定を無効化するか。 */
+  /** お気に入り楽曲設定を無効化するか */
   favoriteSongsDisabled?: boolean
 }
 

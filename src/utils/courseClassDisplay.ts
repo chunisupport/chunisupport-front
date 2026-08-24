@@ -1,4 +1,4 @@
-/** コースクラスのAPI値と表示値の対応表。 */
+/** コースクラスのAPI値と表示値の対応表 */
 const COURSE_CLASS_LABELS: Readonly<Record<string, string>> = {
   '1': 'Ⅰ',
   '2': 'Ⅱ',
@@ -9,7 +9,7 @@ const COURSE_CLASS_LABELS: Readonly<Record<string, string>> = {
   extra: 'EX',
 }
 
-/** コースクラス別の背景色Tailwindクラスの対応表。 */
+/** コースクラス別の背景色Tailwindクラスの対応表 */
 const COURSE_CLASS_BG_CLASS: Readonly<Record<string, string>> = {
   '1': 'bg-course-class-1-bg',
   '2': 'bg-course-class-2-bg',
@@ -18,10 +18,10 @@ const COURSE_CLASS_BG_CLASS: Readonly<Record<string, string>> = {
   '5': 'bg-course-class-5-bg',
 }
 
-/** EXクラス用のWORLD'S ENDと共通の虹グラデーション背景クラス。 */
+/** EXクラス用のWORLD'S ENDと共通の虹グラデーション背景クラス */
 const COURSE_CLASS_EXTRA_BG_CLASS = 'bg-[image:var(--cs-color-worldsend-label-bg)]'
 
-/** ∞クラス用のAJCと同じ薄い虹グラデーション背景クラス。 */
+/** ∞クラス用のAJCと同じ薄い虹グラデーション背景クラス */
 const COURSE_CLASS_INF_BG_CLASS = 'bg-[image:var(--cs-color-course-class-inf-bg)]'
 
 /**

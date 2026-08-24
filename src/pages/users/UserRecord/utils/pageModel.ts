@@ -55,7 +55,7 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
     return attachSongMetaToRecords(songs.songs, params.sourceRecords(), versions.versions)
   })
 
-  /** 曲IDごとの理論値OVER POWER対象難易度。 */
+  /** 曲IDごとの理論値OVER POWER対象難易度 */
   const theoreticalTargetDifficultyBySongId = createMemo(() =>
     buildTheoreticalOverPowerTargetDifficultyBySongId(params.songs()?.songs ?? [])
   )

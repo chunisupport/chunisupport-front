@@ -83,13 +83,13 @@ import {
 Chart.register(ScatterController, LinearScale, PointElement, Tooltip)
 
 type ChartAxisSettings = {
-  /** 縦軸（スコア）の最小値。 */
+  /** 縦軸（スコア）の最小値 */
   yMin: number
-  /** 縦軸（スコア）の最大値。 */
+  /** 縦軸（スコア）の最大値 */
   yMax: number
-  /** 横軸（譜面定数）の最小値。 */
+  /** 横軸（譜面定数）の最小値 */
   xMin: number
-  /** 横軸（譜面定数）の最大値。 */
+  /** 横軸（譜面定数）の最大値 */
   xMax: number
 }
 
@@ -100,29 +100,29 @@ type InspectorPoint = {
 }
 
 type SettingsNumberFieldProps = {
-  /** 入力値。 */
+  /** 入力値 */
   value: string
-  /** 許容する最小値。 */
+  /** 許容する最小値 */
   min: number
-  /** 許容する最大値。 */
+  /** 許容する最大値 */
   max: number
-  /** 増減単位。 */
+  /** 増減単位 */
   step: number
-  /** アクセシブルな入力名。 */
+  /** アクセシブルな入力名 */
   label: string
-  /** 入力値の更新処理。 */
+  /** 入力値の更新処理 */
   onChange: (value: string) => void
 }
 
-/** 外れ値表の表示内容。 */
+/** 外れ値表の表示内容 */
 type OutlierTableProps = {
-  /** 表題に表示するアイコン。 */
+  /** 表題に表示するアイコン */
   icon: JSX.Element
-  /** 表題。 */
+  /** 表題 */
   title: string
-  /** スクリーンリーダー向けの表題。 */
+  /** スクリーンリーダー向けの表題 */
   caption: string
-  /** 表示する外れ値譜面一覧。 */
+  /** 表示する外れ値譜面一覧 */
   outliers: WeakChartOutlier[]
 }
 
@@ -465,11 +465,11 @@ const OutlierTable = (props: OutlierTableProps): JSX.Element => {
   )
 }
 
-/** 苦手譜面インスペクターの表示と集計に必要な取得データ。 */
+/** 苦手譜面インスペクターの表示と集計に必要な取得データ */
 type WeakChartInspectorData = {
-  /** ログインユーザーの通常譜面レコード。 */
+  /** ログインユーザーの通常譜面レコード */
   records: PlayerRecordDTO[]
-  /** 曲IDごとの理論値OVER POWER対象難易度。 */
+  /** 曲IDごとの理論値OVER POWER対象難易度 */
   targetDifficultyBySongId: Map<string, PlayerDataDifficulty>
 }
 
@@ -520,11 +520,11 @@ const WeakChartInspectorPage = (): JSX.Element => {
     )
   })
   const inspection = createMemo(() => inspectWeakCharts(aggregationRecords()))
-  /** 下方向の外れ値だけを苦手候補として抽出する。 */
+  /** 下方向の外れ値だけを苦手候補として抽出する */
   const lowerOutliers = createMemo(() =>
     inspection().outliers.filter((outlier) => outlier.direction === 'LOW')
   )
-  /** 上方向の外れ値だけを得意候補として抽出する。 */
+  /** 上方向の外れ値だけを得意候補として抽出する */
   const higherOutliers = createMemo(() =>
     inspection().outliers.filter((outlier) => outlier.direction === 'HIGH')
   )

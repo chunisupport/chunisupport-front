@@ -23,7 +23,7 @@ import { formatJusticeCountForAj } from '../../utils/justiceCountDisplay'
 
 const DIFFICULTY_COLUMN_CLASS = `${RECORD_CELL_BASE_CLASS} font-oswald text-sm font-semibold`
 
-/** 通常レコードの列IDごとのセル描画処理。 */
+/** 通常レコードの列IDごとのセル描画処理 */
 export const recordColumnRenderers: Record<
   RecordColumnId,
   ColumnRenderer<PlayerRecordWithSongMeta>

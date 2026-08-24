@@ -40,7 +40,7 @@ export type RandomSongCandidate = {
   version: string
 }
 
-/** ランダム選曲候補の重みを全体・難易度・譜面定数ごとに集計した結果。 */
+/** ランダム選曲候補の重みを全体・難易度・譜面定数ごとに集計した結果 */
 export type RandomSongCandidateWeightSummary = {
   total: number
   byDifficulty: ReadonlyMap<PlayerDataDifficulty, number>

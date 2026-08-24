@@ -6,39 +6,39 @@ import { Show } from 'solid-js'
 export type CheckboxFieldTextVariant = 'normal' | 'large'
 
 type CheckboxFieldProps = {
-  /** チェックボックスの input id。 */
+  /** チェックボックスの input id */
   id?: string
-  /** チェック状態。 */
+  /** チェック状態 */
   checked: boolean
-  /** 表示ラベル。 */
+  /** 表示ラベル */
   label?: JSX.Element
-  /** ラベル下に表示する補足内容。 */
+  /** ラベル下に表示する補足内容 */
   description?: JSX.Element
-  /** ラベル領域へ追加表示する任意の内容。 */
+  /** ラベル領域へ追加表示する任意の内容 */
   extra?: JSX.Element
-  /** ラベルがない場合に使うアクセシブル名。 */
+  /** ラベルがない場合に使うアクセシブル名 */
   ariaLabel?: string
-  /** 操作を無効化するか。 */
+  /** 操作を無効化するか */
   disabled?: boolean
-  /** チェック状態が変わったときの通知先。 */
+  /** チェック状態が変わったときの通知先 */
   onChange: (checked: boolean) => void
-  /** ルート要素に追加で適用する Tailwind クラス。 */
+  /** ルート要素に追加で適用する Tailwind クラス */
   class?: string
-  /** hidden input に追加で適用する Tailwind クラス。 */
+  /** hidden input に追加で適用する Tailwind クラス */
   inputClass?: string
-  /** control に追加で適用する Tailwind クラス。 */
+  /** control に追加で適用する Tailwind クラス */
   controlClass?: string
-  /** label、description、extra を包む要素に追加で適用する Tailwind クラス。 */
+  /** label、description、extra を包む要素に追加で適用する Tailwind クラス */
   bodyClass?: string
-  /** label に追加で適用する Tailwind クラス。 */
+  /** label に追加で適用する Tailwind クラス */
   labelClass?: string
-  /** description に追加で適用する Tailwind クラス。 */
+  /** description に追加で適用する Tailwind クラス */
   descriptionClass?: string
-  /** extra に追加で適用する Tailwind クラス。 */
+  /** extra に追加で適用する Tailwind クラス */
   extraClass?: string
-  /** check アイコンに追加で適用する Tailwind クラス。 */
+  /** check アイコンに追加で適用する Tailwind クラス */
   indicatorClass?: string
-  /** ラベル領域の文字サイズ。 */
+  /** ラベル領域の文字サイズ */
   textVariant?: CheckboxFieldTextVariant
 }
 

@@ -28,31 +28,31 @@ import { formatScoreDifference } from '../../utils/scoreDifference'
 import { getScoreRank } from '../../utils/scoreRank'
 import { NEW_SONG_SSS_PLUS_COPY, RATING_THEORETICAL_TAB_OPTIONS } from './newSongSssPlus.constants'
 
-/** 枠理論値サマリーの計算結果、現在レコード、取得状態を受け取るプロパティ。 */
+/** 枠理論値サマリーの計算結果、現在レコード、取得状態を受け取るプロパティ */
 type RatingTheoreticalSummaryProps = {
-  /** 現在の枠平均レーティング。未計算の場合はnull。 */
+  /** 現在の枠平均レーティング。未計算の場合はnull */
   currentRating: number | null
-  /** 理論値対象譜面との照合に使う全通常譜面レコード。 */
+  /** 理論値対象譜面との照合に使う全通常譜面レコード */
   records: readonly PlayerRecordDTO[]
-  /** 理論値対象譜面一覧の見出し。 */
+  /** 理論値対象譜面一覧の見出し */
   detailsLabel: string
-  /** データ取得で発生したエラー。正常時は未定義。 */
+  /** データ取得で発生したエラー。正常時は未定義 */
   error: unknown
-  /** 現在データを取得または理論値を計算しているか。 */
+  /** 現在データを取得または理論値を計算しているか */
   loading: boolean
-  /** 計算済みの枠理論値。対象譜面がない場合は未定義。 */
+  /** 計算済みの枠理論値。対象譜面がない場合は未定義 */
   theoreticalRating: RatingTheoretical | undefined
 }
 
-/** 理論値サマリー内の1指標に表示するアイコン、文言、値、推定状態。 */
+/** 理論値サマリー内の1指標に表示するアイコン、文言、値、推定状態 */
 type RatingMetricProps = {
-  /** 指標名の前に表示する装飾アイコン。 */
+  /** 指標名の前に表示する装飾アイコン */
   icon: JSX.Element
-  /** 指標の表示名。 */
+  /** 指標の表示名 */
   label: string
-  /** 未確定の譜面定数を含む推定値として強調するか。 */
+  /** 未確定の譜面定数を含む推定値として強調するか */
   unknown: boolean
-  /** 指標として表示する整形済みの値。 */
+  /** 指標として表示する整形済みの値 */
   value: string
 }
 
@@ -309,7 +309,7 @@ const RatingTheoreticalCheckerPage: Component = () => {
   const [record] = createResource(username, fetchUserRecordWithCache)
   const theoreticalRatings = useRatingTheoretical()
   const [selectedFrame, setSelectedFrame] = createSignal<'best' | 'new'>('best')
-  /** 未プレイ補完を除いた全通常譜面レコード。 */
+  /** 未プレイ補完を除いた全通常譜面レコード */
   const playedRecords = createMemo(
     () => record()?.standard.filter((playerRecord) => playerRecord.score > 0) ?? []
   )

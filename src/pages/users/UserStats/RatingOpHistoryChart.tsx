@@ -39,12 +39,12 @@ import {
 Chart.register(LineController, LineElement, LinearScale, PointElement, Tooltip)
 
 type Props = {
-  /** APIが返した公式指標履歴。 */
+  /** APIが返した公式指標履歴 */
   entries: readonly PlayerMetricHistoryEntryDTO[]
 }
 
 type MetricChartProps = Props & {
-  /** 1枚分の指標、表示名、アクセシブル名、テーマ色。 */
+  /** 1枚分の指標、表示名、アクセシブル名、テーマ色 */
   definition: PlayerMetricHistoryChartDefinition
 }
 

@@ -14,7 +14,7 @@ type SortDialogProps = {
   onApply: (sortConditions: RecordSortCondition[]) => void
 }
 
-/** ソート列の選択肢。 */
+/** ソート列の選択肢 */
 const SORT_COLUMN_OPTIONS: SortConditionColumnOption<RecordSortKey>[] =
   RECORD_COLUMN_DEFINITIONS.map((definition) => ({
     value: definition.sortKey,

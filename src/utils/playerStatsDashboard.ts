@@ -10,14 +10,14 @@ import { type ChartLevelLabel, getChartLevelSortKey, toChartLevelLabel } from '.
 import { MAX_SCORE, SCORE_RANK_MIN_SCORES } from './scoreRank'
 import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
 
-/** 統計画面で選択できる難易度または派生条件。 */
+/** 統計画面で選択できる難易度または派生条件 */
 export type PlayerStatsDifficulty =
   | PlayerDataDifficulty
   | 'ALL'
   | typeof MASTER_ULTIMA_FILTER
   | typeof THEORETICAL_OVER_POWER_TARGET_FILTER
 
-/** 達成階段とヒートマップで扱う到達条件。 */
+/** 達成階段とヒートマップで扱う到達条件 */
 export type PlayerStatsAchievement =
   | 'played'
   | 's'
@@ -36,7 +36,7 @@ export type PlayerStatsAchievement =
   | 'absolute'
   | 'catastrophe'
 
-/** 統計画面上部に表示する集計値。 */
+/** 統計画面上部に表示する集計値 */
 export type PlayerStatsSummary = {
   total: number
   played: number
@@ -50,14 +50,14 @@ export type PlayerStatsSummary = {
   maxPercent: number
 }
 
-/** 達成条件1件分の件数と割合。 */
+/** 達成条件1件分の件数と割合 */
 export type PlayerStatsAchievementProgress = {
   achievement: PlayerStatsAchievement
   count: number
   percent: number
 }
 
-/** 譜面定数から換算した表示レベル単位の統計。 */
+/** 譜面定数から換算した表示レベル単位の統計 */
 export type PlayerStatsLevelAchievement =
   | 's'
   | 'sPlus'
@@ -74,22 +74,22 @@ export type PlayerStatsLevelAchievement =
   | 'absolute'
   | 'catastrophe'
 
-/** 達成率分布で表示する到達条件別の件数。 */
+/** 達成率分布で表示する到達条件別の件数 */
 export type PlayerStatsHeatmapRow = Record<PlayerStatsLevelAchievement, number> & {
   total: number
 }
 
-/** 表示レベル単位の達成率分布行。 */
+/** 表示レベル単位の達成率分布行 */
 export type PlayerStatsLevelRow = PlayerStatsHeatmapRow & {
   level: ChartLevelLabel
 }
 
-/** 譜面定数単位の達成率分布行。 */
+/** 譜面定数単位の達成率分布行 */
 export type PlayerStatsChartConstantRow = PlayerStatsHeatmapRow & {
   chartConstant: number
 }
 
-/** 次の区切りとなる達成曲数。 */
+/** 次の区切りとなる達成曲数 */
 export type PlayerStatsMilestone = {
   current: number
   target: number
@@ -97,16 +97,16 @@ export type PlayerStatsMilestone = {
   isComplete: boolean
 }
 
-/** 目標候補リストの種別。 */
+/** 目標候補リストの種別 */
 export type PlayerStatsCandidateTarget = 'sssPlus' | 'aj' | 'max'
 
-/** 曲IDと難易度から総ノーツ数を参照する統計候補用マップ。 */
+/** 曲IDと難易度から総ノーツ数を参照する統計候補用マップ */
 export type PlayerStatsNotesBySongId = ReadonlyMap<
   string,
   Readonly<Partial<Record<PlayerDataDifficulty, number | null>>>
 >
 
-/** 次の目標達成に近い譜面と数値上の残量。 */
+/** 次の目標達成に近い譜面と数値上の残量 */
 export type PlayerStatsCandidate = {
   record: PlayerRecordDTO
   scoreGap: number | null
@@ -289,7 +289,7 @@ const addRecordToHeatmapRow = <TRow extends PlayerStatsHeatmapRow>(
   return row
 }
 
-/** レベル別達成率へ集計する全到達条件。 */
+/** レベル別達成率へ集計する全到達条件 */
 const PLAYER_STATS_LEVEL_ACHIEVEMENTS: readonly PlayerStatsLevelAchievement[] = [
   's',
   'sPlus',

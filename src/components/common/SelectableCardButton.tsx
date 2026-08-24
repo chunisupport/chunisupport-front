@@ -11,47 +11,47 @@ export type SelectableCardLayout = 'row' | 'block'
 export type SelectableCardDensity = 'default' | 'compact'
 
 type SelectableCardClassOptions = {
-  /** カード内容の基本レイアウト。 */
+  /** カード内容の基本レイアウト */
   layout?: SelectableCardLayout
-  /** カードの表示密度。 */
+  /** カードの表示密度 */
   density?: SelectableCardDensity
-  /** 選択状態の見た目にするか。 */
+  /** 選択状態の見た目にするか */
   selected?: boolean
-  /** 無効状態の見た目にするか。 */
+  /** 無効状態の見た目にするか */
   disabled?: boolean
-  /** 危険操作向けの色調にするか。 */
+  /** 危険操作向けの色調にするか */
   danger?: boolean
-  /** 追加で適用する Tailwind クラス。 */
+  /** 追加で適用する Tailwind クラス */
   class?: string
 }
 
 type SelectableCardContentProps = {
-  /** 左側に表示するアイコンや装飾。 */
+  /** 左側に表示するアイコンや装飾 */
   icon?: JSX.Element
-  /** カードの主ラベル。 */
+  /** カードの主ラベル */
   title: JSX.Element
-  /** カードの補足説明。 */
+  /** カードの補足説明 */
   description?: JSX.Element
-  /** タイトル行の右側に表示する補足要素。 */
+  /** タイトル行の右側に表示する補足要素 */
   children?: JSX.Element
-  /** 内容全体へ追加で適用する Tailwind クラス。 */
+  /** 内容全体へ追加で適用する Tailwind クラス */
   contentClass?: string
-  /** 主ラベルへ追加で適用する Tailwind クラス。 */
+  /** 主ラベルへ追加で適用する Tailwind クラス */
   titleClass?: string
-  /** 補足説明へ追加で適用する Tailwind クラス。 */
+  /** 補足説明へ追加で適用する Tailwind クラス */
   descriptionClass?: string
 }
 
 type SelectableCardBaseProps = SelectableCardContentProps & {
-  /** 選択状態の見た目にするか。 */
+  /** 選択状態の見た目にするか */
   selected?: boolean
-  /** 危険操作向けの色調にするか。 */
+  /** 危険操作向けの色調にするか */
   danger?: boolean
-  /** カード内容の基本レイアウト。 */
+  /** カード内容の基本レイアウト */
   layout?: SelectableCardLayout
-  /** カードの表示密度。 */
+  /** カードの表示密度 */
   density?: SelectableCardDensity
-  /** 追加で適用する Tailwind クラス。 */
+  /** 追加で適用する Tailwind クラス */
   class?: string
 }
 
@@ -60,24 +60,24 @@ export type SelectableCardButtonProps = Omit<KobalteButtonProps, 'class' | 'chil
 
 export type SelectableCardLinkProps = Omit<AnchorProps, 'class' | 'children'> &
   SelectableCardBaseProps & {
-    /** リンク遷移を無効化するか。 */
+    /** リンク遷移を無効化するか */
     disabled?: boolean
   }
 
 export type SelectableCardItemProps = SelectableCardBaseProps & {
-  /** RadioGroup の選択値。 */
+  /** RadioGroup の選択値 */
   value: string
-  /** 選択肢を操作不可にするか。 */
+  /** 選択肢を操作不可にするか */
   disabled?: boolean
-  /** スクリーンリーダーへ渡す選択肢名。 */
+  /** スクリーンリーダーへ渡す選択肢名 */
   ariaLabel: string
-  /** RadioGroup の hidden input へ追加で適用する Tailwind クラス。 */
+  /** RadioGroup の hidden input へ追加で適用する Tailwind クラス */
   inputClass?: string
-  /** ラジオ丸へ追加で適用する Tailwind クラス。 */
+  /** ラジオ丸へ追加で適用する Tailwind クラス */
   controlClass?: string
-  /** ラジオ丸の選択表示へ追加で適用する Tailwind クラス。 */
+  /** ラジオ丸の選択表示へ追加で適用する Tailwind クラス */
   indicatorClass?: string
-  /** カード全面クリック用ラベルへ追加で適用する Tailwind クラス。 */
+  /** カード全面クリック用ラベルへ追加で適用する Tailwind クラス */
   labelClass?: string
 }
 

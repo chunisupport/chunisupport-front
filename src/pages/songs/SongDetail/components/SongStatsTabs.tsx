@@ -34,17 +34,17 @@ type Props = {
   ownScore?: number
 } & (SelectableDifficultyProps | ReadonlyDifficultyProps)
 
-/** 難易度別統計の補足説明文。 */
+/** 難易度別統計の補足説明文 */
 const SONG_STATS_DESCRIPTION =
   '実力帯(ベスト枠平均)ごとに集計されます。データは1日に2回更新されます。'
 
-/** 難易度別統計のSelect群を横並びにするコンテナクラス。 */
+/** 難易度別統計のSelect群を横並びにするコンテナクラス */
 const STATS_CONTROL_ROW_CLASS = 'grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center'
 
-/** 難易度別統計の各Select幅を揃えるラッパークラス。 */
+/** 難易度別統計の各Select幅を揃えるラッパークラス */
 const STATS_CONTROL_ITEM_CLASS = 'min-w-0 sm:w-44'
 
-/** 統計テーブル再取得中に表示するオーバーレイのクラス。 */
+/** 統計テーブル再取得中に表示するオーバーレイのクラス */
 const STATS_LOADING_OVERLAY_CLASS =
   'absolute inset-0 z-10 flex items-center justify-center rounded bg-surface/70'
 

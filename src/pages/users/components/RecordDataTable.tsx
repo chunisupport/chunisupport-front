@@ -16,29 +16,29 @@ import { createGridTemplateColumns } from '../utils/recordColumnDefinitions'
 import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
 
 type RecordDataTableProps<TRecord, TColumnId extends string, TSortKey extends string> = {
-  /** 表示するレコード配列。 */
+  /** 表示するレコード配列 */
   records: TRecord[]
-  /** 表示対象の列定義。 */
+  /** 表示対象の列定義 */
   columns: ColumnDefinitionBase<TColumnId, TSortKey>[]
-  /** 現在第1ソートに指定されているキー。 */
+  /** 現在第1ソートに指定されているキー */
   sortKey: TSortKey | null
-  /** 現在第1ソートに指定されている方向。 */
+  /** 現在第1ソートに指定されている方向 */
   sortDirection: SortDirection
-  /** データが空のときに表示する文言。 */
+  /** データが空のときに表示する文言 */
   emptyMessage: string
-  /** 支援技術へ伝えるレコード表の名前。 */
+  /** 支援技術へ伝えるレコード表の名前 */
   ariaLabel?: string
-  /** テーブル外枠に適用するクラス。 */
+  /** テーブル外枠に適用するクラス */
   wrapperClass?: string
-  /** 仮想スクロール位置の再計算トリガー。 */
+  /** 仮想スクロール位置の再計算トリガー */
   resetDeps?: unknown
-  /** 列IDからセルレンダラーを取得する処理。 */
+  /** 列IDからセルレンダラーを取得する処理 */
   getColumnRenderer: (columnId: TColumnId) => ColumnRenderer<TRecord>
-  /** ヘッダークリック時にソートキーを通知する処理。 */
+  /** ヘッダークリック時にソートキーを通知する処理 */
   onSortChange: (key: TSortKey) => void
 }
 
-/** 共通レコード表の既定アクセシブル名。 */
+/** 共通レコード表の既定アクセシブル名 */
 const DEFAULT_RECORD_TABLE_ARIA_LABEL = 'レコード一覧'
 
 /**

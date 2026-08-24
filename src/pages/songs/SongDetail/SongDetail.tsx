@@ -144,14 +144,14 @@ const SongDetail = () => {
     ({ username, displayId }) => fetchUserStandardSongRecordWithCache(username, displayId)
   )
   const ownBestAverage = createMemo(() => ownRating()?.best_average)
-  /** 統計再取得中も直前の表示データを残し、画面高さの急変を防ぐ。 */
+  /** 統計再取得中も直前の表示データを残し、画面高さの急変を防ぐ */
   const displayedStats = createMemo(() => stats.latest ?? stats())
   const ownScoreItems = createMemo(() => {
     const currentSong = song()
     if (!currentSong) return []
     return buildOwnScoreItems(currentSong, ownRecords() ?? [])
   })
-  /** 選択中の難易度に対応するログインユーザーのプレイ済みスコアを取得する。 */
+  /** 選択中の難易度に対応するログインユーザーのプレイ済みスコアを取得する */
   const selectedOwnScore = createMemo(() => {
     if (authSession.status !== 'authenticated') return undefined
 

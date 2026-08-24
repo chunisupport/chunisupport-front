@@ -17,47 +17,47 @@ type KobalteSingleSelectProps<T> = Omit<
   | 'sameWidth'
   | 'value'
 > & {
-  /** 現在選択されている値。 */
+  /** 現在選択されている値 */
   value?: T | null
-  /** 非制御時に初期選択する値。 */
+  /** 非制御時に初期選択する値 */
   defaultValue?: T
-  /** 選択値が変更されたときの通知先。 */
+  /** 選択値が変更されたときの通知先 */
   onChange?: (value: T | null) => void
 }
 
 export type AppSelectLabelVariant = 'visible' | 'srOnly'
 
 export type AppSelectProps<T> = KobalteSingleSelectProps<T> & {
-  /** Select のルートに適用する Tailwind クラス。 */
+  /** Select のルートに適用する Tailwind クラス */
   rootClass?: string
-  /** 入力欄のラベル。 */
+  /** 入力欄のラベル */
   label?: JSX.Element
-  /** ラベルを表示するかスクリーンリーダー専用にするか。 */
+  /** ラベルを表示するかスクリーンリーダー専用にするか */
   labelVariant?: AppSelectLabelVariant
-  /** 補足説明として表示する内容。 */
+  /** 補足説明として表示する内容 */
   description?: JSX.Element
-  /** エラーとして表示する内容。 */
+  /** エラーとして表示する内容 */
   errorMessage?: JSX.Element
-  /** 選択肢と選択中の値を表示用ラベルへ変換する処理。 */
+  /** 選択肢と選択中の値を表示用ラベルへ変換する処理 */
   formatLabel?: (option: T) => JSX.Element
-  /** Trigger に追加で適用する Tailwind クラス。 */
+  /** Trigger に追加で適用する Tailwind クラス */
   triggerClass?: string
-  /** Trigger に付与する id。 */
+  /** Trigger に付与する id */
   triggerId?: string
-  /** Value に追加で適用する Tailwind クラス。 */
+  /** Value に追加で適用する Tailwind クラス */
   valueClass?: string
-  /** Item に追加で適用する Tailwind クラス。 */
+  /** Item に追加で適用する Tailwind クラス */
   itemClass?: string
-  /** Content に追加で適用する Tailwind クラス。 */
+  /** Content に追加で適用する Tailwind クラス */
   contentClass?: string
-  /** Content の z-index を調整する Tailwind クラス。 */
+  /** Content の z-index を調整する Tailwind クラス */
   contentZIndexClass?: string
-  /** Listbox に追加で適用する Tailwind クラス。 */
+  /** Listbox に追加で適用する Tailwind クラス */
   listboxClass?: string
 }
 
 export type FormSelectProps<T> = Omit<AppSelectProps<T>, 'labelVariant'> & {
-  /** フォーム項目として表示するラベル。 */
+  /** フォーム項目として表示するラベル */
   label: JSX.Element
 }
 
@@ -67,7 +67,7 @@ const APP_SELECT_TRIGGER_CLASS =
 const APP_SELECT_VALUE_CLASS =
   'min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap data-placeholder-shown:text-text-subtle'
 
-/** AppSelect の選択肢に適用する状態別スタイル。 */
+/** AppSelect の選択肢に適用する状態別スタイル */
 const APP_SELECT_ITEM_CLASS =
   'cursor-pointer px-3 py-2 text-sm text-text outline-none transition-colors [&:not([data-selected]):hover]:bg-surface-muted [&:not([data-selected])[data-highlighted]]:bg-surface-muted data-disabled:pointer-events-none data-disabled:opacity-50 data-[selected]:bg-action-primary-muted data-[selected]:font-medium data-[selected]:text-action-primary [&[data-selected]:hover]:bg-select-selected-hover-bg [&[data-selected][data-highlighted]]:bg-select-selected-hover-bg'
 

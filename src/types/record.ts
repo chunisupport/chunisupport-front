@@ -1,18 +1,18 @@
 import type { PlayerDataDifficulty, PlayerRecordDTO } from './api'
 
-/** プレイヤーレコードで扱う難易度。 */
+/** プレイヤーレコードで扱う難易度 */
 export type Difficulty = PlayerDataDifficulty
 
-/** プレイヤーレコードで扱うコンボランプ。 */
+/** プレイヤーレコードで扱うコンボランプ */
 export type ComboLamp = PlayerRecordDTO['combo_lamp']
 
-/** レコードフィルターで扱うコンボランプ。 */
+/** レコードフィルターで扱うコンボランプ */
 export type ComboLampFilter = ComboLamp | 'ALL JUSTICE CRITICAL'
 
-/** プレイヤーレコードで扱うFULL CHAINランプ。 */
+/** プレイヤーレコードで扱うFULL CHAINランプ */
 export type ChainLamp = PlayerRecordDTO['full_chain']
 
-/** プレイヤーレコードで扱うハードランプ。 */
+/** プレイヤーレコードで扱うハードランプ */
 export type HardLamp = PlayerRecordDTO['clear_lamp']
 
 /**

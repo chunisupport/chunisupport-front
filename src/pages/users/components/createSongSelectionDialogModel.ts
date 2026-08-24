@@ -3,27 +3,27 @@ import { createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { hasSameSelectionKeys, toggleSelectionKey } from './songSelectionDialog'
 
-/** 楽曲選択ダイアログの共有状態を生成するための外部依存。 */
+/** 楽曲選択ダイアログの共有状態を生成するための外部依存 */
 type SongSelectionDialogModelOptions<TFilter> = {
-  /** ダイアログの表示状態。 */
+  /** ダイアログの表示状態 */
   open: Accessor<boolean>
-  /** 保存済みの選択キー。 */
+  /** 保存済みの選択キー */
   selectedKeys: Accessor<ReadonlySet<string>>
-  /** フィルターの既定値。 */
+  /** フィルターの既定値 */
   defaultFilter: Accessor<TFilter>
-  /** フィルター選択肢を初期化できるか判定する。 */
+  /** フィルター選択肢を初期化できるか判定する */
   isFilterReady: (filter: TFilter) => boolean
-  /** 選択キーを画面固有のpayloadへ変換して保存する。 */
+  /** 選択キーを画面固有のpayloadへ変換して保存する */
   save: (keys: string[]) => Promise<void>
-  /** 保存成功後に呼び出す処理。 */
+  /** 保存成功後に呼び出す処理 */
   onSaved: () => void
-  /** 保存失敗時の既定メッセージ。 */
+  /** 保存失敗時の既定メッセージ */
   saveErrorMessage: string
-  /** 保存失敗時にdraftを保存済み状態へ戻すか。 */
+  /** 保存失敗時にdraftを保存済み状態へ戻すか */
   resetDraftOnError?: boolean
 }
 
-/** 楽曲選択ダイアログの表示状態とユーザー操作。 */
+/** 楽曲選択ダイアログの表示状態とユーザー操作 */
 export type SongSelectionDialogModel<TFilter> = {
   query: Accessor<string>
   setQuery: Setter<string>

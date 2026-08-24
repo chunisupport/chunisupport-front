@@ -6,19 +6,19 @@ import { Show } from 'solid-js'
 type AppDisclosureTriggerVariant = 'default' | 'compact'
 
 type AppDisclosureTriggerProps = {
-  /** 開閉ヘッダーの主ラベル。 */
+  /** 開閉ヘッダーの主ラベル */
   label: JSX.Element
-  /** 右側に表示する補足内容。 */
+  /** 右側に表示する補足内容 */
   summary?: JSX.Element
-  /** 表示密度。 */
+  /** 表示密度 */
   variant?: AppDisclosureTriggerVariant
-  /** Trigger ルートへ追加で適用する Tailwind クラス。 */
+  /** Trigger ルートへ追加で適用する Tailwind クラス */
   class?: string
-  /** Chevron アイコンへ追加で適用する Tailwind クラス。 */
+  /** Chevron アイコンへ追加で適用する Tailwind クラス */
   chevronClass?: string
-  /** 主ラベルへ追加で適用する Tailwind クラス。 */
+  /** 主ラベルへ追加で適用する Tailwind クラス */
   labelClass?: string
-  /** 補足内容へ追加で適用する Tailwind クラス。 */
+  /** 補足内容へ追加で適用する Tailwind クラス */
   summaryClass?: string
 }
 

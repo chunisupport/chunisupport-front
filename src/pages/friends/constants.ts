@@ -3,13 +3,13 @@ import { FRIENDS_PATH } from '../../constants/routes'
 
 export { FRIENDS_PAGE_TITLE } from '../../constants/pageTitles'
 
-/** ユーザー名コピー成功表示を維持する時間(ms)。 */
+/** ユーザー名コピー成功表示を維持する時間(ms) */
 export const FRIENDS_COPY_FEEDBACK_DURATION_MS = 1200
 
-/** フレンド申請 username 入力のエラー表示ID。 */
+/** フレンド申請 username 入力のエラー表示ID */
 export const FRIEND_REQUEST_USERNAME_ERROR_ID = 'friend-request-username-error'
 
-/** フレンド画面のタブ値。 */
+/** フレンド画面のタブ値 */
 export type FriendsTabValue = 'friends' | 'received' | 'sent'
 
 /**
@@ -26,7 +26,7 @@ export const buildFriendsTabOptions = (
   { value: 'sent', label: '申請中' },
 ]
 
-/** フレンド画面タブに対応するURLパスセグメント。 */
+/** フレンド画面タブに対応するURLパスセグメント */
 const FRIENDS_TAB_PATH_SEGMENTS: Record<FriendsTabValue, string> = {
   friends: '',
   received: 'receive',
@@ -65,7 +65,7 @@ export const resolveFriendsTabValue = (segment: string | undefined): FriendsTabV
   }
 }
 
-/** フレンド画面で使う固定文言。 */
+/** フレンド画面で使う固定文言 */
 export const FRIENDS_COPY = {
   requestFormTitle: 'フレンド申請',
   usernameLabel: 'ユーザー名',

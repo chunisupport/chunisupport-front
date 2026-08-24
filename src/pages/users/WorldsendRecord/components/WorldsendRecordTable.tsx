@@ -14,13 +14,13 @@ import {
 } from '../utils/sorting'
 
 type WorldsendRecordTableProps = {
-  /** 表示対象の WORLD'S END レコード。 */
+  /** 表示対象の WORLD'S END レコード */
   records: WorldsendRecordWithSongMeta[]
-  /** 現在の表示列ID。 */
+  /** 現在の表示列ID */
   visibleColumnIds: WorldsendRecordColumnId[]
-  /** 複数ソート条件。 */
+  /** 複数ソート条件 */
   sortConditions: WorldsendRecordSortCondition[]
-  /** ヘッダークリック時にソートキーを通知する処理。 */
+  /** ヘッダークリック時にソートキーを通知する処理 */
   onSortChange: (nextKey: WorldsendRecordSortKey) => void
 }
 

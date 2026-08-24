@@ -1,36 +1,36 @@
 export const LOGIN_PATH = '/login'
-/** スタッフ向けメンテナンス時ログイン画面のパス。 */
+/** スタッフ向けメンテナンス時ログイン画面のパス */
 export const MAINTENANCE_LOGIN_PATH = '/maintenance/login'
 export const REGISTER_PATH = '/register'
 export const REGISTER_SCORE_PATH = '/register-score'
 export const REGISTER_SCORE_TEMP_PATH = '/register-score-temp'
-/** 保存済みの最新スコア更新結果画面のパス。 */
+/** 保存済みの最新スコア更新結果画面のパス */
 export const LATEST_SCORE_UPDATE_PATH = '/latest-score-update'
 export const TOOLS_PATH = '/tools'
-/** フレンド画面のパス。 */
+/** フレンド画面のパス */
 export const FRIENDS_PATH = '/friends'
 export const CHART_CONSTANT_CALCULATOR_PATH = `${TOOLS_PATH}/chart-constant-calculator`
 export const BORDER_CALCULATOR_PATH = `${TOOLS_PATH}/border-calculator`
 export const WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector`
 export const RANDOM_SONG_SELECTOR_PATH = `${TOOLS_PATH}/random-song-selector`
-/** ベスト枠・新曲枠理論値チェッカー画面のパス。 */
+/** ベスト枠・新曲枠理論値チェッカー画面のパス */
 export const RATING_THEORETICAL_CHECKER_PATH = `${TOOLS_PATH}/rating-theoretical-checker`
-/** ベスト枠ランキング画面のパス。 */
+/** ベスト枠ランキング画面のパス */
 export const BEST_SLOT_RANKING_PATH = `${TOOLS_PATH}/best-slot-ranking`
-/** ダッシュボード画面のパス。 */
+/** ダッシュボード画面のパス */
 export const DASHBOARD_PATH = `${TOOLS_PATH}/dashboard`
-/** EDITOR向け編集メニューのパス。 */
+/** EDITOR向け編集メニューのパス */
 export const EDITOR_PATH = '/editor'
-/** EDITOR向け楽曲編集画面のパス。 */
+/** EDITOR向け楽曲編集画面のパス */
 export const EDITOR_SONGS_PATH = `${EDITOR_PATH}/songs`
-/** ADMIN向け管理メニューのパス。 */
+/** ADMIN向け管理メニューのパス */
 export const ADMIN_PATH = '/admin'
-/** スタッフ向けデータ充足状況画面のパス。 */
+/** スタッフ向けデータ充足状況画面のパス */
 export const ADMIN_DATA_COVERAGE_PATH = `${ADMIN_PATH}/data-coverage`
-/** ADMIN向けメンテナンス管理画面のパス。 */
+/** ADMIN向けメンテナンス管理画面のパス */
 export const ADMIN_MAINTENANCE_PATH = `${ADMIN_PATH}/maintenance`
 
-/** 楽曲詳細から譜面詳細へ遷移したことを表すルーター state。 */
+/** 楽曲詳細から譜面詳細へ遷移したことを表すルーター state */
 export const CHART_DETAIL_FROM_SONG_DETAIL_STATE = {
   source: 'song-detail',
 } as const

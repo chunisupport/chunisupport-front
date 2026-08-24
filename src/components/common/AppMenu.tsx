@@ -12,35 +12,35 @@ export type AppMenuContentVariant = 'default' | 'compact'
 export type AppMenuItemTone = 'default' | 'danger'
 
 export type AppMenuTriggerProps = Omit<DropdownMenuTriggerProps, 'class' | 'children'> & {
-  /** トリガーのアクセシブルラベル。 */
+  /** トリガーのアクセシブルラベル */
   label: string
-  /** トリガーに表示するアイコン。 */
+  /** トリガーに表示するアイコン */
   icon: JSX.Element
-  /** トリガーの表示用途。 */
+  /** トリガーの表示用途 */
   variant?: AppMenuTriggerVariant
-  /** トリガー右上に通知ドットを表示するか。 */
+  /** トリガー右上に通知ドットを表示するか */
   hasNotificationDot?: boolean
-  /** 追加で適用する Tailwind クラス。 */
+  /** 追加で適用する Tailwind クラス */
   class?: string
 }
 
 export type AppMenuContentProps = Omit<DropdownMenuContentProps, 'class'> & {
-  /** メニュー内容の表示密度。 */
+  /** メニュー内容の表示密度 */
   variant?: AppMenuContentVariant
-  /** 追加で適用する Tailwind クラス。 */
+  /** 追加で適用する Tailwind クラス */
   class?: string
 }
 
 export type AppMenuItemProps = Omit<DropdownMenuItemProps, 'class' | 'children'> & {
-  /** メニュー項目の表示ラベル。 */
+  /** メニュー項目の表示ラベル */
   label: JSX.Element
-  /** ラベル左側に表示するアイコン。 */
+  /** ラベル左側に表示するアイコン */
   icon?: JSX.Element
-  /** メニュー項目の色調。 */
+  /** メニュー項目の色調 */
   tone?: AppMenuItemTone
-  /** メニュー項目右上に通知ドットを表示するか。 */
+  /** メニュー項目右上に通知ドットを表示するか */
   hasNotificationDot?: boolean
-  /** 追加で適用する Tailwind クラス。 */
+  /** 追加で適用する Tailwind クラス */
   class?: string
 }
 

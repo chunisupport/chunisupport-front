@@ -1,6 +1,6 @@
 export type SortDirection = 'asc' | 'desc'
 
-/** ソートクエリを読み取る検索パラメータの入力元。 */
+/** ソートクエリを読み取る検索パラメータの入力元 */
 export type SortParamsSource = Record<string, string | string[] | undefined>
 
 const readFirstParam = (value: string | string[] | undefined): string =>

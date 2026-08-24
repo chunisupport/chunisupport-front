@@ -3,11 +3,11 @@ import type { JSX } from 'solid-js'
 export type LoadingSize = 'default' | 'inline'
 
 type LoadingProps = {
-  /** ローディング表示の大きさ。 */
+  /** ローディング表示の大きさ */
   size?: LoadingSize
-  /** スクリーンリーダーへ通知する処理内容。 */
+  /** スクリーンリーダーへ通知する処理内容 */
   ariaLabel?: string
-  /** 親要素が処理中状態を通知する場合に装飾表示として扱うか。 */
+  /** 親要素が処理中状態を通知する場合に装飾表示として扱うか */
   ariaHidden?: boolean
 }
 

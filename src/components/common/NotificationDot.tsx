@@ -2,9 +2,9 @@ import type { JSX } from 'solid-js'
 import { Show } from 'solid-js'
 
 type NotificationDotProps = {
-  /** ドットを表示するか。 */
+  /** ドットを表示するか */
   visible: boolean
-  /** 追加で適用する Tailwind クラス。 */
+  /** 追加で適用する Tailwind クラス */
   class?: string
 }
 

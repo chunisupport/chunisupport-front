@@ -11,10 +11,10 @@ import { normalizeScoreRangeInput } from '../../../../utils/rangeInput'
 import { SCORE_RANKS } from '../../utils/scoreRank'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from './styles'
 
-/** スコア範囲セクションの見出し。 */
+/** スコア範囲セクションの見出し */
 const SCORE_RANGE_TITLE = 'スコア'
 
-/** スコアランク範囲セクションの見出し。 */
+/** スコアランク範囲セクションの見出し */
 const SCORE_RANK_RANGE_TITLE = 'スコアランク'
 
 type ScoreSectionProps = {
