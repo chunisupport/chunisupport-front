@@ -42,6 +42,6 @@ test('スコア差を桁区切りと符号付きで表示すること', () => {
 test('スコア差に応じて難易度別統計と同じ文字色を返すこと', () => {
   // Given / When / Then
   assert.equal(getScoreDifferenceClass(1), 'text-success')
-  assert.equal(getScoreDifferenceClass(-1), 'text-info')
+  assert.equal(getScoreDifferenceClass(-1), 'text-score-difference-negative')
   assert.equal(getScoreDifferenceClass(0), 'text-text-muted')
 })

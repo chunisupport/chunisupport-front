@@ -60,7 +60,7 @@ const OwnScoreBadge = (props: { difficulty: OwnScoreItem['difficulty'] }) => (
 )
 
 /**
- * 自己スコアに紐づくコンボ・ハード・FULL CHAINランプを表示する。
+ * 自己スコアに紐づくハード・コンボ・FULL CHAINランプを表示する。
  *
  * @param props - スコアと3種類のランプ状態。
  * @returns ランプバッジ群。
@@ -69,12 +69,12 @@ const OwnScoreLamps = (
   props: Pick<OwnScoreItem, 'score' | 'comboLamp' | 'clearLamp' | 'fullChain'>
 ) => (
   <div class={`${OWN_SCORE_LAMPS_CLASS} ${RECORD_LAMP_COLUMN_CLASS}`}>
+    {renderDefaultRecordHardLampBadge(props.clearLamp ?? null)}
     {renderDefaultRecordLampBadge(props.comboLamp ?? null, {
       is_played: true,
       combo_lamp: props.comboLamp ?? null,
       score: props.score ?? 0,
     })}
-    {renderDefaultRecordHardLampBadge(props.clearLamp ?? null)}
     {renderDefaultRecordFullChainBadge(props.fullChain ?? null)}
   </div>
 )
@@ -89,8 +89,8 @@ const buildOwnScoreLinkAriaLabel = (item: OwnScoreItem): string =>
   [
     item.difficulty,
     item.score?.toLocaleString('ja-JP'),
-    `コンボ ${getDefaultRecordLampLabel(item.comboLamp ?? null, item.score) || 'なし'}`,
     `ハード ${item.clearLamp ?? 'なし'}`,
+    `コンボ ${getDefaultRecordLampLabel(item.comboLamp ?? null, item.score) || 'なし'}`,
     `FULL CHAIN ${item.fullChain ?? 'なし'}`,
     SCORE_HISTORY_LINK_LABEL,
   ].join(' ')
