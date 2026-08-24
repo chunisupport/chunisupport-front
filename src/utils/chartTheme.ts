@@ -21,3 +21,18 @@ export const resolveChartColor = (
 
   return color
 }
+
+/**
+ * CSSカスタムプロパティのピクセル値をCanvas描画用の数値へ変換する。
+ *
+ * @param variableName 取得対象のCSSカスタムプロパティ名。
+ * @param fallback CSS変数を解決できない場合に返す既定値。
+ * @returns 単位を除いた正の有限ピクセル値。
+ */
+export const resolveChartPixelLength = (variableName: string, fallback: number): number => {
+  const value = Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(variableName)
+  )
+
+  return Number.isFinite(value) && value > 0 ? value : fallback
+}

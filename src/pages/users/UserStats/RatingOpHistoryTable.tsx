@@ -36,16 +36,16 @@ export const RatingOpHistoryTable: Component<Props> = (props) => {
           <caption class="sr-only">{PLAYER_METRIC_HISTORY_COPY.tableCaption}</caption>
           <thead class="bg-surface-muted text-xs text-text-muted">
             <tr>
-              <th scope="col" class="px-2 py-2 text-left font-medium">
+              <th scope="col" class="py-2 pr-1 pl-4 text-left font-medium">
                 {PLAYER_METRIC_HISTORY_COPY.collectedAt}
               </th>
-              <th scope="col" class="px-2 py-2 text-right font-medium">
+              <th scope="col" class="px-1 py-2 text-center font-medium">
                 {PLAYER_METRIC_HISTORY_COPY.rating}
               </th>
-              <th scope="col" class="px-2 py-2 text-right font-medium">
+              <th scope="col" class="px-1 py-2 text-center font-medium">
                 {PLAYER_METRIC_HISTORY_COPY.overPower}
               </th>
-              <th scope="col" class="px-2 py-2 text-right font-medium">
+              <th scope="col" class="py-2 pr-4 pl-1 text-right font-medium">
                 {PLAYER_METRIC_HISTORY_COPY.overPowerPercent}
               </th>
             </tr>
@@ -54,18 +54,18 @@ export const RatingOpHistoryTable: Component<Props> = (props) => {
             <For each={entries()}>
               {(entry) => (
                 <tr>
-                  <td class="whitespace-nowrap px-2 py-3 font-jost text-sm tabular-nums text-text-muted">
+                  <td class="whitespace-nowrap py-3 pr-1 pl-4 text-left font-jost text-sm tabular-nums text-text-muted">
                     <time dateTime={entry.data_collected_at}>
                       {formatPlayerMetricHistoryDateTime(entry.data_collected_at)}
                     </time>
                   </td>
-                  <td class="whitespace-nowrap px-2 py-3 text-right font-jost text-base font-semibold tabular-nums text-text">
+                  <td class="whitespace-nowrap px-1 py-3 text-center font-jost text-base font-semibold tabular-nums text-text">
                     {formatFixed(entry.rating, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}
                   </td>
-                  <td class="whitespace-nowrap px-2 py-3 text-right font-jost text-base font-semibold tabular-nums text-text">
+                  <td class="whitespace-nowrap px-1 py-3 text-center font-jost text-base font-semibold tabular-nums text-text">
                     {formatFixed(entry.overpower, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}
                   </td>
-                  <td class="whitespace-nowrap px-2 py-3 text-right font-jost text-base font-semibold tabular-nums text-text">
+                  <td class="whitespace-nowrap py-3 pr-4 pl-1 text-right font-jost text-base font-semibold tabular-nums text-text">
                     {entry.overpower_percent === null
                       ? PLAYER_METRIC_HISTORY_COPY.missingValue
                       : `${formatFixed(entry.overpower_percent, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}%`}

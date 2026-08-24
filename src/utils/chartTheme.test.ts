@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { resolveChartColor } from './chartTheme'
+import { resolveChartColor, resolveChartPixelLength } from './chartTheme'
 
 test('CSSカスタムプロパティをChart.js用の解決済み色へ変換する', () => {
   // Given
@@ -63,6 +63,62 @@ test('色を解決できない場合は既定色を返す', () => {
   try {
     // When & Then
     assert.equal(resolveChartColor('--missing-color', '#123456'), '#123456')
+  } finally {
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: previousDocument,
+    })
+    Object.defineProperty(globalThis, 'getComputedStyle', {
+      configurable: true,
+      value: previousGetComputedStyle,
+    })
+  }
+})
+
+test('CSSカスタムプロパティのpx値をChart.js用の数値へ変換する', () => {
+  // Given
+  const previousDocument = globalThis.document
+  const previousGetComputedStyle = globalThis.getComputedStyle
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { documentElement: {} },
+  })
+  Object.defineProperty(globalThis, 'getComputedStyle', {
+    configurable: true,
+    value: () => ({ getPropertyValue: () => '6px' }),
+  })
+
+  try {
+    // When & Then
+    assert.equal(resolveChartPixelLength('--cs-size-score-rank-plus-stripe-period', 4), 6)
+  } finally {
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: previousDocument,
+    })
+    Object.defineProperty(globalThis, 'getComputedStyle', {
+      configurable: true,
+      value: previousGetComputedStyle,
+    })
+  }
+})
+
+test('CSSカスタムプロパティの長さを解決できない場合は既定値を返す', () => {
+  // Given
+  const previousDocument = globalThis.document
+  const previousGetComputedStyle = globalThis.getComputedStyle
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { documentElement: {} },
+  })
+  Object.defineProperty(globalThis, 'getComputedStyle', {
+    configurable: true,
+    value: () => ({ getPropertyValue: () => '0px' }),
+  })
+
+  try {
+    // When & Then
+    assert.equal(resolveChartPixelLength('--missing-length', 3), 3)
   } finally {
     Object.defineProperty(globalThis, 'document', {
       configurable: true,

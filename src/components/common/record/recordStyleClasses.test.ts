@@ -12,6 +12,7 @@ import {
   getComboLampBadgeClass,
   HARD_LAMP_BAR_CLASS,
   SCORE_RANK_BAR_CLASS,
+  SCORE_RANK_PLUS_BAR_BACKGROUND_CLASS,
 } from './recordStyleClasses'
 
 test('AJCのコンボランプバッジは虹色クラスを返すこと', () => {
@@ -87,6 +88,27 @@ test('フィルター統計のMAXはAJCと同じ虹色グラデーションを�
 
   // Then: AJCと同じ虹色グラデーションが返る
   assert.equal(result, expectedClass)
+})
+
+test('S+とSS+だけが通常ランク色へ白い斜線背景を重ねること', () => {
+  // Given: 同じ背景色を共有するS系とSS系のランク
+  const expectedPlusClass = SCORE_RANK_PLUS_BAR_BACKGROUND_CLASS
+
+  // When: 各ランクの分布バークラスを取得する
+  const result = {
+    s: SCORE_RANK_BAR_CLASS.S,
+    sPlus: SCORE_RANK_BAR_CLASS['S+'],
+    ss: SCORE_RANK_BAR_CLASS.SS,
+    ssPlus: SCORE_RANK_BAR_CLASS['SS+'],
+  }
+
+  // Then: プラス付きランクだけに共通の斜線背景が含まれる
+  assert.deepEqual(result, {
+    s: 'bg-score-rank-s-bg',
+    sPlus: `bg-score-rank-s-bg ${expectedPlusClass}`,
+    ss: 'bg-score-rank-ss-bg',
+    ssPlus: `bg-score-rank-ss-bg ${expectedPlusClass}`,
+  })
 })
 
 test('フィルター統計の未プレイは背景と同じ色クラスを返すこと', () => {

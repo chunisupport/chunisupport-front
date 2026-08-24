@@ -146,6 +146,25 @@ test('AJCランプの虹色は虹称号と同じ色列で定義されている�
   )
 })
 
+test('プラス付きスコアランクの背景は半透明の白い45度斜線であること', () => {
+  assert.equal(
+    readCustomProperty(tailwindCssContent, '--cs-color-score-rank-plus-stripe'),
+    'rgb(255 255 255 / 25%)'
+  )
+  assert.equal(
+    readCustomProperty(tailwindCssContent, '--cs-size-score-rank-plus-stripe-width'),
+    '3px'
+  )
+  assert.equal(
+    readCustomProperty(tailwindCssContent, '--cs-size-score-rank-plus-stripe-period'),
+    '6px'
+  )
+  assert.equal(
+    readCustomProperty(tailwindCssContent, '--cs-gradient-score-rank-plus-bg').replace(/\s+/g, ' '),
+    'repeating-linear-gradient( 45deg, var(--cs-color-score-rank-plus-stripe) 0 var(--cs-size-score-rank-plus-stripe-width), transparent var(--cs-size-score-rank-plus-stripe-width) var(--cs-size-score-rank-plus-stripe-period) )'
+  )
+})
+
 test('SP称号の背景は虹称号と同じ7色を0.35秒ごとに循環すること', () => {
   const expectedKeyframes = [
     ['0', 1],
