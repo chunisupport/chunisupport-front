@@ -1,5 +1,6 @@
 const POSITIVE_SCORE_DIFFERENCE_CLASS = 'text-success'
-const NEGATIVE_SCORE_DIFFERENCE_CLASS = 'text-info'
+/** 負のスコア差へ適用する専用の文字色クラス。 */
+const NEGATIVE_SCORE_DIFFERENCE_CLASS = 'text-score-difference-negative'
 const EQUAL_SCORE_DIFFERENCE_CLASS = 'text-text-muted'
 
 /**

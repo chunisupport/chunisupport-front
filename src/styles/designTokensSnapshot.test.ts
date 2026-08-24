@@ -58,6 +58,7 @@ test('既存色と同じ値でデザイントークンが定義されている�
     ['--cs-color-score-rank-sssp-text', 'var(--color-green-500)'],
     ['--cs-color-score-rank-sss-bg', 'var(--color-yellow-500)'],
     ['--cs-color-score-rank-sss-text', 'var(--color-yellow-500)'],
+    ['--cs-color-score-difference-negative', 'var(--color-blue-700)'],
   ] as const
 
   for (const [tokenName, expectedValue] of expectedMappings) {
@@ -90,11 +91,24 @@ test('Tailwind公開トークンがcsトークンへ接続されていること'
     ['--color-ranking-medal-text', 'var(--cs-color-ranking-medal-text)'],
     ['--color-score-rank-sssp-bg', 'var(--cs-color-score-rank-sssp-bg)'],
     ['--color-score-rank-sssp-text', 'var(--cs-color-score-rank-sssp-text)'],
+    ['--color-score-difference-negative', 'var(--cs-color-score-difference-negative)'],
   ] as const
 
   for (const [colorName, expectedValue] of expectedBindings) {
     assert.equal(readCustomProperty(tailwindCssContent, colorName), expectedValue)
   }
+})
+
+test('負のスコア差はライト系とダーク系で明るさを調整した青色になること', () => {
+  assert.deepEqual(
+    readCustomProperties(tailwindCssContent, '--cs-color-score-difference-negative'),
+    [
+      'var(--color-blue-700)',
+      'var(--color-blue-400)',
+      'var(--color-blue-400)',
+      'var(--color-blue-700)',
+    ]
+  )
 })
 
 test('ホバーに使う背景トークンがすべてのテーマで不透明に定義されていること', () => {
