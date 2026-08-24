@@ -4,13 +4,10 @@ import type { PlayerMetricHistoryEntryDTO } from '../types/api'
 export type PlayerMetricHistorySortOrder = 'ascending' | 'descending'
 
 /** 公式指標履歴でグラフ化する値。 */
-export type PlayerMetricHistoryMetric = 'rating' | 'overpower'
+export type PlayerMetricHistoryMetric = 'rating' | 'overpower' | 'overpower_percent'
 
 /** Chart.jsへ渡す公式指標履歴の座標。 */
-export type PlayerMetricHistoryChartPoint = {
-  x: number
-  y: number
-}
+export type PlayerMetricHistoryChartPoint = { x: number; y: number | null }
 
 const PLAYER_METRIC_HISTORY_NOT_FOUND_CODE = 'player_metric_history_not_found'
 const INVALID_DATE_LABEL = '-'
@@ -73,8 +70,8 @@ export const sortPlayerMetricHistoryEntries = (
  * 公式指標履歴をChart.js用の古い順の座標へ変換する。
  *
  * @param entries - APIが返した公式指標履歴。
- * @param metric - RATINGまたはOVER POWER。
- * @returns 不正日時を除外した古い順のグラフ座標。
+ * @param metric - RATING、OVER POWER、OP%のいずれか。
+ * @returns 不正日時を除外し、未記録値を線の切れ目として残した古い順のグラフ座標。
  */
 export const buildPlayerMetricHistoryChartPoints = (
   entries: readonly PlayerMetricHistoryEntryDTO[],
@@ -82,8 +79,23 @@ export const buildPlayerMetricHistoryChartPoints = (
 ): PlayerMetricHistoryChartPoint[] =>
   sortPlayerMetricHistoryEntries(entries, 'ascending').flatMap((entry) => {
     const timestamp = new Date(entry.data_collected_at).getTime()
-    return Number.isNaN(timestamp) ? [] : [{ x: timestamp, y: entry[metric] }]
+    if (Number.isNaN(timestamp)) return []
+
+    const value = entry[metric]
+    return [{ x: timestamp, y: value }]
   })
+
+/**
+ * 指定した公式指標に記録済みの値が1件以上あるか判定する。
+ *
+ * @param entries - APIが返した公式指標履歴。
+ * @param metric - 判定対象の公式指標。
+ * @returns nullでない値が1件以上あればtrue。
+ */
+export const hasPlayerMetricHistoryValues = (
+  entries: readonly PlayerMetricHistoryEntryDTO[],
+  metric: PlayerMetricHistoryMetric
+): boolean => entries.some((entry) => entry[metric] !== null)
 
 /**
  * 公式指標履歴の取得日時を日本時間の日時表示へ整形する。
