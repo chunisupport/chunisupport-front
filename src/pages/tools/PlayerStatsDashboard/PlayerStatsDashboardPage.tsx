@@ -48,7 +48,6 @@ import {
   type PlayerStatsNotesBySongId,
   type PlayerStatsSummary,
 } from '../../../utils/playerStatsDashboard'
-import { formatUpdatedAt } from '../../../utils/recordUpdatedAt'
 import { formatScoreDifference } from '../../../utils/scoreDifference'
 import { getScoreRank } from '../../../utils/scoreRank'
 import {
@@ -71,11 +70,9 @@ import {
 
 /** 統計画面の表示に必要なログインユーザーのレコード情報 */
 type PlayerStatsPageData = {
-  username: string
   records: PlayerRecordDTO[]
   targetDifficultyBySongId: Map<string, PlayerDataDifficulty>
   notesBySongId: PlayerStatsNotesBySongId
-  updatedAt: string | null
 }
 
 /** 主要統計カード1件分の表示定義 */
@@ -92,7 +89,7 @@ const PAGE_SECTION_CLASS = 'rounded-xl border border-border bg-surface p-4 shado
 /**
  * ログインユーザー本人の統計画面用レコードを取得する。
  *
- * @returns ユーザー名、未プレイを含む通常譜面レコード、譜面メタ情報、更新日時。
+ * @returns 未プレイを含む通常譜面レコードと譜面メタ情報。
  */
 const fetchPlayerStatsPageData = async (): Promise<PlayerStatsPageData> => {
   const user = await fetchMe()
@@ -101,11 +98,9 @@ const fetchPlayerStatsPageData = async (): Promise<PlayerStatsPageData> => {
     fetchPlayerStatsChartMetadata(),
   ])
   return {
-    username: user.username,
     records: record.standard,
     targetDifficultyBySongId: chartMetadata.targetDifficultyBySongId,
     notesBySongId: chartMetadata.notesBySongId,
-    updatedAt: record.meta.updated_at,
   }
 }
 
@@ -449,7 +444,14 @@ const AchievementHeatmap = (props: {
 const getTargetCurrentCount = (
   summary: PlayerStatsSummary,
   target: PlayerStatsCandidateTarget
-): number => (target === 'sssPlus' ? summary.sssPlus : target === 'aj' ? summary.aj : summary.max)
+): number =>
+  target === 'sss'
+    ? summary.sss
+    : target === 'sssPlus'
+      ? summary.sssPlus
+      : target === 'aj'
+        ? summary.aj
+        : summary.max
 
 /**
  * 次の区切りとなる達成曲数を3種類並べて表示する。
@@ -633,7 +635,7 @@ const CandidateSection = (props: {
       </h2>
     </div>
     <SegmentedTabs
-      defaultValue="sssPlus"
+      defaultValue="sss"
       options={PLAYER_STATS_CANDIDATE_OPTIONS}
       listClass="mb-4 w-full sm:w-auto"
       triggerClass="flex-1 sm:flex-none"
@@ -694,12 +696,16 @@ const PlayerStatsDashboardPage: Component = () => {
           <Show when={data().records.length > 0} fallback={<PlayerDataEmptyState />}>
             <main class="mx-auto w-full max-w-7xl space-y-4 p-4 sm:space-y-6">
               <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <h1 class="text-2xl font-semibold text-text">{PLAYER_STATS_COPY.pageTitle}</h1>
-                  <p class="mt-1 font-sans text-sm text-text-muted">{data().username}</p>
-                  <p class="mt-1 text-xs text-text-subtle">
-                    {PLAYER_STATS_COPY.updatedAt}: {formatUpdatedAt(data().updatedAt)}
-                  </p>
+                <div class="flex items-start gap-3">
+                  <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+                    <ChartNoAxesCombined class="h-5 w-5 text-action-primary" aria-hidden={true} />
+                  </span>
+                  <div>
+                    <h1 class="text-2xl font-semibold text-text">{PLAYER_STATS_COPY.pageTitle}</h1>
+                    <p class="mt-1 font-sans text-sm text-text-muted">
+                      {PLAYER_STATS_COPY.description}
+                    </p>
+                  </div>
                 </div>
                 <AppSelect<PlayerStatsDifficultyOption>
                   rootClass="w-full sm:w-48"

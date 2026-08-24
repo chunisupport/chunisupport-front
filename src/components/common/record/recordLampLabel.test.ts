@@ -2,7 +2,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import { MAX_SCORE } from '../../../utils/scoreRank.ts'
-import { getDefaultRecordLampLabel } from './recordLampLabel.ts'
+import {
+  getDefaultRecordLampAccessibleLabel,
+  getDefaultRecordLampLabel,
+} from './recordLampLabel.ts'
 
 test('コンボランプバッジは理論値AJをAJCとして表示する', () => {
   // Given: ALL JUSTICEかつ理論値のレコード
@@ -37,4 +40,26 @@ test('コンボランプバッジはFULL COMBOをFCとして表示する', () =>
 
   // Then: FCの短縮ラベルを返す
   assert.equal(result, 'FC')
+})
+
+test('理論値AJの読み上げラベルはALL JUSTICE CRITICALになる', () => {
+  // Given: ALL JUSTICEかつ理論値のレコード
+  const lamp = 'ALL JUSTICE'
+
+  // When: 読み上げラベルを取得する
+  const result = getDefaultRecordLampAccessibleLabel(lamp, MAX_SCORE)
+
+  // Then: 省略しないAJCの名称を返す
+  assert.equal(result, 'ALL JUSTICE CRITICAL')
+})
+
+test('未設定のコンボランプは読み上げ時になしと伝える', () => {
+  // Given: コンボランプが未設定のレコード
+  const lamp = null
+
+  // When: 読み上げラベルを取得する
+  const result = getDefaultRecordLampAccessibleLabel(lamp)
+
+  // Then: 未設定状態を明示する
+  assert.equal(result, 'なし')
 })

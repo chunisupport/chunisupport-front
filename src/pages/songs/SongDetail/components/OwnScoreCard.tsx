@@ -3,12 +3,7 @@ import { ChevronRight } from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import { Loading } from '../../../../components'
 import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'
-import {
-  RECORD_LAMP_COLUMN_CLASS,
-  renderDefaultRecordFullChainBadge,
-  renderDefaultRecordHardLampBadge,
-  renderDefaultRecordLampBadge,
-} from '../../../../components/common/record/RecordDisplayParts'
+import { DefaultRecordLampBadges } from '../../../../components/common/record/RecordDisplayParts'
 import { getDefaultRecordLampLabel } from '../../../../components/common/record/recordLampLabel'
 import { WORLDSEND_SCORE_LABEL } from '../../../../constants/chart'
 import {
@@ -16,7 +11,7 @@ import {
   buildWorldsendChartDetailPath,
   CHART_DETAIL_FROM_SONG_DETAIL_STATE,
 } from '../../../../constants/routes'
-import type { PlayerDataDifficulty } from '../../../../types/api'
+import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../../../types/api'
 import WorldsendBadge from '../../components/WorldsendBadge'
 import {
   OWN_SCORE_CARD_TITLE,
@@ -28,9 +23,9 @@ import {
 export type OwnScoreItem = {
   difficulty: PlayerDataDifficulty | typeof WORLDSEND_SCORE_LABEL
   score?: number
-  comboLamp?: Parameters<typeof renderDefaultRecordLampBadge>[0]
-  clearLamp?: Parameters<typeof renderDefaultRecordHardLampBadge>[0]
-  fullChain?: Parameters<typeof renderDefaultRecordFullChainBadge>[0]
+  comboLamp?: PlayerRecordDTO['combo_lamp']
+  clearLamp?: PlayerRecordDTO['clear_lamp']
+  fullChain?: PlayerRecordDTO['full_chain']
   supportsHistory: boolean
 }
 
@@ -41,8 +36,6 @@ const OWN_SCORE_CARD_CLASS =
 const OWN_SCORE_VALUE_CLASS = 'font-jost text-xl font-semibold tabular-nums'
 /** 自己スコアとランプを縦並びにする共通レイアウトクラス */
 const OWN_SCORE_VALUE_STACK_CLASS = 'ml-auto flex flex-col items-end gap-1'
-/** 自己スコアカード内のランプ表示領域クラス */
-const OWN_SCORE_LAMPS_CLASS = 'flex gap-2'
 /** 未プレイ自己スコアカードの共通レイアウトクラス */
 const UNPLAYED_OWN_SCORE_CARD_CLASS =
   'flex min-h-24 items-center gap-3 rounded-lg border border-border bg-surface p-4'
@@ -68,15 +61,14 @@ const OwnScoreBadge = (props: { difficulty: OwnScoreItem['difficulty'] }) => (
 const OwnScoreLamps = (
   props: Pick<OwnScoreItem, 'score' | 'comboLamp' | 'clearLamp' | 'fullChain'>
 ) => (
-  <div class={`${OWN_SCORE_LAMPS_CLASS} ${RECORD_LAMP_COLUMN_CLASS}`}>
-    {renderDefaultRecordHardLampBadge(props.clearLamp ?? null)}
-    {renderDefaultRecordLampBadge(props.comboLamp ?? null, {
-      is_played: true,
-      combo_lamp: props.comboLamp ?? null,
+  <DefaultRecordLampBadges
+    record={{
       score: props.score ?? 0,
-    })}
-    {renderDefaultRecordFullChainBadge(props.fullChain ?? null)}
-  </div>
+      clear_lamp: props.clearLamp ?? null,
+      combo_lamp: props.comboLamp ?? null,
+      full_chain: props.fullChain ?? null,
+    }}
+  />
 )
 
 /**

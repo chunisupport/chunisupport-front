@@ -16,6 +16,10 @@ export const FRIEND_RANKING_PLAYER_LABEL = 'プレイヤー'
 export const SCORE_HISTORY_UPDATED_AT_LABEL = '更新日'
 /** 履歴一覧のスコア列ラベル */
 export const SCORE_HISTORY_SCORE_LABEL = 'スコア'
+/** 履歴一覧のランプ列ラベル */
+export const SCORE_HISTORY_LAMP_LABEL = 'ランプ'
+/** 3種類のランプを含む履歴表で各列の可読幅を維持する最小幅 */
+export const SCORE_HISTORY_TABLE_MIN_WIDTH_CLASS = 'min-w-[32rem]'
 /** スコア履歴のバージョン境界を表示する切替ラベル */
 export const SCORE_HISTORY_VERSION_LABEL_TOGGLE = 'バージョン表記'
 /** 現行ベストに表示するラベル */

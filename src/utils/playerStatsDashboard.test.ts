@@ -336,6 +336,28 @@ test('候補譜面は目標未達のプレイ済み譜面を現在記録に近�
   )
 })
 
+test('SSS候補はSSS未達のプレイ済み譜面を目標までのスコア差順で返す', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'low', score: 990_000 }),
+    createRecord({ id: 'near', score: 999_500 }),
+    createRecord({ id: 'done', score: 1_009_000 }),
+    createRecord({ id: 'unplayed', is_played: false, score: 0 }),
+  ]
+
+  // When
+  const candidates = findPlayerStatsCandidates(records, 'sss', 5)
+
+  // Then
+  assert.deepEqual(
+    candidates.map(({ record, scoreGap }) => ({ id: record.id, scoreGap })),
+    [
+      { id: 'near', scoreGap: 8000 },
+      { id: 'low', scoreGap: 17500 },
+    ]
+  )
+})
+
 test('AJ候補はFULL COMBO済みを優先しスコア差を返さない', () => {
   // Given
   const records = [
