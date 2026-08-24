@@ -46,7 +46,7 @@ export const SongListTitleCell = (props: SongListTitleCellProps) => (
   <td class={`${props.class} relative`}>
     <A
       href={props.href}
-      class="absolute inset-0 flex min-w-0 items-center px-3 font-sans text-action-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
+      class="absolute inset-0 flex min-w-0 items-center px-3 font-sans text-song-list-title hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
       title={props.title}
     >
       <span class="min-w-0 truncate">{props.title}</span>

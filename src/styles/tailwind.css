@@ -176,6 +176,7 @@
   --cs-color-input-border-hover: var(--color-gray-500);
   --cs-color-link: var(--color-primary-600);
   --cs-color-link-hover: var(--color-primary-700);
+  --cs-color-song-list-title: var(--color-primary-600);
 }
 
 :is([data-theme="dark"], [data-theme="black"]) {
@@ -265,6 +266,7 @@
   --cs-color-input-border-hover: #3f8a6b;
   --cs-color-link: var(--color-primary-400);
   --cs-color-link-hover: var(--color-primary-300);
+  --cs-color-song-list-title: var(--color-primary-300);
 }
 
 [data-theme="black"] {
@@ -407,6 +409,7 @@
   --cs-color-input-border-hover: #3f5aa0;
   --cs-color-link: var(--color-primary-400);
   --cs-color-link-hover: var(--color-primary-300);
+  --cs-color-song-list-title: var(--color-primary-300);
 }
 
 [data-theme="pastel-orange"] {
@@ -480,6 +483,7 @@
   --cs-color-input-border-hover: #dda878;
   --cs-color-link: var(--color-primary-600);
   --cs-color-link-hover: var(--color-primary-700);
+  --cs-color-song-list-title: var(--color-primary-600);
 }
 
 :root,
@@ -711,6 +715,7 @@
   --color-input-border-hover: var(--cs-color-input-border-hover);
   --color-link: var(--cs-color-link);
   --color-link-hover: var(--cs-color-link-hover);
+  --color-song-list-title: var(--cs-color-song-list-title);
 
   /* 難易度バッジ */
   --color-difficulty-basic-bg: var(--cs-color-difficulty-basic-bg);
