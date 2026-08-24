@@ -74,9 +74,10 @@ const BestSlotRankingRow = (props: {
 
   return (
     <tr
-      class="border-t border-border"
+      class="border-l-4 border-t border-border"
       classList={{
-        'bg-action-primary-muted': props.isOwnBest,
+        'border-l-action-primary-hover bg-interactive-row-hover': props.isOwnBest,
+        'border-l-transparent': !props.isOwnBest,
         'hover:bg-interactive-row-hover': props.isOwnBest,
         'hover:bg-surface-muted': !props.isOwnBest,
       }}
