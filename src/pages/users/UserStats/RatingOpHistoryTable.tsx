@@ -13,7 +13,7 @@ import {
 } from './constants'
 
 type Props = {
-  /** APIが返した公式指標履歴。 */
+  /** APIが返した公式指標履歴 */
   entries: readonly PlayerMetricHistoryEntryDTO[]
 }
 

@@ -1,4 +1,4 @@
-/** Chart.js の色解決に使う既定色。 */
+/** Chart.js の色解決に使う既定色 */
 export const CHART_COLOR_FALLBACK = '#6b7280'
 
 /**

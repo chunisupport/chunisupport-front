@@ -3,7 +3,7 @@ import type { PlayerStatsNotesBySongId } from '../../utils/playerStatsDashboard'
 import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../utils/theoreticalOverPowerTarget'
 import { fetchAllSongsWithCache } from '../cache/fetchAllSongsWithCache'
 
-/** 統計ダッシュボードで使う曲別の譜面情報。 */
+/** 統計ダッシュボードで使う曲別の譜面情報 */
 export type PlayerStatsChartMetadata = {
   targetDifficultyBySongId: Map<string, PlayerDataDifficulty>
   notesBySongId: PlayerStatsNotesBySongId

@@ -2,7 +2,7 @@ import { createRoot } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import type { UserDTO } from '../types/api'
 
-/** フロントエンドが保持する認証セッションの解決状態。 */
+/** フロントエンドが保持する認証セッションの解決状態 */
 export type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated' | 'error'
 
 type AuthState = {

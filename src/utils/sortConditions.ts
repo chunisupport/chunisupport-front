@@ -1,6 +1,6 @@
 import type { SortDirection } from './sortingQuery'
 
-/** 複数条件ソートで使う1行分のソート条件。 */
+/** 複数条件ソートで使う1行分のソート条件 */
 export type SortCondition<TSortKey extends string> = {
   key: TSortKey
   direction: SortDirection

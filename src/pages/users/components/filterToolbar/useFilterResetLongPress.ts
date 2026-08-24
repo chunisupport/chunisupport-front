@@ -1,30 +1,30 @@
 import { createSignal, onCleanup } from 'solid-js'
 
-/** 単押しと長押しを判定するため、見た目を変えずに待つ時間。 */
+/** 単押しと長押しを判定するため、見た目を変えずに待つ時間 */
 const FILTER_RESET_PRESS_JUDGE_MS = 320
 
-/** リセット操作として扱う長押しインジケータの進行時間。 */
+/** リセット操作として扱う長押しインジケータの進行時間 */
 const FILTER_RESET_INDICATOR_DURATION_MS = 400
 
-/** フィルターリセットを実行可能にする合計長押し時間。 */
+/** フィルターリセットを実行可能にする合計長押し時間 */
 const FILTER_RESET_HOLD_DURATION_MS =
   FILTER_RESET_PRESS_JUDGE_MS + FILTER_RESET_INDICATOR_DURATION_MS
 
-/** 長押し成立後の互換クリックを抑止する時間。 */
+/** 長押し成立後の互換クリックを抑止する時間 */
 const FILTER_RESET_CLICK_SUPPRESSION_MS = 500
 
-/** 長押し中に一時適用するテキスト選択抑止値。 */
+/** 長押し中に一時適用するテキスト選択抑止値 */
 const FILTER_RESET_USER_SELECT_DISABLED_VALUE = 'none'
 
-/** WebKit系ブラウザ向けのテキスト選択抑止プロパティ名。 */
+/** WebKit系ブラウザ向けのテキスト選択抑止プロパティ名 */
 const FILTER_RESET_WEBKIT_USER_SELECT_PROPERTY = '-webkit-user-select'
 
 type UseFilterResetLongPressParams = {
-  /** 長押し判定を開始できない状態か。 */
+  /** 長押し判定を開始できない状態か */
   isDisabled: () => boolean
-  /** 長押し成立後にポインターを離したときの処理。 */
+  /** 長押し成立後にポインターを離したときの処理 */
   onReset: () => void
-  /** 通常クリック時の処理。 */
+  /** 通常クリック時の処理 */
   onClick: () => void
 }
 

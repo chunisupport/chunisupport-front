@@ -24,25 +24,25 @@ type FriendRankingTableEntry = Pick<
 >
 
 type Props = {
-  /** 表示対象の楽曲名。 */
+  /** 表示対象の楽曲名 */
   title: string
-  /** 表示対象のアーティスト名。 */
+  /** 表示対象のアーティスト名 */
   artist: string
-  /** 通常難易度または WORLD'S END を表すバッジ。 */
+  /** 通常難易度または WORLD'S END を表すバッジ */
   badge: JSX.Element
-  /** 楽曲詳細へ戻る操作。 */
+  /** 楽曲詳細へ戻る操作 */
   onBack: () => void
-  /** 表示対象のスコア履歴。 */
+  /** 表示対象のスコア履歴 */
   historyEntries: readonly ScoreHistoryEntryDTO[]
-  /** スコア履歴を読み込み中か。 */
+  /** スコア履歴を読み込み中か */
   isHistoryLoading: boolean
-  /** スコア履歴の取得エラー。 */
+  /** スコア履歴の取得エラー */
   historyError: unknown
-  /** 表示対象のフレンドランキング。 */
+  /** 表示対象のフレンドランキング */
   friendRankingEntries: readonly FriendRankingTableEntry[]
-  /** フレンドランキングを読み込み中か。 */
+  /** フレンドランキングを読み込み中か */
   isFriendRankingLoading: boolean
-  /** フレンドランキングの取得エラー。 */
+  /** フレンドランキングの取得エラー */
   friendRankingError: unknown
 }
 

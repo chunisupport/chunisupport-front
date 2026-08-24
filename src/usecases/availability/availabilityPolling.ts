@@ -22,7 +22,7 @@ type CreateAvailabilityPollingOptions<TResult> = {
   getPollingDelayMs?: (state: AvailabilityState) => number | null
 }
 
-/** 可用性ポーリングを操作するコントローラー。 */
+/** 可用性ポーリングを操作するコントローラー */
 export type AvailabilityPollingController<TResult = unknown> = {
   start: () => void
   sync: () => void

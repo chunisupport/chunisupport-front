@@ -6,7 +6,7 @@ import type {
   PlayerDataStatisticsGroup,
 } from '../../types/api'
 
-/** RECORD STATISTICSで表示する集計列。 */
+/** RECORD STATISTICSで表示する集計列 */
 export const REGISTER_SCORE_STAT_COLUMNS = [
   'AJ',
   'FC',
@@ -19,25 +19,25 @@ export const REGISTER_SCORE_STAT_COLUMNS = [
   'S',
 ] as const
 
-/** RECORD STATISTICSでFC列の後ろに区切り線を設ける列。 */
+/** RECORD STATISTICSでFC列の後ろに区切り線を設ける列 */
 export const REGISTER_SCORE_STATISTIC_DIVIDER_START_COLUMN = 'MAX' as const
 
-/** 更新差分レポートで扱う固定難易度。 */
+/** 更新差分レポートで扱う固定難易度 */
 export const REGISTER_SCORE_DIFFICULTIES: readonly PlayerDataStatisticsDifficulty[] =
   PLAYER_DATA_STATISTICS_DIFFICULTIES
 
-/** 通常譜面の全難易度集計を表す設定キー。 */
+/** 通常譜面の全難易度集計を表す設定キー */
 export const REGISTER_SCORE_ALL_ROW_KEY = 'ALL' as const
 
-/** 更新差分の集計行を識別するキー。 */
+/** 更新差分の集計行を識別するキー */
 export type RegisterScoreAggregateRowKey =
   | typeof REGISTER_SCORE_ALL_ROW_KEY
   | PlayerDataStatisticsDifficulty
 
-/** 更新差分の集計行ごとの表示状態。 */
+/** 更新差分の集計行ごとの表示状態 */
 export type RegisterScoreAggregateRowVisibility = Record<RegisterScoreAggregateRowKey, boolean>
 
-/** TOTAL HIGH SCOREの1行分の表示データ。 */
+/** TOTAL HIGH SCOREの1行分の表示データ */
 export type RegisterScoreTotalHighScoreRow = {
   key: RegisterScoreAggregateRowKey
   label: string
@@ -45,7 +45,7 @@ export type RegisterScoreTotalHighScoreRow = {
   value: PlayerDataNumberDiff
 }
 
-/** RECORD STATISTICSの1行分の表示データ。 */
+/** RECORD STATISTICSの1行分の表示データ */
 export type RegisterScoreStatisticRow = {
   key: RegisterScoreAggregateRowKey
   label: string
@@ -53,7 +53,7 @@ export type RegisterScoreStatisticRow = {
   values: Record<(typeof REGISTER_SCORE_STAT_COLUMNS)[number], PlayerDataNumberDiff>
 }
 
-/** 集計セクションで共通利用する行ごとの設定項目。 */
+/** 集計セクションで共通利用する行ごとの設定項目 */
 export const REGISTER_SCORE_AGGREGATE_ROW_OPTIONS: readonly {
   key: RegisterScoreAggregateRowKey
   label: string
@@ -67,7 +67,7 @@ export const REGISTER_SCORE_AGGREGATE_ROW_OPTIONS: readonly {
   { key: 'WE', label: 'WE' },
 ]
 
-/** 更新差分統計に表示する難易度キーの短縮ラベル。 */
+/** 更新差分統計に表示する難易度キーの短縮ラベル */
 const REGISTER_SCORE_DIFFICULTY_LABELS: Readonly<Record<PlayerDataStatisticsDifficulty, string>> = {
   BASIC: 'BAS',
   ADVANCED: 'ADV',

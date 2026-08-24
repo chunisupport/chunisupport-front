@@ -12,7 +12,7 @@ import {
 } from './goalGroupsModel'
 import type { GoalWithProgress } from './goalsListProgress'
 
-/** テスト用目標グループを作る。 */
+/** テスト用目標グループを作る */
 const createGroup = (id: number, sortOrder: number): GoalGroupDTO => ({
   id,
   name: `グループ${id}`,
@@ -20,7 +20,7 @@ const createGroup = (id: number, sortOrder: number): GoalGroupDTO => ({
   created_at: '2026-01-01T00:00:00Z',
 })
 
-/** テスト用の進捗付き目標を作る。 */
+/** テスト用の進捗付き目標を作る */
 const createGoal = (id: number, groupId: number | null, sortOrder: number): GoalWithProgress => ({
   goal: {
     id,

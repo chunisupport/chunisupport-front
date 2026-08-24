@@ -8,7 +8,7 @@ import {
   requestChangedSongMasters,
 } from './registerScoreCommit'
 
-/** テスト用の統計グループを生成する。 */
+/** テスト用の統計グループを生成する */
 const createStatisticsGroup = (after = 0): PlayerDataStatisticsGroup => ({
   total_high_score: { before: 0, after, delta: after },
   record_statistics: Object.fromEntries(

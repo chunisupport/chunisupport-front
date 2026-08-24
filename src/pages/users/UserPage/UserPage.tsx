@@ -38,11 +38,11 @@ export type UserPageRecordProfile = {
   record: UserRecordDTO
 }
 
-/** ユーザー名とコースレコード取得結果を関連付けた表示用データ。 */
+/** ユーザー名とコースレコード取得結果を関連付けた表示用データ */
 export type UserPageCourseRecordProfile = {
-  /** 取得対象のユーザー名。 */
+  /** 取得対象のユーザー名 */
   username: string
-  /** コースレコード一覧レスポンス。 */
+  /** コースレコード一覧レスポンス */
   records: UserCourseRecordsDTO
 }
 
@@ -118,7 +118,7 @@ const UserPage: Component = () => {
   const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
   const [courseRecordProfileUsername, setCourseRecordProfileUsername] = createSignal<string>()
 
-  /** COURSEタブを一度開いたユーザー名を記録し、そのユーザーのページ内でリソースを保持する。 */
+  /** COURSEタブを一度開いたユーザー名を記録し、そのユーザーのページ内でリソースを保持する */
   createEffect(() => {
     if (resolveProfilePageQuery(params.page, searchParams.page) === 'record_course') {
       setCourseRecordProfileUsername(params.username)

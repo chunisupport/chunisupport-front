@@ -22,53 +22,53 @@ import { RATING_IMAGE_COPY, RATING_IMAGE_WIDTH_PX } from '../UserProfileView.con
 import { UserRecordPlaceholderCard } from './UserRecordPlaceholderCard'
 
 type RatingImageSheetProps = {
-  /** 画像上部へ表示するプレイヤー情報。 */
+  /** 画像上部へ表示するプレイヤー情報 */
   playerInfo: PlayerDTO
-  /** 画像上部へ表示する称号。 */
+  /** 画像上部へ表示する称号 */
   honors: HonorDTO[]
-  /** ベスト枠・新曲枠と集計値。 */
+  /** ベスト枠・新曲枠と集計値 */
   rating: UserRatingDTO
-  /** カード背景へジャケット画像を表示するかどうか。 */
+  /** カード背景へジャケット画像を表示するかどうか */
   showJackets: boolean
-  /** 画像化対象のルート要素を受け取るコールバック。 */
+  /** 画像化対象のルート要素を受け取るコールバック */
   captureRef: (element: HTMLDivElement) => void
-  /** ジャケット画像ごとの準備状態を通知するコールバック。 */
+  /** ジャケット画像ごとの準備状態を通知するコールバック */
   onJacketReadyChange: (key: string, ready: boolean) => void
 }
 
 type RatingImageRecordCardProps = {
-  /** 表示対象のレコード。 */
+  /** 表示対象のレコード */
   record: PlayerRecordDTO
-  /** 一覧内の0始まりインデックス。 */
+  /** 一覧内の0始まりインデックス */
   index: number
-  /** カード背景へジャケット画像を表示するかどうか。 */
+  /** カード背景へジャケット画像を表示するかどうか */
   showJackets: boolean
-  /** 画像化対象内でジャケット画像を識別するキー。 */
+  /** 画像化対象内でジャケット画像を識別するキー */
   jacketKey: string
-  /** ジャケット画像の準備状態を通知するコールバック。 */
+  /** ジャケット画像の準備状態を通知するコールバック */
   onJacketReadyChange: (key: string, ready: boolean) => void
 }
 
 type RatingImageColumnProps = {
-  /** 枠見出し。 */
+  /** 枠見出し */
   heading: string
-  /** 枠の平均レーティング。 */
+  /** 枠の平均レーティング */
   average: number | null
-  /** 枠へ採用されたレコード。 */
+  /** 枠へ採用されたレコード */
   records: PlayerRecordDTO[]
-  /** 枠の規定件数。 */
+  /** 枠の規定件数 */
   slotCount: number
-  /** カード背景へジャケット画像を表示するかどうか。 */
+  /** カード背景へジャケット画像を表示するかどうか */
   showJackets: boolean
-  /** 枠を識別するキー。 */
+  /** 枠を識別するキー */
   columnKey: 'best' | 'new'
-  /** ジャケット画像の準備状態を通知するコールバック。 */
+  /** ジャケット画像の準備状態を通知するコールバック */
   onJacketReadyChange: (key: string, ready: boolean) => void
 }
 
 type JacketLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error'
 
-/** ジャケット画像の再取得時にキャッシュキーへ使用するクエリ名。 */
+/** ジャケット画像の再取得時にキャッシュキーへ使用するクエリ名 */
 const JACKET_RETRY_QUERY_PARAM = 'retry'
 
 /**
@@ -106,7 +106,7 @@ const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => 
   const [jacketSource, setJacketSource] = createSignal(jacketUrl())
   const constDisplay = () => getConstDisplay(props.record.const, props.record.is_const_unknown)
   const unknownValueClass = () => (props.record.is_const_unknown ? 'text-danger' : 'text-text')
-  /** @returns コンボランプがある場合はスコアへ重ねるアクセントバーの背景クラス。 */
+  /** @returns コンボランプがある場合はスコアへ重ねるアクセントバーの背景クラス */
   const comboLampScoreAccentClass = () =>
     props.record.combo_lamp ? COMBO_LAMP_SCORE_ACCENT_CLASS[props.record.combo_lamp] : undefined
   let fallbackLoaded = false

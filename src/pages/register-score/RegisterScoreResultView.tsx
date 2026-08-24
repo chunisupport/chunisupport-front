@@ -89,21 +89,21 @@ const NO_DATA_TEXT = '-'
 const WORLD_END_BADGE_CLASS =
   'bg-[image:var(--cs-color-worldsend-label-bg)] text-worldsend-label-text'
 const PROFILE_VALUE_CLASS = 'font-jost text-base font-normal leading-6'
-/** 更新差分レポートの原寸幅を固定するクラス。 */
+/** 更新差分レポートの原寸幅を固定するクラス */
 const REGISTER_SCORE_REPORT_WIDTH_CLASS = 'w-[31rem]'
-/** 更新差分レポートの表示領域を原寸幅以下に制限するクラス。 */
+/** 更新差分レポートの表示領域を原寸幅以下に制限するクラス */
 const REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS = 'max-w-[31rem]'
-/** 更新差分レポートヘッダに表示するロゴの色。 */
+/** 更新差分レポートヘッダに表示するロゴの色 */
 const REGISTER_SCORE_REPORT_LOGO_COLOR = '#444444'
-/** 更新差分画像を原寸で出力するピクセル比。 */
+/** 更新差分画像を原寸で出力するピクセル比 */
 const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 1
-/** 更新差分JPEG画像の圧縮品質。 */
+/** 更新差分JPEG画像の圧縮品質 */
 const REGISTER_SCORE_IMAGE_JPEG_QUALITY = 0.9
-/** 更新差分画像のファイル名へ付与する接頭辞。 */
+/** 更新差分画像のファイル名へ付与する接頭辞 */
 const REGISTER_SCORE_IMAGE_FILENAME_PREFIX = 'chunisupport-score-update'
-/** 共有用画像をレポート更新後に再生成するまでの待機時間。 */
+/** 共有用画像をレポート更新後に再生成するまでの待機時間 */
 const REGISTER_SCORE_SHARE_PREPARE_DELAY_MS = 1_000
-/** コピー成功時に曲名をアクセントカラーで保持する時間。 */
+/** コピー成功時に曲名をアクセントカラーで保持する時間 */
 const REGISTER_SCORE_COPY_HIGHLIGHT_MS = 100
 
 /**
@@ -123,9 +123,9 @@ const SCORE_CHANGE_CARD_CLASS =
  */
 const SCORE_CHANGE_SCORE_GRID_CLASS =
   'mt-1.5 flex items-center justify-around gap-x-2 text-lg leading-6'
-/** コース差分のスコアとランプ表示領域を固定幅にするクラス。 */
+/** コース差分のスコアとランプ表示領域を固定幅にするクラス */
 const COURSE_CHANGE_SCORE_VALUE_CLASS = 'w-[95px] shrink-0'
-/** コースクラスバッジの共通レイアウトクラス。 */
+/** コースクラスバッジの共通レイアウトクラス */
 const COURSE_CLASS_BADGE_LAYOUT_CLASS =
   'inline-flex min-w-6 shrink-0 items-center justify-center rounded font-sans text-xs font-bold uppercase leading-5 [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]'
 
@@ -139,7 +139,7 @@ type RegisterScoreLampRecord = {
 
 export type RegisterScoreSongTitleResolver = (change: PlayerDataRecordChange) => string
 export type RegisterScoreChartLevelResolver = (change: PlayerDataRecordChange) => string | undefined
-/** コース差分からコースタイトルを解決する関数。 */
+/** コース差分からコースタイトルを解決する関数 */
 export type RegisterScoreCourseTitleResolver = (change: PlayerDataCourseRecordChange) => string
 
 /**
@@ -407,15 +407,15 @@ const CourseRecordLampBadges = (props: { state: PlayerDataCourseRecordState }) =
   )
 }
 
-/** プレイヤーメトリクス差分の表示情報。 */
+/** プレイヤーメトリクス差分の表示情報 */
 type RegisterScoreMetricDeltaProps = {
-  /** APIが返した更新前後の差分。 */
+  /** APIが返した更新前後の差分 */
   delta: number | null
-  /** 表示精度へ整形した符号付き差分。 */
+  /** 表示精度へ整形した符号付き差分 */
   formattedDelta: string | null
-  /** 差分の後ろへ表示する単位。 */
+  /** 差分の後ろへ表示する単位 */
   unit?: string
-  /** 単位を読み上げる際の名称。 */
+  /** 単位を読み上げる際の名称 */
   accessibleUnit?: string
 }
 
@@ -1018,9 +1018,9 @@ export const RegisterScoreResultView = (props: {
   const [isSharingImage, setIsSharingImage] = createSignal(false)
   const [shareImageFile, setShareImageFile] = createSignal<File>()
   const [imageActionError, setImageActionError] = createSignal<string>()
-  /** 生成対象となるレポートDOMの更新世代。 */
+  /** 生成対象となるレポートDOMの更新世代 */
   let shareImageRevision = 0
-  /** 共有用画像の生成を開始するタイマー。 */
+  /** 共有用画像の生成を開始するタイマー */
   let shareImagePrepareTimer: number | undefined
 
   /**

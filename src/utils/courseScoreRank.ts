@@ -1,6 +1,6 @@
 import { getScoreRank, type ScoreRank } from './scoreRank'
 
-/** コースモードを構成する楽曲数。 */
+/** コースモードを構成する楽曲数 */
 export const COURSE_TRACK_COUNT = 3
 
 /**

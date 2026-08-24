@@ -31,7 +31,7 @@ const formatWorldsendLevelLabel = (levelStar: number | null | undefined): string
   return `★${levelStar}`
 }
 
-/** WORLD'S END レコードの列IDごとのセル描画処理。 */
+/** WORLD'S END レコードの列IDごとのセル描画処理 */
 const worldsendColumnRenderers: Record<
   WorldsendRecordColumnId,
   ColumnRenderer<WorldsendRecordWithSongMeta>

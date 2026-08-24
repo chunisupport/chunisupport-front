@@ -170,7 +170,7 @@ const BestSlotRankingPage = () => {
   const [nextCursor, setNextCursor] = createSignal<string | null>(null)
   const [isLoadingMore, setIsLoadingMore] = createSignal(false)
   const [loadMoreError, setLoadMoreError] = createSignal<unknown>()
-  /** レート帯の選択セッションごとに追加取得結果を識別する世代番号。 */
+  /** レート帯の選択セッションごとに追加取得結果を識別する世代番号 */
   let paginationRequestVersion = 0
 
   const ratingBands = createMemo<RatingBandDTO[]>(() => ratingBandsResource() ?? [])
@@ -236,7 +236,7 @@ const BestSlotRankingPage = () => {
           .map((record) => [createChartKey(record.id, record.difficulty), record])
       )
   )
-  /** ログインユーザーのベスト枠に含まれる譜面キー集合。 */
+  /** ログインユーザーのベスト枠に含まれる譜面キー集合 */
   const ownBestChartKeys = createMemo(
     () =>
       new Set(
@@ -244,7 +244,7 @@ const BestSlotRankingPage = () => {
       )
   )
 
-  /** 選択中レート帯のランキングを次のカーソルから追加取得する。 */
+  /** 選択中レート帯のランキングを次のカーソルから追加取得する */
   const handleLoadMore = async (): Promise<void> => {
     const ratingBand = selectedRatingBand()?.value
     const cursor = nextCursor()

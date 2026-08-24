@@ -13,7 +13,7 @@ type SongDataByKind = {
   worldsendSongs: WorldsendSongDTO
 }
 
-/** 楽曲キャッシュを最後に一括無効化した世代。 */
+/** 楽曲キャッシュを最後に一括無効化した世代 */
 let songCacheGeneration = 0
 
 /**

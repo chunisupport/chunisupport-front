@@ -6,7 +6,7 @@ export type {
   WorldsendLevelStar,
 } from '../../../../types/worldsendRecord'
 
-/** 楽曲マスタ由来の補足情報を付与した WORLD'S END レコード。 */
+/** 楽曲マスタ由来の補足情報を付与した WORLD'S END レコード */
 export interface WorldsendRecordWithSongMeta extends WorldsendRecordDTO {
   genre: string | null
   reading: string | null

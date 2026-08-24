@@ -1,4 +1,4 @@
-/** ユーザー管理画面の集計表示に使用する文言。 */
+/** ユーザー管理画面の集計表示に使用する文言 */
 export const ADMIN_USER_STATISTICS_COPY = {
   heading: 'ユーザー集計',
   totalUsers: '全ユーザー',

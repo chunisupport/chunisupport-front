@@ -1,6 +1,6 @@
 import type { RatingBandDTO } from '../types/api'
 
-/** 全プレイヤーを表す特殊なレート帯ラベル。 */
+/** 全プレイヤーを表す特殊なレート帯ラベル */
 export const ALL_RATING_BAND_LABEL = 'ALL'
 
 /**

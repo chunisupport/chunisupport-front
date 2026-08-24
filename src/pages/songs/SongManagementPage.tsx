@@ -293,7 +293,7 @@ const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
 }
 
 const managementInputClass = 'w-full rounded border border-border-strong px-3 py-2'
-/** 通常楽曲の新曲判定を編集するチェックボックスの表示名。 */
+/** 通常楽曲の新曲判定を編集するチェックボックスの表示名 */
 const newSongFlagLabel = '新曲フラグ'
 
 /**

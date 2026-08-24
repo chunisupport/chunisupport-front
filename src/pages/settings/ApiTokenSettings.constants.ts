@@ -1,10 +1,10 @@
-/** APIが許可するAPIトークン名の最大文字数。 */
+/** APIが許可するAPIトークン名の最大文字数 */
 export const API_TOKEN_NAME_MAX_LENGTH = 50
 
-/** 1ユーザーが所有できるAPIトークンの最大件数。 */
+/** 1ユーザーが所有できるAPIトークンの最大件数 */
 export const API_TOKEN_MAX_COUNT = 10
 
-/** APIトークン設定欄で使用する表示文言。 */
+/** APIトークン設定欄で使用する表示文言 */
 export const API_TOKEN_SETTINGS_COPY = {
   title: 'APIトークン管理',
   description: '外部連携用の名前付きAPIトークンを管理します。',

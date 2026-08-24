@@ -16,7 +16,7 @@ type FriendRankingTableEntry = Pick<
 >
 
 type Props = {
-  /** 表示対象のフレンドランキング。 */
+  /** 表示対象のフレンドランキング */
   entries: readonly FriendRankingTableEntry[]
 }
 

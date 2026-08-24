@@ -26,15 +26,15 @@ import { RatingImageSheet } from './RatingImageSheet'
 import { formatRatingImageFilename } from './ratingImageFilename'
 
 type Props = {
-  /** プロフィールURLに使用するユーザー名。 */
+  /** プロフィールURLに使用するユーザー名 */
   username: string
-  /** 画像上部へ表示するプレイヤー情報。 */
+  /** 画像上部へ表示するプレイヤー情報 */
   playerInfo: PlayerDTO
-  /** 画像上部へ表示する称号。 */
+  /** 画像上部へ表示する称号 */
   honors: HonorDTO[]
-  /** ベスト枠・新曲枠と集計値。 */
+  /** ベスト枠・新曲枠と集計値 */
   rating: UserRatingDTO
-  /** カード背景へジャケット画像を表示するかどうか。 */
+  /** カード背景へジャケット画像を表示するかどうか */
   showJackets: boolean
 }
 

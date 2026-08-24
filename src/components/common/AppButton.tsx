@@ -17,19 +17,19 @@ export type AppButtonSize = 'xs' | 'sm' | 'md'
 export type AppButtonShape = 'rounded' | 'pill'
 
 export type AppButtonProps = Omit<KobalteButtonProps, 'class'> & {
-  /** ボタンの役割と優先度に対応する見た目。 */
+  /** ボタンの役割と優先度に対応する見た目 */
   variant?: AppButtonVariant
-  /** ボタンの余白と文字サイズ。 */
+  /** ボタンの余白と文字サイズ */
   size?: AppButtonSize
-  /** ボタンの角丸形状。 */
+  /** ボタンの角丸形状 */
   shape?: AppButtonShape
-  /** 横幅いっぱいに広げるかどうか。 */
+  /** 横幅いっぱいに広げるかどうか */
   fullWidth?: boolean
-  /** 左側に表示するアイコン。 */
+  /** 左側に表示するアイコン */
   leftIcon?: JSX.Element
-  /** 右側に表示するアイコン。 */
+  /** 右側に表示するアイコン */
   rightIcon?: JSX.Element
-  /** 追加で適用する Tailwind クラス。 */
+  /** 追加で適用する Tailwind クラス */
   class?: string
 }
 
@@ -40,11 +40,11 @@ export type AppIconButtonProps = Omit<
   AppButtonProps,
   'children' | 'fullWidth' | 'leftIcon' | 'rightIcon' | 'shape' | 'variant'
 > & {
-  /** アイコンボタンの色調。 */
+  /** アイコンボタンの色調 */
   tone?: AppIconButtonTone
-  /** アイコンボタンの大きさ。 */
+  /** アイコンボタンの大きさ */
   size?: AppIconButtonSize
-  /** ボタン内に表示するアイコン。 */
+  /** ボタン内に表示するアイコン */
   children: JSX.Element
 }
 

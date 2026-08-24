@@ -26,7 +26,7 @@ import {
 
 interface GoalTargetChartsSectionProps {
   difficultyItems: MasterDataDTO['difficulties']
-  /** 虹枠目標向けに楽曲単位の対象条件だけを表示するか。 */
+  /** 虹枠目標向けに楽曲単位の対象条件だけを表示するか */
   isRainbowGoal: boolean
   chartTargetMode: GoalChartTargetMode
   diffs: string[]

@@ -102,25 +102,25 @@ const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
 const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_EXCLUDED_RATING_BAND = 'ALL'
 const CHART_X_AXIS_TICK_PADDING = 8
-/** 平均・中央値グラフのセクション見出し。 */
+/** 平均・中央値グラフのセクション見出し */
 const AVERAGE_SCORE_CHART_TITLE = '平均・中央値'
-/** 平均スコア系列の凡例・ツールチップ表示名。 */
+/** 平均スコア系列の凡例・ツールチップ表示名 */
 const AVERAGE_SCORE_CHART_LABEL = '平均スコア'
 const MEDIAN_SCORE_CHART_LABEL = '中央値スコア'
 const AVERAGE_SCORE_CHART_COLOR = '--cs-color-action-primary'
 const MEDIAN_SCORE_CHART_BORDER_DASH = [6, 4]
-/** 平均・中央値グラフに常時表示するデータ点の半径。 */
+/** 平均・中央値グラフに常時表示するデータ点の半径 */
 const AVERAGE_SCORE_CHART_POINT_RADIUS = 2
-/** 平均・中央値グラフのデータ点をホバーした際の半径。 */
+/** 平均・中央値グラフのデータ点をホバーした際の半径 */
 const AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS = 4
-/** 統計テーブルの表示カテゴリ選択肢。 */
+/** 統計テーブルの表示カテゴリ選択肢 */
 export const TABLE_VIEW_OPTIONS: SongStatsTableViewOption[] = [
   { label: '平均スコア', value: 'averageScore' },
   { label: 'スコアランク', value: 'scoreRank' },
   { label: 'FC/AJ/AJC', value: 'combo' },
   { label: 'ハードランプ', value: 'clear' },
 ]
-/** ランク別人数を表示する列とAPIレスポンスのキー。 */
+/** ランク別人数を表示する列とAPIレスポンスのキー */
 const RANK_STAT_COLUMN_DEFINITIONS = [
   { label: 'MAX', valueKey: 'max' },
   { label: 'SSS+', valueKey: 'sssp' },
@@ -134,15 +134,15 @@ const RANK_STAT_COLUMN_DEFINITIONS = [
 const HIGHLIGHTED_RATING_BAND_ROW_CLASS =
   'border-l-4 border-l-action-primary bg-action-primary-muted font-semibold'
 const NORMAL_RATING_BAND_ROW_CLASS = 'border-l-4 border-l-transparent'
-/** 統計テーブルのヘッダーセルに適用するTailwindクラス。 */
+/** 統計テーブルのヘッダーセルに適用するTailwindクラス */
 const TABLE_HEADER_CELL_CLASS =
   'sticky top-0 z-10 bg-surface-muted px-2 py-2 text-right whitespace-nowrap'
-/** 統計テーブルの左寄せヘッダーセルに適用するTailwindクラス。 */
+/** 統計テーブルの左寄せヘッダーセルに適用するTailwindクラス */
 const TABLE_LEFT_HEADER_CELL_CLASS =
   'sticky top-0 z-10 bg-surface-muted px-2 py-2 text-left whitespace-nowrap'
-/** 統計テーブルの実力帯セルに適用するTailwindクラス。 */
+/** 統計テーブルの実力帯セルに適用するTailwindクラス */
 const TABLE_RATING_BAND_CELL_CLASS = 'px-2 py-2 text-left'
-/** 統計テーブルの通常セルに適用するTailwindクラス。 */
+/** 統計テーブルの通常セルに適用するTailwindクラス */
 const TABLE_VALUE_CELL_CLASS = 'px-2 py-2 text-right tabular-nums'
 /**
  * 平均スコアを整数部のみの表示文字列へ変換する。

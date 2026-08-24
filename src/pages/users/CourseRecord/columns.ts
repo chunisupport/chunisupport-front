@@ -1,7 +1,7 @@
 import { getRecordColumnBaseDefinition } from '../utils/recordColumnDefinitions'
 import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
 
-/** コースレコード表で表示する列ID。 */
+/** コースレコード表で表示する列ID */
 export type CourseRecordColumnId =
   | 'title'
   | 'courseClass'
@@ -10,10 +10,10 @@ export type CourseRecordColumnId =
   | 'hardLamp'
   | 'updatedAt'
 
-/** コースレコード表で利用するソートキー。 */
+/** コースレコード表で利用するソートキー */
 export type CourseRecordSortKey = CourseRecordColumnId
 
-/** コースレコード表の列定義。 */
+/** コースレコード表の列定義 */
 export type CourseRecordColumnDefinition = ColumnDefinitionBase<
   CourseRecordColumnId,
   CourseRecordSortKey
@@ -48,5 +48,5 @@ const createCourseRecordColumnDefinitions = (): CourseRecordColumnDefinition[] =
   ]
 }
 
-/** コースレコード表で常に表示する列定義。 */
+/** コースレコード表で常に表示する列定義 */
 export const COURSE_RECORD_COLUMN_DEFINITIONS = createCourseRecordColumnDefinitions()

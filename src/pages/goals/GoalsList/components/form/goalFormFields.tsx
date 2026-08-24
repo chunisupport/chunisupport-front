@@ -10,7 +10,7 @@ import { getSelectableCardButtonClass } from '../../../../../components/common/S
 interface GoalFilterCheckboxProps {
   label: string
   checked: boolean
-  /** チェックボックスを操作不可にし、非対象状態として表示するか。 */
+  /** チェックボックスを操作不可にし、非対象状態として表示するか */
   disabled?: boolean
   onChange: (checked: boolean) => void
 }
@@ -24,21 +24,21 @@ interface GoalTextFieldProps {
 }
 
 interface GoalNumberFieldProps {
-  /** 入力欄の表示ラベル。 */
+  /** 入力欄の表示ラベル */
   label: string
-  /** 入力欄に表示する数値文字列。 */
+  /** 入力欄に表示する数値文字列 */
   value: string
-  /** 入力欄の補足説明。 */
+  /** 入力欄の補足説明 */
   description?: string
-  /** 入力できる最小値。 */
+  /** 入力できる最小値 */
   min?: number
-  /** 入力できる最大値。 */
+  /** 入力できる最大値 */
   max?: number
-  /** 入力値の増減単位。 */
+  /** 入力値の増減単位 */
   step?: number
-  /** 入力操作を無効化するか。 */
+  /** 入力操作を無効化するか */
   disabled?: boolean
-  /** 入力値が変更されたときの通知先。 */
+  /** 入力値が変更されたときの通知先 */
   onChange: (value: string) => void
 }
 
@@ -55,17 +55,17 @@ interface GoalSelectFieldProps<TValue extends string> {
 }
 
 interface GoalTargetModeRadioGroupProps<TValue extends string> {
-  /** ラジオグループ全体の表示ラベル。 */
+  /** ラジオグループ全体の表示ラベル */
   label: string
-  /** フォーム送信・アクセシビリティ用の名前。 */
+  /** フォーム送信・アクセシビリティ用の名前 */
   name: string
-  /** 現在選択中の値。 */
+  /** 現在選択中の値 */
   value: TValue
-  /** 選択できる目標値指定方法。 */
+  /** 選択できる目標値指定方法 */
   options: GoalSelectOption<TValue>[]
-  /** 選択値が変更されたときの通知先。 */
+  /** 選択値が変更されたときの通知先 */
   onChange: (value: TValue) => void
-  /** 選択肢カード内へ追加表示する入力欄などの内容。 */
+  /** 選択肢カード内へ追加表示する入力欄などの内容 */
   renderOptionContent?: (option: GoalSelectOption<TValue>) => JSX.Element
 }
 

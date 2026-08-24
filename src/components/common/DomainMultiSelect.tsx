@@ -6,9 +6,9 @@ type DomainMultiSelectProps<TValue extends AppMultiSelectValue> = Omit<
   MultiSelectFieldProps<TValue>,
   'label' | 'placeholder'
 > & {
-  /** 入力欄上部に表示するラベル。 */
+  /** 入力欄上部に表示するラベル */
   label?: string
-  /** 未選択時に表示するプレースホルダー。 */
+  /** 未選択時に表示するプレースホルダー */
   placeholder?: string
 }
 

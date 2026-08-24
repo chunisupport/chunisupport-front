@@ -21,7 +21,7 @@ import { SCORE_HISTORY_EMPTY_LABEL, SCORE_HISTORY_SCORE_LABEL } from './constant
 Chart.register(Legend, LineController, LineElement, LinearScale, PointElement, Tooltip)
 
 type Props = {
-  /** 表示対象のスコア履歴。 */
+  /** 表示対象のスコア履歴 */
   entries: readonly ScoreHistoryEntryDTO[]
 }
 

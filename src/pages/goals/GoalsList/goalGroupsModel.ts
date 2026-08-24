@@ -1,14 +1,14 @@
 import type { GoalDTO, GoalGroupDTO } from '../../../types/api'
 import type { GoalWithProgress } from './goalsListProgress'
 
-/** 未分類グループの表示名。 */
+/** 未分類グループの表示名 */
 export const UNGROUPED_GOALS_LABEL = '未分類'
-/** 1ユーザーが作成できる目標グループ数。 */
+/** 1ユーザーが作成できる目標グループ数 */
 export const GOAL_GROUPS_LIMIT = 20
-/** 目標グループ名の最大文字数。 */
+/** 目標グループ名の最大文字数 */
 export const GOAL_GROUP_NAME_MAX_LENGTH = 30
 
-/** 目標一覧で切り替える1グループ分の表示モデル。 */
+/** 目標一覧で切り替える1グループ分の表示モデル */
 export interface GoalGroupView {
   groupId: number | null
   name: string

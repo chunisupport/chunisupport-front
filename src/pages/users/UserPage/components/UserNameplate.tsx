@@ -31,7 +31,7 @@ type Props = {
   playerInfo: PlayerDTO
   honors: HonorDTO[]
   rating: UserRatingDTO
-  /** RATING・OVER POWER・OP%履歴ページへのリンク先。 */
+  /** RATING・OVER POWER・OP%履歴ページへのリンク先 */
   historyHref: string
 }
 

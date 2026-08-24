@@ -7,20 +7,20 @@ const CONTROL_CHARACTER_PATTERN = /\p{Cc}/u
 const EDGE_WHITESPACE_PATTERN =
   /^(?:\n|[\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000])+|(?:\n|[\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000])+$/gu
 
-/** メンテナンスコメントの検証エラー種別。 */
+/** メンテナンスコメントの検証エラー種別 */
 export type MaintenanceCommentValidationError = keyof typeof MAINTENANCE_COMMENT_ERROR_MESSAGES
 
-/** メンテナンスコメント検証時の指定。 */
+/** メンテナンスコメント検証時の指定 */
 export interface MaintenanceCommentValidationOptions {
-  /** 空白除去後の空文字をエラーにする場合は true。 */
+  /** 空白除去後の空文字をエラーにする場合は true */
   required?: boolean
 }
 
-/** 正規化済みメンテナンスコメントと検証結果。 */
+/** 正規化済みメンテナンスコメントと検証結果 */
 export interface MaintenanceCommentValidationResult {
-  /** APIへ送信できるように正規化したコメント。 */
+  /** APIへ送信できるように正規化したコメント */
   value: string
-  /** 検証に成功した場合は null、失敗した場合はエラー種別。 */
+  /** 検証に成功した場合は null、失敗した場合はエラー種別 */
   error: MaintenanceCommentValidationError | null
 }
 

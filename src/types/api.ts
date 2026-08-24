@@ -9,13 +9,13 @@ export interface ErrorResponse {
  * API ルートが返す公開メタ情報。
  */
 export interface ApiRootResponse {
-  /** API アプリケーション名。 */
+  /** API アプリケーション名 */
   app_name: string
-  /** API のビルド日時または開発環境識別子。 */
+  /** API のビルド日時または開発環境識別子 */
   build_date: string
-  /** API の短縮コミットハッシュ。管理者向けレスポンスで返される。 */
+  /** API の短縮コミットハッシュ。管理者向けレスポンスで返される */
   revision?: string
-  /** API が返すバージョン番号。未設定の環境では省略される。 */
+  /** API が返すバージョン番号。未設定の環境では省略される */
   version?: string
 }
 
@@ -23,44 +23,44 @@ export interface ApiRootResponse {
  * GET /version が返すAPIバージョン情報。
  */
 export interface ApiVersionResponse {
-  /** API アプリケーション名。 */
+  /** API アプリケーション名 */
   app_name: string
-  /** API のビルド日時または開発環境識別子。 */
+  /** API のビルド日時または開発環境識別子 */
   build_date: string
-  /** API の Git 短縮コミットハッシュ。 */
+  /** API の Git 短縮コミットハッシュ */
   commit_hash: string
-  /** API バイナリの Go バージョン。 */
+  /** API バイナリの Go バージョン */
   go_version: string
 }
 
-/** キャッシュ更新判定 API が返す更新日時レスポンス。 */
+/** キャッシュ更新判定 API が返す更新日時レスポンス */
 export interface UpdatedAtResponseDTO {
-  /** 対象データの最新更新日時。未登録の場合は null。 */
+  /** 対象データの最新更新日時。未登録の場合は null */
   updated_at: string | null
 }
 
-/** APIが返すシステムの運用状態。 */
+/** APIが返すシステムの運用状態 */
 export type SystemStatus = 'operational' | 'maintenance'
 
-/** GET /internal/system/status が返すシステム状態。 */
+/** GET /internal/system/status が返すシステム状態 */
 export interface SystemStatusDTO {
-  /** 現在の運用状態。 */
+  /** 現在の運用状態 */
   status: SystemStatus
-  /** メンテナンス中に一般利用者へ表示するコメント。通常稼働中は空文字。 */
+  /** メンテナンス中に一般利用者へ表示するコメント。通常稼働中は空文字 */
   comment: string
-  /** 状態を最後に更新した日時。 */
+  /** 状態を最後に更新した日時 */
   updated_at: string
 }
 
-/** PUT /internal/admin/maintenance に送信する状態更新内容。 */
+/** PUT /internal/admin/maintenance に送信する状態更新内容 */
 export interface UpdateMaintenanceRequest {
-  /** メンテナンスを有効にする場合は true。 */
+  /** メンテナンスを有効にする場合は true */
   enabled: boolean
-  /** 有効化時に一般利用者へ表示するコメント。無効化時は空文字。 */
+  /** 有効化時に一般利用者へ表示するコメント。無効化時は空文字 */
   comment: string
 }
 
-/** APIが返すエラーコード。 */
+/** APIが返すエラーコード */
 export type ErrorCode =
   // 汎用
   | 'bad_request'
@@ -153,7 +153,7 @@ export type ErrorCode =
   | 'service_unavailable'
   | 'maintenance_mode'
 
-/** APIエラーコードに対応する利用者向けメッセージ。 */
+/** APIエラーコードに対応する利用者向けメッセージ */
 export const errorMessages: Record<ErrorCode, string> = {
   bad_request: 'リクエスト形式が不正です',
   internal_error: 'サーバーエラーが発生しました',
@@ -263,11 +263,11 @@ export interface SongDTO {
   jacket: string | null
   maxop: number
   is_maxop_unknown: boolean
-  /** 理論値OVER POWERが最大となる譜面の難易度。譜面がない場合は null。 */
+  /** 理論値OVER POWERが最大となる譜面の難易度。譜面がない場合は null */
   op_target_difficulty: PlayerDataDifficulty | null
-  /** 新曲かどうか。 */
+  /** 新曲かどうか */
   is_new: boolean
-  /** 難易度別譜面。APIは存在しない難易度をnullで返す場合がある。 */
+  /** 難易度別譜面。APIは存在しない難易度をnullで返す場合がある */
   charts: Partial<Record<PlayerDataDifficulty, ChartDTO | null>>
 }
 
@@ -292,7 +292,7 @@ export interface SongStatsComboDTO {
   none: number
   fc: number
   aj: number
-  /** ALL JUSTICE CRITICALを達成したプレイヤー数。 */
+  /** ALL JUSTICE CRITICALを達成したプレイヤー数 */
   ajc: number
 }
 
@@ -311,7 +311,7 @@ export interface SongStatsBandDTO {
   combo: SongStatsComboDTO
   clear: SongStatsClearDTO
   average_score: number | null
-  /** レーティング帯別の中央値スコア。集計対象がない場合はnull。 */
+  /** レーティング帯別の中央値スコア。集計対象がない場合はnull */
   median_score: number | null
   player_count: number
 }
@@ -321,7 +321,7 @@ export interface SongStatsResponseDTO {
   stats: SongStatsBandDTO[]
 }
 
-/** スコア履歴の1件を表す。 */
+/** スコア履歴の1件を表す */
 export interface ScoreHistoryEntryDTO {
   score: number
   clear_lamp: PlayerRecordDTO['clear_lamp']
@@ -330,100 +330,100 @@ export interface ScoreHistoryEntryDTO {
   updated_at: string
 }
 
-/** 譜面単位のスコア履歴レスポンス。 */
+/** 譜面単位のスコア履歴レスポンス */
 export interface ScoreHistoryResponseDTO {
   entries: ScoreHistoryEntryDTO[]
 }
 
-/** フレンドランキングの対象楽曲概要。 */
+/** フレンドランキングの対象楽曲概要 */
 export interface FriendRankingSongDTO {
-  /** 楽曲表示ID。 */
+  /** 楽曲表示ID */
   id: string
-  /** 楽曲名。 */
+  /** 楽曲名 */
   title: string
-  /** アーティスト名。 */
+  /** アーティスト名 */
   artist: string
 }
 
-/** フレンドランキングの対象譜面概要。 */
+/** フレンドランキングの対象譜面概要 */
 export interface FriendRankingChartDTO {
-  /** 大文字の難易度ドメイン値。 */
+  /** 大文字の難易度ドメイン値 */
   difficulty: PlayerDataDifficulty
-  /** 譜面定数。 */
+  /** 譜面定数 */
   const: number
-  /** 譜面定数が推定値か。 */
+  /** 譜面定数が推定値か */
   is_const_unknown: boolean
 }
 
-/** フレンドランキング1行分の現在スコア。 */
+/** フレンドランキング1行分の現在スコア */
 export interface FriendRankingEntryDTO {
-  /** 同点を考慮した順位。 */
+  /** 同点を考慮した順位 */
   rank: number
-  /** ユーザー名。 */
+  /** ユーザー名 */
   username: string
-  /** プレイヤー名。 */
+  /** プレイヤー名 */
   player_name: string
-  /** 現在スコア。 */
+  /** 現在スコア */
   score: number
-  /** 単曲レーティング。 */
+  /** 単曲レーティング */
   rating: number
-  /** OVER POWER値。 */
+  /** OVER POWER値 */
   overpower: number
-  /** OVER POWER達成率。 */
+  /** OVER POWER達成率 */
   overpower_percent: number
-  /** クリアランプ。 */
+  /** クリアランプ */
   clear_lamp: PlayerRecordDTO['clear_lamp']
-  /** コンボランプ。 */
+  /** コンボランプ */
   combo_lamp: PlayerRecordDTO['combo_lamp']
-  /** フルチェインランプ。 */
+  /** フルチェインランプ */
   full_chain: PlayerRecordDTO['full_chain']
-  /** レコード更新日時。 */
+  /** レコード更新日時 */
   updated_at: string
-  /** ログインユーザー自身の行か。 */
+  /** ログインユーザー自身の行か */
   is_self: boolean
 }
 
-/** 通常譜面のフレンドランキングレスポンス。 */
+/** 通常譜面のフレンドランキングレスポンス */
 export interface FriendRankingResponseDTO {
-  /** 対象楽曲。 */
+  /** 対象楽曲 */
   song: FriendRankingSongDTO
-  /** 対象譜面。 */
+  /** 対象譜面 */
   chart: FriendRankingChartDTO
-  /** 自分とフレンドのランキング。 */
+  /** 自分とフレンドのランキング */
   ranking: FriendRankingEntryDTO[]
-  /** 自分の順位。未プレイの場合は null。 */
+  /** 自分の順位。未プレイの場合は null */
   my_rank: number | null
-  /** ランキング対象人数。 */
+  /** ランキング対象人数 */
   total: number
 }
 
-/** WORLD'S ENDのフレンドランキング1行分。 */
+/** WORLD'S ENDのフレンドランキング1行分 */
 export interface WorldsendFriendRankingEntryDTO {
-  /** 同点を考慮した順位。 */
+  /** 同点を考慮した順位 */
   rank: number
-  /** ユーザー名。 */
+  /** ユーザー名 */
   username: string
-  /** プレイヤー名。 */
+  /** プレイヤー名 */
   player_name: string
-  /** 現在スコア。 */
+  /** 現在スコア */
   score: number
-  /** クリアランプ。 */
+  /** クリアランプ */
   clear_lamp: WorldsendRecordDTO['clear_lamp']
-  /** コンボランプ。 */
+  /** コンボランプ */
   combo_lamp: WorldsendRecordDTO['combo_lamp']
-  /** フルチェインランプ。 */
+  /** フルチェインランプ */
   full_chain: WorldsendRecordDTO['full_chain']
-  /** ログインユーザー自身の行か。 */
+  /** ログインユーザー自身の行か */
   is_self: boolean
 }
 
-/** WORLD'S ENDのフレンドランキングレスポンス。 */
+/** WORLD'S ENDのフレンドランキングレスポンス */
 export interface WorldsendFriendRankingResponseDTO {
-  /** 自分とフレンドのランキング。 */
+  /** 自分とフレンドのランキング */
   ranking: WorldsendFriendRankingEntryDTO[]
-  /** 自分の順位。未プレイの場合は null。 */
+  /** 自分の順位。未プレイの場合は null */
   my_rank: number | null
-  /** ランキング対象人数。 */
+  /** ランキング対象人数 */
   total: number
 }
 
@@ -442,31 +442,31 @@ export interface RatingBandDTO {
   sort_order: number
 }
 
-/** ベスト枠ランキングに表示する楽曲概要。 */
+/** ベスト枠ランキングに表示する楽曲概要 */
 export interface BestSlotRankingSongDTO {
   id: string
   title: string
 }
 
-/** ベスト枠ランキングに表示する譜面概要。 */
+/** ベスト枠ランキングに表示する譜面概要 */
 export interface BestSlotRankingChartDTO {
   difficulty: PlayerDataDifficulty
   const: number
   is_const_unknown: boolean
 }
 
-/** ベスト枠採用率ランキングの1件。 */
+/** ベスト枠採用率ランキングの1件 */
 export interface BestSlotRankingEntryDTO {
   rank: number
   song: BestSlotRankingSongDTO
   chart: BestSlotRankingChartDTO
   best_player_count: number
   best_player_percentage: number
-  /** 選択レート帯でこの譜面をプレイした全プレイヤーの平均スコア。 */
+  /** 選択レート帯でこの譜面をプレイした全プレイヤーの平均スコア */
   average_score: number | null
 }
 
-/** ベスト枠平均レート帯別ランキングAPIのレスポンス。 */
+/** ベスト枠平均レート帯別ランキングAPIのレスポンス */
 export interface BestSlotRankingResponseDTO {
   rating_band: string
   eligible_player_count: number
@@ -561,9 +561,9 @@ export interface GoalDTO {
   achievement_type: GoalAchievementType
   achievement_params: GoalAchievementParams
   attributes: GoalAttributes
-  /** 現在値を目標までの残量として表示するか。 */
+  /** 現在値を目標までの残量として表示するか */
   invert_value: boolean
-  /** 達成率を残り割合として表示するか。 */
+  /** 達成率を残り割合として表示するか */
   invert_percentage: boolean
   sort_order: number
   created_at: string
@@ -572,7 +572,7 @@ export interface GoalDTO {
 export type GoalCreateRequest = Omit<GoalDTO, 'id' | 'sort_order' | 'created_at'>
 export type GoalUpdateRequest = Omit<GoalDTO, 'id' | 'sort_order' | 'created_at'>
 
-/** API が返す目標グループ。 */
+/** API が返す目標グループ */
 export interface GoalGroupDTO {
   id: number
   name: string
@@ -580,17 +580,17 @@ export interface GoalGroupDTO {
   created_at: string
 }
 
-/** 目標グループの作成・更新リクエスト。 */
+/** 目標グループの作成・更新リクエスト */
 export interface GoalGroupRequest {
   name: string
 }
 
 // --------------------------------
 
-/** 保存済みレコードフィルターの対象種別。 */
+/** 保存済みレコードフィルターの対象種別 */
 export type RecordFilterType = 'standard' | 'worldsend'
 
-/** API が返す保存済みレコードフィルター。 */
+/** API が返す保存済みレコードフィルター */
 export interface RecordFilterDTO<TFilter = unknown> {
   id: string
   name: string
@@ -601,20 +601,20 @@ export interface RecordFilterDTO<TFilter = unknown> {
   updated_at: string
 }
 
-/** 保存済みレコードフィルターの作成・更新リクエスト。 */
+/** 保存済みレコードフィルターの作成・更新リクエスト */
 export type RecordFilterRequest<TFilter = unknown> = Pick<
   RecordFilterDTO<TFilter>,
   'name' | 'filter_type' | 'schema_version' | 'filter'
 >
 
-/** 保存済みレコードフィルター一覧レスポンス。 */
+/** 保存済みレコードフィルター一覧レスポンス */
 export interface RecordFiltersResponse<TFilter = unknown> {
   filters: RecordFilterDTO<TFilter>[]
 }
 
 // --------------------------------
 
-/** APIが返すアカウント種別。 */
+/** APIが返すアカウント種別 */
 export type AccountType = 'PLAYER' | 'EDITOR' | 'ADMIN' | 'EXTDEV'
 
 export interface UserDTO {
@@ -624,61 +624,61 @@ export interface UserDTO {
   last_score_update: string | null
 }
 
-/** フレンド・申請一覧に表示する相手ユーザー概要。 */
+/** フレンド・申請一覧に表示する相手ユーザー概要 */
 export interface FriendshipUserDTO {
-  /** ユーザー名。プロフィール遷移に使用する公開ID。 */
+  /** ユーザー名。プロフィール遷移に使用する公開ID */
   username: string
-  /** プレイヤーレベル。プレイヤーデータ未連携の場合は null。 */
+  /** プレイヤーレベル。プレイヤーデータ未連携の場合は null */
   player_level: number | null
-  /** プレイヤー名。プレイヤーデータ未連携の場合は null。 */
+  /** プレイヤー名。プレイヤーデータ未連携の場合は null */
   player_name: string | null
-  /** 計算済みレーティング。プレイヤーデータ未連携の場合は null。 */
+  /** 計算済みレーティング。プレイヤーデータ未連携の場合は null */
   rating: number | null
-  /** 非公開アカウントかどうか。 */
+  /** 非公開アカウントかどうか */
   is_private: boolean
-  /** 申請日時。 */
+  /** 申請日時 */
   requested_at: string
-  /** 承認日時。申請中の場合は null または未返却。 */
+  /** 承認日時。申請中の場合は null または未返却 */
   accepted_at?: string | null
 }
 
-/** フレンド・申請一覧APIのレスポンス。 */
+/** フレンド・申請一覧APIのレスポンス */
 export interface FriendshipListResponse {
-  /** フレンドまたは申請ユーザー概要の一覧。 */
+  /** フレンドまたは申請ユーザー概要の一覧 */
   items: FriendshipUserDTO[]
 }
 
-/** フレンド申請APIのリクエスト。 */
+/** フレンド申請APIのリクエスト */
 export interface FriendRequestCreateRequest {
-  /** 完全一致で検索する申請先ユーザー名。 */
+  /** 完全一致で検索する申請先ユーザー名 */
   username: string
 }
 
-/** 登録直後と保存済み最新結果で共通するプレイヤーデータ更新結果。 */
+/** 登録直後と保存済み最新結果で共通するプレイヤーデータ更新結果 */
 export interface PlayerDataUpdateResult {
   player_id: number
   app_ver: string
   imported_at: string
-  /** 登録後のプレイヤープロフィール情報。 */
+  /** 登録後のプレイヤープロフィール情報 */
   profile: PlayerDataProfile
   summary: PlayerDataSummary
-  /** 登録前後のレート・OVER POWER値・OP%差分。schema version 1では未返却。 */
+  /** 登録前後のレート・OVER POWER値・OP%差分。schema version 1では未返却 */
   metric_diffs?: PlayerDataMetricDiffs
-  /** 登録前後の通常譜面およびWORLD'S END集計差分。 */
+  /** 登録前後の通常譜面およびWORLD'S END集計差分 */
   statistics: PlayerDataStatistics
   counts: PlayerDataCounts
-  /** 実際に新規追加または更新されたスコア差分。0件の場合は空配列。 */
+  /** 実際に新規追加または更新されたスコア差分。0件の場合は空配列 */
   changes: PlayerDataRecordChange[]
 }
 
-/** プレイヤーデータ登録APIが返す更新結果。 */
+/** プレイヤーデータ登録APIが返す更新結果 */
 export interface PlayerDataResult extends PlayerDataUpdateResult {
   skipped_records: SkippedRecord[]
 }
 
-/** 保存済みの最新プレイヤーデータ更新結果。 */
+/** 保存済みの最新プレイヤーデータ更新結果 */
 export interface PlayerLatestUpdateResult extends PlayerDataUpdateResult {
-  /** 保存形式のスキーマバージョン。 */
+  /** 保存形式のスキーマバージョン */
   schema_version: number
 }
 
@@ -705,32 +705,32 @@ export interface PlayerDataSummary {
 
 export type PlayerDataDifficulty = 'BASIC' | 'ADVANCED' | 'EXPERT' | 'MASTER' | 'ULTIMA'
 
-/** 更新差分の統計グループとして返る通常難易度とWORLD'S END。 */
+/** 更新差分の統計グループとして返る通常難易度とWORLD'S END */
 export type PlayerDataStatisticsDifficulty = PlayerDataDifficulty | 'WE'
 
-/** 登録前後のnullableな小数差分。 */
+/** 登録前後のnullableな小数差分 */
 export interface PlayerDataFloat64Diff {
   before: number | null
   after: number | null
   delta: number | null
 }
 
-/** レート、OVER POWER値、OP%の登録前後差分。 */
+/** レート、OVER POWER値、OP%の登録前後差分 */
 export interface PlayerDataMetricDiffs {
   rating: PlayerDataFloat64Diff
   overpower_value: PlayerDataFloat64Diff
-  /** OP%の差分。schema version 1、2では未返却。 */
+  /** OP%の差分。schema version 1、2では未返却 */
   overpower_percent?: PlayerDataFloat64Diff
 }
 
-/** 登録前後の整数差分。 */
+/** 登録前後の整数差分 */
 export interface PlayerDataNumberDiff {
   before: number
   after: number
   delta: number
 }
 
-/** 通常譜面の達成件数差分。 */
+/** 通常譜面の達成件数差分 */
 export interface PlayerDataRecordStatisticsDiff {
   aj: PlayerDataNumberDiff
   fc: PlayerDataNumberDiff
@@ -745,82 +745,82 @@ export interface PlayerDataRecordStatisticsDiff {
   s: PlayerDataNumberDiff
 }
 
-/** 全体、通常難易度、またはWORLD'S ENDの集計差分。 */
+/** 全体、通常難易度、またはWORLD'S ENDの集計差分 */
 export interface PlayerDataStatisticsGroup {
   total_high_score: PlayerDataNumberDiff
   record_statistics: PlayerDataRecordStatisticsDiff
 }
 
-/** 通常譜面全体、固定5難易度、およびWORLD'S ENDの集計差分。 */
+/** 通常譜面全体、固定5難易度、およびWORLD'S ENDの集計差分 */
 export interface PlayerDataStatistics {
   overall: PlayerDataStatisticsGroup
   by_difficulty: Record<PlayerDataStatisticsDifficulty, PlayerDataStatisticsGroup>
 }
 
 export interface PlayerDataCounts {
-  /** 通常譜面レコードの保存対象件数。 */
+  /** 通常譜面レコードの保存対象件数 */
   standard_records_upserted: number
-  /** WORLD'S END レコードの保存対象件数。 */
+  /** WORLD'S END レコードの保存対象件数 */
   worldsend_records_upserted: number
-  /** 通常譜面レコードのスキップ件数。 */
+  /** 通常譜面レコードのスキップ件数 */
   standard_records_skipped: number
-  /** WORLD'S END レコードのスキップ件数。 */
+  /** WORLD'S END レコードのスキップ件数 */
   worldsend_records_skipped: number
-  /** 称号データのスキップ件数。 */
+  /** 称号データのスキップ件数 */
   honors_skipped: number
-  /** 通常譜面レコードの実更新件数。 */
+  /** 通常譜面レコードの実更新件数 */
   standard_records_actually_changed: number
-  /** WORLD'S END レコードの実更新件数。 */
+  /** WORLD'S END レコードの実更新件数 */
   worldsend_records_actually_changed: number
-  /** コースレコードの保存対象件数。 */
+  /** コースレコードの保存対象件数 */
   course_records_upserted: number
-  /** コースレコードのスキップ件数。 */
+  /** コースレコードのスキップ件数 */
   course_records_skipped: number
-  /** コースレコードの実更新件数。 */
+  /** コースレコードの実更新件数 */
   course_records_actually_changed: number
 }
 
-/** 通常譜面・WORLD'S ENDの登録差分。 */
+/** 通常譜面・WORLD'S ENDの登録差分 */
 export interface PlayerDataSongRecordChange {
-  /** 登録差分のレコード種別。 */
+  /** 登録差分のレコード種別 */
   record_type: 'standard' | 'worldsend'
   change_type: 'new' | 'updated'
   idx: string
-  /** 通常譜面は大文字難易度名、WORLD'S ENDはWE。 */
+  /** 通常譜面は大文字難易度名、WORLD'S ENDはWE */
   diff: PlayerDataDifficulty | 'WE'
   before: PlayerDataRecordState | null
   after: PlayerDataRecordState
 }
 
-/** コースレコードの登録差分。 */
+/** コースレコードの登録差分 */
 export interface PlayerDataCourseRecordChange {
-  /** 登録差分のレコード種別。 */
+  /** 登録差分のレコード種別 */
   record_type: 'course'
   change_type: 'new' | 'updated'
-  /** コースの公式インデックス。 */
+  /** コースの公式インデックス */
   idx: string
-  /** コースクラス。 */
+  /** コースクラス */
   course_class: string
   before: PlayerDataCourseRecordState | null
   after: PlayerDataCourseRecordState
 }
 
-/** コースマスタの表示に必要な情報。 */
+/** コースマスタの表示に必要な情報 */
 export interface CourseDTO {
-  /** コースの表示用ID。 */
+  /** コースの表示用ID */
   display_id: string
-  /** コースの公式インデックス。 */
+  /** コースの公式インデックス */
   idx: string
-  /** コースタイトル。 */
+  /** コースタイトル */
   name: string
-  /** コースクラス。 */
+  /** コースクラス */
   class: string
 }
 
-/** プレイヤーデータ登録で返されるレコード差分。 */
+/** プレイヤーデータ登録で返されるレコード差分 */
 export type PlayerDataRecordChange = PlayerDataSongRecordChange | PlayerDataCourseRecordChange
 
-/** 通常譜面・WORLD'S ENDの差分状態。 */
+/** 通常譜面・WORLD'S ENDの差分状態 */
 export interface PlayerDataRecordState {
   score: number
   clear_lamp: string | null
@@ -828,7 +828,7 @@ export interface PlayerDataRecordState {
   full_chain: string | null
 }
 
-/** ハード・フルチェインを持たないコースレコードの差分状態。 */
+/** ハード・フルチェインを持たないコースレコードの差分状態 */
 export interface PlayerDataCourseRecordState {
   score: number
   is_clear: boolean
@@ -836,7 +836,7 @@ export interface PlayerDataCourseRecordState {
 }
 
 export interface SkippedRecord {
-  /** スキップされたレコード種別。 */
+  /** スキップされたレコード種別 */
   record_type: 'standard' | 'worldsend' | 'course' | 'honor'
   reason: string
   details: string
@@ -847,7 +847,7 @@ export interface UserProfileDTO {
   player: PlayerDTO | null
 }
 
-/** 管理者向けユーザー一覧APIが返すユーザー情報。 */
+/** 管理者向けユーザー一覧APIが返すユーザー情報 */
 export interface AdminUserListResponse {
   username: string
   last_sign_in_time?: string | null
@@ -862,13 +862,13 @@ export interface AdminUserListResponse {
   is_private: boolean
 }
 
-/** 管理者向けユーザー集計APIが返す件数。 */
+/** 管理者向けユーザー集計APIが返す件数 */
 export interface AdminUserStatisticsResponse {
-  /** 全ユーザー数。 */
+  /** 全ユーザー数 */
   total_users: number
-  /** プレイヤーデータが紐付けられているユーザー数。 */
+  /** プレイヤーデータが紐付けられているユーザー数 */
   users_with_player_data: number
-  /** 直近30日以内に更新されたプレイヤーデータ数。 */
+  /** 直近30日以内に更新されたプレイヤーデータ数 */
   active_player_data_last_30_days: number
 }
 
@@ -887,21 +887,21 @@ export interface UserRatingDTO {
   meta: UserRatingMetaDTO
 }
 
-/** 公式RATING・公式OVER POWER・公式OP%履歴の1件を表す。 */
+/** 公式RATING・公式OVER POWER・公式OP%履歴の1件を表す */
 export interface PlayerMetricHistoryEntryDTO {
-  /** CHUNITHM-NETから取得した公式RATING。 */
+  /** CHUNITHM-NETから取得した公式RATING */
   rating: number
-  /** CHUNITHM-NETから取得した公式OVER POWER。 */
+  /** CHUNITHM-NETから取得した公式OVER POWER */
   overpower: number
-  /** CHUNITHM-NETから取得した公式OP%。記録開始前はnull。 */
+  /** CHUNITHM-NETから取得した公式OP%。記録開始前はnull */
   overpower_percent: number | null
-  /** CHUNITHM-NETからのデータ取得完了日時。 */
+  /** CHUNITHM-NETからのデータ取得完了日時 */
   data_collected_at: string
 }
 
-/** プレイヤー単位の公式RATING・公式OVER POWER・公式OP%履歴レスポンス。 */
+/** プレイヤー単位の公式RATING・公式OVER POWER・公式OP%履歴レスポンス */
 export interface PlayerMetricHistoryResponseDTO {
-  /** 現在値を先頭に新しい順で並んだ公式指標のスナップショット。 */
+  /** 現在値を先頭に新しい順で並んだ公式指標のスナップショット */
   entries: PlayerMetricHistoryEntryDTO[]
 }
 
@@ -971,48 +971,48 @@ export interface UserRecordMetaDTO {
 }
 
 export interface UserRecordDTO {
-  /** 通常譜面のユーザーレコード。 */
+  /** 通常譜面のユーザーレコード */
   standard: PlayerRecordDTO[]
-  /** WORLD'S END のユーザーレコード。 */
+  /** WORLD'S END のユーザーレコード */
   worldsend?: WorldsendRecordDTO[]
   meta: UserRecordMetaDTO
 }
 
-/** 通常楽曲1曲分のユーザーレコードレスポンス。 */
+/** 通常楽曲1曲分のユーザーレコードレスポンス */
 export interface UserStandardSongRecordDTO {
   standard: PlayerRecordDTO[]
   meta: UserRecordMetaDTO
 }
 
-/** WORLD'S END楽曲1曲分のユーザーレコードレスポンス。 */
+/** WORLD'S END楽曲1曲分のユーザーレコードレスポンス */
 export interface UserWorldsendSongRecordDTO {
   worldsend: WorldsendRecordDTO | null
   meta: UserRecordMetaDTO
 }
 
-/** コースモード1件分のユーザーレコード。 */
+/** コースモード1件分のユーザーレコード */
 export interface CourseRecordDTO {
-  /** コースの表示用ID。 */
+  /** コースの表示用ID */
   display_id: string
-  /** コースの公式インデックス。 */
+  /** コースの公式インデックス */
   idx: string
-  /** コースタイトル。 */
+  /** コースタイトル */
   name: string
-  /** コースクラス。 */
+  /** コースクラス */
   class: string
-  /** プレイ済みか。 */
+  /** プレイ済みか */
   is_played: boolean
-  /** 3曲合計スコア。 */
+  /** 3曲合計スコア */
   score: number
-  /** コースをクリア済みか。 */
+  /** コースをクリア済みか */
   is_clear: boolean
-  /** コースのコンボランプ。 */
+  /** コースのコンボランプ */
   combo_lamp: 'FULL COMBO' | 'ALL JUSTICE' | null
-  /** レコード更新日時。 */
+  /** レコード更新日時 */
   updated_at: string | null
 }
 
-/** ユーザーのコースレコード一覧レスポンス。 */
+/** ユーザーのコースレコード一覧レスポンス */
 export interface UserCourseRecordsDTO {
   courses: CourseRecordDTO[]
   meta: UserRecordMetaDTO
@@ -1038,7 +1038,7 @@ export interface PlayerLockedSongsBatchRequest {
   delete?: PlayerLockedSongRequest[]
 }
 
-/** ユーザーがお気に入りに登録した楽曲。 */
+/** ユーザーがお気に入りに登録した楽曲 */
 export interface PlayerFavoriteSongResponseItem {
   display_id: string
   title: string
@@ -1046,12 +1046,12 @@ export interface PlayerFavoriteSongResponseItem {
   favorited_at: string
 }
 
-/** お気に入り楽曲一覧APIのレスポンス。 */
+/** お気に入り楽曲一覧APIのレスポンス */
 export interface PlayerFavoriteSongsResponse {
   items: PlayerFavoriteSongResponseItem[]
 }
 
-/** お気に入り楽曲登録APIのリクエスト。 */
+/** お気に入り楽曲登録APIのリクエスト */
 export interface PlayerFavoriteSongRequest {
   display_id: string
 }
@@ -1074,15 +1074,15 @@ export interface UserRecordResponseDTO {
   best_candidate: PlayerRecordDTO[]
   new: PlayerRecordDTO[]
   new_candidate: PlayerRecordDTO[]
-  /** 通常譜面のユーザーレコード。 */
+  /** 通常譜面のユーザーレコード */
   standard: PlayerRecordDTO[]
-  /** WORLD'S END のユーザーレコード。 */
+  /** WORLD'S END のユーザーレコード */
   worldsend?: WorldsendRecordDTO[]
 }
 
 export interface PlayerRecordDTO {
   is_played: boolean
-  /** 曲ごとの現在OVER POWER集計対象か。楽曲マスタ上の理論値対象譜面ではない。 */
+  /** 曲ごとの現在OVER POWER集計対象か。楽曲マスタ上の理論値対象譜面ではない */
   is_op_target: boolean
   updated_at: string | null
   difficulty: PlayerDataDifficulty
@@ -1095,9 +1095,9 @@ export interface PlayerRecordDTO {
   score: number
   rating: number
   overpower: number
-  /** AJ時のJUSTICE数。AJ以外または算出不能な場合はnull。 */
+  /** AJ時のJUSTICE数。AJ以外または算出不能な場合はnull */
   justice_count: number | null
-  /** OVER POWER達成率。 */
+  /** OVER POWER達成率 */
   overpower_percent: number
   img: string
   clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY' | null
@@ -1116,7 +1116,7 @@ export interface WorldsendRecordDTO {
   attribute: string | null
   notes: number | null
   score: number
-  /** AJ時のJUSTICE数。AJ以外または算出不能な場合はnull。 */
+  /** AJ時のJUSTICE数。AJ以外または算出不能な場合はnull */
   justice_count: number | null
   img: string
   clear_lamp: 'FAILED' | 'CLEAR' | 'HARD' | 'BRAVE' | 'ABSOLUTE' | 'CATASTROPHY' | null
@@ -1176,7 +1176,7 @@ export interface CreateSongRequestDTO {
   bpm: number | null
   released_at: string | null
   jacket: string | null
-  /** 新曲かどうか。省略時はfalse。 */
+  /** 新曲かどうか。省略時はfalse */
   is_new?: boolean
   charts?: CreateSongChartRequestDTO[]
 }
@@ -1190,7 +1190,7 @@ export interface UpdateSongRequestDTO {
   bpm: number | null
   released_at: string | null
   jacket: string | null
-  /** 新曲かどうか。省略またはnullの場合はfalseとして更新。 */
+  /** 新曲かどうか。省略またはnullの場合はfalseとして更新 */
   is_new?: boolean | null
   charts: Record<string, UpdateChartRequestDTO>
 }
@@ -1230,7 +1230,7 @@ export interface UpdateWorldsendSongRequestDTO {
 
 // --------------------------------
 
-/** 移行対象に含まれるセクション別データ件数。 */
+/** 移行対象に含まれるセクション別データ件数 */
 export interface DataTransferCountsResponse {
   records: number
   record_histories: number
@@ -1246,71 +1246,71 @@ export interface DataTransferCountsResponse {
   record_filters: number
 }
 
-/** 移行を確定できない理由。 */
+/** 移行を確定できない理由 */
 export type DataTransferBlocker = 'destination_not_empty' | 'unresolved_references'
 
-/** 移行ファイル検証結果。 */
+/** 移行ファイル検証結果 */
 export interface DataTransferValidationResponse {
-  /** 現在のアカウントへ移行できる場合は true。 */
+  /** 現在のアカウントへ移行できる場合は true */
   importable: boolean
-  /** 移行対象のプレイヤー名。 */
+  /** 移行対象のプレイヤー名 */
   player_name: string
-  /** 移行対象のデータ件数。 */
+  /** 移行対象のデータ件数 */
   counts: DataTransferCountsResponse
-  /** 移行を確定できない理由。 */
+  /** 移行を確定できない理由 */
   blockers: DataTransferBlocker[]
-  /** 移行先マスターで解決できない参照。 */
+  /** 移行先マスターで解決できない参照 */
   unresolved_references: string[]
-  /** 解決できない参照の総数。 */
+  /** 解決できない参照の総数 */
   unresolved_reference_count: number
 }
 
-/** ユーザーデータ移行の確定結果。 */
+/** ユーザーデータ移行の確定結果 */
 export interface DataTransferImportResponse {
-  /** 移行先で新規採番されたプレイヤーID。 */
+  /** 移行先で新規採番されたプレイヤーID */
   player_id: number
-  /** 保存されたデータ件数。 */
+  /** 保存されたデータ件数 */
   counts: DataTransferCountsResponse
 }
 
-/** エクスポートAPIから受け取ったダウンロード情報。 */
+/** エクスポートAPIから受け取ったダウンロード情報 */
 export interface DataTransferExportFile {
-  /** 署名付き移行JSON。 */
+  /** 署名付き移行JSON */
   blob: Blob
-  /** ダウンロード時に使用するファイル名。 */
+  /** ダウンロード時に使用するファイル名 */
   filename: string
 }
 
 // --------------------------------
 
-/** APIトークンの管理画面用情報。 */
+/** APIトークンの管理画面用情報 */
 export interface ApiToken {
-  /** APIトークンID。名称変更・削除時に使用する。 */
+  /** APIトークンID。名称変更・削除時に使用する */
   id: number
-  /** ユーザーが指定した表示名。 */
+  /** ユーザーが指定した表示名 */
   name: string
-  /** 表示用のトークン先頭5文字。旧仕様からの移行データは null。 */
+  /** 表示用のトークン先頭5文字。旧仕様からの移行データは null */
   token_prefix: string | null
-  /** 最終利用日時。未使用の場合は null。 */
+  /** 最終利用日時。未使用の場合は null */
   last_used_at: string | null
-  /** 発行日時。 */
+  /** 発行日時 */
   created_at: string
 }
 
-/** APIトークン発行時に一度だけ返る平文トークン付きレスポンス。 */
+/** APIトークン発行時に一度だけ返る平文トークン付きレスポンス */
 export interface ApiTokenIssueResponse extends ApiToken {
-  /** 発行された平文APIトークン。 */
+  /** 発行された平文APIトークン */
   token: string
 }
 
-/** APIトークン一覧レスポンス。 */
+/** APIトークン一覧レスポンス */
 export interface ApiTokenListResponse {
-  /** 新しい順に並んだAPIトークン一覧。 */
+  /** 新しい順に並んだAPIトークン一覧 */
   tokens: ApiToken[]
 }
 
-/** APIトークン名称変更リクエスト。 */
+/** APIトークン名称変更リクエスト */
 export interface ApiTokenRenameRequest {
-  /** 前後空白を除いて1〜50文字の新しい表示名。 */
+  /** 前後空白を除いて1〜50文字の新しい表示名 */
   name: string
 }

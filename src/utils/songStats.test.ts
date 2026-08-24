@@ -3,7 +3,7 @@ import test from 'node:test'
 import type { RatingBandDTO, SongStatsBandDTO } from '../types/api'
 import { completeSongStatsRatingBands } from './songStats'
 
-/** テスト用の楽曲統計行を生成する。 */
+/** テスト用の楽曲統計行を生成する */
 const createStatsBand = (ratingBand: string, playerCount: number): SongStatsBandDTO => ({
   rating_band: ratingBand,
   rank: { aaal: 1, s: 1, sp: 1, ss: 1, ssp: 1, sss: 1, sssp: 1, max: 1 },

@@ -8,9 +8,9 @@ import type { WorldsendSongDTO } from '../../types/api'
 
 type WorldsendSongsResponse = { songs: WorldsendSongDTO[] }
 
-/** WORLD'S END 楽曲取得時の IndexedDB キャッシュ利用方法。 */
+/** WORLD'S END 楽曲取得時の IndexedDB キャッシュ利用方法 */
 type FetchWorldsendSongsWithCacheOptions = {
-  /** IndexedDB の既存キャッシュを参照せず API から再取得するか。 */
+  /** IndexedDB の既存キャッシュを参照せず API から再取得するか */
   forceRefresh?: boolean
 }
 

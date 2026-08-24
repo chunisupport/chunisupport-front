@@ -40,20 +40,20 @@ import {
 } from './maintenanceAction'
 
 type MaintenanceConfirmation = {
-  /** 確認する状態変更操作。 */
+  /** 確認する状態変更操作 */
   action: MaintenanceAction
-  /** 確認画面に表示し、確定時に送信する正規化済みコメント。 */
+  /** 確認画面に表示し、確定時に送信する正規化済みコメント */
   comment: string
 }
 
 type MaintenanceStatusSummaryProps = {
-  /** メンテナンス中の場合はtrue。 */
+  /** メンテナンス中の場合はtrue */
   maintenance: boolean
-  /** APIが返した最終更新日時。 */
+  /** APIが返した最終更新日時 */
   updatedAt: string | null
 }
 
-/** 管理操作を解放する前に行う状態同期の進行状況。 */
+/** 管理操作を解放する前に行う状態同期の進行状況 */
 type MaintenanceStatusSyncState = 'loading' | 'ready' | 'error'
 
 const COMMENT_TEXT_AREA_CLASS =

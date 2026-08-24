@@ -3,7 +3,7 @@ import { createStore, reconcile } from 'solid-js/store'
 import { MAINTENANCE_DEFAULT_RETRY_AFTER_SECONDS } from '../constants/maintenance'
 import type { SystemStatusDTO } from '../types/api'
 
-/** アプリが表示判断に利用するAPI可用性状態。 */
+/** アプリが表示判断に利用するAPI可用性状態 */
 export type AvailabilityState =
   | {
       kind: 'checking'
@@ -36,7 +36,7 @@ type SystemStatusAppliedListener = (state: AvailabilityState) => void
 const maintenanceDetectedListeners = new Set<MaintenanceDetectedListener>()
 const systemStatusAppliedListeners = new Set<SystemStatusAppliedListener>()
 
-/** アプリ全体で共有する現在のAPI可用性状態と更新関数。 */
+/** アプリ全体で共有する現在のAPI可用性状態と更新関数 */
 export const [availability, setAvailability] = createRoot(() =>
   createStore<AvailabilityStore>({ state: { kind: 'checking' } })
 )

@@ -2,7 +2,7 @@ import type { Component } from 'solid-js'
 import { buildEmptyRatingSlotLabel } from '../UserProfileView.constants'
 
 type Props = {
-  /** 一覧内の0始まりインデックス。 */
+  /** 一覧内の0始まりインデックス */
   index: number
 }
 

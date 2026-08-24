@@ -1,15 +1,15 @@
-/** ユーザーが選択・保存できる背景テーマ。 */
+/** ユーザーが選択・保存できる背景テーマ */
 export type ThemePreference = 'light' | 'dark' | 'dark-blue' | 'black' | 'pastel-orange'
 
-/** ルート要素へ実際に適用する背景テーマ。 */
+/** ルート要素へ実際に適用する背景テーマ */
 export type AppliedTheme = ThemePreference
 
-/** 背景テーマから独立して適用する操作強調色。 */
+/** 背景テーマから独立して適用する操作強調色 */
 export type AccentPreference = 'green' | 'orange' | 'blue' | 'violet' | 'yellow' | 'red'
 
 export const THEME_STORAGE_KEY = 'chunisupport-theme'
 export const ACCENT_STORAGE_KEY = 'chunisupport-accent'
-/** アプリケーションで使用する既定のアクセントカラー。 */
+/** アプリケーションで使用する既定のアクセントカラー */
 export const DEFAULT_ACCENT: AccentPreference = 'green'
 const THEME_MEDIA_QUERY = '(prefers-color-scheme: dark)'
 

@@ -4,19 +4,19 @@ import {
 } from '../../../../components/common/AppMultiSelect'
 
 type MultiSelectFilterSectionProps<T extends string | number | null> = {
-  /** セクション見出し。 */
+  /** セクション見出し */
   title: string
-  /** 複数選択で表示する選択肢。 */
+  /** 複数選択で表示する選択肢 */
   options: T[]
-  /** 現在選択されている値。 */
+  /** 現在選択されている値 */
   selected: T[]
-  /** 未選択時に表示するプレースホルダー。 */
+  /** 未選択時に表示するプレースホルダー */
   placeholder?: string
-  /** 選択肢の値を表示用ラベルへ変換する処理。 */
+  /** 選択肢の値を表示用ラベルへ変換する処理 */
   formatLabel?: (value: T) => string
-  /** 選択状態が変更されたときの通知先。 */
+  /** 選択状態が変更されたときの通知先 */
   onChange: (selected: T[]) => void
-  /** Select のポータルコンテンツに適用する z-index クラス。 */
+  /** Select のポータルコンテンツに適用する z-index クラス */
   contentZIndexClass?: string
 }
 

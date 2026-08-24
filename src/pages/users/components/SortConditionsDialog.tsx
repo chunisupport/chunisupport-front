@@ -9,7 +9,7 @@ import FilterResetDialog from './FilterResetDialog'
 
 export type { SortCondition } from '../../../utils/sortConditions'
 
-/** 複数条件ソートで選択できる列の表示項目。 */
+/** 複数条件ソートで選択できる列の表示項目 */
 export type SortConditionColumnOption<TSortKey extends string> = {
   value: TSortKey
   label: string
@@ -33,13 +33,13 @@ type SortConditionsDialogProps<TSortKey extends string> = {
   normalizeSortConditions: (sortConditions: SortCondition<TSortKey>[]) => SortCondition<TSortKey>[]
 }
 
-/** ソート方向の選択肢。 */
+/** ソート方向の選択肢 */
 const SORT_DIRECTION_OPTIONS: SortDirectionOption[] = [
   { value: 'desc', label: '降順' },
   { value: 'asc', label: '昇順' },
 ]
 
-/** 詳細ソート行の番号バッジ表示クラス。 */
+/** 詳細ソート行の番号バッジ表示クラス */
 const SORT_CONDITION_BADGE_CLASS =
   'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-sm font-bold text-text-muted'
 const SORT_VIEW_TAB_OPTIONS = [

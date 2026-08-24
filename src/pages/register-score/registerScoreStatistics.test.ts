@@ -12,7 +12,7 @@ import {
   toRegisterScoreStatisticRows,
 } from './registerScoreStatistics'
 
-/** 差分がない数値集計。 */
+/** 差分がない数値集計 */
 const ZERO_DIFF: PlayerDataNumberDiff = { before: 10, after: 10, delta: 0 }
 
 /**

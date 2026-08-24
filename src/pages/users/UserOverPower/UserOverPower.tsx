@@ -183,12 +183,12 @@ const UserOverPower: Component<Props> = (props) => {
     summaryViewMode() === 'table' ? 'graph' : 'table'
   )
 
-  /** OVERPOWERサマリーの表示形式をテーブルとグラフの間で切り替える。 */
+  /** OVERPOWERサマリーの表示形式をテーブルとグラフの間で切り替える */
   const handleToggleSummaryViewMode = () => {
     setSummaryViewMode(nextSummaryViewMode())
   }
 
-  /** レベル別集計の低レベル帯表示を切り替える。 */
+  /** レベル別集計の低レベル帯表示を切り替える */
   const handleToggleLowLevelRows = () => {
     setLowLevelRowsExpanded((expanded) => !expanded)
   }

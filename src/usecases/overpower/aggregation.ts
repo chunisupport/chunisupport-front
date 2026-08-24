@@ -10,7 +10,7 @@ import type {
   OverPowerLockedSong,
 } from './types'
 
-/** OVER POWERで扱う難易度の表示順。 */
+/** OVER POWERで扱う難易度の表示順 */
 export const OVER_POWER_DIFFICULTIES: readonly OverPowerDifficulty[] = PLAYER_DATA_DIFFICULTIES
 
 type LockedSongLookup = {

@@ -18,7 +18,7 @@ export type {
   HardLamp,
   NumericRangeFilter,
 }
-/** 通常レコード一覧で選択できるソートキー。 */
+/** 通常レコード一覧で選択できるソートキー */
 export type RecordSortKey =
   | 'title'
   | 'difficulty'
@@ -33,7 +33,7 @@ export type RecordSortKey =
   | 'lamp'
   | 'hardLamp'
   | 'fullChain'
-/** 通常レコード一覧で表示を切り替えられる列ID。 */
+/** 通常レコード一覧で表示を切り替えられる列ID */
 export type RecordColumnId =
   | 'title'
   | 'difficulty'
@@ -49,21 +49,21 @@ export type RecordColumnId =
   | 'overpowerPercent'
   | 'updatedAt'
 
-/** レコード一覧のソート条件。 */
+/** レコード一覧のソート条件 */
 export type RecordSortCondition = SortCondition<RecordSortKey>
 
-/** OP対象譜面フィルターで選択できる対象種別。 */
+/** OP対象譜面フィルターで選択できる対象種別 */
 export type OpTargetType = 'current' | 'theoretical'
 
-/** フィルターの型定義。 */
+/** フィルターの型定義 */
 export interface FilterState {
   title: string
   difficulties: Difficulty[]
-  /** OVER POWER対象譜面だけを表示するか。 */
+  /** OVER POWER対象譜面だけを表示するか */
   opTargetOnly: boolean
-  /** OVER POWER対象譜面を現在の集計対象と理論値対象のどちらで判定するか。 */
+  /** OVER POWER対象譜面を現在の集計対象と理論値対象のどちらで判定するか */
   opTargetType: OpTargetType
-  /** お気に入り登録済みの楽曲だけを表示するか。 */
+  /** お気に入り登録済みの楽曲だけを表示するか */
   favoriteSongsOnly: boolean
   genres: string[]
   versions: string[]
@@ -77,6 +77,6 @@ export interface FilterState {
   chain_lamp: ChainLamp[]
   hard_lamp: HardLamp[]
   excludeNoPlay: boolean
-  /** 最終更新日の範囲フィルター。空文字列は未指定を意味する。 */
+  /** 最終更新日の範囲フィルター。空文字列は未指定を意味する */
   updatedAt: DateRangeFilter
 }

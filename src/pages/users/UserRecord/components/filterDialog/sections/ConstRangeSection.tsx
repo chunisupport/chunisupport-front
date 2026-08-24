@@ -9,10 +9,10 @@ import {
 import { normalizeChartConstRangeInput } from '../../../../../../utils/rangeInput'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../components/filter/styles'
 
-/** レベル範囲セクションの見出し。 */
+/** レベル範囲セクションの見出し */
 const CONST_LEVEL_RANGE_TITLE = 'レベル'
 
-/** 譜面定数範囲セクションの見出し。 */
+/** 譜面定数範囲セクションの見出し */
 const CONST_VALUE_RANGE_TITLE = '譜面定数'
 
 const CONST_LEVEL_OPTIONS = [

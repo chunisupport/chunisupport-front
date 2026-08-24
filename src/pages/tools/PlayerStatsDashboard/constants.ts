@@ -9,7 +9,7 @@ import type {
   PlayerStatsLevelAchievement,
 } from '../../../utils/playerStatsDashboard'
 
-/** ダッシュボード画面の表示文言。 */
+/** ダッシュボード画面の表示文言 */
 export const PLAYER_STATS_COPY = {
   pageTitle: 'ダッシュボード',
   documentTitle: 'ダッシュボード',
@@ -42,13 +42,13 @@ export const PLAYER_STATS_COPY = {
   heatmapCountSeparator: '/',
 } as const
 
-/** 難易度フィルター1件分の値と表示名。 */
+/** 難易度フィルター1件分の値と表示名 */
 export type PlayerStatsDifficultyOption = {
   value: PlayerStatsDifficulty
   label: string
 }
 
-/** 統計画面の難易度選択肢。 */
+/** 統計画面の難易度選択肢 */
 export const PLAYER_STATS_DIFFICULTY_OPTIONS: PlayerStatsDifficultyOption[] = [
   { value: 'ALL', label: '全難易度' },
   { value: MASTER_ULTIMA_FILTER, label: 'MASTER+ULTIMA' },
@@ -60,29 +60,29 @@ export const PLAYER_STATS_DIFFICULTY_OPTIONS: PlayerStatsDifficultyOption[] = [
   { value: 'ULTIMA', label: 'ULTIMA' },
 ]
 
-/** 統計画面で初期集計する難易度。 */
+/** 統計画面で初期集計する難易度 */
 export const PLAYER_STATS_DEFAULT_DIFFICULTY: PlayerStatsDifficulty = MASTER_ULTIMA_FILTER
 
-/** 達成状況タブの種別。 */
+/** 達成状況タブの種別 */
 export type PlayerStatsAchievementGroup = 'rank' | 'combo' | 'hard'
 
-/** 達成率分布の集計軸。 */
+/** 達成率分布の集計軸 */
 export type PlayerStatsHeatmapAxis = 'level' | 'chartConstant'
 
-/** 達成状況タブの表示選択肢。 */
+/** 達成状況タブの表示選択肢 */
 export const PLAYER_STATS_ACHIEVEMENT_GROUP_OPTIONS = [
   { value: 'rank', label: 'RANK' },
   { value: 'combo', label: 'COMBO' },
   { value: 'hard', label: 'HARD' },
 ] as const
 
-/** 達成率分布の集計軸サブタブ。 */
+/** 達成率分布の集計軸サブタブ */
 export const PLAYER_STATS_HEATMAP_AXIS_OPTIONS = [
   { value: 'level', label: 'レベル別' },
   { value: 'chartConstant', label: '譜面定数別' },
 ] as const satisfies readonly { value: PlayerStatsHeatmapAxis; label: string }[]
 
-/** 達成状況タブごとの累計到達条件。 */
+/** 達成状況タブごとの累計到達条件 */
 export const PLAYER_STATS_ACHIEVEMENTS: Record<
   PlayerStatsAchievementGroup,
   readonly PlayerStatsAchievement[]
@@ -92,7 +92,7 @@ export const PLAYER_STATS_ACHIEVEMENTS: Record<
   hard: ['played', 'clear', 'hard', 'brave', 'absolute', 'catastrophe'],
 }
 
-/** 累計到達条件の表示名。 */
+/** 累計到達条件の表示名 */
 export const PLAYER_STATS_ACHIEVEMENT_LABEL: Record<PlayerStatsAchievement, string> = {
   played: 'プレイ済み',
   s: 'S',
@@ -112,27 +112,27 @@ export const PLAYER_STATS_ACHIEVEMENT_LABEL: Record<PlayerStatsAchievement, stri
   catastrophe: 'CATASTROPHY',
 }
 
-/** 次のマイルストーンの表示選択肢。 */
+/** 次のマイルストーンの表示選択肢 */
 export const PLAYER_STATS_MILESTONE_OPTIONS = [
   { value: 'sssPlus', label: 'SSS+' },
   { value: 'aj', label: 'AJ' },
   { value: 'max', label: 'MAX' },
 ] as const satisfies readonly { value: PlayerStatsCandidateTarget; label: string }[]
 
-/** 次に狙う譜面タブの表示選択肢。 */
+/** 次に狙う譜面タブの表示選択肢 */
 export const PLAYER_STATS_CANDIDATE_OPTIONS = [
   { value: 'sssPlus', label: 'SSS+' },
   { value: 'aj', label: 'AJ' },
   { value: 'max', label: 'AJC' },
 ] as const satisfies readonly { value: PlayerStatsCandidateTarget; label: string }[]
 
-/** 候補リストに表示する最大譜面数。 */
+/** 候補リストに表示する最大譜面数 */
 export const PLAYER_STATS_CANDIDATE_LIMIT = 15
 
-/** ヒートマップ背景色へ混ぜるアクセント色の最大割合。 */
+/** ヒートマップ背景色へ混ぜるアクセント色の最大割合 */
 export const PLAYER_STATS_HEATMAP_MAX_MIX_PERCENT = 55
 
-/** 達成率分布の行定義。 */
+/** 達成率分布の行定義 */
 export const PLAYER_STATS_HEATMAP_METRICS: Record<
   PlayerStatsAchievementGroup,
   readonly { key: PlayerStatsLevelAchievement; label: string }[]

@@ -29,7 +29,7 @@ type RegisterScoreViewState =
   | { type: 'success'; result: NormalizedPlayerDataResult }
   | { type: 'error'; message: string }
 
-/** コースタイトル検索に必要なコースマスタ項目。 */
+/** コースタイトル検索に必要なコースマスタ項目 */
 type CourseLookupItem = Pick<CourseDTO, 'idx' | 'name'>
 
 /**

@@ -9,15 +9,15 @@ import type {
   SkippedRecord,
 } from '../types/api'
 
-/** 旧保存形式を正規化した、すべての項目を必ず持つメトリクス差分。 */
+/** 旧保存形式を正規化した、すべての項目を必ず持つメトリクス差分 */
 type NormalizedPlayerDataMetricDiffs = Required<PlayerDataMetricDiffs>
 
-/** 旧保存形式を正規化した、メトリクス差分を必ず持つ更新結果。 */
+/** 旧保存形式を正規化した、メトリクス差分を必ず持つ更新結果 */
 export type NormalizedPlayerDataUpdateResult = Omit<PlayerDataUpdateResult, 'metric_diffs'> & {
   metric_diffs: NormalizedPlayerDataMetricDiffs
 }
 
-/** 画面表示用に正規化した登録結果。 */
+/** 画面表示用に正規化した登録結果 */
 export type NormalizedPlayerDataResult = NormalizedPlayerDataUpdateResult & {
   skipped_records: SkippedRecord[]
 }
@@ -37,7 +37,7 @@ type RegisterScoreCommitResult = {
   result: NormalizedPlayerDataResult
 }
 
-/** 数値差分のゼロ値を生成する。 */
+/** 数値差分のゼロ値を生成する */
 const createEmptyDiff = (): PlayerDataNumberDiff => ({ before: 0, after: 0, delta: 0 })
 
 /**
@@ -58,7 +58,7 @@ const createEmptyMetricDiffs = (): NormalizedPlayerDataMetricDiffs => ({
   overpower_percent: createEmptyFloat64Diff(),
 })
 
-/** 統計グループのゼロ値を生成する。 */
+/** 統計グループのゼロ値を生成する */
 const createEmptyStatisticsGroup = (): PlayerDataStatisticsGroup => ({
   total_high_score: createEmptyDiff(),
   record_statistics: {
