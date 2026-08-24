@@ -14,7 +14,7 @@ export type WorldsendChartRow = {
   notesDesigner: string
 }
 
-/** WORLD'S END の自己スコアカードへ渡すスコアとランプ状態。 */
+/** WORLD'S END の自己スコアカードへ渡すスコアとランプ状態 */
 export type WorldsendOwnScoreItem = {
   difficulty: typeof WORLDSEND_SCORE_LABEL
   score: number | undefined

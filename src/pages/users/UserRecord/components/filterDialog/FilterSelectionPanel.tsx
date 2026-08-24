@@ -44,21 +44,21 @@ type FilterSelectionPanelProps = {
   versions?: VersionSummaryDTO[]
   defaultFilter: FilterState
   resetKey: number
-  /** 編集中のフィルター名。null の場合は編集中でない。 */
+  /** 編集中のフィルター名。null の場合は編集中でない */
   editingFilterName?: string | null
-  /** フィルター名が変更されたときのコールバック。 */
+  /** フィルター名が変更されたときのコールバック */
   onEditingFilterNameChange?: (name: string) => void
-  /** お気に入り楽曲設定を開く。 */
+  /** お気に入り楽曲設定を開く */
   onOpenFavoriteSongs?: () => void
-  /** お気に入り楽曲設定を無効化するか。 */
+  /** お気に入り楽曲設定を無効化するか */
   favoriteSongsDisabled?: boolean
 }
 
-/** フィルター名入力を API の最大文字数に丸める。 */
+/** フィルター名入力を API の最大文字数に丸める */
 const limitNameInput = (value: string): string =>
   Array.from(value).slice(0, RECORD_FILTER_NAME_MAX_LENGTH).join('')
 
-/** 通常のフィルターダイアログ上で Select の選択肢を前面に表示する z-index クラス。 */
+/** 通常のフィルターダイアログ上で Select の選択肢を前面に表示する z-index クラス */
 const FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
 
 /**
@@ -257,7 +257,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     }))
   }
 
-  /** @returns マスターデータを大文字の正規難易度へ変換した選択肢。 */
+  /** @returns マスターデータを大文字の正規難易度へ変換した選択肢 */
   const difficulties = () =>
     props.masterData?.difficulties.flatMap((difficulty) => {
       const normalized = normalizePlayerDataDifficulty(difficulty.name)

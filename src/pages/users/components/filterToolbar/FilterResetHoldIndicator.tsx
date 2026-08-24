@@ -1,77 +1,77 @@
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 
-/** フィルターボタンの1辺。リングサイズ算出の基準に使う。 */
+/** フィルターボタンの1辺。リングサイズ算出の基準に使う */
 const FILTER_BUTTON_SIZE_REM = 2.375 / 2.0
 
-/** フィルターボタンの対角線。 */
+/** フィルターボタンの対角線 */
 const FILTER_BUTTON_DIAGONAL_REM = FILTER_BUTTON_SIZE_REM * Math.SQRT2
 
-/** 内側の濃いドーナツ円の外径。 */
+/** 内側の濃いドーナツ円の外径 */
 const FILTER_RESET_INNER_RING_OUTER_SIZE_REM = FILTER_BUTTON_DIAGONAL_REM * 1.7 * 2
 
-/** 内側の濃いドーナツ円の内径。 */
+/** 内側の濃いドーナツ円の内径 */
 const FILTER_RESET_INNER_RING_INNER_SIZE_REM = FILTER_BUTTON_DIAGONAL_REM * 1.2 * 2
 
-/** 外側の進行ドーナツ円の外径。 */
+/** 外側の進行ドーナツ円の外径 */
 const FILTER_RESET_OUTER_RING_OUTER_SIZE_REM = FILTER_BUTTON_DIAGONAL_REM * 3.4 * 2
 
-/** 外側の進行ドーナツ円の内径。 */
+/** 外側の進行ドーナツ円の内径 */
 const FILTER_RESET_OUTER_RING_INNER_SIZE_REM = FILTER_BUTTON_DIAGONAL_REM * 1.9 * 2
 
-/** リセットインジケータSVGのビューボックスサイズ。 */
+/** リセットインジケータSVGのビューボックスサイズ */
 const FILTER_RESET_INDICATOR_VIEWBOX_SIZE = 100
 
-/** リセットインジケータSVGの中心座標。 */
+/** リセットインジケータSVGの中心座標 */
 const FILTER_RESET_INDICATOR_CENTER = FILTER_RESET_INDICATOR_VIEWBOX_SIZE / 2
 
-/** 外側リングの外周半径。 */
+/** 外側リングの外周半径 */
 const FILTER_RESET_OUTER_RING_OUTER_RADIUS = FILTER_RESET_INDICATOR_VIEWBOX_SIZE / 2
 
-/** 外側リングの内周半径。 */
+/** 外側リングの内周半径 */
 const FILTER_RESET_OUTER_RING_INNER_RADIUS =
   (FILTER_RESET_OUTER_RING_INNER_SIZE_REM / FILTER_RESET_OUTER_RING_OUTER_SIZE_REM) *
   FILTER_RESET_OUTER_RING_OUTER_RADIUS
 
-/** 外側リングの線幅。 */
+/** 外側リングの線幅 */
 const FILTER_RESET_OUTER_RING_STROKE_WIDTH =
   FILTER_RESET_OUTER_RING_OUTER_RADIUS - FILTER_RESET_OUTER_RING_INNER_RADIUS
 
-/** 外側リングの中心線半径。 */
+/** 外側リングの中心線半径 */
 const FILTER_RESET_OUTER_RING_RADIUS =
   FILTER_RESET_OUTER_RING_INNER_RADIUS + FILTER_RESET_OUTER_RING_STROKE_WIDTH / 2
 
-/** 外側リングの円周。 */
+/** 外側リングの円周 */
 const FILTER_RESET_OUTER_RING_CIRCUMFERENCE = 2 * Math.PI * FILTER_RESET_OUTER_RING_RADIUS
 
-/** 内側リングの外周半径。 */
+/** 内側リングの外周半径 */
 const FILTER_RESET_INNER_RING_OUTER_RADIUS =
   (FILTER_RESET_INNER_RING_OUTER_SIZE_REM / FILTER_RESET_OUTER_RING_OUTER_SIZE_REM) *
   FILTER_RESET_OUTER_RING_OUTER_RADIUS
 
-/** 内側リングの内周半径。 */
+/** 内側リングの内周半径 */
 const FILTER_RESET_INNER_RING_INNER_RADIUS =
   (FILTER_RESET_INNER_RING_INNER_SIZE_REM / FILTER_RESET_OUTER_RING_OUTER_SIZE_REM) *
   FILTER_RESET_OUTER_RING_OUTER_RADIUS
 
-/** 内側リングの線幅。 */
+/** 内側リングの線幅 */
 const FILTER_RESET_INNER_RING_STROKE_WIDTH =
   FILTER_RESET_INNER_RING_OUTER_RADIUS - FILTER_RESET_INNER_RING_INNER_RADIUS
 
-/** 内側リングの中心線半径。 */
+/** 内側リングの中心線半径 */
 const FILTER_RESET_INNER_RING_RADIUS =
   FILTER_RESET_INNER_RING_INNER_RADIUS + FILTER_RESET_INNER_RING_STROKE_WIDTH / 2
 
-/** リセット操作中に外側リングの上へ表示する文言。 */
+/** リセット操作中に外側リングの上へ表示する文言 */
 const FILTER_RESET_HOLDING_LABEL = 'フィルター・ソート リセット'
 
-/** リセット可能になった後にリング内へ表示する文言。 */
+/** リセット可能になった後にリング内へ表示する文言 */
 const FILTER_RESET_READY_LABEL = 'RELEASE'
 
 type FilterResetHoldIndicatorProps = {
-  /** 長押し進捗。0から1の範囲で扱う。 */
+  /** 長押し進捗。0から1の範囲で扱う */
   progress: number
-  /** ボタン解放でリセットできる状態か。 */
+  /** ボタン解放でリセットできる状態か */
   ready: boolean
 }
 

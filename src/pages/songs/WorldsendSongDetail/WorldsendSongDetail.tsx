@@ -84,11 +84,11 @@ const WorldsendSongDetail = () => {
     ({ username, displayId }) => fetchUserWorldsendSongRecordWithCache(username, displayId)
   )
   const ownBestAverage = createMemo(() => ownRating()?.best_average)
-  /** 表示中の楽曲に対応するログインユーザーの WORLD'S END レコードを取得する。 */
+  /** 表示中の楽曲に対応するログインユーザーの WORLD'S END レコードを取得する */
   const ownRecord = createMemo(() => ownRecords())
-  /** WORLD'S END の自己スコアカード表示項目を構築する。 */
+  /** WORLD'S END の自己スコアカード表示項目を構築する */
   const ownScoreItems = createMemo<OwnScoreItem[]>(() => [buildWorldsendOwnScoreItem(ownRecord())])
-  /** 統計表との比較に使うログインユーザーのプレイ済みスコアを取得する。 */
+  /** 統計表との比較に使うログインユーザーのプレイ済みスコアを取得する */
   const ownScore = createMemo(() =>
     authSession.status === 'authenticated' && ownRecord()?.is_played
       ? ownRecord()?.score

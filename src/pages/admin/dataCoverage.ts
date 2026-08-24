@@ -7,45 +7,45 @@ import {
   toChartLevelLabel,
 } from '../../utils/chartLevel'
 
-/** 判明件数、母数、充足率をまとめた集計値。 */
+/** 判明件数、母数、充足率をまとめた集計値 */
 export type DataCoverageCount = {
-  /** 判明している譜面数。 */
+  /** 判明している譜面数 */
   known: number
-  /** 集計対象の譜面総数。 */
+  /** 集計対象の譜面総数 */
   total: number
-  /** 0から100までの充足率。 */
+  /** 0から100までの充足率 */
   percent: number
 }
 
-/** レベル1行分の難易度別譜面定数充足状況。 */
+/** レベル1行分の難易度別譜面定数充足状況 */
 export type ChartConstantCoverageRow = {
-  /** 推定値を含む登録定数から算出した譜面レベル。 */
+  /** 推定値を含む登録定数から算出した譜面レベル */
   level: ChartLevelLabel
-  /** 難易度別の充足状況。 */
+  /** 難易度別の充足状況 */
   byDifficulty: Record<PlayerDataDifficulty, DataCoverageCount>
-  /** 行全体の充足状況。 */
+  /** 行全体の充足状況 */
   total: DataCoverageCount
 }
 
-/** 譜面定数が未判明の譜面情報。 */
+/** 譜面定数が未判明の譜面情報 */
 export type UnknownChartConstantEntry = {
-  /** 楽曲名。 */
+  /** 楽曲名 */
   songTitle: string
-  /** 譜面難易度。 */
+  /** 譜面難易度 */
   difficulty: PlayerDataDifficulty
-  /** 確定している譜面レベル。 */
+  /** 確定している譜面レベル */
   level: ChartLevelLabel
 }
 
-/** レベル10以上の譜面定数充足状況ダッシュボードに必要な集計結果。 */
+/** レベル10以上の譜面定数充足状況ダッシュボードに必要な集計結果 */
 export type ChartConstantCoverage = {
-  /** レベル10以上の全譜面の充足状況。 */
+  /** レベル10以上の全譜面の充足状況 */
   overall: DataCoverageCount
-  /** 難易度別の充足状況。 */
+  /** 難易度別の充足状況 */
   byDifficulty: Record<PlayerDataDifficulty, DataCoverageCount>
-  /** レベル別・難易度別の充足状況。 */
+  /** レベル別・難易度別の充足状況 */
   rows: ChartConstantCoverageRow[]
-  /** 譜面定数が未判明の譜面一覧。 */
+  /** 譜面定数が未判明の譜面一覧 */
   unknownCharts: UnknownChartConstantEntry[]
 }
 

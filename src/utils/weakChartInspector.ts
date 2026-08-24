@@ -4,27 +4,27 @@ import { truncateChartConst } from './chartConstFormat'
 import { compareSongsByReading } from './songTitleSorting'
 import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
 
-/** 苦手譜面インスペクターで理論値OVER POWER対象を表す選択値。 */
+/** 苦手譜面インスペクターで理論値OVER POWER対象を表す選択値 */
 export const WEAK_CHART_OP_TARGET_FILTER = THEORETICAL_OVER_POWER_TARGET_FILTER
 
-/** 苦手譜面インスペクターで選択できる通常難易度または理論値OVER POWER対象。 */
+/** 苦手譜面インスペクターで選択できる通常難易度または理論値OVER POWER対象 */
 export type WeakChartAggregationDifficulty =
   | PlayerDataDifficulty
   | typeof WEAK_CHART_OP_TARGET_FILTER
 
-/** 苦手譜面インスペクターの集計対象範囲。 */
+/** 苦手譜面インスペクターの集計対象範囲 */
 export type WeakChartAggregationRange = {
-  /** 集計対象とするスコアの最小値。 */
+  /** 集計対象とするスコアの最小値 */
   scoreMin: number
-  /** 集計対象とするスコアの最大値。 */
+  /** 集計対象とするスコアの最大値 */
   scoreMax: number
-  /** 集計対象とする譜面定数の最小値。 */
+  /** 集計対象とする譜面定数の最小値 */
   constMin: number
-  /** 集計対象とする譜面定数の最大値。 */
+  /** 集計対象とする譜面定数の最大値 */
   constMax: number
 }
 
-/** 箱ひげ図を構成する譜面定数単位の統計値。 */
+/** 箱ひげ図を構成する譜面定数単位の統計値 */
 export type ChartScoreDistribution = {
   chartConst: number
   count: number
@@ -35,17 +35,17 @@ export type ChartScoreDistribution = {
   upperWhisker: number
 }
 
-/** 外れ値と判定された譜面レコード。 */
+/** 外れ値と判定された譜面レコード */
 export type WeakChartOutlier = {
   record: PlayerRecordDTO
   direction: 'LOW' | 'HIGH'
   distance: number
 }
 
-/** 外れ値表で利用できるソートキー。 */
+/** 外れ値表で利用できるソートキー */
 export type WeakChartSortKey = 'title' | 'difficulty' | 'const' | 'score'
 
-/** 苦手譜面分析の算出結果。 */
+/** 苦手譜面分析の算出結果 */
 export type WeakChartInspection = {
   distributions: ChartScoreDistribution[]
   outliers: WeakChartOutlier[]

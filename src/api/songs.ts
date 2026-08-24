@@ -24,13 +24,13 @@ import { fetchWithAuth } from './fetchWithAuth'
 type VersionsResponse = { versions: VersionDTO[] }
 export type ScoreHistoryDifficulty = 'EXPERT' | 'MASTER' | 'ULTIMA'
 
-/** 内部向け WORLD'S END 楽曲APIのベースパス。 */
+/** 内部向け WORLD'S END 楽曲APIのベースパス */
 const INTERNAL_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/worldsend-songs`
-/** 編集者向け WORLD'S END 楽曲APIのベースパス。 */
+/** 編集者向け WORLD'S END 楽曲APIのベースパス */
 const INTERNAL_EDITOR_WORLDSEND_SONGS_PATH = `${API_BASE_URL}/internal/editor/worldsend-songs`
-/** 内部向けユーザーAPIのベースパス。 */
+/** 内部向けユーザーAPIのベースパス */
 const INTERNAL_USERS_PATH = `${API_BASE_URL}/internal/users`
-/** 内部向けフレンドランキングAPIのベースパス。 */
+/** 内部向けフレンドランキングAPIのベースパス */
 const INTERNAL_FRIEND_RANKINGS_PATH = `${API_BASE_URL}/internal/friend-rankings`
 
 let cachedVersionsResponse: VersionsResponse | undefined

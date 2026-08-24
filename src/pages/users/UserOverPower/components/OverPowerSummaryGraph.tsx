@@ -18,10 +18,10 @@ type Props = {
   rows: OverPowerGraphRow[]
 }
 
-/** OVERPOWERグラフのOTHER帯に使う、フィルター統計の未プレイと同じ背景色クラス。 */
+/** OVERPOWERグラフのOTHER帯に使う、フィルター統計の未プレイと同じ背景色クラス */
 const OVER_POWER_OTHER_BAR_CLASS = SCORE_RANK_BAR_CLASS.未プレイ
 
-/** OVERPOWERグラフのスコア帯ごとの背景色クラス。 */
+/** OVERPOWERグラフのスコア帯ごとの背景色クラス */
 const scoreBandClass: Record<OverPowerScoreBand, string> = {
   MAX: ALL_JUSTICE_CRITICAL_BG_CLASS,
   'SSS+': SCORE_RANK_BAR_CLASS['SSS+'],
@@ -33,21 +33,21 @@ const scoreBandClass: Record<OverPowerScoreBand, string> = {
   OTHER: OVER_POWER_OTHER_BAR_CLASS,
 }
 
-/** OVERPOWERグラフのコンボ帯ごとの背景色クラス。 */
+/** OVERPOWERグラフのコンボ帯ごとの背景色クラス */
 const comboBandClass: Record<OverPowerComboBand, string> = {
   'ALL JUSTICE': COMBO_LAMP_BAR_CLASS['ALL JUSTICE'],
   'FULL COMBO': COMBO_LAMP_BAR_CLASS['FULL COMBO'],
   OTHER: OVER_POWER_OTHER_BAR_CLASS,
 }
 
-/** OVERPOWER値をグラフ表示用の固定小数点文字列に整形する。 */
+/** OVERPOWER値をグラフ表示用の固定小数点文字列に整形する */
 const formatValue = formatOverPowerValue
 
-/** 達成率をグラフ表示用の固定小数点文字列に整形する。 */
+/** 達成率をグラフ表示用の固定小数点文字列に整形する */
 const formatPercent = (value: number): string =>
   formatOverPowerPercent(value, OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES)
 
-/** 分布バーの横幅として使う割合を算出する。 */
+/** 分布バーの横幅として使う割合を算出する */
 const calcBandPercent = (count: number, total: number): number =>
   total > 0 ? (count / total) * 100 : 0
 
@@ -101,7 +101,7 @@ const DistributionBar: Component<{
   )
 }
 
-/** OVERPOWERサマリーをランク・コンボ分布付きのカードグラフとして描画する。 */
+/** OVERPOWERサマリーをランク・コンボ分布付きのカードグラフとして描画する */
 export const OverPowerSummaryGraph: Component<Props> = (props) => (
   <section class="space-y-4">
     <Show

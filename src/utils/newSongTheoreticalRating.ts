@@ -12,50 +12,50 @@ import { calculateSingleRatingHundredths, MAX_RATING_SCORE } from './singleRatin
 const RATING_SCALE = 100
 const PLAYER_RATING_SCALE = 10_000
 
-/** 枠理論値の集計中に使用する、表示用譜面情報と整数化した単曲レーティング。 */
+/** 枠理論値の集計中に使用する、表示用譜面情報と整数化した単曲レーティング */
 type TheoreticalChartRating = RatingTheoreticalEntry & {
-  /** 浮動小数点誤差を避けて並べ替え・合計するための100倍単曲レーティング。 */
+  /** 浮動小数点誤差を避けて並べ替え・合計するための100倍単曲レーティング */
   ratingHundredths: number
 }
 
-/** レーティング枠の理論値へ採用された譜面。 */
+/** レーティング枠の理論値へ採用された譜面 */
 export type RatingTheoreticalEntry = {
-  /** 楽曲詳細への遷移に使う楽曲ID。 */
+  /** 楽曲詳細への遷移に使う楽曲ID */
   songId: string
-  /** 楽曲名。 */
+  /** 楽曲名 */
   title: string
-  /** アーティスト名。 */
+  /** アーティスト名 */
   artist: string
-  /** 譜面難易度。 */
+  /** 譜面難易度 */
   difficulty: PlayerDataDifficulty
-  /** 譜面定数。 */
+  /** 譜面定数 */
   chartConstant: number
-  /** 譜面定数が推定値か。 */
+  /** 譜面定数が推定値か */
   isChartConstantUnknown: boolean
-  /** 理論スコア時の単曲レーティング。 */
+  /** 理論スコア時の単曲レーティング */
   rating: number
 }
 
-/** レーティング枠の理論値計算結果。 */
+/** レーティング枠の理論値計算結果 */
 export type RatingTheoretical = {
-  /** 規定枠数までの採用譜面数で平均したレーティング理論値。 */
+  /** 規定枠数までの採用譜面数で平均したレーティング理論値 */
   rating: number
-  /** 採用譜面に推定譜面定数が含まれるか。 */
+  /** 採用譜面に推定譜面定数が含まれるか */
   hasUnknownChartConstants: boolean
-  /** 理論値へ採用された単曲レーティング降順の譜面一覧。 */
+  /** 理論値へ採用された単曲レーティング降順の譜面一覧 */
   entries: RatingTheoreticalEntry[]
 }
 
-/** 理論値対象譜面に対応する現在レコードの所属。 */
+/** 理論値対象譜面に対応する現在レコードの所属 */
 export type RatingTheoreticalProgressSlot = 'current' | 'candidate'
 
-/** SSS+対象譜面の現在スコアとSSS+ボーダーとの差。 */
+/** SSS+対象譜面の現在スコアとSSS+ボーダーとの差 */
 export type RatingTheoreticalProgress = {
-  /** 現在スコアを取得した枠。レコードがなければnull。 */
+  /** 現在スコアを取得した枠。レコードがなければnull */
   slot: RatingTheoreticalProgressSlot | null
-  /** 現在スコア。レコードがなければnull。 */
+  /** 現在スコア。レコードがなければnull */
   currentScore: number | null
-  /** 現在スコアからSSS+ボーダーを引いた不足差。到達済みまたはレコードなしならnull。 */
+  /** 現在スコアからSSS+ボーダーを引いた不足差。到達済みまたはレコードなしならnull */
   scoreGap: number | null
 }
 

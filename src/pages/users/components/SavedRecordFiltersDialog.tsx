@@ -46,13 +46,13 @@ type SavedRecordFiltersDialogProps<TFilter> = {
   createFilter: (name: string, filter: TFilter) => Promise<void>
   updateFilter: (id: string, name: string, filter: TFilter) => Promise<void>
   deleteFilter: (id: string) => Promise<void>
-  /** 編集中フィルターの状態が変化したときに呼ばれる。null の場合は編集中でないことを示す。 */
+  /** 編集中フィルターの状態が変化したときに呼ばれる。null の場合は編集中でないことを示す */
   onEditingChange?: (editing: EditingFilter | null) => void
-  /** フィルターダイアログ本体で編集中のフィルター名。保存時に内部名よりも優先される。 */
+  /** フィルターダイアログ本体で編集中のフィルター名。保存時に内部名よりも優先される */
   editedFilterName?: string
 }
 
-/** 編集中の保存済みフィルター情報。 */
+/** 編集中の保存済みフィルター情報 */
 export type EditingFilter = {
   id: string
   name: string

@@ -14,7 +14,7 @@ import {
   resolveRegisterScoreSongTitle,
 } from './registerScoreResolvers'
 
-/** テスト用の通常楽曲マスタを生成する。 */
+/** テスト用の通常楽曲マスタを生成する */
 const createStandardSong = (): SongDTO => ({
   id: 'song-id',
   title: '通常楽曲',
@@ -32,7 +32,7 @@ const createStandardSong = (): SongDTO => ({
   charts: { MASTER: { const: 15.4, is_const_unknown: false, notes: null } },
 })
 
-/** テスト用のWORLD'S END楽曲マスタを生成する。 */
+/** テスト用のWORLD'S END楽曲マスタを生成する */
 const createWorldsendSong = (): WorldsendSongDTO => ({
   id: 'worldsend-id',
   title: "WORLD'S END楽曲",

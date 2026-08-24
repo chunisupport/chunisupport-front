@@ -27,7 +27,7 @@ type FetchMeOptions = {
   redirectOnUnauthorized?: boolean
 }
 
-/** ユーザー更新日時の進行中リクエスト。ユーザー名ごとに同時呼び出しを共有する。 */
+/** ユーザー更新日時の進行中リクエスト。ユーザー名ごとに同時呼び出しを共有する */
 const userUpdatedAtResponsePromises = new Map<string, Promise<UpdatedAtResponseDTO>>()
 
 export const fetchUserProfileSummary = async (username: string): Promise<UserProfileDTO> => {

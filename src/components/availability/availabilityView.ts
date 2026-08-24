@@ -5,7 +5,7 @@ import type { AccountType } from '../../types/api'
 import { isMaintenanceStaff } from '../../utils/maintenanceRole'
 import { normalizeRoutePathname } from '../../utils/routePathname'
 
-/** アプリ可用性ゲートが表示する画面種別。 */
+/** アプリ可用性ゲートが表示する画面種別 */
 export type AvailabilityView = 'application' | 'loading' | 'maintenance' | 'unavailable'
 
 type ResolveAvailabilityViewOptions = {

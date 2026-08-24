@@ -1,4 +1,4 @@
-/** 称号管理画面で使用する表示文言。 */
+/** 称号管理画面で使用する表示文言 */
 export const ADMIN_HONORS_COPY = {
   pageTitle: '称号管理',
   pageDescription: '称号、クラス、image_url を一覧で確認します。',
@@ -22,7 +22,7 @@ export const ADMIN_HONORS_COPY = {
   emptyState: '登録されている称号がありません。',
 } as const
 
-/** 称号フォームの入力上限。 */
+/** 称号フォームの入力上限 */
 export const HONOR_INPUT_LIMITS = {
   name: 500,
   imageUrl: 255,

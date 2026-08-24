@@ -5,20 +5,20 @@ import {
 import type { SongDTO } from '../../../types/api'
 import { hasSameFilterValues } from '../utils/filterValue'
 
-/** 楽曲選択ダイアログで共通利用するジャンル・バージョンフィルター。 */
+/** 楽曲選択ダイアログで共通利用するジャンル・バージョンフィルター */
 export type SongSelectionFilter = {
   genres: string[]
   versions: string[]
 }
 
-/** 楽曲選択フィルターダイアログ内の Select を前面へ表示するクラス。 */
+/** 楽曲選択フィルターダイアログ内の Select を前面へ表示するクラス */
 export const SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-80'
 
-/** 楽曲選択ツールバーボタンの選択状態へ適用するクラス。 */
+/** 楽曲選択ツールバーボタンの選択状態へ適用するクラス */
 export const SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS =
   'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
 
-/** 楽曲選択ツールバーボタンの未選択状態へ適用するクラス。 */
+/** 楽曲選択ツールバーボタンの未選択状態へ適用するクラス */
 export const SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS =
   'border-border-strong bg-surface text-text-muted hover:bg-surface-hover'
 

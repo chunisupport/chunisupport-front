@@ -8,9 +8,9 @@ import type { SongDTO } from '../../types/api'
 
 type AllSongsResponse = { songs: SongDTO[] }
 
-/** 通常楽曲取得時の IndexedDB キャッシュ利用方法。 */
+/** 通常楽曲取得時の IndexedDB キャッシュ利用方法 */
 type FetchAllSongsWithCacheOptions = {
-  /** IndexedDB の既存キャッシュを参照せず API から再取得するか。 */
+  /** IndexedDB の既存キャッシュを参照せず API から再取得するか */
   forceRefresh?: boolean
 }
 

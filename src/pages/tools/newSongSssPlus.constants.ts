@@ -1,4 +1,4 @@
-/** ベスト枠・新曲枠理論値チェッカーで使用する文言。 */
+/** ベスト枠・新曲枠理論値チェッカーで使用する文言 */
 export const NEW_SONG_SSS_PLUS_COPY = {
   title: 'ベスト枠・新曲枠理論値チェッカー',
   description: '全譜面SSS+時の理論値と、全レコードから対象譜面の現在スコアを確認できます。',
@@ -20,7 +20,7 @@ export const NEW_SONG_SSS_PLUS_COPY = {
   recordUnavailable: 'スコアなし',
 } as const
 
-/** 理論値チェッカーの表示枠タブ。 */
+/** 理論値チェッカーの表示枠タブ */
 export const RATING_THEORETICAL_TAB_OPTIONS = [
   { value: 'best', label: 'ベスト枠' },
   { value: 'new', label: '新曲枠' },

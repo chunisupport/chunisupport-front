@@ -11,22 +11,22 @@ import { isApiTokenNameError, isValidApiTokenName, normalizeApiTokenName } from 
 import { formatSettingsDateTime } from './settingsDateTime'
 
 type ApiTokenSettingsSectionProps = {
-  /** APIトークン一覧の取得を開始する認証済みユーザー名。 */
+  /** APIトークン一覧の取得を開始する認証済みユーザー名 */
   username: string
 }
 
 type ApiTokenNameFieldProps = {
-  /** 入力欄のラベル。 */
+  /** 入力欄のラベル */
   label: string
-  /** 入力中のAPIトークン名。 */
+  /** 入力中のAPIトークン名 */
   value: string
-  /** 未入力時の表示文言。 */
+  /** 未入力時の表示文言 */
   placeholder?: string
-  /** 入力を無効化するか。 */
+  /** 入力を無効化するか */
   disabled: boolean
-  /** 入力値に紐づくエラーメッセージ。 */
+  /** 入力値に紐づくエラーメッセージ */
   error: string
-  /** 入力値の変更通知先。 */
+  /** 入力値の変更通知先 */
   onChange: (value: string) => void
 }
 

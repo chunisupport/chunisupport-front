@@ -1,4 +1,4 @@
-/** ISO 8601形式の先頭から年月日を取得する正規表現。 */
+/** ISO 8601形式の先頭から年月日を取得する正規表現 */
 const YMD_PATTERN = /^(\d{4})-(\d{2})-(\d{2})/
 
 /**
@@ -54,7 +54,7 @@ export const hasValidUpdatedAtTimestamp = (timestamp: number): boolean => {
   return timestamp !== Number.NEGATIVE_INFINITY
 }
 
-/** 更新日ソートに必要なプレイ状態とタイムスタンプ。 */
+/** 更新日ソートに必要なプレイ状態とタイムスタンプ */
 export type UpdatedAtSortable = {
   isPlayed: boolean
   updatedAtTimestamp: number

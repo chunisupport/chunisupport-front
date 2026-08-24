@@ -9,15 +9,15 @@ import {
   type RatingTheoretical,
 } from '../utils/newSongTheoreticalRating'
 
-/** CHUNITHMの現行日付判定に使うIANAタイムゾーン。 */
+/** CHUNITHMの現行日付判定に使うIANAタイムゾーン */
 const CHUNITHM_TIME_ZONE = 'Asia/Tokyo'
-/** YYYY-MM-DD形式で日付を得るためのロケール。 */
+/** YYYY-MM-DD形式で日付を得るためのロケール */
 const DATE_ONLY_LOCALE = 'sv-SE'
-/** CHUNITHM稼働地域の現在日を生成するフォーマッター。 */
+/** CHUNITHM稼働地域の現在日を生成するフォーマッター */
 const CHUNITHM_DATE_FORMATTER = new Intl.DateTimeFormat(DATE_ONLY_LOCALE, {
   timeZone: CHUNITHM_TIME_ZONE,
 })
-/** 表示中のJST日付を更新する間隔。 */
+/** 表示中のJST日付を更新する間隔 */
 const CURRENT_DATE_REFRESH_INTERVAL_MS = 60_000
 
 /**
@@ -27,19 +27,19 @@ const CURRENT_DATE_REFRESH_INTERVAL_MS = 60_000
  */
 const getCurrentChunithmDate = (): string => CHUNITHM_DATE_FORMATTER.format(new Date())
 
-/** ベスト枠・新曲枠理論値の取得状態。 */
+/** ベスト枠・新曲枠理論値の取得状態 */
 export type RatingTheoreticalState = {
-  /** ベスト枠理論値の計算結果。 */
+  /** ベスト枠理論値の計算結果 */
   bestTheoreticalRating: Accessor<RatingTheoretical | undefined>
-  /** 新曲枠理論値の計算結果。 */
+  /** 新曲枠理論値の計算結果 */
   newTheoreticalRating: Accessor<RatingTheoretical | undefined>
-  /** ベスト枠に必要な楽曲データを取得中か。 */
+  /** ベスト枠に必要な楽曲データを取得中か */
   isBestLoading: Accessor<boolean>
-  /** 新曲枠に必要な楽曲・バージョンデータを取得中か。 */
+  /** 新曲枠に必要な楽曲・バージョンデータを取得中か */
   isNewLoading: Accessor<boolean>
-  /** ベスト枠に必要な楽曲データの取得エラー。 */
+  /** ベスト枠に必要な楽曲データの取得エラー */
   bestError: Accessor<unknown>
-  /** 新曲枠に必要な楽曲・バージョンデータの取得エラー。 */
+  /** 新曲枠に必要な楽曲・バージョンデータの取得エラー */
   newError: Accessor<unknown>
 }
 

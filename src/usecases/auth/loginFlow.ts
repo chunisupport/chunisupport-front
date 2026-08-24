@@ -16,13 +16,13 @@ type ErrorLike = {
 
 export type MaintenanceLoginDestination =
   | {
-      /** ログインを許可し、遷移できる状態。 */
+      /** ログインを許可し、遷移できる状態 */
       kind: 'allowed'
-      /** スタッフログイン後の遷移先。 */
+      /** スタッフログイン後の遷移先 */
       path: string
     }
   | {
-      /** スタッフ以外のためログインを拒否する状態。 */
+      /** スタッフ以外のためログインを拒否する状態 */
       kind: 'forbidden'
     }
 

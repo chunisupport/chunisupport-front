@@ -13,7 +13,7 @@ import {
 } from './sorting'
 
 type Props = {
-  /** 表示対象のコースレコード。 */
+  /** 表示対象のコースレコード */
   records: CourseRecordDTO[]
 }
 

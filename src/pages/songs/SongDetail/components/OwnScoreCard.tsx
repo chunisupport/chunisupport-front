@@ -24,7 +24,7 @@ import {
   UNPLAYED_SCORE_LABEL,
 } from '../scoreHistory.constants'
 
-/** 楽曲詳細で表示する難易度別の自己スコアとランプ状態。 */
+/** 楽曲詳細で表示する難易度別の自己スコアとランプ状態 */
 export type OwnScoreItem = {
   difficulty: PlayerDataDifficulty | typeof WORLDSEND_SCORE_LABEL
   score?: number
@@ -34,16 +34,16 @@ export type OwnScoreItem = {
   supportsHistory: boolean
 }
 
-/** プレイ済み自己スコアカードの共通レイアウトクラス。 */
+/** プレイ済み自己スコアカードの共通レイアウトクラス */
 const OWN_SCORE_CARD_CLASS =
   'flex min-h-24 items-center gap-3 rounded-lg border border-border bg-surface p-4'
-/** 自己スコア数値の共通フォント・レイアウトクラス。 */
+/** 自己スコア数値の共通フォント・レイアウトクラス */
 const OWN_SCORE_VALUE_CLASS = 'font-jost text-xl font-semibold tabular-nums'
-/** 自己スコアとランプを縦並びにする共通レイアウトクラス。 */
+/** 自己スコアとランプを縦並びにする共通レイアウトクラス */
 const OWN_SCORE_VALUE_STACK_CLASS = 'ml-auto flex flex-col items-end gap-1'
-/** 自己スコアカード内のランプ表示領域クラス。 */
+/** 自己スコアカード内のランプ表示領域クラス */
 const OWN_SCORE_LAMPS_CLASS = 'flex gap-2'
-/** 未プレイ自己スコアカードの共通レイアウトクラス。 */
+/** 未プレイ自己スコアカードの共通レイアウトクラス */
 const UNPLAYED_OWN_SCORE_CARD_CLASS =
   'flex min-h-24 items-center gap-3 rounded-lg border border-border bg-surface p-4'
 

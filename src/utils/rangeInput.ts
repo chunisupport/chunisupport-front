@@ -9,13 +9,13 @@ const DECIMAL_RANGE_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
 const INTEGER_RANGE_INPUT_PATTERN = /^\d*$/
 
 export type OptionalRangeInputOptions = {
-  /** 許可する最小値。 */
+  /** 許可する最小値 */
   min: number
-  /** 許可する最大値。 */
+  /** 許可する最大値 */
   max: number
-  /** 整数のみ許可するか。 */
+  /** 整数のみ許可するか */
   integer?: boolean
-  /** 正規化後に揃える小数点以下桁数。 */
+  /** 正規化後に揃える小数点以下桁数 */
   decimalPlaces?: number
 }
 

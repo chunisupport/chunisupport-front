@@ -14,10 +14,10 @@ type FilterResetDialogProps = {
   title?: string
 }
 
-/** リセット確認ダイアログで共通表示する補足文の先頭。 */
+/** リセット確認ダイアログで共通表示する補足文の先頭 */
 const RESET_DIALOG_DESCRIPTION_PREFIX = 'Tips: フィルターボタン'
 
-/** リセット確認ダイアログで共通表示する補足文の末尾。 */
+/** リセット確認ダイアログで共通表示する補足文の末尾 */
 const RESET_DIALOG_DESCRIPTION_SUFFIX = 'を長押しすると、フィルター・ソートをリセットできます。'
 
 /**

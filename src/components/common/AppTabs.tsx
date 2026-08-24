@@ -5,49 +5,49 @@ import { For } from 'solid-js'
 import { NotificationDot } from './NotificationDot'
 
 export type AppTabOption<TValue extends string> = {
-  /** タブの値。 */
+  /** タブの値 */
   value: TValue
-  /** タブに表示するラベル。 */
+  /** タブに表示するラベル */
   label: JSX.Element
-  /** タブを無効化するか。 */
+  /** タブを無効化するか */
   disabled?: boolean
-  /** タブ右上に通知ドットを表示するか。 */
+  /** タブ右上に通知ドットを表示するか */
   hasNotificationDot?: boolean
 }
 
 type AppTabsBaseProps<TValue extends string> = {
-  /** 表示するタブ選択肢。 */
+  /** 表示するタブ選択肢 */
   options: readonly AppTabOption<TValue>[]
-  /** 現在選択中のタブ値。 */
+  /** 現在選択中のタブ値 */
   value?: TValue
-  /** 非制御時の初期タブ値。 */
+  /** 非制御時の初期タブ値 */
   defaultValue?: TValue
-  /** タブ変更時の通知先。 */
+  /** タブ変更時の通知先 */
   onChange?: (value: TValue) => void
-  /** タブの内容。 */
+  /** タブの内容 */
   children?: JSX.Element
-  /** Tabs.Root に追加で適用する Tailwind クラス。 */
+  /** Tabs.Root に追加で適用する Tailwind クラス */
   class?: string
-  /** Tabs.List に追加で適用する Tailwind クラス。 */
+  /** Tabs.List に追加で適用する Tailwind クラス */
   listClass?: string
-  /** Tabs.List を包む要素に適用する Tailwind クラス。 */
+  /** Tabs.List を包む要素に適用する Tailwind クラス */
   listWrapperClass?: string
-  /** Tabs.List と同じ行に追加表示する内容。 */
+  /** Tabs.List と同じ行に追加表示する内容 */
   listAside?: JSX.Element
-  /** Tabs.Trigger に追加で適用する Tailwind クラス。 */
+  /** Tabs.Trigger に追加で適用する Tailwind クラス */
   triggerClass?: string
-  /** Tabs.List の末尾に追加表示する内容。 */
+  /** Tabs.List の末尾に追加表示する内容 */
   listAfter?: JSX.Element
 }
 
 type AppTabContentProps<TValue extends string> = {
-  /** 対応するタブ値。 */
+  /** 対応するタブ値 */
   value: TValue
-  /** 非選択時もDOMへ残すか。 */
+  /** 非選択時もDOMへ残すか */
   forceMount?: boolean
-  /** Tabs.Content に追加で適用する Tailwind クラス。 */
+  /** Tabs.Content に追加で適用する Tailwind クラス */
   class?: string
-  /** タブ内容。 */
+  /** タブ内容 */
   children?: JSX.Element
 }
 
@@ -55,22 +55,22 @@ type AppTabsListProps<TValue extends string> = Pick<
   AppTabsBaseProps<TValue>,
   'options' | 'listClass' | 'listWrapperClass' | 'listAside' | 'triggerClass' | 'listAfter'
 > & {
-  /** Tabs.List の既定クラス。 */
+  /** Tabs.List の既定クラス */
   defaultListClass: string
-  /** Tabs.Trigger の既定クラス。 */
+  /** Tabs.Trigger の既定クラス */
   defaultTriggerClass: string
 }
 
 type AppSegmentedToggleGroupProps<TValue extends string> = {
-  /** 表示する単一選択の選択肢。 */
+  /** 表示する単一選択の選択肢 */
   options: readonly AppTabOption<TValue>[]
-  /** 現在選択中の値。 */
+  /** 現在選択中の値 */
   value: TValue
-  /** 選択変更時の通知先。 */
+  /** 選択変更時の通知先 */
   onChange: (value: TValue) => void
-  /** ToggleGroupへ追加で適用するTailwindクラス。 */
+  /** ToggleGroupへ追加で適用するTailwindクラス */
   class?: string
-  /** ToggleGroup.Itemへ追加で適用するTailwindクラス。 */
+  /** ToggleGroup.Itemへ追加で適用するTailwindクラス */
   itemClass?: string
 }
 

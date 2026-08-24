@@ -1,7 +1,7 @@
 import type { PlayerDataDifficulty } from '../../../types/api'
 import { difficultyBadgeClass, difficultyShort } from '../../../utils/difficultyUtils'
 
-/** 難易度など短いドメイン値をレコード表で固定幅表示する共通バッジ寸法。 */
+/** 難易度など短いドメイン値をレコード表で固定幅表示する共通バッジ寸法 */
 export const RECORD_COMPACT_BADGE_CLASS =
   'inline-flex h-6 w-7 shrink-0 items-center justify-center rounded-lg px-1 font-oswald text-sm font-bold leading-none'
 

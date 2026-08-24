@@ -3,17 +3,17 @@ import { RangeControlRow } from '../../../../components/common/RangeInput'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from './styles'
 
 type DateRangeSectionProps = {
-  /** 下限の現在の入力値 (YYYY-MM-DD)。 */
+  /** 下限の現在の入力値 (YYYY-MM-DD) */
   minValue: string
-  /** 上限の現在の入力値 (YYYY-MM-DD)。 */
+  /** 上限の現在の入力値 (YYYY-MM-DD) */
   maxValue: string
-  /** 下限の入力中値の変更通知。 */
+  /** 下限の入力中値の変更通知 */
   onMinInput: (value: string) => void
-  /** 上限の入力中値の変更通知。 */
+  /** 上限の入力中値の変更通知 */
   onMaxInput: (value: string) => void
-  /** 下限の確定値を通知する処理。 */
+  /** 下限の確定値を通知する処理 */
   onMinCommit: (value: string) => void
-  /** 上限の確定値を通知する処理。 */
+  /** 上限の確定値を通知する処理 */
   onMaxCommit: (value: string) => void
 }
 

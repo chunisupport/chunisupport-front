@@ -7,7 +7,7 @@ import {
 } from '../../stores/availability'
 import type { SystemStatusDTO } from '../../types/api'
 
-/** 状態確認処理の結果。 */
+/** 状態確認処理の結果 */
 export type AvailabilityRefreshResult =
   | {
       type: 'success'
@@ -41,7 +41,7 @@ const fetchDefaultSystemStatus: FetchSystemStatus = async (signal) => {
   return fetchSystemStatus(signal)
 }
 
-/** 状態確認時に上書きできるメンテナンス再確認間隔。 */
+/** 状態確認時に上書きできるメンテナンス再確認間隔 */
 export type RefreshAvailabilityOptions = {
   retryAfterSeconds?: number
 }

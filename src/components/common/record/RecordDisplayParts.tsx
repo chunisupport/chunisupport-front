@@ -42,32 +42,32 @@ type RecordTitleCellProps = {
   title: string
 }
 
-/** レコード行とカードのホバー色変化に使う共通トランジション。 */
+/** レコード行とカードのホバー色変化に使う共通トランジション */
 export const RECORD_HOVER_TRANSITION_CLASS = 'transition-colors'
-/** レコード行の通常時とホバー時の背景色クラス。 */
+/** レコード行の通常時とホバー時の背景色クラス */
 export const RECORD_ROW_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} bg-surface hover:bg-interactive-row-hover`
-/** 直前行との区切り線を上辺に表示するレコード行クラス。 */
+/** 直前行との区切り線を上辺に表示するレコード行クラス */
 export const RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS = `${RECORD_ROW_HOVER_CLASS} border-t border-border`
-/** レコードカードのホバー背景色クラス。 */
+/** レコードカードのホバー背景色クラス */
 export const RECORD_CARD_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} group-hover:bg-interactive-row-hover`
-/** 仮想スクロールで使うレコード1行の高さ。 */
+/** 仮想スクロールで使うレコード1行の高さ */
 export const RECORD_ROW_HEIGHT = 34
 const RECORD_ROW_MIN_HEIGHT_CLASS_BY_HEIGHT = {
   [RECORD_ROW_HEIGHT]: 'min-h-[34px]',
 } as const satisfies Record<typeof RECORD_ROW_HEIGHT, `min-h-[${typeof RECORD_ROW_HEIGHT}px]`>
-/** レコード1行分の最小高さを揃えるクラス。 */
+/** レコード1行分の最小高さを揃えるクラス */
 export const RECORD_ROW_MIN_HEIGHT_CLASS = RECORD_ROW_MIN_HEIGHT_CLASS_BY_HEIGHT[RECORD_ROW_HEIGHT]
-/** レコード表ヘッダーボタンの共通レイアウトクラス。 */
+/** レコード表ヘッダーボタンの共通レイアウトクラス */
 export const RECORD_HEADER_BUTTON_CLASS = RECORD_ROW_MIN_HEIGHT_CLASS
-/** 数値や英数字中心のレコード列に使う文字サイズクラス。 */
+/** 数値や英数字中心のレコード列に使う文字サイズクラス */
 export const RECORD_ALPHANUMERIC_COLUMN_CLASS = 'text-sm'
-/** レコード表セルの中央寄せレイアウトに使う基礎クラス。 */
+/** レコード表セルの中央寄せレイアウトに使う基礎クラス */
 export const RECORD_CELL_BASE_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items-center justify-center whitespace-nowrap`
-/** レコード表セルの中央寄せテキストに使う共通クラス。 */
+/** レコード表セルの中央寄せテキストに使う共通クラス */
 export const RECORD_CELL_CENTER_TEXT_CLASS = `${RECORD_CELL_BASE_CLASS} text-center ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`
-/** レコードのランプ列に使うフォントと文字サイズの共通クラス。 */
+/** レコードのランプ列に使うフォントと文字サイズの共通クラス */
 export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
-/** レコードのランプバッジに共通する固定幅と文字配置のクラス。 */
+/** レコードのランプバッジに共通する固定幅と文字配置のクラス */
 const RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS =
   'inline-flex w-[34px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
 const HARD_LAMP_BADGE_CLASS = RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS
@@ -200,9 +200,9 @@ export const RecordTitleCell = (props: RecordTitleCellProps) => {
  * @returns スコアセル。未プレイ時は空セル。
  */
 export const RecordScoreCell = (props: {
-  /** 表示するプレイ状態とスコア。 */
+  /** 表示するプレイ状態とスコア */
   record: ScoreRecord
-  /** 通常スコア以外の尺度で使うランク判定関数。 */
+  /** 通常スコア以外の尺度で使うランク判定関数 */
   getRank?: (score: number) => ScoreRank
 }): JSX.Element => {
   if (!props.record.is_played) {

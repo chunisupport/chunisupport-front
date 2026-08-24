@@ -1,11 +1,11 @@
 const CHART_CONSTANT_SCALE = 10
 const RATING_SCALE = 100
 
-/** 単曲レーティングの計算対象となる最低スコア。 */
+/** 単曲レーティングの計算対象となる最低スコア */
 export const MIN_RATING_SCORE = 0
-/** 単曲レーティングが理論値となる最大スコア。 */
+/** 単曲レーティングが理論値となる最大スコア */
 export const MAX_RATING_SCORE = 1_010_000
-/** 理論スコア時に譜面定数へ加算される単曲レーティング。 */
+/** 理論スコア時に譜面定数へ加算される単曲レーティング */
 export const THEORETICAL_RATING_BONUS_HUNDREDTHS = 215
 
 /**

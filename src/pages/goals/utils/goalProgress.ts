@@ -30,7 +30,7 @@ export interface GoalProgressResult {
 }
 
 interface FilterRecordsByAttributesOptions {
-  /** OP対象指定時に、対象曲の全譜面レコードを残すか。OVER POWER集計で曲内最大値を取るために使う。 */
+  /** OP対象指定時に、対象曲の全譜面レコードを残すか。OVER POWER集計で曲内最大値を取るために使う */
   includeAllChartsForOpTarget?: boolean
 }
 

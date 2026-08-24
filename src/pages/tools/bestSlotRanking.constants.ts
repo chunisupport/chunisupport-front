@@ -1,4 +1,4 @@
-/** ベスト枠ランキング画面の表示文言。 */
+/** ベスト枠ランキング画面の表示文言 */
 export const BEST_SLOT_RANKING_COPY = {
   title: 'ベスト枠ランキング',
   description: 'レート帯ごとのベスト枠採用率が高い譜面をランキングで確認できます。',
@@ -15,5 +15,5 @@ export const BEST_SLOT_RANKING_COPY = {
   loadMore: 'さらに表示',
 } as const
 
-/** 採用率表示で切り捨て・固定表示する小数点以下桁数。 */
+/** 採用率表示で切り捨て・固定表示する小数点以下桁数 */
 export const BEST_SLOT_PERCENTAGE_DECIMAL_PLACES = 2

@@ -48,7 +48,7 @@ const createRecord = (
   ...overrides,
 })
 
-/** 集計対象範囲を制限しないテスト用設定。 */
+/** 集計対象範囲を制限しないテスト用設定 */
 const FULL_AGGREGATION_RANGE = {
   scoreMin: 0,
   scoreMax: 1010000,

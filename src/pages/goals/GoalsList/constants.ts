@@ -93,7 +93,7 @@ export const GOALS_LIMIT_REACHED_MESSAGE = `目標は${GOALS_LIMIT}件まで作�
  */
 export const EMPTY_GOALS_MESSAGE = `目標がありません。「${ADD_GOAL_LABEL}」から作成してください。`
 
-/** 目標グループ機能で画面表示する固定文言。 */
+/** 目標グループ機能で画面表示する固定文言 */
 export const GOAL_GROUP_COPY = {
   fieldLabel: 'グループ',
   manageButtonLabel: '目標グループを管理',
@@ -117,10 +117,10 @@ export const GOAL_GROUP_COPY = {
   reorderError: 'グループの並び替えに失敗しました。',
 } as const
 
-/** 目標グループ一覧で選択できる表示モード。 */
+/** 目標グループ一覧で選択できる表示モード */
 export type GoalGroupDisplayMode = 'horizontal' | 'all'
 
-/** 目標グループ表示モード切り替えで使う固定文言。 */
+/** 目標グループ表示モード切り替えで使う固定文言 */
 export const GOAL_GROUP_DISPLAY_MODE_COPY = {
   label: '目標グループの表示形式',
   horizontal: '横切り替え',

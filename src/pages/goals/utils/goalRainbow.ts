@@ -12,7 +12,7 @@ import { resolveGoalDynamicTarget } from './goalCountTarget'
 import type { GoalProgressResult } from './goalProgress'
 import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
 
-/** 虹枠判定で必須となる通常難易度。 */
+/** 虹枠判定で必須となる通常難易度 */
 export const RAINBOW_REQUIRED_DIFFICULTIES = [
   'BASIC',
   'ADVANCED',

@@ -64,44 +64,44 @@ type FriendshipPageData = {
 type FriendshipOperation = 'request' | 'accept' | 'reject' | 'cancel' | 'remove'
 
 type ApiErrorLike = {
-  /** APIエラーコード。 */
+  /** APIエラーコード */
   code?: unknown
 }
 
 type PendingConfirmAction = {
-  /** 確認後に実行する操作種別。 */
+  /** 確認後に実行する操作種別 */
   type: 'reject' | 'remove'
-  /** 操作対象ユーザー。 */
+  /** 操作対象ユーザー */
   user: FriendshipUserDTO
 }
 
 type FriendshipListProps = {
-  /** 一覧の表示種別。 */
+  /** 一覧の表示種別 */
   variant: FriendsTabValue
-  /** 表示するユーザー概要の一覧。 */
+  /** 表示するユーザー概要の一覧 */
   items: FriendshipUserDTO[]
-  /** 空状態で表示する文言。 */
+  /** 空状態で表示する文言 */
   emptyMessage: string
-  /** 一覧内の操作を無効化するか。 */
+  /** 一覧内の操作を無効化するか */
   actionsDisabled: boolean
-  /** 申請承認時の処理。 */
+  /** 申請承認時の処理 */
   onAccept: (user: FriendshipUserDTO) => void
-  /** 申請拒否時の処理。 */
+  /** 申請拒否時の処理 */
   onReject: (user: FriendshipUserDTO) => void
-  /** フレンド解除時の処理。 */
+  /** フレンド解除時の処理 */
   onRemove: (user: FriendshipUserDTO) => void
-  /** 送信済み申請取り消し時の処理。 */
+  /** 送信済み申請取り消し時の処理 */
   onCancel: (user: FriendshipUserDTO) => void
 }
 
 type FriendConfirmDialogProps = {
-  /** 確認ダイアログを表示する操作。 */
+  /** 確認ダイアログを表示する操作 */
   action: PendingConfirmAction | null
-  /** API 操作中かどうか。 */
+  /** API 操作中かどうか */
   busy: boolean
-  /** ダイアログ開閉変更時の通知先。 */
+  /** ダイアログ開閉変更時の通知先 */
   onOpenChange: (open: boolean) => void
-  /** 確認ボタン押下時の処理。 */
+  /** 確認ボタン押下時の処理 */
   onConfirm: () => void
 }
 

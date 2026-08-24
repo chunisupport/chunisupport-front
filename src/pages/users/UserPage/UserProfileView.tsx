@@ -101,7 +101,7 @@ const RecordList: Component<{
   candidateHeading: string
   candidateTargetRating?: number
   showJackets: boolean
-  /** レーティング対象として表示する規定枠数。 */
+  /** レーティング対象として表示する規定枠数 */
   slotCount: number
 }> = (props) => {
   /**

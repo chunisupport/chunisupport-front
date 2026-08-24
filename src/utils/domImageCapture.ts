@@ -1,23 +1,23 @@
-/** DOM画像化時にCanvasの一辺へ許容する最大CSSピクセル数。 */
+/** DOM画像化時にCanvasの一辺へ許容する最大CSSピクセル数 */
 const DEFAULT_IMAGE_CAPTURE_MAX_CSS_SIDE = 8_000
-/** ダウンロード開始後にObject URLを解放するまでの待機時間。 */
+/** ダウンロード開始後にObject URLを解放するまでの待機時間 */
 const IMAGE_OBJECT_URL_REVOKE_DELAY_MS = 1_000
 
 type ImageCaptureOptions = {
-  /** ラスター画像へ出力するときのデバイスピクセル比。 */
+  /** ラスター画像へ出力するときのデバイスピクセル比 */
   pixelRatio: number
-  /** 出力するラスター画像形式。 */
+  /** 出力するラスター画像形式 */
   format: 'png' | 'jpeg'
-  /** JPEG出力時の圧縮品質。 */
+  /** JPEG出力時の圧縮品質 */
   quality?: number
-  /** 画像化用DOMの一辺へ許容する最大CSSピクセル数。 */
+  /** 画像化用DOMの一辺へ許容する最大CSSピクセル数 */
   maxCssSide?: number
 }
 
 type ImageCaptureTarget = {
-  /** SnapDOMへ渡す、画面表示用transformを持たない要素。 */
+  /** SnapDOMへ渡す、画面表示用transformを持たない要素 */
   element: HTMLDivElement
-  /** 画像化用に追加した一時DOMを破棄する処理。 */
+  /** 画像化用に追加した一時DOMを破棄する処理 */
   dispose: () => void
 }
 

@@ -16,7 +16,7 @@ export type FilterStatsComboLamp =
   | '未プレイ'
 export type FilterStatsClearLamp = NonNullable<SharedClearLamp> | '未プレイ'
 
-/** レコードのスコアランク表示で使う文字色クラス。 */
+/** レコードのスコアランク表示で使う文字色クラス */
 export const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
   'SSS+': 'text-score-rank-sssp-text',
   SSS: 'text-score-rank-sss-text',
@@ -34,15 +34,15 @@ export const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
   D: 'text-score-rank-d-text',
 }
 
-/** ALL JUSTICE CRITICAL表示で共通利用するグラデーション背景クラス。 */
+/** ALL JUSTICE CRITICAL表示で共通利用するグラデーション背景クラス */
 export const ALL_JUSTICE_CRITICAL_BG_CLASS =
   '[background-image:var(--cs-gradient-lamp-all-justice-critical-bg)]'
 
-/** プラス付きスコアランクを同系色の通常ランクと区別する斜線背景クラス。 */
+/** プラス付きスコアランクを同系色の通常ランクと区別する斜線背景クラス */
 export const SCORE_RANK_PLUS_BAR_BACKGROUND_CLASS =
   '[background-image:var(--cs-gradient-score-rank-plus-bg)]'
 
-/** レコードのスコアランク文字色に合わせたフィルター統計グラフ用背景色クラス。 */
+/** レコードのスコアランク文字色に合わせたフィルター統計グラフ用背景色クラス */
 export const SCORE_RANK_BAR_CLASS: Record<FilterStatsRank, string> = {
   MAX: ALL_JUSTICE_CRITICAL_BG_CLASS,
   'SSS+': 'bg-score-rank-sssp-bg',
@@ -55,32 +55,32 @@ export const SCORE_RANK_BAR_CLASS: Record<FilterStatsRank, string> = {
   未プレイ: 'bg-surface-hover',
 }
 
-/** レコードのコンボランプバッジで使う背景色クラス。 */
+/** レコードのコンボランプバッジで使う背景色クラス */
 export const COMBO_LAMP_BADGE_BACKGROUND_CLASS: Record<NonNullable<SharedComboLamp>, string> = {
   'FULL COMBO': 'bg-lamp-full-combo-bg',
   'ALL JUSTICE': 'bg-lamp-all-justice-bg',
 }
 
-/** レコードのコンボランプ背景色を文字色として使うクラス。 */
+/** レコードのコンボランプ背景色を文字色として使うクラス */
 export const COMBO_LAMP_ACCENT_TEXT_CLASS: Record<NonNullable<SharedComboLamp>, string> = {
   'FULL COMBO': 'text-lamp-full-combo-bg',
   'ALL JUSTICE': 'text-lamp-all-justice-bg',
 }
 
-/** レコードのスコアへ重ねるコンボランプ別アクセントバーの背景クラス。 */
+/** レコードのスコアへ重ねるコンボランプ別アクセントバーの背景クラス */
 export const COMBO_LAMP_SCORE_ACCENT_CLASS: Record<NonNullable<SharedComboLamp>, string> = {
   'FULL COMBO':
     'bg-gradient-to-b from-transparent to-lamp-full-combo-bg [-webkit-mask-image:repeating-linear-gradient(90deg,black_0_6px,transparent_6px_10px)] [mask-image:repeating-linear-gradient(90deg,black_0_6px,transparent_6px_10px)]',
   'ALL JUSTICE': 'bg-gradient-to-b from-transparent to-lamp-all-justice-bg',
 }
 
-/** レコードのコンボランプバッジで使う文字色クラス。 */
+/** レコードのコンボランプバッジで使う文字色クラス */
 export const COMBO_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedComboLamp>, string> = {
   'FULL COMBO': 'text-lamp-full-combo-text',
   'ALL JUSTICE': 'text-lamp-all-justice-text',
 }
 
-/** ALL JUSTICE CRITICALバッジで使う背景と文字色のクラス。 */
+/** ALL JUSTICE CRITICALバッジで使う背景と文字色のクラス */
 export const ALL_JUSTICE_CRITICAL_BADGE_CLASS = `${ALL_JUSTICE_CRITICAL_BG_CLASS} text-lamp-all-justice-critical-text`
 
 /**
@@ -98,7 +98,7 @@ export const getComboLampBadgeClass = (
   return `${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`
 }
 
-/** レコードのハードランプバッジで使う背景色クラス。 */
+/** レコードのハードランプバッジで使う背景色クラス */
 export const HARD_LAMP_BADGE_BACKGROUND_CLASS: Record<NonNullable<SharedClearLamp>, string> = {
   CLEAR: 'bg-lamp-clear-bg',
   HARD: 'bg-lamp-hard-bg',
@@ -108,7 +108,7 @@ export const HARD_LAMP_BADGE_BACKGROUND_CLASS: Record<NonNullable<SharedClearLam
   FAILED: 'bg-lamp-failed-bg',
 }
 
-/** レコードのハードランプバッジで使う文字色クラス。 */
+/** レコードのハードランプバッジで使う文字色クラス */
 export const HARD_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedClearLamp>, string> = {
   CLEAR: 'text-lamp-clear-text',
   HARD: 'text-lamp-hard-text',
@@ -118,7 +118,7 @@ export const HARD_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedClearLamp>, st
   FAILED: 'text-lamp-failed-text',
 }
 
-/** レコードのコンボランプバッジ色に合わせたフィルター統計グラフ用背景色クラス。 */
+/** レコードのコンボランプバッジ色に合わせたフィルター統計グラフ用背景色クラス */
 export const COMBO_LAMP_BAR_CLASS: Record<FilterStatsComboLamp, string> = {
   'ALL JUSTICE CRITICAL': ALL_JUSTICE_CRITICAL_BG_CLASS,
   'ALL JUSTICE': COMBO_LAMP_BADGE_BACKGROUND_CLASS['ALL JUSTICE'],
@@ -127,7 +127,7 @@ export const COMBO_LAMP_BAR_CLASS: Record<FilterStatsComboLamp, string> = {
   未プレイ: 'bg-surface-hover',
 }
 
-/** レコードのハードランプバッジ色に合わせたフィルター統計グラフ用背景色クラス。 */
+/** レコードのハードランプバッジ色に合わせたフィルター統計グラフ用背景色クラス */
 export const HARD_LAMP_BAR_CLASS: Record<FilterStatsClearLamp, string> = {
   CATASTROPHY: HARD_LAMP_BADGE_BACKGROUND_CLASS.CATASTROPHY,
   ABSOLUTE: HARD_LAMP_BADGE_BACKGROUND_CLASS.ABSOLUTE,

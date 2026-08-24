@@ -19,17 +19,17 @@ const DEFAULT_OVERSCAN = 12
 const getDefaultScrollElement = () => document.getElementById('app-main') as HTMLDivElement | null
 
 type WindowVirtualTableParams<TScrollElement extends HTMLElement> = {
-  /** 表示対象の行数。 */
+  /** 表示対象の行数 */
   rowCount: Accessor<number>
-  /** 1行あたりの見積もり高さ。 */
+  /** 1行あたりの見積もり高さ */
   rowHeight: number
-  /** 仮想化範囲の前後に追加描画する行数。 */
+  /** 仮想化範囲の前後に追加描画する行数 */
   overscan?: number
-  /** 行数変更時に先頭へスクロールするか。 */
+  /** 行数変更時に先頭へスクロールするか */
   resetOnRowCountChange?: boolean
-  /** レイアウトだけを再計算したい依存値。 */
+  /** レイアウトだけを再計算したい依存値 */
   layoutDeps?: Accessor<unknown>
-  /** スクロール要素の取得処理。未指定時はapp-mainを使う。 */
+  /** スクロール要素の取得処理。未指定時はapp-mainを使う */
   getScrollElement?: () => TScrollElement | null
 }
 

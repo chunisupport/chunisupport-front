@@ -55,20 +55,20 @@ const createSongsStore = () => {
     }
   )
 
-  /** 通常楽曲が未要求の場合に初回ロードを開始する。 */
+  /** 通常楽曲が未要求の場合に初回ロードを開始する */
   const ensureSongsLoaded = (): void => {
     setSongsRequested(true)
   }
 
-  /** WORLD'S END 楽曲が未要求の場合に初回ロードを開始する。 */
+  /** WORLD'S END 楽曲が未要求の場合に初回ロードを開始する */
   const ensureWorldsendSongsLoaded = (): void => {
     setWorldsendSongsRequested(true)
   }
 
-  /** @returns 通常楽曲の初回要求前または取得中の場合は true。 */
+  /** @returns 通常楽曲の初回要求前または取得中の場合は true */
   const isSongsLoading = (): boolean => !songsRequested() || songsResponse.loading
 
-  /** @returns WORLD'S END 楽曲の初回要求前または取得中の場合は true。 */
+  /** @returns WORLD'S END 楽曲の初回要求前または取得中の場合は true */
   const isWorldsendSongsLoading = (): boolean =>
     !worldsendSongsRequested() || worldsendSongsResponse.loading
 

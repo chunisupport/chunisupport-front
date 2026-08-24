@@ -14,27 +14,27 @@ const HEADER_BUTTON_BASE_CLASS =
   'flex w-full items-center text-center whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset'
 
 type SortIndicatorProps = {
-  /** 現在の列がソート対象かどうか。 */
+  /** 現在の列がソート対象かどうか */
   active: boolean
-  /** 現在のソート方向。 */
+  /** 現在のソート方向 */
   direction: SortDirection
 }
 
 export type SortableHeaderButtonProps = SortIndicatorProps & {
-  /** ヘッダーに表示するラベル。 */
+  /** ヘッダーに表示するラベル */
   label: string
-  /** ヘッダー内容の配置。 */
+  /** ヘッダー内容の配置 */
   align?: HeaderAlign
-  /** ボタンへ追加するクラス。 */
+  /** ボタンへ追加するクラス */
   class?: string
-  /** ヘッダークリック時の処理。 */
+  /** ヘッダークリック時の処理 */
   onClick: () => void
 }
 
 export type SortableTableHeaderCellProps = Omit<SortableHeaderButtonProps, 'class'> & {
-  /** th要素へ追加するクラス。 */
+  /** th要素へ追加するクラス */
   thClass?: string
-  /** ヘッダーボタンへ追加するクラス。 */
+  /** ヘッダーボタンへ追加するクラス */
   buttonClass?: string
 }
 

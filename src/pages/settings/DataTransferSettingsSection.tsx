@@ -21,14 +21,14 @@ import {
 } from './DataTransferSettings.constants'
 
 type DataTransferSettingsSectionProps = {
-  /** 現在のアカウントがプレイヤーデータを保持しているか。 */
+  /** 現在のアカウントがプレイヤーデータを保持しているか */
   hasUserData: boolean
-  /** インポート後に設定画面のユーザー情報を再取得する処理。 */
+  /** インポート後に設定画面のユーザー情報を再取得する処理 */
   onImported: () => Promise<void>
 }
 
 type DataTransferCountsProps = {
-  /** セクション別の移行対象件数。 */
+  /** セクション別の移行対象件数 */
   counts: DataTransferCountsResponse
 }
 

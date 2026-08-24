@@ -1,11 +1,11 @@
-/** レーティング枠画像の固定論理幅。 */
+/** レーティング枠画像の固定論理幅 */
 export const RATING_IMAGE_WIDTH_PX = 1_024
-/** レーティング枠画像を原寸で出力するピクセル比。 */
+/** レーティング枠画像を原寸で出力するピクセル比 */
 export const RATING_IMAGE_PIXEL_RATIO = 1
-/** レーティング枠JPEG画像の圧縮品質。 */
+/** レーティング枠JPEG画像の圧縮品質 */
 export const RATING_IMAGE_JPEG_QUALITY = 0.9
 
-/** レーティング枠画像化プレビューで使用する文言。 */
+/** レーティング枠画像化プレビューで使用する文言 */
 export const RATING_IMAGE_COPY = {
   openPreview: '画像化',
   dialogTitle: '画像化プレビュー',

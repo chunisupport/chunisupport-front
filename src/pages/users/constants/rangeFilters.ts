@@ -5,7 +5,7 @@ import {
   OVER_POWER_MIN,
 } from '../../../constants/chart'
 
-/** 範囲フィルターの入力欄設定。 */
+/** 範囲フィルターの入力欄設定 */
 export type NumericRangeFilterConfig = {
   idPrefix: string
   title: string
@@ -19,7 +19,7 @@ export type NumericRangeFilterConfig = {
   pattern: string
 }
 
-/** JUSTICE数フィルターの入力欄設定。 */
+/** JUSTICE数フィルターの入力欄設定 */
 export const JUSTICE_COUNT_RANGE_FILTER: NumericRangeFilterConfig = {
   idPrefix: 'justice-count',
   title: 'JUSTICE数',
@@ -33,7 +33,7 @@ export const JUSTICE_COUNT_RANGE_FILTER: NumericRangeFilterConfig = {
   pattern: '[0-9]*',
 }
 
-/** OVER POWERフィルターの入力欄設定。 */
+/** OVER POWERフィルターの入力欄設定 */
 export const OVER_POWER_RANGE_FILTER: NumericRangeFilterConfig = {
   idPrefix: 'over-power',
   title: 'OVER POWER',

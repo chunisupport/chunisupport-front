@@ -53,7 +53,7 @@ interface GoalFormSelectionFallbacks {
   allDifficultySelections: string[]
   allGenreSelections: string[]
   allVersionSelections: string[]
-  /** 作成フォームで初期選択する難易度ID。 */
+  /** 作成フォームで初期選択する難易度ID */
   defaultDifficultySelections: string[]
 }
 

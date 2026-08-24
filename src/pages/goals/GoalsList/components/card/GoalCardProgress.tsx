@@ -4,23 +4,23 @@ import type { GoalAchievementType } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { resolveGoalCardDisplayProgress } from './goalCardProgressModel'
 
-/** 目標カードの進捗表示に必要なプロパティ。 */
+/** 目標カードの進捗表示に必要なプロパティ */
 interface GoalCardProgressProps {
-  /** 進捗ゲージのアクセシブル名に使う目標タイトル。 */
+  /** 進捗ゲージのアクセシブル名に使う目標タイトル */
   title: string
-  /** 数値の表示形式を決める目標種別。 */
+  /** 数値の表示形式を決める目標種別 */
   achievementType: GoalAchievementType
-  /** 現在値を達成までの残量として表示するか。 */
+  /** 現在値を達成までの残量として表示するか */
   invertValue: boolean
-  /** 達成率を達成までの残り割合として表示するか。 */
+  /** 達成率を達成までの残り割合として表示するか */
   invertPercentage: boolean
-  /** 現在値、目標値、達成率を含む進捗情報。 */
+  /** 現在値、目標値、達成率を含む進捗情報 */
   progress: GoalProgressResult
-  /** 現在値、目標値、達成率の数値表示を含めるか。 */
+  /** 現在値、目標値、達成率の数値表示を含めるか */
   showValues?: boolean
 }
 
-/** 折りたたみ時の割合表示に必要なプロパティ。 */
+/** 折りたたみ時の割合表示に必要なプロパティ */
 type GoalCardProgressPercentageProps = Pick<
   GoalCardProgressProps,
   'achievementType' | 'invertValue' | 'invertPercentage' | 'progress'

@@ -1,12 +1,12 @@
 import type { PlayerMetricHistoryEntryDTO } from '../types/api'
 
-/** 公式指標履歴の並び順。 */
+/** 公式指標履歴の並び順 */
 export type PlayerMetricHistorySortOrder = 'ascending' | 'descending'
 
-/** 公式指標履歴でグラフ化する値。 */
+/** 公式指標履歴でグラフ化する値 */
 export type PlayerMetricHistoryMetric = 'rating' | 'overpower' | 'overpower_percent'
 
-/** Chart.jsへ渡す公式指標履歴の座標。 */
+/** Chart.jsへ渡す公式指標履歴の座標 */
 export type PlayerMetricHistoryChartPoint = { x: number; y: number | null }
 
 const PLAYER_METRIC_HISTORY_NOT_FOUND_CODE = 'player_metric_history_not_found'
@@ -28,7 +28,7 @@ const playerMetricHistoryAxisDateFormatter = new Intl.DateTimeFormat('ja-JP', {
   timeZone: PLAYER_METRIC_HISTORY_TIME_ZONE,
 })
 
-/** APIエラーコードを参照できる最小限の構造。 */
+/** APIエラーコードを参照できる最小限の構造 */
 type ApiErrorLike = {
   code?: string
 }

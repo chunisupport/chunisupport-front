@@ -53,22 +53,22 @@ interface GoalFormDialogProps {
   open: boolean
   mode: 'create' | 'edit'
   initialGoal?: GoalDTO
-  /** 新規作成時に初期選択するグループID。 */
+  /** 新規作成時に初期選択するグループID */
   initialGroupId: number | null
-  /** 所属先として選択できる目標グループ。 */
+  /** 所属先として選択できる目標グループ */
   groups: GoalGroupDTO[]
   masterData: MasterDataDTO
   versions: VersionDTO[]
   isSaving: boolean
-  /** 保存APIから返されたエラーメッセージ。 */
+  /** 保存APIから返されたエラーメッセージ */
   apiErrorMessage: string
   onOpenChange: (open: boolean) => void
   onSave: (payload: GoalRequest) => Promise<void>
-  /** 対象条件と目標種別に応じた譜面数または楽曲数を解決する関数。 */
+  /** 対象条件と目標種別に応じた譜面数または楽曲数を解決する関数 */
   resolveAllCount: (attributes: GoalAttributes, achievementType?: GoalAchievementType) => number
-  /** 対象条件に一致する譜面ごとの最大OVER POWER合計を解決する関数。 */
+  /** 対象条件に一致する譜面ごとの最大OVER POWER合計を解決する関数 */
   resolveOverPowerChartMax: (attributes: GoalAttributes) => number
-  /** フォーム入力中の目標内容から実レコードに基づく進捗を解決する関数。 */
+  /** フォーム入力中の目標内容から実レコードに基づく進捗を解決する関数 */
   resolveDraftGoalProgress: (goal: GoalCreateRequest) => GoalProgressResult
 }
 

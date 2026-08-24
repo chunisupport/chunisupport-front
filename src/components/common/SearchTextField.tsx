@@ -8,25 +8,25 @@ import {
 } from './searchTextFieldStyles'
 
 type SearchTextFieldProps = {
-  /** 入力欄の id。 */
+  /** 入力欄の id */
   id?: string
-  /** 表示ラベル。 */
+  /** 表示ラベル */
   label?: string
-  /** 表示ラベルがない場合に使うスクリーンリーダー向けラベル。 */
+  /** 表示ラベルがない場合に使うスクリーンリーダー向けラベル */
   ariaLabel: string
-  /** 現在の検索文字列。 */
+  /** 現在の検索文字列 */
   value: string
-  /** 未入力時に表示する文言。 */
+  /** 未入力時に表示する文言 */
   placeholder: string
-  /** 検索文字列が入力済みの状態として強調するか。 */
+  /** 検索文字列が入力済みの状態として強調するか */
   active?: boolean
-  /** ルートへ追加で適用する Tailwind クラス。 */
+  /** ルートへ追加で適用する Tailwind クラス */
   class?: string
-  /** 外枠へ追加で適用する Tailwind クラス。 */
+  /** 外枠へ追加で適用する Tailwind クラス */
   frameClass?: string
-  /** ラベルへ追加で適用する Tailwind クラス。 */
+  /** ラベルへ追加で適用する Tailwind クラス */
   labelClass?: string
-  /** 検索文字列の変更通知先。 */
+  /** 検索文字列の変更通知先 */
   onChange: (value: string) => void
 }
 

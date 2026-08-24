@@ -1,7 +1,7 @@
 import type { UpdateMaintenanceRequest } from '../../types/api'
 import { normalizeMaintenanceComment } from '../../utils/maintenanceComment'
 
-/** 管理画面から実行できるメンテナンス状態の変更操作。 */
+/** 管理画面から実行できるメンテナンス状態の変更操作 */
 export type MaintenanceAction = 'start' | 'update' | 'end'
 
 /**

@@ -1,7 +1,7 @@
 import type { ScoreHistoryDifficulty } from '../api/songs'
 import type { ScoreHistoryEntryDTO, VersionSummaryDTO } from '../types/api'
 
-/** スコア履歴テーブルに表示するスコア行またはバージョン境界行。 */
+/** スコア履歴テーブルに表示するスコア行またはバージョン境界行 */
 export type ScoreHistoryTableRow =
   | { type: 'score'; entry: ScoreHistoryEntryDTO }
   | { type: 'version'; name: string }

@@ -1,12 +1,12 @@
 import type { DataTransferBlocker, DataTransferCountsResponse } from '../../types/api'
 
-/** APIが受け付ける移行ファイルの最大サイズ。 */
+/** APIが受け付ける移行ファイルの最大サイズ */
 export const DATA_TRANSFER_MAX_FILE_SIZE_BYTES = 32 * 1024 * 1024
 
-/** Kobalte FileFieldへ渡す移行ファイル形式。 */
+/** Kobalte FileFieldへ渡す移行ファイル形式 */
 export const DATA_TRANSFER_ACCEPT = ['application/json', '.json'] as const
 
-/** データ移行画面で使用する文言。 */
+/** データ移行画面で使用する文言 */
 export const DATA_TRANSFER_COPY = {
   title: 'データ移行',
   description: 'ユーザーデータを別のChuniSupport環境へ移行します。',
@@ -40,7 +40,7 @@ export const DATA_TRANSFER_COPY = {
   countUnit: '件',
 } as const
 
-/** 検証結果に表示するセクション別件数。 */
+/** 検証結果に表示するセクション別件数 */
 export const DATA_TRANSFER_COUNT_ITEMS: readonly {
   key: keyof DataTransferCountsResponse
   label: string
@@ -59,7 +59,7 @@ export const DATA_TRANSFER_COUNT_ITEMS: readonly {
   { key: 'record_filters', label: '保存済みフィルター' },
 ]
 
-/** APIの移行阻害理由に対応する表示文言。 */
+/** APIの移行阻害理由に対応する表示文言 */
 export const DATA_TRANSFER_BLOCKER_MESSAGES: Record<DataTransferBlocker, string> = {
   destination_not_empty: 'このアカウントには既に移行対象データがあります。',
   unresolved_references: '移行先で参照できないデータが含まれています。',

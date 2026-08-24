@@ -4,24 +4,24 @@ import { For } from 'solid-js'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
 export type StaffMenuLink = {
-  /** 遷移先のアプリ内パス。 */
+  /** 遷移先のアプリ内パス */
   href: string
-  /** カードに表示する画面名。 */
+  /** カードに表示する画面名 */
   title: string
-  /** カードに表示する画面の概要。 */
+  /** カードに表示する画面の概要 */
   description: string
 }
 
 type StaffMenuPageProps = {
-  /** ドキュメントタイトル。 */
+  /** ドキュメントタイトル */
   pageTitle: string
-  /** ページ上部に表示する見出し。 */
+  /** ページ上部に表示する見出し */
   heading: string
-  /** ページ上部に表示するメニューの概要。 */
+  /** ページ上部に表示するメニューの概要 */
   description: string
-  /** メニューに表示する各画面へのリンク。 */
+  /** メニューに表示する各画面へのリンク */
   links: readonly StaffMenuLink[]
-  /** 見出しの下へ追加表示する権限固有の情報。 */
+  /** 見出しの下へ追加表示する権限固有の情報 */
   supplementaryContent?: JSX.Element
 }
 

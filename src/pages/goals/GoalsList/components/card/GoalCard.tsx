@@ -14,11 +14,11 @@ import { GoalCardActionMenu } from './GoalCardActionMenu'
 import { GoalCardProgress, GoalCardProgressPercentage } from './GoalCardProgress'
 
 interface GoalCardProps {
-  /** 表示する目標。 */
+  /** 表示する目標 */
   goal: GoalDTO
-  /** 目標の進捗。 */
+  /** 目標の進捗 */
   progress: GoalProgressResult
-  /** カードタイトルに使う見出しレベル。 */
+  /** カードタイトルに使う見出しレベル */
   headingLevel?: 2 | 3
   onEdit: (goal: GoalDTO) => void
   onCopy: (goal: GoalDTO) => void

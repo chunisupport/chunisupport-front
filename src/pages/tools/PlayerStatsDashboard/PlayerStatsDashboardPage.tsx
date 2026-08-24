@@ -69,7 +69,7 @@ import {
   type PlayerStatsHeatmapAxis,
 } from './constants'
 
-/** 統計画面の表示に必要なログインユーザーのレコード情報。 */
+/** 統計画面の表示に必要なログインユーザーのレコード情報 */
 type PlayerStatsPageData = {
   username: string
   records: PlayerRecordDTO[]
@@ -78,7 +78,7 @@ type PlayerStatsPageData = {
   updatedAt: string | null
 }
 
-/** 主要統計カード1件分の表示定義。 */
+/** 主要統計カード1件分の表示定義 */
 type SummaryCardDefinition = {
   label: string
   value: string
@@ -86,7 +86,7 @@ type SummaryCardDefinition = {
   icon: Component<{ class?: string; 'aria-hidden'?: boolean }>
 }
 
-/** 統計画面の各セクションに共通適用するカードクラス。 */
+/** 統計画面の各セクションに共通適用するカードクラス */
 const PAGE_SECTION_CLASS = 'rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5'
 
 /**

@@ -25,7 +25,7 @@ import {
 import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
 import type { WorldsendRecordSortKey } from './columns'
 
-/** WORLD'S END レコードのソート条件。 */
+/** WORLD'S END レコードのソート条件 */
 export type WorldsendRecordSortCondition = SortCondition<WorldsendRecordSortKey>
 
 type SortableWorldsendRecordEntry<TRecord extends WorldsendRecordDTO> = {
@@ -50,7 +50,7 @@ const WE_SORT_COL_MAP: Record<string, WorldsendRecordSortKey> = {
   justice_count: 'justiceCount',
 }
 
-/** WORLD'S END レコード一覧で常に適用する既定ソート条件。 */
+/** WORLD'S END レコード一覧で常に適用する既定ソート条件 */
 export const DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS: WorldsendRecordSortCondition[] = [
   { key: 'score', direction: 'desc' },
   { key: 'attribute', direction: 'asc' },

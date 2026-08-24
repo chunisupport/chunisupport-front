@@ -25,7 +25,7 @@ import {
 const fetchFreshAllSongs = () => fetchAllSongs({ cache: 'no-store' })
 
 type CoverageValueProps = {
-  /** 表示する判明数、総数、充足率。 */
+  /** 表示する判明数、総数、充足率 */
   coverage: DataCoverageCount
 }
 
@@ -46,9 +46,9 @@ const CoverageValue = (props: CoverageValueProps) => (
 )
 
 type CoverageCellProps = {
-  /** セルに表示する判明数、総数、充足率。 */
+  /** セルに表示する判明数、総数、充足率 */
   coverage: DataCoverageCount
-  /** 全体集計セルとして強調するか。 */
+  /** 全体集計セルとして強調するか */
   emphasized?: boolean
 }
 
@@ -76,7 +76,7 @@ const CoverageCell = (props: CoverageCellProps) => (
 )
 
 type CoverageMatrixProps = {
-  /** 難易度・レベル別の譜面定数充足状況。 */
+  /** 難易度・レベル別の譜面定数充足状況 */
   coverage: ChartConstantCoverage
 }
 

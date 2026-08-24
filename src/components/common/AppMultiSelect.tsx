@@ -7,42 +7,42 @@ import { AppButton } from './AppButton'
 export type AppMultiSelectValue = string | number | null
 
 export type AppMultiSelectOption<TValue extends AppMultiSelectValue> = {
-  /** 選択値として扱う値。 */
+  /** 選択値として扱う値 */
   value: TValue
-  /** 画面に表示するラベル。 */
+  /** 画面に表示するラベル */
   label: string
 }
 
 export type AppMultiSelectProps<TValue extends AppMultiSelectValue> = {
-  /** 複数選択で表示する選択肢。 */
+  /** 複数選択で表示する選択肢 */
   options: readonly AppMultiSelectOption<TValue>[]
-  /** 現在選択されている値。 */
+  /** 現在選択されている値 */
   selected: readonly TValue[]
-  /** 未選択時に表示するプレースホルダー。 */
+  /** 未選択時に表示するプレースホルダー */
   placeholder: string
-  /** 選択状態が変更されたときの通知先。 */
+  /** 選択状態が変更されたときの通知先 */
   onChange: (selected: TValue[]) => void
-  /** Select のポータルコンテンツに適用する z-index クラス。 */
+  /** Select のポータルコンテンツに適用する z-index クラス */
   contentZIndexClass?: string
-  /** トリガー内に表示する選択済み項目数の上限。 */
+  /** トリガー内に表示する選択済み項目数の上限 */
   selectedPreviewLimit?: number
-  /** 操作を無効化するかどうか。 */
+  /** 操作を無効化するかどうか */
   disabled?: boolean
-  /** Select.Trigger へ追加で適用する Tailwind クラス。 */
+  /** Select.Trigger へ追加で適用する Tailwind クラス */
   triggerClass?: string
 }
 
 export type MultiSelectFieldProps<TValue extends AppMultiSelectValue> =
   AppMultiSelectProps<TValue> & {
-    /** 入力欄上部に表示するラベル。 */
+    /** 入力欄上部に表示するラベル */
     label?: string
-    /** 全選択ボタンの表示文言。 */
+    /** 全選択ボタンの表示文言 */
     selectAllLabel?: string
-    /** 全選択ボタンで選択する値。未指定時は全選択肢を使う。 */
+    /** 全選択ボタンで選択する値。未指定時は全選択肢を使う */
     selectAllValues?: readonly TValue[]
-    /** 全解除ボタンの表示文言。 */
+    /** 全解除ボタンの表示文言 */
     clearLabel?: string
-    /** ラベルへ追加で適用する Tailwind クラス。 */
+    /** ラベルへ追加で適用する Tailwind クラス */
     labelClass?: string
   }
 
@@ -54,7 +54,7 @@ const DEFAULT_MULTI_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
 const MULTI_SELECT_TRIGGER_CLASS =
   'flex w-full items-center rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60'
 
-/** AppMultiSelect の選択肢に適用する状態別スタイル。 */
+/** AppMultiSelect の選択肢に適用する状態別スタイル */
 const MULTI_SELECT_ITEM_CLASS =
   'cursor-pointer px-3 py-2 text-sm text-text transition-colors [&:not([data-selected]):hover]:bg-surface-muted [&:not([data-selected])[data-highlighted]]:bg-surface-muted data-[selected]:bg-action-primary-muted data-[selected]:font-medium data-[selected]:text-action-primary [&[data-selected]:hover]:bg-select-selected-hover-bg [&[data-selected][data-highlighted]]:bg-select-selected-hover-bg'
 

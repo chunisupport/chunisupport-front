@@ -45,7 +45,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   justice_count: 'justiceCount',
 }
 
-/** 通常レコード一覧で常に適用する既定ソート条件。 */
+/** 通常レコード一覧で常に適用する既定ソート条件 */
 export const DEFAULT_RECORD_SORT_CONDITIONS: RecordSortCondition[] = [
   { key: 'rating', direction: 'desc' },
   { key: 'const', direction: 'desc' },

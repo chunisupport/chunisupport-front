@@ -8,10 +8,10 @@ export type ScoreRank =
   | '0点'
   | Extract<DomainScoreRank, 'AAA' | 'S' | 'S+' | 'SS' | 'SS+' | 'SSS' | 'SSS+'>
 
-/** スコアランクフィルターで選択できるランクラベル。 */
+/** スコアランクフィルターで選択できるランクラベル */
 export const SCORE_RANKS: ScoreRank[] = ['0点', 'AAA', 'S', 'S+', 'SS', 'SS+', 'SSS', 'SSS+']
 
-/** スコアランクフィルターの下限値。 */
+/** スコアランクフィルターの下限値 */
 export const SCORE_RANK_VALUES: Record<ScoreRank, number> = {
   '0点': 0,
   AAA: SCORE_RANK_MIN_SCORES.AAA,
@@ -23,7 +23,7 @@ export const SCORE_RANK_VALUES: Record<ScoreRank, number> = {
   'SSS+': SCORE_RANK_MIN_SCORES['SSS+'],
 }
 
-/** スコアランクフィルターの上限値。 */
+/** スコアランクフィルターの上限値 */
 export const SCORE_RANK_MAX_VALUES: Record<ScoreRank, number> = {
   '0点': 0,
   AAA: SCORE_RANK_MAX_SCORES.AAA,

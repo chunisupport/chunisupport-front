@@ -11,10 +11,10 @@ import type { PlayedCourseRecord } from '../../types/courseRecord'
 import type { FilterState, RecordColumnId } from '../../types/recordFilter'
 import type { WorldsendFilterState, WorldsendRecordColumnId } from '../../types/worldsendRecord'
 
-/** IndexedDB に保存するキャッシュデータの現行スキーマバージョン。 */
+/** IndexedDB に保存するキャッシュデータの現行スキーマバージョン */
 export const CLIENT_CACHE_SCHEMA_VERSION = 6
 
-/** フロントエンドキャッシュ用 IndexedDB の DB 名。 */
+/** フロントエンドキャッシュ用 IndexedDB の DB 名 */
 export const CLIENT_CACHE_DB_NAME = 'ChuniSupportCache'
 
 export type CacheMetadataKey =
@@ -53,14 +53,14 @@ export type CachedWorldsendSong = {
   data: WorldsendSongDTO
 }
 
-/** IndexedDB に保存するコースマスタ1件。 */
+/** IndexedDB に保存するコースマスタ1件 */
 export type CachedCourse = {
   id: string
   sortOrder: number
   data: CourseDTO
 }
 
-/** マスタ情報を除いて IndexedDB に保存するプレイ済みコースレコード。 */
+/** マスタ情報を除いて IndexedDB に保存するプレイ済みコースレコード */
 export type CachedUserCourseRecord = {
   key: string
   username: string

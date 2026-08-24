@@ -1,10 +1,10 @@
 import { useDragDropContext } from '@thisbeyond/solid-dnd'
 import { onCleanup, onMount } from 'solid-js'
 
-/** タッチ操作でドラッグ開始とみなす長押し時間（ms）。 */
+/** タッチ操作でドラッグ開始とみなす長押し時間（ms） */
 const TOUCH_DRAG_ACTIVATION_DELAY_MS = 300
 
-/** 長押し前にこの距離（px）以上動いたらスクロール操作として扱う。 */
+/** 長押し前にこの距離（px）以上動いたらスクロール操作として扱う */
 const TOUCH_SCROLL_DISTANCE_THRESHOLD_PX = 10
 
 type ActiveInput = { type: 'pointer'; pointerId: number } | { type: 'touch'; identifier: number }
@@ -31,7 +31,7 @@ export function GoalsListLongPressSensor() {
   let activeInput: ActiveInput | undefined
   let initialCoordinates = { x: 0, y: 0 }
 
-  /** ドラッグ開始待ちとドキュメントイベントを解除する。 */
+  /** ドラッグ開始待ちとドキュメントイベントを解除する */
   const detach = (): void => {
     if (activationTimeoutId !== undefined) {
       window.clearTimeout(activationTimeoutId)
@@ -48,7 +48,7 @@ export function GoalsListLongPressSensor() {
     activeInput = undefined
   }
 
-  /** 長押し完了後にドラッグ状態へ移行する。 */
+  /** 長押し完了後にドラッグ状態へ移行する */
   const activate = (): void => {
     if (state.active.sensor || activationDraggableId === undefined) return
 

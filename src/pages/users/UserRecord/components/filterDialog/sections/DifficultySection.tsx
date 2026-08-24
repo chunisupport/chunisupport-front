@@ -7,58 +7,58 @@ import { CheckboxField } from '../../../../../../components/common/CheckboxField
 import type { Difficulty, OpTargetType } from '../../../../../../types/recordFilter'
 
 type DifficultySectionProps = {
-  /** 表示する難易度候補。 */
+  /** 表示する難易度候補 */
   difficulties: Difficulty[]
-  /** 選択中の難易度。 */
+  /** 選択中の難易度 */
   selected: Difficulty[]
-  /** OP対象譜面だけに絞るか。 */
+  /** OP対象譜面だけに絞るか */
   opTargetOnly: boolean
-  /** OP対象譜面の判定種別。 */
+  /** OP対象譜面の判定種別 */
   opTargetType: OpTargetType
-  /** お気に入り楽曲だけに絞るか。 */
+  /** お気に入り楽曲だけに絞るか */
   favoriteSongsOnly: boolean
-  /** 難易度の選択状態を切り替える。 */
+  /** 難易度の選択状態を切り替える */
   onToggle: (difficulty: Difficulty) => void
-  /** OP対象譜面フィルターを切り替える。 */
+  /** OP対象譜面フィルターを切り替える */
   onOpTargetOnlyChange: (checked: boolean) => void
-  /** OP対象譜面の判定種別を変更する。 */
+  /** OP対象譜面の判定種別を変更する */
   onOpTargetTypeChange: (type: OpTargetType) => void
-  /** お気に入り楽曲フィルターを切り替える。 */
+  /** お気に入り楽曲フィルターを切り替える */
   onFavoriteSongsOnlyChange: (checked: boolean) => void
-  /** お気に入り楽曲設定を開く。 */
+  /** お気に入り楽曲設定を開く */
   onOpenFavoriteSongs?: () => void
-  /** お気に入り楽曲設定を無効化するか。 */
+  /** お気に入り楽曲設定を無効化するか */
   favoriteSongsDisabled?: boolean
 }
 
-/** OP対象フィルターのチェックボックスID。 */
+/** OP対象フィルターのチェックボックスID */
 const OP_TARGET_ONLY_CHECKBOX_ID = 'filter-op-target-only'
 
-/** OP対象種別Selectのラベル。 */
+/** OP対象種別Selectのラベル */
 const OP_TARGET_TYPE_SELECT_LABEL = 'OP対象の種別'
 
-/** OP対象種別Selectの選択肢。 */
+/** OP対象種別Selectの選択肢 */
 const OP_TARGET_TYPE_OPTIONS: OpTargetType[] = ['current', 'theoretical']
 
-/** OP対象種別の表示ラベル。 */
+/** OP対象種別の表示ラベル */
 const OP_TARGET_TYPE_LABELS: Readonly<Record<OpTargetType, string>> = {
   current: '現在のOP対象',
   theoretical: 'OP理論値対象',
 }
 
-/** OP対象種別Selectの後ろに表示する文言。 */
+/** OP対象種別Selectの後ろに表示する文言 */
 const OP_TARGET_ONLY_SUFFIX = 'の譜面のみ表示'
 
-/** OP対象フィルターのスクリーンリーダー用接頭辞。 */
+/** OP対象フィルターのスクリーンリーダー用接頭辞 */
 const OP_TARGET_ONLY_SR_PREFIX = 'OP対象'
 
-/** お気に入り楽曲フィルターのチェックボックスID。 */
+/** お気に入り楽曲フィルターのチェックボックスID */
 const FAVORITE_SONGS_ONLY_CHECKBOX_ID = 'filter-favorite-songs-only'
 
-/** お気に入り楽曲フィルターのラベル。 */
+/** お気に入り楽曲フィルターのラベル */
 const FAVORITE_SONGS_ONLY_LABEL = 'お気に入り楽曲のみ表示'
 
-/** お気に入り楽曲設定ボタンのラベル。 */
+/** お気に入り楽曲設定ボタンのラベル */
 const FAVORITE_SONGS_SETTINGS_LABEL = 'お気に入り楽曲設定'
 
 /**
