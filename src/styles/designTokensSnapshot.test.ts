@@ -41,6 +41,7 @@ test('既存色と同じ値でデザイントークンが定義されている�
     ['--cs-color-border', 'var(--color-gray-300)'],
     ['--cs-color-action-primary', 'var(--color-primary-600)'],
     ['--cs-color-action-primary-hover', 'var(--color-primary-700)'],
+    ['--cs-color-song-list-title', 'var(--color-primary-600)'],
     ['--cs-color-select-selected-hover-bg', 'var(--color-primary-100)'],
     ['--cs-color-danger', 'var(--color-red-600)'],
     ['--cs-color-danger-bg', 'var(--color-red-50)'],
@@ -75,6 +76,7 @@ test('Tailwind公開トークンがcsトークンへ接続されていること'
     ['--color-border', 'var(--cs-color-border)'],
     ['--color-action-primary', 'var(--cs-color-action-primary)'],
     ['--color-action-primary-hover', 'var(--cs-color-action-primary-hover)'],
+    ['--color-song-list-title', 'var(--cs-color-song-list-title)'],
     ['--color-select-selected-hover-bg', 'var(--cs-color-select-selected-hover-bg)'],
     ['--color-new-song-bg', 'var(--cs-color-new-song-bg)'],
     ['--color-danger', 'var(--cs-color-danger)'],
@@ -109,6 +111,15 @@ test('負のスコア差はライト系とダーク系で明るさを調整し�
       'var(--color-blue-700)',
     ]
   )
+})
+
+test('楽曲一覧のタイトルはダーク系テーマでアクセント色が二段階明るくなること', () => {
+  assert.deepEqual(readCustomProperties(tailwindCssContent, '--cs-color-song-list-title'), [
+    'var(--color-primary-600)',
+    'var(--color-primary-300)',
+    'var(--color-primary-300)',
+    'var(--color-primary-600)',
+  ])
 })
 
 test('ホバーに使う背景トークンがすべてのテーマで不透明に定義されていること', () => {

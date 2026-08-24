@@ -4,7 +4,7 @@ import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
 import { getScoreRank, type ScoreRank } from '../../../utils/scoreRank'
 import { SortableHeaderButton, type SortDirection } from '../SortableTableHeader'
 import { LampPlaceholderBadge } from './RecordBadges'
-import { getDefaultRecordLampLabel } from './recordLampLabel'
+import { getDefaultRecordLampAccessibleLabel, getDefaultRecordLampLabel } from './recordLampLabel'
 import {
   getComboLampBadgeClass,
   HARD_LAMP_BADGE_BACKGROUND_CLASS,
@@ -19,6 +19,10 @@ type ScoreRecord = Pick<SharedRecordSource, 'is_played' | 'score'>
 type LampRecord = Pick<SharedRecordSource, 'is_played' | 'combo_lamp' | 'score'>
 type HardLampRecord = Pick<SharedRecordSource, 'is_played' | 'clear_lamp'>
 type FullChainRecord = Pick<SharedRecordSource, 'is_played' | 'full_chain'>
+type DefaultRecordLampBadgesRecord = Pick<
+  SharedRecordSource,
+  'score' | 'clear_lamp' | 'combo_lamp' | 'full_chain'
+>
 
 type JusticeCountRecord = {
   combo_lamp: ComboLamp
@@ -85,6 +89,7 @@ const FULL_CHAIN_BADGE_VARIANT: Partial<
   'FULL CHAIN GOLD': 'FULL COMBO',
   'FULL CHAIN PLATINUM': 'ALL JUSTICE',
 }
+const LAMP_NONE_ACCESSIBLE_LABEL = 'なし'
 
 /**
  * レコードのコンボランプ値から表示用バッジを生成する。
@@ -150,6 +155,32 @@ export const renderDefaultRecordFullChainBadge = (
     </span>
   )
 }
+
+/**
+ * ハード・コンボ・FULL CHAINの3種類のランプバッジをまとめて表示する。
+ *
+ * @param props - 表示対象のランプ状態と追加クラス。
+ * @returns 3種類のランプバッジを横並びにした要素。
+ */
+export const DefaultRecordLampBadges = (props: {
+  record: DefaultRecordLampBadgesRecord
+  class?: string
+}) => (
+  <div class={`flex ${RECORD_LAMP_COLUMN_CLASS} ${props.class ?? ''}`}>
+    <span class="sr-only">
+      {`ハードランプ ${props.record.clear_lamp ?? LAMP_NONE_ACCESSIBLE_LABEL}、コンボランプ ${getDefaultRecordLampAccessibleLabel(props.record.combo_lamp, props.record.score)}、FULL CHAIN ${props.record.full_chain ?? LAMP_NONE_ACCESSIBLE_LABEL}`}
+    </span>
+    <div class="flex gap-2" aria-hidden="true">
+      {renderDefaultRecordHardLampBadge(props.record.clear_lamp)}
+      {renderDefaultRecordLampBadge(props.record.combo_lamp, {
+        is_played: true,
+        combo_lamp: props.record.combo_lamp,
+        score: props.record.score,
+      })}
+      {renderDefaultRecordFullChainBadge(props.record.full_chain)}
+    </div>
+  </div>
+)
 
 /**
  * レコード表向けの余白と高さを適用したソート可能ヘッダーボタンを表示する。

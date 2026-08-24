@@ -13,7 +13,7 @@ import type {
 export const PLAYER_STATS_COPY = {
   pageTitle: 'ダッシュボード',
   documentTitle: 'ダッシュボード',
-  updatedAt: 'レコード更新',
+  description: 'プレイ記録から達成状況と次に狙う譜面を確認できます。',
   difficultyLabel: '集計する難易度',
   overviewTitle: '現在地',
   overviewCaption: '選択した難易度の主要な達成状況',
@@ -121,6 +121,7 @@ export const PLAYER_STATS_MILESTONE_OPTIONS = [
 
 /** 次に狙う譜面タブの表示選択肢 */
 export const PLAYER_STATS_CANDIDATE_OPTIONS = [
+  { value: 'sss', label: 'SSS' },
   { value: 'sssPlus', label: 'SSS+' },
   { value: 'aj', label: 'AJ' },
   { value: 'max', label: 'AJC' },

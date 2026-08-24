@@ -42,6 +42,8 @@ export type PlayerStatsSummary = {
   played: number
   playedPercent: number
   averageScore: number
+  sss: number
+  sssPercent: number
   sssPlus: number
   sssPlusPercent: number
   aj: number
@@ -98,7 +100,7 @@ export type PlayerStatsMilestone = {
 }
 
 /** 目標候補リストの種別 */
-export type PlayerStatsCandidateTarget = 'sssPlus' | 'aj' | 'max'
+export type PlayerStatsCandidateTarget = 'sss' | 'sssPlus' | 'aj' | 'max'
 
 /** 曲IDと難易度から総ノーツ数を参照する統計候補用マップ */
 export type PlayerStatsNotesBySongId = ReadonlyMap<
@@ -141,6 +143,7 @@ const SCORE_ACHIEVEMENT_MINIMUM: Partial<Record<PlayerStatsAchievement, number>>
 }
 
 const MILESTONE_STEP: Record<PlayerStatsCandidateTarget, number> = {
+  sss: 10,
   sssPlus: 10,
   aj: 10,
   max: 5,
@@ -228,6 +231,7 @@ export const buildPlayerStatsSummary = (records: PlayerRecordDTO[]): PlayerStats
   const total = records.length
   const playedRecords = records.filter((record) => record.is_played)
   const played = playedRecords.length
+  const sss = records.filter((record) => hasPlayerStatsAchievement(record, 'sss')).length
   const sssPlus = records.filter((record) => hasPlayerStatsAchievement(record, 'sssPlus')).length
   const aj = records.filter((record) => hasPlayerStatsAchievement(record, 'aj')).length
   const max = records.filter((record) => hasPlayerStatsAchievement(record, 'max')).length
@@ -240,6 +244,8 @@ export const buildPlayerStatsSummary = (records: PlayerRecordDTO[]): PlayerStats
     played,
     playedPercent: calculatePlayerStatsPercent(played, total),
     averageScore,
+    sss,
+    sssPercent: calculatePlayerStatsPercent(sss, total),
     sssPlus,
     sssPlusPercent: calculatePlayerStatsPercent(sssPlus, total),
     aj,
@@ -477,7 +483,7 @@ const compareCandidateDisplayOrder = (left: PlayerRecordDTO, right: PlayerRecord
 }
 
 /**
- * SSS+、AJ、MAXの次の達成候補を抽出し、難易度とレベルが低い順に並べる。
+ * SSS、SSS+、AJ、MAXの次の達成候補を抽出し、難易度とレベルが低い順に並べる。
  *
  * @param records - 集計対象の通常譜面レコード。
  * @param target - 候補を抽出する目標種別。
@@ -494,6 +500,7 @@ export const findPlayerStatsCandidates = (
   const candidates = records
     .filter((record) => {
       if (!record.is_played) return false
+      if (target === 'sss') return !hasPlayerStatsAchievement(record, 'sss')
       if (target === 'sssPlus') return !hasPlayerStatsAchievement(record, 'sssPlus')
       if (target === 'aj') return !hasPlayerStatsAchievement(record, 'aj')
       return !hasPlayerStatsAchievement(record, 'max')
@@ -502,7 +509,12 @@ export const findPlayerStatsCandidates = (
     .slice(0, limit)
     .sort(compareCandidateDisplayOrder)
 
-  const targetScore = target === 'sssPlus' ? SCORE_RANK_MIN_SCORES['SSS+'] : MAX_SCORE
+  const targetScore =
+    target === 'sss'
+      ? SCORE_RANK_MIN_SCORES.SSS
+      : target === 'sssPlus'
+        ? SCORE_RANK_MIN_SCORES['SSS+']
+        : MAX_SCORE
   return candidates.map((record) => ({
     record,
     scoreGap: target === 'aj' ? null : Math.max(targetScore - record.score, 0),

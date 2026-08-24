@@ -56,6 +56,9 @@ export default defineConfig(({ env, envMode }) => {
   const envResult = loadEnv({ mode: envMode, prefixes: ['PUBLIC_'] })
   const missingEnvKeys = REQUIRED_PUBLIC_ENV_KEYS.filter((key) => !envResult.rawPublicVars[key])
 
+  /** 本番環境で明示的に許可された場合に限り検索エンジンのインデックス登録を有効にする。 */
+  const enableIndexing = envResult.rawPublicVars.PUBLIC_ENABLE_INDEXING === 'true'
+
   if (missingEnvKeys.length > 0) {
     envResult.cleanup()
     throw new Error(`必須環境変数が設定されていません: ${missingEnvKeys.join(', ')}`)
@@ -82,7 +85,7 @@ export default defineConfig(({ env, envMode }) => {
     html: {
       title: 'ChuniSupport',
       meta: {
-        robots: 'noindex',
+        ...(enableIndexing ? {} : { robots: 'noindex' }),
         'format-detection': 'telephone=no',
       },
       tags: [
