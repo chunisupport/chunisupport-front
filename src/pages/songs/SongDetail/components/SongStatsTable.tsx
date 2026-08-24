@@ -16,7 +16,12 @@ import {
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
 import { accentPreference, themePreference } from '../../../../stores/themePreferences'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
-import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../../../utils/chartTheme'
+import { createChartStripePattern } from '../../../../utils/chartPattern'
+import {
+  CHART_COLOR_FALLBACK,
+  resolveChartColor,
+  resolveChartPixelLength,
+} from '../../../../utils/chartTheme'
 import {
   calculateDisplayedScoreDifference,
   formatScoreDifference,
@@ -25,9 +30,10 @@ import {
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { completeSongStatsRatingBands } from '../../../../utils/songStats'
 import {
-  ALL_JUSTICE_CRITICAL_CHART_GRADIENT_COLOR_VARIABLES,
   CLEAR_CHART_DATASET_DEFINITIONS,
   COMBO_CHART_DATASET_DEFINITIONS,
+  RANK_CHART_DATASET_DEFINITIONS,
+  type SongStatsChartStripePatternDefinition,
 } from './songStatsChartDefinitions'
 import { isOwnBestAverageRatingBand } from './songStatsHighlight'
 
@@ -57,6 +63,7 @@ type SongStatsChartDataset = {
   colorVariable: string
   legendBackgroundVariable?: string
   gradientColorVariables?: readonly string[]
+  stripePattern?: SongStatsChartStripePatternDefinition
 }
 
 type SongStatsChartProps = {
@@ -123,23 +130,6 @@ const RANK_STAT_COLUMN_DEFINITIONS = [
   { label: 'S+', valueKey: 'sp' },
   { label: 'S', valueKey: 's' },
   { label: '～AAA', valueKey: 'aaal' },
-] as const
-/** RANK積み上げ棒グラフへ表示するデータセット定義。 */
-const RANK_CHART_DATASET_DEFINITIONS = [
-  { label: '～AAA', valueKey: 'aaal', colorVariable: '--cs-color-score-rank-d-bg' },
-  { label: 'S', valueKey: 's', colorVariable: '--cs-color-score-rank-s-bg' },
-  { label: 'S+', valueKey: 'sp', colorVariable: '--cs-color-score-rank-s-bg' },
-  { label: 'SS', valueKey: 'ss', colorVariable: '--cs-color-score-rank-ss-bg' },
-  { label: 'SS+', valueKey: 'ssp', colorVariable: '--cs-color-score-rank-ss-bg' },
-  { label: 'SSS', valueKey: 'sss', colorVariable: '--cs-color-score-rank-sss-bg' },
-  { label: 'SSS+', valueKey: 'sssp', colorVariable: '--cs-color-score-rank-sssp-bg' },
-  {
-    label: 'MAX',
-    valueKey: 'max',
-    colorVariable: '--cs-color-lamp-all-justice-critical-bg',
-    legendBackgroundVariable: '--cs-gradient-lamp-all-justice-critical-bg',
-    gradientColorVariables: ALL_JUSTICE_CRITICAL_CHART_GRADIENT_COLOR_VARIABLES,
-  },
 ] as const
 const HIGHLIGHTED_RATING_BAND_ROW_CLASS =
   'border-l-4 border-l-action-primary bg-action-primary-muted font-semibold'
@@ -255,31 +245,64 @@ const createChartGradient = (
 }
 
 /**
- * グラデーション対象の各棒へ個別の虹色背景を適用するChart.jsプラグインを生成する。
- * @param datasets グラデーション設定を含むグラフデータセット。
- * @returns 棒の描画直前にグラデーションを更新するChart.jsプラグイン。
+ * 対象の棒へ虹色グラデーションまたは斜線背景を適用するChart.jsプラグインを生成する。
+ * @param datasets 背景装飾設定を含むグラフデータセット。
+ * @returns 棒の描画直前に背景装飾を更新するChart.jsプラグイン。
  */
-const createBarGradientPlugin = (datasets: SongStatsChartDataset[]): Plugin<'bar'> => {
+const createBarBackgroundPlugin = (datasets: SongStatsChartDataset[]): Plugin<'bar'> => {
+  const baseColors = datasets.map((dataset) =>
+    resolveChartColor(dataset.colorVariable, CHART_COLOR_FALLBACK)
+  )
   const gradientColors = datasets.map((dataset) =>
     dataset.gradientColorVariables?.map((variableName) =>
       resolveChartColor(variableName, CHART_COLOR_FALLBACK)
     )
   )
+  const stripePatternOptions = datasets.map((dataset, datasetIndex) => {
+    const stripePattern = dataset.stripePattern
+    if (!stripePattern) return undefined
+
+    return {
+      baseColor: baseColors[datasetIndex],
+      stripeColor: resolveChartColor(stripePattern.colorVariable, 'rgb(255 255 255 / 25%)'),
+      stripeWidth: resolveChartPixelLength(stripePattern.widthVariable, 3),
+      period: resolveChartPixelLength(stripePattern.periodVariable, 6),
+    }
+  })
+  let patternWidth = 0
+  let patternHeight = 0
+  let stripePatterns: (CanvasPattern | string | undefined)[] = []
 
   return {
-    id: 'song-stats-bar-gradient',
+    id: 'song-stats-bar-background',
     beforeDatasetsDraw: (chart) => {
-      gradientColors.forEach((colors, datasetIndex) => {
-        if (!colors) return
+      if (patternWidth !== chart.width || patternHeight !== chart.height) {
+        patternWidth = chart.width
+        patternHeight = chart.height
+        stripePatterns = stripePatternOptions.map((options) =>
+          options
+            ? createChartStripePattern(chart.ctx, chart.width, chart.height, options)
+            : undefined
+        )
+      }
+
+      datasets.forEach((_, datasetIndex) => {
+        const colors = gradientColors[datasetIndex]
+        const stripePattern = stripePatterns[datasetIndex]
+        if (!colors && !stripePattern) return
+
+        const baseColor = baseColors[datasetIndex]
 
         chart.getDatasetMeta(datasetIndex).data.forEach((element) => {
           const bar = element as BarElement
-          const backgroundColor = createChartGradient(chart.ctx, bar, colors)
+          const resolvedBackground = colors
+            ? createChartGradient(chart.ctx, bar, colors)
+            : (stripePattern ?? baseColor)
 
           bar.options = {
             ...bar.options,
-            backgroundColor,
-            borderColor: backgroundColor,
+            backgroundColor: resolvedBackground,
+            borderColor: resolvedBackground,
           }
         })
       })
@@ -399,7 +422,7 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
 
     const chartData = createSongStatsChartData(props.labels, props.datasets)
     const chartOptions = createSongStatsChartOptions()
-    const chartPlugins = [createBarGradientPlugin(props.datasets)]
+    const chartPlugins = [createBarBackgroundPlugin(props.datasets)]
 
     chart?.destroy()
     chart = new Chart(canvasRef, {
@@ -428,7 +451,9 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
                 <span
                   class="size-3"
                   style={{
-                    background: `var(${dataset.legendBackgroundVariable ?? dataset.colorVariable})`,
+                    background: dataset.stripePattern
+                      ? `var(${dataset.stripePattern.legendBackgroundVariable}), var(${dataset.colorVariable})`
+                      : `var(${dataset.legendBackgroundVariable ?? dataset.colorVariable})`,
                   }}
                   aria-hidden="true"
                 />

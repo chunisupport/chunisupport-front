@@ -586,6 +586,15 @@
   --cs-color-score-rank-ss-text: var(--color-orange-500);
   --cs-color-score-rank-s-bg: var(--color-red-500);
   --cs-color-score-rank-s-text: var(--color-red-500);
+  --cs-color-score-rank-plus-stripe: rgb(255 255 255 / 25%);
+  --cs-size-score-rank-plus-stripe-width: 3px;
+  --cs-size-score-rank-plus-stripe-period: 6px;
+  --cs-gradient-score-rank-plus-bg: repeating-linear-gradient(
+    45deg,
+    var(--cs-color-score-rank-plus-stripe) 0 var(--cs-size-score-rank-plus-stripe-width),
+    transparent var(--cs-size-score-rank-plus-stripe-width)
+      var(--cs-size-score-rank-plus-stripe-period)
+  );
   --cs-color-score-rank-a-bg: var(--color-amber-800);
   --cs-color-score-rank-a-text: var(--color-amber-800);
   --cs-color-score-rank-b-bg: var(--color-sky-500);

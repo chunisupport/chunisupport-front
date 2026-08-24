@@ -67,7 +67,7 @@ export const PLAYER_METRIC_HISTORY_FONT_FAMILY_FALLBACK = 'sans-serif'
 /** 履歴グラフのレスポンシブな固定高さ。 */
 export const PLAYER_METRIC_HISTORY_CHART_HEIGHT_CLASS = 'h-72 sm:h-80'
 /** 履歴一覧が狭い画面で列幅を維持するための最小幅。 */
-export const PLAYER_METRIC_HISTORY_TABLE_MIN_WIDTH_CLASS = 'min-w-[32rem]'
+export const PLAYER_METRIC_HISTORY_TABLE_MIN_WIDTH_CLASS = 'min-w-[24rem]'
 /** 公式指標を画面に表示する小数点以下桁数。 */
 export const PLAYER_METRIC_HISTORY_DECIMAL_PLACES = 2
 /** 折れ線グラフの通常時の点半径。 */
