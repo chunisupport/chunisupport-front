@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from 'chart.js'
 import type { Component } from 'solid-js'
-import { createEffect, createSignal, For, onCleanup, onMount } from 'solid-js'
+import { createEffect, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import { accentPreference, themePreference } from '../../../stores/themePreferences'
 import type { PlayerMetricHistoryEntryDTO } from '../../../types/api'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../../utils/chartTheme'
@@ -18,13 +18,13 @@ import {
   buildPlayerMetricHistoryChartPoints,
   formatPlayerMetricHistoryAxisTimestamp,
   formatPlayerMetricHistoryTooltipTimestamp,
+  hasPlayerMetricHistoryValues,
   type PlayerMetricHistoryChartPoint,
 } from '../../../utils/playerMetricHistory'
 import {
   PLAYER_METRIC_HISTORY_BORDER_WIDTH,
   PLAYER_METRIC_HISTORY_CHART_DEFINITIONS,
   PLAYER_METRIC_HISTORY_CHART_HEIGHT_CLASS,
-  PLAYER_METRIC_HISTORY_DECIMAL_PLACES,
   PLAYER_METRIC_HISTORY_FONT_FAMILY_FALLBACK,
   PLAYER_METRIC_HISTORY_FONT_FAMILY_VARIABLE,
   PLAYER_METRIC_HISTORY_GRID_COLOR_VARIABLE,
@@ -62,7 +62,7 @@ const resolveChartFontFamily = (): string =>
  * 公式指標履歴の折れ線グラフ設定を生成する。
  *
  * @param definition - 表示対象指標の定義。
- * @returns テーマ色と小数2桁表示を反映したChart.js設定。
+ * @returns テーマ色、指標ごとの小数桁と単位を反映したChart.js設定。
  */
 const createMetricChartOptions = (
   definition: PlayerMetricHistoryChartDefinition
@@ -105,7 +105,7 @@ const createMetricChartOptions = (
             const value = context.parsed.y
             return value === null
               ? definition.title
-              : `${definition.title}: ${formatFixed(value, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}`
+              : `${definition.title}: ${formatFixed(value, definition.decimalPlaces)}${definition.suffix}`
           },
         },
       },
@@ -128,7 +128,8 @@ const createMetricChartOptions = (
         ticks: {
           color: textColor,
           font: { family: fontFamily },
-          callback: (value) => formatFixed(Number(value), PLAYER_METRIC_HISTORY_DECIMAL_PLACES),
+          callback: (value) =>
+            `${formatFixed(Number(value), definition.decimalPlaces)}${definition.suffix}`,
         },
         grid: {
           color: gridColor,
@@ -139,7 +140,7 @@ const createMetricChartOptions = (
 }
 
 /**
- * 公式RATINGまたは公式OVER POWERの履歴1系列を折れ線グラフで表示する。
+ * 公式RATING、公式OVER POWER、公式OP%のうち1系列を折れ線グラフで表示する。
  *
  * @param props - 公式指標履歴と1枚分の表示定義。
  * @returns テーマと表示幅へ追従するChart.js折れ線グラフ。
@@ -178,6 +179,7 @@ const MetricHistoryLineChart: Component<MetricChartProps> = (props) => {
           pointHitRadius: PLAYER_METRIC_HISTORY_POINT_HIT_RADIUS,
           borderWidth: PLAYER_METRIC_HISTORY_BORDER_WIDTH,
           tension: PLAYER_METRIC_HISTORY_LINE_TENSION,
+          spanGaps: false,
         },
       ],
     }
@@ -211,15 +213,24 @@ const MetricHistoryLineChart: Component<MetricChartProps> = (props) => {
 }
 
 /**
- * 公式RATINGと公式OVER POWERの履歴を2枚の縦積みグラフで表示する。
+ * 公式RATING・公式OVER POWER・記録済みの公式OP%を縦積みグラフで表示する。
  *
  * @param props - APIが返した公式指標履歴。
- * @returns 単位の異なる指標を分離した2枚の折れ線グラフ。
+ * @returns 単位の異なる指標を分離し、全件未記録のOP%を除外した折れ線グラフ。
  */
 export const RatingOpHistoryChart: Component<Props> = (props) => (
   <div class="space-y-4">
     <For each={PLAYER_METRIC_HISTORY_CHART_DEFINITIONS}>
-      {(definition) => <MetricHistoryLineChart entries={props.entries} definition={definition} />}
+      {(definition) => (
+        <Show
+          when={
+            definition.metric !== 'overpower_percent' ||
+            hasPlayerMetricHistoryValues(props.entries, definition.metric)
+          }
+        >
+          <MetricHistoryLineChart entries={props.entries} definition={definition} />
+        </Show>
+      )}
     </For>
   </div>
 )

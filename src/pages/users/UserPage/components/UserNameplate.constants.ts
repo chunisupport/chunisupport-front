@@ -9,4 +9,4 @@ export const USER_NAMEPLATE_METRIC_LABELS = {
 /** プロフィールカードの履歴導線で使用する文言。 */
 export const USER_NAMEPLATE_HISTORY_LINK_LABEL = '履歴'
 /** プロフィールカードの履歴導線を説明するアクセシブル名。 */
-export const USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL = 'RATING・OVER POWER履歴を見る'
+export const USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL = 'RATING・OVER POWER・OP%履歴を見る'

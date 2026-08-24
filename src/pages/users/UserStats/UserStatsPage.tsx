@@ -76,9 +76,9 @@ const fetchUserStatsPageLoadState = async (username: string): Promise<UserStatsP
 }
 
 /**
- * 公開ユーザーの公式RATINGと公式OVER POWER履歴を表示する。
+ * 公開ユーザーの公式RATING・公式OVER POWER・公式OP%履歴を表示する。
  *
- * @returns 2枚の履歴グラフと同データの履歴表を含むページ。
+ * @returns 公式指標ごとの履歴グラフと同データの履歴表を含むページ。
  */
 const UserStatsPage: Component = () => {
   const params = useParams<{ username: string }>()

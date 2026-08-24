@@ -31,7 +31,7 @@ type Props = {
   playerInfo: PlayerDTO
   honors: HonorDTO[]
   rating: UserRatingDTO
-  /** RATING・OVER POWER履歴ページへのリンク先。 */
+  /** RATING・OVER POWER・OP%履歴ページへのリンク先。 */
   historyHref: string
 }
 
@@ -136,7 +136,7 @@ const HonorTitle: Component<HonorTitleProps> = (props) => {
 }
 
 /**
- * ユーザーの称号、レベル、指標とRATING・OVER POWER履歴への導線を表示する。
+ * ユーザーの称号、レベル、指標とRATING・OVER POWER・OP%履歴への導線を表示する。
  *
  * @param props - プレイヤー情報、称号、計算済みレーティング、履歴ページのリンク先。
  * @returns プロフィールカードの JSX 要素。

@@ -172,7 +172,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   operation_failed: '操作に失敗しました',
   player_not_linked: 'プレイヤーデータが連携されていません',
   player_not_found: 'プレイヤーが見つかりません',
-  player_metric_history_not_found: 'RATING・OVER POWER履歴が見つかりません',
+  player_metric_history_not_found: 'RATING・OVER POWER・OP%履歴が見つかりません',
   data_transfer_player_not_found: 'エクスポートできるプレイヤーデータがありません',
   data_transfer_invalid_file: '選択した移行ファイルを読み込めません',
   data_transfer_invalid_signature: '移行ファイルの署名を確認できません',
@@ -887,17 +887,19 @@ export interface UserRatingDTO {
   meta: UserRatingMetaDTO
 }
 
-/** 公式RATING・公式OVER POWER履歴の1件を表す。 */
+/** 公式RATING・公式OVER POWER・公式OP%履歴の1件を表す。 */
 export interface PlayerMetricHistoryEntryDTO {
   /** CHUNITHM-NETから取得した公式RATING。 */
   rating: number
   /** CHUNITHM-NETから取得した公式OVER POWER。 */
   overpower: number
+  /** CHUNITHM-NETから取得した公式OP%。記録開始前はnull。 */
+  overpower_percent: number | null
   /** CHUNITHM-NETからのデータ取得完了日時。 */
   data_collected_at: string
 }
 
-/** プレイヤー単位の公式RATING・公式OVER POWER履歴レスポンス。 */
+/** プレイヤー単位の公式RATING・公式OVER POWER・公式OP%履歴レスポンス。 */
 export interface PlayerMetricHistoryResponseDTO {
   /** 現在値を先頭に新しい順で並んだ公式指標のスナップショット。 */
   entries: PlayerMetricHistoryEntryDTO[]

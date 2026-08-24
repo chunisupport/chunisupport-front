@@ -2,17 +2,20 @@ import type { PlayerMetricHistoryMetric } from '../../../utils/playerMetricHisto
 
 /** 公式指標履歴ページで表示する文言。 */
 export const PLAYER_METRIC_HISTORY_COPY = {
-  pageTitle: 'RATING / OVER POWER履歴',
-  documentTitle: 'RATING / OVER POWER履歴',
+  pageTitle: 'RATING / OVER POWER / OP%履歴',
+  documentTitle: 'RATING / OVER POWER / OP%履歴',
   backToProfile: 'プロフィールへ戻る',
   emptyHistory: '履歴がありません',
   tableTitle: '履歴一覧',
-  tableCaption: '公式RATINGと公式OVER POWERの履歴',
+  tableCaption: '公式RATING・公式OVER POWER・公式OP%の履歴',
   collectedAt: '取得日時',
   rating: 'RATING',
   overPower: 'OVER POWER',
+  overPowerPercent: 'OP%',
+  missingValue: '-',
   ratingChartAriaLabel: '公式RATING履歴の折れ線グラフ',
   overPowerChartAriaLabel: '公式OVER POWER履歴の折れ線グラフ',
+  overPowerPercentChartAriaLabel: '公式OP%履歴の折れ線グラフ',
 } as const
 
 /** 履歴グラフ1枚分の表示定義。 */
@@ -21,21 +24,35 @@ export type PlayerMetricHistoryChartDefinition = {
   title: string
   ariaLabel: string
   colorVariable: string
+  decimalPlaces: number
+  suffix: string
 }
 
-/** RATINGとOVER POWERを別々の折れ線グラフとして表示する定義。 */
+/** RATING・OVER POWER・OP%を別々の折れ線グラフとして表示する定義。 */
 export const PLAYER_METRIC_HISTORY_CHART_DEFINITIONS = [
   {
     metric: 'rating',
     title: PLAYER_METRIC_HISTORY_COPY.rating,
     ariaLabel: PLAYER_METRIC_HISTORY_COPY.ratingChartAriaLabel,
     colorVariable: '--cs-color-action-primary',
+    decimalPlaces: 2,
+    suffix: '',
   },
   {
     metric: 'overpower',
     title: PLAYER_METRIC_HISTORY_COPY.overPower,
     ariaLabel: PLAYER_METRIC_HISTORY_COPY.overPowerChartAriaLabel,
     colorVariable: '--cs-color-info',
+    decimalPlaces: 2,
+    suffix: '',
+  },
+  {
+    metric: 'overpower_percent',
+    title: PLAYER_METRIC_HISTORY_COPY.overPowerPercent,
+    ariaLabel: PLAYER_METRIC_HISTORY_COPY.overPowerPercentChartAriaLabel,
+    colorVariable: '--cs-color-success',
+    decimalPlaces: 2,
+    suffix: '%',
   },
 ] as const satisfies readonly PlayerMetricHistoryChartDefinition[]
 
