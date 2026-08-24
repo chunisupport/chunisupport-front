@@ -64,11 +64,11 @@ export const createFriendRequest = async (request: FriendRequestCreateRequest): 
 /**
  * 指定ユーザーから届いたフレンド申請を承認する。
  *
- * @param userId - 申請元ユーザーの内部ID。
+ * @param username - 申請元ユーザーの公開識別子。
  * @returns 承認完了時に解決されるPromise。
  */
-export const acceptFriendRequest = async (userId: number): Promise<void> => {
-  await fetchWithAuth(`${FRIENDS_API_PATH}/requests/${encodeURIComponent(userId)}/accept`, {
+export const acceptFriendRequest = async (username: string): Promise<void> => {
+  await fetchWithAuth(`${FRIENDS_API_PATH}/requests/${encodeURIComponent(username)}/accept`, {
     method: 'POST',
     requireAuthentication: true,
   })
@@ -77,11 +77,11 @@ export const acceptFriendRequest = async (userId: number): Promise<void> => {
 /**
  * 指定ユーザーから届いたフレンド申請を拒否する。
  *
- * @param userId - 申請元ユーザーの内部ID。
+ * @param username - 申請元ユーザーの公開識別子。
  * @returns 拒否完了時に解決されるPromise。
  */
-export const rejectFriendRequest = async (userId: number): Promise<void> => {
-  await fetchWithAuth(`${FRIENDS_API_PATH}/requests/${encodeURIComponent(userId)}/reject`, {
+export const rejectFriendRequest = async (username: string): Promise<void> => {
+  await fetchWithAuth(`${FRIENDS_API_PATH}/requests/${encodeURIComponent(username)}/reject`, {
     method: 'POST',
     requireAuthentication: true,
   })
@@ -90,11 +90,11 @@ export const rejectFriendRequest = async (userId: number): Promise<void> => {
 /**
  * 自分が送ったフレンド申請を取り消す。
  *
- * @param userId - 申請先ユーザーの内部ID。
+ * @param username - 申請先ユーザーの公開識別子。
  * @returns 取り消し完了時に解決されるPromise。
  */
-export const cancelFriendRequest = async (userId: number): Promise<void> => {
-  await fetchWithAuth(`${FRIENDS_API_PATH}/requests/${encodeURIComponent(userId)}`, {
+export const cancelFriendRequest = async (username: string): Promise<void> => {
+  await fetchWithAuth(`${FRIENDS_API_PATH}/requests/${encodeURIComponent(username)}`, {
     method: 'DELETE',
     requireAuthentication: true,
   })
@@ -103,11 +103,11 @@ export const cancelFriendRequest = async (userId: number): Promise<void> => {
 /**
  * 指定ユーザーとのフレンド関係を解除する。
  *
- * @param userId - 解除対象ユーザーの内部ID。
+ * @param username - 解除対象ユーザーの公開識別子。
  * @returns 解除完了時に解決されるPromise。
  */
-export const deleteFriend = async (userId: number): Promise<void> => {
-  await fetchWithAuth(`${FRIENDS_API_PATH}/${encodeURIComponent(userId)}`, {
+export const deleteFriend = async (username: string): Promise<void> => {
+  await fetchWithAuth(`${FRIENDS_API_PATH}/${encodeURIComponent(username)}`, {
     method: 'DELETE',
     requireAuthentication: true,
   })

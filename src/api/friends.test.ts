@@ -104,7 +104,7 @@ test('フレンド申請APIはusernameをPOSTする', async () => {
   ])
 })
 
-test('フレンド操作APIはuser_idをエンコードして呼び出す', async () => {
+test('フレンド操作APIはusernameをエンコードして呼び出す', async () => {
   // Given: 操作API呼び出し内容の記録。
   const requests: { url: string; method: string | undefined }[] = []
   globalThis.fetch = async (input, init) => {
@@ -115,27 +115,27 @@ test('フレンド操作APIはuser_idをエンコードして呼び出す', asyn
   // When: 承認、拒否、申請取り消し、解除APIを呼び出す。
   const { acceptFriendRequest, rejectFriendRequest, cancelFriendRequest, deleteFriend } =
     await loadFriendsApi()
-  await acceptFriendRequest(123)
-  await rejectFriendRequest(456)
-  await cancelFriendRequest(654)
-  await deleteFriend(789)
+  await acceptFriendRequest('requester1')
+  await rejectFriendRequest('requester2')
+  await cancelFriendRequest('targetuser')
+  await deleteFriend('frienduser')
 
-  // Then: user_idパスパラメータを使うAPI仕様どおりに呼び出す。
+  // Then: usernameパスパラメータを使うAPI仕様どおりに呼び出す。
   assert.deepEqual(requests, [
     {
-      url: 'http://localhost:3000/internal/friends/requests/123/accept',
+      url: 'http://localhost:3000/internal/friends/requests/requester1/accept',
       method: 'POST',
     },
     {
-      url: 'http://localhost:3000/internal/friends/requests/456/reject',
+      url: 'http://localhost:3000/internal/friends/requests/requester2/reject',
       method: 'POST',
     },
     {
-      url: 'http://localhost:3000/internal/friends/requests/654',
+      url: 'http://localhost:3000/internal/friends/requests/targetuser',
       method: 'DELETE',
     },
     {
-      url: 'http://localhost:3000/internal/friends/789',
+      url: 'http://localhost:3000/internal/friends/frienduser',
       method: 'DELETE',
     },
   ])
