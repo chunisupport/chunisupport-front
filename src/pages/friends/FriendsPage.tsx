@@ -52,6 +52,7 @@ import {
   formatFriendPlayerLevel,
   formatFriendPlayerName,
   formatFriendRating,
+  shouldHideFriendProfile,
 } from './friendshipDisplay'
 
 type FriendshipPageData = {
@@ -130,16 +131,6 @@ const fetchFriendshipPageData = async (): Promise<FriendshipPageData> => {
  * @returns 前後空白を除いたユーザー名。
  */
 const normalizeFriendRequestUsername = (value: string): string => value.trim()
-
-/**
- * フレンドカードでプロフィール情報とリンクを非表示にするか判定する。
- *
- * @param variant - 表示中のフレンド画面タブ。
- * @param user - 表示対象ユーザー。
- * @returns 非公開の送信済み申請先なら true。
- */
-const shouldHideFriendProfile = (variant: FriendsTabValue, user: FriendshipUserDTO): boolean =>
-  variant === 'sent' && user.is_private
 
 /**
  * フレンド申請失敗時の表示文言を生成する。
@@ -329,8 +320,8 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
                     <Show
                       when={!hidesProfile()}
                       fallback={
-                        <span class={`${playerNameClass} text-text`}>
-                          {formatFriendPlayerName(user.player_name)}
+                        <span class={`${playerNameClass} font-sans text-text`}>
+                          @{user.username}
                         </span>
                       }
                     >
@@ -352,9 +343,11 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
                       </span>
                     </Show>
                   </div>
-                  <span class="mt-0.5 block min-w-0 truncate text-xs text-text-muted">
-                    @{user.username}
-                  </span>
+                  <Show when={!hidesProfile()}>
+                    <span class="mt-0.5 block min-w-0 truncate text-xs text-text-muted">
+                      @{user.username}
+                    </span>
+                  </Show>
                 </div>
                 <Show when={!hidesProfile()}>
                   <dl class="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
@@ -576,7 +569,7 @@ const FriendsPage = () => {
    * @returns 承認完了時に解決されるPromise。
    */
   const handleAccept = (user: FriendshipUserDTO): Promise<void> =>
-    runUserOperation('accept', () => acceptFriendRequest(user.user_id), FRIENDS_COPY.acceptSuccess)
+    runUserOperation('accept', () => acceptFriendRequest(user.username), FRIENDS_COPY.acceptSuccess)
 
   /**
    * フレンド申請を拒否する。
@@ -596,7 +589,7 @@ const FriendsPage = () => {
    * @returns 取り消し完了時に解決されるPromise。
    */
   const handleCancel = (user: FriendshipUserDTO): Promise<void> =>
-    runUserOperation('cancel', () => cancelFriendRequest(user.user_id), FRIENDS_COPY.cancelSuccess)
+    runUserOperation('cancel', () => cancelFriendRequest(user.username), FRIENDS_COPY.cancelSuccess)
 
   /**
    * フレンド関係を解除する。
@@ -621,13 +614,13 @@ const FriendsPage = () => {
     if (action.type === 'reject') {
       await runUserOperation(
         'reject',
-        () => rejectFriendRequest(action.user.user_id),
+        () => rejectFriendRequest(action.user.username),
         FRIENDS_COPY.rejectSuccess
       )
     } else {
       await runUserOperation(
         'remove',
-        () => deleteFriend(action.user.user_id),
+        () => deleteFriend(action.user.username),
         FRIENDS_COPY.removeSuccess
       )
     }

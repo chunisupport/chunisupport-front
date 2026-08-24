@@ -1,3 +1,5 @@
+import type { FriendshipUserDTO } from '../../types/api'
+import type { FriendsTabValue } from './constants'
 import { FRIENDS_COPY } from './constants'
 
 const friendDateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
@@ -46,3 +48,15 @@ export const formatFriendPlayerName = (playerName: string | null): string =>
  */
 export const formatFriendPlayerLevel = (level: number | null): string =>
   level === null ? FRIENDS_COPY.playerNotLinked : String(level)
+
+/**
+ * フレンドカードでプロフィール情報とリンクを非表示にするか判定する。
+ *
+ * @param variant - 表示中のフレンド画面タブ。
+ * @param user - 公開設定を持つ表示対象ユーザー。
+ * @returns 未承認の非公開ユーザーなら true。
+ */
+export const shouldHideFriendProfile = (
+  variant: FriendsTabValue,
+  user: Pick<FriendshipUserDTO, 'is_private'>
+): boolean => variant !== 'friends' && user.is_private
