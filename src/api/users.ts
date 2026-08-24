@@ -47,7 +47,7 @@ export const fetchUserRating = async (username: string): Promise<UserRatingDTO> 
 }
 
 /**
- * 指定したユーザーの公式RATING・公式OVER POWER履歴を取得する。
+ * 指定したユーザーの公式RATING・公式OVER POWER・公式OP%履歴を取得する。
  *
  * @param username - 履歴取得対象のユーザー名。
  * @returns 現在値を先頭に新しい順で並んだ公式指標履歴。

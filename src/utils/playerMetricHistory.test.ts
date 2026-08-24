@@ -6,6 +6,7 @@ import {
   formatPlayerMetricHistoryAxisTimestamp,
   formatPlayerMetricHistoryDateTime,
   formatPlayerMetricHistoryTooltipTimestamp,
+  hasPlayerMetricHistoryValues,
   isPlayerMetricHistoryNotFoundError,
   sortPlayerMetricHistoryEntries,
 } from './playerMetricHistory'
@@ -16,16 +17,47 @@ import {
  * @param dataCollectedAt - データ取得日時。
  * @param rating - 公式RATING。
  * @param overpower - 公式OVER POWER。
+ * @param overpowerPercent - 公式OP%。
  * @returns 指定値を持つ履歴DTO。
  */
 const createHistoryEntry = (
   dataCollectedAt: string,
   rating: number,
-  overpower: number
+  overpower: number,
+  overpowerPercent: number | null = null
 ): PlayerMetricHistoryEntryDTO => ({
   rating,
   overpower,
+  overpower_percent: overpowerPercent,
   data_collected_at: dataCollectedAt,
+})
+
+test('公式OPパーセントの未記録値をグラフの切れ目として残す', () => {
+  // Given
+  const oldest = createHistoryEntry('2026-07-01T12:00:00Z', 17.1, 12_000, null)
+  const middle = createHistoryEntry('2026-07-15T12:00:00Z', 17.2, 12_100, 98.7)
+  const latest = createHistoryEntry('2026-08-08T12:00:00Z', 17.25, 12_345.67, 98.76)
+
+  // When
+  const result = buildPlayerMetricHistoryChartPoints([latest, oldest, middle], 'overpower_percent')
+
+  // Then
+  assert.deepEqual(result, [
+    { x: new Date(oldest.data_collected_at).getTime(), y: null },
+    { x: new Date(middle.data_collected_at).getTime(), y: 98.7 },
+    { x: new Date(latest.data_collected_at).getTime(), y: 98.76 },
+  ])
+})
+
+test('公式指標に記録済みの値があるか判定する', () => {
+  // Given
+  const unknown = createHistoryEntry('2026-07-01T12:00:00Z', 17.1, 12_000, null)
+  const known = createHistoryEntry('2026-08-08T12:00:00Z', 17.25, 12_345.67, 98.76)
+
+  // When / Then
+  assert.equal(hasPlayerMetricHistoryValues([unknown], 'overpower_percent'), false)
+  assert.equal(hasPlayerMetricHistoryValues([unknown, known], 'overpower_percent'), true)
+  assert.equal(hasPlayerMetricHistoryValues([unknown], 'rating'), true)
 })
 
 test('公式指標履歴を元配列を変更せず古い順へ並べ替える', () => {
