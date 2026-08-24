@@ -38,14 +38,18 @@ export const SCORE_RANK_TEXT_CLASS: Record<ScoreRank, string> = {
 export const ALL_JUSTICE_CRITICAL_BG_CLASS =
   '[background-image:var(--cs-gradient-lamp-all-justice-critical-bg)]'
 
+/** プラス付きスコアランクを同系色の通常ランクと区別する斜線背景クラス。 */
+export const SCORE_RANK_PLUS_BAR_BACKGROUND_CLASS =
+  '[background-image:var(--cs-gradient-score-rank-plus-bg)]'
+
 /** レコードのスコアランク文字色に合わせたフィルター統計グラフ用背景色クラス。 */
 export const SCORE_RANK_BAR_CLASS: Record<FilterStatsRank, string> = {
   MAX: ALL_JUSTICE_CRITICAL_BG_CLASS,
   'SSS+': 'bg-score-rank-sssp-bg',
   SSS: 'bg-score-rank-sss-bg',
-  'SS+': 'bg-score-rank-ss-bg',
+  'SS+': `bg-score-rank-ss-bg ${SCORE_RANK_PLUS_BAR_BACKGROUND_CLASS}`,
   SS: 'bg-score-rank-ss-bg',
-  'S+': 'bg-score-rank-s-bg',
+  'S+': `bg-score-rank-s-bg ${SCORE_RANK_PLUS_BAR_BACKGROUND_CLASS}`,
   S: 'bg-score-rank-s-bg',
   OTHERS: 'bg-score-rank-d-bg',
   未プレイ: 'bg-surface-hover',

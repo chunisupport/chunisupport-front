@@ -3,7 +3,26 @@ import test from 'node:test'
 import {
   CLEAR_CHART_DATASET_DEFINITIONS,
   COMBO_CHART_DATASET_DEFINITIONS,
+  RANK_CHART_DATASET_DEFINITIONS,
+  SCORE_RANK_PLUS_CHART_STRIPE_PATTERN,
 } from './songStatsChartDefinitions.ts'
+
+test('RANKグラフ定義: S+とSS+だけに共通の斜線パターンを設定する', () => {
+  // Given: 楽曲詳細のRANKグラフ定義を利用する。
+  const definitions = RANK_CHART_DATASET_DEFINITIONS
+
+  // When: 斜線パターンが設定されたランクを取得する。
+  const stripedDefinitions = definitions.filter((definition) => 'stripePattern' in definition)
+
+  // Then: S+とSS+だけが共通のCSSトークン定義を参照する。
+  assert.deepEqual(
+    stripedDefinitions.map((definition) => definition.label),
+    ['S+', 'SS+']
+  )
+  for (const definition of stripedDefinitions) {
+    assert.deepEqual(definition.stripePattern, SCORE_RANK_PLUS_CHART_STRIPE_PATTERN)
+  }
+})
 
 test('COMBOグラフ定義: どのコンボランプも未達成のNONEを先頭に表示する', () => {
   // Given: 楽曲詳細のCOMBOグラフ定義を利用する。
