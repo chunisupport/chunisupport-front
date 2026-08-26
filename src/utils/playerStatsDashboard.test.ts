@@ -12,6 +12,7 @@ import {
   filterPlayerStatsRecords,
   findPlayerStatsCandidates,
   hasPlayerStatsAchievement,
+  isPlayerStatsFilterModified,
 } from './playerStatsDashboard'
 
 test('達成率は件数を総数に対する百分率へ変換する', () => {
@@ -151,6 +152,108 @@ test('OP対象フィルターは楽曲マスタの理論値対象難易度だけ
     filtered.map((record) => `${record.id}:${record.difficulty}`),
     ['song-1:ULTIMA', 'song-2:MASTER']
   )
+})
+
+test('ジャンルとバージョンのフィルターは両方に一致する譜面だけを返す', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'pops-verse' }),
+    createRecord({ id: 'pops-luminous' }),
+    createRecord({ id: 'game-verse' }),
+  ]
+  const attributesBySongId = new Map([
+    ['pops-verse', { genre: 'POPS & ANIME', version: 'VERSE' }],
+    ['pops-luminous', { genre: 'POPS & ANIME', version: 'LUMINOUS' }],
+    ['game-verse', { genre: 'GAME', version: 'VERSE' }],
+  ])
+
+  // When
+  const filtered = filterPlayerStatsRecords(records, 'ALL', new Map(), {
+    attributesBySongId,
+    genres: ['POPS & ANIME'],
+    versions: ['VERSE'],
+  })
+
+  // Then
+  assert.deepEqual(
+    filtered.map((record) => record.id),
+    ['pops-verse']
+  )
+})
+
+test('ジャンルまたはバージョンが未選択の場合は集計対象を返さない', () => {
+  // Given
+  const records = [createRecord({ id: 'song-1' })]
+  const attributesBySongId = new Map([['song-1', { genre: 'POPS & ANIME', version: 'VERSE' }]])
+
+  // When
+  const filtered = filterPlayerStatsRecords(records, 'ALL', new Map(), {
+    attributesBySongId,
+    genres: [],
+    versions: ['VERSE'],
+  })
+
+  // Then
+  assert.deepEqual(filtered, [])
+})
+
+test('統計フィルターは難易度と全選択項目が初期状態なら未変更と判定する', () => {
+  // Given
+  const filters = {
+    difficulty: MASTER_ULTIMA_FILTER,
+    genres: ['GAME', 'POPS & ANIME'],
+    versions: ['VERSE', 'LUMINOUS'],
+  } as const
+
+  // When
+  const modified = isPlayerStatsFilterModified(
+    filters,
+    MASTER_ULTIMA_FILTER,
+    ['POPS & ANIME', 'GAME'],
+    ['LUMINOUS', 'VERSE']
+  )
+
+  // Then
+  assert.equal(modified, false)
+})
+
+test('統計フィルターは難易度・ジャンル・バージョンのいずれかが異なると変更済みになる', () => {
+  // Given
+  const defaultGenres = ['POPS & ANIME', 'GAME']
+  const defaultVersions = ['LUMINOUS', 'VERSE']
+
+  // When
+  const results = [
+    isPlayerStatsFilterModified(
+      { difficulty: 'EXPERT', genres: defaultGenres, versions: defaultVersions },
+      MASTER_ULTIMA_FILTER,
+      defaultGenres,
+      defaultVersions
+    ),
+    isPlayerStatsFilterModified(
+      {
+        difficulty: MASTER_ULTIMA_FILTER,
+        genres: ['GAME'],
+        versions: defaultVersions,
+      },
+      MASTER_ULTIMA_FILTER,
+      defaultGenres,
+      defaultVersions
+    ),
+    isPlayerStatsFilterModified(
+      {
+        difficulty: MASTER_ULTIMA_FILTER,
+        genres: defaultGenres,
+        versions: ['VERSE'],
+      },
+      MASTER_ULTIMA_FILTER,
+      defaultGenres,
+      defaultVersions
+    ),
+  ]
+
+  // Then
+  assert.deepEqual(results, [true, true, true])
 })
 
 test('サマリーは未プレイを母数に含め、平均スコアからは除外する', () => {
