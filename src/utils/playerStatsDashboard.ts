@@ -108,6 +108,26 @@ export type PlayerStatsNotesBySongId = ReadonlyMap<
   Readonly<Partial<Record<PlayerDataDifficulty, number | null>>>
 >
 
+/** 統計フィルターで参照する楽曲属性 */
+export type PlayerStatsRecordAttribute = {
+  genre: string
+  version: string
+}
+
+/** 統計画面のジャンル・バージョン絞り込み条件 */
+export type PlayerStatsAttributeFilter = {
+  attributesBySongId: ReadonlyMap<string, PlayerStatsRecordAttribute>
+  genres: readonly string[]
+  versions: readonly string[]
+}
+
+/** 統計画面で適用中の全フィルター条件 */
+export type PlayerStatsFilterSelection = {
+  difficulty: PlayerStatsDifficulty
+  genres: readonly string[]
+  versions: readonly string[]
+}
+
 /** 次の目標達成に近い譜面と数値上の残量 */
 export type PlayerStatsCandidate = {
   record: PlayerRecordDTO
@@ -148,6 +168,44 @@ const MILESTONE_STEP: Record<PlayerStatsCandidateTarget, number> = {
   aj: 10,
   max: 5,
 }
+
+/**
+ * 選択中の値が既定の全選択肢と一致するか判定する。
+ *
+ * @param selected - 現在選択されている値。
+ * @param defaults - 既定で選択される全候補。
+ * @returns 順序にかかわらず同じ値が選択されている場合はtrue。
+ */
+const hasSamePlayerStatsSelections = (
+  selected: readonly string[],
+  defaults: readonly string[]
+): boolean => {
+  if (selected.length !== defaults.length) return false
+
+  const selectedValues = new Set(selected)
+  return (
+    selectedValues.size === defaults.length && defaults.every((value) => selectedValues.has(value))
+  )
+}
+
+/**
+ * 統計画面のフィルターが初期状態から変更されているか判定する。
+ *
+ * @param filters - 現在適用されているフィルター。
+ * @param defaultDifficulty - 初期選択する難易度。
+ * @param defaultGenres - 初期選択する全ジャンル。
+ * @param defaultVersions - 初期選択する全バージョン。
+ * @returns いずれかの条件が初期状態と異なる場合はtrue。
+ */
+export const isPlayerStatsFilterModified = (
+  filters: PlayerStatsFilterSelection,
+  defaultDifficulty: PlayerStatsDifficulty,
+  defaultGenres: readonly string[],
+  defaultVersions: readonly string[]
+): boolean =>
+  filters.difficulty !== defaultDifficulty ||
+  !hasSamePlayerStatsSelections(filters.genres, defaultGenres) ||
+  !hasSamePlayerStatsSelections(filters.versions, defaultVersions)
 
 /**
  * 件数を全譜面数に対する割合へ変換する。
@@ -194,30 +252,38 @@ export const hasPlayerStatsAchievement = (
  * @param records - 集計元の通常譜面レコード。
  * @param difficulty - 全難易度、通常難易度、MASTERとULTIMAの合算、または理論値OP対象。
  * @param targetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
+ * @param attributeFilter - 楽曲ごとの属性と、選択中のジャンル・バージョン。
  * @returns 選択難易度に一致する新しい配列。
  */
 export const filterPlayerStatsRecords = (
   records: PlayerRecordDTO[],
   difficulty: PlayerStatsDifficulty,
-  targetDifficultyBySongId: ReadonlyMap<string, PlayerDataDifficulty> = new Map()
+  targetDifficultyBySongId: ReadonlyMap<string, PlayerDataDifficulty> = new Map(),
+  attributeFilter?: PlayerStatsAttributeFilter
 ): PlayerRecordDTO[] => {
-  if (difficulty === 'ALL') return [...records]
-
   return records.filter((record) => {
     const recordDifficulty = record.difficulty.toUpperCase() as PlayerDataDifficulty
+    const attribute = attributeFilter?.attributesBySongId.get(record.id)
+    const matchesDifficulty =
+      difficulty === 'ALL' ||
+      (difficulty === MASTER_ULTIMA_FILTER
+        ? MASTER_ULTIMA_DIFFICULTIES.some(
+            (targetDifficulty) => targetDifficulty === recordDifficulty
+          )
+        : difficulty === THEORETICAL_OVER_POWER_TARGET_FILTER
+          ? isTheoreticalOverPowerTargetDifficulty(
+              targetDifficultyBySongId.get(record.id),
+              recordDifficulty
+            )
+          : recordDifficulty === difficulty)
 
-    if (difficulty === MASTER_ULTIMA_FILTER) {
-      return MASTER_ULTIMA_DIFFICULTIES.some(
-        (targetDifficulty) => targetDifficulty === recordDifficulty
-      )
-    }
-    if (difficulty === THEORETICAL_OVER_POWER_TARGET_FILTER) {
-      return isTheoreticalOverPowerTargetDifficulty(
-        targetDifficultyBySongId.get(record.id),
-        recordDifficulty
-      )
-    }
-    return recordDifficulty === difficulty
+    return (
+      matchesDifficulty &&
+      (!attributeFilter ||
+        (attribute !== undefined &&
+          attributeFilter.genres.includes(attribute.genre) &&
+          attributeFilter.versions.includes(attribute.version)))
+    )
   })
 }
 
