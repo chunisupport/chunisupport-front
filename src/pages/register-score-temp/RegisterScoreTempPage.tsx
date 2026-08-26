@@ -105,16 +105,16 @@ const RegisterScoreTempPage = () => {
     }
   }
 
-  useDocumentTitle('スコア登録(一時)')
+  useDocumentTitle('スタッフ向けスコア登録検証')
 
   return (
     <div class="mx-auto w-full max-w-3xl p-6">
       <div class="space-y-4">
         <div>
-          <h1 class="text-2xl font-semibold">スコア情報アップロード</h1>
+          <h1 class="text-2xl font-semibold">スタッフ向けスコア登録検証</h1>
           <p class="mt-2 text-sm text-text-muted">
-            .txt (base64+gzip) もしくは .json (デバッグ用) をアップロードできます。 JSONは送信時に{' '}
-            <span class="font-semibold">?format=json</span>
+            スタッフ向けの一時検証画面です。.txt (base64+gzip) もしくは .json (デバッグ用)
+            をアップロードできます。JSONは送信時に <span class="font-semibold">?format=json</span>
             を付与します。
           </p>
         </div>

@@ -445,14 +445,14 @@ const GuardedAdminMaintenancePage = () => (
 )
 
 /**
- * 認証を要求してスコア登録の一時検証画面を表示する。
+ * ADMIN 権限を要求してスコア登録の一時検証画面を表示する。
  *
- * @returns 認証 guard と route module 読み込み境界を付与した一時検証画面。
+ * @returns 権限制御と route module 読み込み境界を付与した一時検証画面。
  */
 const GuardedRegisterScoreTempPage = () => (
-  <RequireAuth>
+  <RequireRole allowedRoles={['ADMIN']}>
     <LoadableRegisterScoreTempPage />
-  </RequireAuth>
+  </RequireRole>
 )
 
 /**
