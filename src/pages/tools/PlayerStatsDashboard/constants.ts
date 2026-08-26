@@ -37,7 +37,7 @@ export const PLAYER_STATS_COPY = {
   fullComboCandidate: 'FC',
   milestoneRemainingPrefix: 'あと',
   milestoneRemainingSuffix: '譜面',
-  milestoneTargetSuffix: '譜面を目指す',
+  milestoneTargetSuffix: '譜面まで',
   milestoneComplete: '達成済み',
   heatmapCountSeparator: '/',
 } as const
@@ -114,9 +114,10 @@ export const PLAYER_STATS_ACHIEVEMENT_LABEL: Record<PlayerStatsAchievement, stri
 
 /** 次のマイルストーンの表示選択肢 */
 export const PLAYER_STATS_MILESTONE_OPTIONS = [
+  { value: 'sss', label: 'SSS' },
   { value: 'sssPlus', label: 'SSS+' },
   { value: 'aj', label: 'AJ' },
-  { value: 'max', label: 'MAX' },
+  { value: 'max', label: 'AJC' },
 ] as const satisfies readonly { value: PlayerStatsCandidateTarget; label: string }[]
 
 /** 次に狙う譜面タブの表示選択肢 */

@@ -46,7 +46,6 @@
 
 | ID | 優先度 | 概要 | 詳細・対応方針 |
 |---|---|---|---|
-| **OPS-001** | **Medium** | 一時検証画面が本番 route に常設されている | `src/App.tsx` は `RegisterScoreTempPage` を build mode に関係なく登録しています。一時画面は `src/pages/register-score-temp/RegisterScoreTempPage.tsx` 自身を検証ページと定義し、外部 test bookmarklet URL と旧 clipboard fallback を保持しています。現行スコア登録へ役割を統合して削除するか、明示的な開発用 entry / build flag で本番成果物から除外すべきです。 |
 | **TEST-001** | **Medium** | 重要な画面状態・操作フローを検証する component / E2E テスト基盤がない | `package.json:22` の標準テストは `src/**/*.test.ts` だけを対象とし、リポジトリ内に first-party の `.test.tsx` やブラウザ E2E テストはありません。`src/pages/settings/Settings.tsx:72-285` のプライバシー・API token・データ削除・退会、`src/pages/friends/FriendsPage.tsx:397-630` の申請状態遷移、`src/pages/songs/SongManagementPage.tsx:699-1055` の CRUD は、API wrapper や一部 pure function のテストだけでは focus、loading、二重送信、成功後の再取得、SolidJS の反応性を固定できません。状態遷移を primitive / usecase に抽出して Given-When-Then の単体テストを追加し、少数の重要フローには Solid 対応 component test またはブラウザテストを導入すべきです。 |
 
 ### アーキテクチャ・責務 (ARCH)
