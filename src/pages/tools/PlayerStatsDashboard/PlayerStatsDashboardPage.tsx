@@ -438,7 +438,7 @@ const AchievementHeatmap = (props: {
  * 目標種別に対応する現在の達成件数をサマリーから取得する。
  *
  * @param summary - 選択難易度のサマリー。
- * @param target - SSS+、AJ、MAXのいずれか。
+ * @param target - SSS、SSS+、AJ、AJCのいずれか。
  * @returns 対象目標の現在件数。
  */
 const getTargetCurrentCount = (
@@ -454,10 +454,10 @@ const getTargetCurrentCount = (
         : summary.max
 
 /**
- * 次の区切りとなる達成曲数を3種類並べて表示する。
+ * 次の区切りとなる達成譜面数を4種類並べて表示する。
  *
  * @param props.summary - 選択難易度のサマリー。
- * @returns SSS+、AJ、MAXのマイルストーンカード。
+ * @returns SSS、SSS+、AJ、AJCのマイルストーンカード。
  */
 const MilestoneCards = (props: { summary: PlayerStatsSummary }): JSX.Element => (
   <section class={PAGE_SECTION_CLASS} aria-labelledby="player-stats-milestone-title">
@@ -467,7 +467,7 @@ const MilestoneCards = (props: { summary: PlayerStatsSummary }): JSX.Element => 
         {PLAYER_STATS_COPY.milestoneTitle}
       </h2>
     </div>
-    <ul class="grid gap-3 sm:grid-cols-3">
+    <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <For each={PLAYER_STATS_MILESTONE_OPTIONS}>
         {(option) => {
           const milestone = () =>
@@ -479,15 +479,6 @@ const MilestoneCards = (props: { summary: PlayerStatsSummary }): JSX.Element => 
           return (
             <li class="rounded-lg border border-border bg-surface-muted p-3">
               <p class="text-sm font-semibold text-text">{option.label}</p>
-              <p class="mt-2 font-jost text-2xl font-semibold tabular-nums text-action-primary">
-                <Show when={!milestone().isComplete} fallback={PLAYER_STATS_COPY.milestoneComplete}>
-                  {PLAYER_STATS_COPY.milestoneRemainingPrefix}
-                  {formatInteger(milestone().remaining)}
-                  <span class="ml-1 text-sm text-text-muted">
-                    {PLAYER_STATS_COPY.milestoneRemainingSuffix}
-                  </span>
-                </Show>
-              </p>
               <p class="mt-1 text-xs text-text-muted">
                 <Show
                   when={!milestone().isComplete}
@@ -495,6 +486,19 @@ const MilestoneCards = (props: { summary: PlayerStatsSummary }): JSX.Element => 
                 >
                   {formatInteger(milestone().target)}
                   {PLAYER_STATS_COPY.milestoneTargetSuffix}
+                </Show>
+              </p>
+              <p class="mt-2">
+                <Show when={!milestone().isComplete} fallback={PLAYER_STATS_COPY.milestoneComplete}>
+                  <span class="text-sm text-text-muted">
+                    {PLAYER_STATS_COPY.milestoneRemainingPrefix}
+                  </span>
+                  <span class="mx-1 font-jost text-2xl font-semibold tabular-nums text-action-primary">
+                    {formatInteger(milestone().remaining)}
+                  </span>
+                  <span class="text-sm text-text-muted">
+                    {PLAYER_STATS_COPY.milestoneRemainingSuffix}
+                  </span>
                 </Show>
               </p>
             </li>
