@@ -14,7 +14,6 @@ export const PLAYER_STATS_COPY = {
   pageTitle: 'ダッシュボード',
   documentTitle: 'ダッシュボード',
   description: 'プレイ記録から達成状況と次に狙う譜面を確認できます。',
-  difficultyLabel: '集計する難易度',
   overviewTitle: '現在地',
   overviewCaption: '選択した難易度の主要な達成状況',
   achievementTitle: '達成状況',
@@ -31,7 +30,7 @@ export const PLAYER_STATS_COPY = {
   averageScore: '平均スコア',
   sssPlus: 'SSS+',
   allJustice: 'ALL JUSTICE',
-  max: 'MAX',
+  max: 'ALL JUSTICE CRITICAL',
   achievementCountSuffix: '譜面',
   justiceGapSuffix: ' J',
   fullComboCandidate: 'FC',
@@ -40,6 +39,16 @@ export const PLAYER_STATS_COPY = {
   milestoneTargetSuffix: '譜面まで',
   milestoneComplete: '達成済み',
   heatmapCountSeparator: '/',
+  filterButtonLabel: '集計対象を絞り込む',
+  filterButtonActiveLabel: '集計対象を絞り込む（条件変更あり）',
+  filterTitle: '集計対象フィルター',
+  difficultyLabel: '難易度',
+  genreLabel: 'ジャンル',
+  versionLabel: 'バージョン',
+  genrePlaceholder: 'ジャンルを選択',
+  versionPlaceholder: 'バージョンを選択',
+  cancel: 'キャンセル',
+  apply: '適用',
 } as const
 
 /** 難易度フィルター1件分の値と表示名 */
@@ -87,7 +96,7 @@ export const PLAYER_STATS_ACHIEVEMENTS: Record<
   PlayerStatsAchievementGroup,
   readonly PlayerStatsAchievement[]
 > = {
-  rank: ['played', 's', 'ss', 'sss', 'sssPlus', 'max'],
+  rank: ['s', 'sPlus', 'ss', 'ssPlus', 'sss', 'sssPlus', 'max'],
   combo: ['played', 'fc', 'aj', 'max'],
   hard: ['played', 'clear', 'hard', 'brave', 'absolute', 'catastrophe'],
 }

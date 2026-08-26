@@ -4,16 +4,25 @@ import {
   BadgeCheck,
   ChartNoAxesCombined,
   CheckCircle2,
+  Funnel,
   Gauge,
   Grid3X3,
   Target,
   Trophy,
 } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import { createMemo, createResource, createSignal, ErrorBoundary, For, Show } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  ErrorBoundary,
+  For,
+  Show,
+} from 'solid-js'
 import { fetchMe } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
-import { AppSelect } from '../../../components/common/AppSelect'
+import { AppIconButton } from '../../../components/common/AppButton'
 import {
   AppTabContent,
   SegmentedTabs,
@@ -25,7 +34,10 @@ import { buildSongDetailPath } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../../types/api'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
-import { fetchPlayerStatsChartMetadata } from '../../../usecases/overpower/fetchTheoreticalTargetDifficulties'
+import {
+  fetchPlayerStatsChartMetadata,
+  type PlayerStatsChartMetadata,
+} from '../../../usecases/overpower/fetchTheoreticalTargetDifficulties'
 import { formatChartConst } from '../../../utils/chartConstFormat'
 import { getConstDisplay } from '../../../utils/constDisplay'
 import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
@@ -38,10 +50,10 @@ import {
   calculatePlayerStatsPercent,
   filterPlayerStatsRecords,
   findPlayerStatsCandidates,
+  isPlayerStatsFilterModified,
   type PlayerStatsCandidate,
   type PlayerStatsCandidateTarget,
   type PlayerStatsChartConstantRow,
-  type PlayerStatsDifficulty,
   type PlayerStatsHeatmapRow,
   type PlayerStatsLevelAchievement,
   type PlayerStatsLevelRow,
@@ -58,21 +70,23 @@ import {
   PLAYER_STATS_CANDIDATE_OPTIONS,
   PLAYER_STATS_COPY,
   PLAYER_STATS_DEFAULT_DIFFICULTY,
-  PLAYER_STATS_DIFFICULTY_OPTIONS,
   PLAYER_STATS_HEATMAP_AXIS_OPTIONS,
   PLAYER_STATS_HEATMAP_MAX_MIX_PERCENT,
   PLAYER_STATS_HEATMAP_METRICS,
   PLAYER_STATS_MILESTONE_OPTIONS,
   type PlayerStatsAchievementGroup,
-  type PlayerStatsDifficultyOption,
   type PlayerStatsHeatmapAxis,
 } from './constants'
+import { PlayerStatsFilterDialog, type PlayerStatsFilterState } from './PlayerStatsFilterDialog'
 
 /** 統計画面の表示に必要なログインユーザーのレコード情報 */
 type PlayerStatsPageData = {
   records: PlayerRecordDTO[]
   targetDifficultyBySongId: Map<string, PlayerDataDifficulty>
   notesBySongId: PlayerStatsNotesBySongId
+  attributesBySongId: PlayerStatsChartMetadata['attributesBySongId']
+  genres: string[]
+  versions: string[]
 }
 
 /** 主要統計カード1件分の表示定義 */
@@ -101,6 +115,9 @@ const fetchPlayerStatsPageData = async (): Promise<PlayerStatsPageData> => {
     records: record.standard,
     targetDifficultyBySongId: chartMetadata.targetDifficultyBySongId,
     notesBySongId: chartMetadata.notesBySongId,
+    attributesBySongId: chartMetadata.attributesBySongId,
+    genres: chartMetadata.genres,
+    versions: chartMetadata.versions,
   }
 }
 
@@ -467,7 +484,7 @@ const MilestoneCards = (props: { summary: PlayerStatsSummary }): JSX.Element => 
         {PLAYER_STATS_COPY.milestoneTitle}
       </h2>
     </div>
-    <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <ul class="grid gap-3 sm:grid-cols-3">
       <For each={PLAYER_STATS_MILESTONE_OPTIONS}>
         {(option) => {
           const milestone = () =>
@@ -665,25 +682,55 @@ const CandidateSection = (props: {
  * @returns 難易度連動の概要、達成階段、ヒートマップ、目標候補を含むページ。
  */
 const PlayerStatsDashboardPage: Component = () => {
-  const [difficulty, setDifficulty] = createSignal<PlayerStatsDifficulty>(
-    PLAYER_STATS_DEFAULT_DIFFICULTY
-  )
+  const [filters, setFilters] = createSignal<PlayerStatsFilterState>({
+    difficulty: PLAYER_STATS_DEFAULT_DIFFICULTY,
+    genres: [],
+    versions: [],
+  })
+  const [filterOpen, setFilterOpen] = createSignal(false)
   const [pageData] = createResource(fetchPlayerStatsPageData)
+  let filterInitialized = false
+
+  createEffect(() => {
+    const data = pageData()
+    if (!data || filterInitialized) return
+
+    setFilters({
+      difficulty: PLAYER_STATS_DEFAULT_DIFFICULTY,
+      genres: [...data.genres],
+      versions: [...data.versions],
+    })
+    filterInitialized = true
+  })
+
   const filteredRecords = createMemo(() =>
     filterPlayerStatsRecords(
       pageData()?.records ?? [],
-      difficulty(),
-      pageData()?.targetDifficultyBySongId
+      filters().difficulty,
+      pageData()?.targetDifficultyBySongId,
+      pageData()
+        ? {
+            attributesBySongId: pageData()?.attributesBySongId ?? new Map(),
+            genres: filters().genres,
+            versions: filters().versions,
+          }
+        : undefined
     )
   )
   const summary = createMemo(() => buildPlayerStatsSummary(filteredRecords()))
   const levelRows = createMemo(() => buildPlayerStatsLevelRows(filteredRecords()))
   const chartConstantRows = createMemo(() => buildPlayerStatsChartConstantRows(filteredRecords()))
-  const selectedDifficultyOption = createMemo(
-    () =>
-      PLAYER_STATS_DIFFICULTY_OPTIONS.find((option) => option.value === difficulty()) ??
-      PLAYER_STATS_DIFFICULTY_OPTIONS[0]
-  )
+  const hasModifiedFilters = createMemo(() => {
+    const data = pageData()
+    if (!data) return false
+
+    return isPlayerStatsFilterModified(
+      filters(),
+      PLAYER_STATS_DEFAULT_DIFFICULTY,
+      data.genres,
+      data.versions
+    )
+  })
 
   useDocumentTitle(PLAYER_STATS_COPY.documentTitle)
 
@@ -711,17 +758,32 @@ const PlayerStatsDashboardPage: Component = () => {
                     </p>
                   </div>
                 </div>
-                <AppSelect<PlayerStatsDifficultyOption>
-                  rootClass="w-full sm:w-48"
-                  options={PLAYER_STATS_DIFFICULTY_OPTIONS}
-                  optionValue="value"
-                  optionTextValue="label"
-                  value={selectedDifficultyOption()}
-                  onChange={(option) => option && setDifficulty(option.value)}
-                  label={PLAYER_STATS_COPY.difficultyLabel}
-                  formatLabel={(option) => option.label}
-                />
+                <AppIconButton
+                  size="md"
+                  tone={hasModifiedFilters() ? 'primary' : 'surface'}
+                  class="self-end"
+                  aria-label={
+                    hasModifiedFilters()
+                      ? PLAYER_STATS_COPY.filterButtonActiveLabel
+                      : PLAYER_STATS_COPY.filterButtonLabel
+                  }
+                  onClick={() => setFilterOpen(true)}
+                >
+                  <Funnel
+                    class={`h-5 w-5 ${hasModifiedFilters() ? 'fill-current' : ''}`}
+                    aria-hidden={true}
+                  />
+                </AppIconButton>
               </header>
+
+              <PlayerStatsFilterDialog
+                open={filterOpen()}
+                filters={filters()}
+                genreOptions={data().genres}
+                versionOptions={data().versions}
+                onOpenChange={setFilterOpen}
+                onApply={setFilters}
+              />
 
               <SummaryCards summary={summary()} />
 
