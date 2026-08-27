@@ -13,8 +13,10 @@ API サーバーと DB の負荷が高くなった場合でも、画面表示の
 
 - 通常楽曲一覧 API（`GET /internal/songs`）
 - WORLD'S END 楽曲一覧 API（`GET /internal/worldsend-songs`）
+- コース一覧 API
 - ログインユーザー本人のレーティング API（`GET /internal/users/{username}/rating`）
-- ログインユーザー本人のレコード API（`GET /internal/users/{username}/record?include_noplay=true`）
+- ログインユーザー本人の全件レコード API（`GET /internal/users/{username}/record?include_noplay=true`）と曲単位レコード API
+- ログインユーザー本人のコースレコード API
 
 ## 基本方針
 
@@ -61,14 +63,12 @@ API 側にはキャッシュ判定用の `updated-at` エンドポイントが�
 | ---- | -------- | -------- |
 | 通常楽曲一覧 | 1曲単位（`display_id -> SongDTO`） | `songsUpdatedAt` |
 | WORLD'S END 楽曲一覧 | 1曲単位（`display_id -> WorldsendSongDTO`） | `songsUpdatedAt` |
+| コース一覧 | 1コース単位 | `coursesUpdatedAt` |
 | ログインユーザー本人のレーティング | `UserRatingDTO` 丸ごと | `userUpdatedAt` + `songsUpdatedAt` |
-| ログインユーザー本人のレコード | `UserRecordDTO` 丸ごと | `userUpdatedAt` + `songsUpdatedAt` |
+| ログインユーザー本人の通常/WORLD'S ENDレコード | 1曲単位 | `userUpdatedAt` + `songsUpdatedAt` |
+| ログインユーザー本人のコースレコード | 1コース単位 | `userUpdatedAt` + `coursesUpdatedAt` |
 
-楽曲は、楽曲一覧だけでなく楽曲詳細でも個別参照する場面があるため、1曲単位で保存します。ただし現行実装では差分取得 API は使わず、キャッシュミス時は全件 API を取得して IndexedDB 内の対象 store を入れ替えます。API レスポンスの配列順を復元するため、各エントリに `sortOrder` を付与して保存します。
-
-レーティングとレコードは、画面側で全体レスポンスとして利用するため DTO 丸ごと保存します。レコード画面、OVER POWER、目標画面はいずれもレコード全体を使うため、レコードを譜面単位に分割するメリットは現時点では小さいです。
-
-ユーザーレコードキャッシュは `include_noplay=true` を前提とし、`userRecord` として固定キーに保存します。`include_noplay=false` のレコードキャッシュは持ちません。
+全件レコード API のレスポンスは `saveCachedUserRecord` で曲単位へ分割して `userSongRecords` に保存します。全件取得時は、メタデータと曲単位キャッシュが一致していれば `UserRecordDTO` を復元します。曲詳細画面では同じ `userSongRecords` から対象曲だけを取得できます。
 
 ## IndexedDB の DB 設計
 
@@ -84,90 +84,27 @@ ChuniSupportCache
 
 | ストア名 | 主キー | 役割 |
 | -------- | ------ | ---- |
-| `cacheMetadata` | `key` | キャッシュ種別ごとの更新日時・schemaVersion を保存する |
+| `cacheMetadata` | `key` | キャッシュ種別ごとの更新日時・schemaVersionを保存する |
 | `songs` | `id` | 通常楽曲を1曲単位で保存する |
-| `worldsendSongs` | `id` | WORLD'S END 楽曲を1曲単位で保存する |
-| `userApiResponses` | `key` | ログインユーザー本人の rating / record API レスポンスを丸ごと保存する |
-| `viewSettings` | `key` | 現在適用中フィルター・現在適用中列表示設定を保存する（詳細は別ドキュメント） |
+| `worldsendSongs` | `id` | WORLD'S END楽曲を1曲単位で保存する |
+| `courses` | `id` | コースを1件単位で保存する |
+| `userSongRecords` | `key` | 通常/WORLD'S ENDのユーザーレコードを曲単位で保存する |
+| `userCourseRecords` | `key` | ユーザーのコースレコードをコース単位で保存する |
+| `userApiResponses` | `key` | ログインユーザー本人のレーティングレスポンスを保存する |
+| `viewSettings` | `key` | フィルター・列表示設定を保存する |
+| `friendRequestNotificationStates` | `key` | フレンド申請通知の取得状態を保存する |
 
 ### TypeScript 型
 
-`src/lib/db/cacheDB.ts` で以下の型を定義しています。
+`src/lib/db/cacheDB.ts` では、楽曲・コース・曲単位レコード・コースレコード・レーティング・画面設定・フレンド申請通知状態に対応する型を定義しています。
 
-- `CacheMetadata` — 楽曲キャッシュのメタデータ（`songs`, `worldsendSongs`）
-- `CachedSong` / `CachedWorldsendSong` — `id`, `sortOrder`, `data` を持つ楽曲エントリ
-- `UserApiResponse` — `userRating` / `userRecord` の API レスポンス（`username` フィールドを含む）
-- `ViewSetting` — 画面設定（フィルター・列表示）
-
-現行の `CLIENT_CACHE_SCHEMA_VERSION` は `1` です。
+現行の `CLIENT_CACHE_SCHEMA_VERSION` は `6` です。Dexie のDBバージョンとは別の値で、キャッシュデータの互換性判定に使います。
 
 ### IndexedDB に保存されるデータ例
 
-通常楽曲は `songs` store に1曲ずつ保存されます。
+レーティングは `userApiResponses` に `userRating` として保存します。全件レコードレスポンスは `userSongRecords` に曲単位で分割して保存し、`cacheMetadata.userRecord` に全件取得済みであることと更新日時を記録します。曲単位APIで取得したレコードも同じ `userSongRecords` を利用します。
 
-```ts
-{
-  id: 'song_display_id',
-  sortOrder: 0,
-  data: {
-    id: 'song_display_id',
-    title: '曲名',
-    artist: 'アーティスト名',
-    genre: 'POPS & ANIME',
-    bpm: 180,
-    release: '2026-01-01',
-    jacket: '...',
-    charts: {
-      BASIC: { const: 3, is_const_unknown: false, notes: 300, notes_designer: null },
-      ADVANCED: { const: 7, is_const_unknown: false, notes: 600, notes_designer: null },
-      EXPERT: { const: 10, is_const_unknown: false, notes: 900, notes_designer: null },
-      MASTER: { const: 13.5, is_const_unknown: false, notes: 1200, notes_designer: null }
-    }
-  }
-}
-```
-
-レーティングは `userApiResponses` store に DTO 丸ごと保存されます。
-
-```ts
-{
-  key: 'userRating',
-  username: 'example_user',
-  schemaVersion: 1,
-  userUpdatedAt: '2026-06-16T12:00:00Z',
-  songsUpdatedAt: '2026-06-16T11:30:00Z',
-  fetchedAt: '2026-06-16T12:01:00Z',
-  data: {
-    best: [],
-    best_candidate: [],
-    new: [],
-    new_candidate: [],
-    meta: {
-      updated_at: '2026-06-16T12:00:00Z'
-    }
-  }
-}
-```
-
-レコードも `userApiResponses` store に DTO 丸ごと保存されます。
-
-```ts
-{
-  key: 'userRecord',
-  username: 'example_user',
-  schemaVersion: 1,
-  userUpdatedAt: '2026-06-16T12:00:00Z',
-  songsUpdatedAt: '2026-06-16T11:30:00Z',
-  fetchedAt: '2026-06-16T12:01:00Z',
-  data: {
-    standard: [],
-    worldsend: [],
-    meta: {
-      updated_at: '2026-06-16T12:00:00Z'
-    }
-  }
-}
-```
+コースマスタは `courses`、ユーザーのコースレコードは `userCourseRecords` に保存します。
 
 ## キャッシュ判定の流れ
 
@@ -215,18 +152,9 @@ WORLD'S END 楽曲:
 
 ### レコード
 
-```
-1. ログインユーザー本人のページか判定する。本人以外なら API 直呼び出し。
-2. GET /internal/users/{username}/updated-at を呼び、userUpdatedAt を取得する。
-3. GET /internal/songs/updated-at を呼び、songsUpdatedAt を取得する。
-4. userApiResponses.userRecord を読む。
-5. username, userUpdatedAt, songsUpdatedAt, schemaVersion がすべて一致すればキャッシュを返す。
-6. 不一致なら GET /internal/users/{username}/record?include_noplay=true を呼ぶ。
-7. API レスポンスを userApiResponses.userRecord に丸ごと保存し、API 結果を返す。
-8. updated-at 取得または IndexedDB 操作に失敗した場合は、本 API を呼ぶ。
-```
+全件レコード取得では、`userUpdatedAt` と `songsUpdatedAt`、`schemaVersion` が一致し、`cacheMetadata.userRecord` と `userSongRecords` が有効なら曲単位キャッシュから `UserRecordDTO` を復元します。キャッシュが揃っていなければ `GET /internal/users/{username}/record?include_noplay=true` を呼び、レスポンスを曲単位に分割して保存します。
 
-`songsUpdatedAt` も見る理由は、`include_noplay=true` の未プレイ補完が楽曲・譜面一覧に依存するためです。ユーザーレコード自体が変わらなくても、新曲追加や譜面更新でレスポンス内容が変わります。
+曲詳細では `GET /internal/users/{username}/record/songs/{displayId}` または `GET /internal/users/{username}/record/worldsend-songs/{displayId}` を利用し、対象曲だけを `userSongRecords` へ保存・取得します。
 
 ## ディレクトリ構成
 
