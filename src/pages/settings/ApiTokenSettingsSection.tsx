@@ -365,11 +365,12 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
           <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
             {issueActionError()}
           </p>
-          <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
-            {issueSuccess()}
-          </p>
         </div>
       </Show>
+
+      <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
+        {issueSuccess()}
+      </p>
 
       <Show when={generatedToken()}>
         {(issued) => (

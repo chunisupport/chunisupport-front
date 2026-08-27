@@ -334,6 +334,9 @@ const Settings = () => {
             <AlertDialog.Description class="mt-2 text-sm text-text-muted">
               スコア記録を含むプレイヤーデータが削除されます。この操作は取り消せません。
             </AlertDialog.Description>
+            <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
+              {playerDataError()}
+            </p>
             <div class="mt-6 flex justify-end gap-2">
               <AlertDialog.CloseButton class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted">
                 キャンセル
@@ -360,6 +363,9 @@ const Settings = () => {
             <AlertDialog.Description class="mt-2 text-sm text-text-muted">
               ユーザー情報、プレイヤーデータ、目標、APIトークンがすべて削除されます。本人確認のため再認証が必要です。
             </AlertDialog.Description>
+            <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
+              {accountDeleteError()}
+            </p>
             <div class="mt-6 flex justify-end gap-2">
               <AlertDialog.CloseButton class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted">
                 キャンセル

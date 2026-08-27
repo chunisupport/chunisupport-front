@@ -26,5 +26,7 @@ const LEGACY_SECTION_CATEGORIES: Readonly<Record<string, SettingsSectionId>> = {
  */
 export const normalizeSettingsSection = (section?: string): SettingsSectionId =>
   SETTINGS_SECTIONS.find((candidate) => candidate.id === section)?.id ??
-  (section ? LEGACY_SECTION_CATEGORIES[section] : undefined) ??
+  (section && Object.hasOwn(LEGACY_SECTION_CATEGORIES, section)
+    ? LEGACY_SECTION_CATEGORIES[section]
+    : undefined) ??
   DEFAULT_SETTINGS_SECTION

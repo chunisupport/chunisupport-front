@@ -308,7 +308,14 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
               </AppButton>
               <AppButton
                 class="mt-4 ml-2"
-                onClick={() => setIsImportOpen(false)}
+                onClick={() => {
+                  setIsImportOpen(false)
+                  setSelectedFile(undefined)
+                  setValidation(undefined)
+                  setFileError('')
+                  setImportError('')
+                  setImportSuccess('')
+                }}
                 disabled={validating() || importing()}
               >
                 {DATA_TRANSFER_COPY.cancelImportButton}
