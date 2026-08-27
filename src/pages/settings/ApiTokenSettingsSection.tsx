@@ -1,16 +1,16 @@
 import { TextField } from '@kobalte/core/text-field'
+import { ExternalLink } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createResource, createSignal, For, onCleanup, Show } from 'solid-js'
 import { deleteApiToken, fetchApiTokens, issueApiToken, renameApiToken } from '../../api/settings'
 import { LoadError, Loading } from '../../components'
-import { AppButton } from '../../components/common/AppButton'
+import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
+import { API_DOCUMENTATION_URL } from '../../config'
+import { DEVELOPER_API_COPY } from '../../constants/developerApi'
+import { EXTERNAL_LINK_NEW_TAB_DESCRIPTION } from '../../constants/externalLink'
 import type { ApiToken } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-import {
-  API_DOCUMENTATION_URL,
-  API_TOKEN_MAX_COUNT,
-  API_TOKEN_SETTINGS_COPY,
-} from './ApiTokenSettings.constants'
+import { API_TOKEN_MAX_COUNT, API_TOKEN_SETTINGS_COPY } from './ApiTokenSettings.constants'
 import { isApiTokenNameError, isValidApiTokenName, normalizeApiTokenName } from './apiTokenName'
 import { formatSettingsDateTime } from './settingsDateTime'
 
@@ -298,34 +298,42 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
   }
 
   return (
-    <section id="api-token" class="py-4">
-      <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 class="text-lg font-semibold text-text">{API_TOKEN_SETTINGS_COPY.title}</h2>
-          <p class="mt-1 text-sm text-text-muted">{API_TOKEN_SETTINGS_COPY.description}</p>
-        </div>
-        <span class="inline-flex w-fit rounded-full bg-surface-hover px-3 py-1 text-sm font-semibold text-text-muted">
-          {apiTokens()?.tokens.length ?? 0} / {API_TOKEN_MAX_COUNT}
-          {API_TOKEN_SETTINGS_COPY.countUnit}
-        </span>
-      </div>
+    <section aria-labelledby="api-integration-title">
+      <h2 id="api-integration-title" class="text-xl font-semibold text-text">
+        {DEVELOPER_API_COPY.sectionTitle}
+      </h2>
+      <p class="mt-2 text-sm text-text-muted">{DEVELOPER_API_COPY.description}</p>
+      <a
+        class={getAppButtonClass({ variant: 'surface', class: 'mt-4 w-fit' })}
+        href={API_DOCUMENTATION_URL}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {DEVELOPER_API_COPY.documentationLink}
+        <ExternalLink class="h-4 w-4" aria-hidden="true" />
+        <span class="sr-only">{EXTERNAL_LINK_NEW_TAB_DESCRIPTION}</span>
+      </a>
 
-      <div class="mt-4 flex flex-wrap gap-3">
-        <AppButton
-          variant="primary"
-          onClick={() => setIsIssueFormOpen(true)}
-          disabled={isIssueDisabled() || isIssueFormOpen()}
-        >
-          {API_TOKEN_SETTINGS_COPY.startIssueButton}
-        </AppButton>
-        <a
-          class="inline-flex items-center rounded px-3 py-2 text-sm font-medium text-action-primary hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-          href={API_DOCUMENTATION_URL}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {API_TOKEN_SETTINGS_COPY.documentationLink}
-        </a>
+      <div id="api-token" class="mt-8 border-t border-border pt-6">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 class="text-lg font-semibold text-text">{API_TOKEN_SETTINGS_COPY.title}</h3>
+            <p class="mt-1 text-sm text-text-muted">{API_TOKEN_SETTINGS_COPY.description}</p>
+          </div>
+          <span class="inline-flex w-fit rounded-full bg-surface-hover px-3 py-1 text-sm font-semibold text-text-muted">
+            {apiTokens()?.tokens.length ?? 0} / {API_TOKEN_MAX_COUNT}
+          </span>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-3">
+          <AppButton
+            variant="primary"
+            onClick={() => setIsIssueFormOpen(true)}
+            disabled={isIssueDisabled() || isIssueFormOpen()}
+          >
+            {API_TOKEN_SETTINGS_COPY.startIssueButton}
+          </AppButton>
+        </div>
       </div>
 
       <Show when={isIssueFormOpen()}>

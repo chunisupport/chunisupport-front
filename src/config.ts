@@ -6,6 +6,8 @@ export const API_BASE_URL = getRequiredEnv('PUBLIC_BACKEND_URL')
 export const FRONTEND_BASE_URL = getRequiredEnv('PUBLIC_FRONTEND_URL')
 /** ドキュメントサイトのベース URL */
 export const DOCUMENTATION_BASE_URL = getRequiredEnv('PUBLIC_DOCUMENTATION_URL')
+/** 外部連携 API のドキュメント URL */
+export const API_DOCUMENTATION_URL = `${DOCUMENTATION_BASE_URL.replace(/\/$/, '')}/api/`
 /** ブックマークレット配布サイトのベース URL */
 export const BOOKMARKLET_BASE_URL = getRequiredEnv('PUBLIC_BOOKMARKLET_URL')
 /** 現在の環境で使用するブックマークレットのエントリーポイント名 */

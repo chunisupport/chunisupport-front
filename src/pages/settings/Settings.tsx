@@ -220,7 +220,7 @@ const Settings = () => {
                           disabled={privacySubmitting()}
                         >
                           <Switch.Input aria-label="プロフィールを非公開にする" />
-                          <Switch.Control class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full bg-border-strong transition data-[checked]:bg-action-primary data-disabled:opacity-60">
+                          <Switch.Control class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-border-strong transition data-[checked]:bg-action-primary data-disabled:cursor-not-allowed data-disabled:opacity-60">
                             <Switch.Thumb class="inline-block h-5 w-5 translate-x-0.5 rounded-full bg-surface shadow-sm transition data-[checked]:translate-x-5" />
                           </Switch.Control>
                         </Switch>
