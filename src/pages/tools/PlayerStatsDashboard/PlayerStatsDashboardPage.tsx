@@ -761,6 +761,7 @@ const PlayerStatsDashboardPage: Component = () => {
                 <AppIconButton
                   size="md"
                   tone={hasModifiedFilters() ? 'primary' : 'surface'}
+                  class="shrink-0"
                   aria-label={
                     hasModifiedFilters()
                       ? PLAYER_STATS_COPY.filterButtonActiveLabel
