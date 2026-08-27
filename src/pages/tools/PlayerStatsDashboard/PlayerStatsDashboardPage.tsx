@@ -746,7 +746,7 @@ const PlayerStatsDashboardPage: Component = () => {
         {(data) => (
           <Show when={data().records.length > 0} fallback={<PlayerDataEmptyState />}>
             <main class="mx-auto w-full max-w-7xl space-y-4 p-4 sm:space-y-6">
-              <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <header class="flex items-center justify-between gap-4">
                 <div class="flex items-start gap-3">
                   <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
                     <ChartNoAxesCombined class="h-5 w-5 text-action-primary" aria-hidden={true} />
@@ -761,7 +761,7 @@ const PlayerStatsDashboardPage: Component = () => {
                 <AppIconButton
                   size="md"
                   tone={hasModifiedFilters() ? 'primary' : 'surface'}
-                  class="self-end"
+                  class="shrink-0"
                   aria-label={
                     hasModifiedFilters()
                       ? PLAYER_STATS_COPY.filterButtonActiveLabel
