@@ -17,6 +17,8 @@ export const DATA_TRANSFER_COPY = {
   exportSuccess: '移行ファイルを保存しました。',
   exportFailure: 'データのエクスポートに失敗しました。',
   importTitle: 'インポート',
+  startImportButton: 'データをインポート',
+  cancelImportButton: 'キャンセル',
   importDescription: 'エクスポートしたJSONを検証し、空のアカウントへ移行します。',
   fileLabel: '移行ファイル',
   dropzone: 'JSONファイルをドロップ',

@@ -6,7 +6,11 @@ import { LoadError, Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import type { ApiToken } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-import { API_TOKEN_MAX_COUNT, API_TOKEN_SETTINGS_COPY } from './ApiTokenSettings.constants'
+import {
+  API_DOCUMENTATION_URL,
+  API_TOKEN_MAX_COUNT,
+  API_TOKEN_SETTINGS_COPY,
+} from './ApiTokenSettings.constants'
 import { isApiTokenNameError, isValidApiTokenName, normalizeApiTokenName } from './apiTokenName'
 import { formatSettingsDateTime } from './settingsDateTime'
 
@@ -75,6 +79,7 @@ const ApiTokenNameField: Component<ApiTokenNameFieldProps> = (props) => (
  */
 export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = (props) => {
   const [issueName, setIssueName] = createSignal('')
+  const [isIssueFormOpen, setIsIssueFormOpen] = createSignal(false)
   const [issueNameError, setIssueNameError] = createSignal('')
   const [issueActionError, setIssueActionError] = createSignal('')
   const [issueSuccess, setIssueSuccess] = createSignal('')
@@ -144,6 +149,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
       setCopied(false)
       setCopyError('')
       setIssueName('')
+      setIsIssueFormOpen(false)
       setIssueSuccess(API_TOKEN_SETTINGS_COPY.issueSuccess)
       const issuedMetadata: ApiToken = {
         id: result.id,
@@ -304,39 +310,66 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
         </span>
       </div>
 
-      <div class="mt-4 rounded-lg border border-border bg-surface-muted p-4">
-        <form
-          class="flex flex-col gap-3 sm:flex-row sm:items-end"
-          onSubmit={(event) => {
-            event.preventDefault()
-            void handleIssueApiToken()
-          }}
+      <div class="mt-4 flex flex-wrap gap-3">
+        <AppButton
+          variant="primary"
+          onClick={() => setIsIssueFormOpen(true)}
+          disabled={isIssueDisabled() || isIssueFormOpen()}
         >
-          <ApiTokenNameField
-            label={API_TOKEN_SETTINGS_COPY.issueLabel}
-            value={issueName()}
-            placeholder={API_TOKEN_SETTINGS_COPY.issuePlaceholder}
-            disabled={isIssueDisabled()}
-            error={issueNameError()}
-            onChange={handleIssueNameChange}
-          />
-          <AppButton
-            variant="primary"
-            type="submit"
-            class="shrink-0 rounded-md"
-            disabled={isIssueDisabled()}
-            aria-busy={isIssuing()}
-          >
-            {API_TOKEN_SETTINGS_COPY.issueButton}
-          </AppButton>
-        </form>
-        <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-          {issueActionError()}
-        </p>
-        <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
-          {issueSuccess()}
-        </p>
+          {API_TOKEN_SETTINGS_COPY.startIssueButton}
+        </AppButton>
+        <a
+          class="inline-flex items-center rounded px-3 py-2 text-sm font-medium text-action-primary hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+          href={API_DOCUMENTATION_URL}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {API_TOKEN_SETTINGS_COPY.documentationLink}
+        </a>
       </div>
+
+      <Show when={isIssueFormOpen()}>
+        <div class="mt-4 border-y border-border py-4">
+          <form
+            class="flex flex-col gap-3 sm:flex-row sm:items-end"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void handleIssueApiToken()
+            }}
+          >
+            <ApiTokenNameField
+              label={API_TOKEN_SETTINGS_COPY.issueLabel}
+              value={issueName()}
+              placeholder={API_TOKEN_SETTINGS_COPY.issuePlaceholder}
+              disabled={isIssueDisabled()}
+              error={issueNameError()}
+              onChange={handleIssueNameChange}
+            />
+            <AppButton
+              variant="primary"
+              type="submit"
+              class="shrink-0 rounded-md"
+              disabled={isIssueDisabled()}
+              aria-busy={isIssuing()}
+            >
+              {API_TOKEN_SETTINGS_COPY.issueButton}
+            </AppButton>
+            <AppButton
+              class="shrink-0"
+              onClick={() => setIsIssueFormOpen(false)}
+              disabled={isIssuing()}
+            >
+              {API_TOKEN_SETTINGS_COPY.cancelIssueButton}
+            </AppButton>
+          </form>
+          <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
+            {issueActionError()}
+          </p>
+          <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
+            {issueSuccess()}
+          </p>
+        </div>
+      </Show>
 
       <Show when={generatedToken()}>
         {(issued) => (
@@ -378,7 +411,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                 }
               >
                 {(token) => (
-                  <article class="mb-3 rounded-lg border border-border bg-surface-muted p-4 last:mb-0">
+                  <article class="border-b border-border py-4 last:border-b-0">
                     <Show
                       when={editingTokenId() === token.id}
                       fallback={

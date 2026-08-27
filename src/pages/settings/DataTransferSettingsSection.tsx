@@ -77,6 +77,7 @@ const downloadBlob = (blob: Blob, filename: string): void => {
  */
 export const DataTransferSettingsSection: Component<DataTransferSettingsSectionProps> = (props) => {
   const [selectedFile, setSelectedFile] = createSignal<File>()
+  const [isImportOpen, setIsImportOpen] = createSignal(false)
   const [validation, setValidation] =
     createSignal<Awaited<ReturnType<typeof validateUserDataTransfer>>>()
   const [exporting, setExporting] = createSignal(false)
@@ -199,8 +200,8 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
         </div>
       </div>
 
-      <div class="mt-4 grid gap-4 lg:grid-cols-2">
-        <article class="rounded-xl border border-border bg-surface-muted p-4">
+      <div class="mt-4 divide-y divide-border border-y border-border">
+        <article class="py-4">
           <h3 class="font-semibold text-text">{DATA_TRANSFER_COPY.exportTitle}</h3>
           <p class="mt-1 text-sm text-text-muted">{DATA_TRANSFER_COPY.exportDescription}</p>
           <AppButton
@@ -227,73 +228,93 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
           </p>
         </article>
 
-        <article class="rounded-xl border border-border bg-surface-muted p-4">
+        <article class="py-4">
           <h3 class="font-semibold text-text">{DATA_TRANSFER_COPY.importTitle}</h3>
           <p class="mt-1 text-sm text-text-muted">{DATA_TRANSFER_COPY.importDescription}</p>
-          <form
-            method="post"
-            class="mt-4"
-            onSubmit={(event) => {
-              event.preventDefault()
-              void handleValidate()
-            }}
+          <Show
+            when={isImportOpen()}
+            fallback={
+              <AppButton
+                class="mt-4"
+                onClick={() => setIsImportOpen(true)}
+                disabled={props.hasUserData}
+              >
+                {DATA_TRANSFER_COPY.startImportButton}
+              </AppButton>
+            }
           >
-            <FileField
-              accept={[...DATA_TRANSFER_ACCEPT]}
-              maxFileSize={DATA_TRANSFER_MAX_FILE_SIZE_BYTES}
-              disabled={props.hasUserData || validating() || importing()}
-              validationState={fileError() ? 'invalid' : undefined}
-              onFileChange={handleFileChange}
-            >
-              <FileField.Label class="text-sm font-semibold text-text">
-                {DATA_TRANSFER_COPY.fileLabel}
-              </FileField.Label>
-              <FileField.Dropzone class="mt-2 flex min-h-36 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border-strong bg-surface p-4 text-center text-text-muted transition hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring data-disabled:cursor-not-allowed data-disabled:opacity-60">
-                <FileUp aria-hidden="true" class="h-8 w-8" />
-                <span class="text-sm">{DATA_TRANSFER_COPY.dropzone}</span>
-                <FileField.Trigger
-                  type="button"
-                  class={getAppButtonClass({ variant: 'secondary', size: 'sm' })}
-                >
-                  {DATA_TRANSFER_COPY.chooseFile}
-                </FileField.Trigger>
-              </FileField.Dropzone>
-              <FileField.HiddenInput name="data-transfer-file" />
-              <FileField.Description class="mt-2 text-xs text-text-subtle">
-                {DATA_TRANSFER_COPY.fileDescription}
-              </FileField.Description>
-              <FileField.ErrorMessage class="mt-2 text-sm text-danger">
-                {fileError()}
-              </FileField.ErrorMessage>
-              <FileField.ItemList>
-                {(file) => (
-                  <FileField.Item class="mt-3 flex items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2">
-                    <FileField.ItemName class="min-w-0 flex-1 truncate font-sans text-sm text-text" />
-                    <FileField.ItemSize class="shrink-0 text-xs text-text-subtle" />
-                    <FileField.ItemDeleteTrigger
-                      type="button"
-                      class="inline-flex h-9 w-9 items-center justify-center rounded text-text-muted hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                      aria-label={`${file.name}${DATA_TRANSFER_COPY.removeFileSuffix}`}
-                    >
-                      <X aria-hidden="true" class="h-4 w-4" />
-                    </FileField.ItemDeleteTrigger>
-                  </FileField.Item>
-                )}
-              </FileField.ItemList>
-            </FileField>
-
-            <AppButton
-              type="submit"
+            <form
+              method="post"
               class="mt-4"
-              disabled={props.hasUserData || !selectedFile() || validating() || importing()}
-              aria-busy={validating()}
-              leftIcon={validating() ? <Loading size="inline" ariaHidden /> : undefined}
+              onSubmit={(event) => {
+                event.preventDefault()
+                void handleValidate()
+              }}
             >
-              {validating()
-                ? DATA_TRANSFER_COPY.validatingButton
-                : DATA_TRANSFER_COPY.validateButton}
-            </AppButton>
-          </form>
+              <FileField
+                accept={[...DATA_TRANSFER_ACCEPT]}
+                maxFileSize={DATA_TRANSFER_MAX_FILE_SIZE_BYTES}
+                disabled={props.hasUserData || validating() || importing()}
+                validationState={fileError() ? 'invalid' : undefined}
+                onFileChange={handleFileChange}
+              >
+                <FileField.Label class="text-sm font-semibold text-text">
+                  {DATA_TRANSFER_COPY.fileLabel}
+                </FileField.Label>
+                <FileField.Dropzone class="mt-2 flex min-h-36 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border-strong bg-surface p-4 text-center text-text-muted transition hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring data-disabled:cursor-not-allowed data-disabled:opacity-60">
+                  <FileUp aria-hidden="true" class="h-8 w-8" />
+                  <span class="text-sm">{DATA_TRANSFER_COPY.dropzone}</span>
+                  <FileField.Trigger
+                    type="button"
+                    class={getAppButtonClass({ variant: 'secondary', size: 'sm' })}
+                  >
+                    {DATA_TRANSFER_COPY.chooseFile}
+                  </FileField.Trigger>
+                </FileField.Dropzone>
+                <FileField.HiddenInput name="data-transfer-file" />
+                <FileField.Description class="mt-2 text-xs text-text-subtle">
+                  {DATA_TRANSFER_COPY.fileDescription}
+                </FileField.Description>
+                <FileField.ErrorMessage class="mt-2 text-sm text-danger">
+                  {fileError()}
+                </FileField.ErrorMessage>
+                <FileField.ItemList>
+                  {(file) => (
+                    <FileField.Item class="mt-3 flex items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2">
+                      <FileField.ItemName class="min-w-0 flex-1 truncate font-sans text-sm text-text" />
+                      <FileField.ItemSize class="shrink-0 text-xs text-text-subtle" />
+                      <FileField.ItemDeleteTrigger
+                        type="button"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded text-text-muted hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                        aria-label={`${file.name}${DATA_TRANSFER_COPY.removeFileSuffix}`}
+                      >
+                        <X aria-hidden="true" class="h-4 w-4" />
+                      </FileField.ItemDeleteTrigger>
+                    </FileField.Item>
+                  )}
+                </FileField.ItemList>
+              </FileField>
+
+              <AppButton
+                type="submit"
+                class="mt-4"
+                disabled={props.hasUserData || !selectedFile() || validating() || importing()}
+                aria-busy={validating()}
+                leftIcon={validating() ? <Loading size="inline" ariaHidden /> : undefined}
+              >
+                {validating()
+                  ? DATA_TRANSFER_COPY.validatingButton
+                  : DATA_TRANSFER_COPY.validateButton}
+              </AppButton>
+              <AppButton
+                class="mt-4 ml-2"
+                onClick={() => setIsImportOpen(false)}
+                disabled={validating() || importing()}
+              >
+                {DATA_TRANSFER_COPY.cancelImportButton}
+              </AppButton>
+            </form>
+          </Show>
           <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
             {importError()}
           </p>
