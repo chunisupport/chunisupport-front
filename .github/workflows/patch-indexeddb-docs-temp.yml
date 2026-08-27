@@ -1,0 +1,80 @@
+name: Apply IndexedDB documentation correction
+
+on:
+  push:
+    branches:
+      - docs/update-indexeddb-cache-documentation
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/update-indexeddb-cache-documentation
+      - name: Update IndexedDB documentation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('docs/indexeddb-cache.md')
+          text = path.read_text()
+
+          text = re.sub(
+              r'主な対象は以下です。\n\n.*?\n\n## 基本方針',
+              '''主な対象は以下です。\n\n- 通常楽曲一覧 API（`GET /internal/songs`）\n- WORLD'S END 楽曲一覧 API（`GET /internal/worldsend-songs`）\n- コース一覧 API\n- ログインユーザー本人のレーティング API（`GET /internal/users/{username}/rating`）\n- ログインユーザー本人の全件レコード API（`GET /internal/users/{username}/record?include_noplay=true`）と曲単位レコード API\n- ログインユーザー本人のコースレコード API\n\n## 基本方針''',
+              text,
+              count=1,
+              flags=re.S,
+          )
+
+          text = re.sub(
+              r'## キャッシュ対象と保存粒度\n\n.*?\n\n## IndexedDB の DB 設計',
+              '''## キャッシュ対象と保存粒度\n\n| 対象 | 保存粒度 | 更新判定 |\n| ---- | -------- | -------- |\n| 通常楽曲一覧 | 1曲単位（`display_id -> SongDTO`） | `songsUpdatedAt` |\n| WORLD'S END 楽曲一覧 | 1曲単位（`display_id -> WorldsendSongDTO`） | `songsUpdatedAt` |\n| コース一覧 | 1コース単位 | `coursesUpdatedAt` |\n| ログインユーザー本人のレーティング | `UserRatingDTO` 丸ごと | `userUpdatedAt` + `songsUpdatedAt` |\n| ログインユーザー本人の通常/WORLD'S ENDレコード | 1曲単位 | `userUpdatedAt` + `songsUpdatedAt` |\n| ログインユーザー本人のコースレコード | 1コース単位 | `userUpdatedAt` + `coursesUpdatedAt` |\n\n全件レコード API のレスポンスは `saveCachedUserRecord` で曲単位へ分割して `userSongRecords` に保存します。全件取得時は、メタデータと曲単位キャッシュが一致していれば `UserRecordDTO` を復元します。曲詳細画面では同じ `userSongRecords` から対象曲だけを取得できます。\n\n## IndexedDB の DB 設計''',
+              text,
+              count=1,
+              flags=re.S,
+          )
+
+          text = re.sub(
+              r'### ストア一覧\n\n.*?\n\n### IndexedDB に保存されるデータ例',
+              '''### ストア一覧\n\n| ストア名 | 主キー | 役割 |\n| -------- | ------ | ---- |\n| `cacheMetadata` | `key` | キャッシュ種別ごとの更新日時・schemaVersionを保存する |\n| `songs` | `id` | 通常楽曲を1曲単位で保存する |\n| `worldsendSongs` | `id` | WORLD'S END楽曲を1曲単位で保存する |\n| `courses` | `id` | コースを1件単位で保存する |\n| `userSongRecords` | `key` | 通常/WORLD'S ENDのユーザーレコードを曲単位で保存する |\n| `userCourseRecords` | `key` | ユーザーのコースレコードをコース単位で保存する |\n| `userApiResponses` | `key` | ログインユーザー本人のレーティングレスポンスを保存する |\n| `viewSettings` | `key` | フィルター・列表示設定を保存する |\n| `friendRequestNotificationStates` | `key` | フレンド申請通知の取得状態を保存する |\n\n### TypeScript 型\n\n`src/lib/db/cacheDB.ts` では、楽曲・コース・曲単位レコード・コースレコード・レーティング・画面設定・フレンド申請通知状態に対応する型を定義しています。\n\n現行の `CLIENT_CACHE_SCHEMA_VERSION` は `6` です。Dexie のDBバージョンとは別の値で、キャッシュデータの互換性判定に使います。\n\n### IndexedDB に保存されるデータ例''',
+              text,
+              count=1,
+              flags=re.S,
+          )
+
+          text = re.sub(
+              r'### IndexedDB に保存されるデータ例\n\n.*?\n\n## キャッシュ判定の流れ',
+              '''### IndexedDB に保存されるデータ例\n\nレーティングは `userApiResponses` に `userRating` として保存します。全件レコードレスポンスは `userSongRecords` に曲単位で分割して保存し、`cacheMetadata.userRecord` に全件取得済みであることと更新日時を記録します。曲単位APIで取得したレコードも同じ `userSongRecords` を利用します。\n\nコースマスタは `courses`、ユーザーのコースレコードは `userCourseRecords` に保存します。\n\n## キャッシュ判定の流れ''',
+              text,
+              count=1,
+              flags=re.S,
+          )
+
+          text = re.sub(
+              r'### レコード\n\n.*?\n\n## ディレクトリ構成',
+              '''### レコード\n\n全件レコード取得では、`userUpdatedAt` と `songsUpdatedAt`、`schemaVersion` が一致し、`cacheMetadata.userRecord` と `userSongRecords` が有効なら曲単位キャッシュから `UserRecordDTO` を復元します。キャッシュが揃っていなければ `GET /internal/users/{username}/record?include_noplay=true` を呼び、レスポンスを曲単位に分割して保存します。\n\n曲詳細では `GET /internal/users/{username}/record/songs/{displayId}` または `GET /internal/users/{username}/record/worldsend-songs/{displayId}` を利用し、対象曲だけを `userSongRecords` へ保存・取得します。\n\n## ディレクトリ構成''',
+              text,
+              count=1,
+              flags=re.S,
+          )
+
+          text = text.replace('schemaVersion: 1,', 'schemaVersion: 6,')
+
+          path.write_text(text)
+          Path('.github/workflows/patch-indexeddb-docs-temp.yml').unlink()
+          PY
+      - name: Commit correction
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/indexeddb-cache.md .github/workflows/patch-indexeddb-docs-temp.yml
+          git commit -m 'docs: update IndexedDB cache documentation'
+          git push origin HEAD:docs/update-indexeddb-cache-documentation
