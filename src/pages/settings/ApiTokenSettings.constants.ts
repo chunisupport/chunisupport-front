@@ -22,7 +22,6 @@ export const API_TOKEN_SETTINGS_COPY = {
   issueSuccess: 'APIトークンを発行しました。トークン文字列の表示はこの1回のみです。',
   issueFailure: 'APIトークン発行に失敗しました。',
   empty: '現在有効なAPIトークンはありません。',
-  countUnit: '個',
   prefixLabel: '識別子',
   createdAtLabel: '発行日時',
   lastUsedAtLabel: '最終利用',

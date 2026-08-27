@@ -306,7 +306,6 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
         </div>
         <span class="inline-flex w-fit rounded-full bg-surface-hover px-3 py-1 text-sm font-semibold text-text-muted">
           {apiTokens()?.tokens.length ?? 0} / {API_TOKEN_MAX_COUNT}
-          {API_TOKEN_SETTINGS_COPY.countUnit}
         </span>
       </div>
 
