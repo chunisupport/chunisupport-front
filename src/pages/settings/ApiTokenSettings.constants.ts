@@ -4,10 +4,6 @@ export const API_TOKEN_NAME_MAX_LENGTH = 50
 /** 1ユーザーが所有できるAPIトークンの最大件数 */
 export const API_TOKEN_MAX_COUNT = 10
 
-/** 外部連携APIの仕様書 */
-export const API_DOCUMENTATION_URL =
-  'https://github.com/chunisupport/chunisupport-api/blob/develop/docs/API.md'
-
 /** APIトークン設定欄で使用する表示文言 */
 export const API_TOKEN_SETTINGS_COPY = {
   title: 'APIトークン管理',
@@ -17,12 +13,10 @@ export const API_TOKEN_SETTINGS_COPY = {
   issueButton: 'APIトークンを発行',
   startIssueButton: '新しいトークンを発行',
   cancelIssueButton: 'キャンセル',
-  documentationLink: 'APIドキュメントを開く',
   nameValidationError: '前後空白を除いて1〜50文字で入力してください。',
   issueSuccess: 'APIトークンを発行しました。トークン文字列の表示はこの1回のみです。',
   issueFailure: 'APIトークン発行に失敗しました。',
   empty: '現在有効なAPIトークンはありません。',
-  countUnit: '個',
   prefixLabel: '識別子',
   createdAtLabel: '発行日時',
   lastUsedAtLabel: '最終利用',

@@ -5,6 +5,7 @@ import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { A, useLocation, useNavigate } from '@solidjs/router'
 import {
   BadgeQuestionMark,
+  CodeXml,
   Ellipsis,
   ExternalLink,
   FlagTriangleRight,
@@ -28,7 +29,9 @@ type NavBarProps = {
 
 import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
-import { DOCUMENTATION_BASE_URL } from '../../config'
+import { API_DOCUMENTATION_URL, DOCUMENTATION_BASE_URL } from '../../config'
+import { DEVELOPER_API_COPY } from '../../constants/developerApi'
+import { EXTERNAL_LINK_NEW_TAB_DESCRIPTION } from '../../constants/externalLink'
 import { EDITOR_MENU_TITLE, FRIENDS_PAGE_TITLE } from '../../constants/pageTitles'
 import { LATEST_SCORE_UPDATE_TITLE } from '../../constants/playerLatestUpdate'
 import { EDITOR_PATH, FRIENDS_PATH, LATEST_SCORE_UPDATE_PATH } from '../../constants/routes'
@@ -91,7 +94,11 @@ const NavBar = (props: NavBarProps) => {
   const location = useLocation()
   const navigate = useNavigate()
 
-  // ナビゲーション項目の定義
+  /**
+   * 認証状態に応じたナビゲーション項目を構築する。
+   *
+   * @returns 現在表示するナビゲーション項目。
+   */
   const getNavItems = (): NavItem[] => {
     const uname = username()
     const userPath = uname ? `/users/${encodeURIComponent(uname)}` : '#'
@@ -144,6 +151,11 @@ const NavBar = (props: NavBarProps) => {
         label: 'ヘルプ',
         icon: () => <BadgeQuestionMark class="h-4 w-4" aria-hidden="true" />,
         path: DOCUMENTATION_BASE_URL,
+      },
+      {
+        label: DEVELOPER_API_COPY.menuLabel,
+        icon: () => <CodeXml class="h-4 w-4" aria-hidden="true" />,
+        path: API_DOCUMENTATION_URL,
       },
       ...(uname
         ? [
@@ -310,7 +322,12 @@ const NavBar = (props: NavBarProps) => {
       label={
         <span class="inline-flex items-center gap-1">
           {item.label}
-          {item.path?.startsWith('http') && <ExternalLink class="h-3.5 w-3.5" aria-hidden="true" />}
+          {item.path?.startsWith('http') && (
+            <>
+              <ExternalLink class="h-3.5 w-3.5" aria-hidden="true" />
+              <span class="sr-only">{EXTERNAL_LINK_NEW_TAB_DESCRIPTION}</span>
+            </>
+          )}
         </span>
       }
       hasNotificationDot={item.hasNotificationDot}
