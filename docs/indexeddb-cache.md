@@ -66,7 +66,7 @@ API 側にはキャッシュ判定用の `updated-at` エンドポイントが�
 | コース一覧 | 1コース単位 | `coursesUpdatedAt` |
 | ログインユーザー本人のレーティング | `UserRatingDTO` 丸ごと | `userUpdatedAt` + `songsUpdatedAt` |
 | ログインユーザー本人の通常/WORLD'S ENDレコード | 1曲単位 | `userUpdatedAt` + `songsUpdatedAt` |
-| ログインユーザー本人のコースレコード | 1コース単位 | `userUpdatedAt` + `coursesUpdatedAt` |
+| ログインユーザー本人のコースレコード | 1コース単位 | `userUpdatedAt` |
 
 全件レコード API のレスポンスは `saveCachedUserRecord` で曲単位へ分割して `userSongRecords` に保存します。全件取得時は、メタデータと曲単位キャッシュが一致していれば `UserRecordDTO` を復元します。曲詳細画面では同じ `userSongRecords` から対象曲だけを取得できます。
 
@@ -154,7 +154,7 @@ WORLD'S END 楽曲:
 
 全件レコード取得では、`userUpdatedAt` と `songsUpdatedAt`、`schemaVersion` が一致し、`cacheMetadata.userRecord` と `userSongRecords` が有効なら曲単位キャッシュから `UserRecordDTO` を復元します。キャッシュが揃っていなければ `GET /internal/users/{username}/record?include_noplay=true` を呼び、レスポンスを曲単位に分割して保存します。
 
-曲詳細では `GET /internal/users/{username}/record/songs/{displayId}` または `GET /internal/users/{username}/record/worldsend-songs/{displayId}` を利用し、対象曲だけを `userSongRecords` へ保存・取得します。
+曲詳細では `GET /internal/users/{username}/record/songs/{displayId}?include_noplay=true` または `GET /internal/users/{username}/record/worldsend-songs/{displayId}?include_noplay=true` を利用し、対象曲だけを `userSongRecords` へ保存・取得します。
 
 ## ディレクトリ構成
 
