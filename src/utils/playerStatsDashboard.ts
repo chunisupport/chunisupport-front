@@ -40,12 +40,12 @@ export type PlayerStatsAchievement =
 export type PlayerStatsSummary = {
   total: number
   played: number
-  playedPercent: number
+  totalHighScore: number
+  totalHighScorePercent: number
   averageScore: number
   sss: number
   sssPercent: number
   sssPlus: number
-  sssPlusPercent: number
   aj: number
   ajPercent: number
   max: number
@@ -291,7 +291,7 @@ export const filterPlayerStatsRecords = (
  * 通常譜面レコードから統計画面上部のサマリーを算出する。
  *
  * @param records - 集計対象の通常譜面レコード。
- * @returns プレイ率、平均スコア、SSS+、AJ、MAXの集計値。
+ * @returns トータルハイスコア、平均スコア、SSS、SSS+、AJ、MAXの集計値。
  */
 export const buildPlayerStatsSummary = (records: PlayerRecordDTO[]): PlayerStatsSummary => {
   const total = records.length
@@ -301,19 +301,18 @@ export const buildPlayerStatsSummary = (records: PlayerRecordDTO[]): PlayerStats
   const sssPlus = records.filter((record) => hasPlayerStatsAchievement(record, 'sssPlus')).length
   const aj = records.filter((record) => hasPlayerStatsAchievement(record, 'aj')).length
   const max = records.filter((record) => hasPlayerStatsAchievement(record, 'max')).length
-  const averageScore = played
-    ? Math.round(playedRecords.reduce((sum, record) => sum + record.score, 0) / played)
-    : 0
+  const totalHighScore = playedRecords.reduce((sum, record) => sum + record.score, 0)
+  const averageScore = played ? Math.round(totalHighScore / played) : 0
 
   return {
     total,
     played,
-    playedPercent: calculatePlayerStatsPercent(played, total),
+    totalHighScore,
+    totalHighScorePercent: calculatePlayerStatsPercent(totalHighScore, total * MAX_SCORE),
     averageScore,
     sss,
     sssPercent: calculatePlayerStatsPercent(sss, total),
     sssPlus,
-    sssPlusPercent: calculatePlayerStatsPercent(sssPlus, total),
     aj,
     ajPercent: calculatePlayerStatsPercent(aj, total),
     max,

@@ -3,10 +3,10 @@ import {
   Award,
   BadgeCheck,
   ChartNoAxesCombined,
-  CheckCircle2,
   Funnel,
   Gauge,
   Grid3X3,
+  Sigma,
   Target,
   Trophy,
 } from 'lucide-solid'
@@ -129,10 +129,10 @@ const fetchPlayerStatsPageData = async (): Promise<PlayerStatsPageData> => {
  */
 const buildSummaryCardDefinitions = (summary: PlayerStatsSummary): SummaryCardDefinition[] => [
   {
-    label: PLAYER_STATS_COPY.playedCharts,
-    value: `${formatTruncatedFixed(summary.playedPercent, 1)}%`,
-    detail: `${formatInteger(summary.played)} / ${formatInteger(summary.total)}`,
-    icon: CheckCircle2,
+    label: PLAYER_STATS_COPY.totalHighScore,
+    value: formatInteger(summary.totalHighScore),
+    detail: `${formatTruncatedFixed(summary.totalHighScorePercent, 2)}%`,
+    icon: Sigma,
   },
   {
     label: PLAYER_STATS_COPY.averageScore,
@@ -141,21 +141,21 @@ const buildSummaryCardDefinitions = (summary: PlayerStatsSummary): SummaryCardDe
     icon: Gauge,
   },
   {
-    label: PLAYER_STATS_COPY.sssPlus,
-    value: formatInteger(summary.sssPlus),
-    detail: `${formatTruncatedFixed(summary.sssPlusPercent, 1)}%`,
+    label: PLAYER_STATS_COPY.sss,
+    value: formatInteger(summary.sss),
+    detail: `${formatTruncatedFixed(summary.sssPercent, 2)}%`,
     icon: Trophy,
   },
   {
     label: PLAYER_STATS_COPY.allJustice,
     value: formatInteger(summary.aj),
-    detail: `${formatTruncatedFixed(summary.ajPercent, 1)}%`,
+    detail: `${formatTruncatedFixed(summary.ajPercent, 2)}%`,
     icon: Award,
   },
   {
     label: PLAYER_STATS_COPY.max,
     value: formatInteger(summary.max),
-    detail: `${formatTruncatedFixed(summary.maxPercent, 1)}%`,
+    detail: `${formatTruncatedFixed(summary.maxPercent, 2)}%`,
     icon: Target,
   },
 ]
@@ -222,10 +222,10 @@ const AchievementRow = (props: {
         max={100}
         value={props.percent}
       >
-        {props.percent}%
+        {formatTruncatedFixed(props.percent, 2)}%
       </progress>
       <span class="w-14 text-right font-jost text-xs tabular-nums text-text-muted">
-        {formatTruncatedFixed(props.percent, 1)}%
+        {formatTruncatedFixed(props.percent, 2)}%
       </span>
     </div>
   </li>
