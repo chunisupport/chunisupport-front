@@ -37,7 +37,12 @@ import {
 } from '../../stores/friendRequestNotification'
 import type { FriendshipUserDTO } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-import { sanitizeFriendUsernameInput } from '../../utils/friendUsernameInput'
+import {
+  FRIEND_USERNAME_MIN_LENGTH,
+  FRIEND_USERNAME_PATTERN,
+  type FriendUsernameValidationError,
+  validateFriendUsername,
+} from '../../utils/friendUsernameInput'
 import {
   buildFriendsTabOptions,
   buildFriendsTabPath,
@@ -62,11 +67,6 @@ type FriendshipPageData = {
 }
 
 type FriendshipOperation = 'request' | 'accept' | 'reject' | 'cancel' | 'remove'
-
-type ApiErrorLike = {
-  /** APIエラーコード */
-  code?: unknown
-}
 
 type PendingConfirmAction = {
   /** 確認後に実行する操作種別 */
@@ -125,28 +125,25 @@ const fetchFriendshipPageData = async (): Promise<FriendshipPageData> => {
 }
 
 /**
- * username入力値をAPI申請用に正規化する。
- *
- * @param value - 入力されたユーザー名。
- * @returns 前後空白を除いたユーザー名。
- */
-const normalizeFriendRequestUsername = (value: string): string => value.trim()
-
-/**
  * フレンド申請失敗時の表示文言を生成する。
  *
  * @param error - API操作で発生したエラー。
  * @returns フレンド申請欄に表示するエラーメッセージ。
  */
 const formatFriendRequestErrorMessage = (error: unknown): string => {
-  const errorCode =
-    typeof error === 'object' && error !== null ? (error as ApiErrorLike).code : undefined
-
-  if (errorCode === 'validation_failed') {
-    return FRIENDS_COPY.requestUserNotFound
-  }
-
   return toUserFriendlyErrorMessage(error, FRIENDS_COPY.requestFailure)
+}
+
+/**
+ * username の検証結果をフレンド申請欄の表示文言へ変換する。
+ *
+ * @param error - username の検証結果。
+ * @returns 入力エラー文言。有効な場合は空文字。
+ */
+const formatFriendUsernameValidationError = (error: FriendUsernameValidationError): string => {
+  if (error === 'required') return FRIENDS_COPY.usernameRequired
+  if (error === 'invalid') return FRIENDS_COPY.usernameInvalid
+  return ''
 }
 
 /**
@@ -388,6 +385,7 @@ const FriendsPage = () => {
   const navigate = useNavigate()
 
   const [usernameInput, setUsernameInput] = createSignal('')
+  const [usernameValidationErrorMessage, setUsernameValidationErrorMessage] = createSignal('')
   const [requestErrorMessage, setRequestErrorMessage] = createSignal('')
   const [operation, setOperation] = createSignal<FriendshipOperation | null>(null)
   const [isOwnUsernameCopied, setIsOwnUsernameCopied] = createSignal(false)
@@ -411,19 +409,34 @@ const FriendsPage = () => {
       : friendRequestNotification.hasPendingReceivedRequest
   )
   const friendTabOptions = createMemo(() => buildFriendsTabOptions(hasPendingReceivedRequest()))
-  const canSubmitRequest = createMemo(
-    () => normalizeFriendRequestUsername(usernameInput()).length > 0 && operation() === null
+  const usernameErrorMessage = createMemo(
+    () => usernameValidationErrorMessage() || requestErrorMessage()
   )
-
   /**
-   * フレンド申請用 username 入力を更新し、申請欄のエラーを解除する。
+   * フレンド申請用 username 入力を変換せず更新する。
    *
    * @param value - 入力されたユーザー名。
    * @returns なし。
    */
   const updateUsernameInput = (value: string): void => {
-    setUsernameInput(sanitizeFriendUsernameInput(value))
+    setUsernameInput(value)
     setRequestErrorMessage('')
+    if (usernameValidationErrorMessage()) {
+      setUsernameValidationErrorMessage(
+        formatFriendUsernameValidationError(validateFriendUsername(value))
+      )
+    }
+  }
+
+  /**
+   * 現在の username 入力を検証してエラー表示へ反映する。
+   *
+   * @returns 入力が API 仕様を満たす場合は `true`。
+   */
+  const validateUsernameInput = (): boolean => {
+    const validationError = validateFriendUsername(usernameInput())
+    setUsernameValidationErrorMessage(formatFriendUsernameValidationError(validationError))
+    return validationError === null
   }
 
   /**
@@ -518,10 +531,12 @@ const FriendsPage = () => {
    */
   const handleSubmitRequest = async (event: SubmitEvent): Promise<void> => {
     event.preventDefault()
-    const username = normalizeFriendRequestUsername(usernameInput())
-    if (!username || operation() !== null) return
+    if (!validateUsernameInput() || operation() !== null) return
+
+    const username = usernameInput()
 
     setOperation('request')
+    setUsernameValidationErrorMessage('')
     setRequestErrorMessage('')
 
     try {
@@ -687,7 +702,12 @@ const FriendsPage = () => {
           )}
         </Show>
         <div class="flex flex-col gap-2">
-          <TextField class="min-w-0" value={usernameInput()} onChange={updateUsernameInput}>
+          <TextField
+            class="min-w-0"
+            value={usernameInput()}
+            onChange={updateUsernameInput}
+            validationState={usernameErrorMessage() ? 'invalid' : undefined}
+          >
             <TextField.Label class="mb-1 flex items-center justify-between gap-2 text-sm font-medium text-text-muted">
               <span>{FRIENDS_COPY.usernameLabel}</span>
               <span
@@ -695,7 +715,7 @@ const FriendsPage = () => {
                 class="text-xs font-normal text-danger"
                 aria-live="polite"
               >
-                {requestErrorMessage()}
+                {usernameErrorMessage()}
               </span>
             </TextField.Label>
             <div class="flex min-h-10 items-center rounded border border-input-border bg-input-bg transition-colors hover:border-input-border-hover focus-within:ring-2 focus-within:ring-focus-ring">
@@ -710,8 +730,15 @@ const FriendsPage = () => {
                 placeholder={FRIENDS_COPY.usernamePlaceholder}
                 autocomplete="off"
                 aria-errormessage={FRIEND_REQUEST_USERNAME_ERROR_ID}
-                aria-invalid={requestErrorMessage() ? 'true' : undefined}
+                aria-invalid={usernameErrorMessage() ? 'true' : undefined}
                 required
+                minlength={FRIEND_USERNAME_MIN_LENGTH}
+                pattern={FRIEND_USERNAME_PATTERN.source}
+                onBlur={validateUsernameInput}
+                onInvalid={(event) => {
+                  event.preventDefault()
+                  validateUsernameInput()
+                }}
               />
             </div>
           </TextField>
@@ -720,7 +747,7 @@ const FriendsPage = () => {
             variant="primary"
             fullWidth
             leftIcon={<UserPlus class="h-4 w-4" aria-hidden="true" />}
-            disabled={!canSubmitRequest()}
+            disabled={operation() !== null}
           >
             {isRequesting() ? FRIENDS_COPY.submittingRequest : FRIENDS_COPY.submitRequest}
           </AppButton>
