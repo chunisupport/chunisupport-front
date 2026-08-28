@@ -15,6 +15,18 @@ test('APIエラーコードがある場合は対応するユーザー向け文�
   assert.equal(result, 'プレイヤーが見つかりません')
 })
 
+test('user_not_found はユーザー未存在の文言に変換されること', () => {
+  // Given
+  const error = new Error('Not Found') as Error & { code?: string }
+  error.code = 'user_not_found'
+
+  // When
+  const result = toUserFriendlyErrorMessage(error)
+
+  // Then
+  assert.equal(result, 'ユーザーが見つかりません')
+})
+
 test('Turnstileエラーコードがある場合は認証確認の失敗文言に変換されること', () => {
   // Given
   const error = new Error('Unauthorized') as Error & { code?: string }

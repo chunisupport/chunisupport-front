@@ -1,11 +1,46 @@
+/** フレンド操作で使用できる username の最小文字数。 */
+export const FRIEND_USERNAME_MIN_LENGTH = 5
+
+/** フレンド操作で使用できる username の最大文字数。 */
+export const FRIEND_USERNAME_MAX_LENGTH = 50
+
+/** フレンド操作で使用できる username の文字形式。 */
+export const FRIEND_USERNAME_PATTERN = /^[a-z0-9]+$/
+
+/** フレンド操作用 username のバリデーション結果。 */
+export type FriendUsernameValidationError = 'required' | 'invalid' | null
+
 /**
- * フレンド申請の username 入力を許可文字のみへ正規化する。
+ * フレンド操作用 username が API 仕様を満たすか検証する。
  *
- * 大文字は小文字へ変換し、`0-9` と `a-z` 以外の文字は取り除く。
- * 直接入力に加え、コピー＆ペーストされた文字列にも対応する。
- *
- * @param value - 入力欄から受け取った文字列。
- * @returns 小文字英数字（`0-9a-z`）だけを含む文字列。
+ * @param value - 検証対象の username。
+ * @returns 空の場合は `required`、形式不正の場合は `invalid`、有効な場合は `null`。
  */
-export const sanitizeFriendUsernameInput = (value: string): string =>
-  value.toLowerCase().replace(/[^0-9a-z]/g, '')
+export const validateFriendUsername = (value: string): FriendUsernameValidationError => {
+  if (value.length === 0) {
+    return 'required'
+  }
+
+  if (
+    value.length < FRIEND_USERNAME_MIN_LENGTH ||
+    value.length > FRIEND_USERNAME_MAX_LENGTH ||
+    !FRIEND_USERNAME_PATTERN.test(value)
+  ) {
+    return 'invalid'
+  }
+
+  return null
+}
+
+/**
+ * フレンド操作用 username が API 仕様を満たさない場合に例外を送出する。
+ *
+ * @param value - 検証対象の username。
+ * @returns なし。
+ * @throws {TypeError} username が必須・長さ・文字種のいずれかを満たさない場合。
+ */
+export const assertValidFriendUsername = (value: string): void => {
+  if (validateFriendUsername(value) !== null) {
+    throw new TypeError()
+  }
+}
