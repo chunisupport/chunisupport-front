@@ -1,0 +1,47 @@
+name: Apply documentation review fixes
+
+on:
+  push:
+    branches:
+      - docs/update-indexeddb-cache-documentation
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fixes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/update-indexeddb-cache-documentation
+      - name: Update IndexedDB documentation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('docs/indexeddb-cache.md')
+          text = path.read_text()
+
+          old_condition = '| ログインユーザー本人のコースレコード | 1コース単位 | `userUpdatedAt` + `coursesUpdatedAt` |'
+          new_condition = '| ログインユーザー本人のコースレコード | 1コース単位 | `userUpdatedAt` |'
+          if text.count(old_condition) != 1:
+              raise SystemExit('course record cache condition not found exactly once')
+          text = text.replace(old_condition, new_condition)
+
+          old_endpoints = '曲詳細では `GET /internal/users/{username}/record/songs/{displayId}` または `GET /internal/users/{username}/record/worldsend-songs/{displayId}` を利用し、対象曲だけを `userSongRecords` へ保存・取得します。'
+          new_endpoints = '曲詳細では `GET /internal/users/{username}/record/songs/{displayId}?include_noplay=true` または `GET /internal/users/{username}/record/worldsend-songs/{displayId}?include_noplay=true` を利用し、対象曲だけを `userSongRecords` へ保存・取得します。'
+          if text.count(old_endpoints) != 1:
+              raise SystemExit('song detail endpoint description not found exactly once')
+          text = text.replace(old_endpoints, new_endpoints)
+
+          path.write_text(text)
+          PY
+      - name: Commit fixes
+        run: |
+          rm .github/workflows/address-doc-review-feedback-temp.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/indexeddb-cache.md .github/workflows/address-doc-review-feedback-temp.yml
+          git commit -m "docs: address IndexedDB review feedback"
+          git push
