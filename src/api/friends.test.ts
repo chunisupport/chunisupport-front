@@ -140,3 +140,27 @@ test('フレンド操作APIはusernameをエンコードして呼び出す', asy
     },
   ])
 })
+
+test('不正なusernameはすべての更新APIで送信前に拒否する', async () => {
+  // Given: API呼び出し回数の記録。
+  let requestCount = 0
+  globalThis.fetch = async () => {
+    requestCount += 1
+    return new Response(null, { status: 204 })
+  }
+  const {
+    createFriendRequest,
+    acceptFriendRequest,
+    rejectFriendRequest,
+    cancelFriendRequest,
+    deleteFriend,
+  } = await loadFriendsApi()
+
+  // When & Then: body と各 username パスの不正値を拒否する。
+  await assert.rejects(() => createFriendRequest({ username: 'InvalidUser' }), TypeError)
+  await assert.rejects(() => acceptFriendRequest('user name'), TypeError)
+  await assert.rejects(() => rejectFriendRequest('user_name'), TypeError)
+  await assert.rejects(() => cancelFriendRequest('user-1'), TypeError)
+  await assert.rejects(() => deleteFriend('user'), TypeError)
+  assert.equal(requestCount, 0)
+})
