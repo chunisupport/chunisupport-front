@@ -9,6 +9,7 @@ import {
   getAppIconButtonClass,
 } from '../../../../components/common/AppButton'
 import { RATING_SLOT_COUNT } from '../../../../constants/rating'
+import { SOCIAL_SHARE_TEXT } from '../../../../constants/socialShare'
 import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
 import {
   canShareFiles,
@@ -206,7 +207,11 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     setImageActionError(undefined)
 
     try {
-      await navigator.share({ files: [imageFile], title: RATING_IMAGE_COPY.dialogTitle })
+      await navigator.share({
+        files: [imageFile],
+        text: SOCIAL_SHARE_TEXT,
+        title: RATING_IMAGE_COPY.dialogTitle,
+      })
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
         setImageActionError(RATING_IMAGE_COPY.shareError)

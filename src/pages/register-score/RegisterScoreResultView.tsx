@@ -17,6 +17,7 @@ import {
   type SharedClearLamp,
   type SharedComboLamp,
 } from '../../components/common/record/recordStyleClasses'
+import { SOCIAL_SHARE_TEXT } from '../../constants/socialShare'
 import type {
   PlayerDataCourseRecordChange,
   PlayerDataCourseRecordState,
@@ -1205,7 +1206,11 @@ export const RegisterScoreResultView = (props: {
     setImageActionError(undefined)
 
     try {
-      await navigator.share({ files: [imageFile], title: REGISTER_SCORE_MESSAGES.reportTitle })
+      await navigator.share({
+        files: [imageFile],
+        text: SOCIAL_SHARE_TEXT,
+        title: REGISTER_SCORE_MESSAGES.reportTitle,
+      })
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
         setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)

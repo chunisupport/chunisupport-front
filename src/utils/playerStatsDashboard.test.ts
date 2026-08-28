@@ -256,12 +256,12 @@ test('統計フィルターは難易度・ジャンル・バージョンのい�
   assert.deepEqual(results, [true, true, true])
 })
 
-test('サマリーは未プレイを母数に含め、平均スコアからは除外する', () => {
+test('サマリーは未プレイを母数に含め、トータルハイスコアと平均スコアからは除外する', () => {
   // Given
   const records = [
     createRecord({ score: 1_010_000, combo_lamp: 'ALL JUSTICE' }),
     createRecord({ id: 'song-2', score: 1_008_000 }),
-    createRecord({ id: 'song-3', is_played: false, score: 0 }),
+    createRecord({ id: 'song-3', is_played: false, score: 999_999 }),
   ]
 
   // When
@@ -270,7 +270,10 @@ test('サマリーは未プレイを母数に含め、平均スコアからは�
   // Then
   assert.equal(summary.total, 3)
   assert.equal(summary.played, 2)
+  assert.equal(summary.totalHighScore, 2_018_000)
+  assert.equal(summary.totalHighScorePercent, (2_018_000 / (3 * 1_010_000)) * 100)
   assert.equal(summary.averageScore, 1_009_000)
+  assert.equal(summary.sss, 2)
   assert.equal(summary.sssPlus, 1)
   assert.equal(summary.aj, 1)
   assert.equal(summary.max, 1)
