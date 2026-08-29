@@ -182,22 +182,30 @@ const calculateTheoreticalRating = (
 }
 
 /**
- * 配信済みの全通常楽曲からベスト枠レーティング理論値を算出する。
+ * 現行バージョン開始日より前の通常楽曲からベスト枠レーティング理論値を算出する。
  *
  * @param songs - リリース日と譜面定数を含む通常楽曲一覧。
- * @param referenceDate - 配信済み楽曲を判定するYYYY-MM-DD形式の基準日。
+ * @param versions - ベスト枠対象の終了日を解決するバージョン一覧。
+ * @param referenceDate - 現行バージョンを判定するYYYY-MM-DD形式の基準日。
  * @param slotCount - ベスト枠の規定枠数。
- * @returns 規定枠数までの上位譜面を採用譜面数で平均した理論値。
+ * @returns 規定枠数までの上位譜面を採用譜面数で平均した理論値。現行バージョンを解決できなければ未定義。
  */
 export const calculateBestTheoreticalRating = (
   songs: readonly Pick<SongDTO, 'id' | 'title' | 'artist' | 'release' | 'charts'>[],
+  versions: readonly Pick<VersionDTO, 'released_at'>[],
   referenceDate: string,
   slotCount: number
-): RatingTheoretical | undefined =>
-  calculateTheoreticalRating(
-    songs.filter((song) => song.release === null || song.release.slice(0, 10) <= referenceDate),
+): RatingTheoretical | undefined => {
+  const currentVersionReleaseDate = resolveCurrentVersionReleaseDate(versions, referenceDate)
+  if (currentVersionReleaseDate === undefined) return undefined
+
+  return calculateTheoreticalRating(
+    songs.filter(
+      (song) => song.release !== null && song.release.slice(0, 10) < currentVersionReleaseDate
+    ),
     slotCount
   )
+}
 
 /**
  * 全新曲の譜面から新曲枠レーティング理論値を算出する。
