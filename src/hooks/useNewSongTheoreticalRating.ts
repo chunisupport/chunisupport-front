@@ -33,11 +33,11 @@ export type RatingTheoreticalState = {
   bestTheoreticalRating: Accessor<RatingTheoretical | undefined>
   /** 新曲枠理論値の計算結果 */
   newTheoreticalRating: Accessor<RatingTheoretical | undefined>
-  /** ベスト枠に必要な楽曲データを取得中か */
+  /** ベスト枠に必要な楽曲・バージョンデータを取得中か */
   isBestLoading: Accessor<boolean>
   /** 新曲枠に必要な楽曲・バージョンデータを取得中か */
   isNewLoading: Accessor<boolean>
-  /** ベスト枠に必要な楽曲データの取得エラー */
+  /** ベスト枠に必要な楽曲・バージョンデータの取得エラー */
   bestError: Accessor<unknown>
   /** 新曲枠に必要な楽曲・バージョンデータの取得エラー */
   newError: Accessor<unknown>
@@ -67,11 +67,12 @@ export const useRatingTheoretical = (): RatingTheoreticalState => {
   })
 
   const bestTheoreticalRating = createMemo(() => {
-    if (songsResponse.error) return undefined
+    if (songsResponse.error || versionsResponse.error) return undefined
 
     const songs = songsResponse()?.songs
-    return songs
-      ? calculateBestTheoreticalRating(songs, referenceDate(), RATING_SLOT_COUNT.best)
+    const versions = versionsResponse()?.versions
+    return songs && versions
+      ? calculateBestTheoreticalRating(songs, versions, referenceDate(), RATING_SLOT_COUNT.best)
       : undefined
   })
 
@@ -89,9 +90,9 @@ export const useRatingTheoretical = (): RatingTheoreticalState => {
   return {
     bestTheoreticalRating,
     newTheoreticalRating,
-    isBestLoading: isSongsLoading,
+    isBestLoading: () => isSongsLoading() || versionsResponse.loading,
     isNewLoading: () => isSongsLoading() || versionsResponse.loading,
-    bestError: () => songsResponse.error,
+    bestError: () => songsResponse.error ?? versionsResponse.error,
     newError: () => songsResponse.error ?? versionsResponse.error,
   }
 }

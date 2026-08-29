@@ -265,7 +265,7 @@ export interface SongDTO {
   is_maxop_unknown: boolean
   /** 理論値OVER POWERが最大となる譜面の難易度。譜面がない場合は null */
   op_target_difficulty: PlayerDataDifficulty | null
-  /** 新曲かどうか */
+  /** 最新の2週間ごとの更新で追加された楽曲かどうか */
   is_new: boolean
   /** 難易度別譜面。APIは存在しない難易度をnullで返す場合がある */
   charts: Partial<Record<PlayerDataDifficulty, ChartDTO | null>>
@@ -1176,7 +1176,7 @@ export interface CreateSongRequestDTO {
   bpm: number | null
   released_at: string | null
   jacket: string | null
-  /** 新曲かどうか。省略時はfalse */
+  /** 最新の2週間ごとの更新で追加された楽曲かどうか。省略時はfalse */
   is_new?: boolean
   charts?: CreateSongChartRequestDTO[]
 }
@@ -1190,7 +1190,7 @@ export interface UpdateSongRequestDTO {
   bpm: number | null
   released_at: string | null
   jacket: string | null
-  /** 新曲かどうか。省略またはnullの場合はfalseとして更新 */
+  /** 最新の2週間ごとの更新で追加された楽曲かどうか。省略またはnullの場合はfalseとして更新 */
   is_new?: boolean | null
   charts: Record<string, UpdateChartRequestDTO>
 }
