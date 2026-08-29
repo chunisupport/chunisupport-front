@@ -76,31 +76,51 @@ test('全新曲譜面の単曲理論値から上位20件の平均を返すこと
   )
 })
 
-test('配信済み全譜面の単曲理論値からベスト枠上位30件を返すこと', () => {
-  // Given: 配信済み31譜面と、それらより定数が高い未配信譜面。
+test('現行バージョンより前の全譜面からベスト枠上位30件を返すこと', () => {
+  // Given: 旧曲31譜面と、それらより定数が高い現行バージョン楽曲および未配信楽曲。
   const songs = [
     ...Array.from({ length: 31 }, (_, index) =>
-      createSong(`released-${index}`, '2026-07-02', [
-        { value: 13 + index / 10, unknown: index === 30 },
-      ])
+      createSong(`old-${index}`, '2026-07-01', [{ value: 13 + index / 10, unknown: index === 30 }])
     ),
+    createSong('current-version', '2026-07-02', [{ value: 16 }]),
     createSong('future', '2026-08-09', [{ value: 16 }]),
   ]
 
   // When: 基準日時点のベスト枠30枠分の理論値を算出する。
-  const result = calculateBestTheoreticalRating(songs, CURRENT_DATE, 30)
+  const result = calculateBestTheoreticalRating(songs, CURRENT_VERSIONS, CURRENT_DATE, 30)
 
-  // Then: 未配信譜面と最下位譜面を除き、未確定定数を含む上位30譜面を返す。
+  // Then: 現行バージョン以降の譜面と最下位譜面を除き、未確定定数を含む上位30譜面を返す。
   assert.equal(result?.entries.length, 30)
   assert.equal(
     result?.entries.some((entry) => entry.songId === 'future'),
     false
   )
   assert.equal(
-    result?.entries.some((entry) => entry.songId === 'released-0'),
+    result?.entries.some((entry) => entry.songId === 'current-version'),
+    false
+  )
+  assert.equal(
+    result?.entries.some((entry) => entry.songId === 'old-0'),
     false
   )
   assert.equal(result?.hasUnknownChartConstants, true)
+})
+
+test('is_newではなく現行バージョン開始日でベスト枠を判定すること', () => {
+  // Given: is_newがtrueの旧曲と、is_newがfalseの現行バージョン楽曲。
+  const songs = [
+    createSong('recent-update-old-song', '2026-07-01', [{ value: 15 }], true),
+    createSong('current-version-song', '2026-07-02', [{ value: 16 }], false),
+  ]
+
+  // When: ベスト枠1枠分の理論値を算出する。
+  const result = calculateBestTheoreticalRating(songs, CURRENT_VERSIONS, CURRENT_DATE, 1)
+
+  // Then: is_newにかかわらず、現行バージョン開始日より前の楽曲だけが採用される。
+  assert.deepEqual(
+    result?.entries.map((entry) => entry.songId),
+    ['recent-update-old-song']
+  )
 })
 
 test('規定枠数未満の新曲譜面は採用した譜面数で平均すること', () => {
