@@ -4,6 +4,7 @@ import { For, Show } from 'solid-js'
 import { AppButton } from '../../../../../../components/common/AppButton'
 import { AppSelect } from '../../../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../../../components/common/CheckboxField'
+import { EXCLUDE_LOCKED_SONGS_FILTER_LABEL } from '../../../../../../constants/recordFilterOptions'
 import type { Difficulty, OpTargetType } from '../../../../../../types/recordFilter'
 
 type DifficultySectionProps = {
@@ -17,6 +18,8 @@ type DifficultySectionProps = {
   opTargetType: OpTargetType
   /** お気に入り楽曲だけに絞るか */
   favoriteSongsOnly: boolean
+  /** 未解禁設定に登録された楽曲・譜面を除外するか */
+  excludeLockedSongs: boolean
   /** 難易度の選択状態を切り替える */
   onToggle: (difficulty: Difficulty) => void
   /** OP対象譜面フィルターを切り替える */
@@ -25,10 +28,14 @@ type DifficultySectionProps = {
   onOpTargetTypeChange: (type: OpTargetType) => void
   /** お気に入り楽曲フィルターを切り替える */
   onFavoriteSongsOnlyChange: (checked: boolean) => void
+  /** 未解禁曲除外フィルターを切り替える */
+  onExcludeLockedSongsChange: (checked: boolean) => void
   /** お気に入り楽曲設定を開く */
   onOpenFavoriteSongs?: () => void
   /** お気に入り楽曲設定を無効化するか */
   favoriteSongsDisabled?: boolean
+  /** 未解禁曲除外フィルターを無効化するか */
+  lockedSongsDisabled?: boolean
 }
 
 /** OP対象フィルターのチェックボックスID */
@@ -57,6 +64,9 @@ const FAVORITE_SONGS_ONLY_CHECKBOX_ID = 'filter-favorite-songs-only'
 
 /** お気に入り楽曲フィルターのラベル */
 const FAVORITE_SONGS_ONLY_LABEL = 'お気に入り楽曲のみ表示'
+
+/** 未解禁曲除外フィルターのチェックボックスID */
+const EXCLUDE_LOCKED_SONGS_CHECKBOX_ID = 'filter-exclude-locked-songs'
 
 /** お気に入り楽曲設定ボタンのラベル */
 const FAVORITE_SONGS_SETTINGS_LABEL = 'お気に入り楽曲設定'
@@ -145,6 +155,15 @@ const DifficultySection: Component<DifficultySectionProps> = (props) => (
           )}
         </Show>
       </div>
+      <CheckboxField
+        id={EXCLUDE_LOCKED_SONGS_CHECKBOX_ID}
+        checked={props.excludeLockedSongs}
+        onChange={props.onExcludeLockedSongsChange}
+        disabled={props.lockedSongsDisabled}
+        class="relative -mt-1 flex items-center gap-2"
+        textVariant="large"
+        label={EXCLUDE_LOCKED_SONGS_FILTER_LABEL}
+      />
     </div>
   </div>
 )

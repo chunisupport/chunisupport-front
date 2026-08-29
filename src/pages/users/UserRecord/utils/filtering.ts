@@ -1,6 +1,7 @@
 import type { PlayerDataDifficulty } from '../../../../types/api'
 import type { ChainLamp, Difficulty, HardLamp } from '../../../../types/record'
 import type { FilterState } from '../../../../types/recordFilter'
+import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch'
 import { getComboLampFilterValue } from '../../../../utils/comboLampFilter'
 import { isDateInRange } from '../../../../utils/dateFilter'
 import { buildDefaultFilter } from '../../../../utils/recordFilterDefaults'
@@ -45,12 +46,14 @@ export function createRecordTitleMatcher(query: string): RecordTitleMatcher {
  * @param record - 判定対象の通常レコード。
  * @param filters - 適用する通常レコードフィルター。
  * @param theoreticalTargetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
+ * @param lockedSongKeys - 未解禁設定に登録された曲・譜面のキー。
  * @returns レコードが全条件に一致する場合はtrue。
  */
 export function isRecordMatched(
   record: PlayerRecordWithSongMeta,
   filters: FilterState,
-  theoreticalTargetDifficultyBySongId: ReadonlyMap<string, PlayerDataDifficulty> = new Map()
+  theoreticalTargetDifficultyBySongId: ReadonlyMap<string, PlayerDataDifficulty> = new Map(),
+  lockedSongKeys: ReadonlySet<string> = new Set()
 ): boolean {
   const matchTitle = createRecordTitleMatcher(filters.title)
   return isRecordMatchedWithTitleMatcher(
@@ -58,7 +61,8 @@ export function isRecordMatched(
     filters,
     matchTitle,
     new Set(),
-    theoreticalTargetDifficultyBySongId
+    theoreticalTargetDifficultyBySongId,
+    lockedSongKeys
   )
 }
 
@@ -70,6 +74,7 @@ export function isRecordMatched(
  * @param matchTitle - 曲名・アーティスト・読み検索の判定関数。
  * @param favoriteSongIds - お気に入りに登録されている楽曲ID。
  * @param theoreticalTargetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
+ * @param lockedSongKeys - 未解禁設定に登録された曲・譜面のキー。
  * @returns レコードが全条件に一致する場合はtrue。
  */
 export function isRecordMatchedWithTitleMatcher(
@@ -77,7 +82,8 @@ export function isRecordMatchedWithTitleMatcher(
   filters: FilterState,
   matchTitle: RecordTitleMatcher,
   favoriteSongIds: ReadonlySet<string> = new Set(),
-  theoreticalTargetDifficultyBySongId: ReadonlyMap<string, PlayerDataDifficulty> = new Map()
+  theoreticalTargetDifficultyBySongId: ReadonlyMap<string, PlayerDataDifficulty> = new Map(),
+  lockedSongKeys: ReadonlySet<string> = new Set()
 ): boolean {
   // 未プレイ除外
   if (filters.excludeNoPlay && !record.is_played) {
@@ -110,6 +116,14 @@ export function isRecordMatchedWithTitleMatcher(
 
   // お気に入り楽曲
   if (filters.favoriteSongsOnly && !favoriteSongIds.has(record.id)) {
+    return false
+  }
+
+  if (
+    filters.excludeLockedSongs &&
+    (lockedSongKeys.has(createLockedSongKey(record.id, false)) ||
+      (record.difficulty === 'ULTIMA' && lockedSongKeys.has(createLockedSongKey(record.id, true))))
+  ) {
     return false
   }
 
