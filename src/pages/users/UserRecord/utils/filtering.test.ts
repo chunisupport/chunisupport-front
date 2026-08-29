@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { FilterState } from '../../../../types/recordFilter'
+import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch.ts'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
 import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
 import {
@@ -175,6 +176,45 @@ test('isRecordMatchedWithTitleMatcher はお気に入り楽曲だけに絞り込
     ),
     false
   )
+})
+
+test('isRecordMatched は通常未解禁曲とULTIMA未解禁譜面を除外できる', () => {
+  // Given
+  const filters: FilterState = { ...getDefaultFilter(), excludeLockedSongs: true }
+  const normalLockedKeys = new Set([createLockedSongKey('song-1', false)])
+  const ultimaLockedKeys = new Set([createLockedSongKey('song-1', true)])
+
+  // When
+  const normalLockedMaster = isRecordMatched(
+    createRecord({ difficulty: 'MASTER' }),
+    filters,
+    new Map(),
+    normalLockedKeys
+  )
+  const normalLockedUltima = isRecordMatched(
+    createRecord({ difficulty: 'ULTIMA' }),
+    filters,
+    new Map(),
+    normalLockedKeys
+  )
+  const ultimaLockedMaster = isRecordMatched(
+    createRecord({ difficulty: 'MASTER' }),
+    filters,
+    new Map(),
+    ultimaLockedKeys
+  )
+  const ultimaLockedUltima = isRecordMatched(
+    createRecord({ difficulty: 'ULTIMA' }),
+    filters,
+    new Map(),
+    ultimaLockedKeys
+  )
+
+  // Then
+  assert.equal(normalLockedMaster, false)
+  assert.equal(normalLockedUltima, false)
+  assert.equal(ultimaLockedMaster, true)
+  assert.equal(ultimaLockedUltima, false)
 })
 
 test('isRecordMatched は譜面定数とスコアの範囲を判定できる', () => {

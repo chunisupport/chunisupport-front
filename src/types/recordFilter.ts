@@ -65,6 +65,8 @@ export interface FilterState {
   opTargetType: OpTargetType
   /** お気に入り登録済みの楽曲だけを表示するか */
   favoriteSongsOnly: boolean
+  /** 未解禁設定に登録された楽曲・譜面を除外するか */
+  excludeLockedSongs: boolean
   genres: string[]
   versions: string[]
   const: NumericRangeFilter

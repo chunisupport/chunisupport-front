@@ -18,6 +18,7 @@ import {
   type OverPowerSubPage,
   type ProfilePageQuery,
 } from '../../../utils/userProfileRoute'
+import { scrollToUserProfileContent } from '../../../utils/userProfileScroll'
 import { RatingImagePreviewDialog } from './components/RatingImagePreviewDialog'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordCard } from './components/UserRecordCard'
@@ -207,19 +208,7 @@ export const UserProfileView: Component<Props> = (props) => {
     return 'standard'
   })
 
-  // ネームプレートの高さ+マージン(タブ切り替え時の自動スクロール用)
-  const NAMEPLATE_SCROLL_OFFSET = 183
   const forceMountedTabContentClass = 'hidden data-selected:block'
-
-  const scrollToRecordList = () => {
-    const scrollTarget = document.getElementById('app-main')
-    if (scrollTarget && scrollTarget.scrollTop > NAMEPLATE_SCROLL_OFFSET) {
-      scrollTarget.scrollTo({
-        top: NAMEPLATE_SCROLL_OFFSET,
-        behavior: 'smooth',
-      })
-    }
-  }
 
   const buildProfileNavigationTarget = (page: ProfilePageQuery) => {
     const normalizedPath = buildUserProfilePagePath(props.username, page)
@@ -260,13 +249,13 @@ export const UserProfileView: Component<Props> = (props) => {
       props.onShowRecords()
     }
 
-    scrollToRecordList()
+    scrollToUserProfileContent('smooth')
   }
 
   const handleRatingTabChange = (value: string) => {
     if (value !== 'best' && value !== 'new') return
     navigate(buildProfileNavigationTarget(value === 'new' ? 'rating_new' : 'rating_best'))
-    scrollToRecordList()
+    scrollToUserProfileContent('smooth')
   }
 
   /**
@@ -284,7 +273,7 @@ export const UserProfileView: Component<Props> = (props) => {
       value === 'worldsend' ? 'record_we' : value === 'course' ? 'record_course' : 'record_normal'
     navigate(buildProfileNavigationTarget(page))
     if (value !== 'course') props.onShowRecords()
-    scrollToRecordList()
+    scrollToUserProfileContent('smooth')
   }
 
   return (

@@ -29,6 +29,8 @@ interface FilterDialogProps {
   onOpenFavoriteSongs?: () => void
   /** お気に入り楽曲設定を無効化するか */
   favoriteSongsDisabled?: boolean
+  /** 未解禁曲除外フィルターを無効化するか */
+  lockedSongsDisabled?: boolean
 }
 
 /**
@@ -147,6 +149,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
             }
             onOpenFavoriteSongs={props.onOpenFavoriteSongs}
             favoriteSongsDisabled={props.favoriteSongsDisabled}
+            lockedSongsDisabled={props.lockedSongsDisabled}
           />
           <div class="flex justify-end mt-6">
             <div class="flex gap-2">

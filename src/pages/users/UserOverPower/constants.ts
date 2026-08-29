@@ -1,4 +1,5 @@
 import { OVER_POWER_MASTER_ULTIMA_TARGET } from '../../../usecases/overpower/constants'
+import type { OverPowerRecordFilterDimension } from '../../../usecases/overpower/recordNavigation'
 import type { OverPowerSubPage } from '../../../utils/userProfileRoute'
 import type {
   OverPowerAggregationTargetOption,
@@ -40,6 +41,9 @@ export const OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES = 5
 /** 未解禁曲を集計対象から除外する操作の表示名 */
 export const OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL = '未解禁曲除外'
 
+/** 通常レコードへのフィルター付き遷移に失敗したときの表示文言 */
+export const OVER_POWER_RECORD_NAVIGATION_ERROR_MESSAGE = 'レコードの表示に失敗しました。'
+
 /** OVER POWER画面の操作ラベル */
 export const OVER_POWER_CONTROL_LABELS = {
   aggregationTarget: '集計対象',
@@ -60,6 +64,16 @@ export const overPowerSummaryTabBySubPage: Record<OverPowerSubPage, OverPowerSum
 
 /** OVER POWERサマリーの表示軸からURLサブページへ変換する対応表 */
 export const overPowerSubPageBySummaryTab: Record<OverPowerSummaryTab, OverPowerSubPage> = {
+  genres: 'genre',
+  levels: 'level',
+  versions: 'version',
+}
+
+/** OVER POWERの表示軸から通常レコードへ引き継ぐ分類軸への対応 */
+export const overPowerRecordFilterDimensionBySummaryTab: Record<
+  OverPowerSummaryTab,
+  OverPowerRecordFilterDimension
+> = {
   genres: 'genre',
   levels: 'level',
   versions: 'version',

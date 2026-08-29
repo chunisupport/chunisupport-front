@@ -222,6 +222,7 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
       value.opTargetType === 'theoretical') &&
     (value.currentOpTargetOnly === undefined || typeof value.currentOpTargetOnly === 'boolean') &&
     (value.favoriteSongsOnly === undefined || typeof value.favoriteSongsOnly === 'boolean') &&
+    (value.excludeLockedSongs === undefined || typeof value.excludeLockedSongs === 'boolean') &&
     isStringArray(value.genres) &&
     isStringArray(value.versions) &&
     isRequiredNumberRange(value.const, CHART_CONST_MIN, CHART_CONST_MAX) &&

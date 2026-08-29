@@ -45,6 +45,7 @@ export function isRecordFilterOptionsChanged(
     ((current.opTargetOnly || defaultFilter.opTargetOnly) &&
       current.opTargetType !== defaultFilter.opTargetType) ||
     current.favoriteSongsOnly !== defaultFilter.favoriteSongsOnly ||
+    current.excludeLockedSongs !== defaultFilter.excludeLockedSongs ||
     current.constFilterMode !== defaultFilter.constFilterMode ||
     current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
     current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
@@ -82,6 +83,7 @@ export function isRecordDifficultyFilterOnlyChanged(
     current.opTargetOnly === defaultFilter.opTargetOnly &&
     (!current.opTargetOnly || current.opTargetType === defaultFilter.opTargetType) &&
     current.favoriteSongsOnly === defaultFilter.favoriteSongsOnly &&
+    current.excludeLockedSongs === defaultFilter.excludeLockedSongs &&
     current.constFilterMode === defaultFilter.constFilterMode &&
     current.scoreFilterMode === defaultFilter.scoreFilterMode &&
     current.excludeNoPlay === defaultFilter.excludeNoPlay &&

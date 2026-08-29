@@ -36,7 +36,7 @@ test('buildSavedFilterRequest は通常レコード用の保存リクエスト�
   // Then
   assert.equal(result.name, '高難度FC狙い')
   assert.equal(result.filter_type, 'standard')
-  assert.equal(result.schema_version, 7)
+  assert.equal(result.schema_version, 8)
   assert.deepEqual(result.filter, filter)
 })
 
@@ -45,6 +45,7 @@ test('toSavedFilter は旧スキーマのOP対象条件と不足項目を現行�
   const { toSavedFilter } = await loadStorageModule()
   const {
     favoriteSongsOnly: _favoriteSongsOnly,
+    excludeLockedSongs: _excludeLockedSongs,
     combo_lamp: _comboLamp,
     opTargetOnly: _opTargetOnly,
     opTargetType: _opTargetType,
@@ -78,6 +79,7 @@ test('toSavedFilter は旧スキーマのOP対象条件と不足項目を現行�
     opTargetOnly: true,
     opTargetType: 'current',
     favoriteSongsOnly: false,
+    excludeLockedSongs: false,
   })
 })
 
@@ -111,6 +113,29 @@ test('toSavedFilter はschema 6のOP対象条件を移行しコンボランプ�
   assert.equal(result.filter?.opTargetOnly, true)
   assert.equal(result.filter?.opTargetType, 'current')
   assert.deepEqual(result.filter?.combo_lamp, ['ALL JUSTICE'])
+})
+
+test('toSavedFilter はschema 7へ未解禁曲除外条件を補完する', async () => {
+  // Given
+  const { excludeLockedSongs: _excludeLockedSongs, ...legacyFilter } = getDefaultFilter()
+  const { toSavedFilter } = await loadStorageModule()
+  const dto: RecordFilterDTO = {
+    id: '33333333-3333-3333-3333-333333333333',
+    name: 'schema 7',
+    filter_type: 'standard',
+    schema_version: 7,
+    filter: legacyFilter,
+    created_at: '2026-06-15T12:00:00Z',
+    updated_at: '2026-06-15T12:00:00Z',
+  }
+
+  // When
+  const result = toSavedFilter(dto)
+
+  // Then
+  assert.equal(result.isValid, true)
+  assert.equal(result.filter?.excludeLockedSongs, false)
+  assert.deepEqual(result.filter?.combo_lamp, legacyFilter.combo_lamp)
 })
 
 test('toSavedFilter は旧スキーマのDTOを古くて無効な保存フィルターとして残す', async () => {
