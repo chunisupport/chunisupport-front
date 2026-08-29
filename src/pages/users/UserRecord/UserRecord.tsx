@@ -11,7 +11,12 @@ import {
   Suspense,
 } from 'solid-js'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
-import { addMyFavoriteSong, deleteMyFavoriteSong, fetchUserFavoriteSongs } from '../../../api/users'
+import {
+  addMyFavoriteSong,
+  deleteMyFavoriteSong,
+  fetchUserFavoriteSongs,
+  fetchUserLockedSongs,
+} from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import {
@@ -22,8 +27,13 @@ import {
 } from '../../../repositories/viewSettingsRepository'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
+import {
+  consumeStandardRecordFilter,
+  pendingStandardRecordFilter,
+} from '../../../stores/standardRecordNavigation'
 import type { MasterDataDTO, UserRecordDTO, VersionSummaryDTO } from '../../../types/api'
 import type { FilterState, RecordColumnId, RecordSortCondition } from '../../../types/recordFilter'
+import { createLockedSongKey } from '../../../usecases/overpower/lockedSongsBatch'
 import {
   buildDefaultFilter,
   DEFAULT_FILTER,
@@ -108,6 +118,7 @@ const UserRecord: Component<Props> = (props) => {
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
   const [favoriteSongsOpen, setFavoriteSongsOpen] = createSignal(false)
   const [favoriteSongsUnavailable, setFavoriteSongsUnavailable] = createSignal(false)
+  const [lockedSongsUnavailable, setLockedSongsUnavailable] = createSignal(false)
   const canManageFavoriteSongs = createMemo(
     () => authSession.status === 'authenticated' && authSession.user?.username === props.username
   )
@@ -120,6 +131,19 @@ const UserRecord: Component<Props> = (props) => {
         return response
       } catch {
         setFavoriteSongsUnavailable(true)
+        return { items: [] }
+      }
+    }
+  )
+  const [lockedSongs] = createResource(
+    () => props.username,
+    async (username) => {
+      try {
+        const response = await fetchUserLockedSongs(username)
+        setLockedSongsUnavailable(false)
+        return response
+      } catch {
+        setLockedSongsUnavailable(true)
         return { items: [] }
       }
     }
@@ -140,6 +164,13 @@ const UserRecord: Component<Props> = (props) => {
   const favoriteSongIds = createMemo<ReadonlySet<string>>(
     () => new Set(favoriteSongs()?.items.map((item) => item.display_id) ?? [])
   )
+  const lockedSongKeys = createMemo<ReadonlySet<string>>(
+    () =>
+      new Set(
+        lockedSongs()?.items.map((item) => createLockedSongKey(item.display_id, item.is_ultima)) ??
+          []
+      )
+  )
 
   const defaultFilter = createMemo(() => {
     const md = masterData()
@@ -154,13 +185,23 @@ const UserRecord: Component<Props> = (props) => {
     isRecordDifficultyFilterOnlyChanged(filters(), defaultFilter()) ? 'difficulty-only' : undefined
   )
 
-  // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
-  onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
+  // クエリパラメータのソートを反映してからURLをクリーン化する。
+  createEffect(() => {
+    const sortColumn = searchParams.sortcol
+    const sortOrder = searchParams.sortorder
+    if (!sortColumn && !sortOrder) return
+
+    const { initialSortKey: nextSortKey, initialSortOrder: nextSortOrder } =
+      parseSortParams(searchParams)
+    setSortConditions(createInitialRecordSortConditions(nextSortKey, nextSortOrder))
+    sanitizeSortQuery(searchParams, setSearchParams)
+  })
   onMount(() => {
     ensureSongsLoaded()
   })
 
   let filterRestored = false
+  let transferredFilterApplied = false
 
   // マスタデータ取得後に保存済みフィルター、またはデフォルトフィルターを反映する。
   createEffect(() => {
@@ -169,13 +210,31 @@ const UserRecord: Component<Props> = (props) => {
     if (filterRestored || !md || !versions) return
     filterRestored = true
     void restoreInitialStandardRecordFilter(md, versions.versions)
-      .then(setFilters)
+      .then((restoredFilter) => {
+        if (!transferredFilterApplied) setFilters(restoredFilter)
+      })
       .finally(() => setFilterReady(true))
+  })
+
+  // forceMount済みの通常レコードへOVER POWER画面から渡されたフィルターを反映する。
+  createEffect(() => {
+    const pendingFilter = pendingStandardRecordFilter()
+    if (!pendingFilter || pendingFilter.username !== props.username) return
+
+    transferredFilterApplied = true
+    setFilters(normalizeFilterState(pendingFilter.filter))
+    setFilterReady(true)
+    consumeStandardRecordFilter(pendingFilter)
   })
 
   createEffect(() => {
     if (!favoriteSongsUnavailable() || !filters().favoriteSongsOnly) return
     setFilters((current) => ({ ...current, favoriteSongsOnly: false }))
+  })
+
+  createEffect(() => {
+    if (!lockedSongsUnavailable() || !filters().excludeLockedSongs) return
+    setFilters((current) => ({ ...current, excludeLockedSongs: false }))
   })
 
   onMount(() => {
@@ -228,6 +287,7 @@ const UserRecord: Component<Props> = (props) => {
       sourceRecords: () => props.record.standard,
       filters,
       favoriteSongIds,
+      lockedSongKeys,
       sortConditions,
       setSortConditions,
     })
@@ -267,7 +327,13 @@ const UserRecord: Component<Props> = (props) => {
           fallback={<LoadError error={allSongs.error ?? masterData.error ?? versionData.error} />}
         >
           <Show
-            when={!isSongsLoading() && masterData() && versionData() && filterReady()}
+            when={
+              !isSongsLoading() &&
+              masterData() &&
+              versionData() &&
+              filterReady() &&
+              (!filters().excludeLockedSongs || (!lockedSongs.loading && lockedSongs()))
+            }
             fallback={<Loading />}
           >
             <div class="mx-2 text-sm">
@@ -322,6 +388,7 @@ const UserRecord: Component<Props> = (props) => {
                 favoriteSongsDisabled={
                   !canManageFavoriteSongs() || favoriteSongs.loading || favoriteSongsUnavailable()
                 }
+                lockedSongsDisabled={lockedSongs.loading || lockedSongsUnavailable()}
               />
 
               <SortDialog

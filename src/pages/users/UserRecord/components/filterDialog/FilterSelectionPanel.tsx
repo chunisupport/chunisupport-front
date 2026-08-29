@@ -52,6 +52,8 @@ type FilterSelectionPanelProps = {
   onOpenFavoriteSongs?: () => void
   /** お気に入り楽曲設定を無効化するか */
   favoriteSongsDisabled?: boolean
+  /** 未解禁曲除外フィルターを無効化するか */
+  lockedSongsDisabled?: boolean
 }
 
 /** フィルター名入力を API の最大文字数に丸める */
@@ -104,6 +106,13 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     return String(base)
   }
 
+  /**
+   * 表示レベルからフィルターへ設定する譜面定数の端点を取得する。
+   *
+   * @param level - 選択された表示レベル。
+   * @param type - 取得する範囲の端点。
+   * @returns 表示レベルに対応する譜面定数。
+   */
   const Level2Const = (level: string, type: 'min' | 'max') => {
     const isPlus = level.endsWith('+')
     const base = Number.parseInt(level.replace('+', ''), 10)
@@ -369,6 +378,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         opTargetOnly={props.filters.opTargetOnly}
         opTargetType={props.filters.opTargetType}
         favoriteSongsOnly={props.filters.favoriteSongsOnly}
+        excludeLockedSongs={props.filters.excludeLockedSongs}
         onToggle={(diff) =>
           props.setFilters((prev) => ({
             ...prev,
@@ -393,8 +403,15 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             favoriteSongsOnly: checked,
           }))
         }
+        onExcludeLockedSongsChange={(checked) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            excludeLockedSongs: checked,
+          }))
+        }
         onOpenFavoriteSongs={props.onOpenFavoriteSongs}
         favoriteSongsDisabled={props.favoriteSongsDisabled}
+        lockedSongsDisabled={props.lockedSongsDisabled}
       />
       <ConstRangeSection
         constFilterMode={props.filters.constFilterMode}

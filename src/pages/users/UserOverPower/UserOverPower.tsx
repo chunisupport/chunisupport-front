@@ -15,8 +15,10 @@ import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/use
 import { LoadError, Loading } from '../../../components'
 import { AppButton } from '../../../components/common/AppButton'
 import { AppSelect } from '../../../components/common/AppSelect'
+import { saveStandardRecordFilterSetting } from '../../../repositories/viewSettingsRepository'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
+import { publishStandardRecordFilter } from '../../../stores/standardRecordNavigation'
 import type { PlayerLockedSongRequest, UserRecordDTO } from '../../../types/api'
 import {
   buildOverPowerChartEntries,
@@ -24,8 +26,19 @@ import {
 } from '../../../usecases/overpower/aggregation'
 import { buildLockedSongsBatchPayload } from '../../../usecases/overpower/lockedSongsBatch'
 import { buildOverPowerSummary } from '../../../usecases/overpower/overpowerSummary'
-import type { OverPowerAggregationTarget } from '../../../usecases/overpower/types'
-import { buildUserOverPowerPagePath, type OverPowerSubPage } from '../../../utils/userProfileRoute'
+import { buildOverPowerRecordFilter } from '../../../usecases/overpower/recordNavigation'
+import type {
+  OverPowerAggregationTarget,
+  OverPowerSummaryRow,
+} from '../../../usecases/overpower/types'
+import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
+import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
+import {
+  buildUserOverPowerPagePath,
+  buildUserProfilePagePath,
+  type OverPowerSubPage,
+} from '../../../utils/userProfileRoute'
+import { scrollToUserProfileContent } from '../../../utils/userProfileScroll'
 import LockedSongsDialog from './components/LockedSongsDialog'
 import LowLevelRowsToggle from './components/LowLevelRowsToggle'
 import { OverPowerSummaryGraph } from './components/OverPowerSummaryGraph'
@@ -35,7 +48,9 @@ import {
   OVER_POWER_AGGREGATION_TARGET_OPTIONS,
   OVER_POWER_CONTROL_LABELS,
   OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL,
+  OVER_POWER_RECORD_NAVIGATION_ERROR_MESSAGE,
   OVER_POWER_SUMMARY_OPTIONS,
+  overPowerRecordFilterDimensionBySummaryTab,
   overPowerSubPageBySummaryTab,
   overPowerSummaryTabBySubPage,
 } from './constants'
@@ -86,6 +101,7 @@ const UserOverPower: Component<Props> = (props) => {
     fetchUserLockedSongs
   )
   const [lockedSongsDialogOpen, setLockedSongsDialogOpen] = createSignal(false)
+  const [recordNavigationError, setRecordNavigationError] = createSignal('')
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -223,6 +239,45 @@ const UserOverPower: Component<Props> = (props) => {
   }
 
   /**
+   * OVER POWERの表示条件を通常レコードフィルターへ保存して遷移する。
+   *
+   * @param row - 遷移元のサマリー行。
+   * @param useCurrentSummaryTab - 現在の表示軸を分類条件として引き継ぐか。
+   * @returns 保存と遷移処理の完了時に解決されるPromise。
+   */
+  const handleOpenRecords = async (
+    row: OverPowerSummaryRow,
+    useCurrentSummaryTab: boolean
+  ): Promise<void> => {
+    const md = masterData()
+    const versions = versionData()?.versions
+    if (!md || !versions) return
+
+    setRecordNavigationError('')
+    try {
+      const filter = buildOverPowerRecordFilter({
+        defaultFilter: buildDefaultFilter(md, versions),
+        dimension: useCurrentSummaryTab
+          ? overPowerRecordFilterDimensionBySummaryTab[selectedSummaryTab()]
+          : 'all',
+        rowLabel: row.label,
+        aggregationTarget: aggregationTarget(),
+        excludeLockedSongs: excludeLockedSongs(),
+      })
+      await saveStandardRecordFilterSetting(filter)
+      publishStandardRecordFilter(props.username, filter)
+      navigate(
+        `${buildUserProfilePagePath(props.username, 'record_normal')}?sortcol=overpower&sortorder=desc`
+      )
+      scrollToUserProfileContent()
+    } catch (error) {
+      setRecordNavigationError(
+        toUserFriendlyErrorMessage(error, OVER_POWER_RECORD_NAVIGATION_ERROR_MESSAGE)
+      )
+    }
+  }
+
+  /**
    * 未解禁楽曲設定の差分を保存し、保存後に設定を再取得する。
    *
    * @param nextLockedSongs - 次に保存する未解禁楽曲設定一覧。
@@ -340,6 +395,14 @@ const UserOverPower: Component<Props> = (props) => {
                   </div>
                 </div>
 
+                <Show when={recordNavigationError()}>
+                  {(message) => (
+                    <p class="mt-2 text-sm text-danger" role="alert">
+                      {message()}
+                    </p>
+                  )}
+                </Show>
+
                 <div class="mt-4">
                   <Show
                     when={summaryViewMode() === 'graph'}
@@ -347,10 +410,14 @@ const UserOverPower: Component<Props> = (props) => {
                       <OverPowerSummaryTable
                         rows={[currentSummary().all]}
                         countLabel={countLabel()}
+                        onOpenRecords={(row) => void handleOpenRecords(row, false)}
                       />
                     }
                   >
-                    <OverPowerSummaryGraph rows={allGraphRows()} />
+                    <OverPowerSummaryGraph
+                      rows={allGraphRows()}
+                      onOpenRecords={(row) => void handleOpenRecords(row, false)}
+                    />
                   </Show>
                 </div>
 
@@ -362,10 +429,14 @@ const UserOverPower: Component<Props> = (props) => {
                         <OverPowerSummaryTable
                           rows={currentSummary().genres}
                           countLabel={countLabel()}
+                          onOpenRecords={(row) => void handleOpenRecords(row, true)}
                         />
                       }
                     >
-                      <OverPowerSummaryGraph rows={genreGraphRows()} />
+                      <OverPowerSummaryGraph
+                        rows={genreGraphRows()}
+                        onOpenRecords={(row) => void handleOpenRecords(row, true)}
+                      />
                     </Show>
                   </div>
                 </Show>
@@ -388,12 +459,16 @@ const UserOverPower: Component<Props> = (props) => {
                           <OverPowerSummaryTable
                             rows={displayedLevelRows()}
                             countLabel={countLabel()}
+                            onOpenRecords={(row) => void handleOpenRecords(row, true)}
                           />
                         </div>
                       }
                     >
                       <div id="over-power-low-level-summary">
-                        <OverPowerSummaryGraph rows={levelGraphRows()} />
+                        <OverPowerSummaryGraph
+                          rows={levelGraphRows()}
+                          onOpenRecords={(row) => void handleOpenRecords(row, true)}
+                        />
                       </div>
                     </Show>
                   </div>
@@ -407,10 +482,14 @@ const UserOverPower: Component<Props> = (props) => {
                         <OverPowerSummaryTable
                           rows={currentSummary().versions}
                           countLabel={countLabel()}
+                          onOpenRecords={(row) => void handleOpenRecords(row, true)}
                         />
                       }
                     >
-                      <OverPowerSummaryGraph rows={versionGraphRows()} />
+                      <OverPowerSummaryGraph
+                        rows={versionGraphRows()}
+                        onOpenRecords={(row) => void handleOpenRecords(row, true)}
+                      />
                     </Show>
                   </div>
                 </Show>

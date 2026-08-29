@@ -63,6 +63,18 @@ test('isRecordFilterOptionsChanged はタイトル検索以外の変更を検出
   assert.equal(result, true)
 })
 
+test('isRecordFilterOptionsChanged は未解禁曲除外の変更を検出すること', () => {
+  // Given
+  const defaultFilter = { ...DEFAULT_FILTER }
+  const currentFilter = { ...DEFAULT_FILTER, excludeLockedSongs: true }
+
+  // When
+  const result = isRecordFilterOptionsChanged(currentFilter, defaultFilter)
+
+  // Then
+  assert.equal(result, true)
+})
+
 test('isRecordFilterOptionsChanged は有効なOP対象種別の変更を検出すること', () => {
   // Given
   const defaultFilter = { ...DEFAULT_FILTER }

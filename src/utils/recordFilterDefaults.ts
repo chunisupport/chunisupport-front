@@ -17,6 +17,7 @@ export const DEFAULT_FILTER: FilterState = {
   opTargetOnly: false,
   opTargetType: 'current',
   favoriteSongsOnly: false,
+  excludeLockedSongs: false,
   genres: [],
   versions: [],
   const: {
@@ -106,6 +107,7 @@ export const normalizeFilterState = (
     opTargetOnly: filter.opTargetOnly ?? currentOpTargetOnly ?? DEFAULT_FILTER.opTargetOnly,
     opTargetType: filter.opTargetType ?? DEFAULT_FILTER.opTargetType,
     favoriteSongsOnly: filter.favoriteSongsOnly ?? DEFAULT_FILTER.favoriteSongsOnly,
+    excludeLockedSongs: filter.excludeLockedSongs ?? DEFAULT_FILTER.excludeLockedSongs,
     combo_lamp: filter.combo_lamp ?? [...RECORD_COMBO_LAMP_OPTIONS],
     chain_lamp: filter.chain_lamp ?? [...RECORD_CHAIN_LAMP_OPTIONS],
     hard_lamp: filter.hard_lamp ?? [...RECORD_HARD_LAMP_OPTIONS],

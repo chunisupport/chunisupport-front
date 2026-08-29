@@ -1,3 +1,5 @@
+import { Button } from '@kobalte/core/button'
+import { Funnel } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import {
@@ -16,6 +18,7 @@ import type {
 
 type Props = {
   rows: OverPowerGraphRow[]
+  onOpenRecords: (row: OverPowerGraphRow['summary']) => void
 }
 
 /** OVERPOWERグラフのOTHER帯に使う、フィルター統計の未プレイと同じ背景色クラス */
@@ -101,7 +104,12 @@ const DistributionBar: Component<{
   )
 }
 
-/** OVERPOWERサマリーをランク・コンボ分布付きのカードグラフとして描画する */
+/**
+ * OVER POWERサマリーをレコード遷移可能なカードグラフとして描画する。
+ *
+ * @param props - 分布付き集計行とレコード遷移ハンドラー。
+ * @returns OVER POWERサマリーのカードグラフ。
+ */
 export const OverPowerSummaryGraph: Component<Props> = (props) => (
   <section class="space-y-4">
     <Show
@@ -119,7 +127,17 @@ export const OverPowerSummaryGraph: Component<Props> = (props) => (
 
           return (
             <article class="rounded-lg border border-border bg-surface p-4 shadow-sm">
-              <h3 class="text-center text-base font-bold text-text">{row.summary.label}</h3>
+              <h3 class="text-center text-base font-bold text-text">
+                <Button
+                  type="button"
+                  class="inline-flex cursor-pointer items-center gap-1.5 rounded hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                  onClick={() => props.onOpenRecords(row.summary)}
+                >
+                  <span>{row.summary.label}</span>
+                  <Funnel class="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span class="sr-only">のレコードを表示</span>
+                </Button>
+              </h3>
               <p class="mt-2 text-lg font-bold tabular-nums text-text">
                 {formatValue(row.summary.current)}
                 <span class="text-sm font-normal text-text-muted">
