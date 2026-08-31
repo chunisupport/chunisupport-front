@@ -24,9 +24,11 @@ import {
   FOOTER_DISCLAIMER_TEXT,
 } from './constants/footer'
 import {
+  ADMIN_CHART_RANKING_PATH,
   ADMIN_DATA_COVERAGE_PATH,
   ADMIN_MAINTENANCE_PATH,
   ADMIN_PATH,
+  ADMIN_WORLDSEND_CHART_RANKING_PATH,
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
@@ -94,6 +96,7 @@ const PlayerStatsDashboardPage = lazy(() => import('./pages/tools/PlayerStatsDas
 
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
 const AdminDataCoveragePage = lazy(() => import('./pages/admin/AdminDataCoveragePage'))
+const AdminChartRankingPage = lazy(() => import('./pages/admin/AdminChartRankingPage'))
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
 const AdminSongsPage = lazy(() => import('./pages/admin/AdminSongsPage'))
 const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
@@ -348,6 +351,7 @@ const ToolsPage = () => {
 
 const LoadableAdminPage = withRouteLoadBoundary(AdminPage)
 const LoadableAdminDataCoveragePage = withRouteLoadBoundary(AdminDataCoveragePage)
+const LoadableAdminChartRankingPage = withRouteLoadBoundary(AdminChartRankingPage)
 const LoadableAdminUsersPage = withRouteLoadBoundary(AdminUsersPage)
 const LoadableAdminSongsPage = withRouteLoadBoundary(AdminSongsPage)
 const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
@@ -375,6 +379,17 @@ const GuardedAdminPage = () => (
 const GuardedAdminDataCoveragePage = () => (
   <RequireRole allowedRoles={['ADMIN', 'EDITOR']}>
     <LoadableAdminDataCoveragePage />
+  </RequireRole>
+)
+
+/**
+ * ADMIN 権限を要求して譜面ランキング画面を表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与した譜面ランキング画面。
+ */
+const GuardedAdminChartRankingPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableAdminChartRankingPage />
   </RequireRole>
 )
 
@@ -572,6 +587,11 @@ const App = () => {
       {/* 管理 */}
       <Route path={ADMIN_PATH} component={withNavBar(GuardedAdminPage)} />
       <Route path={ADMIN_DATA_COVERAGE_PATH} component={withNavBar(GuardedAdminDataCoveragePage)} />
+      <Route path={ADMIN_CHART_RANKING_PATH} component={withNavBar(GuardedAdminChartRankingPage)} />
+      <Route
+        path={ADMIN_WORLDSEND_CHART_RANKING_PATH}
+        component={withNavBar(GuardedAdminChartRankingPage)}
+      />
       <Route path="/admin/users" component={withNavBar(GuardedAdminUsersPage)} />
       <Route path="/admin/songs" component={withNavBar(GuardedAdminSongsPage)} />
       <Route path="/admin/honors" component={withNavBar(GuardedAdminHonorsPage)} />
