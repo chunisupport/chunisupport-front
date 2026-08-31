@@ -123,6 +123,10 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
 {
   "title": "",
   "difficulties": ["MASTER", "ULTIMA"],
+  "opTargetOnly": false,
+  "opTargetType": "current",
+  "favoriteSongsOnly": false,
+  "excludeLockedSongs": false,
   "genres": [],
   "versions": [],
   "const": {
@@ -146,7 +150,11 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
   "combo_lamp": ["ALL JUSTICE CRITICAL", "ALL JUSTICE", "FULL COMBO", null],
   "chain_lamp": ["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null],
   "hard_lamp": ["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null],
-  "excludeNoPlay": false
+  "excludeNoPlay": false,
+  "updatedAt": {
+    "min": "",
+    "max": ""
+  }
 }
 ```
 
@@ -156,6 +164,10 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
 | --- | --- | --- | --- |
 | `title` | `string` | はい | 曲名、アーティスト名、読みの部分一致検索。正規化して比較します。空文字なら条件なしです。 |
 | `difficulties` | `string[]` | はい | 対象難易度の配列です。難易度値は `BASIC`, `ADVANCED`, `EXPERT`, `MASTER`, `ULTIMA` のように大文字で扱います。空配列にすると全件不一致になります。 |
+| `opTargetOnly` | `boolean` | はい | `true` の場合、OVER POWER対象譜面だけを表示します。 |
+| `opTargetType` | `"current"` \| `"theoretical"` | はい | `current` は現在の集計対象、`theoretical` は楽曲ごとの理論値対象難易度で判定します。 |
+| `favoriteSongsOnly` | `boolean` | はい | `true` の場合、お気に入り登録済みの楽曲だけを表示します。 |
+| `excludeLockedSongs` | `boolean` | はい | `true` の場合、未解禁設定に登録された楽曲とULTIMA譜面を除外します。 |
 | `genres` | `string[]` | はい | 対象ジャンル名の配列です。空配列なら全ジャンル対象です。 |
 | `versions` | `string[]` | はい | 対象バージョン名の配列です。値はバージョン API (`/internal/master/versions`) の `versions[].name` を `getShortVersionName` で短縮した名前を使います。空配列なら全バージョン対象です。 |
 | `const` | `{ min: number, max: number }` | はい | 譜面定数の範囲です。 |
@@ -168,6 +180,7 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
 | `chain_lamp` | `Array<string \| null>` | はい | 許可する FULL CHAIN ランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
 | `hard_lamp` | `Array<string \| null>` | はい | 許可するクリアランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
 | `excludeNoPlay` | `boolean` | はい | `true` の場合、未プレイ譜面を除外します。 |
+| `updatedAt` | `{ min: string, max: string }` | はい | 最終更新日の範囲です。空文字列は該当する範囲端を指定しないことを表します。 |
 
 ### 通常レコードの判定ルール
 
@@ -176,20 +189,28 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
 1. `excludeNoPlay` が `true` のとき、未プレイではないこと。
 2. `title` が空でないとき、曲名、アーティスト名、読みのいずれかに一致すること。
 3. `difficulty` が `difficulties` に含まれること。
-4. `genres` が空でないとき、レコードのジャンルが `genres` に含まれること。
-5. `versions` が空でないとき、レコードのバージョンが `versions` に含まれること。
-6. 譜面定数が `const.min` 以上かつ `const.max` 以下であること。
-7. スコアが `score.min` 以上かつ `score.max` 以下であること。
-8. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。
-9. `overPower.min` または `overPower.max` が `null` でないとき、プレイ済み譜面で、`overpower` が指定範囲内であること。
-10. AJC 判定後のコンボランプが `combo_lamp` に含まれること。JUSTICE 数フィルターの有効・無効にかかわらず判定します。
-11. FULL CHAIN ランプが `chain_lamp` に含まれること。
-12. クリアランプが `hard_lamp` に含まれること。
+4. `opTargetOnly` が `true` のとき、`opTargetType` に応じたOVER POWER対象譜面であること。
+5. `favoriteSongsOnly` が `true` のとき、お気に入り登録済みの楽曲であること。
+6. `excludeLockedSongs` が `true` のとき、未解禁設定の通常楽曲ではなく、ULTIMAの場合は未解禁設定のULTIMA譜面でもないこと。
+7. `genres` が空でないとき、レコードのジャンルが `genres` に含まれること。
+8. `versions` が空でないとき、レコードのバージョンが `versions` に含まれること。
+9. 譜面定数が `const.min` 以上かつ `const.max` 以下であること。
+10. スコアが `score.min` 以上かつ `score.max` 以下であること。
+11. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。
+12. `overPower.min` または `overPower.max` が `null` でないとき、プレイ済み譜面で、`overpower` が指定範囲内であること。
+13. AJC 判定後のコンボランプが `combo_lamp` に含まれること。JUSTICE 数フィルターの有効・無効にかかわらず判定します。
+14. FULL CHAIN ランプが `chain_lamp` に含まれること。
+15. クリアランプが `hard_lamp` に含まれること。
+16. `updatedAt` で指定した最終更新日の範囲内であること。
 
 ### 通常レコードのデフォルト値
 
 - `title`: `""`
 - `difficulties`: `["MASTER", "ULTIMA"]`
+- `opTargetOnly`: `false`
+- `opTargetType`: `"current"`
+- `favoriteSongsOnly`: `false`
+- `excludeLockedSongs`: `false`
 - `genres`: マスターデータ上の全ジャンル
 - `versions`: バージョン API (`/internal/master/versions`) から取得した全バージョン名を短縮した名前
 - `const.min`: `1`
@@ -206,6 +227,8 @@ URL クエリでは内部 JSON をそのまま入れず、通常レコードの�
 - `chain_lamp`: `["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null]`
 - `hard_lamp`: `["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null]`
 - `excludeNoPlay`: `false`
+- `updatedAt.min`: `""`
+- `updatedAt.max`: `""`
 
 ## WORLD'S END FilterState
 
@@ -345,12 +368,14 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 {
   "name": "高難度FC狙い",
   "filter_type": "standard",
-  "schema_version": 7,
+  "schema_version": 8,
   "filter": {
     "title": "",
     "difficulties": ["MASTER", "ULTIMA"],
     "opTargetOnly": true,
     "opTargetType": "theoretical",
+    "favoriteSongsOnly": false,
+    "excludeLockedSongs": true,
     "genres": [],
     "versions": ["CHUNITHM VERSE", "CHUNITHM X-VERSE"],
     "const": {
@@ -374,7 +399,11 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
     "combo_lamp": ["FULL COMBO"],
     "chain_lamp": ["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null],
     "hard_lamp": ["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD"],
-    "excludeNoPlay": true
+    "excludeNoPlay": true,
+    "updatedAt": {
+      "min": "",
+      "max": ""
+    }
   }
 }
 ```
@@ -383,7 +412,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 | --- | --- | --- |
 | `name` | `string` | 保存済みフィルター名です。前後空白を除いて1〜30文字、制御文字不可です。 |
 | `filter_type` | `"standard"` \| `"worldsend"` | 通常レコードは `"standard"`、WORLD'S END は `"worldsend"` を使います。 |
-| `schema_version` | `number` | フロント側フィルタースキーマのバージョンです。現行値は通常レコードが `7`、WORLD'S END が `4` です。 |
+| `schema_version` | `number` | フロント側フィルタースキーマのバージョンです。現行値は通常レコードが `8`、WORLD'S END が `4` です。 |
 | `filter` | `object` | `filter_type` に対応するフィルター状態 JSON です。 |
 
 サーバーは `filter` の内部フィールドを解釈しません。
@@ -399,7 +428,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
       "id": "11111111-1111-1111-1111-111111111111",
       "name": "高難度FC狙い",
       "filter_type": "standard",
-      "schema_version": 6,
+      "schema_version": 8,
       "filter": {
         "title": "",
         "difficulties": ["MASTER", "ULTIMA"]
@@ -419,7 +448,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 
 ### フロント側の復元ルール
 
-- 通常レコードは現行の `schema_version: 7` に加え、互換対象の `3`, `4`, `5`, `6` を有効として扱います。
+- 通常レコードは現行の `schema_version: 8` に加え、互換対象の `3`, `4`, `5`, `6`, `7` を有効として扱います。
 - WORLD'S END は現行の `schema_version: 4` に加え、互換対象の `2`, `3` を有効として扱います。
 - 互換対象の `schema_version: 3`, `4`, `5` では、保存済みの `ALL JUSTICE` 条件へ `ALL JUSTICE CRITICAL` を補完し、AJC 選択肢追加前と同じ対象範囲を維持します。
 - `filter` が `null` ではないオブジェクトの場合だけ、各画面の `normalizeFilterState` / `normalizeWorldsendFilterState` で補完します。
