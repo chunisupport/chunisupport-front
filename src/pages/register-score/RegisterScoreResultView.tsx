@@ -31,6 +31,7 @@ import { difficultyBadgeClass } from '../../utils/difficultyUtils'
 import { canShareFiles, captureElementAsImage, downloadBlobFile } from '../../utils/domImageCapture'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
+import { isLampOnlyRegisterScoreChange } from './registerScoreChangeFilter'
 import {
   courseClassBadgeClass,
   formatCourseClass,
@@ -69,10 +70,12 @@ export const REGISTER_SCORE_MESSAGES = {
   processing: 'スコアデータを登録しています。',
   changedSongsTitle: 'NEW RECORDS',
   changedSongsEmpty: '今回更新された楽曲はありません。',
+  filteredChangedSongsEmpty: '表示対象の楽曲はありません。',
   changedCoursesTitle: 'COURSE RECORDS',
   totalHighScoreTitle: 'TOTAL HIGH SCORE',
   recordStatsTitle: 'RECORD STATISTICS',
   displaySettingsTitle: '表示設定',
+  hideLampOnlyChanges: 'ランプのみの更新を非表示',
   shareImage: '共有',
   prepareShareImage: '共有画像を準備',
   preparingShareImage: '共有画像を準備中',
@@ -548,14 +551,16 @@ const RegisterScoreAggregateVisibilitySettings = (props: {
 /**
  * 更新差分レポートに含める集計セクションと統計行を選択する設定を表示する。
  *
- * @param props - 各セクションと統計行の表示状態、および変更ハンドラー。
+ * @param props - 差分一覧、各集計セクション、統計行の表示状態、および変更ハンドラー。
  * @returns 更新差分の表示設定。
  */
 const RegisterScoreDisplaySettings = (props: {
+  hideLampOnlyChanges: boolean
   showTotalHighScore: boolean
   showRecordStatistics: boolean
   totalHighScoreRowVisibility: RegisterScoreAggregateRowVisibility
   statisticRowVisibility: RegisterScoreAggregateRowVisibility
+  onHideLampOnlyChangesChange: (checked: boolean) => void
   onShowTotalHighScoreChange: (checked: boolean) => void
   onShowRecordStatisticsChange: (checked: boolean) => void
   onTotalHighScoreRowVisibilityChange: (key: RegisterScoreAggregateRowKey, checked: boolean) => void
@@ -566,6 +571,12 @@ const RegisterScoreDisplaySettings = (props: {
       {REGISTER_SCORE_MESSAGES.displaySettingsTitle}
     </legend>
     <div class="mt-1 flex flex-col items-start gap-3">
+      <CheckboxField
+        checked={props.hideLampOnlyChanges}
+        onChange={props.onHideLampOnlyChangesChange}
+        textVariant="large"
+        label={REGISTER_SCORE_MESSAGES.hideLampOnlyChanges}
+      />
       <RegisterScoreAggregateVisibilitySettings
         label={REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
         checked={props.showTotalHighScore}
@@ -992,14 +1003,19 @@ export const RegisterScoreResultView = (props: {
   resolveCourseTitle: RegisterScoreCourseTitleResolver
   changedSongsEmptyMessage?: string
 }) => {
+  const [hideLampOnlyChanges, setHideLampOnlyChanges] = createSignal(false)
   const songChanges = createMemo(() =>
     props.result.changes.filter(
-      (change): change is PlayerDataSongRecordChange => change.record_type !== 'course'
+      (change): change is PlayerDataSongRecordChange =>
+        change.record_type !== 'course' &&
+        (!hideLampOnlyChanges() || !isLampOnlyRegisterScoreChange(change))
     )
   )
   const courseChanges = createMemo(() =>
     props.result.changes.filter(
-      (change): change is PlayerDataCourseRecordChange => change.record_type === 'course'
+      (change): change is PlayerDataCourseRecordChange =>
+        change.record_type === 'course' &&
+        (!hideLampOnlyChanges() || !isLampOnlyRegisterScoreChange(change))
     )
   )
   const [showTotalHighScore, setShowTotalHighScore] = createSignal(true)
@@ -1309,10 +1325,12 @@ export const RegisterScoreResultView = (props: {
         </Show>
       </div>
       <RegisterScoreDisplaySettings
+        hideLampOnlyChanges={hideLampOnlyChanges()}
         showTotalHighScore={showTotalHighScore()}
         showRecordStatistics={showRecordStatistics()}
         totalHighScoreRowVisibility={totalHighScoreRowVisibility()}
         statisticRowVisibility={statisticRowVisibility()}
+        onHideLampOnlyChangesChange={setHideLampOnlyChanges}
         onShowTotalHighScoreChange={setShowTotalHighScore}
         onShowRecordStatisticsChange={setShowRecordStatistics}
         onTotalHighScoreRowVisibilityChange={updateTotalHighScoreRowVisibility}
@@ -1346,7 +1364,11 @@ export const RegisterScoreResultView = (props: {
                 changes={songChanges()}
                 resolveSongTitle={props.resolveSongTitle}
                 resolveChartLevel={props.resolveChartLevel}
-                emptyMessage={props.changedSongsEmptyMessage}
+                emptyMessage={
+                  hideLampOnlyChanges()
+                    ? REGISTER_SCORE_MESSAGES.filteredChangedSongsEmpty
+                    : props.changedSongsEmptyMessage
+                }
                 onCopySongTitle={copySongTitle}
               />
               <RegisterCourseChangesSection
