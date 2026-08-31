@@ -6,7 +6,6 @@ import { A, useLocation, useNavigate } from '@solidjs/router'
 import { useQueryClient } from '@tanstack/solid-query'
 import {
   BadgeQuestionMark,
-  CodeXml,
   Ellipsis,
   ExternalLink,
   FlagTriangleRight,
@@ -30,8 +29,8 @@ type NavBarProps = {
 
 import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
-import { API_DOCUMENTATION_URL, DOCUMENTATION_BASE_URL } from '../../config'
-import { DEVELOPER_API_COPY } from '../../constants/developerApi'
+import { DOCUMENTATION_BASE_URL } from '../../config'
+import { DISCORD_COMMUNITY } from '../../constants/discordCommunity'
 import { EXTERNAL_LINK_NEW_TAB_DESCRIPTION } from '../../constants/externalLink'
 import { EDITOR_MENU_TITLE, FRIENDS_PAGE_TITLE } from '../../constants/pageTitles'
 import { LATEST_SCORE_UPDATE_TITLE } from '../../constants/playerLatestUpdate'
@@ -155,9 +154,17 @@ const NavBar = (props: NavBarProps) => {
         path: DOCUMENTATION_BASE_URL,
       },
       {
-        label: DEVELOPER_API_COPY.menuLabel,
-        icon: () => <CodeXml class="h-4 w-4" aria-hidden="true" />,
-        path: API_DOCUMENTATION_URL,
+        label: DISCORD_COMMUNITY.label,
+        icon: () => (
+          <img
+            src="/Discord-Symbol-Blurple.svg"
+            alt=""
+            width="16"
+            height="16"
+            class="h-4 w-4 object-contain"
+          />
+        ),
+        path: DISCORD_COMMUNITY.url,
       },
       ...(uname
         ? [
