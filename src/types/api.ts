@@ -474,6 +474,46 @@ export interface BestSlotRankingResponseDTO {
   next_cursor: string | null
 }
 
+/** 管理者向け譜面ランキングの楽曲情報 */
+export interface AdminChartRankingSongDTO {
+  id: string
+  title: string
+  artist: string
+}
+
+/** 管理者向け譜面ランキングの譜面情報 */
+export interface AdminChartRankingChartDTO {
+  difficulty: PlayerDataDifficulty | "WORLD'S END"
+  const?: number
+  is_const_unknown?: boolean
+  level_star?: number
+  attribute?: string
+  is_worldsend: boolean
+}
+
+/** 管理者向け譜面ランキングの1件 */
+export interface AdminChartRankingEntryDTO {
+  rank: number
+  username: string
+  player_name: string
+  score: number
+  rating?: number
+  overpower?: number
+  overpower_percent?: number
+  clear_lamp: PlayerRecordDTO['clear_lamp']
+  combo_lamp: PlayerRecordDTO['combo_lamp']
+  full_chain: PlayerRecordDTO['full_chain']
+  updated_at: string
+}
+
+/** 管理者向け譜面ランキングAPIのレスポンス */
+export interface AdminChartRankingResponseDTO {
+  song: AdminChartRankingSongDTO
+  chart: AdminChartRankingChartDTO
+  ranking: AdminChartRankingEntryDTO[]
+  total: number
+}
+
 export interface AchievementTypeDTO {
   code: string
   label?: string
