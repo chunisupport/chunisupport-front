@@ -96,3 +96,22 @@ export const buildSongChartDetailPath = (displayId: string, difficulty: string):
  */
 export const buildWorldsendChartDetailPath = (displayId: string): string =>
   `/songs/worldsend/${encodeURIComponent(displayId)}/chart-detail`
+
+/**
+ * ADMIN向け通常譜面ランキング画面のパスを生成する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @param difficulty - 大文字の難易度ドメイン値。
+ * @returns 表示IDと難易度を含む通常譜面ランキング画面のパス。
+ */
+export const buildAdminChartRankingPath = (displayId: string, difficulty: string): string =>
+  `${ADMIN_PATH}/chart-rankings/songs/${encodeURIComponent(displayId)}/charts/${encodeURIComponent(difficulty.toUpperCase())}`
+
+/**
+ * ADMIN向けWORLD'S END譜面ランキング画面のパスを生成する。
+ *
+ * @param displayId - 楽曲表示ID。
+ * @returns 表示IDを含むWORLD'S END譜面ランキング画面のパス。
+ */
+export const buildAdminWorldsendChartRankingPath = (displayId: string): string =>
+  `${ADMIN_PATH}/chart-rankings/worldsend-songs/${encodeURIComponent(displayId)}`

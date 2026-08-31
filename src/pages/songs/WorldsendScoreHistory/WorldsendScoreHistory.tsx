@@ -5,6 +5,7 @@ import { fetchOwnWorldsendScoreHistory, fetchWorldsendSongByDisplayId } from '..
 import { LoadError, Loading } from '../../../components'
 import { WORLDSEND_SCORE_LABEL } from '../../../constants/chart'
 import {
+  buildAdminWorldsendChartRankingPath,
   buildWorldsendSongDetailPath,
   isChartDetailFromSongDetailState,
 } from '../../../constants/routes'
@@ -65,6 +66,7 @@ const WorldsendScoreHistory = () => {
           friendRankingEntries={friendRanking.data?.ranking ?? []}
           isFriendRankingLoading={friendRanking.isLoading}
           friendRankingError={friendRanking.error}
+          adminRankingHref={buildAdminWorldsendChartRankingPath(params.displayid)}
         />
       </Show>
     </Show>
