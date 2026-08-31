@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  buildAdminChartRankingPath,
+  buildAdminWorldsendChartRankingPath,
   buildSongChartDetailPath,
   buildSongDetailPath,
   buildWorldsendChartDetailPath,
@@ -9,6 +11,28 @@ import {
   DASHBOARD_PATH,
   isChartDetailFromSongDetailState,
 } from './routes'
+
+test('管理者向け通常譜面ランキングパスは表示IDと難易度をエンコードする', () => {
+  // Given: URL予約文字を含む表示IDと小文字の難易度。
+  const displayId = 'A/B C'
+
+  // When: 通常譜面ランキング画面のパスを生成する。
+  const result = buildAdminChartRankingPath(displayId, 'ultima')
+
+  // Then: 表示IDが安全にエンコードされ、難易度が大文字へ正規化される。
+  assert.equal(result, '/admin/chart-rankings/songs/A%2FB%20C/charts/ULTIMA')
+})
+
+test("管理者向けWORLD'S END譜面ランキングパスは表示IDをエンコードする", () => {
+  // Given: URL予約文字を含む表示ID。
+  const displayId = 'WE/A B'
+
+  // When: WORLD'S END譜面ランキング画面のパスを生成する。
+  const result = buildAdminWorldsendChartRankingPath(displayId)
+
+  // Then: 表示IDがパス要素として安全にエンコードされる。
+  assert.equal(result, '/admin/chart-rankings/worldsend-songs/WE%2FA%20B')
+})
 
 test('ダッシュボードパスは tools 配下の dashboard である', () => {
   const result = DASHBOARD_PATH

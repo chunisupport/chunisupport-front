@@ -5,7 +5,11 @@ import { fetchOwnSongScoreHistory, fetchSongByDisplayId } from '../../../api/son
 
 import { LoadError, Loading } from '../../../components'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
-import { buildSongDetailPath, isChartDetailFromSongDetailState } from '../../../constants/routes'
+import {
+  buildAdminChartRankingPath,
+  buildSongDetailPath,
+  isChartDetailFromSongDetailState,
+} from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { songFriendRankingQueryOptions } from '../../../queries/friendRankings'
 import { authSession } from '../../../stores/authSession'
@@ -84,6 +88,10 @@ const SongScoreHistory = () => {
               friendRankingEntries={friendRanking.data?.ranking ?? []}
               isFriendRankingLoading={friendRanking.isLoading}
               friendRankingError={friendRanking.error}
+              adminRankingHref={buildAdminChartRankingPath(
+                params.displayid,
+                difficulty() ?? 'MASTER'
+              )}
             />
           </Show>
         </Show>

@@ -1,15 +1,20 @@
 import { Button } from '@kobalte/core/button'
+import { A } from '@solidjs/router'
+import { Trophy } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createMemo, createResource, createSignal, Show } from 'solid-js'
 import { fetchVersions } from '../../../../api/songs'
 import { LoadError, Loading } from '../../../../components'
+import { getAppButtonClass } from '../../../../components/common/AppButton'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
+import { authSession } from '../../../../stores/authSession'
 import type {
   FriendRankingEntryDTO,
   ScoreHistoryEntryDTO,
   WorldsendFriendRankingEntryDTO,
 } from '../../../../types/api'
 import {
+  ADMIN_CHART_RANKING_LINK_LABEL,
   FRIEND_RANKING_SECTION_LABEL,
   SCORE_HISTORY_SECTION_LABEL,
   SCORE_HISTORY_VERSION_LABEL_TOGGLE,
@@ -44,6 +49,8 @@ type Props = {
   isFriendRankingLoading: boolean
   /** フレンドランキングの取得エラー */
   friendRankingError: unknown
+  /** ADMIN向け全体ランキング画面のパス */
+  adminRankingHref: string
 }
 
 /**
@@ -111,6 +118,20 @@ const ChartDetailPage = (props: Props) => {
           </Show>
         </Show>
       </section>
+
+      <Show
+        when={authSession.status === 'authenticated' && authSession.user?.account_type === 'ADMIN'}
+      >
+        <div class="flex justify-end">
+          <A
+            href={props.adminRankingHref}
+            class={getAppButtonClass({ variant: 'surface', size: 'sm' })}
+          >
+            <Trophy class="h-4 w-4" aria-hidden="true" />
+            {ADMIN_CHART_RANKING_LINK_LABEL}
+          </A>
+        </div>
+      </Show>
     </main>
   )
 }
