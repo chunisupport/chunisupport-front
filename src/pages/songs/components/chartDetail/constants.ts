@@ -4,6 +4,8 @@ export const CHART_DETAIL_PAGE_TITLE = '譜面詳細'
 export const SCORE_HISTORY_SECTION_LABEL = 'スコア履歴'
 /** フレンドランキングセクションのラベル */
 export const FRIEND_RANKING_SECTION_LABEL = 'フレンドランキング'
+/** ADMIN向け全体ランキングへのリンクラベル */
+export const ADMIN_CHART_RANKING_LINK_LABEL = '全体ランキングを見る'
 /** スコア履歴が空の場合の表示 */
 export const SCORE_HISTORY_EMPTY_LABEL = '履歴がありません'
 /** フレンドランキングが空の場合の表示 */
