@@ -1,10 +1,13 @@
 import { useSearchParams } from '@solidjs/router'
+import { useQueryClient } from '@tanstack/solid-query'
 import { createSignal, Match, onMount, Switch } from 'solid-js'
 
 import { postPlayerDataCommit } from '../../api/register-data'
 import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { invalidateFriendRankings } from '../../queries/friendRankings'
 import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
+import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
 import type { CourseDTO } from '../../types/api'
 import { fetchCoursesWithCache } from '../../usecases/cache/fetchCoursesWithCache'
@@ -50,8 +53,19 @@ const resolveRegisterScoreErrorMessage = (error: unknown): string => {
 const RegisterScorePage = () => {
   const [searchParams] = useSearchParams<{ token: string | string[] }>()
   const songsData = useSongsData()
+  const queryClient = useQueryClient()
   const [viewState, setViewState] = createSignal<RegisterScoreViewState>({ type: 'committing' })
   let courses: CourseLookupItem[] = []
+
+  /**
+   * ログイン中ユーザーのフレンドランキングキャッシュを無効化する。
+   *
+   * @returns 表示中ランキングの再取得完了時に解決されるPromise。
+   */
+  const invalidateCurrentUserFriendRankings = (): Promise<void> => {
+    const username = authSession.user?.username
+    return username ? invalidateFriendRankings(queryClient, username) : Promise.resolve()
+  }
 
   useDocumentTitle(REGISTER_SCORE_MESSAGES.title)
 
@@ -104,6 +118,7 @@ const RegisterScorePage = () => {
         {
           commitPlayerData: postPlayerDataCommit,
           clearUserApiCache: clearCachedUserApiResponses,
+          invalidateFriendRankings: invalidateCurrentUserFriendRankings,
           ensureSongsLoaded: songsData.ensureSongsLoaded,
           ensureWorldsendSongsLoaded: songsData.ensureWorldsendSongsLoaded,
         }

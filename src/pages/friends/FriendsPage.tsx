@@ -2,25 +2,15 @@ import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate, useParams } from '@solidjs/router'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/solid-query'
 import { Check, Copy, EllipsisVertical, Lock, RotateCw, UserMinus, UserPlus, X } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import {
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-  For,
-  onCleanup,
-  Show,
-} from 'solid-js'
+import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import {
   acceptFriendRequest,
   cancelFriendRequest,
   createFriendRequest,
   deleteFriend,
-  fetchFriends,
-  fetchReceivedFriendRequests,
-  fetchSentFriendRequests,
   rejectFriendRequest,
 } from '../../api/friends'
 import { AppButton } from '../../components/common/AppButton'
@@ -29,6 +19,14 @@ import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { Loading } from '../../components/Loading'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import {
+  type FriendshipMutationType,
+  friendMutationKeys,
+  friendsQueryOptions,
+  invalidateFriendQueriesAfterMutation,
+  receivedFriendRequestsQueryOptions,
+  sentFriendRequestsQueryOptions,
+} from '../../queries/friends'
 import { authSession } from '../../stores/authSession'
 import {
   friendRequestNotification,
@@ -60,13 +58,12 @@ import {
   shouldHideFriendProfile,
 } from './friendshipDisplay'
 
-type FriendshipPageData = {
-  friends: FriendshipUserDTO[]
-  received: FriendshipUserDTO[]
-  sent: FriendshipUserDTO[]
+type FriendshipMutationVariables = {
+  /** 操作を行う認証ユーザー名。 */
+  authenticatedUsername: string
+  /** 操作対象のユーザー名。 */
+  targetUsername: string
 }
-
-type FriendshipOperation = 'request' | 'accept' | 'reject' | 'cancel' | 'remove'
 
 type PendingConfirmAction = {
   /** 確認後に実行する操作種別 */
@@ -103,25 +100,6 @@ type FriendConfirmDialogProps = {
   onOpenChange: (open: boolean) => void
   /** 確認ボタン押下時の処理 */
   onConfirm: () => void
-}
-
-/**
- * フレンド画面に必要な3種類の一覧をまとめて取得する。
- *
- * @returns 承認済みフレンド、受信済みフレンドリクエスト、送信済みフレンドリクエスト。
- */
-const fetchFriendshipPageData = async (): Promise<FriendshipPageData> => {
-  const [friends, received, sent] = await Promise.all([
-    fetchFriends(),
-    fetchReceivedFriendRequests(),
-    fetchSentFriendRequests(),
-  ])
-
-  return {
-    friends: friends.items,
-    received: received.items,
-    sent: sent.items,
-  }
 }
 
 /**
@@ -384,28 +362,118 @@ const FriendsPage = () => {
   const params = useParams<{ tab?: string }>()
   const navigate = useNavigate()
 
+  const queryClient = useQueryClient()
   const [usernameInput, setUsernameInput] = createSignal('')
   const [usernameValidationErrorMessage, setUsernameValidationErrorMessage] = createSignal('')
   const [requestErrorMessage, setRequestErrorMessage] = createSignal('')
-  const [operation, setOperation] = createSignal<FriendshipOperation | null>(null)
   const [isOwnUsernameCopied, setIsOwnUsernameCopied] = createSignal(false)
   const [pendingConfirmAction, setPendingConfirmAction] = createSignal<PendingConfirmAction | null>(
     null
   )
   let ownUsernameCopyResetTimer: number | undefined
+  let lastReportedQueryError: unknown
 
-  const [pageData, { refetch }] = createResource(fetchFriendshipPageData)
-
-  const currentData = createMemo(() => pageData() ?? { friends: [], received: [], sent: [] })
-  const isInitialLoading = createMemo(() => pageData.loading && pageData() === undefined)
-  const hasInitialLoadError = createMemo(() => Boolean(pageData.error && pageData() === undefined))
-  const isRequesting = createMemo(() => operation() === 'request')
   const ownUsername = createMemo(() => authSession.user?.username ?? '')
+  const friendsQuery = useQuery(() => friendsQueryOptions(ownUsername() || null))
+  const receivedRequestsQuery = useQuery(() =>
+    receivedFriendRequestsQueryOptions(ownUsername() || null)
+  )
+  const sentRequestsQuery = useQuery(() => sentFriendRequestsQueryOptions(ownUsername() || null))
+
+  /**
+   * フレンド操作成功を通知し、影響するqueryを無効化する。
+   *
+   * @param authenticatedUsername - 操作を行った認証ユーザー名。
+   * @param completedOperation - 完了したフレンド操作。
+   * @param successMessage - 操作成功時に表示する文言。
+   * @returns 表示中queryの再取得完了時に解決されるPromise。
+   */
+  const completeFriendMutation = async (
+    authenticatedUsername: string,
+    completedOperation: FriendshipMutationType,
+    successMessage: string
+  ): Promise<void> => {
+    showSuccessToast(successMessage)
+    await invalidateFriendQueriesAfterMutation(
+      queryClient,
+      authenticatedUsername,
+      completedOperation
+    )
+  }
+
+  const requestMutation = useMutation(() => ({
+    mutationKey: friendMutationKeys.operation(ownUsername(), 'request'),
+    mutationFn: (variables: FriendshipMutationVariables) =>
+      createFriendRequest({ username: variables.targetUsername }),
+    onSuccess: async (_data, variables) => {
+      setUsernameInput('')
+      await completeFriendMutation(
+        variables.authenticatedUsername,
+        'request',
+        FRIENDS_COPY.requestSuccess
+      )
+    },
+  }))
+  const acceptMutation = useMutation(() => ({
+    mutationKey: friendMutationKeys.operation(ownUsername(), 'accept'),
+    mutationFn: (variables: FriendshipMutationVariables) =>
+      acceptFriendRequest(variables.targetUsername),
+    onSuccess: (_data, variables) =>
+      completeFriendMutation(variables.authenticatedUsername, 'accept', FRIENDS_COPY.acceptSuccess),
+  }))
+  const rejectMutation = useMutation(() => ({
+    mutationKey: friendMutationKeys.operation(ownUsername(), 'reject'),
+    mutationFn: (variables: FriendshipMutationVariables) =>
+      rejectFriendRequest(variables.targetUsername),
+    onSuccess: (_data, variables) =>
+      completeFriendMutation(variables.authenticatedUsername, 'reject', FRIENDS_COPY.rejectSuccess),
+  }))
+  const cancelMutation = useMutation(() => ({
+    mutationKey: friendMutationKeys.operation(ownUsername(), 'cancel'),
+    mutationFn: (variables: FriendshipMutationVariables) =>
+      cancelFriendRequest(variables.targetUsername),
+    onSuccess: (_data, variables) =>
+      completeFriendMutation(variables.authenticatedUsername, 'cancel', FRIENDS_COPY.cancelSuccess),
+  }))
+  const removeMutation = useMutation(() => ({
+    mutationKey: friendMutationKeys.operation(ownUsername(), 'remove'),
+    mutationFn: (variables: FriendshipMutationVariables) => deleteFriend(variables.targetUsername),
+    onSuccess: (_data, variables) =>
+      completeFriendMutation(variables.authenticatedUsername, 'remove', FRIENDS_COPY.removeSuccess),
+  }))
+
+  const operation = createMemo<FriendshipMutationType | null>(() => {
+    if (requestMutation.isPending) return 'request'
+    if (acceptMutation.isPending) return 'accept'
+    if (rejectMutation.isPending) return 'reject'
+    if (cancelMutation.isPending) return 'cancel'
+    if (removeMutation.isPending) return 'remove'
+    return null
+  })
+  const currentData = createMemo(() => ({
+    friends: friendsQuery.data ?? [],
+    received: receivedRequestsQuery.data ?? [],
+    sent: sentRequestsQuery.data ?? [],
+  }))
+  const isInitialLoading = createMemo(() =>
+    [friendsQuery, receivedRequestsQuery, sentRequestsQuery].some(
+      (query) => query.isLoading && query.data === undefined
+    )
+  )
+  const hasInitialLoadError = createMemo(() =>
+    [friendsQuery, receivedRequestsQuery, sentRequestsQuery].some(
+      (query) => query.isError && query.data === undefined
+    )
+  )
+  const isRefreshing = createMemo(() =>
+    [friendsQuery, receivedRequestsQuery, sentRequestsQuery].some((query) => query.isFetching)
+  )
+  const isRequesting = createMemo(() => operation() === 'request')
   const resolvedActiveTab = createMemo(() => resolveFriendsTabValue(params.tab))
   const activeTab = createMemo(() => resolvedActiveTab() ?? 'friends')
   const hasPendingReceivedRequest = createMemo(() =>
-    pageData() !== undefined
-      ? currentData().received.length > 0
+    receivedRequestsQuery.data !== undefined
+      ? receivedRequestsQuery.data.length > 0
       : friendRequestNotification.hasPendingReceivedRequest
   )
   const friendTabOptions = createMemo(() => buildFriendsTabOptions(hasPendingReceivedRequest()))
@@ -462,41 +530,44 @@ const FriendsPage = () => {
   })
 
   createEffect(() => {
-    if (pageData.error) {
-      showErrorToast(toUserFriendlyErrorMessage(pageData.error))
+    const error = friendsQuery.error ?? receivedRequestsQuery.error ?? sentRequestsQuery.error
+
+    if (!error) {
+      lastReportedQueryError = undefined
+      return
     }
+    if (error === lastReportedQueryError) return
+
+    lastReportedQueryError = error
+    showErrorToast(toUserFriendlyErrorMessage(error))
   })
 
   createEffect(() => {
-    const data = pageData()
+    const receivedRequests = receivedRequestsQuery.data
+    const dataUpdatedAt = receivedRequestsQuery.dataUpdatedAt
     const username = ownUsername()
 
-    if (data && username) {
+    if (receivedRequests && dataUpdatedAt > 0 && username) {
       setActiveFriendRequestNotificationUser(username)
-      void syncFriendRequestNotificationFromReceivedCount(username, data.received.length).catch(
-        () => undefined
-      )
+      void syncFriendRequestNotificationFromReceivedCount(
+        username,
+        receivedRequests.length,
+        dataUpdatedAt
+      ).catch(() => undefined)
     }
   })
 
   /**
-   * 一覧を再取得する。
+   * 3種類のフレンド一覧を再取得する。
    *
-   * @returns 再取得完了時に解決されるPromise。
+   * @returns 全queryの再取得完了時に解決されるPromise。
    */
   const refresh = async (): Promise<void> => {
-    await refetch()
-  }
-
-  /**
-   * 操作成功後に共通の状態更新を行う。
-   *
-   * @param successMessage - 操作成功時に表示する文言。
-   * @returns 一覧再取得完了時に解決されるPromise。
-   */
-  const completeOperation = async (successMessage: string): Promise<void> => {
-    showSuccessToast(successMessage)
-    await refresh()
+    await Promise.all([
+      friendsQuery.refetch(),
+      receivedRequestsQuery.refetch(),
+      sentRequestsQuery.refetch(),
+    ])
   }
 
   /**
@@ -531,49 +602,58 @@ const FriendsPage = () => {
    */
   const handleSubmitRequest = async (event: SubmitEvent): Promise<void> => {
     event.preventDefault()
-    if (!validateUsernameInput() || operation() !== null) return
+    const authenticatedUsername = ownUsername()
+    if (!authenticatedUsername || !validateUsernameInput() || operation() !== null) return
 
-    const username = usernameInput()
-
-    setOperation('request')
     setUsernameValidationErrorMessage('')
     setRequestErrorMessage('')
 
     try {
-      await createFriendRequest({ username })
-      setUsernameInput('')
-      await completeOperation(FRIENDS_COPY.requestSuccess)
+      await requestMutation.mutateAsync({
+        authenticatedUsername,
+        targetUsername: usernameInput(),
+      })
     } catch (error) {
       setRequestErrorMessage(formatFriendRequestErrorMessage(error))
-    } finally {
-      setOperation(null)
     }
   }
 
   /**
-   * ユーザー単位のフレンド操作を共通処理する。
+   * ユーザー単位のフレンドmutationを実行する。
    *
    * @param nextOperation - 実行する操作種別。
-   * @param action - API操作。
-   * @param successMessage - 成功時に表示する文言。
-   * @returns 操作完了時に解決されるPromise。
+   * @param targetUsername - 操作対象のユーザー名。
+   * @returns mutationと関連queryの更新完了時に解決されるPromise。
    */
   const runUserOperation = async (
-    nextOperation: Exclude<FriendshipOperation, 'request'>,
-    action: () => Promise<void>,
-    successMessage: string
+    nextOperation: Exclude<FriendshipMutationType, 'request'>,
+    targetUsername: string
   ): Promise<void> => {
-    if (operation() !== null) return
+    const authenticatedUsername = ownUsername()
+    if (!authenticatedUsername || operation() !== null) return
 
-    setOperation(nextOperation)
+    const variables: FriendshipMutationVariables = {
+      authenticatedUsername,
+      targetUsername,
+    }
 
     try {
-      await action()
-      await completeOperation(successMessage)
+      switch (nextOperation) {
+        case 'accept':
+          await acceptMutation.mutateAsync(variables)
+          break
+        case 'reject':
+          await rejectMutation.mutateAsync(variables)
+          break
+        case 'cancel':
+          await cancelMutation.mutateAsync(variables)
+          break
+        case 'remove':
+          await removeMutation.mutateAsync(variables)
+          break
+      }
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, FRIENDS_COPY.operationFailure))
-    } finally {
-      setOperation(null)
     }
   }
 
@@ -584,7 +664,7 @@ const FriendsPage = () => {
    * @returns 承認完了時に解決されるPromise。
    */
   const handleAccept = (user: FriendshipUserDTO): Promise<void> =>
-    runUserOperation('accept', () => acceptFriendRequest(user.username), FRIENDS_COPY.acceptSuccess)
+    runUserOperation('accept', user.username)
 
   /**
    * フレンド申請を拒否する。
@@ -604,7 +684,7 @@ const FriendsPage = () => {
    * @returns 取り消し完了時に解決されるPromise。
    */
   const handleCancel = (user: FriendshipUserDTO): Promise<void> =>
-    runUserOperation('cancel', () => cancelFriendRequest(user.username), FRIENDS_COPY.cancelSuccess)
+    runUserOperation('cancel', user.username)
 
   /**
    * フレンド関係を解除する。
@@ -627,17 +707,9 @@ const FriendsPage = () => {
     if (!action) return
 
     if (action.type === 'reject') {
-      await runUserOperation(
-        'reject',
-        () => rejectFriendRequest(action.user.username),
-        FRIENDS_COPY.rejectSuccess
-      )
+      await runUserOperation('reject', action.user.username)
     } else {
-      await runUserOperation(
-        'remove',
-        () => deleteFriend(action.user.username),
-        FRIENDS_COPY.removeSuccess
-      )
+      await runUserOperation('remove', action.user.username)
     }
 
     setPendingConfirmAction(null)
@@ -651,7 +723,7 @@ const FriendsPage = () => {
           variant="surface"
           size="sm"
           leftIcon={<RotateCw class="h-4 w-4" aria-hidden="true" />}
-          disabled={pageData.loading || operation() !== null}
+          disabled={isRefreshing() || operation() !== null}
           onClick={() => void refresh()}
         >
           {FRIENDS_COPY.retry}

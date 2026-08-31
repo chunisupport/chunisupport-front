@@ -25,6 +25,7 @@ export type NormalizedPlayerDataResult = NormalizedPlayerDataUpdateResult & {
 type RegisterScoreCommitDependencies = {
   commitPlayerData: (uploadToken: string) => Promise<PlayerDataResult>
   clearUserApiCache: () => Promise<void>
+  invalidateFriendRankings: () => Promise<void>
   ensureSongsLoaded: () => void
   ensureWorldsendSongsLoaded: () => void
 }
@@ -165,11 +166,11 @@ export const commitRegisterScore = async (
 ): Promise<RegisterScoreCommitResult> => {
   const result = normalizePlayerDataResult(await dependencies.commitPlayerData(input.uploadToken))
 
-  try {
-    await dependencies.clearUserApiCache()
-  } catch {
-    // キャッシュ削除失敗より、確定済みスコアの結果表示を優先する。
-  }
+  // 確定済みスコアの結果表示は、派生キャッシュ更新の失敗で妨げない。
+  await Promise.allSettled([
+    dependencies.clearUserApiCache(),
+    dependencies.invalidateFriendRankings(),
+  ])
 
   requestChangedSongMasters(result, dependencies)
 

@@ -1,14 +1,13 @@
 import { useLocation, useNavigate, useParams, useSearchParams } from '@solidjs/router'
+import { useQuery } from '@tanstack/solid-query'
 import { createMemo, createResource, Show } from 'solid-js'
-import {
-  fetchOwnSongScoreHistory,
-  fetchSongByDisplayId,
-  fetchSongFriendRanking,
-} from '../../../api/songs'
+import { fetchOwnSongScoreHistory, fetchSongByDisplayId } from '../../../api/songs'
+
 import { LoadError, Loading } from '../../../components'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
 import { buildSongDetailPath, isChartDetailFromSongDetailState } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { songFriendRankingQueryOptions } from '../../../queries/friendRankings'
 import { authSession } from '../../../stores/authSession'
 import { parseScoreHistoryDifficulty } from '../../../utils/scoreHistory'
 import NotFoundPage from '../../NotFoundPage'
@@ -39,13 +38,12 @@ const SongScoreHistory = () => {
     },
     (source) => fetchOwnSongScoreHistory(source.displayId, source.difficulty, source.username)
   )
-  const [friendRanking] = createResource(
-    () => {
-      const selectedDifficulty = difficulty()
-      if (!selectedDifficulty) return null
-      return { displayId: params.displayid, difficulty: selectedDifficulty }
-    },
-    (source) => fetchSongFriendRanking(source.displayId, source.difficulty)
+  const friendRanking = useQuery(() =>
+    songFriendRankingQueryOptions(
+      authSession.user?.username ?? null,
+      params.displayid,
+      difficulty()
+    )
   )
 
   const isValidChart = createMemo(() => {
@@ -83,8 +81,8 @@ const SongScoreHistory = () => {
               historyEntries={history()?.entries ?? []}
               isHistoryLoading={history.loading}
               historyError={history.error}
-              friendRankingEntries={friendRanking()?.ranking ?? []}
-              isFriendRankingLoading={friendRanking.loading}
+              friendRankingEntries={friendRanking.data?.ranking ?? []}
+              isFriendRankingLoading={friendRanking.isLoading}
               friendRankingError={friendRanking.error}
             />
           </Show>

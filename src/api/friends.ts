@@ -8,11 +8,13 @@ const FRIENDS_API_PATH = `${API_BASE_URL}/internal/friends`
 /**
  * 承認済みフレンド一覧を取得する。
  *
+ * @param signal - リクエストを中断するためのシグナル。
  * @returns 成立日時降順のフレンド一覧。
  */
-export const fetchFriends = async (): Promise<FriendshipListResponse> => {
+export const fetchFriends = async (signal?: AbortSignal): Promise<FriendshipListResponse> => {
   const response = await fetchWithAuth(FRIENDS_API_PATH, {
     method: 'GET',
+    signal,
     requireAuthentication: true,
   })
 
@@ -22,11 +24,15 @@ export const fetchFriends = async (): Promise<FriendshipListResponse> => {
 /**
  * 自分宛てのフレンド申請一覧を取得する。
  *
+ * @param signal - リクエストを中断するためのシグナル。
  * @returns 申請日時降順の受信済みフレンドリクエスト一覧。
  */
-export const fetchReceivedFriendRequests = async (): Promise<FriendshipListResponse> => {
+export const fetchReceivedFriendRequests = async (
+  signal?: AbortSignal
+): Promise<FriendshipListResponse> => {
   const response = await fetchWithAuth(`${FRIENDS_API_PATH}/requests/received`, {
     method: 'GET',
+    signal,
     requireAuthentication: true,
   })
 
@@ -36,11 +42,15 @@ export const fetchReceivedFriendRequests = async (): Promise<FriendshipListRespo
 /**
  * 自分が送ったフレンド申請一覧を取得する。
  *
+ * @param signal - リクエストを中断するためのシグナル。
  * @returns 申請日時降順の送信申請一覧。
  */
-export const fetchSentFriendRequests = async (): Promise<FriendshipListResponse> => {
+export const fetchSentFriendRequests = async (
+  signal?: AbortSignal
+): Promise<FriendshipListResponse> => {
   const response = await fetchWithAuth(`${FRIENDS_API_PATH}/requests/sent`, {
     method: 'GET',
+    signal,
     requireAuthentication: true,
   })
 

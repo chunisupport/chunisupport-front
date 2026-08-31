@@ -24,6 +24,7 @@
   "dependencies": {
     "@kobalte/core": "^0.13.11",
     "@solidjs/router": "^0.16.1",
+    "@tanstack/solid-query": "^5.102.8",
     "@tanstack/solid-virtual": "^3.13.30",
     "@thisbeyond/solid-dnd": "^0.7.5",
     "@zumer/snapdom": "^2.23.1",

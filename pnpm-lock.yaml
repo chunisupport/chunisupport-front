@@ -14,6 +14,9 @@ importers:
       '@solidjs/router':
         specifier: ^0.16.1
         version: 0.16.1(solid-js@1.9.13)
+      '@tanstack/solid-query':
+        specifier: ^5.102.8
+        version: 5.102.8(solid-js@1.9.13)
       '@tanstack/solid-virtual':
         specifier: ^3.13.30
         version: 3.13.30(solid-js@1.9.13)
@@ -960,6 +963,14 @@ packages:
 
   '@tailwindcss/postcss@4.3.1':
     resolution: {integrity: sha512-dNJuNbdEJT/SWRuXTYP1WSamelsz3ztkUsdtWQPjrexysrTpaEPM40P/71knXiXLYEojqPOEGitVLLpPMS5T6A==}
+
+  '@tanstack/query-core@5.102.8':
+    resolution: {integrity: sha512-ZNjkJ33CqvPNec/6lZBnHqLc3EVGPZ9ySLhYahU9TcuRFdmwXewuj0c4hwSWcGHqEUwcSrKeZ+oGcvPBqXcQcg==}
+
+  '@tanstack/solid-query@5.102.8':
+    resolution: {integrity: sha512-qna3S2XOsE++t31viQNeZziOO/gDEkoEnHG+2hVoYLG3cYFYDKWuhUYLvpsYKhbGz0qQed22qCnB55rVt3QB6Q==}
+    peerDependencies:
+      solid-js: ^1.6.0
 
   '@tanstack/solid-virtual@3.13.30':
     resolution: {integrity: sha512-Uggj9Ie4psxQLFfZ9FmTKsKkXVNRUQBIc6ucKnW8l/zA2fR5Q+lInzsqoOw0OjIhLlBgxI767kxS2dj82CX65g==}
@@ -2961,6 +2972,13 @@ snapshots:
       '@tailwindcss/oxide': 4.3.1
       postcss: 8.5.15
       tailwindcss: 4.3.1
+
+  '@tanstack/query-core@5.102.8': {}
+
+  '@tanstack/solid-query@5.102.8(solid-js@1.9.13)':
+    dependencies:
+      '@tanstack/query-core': 5.102.8
+      solid-js: 1.9.13
 
   '@tanstack/solid-virtual@3.13.30(solid-js@1.9.13)':
     dependencies:

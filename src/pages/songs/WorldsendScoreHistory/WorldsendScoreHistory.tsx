@@ -1,10 +1,7 @@
 import { useLocation, useNavigate, useParams } from '@solidjs/router'
+import { useQuery } from '@tanstack/solid-query'
 import { createResource, Show } from 'solid-js'
-import {
-  fetchOwnWorldsendScoreHistory,
-  fetchWorldsendFriendRanking,
-  fetchWorldsendSongByDisplayId,
-} from '../../../api/songs'
+import { fetchOwnWorldsendScoreHistory, fetchWorldsendSongByDisplayId } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import { WORLDSEND_SCORE_LABEL } from '../../../constants/chart'
 import {
@@ -12,6 +9,7 @@ import {
   isChartDetailFromSongDetailState,
 } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { worldsendFriendRankingQueryOptions } from '../../../queries/friendRankings'
 import { authSession } from '../../../stores/authSession'
 import ChartDetailPage from '../components/chartDetail/ChartDetailPage'
 import { CHART_DETAIL_PAGE_TITLE } from '../components/chartDetail/constants'
@@ -34,8 +32,9 @@ const WorldsendScoreHistory = () => {
     },
     (source) => fetchOwnWorldsendScoreHistory(source.displayId, source.username)
   )
-  const [friendRanking] = createResource(() => params.displayid, fetchWorldsendFriendRanking)
-
+  const friendRanking = useQuery(() =>
+    worldsendFriendRankingQueryOptions(authSession.user?.username ?? null, params.displayid)
+  )
   useDocumentTitle(() => `${song()?.title ?? WORLDSEND_SCORE_LABEL} - ${CHART_DETAIL_PAGE_TITLE}`)
 
   /**
@@ -63,8 +62,8 @@ const WorldsendScoreHistory = () => {
           historyEntries={history()?.entries ?? []}
           isHistoryLoading={history.loading}
           historyError={history.error}
-          friendRankingEntries={friendRanking()?.ranking ?? []}
-          isFriendRankingLoading={friendRanking.loading}
+          friendRankingEntries={friendRanking.data?.ranking ?? []}
+          isFriendRankingLoading={friendRanking.isLoading}
           friendRankingError={friendRanking.error}
         />
       </Show>
