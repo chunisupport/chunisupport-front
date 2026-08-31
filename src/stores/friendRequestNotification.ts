@@ -1,6 +1,7 @@
+import type { QueryClient } from '@tanstack/solid-query'
 import { createRoot } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import { fetchReceivedFriendRequests } from '../api/friends'
+import { receivedFriendRequestsQueryOptions } from '../queries/friends'
 import {
   readFriendRequestNotificationState,
   saveFriendRequestNotificationState,
@@ -24,7 +25,6 @@ export const [friendRequestNotification, setFriendRequestNotification] = createR
   })
 )
 
-const refreshingUsernames = new Set<string>()
 let activeNotificationUsername: string | null = null
 
 /**
@@ -101,52 +101,54 @@ export const hydrateFriendRequestNotification = async (username: string): Promis
 }
 
 /**
- * フレンド申請通知状態を API から取得して更新する。
+ * フレンド申請通知状態を受信申請queryから取得して更新する。
  *
+ * @param queryClient - 受信申請queryを共有するQueryClient。
  * @param username - 認証ユーザー名。
  * @returns 更新完了後に解決される Promise。
  */
-export const refreshFriendRequestNotification = async (username: string): Promise<void> => {
-  if (!isActiveFriendRequestNotificationUser(username) || refreshingUsernames.has(username)) {
+export const refreshFriendRequestNotification = async (
+  queryClient: QueryClient,
+  username: string
+): Promise<void> => {
+  if (!isActiveFriendRequestNotificationUser(username)) {
     return
   }
 
-  refreshingUsernames.add(username)
   setFriendRequestNotification({
     username,
     isHydrated: true,
   })
 
-  try {
-    const response = await fetchReceivedFriendRequests()
-    const hasPendingReceivedRequest = response.items.length > 0
-    const fetchedAt = new Date().toISOString()
+  const options = receivedFriendRequestsQueryOptions(username)
+  const receivedRequests = await queryClient.fetchQuery({
+    ...options,
+    staleTime: 0,
+  })
+  const dataUpdatedAt = queryClient.getQueryState(options.queryKey)?.dataUpdatedAt
 
-    if (
-      !isActiveFriendRequestNotificationUser(username) ||
-      friendRequestNotification.username !== username
-    ) {
-      return
-    }
-
-    await saveFriendRequestNotificationState(username, hasPendingReceivedRequest, fetchedAt)
-    setFriendRequestNotification({
-      username,
-      hasPendingReceivedRequest,
-      fetchedAt,
-    })
-  } finally {
-    refreshingUsernames.delete(username)
+  if (!dataUpdatedAt) {
+    return
   }
+
+  await syncFriendRequestNotificationFromReceivedCount(
+    username,
+    receivedRequests.length,
+    dataUpdatedAt
+  )
 }
 
 /**
  * 前回取得時刻が古い場合だけフレンド申請通知状態を更新する。
  *
+ * @param queryClient - 受信申請queryを共有するQueryClient。
  * @param username - 認証ユーザー名。
  * @returns 必要な更新が完了した後に解決される Promise。
  */
-export const refreshFriendRequestNotificationIfStale = async (username: string): Promise<void> => {
+export const refreshFriendRequestNotificationIfStale = async (
+  queryClient: QueryClient,
+  username: string
+): Promise<void> => {
   if (!isActiveFriendRequestNotificationUser(username)) {
     return
   }
@@ -160,7 +162,7 @@ export const refreshFriendRequestNotificationIfStale = async (username: string):
     friendRequestNotification.username === username &&
     isFriendRequestNotificationStale(friendRequestNotification.fetchedAt)
   ) {
-    await refreshFriendRequestNotification(username)
+    await refreshFriendRequestNotification(queryClient, username)
   }
 }
 
@@ -169,18 +171,28 @@ export const refreshFriendRequestNotificationIfStale = async (username: string):
  *
  * @param username - 認証ユーザー名。
  * @param receivedRequestCount - 受信済みフレンド申請件数。
+ * @param dataUpdatedAt - 受信申請queryがデータを取得したUnix時刻（ミリ秒）。
  * @returns 保存完了後に解決される Promise。
  */
 export const syncFriendRequestNotificationFromReceivedCount = async (
   username: string,
-  receivedRequestCount: number
+  receivedRequestCount: number,
+  dataUpdatedAt: number
 ): Promise<void> => {
   if (!isActiveFriendRequestNotificationUser(username)) {
     return
   }
 
   const hasPendingReceivedRequest = receivedRequestCount > 0
-  const fetchedAt = new Date().toISOString()
+  const fetchedAt = new Date(dataUpdatedAt).toISOString()
+
+  if (
+    friendRequestNotification.username === username &&
+    friendRequestNotification.hasPendingReceivedRequest === hasPendingReceivedRequest &&
+    friendRequestNotification.fetchedAt === fetchedAt
+  ) {
+    return
+  }
 
   await saveFriendRequestNotificationState(username, hasPendingReceivedRequest, fetchedAt)
   if (!isActiveFriendRequestNotificationUser(username)) {

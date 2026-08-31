@@ -1,7 +1,7 @@
 import { A } from '@solidjs/router'
+import { useInfiniteQuery } from '@tanstack/solid-query'
 import { Trophy } from 'lucide-solid'
-import { createEffect, createMemo, createResource, createSignal, For, on, Show } from 'solid-js'
-import { fetchBestSlotRanking } from '../../api/bestSlotRankings'
+import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { fetchRatingBands } from '../../api/ratingBands'
 import { LoadError, Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
@@ -9,6 +9,7 @@ import { AppSelect } from '../../components/common/AppSelect'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
 import { buildSongDetailPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { bestSlotRankingInfiniteQueryOptions } from '../../queries/bestSlotRankings'
 import { authSession } from '../../stores/authSession'
 import type { BestSlotRankingEntryDTO, PlayerRecordDTO, RatingBandDTO } from '../../types/api'
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
@@ -166,12 +167,6 @@ const BestSlotRankingPage = () => {
   )
   const [selectedRatingBand, setSelectedRatingBand] = createSignal<RatingBandOption | null>(null)
   const [hasResolvedInitialBand, setHasResolvedInitialBand] = createSignal(false)
-  const [additionalEntries, setAdditionalEntries] = createSignal<BestSlotRankingEntryDTO[]>([])
-  const [nextCursor, setNextCursor] = createSignal<string | null>(null)
-  const [isLoadingMore, setIsLoadingMore] = createSignal(false)
-  const [loadMoreError, setLoadMoreError] = createSignal<unknown>()
-  /** レート帯の選択セッションごとに追加取得結果を識別する世代番号 */
-  let paginationRequestVersion = 0
 
   const ratingBands = createMemo<RatingBandDTO[]>(() => ratingBandsResource() ?? [])
   const ratingBandOptions = createMemo<RatingBandOption[]>(() =>
@@ -195,39 +190,12 @@ const BestSlotRankingPage = () => {
     setHasResolvedInitialBand(true)
   })
 
-  const [ranking] = createResource(
-    () => selectedRatingBand()?.value,
-    (ratingBand) => fetchBestSlotRanking({ ratingBand })
+  const ranking = useInfiniteQuery(() =>
+    bestSlotRankingInfiniteQueryOptions(selectedRatingBand()?.value ?? null)
   )
-
-  createEffect(
-    on(
-      () => selectedRatingBand()?.value,
-      () => {
-        paginationRequestVersion += 1
-        setAdditionalEntries([])
-        setNextCursor(null)
-        setIsLoadingMore(false)
-        setLoadMoreError(undefined)
-      }
-    )
+  const displayedEntries = createMemo(
+    () => ranking.data?.pages.flatMap((page) => page.ranking) ?? []
   )
-
-  createEffect(() => {
-    const response = ranking()
-    if (response && response.rating_band === selectedRatingBand()?.value) {
-      setNextCursor(response.next_cursor)
-    }
-  })
-
-  const currentRanking = createMemo(() => {
-    const response = ranking()
-    return response?.rating_band === selectedRatingBand()?.value ? response : undefined
-  })
-  const displayedEntries = createMemo(() => [
-    ...(currentRanking()?.ranking ?? []),
-    ...additionalEntries(),
-  ])
   const ownRecordsByChart = createMemo(
     () =>
       new Map<string, PlayerRecordDTO>(
@@ -244,36 +212,14 @@ const BestSlotRankingPage = () => {
       )
   )
 
-  /** 選択中レート帯のランキングを次のカーソルから追加取得する */
+  /**
+   * 選択中レート帯のランキングを次のカーソルから追加取得する。
+   *
+   * @returns 追加取得完了後に解決されるPromise。
+   */
   const handleLoadMore = async (): Promise<void> => {
-    const ratingBand = selectedRatingBand()?.value
-    const cursor = nextCursor()
-    if (!ratingBand || !cursor || isLoadingMore()) return
-    const requestVersion = paginationRequestVersion
-
-    setIsLoadingMore(true)
-    setLoadMoreError(undefined)
-    try {
-      const response = await fetchBestSlotRanking({ ratingBand, cursor })
-      if (
-        paginationRequestVersion !== requestVersion ||
-        selectedRatingBand()?.value !== ratingBand
-      ) {
-        return
-      }
-
-      setAdditionalEntries((current) => [...current, ...response.ranking])
-      setNextCursor(response.next_cursor)
-    } catch (error) {
-      if (
-        paginationRequestVersion === requestVersion &&
-        selectedRatingBand()?.value === ratingBand
-      ) {
-        setLoadMoreError(error)
-      }
-    } finally {
-      if (paginationRequestVersion === requestVersion) setIsLoadingMore(false)
-    }
+    if (!ranking.hasNextPage || ranking.isFetching) return
+    await ranking.fetchNextPage()
   }
 
   useDocumentTitle(BEST_SLOT_RANKING_COPY.title)
@@ -310,15 +256,18 @@ const BestSlotRankingPage = () => {
         fallback={<LoadError error={ratingBandsResource.error} />}
       >
         <Show
-          when={selectedRatingBand() && !ranking.loading}
+          when={selectedRatingBand() && !ranking.isPending}
           fallback={
             <div class="h-40">
               <Loading />
             </div>
           }
         >
-          <Show when={!ranking.error} fallback={<LoadError error={ranking.error} />}>
-            <Show when={currentRanking()}>
+          <Show
+            when={!ranking.isError || ranking.data}
+            fallback={<LoadError error={ranking.error} />}
+          >
+            <Show when={ranking.data}>
               <Show
                 when={displayedEntries().length > 0}
                 fallback={
@@ -376,18 +325,24 @@ const BestSlotRankingPage = () => {
                 </div>
               </Show>
 
-              <Show when={loadMoreError()}>{(error) => <LoadError error={error()} />}</Show>
+              <Show when={ranking.isFetchNextPageError}>
+                <LoadError error={ranking.error} />
+              </Show>
               <Show
-                when={!isLoadingMore()}
+                when={!ranking.isFetchingNextPage}
                 fallback={
                   <div class="h-20">
                     <Loading />
                   </div>
                 }
               >
-                <Show when={nextCursor()}>
+                <Show when={ranking.hasNextPage}>
                   <div class="flex justify-center">
-                    <AppButton variant="surface" onClick={handleLoadMore}>
+                    <AppButton
+                      variant="surface"
+                      disabled={ranking.isFetching}
+                      onClick={handleLoadMore}
+                    >
                       {BEST_SLOT_RANKING_COPY.loadMore}
                     </AppButton>
                   </div>

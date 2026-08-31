@@ -25,8 +25,10 @@ test('ベスト枠ランキングAPIはレート帯とページング条件をUR
   // Given: URLエンコードが必要な最上位帯とカーソル。
   setupApiTestEnv()
   let calledUrl = ''
-  globalThis.fetch = async (input) => {
+  let calledSignal: AbortSignal | null | undefined
+  globalThis.fetch = async (input, init) => {
     calledUrl = String(input)
+    calledSignal = init?.signal
     return Response.json({
       rating_band: '17.6+',
       eligible_player_count: 0,
@@ -37,12 +39,19 @@ test('ベスト枠ランキングAPIはレート帯とページング条件をUR
   const cacheKey = `${Date.now()}-${Math.random()}`
   const { fetchBestSlotRanking } = await import(`./bestSlotRankings.ts?cache=${cacheKey}`)
 
-  // When: 2ページ目を取得する。
-  await fetchBestSlotRanking({ ratingBand: '17.6+', cursor: 'next/value', limit: 100 })
+  // When: キャンセル可能な2ページ目を取得する。
+  const controller = new AbortController()
+  await fetchBestSlotRanking({
+    ratingBand: '17.6+',
+    cursor: 'next/value',
+    limit: 100,
+    signal: controller.signal,
+  })
 
-  // Then: すべての条件が安全にエンコードされる。
+  // Then: すべての条件が安全にエンコードされ、シグナルが引き渡される。
   assert.equal(
     calledUrl,
     'http://localhost:3000/internal/best-slot-rankings?rating_band=17.6%2B&limit=100&cursor=next%2Fvalue'
   )
+  assert.equal(calledSignal, controller.signal)
 })
