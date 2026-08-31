@@ -27,6 +27,10 @@ export const EDITOR_SONGS_PATH = `${EDITOR_PATH}/songs`
 export const ADMIN_PATH = '/admin'
 /** スタッフ向けデータ充足状況画面のパス */
 export const ADMIN_DATA_COVERAGE_PATH = `${ADMIN_PATH}/data-coverage`
+/** ADMIN向け通常譜面ランキング画面のパス */
+export const ADMIN_CHART_RANKING_PATH = `${ADMIN_PATH}/chart-rankings/songs/:displayid/charts/:difficulty`
+/** ADMIN向けWORLD'S END譜面ランキング画面のパス */
+export const ADMIN_WORLDSEND_CHART_RANKING_PATH = `${ADMIN_PATH}/chart-rankings/worldsend-songs/:displayid`
 /** ADMIN向けメンテナンス管理画面のパス */
 export const ADMIN_MAINTENANCE_PATH = `${ADMIN_PATH}/maintenance`
 

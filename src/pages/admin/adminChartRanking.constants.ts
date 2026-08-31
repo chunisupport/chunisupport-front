@@ -1,0 +1,21 @@
+/** 管理者向け譜面ランキング画面の表示文言 */
+export const ADMIN_CHART_RANKING_COPY = {
+  title: '譜面ランキング',
+  total: '登録者数',
+  empty: 'ランキングデータがありません。',
+  tableCaption: '譜面スコアランキング',
+  rankColumn: '順位',
+  playerColumn: 'プレイヤー',
+  scoreColumn: 'スコア',
+  ratingColumn: '単曲レート',
+  overpowerColumn: 'OVER POWER',
+  overpowerPercentColumn: 'OP達成率',
+  lampColumn: 'ランプ',
+  updatedAtColumn: '更新日時',
+  chartConstantPrefix: '定数',
+  worldsendLevelPrefix: '★',
+  usernamePrefix: '@',
+  emptyValue: '-',
+  unknownValue: '?',
+  lampSeparator: ' / ',
+} as const
