@@ -83,15 +83,18 @@ test('syncFriendRequestNotificationFromReceivedCount: 現在の通知対象ユ�
     syncFriendRequestNotificationFromReceivedCount,
   } = await loadFriendRequestNotificationStore()
   setActiveFriendRequestNotificationUser('alice')
+  const dataUpdatedAt = Date.parse('2026-07-09T10:00:00.000Z')
 
   // When: alice の受信申請件数を同期する。
-  await syncFriendRequestNotificationFromReceivedCount('alice', 1)
+  await syncFriendRequestNotificationFromReceivedCount('alice', 1, dataUpdatedAt)
 
   // Then: メモリと IndexedDB の通知状態が alice の内容で更新される。
   const cached = await db.friendRequestNotificationStates.get('friendRequestNotification:alice')
   assert.equal(friendRequestNotification.username, 'alice')
   assert.equal(friendRequestNotification.hasPendingReceivedRequest, true)
+  assert.equal(friendRequestNotification.fetchedAt, '2026-07-09T10:00:00.000Z')
   assert.equal(cached?.hasPendingReceivedRequest, true)
+  assert.equal(cached?.fetchedAt, '2026-07-09T10:00:00.000Z')
 })
 
 test('syncFriendRequestNotificationFromReceivedCount: 現在の通知対象でないユーザーは同期しないこと', async () => {
@@ -104,7 +107,11 @@ test('syncFriendRequestNotificationFromReceivedCount: 現在の通知対象で�
   setActiveFriendRequestNotificationUser('bob')
 
   // When: alice の受信申請件数同期が遅れて到着する。
-  await syncFriendRequestNotificationFromReceivedCount('alice', 1)
+  await syncFriendRequestNotificationFromReceivedCount(
+    'alice',
+    1,
+    Date.parse('2026-07-09T10:00:00.000Z')
+  )
 
   // Then: alice の状態はメモリにも IndexedDB にも反映されない。
   const cached = await db.friendRequestNotificationStates.get('friendRequestNotification:alice')

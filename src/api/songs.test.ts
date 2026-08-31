@@ -336,6 +336,24 @@ test("フレンドランキングAPIはWORLD'S END譜面ランキングのパス
   ])
 })
 
+test('フレンドランキングAPIはAbortSignalをHTTPリクエストへ引き渡す', async () => {
+  // Given: 通常譜面とWORLD'S END譜面で共通利用するAbortSignal。
+  const controller = new AbortController()
+  const signals: (AbortSignal | null | undefined)[] = []
+  globalThis.fetch = async (_input, init) => {
+    signals.push(init?.signal)
+    return Response.json({ ranking: [], my_rank: null, total: 0 })
+  }
+
+  // When: 両方のフレンドランキングを取得する。
+  const { fetchSongFriendRanking, fetchWorldsendFriendRanking } = await loadSongsApi()
+  await fetchSongFriendRanking('song-1', 'MASTER', controller.signal)
+  await fetchWorldsendFriendRanking('worldsend-1', controller.signal)
+
+  // Then: TanStack Queryが中断できるよう、どちらのfetchにも同じシグナルが渡る。
+  assert.deepEqual(signals, [controller.signal, controller.signal])
+})
+
 test('fetchVersions は同時呼び出しを同じリクエストにまとめる', async () => {
   const responseBody = {
     versions: [{ name: 'CHUNITHM LUMINOUS', released_at: '2023-12-14' }],

@@ -81,6 +81,26 @@ test('フレンド一覧APIは認証付きGETでitemsレスポンスを返す', 
   ])
 })
 
+test('フレンド一覧APIはAbortSignalをHTTPリクエストへ引き渡す', async () => {
+  // Given: 3種類の一覧取得へ共通で渡すAbortSignal。
+  const controller = new AbortController()
+  const signals: (AbortSignal | null | undefined)[] = []
+  globalThis.fetch = async (_input, init) => {
+    signals.push(init?.signal)
+    return Response.json({ items: [] })
+  }
+
+  // When: 各一覧を同じシグナルで取得する。
+  const { fetchFriends, fetchReceivedFriendRequests, fetchSentFriendRequests } =
+    await loadFriendsApi()
+  await fetchFriends(controller.signal)
+  await fetchReceivedFriendRequests(controller.signal)
+  await fetchSentFriendRequests(controller.signal)
+
+  // Then: TanStack Queryが中断できるよう、すべてのfetchへ同じシグナルが渡る。
+  assert.deepEqual(signals, [controller.signal, controller.signal, controller.signal])
+})
+
 test('フレンド申請APIはusernameをPOSTする', async () => {
   // Given: API呼び出し内容の記録。
   const requests: { url: string; method: string | undefined; body: BodyInit | null | undefined }[] =

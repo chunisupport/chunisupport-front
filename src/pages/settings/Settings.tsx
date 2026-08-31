@@ -1,6 +1,7 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Switch } from '@kobalte/core/switch'
 import { A, useNavigate, useParams } from '@solidjs/router'
+import { useQueryClient } from '@tanstack/solid-query'
 import { createEffect, createResource, createSignal, For, Show } from 'solid-js'
 import { deleteAccount, deletePlayerData, fetchPrivacy, updatePrivacy } from '../../api/settings'
 import { fetchMe, fetchUserProfileSummary } from '../../api/users'
@@ -10,6 +11,7 @@ import AppearanceSettings from '../../components/common/AppearanceSettings'
 import { APPEARANCE_SETTINGS_COPY } from '../../components/common/AppearanceSettings.constants'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
+import { invalidateFriendRankings } from '../../queries/friendRankings'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
@@ -30,6 +32,7 @@ type SettingsSummary = {
  */
 const Settings = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const params = useParams<{ section?: string }>()
   const [privacyValue, setPrivacyValue] = createSignal(false)
   const [privacySubmitting, setPrivacySubmitting] = createSignal(false)
@@ -45,6 +48,15 @@ const Settings = () => {
 
   useDocumentTitle('設定')
 
+  /**
+   * ログイン中ユーザーのフレンドランキングキャッシュを無効化する。
+   *
+   * @returns 表示中ランキングの再取得完了時に解決されるPromise。
+   */
+  const invalidateCurrentUserFriendRankings = (): Promise<void> => {
+    const username = authSession.user?.username
+    return username ? invalidateFriendRankings(queryClient, username) : Promise.resolve()
+  }
   const [summary, { refetch: refetchSummary, mutate: mutateSummary }] = createResource(
     () => authSession.user?.username,
     async (username): Promise<SettingsSummary> => {
@@ -126,6 +138,7 @@ const Settings = () => {
     setPlayerDeleting(true)
     try {
       await deletePlayerData()
+      await invalidateCurrentUserFriendRankings().catch(() => undefined)
       setPlayerDeleteDialogOpen(false)
       setPlayerDataSuccess('プレイヤーデータを削除しました。必要であれば再登録してください。')
       await refetchSummary()
@@ -276,7 +289,10 @@ const Settings = () => {
                       <DataTransferSettingsSection
                         hasUserData={Boolean(loadedSummary().profile.player)}
                         onImported={async () => {
-                          await refetchSummary()
+                          await Promise.allSettled([
+                            invalidateCurrentUserFriendRankings(),
+                            refetchSummary(),
+                          ])
                         }}
                       />
                     </div>

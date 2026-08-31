@@ -2117,6 +2117,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 The following npm packages may be included in this product:
 
+ - @tanstack/query-core@5.102.8
+ - @tanstack/solid-query@5.102.8
  - @tanstack/solid-virtual@3.13.30
  - @tanstack/virtual-core@3.17.2
 

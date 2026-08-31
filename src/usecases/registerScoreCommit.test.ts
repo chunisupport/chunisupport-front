@@ -259,6 +259,7 @@ test('commitRegisterScore: 登録結果を正規化して返す', async () => {
   // Given: 登録APIが成功する状態。
   const result = createPlayerDataResult()
   let cacheCleared = false
+  let friendRankingsInvalidated = false
 
   // When: スコア登録確定処理を実行する。
   const committed = await commitRegisterScore(
@@ -268,6 +269,9 @@ test('commitRegisterScore: 登録結果を正規化して返す', async () => {
       clearUserApiCache: async () => {
         cacheCleared = true
       },
+      invalidateFriendRankings: async () => {
+        friendRankingsInvalidated = true
+      },
       ensureSongsLoaded: () => {},
       ensureWorldsendSongsLoaded: () => {},
     }
@@ -276,10 +280,11 @@ test('commitRegisterScore: 登録結果を正規化して返す', async () => {
   // Then: 登録結果を画面へ返す。
   assert.deepEqual(committed.result, result)
   assert.equal(cacheCleared, true)
+  assert.equal(friendRankingsInvalidated, true)
 })
 
-test('commitRegisterScore: キャッシュ削除失敗時も確定済みの登録結果を返す', async () => {
-  // Given: スコア登録は成功し、キャッシュ削除だけが失敗する状態。
+test('commitRegisterScore: 派生キャッシュ更新失敗時も確定済みの登録結果を返す', async () => {
+  // Given: スコア登録は成功し、IndexedDB削除とランキング無効化が失敗する状態。
   const result = createPlayerDataResult()
 
   // When: スコア登録確定処理を実行する。
@@ -290,11 +295,14 @@ test('commitRegisterScore: キャッシュ削除失敗時も確定済みの登�
       clearUserApiCache: async () => {
         throw new Error('IndexedDB error')
       },
+      invalidateFriendRankings: async () => {
+        throw new Error('Query invalidation error')
+      },
       ensureSongsLoaded: () => {},
       ensureWorldsendSongsLoaded: () => {},
     }
   )
 
-  // Then: 登録成功はキャッシュ削除エラーの影響を受けない。
+  // Then: 登録成功は派生キャッシュ更新エラーの影響を受けない。
   assert.deepEqual(committed.result, result)
 })

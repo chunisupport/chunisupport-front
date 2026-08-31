@@ -10,12 +10,13 @@ export type FetchBestSlotRankingOptions = {
   ratingBand: string
   cursor?: string
   limit?: number
+  signal?: AbortSignal
 }
 
 /**
  * ベスト枠平均レート帯別の譜面採用率ランキングを取得する。
  *
- * @param options - レート帯、カーソル、取得件数。
+ * @param options - レート帯、カーソル、取得件数、キャンセルシグナル。
  * @returns 指定したレート帯のランキング1ページ分。
  */
 export const fetchBestSlotRanking = async (
@@ -26,6 +27,6 @@ export const fetchBestSlotRanking = async (
   url.searchParams.set('limit', String(options.limit ?? BEST_SLOT_RANKING_PAGE_SIZE))
   if (options.cursor) url.searchParams.set('cursor', options.cursor)
 
-  const response = await fetchWithAuth(url)
+  const response = await fetchWithAuth(url, { signal: options.signal })
   return response.json()
 }

@@ -3,6 +3,7 @@ import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { A, useLocation, useNavigate } from '@solidjs/router'
+import { useQueryClient } from '@tanstack/solid-query'
 import {
   BadgeQuestionMark,
   CodeXml,
@@ -87,6 +88,7 @@ const NavBar = (props: NavBarProps) => {
   const [showLoginDialog, setShowLoginDialog] = createSignal(false)
   const [showLogoutDialog, setShowLogoutDialog] = createSignal(false)
   const [showThemeDialog, setShowThemeDialog] = createSignal(false)
+  const queryClient = useQueryClient()
 
   const username = () => authSession.user?.username ?? null
   const isLoading = () => authSession.status === 'unknown'
@@ -221,7 +223,7 @@ const NavBar = (props: NavBarProps) => {
     if (authSession.status === 'authenticated' && uname) {
       setActiveFriendRequestNotificationUser(uname)
       void hydrateFriendRequestNotification(uname)
-        .then(() => refreshFriendRequestNotificationIfStale(uname))
+        .then(() => refreshFriendRequestNotificationIfStale(queryClient, uname))
         .catch(() => undefined)
       return
     }
@@ -297,7 +299,7 @@ const NavBar = (props: NavBarProps) => {
   const handleOthersMenuOpenChange = (open: boolean): void => {
     const uname = username()
     if (open && uname) {
-      void refreshFriendRequestNotificationIfStale(uname).catch(() => undefined)
+      void refreshFriendRequestNotificationIfStale(queryClient, uname).catch(() => undefined)
     }
   }
 

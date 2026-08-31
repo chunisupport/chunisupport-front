@@ -259,14 +259,17 @@ export const fetchOwnWorldsendScoreHistory = async (
  *
  * @param displayId - 楽曲表示ID。
  * @param difficulty - 大文字の難易度ドメイン値。
+ * @param signal - リクエストを中断するためのシグナル。
  * @returns 自分と承認済みフレンドの現在スコアランキング。
  */
 export const fetchSongFriendRanking = async (
   displayId: string,
-  difficulty: ScoreHistoryDifficulty
+  difficulty: ScoreHistoryDifficulty,
+  signal?: AbortSignal
 ): Promise<FriendRankingResponseDTO> => {
   const response = await fetchWithAuth(
-    `${INTERNAL_FRIEND_RANKINGS_PATH}/songs/${encodeURIComponent(displayId)}/charts/${encodeURIComponent(difficulty)}`
+    `${INTERNAL_FRIEND_RANKINGS_PATH}/songs/${encodeURIComponent(displayId)}/charts/${encodeURIComponent(difficulty)}`,
+    { signal }
   )
 
   return response.json()
@@ -276,13 +279,16 @@ export const fetchSongFriendRanking = async (
  * WORLD'S END譜面のフレンドランキングを取得する。
  *
  * @param displayId - 楽曲表示ID。
+ * @param signal - リクエストを中断するためのシグナル。
  * @returns 自分と承認済みフレンドの現在スコアランキング。
  */
 export const fetchWorldsendFriendRanking = async (
-  displayId: string
+  displayId: string,
+  signal?: AbortSignal
 ): Promise<WorldsendFriendRankingResponseDTO> => {
   const response = await fetchWithAuth(
-    `${INTERNAL_FRIEND_RANKINGS_PATH}/worldsend-songs/${encodeURIComponent(displayId)}`
+    `${INTERNAL_FRIEND_RANKINGS_PATH}/worldsend-songs/${encodeURIComponent(displayId)}`,
+    { signal }
   )
 
   return response.json()
