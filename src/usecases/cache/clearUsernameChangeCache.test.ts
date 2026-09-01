@@ -17,7 +17,7 @@ import type { UserRatingDTO } from '../../types/api.ts'
 /**
  * APIモジュールが要求する環境変数を設定してテスト対象を読み込む。
  *
- * @returns ユーザーID変更キャッシュ関数とquery key factory。
+ * @returns ユーザーネーム変更キャッシュ関数とquery key factory。
  */
 const loadUsernameChangeCache = async () => {
   process.env.PUBLIC_BACKEND_URL = 'http://localhost:3000'
@@ -73,7 +73,7 @@ afterEach(async () => {
   ])
 })
 
-test('ユーザーID変更後は認証ユーザー用キャッシュを削除し表示設定を保持すること', async () => {
+test('ユーザーネーム変更後は認証ユーザー用キャッシュを削除し表示設定を保持すること', async () => {
   // Given: ユーザーAPI、通知、表示設定、フレンドqueryを保存する。
   const { clearUsernameChangeCache, friendshipQueryKeys } = await loadUsernameChangeCache()
   await saveCachedUserRating('alice', 'user-1', 'songs-1', rating)
@@ -86,7 +86,7 @@ test('ユーザーID変更後は認証ユーザー用キャッシュを削除し
   queryClient.setQueryData(aliceQueryKey, [])
   queryClient.setQueryData(bobQueryKey, [])
 
-  // When: alice のユーザーID変更後キャッシュを削除する。
+  // When: alice のユーザーネーム変更後キャッシュを削除する。
   await clearUsernameChangeCache(queryClient, 'alice')
 
   // Then: 認証ユーザー用キャッシュとaliceの状態が消え、表示設定とbobの状態は残る。
@@ -99,7 +99,7 @@ test('ユーザーID変更後は認証ユーザー用キャッシュを削除し
   queryClient.clear()
 })
 
-test('キャッシュ削除に失敗してもユーザーID変更の成功フローを拒否しないこと', async () => {
+test('キャッシュ削除に失敗してもユーザーネーム変更の成功フローを拒否しないこと', async () => {
   // Given: IndexedDBのユーザーAPIキャッシュ削除だけが失敗する。
   const { clearUsernameChangeCache } = await loadUsernameChangeCache()
   const queryClient = createTestQueryClient()
