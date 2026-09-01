@@ -140,6 +140,8 @@ export type ErrorCode =
   | 'username_too_short'
   | 'username_too_long'
   | 'username_invalid_char'
+  | 'username_forbidden'
+  | 'username_taken'
   | 'password_too_short'
   | 'password_too_long'
   | 'invalid_password'
@@ -221,6 +223,8 @@ export const errorMessages: Record<ErrorCode, string> = {
   username_too_short: 'ユーザー名は5文字以上である必要があります',
   username_too_long: 'ユーザー名は50文字以内である必要があります',
   username_invalid_char: 'ユーザー名は小文字英数字のみ使用できます',
+  username_forbidden: 'このユーザーIDは使用できません',
+  username_taken: 'このユーザーIDはすでに使用されています',
   password_too_short: 'パスワードは8文字以上である必要があります',
   password_too_long: 'パスワードは128文字以内である必要があります',
   invalid_password: 'パスワードが無効です',

@@ -12,13 +12,14 @@ import { APPEARANCE_SETTINGS_COPY } from '../../components/common/AppearanceSett
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
-import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
+import { authSession, clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { ApiTokenSettingsSection } from './ApiTokenSettingsSection'
 import { DataTransferSettingsSection } from './DataTransferSettingsSection'
 import { formatSettingsDateTime } from './settingsDateTime'
 import { normalizeSettingsSection, SETTINGS_SECTIONS } from './settingsSections'
+import { UsernameChangeForm } from './UsernameChangeForm'
 
 type SettingsSummary = {
   me: Awaited<ReturnType<typeof fetchMe>>
@@ -315,6 +316,25 @@ const Settings = () => {
                           <dd class="font-medium text-text">{loadedSummary().me.account_type}</dd>
                         </div>
                       </dl>
+                      <UsernameChangeForm
+                        currentUsername={loadedSummary().me.username}
+                        onChanged={async (username) => {
+                          const currentUser = authSession.user
+                          if (currentUser) {
+                            setAuthenticatedUser({ ...currentUser, username })
+                          }
+                          mutateSummary((current) =>
+                            current
+                              ? {
+                                  me: { ...current.me, username },
+                                  profile: { ...current.profile, username },
+                                }
+                              : current
+                          )
+                          queryClient.clear()
+                          await clearClientCache()
+                        }}
+                      />
                       <div class="mt-10 border-t border-danger-border pt-6">
                         <h3 class="font-semibold text-danger">退会</h3>
                         <p class="mt-1 text-sm text-text-muted">
