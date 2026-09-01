@@ -130,9 +130,9 @@ const Settings = () => {
   }
 
   /**
-   * ユーザーID変更後に認証状態と画面表示を更新し、旧IDに依存するキャッシュを破棄する。
+   * ユーザーネーム変更後に認証状態と画面表示を更新し、旧ユーザーネームに依存するキャッシュを破棄する。
    *
-   * @param username - APIが返した変更後のユーザー名。
+   * @param username - APIが返した変更後のユーザーネーム。
    * @returns 状態更新とキャッシュ破棄の試行完了後に解決されるPromise。
    */
   const handleUsernameChanged = async (username: string): Promise<void> => {
@@ -333,7 +333,7 @@ const Settings = () => {
                       </h2>
                       <dl class="mt-5 divide-y divide-border border-y border-border">
                         <div class="flex justify-between gap-4 py-4">
-                          <dt class="text-text-muted">ユーザー名</dt>
+                          <dt class="text-text-muted">ユーザーネーム</dt>
                           <dd class="font-sans font-medium text-text">
                             {loadedSummary().me.username}
                           </dd>
