@@ -2,6 +2,8 @@
 const DEFAULT_IMAGE_CAPTURE_MAX_CSS_SIDE = 8_000
 /** ダウンロード開始後にObject URLを解放するまでの待機時間 */
 const IMAGE_OBJECT_URL_REVOKE_DELAY_MS = 1_000
+/** DOM画像へ含めない要素を指定するデータ属性セレクター */
+const IMAGE_CAPTURE_EXCLUDED_SELECTOR = '[data-image-capture-excluded="true"]'
 
 type ImageCaptureOptions = {
   /** ラスター画像へ出力するときのデバイスピクセル比 */
@@ -47,11 +49,13 @@ const createImageCaptureTarget = (
   maxCssSide: number
 ): ImageCaptureTarget => {
   const sourceWidth = sourceElement.offsetWidth
-  const sourceHeight = sourceElement.offsetHeight
-  const captureScale = calculateImageCaptureScale(sourceWidth, sourceHeight, maxCssSide)
   const captureHost = document.createElement('div')
   const captureElement = document.createElement('div')
   const sourceClone = sourceElement.cloneNode(true) as HTMLElement
+
+  sourceClone.querySelectorAll(IMAGE_CAPTURE_EXCLUDED_SELECTOR).forEach((element) => {
+    element.remove()
+  })
 
   Object.assign(captureHost.style, {
     left: '-100000px',
@@ -59,21 +63,27 @@ const createImageCaptureTarget = (
     position: 'fixed',
     top: '0',
   })
-  Object.assign(captureElement.style, {
-    height: `${Math.ceil(sourceHeight * captureScale)}px`,
-    overflow: 'hidden',
-    width: `${Math.ceil(sourceWidth * captureScale)}px`,
-  })
   Object.assign(sourceClone.style, {
     maxWidth: 'none',
-    transform: `scale(${captureScale})`,
-    transformOrigin: 'top left',
     width: `${sourceWidth}px`,
   })
   captureHost.setAttribute('aria-hidden', 'true')
   captureElement.appendChild(sourceClone)
   captureHost.appendChild(captureElement)
   document.body.appendChild(captureHost)
+
+  const sourceHeight = sourceClone.offsetHeight
+  const captureScale = calculateImageCaptureScale(sourceWidth, sourceHeight, maxCssSide)
+
+  Object.assign(captureElement.style, {
+    height: `${Math.ceil(sourceHeight * captureScale)}px`,
+    overflow: 'hidden',
+    width: `${Math.ceil(sourceWidth * captureScale)}px`,
+  })
+  Object.assign(sourceClone.style, {
+    transform: `scale(${captureScale})`,
+    transformOrigin: 'top left',
+  })
 
   return {
     element: captureElement,

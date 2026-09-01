@@ -1,9 +1,9 @@
 import { Button } from '@kobalte/core/button'
-import { Download, Play, Share2 } from 'lucide-solid'
+import { Download, Eye, EyeOff, Play, Share2 } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import logoSingle from '../../assets/logo_single.svg'
 import { Loading } from '../../components'
-import { AppButton } from '../../components/common/AppButton'
+import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
@@ -86,6 +86,8 @@ export const REGISTER_SCORE_MESSAGES = {
   downloadImageError: '画像のダウンロードに失敗しました。',
   copySongTitleSuccess: '曲名をコピーしました。',
   copySongTitleError: '曲名のコピーに失敗しました。',
+  excludeSongFromImage: '画像から除外',
+  includeSongInImage: '画像に含める',
   unknownSongTitle: REGISTER_SCORE_UNKNOWN_TITLE,
 } as const
 
@@ -337,6 +339,15 @@ const getDifficultyBadgeClass = (change: PlayerDataSongRecordChange): string => 
 
   return difficultyBadgeClass(change.diff)
 }
+
+/**
+ * 楽曲差分を一時的な画像除外状態で識別するキーへ変換する。
+ *
+ * @param change - APIから返却された1譜面分の差分。
+ * @returns レコード種別、楽曲ID、難易度を連結した識別キー。
+ */
+const createSongChangeKey = (change: PlayerDataSongRecordChange): string =>
+  `${change.record_type}:${change.idx}:${change.diff}`
 
 /**
  * API由来のランプ文字列を大文字のドメイン値へ正規化する。
@@ -739,14 +750,16 @@ const BeforeRecordScore = (props: {
 /**
  * 1譜面分の登録差分をスクリーンショットに近い行表示にする。
  *
- * @param props - 表示対象の差分、解決済み楽曲タイトル、譜面レベル、曲名コピー処理。
+ * @param props - 表示対象の差分、解決済み楽曲タイトル、譜面レベル、画像除外状態、操作処理。
  * @returns 差分行。
  */
 const RegisterScoreChangeRow = (props: {
   change: PlayerDataSongRecordChange
   songTitle: string
   chartLevel?: string
+  excludedFromImage: boolean
   onCopySongTitle: (songTitle: string) => Promise<boolean>
+  onExcludedFromImageChange: (excluded: boolean) => void
 }) => {
   const [isCopyHighlighted, setIsCopyHighlighted] = createSignal(false)
   let copyHighlightTimerId: number | undefined
@@ -778,62 +791,88 @@ const RegisterScoreChangeRow = (props: {
   })
 
   return (
-    <article class={`${SCORE_CHANGE_CARD_CLASS} font-jost`}>
-      <div class="flex min-w-0 items-center gap-2 text-base">
-        <span class={`${DIFFICULTY_BADGE_LAYOUT_CLASS} ${getDifficultyBadgeClass(props.change)}`}>
-          {getShortDifficultyLabel(props.change)}
-        </span>
-        <Show when={props.chartLevel}>
-          {(level) => (
-            <span class="shrink-0 whitespace-nowrap rounded bg-surface px-2 py-0.5 text-xs font-bold leading-5">
-              {level()}
-            </span>
-          )}
-        </Show>
-        <h3 class="min-w-0 flex-1">
-          <Button
-            class={`block w-full min-w-0 truncate border-0 bg-transparent p-0 text-left font-sans text-base font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 ${
-              isCopyHighlighted()
-                ? 'text-action-primary transition-none'
-                : 'text-text transition-colors duration-700 motion-reduce:transition-none'
-            }`}
-            aria-label={`「${props.songTitle}」をコピー`}
-            title={props.songTitle}
-            onClick={handleCopySongTitle}
-          >
-            {props.songTitle}
-          </Button>
-        </h3>
-      </div>
-      <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
-        <div class="w-fit">
-          <BeforeRecordScore before={props.change.before} />
-          <Show
-            when={props.change.before}
-            fallback={
-              <div class="mt-1 flex min-h-6 flex-wrap items-center gap-1">
-                <LampPlaceholderBadge class="w-[34px]" />
-                <LampPlaceholderBadge class="w-[34px]" />
-                <LampPlaceholderBadge class="w-[34px]" />
-              </div>
-            }
-          >
-            {(before) => <RecordLampBadges state={before()} />}
-          </Show>
-        </div>
-        <div class="flex w-20 flex-col items-center gap-1">
-          <Play class="mt-1.5 h-3.5 w-3.5 fill-current text-blue-700" aria-hidden="true" />
-          <Show when={formatScoreDelta(props.change)}>
-            {(delta) => (
-              <span class="font-sans text-sm font-bold leading-4 text-blue-700">{delta()}</span>
+    <article
+      class={`${SCORE_CHANGE_CARD_CLASS} relative font-jost`}
+      data-image-capture-excluded={props.excludedFromImage ? 'true' : undefined}
+    >
+      <div
+        class={`transition-opacity motion-reduce:transition-none ${
+          props.excludedFromImage ? 'opacity-40' : 'opacity-100'
+        }`}
+      >
+        <div class="flex min-w-0 items-center gap-2 pr-10 text-base">
+          <span class={`${DIFFICULTY_BADGE_LAYOUT_CLASS} ${getDifficultyBadgeClass(props.change)}`}>
+            {getShortDifficultyLabel(props.change)}
+          </span>
+          <Show when={props.chartLevel}>
+            {(level) => (
+              <span class="shrink-0 whitespace-nowrap rounded bg-surface px-2 py-0.5 text-xs font-bold leading-5">
+                {level()}
+              </span>
             )}
           </Show>
+          <h3 class="min-w-0 flex-1">
+            <Button
+              class={`block w-full min-w-0 truncate border-0 bg-transparent p-0 text-left font-sans text-base font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 ${
+                isCopyHighlighted()
+                  ? 'text-action-primary transition-none'
+                  : 'text-text transition-colors duration-700 motion-reduce:transition-none'
+              }`}
+              aria-label={`「${props.songTitle}」をコピー`}
+              title={props.songTitle}
+              onClick={handleCopySongTitle}
+            >
+              {props.songTitle}
+            </Button>
+          </h3>
         </div>
-        <div class="w-fit">
-          <span class="font-jost font-semibold">{formatScore(props.change.after.score)}</span>
-          <RecordLampBadges state={props.change.after} />
+        <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
+          <div class="w-fit">
+            <BeforeRecordScore before={props.change.before} />
+            <Show
+              when={props.change.before}
+              fallback={
+                <div class="mt-1 flex min-h-6 flex-wrap items-center gap-1">
+                  <LampPlaceholderBadge class="w-[34px]" />
+                  <LampPlaceholderBadge class="w-[34px]" />
+                  <LampPlaceholderBadge class="w-[34px]" />
+                </div>
+              }
+            >
+              {(before) => <RecordLampBadges state={before()} />}
+            </Show>
+          </div>
+          <div class="flex w-20 flex-col items-center gap-1">
+            <Play class="mt-1.5 h-3.5 w-3.5 fill-current text-blue-700" aria-hidden="true" />
+            <Show when={formatScoreDelta(props.change)}>
+              {(delta) => (
+                <span class="font-sans text-sm font-bold leading-4 text-blue-700">{delta()}</span>
+              )}
+            </Show>
+          </div>
+          <div class="w-fit">
+            <span class="font-jost font-semibold">{formatScore(props.change.after.score)}</span>
+            <RecordLampBadges state={props.change.after} />
+          </div>
         </div>
       </div>
+      <AppIconButton
+        tone="ghost"
+        class="absolute right-1 top-1"
+        aria-label={REGISTER_SCORE_MESSAGES.excludeSongFromImage}
+        aria-pressed={props.excludedFromImage}
+        title={
+          props.excludedFromImage
+            ? REGISTER_SCORE_MESSAGES.includeSongInImage
+            : REGISTER_SCORE_MESSAGES.excludeSongFromImage
+        }
+        data-image-capture-excluded="true"
+        onClick={() => props.onExcludedFromImageChange(!props.excludedFromImage)}
+      >
+        <Show when={props.excludedFromImage} fallback={<Eye class="h-5 w-5" aria-hidden="true" />}>
+          <EyeOff class="h-5 w-5" aria-hidden="true" />
+        </Show>
+      </AppIconButton>
     </article>
   )
 }
@@ -923,7 +962,7 @@ const RegisterScoreReportHeader = (props: { result: NormalizedPlayerDataUpdateRe
 /**
  * 更新レコード一覧を表示する。
  *
- * @param props - 更新差分、楽曲名解決関数、譜面レベル解決関数、曲名コピー処理。
+ * @param props - 更新差分、楽曲名解決関数、譜面レベル解決関数、画像除外状態、操作処理。
  * @returns 更新レコードセクション。
  */
 const RegisterScoreChangesSection = (props: {
@@ -931,7 +970,9 @@ const RegisterScoreChangesSection = (props: {
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
   emptyMessage?: string
+  excludedSongChangeKeys: ReadonlySet<string>
   onCopySongTitle: (songTitle: string) => Promise<boolean>
+  onSongExcludedFromImageChange: (change: PlayerDataSongRecordChange, excluded: boolean) => void
 }) => (
   <section class="min-w-0 pt-4">
     <h2 class="mb-1 whitespace-nowrap text-xl font-bold">
@@ -952,7 +993,11 @@ const RegisterScoreChangesSection = (props: {
               change={change}
               songTitle={props.resolveSongTitle(change)}
               chartLevel={props.resolveChartLevel?.(change)}
+              excludedFromImage={props.excludedSongChangeKeys.has(createSongChangeKey(change))}
               onCopySongTitle={props.onCopySongTitle}
+              onExcludedFromImageChange={(excluded) =>
+                props.onSongExcludedFromImageChange(change, excluded)
+              }
             />
           )}
         </For>
@@ -1004,6 +1049,9 @@ export const RegisterScoreResultView = (props: {
   changedSongsEmptyMessage?: string
 }) => {
   const [hideLampOnlyChanges, setHideLampOnlyChanges] = createSignal(false)
+  const [excludedSongChangeKeys, setExcludedSongChangeKeys] = createSignal<ReadonlySet<string>>(
+    new Set()
+  )
   const songChanges = createMemo(() =>
     props.result.changes.filter(
       (change): change is PlayerDataSongRecordChange =>
@@ -1086,6 +1134,30 @@ export const RegisterScoreResultView = (props: {
     checked: boolean
   ): void => {
     setStatisticRowVisibility((current) => ({ ...current, [key]: checked }))
+  }
+
+  /**
+   * 楽曲カードを共有・ダウンロード画像へ含めるかを一時的に切り替える。
+   *
+   * @param change - 対象となる1譜面分の差分。
+   * @param excluded - 画像から除外する場合はtrue。
+   * @returns なし。
+   */
+  const updateSongExcludedFromImage = (
+    change: PlayerDataSongRecordChange,
+    excluded: boolean
+  ): void => {
+    const key = createSongChangeKey(change)
+
+    setExcludedSongChangeKeys((current) => {
+      const next = new Set(current)
+      if (excluded) {
+        next.add(key)
+      } else {
+        next.delete(key)
+      }
+      return next
+    })
   }
 
   /**
@@ -1369,7 +1441,9 @@ export const RegisterScoreResultView = (props: {
                     ? REGISTER_SCORE_MESSAGES.filteredChangedSongsEmpty
                     : props.changedSongsEmptyMessage
                 }
+                excludedSongChangeKeys={excludedSongChangeKeys()}
                 onCopySongTitle={copySongTitle}
+                onSongExcludedFromImageChange={updateSongExcludedFromImage}
               />
               <RegisterCourseChangesSection
                 changes={courseChanges()}
