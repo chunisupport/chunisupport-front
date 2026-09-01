@@ -14,6 +14,7 @@ import { auth } from '../../lib/firebase'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
 import { authSession, clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
+import { clearUsernameChangeCache } from '../../usecases/cache/clearUsernameChangeCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { ApiTokenSettingsSection } from './ApiTokenSettingsSection'
 import { DataTransferSettingsSection } from './DataTransferSettingsSection'
@@ -125,6 +126,32 @@ const Settings = () => {
       await handlePrivacyRefresh()
     } finally {
       setPrivacySubmitting(false)
+    }
+  }
+
+  /**
+   * ユーザーID変更後に認証状態と画面表示を更新し、旧IDに依存するキャッシュを破棄する。
+   *
+   * @param username - APIが返した変更後のユーザー名。
+   * @returns 状態更新とキャッシュ破棄の試行完了後に解決されるPromise。
+   */
+  const handleUsernameChanged = async (username: string): Promise<void> => {
+    const previousUsername = authSession.user?.username ?? summary()?.me.username
+    const currentUser = authSession.user
+    if (currentUser) {
+      setAuthenticatedUser({ ...currentUser, username })
+    }
+    mutateSummary((current) =>
+      current
+        ? {
+            me: { ...current.me, username },
+            profile: { ...current.profile, username },
+          }
+        : current
+    )
+
+    if (previousUsername) {
+      await clearUsernameChangeCache(queryClient, previousUsername)
     }
   }
 
@@ -318,22 +345,7 @@ const Settings = () => {
                       </dl>
                       <UsernameChangeForm
                         currentUsername={loadedSummary().me.username}
-                        onChanged={async (username) => {
-                          const currentUser = authSession.user
-                          if (currentUser) {
-                            setAuthenticatedUser({ ...currentUser, username })
-                          }
-                          mutateSummary((current) =>
-                            current
-                              ? {
-                                  me: { ...current.me, username },
-                                  profile: { ...current.profile, username },
-                                }
-                              : current
-                          )
-                          queryClient.clear()
-                          await clearClientCache()
-                        }}
+                        onChanged={handleUsernameChanged}
                       />
                       <div class="mt-10 border-t border-danger-border pt-6">
                         <h3 class="font-semibold text-danger">退会</h3>
