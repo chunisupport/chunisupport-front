@@ -62,6 +62,16 @@ export const saveFriendRequestNotificationState = async (
 }
 
 /**
+ * 指定ユーザーのフレンド申請通知状態を削除する。
+ *
+ * @param username - 削除対象の認証ユーザー名。
+ * @returns 削除完了後に解決される Promise。
+ */
+export const clearFriendRequestNotificationState = async (username: string): Promise<void> => {
+  await db.friendRequestNotificationStates.delete(buildFriendRequestNotificationKey(username))
+}
+
+/**
  * フレンド申請通知状態を全削除する。
  *
  * @returns 削除完了後に解決される Promise。

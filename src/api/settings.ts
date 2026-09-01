@@ -189,3 +189,27 @@ export const deleteAccount = async (): Promise<void> => {
     suppressUnauthorizedRedirectForCodes: ['recent_sign_in_required'],
   })
 }
+
+/**
+ * 再認証済みユーザーの公開ユーザー名を変更する。
+ *
+ * @param username - 新しいユーザー名。
+ * @param reauthToken - Firebase再認証で取得したIDトークン。
+ * @returns APIが確定した変更後のユーザー名。
+ */
+export const updateUsername = async (
+  username: string,
+  reauthToken: string
+): Promise<{ username: string }> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/me/username`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Reauth-Token': reauthToken,
+    },
+    body: JSON.stringify({ username }),
+    suppressUnauthorizedRedirectForCodes: ['recent_sign_in_required'],
+  })
+
+  return response.json()
+}

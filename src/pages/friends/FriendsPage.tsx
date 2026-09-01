@@ -36,11 +36,11 @@ import {
 import type { FriendshipUserDTO } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
-  FRIEND_USERNAME_MIN_LENGTH,
-  FRIEND_USERNAME_PATTERN,
-  type FriendUsernameValidationError,
-  validateFriendUsername,
-} from '../../utils/friendUsernameInput'
+  USERNAME_MIN_LENGTH,
+  USERNAME_PATTERN,
+  type UsernameValidationError,
+  validateUsername,
+} from '../../utils/usernameInput'
 import {
   buildFriendsTabOptions,
   buildFriendsTabPath,
@@ -118,7 +118,7 @@ const formatFriendRequestErrorMessage = (error: unknown): string => {
  * @param error - username の検証結果。
  * @returns 入力エラー文言。有効な場合は空文字。
  */
-const formatFriendUsernameValidationError = (error: FriendUsernameValidationError): string => {
+const formatUsernameValidationError = (error: UsernameValidationError): string => {
   if (error === 'required') return FRIENDS_COPY.usernameRequired
   if (error === 'invalid') return FRIENDS_COPY.usernameInvalid
   return ''
@@ -490,9 +490,7 @@ const FriendsPage = () => {
     setUsernameInput(value)
     setRequestErrorMessage('')
     if (usernameValidationErrorMessage()) {
-      setUsernameValidationErrorMessage(
-        formatFriendUsernameValidationError(validateFriendUsername(value))
-      )
+      setUsernameValidationErrorMessage(formatUsernameValidationError(validateUsername(value)))
     }
   }
 
@@ -502,8 +500,8 @@ const FriendsPage = () => {
    * @returns 入力が API 仕様を満たす場合は `true`。
    */
   const validateUsernameInput = (): boolean => {
-    const validationError = validateFriendUsername(usernameInput())
-    setUsernameValidationErrorMessage(formatFriendUsernameValidationError(validationError))
+    const validationError = validateUsername(usernameInput())
+    setUsernameValidationErrorMessage(formatUsernameValidationError(validationError))
     return validationError === null
   }
 
@@ -804,8 +802,8 @@ const FriendsPage = () => {
                 aria-errormessage={FRIEND_REQUEST_USERNAME_ERROR_ID}
                 aria-invalid={usernameErrorMessage() ? 'true' : undefined}
                 required
-                minlength={FRIEND_USERNAME_MIN_LENGTH}
-                pattern={FRIEND_USERNAME_PATTERN.source}
+                minlength={USERNAME_MIN_LENGTH}
+                pattern={USERNAME_PATTERN.source}
                 onBlur={validateUsernameInput}
                 onInvalid={(event) => {
                   event.preventDefault()
