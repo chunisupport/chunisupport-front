@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { assertValidFriendUsername, validateFriendUsername } from './friendUsernameInput'
+import { assertValidUsername, validateUsername } from './usernameInput'
 
 test('空文字は必須エラーになること', () => {
   // Given
   const value = ''
 
   // When
-  const result = validateFriendUsername(value)
+  const result = validateUsername(value)
 
   // Then
   assert.equal(result, 'required')
@@ -19,8 +19,8 @@ test('5〜50文字の小文字英数字は有効になること', () => {
   const maximumLengthValue = 'a'.repeat(50)
 
   // When
-  const minimumLengthResult = validateFriendUsername(minimumLengthValue)
-  const maximumLengthResult = validateFriendUsername(maximumLengthValue)
+  const minimumLengthResult = validateUsername(minimumLengthValue)
+  const maximumLengthResult = validateUsername(maximumLengthValue)
 
   // Then
   assert.equal(minimumLengthResult, null)
@@ -33,8 +33,8 @@ test('5文字未満または50文字超過は形式エラーになること', ()
   const tooLongValue = 'a'.repeat(51)
 
   // When
-  const tooShortResult = validateFriendUsername(tooShortValue)
-  const tooLongResult = validateFriendUsername(tooLongValue)
+  const tooShortResult = validateUsername(tooShortValue)
+  const tooLongResult = validateUsername(tooLongValue)
 
   // Then
   assert.equal(tooShortResult, 'invalid')
@@ -46,7 +46,7 @@ test('大文字・記号・空白・全角文字は形式エラーになり入�
   const invalidValues = ['ChuniUser', 'chuni_user', 'chuni user', 'ｃｈｕｎｉ']
 
   // When
-  const results = invalidValues.map((value) => validateFriendUsername(value))
+  const results = invalidValues.map((value) => validateUsername(value))
 
   // Then
   assert.deepEqual(results, ['invalid', 'invalid', 'invalid', 'invalid'])
@@ -58,5 +58,16 @@ test('不正な username は API 呼び出し前の検証で例外になるこ�
   const value = 'Invalid User'
 
   // When & Then
-  assert.throws(() => assertValidFriendUsername(value), TypeError)
+  assert.throws(() => assertValidUsername(value), TypeError)
+})
+
+test('現在と同じユーザー名も形式上は有効になること', () => {
+  // Given: 現在のユーザー名と同じ入力値。
+  const value = 'currentuser'
+
+  // When: 共通のユーザー名形式を検証する。
+  const result = validateUsername(value)
+
+  // Then: 変更有無の判定とは分離し、形式上は有効とする。
+  assert.equal(result, null)
 })

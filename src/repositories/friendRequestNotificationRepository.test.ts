@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
 import { CLIENT_CACHE_SCHEMA_VERSION, db } from '../lib/db/cacheDB.ts'
 import {
+  clearFriendRequestNotificationState,
   clearFriendRequestNotificationStates,
   readFriendRequestNotificationState,
   saveFriendRequestNotificationState,
@@ -45,4 +46,17 @@ test('フレンド申請通知状態は旧スキーマの場合は読み込ま�
 
   // Then: 旧スキーマの状態は利用されない。
   assert.equal(state, null)
+})
+
+test('指定ユーザーのフレンド申請通知状態だけを削除できること', async () => {
+  // Given: alice と bob の通知状態を保存する。
+  await saveFriendRequestNotificationState('alice', true, '2026-07-09T10:00:00.000Z')
+  await saveFriendRequestNotificationState('bob', false, '2026-07-09T10:05:00.000Z')
+
+  // When: alice の通知状態だけを削除する。
+  await clearFriendRequestNotificationState('alice')
+
+  // Then: alice は削除され、bob は保持される。
+  assert.equal(await readFriendRequestNotificationState('alice'), null)
+  assert.notEqual(await readFriendRequestNotificationState('bob'), null)
 })

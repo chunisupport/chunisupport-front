@@ -1,6 +1,6 @@
 import { API_BASE_URL } from '../config'
 import type { FriendRequestCreateRequest, FriendshipListResponse } from '../types/api'
-import { assertValidFriendUsername } from '../utils/friendUsernameInput'
+import { assertValidUsername } from '../utils/usernameInput'
 import { fetchWithAuth } from './fetchWithAuth'
 
 const FRIENDS_API_PATH = `${API_BASE_URL}/internal/friends`
@@ -65,7 +65,7 @@ export const fetchSentFriendRequests = async (
  * @throws {TypeError} username がフレンド操作用の形式を満たさない場合。
  */
 export const createFriendRequest = async (request: FriendRequestCreateRequest): Promise<void> => {
-  assertValidFriendUsername(request.username)
+  assertValidUsername(request.username)
 
   await fetchWithAuth(`${FRIENDS_API_PATH}/requests`, {
     method: 'POST',
@@ -83,7 +83,7 @@ export const createFriendRequest = async (request: FriendRequestCreateRequest): 
  * @throws {TypeError} username がフレンド操作用の形式を満たさない場合。
  */
 export const acceptFriendRequest = async (username: string): Promise<void> => {
-  assertValidFriendUsername(username)
+  assertValidUsername(username)
 
   await fetchWithAuth(`${FRIENDS_API_PATH}/requests/${encodeURIComponent(username)}/accept`, {
     method: 'POST',
@@ -99,7 +99,7 @@ export const acceptFriendRequest = async (username: string): Promise<void> => {
  * @throws {TypeError} username がフレンド操作用の形式を満たさない場合。
  */
 export const rejectFriendRequest = async (username: string): Promise<void> => {
-  assertValidFriendUsername(username)
+  assertValidUsername(username)
 
   await fetchWithAuth(`${FRIENDS_API_PATH}/requests/${encodeURIComponent(username)}/reject`, {
     method: 'POST',
@@ -115,7 +115,7 @@ export const rejectFriendRequest = async (username: string): Promise<void> => {
  * @throws {TypeError} username がフレンド操作用の形式を満たさない場合。
  */
 export const cancelFriendRequest = async (username: string): Promise<void> => {
-  assertValidFriendUsername(username)
+  assertValidUsername(username)
 
   await fetchWithAuth(`${FRIENDS_API_PATH}/requests/${encodeURIComponent(username)}`, {
     method: 'DELETE',
@@ -131,7 +131,7 @@ export const cancelFriendRequest = async (username: string): Promise<void> => {
  * @throws {TypeError} username がフレンド操作用の形式を満たさない場合。
  */
 export const deleteFriend = async (username: string): Promise<void> => {
-  assertValidFriendUsername(username)
+  assertValidUsername(username)
 
   await fetchWithAuth(`${FRIENDS_API_PATH}/${encodeURIComponent(username)}`, {
     method: 'DELETE',

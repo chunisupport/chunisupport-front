@@ -258,3 +258,41 @@ test('データ移行の検証はnullの配列フィールドを空配列へ正�
   assert.deepEqual(validation.blockers, [])
   assert.deepEqual(validation.unresolved_references, [])
 })
+
+test('ユーザー名変更は再認証トークンと新しいユーザー名をPUTする', async () => {
+  // Given: ユーザー名変更レスポンスと再認証トークン。
+  const responseBody = { username: 'newname' }
+  let request:
+    | {
+        url: string
+        method: string | undefined
+        reauthToken: string | null
+        contentType: string | null
+        body: BodyInit | null | undefined
+      }
+    | undefined
+  globalThis.fetch = async (input, init) => {
+    request = {
+      url: String(input),
+      method: init?.method,
+      reauthToken: new Headers(init?.headers).get('X-Reauth-Token'),
+      contentType: new Headers(init?.headers).get('Content-Type'),
+      body: init?.body,
+    }
+    return Response.json(responseBody)
+  }
+
+  // When: 取得済みの再認証トークンでユーザー名を変更する。
+  const { updateUsername } = await loadSettingsApi()
+  const result = await updateUsername('newname', 'reauth-token')
+
+  // Then: ユーザー名変更エンドポイントへ必要な情報を送信する。
+  assert.deepEqual(result, responseBody)
+  assert.deepEqual(request, {
+    url: 'http://localhost:3000/internal/me/username',
+    method: 'PUT',
+    reauthToken: 'reauth-token',
+    contentType: 'application/json',
+    body: JSON.stringify({ username: 'newname' }),
+  })
+})
