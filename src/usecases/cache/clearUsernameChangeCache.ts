@@ -4,12 +4,12 @@ import { clearFriendRequestNotificationState } from '../../repositories/friendRe
 import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
 
 /**
- * ユーザーID変更後に認証ユーザー用APIキャッシュと旧IDのフレンド・通知キャッシュを破棄する。
+ * ユーザーネーム変更後に認証ユーザー用APIキャッシュと旧ユーザーネームのフレンド・通知キャッシュを破棄する。
  *
- * キャッシュ削除はID変更の補助処理のため、失敗しても変更成功を取り消さない。
+ * キャッシュ削除はユーザーネーム変更の補助処理のため、失敗しても変更成功を取り消さない。
  *
  * @param queryClient - フレンド関連queryを保持するQueryClient。
- * @param previousUsername - 変更前のユーザー名。
+ * @param previousUsername - 変更前のユーザーネーム。
  * @returns すべてのキャッシュ削除試行が完了した後に解決されるPromise。
  */
 export const clearUsernameChangeCache = async (

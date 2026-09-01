@@ -191,11 +191,11 @@ export const deleteAccount = async (): Promise<void> => {
 }
 
 /**
- * 再認証済みユーザーの公開ユーザー名を変更する。
+ * 再認証済みユーザーの公開ユーザーネームを変更する。
  *
- * @param username - 新しいユーザー名。
+ * @param username - 新しいユーザーネーム。
  * @param reauthToken - Firebase再認証で取得したIDトークン。
- * @returns APIが確定した変更後のユーザー名。
+ * @returns APIが確定した変更後のユーザーネーム。
  */
 export const updateUsername = async (
   username: string,
