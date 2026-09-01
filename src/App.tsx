@@ -52,6 +52,7 @@ import {
   type ToolLinkIcon,
 } from './constants/tools'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
+import { useRobotsMeta } from './hooks/useRobotsMeta'
 import NotFoundPage from './pages/NotFoundPage'
 import { getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
@@ -476,12 +477,16 @@ const GuardedRegisterScoreTempPage = () => (
  * @param props - 現在のrouteが解決した画面。
  * @returns 可用性制御を適用したアプリケーションルート。
  */
-const ApplicationRoot = (props: { children?: JSX.Element }) => (
-  <ApplicationAvailabilityGate>
-    {props.children}
-    <AppToastRegion />
-  </ApplicationAvailabilityGate>
-)
+const ApplicationRoot = (props: { children?: JSX.Element }) => {
+  useRobotsMeta()
+
+  return (
+    <ApplicationAvailabilityGate>
+      {props.children}
+      <AppToastRegion />
+    </ApplicationAvailabilityGate>
+  )
+}
 
 /**
  * アプリ全体の route と共通 shell を構成する。

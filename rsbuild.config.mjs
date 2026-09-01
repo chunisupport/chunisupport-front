@@ -56,7 +56,7 @@ export default defineConfig(({ env, envMode }) => {
   const envResult = loadEnv({ mode: envMode, prefixes: ['PUBLIC_'] })
   const missingEnvKeys = REQUIRED_PUBLIC_ENV_KEYS.filter((key) => !envResult.rawPublicVars[key])
 
-  /** 本番環境で明示的に許可された場合に限り検索エンジンのインデックス登録を有効にする。 */
+  /** 本番環境で明示的に許可された場合に限り検索エンジンのインデックス登録を有効にする。ユーザーページの noindex はクライアント側で別途付与する。 */
   const enableIndexing = envResult.rawPublicVars.PUBLIC_ENABLE_INDEXING === 'true'
 
   if (missingEnvKeys.length > 0) {

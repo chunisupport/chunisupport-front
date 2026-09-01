@@ -1,6 +1,8 @@
 export const LOGIN_PATH = '/login'
 /** スタッフ向けメンテナンス時ログイン画面のパス */
 export const MAINTENANCE_LOGIN_PATH = '/maintenance/login'
+/** ユーザーページのベースパス */
+export const USERS_PATH = '/users'
 export const REGISTER_PATH = '/register'
 export const REGISTER_SCORE_PATH = '/register-score'
 export const REGISTER_SCORE_TEMP_PATH = '/register-score-temp'
