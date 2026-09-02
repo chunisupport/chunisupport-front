@@ -22,7 +22,7 @@ export type CourseRecordColumnDefinition = ColumnDefinitionBase<
 /**
  * 既存レコード表の列幅を使ってコースレコード列を定義する。
  *
- * @returns タイトル、クラス、スコア、AJ、ハード、更新日の列定義。
+ * @returns タイトル、クラス、スコア、AJ、クリア、更新日の列定義。
  */
 const createCourseRecordColumnDefinitions = (): CourseRecordColumnDefinition[] => {
   const title = getRecordColumnBaseDefinition('title')
@@ -43,7 +43,7 @@ const createCourseRecordColumnDefinitions = (): CourseRecordColumnDefinition[] =
     },
     { ...score, id: 'score', sortKey: 'score', defaultVisible: true },
     { ...lamp, id: 'lamp', sortKey: 'lamp', defaultVisible: true },
-    { ...hardLamp, id: 'hardLamp', sortKey: 'hardLamp', defaultVisible: true },
+    { ...hardLamp, id: 'hardLamp', label: 'クリア', sortKey: 'hardLamp', defaultVisible: true },
     { ...updatedAt, id: 'updatedAt', sortKey: 'updatedAt', defaultVisible: true },
   ]
 }
