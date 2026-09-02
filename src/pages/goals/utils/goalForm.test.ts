@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
-import { buildGoalPayload, formatGoalAttributesLabel } from './goalForm'
+import { buildGoalPayload, formatGoalAttributesLabel, formatGoalTypeLabel } from './goalForm'
 
 const MASTER_DATA: MasterDataDTO = {
   difficulties: [
@@ -39,6 +39,11 @@ test('保存用ペイロードは実数値と割合の反転フラグを独立�
   assert.equal(result.invert_value, true)
   assert.equal(result.invert_percentage, false)
   assert.equal('invert' in result, false)
+})
+
+test('FULL CHAIN目標種別を日本語ラベルへ変換する', () => {
+  // Given / When / Then
+  assert.equal(formatGoalTypeLabel('fullchain_count'), 'FULL CHAIN達成数')
 })
 
 test('空配列の条件は対象譜面なしとして表示する', () => {

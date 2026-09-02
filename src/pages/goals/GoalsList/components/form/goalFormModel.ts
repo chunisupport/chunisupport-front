@@ -20,8 +20,10 @@ import {
 import { buildGoalTargetParam, type GoalTargetMode } from '../../../utils/goalCountTarget'
 import {
   type ComboLampGoalValue,
+  type FullChainGoalValue,
   type HardLampGoalValue,
   isComboLampGoalValue,
+  isFullChainGoalValue,
   isHardLampGoalValue,
 } from '../../../utils/goalLamp'
 
@@ -39,6 +41,7 @@ export interface GoalFormState {
   totalMode: GoalTargetMode
   hardLamp: HardLampGoalValue
   comboLamp: ComboLampGoalValue
+  fullChain: FullChainGoalValue
   invertValue: boolean
   invertPercentage: boolean
   chartTargetMode: GoalChartTargetMode
@@ -77,6 +80,7 @@ export interface GoalFormAchievementParamsInput {
   totalMode: GoalTargetMode
   hardLamp: HardLampGoalValue
   comboLamp: ComboLampGoalValue
+  fullChain: FullChainGoalValue
 }
 
 export const DEFAULT_GOAL_ACHIEVEMENT_TYPE = 'rank_count' satisfies GoalAchievementType
@@ -116,6 +120,7 @@ export const isCountAchievementType = (type: GoalAchievementType): boolean =>
   type === 'rank_count' ||
   type === 'hardlamp_count' ||
   type === 'combolamp_count' ||
+  type === 'fullchain_count' ||
   type === 'rainbow_count'
 
 /**
@@ -285,6 +290,7 @@ export const createDefaultGoalFormState = (
   totalMode: 'number',
   hardLamp: 'HRD',
   comboLamp: 'FC',
+  fullChain: 'GOLD',
   invertValue: false,
   invertPercentage: false,
   chartTargetMode: 'normal',
@@ -321,6 +327,8 @@ export const createGoalFormInitialState = (
     typeof lampValue === 'string' && isHardLampGoalValue(lampValue) ? lampValue : undefined
   const comboLampValue =
     typeof lampValue === 'string' && isComboLampGoalValue(lampValue) ? lampValue : undefined
+  const fullChainValue =
+    typeof lampValue === 'string' && isFullChainGoalValue(lampValue) ? lampValue : undefined
 
   return {
     ...defaultState,
@@ -341,6 +349,7 @@ export const createGoalFormInitialState = (
       : 'number',
     hardLamp: hardLampValue ?? defaultState.hardLamp,
     comboLamp: comboLampValue ?? defaultState.comboLamp,
+    fullChain: fullChainValue ?? defaultState.fullChain,
     invertValue: goal.invert_value,
     invertPercentage: goal.invert_percentage,
     chartTargetMode: goal.attributes.chart_target === 'OP_TARGET' ? 'op_target' : 'normal',
@@ -417,9 +426,14 @@ export const buildGoalFormAchievementParams = (
               lamp: input.comboLamp,
               ...targetCountParam,
             }
-          : input.achievementType === 'rainbow_count'
-            ? targetCountParam
-            : canUseDynamicTotalTarget(input.achievementType)
-              ? targetTotalParam
-              : { total: Number.isFinite(Number(input.total)) ? Number(input.total) : 0 }
+          : input.achievementType === 'fullchain_count'
+            ? {
+                lamp: input.fullChain,
+                ...targetCountParam,
+              }
+            : input.achievementType === 'rainbow_count'
+              ? targetCountParam
+              : canUseDynamicTotalTarget(input.achievementType)
+                ? targetTotalParam
+                : { total: Number.isFinite(Number(input.total)) ? Number(input.total) : 0 }
 }

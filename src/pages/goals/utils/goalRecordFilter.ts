@@ -7,8 +7,10 @@ import { MAX_SCORE } from '../../../utils/scoreRank'
 import { normalizeGoalAttributeIds } from './goalAttributes'
 import {
   COMBO_LAMP_UNACHIEVED_FILTERS,
+  FULL_CHAIN_UNACHIEVED_FILTERS,
   HARD_LAMP_UNACHIEVED_FILTERS,
   isComboLampGoalValue,
+  isFullChainGoalValue,
   isHardLampGoalValue,
 } from './goalLamp'
 import { buildGoalVersionNameMap } from './goalVersion'
@@ -19,6 +21,7 @@ const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
   'avg_score',
   'hardlamp_count',
   'combolamp_count',
+  'fullchain_count',
   'rainbow_count',
 ])
 
@@ -66,6 +69,17 @@ const isNavigableComboLampGoal = (goal: GoalDTO): boolean => {
 }
 
 /**
+ * 通常レコード遷移に使えるFULL CHAIN目標か判定する。
+ *
+ * @param goal - 判定対象の目標。
+ * @returns ランプ指定が現行定義に含まれる場合は true。
+ */
+const isNavigableFullChainGoal = (goal: GoalDTO): boolean => {
+  const lamp = getGoalLampParam(goal)
+  return typeof lamp === 'string' && isFullChainGoalValue(lamp)
+}
+
+/**
  * 目標種別ごとの未達成条件を通常レコードフィルターへ反映する。
  *
  * @param filter - 属性条件を反映済みのフィルター。
@@ -96,6 +110,13 @@ const applyUnachievedCondition = (filter: FilterState, goal: GoalDTO): FilterSta
         return filter
       }
       return { ...filter, combo_lamp: [...COMBO_LAMP_UNACHIEVED_FILTERS[lamp]] }
+    }
+    case 'fullchain_count': {
+      const lamp = getGoalLampParam(goal)
+      if (typeof lamp !== 'string' || !isFullChainGoalValue(lamp)) {
+        return filter
+      }
+      return { ...filter, chain_lamp: [...FULL_CHAIN_UNACHIEVED_FILTERS[lamp]] }
     }
     case 'rainbow_count':
       return { ...filter, combo_lamp: ['FULL COMBO', null] }
@@ -181,4 +202,5 @@ export const isGoalRecordNavigationEnabled = (goal: GoalDTO): boolean =>
   !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.ver)) &&
   NAVIGABLE_ACHIEVEMENT_TYPES.has(goal.achievement_type) &&
   (goal.achievement_type !== 'hardlamp_count' || isNavigableHardLampGoal(goal)) &&
-  (goal.achievement_type !== 'combolamp_count' || isNavigableComboLampGoal(goal))
+  (goal.achievement_type !== 'combolamp_count' || isNavigableComboLampGoal(goal)) &&
+  (goal.achievement_type !== 'fullchain_count' || isNavigableFullChainGoal(goal))

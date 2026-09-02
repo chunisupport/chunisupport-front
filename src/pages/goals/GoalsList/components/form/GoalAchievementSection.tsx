@@ -8,6 +8,8 @@ import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import {
   COMBO_LAMP_OPTIONS,
   type ComboLampGoalValue,
+  FULL_CHAIN_OPTIONS,
+  type FullChainGoalValue,
   HARD_LAMP_OPTIONS,
   type HardLampGoalValue,
 } from '../../../utils/goalLamp'
@@ -38,6 +40,7 @@ interface GoalAchievementSectionProps {
   totalMode: GoalTargetMode
   hardLamp: HardLampGoalValue
   comboLamp: ComboLampGoalValue
+  fullChain: FullChainGoalValue
   invertValue: boolean
   invertPercentage: boolean
   countMax: number
@@ -55,6 +58,7 @@ interface GoalAchievementSectionProps {
   onTotalModeChange: (mode: GoalTargetMode) => void
   onHardLampChange: (lamp: HardLampGoalValue) => void
   onComboLampChange: (lamp: ComboLampGoalValue) => void
+  onFullChainChange: (lamp: FullChainGoalValue) => void
   onInvertValueChange: (invertValue: boolean) => void
   onInvertPercentageChange: (invertPercentage: boolean) => void
   canUseDynamicTotalTarget: (type: GoalAchievementType) => boolean
@@ -83,6 +87,10 @@ const HARD_LAMP_SELECT_OPTIONS: GoalSelectOption<HardLampGoalValue>[] = HARD_LAM
 )
 
 const COMBO_LAMP_SELECT_OPTIONS: GoalSelectOption<ComboLampGoalValue>[] = COMBO_LAMP_OPTIONS.map(
+  (lamp) => ({ value: lamp.value, label: lamp.label })
+)
+
+const FULL_CHAIN_SELECT_OPTIONS: GoalSelectOption<FullChainGoalValue>[] = FULL_CHAIN_OPTIONS.map(
   (lamp) => ({ value: lamp.value, label: lamp.label })
 )
 
@@ -166,12 +174,22 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
         />
       </Show>
 
+      <Show when={props.achievementType === 'fullchain_count'}>
+        <GoalSelectField
+          label="FULL CHAIN"
+          value={props.fullChain}
+          options={FULL_CHAIN_SELECT_OPTIONS}
+          onChange={props.onFullChainChange}
+        />
+      </Show>
+
       <Show
         when={
           props.achievementType === 'score_count' ||
           props.achievementType === 'rank_count' ||
           props.achievementType === 'hardlamp_count' ||
           props.achievementType === 'combolamp_count' ||
+          props.achievementType === 'fullchain_count' ||
           props.achievementType === 'rainbow_count'
         }
       >
