@@ -16,7 +16,9 @@ import {
   COMBO_LAMP_ORDER,
   HARD_LAMP_ORDER,
   isComboLampGoalValue,
+  isFullChainGoalValue,
   isHardLampGoalValue,
+  resolveFullChainRecordName,
   resolveHardLampRecordName,
 } from './goalLamp'
 import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
@@ -333,6 +335,18 @@ export const calculateGoalProgress = (
         if (!lamp) return false
         return (COMBO_LAMP_ORDER[lamp] ?? 0) >= required
       }).length
+      break
+    }
+    case 'fullchain_count': {
+      target = resolveCountTarget(goal.achievement_params, filteredRecords.length)
+      const lamp = getGoalLampParam(goal.achievement_params)
+      if (typeof lamp !== 'string' || !isFullChainGoalValue(lamp)) {
+        current = 0
+        target = Math.max(target, 1)
+        break
+      }
+      const fullChainName = resolveFullChainRecordName(lamp)
+      current = filteredRecords.filter((record) => record.full_chain === fullChainName).length
       break
     }
     case 'total_score': {

@@ -180,6 +180,37 @@ test('コンボランプ目標では要求ランプ未満の譜面だけに一�
   assert.equal(isRecordMatched(createRecord({ combo_lamp: 'ALL JUSTICE' }), filter), false)
 })
 
+test('FULL CHAIN目標では指定種別以外の譜面だけに一致する', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'fullchain_count',
+    achievement_params: { lamp: 'GOLD', count: 1 },
+  })
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // When & Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), true)
+  assert.equal(isRecordMatched(createRecord({ full_chain: 'FULL CHAIN GOLD' }), filter), false)
+  assert.equal(isRecordMatched(createRecord({ full_chain: 'FULL CHAIN PLATINUM' }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ full_chain: null }), filter), true)
+})
+
+test('不正なFULL CHAIN値ではレコード遷移を無効にする', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'fullchain_count',
+    achievement_params: { lamp: 'SILVER', count: 1 } as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+  const defaultFilter = buildDefaultFilter(MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  assert.deepEqual(filter.chain_lamp, defaultFilter.chain_lamp)
+})
+
 test('不正なハードランプ値ではレコード遷移を無効にし、フィルター変換で例外を投げない', () => {
   // Given
   const goal = createGoal({
