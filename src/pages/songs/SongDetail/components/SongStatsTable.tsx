@@ -29,6 +29,7 @@ import {
 } from '../../../../utils/scoreDifference'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { completeSongStatsRatingBands } from '../../../../utils/songStats'
+import { OWN_SCORE_CARD_TITLE } from '../scoreHistory.constants'
 import {
   CLEAR_CHART_DATASET_DEFINITIONS,
   COMBO_CHART_DATASET_DEFINITIONS,
@@ -77,11 +78,13 @@ type SongStatsAverageScoreChartProps = {
   labels: string[]
   averageScores: (number | null)[]
   medianScores: (number | null)[]
+  ownScore?: number
 }
 
 type SongStatsChartsProps = {
   stats: SongStatsBandDTO[]
   ratingBands?: RatingBandDTO[]
+  ownScore?: number
 }
 
 export type SongStatsTableView = 'averageScore' | 'scoreRank' | 'combo' | 'clear'
@@ -113,6 +116,15 @@ const MEDIAN_SCORE_CHART_BORDER_DASH = [6, 4]
 const AVERAGE_SCORE_CHART_POINT_RADIUS = 2
 /** 平均・中央値グラフのデータ点をホバーした際の半径 */
 const AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS = 4
+/** 自分のスコア参照線の凡例・ツールチップ表示名 */
+const OWN_SCORE_CHART_LABEL = OWN_SCORE_CARD_TITLE
+/** 自分のスコア参照線の色。アクセント色に依存せず平均・中央値と区別する */
+const OWN_SCORE_CHART_COLOR = '--cs-color-text'
+/** 平均・中央値グラフのアクセシブル名 */
+const AVERAGE_SCORE_CHART_ARIA_LABEL = 'レーティング帯別の平均スコアと中央値スコアの折れ線グラフ'
+/** 自分のスコア参照線を含む平均・中央値グラフのアクセシブル名 */
+const AVERAGE_SCORE_CHART_WITH_OWN_SCORE_ARIA_LABEL =
+  'レーティング帯別の平均スコア、中央値スコア、自分のスコアの折れ線グラフ'
 /** 統計テーブルの表示カテゴリ選択肢 */
 export const TABLE_VIEW_OPTIONS: SongStatsTableViewOption[] = [
   { label: '平均スコア', value: 'averageScore' },
@@ -498,6 +510,9 @@ const createAverageScoreChartOptions = (): ChartOptions<'line'> => {
             const score = context.parsed.y
             const label = context.dataset.label ?? AVERAGE_SCORE_CHART_LABEL
             if (score === null) return label
+            if (label === OWN_SCORE_CHART_LABEL) {
+              return `${label}: ${score.toLocaleString()}`
+            }
 
             return `${label}: ${score.toLocaleString(undefined, {
               minimumFractionDigits: 4,
@@ -535,7 +550,7 @@ const createAverageScoreChartOptions = (): ChartOptions<'line'> => {
 
 /**
  * rating bandごとの平均スコアと中央値スコアを折れ線グラフで表示する。
- * @param props 横軸ラベル、平均スコア、中央値スコア。
+ * @param props 横軸ラベル、平均スコア、中央値スコア、自分のスコア。
  * @returns レーティング帯別の平均・中央値スコアグラフ。
  */
 const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
@@ -554,41 +569,62 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
     accentPreference()
 
     const color = resolveChartColor(AVERAGE_SCORE_CHART_COLOR, CHART_COLOR_FALLBACK)
+    const ownScore = props.ownScore
+    const ownScoreColor = resolveChartColor(OWN_SCORE_CHART_COLOR, CHART_COLOR_FALLBACK)
+    const datasets: ChartData<'line', (number | null)[], string>['datasets'] = [
+      {
+        label: AVERAGE_SCORE_CHART_LABEL,
+        data: props.averageScores,
+        borderColor: color,
+        backgroundColor: color,
+        pointBackgroundColor: color,
+        pointBorderColor: color,
+        pointHoverBackgroundColor: color,
+        pointHoverBorderColor: color,
+        pointRadius: AVERAGE_SCORE_CHART_POINT_RADIUS,
+        pointHoverRadius: AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS,
+        borderWidth: 2,
+        tension: 0.2,
+        spanGaps: true,
+      },
+      {
+        label: MEDIAN_SCORE_CHART_LABEL,
+        data: props.medianScores,
+        borderColor: color,
+        backgroundColor: color,
+        pointBackgroundColor: color,
+        pointBorderColor: color,
+        pointHoverBackgroundColor: color,
+        pointHoverBorderColor: color,
+        pointRadius: AVERAGE_SCORE_CHART_POINT_RADIUS,
+        pointHoverRadius: AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS,
+        borderWidth: 2,
+        borderDash: MEDIAN_SCORE_CHART_BORDER_DASH,
+        tension: 0.2,
+        spanGaps: true,
+      },
+    ]
+
+    if (ownScore !== undefined) {
+      datasets.push({
+        label: OWN_SCORE_CHART_LABEL,
+        data: props.labels.map(() => ownScore),
+        borderColor: ownScoreColor,
+        backgroundColor: ownScoreColor,
+        pointBackgroundColor: ownScoreColor,
+        pointBorderColor: ownScoreColor,
+        pointHoverBackgroundColor: ownScoreColor,
+        pointHoverBorderColor: ownScoreColor,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        borderWidth: 2,
+        tension: 0,
+      })
+    }
+
     const chartData: ChartData<'line', (number | null)[], string> = {
       labels: props.labels,
-      datasets: [
-        {
-          label: AVERAGE_SCORE_CHART_LABEL,
-          data: props.averageScores,
-          borderColor: color,
-          backgroundColor: color,
-          pointBackgroundColor: color,
-          pointBorderColor: color,
-          pointHoverBackgroundColor: color,
-          pointHoverBorderColor: color,
-          pointRadius: AVERAGE_SCORE_CHART_POINT_RADIUS,
-          pointHoverRadius: AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS,
-          borderWidth: 2,
-          tension: 0.2,
-          spanGaps: true,
-        },
-        {
-          label: MEDIAN_SCORE_CHART_LABEL,
-          data: props.medianScores,
-          borderColor: color,
-          backgroundColor: color,
-          pointBackgroundColor: color,
-          pointBorderColor: color,
-          pointHoverBackgroundColor: color,
-          pointHoverBorderColor: color,
-          pointRadius: AVERAGE_SCORE_CHART_POINT_RADIUS,
-          pointHoverRadius: AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS,
-          borderWidth: 2,
-          borderDash: MEDIAN_SCORE_CHART_BORDER_DASH,
-          tension: 0.2,
-          spanGaps: true,
-        },
-      ],
+      datasets,
     }
 
     if (!chart) {
@@ -615,7 +651,11 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
       <div class={CHART_HEIGHT_CLASS}>
         <canvas
           ref={canvasRef}
-          aria-label="レーティング帯別の平均スコアと中央値スコアの折れ線グラフ"
+          aria-label={
+            props.ownScore === undefined
+              ? AVERAGE_SCORE_CHART_ARIA_LABEL
+              : AVERAGE_SCORE_CHART_WITH_OWN_SCORE_ARIA_LABEL
+          }
           role="img"
         />
       </div>
@@ -625,7 +665,7 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
 
 /**
  * 難易度別統計テーブルの下に表示する集計グラフを生成する。
- * @param props 表示対象の統計行。
+ * @param props 表示対象の統計行と、平均・中央値グラフへ重ねる自分のスコア。
  * @returns RANK、FC/AJ/AJC、CLEAR系ランプ、平均スコアのグラフ。
  */
 const SongStatsCharts = (props: SongStatsChartsProps) => {
@@ -686,6 +726,7 @@ const SongStatsCharts = (props: SongStatsChartsProps) => {
         labels={labels()}
         averageScores={averageScores()}
         medianScores={medianScores()}
+        ownScore={props.ownScore}
       />
     </div>
   )
@@ -744,7 +785,11 @@ const SongStatsTable = (props: Props) => {
           </tbody>
         </table>
       </div>
-      <SongStatsCharts stats={props.stats} ratingBands={props.ratingBands} />
+      <SongStatsCharts
+        stats={props.stats}
+        ratingBands={props.ratingBands}
+        ownScore={props.ownScore}
+      />
     </>
   )
 }

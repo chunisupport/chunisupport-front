@@ -62,7 +62,7 @@ const resolveChartFontFamily = (): string =>
  * 公式指標履歴の折れ線グラフ設定を生成する。
  *
  * @param definition - 表示対象指標の定義。
- * @returns テーマ色、指標ごとの小数桁と単位を反映したChart.js設定。
+ * @returns テーマ色、指標ごとの小数桁・単位・縦軸上限を反映したChart.js設定。
  */
 const createMetricChartOptions = (
   definition: PlayerMetricHistoryChartDefinition
@@ -125,6 +125,7 @@ const createMetricChartOptions = (
         },
       },
       y: {
+        ...(definition.yMax === undefined ? {} : { max: definition.yMax }),
         ticks: {
           color: textColor,
           font: { family: fontFamily },
