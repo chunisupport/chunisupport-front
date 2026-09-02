@@ -45,6 +45,7 @@ export const PLAYER_METRIC_HISTORY_CHART_DEFINITIONS = [
     colorVariable: '--cs-color-action-primary',
     decimalPlaces: 2,
     suffix: '',
+    yMax: PLAYER_METRIC_HISTORY_RATING_AXIS_MAX,
   },
   {
     metric: 'overpower',
@@ -61,6 +62,7 @@ export const PLAYER_METRIC_HISTORY_CHART_DEFINITIONS = [
     colorVariable: '--cs-color-success',
     decimalPlaces: 2,
     suffix: '%',
+    yMax: PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_MAX,
   },
 ] as const satisfies readonly PlayerMetricHistoryChartDefinition[]
 
