@@ -2,8 +2,8 @@ import { useParams } from '@solidjs/router'
 import { createMemo, createResource, For, Show } from 'solid-js'
 import { fetchAdminChartRanking } from '../../api/adminChartRankings'
 import { LoadError, Loading } from '../../components'
+import { DefaultRecordLampBadges } from '../../components/common/record/RecordDisplayParts'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import type { AdminChartRankingEntryDTO } from '../../types/api'
 import { formatInteger } from '../../utils/numberFormat'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { getRankingPositionClass } from '../../utils/rankingPosition'
@@ -27,19 +27,6 @@ const formatOptionalNumber = (
   value: number | undefined,
   formatter: (target: number) => string
 ): string => (typeof value === 'number' ? formatter(value) : ADMIN_CHART_RANKING_COPY.emptyValue)
-
-/**
- * ランキング行のランプを簡易表示する。
- *
- * @param entry - ランキングの1件。
- * @returns 設定済みランプを結合した文字列。未設定時はハイフン。
- */
-const formatLamps = (entry: AdminChartRankingEntryDTO): string => {
-  const lamps = [entry.clear_lamp, entry.combo_lamp, entry.full_chain].filter(Boolean)
-  return lamps.length > 0
-    ? lamps.join(ADMIN_CHART_RANKING_COPY.lampSeparator)
-    : ADMIN_CHART_RANKING_COPY.emptyValue
-}
 
 /**
  * 管理者向け譜面ランキングを表示する。
@@ -135,7 +122,7 @@ const AdminChartRankingPage = () => {
                               {ADMIN_CHART_RANKING_COPY.overpowerPercentColumn}
                             </th>
                           </Show>
-                          <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
+                          <th scope="col" class="px-3 py-2 text-center whitespace-nowrap">
                             {ADMIN_CHART_RANKING_COPY.lampColumn}
                           </th>
                           <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
@@ -183,7 +170,9 @@ const AdminChartRankingPage = () => {
                                   )}
                                 </td>
                               </Show>
-                              <td class="px-3 py-2 whitespace-nowrap">{formatLamps(entry)}</td>
+                              <td class="px-3 py-2 whitespace-nowrap">
+                                <DefaultRecordLampBadges record={entry} class="justify-center" />
+                              </td>
                               <td class="px-3 py-2 whitespace-nowrap">
                                 {formatAdminUserDateTime(entry.updated_at)}
                               </td>

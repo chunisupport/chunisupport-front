@@ -2815,7 +2815,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 The following npm package may be included in this product:
 
- - protobufjs@7.6.4
+ - protobufjs@7.6.6
 
 This package contains the following license:
 
