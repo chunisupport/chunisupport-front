@@ -206,6 +206,16 @@ const formatUpdatedAt = (value: string | null | undefined): string => {
 const editableDifficulties = PLAYER_DATA_DIFFICULTIES
 type EditableDifficultyName = PlayerDataDifficulty
 
+/**
+ * BASIC / ADVANCED は NOTES DESIGNER が存在しないため、入力対象外とする。
+ *
+ * @param difficultyName 判定対象の難易度名
+ * @returns NOTES DESIGNER を入力できる場合は true
+ */
+const hasNotesDesigner = (difficultyName: EditableDifficultyName): boolean => {
+  return difficultyName !== 'BASIC' && difficultyName !== 'ADVANCED'
+}
+
 const toNullableTrimmedString = (value: string | null): string | null => {
   return value?.trim() ? value.trim() : null
 }
@@ -1196,7 +1206,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                   </TextField>
                                 </td>
                                 <td class="px-3 py-2">
-                                  <TextField>
+                                  <TextField disabled={!hasNotesDesigner(chart().difficulty_name)}>
                                     <TextField.Input
                                       value={chart().notes_designer ?? ''}
                                       onInput={(event) =>
@@ -1208,7 +1218,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                             : event.currentTarget.value
                                         )
                                       }
-                                      class="w-48 rounded border border-border-strong px-2 py-1 font-sans"
+                                      class="w-48 rounded border border-border-strong px-2 py-1 font-sans disabled:bg-surface-hover disabled:text-text-muted"
                                     />
                                   </TextField>
                                 </td>
@@ -1611,7 +1621,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           </TextField>
                         </td>
                         <td class="px-3 py-2">
-                          <TextField disabled={!chart().enabled}>
+                          <TextField
+                            disabled={
+                              !chart().enabled || !hasNotesDesigner(chart().difficulty_name)
+                            }
+                          >
                             <TextField.Input
                               value={chart().notes_designer ?? ''}
                               onInput={(event) =>
@@ -1623,7 +1637,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                                     : event.currentTarget.value
                                 )
                               }
-                              class="w-56 rounded border border-border-strong px-2 py-1 font-sans"
+                              class="w-56 rounded border border-border-strong px-2 py-1 font-sans disabled:bg-surface-hover disabled:text-text-muted"
                             />
                           </TextField>
                         </td>

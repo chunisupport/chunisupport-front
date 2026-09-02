@@ -17,5 +17,4 @@ export const ADMIN_CHART_RANKING_COPY = {
   usernamePrefix: '@',
   emptyValue: '-',
   unknownValue: '?',
-  lampSeparator: ' / ',
 } as const
