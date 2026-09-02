@@ -18,6 +18,12 @@ export const PLAYER_METRIC_HISTORY_COPY = {
   overPowerPercentChartAriaLabel: '公式OP%履歴の折れ線グラフ',
 } as const
 
+/** 公式RATING履歴グラフの縦軸上限 */
+export const PLAYER_METRIC_HISTORY_RATING_AXIS_MAX = 18
+
+/** 公式OP%履歴グラフの縦軸上限 */
+export const PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_MAX = 100
+
 /** 履歴グラフ1枚分の表示定義 */
 export type PlayerMetricHistoryChartDefinition = {
   metric: PlayerMetricHistoryMetric
@@ -26,6 +32,8 @@ export type PlayerMetricHistoryChartDefinition = {
   colorVariable: string
   decimalPlaces: number
   suffix: string
+  /** 縦軸のドメイン上限。未指定の指標はChart.jsの自動スケールを使う */
+  yMax?: number
 }
 
 /** RATING・OVER POWER・OP%を別々の折れ線グラフとして表示する定義 */
