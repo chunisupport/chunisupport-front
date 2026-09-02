@@ -189,6 +189,48 @@ test('不正なコンボランプ目標値では達成件数を0として扱う'
   assert.equal(progress.achieved, false)
 })
 
+test('FULL CHAIN目標は指定種別と完全一致する譜面だけを数える', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-1', full_chain: 'FULL CHAIN GOLD' }),
+    createRecord({ id: 'song-2', full_chain: 'FULL CHAIN PLATINUM' }),
+    createRecord({ id: 'song-3', full_chain: 'FULL CHAIN GOLD' }),
+    createRecord({ id: 'song-4', full_chain: null }),
+  ]
+  const goal = createGoal({
+    achievement_type: 'fullchain_count',
+    achievement_params: { lamp: 'GOLD', count: 2 },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.current, 2)
+  assert.equal(progress.target, 2)
+  assert.equal(progress.achieved, true)
+})
+
+test('不正なFULL CHAIN目標値では達成件数を0として扱う', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'fullchain_count',
+    achievement_params: { lamp: 'SILVER', count: 1 } as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const progress = calculateGoalProgress(
+    goal,
+    [createRecord({ full_chain: 'FULL CHAIN GOLD' })],
+    []
+  )
+
+  // Then
+  assert.equal(progress.current, 0)
+  assert.equal(progress.target, 1)
+  assert.equal(progress.achieved, false)
+})
+
 test('ランプ目標の成果パラメータ形式が不正でも未達成として扱う', () => {
   // Given
   const goal = createGoal({

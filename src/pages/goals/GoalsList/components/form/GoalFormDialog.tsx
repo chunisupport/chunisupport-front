@@ -16,7 +16,11 @@ import { normalizeScoreRangeInput } from '../../../../../utils/rangeInput'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { resolveGoalAchievementTypeLabel } from '../../../utils/goalForm'
-import type { ComboLampGoalValue, HardLampGoalValue } from '../../../utils/goalLamp'
+import type {
+  ComboLampGoalValue,
+  FullChainGoalValue,
+  HardLampGoalValue,
+} from '../../../utils/goalLamp'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { buildGoalVersionOptions } from '../../../utils/goalVersion'
 import { resolveGoalFormGroupId } from '../../goalGroupsModel'
@@ -78,6 +82,7 @@ const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = {
   avg_score: '対象譜面の平均スコアを目標にします。',
   hardlamp_count: '指定ハードランプ以上を達成した譜面数を目標にします。',
   combolamp_count: 'FULL COMBO / ALL JUSTICE の達成数を目標にします。',
+  fullchain_count: '指定したFULL CHAIN種別と一致する譜面数を目標にします。',
   rainbow_count: '曲ごとにBASICからMASTER、存在する場合はULTIMAまでのAJ達成を数えます。',
   total_score: '対象譜面のスコア合計を目標にします。',
   overpower_value: '対象譜面のOVER POWER合計値を目標にします。',
@@ -90,6 +95,7 @@ const GOAL_ACHIEVEMENT_TYPES = [
   'avg_score',
   'hardlamp_count',
   'combolamp_count',
+  'fullchain_count',
   'rainbow_count',
   'total_score',
   'overpower_value',
@@ -126,6 +132,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [totalMode, setTotalMode] = createSignal<GoalTargetMode>('number')
   const [hardLamp, setHardLamp] = createSignal<HardLampGoalValue>('HRD')
   const [comboLamp, setComboLamp] = createSignal<ComboLampGoalValue>('FC')
+  const [fullChain, setFullChain] = createSignal<FullChainGoalValue>('GOLD')
   const [invertValue, setInvertValue] = createSignal(false)
   const [invertPercentage, setInvertPercentage] = createSignal(false)
 
@@ -225,6 +232,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setTotalMode(nextState.totalMode)
     setHardLamp(nextState.hardLamp)
     setComboLamp(nextState.comboLamp)
+    setFullChain(nextState.fullChain)
     setInvertValue(nextState.invertValue)
     setInvertPercentage(nextState.invertPercentage)
     setChartTargetMode(nextState.chartTargetMode)
@@ -264,6 +272,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     totalMode: totalMode(),
     hardLamp: hardLamp(),
     comboLamp: comboLamp(),
+    fullChain: fullChain(),
   })
 
   /**
@@ -496,6 +505,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               totalMode={totalMode()}
               hardLamp={hardLamp()}
               comboLamp={comboLamp()}
+              fullChain={fullChain()}
               invertValue={invertValue()}
               invertPercentage={invertPercentage()}
               countMax={props.resolveAllCount(getDraftAttributes(), achievementType())}
@@ -513,6 +523,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               onTotalModeChange={setTotalMode}
               onHardLampChange={setHardLamp}
               onComboLampChange={setComboLamp}
+              onFullChainChange={setFullChain}
               onInvertValueChange={setInvertValue}
               onInvertPercentageChange={setInvertPercentage}
               canUseDynamicTotalTarget={canUseDynamicTotalTarget}

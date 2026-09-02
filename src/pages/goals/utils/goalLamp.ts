@@ -2,12 +2,16 @@ import type { PlayerRecordDTO } from '../../../types/api'
 
 export type HardLampGoalValue = 'HRD' | 'BRV' | 'ABS' | 'CTS'
 export type ComboLampGoalValue = 'FC' | 'AJ'
+export type FullChainGoalValue = 'GOLD' | 'PLATINUM'
 
 /** ハードランプ目標で選択できる値 */
 export const HARD_LAMP_VALUES = ['HRD', 'BRV', 'ABS', 'CTS'] as const
 
 /** コンボランプ目標で選択できる値 */
 export const COMBO_LAMP_VALUES = ['FC', 'AJ'] as const
+
+/** FULL CHAIN目標で選択できる値 */
+export const FULL_CHAIN_VALUES = ['GOLD', 'PLATINUM'] as const
 
 /** ハードランプ目標の選択肢 */
 export const HARD_LAMP_OPTIONS = [
@@ -22,6 +26,12 @@ export const COMBO_LAMP_OPTIONS = [
   { value: 'FC', label: 'FULL COMBO以上' },
   { value: 'AJ', label: 'ALL JUSTICE' },
 ] as const satisfies readonly { value: ComboLampGoalValue; label: string }[]
+
+/** FULL CHAIN目標の選択肢 */
+export const FULL_CHAIN_OPTIONS = [
+  { value: 'GOLD', label: 'FULL CHAIN GOLD' },
+  { value: 'PLATINUM', label: 'FULL CHAIN PLATINUM' },
+] as const satisfies readonly { value: FullChainGoalValue; label: string }[]
 
 /** プレイヤーレコード上のハードランプ達成順 */
 export const HARD_LAMP_ORDER: Partial<Record<NonNullable<PlayerRecordDTO['clear_lamp']>, number>> =
@@ -59,6 +69,15 @@ export const COMBO_LAMP_UNACHIEVED_FILTERS: Record<
   AJ: ['FULL COMBO', null],
 }
 
+/** FULL CHAIN目標を未達成レコード用フィルターへ変換するための対応表 */
+export const FULL_CHAIN_UNACHIEVED_FILTERS: Record<
+  FullChainGoalValue,
+  PlayerRecordDTO['full_chain'][]
+> = {
+  GOLD: ['FULL CHAIN PLATINUM', null],
+  PLATINUM: ['FULL CHAIN GOLD', null],
+}
+
 /**
  * ハードランプ目標値に対応するレコード上のランプ名を取得する。
  *
@@ -93,3 +112,23 @@ export const isHardLampGoalValue = (value: string): value is HardLampGoalValue =
  */
 export const isComboLampGoalValue = (value: string): value is ComboLampGoalValue =>
   COMBO_LAMP_VALUES.includes(value as ComboLampGoalValue)
+
+/**
+ * 文字列がFULL CHAIN目標の値か判定する。
+ *
+ * @param value - 成果パラメータ内のFULL CHAIN値。
+ * @returns FULL CHAIN目標で利用できる値ならtrue。
+ */
+export const isFullChainGoalValue = (value: string): value is FullChainGoalValue =>
+  FULL_CHAIN_VALUES.includes(value as FullChainGoalValue)
+
+/**
+ * FULL CHAIN目標値に対応するレコード上のランプ名を取得する。
+ *
+ * @param value - FULL CHAIN目標値。
+ * @returns プレイヤーレコードに保存されるFULL CHAIN名。
+ */
+export const resolveFullChainRecordName = (
+  value: FullChainGoalValue
+): NonNullable<PlayerRecordDTO['full_chain']> =>
+  value === 'GOLD' ? 'FULL CHAIN GOLD' : 'FULL CHAIN PLATINUM'

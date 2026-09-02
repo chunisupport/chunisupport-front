@@ -178,6 +178,7 @@ test('成果パラメータは目標種別と指定方法に応じて組み立�
     totalMode: 'number',
     hardLamp: 'HRD',
     comboLamp: 'FC',
+    fullChain: 'GOLD',
   })
   const totalScoreParams = buildGoalFormAchievementParams({
     achievementType: 'total_score',
@@ -189,9 +190,47 @@ test('成果パラメータは目標種別と指定方法に応じて組み立�
     totalMode: 'remaining',
     hardLamp: 'HRD',
     comboLamp: 'FC',
+    fullChain: 'GOLD',
+  })
+
+  const fullChainParams = buildGoalFormAchievementParams({
+    achievementType: 'fullchain_count',
+    score: '0',
+    rank: 'S',
+    count: '75',
+    countMode: 'percent',
+    total: '0',
+    totalMode: 'number',
+    hardLamp: 'HRD',
+    comboLamp: 'FC',
+    fullChain: 'PLATINUM',
   })
 
   // Then
   assert.deepEqual(scoreCountParams, { score: 1009000, count: 30 })
   assert.deepEqual(totalScoreParams, { remaining: 5 })
+  assert.deepEqual(fullChainParams, { lamp: 'PLATINUM', percent: 75 })
+})
+
+test('FULL CHAIN目標の編集状態は保存済みランプと全件指定を復元する', () => {
+  // Given
+  const goal = {
+    id: 2,
+    group_id: null,
+    title: 'プラチナ制覇',
+    achievement_type: 'fullchain_count',
+    achievement_params: { lamp: 'PLATINUM' },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    sort_order: 1,
+    created_at: '2026-09-02T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then
+  assert.equal(result.fullChain, 'PLATINUM')
+  assert.equal(result.countMode, 'all')
 })
