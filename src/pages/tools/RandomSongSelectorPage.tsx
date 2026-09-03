@@ -561,6 +561,7 @@ const RandomSongSelect = <T extends string>(props: {
 
 /**
  * ランダム選曲ツールページを表示する。
+ * 曲数欄とお気に入り欄は上端を揃え、ログイン状態の補足表示による位置ずれを防ぐ。
  *
  * @returns 条件フォームとランダム選曲結果。
  */
@@ -1084,7 +1085,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
           <section class="rounded-lg border border-border bg-surface p-4 sm:p-6">
             <Show when={!isSongsLoading() && !versionsResponse.loading} fallback={<Loading />}>
               <form class="space-y-4" onSubmit={(event) => event.preventDefault()}>
-                <div class="grid items-end gap-4 sm:grid-cols-[8rem_minmax(0,1fr)]">
+                <div class="grid items-start gap-4 sm:grid-cols-[8rem_minmax(0,1fr)]">
                   <div class="max-w-32">
                     <RandomSongTextField
                       id="random-song-count"
