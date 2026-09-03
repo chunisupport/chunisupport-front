@@ -34,3 +34,21 @@ test('曲のリリース日は直近のバージョンのリリース日順番�
   assert.equal(resolveGoalVersionValueByReleaseDate('2024-01-01', versions), 3)
   assert.equal(resolveGoalVersionValueByReleaseDate('invalid', versions), undefined)
 })
+
+test('未来バージョンは選択肢から除外され、公開済みの番号は変わらない', () => {
+  // Given: 未来バージョンを含む一覧がある。
+  const withFuture: VersionDTO[] = [
+    ...versions,
+    { id: 77, name: 'CHUNITHM FUTURE', released_at: '2027-01-01' },
+  ]
+
+  // When: 基準日を指定して選択肢を作る。
+  const result = buildGoalVersionOptions(withFuture, '2026-09-03')
+
+  // Then: 未来分が除かれ、公開済みの番号は不変である。
+  assert.deepEqual(result, [
+    { value: '1', numericValue: 1, label: 'NEW' },
+    { value: '2', numericValue: 2, label: 'SUN' },
+    { value: '3', numericValue: 3, label: 'LUMINOUS' },
+  ])
+})

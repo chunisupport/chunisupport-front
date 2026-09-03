@@ -5,7 +5,11 @@ import type {
   PlayerStatsRecordAttribute,
 } from '../../utils/playerStatsDashboard'
 import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../utils/theoreticalOverPowerTarget'
-import { getShortVersionName, resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
+import {
+  filterReleasedVersions,
+  getShortVersionName,
+  resolveVersionNameByReleaseDate,
+} from '../../utils/versionConverter'
 import { fetchAllSongsWithCache } from '../cache/fetchAllSongsWithCache'
 
 /** 統計ダッシュボードで使う曲別の譜面情報 */
@@ -52,7 +56,9 @@ export const fetchPlayerStatsChartMetadata = async (): Promise<PlayerStatsChartM
       ])
     ),
     genres: masterData.genres.map((genre) => genre.name),
-    versions: versionData.versions.map((version) => getShortVersionName(version.name)),
+    versions: filterReleasedVersions(versionData.versions).map((version) =>
+      getShortVersionName(version.name)
+    ),
   }
 }
 

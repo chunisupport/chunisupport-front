@@ -35,6 +35,8 @@ export const ADMIN_CHART_RANKING_PATH = `${ADMIN_PATH}/chart-rankings/songs/:dis
 export const ADMIN_WORLDSEND_CHART_RANKING_PATH = `${ADMIN_PATH}/chart-rankings/worldsend-songs/:displayid`
 /** ADMIN向けメンテナンス管理画面のパス */
 export const ADMIN_MAINTENANCE_PATH = `${ADMIN_PATH}/maintenance`
+/** ADMIN向けバージョン管理画面のパス */
+export const ADMIN_VERSIONS_PATH = `${ADMIN_PATH}/versions`
 
 /** 楽曲詳細から譜面詳細へ遷移したことを表すルーター state */
 export const CHART_DETAIL_FROM_SONG_DETAIL_STATE = {

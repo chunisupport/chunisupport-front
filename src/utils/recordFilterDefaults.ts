@@ -8,7 +8,7 @@ import type { MasterDataDTO, MasterItemDTO, VersionSummaryDTO } from '../types/a
 import type { FilterState } from '../types/recordFilter'
 import { sortMasterItemsBySortOrder } from './masterData'
 import { MAX_SCORE } from './scoreRank'
-import { getShortVersionName } from './versionConverter'
+import { filterReleasedVersions, getShortVersionName } from './versionConverter'
 
 /** フィルターのデフォルト値 */
 export const DEFAULT_FILTER: FilterState = {
@@ -52,30 +52,36 @@ export const DEFAULT_FILTER: FilterState = {
  * マスタデータに依存するフィルター初期値を作成する。
  *
  * @param masterData - ジャンルなどのマスタデータ。
- * @param versions - バージョン一覧。
+ * @param versions - バージョン一覧。未来分は除外して初期値にする。
+ * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
  * @returns マスタデータから作成したジャンルとバージョンの初期値。
  */
 export const getMasterDataDefaults = (
   masterData?: MasterDataDTO,
-  versions?: VersionSummaryDTO[]
+  versions?: VersionSummaryDTO[],
+  referenceDate?: string
 ) => ({
   genres: sortMasterItemsBySortOrder(masterData?.genres ?? []).map((g: MasterItemDTO) => g.name),
-  versions: versions?.map((version) => getShortVersionName(version.name)) ?? [],
+  versions: filterReleasedVersions(versions ?? [], referenceDate).map((version) =>
+    getShortVersionName(version.name)
+  ),
 })
 
 /**
  * レコードフィルターのデフォルト状態を作成する。
  *
  * @param masterData - ジャンルなどのマスタデータ。
- * @param versions - バージョン一覧。
+ * @param versions - バージョン一覧。未来分は除外して初期値にする。
+ * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
  * @returns 配列と範囲条件を複製したレコードフィルターの初期状態。
  */
 export const buildDefaultFilter = (
   masterData?: MasterDataDTO,
-  versions?: VersionSummaryDTO[]
+  versions?: VersionSummaryDTO[],
+  referenceDate?: string
 ): FilterState => ({
   ...DEFAULT_FILTER,
-  ...getMasterDataDefaults(masterData, versions),
+  ...getMasterDataDefaults(masterData, versions, referenceDate),
   const: { ...DEFAULT_FILTER.const },
   score: { ...DEFAULT_FILTER.score },
   justiceCount: { ...DEFAULT_FILTER.justiceCount },

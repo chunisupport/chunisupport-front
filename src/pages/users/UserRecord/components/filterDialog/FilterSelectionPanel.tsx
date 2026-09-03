@@ -18,7 +18,7 @@ import {
   updateOptionalNumberRange,
 } from '../../../../../utils/rangeInput'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
-import { getShortVersionName } from '../../../../../utils/versionConverter'
+import { filterReleasedVersions, getShortVersionName } from '../../../../../utils/versionConverter'
 import DateRangeSection from '../../../components/filter/DateRangeSection'
 import LampSection from '../../../components/filter/LampSection'
 import MultiSelectFilterSection from '../../../components/filter/MultiSelectFilterSection'
@@ -273,7 +273,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       return normalized ? [normalized] : []
     }) ?? []
   const genres = () => sortMasterItemsBySortOrder(props.masterData?.genres ?? []).map((g) => g.name)
-  const versions = () => props.versions?.map((version) => getShortVersionName(version.name)) ?? []
+  const versions = () =>
+    filterReleasedVersions(props.versions ?? []).map((version) => getShortVersionName(version.name))
 
   /**
    * JUSTICE数の入力値をフィルター状態へ反映する。

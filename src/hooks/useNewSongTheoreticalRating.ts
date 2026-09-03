@@ -8,15 +8,8 @@ import {
   calculateNewSongTheoreticalRating,
   type RatingTheoretical,
 } from '../utils/newSongTheoreticalRating'
+import { getTodayChunithmDate } from '../utils/versionConverter'
 
-/** CHUNITHMの現行日付判定に使うIANAタイムゾーン */
-const CHUNITHM_TIME_ZONE = 'Asia/Tokyo'
-/** YYYY-MM-DD形式で日付を得るためのロケール */
-const DATE_ONLY_LOCALE = 'sv-SE'
-/** CHUNITHM稼働地域の現在日を生成するフォーマッター */
-const CHUNITHM_DATE_FORMATTER = new Intl.DateTimeFormat(DATE_ONLY_LOCALE, {
-  timeZone: CHUNITHM_TIME_ZONE,
-})
 /** 表示中のJST日付を更新する間隔 */
 const CURRENT_DATE_REFRESH_INTERVAL_MS = 60_000
 
@@ -25,7 +18,7 @@ const CURRENT_DATE_REFRESH_INTERVAL_MS = 60_000
  *
  * @returns YYYY-MM-DD形式のJST現在日。
  */
-const getCurrentChunithmDate = (): string => CHUNITHM_DATE_FORMATTER.format(new Date())
+const getCurrentChunithmDate = (): string => getTodayChunithmDate()
 
 /** ベスト枠・新曲枠理論値の取得状態 */
 export type RatingTheoreticalState = {

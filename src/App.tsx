@@ -28,6 +28,7 @@ import {
   ADMIN_DATA_COVERAGE_PATH,
   ADMIN_MAINTENANCE_PATH,
   ADMIN_PATH,
+  ADMIN_VERSIONS_PATH,
   ADMIN_WORLDSEND_CHART_RANKING_PATH,
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
@@ -102,6 +103,7 @@ const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
 const AdminSongsPage = lazy(() => import('./pages/admin/AdminSongsPage'))
 const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
 const AdminMaintenancePage = lazy(() => import('./pages/admin/AdminMaintenancePage'))
+const AdminVersionsPage = lazy(() => import('./pages/admin/AdminVersionsPage'))
 const EditorPage = lazy(() => import('./pages/editor/EditorPage'))
 const EditorSongsPage = lazy(() => import('./pages/editor/EditorSongsPage'))
 
@@ -357,6 +359,7 @@ const LoadableAdminUsersPage = withRouteLoadBoundary(AdminUsersPage)
 const LoadableAdminSongsPage = withRouteLoadBoundary(AdminSongsPage)
 const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
 const LoadableAdminMaintenancePage = withRouteLoadBoundary(AdminMaintenancePage)
+const LoadableAdminVersionsPage = withRouteLoadBoundary(AdminVersionsPage)
 const LoadableEditorPage = withRouteLoadBoundary(EditorPage)
 const LoadableEditorSongsPage = withRouteLoadBoundary(EditorSongsPage)
 const LoadableRegisterScoreTempPage = withRouteLoadBoundary(RegisterScoreTempPage)
@@ -457,6 +460,17 @@ const GuardedAdminHonorsPage = () => (
 const GuardedAdminMaintenancePage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
     <LoadableAdminMaintenancePage />
+  </RequireRole>
+)
+
+/**
+ * ADMIN 権限を要求してバージョン管理画面を表示する。
+ *
+ * @returns 権限制御済みのバージョン管理画面。
+ */
+const GuardedAdminVersionsPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableAdminVersionsPage />
   </RequireRole>
 )
 
@@ -601,6 +615,7 @@ const App = () => {
       <Route path="/admin/songs" component={withNavBar(GuardedAdminSongsPage)} />
       <Route path="/admin/honors" component={withNavBar(GuardedAdminHonorsPage)} />
       <Route path={ADMIN_MAINTENANCE_PATH} component={withNavBar(GuardedAdminMaintenancePage)} />
+      <Route path={ADMIN_VERSIONS_PATH} component={withNavBar(GuardedAdminVersionsPage)} />
 
       {/* 編集 */}
       <Route path={EDITOR_PATH} component={withNavBar(GuardedEditorPage)} />
