@@ -12,6 +12,7 @@ import {
   drawRandomSongs,
   filterRandomSongCandidates,
   filterRandomSongCandidatesByRecord,
+  formatRandomSongLevel,
   getRandomSongCompleteLevelWeightOptions,
   hasInvalidRandomSongWeightValue,
   parseOptionalRandomSongDecimal,
@@ -20,6 +21,7 @@ import {
   RANDOM_SONG_OP_TARGET_FILTER,
   RANDOM_SONG_SELECTOR_DIFFICULTIES,
   RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS,
+  resolveRandomSongLevelWeightEnabledState,
   resolveRandomSongRecordLamp,
   restoreRandomSongResults,
   toggleRandomSongDifficultyFilter,
@@ -52,17 +54,21 @@ const createSong = (overrides: Partial<SongDTO>): SongDTO => ({
   ...overrides,
 })
 
-const createCandidate = (overrides: Partial<RandomSongCandidate>): RandomSongCandidate => ({
-  song: createSong({ id: 'song-a', title: 'Song A' }),
-  difficulty: 'MASTER',
-  chartConst: 13.7,
-  levelLabel: '13+',
-  genre: 'POPS & ANIME',
-  version: 'NEW',
-  ...overrides,
-})
+const createCandidate = (overrides: Partial<RandomSongCandidate>): RandomSongCandidate => {
+  const chartConst = overrides.chartConst ?? 13.7
 
-test('候補の重みを全体・難易度別・譜面定数別に1回で集計する', () => {
+  return {
+    song: createSong({ id: 'song-a', title: 'Song A' }),
+    difficulty: 'MASTER',
+    chartConst,
+    levelLabel: formatRandomSongLevel(chartConst),
+    genre: 'POPS & ANIME',
+    version: 'NEW',
+    ...overrides,
+  }
+}
+
+test('候補の重みを全体・難易度別・レベル別・譜面定数別に1回で集計する', () => {
   // Given
   const candidates = [
     createCandidate({ difficulty: 'MASTER', chartConst: 13.7 }),
@@ -85,8 +91,11 @@ test('候補の重みを全体・難易度別・譜面定数別に1回で集計�
   assert.equal(result.total, 5)
   assert.equal(result.byDifficulty.get('MASTER'), 2)
   assert.equal(result.byDifficulty.get('ULTIMA'), 3)
+  assert.equal(result.byLevel.get('13+'), 2)
+  assert.equal(result.byLevel.get('14'), 3)
   assert.equal(result.byChartConst.get('13.7'), 2)
   assert.equal(result.byChartConst.get('14.0'), 3)
+  assert.deepEqual([...result.invalidLevelLabels], ['14'])
 })
 
 const createRecord = (overrides: Partial<PlayerRecordDTO>): PlayerRecordDTO => ({
@@ -345,6 +354,55 @@ test('レベル内の全譜面定数を含む場合だけレベル別重み設�
 
   // Then: 全定数が残る13だけを一括設定できる。
   assert.deepEqual(options, [{ levelLabel: '13', chartConsts: ['13.0', '13.4'] }])
+})
+
+test('候補が空の場合はレベル別重み設定の対象を返さないこと', () => {
+  // Given: 絞り込み前後とも候補がない。
+  const allChartConstsByLevel = createChartConstsByLevelMap([])
+
+  // When: 一括設定できるレベルを取得する。
+  const options = getRandomSongCompleteLevelWeightOptions(allChartConstsByLevel, [])
+
+  // Then: 対象レベルは空になる。
+  assert.deepEqual(options, [])
+})
+
+test('全レベルの全譜面定数が残る場合はレベル順で一括設定の対象にすること', () => {
+  // Given: 13と13+の境界を含む全候補がある。
+  const allCandidates = [
+    createCandidate({ chartConst: 13 }),
+    createCandidate({ chartConst: 13.4 }),
+    createCandidate({ chartConst: 13.5 }),
+    createCandidate({ chartConst: 13.9 }),
+  ]
+  const allChartConstsByLevel = createChartConstsByLevelMap(allCandidates)
+
+  // When: 全候補が絞り込み後にも残る。
+  const options = getRandomSongCompleteLevelWeightOptions(allChartConstsByLevel, allCandidates)
+
+  // Then: 13が13+より前に並び、両レベルを一括設定できる。
+  assert.deepEqual(options, [
+    { levelLabel: '13', chartConsts: ['13.0', '13.4'] },
+    { levelLabel: '13+', chartConsts: ['13.5', '13.9'] },
+  ])
+})
+
+test('レベル内の譜面定数の有効状態を3段階で判定すること', () => {
+  // Given: すべて有効、一部有効、すべて無効の設定がある。
+  const chartConsts = ['13.0', '13.4']
+
+  // When: 各設定の有効状態を判定する。
+  const enabled = resolveRandomSongLevelWeightEnabledState(chartConsts, {})
+  const mixed = resolveRandomSongLevelWeightEnabledState(chartConsts, { '13.4': false })
+  const disabled = resolveRandomSongLevelWeightEnabledState(chartConsts, {
+    '13.0': false,
+    '13.4': false,
+  })
+
+  // Then: カード表示に使う3状態を返す。
+  assert.equal(enabled, 'enabled')
+  assert.equal(mixed, 'mixed')
+  assert.equal(disabled, 'disabled')
 })
 
 test('抽選数が候補数を超える場合は候補数までに制限すること', () => {
