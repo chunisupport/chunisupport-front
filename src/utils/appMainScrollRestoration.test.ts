@@ -4,9 +4,44 @@ import {
   clearAppMainScrollOffsets,
   getAppMainScrollOffset,
   getAppMainScrollTop,
+  isHistoryPopNavigation,
+  rememberAppMainScrollNavigationTarget,
+  resolveRestoredAppMainScrollOffset,
   restoreAppMainScrollOffset,
   saveAppMainScrollOffset,
 } from './appMainScrollRestoration'
+
+test('履歴の戻る/進む遷移だけを pop と判定すること', () => {
+  // Given / When / Then
+  assert.equal(isHistoryPopNavigation(-1), true)
+  assert.equal(isHistoryPopNavigation(1), true)
+  assert.equal(isHistoryPopNavigation('/songs'), false)
+  assert.equal(isHistoryPopNavigation('/tools'), false)
+})
+
+test('サイドバーなどの新規遷移では保存済み位置を復元しないこと', () => {
+  // Given
+  clearAppMainScrollOffsets()
+  rememberAppMainScrollNavigationTarget('/tools')
+
+  // When
+  const restoredOffset = resolveRestoredAppMainScrollOffset(1280)
+
+  // Then
+  assert.equal(restoredOffset, 0)
+})
+
+test('履歴の戻る/進むでは保存済み位置を復元すること', () => {
+  // Given
+  clearAppMainScrollOffsets()
+  rememberAppMainScrollNavigationTarget(-1)
+
+  // When
+  const restoredOffset = resolveRestoredAppMainScrollOffset(1280)
+
+  // Then
+  assert.equal(restoredOffset, 1280)
+})
 
 test('パスごとにスクロール位置を保存・取得できること', () => {
   // Given
