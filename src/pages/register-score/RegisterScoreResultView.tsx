@@ -4,6 +4,7 @@ import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-j
 import logoSingle from '../../assets/logo_single.svg'
 import { Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { AppSelect } from '../../components/common/AppSelect'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
@@ -31,18 +32,27 @@ import { difficultyBadgeClass } from '../../utils/difficultyUtils'
 import { canShareFiles, captureElementAsImage, downloadBlobFile } from '../../utils/domImageCapture'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
+import type { SortDirection } from '../../utils/sortingQuery'
+import { REGISTER_SCORE_COPY } from './constants'
 import { isLampOnlyRegisterScoreChange } from './registerScoreChangeFilter'
-import {
-  courseClassBadgeClass,
-  formatCourseClass,
-  REGISTER_SCORE_UNKNOWN_TITLE,
-} from './registerScoreDisplay'
+import { courseClassBadgeClass, formatCourseClass } from './registerScoreDisplay'
+import { hasRegisterScoreImageChanges } from './registerScoreImageVisibility'
 import {
   formatRegisterScoreOverPowerDelta,
   formatRegisterScoreOverPowerPercentDelta,
   formatRegisterScoreRatingDelta,
   getRegisterScoreMetricDeltaClass,
 } from './registerScoreMetricDiff'
+import {
+  DEFAULT_REGISTER_SCORE_SORT_SETTINGS,
+  REGISTER_SCORE_PRIMARY_SORT_OPTIONS,
+  REGISTER_SCORE_SORT_DIRECTION_OPTIONS,
+  type RegisterScorePrimarySortKey,
+  type RegisterScoreSongSortValues,
+  type RegisterScoreSortDirectionOption,
+  type RegisterScoreSortSettings,
+  sortRegisterScoreChanges,
+} from './registerScoreSorting'
 import {
   createDefaultRegisterScoreStatisticRowVisibility,
   createDefaultRegisterScoreTotalHighScoreRowVisibility,
@@ -56,41 +66,6 @@ import {
   toRegisterScoreTotalHighScoreRows,
 } from './registerScoreStatistics'
 
-export const REGISTER_SCORE_MESSAGES = {
-  ratingLabel: 'RATING',
-  overPowerLabel: 'OVER POWER',
-  overPowerPercentLabel: 'OP%',
-  overPowerPercentAccessibleLabel: 'OVER POWER達成率',
-  percentagePointUnit: 'pt',
-  percentagePointAccessibleUnit: 'パーセントポイント',
-  invalidToken: 'tokenが不正です。登録用URLを確認してください。',
-  fallbackError: '登録に失敗しました。',
-  reportTitle: '更新差分',
-  title: 'スコア登録',
-  processing: 'スコアデータを登録しています。',
-  changedSongsTitle: 'NEW RECORDS',
-  changedSongsEmpty: '今回更新された楽曲はありません。',
-  filteredChangedSongsEmpty: '表示対象の楽曲はありません。',
-  changedCoursesTitle: 'COURSE RECORDS',
-  totalHighScoreTitle: 'TOTAL HIGH SCORE',
-  recordStatsTitle: 'RECORD STATISTICS',
-  displaySettingsTitle: '表示設定',
-  hideLampOnlyChanges: 'ランプのみの更新を非表示',
-  shareImage: '共有',
-  prepareShareImage: '共有画像を準備',
-  preparingShareImage: '共有画像を準備中',
-  sharingImage: '共有中',
-  shareImageError: '画像の共有に失敗しました。',
-  downloadImage: 'ダウンロード',
-  downloadingImage: '作成中',
-  downloadImageError: '画像のダウンロードに失敗しました。',
-  copySongTitleSuccess: '曲名をコピーしました。',
-  copySongTitleError: '曲名のコピーに失敗しました。',
-  excludeSongFromImage: '画像から除外',
-  includeSongInImage: '画像に含める',
-  unknownSongTitle: REGISTER_SCORE_UNKNOWN_TITLE,
-} as const
-
 const NO_DATA_TEXT = '-'
 const WORLD_END_BADGE_CLASS =
   'bg-[image:var(--cs-color-worldsend-label-bg)] text-worldsend-label-text'
@@ -98,7 +73,10 @@ const PROFILE_VALUE_CLASS = 'font-jost text-base font-normal leading-6'
 /** 更新差分レポートの原寸幅を固定するクラス */
 const REGISTER_SCORE_REPORT_WIDTH_CLASS = 'w-[31rem]'
 /** 更新差分レポートの表示領域を原寸幅以下に制限するクラス */
-const REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS = 'max-w-[31rem]'
+const REGISTER_SCORE_STACK_MAX_WIDTH_CLASS = 'max-w-[31rem]'
+/** コンポーネント幅が59rem以上なら27remの設定欄と原寸レポートを横並びにするクラス */
+const REGISTER_SCORE_RESULT_LAYOUT_CLASS =
+  'mx-auto grid w-full min-w-0 max-w-[31rem] gap-4 @min-[59rem]:max-w-none @min-[59rem]:grid-cols-[27rem_31rem] @min-[59rem]:items-start @min-[59rem]:justify-center'
 /** 更新差分レポートヘッダに表示するロゴの色 */
 const REGISTER_SCORE_REPORT_LOGO_COLOR = '#444444'
 /** 更新差分画像を原寸で出力するピクセル比 */
@@ -145,6 +123,15 @@ type RegisterScoreLampRecord = {
 
 export type RegisterScoreSongTitleResolver = (change: PlayerDataRecordChange) => string
 export type RegisterScoreChartLevelResolver = (change: PlayerDataRecordChange) => string | undefined
+/**
+ * 更新差分のソート用レベル・単曲レーティングを解決する関数。
+ *
+ * @param change - APIが返した1譜面分の楽曲差分。
+ * @returns ソート用のレベルと単曲レーティング。
+ */
+export type RegisterScoreSongSortValuesResolver = (
+  change: PlayerDataSongRecordChange
+) => RegisterScoreSongSortValues
 /** コース差分からコースタイトルを解決する関数 */
 export type RegisterScoreCourseTitleResolver = (change: PlayerDataCourseRecordChange) => string
 
@@ -341,13 +328,15 @@ const getDifficultyBadgeClass = (change: PlayerDataSongRecordChange): string => 
 }
 
 /**
- * 楽曲差分を一時的な画像除外状態で識別するキーへ変換する。
+ * 更新差分を一時的な画像除外状態で識別するキーへ変換する。
  *
- * @param change - APIから返却された1譜面分の差分。
- * @returns レコード種別、楽曲ID、難易度を連結した識別キー。
+ * @param change - APIから返却された1件分の更新差分。
+ * @returns 更新差分を一意に識別するキー。
  */
-const createSongChangeKey = (change: PlayerDataSongRecordChange): string =>
-  `${change.record_type}:${change.idx}:${change.diff}`
+const createRegisterScoreChangeKey = (change: PlayerDataRecordChange): string =>
+  change.record_type === 'course'
+    ? `${change.record_type}:${change.idx}:${change.course_class}`
+    : `${change.record_type}:${change.idx}:${change.diff}`
 
 /**
  * API由来のランプ文字列を大文字のドメイン値へ正規化する。
@@ -483,7 +472,7 @@ const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdate
         </p>
       </div>
       <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
-        <dt class="font-extrabold text-text-muted">{REGISTER_SCORE_MESSAGES.ratingLabel}</dt>
+        <dt class="font-extrabold text-text-muted">{REGISTER_SCORE_COPY.ratingLabel}</dt>
         <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
           <span>{formatNullableRating(props.result.summary.rating)}</span>
           <RegisterScoreMetricDelta
@@ -492,7 +481,7 @@ const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdate
           />
         </dd>
         <dt class="whitespace-nowrap font-extrabold text-text-muted">
-          {REGISTER_SCORE_MESSAGES.overPowerLabel}
+          {REGISTER_SCORE_COPY.overPowerLabel}
         </dt>
         <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
           <Show when={props.result.summary.overpower_value !== null} fallback={NO_DATA_TEXT}>
@@ -504,8 +493,8 @@ const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdate
           />
         </dd>
         <dt class="font-extrabold text-text-muted">
-          <span aria-hidden="true">{REGISTER_SCORE_MESSAGES.overPowerPercentLabel}</span>
-          <span class="sr-only">{REGISTER_SCORE_MESSAGES.overPowerPercentAccessibleLabel}</span>
+          <span aria-hidden="true">{REGISTER_SCORE_COPY.overPowerPercentLabel}</span>
+          <span class="sr-only">{REGISTER_SCORE_COPY.overPowerPercentAccessibleLabel}</span>
         </dt>
         <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
           <Show when={props.result.summary.overpower_percentage !== null} fallback={NO_DATA_TEXT}>
@@ -514,8 +503,8 @@ const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdate
           <RegisterScoreMetricDelta
             delta={props.result.metric_diffs.overpower_percent.delta}
             formattedDelta={overPowerPercentDelta()}
-            unit={REGISTER_SCORE_MESSAGES.percentagePointUnit}
-            accessibleUnit={REGISTER_SCORE_MESSAGES.percentagePointAccessibleUnit}
+            unit={REGISTER_SCORE_COPY.percentagePointUnit}
+            accessibleUnit={REGISTER_SCORE_COPY.percentagePointAccessibleUnit}
           />
         </dd>
       </dl>
@@ -560,43 +549,121 @@ const RegisterScoreAggregateVisibilitySettings = (props: {
 )
 
 /**
+ * 更新差分の楽曲カードに適用するソート設定を表示する。
+ *
+ * @param props - 楽曲カードのソート現在値と変更ハンドラー。
+ * @returns 楽曲カードのソート設定UI。
+ */
+const RegisterScoreSortControls = (props: {
+  primaryKey: RegisterScorePrimarySortKey
+  primaryDirection: SortDirection
+  onPrimaryKeyChange: (key: RegisterScorePrimarySortKey) => void
+  onPrimaryDirectionChange: (direction: SortDirection) => void
+}) => {
+  /**
+   * 現在の主ソート設定に対応する選択肢を返す。
+   *
+   * @returns 主ソートの選択肢。
+   */
+  const primaryOption = () =>
+    REGISTER_SCORE_PRIMARY_SORT_OPTIONS.find((option) => option.value === props.primaryKey) ??
+    REGISTER_SCORE_PRIMARY_SORT_OPTIONS[0]
+
+  /**
+   * 現在のソート方向に対応する選択肢を返す。
+   *
+   * @param direction - 選択中のソート方向。
+   * @returns ソート方向の選択肢。
+   */
+  const getDirectionOption = (direction: SortDirection): RegisterScoreSortDirectionOption =>
+    REGISTER_SCORE_SORT_DIRECTION_OPTIONS.find((option) => option.value === direction) ??
+    REGISTER_SCORE_SORT_DIRECTION_OPTIONS[0]
+
+  return (
+    <div class="w-full">
+      <p class="mb-1 text-sm font-medium text-text-muted">{REGISTER_SCORE_COPY.songSortTitle}</p>
+      <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_6rem] items-start gap-2">
+        <AppSelect
+          options={REGISTER_SCORE_PRIMARY_SORT_OPTIONS}
+          optionValue="value"
+          optionTextValue="label"
+          value={primaryOption()}
+          onChange={(option) => {
+            if (option) props.onPrimaryKeyChange(option.value)
+          }}
+          label={REGISTER_SCORE_COPY.songSortTitle}
+          labelVariant="srOnly"
+          formatLabel={(option) => option.label}
+        />
+        <AppSelect
+          options={REGISTER_SCORE_SORT_DIRECTION_OPTIONS}
+          optionValue="value"
+          optionTextValue="label"
+          value={getDirectionOption(props.primaryDirection)}
+          onChange={(option) => {
+            if (option) props.onPrimaryDirectionChange(option.value)
+          }}
+          label={REGISTER_SCORE_COPY.songSortDirectionLabel}
+          labelVariant="srOnly"
+          formatLabel={(option) => option.label}
+          disabled={props.primaryKey === 'none'}
+        />
+      </div>
+    </div>
+  )
+}
+
+/**
  * 更新差分レポートに含める集計セクションと統計行を選択する設定を表示する。
  *
- * @param props - 差分一覧、各集計セクション、統計行の表示状態、および変更ハンドラー。
+ * @param props - 楽曲カードのソート、各集計セクション、統計行の表示状態、および変更ハンドラー。
  * @returns 更新差分の表示設定。
  */
 const RegisterScoreDisplaySettings = (props: {
+  primarySortKey: RegisterScorePrimarySortKey
+  primarySortDirection: SortDirection
   hideLampOnlyChanges: boolean
   showTotalHighScore: boolean
   showRecordStatistics: boolean
   totalHighScoreRowVisibility: RegisterScoreAggregateRowVisibility
   statisticRowVisibility: RegisterScoreAggregateRowVisibility
+  onPrimarySortKeyChange: (key: RegisterScorePrimarySortKey) => void
+  onPrimarySortDirectionChange: (direction: SortDirection) => void
   onHideLampOnlyChangesChange: (checked: boolean) => void
   onShowTotalHighScoreChange: (checked: boolean) => void
   onShowRecordStatisticsChange: (checked: boolean) => void
   onTotalHighScoreRowVisibilityChange: (key: RegisterScoreAggregateRowKey, checked: boolean) => void
   onStatisticRowVisibilityChange: (key: RegisterScoreAggregateRowKey, checked: boolean) => void
 }) => (
-  <fieldset class="rounded-md border border-border bg-surface px-4 pb-4 pt-3">
-    <legend class="px-1 text-lg font-semibold text-text">
-      {REGISTER_SCORE_MESSAGES.displaySettingsTitle}
-    </legend>
-    <div class="mt-1 flex flex-col items-start gap-3">
+  <fieldset
+    class="w-full min-w-0 rounded-md border border-border bg-surface p-4"
+    aria-labelledby="register-score-display-settings-title"
+  >
+    <h2 id="register-score-display-settings-title" class="mb-3 text-lg font-semibold text-text">
+      {REGISTER_SCORE_COPY.displaySettingsTitle}
+    </h2>
+    <div class="flex flex-col items-start gap-3">
+      <RegisterScoreSortControls
+        primaryKey={props.primarySortKey}
+        primaryDirection={props.primarySortDirection}
+        onPrimaryKeyChange={props.onPrimarySortKeyChange}
+        onPrimaryDirectionChange={props.onPrimarySortDirectionChange}
+      />
       <CheckboxField
         checked={props.hideLampOnlyChanges}
         onChange={props.onHideLampOnlyChangesChange}
         textVariant="large"
-        label={REGISTER_SCORE_MESSAGES.hideLampOnlyChanges}
+        label={REGISTER_SCORE_COPY.hideLampOnlyChanges}
       />
       <RegisterScoreAggregateVisibilitySettings
-        label={REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
+        label={REGISTER_SCORE_COPY.totalHighScoreTitle}
         checked={props.showTotalHighScore}
         rowVisibility={props.totalHighScoreRowVisibility}
         onChange={props.onShowTotalHighScoreChange}
         onRowVisibilityChange={props.onTotalHighScoreRowVisibilityChange}
       />
       <RegisterScoreAggregateVisibilitySettings
-        label={REGISTER_SCORE_MESSAGES.recordStatsTitle}
+        label={REGISTER_SCORE_COPY.recordStatsTitle}
         checked={props.showRecordStatistics}
         rowVisibility={props.statisticRowVisibility}
         onChange={props.onShowRecordStatisticsChange}
@@ -635,7 +702,7 @@ const RegisterScoreAggregateSummary = (props: {
       <Show when={props.showTotalHighScore && totalHighScoreRows().length > 0}>
         <section class="py-4">
           <h2 class="mb-3 whitespace-nowrap text-xl font-extrabold leading-6">
-            {REGISTER_SCORE_MESSAGES.totalHighScoreTitle}
+            {REGISTER_SCORE_COPY.totalHighScoreTitle}
           </h2>
           <div class="grid grid-cols-3 gap-x-4 gap-y-1 text-sm">
             <For each={totalHighScoreRows()}>
@@ -664,7 +731,7 @@ const RegisterScoreAggregateSummary = (props: {
       <Show when={props.showRecordStatistics && statisticRows().length > 0}>
         <section class="py-4">
           <h2 class="mb-3 whitespace-nowrap text-xl font-extrabold leading-6">
-            {REGISTER_SCORE_MESSAGES.recordStatsTitle}
+            {REGISTER_SCORE_COPY.recordStatsTitle}
           </h2>
           <RegisterScoreLampStatistics rows={statisticRows()} />
         </section>
@@ -745,6 +812,35 @@ const BeforeRecordScore = (props: {
   >
     {(before) => <span class="font-jost font-semibold">{formatScore(before().score)}</span>}
   </Show>
+)
+
+/**
+ * 更新差分カードを共有・ダウンロード画像へ含めるか切り替える。
+ *
+ * @param props - 現在の画像除外状態と変更ハンドラー。
+ * @returns 画像除外状態を切り替えるアイコンボタン。
+ */
+const RegisterScoreImageExclusionButton = (props: {
+  excludedFromImage: boolean
+  onChange: (excluded: boolean) => void
+}) => (
+  <AppIconButton
+    tone="ghost"
+    class="absolute right-1 top-1"
+    aria-label={REGISTER_SCORE_COPY.excludeChangeFromImage}
+    aria-pressed={props.excludedFromImage}
+    title={
+      props.excludedFromImage
+        ? REGISTER_SCORE_COPY.includeChangeInImage
+        : REGISTER_SCORE_COPY.excludeChangeFromImage
+    }
+    data-image-capture-excluded="true"
+    onClick={() => props.onChange(!props.excludedFromImage)}
+  >
+    <Show when={props.excludedFromImage} fallback={<Eye class="h-5 w-5" aria-hidden="true" />}>
+      <EyeOff class="h-5 w-5" aria-hidden="true" />
+    </Show>
+  </AppIconButton>
 )
 
 /**
@@ -856,23 +952,10 @@ const RegisterScoreChangeRow = (props: {
           </div>
         </div>
       </div>
-      <AppIconButton
-        tone="ghost"
-        class="absolute right-1 top-1"
-        aria-label={REGISTER_SCORE_MESSAGES.excludeSongFromImage}
-        aria-pressed={props.excludedFromImage}
-        title={
-          props.excludedFromImage
-            ? REGISTER_SCORE_MESSAGES.includeSongInImage
-            : REGISTER_SCORE_MESSAGES.excludeSongFromImage
-        }
-        data-image-capture-excluded="true"
-        onClick={() => props.onExcludedFromImageChange(!props.excludedFromImage)}
-      >
-        <Show when={props.excludedFromImage} fallback={<Eye class="h-5 w-5" aria-hidden="true" />}>
-          <EyeOff class="h-5 w-5" aria-hidden="true" />
-        </Show>
-      </AppIconButton>
+      <RegisterScoreImageExclusionButton
+        excludedFromImage={props.excludedFromImage}
+        onChange={props.onExcludedFromImageChange}
+      />
     </article>
   )
 }
@@ -880,52 +963,67 @@ const RegisterScoreChangeRow = (props: {
 /**
  * 1コース分の登録差分を、コース固有の状態だけで表示する。
  *
- * @param props - 表示対象のコース差分と解決済みコースタイトル。
+ * @param props - 表示対象のコース差分、画像除外状態、操作処理。
  * @returns コース差分行。
  */
 const RegisterCourseChangeRow = (props: {
   change: PlayerDataCourseRecordChange
   courseTitle: string
+  excludedFromImage: boolean
+  onExcludedFromImageChange: (excluded: boolean) => void
 }) => (
-  <article class={`${SCORE_CHANGE_CARD_CLASS} font-jost`}>
-    <div class="flex min-w-0 items-center gap-2 text-base">
-      <span
-        class={`${COURSE_CLASS_BADGE_LAYOUT_CLASS} whitespace-nowrap ${courseClassBadgeClass(
-          props.change.course_class
-        )}`}
-      >
-        {formatCourseClass(props.change.course_class)}
-      </span>
-      <h3 class="min-w-0 flex-1 truncate font-sans text-base font-bold">{props.courseTitle}</h3>
-    </div>
-    <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
-      <div class={COURSE_CHANGE_SCORE_VALUE_CLASS}>
-        <BeforeRecordScore before={props.change.before} />
-        <Show
-          when={props.change.before}
-          fallback={
-            <div class="mt-1 flex min-h-6 flex-wrap items-center gap-1">
-              <LampPlaceholderBadge class="w-[34px]" />
-              <LampPlaceholderBadge class="w-[34px]" />
-            </div>
-          }
+  <article
+    class={`${SCORE_CHANGE_CARD_CLASS} relative font-jost`}
+    data-image-capture-excluded={props.excludedFromImage ? 'true' : undefined}
+  >
+    <div
+      class={`transition-opacity motion-reduce:transition-none ${
+        props.excludedFromImage ? 'opacity-40' : 'opacity-100'
+      }`}
+    >
+      <div class="flex min-w-0 items-center gap-2 pr-10 text-base">
+        <span
+          class={`${COURSE_CLASS_BADGE_LAYOUT_CLASS} whitespace-nowrap ${courseClassBadgeClass(
+            props.change.course_class
+          )}`}
         >
-          {(before) => <CourseRecordLampBadges state={before()} />}
-        </Show>
+          {formatCourseClass(props.change.course_class)}
+        </span>
+        <h3 class="min-w-0 flex-1 truncate font-sans text-base font-bold">{props.courseTitle}</h3>
       </div>
-      <div class="flex w-20 flex-col items-center gap-1">
-        <Play class="mt-1.5 h-3.5 w-3.5 fill-current text-blue-700" aria-hidden="true" />
-        <Show when={formatScoreDelta(props.change)}>
-          {(delta) => (
-            <span class="font-sans text-sm font-bold leading-4 text-blue-700">{delta()}</span>
-          )}
-        </Show>
-      </div>
-      <div class={COURSE_CHANGE_SCORE_VALUE_CLASS}>
-        <span class="font-jost font-semibold">{formatScore(props.change.after.score)}</span>
-        <CourseRecordLampBadges state={props.change.after} />
+      <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>
+        <div class={COURSE_CHANGE_SCORE_VALUE_CLASS}>
+          <BeforeRecordScore before={props.change.before} />
+          <Show
+            when={props.change.before}
+            fallback={
+              <div class="mt-1 flex min-h-6 flex-wrap items-center gap-1">
+                <LampPlaceholderBadge class="w-[34px]" />
+                <LampPlaceholderBadge class="w-[34px]" />
+              </div>
+            }
+          >
+            {(before) => <CourseRecordLampBadges state={before()} />}
+          </Show>
+        </div>
+        <div class="flex w-20 flex-col items-center gap-1">
+          <Play class="mt-1.5 h-3.5 w-3.5 fill-current text-blue-700" aria-hidden="true" />
+          <Show when={formatScoreDelta(props.change)}>
+            {(delta) => (
+              <span class="font-sans text-sm font-bold leading-4 text-blue-700">{delta()}</span>
+            )}
+          </Show>
+        </div>
+        <div class={COURSE_CHANGE_SCORE_VALUE_CLASS}>
+          <span class="font-jost font-semibold">{formatScore(props.change.after.score)}</span>
+          <CourseRecordLampBadges state={props.change.after} />
+        </div>
       </div>
     </div>
+    <RegisterScoreImageExclusionButton
+      excludedFromImage={props.excludedFromImage}
+      onChange={props.onExcludedFromImageChange}
+    />
   </article>
 )
 
@@ -949,7 +1047,7 @@ const RegisterScoreReportHeader = (props: { result: NormalizedPlayerDataUpdateRe
       }}
     />
     <div class="min-w-0 text-right">
-      <h1 class="whitespace-nowrap text-2xl font-bold">{REGISTER_SCORE_MESSAGES.reportTitle}</h1>
+      <h1 class="whitespace-nowrap text-2xl font-bold">{REGISTER_SCORE_COPY.reportTitle}</h1>
       <p class="mt-1 text-sm">
         <span class="whitespace-nowrap font-jost">
           {formatImportedAt(props.result.imported_at)}
@@ -962,7 +1060,7 @@ const RegisterScoreReportHeader = (props: { result: NormalizedPlayerDataUpdateRe
 /**
  * 更新レコード一覧を表示する。
  *
- * @param props - 更新差分、楽曲名解決関数、譜面レベル解決関数、画像除外状態、操作処理。
+ * @param props - 更新差分、表示解決関数、画像除外状態、操作処理。
  * @returns 更新レコードセクション。
  */
 const RegisterScoreChangesSection = (props: {
@@ -970,19 +1068,31 @@ const RegisterScoreChangesSection = (props: {
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
   emptyMessage?: string
-  excludedSongChangeKeys: ReadonlySet<string>
+  excludedChangeKeys: ReadonlySet<string>
   onCopySongTitle: (songTitle: string) => Promise<boolean>
-  onSongExcludedFromImageChange: (change: PlayerDataSongRecordChange, excluded: boolean) => void
+  onChangeExcludedFromImage: (change: PlayerDataRecordChange, excluded: boolean) => void
 }) => (
-  <section class="min-w-0 pt-4">
+  <section
+    class="min-w-0 pt-4"
+    data-image-capture-excluded={
+      props.changes.length > 0 &&
+      !hasRegisterScoreImageChanges(
+        props.changes,
+        props.excludedChangeKeys,
+        createRegisterScoreChangeKey
+      )
+        ? 'true'
+        : undefined
+    }
+  >
     <h2 class="mb-1 whitespace-nowrap text-xl font-bold">
-      {REGISTER_SCORE_MESSAGES.changedSongsTitle}
+      {REGISTER_SCORE_COPY.changedSongsTitle}
     </h2>
     <Show
       when={props.changes.length > 0}
       fallback={
         <p class="px-2 py-6 text-center text-sm text-text-muted">
-          {props.emptyMessage ?? REGISTER_SCORE_MESSAGES.changedSongsEmpty}
+          {props.emptyMessage ?? REGISTER_SCORE_COPY.changedSongsEmpty}
         </p>
       }
     >
@@ -993,10 +1103,10 @@ const RegisterScoreChangesSection = (props: {
               change={change}
               songTitle={props.resolveSongTitle(change)}
               chartLevel={props.resolveChartLevel?.(change)}
-              excludedFromImage={props.excludedSongChangeKeys.has(createSongChangeKey(change))}
+              excludedFromImage={props.excludedChangeKeys.has(createRegisterScoreChangeKey(change))}
               onCopySongTitle={props.onCopySongTitle}
               onExcludedFromImageChange={(excluded) =>
-                props.onSongExcludedFromImageChange(change, excluded)
+                props.onChangeExcludedFromImage(change, excluded)
               }
             />
           )}
@@ -1009,17 +1119,30 @@ const RegisterScoreChangesSection = (props: {
 /**
  * 更新されたコースレコードをレポート末尾へ表示する。
  *
- * @param props - コースレコード差分とコースタイトル解決関数。
+ * @param props - コースレコード差分、コースタイトル解決関数、画像除外状態、操作処理。
  * @returns コースレコードセクション。差分がない場合は何も表示しない。
  */
 const RegisterCourseChangesSection = (props: {
   changes: PlayerDataCourseRecordChange[]
   resolveCourseTitle: RegisterScoreCourseTitleResolver
+  excludedChangeKeys: ReadonlySet<string>
+  onChangeExcludedFromImage: (change: PlayerDataRecordChange, excluded: boolean) => void
 }) => (
   <Show when={props.changes.length > 0}>
-    <section class="min-w-0 pt-4">
+    <section
+      class="min-w-0 pt-4"
+      data-image-capture-excluded={
+        !hasRegisterScoreImageChanges(
+          props.changes,
+          props.excludedChangeKeys,
+          createRegisterScoreChangeKey
+        )
+          ? 'true'
+          : undefined
+      }
+    >
       <h2 class="mb-1 whitespace-nowrap text-xl font-bold">
-        {REGISTER_SCORE_MESSAGES.changedCoursesTitle}
+        {REGISTER_SCORE_COPY.changedCoursesTitle}
       </h2>
       <div class="mt-2 grid min-w-0 max-w-full gap-2">
         <For each={props.changes}>
@@ -1027,6 +1150,10 @@ const RegisterCourseChangesSection = (props: {
             <RegisterCourseChangeRow
               change={change}
               courseTitle={props.resolveCourseTitle(change)}
+              excludedFromImage={props.excludedChangeKeys.has(createRegisterScoreChangeKey(change))}
+              onExcludedFromImageChange={(excluded) =>
+                props.onChangeExcludedFromImage(change, excluded)
+              }
             />
           )}
         </For>
@@ -1038,25 +1165,32 @@ const RegisterCourseChangesSection = (props: {
 /**
  * スコア登録完了後の結果と差分一覧を表示する。
  *
- * @param props - 登録結果、楽曲名・コースタイトル解決関数、譜面レベル解決関数、空状態文言。
+ * @param props - ページ見出し、登録結果、各表示値の解決関数、空状態文言。
  * @returns 登録結果パネル。
  */
 export const RegisterScoreResultView = (props: {
+  pageTitle: string
   result: NormalizedPlayerDataUpdateResult
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
+  resolveSongSortValues: RegisterScoreSongSortValuesResolver
   resolveCourseTitle: RegisterScoreCourseTitleResolver
   changedSongsEmptyMessage?: string
 }) => {
   const [hideLampOnlyChanges, setHideLampOnlyChanges] = createSignal(false)
-  const [excludedSongChangeKeys, setExcludedSongChangeKeys] = createSignal<ReadonlySet<string>>(
-    new Set()
-  )
+  const [songSortSettings, setSongSortSettings] = createSignal<RegisterScoreSortSettings>({
+    ...DEFAULT_REGISTER_SCORE_SORT_SETTINGS,
+  })
+  const [excludedChangeKeys, setExcludedChangeKeys] = createSignal<ReadonlySet<string>>(new Set())
   const songChanges = createMemo(() =>
-    props.result.changes.filter(
-      (change): change is PlayerDataSongRecordChange =>
-        change.record_type !== 'course' &&
-        (!hideLampOnlyChanges() || !isLampOnlyRegisterScoreChange(change))
+    sortRegisterScoreChanges(
+      props.result.changes.filter(
+        (change): change is PlayerDataSongRecordChange =>
+          change.record_type !== 'course' &&
+          (!hideLampOnlyChanges() || !isLampOnlyRegisterScoreChange(change))
+      ),
+      songSortSettings(),
+      props.resolveSongSortValues
     )
   )
   const courseChanges = createMemo(() =>
@@ -1137,19 +1271,39 @@ export const RegisterScoreResultView = (props: {
   }
 
   /**
-   * 楽曲カードを共有・ダウンロード画像へ含めるかを一時的に切り替える。
+   * 楽曲カードの主ソートキーを更新する。
    *
-   * @param change - 対象となる1譜面分の差分。
+   * @param primaryKey - レベル、単曲レーティング、または現在順。
+   * @returns なし。
+   */
+  const updatePrimarySortKey = (primaryKey: RegisterScorePrimarySortKey): void => {
+    setSongSortSettings((current) => ({ ...current, primaryKey }))
+  }
+
+  /**
+   * 楽曲カードの主ソート方向を更新する。
+   *
+   * @param primaryDirection - 主ソートへ適用する方向。
+   * @returns なし。
+   */
+  const updatePrimarySortDirection = (primaryDirection: SortDirection): void => {
+    setSongSortSettings((current) => ({ ...current, primaryDirection }))
+  }
+
+  /**
+   * 更新差分を共有・ダウンロード画像へ含めるかを一時的に切り替える。
+   *
+   * @param change - 対象となる1件分の更新差分。
    * @param excluded - 画像から除外する場合はtrue。
    * @returns なし。
    */
-  const updateSongExcludedFromImage = (
-    change: PlayerDataSongRecordChange,
+  const updateChangeExcludedFromImage = (
+    change: PlayerDataRecordChange,
     excluded: boolean
   ): void => {
-    const key = createSongChangeKey(change)
+    const key = createRegisterScoreChangeKey(change)
 
-    setExcludedSongChangeKeys((current) => {
+    setExcludedChangeKeys((current) => {
       const next = new Set(current)
       if (excluded) {
         next.add(key)
@@ -1169,10 +1323,10 @@ export const RegisterScoreResultView = (props: {
   const copySongTitle = async (songTitle: string): Promise<boolean> => {
     try {
       await navigator.clipboard.writeText(songTitle)
-      showSuccessToast(REGISTER_SCORE_MESSAGES.copySongTitleSuccess)
+      showSuccessToast(REGISTER_SCORE_COPY.copySongTitleSuccess)
       return true
     } catch {
-      showErrorToast(REGISTER_SCORE_MESSAGES.copySongTitleError)
+      showErrorToast(REGISTER_SCORE_COPY.copySongTitleError)
       return false
     }
   }
@@ -1217,7 +1371,7 @@ export const RegisterScoreResultView = (props: {
     } catch {
       if (targetRevision === shareImageRevision) {
         setShareImageFile(undefined)
-        setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+        setImageActionError(REGISTER_SCORE_COPY.shareImageError)
       }
     } finally {
       setIsPreparingShareImage(false)
@@ -1268,7 +1422,7 @@ export const RegisterScoreResultView = (props: {
       const imageFile = await createReportImageFile()
       downloadBlobFile(imageFile, imageFile.name)
     } catch {
-      setImageActionError(REGISTER_SCORE_MESSAGES.downloadImageError)
+      setImageActionError(REGISTER_SCORE_COPY.downloadImageError)
     } finally {
       setIsDownloadingImage(false)
     }
@@ -1286,7 +1440,7 @@ export const RegisterScoreResultView = (props: {
       return
     }
     if (!canShareFiles([imageFile])) {
-      setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+      setImageActionError(REGISTER_SCORE_COPY.shareImageError)
       return
     }
 
@@ -1297,11 +1451,11 @@ export const RegisterScoreResultView = (props: {
       await navigator.share({
         files: [imageFile],
         text: SOCIAL_SHARE_TEXT,
-        title: REGISTER_SCORE_MESSAGES.reportTitle,
+        title: REGISTER_SCORE_COPY.reportTitle,
       })
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
-        setImageActionError(REGISTER_SCORE_MESSAGES.shareImageError)
+        setImageActionError(REGISTER_SCORE_COPY.shareImageError)
       }
     } finally {
       setIsSharingImage(false)
@@ -1345,112 +1499,125 @@ export const RegisterScoreResultView = (props: {
   })
 
   return (
-    <div class={`mx-auto flex w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} flex-col gap-4`}>
-      <div class="flex flex-col items-end gap-2">
-        <div class="flex flex-wrap justify-end gap-2">
-          <Show when={canShareReportImage()}>
+    <div class="@container mx-auto flex w-full max-w-5xl flex-col gap-4">
+      <header
+        class={`mx-auto flex w-full ${REGISTER_SCORE_STACK_MAX_WIDTH_CLASS} flex-col gap-4 @min-[59rem]:max-w-none @min-[59rem]:flex-row @min-[59rem]:items-center @min-[59rem]:justify-between`}
+      >
+        <h1 class="text-2xl font-semibold">{props.pageTitle}</h1>
+        <div class="flex flex-col items-end gap-2">
+          <div class="flex flex-wrap justify-end gap-2">
+            <Show when={canShareReportImage()}>
+              <AppButton
+                variant="secondary"
+                disabled={isGeneratingImage()}
+                aria-busy={isPreparingShareImage() || isSharingImage()}
+                onClick={shareReportImage}
+                leftIcon={
+                  <Show
+                    when={!isPreparingShareImage() && !isSharingImage()}
+                    fallback={<Loading size="inline" ariaHidden />}
+                  >
+                    <Share2 class="h-4 w-4" aria-hidden="true" />
+                  </Show>
+                }
+              >
+                {isPreparingShareImage()
+                  ? REGISTER_SCORE_COPY.preparingShareImage
+                  : isSharingImage()
+                    ? REGISTER_SCORE_COPY.sharingImage
+                    : shareImageFile()
+                      ? REGISTER_SCORE_COPY.shareImage
+                      : REGISTER_SCORE_COPY.prepareShareImage}
+              </AppButton>
+            </Show>
             <AppButton
-              variant="secondary"
+              variant="primary"
               disabled={isGeneratingImage()}
-              aria-busy={isPreparingShareImage() || isSharingImage()}
-              onClick={shareReportImage}
+              aria-busy={isDownloadingImage()}
+              onClick={downloadReportImage}
               leftIcon={
-                <Show
-                  when={!isPreparingShareImage() && !isSharingImage()}
-                  fallback={<Loading size="inline" ariaHidden />}
-                >
-                  <Share2 class="h-4 w-4" aria-hidden="true" />
+                <Show when={!isDownloadingImage()} fallback={<Loading size="inline" ariaHidden />}>
+                  <Download class="h-4 w-4" aria-hidden="true" />
                 </Show>
               }
             >
-              {isPreparingShareImage()
-                ? REGISTER_SCORE_MESSAGES.preparingShareImage
-                : isSharingImage()
-                  ? REGISTER_SCORE_MESSAGES.sharingImage
-                  : shareImageFile()
-                    ? REGISTER_SCORE_MESSAGES.shareImage
-                    : REGISTER_SCORE_MESSAGES.prepareShareImage}
+              {isDownloadingImage()
+                ? REGISTER_SCORE_COPY.downloadingImage
+                : REGISTER_SCORE_COPY.downloadImage}
             </AppButton>
+          </div>
+          <Show when={imageActionError()}>
+            {(message) => (
+              <p class="text-sm text-danger" role="alert">
+                {message()}
+              </p>
+            )}
           </Show>
-          <AppButton
-            variant="primary"
-            disabled={isGeneratingImage()}
-            aria-busy={isDownloadingImage()}
-            onClick={downloadReportImage}
-            leftIcon={
-              <Show when={!isDownloadingImage()} fallback={<Loading size="inline" ariaHidden />}>
-                <Download class="h-4 w-4" aria-hidden="true" />
-              </Show>
-            }
-          >
-            {isDownloadingImage()
-              ? REGISTER_SCORE_MESSAGES.downloadingImage
-              : REGISTER_SCORE_MESSAGES.downloadImage}
-          </AppButton>
         </div>
-        <Show when={imageActionError()}>
-          {(message) => (
-            <p class="text-sm text-danger" role="alert">
-              {message()}
-            </p>
-          )}
-        </Show>
-      </div>
-      <RegisterScoreDisplaySettings
-        hideLampOnlyChanges={hideLampOnlyChanges()}
-        showTotalHighScore={showTotalHighScore()}
-        showRecordStatistics={showRecordStatistics()}
-        totalHighScoreRowVisibility={totalHighScoreRowVisibility()}
-        statisticRowVisibility={statisticRowVisibility()}
-        onHideLampOnlyChangesChange={setHideLampOnlyChanges}
-        onShowTotalHighScoreChange={setShowTotalHighScore}
-        onShowRecordStatisticsChange={setShowRecordStatistics}
-        onTotalHighScoreRowVisibilityChange={updateTotalHighScoreRowVisibility}
-        onStatisticRowVisibilityChange={updateStatisticRowVisibility}
-      />
-      <div
-        ref={scaleContainerRef}
-        class={`w-full ${REGISTER_SCORE_REPORT_MAX_WIDTH_CLASS} overflow-hidden`}
-        style={{ height: scaledReportHeight() ? `${scaledReportHeight()}px` : undefined }}
-      >
+      </header>
+      <div class={REGISTER_SCORE_RESULT_LAYOUT_CLASS}>
+        <RegisterScoreDisplaySettings
+          primarySortKey={songSortSettings().primaryKey}
+          primarySortDirection={songSortSettings().primaryDirection}
+          hideLampOnlyChanges={hideLampOnlyChanges()}
+          showTotalHighScore={showTotalHighScore()}
+          showRecordStatistics={showRecordStatistics()}
+          totalHighScoreRowVisibility={totalHighScoreRowVisibility()}
+          statisticRowVisibility={statisticRowVisibility()}
+          onPrimarySortKeyChange={updatePrimarySortKey}
+          onPrimarySortDirectionChange={updatePrimarySortDirection}
+          onHideLampOnlyChangesChange={setHideLampOnlyChanges}
+          onShowTotalHighScoreChange={setShowTotalHighScore}
+          onShowRecordStatisticsChange={setShowRecordStatistics}
+          onTotalHighScoreRowVisibilityChange={updateTotalHighScoreRowVisibility}
+          onStatisticRowVisibilityChange={updateStatisticRowVisibility}
+        />
         <div
-          class={`${REGISTER_SCORE_REPORT_WIDTH_CLASS} origin-top-left`}
-          style={{ transform: `scale(${reportScale()})` }}
+          ref={scaleContainerRef}
+          class={`w-full ${REGISTER_SCORE_STACK_MAX_WIDTH_CLASS} overflow-hidden`}
+          style={{ height: scaledReportHeight() ? `${scaledReportHeight()}px` : undefined }}
         >
-          <section
-            ref={reportRef}
-            data-theme="light"
-            class="w-full overflow-hidden rounded-md border border-border bg-surface px-0 pb-4 pt-0 font-sans text-text shadow-sm"
+          <div
+            class={`${REGISTER_SCORE_REPORT_WIDTH_CLASS} origin-top-left`}
+            style={{ transform: `scale(${reportScale()})` }}
           >
-            <RegisterScoreReportHeader result={props.result} />
-            <div class="px-4 pt-3">
-              <RegisterScoreProfileSummary result={props.result} />
-              <RegisterScoreAggregateSummary
-                result={props.result}
-                showTotalHighScore={showTotalHighScore()}
-                showRecordStatistics={showRecordStatistics()}
-                totalHighScoreRowVisibility={totalHighScoreRowVisibility()}
-                statisticRowVisibility={statisticRowVisibility()}
-              />
-              <RegisterScoreChangesSection
-                changes={songChanges()}
-                resolveSongTitle={props.resolveSongTitle}
-                resolveChartLevel={props.resolveChartLevel}
-                emptyMessage={
-                  hideLampOnlyChanges()
-                    ? REGISTER_SCORE_MESSAGES.filteredChangedSongsEmpty
-                    : props.changedSongsEmptyMessage
-                }
-                excludedSongChangeKeys={excludedSongChangeKeys()}
-                onCopySongTitle={copySongTitle}
-                onSongExcludedFromImageChange={updateSongExcludedFromImage}
-              />
-              <RegisterCourseChangesSection
-                changes={courseChanges()}
-                resolveCourseTitle={props.resolveCourseTitle}
-              />
-            </div>
-          </section>
+            <section
+              ref={reportRef}
+              data-theme="light"
+              class="w-full overflow-hidden rounded-md border border-border bg-surface px-0 pb-4 pt-0 font-sans text-text shadow-sm"
+            >
+              <RegisterScoreReportHeader result={props.result} />
+              <div class="px-4 pt-3">
+                <RegisterScoreProfileSummary result={props.result} />
+                <RegisterScoreAggregateSummary
+                  result={props.result}
+                  showTotalHighScore={showTotalHighScore()}
+                  showRecordStatistics={showRecordStatistics()}
+                  totalHighScoreRowVisibility={totalHighScoreRowVisibility()}
+                  statisticRowVisibility={statisticRowVisibility()}
+                />
+                <RegisterScoreChangesSection
+                  changes={songChanges()}
+                  resolveSongTitle={props.resolveSongTitle}
+                  resolveChartLevel={props.resolveChartLevel}
+                  emptyMessage={
+                    hideLampOnlyChanges()
+                      ? REGISTER_SCORE_COPY.filteredChangedSongsEmpty
+                      : props.changedSongsEmptyMessage
+                  }
+                  excludedChangeKeys={excludedChangeKeys()}
+                  onCopySongTitle={copySongTitle}
+                  onChangeExcludedFromImage={updateChangeExcludedFromImage}
+                />
+                <RegisterCourseChangesSection
+                  changes={courseChanges()}
+                  resolveCourseTitle={props.resolveCourseTitle}
+                  excludedChangeKeys={excludedChangeKeys()}
+                  onChangeExcludedFromImage={updateChangeExcludedFromImage}
+                />
+              </div>
+            </section>
+          </div>
         </div>
       </div>
     </div>

@@ -56,6 +56,7 @@ import {
 } from '../../utils/randomSongSelector'
 import { normalizeChartConstRangeInput, normalizeScoreRangeInput } from '../../utils/rangeInput'
 import { getScoreRank } from '../../utils/scoreRank'
+import { filterReleasedVersions, getShortVersionName } from '../../utils/versionConverter'
 import {
   RANDOM_SONG_BEST_FRAME_OPTIONS,
   RANDOM_SONG_LAMP_OPTIONS,
@@ -554,9 +555,17 @@ const RandomSongSelectorPage = (): JSX.Element => {
       left.localeCompare(right, 'ja')
     )
   )
-  const versionOptions = createMemo(() => [
-    ...new Set(allCandidates().map((candidate) => candidate.version)),
-  ])
+  const versionOptions = createMemo(() => {
+    const releasedNames = new Set(
+      filterReleasedVersions(versionsResponse()?.versions ?? []).map((version) =>
+        getShortVersionName(version.name)
+      )
+    )
+    // 候補の解決は全件で行い、未来名の候補が公開済み選択肢から外れる。
+    return [...new Set(allCandidates().map((candidate) => candidate.version))].filter((version) =>
+      releasedNames.has(version)
+    )
+  })
   const parsedMinConst = createMemo(() => parseOptionalRandomSongDecimal(minConst()))
   const parsedMaxConst = createMemo(() => parseOptionalRandomSongDecimal(maxConst()))
   const parsedMinScore = createMemo(() => parseOptionalRandomSongDecimal(minScore()))

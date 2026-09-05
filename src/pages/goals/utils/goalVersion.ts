@@ -1,5 +1,5 @@
 import type { VersionDTO } from '../../../types/api'
-import { getShortVersionName } from '../../../utils/versionConverter'
+import { filterReleasedVersions, getShortVersionName } from '../../../utils/versionConverter'
 
 export type GoalVersionOption = {
   value: string
@@ -23,27 +23,45 @@ export const sortGoalVersionsByReleaseDate = (versions: readonly VersionDTO[]): 
 /**
  * 目標条件のバージョン選択肢をリリース日順の番号で作る。
  *
+ * 未来分は除外してから番号を振る。末尾追加のみの運用では公開済みの番号は不変になる。
+ * 進捗側の解決は全件で行い、未来曲が未来番号になることで現行目標から外れる。
+ *
  * @param versions - API から返されたバージョン一覧。
+ * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
  * @returns チェックボックスに描画する選択肢。
  */
-export const buildGoalVersionOptions = (versions: readonly VersionDTO[]): GoalVersionOption[] =>
-  sortGoalVersionsByReleaseDate(versions).map((version, index) => {
-    const numericValue = index + 1
-    return {
-      value: String(numericValue),
-      numericValue,
-      label: getShortVersionName(version.name),
+export const buildGoalVersionOptions = (
+  versions: readonly VersionDTO[],
+  referenceDate?: string
+): GoalVersionOption[] =>
+  sortGoalVersionsByReleaseDate(filterReleasedVersions(versions, referenceDate)).map(
+    (version, index) => {
+      const numericValue = index + 1
+      return {
+        value: String(numericValue),
+        numericValue,
+        label: getShortVersionName(version.name),
+      }
     }
-  })
+  )
 
 /**
  * 目標条件のバージョン番号から表示名を引く Map を作る。
  *
  * @param versions - API から返されたバージョン一覧。
+ * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
  * @returns リリース日順番号をキーにした表示名 Map。
  */
-export const buildGoalVersionNameMap = (versions: readonly VersionDTO[]): Map<number, string> =>
-  new Map(buildGoalVersionOptions(versions).map((version) => [version.numericValue, version.label]))
+export const buildGoalVersionNameMap = (
+  versions: readonly VersionDTO[],
+  referenceDate?: string
+): Map<number, string> =>
+  new Map(
+    buildGoalVersionOptions(versions, referenceDate).map((version) => [
+      version.numericValue,
+      version.label,
+    ])
+  )
 
 /**
  * 曲のリリース日から目標条件用のバージョン番号を解決する。

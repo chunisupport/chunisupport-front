@@ -1,4 +1,8 @@
-import { ADMIN_DATA_COVERAGE_PATH, ADMIN_MAINTENANCE_PATH } from '../../constants/routes'
+import {
+  ADMIN_DATA_COVERAGE_PATH,
+  ADMIN_MAINTENANCE_PATH,
+  ADMIN_VERSIONS_PATH,
+} from '../../constants/routes'
 
 /** 管理メニュー画面に表示する文言 */
 export const ADMIN_PAGE_COPY = {
@@ -33,5 +37,10 @@ export const ADMIN_PAGE_LINKS = [
     href: '/admin/honors',
     title: '称号管理',
     description: '称号一覧、クラス、画像URLを確認します。',
+  },
+  {
+    href: ADMIN_VERSIONS_PATH,
+    title: 'バージョン管理',
+    description: 'バージョン名と稼働日を追加、修正、削除します。',
   },
 ] as const

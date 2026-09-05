@@ -1,6 +1,6 @@
 import { useSearchParams } from '@solidjs/router'
 import { useQueryClient } from '@tanstack/solid-query'
-import { createSignal, Match, onMount, Switch } from 'solid-js'
+import { createSignal, Match, onMount, Show, Switch } from 'solid-js'
 
 import { postPlayerDataCommit } from '../../api/register-data'
 import { Loading } from '../../components'
@@ -16,10 +16,12 @@ import {
   type NormalizedPlayerDataResult,
 } from '../../usecases/registerScoreCommit'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-import { REGISTER_SCORE_MESSAGES, RegisterScoreResultView } from './RegisterScoreResultView'
+import { REGISTER_SCORE_COPY } from './constants'
+import { RegisterScoreResultView } from './RegisterScoreResultView'
 import {
   resolveRegisterScoreChartLevel,
   resolveRegisterScoreCourseTitle,
+  resolveRegisterScoreSongSortValues,
   resolveRegisterScoreSongTitle,
 } from './registerScoreResolvers'
 import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreToken'
@@ -42,7 +44,7 @@ type CourseLookupItem = Pick<CourseDTO, 'idx' | 'name'>
  * @returns 画面表示用のエラーメッセージ。
  */
 const resolveRegisterScoreErrorMessage = (error: unknown): string => {
-  return toUserFriendlyErrorMessage(error, REGISTER_SCORE_MESSAGES.fallbackError)
+  return toUserFriendlyErrorMessage(error, REGISTER_SCORE_COPY.fallbackError)
 }
 
 /**
@@ -67,7 +69,7 @@ const RegisterScorePage = () => {
     return username ? invalidateFriendRankings(queryClient, username) : Promise.resolve()
   }
 
-  useDocumentTitle(REGISTER_SCORE_MESSAGES.title)
+  useDocumentTitle(REGISTER_SCORE_COPY.title)
 
   /**
    * 差分に含まれる楽曲idxから表示用の楽曲名を解決する。
@@ -94,6 +96,19 @@ const RegisterScorePage = () => {
   }
 
   /**
+   * 差分に含まれる楽曲idxと難易度からソート用の値を解決する。
+   *
+   * @param change - APIから返却された1譜面分の差分。
+   * @returns ソート用のレベルと単曲レーティング。解決できない値はnull。
+   */
+  const songSortValuesByIdx = (
+    change: Parameters<typeof resolveRegisterScoreSongSortValues>[0]
+  ) => {
+    const standardSongs = songsData.songsResponse.latest?.songs ?? []
+    return resolveRegisterScoreSongSortValues(change, standardSongs)
+  }
+
+  /**
    * 差分に含まれるコースidxから表示用のコースタイトルを解決する。
    *
    * @param change - APIから返却されたコース差分。
@@ -108,7 +123,7 @@ const RegisterScorePage = () => {
   onMount(async () => {
     const uploadToken = normalizeUploadTokenParam(searchParams.token)
     if (!uploadToken || !isValidUploadToken(uploadToken)) {
-      setViewState({ type: 'error', message: REGISTER_SCORE_MESSAGES.invalidToken })
+      setViewState({ type: 'error', message: REGISTER_SCORE_COPY.invalidToken })
       return
     }
 
@@ -137,14 +152,16 @@ const RegisterScorePage = () => {
 
   return (
     <main class="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
-      <h1 class="text-2xl font-semibold">{REGISTER_SCORE_MESSAGES.title}</h1>
+      <Show when={viewState().type !== 'success'}>
+        <h1 class="text-2xl font-semibold">{REGISTER_SCORE_COPY.title}</h1>
+      </Show>
 
       <Switch>
         <Match when={viewState().type === 'committing'}>
           <section class="rounded-lg border border-border bg-surface p-6">
             <Loading />
             <p class="mt-4 text-center text-sm text-text-muted" aria-live="polite">
-              {REGISTER_SCORE_MESSAGES.processing}
+              {REGISTER_SCORE_COPY.processing}
             </p>
           </section>
         </Match>
@@ -158,9 +175,11 @@ const RegisterScorePage = () => {
 
             return (
               <RegisterScoreResultView
+                pageTitle={REGISTER_SCORE_COPY.title}
                 result={successState.result}
                 resolveSongTitle={songTitleByIdx}
                 resolveChartLevel={chartLevelByIdx}
+                resolveSongSortValues={songSortValuesByIdx}
                 resolveCourseTitle={(change) => courseTitleByIdx(change, courses)}
               />
             )
