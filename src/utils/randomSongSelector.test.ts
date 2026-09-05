@@ -11,6 +11,7 @@ import {
   createRandomSongRecordMap,
   drawRandomSongs,
   filterRandomSongCandidates,
+  filterRandomSongCandidatesByFavorite,
   filterRandomSongCandidatesByRecord,
   formatRandomSongLevel,
   getRandomSongCompleteLevelWeightOptions,
@@ -217,6 +218,69 @@ test('難易度・ジャンル・バージョン・譜面定数で候補を絞�
     filtered.map((candidate) => candidate.difficulty),
     ['MASTER']
   )
+})
+
+test('お気に入りからランダムではお気に入り楽曲の全譜面だけを残すこと', () => {
+  // Given: お気に入り楽曲と未登録楽曲の譜面候補がある。
+  const candidates = [
+    createCandidate({
+      song: createSong({ id: 'favorite-song', title: 'Favorite Song' }),
+      difficulty: 'EXPERT',
+    }),
+    createCandidate({
+      song: createSong({ id: 'favorite-song', title: 'Favorite Song' }),
+      difficulty: 'MASTER',
+    }),
+    createCandidate({
+      song: createSong({ id: 'other-song', title: 'Other Song' }),
+      difficulty: 'MASTER',
+    }),
+  ]
+
+  // When: お気に入り楽曲だけに絞り込む。
+  const filtered = filterRandomSongCandidatesByFavorite(
+    candidates,
+    new Set(['favorite-song']),
+    true
+  )
+
+  // Then: お気に入り楽曲に属する譜面だけが残る。
+  assert.deepEqual(
+    filtered.map((candidate) => `${candidate.song.id}:${candidate.difficulty}`),
+    ['favorite-song:EXPERT', 'favorite-song:MASTER']
+  )
+})
+
+/** お気に入り未登録時に絞り込みを有効にすると候補が空になることを検証する。 */
+test('お気に入りが0件でお気に入りからランダムが有効なら候補を残さないこと', () => {
+  // Given: 譜面候補はあるが、お気に入り楽曲は登録されていない。
+  const candidates = [createCandidate({})]
+  const favoriteSongIds = new Set<string>()
+
+  // When: お気に入り楽曲だけに絞り込む。
+  const filtered = filterRandomSongCandidatesByFavorite(candidates, favoriteSongIds, true)
+
+  // Then: 候補が空になる。
+  assert.deepEqual(filtered, [])
+})
+
+/** お気に入り絞り込みが無効な場合に元の候補配列をそのまま返すことを検証する。 */
+test('お気に入りからランダムが無効なら元の候補配列をそのまま返すこと', () => {
+  // Given: お気に入り楽曲と未登録楽曲の譜面候補がある。
+  const candidates = [
+    createCandidate({ song: createSong({ id: 'favorite-song' }) }),
+    createCandidate({ song: createSong({ id: 'other-song' }) }),
+  ]
+
+  // When: お気に入り絞り込みを無効にする。
+  const filtered = filterRandomSongCandidatesByFavorite(
+    candidates,
+    new Set(['favorite-song']),
+    false
+  )
+
+  // Then: コピーせず、すべての候補を含む元の配列を返す。
+  assert.equal(filtered, candidates)
 })
 
 test('OP対象の難易度絞り込みでは曲ごとのOP対象譜面だけを残すこと', () => {

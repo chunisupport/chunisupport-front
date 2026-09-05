@@ -442,6 +442,24 @@ export const filterRandomSongCandidates = (
   })
 
 /**
+ * ランダム選曲候補をお気に入り楽曲だけに絞り込む。
+ *
+ * @param candidates - 譜面単位の候補一覧。
+ * @param favoriteSongIds - お気に入り登録されている楽曲ID。
+ * @param favoriteOnly - お気に入り楽曲だけを残す場合は true。
+ * @returns お気に入り条件に一致した候補一覧。絞り込みが無効な場合は元の配列。
+ */
+export const filterRandomSongCandidatesByFavorite = (
+  candidates: readonly RandomSongCandidate[],
+  favoriteSongIds: ReadonlySet<string>,
+  favoriteOnly: boolean
+): readonly RandomSongCandidate[] => {
+  if (!favoriteOnly) return candidates
+
+  return candidates.filter((candidate) => favoriteSongIds.has(candidate.song.id))
+}
+
+/**
  * レコードのスコア範囲絞り込みを適用するか判定する。
  *
  * @param filter - プレイ状況とスコアの絞り込み条件。
