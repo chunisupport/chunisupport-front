@@ -8,7 +8,6 @@ import {
   COMBO_LAMP_BADGE_BACKGROUND_CLASS,
   COMBO_LAMP_BADGE_TEXT_CLASS,
   COMBO_LAMP_BAR_CLASS,
-  COMBO_LAMP_SCORE_ACCENT_CLASS,
   getComboLampBadgeClass,
   HARD_LAMP_BAR_CLASS,
   SCORE_RANK_BAR_CLASS,
@@ -55,17 +54,6 @@ test('FCのコンボランプバッジはFC用トークン色を返すこと', (
     result,
     `${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`
   )
-})
-
-test('画像用スコアアクセントはFCだけを粗い破線で表示すること', () => {
-  // Given: FCとAJの画像用スコアアクセント
-  const expectedFullComboClass =
-    'bg-gradient-to-b from-transparent to-lamp-full-combo-bg [-webkit-mask-image:repeating-linear-gradient(90deg,black_0_6px,transparent_6px_10px)] [mask-image:repeating-linear-gradient(90deg,black_0_6px,transparent_6px_10px)]'
-  const expectedAllJusticeClass = 'bg-gradient-to-b from-transparent to-lamp-all-justice-bg'
-
-  // When & Then: FCだけが固定周期の破線になり、AJは連続したグラデーションを維持する
-  assert.equal(COMBO_LAMP_SCORE_ACCENT_CLASS['FULL COMBO'], expectedFullComboClass)
-  assert.equal(COMBO_LAMP_SCORE_ACCENT_CLASS['ALL JUSTICE'], expectedAllJusticeClass)
 })
 
 test('COMBOのなしとHARDのFAILEDはRANKのOTHERS色を返すこと', () => {

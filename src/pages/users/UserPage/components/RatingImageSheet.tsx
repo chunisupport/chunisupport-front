@@ -3,8 +3,10 @@ import { Play } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createSignal, For, Show } from 'solid-js'
 import placeholderImageUrl from '../../../../assets/placeholder.png'
+import { RECORD_CARD_LAMP_BADGE_CLASS } from '../../../../components/common/record/RecordDisplayParts'
+import { getDefaultRecordLampLabel } from '../../../../components/common/record/recordLampLabel'
 import {
-  COMBO_LAMP_SCORE_ACCENT_CLASS,
+  getComboLampBadgeClass,
   SCORE_RANK_TEXT_CLASS,
 } from '../../../../components/common/record/recordStyleClasses'
 import { getHonorTypeClassName } from '../../../../constants/honors'
@@ -106,9 +108,6 @@ const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => 
   const [jacketSource, setJacketSource] = createSignal(jacketUrl())
   const constDisplay = () => getConstDisplay(props.record.const, props.record.is_const_unknown)
   const unknownValueClass = () => (props.record.is_const_unknown ? 'text-danger' : 'text-text')
-  /** @returns コンボランプがある場合はスコアへ重ねるアクセントバーの背景クラス */
-  const comboLampScoreAccentClass = () =>
-    props.record.combo_lamp ? COMBO_LAMP_SCORE_ACCENT_CLASS[props.record.combo_lamp] : undefined
   let fallbackLoaded = false
   let retried = false
 
@@ -211,25 +210,27 @@ const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => 
         <p class="min-w-0 flex-1 truncate whitespace-nowrap font-sans text-xl font-semibold leading-tight">
           {props.record.title}
         </p>
-        <div class="flex w-21 shrink-0 flex-col items-end justify-center whitespace-nowrap text-right font-oswald leading-none">
-          <span
-            class={`relative inline-block text-xl font-bold ${SCORE_RANK_TEXT_CLASS[scoreRank()]}`}
-          >
-            <span class="relative z-10">{formatInteger(props.record.score)}</span>
-            <Show when={comboLampScoreAccentClass()}>
-              {(accentClass) => (
+        {/* スコア・譜面定数列。AJC幅まで収まるようタイトル側へ省略の逃げ先を残す。 */}
+        <div class="flex w-24 shrink-0 flex-col items-end justify-center whitespace-nowrap text-right font-oswald leading-none">
+          <span class={`text-xl font-bold ${SCORE_RANK_TEXT_CLASS[scoreRank()]}`}>
+            {formatInteger(props.record.score)}
+          </span>
+          <span class={`flex items-center gap-1 text-xl font-bold ${unknownValueClass()}`}>
+            <Show when={props.record.combo_lamp}>
+              {(lamp) => (
                 <span
-                  class={`absolute inset-x-0 bottom-px h-1.5 ${accentClass()}`}
-                  aria-hidden="true"
-                />
+                  class={`mt-[2px] ${RECORD_CARD_LAMP_BADGE_CLASS} ${getComboLampBadgeClass(lamp(), props.record.score)}`}
+                >
+                  {getDefaultRecordLampLabel(lamp(), props.record.score)}
+                </span>
               )}
             </Show>
-          </span>
-          <span class={`text-xl font-bold ${unknownValueClass()}`}>
-            {constDisplay().valueText}
-            <Show when={constDisplay().markerText}>
-              {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
-            </Show>
+            <span>
+              {constDisplay().valueText}
+              <Show when={constDisplay().markerText}>
+                {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
+              </Show>
+            </span>
           </span>
         </div>
         <Play
