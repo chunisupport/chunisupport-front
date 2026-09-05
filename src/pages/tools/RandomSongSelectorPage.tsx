@@ -34,15 +34,18 @@ import { formatChartConst } from '../../utils/chartConstFormat'
 import {
   aggregateRandomSongCandidateWeights,
   buildRandomSongCandidates,
+  createChartConstsByLevelMap,
   createRandomSongCandidateKey,
   createRandomSongChartKey,
   createRandomSongRecordMap,
   drawRandomSongs,
   filterRandomSongCandidates,
   filterRandomSongCandidatesByRecord,
+  getRandomSongCompleteLevelWeightOptions,
   hasInvalidRandomSongWeightValue,
   parseOptionalRandomSongDecimal,
   parseRandomSongDrawCount,
+  parseRandomSongWeightValue,
   parseRandomSongWeightValues,
   RANDOM_SONG_OP_TARGET_FILTER,
   RANDOM_SONG_SELECTOR_DIFFICULTIES,
@@ -50,6 +53,8 @@ import {
   type RandomSongCandidate,
   type RandomSongDifficultyFilter,
   type RandomSongLampFilter,
+  type RandomSongLevelWeightOption,
+  resolveRandomSongLevelWeightEnabledState,
   resolveRandomSongRecordLamp,
   restoreRandomSongResults,
   toggleRandomSongDifficultyFilter,
@@ -99,6 +104,7 @@ type RandomSongTextFieldProps = {
   labelHidden?: boolean
   value: string
   inputMode?: 'numeric' | 'decimal'
+  placeholder?: string
   disabled?: boolean
   onChange: (value: string) => void
 }
@@ -123,6 +129,7 @@ type RandomSongWeightFieldProps = {
   label: string
   value: string
   percentLabel: string
+  placeholder?: string
   disabled?: boolean
   onChange: (value: string) => void
 }
@@ -183,13 +190,7 @@ const getRandomSongInputPattern = (
  */
 const parseRandomSongWeightForPercent = (value: string, enabled = true): number | null => {
   if (!enabled) return 0
-
-  const parsed = parseOptionalRandomSongDecimal(value)
-  if (parsed === null || Number.isNaN(parsed)) {
-    return null
-  }
-
-  return parsed
+  return parseRandomSongWeightValue(value)
 }
 
 /**
@@ -269,6 +270,7 @@ const RandomSongTextField: Component<RandomSongTextFieldProps> = (props) => (
       inputMode={props.inputMode}
       pattern={getRandomSongInputPattern(props.inputMode)}
       autocomplete="off"
+      placeholder={props.placeholder}
       disabled={props.disabled}
     />
   </TextField>
@@ -327,6 +329,7 @@ const RandomSongWeightField: Component<RandomSongWeightFieldProps> = (props) => 
       label={props.label}
       value={props.value}
       inputMode="decimal"
+      placeholder={props.placeholder}
       disabled={props.disabled}
       onChange={props.onChange}
     />
@@ -346,6 +349,7 @@ const RandomSongWeightField: Component<RandomSongWeightFieldProps> = (props) => 
 const RandomSongCheckbox: Component<{
   id: string
   checked: boolean
+  indeterminate?: boolean
   label: string
   disabled?: boolean
   onChange: (checked: boolean) => void
@@ -354,6 +358,7 @@ const RandomSongCheckbox: Component<{
     id={props.id}
     class="relative grid min-h-5 grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 text-sm text-text data-disabled:cursor-not-allowed data-disabled:opacity-60"
     checked={props.checked}
+    indeterminate={props.indeterminate}
     disabled={props.disabled}
     onChange={props.onChange}
     indicatorClass="h-3.5 w-3.5"
@@ -663,10 +668,14 @@ const RandomSongSelectorPage = (): JSX.Element => {
       ...new Set(filteredCandidates().map((candidate) => formatChartConst(candidate.chartConst))),
     ].sort((left, right) => Number(left) - Number(right))
   )
+  const allChartConstsByLevel = createMemo(() => createChartConstsByLevelMap(allCandidates()))
+  const completeLevelWeightOptions = createMemo(() =>
+    getRandomSongCompleteLevelWeightOptions(allChartConstsByLevel(), filteredCandidates())
+  )
   /**
    * 候補全体を一度だけ走査し、出現割合表示用の重みを分類別に集計する。
    *
-   * @returns 全体・難易度別・譜面定数別の候補重み。
+   * @returns 全体・難易度別・レベル別・譜面定数別の候補重み。
    */
   const candidateWeightSummary = createMemo(() => {
     const currentDifficultyWeights = difficultyWeights()
@@ -870,6 +879,37 @@ const RandomSongSelectorPage = (): JSX.Element => {
   }
 
   /**
+   * レベル内の全譜面定数へ同じ出やすさを設定する。
+   *
+   * @param option - 一括設定するレベルと譜面定数。
+   * @param value - 新しい重み入力値。
+   * @returns なし。
+   */
+  const handleLevelWeightChange = (option: RandomSongLevelWeightOption, value: string): void => {
+    setConstWeights((prev) => ({
+      ...prev,
+      ...Object.fromEntries(option.chartConsts.map((chartConst) => [chartConst, value])),
+    }))
+  }
+
+  /**
+   * レベル内の全譜面定数の抽選対象オンオフを更新する。
+   *
+   * @param option - 一括設定するレベルと譜面定数。
+   * @param enabled - 抽選対象に含める場合は true。
+   * @returns なし。
+   */
+  const handleLevelWeightEnabledChange = (
+    option: RandomSongLevelWeightOption,
+    enabled: boolean
+  ): void => {
+    setConstWeightEnabled((prev) => ({
+      ...prev,
+      ...Object.fromEntries(option.chartConsts.map((chartConst) => [chartConst, enabled])),
+    }))
+  }
+
+  /**
    * 難易度別の候補重みが全候補内で占める割合を取得する。
    *
    * @param difficulty - 表示対象の難易度。
@@ -902,6 +942,35 @@ const RandomSongSelectorPage = (): JSX.Element => {
 
     const summary = candidateWeightSummary()
     return formatRandomSongWeightPercent(summary.byChartConst.get(chartConst) ?? 0, summary.total)
+  }
+
+  /**
+   * レベル内の候補重みが全候補内で占める割合を取得する。
+   *
+   * @param option - 表示対象のレベルと譜面定数。
+   * @returns 全候補の重み総量に対するレベル別の出現割合。
+   */
+  const levelWeightPercentLabel = (option: RandomSongLevelWeightOption): string => {
+    const summary = candidateWeightSummary()
+    if (summary.invalidLevelLabels.has(option.levelLabel)) {
+      return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
+    }
+
+    return formatRandomSongWeightPercent(summary.byLevel.get(option.levelLabel) ?? 0, summary.total)
+  }
+
+  /**
+   * レベル内で共通の出やすさが設定されている場合だけ、その値を取得する。
+   *
+   * @param option - 表示対象のレベルと譜面定数。
+   * @returns 共通の重み。定数ごとに異なる場合は空文字。
+   */
+  const levelWeightValue = (option: RandomSongLevelWeightOption): string => {
+    const values = option.chartConsts.map(
+      (chartConst) => constWeights()[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight
+    )
+
+    return values.every((value) => value === values[0]) ? values[0] : ''
   }
 
   /**
@@ -1151,6 +1220,76 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                     </For>
                                   </div>
                                 </div>
+                                <Show when={completeLevelWeightOptions().length > 0}>
+                                  <div>
+                                    <div class="mb-2 text-sm font-medium text-text-muted">
+                                      {RANDOM_SONG_SELECTOR_COPY.levelWeightLabel}
+                                    </div>
+                                    <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                                      <For each={completeLevelWeightOptions()}>
+                                        {(option) => {
+                                          const enabledState = () =>
+                                            resolveRandomSongLevelWeightEnabledState(
+                                              option.chartConsts,
+                                              constWeightEnabled()
+                                            )
+                                          const isEnabled = () => enabledState() === 'enabled'
+                                          const isIndeterminate = () => enabledState() === 'mixed'
+                                          const weightValue = () => levelWeightValue(option)
+                                          const checkboxId = `random-song-level-enabled-${option.levelLabel.replace('+', 'plus')}`
+                                          return (
+                                            <div
+                                              class="relative flex h-full min-h-32 flex-col gap-2 rounded border p-3"
+                                              classList={{
+                                                'border-action-primary bg-action-primary-muted':
+                                                  isEnabled(),
+                                                'border-action-primary bg-surface-muted':
+                                                  isIndeterminate(),
+                                                'border-border bg-surface-muted':
+                                                  enabledState() === 'disabled',
+                                              }}
+                                            >
+                                              <label
+                                                for={checkboxId}
+                                                class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                                              >
+                                                <span class="sr-only">{option.levelLabel}</span>
+                                              </label>
+                                              <div class="pointer-events-none relative z-20">
+                                                <RandomSongCheckbox
+                                                  id={checkboxId}
+                                                  checked={isEnabled()}
+                                                  indeterminate={isIndeterminate()}
+                                                  label={option.levelLabel}
+                                                  onChange={(enabled) =>
+                                                    handleLevelWeightEnabledChange(option, enabled)
+                                                  }
+                                                />
+                                              </div>
+                                              <div class="pointer-events-auto relative z-20 mt-auto">
+                                                <RandomSongWeightField
+                                                  id={`random-song-level-weight-${option.levelLabel.replace('+', 'plus')}`}
+                                                  label={RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate}
+                                                  value={weightValue()}
+                                                  placeholder={
+                                                    weightValue() === ''
+                                                      ? RANDOM_SONG_SELECTOR_COPY.mixedWeightPlaceholder
+                                                      : undefined
+                                                  }
+                                                  percentLabel={levelWeightPercentLabel(option)}
+                                                  disabled={enabledState() === 'disabled'}
+                                                  onChange={(value) =>
+                                                    handleLevelWeightChange(option, value)
+                                                  }
+                                                />
+                                              </div>
+                                            </div>
+                                          )
+                                        }}
+                                      </For>
+                                    </div>
+                                  </div>
+                                </Show>
                                 <div>
                                   <div class="mb-2 text-sm font-medium text-text-muted">
                                     {RANDOM_SONG_SELECTOR_COPY.constWeightLabel}

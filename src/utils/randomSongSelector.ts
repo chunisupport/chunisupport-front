@@ -40,11 +40,13 @@ export type RandomSongCandidate = {
   version: string
 }
 
-/** ランダム選曲候補の重みを全体・難易度・譜面定数ごとに集計した結果 */
+/** ランダム選曲候補の重みを全体・難易度・レベル・譜面定数ごとに集計した結果 */
 export type RandomSongCandidateWeightSummary = {
   total: number
   byDifficulty: ReadonlyMap<PlayerDataDifficulty, number>
+  byLevel: ReadonlyMap<string, number>
   byChartConst: ReadonlyMap<string, number>
+  invalidLevelLabels: ReadonlySet<string>
 }
 
 export type RandomSongFilter = {
@@ -59,6 +61,17 @@ export type RandomSongWeight = {
   difficultyWeights?: Partial<Record<PlayerDataDifficulty, number>>
   constWeights?: Partial<Record<string, number>>
 }
+
+/**
+ * レベル単位でまとめて重みを設定できる譜面定数のグループ。
+ */
+export type RandomSongLevelWeightOption = {
+  levelLabel: string
+  chartConsts: string[]
+}
+
+/** レベル別カードに含まれる譜面定数の有効状態。 */
+export type RandomSongLevelWeightEnabledState = 'enabled' | 'mixed' | 'disabled'
 
 export type RandomSongPlayStatusFilter = 'all' | 'played' | 'unplayed'
 
@@ -110,7 +123,7 @@ export const createRandomSongCandidateKey = (candidate: RandomSongCandidate): st
  *
  * @param candidates - 集計対象の選曲候補。
  * @param resolveWeight - 候補1件の重みを返す関数。不正値を除外する場合は null を返す。
- * @returns 全候補・難易度別・譜面定数別の重み合計。
+ * @returns 全候補・難易度別・レベル別・譜面定数別の重み合計と不正値を含むレベル。
  */
 export const aggregateRandomSongCandidateWeights = (
   candidates: readonly RandomSongCandidate[],
@@ -118,20 +131,26 @@ export const aggregateRandomSongCandidateWeights = (
 ): RandomSongCandidateWeightSummary => {
   let total = 0
   const byDifficulty = new Map<PlayerDataDifficulty, number>()
+  const byLevel = new Map<string, number>()
   const byChartConst = new Map<string, number>()
+  const invalidLevelLabels = new Set<string>()
 
   for (const candidate of candidates) {
     const weight = resolveWeight(candidate)
-    if (weight === null) continue
+    if (weight === null) {
+      invalidLevelLabels.add(candidate.levelLabel)
+      continue
+    }
 
     total += weight
     byDifficulty.set(candidate.difficulty, (byDifficulty.get(candidate.difficulty) ?? 0) + weight)
+    byLevel.set(candidate.levelLabel, (byLevel.get(candidate.levelLabel) ?? 0) + weight)
 
     const chartConst = formatChartConst(candidate.chartConst)
     byChartConst.set(chartConst, (byChartConst.get(chartConst) ?? 0) + weight)
   }
 
-  return { total, byDifficulty, byChartConst }
+  return { total, byDifficulty, byLevel, byChartConst, invalidLevelLabels }
 }
 
 /**
@@ -231,6 +250,75 @@ export const formatRandomSongLevel = (chartConst: number): string => {
   const baseLevel = Math.floor(chartConst)
   const decimal = Math.round((chartConst - baseLevel) * 10)
   return decimal >= 5 ? `${baseLevel}+` : String(baseLevel)
+}
+
+/**
+ * 候補一覧をレベルごとの譜面定数セットへ変換する。
+ *
+ * @param candidates - 変換対象のランダム選曲候補。
+ * @returns レベル表記をキー、譜面定数の集合を値とするMap。
+ */
+export const createChartConstsByLevelMap = (
+  candidates: readonly RandomSongCandidate[]
+): Map<string, Set<string>> => {
+  const values = new Map<string, Set<string>>()
+
+  for (const candidate of candidates) {
+    const levelLabel = formatRandomSongLevel(candidate.chartConst)
+    const chartConsts = values.get(levelLabel) ?? new Set<string>()
+    chartConsts.add(formatChartConst(candidate.chartConst))
+    values.set(levelLabel, chartConsts)
+  }
+
+  return values
+}
+
+/**
+ * 絞り込み結果にレベル内の全譜面定数が残っているレベルを取得する。
+ *
+ * @param allChartConstsByLevel - 絞り込み前の全候補から作成したレベル別譜面定数。
+ * @param filteredCandidates - 現在の絞り込み後候補。
+ * @returns 一括設定できるレベルと含まれる譜面定数。
+ */
+export const getRandomSongCompleteLevelWeightOptions = (
+  allChartConstsByLevel: ReadonlyMap<string, ReadonlySet<string>>,
+  filteredCandidates: readonly RandomSongCandidate[]
+): RandomSongLevelWeightOption[] => {
+  const filteredChartConstsByLevel = createChartConstsByLevelMap(filteredCandidates)
+
+  return [...allChartConstsByLevel.entries()]
+    .flatMap(([levelLabel, allChartConsts]) => {
+      const filteredChartConsts = filteredChartConstsByLevel.get(levelLabel)
+      if (!filteredChartConsts || filteredChartConsts.size !== allChartConsts.size) {
+        return []
+      }
+
+      return [
+        {
+          levelLabel,
+          chartConsts: [...allChartConsts].sort((left, right) => Number(left) - Number(right)),
+        },
+      ]
+    })
+    .sort((left, right) => Number(left.chartConsts[0]) - Number(right.chartConsts[0]))
+}
+
+/**
+ * レベル内の譜面定数がすべて有効、一部有効、すべて無効のどれかを判定する。
+ *
+ * @param chartConsts - 判定対象の譜面定数。
+ * @param enabledByChartConst - 譜面定数ごとの有効状態。未設定は有効として扱う。
+ * @returns レベル別カードに表示する有効状態。
+ */
+export const resolveRandomSongLevelWeightEnabledState = (
+  chartConsts: readonly string[],
+  enabledByChartConst: Readonly<Partial<Record<string, boolean>>>
+): RandomSongLevelWeightEnabledState => {
+  const enabledStates = chartConsts.map((chartConst) => enabledByChartConst[chartConst] !== false)
+
+  if (enabledStates.every(Boolean)) return 'enabled'
+  if (enabledStates.some(Boolean)) return 'mixed'
+  return 'disabled'
 }
 
 /**
