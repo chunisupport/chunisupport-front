@@ -10,7 +10,7 @@ import {
 } from '../../../../constants/recordFilterOptions'
 import type { VersionSummaryDTO, WorldsendSongDTO } from '../../../../types/api'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { getShortVersionName } from '../../../../utils/versionConverter'
+import { filterReleasedVersions, getShortVersionName } from '../../../../utils/versionConverter'
 import type { WorldsendFilterState } from './filterTypes'
 
 /** WORLD'S END フィルターの初期値 */
@@ -46,16 +46,21 @@ export const DEFAULT_WORLDSEND_FILTER: WorldsendFilterState = {
  * WORLD'S END 楽曲マスタからフィルターの初期選択肢を生成する。
  *
  * @param songs - WORLD'S END 楽曲マスタ。
+ * @param versionSummaries - バージョン一覧。未来分は除外して初期値にする。
+ * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
  * @returns ジャンル、バージョン、属性を全選択した初期値。
  */
 export const getWorldsendSongDefaults = (
   songs: WorldsendSongDTO[],
-  versionSummaries: VersionSummaryDTO[] = []
+  versionSummaries: VersionSummaryDTO[] = [],
+  referenceDate?: string
 ) => {
   const genres = Array.from(
     new Set(songs.map((song) => song.genre).filter((genre): genre is string => Boolean(genre)))
   ).sort((left, right) => left.localeCompare(right, 'ja'))
-  const releaseVersions = versionSummaries.map((version) => getShortVersionName(version.name))
+  const releaseVersions = filterReleasedVersions(versionSummaries, referenceDate).map((version) =>
+    getShortVersionName(version.name)
+  )
   const attributes = Array.from(
     new Set(songs.map((song) => song.charts.WORLDSEND?.attribute ?? null))
   ).sort((left, right) => (left ?? '').localeCompare(right ?? '', 'ja'))
@@ -67,13 +72,16 @@ export const getWorldsendSongDefaults = (
  * WORLD'S END フィルターの初期値を生成する。
  *
  * @param songs - WORLD'S END 楽曲マスタ。
+ * @param versions - バージョン一覧。未来分は除外して初期値にする。
+ * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
  * @returns 楽曲マスタ由来の選択肢を反映したフィルター初期値。
  */
 export const buildDefaultWorldsendFilter = (
   songs: WorldsendSongDTO[] = [],
-  versions: VersionSummaryDTO[] = []
+  versions: VersionSummaryDTO[] = [],
+  referenceDate?: string
 ): WorldsendFilterState => {
-  const defaults = getWorldsendSongDefaults(songs, versions)
+  const defaults = getWorldsendSongDefaults(songs, versions, referenceDate)
 
   return {
     ...DEFAULT_WORLDSEND_FILTER,

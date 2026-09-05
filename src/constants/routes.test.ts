@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  ADMIN_VERSIONS_PATH,
   buildAdminChartRankingPath,
   buildAdminWorldsendChartRankingPath,
   buildSongChartDetailPath,
@@ -11,6 +12,10 @@ import {
   DASHBOARD_PATH,
   isChartDetailFromSongDetailState,
 } from './routes'
+
+test('管理者向けバージョン管理パスを返す', () => {
+  assert.equal(ADMIN_VERSIONS_PATH, '/admin/versions')
+})
 
 test('管理者向け通常譜面ランキングパスは表示IDと難易度をエンコードする', () => {
   // Given: URL予約文字を含む表示IDと小文字の難易度。

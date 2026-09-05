@@ -147,6 +147,12 @@ export type ErrorCode =
   | 'invalid_password'
   | 'app_version_unsupported'
   | 'duplicate_official_idx'
+  // バージョン管理
+  | 'invalid_version_input'
+  | 'version_not_found'
+  | 'version_name_conflict'
+  | 'version_not_latest'
+  | 'version_in_use'
   // その他
   | 'not_found'
   | 'method_not_allowed'
@@ -230,6 +236,11 @@ export const errorMessages: Record<ErrorCode, string> = {
   invalid_password: 'パスワードが無効です',
   app_version_unsupported: 'データが古くなっています',
   duplicate_official_idx: '同じ公式IDの楽曲がすでに存在します',
+  invalid_version_input: 'バージョン名または稼働日の入力内容が不正です',
+  version_not_found: '対象のバージョンが見つかりません',
+  version_name_conflict: '同じバージョン名がすでに存在します',
+  version_not_latest: '最新版以外のバージョンは削除できません',
+  version_in_use: '対象バージョンの期間に楽曲があるため削除できません',
   not_found: 'リソースが見つかりません',
   method_not_allowed: '許可されていない操作です',
   unsupported_media_type: 'サポートされていないメディアタイプです',
@@ -536,6 +547,17 @@ export interface VersionDTO {
   id: number
   name: string
   released_at: string
+}
+
+/** 管理者向けバージョン作成リクエスト */
+export interface CreateVersionRequestDTO {
+  name: string
+  released_at: string
+}
+
+/** 管理者向けバージョン改名リクエスト */
+export interface RenameVersionRequestDTO {
+  name: string
 }
 
 export interface VersionSummaryDTO {

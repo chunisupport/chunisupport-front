@@ -315,15 +315,35 @@ export const fetchVersions = async (): Promise<VersionsResponse> => {
     return cachedVersionsResponse
   }
 
-  versionsResponsePromise ??= fetchVersionsFromApi()
+  const responsePromise = versionsResponsePromise ?? fetchVersionsFromApi()
+  versionsResponsePromise = responsePromise
 
   try {
-    cachedVersionsResponse = await versionsResponsePromise
-    return cachedVersionsResponse
+    const response = await responsePromise
+    if (versionsResponsePromise === responsePromise) {
+      cachedVersionsResponse = response
+      versionsResponsePromise = undefined
+    }
+    return response
   } catch (error) {
-    versionsResponsePromise = undefined
+    if (versionsResponsePromise === responsePromise) {
+      versionsResponsePromise = undefined
+    }
     throw error
   }
+}
+
+/**
+ * バージョン管理操作後に、公開一覧と全マスタのセッションキャッシュを無効化する。
+ * 無効化前に開始したリクエストの結果も、以後のキャッシュには採用しない。
+ *
+ * @returns なし。
+ */
+export const invalidateVersionCaches = (): void => {
+  cachedVersionsResponse = undefined
+  versionsResponsePromise = undefined
+  cachedMasterDataResponse = undefined
+  masterDataResponsePromise = undefined
 }
 
 export const updateSongs = async (requests: UpdateSongRequestDTO[]): Promise<void> => {
@@ -475,13 +495,20 @@ export const fetchMasterData = async (): Promise<MasterDataDTO> => {
     return cachedMasterDataResponse
   }
 
-  masterDataResponsePromise ??= fetchMasterDataFromApi()
+  const responsePromise = masterDataResponsePromise ?? fetchMasterDataFromApi()
+  masterDataResponsePromise = responsePromise
 
   try {
-    cachedMasterDataResponse = await masterDataResponsePromise
-    return cachedMasterDataResponse
+    const response = await responsePromise
+    if (masterDataResponsePromise === responsePromise) {
+      cachedMasterDataResponse = response
+      masterDataResponsePromise = undefined
+    }
+    return response
   } catch (error) {
-    masterDataResponsePromise = undefined
+    if (masterDataResponsePromise === responsePromise) {
+      masterDataResponsePromise = undefined
+    }
     throw error
   }
 }

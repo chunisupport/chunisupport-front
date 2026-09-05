@@ -19,6 +19,7 @@ import {
   normalizeQuery,
 } from '../../../../utils/searchUtils'
 import {
+  filterReleasedVersions,
   getShortVersionName,
   resolveVersionNameByReleaseDate,
 } from '../../../../utils/versionConverter'
@@ -119,7 +120,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
     sortMasterItemsBySortOrder(props.genres).map((genre) => genre.name)
   )
   const versionOptions = createMemo(() =>
-    props.versions.map((version) => getShortVersionName(version.name))
+    filterReleasedVersions(props.versions).map((version) => getShortVersionName(version.name))
   )
   const defaultFilter = createMemo(() =>
     buildDefaultLockedSongsFilter(genreOptions(), versionOptions())

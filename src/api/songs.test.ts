@@ -65,6 +65,28 @@ test('fetchVersions は一度取得したバージョン一覧をセッション
   assert.deepEqual(second, responseBody)
 })
 
+test('バージョン更新後は公開バージョン一覧をAPIから再取得する', async () => {
+  const responseBodies = [
+    { versions: [{ name: 'CHUNITHM VERSE', released_at: '2024-12-12' }] },
+    { versions: [{ name: 'CHUNITHM X-VERSE', released_at: '2024-12-12' }] },
+  ]
+  let fetchCount = 0
+  globalThis.fetch = async () => {
+    const responseBody = responseBodies[fetchCount]
+    fetchCount += 1
+    return Response.json(responseBody)
+  }
+  const { fetchVersions, invalidateVersionCaches } = await loadSongsApi()
+  const beforeMutation = await fetchVersions()
+
+  invalidateVersionCaches()
+  const afterMutation = await fetchVersions()
+
+  assert.equal(fetchCount, 2)
+  assert.deepEqual(beforeMutation, responseBodies[0])
+  assert.deepEqual(afterMutation, responseBodies[1])
+})
+
 test('fetchSongsUpdatedAt は一度取得した更新日時をセッション中に再利用する', async () => {
   const responseBody = { updated_at: '2026-06-16T12:00:00Z' }
   let fetchCount = 0
