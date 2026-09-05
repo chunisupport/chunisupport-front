@@ -8,9 +8,11 @@ import type {
   SongDTO,
   WorldsendSongDTO,
 } from '../../types/api'
+import { calculateSingleRatingHundredths } from '../../utils/singleRating'
 import {
   resolveRegisterScoreChartLevel,
   resolveRegisterScoreCourseTitle,
+  resolveRegisterScoreSongSortValues,
   resolveRegisterScoreSongTitle,
 } from './registerScoreResolvers'
 
@@ -124,6 +126,33 @@ test('レコード種別に応じて譜面レベルを解決する', () => {
   assert.equal(standardLevel, '15')
   assert.equal(worldsendLevel, '★5')
   assert.equal(courseLevel, undefined)
+})
+
+test('通常譜面の表示レベルと単曲レーティングをソート用の数値へ変換する', () => {
+  // Given: 譜面定数と登録後スコアを持つ通常譜面差分。
+  const standardSongs = [createStandardSong()]
+
+  // When: ソート用の値を解決する。
+  const result = resolveRegisterScoreSongSortValues(standardChange, standardSongs)
+
+  // Then: 表示レベルの順序キーと単曲レーティングの百分の一単位を返す。
+  assert.deepEqual(result, {
+    level: 30,
+    singleRating: calculateSingleRatingHundredths(1_000_000, 15.4),
+  })
+})
+
+test('WORLD’S ENDと未解決譜面はレベル・単曲レーティングのソート対象外にする', () => {
+  // Given: WORLD’S END差分と空の通常譜面マスタ。
+  const worldsendValues = resolveRegisterScoreSongSortValues(worldsendChange, [])
+  const unknownValues = resolveRegisterScoreSongSortValues(
+    { ...standardChange, idx: 'unknown' },
+    []
+  )
+
+  // Then: どちらもソート値をnullとして返す。
+  assert.deepEqual(worldsendValues, { level: null, singleRating: null })
+  assert.deepEqual(unknownValues, { level: null, singleRating: null })
 })
 
 test('コース名を解決し、未登録コースではプレースホルダーを返す', () => {

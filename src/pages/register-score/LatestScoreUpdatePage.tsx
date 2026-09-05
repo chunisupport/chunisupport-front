@@ -1,4 +1,4 @@
-import { createResource, Match, Switch } from 'solid-js'
+import { createResource, Match, Show, Switch } from 'solid-js'
 
 import { fetchLatestPlayerDataUpdate } from '../../api/register-data'
 import { LoadError, Loading } from '../../components'
@@ -18,6 +18,7 @@ import { RegisterScoreResultView } from './RegisterScoreResultView'
 import {
   resolveRegisterScoreChartLevel,
   resolveRegisterScoreCourseTitle,
+  resolveRegisterScoreSongSortValues,
   resolveRegisterScoreSongTitle,
 } from './registerScoreResolvers'
 
@@ -61,7 +62,9 @@ const LatestScoreUpdatePage = () => {
 
   return (
     <main class="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
-      <h1 class="text-2xl font-semibold">{LATEST_SCORE_UPDATE_TITLE}</h1>
+      <Show when={pageData.state !== 'ready' || pageData() === null}>
+        <h1 class="text-2xl font-semibold">{LATEST_SCORE_UPDATE_TITLE}</h1>
+      </Show>
 
       <Switch>
         <Match when={pageData.error}>
@@ -80,6 +83,7 @@ const LatestScoreUpdatePage = () => {
         <Match when={pageData()}>
           {(data) => (
             <RegisterScoreResultView
+              pageTitle={LATEST_SCORE_UPDATE_TITLE}
               result={data().result}
               resolveSongTitle={(change) =>
                 resolveRegisterScoreSongTitle(
@@ -93,6 +97,12 @@ const LatestScoreUpdatePage = () => {
                   change,
                   songsData.songsResponse.latest?.songs ?? [],
                   songsData.worldsendSongsResponse.latest?.songs ?? []
+                )
+              }
+              resolveSongSortValues={(change) =>
+                resolveRegisterScoreSongSortValues(
+                  change,
+                  songsData.songsResponse.latest?.songs ?? []
                 )
               }
               resolveCourseTitle={(change) =>
