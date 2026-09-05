@@ -30,6 +30,8 @@ type Props = {
   songs: SongDTO[]
   sortKey: SongSortKey | null
   sortDirection: SortDirection | null
+  /** 仮想テーブル初回アタッチ時のスクロール位置 */
+  initialScrollOffset?: number
   onSortChange: (key: SongSortKey) => void
 }
 
@@ -58,6 +60,7 @@ const SongsTable = (props: Props) => {
     rowCount: () => props.songs.length,
     rowHeight: ROW_HEIGHT,
     resetOnRowCountChange: true,
+    initialOffset: props.initialScrollOffset,
   })
 
   const virtualRows = createMemo(() => virtualizedTable.virtualRows())

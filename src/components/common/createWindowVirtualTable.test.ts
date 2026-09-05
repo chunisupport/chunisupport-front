@@ -167,6 +167,39 @@ await new Promise((resolve) =>
   await runBrowserSolidTest(script)
 })
 
+test('initialOffset指定時は初回アタッチでその位置へスクロールし先頭リセットしないこと', async () => {
+  // Given: 復元位置を指定した仮想テーブル
+  const script = `
+await new Promise((resolve) =>
+  createRoot(async (dispose) => {
+    const [rowCount] = createSignal(3)
+    const scrollElement = createFakeScrollElement(0)
+    const table = createWindowVirtualTable({
+      rowCount,
+      rowHeight: 10,
+      resetOnRowCountChange: true,
+      initialOffset: 120,
+      getScrollElement: () => scrollElement,
+    })
+
+    table.setTableBodyRef(createFakeElement(25))
+    table.setTableContainerRef(createFakeElement(20))
+
+    // When: 初回マウントのeffectを反映する
+    await nextTask()
+    await nextTask()
+
+    // Then: 指定オフセットを維持する
+    assert.equal(scrollElement.scrollTop, 120)
+    dispose()
+    resolve()
+  })
+)
+`
+
+  await runBrowserSolidTest(script)
+})
+
 test('resetOnRowCountChange有効時は行数変化で先頭へスクロールすること', async () => {
   // Given: 行数変化時リセットが有効な仮想テーブル
   const script = `

@@ -1,6 +1,7 @@
 import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
 import { fetchMasterData } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
+import { useAppMainScrollRestoration } from '../../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../../stores/songsData'
 import type { SortDirection } from '../../../utils/sortingQuery'
@@ -10,6 +11,11 @@ import { buildSearchableItems, filterSearchableItems } from '../searchHelpers'
 import SongsTable from './components/SongsTable'
 import { nextSortState, type SongSortKey, sortSongs } from './utils/sorting'
 
+/**
+ * 通常楽曲の一覧画面を表示する。
+ *
+ * @returns 楽曲一覧ページ。
+ */
 const SongsList = () => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [masterData] = createResource(fetchMasterData)
@@ -20,6 +26,8 @@ const SongsList = () => {
   onMount(() => {
     ensureSongsLoaded()
   })
+
+  const restoredScrollOffset = useAppMainScrollRestoration(() => !isSongsLoading())
 
   const defaultSortedSongs = createMemo(() => {
     const songs = songsResponse()?.songs ?? []
@@ -61,6 +69,7 @@ const SongsList = () => {
               songs={sortedSongs()}
               sortKey={sortKey()}
               sortDirection={sortDirection()}
+              initialScrollOffset={restoredScrollOffset}
               onSortChange={handleSortChange}
             />
 
