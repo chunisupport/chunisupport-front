@@ -1,6 +1,7 @@
 import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
 import { fetchMasterData } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
+import { useAppMainScrollRestoration } from '../../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../../stores/songsData'
 import type { SortDirection } from '../../../utils/sortingQuery'
@@ -10,6 +11,11 @@ import { buildSearchableItems, filterSearchableItems } from '../searchHelpers'
 import WorldsendSongsTable from './components/WorldsendSongsTable'
 import { nextSortState, sortWorldsendSongs, type WorldsendSongSortKey } from './utils/sorting'
 
+/**
+ * WORLD'S END 楽曲の一覧画面を表示する。
+ *
+ * @returns WORLD'S END 楽曲一覧ページ。
+ */
 const WorldsendSongsList = () => {
   const { worldsendSongsResponse, ensureWorldsendSongsLoaded, isWorldsendSongsLoading } =
     useSongsData()
@@ -21,6 +27,8 @@ const WorldsendSongsList = () => {
   onMount(() => {
     ensureWorldsendSongsLoaded()
   })
+
+  const restoredScrollOffset = useAppMainScrollRestoration(() => !isWorldsendSongsLoading())
 
   const defaultSortedSongs = createMemo(() => {
     const songs = worldsendSongsResponse()?.songs ?? []
@@ -66,6 +74,7 @@ const WorldsendSongsList = () => {
               songs={sortedSongs()}
               sortKey={sortKey()}
               sortDirection={sortDirection()}
+              initialScrollOffset={restoredScrollOffset}
               onSortChange={handleSortChange}
             />
 
