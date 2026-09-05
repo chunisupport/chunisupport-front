@@ -2,10 +2,13 @@ import { Image } from '@kobalte/core/image'
 import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createSignal, onMount, Show } from 'solid-js'
-import { RECORD_CARD_HOVER_CLASS } from '../../../../components/common/record/RecordDisplayParts'
+import {
+  RECORD_CARD_HOVER_CLASS,
+  RECORD_CARD_LAMP_BADGE_CLASS,
+} from '../../../../components/common/record/RecordDisplayParts'
 import { getDefaultRecordLampLabel } from '../../../../components/common/record/recordLampLabel'
 import {
-  COMBO_LAMP_ACCENT_TEXT_CLASS,
+  getComboLampBadgeClass,
   SCORE_RANK_TEXT_CLASS,
 } from '../../../../components/common/record/recordStyleClasses'
 import type { PlayerRecordDTO } from '../../../../types/api'
@@ -107,14 +110,14 @@ export const UserRecordCard: Component<Props> = (props) => {
                     ({formatScoreDifference(props.scoreDifference ?? 0)})
                   </span>
                 </Show>
+                {/* 意味色はバッジ塗りで保持し、ライトテーマでも読めるようにする。 */}
                 <Show when={props.record.combo_lamp}>
                   {(lamp) => (
-                    <>
-                      <span class="ml-1">/ </span>
-                      <span class={COMBO_LAMP_ACCENT_TEXT_CLASS[lamp()]}>
-                        {getDefaultRecordLampLabel(lamp())}
-                      </span>
-                    </>
+                    <span
+                      class={`ml-1 mb-[3px] ${RECORD_CARD_LAMP_BADGE_CLASS} ${getComboLampBadgeClass(lamp(), props.record.score)}`}
+                    >
+                      {getDefaultRecordLampLabel(lamp(), props.record.score)}
+                    </span>
                   )}
                 </Show>
               </p>

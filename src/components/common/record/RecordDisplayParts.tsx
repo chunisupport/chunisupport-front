@@ -54,6 +54,12 @@ export const RECORD_ROW_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} bg-surfa
 export const RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS = `${RECORD_ROW_HOVER_CLASS} border-t border-border`
 /** レコードカードのホバー背景色クラス */
 export const RECORD_CARD_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} group-hover:bg-interactive-row-hover`
+/**
+ * レコードカード内で使うコンボランプバッジの共通寸法。
+ * 表の固定幅バッジより小型化し、行内テキストに埋めても行高を膨らませない。
+ */
+export const RECORD_CARD_LAMP_BADGE_CLASS =
+  'inline-flex min-w-7 shrink-0 items-center justify-center rounded-lg px-1.5 py-0.5 align-middle text-xs font-extrabold leading-none'
 /** 仮想スクロールで使うレコード1行の高さ */
 export const RECORD_ROW_HEIGHT = 34
 const RECORD_ROW_MIN_HEIGHT_CLASS_BY_HEIGHT = {

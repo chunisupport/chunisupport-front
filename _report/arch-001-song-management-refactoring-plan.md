@@ -1,7 +1,7 @@
 # ARCH-001 楽曲管理機能の責務分割計画案
 
 **作成日**: 2026年07月23日  
-**対象課題**: `_report/refactor.md` の `ARCH-001`  
+**対象課題**: Issue #218（旧 `_report/refactor.md` `ARCH-001`）  
 **対象画面**: ADMIN向け楽曲管理画面、EDITOR向け楽曲編集画面
 
 ## 1. 目的
@@ -300,7 +300,7 @@ API仕様を正とし、境界値を単体テストへ追加してから挙動�
 2. `src/pages/admin`、`src/pages/editor`から`src/pages/songs`への楽曲管理目的のimportがないことを確認する。
 3. TSXコンポーネント内にAPI request組み立てが残っていないことを確認する。
 4. セルフレビューを実施する。
-5. すべての受け入れ条件を満たした後、`_report/refactor.md`から`ARCH-001`の行を削除する。
+5. すべての受け入れ条件を満たした後、Issue #218 をクローズする。
 
 ## 7. テスト計画
 
@@ -383,16 +383,16 @@ pnpm build
 - 入力エラーが操作対象の近くに表示される。
 - 通常楽曲とWORLD'S ENDの主要な変換・検証・状態遷移に単体テストがある。
 - `pnpm check:ci`、`pnpm typecheck`、`pnpm test:unit`、`pnpm build`が成功する。
-- `_report/refactor.md`から`ARCH-001`が削除される。
+- Issue #218 がクローズされる。
 
 ## 10. 対象外
 
 以下は別課題として扱い、ARCH-001の完了を不必要に拡大しない。
 
-- `ARCH-006`: `/internal/master`の用途別API／accessorへの分割。
+- Issue #204（旧 `ARCH-006`）: `/internal/master`の用途別API／accessorへの分割。
 - `QUAL-001`: 難易度型・正規順・表示定義の全feature横断での統合。
-- `QUAL-003`: 楽曲管理以外の全ダイアログ・破壊的操作UIの移行。
-- `TEST-001`: 新しいcomponent test／E2Eテスト基盤の導入。
+- Issue #266（旧 `QUAL-003`）: 楽曲管理以外の全ダイアログ・破壊的操作UIの移行。
+- Issue #264（旧 `TEST-001`）: 新しいcomponent test／E2Eテスト基盤の導入。
 - 楽曲管理画面のデザイン全面変更。
 - API endpointやrequest／response仕様の変更。
 
