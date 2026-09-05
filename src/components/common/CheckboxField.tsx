@@ -1,5 +1,5 @@
 import { Checkbox } from '@kobalte/core/checkbox'
-import { Check } from 'lucide-solid'
+import { Check, Minus } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { Show } from 'solid-js'
 
@@ -10,6 +10,8 @@ type CheckboxFieldProps = {
   id?: string
   /** チェック状態 */
   checked: boolean
+  /** 一部だけがチェックされた中間状態 */
+  indeterminate?: boolean
   /** 表示ラベル */
   label?: JSX.Element
   /** ラベル下に表示する補足内容 */
@@ -56,7 +58,7 @@ const CHECKBOX_FIELD_DESCRIPTION_CLASS = 'mt-0.5 text-xs leading-5 text-text-sub
 const CHECKBOX_FIELD_EXTRA_CLASS = 'mt-1'
 
 const CHECKBOX_FIELD_ACTION_CONTROL_CLASS =
-  'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
+  'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse data-indeterminate:border-action-primary data-indeterminate:bg-action-primary data-indeterminate:text-text-inverse'
 
 /**
  * ラベル領域の既定文字スタイルを文字サイズから取得する。
@@ -76,6 +78,7 @@ const getCheckboxFieldTextClass = (variant: CheckboxFieldTextVariant): string =>
 export const CheckboxField: Component<CheckboxFieldProps> = (props) => (
   <Checkbox
     checked={props.checked}
+    indeterminate={props.indeterminate}
     disabled={props.disabled}
     onChange={props.onChange}
     aria-label={props.label ? undefined : props.ariaLabel}
@@ -86,7 +89,12 @@ export const CheckboxField: Component<CheckboxFieldProps> = (props) => (
     <Checkbox.Input id={props.id} class={props.inputClass} style={{ left: '0', top: '0' }} />
     <Checkbox.Control class={`${CHECKBOX_FIELD_ACTION_CONTROL_CLASS} ${props.controlClass ?? ''}`}>
       <Checkbox.Indicator>
-        <Check class={props.indicatorClass ?? 'h-4 w-4'} aria-hidden="true" />
+        <Show
+          when={props.indeterminate}
+          fallback={<Check class={props.indicatorClass ?? 'h-4 w-4'} aria-hidden="true" />}
+        >
+          <Minus class={props.indicatorClass ?? 'h-4 w-4'} aria-hidden="true" />
+        </Show>
       </Checkbox.Indicator>
     </Checkbox.Control>
     <Show when={props.label || props.description || props.extra}>

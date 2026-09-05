@@ -16,7 +16,7 @@ import {
   untrack,
 } from 'solid-js'
 import { fetchVersions } from '../../api/songs'
-import { fetchMe, fetchUserRating } from '../../api/users'
+import { fetchMe, fetchUserFavoriteSongs, fetchUserRating } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { MultiSelectField, toMultiSelectOptions } from '../../components/common/AppMultiSelect'
@@ -34,15 +34,19 @@ import { formatChartConst } from '../../utils/chartConstFormat'
 import {
   aggregateRandomSongCandidateWeights,
   buildRandomSongCandidates,
+  createChartConstsByLevelMap,
   createRandomSongCandidateKey,
   createRandomSongChartKey,
   createRandomSongRecordMap,
   drawRandomSongs,
   filterRandomSongCandidates,
+  filterRandomSongCandidatesByFavorite,
   filterRandomSongCandidatesByRecord,
+  getRandomSongCompleteLevelWeightOptions,
   hasInvalidRandomSongWeightValue,
   parseOptionalRandomSongDecimal,
   parseRandomSongDrawCount,
+  parseRandomSongWeightValue,
   parseRandomSongWeightValues,
   RANDOM_SONG_OP_TARGET_FILTER,
   RANDOM_SONG_SELECTOR_DIFFICULTIES,
@@ -50,6 +54,8 @@ import {
   type RandomSongCandidate,
   type RandomSongDifficultyFilter,
   type RandomSongLampFilter,
+  type RandomSongLevelWeightOption,
+  resolveRandomSongLevelWeightEnabledState,
   resolveRandomSongRecordLamp,
   restoreRandomSongResults,
   toggleRandomSongDifficultyFilter,
@@ -99,6 +105,7 @@ type RandomSongTextFieldProps = {
   labelHidden?: boolean
   value: string
   inputMode?: 'numeric' | 'decimal'
+  placeholder?: string
   disabled?: boolean
   onChange: (value: string) => void
 }
@@ -123,6 +130,7 @@ type RandomSongWeightFieldProps = {
   label: string
   value: string
   percentLabel: string
+  placeholder?: string
   disabled?: boolean
   onChange: (value: string) => void
 }
@@ -150,6 +158,25 @@ type MyRandomSongRecordData =
   | {
       status: 'error'
     }
+
+/** ランダム選曲で利用するお気に入り楽曲の取得状態。 */
+type MyRandomSongFavoriteData =
+  | {
+      status: 'available'
+      favoriteSongIds: ReadonlySet<string>
+    }
+  | {
+      status: 'unauthenticated'
+    }
+  | {
+      status: 'error'
+    }
+
+/** ランダム選曲で利用するログイン中ユーザーデータの取得状態。 */
+type MyRandomSongUserData = {
+  record: MyRandomSongRecordData
+  favorite: MyRandomSongFavoriteData
+}
 
 const UNAUTHENTICATED_ERROR_CODES = new Set([
   'missing_token',
@@ -183,13 +210,7 @@ const getRandomSongInputPattern = (
  */
 const parseRandomSongWeightForPercent = (value: string, enabled = true): number | null => {
   if (!enabled) return 0
-
-  const parsed = parseOptionalRandomSongDecimal(value)
-  if (parsed === null || Number.isNaN(parsed)) {
-    return null
-  }
-
-  return parsed
+  return parseRandomSongWeightValue(value)
 }
 
 /**
@@ -269,6 +290,7 @@ const RandomSongTextField: Component<RandomSongTextFieldProps> = (props) => (
       inputMode={props.inputMode}
       pattern={getRandomSongInputPattern(props.inputMode)}
       autocomplete="off"
+      placeholder={props.placeholder}
       disabled={props.disabled}
     />
   </TextField>
@@ -327,6 +349,7 @@ const RandomSongWeightField: Component<RandomSongWeightFieldProps> = (props) => 
       label={props.label}
       value={props.value}
       inputMode="decimal"
+      placeholder={props.placeholder}
       disabled={props.disabled}
       onChange={props.onChange}
     />
@@ -346,6 +369,7 @@ const RandomSongWeightField: Component<RandomSongWeightFieldProps> = (props) => 
 const RandomSongCheckbox: Component<{
   id: string
   checked: boolean
+  indeterminate?: boolean
   label: string
   disabled?: boolean
   onChange: (checked: boolean) => void
@@ -354,6 +378,7 @@ const RandomSongCheckbox: Component<{
     id={props.id}
     class="relative grid min-h-5 grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 text-sm text-text data-disabled:cursor-not-allowed data-disabled:opacity-60"
     checked={props.checked}
+    indeterminate={props.indeterminate}
     disabled={props.disabled}
     onChange={props.onChange}
     indicatorClass="h-3.5 w-3.5"
@@ -368,7 +393,7 @@ const RandomSongCheckbox: Component<{
  * @param error - 取得処理で発生したエラー。
  * @returns 未認証エラーの場合は true。
  */
-const isUnauthenticatedRandomSongRecordError = (error: unknown): boolean => {
+const isUnauthenticatedRandomSongError = (error: unknown): boolean => {
   if (typeof error !== 'object' || error === null) return false
 
   const apiError = error as { status?: number; code?: string }
@@ -378,16 +403,16 @@ const isUnauthenticatedRandomSongRecordError = (error: unknown): boolean => {
 }
 
 /**
- * ログイン中ユーザーのレコード情報を取得する。
+ * 指定ユーザーのレコード情報を取得する。
  *
+ * @param username - 取得対象のユーザー名。
  * @returns 取得できたレコード情報、または取得できなかった理由。
  */
-const fetchMyRandomSongRecordData = async (): Promise<MyRandomSongRecordData> => {
+const fetchMyRandomSongRecordData = async (username: string): Promise<MyRandomSongRecordData> => {
   try {
-    const me = await fetchMe({ redirectOnUnauthorized: false })
     const [rating, records] = await Promise.all([
-      fetchUserRating(me.username),
-      fetchUserRecordWithCache(me.username),
+      fetchUserRating(username),
+      fetchUserRecordWithCache(username),
     ])
 
     return {
@@ -396,9 +421,52 @@ const fetchMyRandomSongRecordData = async (): Promise<MyRandomSongRecordData> =>
       bestRecords: rating.best,
     }
   } catch (error) {
-    return isUnauthenticatedRandomSongRecordError(error)
+    return isUnauthenticatedRandomSongError(error)
       ? { status: 'unauthenticated' }
       : { status: 'error' }
+  }
+}
+
+/**
+ * 指定ユーザーのお気に入り楽曲を取得する。
+ *
+ * @param username - 取得対象のユーザー名。
+ * @returns 取得できたお気に入り楽曲ID、または取得できなかった理由。
+ */
+const fetchMyRandomSongFavoriteData = async (
+  username: string
+): Promise<MyRandomSongFavoriteData> => {
+  try {
+    const favoriteSongs = await fetchUserFavoriteSongs(username)
+
+    return {
+      status: 'available',
+      favoriteSongIds: new Set(favoriteSongs.items.map((item) => item.display_id)),
+    }
+  } catch (error) {
+    return isUnauthenticatedRandomSongError(error)
+      ? { status: 'unauthenticated' }
+      : { status: 'error' }
+  }
+}
+
+/**
+ * ログイン中ユーザーのレコード情報とお気に入り楽曲を取得する。
+ *
+ * @returns レコード情報とお気に入り楽曲それぞれの取得状態。
+ */
+const fetchMyRandomSongUserData = async (): Promise<MyRandomSongUserData> => {
+  try {
+    const me = await fetchMe({ redirectOnUnauthorized: false })
+    const [record, favorite] = await Promise.all([
+      fetchMyRandomSongRecordData(me.username),
+      fetchMyRandomSongFavoriteData(me.username),
+    ])
+
+    return { record, favorite }
+  } catch (error) {
+    const status = isUnauthenticatedRandomSongError(error) ? 'unauthenticated' : 'error'
+    return { record: { status }, favorite: { status } }
   }
 }
 
@@ -493,13 +561,16 @@ const RandomSongSelect = <T extends string>(props: {
 
 /**
  * ランダム選曲ツールページを表示する。
+ * 曲数欄とお気に入り欄は上端を揃え、ログイン状態の補足表示による位置ずれを防ぐ。
  *
  * @returns 条件フォームとランダム選曲結果。
  */
 const RandomSongSelectorPage = (): JSX.Element => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [versionsResponse] = createResource(fetchVersions)
-  const [myRecordData] = createResource(fetchMyRandomSongRecordData)
+  const [myUserData] = createResource(fetchMyRandomSongUserData)
+  const myRecordData = (): MyRandomSongRecordData | undefined => myUserData()?.record
+  const myFavoriteData = (): MyRandomSongFavoriteData | undefined => myUserData()?.favorite
   const [count, setCount] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.count)
   const [minConst, setMinConst] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.minConst)
   const [maxConst, setMaxConst] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.maxConst)
@@ -510,6 +581,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const [selectedVersions, setSelectedVersions] = createSignal<string[]>([])
   const [recordFilterSettingsOpen, setRecordFilterSettingsOpen] = createSignal(false)
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = createSignal(false)
+  const [favoriteOnly, setFavoriteOnly] = createSignal<boolean>(
+    RANDOM_SONG_SELECTOR_DEFAULTS.favoriteOnly
+  )
   const [playStatus, setPlayStatus] = createSignal<RandomSongPlayStatus>('all')
   const [bestFrame, setBestFrame] = createSignal<RandomSongBestFrame>('all')
   const [selectedLamps, setSelectedLamps] = createSignal<RandomSongLamp[]>([
@@ -595,6 +669,14 @@ const RandomSongSelectorPage = (): JSX.Element => {
     () => new Set(createRandomSongRecordMap(availableMyRecordData()?.bestRecords ?? []).keys())
   )
   const hasMyRecordData = createMemo(() => availableMyRecordData() !== null)
+  const availableMyFavoriteData = createMemo(() => {
+    const data = myFavoriteData()
+    return data?.status === 'available' ? data : null
+  })
+  const hasMyFavoriteData = createMemo(() => availableMyFavoriteData() !== null)
+  const favoriteSongIds = createMemo<ReadonlySet<string>>(
+    () => availableMyFavoriteData()?.favoriteSongIds ?? new Set()
+  )
   /**
    * 自分のレコード表示が現在有効かどうかを返します。
    *
@@ -642,11 +724,16 @@ const RandomSongSelectorPage = (): JSX.Element => {
       minConst: parsedMinConst(),
       maxConst: parsedMaxConst(),
     })
+    const favoriteFilteredCandidates = filterRandomSongCandidatesByFavorite(
+      basicFilteredCandidates,
+      favoriteSongIds(),
+      favoriteOnly()
+    )
 
-    if (!hasMyRecordData()) return basicFilteredCandidates
+    if (!hasMyRecordData()) return favoriteFilteredCandidates
 
     return filterRandomSongCandidatesByRecord(
-      basicFilteredCandidates,
+      favoriteFilteredCandidates,
       recordsByChartKey(),
       bestChartKeys(),
       {
@@ -663,10 +750,14 @@ const RandomSongSelectorPage = (): JSX.Element => {
       ...new Set(filteredCandidates().map((candidate) => formatChartConst(candidate.chartConst))),
     ].sort((left, right) => Number(left) - Number(right))
   )
+  const allChartConstsByLevel = createMemo(() => createChartConstsByLevelMap(allCandidates()))
+  const completeLevelWeightOptions = createMemo(() =>
+    getRandomSongCompleteLevelWeightOptions(allChartConstsByLevel(), filteredCandidates())
+  )
   /**
    * 候補全体を一度だけ走査し、出現割合表示用の重みを分類別に集計する。
    *
-   * @returns 全体・難易度別・譜面定数別の候補重み。
+   * @returns 全体・難易度別・レベル別・譜面定数別の候補重み。
    */
   const candidateWeightSummary = createMemo(() => {
     const currentDifficultyWeights = difficultyWeights()
@@ -799,6 +890,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     setMinScore(RANDOM_SONG_SELECTOR_DEFAULTS.minScore)
     setMaxScore(RANDOM_SONG_SELECTOR_DEFAULTS.maxScore)
     setShowRecord(RANDOM_SONG_SELECTOR_DEFAULTS.showRecord)
+    setFavoriteOnly(RANDOM_SONG_SELECTOR_DEFAULTS.favoriteOnly)
     setPlayStatus('all')
     setBestFrame('all')
     setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])
@@ -870,6 +962,37 @@ const RandomSongSelectorPage = (): JSX.Element => {
   }
 
   /**
+   * レベル内の全譜面定数へ同じ出やすさを設定する。
+   *
+   * @param option - 一括設定するレベルと譜面定数。
+   * @param value - 新しい重み入力値。
+   * @returns なし。
+   */
+  const handleLevelWeightChange = (option: RandomSongLevelWeightOption, value: string): void => {
+    setConstWeights((prev) => ({
+      ...prev,
+      ...Object.fromEntries(option.chartConsts.map((chartConst) => [chartConst, value])),
+    }))
+  }
+
+  /**
+   * レベル内の全譜面定数の抽選対象オンオフを更新する。
+   *
+   * @param option - 一括設定するレベルと譜面定数。
+   * @param enabled - 抽選対象に含める場合は true。
+   * @returns なし。
+   */
+  const handleLevelWeightEnabledChange = (
+    option: RandomSongLevelWeightOption,
+    enabled: boolean
+  ): void => {
+    setConstWeightEnabled((prev) => ({
+      ...prev,
+      ...Object.fromEntries(option.chartConsts.map((chartConst) => [chartConst, enabled])),
+    }))
+  }
+
+  /**
    * 難易度別の候補重みが全候補内で占める割合を取得する。
    *
    * @param difficulty - 表示対象の難易度。
@@ -905,6 +1028,35 @@ const RandomSongSelectorPage = (): JSX.Element => {
   }
 
   /**
+   * レベル内の候補重みが全候補内で占める割合を取得する。
+   *
+   * @param option - 表示対象のレベルと譜面定数。
+   * @returns 全候補の重み総量に対するレベル別の出現割合。
+   */
+  const levelWeightPercentLabel = (option: RandomSongLevelWeightOption): string => {
+    const summary = candidateWeightSummary()
+    if (summary.invalidLevelLabels.has(option.levelLabel)) {
+      return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
+    }
+
+    return formatRandomSongWeightPercent(summary.byLevel.get(option.levelLabel) ?? 0, summary.total)
+  }
+
+  /**
+   * レベル内で共通の出やすさが設定されている場合だけ、その値を取得する。
+   *
+   * @param option - 表示対象のレベルと譜面定数。
+   * @returns 共通の重み。定数ごとに異なる場合は空文字。
+   */
+  const levelWeightValue = (option: RandomSongLevelWeightOption): string => {
+    const values = option.chartConsts.map(
+      (chartConst) => constWeights()[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight
+    )
+
+    return values.every((value) => value === values[0]) ? values[0] : ''
+  }
+
+  /**
    * 選曲候補に対応する自分のレコードを取得する。
    *
    * @param candidate - 選曲結果の譜面候補。
@@ -933,7 +1085,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
           <section class="rounded-lg border border-border bg-surface p-4 sm:p-6">
             <Show when={!isSongsLoading() && !versionsResponse.loading} fallback={<Loading />}>
               <form class="space-y-4" onSubmit={(event) => event.preventDefault()}>
-                <div class="grid gap-4 lg:grid-cols-2">
+                <div class="grid items-start gap-4 sm:grid-cols-[8rem_minmax(0,1fr)]">
                   <div class="max-w-32">
                     <RandomSongTextField
                       id="random-song-count"
@@ -942,6 +1094,27 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       inputMode="numeric"
                       onChange={setCount}
                     />
+                  </div>
+                  <div class="pb-2">
+                    <CheckboxField
+                      id="random-song-favorite-only"
+                      checked={favoriteOnly()}
+                      disabled={!hasMyFavoriteData()}
+                      onChange={setFavoriteOnly}
+                      class="relative flex items-center gap-2"
+                      textVariant="large"
+                      label={RANDOM_SONG_SELECTOR_COPY.favoriteOnlyLabel}
+                    />
+                    <Show when={myFavoriteData()?.status === 'unauthenticated'}>
+                      <p class="mt-1 text-xs text-text-muted">
+                        {RANDOM_SONG_SELECTOR_COPY.recordUnavailableMessage}
+                      </p>
+                    </Show>
+                    <Show when={myFavoriteData()?.status === 'error'}>
+                      <p class="mt-1 text-xs text-danger">
+                        {RANDOM_SONG_SELECTOR_COPY.favoriteFetchErrorMessage}
+                      </p>
+                    </Show>
                   </div>
                 </div>
 
@@ -1151,6 +1324,76 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                     </For>
                                   </div>
                                 </div>
+                                <Show when={completeLevelWeightOptions().length > 0}>
+                                  <div>
+                                    <div class="mb-2 text-sm font-medium text-text-muted">
+                                      {RANDOM_SONG_SELECTOR_COPY.levelWeightLabel}
+                                    </div>
+                                    <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                                      <For each={completeLevelWeightOptions()}>
+                                        {(option) => {
+                                          const enabledState = () =>
+                                            resolveRandomSongLevelWeightEnabledState(
+                                              option.chartConsts,
+                                              constWeightEnabled()
+                                            )
+                                          const isEnabled = () => enabledState() === 'enabled'
+                                          const isIndeterminate = () => enabledState() === 'mixed'
+                                          const weightValue = () => levelWeightValue(option)
+                                          const checkboxId = `random-song-level-enabled-${option.levelLabel.replace('+', 'plus')}`
+                                          return (
+                                            <div
+                                              class="relative flex h-full min-h-32 flex-col gap-2 rounded border p-3"
+                                              classList={{
+                                                'border-action-primary bg-action-primary-muted':
+                                                  isEnabled(),
+                                                'border-action-primary bg-surface-muted':
+                                                  isIndeterminate(),
+                                                'border-border bg-surface-muted':
+                                                  enabledState() === 'disabled',
+                                              }}
+                                            >
+                                              <label
+                                                for={checkboxId}
+                                                class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                                              >
+                                                <span class="sr-only">{option.levelLabel}</span>
+                                              </label>
+                                              <div class="pointer-events-none relative z-20">
+                                                <RandomSongCheckbox
+                                                  id={checkboxId}
+                                                  checked={isEnabled()}
+                                                  indeterminate={isIndeterminate()}
+                                                  label={option.levelLabel}
+                                                  onChange={(enabled) =>
+                                                    handleLevelWeightEnabledChange(option, enabled)
+                                                  }
+                                                />
+                                              </div>
+                                              <div class="pointer-events-auto relative z-20 mt-auto">
+                                                <RandomSongWeightField
+                                                  id={`random-song-level-weight-${option.levelLabel.replace('+', 'plus')}`}
+                                                  label={RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate}
+                                                  value={weightValue()}
+                                                  placeholder={
+                                                    weightValue() === ''
+                                                      ? RANDOM_SONG_SELECTOR_COPY.mixedWeightPlaceholder
+                                                      : undefined
+                                                  }
+                                                  percentLabel={levelWeightPercentLabel(option)}
+                                                  disabled={enabledState() === 'disabled'}
+                                                  onChange={(value) =>
+                                                    handleLevelWeightChange(option, value)
+                                                  }
+                                                />
+                                              </div>
+                                            </div>
+                                          )
+                                        }}
+                                      </For>
+                                    </div>
+                                  </div>
+                                </Show>
                                 <div>
                                   <div class="mb-2 text-sm font-medium text-text-muted">
                                     {RANDOM_SONG_SELECTOR_COPY.constWeightLabel}
