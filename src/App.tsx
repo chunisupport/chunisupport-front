@@ -52,6 +52,7 @@ import {
   type ToolLink,
   type ToolLinkIcon,
 } from './constants/tools'
+import { useRememberAppMainScrollNavigationType } from './hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import { useRobotsMeta } from './hooks/useRobotsMeta'
 import NotFoundPage from './pages/NotFoundPage'
@@ -487,12 +488,14 @@ const GuardedRegisterScoreTempPage = () => (
 
 /**
  * ルーター配下の画面をAPI可用性ゲートと共通トースト領域で包む。
+ * 楽曲一覧のスクロール復元のため、直近の遷移種別も記録する。
  *
  * @param props - 現在のrouteが解決した画面。
  * @returns 可用性制御を適用したアプリケーションルート。
  */
 const ApplicationRoot = (props: { children?: JSX.Element }) => {
   useRobotsMeta()
+  useRememberAppMainScrollNavigationType()
 
   return (
     <ApplicationAvailabilityGate>
