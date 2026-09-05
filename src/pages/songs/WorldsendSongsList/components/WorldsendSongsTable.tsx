@@ -24,6 +24,8 @@ type Props = {
   songs: WorldsendSongDTO[]
   sortKey: WorldsendSongSortKey | null
   sortDirection: SortDirection | null
+  /** 仮想テーブル初回アタッチ時のスクロール位置 */
+  initialScrollOffset?: number
   onSortChange: (key: WorldsendSongSortKey) => void
 }
 
@@ -53,6 +55,7 @@ const WorldsendSongsTable = (props: Props) => {
     rowCount: () => props.songs.length,
     rowHeight: ROW_HEIGHT,
     resetOnRowCountChange: true,
+    initialOffset: props.initialScrollOffset,
   })
 
   const virtualRows = createMemo(() => virtualizedTable.virtualRows())
