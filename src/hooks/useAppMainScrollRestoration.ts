@@ -1,5 +1,5 @@
 import { useBeforeLeave, useLocation } from '@solidjs/router'
-import { type Accessor, createEffect, on, onCleanup } from 'solid-js'
+import { type Accessor, createEffect, createMemo, onCleanup } from 'solid-js'
 import {
   getAppMainScrollOffset,
   getAppMainScrollTop,
@@ -30,61 +30,57 @@ export const useAppMainScrollRestoration = (isReady: Accessor<boolean>): number 
   const location = useLocation()
   const pathKey = location.pathname
   const restoredOffset = resolveRestoredAppMainScrollOffset(getAppMainScrollOffset(pathKey))
-  let didRestore = false
-  /** `useBeforeLeave` で記録した離脱元パス。クリーンアップ時の保存キーに使う。 */
-  let leavingPath: string | undefined
-
-  /**
-   * 離脱元のパスに対して現在のメインスクロール位置を保存する。
-   *
-   * @param fromPathname - 離脱元のパス名。未指定時はマウント時のパスへ保存する。
-   */
-  const saveCurrentOffset = (fromPathname?: string) => {
-    saveAppMainScrollOffset(fromPathname ?? pathKey, getAppMainScrollTop())
-  }
+  let savedBeforeLeave = false
 
   useBeforeLeave((event) => {
-    leavingPath = event.from.pathname
-    saveCurrentOffset(event.from.pathname)
+    saveAppMainScrollOffset(event.from.pathname, getAppMainScrollTop())
+    savedBeforeLeave = true
   })
   onCleanup(() => {
-    saveCurrentOffset(leavingPath)
+    // 離脱前に保存済みなら、DOM破棄で縮んだ位置による上書きを防ぐ。
+    if (!savedBeforeLeave) {
+      saveAppMainScrollOffset(location.pathname, getAppMainScrollTop())
+    }
   })
+
+  createAppMainScrollRestoreEffect(() => location.pathname, isReady)
+  return restoredOffset
+}
+
+/**
+ * パスごとの履歴復元を、表示準備が整うまで保留する。
+ *
+ * @param pathname - 現在のパス。
+ * @param isReady - 対象のコンテンツと仮想テーブルが描画済みなら true。
+ * @returns なし。
+ */
+export const createAppMainScrollRestoreEffect = (
+  pathname: Accessor<string>,
+  isReady: Accessor<boolean>
+): void => {
+  const navigation = createMemo(() => ({
+    offset: resolveRestoredAppMainScrollOffset(getAppMainScrollOffset(pathname())),
+    restored: false,
+  }))
 
   createEffect(() => {
-    if (!isReady() || didRestore) return
-    didRestore = true
-    const currentOffset = resolveRestoredAppMainScrollOffset(
-      getAppMainScrollOffset(location.pathname)
-    )
-    if (currentOffset <= 0) return
+    const current = navigation()
+    if (!isReady() || current.restored || current.offset <= 0) return
+    let cancelled = false
+    let frameId: number | undefined
 
     queueMicrotask(() => {
-      restoreAppMainScrollOffset(currentOffset)
-      requestAnimationFrame(() => {
-        restoreAppMainScrollOffset(currentOffset)
+      if (cancelled) return
+      restoreAppMainScrollOffset(current.offset)
+      frameId = requestAnimationFrame(() => {
+        restoreAppMainScrollOffset(current.offset)
+        current.restored = true
       })
     })
+
+    onCleanup(() => {
+      cancelled = true
+      if (frameId !== undefined) cancelAnimationFrame(frameId)
+    })
   })
-
-  createEffect(
-    on(
-      () => location.pathname,
-      (nextPath) => {
-        if (!isReady()) return
-        const nextOffset = resolveRestoredAppMainScrollOffset(getAppMainScrollOffset(nextPath))
-        if (nextOffset <= 0) return
-
-        queueMicrotask(() => {
-          restoreAppMainScrollOffset(nextOffset)
-          requestAnimationFrame(() => {
-            restoreAppMainScrollOffset(nextOffset)
-          })
-        })
-      },
-      { defer: true }
-    )
-  )
-
-  return restoredOffset
 }

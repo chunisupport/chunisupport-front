@@ -12,6 +12,7 @@ import {
 
 import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
+import { createHistoryViewState } from '../../../hooks/createHistoryViewState'
 import {
   readWorldsendRecordColumnsSetting,
   saveWorldsendRecordColumnsSetting,
@@ -53,7 +54,13 @@ import WorldsendColumnSettingsDialog from './WorldsendColumnSettingsDialog'
 
 type Props = {
   records: WorldsendRecordDTO[]
+  username: string
+  active: boolean
+  onReadyChange: (ready: boolean) => void
 }
+
+const useRecordSortState = createHistoryViewState<WorldsendRecordSortCondition[]>()
+const useRecordStatsState = createHistoryViewState<boolean>()
 
 type WorldsendSortKey = WorldsendRecordSortKey
 
@@ -74,10 +81,14 @@ const WorldsendRecord = (props: Props) => {
     ...DEFAULT_WORLDSEND_FILTER,
   })
   const [filterReady, setFilterReady] = createSignal(false)
+  const [columnsReady, setColumnsReady] = createSignal(false)
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [sortSettingsOpen, setSortSettingsOpen] = createSignal(false)
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
-  const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
+  const [filterStatsOpen, setFilterStatsOpen] = useRecordStatsState(
+    () => props.username,
+    () => false
+  )
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<WorldsendRecordColumnId[]>(
     sanitizeVisibleWorldsendColumnIds(getDefaultVisibleWorldsendColumnIds())
   )
@@ -85,8 +96,9 @@ const WorldsendRecord = (props: Props) => {
   // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
   const { initialSortKey, initialSortOrder } = parseWorldsendSortParams(searchParams)
-  const [sortConditions, setSortConditions] = createSignal<WorldsendRecordSortCondition[]>(
-    createInitialWorldsendRecordSortConditions(initialSortKey, initialSortOrder)
+  const [sortConditions, setSortConditions] = useRecordSortState(
+    () => props.username,
+    () => createInitialWorldsendRecordSortConditions(initialSortKey, initialSortOrder)
   )
 
   // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
@@ -125,6 +137,7 @@ const WorldsendRecord = (props: Props) => {
         }
       })
       .catch(() => undefined)
+      .finally(() => setColumnsReady(true))
   })
 
   /**
@@ -204,7 +217,7 @@ const WorldsendRecord = (props: Props) => {
           fallback={<LoadError error={worldsendSongs.error ?? versionData.error} />}
         >
           <Show
-            when={!isWorldsendSongsLoading() && versionData() && filterReady()}
+            when={!isWorldsendSongsLoading() && versionData() && filterReady() && columnsReady()}
             fallback={<Loading />}
           >
             <div class="mx-2 text-sm">
@@ -232,6 +245,9 @@ const WorldsendRecord = (props: Props) => {
 
               <WorldsendRecordTable
                 records={filteredRecords()}
+                active={props.active}
+                onReadyChange={props.onReadyChange}
+                resetDeps={filterStatsOpen()}
                 visibleColumnIds={visibleColumnIds()}
                 sortConditions={sortConditions()}
                 onSortChange={handleSortChange}
