@@ -41,6 +41,7 @@ import {
   SCORE_MIN,
   SCORE_THEORETICAL_MAX,
 } from '../../constants/chart'
+import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { accentPreference, themePreference } from '../../stores/themePreferences'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
@@ -499,6 +500,7 @@ const fetchWeakChartInspectorData = async (): Promise<WeakChartInspectorData> =>
 const WeakChartInspectorPage = (): JSX.Element => {
   useDocumentTitle(WEAK_CHART_INSPECTOR_COPY.title)
   const [data] = createResource(fetchWeakChartInspectorData)
+  useAppMainScrollRestoration(() => !data.loading)
   const analysisRecords = createMemo(() =>
     (data()?.records ?? []).filter(isWeakChartInspectionTarget)
   )

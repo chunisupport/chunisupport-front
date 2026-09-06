@@ -1,12 +1,14 @@
 import { A } from '@solidjs/router'
 import { Gauge, TrendingUp, TriangleAlert } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
+import { createMemo, createResource, For, Show } from 'solid-js'
 import { LoadError, Loading } from '../../components'
 import { AppTabContent, SegmentedTabs } from '../../components/common/AppTabs'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
-import { buildSongDetailPath } from '../../constants/routes'
+import { buildSongDetailPath, RATING_THEORETICAL_CHECKER_PATH } from '../../constants/routes'
+import { createHistoryViewState } from '../../hooks/createHistoryViewState'
+import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useRatingTheoretical } from '../../hooks/useNewSongTheoreticalRating'
 import { authSession } from '../../stores/authSession'
@@ -27,6 +29,12 @@ import { formatPlayerRating, formatRatingFixed2 } from '../../utils/ratingFormat
 import { formatScoreDifference } from '../../utils/scoreDifference'
 import { getScoreRank } from '../../utils/scoreRank'
 import { NEW_SONG_SSS_PLUS_COPY, RATING_THEORETICAL_TAB_OPTIONS } from './newSongSssPlus.constants'
+
+/** ベスト枠・新曲枠理論値チェッカーで選択できる表示枠 */
+type RatingTheoreticalFrame = (typeof RATING_THEORETICAL_TAB_OPTIONS)[number]['value']
+
+/** 履歴で戻った際に選択中の表示枠を復元する Primitive */
+const useSelectedFrameState = createHistoryViewState<RatingTheoreticalFrame>()
 
 /** 枠理論値サマリーの計算結果、現在レコード、取得状態を受け取るプロパティ */
 type RatingTheoreticalSummaryProps = {
@@ -308,7 +316,18 @@ const RatingTheoreticalCheckerPage: Component = () => {
   const [rating] = createResource(username, fetchUserRatingWithCache)
   const [record] = createResource(username, fetchUserRecordWithCache)
   const theoreticalRatings = useRatingTheoretical()
-  const [selectedFrame, setSelectedFrame] = createSignal<'best' | 'new'>('best')
+  const [selectedFrame, setSelectedFrame] = useSelectedFrameState(
+    () => RATING_THEORETICAL_CHECKER_PATH,
+    () => 'best'
+  )
+  useAppMainScrollRestoration(
+    () =>
+      !rating.loading &&
+      !record.loading &&
+      (selectedFrame() === 'best'
+        ? !theoreticalRatings.isBestLoading()
+        : !theoreticalRatings.isNewLoading())
+  )
   /** 未プレイ補完を除いた全通常譜面レコード */
   const playedRecords = createMemo(
     () => record()?.standard.filter((playerRecord) => playerRecord.score > 0) ?? []
