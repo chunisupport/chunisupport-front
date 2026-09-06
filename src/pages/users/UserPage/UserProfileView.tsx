@@ -189,15 +189,31 @@ export const UserProfileView: Component<Props> = (props) => {
   }
   const navigate = useNavigate()
   const location = useLocation()
+  const [standardReady, setStandardReady] = createSignal(false)
+  const [worldsendReady, setWorldsendReady] = createSignal(false)
+  const [courseReady, setCourseReady] = createSignal(false)
   /**
-   * ベスト枠・新曲枠タブの表示準備ができているかどうかを返す。
-   * レーティングはプロフィールと同時に取得済みのため、タブ選択状態だけで判定する。
+   * 表示中タブのコンテンツがスクロール復元可能かを返す。
+   * レコードは非同期設定の復元と仮想テーブルの描画完了を待つ。
    *
-   * @returns ベスト枠・新曲枠のいずれかを表示中なら true。
+   * @returns 表示中タブの描画が完了していれば true。
    */
-  const isRatingTabReady = () =>
-    props.selectedPage === 'rating_best' || props.selectedPage === 'rating_new'
-  useAppMainScrollRestoration(isRatingTabReady)
+  const isSelectedTabReady = () => {
+    switch (props.selectedPage) {
+      case 'rating_best':
+      case 'rating_new':
+        return true
+      case 'record_normal':
+        return standardReady()
+      case 'record_we':
+        return worldsendReady()
+      case 'record_course':
+        return courseReady()
+      default:
+        return false
+    }
+  }
+  useAppMainScrollRestoration(isSelectedTabReady)
   const selectedPageTab = createMemo<'rating' | 'records' | 'overpower'>(() => {
     if (
       props.selectedPage === 'record_normal' ||
@@ -385,7 +401,12 @@ export const UserProfileView: Component<Props> = (props) => {
               <Suspense fallback={<Loading />}>
                 <Show when={recordProfile()} fallback={<Loading />}>
                   {(profile) => (
-                    <UserRecord username={profile().username} record={profile().record} />
+                    <UserRecord
+                      username={profile().username}
+                      record={profile().record}
+                      active={props.selectedPage === 'record_normal'}
+                      onReadyChange={setStandardReady}
+                    />
                   )}
                 </Show>
               </Suspense>
@@ -393,7 +414,14 @@ export const UserProfileView: Component<Props> = (props) => {
             <AppTabContent value="worldsend" forceMount class={forceMountedTabContentClass}>
               <Suspense fallback={<Loading />}>
                 <Show when={recordProfile()} fallback={<Loading />}>
-                  {(profile) => <WorldsendRecord records={profile().record.worldsend ?? []} />}
+                  {(profile) => (
+                    <WorldsendRecord
+                      username={profile().username}
+                      records={profile().record.worldsend ?? []}
+                      active={props.selectedPage === 'record_we'}
+                      onReadyChange={setWorldsendReady}
+                    />
+                  )}
                 </Show>
               </Suspense>
             </AppTabContent>
@@ -404,7 +432,14 @@ export const UserProfileView: Component<Props> = (props) => {
                   fallback={<LoadError error={props.courseRecordProfile.error} />}
                 >
                   <Show when={courseRecordProfile()} fallback={<Loading />}>
-                    {(profile) => <CourseRecord records={profile().records.courses} />}
+                    {(profile) => (
+                      <CourseRecord
+                        username={profile().username}
+                        records={profile().records.courses}
+                        active={props.selectedPage === 'record_course'}
+                        onReadyChange={setCourseReady}
+                      />
+                    )}
                   </Show>
                 </Show>
               </Suspense>

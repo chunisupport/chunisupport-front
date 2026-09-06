@@ -28,7 +28,9 @@ type WindowVirtualTableParams<TScrollElement extends HTMLElement> = {
   /** 行数変更時に先頭へスクロールするか。初回マウントでは復元を妨げないよう動かない */
   resetOnRowCountChange?: boolean
   /** 初回アタッチ時のスクロール位置。未指定時は先頭 */
-  initialOffset?: number
+  initialOffset?: number | Accessor<number>
+  /** 非表示タブなどでスクロール操作を停止するための状態 */
+  enabled?: Accessor<boolean>
   /** レイアウトだけを再計算したい依存値 */
   layoutDeps?: Accessor<unknown>
   /** スクロール要素の取得処理。未指定時はapp-mainを使う */
@@ -65,6 +67,9 @@ export const createWindowVirtualTable = <
       return params.rowCount()
     },
     getScrollElement,
+    get enabled() {
+      return params.enabled?.() ?? true
+    },
     estimateSize: () => params.rowHeight,
     overscan: params.overscan ?? DEFAULT_OVERSCAN,
     initialOffset: params.initialOffset ?? 0,
@@ -79,6 +84,7 @@ export const createWindowVirtualTable = <
    * @returns なし。
    */
   const updateScrollMargin = () => {
+    if (params.enabled?.() === false) return
     const scrollElement = getScrollElement()
     const tableBodyElement = bodyRef()
     if (!scrollElement || !tableBodyElement) return
@@ -112,6 +118,7 @@ export const createWindowVirtualTable = <
    */
   const resetToTop = () => {
     queueMicrotask(() => {
+      if (params.enabled?.() === false) return
       updateScrollMargin()
       rowVirtualizer.scrollToIndex(0)
     })
