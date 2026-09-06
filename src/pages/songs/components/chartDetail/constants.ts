@@ -2,6 +2,10 @@
 export const CHART_DETAIL_PAGE_TITLE = '譜面詳細'
 /** スコア履歴セクションのラベル */
 export const SCORE_HISTORY_SECTION_LABEL = 'スコア履歴'
+/** スコア履歴の表示上限件数 */
+export const SCORE_HISTORY_MAX_ENTRIES = 50
+/** スコア履歴の件数上限の付記 */
+export const SCORE_HISTORY_MAX_ENTRIES_LABEL = `最大${SCORE_HISTORY_MAX_ENTRIES}件`
 /** フレンドランキングセクションのラベル */
 export const FRIEND_RANKING_SECTION_LABEL = 'フレンドランキング'
 /** ADMIN向け全体ランキングへのリンクラベル */
