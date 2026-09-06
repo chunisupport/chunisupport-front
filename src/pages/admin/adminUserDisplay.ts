@@ -1,3 +1,5 @@
+import type { AccountType } from '../../types/api'
+
 const adminUserDateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
   year: 'numeric',
   month: 'numeric',
@@ -20,7 +22,13 @@ export const formatAdminUserDateTime = (value: string | null): string => {
 
 export const formatBooleanFlag = (value: boolean): string => (value ? 'true' : 'false')
 
-export const formatAccountType = (value: 'ADMIN' | 'PLAYER'): string => value
+/**
+ * APIが返すアカウント種別を一覧表示用の文字列へ変換する。
+ *
+ * @param value - APIが返すアカウント種別。
+ * @returns 表示するアカウント種別。
+ */
+export const formatAccountType = (value: AccountType): string => value
 
 export const formatNullableText = (value: string | null | undefined): string =>
   value ? value : '-'

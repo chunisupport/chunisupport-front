@@ -1,6 +1,8 @@
 import { API_BASE_URL } from '../config'
 import type {
+  AccountType,
   AdminUserListResponse,
+  AdminUserPermissionsResponse,
   AdminUserStatisticsResponse,
   PlayerFavoriteSongRequest,
   PlayerFavoriteSongsResponse,
@@ -311,6 +313,41 @@ export const fetchAdminUserStatistics = async (): Promise<AdminUserStatisticsRes
   return response.json()
 }
 
+/**
+ * 権限変更時に選択できるアカウント種別を取得する。
+ *
+ * @returns 権限名の一覧。
+ */
+export const fetchAdminUserPermissions = async (): Promise<AdminUserPermissionsResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/master/permissions`)
+
+  return response.json()
+}
+
+/**
+ * 指定したユーザーの権限を変更する。
+ *
+ * @param username - 権限を変更するユーザー名。
+ * @param permission - 設定するアカウント種別。
+ * @returns 変更完了時に解決されるPromise。
+ */
+export const updateUserPermission = async (
+  username: string,
+  permission: AccountType
+): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/permission`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ permission }),
+  })
+}
+
+/**
+ * 指定したユーザーを物理削除する。
+ *
+ * @param username - 削除対象のユーザー名。
+ * @returns 削除完了時に解決されるPromise。
+ */
 export const deleteUserByUsername = async (username: string): Promise<void> => {
   await fetchWithAuth(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}`, {
     method: 'DELETE',
