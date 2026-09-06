@@ -224,3 +224,34 @@ test('fetchAdminUserStatisticsは管理者向けユーザー集計を取得す�
   // Then
   assert.deepEqual(response, responseBody)
 })
+
+test('fetchAdminUserPermissionsは権限候補を取得すること', async () => {
+  // Given
+  const responseBody = { permissions: ['PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] }
+  globalThis.fetch = async (input) => {
+    assert.equal(String(input), 'http://localhost:3000/internal/master/permissions')
+    return Response.json(responseBody)
+  }
+  const { fetchAdminUserPermissions } = await loadUsersApi()
+
+  // When
+  const response = await fetchAdminUserPermissions()
+
+  // Then
+  assert.deepEqual(response, responseBody)
+})
+
+test('updateUserPermissionはURLエンコードしたユーザー名と選択した権限を送信すること', async () => {
+  // Given
+  globalThis.fetch = async (input, init) => {
+    assert.equal(String(input), 'http://localhost:3000/internal/users/alice%20bob/permission')
+    assert.equal(init?.method, 'PATCH')
+    assert.equal(new Headers(init?.headers).get('Content-Type'), 'application/json')
+    assert.equal(init?.body, JSON.stringify({ permission: 'EDITOR' }))
+    return new Response(null, { status: 204 })
+  }
+  const { updateUserPermission } = await loadUsersApi()
+
+  // When
+  await updateUserPermission('alice bob', 'EDITOR')
+})

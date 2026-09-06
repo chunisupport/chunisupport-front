@@ -925,7 +925,7 @@ export interface AdminUserListResponse {
   username: string
   last_sign_in_time?: string | null
   last_refresh_time?: string | null
-  account_type: 'ADMIN' | 'PLAYER'
+  account_type: AccountType
   created_at: string
   updated_at: string
   player_name: string | null
@@ -933,6 +933,11 @@ export interface AdminUserListResponse {
   overpower_value: number | null
   is_suspicious: boolean
   is_private: boolean
+}
+
+/** 管理者向け権限候補取得APIが返す権限一覧 */
+export interface AdminUserPermissionsResponse {
+  permissions: AccountType[]
 }
 
 /** 管理者向けユーザー集計APIが返す件数 */

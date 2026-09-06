@@ -30,6 +30,8 @@ test('boolean フラグは true/false 文字列に変換する', () => {
 test('account_type は定義済み値をそのまま表示する', () => {
   assert.equal(formatAccountType('ADMIN'), 'ADMIN')
   assert.equal(formatAccountType('PLAYER'), 'PLAYER')
+  assert.equal(formatAccountType('EDITOR'), 'EDITOR')
+  assert.equal(formatAccountType('EXTDEV'), 'EXTDEV')
 })
 
 test('nullable text は null と空文字でハイフンを返す', () => {

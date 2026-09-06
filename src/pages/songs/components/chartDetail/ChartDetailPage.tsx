@@ -16,6 +16,7 @@ import type {
 import {
   ADMIN_CHART_RANKING_LINK_LABEL,
   FRIEND_RANKING_SECTION_LABEL,
+  SCORE_HISTORY_MAX_ENTRIES_LABEL,
   SCORE_HISTORY_SECTION_LABEL,
   SCORE_HISTORY_VERSION_LABEL_TOGGLE,
 } from './constants'
@@ -84,7 +85,12 @@ const ChartDetailPage = (props: Props) => {
 
       <section class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2 class="text-lg font-semibold">{SCORE_HISTORY_SECTION_LABEL}</h2>
+          <h2 class="flex flex-wrap items-baseline gap-2 text-lg font-semibold">
+            {SCORE_HISTORY_SECTION_LABEL}
+            <span class="text-xs font-normal text-text-muted">
+              {SCORE_HISTORY_MAX_ENTRIES_LABEL}
+            </span>
+          </h2>
           <Show when={!versions.error}>
             <CheckboxField
               id="score-history-version-label-toggle"
