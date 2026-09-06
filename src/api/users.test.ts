@@ -162,6 +162,49 @@ test('fetchUserCourseRecordsは未プレイを含むコースレコード一覧�
   assert.deepEqual(response, responseBody)
 })
 
+test('fetchAdminUsersはpageとnameをクエリに付けて一覧を取得すること', async () => {
+  // Given
+  const responseBody = [
+    {
+      username: 'user1',
+      account_type: 'PLAYER',
+      created_at: '2026-01-01T00:00:00+09:00',
+      updated_at: '2026-01-02T00:00:00+09:00',
+      player_name: 'player1',
+      rating: 17.25,
+      overpower_value: 9500,
+      is_suspicious: false,
+      is_private: false,
+    },
+  ]
+  globalThis.fetch = async (input) => {
+    assert.equal(String(input), 'http://localhost:3000/internal/users/?page=2&name=user')
+    return Response.json(responseBody)
+  }
+  const { fetchAdminUsers } = await loadUsersApi()
+
+  // When
+  const response = await fetchAdminUsers({ page: 2, name: 'user' })
+
+  // Then
+  assert.deepEqual(response, responseBody)
+})
+
+test('fetchAdminUsersはpage未指定なら1ページ目を取得すること', async () => {
+  // Given
+  globalThis.fetch = async (input) => {
+    assert.equal(String(input), 'http://localhost:3000/internal/users/?page=1')
+    return Response.json([])
+  }
+  const { fetchAdminUsers } = await loadUsersApi()
+
+  // When
+  const response = await fetchAdminUsers()
+
+  // Then
+  assert.deepEqual(response, [])
+})
+
 test('fetchAdminUserStatisticsは管理者向けユーザー集計を取得すること', async () => {
   // Given
   const responseBody = {

@@ -7,3 +7,12 @@ export const ADMIN_USER_STATISTICS_COPY = {
   loadingLabel: 'ユーザー集計を読み込み中',
   loadError: 'ユーザー集計を取得できませんでした。',
 } as const
+
+/** ユーザー管理画面の一覧・検索に使用する文言 */
+export const ADMIN_USER_LIST_COPY = {
+  searchLabel: 'ユーザー/プレイヤー名（前方一致）',
+  searchPlaceholder: '例: user',
+  searchButton: '検索',
+  empty: '一致するユーザーが見つかりません。',
+  loadingLabel: 'ユーザー一覧を読み込み中',
+} as const
