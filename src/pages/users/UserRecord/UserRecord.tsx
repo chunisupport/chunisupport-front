@@ -18,6 +18,7 @@ import {
   fetchUserLockedSongs,
 } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
+import { createHistoryViewState } from '../../../hooks/createHistoryViewState'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import {
   readStandardRecordColumnsSetting,
@@ -68,7 +69,12 @@ import {
 type Props = {
   username: string
   record: UserRecordDTO
+  active: boolean
+  onReadyChange: (ready: boolean) => void
 }
+
+const useRecordSortState = createHistoryViewState<RecordSortCondition[]>()
+const useRecordStatsState = createHistoryViewState<boolean>()
 
 /**
  * 通常レコードの初期フィルターを保存済み設定、または既定値から決定する。
@@ -110,10 +116,14 @@ const UserRecord: Component<Props> = (props) => {
     ...DEFAULT_FILTER,
   })
   const [filterReady, setFilterReady] = createSignal(false)
+  const [columnsReady, setColumnsReady] = createSignal(false)
 
   // フィルターダイアログの開閉状態
   const [filterOpen, setFilterOpen] = createSignal(false)
-  const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
+  const [filterStatsOpen, setFilterStatsOpen] = useRecordStatsState(
+    () => props.username,
+    () => false
+  )
   const [sortSettingsOpen, setSortSettingsOpen] = createSignal(false)
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
   const [favoriteSongsOpen, setFavoriteSongsOpen] = createSignal(false)
@@ -153,8 +163,9 @@ const UserRecord: Component<Props> = (props) => {
   const [searchParams, setSearchParams] = useSearchParams()
   const { initialSortKey, initialSortOrder } = parseSortParams(searchParams)
 
-  const [sortConditions, setSortConditions] = createSignal<RecordSortCondition[]>(
-    createInitialRecordSortConditions(initialSortKey, initialSortOrder)
+  const [sortConditions, setSortConditions] = useRecordSortState(
+    () => props.username,
+    () => createInitialRecordSortConditions(initialSortKey, initialSortOrder)
   )
   const primarySort = () => sortConditions()[0] ?? null
   const [visibleColumnIds, setVisibleColumnIds] = createSignal<RecordColumnId[]>(
@@ -245,6 +256,7 @@ const UserRecord: Component<Props> = (props) => {
         }
       })
       .catch(() => undefined)
+      .finally(() => setColumnsReady(true))
   })
 
   /**
@@ -332,6 +344,8 @@ const UserRecord: Component<Props> = (props) => {
               masterData() &&
               versionData() &&
               filterReady() &&
+              columnsReady() &&
+              (!filters().favoriteSongsOnly || (!favoriteSongs.loading && favoriteSongs())) &&
               (!filters().excludeLockedSongs || (!lockedSongs.loading && lockedSongs()))
             }
             fallback={<Loading />}
@@ -366,6 +380,8 @@ const UserRecord: Component<Props> = (props) => {
               {/* レコード一覧 */}
               <RecordDataTable
                 records={sortedRecords()}
+                active={props.active}
+                onReadyChange={props.onReadyChange}
                 columns={visibleColumns()}
                 sortKey={primarySort()?.key ?? null}
                 sortDirection={primarySort()?.direction ?? null}

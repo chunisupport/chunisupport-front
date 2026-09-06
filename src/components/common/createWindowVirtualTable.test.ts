@@ -274,3 +274,78 @@ await new Promise((resolve) =>
 
   await runBrowserSolidTest(script)
 })
+
+test('非表示テーブルは初期化と行数変更で共有スクロール領域を動かさない', async () => {
+  await runBrowserSolidTest(`
+const view = createRoot((dispose) => {
+  const [rowCount, setRowCount] = createSignal(100)
+  const [enabled, setEnabled] = createSignal(false)
+  const scrollElement = createFakeScrollElement(640)
+  const table = createWindowVirtualTable({
+    rowCount,
+    rowHeight: 10,
+    enabled,
+    initialOffset: () => scrollElement.scrollTop,
+    resetOnRowCountChange: true,
+    getScrollElement: () => scrollElement,
+  })
+  table.setTableBodyRef(createFakeElement(25))
+  table.setTableContainerRef(createFakeElement(20))
+  return { dispose, setRowCount, setEnabled, scrollElement, table }
+})
+await nextTask()
+view.setRowCount(50)
+await nextTask()
+assert.deepEqual(view.scrollElement.scrollCalls, [])
+assert.equal(view.scrollElement.scrollTop, 640)
+
+view.setEnabled(true)
+await nextTask()
+await nextTask()
+assert.equal(view.scrollElement.scrollTop, 640)
+assert.ok(view.table.virtualRows().length > 0)
+
+view.setEnabled(false)
+await nextTask()
+view.scrollElement.scrollTop = 240
+view.setEnabled(true)
+await nextTask()
+await nextTask()
+assert.equal(view.scrollElement.scrollTop, 240)
+view.dispose()
+`)
+})
+
+test('非同期に行が揃った仮想テーブルで深い位置を復元し、末尾付近の行を描画する', async () => {
+  await runBrowserSolidTest(`
+const view = createRoot((dispose) => {
+  const [rowCount, setRowCount] = createSignal(0)
+  const [enabled, setEnabled] = createSignal(false)
+  const scrollElement = createFakeScrollElement(0)
+  scrollElement.scrollHeight = 10000
+  const table = createWindowVirtualTable({
+    rowCount,
+    rowHeight: 10,
+    enabled,
+    initialOffset: 9500,
+    resetOnRowCountChange: true,
+    getScrollElement: () => scrollElement,
+  })
+  table.setTableBodyRef({
+    getBoundingClientRect: () => ({ top: 10 - scrollElement.scrollTop }),
+  })
+  table.setTableContainerRef(createFakeElement(10))
+  return { dispose, setRowCount, setEnabled, scrollElement, table }
+})
+await nextTask()
+view.setRowCount(1000)
+await nextTask()
+view.setEnabled(true)
+await nextTask()
+await nextTask()
+assert.equal(view.scrollElement.scrollTop, 9500)
+assert.equal(view.table.scrollMargin(), 0)
+assert.ok(view.table.virtualRows().some((row) => row.index === 950))
+view.dispose()
+`)
+})

@@ -65,7 +65,8 @@ export const rememberAppMainScrollNavigationTarget = (to: string | number): void
  * @param to - 遷移先。履歴デルタなら数値。
  * @returns 履歴の戻る/進むなら true。
  */
-export const isHistoryPopNavigation = (to: string | number): boolean => typeof to === 'number'
+export const isHistoryPopNavigation = (to: string | number = lastNavigationTarget): boolean =>
+  typeof to === 'number'
 
 /**
  * 保存済み位置を復元してよいか判定し、復元する縦位置を返す。

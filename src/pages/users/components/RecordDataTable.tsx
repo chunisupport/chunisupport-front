@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js'
-import { createMemo, For, Show } from 'solid-js'
+import { createEffect, createMemo, For, onCleanup, Show } from 'solid-js'
 import { createWindowVirtualTable } from '../../../components/common/createWindowVirtualTable'
 import {
   type ColumnRenderer,
@@ -12,6 +12,7 @@ import {
   getSortAriaValue,
   type SortDirection,
 } from '../../../components/common/SortableTableHeader'
+import { getAppMainScrollTop } from '../../../utils/appMainScrollRestoration'
 import { createGridTemplateColumns } from '../utils/recordColumnDefinitions'
 import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
 
@@ -32,6 +33,10 @@ type RecordDataTableProps<TRecord, TColumnId extends string, TSortKey extends st
   wrapperClass?: string
   /** 仮想スクロール位置の再計算トリガー */
   resetDeps?: unknown
+  /** このテーブルのタブを表示中か */
+  active?: boolean
+  /** テーブルの描画準備状態の通知先 */
+  onReadyChange?: (ready: boolean) => void
   /** 列IDからセルレンダラーを取得する処理 */
   getColumnRenderer: (columnId: TColumnId) => ColumnRenderer<TRecord>
   /** ヘッダークリック時にソートキーを通知する処理 */
@@ -55,10 +60,17 @@ export function RecordDataTable<TRecord, TColumnId extends string, TSortKey exte
 ): JSX.Element {
   const virtualizedTable = createWindowVirtualTable<HTMLDivElement, HTMLDivElement>({
     rowHeight: RECORD_ROW_HEIGHT,
+    enabled: () => props.active ?? true,
+    initialOffset: getAppMainScrollTop,
     rowCount: () => props.records.length,
     resetOnRowCountChange: true,
     layoutDeps: () => props.resetDeps,
   })
+
+  createEffect(() => {
+    props.onReadyChange?.(props.active ?? true)
+  })
+  onCleanup(() => props.onReadyChange?.(false))
 
   const gridTemplateColumns = createMemo(() => createGridTemplateColumns(props.columns))
   /**

@@ -1,5 +1,6 @@
 import type { Component } from 'solid-js'
-import { createMemo, createSignal } from 'solid-js'
+import { createMemo } from 'solid-js'
+import { createHistoryViewState } from '../../../hooks/createHistoryViewState'
 import type { CourseRecordDTO } from '../../../types/api'
 import { nextPrimarySortCondition } from '../../../utils/sortConditions'
 import RecordDataTable from '../components/RecordDataTable'
@@ -15,7 +16,12 @@ import {
 type Props = {
   /** 表示対象のコースレコード */
   records: CourseRecordDTO[]
+  username: string
+  active: boolean
+  onReadyChange: (ready: boolean) => void
 }
+
+const useRecordSortState = createHistoryViewState<CourseRecordSortCondition>()
 
 /**
  * コースモードのレコードを共通レコードテーブルで表示する。
@@ -24,8 +30,9 @@ type Props = {
  * @returns 既存レコード列と同じ幅・セルを使ったコースレコード表。
  */
 const CourseRecord: Component<Props> = (props) => {
-  const [sortCondition, setSortCondition] = createSignal<CourseRecordSortCondition>(
-    DEFAULT_COURSE_RECORD_SORT_CONDITION
+  const [sortCondition, setSortCondition] = useRecordSortState(
+    () => props.username,
+    () => DEFAULT_COURSE_RECORD_SORT_CONDITION
   )
   const sortedRecords = createMemo(() => sortCourseRecords(props.records, sortCondition()))
 
@@ -43,6 +50,8 @@ const CourseRecord: Component<Props> = (props) => {
     <div class="mx-2 text-sm">
       <RecordDataTable
         records={sortedRecords()}
+        active={props.active}
+        onReadyChange={props.onReadyChange}
         columns={COURSE_RECORD_COLUMN_DEFINITIONS}
         sortKey={sortCondition().key}
         sortDirection={sortCondition().direction}

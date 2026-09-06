@@ -16,6 +16,12 @@ import {
 type WorldsendRecordTableProps = {
   /** 表示対象の WORLD'S END レコード */
   records: WorldsendRecordWithSongMeta[]
+  /** テーブルのタブを表示中か */
+  active: boolean
+  /** 描画準備状態の通知先 */
+  onReadyChange: (ready: boolean) => void
+  /** 統計の開閉によるレイアウト再計算の依存値 */
+  resetDeps?: unknown
   /** 現在の表示列ID */
   visibleColumnIds: WorldsendRecordColumnId[]
   /** 複数ソート条件 */
@@ -42,6 +48,9 @@ const WorldsendRecordTable: Component<WorldsendRecordTableProps> = (props) => {
   return (
     <RecordDataTable
       records={sortedRecords()}
+      active={props.active}
+      onReadyChange={props.onReadyChange}
+      resetDeps={props.resetDeps}
       columns={visibleColumns()}
       sortKey={primarySort().key}
       sortDirection={primarySort().direction}
