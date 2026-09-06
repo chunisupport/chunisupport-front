@@ -269,18 +269,28 @@ export const deleteMyFavoriteSong = async (displayId: string): Promise<void> => 
   )
 }
 
+/** 管理者向けユーザー一覧APIの1ページあたり件数 */
+export const ADMIN_USER_LIST_PAGE_SIZE = 100
+
+/** 管理者向けユーザー一覧の取得条件 */
 type FetchAdminUsersOptions = {
+  /** ページ番号（1始まり）。省略時は1 */
   page?: number
+  /** ユーザー名またはプレイヤー名の前方一致。空なら指定しない */
   name?: string
 }
 
+/**
+ * 管理者向けユーザー一覧をページ単位で取得する。
+ *
+ * @param options - ページ番号と名前検索。
+ * @returns 指定ページのユーザー一覧。
+ */
 export const fetchAdminUsers = async (
   options: FetchAdminUsersOptions = {}
 ): Promise<AdminUserListResponse[]> => {
   const url = new URL(`${API_BASE_URL}/internal/users/`)
-  if (typeof options.page !== 'undefined') {
-    url.searchParams.set('page', String(options.page))
-  }
+  url.searchParams.set('page', String(options.page ?? 1))
   if (options.name) {
     url.searchParams.set('name', options.name)
   }
