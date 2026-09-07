@@ -85,3 +85,42 @@ export const createAppMainScrollRestoreEffect = (
     })
   })
 }
+
+/**
+ * 指定されたスクロール位置を、切り替え先コンテンツの描画完了後に復元する。
+ *
+ * @param pathname - 現在のパス。
+ * @param isReady - 切り替え先コンテンツが描画済みなら true。
+ * @param requestedOffset - 復元待ちのスクロール位置。
+ * @param onRestored - 復元完了後に待機状態を解除する処理。
+ * @returns なし。
+ */
+export const createAppMainScrollOffsetRestoreEffect = (
+  pathname: Accessor<string>,
+  isReady: Accessor<boolean>,
+  requestedOffset: Accessor<number | undefined>,
+  onRestored: () => void
+): void => {
+  createEffect(() => {
+    const currentPath = pathname()
+    const offset = requestedOffset()
+    if (!isReady() || offset === undefined) return
+
+    let cancelled = false
+    let frameId: number | undefined
+    queueMicrotask(() => {
+      if (cancelled || pathname() !== currentPath) return
+      restoreAppMainScrollOffset(offset)
+      frameId = requestAnimationFrame(() => {
+        if (cancelled || pathname() !== currentPath) return
+        restoreAppMainScrollOffset(offset)
+        onRestored()
+      })
+    })
+
+    onCleanup(() => {
+      cancelled = true
+      if (frameId !== undefined) cancelAnimationFrame(frameId)
+    })
+  })
+}

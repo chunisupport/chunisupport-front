@@ -6,7 +6,10 @@ import { LoadError, Loading } from '../../../components'
 import { AppIconButton } from '../../../components/common/AppButton'
 import { AppTabContent, SegmentedTabs, UnderlineTabs } from '../../../components/common/AppTabs'
 import { RATING_SLOT_COUNT } from '../../../constants/rating'
-import { useAppMainScrollRestoration } from '../../../hooks/useAppMainScrollRestoration'
+import {
+  createAppMainScrollOffsetRestoreEffect,
+  useAppMainScrollRestoration,
+} from '../../../hooks/useAppMainScrollRestoration'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import {
   getAppMainScrollTop,
@@ -192,6 +195,7 @@ export const UserProfileView: Component<Props> = (props) => {
   const [standardReady, setStandardReady] = createSignal(false)
   const [worldsendReady, setWorldsendReady] = createSignal(false)
   const [courseReady, setCourseReady] = createSignal(false)
+  const [pendingSubTabScrollOffset, setPendingSubTabScrollOffset] = createSignal<number>()
   /**
    * 表示中タブのコンテンツがスクロール復元可能かを返す。
    * レコードは非同期設定の復元と仮想テーブルの描画完了を待つ。
@@ -214,6 +218,12 @@ export const UserProfileView: Component<Props> = (props) => {
     }
   }
   useAppMainScrollRestoration(isSelectedTabReady)
+  createAppMainScrollOffsetRestoreEffect(
+    () => location.pathname,
+    isSelectedTabReady,
+    pendingSubTabScrollOffset,
+    () => setPendingSubTabScrollOffset(undefined)
+  )
   const selectedPageTab = createMemo<'rating' | 'records' | 'overpower'>(() => {
     if (
       props.selectedPage === 'record_normal' ||
@@ -260,15 +270,24 @@ export const UserProfileView: Component<Props> = (props) => {
    * タブ切替前の `#app-main` スクロール位置を現在のパスへ保存する。
    * 同一マウント内のタブ遷移では `useBeforeLeave` が発火しない場合があるため、明示的に保存する。
    *
-   * @returns なし。
+   * @returns 保存した縦スクロール位置。
    */
-  const saveCurrentProfileScrollPosition = () => {
-    saveAppMainScrollOffset(location.pathname, getAppMainScrollTop())
+  const saveCurrentProfileScrollPosition = (): number => {
+    const offset = getAppMainScrollTop()
+    saveAppMainScrollOffset(location.pathname, offset)
+    return offset
   }
 
+  /**
+   * 上位タブを切り替え、切り替え先のプロフィール内容の先頭へ移動する。
+   *
+   * @param value - 切り替え先の上位タブ。
+   * @returns なし。
+   */
   const handlePageTabChange = (value: string) => {
     if (value !== 'rating' && value !== 'records' && value !== 'overpower') return
 
+    setPendingSubTabScrollOffset(undefined)
     saveCurrentProfileScrollPosition()
     if (value === 'rating') {
       navigate(
@@ -293,11 +312,18 @@ export const UserProfileView: Component<Props> = (props) => {
     scrollToUserProfileContent('smooth')
   }
 
+  /**
+   * 現在のスクロール位置を維持したままレーティング枠を切り替える。
+   *
+   * @param value - 切り替え先のレーティング枠。
+   * @returns なし。
+   */
   const handleRatingTabChange = (value: string) => {
     if (value !== 'best' && value !== 'new') return
-    saveCurrentProfileScrollPosition()
-    navigate(buildProfileNavigationTarget(value === 'new' ? 'rating_new' : 'rating_best'))
-    scrollToUserProfileContent('smooth')
+    setPendingSubTabScrollOffset(saveCurrentProfileScrollPosition())
+    navigate(buildProfileNavigationTarget(value === 'new' ? 'rating_new' : 'rating_best'), {
+      scroll: false,
+    })
   }
 
   /**
@@ -309,14 +335,19 @@ export const UserProfileView: Component<Props> = (props) => {
     setShowJackets((current) => !current)
   }
 
+  /**
+   * 現在のスクロール位置を維持したままレコード種別を切り替える。
+   *
+   * @param value - 切り替え先のレコード種別。
+   * @returns なし。
+   */
   const handleRecordTabChange = (value: string) => {
     if (value !== 'standard' && value !== 'worldsend' && value !== 'course') return
-    saveCurrentProfileScrollPosition()
+    setPendingSubTabScrollOffset(saveCurrentProfileScrollPosition())
     const page =
       value === 'worldsend' ? 'record_we' : value === 'course' ? 'record_course' : 'record_normal'
-    navigate(buildProfileNavigationTarget(page))
+    navigate(buildProfileNavigationTarget(page), { scroll: false })
     if (value !== 'course') props.onShowRecords()
-    scrollToUserProfileContent('smooth')
   }
 
   return (
