@@ -1,4 +1,4 @@
-import { ArrowLeftRight } from 'lucide-solid'
+import { ArrowUpDown } from 'lucide-solid'
 import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
@@ -85,7 +85,7 @@ const SongsList = () => {
                 versions={versions()?.versions ?? []}
               />
               <AppIconButton
-                class="ml-1 h-9.5 w-9.5 shrink-0"
+                class="ml-2 h-9.5 w-9.5 shrink-0"
                 tone={displayMode() === 'notes' ? 'primary' : 'surface'}
                 aria-label={SONG_CHART_DISPLAY_LABELS.toggle}
                 aria-pressed={displayMode() === 'notes'}
@@ -96,7 +96,7 @@ const SongsList = () => {
                 }
                 onClick={() => setDisplayMode((mode) => (mode === 'const' ? 'notes' : 'const'))}
               >
-                <ArrowLeftRight class="h-4 w-4" aria-hidden="true" />
+                <ArrowUpDown class="h-4 w-4" aria-hidden="true" />
               </AppIconButton>
             </div>
             <p class="text-sm text-text-muted">{sortedSongs().length}件</p>
