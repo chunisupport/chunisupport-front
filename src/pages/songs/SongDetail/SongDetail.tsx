@@ -2,17 +2,21 @@ import { useParams, useSearchParams } from '@solidjs/router'
 import { createEffect, createMemo, createResource, createSignal, on, Show, untrack } from 'solid-js'
 import { fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
 import { LoadError } from '../../../components'
+import { showErrorToast } from '../../../components/common/AppToast'
 import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
+import { useSongsData } from '../../../stores/songsData'
 import type { PlayerRecordDTO, SongDTO } from '../../../types/api'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserStandardSongRecordWithCache } from '../../../usecases/cache/fetchUserSongRecordWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
 import { normalizeDifficultyQueryValue } from '../../../utils/difficultyUtils'
+import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import NotFoundPage from '../../NotFoundPage'
 import SongDetailLayout from '../components/SongDetailLayout'
 import { useSongDetailBase } from '../components/useSongDetailBase'
+import { SONG_DATA_REFRESH_ERROR_MESSAGE } from '../constants'
 import OwnScoreCard, { type OwnScoreItem } from './components/OwnScoreCard'
 import SongInfoCard from './components/SongInfoCard'
 import SongStatsTabs from './components/SongStatsTabs'
@@ -79,7 +83,11 @@ const SongDetail = () => {
   const params = useParams<{ displayid: string }>()
   const [searchParams] = useSearchParams()
 
-  const [songState] = createResource(() => params.displayid, fetchSongDetailLoadState)
+  const songsData = useSongsData()
+  const [songState, { refetch: refetchSongState }] = createResource(
+    () => params.displayid,
+    fetchSongDetailLoadState
+  )
   const song = createMemo(() => {
     const state = songState()
     return state?.type === 'loaded' ? state.song : undefined
@@ -160,6 +168,19 @@ const SongDetail = () => {
     return ownScoreItems().find((item) => item.difficulty === difficulty)?.score
   })
 
+  /**
+   * 楽曲マスタ更新後に詳細と一覧キャッシュを再取得する。
+   *
+   * @returns 再取得完了後に解決される Promise。
+   */
+  const handleSongUpdated = async (): Promise<void> => {
+    try {
+      await Promise.all([refetchSongState(), songsData.refreshSongs()])
+    } catch (error) {
+      showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+    }
+  }
+
   useDocumentTitle(() => `${song()?.title ?? '楽曲'} - 楽曲詳細`)
 
   return (
@@ -176,6 +197,8 @@ const SongDetail = () => {
               song={currentSong}
               availableDifficulties={availableDifficulties()}
               versionName={songVersionName()}
+              genres={masterData()?.genres ?? []}
+              onUpdated={handleSongUpdated}
             />
           )}
           renderStats={(currentSong) => (

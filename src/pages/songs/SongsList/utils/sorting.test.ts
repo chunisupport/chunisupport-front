@@ -103,3 +103,48 @@ test('BPMと定数の未設定値は末尾に寄せる', () => {
     ['hard', 'easy', 'missing-bpm', 'slow', 'missing-chart']
   )
 })
+
+test('ノーツ数モードは定数と独立して並び替え、未設定を末尾に保ち同値の順を維持する', () => {
+  const songs = [
+    createSong({ id: 'missing-chart' }),
+    createSong({
+      id: 'many',
+      charts: { MASTER: { const: 10, is_const_unknown: true, notes: 2000 } },
+    }),
+    createSong({
+      id: 'missing-notes',
+      charts: { MASTER: { const: 11, is_const_unknown: false, notes: null } },
+    }),
+    createSong({
+      id: 'few',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: 900 } },
+    }),
+    createSong({
+      id: 'same',
+      charts: { MASTER: { const: 13, is_const_unknown: false, notes: 900 } },
+    }),
+    createSong({
+      id: 'zero',
+      charts: { MASTER: { const: 12, is_const_unknown: false, notes: 0 } },
+    }),
+  ]
+
+  const ascending = sortSongs(songs, 'master', 'asc', undefined, 'notes')
+  const descending = sortSongs(songs, 'master', 'desc', undefined, 'notes')
+  const constants = sortSongs(songs, 'master', 'asc', undefined, 'const')
+
+  assert.deepEqual(
+    ascending.map((song) => song.id),
+    ['zero', 'few', 'same', 'many', 'missing-chart', 'missing-notes']
+  )
+  assert.deepEqual(
+    descending.map((song) => song.id),
+    ['many', 'few', 'same', 'zero', 'missing-chart', 'missing-notes']
+  )
+  assert.deepEqual(
+    constants.map((song) => song.id),
+    ['many', 'missing-notes', 'zero', 'same', 'few', 'missing-chart']
+  )
+  assert.equal(sortSongs(songs, null, null, undefined, 'notes'), songs)
+  assert.equal(songs[0].id, 'missing-chart')
+})
