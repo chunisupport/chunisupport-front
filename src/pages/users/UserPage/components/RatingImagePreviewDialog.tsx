@@ -3,7 +3,7 @@ import { Copy, Download, ImageDown, Share2, X } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal, onCleanup, Show, untrack } from 'solid-js'
 import { Loading } from '../../../../components'
-import { getAppIconButtonClass } from '../../../../components/common/AppButton'
+import { getAppButtonClass, getAppIconButtonClass } from '../../../../components/common/AppButton'
 import { ImageCaptureActionButton } from '../../../../components/common/ImageCaptureActionButton'
 import { RATING_SLOT_COUNT } from '../../../../constants/rating'
 import { SOCIAL_SHARE_TEXT } from '../../../../constants/socialShare'
@@ -333,13 +333,14 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
       <Dialog.Trigger
         as="button"
         type="button"
-        class={getAppIconButtonClass({
-          class: 'rounded-full focus-visible:ring-offset-2',
+        class={getAppButtonClass({
+          variant: 'surface',
+          shape: 'pill',
+          class: 'h-10 focus-visible:ring-offset-2',
         })}
-        aria-label={RATING_IMAGE_COPY.openPreview}
-        title={RATING_IMAGE_COPY.openPreview}
       >
         <ImageDown class="h-5 w-5" aria-hidden="true" />
+        <span>{RATING_IMAGE_COPY.openPreview}</span>
       </Dialog.Trigger>
       <Show when={open()}>
         <Dialog.Portal>
@@ -414,6 +415,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                 <Show when={canCopyRatingImage()}>
                   <ImageCaptureActionButton
                     label={RATING_IMAGE_COPY.copy}
+                    showImageIcon
                     disabled={isImageActionRunning() || !isPreviewReady()}
                     busy={isCopying()}
                     success={isCopied()}
@@ -425,6 +427,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                 <ImageCaptureActionButton
                   tone="primary"
                   label={RATING_IMAGE_COPY.download}
+                  showImageIcon
                   disabled={isImageActionRunning() || !isPreviewReady()}
                   busy={isDownloading()}
                   onClick={downloadRatingImage}

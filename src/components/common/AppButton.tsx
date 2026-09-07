@@ -34,7 +34,7 @@ export type AppButtonProps = Omit<KobalteButtonProps, 'class'> & {
 }
 
 export type AppIconButtonTone = 'surface' | 'primary' | 'danger' | 'ghost'
-export type AppIconButtonSize = 'sm' | 'md'
+export type AppIconButtonSize = 'sm' | 'md' | 'auto'
 
 export type AppIconButtonProps = Omit<
   AppButtonProps,
@@ -42,7 +42,7 @@ export type AppIconButtonProps = Omit<
 > & {
   /** アイコンボタンの色調 */
   tone?: AppIconButtonTone
-  /** アイコンボタンの大きさ */
+  /** アイコンボタンの大きさ。`auto` は複数アイコンを横並びにできる幅にする。 */
   size?: AppIconButtonSize
   /** ボタン内に表示するアイコン */
   children: JSX.Element
@@ -86,6 +86,7 @@ const ICON_BUTTON_TONE_CLASS: Record<AppIconButtonTone, string> = {
 const ICON_BUTTON_SIZE_CLASS: Record<AppIconButtonSize, string> = {
   sm: 'h-9 w-9',
   md: 'h-10 w-10',
+  auto: 'h-9 w-auto min-w-9 px-2',
 }
 
 /**

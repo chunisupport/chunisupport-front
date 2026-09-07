@@ -1580,6 +1580,7 @@ export const RegisterScoreResultView = (props: {
             <Show when={canCopyReportImage()}>
               <ImageCaptureActionButton
                 label={REGISTER_SCORE_COPY.copyImage}
+                showImageIcon
                 disabled={isGeneratingImage()}
                 busy={isCopyingImage()}
                 success={isImageCopied()}
@@ -1591,6 +1592,7 @@ export const RegisterScoreResultView = (props: {
             <ImageCaptureActionButton
               tone="primary"
               label={REGISTER_SCORE_COPY.downloadImage}
+              showImageIcon
               disabled={isGeneratingImage()}
               busy={isDownloadingImage()}
               onClick={downloadReportImage}
