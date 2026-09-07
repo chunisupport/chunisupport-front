@@ -15,7 +15,8 @@ const SongSearchInput = (props: SongSearchInputProps) => {
   return (
     <SearchTextField
       id={props.id}
-      class="max-w-md"
+      class="min-w-0 flex-1"
+      frameClass="rounded-l border-r-0"
       label="楽曲検索"
       ariaLabel="楽曲検索"
       value={props.value}

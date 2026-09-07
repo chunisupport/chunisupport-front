@@ -3,9 +3,9 @@ import { createEffect, createMemo, createSignal, For } from 'solid-js'
 import { AppButton, getAppButtonClass } from '../../../components/common/AppButton'
 import { AppSelect } from '../../../components/common/AppSelect'
 import { AppTabContent, SegmentedTabs } from '../../../components/common/AppTabs'
+import FilterResetDialog from '../../../components/common/FilterResetDialog'
 import type { SortCondition } from '../../../utils/sortConditions'
 import type { SortDirection } from '../../../utils/sortingQuery'
-import FilterResetDialog from './FilterResetDialog'
 
 export type { SortCondition } from '../../../utils/sortConditions'
 

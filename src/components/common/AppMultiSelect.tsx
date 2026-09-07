@@ -16,6 +16,8 @@ export type AppMultiSelectOption<TValue extends AppMultiSelectValue> = {
 export type AppMultiSelectProps<TValue extends AppMultiSelectValue> = {
   /** 複数選択で表示する選択肢 */
   options: readonly AppMultiSelectOption<TValue>[]
+  /** 支援技術に伝える入力項目名 */
+  ariaLabel?: string
   /** 現在選択されている値 */
   selected: readonly TValue[]
   /** 未選択時に表示するプレースホルダー */
@@ -130,7 +132,10 @@ export const AppMultiSelect = <TValue extends AppMultiSelectValue>(
         </Select.Item>
       )}
     >
-      <Select.Trigger class={`${MULTI_SELECT_TRIGGER_CLASS} ${props.triggerClass ?? ''}`}>
+      <Select.Trigger
+        aria-label={props.ariaLabel}
+        class={`${MULTI_SELECT_TRIGGER_CLASS} ${props.triggerClass ?? ''}`}
+      >
         <div class="flex min-h-6 flex-1 flex-wrap gap-1" aria-live="polite">
           <Show
             when={selectedOptions().length > 0}
@@ -200,6 +205,7 @@ export const MultiSelectField = <TValue extends AppMultiSelectValue>(
       </AppButton>
     </div>
     <AppMultiSelect
+      ariaLabel={props.ariaLabel ?? props.label}
       options={props.options}
       selected={props.selected}
       placeholder={props.placeholder}
