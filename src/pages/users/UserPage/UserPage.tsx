@@ -112,6 +112,16 @@ const fetchUserCourseRecordLoadState = async (
   records: await fetchUserCourseRecordsWithCache(username),
 })
 
+/**
+ * プロフィールページのドキュメントタイトルを組み立てる。
+ *
+ * @param playerName - ゲーム内プレイヤー名。未取得の場合は undefined。
+ * @param username - 公開ユーザー名。
+ * @returns `playerName (@username)`。プレイヤー名がない場合はユーザー名のみ。
+ */
+const buildUserPageDocumentTitle = (playerName: string | undefined, username: string): string =>
+  playerName ? `${playerName} (@${username})` : username
+
 const UserPage: Component = () => {
   const params = useParams<{ username: string; page?: string; subPage?: string }>()
   const [searchParams] = useSearchParams()
@@ -186,8 +196,13 @@ const UserPage: Component = () => {
     if (state?.type === 'error') return state.error
     return recordProfile.error
   })
+  const documentTitle = createMemo(() => {
+    const state = pageState()
+    const playerName = state?.type === 'loaded' ? state.profile.player?.name : undefined
+    return buildUserPageDocumentTitle(playerName, params.username)
+  })
 
-  useDocumentTitle(() => `${params.username}さんのページ`)
+  useDocumentTitle(documentTitle)
 
   return (
     <ErrorBoundary

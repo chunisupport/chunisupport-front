@@ -200,6 +200,44 @@ await new Promise((resolve) =>
   await runBrowserSolidTest(script)
 })
 
+test('resetOnRowCountChange有効時は同じ行数の再計算では先頭へスクロールしないこと', async () => {
+  // Given: 行配列の参照だけが変わる仮想テーブル
+  const script = `
+await new Promise((resolve) =>
+  createRoot(async (dispose) => {
+    const [rows, setRows] = createSignal([1, 2, 3])
+    const scrollElement = createFakeScrollElement(120)
+    const table = createWindowVirtualTable({
+      rowCount: () => rows().length,
+      rowHeight: 10,
+      resetOnRowCountChange: true,
+      getScrollElement: () => scrollElement,
+    })
+
+    table.setTableBodyRef(createFakeElement(25))
+    table.setTableContainerRef(createFakeElement(20))
+    await nextTask()
+    await nextTask()
+    scrollElement.scrollTop = 120
+    const callCountBeforeSameLengthUpdate = scrollElement.scrollCalls.length
+
+    // When: 行数は同じまま配列だけ更新する
+    setRows([4, 5, 6])
+    await nextTask()
+    await nextTask()
+
+    // Then: 先頭スクロールしない
+    assert.equal(scrollElement.scrollCalls.length, callCountBeforeSameLengthUpdate)
+    assert.equal(scrollElement.scrollTop, 120)
+    dispose()
+    resolve()
+  })
+)
+`
+
+  await runBrowserSolidTest(script)
+})
+
 test('resetOnRowCountChange有効時は行数変化で先頭へスクロールすること', async () => {
   // Given: 行数変化時リセットが有効な仮想テーブル
   const script = `

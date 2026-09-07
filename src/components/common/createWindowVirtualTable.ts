@@ -25,7 +25,7 @@ type WindowVirtualTableParams<TScrollElement extends HTMLElement> = {
   rowHeight: number
   /** 仮想化範囲の前後に追加描画する行数 */
   overscan?: number
-  /** 行数変更時に先頭へスクロールするか。初回マウントでは復元を妨げないよう動かない */
+  /** 行数が変わったときに先頭へスクロールするか。同じ行数の再計算では動かない */
   resetOnRowCountChange?: boolean
   /** 初回アタッチ時のスクロール位置。未指定時は先頭 */
   initialOffset?: number | Accessor<number>
@@ -145,12 +145,13 @@ export const createWindowVirtualTable = <
     })
   })
 
-  createEffect((isFirstRun = true) => {
-    if (!params.resetOnRowCountChange) return false
-    params.rowCount()
-    if (isFirstRun) return false
-    resetToTop()
-    return false
+  createEffect((previousCount?: number) => {
+    if (!params.resetOnRowCountChange) return previousCount
+    const nextCount = params.rowCount()
+    if (previousCount !== undefined && previousCount !== nextCount) {
+      resetToTop()
+    }
+    return nextCount
   })
 
   createEffect(() => {

@@ -65,15 +65,16 @@ export const createAppMainScrollRestoreEffect = (
 
   createEffect(() => {
     const current = navigation()
-    if (!isReady() || current.restored || current.offset <= 0) return
+    const offset = resolveRestoredAppMainScrollOffset(getAppMainScrollOffset(pathname()))
+    if (!isReady() || current.restored || offset <= 0) return
     let cancelled = false
     let frameId: number | undefined
 
     queueMicrotask(() => {
       if (cancelled) return
-      restoreAppMainScrollOffset(current.offset)
+      restoreAppMainScrollOffset(offset)
       frameId = requestAnimationFrame(() => {
-        restoreAppMainScrollOffset(current.offset)
+        restoreAppMainScrollOffset(offset)
         current.restored = true
       })
     })
