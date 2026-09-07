@@ -2,15 +2,19 @@ import { useParams } from '@solidjs/router'
 import { createMemo, createResource, Show } from 'solid-js'
 import { fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
 import { LoadError } from '../../../components'
+import { showErrorToast } from '../../../components/common/AppToast'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
+import { useSongsData } from '../../../stores/songsData'
 import type { WorldsendSongDTO } from '../../../types/api'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserWorldsendSongRecordWithCache } from '../../../usecases/cache/fetchUserSongRecordWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
+import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import NotFoundPage from '../../NotFoundPage'
 import SongDetailLayout from '../components/SongDetailLayout'
 import { useSongDetailBase } from '../components/useSongDetailBase'
+import { SONG_DATA_REFRESH_ERROR_MESSAGE } from '../constants'
 import OwnScoreCard, { type OwnScoreItem } from '../SongDetail/components/OwnScoreCard'
 import SongStatsTabs from '../SongDetail/components/SongStatsTabs'
 import { buildWorldsendOwnScoreItem, getWorldsendTitleMeta } from '../worldsendDetailModel'
@@ -57,7 +61,11 @@ const WorldsendSongDetail = () => {
 
   const displayIdSource = () => getWorldsendDisplayIdSource(params.displayid)
 
-  const [songState] = createResource(displayIdSource, fetchWorldsendSongDetailLoadState)
+  const songsData = useSongsData()
+  const [songState, { refetch: refetchSongState }] = createResource(
+    displayIdSource,
+    fetchWorldsendSongDetailLoadState
+  )
   const song = createMemo(() => {
     const state = songState()
     return state?.type === 'loaded' ? state.song : undefined
@@ -101,6 +109,19 @@ const WorldsendSongDetail = () => {
     return getWorldsendTitleMeta(currentSong)
   })
 
+  /**
+   * 楽曲マスタ更新後に詳細と一覧キャッシュを再取得する。
+   *
+   * @returns 再取得完了後に解決される Promise。
+   */
+  const handleSongUpdated = async (): Promise<void> => {
+    try {
+      await Promise.all([refetchSongState(), songsData.refreshWorldsendSongs()])
+    } catch (error) {
+      showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+    }
+  }
+
   useDocumentTitle(() => `${song()?.title ?? "WORLD'S END楽曲"} - WORLD'S END楽曲詳細`)
 
   return (
@@ -113,7 +134,12 @@ const WorldsendSongDetail = () => {
           artist={titleMeta().artist}
           onBack={handleBack}
           renderInfoCard={(currentSong) => (
-            <WorldsendSongInfoCard song={currentSong} versionName={songVersionName()} />
+            <WorldsendSongInfoCard
+              song={currentSong}
+              versionName={songVersionName()}
+              genres={masterData()?.genres ?? []}
+              onUpdated={handleSongUpdated}
+            />
           )}
           renderStats={(currentSong) => (
             <>

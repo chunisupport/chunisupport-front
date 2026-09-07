@@ -1,6 +1,8 @@
+import { ArrowLeftRight } from 'lucide-solid'
 import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
+import { AppIconButton } from '../../../components/common/AppButton'
 import { useAppMainScrollRestoration } from '../../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../../stores/songsData'
@@ -11,6 +13,7 @@ import SongsViewToggle from '../components/SongsViewToggle'
 import { buildSearchableItems, filterSearchableItems } from '../searchHelpers'
 import { createSongFilters, filterSongs } from '../songFilters'
 import SongsTable from './components/SongsTable'
+import { SONG_CHART_DISPLAY_LABELS, type SongChartDisplayMode } from './constants'
 import { nextSortState, type SongSortKey, sortSongs } from './utils/sorting'
 
 /**
@@ -25,6 +28,7 @@ const SongsList = () => {
   const [filters, setFilters] = createSignal(createSongFilters())
   const [sortKey, setSortKey] = createSignal<SongSortKey | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
+  const [displayMode, setDisplayMode] = createSignal<SongChartDisplayMode>('const')
   const [searchQuery, setSearchQuery] = createSignal('')
 
   onMount(() => {
@@ -49,7 +53,7 @@ const SongsList = () => {
   )
 
   const sortedSongs = createMemo(() =>
-    sortSongs(filteredSongs(), sortKey(), sortDirection(), masterData()?.genres)
+    sortSongs(filteredSongs(), sortKey(), sortDirection(), masterData()?.genres, displayMode())
   )
 
   const handleSortChange = (nextKey: SongSortKey) => {
@@ -80,11 +84,26 @@ const SongsList = () => {
                 genres={[...new Set(defaultSortedSongs().map((song) => song.genre))]}
                 versions={versions()?.versions ?? []}
               />
+              <AppIconButton
+                class="ml-1 h-9.5 w-9.5 shrink-0"
+                tone={displayMode() === 'notes' ? 'primary' : 'surface'}
+                aria-label={SONG_CHART_DISPLAY_LABELS.toggle}
+                aria-pressed={displayMode() === 'notes'}
+                title={
+                  displayMode() === 'const'
+                    ? SONG_CHART_DISPLAY_LABELS.toNotes
+                    : SONG_CHART_DISPLAY_LABELS.toConst
+                }
+                onClick={() => setDisplayMode((mode) => (mode === 'const' ? 'notes' : 'const'))}
+              >
+                <ArrowLeftRight class="h-4 w-4" aria-hidden="true" />
+              </AppIconButton>
             </div>
             <p class="text-sm text-text-muted">{sortedSongs().length}件</p>
 
             <SongsTable
               songs={sortedSongs()}
+              displayMode={displayMode()}
               sortKey={sortKey()}
               sortDirection={sortDirection()}
               initialScrollOffset={restoredScrollOffset}

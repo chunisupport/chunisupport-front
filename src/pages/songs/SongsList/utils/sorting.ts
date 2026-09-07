@@ -5,6 +5,7 @@ import {
   nextSortState as nextSharedSortState,
   type SortDirection,
 } from '../../../../utils/sortingQuery'
+import type { SongChartDisplayMode } from '../constants'
 
 export type SongSortKey =
   | 'title'
@@ -57,11 +58,21 @@ export const nextSortState = (
   sortDirection: SortDirection | null
 } => nextSharedSortState(currentSortKey, currentSortDirection, nextKey)
 
+/**
+ * 選択列と表示モードに従って楽曲を安定ソートする。
+ * @param songs - 絞り込み済みの楽曲。
+ * @param currentSortKey - ソート対象列。
+ * @param currentSortDirection - 昇順または降順。
+ * @param genres - ジャンルの表示順。
+ * @param displayMode - 難易度列で比較する値。
+ * @returns 未設定値を末尾に配置した楽曲一覧。ソート解除時は元の配列。
+ */
 export const sortSongs = (
   songs: SongDTO[],
   currentSortKey: SongSortKey | null,
   currentSortDirection: SortDirection | null,
-  genres?: MasterItemDTO[]
+  genres?: MasterItemDTO[],
+  displayMode: SongChartDisplayMode = 'const'
 ): SongDTO[] => {
   if (!currentSortKey || !currentSortDirection) {
     return songs
@@ -103,7 +114,11 @@ export const sortSongs = (
           const difficulty = CHART_SORT_KEY_MAP[currentSortKey]
           const leftChart = left.charts[difficulty]
           const rightChart = right.charts[difficulty]
-          comparison = compareNullableNumber(leftChart?.const, rightChart?.const, direction)
+          comparison = compareNullableNumber(
+            leftChart?.[displayMode],
+            rightChart?.[displayMode],
+            direction
+          )
           if (comparison !== 0) return comparison
           break
         }

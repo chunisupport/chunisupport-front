@@ -12,6 +12,8 @@ type Props = {
   title: string
   jacket: string | null
   infoItems: SongMetaInfoItem[]
+  /** 楽曲情報カード右上へ重ねて表示する操作 */
+  infoAction?: JSX.Element
   children: JSX.Element
 }
 
@@ -42,7 +44,8 @@ const SongMetaCardLayout = (props: Props) => {
           </Image.Fallback>
         </Image>
 
-        <div class="grid gap-2 rounded-md border border-border bg-surface p-4">
+        <div class="relative grid gap-2 rounded-md border border-border bg-surface p-4">
+          {props.infoAction}
           <For each={props.infoItems}>
             {(item) => (
               <div class="space-y-[2px]">
