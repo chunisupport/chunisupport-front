@@ -256,6 +256,24 @@ test('isRecordMatched は譜面定数とスコアの範囲を判定できる', (
   )
 })
 
+test('単曲レート範囲は境界を含み定数不明譜面を除外する', () => {
+  // Given
+  const filters: FilterState = {
+    ...getDefaultFilter(),
+    rating: { min: 17.45, max: 18 },
+  }
+
+  // When & Then
+  assert.equal(isRecordMatched(createRecord({ rating: 17.45 }), filters), true)
+  assert.equal(isRecordMatched(createRecord({ rating: 18 }), filters), true)
+  assert.equal(isRecordMatched(createRecord({ rating: 17.44 }), filters), false)
+  assert.equal(isRecordMatched(createRecord({ rating: 18.01 }), filters), false)
+  assert.equal(
+    isRecordMatched(createRecord({ rating: 17.5, is_const_unknown: true }), filters),
+    false
+  )
+})
+
 test('isRecordMatched はJUSTICE数の範囲をAJ済み譜面だけに適用する', () => {
   const record = createRecord({
     combo_lamp: 'ALL JUSTICE',

@@ -149,6 +149,76 @@ test('件数目標のpercentを最大件数に掛けて目標値にする', () =
   assert.equal(progress.achieved, true)
 })
 
+test('単曲レート達成数は到達可能譜面だけを動的分母にして現在値を数える', () => {
+  // Given: 18.00へ届かない定数15.8と、届く定数15.9以上の譜面。
+  const records = [
+    createRecord({ id: 'unreachable', const: 15.8, rating: 17.95 }),
+    createRecord({ id: 'achieved', const: 15.9, rating: 18 }),
+    createRecord({ id: 'unachieved', const: 16, rating: 17.99 }),
+  ]
+  const goal = createGoal({
+    achievement_type: 'rating_count',
+    achievement_params: { rating: 18 },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then: 到達可能な2譜面が分母となり、そのうち1譜面が達成済み。
+  assert.deepEqual(progress, {
+    current: 1,
+    target: 2,
+    percent: 50,
+    achieved: false,
+    hasUnknownMaxOp: false,
+  })
+})
+
+test('単曲レート達成数の残数と割合は到達可能譜面数から目標件数へ変換する', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'one', const: 15.9, rating: 18 }),
+    createRecord({ id: 'two', const: 16, rating: 18 }),
+    createRecord({ id: 'three', const: 16, rating: 17.9 }),
+    createRecord({ id: 'unreachable', const: 15.8, rating: 17.9 }),
+  ]
+  const remainingGoal = createGoal({
+    achievement_type: 'rating_count',
+    achievement_params: { rating: 18, remaining: 1 },
+  })
+  const percentGoal = createGoal({
+    achievement_type: 'rating_count',
+    achievement_params: { rating: 18, percent: 50 },
+  })
+
+  // When
+  const remainingProgress = calculateGoalProgress(remainingGoal, records, [])
+  const percentProgress = calculateGoalProgress(percentGoal, records, [])
+
+  // Then
+  assert.equal(remainingProgress.target, 2)
+  assert.equal(remainingProgress.achieved, true)
+  assert.equal(percentProgress.target, 2)
+  assert.equal(percentProgress.achieved, true)
+})
+
+test('単曲レートへ到達可能な譜面がなくなった場合は未達成として扱う', () => {
+  // Given: 保存後の定数変更で18.00へ到達できる譜面が0件になった状態。
+  const goal = createGoal({
+    achievement_type: 'rating_count',
+    achievement_params: { rating: 18 },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, [createRecord({ const: 15.8, rating: 17.95 })], [])
+
+  // Then
+  assert.equal(progress.current, 0)
+  assert.equal(progress.target, 0)
+  assert.equal(progress.percent, 0)
+  assert.equal(progress.achieved, false)
+})
+
 test('不正なハードランプ目標値では達成件数を0として扱う', () => {
   // Given
   const records = [

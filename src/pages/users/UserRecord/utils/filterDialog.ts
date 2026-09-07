@@ -30,6 +30,16 @@ export function hasOverPowerFilter(filter: FilterState): boolean {
 }
 
 /**
+ * 単曲レートフィルターが有効かを判定する。
+ *
+ * @param filter - 判定対象のフィルター状態。
+ * @returns 単曲レートの下限または上限が指定されている場合はtrue。
+ */
+export function hasRatingFilter(filter: FilterState): boolean {
+  return filter.rating.min !== null || filter.rating.max !== null
+}
+
+/**
  * 通常レコードフィルターのうち、検索文字列以外が既定値から変更されているか判定する。
  *
  * @param current - 現在のフィルター状態。
@@ -53,6 +63,8 @@ export function isRecordFilterOptionsChanged(
     current.const.max !== defaultFilter.const.max ||
     current.score.min !== defaultFilter.score.min ||
     current.score.max !== defaultFilter.score.max ||
+    current.rating.min !== defaultFilter.rating.min ||
+    current.rating.max !== defaultFilter.rating.max ||
     current.justiceCount.min !== defaultFilter.justiceCount.min ||
     current.justiceCount.max !== defaultFilter.justiceCount.max ||
     current.overPower.min !== defaultFilter.overPower.min ||
@@ -91,6 +103,8 @@ export function isRecordDifficultyFilterOnlyChanged(
     current.const.max === defaultFilter.const.max &&
     current.score.min === defaultFilter.score.min &&
     current.score.max === defaultFilter.score.max &&
+    current.rating.min === defaultFilter.rating.min &&
+    current.rating.max === defaultFilter.rating.max &&
     current.justiceCount.min === defaultFilter.justiceCount.min &&
     current.justiceCount.max === defaultFilter.justiceCount.max &&
     current.overPower.min === defaultFilter.overPower.min &&

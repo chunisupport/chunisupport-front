@@ -3,7 +3,11 @@ import type { GoalAchievementType } from '../../../../../types/api'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { GOAL_TITLE_MAX_LENGTH } from '../../constants'
-import { ERROR_MESSAGE_INVALID_COUNT_TARGET } from './constants'
+import {
+  ERROR_MESSAGE_INVALID_COUNT_TARGET,
+  RATING_GOAL_DECIMAL_PLACES,
+  RATING_GOAL_MIN_VALUE,
+} from './constants'
 import {
   canUseDynamicTotalTarget,
   getRankGoalScore,
@@ -18,6 +22,7 @@ export interface GoalFormValidationInput {
   title: string
   achievementType: GoalAchievementType
   score: string
+  rating?: string
   rank: RankGoalValue
   count: string
   countMode: GoalTargetMode
@@ -57,6 +62,7 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
   const parsedScore =
     input.achievementType === 'rank_count' ? getRankGoalScore(input.rank) : Number(input.score)
   const parsedCount = Number(input.count)
+  const parsedRating = Number(input.rating)
   const parsedTotal =
     canUseDynamicTotalTarget(input.achievementType) && input.totalMode === 'all'
       ? input.theoreticalTotal
@@ -71,6 +77,15 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
       (typeof parsedConstMax === 'number' && !Number.isFinite(parsedConstMax)))
   ) {
     return '定数範囲が不正です。'
+  }
+
+  if (
+    input.achievementType === 'rating_count' &&
+    (!Number.isFinite(parsedRating) ||
+      parsedRating < RATING_GOAL_MIN_VALUE ||
+      !isWithinDecimalPlaces(parsedRating, RATING_GOAL_DECIMAL_PLACES))
+  ) {
+    return `単曲レートは${RATING_GOAL_MIN_VALUE}以上、小数第${RATING_GOAL_DECIMAL_PLACES}位以内で入力してください。`
   }
   if (
     input.achievementType !== 'rainbow_count' &&

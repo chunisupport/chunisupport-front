@@ -13,11 +13,13 @@ import {
   isFullChainGoalValue,
   isHardLampGoalValue,
 } from './goalLamp'
+import { resolveRatingGoalMinimumChartConstant } from './goalRatingCount'
 import { buildGoalVersionNameMap } from './goalVersion'
 
 const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
   'rank_count',
   'score_count',
+  'rating_count',
   'avg_score',
   'hardlamp_count',
   'combolamp_count',
@@ -95,6 +97,13 @@ const applyUnachievedCondition = (filter: FilterState, goal: GoalDTO): FilterSta
       return {
         ...filter,
         score: { min: SCORE_MIN, max: Math.max(SCORE_MIN, params.score - 1) },
+      }
+    }
+    case 'rating_count': {
+      const params = goal.achievement_params as { rating: number }
+      return {
+        ...filter,
+        rating: { min: null, max: Math.max(0, params.rating - 0.01) },
       }
     }
     case 'hardlamp_count': {
@@ -184,7 +193,15 @@ export const buildGoalRecordFilter = (
     constFilterMode: 'number',
     score: { min: SCORE_MIN, max: MAX_SCORE },
     scoreFilterMode: 'number',
+    rating: { min: null, max: null },
     excludeNoPlay: false,
+  }
+
+  if (goal.achievement_type === 'rating_count' && 'rating' in goal.achievement_params) {
+    filter.const.min = Math.max(
+      filter.const.min,
+      resolveRatingGoalMinimumChartConstant(goal.achievement_params.rating)
+    )
   }
 
   return applyUnachievedCondition(filter, goal)

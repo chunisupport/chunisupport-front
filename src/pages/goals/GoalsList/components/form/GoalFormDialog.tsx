@@ -24,6 +24,7 @@ import type {
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { buildGoalVersionOptions } from '../../../utils/goalVersion'
 import { resolveGoalFormGroupId } from '../../goalGroupsModel'
+import { DEFAULT_RATING_GOAL_VALUE } from './constants'
 import { GoalAchievementSection } from './GoalAchievementSection'
 import { GoalFormFooter } from './GoalFormFooter'
 import { GoalGroupSection } from './GoalGroupSection'
@@ -69,7 +70,11 @@ interface GoalFormDialogProps {
   onOpenChange: (open: boolean) => void
   onSave: (payload: GoalRequest) => Promise<void>
   /** 対象条件と目標種別に応じた譜面数または楽曲数を解決する関数 */
-  resolveAllCount: (attributes: GoalAttributes, achievementType?: GoalAchievementType) => number
+  resolveAllCount: (
+    attributes: GoalAttributes,
+    achievementType?: GoalAchievementType,
+    achievementParams?: GoalCreateRequest['achievement_params']
+  ) => number
   /** 対象条件に一致する譜面ごとの最大OVER POWER合計を解決する関数 */
   resolveOverPowerChartMax: (attributes: GoalAttributes) => number
   /** フォーム入力中の目標内容から実レコードに基づく進捗を解決する関数 */
@@ -79,6 +84,7 @@ interface GoalFormDialogProps {
 const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = {
   rank_count: '指定ランク以上を達成した譜面数を目標にします。',
   score_count: '指定スコア以上を達成した譜面数を目標にします。',
+  rating_count: '指定単曲レートへ理論上到達可能な譜面の達成数を目標にします。',
   avg_score: '対象譜面の平均スコアを目標にします。',
   hardlamp_count: '指定ハードランプ以上を達成した譜面数を目標にします。',
   combolamp_count: 'FULL COMBO / ALL JUSTICE の達成数を目標にします。',
@@ -92,6 +98,7 @@ const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = {
 const GOAL_ACHIEVEMENT_TYPES = [
   'rank_count',
   'score_count',
+  'rating_count',
   'avg_score',
   'hardlamp_count',
   'combolamp_count',
@@ -125,6 +132,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     DEFAULT_GOAL_ACHIEVEMENT_TYPE
   )
   const [score, setScore] = createSignal(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
+  const [rating, setRating] = createSignal(DEFAULT_RATING_GOAL_VALUE)
   const [rank, setRank] = createSignal<RankGoalValue>(DEFAULT_RANK_GOAL)
   const [count, setCount] = createSignal('1')
   const [countMode, setCountMode] = createSignal<GoalTargetMode>('all')
@@ -225,6 +233,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setGroupId(resolveGoalFormGroupId(props.initialGoal, props.initialGroupId))
     setAchievementType(nextState.achievementType)
     setScore(nextState.score)
+    setRating(nextState.rating)
     setRank(nextState.rank)
     setCount(nextState.count)
     setCountMode(nextState.countMode)
@@ -265,6 +274,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   ): GoalFormAchievementParamsInput => ({
     achievementType: type,
     score: score(),
+    rating: rating(),
     rank: rank(),
     count: count(),
     countMode: countMode(),
@@ -292,7 +302,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const targetCountText = (): string => {
     const currentType = achievementType()
     const unit = currentType === 'rainbow_count' ? '曲' : '譜面'
-    return `${props.resolveAllCount(getDraftAttributes(), currentType).toLocaleString('ja-JP')} ${unit}`
+    return `${props
+      .resolveAllCount(getDraftAttributes(), currentType, buildDraftAchievementParams(currentType))
+      .toLocaleString('ja-JP')} ${unit}`
   }
 
   /**
@@ -348,7 +360,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     countMode() === 'percent'
       ? '100%以内'
       : `${props
-          .resolveAllCount(getDraftAttributes(), achievementType())
+          .resolveAllCount(
+            getDraftAttributes(),
+            achievementType(),
+            buildDraftAchievementParams(achievementType())
+          )
           .toLocaleString('ja-JP')}件以内`
 
   /**
@@ -404,16 +420,23 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setScore(String(getRankGoalScore(nextRank)))
   }
 
-  const handleSave = async () => {
+  /**
+   * 現在の入力値を検証し、保存可能な目標を親へ通知する。
+   *
+   * @returns 保存処理の完了後に解決するPromise。
+   */
+  const handleSave = async (): Promise<void> => {
     setErrorMessage('')
     const trimmed = title().trim()
     const currentType = achievementType()
     const attributes = getDraftAttributes()
-    const allCount = props.resolveAllCount(attributes, currentType)
+    const achievementParams = buildDraftAchievementParams(currentType)
+    const allCount = props.resolveAllCount(attributes, currentType, achievementParams)
     const validationError = validateGoalForm({
       title: title(),
       achievementType: currentType,
       score: score(),
+      rating: rating(),
       rank: rank(),
       count: count(),
       countMode: countMode(),
@@ -430,7 +453,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       return
     }
 
-    const achievement_params = buildDraftAchievementParams(currentType)
+    const achievement_params = achievementParams
 
     await props.onSave({
       group_id: groupId(),
@@ -498,6 +521,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               achievementTypeOptions={achievementTypeOptions()}
               achievementDescription={selectedAchievementDescription()}
               score={score()}
+              rating={rating()}
               rank={rank()}
               count={count()}
               countMode={countMode()}
@@ -508,7 +532,11 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               fullChain={fullChain()}
               invertValue={invertValue()}
               invertPercentage={invertPercentage()}
-              countMax={props.resolveAllCount(getDraftAttributes(), achievementType())}
+              countMax={props.resolveAllCount(
+                getDraftAttributes(),
+                achievementType(),
+                buildDraftAchievementParams(achievementType())
+              )}
               countLimitText={countLimitText()}
               targetCountText={targetCountText()}
               theoreticalTotalText={theoreticalTotalText()}
@@ -516,6 +544,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               totalFieldMax={totalFieldMax()}
               onAchievementTypeChange={handleAchievementTypeChange}
               onScoreChange={handleScoreChange}
+              onRatingChange={setRating}
               onRankChange={handleRankChange}
               onCountChange={setCount}
               onCountModeChange={setCountMode}

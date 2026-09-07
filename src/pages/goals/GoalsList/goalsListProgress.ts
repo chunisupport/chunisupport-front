@@ -6,6 +6,7 @@ import {
   type GoalProgressResult,
 } from '../utils/goalProgress'
 import { calculateRainbowGoalProgress, filterRainbowTargetSongs } from '../utils/goalRainbow'
+import { filterRatingReachableRecords } from '../utils/goalRatingCount'
 import type { GoalsListData } from './goalsListResource'
 
 export interface GoalWithProgress {
@@ -74,24 +75,31 @@ export const buildGoalsWithProgress = (data: GoalsListData | undefined): GoalWit
  * @param data - 目標一覧画面で取得済みのデータ。
  * @param attributes - 件数を確認する対象条件。
  * @param achievementType - 集約単位を決める目標種別。虹枠では楽曲単位にする。
+ * @param achievementParams - 到達可能譜面数の解決に使う成果パラメータ。
  * @returns 条件に一致する譜面数または楽曲数。
  */
 export const resolveGoalAllCount = (
   data: GoalsListData | undefined,
   attributes: GoalCreateRequest['attributes'],
-  achievementType?: GoalCreateRequest['achievement_type']
+  achievementType?: GoalCreateRequest['achievement_type'],
+  achievementParams?: GoalCreateRequest['achievement_params']
 ): number => {
   if (!data) return 0
   if (achievementType === 'rainbow_count') {
     return filterRainbowTargetSongs(data.songs, attributes, data.masterData, data.versions).length
   }
-  return filterRecordsByAttributes(
+  const filteredRecords = filterRecordsByAttributes(
     data.records,
     attributes,
     data.masterData,
     data.songs,
     data.versions
-  ).length
+  )
+  if (achievementType === 'rating_count') {
+    const rating = achievementParams && 'rating' in achievementParams ? achievementParams.rating : 0
+    return filterRatingReachableRecords(filteredRecords, rating).length
+  }
+  return filteredRecords.length
 }
 
 /**

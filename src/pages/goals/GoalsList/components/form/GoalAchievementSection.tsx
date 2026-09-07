@@ -13,7 +13,14 @@ import {
   HARD_LAMP_OPTIONS,
   type HardLampGoalValue,
 } from '../../../utils/goalLamp'
-import { LABEL_INVERT_PERCENTAGE, LABEL_INVERT_VALUE, STEP3_DESCRIPTION } from './constants'
+import {
+  LABEL_INVERT_PERCENTAGE,
+  LABEL_INVERT_VALUE,
+  RATING_GOAL_DECIMAL_PLACES,
+  RATING_GOAL_FIELD_LABEL,
+  RATING_GOAL_MIN_VALUE,
+  STEP3_DESCRIPTION,
+} from './constants'
 import {
   GoalNumberField,
   GoalSelectField,
@@ -33,6 +40,7 @@ interface GoalAchievementSectionProps {
   achievementTypeOptions: GoalSelectOption<GoalAchievementType>[]
   achievementDescription: string
   score: string
+  rating: string
   rank: RankGoalValue
   count: string
   countMode: GoalTargetMode
@@ -51,6 +59,7 @@ interface GoalAchievementSectionProps {
   totalFieldMax?: number
   onAchievementTypeChange: (type: GoalAchievementType) => void
   onScoreChange: (score: string) => void
+  onRatingChange: (rating: string) => void
   onRankChange: (rank: RankGoalValue) => void
   onCountChange: (count: string) => void
   onCountModeChange: (mode: GoalTargetMode) => void
@@ -156,6 +165,16 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
         />
       </Show>
 
+      <Show when={props.achievementType === 'rating_count'}>
+        <GoalNumberField
+          label={RATING_GOAL_FIELD_LABEL}
+          value={props.rating}
+          min={RATING_GOAL_MIN_VALUE}
+          step={10 ** -RATING_GOAL_DECIMAL_PLACES}
+          onChange={props.onRatingChange}
+        />
+      </Show>
+
       <Show when={props.achievementType === 'hardlamp_count'}>
         <GoalSelectField
           label="ハードランプ"
@@ -187,6 +206,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
         when={
           props.achievementType === 'score_count' ||
           props.achievementType === 'rank_count' ||
+          props.achievementType === 'rating_count' ||
           props.achievementType === 'hardlamp_count' ||
           props.achievementType === 'combolamp_count' ||
           props.achievementType === 'fullchain_count' ||

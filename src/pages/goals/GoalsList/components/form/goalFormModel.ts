@@ -26,6 +26,7 @@ import {
   isFullChainGoalValue,
   isHardLampGoalValue,
 } from '../../../utils/goalLamp'
+import { DEFAULT_RATING_GOAL_VALUE } from './constants'
 
 export type RankGoalValue = ScoreRank | 'THEORETICAL'
 export type GoalChartTargetMode = 'normal' | 'op_target'
@@ -34,6 +35,7 @@ export interface GoalFormState {
   title: string
   achievementType: GoalAchievementType
   score: string
+  rating: string
   rank: RankGoalValue
   count: string
   countMode: GoalTargetMode
@@ -73,6 +75,7 @@ export interface GoalFormAttributesInput {
 export interface GoalFormAchievementParamsInput {
   achievementType: GoalAchievementType
   score: string
+  rating?: string
   rank: RankGoalValue
   count: string
   countMode: GoalTargetMode
@@ -118,6 +121,7 @@ export const getRankGoalValue = (score: number): RankGoalValue =>
 export const isCountAchievementType = (type: GoalAchievementType): boolean =>
   type === 'score_count' ||
   type === 'rank_count' ||
+  type === 'rating_count' ||
   type === 'hardlamp_count' ||
   type === 'combolamp_count' ||
   type === 'fullchain_count' ||
@@ -283,6 +287,7 @@ export const createDefaultGoalFormState = (
   title: '',
   achievementType: DEFAULT_GOAL_ACHIEVEMENT_TYPE,
   score: String(getRankGoalScore(DEFAULT_RANK_GOAL)),
+  rating: DEFAULT_RATING_GOAL_VALUE,
   rank: DEFAULT_RANK_GOAL,
   count: '1',
   countMode: 'all',
@@ -322,6 +327,8 @@ export const createGoalFormInitialState = (
   const countTargetValue = rawCount ?? rawRemaining ?? rawPercent
   const totalTargetValue = rawTotal ?? rawRemaining ?? rawPercent
   const scoreValue = 'score' in goal.achievement_params ? goal.achievement_params.score : undefined
+  const ratingValue =
+    'rating' in goal.achievement_params ? goal.achievement_params.rating : undefined
   const lampValue = 'lamp' in goal.achievement_params ? goal.achievement_params.lamp : undefined
   const hardLampValue =
     typeof lampValue === 'string' && isHardLampGoalValue(lampValue) ? lampValue : undefined
@@ -335,6 +342,7 @@ export const createGoalFormInitialState = (
     title: goal.title,
     achievementType: goal.achievement_type,
     score: typeof scoreValue === 'number' ? String(scoreValue) : defaultState.score,
+    rating: typeof ratingValue === 'number' ? String(ratingValue) : defaultState.rating,
     rank:
       typeof scoreValue === 'number' && goal.achievement_type === 'rank_count'
         ? getRankGoalValue(scoreValue)
@@ -414,26 +422,31 @@ export const buildGoalFormAchievementParams = (
         score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : SCORE_MIN),
         ...targetCountParam,
       }
-    : input.achievementType === 'avg_score'
-      ? { score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : SCORE_MIN) }
-      : input.achievementType === 'hardlamp_count'
-        ? {
-            lamp: input.hardLamp,
-            ...targetCountParam,
-          }
-        : input.achievementType === 'combolamp_count'
+    : input.achievementType === 'rating_count'
+      ? {
+          rating: Number.isFinite(Number(input.rating)) ? Number(input.rating) : 0,
+          ...targetCountParam,
+        }
+      : input.achievementType === 'avg_score'
+        ? { score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : SCORE_MIN) }
+        : input.achievementType === 'hardlamp_count'
           ? {
-              lamp: input.comboLamp,
+              lamp: input.hardLamp,
               ...targetCountParam,
             }
-          : input.achievementType === 'fullchain_count'
+          : input.achievementType === 'combolamp_count'
             ? {
-                lamp: input.fullChain,
+                lamp: input.comboLamp,
                 ...targetCountParam,
               }
-            : input.achievementType === 'rainbow_count'
-              ? targetCountParam
-              : canUseDynamicTotalTarget(input.achievementType)
-                ? targetTotalParam
-                : { total: Number.isFinite(Number(input.total)) ? Number(input.total) : 0 }
+            : input.achievementType === 'fullchain_count'
+              ? {
+                  lamp: input.fullChain,
+                  ...targetCountParam,
+                }
+              : input.achievementType === 'rainbow_count'
+                ? targetCountParam
+                : canUseDynamicTotalTarget(input.achievementType)
+                  ? targetTotalParam
+                  : { total: Number.isFinite(Number(input.total)) ? Number(input.total) : 0 }
 }

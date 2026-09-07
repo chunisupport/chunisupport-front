@@ -21,6 +21,7 @@ import {
   resolveFullChainRecordName,
   resolveHardLampRecordName,
 } from './goalLamp'
+import { filterRatingReachableRecords } from './goalRatingCount'
 import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
 
 export interface GoalProgressResult {
@@ -284,6 +285,7 @@ export const calculateGoalProgress = (
   let current = 0
   let target = 1
   let hasUnknownMaxOp = false
+  let hasReachableTarget = true
 
   switch (goal.achievement_type) {
     case 'rank_count':
@@ -291,6 +293,14 @@ export const calculateGoalProgress = (
       const threshold = getNumberGoalTargetParam(goal.achievement_params, 'score')
       target = resolveCountTarget(goal.achievement_params, filteredRecords.length)
       current = filteredRecords.filter((record) => record.score >= threshold).length
+      break
+    }
+    case 'rating_count': {
+      const threshold = getNumberGoalTargetParam(goal.achievement_params, 'rating')
+      const reachableRecords = filterRatingReachableRecords(filteredRecords, threshold)
+      target = resolveCountTarget(goal.achievement_params, reachableRecords.length)
+      current = reachableRecords.filter((record) => record.rating >= threshold).length
+      hasReachableTarget = reachableRecords.length > 0
       break
     }
     case 'avg_score': {
@@ -406,7 +416,7 @@ export const calculateGoalProgress = (
     current,
     target,
     percent,
-    achieved: current >= target,
+    achieved: hasReachableTarget && current >= target,
     hasUnknownMaxOp,
   }
 }

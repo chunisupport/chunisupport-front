@@ -212,6 +212,50 @@ test('成果パラメータは目標種別と指定方法に応じて組み立�
   assert.deepEqual(fullChainParams, { lamp: 'PLATINUM', percent: 75 })
 })
 
+test('単曲レート達成数の成果パラメータはレートと件数指定方法を保持する', () => {
+  // Given / When
+  const params = buildGoalFormAchievementParams({
+    achievementType: 'rating_count',
+    score: '0',
+    rating: '18.00',
+    rank: 'S',
+    count: '50',
+    countMode: 'percent',
+    total: '0',
+    totalMode: 'number',
+    hardLamp: 'HRD',
+    comboLamp: 'FC',
+    fullChain: 'GOLD',
+  })
+
+  // Then
+  assert.deepEqual(params, { rating: 18, percent: 50 })
+})
+
+test('単曲レート達成数の編集状態はレートと残数指定を復元する', () => {
+  // Given
+  const goal = {
+    id: 3,
+    group_id: null,
+    title: '単曲18を増やす',
+    achievement_type: 'rating_count',
+    achievement_params: { rating: 18, remaining: 1 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    sort_order: 1,
+    created_at: '2026-09-07T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then
+  assert.equal(result.rating, '18')
+  assert.equal(result.count, '1')
+  assert.equal(result.countMode, 'remaining')
+})
+
 test('FULL CHAIN目標の編集状態は保存済みランプと全件指定を復元する', () => {
   // Given
   const goal = {

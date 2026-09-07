@@ -80,3 +80,49 @@ test('正しい入力の場合は保存前検証を通過する', () => {
   // Then
   assert.equal(result, undefined)
 })
+
+test('単曲レートは0.01以上かつ小数第2位以内を要求する', () => {
+  // Given
+  const baseInput = {
+    title: '単曲レート目標',
+    achievementType: 'rating_count' as const,
+    score: '0',
+    rank: 'S' as const,
+    count: '1',
+    countMode: 'all' as const,
+    total: '0',
+    totalMode: 'number' as const,
+    constMin: '1',
+    constMax: '16',
+    allCount: 1,
+    theoreticalTotal: 0,
+  }
+
+  // When / Then
+  assert.match(validateGoalForm({ ...baseInput, rating: '' }) ?? '', /単曲レート/)
+  assert.match(validateGoalForm({ ...baseInput, rating: '0' }) ?? '', /0\.01以上/)
+  assert.match(validateGoalForm({ ...baseInput, rating: '18.001' }) ?? '', /小数第2位以内/)
+  assert.equal(validateGoalForm({ ...baseInput, rating: '18.00' }), undefined)
+})
+
+test('単曲レート入力の不正は到達可能譜面0件より先に報告する', () => {
+  // Given / When
+  const result = validateGoalForm({
+    title: '単曲レート目標',
+    achievementType: 'rating_count',
+    score: '0',
+    rating: '',
+    rank: 'S',
+    count: '1',
+    countMode: 'all',
+    total: '0',
+    totalMode: 'number',
+    constMin: '1',
+    constMax: '16',
+    allCount: 0,
+    theoreticalTotal: 0,
+  })
+
+  // Then
+  assert.match(result ?? '', /単曲レート/)
+})

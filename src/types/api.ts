@@ -568,6 +568,7 @@ export interface VersionSummaryDTO {
 export type GoalAchievementType =
   | 'rank_count'
   | 'score_count'
+  | 'rating_count'
   | 'avg_score'
   | 'hardlamp_count'
   | 'combolamp_count'
@@ -589,6 +590,12 @@ export interface GoalAttributes {
 }
 
 export type GoalAchievementParams =
+  | {
+      rating: number
+      count?: number
+      remaining?: number
+      percent?: number
+    }
   | {
       score: number
       count?: number
