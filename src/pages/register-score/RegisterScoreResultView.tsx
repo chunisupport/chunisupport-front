@@ -1,12 +1,12 @@
 import { Button } from '@kobalte/core/button'
-import { Download, Eye, EyeOff, Play, Share2 } from 'lucide-solid'
+import { Copy, Download, Eye, EyeOff, Play, Share2 } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import logoSingle from '../../assets/logo_single.svg'
-import { Loading } from '../../components'
-import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { AppIconButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { CheckboxField } from '../../components/common/CheckboxField'
+import { ImageCaptureActionButton } from '../../components/common/ImageCaptureActionButton'
 import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
 import {
   RecordFullChainCell,
@@ -29,7 +29,14 @@ import type {
 } from '../../types/api'
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
-import { canShareFiles, captureElementAsImage, downloadBlobFile } from '../../utils/domImageCapture'
+import {
+  canCopyImageToClipboard,
+  canShareFiles,
+  captureElementAsImage,
+  copyImageToClipboard,
+  downloadBlobFile,
+  IMAGE_CLIPBOARD_COPY_FEEDBACK_MS,
+} from '../../utils/domImageCapture'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
 import type { SortDirection } from '../../utils/sortingQuery'
@@ -1215,20 +1222,43 @@ export const RegisterScoreResultView = (props: {
   const [isDownloadingImage, setIsDownloadingImage] = createSignal(false)
   const [isPreparingShareImage, setIsPreparingShareImage] = createSignal(false)
   const [isSharingImage, setIsSharingImage] = createSignal(false)
+  const [isCopyingImage, setIsCopyingImage] = createSignal(false)
+  const [isImageCopied, setIsImageCopied] = createSignal(false)
   const [shareImageFile, setShareImageFile] = createSignal<File>()
   const [imageActionError, setImageActionError] = createSignal<string>()
   /** 生成対象となるレポートDOMの更新世代 */
   let shareImageRevision = 0
   /** 共有用画像の生成を開始するタイマー */
   let shareImagePrepareTimer: number | undefined
+  /** 画像コピー成功表示を戻すタイマー */
+  let copyImageFeedbackTimer: number | undefined
 
   /**
-   * ダウンロードまたは共有用の画像を生成中かどうかを返す。
+   * ダウンロード、共有、またはコピー用の画像を生成中かどうかを返す。
    *
    * @returns いずれかの画像生成処理中の場合はtrue。
    */
   const isGeneratingImage = (): boolean =>
-    isDownloadingImage() || isPreparingShareImage() || isSharingImage()
+    isDownloadingImage() || isPreparingShareImage() || isSharingImage() || isCopyingImage()
+
+  /**
+   * 現在のブラウザが画像のクリップボードコピーに対応しているかを返す。
+   *
+   * @returns Clipboard APIでPNG画像を書き込める場合はtrue。
+   */
+  const canCopyReportImage = (): boolean => canCopyImageToClipboard()
+
+  /**
+   * 画像コピー成功表示のタイマーを破棄する。
+   *
+   * @returns なし。
+   */
+  const clearCopyImageFeedbackTimer = (): void => {
+    if (copyImageFeedbackTimer === undefined) return
+
+    window.clearTimeout(copyImageFeedbackTimer)
+    copyImageFeedbackTimer = undefined
+  }
 
   /**
    * 現在のブラウザがJPEGファイルの共有に対応しているかを返す。
@@ -1410,6 +1440,36 @@ export const RegisterScoreResultView = (props: {
   }
 
   /**
+   * 現在表示中の更新差分レポート画像をクリップボードへコピーする。
+   *
+   * @returns なし。
+   */
+  const copyReportImage = (): void => {
+    if (isGeneratingImage()) return
+
+    setIsCopyingImage(true)
+    setIsImageCopied(false)
+    setImageActionError(undefined)
+    clearCopyImageFeedbackTimer()
+
+    const preparedImage = shareImageFile()
+    void copyImageToClipboard(preparedImage ?? createReportImageFile())
+      .then(() => {
+        setIsImageCopied(true)
+        copyImageFeedbackTimer = window.setTimeout(() => {
+          setIsImageCopied(false)
+          copyImageFeedbackTimer = undefined
+        }, IMAGE_CLIPBOARD_COPY_FEEDBACK_MS)
+      })
+      .catch(() => {
+        setImageActionError(REGISTER_SCORE_COPY.copyImageError)
+      })
+      .finally(() => {
+        setIsCopyingImage(false)
+      })
+  }
+
+  /**
    * 現在表示中の更新差分レポートを1枚のJPEG画像としてダウンロードする。
    *
    * @returns ダウンロード処理の完了時に解決されるPromise。
@@ -1493,6 +1553,7 @@ export const RegisterScoreResultView = (props: {
 
     onCleanup(() => {
       if (shareImagePrepareTimer !== undefined) window.clearTimeout(shareImagePrepareTimer)
+      clearCopyImageFeedbackTimer()
       shareImageObserver?.disconnect()
       resizeObserver.disconnect()
     })
@@ -1507,44 +1568,35 @@ export const RegisterScoreResultView = (props: {
         <div class="flex flex-col items-end gap-2">
           <div class="flex flex-wrap justify-end gap-2">
             <Show when={canShareReportImage()}>
-              <AppButton
-                variant="secondary"
+              <ImageCaptureActionButton
+                label={REGISTER_SCORE_COPY.shareImage}
                 disabled={isGeneratingImage()}
-                aria-busy={isPreparingShareImage() || isSharingImage()}
+                busy={isPreparingShareImage() || isSharingImage()}
                 onClick={shareReportImage}
-                leftIcon={
-                  <Show
-                    when={!isPreparingShareImage() && !isSharingImage()}
-                    fallback={<Loading size="inline" ariaHidden />}
-                  >
-                    <Share2 class="h-4 w-4" aria-hidden="true" />
-                  </Show>
-                }
               >
-                {isPreparingShareImage()
-                  ? REGISTER_SCORE_COPY.preparingShareImage
-                  : isSharingImage()
-                    ? REGISTER_SCORE_COPY.sharingImage
-                    : shareImageFile()
-                      ? REGISTER_SCORE_COPY.shareImage
-                      : REGISTER_SCORE_COPY.prepareShareImage}
-              </AppButton>
+                <Share2 class="h-5 w-5" aria-hidden="true" />
+              </ImageCaptureActionButton>
             </Show>
-            <AppButton
-              variant="primary"
+            <Show when={canCopyReportImage()}>
+              <ImageCaptureActionButton
+                label={REGISTER_SCORE_COPY.copyImage}
+                disabled={isGeneratingImage()}
+                busy={isCopyingImage()}
+                success={isImageCopied()}
+                onClick={copyReportImage}
+              >
+                <Copy class="h-5 w-5" aria-hidden="true" />
+              </ImageCaptureActionButton>
+            </Show>
+            <ImageCaptureActionButton
+              tone="primary"
+              label={REGISTER_SCORE_COPY.downloadImage}
               disabled={isGeneratingImage()}
-              aria-busy={isDownloadingImage()}
+              busy={isDownloadingImage()}
               onClick={downloadReportImage}
-              leftIcon={
-                <Show when={!isDownloadingImage()} fallback={<Loading size="inline" ariaHidden />}>
-                  <Download class="h-4 w-4" aria-hidden="true" />
-                </Show>
-              }
             >
-              {isDownloadingImage()
-                ? REGISTER_SCORE_COPY.downloadingImage
-                : REGISTER_SCORE_COPY.downloadImage}
-            </AppButton>
+              <Download class="h-5 w-5" aria-hidden="true" />
+            </ImageCaptureActionButton>
           </div>
           <Show when={imageActionError()}>
             {(message) => (

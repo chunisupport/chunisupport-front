@@ -1,20 +1,20 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { Download, ImageDown, Share2, X } from 'lucide-solid'
+import { Copy, Download, ImageDown, Share2, X } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal, onCleanup, Show, untrack } from 'solid-js'
 import { Loading } from '../../../../components'
-import {
-  AppButton,
-  getAppButtonClass,
-  getAppIconButtonClass,
-} from '../../../../components/common/AppButton'
+import { getAppIconButtonClass } from '../../../../components/common/AppButton'
+import { ImageCaptureActionButton } from '../../../../components/common/ImageCaptureActionButton'
 import { RATING_SLOT_COUNT } from '../../../../constants/rating'
 import { SOCIAL_SHARE_TEXT } from '../../../../constants/socialShare'
 import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
 import {
+  canCopyImageToClipboard,
   canShareFiles,
   captureElementAsImage,
+  copyImageToClipboard,
   downloadBlobFile,
+  IMAGE_CLIPBOARD_COPY_FEEDBACK_MS,
 } from '../../../../utils/domImageCapture'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import {
@@ -50,11 +50,14 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const [isDownloading, setIsDownloading] = createSignal(false)
   const [isPreparingShare, setIsPreparingShare] = createSignal(false)
   const [isSharing, setIsSharing] = createSignal(false)
+  const [isCopying, setIsCopying] = createSignal(false)
+  const [isCopied, setIsCopied] = createSignal(false)
   const [shareImageFile, setShareImageFile] = createSignal<File>()
   const [imageActionError, setImageActionError] = createSignal<string>()
   const [previewViewport, setPreviewViewport] = createSignal<HTMLDivElement>()
   const [imageSheet, setImageSheet] = createSignal<HTMLDivElement>()
   const [previewScale, setPreviewScale] = createSignal(1)
+  let copyFeedbackTimer: number | undefined
 
   const [readyJacketCount, setReadyJacketCount] = createSignal(0)
   const readyJacketKeys = new Set<string>()
@@ -81,11 +84,12 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const isPreviewReady = (): boolean => readyJacketCount() >= expectedJacketCount()
 
   /**
-   * ダウンロード・共有・共有用画像生成のいずれかを実行中か返す。
+   * ダウンロード・共有・コピー・共有用画像生成のいずれかを実行中か返す。
    *
    * @returns 画像に関する処理を実行中の場合はtrue。
    */
-  const isImageActionRunning = (): boolean => isDownloading() || isPreparingShare() || isSharing()
+  const isImageActionRunning = (): boolean =>
+    isDownloading() || isPreparingShare() || isSharing() || isCopying()
 
   /**
    * 現在のブラウザがJPEGファイルの共有に対応しているかを返す。
@@ -94,6 +98,25 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
    */
   const canShareRatingImage = (): boolean =>
     canShareFiles([new File([], 'share-test.jpg', { type: 'image/jpeg' })])
+
+  /**
+   * 現在のブラウザが画像のクリップボードコピーに対応しているかを返す。
+   *
+   * @returns Clipboard APIでPNG画像を書き込める場合はtrue。
+   */
+  const canCopyRatingImage = (): boolean => canCopyImageToClipboard()
+
+  /**
+   * コピー成功表示のタイマーを破棄する。
+   *
+   * @returns なし。
+   */
+  const clearCopyFeedbackTimer = (): void => {
+    if (copyFeedbackTimer === undefined) return
+
+    window.clearTimeout(copyFeedbackTimer)
+    copyFeedbackTimer = undefined
+  }
 
   /**
    * ジャケット画像ごとの準備状態を集約する。
@@ -124,6 +147,8 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
       readyJacketKeys.clear()
       setReadyJacketCount(0)
       setShareImageFile(undefined)
+      setIsCopied(false)
+      clearCopyFeedbackTimer()
     }
     setOpen(nextOpen)
     if (!nextOpen) setImageActionError(undefined)
@@ -166,6 +191,36 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     } finally {
       setIsPreparingShare(false)
     }
+  }
+
+  /**
+   * 現在のプレビュー画像をクリップボードへコピーする。
+   *
+   * @returns なし。
+   */
+  const copyRatingImage = (): void => {
+    if (isImageActionRunning() || !isPreviewReady()) return
+
+    setIsCopying(true)
+    setIsCopied(false)
+    setImageActionError(undefined)
+    clearCopyFeedbackTimer()
+
+    const preparedImage = shareImageFile()
+    void copyImageToClipboard(preparedImage ?? createRatingImageFile())
+      .then(() => {
+        setIsCopied(true)
+        copyFeedbackTimer = window.setTimeout(() => {
+          setIsCopied(false)
+          copyFeedbackTimer = undefined
+        }, IMAGE_CLIPBOARD_COPY_FEEDBACK_MS)
+      })
+      .catch(() => {
+        setImageActionError(RATING_IMAGE_COPY.copyError)
+      })
+      .finally(() => {
+        setIsCopying(false)
+      })
   }
 
   /**
@@ -221,6 +276,10 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     }
   }
 
+  onCleanup(() => {
+    clearCopyFeedbackTimer()
+  })
+
   // 共有ダイアログをクリック直後に開けるよう、プレビュー完成時点でファイルを準備する。
   createEffect(() => {
     if (!open() || !isPreviewReady() || !canShareRatingImage()) return
@@ -274,14 +333,13 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
       <Dialog.Trigger
         as="button"
         type="button"
-        class={getAppButtonClass({
-          variant: 'surface',
-          shape: 'pill',
-          class: 'h-10 focus-visible:ring-offset-2',
+        class={getAppIconButtonClass({
+          class: 'rounded-full focus-visible:ring-offset-2',
         })}
+        aria-label={RATING_IMAGE_COPY.openPreview}
+        title={RATING_IMAGE_COPY.openPreview}
       >
         <ImageDown class="h-5 w-5" aria-hidden="true" />
-        <span>{RATING_IMAGE_COPY.openPreview}</span>
       </Dialog.Trigger>
       <Show when={open()}>
         <Dialog.Portal>
@@ -345,39 +403,34 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                 )}
               </Show>
               <div class="flex flex-wrap justify-end gap-2">
-                <AppButton
-                  variant="secondary"
+                <ImageCaptureActionButton
+                  label={RATING_IMAGE_COPY.share}
                   disabled={!canShareRatingImage() || isImageActionRunning() || !isPreviewReady()}
-                  aria-busy={isPreparingShare() || isSharing()}
+                  busy={isPreparingShare() || isSharing()}
                   onClick={shareRatingImage}
-                  leftIcon={
-                    <Show
-                      when={!isPreparingShare() && !isSharing()}
-                      fallback={<Loading size="inline" ariaHidden />}
-                    >
-                      <Share2 class="h-4 w-4" aria-hidden="true" />
-                    </Show>
-                  }
                 >
-                  {isPreparingShare()
-                    ? RATING_IMAGE_COPY.preparingShare
-                    : isSharing()
-                      ? RATING_IMAGE_COPY.sharing
-                      : RATING_IMAGE_COPY.share}
-                </AppButton>
-                <AppButton
-                  variant="primary"
+                  <Share2 class="h-5 w-5" aria-hidden="true" />
+                </ImageCaptureActionButton>
+                <Show when={canCopyRatingImage()}>
+                  <ImageCaptureActionButton
+                    label={RATING_IMAGE_COPY.copy}
+                    disabled={isImageActionRunning() || !isPreviewReady()}
+                    busy={isCopying()}
+                    success={isCopied()}
+                    onClick={copyRatingImage}
+                  >
+                    <Copy class="h-5 w-5" aria-hidden="true" />
+                  </ImageCaptureActionButton>
+                </Show>
+                <ImageCaptureActionButton
+                  tone="primary"
+                  label={RATING_IMAGE_COPY.download}
                   disabled={isImageActionRunning() || !isPreviewReady()}
-                  aria-busy={isDownloading()}
+                  busy={isDownloading()}
                   onClick={downloadRatingImage}
-                  leftIcon={
-                    <Show when={!isDownloading()} fallback={<Loading size="inline" ariaHidden />}>
-                      <Download class="h-4 w-4" aria-hidden="true" />
-                    </Show>
-                  }
                 >
-                  {isDownloading() ? RATING_IMAGE_COPY.downloading : RATING_IMAGE_COPY.download}
-                </AppButton>
+                  <Download class="h-5 w-5" aria-hidden="true" />
+                </ImageCaptureActionButton>
               </div>
             </div>
           </Dialog.Content>
