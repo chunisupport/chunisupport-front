@@ -1,6 +1,12 @@
 /** EDITOR向け楽曲編集画面の表示名 */
 export const EDITOR_SONGS_TITLE = '楽曲編集'
 
+/** EDITOR向けコース編集画面の表示名 */
+export const EDITOR_COURSES_TITLE = 'コース編集'
+
+/** ADMIN向けコース管理画面の表示名 */
+export const ADMIN_COURSES_TITLE = 'コース管理（ADMIN）'
+
 /** EDITOR向け編集メニューの表示名 */
 export const EDITOR_MENU_TITLE = '編集メニュー'
 

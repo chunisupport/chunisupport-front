@@ -235,7 +235,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   password_too_long: 'パスワードは128文字以内である必要があります',
   invalid_password: 'パスワードが無効です',
   app_version_unsupported: 'データが古くなっています',
-  duplicate_official_idx: '同じ公式IDの楽曲がすでに存在します',
+  duplicate_official_idx: '同じ公式IDがすでに存在します',
   invalid_version_input: 'バージョン名または稼働日の入力内容が不正です',
   version_not_found: '対象のバージョンが見つかりません',
   version_name_conflict: '同じバージョン名がすでに存在します',
@@ -892,6 +892,39 @@ export interface CourseDTO {
   /** コースの公式インデックス */
   idx: string
   /** コースタイトル */
+  name: string
+  /** コースクラス */
+  class: string
+}
+
+/** 編集者向けコースマスタ。削除済みを含み、内部IDと更新日時を返す */
+export interface ManagedCourseDTO extends CourseDTO {
+  /** コースの内部ID。公開一覧では省略される場合がある */
+  id?: number
+  /** 論理削除済みかどうか。false の場合は API が省略することがある */
+  is_deleted?: boolean
+  /** コースマスタの更新日時 */
+  updated_at?: string
+}
+
+/** 編集者向けコース一覧レスポンス */
+export interface ManagedCoursesResponse {
+  courses: ManagedCourseDTO[]
+}
+
+/** コース追加リクエスト */
+export interface CreateCourseRequestDTO {
+  /** 公式インデックス */
+  idx: string
+  /** コース名 */
+  name: string
+  /** コースクラス */
+  class: string
+}
+
+/** コース名称・クラス更新リクエスト */
+export interface UpdateCourseRequestDTO {
+  /** コース名 */
   name: string
   /** コースクラス */
   class: string

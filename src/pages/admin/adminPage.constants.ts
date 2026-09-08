@@ -1,4 +1,5 @@
 import {
+  ADMIN_COURSES_PATH,
   ADMIN_DATA_COVERAGE_PATH,
   ADMIN_MAINTENANCE_PATH,
   ADMIN_VERSIONS_PATH,
@@ -32,6 +33,11 @@ export const ADMIN_PAGE_LINKS = [
     href: '/admin/songs',
     title: '楽曲管理',
     description: '楽曲一覧、編集、削除、復活を行います。',
+  },
+  {
+    href: ADMIN_COURSES_PATH,
+    title: 'コース管理',
+    description: 'コース一覧、編集、削除、復活を行います。',
   },
   {
     href: '/admin/honors',

@@ -25,6 +25,7 @@ import {
 } from './constants/footer'
 import {
   ADMIN_CHART_RANKING_PATH,
+  ADMIN_COURSES_PATH,
   ADMIN_DATA_COVERAGE_PATH,
   ADMIN_MAINTENANCE_PATH,
   ADMIN_PATH,
@@ -34,6 +35,7 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   DASHBOARD_PATH,
+  EDITOR_COURSES_PATH,
   EDITOR_PATH,
   EDITOR_SONGS_PATH,
   FRIENDS_PATH,
@@ -102,11 +104,13 @@ const AdminDataCoveragePage = lazy(() => import('./pages/admin/AdminDataCoverage
 const AdminChartRankingPage = lazy(() => import('./pages/admin/AdminChartRankingPage'))
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
 const AdminSongsPage = lazy(() => import('./pages/admin/AdminSongsPage'))
+const AdminCoursesPage = lazy(() => import('./pages/admin/AdminCoursesPage'))
 const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
 const AdminMaintenancePage = lazy(() => import('./pages/admin/AdminMaintenancePage'))
 const AdminVersionsPage = lazy(() => import('./pages/admin/AdminVersionsPage'))
 const EditorPage = lazy(() => import('./pages/editor/EditorPage'))
 const EditorSongsPage = lazy(() => import('./pages/editor/EditorSongsPage'))
+const EditorCoursesPage = lazy(() => import('./pages/editor/EditorCoursesPage'))
 
 /**
  * route module を事前取得できる遅延コンポーネント。
@@ -358,11 +362,13 @@ const LoadableAdminDataCoveragePage = withRouteLoadBoundary(AdminDataCoveragePag
 const LoadableAdminChartRankingPage = withRouteLoadBoundary(AdminChartRankingPage)
 const LoadableAdminUsersPage = withRouteLoadBoundary(AdminUsersPage)
 const LoadableAdminSongsPage = withRouteLoadBoundary(AdminSongsPage)
+const LoadableAdminCoursesPage = withRouteLoadBoundary(AdminCoursesPage)
 const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
 const LoadableAdminMaintenancePage = withRouteLoadBoundary(AdminMaintenancePage)
 const LoadableAdminVersionsPage = withRouteLoadBoundary(AdminVersionsPage)
 const LoadableEditorPage = withRouteLoadBoundary(EditorPage)
 const LoadableEditorSongsPage = withRouteLoadBoundary(EditorSongsPage)
+const LoadableEditorCoursesPage = withRouteLoadBoundary(EditorCoursesPage)
 const LoadableRegisterScoreTempPage = withRouteLoadBoundary(RegisterScoreTempPage)
 
 /**
@@ -421,6 +427,17 @@ const GuardedAdminSongsPage = () => (
 )
 
 /**
+ * ADMIN 権限を要求してコース管理画面を表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与したコース管理画面。
+ */
+const GuardedAdminCoursesPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableAdminCoursesPage />
+  </RequireRole>
+)
+
+/**
  * EDITOR権限を要求して楽曲編集画面を表示する。
  *
  * @returns 権限制御済みの楽曲編集画面。
@@ -428,6 +445,17 @@ const GuardedAdminSongsPage = () => (
 const GuardedEditorSongsPage = () => (
   <RequireRole allowedRoles={['EDITOR']}>
     <LoadableEditorSongsPage />
+  </RequireRole>
+)
+
+/**
+ * EDITOR権限を要求してコース編集画面を表示する。
+ *
+ * @returns 権限制御済みのコース編集画面。
+ */
+const GuardedEditorCoursesPage = () => (
+  <RequireRole allowedRoles={['EDITOR']}>
+    <LoadableEditorCoursesPage />
   </RequireRole>
 )
 
@@ -616,6 +644,7 @@ const App = () => {
       />
       <Route path="/admin/users" component={withNavBar(GuardedAdminUsersPage)} />
       <Route path="/admin/songs" component={withNavBar(GuardedAdminSongsPage)} />
+      <Route path={ADMIN_COURSES_PATH} component={withNavBar(GuardedAdminCoursesPage)} />
       <Route path="/admin/honors" component={withNavBar(GuardedAdminHonorsPage)} />
       <Route path={ADMIN_MAINTENANCE_PATH} component={withNavBar(GuardedAdminMaintenancePage)} />
       <Route path={ADMIN_VERSIONS_PATH} component={withNavBar(GuardedAdminVersionsPage)} />
@@ -623,6 +652,7 @@ const App = () => {
       {/* 編集 */}
       <Route path={EDITOR_PATH} component={withNavBar(GuardedEditorPage)} />
       <Route path={EDITOR_SONGS_PATH} component={withNavBar(GuardedEditorSongsPage)} />
+      <Route path={EDITOR_COURSES_PATH} component={withNavBar(GuardedEditorCoursesPage)} />
 
       {/* 404 */}
       <Route path="*" component={NotFoundPage} />

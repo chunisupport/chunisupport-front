@@ -25,6 +25,8 @@ export const DASHBOARD_PATH = `${TOOLS_PATH}/dashboard`
 export const EDITOR_PATH = '/editor'
 /** EDITOR向け楽曲編集画面のパス */
 export const EDITOR_SONGS_PATH = `${EDITOR_PATH}/songs`
+/** EDITOR向けコース編集画面のパス */
+export const EDITOR_COURSES_PATH = `${EDITOR_PATH}/courses`
 /** ADMIN向け管理メニューのパス */
 export const ADMIN_PATH = '/admin'
 /** スタッフ向けデータ充足状況画面のパス */
@@ -37,6 +39,8 @@ export const ADMIN_WORLDSEND_CHART_RANKING_PATH = `${ADMIN_PATH}/chart-rankings/
 export const ADMIN_MAINTENANCE_PATH = `${ADMIN_PATH}/maintenance`
 /** ADMIN向けバージョン管理画面のパス */
 export const ADMIN_VERSIONS_PATH = `${ADMIN_PATH}/versions`
+/** ADMIN向けコース管理画面のパス */
+export const ADMIN_COURSES_PATH = `${ADMIN_PATH}/courses`
 
 /** 楽曲詳細から譜面詳細へ遷移したことを表すルーター state */
 export const CHART_DETAIL_FROM_SONG_DETAIL_STATE = {
