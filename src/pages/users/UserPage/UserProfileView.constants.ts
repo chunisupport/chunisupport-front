@@ -24,10 +24,6 @@ export const RATING_IMAGE_COPY = {
   close: '閉じる',
   share: '共有',
   shareError: '共有に失敗しました。',
-  copy: 'コピー',
-  copyError: 'コピーに失敗しました。',
-  download: 'ダウンロード',
-  downloadError: 'ダウンロードに失敗しました。',
 } as const
 
 /**
