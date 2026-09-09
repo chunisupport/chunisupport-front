@@ -17,6 +17,7 @@ export const ADMIN_VERSIONS_COPY = {
   latestLabel: '最新版',
   editAction: '編集',
   deleteAction: '削除',
+  deleteDisabled: '最新版以外は削除できません',
   emptyState: '登録されているバージョンがありません。',
   createSuccess: 'バージョンを追加しました。',
   createError: 'バージョンの追加に失敗しました。',
@@ -48,9 +49,11 @@ export const formatVersionEditLabel = (versionName: string): string => `${versio
  * バージョン削除ボタンのアクセシブルなラベルを生成する。
  *
  * @param versionName - 対象バージョン名。
+ * @param canDelete - 最新版として削除できる場合は true。
  * @returns スクリーンリーダー向けの削除ラベル。
  */
-export const formatVersionDeleteLabel = (versionName: string): string => `${versionName}を削除`
+export const formatVersionDeleteLabel = (versionName: string, canDelete = true): string =>
+  canDelete ? `${versionName}を削除` : `${versionName}は最新版ではないため削除できません`
 
 /**
  * 削除確認ダイアログで対象バージョン名を示す文面を生成する。

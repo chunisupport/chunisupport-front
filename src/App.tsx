@@ -327,14 +327,14 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
 /**
  * ツールカード内の共通表示要素を表示する。
  * @param props.tool - 表示対象のツールリンク情報。
- * @returns アイコン、タイトル、状態ラベルを含むツールカード内容。
+ * @returns アイコン、タイトル、説明、状態ラベルを含むツールカード内容。
  */
 const ToolCardContent = (props: { tool: ToolLink }) => {
   return (
     <SelectableCardLink
       href={props.tool.href}
       disabled={props.tool.disabled}
-      class="min-h-24"
+      class="min-h-24 items-center"
       icon={
         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
           <ToolCardIcon icon={props.tool.icon} disabled={props.tool.disabled} />
@@ -342,6 +342,7 @@ const ToolCardContent = (props: { tool: ToolLink }) => {
       }
       title={props.tool.title}
       titleClass="text-base"
+      description={props.tool.description}
     >
       <Show when={props.tool.disabled === true}>
         <span class="w-fit rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text-muted">

@@ -96,7 +96,7 @@ const SongsList = () => {
                 }
                 onClick={() => setDisplayMode((mode) => (mode === 'const' ? 'notes' : 'const'))}
               >
-                <ArrowUpDown class="h-4 w-4" aria-hidden="true" />
+                <ArrowUpDown size={24} aria-hidden="true" />
               </AppIconButton>
             </div>
             <p class="text-sm text-text-muted">{sortedSongs().length}件</p>

@@ -17,15 +17,18 @@ export const EDITOR_PAGE_LINKS = [
     href: ADMIN_DATA_COVERAGE_PATH,
     title: 'データ充足状況',
     description: '譜面定数の判明状況を難易度・レベル別に確認します。',
+    icon: 'coverage',
   },
   {
     href: EDITOR_SONGS_PATH,
     title: '楽曲管理',
     description: '楽曲一覧と楽曲情報を確認・編集します。',
+    icon: 'songs',
   },
   {
     href: EDITOR_COURSES_PATH,
     title: 'コース管理',
     description: 'コース一覧とコース情報を確認・編集します。',
+    icon: 'courses',
   },
 ] as const

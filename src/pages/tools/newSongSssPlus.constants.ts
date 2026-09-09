@@ -1,7 +1,7 @@
 /** ベスト枠・新曲枠理論値チェッカーで使用する文言 */
 export const NEW_SONG_SSS_PLUS_COPY = {
   title: 'ベスト枠・新曲枠理論値チェッカー',
-  description: '全譜面SSS+時の理論値と、全レコードから対象譜面の現在スコアを確認できます。',
+  description: '全譜面SSS+時の理論値レーティングを確認できます。',
   ariaLabel: 'レーティング枠理論値チェック',
   targetRating: '理論値',
   currentGap: '現在との差',

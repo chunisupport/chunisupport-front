@@ -261,6 +261,14 @@ const AdminVersionsPage = (): JSX.Element => {
     return values[values.length - 1]?.id ?? null
   })
 
+  /**
+   * 指定バージョンが削除可能な最新版か判定する。
+   *
+   * @param version - 判定対象のバージョン。
+   * @returns 最新版の場合は true。
+   */
+  const canDeleteVersion = (version: VersionDTO): boolean => version.id === latestVersionId()
+
   /** バージョン一覧を再取得する。 */
   const refresh = (): void => {
     setRefreshKey((current) => current + 1)
@@ -419,16 +427,22 @@ const AdminVersionsPage = (): JSX.Element => {
                           >
                             <Pencil class="h-4 w-4" aria-hidden="true" />
                           </AppIconButton>
-                          <Show when={version.id === latestVersionId()}>
-                            <AppIconButton
-                              tone="danger"
-                              aria-label={formatVersionDeleteLabel(version.name)}
-                              title={ADMIN_VERSIONS_COPY.deleteAction}
-                              onClick={() => openDeleteDialog(version)}
-                            >
-                              <Trash2 class="h-4 w-4" aria-hidden="true" />
-                            </AppIconButton>
-                          </Show>
+                          <AppIconButton
+                            tone="danger"
+                            disabled={!canDeleteVersion(version)}
+                            aria-label={formatVersionDeleteLabel(
+                              version.name,
+                              canDeleteVersion(version)
+                            )}
+                            title={
+                              canDeleteVersion(version)
+                                ? ADMIN_VERSIONS_COPY.deleteAction
+                                : ADMIN_VERSIONS_COPY.deleteDisabled
+                            }
+                            onClick={() => openDeleteDialog(version)}
+                          >
+                            <Trash2 class="h-4 w-4" aria-hidden="true" />
+                          </AppIconButton>
                         </div>
                       </td>
                       <td class="px-3 py-2 font-sans">
