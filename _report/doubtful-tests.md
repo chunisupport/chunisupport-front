@@ -1,102 +1,113 @@
 # 仕様確認が必要なテスト
 
 調査日: 2026-07-26
-再検証日: 2026-08-25
+再検証日: 2026-09-09
+調査対象: `develop` (`d33d726`)
 
 この文書は、テストが現在の実装を固定しているものの、期待値を仕様として確定してよいか判断が必要な項目を記録する。未確定の項目は、テストや実装を変更する前に仕様を確認する。仕様を確認できた項目は末尾の「確認済み」に記録する。
+
+項目番号は過去のレポートとの対応を維持する。
 
 ## 優先度: 高
 
 ### 1. OVER POWER合計目標の理論値
 
-- `src/pages/goals/utils/goalProgress.test.ts` の「OVER POWER合計目標のtotalが欠落している場合は対象譜面の理論値合計を使う」は、通常条件でも `song.maxop` の合計を期待している。
-- `src/pages/goals/utils/goalOverPower.test.ts` の「通常条件では各譜面の定数から最大OVER POWER合計を算出する」は、通常条件では `record.const` から算出し、`OP_TARGET` の場合だけ `song.maxop` を使う期待になっている。
+- `calculateGoalOverPowerChartMax`は、通常条件では各`record.const`から譜面ごとの理論OVER POWERを算出し、`chart_target: 'OP_TARGET'`の場合だけ楽曲ごとの`song.maxop`を重複なく合計する。
+- 一方、`calculateGoalProgress`の`overpower_value`で保存済みの`total`がない場合、通常条件でも各レコードに対応する`song.maxop`を合計して動的な目標値を求める。
+- `src/pages/goals/utils/goalOverPower.test.ts`と`src/pages/goals/utils/goalProgress.test.ts`も、それぞれ異なる定義を固定している。
 - 確認事項:
-  - 通常条件の理論値は対象譜面ごとの `record.const` から算出するか。
-  - `song.maxop` は `chart_target: 'OP_TARGET'` の場合だけ使うか。
-  - 目標作成時の最大値、保存値、目標カードの再計算結果を同じ定義へ統一するか。
+  - 通常条件の理論値は対象譜面ごとの`record.const`から算出するか。
+  - `song.maxop`は`chart_target: 'OP_TARGET'`の場合だけ使用するか。
+  - 目標作成時の最大値、保存値がない場合の再計算、目標カードの進捗計算を同じ定義へ統一するか。
 
 ### 3. 検索語末尾の全角英字を無条件に1文字削除
 
-- `src/utils/searchUtils.test.ts` の `removeTrailingFullwidthAlphabet` 関連テストが、末尾の全角英字を常に未確定のIME入力とみなして削除する仕様を固定している。
+- `removeTrailingFullwidthAlphabet`は、検索語の末尾が全角英字なら常に1文字削除する。
+- `src/utils/searchUtils.test.ts`も、この動作を明示的に固定している。
 - 確定済みの検索語や、曲名・アーティスト名に全角英字を含む検索でも末尾1文字が失われる。
 - 確認事項:
-  - IME変換途中だけを判定できるUIイベントへ処理を移すか。
-  - 確定済み文字列にも現在の補正を適用する仕様か。
+  - IME変換途中だけをUIイベントで判定して補正するか。
+  - 確定済み文字列にも現在の補正を適用する仕様とするか。
 
 ## 優先度: 中
 
 ### 4. 四分位数の算出方法
 
-- `src/pages/users/UserRecord/utils/recordStats.test.ts` は2件のスコアに対し、Q1とQ3の両方を最小値とする期待を持つ。
-- `src/pages/users/utils/recordStats.ts` はインデックスの切り捨てで四分位を選ぶ一方、苦手譜面インスペクターでは補間を用いた四分位計算がある。
+- `getRecordStats`は、Q1を`floor((n - 1) × 0.25)`、Q3を`floor((n - 1) × 0.75)`番目の値として選ぶ。
+- そのため、2件のスコアではQ1とQ3の両方が最小値になる。
+- `src/pages/users/UserRecord/utils/recordStats.test.ts`も、この結果を固定している。
 - 確認事項:
-  - 最近傍順位、中央値分割、線形補間のどれをプロジェクト標準とするか。
-  - 画面間で同じ「Q1/Q3」表記を使うなら計算法も共通化するか。
+  - 現在のインデックス切り捨て方式をフィルター統計の正式な四分位数定義とするか。
+  - 中央値分割や線形補間など別の定義へ変更するか。
 
 ### 5. 複数ソート条件のキー重複
 
-- `src/utils/sortConditions.test.ts` と `src/pages/users/WorldsendRecord/utils/sorting.test.ts` は、初期ソートの第1条件と既定の第2条件が同じキーになる結果を期待している。
-- 同じキーを続けて比較しても第2条件は実質的に機能せず、ユーザーが期待するタイブレークにならない可能性がある。
+- `createInitialSortConditions`は、第1条件だけを指定値へ置き換えるため、指定キーが既定の第2条件以降と同じ場合でも重複を除去しない。
+- `src/utils/sortConditions.test.ts`は`level`が第1・第2条件へ重複する結果を固定している。
+- WORLD'S ENDでも、初期ソートで`attribute`が第1・第2条件へ重複する結果をテストしている。
+- 同じキーを続けて比較しても後段の条件は実質的なタイブレークにならない。
 - 確認事項:
   - 重複キーを許可して表示どおり保持するか。
   - 後続の重複キーを除外し、別の既定条件で補完するか。
 
 ### 6. J数なしレコード同士の並び順
 
-- `src/pages/users/WorldsendRecord/utils/sorting.test.ts` は、J数なしのレコードをJ数ソートの昇順・降順に関係なくスコア降順で並べる期待を持つ。
-- `src/pages/users/utils/justiceCountSorting.ts` が常にスコア降順の非ゼロ比較を返すため、複数ソート時は後続条件が評価されない。
-- 単一条件用の互換関数を使うテストが中心で、画面が使う複数条件ソートのタイブレークを十分に検証していない。
+- `src/pages/users/WorldsendRecord/utils/sorting.test.ts`は、J数なしのレコードをJ数ソートの昇順・降順に関係なくスコア降順で並べる期待を持つ。
+- そのため、J数なし同士では後続のソート条件よりスコアが優先される。
 - 確認事項:
   - J数なし同士は常にスコア降順、元順維持、または次のソート条件へ委譲するか。
   - 通常譜面とWORLD'S ENDで同じ規則を採用するか。
 
-### 7. ボーダー計算の `targetJustice` の境界条件と命名
+### 7. ボーダー計算の`targetJustice`の境界条件と命名
 
-- `src/utils/borderCalculator.test.ts` は `targetJustice: 100` に対して、JUSTICE数139〜144の候補を期待している。
-- `src/utils/borderCalculator.ts` のJSDocでは現在、`targetJustice` をJUSTICE数の下限として扱うことが明記されている。
-- 実装は `justice > targetJustice` を条件としており、指定値そのものは候補に含めない厳密な下限になっている。
+- `src/utils/borderCalculator.test.ts`は`targetJustice: 100`に対して、指定値そのものではなく`justice > targetJustice`となる候補を期待している。
+- 実装も指定値を含めない厳密な下限として扱う。
+- 入力検証やUIでは「目標JUSTICE数」という名称を使用しているため、境界の意味が直感的とは限らない。
 - 確認事項:
-  - 下限値そのものを含む `justice >= targetJustice` とするか、現在どおり厳密な下限として `justice > targetJustice` を維持するか。
-  - 厳密な下限を維持する場合、`targetJustice` という名前やUI文言が意味を正確に表しているか。
+  - 下限値そのものを含む`justice >= targetJustice`とするか、現在どおり`justice > targetJustice`を維持するか。
+  - 厳密な下限を維持する場合、変数名やUI文言をその意味に合わせるか。
 
 ### 8. 更新日のタイムゾーンと日付妥当性
 
-- `src/utils/dateFilter.test.ts` は `2026-05-31T23:59:59Z` を6月1日の下限から除外する期待を持つ。JSTでは6月1日だが、ISO文字列上のUTC日付である5月31日として扱う仕様を固定している。
-- `src/utils/recordUpdatedAt.test.ts` は形式不正を検証するが、`2026-99-99` のように正規表現へ一致する実在しない日付を検証していない。
+- `toRecordDateString`はISO 8601文字列の先頭にある`YYYY-MM-DD`をそのまま抽出し、タイムゾーン変換をしない。
+- `src/utils/dateFilter.test.ts`は`2026-05-31T23:59:59Z`を6月1日の下限から除外する。日本時間では6月1日だが、文字列上の日付である5月31日として扱う仕様になっている。
+- `formatUpdatedAt`も先頭の年月日が正規表現へ一致すればそのまま表示するため、`2026-99-99...`のようなカレンダー上存在しない日付を表示用には拒否しない。
+- 一方、更新日ソートは`Date.parse`を使用するため、不正日付を無効値として扱う。
 - 確認事項:
-  - 更新日の表示・フィルター基準をUTC、JST、文字列上の日付のどれにするか。
-  - カレンダー上の妥当性まで検証するか。
+  - 更新日の表示・フィルター基準を日本時間、UTC、文字列上の日付のどれにするか。
+  - 表示・フィルター・ソートで日付妥当性の判定を統一するか。
 
 ## 優先度: 低
 
-### 9. スコアランクフィルターでAAA未満をAAAへ丸める
+### 9. スコアランクフィルターでAAA未満をAAAへまとめる
 
-- `src/pages/users/utils/scoreRank.test.ts` は0点とAAA帯だけを検証している。
-- 現在の `scoreToFilterRank` は1〜949,999点も、選択肢に下位ランクがないためAAAへ変換する。
+- スコアランクフィルターの選択肢は`0点`の次が`AAA`で、下位ランクを持たない。
+- `scoreToFilterRank`は1〜AAA未満のスコアも`AAA`へ変換する。
 - 確認事項:
-  - 「0点」と「AAA」の間をAAAへ丸める仕様か。
-  - 「AAA未満」などの専用値を追加するか。
+  - `0点`と`AAA`の間をAAAへまとめる仕様とするか。
+  - `AAA未満`などの専用値を追加するか。
 
 ### 10. フレンド画面のレーティング丸め
 
-- `src/pages/friends/friendshipDisplay.test.ts` は桁数だけを検証し、丸め境界を検証していない。
-- `formatFriendRating` は `toFixed(2)` で四捨五入する一方、`src/utils/ratingFormat.test.ts` は共通表示を小数点以下2桁の切り捨てとして固定している。
+- `formatFriendRating`は`toFixed(2)`を使用し、小数点以下2桁へ丸める。
+- 共通のレーティング表示は小数点以下2桁の切り捨てを使用しており、表示規則が一致していない。
+- `src/pages/friends/friendshipDisplay.test.ts`は桁数を検証するが、丸め境界を固定していない。
 - 確認事項:
-  - フレンド画面だけ四捨五入するか。
+  - フレンド画面だけ丸める仕様とするか。
   - 共通のレーティング表示規則へ統一するか。
 
-### 11. リリース日未設定曲の配置
+### 11. リリース日未設定・不正曲の配置
 
-- `src/pages/songs/utils/releaseDateSorting.test.ts` は、リリース日未設定・不正の曲を先頭へ置く仕様を固定している。
-- `src/stores/songsData.test.ts` は、共有楽曲ストアの降順ソートで同じ曲を末尾へ置く仕様を固定している。
+- `sortByReleaseDateDescWithMissingFirst`は、リリース日未設定または不正な楽曲を先頭へ配置する。
+- 一方、共有楽曲データの`sortSongsByReleaseDescAndIdxDesc`は、同じ未設定・不正値を末尾へ配置する。
+- どちらもリリース日降順の用途だが、欠損値の配置規則が逆になっている。
 - 確認事項:
-  - 管理・確認用途だけ未設定を先頭へ出す意図的な差か。
-  - 同じ「リリース日降順」なら配置を統一するか。
+  - 管理・確認用途など画面ごとに意図的に規則を分けるか。
+  - 同じ「リリース日降順」として配置規則を統一するか。
 
 ### 12. マスタ外ジャンル・バージョンのOVER POWER集計
 
-- `src/usecases/overpower/overpowerSummary.test.ts` は、不明ジャンル・不明バージョンの値をALLへ含める一方、各内訳から除外する期待を持つ。
+- `src/usecases/overpower/overpowerSummary.test.ts`は、不明ジャンル・不明バージョンの値をALLへ含める一方、各内訳から除外する期待を持つ。
 - そのため、ALLと表示中の内訳合計が一致しない。
 - 確認事項:
   - 「不明」行を内訳へ追加するか。
@@ -105,8 +116,8 @@
 
 ### 13. 固定件数目標が対象数を超えた場合
 
-- `src/pages/goals/utils/goalRainbow.test.ts` は、保存済みの固定件数が現在の対象楽曲数を超えても固定値を維持する期待を持つ。
-- 楽曲削除や条件変更で対象が1曲になっても目標3曲が残り、達成不能な目標になり得る。
+- `src/pages/goals/utils/goalRainbow.test.ts`は、保存済みの固定件数が現在の対象楽曲数を超えても固定値を維持する期待を持つ。
+- たとえば対象が1曲まで減っても固定目標3曲が残り、達成不能な目標になる。
 - 確認事項:
   - 保存済みの固定目標を履歴として維持するか。
   - 現在の対象数へ上限補正するか。
@@ -114,25 +125,25 @@
 
 ### 14. 降順ソート時のマスタ外ジャンル
 
-- `src/utils/masterData.test.ts` はマスタ順序にない名称を末尾へ置く期待を持つ。
-- 楽曲一覧のジャンルソートは比較結果全体へ降順係数を掛けるため、降順ではマスタ外ジャンルが先頭へ反転するが、この挙動を直接検証するテストがない。
+- `compareMasterItemNames`はマスタ順序にない名称を既知の項目より後へ配置し、`src/utils/masterData.test.ts`もその規則を固定している。
+- 楽曲一覧の`sortSongs`はジャンル比較結果へ降順係数を掛けるため、降順ではマスタ外ジャンルが先頭側へ反転する。
 - 確認事項:
   - マスタ外ジャンルは昇順・降順とも末尾へ固定するか。
   - 降順ではマスタ項目と一緒に順序を反転させるか。
 
 ### 15. OVER POWER達成率の表示桁数
 
-- 目標カードでは `OVER_POWER_PERCENT_DECIMAL_PLACES = 3` を定義し、`formatOverPowerPercent(value, 3)` 相当の呼び出しで小数点以下3桁を明示的に指定している。
-- 共通の `formatOverPowerPercent` は、桁数を省略した場合の既定値を小数点以下5桁としている。
-- 現在の差は偶然のフォーマット差ではなく、コード上は目標カード固有の指定として明示されている。
+- 共通の`formatOverPowerPercent`は、桁数を省略した場合に小数点以下5桁で表示する。
+- 目標カードは`OVER_POWER_PERCENT_DECIMAL_PLACES = 3`をローカルに定義し、小数点以下3桁を明示的に指定している。
+- 現在の差はコード上で明示された画面固有の指定になっている。
 - 確認事項:
-  - 目標カードだけ3桁とする画面固有仕様を正式な仕様として維持するか。
+  - 目標カードだけ3桁とする仕様を維持するか。
   - 共通表示と同じ5桁へ統一するか。
 
 ## 確認済み
 
 ### 2. 検索時の長音記号を一律で「ウ」へ変換
 
-- `src/utils/searchUtils.test.ts` の「reading の長音記号をウとして扱う」は、`ー` と `ｰ` を前後の音に関係なく一律で `ウ` へ変換する仕様を固定している。
-- この変換は公式の reading 仕様に準拠していることを確認済み。
+- `src/utils/searchUtils.test.ts`の「reading の長音記号をウとして扱う」は、`ー`と`ｰ`を前後の音に関係なく一律で`ウ`へ変換する仕様を固定している。
+- この変換は公式のreading仕様に準拠していることを確認済み。
 - 現在のテストと実装を維持する。
