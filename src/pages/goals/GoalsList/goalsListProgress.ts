@@ -1,4 +1,5 @@
 import type { GoalCreateRequest, GoalDTO } from '../../../types/api'
+import { filterRatingReachableRecords } from '../../../utils/goalRatingCount'
 import { calculateGoalOverPowerChartMax } from '../utils/goalOverPower'
 import {
   calculateGoalProgress,
@@ -6,7 +7,6 @@ import {
   type GoalProgressResult,
 } from '../utils/goalProgress'
 import { calculateRainbowGoalProgress, filterRainbowTargetSongs } from '../utils/goalRainbow'
-import { filterRatingReachableRecords } from '../utils/goalRatingCount'
 import type { GoalsListData } from './goalsListResource'
 
 export interface GoalWithProgress {

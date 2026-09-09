@@ -512,3 +512,16 @@ export const fetchMasterData = async (): Promise<MasterDataDTO> => {
     throw error
   }
 }
+
+/** 目標の対象条件を解決するための難易度・ジャンル情報。 */
+export type GoalFilterOptions = Pick<MasterDataDTO, 'difficulties' | 'genres'>
+
+/**
+ * 目標フィルターに必要な難易度とジャンルだけを取得する。
+ *
+ * @returns 目標属性IDの解決に使う選択肢。
+ */
+export const fetchGoalFilterOptions = async (): Promise<GoalFilterOptions> => {
+  const { difficulties, genres } = await fetchMasterData()
+  return { difficulties, genres }
+}

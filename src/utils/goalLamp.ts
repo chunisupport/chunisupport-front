@@ -1,4 +1,4 @@
-import type { PlayerRecordDTO } from '../../../types/api'
+import type { PlayerRecordDTO } from '../types/api'
 
 export type HardLampGoalValue = 'HRD' | 'BRV' | 'ABS' | 'CTS'
 export type ComboLampGoalValue = 'FC' | 'AJ'
