@@ -1,11 +1,11 @@
-import { CHART_CONST_MIN } from '../../../constants/chart'
-import type { PlayerRecordDTO } from '../../../types/api'
+import { CHART_CONST_MIN } from '../constants/chart'
+import type { PlayerRecordDTO } from '../types/api'
 import {
   calculateSingleRatingHundredths,
   MAX_RATING_SCORE,
   THEORETICAL_RATING_BONUS_HUNDREDTHS,
   toRatingHundredths,
-} from '../../../utils/singleRating'
+} from './singleRating'
 
 const CHART_CONSTANT_TENTHS_SCALE = 10
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { PlayerRecordDTO } from '../../../types/api'
+import type { PlayerRecordDTO } from '../types/api'
 import {
   filterRatingReachableRecords,
   resolveRatingGoalMinimumChartConstant,

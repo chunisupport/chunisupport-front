@@ -8,10 +8,7 @@ import type {
   VersionDTO,
 } from '../../../types/api'
 import { buildCurrentOverPowerBySongId } from '../../../usecases/overpower/currentOpTarget'
-import { MAX_SCORE } from '../../../utils/scoreRank'
-import { isTheoreticalOverPowerTargetDifficulty } from '../../../utils/theoreticalOverPowerTarget'
-import { normalizeGoalAttributeIds } from './goalAttributes'
-import { getNumberGoalTargetParam, resolveGoalDynamicTarget } from './goalCountTarget'
+import { normalizeGoalAttributeIds } from '../../../utils/goalAttributes'
 import {
   COMBO_LAMP_ORDER,
   HARD_LAMP_ORDER,
@@ -20,9 +17,12 @@ import {
   isHardLampGoalValue,
   resolveFullChainRecordName,
   resolveHardLampRecordName,
-} from './goalLamp'
-import { filterRatingReachableRecords } from './goalRatingCount'
-import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
+} from '../../../utils/goalLamp'
+import { filterRatingReachableRecords } from '../../../utils/goalRatingCount'
+import { resolveGoalVersionValueByReleaseDate } from '../../../utils/goalVersion'
+import { MAX_SCORE } from '../../../utils/scoreRank'
+import { isTheoreticalOverPowerTargetDifficulty } from '../../../utils/theoreticalOverPowerTarget'
+import { getNumberGoalTargetParam, resolveGoalDynamicTarget } from './goalCountTarget'
 
 export interface GoalProgressResult {
   current: number

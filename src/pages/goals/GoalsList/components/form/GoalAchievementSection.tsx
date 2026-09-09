@@ -3,8 +3,6 @@ import { Show } from 'solid-js'
 import { CheckboxField } from '../../../../../components/common/CheckboxField'
 import { SCORE_MIN } from '../../../../../constants/chart'
 import type { GoalAchievementType } from '../../../../../types/api'
-import { MAX_SCORE, SCORE_RANK_MIN_SCORES, SCORE_RANKS_ASC } from '../../../../../utils/scoreRank'
-import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import {
   COMBO_LAMP_OPTIONS,
   type ComboLampGoalValue,
@@ -12,7 +10,9 @@ import {
   type FullChainGoalValue,
   HARD_LAMP_OPTIONS,
   type HardLampGoalValue,
-} from '../../../utils/goalLamp'
+} from '../../../../../utils/goalLamp'
+import { MAX_SCORE, SCORE_RANK_MIN_SCORES, SCORE_RANKS_ASC } from '../../../../../utils/scoreRank'
+import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import {
   LABEL_INVERT_PERCENTAGE,
   LABEL_INVERT_VALUE,

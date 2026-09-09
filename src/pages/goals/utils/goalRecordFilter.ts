@@ -2,9 +2,7 @@ import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../constants/
 import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
 import type { FilterState } from '../../../types/recordFilter'
-import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
-import { MAX_SCORE } from '../../../utils/scoreRank'
-import { normalizeGoalAttributeIds } from './goalAttributes'
+import { normalizeGoalAttributeIds } from '../../../utils/goalAttributes'
 import {
   COMBO_LAMP_UNACHIEVED_FILTERS,
   FULL_CHAIN_UNACHIEVED_FILTERS,
@@ -12,9 +10,11 @@ import {
   isComboLampGoalValue,
   isFullChainGoalValue,
   isHardLampGoalValue,
-} from './goalLamp'
-import { resolveRatingGoalMinimumChartConstant } from './goalRatingCount'
-import { buildGoalVersionNameMap } from './goalVersion'
+} from '../../../utils/goalLamp'
+import { resolveRatingGoalMinimumChartConstant } from '../../../utils/goalRatingCount'
+import { buildGoalVersionNameMap } from '../../../utils/goalVersion'
+import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
+import { MAX_SCORE } from '../../../utils/scoreRank'
 
 const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
   'rank_count',

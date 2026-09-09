@@ -12,17 +12,17 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../../../types/api'
-import { normalizeScoreRangeInput } from '../../../../../utils/rangeInput'
-import { MAX_SCORE } from '../../../../../utils/scoreRank'
-import type { GoalTargetMode } from '../../../utils/goalCountTarget'
-import { resolveGoalAchievementTypeLabel } from '../../../utils/goalForm'
 import type {
   ComboLampGoalValue,
   FullChainGoalValue,
   HardLampGoalValue,
-} from '../../../utils/goalLamp'
+} from '../../../../../utils/goalLamp'
+import { buildGoalVersionOptions } from '../../../../../utils/goalVersion'
+import { normalizeScoreRangeInput } from '../../../../../utils/rangeInput'
+import { MAX_SCORE } from '../../../../../utils/scoreRank'
+import type { GoalTargetMode } from '../../../utils/goalCountTarget'
+import { resolveGoalAchievementTypeLabel } from '../../../utils/goalForm'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
-import { buildGoalVersionOptions } from '../../../utils/goalVersion'
 import { resolveGoalFormGroupId } from '../../goalGroupsModel'
 import { DEFAULT_RATING_GOAL_VALUE } from './constants'
 import { GoalAchievementSection } from './GoalAchievementSection'

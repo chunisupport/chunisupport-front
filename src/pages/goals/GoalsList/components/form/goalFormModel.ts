@@ -12,20 +12,20 @@ import type {
   GoalDTO,
 } from '../../../../../types/api'
 import {
-  getScoreRank,
-  MAX_SCORE,
-  SCORE_RANK_MIN_SCORES,
-  type ScoreRank,
-} from '../../../../../utils/scoreRank'
-import { buildGoalTargetParam, type GoalTargetMode } from '../../../utils/goalCountTarget'
-import {
   type ComboLampGoalValue,
   type FullChainGoalValue,
   type HardLampGoalValue,
   isComboLampGoalValue,
   isFullChainGoalValue,
   isHardLampGoalValue,
-} from '../../../utils/goalLamp'
+} from '../../../../../utils/goalLamp'
+import {
+  getScoreRank,
+  MAX_SCORE,
+  SCORE_RANK_MIN_SCORES,
+  type ScoreRank,
+} from '../../../../../utils/scoreRank'
+import { buildGoalTargetParam, type GoalTargetMode } from '../../../utils/goalCountTarget'
 import { DEFAULT_RATING_GOAL_VALUE } from './constants'
 
 export type RankGoalValue = ScoreRank | 'THEORETICAL'

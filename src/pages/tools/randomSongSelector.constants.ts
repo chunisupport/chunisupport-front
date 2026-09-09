@@ -57,6 +57,15 @@ export const RANDOM_SONG_SELECTOR_FIELD_LABELS = {
  * ランダム選曲ツールの表示文言。
  */
 export const RANDOM_SONG_SELECTOR_COPY = {
+  goalFilterLabel: '目標で絞る',
+  goalFilterDialogTitle: '目標で絞る',
+  goalFilterNoneLabel: '絞り込みなし',
+  goalFilterCancelLabel: 'キャンセル',
+  goalFilterApplyLabel: '適用',
+  goalFilterUnavailableMessage: 'ログイン時のみ保存済み目標を利用できます。',
+  goalFilterFetchErrorMessage: '目標を取得できませんでした。',
+  goalFilterRecordFetchErrorMessage: '目標の未達成状況を取得できませんでした。',
+  goalFilterEmptyMessage: '絞り込みに利用できる目標がありません。',
   title: 'ランダム選曲',
   description: '条件に合う通常譜面から指定曲数をランダムに選びます。',
   countLabel: '曲数',
