@@ -5,6 +5,7 @@ import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
 import { AppIconButton } from '../../../components/common/AppButton'
 import { AppTabContent, SegmentedTabs, UnderlineTabs } from '../../../components/common/AppTabs'
+import { UserRecordCard } from '../../../components/common/record/UserRecordCard'
 import { RATING_SLOT_COUNT } from '../../../constants/rating'
 import {
   createAppMainScrollOffsetRestoreEffect,
@@ -29,7 +30,6 @@ import {
 import { scrollToUserProfileContent } from '../../../utils/userProfileScroll'
 import { RatingImagePreviewDialog } from './components/RatingImagePreviewDialog'
 import { UserNameplate } from './components/UserNameplate'
-import { UserRecordCard } from './components/UserRecordCard'
 import { UserRecordPlaceholderCard } from './components/UserRecordPlaceholderCard'
 import type {
   UserPageCourseRecordProfile,

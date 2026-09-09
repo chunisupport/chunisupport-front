@@ -1,8 +1,8 @@
-import { Image } from '@kobalte/core/image'
 import { Play } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createSignal, For, Show } from 'solid-js'
 import placeholderImageUrl from '../../../../assets/placeholder.png'
+import { JacketImage } from '../../../../components/common/JacketImage'
 import { RECORD_CARD_LAMP_BADGE_CLASS } from '../../../../components/common/record/RecordDisplayParts'
 import { getDefaultRecordLampLabel } from '../../../../components/common/record/recordLampLabel'
 import {
@@ -70,9 +70,6 @@ type RatingImageColumnProps = {
 
 type JacketLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error'
 
-/** ジャケット画像の再取得時にキャッシュキーへ使用するクエリ名 */
-const JACKET_RETRY_QUERY_PARAM = 'retry'
-
 /**
  * プロフィール画像へ表示する代表称号を取得する。
  *
@@ -81,18 +78,6 @@ const JACKET_RETRY_QUERY_PARAM = 'retry'
  */
 const getPrimaryHonor = (honors: HonorDTO[]): HonorDTO | undefined =>
   honors.find((honor) => honor.slot === 1) ?? honors[0]
-
-/**
- * ジャケット画像をキャッシュから切り離して再取得するURLを生成する。
- *
- * @param sourceUrl - 最初の取得に失敗したジャケット画像URL。
- * @returns 現在時刻を再試行キーとして付与したURL。
- */
-const buildJacketRetryUrl = (sourceUrl: string): string => {
-  const retryUrl = new URL(sourceUrl)
-  retryUrl.searchParams.set(JACKET_RETRY_QUERY_PARAM, Date.now().toString())
-  return retryUrl.toString()
-}
 
 /**
  * レーティング枠画像用の静的レコードカードを表示する。
@@ -105,11 +90,9 @@ const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => 
   const scoreRank = () => getScoreRank(props.record.score)
   const indexColor = () => getRankingPositionClass(props.index + 1, 'bg-surface-hover')
   const jacketUrl = () => buildChunithmJacketUrl(props.record.img)
-  const [jacketSource, setJacketSource] = createSignal(jacketUrl())
   const constDisplay = () => getConstDisplay(props.record.const, props.record.is_const_unknown)
   const unknownValueClass = () => (props.record.is_const_unknown ? 'text-danger' : 'text-text')
   let fallbackLoaded = false
-  let retried = false
 
   /**
    * 元ジャケットの読み込み状態を反映し、表示可能になったカードを通知する。
@@ -118,17 +101,6 @@ const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => 
    * @returns なし。
    */
   const handleJacketLoadingStatusChange = (status: JacketLoadingStatus): void => {
-    if (status === 'error' && !retried) {
-      const sourceUrl = jacketUrl()
-      if (sourceUrl) {
-        retried = true
-        setJacketLoadingStatus('loading')
-        props.onJacketReadyChange(props.jacketKey, false)
-        setJacketSource(buildJacketRetryUrl(sourceUrl))
-        return
-      }
-    }
-
     setJacketLoadingStatus(status)
 
     if (status === 'error' && fallbackLoaded) {
@@ -178,27 +150,25 @@ const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => 
     >
       <Show when={props.showJackets && jacketUrl()}>
         {(url) => (
-          <Image
+          <JacketImage
+            source={url()}
+            alt=""
             class="pointer-events-none absolute inset-y-0 right-0 z-0 block w-1/2 overflow-hidden [mask-image:linear-gradient(to_right,transparent_0%,black_33%)]"
-            aria-hidden="true"
+            ariaHidden={true}
+            crossOrigin="anonymous"
+            imageClass="h-full w-full object-cover object-center opacity-15"
+            onLoad={handleJacketLoad}
             onLoadingStatusChange={handleJacketLoadingStatusChange}
-          >
-            <Image.Img
-              crossOrigin="anonymous"
-              src={jacketSource() ?? url()}
-              alt=""
-              class="h-full w-full object-cover object-center opacity-15"
-              onLoad={handleJacketLoad}
-            />
-            <Image.Fallback class="block h-full w-full">
+            fallbackClass="block h-full w-full"
+            fallback={
               <img
                 src={placeholderImageUrl}
                 alt=""
                 class="h-full w-full object-cover object-center opacity-15"
                 onLoad={handleFallbackLoad}
               />
-            </Image.Fallback>
-          </Image>
+            }
+          />
         )}
       </Show>
       <div class="relative z-10 flex h-full items-center gap-1">

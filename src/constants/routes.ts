@@ -19,6 +19,8 @@ export const RANDOM_SONG_SELECTOR_PATH = `${TOOLS_PATH}/random-song-selector`
 export const RATING_THEORETICAL_CHECKER_PATH = `${TOOLS_PATH}/rating-theoretical-checker`
 /** ベスト枠ランキング画面のパス */
 export const BEST_SLOT_RANKING_PATH = `${TOOLS_PATH}/best-slot-ranking`
+/** 全曲ベスト枠画面のパス */
+export const ALL_SONG_BEST_FRAME_PATH = `${TOOLS_PATH}/all-song-best-frame`
 /** ダッシュボード画面のパス */
 export const DASHBOARD_PATH = `${TOOLS_PATH}/dashboard`
 /** EDITOR向け編集メニューのパス */

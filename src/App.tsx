@@ -1,5 +1,13 @@
 import { A, Route, Router } from '@solidjs/router'
-import { Calculator, ChartNoAxesCombined, Dices, Gauge, Target, Trophy } from 'lucide-solid'
+import {
+  Calculator,
+  ChartNoAxesCombined,
+  Dices,
+  Gauge,
+  ListOrdered,
+  Target,
+  Trophy,
+} from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
 
@@ -31,6 +39,7 @@ import {
   ADMIN_PATH,
   ADMIN_VERSIONS_PATH,
   ADMIN_WORLDSEND_CHART_RANKING_PATH,
+  ALL_SONG_BEST_FRAME_PATH,
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
@@ -96,6 +105,7 @@ const BorderCalculatorPage = lazy(() => import('./pages/tools/BorderCalculatorPa
 const WeakChartInspectorPage = lazy(() => import('./pages/tools/WeakChartInspectorPage'))
 const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelectorPage'))
 const BestSlotRankingPage = lazy(() => import('./pages/tools/BestSlotRankingPage'))
+const AllSongBestFramePage = lazy(() => import('./pages/tools/AllSongBestFramePage'))
 const RatingTheoreticalCheckerPage = lazy(() => import('./pages/tools/NewSongSssPlusToolPage'))
 const PlayerStatsDashboardPage = lazy(() => import('./pages/tools/PlayerStatsDashboard'))
 
@@ -309,6 +319,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Trophy class={iconClass} aria-hidden="true" />
     case 'gauge':
       return <Gauge class={iconClass} aria-hidden="true" />
+    case 'list':
+      return <ListOrdered class={iconClass} aria-hidden="true" />
   }
 }
 
@@ -624,6 +636,10 @@ const App = () => {
       <Route
         path={BEST_SLOT_RANKING_PATH}
         component={withNavBar(withRouteLoadBoundary(BestSlotRankingPage))}
+      />
+      <Route
+        path={ALL_SONG_BEST_FRAME_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(AllSongBestFramePage)))}
       />
       <Route
         path={RATING_THEORETICAL_CHECKER_PATH}

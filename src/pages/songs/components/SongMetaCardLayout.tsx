@@ -1,6 +1,6 @@
-import { Image } from '@kobalte/core/image'
 import { For, type JSX } from 'solid-js'
 import placeholderImageUrl from '../../../assets/placeholder.png'
+import { JacketImage } from '../../../components/common/JacketImage'
 import { buildChunithmJacketUrl } from '../../../utils/jacket'
 
 export type SongMetaInfoItem = {
@@ -29,20 +29,19 @@ const SongMetaCardLayout = (props: Props) => {
   return (
     <div class="space-y-4 lg:grid lg:grid-cols-[240px_minmax(0,220px)_minmax(0,1fr)] lg:items-start lg:gap-4 lg:space-y-0">
       <div class="grid grid-cols-[minmax(0,42vw)_minmax(0,1fr)] items-start gap-4 lg:contents">
-        <Image class="block aspect-square w-full overflow-hidden rounded-md border border-border bg-surface">
-          <Image.Img
-            src={jacketUrl() ?? undefined}
-            alt={`${props.title}のジャケット`}
-            class="h-full w-full object-cover"
-          />
-          <Image.Fallback>
+        <JacketImage
+          source={jacketUrl() ?? undefined}
+          alt={`${props.title}のジャケット`}
+          class="block aspect-square w-full overflow-hidden rounded-md border border-border bg-surface"
+          imageClass="h-full w-full object-cover"
+          fallback={
             <img
               src={placeholderImageUrl}
               alt={`${props.title}のジャケット（フォールバック）`}
               class="h-full w-full object-cover"
             />
-          </Image.Fallback>
-        </Image>
+          }
+        />
 
         <div class="relative grid gap-2 rounded-md border border-border bg-surface p-4">
           {props.infoAction}

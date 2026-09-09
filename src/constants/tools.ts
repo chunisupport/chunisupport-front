@@ -1,4 +1,5 @@
 import {
+  ALL_SONG_BEST_FRAME_PATH,
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
@@ -11,7 +12,14 @@ import {
 /**
  * ツールカードに表示するアイコン種別。
  */
-export type ToolLinkIcon = 'calculator' | 'chart' | 'target' | 'random' | 'ranking' | 'gauge'
+export type ToolLinkIcon =
+  | 'calculator'
+  | 'chart'
+  | 'target'
+  | 'random'
+  | 'ranking'
+  | 'gauge'
+  | 'list'
 
 /**
  * 無効化されたツールカードに表示する状態ラベル。
@@ -66,6 +74,11 @@ export const TOOL_LINKS: ToolLink[] = [
     title: 'ベスト枠ランキング',
     href: BEST_SLOT_RANKING_PATH,
     icon: 'ranking',
+  },
+  {
+    title: '全曲ベスト枠',
+    href: ALL_SONG_BEST_FRAME_PATH,
+    icon: 'list',
   },
   {
     title: 'ベスト枠・新曲枠理論値チェッカー',

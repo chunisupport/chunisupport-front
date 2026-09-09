@@ -1,28 +1,19 @@
-import { Image } from '@kobalte/core/image'
 import { A } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import { createSignal, onMount, Show } from 'solid-js'
-import {
-  RECORD_CARD_HOVER_CLASS,
-  RECORD_CARD_LAMP_BADGE_CLASS,
-} from '../../../../components/common/record/RecordDisplayParts'
-import { getDefaultRecordLampLabel } from '../../../../components/common/record/recordLampLabel'
-import {
-  getComboLampBadgeClass,
-  SCORE_RANK_TEXT_CLASS,
-} from '../../../../components/common/record/recordStyleClasses'
-import type { PlayerRecordDTO } from '../../../../types/api'
-import { getConstDisplay } from '../../../../utils/constDisplay'
-import {
-  difficultyCardBorderColor,
-  difficultyToQueryValue,
-} from '../../../../utils/difficultyUtils'
-import { buildChunithmJacketUrl } from '../../../../utils/jacket'
-import { formatInteger } from '../../../../utils/numberFormat'
-import { getRankingPositionClass } from '../../../../utils/rankingPosition'
-import { formatRatingFixed2 } from '../../../../utils/ratingFormat'
-import { formatScoreDifference } from '../../../../utils/scoreDifference'
-import { getScoreRank } from '../../../../utils/scoreRank'
+import type { PlayerRecordDTO } from '../../../types/api'
+import { getConstDisplay } from '../../../utils/constDisplay'
+import { difficultyCardBorderColor, difficultyToQueryValue } from '../../../utils/difficultyUtils'
+import { buildChunithmJacketUrl } from '../../../utils/jacket'
+import { formatInteger } from '../../../utils/numberFormat'
+import { getRankingPositionClass } from '../../../utils/rankingPosition'
+import { formatRatingFixed2 } from '../../../utils/ratingFormat'
+import { formatScoreDifference } from '../../../utils/scoreDifference'
+import { getScoreRank } from '../../../utils/scoreRank'
+import { JacketImage } from '../JacketImage'
+import { RECORD_CARD_HOVER_CLASS, RECORD_CARD_LAMP_BADGE_CLASS } from './RecordDisplayParts'
+import { getDefaultRecordLampLabel } from './recordLampLabel'
+import { getComboLampBadgeClass, SCORE_RANK_TEXT_CLASS } from './recordStyleClasses'
 
 type Props = {
   record: PlayerRecordDTO
@@ -71,16 +62,13 @@ export const UserRecordCard: Component<Props> = (props) => {
         >
           <Show when={props.showJackets && jacketUrl()}>
             {(url) => (
-              <Image
+              <JacketImage
+                source={url()}
+                alt=""
                 class="pointer-events-none absolute inset-y-0 right-0 z-0 block w-1/2 overflow-hidden [mask-image:linear-gradient(to_right,transparent_0%,black_33%)]"
-                aria-hidden="true"
-              >
-                <Image.Img
-                  src={url()}
-                  alt=""
-                  class="h-full w-full object-cover object-center opacity-15"
-                />
-              </Image>
+                ariaHidden={true}
+                imageClass="h-full w-full object-cover object-center opacity-15"
+              />
             )}
           </Show>
           <div class="relative z-10 flex items-center gap-3">
