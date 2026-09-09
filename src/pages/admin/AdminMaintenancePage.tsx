@@ -56,8 +56,9 @@ type MaintenanceStatusSummaryProps = {
 /** 管理操作を解放する前に行う状態同期の進行状況 */
 type MaintenanceStatusSyncState = 'loading' | 'ready' | 'error'
 
+/** メンテナンスコメント入力欄のスタイル */
 const COMMENT_TEXT_AREA_CLASS =
-  'min-h-48 w-full resize-y rounded-md border border-input-border bg-input-bg px-3 py-2 text-base leading-relaxed text-text outline-none transition hover:border-input-border-hover focus:border-action-primary focus:ring-2 focus:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60'
+  'min-h-48 w-full resize-y rounded-md border border-input-border bg-input-bg px-3 py-2 font-sans text-base leading-relaxed text-text outline-none transition hover:border-input-border-hover focus:border-action-primary focus:ring-2 focus:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60'
 
 /**
  * 現在の稼働状態と最終更新日時をアイコンとテキストで表示する。
