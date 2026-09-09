@@ -1,9 +1,13 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { Copy, Download, ImageDown, Share2, X } from 'lucide-solid'
+import { Copy, Download, ImageDown, RotateCcw, Share2, X } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createEffect, createSignal, onCleanup, Show, untrack } from 'solid-js'
+import { createEffect, createSignal, on, onCleanup, Show, untrack } from 'solid-js'
 import { Loading } from '../../../../components'
-import { getAppButtonClass, getAppIconButtonClass } from '../../../../components/common/AppButton'
+import {
+  AppButton,
+  getAppButtonClass,
+  getAppIconButtonClass,
+} from '../../../../components/common/AppButton'
 import { ImageCaptureActionButton } from '../../../../components/common/ImageCaptureActionButton'
 import { RATING_SLOT_COUNT } from '../../../../constants/rating'
 import { SOCIAL_SHARE_TEXT } from '../../../../constants/socialShare'
@@ -21,7 +25,6 @@ import {
   RATING_IMAGE_COPY,
   RATING_IMAGE_JPEG_QUALITY,
   RATING_IMAGE_PIXEL_RATIO,
-  RATING_IMAGE_WIDTH_PX,
 } from '../UserProfileView.constants'
 import { RatingImageSheet } from './RatingImageSheet'
 import { formatRatingImageFilename } from './ratingImageFilename'
@@ -40,7 +43,10 @@ type Props = {
 }
 
 /**
- * ベスト枠・新曲枠画像を縮小プレビューし、JPEGとして共有・保存できるダイアログを表示する。
+ * ベスト枠・新曲枠画像を実画像でプレビューし、JPEGとして共有・保存できるダイアログを表示する。
+ *
+ * プレビュー表示時点で画像化を行い、表示中の画像と保存する画像を同一のBlobにする。
+ * 画像表示により、スマートフォンの長押し保存など標準の画像操作を利用できる。
  *
  * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定。
  * @returns 画像化プレビューを開くボタンとダイアログ。
@@ -48,16 +54,16 @@ type Props = {
 export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [isDownloading, setIsDownloading] = createSignal(false)
-  const [isPreparingShare, setIsPreparingShare] = createSignal(false)
   const [isSharing, setIsSharing] = createSignal(false)
   const [isCopying, setIsCopying] = createSignal(false)
   const [isCopied, setIsCopied] = createSignal(false)
-  const [shareImageFile, setShareImageFile] = createSignal<File>()
+  const [isCapturingPreview, setIsCapturingPreview] = createSignal(false)
+  const [previewBlob, setPreviewBlob] = createSignal<Blob>()
+  const [previewUrl, setPreviewUrl] = createSignal<string>()
   const [imageActionError, setImageActionError] = createSignal<string>()
-  const [previewViewport, setPreviewViewport] = createSignal<HTMLDivElement>()
   const [imageSheet, setImageSheet] = createSignal<HTMLDivElement>()
-  const [previewScale, setPreviewScale] = createSignal(1)
   let copyFeedbackTimer: number | undefined
+  let captureRevision = 0
 
   const [readyJacketCount, setReadyJacketCount] = createSignal(0)
   const readyJacketKeys = new Set<string>()
@@ -79,17 +85,17 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   /**
    * 全ジャケットが元画像またはプレースホルダーで表示可能になったかを返す。
    *
-   * @returns プレビューを表示可能な場合はtrue。
+   * @returns 画像化を開始可能な場合はtrue。
    */
   const isPreviewReady = (): boolean => readyJacketCount() >= expectedJacketCount()
 
   /**
-   * ダウンロード・共有・コピー・共有用画像生成のいずれかを実行中か返す。
+   * ダウンロード・共有・コピー・プレビュー生成のいずれかを実行中か返す。
    *
    * @returns 画像に関する処理を実行中の場合はtrue。
    */
   const isImageActionRunning = (): boolean =>
-    isDownloading() || isPreparingShare() || isSharing() || isCopying()
+    isDownloading() || isSharing() || isCopying() || isCapturingPreview()
 
   /**
    * 現在のブラウザがJPEGファイルの共有に対応しているかを返す。
@@ -119,6 +125,19 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   }
 
   /**
+   * プレビュー用のObject URLを破棄する。
+   *
+   * @returns なし。
+   */
+  const revokePreviewUrl = (): void => {
+    const objectUrl = previewUrl()
+    if (objectUrl) URL.revokeObjectURL(objectUrl)
+
+    setPreviewUrl(undefined)
+    setPreviewBlob(undefined)
+  }
+
+  /**
    * ジャケット画像ごとの準備状態を集約する。
    *
    * @param key - 画像化対象内でジャケット画像を識別するキー。
@@ -135,7 +154,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   }
 
   /**
-   * ダイアログの開閉状態を更新し、閉じるときは一時エラーを破棄する。
+   * ダイアログの開閉状態を更新し、閉じるときは一時画像とエラーを破棄する。
    *
    * @param nextOpen - 次のダイアログ開閉状態。
    * @returns なし。
@@ -144,70 +163,102 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     if (!nextOpen && isImageActionRunning()) return
 
     if (nextOpen) {
+      captureRevision += 1
       readyJacketKeys.clear()
       setReadyJacketCount(0)
-      setShareImageFile(undefined)
+      revokePreviewUrl()
       setIsCopied(false)
+      setImageActionError(undefined)
+      clearCopyFeedbackTimer()
+    } else {
+      captureRevision += 1
+      revokePreviewUrl()
+      setImageSheet(undefined)
+      setIsCopied(false)
+      setImageActionError(undefined)
       clearCopyFeedbackTimer()
     }
     setOpen(nextOpen)
-    if (!nextOpen) setImageActionError(undefined)
   }
 
   /**
-   * 現在のプレビュー内容を原寸解像度のJPEGファイルとして生成する。
+   * 画面外の画像化対象をJPEGへ変換し、プレビュー表示と保存操作で共有する。
+   *
+   * @returns プレビュー生成処理の完了時に解決されるPromise。
+   */
+  const capturePreviewImage = async (): Promise<void> => {
+    const sheet = imageSheet()
+    if (!sheet || !open() || !isPreviewReady()) return
+
+    const revision = ++captureRevision
+    setIsCapturingPreview(true)
+    setImageActionError(undefined)
+
+    try {
+      const blob = await captureElementAsImage(sheet, {
+        format: 'jpeg',
+        pixelRatio: RATING_IMAGE_PIXEL_RATIO,
+        quality: RATING_IMAGE_JPEG_QUALITY,
+      })
+      if (revision !== captureRevision || !open()) return
+
+      const oldUrl = previewUrl()
+      if (oldUrl) URL.revokeObjectURL(oldUrl)
+
+      const objectUrl = URL.createObjectURL(blob)
+      if (revision !== captureRevision || !open()) {
+        URL.revokeObjectURL(objectUrl)
+        return
+      }
+      setPreviewBlob(blob)
+      setPreviewUrl(objectUrl)
+    } catch {
+      if (revision !== captureRevision) return
+
+      setImageActionError(RATING_IMAGE_COPY.previewError)
+    } finally {
+      if (revision === captureRevision) setIsCapturingPreview(false)
+    }
+  }
+
+  /**
+   * プレビュー生成に失敗した画像化を再試行する。
+   *
+   * @returns なし。
+   */
+  const retryPreviewCapture = (): void => {
+    if (open() && !isCapturingPreview() && !previewUrl()) {
+      void capturePreviewImage()
+    }
+  }
+
+  /**
+   * プレビュー表示中の画像をファイル名付きのJPEGファイルとして返す。
    *
    * @returns ファイル名を設定したJPEGファイル。
    */
-  const createRatingImageFile = async (): Promise<File> => {
-    const sheet = imageSheet()
-    if (!sheet) throw new Error('Rating image sheet is not ready')
-
-    const blob = await captureElementAsImage(sheet, {
-      format: 'jpeg',
-      pixelRatio: RATING_IMAGE_PIXEL_RATIO,
-      quality: RATING_IMAGE_JPEG_QUALITY,
-    })
+  const createRatingImageFile = (): File => {
+    const blob = previewBlob()
+    if (!blob) throw new Error('Rating preview image is not ready')
 
     return new File([blob], formatRatingImageFilename(props.username), { type: 'image/jpeg' })
   }
 
   /**
-   * Web Share APIのユーザー操作を保てるよう、共有用画像を事前生成する。
-   *
-   * @returns 画像生成処理の完了時に解決されるPromise。
-   */
-  const prepareShareImage = async (): Promise<void> => {
-    if (isPreparingShare() || shareImageFile()) return
-
-    setIsPreparingShare(true)
-    setImageActionError(undefined)
-
-    try {
-      setShareImageFile(await createRatingImageFile())
-    } catch {
-      setShareImageFile(undefined)
-      setImageActionError(RATING_IMAGE_COPY.shareError)
-    } finally {
-      setIsPreparingShare(false)
-    }
-  }
-
-  /**
-   * 現在のプレビュー画像をクリップボードへコピーする。
+   * プレビュー表示中の画像をクリップボードへコピーする。
    *
    * @returns なし。
    */
   const copyRatingImage = (): void => {
-    if (isImageActionRunning() || !isPreviewReady()) return
+    const blob = previewBlob()
+    if (isImageActionRunning() || !blob || !previewUrl()) return
 
     setIsCopying(true)
     setIsCopied(false)
     setImageActionError(undefined)
     clearCopyFeedbackTimer()
 
-    const preparedImage = shareImageFile()
-    void copyImageToClipboard(preparedImage ?? createRatingImageFile())
+    void copyImageToClipboard(blob)
       .then(() => {
         setIsCopied(true)
         copyFeedbackTimer = window.setTimeout(() => {
@@ -224,16 +275,18 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   }
 
   /**
-   * 現在のプレビュー内容を原寸解像度のJPEGとしてダウンロードする。
+   * プレビュー表示中の画像をJPEGとしてダウンロードする。
    *
    * @returns ダウンロード処理の完了時に解決されるPromise。
    */
   const downloadRatingImage = async (): Promise<void> => {
+    if (isImageActionRunning() || !previewUrl()) return
+
     setIsDownloading(true)
     setImageActionError(undefined)
 
     try {
-      const imageFile = await createRatingImageFile()
+      const imageFile = createRatingImageFile()
       downloadBlobFile(imageFile, imageFile.name)
     } catch {
       setImageActionError(RATING_IMAGE_COPY.downloadError)
@@ -243,14 +296,20 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   }
 
   /**
-   * 現在のプレビュー画像をWeb Share APIで共有する。
+   * プレビュー表示中の画像をWeb Share APIで共有する。
+   *
+   * プレビュー時点で画像が確定しているため、クリック操作内でファイルを組み立てる。
    *
    * @returns 共有処理の完了時に解決されるPromise。
    */
   const shareRatingImage = async (): Promise<void> => {
-    const imageFile = shareImageFile()
-    if (!imageFile) {
-      void prepareShareImage()
+    if (isImageActionRunning() || !previewUrl()) return
+
+    let imageFile: File
+    try {
+      imageFile = createRatingImageFile()
+    } catch {
+      setImageActionError(RATING_IMAGE_COPY.shareError)
       return
     }
     if (!canShareFiles([imageFile])) {
@@ -277,55 +336,38 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   }
 
   onCleanup(() => {
+    captureRevision += 1
     clearCopyFeedbackTimer()
+    const objectUrl = previewUrl()
+    if (objectUrl) URL.revokeObjectURL(objectUrl)
   })
 
-  // 共有ダイアログをクリック直後に開けるよう、プレビュー完成時点でファイルを準備する。
-  createEffect(() => {
-    if (!open() || !isPreviewReady() || !canShareRatingImage()) return
+  // 画像内容の変更時はプレビューを破棄し、ジャケット準備完了後に再生成する。
+  createEffect(
+    on(
+      () => [props.rating, props.playerInfo, props.honors, props.showJackets],
+      () => {
+        if (!open()) return
 
-    untrack(() => void prepareShareImage())
-  })
+        captureRevision += 1
+        readyJacketKeys.clear()
+        setReadyJacketCount(0)
+        revokePreviewUrl()
+        setImageActionError(undefined)
+      },
+      { defer: true }
+    )
+  )
 
-  // 画像の論理サイズを保存したまま、プレビューだけをダイアログの表示領域へ収める。
+  // 画面外の画像化対象の準備が整い次第、表示用の実画像を生成する。
   createEffect(() => {
     if (!open()) return
+    if (!isPreviewReady()) return
 
-    const viewport = previewViewport()
     const sheet = imageSheet()
-    if (!viewport || !sheet) return
+    if (!sheet || previewUrl() || isCapturingPreview()) return
 
-    /**
-     * 画像本体を表示領域の幅と高さへ収める縮小率を更新する。
-     *
-     * @returns なし。
-     */
-    let animationFrameId: number | undefined
-
-    const updatePreviewSize = (): void => {
-      if (animationFrameId !== undefined) cancelAnimationFrame(animationFrameId)
-
-      animationFrameId = requestAnimationFrame(() => {
-        const scale = Math.min(
-          1,
-          viewport.clientWidth / RATING_IMAGE_WIDTH_PX,
-          viewport.clientHeight / sheet.offsetHeight
-        )
-
-        setPreviewScale((current) => (current === scale ? current : scale))
-        animationFrameId = undefined
-      })
-    }
-
-    const resizeObserver = new ResizeObserver(updatePreviewSize)
-    resizeObserver.observe(viewport)
-    resizeObserver.observe(sheet)
-    updatePreviewSize()
-
-    onCleanup(() => {
-      resizeObserver.disconnect()
-      if (animationFrameId !== undefined) cancelAnimationFrame(animationFrameId)
-    })
+    untrack(() => void capturePreviewImage())
   })
 
   return (
@@ -366,37 +408,47 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
 
             <div class="mt-4 min-h-0 flex-1 basis-0 overflow-hidden rounded-md bg-bg p-3">
               <div
-                ref={(element) => setPreviewViewport(element)}
-                class="relative mx-auto h-full w-full overflow-hidden"
+                class="flex h-full w-full items-center justify-center overflow-hidden"
+                aria-busy={!previewUrl()}
               >
-                <Show when={!isPreviewReady()}>
-                  <div class="absolute inset-0 z-10">
-                    <Loading ariaLabel={RATING_IMAGE_COPY.preparingPreview} />
-                  </div>
-                </Show>
-                <div
-                  class="absolute left-1/2 top-1/2 select-none"
-                  classList={{ invisible: !isPreviewReady() }}
-                  aria-busy={!isPreviewReady()}
-                  style={{
-                    transform: `translate(-50%, -50%) scale(${previewScale()})`,
-                    'transform-origin': 'center',
-                  }}
+                <Show
+                  when={previewUrl()}
+                  fallback={
+                    <Show
+                      when={!imageActionError()}
+                      fallback={
+                        <div class="flex flex-col items-center gap-3 text-center">
+                          <p class="text-sm text-danger" role="alert">
+                            {imageActionError()}
+                          </p>
+                          <AppButton
+                            variant="surface"
+                            size="sm"
+                            leftIcon={<RotateCcw class="h-4 w-4" aria-hidden="true" />}
+                            onClick={retryPreviewCapture}
+                          >
+                            {RATING_IMAGE_COPY.retryPreview}
+                          </AppButton>
+                        </div>
+                      }
+                    >
+                      <Loading ariaLabel={RATING_IMAGE_COPY.preparingPreview} />
+                    </Show>
+                  }
                 >
-                  <RatingImageSheet
-                    captureRef={(element) => setImageSheet(element)}
-                    playerInfo={props.playerInfo}
-                    honors={props.honors}
-                    rating={props.rating}
-                    showJackets={props.showJackets}
-                    onJacketReadyChange={handleJacketReadyChange}
-                  />
-                </div>
+                  {(objectUrl) => (
+                    <img
+                      src={objectUrl()}
+                      alt={RATING_IMAGE_COPY.previewAlt}
+                      class="max-h-full max-w-full object-contain shadow-sm [-webkit-touch-callout:default]"
+                    />
+                  )}
+                </Show>
               </div>
             </div>
 
             <div class="mt-4 flex shrink-0 flex-col items-end gap-2">
-              <Show when={imageActionError()}>
+              <Show when={previewUrl() && imageActionError()}>
                 {(message) => (
                   <p class="text-sm text-danger" role="alert">
                     {message()}
@@ -406,8 +458,8 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
               <div class="flex flex-wrap justify-end gap-2">
                 <ImageCaptureActionButton
                   label={RATING_IMAGE_COPY.share}
-                  disabled={!canShareRatingImage() || isImageActionRunning() || !isPreviewReady()}
-                  busy={isPreparingShare() || isSharing()}
+                  disabled={!canShareRatingImage() || isImageActionRunning() || !previewUrl()}
+                  busy={isSharing()}
                   onClick={shareRatingImage}
                 >
                   <Share2 class="h-5 w-5" aria-hidden="true" />
@@ -416,7 +468,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                   <ImageCaptureActionButton
                     label={RATING_IMAGE_COPY.copy}
                     showImageIcon
-                    disabled={isImageActionRunning() || !isPreviewReady()}
+                    disabled={isImageActionRunning() || !previewUrl()}
                     busy={isCopying()}
                     success={isCopied()}
                     onClick={copyRatingImage}
@@ -428,13 +480,24 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                   tone="primary"
                   label={RATING_IMAGE_COPY.download}
                   showImageIcon
-                  disabled={isImageActionRunning() || !isPreviewReady()}
+                  disabled={isImageActionRunning() || !previewUrl()}
                   busy={isDownloading()}
                   onClick={downloadRatingImage}
                 >
                   <Download class="h-5 w-5" aria-hidden="true" />
                 </ImageCaptureActionButton>
               </div>
+            </div>
+
+            <div class="pointer-events-none fixed left-[-100000px] top-0" aria-hidden="true">
+              <RatingImageSheet
+                captureRef={(element) => setImageSheet(element)}
+                playerInfo={props.playerInfo}
+                honors={props.honors}
+                rating={props.rating}
+                showJackets={props.showJackets}
+                onJacketReadyChange={handleJacketReadyChange}
+              />
             </div>
           </Dialog.Content>
         </Dialog.Portal>

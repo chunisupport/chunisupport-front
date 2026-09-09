@@ -79,6 +79,7 @@ const SongsList = () => {
             <div class="flex max-w-md items-end">
               <SongSearchInput id="songs-search" value={searchQuery()} onInput={setSearchQuery} />
               <SongFilterPanel
+                idPrefix="songs"
                 filters={filters()}
                 onChange={setFilters}
                 genres={[...new Set(defaultSortedSongs().map((song) => song.genre))]}

@@ -36,14 +36,22 @@ import type {
   UpdateWorldsendSongRequestDTO,
 } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import SongManagementFilterPanel from './components/SongManagementFilterPanel'
 import { SONG_DATA_REFRESH_ERROR_MESSAGE } from './constants'
 import { buildSearchableItems, filterSearchableItems } from './searchHelpers'
+import {
+  createSongManagementFilters,
+  filterManagedSongs,
+  filterManagedWorldsendSongs,
+} from './songManagementFilters'
 import { sortByReleaseDateDescWithMissingFirst } from './utils/releaseDateSorting'
 
 type SongManagementPageProps = {
   title: string
   canCreate: boolean
   canDelete: boolean
+  /** 管理用の属性・欠落フィルターを表示するか */
+  showAdvancedFilters: boolean
 }
 
 type EditableChartDraft = {
@@ -303,8 +311,27 @@ const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
 }
 
 const managementInputClass = 'w-full rounded border border-border-strong px-3 py-2'
+/** 楽曲管理一覧の行ボタンに共通で付けるレイアウトクラス */
+const managedSongRowButtonClass = 'w-full px-3 py-2 text-left text-sm'
 /** 通常楽曲の新曲判定を編集するチェックボックスの表示名 */
 const newSongFlagLabel = '新曲フラグ'
+
+/**
+ * 楽曲管理一覧の行背景クラスを返す。
+ * 削除済み行は通常行のホバー色に置き換わらないようにする。
+ *
+ * @param isSelected - 選択中かどうか
+ * @param isDeleted - 論理削除済みかどうか
+ * @returns Button の classList へ渡すクラスマップ
+ */
+const getManagedSongRowClassList = (
+  isSelected: boolean,
+  isDeleted: boolean
+): Record<string, boolean> => ({
+  'bg-info-bg': isSelected,
+  'bg-danger-bg': isDeleted && !isSelected,
+  'hover:bg-surface-muted': !isDeleted && !isSelected,
+})
 
 /**
  * 楽曲管理画面で利用する Kobalte TextField ベースの入力欄を描画します。
@@ -465,20 +492,30 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   )
   const [songSearchQuery, setSongSearchQuery] = createSignal('')
   const [worldsendSearchQuery, setWorldsendSearchQuery] = createSignal('')
+  const [songFilters, setSongFilters] = createSignal(createSongManagementFilters())
+  const [worldsendFilters, setWorldsendFilters] = createSignal(createSongManagementFilters())
 
   const songs = createMemo<ManagedSongDTO[]>(() =>
     sortByReleaseDateDescWithMissingFirst(songsResponse()?.songs ?? [])
   )
   const searchableSongs = createMemo(() => buildSearchableItems(songs()))
   const filteredSongs = createMemo(() =>
-    filterSearchableItems(searchableSongs(), songSearchQuery())
+    filterManagedSongs(
+      filterSearchableItems(searchableSongs(), songSearchQuery()),
+      songFilters(),
+      masterData()?.versions ?? []
+    )
   )
   const worldsendSongs = createMemo<ManagedWorldsendSongDTO[]>(() =>
     sortByReleaseDateDescWithMissingFirst(worldsendResponse()?.songs ?? [])
   )
   const searchableWorldsendSongs = createMemo(() => buildSearchableItems(worldsendSongs()))
   const filteredWorldsendSongs = createMemo(() =>
-    filterSearchableItems(searchableWorldsendSongs(), worldsendSearchQuery())
+    filterManagedWorldsendSongs(
+      filterSearchableItems(searchableWorldsendSongs(), worldsendSearchQuery()),
+      worldsendFilters(),
+      masterData()?.versions ?? []
+    )
   )
   const selectedSong = createMemo(() => {
     const selected = selectedSongId()
@@ -1013,16 +1050,33 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         >
           <div class="mt-3 grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
             <div class="min-w-0">
-              <TextField class="mb-2 flex items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
-                <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
-                <TextField.Input
-                  type="search"
-                  value={songSearchQuery()}
-                  onInput={(event) => setSongSearchQuery(event.currentTarget.value)}
-                  placeholder="曲名・アーティスト名で検索"
-                  class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
-                />
-              </TextField>
+              <div class="mb-2 flex items-end">
+                <TextField
+                  class="flex min-w-0 flex-1 items-center gap-2 border border-border-strong px-2 focus-within:border-focus-ring"
+                  classList={{
+                    rounded: !props.showAdvancedFilters,
+                    'rounded-l border-r-0': props.showAdvancedFilters,
+                  }}
+                >
+                  <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
+                  <TextField.Input
+                    type="search"
+                    value={songSearchQuery()}
+                    onInput={(event) => setSongSearchQuery(event.currentTarget.value)}
+                    placeholder="曲名・アーティスト名で検索"
+                    class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
+                  />
+                </TextField>
+                <Show when={props.showAdvancedFilters}>
+                  <SongManagementFilterPanel
+                    idPrefix="managed-songs"
+                    filters={songFilters()}
+                    onChange={setSongFilters}
+                    genres={(masterData()?.genres ?? []).map((genre) => genre.name)}
+                    versions={masterData()?.versions ?? []}
+                  />
+                </Show>
+              </div>
               <div class="max-h-130 overflow-y-auto rounded border border-border">
                 <ul class="divide-y divide-border">
                   <For each={filteredSongs()}>
@@ -1032,11 +1086,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         <li>
                           <Button
                             type="button"
-                            class="w-full px-3 py-2 text-left text-sm hover:bg-surface-muted"
-                            classList={{
-                              'bg-info-bg': isSelected(),
-                              'bg-danger-bg': song.is_deleted && !isSelected(),
-                            }}
+                            class={managedSongRowButtonClass}
+                            classList={getManagedSongRowClassList(isSelected(), song.is_deleted)}
                             onClick={() => handleSelectSong(song.id)}
                           >
                             <p class="font-sans font-medium text-text">{song.title}</p>
@@ -1283,16 +1334,33 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         >
           <div class="mt-3 grid gap-4 lg:grid-cols-[300px_1fr]">
             <div>
-              <TextField class="mb-2 flex items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
-                <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
-                <TextField.Input
-                  type="search"
-                  value={worldsendSearchQuery()}
-                  onInput={(event) => setWorldsendSearchQuery(event.currentTarget.value)}
-                  placeholder="曲名・アーティスト名で検索"
-                  class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
-                />
-              </TextField>
+              <div class="mb-2 flex items-end">
+                <TextField
+                  class="flex min-w-0 flex-1 items-center gap-2 border border-border-strong px-2 focus-within:border-focus-ring"
+                  classList={{
+                    rounded: !props.showAdvancedFilters,
+                    'rounded-l border-r-0': props.showAdvancedFilters,
+                  }}
+                >
+                  <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
+                  <TextField.Input
+                    type="search"
+                    value={worldsendSearchQuery()}
+                    onInput={(event) => setWorldsendSearchQuery(event.currentTarget.value)}
+                    placeholder="曲名・アーティスト名で検索"
+                    class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
+                  />
+                </TextField>
+                <Show when={props.showAdvancedFilters}>
+                  <SongManagementFilterPanel
+                    idPrefix="managed-worldsend-songs"
+                    filters={worldsendFilters()}
+                    onChange={setWorldsendFilters}
+                    genres={(masterData()?.genres ?? []).map((genre) => genre.name)}
+                    versions={masterData()?.versions ?? []}
+                  />
+                </Show>
+              </div>
               <div class="max-h-130 overflow-y-auto rounded border border-border">
                 <ul class="divide-y divide-border">
                   <For each={filteredWorldsendSongs()}>
@@ -1302,11 +1370,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         <li>
                           <Button
                             type="button"
-                            class="w-full px-3 py-2 text-left text-sm hover:bg-surface-muted"
-                            classList={{
-                              'bg-info-bg': isSelected(),
-                              'bg-danger-bg': song.is_deleted && !isSelected(),
-                            }}
+                            class={managedSongRowButtonClass}
+                            classList={getManagedSongRowClassList(isSelected(), song.is_deleted)}
                             onClick={() => handleSelectWorldsendSong(song.id)}
                           >
                             <p class="font-sans font-medium text-text">{song.title}</p>

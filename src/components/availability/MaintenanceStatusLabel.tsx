@@ -10,7 +10,7 @@ import { availability } from '../../stores/availability'
 import { isMaintenanceStaff } from '../../utils/maintenanceRole'
 
 const MAINTENANCE_STATUS_LABEL_CLASS =
-  'inline-flex items-center gap-1.5 rounded-full border border-action-primary-border bg-action-primary px-3 py-1 text-sm font-semibold text-text-inverse shadow-sm'
+  'animate-maintenance-status inline-flex items-center gap-1.5 rounded-full border border-action-primary-border bg-action-primary px-3 py-1 text-sm font-semibold text-text-inverse shadow-sm'
 
 /**
  * メンテナンス状態ラベルのアイコンと文言を表示する。
@@ -27,6 +27,7 @@ const MaintenanceStatusLabelContent = (): JSX.Element => (
 /**
  * メンテナンス中にスタッフ向けの状態ラベルを表示する。
  * ADMINにはメンテナンス管理画面へのリンクを提供し、EDITORには非インタラクティブな表示だけを行う。
+ * 視認性のため、ラベルは2秒周期で上下にふわふわと明滅する。
  *
  * @returns スタッフ向けメンテナンス状態ラベル。対象外の状態・権限では何も表示しない。
  */

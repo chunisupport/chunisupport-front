@@ -82,6 +82,7 @@ const WorldsendSongsList = () => {
                 onInput={setSearchQuery}
               />
               <SongFilterPanel
+                idPrefix="worldsend-songs"
                 filters={filters()}
                 onChange={setFilters}
                 genres={[

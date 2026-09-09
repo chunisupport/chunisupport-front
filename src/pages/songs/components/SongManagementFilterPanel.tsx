@@ -1,75 +1,93 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { Funnel } from 'lucide-solid'
-import { createMemo, createSignal, Show } from 'solid-js'
+import { createSignal, Show } from 'solid-js'
 import { AppButton, AppIconButton } from '../../../components/common/AppButton'
 import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
+import { AppSelect } from '../../../components/common/AppSelect'
+import { CheckboxField } from '../../../components/common/CheckboxField'
 import { GenreMultiSelect, VersionMultiSelect } from '../../../components/common/DomainMultiSelect'
 import FilterResetDialog from '../../../components/common/FilterResetDialog'
 import FilterResetHoldIndicator from '../../../components/common/filterReset/FilterResetHoldIndicator'
 import { useFilterResetLongPress } from '../../../components/common/filterReset/useFilterResetLongPress'
-import { RangeControlRow, TextRangeInput } from '../../../components/common/RangeInput'
+import { RangeControlRow } from '../../../components/common/RangeInput'
 import type { VersionSummaryDTO } from '../../../types/api'
 import { getShortVersionName } from '../../../utils/versionConverter'
+import { SONG_FILTER_INPUT_CLASS } from '../songFilters'
 import {
-  createSongFilters,
-  SONG_FILTER_LABELS as LABELS,
-  parseBpmFilter,
-  SONG_FILTER_INPUT_CLASS,
-  type SongFilters,
-} from '../songFilters'
+  createSongManagementFilters,
+  SONG_MANAGEMENT_FILTER_LABELS as LABELS,
+  SONG_MANAGEMENT_MISSING_FIELD_OPTIONS,
+  type SongManagementFilters,
+} from '../songManagementFilters'
 
 type Props = {
   /** ダイアログと操作要素のID接頭辞 */
   idPrefix: string
-  filters: SongFilters
-  onChange: (filters: SongFilters) => void
+  filters: SongManagementFilters
   genres: string[]
   versions: readonly VersionSummaryDTO[]
+  onChange: (filters: SongManagementFilters) => void
 }
 
+type MissingFieldOption = (typeof SONG_MANAGEMENT_MISSING_FIELD_OPTIONS)[number]
+
 /**
- * 両方の楽曲一覧で共有する属性フィルタを表示する。
- * @param props - 条件、選択肢と更新通知。
- * @returns 検索欄に隣接するボタンとフィルターダイアログ。
+ * 楽曲管理の検索欄に隣接する属性・欠落フィルターを表示する。
+ *
+ * @param props - 識別子、適用済み条件、選択肢と更新通知。
+ * @returns フィルターボタンと編集用ダイアログ。
  */
-export default function SongFilterPanel(props: Props) {
+export default function SongManagementFilterPanel(props: Props) {
   const [open, setOpen] = createSignal(false)
   const [draft, setDraft] = createSignal(props.filters)
   let triggerButton: HTMLButtonElement | undefined
+  const active = () => {
+    const filters = props.filters
+    return (
+      filters.releaseMin.length > 0 ||
+      filters.releaseMax.length > 0 ||
+      filters.genres !== null ||
+      filters.versions !== null ||
+      filters.missingOnly
+    )
+  }
+  const dateInvalid = () =>
+    !!(draft().releaseMin && draft().releaseMax && draft().releaseMin > draft().releaseMax)
+  const selectedMissingField = () =>
+    SONG_MANAGEMENT_MISSING_FIELD_OPTIONS.find((option) => option.value === draft().missingField) ??
+    SONG_MANAGEMENT_MISSING_FIELD_OPTIONS[0]
+  const filterResetLongPress = useFilterResetLongPress({
+    isDisabled: () => false,
+    onReset: () => props.onChange(createSongManagementFilters()),
+    onClick: () => setOpen(true),
+  })
+
   /**
-   * 開くたびに適用済み条件から編集を開始する。
+   * ダイアログを開くときに適用済み条件を編集状態へ複製する。
+   *
    * @param nextOpen - 次の開閉状態。
    * @returns なし。
    */
-  const handleOpenChange = (nextOpen: boolean) => {
+  const handleOpenChange = (nextOpen: boolean): void => {
     if (nextOpen) setDraft(props.filters)
     setOpen(nextOpen)
   }
-  const bpmInvalid = createMemo(() => {
-    const min = parseBpmFilter(draft().bpmMin)
-    const max = parseBpmFilter(draft().bpmMax)
-    return min !== null && max !== null && min > max
-  })
-  const dateInvalid = () =>
-    !!(draft().releaseMin && draft().releaseMax && draft().releaseMin > draft().releaseMax)
-  const active = () =>
-    Object.values(props.filters).some(
-      (value) => value !== null && (Array.isArray(value) || value.length > 0)
-    )
-  const filterResetLongPress = useFilterResetLongPress({
-    isDisabled: () => false,
-    onReset: () => props.onChange(createSongFilters()),
-    onClick: () => setOpen(true),
-  })
+
   /**
-   * 指定された条件だけを更新する。
-   * @param key - 更新対象のキー。
-   * @param value - 新しい条件値。
+   * 編集中フィルターの指定項目だけを更新する。
+   *
+   * @param key - 更新対象の項目。
+   * @param value - 次の値。
    * @returns なし。
    */
-  const update = <K extends keyof SongFilters>(key: K, value: SongFilters[K]) =>
+  const update = <K extends keyof SongManagementFilters>(
+    key: K,
+    value: SongManagementFilters[K]
+  ): void => {
     setDraft((current) => ({ ...current, [key]: value }))
+  }
+
   return (
     <Dialog open={open()} onOpenChange={handleOpenChange}>
       <div class="-ml-px relative shrink-0">
@@ -113,7 +131,7 @@ export default function SongFilterPanel(props: Props) {
           <div class="mb-4 flex shrink-0 items-center justify-between gap-2">
             <Dialog.Title class="text-lg font-bold">{LABELS.title}</Dialog.Title>
             <FilterResetDialog
-              onReset={() => setDraft(createSongFilters())}
+              onReset={() => setDraft(createSongManagementFilters())}
               showShortcutHint={false}
             />
           </div>
@@ -144,29 +162,6 @@ export default function SongFilterPanel(props: Props) {
                 }
                 placeholder={LABELS.unselected}
               />
-              <TextRangeInput
-                title={LABELS.bpm}
-                inputClass={SONG_FILTER_INPUT_CLASS}
-                errorMessage={bpmInvalid() ? LABELS.rangeError : undefined}
-                start={{
-                  id: 'song-filter-bpm-min',
-                  label: LABELS.bpmMin,
-                  value: draft().bpmMin,
-                  inputMode: 'decimal',
-                  invalid: bpmInvalid(),
-                  normalizeInput: normalizeBpmInput,
-                  onChange: (value) => update('bpmMin', value),
-                }}
-                end={{
-                  id: 'song-filter-bpm-max',
-                  label: LABELS.bpmMax,
-                  value: draft().bpmMax,
-                  inputMode: 'decimal',
-                  invalid: bpmInvalid(),
-                  normalizeInput: normalizeBpmInput,
-                  onChange: (value) => update('bpmMax', value),
-                }}
-              />
               <fieldset class="min-w-0">
                 <legend class="mb-1 text-sm font-medium">{LABELS.release}</legend>
                 <RangeControlRow
@@ -193,13 +188,34 @@ export default function SongFilterPanel(props: Props) {
                   </p>
                 </Show>
               </fieldset>
+              <div class="flex items-end gap-3 border-t border-border pt-4">
+                <AppSelect<MissingFieldOption>
+                  rootClass="min-w-0 flex-1"
+                  label={LABELS.missingField}
+                  labelVariant="srOnly"
+                  options={[...SONG_MANAGEMENT_MISSING_FIELD_OPTIONS]}
+                  optionValue="value"
+                  optionTextValue="label"
+                  value={selectedMissingField()}
+                  onChange={(option) => update('missingField', option?.value ?? 'release')}
+                  formatLabel={(option) => option.label}
+                  itemClass="hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
+                />
+                <CheckboxField
+                  id={`${props.idPrefix}-missing-only`}
+                  checked={draft().missingOnly}
+                  label={LABELS.missingOnly}
+                  onChange={(checked) => update('missingOnly', checked)}
+                  class="h-9.5 shrink-0"
+                />
+              </div>
             </div>
           </div>
           <div class="mt-6 flex shrink-0 justify-end gap-2">
             <Dialog.CloseButton as={AppButton}>{LABELS.cancel}</Dialog.CloseButton>
             <AppButton
               variant="primary"
-              disabled={bpmInvalid() || dateInvalid()}
+              disabled={dateInvalid()}
               onClick={() => {
                 props.onChange(draft())
                 setOpen(false)
@@ -215,17 +231,9 @@ export default function SongFilterPanel(props: Props) {
 }
 
 /**
- * BPM欄で非負の小数と入力途中の値を許可する。
- * @param value - 入力文字列。
- * @returns 許可する入力。不正な文字列はnull。
- */
-function normalizeBpmInput(value: string): string | null {
-  return /^\d*(?:\.\d*)?$/.test(value) ? value : null
-}
-
-/**
- * 日付範囲の片側をラベル付きで表示する。
- * @param props - 日付、ラベル、エラー状態と更新通知。
+ * 追加日範囲の片側をラベル付きで表示する。
+ *
+ * @param props - ラベル、値、エラー状態と更新通知。
  * @returns 日付入力欄。
  */
 function DateEndpoint(props: {

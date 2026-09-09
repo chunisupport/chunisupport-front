@@ -73,6 +73,8 @@ type FilterResetHoldIndicatorProps = {
   progress: number
   /** ボタン解放でリセットできる状態か */
   ready: boolean
+  /** 外側リングの上へ表示する操作名 */
+  holdingLabel?: string
 }
 
 /**
@@ -131,7 +133,7 @@ const FilterResetHoldIndicator: Component<FilterResetHoldIndicatorProps> = (prop
         />
       </svg>
       <div class="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded border border-danger-border bg-danger-bg px-3 py-2 text-base font-semibold text-danger shadow-md">
-        {FILTER_RESET_HOLDING_LABEL}
+        {props.holdingLabel ?? FILTER_RESET_HOLDING_LABEL}
       </div>
       <Show when={props.ready}>
         <div
