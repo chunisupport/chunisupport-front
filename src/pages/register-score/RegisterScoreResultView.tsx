@@ -1,12 +1,11 @@
 import { Button } from '@kobalte/core/button'
-import { Copy, Download, Eye, EyeOff, Play, Share2 } from 'lucide-solid'
+import { Eye, EyeOff, Play } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import logoSingle from '../../assets/logo_single.svg'
 import { AppIconButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { CheckboxField } from '../../components/common/CheckboxField'
-import { ImageCaptureActionButton } from '../../components/common/ImageCaptureActionButton'
 import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
 import {
   RecordFullChainCell,
@@ -18,7 +17,6 @@ import {
   type SharedClearLamp,
   type SharedComboLamp,
 } from '../../components/common/record/recordStyleClasses'
-import { SOCIAL_SHARE_TEXT } from '../../constants/socialShare'
 import type {
   PlayerDataCourseRecordChange,
   PlayerDataCourseRecordState,
@@ -29,18 +27,12 @@ import type {
 } from '../../types/api'
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
-import {
-  canCopyImageToClipboard,
-  canShareFiles,
-  captureElementAsImage,
-  copyImageToClipboard,
-  downloadBlobFile,
-  IMAGE_CLIPBOARD_COPY_FEEDBACK_MS,
-} from '../../utils/domImageCapture'
+import { captureElementAsImage } from '../../utils/domImageCapture'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
 import type { SortDirection } from '../../utils/sortingQuery'
 import { REGISTER_SCORE_COPY } from './constants'
+import { RegisterScoreImagePreviewDialog } from './RegisterScoreImagePreviewDialog'
 import { isLampOnlyRegisterScoreChange } from './registerScoreChangeFilter'
 import { courseClassBadgeClass, formatCourseClass } from './registerScoreDisplay'
 import { hasRegisterScoreImageChanges } from './registerScoreImageVisibility'
@@ -92,8 +84,6 @@ const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 1
 const REGISTER_SCORE_IMAGE_JPEG_QUALITY = 0.9
 /** 更新差分画像のファイル名へ付与する接頭辞 */
 const REGISTER_SCORE_IMAGE_FILENAME_PREFIX = 'chunisupport-score-update'
-/** 共有用画像をレポート更新後に再生成するまでの待機時間 */
-const REGISTER_SCORE_SHARE_PREPARE_DELAY_MS = 1_000
 /** コピー成功時に曲名をアクセントカラーで保持する時間 */
 const REGISTER_SCORE_COPY_HIGHLIGHT_MS = 100
 
@@ -1219,56 +1209,6 @@ export const RegisterScoreResultView = (props: {
     )
   const [reportScale, setReportScale] = createSignal(1)
   const [scaledReportHeight, setScaledReportHeight] = createSignal<number>()
-  const [isDownloadingImage, setIsDownloadingImage] = createSignal(false)
-  const [isPreparingShareImage, setIsPreparingShareImage] = createSignal(false)
-  const [isSharingImage, setIsSharingImage] = createSignal(false)
-  const [isCopyingImage, setIsCopyingImage] = createSignal(false)
-  const [isImageCopied, setIsImageCopied] = createSignal(false)
-  const [shareImageFile, setShareImageFile] = createSignal<File>()
-  const [imageActionError, setImageActionError] = createSignal<string>()
-  /** 生成対象となるレポートDOMの更新世代 */
-  let shareImageRevision = 0
-  /** 共有用画像の生成を開始するタイマー */
-  let shareImagePrepareTimer: number | undefined
-  /** 画像コピー成功表示を戻すタイマー */
-  let copyImageFeedbackTimer: number | undefined
-
-  /**
-   * ダウンロード、共有、またはコピー用の画像を生成中かどうかを返す。
-   *
-   * @returns いずれかの画像生成処理中の場合はtrue。
-   */
-  const isGeneratingImage = (): boolean =>
-    isDownloadingImage() || isPreparingShareImage() || isSharingImage() || isCopyingImage()
-
-  /**
-   * 現在のブラウザが画像のクリップボードコピーに対応しているかを返す。
-   *
-   * @returns Clipboard APIでPNG画像を書き込める場合はtrue。
-   */
-  const canCopyReportImage = (): boolean => canCopyImageToClipboard()
-
-  /**
-   * 画像コピー成功表示のタイマーを破棄する。
-   *
-   * @returns なし。
-   */
-  const clearCopyImageFeedbackTimer = (): void => {
-    if (copyImageFeedbackTimer === undefined) return
-
-    window.clearTimeout(copyImageFeedbackTimer)
-    copyImageFeedbackTimer = undefined
-  }
-
-  /**
-   * 現在のブラウザがJPEGファイルの共有に対応しているかを返す。
-   *
-   * @returns Web Share APIでJPEGファイルを共有できる場合はtrue。
-   */
-  const canShareReportImage = (): boolean => {
-    const testFile = new File([], 'share-test.jpg', { type: 'image/jpeg' })
-    return canShareFiles([testFile])
-  }
   let scaleContainerRef!: HTMLDivElement
   let reportRef!: HTMLElement
 
@@ -1364,176 +1304,16 @@ export const RegisterScoreResultView = (props: {
   /**
    * 現在表示中の更新差分レポートを原寸のJPEG画像として生成する。
    *
-   * @returns 生成した画像ファイル。
+   * @returns 生成したJPEG画像のBlob。
    */
-  const createReportImageFile = async (): Promise<File> => {
-    const imageBlob = await captureElementAsImage(reportRef, {
+  const captureReportImage = async (): Promise<Blob> =>
+    captureElementAsImage(reportRef, {
       format: 'jpeg',
       pixelRatio: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
       quality: REGISTER_SCORE_IMAGE_JPEG_QUALITY,
     })
-    const filename = formatRegisterScoreImageFilename(props.result.imported_at)
-
-    return new File([imageBlob], filename, { type: 'image/jpeg' })
-  }
-
-  /**
-   * Web Share APIの一時的なユーザー操作を保てるよう、共有用画像を事前生成する。
-   *
-   * @returns 画像生成処理の完了時に解決されるPromise。
-   */
-  const prepareShareImage = async (): Promise<void> => {
-    if (isPreparingShareImage()) return
-
-    if (shareImagePrepareTimer !== undefined) {
-      window.clearTimeout(shareImagePrepareTimer)
-      shareImagePrepareTimer = undefined
-    }
-
-    const targetRevision = shareImageRevision
-
-    setIsPreparingShareImage(true)
-    setImageActionError(undefined)
-
-    try {
-      const imageFile = await createReportImageFile()
-      if (targetRevision === shareImageRevision) setShareImageFile(imageFile)
-    } catch {
-      if (targetRevision === shareImageRevision) {
-        setShareImageFile(undefined)
-        setImageActionError(REGISTER_SCORE_COPY.shareImageError)
-      }
-    } finally {
-      setIsPreparingShareImage(false)
-    }
-  }
-
-  /**
-   * 共有用画像の生成を待機時間後へ予約する。
-   *
-   * @returns なし。
-   */
-  const queueShareImagePreparation = (): void => {
-    if (shareImagePrepareTimer !== undefined) window.clearTimeout(shareImagePrepareTimer)
-
-    shareImagePrepareTimer = window.setTimeout(() => {
-      shareImagePrepareTimer = undefined
-
-      if (isGeneratingImage()) {
-        queueShareImagePreparation()
-        return
-      }
-
-      void prepareShareImage()
-    }, REGISTER_SCORE_SHARE_PREPARE_DELAY_MS)
-  }
-
-  /**
-   * レポートDOMの更新を記録し、共有用画像の再生成を予約する。
-   *
-   * @returns なし。
-   */
-  const scheduleShareImagePreparation = (): void => {
-    shareImageRevision += 1
-    setShareImageFile(undefined)
-    queueShareImagePreparation()
-  }
-
-  /**
-   * 現在表示中の更新差分レポート画像をクリップボードへコピーする。
-   *
-   * @returns なし。
-   */
-  const copyReportImage = (): void => {
-    if (isGeneratingImage()) return
-
-    setIsCopyingImage(true)
-    setIsImageCopied(false)
-    setImageActionError(undefined)
-    clearCopyImageFeedbackTimer()
-
-    const preparedImage = shareImageFile()
-    void copyImageToClipboard(preparedImage ?? createReportImageFile())
-      .then(() => {
-        setIsImageCopied(true)
-        copyImageFeedbackTimer = window.setTimeout(() => {
-          setIsImageCopied(false)
-          copyImageFeedbackTimer = undefined
-        }, IMAGE_CLIPBOARD_COPY_FEEDBACK_MS)
-      })
-      .catch(() => {
-        setImageActionError(REGISTER_SCORE_COPY.copyImageError)
-      })
-      .finally(() => {
-        setIsCopyingImage(false)
-      })
-  }
-
-  /**
-   * 現在表示中の更新差分レポートを1枚のJPEG画像としてダウンロードする。
-   *
-   * @returns ダウンロード処理の完了時に解決されるPromise。
-   */
-  const downloadReportImage = async (): Promise<void> => {
-    setIsDownloadingImage(true)
-    setImageActionError(undefined)
-
-    try {
-      const imageFile = await createReportImageFile()
-      downloadBlobFile(imageFile, imageFile.name)
-    } catch {
-      setImageActionError(REGISTER_SCORE_COPY.downloadImageError)
-    } finally {
-      setIsDownloadingImage(false)
-    }
-  }
-
-  /**
-   * 現在表示中の更新差分レポートをWeb Share APIで共有する。
-   *
-   * @returns 共有処理の完了時に解決されるPromise。
-   */
-  const shareReportImage = async (): Promise<void> => {
-    const imageFile = shareImageFile()
-    if (!imageFile) {
-      void prepareShareImage()
-      return
-    }
-    if (!canShareFiles([imageFile])) {
-      setImageActionError(REGISTER_SCORE_COPY.shareImageError)
-      return
-    }
-
-    setIsSharingImage(true)
-    setImageActionError(undefined)
-
-    try {
-      await navigator.share({
-        files: [imageFile],
-        text: SOCIAL_SHARE_TEXT,
-        title: REGISTER_SCORE_COPY.reportTitle,
-      })
-    } catch (error) {
-      if (!(error instanceof DOMException && error.name === 'AbortError')) {
-        setImageActionError(REGISTER_SCORE_COPY.shareImageError)
-      }
-    } finally {
-      setIsSharingImage(false)
-    }
-  }
 
   onMount(() => {
-    const shareImageObserver = canShareReportImage()
-      ? new MutationObserver(scheduleShareImagePreparation)
-      : undefined
-    shareImageObserver?.observe(reportRef, {
-      attributes: true,
-      characterData: true,
-      childList: true,
-      subtree: true,
-    })
-    if (shareImageObserver) scheduleShareImagePreparation()
-
     /**
      * 固定幅レポートを親要素の表示幅へ収める縮小率と占有高さを更新する。
      *
@@ -1552,9 +1332,6 @@ export const RegisterScoreResultView = (props: {
     updateReportScale()
 
     onCleanup(() => {
-      if (shareImagePrepareTimer !== undefined) window.clearTimeout(shareImagePrepareTimer)
-      clearCopyImageFeedbackTimer()
-      shareImageObserver?.disconnect()
       resizeObserver.disconnect()
     })
   })
@@ -1565,49 +1342,10 @@ export const RegisterScoreResultView = (props: {
         class={`mx-auto flex w-full ${REGISTER_SCORE_STACK_MAX_WIDTH_CLASS} flex-col gap-4 @min-[59rem]:max-w-none @min-[59rem]:flex-row @min-[59rem]:items-center @min-[59rem]:justify-between`}
       >
         <h1 class="text-2xl font-semibold">{props.pageTitle}</h1>
-        <div class="flex flex-col items-end gap-2">
-          <div class="flex flex-wrap justify-end gap-2">
-            <Show when={canShareReportImage()}>
-              <ImageCaptureActionButton
-                label={REGISTER_SCORE_COPY.shareImage}
-                disabled={isGeneratingImage()}
-                busy={isPreparingShareImage() || isSharingImage()}
-                onClick={shareReportImage}
-              >
-                <Share2 class="h-5 w-5" aria-hidden="true" />
-              </ImageCaptureActionButton>
-            </Show>
-            <Show when={canCopyReportImage()}>
-              <ImageCaptureActionButton
-                label={REGISTER_SCORE_COPY.copyImage}
-                showImageIcon
-                disabled={isGeneratingImage()}
-                busy={isCopyingImage()}
-                success={isImageCopied()}
-                onClick={copyReportImage}
-              >
-                <Copy class="h-5 w-5" aria-hidden="true" />
-              </ImageCaptureActionButton>
-            </Show>
-            <ImageCaptureActionButton
-              tone="primary"
-              label={REGISTER_SCORE_COPY.downloadImage}
-              showImageIcon
-              disabled={isGeneratingImage()}
-              busy={isDownloadingImage()}
-              onClick={downloadReportImage}
-            >
-              <Download class="h-5 w-5" aria-hidden="true" />
-            </ImageCaptureActionButton>
-          </div>
-          <Show when={imageActionError()}>
-            {(message) => (
-              <p class="text-sm text-danger" role="alert">
-                {message()}
-              </p>
-            )}
-          </Show>
-        </div>
+        <RegisterScoreImagePreviewDialog
+          captureImage={captureReportImage}
+          imageFilename={formatRegisterScoreImageFilename(props.result.imported_at)}
+        />
       </header>
       <div class={REGISTER_SCORE_RESULT_LAYOUT_CLASS}>
         <RegisterScoreDisplaySettings
