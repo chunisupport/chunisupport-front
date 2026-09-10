@@ -174,7 +174,7 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
         type="button"
         class={getAppButtonClass({
           variant: 'primary',
-          shape: 'pill',
+          shape: 'rounded',
           class: 'h-10 focus-visible:ring-offset-2',
         })}
       >
