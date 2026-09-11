@@ -24,6 +24,8 @@ const FRONTEND_BUILD_DATE = new Date().toISOString().slice(0, 10).replaceAll('-'
 
 /** ハッシュ生成と出力コピーの対象にする favicon の絶対パス。 */
 const FAVICON_PATH = path.resolve(import.meta.dirname, 'src/assets/favicon.png')
+/** トップページの OGP に使用する画像の絶対パス。 */
+const OGP_IMAGE_PATH = path.resolve(import.meta.dirname, 'src/assets/ogp.png')
 const ASSET_HASH_LENGTH = 10
 
 /**
@@ -176,6 +178,10 @@ export default defineConfig(({ env, envMode }) => {
         {
           from: FAVICON_PATH,
           to: FAVICON_FILE_NAME,
+        },
+        {
+          from: OGP_IMAGE_PATH,
+          to: 'ogp.png',
         },
       ],
     },

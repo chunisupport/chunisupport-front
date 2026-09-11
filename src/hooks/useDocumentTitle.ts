@@ -1,6 +1,5 @@
 import { createEffect, onCleanup } from 'solid-js'
-
-const SITE_NAME = 'ChuniSupport'
+import { buildDocumentTitle, SITE_NAME } from '../constants/site'
 
 /**
  * ページのドキュメントタイトルを設定するカスタムフック
@@ -11,7 +10,7 @@ export function useDocumentTitle(title?: string | (() => string)) {
 
   createEffect(() => {
     const pageTitle = typeof title === 'function' ? title() : title
-    document.title = pageTitle ? `${pageTitle} - ${SITE_NAME}` : defaultTitle
+    document.title = buildDocumentTitle(pageTitle)
   })
 
   onCleanup(() => {
