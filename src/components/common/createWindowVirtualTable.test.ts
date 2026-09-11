@@ -85,7 +85,20 @@ const createFakeElement = (top, height = 30) => ({
 })
 `
 
-const runBrowserSolidTest = async (script: string) => {
+type BrowserSolidTestCase = {
+  name: string
+  script: string
+}
+
+/**
+ * browser条件のSolidJSテストを1つのNode.jsプロセスで実行する。
+ * @param cases 実行するテストケース。
+ * @returns 子プロセスの完了を表すPromise。
+ */
+const runBrowserSolidTests = async (cases: readonly BrowserSolidTestCase[]) => {
+  const script = cases
+    .map(({ name, script: testScript }) => `// ${name}\n{\n${testScript}\n}`)
+    .join('\n')
   const { stderr } = await execFileAsync(
     process.execPath,
     [
@@ -103,9 +116,11 @@ const runBrowserSolidTest = async (script: string) => {
   assert.equal(stderr, '')
 }
 
-test('createWindowVirtualTableは本文位置からscrollMarginを算出すること', async () => {
-  // Given: スクロール要素から15px下に本文があるテーブル
-  const script = `
+/** browser条件で確認する仮想テーブルの挙動。 */
+const BROWSER_SOLID_TEST_CASES = [
+  {
+    name: 'createWindowVirtualTableは本文位置からscrollMarginを算出すること',
+    script: `
 await new Promise((resolve) =>
   createRoot(async (dispose) => {
     const [rowCount] = createSignal(3)
@@ -129,14 +144,11 @@ await new Promise((resolve) =>
     resolve()
   })
 )
-`
-
-  await runBrowserSolidTest(script)
-})
-
-test('createWindowVirtualTableのresetToTopは先頭へスクロールすること', async () => {
-  // Given: 下方向へスクロール済みの仮想テーブル
-  const script = `
+`,
+  },
+  {
+    name: 'createWindowVirtualTableのresetToTopは先頭へスクロールすること',
+    script: `
 await new Promise((resolve) =>
   createRoot(async (dispose) => {
     const [rowCount] = createSignal(3)
@@ -162,14 +174,11 @@ await new Promise((resolve) =>
     resolve()
   })
 )
-`
-
-  await runBrowserSolidTest(script)
-})
-
-test('initialOffset指定時は初回アタッチでその位置へスクロールし先頭リセットしないこと', async () => {
-  // Given: 復元位置を指定した仮想テーブル
-  const script = `
+`,
+  },
+  {
+    name: 'initialOffset指定時は初回アタッチでその位置へスクロールし先頭リセットしないこと',
+    script: `
 await new Promise((resolve) =>
   createRoot(async (dispose) => {
     const [rowCount] = createSignal(3)
@@ -195,14 +204,11 @@ await new Promise((resolve) =>
     resolve()
   })
 )
-`
-
-  await runBrowserSolidTest(script)
-})
-
-test('resetOnRowCountChange有効時は同じ行数の再計算では先頭へスクロールしないこと', async () => {
-  // Given: 行配列の参照だけが変わる仮想テーブル
-  const script = `
+`,
+  },
+  {
+    name: 'resetOnRowCountChange有効時は同じ行数の再計算では先頭へスクロールしないこと',
+    script: `
 await new Promise((resolve) =>
   createRoot(async (dispose) => {
     const [rows, setRows] = createSignal([1, 2, 3])
@@ -233,14 +239,11 @@ await new Promise((resolve) =>
     resolve()
   })
 )
-`
-
-  await runBrowserSolidTest(script)
-})
-
-test('resetOnRowCountChange有効時は行数変化で先頭へスクロールすること', async () => {
-  // Given: 行数変化時リセットが有効な仮想テーブル
-  const script = `
+`,
+  },
+  {
+    name: 'resetOnRowCountChange有効時は行数変化で先頭へスクロールすること',
+    script: `
 await new Promise((resolve) =>
   createRoot(async (dispose) => {
     const [rowCount, setRowCount] = createSignal(3)
@@ -270,14 +273,11 @@ await new Promise((resolve) =>
     resolve()
   })
 )
-`
-
-  await runBrowserSolidTest(script)
-})
-
-test('virtualRowsは現在の行数を超えた仮想行を除外すること', async () => {
-  // Given: 仮想化済みの行を持つテーブル
-  const script = `
+`,
+  },
+  {
+    name: 'virtualRowsは現在の行数を超えた仮想行を除外すること',
+    script: `
 await new Promise((resolve) =>
   createRoot(async (dispose) => {
     const [rowCount, setRowCount] = createSignal(3)
@@ -308,13 +308,11 @@ await new Promise((resolve) =>
     resolve()
   })
 )
-`
-
-  await runBrowserSolidTest(script)
-})
-
-test('非表示テーブルは初期化と行数変更で共有スクロール領域を動かさない', async () => {
-  await runBrowserSolidTest(`
+`,
+  },
+  {
+    name: '非表示テーブルは初期化と行数変更で共有スクロール領域を動かさない',
+    script: `
 const view = createRoot((dispose) => {
   const [rowCount, setRowCount] = createSignal(100)
   const [enabled, setEnabled] = createSignal(false)
@@ -351,11 +349,11 @@ await nextTask()
 await nextTask()
 assert.equal(view.scrollElement.scrollTop, 240)
 view.dispose()
-`)
-})
-
-test('非同期に行が揃った仮想テーブルで深い位置を復元し、末尾付近の行を描画する', async () => {
-  await runBrowserSolidTest(`
+`,
+  },
+  {
+    name: '非同期に行が揃った仮想テーブルで深い位置を復元し、末尾付近の行を描画する',
+    script: `
 const view = createRoot((dispose) => {
   const [rowCount, setRowCount] = createSignal(0)
   const [enabled, setEnabled] = createSignal(false)
@@ -385,5 +383,10 @@ assert.equal(view.scrollElement.scrollTop, 9500)
 assert.equal(view.table.scrollMargin(), 0)
 assert.ok(view.table.virtualRows().some((row) => row.index === 950))
 view.dispose()
-`)
+`,
+  },
+] as const
+
+test('createWindowVirtualTableのbrowser条件の挙動をまとめて検証すること', async () => {
+  await runBrowserSolidTests(BROWSER_SOLID_TEST_CASES)
 })

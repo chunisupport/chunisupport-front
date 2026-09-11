@@ -1,25 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-
-/**
- * テスト用の環境変数を設定する。
- *
- * @returns なし。
- */
-const setupApiTestEnv = (): void => {
-  process.env.PUBLIC_BACKEND_URL = 'http://localhost:3000'
-  process.env.PUBLIC_FRONTEND_URL = 'http://localhost:3000'
-  process.env.PUBLIC_DOCUMENTATION_URL = 'https://docs.chunisupport.net'
-  process.env.PUBLIC_BOOKMARKLET_URL = 'https://dist.chunisupport.net'
-  process.env.PUBLIC_BOOKMARKLET_ENTRYPOINT = 'main.js'
-  process.env.PUBLIC_FB_API_KEY = 'test-api-key'
-  process.env.PUBLIC_FB_AUTH_DOMAIN = 'test.firebaseapp.com'
-  process.env.PUBLIC_FB_PROJECT_ID = 'test-project'
-  process.env.PUBLIC_FB_STORAGE_BUCKET = 'test.appspot.com'
-  process.env.PUBLIC_FB_MESSAGING_SENDER_ID = '123456789'
-  process.env.PUBLIC_FB_APP_ID = 'test-app-id'
-  process.env.PUBLIC_CF_TURNSTILE_SITE_KEY = '1x00000000000000000000AA'
-}
+import { createTestCacheKey, setupTestEnvironment } from '../test/setupTestEnvironment'
 
 /**
  * モジュール内キャッシュをテストごとに分離して fetchVersions を読み込む。
@@ -27,8 +8,8 @@ const setupApiTestEnv = (): void => {
  * @returns fetchVersions 関数。
  */
 const loadFetchVersions = async () => {
-  setupApiTestEnv()
-  const cacheKey = `${Date.now()}-${Math.random()}`
+  setupTestEnvironment()
+  const cacheKey = createTestCacheKey()
   const { fetchVersions } = await import(`./songs.ts?cache=${cacheKey}`)
   return fetchVersions
 }
@@ -39,8 +20,8 @@ const loadFetchVersions = async () => {
  * @returns songs API モジュール。
  */
 const loadSongsApi = async () => {
-  setupApiTestEnv()
-  const cacheKey = `${Date.now()}-${Math.random()}`
+  setupTestEnvironment()
+  const cacheKey = createTestCacheKey()
   return import(`./songs.ts?cache=${cacheKey}`)
 }
 

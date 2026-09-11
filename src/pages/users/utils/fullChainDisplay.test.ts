@@ -3,35 +3,20 @@ import test from 'node:test'
 
 import { formatFullChainLampLabel } from './fullChainDisplay'
 
-test('FULL CHAIN GOLDは表示用ラベルに変換されること', () => {
+test('FULL CHAINの状態を表示用ラベルに変換すること', () => {
   // Given
-  const fullChain = 'FULL CHAIN GOLD'
+  const cases = [
+    { fullChain: 'FULL CHAIN GOLD', expected: 'FULL CHAIN (GOLD)' },
+    { fullChain: 'FULL CHAIN PLATINUM', expected: 'FULL CHAIN (PLATINUM)' },
+    { fullChain: null, expected: 'なし' },
+  ] as const
 
   // When
-  const result = formatFullChainLampLabel(fullChain)
+  const results = cases.map(({ fullChain }) => formatFullChainLampLabel(fullChain))
 
   // Then
-  assert.equal(result, 'FULL CHAIN (GOLD)')
-})
-
-test('FULL CHAIN PLATINUMは表示用ラベルに変換されること', () => {
-  // Given
-  const fullChain = 'FULL CHAIN PLATINUM'
-
-  // When
-  const result = formatFullChainLampLabel(fullChain)
-
-  // Then
-  assert.equal(result, 'FULL CHAIN (PLATINUM)')
-})
-
-test('FULL CHAINランプなしはなしに変換されること', () => {
-  // Given
-  const fullChain = null
-
-  // When
-  const result = formatFullChainLampLabel(fullChain)
-
-  // Then
-  assert.equal(result, 'なし')
+  assert.deepEqual(
+    results,
+    cases.map(({ expected }) => expected)
+  )
 })

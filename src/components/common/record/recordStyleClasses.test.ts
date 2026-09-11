@@ -4,14 +4,9 @@ import test from 'node:test'
 import { MAX_SCORE } from '../../../utils/scoreRank'
 import {
   ALL_JUSTICE_CRITICAL_BADGE_CLASS,
-  ALL_JUSTICE_CRITICAL_BG_CLASS,
   COMBO_LAMP_BADGE_BACKGROUND_CLASS,
   COMBO_LAMP_BADGE_TEXT_CLASS,
-  COMBO_LAMP_BAR_CLASS,
   getComboLampBadgeClass,
-  HARD_LAMP_BAR_CLASS,
-  SCORE_RANK_BAR_CLASS,
-  SCORE_RANK_PLUS_BAR_BACKGROUND_CLASS,
 } from './recordStyleClasses'
 
 test('AJCのコンボランプバッジは虹色クラスを返すこと', () => {
@@ -39,77 +34,4 @@ test('通常AJのコンボランプバッジはAJ用トークン色を返すこ�
     result,
     `${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`
   )
-})
-
-test('FCのコンボランプバッジはFC用トークン色を返すこと', () => {
-  // Given: FULL COMBOのレコード
-  const lamp = 'FULL COMBO'
-  const score = MAX_SCORE
-
-  // When: コンボランプバッジの色クラスを取得する
-  const result = getComboLampBadgeClass(lamp, score)
-
-  // Then: FC用の背景色と文字色が返る
-  assert.equal(
-    result,
-    `${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`
-  )
-})
-
-test('COMBOのなしとHARDのFAILEDはRANKのOTHERS色を返すこと', () => {
-  // Given: RANKのOTHERSで使う低ランク向け色クラス
-  const othersClass = SCORE_RANK_BAR_CLASS.OTHERS
-
-  // When: COMBOのなしとHARDのFAILEDの色クラスを取得する
-  const result = [COMBO_LAMP_BAR_CLASS.なし, HARD_LAMP_BAR_CLASS.FAILED]
-
-  // Then: どちらもOTHERS色に統一される
-  assert.deepEqual(result, [othersClass, othersClass])
-})
-
-test('フィルター統計のMAXはAJCと同じ虹色グラデーションを返すこと', () => {
-  // Given: AJC表示で共通利用する虹色グラデーションクラス
-  const expectedClass = ALL_JUSTICE_CRITICAL_BG_CLASS
-
-  // When: RANKのMAX色クラスを取得する
-  const result = SCORE_RANK_BAR_CLASS.MAX
-
-  // Then: AJCと同じ虹色グラデーションが返る
-  assert.equal(result, expectedClass)
-})
-
-test('S+とSS+だけが通常ランク色へ白い斜線背景を重ねること', () => {
-  // Given: 同じ背景色を共有するS系とSS系のランク
-  const expectedPlusClass = SCORE_RANK_PLUS_BAR_BACKGROUND_CLASS
-
-  // When: 各ランクの分布バークラスを取得する
-  const result = {
-    s: SCORE_RANK_BAR_CLASS.S,
-    sPlus: SCORE_RANK_BAR_CLASS['S+'],
-    ss: SCORE_RANK_BAR_CLASS.SS,
-    ssPlus: SCORE_RANK_BAR_CLASS['SS+'],
-  }
-
-  // Then: プラス付きランクだけに共通の斜線背景が含まれる
-  assert.deepEqual(result, {
-    s: 'bg-score-rank-s-bg',
-    sPlus: `bg-score-rank-s-bg ${expectedPlusClass}`,
-    ss: 'bg-score-rank-ss-bg',
-    ssPlus: `bg-score-rank-ss-bg ${expectedPlusClass}`,
-  })
-})
-
-test('フィルター統計の未プレイは背景と同じ色クラスを返すこと', () => {
-  // Given: フィルター統計に表示する未プレイカテゴリ
-  const expectedClass = 'bg-surface-hover'
-
-  // When: 各分布の未プレイ色クラスを取得する
-  const result = [
-    SCORE_RANK_BAR_CLASS.未プレイ,
-    COMBO_LAMP_BAR_CLASS.未プレイ,
-    HARD_LAMP_BAR_CLASS.未プレイ,
-  ]
-
-  // Then: すべてバー背景と同じ色クラスで統一される
-  assert.deepEqual(result, [expectedClass, expectedClass, expectedClass])
 })

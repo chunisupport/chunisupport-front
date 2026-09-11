@@ -1,25 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-
-/**
- * フレンドAPIテスト用の環境変数を設定する。
- *
- * @returns なし。
- */
-const setupFriendsApiTestEnv = (): void => {
-  process.env.PUBLIC_BACKEND_URL = 'http://localhost:3000'
-  process.env.PUBLIC_FRONTEND_URL = 'http://localhost:3000'
-  process.env.PUBLIC_DOCUMENTATION_URL = 'https://docs.chunisupport.net'
-  process.env.PUBLIC_BOOKMARKLET_URL = 'https://dist.chunisupport.net'
-  process.env.PUBLIC_BOOKMARKLET_ENTRYPOINT = 'main.js'
-  process.env.PUBLIC_FB_API_KEY = 'test-api-key'
-  process.env.PUBLIC_FB_AUTH_DOMAIN = 'test.firebaseapp.com'
-  process.env.PUBLIC_FB_PROJECT_ID = 'test-project'
-  process.env.PUBLIC_FB_STORAGE_BUCKET = 'test.appspot.com'
-  process.env.PUBLIC_FB_MESSAGING_SENDER_ID = '123456789'
-  process.env.PUBLIC_FB_APP_ID = 'test-app-id'
-  process.env.PUBLIC_CF_TURNSTILE_SITE_KEY = '1x00000000000000000000AA'
-}
+import { createTestCacheKey, setupTestEnvironment } from '../test/setupTestEnvironment'
 
 /**
  * Firebase認証状態をテスト用ログイン済みに差し替える。
@@ -46,9 +27,9 @@ const setupAuthenticatedFirebase = async (): Promise<void> => {
  * @returns friends API モジュール。
  */
 const loadFriendsApi = async () => {
-  setupFriendsApiTestEnv()
+  setupTestEnvironment()
   await setupAuthenticatedFirebase()
-  const cacheKey = `${Date.now()}-${Math.random()}`
+  const cacheKey = createTestCacheKey()
   return import(`./friends.ts?cache=${cacheKey}`)
 }
 
