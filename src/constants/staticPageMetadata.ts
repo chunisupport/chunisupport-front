@@ -1,4 +1,5 @@
 import { TOOLS_PATH } from './routes'
+import { joinDocumentTitleParts, SITE_NAME } from './site'
 import { TOOL_LINKS } from './tools'
 
 /**
@@ -17,7 +18,7 @@ export type StaticPageMetadata = {
 /** トップページの共有時に使用する固定メタ情報。 */
 export const ROOT_PAGE_METADATA: StaticPageMetadata = {
   path: '/',
-  title: 'ChuniSupport | CHUNITHMスコアツール',
+  title: joinDocumentTitleParts(SITE_NAME, 'CHUNITHMスコアツール'),
   description: 'CHUNITHMプレイヤーのためのスコア管理ツール',
 }
 

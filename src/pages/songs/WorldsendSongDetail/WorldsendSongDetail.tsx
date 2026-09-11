@@ -3,6 +3,7 @@ import { createMemo, createResource, Show } from 'solid-js'
 import { fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
 import { LoadError } from '../../../components'
 import { showErrorToast } from '../../../components/common/AppToast'
+import { joinDocumentTitleParts } from '../../../constants/site'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
@@ -122,7 +123,9 @@ const WorldsendSongDetail = () => {
     }
   }
 
-  useDocumentTitle(() => `${song()?.title ?? "WORLD'S END楽曲"} - WORLD'S END楽曲詳細`)
+  useDocumentTitle(() =>
+    joinDocumentTitleParts(song()?.title ?? "WORLD'S END楽曲", "WORLD'S END楽曲詳細")
+  )
 
   return (
     <Show when={songState()?.type !== 'notFound'} fallback={<NotFoundPage />}>

@@ -9,6 +9,7 @@ import {
   buildWorldsendSongDetailPath,
   isChartDetailFromSongDetailState,
 } from '../../../constants/routes'
+import { joinDocumentTitleParts } from '../../../constants/site'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { worldsendFriendRankingQueryOptions } from '../../../queries/friendRankings'
 import { authSession } from '../../../stores/authSession'
@@ -36,7 +37,9 @@ const WorldsendScoreHistory = () => {
   const friendRanking = useQuery(() =>
     worldsendFriendRankingQueryOptions(authSession.user?.username ?? null, params.displayid)
   )
-  useDocumentTitle(() => `${song()?.title ?? WORLDSEND_SCORE_LABEL} - ${CHART_DETAIL_PAGE_TITLE}`)
+  useDocumentTitle(() =>
+    joinDocumentTitleParts(song()?.title ?? WORLDSEND_SCORE_LABEL, CHART_DETAIL_PAGE_TITLE)
+  )
 
   /**
    * 楽曲詳細から入った履歴では詳細URLを積まず、元の詳細履歴へ戻す。

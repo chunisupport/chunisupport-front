@@ -4,6 +4,7 @@ import { fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
 import { LoadError } from '../../../components'
 import { showErrorToast } from '../../../components/common/AppToast'
 import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
+import { joinDocumentTitleParts } from '../../../constants/site'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
@@ -181,7 +182,7 @@ const SongDetail = () => {
     }
   }
 
-  useDocumentTitle(() => `${song()?.title ?? '楽曲'} - 楽曲詳細`)
+  useDocumentTitle(() => joinDocumentTitleParts(song()?.title ?? '楽曲', '楽曲詳細'))
 
   return (
     <Show when={songState()?.type !== 'notFound'} fallback={<NotFoundPage />}>

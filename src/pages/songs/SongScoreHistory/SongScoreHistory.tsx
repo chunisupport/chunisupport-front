@@ -10,6 +10,7 @@ import {
   buildSongDetailPath,
   isChartDetailFromSongDetailState,
 } from '../../../constants/routes'
+import { joinDocumentTitleParts } from '../../../constants/site'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { songFriendRankingQueryOptions } from '../../../queries/friendRankings'
 import { authSession } from '../../../stores/authSession'
@@ -56,7 +57,7 @@ const SongScoreHistory = () => {
     return Boolean(currentSong && selectedDifficulty && currentSong.charts[selectedDifficulty])
   })
 
-  useDocumentTitle(() => `${song()?.title ?? '楽曲'} - ${CHART_DETAIL_PAGE_TITLE}`)
+  useDocumentTitle(() => joinDocumentTitleParts(song()?.title ?? '楽曲', CHART_DETAIL_PAGE_TITLE))
 
   /**
    * 楽曲詳細から入った履歴では詳細URLを積まず、元の詳細履歴へ戻す。

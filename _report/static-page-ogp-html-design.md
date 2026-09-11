@@ -154,7 +154,7 @@ const toolPageMetadata = TOOL_LINKS.filter(
 export const SITE_NAME = 'ChuniSupport'
 
 export const buildDocumentTitle = (pageTitle?: string): string =>
-  pageTitle ? `${pageTitle} - ${SITE_NAME}` : SITE_NAME
+  pageTitle ? `${pageTitle} | ${SITE_NAME}` : SITE_NAME
 ```
 
 ファイル候補:
@@ -181,17 +181,17 @@ src/constants/site.ts
 各固定ページの初期 HTML には少なくとも次の要素を含める。
 
 ```html
-<title>ページ名 - ChuniSupport</title>
+<title>ページ名 | ChuniSupport</title>
 <meta name="description" content="ページの説明">
 <link rel="canonical" href="https://chunisupport.net/page-path">
 <meta property="og:site_name" content="ChuniSupport">
-<meta property="og:title" content="ページ名 - ChuniSupport">
+<meta property="og:title" content="ページ名 | ChuniSupport">
 <meta property="og:description" content="ページの説明">
 <meta property="og:url" content="https://chunisupport.net/page-path">
 <meta property="og:image" content="https://chunisupport.net/ogp/default.png">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ページ名 - ChuniSupport">
+<meta name="twitter:title" content="ページ名 | ChuniSupport">
 <meta name="twitter:description" content="ページの説明">
 <meta name="twitter:image" content="https://chunisupport.net/ogp/default.png">
 ```

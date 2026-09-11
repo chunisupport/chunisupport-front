@@ -159,10 +159,10 @@ OGP生成だけのために新しいAPIを追加しない。
 例:
 
 ```html
-<title>SONG TITLE - ChuniSupport</title>
+<title>SONG TITLE | ChuniSupport</title>
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ChuniSupport">
-<meta property="og:title" content="SONG TITLE - ChuniSupport">
+<meta property="og:title" content="SONG TITLE | ChuniSupport">
 <meta property="og:description" content="ARTIST / CHUNITHM楽曲情報">
 <meta property="og:url" content="https://chunisupport.net/songs/DISPLAY_ID">
 <meta property="og:image" content="JACKET_OR_OGP_IMAGE_URL">
@@ -336,10 +336,10 @@ APIの既存プライバシー制御を迂回しない。
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <title>USERNAME - ChuniSupport</title>
+  <title>USERNAME | ChuniSupport</title>
   <meta property="og:type" content="profile">
   <meta property="og:site_name" content="ChuniSupport">
-  <meta property="og:title" content="USERNAME - ChuniSupport">
+  <meta property="og:title" content="USERNAME | ChuniSupport">
   <meta property="og:description" content="RATING ...">
   <meta property="og:image" content="DEFAULT_OR_USER_OGP_IMAGE">
   <meta property="og:url" content="https://share.chunisupport.net/users/USERNAME">
