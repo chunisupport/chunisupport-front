@@ -27,7 +27,7 @@ import {
 import { formatInteger } from '../../utils/numberFormat'
 import { formatPlayerRating, formatRatingFixed2 } from '../../utils/ratingFormat'
 import { formatScoreDifference } from '../../utils/scoreDifference'
-import { getScoreRank } from '../../utils/scoreRank'
+import { getScoreRank, type ScoreRank } from '../../utils/scoreRank'
 import { NEW_SONG_SSS_PLUS_COPY, RATING_THEORETICAL_TAB_OPTIONS } from './newSongSssPlus.constants'
 
 /** ベスト枠・新曲枠理論値チェッカーで選択できる表示枠 */
@@ -50,6 +50,16 @@ type RatingTheoreticalSummaryProps = {
   loading: boolean
   /** 計算済みの枠理論値。対象譜面がない場合は未定義 */
   theoreticalRating: RatingTheoretical | undefined
+}
+
+/** 理論値対象譜面の現在スコア表示 */
+type ChartProgressDisplay = {
+  /** 譜面の現在スコア */
+  currentScore: number
+  /** 現在スコアのランク */
+  scoreRank: ScoreRank
+  /** SSS+ボーダーとの差。到達済みならnull */
+  scoreGap: number | null
 }
 
 /** 理論値サマリー内の1指標に表示するアイコン、文言、値、推定状態 */
@@ -98,60 +108,133 @@ const RatingMetric: Component<RatingMetricProps> = (props) => (
 /**
  * SSS+対象譜面の現在スコアをランク色、SSS+ボーダーとの差を差分色で表示する。
  *
- * @param props - 対象譜面と全通常譜面レコード。
+ * @param props - 現在スコア表示。レコードがなければ未定義。
  * @returns 現在スコアとSSS+ボーダーとの差。
  */
 const SssPlusChartProgress: Component<{
+  progress: ChartProgressDisplay | undefined
+}> = (props) => (
+  <span class="flex min-w-0 flex-wrap items-center justify-end gap-x-1 gap-y-0.5 font-oswald text-xs tabular-nums text-text-muted sm:gap-x-3">
+    <Show
+      when={props.progress}
+      keyed
+      fallback={
+        <span class="font-sans text-text-subtle">{NEW_SONG_SSS_PLUS_COPY.recordUnavailable}</span>
+      }
+    >
+      {(current) => (
+        <>
+          <span
+            class={`whitespace-nowrap font-semibold ${SCORE_RANK_TEXT_CLASS[current.scoreRank]}`}
+          >
+            <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.currentScoreLabel}</span>
+            {formatInteger(current.currentScore)}
+          </span>
+          <Show when={current.scoreGap !== null}>
+            <span class="whitespace-nowrap font-medium text-rating-candidate-gap">
+              <span class="sr-only font-sans text-text-muted sm:not-sr-only sm:mr-1">
+                {NEW_SONG_SSS_PLUS_COPY.scoreGapLabel}
+              </span>
+              <span class="sm:hidden" aria-hidden="true">
+                (
+              </span>
+              {formatScoreDifference(current.scoreGap ?? 0)}
+              <span class="sm:hidden" aria-hidden="true">
+                )
+              </span>
+            </span>
+          </Show>
+        </>
+      )}
+    </Show>
+  </span>
+)
+
+/**
+ * 理論値対象譜面の現在スコア表示を組み立てる。
+ *
+ * @param entry - 理論値対象譜面。
+ * @param records - 照合に使う全通常譜面レコード。
+ * @returns 現在スコア表示。レコードがなければ未定義。
+ */
+const resolveChartProgressDisplay = (
+  entry: RatingTheoreticalEntry,
+  records: readonly PlayerRecordDTO[]
+): ChartProgressDisplay | undefined => {
+  const resolved = resolveRatingTheoreticalProgress(entry, records, [])
+  if (resolved.slot === null || resolved.currentScore === null) {
+    return undefined
+  }
+  return {
+    currentScore: resolved.currentScore,
+    scoreRank: getScoreRank(resolved.currentScore),
+    scoreGap: resolved.scoreGap,
+  }
+}
+
+/**
+ * 理論値対象譜面の1行を表示する。SSS+達成済みなら背景をハイライトする。
+ *
+ * @param props - 対象譜面、順位、全通常譜面レコード。
+ * @returns 楽曲詳細へ遷移できる一覧行。
+ */
+const TheoreticalChartRow: Component<{
   entry: RatingTheoreticalEntry
+  index: number
   records: readonly PlayerRecordDTO[]
 }> = (props) => {
-  const progress = createMemo(() => {
-    const resolved = resolveRatingTheoreticalProgress(props.entry, props.records, [])
-    if (resolved.slot === null || resolved.currentScore === null) {
-      return undefined
-    }
-    return {
-      currentScore: resolved.currentScore,
-      scoreRank: getScoreRank(resolved.currentScore),
-      scoreGap: resolved.scoreGap,
-    }
-  })
+  const progress = createMemo(() => resolveChartProgressDisplay(props.entry, props.records))
+  const isSssPlusAchieved = () => progress()?.scoreRank === 'SSS+'
 
   return (
-    <span class="flex min-w-0 flex-wrap items-center justify-end gap-x-1 gap-y-0.5 font-oswald text-xs tabular-nums text-text-muted sm:gap-x-3">
-      <Show
-        when={progress()}
-        keyed
-        fallback={
-          <span class="font-sans text-text-subtle">{NEW_SONG_SSS_PLUS_COPY.recordUnavailable}</span>
-        }
+    <li>
+      <A
+        href={buildSongDetailPath(props.entry.songId, props.entry.difficulty)}
+        class="grid grid-cols-[2rem_1.75rem_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
+        classList={{
+          'bg-row-highlight hover:bg-row-highlight-hover': isSssPlusAchieved(),
+          'hover:bg-surface-hover': !isSssPlusAchieved(),
+        }}
       >
-        {(current) => (
-          <>
-            <span
-              class={`whitespace-nowrap font-semibold ${SCORE_RANK_TEXT_CLASS[current.scoreRank]}`}
-            >
-              <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.currentScoreLabel}</span>
-              {formatInteger(current.currentScore)}
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-muted font-oswald text-lg font-bold text-text-muted">
+          {props.index + 1}
+        </span>
+        <RecordDifficultyBadge difficulty={props.entry.difficulty} />
+        <span class="min-w-0 font-sans">
+          <span class="block truncate text-sm font-semibold text-text">{props.entry.title}</span>
+          <span class="block truncate text-xs text-text-muted">{props.entry.artist}</span>
+          <Show when={isSssPlusAchieved()}>
+            <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.sssPlusAchievedLabel}</span>
+          </Show>
+        </span>
+        <span class="flex shrink-0 flex-col items-end gap-0.5 text-right">
+          <span class="font-oswald tabular-nums">
+            <span class="block text-base font-bold text-text">
+              <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.singleRatingLabel}</span>
+              {formatRatingFixed2(props.entry.rating)}
             </span>
-            <Show when={current.scoreGap !== null}>
-              <span class="whitespace-nowrap font-medium text-rating-candidate-gap">
-                <span class="sr-only font-sans text-text-muted sm:not-sr-only sm:mr-1">
-                  {NEW_SONG_SSS_PLUS_COPY.scoreGapLabel}
-                </span>
-                <span class="sm:hidden" aria-hidden="true">
-                  (
-                </span>
-                {formatScoreDifference(current.scoreGap ?? 0)}
-                <span class="sm:hidden" aria-hidden="true">
-                  )
-                </span>
-              </span>
-            </Show>
-          </>
-        )}
-      </Show>
-    </span>
+            <span
+              class="block text-xs text-text-muted data-[unknown=true]:italic data-[unknown=true]:text-danger"
+              data-unknown={props.entry.isChartConstantUnknown}
+            >
+              <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.chartConstantLabel}</span>
+              {formatChartConst(props.entry.chartConstant)}
+              <Show when={props.entry.isChartConstantUnknown}>
+                <sup
+                  class="ml-0.5 align-super font-sans text-[0.65em]"
+                  title={NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}
+                  aria-hidden="true"
+                >
+                  {NEW_SONG_SSS_PLUS_COPY.unknownMarker}
+                </sup>
+                <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
+              </Show>
+            </span>
+          </span>
+          <SssPlusChartProgress progress={progress()} />
+        </span>
+      </A>
+    </li>
   )
 }
 
@@ -177,47 +260,7 @@ const TheoreticalChartList: Component<{
     <ol class="divide-y divide-border border-t border-border">
       <For each={props.entries}>
         {(entry, index) => (
-          <li>
-            <A
-              href={buildSongDetailPath(entry.songId, entry.difficulty)}
-              class="grid grid-cols-[2rem_1.75rem_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 text-inherit hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
-            >
-              <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-muted font-oswald text-lg font-bold text-text-muted">
-                {index() + 1}
-              </span>
-              <RecordDifficultyBadge difficulty={entry.difficulty} />
-              <span class="min-w-0 font-sans">
-                <span class="block truncate text-sm font-semibold text-text">{entry.title}</span>
-                <span class="block truncate text-xs text-text-muted">{entry.artist}</span>
-              </span>
-              <span class="flex shrink-0 flex-col items-end gap-0.5 text-right">
-                <span class="font-oswald tabular-nums">
-                  <span class="block text-base font-bold text-text">
-                    <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.singleRatingLabel}</span>
-                    {formatRatingFixed2(entry.rating)}
-                  </span>
-                  <span
-                    class="block text-xs text-text-muted data-[unknown=true]:italic data-[unknown=true]:text-danger"
-                    data-unknown={entry.isChartConstantUnknown}
-                  >
-                    <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.chartConstantLabel}</span>
-                    {formatChartConst(entry.chartConstant)}
-                    <Show when={entry.isChartConstantUnknown}>
-                      <sup
-                        class="ml-0.5 align-super font-sans text-[0.65em]"
-                        title={NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}
-                        aria-hidden="true"
-                      >
-                        {NEW_SONG_SSS_PLUS_COPY.unknownMarker}
-                      </sup>
-                      <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
-                    </Show>
-                  </span>
-                </span>
-                <SssPlusChartProgress records={props.records} entry={entry} />
-              </span>
-            </A>
-          </li>
+          <TheoreticalChartRow entry={entry} index={index()} records={props.records} />
         )}
       </For>
     </ol>

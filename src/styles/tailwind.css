@@ -136,6 +136,16 @@
   --cs-color-select-selected-hover-bg: var(--color-primary-100);
   --cs-color-interactive-row-hover: var(--color-primary-100);
   --cs-color-new-song-bg: var(--color-primary-100);
+  --cs-color-row-highlight: color-mix(
+    in oklab,
+    var(--color-primary-500) 22%,
+    var(--cs-color-surface)
+  );
+  --cs-color-row-highlight-hover: color-mix(
+    in oklab,
+    var(--color-primary-500) 32%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-secondary: var(--color-gray-300);
   --cs-color-action-secondary-hover: var(--color-gray-400);
 
@@ -222,6 +232,16 @@
     var(--cs-color-surface)
   );
   --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
+  --cs-color-row-highlight: color-mix(
+    in oklab,
+    var(--color-primary-500) 42%,
+    var(--cs-color-surface)
+  );
+  --cs-color-row-highlight-hover: color-mix(
+    in oklab,
+    var(--color-primary-500) 55%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-secondary: #1d4a39;
   --cs-color-action-secondary-hover: #2f6b53;
 
@@ -300,6 +320,16 @@
     var(--color-primary-900) 35%,
     var(--cs-color-surface)
   );
+  --cs-color-row-highlight: color-mix(
+    in oklab,
+    var(--color-primary-500) 48%,
+    var(--cs-color-surface)
+  );
+  --cs-color-row-highlight-hover: color-mix(
+    in oklab,
+    var(--color-primary-500) 60%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-secondary: #444444;
   --cs-color-action-secondary-hover: #555555;
 
@@ -365,6 +395,16 @@
     var(--cs-color-surface)
   );
   --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
+  --cs-color-row-highlight: color-mix(
+    in oklab,
+    var(--color-primary-500) 42%,
+    var(--cs-color-surface)
+  );
+  --cs-color-row-highlight-hover: color-mix(
+    in oklab,
+    var(--color-primary-500) 55%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-secondary: #1e2d5e;
   --cs-color-action-secondary-hover: #2f4480;
 
@@ -443,6 +483,16 @@
   --cs-color-select-selected-hover-bg: var(--color-primary-100);
   --cs-color-interactive-row-hover: var(--color-primary-100);
   --cs-color-new-song-bg: var(--color-primary-100);
+  --cs-color-row-highlight: color-mix(
+    in oklab,
+    var(--color-primary-500) 22%,
+    var(--cs-color-surface)
+  );
+  --cs-color-row-highlight-hover: color-mix(
+    in oklab,
+    var(--color-primary-500) 32%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-secondary: #f5d5bc;
   --cs-color-action-secondary-hover: #ecc09f;
 
@@ -679,6 +729,9 @@
   --color-select-selected-hover-bg: var(--cs-color-select-selected-hover-bg);
   --color-interactive-row-hover: var(--cs-color-interactive-row-hover);
   --color-new-song-bg: var(--cs-color-new-song-bg);
+  /* 行ハイライト（達成済みなど常時強調。アクセント色を背景テーマごとに混ぜる） */
+  --color-row-highlight: var(--cs-color-row-highlight);
+  --color-row-highlight-hover: var(--cs-color-row-highlight-hover);
   --color-action-secondary: var(--cs-color-action-secondary);
   --color-action-secondary-hover: var(--cs-color-action-secondary-hover);
 

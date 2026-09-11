@@ -18,6 +18,7 @@ export const NEW_SONG_SSS_PLUS_COPY = {
   currentScoreLabel: '現在スコア',
   scoreGapLabel: 'SSS+まで',
   recordUnavailable: 'スコアなし',
+  sssPlusAchievedLabel: 'SSS+達成済み',
 } as const
 
 /** 理論値チェッカーの表示枠タブ */
