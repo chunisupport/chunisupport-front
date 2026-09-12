@@ -29,3 +29,14 @@ export const isNotFoundApiError = (error: unknown): boolean => {
   const apiError = toApiErrorLike(error)
   return apiError?.status === 404 || NOT_FOUND_ERROR_CODES.includes(apiError?.code ?? '')
 }
+
+/**
+ * API エラーが 403 相当かを判定する。
+ *
+ * @param error - 判定対象のエラー値。
+ * @returns 403 相当の場合は true。
+ */
+export const isForbiddenApiError = (error: unknown): boolean => {
+  const apiError = toApiErrorLike(error)
+  return apiError?.status === 403 || apiError?.code === 'forbidden'
+}

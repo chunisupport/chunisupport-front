@@ -37,6 +37,7 @@ import {
   ADMIN_DATA_COVERAGE_PATH,
   ADMIN_MAINTENANCE_PATH,
   ADMIN_PATH,
+  ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH,
   ADMIN_VERSIONS_PATH,
   ADMIN_WORLDSEND_CHART_RANKING_PATH,
   ALL_SONG_BEST_FRAME_PATH,
@@ -118,6 +119,9 @@ const AdminCoursesPage = lazy(() => import('./pages/admin/AdminCoursesPage'))
 const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
 const AdminMaintenancePage = lazy(() => import('./pages/admin/AdminMaintenancePage'))
 const AdminVersionsPage = lazy(() => import('./pages/admin/AdminVersionsPage'))
+const AdminRatingImageDomPreviewPage = lazy(
+  () => import('./pages/admin/AdminRatingImageDomPreviewPage')
+)
 const EditorPage = lazy(() => import('./pages/editor/EditorPage'))
 const EditorSongsPage = lazy(() => import('./pages/editor/EditorSongsPage'))
 const EditorCoursesPage = lazy(() => import('./pages/editor/EditorCoursesPage'))
@@ -379,6 +383,7 @@ const LoadableAdminCoursesPage = withRouteLoadBoundary(AdminCoursesPage)
 const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
 const LoadableAdminMaintenancePage = withRouteLoadBoundary(AdminMaintenancePage)
 const LoadableAdminVersionsPage = withRouteLoadBoundary(AdminVersionsPage)
+const LoadableAdminRatingImageDomPreviewPage = withRouteLoadBoundary(AdminRatingImageDomPreviewPage)
 const LoadableEditorPage = withRouteLoadBoundary(EditorPage)
 const LoadableEditorSongsPage = withRouteLoadBoundary(EditorSongsPage)
 const LoadableEditorCoursesPage = withRouteLoadBoundary(EditorCoursesPage)
@@ -513,6 +518,17 @@ const GuardedAdminMaintenancePage = () => (
 const GuardedAdminVersionsPage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
     <LoadableAdminVersionsPage />
+  </RequireRole>
+)
+
+/**
+ * ADMIN 権限を要求してレーティング画像DOM確認画面を表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与したレーティング画像DOM確認画面。
+ */
+const GuardedAdminRatingImageDomPreviewPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableAdminRatingImageDomPreviewPage />
   </RequireRole>
 )
 
@@ -665,6 +681,10 @@ const App = () => {
       <Route path="/admin/honors" component={withNavBar(GuardedAdminHonorsPage)} />
       <Route path={ADMIN_MAINTENANCE_PATH} component={withNavBar(GuardedAdminMaintenancePage)} />
       <Route path={ADMIN_VERSIONS_PATH} component={withNavBar(GuardedAdminVersionsPage)} />
+      <Route
+        path={ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH}
+        component={withNavBar(GuardedAdminRatingImageDomPreviewPage)}
+      />
 
       {/* 編集 */}
       <Route path={EDITOR_PATH} component={withNavBar(GuardedEditorPage)} />

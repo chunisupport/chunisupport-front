@@ -1,0 +1,21 @@
+/** レーティング画像DOM確認画面で使用する文言 */
+export const ADMIN_RATING_IMAGE_DOM_PREVIEW_COPY = {
+  pageTitle: 'レーティング画像DOM',
+  heading: 'レーティング画像DOM',
+  usernameLabel: 'ユーザー/プレイヤー名',
+  usernamePlaceholder: '空欄でサンプル',
+  usernameAriaLabel: '確認するユーザー名またはプレイヤー名',
+  loadButton: '表示',
+  versionLabel: 'デザイン',
+  showJacketsLabel: 'ジャケット',
+  scaleLabel: '表示サイズ',
+  captureButton: '画像化',
+  capturingLabel: '画像化中',
+  captureError: '画像化に失敗しました。',
+  userNotFound: 'ユーザーが見つかりません。',
+  noPlayerData: 'プレイヤーデータがありません。',
+  privatePlayer: '非公開プレイヤーです。',
+  multipleMatches: '複数のユーザーが該当します。',
+  loadingLabel: '読み込み中',
+  previewLabel: '画像化前のベスト枠・新曲枠',
+} as const

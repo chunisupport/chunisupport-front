@@ -1,4 +1,13 @@
-import { Award, CalendarRange, ChartPie, Music, Route, Users, Wrench } from 'lucide-solid'
+import {
+  Award,
+  CalendarRange,
+  ChartPie,
+  ImageDown,
+  Music,
+  Route,
+  Users,
+  Wrench,
+} from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { For } from 'solid-js'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -13,6 +22,7 @@ export type StaffMenuLinkIcon =
   | 'courses'
   | 'honors'
   | 'versions'
+  | 'ratingImage'
 
 export type StaffMenuLink = {
   /** 遷移先のアプリ内パス */
@@ -62,6 +72,8 @@ const StaffMenuCardIcon = (props: { icon: StaffMenuLinkIcon }) => {
       return <Award class={STAFF_MENU_ICON_CLASS} aria-hidden="true" />
     case 'versions':
       return <CalendarRange class={STAFF_MENU_ICON_CLASS} aria-hidden="true" />
+    case 'ratingImage':
+      return <ImageDown class={STAFF_MENU_ICON_CLASS} aria-hidden="true" />
   }
 }
 
