@@ -9,8 +9,27 @@ export type PlayerMetricHistoryMetric = 'rating' | 'overpower' | 'overpower_perc
 /** Chart.jsへ渡す公式指標履歴の座標 */
 export type PlayerMetricHistoryChartPoint = { x: number; y: number | null }
 
+/** 公式指標履歴グラフの縦軸範囲 */
+export type PlayerMetricHistoryAxisRange = {
+  min: number
+  max: number
+}
+
+/** 公式指標履歴グラフの縦軸範囲を算出する条件 */
+export type PlayerMetricHistoryAxisRangeOptions = {
+  /** 縦軸の値域下限。未指定なら下限を設けない */
+  floor?: number
+  /** 縦軸の値域上限。未指定なら上限を設けない */
+  ceiling?: number
+  /** データ範囲が狭いときに確保する最小余白 */
+  minPadding: number
+  /** データ範囲に対して上下へ確保する余白の割合 */
+  paddingRatio: number
+}
+
 const PLAYER_METRIC_HISTORY_NOT_FOUND_CODE = 'player_metric_history_not_found'
 const INVALID_DATE_LABEL = '-'
+const PLAYER_METRIC_HISTORY_AXIS_RANGE_DECIMAL_PLACES = 10
 const PLAYER_METRIC_HISTORY_TIME_ZONE = 'Asia/Tokyo'
 const playerMetricHistoryDateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
   year: 'numeric',
@@ -27,6 +46,15 @@ const playerMetricHistoryAxisDateFormatter = new Intl.DateTimeFormat('ja-JP', {
   day: '2-digit',
   timeZone: PLAYER_METRIC_HISTORY_TIME_ZONE,
 })
+
+/**
+ * 縦軸範囲の浮動小数点誤差を除去する。
+ *
+ * @param value - 丸める縦軸値。
+ * @returns 固定小数点へ丸めた縦軸値。
+ */
+const roundPlayerMetricHistoryAxisValue = (value: number): number =>
+  Number(value.toFixed(PLAYER_METRIC_HISTORY_AXIS_RANGE_DECIMAL_PLACES))
 
 /** APIエラーコードを参照できる最小限の構造 */
 type ApiErrorLike = {
@@ -84,6 +112,54 @@ export const buildPlayerMetricHistoryChartPoints = (
     const value = entry[metric]
     return [{ x: timestamp, y: value }]
   })
+
+/**
+ * 公式指標履歴グラフの縦軸範囲を、値が中央付近に来るよう算出する。
+ *
+ * @param values - グラフ化する値。nullは無視する。
+ * @param options - 指標ごとの下限・上限と余白。
+ * @returns 算出した縦軸範囲。有効な値がなければundefined。
+ */
+export const buildPlayerMetricHistoryAxisRange = (
+  values: readonly (number | null)[],
+  options: PlayerMetricHistoryAxisRangeOptions
+): PlayerMetricHistoryAxisRange | undefined => {
+  const numbers = values.filter(
+    (value): value is number => value !== null && Number.isFinite(value)
+  )
+  if (numbers.length === 0) {
+    return undefined
+  }
+
+  const dataMin = Math.min(...numbers)
+  const dataMax = Math.max(...numbers)
+  const padding = Math.max((dataMax - dataMin) * options.paddingRatio, options.minPadding)
+  let min = dataMin - padding
+  let max = dataMax + padding
+
+  if (options.floor !== undefined) {
+    min = Math.max(min, options.floor)
+  }
+  if (options.ceiling !== undefined) {
+    max = Math.min(max, options.ceiling)
+  }
+
+  if (max > min) {
+    return {
+      min: roundPlayerMetricHistoryAxisValue(min),
+      max: roundPlayerMetricHistoryAxisValue(max),
+    }
+  }
+
+  if (options.floor !== undefined && options.ceiling !== undefined) {
+    return { min: options.floor, max: options.ceiling }
+  }
+
+  return {
+    min: roundPlayerMetricHistoryAxisValue(dataMin - options.minPadding),
+    max: roundPlayerMetricHistoryAxisValue(dataMax + options.minPadding),
+  }
+}
 
 /**
  * 指定した公式指標に記録済みの値が1件以上あるか判定する。

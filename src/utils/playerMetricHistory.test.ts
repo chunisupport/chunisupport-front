@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PlayerMetricHistoryEntryDTO } from '../types/api'
 import {
+  buildPlayerMetricHistoryAxisRange,
   buildPlayerMetricHistoryChartPoints,
   formatPlayerMetricHistoryAxisTimestamp,
   formatPlayerMetricHistoryDateTime,
@@ -47,6 +48,81 @@ test('公式OPパーセントの未記録値をグラフの切れ目として残
     { x: new Date(middle.data_collected_at).getTime(), y: 98.7 },
     { x: new Date(latest.data_collected_at).getTime(), y: 98.76 },
   ])
+})
+
+test('履歴グラフの縦軸はデータが中央付近に来る範囲を返すこと', () => {
+  // Given: 理論上限より十分低いレーティング履歴。
+  const values = [16.2, 16.5, 16.8]
+
+  // When: 上下に同じ割合の余白を乗せて縦軸範囲を算出する。
+  const result = buildPlayerMetricHistoryAxisRange(values, {
+    floor: 0,
+    ceiling: 18,
+    minPadding: 0.5,
+    paddingRatio: 1,
+  })
+
+  // Then: 下限0や上限18に張り付かず、データの上下に余白が付く。
+  assert.deepEqual(result, { min: 15.6, max: 17.4 })
+})
+
+test('履歴グラフの縦軸は下限と上限を超えないこと', () => {
+  // Given: 上限付近のOP%履歴。
+  const values = [96, 98, 99]
+
+  // When: 余白付きの縦軸範囲を算出する。
+  const result = buildPlayerMetricHistoryAxisRange(values, {
+    floor: 0,
+    ceiling: 100,
+    minPadding: 5,
+    paddingRatio: 1,
+  })
+
+  // Then: 上限100でクリップし、下限は余白分だけ下がる。
+  assert.deepEqual(result, { min: 91, max: 100 })
+})
+
+test('履歴グラフの縦軸は下限0を下回らないこと', () => {
+  // Given: 下限付近のOP%履歴。
+  const values = [2, 3, 4]
+
+  // When: 余白付きの縦軸範囲を算出する。
+  const result = buildPlayerMetricHistoryAxisRange(values, {
+    floor: 0,
+    ceiling: 100,
+    minPadding: 5,
+    paddingRatio: 1,
+  })
+
+  // Then: 下限0でクリップし、上限は余白分だけ上がる。
+  assert.deepEqual(result, { min: 0, max: 9 })
+})
+
+test('履歴グラフの縦軸は有効な値がなければ範囲を返さないこと', () => {
+  // Given: 未記録のみのOP%履歴。
+
+  // When: 縦軸範囲を算出する。
+  const result = buildPlayerMetricHistoryAxisRange([null, null], {
+    minPadding: 5,
+    paddingRatio: 1,
+  })
+
+  // Then: 軸範囲を確定できない。
+  assert.equal(result, undefined)
+})
+
+test('履歴グラフの縦軸は値が1件でも最小余白で中央に置くこと', () => {
+  // Given: OVER POWERが1点だけの履歴。
+
+  // When: 最小余白を使って縦軸範囲を算出する。
+  const result = buildPlayerMetricHistoryAxisRange([12_000], {
+    floor: 0,
+    minPadding: 50,
+    paddingRatio: 1,
+  })
+
+  // Then: 点の上下に最小余白が付く。
+  assert.deepEqual(result, { min: 11_950, max: 12_050 })
 })
 
 test('公式指標に記録済みの値があるか判定する', () => {

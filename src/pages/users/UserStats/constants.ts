@@ -2,8 +2,8 @@ import type { PlayerMetricHistoryMetric } from '../../../utils/playerMetricHisto
 
 /** 公式指標履歴ページで表示する文言 */
 export const PLAYER_METRIC_HISTORY_COPY = {
-  pageTitle: 'RATING / OVER POWER / OP%履歴',
-  documentTitle: 'RATING / OVER POWER / OP%履歴',
+  pageTitle: 'レーティング・OVER POWER履歴',
+  documentTitle: 'レーティング・OVER POWER履歴',
   backToProfile: 'プロフィールへ戻る',
   emptyHistory: '履歴がありません',
   tableTitle: '履歴一覧',
@@ -18,11 +18,26 @@ export const PLAYER_METRIC_HISTORY_COPY = {
   overPowerPercentChartAriaLabel: '公式OP%履歴の折れ線グラフ',
 } as const
 
+/** 公式指標履歴グラフの縦軸下限 */
+export const PLAYER_METRIC_HISTORY_AXIS_FLOOR = 0
+
 /** 公式RATING履歴グラフの縦軸上限 */
-export const PLAYER_METRIC_HISTORY_RATING_AXIS_MAX = 18
+export const PLAYER_METRIC_HISTORY_RATING_AXIS_CEILING = 18
 
 /** 公式OP%履歴グラフの縦軸上限 */
-export const PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_MAX = 100
+export const PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_CEILING = 100
+
+/** データ範囲に対して上下へ確保する余白の割合 */
+export const PLAYER_METRIC_HISTORY_AXIS_PADDING_RATIO = 1
+
+/** 公式RATING履歴グラフでデータ範囲が狭いときに確保する最小余白 */
+export const PLAYER_METRIC_HISTORY_RATING_AXIS_MIN_PADDING = 0.5
+
+/** 公式OVER POWER履歴グラフでデータ範囲が狭いときに確保する最小余白 */
+export const PLAYER_METRIC_HISTORY_OVERPOWER_AXIS_MIN_PADDING = 50
+
+/** 公式OP%履歴グラフでデータ範囲が狭いときに確保する最小余白 */
+export const PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_MIN_PADDING = 5
 
 /** 履歴グラフ1枚分の表示定義 */
 export type PlayerMetricHistoryChartDefinition = {
@@ -32,8 +47,12 @@ export type PlayerMetricHistoryChartDefinition = {
   colorVariable: string
   decimalPlaces: number
   suffix: string
-  /** 縦軸のドメイン上限。未指定の指標はChart.jsの自動スケールを使う */
-  yMax?: number
+  /** 縦軸の値域下限。未指定なら下限を設けない */
+  axisFloor?: number
+  /** 縦軸の値域上限。未指定なら上限を設けない */
+  axisCeiling?: number
+  /** データ範囲が狭いときに確保する縦軸の最小余白 */
+  axisMinPadding: number
 }
 
 /** RATING・OVER POWER・OP%を別々の折れ線グラフとして表示する定義 */
@@ -45,7 +64,9 @@ export const PLAYER_METRIC_HISTORY_CHART_DEFINITIONS = [
     colorVariable: '--cs-color-action-primary',
     decimalPlaces: 2,
     suffix: '',
-    yMax: PLAYER_METRIC_HISTORY_RATING_AXIS_MAX,
+    axisFloor: PLAYER_METRIC_HISTORY_AXIS_FLOOR,
+    axisCeiling: PLAYER_METRIC_HISTORY_RATING_AXIS_CEILING,
+    axisMinPadding: PLAYER_METRIC_HISTORY_RATING_AXIS_MIN_PADDING,
   },
   {
     metric: 'overpower',
@@ -54,6 +75,8 @@ export const PLAYER_METRIC_HISTORY_CHART_DEFINITIONS = [
     colorVariable: '--cs-color-info',
     decimalPlaces: 2,
     suffix: '',
+    axisFloor: PLAYER_METRIC_HISTORY_AXIS_FLOOR,
+    axisMinPadding: PLAYER_METRIC_HISTORY_OVERPOWER_AXIS_MIN_PADDING,
   },
   {
     metric: 'overpower_percent',
@@ -62,7 +85,9 @@ export const PLAYER_METRIC_HISTORY_CHART_DEFINITIONS = [
     colorVariable: '--cs-color-success',
     decimalPlaces: 2,
     suffix: '%',
-    yMax: PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_MAX,
+    axisFloor: PLAYER_METRIC_HISTORY_AXIS_FLOOR,
+    axisCeiling: PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_CEILING,
+    axisMinPadding: PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_MIN_PADDING,
   },
 ] as const satisfies readonly PlayerMetricHistoryChartDefinition[]
 
