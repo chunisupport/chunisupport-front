@@ -7,6 +7,7 @@ import {
   formatRatingImageOverPowerPercent,
   formatRatingImageOverPowerValue,
   getPrimaryHonor,
+  getRatingImageV2ComboLampLabel,
 } from './ratingImageShared.ts'
 
 test('getPrimaryHonor は1枠目の称号を優先すること', () => {
@@ -91,4 +92,18 @@ test('formatRatingImageOverPowerPercent は未設定値をハイフンへする�
 
   // Then: ハイフンになる。
   assert.equal(label, '-')
+})
+
+test('レーティング枠画像 Ver. 2 のコンボランプは省略せずFULL COMBOとALL JUSTICEを返すこと', () => {
+  // Given: FULL COMBOとALL JUSTICEと未設定のコンボランプ。
+
+  // When: 画像用の表示文言を取得する。
+  const fullCombo = getRatingImageV2ComboLampLabel('FULL COMBO')
+  const allJustice = getRatingImageV2ComboLampLabel('ALL JUSTICE')
+  const unset = getRatingImageV2ComboLampLabel(null)
+
+  // Then: 省略せずフル表記し、未設定は空文字になる。
+  assert.equal(fullCombo, 'FULL COMBO')
+  assert.equal(allJustice, 'ALL JUSTICE')
+  assert.equal(unset, '')
 })

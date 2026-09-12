@@ -92,7 +92,10 @@ const createIndexedPreviewRecord = (prefix: string, index: number): PlayerRecord
     is_const_unknown: index === 5,
     score: index === 3 ? 1_010_000 : 1_009_000 - index * 100,
     rating: 17.4 - index * 0.02,
+    clear_lamp:
+      index === 3 ? 'CATASTROPHY' : index === 4 ? 'HARD' : index === 1 ? 'ABSOLUTE' : 'CLEAR',
     combo_lamp: index === 3 ? 'ALL JUSTICE' : index === 4 ? 'FULL COMBO' : null,
+    full_chain: index === 3 ? 'FULL CHAIN PLATINUM' : index === 4 ? 'FULL CHAIN GOLD' : null,
     justice_count: index === 3 ? 0 : null,
   })
 }

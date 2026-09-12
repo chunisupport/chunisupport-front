@@ -18,6 +18,7 @@ import { getRankingPositionClass } from '../../../../utils/rankingPosition'
 import { formatNullablePlayerRating, formatRatingFixed2 } from '../../../../utils/ratingFormat'
 import { getScoreRank } from '../../../../utils/scoreRank'
 import { RATING_IMAGE_COPY, RATING_IMAGE_WIDTH_PX } from '../UserProfileView.constants'
+import { RatingImageFooter } from './RatingImageFooter'
 import { RatingImageJacketMedia } from './RatingImageJacketMedia'
 import {
   formatRatingImageOverPowerPercent,
@@ -291,9 +292,7 @@ export const RatingImageSheet: Component<RatingImageSheetProps> = (props) => {
         />
       </main>
 
-      <footer class="mt-6 border-t-2 border-border-strong pt-4">
-        <p class="font-sans text-base font-bold text-text-muted">{RATING_IMAGE_COPY.generatedBy}</p>
-      </footer>
+      <RatingImageFooter class="mt-6 border-t-2 border-border-strong pt-4" />
     </div>
   )
 }

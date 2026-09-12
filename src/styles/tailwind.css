@@ -136,16 +136,12 @@
   --cs-color-select-selected-hover-bg: var(--color-primary-100);
   --cs-color-interactive-row-hover: var(--color-primary-100);
   --cs-color-new-song-bg: var(--color-primary-100);
-  --cs-color-row-highlight: color-mix(
-    in oklab,
-    var(--color-primary-500) 22%,
-    var(--cs-color-surface)
-  );
-  --cs-color-row-highlight-hover: color-mix(
-    in oklab,
-    var(--color-primary-500) 32%,
-    var(--cs-color-surface)
-  );
+  --cs-color-row-highlight: color-mix(in oklab,
+      var(--color-primary-500) 22%,
+      var(--cs-color-surface));
+  --cs-color-row-highlight-hover: color-mix(in oklab,
+      var(--color-primary-500) 32%,
+      var(--cs-color-surface));
   --cs-color-action-secondary: var(--color-gray-300);
   --cs-color-action-secondary-hover: var(--color-gray-400);
 
@@ -215,33 +211,23 @@
   /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
   --cs-color-action-primary: var(--color-primary-500);
   --cs-color-action-primary-hover: var(--color-primary-400);
-  --cs-color-action-primary-muted: color-mix(
-    in oklab,
-    var(--color-primary-700) 35%,
-    var(--cs-color-surface)
-  );
+  --cs-color-action-primary-muted: color-mix(in oklab,
+      var(--color-primary-700) 35%,
+      var(--cs-color-surface));
   --cs-color-action-primary-border: var(--color-primary-700);
-  --cs-color-select-selected-hover-bg: color-mix(
-    in oklab,
-    var(--color-primary-600) 42%,
-    var(--cs-color-surface)
-  );
-  --cs-color-interactive-row-hover: color-mix(
-    in oklab,
-    var(--color-primary-900) 28%,
-    var(--cs-color-surface)
-  );
+  --cs-color-select-selected-hover-bg: color-mix(in oklab,
+      var(--color-primary-600) 42%,
+      var(--cs-color-surface));
+  --cs-color-interactive-row-hover: color-mix(in oklab,
+      var(--color-primary-900) 28%,
+      var(--cs-color-surface));
   --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
-  --cs-color-row-highlight: color-mix(
-    in oklab,
-    var(--color-primary-500) 42%,
-    var(--cs-color-surface)
-  );
-  --cs-color-row-highlight-hover: color-mix(
-    in oklab,
-    var(--color-primary-500) 55%,
-    var(--cs-color-surface)
-  );
+  --cs-color-row-highlight: color-mix(in oklab,
+      var(--color-primary-500) 42%,
+      var(--cs-color-surface));
+  --cs-color-row-highlight-hover: color-mix(in oklab,
+      var(--color-primary-500) 55%,
+      var(--cs-color-surface));
   --cs-color-action-secondary: #1d4a39;
   --cs-color-action-secondary-hover: #2f6b53;
 
@@ -254,11 +240,9 @@
   /* ===== 成功（テキスト / 背景 / 枠線） ===== */
   --cs-color-success: var(--color-green-300);
   --cs-color-success-bg: color-mix(in oklab, var(--color-green-900) 35%, var(--cs-color-surface));
-  --cs-color-success-bg-hover: color-mix(
-    in oklab,
-    var(--color-green-800) 45%,
-    var(--cs-color-surface)
-  );
+  --cs-color-success-bg-hover: color-mix(in oklab,
+      var(--color-green-800) 45%,
+      var(--cs-color-surface));
   --cs-color-success-border: var(--color-green-800);
 
   /* ===== 警告（テキスト / 背景 / 枠線） ===== */
@@ -305,42 +289,30 @@
   --cs-color-border-strong: #666666;
 
   /* ===== 背景色に依存するアクション ===== */
-  --cs-color-action-primary-muted: color-mix(
-    in oklab,
-    var(--color-primary-700) 45%,
-    var(--cs-color-surface)
-  );
-  --cs-color-select-selected-hover-bg: color-mix(
-    in oklab,
-    var(--color-primary-600) 50%,
-    var(--cs-color-surface)
-  );
-  --cs-color-interactive-row-hover: color-mix(
-    in oklab,
-    var(--color-primary-900) 35%,
-    var(--cs-color-surface)
-  );
-  --cs-color-row-highlight: color-mix(
-    in oklab,
-    var(--color-primary-500) 48%,
-    var(--cs-color-surface)
-  );
-  --cs-color-row-highlight-hover: color-mix(
-    in oklab,
-    var(--color-primary-500) 60%,
-    var(--cs-color-surface)
-  );
+  --cs-color-action-primary-muted: color-mix(in oklab,
+      var(--color-primary-700) 45%,
+      var(--cs-color-surface));
+  --cs-color-select-selected-hover-bg: color-mix(in oklab,
+      var(--color-primary-600) 50%,
+      var(--cs-color-surface));
+  --cs-color-interactive-row-hover: color-mix(in oklab,
+      var(--color-primary-900) 35%,
+      var(--cs-color-surface));
+  --cs-color-row-highlight: color-mix(in oklab,
+      var(--color-primary-500) 48%,
+      var(--cs-color-surface));
+  --cs-color-row-highlight-hover: color-mix(in oklab,
+      var(--color-primary-500) 60%,
+      var(--cs-color-surface));
   --cs-color-action-secondary: #444444;
   --cs-color-action-secondary-hover: #555555;
 
   /* ===== 背景色に依存する状態色 ===== */
   --cs-color-danger-bg: color-mix(in oklab, var(--color-red-900) 45%, var(--cs-color-surface));
   --cs-color-success-bg: color-mix(in oklab, var(--color-green-900) 45%, var(--cs-color-surface));
-  --cs-color-success-bg-hover: color-mix(
-    in oklab,
-    var(--color-green-800) 55%,
-    var(--cs-color-surface)
-  );
+  --cs-color-success-bg-hover: color-mix(in oklab,
+      var(--color-green-800) 55%,
+      var(--cs-color-surface));
   --cs-color-warning-bg: color-mix(in oklab, var(--color-yellow-900) 45%, var(--cs-color-surface));
   --cs-color-info-bg: color-mix(in oklab, var(--color-teal-900) 45%, var(--cs-color-surface));
 
@@ -378,33 +350,23 @@
   /* ===== アクション: ボタン（プライマリ / セカンダリ） ===== */
   --cs-color-action-primary: var(--color-primary-500);
   --cs-color-action-primary-hover: var(--color-primary-400);
-  --cs-color-action-primary-muted: color-mix(
-    in oklab,
-    var(--color-primary-700) 35%,
-    var(--cs-color-surface)
-  );
+  --cs-color-action-primary-muted: color-mix(in oklab,
+      var(--color-primary-700) 35%,
+      var(--cs-color-surface));
   --cs-color-action-primary-border: var(--color-primary-700);
-  --cs-color-select-selected-hover-bg: color-mix(
-    in oklab,
-    var(--color-primary-600) 42%,
-    var(--cs-color-surface)
-  );
-  --cs-color-interactive-row-hover: color-mix(
-    in oklab,
-    var(--color-primary-900) 28%,
-    var(--cs-color-surface)
-  );
+  --cs-color-select-selected-hover-bg: color-mix(in oklab,
+      var(--color-primary-600) 42%,
+      var(--cs-color-surface));
+  --cs-color-interactive-row-hover: color-mix(in oklab,
+      var(--color-primary-900) 28%,
+      var(--cs-color-surface));
   --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
-  --cs-color-row-highlight: color-mix(
-    in oklab,
-    var(--color-primary-500) 42%,
-    var(--cs-color-surface)
-  );
-  --cs-color-row-highlight-hover: color-mix(
-    in oklab,
-    var(--color-primary-500) 55%,
-    var(--cs-color-surface)
-  );
+  --cs-color-row-highlight: color-mix(in oklab,
+      var(--color-primary-500) 42%,
+      var(--cs-color-surface));
+  --cs-color-row-highlight-hover: color-mix(in oklab,
+      var(--color-primary-500) 55%,
+      var(--cs-color-surface));
   --cs-color-action-secondary: #1e2d5e;
   --cs-color-action-secondary-hover: #2f4480;
 
@@ -417,11 +379,9 @@
   /* ===== 成功（テキスト / 背景 / 枠線） ===== */
   --cs-color-success: var(--color-green-300);
   --cs-color-success-bg: color-mix(in oklab, var(--color-green-900) 35%, var(--cs-color-surface));
-  --cs-color-success-bg-hover: color-mix(
-    in oklab,
-    var(--color-green-800) 45%,
-    var(--cs-color-surface)
-  );
+  --cs-color-success-bg-hover: color-mix(in oklab,
+      var(--color-green-800) 45%,
+      var(--cs-color-surface));
   --cs-color-success-border: var(--color-green-800);
 
   /* ===== 警告（テキスト / 背景 / 枠線） ===== */
@@ -483,16 +443,12 @@
   --cs-color-select-selected-hover-bg: var(--color-primary-100);
   --cs-color-interactive-row-hover: var(--color-primary-100);
   --cs-color-new-song-bg: var(--color-primary-100);
-  --cs-color-row-highlight: color-mix(
-    in oklab,
-    var(--color-primary-500) 22%,
-    var(--cs-color-surface)
-  );
-  --cs-color-row-highlight-hover: color-mix(
-    in oklab,
-    var(--color-primary-500) 32%,
-    var(--cs-color-surface)
-  );
+  --cs-color-row-highlight: color-mix(in oklab,
+      var(--color-primary-500) 22%,
+      var(--cs-color-surface));
+  --cs-color-row-highlight-hover: color-mix(in oklab,
+      var(--color-primary-500) 32%,
+      var(--cs-color-surface));
   --cs-color-action-secondary: #f5d5bc;
   --cs-color-action-secondary-hover: #ecc09f;
 
@@ -550,13 +506,19 @@
 
   /* ===== レーティング枠画像 Ver. 2（背景模様 / ジャケット重ね文字） ===== */
   --cs-size-rating-image-v2-pattern: 28px;
-  --cs-gradient-rating-image-v2-jacket-scrim: linear-gradient(
-    to top,
-    rgb(0 0 0 / 78%) 0%,
-    rgb(0 0 0 / 40%) 58%,
-    rgb(0 0 0 / 0%) 100%
-  );
-  --cs-shadow-rating-image-v2-jacket-text: 0 1px 2px rgb(0 0 0 / 78%);
+  --cs-color-rating-image-v2-jacket-score-bg: #000000;
+  --cs-color-rating-image-v2-jacket-score-text: var(--color-white);
+  --cs-size-rating-image-v2-difficulty-stripe: 4px;
+  --cs-shadow-rating-image-v2-header: 0 4px 12px rgb(0 0 0 / 22%);
+  --cs-shadow-rating-image-v2-jacket-lamp: 0 1px 3px rgb(0 0 0 / 55%);
+  --cs-size-difficulty-ultima-stripe: 6px;
+  --cs-size-difficulty-ultima-stripe-period: 12px;
+  --cs-color-difficulty-ultima-stripe: #ff0000;
+  --cs-gradient-rating-image-v2-ultima-stripe: repeating-linear-gradient(-60deg,
+      var(--cs-color-difficulty-ultima-stripe) 0,
+      var(--cs-color-difficulty-ultima-stripe) var(--cs-size-difficulty-ultima-stripe),
+      var(--cs-color-difficulty-ultima-bg) var(--cs-size-difficulty-ultima-stripe),
+      var(--cs-color-difficulty-ultima-bg) var(--cs-size-difficulty-ultima-stripe-period));
 
   /* ===== 難易度バッジ（BASIC / ADVANCED / EXPERT / MASTER / ULTIMA） ===== */
   --cs-color-difficulty-basic-bg: #00ab84;
@@ -578,72 +540,60 @@
   --cs-color-course-class-4-bg: #dc2626;
   --cs-color-course-class-5-bg: #3b0764;
   --cs-shadow-course-class-text: 0 1px 2px rgb(0 0 0 / 50%);
-  --cs-color-course-class-inf-bg: linear-gradient(
-    45deg,
-    var(--cs-color-lamp-all-justice-critical-rainbow-1),
-    var(--cs-color-lamp-all-justice-critical-rainbow-2),
-    var(--cs-color-lamp-all-justice-critical-rainbow-3),
-    var(--cs-color-lamp-all-justice-critical-rainbow-4),
-    var(--cs-color-lamp-all-justice-critical-rainbow-5),
-    var(--cs-color-lamp-all-justice-critical-rainbow-6),
-    var(--cs-color-lamp-all-justice-critical-rainbow-7)
-  );
+  --cs-color-course-class-inf-bg: linear-gradient(45deg,
+      var(--cs-color-lamp-all-justice-critical-rainbow-1),
+      var(--cs-color-lamp-all-justice-critical-rainbow-2),
+      var(--cs-color-lamp-all-justice-critical-rainbow-3),
+      var(--cs-color-lamp-all-justice-critical-rainbow-4),
+      var(--cs-color-lamp-all-justice-critical-rainbow-5),
+      var(--cs-color-lamp-all-justice-critical-rainbow-6),
+      var(--cs-color-lamp-all-justice-critical-rainbow-7));
 
   /* ===== WORLD'S ENDラベル ===== */
-  --cs-color-worldsend-label-bg: linear-gradient(
-    135deg,
-    #48111d 0%,
-    #5a3609 18%,
-    #48520f 34%,
-    #0f4f32 50%,
-    #0d4a57 66%,
-    #1e3473 82%,
-    #3f1f61 100%
-  );
+  --cs-color-worldsend-label-bg: linear-gradient(135deg,
+      #48111d 0%,
+      #5a3609 18%,
+      #48520f 34%,
+      #0f4f32 50%,
+      #0d4a57 66%,
+      #1e3473 82%,
+      #3f1f61 100%);
   --cs-color-worldsend-label-text: var(--color-white);
 
   /* ===== ユーザー称号（ノーマル） ===== */
   --cs-color-honor-title-normal-bg: var(--color-yellow-200);
   --cs-color-honor-title-normal-text: var(--color-gray-900);
-  --cs-gradient-rating-image-sp-honor-bg: linear-gradient(
-    135deg,
-    #d8f7e2 0%,
-    #7bd89a 50%,
-    #38b968 100%
-  );
+  --cs-gradient-rating-image-sp-honor-bg: linear-gradient(135deg,
+      #d8f7e2 0%,
+      #7bd89a 50%,
+      #38b968 100%);
 
   /* ===== ランキングメダル（金 / 銀 / 銅） ===== */
   --cs-color-ranking-gold-bg: var(--color-yellow-300);
   --cs-color-ranking-silver-bg: var(--color-gray-300);
   --cs-color-ranking-bronze-bg: var(--color-orange-300);
   --cs-color-ranking-medal-text: var(--color-gray-900);
-  --cs-gradient-ranking-gold-bg: linear-gradient(
-    45deg,
-    #d6a63a 0%,
-    #f8d86a 24%,
-    #fff8bd 42%,
-    #ecc153 58%,
-    #ffe47d 76%,
-    #c99b32 100%
-  );
-  --cs-gradient-ranking-silver-bg: linear-gradient(
-    45deg,
-    #c2c8d2 0%,
-    #edf0f5 24%,
-    #ffffff 42%,
-    #d9dee7 58%,
-    #f7f9fb 76%,
-    #b5bdca 100%
-  );
-  --cs-gradient-ranking-bronze-bg: linear-gradient(
-    45deg,
-    #c8793d 0%,
-    #e39b5b 24%,
-    #ffe0bd 42%,
-    #d88a4b 58%,
-    #f0b075 76%,
-    #b86a35 100%
-  );
+  --cs-gradient-ranking-gold-bg: linear-gradient(45deg,
+      #d6a63a 0%,
+      #f8d86a 24%,
+      #fff8bd 42%,
+      #ecc153 58%,
+      #ffe47d 76%,
+      #c99b32 100%);
+  --cs-gradient-ranking-silver-bg: linear-gradient(45deg,
+      #c2c8d2 0%,
+      #edf0f5 24%,
+      #ffffff 42%,
+      #d9dee7 58%,
+      #f7f9fb 76%,
+      #b5bdca 100%);
+  --cs-gradient-ranking-bronze-bg: linear-gradient(45deg,
+      #c8793d 0%,
+      #e39b5b 24%,
+      #ffe0bd 42%,
+      #d88a4b 58%,
+      #f0b075 76%,
+      #b86a35 100%);
 
   /* ===== スコアランク（SSSP / SSS / SS / S / A / B / C / D） ===== */
   --cs-color-score-rank-sssp-bg: var(--color-green-500);
@@ -657,12 +607,9 @@
   --cs-color-score-rank-plus-stripe: rgb(255 255 255 / 25%);
   --cs-size-score-rank-plus-stripe-width: 3px;
   --cs-size-score-rank-plus-stripe-period: 6px;
-  --cs-gradient-score-rank-plus-bg: repeating-linear-gradient(
-    45deg,
-    var(--cs-color-score-rank-plus-stripe) 0 var(--cs-size-score-rank-plus-stripe-width),
-    transparent var(--cs-size-score-rank-plus-stripe-width)
-      var(--cs-size-score-rank-plus-stripe-period)
-  );
+  --cs-gradient-score-rank-plus-bg: repeating-linear-gradient(45deg,
+      var(--cs-color-score-rank-plus-stripe) 0 var(--cs-size-score-rank-plus-stripe-width),
+      transparent var(--cs-size-score-rank-plus-stripe-width) var(--cs-size-score-rank-plus-stripe-period));
   --cs-color-score-rank-a-bg: var(--color-amber-800);
   --cs-color-score-rank-a-text: var(--color-amber-800);
   --cs-color-score-rank-b-bg: var(--color-sky-500);
@@ -685,16 +632,14 @@
   --cs-color-lamp-all-justice-critical-rainbow-5: #ffc4ad;
   --cs-color-lamp-all-justice-critical-rainbow-6: #fff0a8;
   --cs-color-lamp-all-justice-critical-rainbow-7: #b9eeb7;
-  --cs-gradient-lamp-all-justice-critical-bg: linear-gradient(
-    45deg,
-    var(--cs-color-lamp-all-justice-critical-rainbow-1),
-    var(--cs-color-lamp-all-justice-critical-rainbow-2),
-    var(--cs-color-lamp-all-justice-critical-rainbow-3),
-    var(--cs-color-lamp-all-justice-critical-rainbow-4),
-    var(--cs-color-lamp-all-justice-critical-rainbow-5),
-    var(--cs-color-lamp-all-justice-critical-rainbow-6),
-    var(--cs-color-lamp-all-justice-critical-rainbow-7)
-  );
+  --cs-gradient-lamp-all-justice-critical-bg: linear-gradient(45deg,
+      var(--cs-color-lamp-all-justice-critical-rainbow-1),
+      var(--cs-color-lamp-all-justice-critical-rainbow-2),
+      var(--cs-color-lamp-all-justice-critical-rainbow-3),
+      var(--cs-color-lamp-all-justice-critical-rainbow-4),
+      var(--cs-color-lamp-all-justice-critical-rainbow-5),
+      var(--cs-color-lamp-all-justice-critical-rainbow-6),
+      var(--cs-color-lamp-all-justice-critical-rainbow-7));
   --cs-color-lamp-clear-bg: var(--color-sky-200);
   --cs-color-lamp-clear-text: var(--color-sky-900);
   --cs-color-lamp-hard-bg: var(--color-red-200);
@@ -852,6 +797,7 @@
 }
 
 @keyframes marquee {
+
   0%,
   25% {
     transform: translateX(0%);
@@ -882,6 +828,7 @@
 }
 
 @keyframes honor-title-marquee {
+
   0%,
   25% {
     transform: translateX(0%);
@@ -906,6 +853,7 @@
 /* SP称号の背景を虹称号と共通の7色で0.35秒ずつ循環させる。 */
 /* メンテナンス中ラベルを上下にふわふわさせ、2秒周期で明滅させる。 */
 @keyframes maintenance-status-float {
+
   0%,
   100% {
     opacity: 0.55;
@@ -951,6 +899,7 @@
     background-color: var(--cs-color-lamp-all-justice-critical-rainbow-1);
   }
 }
+
 @layer utilities {
   .text-shadow-badge {
     text-shadow: var(--cs-shadow-course-class-text);
@@ -1005,12 +954,10 @@
     font-weight: bold;
     line-height: 20px;
     text-align: center;
-    --honor-shine: linear-gradient(
-      to bottom,
-      rgb(255 255 255 / 0%),
-      rgb(255 255 255 / 50%) 47%,
-      transparent 52%
-    );
+    --honor-shine: linear-gradient(to bottom,
+        rgb(255 255 255 / 0%),
+        rgb(255 255 255 / 50%) 47%,
+        transparent 52%);
   }
 
   .user-honor-title__text {
@@ -1088,26 +1035,20 @@
 
   .user-honor-title--staff {
     --honor-background:
-      linear-gradient(
-        to bottom,
+      linear-gradient(to bottom,
         transparent 0% 47%,
         rgba(103, 116, 177, 0.25) 52%,
-        transparent 100%
-      ),
-      linear-gradient(
-        110deg,
+        transparent 100%),
+      linear-gradient(110deg,
         #5f7cfc 0 30px,
         transparent 30px 35px,
         #4869fa 35px 45px,
-        transparent 45px 100%
-      ),
-      linear-gradient(
-        290deg,
+        transparent 45px 100%),
+      linear-gradient(290deg,
         #5f7cfc 0 30px,
         transparent 30px 35px,
         #4869fa 35px 45px,
-        transparent 45px 100%
-      ),
+        transparent 45px 100%),
       #ebebeb;
   }
 
@@ -1121,22 +1062,18 @@
   .user-honor-title--maimai {
     --honor-background:
       var(--honor-shine),
-      linear-gradient(
-        150deg,
+      linear-gradient(150deg,
         #ff4646 0 10px,
         #ffa02d 10px 20px,
         #ffdc00 20px 30px,
         #9ac948 30px 40px,
-        transparent 40px 100%
-      ),
-      linear-gradient(
-        330deg,
+        transparent 40px 100%),
+      linear-gradient(330deg,
         #ff4646 0 10px,
         #ffa02d 10px 20px,
         #ffdc00 20px 30px,
         #9ac948 30px 40px,
-        transparent 40px 100%
-      ),
+        transparent 40px 100%),
       #f8f8f8;
   }
 
@@ -1150,19 +1087,23 @@
     animation: none;
   }
 
+  .rating-image-v2-header {
+    box-shadow: var(--cs-shadow-rating-image-v2-header);
+  }
+
+  .rating-image-v2-jacket-lamp {
+    box-shadow: var(--cs-shadow-rating-image-v2-jacket-lamp);
+  }
+
   .rating-image-v2-backdrop {
     background-color: var(--color-bg);
     background-image:
-      linear-gradient(
-        158deg,
+      linear-gradient(158deg,
         color-mix(in oklab, var(--color-action-primary) 18%, transparent) 0 160px,
-        transparent 280px
-      ),
-      repeating-linear-gradient(
-        -24deg,
+        transparent 280px),
+      repeating-linear-gradient(-24deg,
         transparent 0 20px,
-        color-mix(in oklab, var(--color-border) 42%, transparent) 20px 21px
-      ),
+        color-mix(in oklab, var(--color-border) 42%, transparent) 20px 21px),
       repeating-conic-gradient(var(--color-bg) 0 25%, var(--cs-color-page-bg-pattern) 0 50%);
     background-size:
       auto,
@@ -1171,8 +1112,46 @@
   }
 
   .rating-image-v2-card {
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .rating-image-v2-card::before {
+    content: "";
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--cs-size-rating-image-v2-difficulty-stripe);
+    pointer-events: none;
+    background-color: var(--color-surface-hover);
+  }
+
+  .rating-image-v2-card[data-difficulty]::before {
+    background-color: var(--cs-color-rating-image-v2-difficulty-fill);
+  }
+
+  .rating-image-v2-card[data-difficulty="BASIC"] {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-difficulty-basic-bg);
+  }
+
+  .rating-image-v2-card[data-difficulty="ADVANCED"] {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-difficulty-advanced-bg);
+  }
+
+  .rating-image-v2-card[data-difficulty="EXPERT"] {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-difficulty-expert-bg);
+  }
+
+  .rating-image-v2-card[data-difficulty="MASTER"] {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-difficulty-master-bg);
+  }
+
+  .rating-image-v2-card[data-difficulty="ULTIMA"]::before {
+    background-color: transparent;
+    background-image: var(--cs-gradient-rating-image-v2-ultima-stripe);
   }
 
   .rating-image-v2-title {
@@ -1186,16 +1165,16 @@
     white-space: nowrap;
   }
 
-  .rating-image-v2-jacket-scrim {
-    background-image: var(--cs-gradient-rating-image-v2-jacket-scrim);
+  .rating-image-v2-jacket-score {
+    box-sizing: border-box;
+    padding: 3px 5px 4px;
+    background-color: var(--cs-color-rating-image-v2-jacket-score-bg);
+    color: var(--cs-color-rating-image-v2-jacket-score-text);
   }
 
-  .rating-image-v2-jacket-overlay {
-    text-shadow: var(--cs-shadow-rating-image-v2-jacket-text);
-  }
-
-  .rating-image-v2-difficulty-corner {
-    clip-path: polygon(0 0, 100% 0, 100% 100%);
+  .rating-image-v2-jacket-rank {
+    padding: 2px 5px 4px;
+    background-color: var(--cs-color-rating-image-v2-jacket-score-bg);
   }
 
   .rating-image-v2-honor-empty {
@@ -1204,11 +1183,9 @@
     border: 1px dashed var(--color-border-strong);
     border-radius: 6px;
     background-color: var(--color-surface-muted);
-    background-image: repeating-linear-gradient(
-      -45deg,
-      transparent 0 6px,
-      color-mix(in oklab, var(--color-border) 55%, transparent) 6px 7px
-    );
+    background-image: repeating-linear-gradient(-45deg,
+        transparent 0 6px,
+        color-mix(in oklab, var(--color-border) 55%, transparent) 6px 7px);
   }
 
   .user-honor-title--phoenix-g {
@@ -1244,18 +1221,15 @@
   .user-honor-title--ultima {
     --honor-background:
       var(--honor-shine),
-      linear-gradient(
-        135deg,
+      linear-gradient(135deg,
         #333 0 15px,
         #ee6666 15px 20px,
         #863a3a 20px 30px,
         #ee6666 30px 35px,
         #863a3a 35px 38px,
         #ee6666 38px 45px,
-        transparent 45px 100%
-      ),
-      linear-gradient(
-        315deg,
+        transparent 45px 100%),
+      linear-gradient(315deg,
         #333 0 15px,
         #863a3a 15px 25px,
         #ee6666 25px 27px,
@@ -1263,8 +1237,7 @@
         #ee6666 30px 32px,
         #863a3a 32px 35px,
         #ee6666 35px 45px,
-        transparent 45px 100%
-      ),
+        transparent 45px 100%),
       #fdf5a7;
   }
 
@@ -1272,8 +1245,7 @@
     color: var(--color-text-subtle);
   }
 
-  :is([data-theme="dark"], [data-theme="dark-blue"], [data-theme="black"])
-    .goal-card-progress-secondary {
+  :is([data-theme="dark"], [data-theme="dark-blue"], [data-theme="black"]) .goal-card-progress-secondary {
     color: var(--color-primary-300);
   }
 }
@@ -1291,10 +1263,8 @@
   body,
   .bg-page-pattern {
     background-color: var(--color-bg);
-    background-image: repeating-conic-gradient(
-      var(--color-bg) 0 25%,
-      var(--cs-color-page-bg-pattern) 0 50%
-    );
+    background-image: repeating-conic-gradient(var(--color-bg) 0 25%,
+        var(--cs-color-page-bg-pattern) 0 50%);
     background-size: var(--cs-size-page-bg-pattern) var(--cs-size-page-bg-pattern);
     background-attachment: fixed;
   }

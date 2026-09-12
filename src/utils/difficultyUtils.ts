@@ -1,7 +1,6 @@
 import {
   DIFFICULTY_BADGE_CLASS_MAP,
   DIFFICULTY_CARD_BORDER_CLASS_MAP,
-  DIFFICULTY_FRAME_BACKGROUND_CLASS_MAP,
   DIFFICULTY_SINGLE_LETTER_MAP,
   normalizePlayerDataDifficulty,
 } from '../constants/difficulty'
@@ -69,14 +68,4 @@ export function difficultyBadgeClass(difficulty: string): string {
 export function difficultyCardBorderColor(difficulty: string): string {
   const normalized = normalizePlayerDataDifficulty(difficulty)
   return normalized ? DIFFICULTY_CARD_BORDER_CLASS_MAP[normalized] : 'before:bg-border-strong'
-}
-
-/**
- * ジャケット枠など、要素本体へ適用する難易度背景クラスを返す。
- * @param difficulty 難易度
- * @returns 背景色またはULTIMA用ストライプのトークンクラス
- */
-export function difficultyFrameBackgroundClass(difficulty: string): string {
-  const normalized = normalizePlayerDataDifficulty(difficulty)
-  return normalized ? DIFFICULTY_FRAME_BACKGROUND_CLASS_MAP[normalized] : 'bg-border-strong'
 }

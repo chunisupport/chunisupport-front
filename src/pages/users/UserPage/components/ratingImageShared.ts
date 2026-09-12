@@ -1,4 +1,4 @@
-import type { HonorDTO } from '../../../../types/api'
+import type { HonorDTO, PlayerRecordDTO } from '../../../../types/api'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 
 /** OVER POWERの1行表記で使うラベル */
@@ -55,3 +55,15 @@ export const formatRatingImageOverPowerLine = (
   percent: number | null
 ): string =>
   `${OVER_POWER_LINE_LABEL} ${formatRatingImageOverPowerValue(value)} (${formatRatingImageOverPowerPercent(percent)}%)`
+
+/**
+ * レーティング枠画像 Ver. 2 のコンボランプバッジ文言を返す。
+ * AJCも ALL JUSTICE と表示し、虹色はバッジの色クラス側で付ける。
+ *
+ * @param lamp - APIのコンボランプ値。
+ * @returns FULL COMBO または ALL JUSTICE。表示対象外は空文字。
+ */
+export const getRatingImageV2ComboLampLabel = (lamp: PlayerRecordDTO['combo_lamp']): string => {
+  if (lamp === 'FULL COMBO' || lamp === 'ALL JUSTICE') return lamp
+  return ''
+}
