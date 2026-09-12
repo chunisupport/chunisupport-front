@@ -27,7 +27,45 @@ export const setupTestEnvironment = (overrides: Record<string, string> = {}): vo
  * 動的importのモジュールキャッシュをテストごとに分離するキーを生成する。
  * @returns 一意なキャッシュキー。
  */
-export const createTestCacheKey = (): string => `${Date.now()}-${Math.random()}`
+const createTestCacheKey = (): string => `${Date.now()}-${Math.random()}`
+
+/**
+ * Firebase認証状態をテスト用のログイン済みユーザーへ差し替える。
+ * @returns なし。
+ */
+const setupAuthenticatedFirebase = async (): Promise<void> => {
+  const { auth } = await import('../lib/firebase.ts')
+  Object.defineProperty(auth, 'authStateReady', {
+    configurable: true,
+    value: async () => undefined,
+  })
+  Object.defineProperty(auth, 'currentUser', {
+    configurable: true,
+    value: { getIdToken: async () => 'test-token' },
+  })
+}
+
+type LoadTestModuleOptions = {
+  authenticate?: boolean
+  env?: Record<string, string>
+}
+
+/**
+ * テスト用環境を準備してモジュールを読み込む。
+ * @param importModule キャッシュキー付きで対象モジュールをimportする関数。
+ * @param options 認証モックや環境変数の上書き。
+ * @returns 読み込んだモジュール。
+ */
+export const loadTestModule = async <T>(
+  importModule: (cacheKey: string) => Promise<T>,
+  options: LoadTestModuleOptions = {}
+): Promise<T> => {
+  setupTestEnvironment(options.env)
+  if (options.authenticate) {
+    await setupAuthenticatedFirebase()
+  }
+  return importModule(createTestCacheKey())
+}
 
 export type RecordedFetchCall = {
   input: Parameters<typeof fetch>[0]

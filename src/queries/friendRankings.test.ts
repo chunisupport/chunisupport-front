@@ -1,16 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { setupTestEnvironment } from '../test/setupTestEnvironment'
+import { loadTestModule } from '../test/setupTestEnvironment'
 
 /**
  * フレンドランキングquery moduleを環境設定後に読み込む。
- *
  * @returns フレンドランキングquery module。
  */
-const loadFriendRankingsQuery = async () => {
-  setupTestEnvironment()
-  return import('./friendRankings.ts')
-}
+const loadFriendRankingsQuery = () => loadTestModule(() => import('./friendRankings.ts'))
 
 test('フレンドランキングquery keyは認証ユーザーと譜面種別で分離される', async () => {
   // Given: 2ユーザーと通常譜面、WORLD'S END譜面。

@@ -1,14 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  createTestCacheKey,
-  installFetchRecorder,
-  setupTestEnvironment,
-} from '../test/setupTestEnvironment'
+import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
 test('ベスト枠ランキングAPIはレート帯とページング条件をURLへ設定する', async () => {
   // Given: URLエンコードが必要な最上位帯とカーソル。
-  setupTestEnvironment()
   const calls = installFetchRecorder(() =>
     Response.json({
       rating_band: '17.6+',
@@ -17,8 +12,9 @@ test('ベスト枠ランキングAPIはレート帯とページング条件をUR
       next_cursor: null,
     })
   )
-  const cacheKey = createTestCacheKey()
-  const { fetchBestSlotRanking } = await import(`./bestSlotRankings.ts?cache=${cacheKey}`)
+  const { fetchBestSlotRanking } = await loadTestModule(
+    (cacheKey) => import(`./bestSlotRankings.ts?cache=${cacheKey}`)
+  )
 
   // When: キャンセル可能な2ページ目を取得する。
   const controller = new AbortController()

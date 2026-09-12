@@ -1,61 +1,26 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createTestCacheKey, setupTestEnvironment } from '../test/setupTestEnvironment'
-
-/**
- * 設定APIテスト用の環境変数と認証状態を設定する。
- *
- * @returns なし。
- */
-const setupSettingsApiTest = async (): Promise<void> => {
-  setupTestEnvironment()
-
-  const { auth } = await import('../lib/firebase.ts')
-  Object.defineProperty(auth, 'authStateReady', {
-    configurable: true,
-    value: async () => undefined,
-  })
-  Object.defineProperty(auth, 'currentUser', {
-    configurable: true,
-    value: { getIdToken: async () => 'test-token' },
-  })
-}
+import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
 /**
  * モジュール内定数をテストごとに再評価して設定API関数群を読み込む。
- *
  * @returns 設定APIモジュール。
  */
-const loadSettingsApi = async () => {
-  await setupSettingsApiTest()
-  const cacheKey = createTestCacheKey()
-  return import(`./settings.ts?cache=${cacheKey}`)
-}
+const loadSettingsApi = () =>
+  loadTestModule((cacheKey) => import(`./settings.ts?cache=${cacheKey}`), { authenticate: true })
 
 test('APIトークン一覧は認証付きGETでtokensレスポンスを返す', async () => {
-  // Given: APIトークン一覧レスポンスと呼び出し記録。
-  const responseBody = { tokens: [] }
-  let request: { url: string; method: string | undefined; authorization: string | null } | undefined
-  globalThis.fetch = async (input, init) => {
-    request = {
-      url: String(input),
-      method: init?.method,
-      authorization: new Headers(init?.headers).get('Authorization'),
-    }
-    return Response.json(responseBody)
-  }
+  // Given: APIトークン一覧の呼び出し記録。
+  const calls = installFetchRecorder(() => Response.json({ tokens: [] }))
 
   // When: APIトークン一覧を取得する。
   const { fetchApiTokens } = await loadSettingsApi()
-  const result = await fetchApiTokens()
+  await fetchApiTokens()
 
   // Then: 最新仕様の一覧エンドポイントを認証付きで呼び出す。
-  assert.deepEqual(result, responseBody)
-  assert.deepEqual(request, {
-    url: 'http://localhost:3000/internal/auth/api-tokens',
-    method: 'GET',
-    authorization: 'Bearer test-token',
-  })
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/auth/api-tokens')
+  assert.equal(calls[0]?.init?.method, 'GET')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Authorization'), 'Bearer test-token')
 })
 
 test('APIトークン発行はnameをJSONでPOSTする', async () => {
@@ -68,93 +33,80 @@ test('APIトークン発行はnameをJSONでPOSTする', async () => {
     last_used_at: null,
     created_at: '2026-07-22T12:34:56+09:00',
   }
-  let request:
-    | { method: string | undefined; contentType: string | null; body: BodyInit | null | undefined }
-    | undefined
-  globalThis.fetch = async (_input, init) => {
-    request = {
-      method: init?.method,
-      contentType: new Headers(init?.headers).get('Content-Type'),
-      body: init?.body,
-    }
-    return Response.json(responseBody, { status: 201 })
-  }
+  const calls = installFetchRecorder(() => Response.json(responseBody, { status: 201 }))
 
   // When: 名前付きAPIトークンを発行する。
   const { issueApiToken } = await loadSettingsApi()
   const result = await issueApiToken('Discord Bot')
 
   // Then: nameをJSONリクエストとして送信し、平文付きレスポンスを返す。
-  assert.deepEqual(result, responseBody)
-  assert.deepEqual(request, {
-    method: 'POST',
-    contentType: 'application/json',
-    body: JSON.stringify({ name: 'Discord Bot' }),
-  })
+  assert.equal(result.token, 'plain-text-token')
+  assert.equal(calls[0]?.init?.method, 'POST')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
+  assert.equal(calls[0]?.init?.body, JSON.stringify({ name: 'Discord Bot' }))
 })
 
 test('APIトークンの名称変更と削除はID指定エンドポイントを使う', async () => {
   // Given: 名称変更レスポンスとAPI呼び出し記録。
-  const renamedToken = {
-    id: 42,
-    name: 'CLI',
-    token_prefix: 'plain',
-    last_used_at: null,
-    created_at: '2026-07-22T12:34:56+09:00',
-  }
-  const requests: { url: string; method: string | undefined; body: BodyInit | null | undefined }[] =
-    []
-  globalThis.fetch = async (input, init) => {
-    requests.push({ url: String(input), method: init?.method, body: init?.body })
-    return init?.method === 'PATCH'
-      ? Response.json(renamedToken)
+  const calls = installFetchRecorder((_input, init) =>
+    init?.method === 'PATCH'
+      ? Response.json({
+          id: 42,
+          name: 'CLI',
+          token_prefix: 'plain',
+          last_used_at: null,
+          created_at: '2026-07-22T12:34:56+09:00',
+        })
       : new Response(null, { status: 204 })
-  }
+  )
 
   // When: ID 42の名称変更と削除を行う。
   const { deleteApiToken, renameApiToken } = await loadSettingsApi()
-  const result = await renameApiToken(42, { name: 'CLI' })
+  await renameApiToken(42, { name: 'CLI' })
   await deleteApiToken(42)
 
   // Then: PATCHとDELETEの双方でID指定パスを使用する。
-  assert.deepEqual(result, renamedToken)
-  assert.deepEqual(requests, [
-    {
-      url: 'http://localhost:3000/internal/auth/api-tokens/42',
-      method: 'PATCH',
-      body: JSON.stringify({ name: 'CLI' }),
-    },
-    {
-      url: 'http://localhost:3000/internal/auth/api-tokens/42',
-      method: 'DELETE',
-      body: undefined,
-    },
-  ])
+  assert.deepEqual(
+    calls.map((call) => ({
+      url: String(call.input),
+      method: call.init?.method,
+      body: call.init?.body,
+    })),
+    [
+      {
+        url: 'http://localhost:3000/internal/auth/api-tokens/42',
+        method: 'PATCH',
+        body: JSON.stringify({ name: 'CLI' }),
+      },
+      {
+        url: 'http://localhost:3000/internal/auth/api-tokens/42',
+        method: 'DELETE',
+        body: undefined,
+      },
+    ]
+  )
 })
 
 test('データエクスポートはPOSTして添付ファイル名とBlobを返す', async () => {
   // Given: 署名付きJSONとContent-Dispositionヘッダー。
   const exportedJson = '{"signed":true}'
-  let request: { url: string; method: string | undefined } | undefined
-  globalThis.fetch = async (input, init) => {
-    request = { url: String(input), method: init?.method }
-    return new Response(exportedJson, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Disposition': 'attachment; filename="chunisupport-transfer.json"',
-      },
-    })
-  }
+  const calls = installFetchRecorder(
+    () =>
+      new Response(exportedJson, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Disposition': 'attachment; filename="chunisupport-transfer.json"',
+        },
+      })
+  )
 
   // When: ユーザーデータをエクスポートする。
   const { exportUserDataTransfer } = await loadSettingsApi()
   const result = await exportUserDataTransfer()
 
   // Then: exportをPOSTし、API指定名とJSON Blobを返す。
-  assert.deepEqual(request, {
-    url: 'http://localhost:3000/internal/me/data-transfer/export',
-    method: 'POST',
-  })
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/me/data-transfer/export')
+  assert.equal(calls[0]?.init?.method, 'POST')
   assert.equal(result.filename, 'chunisupport-transfer.json')
   assert.equal(await result.blob.text(), exportedJson)
 })
@@ -187,50 +139,44 @@ test('データ移行の検証と確定は同じJSON BlobをPOSTする', async (
     player_id: 42,
     counts: validationResponse.counts,
   }
-  const requests: {
-    url: string
-    method: string | undefined
-    contentType: string | null
-    body: BodyInit | null | undefined
-  }[] = []
-  globalThis.fetch = async (input, init) => {
-    requests.push({
-      url: String(input),
-      method: init?.method,
-      contentType: new Headers(init?.headers).get('Content-Type'),
-      body: init?.body,
-    })
-    return Response.json(String(input).endsWith('/validate') ? validationResponse : importResponse)
-  }
+  const calls = installFetchRecorder((input) =>
+    Response.json(String(input).endsWith('/validate') ? validationResponse : importResponse)
+  )
 
   // When: 移行ファイルを検証してからインポートする。
   const { importUserDataTransfer, validateUserDataTransfer } = await loadSettingsApi()
-  const validation = await validateUserDataTransfer(file)
-  const imported = await importUserDataTransfer(file)
+  await validateUserDataTransfer(file)
+  await importUserDataTransfer(file)
 
   // Then: 両エンドポイントへ同じBlobをapplication/jsonで送信する。
-  assert.deepEqual(validation, validationResponse)
-  assert.deepEqual(imported, importResponse)
-  assert.deepEqual(requests, [
-    {
-      url: 'http://localhost:3000/internal/me/data-transfer/validate',
-      method: 'POST',
-      contentType: 'application/json',
-      body: file,
-    },
-    {
-      url: 'http://localhost:3000/internal/me/data-transfer/import',
-      method: 'POST',
-      contentType: 'application/json',
-      body: file,
-    },
-  ])
+  assert.deepEqual(
+    calls.map((call) => ({
+      url: String(call.input),
+      method: call.init?.method,
+      contentType: new Headers(call.init?.headers).get('Content-Type'),
+      body: call.init?.body,
+    })),
+    [
+      {
+        url: 'http://localhost:3000/internal/me/data-transfer/validate',
+        method: 'POST',
+        contentType: 'application/json',
+        body: file,
+      },
+      {
+        url: 'http://localhost:3000/internal/me/data-transfer/import',
+        method: 'POST',
+        contentType: 'application/json',
+        body: file,
+      },
+    ]
+  )
 })
 
 test('データ移行の検証はnullの配列フィールドを空配列へ正規化する', async () => {
   // Given: 検証上の問題なしをnullで返すレスポンス。
   const file = new Blob(['{"signed":true}'], { type: 'application/json' })
-  globalThis.fetch = async () =>
+  installFetchRecorder(() =>
     Response.json({
       importable: true,
       player_name: 'TEST',
@@ -239,6 +185,7 @@ test('データ移行の検証はnullの配列フィールドを空配列へ正�
       unresolved_references: null,
       unresolved_reference_count: 0,
     })
+  )
 
   // When: 移行ファイルを検証する。
   const { validateUserDataTransfer } = await loadSettingsApi()
@@ -250,39 +197,17 @@ test('データ移行の検証はnullの配列フィールドを空配列へ正�
 })
 
 test('ユーザー名変更は再認証トークンと新しいユーザー名をPUTする', async () => {
-  // Given: ユーザー名変更レスポンスと再認証トークン。
-  const responseBody = { username: 'newname' }
-  let request:
-    | {
-        url: string
-        method: string | undefined
-        reauthToken: string | null
-        contentType: string | null
-        body: BodyInit | null | undefined
-      }
-    | undefined
-  globalThis.fetch = async (input, init) => {
-    request = {
-      url: String(input),
-      method: init?.method,
-      reauthToken: new Headers(init?.headers).get('X-Reauth-Token'),
-      contentType: new Headers(init?.headers).get('Content-Type'),
-      body: init?.body,
-    }
-    return Response.json(responseBody)
-  }
+  // Given: 再認証トークン付きのユーザー名変更リクエスト。
+  const calls = installFetchRecorder(() => Response.json({ username: 'newname' }))
 
   // When: 取得済みの再認証トークンでユーザー名を変更する。
   const { updateUsername } = await loadSettingsApi()
-  const result = await updateUsername('newname', 'reauth-token')
+  await updateUsername('newname', 'reauth-token')
 
   // Then: ユーザー名変更エンドポイントへ必要な情報を送信する。
-  assert.deepEqual(result, responseBody)
-  assert.deepEqual(request, {
-    url: 'http://localhost:3000/internal/me/username',
-    method: 'PUT',
-    reauthToken: 'reauth-token',
-    contentType: 'application/json',
-    body: JSON.stringify({ username: 'newname' }),
-  })
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/me/username')
+  assert.equal(calls[0]?.init?.method, 'PUT')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('X-Reauth-Token'), 'reauth-token')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
+  assert.equal(calls[0]?.init?.body, JSON.stringify({ username: 'newname' }))
 })

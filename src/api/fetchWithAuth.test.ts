@@ -1,17 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { setupTestEnvironment } from '../test/setupTestEnvironment'
+import { loadTestModule } from '../test/setupTestEnvironment'
 
 /**
  * テスト用のFirebase環境変数を設定して、認証付き fetch モジュールを遅延読み込みする。
- *
  * @returns 認証付き fetch モジュール。
  */
-const loadFetchWithAuthModule = async () => {
-  setupTestEnvironment()
-
-  return import('./fetchWithAuth.ts')
-}
+const loadFetchWithAuthModule = () => loadTestModule(() => import('./fetchWithAuth.ts'))
 
 test('recent_sign_in_required は抑止対象ならセッションクリアしない', async () => {
   const { shouldClearSessionOnUnauthorized } = await loadFetchWithAuthModule()

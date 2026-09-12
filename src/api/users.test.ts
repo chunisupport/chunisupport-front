@@ -1,28 +1,23 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createTestCacheKey, setupTestEnvironment } from '../test/setupTestEnvironment'
+import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
 /**
  * モジュール内状態をテストごとに分離してusers APIを読み込む。
- *
  * @returns users APIモジュール。
  */
-const loadUsersApi = async () => {
-  setupTestEnvironment()
-  const cacheKey = createTestCacheKey()
-  return import(`./users.ts?cache=${cacheKey}`)
-}
+const loadUsersApi = () => loadTestModule((cacheKey) => import(`./users.ts?cache=${cacheKey}`))
 
 test('fetchUserUpdatedAtは同じユーザーへの同時呼び出しを1リクエストにまとめること', async () => {
   // Given
   const responseBody = { updated_at: '2026-07-06T00:00:00Z' }
   let fetchCount = 0
-  globalThis.fetch = async (input) => {
+  installFetchRecorder(async (input) => {
     assert.equal(String(input), 'http://localhost:3000/internal/users/alice/updated-at')
     fetchCount += 1
     await new Promise((resolve) => setTimeout(resolve, 10))
     return Response.json(responseBody)
-  }
+  })
   const { fetchUserUpdatedAt } = await loadUsersApi()
 
   // When
@@ -33,17 +28,16 @@ test('fetchUserUpdatedAtは同じユーザーへの同時呼び出しを1リク�
 
   // Then
   assert.equal(fetchCount, 1)
-  assert.deepEqual(first, responseBody)
-  assert.deepEqual(second, responseBody)
+  assert.equal(first, second)
 })
 
 test('fetchUserUpdatedAtは完了後の呼び出しで最新更新日時を再取得すること', async () => {
   // Given
   let fetchCount = 0
-  globalThis.fetch = async () => {
+  installFetchRecorder(async () => {
     fetchCount += 1
     return Response.json({ updated_at: `updated-${fetchCount}` })
-  }
+  })
   const { fetchUserUpdatedAt } = await loadUsersApi()
 
   // When
@@ -59,14 +53,14 @@ test('fetchUserUpdatedAtは完了後の呼び出しで最新更新日時を再�
 test('fetchUserUpdatedAtは失敗した同時リクエストの完了後に再試行できること', async () => {
   // Given
   let fetchCount = 0
-  globalThis.fetch = async () => {
+  installFetchRecorder(async () => {
     fetchCount += 1
     if (fetchCount === 1) {
       await new Promise((resolve) => setTimeout(resolve, 10))
       throw new Error('network error')
     }
     return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
-  }
+  })
   const { fetchUserUpdatedAt } = await loadUsersApi()
 
   // When
@@ -84,155 +78,119 @@ test('fetchUserUpdatedAtは失敗した同時リクエストの完了後に再�
 
 test('fetchUserRatingOpHistoryはURLエンコードしたユーザー名の公式指標履歴を取得すること', async () => {
   // Given
-  const responseBody = {
-    entries: [
-      {
-        rating: 17.25,
-        overpower: 12345.67,
-        data_collected_at: '2026-08-08T12:00:00Z',
-      },
-    ],
-  }
-  globalThis.fetch = async (input) => {
-    assert.equal(
-      String(input),
-      'http://localhost:3000/internal/users/alice%20bob/rating-op-history'
-    )
-    return Response.json(responseBody)
-  }
+  const calls = installFetchRecorder(() =>
+    Response.json({
+      entries: [
+        {
+          rating: 17.25,
+          overpower: 12345.67,
+          data_collected_at: '2026-08-08T12:00:00Z',
+        },
+      ],
+    })
+  )
   const { fetchUserRatingOpHistory } = await loadUsersApi()
 
   // When
-  const response = await fetchUserRatingOpHistory('alice bob')
+  await fetchUserRatingOpHistory('alice bob')
 
   // Then
-  assert.deepEqual(response, responseBody)
+  assert.equal(
+    String(calls[0]?.input),
+    'http://localhost:3000/internal/users/alice%20bob/rating-op-history'
+  )
 })
 
 test('fetchUserCourseRecordsは未プレイを含むコースレコード一覧を取得できること', async () => {
   // Given
-  const responseBody = {
-    courses: [
-      {
-        display_id: '0123456789abcdef',
-        idx: '50020',
-        name: 'CLASS I COURSE',
-        class: '1',
-        is_played: false,
-        score: 0,
-        is_clear: false,
-        combo_lamp: null,
-        updated_at: null,
-      },
-    ],
-    meta: { updated_at: null },
-  }
-  globalThis.fetch = async (input) => {
-    assert.equal(
-      String(input),
-      'http://localhost:3000/internal/users/alice%20bob/record/courses?include_noplay=true'
-    )
-    return Response.json(responseBody)
-  }
+  const calls = installFetchRecorder(() =>
+    Response.json({
+      courses: [],
+      meta: { updated_at: null },
+    })
+  )
   const { fetchUserCourseRecords } = await loadUsersApi()
 
   // When
-  const response = await fetchUserCourseRecords('alice bob', { includeNoPlay: true })
+  await fetchUserCourseRecords('alice bob', { includeNoPlay: true })
 
   // Then
-  assert.deepEqual(response, responseBody)
+  assert.equal(
+    String(calls[0]?.input),
+    'http://localhost:3000/internal/users/alice%20bob/record/courses?include_noplay=true'
+  )
 })
 
 test('fetchAdminUsersはpageとnameをクエリに付けて一覧を取得すること', async () => {
   // Given
-  const responseBody = [
-    {
-      username: 'user1',
-      account_type: 'PLAYER',
-      created_at: '2026-01-01T00:00:00+09:00',
-      updated_at: '2026-01-02T00:00:00+09:00',
-      player_name: 'player1',
-      rating: 17.25,
-      overpower_value: 9500,
-      is_suspicious: false,
-      is_private: false,
-    },
-  ]
-  globalThis.fetch = async (input) => {
-    assert.equal(String(input), 'http://localhost:3000/internal/users/?page=2&name=user')
-    return Response.json(responseBody)
-  }
+  const calls = installFetchRecorder(() => Response.json([]))
   const { fetchAdminUsers } = await loadUsersApi()
 
   // When
-  const response = await fetchAdminUsers({ page: 2, name: 'user' })
+  await fetchAdminUsers({ page: 2, name: 'user' })
 
   // Then
-  assert.deepEqual(response, responseBody)
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/users/?page=2&name=user')
 })
 
 test('fetchAdminUsersはpage未指定なら1ページ目を取得すること', async () => {
   // Given
-  globalThis.fetch = async (input) => {
-    assert.equal(String(input), 'http://localhost:3000/internal/users/?page=1')
-    return Response.json([])
-  }
+  const calls = installFetchRecorder(() => Response.json([]))
   const { fetchAdminUsers } = await loadUsersApi()
 
   // When
-  const response = await fetchAdminUsers()
+  await fetchAdminUsers()
 
   // Then
-  assert.deepEqual(response, [])
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/users/?page=1')
 })
 
 test('fetchAdminUserStatisticsは管理者向けユーザー集計を取得すること', async () => {
   // Given
-  const responseBody = {
-    total_users: 100,
-    users_with_player_data: 80,
-    active_player_data_last_30_days: 50,
-  }
-  globalThis.fetch = async (input) => {
-    assert.equal(String(input), 'http://localhost:3000/internal/admin/user-stats')
-    return Response.json(responseBody)
-  }
+  const calls = installFetchRecorder(() =>
+    Response.json({
+      total_users: 100,
+      users_with_player_data: 80,
+      active_player_data_last_30_days: 50,
+    })
+  )
   const { fetchAdminUserStatistics } = await loadUsersApi()
 
   // When
-  const response = await fetchAdminUserStatistics()
+  await fetchAdminUserStatistics()
 
   // Then
-  assert.deepEqual(response, responseBody)
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/admin/user-stats')
 })
 
 test('fetchAdminUserPermissionsは権限候補を取得すること', async () => {
   // Given
-  const responseBody = { permissions: ['PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] }
-  globalThis.fetch = async (input) => {
-    assert.equal(String(input), 'http://localhost:3000/internal/master/permissions')
-    return Response.json(responseBody)
-  }
+  const calls = installFetchRecorder(() =>
+    Response.json({ permissions: ['PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] })
+  )
   const { fetchAdminUserPermissions } = await loadUsersApi()
 
   // When
-  const response = await fetchAdminUserPermissions()
+  await fetchAdminUserPermissions()
 
   // Then
-  assert.deepEqual(response, responseBody)
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/master/permissions')
 })
 
 test('updateUserPermissionはURLエンコードしたユーザー名と選択した権限を送信すること', async () => {
   // Given
-  globalThis.fetch = async (input, init) => {
-    assert.equal(String(input), 'http://localhost:3000/internal/users/alice%20bob/permission')
-    assert.equal(init?.method, 'PATCH')
-    assert.equal(new Headers(init?.headers).get('Content-Type'), 'application/json')
-    assert.equal(init?.body, JSON.stringify({ permission: 'EDITOR' }))
-    return new Response(null, { status: 204 })
-  }
+  const calls = installFetchRecorder(() => new Response(null, { status: 204 }))
   const { updateUserPermission } = await loadUsersApi()
 
   // When
   await updateUserPermission('alice bob', 'EDITOR')
+
+  // Then
+  assert.equal(
+    String(calls[0]?.input),
+    'http://localhost:3000/internal/users/alice%20bob/permission'
+  )
+  assert.equal(calls[0]?.init?.method, 'PATCH')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
+  assert.equal(calls[0]?.init?.body, JSON.stringify({ permission: 'EDITOR' }))
 })

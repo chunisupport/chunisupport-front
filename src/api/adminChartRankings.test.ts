@@ -1,19 +1,20 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  createTestCacheKey,
-  installFetchRecorder,
-  setupTestEnvironment,
-} from '../test/setupTestEnvironment'
+import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
+
+/**
+ * モジュール内定数をテストごとに再評価して管理者向け譜面ランキングAPIを読み込む。
+ * @returns 管理者向け譜面ランキングAPIモジュール。
+ */
+const loadAdminChartRankingsApi = () =>
+  loadTestModule((cacheKey) => import(`./adminChartRankings.ts?cache=${cacheKey}`))
 
 test('管理者向け通常譜面ランキングAPIは表示IDをエンコードして難易度を大文字で送る', async () => {
   // Given: URLエンコードが必要な表示IDとキャンセルシグナル。
-  setupTestEnvironment()
   const calls = installFetchRecorder(() =>
     Response.json({ song: {}, chart: {}, ranking: [], total: 0 })
   )
-  const cacheKey = createTestCacheKey()
-  const { fetchAdminChartRanking } = await import(`./adminChartRankings.ts?cache=${cacheKey}`)
+  const { fetchAdminChartRanking } = await loadAdminChartRankingsApi()
   const controller = new AbortController()
 
   // When: 通常譜面ランキングを取得する。
@@ -33,12 +34,10 @@ test('管理者向け通常譜面ランキングAPIは表示IDをエンコード
 
 test("管理者向けWORLD'S END譜面ランキングAPIは専用パスを呼び出す", async () => {
   // Given: WORLD'S END譜面の表示ID。
-  setupTestEnvironment()
   const calls = installFetchRecorder(() =>
     Response.json({ song: {}, chart: {}, ranking: [], total: 0 })
   )
-  const cacheKey = createTestCacheKey()
-  const { fetchAdminChartRanking } = await import(`./adminChartRankings.ts?cache=${cacheKey}`)
+  const { fetchAdminChartRanking } = await loadAdminChartRankingsApi()
 
   // When: 難易度を指定せずランキングを取得する。
   await fetchAdminChartRanking({ displayId: 'WE/01' })

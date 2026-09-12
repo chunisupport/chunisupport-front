@@ -1,22 +1,17 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { setupTestEnvironment } from '../test/setupTestEnvironment'
+import { loadTestModule } from '../test/setupTestEnvironment'
 import type { BestSlotRankingResponseDTO } from '../types/api'
 
 /**
  * ベスト枠ランキングquery moduleを環境設定後に読み込む。
- *
  * @returns ベスト枠ランキングquery module。
  */
-const loadBestSlotRankingsQuery = async () => {
-  setupTestEnvironment()
-  return import('./bestSlotRankings.ts')
-}
+const loadBestSlotRankingsQuery = () => loadTestModule(() => import('./bestSlotRankings.ts'))
 
 /**
  * ページングテスト用のレスポンスを生成する。
- *
- * @param nextCursor - 次ページカーソル。
+ * @param nextCursor 次ページカーソル。
  * @returns 空ランキングを持つレスポンス。
  */
 const createResponse = (nextCursor: string | null): BestSlotRankingResponseDTO => ({

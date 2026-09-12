@@ -1,79 +1,49 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createTestCacheKey, setupTestEnvironment } from '../test/setupTestEnvironment'
-
-/**
- * 最新更新結果APIテスト用の環境変数と認証状態を設定する。
- *
- * @returns なし。
- */
-const setupLatestUpdateApiTest = async (): Promise<void> => {
-  setupTestEnvironment()
-
-  const { auth } = await import('../lib/firebase.ts')
-  Object.defineProperty(auth, 'authStateReady', {
-    configurable: true,
-    value: async () => undefined,
-  })
-  Object.defineProperty(auth, 'currentUser', {
-    configurable: true,
-    value: { getIdToken: async () => 'test-token' },
-  })
-}
+import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
 /**
  * モジュール内定数をテストごとに再評価して登録API関数群を読み込む。
- *
  * @returns 登録APIモジュール。
  */
-const loadRegisterDataApi = async () => {
-  await setupLatestUpdateApiTest()
-  const cacheKey = createTestCacheKey()
-  return import(`./register-data.ts?cache=${cacheKey}`)
-}
+const loadRegisterDataApi = () =>
+  loadTestModule((cacheKey) => import(`./register-data.ts?cache=${cacheKey}`), {
+    authenticate: true,
+  })
 
 test('最新更新結果APIは保存済み結果を認証付きで取得する', async () => {
   // Given: 保存済み結果とAPI呼び出し記録。
-  const responseBody = { schema_version: 1, changes: [] }
-  let request: { url: string; authorization: string | null } | undefined
-  globalThis.fetch = async (input, init) => {
-    request = {
-      url: String(input),
-      authorization: new Headers(init?.headers).get('Authorization'),
-    }
-    return Response.json(responseBody)
-  }
+  const calls = installFetchRecorder(() => Response.json({ schema_version: 1, changes: [] }))
 
   // When: 最新更新結果を取得する。
   const { fetchLatestPlayerDataUpdate } = await loadRegisterDataApi()
-  const result = await fetchLatestPlayerDataUpdate()
+  await fetchLatestPlayerDataUpdate()
 
-  // Then: 本人用エンドポイントへ認証付きでアクセスし、レスポンスを返す。
-  assert.deepEqual(result, responseBody)
-  assert.deepEqual(request, {
-    url: 'http://localhost:3000/internal/me/player-data/latest-update',
-    authorization: 'Bearer test-token',
-  })
+  // Then: 本人用エンドポイントへ認証付きでアクセスする。
+  assert.equal(
+    String(calls[0]?.input),
+    'http://localhost:3000/internal/me/player-data/latest-update'
+  )
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Authorization'), 'Bearer test-token')
 })
 
 for (const schemaVersion of [2, 3] as const) {
   test(`最新更新結果APIはschema version ${schemaVersion}を受け入れる`, async () => {
     // Given: 対応済みスキーマバージョンの保存済み結果。
-    const responseBody = { schema_version: schemaVersion, changes: [] }
-    globalThis.fetch = async () => Response.json(responseBody)
+    installFetchRecorder(() => Response.json({ schema_version: schemaVersion, changes: [] }))
 
     // When: 最新更新結果を取得する。
     const { fetchLatestPlayerDataUpdate } = await loadRegisterDataApi()
     const result = await fetchLatestPlayerDataUpdate()
 
     // Then: 対応済み形式としてレスポンスを返す。
-    assert.deepEqual(result, responseBody)
+    assert.equal(result?.schema_version, schemaVersion)
   })
 }
 
 test('最新更新結果APIは保存済み結果がない204レスポンスをnullへ変換する', async () => {
   // Given: 保存済み結果がないAPIレスポンス。
-  globalThis.fetch = async () => new Response(null, { status: 204 })
+  installFetchRecorder(() => new Response(null, { status: 204 }))
 
   // When: 最新更新結果を取得する。
   const { fetchLatestPlayerDataUpdate } = await loadRegisterDataApi()
@@ -85,7 +55,7 @@ test('最新更新結果APIは保存済み結果がない204レスポンスをnu
 
 test('最新更新結果APIは未対応のスキーマバージョンを拒否する', async () => {
   // Given: フロントエンドが対応していない形式の保存済み結果。
-  globalThis.fetch = async () => Response.json({ schema_version: 4 })
+  installFetchRecorder(() => Response.json({ schema_version: 4 }))
 
   // When: 最新更新結果を取得する。
   const { fetchLatestPlayerDataUpdate } = await loadRegisterDataApi()

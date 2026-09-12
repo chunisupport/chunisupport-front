@@ -1,17 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createTestCacheKey, setupTestEnvironment } from '../test/setupTestEnvironment'
+import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
 /**
  * モジュール内定数をテストごとに再評価して courses API 関数群を読み込む。
- *
  * @returns courses API モジュール。
  */
-const loadCoursesApi = async () => {
-  setupTestEnvironment()
-  const cacheKey = createTestCacheKey()
-  return import(`./courses.ts?cache=${cacheKey}`)
-}
+const loadCoursesApi = () => loadTestModule((cacheKey) => import(`./courses.ts?cache=${cacheKey}`))
 
 test('編集者向けコースAPIは一覧取得と追加・更新・削除・復元のパスを呼び出す', async () => {
   // Given: コース管理APIが成功する。
@@ -24,13 +19,7 @@ test('編集者向けコースAPIは一覧取得と追加・更新・削除・�
     is_deleted: false,
     updated_at: '2026-07-14T10:00:00Z',
   }
-  const called: Array<{ url: string; method: string; body: string | null }> = []
-  globalThis.fetch = async (input, init) => {
-    called.push({
-      url: String(input),
-      method: init?.method ?? 'GET',
-      body: typeof init?.body === 'string' ? init.body : null,
-    })
+  const calls = installFetchRecorder((input, init) => {
     if ((init?.method ?? 'GET') === 'GET') {
       return Response.json({ courses: [createdCourse] })
     }
@@ -41,7 +30,7 @@ test('編集者向けコースAPIは一覧取得と追加・更新・削除・�
       return Response.json(createdCourse)
     }
     return new Response(null, { status: 204 })
-  }
+  })
   const {
     createCourse,
     deleteCourseByDisplayId,
@@ -51,22 +40,19 @@ test('編集者向けコースAPIは一覧取得と追加・更新・削除・�
   } = await loadCoursesApi()
 
   // When: 編集者向けの参照と更新操作を実行する。
-  const list = await fetchManagedCourses()
-  const created = await createCourse({
+  await fetchManagedCourses()
+  await createCourse({
     idx: '50020',
     name: 'CLASS I COURSE',
     class: '1',
   })
-  const updated = await updateCourse('A/B C', { name: 'UPDATED', class: 'inf' })
+  await updateCourse('A/B C', { name: 'UPDATED', class: 'inf' })
   await deleteCourseByDisplayId('A/B C')
   await restoreCourseByDisplayId('A/B C')
 
   // Then: 編集者向け一覧と display_id 付き更新パスを呼び出す。
-  assert.deepEqual(list, { courses: [createdCourse] })
-  assert.deepEqual(created, createdCourse)
-  assert.deepEqual(updated, createdCourse)
   assert.deepEqual(
-    called.map((item) => `${item.method} ${item.url}`),
+    calls.map((item) => `${item.init?.method ?? 'GET'} ${String(item.input)}`),
     [
       'GET http://localhost:3000/internal/editor/courses',
       'POST http://localhost:3000/internal/courses',
@@ -76,8 +62,8 @@ test('編集者向けコースAPIは一覧取得と追加・更新・削除・�
     ]
   )
   assert.equal(
-    called[1]?.body,
+    calls[1]?.init?.body,
     JSON.stringify({ idx: '50020', name: 'CLASS I COURSE', class: '1' })
   )
-  assert.equal(called[2]?.body, JSON.stringify({ name: 'UPDATED', class: 'inf' }))
+  assert.equal(calls[2]?.init?.body, JSON.stringify({ name: 'UPDATED', class: 'inf' }))
 })

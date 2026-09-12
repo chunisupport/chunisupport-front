@@ -1,21 +1,16 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { QueryClient } from '@tanstack/solid-query'
-import { setupTestEnvironment } from '../test/setupTestEnvironment'
+import { loadTestModule } from '../test/setupTestEnvironment'
 
 /**
  * フレンドquery moduleを環境設定後に読み込む。
- *
  * @returns フレンドquery module。
  */
-const loadFriendsQuery = async () => {
-  setupTestEnvironment()
-  return import('./friends.ts')
-}
+const loadFriendsQuery = () => loadTestModule(() => import('./friends.ts'))
 
 /**
  * query単体テスト用のQueryClientを生成する。
- *
  * @returns 自動再試行と自動破棄を無効化したQueryClient。
  */
 const createTestQueryClient = (): QueryClient =>
