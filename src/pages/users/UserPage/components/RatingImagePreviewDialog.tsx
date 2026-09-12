@@ -8,6 +8,7 @@ import {
   getAppButtonClass,
   getAppIconButtonClass,
 } from '../../../../components/common/AppButton'
+import { AppSelect } from '../../../../components/common/AppSelect'
 import { RATING_SLOT_COUNT } from '../../../../constants/rating'
 import { SOCIAL_SHARE_TEXT } from '../../../../constants/socialShare'
 import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
@@ -17,8 +18,11 @@ import {
   RATING_IMAGE_COPY,
   RATING_IMAGE_JPEG_QUALITY,
   RATING_IMAGE_PIXEL_RATIO,
+  RATING_IMAGE_VERSION_OPTIONS,
+  type RatingImageVersionOption,
 } from '../UserProfileView.constants'
 import { RatingImageSheet } from './RatingImageSheet'
+import { RatingImageSheetV2 } from './RatingImageSheetV2'
 import { formatRatingImageFilename } from './ratingImageFilename'
 
 type Props = {
@@ -51,23 +55,29 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const [previewUrl, setPreviewUrl] = createSignal<string>()
   const [imageActionError, setImageActionError] = createSignal<string>()
   const [imageSheet, setImageSheet] = createSignal<HTMLDivElement>()
+  const [selectedVersionOption, setSelectedVersionOption] = createSignal(
+    RATING_IMAGE_VERSION_OPTIONS[0]
+  )
   let captureRevision = 0
 
   const [readyJacketCount, setReadyJacketCount] = createSignal(0)
   const readyJacketKeys = new Set<string>()
 
   /**
-   * 画像化対象に含まれる、URLが有効なジャケット画像の件数を返す。
+   * 画像化対象に含まれる、読み込み完了を待つ画像の件数を返す。
    *
-   * @returns 読み込み完了を待つジャケット画像の件数。
+   * @returns ジャケットまたはプレースホルダーの件数。
    */
   const expectedJacketCount = (): number => {
-    if (!props.showJackets) return 0
-
-    return [
+    const filledRecords = [
       ...props.rating.best.slice(0, RATING_SLOT_COUNT.best),
       ...props.rating.new.slice(0, RATING_SLOT_COUNT.new),
-    ].filter((record) => buildChunithmJacketUrl(record.img) !== null).length
+    ]
+
+    if (selectedVersionOption().value === 'v2') return filledRecords.length
+    if (!props.showJackets) return 0
+
+    return filledRecords.filter((record) => buildChunithmJacketUrl(record.img) !== null).length
   }
 
   /**
@@ -119,6 +129,24 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
       readyJacketKeys.delete(key)
     }
     setReadyJacketCount(readyJacketKeys.size)
+  }
+
+  /**
+   * デザインバージョンを切り替え、プレビューを作り直す。
+   *
+   * @param option - 次に使うデザインバージョン。空選択は無視する。
+   * @returns なし。
+   */
+  const handleVersionChange = (option: RatingImageVersionOption | null): void => {
+    if (!option || option.value === selectedVersionOption().value) return
+
+    captureRevision += 1
+    readyJacketKeys.clear()
+    setReadyJacketCount(0)
+    setIsCapturingPreview(false)
+    revokePreviewUrl()
+    setImageActionError(undefined)
+    setSelectedVersionOption(option)
   }
 
   /**
@@ -205,7 +233,11 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     const blob = previewBlob()
     if (!blob) throw new Error('Rating preview image is not ready')
 
-    return new File([blob], formatRatingImageFilename(props.username), { type: 'image/jpeg' })
+    return new File(
+      [blob],
+      formatRatingImageFilename(props.username, new Date(), selectedVersionOption().value),
+      { type: 'image/jpeg' }
+    )
   }
 
   /**
@@ -264,6 +296,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
         captureRevision += 1
         readyJacketKeys.clear()
         setReadyJacketCount(0)
+        setIsCapturingPreview(false)
         revokePreviewUrl()
         setImageActionError(undefined)
       },
@@ -316,6 +349,23 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
               >
                 <X class="h-5 w-5" aria-hidden="true" />
               </Dialog.CloseButton>
+            </div>
+
+            <div class="mt-3 w-36 shrink-0">
+              <AppSelect<RatingImageVersionOption>
+                options={RATING_IMAGE_VERSION_OPTIONS}
+                optionValue="value"
+                optionTextValue="label"
+                value={selectedVersionOption()}
+                onChange={handleVersionChange}
+                label={RATING_IMAGE_COPY.versionLabel}
+                labelVariant="srOnly"
+                formatLabel={(option) => option.label}
+                triggerClass="h-10"
+                itemClass="hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
+                contentZIndexClass="z-70"
+                disabled={isSharing()}
+              />
             </div>
 
             <div class="mt-4 min-h-0 flex-1 basis-0 overflow-hidden rounded-md bg-bg p-3">
@@ -390,14 +440,28 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
             </div>
 
             <div class="pointer-events-none fixed left-[-100000px] top-0" aria-hidden="true">
-              <RatingImageSheet
-                captureRef={(element) => setImageSheet(element)}
-                playerInfo={props.playerInfo}
-                honors={props.honors}
-                rating={props.rating}
-                showJackets={props.showJackets}
-                onJacketReadyChange={handleJacketReadyChange}
-              />
+              <Show
+                when={selectedVersionOption().value === 'v2'}
+                fallback={
+                  <RatingImageSheet
+                    captureRef={(element) => setImageSheet(element)}
+                    playerInfo={props.playerInfo}
+                    honors={props.honors}
+                    rating={props.rating}
+                    showJackets={props.showJackets}
+                    onJacketReadyChange={handleJacketReadyChange}
+                  />
+                }
+              >
+                <RatingImageSheetV2
+                  captureRef={(element) => setImageSheet(element)}
+                  playerInfo={props.playerInfo}
+                  honors={props.honors}
+                  rating={props.rating}
+                  showJackets={props.showJackets}
+                  onJacketReadyChange={handleJacketReadyChange}
+                />
+              </Show>
             </div>
           </Dialog.Content>
         </Dialog.Portal>

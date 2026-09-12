@@ -548,6 +548,16 @@
 
   --cs-size-user-honor-title-max-width: 464px;
 
+  /* ===== レーティング枠画像 Ver. 2（背景模様 / ジャケット重ね文字） ===== */
+  --cs-size-rating-image-v2-pattern: 28px;
+  --cs-gradient-rating-image-v2-jacket-scrim: linear-gradient(
+    to top,
+    rgb(0 0 0 / 78%) 0%,
+    rgb(0 0 0 / 40%) 58%,
+    rgb(0 0 0 / 0%) 100%
+  );
+  --cs-shadow-rating-image-v2-jacket-text: 0 1px 2px rgb(0 0 0 / 78%);
+
   /* ===== 難易度バッジ（BASIC / ADVANCED / EXPERT / MASTER / ULTIMA） ===== */
   --cs-color-difficulty-basic-bg: #00ab84;
   --cs-color-difficulty-basic-text: var(--color-white);
@@ -1138,6 +1148,67 @@
   .rating-image-honor-title.user-honor-title--sp {
     --honor-background: var(--honor-shine), var(--cs-gradient-rating-image-sp-honor-bg);
     animation: none;
+  }
+
+  .rating-image-v2-backdrop {
+    background-color: var(--color-bg);
+    background-image:
+      linear-gradient(
+        158deg,
+        color-mix(in oklab, var(--color-action-primary) 18%, transparent) 0 160px,
+        transparent 280px
+      ),
+      repeating-linear-gradient(
+        -24deg,
+        transparent 0 20px,
+        color-mix(in oklab, var(--color-border) 42%, transparent) 20px 21px
+      ),
+      repeating-conic-gradient(var(--color-bg) 0 25%, var(--cs-color-page-bg-pattern) 0 50%);
+    background-size:
+      auto,
+      auto,
+      var(--cs-size-rating-image-v2-pattern) var(--cs-size-rating-image-v2-pattern);
+  }
+
+  .rating-image-v2-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+
+  .rating-image-v2-title {
+    overflow: hidden;
+    font-family: var(--font-sans);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rating-image-v2-jacket-scrim {
+    background-image: var(--cs-gradient-rating-image-v2-jacket-scrim);
+  }
+
+  .rating-image-v2-jacket-overlay {
+    text-shadow: var(--cs-shadow-rating-image-v2-jacket-text);
+  }
+
+  .rating-image-v2-difficulty-corner {
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+  }
+
+  .rating-image-v2-honor-empty {
+    box-sizing: border-box;
+    height: 28px;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: 6px;
+    background-color: var(--color-surface-muted);
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent 0 6px,
+      color-mix(in oklab, var(--color-border) 55%, transparent) 6px 7px
+    );
   }
 
   .user-honor-title--phoenix-g {

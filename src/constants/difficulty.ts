@@ -74,3 +74,14 @@ export const DIFFICULTY_CARD_BORDER_CLASS_MAP: Readonly<Record<PlayerDataDifficu
   ULTIMA:
     'before:[background:repeating-linear-gradient(-60deg,#ff0000_0,#ff0000_6px,#000000_6px,#000000_12px)]',
 }
+
+/** ジャケット枠など、要素本体の背景として使う難易度色クラス */
+export const DIFFICULTY_FRAME_BACKGROUND_CLASS_MAP: Readonly<Record<PlayerDataDifficulty, string>> =
+  {
+    BASIC: 'bg-difficulty-basic-bg',
+    ADVANCED: 'bg-difficulty-advanced-bg',
+    EXPERT: 'bg-difficulty-expert-bg',
+    MASTER: 'bg-difficulty-master-bg',
+    ULTIMA:
+      '[background:repeating-linear-gradient(-60deg,#ff0000_0,#ff0000_6px,#000000_6px,#000000_12px)]',
+  }

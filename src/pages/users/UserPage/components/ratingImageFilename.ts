@@ -1,3 +1,5 @@
+import type { RatingImageVersion } from '../UserProfileView.constants'
+
 const RATING_IMAGE_FILENAME_PREFIX = 'chunisupport-best-new'
 
 /**
@@ -22,7 +24,15 @@ const formatRatingImageTimestamp = (date: Date): string => {
  *
  * @param username - プロフィールURLに使用するユーザー名。
  * @param date - ファイル名へ付与する日時。省略時は現在時刻。
- * @returns `chunisupport-best-new-{username}-{YYYYMMDDhhmmss}.jpg` 形式のファイル名。
+ * @param version - 画像のデザインバージョン。Ver. 1は接尾辞なし。
+ * @returns `chunisupport-best-new[-v2]-{username}-{YYYYMMDDhhmmss}.jpg` 形式のファイル名。
  */
-export const formatRatingImageFilename = (username: string, date: Date = new Date()): string =>
-  `${RATING_IMAGE_FILENAME_PREFIX}-${username}-${formatRatingImageTimestamp(date)}.jpg`
+export const formatRatingImageFilename = (
+  username: string,
+  date: Date = new Date(),
+  version: RatingImageVersion = 'v1'
+): string => {
+  const versionSegment = version === 'v1' ? '' : `-${version}`
+
+  return `${RATING_IMAGE_FILENAME_PREFIX}${versionSegment}-${username}-${formatRatingImageTimestamp(date)}.jpg`
+}

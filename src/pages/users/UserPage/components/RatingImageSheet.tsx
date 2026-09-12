@@ -1,8 +1,6 @@
 import { Play } from 'lucide-solid'
-import type { Component, JSX } from 'solid-js'
-import { createSignal, For, Show } from 'solid-js'
-import placeholderImageUrl from '../../../../assets/placeholder.png'
-import { JacketImage } from '../../../../components/common/JacketImage'
+import type { Component } from 'solid-js'
+import { For, Show } from 'solid-js'
 import { RECORD_CARD_LAMP_BADGE_CLASS } from '../../../../components/common/record/RecordDisplayParts'
 import { getDefaultRecordLampLabel } from '../../../../components/common/record/recordLampLabel'
 import {
@@ -16,11 +14,16 @@ import { getConstDisplay } from '../../../../utils/constDisplay'
 import { difficultyCardBorderColor } from '../../../../utils/difficultyUtils'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import { formatInteger } from '../../../../utils/numberFormat'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 import { getRankingPositionClass } from '../../../../utils/rankingPosition'
 import { formatNullablePlayerRating, formatRatingFixed2 } from '../../../../utils/ratingFormat'
 import { getScoreRank } from '../../../../utils/scoreRank'
 import { RATING_IMAGE_COPY, RATING_IMAGE_WIDTH_PX } from '../UserProfileView.constants'
+import { RatingImageJacketMedia } from './RatingImageJacketMedia'
+import {
+  formatRatingImageOverPowerPercent,
+  formatRatingImageOverPowerValue,
+  getPrimaryHonor,
+} from './ratingImageShared'
 import { UserRecordPlaceholderCard } from './UserRecordPlaceholderCard'
 
 type RatingImageSheetProps = {
@@ -68,17 +71,6 @@ type RatingImageColumnProps = {
   onJacketReadyChange: (key: string, ready: boolean) => void
 }
 
-type JacketLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error'
-
-/**
- * プロフィール画像へ表示する代表称号を取得する。
- *
- * @param honors - APIから取得した称号一覧。
- * @returns 1枠目を優先した代表称号。称号がない場合はundefined。
- */
-const getPrimaryHonor = (honors: HonorDTO[]): HonorDTO | undefined =>
-  honors.find((honor) => honor.slot === 1) ?? honors[0]
-
 /**
  * レーティング枠画像用の静的レコードカードを表示する。
  *
@@ -86,61 +78,11 @@ const getPrimaryHonor = (honors: HonorDTO[]): HonorDTO | undefined =>
  * @returns 画像化時にリンクやアニメーションを含まないレコードカード。
  */
 const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => {
-  const [jacketLoadingStatus, setJacketLoadingStatus] = createSignal<JacketLoadingStatus>('idle')
   const scoreRank = () => getScoreRank(props.record.score)
   const indexColor = () => getRankingPositionClass(props.index + 1, 'bg-surface-hover')
   const jacketUrl = () => buildChunithmJacketUrl(props.record.img)
   const constDisplay = () => getConstDisplay(props.record.const, props.record.is_const_unknown)
   const unknownValueClass = () => (props.record.is_const_unknown ? 'text-danger' : 'text-text')
-  let fallbackLoaded = false
-
-  /**
-   * 元ジャケットの読み込み状態を反映し、表示可能になったカードを通知する。
-   *
-   * @param status - Kobalte Imageが通知した読み込み状態。
-   * @returns なし。
-   */
-  const handleJacketLoadingStatusChange = (status: JacketLoadingStatus): void => {
-    setJacketLoadingStatus(status)
-
-    if (status === 'error' && fallbackLoaded) {
-      props.onJacketReadyChange(props.jacketKey, true)
-      return
-    }
-
-    props.onJacketReadyChange(props.jacketKey, false)
-  }
-
-  /**
-   * DOMへ追加された元ジャケットのデコード完了後に準備完了を通知する。
-   *
-   * @param event - 読み込みを完了したジャケット画像のイベント。
-   * @returns なし。
-   */
-  const handleJacketLoad: JSX.EventHandlerUnion<HTMLImageElement, Event> = (event): void => {
-    void event.currentTarget
-      .decode()
-      .catch(() => undefined)
-      .then(() => props.onJacketReadyChange(props.jacketKey, true))
-  }
-
-  /**
-   * プレースホルダーの読み込み完了を記録し、元画像が失敗済みなら準備完了を通知する。
-   *
-   * @param event - 読み込みを完了したプレースホルダー画像のイベント。
-   * @returns なし。
-   */
-  const handleFallbackLoad: JSX.EventHandlerUnion<HTMLImageElement, Event> = (event): void => {
-    void event.currentTarget
-      .decode()
-      .catch(() => undefined)
-      .then(() => {
-        fallbackLoaded = true
-        if (jacketLoadingStatus() === 'error') {
-          props.onJacketReadyChange(props.jacketKey, true)
-        }
-      })
-  }
 
   return (
     <div
@@ -150,24 +92,13 @@ const RatingImageRecordCard: Component<RatingImageRecordCardProps> = (props) => 
     >
       <Show when={props.showJackets && jacketUrl()}>
         {(url) => (
-          <JacketImage
+          <RatingImageJacketMedia
             source={url()}
-            alt=""
+            jacketKey={props.jacketKey}
+            onJacketReadyChange={props.onJacketReadyChange}
             class="pointer-events-none absolute inset-y-0 right-0 z-0 block w-1/2 overflow-hidden [mask-image:linear-gradient(to_right,transparent_0%,black_33%)]"
-            ariaHidden={true}
-            crossOrigin="anonymous"
             imageClass="h-full w-full object-cover object-center opacity-15"
-            onLoad={handleJacketLoad}
-            onLoadingStatusChange={handleJacketLoadingStatusChange}
             fallbackClass="block h-full w-full"
-            fallback={
-              <img
-                src={placeholderImageUrl}
-                alt=""
-                class="h-full w-full object-cover object-center opacity-15"
-                onLoad={handleFallbackLoad}
-              />
-            }
           />
         )}
       </Show>
@@ -283,14 +214,9 @@ const RatingImageColumn: Component<RatingImageColumnProps> = (props) => {
  */
 export const RatingImageSheet: Component<RatingImageSheetProps> = (props) => {
   const primaryHonor = () => getPrimaryHonor(props.honors)
-  const overPowerValue = () =>
-    props.playerInfo.overpower_value === null
-      ? '-'
-      : formatOverPowerValue(props.playerInfo.overpower_value)
+  const overPowerValue = () => formatRatingImageOverPowerValue(props.playerInfo.overpower_value)
   const overPowerPercent = () =>
-    props.playerInfo.overpower_percent === null
-      ? '-'
-      : formatOverPowerPercent(props.playerInfo.overpower_percent)
+    formatRatingImageOverPowerPercent(props.playerInfo.overpower_percent)
 
   return (
     <div
