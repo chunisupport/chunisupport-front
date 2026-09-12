@@ -53,20 +53,16 @@ Solid.js SPA としての動作を維持しながら、URL と表示内容が固
 
 ### 4.1 全体構成
 
-```text
-固定ページメタ情報
-        │
-        ▼
-  rsbuild build
-        │
-        ▼
- dist/index.html ── 固定ページ HTML 生成スクリプト
-                         │
-                         ├── dist/songs.html
-                         ├── dist/songs/worldsend.html
-                         ├── dist/tools.html
-                         └── dist/tools/*.html
-```
+Rsbuild が生成した `dist/index.html` と固定ページメタ情報を固定ページ HTML 生成スクリプトへ渡し、次の成果物を用意する。
+
+| 成果物 | 用途 |
+| --- | --- |
+| `dist/index.html` | 生成元のまま維持する、OGP なしの SPA フォールバック |
+| `dist/root-ogp.html` | トップページ `/` 専用の OGP を含む HTML |
+| `dist/songs.html` | 楽曲一覧用 HTML（追加予定） |
+| `dist/songs/worldsend.html` | WORLD'S END 楽曲一覧用 HTML（追加予定） |
+| `dist/tools.html` | ツール一覧用 HTML |
+| `dist/tools/*.html` | 各ツール用 HTML |
 
 Rsbuild の通常ビルド後に、`dist/index.html` をテンプレートとして固定ページ用 HTML を生成する。各 HTML では head 内のメタ情報だけを変更し、Rsbuild が生成した script、stylesheet、preload、favicon 等のタグはそのまま維持する。
 
@@ -82,7 +78,7 @@ Cloudflare Pages は拡張子を省略した URL と `.html` ファイルを対�
 
 | ページパス | 出力先 |
 | --- | --- |
-| `/` | `dist/index.html` |
+| `/` | `dist/root-ogp.html` |
 | `/songs` | `dist/songs.html` |
 | `/songs/worldsend` | `dist/songs/worldsend.html` |
 | `/tools` | `dist/tools.html` |
@@ -91,6 +87,8 @@ Cloudflare Pages は拡張子を省略した URL と `.html` ファイルを対�
 `dist/songs/index.html` のような形式は `/songs/` を表すため、固定ページでは使用しない。これにより、現在のルート定数、内部リンク、OGP URL を末尾スラッシュなしで統一する。
 
 同名の HTML ファイルとディレクトリは共存できるため、`dist/tools.html` と `dist/tools/*.html` の両方を生成できる。
+
+トップページだけは `dist/root-ogp.html` へ出力し、`dist/index.html` を上書きしない。これにより、専用 HTML がないページへ SPA フォールバックでトップページの OGP や canonical を返すことを防ぐ。`/` への配信方法は 9.1 に記載する。
 
 ## 5. 固定ページメタ情報
 
@@ -252,9 +250,9 @@ scripts/staticPageHtml.test.ts
 6. 元 HTML の `<title>` を置換する。
 7. `</head>` の直前へ固定ページ用タグを挿入する。
 8. ページパスに対応した `.html` ファイルへ UTF-8、BOM なしで書き込む。
-9. `/` の生成結果は `dist/index.html` へ書き戻す。
+9. `/` の生成結果は `dist/root-ogp.html` へ書き込み、`dist/index.html` は OGP なしの SPA フォールバックとして維持する。
 
-すべてのページは変更前の `dist/index.html` を基に生成する。先に書き換えたトップページ HTML を次ページのテンプレートに使用しない。
+すべてのページは同じ `dist/index.html` を基に生成する。固定ページ HTML 生成処理はこのファイルを変更せず、生成済みのページ HTML を次ページのテンプレートに使用しない。
 
 ### 7.3 HTML 操作
 
@@ -307,6 +305,15 @@ Node.js から TypeScript 定義を読み込む際は、既存の TypeScript 拡
 
 ### 9.1 直接アクセス
 
+トップページ `/` には、`public/_redirects` の次の設定で `dist/root-ogp.html` を配信する。Rsbuild はこの設定ファイルを `dist/_redirects` へコピーする。
+
+```plain
+/ /root-ogp 200
+/root-ogp / 301
+```
+
+1行目は Cloudflare Pages 内部で配信する HTML を切り替えるため、ブラウザーの URL は `/` のままとなる。2行目は `/root-ogp` への直接アクセスを `/` へリダイレクトする。トップページ HTML の `canonical` と `og:url` には公開サイトの `/` を指定し、内部配信用パス `/root-ogp` は使用しない。
+
 `/tools/border-calculator` へ直接アクセスした場合、Cloudflare Pages は `dist/tools/border-calculator.html` を返す。HTML に含まれる既存の SPA entry が起動し、Solid Router は現在の URL から従来のツール画面を表示する。
 
 ### 9.2 SPA 内遷移
@@ -317,7 +324,7 @@ Solid Router によるクライアント遷移では HTML の再取得は発生�
 
 ### 9.3 動的ルート
 
-`/songs/example-id` に対応する静的ファイルが存在しない場合、Cloudflare Pages の SPA フォールバックによりルートの `index.html` が返る。Solid Router は従来どおり楽曲詳細ルートを表示する。
+`/songs/example-id` に対応する静的ファイルが存在しない場合、Cloudflare Pages の SPA フォールバックにより OGP なしの `dist/index.html` が返る。`/` 専用の内部配信設定を未生成のパスへ適用せず、トップページの OGP や canonical を含めない。Solid Router は従来どおり楽曲詳細ルートを表示する。
 
 Cloudflare Pages の SPA フォールバックはトップレベルの `404.html` がない構成を前提とする。将来 `404.html` を追加する場合は、動的ルートの配信方法をあわせて再設計する。
 
@@ -341,7 +348,7 @@ Given-When-Then 形式で少なくとも次を確認する。
 
 #### 出力先
 
-- `/` が `dist/index.html` になる。
+- `/` が `dist/root-ogp.html` になる。
 - `/songs` が `dist/songs.html` になる。
 - `/tools/dashboard` が `dist/tools/dashboard.html` になる。
 - 末尾 `/`、`..`、クエリ、フラグメントを含むパスを拒否する。
@@ -368,11 +375,16 @@ Given-When-Then 形式で少なくとも次を確認する。
 `pnpm build` 後に次を確認する。
 
 - 対象パスに対応する全 `.html` が生成されている。
-- 各 HTML に正しい絶対 `og:url` が含まれる。
+- 生成した各固定ページ HTML に正しい絶対 `og:url` が含まれる。
+- `dist/root-ogp.html` の `og:url` と canonical が公開サイトの `/` を指す。
+- 固定ページ HTML 生成前後で `dist/index.html` が変わらず、OGP と canonical を含まない。
+- `dist/_redirects` に 9.1 の設定が含まれる。
 - `og:image` が存在する公開ファイルを指している。
 - 全 HTML の script、stylesheet URL が `dist/index.html` と一致する。
 - JavaScript を実行せずに HTML を取得してもページ固有メタ情報が読める。
-- 未生成の動的ルートが Cloudflare Pages 上で引き続き SPA として表示できる。
+- Cloudflare Pages 上で `/` へ直接アクセスすると、URL を変えずにトップページ固有のメタ情報を含む HTML を返す。
+- `/root-ogp` へ直接アクセスすると `/` へリダイレクトする。
+- 未生成の動的ルートが Cloudflare Pages 上で引き続き SPA として表示でき、初期 HTML にトップページの OGP や canonical を含まない。
 
 ## 12. 品質確認
 
@@ -410,6 +422,7 @@ scripts/staticPageHtml.test.ts
 ### 13.2 変更候補
 
 ```text
+public/_redirects
 package.json
 tsconfig.json
 src/App.tsx
@@ -428,7 +441,8 @@ src/pages/songs/WorldsendSongsList/WorldsendSongsList.tsx
 - JavaScript を実行しないクローラーがメタ情報を取得できる。
 - 全固定ページが同じ SPA JavaScript/CSS 成果物を利用する。
 - 直接アクセスと Solid Router による SPA 遷移の両方が動作する。
-- 未生成の動的ルートに対する SPA フォールバックを維持する。
+- トップページ `/` は URL を変えずに `dist/root-ogp.html` を配信する。
+- 未生成の動的ルートに対する SPA フォールバックには OGP なしの `dist/index.html` を使用し、トップページの OGP や canonical を返さない。
 - 固定ページ追加時は、共通定義へメタ情報を追加するだけで生成対象を拡張できる。
 - ツール名と説明文について `TOOL_LINKS` との新たな二重管理がない。
 - 開発・検証環境の `robots=noindex` が固定 HTML にも保持される。
