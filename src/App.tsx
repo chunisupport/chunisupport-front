@@ -58,6 +58,7 @@ import {
   RATING_THEORETICAL_CHECKER_PATH,
   REGISTER_SCORE_PATH,
   REGISTER_SCORE_TEMP_PATH,
+  SONGS_CARD_PATH,
   TOOLS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './constants/routes'
@@ -87,6 +88,7 @@ const UserStatsPage = lazy(() => import('./pages/users/UserStats/UserStatsPage')
 const GoalsList = lazy(() => import('./pages/goals/GoalsList/GoalsList'))
 
 const SongsList = lazy(() => import('./pages/songs/SongsList/SongsList'))
+const SongsCardList = lazy(() => import('./pages/songs/SongsCardList/SongsCardList'))
 const WorldsendSongsList = lazy(() => import('./pages/songs/WorldsendSongsList/WorldsendSongsList'))
 const SongDetail = lazy(() => import('./pages/songs/SongDetail/SongDetail'))
 const WorldsendSongDetail = lazy(
@@ -620,6 +622,7 @@ const App = () => {
 
       {/* 楽曲 */}
       <Route path="/songs" component={withNavBar(withRouteLoadBoundary(SongsList))} />
+      <Route path={SONGS_CARD_PATH} component={withNavBar(withRouteLoadBoundary(SongsCardList))} />
       <Route
         path="/songs/worldsend"
         component={withNavBar(withRouteLoadBoundary(WorldsendSongsList))}

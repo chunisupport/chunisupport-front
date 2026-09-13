@@ -1,17 +1,14 @@
 import { ArrowUpDown } from 'lucide-solid'
-import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
-import { fetchMasterData, fetchVersions } from '../../../api/songs'
+import { createMemo, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
 import { AppIconButton } from '../../../components/common/AppButton'
 import { useAppMainScrollRestoration } from '../../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../../stores/songsData'
 import type { SortDirection } from '../../../utils/sortingQuery'
 import SongFilterPanel from '../components/SongFilterPanel'
 import SongSearchInput from '../components/SongSearchInput'
 import SongsViewToggle from '../components/SongsViewToggle'
-import { buildSearchableItems, filterSearchableItems } from '../searchHelpers'
-import { createSongFilters, filterSongs } from '../songFilters'
+import { useSongsListQuery } from '../useSongsListQuery'
 import SongsTable from './components/SongsTable'
 import { SONG_CHART_DISPLAY_LABELS, type SongChartDisplayMode } from './constants'
 import { nextSortState, type SongSortKey, sortSongs } from './utils/sorting'
@@ -22,38 +19,26 @@ import { nextSortState, type SongSortKey, sortSongs } from './utils/sorting'
  * @returns 楽曲一覧ページ。
  */
 const SongsList = () => {
-  const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
-  const [masterData] = createResource(fetchMasterData)
-  const [versions] = createResource(fetchVersions)
-  const [filters, setFilters] = createSignal(createSongFilters())
+  const {
+    isSongsLoading,
+    loadError,
+    genres,
+    versionOptions,
+    genreFilterOptions,
+    filters,
+    setFilters,
+    searchQuery,
+    setSearchQuery,
+    filteredSongs,
+  } = useSongsListQuery()
   const [sortKey, setSortKey] = createSignal<SongSortKey | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
   const [displayMode, setDisplayMode] = createSignal<SongChartDisplayMode>('const')
-  const [searchQuery, setSearchQuery] = createSignal('')
-
-  onMount(() => {
-    ensureSongsLoaded()
-  })
 
   const restoredScrollOffset = useAppMainScrollRestoration(() => !isSongsLoading())
 
-  const defaultSortedSongs = createMemo(() => {
-    const songs = songsResponse()?.songs ?? []
-    return sortSongsByReleaseDescAndIdxDesc(songs)
-  })
-
-  const searchableSongs = createMemo(() => buildSearchableItems(defaultSortedSongs()))
-
-  const filteredSongs = createMemo(() =>
-    filterSongs(
-      filterSearchableItems(searchableSongs(), searchQuery()),
-      filters(),
-      versions()?.versions ?? []
-    )
-  )
-
   const sortedSongs = createMemo(() =>
-    sortSongs(filteredSongs(), sortKey(), sortDirection(), masterData()?.genres, displayMode())
+    sortSongs(filteredSongs(), sortKey(), sortDirection(), genres(), displayMode())
   )
 
   const handleSortChange = (nextKey: SongSortKey) => {
@@ -66,12 +51,9 @@ const SongsList = () => {
 
   return (
     <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
-      <Show
-        when={!songsResponse.error && !masterData.error && !versions.error}
-        fallback={<LoadError error={songsResponse.error ?? masterData.error ?? versions.error} />}
-      >
+      <Show when={!loadError()} fallback={<LoadError error={loadError()} />}>
         <Show when={!isSongsLoading()} fallback={<Loading />}>
-          <div class="mx-auto w-full max-w-full p-4 space-y-4">
+          <div class="mx-auto w-full max-w-full space-y-4 p-4">
             <div class="flex items-center justify-between">
               <h1 class="text-2xl font-semibold">楽曲一覧</h1>
               <SongsViewToggle />
@@ -82,8 +64,8 @@ const SongsList = () => {
                 idPrefix="songs"
                 filters={filters()}
                 onChange={setFilters}
-                genres={[...new Set(defaultSortedSongs().map((song) => song.genre))]}
-                versions={versions()?.versions ?? []}
+                genres={genreFilterOptions()}
+                versions={versionOptions()}
               />
               <AppIconButton
                 class="ml-2 h-9.5 w-9.5 shrink-0"
