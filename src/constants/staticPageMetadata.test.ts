@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { STATIC_PAGE_METADATA } from './staticPageMetadata'
-import { TOOL_LINKS } from './tools'
+import { isPublicToolLink, TOOL_LINKS } from './tools'
 
 test('固定ページのパスが重複せず、タイトルと説明が空ではないこと', () => {
   // Given
@@ -24,6 +24,6 @@ test('公開中の全ツールだけを固定ページ生成対象に含める�
 
   // When & Then
   for (const tool of TOOL_LINKS) {
-    assert.equal(generatedPaths.has(tool.href), tool.disabled !== true)
+    assert.equal(generatedPaths.has(tool.href), isPublicToolLink(tool))
   }
 })

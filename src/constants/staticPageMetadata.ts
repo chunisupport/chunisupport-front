@@ -1,6 +1,6 @@
 import { TOOLS_PATH } from './routes'
 import { joinDocumentTitleParts, SITE_NAME } from './site'
-import { TOOL_LINKS } from './tools'
+import { isPublicToolLink, TOOL_LINKS } from './tools'
 
 /**
  * 固定ページの初期 HTML に埋め込むメタ情報。
@@ -33,7 +33,7 @@ export const TOOLS_PAGE_METADATA: StaticPageMetadata = {
 export const STATIC_PAGE_METADATA: readonly StaticPageMetadata[] = [
   ROOT_PAGE_METADATA,
   TOOLS_PAGE_METADATA,
-  ...TOOL_LINKS.filter((tool) => tool.disabled !== true).map(({ href, title, description }) => ({
+  ...TOOL_LINKS.filter(isPublicToolLink).map(({ href, title, description }) => ({
     path: href,
     title,
     description,

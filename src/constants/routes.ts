@@ -15,6 +15,8 @@ export const CHART_CONSTANT_CALCULATOR_PATH = `${TOOLS_PATH}/chart-constant-calc
 export const BORDER_CALCULATOR_PATH = `${TOOLS_PATH}/border-calculator`
 export const WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector`
 export const RANDOM_SONG_SELECTOR_PATH = `${TOOLS_PATH}/random-song-selector`
+/** 未解禁曲ディスカバー画面のパス */
+export const LOCKED_SONG_DISCOVERY_PATH = `${TOOLS_PATH}/locked-song-discovery`
 /** ベスト枠・新曲枠理論値チェッカー画面のパス */
 export const RATING_THEORETICAL_CHECKER_PATH = `${TOOLS_PATH}/rating-theoretical-checker`
 /** ベスト枠ランキング画面のパス */

@@ -5,6 +5,8 @@ import {
   Dices,
   Gauge,
   ListOrdered,
+  Lock,
+  ScanSearch,
   Target,
   Trophy,
 } from 'lucide-solid'
@@ -50,6 +52,7 @@ import {
   EDITOR_SONGS_PATH,
   FRIENDS_PATH,
   LATEST_SCORE_UPDATE_PATH,
+  LOCKED_SONG_DISCOVERY_PATH,
   MAINTENANCE_LOGIN_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
@@ -59,7 +62,9 @@ import {
   WEAK_CHART_INSPECTOR_PATH,
 } from './constants/routes'
 import {
+  ADMIN_ONLY_TOOL_LOCK_LABEL,
   DISABLED_TOOL_BADGE_TEXT,
+  isToolLinkListed,
   TOOL_LINKS,
   type ToolLink,
   type ToolLinkIcon,
@@ -68,7 +73,7 @@ import { useRememberAppMainScrollNavigationType } from './hooks/useAppMainScroll
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import { useRobotsMeta } from './hooks/useRobotsMeta'
 import NotFoundPage from './pages/NotFoundPage'
-import { getAuthenticatedUser } from './stores/authSession'
+import { authSession, getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
 import { resolveHomeView } from './usecases/auth/resolveHomeView'
 
@@ -109,6 +114,7 @@ const BestSlotRankingPage = lazy(() => import('./pages/tools/BestSlotRankingPage
 const AllSongBestFramePage = lazy(() => import('./pages/tools/AllSongBestFramePage'))
 const RatingTheoreticalCheckerPage = lazy(() => import('./pages/tools/NewSongSssPlusToolPage'))
 const PlayerStatsDashboardPage = lazy(() => import('./pages/tools/PlayerStatsDashboard'))
+const LockedSongDiscoveryPage = lazy(() => import('./pages/tools/LockedSongDiscoveryPage'))
 
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
 const AdminDataCoveragePage = lazy(() => import('./pages/admin/AdminDataCoveragePage'))
@@ -325,50 +331,69 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Gauge class={iconClass} aria-hidden="true" />
     case 'list':
       return <ListOrdered class={iconClass} aria-hidden="true" />
+    case 'discover':
+      return <ScanSearch class={iconClass} aria-hidden="true" />
   }
 }
 
 /**
  * ツールカード内の共通表示要素を表示する。
+ * ADMIN 限定ツールはカード右上に南京錠アイコンを重ねる。
  * @param props.tool - 表示対象のツールリンク情報。
  * @returns アイコン、タイトル、説明、状態ラベルを含むツールカード内容。
  */
 const ToolCardContent = (props: { tool: ToolLink }) => {
   return (
-    <SelectableCardLink
-      href={props.tool.href}
-      disabled={props.tool.disabled}
-      class="min-h-24 items-center"
-      icon={
-        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
-          <ToolCardIcon icon={props.tool.icon} disabled={props.tool.disabled} />
-        </span>
-      }
-      title={props.tool.title}
-      titleClass="text-base"
-      description={props.tool.description}
-    >
-      <Show when={props.tool.disabled === true}>
-        <span class="w-fit rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text-muted">
-          {DISABLED_TOOL_BADGE_TEXT}
+    <div class="relative">
+      <SelectableCardLink
+        href={props.tool.href}
+        disabled={props.tool.disabled}
+        class={`min-h-24 items-center ${props.tool.adminOnly === true ? 'pr-8' : ''}`}
+        icon={
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+            <ToolCardIcon icon={props.tool.icon} disabled={props.tool.disabled} />
+          </span>
+        }
+        title={props.tool.title}
+        titleClass="text-base"
+        description={props.tool.description}
+      >
+        <Show when={props.tool.disabled === true}>
+          <span class="w-fit rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text-muted">
+            {DISABLED_TOOL_BADGE_TEXT}
+          </span>
+        </Show>
+      </SelectableCardLink>
+      <Show when={props.tool.adminOnly === true}>
+        <span
+          class="pointer-events-none absolute top-2 right-2 text-text-muted"
+          role="img"
+          aria-label={ADMIN_ONLY_TOOL_LOCK_LABEL}
+          title={ADMIN_ONLY_TOOL_LOCK_LABEL}
+        >
+          <Lock class="h-4 w-4" aria-hidden="true" />
         </span>
       </Show>
-    </SelectableCardLink>
+    </div>
   )
 }
 
 /**
  * ツールページの見出しを表示する。
+ * ADMIN 限定ツールは管理者以外の一覧から除外する。
  * @returns ツールページ
  */
 const ToolsPage = () => {
   useDocumentTitle('ツール')
+  const listedTools = createMemo(() =>
+    TOOL_LINKS.filter((tool) => isToolLinkListed(tool, authSession.user?.account_type))
+  )
 
   return (
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
       <h1 class="text-2xl font-semibold">ツール</h1>
       <div class="grid gap-3 sm:grid-cols-2">
-        <For each={TOOL_LINKS}>{(tool) => <ToolCardContent tool={tool} />}</For>
+        <For each={listedTools()}>{(tool) => <ToolCardContent tool={tool} />}</For>
       </div>
     </div>
   )
@@ -665,6 +690,10 @@ const App = () => {
       <Route
         path={DASHBOARD_PATH}
         component={withNavBar(withAuth(withRouteLoadBoundary(PlayerStatsDashboardPage)))}
+      />
+      <Route
+        path={LOCKED_SONG_DISCOVERY_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(LockedSongDiscoveryPage)))}
       />
 
       {/* 管理 */}

@@ -1,9 +1,11 @@
+import type { AccountType } from '../types/api'
 import {
   ALL_SONG_BEST_FRAME_PATH,
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   DASHBOARD_PATH,
+  LOCKED_SONG_DISCOVERY_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
   WEAK_CHART_INSPECTOR_PATH,
@@ -20,11 +22,17 @@ export type ToolLinkIcon =
   | 'ranking'
   | 'gauge'
   | 'list'
+  | 'discover'
 
 /**
  * 無効化されたツールカードに表示する状態ラベル。
  */
 export const DISABLED_TOOL_BADGE_TEXT = 'coming soon'
+
+/**
+ * ADMIN 限定ツールカードの南京錠アイコンの説明。
+ */
+export const ADMIN_ONLY_TOOL_LOCK_LABEL = '管理者限定'
 
 /**
  * ツールページに表示するリンク情報。
@@ -34,6 +42,7 @@ export const DISABLED_TOOL_BADGE_TEXT = 'coming soon'
  * @property icon - ツールカードに表示するアイコン種別。
  * @property description - ツールカードに表示する概要。
  * @property disabled - ツールカードを無効状態として表示し、リンク遷移を止めるかどうか。
+ * @property adminOnly - ADMIN 以外のツール一覧から隠すかどうか。直接アクセスは妨げない。
  */
 export type ToolLink = {
   title: string
@@ -41,7 +50,27 @@ export type ToolLink = {
   icon: ToolLinkIcon
   description: string
   disabled?: boolean
+  adminOnly?: boolean
 }
+
+/**
+ * ツール一覧に表示するリンクか判定する。
+ *
+ * @param tool - 判定対象のツールリンク。
+ * @param accountType - 現在ユーザーのアカウント種別。未ログイン時は undefined。
+ * @returns ツール一覧へ表示する場合は true。
+ */
+export const isToolLinkListed = (tool: ToolLink, accountType: AccountType | undefined): boolean =>
+  tool.adminOnly !== true || accountType === 'ADMIN'
+
+/**
+ * 固定ページ生成対象の公開ツールか判定する。
+ *
+ * @param tool - 判定対象のツールリンク。
+ * @returns 公開中のツールとして扱う場合は true。
+ */
+export const isPublicToolLink = (tool: ToolLink): boolean =>
+  tool.disabled !== true && isToolLinkListed(tool, undefined)
 
 /**
  * ツールページに表示するリンク一覧。
@@ -88,6 +117,13 @@ export const TOOL_LINKS: ToolLink[] = [
     href: ALL_SONG_BEST_FRAME_PATH,
     icon: 'list',
     description: '全曲・全譜面から、単曲レート上位30曲・上位50曲を計算します。',
+  },
+  {
+    title: '未解禁曲ディスカバー',
+    href: LOCKED_SONG_DISCOVERY_PATH,
+    icon: 'discover',
+    description: '分類別の筐体OVER POWERを照合し、未解禁曲がある範囲を絞り込みます。',
+    adminOnly: true,
   },
   {
     title: 'ベスト枠・新曲枠理論値チェッカー',
