@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import type { AdminUserListResponse } from '../../types/api.ts'
 
 import {
   formatAccountType,
   formatAdminUserDateTime,
   formatNullableText,
+  updateAdminUserListRow,
 } from './adminUserDisplay.ts'
 
 test('管理ユーザー日時が null の場合はハイフンを返す', () => {
@@ -32,4 +34,42 @@ test('nullable text は null と空文字でハイフンを返す', () => {
   assert.equal(formatNullableText(null), '-')
   assert.equal(formatNullableText(''), '-')
   assert.equal(formatNullableText('るなぁぁ'), 'るなぁぁ')
+})
+
+test('ユーザー一覧は対象行の指定フィールドだけを更新し、行順と他の行を維持する', () => {
+  // Given
+  const alice: AdminUserListResponse = {
+    username: 'alice',
+    account_type: 'PLAYER',
+    created_at: '2026-09-01T00:00:00Z',
+    updated_at: '2026-09-01T00:00:00Z',
+    player_name: 'ALICE',
+    rating: 16,
+    overpower_value: 100,
+    is_suspicious: false,
+    is_private: false,
+  }
+  const bob: AdminUserListResponse = {
+    ...alice,
+    username: 'bob',
+    player_name: 'BOB',
+  }
+
+  // When
+  const result = updateAdminUserListRow([alice, bob], 'bob', {
+    account_type: 'EDITOR',
+    is_suspicious: true,
+  })
+
+  // Then
+  assert.deepEqual(
+    result.map((user) => user.username),
+    ['alice', 'bob']
+  )
+  assert.equal(result[0], alice)
+  assert.deepEqual(result[1], {
+    ...bob,
+    account_type: 'EDITOR',
+    is_suspicious: true,
+  })
 })

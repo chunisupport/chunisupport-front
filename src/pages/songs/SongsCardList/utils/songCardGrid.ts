@@ -51,6 +51,18 @@ export const getSongCardGridWidth = (columnCount: number): number => {
 }
 
 /**
+ * 利用可能な幅に収まるカード本文幅を求める。
+ *
+ * @param availableWidth - ページ本文に使える幅（px）。
+ * @returns グリッド幅と利用可能幅の小さい方。
+ */
+export const getSongCardContentWidth = (availableWidth: number): number => {
+  const gridWidth = getSongCardGridWidth(resolveSongCardColumnCount(availableWidth))
+  if (availableWidth <= 0) return gridWidth
+  return Math.min(gridWidth, availableWidth)
+}
+
+/**
  * 指定した仮想行に載せるカードを切り出す。
  *
  * @param items - 表示対象の全件。

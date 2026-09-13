@@ -26,7 +26,12 @@ import {
   formatAdminUserDeleteConfirmation,
   formatAdminUserFlagLabel,
 } from './AdminUsersPage.constants'
-import { formatAccountType, formatAdminUserDateTime, formatNullableText } from './adminUserDisplay'
+import {
+  formatAccountType,
+  formatAdminUserDateTime,
+  formatNullableText,
+  updateAdminUserListRow,
+} from './adminUserDisplay'
 
 /**
  * 管理者向けユーザー管理ページ。
@@ -56,7 +61,7 @@ const AdminUsersPage = () => {
     Record<string, string>
   >({})
 
-  const [usersResponse] = createResource(
+  const [usersResponse, { mutate: mutateUsers }] = createResource(
     () => ({ name: searchName(), page: page(), refresh: refreshKey() }),
     ({ name, page: currentPage }) => fetchAdminUsers({ name, page: currentPage })
   )
@@ -135,8 +140,10 @@ const AdminUsersPage = () => {
     setUpdatingPermissionUsernames((current) => new Set(current).add(username))
     try {
       await updateUserPermission(username, permission)
+      mutateUsers((current) =>
+        current ? updateAdminUserListRow(current, username, { account_type: permission }) : current
+      )
       showSuccessToast(ADMIN_USER_LIST_COPY.permissionUpdateSuccess)
-      refresh()
     } catch (error) {
       setPermissionErrorMessages((current) => ({
         ...current,
@@ -163,8 +170,12 @@ const AdminUsersPage = () => {
     setUpdatingSuspiciousUsernames((current) => new Set(current).add(username))
     try {
       await updateUserSuspicious(username, isSuspicious)
+      mutateUsers((current) =>
+        current
+          ? updateAdminUserListRow(current, username, { is_suspicious: isSuspicious })
+          : current
+      )
       showSuccessToast(ADMIN_USER_LIST_COPY.suspiciousUpdateSuccess)
-      refresh()
     } catch (error) {
       setSuspiciousErrorMessages((current) => ({
         ...current,

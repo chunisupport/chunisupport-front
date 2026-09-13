@@ -9,6 +9,7 @@ import {
   SONG_CARD_WIDTH_PX,
 } from '../constants'
 import {
+  getSongCardContentWidth,
   getSongCardGridWidth,
   getSongCardRowCount,
   getSongCardRowSlice,
@@ -22,7 +23,7 @@ test('コンテナ幅に入る固定幅カードの列数を求めること', ()
   const twoColumnWidth = SONG_CARD_WIDTH_PX * 2 + SONG_CARD_COLUMN_GAP_PX
 
   // When: 列数を求める。
-  // Then: カード幅+隙間で割り切れる数だけ並べ、FHD全幅では3列、最低1列を保つ。
+  // Then: カード幅+隙間で割り切れる数だけ並べ、FHD全幅では4列、最低1列を保つ。
   assert.equal(resolveSongCardColumnCount(oneColumnWidth), 1)
   assert.equal(resolveSongCardColumnCount(almostTwoColumnWidth), 1)
   assert.equal(resolveSongCardColumnCount(twoColumnWidth), 2)
@@ -33,8 +34,20 @@ test('コンテナ幅に入る固定幅カードの列数を求めること', ()
   assert.equal(resolveSongCardColumnCount(0), 1)
 })
 
-test('FHD本文幅では3枚分のグリッド幅が本文幅と一致すること', () => {
-  // Given: FHD本文幅で3列並べる。
+test('狭い幅では本文幅を利用可能幅までに収めること', () => {
+  // Given: 360px の本文幅。
+  const availableWidth = 360
+
+  // When: 中央寄せ用の本文幅を求める。
+  const contentWidth = getSongCardContentWidth(availableWidth)
+
+  // Then: 1列になり、横スクロールしない幅になる。
+  assert.equal(resolveSongCardColumnCount(availableWidth), 1)
+  assert.equal(contentWidth, availableWidth)
+})
+
+test('FHD本文幅では4枚分のグリッド幅が本文幅と一致すること', () => {
+  // Given: FHD本文幅で4列並べる。
   // When: グリッド幅を求める。
   const gridWidth = getSongCardGridWidth(SONG_CARD_FHD_COLUMN_COUNT)
 

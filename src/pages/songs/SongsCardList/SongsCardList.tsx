@@ -12,7 +12,7 @@ import SongsCardGrid from './components/SongsCardGrid'
 import { SONG_CARD_COPY, SONG_CARD_DEFAULT_SORT_OPTION_ID } from './constants'
 import {
   getAvailableSongCardWidth,
-  getSongCardGridWidth,
+  getSongCardContentWidth,
   resolveSongCardColumnCount,
 } from './utils/songCardGrid'
 import { findSongCardSortOption } from './utils/songCardSort'
@@ -37,13 +37,12 @@ const SongsCardList = () => {
   } = useSongsListQuery()
   const [sortOptionId, setSortOptionId] = createSignal(SONG_CARD_DEFAULT_SORT_OPTION_ID)
   const [sortDirection, setSortDirection] = createSignal<SortDirection>('asc')
-  const [columnCount, setColumnCount] = createSignal(
-    resolveSongCardColumnCount(getAvailableSongCardWidth())
-  )
+  const [availableWidth, setAvailableWidth] = createSignal(getAvailableSongCardWidth())
   const [frameEl, setFrameEl] = createSignal<HTMLDivElement>()
 
   const restoredScrollOffset = useAppMainScrollRestoration(() => !isSongsLoading())
-  const contentWidth = createMemo(() => getSongCardGridWidth(columnCount()))
+  const columnCount = createMemo(() => resolveSongCardColumnCount(availableWidth()))
+  const contentWidth = createMemo(() => getSongCardContentWidth(availableWidth()))
 
   createEffect(() => {
     const element = frameEl()
@@ -51,8 +50,7 @@ const SongsCardList = () => {
 
     const observer = new ResizeObserver((entries) => {
       const width = entries[0]?.contentRect.width ?? element.clientWidth
-      const next = resolveSongCardColumnCount(width)
-      setColumnCount((current) => (current === next ? current : next))
+      setAvailableWidth((current) => (current === width ? current : width))
     })
     observer.observe(element)
     onCleanup(() => {
@@ -77,7 +75,7 @@ const SongsCardList = () => {
     <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
       <Show when={!loadError()} fallback={<LoadError error={loadError()} />}>
         <Show when={!isSongsLoading()} fallback={<Loading />}>
-          <div ref={setFrameEl} class="w-full p-4">
+          <div ref={setFrameEl} class="w-full overflow-x-hidden p-4">
             <div class="mx-auto space-y-4" style={{ width: `${contentWidth()}px` }}>
               <h1 class="text-2xl font-semibold">{SONG_CARD_COPY.pageTitle}</h1>
               <div class="flex flex-wrap items-end gap-2">
@@ -109,6 +107,7 @@ const SongsCardList = () => {
 
               <SongsCardGrid
                 songs={sortedSongs()}
+                versions={versionOptions()}
                 columnCount={columnCount()}
                 initialScrollOffset={restoredScrollOffset}
               />
