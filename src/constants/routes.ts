@@ -6,8 +6,6 @@ export const USERS_PATH = '/users'
 export const REGISTER_PATH = '/register'
 export const REGISTER_SCORE_PATH = '/register-score'
 export const REGISTER_SCORE_TEMP_PATH = '/register-score-temp'
-/** 通常楽曲のカード型一覧画面のパス */
-export const SONGS_CARD_PATH = '/songs/card'
 /** 保存済みの最新スコア更新結果画面のパス */
 export const LATEST_SCORE_UPDATE_PATH = '/latest-score-update'
 export const TOOLS_PATH = '/tools'

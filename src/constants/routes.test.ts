@@ -9,7 +9,6 @@ import {
   buildWorldsendSongDetailPath,
   CHART_DETAIL_FROM_SONG_DETAIL_STATE,
   isChartDetailFromSongDetailState,
-  SONGS_CARD_PATH,
 } from './routes'
 
 test('管理者向け通常譜面ランキングパスは表示IDと難易度をエンコードする', () => {
@@ -32,13 +31,6 @@ test("管理者向けWORLD'S END譜面ランキングパスは表示IDをエン�
 
   // Then: 表示IDがパス要素として安全にエンコードされる。
   assert.equal(result, '/admin/chart-rankings/worldsend-songs/WE%2FA%20B')
-})
-
-test('カード型楽曲一覧パスは詳細ルートと衝突しない固定パスである', () => {
-  // Given: カード型楽曲一覧のパス定数。
-  // When: 定数を参照する。
-  // Then: /songs/:displayid より具体的な /songs/card になる。
-  assert.equal(SONGS_CARD_PATH, '/songs/card')
 })
 
 test('通常楽曲詳細パスは表示IDと難易度をエンコードする', () => {
