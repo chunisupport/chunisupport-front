@@ -78,7 +78,13 @@ const SongsCardList = () => {
           <div ref={setFrameEl} class="w-full overflow-x-hidden p-4">
             <div class="mx-auto space-y-4" style={{ width: `${contentWidth()}px` }}>
               <h1 class="text-2xl font-semibold">{SONG_CARD_COPY.pageTitle}</h1>
-              <div class="flex flex-wrap items-end gap-2">
+              <div
+                class="flex gap-2"
+                classList={{
+                  'flex-col': columnCount() === 1,
+                  'flex-wrap items-end': columnCount() !== 1,
+                }}
+              >
                 <div class="flex max-w-md min-w-0 flex-1 items-end">
                   <SongSearchInput
                     id="songs-card-search"
