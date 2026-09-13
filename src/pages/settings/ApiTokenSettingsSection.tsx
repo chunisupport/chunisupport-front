@@ -1,3 +1,5 @@
+import { Dialog } from '@kobalte/core/dialog'
+import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
 import { ExternalLink } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -5,12 +7,18 @@ import { createResource, createSignal, For, onCleanup, Show } from 'solid-js'
 import { deleteApiToken, fetchApiTokens, issueApiToken, renameApiToken } from '../../api/settings'
 import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
+import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import { API_DOCUMENTATION_URL } from '../../config'
 import { DEVELOPER_API_COPY } from '../../constants/developerApi'
 import { EXTERNAL_LINK_NEW_TAB_DESCRIPTION } from '../../constants/externalLink'
-import type { ApiToken } from '../../types/api'
+import type { ApiToken, ApiTokenPermission } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-import { API_TOKEN_MAX_COUNT, API_TOKEN_SETTINGS_COPY } from './ApiTokenSettings.constants'
+import {
+  API_TOKEN_MAX_COUNT,
+  API_TOKEN_PERMISSION_OPTIONS,
+  API_TOKEN_SETTINGS_COPY,
+  formatApiTokenPermission,
+} from './ApiTokenSettings.constants'
 import { isApiTokenNameError, isValidApiTokenName, normalizeApiTokenName } from './apiTokenName'
 import { formatSettingsDateTime } from './settingsDateTime'
 
@@ -79,6 +87,7 @@ const ApiTokenNameField: Component<ApiTokenNameFieldProps> = (props) => (
  */
 export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = (props) => {
   const [issueName, setIssueName] = createSignal('')
+  const [issuePermission, setIssuePermission] = createSignal<ApiTokenPermission>('read')
   const [isIssueFormOpen, setIsIssueFormOpen] = createSignal(false)
   const [issueNameError, setIssueNameError] = createSignal('')
   const [issueActionError, setIssueActionError] = createSignal('')
@@ -128,6 +137,23 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
   }
 
   /**
+   * 発行中の誤操作によるダイアログ閉じを防ぎつつ開閉状態を更新する。
+   *
+   * @param open - 次のダイアログ開閉状態。
+   * @returns なし。
+   */
+  const handleIssueDialogOpenChange = (open: boolean): void => {
+    if (isIssuing()) {
+      return
+    }
+    setIsIssueFormOpen(open)
+    if (open) {
+      setIssueNameError('')
+      setIssueActionError('')
+    }
+  }
+
+  /**
    * 入力された名前でAPIトークンを追加発行する。
    *
    * @returns 発行処理完了後に解決されるPromise。
@@ -144,16 +170,21 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
 
     setIsIssuing(true)
     try {
-      const result = await issueApiToken(normalizeApiTokenName(issueName()))
+      const result = await issueApiToken({
+        name: normalizeApiTokenName(issueName()),
+        permission: issuePermission(),
+      })
       setGeneratedToken(result)
       setCopied(false)
       setCopyError('')
       setIssueName('')
+      setIssuePermission('read')
       setIsIssueFormOpen(false)
       setIssueSuccess(API_TOKEN_SETTINGS_COPY.issueSuccess)
       const issuedMetadata: ApiToken = {
         id: result.id,
         name: result.name,
+        permission: result.permission,
         token_prefix: result.token_prefix,
         last_used_at: result.last_used_at,
         created_at: result.created_at,
@@ -325,56 +356,93 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
           </span>
         </div>
 
-        <div class="mt-4 flex flex-wrap gap-3">
-          <AppButton
-            variant="primary"
-            onClick={() => setIsIssueFormOpen(true)}
-            disabled={isIssueDisabled() || isIssueFormOpen()}
+        <Dialog open={isIssueFormOpen()} onOpenChange={handleIssueDialogOpenChange}>
+          <Dialog.Trigger
+            as="button"
+            type="button"
+            class={getAppButtonClass({ variant: 'primary', class: 'mt-4 w-fit' })}
+            disabled={isIssueDisabled()}
           >
             {API_TOKEN_SETTINGS_COPY.startIssueButton}
-          </AppButton>
-        </div>
-      </div>
+          </Dialog.Trigger>
+          <Dialog.Portal>
+            <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
+            <Dialog.Content class="fixed inset-x-4 top-1/2 z-60 flex max-h-[calc(100dvh-2rem)] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-lg sm:-translate-x-1/2 sm:p-6">
+              <Dialog.Title class="shrink-0 text-lg font-bold text-text">
+                {API_TOKEN_SETTINGS_COPY.issueDialogTitle}
+              </Dialog.Title>
+              <Dialog.Description class="mt-1 shrink-0 text-sm text-text-muted">
+                {API_TOKEN_SETTINGS_COPY.issueDialogDescription}
+              </Dialog.Description>
 
-      <Show when={isIssueFormOpen()}>
-        <div class="mt-4 border-y border-border py-4">
-          <form
-            class="flex flex-col gap-3 sm:flex-row sm:items-end"
-            onSubmit={(event) => {
-              event.preventDefault()
-              void handleIssueApiToken()
-            }}
-          >
-            <ApiTokenNameField
-              label={API_TOKEN_SETTINGS_COPY.issueLabel}
-              value={issueName()}
-              placeholder={API_TOKEN_SETTINGS_COPY.issuePlaceholder}
-              disabled={isIssueDisabled()}
-              error={issueNameError()}
-              onChange={handleIssueNameChange}
-            />
-            <AppButton
-              variant="primary"
-              type="submit"
-              class="shrink-0 rounded-md"
-              disabled={isIssueDisabled()}
-              aria-busy={isIssuing()}
-            >
-              {API_TOKEN_SETTINGS_COPY.issueButton}
-            </AppButton>
-            <AppButton
-              class="shrink-0"
-              onClick={() => setIsIssueFormOpen(false)}
-              disabled={isIssuing()}
-            >
-              {API_TOKEN_SETTINGS_COPY.cancelIssueButton}
-            </AppButton>
-          </form>
-          <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-            {issueActionError()}
-          </p>
-        </div>
-      </Show>
+              <form
+                class="mt-5 flex min-h-0 flex-col"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  void handleIssueApiToken()
+                }}
+              >
+                <div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+                  <ApiTokenNameField
+                    label={API_TOKEN_SETTINGS_COPY.issueLabel}
+                    value={issueName()}
+                    placeholder={API_TOKEN_SETTINGS_COPY.issuePlaceholder}
+                    disabled={isIssuing()}
+                    error={issueNameError()}
+                    onChange={handleIssueNameChange}
+                  />
+                  <RadioGroup
+                    name="api-token-permission"
+                    value={issuePermission()}
+                    onChange={(value) => setIssuePermission(value as ApiTokenPermission)}
+                    disabled={isIssuing()}
+                    class="grid gap-2"
+                  >
+                    <RadioGroup.Label class="text-sm font-medium text-text-muted">
+                      {API_TOKEN_SETTINGS_COPY.permissionLabel}
+                    </RadioGroup.Label>
+                    <div class="grid gap-2 sm:grid-cols-2">
+                      <For each={API_TOKEN_PERMISSION_OPTIONS}>
+                        {(option) => (
+                          <SelectableCardItem
+                            value={option.value}
+                            title={option.label}
+                            description={option.description}
+                            ariaLabel={option.label}
+                            selected={issuePermission() === option.value}
+                            disabled={isIssuing()}
+                            density="compact"
+                            class="rounded-md"
+                          />
+                        )}
+                      </For>
+                    </div>
+                  </RadioGroup>
+                  <p class="text-sm text-danger empty:hidden" role="alert">
+                    {issueActionError()}
+                  </p>
+                </div>
+                <div class="mt-5 flex shrink-0 justify-end gap-2">
+                  <Dialog.CloseButton
+                    class={getAppButtonClass({ variant: 'secondary' })}
+                    disabled={isIssuing()}
+                  >
+                    {API_TOKEN_SETTINGS_COPY.cancelIssueButton}
+                  </Dialog.CloseButton>
+                  <AppButton
+                    variant="primary"
+                    type="submit"
+                    disabled={isIssuing()}
+                    aria-busy={isIssuing()}
+                  >
+                    {API_TOKEN_SETTINGS_COPY.issueButton}
+                  </AppButton>
+                </div>
+              </form>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog>
+      </div>
 
       <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
         {issueSuccess()}
@@ -427,7 +495,13 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <h3 class="font-semibold text-text">{token.name}</h3>
-                            <dl class="mt-2 grid gap-x-6 gap-y-1 text-sm text-text-muted sm:grid-cols-3">
+                            <dl class="mt-2 grid gap-x-6 gap-y-1 text-sm text-text-muted sm:grid-cols-2 lg:grid-cols-4">
+                              <div>
+                                <dt class="inline font-medium">
+                                  {API_TOKEN_SETTINGS_COPY.permissionValueLabel}:{' '}
+                                </dt>
+                                <dd class="inline">{formatApiTokenPermission(token.permission)}</dd>
+                              </div>
                               <div>
                                 <dt class="inline font-medium">
                                   {API_TOKEN_SETTINGS_COPY.prefixLabel}:{' '}

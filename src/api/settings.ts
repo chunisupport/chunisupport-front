@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config'
 import type {
   ApiToken,
+  ApiTokenIssueRequest,
   ApiTokenIssueResponse,
   ApiTokenListResponse,
   ApiTokenRenameRequest,
@@ -55,14 +56,16 @@ export const updatePrivacy = async (isPrivate: boolean): Promise<{ is_private: b
 /**
  * 名前付きAPIトークンを追加発行する。
  *
- * @param name - APIトークンの表示名。
+ * @param request - APIトークンの表示名と権限。
  * @returns 平文トークンと管理情報。平文はこのレスポンスでのみ取得できる。
  */
-export const issueApiToken = async (name: string): Promise<ApiTokenIssueResponse> => {
+export const issueApiToken = async (
+  request: ApiTokenIssueRequest
+): Promise<ApiTokenIssueResponse> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/auth/api-tokens`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify(request),
   })
 
   return response.json()

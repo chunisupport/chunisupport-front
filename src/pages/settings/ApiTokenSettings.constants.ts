@@ -1,8 +1,37 @@
+import type { ApiTokenPermission } from '../../types/api'
+
 /** APIが許可するAPIトークン名の最大文字数 */
 export const API_TOKEN_NAME_MAX_LENGTH = 50
 
 /** 1ユーザーが所有できるAPIトークンの最大件数 */
 export const API_TOKEN_MAX_COUNT = 10
+
+/** APIトークン発行時に選択できる権限 */
+export const API_TOKEN_PERMISSION_OPTIONS: readonly {
+  value: ApiTokenPermission
+  label: string
+  description: string
+}[] = [
+  {
+    value: 'read',
+    label: '読み取り',
+    description: '参照系APIのみ利用できます。',
+  },
+  {
+    value: 'read_write',
+    label: '読み取り・書き込み',
+    description: '参照系・更新系APIを利用できます。更新系APIにはEDITORまたはADMIN権限も必要です。',
+  },
+]
+
+/**
+ * APIトークン権限の表示名を返す。
+ *
+ * @param permission - APIが返したAPIトークン権限。
+ * @returns 設定画面で表示する権限名。
+ */
+export const formatApiTokenPermission = (permission: ApiTokenPermission): string =>
+  API_TOKEN_PERMISSION_OPTIONS.find((option) => option.value === permission)?.label ?? permission
 
 /** APIトークン設定欄で使用する表示文言 */
 export const API_TOKEN_SETTINGS_COPY = {
@@ -10,6 +39,9 @@ export const API_TOKEN_SETTINGS_COPY = {
   description: '外部連携用の名前付きAPIトークンを管理します。',
   issueLabel: '新しいAPIトークン名',
   issuePlaceholder: '例: Discord Bot',
+  issueDialogTitle: 'APIトークンを発行',
+  issueDialogDescription: '名前と権限を指定します。権限は発行後に変更できません。',
+  permissionLabel: '権限',
   issueButton: 'APIトークンを発行',
   startIssueButton: '新しいトークンを発行',
   cancelIssueButton: 'キャンセル',
@@ -20,6 +52,7 @@ export const API_TOKEN_SETTINGS_COPY = {
   prefixLabel: '識別子',
   createdAtLabel: '発行日時',
   lastUsedAtLabel: '最終利用',
+  permissionValueLabel: '権限',
   generatedTitle: '発行されたAPIトークン',
   generatedNotice: 'この画面を離れると再表示できません。',
   copy: 'コピー',

@@ -1407,12 +1407,25 @@ export interface ApiToken {
   id: number
   /** ユーザーが指定した表示名 */
   name: string
+  /** APIトークンで許可される操作 */
+  permission: ApiTokenPermission
   /** 表示用のトークン先頭5文字。旧仕様からの移行データは null */
   token_prefix: string | null
   /** 最終利用日時。未使用の場合は null */
   last_used_at: string | null
   /** 発行日時 */
   created_at: string
+}
+
+/** APIトークンの権限 */
+export type ApiTokenPermission = 'read' | 'read_write'
+
+/** APIトークン発行リクエスト */
+export interface ApiTokenIssueRequest {
+  /** 前後空白を除いて1〜50文字の表示名 */
+  name: string
+  /** 発行後は変更できないAPIトークン権限 */
+  permission: ApiTokenPermission
 }
 
 /** APIトークン発行時に一度だけ返る平文トークン付きレスポンス */
