@@ -20,8 +20,6 @@ export const formatAdminUserDateTime = (value: string | null): string => {
   return adminUserDateTimeFormatter.format(date)
 }
 
-export const formatBooleanFlag = (value: boolean): string => (value ? 'true' : 'false')
-
 /**
  * APIが返すアカウント種別を一覧表示用の文字列へ変換する。
  *

@@ -22,20 +22,32 @@ export const SONG_CARD_COPY = {
   sortDesc: '降順',
 } as const
 
-/** カード1枚の固定幅（px） */
-export const SONG_CARD_WIDTH_PX = 360
-
-/** カード1枚の固定高さ（px）。ジャケット正方形に合わせる */
-export const SONG_CARD_HEIGHT_PX = 128
-
 /** カード行間の隙間（px） */
 export const SONG_CARD_ROW_GAP_PX = 16
 
 /** カード列間の隙間（px） */
 export const SONG_CARD_COLUMN_GAP_PX = 16
 
-/** 一覧ページ左右パディング合計（px）。初期列数の概算に使う */
+/** 一覧ページ左右パディング合計（px） */
 export const SONG_CARD_PAGE_HORIZONTAL_PADDING_PX = 32
+
+/** FHD全幅時のメイン領域幅（px） */
+export const SONG_CARD_FHD_MAIN_WIDTH_PX = 1801
+
+/** FHD全幅時のページ本文幅（px）。p-4 内側 */
+export const SONG_CARD_FHD_CONTENT_WIDTH_PX =
+  SONG_CARD_FHD_MAIN_WIDTH_PX - SONG_CARD_PAGE_HORIZONTAL_PADDING_PX
+
+/** FHD全幅時に並べるカード枚数 */
+export const SONG_CARD_FHD_COLUMN_COUNT = 3
+
+/** カード1枚の固定幅（px）。FHD本文幅で3枚になる値 */
+export const SONG_CARD_WIDTH_PX =
+  (SONG_CARD_FHD_CONTENT_WIDTH_PX - SONG_CARD_COLUMN_GAP_PX * (SONG_CARD_FHD_COLUMN_COUNT - 1)) /
+  SONG_CARD_FHD_COLUMN_COUNT
+
+/** カード1枚の固定高さ（px）。ジャケット正方形に合わせる */
+export const SONG_CARD_HEIGHT_PX = 128
 
 /** 仮想行の見積もり高さ（カード高 + 行間） */
 export const SONG_CARD_ROW_HEIGHT_PX = SONG_CARD_HEIGHT_PX + SONG_CARD_ROW_GAP_PX

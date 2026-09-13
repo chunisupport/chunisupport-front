@@ -343,6 +343,24 @@ export const updateUserPermission = async (
 }
 
 /**
+ * 指定したユーザーの不審アカウントフラグを変更する。
+ *
+ * @param username - フラグを変更するユーザー名。
+ * @param isSuspicious - 設定する不審アカウントフラグ。
+ * @returns 変更完了時に解決されるPromise。
+ */
+export const updateUserSuspicious = async (
+  username: string,
+  isSuspicious: boolean
+): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/suspicious`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ is_suspicious: isSuspicious }),
+  })
+}
+
+/**
  * 指定したユーザーを物理削除する。
  *
  * @param username - 削除対象のユーザー名。

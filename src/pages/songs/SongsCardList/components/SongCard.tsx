@@ -31,6 +31,7 @@ const formatChartNotes = (notes: number | null): string =>
 
 /**
  * カード内の1難易度セルに譜面定数とノーツ数を上下表示する。
+ * 譜面定数が未確定、またはノーツ数が未設定のときはセル全体を半透明にする。
  *
  * @param props - 譜面データと難易度。
  * @returns 色付きの難易度セル。譜面が無い場合は空セル。
@@ -39,21 +40,24 @@ const SongCardChartCell = (props: SongCardChartCellProps) => {
   const constText = () => (props.chart ? formatChartConst(props.chart.const) : '')
   const notesText = () => (props.chart ? formatChartNotes(props.chart.notes) : '')
   const isUnknownConst = () => Boolean(props.chart?.is_const_unknown)
+  const isMissingNotes = () => props.chart != null && props.chart.notes == null
+  const fadeUnknownValue = () => isUnknownConst() || isMissingNotes()
 
   return (
     <div
       class={`flex min-w-0 flex-col items-center justify-center gap-px px-0.5 ${
         props.chart ? difficultyBadgeClass(props.difficulty) : 'bg-surface text-text-muted'
       }`}
+      classList={{ 'opacity-50': fadeUnknownValue() }}
     >
       <Show when={props.chart}>
-        <span class="font-jost text-xs font-semibold leading-none tabular-nums">
+        <span class="font-jost text-sm font-semibold leading-none tabular-nums">
           {constText()}
           <Show when={isUnknownConst()}>
             <sup class="text-[0.65em] leading-none">?</sup>
           </Show>
         </span>
-        <span class="font-jost text-[0.65rem] font-medium leading-none tabular-nums opacity-80">
+        <span class="font-jost text-xs font-medium leading-none tabular-nums opacity-80">
           {notesText()}
         </span>
       </Show>

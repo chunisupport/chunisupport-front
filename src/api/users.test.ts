@@ -194,3 +194,21 @@ test('updateUserPermissionはURLエンコードしたユーザー名と選択し
   assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
   assert.equal(calls[0]?.init?.body, JSON.stringify({ permission: 'EDITOR' }))
 })
+
+test('updateUserSuspiciousはURLエンコードしたユーザー名と不審フラグを送信すること', async () => {
+  // Given
+  const calls = installFetchRecorder(() => new Response(null, { status: 204 }))
+  const { updateUserSuspicious } = await loadUsersApi()
+
+  // When
+  await updateUserSuspicious('alice bob', true)
+
+  // Then
+  assert.equal(
+    String(calls[0]?.input),
+    'http://localhost:3000/internal/users/alice%20bob/suspicious'
+  )
+  assert.equal(calls[0]?.init?.method, 'PATCH')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
+  assert.equal(calls[0]?.init?.body, JSON.stringify({ is_suspicious: true }))
+})

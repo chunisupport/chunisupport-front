@@ -231,7 +231,11 @@
     var(--color-primary-900) 28%,
     var(--cs-color-surface)
   );
-  --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
+  --cs-color-new-song-bg: color-mix(
+    in oklab,
+    var(--color-primary-700) 16%,
+    var(--cs-color-surface)
+  );
   --cs-color-row-highlight: color-mix(
     in oklab,
     var(--color-primary-500) 42%,
@@ -394,7 +398,11 @@
     var(--color-primary-900) 28%,
     var(--cs-color-surface)
   );
-  --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
+  --cs-color-new-song-bg: color-mix(
+    in oklab,
+    var(--color-primary-700) 16%,
+    var(--cs-color-surface)
+  );
   --cs-color-row-highlight: color-mix(
     in oklab,
     var(--color-primary-500) 42%,

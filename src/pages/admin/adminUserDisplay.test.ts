@@ -4,7 +4,6 @@ import test from 'node:test'
 import {
   formatAccountType,
   formatAdminUserDateTime,
-  formatBooleanFlag,
   formatNullableText,
 } from './adminUserDisplay.ts'
 
@@ -20,11 +19,6 @@ test('ISO 文字列の管理ユーザー日時を ja-JP で表示する', () => 
 
 test('不正な日時文字列はハイフンを返す', () => {
   assert.equal(formatAdminUserDateTime('not-a-date'), '-')
-})
-
-test('boolean フラグは true/false 文字列に変換する', () => {
-  assert.equal(formatBooleanFlag(true), 'true')
-  assert.equal(formatBooleanFlag(false), 'false')
 })
 
 test('account_type は定義済み値をそのまま表示する', () => {

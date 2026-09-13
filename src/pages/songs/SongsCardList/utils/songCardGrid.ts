@@ -1,4 +1,19 @@
-import { SONG_CARD_COLUMN_GAP_PX, SONG_CARD_WIDTH_PX } from '../constants'
+import {
+  SONG_CARD_COLUMN_GAP_PX,
+  SONG_CARD_PAGE_HORIZONTAL_PADDING_PX,
+  SONG_CARD_WIDTH_PX,
+} from '../constants'
+
+/**
+ * メイン領域からカード本文に使える幅を求める。
+ *
+ * @returns ページ左右パディングを除いた幅（px）。
+ */
+export const getAvailableSongCardWidth = (): number => {
+  if (typeof document === 'undefined') return 0
+  const main = document.getElementById('app-main')
+  return Math.max(0, (main?.clientWidth ?? 0) - SONG_CARD_PAGE_HORIZONTAL_PADDING_PX)
+}
 
 /**
  * 固定幅カードがコンテナに何列入るかを求める。
@@ -22,6 +37,17 @@ export const resolveSongCardColumnCount = (width: number): number => {
 export const getSongCardRowCount = (itemCount: number, columnCount: number): number => {
   if (itemCount <= 0 || columnCount <= 0) return 0
   return Math.ceil(itemCount / columnCount)
+}
+
+/**
+ * 指定列数のカードグリッド幅を求める。
+ *
+ * @param columnCount - 1行あたりの列数。
+ * @returns カード幅と列間を含むグリッド幅（px）。
+ */
+export const getSongCardGridWidth = (columnCount: number): number => {
+  if (columnCount <= 0) return 0
+  return columnCount * SONG_CARD_WIDTH_PX + (columnCount - 1) * SONG_CARD_COLUMN_GAP_PX
 }
 
 /**

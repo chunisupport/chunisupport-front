@@ -3,27 +3,43 @@ import test from 'node:test'
 import {
   SONG_CARD_COLUMN_GAP_PX,
   SONG_CARD_DEFAULT_SORT_OPTION_ID,
+  SONG_CARD_FHD_COLUMN_COUNT,
+  SONG_CARD_FHD_CONTENT_WIDTH_PX,
   SONG_CARD_SORT_OPTIONS,
   SONG_CARD_WIDTH_PX,
 } from '../constants'
 import {
+  getSongCardGridWidth,
   getSongCardRowCount,
   getSongCardRowSlice,
   resolveSongCardColumnCount,
 } from './songCardGrid'
 
 test('コンテナ幅に入る固定幅カードの列数を求めること', () => {
-  // Given: 1列ちょうど・2列に足りない・2列ちょうど・幅0。
+  // Given: 1列ちょうど・2列に足りない・2列ちょうど・FHD全幅・幅0。
   const oneColumnWidth = SONG_CARD_WIDTH_PX
   const almostTwoColumnWidth = SONG_CARD_WIDTH_PX * 2 + SONG_CARD_COLUMN_GAP_PX - 1
   const twoColumnWidth = SONG_CARD_WIDTH_PX * 2 + SONG_CARD_COLUMN_GAP_PX
 
   // When: 列数を求める。
-  // Then: カード幅+隙間で割り切れる数だけ並べ、最低1列を保つ。
+  // Then: カード幅+隙間で割り切れる数だけ並べ、FHD全幅では3列、最低1列を保つ。
   assert.equal(resolveSongCardColumnCount(oneColumnWidth), 1)
   assert.equal(resolveSongCardColumnCount(almostTwoColumnWidth), 1)
   assert.equal(resolveSongCardColumnCount(twoColumnWidth), 2)
+  assert.equal(
+    resolveSongCardColumnCount(SONG_CARD_FHD_CONTENT_WIDTH_PX),
+    SONG_CARD_FHD_COLUMN_COUNT
+  )
   assert.equal(resolveSongCardColumnCount(0), 1)
+})
+
+test('FHD本文幅では3枚分のグリッド幅が本文幅と一致すること', () => {
+  // Given: FHD本文幅で3列並べる。
+  // When: グリッド幅を求める。
+  const gridWidth = getSongCardGridWidth(SONG_CARD_FHD_COLUMN_COUNT)
+
+  // Then: ページ本文幅と一致する。
+  assert.equal(gridWidth, SONG_CARD_FHD_CONTENT_WIDTH_PX)
 })
 
 test('カード行数は列数で切り上げること', () => {

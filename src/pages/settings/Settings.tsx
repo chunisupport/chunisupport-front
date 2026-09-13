@@ -1,5 +1,4 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
-import { Switch } from '@kobalte/core/switch'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { useQueryClient } from '@tanstack/solid-query'
 import { createEffect, createResource, createSignal, For, Show } from 'solid-js'
@@ -9,6 +8,7 @@ import { LoadError, Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import AppearanceSettings from '../../components/common/AppearanceSettings'
 import { APPEARANCE_SETTINGS_COPY } from '../../components/common/AppearanceSettings.constants'
+import { AppSwitch } from '../../components/common/AppSwitch'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
@@ -255,16 +255,12 @@ const Settings = () => {
                             プロフィールとプレイ情報を自分だけに表示します。
                           </p>
                         </div>
-                        <Switch
+                        <AppSwitch
                           checked={privacyValue()}
                           onChange={handleTogglePrivacy}
                           disabled={privacySubmitting()}
-                        >
-                          <Switch.Input aria-label="プロフィールを非公開にする" />
-                          <Switch.Control class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-border-strong transition data-[checked]:bg-action-primary data-disabled:cursor-not-allowed data-disabled:opacity-60">
-                            <Switch.Thumb class="inline-block h-5 w-5 translate-x-0.5 rounded-full bg-surface shadow-sm transition data-[checked]:translate-x-5" />
-                          </Switch.Control>
-                        </Switch>
+                          label="プロフィールを非公開にする"
+                        />
                       </div>
                       <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
                         {privacyError()}
