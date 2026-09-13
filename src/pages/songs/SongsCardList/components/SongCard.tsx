@@ -19,8 +19,13 @@ import {
   SONG_CARD_HEIGHT_PX,
   SONG_CARD_JACKET_HEIGHT_PX,
   SONG_CARD_NOTES_EMPTY,
+  SONG_CARD_VERSION_NAME_CLASS,
 } from '../constants'
-import { formatSongCardReleaseLine } from '../utils/songCardFormat'
+import {
+  formatSongCardReleaseDate,
+  formatSongCardReleaseLine,
+  formatSongCardReleaseVersion,
+} from '../utils/songCardFormat'
 
 type SongCardProps = {
   song: SongDTO
@@ -80,13 +85,15 @@ const SongCardChartCell = (props: SongCardChartCellProps) => {
 /**
  * 通常楽曲1曲分のカードを表示し、楽曲詳細へ遷移する。
  *
- * @param props - 表示する楽曲。
+ * @param props - 表示する楽曲とバージョン一覧。
  * @returns 上段にジャケットとメタ情報、下段に難易度セルを置いたカード。
  */
 const SongCard = (props: SongCardProps) => {
   const jacketUrl = () => buildChunithmJacketUrl(props.song.jacket)
   const bpmText = () => (props.song.bpm == null ? '-' : String(props.song.bpm))
   const genreText = () => props.song.genre || '-'
+  const releaseDateText = () => formatSongCardReleaseDate(props.song.release)
+  const releaseVersionText = () => formatSongCardReleaseVersion(props.song.release, props.versions)
   const releaseText = () => formatSongCardReleaseLine(props.song.release, props.versions)
 
   return (
@@ -118,18 +125,25 @@ const SongCard = (props: SongCardProps) => {
           <p class="min-w-0 truncate font-sans text-xs text-text-muted" title={props.song.artist}>
             {props.song.artist}
           </p>
-          <div class="mt-1 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-1.5 gap-y-0.5 text-xs">
-            <span class="font-sans text-text-subtle">{SONG_CARD_COPY.genreLabel}:</span>
-            <span class="min-w-0 truncate font-jost" title={genreText()}>
+          <div class="mt-1 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-1.5 gap-y-0.5 text-xs">
+            <span class="font-sans text-text-muted">{SONG_CARD_COPY.genreLabel}:</span>
+            <span class="min-w-0 truncate font-jost text-text" title={genreText()}>
               {genreText()}
             </span>
-            <span class="font-sans text-text-subtle">{SONG_CARD_COPY.bpmLabel}:</span>
-            <span class="min-w-0 truncate font-jost tabular-nums" title={bpmText()}>
+            <span class="font-sans text-text-muted">{SONG_CARD_COPY.bpmLabel}:</span>
+            <span class="min-w-0 truncate font-jost text-text tabular-nums" title={bpmText()}>
               {bpmText()}
             </span>
-            <span class="font-sans text-text-subtle">{SONG_CARD_COPY.releaseLabel}:</span>
-            <span class="min-w-0 truncate font-jost tabular-nums" title={releaseText()}>
-              {releaseText()}
+            <span class="font-sans text-text-muted">{SONG_CARD_COPY.releaseLabel}:</span>
+            <span class="flex min-w-0 flex-col font-jost tabular-nums" title={releaseText()}>
+              <span class="truncate text-text">{releaseDateText()}</span>
+              <Show when={releaseVersionText()}>
+                {(version) => (
+                  <span class={`min-w-0 truncate font-sans ${SONG_CARD_VERSION_NAME_CLASS}`}>
+                    {version()}
+                  </span>
+                )}
+              </Show>
             </span>
           </div>
         </div>

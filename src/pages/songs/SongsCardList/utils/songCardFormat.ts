@@ -1,8 +1,5 @@
 import type { VersionSummaryDTO } from '../../../../types/api'
-import {
-  getShortVersionName,
-  resolveVersionNameByReleaseDate,
-} from '../../../../utils/versionConverter'
+import { resolveVersionNameByReleaseDate } from '../../../../utils/versionConverter'
 
 /** 未設定時の表示 */
 const EMPTY = '-'
@@ -21,18 +18,33 @@ export const formatSongCardReleaseDate = (release: string | null): string => {
 }
 
 /**
- * 追加日とバージョン名をカード表示用に整形する。
+ * 追加日からカード表示用のフルバージョン名を返す。
  *
  * @param release - YYYY-MM-DD の追加日。
  * @param versions - バージョン一覧。
- * @returns `YYYY/MM/DD (バージョン)`。日付が無い場合はハイフン。
+ * @returns CHUNITHM を含むフルバージョン名。日付が無い場合は null。
+ */
+export const formatSongCardReleaseVersion = (
+  release: string | null,
+  versions: readonly VersionSummaryDTO[]
+): string | null => {
+  if (formatSongCardReleaseDate(release) === EMPTY) return null
+  return resolveVersionNameByReleaseDate(release, versions)
+}
+
+/**
+ * 追加日とバージョン名をカードの title 用に整形する。
+ *
+ * @param release - YYYY-MM-DD の追加日。
+ * @param versions - バージョン一覧。
+ * @returns `YYYY/MM/DD フルバージョン名`。日付が無い場合はハイフン。
  */
 export const formatSongCardReleaseLine = (
   release: string | null,
   versions: readonly VersionSummaryDTO[]
 ): string => {
   const dateText = formatSongCardReleaseDate(release)
-  if (dateText === EMPTY) return EMPTY
-  const versionName = getShortVersionName(resolveVersionNameByReleaseDate(release, versions))
-  return `${dateText} (${versionName})`
+  const versionName = formatSongCardReleaseVersion(release, versions)
+  if (dateText === EMPTY || versionName == null) return EMPTY
+  return `${dateText} ${versionName}`
 }

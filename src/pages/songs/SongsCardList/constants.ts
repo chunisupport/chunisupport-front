@@ -25,6 +25,9 @@ export const SONG_CARD_COPY = {
   releaseLabel: 'RELEASE',
 } as const
 
+/** 追加日より小さく、一段薄いバージョン名の表示クラス */
+export const SONG_CARD_VERSION_NAME_CLASS = 'text-[0.6875rem] leading-none text-text-muted'
+
 /** カード行間の隙間（px） */
 export const SONG_CARD_ROW_GAP_PX = 16
 
