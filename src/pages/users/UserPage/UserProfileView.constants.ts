@@ -64,7 +64,7 @@ export const RATING_IMAGE_VERSION_OPTIONS: RatingImageVersionOption[] = [
 export const RATING_IMAGE_COPY = {
   openPreview: '画像化',
   dialogTitle: 'プレビュー',
-  dialogDescription: '現在のテーマとジャケット表示設定で画像を作成します。',
+  dialogDescription: '長押しまたは右クリックで画像を保存できます。',
   versionLabel: 'デザインバージョン',
   preparingPreview: 'プレビューを準備中',
   previewAlt: 'ベスト枠と新曲枠の画像プレビュー',
