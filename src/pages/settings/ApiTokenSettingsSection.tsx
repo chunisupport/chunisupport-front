@@ -479,126 +479,153 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
         <Show when={!apiTokens.error} fallback={<LoadError error={apiTokens.error} />}>
           <Show when={apiTokens()} fallback={<Loading />}>
             {(loaded) => (
-              <For
-                each={loaded().tokens}
+              <Show
+                when={loaded().tokens.length > 0}
                 fallback={
                   <div class="rounded-lg border border-dashed border-border-strong bg-surface-muted p-4 text-sm text-text-muted">
                     {API_TOKEN_SETTINGS_COPY.empty}
                   </div>
                 }
               >
-                {(token) => (
-                  <article class="border-b border-border py-4 last:border-b-0">
-                    <Show
-                      when={editingTokenId() === token.id}
-                      fallback={
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
-                            <h3 class="font-semibold text-text">{token.name}</h3>
-                            <dl class="mt-2 grid gap-x-6 gap-y-1 text-sm text-text-muted sm:grid-cols-2 lg:grid-cols-4">
-                              <div>
-                                <dt class="inline font-medium">
-                                  {API_TOKEN_SETTINGS_COPY.permissionValueLabel}:{' '}
-                                </dt>
-                                <dd class="inline">{formatApiTokenPermission(token.permission)}</dd>
-                              </div>
-                              <div>
-                                <dt class="inline font-medium">
-                                  {API_TOKEN_SETTINGS_COPY.prefixLabel}:{' '}
-                                </dt>
-                                <dd class="inline font-mono">
+                <div class="overflow-x-auto rounded-lg border border-border bg-surface">
+                  <table class="min-w-full text-sm">
+                    <caption class="sr-only">{API_TOKEN_SETTINGS_COPY.tableCaption}</caption>
+                    <thead class="bg-surface-muted">
+                      <tr>
+                        <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
+                          {API_TOKEN_SETTINGS_COPY.nameLabel}
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
+                          {API_TOKEN_SETTINGS_COPY.permissionValueLabel}
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
+                          {API_TOKEN_SETTINGS_COPY.prefixLabel}
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
+                          {API_TOKEN_SETTINGS_COPY.createdAtLabel}
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
+                          {API_TOKEN_SETTINGS_COPY.lastUsedAtLabel}
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
+                          {API_TOKEN_SETTINGS_COPY.actionsLabel}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <For each={loaded().tokens}>
+                        {(token) => (
+                          <Show
+                            when={editingTokenId() === token.id}
+                            fallback={
+                              <tr class="border-t border-border">
+                                <th
+                                  scope="row"
+                                  class="px-3 py-3 text-left font-sans font-semibold text-text whitespace-nowrap"
+                                >
+                                  {token.name}
+                                </th>
+                                <td class="px-3 py-3 text-text-muted whitespace-nowrap">
+                                  {formatApiTokenPermission(token.permission)}
+                                </td>
+                                <td class="px-3 py-3 font-mono text-xs text-text-muted whitespace-nowrap">
                                   {token.token_prefix
                                     ? `${token.token_prefix}…`
                                     : API_TOKEN_SETTINGS_COPY.migratedPrefix}
-                                </dd>
-                              </div>
-                              <div>
-                                <dt class="inline font-medium">
-                                  {API_TOKEN_SETTINGS_COPY.createdAtLabel}:{' '}
-                                </dt>
-                                <dd class="inline">{formatSettingsDateTime(token.created_at)}</dd>
-                              </div>
-                              <div>
-                                <dt class="inline font-medium">
-                                  {API_TOKEN_SETTINGS_COPY.lastUsedAtLabel}:{' '}
-                                </dt>
-                                <dd class="inline">
+                                </td>
+                                <td class="px-3 py-3 text-text-muted whitespace-nowrap">
+                                  {formatSettingsDateTime(token.created_at)}
+                                </td>
+                                <td class="px-3 py-3 text-text-muted whitespace-nowrap">
                                   {formatSettingsDateTime(
                                     token.last_used_at,
                                     API_TOKEN_SETTINGS_COPY.unused
                                   )}
-                                </dd>
-                              </div>
-                            </dl>
-                          </div>
-                          <div class="flex shrink-0 gap-2">
-                            <AppButton
-                              size="xs"
-                              onClick={() => startRenaming(token)}
-                              disabled={mutatingTokenId() !== null}
-                              aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.renameAriaLabelSuffix}`}
-                            >
-                              {API_TOKEN_SETTINGS_COPY.rename}
-                            </AppButton>
-                            <AppButton
-                              size="xs"
-                              variant="danger"
-                              onClick={() => handleDeleteApiToken(token)}
-                              disabled={mutatingTokenId() !== null}
-                              aria-busy={mutatingTokenId() === token.id}
-                              aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.deleteAriaLabelSuffix}`}
-                            >
-                              {API_TOKEN_SETTINGS_COPY.delete}
-                            </AppButton>
-                          </div>
-                        </div>
-                      }
-                    >
-                      <form
-                        class="flex flex-col gap-3 sm:flex-row sm:items-end"
-                        onSubmit={(event) => {
-                          event.preventDefault()
-                          void handleRenameApiToken(token.id)
-                        }}
-                      >
-                        <ApiTokenNameField
-                          label={API_TOKEN_SETTINGS_COPY.renameLabel}
-                          value={editingName()}
-                          disabled={mutatingTokenId() === token.id}
-                          error={editingNameError()}
-                          onChange={(value) => {
-                            setEditingName(value)
-                            setEditingNameError('')
-                          }}
-                        />
-                        <div class="flex shrink-0 gap-2">
-                          <AppButton
-                            size="xs"
-                            variant="primary"
-                            type="submit"
-                            disabled={mutatingTokenId() === token.id}
-                            aria-busy={mutatingTokenId() === token.id}
-                            aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.saveAriaLabelSuffix}`}
+                                </td>
+                                <td class="px-3 py-3">
+                                  <div class="flex gap-2 whitespace-nowrap">
+                                    <AppButton
+                                      size="xs"
+                                      onClick={() => startRenaming(token)}
+                                      disabled={mutatingTokenId() !== null}
+                                      aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.renameAriaLabelSuffix}`}
+                                    >
+                                      {API_TOKEN_SETTINGS_COPY.rename}
+                                    </AppButton>
+                                    <AppButton
+                                      size="xs"
+                                      variant="danger"
+                                      onClick={() => handleDeleteApiToken(token)}
+                                      disabled={mutatingTokenId() !== null}
+                                      aria-busy={mutatingTokenId() === token.id}
+                                      aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.deleteAriaLabelSuffix}`}
+                                    >
+                                      {API_TOKEN_SETTINGS_COPY.delete}
+                                    </AppButton>
+                                  </div>
+                                  <p class="mt-2 text-sm text-danger empty:hidden" role="alert">
+                                    {tokenActionError()?.tokenId === token.id
+                                      ? tokenActionError()?.message
+                                      : ''}
+                                  </p>
+                                </td>
+                              </tr>
+                            }
                           >
-                            {API_TOKEN_SETTINGS_COPY.save}
-                          </AppButton>
-                          <AppButton
-                            size="xs"
-                            onClick={cancelRenaming}
-                            disabled={mutatingTokenId() === token.id}
-                            aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.cancelAriaLabelSuffix}`}
-                          >
-                            {API_TOKEN_SETTINGS_COPY.cancel}
-                          </AppButton>
-                        </div>
-                      </form>
-                    </Show>
-                    <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-                      {tokenActionError()?.tokenId === token.id ? tokenActionError()?.message : ''}
-                    </p>
-                  </article>
-                )}
-              </For>
+                            <tr class="border-t border-border">
+                              <td colSpan={6} class="p-3">
+                                <form
+                                  class="flex flex-col gap-3 sm:flex-row sm:items-end"
+                                  onSubmit={(event) => {
+                                    event.preventDefault()
+                                    void handleRenameApiToken(token.id)
+                                  }}
+                                >
+                                  <ApiTokenNameField
+                                    label={API_TOKEN_SETTINGS_COPY.renameLabel}
+                                    value={editingName()}
+                                    disabled={mutatingTokenId() === token.id}
+                                    error={editingNameError()}
+                                    onChange={(value) => {
+                                      setEditingName(value)
+                                      setEditingNameError('')
+                                    }}
+                                  />
+                                  <div class="flex shrink-0 gap-2">
+                                    <AppButton
+                                      size="xs"
+                                      variant="primary"
+                                      type="submit"
+                                      disabled={mutatingTokenId() === token.id}
+                                      aria-busy={mutatingTokenId() === token.id}
+                                      aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.saveAriaLabelSuffix}`}
+                                    >
+                                      {API_TOKEN_SETTINGS_COPY.save}
+                                    </AppButton>
+                                    <AppButton
+                                      size="xs"
+                                      onClick={cancelRenaming}
+                                      disabled={mutatingTokenId() === token.id}
+                                      aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.cancelAriaLabelSuffix}`}
+                                    >
+                                      {API_TOKEN_SETTINGS_COPY.cancel}
+                                    </AppButton>
+                                  </div>
+                                </form>
+                                <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
+                                  {tokenActionError()?.tokenId === token.id
+                                    ? tokenActionError()?.message
+                                    : ''}
+                                </p>
+                              </td>
+                            </tr>
+                          </Show>
+                        )}
+                      </For>
+                    </tbody>
+                  </table>
+                </div>
+              </Show>
             )}
           </Show>
         </Show>
