@@ -61,6 +61,17 @@ test('サンプルは2枠目が空の称号と未知の譜面定数を含むこ�
   assert.equal(sample.rating.best[5]?.is_const_unknown, true)
 })
 
+test('サンプルはベスト枠と新曲枠に同日最新の更新レコードを含むこと', () => {
+  // Given: 画像化前DOM確認用サンプルを組み立てる前提。
+
+  // When: サンプルデータを生成する。
+  const sample = buildRatingImageDomPreviewSample()
+
+  // Then: 両枠の先頭が同じ最新日で、後続レコードより新しい。
+  assert.equal(sample.rating.best[0]?.updated_at, sample.rating.new[0]?.updated_at)
+  assert.notEqual(sample.rating.best[0]?.updated_at, sample.rating.best[1]?.updated_at)
+})
+
 test('表示倍率パーセントを縮小倍率へ変換すること', () => {
   // Given: 50%表示。
 

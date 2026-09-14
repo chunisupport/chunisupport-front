@@ -16,6 +16,7 @@ import { canShareFiles, captureElementAsImage } from '../../../../utils/domImage
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import {
   RATING_IMAGE_COPY,
+  RATING_IMAGE_DEFAULT_VERSION_OPTION,
   RATING_IMAGE_JPEG_QUALITY,
   RATING_IMAGE_PIXEL_RATIO,
   RATING_IMAGE_VERSION_OPTIONS,
@@ -56,7 +57,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const [imageActionError, setImageActionError] = createSignal<string>()
   const [imageSheet, setImageSheet] = createSignal<HTMLDivElement>()
   const [selectedVersionOption, setSelectedVersionOption] = createSignal(
-    RATING_IMAGE_VERSION_OPTIONS[0]
+    RATING_IMAGE_DEFAULT_VERSION_OPTION
   )
   let captureRevision = 0
 

@@ -37,6 +37,12 @@ const SAMPLE_BEST_RECORD_COUNT = RATING_SLOT_COUNT.best - 2
 /** 新曲枠サンプルの件数。空き枠を残す */
 const SAMPLE_NEW_RECORD_COUNT = RATING_SLOT_COUNT.new - 2
 
+/** NEWラベルの通常日と、同日更新を確認する最新日 */
+const SAMPLE_RECORD_UPDATED_AT = {
+  default: '2026-01-01T12:00:00+09:00',
+  latest: '2026-01-02T12:00:00+09:00',
+} as const
+
 /**
  * 画像化前DOM確認用のレコードを生成する。
  *
@@ -87,6 +93,7 @@ const createIndexedPreviewRecord = (prefix: string, index: number): PlayerRecord
   return createPreviewRecord({
     id: `${prefix}-${String(index + 1)}`,
     title,
+    updated_at: index === 0 ? SAMPLE_RECORD_UPDATED_AT.latest : SAMPLE_RECORD_UPDATED_AT.default,
     difficulty,
     const: 15.4 - index * 0.05,
     is_const_unknown: index === 5,

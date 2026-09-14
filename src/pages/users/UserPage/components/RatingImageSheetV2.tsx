@@ -1,6 +1,6 @@
 import { Triangle } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import { For, Show } from 'solid-js'
+import { createMemo, For, Show } from 'solid-js'
 import placeholderImageUrl from '../../../../assets/placeholder.png'
 import {
   getComboLampBadgeClass,
@@ -11,9 +11,9 @@ import { getHonorTypeClassName } from '../../../../constants/honors'
 import { RATING_SLOT_COUNT } from '../../../../constants/rating'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO, UserRatingDTO } from '../../../../types/api'
 import { getConstDisplay } from '../../../../utils/constDisplay'
+import { findLatestRecordDate, toRecordDateString } from '../../../../utils/dateFilter'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import { formatInteger } from '../../../../utils/numberFormat'
-import { getRankingPositionClass } from '../../../../utils/rankingPosition'
 import { formatNullablePlayerRating, formatRatingFixed2 } from '../../../../utils/ratingFormat'
 import { getScoreRank } from '../../../../utils/scoreRank'
 import {
@@ -30,8 +30,6 @@ import {
   RATING_IMAGE_V2_META_GAP_PX,
   RATING_IMAGE_V2_META_TRIANGLE_GAP_PX,
   RATING_IMAGE_V2_META_TRIANGLE_PX,
-  RATING_IMAGE_V2_META_VALUE_LABEL_CLASS,
-  RATING_IMAGE_V2_META_VALUE_LABEL_GAP_PX,
   RATING_IMAGE_V2_META_WIDTH_PX,
   RATING_IMAGE_V2_PADDING_PX,
   RATING_IMAGE_V2_WIDTH_PX,
@@ -66,6 +64,8 @@ type RatingImageV2JacketTileProps = {
   record: PlayerRecordDTO
   /** 一覧内の0始まりインデックス */
   index: number
+  /** 50枠全体で最新の更新日に該当するかどうか */
+  isLatestUpdate: boolean
   /** カードへジャケット画像を表示するかどうか */
   showJackets: boolean
   /** 画像化対象内でジャケット画像を識別するキー */
@@ -94,11 +94,9 @@ type RatingImageV2HeaderStatProps = {
 }
 
 type RatingImageV2MetaValueProps = {
-  /** 数値の上へ置くラベル */
-  label: string
   /** 数値の文字色クラス */
   valueClass: string
-  /** ラベル下へ表示する数値 */
+  /** 表示する数値 */
   children: JSX.Element
 }
 
@@ -109,6 +107,8 @@ type RatingImageV2GridProps = {
   records: PlayerRecordDTO[]
   /** 枠の規定件数 */
   slotCount: number
+  /** ベスト枠・新曲枠全体で最新の更新日 */
+  latestUpdatedDate: string | null
   /** カードへジャケット画像を表示するかどうか */
   showJackets: boolean
   /** 枠を識別するキー */
@@ -117,12 +117,6 @@ type RatingImageV2GridProps = {
   onJacketReadyChange: (key: string, ready: boolean) => void
 }
 
-/**
- * レーティング枠画像 Ver. 2 の譜面カード余白を返す。
- * 左端の難易度縦線ぶんだけ左余白を広げる。
- *
- * @returns 上下右は通常余白、左は縦線幅を足した余白。
- */
 /**
  * レーティング枠画像 Ver. 2 のヘッダー指標を、値の下にラベルを置いて表示する。
  *
@@ -141,25 +135,26 @@ const RatingImageV2HeaderStat: Component<RatingImageV2HeaderStatProps> = (props)
 )
 
 /**
- * レーティング枠画像 Ver. 2 の譜面定数またはレーティングを、ラベルの下に置いて表示する。
+ * レーティング枠画像 Ver. 2 の譜面定数またはレーティングを表示する。
  *
- * @param props - ラベル、数値の文字色、表示値。
- * @returns ラベルの下に数値を置いた指標。
+ * @param props - 数値の文字色と表示値。
+ * @returns 一回り大きく表示した数値。
  */
 const RatingImageV2MetaValue: Component<RatingImageV2MetaValueProps> = (props) => (
-  <div
-    class="flex shrink-0 flex-col items-center"
-    style={{ gap: `${RATING_IMAGE_V2_META_VALUE_LABEL_GAP_PX}px` }}
-  >
-    <span class={RATING_IMAGE_V2_META_VALUE_LABEL_CLASS}>{props.label}</span>
+  <div class="flex shrink-0 items-center">
     <span
-      class={`shrink-0 whitespace-nowrap font-oswald text-[18px] font-bold leading-none ${props.valueClass}`}
+      class={`shrink-0 whitespace-nowrap font-oswald text-[20px] font-bold leading-none ${props.valueClass}`}
     >
       {props.children}
     </span>
   </div>
 )
 
+/**
+ * レーティング枠画像 Ver. 2 の譜面カード余白を返す。
+ *
+ * @returns 左端の難易度縦線ぶんだけ左余白を広げたスタイル。
+ */
 const buildRatingImageV2CardPaddingStyle = (): JSX.CSSProperties => ({
   padding: `${RATING_IMAGE_V2_CARD_PADDING_PX}px`,
   'padding-left': `${RATING_IMAGE_V2_CARD_PADDING_PX + RATING_IMAGE_V2_DIFFICULTY_STRIPE_PX}px`,
@@ -167,7 +162,7 @@ const buildRatingImageV2CardPaddingStyle = (): JSX.CSSProperties => ({
 
 /**
  * レーティング枠画像 Ver. 2 の空きジャケット枠を表示する。
- * 順位数字は曲ありカードと同じ 32px 枠と上余白へ置き、ジャケットがなくても位置を揃える。
+ * 空き枠番号はカードのボーダー色を使ったフラッグへ配置する。
  *
  * @param props - 空き枠の一覧内インデックス。
  * @returns 曲ありカードと同じ寸法のプレースホルダー。
@@ -181,24 +176,23 @@ const RatingImageV2EmptyTile: Component<RatingImageV2EmptyTileProps> = (props) =
   const slotNumber = () => props.index + 1
 
   return (
-    <div class="rating-image-v2-card h-full min-w-0" style={buildRatingImageV2CardPaddingStyle()}>
+    <div
+      class="rating-image-v2-card rating-image-v2-card--empty h-full min-w-0"
+      style={buildRatingImageV2CardPaddingStyle()}
+    >
       <span class="sr-only">{buildEmptyRatingSlotLabel(slotNumber())}</span>
+      <div
+        class="rating-image-v2-position-flag font-oswald text-[18px] font-bold leading-none text-white"
+        aria-hidden="true"
+      >
+        {slotNumber()}
+      </div>
       <div
         class="flex min-w-0"
         style={{ gap: `${RATING_IMAGE_V2_META_GAP_PX}px` }}
         aria-hidden="true"
       >
-        <div
-          class="flex shrink-0 items-start justify-center"
-          style={{
-            padding: '2px 0',
-            width: `${RATING_IMAGE_V2_META_WIDTH_PX}px`,
-          }}
-        >
-          <div class="flex h-[32px] w-[32px] shrink-0 items-center justify-center font-oswald text-[18px] font-bold leading-none text-disabled-text">
-            {slotNumber()}
-          </div>
-        </div>
+        <div class="shrink-0" style={{ width: `${RATING_IMAGE_V2_META_WIDTH_PX}px` }} />
         <div
           class="shrink-0 bg-surface-muted"
           style={{
@@ -240,7 +234,10 @@ const RatingImageV2JacketComboLamp: Component<RatingImageV2JacketComboLampProps>
           class={`rating-image-v2-jacket-lamp pointer-events-none absolute top-0 left-0 z-20 ${RATING_IMAGE_V2_JACKET_LAMP_BADGE_CLASS} ${getComboLampBadgeClass(lamp(), props.record.score)}`}
           style={{ margin: `${RATING_IMAGE_V2_JACKET_LAMP_MARGIN_PX}px` }}
         >
-          {getRatingImageV2ComboLampLabel(lamp())}
+          <span class="rating-image-v2-jacket-lamp-frame" aria-hidden="true" />
+          <span class="rating-image-v2-jacket-lamp-label">
+            {getRatingImageV2ComboLampLabel(lamp())}
+          </span>
         </span>
       )}
     </Show>
@@ -258,7 +255,6 @@ const RatingImageV2JacketTile: Component<RatingImageV2JacketTileProps> = (props)
   const jacketUrl = () => buildChunithmJacketUrl(props.record.img)
   const constDisplay = () => getConstDisplay(props.record.const, props.record.is_const_unknown)
   const jacketSource = () => (props.showJackets ? jacketUrl() : null)
-  const indexColor = () => getRankingPositionClass(props.index + 1, 'bg-surface-hover text-text')
   const numericClass = () => (props.record.is_const_unknown ? 'text-danger' : 'text-text')
 
   /**
@@ -293,13 +289,21 @@ const RatingImageV2JacketTile: Component<RatingImageV2JacketTileProps> = (props)
 
   return (
     <div
-      class="rating-image-v2-card h-full min-w-0"
+      class="rating-image-v2-card rating-image-v2-card--filled h-full min-w-0"
       data-difficulty={difficulty() ?? undefined}
       style={buildRatingImageV2CardPaddingStyle()}
     >
+      <div class="rating-image-v2-position-flag font-oswald text-[18px] font-bold leading-none text-white">
+        {props.index + 1}
+      </div>
+      <Show when={props.isLatestUpdate}>
+        <span class="rating-image-v2-new-badge pointer-events-none absolute top-0 right-0 z-40 whitespace-nowrap font-jost text-[18px] font-black leading-none text-white italic">
+          {RATING_IMAGE_COPY.latestUpdateBadge}
+        </span>
+      </Show>
       <div class="flex min-w-0" style={{ gap: `${RATING_IMAGE_V2_META_GAP_PX}px` }}>
         <div
-          class="flex shrink-0 flex-col items-center justify-between"
+          class="flex shrink-0 flex-col items-center justify-end"
           style={{
             height: `${RATING_IMAGE_V2_JACKET_PX}px`,
             padding: '2px 0',
@@ -307,18 +311,10 @@ const RatingImageV2JacketTile: Component<RatingImageV2JacketTileProps> = (props)
           }}
         >
           <div
-            class={`flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full font-oswald text-[18px] font-bold leading-none ${indexColor()}`}
-          >
-            {props.index + 1}
-          </div>
-          <div
             class="flex shrink-0 flex-col items-center"
             style={{ gap: `${RATING_IMAGE_V2_META_TRIANGLE_GAP_PX}px` }}
           >
-            <RatingImageV2MetaValue
-              label={RATING_IMAGE_COPY.constLabel}
-              valueClass={numericClass()}
-            >
+            <RatingImageV2MetaValue valueClass={numericClass()}>
               {constDisplay().valueText}
               <Show when={constDisplay().markerText}>
                 {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
@@ -334,10 +330,7 @@ const RatingImageV2JacketTile: Component<RatingImageV2JacketTileProps> = (props)
               strokeWidth={0}
               aria-hidden="true"
             />
-            <RatingImageV2MetaValue
-              label={RATING_IMAGE_COPY.ratingLabel}
-              valueClass={numericClass()}
-            >
+            <RatingImageV2MetaValue valueClass={numericClass()}>
               {formatRatingFixed2(props.record.rating)}
               <Show when={constDisplay().markerText}>
                 {(marker) => <sup class="align-super text-[0.6em]">{marker()}</sup>}
@@ -417,10 +410,10 @@ const RatingImageV2Grid: Component<RatingImageV2GridProps> = (props) => {
   return (
     <section class="min-w-0">
       <h2
-        class="inline-flex shrink-0 items-center whitespace-nowrap bg-action-primary px-[10px] py-[5px] font-sans text-[24px] font-bold leading-none text-text-inverse"
+        class="inline-flex shrink-0 items-center whitespace-nowrap bg-action-primary px-[10px] py-[5px] font-jost text-[24px] font-bold leading-none text-text-inverse"
         style={{ 'margin-bottom': '10px' }}
       >
-        {props.heading}
+        {props.heading} {props.slotCount}
       </h2>
       <ol
         class="m-0 list-none p-0"
@@ -441,6 +434,10 @@ const RatingImageV2Grid: Component<RatingImageV2GridProps> = (props) => {
                   <RatingImageV2JacketTile
                     record={record()}
                     index={slotIndex}
+                    isLatestUpdate={
+                      props.latestUpdatedDate !== null &&
+                      toRecordDateString(record().updated_at) === props.latestUpdatedDate
+                    }
                     showJackets={props.showJackets}
                     jacketKey={`${props.columnKey}-${slotIndex}`}
                     onJacketReadyChange={props.onJacketReadyChange}
@@ -463,6 +460,12 @@ const RatingImageV2Grid: Component<RatingImageV2GridProps> = (props) => {
  */
 export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) => {
   const honorSlots = () => buildHonorSlots(props.honors)
+  const latestUpdatedDate = createMemo(() =>
+    findLatestRecordDate([
+      ...props.rating.best.slice(0, RATING_SLOT_COUNT.best),
+      ...props.rating.new.slice(0, RATING_SLOT_COUNT.new),
+    ])
+  )
   const overPowerValue = () => formatRatingImageOverPowerValue(props.playerInfo.overpower_value)
   const overPowerPercent = () =>
     formatRatingImageOverPowerPercent(props.playerInfo.overpower_percent)
@@ -553,17 +556,19 @@ export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) =>
 
       <main class="flex flex-col" style={{ gap: '22px', 'margin-top': '18px' }}>
         <RatingImageV2Grid
-          heading={RATING_IMAGE_COPY.bestHeading}
+          heading={RATING_IMAGE_COPY.bestV2Heading}
           records={props.rating.best}
           slotCount={RATING_SLOT_COUNT.best}
+          latestUpdatedDate={latestUpdatedDate()}
           showJackets={props.showJackets}
           columnKey="best"
           onJacketReadyChange={props.onJacketReadyChange}
         />
         <RatingImageV2Grid
-          heading={RATING_IMAGE_COPY.newHeading}
+          heading={RATING_IMAGE_COPY.newV2Heading}
           records={props.rating.new}
           slotCount={RATING_SLOT_COUNT.new}
+          latestUpdatedDate={latestUpdatedDate()}
           showJackets={props.showJackets}
           columnKey="new"
           onJacketReadyChange={props.onJacketReadyChange}

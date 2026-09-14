@@ -94,7 +94,7 @@ test('formatRatingImageOverPowerPercent は未設定値をハイフンへする�
   assert.equal(label, '-')
 })
 
-test('レーティング枠画像 Ver. 2 のコンボランプは省略せずFULL COMBOとALL JUSTICEを返すこと', () => {
+test('レーティング枠画像 Ver. 2 のコンボランプはFCとAJの略称を返すこと', () => {
   // Given: FULL COMBOとALL JUSTICEと未設定のコンボランプ。
 
   // When: 画像用の表示文言を取得する。
@@ -102,8 +102,8 @@ test('レーティング枠画像 Ver. 2 のコンボランプは省略せずFUL
   const allJustice = getRatingImageV2ComboLampLabel('ALL JUSTICE')
   const unset = getRatingImageV2ComboLampLabel(null)
 
-  // Then: 省略せずフル表記し、未設定は空文字になる。
-  assert.equal(fullCombo, 'FULL COMBO')
-  assert.equal(allJustice, 'ALL JUSTICE')
+  // Then: 略称を返し、未設定は空文字になる。
+  assert.equal(fullCombo, 'FC')
+  assert.equal(allJustice, 'AJ')
   assert.equal(unset, '')
 })

@@ -560,9 +560,18 @@
   --cs-size-rating-image-v2-pattern: 28px;
   --cs-color-rating-image-v2-jacket-score-bg: #000000;
   --cs-color-rating-image-v2-jacket-score-text: var(--color-white);
+  --cs-color-rating-image-v2-new-badge-bg: #ff4fcf;
   --cs-size-rating-image-v2-difficulty-stripe: 4px;
+  --cs-size-rating-image-v2-position-flag-width: 52px;
+  --cs-size-rating-image-v2-position-flag-height: 32px;
+  --cs-size-rating-image-v2-position-flag-slant: 12px;
+  --cs-size-rating-image-v2-jacket-lamp: 34px;
+  --cs-size-rating-image-v2-jacket-lamp-inset: 4px;
+  --cs-size-rating-image-v2-jacket-lamp-border: 2px;
   --cs-shadow-rating-image-v2-header: 0 4px 12px rgb(0 0 0 / 22%);
   --cs-shadow-rating-image-v2-jacket-lamp: 0 1px 3px rgb(0 0 0 / 55%);
+  --cs-shadow-rating-image-v2-position: 0 1px 2px rgb(0 0 0 / 70%);
+  --cs-shadow-rating-image-v2-new-badge: 0 1px 2px rgb(0 0 0 / 75%);
   --cs-size-difficulty-ultima-stripe: 6px;
   --cs-size-difficulty-ultima-stripe-period: 12px;
   --cs-color-difficulty-ultima-stripe: #ff0000;
@@ -1172,7 +1181,30 @@
   }
 
   .rating-image-v2-jacket-lamp {
+    position: relative;
+    box-sizing: border-box;
+    width: var(--cs-size-rating-image-v2-jacket-lamp);
+    height: var(--cs-size-rating-image-v2-jacket-lamp);
     box-shadow: var(--cs-shadow-rating-image-v2-jacket-lamp);
+    transform: rotate(45deg);
+  }
+
+  .rating-image-v2-jacket-lamp-frame {
+    position: absolute;
+    inset: var(--cs-size-rating-image-v2-jacket-lamp-inset);
+    border: var(--cs-size-rating-image-v2-jacket-lamp-border) solid var(--color-white);
+  }
+
+  .rating-image-v2-jacket-lamp-label {
+    position: relative;
+    z-index: 1;
+    color: var(--color-black);
+    font-family: var(--font-oswald);
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+    transform: rotate(-45deg);
   }
 
   .rating-image-v2-backdrop {
@@ -1196,6 +1228,8 @@
   }
 
   .rating-image-v2-card {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-surface-hover);
+
     position: relative;
     isolation: isolate;
     overflow: hidden;
@@ -1213,8 +1247,24 @@
     background-color: var(--color-surface-hover);
   }
 
-  .rating-image-v2-card[data-difficulty]::before {
+  .rating-image-v2-card--filled::before,
+  .rating-image-v2-card--empty::before {
+    width: var(--cs-size-rating-image-v2-position-flag-width);
     background-color: var(--cs-color-rating-image-v2-difficulty-fill);
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      calc(100% - var(--cs-size-rating-image-v2-position-flag-slant))
+        var(--cs-size-rating-image-v2-position-flag-height),
+      var(--cs-size-rating-image-v2-difficulty-stripe)
+        var(--cs-size-rating-image-v2-position-flag-height),
+      var(--cs-size-rating-image-v2-difficulty-stripe) 100%,
+      0 100%
+    );
+  }
+
+  .rating-image-v2-card--empty {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-border);
   }
 
   .rating-image-v2-card[data-difficulty="BASIC"] {
@@ -1238,6 +1288,34 @@
     background-image: var(--cs-gradient-rating-image-v2-ultima-stripe);
   }
 
+  .rating-image-v2-card[data-difficulty="ULTIMA"] {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-difficulty-ultima-bg);
+  }
+
+  .rating-image-v2-position-flag {
+    position: absolute;
+    z-index: 30;
+    top: 0;
+    left: 0;
+    display: flex;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    width: var(--cs-size-rating-image-v2-position-flag-width);
+    height: var(--cs-size-rating-image-v2-position-flag-height);
+    padding-right: calc(var(--cs-size-rating-image-v2-position-flag-slant) * 0.5);
+    text-shadow: var(--cs-shadow-rating-image-v2-position);
+    transform: translateY(-1px);
+  }
+
+  .rating-image-v2-new-badge {
+    box-sizing: border-box;
+    padding: 3px 4px 4px;
+    background-color: var(--cs-color-rating-image-v2-new-badge-bg);
+    clip-path: polygon(0 0, 96% 4%, 100% 94%, 5% 100%);
+    text-shadow: var(--cs-shadow-rating-image-v2-new-badge);
+  }
+
   .rating-image-v2-title {
     overflow: hidden;
     font-family: var(--font-sans);
@@ -1245,7 +1323,7 @@
     font-weight: 700;
     line-height: 1.25;
     text-align: center;
-    text-overflow: ellipsis;
+    text-overflow: clip;
     white-space: nowrap;
   }
 

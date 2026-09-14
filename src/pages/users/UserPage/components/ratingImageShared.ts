@@ -58,12 +58,13 @@ export const formatRatingImageOverPowerLine = (
 
 /**
  * レーティング枠画像 Ver. 2 のコンボランプバッジ文言を返す。
- * AJCも ALL JUSTICE と表示し、虹色はバッジの色クラス側で付ける。
+ * 理論値AJの虹色はバッジの色クラス側で付け、文言はAJへ統一する。
  *
  * @param lamp - APIのコンボランプ値。
- * @returns FULL COMBO または ALL JUSTICE。表示対象外は空文字。
+ * @returns FC または AJ。表示対象外は空文字。
  */
 export const getRatingImageV2ComboLampLabel = (lamp: PlayerRecordDTO['combo_lamp']): string => {
-  if (lamp === 'FULL COMBO' || lamp === 'ALL JUSTICE') return lamp
+  if (lamp === 'FULL COMBO') return 'FC'
+  if (lamp === 'ALL JUSTICE') return 'AJ'
   return ''
 }

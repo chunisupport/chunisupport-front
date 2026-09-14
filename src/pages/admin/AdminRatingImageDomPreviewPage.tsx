@@ -24,6 +24,7 @@ import { RatingImageSheet } from '../users/UserPage/components/RatingImageSheet'
 import { RatingImageSheetV2 } from '../users/UserPage/components/RatingImageSheetV2'
 import { formatRatingImageFilename } from '../users/UserPage/components/ratingImageFilename'
 import {
+  RATING_IMAGE_DEFAULT_VERSION_OPTION,
   RATING_IMAGE_JPEG_QUALITY,
   RATING_IMAGE_PIXEL_RATIO,
   RATING_IMAGE_VERSION_OPTIONS,
@@ -106,7 +107,7 @@ const AdminRatingImageDomPreviewPage = () => {
   const [usernameInput, setUsernameInput] = createSignal('')
   const [requestedQuery, setRequestedQuery] = createSignal<string | undefined>()
   const [selectedVersionOption, setSelectedVersionOption] = createSignal(
-    RATING_IMAGE_VERSION_OPTIONS[0]
+    RATING_IMAGE_DEFAULT_VERSION_OPTION
   )
   const [showJackets, setShowJackets] = createSignal(true)
   const [scalePercent, setScalePercent] = createSignal<number>(

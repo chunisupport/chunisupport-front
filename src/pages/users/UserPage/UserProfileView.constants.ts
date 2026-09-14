@@ -21,25 +21,17 @@ export const RATING_IMAGE_V2_META_WIDTH_PX = 64
 /** レーティング枠画像 Ver. 2 の数値列とジャケットの間隔 */
 export const RATING_IMAGE_V2_META_GAP_PX = 6
 /** レーティング枠画像 Ver. 2 の譜面定数とレーティングの間の下向き三角形一辺 */
-export const RATING_IMAGE_V2_META_TRIANGLE_PX = 10
+export const RATING_IMAGE_V2_META_TRIANGLE_PX = 12
 /** レーティング枠画像 Ver. 2 の譜面定数・三角形・レーティングの間隔 */
-export const RATING_IMAGE_V2_META_TRIANGLE_GAP_PX = 0
-/** レーティング枠画像 Ver. 2 の数値ラベルと数値の間隔 */
-export const RATING_IMAGE_V2_META_VALUE_LABEL_GAP_PX = 2
-/**
- * レーティング枠画像 Ver. 2 の譜面定数・レーティング上のラベル。
- * 64px幅の数値列へ収める。
- */
-export const RATING_IMAGE_V2_META_VALUE_LABEL_CLASS =
-  'shrink-0 whitespace-nowrap font-oswald text-[9px] font-bold leading-none text-text-muted'
+export const RATING_IMAGE_V2_META_TRIANGLE_GAP_PX = 8
 /** レーティング枠画像 Ver. 2 のジャケット左上ランプバッジ余白 */
-export const RATING_IMAGE_V2_JACKET_LAMP_MARGIN_PX = 4
+export const RATING_IMAGE_V2_JACKET_LAMP_MARGIN_PX = 7
 /**
  * レーティング枠画像 Ver. 2 のジャケット左上コンボランプバッジ。
- * FULL COMBO / ALL JUSTICE のフル表記を100pxジャケットへ収める。
+ * FC / AJ の略称を菱形の内枠付きバッジで強調する。
  */
 export const RATING_IMAGE_V2_JACKET_LAMP_BADGE_CLASS =
-  'inline-flex shrink-0 items-center justify-center rounded-lg px-1 py-0.5 font-oswald text-sm font-extrabold leading-none whitespace-nowrap'
+  'inline-flex shrink-0 items-center justify-center'
 /** レーティング枠画像を原寸で出力するピクセル比 */
 export const RATING_IMAGE_PIXEL_RATIO = 1
 /** レーティング枠JPEG画像の圧縮品質 */
@@ -56,10 +48,16 @@ export type RatingImageVersionOption = {
   label: string
 }
 
+/** レーティング枠画像化で初期選択するデザインバージョン */
+export const RATING_IMAGE_DEFAULT_VERSION_OPTION: RatingImageVersionOption = {
+  value: 'v2',
+  label: 'Ver. 2',
+}
+
 /** レーティング枠画像のデザインバージョン一覧 */
 export const RATING_IMAGE_VERSION_OPTIONS: RatingImageVersionOption[] = [
   { value: 'v1', label: 'Ver. 1' },
-  { value: 'v2', label: 'Ver. 2' },
+  RATING_IMAGE_DEFAULT_VERSION_OPTION,
 ]
 
 /** レーティング枠画像化プレビューで使用する文言 */
@@ -74,9 +72,11 @@ export const RATING_IMAGE_COPY = {
   retryPreview: '再試行',
   bestHeading: 'ベスト枠',
   newHeading: '新曲枠',
+  bestV2Heading: 'BEST',
+  newV2Heading: 'NEW',
+  latestUpdateBadge: 'NEW!',
   averageLabel: 'Avg.',
   ratingLabel: 'RATING',
-  constLabel: 'CONST',
   bestAverageLabel: 'BEST',
   newAverageLabel: 'NEW',
   overPowerLabel: 'OP',

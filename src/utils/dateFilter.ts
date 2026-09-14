@@ -15,6 +15,27 @@ export const toRecordDateString = (updatedAt: string | null): string | null => {
 }
 
 /**
+ * レコード一覧から時刻を除いた最新更新日を返す。
+ *
+ * @param records - 更新日時を持つレコード一覧。
+ * @returns YYYY-MM-DD 形式の最新更新日。有効な更新日がなければ null。
+ */
+export const findLatestRecordDate = (
+  records: readonly { updated_at: string | null }[]
+): string | null => {
+  let latestDate: string | null = null
+
+  for (const record of records) {
+    const recordDate = toRecordDateString(record.updated_at)
+    if (recordDate !== null && (latestDate === null || recordDate > latestDate)) {
+      latestDate = recordDate
+    }
+  }
+
+  return latestDate
+}
+
+/**
  * レコードの最終更新日が日付範囲フィルターに一致するか判定する。
  *
  * @param updatedAt - レコードの最終更新日 (ISO 8601 日時文字列)。null の場合は範囲指定があると不一致。
