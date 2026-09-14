@@ -11,7 +11,7 @@ import { useSongsData } from '../../../stores/songsData'
 import type { PlayerRecordDTO, SongDTO } from '../../../types/api'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserStandardSongRecordWithCache } from '../../../usecases/cache/fetchUserSongRecordWithCache'
-import { isNotFoundApiError } from '../../../utils/apiError'
+import { isNotFoundOrInvalidDisplayIdApiError } from '../../../utils/apiError'
 import { normalizeDifficultyQueryValue } from '../../../utils/difficultyUtils'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import NotFoundPage from '../../NotFoundPage'
@@ -46,7 +46,7 @@ const fetchSongDetailLoadState = async (displayId: string): Promise<SongDetailLo
   try {
     return { type: 'loaded', song: await fetchSongByDisplayId(displayId) }
   } catch (error) {
-    if (isNotFoundApiError(error)) {
+    if (isNotFoundOrInvalidDisplayIdApiError(error)) {
       return { type: 'notFound' }
     }
 

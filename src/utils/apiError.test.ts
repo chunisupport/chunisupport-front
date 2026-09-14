@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { isForbiddenApiError, isNotFoundApiError } from './apiError'
+import {
+  isForbiddenApiError,
+  isNotFoundApiError,
+  isNotFoundOrInvalidDisplayIdApiError,
+} from './apiError'
 
 test('404系のAPIエラーだけをNot Foundとして判定すること', () => {
   // Given
@@ -32,6 +36,25 @@ test('403系のAPIエラーだけをForbiddenとして判定すること', () =>
 
   // When
   const results = cases.map(({ error }) => isForbiddenApiError(error))
+
+  // Then
+  assert.deepEqual(
+    results,
+    cases.map(({ expected }) => expected)
+  )
+})
+
+test('存在しない表示IDと形式不正の表示IDをNot Found相当として判定すること', () => {
+  // Given
+  const cases = [
+    { error: { status: 404 }, expected: true },
+    { error: { code: 'song_not_found' }, expected: true },
+    { error: { status: 422, code: 'validation_failed' }, expected: true },
+    { error: { status: 500, code: 'internal_error' }, expected: false },
+  ] as const
+
+  // When
+  const results = cases.map(({ error }) => isNotFoundOrInvalidDisplayIdApiError(error))
 
   // Then
   assert.deepEqual(

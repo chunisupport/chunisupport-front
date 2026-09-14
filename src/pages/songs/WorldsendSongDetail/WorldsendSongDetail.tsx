@@ -10,7 +10,7 @@ import { useSongsData } from '../../../stores/songsData'
 import type { WorldsendSongDTO } from '../../../types/api'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserWorldsendSongRecordWithCache } from '../../../usecases/cache/fetchUserSongRecordWithCache'
-import { isNotFoundApiError } from '../../../utils/apiError'
+import { isNotFoundOrInvalidDisplayIdApiError } from '../../../utils/apiError'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import NotFoundPage from '../../NotFoundPage'
 import SongDetailLayout from '../components/SongDetailLayout'
@@ -49,7 +49,7 @@ const fetchWorldsendSongDetailLoadState = async (
   try {
     return { type: 'loaded', song: await fetchWorldsendSongByDisplayId(displayId) }
   } catch (error) {
-    if (isNotFoundApiError(error)) {
+    if (isNotFoundOrInvalidDisplayIdApiError(error)) {
       return { type: 'notFound' }
     }
 

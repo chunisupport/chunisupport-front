@@ -14,6 +14,7 @@ import { joinDocumentTitleParts } from '../../../constants/site'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { songFriendRankingQueryOptions } from '../../../queries/friendRankings'
 import { authSession } from '../../../stores/authSession'
+import { isNotFoundOrInvalidDisplayIdApiError } from '../../../utils/apiError'
 import { parseScoreHistoryDifficulty } from '../../../utils/scoreHistory'
 import NotFoundPage from '../../NotFoundPage'
 import ChartDetailPage from '../components/chartDetail/ChartDetailPage'
@@ -56,6 +57,8 @@ const SongScoreHistory = () => {
     const selectedDifficulty = difficulty()
     return Boolean(currentSong && selectedDifficulty && currentSong.charts[selectedDifficulty])
   })
+  /** 存在しない・形式不正の表示IDは存在しない曲とみなして404表示にする */
+  const isSongNotFound = createMemo(() => isNotFoundOrInvalidDisplayIdApiError(song.error))
 
   useDocumentTitle(() => joinDocumentTitleParts(song()?.title ?? '楽曲', CHART_DETAIL_PAGE_TITLE))
 
@@ -75,7 +78,14 @@ const SongScoreHistory = () => {
 
   return (
     <Show when={difficulty()} fallback={<NotFoundPage />}>
-      <Show when={!song.error} fallback={<LoadError error={song.error} />}>
+      <Show
+        when={!song.error}
+        fallback={
+          <Show when={isSongNotFound()} fallback={<LoadError error={song.error} />}>
+            <NotFoundPage />
+          </Show>
+        }
+      >
         <Show when={!song.loading} fallback={<Loading />}>
           <Show when={isValidChart()} fallback={<NotFoundPage />}>
             <ChartDetailPage
