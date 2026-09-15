@@ -1,14 +1,23 @@
 import { A } from '@solidjs/router'
 import type { JSX } from 'solid-js'
-import { For } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { createWindowVirtualTable } from '../../../components/common/createWindowVirtualTable'
+import { getDefaultRecordHardLampLabel } from '../../../components/common/record/recordLampLabel'
+import type { SharedClearLamp } from '../../../components/common/record/recordStyleClasses'
+import {
+  getSortAriaValue,
+  SortableHeaderButton,
+} from '../../../components/common/SortableTableHeader'
 import { buildSongDetailPath, buildWorldsendSongDetailPath } from '../../../constants/routes'
 import type { ChartStats, ChartStatsDifficulty } from '../../../types/chartStats'
 import {
   buildChartStatsCumulativeValues,
   type ChartStatsCategory,
   isWorldsendChartStats,
+  sortChartStats,
 } from '../../../utils/chartStats'
 import { formatInteger } from '../../../utils/numberFormat'
+import { nextSortState, type SortDirection } from '../../../utils/sortingQuery'
 import {
   formatChartStatsLevel,
   formatChartStatsValue,
@@ -31,11 +40,56 @@ type ChartStatsTableProps = {
   valueMode: ChartStatsValueMode
   /** 達成率に応じたセル背景を表示するか */
   showHeatmap: boolean
+  /** 検索・カテゴリ・難易度の変更時に先頭へ戻すための値 */
+  resetKey: string
 }
 
+/** 仮想化で使用する固定行高 */
+const ROW_HEIGHT = 37
+/**
+ * 定数・人数・指標値の数値列に共通適用する固定幅。
+ * Jost SemiBold 14px・tabular-nums での「100.00%」実測 59.53px に
+ * セル水平余白 px-1（8px）と描画誤差の余裕を加えた値。
+ * 伸縮させず余白をすべて曲名列へ回す。
+ */
+const NUMERIC_COLUMN_WIDTH = '4.5rem'
+/** 狭幅の数値列に共通適用する水平余白 */
+const NARROW_COLUMN_PADDING_CLASS = 'px-1'
 /** 表の見出しセルに共通適用するクラス */
 const TABLE_HEADER_CLASS =
-  'whitespace-nowrap bg-surface-muted px-3 py-2 text-right text-xs font-semibold text-text-muted'
+  'flex min-h-[37px] items-center whitespace-nowrap bg-surface-muted py-2 text-xs font-semibold text-text-muted'
+/** 仮想行のセルに共通適用するクラス */
+const TABLE_CELL_CLASS = 'flex h-[37px] items-center'
+/** 曲名以外の中央揃え列に共通適用する配置クラス */
+const CENTER_COLUMN_CLASS = 'justify-center text-center'
+/** 集計カテゴリごとの表の最小幅 */
+const TABLE_MIN_WIDTH_CLASS: Record<ChartStatsCategory, string> = {
+  rank: 'min-w-[55rem]',
+  combo: 'min-w-[37rem]',
+  clear: 'min-w-[46rem]',
+}
+
+/**
+ * 集計列数に応じた仮想行と見出しで共有する列構成を生成する。
+ * 数値列はすべて固定幅とし、曲名列だけが残り幅を受け持つ。
+ *
+ * @param columnCount - 累積達成列の数。
+ * @returns 曲名、定数、人数、集計列のグリッドテンプレート。
+ */
+const buildGridTemplateColumns = (columnCount: number): string =>
+  `minmax(14rem, 1fr) repeat(${columnCount + 2}, ${NUMERIC_COLUMN_WIDTH})`
+
+/**
+ * 表見出し用の指標短縮ラベルを取得する。
+ * HARD系の指標には既存レコード表示と共通の3文字短縮（CTS・ABS等）を使い、
+ * 該当しない指標には正式名をそのまま返す。
+ *
+ * @param key - 累積指標のキー（小文字）。
+ * @param label - 指標の正式名。
+ * @returns 「100.00%」幅の数値列に収まる見出しラベル。
+ */
+const getMetricShortLabel = (key: string, label: string): string =>
+  getDefaultRecordHardLampLabel(key.toUpperCase() as SharedClearLamp) || label
 
 /**
  * 達成率に応じたテーマ連動のヒートマップ背景色を生成する。
@@ -63,83 +117,223 @@ const buildChartHref = (chart: ChartStats, difficulty: ChartStatsDifficulty): st
     : buildSongDetailPath(chart.song_id, difficulty)
 
 /**
- * 譜面ごとの累積達成人数または達成率を表形式で表示する。
+ * 譜面ごとの累積達成人数または達成率をTanStack Virtualで仮想化した表として表示する。
+ * 曲名以外はすべて中央揃えにし、数値列は「100.00%」基準の固定幅で曲名列を最大化する。
+ * すべての列が見出し操作でソートでき、ソート状態は画面内に閉じて保持する。
  *
- * @param props - 譜面一覧、難易度、カテゴリ、数値形式、ヒートマップ設定。
- * @returns 横スクロール可能な意味的データテーブル。
+ * @param props - 譜面一覧、難易度、カテゴリ、数値形式、ヒートマップ設定、先頭復帰キー。
+ * @returns 横スクロール可能な仮想化データテーブル。
  */
 export const ChartStatsTable = (props: ChartStatsTableProps): JSX.Element => {
   const columns = () =>
     props.charts[0] ? buildChartStatsCumulativeValues(props.charts[0], props.category) : []
+  const isWorldsend = () => props.difficulty === "WORLD'S END"
+  const [sortKey, setSortKey] = createSignal<string | null>(null)
+  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
+  const sortedCharts = createMemo(() =>
+    sortChartStats(props.charts, sortKey(), sortDirection(), props.category)
+  )
+  const gridTemplateColumns = createMemo(() => buildGridTemplateColumns(columns().length))
+  const virtualizedTable = createWindowVirtualTable<
+    HTMLDivElement,
+    HTMLTableSectionElement,
+    HTMLDivElement,
+    HTMLTableRowElement
+  >({
+    rowCount: () => sortedCharts().length,
+    rowHeight: ROW_HEIGHT,
+    resetOnRowCountChange: true,
+    layoutDeps: () => props.category,
+  })
+  const virtualRows = createMemo(() => virtualizedTable.virtualRows())
+
+  createEffect((previousKey?: string) => {
+    const currentKey = props.resetKey
+    if (previousKey !== undefined && previousKey !== currentKey) {
+      virtualizedTable.resetToTop()
+    }
+    return currentKey
+  })
+
+  createEffect((previousCategory?: ChartStatsCategory) => {
+    const currentCategory = props.category
+    if (previousCategory !== undefined && previousCategory !== currentCategory) {
+      setSortKey(null)
+      setSortDirection(null)
+    }
+    return currentCategory
+  })
+
+  /**
+   * 列ヘッダー操作時の次のソート状態を適用し、仮想化表を先頭へ戻す。
+   *
+   * @param nextKey - 選択された列のソートキー。
+   * @returns なし。
+   */
+  const handleSortChange = (nextKey: string): void => {
+    const nextSort = nextSortState(sortKey(), sortDirection(), nextKey)
+    setSortKey(nextSort.sortKey)
+    setSortDirection(nextSort.sortDirection)
+    virtualizedTable.resetToTop()
+  }
+
+  /**
+   * ソート状態をth要素へ伝えるaria-sort値を返す。
+   *
+   * @param key - 列のソートキー。
+   * @returns aria-sortへ渡すソート状態。
+   */
+  const headerAriaSort = (key: string) => getSortAriaValue(sortKey() === key, sortDirection())
 
   return (
-    <div class="overflow-x-auto rounded-lg border border-border bg-surface">
-      <table class="min-w-full border-collapse text-sm">
+    <div
+      ref={virtualizedTable.setTableContainerRef}
+      class="overflow-x-auto overflow-y-hidden rounded-lg border border-border bg-surface"
+    >
+      <table
+        class={`block w-full text-sm ${TABLE_MIN_WIDTH_CLASS[props.category]}`}
+        aria-rowcount={sortedCharts().length + 1}
+      >
         <caption class="sr-only">{CHART_STATS_COPY.tableCaption}</caption>
-        <thead>
-          <tr>
-            <th class={`${TABLE_HEADER_CLASS} min-w-56 text-left`} scope="col">
-              曲名
+        <thead class="block">
+          <tr class="grid" style={{ 'grid-template-columns': gridTemplateColumns() }}>
+            <th
+              class={`${TABLE_HEADER_CLASS} justify-start px-3 text-left`}
+              scope="col"
+              aria-sort={headerAriaSort('title')}
+            >
+              <SortableHeaderButton
+                label="曲名"
+                active={sortKey() === 'title'}
+                direction={sortDirection()}
+                align="start"
+                class="justify-start"
+                onClick={() => handleSortChange('title')}
+              />
             </th>
-            <th class={TABLE_HEADER_CLASS} scope="col">
-              {props.difficulty === "WORLD'S END" ? 'Lv./属性' : '譜面定数'}
+            <th
+              class={`${TABLE_HEADER_CLASS} ${NARROW_COLUMN_PADDING_CLASS} ${CENTER_COLUMN_CLASS}`}
+              scope="col"
+              aria-sort={headerAriaSort('level')}
+            >
+              <SortableHeaderButton
+                label={isWorldsend() ? CHART_STATS_COPY.worldsendLevel : CHART_STATS_COPY.level}
+                active={sortKey() === 'level'}
+                direction={sortDirection()}
+                align="center"
+                class="justify-center"
+                onClick={() => handleSortChange('level')}
+              />
             </th>
-            <th class={TABLE_HEADER_CLASS} scope="col">
-              {CHART_STATS_COPY.playerCount}
+            <th
+              class={`${TABLE_HEADER_CLASS} ${NARROW_COLUMN_PADDING_CLASS} ${CENTER_COLUMN_CLASS}`}
+              scope="col"
+              aria-sort={headerAriaSort('player_count')}
+            >
+              <SortableHeaderButton
+                label={CHART_STATS_COPY.playerCount}
+                active={sortKey() === 'player_count'}
+                direction={sortDirection()}
+                align="center"
+                class="justify-center"
+                onClick={() => handleSortChange('player_count')}
+              />
             </th>
             <For each={columns()}>
               {(column) => (
-                <th class={TABLE_HEADER_CLASS} scope="col">
-                  {column.label}
+                <th
+                  class={`${TABLE_HEADER_CLASS} ${NARROW_COLUMN_PADDING_CLASS} ${CENTER_COLUMN_CLASS}`}
+                  scope="col"
+                  title={column.label}
+                  aria-sort={headerAriaSort(column.key)}
+                >
+                  <SortableHeaderButton
+                    label={getMetricShortLabel(column.key, column.label)}
+                    active={sortKey() === column.key}
+                    direction={sortDirection()}
+                    align="center"
+                    class="justify-center"
+                    onClick={() => handleSortChange(column.key)}
+                  />
                 </th>
               )}
             </For>
           </tr>
         </thead>
-        <tbody class="divide-y divide-border">
-          <For each={props.charts}>
-            {(chart) => (
-              <tr class="hover:bg-surface-muted">
-                <th class="min-w-56 px-3 py-2 text-left font-medium" scope="row">
-                  <A
-                    href={buildChartHref(chart, props.difficulty)}
-                    class="font-sans text-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                  >
-                    {chart.title}
-                  </A>
-                </th>
-                <td
-                  class={`whitespace-nowrap px-3 py-2 text-right font-oswald tabular-nums ${getChartStatsLevelClass(chart)}`}
-                >
-                  {formatChartStatsLevel(chart)}
-                </td>
-                <td class="whitespace-nowrap px-3 py-2 text-right font-jost tabular-nums text-text-muted">
-                  {formatInteger(chart.player_count)}
-                </td>
-                <For each={buildChartStatsCumulativeValues(chart, props.category)}>
-                  {(metric) => (
-                    <td
-                      class="min-w-20 whitespace-nowrap border-l border-border px-3 py-2 text-right font-jost font-semibold tabular-nums text-text"
+        <tbody
+          ref={virtualizedTable.setTableBodyRef}
+          class="relative block min-w-full"
+          style={{ height: `${virtualizedTable.getTotalSize()}px` }}
+        >
+          <For each={virtualRows()}>
+            {(virtualRow) => {
+              const chart = createMemo(() => sortedCharts()[virtualRow.index])
+
+              return (
+                <Show when={chart()} keyed>
+                  {(currentChart) => (
+                    <tr
+                      class="absolute left-0 top-0 grid min-w-full border-t border-border hover:bg-surface-muted"
                       style={{
-                        background: props.showHeatmap
-                          ? getHeatmapBackground(metric.count, chart.player_count)
-                          : undefined,
+                        'grid-template-columns': gridTemplateColumns(),
+                        transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
                       }}
-                      title={`${formatInteger(metric.count)}人 / ${formatChartStatsValue(
-                        metric.count,
-                        chart.player_count,
-                        'percent'
-                      )}`}
-                      aria-label={`${metric.label}: ${formatInteger(metric.count)}人 / ${formatInteger(
-                        chart.player_count
-                      )}人、${formatChartStatsValue(metric.count, chart.player_count, 'percent')}`}
+                      aria-rowindex={virtualRow.index + 2}
                     >
-                      {formatChartStatsValue(metric.count, chart.player_count, props.valueMode)}
-                    </td>
+                      <th
+                        class={`${TABLE_CELL_CLASS} min-w-0 p-0 text-left font-medium`}
+                        scope="row"
+                      >
+                        <A
+                          href={buildChartHref(currentChart, props.difficulty)}
+                          class="flex h-full w-full min-w-0 items-center px-3 font-sans text-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
+                        >
+                          <span class="truncate">{currentChart.title}</span>
+                        </A>
+                      </th>
+                      <td
+                        class={`${TABLE_CELL_CLASS} ${NARROW_COLUMN_PADDING_CLASS} ${CENTER_COLUMN_CLASS} whitespace-nowrap font-jost tabular-nums ${getChartStatsLevelClass(currentChart)}`}
+                      >
+                        {formatChartStatsLevel(currentChart)}
+                      </td>
+                      <td
+                        class={`${TABLE_CELL_CLASS} ${NARROW_COLUMN_PADDING_CLASS} ${CENTER_COLUMN_CLASS} whitespace-nowrap font-jost tabular-nums text-text-muted`}
+                      >
+                        {formatInteger(currentChart.player_count)}
+                      </td>
+                      <For each={buildChartStatsCumulativeValues(currentChart, props.category)}>
+                        {(metric) => (
+                          <td
+                            class={`${TABLE_CELL_CLASS} ${NARROW_COLUMN_PADDING_CLASS} ${CENTER_COLUMN_CLASS} min-w-0 whitespace-nowrap border-l border-border font-jost font-semibold tabular-nums text-text`}
+                            style={{
+                              background: props.showHeatmap
+                                ? getHeatmapBackground(metric.count, currentChart.player_count)
+                                : undefined,
+                            }}
+                            title={`${formatInteger(metric.count)}人 / ${formatChartStatsValue(
+                              metric.count,
+                              currentChart.player_count,
+                              'percent'
+                            )}`}
+                            aria-label={`${metric.label}: ${formatInteger(metric.count)}人 / ${formatInteger(
+                              currentChart.player_count
+                            )}人、${formatChartStatsValue(metric.count, currentChart.player_count, 'percent')}`}
+                          >
+                            <span class="truncate">
+                              {formatChartStatsValue(
+                                metric.count,
+                                currentChart.player_count,
+                                props.valueMode
+                              )}
+                            </span>
+                          </td>
+                        )}
+                      </For>
+                    </tr>
                   )}
-                </For>
-              </tr>
-            )}
+                </Show>
+              )
+            }}
           </For>
         </tbody>
       </table>

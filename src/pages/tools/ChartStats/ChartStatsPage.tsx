@@ -7,13 +7,12 @@ import {
   SegmentedToggleGroup,
   UnderlineTabs,
 } from '../../../components/common/AppTabs'
-import { PaginationNav } from '../../../components/common/PaginationNav'
 import { SearchTextField } from '../../../components/common/SearchTextField'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { ChartStatsDifficulty, ChartStatsResponse } from '../../../types/chartStats'
 import type { ChartStatsCategory } from '../../../utils/chartStats'
-import { filterChartStatsByTitle, paginateChartStats } from '../../../utils/chartStats'
-import { ChartStatsGraphList } from './ChartStatsGraphList'
+import { filterChartStatsByTitle } from '../../../utils/chartStats'
+import { ChartStatsGraphTable } from './ChartStatsGraphTable'
 import { ChartStatsTable } from './ChartStatsTable'
 import { formatChartStatsGeneratedAt } from './chartStatsDisplay'
 import {
@@ -21,7 +20,6 @@ import {
   CHART_STATS_COPY,
   CHART_STATS_DEFAULT_DIFFICULTY,
   CHART_STATS_DIFFICULTY_OPTIONS,
-  CHART_STATS_PAGE_SIZE,
   CHART_STATS_VALUE_OPTIONS,
   CHART_STATS_VIEW_OPTIONS,
   type ChartStatsValueMode,
@@ -29,11 +27,11 @@ import {
 } from './constants'
 
 /**
- * 取得済みの難易度別統計を検索・ページング可能なグラフまたは表として表示する。
+ * 取得済みの難易度別統計を検索可能なグラフまたは表として表示する。
  *
  * @param props.data - 静的JSONから取得した難易度別統計。
  * @param props.difficulty - 現在選択中の難易度。
- * @returns 表示設定、検索結果、ページネーションを含む統計本体。
+ * @returns 表示設定と検索結果を含む統計本体。
  */
 const ChartStatsContent = (props: {
   data: ChartStatsResponse
@@ -44,37 +42,15 @@ const ChartStatsContent = (props: {
   const [valueMode, setValueMode] = createSignal<ChartStatsValueMode>('count')
   const [showHeatmap, setShowHeatmap] = createSignal(false)
   const [searchQuery, setSearchQuery] = createSignal('')
-  const [page, setPage] = createSignal(1)
 
   const filteredCharts = createMemo(() => filterChartStatsByTitle(props.data.charts, searchQuery()))
-  const totalPages = createMemo(() =>
-    Math.max(1, Math.ceil(filteredCharts().length / CHART_STATS_PAGE_SIZE))
-  )
-  const visibleCharts = createMemo(() =>
-    paginateChartStats(filteredCharts(), page(), CHART_STATS_PAGE_SIZE)
-  )
-  const resultRange = createMemo(() => {
-    if (filteredCharts().length === 0) return null
-    const start = (page() - 1) * CHART_STATS_PAGE_SIZE + 1
-    return {
-      start,
-      end: Math.min(start + CHART_STATS_PAGE_SIZE - 1, filteredCharts().length),
-    }
-  })
-
-  /**
-   * 曲名検索を更新し、検索結果の先頭ページへ戻す。
-   *
-   * @param value - 新しい検索文字列。
-   * @returns なし。
-   */
-  const handleSearchChange = (value: string): void => {
-    setSearchQuery(value)
-    setPage(1)
-  }
+  const resetKey = createMemo(() => `${props.difficulty}|${category()}|${searchQuery()}`)
 
   return (
     <div class="space-y-4">
+      <p class="font-jost text-xs tabular-nums text-text-muted">
+        {CHART_STATS_COPY.generatedAt} {formatChartStatsGeneratedAt(props.data.generated_at)}
+      </p>
       <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <SearchTextField
           id="chart-stats-search"
@@ -84,7 +60,7 @@ const ChartStatsContent = (props: {
           value={searchQuery()}
           placeholder={CHART_STATS_COPY.searchPlaceholder}
           active={searchQuery().length > 0}
-          onChange={handleSearchChange}
+          onChange={setSearchQuery}
         />
         <div class="flex flex-wrap items-center gap-2">
           <SegmentedToggleGroup
@@ -92,12 +68,12 @@ const ChartStatsContent = (props: {
             value={viewMode()}
             onChange={setViewMode}
           />
-          <SegmentedToggleGroup
-            options={CHART_STATS_VALUE_OPTIONS}
-            value={valueMode()}
-            onChange={setValueMode}
-          />
           <Show when={viewMode() === 'table'}>
+            <SegmentedToggleGroup
+              options={CHART_STATS_VALUE_OPTIONS}
+              value={valueMode()}
+              onChange={setValueMode}
+            />
             <div class="flex h-10 items-center gap-2 rounded-lg border border-border bg-surface px-3">
               <span class="text-sm font-medium text-text-muted">{CHART_STATS_COPY.heatmap}</span>
               <AppSwitch
@@ -118,22 +94,12 @@ const ChartStatsContent = (props: {
         itemClass="flex-1 sm:flex-none"
       />
 
-      <div class="flex flex-wrap items-center justify-between gap-2 text-sm text-text-muted">
-        <p>
-          {filteredCharts().length.toLocaleString()} {CHART_STATS_COPY.resultSuffix}
-        </p>
-        <Show when={resultRange()}>
-          {(range) => (
-            <p class="font-jost tabular-nums">
-              {range().start.toLocaleString()}–{range().end.toLocaleString()} /{' '}
-              {filteredCharts().length.toLocaleString()}
-            </p>
-          )}
-        </Show>
-      </div>
+      <p class="text-sm text-text-muted">
+        {filteredCharts().length.toLocaleString()} {CHART_STATS_COPY.resultSuffix}
+      </p>
 
       <Show
-        when={visibleCharts().length > 0}
+        when={filteredCharts().length > 0}
         fallback={
           <p class="rounded-lg border border-border bg-surface px-4 py-6 text-sm text-text-muted">
             {CHART_STATS_COPY.empty}
@@ -144,33 +110,23 @@ const ChartStatsContent = (props: {
           when={viewMode() === 'graph'}
           fallback={
             <ChartStatsTable
-              charts={visibleCharts()}
+              charts={filteredCharts()}
               difficulty={props.difficulty}
               category={category()}
               valueMode={valueMode()}
               showHeatmap={showHeatmap()}
+              resetKey={resetKey()}
             />
           }
         >
-          <ChartStatsGraphList
-            charts={visibleCharts()}
+          <ChartStatsGraphTable
+            charts={filteredCharts()}
             difficulty={props.difficulty}
             category={category()}
-            valueMode={valueMode()}
+            resetKey={resetKey()}
           />
         </Show>
       </Show>
-
-      <PaginationNav
-        currentPage={page()}
-        totalPages={totalPages()}
-        onPageChange={setPage}
-        labels={{
-          nav: 'レコード統計のページ',
-          previous: '前の50譜面',
-          next: '次の50譜面',
-        }}
-      />
     </div>
   )
 }
@@ -203,20 +159,13 @@ const ChartStatsPage = () => {
       <header class="space-y-1">
         <h1 class="text-2xl font-semibold text-text">{CHART_STATS_COPY.title}</h1>
         <p class="text-sm text-text-muted">{CHART_STATS_COPY.description}</p>
-        <Show when={!stats.loading && !stats.error ? stats() : undefined}>
-          {(data) => (
-            <p class="font-jost text-xs tabular-nums text-text-muted">
-              {CHART_STATS_COPY.generatedAt} {formatChartStatsGeneratedAt(data().generated_at)}
-            </p>
-          )}
-        </Show>
       </header>
 
       <UnderlineTabs
         options={CHART_STATS_DIFFICULTY_OPTIONS}
         value={difficulty()}
         onChange={handleDifficultyChange}
-        listWrapperClass="overflow-x-auto"
+        listWrapperClass="sticky top-0 z-10 -mx-4 overflow-x-auto bg-page-pattern px-4 pt-2"
         listClass="min-w-max"
       >
         <AppTabContent value={difficulty()} class="pt-4">

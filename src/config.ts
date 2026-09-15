@@ -1,9 +1,11 @@
-import { getRequiredEnv } from './lib/env'
+import { getEnv, getRequiredEnv } from './lib/env'
 
 /** バックエンド API のベース URL */
 export const API_BASE_URL = getRequiredEnv('PUBLIC_BACKEND_URL')
 /** フロントエンドサイトのベース URL */
 export const FRONTEND_BASE_URL = getRequiredEnv('PUBLIC_FRONTEND_URL')
+/** レコード統計JSONの配信元。未設定時はフロントエンドURLから解決する */
+export const CHART_STATS_BASE_URL = getEnv().PUBLIC_CHART_STATS_BASE_URL
 /** ドキュメントサイトのベース URL */
 export const DOCUMENTATION_BASE_URL = getRequiredEnv('PUBLIC_DOCUMENTATION_URL')
 /** 外部連携 API のドキュメント URL */

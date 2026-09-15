@@ -6,6 +6,8 @@ import type {
   WorldsendChartStats,
 } from '../types/chartStats'
 import { normalizeForSearch } from './searchUtils'
+import { compareSongsByReading } from './songTitleSorting'
+import type { SortDirection } from './sortingQuery'
 
 /** レコード統計で切り替える集計カテゴリ */
 export type ChartStatsCategory = 'rank' | 'combo' | 'clear'
@@ -47,6 +49,9 @@ const CLEAR_DISTRIBUTION_DEFINITIONS = [
   ['failed', 'FAILED'],
 ] as const satisfies readonly (readonly [keyof ChartStatsClear, string])[]
 
+/** WORLD'S ENDの属性比較に使う日本語照合 */
+const CHART_STATS_ATTRIBUTE_COLLATOR = new Intl.Collator('ja')
+
 /**
  * WORLD'S END譜面統計か判定する。
  *
@@ -55,6 +60,43 @@ const CLEAR_DISTRIBUTION_DEFINITIONS = [
  */
 export const isWorldsendChartStats = (chart: ChartStats): chart is WorldsendChartStats =>
   'level_star' in chart
+
+/**
+ * 定数またはWORLD'S ENDの星数と属性を比較する。
+ * 星数と属性の欠損値はソート方向に関わらず末尾へ回す。
+ *
+ * @param left - 左側の譜面統計。
+ * @param right - 右側の譜面統計。
+ * @param direction - 昇順は1、降順は-1。
+ * @returns 左が先なら負、右が先なら正、同順なら0。
+ */
+const compareChartStatsLevel = (left: ChartStats, right: ChartStats, direction: 1 | -1): number => {
+  const leftWorldsend = isWorldsendChartStats(left)
+  const rightWorldsend = isWorldsendChartStats(right)
+  if (!leftWorldsend && !rightWorldsend) {
+    return (left.const - right.const) * direction
+  }
+  if (leftWorldsend && rightWorldsend) {
+    const leftStar = left.level_star
+    const rightStar = right.level_star
+    if (leftStar === null && rightStar === null) {
+      // 属性の比較へ進む
+    } else if (leftStar === null) {
+      return 1
+    } else if (rightStar === null) {
+      return -1
+    } else if (leftStar !== rightStar) {
+      return (leftStar - rightStar) * direction
+    }
+    const leftAttribute = left.attribute ?? ''
+    const rightAttribute = right.attribute ?? ''
+    if (leftAttribute === '' && rightAttribute === '') return 0
+    if (leftAttribute === '') return 1
+    if (rightAttribute === '') return -1
+    return CHART_STATS_ATTRIBUTE_COLLATOR.compare(leftAttribute, rightAttribute) * direction
+  }
+  return leftWorldsend ? 1 : -1
+}
 
 /**
  * 排他的なJSON件数を積み上げグラフ用の表示順へ変換する。
@@ -107,6 +149,7 @@ export const buildChartStatsCumulativeValues = (
       { key: 'sss', label: 'SSS', count: max + sssp + sss },
       { key: 'ssp', label: 'SS+', count: max + sssp + sss + ssp },
       { key: 'ss', label: 'SS', count: max + sssp + sss + ssp + ss },
+      { key: 'sp', label: 'S+', count: max + sssp + sss + ssp + ss + sp },
       { key: 's', label: 'S', count: max + sssp + sss + ssp + ss + sp + s },
     ]
   }
@@ -160,18 +203,65 @@ export const filterChartStatsByTitle = (
 }
 
 /**
- * 譜面統計を指定ページの範囲へ切り出す。
+ * 譜面統計を指定列で安定ソートする。
  *
- * @param charts - ページング対象の譜面統計。
- * @param page - 1始まりのページ番号。
- * @param pageSize - 1ページに表示する件数。
- * @returns 指定ページに含まれる譜面統計。
+ * ソートキーには `title`（曲名）、`level`（定数または星数と属性）、`player_count`（人数）、
+ * または集計カテゴリに対応する累積指標キー（`buildChartStatsCumulativeValues` のキー）を指定する。
+ * 同順の譜面は曲名の読み順、元の順序の順で確定する。
+ *
+ * @param charts - ソート対象の譜面統計。
+ * @param sortKey - ソート対象列。未指定なら元の順序を保った複製を返す。
+ * @param sortDirection - 昇順または降順。未指定なら元の順序を保った複製を返す。
+ * @param category - 累積指標キーを解決する集計カテゴリ。
+ * @returns ソート済みの新しい譜面統計配列。
  */
-export const paginateChartStats = (
+export const sortChartStats = (
   charts: readonly ChartStats[],
-  page: number,
-  pageSize: number
+  sortKey: string | null,
+  sortDirection: SortDirection | null,
+  category: ChartStatsCategory
 ): ChartStats[] => {
-  const start = (Math.max(1, page) - 1) * Math.max(1, pageSize)
-  return charts.slice(start, start + Math.max(1, pageSize))
+  if (!sortKey || !sortDirection) return [...charts]
+  const direction = sortDirection === 'asc' ? 1 : -1
+  const cumulativeCounts =
+    sortKey === 'title' || sortKey === 'level' || sortKey === 'player_count'
+      ? null
+      : new Map(
+          charts.map(
+            (chart) =>
+              [
+                chart,
+                new Map(
+                  buildChartStatsCumulativeValues(chart, category).map(
+                    (metric) => [metric.key, metric.count] as const
+                  )
+                ),
+              ] as const
+          )
+        )
+
+  return charts
+    .map((chart, index) => ({ chart, index }))
+    .sort((left, right) => {
+      let comparison = 0
+      if (sortKey === 'title') {
+        comparison = compareSongsByReading(left.chart, right.chart) * direction
+      } else if (sortKey === 'level') {
+        comparison = compareChartStatsLevel(left.chart, right.chart, direction)
+      } else if (sortKey === 'player_count') {
+        comparison = (left.chart.player_count - right.chart.player_count) * direction
+      } else {
+        comparison =
+          ((cumulativeCounts?.get(left.chart)?.get(sortKey) ?? 0) -
+            (cumulativeCounts?.get(right.chart)?.get(sortKey) ?? 0)) *
+          direction
+      }
+      if (comparison !== 0) return comparison
+      if (sortKey !== 'title') {
+        const titleComparison = compareSongsByReading(left.chart, right.chart)
+        if (titleComparison !== 0) return titleComparison
+      }
+      return left.index - right.index
+    })
+    .map(({ chart }) => chart)
 }

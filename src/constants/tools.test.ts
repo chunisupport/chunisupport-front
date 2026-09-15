@@ -69,4 +69,5 @@ test('レコード統計は公開ツールとして定義されていること',
   // When / Then
   assert.ok(chartStats)
   assert.equal(isPublicToolLink(chartStats), true)
+  assert.equal(chartStats.icon, 'distribution')
 })

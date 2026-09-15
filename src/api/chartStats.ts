@@ -1,4 +1,4 @@
-import { FRONTEND_BASE_URL } from '../config'
+import { CHART_STATS_BASE_URL, FRONTEND_BASE_URL } from '../config'
 import type { ChartStatsDifficulty, ChartStatsResponse } from '../types/chartStats'
 
 const CHART_STATS_FETCH_ERROR_MESSAGE = 'レコード統計の取得に失敗しました'
@@ -17,9 +17,15 @@ const CHART_STATS_FILE_NAME: Record<ChartStatsDifficulty, string> = {
  * フロントエンドURLから同一環境の静的データ配信元を生成する。
  *
  * @param frontendBaseUrl - 環境ごとのフロントエンドURL。
- * @returns ホスト名へstatic.を付けた静的データ配信元。
+ * @param configuredBaseUrl - 環境変数で明示された静的データ配信元。
+ * @returns 明示された配信元、またはホスト名へstatic.を付けた配信元。
  */
-export const resolveStaticDataBaseUrl = (frontendBaseUrl: string): string => {
+export const resolveStaticDataBaseUrl = (
+  frontendBaseUrl: string,
+  configuredBaseUrl?: string
+): string => {
+  if (configuredBaseUrl) return configuredBaseUrl.replace(/\/$/, '')
+
   const url = new URL(frontendBaseUrl)
   url.hostname = `static.${url.hostname}`
   url.pathname = ''
@@ -38,7 +44,7 @@ export const resolveStaticDataBaseUrl = (frontendBaseUrl: string): string => {
 export const fetchChartStats = async (
   difficulty: ChartStatsDifficulty
 ): Promise<ChartStatsResponse> => {
-  const baseUrl = resolveStaticDataBaseUrl(FRONTEND_BASE_URL)
+  const baseUrl = resolveStaticDataBaseUrl(FRONTEND_BASE_URL, CHART_STATS_BASE_URL)
   const response = await fetch(
     `${baseUrl}/v1/chart-stats/${CHART_STATS_FILE_NAME[difficulty]}.json`,
     { headers: { Accept: 'application/json' } }

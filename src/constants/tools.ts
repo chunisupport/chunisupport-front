@@ -18,6 +18,7 @@ import {
 export type ToolLinkIcon =
   | 'calculator'
   | 'chart'
+  | 'distribution'
   | 'target'
   | 'random'
   | 'ranking'
@@ -80,7 +81,7 @@ export const TOOL_LINKS: ToolLink[] = [
   {
     title: 'レコード統計',
     href: CHART_STATS_PATH,
-    icon: 'chart',
+    icon: 'distribution',
     description: '全プレイヤーの記録から、譜面ごとのランク・コンボ・クリア状況を確認できます。',
   },
   {

@@ -23,6 +23,20 @@ test('フロントエンドURLから同一環境の静的データURLを生成�
   assert.equal(development, 'https://static.chunisup-dev.f5.si')
 })
 
+test('静的データ配信元が設定されている場合はフロントエンドURLより優先すること', async () => {
+  // Given
+  const { resolveStaticDataBaseUrl } = await loadChartStatsApi()
+
+  // When
+  const result = resolveStaticDataBaseUrl(
+    'http://localhost:3000',
+    'https://static.chunisup-dev.f5.si/'
+  )
+
+  // Then
+  assert.equal(result, 'https://static.chunisup-dev.f5.si')
+})
+
 test("WORLD'S ENDはWORLDS_END.jsonから取得すること", async () => {
   // Given
   const originalFetch = globalThis.fetch

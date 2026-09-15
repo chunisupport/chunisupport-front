@@ -1,6 +1,7 @@
 import { A, Route, Router } from '@solidjs/router'
 import {
   Calculator,
+  ChartColumnStacked,
   ChartNoAxesCombined,
   Dices,
   Gauge,
@@ -326,6 +327,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Target class={iconClass} aria-hidden="true" />
     case 'chart':
       return <ChartNoAxesCombined class={iconClass} aria-hidden="true" />
+    case 'distribution':
+      return <ChartColumnStacked class={iconClass} aria-hidden="true" />
 
     case 'random':
       return <Dices class={iconClass} aria-hidden="true" />

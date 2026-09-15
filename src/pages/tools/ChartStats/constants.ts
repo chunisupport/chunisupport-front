@@ -26,9 +26,6 @@ export const CHART_STATS_DIFFICULTY_OPTIONS: readonly ChartStatsDifficultyOption
 /** 初期表示する難易度 */
 export const CHART_STATS_DEFAULT_DIFFICULTY: ChartStatsDifficulty = 'MASTER'
 
-/** 1ページに表示する譜面数 */
-export const CHART_STATS_PAGE_SIZE = 50
-
 /** ヒートマップで最も濃いセルへ混ぜるアクセント色の割合 */
 export const CHART_STATS_HEATMAP_MAX_MIX_PERCENT = 55
 
@@ -68,9 +65,11 @@ export const CHART_STATS_COPY = {
   searchLabel: '曲名検索',
   searchPlaceholder: '曲名で検索',
   resultSuffix: '譜面',
-  playerCount: 'プレイ人数',
+  level: '定数',
+  worldsendLevel: 'Lv./属性',
+  playerCount: '人数',
   heatmap: 'ヒートマップ',
   empty: '条件に一致する譜面がありません。',
-  graphCaption: '帯の幅は各達成状況の構成比を表します。',
+  graphTableCaption: '譜面ごとの達成状況を1行1グラフで示した表',
   tableCaption: '譜面ごとの累積達成人数または達成率',
 } as const
