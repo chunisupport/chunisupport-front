@@ -1,4 +1,4 @@
-import { TOOLS_PATH } from './routes'
+import { SONGS_PATH, TOOLS_PATH, WORLDSEND_SONGS_PATH } from './routes'
 import { joinDocumentTitleParts, SITE_NAME } from './site'
 import { isPublicToolLink, TOOL_LINKS } from './tools'
 
@@ -29,9 +29,25 @@ export const TOOLS_PAGE_METADATA: StaticPageMetadata = {
   description: 'CHUNITHM のプレイや目標設定に役立つ計算・分析ツールを利用できます。',
 }
 
-/** トップページと公開中の全ツールページに対応する固定メタ情報。 */
+/** 通常楽曲一覧ページの固定メタ情報。 */
+export const SONGS_PAGE_METADATA: StaticPageMetadata = {
+  path: SONGS_PATH,
+  title: '楽曲一覧',
+  description: 'CHUNITHM の楽曲と通常譜面の情報を検索、確認できます。',
+}
+
+/** WORLD'S END楽曲一覧ページの固定メタ情報。 */
+export const WORLDSEND_SONGS_PAGE_METADATA: StaticPageMetadata = {
+  path: WORLDSEND_SONGS_PATH,
+  title: "WORLD'S END 楽曲一覧",
+  description: "CHUNITHM の WORLD'S END 楽曲と譜面情報を検索、確認できます。",
+}
+
+/** トップページと楽曲一覧と公開中の全ツールページに対応する固定メタ情報。 */
 export const STATIC_PAGE_METADATA: readonly StaticPageMetadata[] = [
   ROOT_PAGE_METADATA,
+  SONGS_PAGE_METADATA,
+  WORLDSEND_SONGS_PAGE_METADATA,
   TOOLS_PAGE_METADATA,
   ...TOOL_LINKS.filter(isPublicToolLink).map(({ href, title, description }) => ({
     path: href,

@@ -46,6 +46,7 @@ import {
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
+  CHART_STATS_PATH,
   DASHBOARD_PATH,
   EDITOR_COURSES_PATH,
   EDITOR_PATH,
@@ -58,8 +59,10 @@ import {
   RATING_THEORETICAL_CHECKER_PATH,
   REGISTER_SCORE_PATH,
   REGISTER_SCORE_TEMP_PATH,
+  SONGS_PATH,
   TOOLS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
+  WORLDSEND_SONGS_PATH,
 } from './constants/routes'
 import {
   ADMIN_ONLY_TOOL_LOCK_LABEL,
@@ -107,6 +110,7 @@ const RegisterScoreTempPage = lazy(
 )
 
 const ChartConstantCalculatorPage = lazy(() => import('./pages/tools/ChartConstantCalculatorPage'))
+const ChartStatsPage = lazy(() => import('./pages/tools/ChartStats'))
 const BorderCalculatorPage = lazy(() => import('./pages/tools/BorderCalculatorPage'))
 const WeakChartInspectorPage = lazy(() => import('./pages/tools/WeakChartInspectorPage'))
 const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelectorPage'))
@@ -619,24 +623,27 @@ const App = () => {
       <Route path="/goals" component={withNavBar(withAuth(withRouteLoadBoundary(GoalsList)))} />
 
       {/* 楽曲 */}
-      <Route path="/songs" component={withNavBar(withRouteLoadBoundary(SongsList))} />
+      <Route path={SONGS_PATH} component={withNavBar(withRouteLoadBoundary(SongsList))} />
       <Route
-        path="/songs/worldsend"
+        path={WORLDSEND_SONGS_PATH}
         component={withNavBar(withRouteLoadBoundary(WorldsendSongsList))}
       />
       <Route
-        path="/songs/worldsend/:displayid/chart-detail"
+        path={`${WORLDSEND_SONGS_PATH}/:displayid/chart-detail`}
         component={withNavBar(withAuth(withRouteLoadBoundary(WorldsendScoreHistory)))}
       />
       <Route
-        path="/songs/worldsend/:displayid"
+        path={`${WORLDSEND_SONGS_PATH}/:displayid`}
         component={withNavBar(withRouteLoadBoundary(WorldsendSongDetail))}
       />
       <Route
-        path="/songs/:displayid/chart-detail"
+        path={`${SONGS_PATH}/:displayid/chart-detail`}
         component={withNavBar(withAuth(withRouteLoadBoundary(SongScoreHistory)))}
       />
-      <Route path="/songs/:displayid" component={withNavBar(withRouteLoadBoundary(SongDetail))} />
+      <Route
+        path={`${SONGS_PATH}/:displayid`}
+        component={withNavBar(withRouteLoadBoundary(SongDetail))}
+      />
 
       {/* 設定 */}
       <Route
@@ -662,6 +669,10 @@ const App = () => {
       <Route
         path={CHART_CONSTANT_CALCULATOR_PATH}
         component={withNavBar(withRouteLoadBoundary(ChartConstantCalculatorPage))}
+      />
+      <Route
+        path={CHART_STATS_PATH}
+        component={withNavBar(withRouteLoadBoundary(ChartStatsPage))}
       />
       <Route
         path={BORDER_CALCULATOR_PATH}

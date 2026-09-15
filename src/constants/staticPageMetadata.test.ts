@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { SONGS_PATH, WORLDSEND_SONGS_PATH } from './routes'
 import { STATIC_PAGE_METADATA } from './staticPageMetadata'
 import { isPublicToolLink, TOOL_LINKS } from './tools'
 
@@ -26,4 +27,13 @@ test('公開中の全ツールだけを固定ページ生成対象に含める�
   for (const tool of TOOL_LINKS) {
     assert.equal(generatedPaths.has(tool.href), isPublicToolLink(tool))
   }
+})
+
+test('楽曲一覧の固定ページを生成対象に含めること', () => {
+  // Given
+  const generatedPaths = new Set(STATIC_PAGE_METADATA.map((page) => page.path))
+
+  // When & Then
+  assert.equal(generatedPaths.has(SONGS_PATH), true)
+  assert.equal(generatedPaths.has(WORLDSEND_SONGS_PATH), true)
 })

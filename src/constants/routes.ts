@@ -9,8 +9,14 @@ export const REGISTER_SCORE_TEMP_PATH = '/register-score-temp'
 /** 保存済みの最新スコア更新結果画面のパス */
 export const LATEST_SCORE_UPDATE_PATH = '/latest-score-update'
 export const TOOLS_PATH = '/tools'
+/** 全譜面レコード統計画面のパス */
+export const CHART_STATS_PATH = `${TOOLS_PATH}/chart-stats`
 /** フレンド画面のパス */
 export const FRIENDS_PATH = '/friends'
+/** 通常楽曲一覧画面のパス */
+export const SONGS_PATH = '/songs'
+/** WORLD'S END楽曲一覧画面のパス */
+export const WORLDSEND_SONGS_PATH = `${SONGS_PATH}/worldsend`
 export const CHART_CONSTANT_CALCULATOR_PATH = `${TOOLS_PATH}/chart-constant-calculator`
 export const BORDER_CALCULATOR_PATH = `${TOOLS_PATH}/border-calculator`
 export const WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector`
@@ -61,7 +67,7 @@ export const CHART_DETAIL_FROM_SONG_DETAIL_STATE = {
  * @returns 通常楽曲詳細画面パス。
  */
 export const buildSongDetailPath = (displayId: string, difficulty?: string): string => {
-  const path = `/songs/${encodeURIComponent(displayId)}`
+  const path = `${SONGS_PATH}/${encodeURIComponent(displayId)}`
   if (!difficulty) return path
 
   return `${path}?${new URLSearchParams({ diff: difficulty.toLowerCase() }).toString()}`
@@ -74,7 +80,7 @@ export const buildSongDetailPath = (displayId: string, difficulty?: string): str
  * @returns WORLD'S END 楽曲詳細画面パス。
  */
 export const buildWorldsendSongDetailPath = (displayId: string): string =>
-  `/songs/worldsend/${encodeURIComponent(displayId)}`
+  `${WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}`
 
 /**
  * 楽曲詳細から譜面詳細へ遷移した state か判定する。
@@ -98,7 +104,7 @@ export const isChartDetailFromSongDetailState = (
  * @returns 難易度クエリを含む譜面詳細画面パス。
  */
 export const buildSongChartDetailPath = (displayId: string, difficulty: string): string =>
-  `/songs/${encodeURIComponent(displayId)}/chart-detail?${new URLSearchParams({
+  `${SONGS_PATH}/${encodeURIComponent(displayId)}/chart-detail?${new URLSearchParams({
     diff: difficulty.toLowerCase(),
   }).toString()}`
 
@@ -109,7 +115,7 @@ export const buildSongChartDetailPath = (displayId: string, difficulty: string):
  * @returns WORLD'S END 譜面詳細画面パス。
  */
 export const buildWorldsendChartDetailPath = (displayId: string): string =>
-  `/songs/worldsend/${encodeURIComponent(displayId)}/chart-detail`
+  `${WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}/chart-detail`
 
 /**
  * ADMIN向け通常譜面ランキング画面のパスを生成する。
