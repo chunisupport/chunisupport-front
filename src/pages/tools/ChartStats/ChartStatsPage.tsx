@@ -1,6 +1,7 @@
 import { ChartColumnStacked } from 'lucide-solid'
-import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
+import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
 import { fetchChartStats } from '../../../api/chartStats'
+import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import {
   AppTabContent,
@@ -10,9 +11,15 @@ import {
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { SearchTextField } from '../../../components/common/SearchTextField'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { useSongsData } from '../../../stores/songsData'
 import type { ChartStatsDifficulty, ChartStatsResponse } from '../../../types/chartStats'
-import type { ChartStatsCategory } from '../../../utils/chartStats'
-import { filterChartStatsByTitle } from '../../../utils/chartStats'
+import type { ChartStatsAttributeFilter, ChartStatsCategory } from '../../../utils/chartStats'
+import {
+  buildChartStatsAttributesBySongId,
+  createDefaultChartStatsAttributeFilter,
+  filterChartStats,
+} from '../../../utils/chartStats'
+import { ChartStatsFilterPanel } from './ChartStatsFilterPanel'
 import { ChartStatsGraphTable } from './ChartStatsGraphTable'
 import { ChartStatsTable } from './ChartStatsTable'
 import { formatChartStatsGeneratedAt } from './chartStatsDisplay'
@@ -43,9 +50,46 @@ const ChartStatsContent = (props: {
   const [valueMode, setValueMode] = createSignal<ChartStatsValueMode>('count')
   const [cumulative, setCumulative] = createSignal(false)
   const [searchQuery, setSearchQuery] = createSignal('')
+  const [attributeFilter, setAttributeFilter] = createSignal<ChartStatsAttributeFilter>(
+    createDefaultChartStatsAttributeFilter()
+  )
+  const { songsResponse, worldsendSongsResponse, ensureSongsLoaded, ensureWorldsendSongsLoaded } =
+    useSongsData()
+  const [versions] = createResource(fetchVersions)
 
-  const filteredCharts = createMemo(() => filterChartStatsByTitle(props.data.charts, searchQuery()))
-  const resetKey = createMemo(() => `${props.difficulty}|${category()}|${searchQuery()}`)
+  onMount(() => {
+    ensureSongsLoaded()
+    ensureWorldsendSongsLoaded()
+  })
+
+  const targetSongs = createMemo(() => {
+    const response = props.difficulty === "WORLD'S END" ? worldsendSongsResponse() : songsResponse()
+    return response?.songs
+  })
+
+  const genreOptions = createMemo(() => {
+    const songs = targetSongs()
+    if (!songs) return []
+    return [...new Set(songs.map((song) => song.genre).filter((genre) => genre !== null))].sort(
+      (left, right) => left.localeCompare(right, 'ja')
+    )
+  })
+
+  const versionOptions = createMemo(() => versions()?.versions ?? [])
+
+  const attributesBySongId = createMemo(() => {
+    const songs = targetSongs()
+    const versionList = versions()?.versions
+    if (!songs || !versionList) return undefined
+    return buildChartStatsAttributesBySongId(songs, versionList)
+  })
+
+  const filteredCharts = createMemo(() =>
+    filterChartStats(props.data.charts, searchQuery(), attributesBySongId(), attributeFilter())
+  )
+  const resetKey = createMemo(
+    () => `${props.difficulty}|${category()}|${searchQuery()}|${JSON.stringify(attributeFilter())}`
+  )
 
   return (
     <div class="space-y-4">
@@ -53,16 +97,27 @@ const ChartStatsContent = (props: {
         {CHART_STATS_COPY.generatedAt} {formatChartStatsGeneratedAt(props.data.generated_at)}
       </p>
       <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <SearchTextField
-          id="chart-stats-search"
-          class="w-full lg:max-w-md"
-          label={CHART_STATS_COPY.searchLabel}
-          ariaLabel={CHART_STATS_COPY.searchLabel}
-          value={searchQuery()}
-          placeholder={CHART_STATS_COPY.searchPlaceholder}
-          active={searchQuery().length > 0}
-          onChange={setSearchQuery}
-        />
+        <div class="flex w-full min-w-0 flex-1 items-end lg:max-w-md">
+          <SearchTextField
+            id="chart-stats-search"
+            class="min-w-0 flex-1"
+            frameClass="rounded-l border-r-0"
+            label={CHART_STATS_COPY.searchLabel}
+            ariaLabel={CHART_STATS_COPY.searchLabel}
+            value={searchQuery()}
+            placeholder={CHART_STATS_COPY.searchPlaceholder}
+            active={searchQuery().length > 0}
+            onChange={setSearchQuery}
+          />
+          <ChartStatsFilterPanel
+            idPrefix="chart-stats"
+            filters={attributeFilter()}
+            onChange={setAttributeFilter}
+            genres={genreOptions()}
+            versions={versionOptions()}
+            disabled={attributesBySongId() === undefined}
+          />
+        </div>
         <div class="flex flex-wrap items-center gap-2">
           <SegmentedToggleGroup
             options={CHART_STATS_VIEW_OPTIONS}
@@ -74,12 +129,10 @@ const ChartStatsContent = (props: {
             value={valueMode()}
             onChange={setValueMode}
           />
-          <div
-            class="flex h-10 items-center rounded-lg border border-border bg-surface px-3"
-            classList={{ invisible: viewMode() !== 'table' }}
-          >
+          <div class="flex h-10 items-center rounded-lg border border-border bg-surface px-3">
             <CheckboxField
               checked={cumulative()}
+              disabled={viewMode() !== 'table'}
               onChange={setCumulative}
               label={CHART_STATS_COPY.cumulative}
             />

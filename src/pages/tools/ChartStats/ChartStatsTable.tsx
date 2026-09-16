@@ -133,7 +133,14 @@ export const ChartStatsTable = (props: ChartStatsTableProps): JSX.Element => {
   const [sortKey, setSortKey] = createSignal<string | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
   const sortedCharts = createMemo(() =>
-    sortChartStats(props.charts, sortKey(), sortDirection(), props.category, props.cumulative)
+    sortChartStats(
+      props.charts,
+      sortKey(),
+      sortDirection(),
+      props.category,
+      props.cumulative,
+      props.valueMode
+    )
   )
   const gridTemplateColumns = createMemo(() => buildGridTemplateColumns(columns().length))
   const virtualizedTable = createWindowVirtualTable<

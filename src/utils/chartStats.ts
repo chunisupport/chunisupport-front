@@ -8,6 +8,7 @@ import type {
 import { normalizeForSearch } from './searchUtils'
 import { compareSongsByReading } from './songTitleSorting'
 import type { SortDirection } from './sortingQuery'
+import { resolveVersionNameByReleaseDate } from './versionConverter'
 
 /** レコード統計で切り替える集計カテゴリ */
 export type ChartStatsCategory = 'rank' | 'combo' | 'clear'
@@ -243,6 +244,105 @@ export const filterChartStatsByTitle = (
   return charts.filter((chart) => normalizeForSearch(chart.title).includes(normalizedQuery))
 }
 
+/** レコード統計のバージョン・ジャンル絞り込み条件。nullは未指定（全件対象）を表す */
+export type ChartStatsAttributeFilter = {
+  genres: string[] | null
+  versions: string[] | null
+}
+
+/** 譜面統計の絞り込みに使う楽曲属性。バージョンはフルネームで保持する */
+export type ChartStatsSongAttributes = {
+  genre: string | null
+  version: string
+}
+
+/** 楽曲属性マップ生成に必要な最小の楽曲情報 */
+export type ChartStatsSongMeta = {
+  id: string
+  genre: string | null
+  release: string | null
+}
+
+/** バージョン解決に必要な最小のバージョン情報 */
+export type ChartStatsVersionMeta = {
+  name: string
+  released_at: string
+}
+
+/**
+ * 未指定の属性フィルターを生成する。
+ *
+ * @returns 独立した初期フィルター。
+ */
+export const createDefaultChartStatsAttributeFilter = (): ChartStatsAttributeFilter => ({
+  genres: null,
+  versions: null,
+})
+
+/**
+ * バージョンまたはジャンルの絞り込みが指定されているか判定する。
+ *
+ * @param filter - 判定する属性フィルター。
+ * @returns いずれかが指定されている場合はtrue。
+ */
+export const isChartStatsAttributeFilterActive = (filter: ChartStatsAttributeFilter): boolean =>
+  filter.genres !== null || filter.versions !== null
+
+/**
+ * 楽曲マスタからsong_idをキーとする属性マップを生成する。
+ *
+ * @param songs - 通常楽曲またはWORLD'S END楽曲の一覧。
+ * @param versions - リリース日からバージョン名を解決するためのバージョン一覧。
+ * @returns song_idごとのジャンルとバージョン（フルネーム）のマップ。
+ */
+export const buildChartStatsAttributesBySongId = (
+  songs: readonly ChartStatsSongMeta[],
+  versions: readonly ChartStatsVersionMeta[]
+): Map<string, ChartStatsSongAttributes> =>
+  new Map(
+    songs.map((song) => [
+      song.id,
+      {
+        genre: song.genre,
+        version: resolveVersionNameByReleaseDate(song.release, versions),
+      },
+    ])
+  )
+
+/**
+ * 曲名検索に加えてバージョン・ジャンルで譜面統計を絞り込む。
+ * 属性マップが未取得の場合は曲名検索のみを適用し、マップにない譜面は不明扱いとする。
+ *
+ * @param charts - 絞り込み対象の譜面統計。
+ * @param query - 曲名検索文字列。
+ * @param attributesBySongId - song_idごとの楽曲属性。未指定時は属性絞り込みを行わない。
+ * @param filter - バージョン・ジャンルの絞り込み条件。未指定時は属性絞り込みを行わない。
+ * @returns 元の順序を保った絞り込み結果。
+ */
+export const filterChartStats = (
+  charts: readonly ChartStats[],
+  query: string,
+  attributesBySongId?: ReadonlyMap<string, ChartStatsSongAttributes>,
+  filter?: ChartStatsAttributeFilter
+): ChartStats[] => {
+  const titleFiltered = filterChartStatsByTitle(charts, query)
+  if (!attributesBySongId || !filter) return titleFiltered
+  if (filter.genres === null && filter.versions === null) return titleFiltered
+  return titleFiltered.filter((chart) => {
+    const attributes = attributesBySongId.get(chart.song_id) ?? { genre: null, version: '不明' }
+    if (
+      filter.genres !== null &&
+      (attributes.genre === null || !filter.genres.includes(attributes.genre))
+    ) {
+      return false
+    }
+    if (filter.versions !== null && !filter.versions.includes(attributes.version)) {
+      return false
+    }
+    return true
+  })
+}
+
 /**
  * 譜面統計を指定列で安定ソートする。
  *
@@ -255,6 +355,7 @@ export const filterChartStatsByTitle = (
  * @param sortDirection - 昇順または降順。未指定なら元の順序を保った複製を返す。
  * @param category - 指標キーを解決する集計カテゴリ。
  * @param cumulative - 指標値を累積人数で評価する場合はtrue、排他人数で評価する場合はfalse。
+ * @param valueMode - 人数または丸める前の割合で評価する。
  * @returns ソート済みの新しい譜面統計配列。
  */
 export const sortChartStats = (
@@ -262,11 +363,12 @@ export const sortChartStats = (
   sortKey: string | null,
   sortDirection: SortDirection | null,
   category: ChartStatsCategory,
-  cumulative = true
+  cumulative = true,
+  valueMode: 'count' | 'percent' = 'count'
 ): ChartStats[] => {
   if (!sortKey || !sortDirection) return [...charts]
   const direction = sortDirection === 'asc' ? 1 : -1
-  const metricCounts =
+  const metricValues =
     sortKey === 'title' || sortKey === 'level' || sortKey === 'player_count'
       ? null
       : new Map(
@@ -276,7 +378,13 @@ export const sortChartStats = (
                 chart,
                 new Map(
                   buildChartStatsTableValues(chart, category, cumulative).map(
-                    (metric) => [metric.key, metric.count] as const
+                    (metric) =>
+                      [
+                        metric.key,
+                        valueMode === 'percent'
+                          ? calculateChartStatsPercent(metric.count, chart.player_count)
+                          : metric.count,
+                      ] as const
                   )
                 ),
               ] as const
@@ -294,10 +402,11 @@ export const sortChartStats = (
       } else if (sortKey === 'player_count') {
         comparison = (left.chart.player_count - right.chart.player_count) * direction
       } else {
-        comparison =
-          ((metricCounts?.get(left.chart)?.get(sortKey) ?? 0) -
-            (metricCounts?.get(right.chart)?.get(sortKey) ?? 0)) *
-          direction
+        const leftValue = metricValues?.get(left.chart)?.get(sortKey) ?? null
+        const rightValue = metricValues?.get(right.chart)?.get(sortKey) ?? null
+        if (leftValue === null && rightValue !== null) return 1
+        if (rightValue === null && leftValue !== null) return -1
+        comparison = ((leftValue ?? 0) - (rightValue ?? 0)) * direction
       }
       if (comparison !== 0) return comparison
       if (sortKey !== 'title') {

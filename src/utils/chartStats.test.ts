@@ -2,13 +2,17 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { StandardChartStats, WorldsendChartStats } from '../types/chartStats'
 import {
+  buildChartStatsAttributesBySongId,
   buildChartStatsCumulativeValues,
   buildChartStatsDistribution,
   buildChartStatsTableValues,
   calculateChartStatsBarWidthPercent,
   calculateChartStatsPercent,
+  createDefaultChartStatsAttributeFilter,
+  filterChartStats,
   filterChartStatsByTitle,
   getMaxChartStatsPlayerCount,
+  isChartStatsAttributeFilterActive,
   sortChartStats,
 } from './chartStats'
 
@@ -149,6 +153,99 @@ test('指標列のソートは累積と排他で評価値を使い分けるこ�
   assert.deepEqual(
     exclusive.map(({ title }) => title),
     ['chart-mid', 'chart-low']
+  )
+})
+
+test('グラフ凡例のソートはRANK・COMBO・HARDの排他的な人数を使うこと', () => {
+  // Given
+  const charts = [
+    createSortableChart({
+      title: 'A song',
+      rank: { ...createChart().rank, ssp: 8 },
+      combo: { ...createChart().combo, aj: 3 },
+      clear: { ...createChart().clear, hard: 5 },
+    }),
+    createSortableChart({
+      title: 'B song',
+      rank: { ...createChart().rank, ssp: 2 },
+      combo: { ...createChart().combo, aj: 9 },
+      clear: { ...createChart().clear, hard: 1 },
+    }),
+  ]
+
+  // When / Then
+  assert.deepEqual(
+    sortChartStats(charts, 'ssp', 'asc', 'rank', false).map(({ title }) => title),
+    ['B song', 'A song']
+  )
+  assert.deepEqual(
+    sortChartStats(charts, 'aj', 'desc', 'combo', false).map(({ title }) => title),
+    ['B song', 'A song']
+  )
+  assert.deepEqual(
+    sortChartStats(charts, 'hard', 'asc', 'clear', false).map(({ title }) => title),
+    ['B song', 'A song']
+  )
+})
+
+test('割合表示のソートは表の累積値とグラフの排他値をそれぞれ人数で割ること', () => {
+  // Given
+  const charts = [
+    createSortableChart({
+      title: 'A song',
+      player_count: 10,
+      rank: { ...createChart().rank, max: 0, sssp: 1, sss: 1 },
+    }),
+    createSortableChart({
+      title: 'B song',
+      player_count: 100,
+      rank: { ...createChart().rank, max: 2, sssp: 0, sss: 1 },
+    }),
+  ]
+
+  // When / Then
+  assert.deepEqual(
+    sortChartStats(charts, 'sss', 'asc', 'rank', true, 'count').map(({ title }) => title),
+    ['A song', 'B song']
+  )
+  assert.deepEqual(
+    sortChartStats(charts, 'sss', 'asc', 'rank', true, 'percent').map(({ title }) => title),
+    ['B song', 'A song']
+  )
+  assert.deepEqual(
+    sortChartStats(charts, 'sss', 'asc', 'rank', false, 'percent').map(({ title }) => title),
+    ['B song', 'A song']
+  )
+})
+
+test('割合ソートは表示桁数より細かく比較し、分母0の譜面を末尾に置くこと', () => {
+  // Given: AとBはいずれも画面上では0.33%と表示される
+  const charts = [
+    createSortableChart({
+      title: 'A song',
+      player_count: 300,
+      rank: { ...createChart().rank, max: 1 },
+    }),
+    createSortableChart({
+      title: 'B song',
+      player_count: 301,
+      rank: { ...createChart().rank, max: 1 },
+    }),
+    createSortableChart({
+      title: 'C song',
+      player_count: 0,
+      rank: { ...createChart().rank, max: 0 },
+    }),
+  ]
+
+  // When / Then
+  assert.deepEqual(
+    sortChartStats(charts, 'max', 'asc', 'rank', false, 'percent').map(({ title }) => title),
+    ['B song', 'A song', 'C song']
+  )
+  assert.deepEqual(
+    sortChartStats(charts, 'max', 'desc', 'rank', false, 'percent').map(({ title }) => title),
+    ['A song', 'B song', 'C song']
   )
 })
 
@@ -388,4 +485,110 @@ test('同順時は曲名順で確定すること', () => {
     sorted.map(({ title }) => title),
     ['A song', 'B song']
   )
+})
+
+test('初期フィルターは未指定で非アクティブなこと', () => {
+  // Given / When
+  const filter = createDefaultChartStatsAttributeFilter()
+
+  // Then
+  assert.deepEqual(filter, { genres: null, versions: null })
+  assert.equal(isChartStatsAttributeFilterActive(filter), false)
+  assert.equal(
+    isChartStatsAttributeFilterActive({ genres: ['POPS & ANIME'], versions: null }),
+    true
+  )
+  assert.equal(
+    isChartStatsAttributeFilterActive({ genres: null, versions: ['CHUNITHM VERSE'] }),
+    true
+  )
+})
+
+test('楽曲マスタからsong_idごとの属性マップを生成すること', () => {
+  // Given
+  const songs = [
+    { id: 'song-1', genre: 'POPS & ANIME', release: '2024-12-12' },
+    { id: 'song-2', genre: null, release: null },
+  ]
+  const versions = [{ name: 'CHUNITHM VERSE', released_at: '2024-12-12' }]
+
+  // When
+  const attributes = buildChartStatsAttributesBySongId(songs, versions)
+
+  // Then
+  assert.deepEqual(attributes.get('song-1'), {
+    genre: 'POPS & ANIME',
+    version: 'CHUNITHM VERSE',
+  })
+  assert.deepEqual(attributes.get('song-2'), { genre: null, version: '不明' })
+})
+
+test('曲名検索とバージョン・ジャンルで絞り込むこと', () => {
+  // Given
+  const charts = [
+    createSortableChart({ title: 'song-1', song_id: 'song-1' }),
+    createSortableChart({ title: 'song-2', song_id: 'song-2' }),
+    createSortableChart({ title: 'song-3', song_id: 'song-3' }),
+  ]
+  const attributes = new Map([
+    ['song-1', { genre: 'POPS & ANIME', version: 'CHUNITHM VERSE' }],
+    ['song-2', { genre: 'niconico', version: 'CHUNITHM VERSE' }],
+    ['song-3', { genre: 'POPS & ANIME', version: 'CHUNITHM LUMINOUS' }],
+  ])
+
+  // When
+  const filtered = filterChartStats(charts, '', attributes, {
+    genres: ['POPS & ANIME'],
+    versions: ['CHUNITHM VERSE'],
+  })
+
+  // Then
+  assert.deepEqual(
+    filtered.map(({ song_id }) => song_id),
+    ['song-1']
+  )
+})
+
+test('属性マップ未取得時は曲名検索のみを適用すること', () => {
+  // Given
+  const charts = [createChart('ＡＢＣ song'), createChart('別の曲')]
+
+  // When
+  const filtered = filterChartStats(charts, 'abc', undefined, {
+    genres: ['POPS & ANIME'],
+    versions: null,
+  })
+
+  // Then
+  assert.deepEqual(
+    filtered.map(({ title }) => title),
+    ['ＡＢＣ song']
+  )
+})
+
+test('マップにない譜面は不明扱いで判定すること', () => {
+  // Given
+  const charts = [createSortableChart({ title: 'unknown', song_id: 'unknown' })]
+  const attributes = new Map<string, { genre: string | null; version: string }>()
+
+  // When
+  const withoutFilter = filterChartStats(
+    charts,
+    '',
+    attributes,
+    createDefaultChartStatsAttributeFilter()
+  )
+  const withUnknownVersion = filterChartStats(charts, '', attributes, {
+    genres: null,
+    versions: ['不明'],
+  })
+  const withGenre = filterChartStats(charts, '', attributes, {
+    genres: ['POPS & ANIME'],
+    versions: null,
+  })
+
+  // Then
+  assert.equal(withoutFilter.length, 1)
+  assert.equal(withUnknownVersion.length, 1)
+  assert.equal(withGenre.length, 0)
 })

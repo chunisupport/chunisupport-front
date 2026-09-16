@@ -1,3 +1,4 @@
+import { Button } from '@kobalte/core/button'
 import { A } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
@@ -12,6 +13,7 @@ import {
 import {
   getSortAriaValue,
   SortableHeaderButton,
+  SortIndicator,
 } from '../../../components/common/SortableTableHeader'
 import { buildSongDetailPath, buildWorldsendSongDetailPath } from '../../../constants/routes'
 import type { ChartStats, ChartStatsDifficulty } from '../../../types/chartStats'
@@ -97,13 +99,6 @@ const CLEAR_COLOR_CLASS: Record<string, string> = {
   failed: HARD_LAMP_BAR_CLASS.FAILED,
 }
 
-/** 集計カテゴリの表示名 */
-const CATEGORY_LABEL: Record<ChartStatsCategory, string> = {
-  rank: 'RANK',
-  combo: 'COMBO',
-  clear: 'HARD',
-}
-
 /**
  * 集計カテゴリと分布キーに対応する既存レコード色を取得する。
  *
@@ -132,7 +127,7 @@ const buildChartHref = (chart: ChartStats, difficulty: ChartStatsDifficulty): st
 /**
  * 譜面ごとの排他的な達成状況を1行1グラフの仮想化表として表示する。
  * 定数と人数の列は中央揃えにする。
- * 曲名、定数、人数の列が見出し操作でソートでき、ソート状態は画面内に閉じて保持する。
+ * 曲名、定数、人数の列と分布の各凡例でソートでき、ソート状態は画面内に閉じて保持する。
  * 人数表示では最大プレイ人数を100%としてバー幅を伸縮させ、割合表示では全行を同じ幅にする。
  *
  * @param props - 譜面一覧、難易度、集計カテゴリ、数値形式、先頭復帰キー。
@@ -145,7 +140,7 @@ export const ChartStatsGraphTable = (props: ChartStatsGraphTableProps): JSX.Elem
   const [sortKey, setSortKey] = createSignal<string | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
   const sortedCharts = createMemo(() =>
-    sortChartStats(props.charts, sortKey(), sortDirection(), props.category)
+    sortChartStats(props.charts, sortKey(), sortDirection(), props.category, false, props.valueMode)
   )
   const virtualizedTable = createWindowVirtualTable<
     HTMLDivElement,
@@ -166,6 +161,15 @@ export const ChartStatsGraphTable = (props: ChartStatsGraphTableProps): JSX.Elem
       virtualizedTable.resetToTop()
     }
     return currentKey
+  })
+
+  createEffect((previousCategory?: ChartStatsCategory) => {
+    const currentCategory = props.category
+    if (previousCategory !== undefined && previousCategory !== currentCategory) {
+      setSortKey(null)
+      setSortDirection(null)
+    }
+    return currentCategory
   })
 
   /**
@@ -247,18 +251,45 @@ export const ChartStatsGraphTable = (props: ChartStatsGraphTableProps): JSX.Elem
                 onClick={() => handleSortChange('player_count')}
               />
             </th>
-            <th class={`${TABLE_HEADER_CLASS} px-3`} scope="col">
+            <th
+              class={`${TABLE_HEADER_CLASS} px-3`}
+              scope="col"
+              aria-sort={getSortAriaValue(
+                legend().some((metric) => metric.key === sortKey()),
+                sortDirection()
+              )}
+            >
               <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span>{CATEGORY_LABEL[props.category]}</span>
                 <ul class="flex flex-wrap items-center gap-x-3 gap-y-1 font-normal">
                   <For each={legend()}>
                     {(metric) => (
-                      <li class="flex items-center gap-1.5">
-                        <span
-                          class={`${getDistributionColorClass(props.category, metric.key)} h-2.5 w-2.5 rounded-full`}
-                          aria-hidden="true"
-                        />
-                        <span>{metric.label}</span>
+                      <li>
+                        <Button
+                          type="button"
+                          class="relative inline-flex items-center gap-1.5 rounded-sm pb-1 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                          aria-label={`${metric.label}${CHART_STATS_COPY.sortByMetric}${
+                            sortKey() === metric.key
+                              ? `（${
+                                  sortDirection() === 'asc'
+                                    ? CHART_STATS_COPY.sortAscending
+                                    : CHART_STATS_COPY.sortDescending
+                                }）`
+                              : ''
+                          }`}
+                          onClick={() => handleSortChange(metric.key)}
+                        >
+                          <span
+                            class={`${getDistributionColorClass(props.category, metric.key)} h-2.5 w-2.5 rounded-full`}
+                            aria-hidden="true"
+                          />
+                          <span>{metric.label}</span>
+                          <span class="absolute bottom-0 left-1/2 flex h-[3px] -translate-x-1/2 items-center">
+                            <SortIndicator
+                              active={sortKey() === metric.key}
+                              direction={sortDirection()}
+                            />
+                          </span>
+                        </Button>
                       </li>
                     )}
                   </For>
