@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { checkForFrontendUpdate } from '../utils/frontendVersion.ts'
 import { fetchApi } from './fetchApi.ts'
 
 test('APIの非成功レスポンスはバージョン確認の完了を待たずに返す', async () => {
@@ -42,6 +43,7 @@ test('APIの非成功レスポンスはバージョン確認の完了を待た�
     assert.equal(fetchCount, 2)
   } finally {
     resolveVersion?.(new Response(JSON.stringify({ buildId: 'current-build' }), { status: 200 }))
+    await checkForFrontendUpdate()
     globalThis.fetch = originalFetch
     Object.assign(globalThis, { window: originalWindow })
   }
@@ -92,6 +94,7 @@ test('APIの通信エラーはバージョン確認の完了を待たずに送�
     assert.equal(fetchCount, 2)
   } finally {
     resolveVersion?.(new Response(JSON.stringify({ buildId: 'current-build' }), { status: 200 }))
+    await checkForFrontendUpdate()
     globalThis.fetch = originalFetch
     Object.assign(globalThis, { window: originalWindow })
   }
