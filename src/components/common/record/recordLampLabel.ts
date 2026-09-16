@@ -1,5 +1,14 @@
 import { MAX_SCORE } from '../../../utils/scoreRank'
-import type { SharedComboLamp } from './recordStyleClasses'
+import type { SharedClearLamp, SharedComboLamp } from './recordStyleClasses'
+
+/** FAILED以外のハードランプ短縮ラベル */
+const HARD_LAMP_LABEL: Record<Exclude<NonNullable<SharedClearLamp>, 'FAILED'>, string> = {
+  CLEAR: 'CLR',
+  HARD: 'HRD',
+  BRAVE: 'BRV',
+  ABSOLUTE: 'ABS',
+  CATASTROPHY: 'CTS',
+}
 
 /**
  * コンボランプバッジの表示ラベルを返す。
@@ -28,4 +37,15 @@ export const getDefaultRecordLampAccessibleLabel = (
 ): string => {
   if (lamp === 'ALL JUSTICE' && score === MAX_SCORE) return 'ALL JUSTICE CRITICAL'
   return lamp ?? 'なし'
+}
+
+/**
+ * ハードランプバッジの表示ラベルを返す。
+ *
+ * @param lamp - APIのハードランプ値。
+ * @returns ハードランプバッジの短縮ラベル。表示対象外の場合は空文字。
+ */
+export const getDefaultRecordHardLampLabel = (lamp: SharedClearLamp): string => {
+  if (!lamp || lamp === 'FAILED') return ''
+  return HARD_LAMP_LABEL[lamp]
 }
