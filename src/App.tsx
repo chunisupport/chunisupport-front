@@ -1,13 +1,5 @@
 import { A, Route, Router } from '@solidjs/router'
-import {
-  Calculator,
-  ChartColumnStacked,
-  ChartNoAxesCombined,
-  Dices,
-  Gauge,
-  Target,
-  Trophy,
-} from 'lucide-solid'
+import { Calculator, ChartNoAxesCombined, Dices, Gauge, Target, Trophy } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
 
@@ -41,7 +33,6 @@ import {
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
-  CHART_STATS_PATH,
   DASHBOARD_PATH,
   EDITOR_PATH,
   EDITOR_SONGS_PATH,
@@ -57,7 +48,6 @@ import {
 } from './constants/routes'
 import {
   DISABLED_TOOL_BADGE_TEXT,
-  isToolLinkListed,
   TOOL_LINKS,
   type ToolLink,
   type ToolLinkIcon,
@@ -66,7 +56,7 @@ import { useRememberAppMainScrollNavigationType } from './hooks/useAppMainScroll
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import { useRobotsMeta } from './hooks/useRobotsMeta'
 import NotFoundPage from './pages/NotFoundPage'
-import { authSession, getAuthenticatedUser } from './stores/authSession'
+import { getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
 import { resolveHomeView } from './usecases/auth/resolveHomeView'
 
@@ -100,7 +90,6 @@ const RegisterScoreTempPage = lazy(
 )
 
 const ChartConstantCalculatorPage = lazy(() => import('./pages/tools/ChartConstantCalculatorPage'))
-const ChartStatsPage = lazy(() => import('./pages/tools/ChartStats'))
 const BorderCalculatorPage = lazy(() => import('./pages/tools/BorderCalculatorPage'))
 const WeakChartInspectorPage = lazy(() => import('./pages/tools/WeakChartInspectorPage'))
 const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelectorPage'))
@@ -309,8 +298,6 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Target class={iconClass} aria-hidden="true" />
     case 'chart':
       return <ChartNoAxesCombined class={iconClass} aria-hidden="true" />
-    case 'distribution':
-      return <ChartColumnStacked class={iconClass} aria-hidden="true" />
 
     case 'random':
       return <Dices class={iconClass} aria-hidden="true" />
@@ -355,15 +342,12 @@ const ToolCardContent = (props: { tool: ToolLink }) => {
  */
 const ToolsPage = () => {
   useDocumentTitle('ツール')
-  const listedTools = createMemo(() =>
-    TOOL_LINKS.filter((tool) => isToolLinkListed(tool, authSession.user?.account_type))
-  )
 
   return (
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
       <h1 class="text-2xl font-semibold">ツール</h1>
       <div class="grid gap-3 sm:grid-cols-2">
-        <For each={listedTools()}>{(tool) => <ToolCardContent tool={tool} />}</For>
+        <For each={TOOL_LINKS}>{(tool) => <ToolCardContent tool={tool} />}</For>
       </div>
     </div>
   )
@@ -593,10 +577,6 @@ const App = () => {
       />
       <Route path={REGISTER_SCORE_TEMP_PATH} component={withNavBar(GuardedRegisterScoreTempPage)} />
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />
-      <Route
-        path={CHART_STATS_PATH}
-        component={withNavBar(withRouteLoadBoundary(ChartStatsPage))}
-      />
       <Route
         path={CHART_CONSTANT_CALCULATOR_PATH}
         component={withNavBar(withRouteLoadBoundary(ChartConstantCalculatorPage))}

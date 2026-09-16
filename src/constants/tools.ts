@@ -1,9 +1,7 @@
-import type { AccountType } from '../types/api'
 import {
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
-  CHART_STATS_PATH,
   DASHBOARD_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
@@ -13,14 +11,7 @@ import {
 /**
  * ツールカードに表示するアイコン種別。
  */
-export type ToolLinkIcon =
-  | 'calculator'
-  | 'chart'
-  | 'distribution'
-  | 'target'
-  | 'random'
-  | 'ranking'
-  | 'gauge'
+export type ToolLinkIcon = 'calculator' | 'chart' | 'target' | 'random' | 'ranking' | 'gauge'
 
 /**
  * 無効化されたツールカードに表示する状態ラベル。
@@ -34,36 +25,18 @@ export const DISABLED_TOOL_BADGE_TEXT = 'coming soon'
  * @property href - 有効時に遷移するツールページのパス。
  * @property icon - ツールカードに表示するアイコン種別。
  * @property disabled - ツールカードを無効状態として表示し、リンク遷移を止めるかどうか。
- * @property adminOnly - ADMIN 以外のツール一覧から隠すかどうか。直接アクセスは妨げない。
  */
 export type ToolLink = {
   title: string
   href: string
   icon: ToolLinkIcon
   disabled?: boolean
-  adminOnly?: boolean
 }
-
-/**
- * ツール一覧に表示するリンクか判定する。
- *
- * @param tool - 判定対象のツールリンク。
- * @param accountType - 現在ユーザーのアカウント種別。未ログイン時は undefined。
- * @returns ツール一覧へ表示する場合は true。
- */
-export const isToolLinkListed = (tool: ToolLink, accountType: AccountType | undefined): boolean =>
-  tool.adminOnly !== true || accountType === 'ADMIN'
 
 /**
  * ツールページに表示するリンク一覧。
  */
 export const TOOL_LINKS: ToolLink[] = [
-  {
-    title: 'レコード統計',
-    href: CHART_STATS_PATH,
-    icon: 'distribution',
-    adminOnly: true,
-  },
   {
     title: 'ダッシュボード',
     href: DASHBOARD_PATH,

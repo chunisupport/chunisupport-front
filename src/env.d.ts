@@ -3,7 +3,6 @@
 interface ImportMetaEnv {
   readonly PUBLIC_BACKEND_URL: string
   readonly PUBLIC_FRONTEND_URL: string
-  readonly PUBLIC_CHART_STATS_BASE_URL?: string
   readonly PUBLIC_DOCUMENTATION_URL: string
   readonly PUBLIC_BOOKMARKLET_URL: string
   readonly PUBLIC_BOOKMARKLET_ENTRYPOINT: string

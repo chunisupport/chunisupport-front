@@ -9,8 +9,6 @@ export const REGISTER_SCORE_TEMP_PATH = '/register-score-temp'
 /** 保存済みの最新スコア更新結果画面のパス */
 export const LATEST_SCORE_UPDATE_PATH = '/latest-score-update'
 export const TOOLS_PATH = '/tools'
-/** 全譜面レコード統計画面のパス */
-export const CHART_STATS_PATH = `${TOOLS_PATH}/chart-stats`
 /** フレンド画面のパス */
 export const FRIENDS_PATH = '/friends'
 export const CHART_CONSTANT_CALCULATOR_PATH = `${TOOLS_PATH}/chart-constant-calculator`
