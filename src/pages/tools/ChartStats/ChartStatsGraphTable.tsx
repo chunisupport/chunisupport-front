@@ -18,14 +18,16 @@ import type { ChartStats, ChartStatsDifficulty } from '../../../types/chartStats
 import {
   buildChartStatsDistribution,
   type ChartStatsCategory,
+  calculateChartStatsBarWidthPercent,
   calculateChartStatsPercent,
+  getMaxChartStatsPlayerCount,
   isWorldsendChartStats,
   sortChartStats,
 } from '../../../utils/chartStats'
 import { formatInteger } from '../../../utils/numberFormat'
 import { nextSortState, type SortDirection } from '../../../utils/sortingQuery'
 import { formatChartStatsLevel, getChartStatsLevelClass } from './chartStatsDisplay'
-import { CHART_STATS_COPY } from './constants'
+import { CHART_STATS_COPY, type ChartStatsValueMode } from './constants'
 
 type ChartStatsGraphTableProps = {
   /** 表示対象の譜面統計 */
@@ -34,6 +36,8 @@ type ChartStatsGraphTableProps = {
   difficulty: ChartStatsDifficulty
   /** 現在選択中の集計カテゴリ */
   category: ChartStatsCategory
+  /** 人数または割合の表示形式 */
+  valueMode: ChartStatsValueMode
   /** 検索・カテゴリ・難易度の変更時に先頭へ戻すための値 */
   resetKey: string
 }
@@ -129,13 +133,15 @@ const buildChartHref = (chart: ChartStats, difficulty: ChartStatsDifficulty): st
  * 譜面ごとの排他的な達成状況を1行1グラフの仮想化表として表示する。
  * 定数と人数の列は中央揃えにする。
  * 曲名、定数、人数の列が見出し操作でソートでき、ソート状態は画面内に閉じて保持する。
+ * 人数表示では最大プレイ人数を100%としてバー幅を伸縮させ、割合表示では全行を同じ幅にする。
  *
- * @param props - 譜面一覧、難易度、集計カテゴリ、先頭復帰キー。
+ * @param props - 譜面一覧、難易度、集計カテゴリ、数値形式、先頭復帰キー。
  * @returns 楽曲情報と分布グラフを横並びにした仮想化表。
  */
 export const ChartStatsGraphTable = (props: ChartStatsGraphTableProps): JSX.Element => {
   const legend = () =>
     props.charts[0] ? buildChartStatsDistribution(props.charts[0], props.category) : []
+  const maxPlayerCount = createMemo(() => getMaxChartStatsPlayerCount(props.charts))
   const [sortKey, setSortKey] = createSignal<string | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
   const sortedCharts = createMemo(() =>
@@ -275,6 +281,13 @@ export const ChartStatsGraphTable = (props: ChartStatsGraphTableProps): JSX.Elem
                   {(currentChart) => {
                     const distribution = () =>
                       buildChartStatsDistribution(currentChart, props.category)
+                    const barWidthPercent = () =>
+                      props.valueMode === 'count'
+                        ? calculateChartStatsBarWidthPercent(
+                            currentChart.player_count,
+                            maxPlayerCount()
+                          )
+                        : 100
 
                     return (
                       <tr
@@ -312,20 +325,24 @@ export const ChartStatsGraphTable = (props: ChartStatsGraphTableProps): JSX.Elem
                               .map((metric) => `${metric.label} ${formatInteger(metric.count)}人`)
                               .join('、')}
                           </span>
-                          <DistributionBar
-                            class="w-full rounded"
-                            heightClass="h-3.5"
-                            segments={distribution().map((metric) => ({
-                              key: metric.key,
-                              percent:
-                                calculateChartStatsPercent(
-                                  metric.count,
-                                  currentChart.player_count
-                                ) ?? 0,
-                              colorClass: getDistributionColorClass(props.category, metric.key),
-                              title: metric.label,
-                            }))}
-                          />
+                          <div class="w-full">
+                            <div style={{ width: `${barWidthPercent()}%` }}>
+                              <DistributionBar
+                                class="w-full rounded"
+                                heightClass="h-3.5"
+                                segments={distribution().map((metric) => ({
+                                  key: metric.key,
+                                  percent:
+                                    calculateChartStatsPercent(
+                                      metric.count,
+                                      currentChart.player_count
+                                    ) ?? 0,
+                                  colorClass: getDistributionColorClass(props.category, metric.key),
+                                  title: metric.label,
+                                }))}
+                              />
+                            </div>
+                          </div>
                         </td>
                       </tr>
                     )

@@ -4,8 +4,11 @@ import type { StandardChartStats, WorldsendChartStats } from '../types/chartStat
 import {
   buildChartStatsCumulativeValues,
   buildChartStatsDistribution,
+  buildChartStatsTableValues,
+  calculateChartStatsBarWidthPercent,
   calculateChartStatsPercent,
   filterChartStatsByTitle,
+  getMaxChartStatsPlayerCount,
   sortChartStats,
 } from './chartStats'
 
@@ -81,6 +84,104 @@ test('プレイヤー数が0人の場合は達成率を算出しないこと', (
   // Given / When / Then
   assert.equal(calculateChartStatsPercent(25, 100), 25)
   assert.equal(calculateChartStatsPercent(0, 0), null)
+})
+
+test('表の集計値は累積指定で累積人数を返すこと', () => {
+  // Given
+  const chart = createChart()
+
+  // When
+  const rank = buildChartStatsTableValues(chart, 'rank', true)
+
+  // Then
+  assert.deepEqual(
+    rank.map(({ count }) => count),
+    [1, 3, 6, 10, 15, 21, 28]
+  )
+})
+
+test('表の集計値は非累積指定で区分ごとの排他人数を返すこと', () => {
+  // Given
+  const chart = createChart()
+
+  // When
+  const rank = buildChartStatsTableValues(chart, 'rank', false)
+  const combo = buildChartStatsTableValues(chart, 'combo', false)
+  const clear = buildChartStatsTableValues(chart, 'clear', false)
+
+  // Then
+  assert.deepEqual(
+    rank.map(({ count }) => count),
+    [1, 2, 3, 4, 5, 6, 7, 72]
+  )
+  assert.deepEqual(
+    combo.map(({ count }) => count),
+    [1, 9, 20, 70]
+  )
+  assert.deepEqual(
+    clear.map(({ count }) => count),
+    [1, 2, 3, 4, 50, 40]
+  )
+})
+
+test('指標列のソートは累積と排他で評価値を使い分けること', () => {
+  // Given: SSS累積は mid=60 > low=6、SSS排他は low=3 < mid=30
+  const charts = [
+    createSortableChart({
+      title: 'chart-mid',
+      rank: { max: 10, sssp: 20, sss: 30, ssp: 0, ss: 0, sp: 0, s: 0, aaal: 40 },
+    }),
+    createSortableChart({
+      title: 'chart-low',
+      rank: { max: 1, sssp: 2, sss: 3, ssp: 0, ss: 0, sp: 0, s: 0, aaal: 94 },
+    }),
+  ]
+
+  // When
+  const cumulative = sortChartStats(charts, 'sss', 'asc', 'rank', true)
+  const exclusive = sortChartStats(charts, 'aaal', 'asc', 'rank', false)
+
+  // Then
+  assert.deepEqual(
+    cumulative.map(({ title }) => title),
+    ['chart-low', 'chart-mid']
+  )
+  assert.deepEqual(
+    exclusive.map(({ title }) => title),
+    ['chart-mid', 'chart-low']
+  )
+})
+
+test('表示中の最大プレイ人数を取得すること', () => {
+  // Given
+  const charts = [
+    createSortableChart({ title: 'few', player_count: 50 }),
+    createSortableChart({ title: 'many', player_count: 300 }),
+    createSortableChart({ title: 'mid', player_count: 100 }),
+  ]
+
+  // When
+  const max = getMaxChartStatsPlayerCount(charts)
+
+  // Then
+  assert.equal(max, 300)
+})
+
+test('空配列の最大プレイ人数は0になること', () => {
+  // Given / When / Then
+  assert.equal(getMaxChartStatsPlayerCount([]), 0)
+})
+
+test('最大プレイ人数に対するバー幅を人数比で算出すること', () => {
+  // Given / When / Then
+  assert.equal(calculateChartStatsBarWidthPercent(300, 300), 100)
+  assert.equal(calculateChartStatsBarWidthPercent(150, 300), 50)
+  assert.equal(calculateChartStatsBarWidthPercent(0, 300), 0)
+})
+
+test('基準人数が0以下の場合のバー幅は0になること', () => {
+  // Given / When / Then
+  assert.equal(calculateChartStatsBarWidthPercent(100, 0), 0)
 })
 
 test('曲名検索を正規化して絞り込むこと', () => {

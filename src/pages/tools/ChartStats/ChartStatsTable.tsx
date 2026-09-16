@@ -11,7 +11,7 @@ import {
 import { buildSongDetailPath, buildWorldsendSongDetailPath } from '../../../constants/routes'
 import type { ChartStats, ChartStatsDifficulty } from '../../../types/chartStats'
 import {
-  buildChartStatsCumulativeValues,
+  buildChartStatsTableValues,
   type ChartStatsCategory,
   isWorldsendChartStats,
   sortChartStats,
@@ -38,8 +38,8 @@ type ChartStatsTableProps = {
   category: ChartStatsCategory
   /** 人数または割合の表示形式 */
   valueMode: ChartStatsValueMode
-  /** 達成率に応じたセル背景を表示するか */
-  showHeatmap: boolean
+  /** 各到達条件以上の累積人数で表示する場合はtrue、区分ごとの排他人数で表示する場合はfalse */
+  cumulative: boolean
   /** 検索・カテゴリ・難易度の変更時に先頭へ戻すための値 */
   resetKey: string
 }
@@ -73,7 +73,7 @@ const TABLE_MIN_WIDTH_CLASS: Record<ChartStatsCategory, string> = {
  * 集計列数に応じた仮想行と見出しで共有する列構成を生成する。
  * 数値列はすべて固定幅とし、曲名列だけが残り幅を受け持つ。
  *
- * @param columnCount - 累積達成列の数。
+ * @param columnCount - 集計列の数。
  * @returns 曲名、定数、人数、集計列のグリッドテンプレート。
  */
 const buildGridTemplateColumns = (columnCount: number): string =>
@@ -84,7 +84,7 @@ const buildGridTemplateColumns = (columnCount: number): string =>
  * HARD系の指標には既存レコード表示と共通の3文字短縮（CTS・ABS等）を使い、
  * 該当しない指標には正式名をそのまま返す。
  *
- * @param key - 累積指標のキー（小文字）。
+ * @param key - 指標のキー（小文字）。
  * @param label - 指標の正式名。
  * @returns 「100.00%」幅の数値列に収まる見出しラベル。
  */
@@ -94,7 +94,7 @@ const getMetricShortLabel = (key: string, label: string): string =>
 /**
  * 達成率に応じたテーマ連動のヒートマップ背景色を生成する。
  *
- * @param count - 累積達成人数。
+ * @param count - 達成人数。
  * @param playerCount - 集計対象プレイヤー数。
  * @returns アクセント色と面色を混ぜた背景色。
  */
@@ -117,21 +117,23 @@ const buildChartHref = (chart: ChartStats, difficulty: ChartStatsDifficulty): st
     : buildSongDetailPath(chart.song_id, difficulty)
 
 /**
- * 譜面ごとの累積達成人数または達成率をTanStack Virtualで仮想化した表として表示する。
+ * 譜面ごとの達成人数または達成率をTanStack Virtualで仮想化した表として表示する。
  * 曲名以外はすべて中央揃えにし、数値列は「100.00%」基準の固定幅で曲名列を最大化する。
  * すべての列が見出し操作でソートでき、ソート状態は画面内に閉じて保持する。
  *
- * @param props - 譜面一覧、難易度、カテゴリ、数値形式、ヒートマップ設定、先頭復帰キー。
+ * @param props - 譜面一覧、難易度、カテゴリ、数値形式、累積表示設定、先頭復帰キー。
  * @returns 横スクロール可能な仮想化データテーブル。
  */
 export const ChartStatsTable = (props: ChartStatsTableProps): JSX.Element => {
   const columns = () =>
-    props.charts[0] ? buildChartStatsCumulativeValues(props.charts[0], props.category) : []
+    props.charts[0]
+      ? buildChartStatsTableValues(props.charts[0], props.category, props.cumulative)
+      : []
   const isWorldsend = () => props.difficulty === "WORLD'S END"
   const [sortKey, setSortKey] = createSignal<string | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
   const sortedCharts = createMemo(() =>
-    sortChartStats(props.charts, sortKey(), sortDirection(), props.category)
+    sortChartStats(props.charts, sortKey(), sortDirection(), props.category, props.cumulative)
   )
   const gridTemplateColumns = createMemo(() => buildGridTemplateColumns(columns().length))
   const virtualizedTable = createWindowVirtualTable<
@@ -155,13 +157,13 @@ export const ChartStatsTable = (props: ChartStatsTableProps): JSX.Element => {
     return currentKey
   })
 
-  createEffect((previousCategory?: ChartStatsCategory) => {
-    const currentCategory = props.category
-    if (previousCategory !== undefined && previousCategory !== currentCategory) {
+  createEffect((previousKeys?: string) => {
+    const currentKeys = `${props.category}|${props.cumulative}`
+    if (previousKeys !== undefined && previousKeys !== currentKeys) {
       setSortKey(null)
       setSortDirection(null)
     }
-    return currentCategory
+    return currentKeys
   })
 
   /**
@@ -301,14 +303,21 @@ export const ChartStatsTable = (props: ChartStatsTableProps): JSX.Element => {
                       >
                         {formatInteger(currentChart.player_count)}
                       </td>
-                      <For each={buildChartStatsCumulativeValues(currentChart, props.category)}>
+                      <For
+                        each={buildChartStatsTableValues(
+                          currentChart,
+                          props.category,
+                          props.cumulative
+                        )}
+                      >
                         {(metric) => (
                           <td
                             class={`${TABLE_CELL_CLASS} ${NARROW_COLUMN_PADDING_CLASS} ${CENTER_COLUMN_CLASS} min-w-0 whitespace-nowrap border-l border-border font-jost font-semibold tabular-nums text-text`}
                             style={{
-                              background: props.showHeatmap
-                                ? getHeatmapBackground(metric.count, currentChart.player_count)
-                                : undefined,
+                              background: getHeatmapBackground(
+                                metric.count,
+                                currentChart.player_count
+                              ),
                             }}
                             title={`${formatInteger(metric.count)}人 / ${formatChartStatsValue(
                               metric.count,

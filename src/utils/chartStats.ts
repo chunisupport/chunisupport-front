@@ -177,6 +177,24 @@ export const buildChartStatsCumulativeValues = (
 }
 
 /**
+ * 表へ表示する集計値を累積または排他の指定に応じて取得する。
+ * 累積の場合は各到達条件以上の人数、排他の場合は区分ごとの人数を返す。
+ *
+ * @param chart - 変換する譜面統計。
+ * @param category - 表示する集計カテゴリ。
+ * @param cumulative - 累積人数で表示する場合はtrue、排他人数で表示する場合はfalse。
+ * @returns 表の列順に並んだ統計値。
+ */
+export const buildChartStatsTableValues = (
+  chart: ChartStats,
+  category: ChartStatsCategory,
+  cumulative: boolean
+): ChartStatsMetricValue[] =>
+  cumulative
+    ? buildChartStatsCumulativeValues(chart, category)
+    : buildChartStatsDistribution(chart, category)
+
+/**
  * プレイヤー数を分母として達成率を算出する。
  *
  * @param count - 達成人数。
@@ -185,6 +203,29 @@ export const buildChartStatsCumulativeValues = (
  */
 export const calculateChartStatsPercent = (count: number, playerCount: number): number | null =>
   playerCount > 0 ? (count / playerCount) * 100 : null
+
+/**
+ * グラフの基準幅となる最大プレイ人数を取得する。
+ *
+ * @param charts - 幅の基準を求める譜面統計。
+ * @returns 最大の `player_count`。空配列の場合は0。
+ */
+export const getMaxChartStatsPlayerCount = (charts: readonly ChartStats[]): number =>
+  charts.reduce((max, chart) => Math.max(max, chart.player_count), 0)
+
+/**
+ * 最大プレイ人数に対するグラフバーの表示幅を算出する。
+ * 最もプレイ人数が多い譜面を100%として人数比で伸縮させる。
+ *
+ * @param playerCount - 対象譜面のプレイ人数。
+ * @param maxPlayerCount - 表示中の最大プレイ人数。
+ * @returns バー幅の百分率。基準が0以下の場合は0。
+ */
+export const calculateChartStatsBarWidthPercent = (
+  playerCount: number,
+  maxPlayerCount: number
+): number =>
+  maxPlayerCount > 0 ? Math.min(100, Math.max(0, (playerCount / maxPlayerCount) * 100)) : 0
 
 /**
  * 曲名が検索文字列に一致する譜面統計だけを取得する。
@@ -206,24 +247,26 @@ export const filterChartStatsByTitle = (
  * 譜面統計を指定列で安定ソートする。
  *
  * ソートキーには `title`（曲名）、`level`（定数または星数と属性）、`player_count`（人数）、
- * または集計カテゴリに対応する累積指標キー（`buildChartStatsCumulativeValues` のキー）を指定する。
+ * または集計カテゴリに対応する指標キー（`buildChartStatsTableValues` のキー）を指定する。
  * 同順の譜面は曲名の読み順、元の順序の順で確定する。
  *
  * @param charts - ソート対象の譜面統計。
  * @param sortKey - ソート対象列。未指定なら元の順序を保った複製を返す。
  * @param sortDirection - 昇順または降順。未指定なら元の順序を保った複製を返す。
- * @param category - 累積指標キーを解決する集計カテゴリ。
+ * @param category - 指標キーを解決する集計カテゴリ。
+ * @param cumulative - 指標値を累積人数で評価する場合はtrue、排他人数で評価する場合はfalse。
  * @returns ソート済みの新しい譜面統計配列。
  */
 export const sortChartStats = (
   charts: readonly ChartStats[],
   sortKey: string | null,
   sortDirection: SortDirection | null,
-  category: ChartStatsCategory
+  category: ChartStatsCategory,
+  cumulative = true
 ): ChartStats[] => {
   if (!sortKey || !sortDirection) return [...charts]
   const direction = sortDirection === 'asc' ? 1 : -1
-  const cumulativeCounts =
+  const metricCounts =
     sortKey === 'title' || sortKey === 'level' || sortKey === 'player_count'
       ? null
       : new Map(
@@ -232,7 +275,7 @@ export const sortChartStats = (
               [
                 chart,
                 new Map(
-                  buildChartStatsCumulativeValues(chart, category).map(
+                  buildChartStatsTableValues(chart, category, cumulative).map(
                     (metric) => [metric.key, metric.count] as const
                   )
                 ),
@@ -252,8 +295,8 @@ export const sortChartStats = (
         comparison = (left.chart.player_count - right.chart.player_count) * direction
       } else {
         comparison =
-          ((cumulativeCounts?.get(left.chart)?.get(sortKey) ?? 0) -
-            (cumulativeCounts?.get(right.chart)?.get(sortKey) ?? 0)) *
+          ((metricCounts?.get(left.chart)?.get(sortKey) ?? 0) -
+            (metricCounts?.get(right.chart)?.get(sortKey) ?? 0)) *
           direction
       }
       if (comparison !== 0) return comparison

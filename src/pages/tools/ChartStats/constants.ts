@@ -68,8 +68,8 @@ export const CHART_STATS_COPY = {
   level: '定数',
   worldsendLevel: 'Lv./属性',
   playerCount: '人数',
-  heatmap: 'ヒートマップ',
+  cumulative: '累積',
   empty: '条件に一致する譜面がありません。',
   graphTableCaption: '譜面ごとの達成状況を1行1グラフで示した表',
-  tableCaption: '譜面ごとの累積達成人数または達成率',
+  tableCaption: '譜面ごとの達成人数または達成率',
 } as const

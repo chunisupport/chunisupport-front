@@ -1,12 +1,12 @@
 import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { fetchChartStats } from '../../../api/chartStats'
 import { LoadError, Loading } from '../../../components'
-import { AppSwitch } from '../../../components/common/AppSwitch'
 import {
   AppTabContent,
   SegmentedToggleGroup,
   UnderlineTabs,
 } from '../../../components/common/AppTabs'
+import { CheckboxField } from '../../../components/common/CheckboxField'
 import { SearchTextField } from '../../../components/common/SearchTextField'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { ChartStatsDifficulty, ChartStatsResponse } from '../../../types/chartStats'
@@ -40,7 +40,7 @@ const ChartStatsContent = (props: {
   const [viewMode, setViewMode] = createSignal<ChartStatsViewMode>('graph')
   const [category, setCategory] = createSignal<ChartStatsCategory>('rank')
   const [valueMode, setValueMode] = createSignal<ChartStatsValueMode>('count')
-  const [showHeatmap, setShowHeatmap] = createSignal(false)
+  const [cumulative, setCumulative] = createSignal(false)
   const [searchQuery, setSearchQuery] = createSignal('')
 
   const filteredCharts = createMemo(() => filterChartStatsByTitle(props.data.charts, searchQuery()))
@@ -68,18 +68,17 @@ const ChartStatsContent = (props: {
             value={viewMode()}
             onChange={setViewMode}
           />
+          <SegmentedToggleGroup
+            options={CHART_STATS_VALUE_OPTIONS}
+            value={valueMode()}
+            onChange={setValueMode}
+          />
           <Show when={viewMode() === 'table'}>
-            <SegmentedToggleGroup
-              options={CHART_STATS_VALUE_OPTIONS}
-              value={valueMode()}
-              onChange={setValueMode}
-            />
-            <div class="flex h-10 items-center gap-2 rounded-lg border border-border bg-surface px-3">
-              <span class="text-sm font-medium text-text-muted">{CHART_STATS_COPY.heatmap}</span>
-              <AppSwitch
-                label={CHART_STATS_COPY.heatmap}
-                checked={showHeatmap()}
-                onChange={setShowHeatmap}
+            <div class="flex h-10 items-center rounded-lg border border-border bg-surface px-3">
+              <CheckboxField
+                checked={cumulative()}
+                onChange={setCumulative}
+                label={CHART_STATS_COPY.cumulative}
               />
             </div>
           </Show>
@@ -114,7 +113,7 @@ const ChartStatsContent = (props: {
               difficulty={props.difficulty}
               category={category()}
               valueMode={valueMode()}
-              showHeatmap={showHeatmap()}
+              cumulative={cumulative()}
               resetKey={resetKey()}
             />
           }
@@ -123,6 +122,7 @@ const ChartStatsContent = (props: {
             charts={filteredCharts()}
             difficulty={props.difficulty}
             category={category()}
+            valueMode={valueMode()}
             resetKey={resetKey()}
           />
         </Show>
