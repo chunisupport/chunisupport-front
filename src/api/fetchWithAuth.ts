@@ -6,6 +6,7 @@ import { type ErrorCode, type ErrorResponse, getErrorMessage } from '../types/ap
 import { buildLoginRedirectPath } from '../usecases/auth/redirectPath'
 import { buildCurrentPath } from '../utils/currentPath'
 import { isMaintenanceModeError, parseRetryAfterSeconds } from '../utils/maintenanceError'
+import { fetchApi } from './fetchApi'
 
 type FetchWithAuthOptions = RequestInit & {
   requireAuthentication?: boolean
@@ -102,7 +103,7 @@ export const fetchWithAuth = async (
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(input, {
+  const response = await fetchApi(input, {
     ...requestInit,
     headers,
   })
