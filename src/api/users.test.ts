@@ -101,7 +101,7 @@ test('fetchUserRatingOpHistoryはURLエンコードしたユーザー名の公�
   )
 })
 
-test('fetchUserCourseRecordsは未プレイを含むコースレコード一覧を取得できること', async () => {
+test('fetchUserCourseRecordsは廃止済みクエリを付けずにコースレコード一覧を取得すること', async () => {
   // Given
   const calls = installFetchRecorder(() =>
     Response.json({
@@ -112,12 +112,12 @@ test('fetchUserCourseRecordsは未プレイを含むコースレコード一覧�
   const { fetchUserCourseRecords } = await loadUsersApi()
 
   // When
-  await fetchUserCourseRecords('alice bob', { includeNoPlay: true })
+  await fetchUserCourseRecords('alice bob')
 
   // Then
   assert.equal(
     String(calls[0]?.input),
-    'http://localhost:3000/internal/users/alice%20bob/record/courses?include_noplay=true'
+    'http://localhost:3000/internal/users/alice%20bob/record/courses'
   )
 })
 

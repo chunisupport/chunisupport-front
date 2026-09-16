@@ -20,9 +20,7 @@ export const fetchUserStandardSongRecordWithCache = async (
   displayId: string
 ): Promise<PlayerRecordDTO[]> => {
   if (!(await isAuthenticatedOwnUser(username))) {
-    const response = await fetchUserStandardSongRecord(username, displayId, {
-      includeNoPlay: true,
-    })
+    const response = await fetchUserStandardSongRecord(username, displayId)
     return response.standard
   }
 
@@ -30,9 +28,7 @@ export const fetchUserStandardSongRecordWithCache = async (
   try {
     timestamps = await fetchUserApiCacheTimestamps(username)
   } catch {
-    const response = await fetchUserStandardSongRecord(username, displayId, {
-      includeNoPlay: true,
-    })
+    const response = await fetchUserStandardSongRecord(username, displayId)
     return response.standard
   }
 
@@ -46,9 +42,7 @@ export const fetchUserStandardSongRecordWithCache = async (
     // IndexedDBの読み込み失敗時はAPIから取得する。
   }
 
-  const response = await fetchUserStandardSongRecord(username, displayId, {
-    includeNoPlay: true,
-  })
+  const response = await fetchUserStandardSongRecord(username, displayId)
   try {
     await saveCachedStandardSongRecord(match, displayId, response.standard)
   } catch {
@@ -70,9 +64,7 @@ export const fetchUserWorldsendSongRecordWithCache = async (
   displayId: string
 ): Promise<WorldsendRecordDTO | null> => {
   if (!(await isAuthenticatedOwnUser(username))) {
-    const response = await fetchUserWorldsendSongRecord(username, displayId, {
-      includeNoPlay: true,
-    })
+    const response = await fetchUserWorldsendSongRecord(username, displayId)
     return response.worldsend
   }
 
@@ -80,9 +72,7 @@ export const fetchUserWorldsendSongRecordWithCache = async (
   try {
     timestamps = await fetchUserApiCacheTimestamps(username)
   } catch {
-    const response = await fetchUserWorldsendSongRecord(username, displayId, {
-      includeNoPlay: true,
-    })
+    const response = await fetchUserWorldsendSongRecord(username, displayId)
     return response.worldsend
   }
 
@@ -96,9 +86,7 @@ export const fetchUserWorldsendSongRecordWithCache = async (
     // IndexedDBの読み込み失敗時はAPIから取得する。
   }
 
-  const response = await fetchUserWorldsendSongRecord(username, displayId, {
-    includeNoPlay: true,
-  })
+  const response = await fetchUserWorldsendSongRecord(username, displayId)
   try {
     await saveCachedWorldsendSongRecord(match, displayId, response.worldsend)
   } catch {

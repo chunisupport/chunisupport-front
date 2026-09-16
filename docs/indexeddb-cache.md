@@ -15,7 +15,7 @@ API サーバーと DB の負荷が高くなった場合でも、画面表示の
 - WORLD'S END 楽曲一覧 API（`GET /internal/worldsend-songs`）
 - コース一覧 API
 - ログインユーザー本人のレーティング API（`GET /internal/users/{username}/rating`）
-- ログインユーザー本人の全件レコード API（`GET /internal/users/{username}/record?include_noplay=true`）と曲単位レコード API
+- ログインユーザー本人の全件レコード API（`GET /internal/users/{username}/record`）と曲単位レコード API
 - ログインユーザー本人のコースレコード API
 
 ## 基本方針
@@ -152,9 +152,9 @@ WORLD'S END 楽曲:
 
 ### レコード
 
-全件レコード取得では、`userUpdatedAt` と `songsUpdatedAt`、`schemaVersion` が一致し、`cacheMetadata.userRecord` と `userSongRecords` が有効なら曲単位キャッシュから `UserRecordDTO` を復元します。キャッシュが揃っていなければ `GET /internal/users/{username}/record?include_noplay=true` を呼び、レスポンスを曲単位に分割して保存します。
+全件レコード取得では、`userUpdatedAt` と `songsUpdatedAt`、`schemaVersion` が一致し、`cacheMetadata.userRecord` と `userSongRecords` が有効なら曲単位キャッシュから `UserRecordDTO` を復元します。キャッシュが揃っていなければ `GET /internal/users/{username}/record` を呼び、レスポンスを曲単位に分割して保存します。未プレイデータは API により常に補完されます。
 
-曲詳細では `GET /internal/users/{username}/record/songs/{displayId}?include_noplay=true` または `GET /internal/users/{username}/record/worldsend-songs/{displayId}?include_noplay=true` を利用し、対象曲だけを `userSongRecords` へ保存・取得します。
+曲詳細では `GET /internal/users/{username}/record/songs/{displayId}` または `GET /internal/users/{username}/record/worldsend-songs/{displayId}` を利用し、対象曲だけを `userSongRecords` へ保存・取得します。未プレイデータは API により常に補完されます。
 
 ## ディレクトリ構成
 
@@ -195,7 +195,7 @@ src/
 `src/pages/users/UserPage/UserPage.tsx` では、以下をキャッシュ対応 usecase に差し替えています。
 
 - `fetchUserRating(username)` → `fetchUserRatingWithCache(username)`
-- `fetchUserRecord(username, { includeNoPlay: true })` → `fetchUserRecordWithCache(username)`
+- `fetchUserRecord(username)` → `fetchUserRecordWithCache(username)`
 
 ログインユーザー本人以外の username が指定された場合、usecase 内で API 直呼び出しにします。
 
