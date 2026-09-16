@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import { createHash, randomUUID } from 'node:crypto'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { defineConfig, loadEnv } from '@rsbuild/core'
 import { pluginBabel } from '@rsbuild/plugin-babel'
@@ -21,6 +21,8 @@ const REQUIRED_PUBLIC_ENV_KEYS = [
 ]
 
 const FRONTEND_BUILD_DATE = new Date().toISOString().slice(0, 10).replaceAll('-', '')
+/** 実行中コードと公開中ファイルを対応付ける、ビルドごとに一意なID。 */
+const FRONTEND_BUILD_ID = randomUUID()
 
 /** ハッシュ生成と出力コピーの対象にする favicon の絶対パス。 */
 const FAVICON_PATH = path.resolve(import.meta.dirname, 'src/assets/favicon.png')
@@ -53,6 +55,28 @@ const resolveFrontendCommitHash = () => {
 
 const FRONTEND_COMMIT_HASH = resolveFrontendCommitHash()
 
+/**
+ * 公開中ビルドのIDを、キャッシュされない静的JSONとして出力する。
+ *
+ * @returns Rsbuildのビルド完了フックを登録するプラグイン。
+ */
+const frontendVersionPlugin = () => ({
+  name: 'frontend-version',
+  setup(api) {
+    api.onAfterBuild(({ environments }) => {
+      for (const environment of Object.values(environments)) {
+        const outputPath = environment.distPath
+        mkdirSync(outputPath, { recursive: true })
+        writeFileSync(
+          path.join(outputPath, 'version.json'),
+          `${JSON.stringify({ buildId: FRONTEND_BUILD_ID })}\n`,
+          'utf8'
+        )
+      }
+    })
+  },
+})
+
 // Docs: https://rsbuild.rs/config/
 export default defineConfig(({ env, envMode }) => {
   const envResult = loadEnv({ mode: envMode, prefixes: ['PUBLIC_'] })
@@ -70,6 +94,7 @@ export default defineConfig(({ env, envMode }) => {
     ...envResult.publicVars,
     __FRONTEND_BUILD_DATE__: JSON.stringify(FRONTEND_BUILD_DATE),
     __FRONTEND_COMMIT_HASH__: JSON.stringify(FRONTEND_COMMIT_HASH),
+    __FRONTEND_BUILD_ID__: JSON.stringify(FRONTEND_BUILD_ID),
     'import.meta.env': JSON.stringify({
       ...envResult.rawPublicVars,
       MODE: envMode,
@@ -186,6 +211,7 @@ export default defineConfig(({ env, envMode }) => {
       ],
     },
     plugins: [
+      frontendVersionPlugin(),
       pluginBabel({
         include: /\.(?:jsx|tsx)$/,
       }),

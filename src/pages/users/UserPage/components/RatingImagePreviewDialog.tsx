@@ -157,7 +157,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
    * @returns なし。
    */
   const handleOpenChange = (nextOpen: boolean): void => {
-    if (!nextOpen && isImageActionRunning()) return
+    if (!nextOpen && isSharing()) return
 
     if (nextOpen) {
       captureRevision += 1
@@ -167,6 +167,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
       setImageActionError(undefined)
     } else {
       captureRevision += 1
+      setIsCapturingPreview(false)
       revokePreviewUrl()
       setImageSheet(undefined)
       setImageActionError(undefined)
@@ -346,7 +347,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
               <Dialog.CloseButton
                 class={getAppIconButtonClass({ tone: 'ghost', class: 'shrink-0' })}
                 aria-label={RATING_IMAGE_COPY.close}
-                disabled={isImageActionRunning()}
+                disabled={isSharing()}
               >
                 <X class="h-5 w-5" aria-hidden="true" />
               </Dialog.CloseButton>
