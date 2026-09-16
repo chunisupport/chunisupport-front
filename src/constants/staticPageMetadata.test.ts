@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { SONGS_PATH, WORLDSEND_SONGS_PATH } from './routes'
+import { CHART_STATS_PATH, SONGS_PATH, WORLDSEND_SONGS_PATH } from './routes'
 import { STATIC_PAGE_METADATA } from './staticPageMetadata'
 import { isPublicToolLink, TOOL_LINKS } from './tools'
 
@@ -19,13 +19,16 @@ test('固定ページのパスが重複せず、タイトルと説明が空で�
   }
 })
 
-test('公開中の全ツールだけを固定ページ生成対象に含めること', () => {
+test('公開ツールとレコード統計を固定ページ生成対象に含めること', () => {
   // Given
   const generatedPaths = new Set(STATIC_PAGE_METADATA.map((page) => page.path))
 
   // When & Then
   for (const tool of TOOL_LINKS) {
-    assert.equal(generatedPaths.has(tool.href), isPublicToolLink(tool))
+    assert.equal(
+      generatedPaths.has(tool.href),
+      isPublicToolLink(tool) || tool.href === CHART_STATS_PATH
+    )
   }
 })
 
@@ -36,4 +39,12 @@ test('楽曲一覧の固定ページを生成対象に含めること', () => {
   // When & Then
   assert.equal(generatedPaths.has(SONGS_PATH), true)
   assert.equal(generatedPaths.has(WORLDSEND_SONGS_PATH), true)
+})
+
+test('レコード統計は一覧の公開対象から外して直接アクセス用の固定ページを生成すること', () => {
+  // Given
+  const generatedPaths = new Set(STATIC_PAGE_METADATA.map((page) => page.path))
+
+  // When & Then
+  assert.equal(generatedPaths.has(CHART_STATS_PATH), true)
 })
