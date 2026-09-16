@@ -62,14 +62,15 @@ test('未解禁曲ディスカバーは ADMIN 限定ツールとして定義さ�
   assert.equal(isPublicToolLink(lockedSongDiscovery), false)
 })
 
-test('レコード統計は ADMIN 向けツールとして定義されていること', () => {
+test('レコード統計は公開ツールとして定義されていること', () => {
   // Given
   const chartStats = TOOL_LINKS.find((tool) => tool.href === CHART_STATS_PATH)
 
   // When / Then
   assert.ok(chartStats)
-  assert.equal(isPublicToolLink(chartStats), false)
-  assert.equal(isToolLinkListed(chartStats, 'PLAYER'), false)
+  assert.equal(isPublicToolLink(chartStats), true)
+  assert.equal(isToolLinkListed(chartStats, undefined), true)
+  assert.equal(isToolLinkListed(chartStats, 'PLAYER'), true)
   assert.equal(isToolLinkListed(chartStats, 'ADMIN'), true)
   assert.equal(chartStats.icon, 'distribution')
 })

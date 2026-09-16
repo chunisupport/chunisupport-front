@@ -1,3 +1,4 @@
+import { ChartColumnStacked } from 'lucide-solid'
 import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { fetchChartStats } from '../../../api/chartStats'
 import { LoadError, Loading } from '../../../components'
@@ -73,15 +74,16 @@ const ChartStatsContent = (props: {
             value={valueMode()}
             onChange={setValueMode}
           />
-          <Show when={viewMode() === 'table'}>
-            <div class="flex h-10 items-center rounded-lg border border-border bg-surface px-3">
-              <CheckboxField
-                checked={cumulative()}
-                onChange={setCumulative}
-                label={CHART_STATS_COPY.cumulative}
-              />
-            </div>
-          </Show>
+          <div
+            class="flex h-10 items-center rounded-lg border border-border bg-surface px-3"
+            classList={{ invisible: viewMode() !== 'table' }}
+          >
+            <CheckboxField
+              checked={cumulative()}
+              onChange={setCumulative}
+              label={CHART_STATS_COPY.cumulative}
+            />
+          </div>
         </div>
       </div>
 
@@ -156,9 +158,14 @@ const ChartStatsPage = () => {
 
   return (
     <div class="mx-auto w-full max-w-6xl space-y-4 p-4">
-      <header class="space-y-1">
-        <h1 class="text-2xl font-semibold text-text">{CHART_STATS_COPY.title}</h1>
-        <p class="text-sm text-text-muted">{CHART_STATS_COPY.description}</p>
+      <header class="flex items-start gap-3">
+        <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+          <ChartColumnStacked class="h-5 w-5 text-action-primary" aria-hidden="true" />
+        </span>
+        <div>
+          <h1 class="text-2xl font-semibold text-text">{CHART_STATS_COPY.title}</h1>
+          <p class="mt-1 text-sm text-text-muted">{CHART_STATS_COPY.description}</p>
+        </div>
       </header>
 
       <UnderlineTabs

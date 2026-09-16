@@ -1,4 +1,4 @@
-import { CHART_STATS_PATH, SONGS_PATH, TOOLS_PATH, WORLDSEND_SONGS_PATH } from './routes'
+import { SONGS_PATH, TOOLS_PATH, WORLDSEND_SONGS_PATH } from './routes'
 import { joinDocumentTitleParts, SITE_NAME } from './site'
 import { isPublicToolLink, TOOL_LINKS } from './tools'
 
@@ -49,11 +49,6 @@ export const STATIC_PAGE_METADATA: readonly StaticPageMetadata[] = [
   SONGS_PAGE_METADATA,
   WORLDSEND_SONGS_PAGE_METADATA,
   TOOLS_PAGE_METADATA,
-  {
-    path: CHART_STATS_PATH,
-    title: 'レコード統計',
-    description: '譜面ごとのランク・コンボ・クリア状況を確認できます。',
-  },
   ...TOOL_LINKS.filter(isPublicToolLink).map(({ href, title, description }) => ({
     path: href,
     title,

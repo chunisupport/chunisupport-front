@@ -19,16 +19,13 @@ test('固定ページのパスが重複せず、タイトルと説明が空で�
   }
 })
 
-test('公開ツールとレコード統計を固定ページ生成対象に含めること', () => {
+test('公開ツールを固定ページ生成対象に含めること', () => {
   // Given
   const generatedPaths = new Set(STATIC_PAGE_METADATA.map((page) => page.path))
 
   // When & Then
   for (const tool of TOOL_LINKS) {
-    assert.equal(
-      generatedPaths.has(tool.href),
-      isPublicToolLink(tool) || tool.href === CHART_STATS_PATH
-    )
+    assert.equal(generatedPaths.has(tool.href), isPublicToolLink(tool))
   }
 })
 
@@ -41,10 +38,13 @@ test('楽曲一覧の固定ページを生成対象に含めること', () => {
   assert.equal(generatedPaths.has(WORLDSEND_SONGS_PATH), true)
 })
 
-test('レコード統計は一覧の公開対象から外して直接アクセス用の固定ページを生成すること', () => {
+test('レコード統計は公開ツールとして固定ページを生成すること', () => {
   // Given
   const generatedPaths = new Set(STATIC_PAGE_METADATA.map((page) => page.path))
+  const chartStats = TOOL_LINKS.find((tool) => tool.href === CHART_STATS_PATH)
 
   // When & Then
+  assert.ok(chartStats)
   assert.equal(generatedPaths.has(CHART_STATS_PATH), true)
+  assert.equal(isPublicToolLink(chartStats), true)
 })
