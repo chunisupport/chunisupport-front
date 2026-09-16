@@ -52,12 +52,11 @@ export const reloadWhenNewFrontendIsAvailable = async (
   dependencies: FrontendVersionDependencies
 ): Promise<void> => {
   try {
-    if (dependencies.getSessionValue(AUTO_RELOAD_SESSION_KEY)) return
-
     const publishedVersion = await dependencies.fetchVersion()
     if (publishedVersion.buildId === dependencies.currentBuildId) return
+    if (dependencies.getSessionValue(AUTO_RELOAD_SESSION_KEY) === publishedVersion.buildId) return
 
-    dependencies.setSessionValue(AUTO_RELOAD_SESSION_KEY, dependencies.currentBuildId)
+    dependencies.setSessionValue(AUTO_RELOAD_SESSION_KEY, publishedVersion.buildId)
     dependencies.reload()
   } catch {
     // バージョン確認に失敗した場合は、呼び出し元の既存エラー処理を継続する。

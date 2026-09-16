@@ -24,6 +24,30 @@ test('公開中のビルドIDが実行中と異なる場合は一度だけ再読
   assert.equal(reloadCount, 1)
 })
 
+test('同一セッションでも未確認の公開ビルドへは再度読み込む', async () => {
+  // Given: ビルドAからBへの自動更新を同一セッションですでに実施している。
+  const session = new Map<string, string>()
+  let publishedBuildId = 'build-b'
+  let reloadCount = 0
+  const createDependencies = (currentBuildId: string) => ({
+    currentBuildId,
+    fetchVersion: async () => ({ buildId: publishedBuildId }),
+    getSessionValue: (key: string) => session.get(key) ?? null,
+    setSessionValue: (key: string, value: string) => session.set(key, value),
+    reload: () => {
+      reloadCount += 1
+    },
+  })
+  await reloadWhenNewFrontendIsAvailable(createDependencies('build-a'))
+
+  // When: 再読み込み後にビルドCが公開され、ビルドBから更新確認する。
+  publishedBuildId = 'build-c'
+  await reloadWhenNewFrontendIsAvailable(createDependencies('build-b'))
+
+  // Then: 確認済みのビルドBではなく、未確認のビルドCへ再度読み込む。
+  assert.equal(reloadCount, 2)
+})
+
 test('公開中のビルドIDが実行中と同じ場合は再読み込みしない', async () => {
   // Given: 実行中と同じビルドが公開されている。
   let reloadCount = 0
