@@ -13,10 +13,10 @@ export type WeakChartAggregationDifficulty =
   | typeof WEAK_CHART_OP_TARGET_FILTER
 
 /** Tukey法の下側フェンスに掛けるIQR係数。苦手側はfar out相当で絞る。 */
-export const WEAK_CHART_LOWER_FENCE_MULTIPLIER = 3.0
+export const WEAK_CHART_LOWER_FENCE_MULTIPLIER = 2
 
 /** Tukey法の上側フェンスに掛けるIQR係数。得意側は上限頭打ちに配慮して緩める。 */
-export const WEAK_CHART_UPPER_FENCE_MULTIPLIER = 0.7
+export const WEAK_CHART_UPPER_FENCE_MULTIPLIER = 0.6
 
 /** 苦手譜面インスペクターの集計対象範囲 */
 export type WeakChartAggregationRange = {
@@ -143,7 +143,7 @@ const quantile = (sortedValues: number[], percentile: number): number => {
 /**
  * プレイ済みレコードを譜面定数ごとに集計し、Tukey法で外れ値を抽出する。
  *
- * 下側フェンスは `Q1 - 3.0 * IQR`、上側フェンスは `Q3 + 0.7 * IQR` の非対称とし、
+ * 下側フェンスは `Q1 - 2 * IQR`、上側フェンスは `Q3 + 0.6 * IQR` の非対称とし、
  * スコア上限の頭打ちで得意側が出にくく苦手側が出やすい偏りを補正する。
  *
  * @param records - 通常譜面のユーザーレコード。

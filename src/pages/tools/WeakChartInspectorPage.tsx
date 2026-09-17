@@ -50,6 +50,7 @@ import { fetchTheoreticalTargetDifficultyBySongId } from '../../usecases/overpow
 import { formatChartConst, truncateChartConst } from '../../utils/chartConstFormat'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { resolveViewportTooltipPosition } from '../../utils/chartTooltipPosition'
+import { buildChunithmJacketUrl } from '../../utils/jacket'
 import { formatInteger, formatScoreKilo } from '../../utils/numberFormat'
 import { clampNumericInput } from '../../utils/numberInput'
 import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
@@ -76,6 +77,8 @@ import {
   WEAK_CHART_POINT_JITTER,
   WEAK_CHART_SCORE_TICK_INTERVAL,
   WEAK_CHART_SETTINGS_COPY,
+  WEAK_CHART_TOOLTIP_JACKET_OBJECT_POSITION,
+  WEAK_CHART_TOOLTIP_JACKET_OPACITY,
   WEAK_CHART_TOOLTIP_POINT_GAP,
   WEAK_CHART_TOOLTIP_TITLE_CLASS,
   WEAK_CHART_TOOLTIP_VIEWPORT_PADDING,
@@ -182,6 +185,37 @@ const createPoints = (records: PlayerRecordDTO[]): InspectorPoint[] =>
 const createChartKey = (record: PlayerRecordDTO): string => `${record.id}:${record.difficulty}`
 
 /**
+ * ツールチップ背景用のジャケット要素を生成する。
+ *
+ * @param jacketUrl - 背景に表示するジャケット画像URL。nullの場合は生成しない。
+ * @returns 中央付近を切り抜いて薄く表示する背景要素。URLがない場合はnull。
+ */
+const createTooltipJacketBackground = (jacketUrl: string | null): HTMLDivElement | null => {
+  if (!jacketUrl) return null
+
+  const backgroundElement = document.createElement('div')
+  backgroundElement.className = 'pointer-events-none absolute inset-0 overflow-hidden'
+  backgroundElement.setAttribute('aria-hidden', 'true')
+
+  const imageElement = document.createElement('img')
+  imageElement.src = jacketUrl
+  imageElement.alt = ''
+  imageElement.setAttribute('aria-hidden', 'true')
+  imageElement.draggable = false
+  imageElement.style.width = '100%'
+  imageElement.style.height = '100%'
+  imageElement.style.objectFit = 'cover'
+  imageElement.style.objectPosition = WEAK_CHART_TOOLTIP_JACKET_OBJECT_POSITION
+  imageElement.style.opacity = String(WEAK_CHART_TOOLTIP_JACKET_OPACITY)
+  imageElement.onerror = (): void => {
+    imageElement.remove()
+  }
+  backgroundElement.append(imageElement)
+
+  return backgroundElement
+}
+
+/**
  * Chart.jsの外部ツールチップ要素を点の情報で更新する。
  *
  * @param tooltipElement - fixed配置で表示する外部ツールチップ要素。
@@ -203,6 +237,11 @@ const updateExternalTooltip = (
   const record = toInspectorPoint(dataPoint.raw).record
   tooltipElement.replaceChildren()
 
+  const jacketBackground = createTooltipJacketBackground(buildChunithmJacketUrl(record.img))
+  if (jacketBackground) {
+    tooltipElement.append(jacketBackground)
+  }
+
   const titleElement = document.createElement('div')
   titleElement.className = WEAK_CHART_TOOLTIP_TITLE_CLASS
   titleElement.textContent = record.title
@@ -211,7 +250,11 @@ const updateExternalTooltip = (
   detailElement.className = 'mt-1 text-text-muted'
   detailElement.textContent = `${record.difficulty} / 定数 ${formatChartConst(record.const)} / ${formatInteger(record.score)}`
 
-  tooltipElement.append(titleElement, detailElement)
+  const contentElement = document.createElement('div')
+  contentElement.className = 'relative'
+  contentElement.append(titleElement, detailElement)
+
+  tooltipElement.append(contentElement)
 
   const canvasRect = canvas.getBoundingClientRect()
   const tooltipRect = tooltipElement.getBoundingClientRect()
@@ -335,7 +378,7 @@ const WeakChartDistributionChart = (props: {
       </div>
       <div
         ref={tooltipRef}
-        class="pointer-events-none fixed z-50 max-w-[min(20rem,calc(100vw-1rem))] rounded-md border border-border-strong bg-surface-raised px-3 py-2 text-sm opacity-0 shadow-lg transition-opacity"
+        class="pointer-events-none fixed z-50 max-w-[min(20rem,calc(100vw-1rem))] overflow-hidden rounded-md border border-border-strong bg-surface-raised px-3 py-2 text-sm opacity-0 shadow-lg transition-opacity"
         role="tooltip"
       />
     </figure>
