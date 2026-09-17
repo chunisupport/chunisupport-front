@@ -1,3 +1,4 @@
+import { ONLINE_WEAK_CHART_MAX_DIFFERENCE_RANGE } from '../constants/chart'
 import type { PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
 
@@ -39,3 +40,18 @@ export const compareRecordsWithRatingBand = (
     return [{ record, averageScore, difference: record.score - Math.trunc(averageScore) }]
   })
 }
+
+/**
+ * 自分のスコアを中央に置くグラフの上下表示範囲を求める。
+ *
+ * @param entries - 平均スコアと照合できる譜面。
+ * @returns 最大平均との差と表示上限の小さい方。
+ */
+export const getSymmetricDifferenceLimit = (entries: readonly OnlineWeakChartEntry[]): number =>
+  Math.min(
+    ONLINE_WEAK_CHART_MAX_DIFFERENCE_RANGE,
+    entries.reduce(
+      (maximum, entry) => Math.max(maximum, Math.abs(entry.averageScore - entry.record.score)),
+      0
+    )
+  )

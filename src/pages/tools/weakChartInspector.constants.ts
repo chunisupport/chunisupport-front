@@ -36,21 +36,6 @@ export const WEAK_CHART_SCORE_TICK_INTERVAL = 1000
 /** 下部ナビゲーションで表示できる最大幅を基準にした散布図の最小幅 */
 export const WEAK_CHART_MIN_WIDTH_CLASS = 'min-w-[44rem]'
 
-/** Chart.js外部ツールチップのviewport端からの余白 */
-export const WEAK_CHART_TOOLTIP_VIEWPORT_PADDING = 8
-
-/** Chart.js外部ツールチップと選択点の間隔 */
-export const WEAK_CHART_TOOLTIP_POINT_GAP = 8
-
-/** Chart.js外部ツールチップの曲名へ適用するTailwindクラス */
-export const WEAK_CHART_TOOLTIP_TITLE_CLASS = 'font-sans font-semibold text-text'
-
-/** Chart.js外部ツールチップ背景のジャケットを薄く表示する不透明度 */
-export const WEAK_CHART_TOOLTIP_JACKET_OPACITY = 0.2
-
-/** Chart.js外部ツールチップ背景のジャケットを中央付近で切り抜く表示位置 */
-export const WEAK_CHART_TOOLTIP_JACKET_OBJECT_POSITION = 'center'
-
 /** グラフ設定画面の表示文言 */
 export const WEAK_CHART_SETTINGS_COPY = {
   title: 'グラフ設定',

@@ -28,10 +28,15 @@ import type { ChartScoresResponse } from '../../types/chartScores'
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { formatChartConst } from '../../utils/chartConstFormat'
+import {
+  CHART_SCATTER_TOOLTIP_CLASS,
+  updateChartScatterTooltip,
+} from '../../utils/chartScatterTooltip'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { formatInteger } from '../../utils/numberFormat'
 import {
   compareRecordsWithRatingBand,
+  getSymmetricDifferenceLimit,
   type OnlineWeakChartEntry,
 } from '../../utils/onlineWeakChartInspector'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
@@ -78,6 +83,7 @@ const createComparisonPoints = (entries: OnlineWeakChartEntry[]): ComparisonPoin
  */
 const OnlineWeakChartScatter = (props: { entries: OnlineWeakChartEntry[] }): JSX.Element => {
   let canvasRef!: HTMLCanvasElement
+  let tooltipRef!: HTMLDivElement
   let chart: Chart<'scatter', ComparisonPoint[]> | undefined
 
   createEffect(() => {
@@ -88,6 +94,7 @@ const OnlineWeakChartScatter = (props: { entries: OnlineWeakChartEntry[] }): JSX
     const gridColor = resolveChartColor('--cs-color-border', CHART_COLOR_FALLBACK)
     const lowerColor = resolveChartColor('--cs-color-weak-chart-outlier', CHART_COLOR_FALLBACK)
     const higherColor = resolveChartColor('--cs-color-weak-chart-point', CHART_COLOR_FALLBACK)
+    const differenceLimit = getSymmetricDifferenceLimit(props.entries)
 
     chart?.destroy()
     chart = new Chart(canvasRef, {
@@ -118,17 +125,17 @@ const OnlineWeakChartScatter = (props: { entries: OnlineWeakChartEntry[] }): JSX
         plugins: {
           legend: { labels: { color: textColor } },
           tooltip: {
-            callbacks: {
-              title: (items) => (items[0]?.raw as ComparisonPoint | undefined)?.entry.record.title,
-              label: (item) => {
-                const { entry } = item.raw as ComparisonPoint
-                return `${entry.record.difficulty} / 定数 ${formatChartConst(entry.record.const)} / ${formatScoreDifference(entry.difference)} 点`
-              },
-              afterLabel: (item) => {
-                const { entry } = item.raw as ComparisonPoint
-                return `自分 ${formatInteger(entry.record.score)} / 平均 ${formatInteger(Math.trunc(entry.averageScore))}`
-              },
-            },
+            enabled: false,
+            external: ({ tooltip }) =>
+              updateChartScatterTooltip(tooltipRef, canvasRef, tooltip, (raw) => {
+                const { entry } = raw as ComparisonPoint
+                return {
+                  record: entry.record,
+                  details: [
+                    `レート帯平均 ${formatInteger(Math.trunc(entry.averageScore))} / 差 ${formatScoreDifference(entry.difference)} 点`,
+                  ],
+                }
+              }),
           },
         },
         scales: {
@@ -139,7 +146,8 @@ const OnlineWeakChartScatter = (props: { entries: OnlineWeakChartEntry[] }): JSX
           },
           y: {
             title: { display: true, text: ONLINE_WEAK_CHART_COPY.yAxis, color: textColor },
-            beginAtZero: true,
+            min: -differenceLimit,
+            max: differenceLimit,
             grid: {
               color: (context) => (context.tick.value === 0 ? textColor : gridColor),
             },
@@ -163,6 +171,7 @@ const OnlineWeakChartScatter = (props: { entries: OnlineWeakChartEntry[] }): JSX
           <canvas ref={canvasRef} role="img" aria-label={ONLINE_WEAK_CHART_COPY.chartLabel} />
         </div>
       </div>
+      <div ref={tooltipRef} class={CHART_SCATTER_TOOLTIP_CLASS} role="tooltip" />
     </figure>
   )
 }
