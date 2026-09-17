@@ -1,9 +1,10 @@
-import type { GoalCreateRequest, GoalDTO } from '../../../types/api'
+import type { GoalAchievementType, GoalCreateRequest, GoalDTO } from '../../../types/api'
 import { filterRatingReachableRecords } from '../../../utils/goalRatingCount'
 import { calculateGoalOverPowerChartMax } from '../utils/goalOverPower'
 import {
   calculateGoalProgress,
   filterRecordsByAttributes,
+  type GoalOverPowerProgressContext,
   type GoalProgressResult,
 } from '../utils/goalProgress'
 import { calculateRainbowGoalProgress, filterRainbowTargetSongs } from '../utils/goalRainbow'
@@ -23,16 +24,28 @@ const EMPTY_DRAFT_GOAL_PROGRESS: GoalProgressResult = {
 }
 
 /**
- * OP対象のOVER POWER目標で曲内最大値を使うべきか判定する。
+ * OVER POWER系の目標種別か判定する。
  *
- * @param goal - 判定対象の目標。
- * @returns OP対象かつOVER POWER系の目標ならtrue。
+ * @param achievementType - 判定対象の目標種別。
+ * @returns OVER POWER合計または達成率の目標ならtrue。
  */
-export const shouldUseOpTargetSongAggregation = (
-  goal: Pick<GoalCreateRequest, 'achievement_type' | 'attributes'>
-): boolean =>
-  goal.attributes.chart_target === 'OP_TARGET' &&
-  (goal.achievement_type === 'overpower_value' || goal.achievement_type === 'overpower_percent')
+export const isOverPowerAchievementType = (
+  achievementType: GoalAchievementType
+): achievementType is 'overpower_value' | 'overpower_percent' =>
+  achievementType === 'overpower_value' || achievementType === 'overpower_percent'
+
+/**
+ * 目標一覧データからOVER POWER進捗計算用の入力を作る。
+ *
+ * @param data - 目標一覧画面で取得済みのデータ。
+ * @returns 未解禁曲設定を含むOVER POWER進捗計算用入力。
+ */
+const toOverPowerProgressContext = (data: GoalsListData): GoalOverPowerProgressContext => ({
+  records: data.records,
+  versions: data.versions,
+  masterData: data.masterData,
+  lockedSongs: data.lockedSongs,
+})
 
 /**
  * 保存済み目標一覧へ現在のプレイヤーレコードに基づく進捗を付与する。
@@ -56,13 +69,23 @@ export const buildGoalsWithProgress = (data: GoalsListData | undefined): GoalWit
         progress: calculateRainbowGoalProgress(goal, targetSongs, data.records),
       }
     }
+    if (isOverPowerAchievementType(goal.achievement_type)) {
+      return {
+        goal,
+        progress: calculateGoalProgress(
+          goal,
+          data.records,
+          data.songs,
+          toOverPowerProgressContext(data)
+        ),
+      }
+    }
     const filtered = filterRecordsByAttributes(
       data.records,
       goal.attributes,
       data.masterData,
       data.songs,
-      data.versions,
-      { includeAllChartsForOpTarget: shouldUseOpTargetSongAggregation(goal) }
+      data.versions
     )
     const progress = calculateGoalProgress(goal, filtered, data.songs)
     return { goal, progress }
@@ -115,15 +138,14 @@ export const resolveGoalOverPowerChartMax = (
 ): number => {
   if (!data) return 0
 
-  const filteredRecords = filterRecordsByAttributes(
+  return calculateGoalOverPowerChartMax(
     data.records,
-    attributes,
-    data.masterData,
     data.songs,
+    attributes,
     data.versions,
-    { includeAllChartsForOpTarget: attributes.chart_target === 'OP_TARGET' }
+    data.masterData,
+    data.lockedSongs
   )
-  return calculateGoalOverPowerChartMax(filteredRecords, data.songs, attributes)
 }
 
 /**
@@ -152,23 +174,29 @@ export const resolveDraftGoalProgress = (
     )
   }
 
+  const draftGoalDto = {
+    ...draftGoal,
+    id: 0,
+    sort_order: 0,
+    created_at: '',
+  }
+
+  if (isOverPowerAchievementType(draftGoal.achievement_type)) {
+    return calculateGoalProgress(
+      draftGoalDto,
+      data.records,
+      data.songs,
+      toOverPowerProgressContext(data)
+    )
+  }
+
   const filtered = filterRecordsByAttributes(
     data.records,
     draftGoal.attributes,
     data.masterData,
     data.songs,
-    data.versions,
-    { includeAllChartsForOpTarget: shouldUseOpTargetSongAggregation(draftGoal) }
+    data.versions
   )
 
-  return calculateGoalProgress(
-    {
-      ...draftGoal,
-      id: 0,
-      sort_order: 0,
-      created_at: '',
-    },
-    filtered,
-    data.songs
-  )
+  return calculateGoalProgress(draftGoalDto, filtered, data.songs)
 }

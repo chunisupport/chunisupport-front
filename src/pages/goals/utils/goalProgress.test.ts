@@ -357,7 +357,20 @@ test('OVER POWER合計目標のtotalが欠落している場合は対象譜面�
     createRecord({ id: 'song-1', overpower: 9 }),
     createRecord({ id: 'song-2', overpower: 7 }),
   ]
-  const songs = [createSong({ id: 'song-1', maxop: 10 }), createSong({ id: 'song-2', maxop: 8 })]
+  const songs = [
+    createSong({
+      id: 'song-1',
+      maxop: 85,
+      op_target_difficulty: 'MASTER',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
+    }),
+    createSong({
+      id: 'song-2',
+      maxop: 80,
+      op_target_difficulty: 'MASTER',
+      charts: { MASTER: { const: 13, is_const_unknown: false, notes: null } },
+    }),
+  ]
   const goal = createGoal({
     achievement_type: 'overpower_value',
     achievement_params: {},
@@ -366,7 +379,7 @@ test('OVER POWER合計目標のtotalが欠落している場合は対象譜面�
   const progress = calculateGoalProgress(goal, records, songs)
 
   assert.equal(progress.current, 16)
-  assert.equal(progress.target, 18)
+  assert.equal(progress.target, 165)
 })
 
 test('OP対象条件では曲ごとのOP対象難易度に一致するレコードだけを抽出する', () => {
@@ -496,31 +509,21 @@ test('OP対象のOVER POWER合計は曲ごとの現在OP対象レコードOPを�
       id: 'song-1',
       maxop: 90,
       op_target_difficulty: 'ULTIMA',
-      charts: { ULTIMA: { const: 15, is_const_unknown: false, notes: null } },
+      charts: {
+        MASTER: { const: 14, is_const_unknown: false, notes: null },
+        ULTIMA: { const: 15, is_const_unknown: false, notes: null },
+      },
     }),
     createSong({
       id: 'song-2',
       maxop: 85,
       op_target_difficulty: 'MASTER',
-      charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
+      charts: {
+        MASTER: { const: 14, is_const_unknown: false, notes: null },
+        ULTIMA: { const: 14.5, is_const_unknown: false, notes: null },
+      },
     }),
   ]
-  const filtered = filterRecordsByAttributes(
-    records,
-    { chart_target: 'OP_TARGET' },
-    {
-      genres: [],
-      difficulties: [],
-      versions: [],
-      account_types: [],
-      rating_bands: [],
-      achievement_types: [],
-      possessions: [],
-    },
-    songs,
-    [],
-    { includeAllChartsForOpTarget: true }
-  )
   const goal = createGoal({
     achievement_type: 'overpower_value',
     achievement_params: {},
@@ -528,7 +531,7 @@ test('OP対象のOVER POWER合計は曲ごとの現在OP対象レコードOPを�
   })
 
   // When
-  const progress = calculateGoalProgress(goal, filtered, songs)
+  const progress = calculateGoalProgress(goal, records, songs)
 
   // Then
   assert.equal(progress.current, 145)
@@ -541,7 +544,17 @@ test('OP対象フラグが全てfalseの場合は曲内最大OPで目標進捗�
     createRecord({ id: 'song-1', difficulty: 'MASTER', overpower: 80, is_op_target: false }),
     createRecord({ id: 'song-1', difficulty: 'ULTIMA', overpower: 90, is_op_target: false }),
   ]
-  const songs = [createSong({ id: 'song-1', maxop: 95, op_target_difficulty: 'ULTIMA' })]
+  const songs = [
+    createSong({
+      id: 'song-1',
+      maxop: 95,
+      op_target_difficulty: 'ULTIMA',
+      charts: {
+        MASTER: { const: 14, is_const_unknown: false, notes: null },
+        ULTIMA: { const: 16, is_const_unknown: false, notes: null },
+      },
+    }),
+  ]
   const goal = createGoal({
     achievement_type: 'overpower_value',
     achievement_params: {},
@@ -554,4 +567,60 @@ test('OP対象フラグが全てfalseの場合は曲内最大OPで目標進捗�
   // Then
   assert.equal(progress.current, 90)
   assert.equal(progress.target, 95)
+})
+
+test('未解禁曲設定はOVER POWER達成率の分母から差し引く', () => {
+  // Given
+  const records = [
+    createRecord({
+      id: 'song-1',
+      difficulty: 'MASTER',
+      overpower: 80,
+      const: 14,
+      is_op_target: true,
+    }),
+    createRecord({
+      id: 'song-1',
+      difficulty: 'ULTIMA',
+      overpower: 0,
+      const: 16,
+      is_op_target: false,
+    }),
+  ]
+  const songs = [
+    createSong({
+      id: 'song-1',
+      maxop: 95,
+      op_target_difficulty: 'ULTIMA',
+      charts: {
+        MASTER: { const: 14, is_const_unknown: false, notes: null },
+        ULTIMA: { const: 16, is_const_unknown: false, notes: null },
+      },
+    }),
+  ]
+  const goal = createGoal({
+    achievement_type: 'overpower_percent',
+    achievement_params: { total: 100 },
+    attributes: { chart_target: 'OP_TARGET' },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, songs, {
+    records,
+    versions: [],
+    masterData: {
+      genres: [],
+      difficulties: [],
+      versions: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+      possessions: [],
+    },
+    lockedSongs: [{ display_id: 'song-1', is_ultima: true }],
+  })
+
+  // Then
+  assert.equal(progress.current, (80 / 85) * 100)
+  assert.equal(progress.target, 100)
 })

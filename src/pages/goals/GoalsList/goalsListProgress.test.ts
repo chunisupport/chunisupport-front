@@ -2,9 +2,9 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalCreateRequest, PlayerRecordDTO } from '../../../types/api'
 import {
+  isOverPowerAchievementType,
   resolveDraftGoalProgress,
   resolveGoalAllCount,
-  shouldUseOpTargetSongAggregation,
 } from './goalsListProgress'
 import type { GoalsListData } from './goalsListResource'
 
@@ -37,22 +37,11 @@ const createRecord = (overrides: Partial<PlayerRecordDTO>): PlayerRecordDTO => (
   ...overrides,
 })
 
-test('OP対象かつOVER POWER系目標では曲単位集計を使う', () => {
+test('OVER POWER系の目標種別を判定する', () => {
   // Given / When / Then
-  assert.equal(
-    shouldUseOpTargetSongAggregation({
-      achievement_type: 'overpower_value',
-      attributes: { chart_target: 'OP_TARGET' },
-    }),
-    true
-  )
-  assert.equal(
-    shouldUseOpTargetSongAggregation({
-      achievement_type: 'rank_count',
-      attributes: { chart_target: 'OP_TARGET' },
-    }),
-    false
-  )
+  assert.equal(isOverPowerAchievementType('overpower_value'), true)
+  assert.equal(isOverPowerAchievementType('overpower_percent'), true)
+  assert.equal(isOverPowerAchievementType('rank_count'), false)
 })
 
 test('データ未取得時の下書き進捗は未達成の初期値を返す', () => {
@@ -99,6 +88,7 @@ test('単曲レート入力の変更に応じて到達可能譜面数を再解�
     },
     versions: [],
     records: [createRecord({ id: '15.8', const: 15.8 }), createRecord({ id: '15.9', const: 15.9 })],
+    lockedSongs: [],
   } satisfies GoalsListData
 
   // When
