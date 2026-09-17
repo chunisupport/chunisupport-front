@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { CHART_STATS_PATH, LOCKED_SONG_DISCOVERY_PATH } from './routes'
+import {
+  CHART_STATS_PATH,
+  LOCKED_SONG_DISCOVERY_PATH,
+  ONLINE_WEAK_CHART_INSPECTOR_PATH,
+} from './routes'
 import { isPublicToolLink, isToolLinkListed, TOOL_LINKS, type ToolLink } from './tools'
 
 const publicTool: ToolLink = {
@@ -60,6 +64,18 @@ test('未解禁曲ディスカバーは ADMIN 限定ツールとして定義さ�
   assert.ok(lockedSongDiscovery)
   assert.equal(lockedSongDiscovery.adminOnly, true)
   assert.equal(isPublicToolLink(lockedSongDiscovery), false)
+})
+
+test('苦手譜面インスペクター Online は ADMIN 限定ツールとして定義されていること', () => {
+  // Given
+  const onlineWeakChartInspector = TOOL_LINKS.find(
+    (tool) => tool.href === ONLINE_WEAK_CHART_INSPECTOR_PATH
+  )
+
+  // When / Then
+  assert.ok(onlineWeakChartInspector)
+  assert.equal(onlineWeakChartInspector.adminOnly, true)
+  assert.equal(isPublicToolLink(onlineWeakChartInspector), false)
 })
 
 test('レコード統計は公開ツールとして定義されていること', () => {
