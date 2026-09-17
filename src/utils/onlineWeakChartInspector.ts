@@ -1,6 +1,8 @@
-import { ONLINE_WEAK_CHART_MAX_DIFFERENCE_RANGE } from '../constants/chart'
 import type { PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
+import { formatChartConst } from './chartConstFormat'
+import { formatInteger } from './numberFormat'
+import { formatScoreDifference } from './scoreDifference'
 
 /** 同じレート帯の平均と比較できるプレイ済み譜面 */
 export interface OnlineWeakChartEntry {
@@ -8,6 +10,19 @@ export interface OnlineWeakChartEntry {
   averageScore: number
   difference: number
 }
+
+/**
+ * 苦手譜面インスペクター Online のツールチップへ表示する譜面情報を整形する。
+ *
+ * @param record - 表示する譜面レコード。
+ * @param difference - 自分のスコアとレート帯平均の差。
+ * @returns 難易度、譜面定数、自分のスコア、差分を含む表示文字列。
+ */
+export const formatOnlineWeakChartTooltipDetail = (
+  record: Pick<PlayerRecordDTO, 'difficulty' | 'const' | 'score'>,
+  difference: number
+): string =>
+  `${record.difficulty} ${formatChartConst(record.const)} / ${formatInteger(record.score)} (${formatScoreDifference(difference)})`
 
 /**
  * プレイ済み譜面と選択レート帯の平均スコアを照合する。
@@ -40,18 +55,3 @@ export const compareRecordsWithRatingBand = (
     return [{ record, averageScore, difference: record.score - Math.trunc(averageScore) }]
   })
 }
-
-/**
- * 自分のスコアを中央に置くグラフの上下表示範囲を求める。
- *
- * @param entries - 平均スコアと照合できる譜面。
- * @returns 最大平均との差と表示上限の小さい方。
- */
-export const getSymmetricDifferenceLimit = (entries: readonly OnlineWeakChartEntry[]): number =>
-  Math.min(
-    ONLINE_WEAK_CHART_MAX_DIFFERENCE_RANGE,
-    entries.reduce(
-      (maximum, entry) => Math.max(maximum, Math.abs(entry.averageScore - entry.record.score)),
-      0
-    )
-  )

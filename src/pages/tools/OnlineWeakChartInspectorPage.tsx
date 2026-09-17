@@ -18,6 +18,7 @@ import { AppButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
+import { ONLINE_WEAK_CHART_MAX_DIFFERENCE_RANGE } from '../../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import { buildSongDetailPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -36,7 +37,7 @@ import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { formatInteger } from '../../utils/numberFormat'
 import {
   compareRecordsWithRatingBand,
-  getSymmetricDifferenceLimit,
+  formatOnlineWeakChartTooltipDetail,
   type OnlineWeakChartEntry,
 } from '../../utils/onlineWeakChartInspector'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
@@ -94,7 +95,6 @@ const OnlineWeakChartScatter = (props: { entries: OnlineWeakChartEntry[] }): JSX
     const gridColor = resolveChartColor('--cs-color-border', CHART_COLOR_FALLBACK)
     const lowerColor = resolveChartColor('--cs-color-weak-chart-outlier', CHART_COLOR_FALLBACK)
     const higherColor = resolveChartColor('--cs-color-weak-chart-point', CHART_COLOR_FALLBACK)
-    const differenceLimit = getSymmetricDifferenceLimit(props.entries)
 
     chart?.destroy()
     chart = new Chart(canvasRef, {
@@ -131,23 +131,19 @@ const OnlineWeakChartScatter = (props: { entries: OnlineWeakChartEntry[] }): JSX
                 const { entry } = raw as ComparisonPoint
                 return {
                   record: entry.record,
-                  details: [
-                    `レート帯平均 ${formatInteger(Math.trunc(entry.averageScore))} / 差 ${formatScoreDifference(entry.difference)} 点`,
-                  ],
+                  detail: formatOnlineWeakChartTooltipDetail(entry.record, entry.difference),
                 }
               }),
           },
         },
         scales: {
           x: {
-            title: { display: true, text: ONLINE_WEAK_CHART_COPY.xAxis, color: textColor },
             grid: { color: gridColor },
             ticks: { color: textColor },
           },
           y: {
-            title: { display: true, text: ONLINE_WEAK_CHART_COPY.yAxis, color: textColor },
-            min: -differenceLimit,
-            max: differenceLimit,
+            min: -ONLINE_WEAK_CHART_MAX_DIFFERENCE_RANGE,
+            max: ONLINE_WEAK_CHART_MAX_DIFFERENCE_RANGE,
             grid: {
               color: (context) => (context.tick.value === 0 ? textColor : gridColor),
             },

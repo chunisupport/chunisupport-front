@@ -13,10 +13,10 @@ const TOOLTIP_JACKET_OPACITY = 0.2
 export const CHART_SCATTER_TOOLTIP_CLASS =
   'pointer-events-none fixed z-50 max-w-[min(20rem,calc(100vw-1rem))] overflow-hidden rounded-md border border-border-strong bg-surface-raised px-3 py-2 text-sm opacity-0 shadow-lg transition-opacity'
 
-/** 散布図の点から表示する譜面情報と追加行 */
+/** 散布図の点から表示する譜面情報と表示行 */
 export type ChartScatterTooltipContent = {
   record: PlayerRecordDTO
-  details?: readonly string[]
+  detail?: string
 }
 
 /**
@@ -39,7 +39,7 @@ export const updateChartScatterTooltip = (
     return
   }
 
-  const { record, details = [] } = resolveContent(tooltip.dataPoints[0].raw)
+  const { record, detail } = resolveContent(tooltip.dataPoints[0].raw)
   tooltipElement.replaceChildren()
 
   const jacketUrl = buildChunithmJacketUrl(record.img)
@@ -69,17 +69,13 @@ export const updateChartScatterTooltip = (
 
   const detailElement = document.createElement('div')
   detailElement.className = 'mt-1 text-text-muted'
-  detailElement.textContent = `${record.difficulty} / 定数 ${formatChartConst(record.const)} / ${formatInteger(record.score)}`
+  detailElement.textContent =
+    detail ??
+    `${record.difficulty} / 定数 ${formatChartConst(record.const)} / ${formatInteger(record.score)}`
 
   const contentElement = document.createElement('div')
   contentElement.className = 'relative'
   contentElement.append(titleElement, detailElement)
-  for (const detail of details) {
-    const extraElement = document.createElement('div')
-    extraElement.className = 'text-text-muted'
-    extraElement.textContent = detail
-    contentElement.append(extraElement)
-  }
   tooltipElement.append(contentElement)
 
   const canvasRect = canvas.getBoundingClientRect()
