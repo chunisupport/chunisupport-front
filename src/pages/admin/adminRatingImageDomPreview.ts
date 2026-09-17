@@ -134,6 +134,7 @@ export const buildRatingImageDomPreviewSample = (): RatingImageDomPreviewModel =
     rating: 17.32,
     class_emblem_id: null,
     class_emblem_base_id: null,
+    possession_id: 1,
     last_played_at: null,
     overpower_value: 12_345.678,
     overpower_percent: 12.34567,

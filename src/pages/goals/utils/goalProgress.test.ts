@@ -401,6 +401,7 @@ test('OP対象条件では曲ごとのOP対象難易度に一致するレコー�
       account_types: [],
       rating_bands: [],
       achievement_types: [],
+      possessions: [],
     },
     songs,
     []
@@ -434,6 +435,7 @@ test('属性が空配列の場合は対象レコードなしとして扱う', ()
       account_types: [],
       rating_bands: [],
       achievement_types: [],
+      possessions: [],
     },
     [],
     []
@@ -471,6 +473,7 @@ test('OP対象条件でも難易度属性が空配列の場合は対象レコー
       account_types: [],
       rating_bands: [],
       achievement_types: [],
+      possessions: [],
     },
     songs,
     []
@@ -512,6 +515,7 @@ test('OP対象のOVER POWER合計は曲ごとの現在OP対象レコードOPを�
       account_types: [],
       rating_bands: [],
       achievement_types: [],
+      possessions: [],
     },
     songs,
     [],

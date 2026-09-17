@@ -21,6 +21,7 @@ const MASTER_DATA: MasterDataDTO = {
   account_types: [],
   rating_bands: [],
   achievement_types: [],
+  possessions: [],
 }
 
 const VERSIONS: VersionDTO[] = [

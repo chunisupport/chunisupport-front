@@ -359,3 +359,51 @@ test('fetchSongsUpdatedAt は失敗後に再試行できる', async () => {
   assert.equal(fetchCount, 2)
   assert.equal(result.updated_at, '2026-06-16T12:00:00Z')
 })
+
+test('fetchMasterData は所持状況マスタをID順で受け取る', async () => {
+  // Given: 順不同の所持状況マスタを含むマスターデータ。
+  installFetchRecorder(() =>
+    Response.json({
+      genres: [],
+      difficulties: [],
+      versions: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+      possessions: [
+        { id: 5, name: 'rainbow' },
+        { id: 1, name: 'normal' },
+      ],
+    })
+  )
+
+  // When: マスターデータを取得する。
+  const { fetchMasterData } = await loadSongsApi()
+  const result = await fetchMasterData()
+
+  // Then: 所持状況がID昇順で受け取れる。
+  assert.equal(result.possessions.length, 2)
+  assert.equal(result.possessions[0]?.name, 'normal')
+  assert.equal(result.possessions[1]?.name, 'rainbow')
+})
+
+test('fetchMasterData は所持状況マスタが無い場合に空配列へ正規化する', async () => {
+  // Given: 所持状況を含まない旧マスターデータ。
+  installFetchRecorder(() =>
+    Response.json({
+      genres: [],
+      difficulties: [],
+      versions: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+    })
+  )
+
+  // When: マスターデータを取得する。
+  const { fetchMasterData } = await loadSongsApi()
+  const result = await fetchMasterData()
+
+  // Then: 呼び出し側が未定義を扱わずに済む。
+  assert.deepEqual(result.possessions, [])
+})

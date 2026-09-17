@@ -534,6 +534,9 @@ export interface AchievementTypeDTO {
   label?: string
   name?: string
 }
+/** プレイヤー所持状況のマスタ名称 */
+export type PossessionName = 'normal' | 'silver' | 'gold' | 'platina' | 'rainbow'
+
 export interface MasterDataDTO {
   genres: MasterItemDTO[]
   difficulties: MasterItemDTO[]
@@ -541,6 +544,8 @@ export interface MasterDataDTO {
   account_types: MasterItemDTO[]
   rating_bands: RatingBandDTO[]
   achievement_types: AchievementTypeDTO[]
+  /** プレイヤー所持状況一覧（ID順）。`PlayerDTO.possession_id` の解決に使用する */
+  possessions: MasterItemDTO[]
 }
 
 export interface VersionDTO {
@@ -769,6 +774,11 @@ export interface PlayerDataProfile {
   rating: number | null
   class_emblem_id: number | null
   class_emblem_base_id: number | null
+  /**
+   * プレイヤー所持状況ID。`MasterDataDTO.possessions` の `id` に対応する。
+   * 現行APIは常に返すが、保存済み最新更新結果の旧schemaでは未返却のことがある。
+   */
+  possession_id?: number
   last_played_at: string | null
   overpower_value: number | null
   overpower_percent: number | null
@@ -1029,6 +1039,8 @@ export interface PlayerDTO {
   rating: number
   class_emblem_id: number | null
   class_emblem_base_id: number | null
+  /** プレイヤー所持状況ID。`MasterDataDTO.possessions` の `id` に対応する */
+  possession_id: number
   last_played_at: string | null
   overpower_value: number | null
   overpower_percent: number | null

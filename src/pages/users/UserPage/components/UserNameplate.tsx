@@ -20,6 +20,7 @@ import { formatNullablePlayerRating } from '../../../../utils/ratingFormat'
 import {
   hasUnknownChartConstants,
   hasUnknownOverPowerChartConstants,
+  hasUnknownOverPowerPercentChartConstants,
 } from '../../../../utils/unknownChartConstant'
 import {
   USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL,
@@ -40,7 +41,7 @@ type Props = {
   rating: UserRatingDTO
   /** RATING・OVER POWER・OP%履歴ページへのリンク先 */
   historyHref: string
-  /** 通常譜面レコード。未取得時はOVER POWERの定数未判明判定を行わない */
+  /** 通常譜面レコード。未取得時はOVER POWER値・達成率の定数未判明判定を行わない */
   records?: readonly PlayerRecordDTO[]
 }
 
@@ -222,6 +223,10 @@ export const UserNameplate: Component<Props> = (props) => {
   const overPowerHasUnknownChartConstants = createMemo(() =>
     hasUnknownOverPowerChartConstants(props.records ?? [])
   )
+  /** OVER POWER達成率の計算対象に定数未判明の譜面が含まれるか */
+  const overPowerPercentHasUnknownChartConstants = createMemo(() =>
+    hasUnknownOverPowerPercentChartConstants(props.records ?? [])
+  )
   /** OVER POWER値の表示文字列。未設定時は undefined */
   const overPowerValueText = createMemo(() =>
     props.playerInfo.overpower_value == null
@@ -350,7 +355,7 @@ export const UserNameplate: Component<Props> = (props) => {
               <Show when={overPowerPercentText() !== undefined} fallback="%">
                 <UnknownConstMetricValue
                   value={`${overPowerPercentText() ?? ''}%`}
-                  unknown={overPowerHasUnknownChartConstants()}
+                  unknown={overPowerPercentHasUnknownChartConstants()}
                 />
               </Show>
             </span>

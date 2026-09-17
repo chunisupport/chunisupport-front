@@ -8,6 +8,7 @@ import type {
   ManagedSongDTO,
   ManagedWorldsendSongDTO,
   MasterDataDTO,
+  MasterItemDTO,
   ScoreHistoryResponseDTO,
   SongDTO,
   SongStatsResponseDTO,
@@ -437,8 +438,12 @@ export const restoreWorldsendSongByDisplayId = async (displayId: string): Promis
  */
 const fetchMasterDataFromApi = async (): Promise<MasterDataDTO> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/master`)
-  const raw = (await response.json()) as Omit<MasterDataDTO, 'achievement_types'> & {
+  const raw = (await response.json()) as Omit<
+    MasterDataDTO,
+    'achievement_types' | 'possessions'
+  > & {
     achievement_types?: unknown[]
+    possessions?: MasterItemDTO[]
   }
 
   const achievementTypes: AchievementTypeDTO[] = (raw.achievement_types ?? [])
@@ -481,6 +486,7 @@ const fetchMasterDataFromApi = async (): Promise<MasterDataDTO> => {
   return {
     ...raw,
     genres: sortMasterItemsBySortOrder(raw.genres ?? []),
+    possessions: sortMasterItemsBySortOrder(raw.possessions ?? []),
     achievement_types: achievementTypes,
   }
 }

@@ -95,6 +95,7 @@ test('単曲レート入力の変更に応じて到達可能譜面数を再解�
       account_types: [],
       rating_bands: [],
       achievement_types: [],
+      possessions: [],
     },
     versions: [],
     records: [createRecord({ id: '15.8', const: 15.8 }), createRecord({ id: '15.9', const: 15.9 })],
