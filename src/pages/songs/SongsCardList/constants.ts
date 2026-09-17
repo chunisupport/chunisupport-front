@@ -57,8 +57,12 @@ export const SONG_CARD_JACKET_HEIGHT_PX = 128
 /** カード下部の難易度行の高さ（px） */
 export const SONG_CARD_CHART_ROW_HEIGHT_PX = 40
 
-/** カード1枚の高さ（px） */
-export const SONG_CARD_HEIGHT_PX = SONG_CARD_JACKET_HEIGHT_PX + SONG_CARD_CHART_ROW_HEIGHT_PX
+/** カード外枠ボーダーの上下合計（px）。border-box のため内容領域から差し引かれる */
+export const SONG_CARD_BORDER_HEIGHT_PX = 2
+
+/** カード1枚の高さ（px）。外枠ボーダーを含む */
+export const SONG_CARD_HEIGHT_PX =
+  SONG_CARD_JACKET_HEIGHT_PX + SONG_CARD_CHART_ROW_HEIGHT_PX + SONG_CARD_BORDER_HEIGHT_PX
 
 /** 仮想行の見積もり高さ（カード高 + 行間） */
 export const SONG_CARD_ROW_HEIGHT_PX = SONG_CARD_HEIGHT_PX + SONG_CARD_ROW_GAP_PX

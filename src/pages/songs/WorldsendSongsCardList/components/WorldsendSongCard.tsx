@@ -89,7 +89,7 @@ const WorldsendSongCard = (props: WorldsendSongCardProps) => {
       style={{ height: `${SONG_CARD_HEIGHT_PX}px` }}
     >
       <div
-        class="flex min-h-0 min-w-0 flex-1"
+        class="flex min-h-0 min-w-0 flex-1 overflow-hidden"
         style={{ height: `${SONG_CARD_JACKET_HEIGHT_PX}px` }}
       >
         <JacketImage
