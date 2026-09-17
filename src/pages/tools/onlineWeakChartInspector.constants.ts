@@ -4,15 +4,24 @@ export const ONLINE_WEAK_CHART_COPY = {
   description: '自分のスコアを、同じレート帯の平均スコアと比較します。',
   ratingBand: '比較するレート帯',
   difficulty: '難易度',
-  chartTitle: '譜面定数別の平均スコアとの差',
+  chartTitle: '平均スコアとの差',
   chartLabel: '横軸が譜面定数、縦軸が自分のスコアから同レート帯の平均スコアを引いた値の散布図',
   tableTitle: '平均との比較一覧',
   tableCaption: '自分のスコアと同レート帯の平均スコアの比較',
   empty: '比較できるプレイ済み譜面がありません。',
   more: 'さらに表示',
-  ownScore: '自分のスコア',
-  averageScore: 'レート帯平均',
-  difference: '平均との差',
+  ownScore: 'スコア',
+  averageScore: '平均',
+  difference: '点差',
+  settingsTitle: '表示・集計範囲',
+  settingsOpen: '表示・集計範囲を開く',
+  scoreRange: '平均スコアとの差',
+  chartConstRange: '譜面定数',
+  chartConstMin: '譜面定数 最小',
+  chartConstMax: '譜面定数 最大',
+  reset: '初期値に戻す',
+  cancel: 'キャンセル',
+  apply: '適用',
   lowerDataset: '平均より低い',
   higherDataset: '平均以上',
   songTitle: '曲名',
@@ -24,3 +33,14 @@ export const ONLINE_WEAK_CHART_PAGE_SIZE = 100
 
 /** 散布図の譜面定数座標をずらす最大単位 */
 export const ONLINE_WEAK_CHART_POINT_JITTER = 0.012
+
+/** Online の表示・集計範囲の初期値 */
+export const ONLINE_WEAK_CHART_FILTER_DEFAULT = {
+  difficulties: ['MASTER', 'ULTIMA'],
+  differenceRange: 10000,
+  constMin: 1,
+  constMax: 16,
+} as const
+
+/** Online の平均との差に指定できる最小値 */
+export const ONLINE_WEAK_CHART_DIFFERENCE_RANGE_MIN = 1

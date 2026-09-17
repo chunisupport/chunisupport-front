@@ -1,4 +1,4 @@
-import type { PlayerRecordDTO } from '../types/api'
+import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
 import { formatChartConst } from './chartConstFormat'
 import { formatInteger } from './numberFormat'
@@ -10,6 +10,33 @@ export interface OnlineWeakChartEntry {
   averageScore: number
   difference: number
 }
+
+/** Online の表示・集計範囲 */
+export interface OnlineWeakChartFilter {
+  difficulties: readonly PlayerDataDifficulty[]
+  differenceRange: number
+  constMin: number
+  constMax: number
+}
+
+/**
+ * 比較結果から表示・集計範囲に含まれる譜面を抽出する。
+ *
+ * @param entries - レート帯平均との比較結果。
+ * @param filter - 難易度、点差、譜面定数の範囲。
+ * @returns 範囲内の比較結果。
+ */
+export const filterOnlineWeakChartEntries = (
+  entries: readonly OnlineWeakChartEntry[],
+  filter: OnlineWeakChartFilter
+): OnlineWeakChartEntry[] =>
+  entries.filter(
+    ({ record, difference }) =>
+      filter.difficulties.some((difficulty) => difficulty === record.difficulty.toUpperCase()) &&
+      Math.abs(difference) <= filter.differenceRange &&
+      record.const >= filter.constMin &&
+      record.const <= filter.constMax
+  )
 
 /**
  * 苦手譜面インスペクター Online のツールチップへ表示する譜面情報を整形する。

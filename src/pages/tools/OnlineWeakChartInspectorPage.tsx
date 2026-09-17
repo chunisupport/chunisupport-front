@@ -1,6 +1,8 @@
+import { Dialog } from '@kobalte/core/dialog'
+import { NumberField } from '@kobalte/core/number-field'
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, PointElement, ScatterController, Tooltip } from 'chart.js'
-import { ChartNoAxesCombined } from 'lucide-solid'
+import { ChartNoAxesCombined, Minus, Plus, RotateCcw, Settings } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -14,11 +16,11 @@ import {
 import { fetchChartScores } from '../../api/chartScores'
 import { fetchRatingBands } from '../../api/ratingBands'
 import { LoadError, Loading } from '../../components'
-import { AppButton } from '../../components/common/AppButton'
+import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
-import { ONLINE_WEAK_CHART_MAX_DIFFERENCE_RANGE } from '../../constants/chart'
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_THEORETICAL_MAX } from '../../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import { buildSongDetailPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -35,15 +37,20 @@ import {
 } from '../../utils/chartScatterTooltip'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { formatInteger } from '../../utils/numberFormat'
+import { clampNumericInput } from '../../utils/numberInput'
 import {
   compareRecordsWithRatingBand,
+  filterOnlineWeakChartEntries,
   formatOnlineWeakChartTooltipDetail,
   type OnlineWeakChartEntry,
+  type OnlineWeakChartFilter,
 } from '../../utils/onlineWeakChartInspector'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import { formatScoreDifference, getScoreDifferenceClass } from '../../utils/scoreDifference'
 import {
   ONLINE_WEAK_CHART_COPY,
+  ONLINE_WEAK_CHART_DIFFERENCE_RANGE_MIN,
+  ONLINE_WEAK_CHART_FILTER_DEFAULT,
   ONLINE_WEAK_CHART_PAGE_SIZE,
   ONLINE_WEAK_CHART_POINT_JITTER,
 } from './onlineWeakChartInspector.constants'
@@ -52,6 +59,38 @@ Chart.register(ScatterController, LinearScale, PointElement, Tooltip)
 
 type RatingBandOption = { label: string; value: string }
 type ComparisonPoint = { x: number; y: number; entry: OnlineWeakChartEntry }
+
+/**
+ * 設定画面に範囲内補正付きの数値欄を表示する。
+ *
+ * @param props - 入力値、範囲、刻み、ラベルと変更処理。
+ * @returns 数値入力欄。
+ */
+const FilterNumberField = (props: {
+  value: string
+  min: number
+  max: number
+  step: number
+  label: string
+  onChange: (value: string) => void
+}): JSX.Element => (
+  <NumberField
+    class="block flex-1"
+    value={props.value}
+    onChange={(value) => props.onChange(clampNumericInput(value, props.min, props.max))}
+    format={false}
+    allowedInput={props.step === 1 ? /[0-9]/ : /[0-9.]/}
+    step={props.step}
+  >
+    <NumberField.Label class="sr-only">{props.label}</NumberField.Label>
+    <NumberField.Input
+      min={props.min}
+      max={props.max}
+      step={props.step}
+      class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-focus-ring"
+    />
+  </NumberField>
+)
 
 /**
  * 選択した難易度の公開スコア統計を取得する。
@@ -80,9 +119,13 @@ const createComparisonPoints = (entries: OnlineWeakChartEntry[]): ComparisonPoin
  * 譜面定数ごとに平均との差を散布図で表示する。
  *
  * @param props.entries - 比較対象の譜面。
+ * @param props.differenceRange - 縦軸に表示する点差の絶対値。
  * @returns 平均以下と平均以上を色分けした散布図。
  */
-const OnlineWeakChartScatter = (props: { entries: OnlineWeakChartEntry[] }): JSX.Element => {
+const OnlineWeakChartScatter = (props: {
+  entries: OnlineWeakChartEntry[]
+  differenceRange: number
+}): JSX.Element => {
   let canvasRef!: HTMLCanvasElement
   let tooltipRef!: HTMLDivElement
   let chart: Chart<'scatter', ComparisonPoint[]> | undefined
@@ -142,8 +185,8 @@ const OnlineWeakChartScatter = (props: { entries: OnlineWeakChartEntry[] }): JSX
             ticks: { color: textColor },
           },
           y: {
-            min: -ONLINE_WEAK_CHART_MAX_DIFFERENCE_RANGE,
-            max: ONLINE_WEAK_CHART_MAX_DIFFERENCE_RANGE,
+            min: -props.differenceRange,
+            max: props.differenceRange,
             grid: {
               color: (context) => (context.tick.value === 0 ? textColor : gridColor),
             },
@@ -184,11 +227,19 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
   const [ownRating] = createResource(username, fetchUserRatingWithCache)
   const [ownRecords] = createResource(username, fetchUserRecordWithCache)
   const [selectedBand, setSelectedBand] = createSignal<RatingBandOption | null>(null)
-  const [selectedDifficulties, setSelectedDifficulties] = createSignal<PlayerDataDifficulty[]>([
-    'MASTER',
-    'ULTIMA',
-  ])
-  const [scoreSnapshots] = createResource(selectedDifficulties, fetchSelectedChartScores)
+  const [filter, setFilter] = createSignal<OnlineWeakChartFilter>({
+    ...ONLINE_WEAK_CHART_FILTER_DEFAULT,
+  })
+  const [settingsOpen, setSettingsOpen] = createSignal(false)
+  const [editDifficulties, setEditDifficulties] = createSignal<PlayerDataDifficulty[]>([])
+  const [editDifferenceRange, setEditDifferenceRange] = createSignal('')
+  const [editConstMin, setEditConstMin] = createSignal('')
+  const [editConstMax, setEditConstMax] = createSignal('')
+  let settingsContentRef!: HTMLDivElement
+  const [scoreSnapshots] = createResource(
+    () => [...filter().difficulties],
+    fetchSelectedChartScores
+  )
   const [visibleCount, setVisibleCount] = createSignal(ONLINE_WEAK_CHART_PAGE_SIZE)
 
   const ratingBandOptions = createMemo(() =>
@@ -208,10 +259,13 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
   })
 
   const entries = createMemo(() =>
-    compareRecordsWithRatingBand(
-      ownRecords()?.standard ?? [],
-      scoreSnapshots() ?? [],
-      selectedBand()?.value ?? ''
+    filterOnlineWeakChartEntries(
+      compareRecordsWithRatingBand(
+        ownRecords()?.standard ?? [],
+        scoreSnapshots() ?? [],
+        selectedBand()?.value ?? ''
+      ),
+      filter()
     ).sort((left, right) => left.difference - right.difference)
   )
   const visibleEntries = createMemo(() => entries().slice(0, visibleCount()))
@@ -227,26 +281,104 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
    * @returns なし。
    */
   const toggleDifficulty = (difficulty: PlayerDataDifficulty): void => {
-    setSelectedDifficulties((current) =>
+    setEditDifficulties((current) =>
       current.includes(difficulty)
         ? current.length > 1
           ? current.filter((item) => item !== difficulty)
           : current
         : PLAYER_DATA_DIFFICULTIES.filter((item) => current.includes(item) || item === difficulty)
     )
+  }
+
+  /**
+   * 適用中の条件を編集欄へ反映して設定を開く。
+   *
+   * @returns なし。
+   */
+  const openSettings = (): void => {
+    setEditDifficulties([...filter().difficulties])
+    setEditDifferenceRange(String(filter().differenceRange))
+    setEditConstMin(String(filter().constMin))
+    setEditConstMax(String(filter().constMax))
+    setSettingsOpen(true)
+  }
+
+  /**
+   * 編集中の条件を初期値に戻す。
+   *
+   * @returns なし。
+   */
+  const resetSettings = (): void => {
+    setEditDifficulties([...ONLINE_WEAK_CHART_FILTER_DEFAULT.difficulties])
+    setEditDifferenceRange(String(ONLINE_WEAK_CHART_FILTER_DEFAULT.differenceRange))
+    setEditConstMin(String(ONLINE_WEAK_CHART_FILTER_DEFAULT.constMin))
+    setEditConstMax(String(ONLINE_WEAK_CHART_FILTER_DEFAULT.constMax))
+  }
+
+  /**
+   * 編集中の範囲をグラフと表へ適用する。
+   *
+   * @returns なし。
+   */
+  const applySettings = (): void => {
+    const differenceRange = Number(editDifferenceRange())
+    const constMin = Number(editConstMin()) || CHART_CONST_MIN
+    const constMax = Number(editConstMax()) || CHART_CONST_MAX
+    setFilter({
+      difficulties: [...editDifficulties()],
+      differenceRange:
+        differenceRange >= ONLINE_WEAK_CHART_DIFFERENCE_RANGE_MIN
+          ? differenceRange
+          : ONLINE_WEAK_CHART_FILTER_DEFAULT.differenceRange,
+      constMin: Math.min(constMin, constMax),
+      constMax: Math.max(constMin, constMax),
+    })
     setVisibleCount(ONLINE_WEAK_CHART_PAGE_SIZE)
+    setSettingsOpen(false)
+  }
+
+  /**
+   * 設定の開閉を処理する。
+   *
+   * @param open - 次の開閉状態。
+   * @returns なし。
+   */
+  const handleSettingsOpenChange = (open: boolean): void => {
+    if (open) openSettings()
+    else setSettingsOpen(false)
+  }
+
+  /**
+   * 設定を開いた際にダイアログ本体へフォーカスする。
+   *
+   * @param event - 自動フォーカスイベント。
+   * @returns なし。
+   */
+  const handleSettingsOpenAutoFocus = (event: Event): void => {
+    event.preventDefault()
+    settingsContentRef.focus()
   }
 
   return (
     <main class="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4">
-      <header class="flex items-start gap-3">
-        <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
-          <ChartNoAxesCombined class="h-5 w-5 text-action-primary" aria-hidden="true" />
-        </span>
-        <div>
-          <h1 class="text-2xl font-semibold">{ONLINE_WEAK_CHART_COPY.title}</h1>
-          <p class="mt-1 text-sm text-text-muted">{ONLINE_WEAK_CHART_COPY.description}</p>
+      <header class="flex items-start justify-between gap-3">
+        <div class="flex items-start gap-3">
+          <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+            <ChartNoAxesCombined class="h-5 w-5 text-action-primary" aria-hidden="true" />
+          </span>
+          <div>
+            <h1 class="text-2xl font-semibold">{ONLINE_WEAK_CHART_COPY.title}</h1>
+            <p class="mt-1 text-sm text-text-muted">{ONLINE_WEAK_CHART_COPY.description}</p>
+          </div>
         </div>
+        <AppIconButton
+          tone="ghost"
+          aria-label={ONLINE_WEAK_CHART_COPY.settingsOpen}
+          onClick={openSettings}
+          class="shrink-0"
+        >
+          <Settings class="h-5 w-5" aria-hidden="true" />
+        </AppIconButton>
       </header>
 
       <div class="flex flex-wrap items-end gap-4 rounded-lg border border-border bg-surface p-4">
@@ -268,22 +400,108 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
             formatLabel={(option) => option.label}
           />
         </Show>
-        <fieldset class="flex flex-wrap gap-x-3 gap-y-1">
-          <legend class="mb-1 text-sm font-medium">{ONLINE_WEAK_CHART_COPY.difficulty}</legend>
-          <For each={PLAYER_DATA_DIFFICULTIES}>
-            {(difficulty) => (
-              <CheckboxField
-                id={`online-weak-chart-${difficulty}`}
-                checked={selectedDifficulties().includes(difficulty)}
-                onChange={() => toggleDifficulty(difficulty)}
-                label={difficulty}
-                textVariant="large"
-                class="relative flex items-center gap-2"
-              />
-            )}
-          </For>
-        </fieldset>
       </div>
+
+      <Dialog open={settingsOpen()} onOpenChange={handleSettingsOpenChange} preventScroll={false}>
+        <Dialog.Portal>
+          <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
+          <Dialog.Content
+            ref={settingsContentRef}
+            onOpenAutoFocus={handleSettingsOpenAutoFocus}
+            class="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg"
+          >
+            <div class="mb-4 flex shrink-0 items-center justify-between">
+              <Dialog.Title class="text-lg font-bold">
+                {ONLINE_WEAK_CHART_COPY.settingsTitle}
+              </Dialog.Title>
+              <AppIconButton
+                tone="danger"
+                aria-label={ONLINE_WEAK_CHART_COPY.reset}
+                onClick={resetSettings}
+              >
+                <RotateCcw class="h-5 w-5" aria-hidden="true" />
+              </AppIconButton>
+            </div>
+            <div class="min-h-0 flex-1 basis-0 space-y-5 overflow-y-auto">
+              <fieldset>
+                <legend class="mb-2 text-sm font-semibold">
+                  {ONLINE_WEAK_CHART_COPY.difficulty}
+                </legend>
+                <div class="flex flex-col items-start gap-1">
+                  <For each={PLAYER_DATA_DIFFICULTIES}>
+                    {(difficulty) => (
+                      <CheckboxField
+                        id={`online-weak-chart-${difficulty}`}
+                        checked={editDifficulties().includes(difficulty)}
+                        onChange={() => toggleDifficulty(difficulty)}
+                        label={difficulty}
+                        textVariant="large"
+                        class="relative flex items-center gap-2"
+                      />
+                    )}
+                  </For>
+                </div>
+              </fieldset>
+              <div class="space-y-1">
+                <span class="block text-sm text-text-muted">
+                  {ONLINE_WEAK_CHART_COPY.scoreRange}
+                </span>
+                <div class="flex items-center gap-2">
+                  <span
+                    class="flex shrink-0 flex-col items-center text-text-muted"
+                    aria-hidden="true"
+                  >
+                    <Plus class="h-3 w-3" />
+                    <Minus class="h-3 w-3" />
+                  </span>
+                  <FilterNumberField
+                    value={editDifferenceRange()}
+                    min={ONLINE_WEAK_CHART_DIFFERENCE_RANGE_MIN}
+                    max={SCORE_THEORETICAL_MAX}
+                    step={1}
+                    label={ONLINE_WEAK_CHART_COPY.scoreRange}
+                    onChange={setEditDifferenceRange}
+                  />
+                </div>
+              </div>
+              <div class="space-y-1">
+                <span class="block text-sm text-text-muted">
+                  {ONLINE_WEAK_CHART_COPY.chartConstRange}
+                </span>
+                <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-center gap-2">
+                  <FilterNumberField
+                    value={editConstMin()}
+                    min={CHART_CONST_MIN}
+                    max={CHART_CONST_MAX}
+                    step={0.1}
+                    label={ONLINE_WEAK_CHART_COPY.chartConstMin}
+                    onChange={setEditConstMin}
+                  />
+                  <span class="text-center text-text-muted" aria-hidden="true">
+                    ～
+                  </span>
+                  <FilterNumberField
+                    value={editConstMax()}
+                    min={CHART_CONST_MIN}
+                    max={CHART_CONST_MAX}
+                    step={0.1}
+                    label={ONLINE_WEAK_CHART_COPY.chartConstMax}
+                    onChange={setEditConstMax}
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="mt-6 flex shrink-0 justify-end gap-2">
+              <AppButton onClick={() => setSettingsOpen(false)}>
+                {ONLINE_WEAK_CHART_COPY.cancel}
+              </AppButton>
+              <AppButton variant="primary" onClick={applySettings}>
+                {ONLINE_WEAK_CHART_COPY.apply}
+              </AppButton>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog>
 
       <Show when={!loadError()} fallback={<LoadError error={loadError()} />}>
         <Show when={!isLoading()} fallback={<Loading />}>
@@ -295,7 +513,10 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
               </p>
             }
           >
-            <OnlineWeakChartScatter entries={entries()} />
+            <OnlineWeakChartScatter
+              entries={entries()}
+              differenceRange={filter().differenceRange}
+            />
             <section class="rounded-lg border border-border bg-surface">
               <h2 class="border-b border-border px-4 py-3 text-lg font-semibold">
                 {ONLINE_WEAK_CHART_COPY.tableTitle}
@@ -304,8 +525,16 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
                 </span>
               </h2>
               <div class="overflow-x-auto">
-                <table class="w-full min-w-150 text-sm">
+                <table class="w-full min-w-150 table-fixed text-sm">
                   <caption class="sr-only">{ONLINE_WEAK_CHART_COPY.tableCaption}</caption>
+                  <colgroup>
+                    <col />
+                    <col class="w-23" />
+                    <col class="w-14" />
+                    <col class="w-24" />
+                    <col class="w-24" />
+                    <col class="w-20" />
+                  </colgroup>
                   <thead class="bg-surface-muted text-text-muted">
                     <tr>
                       <th scope="col" class="px-3 py-2 text-left">
@@ -332,7 +561,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
                     <For each={visibleEntries()}>
                       {({ record, averageScore, difference }) => (
                         <tr class="border-t border-border hover:bg-surface-muted">
-                          <td class="max-w-64 px-3 py-2 font-sans">
+                          <td class="overflow-hidden px-3 py-2 font-sans">
                             <A
                               href={buildSongDetailPath(record.id, record.difficulty)}
                               class="block truncate text-link hover:text-link-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
