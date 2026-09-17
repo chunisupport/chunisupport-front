@@ -1,6 +1,6 @@
 import type { PossessionName } from '../types/api'
 
-/** プレイヤー所持状況の正規名称。IDはマスタから解決する */
+/** ポゼッションの正規名称。IDはマスタから解決する */
 export const POSSESSION_NAMES = [
   'normal',
   'silver',
@@ -9,16 +9,42 @@ export const POSSESSION_NAMES = [
   'rainbow',
 ] as const satisfies readonly PossessionName[]
 
-/** 未指定時に使う所持状況名。APIの省略時既定値と一致する */
+/** 未指定時に使うポゼッション名。APIの省略時既定値と一致する */
 export const DEFAULT_POSSESSION_NAME: PossessionName = 'normal'
+
+/**
+ * ポゼッション名をプロフィールカード背景のCSSクラス名へ変換する。
+ * normal はテーマのサーフェス色のままにする。
+ */
+export const POSSESSION_CLASS_NAMES: Record<PossessionName, string> = {
+  normal: '',
+  silver: 'user-nameplate--silver',
+  gold: 'user-nameplate--gold',
+  platina: 'user-nameplate--platina',
+  rainbow: 'user-nameplate--rainbow',
+}
 
 const POSSESSION_NAME_SET: ReadonlySet<string> = new Set(POSSESSION_NAMES)
 
 /**
- * 外部入力の所持状況名がマスタの正規値かを判定する。
+ * 外部入力のポゼッション名がマスタの正規値かを判定する。
  *
- * @param value - APIやマスタから受け取った所持状況名。
- * @returns 正規の所持状況名なら true。
+ * @param value - APIやマスタから受け取ったポゼッション名。
+ * @returns 正規のポゼッション名なら true。
  */
 export const isPossessionName = (value: string): value is PossessionName =>
   POSSESSION_NAME_SET.has(value)
+
+/**
+ * ポゼッション名に対応するプロフィールカード背景のCSSクラス名を返す。
+ *
+ * @param name - マスタから解決したポゼッション名。
+ * @returns 着色用のCSSクラス名。normal と未定義の名称は空文字。
+ */
+export const getPossessionClassName = (name: string): string => {
+  if (!isPossessionName(name) || name === DEFAULT_POSSESSION_NAME) {
+    return ''
+  }
+
+  return `user-nameplate--colored ${POSSESSION_CLASS_NAMES[name]}`
+}

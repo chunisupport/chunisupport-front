@@ -678,6 +678,48 @@
     #b86a35 100%
   );
 
+  /* ===== ポゼッション（プロフィールカード背景。normalはテーマのサーフェス色） ===== */
+  --cs-color-possession-text: var(--color-gray-900);
+  --cs-color-possession-text-muted: var(--color-gray-600);
+  --cs-color-possession-divider: rgb(0 0 0 / 18%);
+  --cs-color-possession-silver-bg: #b4d4f2;
+  --cs-color-possession-silver-border: #6f9ec8;
+  --cs-gradient-possession-silver-bg: linear-gradient(
+    45deg,
+    #7eafd6 0%,
+    #b4d4f2 24%,
+    #eaf6ff 42%,
+    #9ec8ea 58%,
+    #d2ebfb 76%,
+    #6f9ec8 100%
+  );
+  --cs-color-possession-gold-bg: #f2d43a;
+  --cs-color-possession-gold-border: #c9b41c;
+  --cs-gradient-possession-gold-bg: linear-gradient(
+    45deg,
+    #d4bc1e 0%,
+    #f2d43a 24%,
+    #fff8b0 42%,
+    #e8d028 58%,
+    #f7e25c 76%,
+    #c9b41c 100%
+  );
+  --cs-color-possession-platina-bg: #faf5ca;
+  --cs-color-possession-platina-border: #d4ca90;
+  --cs-gradient-possession-platina-bg: linear-gradient(
+    45deg,
+    #e5da9f 0%,
+    #faf5ca 24%,
+    #fffef8 42%,
+    #f1e9b7 58%,
+    #faf8df 76%,
+    #d4ca90 100%
+  );
+  --cs-color-possession-rainbow-bg: var(--cs-color-honor-rainbow-3);
+  --cs-color-possession-rainbow-border: var(--cs-color-honor-rainbow-2);
+  --cs-gradient-possession-rainbow-bg: var(--cs-gradient-honor-rainbow-bg);
+  --cs-shadow-honor-title: 0 1px 2px rgb(0 0 0 / 28%), 0 3px 8px rgb(0 0 0 / 22%);
+
   /* ===== スコアランク（SSSP / SSS / SS / S / A / B / C / D） ===== */
   --cs-color-score-rank-sssp-bg: var(--color-green-500);
   --cs-color-score-rank-sssp-text: var(--color-green-500);
@@ -1094,6 +1136,10 @@
     margin: 0;
   }
 
+  .user-nameplate .user-honor-title {
+    box-shadow: var(--cs-shadow-honor-title);
+  }
+
   .user-honor-title--normal {
     --honor-background: var(--honor-shine), #d4d4d4;
   }
@@ -1413,6 +1459,58 @@
         transparent 45px 100%
       ),
       #fdf5a7;
+  }
+
+  .user-nameplate {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+
+  .user-nameplate--colored {
+    color: var(--cs-color-possession-text);
+    background-color: var(--nameplate-background-color);
+    background-image: var(--nameplate-background-image);
+    border-color: var(--nameplate-border-color);
+  }
+
+  .user-nameplate--silver {
+    --nameplate-background-color: var(--cs-color-possession-silver-bg);
+    --nameplate-background-image: var(--cs-gradient-possession-silver-bg);
+    --nameplate-border-color: var(--cs-color-possession-silver-border);
+  }
+
+  .user-nameplate--gold {
+    --nameplate-background-color: var(--cs-color-possession-gold-bg);
+    --nameplate-background-image: var(--cs-gradient-possession-gold-bg);
+    --nameplate-border-color: var(--cs-color-possession-gold-border);
+  }
+
+  .user-nameplate--platina {
+    --nameplate-background-color: var(--cs-color-possession-platina-bg);
+    --nameplate-background-image: var(--cs-gradient-possession-platina-bg);
+    --nameplate-border-color: var(--cs-color-possession-platina-border);
+  }
+
+  .user-nameplate--rainbow {
+    --nameplate-background-color: var(--cs-color-possession-rainbow-bg);
+    --nameplate-background-image: var(--cs-gradient-possession-rainbow-bg);
+    --nameplate-border-color: var(--cs-color-possession-rainbow-border);
+  }
+
+  .user-nameplate hr {
+    border-color: var(--color-border);
+  }
+
+  .user-nameplate--colored hr {
+    border-color: var(--cs-color-possession-divider);
+  }
+
+  .user-nameplate-metric-secondary {
+    color: var(--color-text-muted);
+  }
+
+  .user-nameplate--colored .user-nameplate-metric-secondary {
+    color: var(--cs-color-possession-text-muted);
   }
 
   .goal-card-progress-secondary {

@@ -2,11 +2,11 @@ import { DEFAULT_POSSESSION_NAME, isPossessionName } from '../constants/possessi
 import type { MasterItemDTO, PossessionName } from '../types/api'
 
 /**
- * 所持状況IDをマスタ名称へ解決する。
+ * ポゼッションIDをマスタ名称へ解決する。
  *
- * @param possessionId - プレイヤーの所持状況ID。旧schemaでは未指定になり得る。
- * @param possessions - ID順の所持状況マスタ。
- * @returns マスタに存在する正規の所持状況名。未解決の場合は既定値。
+ * @param possessionId - プレイヤーのポゼッションID。旧schemaでは未指定になり得る。
+ * @param possessions - ID順のポゼッションマスタ。
+ * @returns マスタに存在する正規のポゼッション名。未解決の場合は既定値。
  */
 export const resolvePossessionName = (
   possessionId: number | undefined,

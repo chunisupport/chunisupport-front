@@ -11,8 +11,8 @@ const POSSESSIONS: MasterItemDTO[] = [
   { id: 5, name: 'rainbow' },
 ]
 
-test('所持状況IDをマスタ名称へ解決する', () => {
-  // Given: 虹の所持状況ID。
+test('ポゼッションIDをマスタ名称へ解決する', () => {
+  // Given: 虹のポゼッションID。
 
   // When: マスタから名称を解決する。
   const name = resolvePossessionName(5, POSSESSIONS)
@@ -21,8 +21,8 @@ test('所持状況IDをマスタ名称へ解決する', () => {
   assert.equal(name, 'rainbow')
 })
 
-test('所持状況IDが未指定の場合はnormalを返す', () => {
-  // Given: 旧schemaの最新更新結果など、所持状況IDがない状態。
+test('ポゼッションIDが未指定の場合はnormalを返す', () => {
+  // Given: 旧schemaの最新更新結果など、ポゼッションIDがない状態。
 
   // When: 名称を解決する。
   const name = resolvePossessionName(undefined, POSSESSIONS)
@@ -31,7 +31,7 @@ test('所持状況IDが未指定の場合はnormalを返す', () => {
   assert.equal(name, 'normal')
 })
 
-test('マスタに存在しない所持状況IDはnormalを返す', () => {
+test('マスタに存在しないポゼッションIDはnormalを返す', () => {
   // Given: 未知のID、または空のマスタ。
 
   // When / Then: 表示不能にせず既定値へ落とす。
@@ -45,6 +45,6 @@ test('マスタ名称が正規値でない場合はnormalを返す', () => {
   // When: 名称を解決する。
   const name = resolvePossessionName(1, [{ id: 1, name: 'unknown' }])
 
-  // Then: 正規の所持状況名だけを返す。
+  // Then: 正規のポゼッション名だけを返す。
   assert.equal(name, 'normal')
 })

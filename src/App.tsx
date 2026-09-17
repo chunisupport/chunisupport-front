@@ -39,6 +39,7 @@ import {
   ADMIN_COURSES_PATH,
   ADMIN_DATA_COVERAGE_PATH,
   ADMIN_MAINTENANCE_PATH,
+  ADMIN_NAMEPLATE_PREVIEW_PATH,
   ADMIN_PATH,
   ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH,
   ADMIN_VERSIONS_PATH,
@@ -133,6 +134,7 @@ const AdminVersionsPage = lazy(() => import('./pages/admin/AdminVersionsPage'))
 const AdminRatingImageDomPreviewPage = lazy(
   () => import('./pages/admin/AdminRatingImageDomPreviewPage')
 )
+const AdminNameplatePreviewPage = lazy(() => import('./pages/admin/AdminNameplatePreviewPage'))
 const EditorPage = lazy(() => import('./pages/editor/EditorPage'))
 const EditorSongsPage = lazy(() => import('./pages/editor/EditorSongsPage'))
 const EditorCoursesPage = lazy(() => import('./pages/editor/EditorCoursesPage'))
@@ -416,6 +418,7 @@ const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
 const LoadableAdminMaintenancePage = withRouteLoadBoundary(AdminMaintenancePage)
 const LoadableAdminVersionsPage = withRouteLoadBoundary(AdminVersionsPage)
 const LoadableAdminRatingImageDomPreviewPage = withRouteLoadBoundary(AdminRatingImageDomPreviewPage)
+const LoadableAdminNameplatePreviewPage = withRouteLoadBoundary(AdminNameplatePreviewPage)
 const LoadableEditorPage = withRouteLoadBoundary(EditorPage)
 const LoadableEditorSongsPage = withRouteLoadBoundary(EditorSongsPage)
 const LoadableEditorCoursesPage = withRouteLoadBoundary(EditorCoursesPage)
@@ -561,6 +564,17 @@ const GuardedAdminVersionsPage = () => (
 const GuardedAdminRatingImageDomPreviewPage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
     <LoadableAdminRatingImageDomPreviewPage />
+  </RequireRole>
+)
+
+/**
+ * ADMIN 権限を要求してポゼッション別プロフィールカード確認画面を表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与した確認画面。
+ */
+const GuardedAdminNameplatePreviewPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableAdminNameplatePreviewPage />
   </RequireRole>
 )
 
@@ -727,6 +741,10 @@ const App = () => {
       <Route
         path={ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH}
         component={withNavBar(GuardedAdminRatingImageDomPreviewPage)}
+      />
+      <Route
+        path={ADMIN_NAMEPLATE_PREVIEW_PATH}
+        component={withNavBar(GuardedAdminNameplatePreviewPage)}
       />
 
       {/* 編集 */}

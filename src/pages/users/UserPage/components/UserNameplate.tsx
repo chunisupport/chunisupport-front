@@ -6,16 +6,26 @@ import {
   type Component,
   createEffect,
   createMemo,
+  createResource,
   createSignal,
   For,
   onCleanup,
   onMount,
   Show,
 } from 'solid-js'
+import { fetchPossessions } from '../../../../api/possessions'
 import { getAppButtonClass } from '../../../../components/common/AppButton'
 import { HONOR_TYPE_CLASS_NAMES } from '../../../../constants/honors'
-import type { HonorDTO, PlayerDTO, PlayerRecordDTO, UserRatingDTO } from '../../../../types/api'
+import { getPossessionClassName } from '../../../../constants/possession'
+import type {
+  HonorDTO,
+  PlayerDTO,
+  PlayerRecordDTO,
+  PossessionName,
+  UserRatingDTO,
+} from '../../../../types/api'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
+import { resolvePossessionName } from '../../../../utils/possession'
 import { formatNullablePlayerRating } from '../../../../utils/ratingFormat'
 import {
   hasUnknownChartConstants,
@@ -43,6 +53,8 @@ type Props = {
   historyHref: string
   /** 通常譜面レコード。未取得時はOVER POWER値・達成率の定数未判明判定を行わない */
   records?: readonly PlayerRecordDTO[]
+  /** マスタ解決を省略して適用するポゼッション名。確認画面向け */
+  possessionName?: PossessionName
 }
 
 type HonorTitleProps = {
@@ -206,11 +218,22 @@ const HonorTitle: Component<HonorTitleProps> = (props) => {
 
 /**
  * ユーザーの称号、レベル、指標とRATING・OVER POWER・OP%履歴への導線を表示する。
+ * カード背景色はポゼッションに応じて切り替える。
  *
- * @param props - プレイヤー情報、称号、計算済みレーティング、通常譜面レコード、履歴ページのリンク先。
+ * @param props - プレイヤー情報、称号、計算済みレーティング、通常譜面レコード、履歴ページのリンク先、確認用ポゼッション名。
  * @returns プロフィールカードの JSX 要素。
  */
 export const UserNameplate: Component<Props> = (props) => {
+  const [possessions] = createResource(
+    () => (props.possessionName == null ? true : undefined),
+    () => fetchPossessions()
+  )
+  /** 明示指定、またはマスタから解決したポゼッション名。未取得時は既定値 */
+  const possessionName = createMemo(
+    () =>
+      props.possessionName ??
+      resolvePossessionName(props.playerInfo.possession_id, possessions() ?? [])
+  )
   const playerRatingText = createMemo(() => formatNullablePlayerRating(props.rating.rating))
   const bestRatingText = createMemo(() => formatNullablePlayerRating(props.rating.best_average))
   const newRatingText = createMemo(() => formatNullablePlayerRating(props.rating.new_average))
@@ -274,7 +297,12 @@ export const UserNameplate: Component<Props> = (props) => {
   })
 
   return (
-    <div class="relative mb-2 mx-auto w-[min(380px,calc(100%-2rem))] rounded-md border border-border bg-surface px-3 py-3 shadow-sm">
+    <div
+      class={`user-nameplate relative mb-2 mx-auto w-[min(380px,calc(100%-2rem))] rounded-md px-3 py-3 shadow-sm ${getPossessionClassName(
+        possessionName()
+      )}`}
+      data-possession={possessionName()}
+    >
       <Show when={visibleHonors().length > 0}>
         <Show
           when={hasMultipleVisibleHonors()}
@@ -312,7 +340,7 @@ export const UserNameplate: Component<Props> = (props) => {
         <p class="">Lv. {props.playerInfo.level}</p>
         <h1 class="flex-1 text-xl font-medium text-center">{props.playerInfo.name}</h1>
       </div>
-      <hr class="mb-2 border-t border-border" />
+      <hr class="mb-2 border-t" />
       <dl class="space-y-2">
         <div>
           <dt class="text-sm font-medium leading-tight">{USER_NAMEPLATE_METRIC_LABELS.rating}</dt>
@@ -323,7 +351,7 @@ export const UserNameplate: Component<Props> = (props) => {
                 unknown={ratingHasUnknownChartConstants()}
               />
             </strong>
-            <span class="goal-card-progress-secondary font-jost text-base font-semibold">
+            <span class="user-nameplate-metric-secondary font-jost text-base font-semibold">
               {USER_NAMEPLATE_METRIC_LABELS.best}{' '}
               <UnknownConstMetricValue
                 value={bestRatingText()}
@@ -351,7 +379,7 @@ export const UserNameplate: Component<Props> = (props) => {
                 />
               </Show>
             </strong>
-            <span class="font-jost text-base font-semibold">
+            <span class="user-nameplate-metric-secondary font-jost text-base font-semibold">
               <Show when={overPowerPercentText() !== undefined} fallback="%">
                 <UnknownConstMetricValue
                   value={`${overPowerPercentText() ?? ''}%`}
