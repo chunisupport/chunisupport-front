@@ -13,8 +13,6 @@ export const ONLINE_WEAK_CHART_COPY = {
   ownScore: '自分のスコア',
   averageScore: 'レート帯平均',
   difference: '平均との差',
-  xAxis: '譜面定数',
-  yAxis: '平均との差（点）',
   lowerDataset: '平均より低い',
   higherDataset: '平均以上',
   songTitle: '曲名',
