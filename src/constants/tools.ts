@@ -3,6 +3,7 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   DASHBOARD_PATH,
+  ONLINE_WEAK_CHART_INSPECTOR_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
   WEAK_CHART_INSPECTOR_PATH,
@@ -31,6 +32,8 @@ export type ToolLink = {
   href: string
   icon: ToolLinkIcon
   disabled?: boolean
+  description?: string
+  adminOnly?: boolean
 }
 
 /**
@@ -56,6 +59,12 @@ export const TOOL_LINKS: ToolLink[] = [
     title: '苦手譜面インスペクター',
     href: WEAK_CHART_INSPECTOR_PATH,
     icon: 'chart',
+  },
+  {
+    title: '苦手譜面インスペクター Online',
+    href: ONLINE_WEAK_CHART_INSPECTOR_PATH,
+    icon: 'chart',
+    description: '自分のスコアを同じレート帯の平均スコアと比較します。',
   },
   {
     title: 'ランダム選曲',
