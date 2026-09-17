@@ -1,6 +1,6 @@
 import { CHART_SCORES_BASE_URL, FRONTEND_BASE_URL } from '../config'
 import type { ChartScoresDifficulty, ChartScoresResponse } from '../types/chartScores'
-import { resolveStaticDataBaseUrl } from './chartStats'
+import { resolveStaticDataBaseUrl } from '../utils/staticDataBaseUrl'
 
 const CHART_SCORES_FETCH_ERROR_MESSAGE = '譜面スコア統計の取得に失敗しました'
 

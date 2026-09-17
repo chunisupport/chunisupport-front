@@ -1,3 +1,4 @@
+import type { AccountType } from '../types/api'
 import {
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
@@ -26,15 +27,25 @@ export const DISABLED_TOOL_BADGE_TEXT = 'coming soon'
  * @property href - 有効時に遷移するツールページのパス。
  * @property icon - ツールカードに表示するアイコン種別。
  * @property disabled - ツールカードを無効状態として表示し、リンク遷移を止めるかどうか。
+ * @property adminOnly - ADMIN 以外のツール一覧から隠すかどうか。直接アクセスは妨げない。
  */
 export type ToolLink = {
   title: string
   href: string
   icon: ToolLinkIcon
   disabled?: boolean
-  description?: string
   adminOnly?: boolean
 }
+
+/**
+ * ツール一覧に表示するリンクか判定する。
+ *
+ * @param tool - 判定対象のツールリンク。
+ * @param accountType - 現在ユーザーのアカウント種別。未ログイン時は undefined。
+ * @returns ツール一覧へ表示する場合は true。
+ */
+export const isToolLinkListed = (tool: ToolLink, accountType: AccountType | undefined): boolean =>
+  tool.adminOnly !== true || accountType === 'ADMIN'
 
 /**
  * ツールページに表示するリンク一覧。
@@ -64,7 +75,6 @@ export const TOOL_LINKS: ToolLink[] = [
     title: '苦手譜面インスペクター Online',
     href: ONLINE_WEAK_CHART_INSPECTOR_PATH,
     icon: 'chart',
-    description: '自分のスコアを同じレート帯の平均スコアと比較します。',
     adminOnly: true,
   },
   {

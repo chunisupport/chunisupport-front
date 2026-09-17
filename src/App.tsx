@@ -49,6 +49,7 @@ import {
 } from './constants/routes'
 import {
   DISABLED_TOOL_BADGE_TEXT,
+  isToolLinkListed,
   TOOL_LINKS,
   type ToolLink,
   type ToolLinkIcon,
@@ -351,7 +352,13 @@ const ToolsPage = () => {
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
       <h1 class="text-2xl font-semibold">ツール</h1>
       <div class="grid gap-3 sm:grid-cols-2">
-        <For each={TOOL_LINKS}>{(tool) => <ToolCardContent tool={tool} />}</For>
+        <For
+          each={TOOL_LINKS.filter((tool) =>
+            isToolLinkListed(tool, getAuthenticatedUser()?.account_type)
+          )}
+        >
+          {(tool) => <ToolCardContent tool={tool} />}
+        </For>
       </div>
     </div>
   )
