@@ -86,7 +86,11 @@ export const readCachedWorldsendSongs = async (
   }
 
   const cachedSongs = await db.worldsendSongs.toArray()
-  if (cachedSongs.length === 0 || !hasSongSortOrder(cachedSongs)) {
+  if (
+    cachedSongs.length === 0 ||
+    !hasSongSortOrder(cachedSongs) ||
+    cachedSongs.some((song) => typeof song.data.is_new !== 'boolean')
+  ) {
     return null
   }
 

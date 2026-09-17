@@ -50,6 +50,7 @@ const createWorldsendSong = (overrides: Partial<WorldsendSongDTO> = {}): Worldse
   release: '2024-01-15',
   official_idx: '123',
   jacket: 'jacket-file',
+  is_new: true,
   charts: {
     WORLDSEND: {
       attribute: '狂',
@@ -142,6 +143,7 @@ test('buildWorldsendSongMetaUpdateRequest: 譜面フィールドを載せない�
   // Then
   assert.equal(request.genre, 'ORIGINAL')
   assert.equal(request.bpm, null)
+  assert.equal(request.is_new, true)
   assert.equal(request.released_at, null)
   assert.equal('charts' in request, false)
 })
@@ -238,6 +240,7 @@ test('buildWorldsendChartMetaUpdateRequest: WORLDSEND譜面だけを更新対象
 
   // Then
   assert.equal(request.genre, 'VARIETY')
+  assert.equal(request.is_new, true)
   assert.equal(request.released_at, '2024-01-15')
   assert.deepEqual(request.charts, {
     WORLDSEND: {

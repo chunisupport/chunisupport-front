@@ -43,6 +43,7 @@ const cachedWorldsendSong: WorldsendSongDTO = {
   release: null,
   official_idx: '90001',
   jacket: null,
+  is_new: false,
   charts: {},
 }
 

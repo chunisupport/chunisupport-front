@@ -45,6 +45,12 @@ const StarLevel = (props: { level: number | null | undefined }) => {
   return <span>★{props.level}</span>
 }
 
+/**
+ * WORLD'S END 楽曲一覧を仮想テーブルとして表示する。
+ *
+ * @param props - 楽曲一覧、ソート状態、変更ハンドラ。
+ * @returns 新曲を強調した楽曲一覧テーブル。
+ */
 const WorldsendSongsTable = (props: Props) => {
   const virtualizedTable = createWindowVirtualTable<
     HTMLDivElement,
@@ -144,6 +150,7 @@ const WorldsendSongsTable = (props: Props) => {
                     return (
                       <tr
                         class="absolute left-0 top-0 grid min-w-full border-t border-border"
+                        classList={{ 'bg-new-song-bg': currentSong.is_new === true }}
                         style={{
                           'grid-template-columns': GRID_TEMPLATE_COLUMNS,
                           transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,

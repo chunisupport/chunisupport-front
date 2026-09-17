@@ -56,6 +56,7 @@ const worldsendSong: ManagedWorldsendSongDTO = {
   release: '2025-01-01',
   official_idx: '2',
   jacket: null,
+  is_new: false,
   charts: { WORLDSEND: { attribute: '狂', level_star: 3, notes: 500, notes_designer: 'WE担当' } },
   is_deleted: false,
   updated_at: '2025-01-01T00:00:00Z',

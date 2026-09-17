@@ -85,8 +85,12 @@ const WorldsendSongCard = (props: WorldsendSongCardProps) => {
   return (
     <A
       href={buildWorldsendSongDetailPath(props.song.id)}
-      class="flex w-full min-w-0 flex-col overflow-hidden rounded-md border border-border bg-surface text-inherit no-underline transition-colors hover:bg-interactive-row-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
+      class="flex w-full min-w-0 flex-col overflow-hidden rounded-md border border-border text-inherit no-underline transition-colors hover:bg-interactive-row-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
       style={{ height: `${SONG_CARD_HEIGHT_PX}px` }}
+      classList={{
+        'bg-new-song-bg': props.song.is_new === true,
+        'bg-surface': props.song.is_new !== true,
+      }}
     >
       <div
         class="flex min-h-0 min-w-0 flex-1 overflow-hidden"

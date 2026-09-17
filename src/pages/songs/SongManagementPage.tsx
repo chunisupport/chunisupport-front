@@ -98,6 +98,7 @@ type WorldsendDraft = {
   bpm: number | null
   released_at: string | null
   jacket: string | null
+  is_new: boolean
   attribute: string | null
   level_star: number | null
   notes: number | null
@@ -137,6 +138,7 @@ type CreateWorldsendDraft = {
   bpm: number | null
   released_at: string | null
   jacket: string | null
+  is_new: boolean
   attribute: string | null
   level_star: number | null
   notes: number | null
@@ -314,6 +316,7 @@ const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
     bpm: null,
     released_at: null,
     jacket: null,
+    is_new: false,
     attribute: null,
     level_star: null,
     notes: null,
@@ -465,6 +468,7 @@ const toWorldsendDraft = (
     bpm: song.bpm ?? null,
     released_at: toDateOnly(song.release),
     jacket: song.jacket ?? null,
+    is_new: readSongNewFlag(song),
     attribute: chart?.attribute ?? null,
     level_star: chart?.level_star ?? null,
     notes: chart?.notes ?? null,
@@ -528,6 +532,7 @@ const hasWorldsendDraftChanges = (
     current.bpm !== initial.bpm ||
     current.released_at !== initial.released_at ||
     current.jacket !== initial.jacket ||
+    current.is_new !== initial.is_new ||
     current.attribute !== initial.attribute ||
     current.level_star !== initial.level_star ||
     current.notes !== initial.notes ||
@@ -595,6 +600,7 @@ const applyWorldsendDraftToManagedSong = (
   bpm: draft.bpm,
   release: toDateOnly(draft.released_at),
   jacket: draft.jacket,
+  is_new: draft.is_new,
   charts: {
     WORLDSEND: {
       attribute: toNullableTrimmedString(draft.attribute),
@@ -1093,6 +1099,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       bpm: current.bpm,
       released_at: normalizedReleasedAt,
       jacket: current.jacket?.trim() ? current.jacket.trim() : null,
+      is_new: current.is_new,
       chart: hasChartInput
         ? {
             attribute: current.attribute?.trim() ? current.attribute.trim() : null,
@@ -1143,6 +1150,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       bpm: current.bpm,
       released_at: normalizedReleasedAt,
       jacket: current.jacket,
+      is_new: current.is_new,
       charts: {
         WORLDSEND: {
           attribute: current.attribute?.trim() ? current.attribute.trim() : null,
@@ -1711,6 +1719,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           updateWorldsendDraftField('jacket', value.trim() === '' ? null : value)
                         }
                       />
+                      <div class="flex items-end py-2">
+                        <ManagementCheckbox
+                          checked={currentDraft().is_new === true}
+                          ariaLabel={newSongFlagLabel}
+                          label={newSongFlagLabel}
+                          onChange={(checked) => updateWorldsendDraftField('is_new', checked)}
+                        />
+                      </div>
                       <ManagementTextField
                         class="col-span-1 text-sm"
                         label="属性"
@@ -2067,6 +2083,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   updateCreateWorldsendDraftField('jacket', value.trim() === '' ? null : value)
                 }
               />
+              <div class="flex items-end py-2">
+                <ManagementCheckbox
+                  checked={createWorldsendDraft().is_new === true}
+                  ariaLabel={newSongFlagLabel}
+                  label={newSongFlagLabel}
+                  onChange={(checked) => updateCreateWorldsendDraftField('is_new', checked)}
+                />
+              </div>
             </div>
             <ManagementTextField
               label="属性"

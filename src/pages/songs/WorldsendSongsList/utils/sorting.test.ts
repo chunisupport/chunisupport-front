@@ -13,6 +13,7 @@ const createSong = (overrides: Partial<WorldsendSongDTO>): WorldsendSongDTO => (
   release: overrides.release === undefined ? '2024-01-01' : overrides.release,
   official_idx: overrides.official_idx ?? '1',
   jacket: overrides.jacket ?? null,
+  is_new: overrides.is_new ?? false,
   charts: overrides.charts ?? {},
 })
 

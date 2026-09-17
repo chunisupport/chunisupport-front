@@ -1260,6 +1260,7 @@ export interface WorldsendSongDTO {
   release: string | null
   official_idx: string
   jacket: string | null
+  is_new: boolean
   charts: { WORLDSEND?: WorldsendChartDTO }
   // API仕様書に未記載だが include_deleted=true 時に削除状態の判別に利用
   is_deleted?: boolean
@@ -1329,6 +1330,7 @@ export interface CreateWorldsendSongRequestDTO {
   bpm: number | null
   released_at: string | null
   jacket: string | null
+  is_new?: boolean
   chart?: UpdateWorldsendChartRequestDTO
 }
 
@@ -1341,6 +1343,7 @@ export interface UpdateWorldsendSongRequestDTO {
   bpm: number | null
   released_at: string | null
   jacket: string | null
+  is_new: boolean
   charts?: {
     WORLDSEND?: UpdateWorldsendChartRequestDTO
   } | null
