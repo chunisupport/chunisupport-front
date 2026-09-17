@@ -17,6 +17,7 @@ import { fetchPossessions } from '../../../../api/possessions'
 import { getAppButtonClass } from '../../../../components/common/AppButton'
 import { HONOR_TYPE_CLASS_NAMES } from '../../../../constants/honors'
 import { getPossessionClassName } from '../../../../constants/possession'
+import { useSongsData } from '../../../../stores/songsData'
 import type {
   HonorDTO,
   PlayerDTO,
@@ -27,6 +28,7 @@ import type {
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 import { resolvePossessionName } from '../../../../utils/possession'
 import { formatNullablePlayerRating } from '../../../../utils/ratingFormat'
+import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../../../utils/theoreticalOverPowerTarget'
 import {
   hasUnknownChartConstants,
   hasUnknownOverPowerChartConstants,
@@ -224,10 +226,15 @@ const HonorTitle: Component<HonorTitleProps> = (props) => {
  * @returns プロフィールカードの JSX 要素。
  */
 export const UserNameplate: Component<Props> = (props) => {
+  const { songsResponse, ensureSongsLoaded } = useSongsData()
   const [possessions] = createResource(
     () => (props.possessionName == null ? true : undefined),
     () => fetchPossessions()
   )
+
+  createEffect(() => {
+    if (props.records) ensureSongsLoaded()
+  })
   /** 明示指定、またはマスタから解決したポゼッション名。未取得時は既定値 */
   const possessionName = createMemo(
     () =>
@@ -246,10 +253,16 @@ export const UserNameplate: Component<Props> = (props) => {
   const overPowerHasUnknownChartConstants = createMemo(() =>
     hasUnknownOverPowerChartConstants(props.records ?? [])
   )
-  /** OVER POWER達成率の計算対象に定数未判明の譜面が含まれるか */
-  const overPowerPercentHasUnknownChartConstants = createMemo(() =>
-    hasUnknownOverPowerPercentChartConstants(props.records ?? [])
+  /** 曲IDごとの理論値OVER POWER対象難易度 */
+  const theoreticalTargetDifficultyBySongId = createMemo(() =>
+    buildTheoreticalOverPowerTargetDifficultyBySongId(songsResponse()?.songs ?? [])
   )
+  /** 理論値OVER POWER対象譜面に定数未判明が含まれるか */
+  const overPowerPercentHasUnknownChartConstants = createMemo(() => {
+    const records = props.records
+    if (!records || !songsResponse()) return false
+    return hasUnknownOverPowerPercentChartConstants(records, theoreticalTargetDifficultyBySongId())
+  })
   /** OVER POWER値の表示文字列。未設定時は undefined */
   const overPowerValueText = createMemo(() =>
     props.playerInfo.overpower_value == null

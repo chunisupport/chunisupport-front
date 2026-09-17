@@ -78,40 +78,57 @@ test('現在OP対象がなければfalseを返すこと', () => {
   assert.equal(result, false)
 })
 
-test('未プレイの定数未判明譜面があればOP%判定はtrueを返すこと', () => {
+test('理論値OP対象譜面が定数未判明ならOP%判定はtrueを返すこと', () => {
   // Given
   const records = [
-    { is_op_target: false, is_played: false, is_const_unknown: true },
-    { is_op_target: true, is_played: true, is_const_unknown: false },
+    { id: 'song-a', difficulty: 'ULTIMA' as const, is_const_unknown: true },
+    { id: 'song-a', difficulty: 'MASTER' as const, is_const_unknown: false },
   ]
+  const targetDifficultyBySongId = new Map([['song-a', 'ULTIMA' as const]])
 
   // When
-  const result = hasUnknownOverPowerPercentChartConstants(records)
+  const result = hasUnknownOverPowerPercentChartConstants(records, targetDifficultyBySongId)
 
   // Then
   assert.equal(result, true)
 })
 
-test('現在OP対象の定数未判明があればOP%判定はtrueを返すこと', () => {
-  // Given
-  const records = [{ is_op_target: true, is_played: true, is_const_unknown: true }]
-
-  // When
-  const result = hasUnknownOverPowerPercentChartConstants(records)
-
-  // Then
-  assert.equal(result, true)
-})
-
-test('プレイ済みの非OP対象だけが定数未判明ならOP%判定はfalseを返すこと', () => {
+test('理論値OP対象以外のMASTERが定数未判明ならOP%判定はfalseを返すこと', () => {
   // Given
   const records = [
-    { is_op_target: false, is_played: true, is_const_unknown: true },
-    { is_op_target: true, is_played: true, is_const_unknown: false },
+    { id: 'song-a', difficulty: 'MASTER' as const, is_const_unknown: true },
+    { id: 'song-a', difficulty: 'ULTIMA' as const, is_const_unknown: false },
   ]
+  const targetDifficultyBySongId = new Map([['song-a', 'ULTIMA' as const]])
 
   // When
-  const result = hasUnknownOverPowerPercentChartConstants(records)
+  const result = hasUnknownOverPowerPercentChartConstants(records, targetDifficultyBySongId)
+
+  // Then
+  assert.equal(result, false)
+})
+
+test('理論値OP対象以外のEXPERTが定数未判明ならOP%判定はfalseを返すこと', () => {
+  // Given
+  const records = [
+    { id: 'song-a', difficulty: 'EXPERT' as const, is_const_unknown: true },
+    { id: 'song-a', difficulty: 'MASTER' as const, is_const_unknown: false },
+  ]
+  const targetDifficultyBySongId = new Map([['song-a', 'MASTER' as const]])
+
+  // When
+  const result = hasUnknownOverPowerPercentChartConstants(records, targetDifficultyBySongId)
+
+  // Then
+  assert.equal(result, false)
+})
+
+test('理論値OP対象を解決できない場合はOP%判定はfalseを返すこと', () => {
+  // Given
+  const records = [{ id: 'song-a', difficulty: 'MASTER' as const, is_const_unknown: true }]
+
+  // When
+  const result = hasUnknownOverPowerPercentChartConstants(records, new Map())
 
   // Then
   assert.equal(result, false)

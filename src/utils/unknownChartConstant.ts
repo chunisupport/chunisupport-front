@@ -1,3 +1,6 @@
+import type { PlayerDataDifficulty } from '../types/api'
+import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
+
 /** 定数未判明フラグを持つ譜面またはレコード */
 type ChartConstantUnknownFlag = {
   is_const_unknown: boolean
@@ -9,8 +12,9 @@ type OverPowerUnknownFlag = ChartConstantUnknownFlag & {
 }
 
 /** OVER POWER達成率の定数未判明判定に使うレコード */
-type OverPowerPercentUnknownFlag = OverPowerUnknownFlag & {
-  is_played: boolean
+type OverPowerPercentUnknownFlag = ChartConstantUnknownFlag & {
+  id: string
+  difficulty: PlayerDataDifficulty
 }
 
 /**
@@ -34,13 +38,21 @@ export const hasUnknownOverPowerChartConstants = (
 
 /**
  * OVER POWER達成率の計算対象に定数未判明の譜面が含まれるか判定する。
- * 現在OP対象に加え、理論値分母となる未プレイ譜面も含める。
+ * 理論値OVER POWER対象譜面だけを見る。
  *
  * @param records - 判定対象のプレイヤーレコード。
- * @returns 現在OP対象または未プレイ譜面に定数未判明が含まれる場合はtrue。
+ * @param targetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
+ * @returns 理論値OP対象譜面に定数未判明が含まれる場合はtrue。
  */
 export const hasUnknownOverPowerPercentChartConstants = (
-  records: readonly OverPowerPercentUnknownFlag[]
+  records: readonly OverPowerPercentUnknownFlag[],
+  targetDifficultyBySongId: ReadonlyMap<string, PlayerDataDifficulty>
 ): boolean =>
-  hasUnknownOverPowerChartConstants(records) ||
-  hasUnknownChartConstants(records.filter((record) => !record.is_played))
+  hasUnknownChartConstants(
+    records.filter((record) =>
+      isTheoreticalOverPowerTargetDifficulty(
+        targetDifficultyBySongId.get(record.id),
+        record.difficulty
+      )
+    )
+  )
