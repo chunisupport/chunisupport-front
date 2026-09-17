@@ -25,13 +25,20 @@ export const RATING_IMAGE_V2_META_TRIANGLE_PX = 12
 /** レーティング枠画像 Ver. 2 の譜面定数・三角形・レーティングの間隔 */
 export const RATING_IMAGE_V2_META_TRIANGLE_GAP_PX = 8
 /** レーティング枠画像 Ver. 2 のジャケット左上ランプバッジ余白 */
-export const RATING_IMAGE_V2_JACKET_LAMP_MARGIN_PX = 7
+export const RATING_IMAGE_V2_JACKET_LAMP_MARGIN_PX = 5
 /**
  * レーティング枠画像 Ver. 2 のジャケット左上コンボランプバッジ。
- * FC / AJ の略称を菱形の内枠付きバッジで強調する。
+ * FC / AJ / AJC の略称を、角丸の白いフチ菱形から少しはみ出させて強調する。
  */
 export const RATING_IMAGE_V2_JACKET_LAMP_BADGE_CLASS =
   'inline-flex shrink-0 items-center justify-center'
+
+/**
+ * レーティング枠画像 Ver. 2 の最新更新 NEW! バッジ。
+ * 画像化対象とプレビュー設定チェックボックスで同じ見た目を共有する。
+ */
+export const RATING_IMAGE_V2_NEW_BADGE_CLASS =
+  'rating-image-v2-new-badge whitespace-nowrap font-jost text-[18px] font-black leading-none text-white italic'
 /** レーティング枠画像を原寸で出力するピクセル比 */
 export const RATING_IMAGE_PIXEL_RATIO = 1
 /** レーティング枠JPEG画像の圧縮品質 */
@@ -66,6 +73,9 @@ export const RATING_IMAGE_COPY = {
   dialogTitle: 'プレビュー',
   dialogDescription: '長押しまたは右クリックで画像を保存できます。',
   versionLabel: 'デザインバージョン',
+  v2OptionsLegend: '表示設定',
+  showLatestUpdateBadgeLabel: 'ラベルを表示',
+  applyPossessionLabel: 'ポゼッションを反映',
   preparingPreview: 'プレビューを準備中',
   previewAlt: 'ベスト枠と新曲枠の画像プレビュー',
   previewError: 'プレビューの作成に失敗しました。',

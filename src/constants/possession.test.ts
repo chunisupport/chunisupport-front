@@ -30,7 +30,7 @@ test('未指定時の既定ポゼッション名はnormalである', () => {
   assert.equal(DEFAULT_POSSESSION_NAME, 'normal')
 })
 
-test('着色するポゼッション名をプロフィールカード背景のCSSクラス名へ変換する', () => {
+test('着色するポゼッション名を背景のCSSクラス名へ変換する', () => {
   // Given: normal 以外の正規ポゼッション名。
 
   // When / Then: 着色クラスと個別クラスを返す。

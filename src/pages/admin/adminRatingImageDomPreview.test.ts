@@ -2,7 +2,12 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import { PLAYER_NAME_MAX_LENGTH } from '../../constants/player'
+import { DEFAULT_POSSESSION_NAME, POSSESSION_NAMES } from '../../constants/possession'
 import { RATING_SLOT_COUNT } from '../../constants/rating'
+import {
+  RATING_IMAGE_DEFAULT_POSSESSION_OPTION,
+  RATING_IMAGE_POSSESSION_OPTIONS,
+} from './AdminRatingImageDomPreviewPage.constants.ts'
 import {
   buildRatingImageDomPreviewSample,
   countRatingImagePreviewJackets,
@@ -133,6 +138,17 @@ test('管理者一覧に完全一致がなければnoneを返すこと', () => {
 
   // Then: 該当なし。
   assert.equal(username, 'none')
+})
+
+test('ポゼッション選択肢は全正規値を含み初期値はnormalであること', () => {
+  // Given: レーティング画像DOM確認のポゼッションセレクト。
+
+  // When / Then: マスタの正規値をすべて選べ、初期値は未着色のnormal。
+  assert.deepEqual(
+    RATING_IMAGE_POSSESSION_OPTIONS.map((option) => option.value),
+    [...POSSESSION_NAMES]
+  )
+  assert.equal(RATING_IMAGE_DEFAULT_POSSESSION_OPTION.value, DEFAULT_POSSESSION_NAME)
 })
 
 test('Ver.2は埋め込み済み枠数だけジャケット待ちにすること', () => {

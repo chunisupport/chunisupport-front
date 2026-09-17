@@ -13,7 +13,8 @@ export const POSSESSION_NAMES = [
 export const DEFAULT_POSSESSION_NAME: PossessionName = 'normal'
 
 /**
- * ポゼッション名をプロフィールカード背景のCSSクラス名へ変換する。
+ * ポゼッション名を背景のCSSクラス名へ変換する。
+ * プロフィールカードとレーティング枠画像 Ver. 2 のヘッダーで使う。
  * normal はテーマのサーフェス色のままにする。
  */
 export const POSSESSION_CLASS_NAMES: Record<PossessionName, string> = {
@@ -36,7 +37,7 @@ export const isPossessionName = (value: string): value is PossessionName =>
   POSSESSION_NAME_SET.has(value)
 
 /**
- * ポゼッション名に対応するプロフィールカード背景のCSSクラス名を返す。
+ * ポゼッション名に対応する背景のCSSクラス名を返す。
  *
  * @param name - マスタから解決したポゼッション名。
  * @returns 着色用のCSSクラス名。normal と未定義の名称は空文字。

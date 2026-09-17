@@ -30,7 +30,12 @@ import {
   RATING_IMAGE_VERSION_OPTIONS,
   type RatingImageVersionOption,
 } from '../users/UserPage/UserProfileView.constants'
-import { ADMIN_RATING_IMAGE_DOM_PREVIEW_COPY } from './AdminRatingImageDomPreviewPage.constants'
+import {
+  ADMIN_RATING_IMAGE_DOM_PREVIEW_COPY,
+  RATING_IMAGE_DEFAULT_POSSESSION_OPTION,
+  RATING_IMAGE_POSSESSION_OPTIONS,
+  type RatingImagePossessionOption,
+} from './AdminRatingImageDomPreviewPage.constants'
 import {
   countRatingImagePreviewJackets,
   previewScalePercentToFactor,
@@ -109,6 +114,9 @@ const AdminRatingImageDomPreviewPage = () => {
   const [selectedVersionOption, setSelectedVersionOption] = createSignal(
     RATING_IMAGE_DEFAULT_VERSION_OPTION
   )
+  const [selectedPossessionOption, setSelectedPossessionOption] = createSignal(
+    RATING_IMAGE_DEFAULT_POSSESSION_OPTION
+  )
   const [showJackets, setShowJackets] = createSignal(true)
   const [scalePercent, setScalePercent] = createSignal<number>(
     RATING_IMAGE_DOM_PREVIEW_SCALE_PERCENT.defaultValue
@@ -144,6 +152,17 @@ const AdminRatingImageDomPreviewPage = () => {
   const handleVersionChange = (option: RatingImageVersionOption | null): void => {
     if (!option || option.value === selectedVersionOption().value) return
     setSelectedVersionOption(option)
+  }
+
+  /**
+   * Ver. 2 ヘッダーのポゼッション背景色を切り替える。
+   *
+   * @param option - 次に使うポゼッション。空選択は無視する。
+   * @returns なし。
+   */
+  const handlePossessionChange = (option: RatingImagePossessionOption | null): void => {
+    if (!option || option.value === selectedPossessionOption().value) return
+    setSelectedPossessionOption(option)
   }
 
   /**
@@ -333,6 +352,21 @@ const AdminRatingImageDomPreviewPage = () => {
               itemClass="hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
             />
           </div>
+          <Show when={selectedVersionOption().value === 'v2'}>
+            <div class="w-36">
+              <AppSelect<RatingImagePossessionOption>
+                options={RATING_IMAGE_POSSESSION_OPTIONS}
+                optionValue="value"
+                optionTextValue="label"
+                value={selectedPossessionOption()}
+                onChange={handlePossessionChange}
+                label={ADMIN_RATING_IMAGE_DOM_PREVIEW_COPY.possessionLabel}
+                formatLabel={(option) => option.label}
+                triggerClass="h-10"
+                itemClass="hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
+              />
+            </div>
+          </Show>
           <CheckboxField
             checked={showJackets()}
             label={ADMIN_RATING_IMAGE_DOM_PREVIEW_COPY.showJacketsLabel}
@@ -426,6 +460,7 @@ const AdminRatingImageDomPreviewPage = () => {
                         honors={model.honors}
                         rating={model.rating}
                         showJackets={showJackets()}
+                        possessionName={selectedPossessionOption().value}
                         onJacketReadyChange={handleJacketReadyChange}
                       />
                     </Show>

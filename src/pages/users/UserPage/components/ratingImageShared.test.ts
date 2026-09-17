@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { HonorDTO } from '../../../../types/api'
+import { MAX_SCORE } from '../../../../utils/scoreRank'
 import {
   buildHonorSlots,
   formatRatingImageOverPowerLine,
@@ -8,6 +9,7 @@ import {
   formatRatingImageOverPowerValue,
   getPrimaryHonor,
   getRatingImageV2ComboLampLabel,
+  getRatingImageV2ComboLampVariant,
 } from './ratingImageShared.ts'
 
 test('getPrimaryHonor は1枠目の称号を優先すること', () => {
@@ -106,4 +108,19 @@ test('レーティング枠画像 Ver. 2 のコンボランプはFCとAJの略�
   assert.equal(fullCombo, 'FC')
   assert.equal(allJustice, 'AJ')
   assert.equal(unset, '')
+})
+
+test('レーティング枠画像 Ver. 2 のコンボランプ装飾をFC、AJ、AJCへ分類すること', () => {
+  // Given: FULL COMBO、通常のALL JUSTICE、理論値のALL JUSTICE。
+  const maxScore = MAX_SCORE
+
+  // When: 画像用の装飾種別を取得する。
+  const fullCombo = getRatingImageV2ComboLampVariant('FULL COMBO', maxScore)
+  const allJustice = getRatingImageV2ComboLampVariant('ALL JUSTICE', maxScore - 1)
+  const allJusticeCritical = getRatingImageV2ComboLampVariant('ALL JUSTICE', maxScore)
+
+  // Then: FC、AJ、AJCの順に分類される。
+  assert.equal(fullCombo, 'fc')
+  assert.equal(allJustice, 'aj')
+  assert.equal(allJusticeCritical, 'ajc')
 })

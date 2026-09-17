@@ -1,7 +1,17 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { ImageDown, RotateCcw, Share2, X } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createEffect, createSignal, on, onCleanup, Show, untrack } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  on,
+  onCleanup,
+  Show,
+  untrack,
+} from 'solid-js'
+import { fetchPossessions } from '../../../../api/possessions'
 import { Loading } from '../../../../components'
 import {
   AppButton,
@@ -9,16 +19,20 @@ import {
   getAppIconButtonClass,
 } from '../../../../components/common/AppButton'
 import { AppSelect } from '../../../../components/common/AppSelect'
+import { CheckboxField } from '../../../../components/common/CheckboxField'
+import { DEFAULT_POSSESSION_NAME } from '../../../../constants/possession'
 import { RATING_SLOT_COUNT } from '../../../../constants/rating'
 import { SOCIAL_SHARE_TEXT } from '../../../../constants/socialShare'
 import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
 import { canShareFiles, captureElementAsImage } from '../../../../utils/domImageCapture'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
+import { resolvePossessionName } from '../../../../utils/possession'
 import {
   RATING_IMAGE_COPY,
   RATING_IMAGE_DEFAULT_VERSION_OPTION,
   RATING_IMAGE_JPEG_QUALITY,
   RATING_IMAGE_PIXEL_RATIO,
+  RATING_IMAGE_V2_NEW_BADGE_CLASS,
   RATING_IMAGE_VERSION_OPTIONS,
   type RatingImageVersionOption,
 } from '../UserProfileView.constants'
@@ -45,7 +59,7 @@ type Props = {
  * プレビュー表示時点で画像化を行い、表示中の画像と保存する画像を同一のBlobにする。
  * 画像表示により、スマートフォンの長押し保存など標準の画像操作を利用できる。
  *
- * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定。
+ * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定。Ver. 2 は NEW! バッジとポゼッション色を切り替えられる。
  * @returns 画像化プレビューを開くボタンとダイアログ。
  */
 export const RatingImagePreviewDialog: Component<Props> = (props) => {
@@ -59,10 +73,22 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const [selectedVersionOption, setSelectedVersionOption] = createSignal(
     RATING_IMAGE_DEFAULT_VERSION_OPTION
   )
+  const [showLatestUpdateBadge, setShowLatestUpdateBadge] = createSignal(true)
+  const [applyPossession, setApplyPossession] = createSignal(true)
   let captureRevision = 0
 
   const [readyJacketCount, setReadyJacketCount] = createSignal(0)
   const readyJacketKeys = new Set<string>()
+  const [possessions] = createResource(
+    () => (open() && selectedVersionOption().value === 'v2' ? true : undefined),
+    fetchPossessions
+  )
+  /** レーティング枠画像 Ver. 2 のヘッダーへ渡すポゼッション名 */
+  const possessionName = createMemo(() => {
+    if (!applyPossession()) return DEFAULT_POSSESSION_NAME
+
+    return resolvePossessionName(props.playerInfo.possession_id, possessions() ?? [])
+  })
 
   /**
    * 画像化対象に含まれる、読み込み完了を待つ画像の件数を返す。
@@ -82,11 +108,23 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   }
 
   /**
-   * 全ジャケットが元画像またはプレースホルダーで表示可能になったかを返す。
+   * ポゼッションマスタの取得が終わり、ヘッダー色を確定できるかを返す。
+   *
+   * @returns Ver. 1、ポゼッション非反映、またはマスタ取得完了・失敗時は true。
+   */
+  const isPossessionReady = (): boolean => {
+    if (selectedVersionOption().value !== 'v2' || !applyPossession()) return true
+
+    return possessions.state === 'ready' || possessions.state === 'errored'
+  }
+
+  /**
+   * ジャケットとポゼッション色の準備が終わり、画像化を開始できるかを返す。
    *
    * @returns 画像化を開始可能な場合はtrue。
    */
-  const isPreviewReady = (): boolean => readyJacketCount() >= expectedJacketCount()
+  const isPreviewReady = (): boolean =>
+    readyJacketCount() >= expectedJacketCount() && isPossessionReady()
 
   /**
    * 共有またはプレビュー生成を実行中か返す。
@@ -133,6 +171,23 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   }
 
   /**
+   * プレビュー画像を破棄し、準備完了後に再生成できるようにする。
+   *
+   * @param resetJackets - ジャケット準備状態も初期化する場合は true。
+   * @returns なし。
+   */
+  const invalidatePreview = (resetJackets: boolean): void => {
+    captureRevision += 1
+    if (resetJackets) {
+      readyJacketKeys.clear()
+      setReadyJacketCount(0)
+    }
+    setIsCapturingPreview(false)
+    revokePreviewUrl()
+    setImageActionError(undefined)
+  }
+
+  /**
    * デザインバージョンを切り替え、プレビューを作り直す。
    *
    * @param option - 次に使うデザインバージョン。空選択は無視する。
@@ -141,13 +196,30 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const handleVersionChange = (option: RatingImageVersionOption | null): void => {
     if (!option || option.value === selectedVersionOption().value) return
 
-    captureRevision += 1
-    readyJacketKeys.clear()
-    setReadyJacketCount(0)
-    setIsCapturingPreview(false)
-    revokePreviewUrl()
-    setImageActionError(undefined)
+    invalidatePreview(true)
     setSelectedVersionOption(option)
+  }
+
+  /**
+   * NEW! バッジの表示を切り替え、プレビューを作り直す。
+   *
+   * @param checked - 最新更新バッジを表示する場合は true。
+   * @returns なし。
+   */
+  const handleShowLatestUpdateBadgeChange = (checked: boolean): void => {
+    setShowLatestUpdateBadge(checked)
+    invalidatePreview(false)
+  }
+
+  /**
+   * ポゼッション色の反映を切り替え、プレビューを作り直す。
+   *
+   * @param checked - ヘッダーへポゼッション色を反映する場合は true。
+   * @returns なし。
+   */
+  const handleApplyPossessionChange = (checked: boolean): void => {
+    setApplyPossession(checked)
+    invalidatePreview(false)
   }
 
   /**
@@ -160,11 +232,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     if (!nextOpen && isSharing()) return
 
     if (nextOpen) {
-      captureRevision += 1
-      readyJacketKeys.clear()
-      setReadyJacketCount(0)
-      revokePreviewUrl()
-      setImageActionError(undefined)
+      invalidatePreview(true)
     } else {
       captureRevision += 1
       setIsCapturingPreview(false)
@@ -295,12 +363,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
       () => {
         if (!open()) return
 
-        captureRevision += 1
-        readyJacketKeys.clear()
-        setReadyJacketCount(0)
-        setIsCapturingPreview(false)
-        revokePreviewUrl()
-        setImageActionError(undefined)
+        invalidatePreview(true)
       },
       { defer: true }
     )
@@ -369,6 +432,35 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                 disabled={isSharing()}
               />
             </div>
+
+            <Show when={selectedVersionOption().value === 'v2'}>
+              <fieldset class="mt-3 w-fit shrink-0 rounded-md border border-border bg-bg px-3 py-2">
+                <legend class="sr-only">{RATING_IMAGE_COPY.v2OptionsLegend}</legend>
+                <div class="flex flex-col items-start gap-2">
+                  <CheckboxField
+                    id="rating-image-show-latest-update-badge"
+                    checked={showLatestUpdateBadge()}
+                    disabled={isSharing()}
+                    onChange={handleShowLatestUpdateBadgeChange}
+                    label={
+                      <span class="inline-flex items-center gap-1.5">
+                        <span class={`shrink-0 ${RATING_IMAGE_V2_NEW_BADGE_CLASS}`}>
+                          {RATING_IMAGE_COPY.latestUpdateBadge}
+                        </span>
+                        <span>{RATING_IMAGE_COPY.showLatestUpdateBadgeLabel}</span>
+                      </span>
+                    }
+                  />
+                  <CheckboxField
+                    id="rating-image-apply-possession"
+                    checked={applyPossession()}
+                    disabled={isSharing()}
+                    onChange={handleApplyPossessionChange}
+                    label={RATING_IMAGE_COPY.applyPossessionLabel}
+                  />
+                </div>
+              </fieldset>
+            </Show>
 
             <div class="mt-4 min-h-0 flex-1 basis-0 overflow-hidden rounded-md bg-bg p-3">
               <div
@@ -461,6 +553,8 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                   honors={props.honors}
                   rating={props.rating}
                   showJackets={props.showJackets}
+                  showLatestUpdateBadge={showLatestUpdateBadge()}
+                  possessionName={possessionName()}
                   onJacketReadyChange={handleJacketReadyChange}
                 />
               </Show>

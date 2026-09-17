@@ -565,11 +565,12 @@
   --cs-size-rating-image-v2-position-flag-width: 52px;
   --cs-size-rating-image-v2-position-flag-height: 32px;
   --cs-size-rating-image-v2-position-flag-slant: 12px;
-  --cs-size-rating-image-v2-jacket-lamp: 34px;
-  --cs-size-rating-image-v2-jacket-lamp-inset: 4px;
+  --cs-size-rating-image-v2-position-flag-font: 22px;
+  --cs-size-rating-image-v2-jacket-lamp: 18px;
+  --cs-size-rating-image-v2-jacket-lamp-font: 13px;
   --cs-size-rating-image-v2-jacket-lamp-border: 2px;
+  --cs-size-rating-image-v2-jacket-lamp-radius: 4px;
   --cs-shadow-rating-image-v2-header: 0 4px 12px rgb(0 0 0 / 22%);
-  --cs-shadow-rating-image-v2-jacket-lamp: 0 1px 3px rgb(0 0 0 / 55%);
   --cs-shadow-rating-image-v2-position: 0 1px 2px rgb(0 0 0 / 70%);
   --cs-shadow-rating-image-v2-new-badge: 0 1px 2px rgb(0 0 0 / 75%);
   --cs-size-difficulty-ultima-stripe: 6px;
@@ -1232,31 +1233,60 @@
     box-shadow: var(--cs-shadow-rating-image-v2-header);
   }
 
+  .rating-image-v2-header .user-honor-title {
+    box-shadow: var(--cs-shadow-honor-title);
+  }
+
+  .rating-image-v2-header-divider {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .rating-image-v2-header.user-nameplate--colored .rating-image-v2-header-divider {
+    border-top-color: var(--cs-color-possession-divider);
+  }
+
   .rating-image-v2-jacket-lamp {
     position: relative;
     box-sizing: border-box;
+    overflow: visible;
     width: var(--cs-size-rating-image-v2-jacket-lamp);
     height: var(--cs-size-rating-image-v2-jacket-lamp);
-    box-shadow: var(--cs-shadow-rating-image-v2-jacket-lamp);
+    border: var(--cs-size-rating-image-v2-jacket-lamp-border) solid var(--color-white);
+    border-radius: var(--cs-size-rating-image-v2-jacket-lamp-radius);
     transform: rotate(45deg);
   }
 
-  .rating-image-v2-jacket-lamp-frame {
-    position: absolute;
-    inset: var(--cs-size-rating-image-v2-jacket-lamp-inset);
-    border: var(--cs-size-rating-image-v2-jacket-lamp-border) solid var(--color-white);
+  .rating-image-v2-jacket-lamp[data-combo-lamp="fc"] {
+    background-color: var(--cs-color-ranking-gold-bg);
+    background-image: var(--cs-gradient-ranking-gold-bg);
+    color: var(--color-gray-900);
+  }
+
+  .rating-image-v2-jacket-lamp[data-combo-lamp="aj"] {
+    background-color: var(--cs-color-possession-platina-bg);
+    background-image: var(--cs-gradient-possession-platina-bg);
+    color: var(--color-gray-900);
+  }
+
+  .rating-image-v2-jacket-lamp[data-combo-lamp="ajc"] {
+    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-1);
+    background-image: var(--cs-gradient-lamp-all-justice-critical-bg);
+    color: var(--cs-color-lamp-all-justice-critical-text);
   }
 
   .rating-image-v2-jacket-lamp-label {
-    position: relative;
+    position: absolute;
+    top: 50%;
+    left: 50%;
     z-index: 1;
-    color: var(--color-black);
+    overflow: visible;
     font-family: var(--font-oswald);
-    font-size: 18px;
+    font-size: var(--cs-size-rating-image-v2-jacket-lamp-font);
     font-weight: 800;
     line-height: 1;
     white-space: nowrap;
-    transform: rotate(-45deg);
+    text-wrap: nowrap;
+    transform: translate(-50%, -50%) rotate(-45deg);
   }
 
   .rating-image-v2-backdrop {
@@ -1356,6 +1386,7 @@
     width: var(--cs-size-rating-image-v2-position-flag-width);
     height: var(--cs-size-rating-image-v2-position-flag-height);
     padding-right: calc(var(--cs-size-rating-image-v2-position-flag-slant) * 0.5);
+    font-size: var(--cs-size-rating-image-v2-position-flag-font);
     text-shadow: var(--cs-shadow-rating-image-v2-position);
     transform: translateY(-1px);
   }
@@ -1396,12 +1427,7 @@
     height: 28px;
     border: 1px dashed var(--color-border-strong);
     border-radius: 6px;
-    background-color: var(--color-surface-muted);
-    background-image: repeating-linear-gradient(
-      -45deg,
-      transparent 0 6px,
-      color-mix(in oklab, var(--color-border) 55%, transparent) 6px 7px
-    );
+    background-color: transparent;
   }
 
   .user-honor-title--phoenix-g {

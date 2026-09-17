@@ -2,14 +2,18 @@ import { Triangle } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
 import placeholderImageUrl from '../../../../assets/placeholder.png'
-import {
-  getComboLampBadgeClass,
-  SCORE_RANK_TEXT_CLASS,
-} from '../../../../components/common/record/recordStyleClasses'
+import { SCORE_RANK_TEXT_CLASS } from '../../../../components/common/record/recordStyleClasses'
 import { normalizePlayerDataDifficulty } from '../../../../constants/difficulty'
 import { getHonorTypeClassName } from '../../../../constants/honors'
+import { DEFAULT_POSSESSION_NAME, getPossessionClassName } from '../../../../constants/possession'
 import { RATING_SLOT_COUNT } from '../../../../constants/rating'
-import type { HonorDTO, PlayerDTO, PlayerRecordDTO, UserRatingDTO } from '../../../../types/api'
+import type {
+  HonorDTO,
+  PlayerDTO,
+  PlayerRecordDTO,
+  PossessionName,
+  UserRatingDTO,
+} from '../../../../types/api'
 import { getConstDisplay } from '../../../../utils/constDisplay'
 import { findLatestRecordDate, toRecordDateString } from '../../../../utils/dateFilter'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
@@ -31,6 +35,7 @@ import {
   RATING_IMAGE_V2_META_TRIANGLE_GAP_PX,
   RATING_IMAGE_V2_META_TRIANGLE_PX,
   RATING_IMAGE_V2_META_WIDTH_PX,
+  RATING_IMAGE_V2_NEW_BADGE_CLASS,
   RATING_IMAGE_V2_PADDING_PX,
   RATING_IMAGE_V2_WIDTH_PX,
 } from '../UserProfileView.constants'
@@ -41,6 +46,7 @@ import {
   formatRatingImageOverPowerPercent,
   formatRatingImageOverPowerValue,
   getRatingImageV2ComboLampLabel,
+  getRatingImageV2ComboLampVariant,
   HONOR_SLOT_NUMBERS,
 } from './ratingImageShared'
 
@@ -53,10 +59,14 @@ type RatingImageSheetV2Props = {
   rating: UserRatingDTO
   /** カードへジャケット画像を表示するかどうか */
   showJackets: boolean
+  /** 最新更新の NEW! バッジを表示するかどうか。未指定時は表示する */
+  showLatestUpdateBadge?: boolean
   /** 画像化対象のルート要素を受け取るコールバック */
   captureRef: (element: HTMLDivElement) => void
   /** ジャケット画像ごとの準備状態を通知するコールバック */
   onJacketReadyChange: (key: string, ready: boolean) => void
+  /** ヘッダー背景に使うポゼッション名。未指定時はテーマのサーフェス色 */
+  possessionName?: PossessionName
 }
 
 type RatingImageV2JacketTileProps = {
@@ -111,6 +121,8 @@ type RatingImageV2GridProps = {
   latestUpdatedDate: string | null
   /** カードへジャケット画像を表示するかどうか */
   showJackets: boolean
+  /** 最新更新の NEW! バッジを表示するかどうか */
+  showLatestUpdateBadge: boolean
   /** 枠を識別するキー */
   columnKey: 'best' | 'new'
   /** ジャケット画像の準備状態を通知するコールバック */
@@ -128,7 +140,7 @@ const RatingImageV2HeaderStat: Component<RatingImageV2HeaderStatProps> = (props)
     <div class={`whitespace-nowrap font-jost font-semibold leading-none ${props.valueClass}`}>
       {props.children}
     </div>
-    <p class="mt-[6px] whitespace-nowrap text-[13px] font-bold leading-none text-text-muted">
+    <p class="user-nameplate-metric-secondary mt-[6px] whitespace-nowrap text-[13px] font-bold leading-none">
       {props.label}
     </p>
   </div>
@@ -182,7 +194,7 @@ const RatingImageV2EmptyTile: Component<RatingImageV2EmptyTileProps> = (props) =
     >
       <span class="sr-only">{buildEmptyRatingSlotLabel(slotNumber())}</span>
       <div
-        class="rating-image-v2-position-flag font-oswald text-[18px] font-bold leading-none text-white"
+        class="rating-image-v2-position-flag font-oswald font-bold leading-none text-white"
         aria-hidden="true"
       >
         {slotNumber()}
@@ -214,7 +226,7 @@ const RatingImageV2EmptyTile: Component<RatingImageV2EmptyTileProps> = (props) =
 
 /**
  * レーティング枠画像 Ver. 2 のジャケット左上へコンボランプバッジを表示する。
- * AJCは虹色の ALL JUSTICE として表示する。
+ * FCは金色、AJはプラチナ色、AJCは虹色の角丸エンブレムとし、略称はバッジから少しはみ出させる。
  *
  * @param props - 表示対象のレコード。
  * @returns コンボランプがある場合のみ左上のバッジ。
@@ -231,10 +243,10 @@ const RatingImageV2JacketComboLamp: Component<RatingImageV2JacketComboLampProps>
     <Show when={comboLamp()}>
       {(lamp) => (
         <span
-          class={`rating-image-v2-jacket-lamp pointer-events-none absolute top-0 left-0 z-20 ${RATING_IMAGE_V2_JACKET_LAMP_BADGE_CLASS} ${getComboLampBadgeClass(lamp(), props.record.score)}`}
+          class={`rating-image-v2-jacket-lamp pointer-events-none absolute top-0 left-0 z-20 ${RATING_IMAGE_V2_JACKET_LAMP_BADGE_CLASS}`}
+          data-combo-lamp={getRatingImageV2ComboLampVariant(lamp(), props.record.score)}
           style={{ margin: `${RATING_IMAGE_V2_JACKET_LAMP_MARGIN_PX}px` }}
         >
-          <span class="rating-image-v2-jacket-lamp-frame" aria-hidden="true" />
           <span class="rating-image-v2-jacket-lamp-label">
             {getRatingImageV2ComboLampLabel(lamp())}
           </span>
@@ -293,11 +305,13 @@ const RatingImageV2JacketTile: Component<RatingImageV2JacketTileProps> = (props)
       data-difficulty={difficulty() ?? undefined}
       style={buildRatingImageV2CardPaddingStyle()}
     >
-      <div class="rating-image-v2-position-flag font-oswald text-[18px] font-bold leading-none text-white">
+      <div class="rating-image-v2-position-flag font-oswald font-bold leading-none text-white">
         {props.index + 1}
       </div>
       <Show when={props.isLatestUpdate}>
-        <span class="rating-image-v2-new-badge pointer-events-none absolute top-0 right-0 z-40 whitespace-nowrap font-jost text-[18px] font-black leading-none text-white italic">
+        <span
+          class={`pointer-events-none absolute top-0 right-0 z-40 ${RATING_IMAGE_V2_NEW_BADGE_CLASS}`}
+        >
           {RATING_IMAGE_COPY.latestUpdateBadge}
         </span>
       </Show>
@@ -396,7 +410,7 @@ const RatingImageV2JacketTile: Component<RatingImageV2JacketTileProps> = (props)
 /**
  * レーティング枠画像 Ver. 2 のジャケットグリッドを表示する。
  *
- * @param props - 見出し、採用レコード、規定件数、ジャケット表示設定。
+ * @param props - 見出し、採用レコード、規定件数、ジャケット表示設定、NEW! バッジ表示。
  * @returns ベスト枠または新曲枠の格子。
  */
 const RatingImageV2Grid: Component<RatingImageV2GridProps> = (props) => {
@@ -435,6 +449,7 @@ const RatingImageV2Grid: Component<RatingImageV2GridProps> = (props) => {
                     record={record()}
                     index={slotIndex}
                     isLatestUpdate={
+                      props.showLatestUpdateBadge &&
                       props.latestUpdatedDate !== null &&
                       toRecordDateString(record().updated_at) === props.latestUpdatedDate
                     }
@@ -454,8 +469,9 @@ const RatingImageV2Grid: Component<RatingImageV2GridProps> = (props) => {
 
 /**
  * プレビューとJPEG出力で共有するベスト枠・新曲枠画像 Ver. 2 を表示する。
+ * ヘッダー背景色はポゼッションに応じて切り替える。
  *
- * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定、参照コールバック。
+ * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定、NEW! バッジ表示、ポゼッション名、参照コールバック。
  * @returns ジャケットを格子状に並べた固定論理幅の縦長画像レイアウト。
  */
 export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) => {
@@ -469,6 +485,12 @@ export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) =>
   const overPowerValue = () => formatRatingImageOverPowerValue(props.playerInfo.overpower_value)
   const overPowerPercent = () =>
     formatRatingImageOverPowerPercent(props.playerInfo.overpower_percent)
+  /** ヘッダー背景に適用するポゼッション名。未指定時は既定値 */
+  const possessionName = createMemo(() => props.possessionName ?? DEFAULT_POSSESSION_NAME)
+  /** ポゼッション着色クラス。normal のときはサーフェス色を使う */
+  const headerPossessionClassName = createMemo(
+    () => getPossessionClassName(possessionName()) || 'bg-surface'
+  )
 
   return (
     <div
@@ -480,9 +502,9 @@ export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) =>
       }}
     >
       <header
-        class="rating-image-v2-header flex gap-[16px] bg-surface"
+        class={`rating-image-v2-header flex gap-[16px] ${headerPossessionClassName()}`}
+        data-possession={possessionName()}
         style={{
-          'border-left': '8px solid var(--color-action-primary)',
           padding: '16px 20px',
         }}
       >
@@ -491,14 +513,13 @@ export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) =>
             <h1 class="min-w-0 flex-1 truncate font-sans text-[48px] font-bold leading-none">
               {props.playerInfo.name}
             </h1>
-            <p class="shrink-0 whitespace-nowrap font-jost text-[22px] font-medium text-text-muted">
+            <p class="user-nameplate-metric-secondary shrink-0 whitespace-nowrap font-jost text-[22px] font-medium">
               Lv. {props.playerInfo.level}
             </p>
           </div>
           <div
-            class="flex min-w-0 items-end gap-[24px]"
+            class="rating-image-v2-header-divider flex min-w-0 items-end gap-[24px]"
             style={{
-              'border-top': '1px solid var(--color-border)',
               'margin-top': '12px',
               'padding-top': '10px',
             }}
@@ -523,7 +544,10 @@ export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) =>
               valueClass="text-[22px]"
             >
               {overPowerValue()}
-              <span class="text-[16px] font-medium text-text-muted"> ({overPowerPercent()}%)</span>
+              <span class="user-nameplate-metric-secondary text-[16px] font-medium">
+                {' '}
+                ({overPowerPercent()}%)
+              </span>
             </RatingImageV2HeaderStat>
           </div>
         </div>
@@ -561,6 +585,7 @@ export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) =>
           slotCount={RATING_SLOT_COUNT.best}
           latestUpdatedDate={latestUpdatedDate()}
           showJackets={props.showJackets}
+          showLatestUpdateBadge={props.showLatestUpdateBadge ?? true}
           columnKey="best"
           onJacketReadyChange={props.onJacketReadyChange}
         />
@@ -570,6 +595,7 @@ export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) =>
           slotCount={RATING_SLOT_COUNT.new}
           latestUpdatedDate={latestUpdatedDate()}
           showJackets={props.showJackets}
+          showLatestUpdateBadge={props.showLatestUpdateBadge ?? true}
           columnKey="new"
           onJacketReadyChange={props.onJacketReadyChange}
         />
