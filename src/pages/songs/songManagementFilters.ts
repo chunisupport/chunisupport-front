@@ -8,6 +8,9 @@ import { resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
 
 export type SongManagementMissingField = 'release' | 'bpm' | 'notes' | 'notesDesigner'
 
+/** 楽曲管理フィルターで絞り込む収録状態 */
+export type SongManagementCatalogState = 'included' | 'deleted'
+
 export type SongManagementFilters = {
   releaseMin: string
   releaseMax: string
@@ -15,6 +18,8 @@ export type SongManagementFilters = {
   versions: string[] | null
   missingField: SongManagementMissingField
   missingOnly: boolean
+  catalogState: SongManagementCatalogState
+  catalogOnly: boolean
 }
 
 export const SONG_MANAGEMENT_FILTER_LABELS = {
@@ -29,6 +34,8 @@ export const SONG_MANAGEMENT_FILTER_LABELS = {
   releaseMax: '追加日 終了',
   missingField: '欠落項目',
   missingOnly: '欠落のみ表示',
+  catalogField: '収録状態',
+  catalogOnly: '楽曲のみ表示',
   rangeError: '開始日は終了日以前にしてください。',
 } as const
 
@@ -40,6 +47,14 @@ export const SONG_MANAGEMENT_MISSING_FIELD_OPTIONS: readonly {
   { value: 'bpm', label: 'BPM' },
   { value: 'notes', label: 'ノーツ数' },
   { value: 'notesDesigner', label: 'NOTES DESIGNER' },
+]
+
+export const SONG_MANAGEMENT_CATALOG_STATE_OPTIONS: readonly {
+  value: SongManagementCatalogState
+  label: string
+}[] = [
+  { value: 'included', label: '収録中' },
+  { value: 'deleted', label: '削除済み' },
 ]
 
 const REQUIRED_STANDARD_DIFFICULTIES = [
@@ -57,7 +72,7 @@ const NOTES_DESIGNER_DIFFICULTIES = [
 /**
  * 楽曲管理フィルターの初期値を生成する。
  *
- * @returns 追加日を欠落対象にした未指定フィルター。
+ * @returns 欠落項目を追加日、収録状態を収録中にした未指定フィルター。
  */
 export const createSongManagementFilters = (): SongManagementFilters => ({
   releaseMin: '',
@@ -66,6 +81,8 @@ export const createSongManagementFilters = (): SongManagementFilters => ({
   versions: null,
   missingField: 'release',
   missingOnly: false,
+  catalogState: 'included',
+  catalogOnly: false,
 })
 
 /**
@@ -132,7 +149,7 @@ export const hasMissingManagedWorldsendSongField = (
  * @returns 共通属性条件をすべて満たす場合は true。
  */
 const matchesManagementAttributes = (
-  song: { genre: string | null; release: string | null },
+  song: { genre: string | null; release: string | null; is_deleted: boolean },
   filters: SongManagementFilters,
   versions: readonly VersionSummaryDTO[]
 ): boolean => {
@@ -146,6 +163,7 @@ const matchesManagementAttributes = (
     !filters.versions.includes(resolveVersionNameByReleaseDate(song.release, versions))
   )
     return false
+  if (filters.catalogOnly && song.is_deleted !== (filters.catalogState === 'deleted')) return false
   return true
 }
 

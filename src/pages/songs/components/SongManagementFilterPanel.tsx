@@ -17,8 +17,11 @@ import { SONG_FILTER_INPUT_CLASS } from '../songFilters'
 import {
   createSongManagementFilters,
   SONG_MANAGEMENT_FILTER_LABELS as LABELS,
+  SONG_MANAGEMENT_CATALOG_STATE_OPTIONS,
   SONG_MANAGEMENT_MISSING_FIELD_OPTIONS,
+  type SongManagementCatalogState,
   type SongManagementFilters,
+  type SongManagementMissingField,
 } from '../songManagementFilters'
 
 type Props = {
@@ -30,7 +33,10 @@ type Props = {
   onChange: (filters: SongManagementFilters) => void
 }
 
-type MissingFieldOption = (typeof SONG_MANAGEMENT_MISSING_FIELD_OPTIONS)[number]
+type FilterToggleSelectOption<T extends string> = {
+  value: T
+  label: string
+}
 
 /**
  * 楽曲管理の検索欄に隣接する属性・欠落フィルターを表示する。
@@ -49,14 +55,12 @@ export default function SongManagementFilterPanel(props: Props) {
       filters.releaseMax.length > 0 ||
       filters.genres !== null ||
       filters.versions !== null ||
-      filters.missingOnly
+      filters.missingOnly ||
+      filters.catalogOnly
     )
   }
   const dateInvalid = () =>
     !!(draft().releaseMin && draft().releaseMax && draft().releaseMin > draft().releaseMax)
-  const selectedMissingField = () =>
-    SONG_MANAGEMENT_MISSING_FIELD_OPTIONS.find((option) => option.value === draft().missingField) ??
-    SONG_MANAGEMENT_MISSING_FIELD_OPTIONS[0]
   const filterResetLongPress = useFilterResetLongPress({
     isDisabled: () => false,
     onReset: () => props.onChange(createSongManagementFilters()),
@@ -188,25 +192,28 @@ export default function SongManagementFilterPanel(props: Props) {
                   </p>
                 </Show>
               </fieldset>
-              <div class="flex items-end gap-3 border-t border-border pt-4">
-                <AppSelect<MissingFieldOption>
-                  rootClass="min-w-0 flex-1"
-                  label={LABELS.missingField}
-                  labelVariant="srOnly"
-                  options={[...SONG_MANAGEMENT_MISSING_FIELD_OPTIONS]}
-                  optionValue="value"
-                  optionTextValue="label"
-                  value={selectedMissingField()}
-                  onChange={(option) => update('missingField', option?.value ?? 'release')}
-                  formatLabel={(option) => option.label}
-                  itemClass="hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
-                />
-                <CheckboxField
+              <div class="space-y-3 border-t border-border pt-4">
+                <FilterToggleSelectRow<SongManagementMissingField>
                   id={`${props.idPrefix}-missing-only`}
                   checked={draft().missingOnly}
-                  label={LABELS.missingOnly}
-                  onChange={(checked) => update('missingOnly', checked)}
-                  class="h-9.5 shrink-0"
+                  onCheckedChange={(checked) => update('missingOnly', checked)}
+                  selectLabel={LABELS.missingField}
+                  options={SONG_MANAGEMENT_MISSING_FIELD_OPTIONS}
+                  value={draft().missingField}
+                  fallbackValue="release"
+                  onValueChange={(value) => update('missingField', value)}
+                  suffix={LABELS.missingOnly}
+                />
+                <FilterToggleSelectRow<SongManagementCatalogState>
+                  id={`${props.idPrefix}-catalog-only`}
+                  checked={draft().catalogOnly}
+                  onCheckedChange={(checked) => update('catalogOnly', checked)}
+                  selectLabel={LABELS.catalogField}
+                  options={SONG_MANAGEMENT_CATALOG_STATE_OPTIONS}
+                  value={draft().catalogState}
+                  fallbackValue="included"
+                  onValueChange={(value) => update('catalogState', value)}
+                  suffix={LABELS.catalogOnly}
                 />
               </div>
             </div>
@@ -227,6 +234,55 @@ export default function SongManagementFilterPanel(props: Props) {
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog>
+  )
+}
+
+/**
+ * チェックボックス、プルダウン、接尾辞テキストを1行で表示する。
+ *
+ * @param props - チェック状態、選択肢、接尾辞と更新通知。
+ * @returns フィルター行。
+ */
+function FilterToggleSelectRow<T extends string>(props: {
+  id: string
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+  selectLabel: string
+  options: readonly FilterToggleSelectOption<T>[]
+  value: T
+  fallbackValue: T
+  onValueChange: (value: T) => void
+  suffix: string
+}) {
+  const selected = (): FilterToggleSelectOption<T> =>
+    props.options.find((option) => option.value === props.value) ??
+    props.options.find((option) => option.value === props.fallbackValue) ??
+    props.options[0] ?? { value: props.fallbackValue, label: props.fallbackValue }
+
+  return (
+    <div class="flex min-w-0 items-center gap-2">
+      <CheckboxField
+        id={props.id}
+        checked={props.checked}
+        onChange={props.onCheckedChange}
+        class="shrink-0"
+      />
+      <AppSelect<FilterToggleSelectOption<T>>
+        rootClass="min-w-0 flex-1"
+        label={props.selectLabel}
+        labelVariant="srOnly"
+        options={[...props.options]}
+        optionValue="value"
+        optionTextValue="label"
+        value={selected()}
+        onChange={(option) => props.onValueChange(option?.value ?? props.fallbackValue)}
+        formatLabel={(option) => option.label}
+        itemClass="hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
+      />
+      <label for={props.id} class="shrink-0 cursor-pointer text-sm text-text-muted">
+        {props.suffix}
+      </label>
+    </div>
   )
 }
 

@@ -109,6 +109,35 @@ test('ジャンル・バージョン・追加日はAND条件で通常曲を絞�
   assert.deepEqual(result, [standardSong])
 })
 
+test('収録中または削除済みの楽曲のみを表示する', () => {
+  // Given: 収録中曲と削除済み曲、および収録状態フィルター。
+  const deleted = { ...standardSong, id: '3', is_deleted: true }
+  const includedFilters = {
+    ...createSongManagementFilters(),
+    catalogOnly: true,
+    catalogState: 'included' as const,
+  }
+  const deletedFilters = {
+    ...createSongManagementFilters(),
+    catalogOnly: true,
+    catalogState: 'deleted' as const,
+  }
+
+  // When: 収録状態の指定あり・なしで絞り込む。
+  const includedResult = filterManagedSongs([standardSong, deleted], includedFilters, versions)
+  const deletedResult = filterManagedSongs([standardSong, deleted], deletedFilters, versions)
+  const allResult = filterManagedSongs(
+    [standardSong, deleted],
+    createSongManagementFilters(),
+    versions
+  )
+
+  // Then: チェック時は選択状態の曲だけ、未チェック時は両方を返す。
+  assert.deepEqual(includedResult, [standardSong])
+  assert.deepEqual(deletedResult, [deleted])
+  assert.deepEqual(allResult, [standardSong, deleted])
+})
+
 test('選択した項目が欠落したWORLD’S END曲だけを表示する', () => {
   // Given: NOTES DESIGNER欠落のみを表示するフィルター。
   const originalChart = worldsendSong.charts.WORLDSEND

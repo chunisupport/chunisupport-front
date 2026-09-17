@@ -19,6 +19,7 @@ import {
 } from '../utils/songMetaEdit'
 import type { StandardSongLookupItem } from '../utils/standardSongLookup'
 import CopyFromStandardField from './CopyFromStandardField'
+import SongEditSaveButton from './SongEditSaveButton'
 
 type Props = {
   open: boolean
@@ -86,17 +87,34 @@ const SongMetaEditDialog: Component<Props> = (props) => {
   const [bpm, setBpm] = createSignal('')
   const [releasedAt, setReleasedAt] = createSignal('')
   const [validationMessage, setValidationMessage] = createSignal('')
+  const [initialValues, setInitialValues] = createSignal({
+    genreName: null as string | null,
+    bpm: '',
+    releasedAt: '',
+  })
 
   const selectedGenre = createMemo(
     () => props.genres.find((genre) => genre.name === genreName()) ?? null
   )
   const errorMessage = () => validationMessage() || props.apiErrorMessage
+  const changed = createMemo(
+    () =>
+      genreName() !== initialValues().genreName ||
+      bpm() !== initialValues().bpm ||
+      releasedAt() !== initialValues().releasedAt
+  )
 
   createEffect(() => {
     if (!props.open) return
-    setGenreName(props.initialGenre)
-    setBpm(toInputValue(props.initialBpm))
-    setReleasedAt(toDateInputValue(props.initialRelease))
+    const values = {
+      genreName: props.initialGenre,
+      bpm: toInputValue(props.initialBpm),
+      releasedAt: toDateInputValue(props.initialRelease),
+    }
+    setInitialValues(values)
+    setGenreName(values.genreName)
+    setBpm(values.bpm)
+    setReleasedAt(values.releasedAt)
     setValidationMessage('')
   })
 
@@ -108,6 +126,7 @@ const SongMetaEditDialog: Component<Props> = (props) => {
    */
   const handleSubmit = (event: SubmitEvent): void => {
     event.preventDefault()
+    if (!changed() || props.saving) return
     const parsed = parseSongMetaEditValues(
       {
         genreName: genreName(),
@@ -193,9 +212,7 @@ const SongMetaEditDialog: Component<Props> = (props) => {
               <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
                 {SONG_EDIT_COPY.cancelButton}
               </AppButton>
-              <AppButton type="submit" variant="primary" disabled={props.saving}>
-                {props.saving ? SONG_EDIT_COPY.savingButton : SONG_EDIT_COPY.saveButton}
-              </AppButton>
+              <SongEditSaveButton changed={changed()} saving={props.saving} />
             </div>
           </form>
         </Dialog.Content>
