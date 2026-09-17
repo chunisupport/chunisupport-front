@@ -408,7 +408,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
           <Dialog.Content
             ref={settingsContentRef}
             onOpenAutoFocus={handleSettingsOpenAutoFocus}
-            class="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg"
+            class="fixed left-1/2 top-1/2 z-50 flex h-5/6 max-h-11/12 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg"
           >
             <div class="mb-4 flex shrink-0 items-center justify-between">
               <Dialog.Title class="text-lg font-bold">
