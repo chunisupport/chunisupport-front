@@ -7,6 +7,7 @@ import {
   CHART_STATS_PATH,
   DASHBOARD_PATH,
   LOCKED_SONG_DISCOVERY_PATH,
+  ONLINE_WEAK_CHART_INSPECTOR_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
   WEAK_CHART_INSPECTOR_PATH,
@@ -107,6 +108,12 @@ export const TOOL_LINKS: ToolLink[] = [
     href: WEAK_CHART_INSPECTOR_PATH,
     icon: 'chart',
     description: 'プレイ済み譜面を譜面定数ごとに比較し、得意・苦手譜面を推測します。',
+  },
+  {
+    title: '苦手譜面インスペクター Online',
+    href: ONLINE_WEAK_CHART_INSPECTOR_PATH,
+    icon: 'chart',
+    description: '自分のスコアを同じレート帯の平均スコアと比較します。',
   },
   {
     title: 'ランダム選曲',

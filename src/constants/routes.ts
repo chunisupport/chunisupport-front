@@ -20,6 +20,8 @@ export const WORLDSEND_SONGS_PATH = `${SONGS_PATH}/worldsend`
 export const CHART_CONSTANT_CALCULATOR_PATH = `${TOOLS_PATH}/chart-constant-calculator`
 export const BORDER_CALCULATOR_PATH = `${TOOLS_PATH}/border-calculator`
 export const WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector`
+/** レート帯別平均スコアと比較する苦手譜面インスペクター */
+export const ONLINE_WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector-online`
 export const RANDOM_SONG_SELECTOR_PATH = `${TOOLS_PATH}/random-song-selector`
 /** 未解禁曲ディスカバー画面のパス */
 export const LOCKED_SONG_DISCOVERY_PATH = `${TOOLS_PATH}/locked-song-discovery`

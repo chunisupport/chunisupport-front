@@ -6,6 +6,8 @@ export const API_BASE_URL = getRequiredEnv('PUBLIC_BACKEND_URL')
 export const FRONTEND_BASE_URL = getRequiredEnv('PUBLIC_FRONTEND_URL')
 /** レコード統計JSONの配信元。未設定時はフロントエンドURLから解決する */
 export const CHART_STATS_BASE_URL = getEnv().PUBLIC_CHART_STATS_BASE_URL
+/** 譜面スコア統計JSONの配信元。未設定時はフロントエンドURLから解決する */
+export const CHART_SCORES_BASE_URL = getEnv().PUBLIC_CHART_SCORES_BASE_URL
 /** ドキュメントサイトのベース URL */
 export const DOCUMENTATION_BASE_URL = getRequiredEnv('PUBLIC_DOCUMENTATION_URL')
 /** 外部連携 API のドキュメント URL */

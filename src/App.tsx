@@ -57,6 +57,7 @@ import {
   LATEST_SCORE_UPDATE_PATH,
   LOCKED_SONG_DISCOVERY_PATH,
   MAINTENANCE_LOGIN_PATH,
+  ONLINE_WEAK_CHART_INSPECTOR_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
   REGISTER_SCORE_PATH,
@@ -115,6 +116,9 @@ const ChartConstantCalculatorPage = lazy(() => import('./pages/tools/ChartConsta
 const ChartStatsPage = lazy(() => import('./pages/tools/ChartStats'))
 const BorderCalculatorPage = lazy(() => import('./pages/tools/BorderCalculatorPage'))
 const WeakChartInspectorPage = lazy(() => import('./pages/tools/WeakChartInspectorPage'))
+const OnlineWeakChartInspectorPage = lazy(
+  () => import('./pages/tools/OnlineWeakChartInspectorPage')
+)
 const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelectorPage'))
 const BestSlotRankingPage = lazy(() => import('./pages/tools/BestSlotRankingPage'))
 const AllSongBestFramePage = lazy(() => import('./pages/tools/AllSongBestFramePage'))
@@ -698,6 +702,10 @@ const App = () => {
       <Route
         path={WEAK_CHART_INSPECTOR_PATH}
         component={withNavBar(withAuth(withRouteLoadBoundary(WeakChartInspectorPage)))}
+      />
+      <Route
+        path={ONLINE_WEAK_CHART_INSPECTOR_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(OnlineWeakChartInspectorPage)))}
       />
       <Route
         path={RANDOM_SONG_SELECTOR_PATH}
