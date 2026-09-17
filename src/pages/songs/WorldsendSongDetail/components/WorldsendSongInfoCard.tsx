@@ -1,7 +1,8 @@
-import { createSignal, For, Show } from 'solid-js'
+import { createEffect, createSignal, For, Show } from 'solid-js'
 import { updateWorldsendSongs } from '../../../../api/songs'
 import { showSuccessToast } from '../../../../components/common/AppToast'
 import { authSession } from '../../../../stores/authSession'
+import { useSongsData } from '../../../../stores/songsData'
 import type {
   MasterItemDTO,
   UpdateWorldsendChartRequestDTO,
@@ -39,12 +40,18 @@ type Props = {
  * @returns 楽曲情報カードUI。
  */
 const WorldsendSongInfoCard = (props: Props) => {
+  const songsData = useSongsData()
   const [songDialogOpen, setSongDialogOpen] = createSignal(false)
   const [chartDialogOpen, setChartDialogOpen] = createSignal(false)
   const [savingSong, setSavingSong] = createSignal(false)
   const [savingChart, setSavingChart] = createSignal(false)
   const [songFormError, setSongFormError] = createSignal('')
   const [chartFormError, setChartFormError] = createSignal('')
+
+  createEffect(() => {
+    if (!songDialogOpen()) return
+    songsData.ensureSongsLoaded()
+  })
 
   const canEdit = () =>
     authSession.status === 'authenticated' && canEditSongMaster(authSession.user?.account_type)
@@ -173,6 +180,11 @@ const WorldsendSongInfoCard = (props: Props) => {
         requireGenre={false}
         saving={savingSong()}
         apiErrorMessage={songFormError()}
+        enableCopyBpmFromStandard
+        standardSongs={songsData.songsResponse()?.songs ?? []}
+        copyBpmTitle={props.song.title}
+        copyBpmArtist={props.song.artist}
+        standardSongsLoading={songsData.isSongsLoading()}
         onOpenChange={setSongDialogOpen}
         onSubmit={handleSongMetaSubmit}
       />

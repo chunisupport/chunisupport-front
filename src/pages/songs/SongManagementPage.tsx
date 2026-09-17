@@ -36,6 +36,7 @@ import type {
   UpdateWorldsendSongRequestDTO,
 } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import CopyFromStandardField from './components/CopyFromStandardField'
 import SongManagementFilterPanel from './components/SongManagementFilterPanel'
 import { SONG_DATA_REFRESH_ERROR_MESSAGE } from './constants'
 import { buildSearchableItems, filterSearchableItems } from './searchHelpers'
@@ -1404,16 +1405,26 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         inputClass={`${managementInputClass} font-sans`}
                         onInput={(value) => updateWorldsendDraftField('title', value)}
                       />
-                      <ManagementTextField
-                        class="col-span-2 text-sm"
-                        label="読み"
-                        value={currentDraft().reading ?? ''}
-                        maxLength={300}
-                        inputClass={`${managementInputClass} font-sans`}
-                        onInput={(value) =>
-                          updateWorldsendDraftField('reading', value.trim() === '' ? null : value)
-                        }
-                      />
+                      <CopyFromStandardField
+                        class="col-span-2"
+                        field="reading"
+                        songs={songs()}
+                        title={currentDraft().title}
+                        artist={currentDraft().artist}
+                        songsLoading={songsResponse.loading}
+                        onCopied={(reading) => updateWorldsendDraftField('reading', reading)}
+                      >
+                        <ManagementTextField
+                          class="text-sm"
+                          label="読み"
+                          value={currentDraft().reading ?? ''}
+                          maxLength={300}
+                          inputClass={`${managementInputClass} font-sans`}
+                          onInput={(value) =>
+                            updateWorldsendDraftField('reading', value.trim() === '' ? null : value)
+                          }
+                        />
+                      </CopyFromStandardField>
                       <ManagementTextField
                         class="col-span-2 text-sm"
                         label="アーティスト"
@@ -1428,14 +1439,23 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         placeholder="未設定"
                         onChange={(value) => updateWorldsendDraftField('genre_id', value)}
                       />
-                      <ManagementTextField
-                        label="BPM"
-                        type="number"
-                        value={currentDraft().bpm ?? ''}
-                        onInput={(value) =>
-                          updateWorldsendDraftField('bpm', value === '' ? null : Number(value))
-                        }
-                      />
+                      <CopyFromStandardField
+                        field="bpm"
+                        songs={songs()}
+                        title={currentDraft().title}
+                        artist={currentDraft().artist}
+                        songsLoading={songsResponse.loading}
+                        onCopied={(bpm) => updateWorldsendDraftField('bpm', bpm)}
+                      >
+                        <ManagementTextField
+                          label="BPM"
+                          type="number"
+                          value={currentDraft().bpm ?? ''}
+                          onInput={(value) =>
+                            updateWorldsendDraftField('bpm', value === '' ? null : Number(value))
+                          }
+                        />
+                      </CopyFromStandardField>
                       <ManagementTextField
                         label="リリース日"
                         type="date"
@@ -1739,15 +1759,24 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               inputClass={`${managementInputClass} font-sans`}
               onInput={(value) => updateCreateWorldsendDraftField('title', value)}
             />
-            <ManagementTextField
-              label="読み"
-              value={createWorldsendDraft().reading ?? ''}
-              maxLength={300}
-              inputClass={`${managementInputClass} font-sans`}
-              onInput={(value) =>
-                updateCreateWorldsendDraftField('reading', value.trim() === '' ? null : value)
-              }
-            />
+            <CopyFromStandardField
+              field="reading"
+              songs={songs()}
+              title={createWorldsendDraft().title}
+              artist={createWorldsendDraft().artist}
+              songsLoading={songsResponse.loading}
+              onCopied={(reading) => updateCreateWorldsendDraftField('reading', reading)}
+            >
+              <ManagementTextField
+                label="読み"
+                value={createWorldsendDraft().reading ?? ''}
+                maxLength={300}
+                inputClass={`${managementInputClass} font-sans`}
+                onInput={(value) =>
+                  updateCreateWorldsendDraftField('reading', value.trim() === '' ? null : value)
+                }
+              />
+            </CopyFromStandardField>
             <ManagementTextField
               label="アーティスト"
               value={createWorldsendDraft().artist}
@@ -1762,14 +1791,23 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                 placeholder="選択してください"
                 onChange={(value) => updateCreateWorldsendDraftField('genre_id', value)}
               />
-              <ManagementTextField
-                label="BPM"
-                type="number"
-                value={createWorldsendDraft().bpm ?? ''}
-                onInput={(value) =>
-                  updateCreateWorldsendDraftField('bpm', value === '' ? null : Number(value))
-                }
-              />
+              <CopyFromStandardField
+                field="bpm"
+                songs={songs()}
+                title={createWorldsendDraft().title}
+                artist={createWorldsendDraft().artist}
+                songsLoading={songsResponse.loading}
+                onCopied={(bpm) => updateCreateWorldsendDraftField('bpm', bpm)}
+              >
+                <ManagementTextField
+                  label="BPM"
+                  type="number"
+                  value={createWorldsendDraft().bpm ?? ''}
+                  onInput={(value) =>
+                    updateCreateWorldsendDraftField('bpm', value === '' ? null : Number(value))
+                  }
+                />
+              </CopyFromStandardField>
               <ManagementTextField
                 label="リリース日"
                 type="date"
