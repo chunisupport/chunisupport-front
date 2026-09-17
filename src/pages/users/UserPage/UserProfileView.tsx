@@ -46,7 +46,6 @@ type Props = {
   profile: UserPageRatingProfile
   recordProfile: Accessor<UserPageRecordProfile | undefined>
   courseRecordProfile: Resource<UserPageCourseRecordProfile>
-  onShowRecords: () => void
   selectedOverPowerSubPage: OverPowerSubPage
   selectedPage: ProfilePageQuery
   username: string
@@ -303,10 +302,8 @@ export const UserProfileView: Component<Props> = (props) => {
               : 'record_normal'
         )
       )
-      props.onShowRecords()
     } else {
       navigate(buildOverPowerNavigationTarget(props.selectedOverPowerSubPage))
-      props.onShowRecords()
     }
 
     scrollToUserProfileContent('smooth')
@@ -347,7 +344,6 @@ export const UserProfileView: Component<Props> = (props) => {
     const page =
       value === 'worldsend' ? 'record_we' : value === 'course' ? 'record_course' : 'record_normal'
     navigate(buildProfileNavigationTarget(page), { scroll: false })
-    if (value !== 'course') props.onShowRecords()
   }
 
   return (
@@ -360,6 +356,7 @@ export const UserProfileView: Component<Props> = (props) => {
           honors={honors()}
           rating={props.profile.rating}
           historyHref={buildUserStatsPagePath(props.username)}
+          records={recordProfile()?.record.standard}
         />
       </div>
 

@@ -2,6 +2,7 @@ import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import { ALL_SONG_BEST_SLOT_COUNT } from '../constants/rating'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import { toRatingHundredths } from './singleRating'
+import { hasUnknownChartConstants } from './unknownChartConstant'
 
 const RATING_SCALE = 100
 const PLAYER_RATING_SCALE = 10_000
@@ -60,15 +61,6 @@ const calculateRatingAverage = (records: readonly PlayerRecordDTO[]): number | n
   )
   return averageUnits / PLAYER_RATING_SCALE
 }
-
-/**
- * 対象レコードに未確定の譜面定数が含まれるか判定する。
- *
- * @param records - 判定対象のレコード。
- * @returns 未確定譜面定数を含む場合はtrue。
- */
-const hasUnknownChartConstants = (records: readonly PlayerRecordDTO[]): boolean =>
-  records.some((record) => record.is_const_unknown)
 
 /**
  * 全通常譜面からベスト枠・新曲枠を区別せず、単曲レーティング上位50曲を組み立てる。
