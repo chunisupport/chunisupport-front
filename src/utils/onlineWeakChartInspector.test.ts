@@ -4,6 +4,7 @@ import type { PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
 import {
   compareRecordsWithRatingBand,
+  filterOnlineWeakChartEntries,
   formatOnlineWeakChartTooltipDetail,
 } from './onlineWeakChartInspector'
 
@@ -54,6 +55,36 @@ test('選択レート帯の平均があるプレイ済み譜面だけを差分�
   assert.equal(result.length, 1)
   assert.equal(result[0].averageScore, 1007000.75)
   assert.equal(result[0].difference, -2000)
+})
+
+test('Onlineの表示・集計範囲は難易度と点差と譜面定数をともに絞る', () => {
+  // Given: 境界値と範囲外の比較結果。
+  const entries = [
+    {
+      record: record({ const: 14, difficulty: 'MASTER' }),
+      averageScore: 1000000,
+      difference: -10000,
+    },
+    {
+      record: record({ const: 15, difficulty: 'ULTIMA' }),
+      averageScore: 1000000,
+      difference: 10000,
+    },
+    { record: record({ const: 13.9 }), averageScore: 1000000, difference: 0 },
+    { record: record({ const: 14 }), averageScore: 1000000, difference: -10001 },
+    { record: record({ const: 14, difficulty: 'EXPERT' }), averageScore: 1000000, difference: 0 },
+  ]
+
+  // When: MASTERとULTIMA、定数14～15、点差±10000へ絞る。
+  const result = filterOnlineWeakChartEntries(entries, {
+    difficulties: ['MASTER', 'ULTIMA'],
+    differenceRange: 10000,
+    constMin: 14,
+    constMax: 15,
+  })
+
+  // Then: 両端の点差を含み、範囲外の譜面は除外する。
+  assert.deepEqual(result, entries.slice(0, 2))
 })
 
 test('Onlineのツールチップを譜面情報と差分の簡潔な形式へ整形する', () => {
