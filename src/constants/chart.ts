@@ -15,6 +15,9 @@ export const CHART_LEVEL_10_CONST_MIN = 10.0
 /** 苦手譜面インスペクターの分析対象難易度 */
 export const WEAK_CHART_INSPECTOR_DIFFICULTIES = ['MASTER', 'ULTIMA'] as const
 
+/** 苦手譜面インスペクター Online の平均スコア差表示上限 */
+export const ONLINE_WEAK_CHART_MAX_DIFFERENCE_RANGE = 10000
+
 /** 目標フォームの対象譜面で初期選択する難易度 */
 export const GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES = ['MASTER', 'ULTIMA'] as const
 

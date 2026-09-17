@@ -2,7 +2,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
-import { compareRecordsWithRatingBand } from './onlineWeakChartInspector'
+import {
+  compareRecordsWithRatingBand,
+  getSymmetricDifferenceLimit,
+} from './onlineWeakChartInspector'
 
 const record = (changes: Partial<PlayerRecordDTO>): PlayerRecordDTO =>
   ({
@@ -51,4 +54,15 @@ test('選択レート帯の平均があるプレイ済み譜面だけを差分�
   assert.equal(result.length, 1)
   assert.equal(result[0].averageScore, 1007000.75)
   assert.equal(result[0].difference, -2000)
+})
+
+test('平均との差の最大絶対値を上下対称の表示範囲に使い、10000点で打ち止める', () => {
+  // Given: 最大差が10000点未満の譜面と10000点を超える譜面。
+  const near = { record: record({ score: 1005000 }), averageScore: 1007000.5, difference: -2000 }
+  const far = { record: record({ score: 990000 }), averageScore: 1007000, difference: -17000 }
+
+  // When & Then: 平均の小数部分を含む最大絶対値を使い、上限で制限する。
+  assert.equal(getSymmetricDifferenceLimit([near]), 2000.5)
+  assert.equal(getSymmetricDifferenceLimit([near, far]), 10000)
+  assert.equal(getSymmetricDifferenceLimit([]), 0)
 })
