@@ -77,6 +77,23 @@ export const isPublicToolLink = (tool: ToolLink): boolean =>
   tool.disabled !== true && isToolLinkListed(tool, undefined)
 
 /**
+ * パスに対応するツールリンク情報を取得する。
+ *
+ * TOOL_LINKS を単一の情報源としてツール一覧・ツール画面・静的メタで共有するための取得処理。
+ *
+ * @param href - 検索するツールページのパス。
+ * @returns 対応するツールリンク情報。
+ * @throws 対応するツールリンクが存在しない場合。
+ */
+export const getToolLink = (href: string): ToolLink => {
+  const tool = TOOL_LINKS.find((candidate) => candidate.href === href)
+  if (!tool) {
+    throw new Error(`Unknown tool link: ${href}`)
+  }
+  return tool
+}
+
+/**
  * ツールページに表示するリンク一覧。
  */
 export const TOOL_LINKS: ToolLink[] = [

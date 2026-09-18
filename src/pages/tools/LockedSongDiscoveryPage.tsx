@@ -7,6 +7,8 @@ import { fetchMasterData, fetchVersions } from '../../api/songs'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { AppTabContent, SegmentedTabs } from '../../components/common/AppTabs'
+import { LOCKED_SONG_DISCOVERY_PATH } from '../../constants/routes'
+import { getToolLink } from '../../constants/tools'
 import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { saveStandardRecordFilterSetting } from '../../repositories/viewSettingsRepository'
@@ -242,7 +244,8 @@ const LockedSongDiscoveryPage: Component = () => {
   const [recordNavigationError, setRecordNavigationError] = createSignal('')
 
   onMount(ensureSongsLoaded)
-  useDocumentTitle(LOCKED_SONG_DISCOVERY_COPY.title)
+  const tool = getToolLink(LOCKED_SONG_DISCOVERY_PATH)
+  useDocumentTitle(tool.title)
   useAppMainScrollRestoration(
     () => !record.loading && !songsResponse.loading && !masterData.loading && !versions.loading
   )
@@ -416,10 +419,8 @@ const LockedSongDiscoveryPage: Component = () => {
           <ScanSearch class="h-5 w-5 text-action-primary" aria-hidden="true" />
         </span>
         <div>
-          <h1 class="text-2xl font-semibold">{LOCKED_SONG_DISCOVERY_COPY.title}</h1>
-          <p class="mt-1 font-sans text-sm text-text-muted">
-            {LOCKED_SONG_DISCOVERY_COPY.description}
-          </p>
+          <h1 class="text-2xl font-semibold">{tool.title}</h1>
+          <p class="mt-1 font-sans text-sm text-text-muted">{tool.description}</p>
           <p class="mt-1 font-sans text-sm font-medium text-text">
             {LOCKED_SONG_DISCOVERY_COPY.inputGuide}
           </p>

@@ -5,7 +5,7 @@ import {
   LOCKED_SONG_DISCOVERY_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
-import { isPublicToolLink, isToolLinkListed, TOOL_LINKS, type ToolLink } from './tools'
+import { getToolLink, isPublicToolLink, isToolLinkListed, TOOL_LINKS, type ToolLink } from './tools'
 
 const publicTool: ToolLink = {
   title: '公開ツール',
@@ -92,4 +92,32 @@ test('レコード統計は公開ツールとして定義されていること',
   assert.equal(isToolLinkListed(chartStats, 'PLAYER'), true)
   assert.equal(isToolLinkListed(chartStats, 'ADMIN'), true)
   assert.equal(chartStats.icon, 'distribution')
+})
+
+test('getToolLink はパスに対応するツール情報を返すこと', () => {
+  // Given
+  const target = TOOL_LINKS[0]
+  assert.ok(target)
+
+  // When
+  const result = getToolLink(target.href)
+
+  // Then
+  assert.equal(result.title, target.title)
+  assert.equal(result.description, target.description)
+})
+
+test('getToolLink は全ツールパスに対応するツール情報を返すこと', () => {
+  // Given / When / Then
+  for (const tool of TOOL_LINKS) {
+    assert.equal(getToolLink(tool.href), tool)
+  }
+})
+
+test('getToolLink は未知のパスでエラーをスローすること', () => {
+  // Given
+  const unknownPath = '/tools/unknown-tool-for-test'
+
+  // When & Then
+  assert.throws(() => getToolLink(unknownPath), new Error(`Unknown tool link: ${unknownPath}`))
 })

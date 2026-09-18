@@ -1,7 +1,5 @@
-/** ベスト枠ランキング画面の表示文言 */
+/** ベスト枠ランキング画面の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const BEST_SLOT_RANKING_COPY = {
-  title: 'ベスト枠ランキング',
-  description: 'レート帯ごとのベスト枠採用率が高い譜面をランキングで確認できます。',
   ratingBandLabel: 'ベスト枠平均',
   tableCaption: 'ベスト枠採用率ランキング',
   rankColumn: '順位',

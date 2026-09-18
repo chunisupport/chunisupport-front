@@ -7,7 +7,8 @@ import { LoadError, Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
-import { buildSongDetailPath } from '../../constants/routes'
+import { BEST_SLOT_RANKING_PATH, buildSongDetailPath } from '../../constants/routes'
+import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { bestSlotRankingInfiniteQueryOptions } from '../../queries/bestSlotRankings'
 import { authSession } from '../../stores/authSession'
@@ -222,7 +223,8 @@ const BestSlotRankingPage = () => {
     await ranking.fetchNextPage()
   }
 
-  useDocumentTitle(BEST_SLOT_RANKING_COPY.title)
+  const tool = getToolLink(BEST_SLOT_RANKING_PATH)
+  useDocumentTitle(tool.title)
 
   return (
     <div class="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
@@ -232,8 +234,8 @@ const BestSlotRankingPage = () => {
             <Trophy class="h-5 w-5 text-action-primary" aria-hidden="true" />
           </span>
           <div>
-            <h1 class="text-2xl font-semibold">{BEST_SLOT_RANKING_COPY.title}</h1>
-            <p class="mt-1 text-sm text-text-muted">{BEST_SLOT_RANKING_COPY.description}</p>
+            <h1 class="text-2xl font-semibold">{tool.title}</h1>
+            <p class="mt-1 text-sm text-text-muted">{tool.description}</p>
           </div>
         </header>
         <Show when={selectedRatingBand()}>

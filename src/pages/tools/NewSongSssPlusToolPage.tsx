@@ -7,6 +7,7 @@ import { AppTabContent, SegmentedTabs } from '../../components/common/AppTabs'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
 import { buildSongDetailPath, RATING_THEORETICAL_CHECKER_PATH } from '../../constants/routes'
+import { getToolLink } from '../../constants/tools'
 import { createHistoryViewState } from '../../hooks/createHistoryViewState'
 import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -376,7 +377,8 @@ const RatingTheoreticalCheckerPage: Component = () => {
     () => record()?.standard.filter((playerRecord) => playerRecord.score > 0) ?? []
   )
 
-  useDocumentTitle(NEW_SONG_SSS_PLUS_COPY.title)
+  const tool = getToolLink(RATING_THEORETICAL_CHECKER_PATH)
+  useDocumentTitle(tool.title)
 
   return (
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
@@ -385,8 +387,8 @@ const RatingTheoreticalCheckerPage: Component = () => {
           <Gauge class="h-5 w-5 text-action-primary" aria-hidden="true" />
         </span>
         <div>
-          <h1 class="text-2xl font-semibold">{NEW_SONG_SSS_PLUS_COPY.title}</h1>
-          <p class="mt-1 font-sans text-sm text-text-muted">{NEW_SONG_SSS_PLUS_COPY.description}</p>
+          <h1 class="text-2xl font-semibold">{tool.title}</h1>
+          <p class="mt-1 font-sans text-sm text-text-muted">{tool.description}</p>
         </div>
       </header>
 

@@ -4,10 +4,8 @@ import type { LockedSongDiscoveryDifficulty } from '../../utils/lockedSongDiscov
 /** 筐体表示を照合する分類軸。 */
 export type LockedSongDiscoveryAxis = 'genre' | 'version'
 
-/** 未解禁曲ディスカバーの画面文言。 */
+/** 未解禁曲ディスカバーの画面文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const LOCKED_SONG_DISCOVERY_COPY = {
-  title: '未解禁曲ディスカバー',
-  description: '筐体の分類別OVER POWERとOP%を照合し、未解禁曲が含まれる範囲を絞り込みます。',
   inputGuide: '差がある分類だけ入力してください。OPとOP%は片方だけでも照合できます。',
   dataLoading: '照合用データを読み込み中',
   calculated: 'ChuniSupport',

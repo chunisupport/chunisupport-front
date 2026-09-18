@@ -57,10 +57,8 @@ export const CHART_STATS_VALUE_OPTIONS: readonly {
   { value: 'percent', label: '割合' },
 ]
 
-/** レコード統計ページの表示文言 */
+/** レコード統計ページの表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const CHART_STATS_COPY = {
-  title: 'レコード統計',
-  description: '全プレイヤーの記録から、譜面ごとの達成状況を確認できます。',
   generatedAt: '最終更新',
   searchLabel: '曲名検索',
   searchPlaceholder: '曲名で検索',

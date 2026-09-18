@@ -27,7 +27,8 @@ import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { GenreMultiSelect, VersionMultiSelect } from '../../components/common/DomainMultiSelect'
 import { getSortAriaValue, SortableHeaderButton } from '../../components/common/SortableTableHeader'
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_THEORETICAL_MAX } from '../../constants/chart'
-import { buildSongDetailPath } from '../../constants/routes'
+import { buildSongDetailPath, ONLINE_WEAK_CHART_INSPECTOR_PATH } from '../../constants/routes'
+import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
@@ -482,7 +483,8 @@ const OnlineWeakChartTable = (props: OnlineWeakChartTableProps): JSX.Element => 
  * @returns レート帯と難易度を選択できる散布図・譜面表。
  */
 const OnlineWeakChartInspectorPage = (): JSX.Element => {
-  useDocumentTitle(ONLINE_WEAK_CHART_COPY.title)
+  const tool = getToolLink(ONLINE_WEAK_CHART_INSPECTOR_PATH)
+  useDocumentTitle(tool.title)
   const [ratingBandsResource] = createResource(fetchRatingBands)
   const [versionsResource] = createResource(fetchVersions)
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
@@ -671,8 +673,8 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
             <Globe class="h-5 w-5 text-action-primary" aria-hidden="true" />
           </span>
           <div>
-            <h1 class="text-2xl font-semibold">{ONLINE_WEAK_CHART_COPY.title}</h1>
-            <p class="mt-1 text-sm text-text-muted">{ONLINE_WEAK_CHART_COPY.description}</p>
+            <h1 class="text-2xl font-semibold">{tool.title}</h1>
+            <p class="mt-1 text-sm text-text-muted">{tool.description}</p>
           </div>
         </div>
         <AppIconButton

@@ -1,7 +1,5 @@
-/** 全曲ベスト枠画面の表示文言 */
+/** 全曲ベスト枠画面の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const ALL_SONG_BEST_FRAME_COPY = {
-  title: '全曲ベスト枠',
-  description: '全曲・全譜面から、単曲レート上位30曲・上位50曲を計算します。',
   ariaLabel: '全曲ベスト枠',
   primaryAverage: '30曲平均レーティング',
   totalAverage: '50曲平均レーティング',

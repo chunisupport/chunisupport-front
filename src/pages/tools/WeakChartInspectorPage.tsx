@@ -34,6 +34,8 @@ import {
   SCORE_MIN,
   SCORE_THEORETICAL_MAX,
 } from '../../constants/chart'
+import { WEAK_CHART_INSPECTOR_PATH } from '../../constants/routes'
+import { getToolLink } from '../../constants/tools'
 import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { accentPreference, themePreference } from '../../stores/themePreferences'
@@ -434,7 +436,8 @@ const fetchWeakChartInspectorData = async (): Promise<WeakChartInspectorData> =>
  * @returns 散布図と外れ値表を含むツール画面。
  */
 const WeakChartInspectorPage = (): JSX.Element => {
-  useDocumentTitle(WEAK_CHART_INSPECTOR_COPY.title)
+  const tool = getToolLink(WEAK_CHART_INSPECTOR_PATH)
+  useDocumentTitle(tool.title)
   const [data] = createResource(fetchWeakChartInspectorData)
   useAppMainScrollRestoration(() => !data.loading)
   const analysisRecords = createMemo(() =>
@@ -591,8 +594,8 @@ const WeakChartInspectorPage = (): JSX.Element => {
               <ChartNoAxesCombined class="h-5 w-5 text-action-primary" aria-hidden="true" />
             </span>
             <div>
-              <h1 class="text-2xl font-semibold">{WEAK_CHART_INSPECTOR_COPY.title}</h1>
-              <p class="mt-1 text-sm text-text-muted">{WEAK_CHART_INSPECTOR_COPY.description}</p>
+              <h1 class="text-2xl font-semibold">{tool.title}</h1>
+              <p class="mt-1 text-sm text-text-muted">{tool.description}</p>
             </div>
           </header>
           <Show when={!data.loading && analysisRecords().length > 0}>

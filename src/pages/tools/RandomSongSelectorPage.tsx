@@ -27,6 +27,8 @@ import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { GenreMultiSelect, VersionMultiSelect } from '../../components/common/DomainMultiSelect'
 import { TextRangeInput } from '../../components/common/RangeInput'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
+import { RANDOM_SONG_SELECTOR_PATH } from '../../constants/routes'
+import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { GoalDTO, PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
@@ -655,7 +657,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const [resultsRestored, setResultsRestored] = createSignal(false)
   const [results, setResults] = createSignal<RandomSongCandidate[]>([])
 
-  useDocumentTitle(RANDOM_SONG_SELECTOR_COPY.title)
+  const tool = getToolLink(RANDOM_SONG_SELECTOR_PATH)
+  useDocumentTitle(tool.title)
 
   onMount(() => {
     ensureSongsLoaded()
@@ -1155,8 +1158,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
           <Dices class="h-5 w-5 text-action-primary" aria-hidden="true" />
         </span>
         <div>
-          <h1 class="text-2xl font-semibold">{RANDOM_SONG_SELECTOR_COPY.title}</h1>
-          <p class="mt-1 text-sm text-text-muted">{RANDOM_SONG_SELECTOR_COPY.description}</p>
+          <h1 class="text-2xl font-semibold">{tool.title}</h1>
+          <p class="mt-1 text-sm text-text-muted">{tool.description}</p>
         </div>
       </header>
 

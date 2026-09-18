@@ -10,6 +10,8 @@ import {
 } from '../../../components/common/AppTabs'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { SearchTextField } from '../../../components/common/SearchTextField'
+import { CHART_STATS_PATH } from '../../../constants/routes'
+import { getToolLink } from '../../../constants/tools'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { useSongsData } from '../../../stores/songsData'
 import type { ChartStatsDifficulty, ChartStatsResponse } from '../../../types/chartStats'
@@ -207,7 +209,8 @@ const ChartStatsPage = () => {
     setDifficulty(value.toUpperCase() as ChartStatsDifficulty)
   }
 
-  useDocumentTitle(CHART_STATS_COPY.title)
+  const tool = getToolLink(CHART_STATS_PATH)
+  useDocumentTitle(tool.title)
 
   return (
     <div class="mx-auto w-full max-w-6xl space-y-4 p-4">
@@ -216,8 +219,8 @@ const ChartStatsPage = () => {
           <ChartColumnStacked class="h-5 w-5 text-action-primary" aria-hidden="true" />
         </span>
         <div>
-          <h1 class="text-2xl font-semibold text-text">{CHART_STATS_COPY.title}</h1>
-          <p class="mt-1 text-sm text-text-muted">{CHART_STATS_COPY.description}</p>
+          <h1 class="text-2xl font-semibold text-text">{tool.title}</h1>
+          <p class="mt-1 text-sm text-text-muted">{tool.description}</p>
         </div>
       </header>
 

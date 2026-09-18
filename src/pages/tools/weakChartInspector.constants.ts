@@ -5,10 +5,8 @@ import {
   type WeakChartAggregationDifficulty,
 } from '../../utils/weakChartInspector'
 
-/** 苦手譜面インスペクターの画面表示文言 */
+/** 苦手譜面インスペクターの画面表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const WEAK_CHART_INSPECTOR_COPY = {
-  title: '苦手譜面インスペクター',
-  description: 'プレイ済み譜面を譜面定数ごとに比較し、得意・苦手譜面を推測します。',
   chartTitle: '譜面定数別スコア分布',
   chartAccessibleLabel: '譜面定数ごとの獲得スコア散布図',
   outlierTitle: '苦手かもしれない譜面',

@@ -4,6 +4,8 @@ import { createMemo, createResource, For, Show } from 'solid-js'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../components'
 import { UserRecordCard } from '../../components/common/record/UserRecordCard'
 import { ALL_SONG_BEST_SLOT_COUNT } from '../../constants/rating'
+import { ALL_SONG_BEST_FRAME_PATH } from '../../constants/routes'
+import { getToolLink } from '../../constants/tools'
 import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
@@ -65,7 +67,8 @@ const AllSongBestFramePage: Component = () => {
     () => frame().primaryHasUnknownChartConstants || frame().totalHasUnknownChartConstants
   )
   useAppMainScrollRestoration(() => !record.loading)
-  useDocumentTitle(ALL_SONG_BEST_FRAME_COPY.title)
+  const tool = getToolLink(ALL_SONG_BEST_FRAME_PATH)
+  useDocumentTitle(tool.title)
 
   return (
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
@@ -74,10 +77,8 @@ const AllSongBestFramePage: Component = () => {
           <ListOrdered class="h-5 w-5 text-action-primary" aria-hidden="true" />
         </span>
         <div>
-          <h1 class="text-2xl font-semibold">{ALL_SONG_BEST_FRAME_COPY.title}</h1>
-          <p class="mt-1 font-sans text-sm text-text-muted">
-            {ALL_SONG_BEST_FRAME_COPY.description}
-          </p>
+          <h1 class="text-2xl font-semibold">{tool.title}</h1>
+          <p class="mt-1 font-sans text-sm text-text-muted">{tool.description}</p>
         </div>
       </header>
 

@@ -5,10 +5,8 @@ import {
   type OnlineWeakChartDifficulty,
 } from '../../utils/onlineWeakChartInspector'
 
-/** 苦手譜面インスペクター Online の画面文言 */
+/** 苦手譜面インスペクター Online の画面文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const ONLINE_WEAK_CHART_COPY = {
-  title: '苦手譜面インスペクター Online',
-  description: '自分のスコアを、同じレート帯の平均スコアと比較します。',
   ratingBand: '比較するレート帯',
   difficulty: '難易度',
   chartTitle: '平均スコアとの差',
