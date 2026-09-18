@@ -62,6 +62,7 @@ export const OVER_POWER_RECORD_NAVIGATION_ERROR_MESSAGE = 'レコードの表示
 
 /** 未解禁楽曲設定ダイアログで公式値と計算値を見比べる表示の文言 */
 export const LOCKED_SONGS_OP_COMPARISON_COPY = {
+  disclosureLabel: '公式値との照合',
   official: '公式値',
   calculated: '計算値',
   kind: '種別',
