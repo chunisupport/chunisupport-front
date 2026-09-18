@@ -76,6 +76,7 @@ export const RATING_IMAGE_COPY = {
   v2OptionsLegend: '表示設定',
   showLatestUpdateBadgeLabel: 'ラベルを表示',
   applyPossessionLabel: 'ポゼッションを反映',
+  hidePlayerLevelLabel: 'プレイヤーレベルを非表示',
   preparingPreview: 'プレビューを準備中',
   previewAlt: 'ベスト枠と新曲枠の画像プレビュー',
   previewError: 'プレビューの作成に失敗しました。',

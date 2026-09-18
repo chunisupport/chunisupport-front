@@ -29,6 +29,7 @@ import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerSc
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
 import { captureElementAsImage } from '../../utils/domImageCapture'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
+import { formatPlayerLevelLabel } from '../../utils/playerLevel'
 import { formatPlayerRating } from '../../utils/ratingFormat'
 import type { SortDirection } from '../../utils/sortingQuery'
 import { REGISTER_SCORE_COPY } from './constants'
@@ -448,6 +449,7 @@ const RegisterScoreMetricDelta = (props: RegisterScoreMetricDeltaProps) => (
  * @returns プロフィール概要。
  */
 const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdateResult }) => {
+  const [hidePlayerLevel, setHidePlayerLevel] = createSignal(false)
   const ratingDelta = createMemo(() =>
     formatRegisterScoreRatingDelta(props.result.metric_diffs.rating.delta)
   )
@@ -461,12 +463,16 @@ const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdate
   return (
     <section class="pb-3">
       <div class="flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2.5">
-        <p class="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 font-sans text-xl font-extrabold leading-none">
-          <span class="shrink-0 whitespace-nowrap tracking-normal">
-            Lv. {props.result.profile.level}
+        <div class="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 font-sans text-xl font-extrabold leading-none">
+          <span class="flex shrink-0 items-center gap-1 whitespace-nowrap tracking-normal">
+            <span>{formatPlayerLevelLabel(props.result.profile.level, hidePlayerLevel())}</span>
+            <RegisterScorePlayerLevelVisibilityButton
+              hidePlayerLevel={hidePlayerLevel()}
+              onChange={setHidePlayerLevel}
+            />
           </span>
           <span class="min-w-0 truncate text-center">{props.result.profile.name}</span>
-        </p>
+        </div>
       </div>
       <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
         <dt class="font-extrabold text-text-muted">{REGISTER_SCORE_COPY.ratingLabel}</dt>
@@ -809,6 +815,38 @@ const BeforeRecordScore = (props: {
   >
     {(before) => <span class="font-jost font-semibold">{formatScore(before().score)}</span>}
   </Show>
+)
+
+/**
+ * 更新差分レポートのプレイヤーレベル表示を切り替える。
+ *
+ * @param props - 現在の非表示状態と変更ハンドラー。
+ * @returns レベル表示を切り替えるアイコンボタン。
+ */
+const RegisterScorePlayerLevelVisibilityButton = (props: {
+  hidePlayerLevel: boolean
+  onChange: (hidePlayerLevel: boolean) => void
+}) => (
+  <AppIconButton
+    tone="ghost"
+    aria-label={
+      props.hidePlayerLevel
+        ? REGISTER_SCORE_COPY.showPlayerLevel
+        : REGISTER_SCORE_COPY.hidePlayerLevel
+    }
+    aria-pressed={props.hidePlayerLevel}
+    title={
+      props.hidePlayerLevel
+        ? REGISTER_SCORE_COPY.showPlayerLevel
+        : REGISTER_SCORE_COPY.hidePlayerLevel
+    }
+    data-image-capture-excluded="true"
+    onClick={() => props.onChange(!props.hidePlayerLevel)}
+  >
+    <Show when={props.hidePlayerLevel} fallback={<Eye class="h-5 w-5" aria-hidden="true" />}>
+      <EyeOff class="h-5 w-5" aria-hidden="true" />
+    </Show>
+  </AppIconButton>
 )
 
 /**

@@ -18,6 +18,7 @@ import { getConstDisplay } from '../../../../utils/constDisplay'
 import { findLatestRecordDate, toRecordDateString } from '../../../../utils/dateFilter'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import { formatInteger } from '../../../../utils/numberFormat'
+import { formatPlayerLevelLabel } from '../../../../utils/playerLevel'
 import { formatNullablePlayerRating, formatRatingFixed2 } from '../../../../utils/ratingFormat'
 import { getScoreRank } from '../../../../utils/scoreRank'
 import {
@@ -61,6 +62,8 @@ type RatingImageSheetV2Props = {
   showJackets: boolean
   /** 最新更新の NEW! バッジを表示するかどうか。未指定時は表示する */
   showLatestUpdateBadge?: boolean
+  /** プレイヤーレベルを隠すかどうか。未指定時は表示する */
+  hidePlayerLevel?: boolean
   /** 画像化対象のルート要素を受け取るコールバック */
   captureRef: (element: HTMLDivElement) => void
   /** ジャケット画像ごとの準備状態を通知するコールバック */
@@ -471,7 +474,7 @@ const RatingImageV2Grid: Component<RatingImageV2GridProps> = (props) => {
  * プレビューとJPEG出力で共有するベスト枠・新曲枠画像 Ver. 2 を表示する。
  * ヘッダー背景色はポゼッションに応じて切り替える。
  *
- * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定、NEW! バッジ表示、ポゼッション名、参照コールバック。
+ * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定、NEW! バッジ表示、レベル非表示、ポゼッション名、参照コールバック。
  * @returns ジャケットを格子状に並べた固定論理幅の縦長画像レイアウト。
  */
 export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) => {
@@ -513,8 +516,12 @@ export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) =>
             <h1 class="min-w-0 flex-1 truncate font-sans text-[48px] font-bold leading-none">
               {props.playerInfo.name}
             </h1>
-            <p class="user-nameplate-metric-secondary shrink-0 whitespace-nowrap font-jost text-[22px] font-medium">
-              Lv. {props.playerInfo.level}
+            <p
+              class={`user-nameplate-metric-secondary shrink-0 whitespace-nowrap text-[22px] font-medium ${
+                props.hidePlayerLevel ? 'font-sans' : 'font-jost'
+              }`}
+            >
+              {formatPlayerLevelLabel(props.playerInfo.level, props.hidePlayerLevel ?? false)}
             </p>
           </div>
           <div
