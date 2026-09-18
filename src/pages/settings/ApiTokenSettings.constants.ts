@@ -41,6 +41,7 @@ export const API_TOKEN_SETTINGS_COPY = {
   issuePlaceholder: '例: Discord Bot',
   issueDialogTitle: 'APIトークンを発行',
   issueDialogDescription: '名前と権限を指定します。権限は発行後に変更できません。',
+  issueReadOnlyDialogDescription: '名前を指定します。権限は読み取り専用で発行されます。',
   permissionLabel: '権限',
   issueButton: 'APIトークンを発行',
   startIssueButton: '新しいトークンを発行',

@@ -11,7 +11,11 @@ import { SelectableCardItem } from '../../components/common/SelectableCardButton
 import { API_DOCUMENTATION_URL } from '../../config'
 import { DEVELOPER_API_COPY } from '../../constants/developerApi'
 import { EXTERNAL_LINK_NEW_TAB_DESCRIPTION } from '../../constants/externalLink'
-import type { ApiToken, ApiTokenPermission } from '../../types/api'
+import type { AccountType, ApiToken, ApiTokenPermission } from '../../types/api'
+import {
+  canIssueReadWriteApiToken,
+  resolveApiTokenIssuePermission,
+} from '../../utils/apiTokenPermission'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
   API_TOKEN_MAX_COUNT,
@@ -25,6 +29,8 @@ import { formatSettingsDateTime } from './settingsDateTime'
 type ApiTokenSettingsSectionProps = {
   /** APIトークン一覧の取得を開始する認証済みユーザー名 */
   username: string
+  /** APIトークンを発行するユーザーのアカウント種別 */
+  accountType: AccountType
 }
 
 type ApiTokenNameFieldProps = {
@@ -111,6 +117,13 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
     async () => fetchApiTokens()
   )
 
+  /**
+   * 現在のアカウントが書き込み権限付きAPIトークンを発行できるか判定する。
+   *
+   * @returns EDITORまたはADMINの場合はtrue。
+   */
+  const canIssueReadWriteToken = (): boolean => canIssueReadWriteApiToken(props.accountType)
+
   onCleanup(() => {
     if (typeof copiedResetTimer !== 'undefined') {
       window.clearTimeout(copiedResetTimer)
@@ -150,6 +163,9 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
     if (open) {
       setIssueNameError('')
       setIssueActionError('')
+      if (!canIssueReadWriteToken()) {
+        setIssuePermission('read')
+      }
     }
   }
 
@@ -172,7 +188,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
     try {
       const result = await issueApiToken({
         name: normalizeApiTokenName(issueName()),
-        permission: issuePermission(),
+        permission: resolveApiTokenIssuePermission(props.accountType, issuePermission()),
       })
       setGeneratedToken(result)
       setCopied(false)
@@ -372,7 +388,9 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                 {API_TOKEN_SETTINGS_COPY.issueDialogTitle}
               </Dialog.Title>
               <Dialog.Description class="mt-1 shrink-0 text-sm text-text-muted">
-                {API_TOKEN_SETTINGS_COPY.issueDialogDescription}
+                {canIssueReadWriteToken()
+                  ? API_TOKEN_SETTINGS_COPY.issueDialogDescription
+                  : API_TOKEN_SETTINGS_COPY.issueReadOnlyDialogDescription}
               </Dialog.Description>
 
               <form
@@ -391,33 +409,35 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                     error={issueNameError()}
                     onChange={handleIssueNameChange}
                   />
-                  <RadioGroup
-                    name="api-token-permission"
-                    value={issuePermission()}
-                    onChange={(value) => setIssuePermission(value as ApiTokenPermission)}
-                    disabled={isIssuing()}
-                    class="grid gap-2"
-                  >
-                    <RadioGroup.Label class="text-sm font-medium text-text-muted">
-                      {API_TOKEN_SETTINGS_COPY.permissionLabel}
-                    </RadioGroup.Label>
-                    <div class="grid gap-2 sm:grid-cols-2">
-                      <For each={API_TOKEN_PERMISSION_OPTIONS}>
-                        {(option) => (
-                          <SelectableCardItem
-                            value={option.value}
-                            title={option.label}
-                            description={option.description}
-                            ariaLabel={option.label}
-                            selected={issuePermission() === option.value}
-                            disabled={isIssuing()}
-                            density="compact"
-                            class="rounded-md"
-                          />
-                        )}
-                      </For>
-                    </div>
-                  </RadioGroup>
+                  <Show when={canIssueReadWriteToken()}>
+                    <RadioGroup
+                      name="api-token-permission"
+                      value={issuePermission()}
+                      onChange={(value) => setIssuePermission(value as ApiTokenPermission)}
+                      disabled={isIssuing()}
+                      class="grid gap-2"
+                    >
+                      <RadioGroup.Label class="text-sm font-medium text-text-muted">
+                        {API_TOKEN_SETTINGS_COPY.permissionLabel}
+                      </RadioGroup.Label>
+                      <div class="grid gap-2 sm:grid-cols-2">
+                        <For each={API_TOKEN_PERMISSION_OPTIONS}>
+                          {(option) => (
+                            <SelectableCardItem
+                              value={option.value}
+                              title={option.label}
+                              description={option.description}
+                              ariaLabel={option.label}
+                              selected={issuePermission() === option.value}
+                              disabled={isIssuing()}
+                              density="compact"
+                              class="rounded-md"
+                            />
+                          )}
+                        </For>
+                      </div>
+                    </RadioGroup>
+                  </Show>
                   <p class="text-sm text-danger empty:hidden" role="alert">
                     {issueActionError()}
                   </p>

@@ -272,7 +272,10 @@ const Settings = () => {
                   </Show>
 
                   <Show when={activeSection() === 'api'}>
-                    <ApiTokenSettingsSection username={loadedSummary().me.username} />
+                    <ApiTokenSettingsSection
+                      username={loadedSummary().me.username}
+                      accountType={loadedSummary().me.account_type}
+                    />
                   </Show>
 
                   <Show when={activeSection() === 'data'}>
