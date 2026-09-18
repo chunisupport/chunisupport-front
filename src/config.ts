@@ -4,6 +4,8 @@ import { getEnv, getRequiredEnv } from './lib/env'
 export const API_BASE_URL = getRequiredEnv('PUBLIC_BACKEND_URL')
 /** フロントエンドサイトのベース URL */
 export const FRONTEND_BASE_URL = getRequiredEnv('PUBLIC_FRONTEND_URL')
+/** レコード統計JSONの配信元。未設定時はフロントエンドURLから解決する */
+export const CHART_STATS_BASE_URL = getEnv().PUBLIC_CHART_STATS_BASE_URL
 /** 譜面スコア統計JSONの配信元。未設定時はフロントエンドURLから解決する */
 export const CHART_SCORES_BASE_URL = getEnv().PUBLIC_CHART_SCORES_BASE_URL
 /** ドキュメントサイトのベース URL */

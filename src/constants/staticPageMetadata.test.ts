@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { SONGS_PATH, WORLDSEND_SONGS_PATH } from './routes'
+import { CHART_STATS_PATH, SONGS_PATH, WORLDSEND_SONGS_PATH } from './routes'
 import { STATIC_PAGE_METADATA } from './staticPageMetadata'
 import { isPublicToolLink, TOOL_LINKS } from './tools'
 
@@ -36,4 +36,15 @@ test('楽曲一覧の固定ページを生成対象に含めること', () => {
   // When & Then
   assert.equal(generatedPaths.has(SONGS_PATH), true)
   assert.equal(generatedPaths.has(WORLDSEND_SONGS_PATH), true)
+})
+
+test('レコード統計は公開ツールとして固定ページを生成すること', () => {
+  // Given
+  const generatedPaths = new Set(STATIC_PAGE_METADATA.map((page) => page.path))
+  const chartStats = TOOL_LINKS.find((tool) => tool.href === CHART_STATS_PATH)
+
+  // When & Then
+  assert.ok(chartStats)
+  assert.equal(generatedPaths.has(CHART_STATS_PATH), true)
+  assert.equal(isPublicToolLink(chartStats), true)
 })

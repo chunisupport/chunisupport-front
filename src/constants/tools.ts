@@ -4,6 +4,7 @@ import {
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
+  CHART_STATS_PATH,
   DASHBOARD_PATH,
   LOCKED_SONG_DISCOVERY_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
@@ -18,6 +19,7 @@ import {
 export type ToolLinkIcon =
   | 'calculator'
   | 'chart'
+  | 'distribution'
   | 'target'
   | 'random'
   | 'ranking'
@@ -94,6 +96,12 @@ export const getToolLink = (href: string): ToolLink => {
  * ツールページに表示するリンク一覧。
  */
 export const TOOL_LINKS: ToolLink[] = [
+  {
+    title: 'レコード統計',
+    href: CHART_STATS_PATH,
+    icon: 'distribution',
+    description: '全プレイヤーの記録から、譜面ごとのランク・コンボ・クリア状況を確認できます。',
+  },
   {
     title: 'ダッシュボード',
     href: DASHBOARD_PATH,

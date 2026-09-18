@@ -1,6 +1,7 @@
 import { A, Route, Router } from '@solidjs/router'
 import {
   Calculator,
+  ChartColumnStacked,
   ChartNoAxesCombined,
   Dices,
   Gauge,
@@ -47,6 +48,7 @@ import {
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
+  CHART_STATS_PATH,
   DASHBOARD_PATH,
   EDITOR_COURSES_PATH,
   EDITOR_PATH,
@@ -111,6 +113,7 @@ const RegisterScoreTempPage = lazy(
 )
 
 const ChartConstantCalculatorPage = lazy(() => import('./pages/tools/ChartConstantCalculatorPage'))
+const ChartStatsPage = lazy(() => import('./pages/tools/ChartStats'))
 const BorderCalculatorPage = lazy(() => import('./pages/tools/BorderCalculatorPage'))
 const WeakChartInspectorPage = lazy(() => import('./pages/tools/WeakChartInspectorPage'))
 const OnlineWeakChartInspectorPage = lazy(
@@ -330,6 +333,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Target class={iconClass} aria-hidden="true" />
     case 'chart':
       return <ChartNoAxesCombined class={iconClass} aria-hidden="true" />
+    case 'distribution':
+      return <ChartColumnStacked class={iconClass} aria-hidden="true" />
     case 'random':
       return <Dices class={iconClass} aria-hidden="true" />
     case 'ranking':
@@ -686,6 +691,10 @@ const App = () => {
       <Route
         path={CHART_CONSTANT_CALCULATOR_PATH}
         component={withNavBar(withRouteLoadBoundary(ChartConstantCalculatorPage))}
+      />
+      <Route
+        path={CHART_STATS_PATH}
+        component={withNavBar(withRouteLoadBoundary(ChartStatsPage))}
       />
       <Route
         path={BORDER_CALCULATOR_PATH}
