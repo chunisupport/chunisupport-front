@@ -131,7 +131,6 @@ export const TOOL_LINKS: ToolLink[] = [
     href: ONLINE_WEAK_CHART_INSPECTOR_PATH,
     icon: 'chart',
     description: '自分のスコアを同じレート帯の平均スコアと比較します。',
-    adminOnly: true,
   },
   {
     title: 'ランダム選曲',
