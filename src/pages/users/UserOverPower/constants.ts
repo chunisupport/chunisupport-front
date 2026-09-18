@@ -41,6 +41,16 @@ export const OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES = 5
 /** 未解禁曲を集計対象から除外する操作の表示名 */
 export const OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL = '未解禁曲除外'
 
+/** 未解禁楽曲設定ダイアログのプレイ状況フィルター */
+export type LockedSongsPlayStatus = 'all' | 'played' | 'unplayed'
+
+/** 未解禁楽曲設定ダイアログのプレイ状況フィルター選択肢 */
+export const LOCKED_SONG_PLAY_STATUS_OPTIONS = [
+  { value: 'all', label: 'すべて' },
+  { value: 'played', label: 'プレイ済み' },
+  { value: 'unplayed', label: '未プレイ' },
+] as const
+
 /** 通常レコードへのフィルター付き遷移に失敗したときの表示文言 */
 export const OVER_POWER_RECORD_NAVIGATION_ERROR_MESSAGE = 'レコードの表示に失敗しました。'
 
