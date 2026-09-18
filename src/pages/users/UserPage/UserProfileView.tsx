@@ -481,6 +481,7 @@ export const UserProfileView: Component<Props> = (props) => {
               {(profile) => (
                 <UserOverPower
                   record={profile().record}
+                  player={playerInfo()}
                   selectedSubPage={props.selectedOverPowerSubPage}
                   username={props.username}
                 />

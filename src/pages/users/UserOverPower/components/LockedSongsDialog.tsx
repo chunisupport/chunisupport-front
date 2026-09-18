@@ -11,7 +11,11 @@ import type {
   SongDTO,
   VersionDTO,
 } from '../../../../types/api'
-import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch'
+import {
+  createLockedSongKey,
+  toLockedSongRequests,
+} from '../../../../usecases/overpower/lockedSongsBatch'
+import { buildLockedSongsOpComparison } from '../../../../usecases/overpower/lockedSongsOpComparison'
 import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
 import {
   normalizeForReadingSearch,
@@ -31,6 +35,7 @@ import {
   sortSongSelectionCandidates,
 } from '../../components/songSelectionDialog'
 import { hasSameFilterValues } from '../../utils/filterValue'
+import { LockedSongsOpComparison } from './LockedSongsOpComparison'
 
 type Props = {
   open: boolean
@@ -39,6 +44,10 @@ type Props = {
   genres: MasterItemDTO[]
   versions: VersionDTO[]
   lockedSongs: PlayerLockedSongResponseItem[]
+  /** CHUNITHM-NETから取得した公式OVER POWER */
+  officialOverPower: number
+  /** CHUNITHM-NETから取得した公式OP%。記録開始前はnull */
+  officialOverPowerPercent: number | null
   onOpenChange: (open: boolean) => void
   onSaveLockedSongs: (items: PlayerLockedSongRequest[]) => Promise<void>
 }
@@ -95,24 +104,9 @@ const isLockedSongsFilterChanged = (
   !hasSameFilterValues(current.versions, defaultFilter.versions)
 
 /**
- * 選択キーを未解禁楽曲保存payloadへ変換する。
- *
- * @param keys - `displayId:mode` 形式の選択キー。
- * @returns 未解禁楽曲の保存payload。
- */
-const toLockedSongRequests = (keys: string[]): PlayerLockedSongRequest[] =>
-  keys.map((key) => {
-    const [displayId, mode] = key.split(':')
-    return {
-      display_id: displayId,
-      is_ultima: mode === 'ultima',
-    }
-  })
-
-/**
  * OVER POWER計算から除外する未解禁楽曲を検索・絞り込みしながら編集するダイアログ。
  *
- * @param props - ダイアログの表示状態、楽曲・マスターデータ、未解禁楽曲、保存処理。
+ * @param props - ダイアログの表示状態、楽曲・マスターデータ、未解禁楽曲、公式OP、保存処理。
  * @returns 未解禁楽曲設定ダイアログのUI。
  */
 const LockedSongsDialog: Component<Props> = (props) => {
@@ -224,6 +218,17 @@ const LockedSongsDialog: Component<Props> = (props) => {
   const selectionSummary = createMemo(
     () => `${model.selectedCount()}件選択中 / ${filteredSongListItems().length}件表示`
   )
+  const draftLockedSongs = createMemo(() => toLockedSongRequests([...model.draftKeys()]))
+  const opComparison = createMemo(() =>
+    buildLockedSongsOpComparison({
+      songs: props.songs,
+      records: props.records,
+      versions: props.versions,
+      lockedSongs: draftLockedSongs(),
+      officialOverPower: props.officialOverPower,
+      officialOverPowerPercent: props.officialOverPowerPercent,
+    })
+  )
 
   /**
    * 未解禁候補の選択行を描画する。
@@ -301,6 +306,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
       onOpenChange={props.onOpenChange}
       title="未解禁楽曲設定"
       description={LOCKED_SONG_DESCRIPTION}
+      headerExtra={<LockedSongsOpComparison comparison={opComparison} />}
       searchAriaLabel="未解禁楽曲検索"
       query={model.query}
       setQuery={model.setQuery}

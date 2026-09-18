@@ -17,6 +17,8 @@ export const NAMEPLATE_PREVIEW_PLAYER: PlayerDTO = {
   last_played_at: null,
   overpower_value: 12_345.678,
   overpower_percent: 12.34567,
+  official_overpower: 12_345.67,
+  official_overpower_percent: 12.34,
   team_name: null,
   team_color: null,
   honors: PREVIEW_HONORS,

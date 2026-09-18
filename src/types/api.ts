@@ -1044,6 +1044,10 @@ export interface PlayerDTO {
   last_played_at: string | null
   overpower_value: number | null
   overpower_percent: number | null
+  /** CHUNITHM-NETから取得した公式OVER POWER */
+  official_overpower: number
+  /** CHUNITHM-NETから取得した公式OP%。記録開始前はnull */
+  official_overpower_percent: number | null
   team_name: string | null
   team_color: string | null
   honors: HonorDTO[]

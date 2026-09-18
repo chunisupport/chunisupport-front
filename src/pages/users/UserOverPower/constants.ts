@@ -44,6 +44,18 @@ export const OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL = '未解禁曲除外'
 /** 通常レコードへのフィルター付き遷移に失敗したときの表示文言 */
 export const OVER_POWER_RECORD_NAVIGATION_ERROR_MESSAGE = 'レコードの表示に失敗しました。'
 
+/** 未解禁楽曲設定ダイアログで公式値と計算値を見比べる表示の文言 */
+export const LOCKED_SONGS_OP_COMPARISON_COPY = {
+  official: '公式値',
+  calculated: '計算値',
+  kind: '種別',
+  overPower: 'OP',
+  overPowerPercent: 'OP%',
+  matched: '一致',
+  mismatched: '差異あり',
+  missingValue: '-',
+} as const
+
 /** OVER POWER画面の操作ラベル */
 export const OVER_POWER_CONTROL_LABELS = {
   aggregationTarget: '集計対象',
