@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { validateGoalForm } from './goalFormValidation'
+import { isWithinDecimalPlaces, validateGoalForm } from './goalFormValidation'
 
 const validInput = {
   title: 'SSS達成',
@@ -103,6 +103,18 @@ test('単曲レートは0.01以上かつ小数第2位以内を要求する', () 
   assert.match(validateGoalForm({ ...baseInput, rating: '0' }) ?? '', /0\.01以上/)
   assert.match(validateGoalForm({ ...baseInput, rating: '18.001' }) ?? '', /小数第2位以内/)
   assert.equal(validateGoalForm({ ...baseInput, rating: '18.00' }), undefined)
+  assert.equal(validateGoalForm({ ...baseInput, rating: '17.1' }), undefined)
+  assert.equal(validateGoalForm({ ...baseInput, rating: '17.15' }), undefined)
+})
+
+test('小数桁数判定は17.1のような2進表現誤差を許容する', () => {
+  // Given / When / Then
+  assert.equal(isWithinDecimalPlaces(17.1, 2), true)
+  assert.equal(isWithinDecimalPlaces(17.15, 2), true)
+  assert.equal(isWithinDecimalPlaces(16.1, 2), true)
+  assert.equal(isWithinDecimalPlaces(18.001, 2), false)
+  assert.equal(isWithinDecimalPlaces(12.345, 3), true)
+  assert.equal(isWithinDecimalPlaces(12.3456, 3), false)
 })
 
 test('単曲レート入力の不正は到達可能譜面0件より先に報告する', () => {
