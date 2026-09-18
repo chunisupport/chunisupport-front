@@ -2,7 +2,7 @@ import { Dialog } from '@kobalte/core/dialog'
 import { NumberField } from '@kobalte/core/number-field'
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, PointElement, ScatterController, Tooltip } from 'chart.js'
-import { ChartNoAxesCombined, Minus, Plus, RotateCcw, Settings } from 'lucide-solid'
+import { Globe, Minus, Plus, RotateCcw, Settings } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -11,20 +11,27 @@ import {
   createSignal,
   For,
   onCleanup,
+  onMount,
   Show,
 } from 'solid-js'
 import { fetchChartScores } from '../../api/chartScores'
 import { fetchRatingBands } from '../../api/ratingBands'
+import { fetchVersions } from '../../api/songs'
 import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { toMultiSelectOptions } from '../../components/common/AppMultiSelect'
 import { AppSelect } from '../../components/common/AppSelect'
 import { CheckboxField } from '../../components/common/CheckboxField'
+import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
+import { GenreMultiSelect, VersionMultiSelect } from '../../components/common/DomainMultiSelect'
+import { getSortAriaValue, SortableHeaderButton } from '../../components/common/SortableTableHeader'
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_THEORETICAL_MAX } from '../../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import { buildSongDetailPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
+import { useSongsData } from '../../stores/songsData'
 import { accentPreference, themePreference } from '../../stores/themePreferences'
 import type { PlayerDataDifficulty, RatingBandDTO } from '../../types/api'
 import type { ChartScoresResponse } from '../../types/chartScores'
@@ -35,6 +42,7 @@ import {
   CHART_SCATTER_TOOLTIP_CLASS,
   updateChartScatterTooltip,
 } from '../../utils/chartScatterTooltip'
+import { buildChartStatsAttributesBySongId } from '../../utils/chartStats'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { formatInteger } from '../../utils/numberFormat'
 import { clampNumericInput } from '../../utils/numberInput'
@@ -44,14 +52,17 @@ import {
   formatOnlineWeakChartTooltipDetail,
   type OnlineWeakChartEntry,
   type OnlineWeakChartFilter,
+  type OnlineWeakChartSortKey,
+  sortOnlineWeakChartEntries,
 } from '../../utils/onlineWeakChartInspector'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import { formatScoreDifference, getScoreDifferenceClass } from '../../utils/scoreDifference'
+import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
+import { getShortVersionName } from '../../utils/versionConverter'
 import {
   ONLINE_WEAK_CHART_COPY,
-  ONLINE_WEAK_CHART_DIFFERENCE_RANGE_MIN,
+  ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN,
   ONLINE_WEAK_CHART_FILTER_DEFAULT,
-  ONLINE_WEAK_CHART_PAGE_SIZE,
   ONLINE_WEAK_CHART_POINT_JITTER,
 } from './onlineWeakChartInspector.constants'
 
@@ -119,12 +130,12 @@ const createComparisonPoints = (entries: OnlineWeakChartEntry[]): ComparisonPoin
  * 譜面定数ごとに平均との差を散布図で表示する。
  *
  * @param props.entries - 比較対象の譜面。
- * @param props.differenceRange - 縦軸に表示する点差の絶対値。
+ * @param props.displayScoreRange - 縦軸に表示するスコア差の絶対値。
  * @returns 平均以下と平均以上を色分けした散布図。
  */
 const OnlineWeakChartScatter = (props: {
   entries: OnlineWeakChartEntry[]
-  differenceRange: number
+  displayScoreRange: number
 }): JSX.Element => {
   let canvasRef!: HTMLCanvasElement
   let tooltipRef!: HTMLDivElement
@@ -134,6 +145,13 @@ const OnlineWeakChartScatter = (props: {
     themePreference()
     accentPreference()
     const points = createComparisonPoints(props.entries)
+    const chartConstRange = props.entries.reduce(
+      (range, { record }) => ({
+        min: Math.min(range.min, record.const),
+        max: Math.max(range.max, record.const),
+      }),
+      { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY }
+    )
     const textColor = resolveChartColor('--cs-color-text-muted', CHART_COLOR_FALLBACK)
     const gridColor = resolveChartColor('--cs-color-border', CHART_COLOR_FALLBACK)
     const lowerColor = resolveChartColor('--cs-color-weak-chart-outlier', CHART_COLOR_FALLBACK)
@@ -181,12 +199,14 @@ const OnlineWeakChartScatter = (props: {
         },
         scales: {
           x: {
+            min: chartConstRange.min,
+            max: chartConstRange.max,
             grid: { color: gridColor },
             ticks: { color: textColor },
           },
           y: {
-            min: -props.differenceRange,
-            max: props.differenceRange,
+            min: -props.displayScoreRange,
+            max: props.displayScoreRange,
             grid: {
               color: (context) => (context.tick.value === 0 ? textColor : gridColor),
             },
@@ -215,6 +235,240 @@ const OnlineWeakChartScatter = (props: {
   )
 }
 
+/** 仮想化で使用する比較表の固定行高。 */
+const ONLINE_WEAK_CHART_TABLE_ROW_HEIGHT = 37
+/** 比較表の仮想行と見出しで共有する列構成。 */
+const ONLINE_WEAK_CHART_TABLE_GRID_TEMPLATE = 'minmax(14rem, 1fr) 6rem 4.5rem 7rem 7rem 6rem'
+/** 比較表の見出しセルに共通適用するクラス。 */
+const ONLINE_WEAK_CHART_TABLE_HEADER_CLASS =
+  'flex min-h-[37px] items-center whitespace-nowrap bg-surface-muted py-2 text-xs font-semibold text-text-muted'
+/** 比較表の仮想行セルに共通適用するクラス。 */
+const ONLINE_WEAK_CHART_TABLE_CELL_CLASS = 'flex h-[37px] items-center'
+
+type OnlineWeakChartTableProps = {
+  /** 表示対象の比較結果。 */
+  entries: readonly OnlineWeakChartEntry[]
+  /** 条件変更時に仮想スクロールを先頭へ戻すためのキー。 */
+  resetKey: string
+}
+
+/**
+ * 比較結果をソート可能な仮想化表として表示する。
+ *
+ * @param props - 比較結果と条件変更を識別するキー。
+ * @returns 曲名、難易度、定数、スコア、平均、点差を表示する表。
+ */
+const OnlineWeakChartTable = (props: OnlineWeakChartTableProps): JSX.Element => {
+  const [sortKey, setSortKey] = createSignal<OnlineWeakChartSortKey | null>(null)
+  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
+  const sortedEntries = createMemo(() =>
+    sortOnlineWeakChartEntries(props.entries, sortKey(), sortDirection())
+  )
+  const virtualizedTable = createWindowVirtualTable<
+    HTMLDivElement,
+    HTMLTableSectionElement,
+    HTMLDivElement,
+    HTMLTableRowElement
+  >({
+    rowCount: () => sortedEntries().length,
+    rowHeight: ONLINE_WEAK_CHART_TABLE_ROW_HEIGHT,
+    resetOnRowCountChange: true,
+    layoutDeps: () => props.resetKey,
+  })
+  const virtualRows = createMemo(() => virtualizedTable.virtualRows())
+
+  createEffect((previousKey?: string) => {
+    const currentKey = props.resetKey
+    if (previousKey !== undefined && previousKey !== currentKey) {
+      virtualizedTable.resetToTop()
+    }
+    return currentKey
+  })
+
+  /**
+   * 列ヘッダー操作時の次のソート状態を適用し、表を先頭へ戻す。
+   *
+   * @param nextKey - 選択された列のソートキー。
+   * @returns なし。
+   */
+  const handleSortChange = (nextKey: OnlineWeakChartSortKey): void => {
+    const nextSort = nextSortState(sortKey(), sortDirection(), nextKey)
+    setSortKey(nextSort.sortKey)
+    setSortDirection(nextSort.sortDirection)
+    virtualizedTable.resetToTop()
+  }
+
+  /**
+   * ソート状態を表ヘッダーへ反映する。
+   *
+   * @param label - ヘッダーの表示名。
+   * @param key - ヘッダーに対応するソートキー。
+   * @param align - ヘッダー内容の配置。
+   * @returns ソート操作可能なヘッダーボタン。
+   */
+  const header = (
+    label: string,
+    key: OnlineWeakChartSortKey,
+    align: 'start' | 'center' = 'center'
+  ): JSX.Element => (
+    <SortableHeaderButton
+      label={label}
+      active={sortKey() === key}
+      direction={sortDirection()}
+      align={align}
+      class={align === 'start' ? 'justify-start' : 'justify-center'}
+      onClick={() => handleSortChange(key)}
+    />
+  )
+
+  /**
+   * ソート状態をth要素へ伝えるaria-sort値を返す。
+   *
+   * @param key - 列のソートキー。
+   * @returns aria-sortへ渡すソート状態。
+   */
+  const headerAriaSort = (key: OnlineWeakChartSortKey) =>
+    getSortAriaValue(sortKey() === key, sortDirection())
+
+  return (
+    <section class="rounded-lg border border-border bg-surface">
+      <h2 class="border-b border-border px-4 py-3 text-lg font-semibold">
+        {ONLINE_WEAK_CHART_COPY.tableTitle}
+        <span class="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-sm text-text-muted">
+          {props.entries.length}
+        </span>
+      </h2>
+      <div
+        ref={virtualizedTable.setTableContainerRef}
+        class="overflow-x-auto overflow-y-hidden rounded-b-lg"
+      >
+        <table
+          class="block w-full min-w-[45rem] text-sm"
+          aria-rowcount={sortedEntries().length + 1}
+        >
+          <caption class="sr-only">{ONLINE_WEAK_CHART_COPY.tableCaption}</caption>
+          <thead class="block">
+            <tr
+              class="grid"
+              style={{ 'grid-template-columns': ONLINE_WEAK_CHART_TABLE_GRID_TEMPLATE }}
+            >
+              <th
+                class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-start px-3 text-left`}
+                scope="col"
+                aria-sort={headerAriaSort('title')}
+              >
+                {header(ONLINE_WEAK_CHART_COPY.songTitle, 'title', 'start')}
+              </th>
+              <th
+                class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-2 text-center`}
+                scope="col"
+                aria-sort={headerAriaSort('difficulty')}
+              >
+                {header(ONLINE_WEAK_CHART_COPY.difficulty, 'difficulty')}
+              </th>
+              <th
+                class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-2 text-center`}
+                scope="col"
+                aria-sort={headerAriaSort('const')}
+              >
+                {header(ONLINE_WEAK_CHART_COPY.chartConst, 'const')}
+              </th>
+              <th
+                class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-2 text-center`}
+                scope="col"
+                aria-sort={headerAriaSort('score')}
+              >
+                {header(ONLINE_WEAK_CHART_COPY.ownScore, 'score')}
+              </th>
+              <th
+                class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-2 text-center`}
+                scope="col"
+                aria-sort={headerAriaSort('averageScore')}
+              >
+                {header(ONLINE_WEAK_CHART_COPY.averageScore, 'averageScore')}
+              </th>
+              <th
+                class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-2 text-center`}
+                scope="col"
+                aria-sort={headerAriaSort('difference')}
+              >
+                {header(ONLINE_WEAK_CHART_COPY.difference, 'difference')}
+              </th>
+            </tr>
+          </thead>
+          <tbody
+            ref={virtualizedTable.setTableBodyRef}
+            class="relative block min-w-full"
+            style={{ height: `${virtualizedTable.getTotalSize()}px` }}
+          >
+            <For each={virtualRows()}>
+              {(virtualRow) => {
+                const entry = createMemo(() => sortedEntries()[virtualRow.index])
+
+                return (
+                  <Show when={entry()} keyed>
+                    {(currentEntry) => (
+                      <tr
+                        class="absolute left-0 top-0 grid min-w-full border-t border-border hover:bg-surface-muted"
+                        style={{
+                          'grid-template-columns': ONLINE_WEAK_CHART_TABLE_GRID_TEMPLATE,
+                          transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
+                        }}
+                        aria-rowindex={virtualRow.index + 2}
+                      >
+                        <th
+                          class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} min-w-0 p-0 text-left font-medium`}
+                          scope="row"
+                        >
+                          <A
+                            href={buildSongDetailPath(
+                              currentEntry.record.id,
+                              currentEntry.record.difficulty
+                            )}
+                            class="flex h-full w-full min-w-0 items-center px-3 font-sans text-link hover:text-link-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
+                            title={currentEntry.record.title}
+                          >
+                            <span class="truncate">{currentEntry.record.title}</span>
+                          </A>
+                        </th>
+                        <td
+                          class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-2 text-center`}
+                        >
+                          <DifficultyBadge difficulty={currentEntry.record.difficulty} compact />
+                        </td>
+                        <td
+                          class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-2 text-center font-jost tabular-nums`}
+                        >
+                          {formatChartConst(currentEntry.record.const)}
+                        </td>
+                        <td
+                          class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-end px-2 text-right font-jost tabular-nums`}
+                        >
+                          {formatInteger(currentEntry.record.score)}
+                        </td>
+                        <td
+                          class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-end px-2 text-right font-jost tabular-nums`}
+                        >
+                          {formatInteger(Math.trunc(currentEntry.averageScore))}
+                        </td>
+                        <td
+                          class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-end px-2 text-right font-jost tabular-nums ${getScoreDifferenceClass(currentEntry.difference)}`}
+                        >
+                          {formatScoreDifference(currentEntry.difference)}
+                        </td>
+                      </tr>
+                    )}
+                  </Show>
+                )
+              }}
+            </For>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
 /**
  * 同じレート帯との比較結果を表示する。
  *
@@ -223,6 +477,8 @@ const OnlineWeakChartScatter = (props: {
 const OnlineWeakChartInspectorPage = (): JSX.Element => {
   useDocumentTitle(ONLINE_WEAK_CHART_COPY.title)
   const [ratingBandsResource] = createResource(fetchRatingBands)
+  const [versionsResource] = createResource(fetchVersions)
+  const { songsResponse, ensureSongsLoaded } = useSongsData()
   const username = () => authSession.user?.username ?? null
   const [ownRating] = createResource(username, fetchUserRatingWithCache)
   const [ownRecords] = createResource(username, fetchUserRecordWithCache)
@@ -232,15 +488,18 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
   })
   const [settingsOpen, setSettingsOpen] = createSignal(false)
   const [editDifficulties, setEditDifficulties] = createSignal<PlayerDataDifficulty[]>([])
-  const [editDifferenceRange, setEditDifferenceRange] = createSignal('')
+  const [editDisplayScoreRange, setEditDisplayScoreRange] = createSignal('')
   const [editConstMin, setEditConstMin] = createSignal('')
   const [editConstMax, setEditConstMax] = createSignal('')
+  const [editGenres, setEditGenres] = createSignal<string[] | null>(null)
+  const [editVersions, setEditVersions] = createSignal<string[] | null>(null)
   let settingsContentRef!: HTMLDivElement
   const [scoreSnapshots] = createResource(
     () => [...filter().difficulties],
     fetchSelectedChartScores
   )
-  const [visibleCount, setVisibleCount] = createSignal(ONLINE_WEAK_CHART_PAGE_SIZE)
+
+  onMount(() => ensureSongsLoaded())
 
   const ratingBandOptions = createMemo(() =>
     (ratingBandsResource() ?? [])
@@ -248,6 +507,24 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
       .sort((left, right) => right.sort_order - left.sort_order)
       .map((band: RatingBandDTO) => ({ label: band.label, value: band.label }))
   )
+
+  const genreOptions = createMemo(() => {
+    const songs = songsResponse()?.songs
+    if (!songs) return []
+
+    return [...new Set(songs.map((song) => song.genre))].sort((left, right) =>
+      left.localeCompare(right, 'ja')
+    )
+  })
+  const versionOptions = createMemo(() => versionsResource()?.versions ?? [])
+  const versionNames = createMemo(() => versionOptions().map((version) => version.name))
+  const attributesBySongId = createMemo(() => {
+    const songs = songsResponse()?.songs
+    const versions = versionsResource()?.versions
+    if (!songs || !versions) return undefined
+
+    return buildChartStatsAttributesBySongId(songs, versions)
+  })
 
   createEffect(() => {
     if (selectedBand() || !ratingBandsResource() || ownRating.loading) return
@@ -258,17 +535,21 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
     if (band) setSelectedBand({ label: band.label, value: band.label })
   })
 
-  const entries = createMemo(() =>
-    filterOnlineWeakChartEntries(
-      compareRecordsWithRatingBand(
-        ownRecords()?.standard ?? [],
-        scoreSnapshots() ?? [],
-        selectedBand()?.value ?? ''
-      ),
-      filter()
-    ).sort((left, right) => left.difference - right.difference)
+  const comparedEntries = createMemo(() =>
+    compareRecordsWithRatingBand(
+      ownRecords()?.standard ?? [],
+      scoreSnapshots() ?? [],
+      selectedBand()?.value ?? ''
+    )
   )
-  const visibleEntries = createMemo(() => entries().slice(0, visibleCount()))
+  const entries = createMemo(() =>
+    filterOnlineWeakChartEntries(comparedEntries(), filter(), attributesBySongId()).sort(
+      (left, right) => left.difference - right.difference
+    )
+  )
+  const tableResetKey = createMemo(
+    () => `${selectedBand()?.value ?? ''}|${JSON.stringify(filter())}`
+  )
   const isLoading = () =>
     ratingBandsResource.loading || ownRating.loading || ownRecords.loading || scoreSnapshots.loading
   const loadError = () =>
@@ -296,10 +577,13 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
    * @returns なし。
    */
   const openSettings = (): void => {
-    setEditDifficulties([...filter().difficulties])
-    setEditDifferenceRange(String(filter().differenceRange))
-    setEditConstMin(String(filter().constMin))
-    setEditConstMax(String(filter().constMax))
+    const currentFilter = filter()
+    setEditDifficulties([...currentFilter.difficulties])
+    setEditDisplayScoreRange(String(currentFilter.displayScoreRange))
+    setEditConstMin(String(currentFilter.constMin))
+    setEditConstMax(String(currentFilter.constMax))
+    setEditGenres(currentFilter.genres === null ? null : [...currentFilter.genres])
+    setEditVersions(currentFilter.versions === null ? null : [...currentFilter.versions])
     setSettingsOpen(true)
   }
 
@@ -310,9 +594,11 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
    */
   const resetSettings = (): void => {
     setEditDifficulties([...ONLINE_WEAK_CHART_FILTER_DEFAULT.difficulties])
-    setEditDifferenceRange(String(ONLINE_WEAK_CHART_FILTER_DEFAULT.differenceRange))
+    setEditDisplayScoreRange(String(ONLINE_WEAK_CHART_FILTER_DEFAULT.displayScoreRange))
     setEditConstMin(String(ONLINE_WEAK_CHART_FILTER_DEFAULT.constMin))
     setEditConstMax(String(ONLINE_WEAK_CHART_FILTER_DEFAULT.constMax))
+    setEditGenres(null)
+    setEditVersions(null)
   }
 
   /**
@@ -321,19 +607,20 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
    * @returns なし。
    */
   const applySettings = (): void => {
-    const differenceRange = Number(editDifferenceRange())
+    const displayScoreRange = Number(editDisplayScoreRange())
     const constMin = Number(editConstMin()) || CHART_CONST_MIN
     const constMax = Number(editConstMax()) || CHART_CONST_MAX
     setFilter({
       difficulties: [...editDifficulties()],
-      differenceRange:
-        differenceRange >= ONLINE_WEAK_CHART_DIFFERENCE_RANGE_MIN
-          ? differenceRange
-          : ONLINE_WEAK_CHART_FILTER_DEFAULT.differenceRange,
+      displayScoreRange:
+        displayScoreRange >= ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN
+          ? displayScoreRange
+          : ONLINE_WEAK_CHART_FILTER_DEFAULT.displayScoreRange,
       constMin: Math.min(constMin, constMax),
       constMax: Math.max(constMin, constMax),
+      genres: editGenres(),
+      versions: editVersions(),
     })
-    setVisibleCount(ONLINE_WEAK_CHART_PAGE_SIZE)
     setSettingsOpen(false)
   }
 
@@ -364,7 +651,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
       <header class="flex items-start justify-between gap-3">
         <div class="flex items-start gap-3">
           <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
-            <ChartNoAxesCombined class="h-5 w-5 text-action-primary" aria-hidden="true" />
+            <Globe class="h-5 w-5 text-action-primary" aria-hidden="true" />
           </span>
           <div>
             <h1 class="text-2xl font-semibold">{ONLINE_WEAK_CHART_COPY.title}</h1>
@@ -391,7 +678,6 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
             onChange={(option) => {
               if (option) {
                 setSelectedBand(option)
-                setVisibleCount(ONLINE_WEAK_CHART_PAGE_SIZE)
               }
             }}
             label={ONLINE_WEAK_CHART_COPY.ratingBand}
@@ -422,7 +708,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
                 <RotateCcw class="h-5 w-5" aria-hidden="true" />
               </AppIconButton>
             </div>
-            <div class="min-h-0 flex-1 basis-0 space-y-5 overflow-y-auto">
+            <div class="scrollbar-none min-h-0 min-w-0 flex-1 basis-0 space-y-5 overflow-y-auto">
               <fieldset>
                 <legend class="mb-2 text-sm font-semibold">
                   {ONLINE_WEAK_CHART_COPY.difficulty}
@@ -442,9 +728,31 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
                   </For>
                 </div>
               </fieldset>
+              <GenreMultiSelect
+                options={toMultiSelectOptions(genreOptions())}
+                selected={editGenres() ?? genreOptions()}
+                onChange={(value) =>
+                  setEditGenres(
+                    value.length > 0 && value.length === genreOptions().length ? null : [...value]
+                  )
+                }
+                placeholder={ONLINE_WEAK_CHART_COPY.filterUnselected}
+                disabled={attributesBySongId() === undefined}
+              />
+              <VersionMultiSelect
+                options={toMultiSelectOptions(versionNames(), getShortVersionName)}
+                selected={editVersions() ?? versionNames()}
+                onChange={(value) =>
+                  setEditVersions(
+                    value.length > 0 && value.length === versionNames().length ? null : [...value]
+                  )
+                }
+                placeholder={ONLINE_WEAK_CHART_COPY.filterUnselected}
+                disabled={attributesBySongId() === undefined}
+              />
               <div class="space-y-1">
                 <span class="block text-sm text-text-muted">
-                  {ONLINE_WEAK_CHART_COPY.scoreRange}
+                  {ONLINE_WEAK_CHART_COPY.displayScoreRange}
                 </span>
                 <div class="flex items-center gap-2">
                   <span
@@ -455,12 +763,12 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
                     <Minus class="h-3 w-3" />
                   </span>
                   <FilterNumberField
-                    value={editDifferenceRange()}
-                    min={ONLINE_WEAK_CHART_DIFFERENCE_RANGE_MIN}
+                    value={editDisplayScoreRange()}
+                    min={ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN}
                     max={SCORE_THEORETICAL_MAX}
                     step={1}
-                    label={ONLINE_WEAK_CHART_COPY.scoreRange}
-                    onChange={setEditDifferenceRange}
+                    label={ONLINE_WEAK_CHART_COPY.displayScoreRange}
+                    onChange={setEditDisplayScoreRange}
                   />
                 </div>
               </div>
@@ -515,94 +823,9 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
           >
             <OnlineWeakChartScatter
               entries={entries()}
-              differenceRange={filter().differenceRange}
+              displayScoreRange={filter().displayScoreRange}
             />
-            <section class="rounded-lg border border-border bg-surface">
-              <h2 class="border-b border-border px-4 py-3 text-lg font-semibold">
-                {ONLINE_WEAK_CHART_COPY.tableTitle}
-                <span class="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-sm text-text-muted">
-                  {entries().length}
-                </span>
-              </h2>
-              <div class="overflow-x-auto">
-                <table class="w-full min-w-150 table-fixed text-sm">
-                  <caption class="sr-only">{ONLINE_WEAK_CHART_COPY.tableCaption}</caption>
-                  <colgroup>
-                    <col />
-                    <col class="w-23" />
-                    <col class="w-14" />
-                    <col class="w-24" />
-                    <col class="w-24" />
-                    <col class="w-20" />
-                  </colgroup>
-                  <thead class="bg-surface-muted text-text-muted">
-                    <tr>
-                      <th scope="col" class="px-3 py-2 text-left">
-                        {ONLINE_WEAK_CHART_COPY.songTitle}
-                      </th>
-                      <th scope="col" class="px-3 py-2 text-center">
-                        難易度
-                      </th>
-                      <th scope="col" class="px-3 py-2 text-center">
-                        {ONLINE_WEAK_CHART_COPY.chartConst}
-                      </th>
-                      <th scope="col" class="px-3 py-2 text-right">
-                        {ONLINE_WEAK_CHART_COPY.ownScore}
-                      </th>
-                      <th scope="col" class="px-3 py-2 text-right">
-                        {ONLINE_WEAK_CHART_COPY.averageScore}
-                      </th>
-                      <th scope="col" class="px-3 py-2 text-right">
-                        {ONLINE_WEAK_CHART_COPY.difference}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <For each={visibleEntries()}>
-                      {({ record, averageScore, difference }) => (
-                        <tr class="border-t border-border hover:bg-surface-muted">
-                          <td class="overflow-hidden px-3 py-2 font-sans">
-                            <A
-                              href={buildSongDetailPath(record.id, record.difficulty)}
-                              class="block truncate text-link hover:text-link-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                              title={record.title}
-                            >
-                              {record.title}
-                            </A>
-                          </td>
-                          <td class="px-3 py-2 text-center">
-                            <DifficultyBadge difficulty={record.difficulty} />
-                          </td>
-                          <td class="px-3 py-2 text-center font-jost">
-                            {formatChartConst(record.const)}
-                          </td>
-                          <td class="px-3 py-2 text-right font-jost tabular-nums">
-                            {formatInteger(record.score)}
-                          </td>
-                          <td class="px-3 py-2 text-right font-jost tabular-nums">
-                            {formatInteger(Math.trunc(averageScore))}
-                          </td>
-                          <td
-                            class={`px-3 py-2 text-right font-jost tabular-nums ${getScoreDifferenceClass(difference)}`}
-                          >
-                            {formatScoreDifference(difference)}
-                          </td>
-                        </tr>
-                      )}
-                    </For>
-                  </tbody>
-                </table>
-              </div>
-              <Show when={visibleEntries().length < entries().length}>
-                <div class="border-t border-border p-3 text-center">
-                  <AppButton
-                    onClick={() => setVisibleCount((count) => count + ONLINE_WEAK_CHART_PAGE_SIZE)}
-                  >
-                    {ONLINE_WEAK_CHART_COPY.more}
-                  </AppButton>
-                </div>
-              </Show>
-            </section>
+            <OnlineWeakChartTable entries={entries()} resetKey={tableResetKey()} />
           </Show>
         </Show>
       </Show>

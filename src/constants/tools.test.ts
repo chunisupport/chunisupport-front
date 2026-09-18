@@ -66,7 +66,7 @@ test('未解禁曲ディスカバーは ADMIN 限定ツールとして定義さ�
   assert.equal(isPublicToolLink(lockedSongDiscovery), false)
 })
 
-test('苦手譜面インスペクター Online は ADMIN 限定ツールとして定義されていること', () => {
+test('苦手譜面インスペクター Online はログインユーザー向けの公開ツールとして定義されていること', () => {
   // Given
   const onlineWeakChartInspector = TOOL_LINKS.find(
     (tool) => tool.href === ONLINE_WEAK_CHART_INSPECTOR_PATH
@@ -74,8 +74,11 @@ test('苦手譜面インスペクター Online は ADMIN 限定ツールとし�
 
   // When / Then
   assert.ok(onlineWeakChartInspector)
-  assert.equal(onlineWeakChartInspector.adminOnly, true)
-  assert.equal(isPublicToolLink(onlineWeakChartInspector), false)
+  assert.equal(onlineWeakChartInspector.adminOnly, undefined)
+  assert.equal(onlineWeakChartInspector.icon, 'globe')
+  assert.equal(isPublicToolLink(onlineWeakChartInspector), true)
+  assert.equal(isToolLinkListed(onlineWeakChartInspector, undefined), true)
+  assert.equal(isToolLinkListed(onlineWeakChartInspector, 'PLAYER'), true)
 })
 
 test('レコード統計は公開ツールとして定義されていること', () => {

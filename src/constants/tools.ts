@@ -19,6 +19,7 @@ import {
 export type ToolLinkIcon =
   | 'calculator'
   | 'chart'
+  | 'globe'
   | 'distribution'
   | 'target'
   | 'random'
@@ -112,9 +113,8 @@ export const TOOL_LINKS: ToolLink[] = [
   {
     title: '苦手譜面インスペクター Online',
     href: ONLINE_WEAK_CHART_INSPECTOR_PATH,
-    icon: 'chart',
+    icon: 'globe',
     description: '自分のスコアを同じレート帯の平均スコアと比較します。',
-    adminOnly: true,
   },
   {
     title: 'ランダム選曲',

@@ -9,13 +9,13 @@ export const ONLINE_WEAK_CHART_COPY = {
   tableTitle: '平均との比較一覧',
   tableCaption: '自分のスコアと同レート帯の平均スコアの比較',
   empty: '比較できるプレイ済み譜面がありません。',
-  more: 'さらに表示',
   ownScore: 'スコア',
   averageScore: '平均',
   difference: '点差',
   settingsTitle: '表示・集計範囲',
   settingsOpen: '表示・集計範囲を開く',
-  scoreRange: '平均スコアとの差',
+  displayScoreRange: '表示スコア範囲',
+  filterUnselected: '未選択',
   chartConstRange: '譜面定数',
   chartConstMin: '譜面定数 最小',
   chartConstMax: '譜面定数 最大',
@@ -28,19 +28,18 @@ export const ONLINE_WEAK_CHART_COPY = {
   chartConst: '定数',
 } as const
 
-/** 一度に表示する比較表の行数 */
-export const ONLINE_WEAK_CHART_PAGE_SIZE = 100
-
 /** 散布図の譜面定数座標をずらす最大単位 */
 export const ONLINE_WEAK_CHART_POINT_JITTER = 0.012
 
 /** Online の表示・集計範囲の初期値 */
 export const ONLINE_WEAK_CHART_FILTER_DEFAULT = {
   difficulties: ['MASTER', 'ULTIMA'],
-  differenceRange: 10000,
+  displayScoreRange: 10000,
   constMin: 1,
   constMax: 16,
+  genres: null,
+  versions: null,
 } as const
 
-/** Online の平均との差に指定できる最小値 */
-export const ONLINE_WEAK_CHART_DIFFERENCE_RANGE_MIN = 1
+/** Online の表示スコア範囲に指定できる最小値 */
+export const ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN = 1

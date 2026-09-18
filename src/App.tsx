@@ -5,6 +5,7 @@ import {
   ChartNoAxesCombined,
   Dices,
   Gauge,
+  Globe,
   ListOrdered,
   Lock,
   ScanSearch,
@@ -333,6 +334,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Target class={iconClass} aria-hidden="true" />
     case 'chart':
       return <ChartNoAxesCombined class={iconClass} aria-hidden="true" />
+    case 'globe':
+      return <Globe class={iconClass} aria-hidden="true" />
     case 'distribution':
       return <ChartColumnStacked class={iconClass} aria-hidden="true" />
 
