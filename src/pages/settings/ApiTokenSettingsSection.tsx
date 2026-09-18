@@ -54,7 +54,7 @@ type TokenActionError = {
 }
 
 const API_TOKEN_NAME_INPUT_CLASS =
-  'w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text outline-none transition focus:border-action-primary focus:ring-2 focus:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60'
+  'w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text outline-none transition focus:border-action-primary focus:ring-2 focus:ring-inset focus:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60'
 
 /**
  * APIトークンの発行と名称変更で共通利用する名前入力欄を表示する。

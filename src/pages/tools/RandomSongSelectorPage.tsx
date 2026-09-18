@@ -1462,7 +1462,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                             >
                                               <label
                                                 for={checkboxId}
-                                                class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                                                class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
                                               >
                                                 <span class="sr-only">{option.levelLabel}</span>
                                               </label>
@@ -1522,7 +1522,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                           >
                                             <label
                                               for={checkboxId}
-                                              class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                                              class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
                                             >
                                               <span class="sr-only">{chartConst}</span>
                                             </label>

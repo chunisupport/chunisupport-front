@@ -80,6 +80,12 @@
 - Checkbox をスクロール領域内に置く場合は、Checkbox root に `relative` を付け、`Checkbox.Input` に `style={{ left: '0', top: '0' }}` などで hidden input の位置をチェックボックス行内へ固定してください。
 - 長いフォームを含むダイアログでは、`Dialog.Content` を固定高さの外枠にし、ヘッダー/フッターは `shrink-0`、本文だけを `min-h-0 flex-1 basis-0 overflow-y-auto` のスクロール領域にしてください。`Dialog.Content` 自体をスクロールコンテナにすると、フォーカス移動でダイアログ全体が予期せずスクロールする原因になります。
 
+### ダイアログ内スクロールコンテナとフォーカスリング
+- スクロール領域 (`overflow-y-auto` 等) 内で `w-full` の入力欄・選択カードを使う場合、フォーカスリングは必ず内側に出してください (`ring-inset` / `focus:ring-inset` / `focus-visible:ring-inset` / `focus-within:ring-inset` / `peer-focus-visible:ring-inset`)。外側 (`ring-2` のみ) は上下左右がスクロールポートで切れて見えます。
+- `pr-1` のみでは右しか逃げず、左・上・下は切れたままになるため、パディングでの回避に頼らないでください。`scrollbar-none` と padding なしの組み合わせは特に切れやすいです。
+- 新規のダイアログ内入力欄は個別に外側リングを書かず、対処済みの共通スタイル (`FILTER_DIALOG_FIELD_FOCUS_CLASS`、`GOAL_FIELD_FOCUS_CLASS`、`AppSelect` / `AppMultiSelect` のトリガー、`SONG_FILTER_INPUT_CLASS` 等) を優先利用してください。
+- ヘッダー/フッター (`shrink-0` + `Dialog.Content` の `p-4` / `p-6` 内) のボタンは切れないため、外側のままで構いません。内側化が必須なのはスクロール領域内 (`min-h-0 flex-1 ... overflow-y-auto` 内) の要素のみです。
+
 ### CheckboxField の文字サイズ
 - チェックボックスは原則として共通コンポーネント `src/components/common/CheckboxField.tsx` を利用し、`textVariant` は基本的に既定値の `normal` を使ってください。
 - 難易度選択は MultiSelect ではなく、原則として `CheckboxField` を縦に並べる UI を優先してください。特に `BASIC`〜`ULTIMA` や `OP対象` のように排他制御・disabled制御が絡む選択では、Kobalte Select ベースの MultiSelect を避けてください。

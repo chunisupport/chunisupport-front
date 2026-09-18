@@ -140,7 +140,7 @@ const SettingsNumberField = (props: SettingsNumberFieldProps): JSX.Element => (
       min={props.min}
       max={props.max}
       step={props.step}
-      class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
+      class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-inset focus:ring-focus-ring"
     />
   </NumberField>
 )

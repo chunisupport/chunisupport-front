@@ -82,7 +82,7 @@ export type SelectableCardItemProps = SelectableCardBaseProps & {
 }
 
 const SELECTABLE_CARD_BASE_CLASS =
-  'relative w-full rounded-lg border text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-70 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-70'
+  'relative w-full rounded-lg border text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-70 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-70'
 
 const SELECTABLE_CARD_LAYOUT_CLASS: Record<
   SelectableCardLayout,
@@ -123,7 +123,7 @@ const SELECTABLE_CARD_RADIO_CONTROL_CLASS =
 const SELECTABLE_CARD_RADIO_INDICATOR_CLASS = 'h-2.5 w-2.5 rounded-full bg-action-primary'
 
 const SELECTABLE_CARD_LABEL_CLASS =
-  'absolute inset-0 cursor-pointer rounded-lg focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring'
+  'absolute inset-0 cursor-pointer rounded-lg focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-inset peer-focus-visible:ring-focus-ring'
 
 /**
  * 選択式カード UI に適用する Tailwind クラスを返す。
