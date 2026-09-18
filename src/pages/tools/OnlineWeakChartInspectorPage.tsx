@@ -155,7 +155,9 @@ const OnlineWeakChartScatter = (props: {
   createEffect(() => {
     themePreference()
     accentPreference()
-    const points = createComparisonPoints(props.entries)
+    const points = createComparisonPoints(
+      props.entries.filter(({ difference }) => Math.abs(difference) <= props.displayScoreRange)
+    )
     const chartConstRange = props.entries.reduce(
       (range, { record }) => ({
         min: Math.min(range.min, record.const),
@@ -655,7 +657,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
   }
 
   /**
-   * 編集中の範囲をグラフと表へ適用する。
+   * 編集中の表示条件をグラフと表へ適用する。
    *
    * @returns なし。
    */

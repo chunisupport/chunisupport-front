@@ -42,7 +42,7 @@ export interface OnlineWeakChartEntry {
 export interface OnlineWeakChartFilter {
   /** 通常難易度または理論値OVER POWER対象の選択値 */
   difficulties: readonly OnlineWeakChartDifficulty[]
-  /** 比較結果として表示するスコア差の絶対値範囲。平均値の集計範囲は制限しない。 */
+  /** 散布図の縦軸に表示するスコア差の絶対値範囲。比較表と平均値の集計範囲は制限しない。 */
   displayScoreRange: number
   constMin: number
   constMax: number
@@ -131,7 +131,7 @@ export const resolveOnlineWeakChartScoreDifficulties = (
  * 比較結果から表示条件に含まれる譜面を抽出する。
  *
  * @param entries - レート帯平均との比較結果。
- * @param filter - 難易度、表示スコア差、譜面定数、ジャンル、バージョンの範囲。
+ * @param filter - 難易度、譜面定数、ジャンル、バージョンの表示条件。
  * @param attributesBySongId - 楽曲IDごとのジャンル・バージョン。未取得時は属性条件を適用しない。
  * @param targetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
  * @returns 表示対象の比較結果。
@@ -143,7 +143,7 @@ export const filterOnlineWeakChartEntries = (
   targetDifficultyBySongId?: ReadonlyMap<string, PlayerDataDifficulty>
 ): OnlineWeakChartEntry[] => {
   const opTargetOnly = filter.difficulties.includes(ONLINE_WEAK_CHART_OP_TARGET_FILTER)
-  const rangeFilteredEntries = entries.filter(({ record, difference }) => {
+  const filteredEntries = entries.filter(({ record }) => {
     const recordDifficulty = record.difficulty.toUpperCase() as PlayerDataDifficulty
     const difficultyMatched = opTargetOnly
       ? isTheoreticalOverPowerTargetDifficulty(
@@ -152,19 +152,14 @@ export const filterOnlineWeakChartEntries = (
         )
       : filter.difficulties.includes(recordDifficulty)
 
-    return (
-      difficultyMatched &&
-      Math.abs(difference) <= filter.displayScoreRange &&
-      record.const >= filter.constMin &&
-      record.const <= filter.constMax
-    )
+    return difficultyMatched && record.const >= filter.constMin && record.const <= filter.constMax
   })
 
   if (!attributesBySongId || (filter.genres === null && filter.versions === null)) {
-    return rangeFilteredEntries
+    return filteredEntries
   }
 
-  return rangeFilteredEntries.filter(({ record }) => {
+  return filteredEntries.filter(({ record }) => {
     const attributes = attributesBySongId.get(record.id) ?? { genre: null, version: '不明' }
     if (
       filter.genres !== null &&
