@@ -1,5 +1,6 @@
 import { SCORE_MIN } from '../../../../../constants/chart'
 import type { GoalAchievementType } from '../../../../../types/api'
+import { truncateDecimal } from '../../../../../utils/numberFormat'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { GOAL_TITLE_MAX_LENGTH } from '../../constants'
@@ -36,15 +37,14 @@ export interface GoalFormValidationInput {
 
 /**
  * 数値が指定した小数桁数以内か判定する。
+ * `17.1` のような2進浮動小数点誤差は、既存の切り捨て処理と同じ許容差で吸収する。
  *
  * @param value - 判定対象の数値。
  * @param decimalPlaces - 許容する小数桁数。
  * @returns 許容範囲内ならtrue。
  */
-export const isWithinDecimalPlaces = (value: number, decimalPlaces: number): boolean => {
-  const scale = 10 ** decimalPlaces
-  return Math.abs(value * scale - Math.round(value * scale)) < Number.EPSILON * scale
-}
+export const isWithinDecimalPlaces = (value: number, decimalPlaces: number): boolean =>
+  Number.isFinite(value) && truncateDecimal(value, decimalPlaces) === value
 
 /**
  * 目標フォームの保存前検証を行う。
