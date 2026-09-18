@@ -1,10 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  DEFAULT_SETTINGS_SECTION,
-  normalizeSettingsSection,
-  SETTINGS_SECTIONS,
-} from './settingsSections'
+import { DEFAULT_SETTINGS_SECTION, normalizeSettingsSection } from './settingsSections'
 
 test('既知の設定カテゴリはそのまま正規化されること', () => {
   // Given
@@ -30,12 +26,4 @@ test('旧セクションURLは対応する新カテゴリへ正規化される�
   assert.equal(normalizeSettingsSection('data-transfer'), 'data')
   assert.equal(normalizeSettingsSection('player-data'), 'data')
   assert.equal(normalizeSettingsSection('account-delete'), 'account')
-})
-
-test('設定カテゴリが要求された情報設計の順序で定義されていること', () => {
-  // Given / When
-  const labels = SETTINGS_SECTIONS.map((section) => section.label)
-
-  // Then
-  assert.deepEqual(labels, ['外観', 'プロフィール', 'API・外部連携', 'データ管理', 'アカウント'])
 })

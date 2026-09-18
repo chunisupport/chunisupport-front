@@ -29,6 +29,7 @@ const createPlayerDataResult = (overrides: Partial<PlayerDataResult> = {}): Play
     rating: null,
     class_emblem_id: null,
     class_emblem_base_id: null,
+    possession_id: 1,
     last_played_at: null,
     overpower_value: null,
     overpower_percent: null,

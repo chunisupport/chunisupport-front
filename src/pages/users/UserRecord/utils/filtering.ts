@@ -13,7 +13,7 @@ import {
   normalizeQuery,
 } from '../../../../utils/searchUtils'
 import { isTheoreticalOverPowerTargetDifficulty } from '../../../../utils/theoreticalOverPowerTarget'
-import { hasJusticeCountFilter, hasOverPowerFilter } from './filterDialog'
+import { hasJusticeCountFilter, hasOverPowerFilter, hasRatingFilter } from './filterDialog'
 
 /** フィルターのデフォルト値を取得する */
 export const getDefaultFilter = buildDefaultFilter
@@ -145,6 +145,12 @@ export function isRecordMatchedWithTitleMatcher(
   const score = record.is_played ? record.score : 0
   if (score < filters.score.min) return false
   if (score > filters.score.max) return false
+
+  if (hasRatingFilter(filters)) {
+    if (record.is_const_unknown) return false
+    if (filters.rating.min !== null && record.rating < filters.rating.min) return false
+    if (filters.rating.max !== null && record.rating > filters.rating.max) return false
+  }
 
   // JUSTICE数
   if (hasJusticeCountFilter(filters)) {

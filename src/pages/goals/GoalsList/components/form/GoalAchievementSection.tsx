@@ -3,8 +3,6 @@ import { Show } from 'solid-js'
 import { CheckboxField } from '../../../../../components/common/CheckboxField'
 import { SCORE_MIN } from '../../../../../constants/chart'
 import type { GoalAchievementType } from '../../../../../types/api'
-import { MAX_SCORE, SCORE_RANK_MIN_SCORES, SCORE_RANKS_ASC } from '../../../../../utils/scoreRank'
-import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import {
   COMBO_LAMP_OPTIONS,
   type ComboLampGoalValue,
@@ -12,8 +10,17 @@ import {
   type FullChainGoalValue,
   HARD_LAMP_OPTIONS,
   type HardLampGoalValue,
-} from '../../../utils/goalLamp'
-import { LABEL_INVERT_PERCENTAGE, LABEL_INVERT_VALUE, STEP3_DESCRIPTION } from './constants'
+} from '../../../../../utils/goalLamp'
+import { MAX_SCORE, SCORE_RANK_MIN_SCORES, SCORE_RANKS_ASC } from '../../../../../utils/scoreRank'
+import type { GoalTargetMode } from '../../../utils/goalCountTarget'
+import {
+  LABEL_INVERT_PERCENTAGE,
+  LABEL_INVERT_VALUE,
+  RATING_GOAL_DECIMAL_PLACES,
+  RATING_GOAL_FIELD_LABEL,
+  RATING_GOAL_MIN_VALUE,
+  STEP3_DESCRIPTION,
+} from './constants'
 import {
   GoalNumberField,
   GoalSelectField,
@@ -33,6 +40,7 @@ interface GoalAchievementSectionProps {
   achievementTypeOptions: GoalSelectOption<GoalAchievementType>[]
   achievementDescription: string
   score: string
+  rating: string
   rank: RankGoalValue
   count: string
   countMode: GoalTargetMode
@@ -51,6 +59,7 @@ interface GoalAchievementSectionProps {
   totalFieldMax?: number
   onAchievementTypeChange: (type: GoalAchievementType) => void
   onScoreChange: (score: string) => void
+  onRatingChange: (rating: string) => void
   onRankChange: (rank: RankGoalValue) => void
   onCountChange: (count: string) => void
   onCountModeChange: (mode: GoalTargetMode) => void
@@ -156,6 +165,16 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
         />
       </Show>
 
+      <Show when={props.achievementType === 'rating_count'}>
+        <GoalNumberField
+          label={RATING_GOAL_FIELD_LABEL}
+          value={props.rating}
+          min={RATING_GOAL_MIN_VALUE}
+          step={10 ** -RATING_GOAL_DECIMAL_PLACES}
+          onChange={props.onRatingChange}
+        />
+      </Show>
+
       <Show when={props.achievementType === 'hardlamp_count'}>
         <GoalSelectField
           label="ハードランプ"
@@ -187,6 +206,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
         when={
           props.achievementType === 'score_count' ||
           props.achievementType === 'rank_count' ||
+          props.achievementType === 'rating_count' ||
           props.achievementType === 'hardlamp_count' ||
           props.achievementType === 'combolamp_count' ||
           props.achievementType === 'fullchain_count' ||

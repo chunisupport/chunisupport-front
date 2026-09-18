@@ -4,6 +4,14 @@ const DEFAULT_IMAGE_CAPTURE_MAX_CSS_SIDE = 8_000
 const IMAGE_OBJECT_URL_REVOKE_DELAY_MS = 1_000
 /** DOM画像へ含めない要素を指定するデータ属性セレクター */
 const IMAGE_CAPTURE_EXCLUDED_SELECTOR = '[data-image-capture-excluded="true"]'
+/** クリップボードへ書き込む画像のMIMEタイプ */
+const CLIPBOARD_PNG_MIME_TYPE = 'image/png'
+/** 画像クリップボードコピー成功表示を戻すまでの時間 */
+export const IMAGE_CLIPBOARD_COPY_FEEDBACK_MS = 2_000
+
+type ClipboardItemSupports = {
+  supports?: (type: string) => boolean
+}
 
 type ImageCaptureOptions = {
   /** ラスター画像へ出力するときのデバイスピクセル比 */
@@ -160,6 +168,7 @@ export const downloadBlobFile = (blob: Blob, filename: string): void => {
   link.remove()
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), IMAGE_OBJECT_URL_REVOKE_DELAY_MS)
 }
+
 /**
  * 現在のブラウザが指定ファイルのWeb Share API共有に対応しているかを返す。
  *
@@ -171,3 +180,73 @@ export const canShareFiles = (files: File[]): boolean =>
   typeof navigator.share === 'function' &&
   typeof navigator.canShare === 'function' &&
   navigator.canShare({ files })
+
+/**
+ * 現在のブラウザがPNG画像のクリップボード書き込みに対応しているかを返す。
+ *
+ * @returns Clipboard APIでPNG画像を書き込める場合はtrue。
+ */
+export const canCopyImageToClipboard = (): boolean => {
+  if (typeof navigator === 'undefined' || typeof ClipboardItem === 'undefined') return false
+  if (typeof navigator.clipboard?.write !== 'function') return false
+
+  const clipboardItemClass = ClipboardItem as typeof ClipboardItem & ClipboardItemSupports
+  if (typeof clipboardItemClass.supports === 'function') {
+    return clipboardItemClass.supports(CLIPBOARD_PNG_MIME_TYPE)
+  }
+
+  return true
+}
+
+/**
+ * PNG以外の画像Blobをクリップボード向けPNGへ変換する。
+ *
+ * @param blob - 変換する画像Blob。
+ * @returns PNG画像Blob。
+ */
+const ensurePngClipboardBlob = async (blob: Blob): Promise<Blob> => {
+  if (blob.type === CLIPBOARD_PNG_MIME_TYPE) return blob
+
+  const imageBitmap = await createImageBitmap(blob)
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = imageBitmap.width
+    canvas.height = imageBitmap.height
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error('Canvas is unavailable')
+
+    context.drawImage(imageBitmap, 0, 0)
+
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((result) => {
+        if (result) resolve(result)
+        else reject(new Error('PNG conversion failed'))
+      }, CLIPBOARD_PNG_MIME_TYPE)
+    })
+  } finally {
+    imageBitmap.close()
+  }
+}
+
+/**
+ * 画像Blobをクリップボードへコピーする。
+ *
+ * Safariはユーザー操作中にClipboardItemを生成する必要があるため、
+ * 画像生成は呼び出し前にawaitせず、Promiseのまま渡す。
+ *
+ * @param image - コピーする画像、またはその生成Promise。
+ * @returns クリップボードへの書き込み完了時に解決されるPromise。
+ */
+export const copyImageToClipboard = async (image: Blob | Promise<Blob>): Promise<void> => {
+  if (!canCopyImageToClipboard()) {
+    throw new Error('Image clipboard is unavailable')
+  }
+
+  const pngBlob = Promise.resolve(image).then(ensurePngClipboardBlob)
+
+  await navigator.clipboard.write([
+    new ClipboardItem({
+      [CLIPBOARD_PNG_MIME_TYPE]: pngBlob,
+    }),
+  ])
+}

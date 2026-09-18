@@ -6,10 +6,12 @@ import {
   fetchAdminUserStatistics,
   fetchAdminUsers,
   updateUserPermission,
+  updateUserSuspicious,
 } from '../../api/users'
 import { Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
+import { AppSwitch } from '../../components/common/AppSwitch'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { PaginationNav } from '../../components/common/PaginationNav'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -22,12 +24,13 @@ import {
   ADMIN_USER_LIST_COPY,
   ADMIN_USER_STATISTICS_COPY,
   formatAdminUserDeleteConfirmation,
+  formatAdminUserFlagLabel,
 } from './AdminUsersPage.constants'
 import {
   formatAccountType,
   formatAdminUserDateTime,
-  formatBooleanFlag,
   formatNullableText,
+  updateAdminUserListRow,
 } from './adminUserDisplay'
 
 /**
@@ -51,8 +54,14 @@ const AdminUsersPage = () => {
   const [permissionErrorMessages, setPermissionErrorMessages] = createSignal<
     Record<string, string>
   >({})
+  const [updatingSuspiciousUsernames, setUpdatingSuspiciousUsernames] = createSignal<
+    ReadonlySet<string>
+  >(new Set())
+  const [suspiciousErrorMessages, setSuspiciousErrorMessages] = createSignal<
+    Record<string, string>
+  >({})
 
-  const [usersResponse] = createResource(
+  const [usersResponse, { mutate: mutateUsers }] = createResource(
     () => ({ name: searchName(), page: page(), refresh: refreshKey() }),
     ({ name, page: currentPage }) => fetchAdminUsers({ name, page: currentPage })
   )
@@ -131,8 +140,10 @@ const AdminUsersPage = () => {
     setUpdatingPermissionUsernames((current) => new Set(current).add(username))
     try {
       await updateUserPermission(username, permission)
+      mutateUsers((current) =>
+        current ? updateAdminUserListRow(current, username, { account_type: permission }) : current
+      )
       showSuccessToast(ADMIN_USER_LIST_COPY.permissionUpdateSuccess)
-      refresh()
     } catch (error) {
       setPermissionErrorMessages((current) => ({
         ...current,
@@ -140,6 +151,38 @@ const AdminUsersPage = () => {
       }))
     } finally {
       setUpdatingPermissionUsernames((current) => {
+        const next = new Set(current)
+        next.delete(username)
+        return next
+      })
+    }
+  }
+
+  /**
+   * 指定されたユーザーの不審アカウントフラグを保存する。
+   *
+   * @param username - フラグを変更するユーザー名。
+   * @param isSuspicious - 保存する不審アカウントフラグ。
+   * @returns 保存完了時に解決されるPromise。
+   */
+  const handleSuspiciousChange = async (username: string, isSuspicious: boolean): Promise<void> => {
+    setSuspiciousErrorMessages((current) => ({ ...current, [username]: '' }))
+    setUpdatingSuspiciousUsernames((current) => new Set(current).add(username))
+    try {
+      await updateUserSuspicious(username, isSuspicious)
+      mutateUsers((current) =>
+        current
+          ? updateAdminUserListRow(current, username, { is_suspicious: isSuspicious })
+          : current
+      )
+      showSuccessToast(ADMIN_USER_LIST_COPY.suspiciousUpdateSuccess)
+    } catch (error) {
+      setSuspiciousErrorMessages((current) => ({
+        ...current,
+        [username]: toUserFriendlyErrorMessage(error, ADMIN_USER_LIST_COPY.suspiciousUpdateError),
+      }))
+    } finally {
+      setUpdatingSuspiciousUsernames((current) => {
         const next = new Set(current)
         next.delete(username)
         return next
@@ -347,10 +390,36 @@ const AdminUsersPage = () => {
                     <td class="whitespace-nowrap px-3 py-2">{user.rating ?? '-'}</td>
                     <td class="whitespace-nowrap px-3 py-2">{user.overpower_value ?? '-'}</td>
                     <td class="whitespace-nowrap px-3 py-2">
-                      {formatBooleanFlag(user.is_suspicious)}
+                      <div class="space-y-1">
+                        <AppSwitch
+                          checked={user.is_suspicious}
+                          onChange={(isSuspicious) =>
+                            void handleSuspiciousChange(user.username, isSuspicious)
+                          }
+                          disabled={updatingSuspiciousUsernames().has(user.username)}
+                          label={formatAdminUserFlagLabel(
+                            user.username,
+                            ADMIN_USER_LIST_COPY.suspiciousLabel
+                          )}
+                        />
+                        <Show when={suspiciousErrorMessages()[user.username]}>
+                          {(errorMessage) => (
+                            <p class="text-xs text-danger" role="alert">
+                              {errorMessage()}
+                            </p>
+                          )}
+                        </Show>
+                      </div>
                     </td>
                     <td class="whitespace-nowrap px-3 py-2">
-                      {formatBooleanFlag(user.is_private)}
+                      <AppSwitch
+                        checked={user.is_private}
+                        disabled
+                        label={formatAdminUserFlagLabel(
+                          user.username,
+                          ADMIN_USER_LIST_COPY.privateLabel
+                        )}
+                      />
                     </td>
                     <td class="whitespace-nowrap px-3 py-2">
                       <AppButton

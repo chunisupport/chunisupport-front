@@ -5,11 +5,8 @@ import {
   type WeakChartAggregationDifficulty,
 } from '../../utils/weakChartInspector'
 
-/** 苦手譜面インスペクターの画面表示文言 */
+/** 苦手譜面インスペクターの画面表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const WEAK_CHART_INSPECTOR_COPY = {
-  title: '苦手譜面インスペクター',
-  description:
-    'プレイ済み譜面を譜面定数ごとに比べ、特にスコアが低い／高いものを苦手／得意候補としてピックアップします。',
   chartTitle: '譜面定数別スコア分布',
   chartAccessibleLabel: '譜面定数ごとの獲得スコア散布図',
   outlierTitle: '苦手かもしれない譜面',
@@ -36,15 +33,6 @@ export const WEAK_CHART_SCORE_TICK_INTERVAL = 1000
 
 /** 下部ナビゲーションで表示できる最大幅を基準にした散布図の最小幅 */
 export const WEAK_CHART_MIN_WIDTH_CLASS = 'min-w-[44rem]'
-
-/** Chart.js外部ツールチップのviewport端からの余白 */
-export const WEAK_CHART_TOOLTIP_VIEWPORT_PADDING = 8
-
-/** Chart.js外部ツールチップと選択点の間隔 */
-export const WEAK_CHART_TOOLTIP_POINT_GAP = 8
-
-/** Chart.js外部ツールチップの曲名へ適用するTailwindクラス */
-export const WEAK_CHART_TOOLTIP_TITLE_CLASS = 'font-sans font-semibold text-text'
 
 /** グラフ設定画面の表示文言 */
 export const WEAK_CHART_SETTINGS_COPY = {

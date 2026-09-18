@@ -1,25 +1,45 @@
 import { Button } from '@kobalte/core/button'
+import { Tooltip } from '@kobalte/core/tooltip'
 import { A } from '@solidjs/router'
 import { ChartColumnIncreasing } from 'lucide-solid'
 import {
   type Component,
   createEffect,
   createMemo,
+  createResource,
   createSignal,
   For,
   onCleanup,
   onMount,
   Show,
 } from 'solid-js'
+import { fetchPossessions } from '../../../../api/possessions'
 import { getAppButtonClass } from '../../../../components/common/AppButton'
 import { HONOR_TYPE_CLASS_NAMES } from '../../../../constants/honors'
-import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
+import { getPossessionClassName } from '../../../../constants/possession'
+import { useSongsData } from '../../../../stores/songsData'
+import type {
+  HonorDTO,
+  PlayerDTO,
+  PlayerRecordDTO,
+  PossessionName,
+  UserRatingDTO,
+} from '../../../../types/api'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
+import { resolvePossessionName } from '../../../../utils/possession'
 import { formatNullablePlayerRating } from '../../../../utils/ratingFormat'
+import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../../../utils/theoreticalOverPowerTarget'
+import {
+  hasUnknownChartConstants,
+  hasUnknownOverPowerChartConstants,
+  hasUnknownOverPowerPercentChartConstants,
+} from '../../../../utils/unknownChartConstant'
 import {
   USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL,
   USER_NAMEPLATE_HISTORY_LINK_LABEL,
   USER_NAMEPLATE_METRIC_LABELS,
+  USER_NAMEPLATE_UNKNOWN_CONST_HINT,
+  USER_NAMEPLATE_UNKNOWN_CONST_MARKER,
 } from './UserNameplate.constants'
 
 const HONOR_ROTATION_INTERVAL_MS = 4000
@@ -33,11 +53,74 @@ type Props = {
   rating: UserRatingDTO
   /** RATING・OVER POWER・OP%履歴ページへのリンク先 */
   historyHref: string
+  /** 通常譜面レコード。未取得時はOVER POWER値・達成率の定数未判明判定を行わない */
+  records?: readonly PlayerRecordDTO[]
+  /** マスタ解決を省略して適用するポゼッション名。確認画面向け */
+  possessionName?: PossessionName
 }
 
 type HonorTitleProps = {
   honor: HonorDTO
   isRotating?: boolean
+}
+
+type UnknownConstMetricValueProps = {
+  /** 表示する指標文字列 */
+  value: string
+  /** 定数未判明の譜面を含むか */
+  unknown: boolean
+}
+
+/**
+ * 定数未判明の譜面を含む指標値を薄く表示し、ホバーまたはタップで理由を示す。
+ *
+ * @param props - 表示する指標文字列と未判明状態。
+ * @returns 通常時は数値、未判明時はヒント付きの数値。
+ */
+const UnknownConstMetricValue: Component<UnknownConstMetricValueProps> = (props) => {
+  const [isHintOpen, setIsHintOpen] = createSignal(false)
+  let ignoreCloseOnClick = false
+
+  return (
+    <Show when={props.unknown} fallback={props.value}>
+      <Tooltip
+        open={isHintOpen()}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen && ignoreCloseOnClick) {
+            ignoreCloseOnClick = false
+            return
+          }
+          setIsHintOpen(nextOpen)
+        }}
+        placement="top"
+        gutter={4}
+        openDelay={400}
+      >
+        <Tooltip.Trigger
+          type="button"
+          class="relative inline-block cursor-help rounded-sm p-0 align-baseline leading-none text-inherit opacity-70 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+          aria-label={`${props.value}。${USER_NAMEPLATE_UNKNOWN_CONST_HINT}`}
+          onClick={() => {
+            ignoreCloseOnClick = true
+            setIsHintOpen((current) => !current)
+            queueMicrotask(() => {
+              ignoreCloseOnClick = false
+            })
+          }}
+        >
+          {props.value}
+          <sup class="font-sans text-[0.55em] leading-none" aria-hidden="true">
+            {USER_NAMEPLATE_UNKNOWN_CONST_MARKER}
+          </sup>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content class="z-60 rounded-md border border-border-strong bg-surface-raised px-2 py-1 font-sans text-xs text-text shadow-lg">
+            {USER_NAMEPLATE_UNKNOWN_CONST_HINT}
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip>
+    </Show>
+  )
 }
 
 /**
@@ -137,14 +220,61 @@ const HonorTitle: Component<HonorTitleProps> = (props) => {
 
 /**
  * ユーザーの称号、レベル、指標とRATING・OVER POWER・OP%履歴への導線を表示する。
+ * カード背景色はポゼッションに応じて切り替える。
  *
- * @param props - プレイヤー情報、称号、計算済みレーティング、履歴ページのリンク先。
+ * @param props - プレイヤー情報、称号、計算済みレーティング、通常譜面レコード、履歴ページのリンク先、確認用ポゼッション名。
  * @returns プロフィールカードの JSX 要素。
  */
 export const UserNameplate: Component<Props> = (props) => {
+  const { songsResponse, ensureSongsLoaded } = useSongsData()
+  const [possessions] = createResource(
+    () => (props.possessionName == null ? true : undefined),
+    () => fetchPossessions()
+  )
+
+  createEffect(() => {
+    if (props.records) ensureSongsLoaded()
+  })
+  /** 明示指定、またはマスタから解決したポゼッション名。未取得時は既定値 */
+  const possessionName = createMemo(
+    () =>
+      props.possessionName ??
+      resolvePossessionName(props.playerInfo.possession_id, possessions() ?? [])
+  )
   const playerRatingText = createMemo(() => formatNullablePlayerRating(props.rating.rating))
   const bestRatingText = createMemo(() => formatNullablePlayerRating(props.rating.best_average))
   const newRatingText = createMemo(() => formatNullablePlayerRating(props.rating.new_average))
+  const bestHasUnknownChartConstants = createMemo(() => hasUnknownChartConstants(props.rating.best))
+  const newHasUnknownChartConstants = createMemo(() => hasUnknownChartConstants(props.rating.new))
+  const ratingHasUnknownChartConstants = createMemo(
+    () => bestHasUnknownChartConstants() || newHasUnknownChartConstants()
+  )
+  /** 現在OVER POWER集計対象に定数未判明の譜面が含まれるか */
+  const overPowerHasUnknownChartConstants = createMemo(() =>
+    hasUnknownOverPowerChartConstants(props.records ?? [])
+  )
+  /** 曲IDごとの理論値OVER POWER対象難易度 */
+  const theoreticalTargetDifficultyBySongId = createMemo(() =>
+    buildTheoreticalOverPowerTargetDifficultyBySongId(songsResponse()?.songs ?? [])
+  )
+  /** 理論値OVER POWER対象譜面に定数未判明が含まれるか */
+  const overPowerPercentHasUnknownChartConstants = createMemo(() => {
+    const records = props.records
+    if (!records || !songsResponse()) return false
+    return hasUnknownOverPowerPercentChartConstants(records, theoreticalTargetDifficultyBySongId())
+  })
+  /** OVER POWER値の表示文字列。未設定時は undefined */
+  const overPowerValueText = createMemo(() =>
+    props.playerInfo.overpower_value == null
+      ? undefined
+      : formatOverPowerValue(props.playerInfo.overpower_value)
+  )
+  /** OVER POWER達成率の表示文字列。未設定時は undefined */
+  const overPowerPercentText = createMemo(() =>
+    props.playerInfo.overpower_percent == null
+      ? undefined
+      : formatOverPowerPercent(props.playerInfo.overpower_percent)
+  )
   const [activeHonorIndex, setActiveHonorIndex] = createSignal(0)
   const [isHonorListExpanded, setIsHonorListExpanded] = createSignal(false)
   const visibleHonors = createMemo(() => getVisibleHonors(props.honors))
@@ -180,7 +310,12 @@ export const UserNameplate: Component<Props> = (props) => {
   })
 
   return (
-    <div class="relative mb-2 mx-auto w-[min(380px,calc(100%-2rem))] rounded-md border border-border bg-surface px-3 py-3 shadow-sm">
+    <div
+      class={`user-nameplate relative mb-2 mx-auto w-[min(380px,calc(100%-2rem))] rounded-md px-3 py-3 shadow-sm ${getPossessionClassName(
+        possessionName()
+      )}`}
+      data-possession={possessionName()}
+    >
       <Show when={visibleHonors().length > 0}>
         <Show
           when={hasMultipleVisibleHonors()}
@@ -218,17 +353,29 @@ export const UserNameplate: Component<Props> = (props) => {
         <p class="">Lv. {props.playerInfo.level}</p>
         <h1 class="flex-1 text-xl font-medium text-center">{props.playerInfo.name}</h1>
       </div>
-      <hr class="mb-2 border-t border-border" />
+      <hr class="mb-2 border-t" />
       <dl class="space-y-2">
         <div>
           <dt class="text-sm font-medium leading-tight">{USER_NAMEPLATE_METRIC_LABELS.rating}</dt>
           <dd class="flex flex-wrap items-baseline gap-x-2 leading-none">
             <strong class="font-jost text-2xl font-semibold tracking-tight">
-              {playerRatingText()}
+              <UnknownConstMetricValue
+                value={playerRatingText()}
+                unknown={ratingHasUnknownChartConstants()}
+              />
             </strong>
-            <span class="goal-card-progress-secondary font-jost text-base font-semibold">
-              {USER_NAMEPLATE_METRIC_LABELS.best} {bestRatingText()} /{' '}
-              {USER_NAMEPLATE_METRIC_LABELS.new} {newRatingText()}
+            <span class="user-nameplate-metric-secondary font-jost text-base font-semibold">
+              {USER_NAMEPLATE_METRIC_LABELS.best}{' '}
+              <UnknownConstMetricValue
+                value={bestRatingText()}
+                unknown={bestHasUnknownChartConstants()}
+              />
+              {' / '}
+              {USER_NAMEPLATE_METRIC_LABELS.new}{' '}
+              <UnknownConstMetricValue
+                value={newRatingText()}
+                unknown={newHasUnknownChartConstants()}
+              />
             </span>
           </dd>
         </div>
@@ -238,15 +385,20 @@ export const UserNameplate: Component<Props> = (props) => {
           </dt>
           <dd class="flex flex-wrap items-baseline gap-x-2 leading-none">
             <strong class="font-jost text-2xl font-semibold tracking-tight">
-              {props.playerInfo.overpower_value == null
-                ? undefined
-                : formatOverPowerValue(props.playerInfo.overpower_value)}
-            </strong>
-            <span class="font-jost text-base font-semibold">
-              <Show when={props.playerInfo.overpower_percent !== null}>
-                {formatOverPowerPercent(props.playerInfo.overpower_percent ?? 0)}
+              <Show when={overPowerValueText() !== undefined}>
+                <UnknownConstMetricValue
+                  value={overPowerValueText() ?? ''}
+                  unknown={overPowerHasUnknownChartConstants()}
+                />
               </Show>
-              %
+            </strong>
+            <span class="user-nameplate-metric-secondary font-jost text-base font-semibold">
+              <Show when={overPowerPercentText() !== undefined} fallback="%">
+                <UnknownConstMetricValue
+                  value={`${overPowerPercentText() ?? ''}%`}
+                  unknown={overPowerPercentHasUnknownChartConstants()}
+                />
+              </Show>
             </span>
           </dd>
         </div>

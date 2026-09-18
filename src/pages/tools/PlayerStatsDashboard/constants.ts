@@ -9,11 +9,8 @@ import type {
   PlayerStatsLevelAchievement,
 } from '../../../utils/playerStatsDashboard'
 
-/** ダッシュボード画面の表示文言 */
+/** ダッシュボード画面の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const PLAYER_STATS_COPY = {
-  pageTitle: 'ダッシュボード',
-  documentTitle: 'ダッシュボード',
-  description: 'プレイ記録から達成状況と次に狙う譜面を確認できます。',
   overviewTitle: '現在地',
   overviewCaption: '選択した難易度の主要な達成状況',
   achievementTitle: '達成状況',

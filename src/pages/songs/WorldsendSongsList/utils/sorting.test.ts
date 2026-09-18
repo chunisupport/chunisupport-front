@@ -13,6 +13,7 @@ const createSong = (overrides: Partial<WorldsendSongDTO>): WorldsendSongDTO => (
   release: overrides.release === undefined ? '2024-01-01' : overrides.release,
   official_idx: overrides.official_idx ?? '1',
   jacket: overrides.jacket ?? null,
+  is_new: overrides.is_new ?? false,
   charts: overrides.charts ?? {},
 })
 
@@ -93,5 +94,32 @@ test("WORLD'S END楽曲の属性とレベルの未設定値は末尾に寄せる
   assert.deepEqual(
     sortWorldsendSongs(songs, 'attribute', 'asc').map((song) => song.id),
     ['low', 'high', 'missing-level', 'missing-chart']
+  )
+})
+
+test("WORLD'S END楽曲のノーツ数の未設定値は末尾に寄せる", () => {
+  const songs = [
+    createSong({ id: 'missing-chart' }),
+    createSong({
+      id: 'high',
+      charts: { WORLDSEND: { attribute: '狂', level_star: 5, notes: 1000 } },
+    }),
+    createSong({
+      id: 'low',
+      charts: { WORLDSEND: { attribute: '改', level_star: 2, notes: 900 } },
+    }),
+    createSong({
+      id: 'missing-notes',
+      charts: { WORLDSEND: { attribute: '戻', level_star: 3, notes: null } },
+    }),
+  ]
+
+  assert.deepEqual(
+    sortWorldsendSongs(songs, 'notes', 'asc').map((song) => song.id),
+    ['low', 'high', 'missing-chart', 'missing-notes']
+  )
+  assert.deepEqual(
+    sortWorldsendSongs(songs, 'notes', 'desc').map((song) => song.id),
+    ['high', 'low', 'missing-chart', 'missing-notes']
   )
 })

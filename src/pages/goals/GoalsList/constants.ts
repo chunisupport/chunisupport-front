@@ -1,7 +1,8 @@
 /**
  * 目標一覧で作成できる目標数の上限。
+ * APIの `goal_limit_exceeded` 判定と揃える。
  */
-export const GOALS_LIMIT = 100
+export const GOALS_LIMIT = 300
 
 /**
  * 目標タイトルとして入力できる最大文字数。

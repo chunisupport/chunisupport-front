@@ -6,6 +6,25 @@ const scrollOffsetsByPath = new Map<string, number>()
 /** 直近の遷移先。履歴の戻る/進むは数値、リンク遷移はパス文字列。 */
 let lastNavigationTarget: string | number = ''
 
+/** popstate 処理中はリンク遷移として上書きしない */
+let isHandlingPopState = false
+
+/**
+ * ブラウザの戻る/進むを履歴 pop として記録する。
+ * `useBeforeLeave` の `event.to` がパス文字列になる場合でも、popstate を優先する。
+ */
+export const notifyAppMainScrollPopNavigation = (): void => {
+  lastNavigationTarget = -1
+  isHandlingPopState = true
+  queueMicrotask(() => {
+    isHandlingPopState = false
+  })
+}
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('popstate', notifyAppMainScrollPopNavigation, true)
+}
+
 /**
  * メインスクロール要素の現在の縦位置を取得する。
  *
@@ -52,10 +71,15 @@ export const restoreAppMainScrollOffset = (offset: number): void => {
 
 /**
  * 直近の遷移先を記録する。
+ * popstate 処理中はパス文字列で上書きせず、履歴の戻る/進むとして扱う。
  *
  * @param to - `useBeforeLeave` の遷移先。履歴デルタなら数値。
  */
 export const rememberAppMainScrollNavigationTarget = (to: string | number): void => {
+  if (isHandlingPopState) {
+    lastNavigationTarget = -1
+    return
+  }
   lastNavigationTarget = to
 }
 
@@ -87,4 +111,5 @@ export const resolveRestoredAppMainScrollOffset = (
 export const clearAppMainScrollOffsets = (): void => {
   scrollOffsetsByPath.clear()
   lastNavigationTarget = ''
+  isHandlingPopState = false
 }

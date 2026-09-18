@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { isDateInRange, toRecordDateString } from './dateFilter'
+import { findLatestRecordDate, isDateInRange, toRecordDateString } from './dateFilter'
 
 test('toRecordDateString', async (t) => {
   await t.test('ISO 8601 日時から YYYY-MM-DD を抽出する', () => {
@@ -67,5 +67,33 @@ test('isDateInRange', async (t) => {
       isDateInRange('2026-07-01T00:00:00Z', { min: '2026-06-01', max: '2026-06-30' }),
       false
     )
+  })
+})
+
+test('findLatestRecordDate', async (t) => {
+  await t.test('時刻を比較せず最新の更新日を返す', () => {
+    // Given
+    const records = [
+      { updated_at: '2026-06-01T23:59:59+09:00' },
+      { updated_at: '2026-06-02T00:00:00+09:00' },
+      { updated_at: '2026-06-02T12:34:56+09:00' },
+    ]
+
+    // When
+    const result = findLatestRecordDate(records)
+
+    // Then
+    assert.equal(result, '2026-06-02')
+  })
+
+  await t.test('更新日がない場合は null を返す', () => {
+    // Given
+    const records = [{ updated_at: null }, { updated_at: 'invalid' }]
+
+    // When
+    const result = findLatestRecordDate(records)
+
+    // Then
+    assert.equal(result, null)
   })
 })

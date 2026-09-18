@@ -73,6 +73,8 @@ export interface FilterState {
   constFilterMode: 'level' | 'number'
   score: NumericRangeFilter
   scoreFilterMode: 'number' | 'rank'
+  /** 単曲レートの任意範囲。nullは端点未指定を表す */
+  rating: NumericRangeFilter<number | null>
   justiceCount: NumericRangeFilter<number | null>
   overPower: NumericRangeFilter<number | null>
   combo_lamp: ComboLampFilter[]

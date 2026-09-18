@@ -1,27 +1,107 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { ONLINE_WEAK_CHART_INSPECTOR_PATH } from './routes'
-import { isToolLinkListed, TOOL_LINKS } from './tools'
+import { LOCKED_SONG_DISCOVERY_PATH, ONLINE_WEAK_CHART_INSPECTOR_PATH } from './routes'
+import { getToolLink, isPublicToolLink, isToolLinkListed, TOOL_LINKS, type ToolLink } from './tools'
 
-test('Online は管理者のツール一覧にだけ表示する', () => {
+const publicTool: ToolLink = {
+  title: '公開ツール',
+  href: '/tools/public',
+  icon: 'chart',
+  description: '公開ツールの説明',
+}
+
+const adminOnlyTool: ToolLink = {
+  ...publicTool,
+  title: '管理者限定ツール',
+  href: '/tools/admin-only',
+  adminOnly: true,
+}
+
+const disabledTool: ToolLink = {
+  ...publicTool,
+  title: '無効ツール',
+  href: '/tools/disabled',
+  disabled: true,
+}
+
+test('isToolLinkListed は通常ツールをアカウント種別に関係なく表示すること', () => {
   // Given
-  const online = TOOL_LINKS.find((tool) => tool.href === ONLINE_WEAK_CHART_INSPECTOR_PATH)
-  assert.ok(online)
+  const accountTypes = [undefined, 'PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] as const
 
-  // When / Then
-  assert.equal(online.adminOnly, true)
-  assert.equal(isToolLinkListed(online, undefined), false)
-  assert.equal(isToolLinkListed(online, 'PLAYER'), false)
-  assert.equal(isToolLinkListed(online, 'EDITOR'), false)
-  assert.equal(isToolLinkListed(online, 'ADMIN'), true)
+  // When & Then
+  for (const accountType of accountTypes) {
+    assert.equal(isToolLinkListed(publicTool, accountType), true)
+  }
 })
 
-test('通常ツールはアカウント種別を問わず一覧に表示する', () => {
+test('isToolLinkListed は ADMIN 限定ツールを管理者以外へ表示しないこと', () => {
   // Given
-  const standard = TOOL_LINKS.find((tool) => tool.title === '苦手譜面インスペクター')
-  assert.ok(standard)
+  const nonAdminAccountTypes = [undefined, 'PLAYER', 'EDITOR', 'EXTDEV'] as const
+
+  // When & Then
+  for (const accountType of nonAdminAccountTypes) {
+    assert.equal(isToolLinkListed(adminOnlyTool, accountType), false)
+  }
+  assert.equal(isToolLinkListed(adminOnlyTool, 'ADMIN'), true)
+})
+
+test('isPublicToolLink は無効または ADMIN 限定のツールを公開対象外とすること', () => {
+  // Given / When / Then
+  assert.equal(isPublicToolLink(publicTool), true)
+  assert.equal(isPublicToolLink(disabledTool), false)
+  assert.equal(isPublicToolLink(adminOnlyTool), false)
+})
+
+test('未解禁曲ディスカバーは ADMIN 限定ツールとして定義されていること', () => {
+  // Given
+  const lockedSongDiscovery = TOOL_LINKS.find((tool) => tool.href === LOCKED_SONG_DISCOVERY_PATH)
 
   // When / Then
-  assert.equal(isToolLinkListed(standard, undefined), true)
-  assert.equal(isToolLinkListed(standard, 'PLAYER'), true)
+  assert.ok(lockedSongDiscovery)
+  assert.equal(lockedSongDiscovery.adminOnly, true)
+  assert.equal(isPublicToolLink(lockedSongDiscovery), false)
+})
+
+test('苦手譜面インスペクター Online は管理者のツール一覧にだけ表示すること', () => {
+  // Given
+  const onlineWeakChartInspector = TOOL_LINKS.find(
+    (tool) => tool.href === ONLINE_WEAK_CHART_INSPECTOR_PATH
+  )
+
+  // When / Then
+  assert.ok(onlineWeakChartInspector)
+  assert.equal(onlineWeakChartInspector.adminOnly, true)
+  assert.equal(onlineWeakChartInspector.icon, 'chart')
+  assert.equal(isPublicToolLink(onlineWeakChartInspector), false)
+  assert.equal(isToolLinkListed(onlineWeakChartInspector, undefined), false)
+  assert.equal(isToolLinkListed(onlineWeakChartInspector, 'PLAYER'), false)
+  assert.equal(isToolLinkListed(onlineWeakChartInspector, 'ADMIN'), true)
+})
+
+test('getToolLink はパスに対応するツール情報を返すこと', () => {
+  // Given
+  const target = TOOL_LINKS[0]
+  assert.ok(target)
+
+  // When
+  const result = getToolLink(target.href)
+
+  // Then
+  assert.equal(result.title, target.title)
+  assert.equal(result.description, target.description)
+})
+
+test('getToolLink は全ツールパスに対応するツール情報を返すこと', () => {
+  // Given / When / Then
+  for (const tool of TOOL_LINKS) {
+    assert.equal(getToolLink(tool.href), tool)
+  }
+})
+
+test('getToolLink は未知のパスでエラーをスローすること', () => {
+  // Given
+  const unknownPath = '/tools/unknown-tool-for-test'
+
+  // When & Then
+  assert.throws(() => getToolLink(unknownPath), new Error(`Unknown tool link: ${unknownPath}`))
 })

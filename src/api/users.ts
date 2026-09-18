@@ -21,10 +21,6 @@ import type {
 } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 
-type FetchUserRecordOptions = {
-  includeNoPlay?: boolean
-}
-
 type FetchMeOptions = {
   redirectOnUnauthorized?: boolean
 }
@@ -91,15 +87,16 @@ export const fetchUserUpdatedAt = async (username: string): Promise<UpdatedAtRes
   }
 }
 
-export const fetchUserRecord = async (
-  username: string,
-  options: FetchUserRecordOptions = {}
-): Promise<UserRecordDTO> => {
-  const url = new URL(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record`)
-  if (options.includeNoPlay) {
-    url.searchParams.set('include_noplay', 'true')
-  }
-  const response = await fetchWithAuth(url)
+/**
+ * 指定したユーザーの全楽曲レコードを取得する。
+ *
+ * @param username - レコード取得対象のユーザー名。
+ * @returns 全楽曲レコードレスポンス。
+ */
+export const fetchUserRecord = async (username: string): Promise<UserRecordDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record`
+  )
 
   return response.json()
 }
@@ -108,21 +105,12 @@ export const fetchUserRecord = async (
  * 指定したユーザーのコースレコード一覧を取得する。
  *
  * @param username - レコード取得対象のユーザー名。
- * @param options - 未プレイコースの補完設定。
  * @returns コースレコード一覧レスポンス。
  */
-export const fetchUserCourseRecords = async (
-  username: string,
-  options: FetchUserRecordOptions = {}
-): Promise<UserCourseRecordsDTO> => {
-  const url = new URL(
+export const fetchUserCourseRecords = async (username: string): Promise<UserCourseRecordsDTO> => {
+  const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record/courses`
   )
-  if (options.includeNoPlay) {
-    url.searchParams.set('include_noplay', 'true')
-  }
-
-  const response = await fetchWithAuth(url)
   return response.json()
 }
 
@@ -131,22 +119,15 @@ export const fetchUserCourseRecords = async (
  *
  * @param username - レコード取得対象のユーザー名。
  * @param displayId - 取得対象の楽曲表示ID。
- * @param options - 未プレイ譜面の補完設定。
  * @returns 通常楽曲1曲分のレコードレスポンス。
  */
 export const fetchUserStandardSongRecord = async (
   username: string,
-  displayId: string,
-  options: FetchUserRecordOptions = {}
+  displayId: string
 ): Promise<UserStandardSongRecordDTO> => {
-  const url = new URL(
+  const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record/songs/${encodeURIComponent(displayId)}`
   )
-  if (options.includeNoPlay) {
-    url.searchParams.set('include_noplay', 'true')
-  }
-
-  const response = await fetchWithAuth(url)
   return response.json()
 }
 
@@ -155,22 +136,15 @@ export const fetchUserStandardSongRecord = async (
  *
  * @param username - レコード取得対象のユーザー名。
  * @param displayId - 取得対象の楽曲表示ID。
- * @param options - 未プレイレコードの補完設定。
  * @returns WORLD'S END楽曲1曲分のレコードレスポンス。
  */
 export const fetchUserWorldsendSongRecord = async (
   username: string,
-  displayId: string,
-  options: FetchUserRecordOptions = {}
+  displayId: string
 ): Promise<UserWorldsendSongRecordDTO> => {
-  const url = new URL(
+  const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record/worldsend-songs/${encodeURIComponent(displayId)}`
   )
-  if (options.includeNoPlay) {
-    url.searchParams.set('include_noplay', 'true')
-  }
-
-  const response = await fetchWithAuth(url)
   return response.json()
 }
 
@@ -339,6 +313,24 @@ export const updateUserPermission = async (
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ permission }),
+  })
+}
+
+/**
+ * 指定したユーザーの不審アカウントフラグを変更する。
+ *
+ * @param username - フラグを変更するユーザー名。
+ * @param isSuspicious - 設定する不審アカウントフラグ。
+ * @returns 変更完了時に解決されるPromise。
+ */
+export const updateUserSuspicious = async (
+  username: string,
+  isSuspicious: boolean
+): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/suspicious`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ is_suspicious: isSuspicious }),
   })
 }
 

@@ -48,7 +48,7 @@ const flush = async () => {
     callback()
   }
 }
-const { createAppMainScrollRestoreEffect } =
+const { createAppMainScrollOffsetRestoreEffect, createAppMainScrollRestoreEffect } =
   await import('./src/hooks/useAppMainScrollRestoration.ts')
 ${script}
 `,
@@ -125,5 +125,37 @@ assert.deepEqual(calls, [2400])
 view.dispose()
 await flush()
 assert.deepEqual(calls, [2400])
+`)
+})
+
+test('タブ切替先の表示準備を待って切替前の位置を復元する', async () => {
+  await runBrowserTest(`
+const view = createRoot((dispose) => {
+  const [path, setPath] = createSignal('/record-normal')
+  const [ready, setReady] = createSignal(true)
+  const [requestedOffset, setRequestedOffset] = createSignal()
+  createAppMainScrollOffsetRestoreEffect(path, ready, requestedOffset, () => {
+    setRequestedOffset(undefined)
+  })
+  return { dispose, setPath, setReady, setRequestedOffset }
+})
+view.setRequestedOffset(2400)
+view.setReady(false)
+view.setPath('/record-course')
+await flush()
+assert.deepEqual(calls, [])
+
+view.setReady(true)
+await flush()
+assert.deepEqual(calls, [2400, 2400])
+
+view.setReady(false)
+view.setRequestedOffset(640)
+view.setPath('/record-normal')
+view.setRequestedOffset(undefined)
+view.setReady(true)
+await flush()
+assert.deepEqual(calls, [2400, 2400])
+view.dispose()
 `)
 })

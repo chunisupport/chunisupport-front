@@ -1,5 +1,17 @@
+/** コースクラスとして選択可能な API 値 */
+export const COURSE_CLASS_VALUES = ['1', '2', '3', '4', '5', 'inf', 'extra'] as const
+
+/** コースクラスの API 値 */
+export type CourseClassValue = (typeof COURSE_CLASS_VALUES)[number]
+
+/** コースクラス選択 UI で使う選択肢 */
+export type CourseClassOption = {
+  value: CourseClassValue
+  label: string
+}
+
 /** コースクラスのAPI値と表示値の対応表 */
-const COURSE_CLASS_LABELS: Readonly<Record<string, string>> = {
+const COURSE_CLASS_LABELS: Readonly<Record<CourseClassValue, string>> = {
   '1': 'Ⅰ',
   '2': 'Ⅱ',
   '3': 'Ⅲ',
@@ -8,6 +20,12 @@ const COURSE_CLASS_LABELS: Readonly<Record<string, string>> = {
   inf: '∞',
   extra: 'EX',
 }
+
+/** コースクラス選択 UI で使う選択肢一覧 */
+export const COURSE_CLASS_OPTIONS: CourseClassOption[] = COURSE_CLASS_VALUES.map((value) => ({
+  value,
+  label: COURSE_CLASS_LABELS[value],
+}))
 
 /** コースクラス別の背景色Tailwindクラスの対応表 */
 const COURSE_CLASS_BG_CLASS: Readonly<Record<string, string>> = {
@@ -31,7 +49,7 @@ const COURSE_CLASS_INF_BG_CLASS = 'bg-[image:var(--cs-color-course-class-inf-bg)
  * @returns 表示用のコースクラス。未対応値は元の値を返す。
  */
 export const formatCourseClass = (courseClass: string): string =>
-  COURSE_CLASS_LABELS[courseClass.toLowerCase()] ?? courseClass
+  COURSE_CLASS_LABELS[courseClass.toLowerCase() as CourseClassValue] ?? courseClass
 
 /**
  * コースクラスに応じたバッジ用Tailwindクラスを返す。

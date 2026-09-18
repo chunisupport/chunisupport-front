@@ -4,6 +4,8 @@ import { Calculator } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createSignal, For, Show } from 'solid-js'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
+import { CHART_CONSTANT_CALCULATOR_PATH } from '../../constants/routes'
+import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   type ChartConstantLamp,
@@ -79,7 +81,8 @@ const ChartConstantCalculatorPage = (): JSX.Element => {
   )
   const [lamp, setLamp] = createSignal<ChartConstantLamp>(CHART_CONSTANT_DEFAULTS.lamp)
 
-  useDocumentTitle(CHART_CONSTANT_CALCULATOR_COPY.title)
+  const tool = getToolLink(CHART_CONSTANT_CALCULATOR_PATH)
+  useDocumentTitle(tool.title)
 
   /**
    * スコアを更新し、理論値ならランプをALL JUSTICE CRITICALへ合わせる。
@@ -122,8 +125,8 @@ const ChartConstantCalculatorPage = (): JSX.Element => {
           <Calculator class="h-5 w-5 text-action-primary" aria-hidden="true" />
         </span>
         <div>
-          <h1 class="text-2xl font-semibold">{CHART_CONSTANT_CALCULATOR_COPY.title}</h1>
-          <p class="mt-1 text-sm text-text-muted">{CHART_CONSTANT_CALCULATOR_COPY.description}</p>
+          <h1 class="text-2xl font-semibold">{tool.title}</h1>
+          <p class="mt-1 text-sm text-text-muted">{tool.description}</p>
         </div>
       </header>
 

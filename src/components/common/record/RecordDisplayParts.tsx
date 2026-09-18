@@ -4,7 +4,13 @@ import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
 import { getScoreRank, type ScoreRank } from '../../../utils/scoreRank'
 import { SortableHeaderButton, type SortDirection } from '../SortableTableHeader'
 import { LampPlaceholderBadge } from './RecordBadges'
-import { getDefaultRecordLampAccessibleLabel, getDefaultRecordLampLabel } from './recordLampLabel'
+import {
+  getDefaultRecordFullChainBadgeLamp,
+  getDefaultRecordFullChainLabel,
+  getDefaultRecordHardLampLabel,
+  getDefaultRecordLampAccessibleLabel,
+  getDefaultRecordLampLabel,
+} from './recordLampLabel'
 import {
   getComboLampBadgeClass,
   HARD_LAMP_BADGE_BACKGROUND_CLASS,
@@ -81,20 +87,7 @@ export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
 const RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS =
   'inline-flex w-[34px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
 const HARD_LAMP_BADGE_CLASS = RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS
-const HARD_LAMP_LABEL: Record<Exclude<NonNullable<ClearLamp>, 'FAILED'>, string> = {
-  CLEAR: 'CLR',
-  HARD: 'HRD',
-  BRAVE: 'BRV',
-  ABSOLUTE: 'ABS',
-  CATASTROPHY: 'CTS',
-}
 const FULL_CHAIN_BADGE_CLASS = RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS
-const FULL_CHAIN_BADGE_VARIANT: Partial<
-  Record<NonNullable<SharedRecordSource['full_chain']>, NonNullable<ComboLamp>>
-> = {
-  'FULL CHAIN GOLD': 'FULL COMBO',
-  'FULL CHAIN PLATINUM': 'ALL JUSTICE',
-}
 const LAMP_NONE_ACCESSIBLE_LABEL = 'なし'
 
 /**
@@ -124,11 +117,11 @@ export const renderDefaultRecordLampBadge: LampBadgeRenderer = (lamp, _record) =
  * @param lamp - FAILED以外のハードランプ値。
  * @returns ハードランプのテキストバッジ。
  */
-const renderHardLampTextBadge = (lamp: keyof typeof HARD_LAMP_LABEL): JSX.Element => (
+const renderHardLampTextBadge = (lamp: Exclude<NonNullable<ClearLamp>, 'FAILED'>): JSX.Element => (
   <span
     class={`${HARD_LAMP_BADGE_CLASS} ${HARD_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${HARD_LAMP_BADGE_TEXT_CLASS[lamp]}`}
   >
-    {HARD_LAMP_LABEL[lamp]}
+    {getDefaultRecordHardLampLabel(lamp)}
   </span>
 )
 
@@ -151,13 +144,13 @@ export const renderDefaultRecordHardLampBadge = (lamp: ClearLamp): JSX.Element =
 export const renderDefaultRecordFullChainBadge = (
   fullChain: SharedRecordSource['full_chain']
 ): JSX.Element => {
-  const lampType = fullChain ? FULL_CHAIN_BADGE_VARIANT[fullChain] : undefined
+  const lampType = getDefaultRecordFullChainBadgeLamp(fullChain)
 
   if (!lampType) return <LampPlaceholderBadge class="w-[34px]" />
 
   return (
     <span class={`${FULL_CHAIN_BADGE_CLASS} ${getComboLampBadgeClass(lampType, undefined)}`}>
-      FCH
+      {getDefaultRecordFullChainLabel(fullChain)}
     </span>
   )
 }

@@ -19,7 +19,6 @@ import {
 } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
 import { createHistoryViewState } from '../../../hooks/createHistoryViewState'
-import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import {
   readStandardRecordColumnsSetting,
   readStandardRecordFilterSetting,
@@ -303,8 +302,6 @@ const UserRecord: Component<Props> = (props) => {
       sortConditions,
       setSortConditions,
     })
-
-  useDocumentTitle(() => `${props.username}さんのレコード`)
 
   /**
    * お気に入り楽曲の差分を解除、追加の順に保存する。

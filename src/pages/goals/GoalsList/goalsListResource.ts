@@ -7,7 +7,7 @@ import {
 } from '../../../api/goalGroups'
 import { createGoal, deleteGoal, fetchGoals, reorderGoals, updateGoal } from '../../../api/goals'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
-import { fetchMe, fetchUserProfileSummary } from '../../../api/users'
+import { fetchMe, fetchUserLockedSongs, fetchUserProfileSummary } from '../../../api/users'
 import type {
   GoalCreateRequest,
   GoalDTO,
@@ -20,6 +20,7 @@ import type {
 } from '../../../types/api'
 import { fetchAllSongsWithCache } from '../../../usecases/cache/fetchAllSongsWithCache'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
+import type { OverPowerLockedSong } from '../../../usecases/overpower/types'
 import { buildGoalCopyRequest } from './goalCopy'
 
 export interface GoalsListData {
@@ -31,10 +32,12 @@ export interface GoalsListData {
   masterData: MasterDataDTO
   versions: VersionDTO[]
   records: PlayerRecordDTO[]
+  /** OVER POWER目標の集計から除外する未解禁楽曲設定 */
+  lockedSongs: OverPowerLockedSong[]
 }
 
 /**
- * 目標一覧画面で必要なログインユーザー・目標・マスタ・レコードをまとめて取得する。
+ * 目標一覧画面で必要なログインユーザー・目標・マスタ・レコード・未解禁曲設定をまとめて取得する。
  *
  * @param onUnauthorized - 認証切れを検出したときの遷移処理。
  * @returns 目標一覧画面で参照するデータ一式。
@@ -47,16 +50,25 @@ export const fetchGoalsListData = async (onUnauthorized: () => void): Promise<Go
     throw error
   })
 
-  const [goalsResponse, groupsResponse, songsResponse, masterData, versionData, profile, record] =
-    await Promise.all([
-      fetchGoals(),
-      fetchGoalGroups(),
-      fetchAllSongsWithCache(),
-      fetchMasterData(),
-      fetchVersions(),
-      fetchUserProfileSummary(me.username),
-      fetchUserRecordWithCache(me.username),
-    ])
+  const [
+    goalsResponse,
+    groupsResponse,
+    songsResponse,
+    masterData,
+    versionData,
+    profile,
+    record,
+    lockedSongsResponse,
+  ] = await Promise.all([
+    fetchGoals(),
+    fetchGoalGroups(),
+    fetchAllSongsWithCache(),
+    fetchMasterData(),
+    fetchVersions(),
+    fetchUserProfileSummary(me.username),
+    fetchUserRecordWithCache(me.username),
+    fetchUserLockedSongs(me.username),
+  ])
 
   return {
     username: me.username,
@@ -67,6 +79,7 @@ export const fetchGoalsListData = async (onUnauthorized: () => void): Promise<Go
     masterData,
     versions: versionData.versions ?? [],
     records: profile.player ? record.standard : [],
+    lockedSongs: lockedSongsResponse.items,
   }
 }
 

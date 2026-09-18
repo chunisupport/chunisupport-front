@@ -39,6 +39,12 @@ export const SCORE_MIN = 0
 /** CHUNITHM の理論値スコア */
 export const SCORE_THEORETICAL_MAX = 1010000
 
+/** レコードフィルターで許可する単曲レートの最小値 */
+export const SINGLE_RATING_MIN = 0
+
+/** 現在の譜面定数上限から算出した単曲レートの理論上限 */
+export const SINGLE_RATING_MAX = CHART_CONST_MAX + 2.15
+
 /** レコードフィルターで許可する JUSTICE 数の最小値 */
 export const JUSTICE_COUNT_MIN = 0
 

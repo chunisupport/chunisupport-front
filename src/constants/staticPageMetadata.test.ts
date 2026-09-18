@@ -1,0 +1,39 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import { SONGS_PATH, WORLDSEND_SONGS_PATH } from './routes'
+import { STATIC_PAGE_METADATA } from './staticPageMetadata'
+import { isPublicToolLink, TOOL_LINKS } from './tools'
+
+test('固定ページのパスが重複せず、タイトルと説明が空ではないこと', () => {
+  // Given
+  const paths = STATIC_PAGE_METADATA.map((page) => page.path)
+
+  // When
+  const uniquePaths = new Set(paths)
+
+  // Then
+  assert.equal(uniquePaths.size, paths.length)
+  for (const page of STATIC_PAGE_METADATA) {
+    assert.ok(page.title.length > 0)
+    assert.ok(page.description.length > 0)
+  }
+})
+
+test('公開ツールを固定ページ生成対象に含めること', () => {
+  // Given
+  const generatedPaths = new Set(STATIC_PAGE_METADATA.map((page) => page.path))
+
+  // When & Then
+  for (const tool of TOOL_LINKS) {
+    assert.equal(generatedPaths.has(tool.href), isPublicToolLink(tool))
+  }
+})
+
+test('楽曲一覧の固定ページを生成対象に含めること', () => {
+  // Given
+  const generatedPaths = new Set(STATIC_PAGE_METADATA.map((page) => page.path))
+
+  // When & Then
+  assert.equal(generatedPaths.has(SONGS_PATH), true)
+  assert.equal(generatedPaths.has(WORLDSEND_SONGS_PATH), true)
+})

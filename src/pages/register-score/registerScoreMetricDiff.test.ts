@@ -5,7 +5,6 @@ import {
   formatRegisterScoreOverPowerDelta,
   formatRegisterScoreOverPowerPercentDelta,
   formatRegisterScoreRatingDelta,
-  getRegisterScoreMetricDeltaClass,
 } from './registerScoreMetricDiff'
 
 test('レート差分は小数点以下4桁と符号を表示する', () => {
@@ -73,20 +72,3 @@ test('表示桁未満の差分は表示しない', () => {
   // Then
   assert.equal(result, null)
 })
-
-const metricDeltaClassCases = [
-  { delta: 0.01, expected: 'text-info' },
-  { delta: -0.01, expected: 'text-danger' },
-  { delta: 0, expected: 'text-text' },
-  { delta: null, expected: 'text-text' },
-] as const
-
-for (const { delta, expected } of metricDeltaClassCases) {
-  test(`メトリクス差分 ${delta} に対応するデザイントークンを返す`, () => {
-    // Given / When
-    const result = getRegisterScoreMetricDeltaClass(delta)
-
-    // Then
-    assert.equal(result, expected)
-  })
-}

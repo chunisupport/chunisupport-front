@@ -7,7 +7,14 @@ import { EDITOR_SONGS_TITLE } from './constants'
  * @returns 共通の楽曲管理UIを利用した楽曲編集画面。
  */
 const EditorSongsPage = () => {
-  return <SongManagementPage title={EDITOR_SONGS_TITLE} canCreate={false} canDelete={false} />
+  return (
+    <SongManagementPage
+      title={EDITOR_SONGS_TITLE}
+      canCreate={false}
+      canDelete={false}
+      showAdvancedFilters={false}
+    />
+  )
 }
 
 export default EditorSongsPage

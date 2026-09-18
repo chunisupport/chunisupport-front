@@ -30,7 +30,8 @@ import {
 } from '../../../components/common/AppTabs'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
-import { buildSongDetailPath } from '../../../constants/routes'
+import { buildSongDetailPath, DASHBOARD_PATH } from '../../../constants/routes'
+import { getToolLink } from '../../../constants/tools'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../../types/api'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
@@ -732,7 +733,8 @@ const PlayerStatsDashboardPage: Component = () => {
     )
   })
 
-  useDocumentTitle(PLAYER_STATS_COPY.documentTitle)
+  const tool = getToolLink(DASHBOARD_PATH)
+  useDocumentTitle(tool.title)
 
   return (
     <ErrorBoundary
@@ -752,10 +754,8 @@ const PlayerStatsDashboardPage: Component = () => {
                     <ChartNoAxesCombined class="h-5 w-5 text-action-primary" aria-hidden={true} />
                   </span>
                   <div>
-                    <h1 class="text-2xl font-semibold text-text">{PLAYER_STATS_COPY.pageTitle}</h1>
-                    <p class="mt-1 font-sans text-sm text-text-muted">
-                      {PLAYER_STATS_COPY.description}
-                    </p>
+                    <h1 class="text-2xl font-semibold text-text">{tool.title}</h1>
+                    <p class="mt-1 font-sans text-sm text-text-muted">{tool.description}</p>
                   </div>
                 </div>
                 <AppIconButton

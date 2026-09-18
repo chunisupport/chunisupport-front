@@ -6,6 +6,8 @@ import { AppButton, AppIconButton } from '../../../components/common/AppButton'
 import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
 import { GenreMultiSelect, VersionMultiSelect } from '../../../components/common/DomainMultiSelect'
 import FilterResetDialog from '../../../components/common/FilterResetDialog'
+import FilterResetHoldIndicator from '../../../components/common/filterReset/FilterResetHoldIndicator'
+import { useFilterResetLongPress } from '../../../components/common/filterReset/useFilterResetLongPress'
 import { RangeControlRow, TextRangeInput } from '../../../components/common/RangeInput'
 import type { VersionSummaryDTO } from '../../../types/api'
 import { getShortVersionName } from '../../../utils/versionConverter'
@@ -18,6 +20,8 @@ import {
 } from '../songFilters'
 
 type Props = {
+  /** ダイアログと操作要素のID接頭辞 */
+  idPrefix: string
   filters: SongFilters
   onChange: (filters: SongFilters) => void
   genres: string[]
@@ -32,6 +36,7 @@ type Props = {
 export default function SongFilterPanel(props: Props) {
   const [open, setOpen] = createSignal(false)
   const [draft, setDraft] = createSignal(props.filters)
+  let triggerButton: HTMLButtonElement | undefined
   /**
    * 開くたびに適用済み条件から編集を開始する。
    * @param nextOpen - 次の開閉状態。
@@ -52,6 +57,11 @@ export default function SongFilterPanel(props: Props) {
     Object.values(props.filters).some(
       (value) => value !== null && (Array.isArray(value) || value.length > 0)
     )
+  const filterResetLongPress = useFilterResetLongPress({
+    isDisabled: () => false,
+    onReset: () => props.onChange(createSongFilters()),
+    onClick: () => setOpen(true),
+  })
   /**
    * 指定された条件だけを更新する。
    * @param key - 更新対象のキー。
@@ -62,18 +72,44 @@ export default function SongFilterPanel(props: Props) {
     setDraft((current) => ({ ...current, [key]: value }))
   return (
     <Dialog open={open()} onOpenChange={handleOpenChange}>
-      <Dialog.Trigger
-        as={AppIconButton}
-        tone={active() ? 'primary' : 'surface'}
-        class="h-9.5 w-9.5 shrink-0 rounded-l-none rounded-r"
-        aria-label={active() ? LABELS.active : LABELS.title}
-        title={active() ? LABELS.active : LABELS.title}
-      >
-        <Funnel size={24} aria-hidden="true" />
-      </Dialog.Trigger>
+      <div class="-ml-px relative shrink-0">
+        <Show when={filterResetLongPress.hintVisible()}>
+          <FilterResetHoldIndicator
+            progress={filterResetLongPress.progress()}
+            ready={filterResetLongPress.ready()}
+            holdingLabel={LABELS.holdReset}
+          />
+        </Show>
+        <AppIconButton
+          ref={(element: HTMLButtonElement) => {
+            triggerButton = element
+          }}
+          tone={filterResetLongPress.hintVisible() ? 'danger' : active() ? 'primary' : 'surface'}
+          class="h-9.5 w-9.5 touch-none rounded-l-none rounded-r focus-visible:z-10"
+          onClick={filterResetLongPress.handleClick}
+          onPointerDown={filterResetLongPress.handlePointerDown}
+          onPointerUp={filterResetLongPress.handlePointerUp}
+          onPointerCancel={filterResetLongPress.stopPress}
+          aria-label={active() ? LABELS.active : LABELS.title}
+          aria-pressed={active()}
+          aria-haspopup="dialog"
+          aria-expanded={open()}
+          aria-controls={`${props.idPrefix}-filter-dialog`}
+          title={active() ? LABELS.active : LABELS.title}
+        >
+          <Funnel size={24} aria-hidden="true" />
+        </AppIconButton>
+      </div>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-5/6 max-h-11/12 w-[90vw] max-w-md flex-col rounded-lg bg-surface p-6 shadow-lg">
+        <Dialog.Content
+          id={`${props.idPrefix}-filter-dialog`}
+          class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-5/6 max-h-11/12 w-[90vw] max-w-md flex-col rounded-lg bg-surface p-6 shadow-lg"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            triggerButton?.focus()
+          }}
+        >
           <div class="mb-4 flex shrink-0 items-center justify-between gap-2">
             <Dialog.Title class="text-lg font-bold">{LABELS.title}</Dialog.Title>
             <FilterResetDialog

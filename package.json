@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "pnpm@11.9.0",
   "scripts": {
-    "build": "rsbuild build",
+    "build": "rsbuild build && node --import ./scripts/register-ts-extension-loader.mjs scripts/generate-static-page-html.mjs",
     "dev": "rsbuild dev --open",
     "start": "rsbuild dev --open",
     "preview": "rsbuild preview",

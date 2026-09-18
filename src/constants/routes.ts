@@ -11,22 +11,32 @@ export const LATEST_SCORE_UPDATE_PATH = '/latest-score-update'
 export const TOOLS_PATH = '/tools'
 /** フレンド画面のパス */
 export const FRIENDS_PATH = '/friends'
+/** 通常楽曲一覧画面のパス */
+export const SONGS_PATH = '/songs'
+/** WORLD'S END楽曲一覧画面のパス */
+export const WORLDSEND_SONGS_PATH = `${SONGS_PATH}/worldsend`
 export const CHART_CONSTANT_CALCULATOR_PATH = `${TOOLS_PATH}/chart-constant-calculator`
 export const BORDER_CALCULATOR_PATH = `${TOOLS_PATH}/border-calculator`
 export const WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector`
 /** レート帯別平均スコアと比較する苦手譜面インスペクター */
 export const ONLINE_WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector-online`
 export const RANDOM_SONG_SELECTOR_PATH = `${TOOLS_PATH}/random-song-selector`
+/** 未解禁曲ディスカバー画面のパス */
+export const LOCKED_SONG_DISCOVERY_PATH = `${TOOLS_PATH}/locked-song-discovery`
 /** ベスト枠・新曲枠理論値チェッカー画面のパス */
 export const RATING_THEORETICAL_CHECKER_PATH = `${TOOLS_PATH}/rating-theoretical-checker`
 /** ベスト枠ランキング画面のパス */
 export const BEST_SLOT_RANKING_PATH = `${TOOLS_PATH}/best-slot-ranking`
+/** 全曲ベスト枠画面のパス */
+export const ALL_SONG_BEST_FRAME_PATH = `${TOOLS_PATH}/all-song-best-frame`
 /** ダッシュボード画面のパス */
 export const DASHBOARD_PATH = `${TOOLS_PATH}/dashboard`
 /** EDITOR向け編集メニューのパス */
 export const EDITOR_PATH = '/editor'
 /** EDITOR向け楽曲編集画面のパス */
 export const EDITOR_SONGS_PATH = `${EDITOR_PATH}/songs`
+/** EDITOR向けコース編集画面のパス */
+export const EDITOR_COURSES_PATH = `${EDITOR_PATH}/courses`
 /** ADMIN向け管理メニューのパス */
 export const ADMIN_PATH = '/admin'
 /** スタッフ向けデータ充足状況画面のパス */
@@ -39,6 +49,12 @@ export const ADMIN_WORLDSEND_CHART_RANKING_PATH = `${ADMIN_PATH}/chart-rankings/
 export const ADMIN_MAINTENANCE_PATH = `${ADMIN_PATH}/maintenance`
 /** ADMIN向けバージョン管理画面のパス */
 export const ADMIN_VERSIONS_PATH = `${ADMIN_PATH}/versions`
+/** ADMIN向けコース管理画面のパス */
+export const ADMIN_COURSES_PATH = `${ADMIN_PATH}/courses`
+/** ADMIN向けレーティング画像DOM確認画面のパス */
+export const ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH = `${ADMIN_PATH}/rating-image-dom`
+/** ポゼッション別プロフィールカード確認画面のパス。管理メニューには出さない */
+export const ADMIN_NAMEPLATE_PREVIEW_PATH = `${ADMIN_PATH}/nameplate-preview`
 
 /** 楽曲詳細から譜面詳細へ遷移したことを表すルーター state */
 export const CHART_DETAIL_FROM_SONG_DETAIL_STATE = {
@@ -53,7 +69,7 @@ export const CHART_DETAIL_FROM_SONG_DETAIL_STATE = {
  * @returns 通常楽曲詳細画面パス。
  */
 export const buildSongDetailPath = (displayId: string, difficulty?: string): string => {
-  const path = `/songs/${encodeURIComponent(displayId)}`
+  const path = `${SONGS_PATH}/${encodeURIComponent(displayId)}`
   if (!difficulty) return path
 
   return `${path}?${new URLSearchParams({ diff: difficulty.toLowerCase() }).toString()}`
@@ -66,7 +82,7 @@ export const buildSongDetailPath = (displayId: string, difficulty?: string): str
  * @returns WORLD'S END 楽曲詳細画面パス。
  */
 export const buildWorldsendSongDetailPath = (displayId: string): string =>
-  `/songs/worldsend/${encodeURIComponent(displayId)}`
+  `${WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}`
 
 /**
  * 楽曲詳細から譜面詳細へ遷移した state か判定する。
@@ -90,7 +106,7 @@ export const isChartDetailFromSongDetailState = (
  * @returns 難易度クエリを含む譜面詳細画面パス。
  */
 export const buildSongChartDetailPath = (displayId: string, difficulty: string): string =>
-  `/songs/${encodeURIComponent(displayId)}/chart-detail?${new URLSearchParams({
+  `${SONGS_PATH}/${encodeURIComponent(displayId)}/chart-detail?${new URLSearchParams({
     diff: difficulty.toLowerCase(),
   }).toString()}`
 
@@ -101,7 +117,7 @@ export const buildSongChartDetailPath = (displayId: string, difficulty: string):
  * @returns WORLD'S END 譜面詳細画面パス。
  */
 export const buildWorldsendChartDetailPath = (displayId: string): string =>
-  `/songs/worldsend/${encodeURIComponent(displayId)}/chart-detail`
+  `${WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}/chart-detail`
 
 /**
  * ADMIN向け通常譜面ランキング画面のパスを生成する。

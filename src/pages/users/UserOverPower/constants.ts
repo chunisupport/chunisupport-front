@@ -41,8 +41,42 @@ export const OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES = 5
 /** 未解禁曲を集計対象から除外する操作の表示名 */
 export const OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL = '未解禁曲除外'
 
+/** 未解禁楽曲設定ダイアログのプレイ状況フィルター */
+export type LockedSongsPlayStatus = 'played' | 'unplayed'
+
+/** 未解禁楽曲設定ダイアログのプレイ状況フィルター選択肢 */
+export const LOCKED_SONG_PLAY_STATUS_OPTIONS = [
+  { value: 'unplayed', label: '未プレイ' },
+  { value: 'played', label: 'プレイ済み' },
+] as const
+
+/** 未解禁楽曲設定ダイアログのプレイ状況フィルター表示文言 */
+export const LOCKED_SONG_PLAY_STATUS_FILTER_COPY = {
+  label: 'プレイ状況',
+  suffix: 'のみ表示',
+  ariaLabel: 'プレイ状況フィルターを有効にする',
+} as const
+
 /** 通常レコードへのフィルター付き遷移に失敗したときの表示文言 */
 export const OVER_POWER_RECORD_NAVIGATION_ERROR_MESSAGE = 'レコードの表示に失敗しました。'
+
+/** 未解禁楽曲設定ダイアログで公式値と計算値を見比べる表示の文言 */
+export const LOCKED_SONGS_OP_COMPARISON_COPY = {
+  official: '公式値',
+  calculated: '計算値',
+  kind: '種別',
+  overPower: 'OP',
+  overPowerPercent: 'OP%',
+  matched: '一致',
+  mismatched: '差異あり',
+  missingValue: '-',
+  guidance: {
+    overPowerHigher: 'プレイ済みの未解禁楽曲があります',
+    overPowerLower: 'プレイ済み・解禁済みの楽曲を未解禁に指定しています',
+    overPowerPercentHigher: '解禁済み楽曲を未解禁設定しています',
+    overPowerPercentLower: '未設定の未解禁曲があります',
+  },
+} as const
 
 /** OVER POWER画面の操作ラベル */
 export const OVER_POWER_CONTROL_LABELS = {

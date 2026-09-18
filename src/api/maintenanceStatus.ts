@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config'
 import type { SystemStatusDTO } from '../types/api'
 import { parseSystemStatusDTO } from '../utils/systemStatus'
+import { fetchApi } from './fetchApi'
 
 const SYSTEM_STATUS_API_PATH = `${API_BASE_URL}/internal/system/status`
 const SYSTEM_STATUS_FETCH_ERROR_MESSAGE = 'システム状態の取得に失敗しました'
@@ -13,7 +14,7 @@ const SYSTEM_STATUS_FETCH_ERROR_MESSAGE = 'システム状態の取得に失敗�
  * @throws APIへ接続できない、またはレスポンス形式が不正な場合。
  */
 export const fetchSystemStatus = async (signal?: AbortSignal): Promise<SystemStatusDTO> => {
-  const response = await fetch(SYSTEM_STATUS_API_PATH, {
+  const response = await fetchApi(SYSTEM_STATUS_API_PATH, {
     cache: 'no-store',
     headers: { Accept: 'application/json' },
     signal,

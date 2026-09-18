@@ -15,7 +15,7 @@ export type GoalTargetParam<TAbsoluteKey extends 'count' | 'total' = 'count' | '
   | { percent: number }
   | Record<string, never>
 
-type GoalTargetParamKey = 'score' | 'count' | 'total' | 'remaining' | 'percent'
+type GoalTargetParamKey = 'score' | 'rating' | 'count' | 'total' | 'remaining' | 'percent'
 type GoalTargetParamValue = Partial<Record<GoalTargetParamKey, unknown>>
 
 interface ResolveGoalDynamicTargetOptions {

@@ -4,13 +4,14 @@ import { fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
 import { LoadError } from '../../../components'
 import { showErrorToast } from '../../../components/common/AppToast'
 import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
+import { joinDocumentTitleParts } from '../../../constants/site'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
 import type { PlayerRecordDTO, SongDTO } from '../../../types/api'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserStandardSongRecordWithCache } from '../../../usecases/cache/fetchUserSongRecordWithCache'
-import { isNotFoundApiError } from '../../../utils/apiError'
+import { isNotFoundOrInvalidDisplayIdApiError } from '../../../utils/apiError'
 import { normalizeDifficultyQueryValue } from '../../../utils/difficultyUtils'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import NotFoundPage from '../../NotFoundPage'
@@ -45,7 +46,7 @@ const fetchSongDetailLoadState = async (displayId: string): Promise<SongDetailLo
   try {
     return { type: 'loaded', song: await fetchSongByDisplayId(displayId) }
   } catch (error) {
-    if (isNotFoundApiError(error)) {
+    if (isNotFoundOrInvalidDisplayIdApiError(error)) {
       return { type: 'notFound' }
     }
 
@@ -181,7 +182,7 @@ const SongDetail = () => {
     }
   }
 
-  useDocumentTitle(() => `${song()?.title ?? '楽曲'} - 楽曲詳細`)
+  useDocumentTitle(() => joinDocumentTitleParts(song()?.title ?? '楽曲', '楽曲詳細'))
 
   return (
     <Show when={songState()?.type !== 'notFound'} fallback={<NotFoundPage />}>

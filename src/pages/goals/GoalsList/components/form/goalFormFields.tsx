@@ -215,7 +215,7 @@ export const GoalTargetModeRadioGroup = <TValue extends string>(
                 </RadioGroup.ItemControl>
                 <span class="pointer-events-none">{option.label}</span>
               </div>
-              <RadioGroup.ItemLabel class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring">
+              <RadioGroup.ItemLabel class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-inset peer-focus-visible:ring-focus-ring">
                 <span class="sr-only">{option.label}</span>
               </RadioGroup.ItemLabel>
             </RadioGroup.Item>

@@ -1,21 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { loadTestModule } from '../test/setupTestEnvironment'
 
 /**
  * テスト用のFirebase環境変数を設定して、認証付き fetch モジュールを遅延読み込みする。
- *
  * @returns 認証付き fetch モジュール。
  */
-const loadFetchWithAuthModule = async () => {
-  process.env.PUBLIC_FB_API_KEY = 'test-api-key'
-  process.env.PUBLIC_FB_AUTH_DOMAIN = 'test.firebaseapp.com'
-  process.env.PUBLIC_FB_PROJECT_ID = 'test-project'
-  process.env.PUBLIC_FB_STORAGE_BUCKET = 'test.appspot.com'
-  process.env.PUBLIC_FB_MESSAGING_SENDER_ID = '123456789'
-  process.env.PUBLIC_FB_APP_ID = 'test-app-id'
-
-  return import('./fetchWithAuth.ts')
-}
+const loadFetchWithAuthModule = () => loadTestModule(() => import('./fetchWithAuth.ts'))
 
 test('recent_sign_in_required は抑止対象ならセッションクリアしない', async () => {
   const { shouldClearSessionOnUnauthorized } = await loadFetchWithAuthModule()

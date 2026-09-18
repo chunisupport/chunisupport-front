@@ -63,6 +63,21 @@ test('isRecordFilterOptionsChanged はタイトル検索以外の変更を検出
   assert.equal(result, true)
 })
 
+test('isRecordFilterOptionsChanged は単曲レート範囲の変更を検出すること', () => {
+  // Given
+  const defaultFilter = { ...DEFAULT_FILTER }
+  const currentFilter = {
+    ...DEFAULT_FILTER,
+    rating: { min: 17.45, max: null },
+  }
+
+  // When
+  const result = isRecordFilterOptionsChanged(currentFilter, defaultFilter)
+
+  // Then
+  assert.equal(result, true)
+})
+
 test('isRecordFilterOptionsChanged は未解禁曲除外の変更を検出すること', () => {
   // Given
   const defaultFilter = { ...DEFAULT_FILTER }

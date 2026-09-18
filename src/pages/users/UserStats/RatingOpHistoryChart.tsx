@@ -15,13 +15,16 @@ import type { PlayerMetricHistoryEntryDTO } from '../../../types/api'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../../utils/chartTheme'
 import { formatFixed } from '../../../utils/numberFormat'
 import {
+  buildPlayerMetricHistoryAxisRange,
   buildPlayerMetricHistoryChartPoints,
   formatPlayerMetricHistoryAxisTimestamp,
   formatPlayerMetricHistoryTooltipTimestamp,
   hasPlayerMetricHistoryValues,
+  type PlayerMetricHistoryAxisRange,
   type PlayerMetricHistoryChartPoint,
 } from '../../../utils/playerMetricHistory'
 import {
+  PLAYER_METRIC_HISTORY_AXIS_PADDING_RATIO,
   PLAYER_METRIC_HISTORY_BORDER_WIDTH,
   PLAYER_METRIC_HISTORY_CHART_DEFINITIONS,
   PLAYER_METRIC_HISTORY_CHART_HEIGHT_CLASS,
@@ -62,10 +65,12 @@ const resolveChartFontFamily = (): string =>
  * 公式指標履歴の折れ線グラフ設定を生成する。
  *
  * @param definition - 表示対象指標の定義。
- * @returns テーマ色、指標ごとの小数桁・単位・縦軸上限を反映したChart.js設定。
+ * @param axisRange - データが中央付近に来るよう算出した縦軸範囲。
+ * @returns テーマ色、指標ごとの小数桁・単位・縦軸範囲を反映したChart.js設定。
  */
 const createMetricChartOptions = (
-  definition: PlayerMetricHistoryChartDefinition
+  definition: PlayerMetricHistoryChartDefinition,
+  axisRange: PlayerMetricHistoryAxisRange | undefined
 ): ChartOptions<'line'> => {
   const textColor = resolveChartColor(
     PLAYER_METRIC_HISTORY_TEXT_COLOR_VARIABLE,
@@ -125,7 +130,7 @@ const createMetricChartOptions = (
         },
       },
       y: {
-        ...(definition.yMax === undefined ? {} : { max: definition.yMax }),
+        ...(axisRange === undefined ? {} : { min: axisRange.min, max: axisRange.max }),
         ticks: {
           color: textColor,
           font: { family: fontFamily },
@@ -163,6 +168,15 @@ const MetricHistoryLineChart: Component<MetricChartProps> = (props) => {
 
     const definition = props.definition
     const points = buildPlayerMetricHistoryChartPoints(props.entries, definition.metric)
+    const axisRange = buildPlayerMetricHistoryAxisRange(
+      points.map((point) => point.y),
+      {
+        floor: definition.axisFloor,
+        ceiling: definition.axisCeiling,
+        minPadding: definition.axisMinPadding,
+        paddingRatio: PLAYER_METRIC_HISTORY_AXIS_PADDING_RATIO,
+      }
+    )
     const color = resolveChartColor(definition.colorVariable, CHART_COLOR_FALLBACK)
     const chartData: ChartData<'line', PlayerMetricHistoryChartPoint[], number> = {
       datasets: [
@@ -189,13 +203,13 @@ const MetricHistoryLineChart: Component<MetricChartProps> = (props) => {
       chart = new Chart(canvasRef, {
         type: 'line',
         data: chartData,
-        options: createMetricChartOptions(definition),
+        options: createMetricChartOptions(definition, axisRange),
       })
       return
     }
 
     chart.data = chartData
-    chart.options = createMetricChartOptions(definition)
+    chart.options = createMetricChartOptions(definition, axisRange)
     chart.update('none')
   })
 

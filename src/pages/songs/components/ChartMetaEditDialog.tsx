@@ -1,7 +1,7 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import type { Component } from 'solid-js'
-import { createEffect, createSignal, Index, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, Index, Show } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
@@ -20,6 +20,7 @@ import {
   normalizeNonNegativeIntegerInput,
   parseChartMetaDrafts,
 } from '../utils/songMetaEdit'
+import SongEditSaveButton from './SongEditSaveButton'
 
 type Props = {
   open: boolean
@@ -53,12 +54,27 @@ const patchChartDraft = (
  */
 const ChartMetaEditDialog: Component<Props> = (props) => {
   const [drafts, setDrafts] = createSignal<ChartMetaEditDraft[]>([])
+  const [initialDrafts, setInitialDrafts] = createSignal<ChartMetaEditDraft[]>([])
   const [validationMessage, setValidationMessage] = createSignal('')
   const errorMessage = () => validationMessage() || props.apiErrorMessage
+  const changed = createMemo(() =>
+    drafts().some((draft, index) => {
+      const initial = initialDrafts()[index]
+      return (
+        initial &&
+        (draft.const !== initial.const ||
+          draft.is_const_unknown !== initial.is_const_unknown ||
+          draft.notes !== initial.notes ||
+          draft.notes_designer !== initial.notes_designer)
+      )
+    })
+  )
 
   createEffect(() => {
     if (!props.open) return
-    setDrafts(buildChartDraftsFromSong(props.song))
+    const nextDrafts = buildChartDraftsFromSong(props.song)
+    setInitialDrafts(nextDrafts)
+    setDrafts(nextDrafts)
     setValidationMessage('')
   })
 
@@ -70,6 +86,7 @@ const ChartMetaEditDialog: Component<Props> = (props) => {
    */
   const handleSubmit = (event: SubmitEvent): void => {
     event.preventDefault()
+    if (!changed() || props.saving) return
     const parsed = parseChartMetaDrafts(drafts())
     if (!parsed.ok) {
       setValidationMessage(parsed.message)
@@ -181,9 +198,7 @@ const ChartMetaEditDialog: Component<Props> = (props) => {
               <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
                 {SONG_EDIT_COPY.cancelButton}
               </AppButton>
-              <AppButton type="submit" variant="primary" disabled={props.saving}>
-                {props.saving ? SONG_EDIT_COPY.savingButton : SONG_EDIT_COPY.saveButton}
-              </AppButton>
+              <SongEditSaveButton changed={changed()} saving={props.saving} />
             </div>
           </form>
         </Dialog.Content>

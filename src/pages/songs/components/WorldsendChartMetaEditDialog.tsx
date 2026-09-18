@@ -1,7 +1,7 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import type { Component } from 'solid-js'
-import { createEffect, createSignal, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, Show } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
 import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
 import type { UpdateWorldsendChartRequestDTO, WorldsendSongDTO } from '../../../types/api'
@@ -16,6 +16,7 @@ import {
   normalizeNonNegativeIntegerInput,
   parseWorldsendChartMetaEditValues,
 } from '../utils/songMetaEdit'
+import SongEditSaveButton from './SongEditSaveButton'
 
 type Props = {
   open: boolean
@@ -37,16 +38,36 @@ const WorldsendChartMetaEditDialog: Component<Props> = (props) => {
   const [levelStar, setLevelStar] = createSignal('')
   const [notes, setNotes] = createSignal('')
   const [notesDesigner, setNotesDesigner] = createSignal('')
+  const [initialValues, setInitialValues] = createSignal({
+    attribute: '',
+    levelStar: '',
+    notes: '',
+    notesDesigner: '',
+  })
   const [validationMessage, setValidationMessage] = createSignal('')
   const errorMessage = () => validationMessage() || props.apiErrorMessage
+  const changed = createMemo(
+    () =>
+      attribute() !== initialValues().attribute ||
+      levelStar() !== initialValues().levelStar ||
+      notes() !== initialValues().notes ||
+      notesDesigner() !== initialValues().notesDesigner
+  )
 
   createEffect(() => {
     if (!props.open) return
     const chart = props.song.charts.WORLDSEND
-    setAttribute(chart?.attribute ?? '')
-    setLevelStar(toInputValue(chart?.level_star))
-    setNotes(toInputValue(chart?.notes))
-    setNotesDesigner(chart?.notes_designer ?? '')
+    const values = {
+      attribute: chart?.attribute ?? '',
+      levelStar: toInputValue(chart?.level_star),
+      notes: toInputValue(chart?.notes),
+      notesDesigner: chart?.notes_designer ?? '',
+    }
+    setInitialValues(values)
+    setAttribute(values.attribute)
+    setLevelStar(values.levelStar)
+    setNotes(values.notes)
+    setNotesDesigner(values.notesDesigner)
     setValidationMessage('')
   })
 
@@ -58,6 +79,7 @@ const WorldsendChartMetaEditDialog: Component<Props> = (props) => {
    */
   const handleSubmit = (event: SubmitEvent): void => {
     event.preventDefault()
+    if (!changed() || props.saving) return
     const parsed = parseWorldsendChartMetaEditValues({
       attribute: attribute(),
       levelStar: levelStar(),
@@ -155,9 +177,7 @@ const WorldsendChartMetaEditDialog: Component<Props> = (props) => {
               <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
                 {SONG_EDIT_COPY.cancelButton}
               </AppButton>
-              <AppButton type="submit" variant="primary" disabled={props.saving}>
-                {props.saving ? SONG_EDIT_COPY.savingButton : SONG_EDIT_COPY.saveButton}
-              </AppButton>
+              <SongEditSaveButton changed={changed()} saving={props.saving} />
             </div>
           </form>
         </Dialog.Content>

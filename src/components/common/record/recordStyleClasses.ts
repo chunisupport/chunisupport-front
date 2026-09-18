@@ -4,6 +4,7 @@ import { MAX_SCORE, type ScoreRank } from '../../../utils/scoreRank'
 type SharedRecordSource = PlayerRecordDTO | WorldsendRecordDTO
 export type SharedComboLamp = SharedRecordSource['combo_lamp']
 export type SharedClearLamp = SharedRecordSource['clear_lamp']
+export type SharedFullChain = SharedRecordSource['full_chain']
 export type FilterStatsRank =
   | 'MAX'
   | Extract<ScoreRank, 'SSS+' | 'SSS' | 'SS+' | 'SS' | 'S+' | 'S'>

@@ -4,6 +4,7 @@ import type { Component } from 'solid-js'
 import { For } from 'solid-js'
 import { AppDisclosureTrigger } from '../../../components/common/AppDisclosureTrigger'
 import { AppTabContent, SegmentedTabs } from '../../../components/common/AppTabs'
+import { DistributionBar } from '../../../components/common/record/DistributionBar'
 import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
 import type { DistributionMap, RecordStats } from '../utils/recordStats'
 import {
@@ -91,41 +92,6 @@ const getVisibleDistributionKeys = (dist: DistributionMap, order: string[]) =>
 const getPercentWidth = (percent: number) => (percent > 0 ? `max(2px, ${percent}%)` : '0')
 
 /**
- * 分布の構成比を帯グラフで表示する。
- * @param props - 分布、表示順、色クラス、帯グラフ上で空き領域として扱う分布キー。
- * @returns 分布帯グラフコンポーネント。
- */
-const DistributionBar: Component<{
-  dist: DistributionMap
-  order: string[]
-  colorMap: Record<string, string>
-  emptyBarKeys?: readonly string[]
-}> = (props) => {
-  const visibleKeys = () => getVisibleDistributionKeys(props.dist, props.order)
-  return (
-    <div class="overflow-hidden rounded">
-      <div class="flex h-5 w-full overflow-visible bg-surface-hover">
-        <For each={visibleKeys()}>
-          {(key, index) => {
-            const z = () => visibleKeys().length - index()
-            return (
-              <div
-                class={`${props.emptyBarKeys?.includes(key) ? 'bg-transparent' : props.colorMap[key]} relative h-full shadow-[2px_0_3px_-1px_rgba(0,0,0,0.4)]`}
-                style={{
-                  width: `${props.dist[key].percent}%`,
-                  'z-index': z(),
-                }}
-                title={key}
-              ></div>
-            )
-          }}
-        </For>
-      </div>
-    </div>
-  )
-}
-
-/**
  * 分布の1行分を件数、割合、ミニバーで表示する。
  * @param props - 表示ラベル、分布値、色クラス、ミニバーの背景を透明化する指定。
  * @returns 分布行コンポーネント。
@@ -168,10 +134,14 @@ const DistributionSection: Component<DistributionSectionConfig> = (props) => (
     </div>
     <div class="space-y-3 p-3">
       <DistributionBar
-        dist={props.dist}
-        order={props.order}
-        colorMap={props.colorMap}
-        emptyBarKeys={props.emptyBarKeys}
+        class="rounded"
+        segments={getVisibleDistributionKeys(props.dist, props.order).map((key) => ({
+          key,
+          percent: props.dist[key].percent,
+          colorClass: props.colorMap[key],
+          title: key,
+          transparent: props.emptyBarKeys?.includes(key),
+        }))}
       />
       <ul class="divide-y divide-border">
         <For each={getVisibleDistributionKeys(props.dist, props.order)}>

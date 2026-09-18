@@ -18,3 +18,15 @@ export const LABEL_INVERT_VALUE = '達成までの残数を表示'
  * 進捗プレビューで達成率ではなく達成までの残り割合を表示するチェックボックスのラベル。
  */
 export const LABEL_INVERT_PERCENTAGE = '達成までの残り割合を表示'
+
+/** 単曲レート目標の初期入力値 */
+export const DEFAULT_RATING_GOAL_VALUE = '18'
+
+/** 単曲レート目標の入力欄ラベル */
+export const RATING_GOAL_FIELD_LABEL = '単曲レート'
+
+/** 単曲レート目標で許可する最小値 */
+export const RATING_GOAL_MIN_VALUE = 0.01
+
+/** 単曲レート目標で許可する小数点以下桁数 */
+export const RATING_GOAL_DECIMAL_PLACES = 2

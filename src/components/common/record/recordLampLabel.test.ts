@@ -3,6 +3,9 @@ import test from 'node:test'
 
 import { MAX_SCORE } from '../../../utils/scoreRank.ts'
 import {
+  getDefaultRecordFullChainBadgeLamp,
+  getDefaultRecordFullChainLabel,
+  getDefaultRecordHardLampLabel,
   getDefaultRecordLampAccessibleLabel,
   getDefaultRecordLampLabel,
 } from './recordLampLabel.ts'
@@ -62,4 +65,53 @@ test('未設定のコンボランプは読み上げ時になしと伝える', ()
 
   // Then: 未設定状態を明示する
   assert.equal(result, 'なし')
+})
+
+test('ハードランプバッジはCLEARをCLRとして表示する', () => {
+  // Given: CLEARのハードランプ
+  const lamp = 'CLEAR'
+
+  // When: 表示ラベルを取得する
+  const result = getDefaultRecordHardLampLabel(lamp)
+
+  // Then: CLRの短縮ラベルを返す
+  assert.equal(result, 'CLR')
+})
+
+test('ハードランプバッジはFAILEDと未設定を表示しない', () => {
+  // Given: FAILEDと未設定のハードランプ
+
+  // When: 表示ラベルを取得する
+  const failed = getDefaultRecordHardLampLabel('FAILED')
+  const unset = getDefaultRecordHardLampLabel(null)
+
+  // Then: 空文字を返す
+  assert.equal(failed, '')
+  assert.equal(unset, '')
+})
+
+test('FULL CHAINバッジはGOLDとPLATINUMをFCHとして表示する', () => {
+  // Given: GOLDとPLATINUMのFULL CHAIN
+
+  // When: 表示ラベルを取得する
+  const gold = getDefaultRecordFullChainLabel('FULL CHAIN GOLD')
+  const platinum = getDefaultRecordFullChainLabel('FULL CHAIN PLATINUM')
+
+  // Then: どちらもFCHの短縮ラベルを返す
+  assert.equal(gold, 'FCH')
+  assert.equal(platinum, 'FCH')
+})
+
+test('FULL CHAINバッジの色はGOLDがFC、PLATINUMがAJになる', () => {
+  // Given: GOLDとPLATINUMと未設定のFULL CHAIN
+
+  // When: 色分け用のコンボランプ種別を取得する
+  const gold = getDefaultRecordFullChainBadgeLamp('FULL CHAIN GOLD')
+  const platinum = getDefaultRecordFullChainBadgeLamp('FULL CHAIN PLATINUM')
+  const unset = getDefaultRecordFullChainBadgeLamp(null)
+
+  // Then: GOLDはFULL COMBO、PLATINUMはALL JUSTICE、未設定はnull
+  assert.equal(gold, 'FULL COMBO')
+  assert.equal(platinum, 'ALL JUSTICE')
+  assert.equal(unset, null)
 })

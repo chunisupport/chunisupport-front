@@ -1,11 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { ChartDTO, GoalDTO, MasterDataDTO, PlayerRecordDTO, SongDTO } from '../../../types/api'
-import {
-  calculateRainbowGoalProgress,
-  filterRainbowTargetSongs,
-  getRainbowRequiredDifficulties,
-} from './goalRainbow'
+import { getRainbowRequiredDifficulties } from '../../../utils/goalRainbowCharts'
+import { calculateRainbowGoalProgress, filterRainbowTargetSongs } from './goalRainbow'
 
 const CHART = { const: 1 } as ChartDTO
 const MASTER_DATA = {

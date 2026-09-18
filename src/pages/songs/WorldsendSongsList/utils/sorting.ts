@@ -6,6 +6,7 @@ import {
   type SortDirection,
 } from '../../../../utils/sortingQuery'
 
+/** WORLD'S END 楽曲一覧のソートキー */
 export type WorldsendSongSortKey =
   | 'title'
   | 'artist'
@@ -14,6 +15,7 @@ export type WorldsendSongSortKey =
   | 'bpm'
   | 'attribute'
   | 'level'
+  | 'notes'
 
 const jaCollator = new Intl.Collator('ja')
 
@@ -52,6 +54,14 @@ const releaseTimestamp = (release: string | null): number | null => {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/**
+ * WORLD'S END 楽曲一覧のソート状態を次の状態へ進める。
+ *
+ * @param currentSortKey - 現在のソートキー。
+ * @param currentSortDirection - 現在のソート方向。
+ * @param nextKey - 選択されたソートキー。
+ * @returns 次のソートキーと方向。同じキーを3回選ぶと解除される。
+ */
 export const nextSortState = (
   currentSortKey: WorldsendSongSortKey | null,
   currentSortDirection: SortDirection | null,
@@ -61,6 +71,15 @@ export const nextSortState = (
   sortDirection: SortDirection | null
 } => nextSharedSortState(currentSortKey, currentSortDirection, nextKey)
 
+/**
+ * WORLD'S END 楽曲を指定キーで安定ソートする。
+ *
+ * @param songs - ソート対象の楽曲。
+ * @param currentSortKey - ソートキー。未指定なら入力順のまま返す。
+ * @param currentSortDirection - 昇順または降順。未指定なら入力順のまま返す。
+ * @param genres - ジャンルマスタ。ジャンルソート時の並び順に使う。
+ * @returns ソート済みの楽曲配列。
+ */
 export const sortWorldsendSongs = (
   songs: WorldsendSongDTO[],
   currentSortKey: WorldsendSongSortKey | null,
@@ -120,6 +139,10 @@ export const sortWorldsendSongs = (
             rightChart?.level_star,
             direction
           )
+          if (comparison !== 0) return comparison
+          break
+        case 'notes':
+          comparison = compareNullableNumber(leftChart?.notes, rightChart?.notes, direction)
           if (comparison !== 0) return comparison
           break
       }

@@ -24,3 +24,4 @@ interface ImportMeta {
 
 declare const __FRONTEND_BUILD_DATE__: string
 declare const __FRONTEND_COMMIT_HASH__: string
+declare const __FRONTEND_BUILD_ID__: string

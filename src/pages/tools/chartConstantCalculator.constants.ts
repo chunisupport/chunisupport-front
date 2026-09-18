@@ -1,8 +1,7 @@
 import type { ChartConstantLamp } from '../../utils/chartConstantCalculator'
 
+/** 譜面定数計算機の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const CHART_CONSTANT_CALCULATOR_COPY = {
-  title: '譜面定数計算機',
-  description: 'OVER POWERから譜面定数を逆算します。',
   scoreLabel: 'スコア',
   overPowerChangeLabel: 'OVER POWER 増加幅',
   lampLabel: 'ランプ',

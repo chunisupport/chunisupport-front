@@ -3,9 +3,9 @@ import { ArrowUpDown, Columns3, Funnel } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import { AppIconButton } from '../../../components/common/AppButton'
+import FilterResetHoldIndicator from '../../../components/common/filterReset/FilterResetHoldIndicator'
+import { useFilterResetLongPress } from '../../../components/common/filterReset/useFilterResetLongPress'
 import { SearchTextField } from '../../../components/common/SearchTextField'
-import FilterResetHoldIndicator from './filterToolbar/FilterResetHoldIndicator'
-import { useFilterResetLongPress } from './filterToolbar/useFilterResetLongPress'
 
 type FilterButtonTone = 'default' | 'active' | 'difficulty-only' | 'danger'
 

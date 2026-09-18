@@ -7,14 +7,15 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../types/api'
-import { normalizeGoalAttributeIds } from './goalAttributes'
-import { buildGoalVersionNameMap } from './goalVersion'
+import { normalizeGoalAttributeIds } from '../../../utils/goalAttributes'
+import { buildGoalVersionNameMap } from '../../../utils/goalVersion'
 
 // ID(code) -> 表示名の辞書。将来は言語キーを増やすだけでi18n対応できる
 export const GOAL_ACHIEVEMENT_TYPE_LABELS = {
   ja: {
     rank_count: 'ランク達成数',
     score_count: 'スコア達成数',
+    rating_count: '単曲レート達成数',
     avg_score: '平均スコア',
     hardlamp_count: 'ハードランプ達成数',
     combolamp_count: 'FC/AJ達成数',

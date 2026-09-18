@@ -210,6 +210,7 @@ export const buildWorldsendSongMetaUpdateRequest = (
   bpm: values.bpm,
   released_at: values.releasedAt,
   jacket: song.jacket,
+  is_new: song.is_new,
 })
 
 /**
@@ -356,6 +357,7 @@ export const buildWorldsendChartMetaUpdateRequest = (
   bpm: song.bpm,
   released_at: toDateOnly(song.release),
   jacket: song.jacket,
+  is_new: song.is_new,
   charts: {
     WORLDSEND: chart,
   },

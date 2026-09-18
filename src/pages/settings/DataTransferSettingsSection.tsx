@@ -1,3 +1,4 @@
+import { Collapsible } from '@kobalte/core/collapsible'
 import { FileField, type Details as FileFieldDetails } from '@kobalte/core/file-field'
 import { Download, FileUp, X } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -9,6 +10,7 @@ import {
 } from '../../api/settings'
 import { Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
+import { AppDisclosureTrigger } from '../../components/common/AppDisclosureTrigger'
 import type { DataTransferCountsResponse } from '../../types/api'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
@@ -71,6 +73,7 @@ const downloadBlob = (blob: Blob, filename: string): void => {
 
 /**
  * ユーザーデータのエクスポート・検証・インポート操作を表示する。
+ * しばらく利用しないため、初期状態では折りたたんで隠す。
  *
  * @param props - インポート完了後の画面更新処理。
  * @returns データ移行設定セクション。
@@ -192,213 +195,219 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
   }
 
   return (
-    <section id="data-transfer" class="py-4">
-      <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 class="text-lg font-semibold text-text">{DATA_TRANSFER_COPY.title}</h2>
+    <section id="data-transfer" aria-label={DATA_TRANSFER_COPY.title} class="py-4">
+      <Collapsible defaultOpen={false}>
+        <AppDisclosureTrigger
+          variant="compact"
+          label={DATA_TRANSFER_COPY.title}
+          labelClass="text-lg"
+        />
+        <Collapsible.Content>
           <p class="mt-1 text-sm text-text-muted">{DATA_TRANSFER_COPY.description}</p>
-        </div>
-      </div>
 
-      <div class="mt-4 divide-y divide-border border-y border-border">
-        <article class="py-4">
-          <h3 class="font-semibold text-text">{DATA_TRANSFER_COPY.exportTitle}</h3>
-          <p class="mt-1 text-sm text-text-muted">{DATA_TRANSFER_COPY.exportDescription}</p>
-          <AppButton
-            variant="primary"
-            class="mt-4"
-            onClick={handleExport}
-            disabled={!props.hasUserData || exporting()}
-            aria-busy={exporting()}
-            leftIcon={
-              exporting() ? (
-                <Loading size="inline" ariaHidden />
-              ) : (
-                <Download aria-hidden="true" class="h-4 w-4" />
-              )
-            }
-          >
-            {exporting() ? DATA_TRANSFER_COPY.exportingButton : DATA_TRANSFER_COPY.exportButton}
-          </AppButton>
-          <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-            {exportError()}
-          </p>
-          <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
-            {exportSuccess()}
-          </p>
-        </article>
-
-        <article class="py-4">
-          <h3 class="font-semibold text-text">{DATA_TRANSFER_COPY.importTitle}</h3>
-          <p class="mt-1 text-sm text-text-muted">{DATA_TRANSFER_COPY.importDescription}</p>
-          <Show
-            when={isImportOpen()}
-            fallback={
-              <AppButton
-                class="mt-4"
-                onClick={() => setIsImportOpen(true)}
-                disabled={props.hasUserData}
-              >
-                {DATA_TRANSFER_COPY.startImportButton}
-              </AppButton>
-            }
-          >
-            <form
-              method="post"
-              class="mt-4"
-              onSubmit={(event) => {
-                event.preventDefault()
-                void handleValidate()
-              }}
-            >
-              <FileField
-                accept={[...DATA_TRANSFER_ACCEPT]}
-                maxFileSize={DATA_TRANSFER_MAX_FILE_SIZE_BYTES}
-                disabled={props.hasUserData || validating() || importing()}
-                validationState={fileError() ? 'invalid' : undefined}
-                onFileChange={handleFileChange}
-              >
-                <FileField.Label class="text-sm font-semibold text-text">
-                  {DATA_TRANSFER_COPY.fileLabel}
-                </FileField.Label>
-                <FileField.Dropzone class="mt-2 flex min-h-36 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border-strong bg-surface p-4 text-center text-text-muted transition hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring data-disabled:cursor-not-allowed data-disabled:opacity-60">
-                  <FileUp aria-hidden="true" class="h-8 w-8" />
-                  <span class="text-sm">{DATA_TRANSFER_COPY.dropzone}</span>
-                  <FileField.Trigger
-                    type="button"
-                    class={getAppButtonClass({ variant: 'secondary', size: 'sm' })}
-                  >
-                    {DATA_TRANSFER_COPY.chooseFile}
-                  </FileField.Trigger>
-                </FileField.Dropzone>
-                <FileField.HiddenInput name="data-transfer-file" />
-                <FileField.Description class="mt-2 text-xs text-text-subtle">
-                  {DATA_TRANSFER_COPY.fileDescription}
-                </FileField.Description>
-                <FileField.ErrorMessage class="mt-2 text-sm text-danger">
-                  {fileError()}
-                </FileField.ErrorMessage>
-                <FileField.ItemList>
-                  {(file) => (
-                    <FileField.Item class="mt-3 flex items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2">
-                      <FileField.ItemName class="min-w-0 flex-1 truncate font-sans text-sm text-text" />
-                      <FileField.ItemSize class="shrink-0 text-xs text-text-subtle" />
-                      <FileField.ItemDeleteTrigger
-                        type="button"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded text-text-muted hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                        aria-label={`${file.name}${DATA_TRANSFER_COPY.removeFileSuffix}`}
-                      >
-                        <X aria-hidden="true" class="h-4 w-4" />
-                      </FileField.ItemDeleteTrigger>
-                    </FileField.Item>
-                  )}
-                </FileField.ItemList>
-              </FileField>
-
-              <AppButton
-                type="submit"
-                class="mt-4"
-                disabled={props.hasUserData || !selectedFile() || validating() || importing()}
-                aria-busy={validating()}
-                leftIcon={validating() ? <Loading size="inline" ariaHidden /> : undefined}
-              >
-                {validating()
-                  ? DATA_TRANSFER_COPY.validatingButton
-                  : DATA_TRANSFER_COPY.validateButton}
-              </AppButton>
-              <AppButton
-                class="mt-4 ml-2"
-                onClick={() => {
-                  setIsImportOpen(false)
-                  setSelectedFile(undefined)
-                  setValidation(undefined)
-                  setFileError('')
-                  setImportError('')
-                  setImportSuccess('')
-                }}
-                disabled={validating() || importing()}
-              >
-                {DATA_TRANSFER_COPY.cancelImportButton}
-              </AppButton>
-            </form>
-          </Show>
-          <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-            {importError()}
-          </p>
-        </article>
-      </div>
-
-      <Show when={validation()}>
-        {(checked) => (
-          <article
-            class={`mt-4 rounded-xl border p-4 ${
-              checked().importable
-                ? 'border-success-border bg-success-bg'
-                : 'border-danger-border bg-danger-bg'
-            }`}
-          >
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-              <h3 class="font-semibold text-text">{DATA_TRANSFER_COPY.previewTitle}</h3>
-              <span
-                class={`w-fit text-sm font-semibold ${
-                  checked().importable ? 'text-success' : 'text-danger'
-                }`}
-              >
-                {checked().importable
-                  ? DATA_TRANSFER_COPY.importable
-                  : DATA_TRANSFER_COPY.notImportable}
-              </span>
-            </div>
-            <dl class="mt-3 text-sm">
-              <div>
-                <dt class="text-text-subtle">{DATA_TRANSFER_COPY.playerLabel}</dt>
-                <dd class="mt-1 font-sans font-semibold text-text">{checked().player_name}</dd>
-              </div>
-            </dl>
-            <div class="mt-4">
-              <DataTransferCounts counts={checked().counts} />
-            </div>
-
-            <Show when={checked().blockers.length > 0}>
-              <ul class="mt-4 space-y-1 text-sm text-danger">
-                <For each={checked().blockers}>
-                  {(blocker) => <li>{DATA_TRANSFER_BLOCKER_MESSAGES[blocker]}</li>}
-                </For>
-              </ul>
-            </Show>
-            <Show when={checked().unresolved_references.length > 0}>
-              <div class="mt-4">
-                <h4 class="text-sm font-semibold text-danger">
-                  {DATA_TRANSFER_COPY.unresolvedReferencesTitle}（
-                  {checked().unresolved_reference_count.toLocaleString('ja-JP')}
-                  {DATA_TRANSFER_COPY.countUnit}）
-                </h4>
-                <ul class="mt-2 max-h-48 list-inside list-disc overflow-y-auto rounded-md bg-surface p-3 font-mono text-xs text-danger">
-                  <For each={checked().unresolved_references}>
-                    {(reference) => <li class="break-all">{reference}</li>}
-                  </For>
-                </ul>
-              </div>
-            </Show>
-
-            <Show when={checked().importable}>
+          <div class="mt-4 divide-y divide-border border-y border-border">
+            <article class="py-4">
+              <h3 class="font-semibold text-text">{DATA_TRANSFER_COPY.exportTitle}</h3>
+              <p class="mt-1 text-sm text-text-muted">{DATA_TRANSFER_COPY.exportDescription}</p>
               <AppButton
                 variant="primary"
                 class="mt-4"
-                onClick={handleImport}
-                disabled={props.hasUserData || importing() || Boolean(importSuccess())}
-                aria-busy={importing()}
-                leftIcon={importing() ? <Loading size="inline" ariaHidden /> : undefined}
+                onClick={handleExport}
+                disabled={!props.hasUserData || exporting()}
+                aria-busy={exporting()}
+                leftIcon={
+                  exporting() ? (
+                    <Loading size="inline" ariaHidden />
+                  ) : (
+                    <Download aria-hidden="true" class="h-4 w-4" />
+                  )
+                }
               >
-                {importing() ? DATA_TRANSFER_COPY.importingButton : DATA_TRANSFER_COPY.importButton}
+                {exporting() ? DATA_TRANSFER_COPY.exportingButton : DATA_TRANSFER_COPY.exportButton}
               </AppButton>
-            </Show>
-            <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
-              {importSuccess()}
-            </p>
-          </article>
-        )}
-      </Show>
+              <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
+                {exportError()}
+              </p>
+              <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
+                {exportSuccess()}
+              </p>
+            </article>
+
+            <article class="py-4">
+              <h3 class="font-semibold text-text">{DATA_TRANSFER_COPY.importTitle}</h3>
+              <p class="mt-1 text-sm text-text-muted">{DATA_TRANSFER_COPY.importDescription}</p>
+              <Show
+                when={isImportOpen()}
+                fallback={
+                  <AppButton
+                    class="mt-4"
+                    onClick={() => setIsImportOpen(true)}
+                    disabled={props.hasUserData}
+                  >
+                    {DATA_TRANSFER_COPY.startImportButton}
+                  </AppButton>
+                }
+              >
+                <form
+                  method="post"
+                  class="mt-4"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    void handleValidate()
+                  }}
+                >
+                  <FileField
+                    accept={[...DATA_TRANSFER_ACCEPT]}
+                    maxFileSize={DATA_TRANSFER_MAX_FILE_SIZE_BYTES}
+                    disabled={props.hasUserData || validating() || importing()}
+                    validationState={fileError() ? 'invalid' : undefined}
+                    onFileChange={handleFileChange}
+                  >
+                    <FileField.Label class="text-sm font-semibold text-text">
+                      {DATA_TRANSFER_COPY.fileLabel}
+                    </FileField.Label>
+                    <FileField.Dropzone class="mt-2 flex min-h-36 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border-strong bg-surface p-4 text-center text-text-muted transition hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring data-disabled:cursor-not-allowed data-disabled:opacity-60">
+                      <FileUp aria-hidden="true" class="h-8 w-8" />
+                      <span class="text-sm">{DATA_TRANSFER_COPY.dropzone}</span>
+                      <FileField.Trigger
+                        type="button"
+                        class={getAppButtonClass({ variant: 'secondary', size: 'sm' })}
+                      >
+                        {DATA_TRANSFER_COPY.chooseFile}
+                      </FileField.Trigger>
+                    </FileField.Dropzone>
+                    <FileField.HiddenInput name="data-transfer-file" />
+                    <FileField.Description class="mt-2 text-xs text-text-subtle">
+                      {DATA_TRANSFER_COPY.fileDescription}
+                    </FileField.Description>
+                    <FileField.ErrorMessage class="mt-2 text-sm text-danger">
+                      {fileError()}
+                    </FileField.ErrorMessage>
+                    <FileField.ItemList>
+                      {(file) => (
+                        <FileField.Item class="mt-3 flex items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2">
+                          <FileField.ItemName class="min-w-0 flex-1 truncate font-sans text-sm text-text" />
+                          <FileField.ItemSize class="shrink-0 text-xs text-text-subtle" />
+                          <FileField.ItemDeleteTrigger
+                            type="button"
+                            class="inline-flex h-9 w-9 items-center justify-center rounded text-text-muted hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                            aria-label={`${file.name}${DATA_TRANSFER_COPY.removeFileSuffix}`}
+                          >
+                            <X aria-hidden="true" class="h-4 w-4" />
+                          </FileField.ItemDeleteTrigger>
+                        </FileField.Item>
+                      )}
+                    </FileField.ItemList>
+                  </FileField>
+
+                  <AppButton
+                    type="submit"
+                    class="mt-4"
+                    disabled={props.hasUserData || !selectedFile() || validating() || importing()}
+                    aria-busy={validating()}
+                    leftIcon={validating() ? <Loading size="inline" ariaHidden /> : undefined}
+                  >
+                    {validating()
+                      ? DATA_TRANSFER_COPY.validatingButton
+                      : DATA_TRANSFER_COPY.validateButton}
+                  </AppButton>
+                  <AppButton
+                    class="mt-4 ml-2"
+                    onClick={() => {
+                      setIsImportOpen(false)
+                      setSelectedFile(undefined)
+                      setValidation(undefined)
+                      setFileError('')
+                      setImportError('')
+                      setImportSuccess('')
+                    }}
+                    disabled={validating() || importing()}
+                  >
+                    {DATA_TRANSFER_COPY.cancelImportButton}
+                  </AppButton>
+                </form>
+              </Show>
+              <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
+                {importError()}
+              </p>
+            </article>
+          </div>
+
+          <Show when={validation()}>
+            {(checked) => (
+              <article
+                class={`mt-4 rounded-xl border p-4 ${
+                  checked().importable
+                    ? 'border-success-border bg-success-bg'
+                    : 'border-danger-border bg-danger-bg'
+                }`}
+              >
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <h3 class="font-semibold text-text">{DATA_TRANSFER_COPY.previewTitle}</h3>
+                  <span
+                    class={`w-fit text-sm font-semibold ${
+                      checked().importable ? 'text-success' : 'text-danger'
+                    }`}
+                  >
+                    {checked().importable
+                      ? DATA_TRANSFER_COPY.importable
+                      : DATA_TRANSFER_COPY.notImportable}
+                  </span>
+                </div>
+                <dl class="mt-3 text-sm">
+                  <div>
+                    <dt class="text-text-subtle">{DATA_TRANSFER_COPY.playerLabel}</dt>
+                    <dd class="mt-1 font-sans font-semibold text-text">{checked().player_name}</dd>
+                  </div>
+                </dl>
+                <div class="mt-4">
+                  <DataTransferCounts counts={checked().counts} />
+                </div>
+
+                <Show when={checked().blockers.length > 0}>
+                  <ul class="mt-4 space-y-1 text-sm text-danger">
+                    <For each={checked().blockers}>
+                      {(blocker) => <li>{DATA_TRANSFER_BLOCKER_MESSAGES[blocker]}</li>}
+                    </For>
+                  </ul>
+                </Show>
+                <Show when={checked().unresolved_references.length > 0}>
+                  <div class="mt-4">
+                    <h4 class="text-sm font-semibold text-danger">
+                      {DATA_TRANSFER_COPY.unresolvedReferencesTitle}（
+                      {checked().unresolved_reference_count.toLocaleString('ja-JP')}
+                      {DATA_TRANSFER_COPY.countUnit}）
+                    </h4>
+                    <ul class="mt-2 max-h-48 list-inside list-disc overflow-y-auto rounded-md bg-surface p-3 font-mono text-xs text-danger">
+                      <For each={checked().unresolved_references}>
+                        {(reference) => <li class="break-all">{reference}</li>}
+                      </For>
+                    </ul>
+                  </div>
+                </Show>
+
+                <Show when={checked().importable}>
+                  <AppButton
+                    variant="primary"
+                    class="mt-4"
+                    onClick={handleImport}
+                    disabled={props.hasUserData || importing() || Boolean(importSuccess())}
+                    aria-busy={importing()}
+                    leftIcon={importing() ? <Loading size="inline" ariaHidden /> : undefined}
+                  >
+                    {importing()
+                      ? DATA_TRANSFER_COPY.importingButton
+                      : DATA_TRANSFER_COPY.importButton}
+                  </AppButton>
+                </Show>
+                <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
+                  {importSuccess()}
+                </p>
+              </article>
+            )}
+          </Show>
+        </Collapsible.Content>
+      </Collapsible>
     </section>
   )
 }

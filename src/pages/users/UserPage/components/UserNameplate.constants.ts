@@ -9,4 +9,9 @@ export const USER_NAMEPLATE_METRIC_LABELS = {
 /** プロフィールカードの履歴導線で使用する文言 */
 export const USER_NAMEPLATE_HISTORY_LINK_LABEL = '履歴'
 /** プロフィールカードの履歴導線を説明するアクセシブル名 */
-export const USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL = 'RATING・OVER POWER・OP%履歴を見る'
+export const USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL = 'レーティング・OVER POWER履歴を見る'
+
+/** 定数未判明の譜面がレーティングまたはOVER POWERの計算に含まれることを示すマーカー */
+export const USER_NAMEPLATE_UNKNOWN_CONST_MARKER = '?'
+/** 定数未判明の譜面がレーティングまたはOVER POWERの計算に含まれることを説明する文言 */
+export const USER_NAMEPLATE_UNKNOWN_CONST_HINT = '定数未判明の譜面を計算に使用しています'

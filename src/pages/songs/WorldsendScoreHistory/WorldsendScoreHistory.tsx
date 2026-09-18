@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from '@solidjs/router'
 import { useQuery } from '@tanstack/solid-query'
-import { createResource, Show } from 'solid-js'
+import { createMemo, createResource, Show } from 'solid-js'
 import { fetchOwnWorldsendScoreHistory, fetchWorldsendSongByDisplayId } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import { WORLDSEND_SCORE_LABEL } from '../../../constants/chart'
@@ -9,9 +9,12 @@ import {
   buildWorldsendSongDetailPath,
   isChartDetailFromSongDetailState,
 } from '../../../constants/routes'
+import { joinDocumentTitleParts } from '../../../constants/site'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { worldsendFriendRankingQueryOptions } from '../../../queries/friendRankings'
 import { authSession } from '../../../stores/authSession'
+import { isNotFoundOrInvalidDisplayIdApiError } from '../../../utils/apiError'
+import NotFoundPage from '../../NotFoundPage'
 import ChartDetailPage from '../components/chartDetail/ChartDetailPage'
 import { CHART_DETAIL_PAGE_TITLE } from '../components/chartDetail/constants'
 import WorldsendBadge from '../components/WorldsendBadge'
@@ -36,7 +39,11 @@ const WorldsendScoreHistory = () => {
   const friendRanking = useQuery(() =>
     worldsendFriendRankingQueryOptions(authSession.user?.username ?? null, params.displayid)
   )
-  useDocumentTitle(() => `${song()?.title ?? WORLDSEND_SCORE_LABEL} - ${CHART_DETAIL_PAGE_TITLE}`)
+  useDocumentTitle(() =>
+    joinDocumentTitleParts(song()?.title ?? WORLDSEND_SCORE_LABEL, CHART_DETAIL_PAGE_TITLE)
+  )
+  /** 存在しない・形式不正の表示IDは存在しない曲とみなして404表示にする */
+  const isSongNotFound = createMemo(() => isNotFoundOrInvalidDisplayIdApiError(song.error))
 
   /**
    * 楽曲詳細から入った履歴では詳細URLを積まず、元の詳細履歴へ戻す。
@@ -53,7 +60,14 @@ const WorldsendScoreHistory = () => {
   }
 
   return (
-    <Show when={!song.error} fallback={<LoadError error={song.error} />}>
+    <Show
+      when={!song.error}
+      fallback={
+        <Show when={isSongNotFound()} fallback={<LoadError error={song.error} />}>
+          <NotFoundPage />
+        </Show>
+      }
+    >
       <Show when={!song.loading} fallback={<Loading />}>
         <ChartDetailPage
           title={song()?.title ?? '-'}

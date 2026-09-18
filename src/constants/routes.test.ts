@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
-  ADMIN_VERSIONS_PATH,
   buildAdminChartRankingPath,
   buildAdminWorldsendChartRankingPath,
   buildSongChartDetailPath,
@@ -9,13 +8,8 @@ import {
   buildWorldsendChartDetailPath,
   buildWorldsendSongDetailPath,
   CHART_DETAIL_FROM_SONG_DETAIL_STATE,
-  DASHBOARD_PATH,
   isChartDetailFromSongDetailState,
 } from './routes'
-
-test('管理者向けバージョン管理パスを返す', () => {
-  assert.equal(ADMIN_VERSIONS_PATH, '/admin/versions')
-})
 
 test('管理者向け通常譜面ランキングパスは表示IDと難易度をエンコードする', () => {
   // Given: URL予約文字を含む表示IDと小文字の難易度。
@@ -37,12 +31,6 @@ test("管理者向けWORLD'S END譜面ランキングパスは表示IDをエン�
 
   // Then: 表示IDがパス要素として安全にエンコードされる。
   assert.equal(result, '/admin/chart-rankings/worldsend-songs/WE%2FA%20B')
-})
-
-test('ダッシュボードパスは tools 配下の dashboard である', () => {
-  const result = DASHBOARD_PATH
-
-  assert.equal(result, '/tools/dashboard')
 })
 
 test('通常楽曲詳細パスは表示IDと難易度をエンコードする', () => {

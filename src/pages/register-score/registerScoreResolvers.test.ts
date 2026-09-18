@@ -45,6 +45,7 @@ const createWorldsendSong = (): WorldsendSongDTO => ({
   release: null,
   official_idx: 'worldsend-idx',
   jacket: null,
+  is_new: false,
   charts: { WORLDSEND: { attribute: null, level_star: 5, notes: null } },
 })
 

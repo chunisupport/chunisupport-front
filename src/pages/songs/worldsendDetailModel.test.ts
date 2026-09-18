@@ -23,6 +23,7 @@ const createSong = (overrides: Partial<WorldsendSongDTO> = {}): WorldsendSongDTO
   release: '2024-01-15',
   official_idx: '123',
   jacket: 'jacket-file',
+  is_new: false,
   charts: {
     WORLDSEND: {
       attribute: '狂',

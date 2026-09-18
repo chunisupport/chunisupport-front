@@ -136,6 +136,16 @@
   --cs-color-select-selected-hover-bg: var(--color-primary-100);
   --cs-color-interactive-row-hover: var(--color-primary-100);
   --cs-color-new-song-bg: var(--color-primary-100);
+  --cs-color-row-highlight: color-mix(
+    in oklab,
+    var(--color-primary-500) 22%,
+    var(--cs-color-surface)
+  );
+  --cs-color-row-highlight-hover: color-mix(
+    in oklab,
+    var(--color-primary-500) 32%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-secondary: var(--color-gray-300);
   --cs-color-action-secondary-hover: var(--color-gray-400);
 
@@ -221,7 +231,21 @@
     var(--color-primary-900) 28%,
     var(--cs-color-surface)
   );
-  --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
+  --cs-color-new-song-bg: color-mix(
+    in oklab,
+    var(--color-primary-700) 16%,
+    var(--cs-color-surface)
+  );
+  --cs-color-row-highlight: color-mix(
+    in oklab,
+    var(--color-primary-500) 42%,
+    var(--cs-color-surface)
+  );
+  --cs-color-row-highlight-hover: color-mix(
+    in oklab,
+    var(--color-primary-500) 55%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-secondary: #1d4a39;
   --cs-color-action-secondary-hover: #2f6b53;
 
@@ -300,6 +324,16 @@
     var(--color-primary-900) 35%,
     var(--cs-color-surface)
   );
+  --cs-color-row-highlight: color-mix(
+    in oklab,
+    var(--color-primary-500) 48%,
+    var(--cs-color-surface)
+  );
+  --cs-color-row-highlight-hover: color-mix(
+    in oklab,
+    var(--color-primary-500) 60%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-secondary: #444444;
   --cs-color-action-secondary-hover: #555555;
 
@@ -364,7 +398,21 @@
     var(--color-primary-900) 28%,
     var(--cs-color-surface)
   );
-  --cs-color-new-song-bg: color-mix(in oklab, var(--color-primary-700) 16%, transparent);
+  --cs-color-new-song-bg: color-mix(
+    in oklab,
+    var(--color-primary-700) 16%,
+    var(--cs-color-surface)
+  );
+  --cs-color-row-highlight: color-mix(
+    in oklab,
+    var(--color-primary-500) 42%,
+    var(--cs-color-surface)
+  );
+  --cs-color-row-highlight-hover: color-mix(
+    in oklab,
+    var(--color-primary-500) 55%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-secondary: #1e2d5e;
   --cs-color-action-secondary-hover: #2f4480;
 
@@ -443,6 +491,16 @@
   --cs-color-select-selected-hover-bg: var(--color-primary-100);
   --cs-color-interactive-row-hover: var(--color-primary-100);
   --cs-color-new-song-bg: var(--color-primary-100);
+  --cs-color-row-highlight: color-mix(
+    in oklab,
+    var(--color-primary-500) 22%,
+    var(--cs-color-surface)
+  );
+  --cs-color-row-highlight-hover: color-mix(
+    in oklab,
+    var(--color-primary-500) 32%,
+    var(--cs-color-surface)
+  );
   --cs-color-action-secondary: #f5d5bc;
   --cs-color-action-secondary-hover: #ecc09f;
 
@@ -498,6 +556,34 @@
 
   --cs-size-user-honor-title-max-width: 464px;
 
+  /* ===== レーティング枠画像 Ver. 2（背景模様 / ジャケット重ね文字） ===== */
+  --cs-size-rating-image-v2-pattern: 28px;
+  --cs-color-rating-image-v2-jacket-score-bg: #000000;
+  --cs-color-rating-image-v2-jacket-score-text: var(--color-white);
+  --cs-color-rating-image-v2-new-badge-bg: #ff4fcf;
+  --cs-size-rating-image-v2-difficulty-stripe: 4px;
+  --cs-size-rating-image-v2-position-flag-width: 52px;
+  --cs-size-rating-image-v2-position-flag-height: 32px;
+  --cs-size-rating-image-v2-position-flag-slant: 12px;
+  --cs-size-rating-image-v2-position-flag-font: 22px;
+  --cs-size-rating-image-v2-jacket-lamp: 18px;
+  --cs-size-rating-image-v2-jacket-lamp-font: 13px;
+  --cs-size-rating-image-v2-jacket-lamp-border: 2px;
+  --cs-size-rating-image-v2-jacket-lamp-radius: 4px;
+  --cs-shadow-rating-image-v2-header: 0 4px 12px rgb(0 0 0 / 22%);
+  --cs-shadow-rating-image-v2-position: 0 1px 2px rgb(0 0 0 / 70%);
+  --cs-shadow-rating-image-v2-new-badge: 0 1px 2px rgb(0 0 0 / 75%);
+  --cs-size-difficulty-ultima-stripe: 6px;
+  --cs-size-difficulty-ultima-stripe-period: 12px;
+  --cs-color-difficulty-ultima-stripe: #ff0000;
+  --cs-gradient-rating-image-v2-ultima-stripe: repeating-linear-gradient(
+    -60deg,
+    var(--cs-color-difficulty-ultima-stripe) 0,
+    var(--cs-color-difficulty-ultima-stripe) var(--cs-size-difficulty-ultima-stripe),
+    var(--cs-color-difficulty-ultima-bg) var(--cs-size-difficulty-ultima-stripe),
+    var(--cs-color-difficulty-ultima-bg) var(--cs-size-difficulty-ultima-stripe-period)
+  );
+
   /* ===== 難易度バッジ（BASIC / ADVANCED / EXPERT / MASTER / ULTIMA） ===== */
   --cs-color-difficulty-basic-bg: #00ab84;
   --cs-color-difficulty-basic-text: var(--color-white);
@@ -518,16 +604,7 @@
   --cs-color-course-class-4-bg: #dc2626;
   --cs-color-course-class-5-bg: #3b0764;
   --cs-shadow-course-class-text: 0 1px 2px rgb(0 0 0 / 50%);
-  --cs-color-course-class-inf-bg: linear-gradient(
-    45deg,
-    var(--cs-color-lamp-all-justice-critical-rainbow-1),
-    var(--cs-color-lamp-all-justice-critical-rainbow-2),
-    var(--cs-color-lamp-all-justice-critical-rainbow-3),
-    var(--cs-color-lamp-all-justice-critical-rainbow-4),
-    var(--cs-color-lamp-all-justice-critical-rainbow-5),
-    var(--cs-color-lamp-all-justice-critical-rainbow-6),
-    var(--cs-color-lamp-all-justice-critical-rainbow-7)
-  );
+  --cs-color-course-class-inf-bg: var(--cs-gradient-honor-rainbow-bg);
 
   /* ===== WORLD'S ENDラベル ===== */
   --cs-color-worldsend-label-bg: linear-gradient(
@@ -545,6 +622,23 @@
   /* ===== ユーザー称号（ノーマル） ===== */
   --cs-color-honor-title-normal-bg: var(--color-yellow-200);
   --cs-color-honor-title-normal-text: var(--color-gray-900);
+  --cs-color-honor-rainbow-1: #aeefff;
+  --cs-color-honor-rainbow-2: #b7ceff;
+  --cs-color-honor-rainbow-3: #d0b5ff;
+  --cs-color-honor-rainbow-4: #ffb8e8;
+  --cs-color-honor-rainbow-5: #ffc4ad;
+  --cs-color-honor-rainbow-6: #fff0a8;
+  --cs-color-honor-rainbow-7: #b9eeb7;
+  --cs-gradient-honor-rainbow-bg: linear-gradient(
+    45deg,
+    var(--cs-color-honor-rainbow-1),
+    var(--cs-color-honor-rainbow-2),
+    var(--cs-color-honor-rainbow-3),
+    var(--cs-color-honor-rainbow-4),
+    var(--cs-color-honor-rainbow-5),
+    var(--cs-color-honor-rainbow-6),
+    var(--cs-color-honor-rainbow-7)
+  );
   --cs-gradient-rating-image-sp-honor-bg: linear-gradient(
     135deg,
     #d8f7e2 0%,
@@ -585,6 +679,48 @@
     #b86a35 100%
   );
 
+  /* ===== ポゼッション（プロフィールカード背景。normalはテーマのサーフェス色） ===== */
+  --cs-color-possession-text: var(--color-gray-900);
+  --cs-color-possession-text-muted: var(--color-gray-600);
+  --cs-color-possession-divider: rgb(0 0 0 / 18%);
+  --cs-color-possession-silver-bg: #b4d4f2;
+  --cs-color-possession-silver-border: #6f9ec8;
+  --cs-gradient-possession-silver-bg: linear-gradient(
+    45deg,
+    #7eafd6 0%,
+    #b4d4f2 24%,
+    #eaf6ff 42%,
+    #9ec8ea 58%,
+    #d2ebfb 76%,
+    #6f9ec8 100%
+  );
+  --cs-color-possession-gold-bg: #f2d43a;
+  --cs-color-possession-gold-border: #c9b41c;
+  --cs-gradient-possession-gold-bg: linear-gradient(
+    45deg,
+    #d4bc1e 0%,
+    #f2d43a 24%,
+    #fff8b0 42%,
+    #e8d028 58%,
+    #f7e25c 76%,
+    #c9b41c 100%
+  );
+  --cs-color-possession-platina-bg: #faf5ca;
+  --cs-color-possession-platina-border: #d4ca90;
+  --cs-gradient-possession-platina-bg: linear-gradient(
+    45deg,
+    #e5da9f 0%,
+    #faf5ca 24%,
+    #fffef8 42%,
+    #f1e9b7 58%,
+    #faf8df 76%,
+    #d4ca90 100%
+  );
+  --cs-color-possession-rainbow-bg: var(--cs-color-honor-rainbow-3);
+  --cs-color-possession-rainbow-border: var(--cs-color-honor-rainbow-2);
+  --cs-gradient-possession-rainbow-bg: var(--cs-gradient-honor-rainbow-bg);
+  --cs-shadow-honor-title: 0 1px 2px rgb(0 0 0 / 28%), 0 3px 8px rgb(0 0 0 / 22%);
+
   /* ===== スコアランク（SSSP / SSS / SS / S / A / B / C / D） ===== */
   --cs-color-score-rank-sssp-bg: var(--color-green-500);
   --cs-color-score-rank-sssp-text: var(--color-green-500);
@@ -616,15 +752,15 @@
   --cs-color-lamp-full-combo-text: var(--color-yellow-900);
   --cs-color-lamp-all-justice-bg: #fdf5a7;
   --cs-color-lamp-all-justice-text: var(--color-yellow-900);
-  --cs-color-lamp-all-justice-critical-bg: #aeefff;
+  --cs-color-lamp-all-justice-critical-bg: var(--cs-color-lamp-all-justice-critical-rainbow-1);
   --cs-color-lamp-all-justice-critical-text: #3f2a63;
-  --cs-color-lamp-all-justice-critical-rainbow-1: #aeefff;
-  --cs-color-lamp-all-justice-critical-rainbow-2: #b7ceff;
-  --cs-color-lamp-all-justice-critical-rainbow-3: #d0b5ff;
-  --cs-color-lamp-all-justice-critical-rainbow-4: #ffb8e8;
-  --cs-color-lamp-all-justice-critical-rainbow-5: #ffc4ad;
-  --cs-color-lamp-all-justice-critical-rainbow-6: #fff0a8;
-  --cs-color-lamp-all-justice-critical-rainbow-7: #b9eeb7;
+  --cs-color-lamp-all-justice-critical-rainbow-1: #ffadad;
+  --cs-color-lamp-all-justice-critical-rainbow-2: #ffd0a8;
+  --cs-color-lamp-all-justice-critical-rainbow-3: #fff0a8;
+  --cs-color-lamp-all-justice-critical-rainbow-4: #b9eeb7;
+  --cs-color-lamp-all-justice-critical-rainbow-5: #a8d8ff;
+  --cs-color-lamp-all-justice-critical-rainbow-6: #b7bfff;
+  --cs-color-lamp-all-justice-critical-rainbow-7: #d0b5ff;
   --cs-gradient-lamp-all-justice-critical-bg: linear-gradient(
     45deg,
     var(--cs-color-lamp-all-justice-critical-rainbow-1),
@@ -679,6 +815,9 @@
   --color-select-selected-hover-bg: var(--cs-color-select-selected-hover-bg);
   --color-interactive-row-hover: var(--cs-color-interactive-row-hover);
   --color-new-song-bg: var(--cs-color-new-song-bg);
+  /* 行ハイライト（達成済みなど常時強調。アクセント色を背景テーマごとに混ぜる） */
+  --color-row-highlight: var(--cs-color-row-highlight);
+  --color-row-highlight-hover: var(--cs-color-row-highlight-hover);
   --color-action-secondary: var(--cs-color-action-secondary);
   --color-action-secondary-hover: var(--cs-color-action-secondary-hover);
 
@@ -841,39 +980,54 @@
 }
 
 /* SP称号の背景を虹称号と共通の7色で0.35秒ずつ循環させる。 */
+/* メンテナンス中ラベルを上下にふわふわさせ、2秒周期で明滅させる。 */
+@keyframes maintenance-status-float {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translateY(0.25rem);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(-0.375rem);
+  }
+}
+
 @keyframes honor-title-sp-rainbow {
   0% {
-    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-1);
+    background-color: var(--cs-color-honor-rainbow-1);
   }
 
   14.285% {
-    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-2);
+    background-color: var(--cs-color-honor-rainbow-2);
   }
 
   28.57% {
-    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-3);
+    background-color: var(--cs-color-honor-rainbow-3);
   }
 
   42.855% {
-    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-4);
+    background-color: var(--cs-color-honor-rainbow-4);
   }
 
   57.14% {
-    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-5);
+    background-color: var(--cs-color-honor-rainbow-5);
   }
 
   71.425% {
-    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-6);
+    background-color: var(--cs-color-honor-rainbow-6);
   }
 
   85.71% {
-    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-7);
+    background-color: var(--cs-color-honor-rainbow-7);
   }
 
   100% {
-    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-1);
+    background-color: var(--cs-color-honor-rainbow-1);
   }
 }
+
 @layer utilities {
   .text-shadow-badge {
     text-shadow: var(--cs-shadow-course-class-text);
@@ -881,6 +1035,10 @@
 
   .animate-marquee {
     animation: marquee 5s linear infinite;
+  }
+
+  .animate-maintenance-status {
+    animation: maintenance-status-float 2s ease-in-out infinite;
   }
 
   .scrollbar-none {
@@ -979,6 +1137,10 @@
     margin: 0;
   }
 
+  .user-nameplate .user-honor-title {
+    box-shadow: var(--cs-shadow-honor-title);
+  }
+
   .user-honor-title--normal {
     --honor-background: var(--honor-shine), #d4d4d4;
   }
@@ -1000,9 +1162,7 @@
   }
 
   .user-honor-title--rainbow {
-    --honor-background:
-      var(--honor-shine),
-      linear-gradient(45deg, #aeefff, #b7ceff, #d0b5ff, #ffb8e8, #ffc4ad, #fff0a8, #b9eeb7);
+    --honor-background: var(--honor-shine), var(--cs-gradient-honor-rainbow-bg);
   }
 
   .user-honor-title--staff {
@@ -1069,6 +1229,207 @@
     animation: none;
   }
 
+  .rating-image-v2-header {
+    box-shadow: var(--cs-shadow-rating-image-v2-header);
+  }
+
+  .rating-image-v2-header .user-honor-title {
+    box-shadow: var(--cs-shadow-honor-title);
+  }
+
+  .rating-image-v2-header-divider {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .rating-image-v2-header.user-nameplate--colored .rating-image-v2-header-divider {
+    border-top-color: var(--cs-color-possession-divider);
+  }
+
+  .rating-image-v2-jacket-lamp {
+    position: relative;
+    box-sizing: border-box;
+    overflow: visible;
+    width: var(--cs-size-rating-image-v2-jacket-lamp);
+    height: var(--cs-size-rating-image-v2-jacket-lamp);
+    border: var(--cs-size-rating-image-v2-jacket-lamp-border) solid var(--color-white);
+    border-radius: var(--cs-size-rating-image-v2-jacket-lamp-radius);
+    transform: rotate(45deg);
+  }
+
+  .rating-image-v2-jacket-lamp[data-combo-lamp="fc"] {
+    background-color: var(--cs-color-ranking-gold-bg);
+    background-image: var(--cs-gradient-ranking-gold-bg);
+    color: var(--color-gray-900);
+  }
+
+  .rating-image-v2-jacket-lamp[data-combo-lamp="aj"] {
+    background-color: var(--cs-color-possession-platina-bg);
+    background-image: var(--cs-gradient-possession-platina-bg);
+    color: var(--color-gray-900);
+  }
+
+  .rating-image-v2-jacket-lamp[data-combo-lamp="ajc"] {
+    background-color: var(--cs-color-lamp-all-justice-critical-rainbow-1);
+    background-image: var(--cs-gradient-lamp-all-justice-critical-bg);
+    color: var(--cs-color-lamp-all-justice-critical-text);
+  }
+
+  .rating-image-v2-jacket-lamp-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    overflow: visible;
+    font-family: var(--font-oswald);
+    font-size: var(--cs-size-rating-image-v2-jacket-lamp-font);
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+    text-wrap: nowrap;
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+
+  .rating-image-v2-backdrop {
+    background-color: var(--color-bg);
+    background-image:
+      linear-gradient(
+        158deg,
+        color-mix(in oklab, var(--color-action-primary) 18%, transparent) 0 160px,
+        transparent 280px
+      ),
+      repeating-linear-gradient(
+        -24deg,
+        transparent 0 20px,
+        color-mix(in oklab, var(--color-border) 42%, transparent) 20px 21px
+      ),
+      repeating-conic-gradient(var(--color-bg) 0 25%, var(--cs-color-page-bg-pattern) 0 50%);
+    background-size:
+      auto,
+      auto,
+      var(--cs-size-rating-image-v2-pattern) var(--cs-size-rating-image-v2-pattern);
+  }
+
+  .rating-image-v2-card {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-surface-hover);
+
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .rating-image-v2-card::before {
+    content: "";
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--cs-size-rating-image-v2-difficulty-stripe);
+    pointer-events: none;
+    background-color: var(--color-surface-hover);
+  }
+
+  .rating-image-v2-card--filled::before,
+  .rating-image-v2-card--empty::before {
+    width: var(--cs-size-rating-image-v2-position-flag-width);
+    background-color: var(--cs-color-rating-image-v2-difficulty-fill);
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      calc(100% - var(--cs-size-rating-image-v2-position-flag-slant))
+        var(--cs-size-rating-image-v2-position-flag-height),
+      var(--cs-size-rating-image-v2-difficulty-stripe)
+        var(--cs-size-rating-image-v2-position-flag-height),
+      var(--cs-size-rating-image-v2-difficulty-stripe) 100%,
+      0 100%
+    );
+  }
+
+  .rating-image-v2-card--empty {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-border);
+  }
+
+  .rating-image-v2-card[data-difficulty="BASIC"] {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-difficulty-basic-bg);
+  }
+
+  .rating-image-v2-card[data-difficulty="ADVANCED"] {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-difficulty-advanced-bg);
+  }
+
+  .rating-image-v2-card[data-difficulty="EXPERT"] {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-difficulty-expert-bg);
+  }
+
+  .rating-image-v2-card[data-difficulty="MASTER"] {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-difficulty-master-bg);
+  }
+
+  .rating-image-v2-card[data-difficulty="ULTIMA"]::before {
+    background-color: transparent;
+    background-image: var(--cs-gradient-rating-image-v2-ultima-stripe);
+  }
+
+  .rating-image-v2-card[data-difficulty="ULTIMA"] {
+    --cs-color-rating-image-v2-difficulty-fill: var(--color-difficulty-ultima-bg);
+  }
+
+  .rating-image-v2-position-flag {
+    position: absolute;
+    z-index: 30;
+    top: 0;
+    left: 0;
+    display: flex;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    width: var(--cs-size-rating-image-v2-position-flag-width);
+    height: var(--cs-size-rating-image-v2-position-flag-height);
+    padding-right: calc(var(--cs-size-rating-image-v2-position-flag-slant) * 0.5);
+    font-size: var(--cs-size-rating-image-v2-position-flag-font);
+    text-shadow: var(--cs-shadow-rating-image-v2-position);
+    transform: translateY(-1px);
+  }
+
+  .rating-image-v2-new-badge {
+    box-sizing: border-box;
+    padding: 3px 4px 4px;
+    background-color: var(--cs-color-rating-image-v2-new-badge-bg);
+    clip-path: polygon(0 0, 96% 4%, 100% 94%, 5% 100%);
+    text-shadow: var(--cs-shadow-rating-image-v2-new-badge);
+  }
+
+  .rating-image-v2-title {
+    overflow: hidden;
+    font-family: var(--font-sans);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+    text-overflow: clip;
+    white-space: nowrap;
+  }
+
+  .rating-image-v2-jacket-score {
+    box-sizing: border-box;
+    padding: 3px 5px 4px;
+    background-color: var(--cs-color-rating-image-v2-jacket-score-bg);
+    color: var(--cs-color-rating-image-v2-jacket-score-text);
+  }
+
+  .rating-image-v2-jacket-rank {
+    padding: 2px 5px 4px;
+    background-color: var(--cs-color-rating-image-v2-jacket-score-bg);
+  }
+
+  .rating-image-v2-honor-empty {
+    box-sizing: border-box;
+    height: 28px;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: 6px;
+    background-color: transparent;
+  }
+
   .user-honor-title--phoenix-g {
     --honor-background:
       var(--honor-shine),
@@ -1088,7 +1449,7 @@
       var(--honor-shine),
       linear-gradient(150deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%),
       linear-gradient(330deg, #f353b6 0 40px, #f799d3 40px 50px, transparent 50px 100%),
-      linear-gradient(45deg, #aeefff, #b7ceff, #d0b5ff, #ffb8e8, #ffc4ad, #fff0a8, #b9eeb7);
+      var(--cs-gradient-honor-rainbow-bg);
   }
 
   .user-honor-title--expert {
@@ -1124,6 +1485,58 @@
         transparent 45px 100%
       ),
       #fdf5a7;
+  }
+
+  .user-nameplate {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+
+  .user-nameplate--colored {
+    color: var(--cs-color-possession-text);
+    background-color: var(--nameplate-background-color);
+    background-image: var(--nameplate-background-image);
+    border-color: var(--nameplate-border-color);
+  }
+
+  .user-nameplate--silver {
+    --nameplate-background-color: var(--cs-color-possession-silver-bg);
+    --nameplate-background-image: var(--cs-gradient-possession-silver-bg);
+    --nameplate-border-color: var(--cs-color-possession-silver-border);
+  }
+
+  .user-nameplate--gold {
+    --nameplate-background-color: var(--cs-color-possession-gold-bg);
+    --nameplate-background-image: var(--cs-gradient-possession-gold-bg);
+    --nameplate-border-color: var(--cs-color-possession-gold-border);
+  }
+
+  .user-nameplate--platina {
+    --nameplate-background-color: var(--cs-color-possession-platina-bg);
+    --nameplate-background-image: var(--cs-gradient-possession-platina-bg);
+    --nameplate-border-color: var(--cs-color-possession-platina-border);
+  }
+
+  .user-nameplate--rainbow {
+    --nameplate-background-color: var(--cs-color-possession-rainbow-bg);
+    --nameplate-background-image: var(--cs-gradient-possession-rainbow-bg);
+    --nameplate-border-color: var(--cs-color-possession-rainbow-border);
+  }
+
+  .user-nameplate hr {
+    border-color: var(--color-border);
+  }
+
+  .user-nameplate--colored hr {
+    border-color: var(--cs-color-possession-divider);
+  }
+
+  .user-nameplate-metric-secondary {
+    color: var(--color-text-muted);
+  }
+
+  .user-nameplate--colored .user-nameplate-metric-secondary {
+    color: var(--cs-color-possession-text-muted);
   }
 
   .goal-card-progress-secondary {

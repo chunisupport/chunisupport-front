@@ -2,6 +2,7 @@ import { Button } from '@kobalte/core/button'
 import { Check } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, Show } from 'solid-js'
+import { AppSelect } from '../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
 import type {
   MasterItemDTO,
@@ -11,7 +12,11 @@ import type {
   SongDTO,
   VersionDTO,
 } from '../../../../types/api'
-import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch'
+import {
+  createLockedSongKey,
+  toLockedSongRequests,
+} from '../../../../usecases/overpower/lockedSongsBatch'
+import { buildLockedSongsOpComparison } from '../../../../usecases/overpower/lockedSongsOpComparison'
 import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
 import {
   normalizeForReadingSearch,
@@ -28,9 +33,17 @@ import { SongSelectionDialogBase } from '../../components/SongSelectionDialogBas
 import {
   buildDefaultSongSelectionFilter,
   getSongSelectionRowClass,
+  SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
   sortSongSelectionCandidates,
 } from '../../components/songSelectionDialog'
 import { hasSameFilterValues } from '../../utils/filterValue'
+import {
+  LOCKED_SONG_PLAY_STATUS_FILTER_COPY,
+  LOCKED_SONG_PLAY_STATUS_OPTIONS,
+  type LockedSongsPlayStatus,
+} from '../constants'
+import { LockedSongsOpComparison } from './LockedSongsOpComparison'
+import { matchesLockedSongsPlayStatus } from './lockedSongsFilter'
 
 type Props = {
   open: boolean
@@ -39,6 +52,10 @@ type Props = {
   genres: MasterItemDTO[]
   versions: VersionDTO[]
   lockedSongs: PlayerLockedSongResponseItem[]
+  /** CHUNITHM-NETから取得した公式OVER POWER */
+  officialOverPower: number
+  /** CHUNITHM-NETから取得した公式OP%。記録開始前はnull */
+  officialOverPowerPercent: number | null
   onOpenChange: (open: boolean) => void
   onSaveLockedSongs: (items: PlayerLockedSongRequest[]) => Promise<void>
 }
@@ -51,10 +68,15 @@ type LockedSongListItem = {
 type LockedSongsFilter = {
   genres: string[]
   versions: string[]
-  unplayedOnly: boolean
+  playStatusEnabled: boolean
+  playStatus: LockedSongsPlayStatus
 }
 
+type LockedSongsPlayStatusOption = (typeof LOCKED_SONG_PLAY_STATUS_OPTIONS)[number]
+
 const LOCKED_SONG_DESCRIPTION = 'チェックした曲・譜面はOVER POWER計算対象から除外されます。'
+/** プレイ状況フィルターのチェックボックスを識別するID */
+const LOCKED_SONG_PLAY_STATUS_FILTER_ID = 'locked-song-filter-play-status'
 
 /**
  * 楽曲にULTIMA譜面があるか判定する。
@@ -76,7 +98,8 @@ const buildDefaultLockedSongsFilter = (
   versions: string[]
 ): LockedSongsFilter => ({
   ...buildDefaultSongSelectionFilter(genres, versions),
-  unplayedOnly: false,
+  playStatusEnabled: false,
+  playStatus: LOCKED_SONG_PLAY_STATUS_OPTIONS[0].value,
 })
 
 /**
@@ -90,29 +113,15 @@ const isLockedSongsFilterChanged = (
   current: LockedSongsFilter,
   defaultFilter: LockedSongsFilter
 ): boolean =>
-  current.unplayedOnly !== defaultFilter.unplayedOnly ||
+  current.playStatusEnabled !== defaultFilter.playStatusEnabled ||
+  current.playStatus !== defaultFilter.playStatus ||
   !hasSameFilterValues(current.genres, defaultFilter.genres) ||
   !hasSameFilterValues(current.versions, defaultFilter.versions)
 
 /**
- * 選択キーを未解禁楽曲保存payloadへ変換する。
- *
- * @param keys - `displayId:mode` 形式の選択キー。
- * @returns 未解禁楽曲の保存payload。
- */
-const toLockedSongRequests = (keys: string[]): PlayerLockedSongRequest[] =>
-  keys.map((key) => {
-    const [displayId, mode] = key.split(':')
-    return {
-      display_id: displayId,
-      is_ultima: mode === 'ultima',
-    }
-  })
-
-/**
  * OVER POWER計算から除外する未解禁楽曲を検索・絞り込みしながら編集するダイアログ。
  *
- * @param props - ダイアログの表示状態、楽曲・マスターデータ、未解禁楽曲、保存処理。
+ * @param props - ダイアログの表示状態、楽曲・マスターデータ、未解禁楽曲、公式OP、保存処理。
  * @returns 未解禁楽曲設定ダイアログのUI。
  */
 const LockedSongsDialog: Component<Props> = (props) => {
@@ -188,10 +197,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
   )
 
   /**
-   * 候補が未プレイのみ表示フィルターに合致するか判定する。
+   * 候補がプレイ状況フィルターに合致するか判定するための未プレイ状態を返す。
    *
    * @param item - 未解禁候補の曲・譜面種別。
-   * @returns 未プレイ候補として表示できる場合はtrue。
+   * @returns 候補が未プレイとして扱われる場合はtrue。
    */
   const isUnplayedListItem = (item: LockedSongListItem): boolean => {
     if (item.isUltima) {
@@ -209,7 +218,12 @@ const LockedSongsDialog: Component<Props> = (props) => {
       .filter(({ item, searchableText, searchableReading }) => {
         const key = createLockedSongKey(item.song.id, item.isUltima)
         if (model.showSelectedOnly() && !model.draftKeys().has(key)) return false
-        if (currentFilters.unplayedOnly && !isUnplayedListItem(item)) return false
+        if (
+          currentFilters.playStatusEnabled &&
+          !matchesLockedSongsPlayStatus(currentFilters.playStatus, isUnplayedListItem(item))
+        ) {
+          return false
+        }
         if (!currentFilters.genres.includes(item.song.genre)) return false
         const version = songVersionNameById().get(item.song.id) ?? '不明'
         if (!currentFilters.versions.includes(version)) return false
@@ -223,6 +237,17 @@ const LockedSongsDialog: Component<Props> = (props) => {
   })
   const selectionSummary = createMemo(
     () => `${model.selectedCount()}件選択中 / ${filteredSongListItems().length}件表示`
+  )
+  const draftLockedSongs = createMemo(() => toLockedSongRequests([...model.draftKeys()]))
+  const opComparison = createMemo(() =>
+    buildLockedSongsOpComparison({
+      songs: props.songs,
+      records: props.records,
+      versions: props.versions,
+      lockedSongs: draftLockedSongs(),
+      officialOverPower: props.officialOverPower,
+      officialOverPowerPercent: props.officialOverPowerPercent,
+    })
   )
 
   /**
@@ -280,20 +305,59 @@ const LockedSongsDialog: Component<Props> = (props) => {
   }
 
   /**
-   * 未プレイのみ表示する追加フィルターを描画する。
+   * プレイ状況フィルターを描画する。
    *
-   * @returns 未プレイ絞り込みのチェック欄。
+   * @returns プレイ状況絞り込みのチェックボックスとSelect欄。
    */
-  const renderFilterExtras = (): JSX.Element => (
-    <section>
-      <CheckboxField
-        id="locked-song-filter-unplayed-only"
-        checked={model.filters().unplayedOnly}
-        onChange={(unplayedOnly) => model.setFilters((current) => ({ ...current, unplayedOnly }))}
-        label="未プレイのみ表示"
-      />
-    </section>
-  )
+  const renderFilterExtras = (): JSX.Element => {
+    const selectedOption = (): LockedSongsPlayStatusOption =>
+      LOCKED_SONG_PLAY_STATUS_OPTIONS.find(
+        (option) => option.value === model.filters().playStatus
+      ) ?? LOCKED_SONG_PLAY_STATUS_OPTIONS[0]
+
+    return (
+      <section>
+        <div class="flex min-w-0 items-center gap-2">
+          <CheckboxField
+            id={LOCKED_SONG_PLAY_STATUS_FILTER_ID}
+            checked={model.filters().playStatusEnabled}
+            onChange={(playStatusEnabled) =>
+              model.setFilters((current) => ({
+                ...current,
+                playStatusEnabled,
+              }))
+            }
+            ariaLabel={LOCKED_SONG_PLAY_STATUS_FILTER_COPY.ariaLabel}
+            class="shrink-0"
+          />
+          <AppSelect<LockedSongsPlayStatusOption>
+            rootClass="min-w-0 flex-1"
+            label={LOCKED_SONG_PLAY_STATUS_FILTER_COPY.label}
+            labelVariant="srOnly"
+            options={[...LOCKED_SONG_PLAY_STATUS_OPTIONS]}
+            optionValue="value"
+            optionTextValue="label"
+            value={selectedOption()}
+            onChange={(option) =>
+              model.setFilters((current) => ({
+                ...current,
+                playStatus: option?.value ?? LOCKED_SONG_PLAY_STATUS_OPTIONS[0].value,
+              }))
+            }
+            formatLabel={(option) => option.label}
+            contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+            itemClass="hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
+          />
+          <label
+            for={LOCKED_SONG_PLAY_STATUS_FILTER_ID}
+            class="shrink-0 cursor-pointer text-sm text-text-muted"
+          >
+            {LOCKED_SONG_PLAY_STATUS_FILTER_COPY.suffix}
+          </label>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <SongSelectionDialogBase
@@ -301,6 +365,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
       onOpenChange={props.onOpenChange}
       title="未解禁楽曲設定"
       description={LOCKED_SONG_DESCRIPTION}
+      headerExtra={<LockedSongsOpComparison comparison={opComparison} />}
       searchAriaLabel="未解禁楽曲検索"
       query={model.query}
       setQuery={model.setQuery}

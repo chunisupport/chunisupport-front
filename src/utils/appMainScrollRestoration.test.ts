@@ -5,6 +5,7 @@ import {
   getAppMainScrollOffset,
   getAppMainScrollTop,
   isHistoryPopNavigation,
+  notifyAppMainScrollPopNavigation,
   rememberAppMainScrollNavigationTarget,
   resolveRestoredAppMainScrollOffset,
   restoreAppMainScrollOffset,
@@ -41,6 +42,24 @@ test('履歴の戻る/進むでは保存済み位置を復元すること', () =
 
   // Then
   assert.equal(restoredOffset, 1280)
+})
+
+test('popstate後のパス文字列上書きでも履歴戻りの位置を復元すること', async () => {
+  // Given
+  clearAppMainScrollOffsets()
+  notifyAppMainScrollPopNavigation()
+  rememberAppMainScrollNavigationTarget('/songs')
+
+  // When
+  const restoredOffset = resolveRestoredAppMainScrollOffset(1280)
+
+  // Then
+  assert.equal(isHistoryPopNavigation(), true)
+  assert.equal(restoredOffset, 1280)
+
+  await Promise.resolve()
+  rememberAppMainScrollNavigationTarget('/tools')
+  assert.equal(resolveRestoredAppMainScrollOffset(1280), 0)
 })
 
 test('パスごとにスクロール位置を保存・取得できること', () => {

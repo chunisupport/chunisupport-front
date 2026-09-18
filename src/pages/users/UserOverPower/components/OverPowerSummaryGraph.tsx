@@ -2,6 +2,7 @@ import { Button } from '@kobalte/core/button'
 import { Funnel } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
+import { DistributionBar as StackedDistributionBar } from '../../../../components/common/record/DistributionBar'
 import {
   ALL_JUSTICE_CRITICAL_BG_CLASS,
   COMBO_LAMP_BAR_CLASS,
@@ -50,7 +51,13 @@ const formatValue = formatOverPowerValue
 const formatPercent = (value: number): string =>
   formatOverPowerPercent(value, OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES)
 
-/** 分布バーの横幅として使う割合を算出する */
+/**
+ * 分布バーの横幅として使う割合を算出する。
+ *
+ * @param count - 対象帯の件数。
+ * @param total - 全帯の合計件数。
+ * @returns バー全体に占める割合。
+ */
 const calcBandPercent = (count: number, total: number): number =>
   total > 0 ? (count / total) * 100 : 0
 
@@ -83,23 +90,14 @@ const DistributionBar: Component<{
           )}
         </For>
       </div>
-      <div class="flex h-7 w-full overflow-visible bg-surface-hover" role="presentation">
-        <For each={props.bands.filter((band) => band.count > 0)}>
-          {(band, index) => {
-            const visibleBands = props.bands.filter((b) => b.count > 0)
-            const z = () => visibleBands.length - index()
-            return (
-              <div
-                class={`${props.colorClassByLabel[band.label] ?? 'bg-action-secondary-hover'} relative ${index() === visibleBands.length - 1 ? '' : 'shadow-[2px_0_3px_-1px_rgba(0,0,0,0.4)]'}`}
-                style={{
-                  width: `${calcBandPercent(band.count, props.total)}%`,
-                  'z-index': z(),
-                }}
-              />
-            )
-          }}
-        </For>
-      </div>
+      <StackedDistributionBar
+        heightClass="h-7"
+        segments={props.bands.map((band) => ({
+          key: band.label,
+          percent: calcBandPercent(band.count, props.total),
+          colorClass: props.colorClassByLabel[band.label] ?? 'bg-action-secondary-hover',
+        }))}
+      />
     </div>
   )
 }

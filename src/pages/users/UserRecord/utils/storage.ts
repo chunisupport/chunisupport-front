@@ -11,12 +11,13 @@ import { normalizeFilterState } from '../../../../utils/recordFilterDefaults'
 import type { SavedRecordFilterItem } from '../../components/SavedRecordFiltersDialog'
 import { isValidSavedStandardFilter } from '../../components/savedRecordFilters'
 
-export const SAVED_FILTER_SCHEMA_VERSION = 8
+export const SAVED_FILTER_SCHEMA_VERSION = 9
 const LEGACY_SAVED_FILTER_SCHEMA_VERSION = 3
 const LEGACY_SAVED_FILTER_SCHEMA_VERSION_4 = 4
 const LEGACY_SAVED_FILTER_SCHEMA_VERSION_5 = 5
 const LEGACY_SAVED_FILTER_SCHEMA_VERSION_6 = 6
 const LEGACY_SAVED_FILTER_SCHEMA_VERSION_7 = 7
+const LEGACY_SAVED_FILTER_SCHEMA_VERSION_8 = 8
 const STANDARD_RECORD_FILTER_TYPE = 'standard'
 const INVALID_SCHEMA_MESSAGE = '古い形式のため無効です。'
 const INVALID_FILTER_MESSAGE = '保存値が壊れているため無効です。'
@@ -46,7 +47,8 @@ export function toSavedFilter(dto: RecordFilterDTO<unknown>): SavedFilter {
     dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_4 ||
     dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_5 ||
     dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_6 ||
-    dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_7
+    dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_7 ||
+    dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_8
   const filter =
     validSchema && isObjectRecord(dto.filter) && isValidSavedStandardFilter(dto.filter)
       ? dto.filter
@@ -62,7 +64,8 @@ export function toSavedFilter(dto: RecordFilterDTO<unknown>): SavedFilter {
           combo_lamp:
             dto.schema_version === SAVED_FILTER_SCHEMA_VERSION ||
             dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_6 ||
-            dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_7
+            dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_7 ||
+            dto.schema_version === LEGACY_SAVED_FILTER_SCHEMA_VERSION_8
               ? filter.combo_lamp
               : migrateLegacyComboLampFilters(filter.combo_lamp),
         })

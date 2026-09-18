@@ -235,7 +235,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   password_too_long: 'パスワードは128文字以内である必要があります',
   invalid_password: 'パスワードが無効です',
   app_version_unsupported: 'データが古くなっています',
-  duplicate_official_idx: '同じ公式IDの楽曲がすでに存在します',
+  duplicate_official_idx: '同じ公式IDがすでに存在します',
   invalid_version_input: 'バージョン名または稼働日の入力内容が不正です',
   version_not_found: '対象のバージョンが見つかりません',
   version_name_conflict: '同じバージョン名がすでに存在します',
@@ -534,6 +534,9 @@ export interface AchievementTypeDTO {
   label?: string
   name?: string
 }
+/** ポゼッションのマスタ名称 */
+export type PossessionName = 'normal' | 'silver' | 'gold' | 'platina' | 'rainbow'
+
 export interface MasterDataDTO {
   genres: MasterItemDTO[]
   difficulties: MasterItemDTO[]
@@ -541,6 +544,8 @@ export interface MasterDataDTO {
   account_types: MasterItemDTO[]
   rating_bands: RatingBandDTO[]
   achievement_types: AchievementTypeDTO[]
+  /** ポゼッション一覧（ID順）。`PlayerDTO.possession_id` の解決に使用する */
+  possessions: MasterItemDTO[]
 }
 
 export interface VersionDTO {
@@ -568,6 +573,7 @@ export interface VersionSummaryDTO {
 export type GoalAchievementType =
   | 'rank_count'
   | 'score_count'
+  | 'rating_count'
   | 'avg_score'
   | 'hardlamp_count'
   | 'combolamp_count'
@@ -589,6 +595,12 @@ export interface GoalAttributes {
 }
 
 export type GoalAchievementParams =
+  | {
+      rating: number
+      count?: number
+      remaining?: number
+      percent?: number
+    }
   | {
       score: number
       count?: number
@@ -762,6 +774,11 @@ export interface PlayerDataProfile {
   rating: number | null
   class_emblem_id: number | null
   class_emblem_base_id: number | null
+  /**
+   * ポゼッションID。`MasterDataDTO.possessions` の `id` に対応する。
+   * 現行APIは常に返すが、保存済み最新更新結果の旧schemaでは未返却のことがある。
+   */
+  possession_id?: number
   last_played_at: string | null
   overpower_value: number | null
   overpower_percent: number | null
@@ -890,6 +907,39 @@ export interface CourseDTO {
   class: string
 }
 
+/** 編集者向けコースマスタ。削除済みを含み、内部IDと更新日時を返す */
+export interface ManagedCourseDTO extends CourseDTO {
+  /** コースの内部ID。公開一覧では省略される場合がある */
+  id?: number
+  /** 論理削除済みかどうか。false の場合は API が省略することがある */
+  is_deleted?: boolean
+  /** コースマスタの更新日時 */
+  updated_at?: string
+}
+
+/** 編集者向けコース一覧レスポンス */
+export interface ManagedCoursesResponse {
+  courses: ManagedCourseDTO[]
+}
+
+/** コース追加リクエスト */
+export interface CreateCourseRequestDTO {
+  /** 公式インデックス */
+  idx: string
+  /** コース名 */
+  name: string
+  /** コースクラス */
+  class: string
+}
+
+/** コース名称・クラス更新リクエスト */
+export interface UpdateCourseRequestDTO {
+  /** コース名 */
+  name: string
+  /** コースクラス */
+  class: string
+}
+
 /** プレイヤーデータ登録で返されるレコード差分 */
 export type PlayerDataRecordChange = PlayerDataSongRecordChange | PlayerDataCourseRecordChange
 
@@ -989,9 +1039,15 @@ export interface PlayerDTO {
   rating: number
   class_emblem_id: number | null
   class_emblem_base_id: number | null
+  /** ポゼッションID。`MasterDataDTO.possessions` の `id` に対応する */
+  possession_id: number
   last_played_at: string | null
   overpower_value: number | null
   overpower_percent: number | null
+  /** CHUNITHM-NETから取得した公式OVER POWER */
+  official_overpower: number
+  /** CHUNITHM-NETから取得した公式OP%。記録開始前はnull */
+  official_overpower_percent: number | null
   team_name: string | null
   team_color: string | null
   honors: HonorDTO[]
@@ -1220,6 +1276,7 @@ export interface WorldsendSongDTO {
   release: string | null
   official_idx: string
   jacket: string | null
+  is_new: boolean
   charts: { WORLDSEND?: WorldsendChartDTO }
   // API仕様書に未記載だが include_deleted=true 時に削除状態の判別に利用
   is_deleted?: boolean
@@ -1289,6 +1346,7 @@ export interface CreateWorldsendSongRequestDTO {
   bpm: number | null
   released_at: string | null
   jacket: string | null
+  is_new?: boolean
   chart?: UpdateWorldsendChartRequestDTO
 }
 
@@ -1301,6 +1359,7 @@ export interface UpdateWorldsendSongRequestDTO {
   bpm: number | null
   released_at: string | null
   jacket: string | null
+  is_new: boolean
   charts?: {
     WORLDSEND?: UpdateWorldsendChartRequestDTO
   } | null
@@ -1367,12 +1426,25 @@ export interface ApiToken {
   id: number
   /** ユーザーが指定した表示名 */
   name: string
+  /** APIトークンで許可される操作 */
+  permission: ApiTokenPermission
   /** 表示用のトークン先頭5文字。旧仕様からの移行データは null */
   token_prefix: string | null
   /** 最終利用日時。未使用の場合は null */
   last_used_at: string | null
   /** 発行日時 */
   created_at: string
+}
+
+/** APIトークンの権限 */
+export type ApiTokenPermission = 'read' | 'read_write'
+
+/** APIトークン発行リクエスト */
+export interface ApiTokenIssueRequest {
+  /** 前後空白を除いて1〜50文字の表示名 */
+  name: string
+  /** 発行後は変更できないAPIトークン権限 */
+  permission: ApiTokenPermission
 }
 
 /** APIトークン発行時に一度だけ返る平文トークン付きレスポンス */

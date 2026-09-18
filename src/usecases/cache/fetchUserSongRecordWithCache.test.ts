@@ -75,7 +75,7 @@ test('通常楽曲詳細の単曲レコード取得は2回目にIndexedDBキャ�
     if (url.endsWith('/internal/songs/updated-at')) {
       return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
     }
-    if (url === `${API_BASE_URL}/internal/users/alice/record/songs/song%2F1?include_noplay=true`) {
+    if (url === `${API_BASE_URL}/internal/users/alice/record/songs/song%2F1`) {
       return Response.json({
         standard: [record],
         meta: { updated_at: '2026-07-06T00:00:00Z' },

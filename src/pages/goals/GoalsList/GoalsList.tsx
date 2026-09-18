@@ -136,13 +136,15 @@ const GoalsList: Component = () => {
    *
    * @param attributes - 件数を確認する対象条件。
    * @param achievementType - 集約単位を決める目標種別。
+   * @param achievementParams - 到達可能譜面数の解決に使う成果パラメータ。
    * @returns 条件に一致する譜面数または楽曲数。
    */
   const resolveAllCount = (
     attributes: GoalCreateRequest['attributes'],
-    achievementType?: GoalCreateRequest['achievement_type']
+    achievementType?: GoalCreateRequest['achievement_type'],
+    achievementParams?: GoalCreateRequest['achievement_params']
   ) => {
-    return resolveGoalAllCount(resource(), attributes, achievementType)
+    return resolveGoalAllCount(resource(), attributes, achievementType, achievementParams)
   }
 
   /**

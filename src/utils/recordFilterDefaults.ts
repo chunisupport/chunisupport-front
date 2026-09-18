@@ -30,6 +30,10 @@ export const DEFAULT_FILTER: FilterState = {
     max: MAX_SCORE,
   },
   scoreFilterMode: 'rank',
+  rating: {
+    min: null,
+    max: null,
+  },
   justiceCount: {
     min: null,
     max: null,
@@ -84,6 +88,7 @@ export const buildDefaultFilter = (
   ...getMasterDataDefaults(masterData, versions, referenceDate),
   const: { ...DEFAULT_FILTER.const },
   score: { ...DEFAULT_FILTER.score },
+  rating: { ...DEFAULT_FILTER.rating },
   justiceCount: { ...DEFAULT_FILTER.justiceCount },
   overPower: { ...DEFAULT_FILTER.overPower },
   combo_lamp: [...RECORD_COMBO_LAMP_OPTIONS],
@@ -108,6 +113,7 @@ export const normalizeFilterState = (
     ...currentFilter,
     const: filter.const ?? { ...DEFAULT_FILTER.const },
     score: filter.score ?? { ...DEFAULT_FILTER.score },
+    rating: filter.rating ?? { ...DEFAULT_FILTER.rating },
     justiceCount: filter.justiceCount ?? { ...DEFAULT_FILTER.justiceCount },
     overPower: filter.overPower ?? { ...DEFAULT_FILTER.overPower },
     opTargetOnly: filter.opTargetOnly ?? currentOpTargetOnly ?? DEFAULT_FILTER.opTargetOnly,

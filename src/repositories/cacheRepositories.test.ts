@@ -26,6 +26,7 @@ import {
 import {
   clearCachedSongData,
   readCachedSongs,
+  readCachedWorldsendSongs,
   replaceCachedSongs,
   replaceCachedWorldsendSongs,
 } from './songCacheRepository.ts'
@@ -77,6 +78,7 @@ const worldsendSong: WorldsendSongDTO = {
   release: null,
   official_idx: '90001',
   jacket: null,
+  is_new: false,
   charts: {},
 }
 
@@ -152,6 +154,21 @@ test('楽曲キャッシュは schemaVersion と updated-at が一致する場�
   // Then
   assert.deepEqual(matched, [song, previousIdSong])
   assert.equal(mismatched, null)
+})
+
+test("WORLD'S END の旧キャッシュに新曲フラグがなければ再取得すること", async () => {
+  // Given
+  const songsUpdatedAt = '2026-06-16T12:00:00Z'
+  await replaceCachedWorldsendSongs([worldsendSong], songsUpdatedAt)
+  const oldSong = { ...worldsendSong }
+  delete (oldSong as Partial<WorldsendSongDTO>).is_new
+  await db.worldsendSongs.put({ id: oldSong.id, sortOrder: 0, data: oldSong })
+
+  // When
+  const cached = await readCachedWorldsendSongs(songsUpdatedAt)
+
+  // Then
+  assert.equal(cached, null)
 })
 
 test("楽曲キャッシュ無効化は通常楽曲とWORLD'S END楽曲をまとめて削除すること", async () => {

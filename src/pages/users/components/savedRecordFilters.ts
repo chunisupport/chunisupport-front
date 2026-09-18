@@ -6,6 +6,8 @@ import {
   OVER_POWER_MAX,
   OVER_POWER_MIN,
   SCORE_MIN,
+  SINGLE_RATING_MAX,
+  SINGLE_RATING_MIN,
   WORLDSEND_LEVEL_STAR_MAX,
   WORLDSEND_LEVEL_STAR_MIN,
 } from '../../../constants/chart'
@@ -229,6 +231,8 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
     (value.constFilterMode === 'level' || value.constFilterMode === 'number') &&
     isRequiredNumberRange(value.score, SCORE_MIN, MAX_SCORE, true) &&
     (value.scoreFilterMode === 'rank' || value.scoreFilterMode === 'number') &&
+    (value.rating === undefined ||
+      isOptionalNumberRange(value.rating, SINGLE_RATING_MIN, SINGLE_RATING_MAX)) &&
     isOptionalNumberRange(value.justiceCount, JUSTICE_COUNT_MIN, JUSTICE_COUNT_MAX, true) &&
     isOptionalNumberRange(value.overPower, OVER_POWER_MIN, OVER_POWER_MAX) &&
     isArrayOfOptions<ComboLampFilter>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&

@@ -2,7 +2,16 @@ import { Button } from '@kobalte/core/button'
 import { TextField } from '@kobalte/core/text-field'
 import { Plus, Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createEffect, createMemo, createResource, createSignal, For, Index, Show } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  Index,
+  Show,
+  untrack,
+} from 'solid-js'
 import {
   createSong,
   createWorldsendSong,
@@ -36,14 +45,24 @@ import type {
   UpdateWorldsendSongRequestDTO,
 } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-import { SONG_DATA_REFRESH_ERROR_MESSAGE } from './constants'
+import CopyFromStandardField from './components/CopyFromStandardField'
+import SongManagementFilterPanel from './components/SongManagementFilterPanel'
+import { SONG_DATA_REFRESH_ERROR_MESSAGE, SONG_MANAGEMENT_ACTION_COPY } from './constants'
 import { buildSearchableItems, filterSearchableItems } from './searchHelpers'
+import {
+  createSongManagementFilters,
+  filterManagedSongs,
+  filterManagedWorldsendSongs,
+} from './songManagementFilters'
+import { patchManagedSongResponse } from './utils/patchManagedSongResponse'
 import { sortByReleaseDateDescWithMissingFirst } from './utils/releaseDateSorting'
 
 type SongManagementPageProps = {
   title: string
   canCreate: boolean
   canDelete: boolean
+  /** 管理用の属性・欠落フィルターを表示するか */
+  showAdvancedFilters: boolean
 }
 
 type EditableChartDraft = {
@@ -79,6 +98,7 @@ type WorldsendDraft = {
   bpm: number | null
   released_at: string | null
   jacket: string | null
+  is_new: boolean
   attribute: string | null
   level_star: number | null
   notes: number | null
@@ -118,6 +138,7 @@ type CreateWorldsendDraft = {
   bpm: number | null
   released_at: string | null
   jacket: string | null
+  is_new: boolean
   attribute: string | null
   level_star: number | null
   notes: number | null
@@ -295,6 +316,7 @@ const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
     bpm: null,
     released_at: null,
     jacket: null,
+    is_new: false,
     attribute: null,
     level_star: null,
     notes: null,
@@ -303,8 +325,27 @@ const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
 }
 
 const managementInputClass = 'w-full rounded border border-border-strong px-3 py-2'
+/** 楽曲管理一覧の行ボタンに共通で付けるレイアウトクラス */
+const managedSongRowButtonClass = 'w-full px-3 py-2 text-left text-sm'
 /** 通常楽曲の新曲判定を編集するチェックボックスの表示名 */
 const newSongFlagLabel = '新曲フラグ'
+
+/**
+ * 楽曲管理一覧の行背景クラスを返す。
+ * 削除済み行は通常行のホバー色に置き換わらないようにする。
+ *
+ * @param isSelected - 選択中かどうか
+ * @param isDeleted - 論理削除済みかどうか
+ * @returns Button の classList へ渡すクラスマップ
+ */
+const getManagedSongRowClassList = (
+  isSelected: boolean,
+  isDeleted: boolean
+): Record<string, boolean> => ({
+  'bg-info-bg': isSelected,
+  'bg-danger-bg': isDeleted && !isSelected,
+  'hover:bg-surface-muted': !isDeleted && !isSelected,
+})
 
 /**
  * 楽曲管理画面で利用する Kobalte TextField ベースの入力欄を描画します。
@@ -427,6 +468,7 @@ const toWorldsendDraft = (
     bpm: song.bpm ?? null,
     released_at: toDateOnly(song.release),
     jacket: song.jacket ?? null,
+    is_new: readSongNewFlag(song),
     attribute: chart?.attribute ?? null,
     level_star: chart?.level_star ?? null,
     notes: chart?.notes ?? null,
@@ -435,6 +477,140 @@ const toWorldsendDraft = (
     chart_updated_at: chart?.updated_at ?? null,
   }
 }
+
+/**
+ * 通常楽曲の編集可能な値が選択時から変わったか判定する。
+ *
+ * @param current - 現在の編集値。
+ * @param initial - 選択時の編集値。
+ * @returns 編集可能な値に差がある場合は true。
+ */
+const hasSongDraftChanges = (current: SongDraft | null, initial: SongDraft | null): boolean => {
+  if (!current || !initial) return false
+  if (
+    current.title !== initial.title ||
+    current.reading !== initial.reading ||
+    current.artist !== initial.artist ||
+    current.genre_id !== initial.genre_id ||
+    current.bpm !== initial.bpm ||
+    current.released_at !== initial.released_at ||
+    current.jacket !== initial.jacket ||
+    current.is_new !== initial.is_new ||
+    current.charts.length !== initial.charts.length
+  )
+    return true
+
+  return current.charts.some((chart, index) => {
+    const original = initial.charts[index]
+    return (
+      chart.difficulty_id !== original.difficulty_id ||
+      chart.const !== original.const ||
+      chart.is_const_unknown !== original.is_const_unknown ||
+      chart.notes !== original.notes ||
+      chart.notes_designer !== original.notes_designer
+    )
+  })
+}
+
+/**
+ * WORLD'S END 楽曲の編集可能な値が選択時から変わったか判定する。
+ *
+ * @param current - 現在の編集値。
+ * @param initial - 選択時の編集値。
+ * @returns 編集可能な値に差がある場合は true。
+ */
+const hasWorldsendDraftChanges = (
+  current: WorldsendDraft | null,
+  initial: WorldsendDraft | null
+): boolean => {
+  if (!current || !initial) return false
+  return (
+    current.title !== initial.title ||
+    current.reading !== initial.reading ||
+    current.artist !== initial.artist ||
+    current.genre_id !== initial.genre_id ||
+    current.bpm !== initial.bpm ||
+    current.released_at !== initial.released_at ||
+    current.jacket !== initial.jacket ||
+    current.is_new !== initial.is_new ||
+    current.attribute !== initial.attribute ||
+    current.level_star !== initial.level_star ||
+    current.notes !== initial.notes ||
+    current.notes_designer !== initial.notes_designer
+  )
+}
+
+/**
+ * 保存した通常楽曲ドラフトを管理用 DTO へ反映する。
+ *
+ * @param song - 現在の管理用楽曲
+ * @param draft - 保存した編集ドラフト
+ * @param genreName - ジャンル名。未解決なら既存値を維持する
+ * @returns ドラフト内容を反映した管理用楽曲
+ */
+const applySongDraftToManagedSong = (
+  song: ManagedSongDTO,
+  draft: SongDraft,
+  genreName: string | null
+): ManagedSongDTO => {
+  const charts: ManagedSongDTO['charts'] = { ...song.charts }
+  for (const chart of draft.charts) {
+    const previous = song.charts[chart.difficulty_name]
+    charts[chart.difficulty_name] = {
+      const: parseFloat(chart.const),
+      is_const_unknown: chart.is_const_unknown,
+      notes: chart.notes,
+      notes_designer: toNullableTrimmedString(chart.notes_designer),
+      updated_at: previous?.updated_at ?? null,
+    }
+  }
+
+  return {
+    ...song,
+    title: draft.title,
+    reading: toNullableTrimmedString(draft.reading),
+    artist: draft.artist,
+    genre: genreName ?? song.genre,
+    bpm: draft.bpm,
+    release: toDateOnly(draft.released_at),
+    jacket: draft.jacket,
+    is_new: draft.is_new,
+    charts,
+  }
+}
+
+/**
+ * 保存した WORLD'S END ドラフトを管理用 DTO へ反映する。
+ *
+ * @param song - 現在の管理用楽曲
+ * @param draft - 保存した編集ドラフト
+ * @param genreName - ジャンル名。未解決なら既存値を維持する
+ * @returns ドラフト内容を反映した管理用楽曲
+ */
+const applyWorldsendDraftToManagedSong = (
+  song: ManagedWorldsendSongDTO,
+  draft: WorldsendDraft,
+  genreName: string | null
+): ManagedWorldsendSongDTO => ({
+  ...song,
+  title: draft.title,
+  reading: toNullableTrimmedString(draft.reading),
+  artist: draft.artist,
+  genre: genreName ?? song.genre,
+  bpm: draft.bpm,
+  release: toDateOnly(draft.released_at),
+  jacket: draft.jacket,
+  is_new: draft.is_new,
+  charts: {
+    WORLDSEND: {
+      attribute: toNullableTrimmedString(draft.attribute),
+      level_star: draft.level_star,
+      notes: draft.notes,
+      notes_designer: toNullableTrimmedString(draft.notes_designer),
+      updated_at: song.charts.WORLDSEND?.updated_at ?? null,
+    },
+  },
+})
 
 /**
  * 権限を持つユーザー向けの楽曲管理画面を描画します。
@@ -447,8 +623,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   useDocumentTitle(props.title)
 
   const songsData = useSongsData()
-  const [songsResponse, { refetch: refetchManagedSongs }] = createResource(fetchManagedSongs)
-  const [worldsendResponse, { refetch: refetchManagedWorldsendSongs }] = createResource(
+  const [songsResponse, { mutate: mutateManagedSongs }] = createResource(fetchManagedSongs)
+  const [worldsendResponse, { mutate: mutateManagedWorldsendSongs }] = createResource(
     fetchManagedWorldsendSongs
   )
   const [masterData] = createResource(fetchMasterData)
@@ -456,7 +632,13 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const [selectedSongId, setSelectedSongId] = createSignal<string>('')
   const [selectedWorldsendSongId, setSelectedWorldsendSongId] = createSignal<string>('')
   const [draft, setDraft] = createSignal<SongDraft | null>(null)
+  const [initialDraft, setInitialDraft] = createSignal<SongDraft | null>(null)
   const [worldsendDraft, setWorldsendDraft] = createSignal<WorldsendDraft | null>(null)
+  const [initialWorldsendDraft, setInitialWorldsendDraft] = createSignal<WorldsendDraft | null>(
+    null
+  )
+  const [savingSong, setSavingSong] = createSignal(false)
+  const [savingWorldsend, setSavingWorldsend] = createSignal(false)
   const [createSongDraft, setCreateSongDraft] = createSignal<CreateSongDraft>(
     buildCreateSongDraft()
   )
@@ -465,20 +647,30 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   )
   const [songSearchQuery, setSongSearchQuery] = createSignal('')
   const [worldsendSearchQuery, setWorldsendSearchQuery] = createSignal('')
+  const [songFilters, setSongFilters] = createSignal(createSongManagementFilters())
+  const [worldsendFilters, setWorldsendFilters] = createSignal(createSongManagementFilters())
 
   const songs = createMemo<ManagedSongDTO[]>(() =>
-    sortByReleaseDateDescWithMissingFirst(songsResponse()?.songs ?? [])
+    sortByReleaseDateDescWithMissingFirst(songsResponse.latest?.songs ?? [])
   )
   const searchableSongs = createMemo(() => buildSearchableItems(songs()))
   const filteredSongs = createMemo(() =>
-    filterSearchableItems(searchableSongs(), songSearchQuery())
+    filterManagedSongs(
+      filterSearchableItems(searchableSongs(), songSearchQuery()),
+      songFilters(),
+      masterData()?.versions ?? []
+    )
   )
   const worldsendSongs = createMemo<ManagedWorldsendSongDTO[]>(() =>
-    sortByReleaseDateDescWithMissingFirst(worldsendResponse()?.songs ?? [])
+    sortByReleaseDateDescWithMissingFirst(worldsendResponse.latest?.songs ?? [])
   )
   const searchableWorldsendSongs = createMemo(() => buildSearchableItems(worldsendSongs()))
   const filteredWorldsendSongs = createMemo(() =>
-    filterSearchableItems(searchableWorldsendSongs(), worldsendSearchQuery())
+    filterManagedWorldsendSongs(
+      filterSearchableItems(searchableWorldsendSongs(), worldsendSearchQuery()),
+      worldsendFilters(),
+      masterData()?.versions ?? []
+    )
   )
   const selectedSong = createMemo(() => {
     const selected = selectedSongId()
@@ -490,27 +682,51 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     if (!selected) return null
     return worldsendSongs().find((item) => item.id === selected) ?? null
   })
+  const songChanged = createMemo(() => hasSongDraftChanges(draft(), initialDraft()))
+  const worldsendChanged = createMemo(() =>
+    hasWorldsendDraftChanges(worldsendDraft(), initialWorldsendDraft())
+  )
 
   createEffect(() => {
-    const song = selectedSong()
+    const selectedId = selectedSongId()
     const md = masterData()
-    if (!song || !md) {
+    if (!selectedId || !md) {
       setDraft(null)
+      setInitialDraft(null)
       return
     }
 
-    setDraft(toSongDraft(song, md.genres, md.difficulties))
+    const song = untrack(() => songs().find((item) => item.id === selectedId) ?? null)
+    if (!song) {
+      setDraft(null)
+      setInitialDraft(null)
+      return
+    }
+
+    const nextDraft = toSongDraft(song, md.genres, md.difficulties)
+    setInitialDraft(nextDraft)
+    setDraft(nextDraft)
   })
 
   createEffect(() => {
-    const song = selectedWorldsendSong()
+    const selectedId = selectedWorldsendSongId()
     const md = masterData()
-    if (!song || !md) {
+    if (!selectedId || !md) {
       setWorldsendDraft(null)
+      setInitialWorldsendDraft(null)
       return
     }
 
-    setWorldsendDraft(toWorldsendDraft(song, md.genres))
+    const song = untrack(() => worldsendSongs().find((item) => item.id === selectedId) ?? null)
+    if (!song) {
+      setWorldsendDraft(null)
+      setInitialWorldsendDraft(null)
+      return
+    }
+
+    const nextDraft = toWorldsendDraft(song, md.genres)
+    setInitialWorldsendDraft(nextDraft)
+    setWorldsendDraft(nextDraft)
   })
 
   const handleSelectSong = (songId: string) => {
@@ -613,29 +829,59 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   }
 
   /**
-   * 通常楽曲 CRUD 後に管理画面と公開画面のデータをサーバー正規 DTO で更新する。
+   * 通常楽曲の公開キャッシュを無効化する。管理一覧は再取得せず、画面の再マウントを避ける。
+   *
+   * @returns なし。
+   */
+  const invalidatePublicStandardSongs = (): void => {
+    void songsData.refreshSongs().catch((error: unknown) => {
+      showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+    })
+  }
+
+  /**
+   * WORLD'S END 楽曲の公開キャッシュを無効化する。管理一覧は再取得せず、画面の再マウントを避ける。
+   *
+   * @returns なし。
+   */
+  const invalidatePublicWorldsendSongs = (): void => {
+    void songsData.refreshWorldsendSongs().catch((error: unknown) => {
+      showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+    })
+  }
+
+  /**
+   * 通常楽曲追加後に管理一覧を差し替え、公開キャッシュを無効化する。
+   * resource.refetch は loading で画面をアンマウントするため使わない。
    *
    * @returns 再取得処理完了後に解決される Promise。
    */
   const refreshStandardSongData = async (): Promise<void> => {
     try {
-      await Promise.all([refetchManagedSongs(), songsData.refreshSongs()])
+      mutateManagedSongs(await fetchManagedSongs())
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+      return
     }
+
+    invalidatePublicStandardSongs()
   }
 
   /**
-   * WORLD'S END 楽曲 CRUD 後に管理画面と公開画面のデータを正規 DTO で更新する。
+   * WORLD'S END 楽曲追加後に管理一覧を差し替え、公開キャッシュを無効化する。
+   * resource.refetch は loading で画面をアンマウントするため使わない。
    *
    * @returns 再取得処理完了後に解決される Promise。
    */
   const refreshWorldsendSongData = async (): Promise<void> => {
     try {
-      await Promise.all([refetchManagedWorldsendSongs(), songsData.refreshWorldsendSongs()])
+      mutateManagedWorldsendSongs(await fetchManagedWorldsendSongs())
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+      return
     }
+
+    invalidatePublicWorldsendSongs()
   }
 
   /**
@@ -645,7 +891,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
    */
   const handleSave = async () => {
     const current = draft()
-    if (!current) return
+    if (!current || !songChanged() || savingSong()) return
 
     const md = masterData()
     if (!md) {
@@ -687,12 +933,21 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       ),
     }
 
+    setSavingSong(true)
     try {
       await updateSongs([request])
+      mutateManagedSongs((response) =>
+        patchManagedSongResponse(response, current.id, (song) =>
+          applySongDraftToManagedSong(song, current, request.genre)
+        )
+      )
       showSuccessToast('楽曲を更新しました。')
-      await refreshStandardSongData()
+      if (selectedSongId() === current.id) setInitialDraft(current)
+      invalidatePublicStandardSongs()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
+    } finally {
+      setSavingSong(false)
     }
   }
 
@@ -844,6 +1099,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       bpm: current.bpm,
       released_at: normalizedReleasedAt,
       jacket: current.jacket?.trim() ? current.jacket.trim() : null,
+      is_new: current.is_new,
       chart: hasChartInput
         ? {
             attribute: current.attribute?.trim() ? current.attribute.trim() : null,
@@ -871,7 +1127,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
    */
   const handleSaveWorldsend = async () => {
     const current = worldsendDraft()
-    if (!current) return
+    if (!current || !worldsendChanged() || savingWorldsend()) return
 
     const md = masterData()
     if (!md) {
@@ -894,6 +1150,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       bpm: current.bpm,
       released_at: normalizedReleasedAt,
       jacket: current.jacket,
+      is_new: current.is_new,
       charts: {
         WORLDSEND: {
           attribute: current.attribute?.trim() ? current.attribute.trim() : null,
@@ -904,12 +1161,21 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       },
     }
 
+    setSavingWorldsend(true)
     try {
       await updateWorldsendSongs([request])
+      mutateManagedWorldsendSongs((response) =>
+        patchManagedSongResponse(response, current.id, (song) =>
+          applyWorldsendDraftToManagedSong(song, current, request.genre)
+        )
+      )
       showSuccessToast("WORLD'S END楽曲を更新しました。")
-      await refreshWorldsendSongData()
+      if (selectedWorldsendSongId() === current.id) setInitialWorldsendDraft(current)
+      invalidatePublicWorldsendSongs()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '更新に失敗しました。'))
+    } finally {
+      setSavingWorldsend(false)
     }
   }
 
@@ -923,8 +1189,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     if (!window.confirm('この楽曲を削除しますか？')) return
     try {
       await deleteSongByDisplayId(displayId)
+      mutateManagedSongs((current) =>
+        patchManagedSongResponse(current, displayId, (song) => ({ ...song, is_deleted: true }))
+      )
       showSuccessToast('楽曲を削除しました。')
-      await refreshStandardSongData()
+      invalidatePublicStandardSongs()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
@@ -939,8 +1208,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const handleRestoreSong = async (displayId: string) => {
     try {
       await restoreSongByDisplayId(displayId)
+      mutateManagedSongs((current) =>
+        patchManagedSongResponse(current, displayId, (song) => ({ ...song, is_deleted: false }))
+      )
       showSuccessToast('楽曲を復活しました。')
-      await refreshStandardSongData()
+      invalidatePublicStandardSongs()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
     }
@@ -956,8 +1228,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
     if (!window.confirm("このWORLD'S END楽曲を削除しますか？")) return
     try {
       await deleteWorldsendSongByDisplayId(displayId)
+      mutateManagedWorldsendSongs((current) =>
+        patchManagedSongResponse(current, displayId, (song) => ({ ...song, is_deleted: true }))
+      )
       showSuccessToast("WORLD'S END楽曲を削除しました。")
-      await refreshWorldsendSongData()
+      invalidatePublicWorldsendSongs()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
     }
@@ -972,8 +1247,11 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const handleRestoreWorldsendSong = async (displayId: string) => {
     try {
       await restoreWorldsendSongByDisplayId(displayId)
+      mutateManagedWorldsendSongs((current) =>
+        patchManagedSongResponse(current, displayId, (song) => ({ ...song, is_deleted: false }))
+      )
       showSuccessToast("WORLD'S END楽曲を復活しました。")
-      await refreshWorldsendSongData()
+      invalidatePublicWorldsendSongs()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, '復活に失敗しました。'))
     }
@@ -1004,7 +1282,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         <h2 class="text-lg font-semibold">通常楽曲（編集 / 削除 / 復活）</h2>
 
         <Show
-          when={!songsResponse.loading && !masterData.loading && songs().length > 0}
+          when={!masterData.loading && songs().length > 0}
           fallback={
             <div class="mt-3 h-20">
               <Loading />
@@ -1013,16 +1291,33 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         >
           <div class="mt-3 grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
             <div class="min-w-0">
-              <TextField class="mb-2 flex items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
-                <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
-                <TextField.Input
-                  type="search"
-                  value={songSearchQuery()}
-                  onInput={(event) => setSongSearchQuery(event.currentTarget.value)}
-                  placeholder="曲名・アーティスト名で検索"
-                  class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
-                />
-              </TextField>
+              <div class="mb-2 flex items-end">
+                <TextField
+                  class="flex min-w-0 flex-1 items-center gap-2 border border-border-strong px-2 focus-within:border-focus-ring"
+                  classList={{
+                    rounded: !props.showAdvancedFilters,
+                    'rounded-l border-r-0': props.showAdvancedFilters,
+                  }}
+                >
+                  <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
+                  <TextField.Input
+                    type="search"
+                    value={songSearchQuery()}
+                    onInput={(event) => setSongSearchQuery(event.currentTarget.value)}
+                    placeholder="曲名・アーティスト名で検索"
+                    class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
+                  />
+                </TextField>
+                <Show when={props.showAdvancedFilters}>
+                  <SongManagementFilterPanel
+                    idPrefix="managed-songs"
+                    filters={songFilters()}
+                    onChange={setSongFilters}
+                    genres={(masterData()?.genres ?? []).map((genre) => genre.name)}
+                    versions={masterData()?.versions ?? []}
+                  />
+                </Show>
+              </div>
               <div class="max-h-130 overflow-y-auto rounded border border-border">
                 <ul class="divide-y divide-border">
                   <For each={filteredSongs()}>
@@ -1032,11 +1327,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         <li>
                           <Button
                             type="button"
-                            class="w-full px-3 py-2 text-left text-sm hover:bg-surface-muted"
-                            classList={{
-                              'bg-info-bg': isSelected(),
-                              'bg-danger-bg': song.is_deleted && !isSelected(),
-                            }}
+                            class={managedSongRowButtonClass}
+                            classList={getManagedSongRowClassList(isSelected(), song.is_deleted)}
                             onClick={() => handleSelectSong(song.id)}
                           >
                             <p class="font-sans font-medium text-text">{song.title}</p>
@@ -1136,7 +1428,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         leftIcon={<Plus size={16} aria-hidden="true" />}
                         onClick={handleAddUltimaChart}
                       >
-                        ULTIMA譜面を追加
+                        {SONG_MANAGEMENT_ACTION_COPY.addUltimaChart}
                       </AppButton>
                     </Show>
 
@@ -1238,8 +1530,13 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     </div>
 
                     <div class="flex flex-wrap gap-2">
-                      <AppButton variant="primary" onClick={handleSave}>
-                        更新する
+                      <AppButton
+                        variant="primary"
+                        onClick={handleSave}
+                        disabled={!songChanged() || savingSong()}
+                        leftIcon={savingSong() ? <Loading size="inline" ariaHidden /> : undefined}
+                      >
+                        {SONG_MANAGEMENT_ACTION_COPY.update}
                       </AppButton>
                       <Show
                         when={!selectedSong()?.is_deleted}
@@ -1248,7 +1545,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                             variant="success"
                             onClick={() => handleRestoreSong(currentDraft().id)}
                           >
-                            復活する
+                            {SONG_MANAGEMENT_ACTION_COPY.restore}
                           </AppButton>
                         }
                       >
@@ -1257,7 +1554,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                             variant="danger"
                             onClick={() => handleDeleteSong(currentDraft().id)}
                           >
-                            削除する
+                            {SONG_MANAGEMENT_ACTION_COPY.delete}
                           </AppButton>
                         </Show>
                       </Show>
@@ -1274,7 +1571,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         <h2 class="text-lg font-semibold">WORLD&apos;S END（編集 / 削除 / 復活）</h2>
 
         <Show
-          when={!worldsendResponse.loading && !masterData.loading && worldsendSongs().length > 0}
+          when={!masterData.loading && worldsendSongs().length > 0}
           fallback={
             <div class="mt-3 h-20">
               <Loading />
@@ -1283,16 +1580,33 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         >
           <div class="mt-3 grid gap-4 lg:grid-cols-[300px_1fr]">
             <div>
-              <TextField class="mb-2 flex items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
-                <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
-                <TextField.Input
-                  type="search"
-                  value={worldsendSearchQuery()}
-                  onInput={(event) => setWorldsendSearchQuery(event.currentTarget.value)}
-                  placeholder="曲名・アーティスト名で検索"
-                  class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
-                />
-              </TextField>
+              <div class="mb-2 flex items-end">
+                <TextField
+                  class="flex min-w-0 flex-1 items-center gap-2 border border-border-strong px-2 focus-within:border-focus-ring"
+                  classList={{
+                    rounded: !props.showAdvancedFilters,
+                    'rounded-l border-r-0': props.showAdvancedFilters,
+                  }}
+                >
+                  <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
+                  <TextField.Input
+                    type="search"
+                    value={worldsendSearchQuery()}
+                    onInput={(event) => setWorldsendSearchQuery(event.currentTarget.value)}
+                    placeholder="曲名・アーティスト名で検索"
+                    class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
+                  />
+                </TextField>
+                <Show when={props.showAdvancedFilters}>
+                  <SongManagementFilterPanel
+                    idPrefix="managed-worldsend-songs"
+                    filters={worldsendFilters()}
+                    onChange={setWorldsendFilters}
+                    genres={(masterData()?.genres ?? []).map((genre) => genre.name)}
+                    versions={masterData()?.versions ?? []}
+                  />
+                </Show>
+              </div>
               <div class="max-h-130 overflow-y-auto rounded border border-border">
                 <ul class="divide-y divide-border">
                   <For each={filteredWorldsendSongs()}>
@@ -1302,11 +1616,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         <li>
                           <Button
                             type="button"
-                            class="w-full px-3 py-2 text-left text-sm hover:bg-surface-muted"
-                            classList={{
-                              'bg-info-bg': isSelected(),
-                              'bg-danger-bg': song.is_deleted && !isSelected(),
-                            }}
+                            class={managedSongRowButtonClass}
+                            classList={getManagedSongRowClassList(isSelected(), song.is_deleted)}
                             onClick={() => handleSelectWorldsendSong(song.id)}
                           >
                             <p class="font-sans font-medium text-text">{song.title}</p>
@@ -1339,16 +1650,26 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         inputClass={`${managementInputClass} font-sans`}
                         onInput={(value) => updateWorldsendDraftField('title', value)}
                       />
-                      <ManagementTextField
-                        class="col-span-2 text-sm"
-                        label="読み"
-                        value={currentDraft().reading ?? ''}
-                        maxLength={300}
-                        inputClass={`${managementInputClass} font-sans`}
-                        onInput={(value) =>
-                          updateWorldsendDraftField('reading', value.trim() === '' ? null : value)
-                        }
-                      />
+                      <CopyFromStandardField
+                        class="col-span-2"
+                        field="reading"
+                        songs={songs()}
+                        title={currentDraft().title}
+                        artist={currentDraft().artist}
+                        songsLoading={songsResponse.loading}
+                        onCopied={(reading) => updateWorldsendDraftField('reading', reading)}
+                      >
+                        <ManagementTextField
+                          class="text-sm"
+                          label="読み"
+                          value={currentDraft().reading ?? ''}
+                          maxLength={300}
+                          inputClass={`${managementInputClass} font-sans`}
+                          onInput={(value) =>
+                            updateWorldsendDraftField('reading', value.trim() === '' ? null : value)
+                          }
+                        />
+                      </CopyFromStandardField>
                       <ManagementTextField
                         class="col-span-2 text-sm"
                         label="アーティスト"
@@ -1363,14 +1684,23 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         placeholder="未設定"
                         onChange={(value) => updateWorldsendDraftField('genre_id', value)}
                       />
-                      <ManagementTextField
-                        label="BPM"
-                        type="number"
-                        value={currentDraft().bpm ?? ''}
-                        onInput={(value) =>
-                          updateWorldsendDraftField('bpm', value === '' ? null : Number(value))
-                        }
-                      />
+                      <CopyFromStandardField
+                        field="bpm"
+                        songs={songs()}
+                        title={currentDraft().title}
+                        artist={currentDraft().artist}
+                        songsLoading={songsResponse.loading}
+                        onCopied={(bpm) => updateWorldsendDraftField('bpm', bpm)}
+                      >
+                        <ManagementTextField
+                          label="BPM"
+                          type="number"
+                          value={currentDraft().bpm ?? ''}
+                          onInput={(value) =>
+                            updateWorldsendDraftField('bpm', value === '' ? null : Number(value))
+                          }
+                        />
+                      </CopyFromStandardField>
                       <ManagementTextField
                         label="リリース日"
                         type="date"
@@ -1389,6 +1719,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                           updateWorldsendDraftField('jacket', value.trim() === '' ? null : value)
                         }
                       />
+                      <div class="flex items-end py-2">
+                        <ManagementCheckbox
+                          checked={currentDraft().is_new === true}
+                          ariaLabel={newSongFlagLabel}
+                          label={newSongFlagLabel}
+                          onChange={(checked) => updateWorldsendDraftField('is_new', checked)}
+                        />
+                      </div>
                       <ManagementTextField
                         class="col-span-1 text-sm"
                         label="属性"
@@ -1438,8 +1776,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                     </div>
 
                     <div class="flex flex-wrap gap-2">
-                      <AppButton variant="primary" onClick={handleSaveWorldsend}>
-                        更新する
+                      <AppButton
+                        variant="primary"
+                        onClick={handleSaveWorldsend}
+                        disabled={!worldsendChanged() || savingWorldsend()}
+                        leftIcon={
+                          savingWorldsend() ? <Loading size="inline" ariaHidden /> : undefined
+                        }
+                      >
+                        {SONG_MANAGEMENT_ACTION_COPY.update}
                       </AppButton>
                       <Show
                         when={!selectedWorldsendSong()?.is_deleted}
@@ -1448,7 +1793,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                             variant="success"
                             onClick={() => handleRestoreWorldsendSong(currentDraft().id)}
                           >
-                            復活する
+                            {SONG_MANAGEMENT_ACTION_COPY.restore}
                           </AppButton>
                         }
                       >
@@ -1457,7 +1802,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                             variant="danger"
                             onClick={() => handleDeleteWorldsendSong(currentDraft().id)}
                           >
-                            削除する
+                            {SONG_MANAGEMENT_ACTION_COPY.delete}
                           </AppButton>
                         </Show>
                       </Show>
@@ -1469,7 +1814,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
           </div>
         </Show>
 
-        <Show when={!worldsendResponse.loading && worldsendSongs().length === 0}>
+        <Show when={worldsendResponse.latest !== undefined && worldsendSongs().length === 0}>
           <p class="mt-3 text-sm text-text-subtle">WORLD&apos;S END楽曲がありません。</p>
         </Show>
       </section>
@@ -1653,7 +1998,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               leftIcon={<Plus size={16} aria-hidden="true" />}
               onClick={handleCreateSong}
             >
-              通常楽曲を追加する
+              {SONG_MANAGEMENT_ACTION_COPY.addStandard}
             </AppButton>
           </div>
         </section>
@@ -1674,15 +2019,24 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               inputClass={`${managementInputClass} font-sans`}
               onInput={(value) => updateCreateWorldsendDraftField('title', value)}
             />
-            <ManagementTextField
-              label="読み"
-              value={createWorldsendDraft().reading ?? ''}
-              maxLength={300}
-              inputClass={`${managementInputClass} font-sans`}
-              onInput={(value) =>
-                updateCreateWorldsendDraftField('reading', value.trim() === '' ? null : value)
-              }
-            />
+            <CopyFromStandardField
+              field="reading"
+              songs={songs()}
+              title={createWorldsendDraft().title}
+              artist={createWorldsendDraft().artist}
+              songsLoading={songsResponse.loading}
+              onCopied={(reading) => updateCreateWorldsendDraftField('reading', reading)}
+            >
+              <ManagementTextField
+                label="読み"
+                value={createWorldsendDraft().reading ?? ''}
+                maxLength={300}
+                inputClass={`${managementInputClass} font-sans`}
+                onInput={(value) =>
+                  updateCreateWorldsendDraftField('reading', value.trim() === '' ? null : value)
+                }
+              />
+            </CopyFromStandardField>
             <ManagementTextField
               label="アーティスト"
               value={createWorldsendDraft().artist}
@@ -1697,14 +2051,23 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                 placeholder="選択してください"
                 onChange={(value) => updateCreateWorldsendDraftField('genre_id', value)}
               />
-              <ManagementTextField
-                label="BPM"
-                type="number"
-                value={createWorldsendDraft().bpm ?? ''}
-                onInput={(value) =>
-                  updateCreateWorldsendDraftField('bpm', value === '' ? null : Number(value))
-                }
-              />
+              <CopyFromStandardField
+                field="bpm"
+                songs={songs()}
+                title={createWorldsendDraft().title}
+                artist={createWorldsendDraft().artist}
+                songsLoading={songsResponse.loading}
+                onCopied={(bpm) => updateCreateWorldsendDraftField('bpm', bpm)}
+              >
+                <ManagementTextField
+                  label="BPM"
+                  type="number"
+                  value={createWorldsendDraft().bpm ?? ''}
+                  onInput={(value) =>
+                    updateCreateWorldsendDraftField('bpm', value === '' ? null : Number(value))
+                  }
+                />
+              </CopyFromStandardField>
               <ManagementTextField
                 label="リリース日"
                 type="date"
@@ -1720,6 +2083,14 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                   updateCreateWorldsendDraftField('jacket', value.trim() === '' ? null : value)
                 }
               />
+              <div class="flex items-end py-2">
+                <ManagementCheckbox
+                  checked={createWorldsendDraft().is_new === true}
+                  ariaLabel={newSongFlagLabel}
+                  label={newSongFlagLabel}
+                  onChange={(checked) => updateCreateWorldsendDraftField('is_new', checked)}
+                />
+              </div>
             </div>
             <ManagementTextField
               label="属性"
@@ -1768,7 +2139,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
             leftIcon={<Plus size={16} aria-hidden="true" />}
             onClick={handleCreateWorldsendSong}
           >
-            WORLD&apos;S END楽曲を追加する
+            {SONG_MANAGEMENT_ACTION_COPY.addWorldsend}
           </AppButton>
         </section>
       </Show>

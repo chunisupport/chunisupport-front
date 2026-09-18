@@ -1,5 +1,15 @@
 import { A, Route, Router } from '@solidjs/router'
-import { Calculator, ChartNoAxesCombined, Dices, Gauge, Target, Trophy } from 'lucide-solid'
+import {
+  Calculator,
+  ChartNoAxesCombined,
+  Dices,
+  Gauge,
+  ListOrdered,
+  Lock,
+  ScanSearch,
+  Target,
+  Trophy,
+} from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
 
@@ -25,29 +35,38 @@ import {
 } from './constants/footer'
 import {
   ADMIN_CHART_RANKING_PATH,
+  ADMIN_COURSES_PATH,
   ADMIN_DATA_COVERAGE_PATH,
   ADMIN_MAINTENANCE_PATH,
+  ADMIN_NAMEPLATE_PREVIEW_PATH,
   ADMIN_PATH,
+  ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH,
   ADMIN_VERSIONS_PATH,
   ADMIN_WORLDSEND_CHART_RANKING_PATH,
+  ALL_SONG_BEST_FRAME_PATH,
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   DASHBOARD_PATH,
+  EDITOR_COURSES_PATH,
   EDITOR_PATH,
   EDITOR_SONGS_PATH,
   FRIENDS_PATH,
   LATEST_SCORE_UPDATE_PATH,
+  LOCKED_SONG_DISCOVERY_PATH,
   MAINTENANCE_LOGIN_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
   REGISTER_SCORE_PATH,
   REGISTER_SCORE_TEMP_PATH,
+  SONGS_PATH,
   TOOLS_PATH,
   WEAK_CHART_INSPECTOR_PATH,
+  WORLDSEND_SONGS_PATH,
 } from './constants/routes'
 import {
+  ADMIN_ONLY_TOOL_LOCK_LABEL,
   DISABLED_TOOL_BADGE_TEXT,
   isToolLinkListed,
   TOOL_LINKS,
@@ -99,19 +118,27 @@ const OnlineWeakChartInspectorPage = lazy(
 )
 const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelectorPage'))
 const BestSlotRankingPage = lazy(() => import('./pages/tools/BestSlotRankingPage'))
+const AllSongBestFramePage = lazy(() => import('./pages/tools/AllSongBestFramePage'))
 const RatingTheoreticalCheckerPage = lazy(() => import('./pages/tools/NewSongSssPlusToolPage'))
 const PlayerStatsDashboardPage = lazy(() => import('./pages/tools/PlayerStatsDashboard'))
+const LockedSongDiscoveryPage = lazy(() => import('./pages/tools/LockedSongDiscoveryPage'))
 
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
 const AdminDataCoveragePage = lazy(() => import('./pages/admin/AdminDataCoveragePage'))
 const AdminChartRankingPage = lazy(() => import('./pages/admin/AdminChartRankingPage'))
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
 const AdminSongsPage = lazy(() => import('./pages/admin/AdminSongsPage'))
+const AdminCoursesPage = lazy(() => import('./pages/admin/AdminCoursesPage'))
 const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
 const AdminMaintenancePage = lazy(() => import('./pages/admin/AdminMaintenancePage'))
 const AdminVersionsPage = lazy(() => import('./pages/admin/AdminVersionsPage'))
+const AdminRatingImageDomPreviewPage = lazy(
+  () => import('./pages/admin/AdminRatingImageDomPreviewPage')
+)
+const AdminNameplatePreviewPage = lazy(() => import('./pages/admin/AdminNameplatePreviewPage'))
 const EditorPage = lazy(() => import('./pages/editor/EditorPage'))
 const EditorSongsPage = lazy(() => import('./pages/editor/EditorSongsPage'))
+const EditorCoursesPage = lazy(() => import('./pages/editor/EditorCoursesPage'))
 
 /**
  * route module を事前取得できる遅延コンポーネント。
@@ -303,51 +330,68 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Target class={iconClass} aria-hidden="true" />
     case 'chart':
       return <ChartNoAxesCombined class={iconClass} aria-hidden="true" />
-
     case 'random':
       return <Dices class={iconClass} aria-hidden="true" />
     case 'ranking':
       return <Trophy class={iconClass} aria-hidden="true" />
     case 'gauge':
       return <Gauge class={iconClass} aria-hidden="true" />
+    case 'list':
+      return <ListOrdered class={iconClass} aria-hidden="true" />
+    case 'discover':
+      return <ScanSearch class={iconClass} aria-hidden="true" />
   }
 }
 
 /**
  * ツールカード内の共通表示要素を表示する。
+ * ADMIN 限定ツールはカード右上に南京錠アイコンを重ねる。
  * @param props.tool - 表示対象のツールリンク情報。
- * @returns アイコン、タイトル、状態ラベルを含むツールカード内容。
+ * @returns アイコン、タイトル、説明、状態ラベルを含むツールカード内容。
  */
 const ToolCardContent = (props: { tool: ToolLink }) => {
   return (
-    <SelectableCardLink
-      href={props.tool.href}
-      disabled={props.tool.disabled}
-      class="min-h-24"
-      icon={
-        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
-          <ToolCardIcon icon={props.tool.icon} disabled={props.tool.disabled} />
-        </span>
-      }
-      title={props.tool.title}
-      titleClass="text-base"
-    >
-      <Show when={props.tool.disabled === true}>
-        <span class="w-fit rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text-muted">
-          {DISABLED_TOOL_BADGE_TEXT}
+    <div class="relative">
+      <SelectableCardLink
+        href={props.tool.href}
+        disabled={props.tool.disabled}
+        class={`min-h-24 items-center ${props.tool.adminOnly === true ? 'pr-8' : ''}`}
+        icon={
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+            <ToolCardIcon icon={props.tool.icon} disabled={props.tool.disabled} />
+          </span>
+        }
+        title={props.tool.title}
+        titleClass="text-base"
+        description={props.tool.description}
+      >
+        <Show when={props.tool.disabled === true}>
+          <span class="w-fit rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text-muted">
+            {DISABLED_TOOL_BADGE_TEXT}
+          </span>
+        </Show>
+      </SelectableCardLink>
+      <Show when={props.tool.adminOnly === true}>
+        <span
+          class="pointer-events-none absolute top-2 right-2 text-text-muted"
+          role="img"
+          aria-label={ADMIN_ONLY_TOOL_LOCK_LABEL}
+          title={ADMIN_ONLY_TOOL_LOCK_LABEL}
+        >
+          <Lock class="h-4 w-4" aria-hidden="true" />
         </span>
       </Show>
-    </SelectableCardLink>
+    </div>
   )
 }
 
 /**
  * ツールページの見出しを表示する。
+ * ADMIN 限定ツールは管理者以外の一覧から除外する。
  * @returns ツールページ
  */
 const ToolsPage = () => {
   useDocumentTitle('ツール')
-
   return (
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
       <h1 class="text-2xl font-semibold">ツール</h1>
@@ -369,11 +413,15 @@ const LoadableAdminDataCoveragePage = withRouteLoadBoundary(AdminDataCoveragePag
 const LoadableAdminChartRankingPage = withRouteLoadBoundary(AdminChartRankingPage)
 const LoadableAdminUsersPage = withRouteLoadBoundary(AdminUsersPage)
 const LoadableAdminSongsPage = withRouteLoadBoundary(AdminSongsPage)
+const LoadableAdminCoursesPage = withRouteLoadBoundary(AdminCoursesPage)
 const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
 const LoadableAdminMaintenancePage = withRouteLoadBoundary(AdminMaintenancePage)
 const LoadableAdminVersionsPage = withRouteLoadBoundary(AdminVersionsPage)
+const LoadableAdminRatingImageDomPreviewPage = withRouteLoadBoundary(AdminRatingImageDomPreviewPage)
+const LoadableAdminNameplatePreviewPage = withRouteLoadBoundary(AdminNameplatePreviewPage)
 const LoadableEditorPage = withRouteLoadBoundary(EditorPage)
 const LoadableEditorSongsPage = withRouteLoadBoundary(EditorSongsPage)
+const LoadableEditorCoursesPage = withRouteLoadBoundary(EditorCoursesPage)
 const LoadableRegisterScoreTempPage = withRouteLoadBoundary(RegisterScoreTempPage)
 
 /**
@@ -432,6 +480,17 @@ const GuardedAdminSongsPage = () => (
 )
 
 /**
+ * ADMIN 権限を要求してコース管理画面を表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与したコース管理画面。
+ */
+const GuardedAdminCoursesPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableAdminCoursesPage />
+  </RequireRole>
+)
+
+/**
  * EDITOR権限を要求して楽曲編集画面を表示する。
  *
  * @returns 権限制御済みの楽曲編集画面。
@@ -439,6 +498,17 @@ const GuardedAdminSongsPage = () => (
 const GuardedEditorSongsPage = () => (
   <RequireRole allowedRoles={['EDITOR']}>
     <LoadableEditorSongsPage />
+  </RequireRole>
+)
+
+/**
+ * EDITOR権限を要求してコース編集画面を表示する。
+ *
+ * @returns 権限制御済みのコース編集画面。
+ */
+const GuardedEditorCoursesPage = () => (
+  <RequireRole allowedRoles={['EDITOR']}>
+    <LoadableEditorCoursesPage />
   </RequireRole>
 )
 
@@ -483,6 +553,28 @@ const GuardedAdminMaintenancePage = () => (
 const GuardedAdminVersionsPage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
     <LoadableAdminVersionsPage />
+  </RequireRole>
+)
+
+/**
+ * ADMIN 権限を要求してレーティング画像DOM確認画面を表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与したレーティング画像DOM確認画面。
+ */
+const GuardedAdminRatingImageDomPreviewPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableAdminRatingImageDomPreviewPage />
+  </RequireRole>
+)
+
+/**
+ * ADMIN 権限を要求してポゼッション別プロフィールカード確認画面を表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与した確認画面。
+ */
+const GuardedAdminNameplatePreviewPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableAdminNameplatePreviewPage />
   </RequireRole>
 )
 
@@ -548,24 +640,27 @@ const App = () => {
       <Route path="/goals" component={withNavBar(withAuth(withRouteLoadBoundary(GoalsList)))} />
 
       {/* 楽曲 */}
-      <Route path="/songs" component={withNavBar(withRouteLoadBoundary(SongsList))} />
+      <Route path={SONGS_PATH} component={withNavBar(withRouteLoadBoundary(SongsList))} />
       <Route
-        path="/songs/worldsend"
+        path={WORLDSEND_SONGS_PATH}
         component={withNavBar(withRouteLoadBoundary(WorldsendSongsList))}
       />
       <Route
-        path="/songs/worldsend/:displayid/chart-detail"
+        path={`${WORLDSEND_SONGS_PATH}/:displayid/chart-detail`}
         component={withNavBar(withAuth(withRouteLoadBoundary(WorldsendScoreHistory)))}
       />
       <Route
-        path="/songs/worldsend/:displayid"
+        path={`${WORLDSEND_SONGS_PATH}/:displayid`}
         component={withNavBar(withRouteLoadBoundary(WorldsendSongDetail))}
       />
       <Route
-        path="/songs/:displayid/chart-detail"
+        path={`${SONGS_PATH}/:displayid/chart-detail`}
         component={withNavBar(withAuth(withRouteLoadBoundary(SongScoreHistory)))}
       />
-      <Route path="/songs/:displayid" component={withNavBar(withRouteLoadBoundary(SongDetail))} />
+      <Route
+        path={`${SONGS_PATH}/:displayid`}
+        component={withNavBar(withRouteLoadBoundary(SongDetail))}
+      />
 
       {/* 設定 */}
       <Route
@@ -613,12 +708,20 @@ const App = () => {
         component={withNavBar(withRouteLoadBoundary(BestSlotRankingPage))}
       />
       <Route
+        path={ALL_SONG_BEST_FRAME_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(AllSongBestFramePage)))}
+      />
+      <Route
         path={RATING_THEORETICAL_CHECKER_PATH}
         component={withNavBar(withAuth(withRouteLoadBoundary(RatingTheoreticalCheckerPage)))}
       />
       <Route
         path={DASHBOARD_PATH}
         component={withNavBar(withAuth(withRouteLoadBoundary(PlayerStatsDashboardPage)))}
+      />
+      <Route
+        path={LOCKED_SONG_DISCOVERY_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(LockedSongDiscoveryPage)))}
       />
 
       {/* 管理 */}
@@ -631,13 +734,23 @@ const App = () => {
       />
       <Route path="/admin/users" component={withNavBar(GuardedAdminUsersPage)} />
       <Route path="/admin/songs" component={withNavBar(GuardedAdminSongsPage)} />
+      <Route path={ADMIN_COURSES_PATH} component={withNavBar(GuardedAdminCoursesPage)} />
       <Route path="/admin/honors" component={withNavBar(GuardedAdminHonorsPage)} />
       <Route path={ADMIN_MAINTENANCE_PATH} component={withNavBar(GuardedAdminMaintenancePage)} />
       <Route path={ADMIN_VERSIONS_PATH} component={withNavBar(GuardedAdminVersionsPage)} />
+      <Route
+        path={ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH}
+        component={withNavBar(GuardedAdminRatingImageDomPreviewPage)}
+      />
+      <Route
+        path={ADMIN_NAMEPLATE_PREVIEW_PATH}
+        component={withNavBar(GuardedAdminNameplatePreviewPage)}
+      />
 
       {/* 編集 */}
       <Route path={EDITOR_PATH} component={withNavBar(GuardedEditorPage)} />
       <Route path={EDITOR_SONGS_PATH} component={withNavBar(GuardedEditorSongsPage)} />
+      <Route path={EDITOR_COURSES_PATH} component={withNavBar(GuardedEditorCoursesPage)} />
 
       {/* 404 */}
       <Route path="*" component={NotFoundPage} />

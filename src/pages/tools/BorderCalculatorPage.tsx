@@ -7,15 +7,16 @@ import { LoadError, Loading } from '../../components'
 import { FormSelect } from '../../components/common/AppSelect'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
+import { BORDER_CALCULATOR_PATH } from '../../constants/routes'
+import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { SongDTO } from '../../types/api'
 import { type BorderCalculatorResult, calculateBorder } from '../../utils/borderCalculator'
 import { buildSearchableItems, filterSearchableItems } from '../songs/searchHelpers'
 
+/** ボーダー計算機の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 const BORDER_CALCULATOR_COPY = {
-  title: 'ボーダー計算機',
-  description: '楽曲と譜面を選び、目標スコアまでの許容判定数を計算します。',
   songSearchLabel: '曲名',
   songSearchPlaceholder: '曲名・アーティスト名で検索',
   songCandidatesLabel: '検索候補',
@@ -371,7 +372,8 @@ const BorderCalculatorPage = (): JSX.Element => {
   const [targetJustice, setTargetJustice] = createSignal('50')
   const [fullComboOnly, setFullComboOnly] = createSignal(false)
 
-  useDocumentTitle(BORDER_CALCULATOR_COPY.title)
+  const tool = getToolLink(BORDER_CALCULATOR_PATH)
+  useDocumentTitle(tool.title)
 
   onMount(() => {
     ensureSongsLoaded()
@@ -468,8 +470,8 @@ const BorderCalculatorPage = (): JSX.Element => {
           <Target class="h-5 w-5 text-action-primary" aria-hidden="true" />
         </span>
         <div>
-          <h1 class="text-2xl font-semibold">{BORDER_CALCULATOR_COPY.title}</h1>
-          <p class="mt-1 text-sm text-text-muted">{BORDER_CALCULATOR_COPY.description}</p>
+          <h1 class="text-2xl font-semibold">{tool.title}</h1>
+          <p class="mt-1 text-sm text-text-muted">{tool.description}</p>
         </div>
       </header>
 

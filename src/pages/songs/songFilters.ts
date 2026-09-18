@@ -16,6 +16,7 @@ export const SONG_FILTER_LABELS = {
   cancel: 'キャンセル',
   apply: '適用',
   active: 'フィルター適用中',
+  holdReset: 'フィルター リセット',
   unselected: '未選択',
   bpm: 'BPM',
   bpmMin: 'BPM 下限',

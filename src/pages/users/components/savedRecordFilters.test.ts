@@ -60,6 +60,22 @@ test('isValidSavedStandardFilter は範囲外の定数を壊れたフィルタ�
   assert.equal(isValidSavedStandardFilter(brokenFilter), false)
 })
 
+test('isValidSavedStandardFilter は単曲レート範囲と旧形式の省略を検証すること', () => {
+  // Given
+  const { rating: _rating, ...legacyFilter } = DEFAULT_FILTER
+
+  // When & Then
+  assert.equal(isValidSavedStandardFilter(legacyFilter), true)
+  assert.equal(
+    isValidSavedStandardFilter({ ...DEFAULT_FILTER, rating: { min: 17.45, max: 18 } }),
+    true
+  )
+  assert.equal(
+    isValidSavedStandardFilter({ ...DEFAULT_FILTER, rating: { min: -0.01, max: 18 } }),
+    false
+  )
+})
+
 test('isValidSavedStandardFilter は現行と旧形式のOP対象条件を検証すること', () => {
   // Given
   const {

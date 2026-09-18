@@ -8,6 +8,7 @@ import type {
   ManagedSongDTO,
   ManagedWorldsendSongDTO,
   MasterDataDTO,
+  MasterItemDTO,
   ScoreHistoryResponseDTO,
   SongDTO,
   SongStatsResponseDTO,
@@ -437,8 +438,12 @@ export const restoreWorldsendSongByDisplayId = async (displayId: string): Promis
  */
 const fetchMasterDataFromApi = async (): Promise<MasterDataDTO> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/master`)
-  const raw = (await response.json()) as Omit<MasterDataDTO, 'achievement_types'> & {
+  const raw = (await response.json()) as Omit<
+    MasterDataDTO,
+    'achievement_types' | 'possessions'
+  > & {
     achievement_types?: unknown[]
+    possessions?: MasterItemDTO[]
   }
 
   const achievementTypes: AchievementTypeDTO[] = (raw.achievement_types ?? [])
@@ -481,6 +486,7 @@ const fetchMasterDataFromApi = async (): Promise<MasterDataDTO> => {
   return {
     ...raw,
     genres: sortMasterItemsBySortOrder(raw.genres ?? []),
+    possessions: sortMasterItemsBySortOrder(raw.possessions ?? []),
     achievement_types: achievementTypes,
   }
 }
@@ -511,4 +517,17 @@ export const fetchMasterData = async (): Promise<MasterDataDTO> => {
     }
     throw error
   }
+}
+
+/** 目標の対象条件を解決するための難易度・ジャンル情報。 */
+export type GoalFilterOptions = Pick<MasterDataDTO, 'difficulties' | 'genres'>
+
+/**
+ * 目標フィルターに必要な難易度とジャンルだけを取得する。
+ *
+ * @returns 目標属性IDの解決に使う選択肢。
+ */
+export const fetchGoalFilterOptions = async (): Promise<GoalFilterOptions> => {
+  const { difficulties, genres } = await fetchMasterData()
+  return { difficulties, genres }
 }

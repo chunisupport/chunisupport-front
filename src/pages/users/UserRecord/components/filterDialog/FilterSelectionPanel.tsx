@@ -1,7 +1,13 @@
 import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../../../constants/chart'
+import {
+  CHART_CONST_MAX,
+  CHART_CONST_MIN,
+  SCORE_MIN,
+  SINGLE_RATING_MAX,
+  SINGLE_RATING_MIN,
+} from '../../../../../constants/chart'
 import { normalizePlayerDataDifficulty } from '../../../../../constants/difficulty'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
@@ -29,6 +35,7 @@ import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFi
 import {
   JUSTICE_COUNT_RANGE_FILTER,
   OVER_POWER_RANGE_FILTER,
+  SINGLE_RATING_RANGE_FILTER,
 } from '../../../constants/rangeFilters'
 import { toggleArray } from '../../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
@@ -81,6 +88,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const [justiceCountMinInput, setJusticeCountMinInput] = createSignal(
     toInputValue(props.filters.justiceCount.min)
   )
+  const [ratingMinInput, setRatingMinInput] = createSignal(toInputValue(props.filters.rating.min))
+  const [ratingMaxInput, setRatingMaxInput] = createSignal(toInputValue(props.filters.rating.max))
   const [justiceCountMaxInput, setJusticeCountMaxInput] = createSignal(
     toInputValue(props.filters.justiceCount.max)
   )
@@ -137,6 +146,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     setScoreMaxInput(toInputValue(props.filters.score.max))
     setJusticeCountMinInput(toInputValue(props.filters.justiceCount.min))
     setJusticeCountMaxInput(toInputValue(props.filters.justiceCount.max))
+    setRatingMinInput(toInputValue(props.filters.rating.min))
+    setRatingMaxInput(toInputValue(props.filters.rating.max))
     setOverPowerMinInput(toInputValue(props.filters.overPower.min))
     setOverPowerMaxInput(toInputValue(props.filters.overPower.max))
     setUpdatedAtMinInput(props.filters.updatedAt.min)
@@ -315,6 +326,34 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   }
 
   /**
+   * 単曲レートの入力値をフィルター状態へ反映する。
+   *
+   * @param type - 更新対象の範囲端。
+   * @param value - 入力欄から受け取った文字列。
+   */
+  const commitRatingRange = (type: 'min' | 'max', value: string) => {
+    const nextRange = updateOptionalNumberRange(props.filters.rating, type, value, {
+      min: SINGLE_RATING_MIN,
+      max: SINGLE_RATING_MAX,
+      decimalPlaces: 2,
+    })
+    const nextValue = toInputValue(nextRange[type])
+    if (type === 'min') {
+      setRatingMinInput(nextValue)
+      props.setFilters((prev) => ({
+        ...prev,
+        rating: { ...prev.rating, min: nextRange.min },
+      }))
+      return
+    }
+    setRatingMaxInput(nextValue)
+    props.setFilters((prev) => ({
+      ...prev,
+      rating: { ...prev.rating, max: nextRange.max },
+    }))
+  }
+
+  /**
    * OVER POWERの入力値をフィルター状態へ反映する。
    *
    * @param type - 更新対象の範囲端。
@@ -482,6 +521,15 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             excludeNoPlay: checked,
           }))
         }
+      />
+      <NumericRangeSection
+        config={SINGLE_RATING_RANGE_FILTER}
+        minValue={ratingMinInput()}
+        maxValue={ratingMaxInput()}
+        onMinInput={setRatingMinInput}
+        onMaxInput={setRatingMaxInput}
+        onMinCommit={(value) => commitRatingRange('min', value)}
+        onMaxCommit={(value) => commitRatingRange('max', value)}
       />
       <NumericRangeSection
         config={JUSTICE_COUNT_RANGE_FILTER}

@@ -1,47 +1,64 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { isNotFoundApiError } from './apiError'
+import {
+  isForbiddenApiError,
+  isNotFoundApiError,
+  isNotFoundOrInvalidDisplayIdApiError,
+} from './apiError'
 
-test('status が 404 の場合は Not Found として判定されること', () => {
+test('404系のAPIエラーだけをNot Foundとして判定すること', () => {
   // Given
-  const error = { status: 404 }
+  const cases = [
+    { error: { status: 404 }, expected: true },
+    { error: { code: 'user_not_found' }, expected: true },
+    { error: { code: 'song_not_found' }, expected: true },
+    { error: { status: 500, code: 'internal_server_error' }, expected: false },
+  ] as const
 
   // When
-  const result = isNotFoundApiError(error)
+  const results = cases.map(({ error }) => isNotFoundApiError(error))
 
   // Then
-  assert.equal(result, true)
+  assert.deepEqual(
+    results,
+    cases.map(({ expected }) => expected)
+  )
 })
 
-test('code が user_not_found の場合は Not Found として判定されること', () => {
+test('403系のAPIエラーだけをForbiddenとして判定すること', () => {
   // Given
-  const error = { code: 'user_not_found' }
+  const cases = [
+    { error: { status: 403 }, expected: true },
+    { error: { code: 'forbidden' }, expected: true },
+    { error: { status: 404, code: 'user_not_found' }, expected: false },
+    { error: { status: 500, code: 'internal_server_error' }, expected: false },
+  ] as const
 
   // When
-  const result = isNotFoundApiError(error)
+  const results = cases.map(({ error }) => isForbiddenApiError(error))
 
   // Then
-  assert.equal(result, true)
+  assert.deepEqual(
+    results,
+    cases.map(({ expected }) => expected)
+  )
 })
 
-test('code が song_not_found の場合は Not Found として判定されること', () => {
+test('存在しない表示IDと形式不正の表示IDをNot Found相当として判定すること', () => {
   // Given
-  const error = { code: 'song_not_found' }
+  const cases = [
+    { error: { status: 404 }, expected: true },
+    { error: { code: 'song_not_found' }, expected: true },
+    { error: { status: 422, code: 'validation_failed' }, expected: true },
+    { error: { status: 500, code: 'internal_error' }, expected: false },
+  ] as const
 
   // When
-  const result = isNotFoundApiError(error)
+  const results = cases.map(({ error }) => isNotFoundOrInvalidDisplayIdApiError(error))
 
   // Then
-  assert.equal(result, true)
-})
-
-test('404 ではないエラーは Not Found として判定されないこと', () => {
-  // Given
-  const error = { status: 500, code: 'internal_server_error' }
-
-  // When
-  const result = isNotFoundApiError(error)
-
-  // Then
-  assert.equal(result, false)
+  assert.deepEqual(
+    results,
+    cases.map(({ expected }) => expected)
+  )
 })

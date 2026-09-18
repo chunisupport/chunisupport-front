@@ -6,7 +6,7 @@ import SongManagementPage from '../songs/SongManagementPage'
  * @returns すべての楽曲管理操作を許可した共通画面。
  */
 const AdminSongsPage = () => {
-  return <SongManagementPage title="楽曲管理（ADMIN）" canCreate canDelete />
+  return <SongManagementPage title="楽曲管理（ADMIN）" canCreate canDelete showAdvancedFilters />
 }
 
 export default AdminSongsPage

@@ -112,10 +112,19 @@ const fetchUserCourseRecordLoadState = async (
   records: await fetchUserCourseRecordsWithCache(username),
 })
 
+/**
+ * プロフィールページのドキュメントタイトルを組み立てる。
+ *
+ * @param playerName - ゲーム内プレイヤー名。未取得の場合は undefined。
+ * @param username - 公開ユーザー名。
+ * @returns `playerName (@username)`。プレイヤー名がない場合はユーザー名のみ。
+ */
+const buildUserPageDocumentTitle = (playerName: string | undefined, username: string): string =>
+  playerName ? `${playerName} (@${username})` : username
+
 const UserPage: Component = () => {
   const params = useParams<{ username: string; page?: string; subPage?: string }>()
   const [searchParams] = useSearchParams()
-  const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
   const [courseRecordProfileUsername, setCourseRecordProfileUsername] = createSignal<string>()
 
   /** COURSEタブを一度開いたユーザー名を記録し、そのユーザーのページ内でリソースを保持する */
@@ -126,15 +135,7 @@ const UserPage: Component = () => {
   })
 
   const [pageState] = createResource(() => params.username, fetchUserPageLoadState)
-  const [recordProfile] = createResource(() => {
-    const selectedPage = resolveProfilePageQuery(params.page, searchParams.page)
-    return shouldFetchRecordProfile() ||
-      selectedPage === 'record_normal' ||
-      selectedPage === 'record_we' ||
-      selectedPage === 'overpower'
-      ? params.username
-      : undefined
-  }, fetchUserRecordLoadState)
+  const [recordProfile] = createResource(() => params.username, fetchUserRecordLoadState)
   const [courseRecordProfile] = createResource(
     () => (courseRecordProfileUsername() === params.username ? params.username : undefined),
     fetchUserCourseRecordLoadState
@@ -181,13 +182,31 @@ const UserPage: Component = () => {
     const state = pageState()
     return state?.type === 'loaded' && Boolean(state.profile.player)
   })
+  /**
+   * 初期表示の失敗、またはレコード・OVER POWERタブ表示中のレコード取得失敗を返す。
+   *
+   * @returns 画面全体へ出すエラー。レーティングタブではレコード取得失敗を無視する。
+   */
   const pageLoadError = createMemo(() => {
     const state = pageState()
     if (state?.type === 'error') return state.error
-    return recordProfile.error
+    const selectedPage = resolveProfilePageQuery(params.page, searchParams.page)
+    if (
+      selectedPage === 'record_normal' ||
+      selectedPage === 'record_we' ||
+      selectedPage === 'overpower'
+    ) {
+      return recordProfile.error
+    }
+    return undefined
+  })
+  const documentTitle = createMemo(() => {
+    const state = pageState()
+    const playerName = state?.type === 'loaded' ? state.profile.player?.name : undefined
+    return buildUserPageDocumentTitle(playerName, params.username)
   })
 
-  useDocumentTitle(() => `${params.username}さんのページ`)
+  useDocumentTitle(documentTitle)
 
   return (
     <ErrorBoundary
@@ -217,7 +236,6 @@ const UserPage: Component = () => {
                     profile={linkedProfile()}
                     recordProfile={linkedRecordProfile}
                     courseRecordProfile={courseRecordProfile}
-                    onShowRecords={() => setShouldFetchRecordProfile(true)}
                     selectedPage={resolveProfilePageQuery(params.page, searchParams.page)}
                     selectedOverPowerSubPage={resolveOverPowerSubPage(params.subPage)}
                     username={params.username}

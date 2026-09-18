@@ -46,6 +46,7 @@ import {
 } from '../../stores/friendRequestNotification'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
+import MaintenanceStatusLabel from '../availability/MaintenanceStatusLabel'
 import { AppButton } from '../common/AppButton'
 import AppearanceSettings from '../common/AppearanceSettings'
 import { APPEARANCE_SETTINGS_COPY } from '../common/AppearanceSettings.constants'
@@ -79,7 +80,7 @@ type NavItem = {
 }
 
 /**
- * アプリケーション共通のナビゲーションと画面領域を表示する。
+ * アプリケーション共通のナビゲーション、画面領域、メンテナンス状態ラベルを表示する。
  * @param props ナビゲーション内に表示する画面要素
  * @returns ナビゲーション付きの画面レイアウト
  */
@@ -400,6 +401,7 @@ const NavBar = (props: NavBarProps) => {
       <div class="flex flex-col min-h-0 flex-1 min-w-0">
         <main id="app-main" class="flex-1 min-h-0 overflow-y-auto">
           {props.children}
+          <MaintenanceStatusLabel />
         </main>
 
         {/* スマホ用nav-bar 768px未満 */}

@@ -19,7 +19,7 @@ import { saveStandardRecordFilterSetting } from '../../../repositories/viewSetti
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
 import { publishStandardRecordFilter } from '../../../stores/standardRecordNavigation'
-import type { PlayerLockedSongRequest, UserRecordDTO } from '../../../types/api'
+import type { PlayerDTO, PlayerLockedSongRequest, UserRecordDTO } from '../../../types/api'
 import {
   buildOverPowerChartEntries,
   selectOverPowerChartEntries,
@@ -69,6 +69,8 @@ import {
 
 type Props = {
   record: UserRecordDTO
+  /** 公式OP/OP%を含むプレイヤー情報 */
+  player: PlayerDTO
   selectedSubPage: OverPowerSubPage
   username: string
 }
@@ -76,7 +78,7 @@ type Props = {
 /**
  * ユーザーのOVERPOWERサマリーと分布グラフを表示する。
  *
- * @param props - レコード、選択中サブページ、表示対象ユーザー名。
+ * @param props - レコード、プレイヤー情報、選択中サブページ、表示対象ユーザー名。
  * @returns OVER POWER タブの表示要素。
  */
 const UserOverPower: Component<Props> = (props) => {
@@ -502,6 +504,8 @@ const UserOverPower: Component<Props> = (props) => {
                     genres={masterData()?.genres ?? []}
                     versions={versionData()?.versions ?? []}
                     lockedSongs={lockedSongs()?.items ?? []}
+                    officialOverPower={props.player.official_overpower}
+                    officialOverPowerPercent={props.player.official_overpower_percent}
                     onOpenChange={setLockedSongsDialogOpen}
                     onSaveLockedSongs={handleSaveLockedSongs}
                   />

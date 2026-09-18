@@ -233,6 +233,36 @@ test('Tukey法の上側外れ値を得意かもしれない譜面として抽出
   assert.equal(result.outliers[0].direction, 'HIGH')
 })
 
+test('下側は2倍で苦手譜面を絞り込むこと', () => {
+  // Given: 対称1.5倍なら下限996500で外れ値になる996000を含む分布。
+  // Q1=1000250、Q3=1002750、IQR=2500のため、新下限は995250になる。
+  const records = [996000, 1000000, 1001000, 1002000, 1003000, 1004000].map((score) =>
+    createRecord(score)
+  )
+
+  // When
+  const result = inspectWeakCharts(records)
+
+  // Then: 下側係数2では苦手譜面として抽出されない。
+  assert.equal(result.outliers.length, 0)
+})
+
+test('上側は0.6倍で得意かもしれない譜面を拾うこと', () => {
+  // Given: 対称1.5倍なら上限1007500で外れ値にならない1007000を含む分布。
+  // Q1=1001250、Q3=1003750、IQR=2500のため、新上限は1005250になる。
+  const records = [1000000, 1001000, 1002000, 1003000, 1004000, 1007000].map((score) =>
+    createRecord(score)
+  )
+
+  // When
+  const result = inspectWeakCharts(records)
+
+  // Then: 上側係数0.6では得意かもしれない譜面として抽出される。
+  assert.equal(result.outliers.length, 1)
+  assert.equal(result.outliers[0].record.score, 1007000)
+  assert.equal(result.outliers[0].direction, 'HIGH')
+})
+
 test('未プレイ譜面を分布と外れ値の計算から除外すること', () => {
   // Given
   const records = [
