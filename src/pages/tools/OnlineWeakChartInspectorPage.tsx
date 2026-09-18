@@ -49,6 +49,7 @@ import { clampNumericInput } from '../../utils/numberInput'
 import {
   compareRecordsWithRatingBand,
   filterOnlineWeakChartEntries,
+  filterOnlineWeakChartTableEntries,
   formatOnlineWeakChartTooltipDetail,
   ONLINE_WEAK_CHART_OP_TARGET_FILTER,
   type OnlineWeakChartDifficulty,
@@ -70,12 +71,15 @@ import {
   ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN,
   ONLINE_WEAK_CHART_FILTER_DEFAULT,
   ONLINE_WEAK_CHART_POINT_JITTER,
+  ONLINE_WEAK_CHART_TABLE_FILTER_OPTIONS,
 } from './onlineWeakChartInspector.constants'
 
 Chart.register(ScatterController, LinearScale, PointElement, Tooltip)
 
 type RatingBandOption = { label: string; value: string }
 type ComparisonPoint = { x: number; y: number; entry: OnlineWeakChartEntry }
+/** 比較表の平均との比較条件を表示する選択肢 */
+type OnlineWeakChartTableFilterOption = (typeof ONLINE_WEAK_CHART_TABLE_FILTER_OPTIONS)[number]
 
 /**
  * 設定画面に範囲内補正付きの数値欄を表示する。
@@ -269,9 +273,16 @@ type OnlineWeakChartTableProps = {
 const OnlineWeakChartTable = (props: OnlineWeakChartTableProps): JSX.Element => {
   const [sortKey, setSortKey] = createSignal<OnlineWeakChartSortKey | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
-  const sortedEntries = createMemo(() =>
-    sortOnlineWeakChartEntries(props.entries, sortKey(), sortDirection())
+  const [tableFilter, setTableFilter] = createSignal<OnlineWeakChartTableFilterOption>(
+    ONLINE_WEAK_CHART_TABLE_FILTER_OPTIONS[0]
   )
+  const filteredEntries = createMemo(() =>
+    filterOnlineWeakChartTableEntries(props.entries, tableFilter().value)
+  )
+  const sortedEntries = createMemo(() =>
+    sortOnlineWeakChartEntries(filteredEntries(), sortKey(), sortDirection())
+  )
+  const tableResetKey = createMemo(() => `${props.resetKey}|${tableFilter().value}`)
   const virtualizedTable = createWindowVirtualTable<
     HTMLDivElement,
     HTMLTableSectionElement,
@@ -281,12 +292,12 @@ const OnlineWeakChartTable = (props: OnlineWeakChartTableProps): JSX.Element => 
     rowCount: () => sortedEntries().length,
     rowHeight: ONLINE_WEAK_CHART_TABLE_ROW_HEIGHT,
     resetOnRowCountChange: true,
-    layoutDeps: () => props.resetKey,
+    layoutDeps: tableResetKey,
   })
   const virtualRows = createMemo(() => virtualizedTable.virtualRows())
 
   createEffect((previousKey?: string) => {
-    const currentKey = props.resetKey
+    const currentKey = tableResetKey()
     if (previousKey !== undefined && previousKey !== currentKey) {
       virtualizedTable.resetToTop()
     }
@@ -340,139 +351,162 @@ const OnlineWeakChartTable = (props: OnlineWeakChartTableProps): JSX.Element => 
 
   return (
     <section class="rounded-lg border border-border bg-surface">
-      <h2 class="border-b border-border px-4 py-3 text-lg font-semibold">
-        {ONLINE_WEAK_CHART_COPY.tableTitle}
-        <span class="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-sm text-text-muted">
-          {props.entries.length}
-        </span>
-      </h2>
-      <div
-        ref={virtualizedTable.setTableContainerRef}
-        class="overflow-x-auto overflow-y-hidden rounded-b-lg"
-      >
-        <table
-          class="block w-full min-w-[37rem] text-sm"
-          aria-rowcount={sortedEntries().length + 1}
-        >
-          <caption class="sr-only">{ONLINE_WEAK_CHART_COPY.tableCaption}</caption>
-          <thead class="block">
-            <tr
-              class="grid"
-              style={{ 'grid-template-columns': ONLINE_WEAK_CHART_TABLE_GRID_TEMPLATE }}
-            >
-              <th
-                class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-start px-3 text-left`}
-                scope="col"
-                aria-sort={headerAriaSort('title')}
-              >
-                {header(ONLINE_WEAK_CHART_COPY.songTitle, 'title', 'start')}
-              </th>
-              <th
-                class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
-                scope="col"
-                aria-sort={headerAriaSort('difficulty')}
-              >
-                {header(ONLINE_WEAK_CHART_COPY.difficulty, 'difficulty')}
-              </th>
-              <th
-                class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
-                scope="col"
-                aria-sort={headerAriaSort('const')}
-              >
-                {header(ONLINE_WEAK_CHART_COPY.chartConst, 'const')}
-              </th>
-              <th
-                class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
-                scope="col"
-                aria-sort={headerAriaSort('score')}
-              >
-                {header(ONLINE_WEAK_CHART_COPY.ownScore, 'score')}
-              </th>
-              <th
-                class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
-                scope="col"
-                aria-sort={headerAriaSort('averageScore')}
-              >
-                {header(ONLINE_WEAK_CHART_COPY.averageScore, 'averageScore')}
-              </th>
-              <th
-                class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
-                scope="col"
-                aria-sort={headerAriaSort('difference')}
-              >
-                {header(ONLINE_WEAK_CHART_COPY.difference, 'difference')}
-              </th>
-            </tr>
-          </thead>
-          <tbody
-            ref={virtualizedTable.setTableBodyRef}
-            class="relative block min-w-full"
-            style={{ height: `${virtualizedTable.getTotalSize()}px` }}
-          >
-            <For each={virtualRows()}>
-              {(virtualRow) => {
-                const entry = createMemo(() => sortedEntries()[virtualRow.index])
-
-                return (
-                  <Show when={entry()} keyed>
-                    {(currentEntry) => (
-                      <tr
-                        class="absolute left-0 top-0 grid min-w-full border-t border-border hover:bg-surface-muted"
-                        style={{
-                          'grid-template-columns': ONLINE_WEAK_CHART_TABLE_GRID_TEMPLATE,
-                          transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
-                        }}
-                        aria-rowindex={virtualRow.index + 2}
-                      >
-                        <th
-                          class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} min-w-0 p-0 text-left font-medium`}
-                          scope="row"
-                        >
-                          <A
-                            href={buildSongDetailPath(
-                              currentEntry.record.id,
-                              currentEntry.record.difficulty
-                            )}
-                            class="flex h-full w-full min-w-0 items-center px-3 font-sans text-link hover:text-link-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
-                            title={currentEntry.record.title}
-                          >
-                            <span class="truncate">{currentEntry.record.title}</span>
-                          </A>
-                        </th>
-                        <td
-                          class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center`}
-                        >
-                          <DifficultyBadge difficulty={currentEntry.record.difficulty} />
-                        </td>
-                        <td
-                          class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
-                        >
-                          {formatChartConst(currentEntry.record.const)}
-                        </td>
-                        <td
-                          class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
-                        >
-                          {formatInteger(currentEntry.record.score)}
-                        </td>
-                        <td
-                          class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
-                        >
-                          {formatInteger(Math.trunc(currentEntry.averageScore))}
-                        </td>
-                        <td
-                          class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums ${getScoreDifferenceClass(currentEntry.difference)}`}
-                        >
-                          {formatScoreDifference(currentEntry.difference)}
-                        </td>
-                      </tr>
-                    )}
-                  </Show>
-                )
-              }}
-            </For>
-          </tbody>
-        </table>
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2">
+        <h2 class="text-lg font-semibold">
+          {ONLINE_WEAK_CHART_COPY.tableTitle}
+          <span class="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-sm text-text-muted">
+            {filteredEntries().length}
+          </span>
+        </h2>
+        <AppSelect<OnlineWeakChartTableFilterOption>
+          options={[...ONLINE_WEAK_CHART_TABLE_FILTER_OPTIONS]}
+          optionValue="value"
+          optionTextValue="label"
+          value={tableFilter()}
+          onChange={(option) => option && setTableFilter(option)}
+          label={ONLINE_WEAK_CHART_COPY.tableFilterLabel}
+          labelVariant="srOnly"
+          rootClass="w-36 shrink-0"
+          triggerClass="h-8"
+          formatLabel={(option) => option.label}
+        />
       </div>
+      <Show
+        when={filteredEntries().length > 0}
+        fallback={
+          <p class="rounded-b-lg px-4 py-8 text-center text-sm text-text-muted">
+            {ONLINE_WEAK_CHART_COPY.tableFilterEmpty}
+          </p>
+        }
+      >
+        <div
+          ref={virtualizedTable.setTableContainerRef}
+          class="overflow-x-auto overflow-y-hidden rounded-b-lg"
+        >
+          <table
+            class="block w-full min-w-[37rem] text-sm"
+            aria-rowcount={sortedEntries().length + 1}
+          >
+            <caption class="sr-only">{ONLINE_WEAK_CHART_COPY.tableCaption}</caption>
+            <thead class="block">
+              <tr
+                class="grid"
+                style={{ 'grid-template-columns': ONLINE_WEAK_CHART_TABLE_GRID_TEMPLATE }}
+              >
+                <th
+                  class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-start px-3 text-left`}
+                  scope="col"
+                  aria-sort={headerAriaSort('title')}
+                >
+                  {header(ONLINE_WEAK_CHART_COPY.songTitle, 'title', 'start')}
+                </th>
+                <th
+                  class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
+                  scope="col"
+                  aria-sort={headerAriaSort('difficulty')}
+                >
+                  {header(ONLINE_WEAK_CHART_COPY.difficulty, 'difficulty')}
+                </th>
+                <th
+                  class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
+                  scope="col"
+                  aria-sort={headerAriaSort('const')}
+                >
+                  {header(ONLINE_WEAK_CHART_COPY.chartConst, 'const')}
+                </th>
+                <th
+                  class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
+                  scope="col"
+                  aria-sort={headerAriaSort('score')}
+                >
+                  {header(ONLINE_WEAK_CHART_COPY.ownScore, 'score')}
+                </th>
+                <th
+                  class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
+                  scope="col"
+                  aria-sort={headerAriaSort('averageScore')}
+                >
+                  {header(ONLINE_WEAK_CHART_COPY.averageScore, 'averageScore')}
+                </th>
+                <th
+                  class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
+                  scope="col"
+                  aria-sort={headerAriaSort('difference')}
+                >
+                  {header(ONLINE_WEAK_CHART_COPY.difference, 'difference')}
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              ref={virtualizedTable.setTableBodyRef}
+              class="relative block min-w-full"
+              style={{ height: `${virtualizedTable.getTotalSize()}px` }}
+            >
+              <For each={virtualRows()}>
+                {(virtualRow) => {
+                  const entry = createMemo(() => sortedEntries()[virtualRow.index])
+
+                  return (
+                    <Show when={entry()} keyed>
+                      {(currentEntry) => (
+                        <tr
+                          class="absolute left-0 top-0 grid min-w-full border-t border-border hover:bg-surface-muted"
+                          style={{
+                            'grid-template-columns': ONLINE_WEAK_CHART_TABLE_GRID_TEMPLATE,
+                            transform: `translateY(${virtualRow.start - virtualizedTable.scrollMargin()}px)`,
+                          }}
+                          aria-rowindex={virtualRow.index + 2}
+                        >
+                          <th
+                            class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} min-w-0 p-0 text-left font-medium`}
+                            scope="row"
+                          >
+                            <A
+                              href={buildSongDetailPath(
+                                currentEntry.record.id,
+                                currentEntry.record.difficulty
+                              )}
+                              class="flex h-full w-full min-w-0 items-center px-3 font-sans text-link hover:text-link-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
+                              title={currentEntry.record.title}
+                            >
+                              <span class="truncate">{currentEntry.record.title}</span>
+                            </A>
+                          </th>
+                          <td
+                            class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center`}
+                          >
+                            <DifficultyBadge difficulty={currentEntry.record.difficulty} />
+                          </td>
+                          <td
+                            class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
+                          >
+                            {formatChartConst(currentEntry.record.const)}
+                          </td>
+                          <td
+                            class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
+                          >
+                            {formatInteger(currentEntry.record.score)}
+                          </td>
+                          <td
+                            class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
+                          >
+                            {formatInteger(Math.trunc(currentEntry.averageScore))}
+                          </td>
+                          <td
+                            class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums ${getScoreDifferenceClass(currentEntry.difference)}`}
+                          >
+                            {formatScoreDifference(currentEntry.difference)}
+                          </td>
+                        </tr>
+                      )}
+                    </Show>
+                  )
+                }}
+              </For>
+            </tbody>
+          </table>
+        </div>
+      </Show>
     </section>
   )
 }

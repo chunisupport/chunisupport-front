@@ -5,8 +5,10 @@ import type { ChartScoresResponse } from '../types/chartScores'
 import {
   compareRecordsWithRatingBand,
   filterOnlineWeakChartEntries,
+  filterOnlineWeakChartTableEntries,
   formatOnlineWeakChartTooltipDetail,
   ONLINE_WEAK_CHART_OP_TARGET_FILTER,
+  ONLINE_WEAK_CHART_TABLE_FILTER,
   resolveOnlineWeakChartScoreDifficulties,
   sortOnlineWeakChartEntries,
   toggleOnlineWeakChartDifficulty,
@@ -252,6 +254,37 @@ test('Onlineのジャンルとバージョンは表示時の属性フィルタ�
 
   // Then: 両方の属性に一致する譜面だけが残る。
   assert.deepEqual(result, [entries[0]])
+})
+
+test('比較表は平均以上と平均未満を点差の境界を含めて絞り込む', () => {
+  // Given: 平均未満、平均と同値、平均以上の比較結果。
+  const entries = [
+    { record: record({ id: 'below' }), averageScore: 1005000, difference: -1 },
+    { record: record({ id: 'equal' }), averageScore: 1005000, difference: 0 },
+    { record: record({ id: 'above' }), averageScore: 1005000, difference: 1 },
+  ]
+
+  // When: 比較表の各表示条件で絞り込む。
+  const all = filterOnlineWeakChartTableEntries(entries, ONLINE_WEAK_CHART_TABLE_FILTER.all)
+  const aboveAverage = filterOnlineWeakChartTableEntries(
+    entries,
+    ONLINE_WEAK_CHART_TABLE_FILTER.aboveAverage
+  )
+  const belowAverage = filterOnlineWeakChartTableEntries(
+    entries,
+    ONLINE_WEAK_CHART_TABLE_FILTER.belowAverage
+  )
+
+  // Then: 同値は平均以上に含み、平均未満とは分かれる。
+  assert.deepEqual(all, entries)
+  assert.deepEqual(
+    aboveAverage.map(({ record: currentRecord }) => currentRecord.id),
+    ['equal', 'above']
+  )
+  assert.deepEqual(
+    belowAverage.map(({ record: currentRecord }) => currentRecord.id),
+    ['below']
+  )
 })
 
 test('Onlineのツールチップを譜面情報と差分の簡潔な形式へ整形する', () => {

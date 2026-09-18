@@ -19,6 +19,17 @@ export type OnlineWeakChartDifficulty =
   | PlayerDataDifficulty
   | typeof ONLINE_WEAK_CHART_OP_TARGET_FILTER
 
+/** 苦手譜面インスペクター Online の比較表で表示する平均との比較条件 */
+export const ONLINE_WEAK_CHART_TABLE_FILTER = {
+  all: 'all',
+  aboveAverage: 'aboveAverage',
+  belowAverage: 'belowAverage',
+} as const
+
+/** 苦手譜面インスペクター Online の比較表で表示する平均との比較条件の型 */
+export type OnlineWeakChartTableFilter =
+  (typeof ONLINE_WEAK_CHART_TABLE_FILTER)[keyof typeof ONLINE_WEAK_CHART_TABLE_FILTER]
+
 /** 同じレート帯の平均と比較できるプレイ済み譜面 */
 export interface OnlineWeakChartEntry {
   record: PlayerRecordDTO
@@ -144,6 +155,27 @@ export const filterOnlineWeakChartEntries = (
     }
     return true
   })
+}
+
+/**
+ * 比較表の平均との比較条件に一致する譜面を抽出する。
+ *
+ * @param entries - 表示対象の比較結果。
+ * @param filter - 表示する平均との比較条件。
+ * @returns 比較条件に一致した比較結果。
+ */
+export const filterOnlineWeakChartTableEntries = (
+  entries: readonly OnlineWeakChartEntry[],
+  filter: OnlineWeakChartTableFilter
+): OnlineWeakChartEntry[] => {
+  switch (filter) {
+    case ONLINE_WEAK_CHART_TABLE_FILTER.aboveAverage:
+      return entries.filter(({ difference }) => difference >= 0)
+    case ONLINE_WEAK_CHART_TABLE_FILTER.belowAverage:
+      return entries.filter(({ difference }) => difference < 0)
+    default:
+      return [...entries]
+  }
 }
 
 /**
