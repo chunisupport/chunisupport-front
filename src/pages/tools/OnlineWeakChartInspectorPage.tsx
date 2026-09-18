@@ -27,7 +27,6 @@ import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { GenreMultiSelect, VersionMultiSelect } from '../../components/common/DomainMultiSelect'
 import { getSortAriaValue, SortableHeaderButton } from '../../components/common/SortableTableHeader'
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_THEORETICAL_MAX } from '../../constants/chart'
-import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import { buildSongDetailPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
@@ -50,17 +49,23 @@ import {
   compareRecordsWithRatingBand,
   filterOnlineWeakChartEntries,
   formatOnlineWeakChartTooltipDetail,
+  type OnlineWeakChartDifficulty,
   type OnlineWeakChartEntry,
   type OnlineWeakChartFilter,
   type OnlineWeakChartSortKey,
+  ONLINE_WEAK_CHART_OP_TARGET_FILTER,
+  resolveOnlineWeakChartScoreDifficulties,
   sortOnlineWeakChartEntries,
+  toggleOnlineWeakChartDifficulty,
 } from '../../utils/onlineWeakChartInspector'
+import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../utils/theoreticalOverPowerTarget'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import { formatScoreDifference, getScoreDifferenceClass } from '../../utils/scoreDifference'
 import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
 import { getShortVersionName } from '../../utils/versionConverter'
 import {
   ONLINE_WEAK_CHART_COPY,
+  ONLINE_WEAK_CHART_DIFFICULTY_OPTIONS,
   ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN,
   ONLINE_WEAK_CHART_FILTER_DEFAULT,
   ONLINE_WEAK_CHART_POINT_JITTER,
@@ -106,12 +111,13 @@ const FilterNumberField = (props: {
 /**
  * 選択した難易度の公開スコア統計を取得する。
  *
- * @param difficulties - 集計対象の難易度。
+ * @param difficulties - 通常難易度または理論値OVER POWER対象の選択値。
  * @returns 難易度別の統計JSON。
  */
 const fetchSelectedChartScores = (
-  difficulties: PlayerDataDifficulty[]
-): Promise<ChartScoresResponse[]> => Promise.all(difficulties.map(fetchChartScores))
+  difficulties: OnlineWeakChartDifficulty[]
+): Promise<ChartScoresResponse[]> =>
+  Promise.all(resolveOnlineWeakChartScoreDifficulties(difficulties).map(fetchChartScores))
 
 /**
  * 比較する譜面をグラフ上で識別できる散布図座標へ変換する。
@@ -184,7 +190,7 @@ const OnlineWeakChartScatter = (props: {
         animation: false,
         interaction: { mode: 'nearest', intersect: true },
         plugins: {
-          legend: { labels: { color: textColor } },
+          legend: { display: false },
           tooltip: {
             enabled: false,
             external: ({ tooltip }) =>
@@ -479,7 +485,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
   useDocumentTitle(ONLINE_WEAK_CHART_COPY.title)
   const [ratingBandsResource] = createResource(fetchRatingBands)
   const [versionsResource] = createResource(fetchVersions)
-  const { songsResponse, ensureSongsLoaded } = useSongsData()
+  const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const username = () => authSession.user?.username ?? null
   const [ownRating] = createResource(username, fetchUserRatingWithCache)
   const [ownRecords] = createResource(username, fetchUserRecordWithCache)
@@ -488,7 +494,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
     ...ONLINE_WEAK_CHART_FILTER_DEFAULT,
   })
   const [settingsOpen, setSettingsOpen] = createSignal(false)
-  const [editDifficulties, setEditDifficulties] = createSignal<PlayerDataDifficulty[]>([])
+  const [editDifficulties, setEditDifficulties] = createSignal<OnlineWeakChartDifficulty[]>([])
   const [editDisplayScoreRange, setEditDisplayScoreRange] = createSignal('')
   const [editConstMin, setEditConstMin] = createSignal('')
   const [editConstMax, setEditConstMax] = createSignal('')
@@ -526,6 +532,11 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
 
     return buildChartStatsAttributesBySongId(songs, versions)
   })
+  const targetDifficultyBySongId = createMemo(() =>
+    buildTheoreticalOverPowerTargetDifficultyBySongId(songsResponse()?.songs ?? [])
+  )
+  const isOpTargetSelected = () =>
+    filter().difficulties.includes(ONLINE_WEAK_CHART_OP_TARGET_FILTER)
 
   createEffect(() => {
     if (selectedBand() || !ratingBandsResource() || ownRating.loading) return
@@ -544,32 +555,37 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
     )
   )
   const entries = createMemo(() =>
-    filterOnlineWeakChartEntries(comparedEntries(), filter(), attributesBySongId()).sort(
-      (left, right) => left.difference - right.difference
-    )
+    filterOnlineWeakChartEntries(
+      comparedEntries(),
+      filter(),
+      attributesBySongId(),
+      targetDifficultyBySongId()
+    ).sort((left, right) => left.difference - right.difference)
   )
   const tableResetKey = createMemo(
     () => `${selectedBand()?.value ?? ''}|${JSON.stringify(filter())}`
   )
   const isLoading = () =>
-    ratingBandsResource.loading || ownRating.loading || ownRecords.loading || scoreSnapshots.loading
+    ratingBandsResource.loading ||
+    ownRating.loading ||
+    ownRecords.loading ||
+    scoreSnapshots.loading ||
+    (isOpTargetSelected() && isSongsLoading())
   const loadError = () =>
-    ratingBandsResource.error ?? ownRating.error ?? ownRecords.error ?? scoreSnapshots.error
+    ratingBandsResource.error ??
+    ownRating.error ??
+    ownRecords.error ??
+    scoreSnapshots.error ??
+    (isOpTargetSelected() ? songsResponse.error : undefined)
 
   /**
    * 対象難易度の選択状態を更新する。
    *
-   * @param difficulty - 切り替える難易度。
+   * @param difficulty - 切り替える通常難易度または理論値OVER POWER対象。
    * @returns なし。
    */
-  const toggleDifficulty = (difficulty: PlayerDataDifficulty): void => {
-    setEditDifficulties((current) =>
-      current.includes(difficulty)
-        ? current.length > 1
-          ? current.filter((item) => item !== difficulty)
-          : current
-        : PLAYER_DATA_DIFFICULTIES.filter((item) => current.includes(item) || item === difficulty)
-    )
+  const toggleDifficulty = (difficulty: OnlineWeakChartDifficulty): void => {
+    setEditDifficulties((current) => toggleOnlineWeakChartDifficulty(current, difficulty))
   }
 
   /**
@@ -715,13 +731,17 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
                   {ONLINE_WEAK_CHART_COPY.difficulty}
                 </legend>
                 <div class="flex flex-col items-start gap-1">
-                  <For each={PLAYER_DATA_DIFFICULTIES}>
-                    {(difficulty) => (
+                  <For each={ONLINE_WEAK_CHART_DIFFICULTY_OPTIONS}>
+                    {(option) => (
                       <CheckboxField
-                        id={`online-weak-chart-${difficulty}`}
-                        checked={editDifficulties().includes(difficulty)}
-                        onChange={() => toggleDifficulty(difficulty)}
-                        label={difficulty}
+                        id={`online-weak-chart-${option.value}`}
+                        checked={editDifficulties().includes(option.value)}
+                        disabled={
+                          editDifficulties().includes(ONLINE_WEAK_CHART_OP_TARGET_FILTER) &&
+                          option.value !== ONLINE_WEAK_CHART_OP_TARGET_FILTER
+                        }
+                        onChange={() => toggleDifficulty(option.value)}
+                        label={option.label}
                         textVariant="large"
                         class="relative flex items-center gap-2"
                       />

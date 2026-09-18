@@ -6,7 +6,10 @@ import {
   compareRecordsWithRatingBand,
   filterOnlineWeakChartEntries,
   formatOnlineWeakChartTooltipDetail,
+  ONLINE_WEAK_CHART_OP_TARGET_FILTER,
+  resolveOnlineWeakChartScoreDifficulties,
   sortOnlineWeakChartEntries,
+  toggleOnlineWeakChartDifficulty,
 } from './onlineWeakChartInspector'
 
 const record = (changes: Partial<PlayerRecordDTO>): PlayerRecordDTO =>
@@ -88,6 +91,123 @@ test('Onlineの表示範囲は難易度と点差と譜面定数をともに絞�
 
   // Then: 両端の点差を含み、範囲外の譜面は除外する。
   assert.deepEqual(result, entries.slice(0, 2))
+})
+
+test('理論値OP対象では現在のOP対象フラグではなく楽曲マスタの対象難易度を使う', () => {
+  // Given: 現在のOP対象と理論値OP対象が反対になっている2曲。
+  const entries = [
+    {
+      record: record({ id: 'song-1', difficulty: 'MASTER', const: 14, is_op_target: true }),
+      averageScore: 1000000,
+      difference: 0,
+    },
+    {
+      record: record({ id: 'song-1', difficulty: 'ULTIMA', const: 15, is_op_target: false }),
+      averageScore: 1000000,
+      difference: 0,
+    },
+    {
+      record: record({ id: 'song-2', difficulty: 'MASTER', const: 14.5, is_op_target: false }),
+      averageScore: 1000000,
+      difference: 0,
+    },
+    {
+      record: record({ id: 'song-2', difficulty: 'ULTIMA', const: 14, is_op_target: true }),
+      averageScore: 1000000,
+      difference: 0,
+    },
+  ]
+  const targetDifficultyBySongId = new Map([
+    ['song-1', 'ULTIMA'] as const,
+    ['song-2', 'MASTER'] as const,
+  ])
+
+  // When: 理論値OP対象だけに絞り込む。
+  const result = filterOnlineWeakChartEntries(
+    entries,
+    {
+      difficulties: [ONLINE_WEAK_CHART_OP_TARGET_FILTER],
+      displayScoreRange: 10000,
+      constMin: 1,
+      constMax: 16,
+      genres: null,
+      versions: null,
+    },
+    undefined,
+    targetDifficultyBySongId
+  )
+
+  // Then: 各曲の楽曲マスタが示す難易度だけが残る。
+  assert.deepEqual(
+    result.map(({ record: currentRecord }) => `${currentRecord.id}:${currentRecord.difficulty}`),
+    ['song-1:ULTIMA', 'song-2:MASTER']
+  )
+})
+
+test('理論値OP対象では対象難易度を解決できないレコードを除外する', () => {
+  // Given: 対象難易度なしと楽曲マスタなしの比較結果。
+  const entries = [
+    {
+      record: record({ id: 'without-target', difficulty: 'MASTER', const: 14 }),
+      averageScore: 1000000,
+      difference: 0,
+    },
+    {
+      record: record({ id: 'missing-song', difficulty: 'MASTER', const: 14 }),
+      averageScore: 1000000,
+      difference: 0,
+    },
+  ]
+  const targetDifficultyBySongId = new Map([['other-song', 'ULTIMA'] as const])
+
+  // When: 理論値OP対象だけに絞り込む。
+  const result = filterOnlineWeakChartEntries(
+    entries,
+    {
+      difficulties: [ONLINE_WEAK_CHART_OP_TARGET_FILTER],
+      displayScoreRange: 10000,
+      constMin: 1,
+      constMax: 16,
+      genres: null,
+      versions: null,
+    },
+    undefined,
+    targetDifficultyBySongId
+  )
+
+  // Then: フォールバックせず全件が除外される。
+  assert.deepEqual(result, [])
+})
+
+test('理論値OP対象と通常難易度は排他選択になる', () => {
+  // Given: MASTERとULTIMAを選択中。
+  const selected = ['MASTER', 'ULTIMA'] as const
+
+  // When: 理論値OP対象を選び、解除後にMASTERを選び直す。
+  const opTargetSelected = toggleOnlineWeakChartDifficulty(
+    selected,
+    ONLINE_WEAK_CHART_OP_TARGET_FILTER
+  )
+  const opTargetCleared = toggleOnlineWeakChartDifficulty(
+    opTargetSelected,
+    ONLINE_WEAK_CHART_OP_TARGET_FILTER
+  )
+  const masterSelected = toggleOnlineWeakChartDifficulty(opTargetSelected, 'MASTER')
+
+  // Then: 理論値OP対象は単独選択となり、解除と通常難易度への切り替えができる。
+  assert.deepEqual(opTargetSelected, [ONLINE_WEAK_CHART_OP_TARGET_FILTER])
+  assert.deepEqual(opTargetCleared, [])
+  assert.deepEqual(masterSelected, ['MASTER'])
+})
+
+test('理論値OP対象の平均スコア取得難易度はMASTERとULTIMAになる', () => {
+  // Given: 理論値OP対象だけを選択している。
+
+  // When: 静的スコア統計の取得難易度を解決する。
+  const result = resolveOnlineWeakChartScoreDifficulties([ONLINE_WEAK_CHART_OP_TARGET_FILTER])
+
+  // Then: MASTERとULTIMAだけを取得対象にする。
+  assert.deepEqual(result, ['MASTER', 'ULTIMA'])
 })
 
 test('Onlineのジャンルとバージョンは表示時の属性フィルタとして適用する', () => {

@@ -1,3 +1,10 @@
+import { THEORETICAL_OVER_POWER_TARGET_LABEL } from '../../constants/chart'
+import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
+import {
+  ONLINE_WEAK_CHART_OP_TARGET_FILTER,
+  type OnlineWeakChartDifficulty,
+} from '../../utils/onlineWeakChartInspector'
+
 /** 苦手譜面インスペクター Online の画面文言 */
 export const ONLINE_WEAK_CHART_COPY = {
   title: '苦手譜面インスペクター Online',
@@ -43,3 +50,20 @@ export const ONLINE_WEAK_CHART_FILTER_DEFAULT = {
 
 /** Online の表示スコア範囲に指定できる最小値 */
 export const ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN = 1
+
+/** 苦手譜面インスペクター Online の難易度選択肢 */
+export const ONLINE_WEAK_CHART_DIFFICULTY_OPTIONS: readonly {
+  /** 選択状態で保持する値 */
+  value: OnlineWeakChartDifficulty
+  /** チェックボックスに表示する名前 */
+  label: string
+}[] = [
+  {
+    value: ONLINE_WEAK_CHART_OP_TARGET_FILTER,
+    label: THEORETICAL_OVER_POWER_TARGET_LABEL,
+  },
+  ...PLAYER_DATA_DIFFICULTIES.map((difficulty) => ({
+    value: difficulty,
+    label: difficulty,
+  })),
+]

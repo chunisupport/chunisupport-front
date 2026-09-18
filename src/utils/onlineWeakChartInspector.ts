@@ -1,9 +1,20 @@
+import { MASTER_ULTIMA_DIFFICULTIES, THEORETICAL_OVER_POWER_TARGET_FILTER } from '../constants/chart'
+import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
 import { formatChartConst } from './chartConstFormat'
 import { formatInteger } from './numberFormat'
 import { formatScoreDifference } from './scoreDifference'
 import { compareSongsByReading } from './songTitleSorting'
+import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
+
+/** 苦手譜面インスペクター Online で理論値OVER POWER対象を表す選択値 */
+export const ONLINE_WEAK_CHART_OP_TARGET_FILTER = THEORETICAL_OVER_POWER_TARGET_FILTER
+
+/** 苦手譜面インスペクター Online で選択できる通常難易度または理論値OVER POWER対象 */
+export type OnlineWeakChartDifficulty =
+  | PlayerDataDifficulty
+  | typeof ONLINE_WEAK_CHART_OP_TARGET_FILTER
 
 /** 同じレート帯の平均と比較できるプレイ済み譜面 */
 export interface OnlineWeakChartEntry {
@@ -14,7 +25,8 @@ export interface OnlineWeakChartEntry {
 
 /** Online の表示条件 */
 export interface OnlineWeakChartFilter {
-  difficulties: readonly PlayerDataDifficulty[]
+  /** 通常難易度または理論値OVER POWER対象の選択値 */
+  difficulties: readonly OnlineWeakChartDifficulty[]
   /** 比較結果として表示するスコア差の絶対値範囲。平均値の集計範囲は制限しない。 */
   displayScoreRange: number
   constMin: number
@@ -39,25 +51,78 @@ export type OnlineWeakChartSortKey =
   | 'difference'
 
 /**
+ * 理論値OVER POWER対象と通常難易度が同時に選ばれない次の選択状態を作る。
+ *
+ * @param current - 現在選択中の難易度。
+ * @param toggled - 切り替える難易度。
+ * @returns 切り替え後の難易度。
+ */
+export const toggleOnlineWeakChartDifficulty = (
+  current: readonly OnlineWeakChartDifficulty[],
+  toggled: OnlineWeakChartDifficulty
+): OnlineWeakChartDifficulty[] => {
+  if (toggled === ONLINE_WEAK_CHART_OP_TARGET_FILTER) {
+    return current.includes(ONLINE_WEAK_CHART_OP_TARGET_FILTER)
+      ? []
+      : [ONLINE_WEAK_CHART_OP_TARGET_FILTER]
+  }
+
+  const withoutOpTarget = current.filter(
+    (difficulty) => difficulty !== ONLINE_WEAK_CHART_OP_TARGET_FILTER
+  )
+  return withoutOpTarget.includes(toggled)
+    ? withoutOpTarget.filter((difficulty) => difficulty !== toggled)
+    : [...withoutOpTarget, toggled]
+}
+
+/**
+ * 平均スコア統計の取得に使う通常難易度を選択値から解決する。
+ *
+ * @param difficulties - 通常難易度または理論値OVER POWER対象の選択値。
+ * @returns 静的スコア統計を取得する通常難易度。
+ */
+export const resolveOnlineWeakChartScoreDifficulties = (
+  difficulties: readonly OnlineWeakChartDifficulty[]
+): PlayerDataDifficulty[] => {
+  if (difficulties.includes(ONLINE_WEAK_CHART_OP_TARGET_FILTER)) {
+    return [...MASTER_ULTIMA_DIFFICULTIES]
+  }
+
+  return PLAYER_DATA_DIFFICULTIES.filter((difficulty) => difficulties.includes(difficulty))
+}
+
+/**
  * 比較結果から表示条件に含まれる譜面を抽出する。
  *
  * @param entries - レート帯平均との比較結果。
  * @param filter - 難易度、表示スコア差、譜面定数、ジャンル、バージョンの範囲。
  * @param attributesBySongId - 楽曲IDごとのジャンル・バージョン。未取得時は属性条件を適用しない。
+ * @param targetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
  * @returns 表示対象の比較結果。
  */
 export const filterOnlineWeakChartEntries = (
   entries: readonly OnlineWeakChartEntry[],
   filter: OnlineWeakChartFilter,
-  attributesBySongId?: ReadonlyMap<string, OnlineWeakChartSongAttributes>
+  attributesBySongId?: ReadonlyMap<string, OnlineWeakChartSongAttributes>,
+  targetDifficultyBySongId?: ReadonlyMap<string, PlayerDataDifficulty>
 ): OnlineWeakChartEntry[] => {
-  const rangeFilteredEntries = entries.filter(
-    ({ record, difference }) =>
-      filter.difficulties.some((difficulty) => difficulty === record.difficulty.toUpperCase()) &&
+  const opTargetOnly = filter.difficulties.includes(ONLINE_WEAK_CHART_OP_TARGET_FILTER)
+  const rangeFilteredEntries = entries.filter(({ record, difference }) => {
+    const recordDifficulty = record.difficulty.toUpperCase() as PlayerDataDifficulty
+    const difficultyMatched = opTargetOnly
+      ? isTheoreticalOverPowerTargetDifficulty(
+          targetDifficultyBySongId?.get(record.id),
+          recordDifficulty
+        )
+      : filter.difficulties.includes(recordDifficulty)
+
+    return (
+      difficultyMatched &&
       Math.abs(difference) <= filter.displayScoreRange &&
       record.const >= filter.constMin &&
       record.const <= filter.constMax
-  )
+    )
+  })
 
   if (!attributesBySongId || (filter.genres === null && filter.versions === null)) {
     return rangeFilteredEntries
