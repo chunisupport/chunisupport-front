@@ -32,7 +32,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
 import { accentPreference, themePreference } from '../../stores/themePreferences'
-import type { PlayerDataDifficulty, RatingBandDTO } from '../../types/api'
+import type { RatingBandDTO } from '../../types/api'
 import type { ChartScoresResponse } from '../../types/chartScores'
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
@@ -49,19 +49,19 @@ import {
   compareRecordsWithRatingBand,
   filterOnlineWeakChartEntries,
   formatOnlineWeakChartTooltipDetail,
+  ONLINE_WEAK_CHART_OP_TARGET_FILTER,
   type OnlineWeakChartDifficulty,
   type OnlineWeakChartEntry,
   type OnlineWeakChartFilter,
   type OnlineWeakChartSortKey,
-  ONLINE_WEAK_CHART_OP_TARGET_FILTER,
   resolveOnlineWeakChartScoreDifficulties,
   sortOnlineWeakChartEntries,
   toggleOnlineWeakChartDifficulty,
 } from '../../utils/onlineWeakChartInspector'
-import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../utils/theoreticalOverPowerTarget'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import { formatScoreDifference, getScoreDifferenceClass } from '../../utils/scoreDifference'
 import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
+import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../utils/theoreticalOverPowerTarget'
 import { getShortVersionName } from '../../utils/versionConverter'
 import {
   ONLINE_WEAK_CHART_COPY,
@@ -246,9 +246,9 @@ const ONLINE_WEAK_CHART_TABLE_ROW_HEIGHT = 37
 /** 比較表の仮想行と見出しで共有する列構成。 */
 const ONLINE_WEAK_CHART_TABLE_GRID_TEMPLATE =
   'minmax(14rem, 1fr) 5.75rem 3rem 4.75rem 4.75rem 4.75rem'
-/** 比較表の見出しセルに共通適用するクラス。 */
+/** 比較表の見出しセルに共通適用するクラス。苦手譜面インスペクターの表見出しと高さと字を揃える。 */
 const ONLINE_WEAK_CHART_TABLE_HEADER_CLASS =
-  'flex min-h-[37px] items-center whitespace-nowrap bg-surface-muted py-2 text-xs font-semibold text-text-muted'
+  'flex min-h-8 items-center whitespace-nowrap bg-surface-muted font-medium text-text-muted'
 /** 比較表の仮想行セルに共通適用するクラス。 */
 const ONLINE_WEAK_CHART_TABLE_CELL_CLASS = 'flex h-[37px] items-center'
 
@@ -323,7 +323,7 @@ const OnlineWeakChartTable = (props: OnlineWeakChartTableProps): JSX.Element => 
       active={sortKey() === key}
       direction={sortDirection()}
       align={align}
-      class={align === 'start' ? 'justify-start' : 'justify-center'}
+      class={align === 'start' ? 'justify-start min-h-8!' : 'justify-center min-h-8!'}
       onClick={() => handleSortChange(key)}
     />
   )

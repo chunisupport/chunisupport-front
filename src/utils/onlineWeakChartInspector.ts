@@ -1,4 +1,7 @@
-import { MASTER_ULTIMA_DIFFICULTIES, THEORETICAL_OVER_POWER_TARGET_FILTER } from '../constants/chart'
+import {
+  MASTER_ULTIMA_DIFFICULTIES,
+  THEORETICAL_OVER_POWER_TARGET_FILTER,
+} from '../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'

@@ -210,6 +210,16 @@ test('理論値OP対象の平均スコア取得難易度はMASTERとULTIMAにな
   assert.deepEqual(result, ['MASTER', 'ULTIMA'])
 })
 
+test('通常難易度の平均スコア取得難易度は選択順ではなく正規順になる', () => {
+  // Given: MASTERとEXPERTを選択している。
+
+  // When: 静的スコア統計の取得難易度を解決する。
+  const result = resolveOnlineWeakChartScoreDifficulties(['MASTER', 'EXPERT'])
+
+  // Then: 正規順のEXPERTとMASTERだけを取得対象にする。
+  assert.deepEqual(result, ['EXPERT', 'MASTER'])
+})
+
 test('Onlineのジャンルとバージョンは表示時の属性フィルタとして適用する', () => {
   // Given: 比較結果と楽曲マスタ由来の属性。
   const entries = [
