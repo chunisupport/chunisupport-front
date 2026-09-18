@@ -1,3 +1,4 @@
+import { Collapsible } from '@kobalte/core/collapsible'
 import { Dialog } from '@kobalte/core/dialog'
 import { ImageDown, RotateCcw, Share2, X } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -18,6 +19,7 @@ import {
   getAppButtonClass,
   getAppIconButtonClass,
 } from '../../../../components/common/AppButton'
+import { AppDisclosureTrigger } from '../../../../components/common/AppDisclosureTrigger'
 import { AppSelect } from '../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
 import { DEFAULT_POSSESSION_NAME } from '../../../../constants/possession'
@@ -39,6 +41,10 @@ import {
 import { RatingImageSheet } from './RatingImageSheet'
 import { RatingImageSheetV2 } from './RatingImageSheetV2'
 import { formatRatingImageFilename } from './ratingImageFilename'
+import {
+  readRatingImageV2OptionsOpen,
+  saveRatingImageV2OptionsOpen,
+} from './ratingImageV2OptionsStorage'
 
 type Props = {
   /** プロフィールURLに使用するユーザー名 */
@@ -59,7 +65,7 @@ type Props = {
  * プレビュー表示時点で画像化を行い、表示中の画像と保存する画像を同一のBlobにする。
  * 画像表示により、スマートフォンの長押し保存など標準の画像操作を利用できる。
  *
- * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定。Ver. 2 は NEW! バッジとポゼッション色を切り替えられる。
+ * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定。Ver. 2 は NEW! バッジ、ポゼッション色、レベル非表示を切り替えられる。
  * @returns 画像化プレビューを開くボタンとダイアログ。
  */
 export const RatingImagePreviewDialog: Component<Props> = (props) => {
@@ -75,6 +81,8 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   )
   const [showLatestUpdateBadge, setShowLatestUpdateBadge] = createSignal(true)
   const [applyPossession, setApplyPossession] = createSignal(true)
+  const [hidePlayerLevel, setHidePlayerLevel] = createSignal(false)
+  const [v2OptionsOpen, setV2OptionsOpen] = createSignal(readRatingImageV2OptionsOpen())
   let captureRevision = 0
 
   const [readyJacketCount, setReadyJacketCount] = createSignal(0)
@@ -220,6 +228,28 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const handleApplyPossessionChange = (checked: boolean): void => {
     setApplyPossession(checked)
     invalidatePreview(false)
+  }
+
+  /**
+   * プレイヤーレベルの非表示を切り替え、プレビューを作り直す。
+   *
+   * @param checked - レベルを隠す場合は true。
+   * @returns なし。
+   */
+  const handleHidePlayerLevelChange = (checked: boolean): void => {
+    setHidePlayerLevel(checked)
+    invalidatePreview(false)
+  }
+
+  /**
+   * Ver. 2 の表示設定パネルの開閉を更新し、次回以降も同じ状態になるよう保存する。
+   *
+   * @param nextOpen - 次の開閉状態。
+   * @returns なし。
+   */
+  const handleV2OptionsOpenChange = (nextOpen: boolean): void => {
+    setV2OptionsOpen(nextOpen)
+    saveRatingImageV2OptionsOpen(nextOpen)
   }
 
   /**
@@ -434,32 +464,48 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
             </div>
 
             <Show when={selectedVersionOption().value === 'v2'}>
-              <fieldset class="mt-3 w-fit shrink-0 rounded-md border border-border bg-bg px-3 py-2">
-                <legend class="sr-only">{RATING_IMAGE_COPY.v2OptionsLegend}</legend>
-                <div class="flex flex-col items-start gap-2">
-                  <CheckboxField
-                    id="rating-image-show-latest-update-badge"
-                    checked={showLatestUpdateBadge()}
-                    disabled={isSharing()}
-                    onChange={handleShowLatestUpdateBadgeChange}
-                    label={
-                      <span class="inline-flex items-center gap-1.5">
-                        <span class={`shrink-0 ${RATING_IMAGE_V2_NEW_BADGE_CLASS}`}>
-                          {RATING_IMAGE_COPY.latestUpdateBadge}
-                        </span>
-                        <span>{RATING_IMAGE_COPY.showLatestUpdateBadgeLabel}</span>
-                      </span>
-                    }
-                  />
-                  <CheckboxField
-                    id="rating-image-apply-possession"
-                    checked={applyPossession()}
-                    disabled={isSharing()}
-                    onChange={handleApplyPossessionChange}
-                    label={RATING_IMAGE_COPY.applyPossessionLabel}
-                  />
-                </div>
-              </fieldset>
+              <Collapsible
+                class="mt-3 w-full shrink-0 rounded-lg border border-border-strong bg-surface"
+                open={v2OptionsOpen()}
+                onOpenChange={handleV2OptionsOpenChange}
+                disabled={isSharing()}
+              >
+                <AppDisclosureTrigger class="gap-1.5" label={RATING_IMAGE_COPY.v2OptionsLegend} />
+                <Collapsible.Content>
+                  <div class="border-t border-border p-3">
+                    <div class="flex flex-col items-start gap-2">
+                      <CheckboxField
+                        id="rating-image-show-latest-update-badge"
+                        checked={showLatestUpdateBadge()}
+                        disabled={isSharing()}
+                        onChange={handleShowLatestUpdateBadgeChange}
+                        label={
+                          <span class="inline-flex items-center gap-1.5">
+                            <span class={`shrink-0 ${RATING_IMAGE_V2_NEW_BADGE_CLASS}`}>
+                              {RATING_IMAGE_COPY.latestUpdateBadge}
+                            </span>
+                            <span>{RATING_IMAGE_COPY.showLatestUpdateBadgeLabel}</span>
+                          </span>
+                        }
+                      />
+                      <CheckboxField
+                        id="rating-image-apply-possession"
+                        checked={applyPossession()}
+                        disabled={isSharing()}
+                        onChange={handleApplyPossessionChange}
+                        label={RATING_IMAGE_COPY.applyPossessionLabel}
+                      />
+                      <CheckboxField
+                        id="rating-image-hide-player-level"
+                        checked={hidePlayerLevel()}
+                        disabled={isSharing()}
+                        onChange={handleHidePlayerLevelChange}
+                        label={RATING_IMAGE_COPY.hidePlayerLevelLabel}
+                      />
+                    </div>
+                  </div>
+                </Collapsible.Content>
+              </Collapsible>
             </Show>
 
             <div class="mt-4 min-h-0 flex-1 basis-0 overflow-hidden rounded-md bg-bg p-3">
@@ -554,6 +600,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                   rating={props.rating}
                   showJackets={props.showJackets}
                   showLatestUpdateBadge={showLatestUpdateBadge()}
+                  hidePlayerLevel={hidePlayerLevel()}
                   possessionName={possessionName()}
                   onJacketReadyChange={handleJacketReadyChange}
                 />

@@ -40,6 +40,8 @@ export const REGISTER_SCORE_COPY = {
   copySongTitleError: '曲名のコピーに失敗しました。',
   excludeChangeFromImage: '画像から除外',
   includeChangeInImage: '画像に含める',
+  hidePlayerLevel: 'レベルを非表示',
+  showPlayerLevel: 'レベルを表示',
 } as const
 
 /**
