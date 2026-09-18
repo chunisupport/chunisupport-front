@@ -1224,6 +1224,12 @@
     animation: honor-title-sp-rainbow 2.45s linear infinite;
   }
 
+  .user-honor-title--rotating.user-honor-title--sp {
+    animation:
+      honor-title-rotate 4s ease-in-out both,
+      honor-title-sp-rainbow 2.45s linear infinite;
+  }
+
   .rating-image-honor-title.user-honor-title--sp {
     --honor-background: var(--honor-shine), var(--cs-gradient-rating-image-sp-honor-bg);
     animation: none;
