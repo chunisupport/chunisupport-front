@@ -63,7 +63,7 @@ test('選択レート帯の平均があるプレイ済み譜面だけを差分�
   assert.equal(result[0].difference, -2000)
 })
 
-test('Onlineの表示範囲は難易度と点差と譜面定数をともに絞る', () => {
+test('Onlineの表示条件は難易度と譜面定数を絞り、表では点差を制限しない', () => {
   // Given: 境界値と範囲外の比較結果。
   const entries = [
     {
@@ -77,11 +77,12 @@ test('Onlineの表示範囲は難易度と点差と譜面定数をともに絞�
       difference: 10000,
     },
     { record: record({ const: 13.9 }), averageScore: 1000000, difference: 0 },
-    { record: record({ const: 14 }), averageScore: 1000000, difference: -10001 },
+    { record: record({ const: 14 }), averageScore: 1000000, difference: -60000 },
+    { record: record({ const: 14 }), averageScore: 1000000, difference: 60000 },
     { record: record({ const: 14, difficulty: 'EXPERT' }), averageScore: 1000000, difference: 0 },
   ]
 
-  // When: 表示対象をMASTERとULTIMA、定数14～15、点差±10000へ絞る。
+  // When: 表示対象をMASTERとULTIMA、定数14～15、散布図の縦軸を±10000にする。
   const result = filterOnlineWeakChartEntries(entries, {
     difficulties: ['MASTER', 'ULTIMA'],
     displayScoreRange: 10000,
@@ -91,8 +92,8 @@ test('Onlineの表示範囲は難易度と点差と譜面定数をともに絞�
     versions: null,
   })
 
-  // Then: 両端の点差を含み、範囲外の譜面は除外する。
-  assert.deepEqual(result, entries.slice(0, 2))
+  // Then: 点差±60000の譜面も表の対象に残り、難易度と定数の範囲外は除外する。
+  assert.deepEqual(result, [entries[0], entries[1], entries[3], entries[4]])
 })
 
 test('理論値OP対象では現在のOP対象フラグではなく楽曲マスタの対象難易度を使う', () => {
