@@ -11,6 +11,5 @@ export const matchesLockedSongsPlayStatus = (
   playStatus: LockedSongsPlayStatus,
   isUnplayed: boolean
 ): boolean => {
-  if (playStatus === 'all') return true
   return playStatus === 'unplayed' ? isUnplayed : !isUnplayed
 }

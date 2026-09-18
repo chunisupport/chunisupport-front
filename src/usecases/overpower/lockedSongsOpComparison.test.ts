@@ -7,6 +7,7 @@ import {
   formatLockedSongsOverPowerDelta,
   formatLockedSongsOverPowerPercentDelta,
   formatOfficialOverPowerDisplay,
+  getLockedSongsOpComparisonDeltaDirection,
   matchesOfficialOverPowerDisplay,
 } from './lockedSongsOpComparison'
 
@@ -91,6 +92,12 @@ test('小数第2位へ切り捨てた表示が同じなら公式値と一致す�
 
   // Then
   assert.equal(result, true)
+})
+
+test('表示上のOP差分方向を判定できること', () => {
+  assert.equal(getLockedSongsOpComparisonDeltaDirection(90.13, 90.12), 'higher')
+  assert.equal(getLockedSongsOpComparisonDeltaDirection(90.11, 90.12), 'lower')
+  assert.equal(getLockedSongsOpComparisonDeltaDirection(90.129, 90.12), null)
 })
 
 test('計算OPが公式OPより大きいときの差を符号付きで整形すること', () => {

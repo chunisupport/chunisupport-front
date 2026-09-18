@@ -44,6 +44,27 @@ export const formatOfficialOverPowerDisplay = (value: number): string =>
 export const matchesOfficialOverPowerDisplay = (calculated: number, official: number): boolean =>
   formatOfficialOverPowerDisplay(calculated) === formatOfficialOverPowerDisplay(official)
 
+/** 公式値との差分が表示上どちら向きかを表す型。 */
+export type LockedSongsOpComparisonDeltaDirection = 'higher' | 'lower'
+
+/**
+ * OP/OP%の表示値が公式値と一致しない場合の差分方向を返す。
+ *
+ * @param calculatedValue - 未解禁設定から算出した値。
+ * @param officialValue - 公式値。
+ * @returns 算出値が高ければhigher、低ければlower、表示上一致すればnull。
+ */
+export const getLockedSongsOpComparisonDeltaDirection = (
+  calculatedValue: number,
+  officialValue: number
+): LockedSongsOpComparisonDeltaDirection | null => {
+  if (matchesOfficialOverPowerDisplay(calculatedValue, officialValue)) {
+    return null
+  }
+
+  return calculatedValue > officialValue ? 'higher' : 'lower'
+}
+
 /**
  * 符号付き差分文字列を生成する。
  *

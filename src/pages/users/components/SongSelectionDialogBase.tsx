@@ -58,6 +58,7 @@ type SongSelectionDialogBaseProps<TItem, TFilter> = {
 
 const FILTER_LABEL = 'フィルター'
 const FILTER_ACTIVE_LABEL = 'フィルター適用中'
+const FILTER_RESET_LABEL = 'リセット'
 const SELECTED_ONLY_LABEL = '選択済み楽曲のみ表示'
 const EMPTY_MESSAGE = '該当する曲がありません'
 
@@ -178,7 +179,7 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
               <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex max-h-[80dvh] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
                 <div class="mb-4 flex shrink-0 items-center justify-between gap-3">
                   <Dialog.Title class="text-lg font-bold">{FILTER_LABEL}</Dialog.Title>
-                  <AppButton onClick={props.resetFilters}>すべて選択</AppButton>
+                  <AppButton onClick={props.resetFilters}>{FILTER_RESET_LABEL}</AppButton>
                 </div>
                 <div class="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
                   <GenreMultiSelect

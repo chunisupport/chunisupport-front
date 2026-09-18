@@ -3,6 +3,7 @@ import { Check } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, Show } from 'solid-js'
 import { AppSelect } from '../../../../components/common/AppSelect'
+import { CheckboxField } from '../../../../components/common/CheckboxField'
 import type {
   MasterItemDTO,
   PlayerLockedSongRequest,
@@ -36,7 +37,11 @@ import {
   sortSongSelectionCandidates,
 } from '../../components/songSelectionDialog'
 import { hasSameFilterValues } from '../../utils/filterValue'
-import { LOCKED_SONG_PLAY_STATUS_OPTIONS, type LockedSongsPlayStatus } from '../constants'
+import {
+  LOCKED_SONG_PLAY_STATUS_FILTER_COPY,
+  LOCKED_SONG_PLAY_STATUS_OPTIONS,
+  type LockedSongsPlayStatus,
+} from '../constants'
 import { LockedSongsOpComparison } from './LockedSongsOpComparison'
 import { matchesLockedSongsPlayStatus } from './lockedSongsFilter'
 
@@ -63,12 +68,15 @@ type LockedSongListItem = {
 type LockedSongsFilter = {
   genres: string[]
   versions: string[]
+  playStatusEnabled: boolean
   playStatus: LockedSongsPlayStatus
 }
 
 type LockedSongsPlayStatusOption = (typeof LOCKED_SONG_PLAY_STATUS_OPTIONS)[number]
 
 const LOCKED_SONG_DESCRIPTION = 'チェックした曲・譜面はOVER POWER計算対象から除外されます。'
+/** プレイ状況フィルターのチェックボックスを識別するID */
+const LOCKED_SONG_PLAY_STATUS_FILTER_ID = 'locked-song-filter-play-status'
 
 /**
  * 楽曲にULTIMA譜面があるか判定する。
@@ -90,7 +98,8 @@ const buildDefaultLockedSongsFilter = (
   versions: string[]
 ): LockedSongsFilter => ({
   ...buildDefaultSongSelectionFilter(genres, versions),
-  playStatus: 'all',
+  playStatusEnabled: false,
+  playStatus: LOCKED_SONG_PLAY_STATUS_OPTIONS[0].value,
 })
 
 /**
@@ -104,6 +113,7 @@ const isLockedSongsFilterChanged = (
   current: LockedSongsFilter,
   defaultFilter: LockedSongsFilter
 ): boolean =>
+  current.playStatusEnabled !== defaultFilter.playStatusEnabled ||
   current.playStatus !== defaultFilter.playStatus ||
   !hasSameFilterValues(current.genres, defaultFilter.genres) ||
   !hasSameFilterValues(current.versions, defaultFilter.versions)
@@ -208,7 +218,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
       .filter(({ item, searchableText, searchableReading }) => {
         const key = createLockedSongKey(item.song.id, item.isUltima)
         if (model.showSelectedOnly() && !model.draftKeys().has(key)) return false
-        if (!matchesLockedSongsPlayStatus(currentFilters.playStatus, isUnplayedListItem(item))) {
+        if (
+          currentFilters.playStatusEnabled &&
+          !matchesLockedSongsPlayStatus(currentFilters.playStatus, isUnplayedListItem(item))
+        ) {
           return false
         }
         if (!currentFilters.genres.includes(item.song.genre)) return false
@@ -294,7 +307,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
   /**
    * プレイ状況フィルターを描画する。
    *
-   * @returns プレイ状況絞り込みのSelect欄。
+   * @returns プレイ状況絞り込みのチェックボックスとSelect欄。
    */
   const renderFilterExtras = (): JSX.Element => {
     const selectedOption = (): LockedSongsPlayStatusOption =>
@@ -304,19 +317,44 @@ const LockedSongsDialog: Component<Props> = (props) => {
 
     return (
       <section>
-        <AppSelect<LockedSongsPlayStatusOption>
-          rootClass="block text-sm"
-          label="プレイ状況"
-          options={[...LOCKED_SONG_PLAY_STATUS_OPTIONS]}
-          optionValue="value"
-          optionTextValue="label"
-          value={selectedOption()}
-          onChange={(option) => {
-            if (option) model.setFilters((current) => ({ ...current, playStatus: option.value }))
-          }}
-          formatLabel={(option) => option.label}
-          contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-        />
+        <div class="flex min-w-0 items-center gap-2">
+          <CheckboxField
+            id={LOCKED_SONG_PLAY_STATUS_FILTER_ID}
+            checked={model.filters().playStatusEnabled}
+            onChange={(playStatusEnabled) =>
+              model.setFilters((current) => ({
+                ...current,
+                playStatusEnabled,
+              }))
+            }
+            ariaLabel={LOCKED_SONG_PLAY_STATUS_FILTER_COPY.ariaLabel}
+            class="shrink-0"
+          />
+          <AppSelect<LockedSongsPlayStatusOption>
+            rootClass="min-w-0 flex-1"
+            label={LOCKED_SONG_PLAY_STATUS_FILTER_COPY.label}
+            labelVariant="srOnly"
+            options={[...LOCKED_SONG_PLAY_STATUS_OPTIONS]}
+            optionValue="value"
+            optionTextValue="label"
+            value={selectedOption()}
+            onChange={(option) =>
+              model.setFilters((current) => ({
+                ...current,
+                playStatus: option?.value ?? LOCKED_SONG_PLAY_STATUS_OPTIONS[0].value,
+              }))
+            }
+            formatLabel={(option) => option.label}
+            contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+            itemClass="hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
+          />
+          <label
+            for={LOCKED_SONG_PLAY_STATUS_FILTER_ID}
+            class="shrink-0 cursor-pointer text-sm text-text-muted"
+          >
+            {LOCKED_SONG_PLAY_STATUS_FILTER_COPY.suffix}
+          </label>
+        </div>
       </section>
     )
   }
