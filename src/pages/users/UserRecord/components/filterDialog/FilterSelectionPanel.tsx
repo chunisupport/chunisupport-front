@@ -1,6 +1,8 @@
 import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
+import ChartConstRangeField from '../../../../../components/common/ChartConstRangeField'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../../components/common/filterStyles'
 import {
   CHART_CONST_MAX,
   CHART_CONST_MIN,
@@ -16,8 +18,12 @@ import {
 } from '../../../../../constants/recordFilterOptions'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import type { FilterState } from '../../../../../types/recordFilter'
+import {
+  type ChartLevelLabel,
+  getChartLevelFilterBoundary,
+  toChartLevelFilterLabel,
+} from '../../../../../utils/chartLevel'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
-import { truncateDecimal } from '../../../../../utils/numberFormat'
 import {
   parseNumberInput,
   toInputValue,
@@ -30,7 +36,6 @@ import LampSection from '../../../components/filter/LampSection'
 import MultiSelectFilterSection from '../../../components/filter/MultiSelectFilterSection'
 import NumericRangeSection from '../../../components/filter/NumericRangeSection'
 import ScoreSection from '../../../components/filter/ScoreSection'
-import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../components/filter/styles'
 import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters'
 import {
   JUSTICE_COUNT_RANGE_FILTER,
@@ -40,7 +45,6 @@ import {
 import { toggleArray } from '../../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../../utils/scoreRank'
-import ConstRangeSection from './sections/ConstRangeSection'
 import DifficultySection from './sections/DifficultySection'
 
 type FilterSelectionPanelProps = {
@@ -102,41 +106,6 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const [updatedAtMinInput, setUpdatedAtMinInput] = createSignal(props.filters.updatedAt.min)
   const [updatedAtMaxInput, setUpdatedAtMaxInput] = createSignal(props.filters.updatedAt.max)
 
-  const Const2Level = (value: number) => {
-    const normalized = Math.max(CHART_CONST_MIN, Math.min(value, CHART_CONST_MAX))
-    if (normalized <= 6.9) {
-      return String(Math.floor(normalized))
-    }
-    const base = Math.floor(normalized)
-    const decimal = normalized - base
-    if (decimal >= 0.5) {
-      return `${base}+`
-    }
-    return String(base)
-  }
-
-  /**
-   * 表示レベルからフィルターへ設定する譜面定数の端点を取得する。
-   *
-   * @param level - 選択された表示レベル。
-   * @param type - 取得する範囲の端点。
-   * @returns 表示レベルに対応する譜面定数。
-   */
-  const Level2Const = (level: string, type: 'min' | 'max') => {
-    const isPlus = level.endsWith('+')
-    const base = Number.parseInt(level.replace('+', ''), 10)
-    if (base <= 6) {
-      return type === 'min' ? base : truncateDecimal(base + 0.9, 1)
-    }
-    if (isPlus) {
-      return type === 'min' ? truncateDecimal(base + 0.5, 1) : truncateDecimal(base + 0.9, 1)
-    }
-    if (base >= CHART_CONST_MAX) {
-      return CHART_CONST_MAX
-    }
-    return type === 'min' ? base : truncateDecimal(base + 0.4, 1)
-  }
-
   // フィルターダイアログが開かれた時にフィルター状態を同期
   createEffect(() => {
     if (!props.open) return
@@ -152,8 +121,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     setOverPowerMaxInput(toInputValue(props.filters.overPower.max))
     setUpdatedAtMinInput(props.filters.updatedAt.min)
     setUpdatedAtMaxInput(props.filters.updatedAt.max)
-    setConstLevelMin(Const2Level(props.filters.const.min))
-    setConstLevelMax(Const2Level(props.filters.const.max))
+    setConstLevelMin(toChartLevelFilterLabel(props.filters.const.min))
+    setConstLevelMax(toChartLevelFilterLabel(props.filters.const.max))
     setScoreRankMin(scoreToFilterRank(props.filters.score.min))
     setScoreRankMax(scoreToFilterRank(props.filters.score.max))
   })
@@ -174,10 +143,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     }
     // 定数->レベルの場合
     // 内部の保持値を変換してセット
-    const nextMinLevel = Const2Level(props.filters.const.min)
-    const nextMaxLevel = Const2Level(props.filters.const.max)
-    const nextMinValue = Level2Const(nextMinLevel, 'min')
-    const nextMaxValue = Level2Const(nextMaxLevel, 'max')
+    const nextMinLevel = toChartLevelFilterLabel(props.filters.const.min)
+    const nextMaxLevel = toChartLevelFilterLabel(props.filters.const.max)
+    const nextMinValue = getChartLevelFilterBoundary(nextMinLevel, 'min')
+    const nextMaxValue = getChartLevelFilterBoundary(nextMaxLevel, 'max')
     setConstLevelMin(nextMinLevel)
     setConstLevelMax(nextMaxLevel)
     // フィルター状態を更新
@@ -228,7 +197,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const handleConstLevelChange = (type: 'min' | 'max', value: string) => {
     if (type === 'min') {
       setConstLevelMin(value)
-      const nextValue = Level2Const(value, 'min')
+      const nextValue = getChartLevelFilterBoundary(value as ChartLevelLabel, 'min')
       setConstMinInput(toInputValue(nextValue))
       props.setFilters((prev) => ({
         ...prev,
@@ -240,7 +209,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       return
     }
     setConstLevelMax(value)
-    const nextValue = Level2Const(value, 'max')
+    const nextValue = getChartLevelFilterBoundary(value as ChartLevelLabel, 'max')
     setConstMaxInput(toInputValue(nextValue))
     props.setFilters((prev) => ({
       ...prev,
@@ -453,7 +422,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         favoriteSongsDisabled={props.favoriteSongsDisabled}
         lockedSongsDisabled={props.lockedSongsDisabled}
       />
-      <ConstRangeSection
+      <ChartConstRangeField
         constFilterMode={props.filters.constFilterMode}
         minValue={constMinInput()}
         maxValue={constMaxInput()}
