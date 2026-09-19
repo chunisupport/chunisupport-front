@@ -1,3 +1,4 @@
+import { CHART_CONST_MAX, CHART_CONST_MIN } from '../constants/chart'
 import type {
   ChartStats,
   ChartStatsClear,
@@ -5,6 +6,7 @@ import type {
   ChartStatsRank,
   WorldsendChartStats,
 } from '../types/chartStats'
+import type { NumericRangeFilter } from '../types/record'
 import { normalizeForSearch } from './searchUtils'
 import { compareSongsByReading } from './songTitleSorting'
 import type { SortDirection } from './sortingQuery'
@@ -244,10 +246,12 @@ export const filterChartStatsByTitle = (
   return charts.filter((chart) => normalizeForSearch(chart.title).includes(normalizedQuery))
 }
 
-/** レコード統計のバージョン・ジャンル絞り込み条件。nullは未指定（全件対象）を表す */
+/** レコード統計の範囲・バージョン・ジャンル絞り込み条件。nullは未指定（全件対象）を表す */
 export type ChartStatsAttributeFilter = {
   genres: string[] | null
   versions: string[] | null
+  constFilterMode: 'level' | 'number'
+  constRange: NumericRangeFilter
 }
 
 /** 譜面統計の絞り込みに使う楽曲属性。バージョンはフルネームで保持する */
@@ -277,16 +281,21 @@ export type ChartStatsVersionMeta = {
 export const createDefaultChartStatsAttributeFilter = (): ChartStatsAttributeFilter => ({
   genres: null,
   versions: null,
+  constFilterMode: 'level',
+  constRange: { min: CHART_CONST_MIN, max: CHART_CONST_MAX },
 })
 
 /**
- * バージョンまたはジャンルの絞り込みが指定されているか判定する。
+ * レベル・譜面定数・バージョン・ジャンルの絞り込みが指定されているか判定する。
  *
  * @param filter - 判定する属性フィルター。
  * @returns いずれかが指定されている場合はtrue。
  */
 export const isChartStatsAttributeFilterActive = (filter: ChartStatsAttributeFilter): boolean =>
-  filter.genres !== null || filter.versions !== null
+  filter.genres !== null ||
+  filter.versions !== null ||
+  filter.constRange.min !== CHART_CONST_MIN ||
+  filter.constRange.max !== CHART_CONST_MAX
 
 /**
  * 楽曲マスタからsong_idをキーとする属性マップを生成する。
@@ -310,13 +319,14 @@ export const buildChartStatsAttributesBySongId = (
   )
 
 /**
- * 曲名検索に加えてバージョン・ジャンルで譜面統計を絞り込む。
- * 属性マップが未取得の場合は曲名検索のみを適用し、マップにない譜面は不明扱いとする。
+ * 曲名検索に加えてレベル・譜面定数・バージョン・ジャンルで譜面統計を絞り込む。
+ * 属性マップが未取得の場合も範囲条件を適用し、バージョン・ジャンル条件のみ保留する。
+ * 属性マップにない譜面は不明扱いとする。
  *
  * @param charts - 絞り込み対象の譜面統計。
  * @param query - 曲名検索文字列。
  * @param attributesBySongId - song_idごとの楽曲属性。未指定時は属性絞り込みを行わない。
- * @param filter - バージョン・ジャンルの絞り込み条件。未指定時は属性絞り込みを行わない。
+ * @param filter - 範囲・バージョン・ジャンルの絞り込み条件。未指定時は追加の絞り込みを行わない。
  * @returns 元の順序を保った絞り込み結果。
  */
 export const filterChartStats = (
@@ -326,9 +336,15 @@ export const filterChartStats = (
   filter?: ChartStatsAttributeFilter
 ): ChartStats[] => {
   const titleFiltered = filterChartStatsByTitle(charts, query)
-  if (!attributesBySongId || !filter) return titleFiltered
-  if (filter.genres === null && filter.versions === null) return titleFiltered
+  if (!filter) return titleFiltered
   return titleFiltered.filter((chart) => {
+    if (
+      !isWorldsendChartStats(chart) &&
+      (chart.const < filter.constRange.min || chart.const > filter.constRange.max)
+    ) {
+      return false
+    }
+    if (!attributesBySongId || (filter.genres === null && filter.versions === null)) return true
     const attributes = attributesBySongId.get(chart.song_id) ?? { genre: null, version: '不明' }
     if (
       filter.genres !== null &&

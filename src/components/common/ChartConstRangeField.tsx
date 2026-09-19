@@ -1,49 +1,23 @@
 import type { Component } from 'solid-js'
-import { CheckboxField } from '../../../../../../components/common/CheckboxField'
+import { CHART_LEVEL_FILTER_OPTIONS } from '../../utils/chartLevel'
+import { normalizeChartConstRangeInput } from '../../utils/rangeInput'
+import { CheckboxField } from './CheckboxField'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS } from './filterStyles'
 import {
   RANGE_END_LABEL_SUFFIX,
   RANGE_START_LABEL_SUFFIX,
   SelectRangeInput,
   TextRangeInput,
-} from '../../../../../../components/common/RangeInput'
-import { normalizeChartConstRangeInput } from '../../../../../../utils/rangeInput'
-import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../components/filter/styles'
+} from './RangeInput'
 
 /** レベル範囲セクションの見出し */
 const CONST_LEVEL_RANGE_TITLE = 'レベル'
 
 /** 譜面定数範囲セクションの見出し */
 const CONST_VALUE_RANGE_TITLE = '譜面定数'
-
-const CONST_LEVEL_OPTIONS = [
-  '1',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '7+',
-  '8',
-  '8+',
-  '9',
-  '9+',
-  '10',
-  '10+',
-  '11',
-  '11+',
-  '12',
-  '12+',
-  '13',
-  '13+',
-  '14',
-  '14+',
-  '15',
-  '15+',
-  '16',
-]
-
-type ConstRangeSectionProps = {
+export type ChartConstRangeFieldProps = {
+  /** 入力欄IDの接頭辞 */
+  idPrefix?: string
   constFilterMode: 'level' | 'number'
   minValue: string
   maxValue: string
@@ -63,14 +37,14 @@ type ConstRangeSectionProps = {
  * @param props - 範囲入力値、入力モード、選択値、各変更ハンドラ。
  * @returns 定数範囲フィルターセクションの JSX 要素。
  */
-const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
+export const ChartConstRangeField: Component<ChartConstRangeFieldProps> = (props) => (
   <div>
     {props.constFilterMode === 'number' ? (
       <TextRangeInput
         title={CONST_VALUE_RANGE_TITLE}
         inputClass={FILTER_DIALOG_FIELD_INPUT_CLASS}
         start={{
-          id: 'filter-const-min',
+          id: `${props.idPrefix ?? 'filter'}-const-min`,
           label: `${CONST_VALUE_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
           value: props.minValue,
           inputMode: 'decimal',
@@ -80,7 +54,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
           onCommit: props.onMinCommit,
         }}
         end={{
-          id: 'filter-const-max',
+          id: `${props.idPrefix ?? 'filter'}-const-max`,
           label: `${CONST_VALUE_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
           value: props.maxValue,
           inputMode: 'decimal',
@@ -93,7 +67,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
     ) : (
       <SelectRangeInput
         title={CONST_LEVEL_RANGE_TITLE}
-        options={CONST_LEVEL_OPTIONS}
+        options={[...CHART_LEVEL_FILTER_OPTIONS]}
         placeholder="選択…"
         start={{
           value: props.constLevelMin,
@@ -109,7 +83,7 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
     )}
     <div class="mt-2">
       <CheckboxField
-        id="filter-const-mode"
+        id={`${props.idPrefix ?? 'filter'}-const-mode`}
         checked={props.constFilterMode === 'number'}
         onChange={(checked) => props.onConstFilterModeChange(checked ? 'number' : 'level')}
         class="flex items-center gap-2"
@@ -120,4 +94,4 @@ const ConstRangeSection: Component<ConstRangeSectionProps> = (props) => (
   </div>
 )
 
-export default ConstRangeSection
+export default ChartConstRangeField

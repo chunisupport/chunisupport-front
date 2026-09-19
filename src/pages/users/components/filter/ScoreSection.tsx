@@ -1,5 +1,6 @@
 import type { Component } from 'solid-js'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../components/common/filterStyles'
 import {
   RANGE_END_LABEL_SUFFIX,
   RANGE_START_LABEL_SUFFIX,
@@ -7,9 +8,7 @@ import {
   TextRangeInput,
 } from '../../../../components/common/RangeInput'
 import { normalizeScoreRangeInput } from '../../../../utils/rangeInput'
-
 import { SCORE_RANKS } from '../../utils/scoreRank'
-import { FILTER_DIALOG_FIELD_INPUT_CLASS } from './styles'
 
 /** スコア範囲セクションの見出し */
 const SCORE_RANGE_TITLE = 'スコア'

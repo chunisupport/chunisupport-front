@@ -492,16 +492,63 @@ test('初期フィルターは未指定で非アクティブなこと', () => {
   const filter = createDefaultChartStatsAttributeFilter()
 
   // Then
-  assert.deepEqual(filter, { genres: null, versions: null })
+  assert.deepEqual(filter, {
+    genres: null,
+    versions: null,
+    constFilterMode: 'level',
+    constRange: { min: 1, max: 16 },
+  })
   assert.equal(isChartStatsAttributeFilterActive(filter), false)
   assert.equal(
-    isChartStatsAttributeFilterActive({ genres: ['POPS & ANIME'], versions: null }),
+    isChartStatsAttributeFilterActive({
+      ...createDefaultChartStatsAttributeFilter(),
+      genres: ['POPS & ANIME'],
+    }),
     true
   )
   assert.equal(
-    isChartStatsAttributeFilterActive({ genres: null, versions: ['CHUNITHM VERSE'] }),
+    isChartStatsAttributeFilterActive({
+      ...createDefaultChartStatsAttributeFilter(),
+      versions: ['CHUNITHM VERSE'],
+    }),
     true
   )
+})
+
+test('譜面定数の範囲で通常譜面を絞り込むこと', () => {
+  // Given
+  const charts = [
+    createSortableChart({ title: 'level-13', const: 13.4 }),
+    createSortableChart({ title: 'level-14', const: 14.0 }),
+    createSortableChart({ title: 'level-14-plus', const: 14.7 }),
+  ]
+
+  // When
+  const filtered = filterChartStats(charts, '', undefined, {
+    ...createDefaultChartStatsAttributeFilter(),
+    constFilterMode: 'number',
+    constRange: { min: 14.0, max: 14.7 },
+  })
+
+  // Then
+  assert.deepEqual(
+    filtered.map(({ title }) => title),
+    ['level-14', 'level-14-plus']
+  )
+})
+
+test("WORLD'S END譜面には譜面定数範囲を適用しないこと", () => {
+  // Given
+  const charts = [createSortableWorldsendChart('worldsend', 4, '弾')]
+
+  // When
+  const filtered = filterChartStats(charts, '', undefined, {
+    ...createDefaultChartStatsAttributeFilter(),
+    constRange: { min: 14, max: 14.4 },
+  })
+
+  // Then
+  assert.deepEqual(filtered, charts)
 })
 
 test('楽曲マスタからsong_idごとの属性マップを生成すること', () => {
@@ -538,6 +585,7 @@ test('曲名検索とバージョン・ジャンルで絞り込むこと', () =>
 
   // When
   const filtered = filterChartStats(charts, '', attributes, {
+    ...createDefaultChartStatsAttributeFilter(),
     genres: ['POPS & ANIME'],
     versions: ['CHUNITHM VERSE'],
   })
@@ -555,6 +603,7 @@ test('属性マップ未取得時は曲名検索のみを適用すること', ()
 
   // When
   const filtered = filterChartStats(charts, 'abc', undefined, {
+    ...createDefaultChartStatsAttributeFilter(),
     genres: ['POPS & ANIME'],
     versions: null,
   })
@@ -579,10 +628,12 @@ test('マップにない譜面は不明扱いで判定すること', () => {
     createDefaultChartStatsAttributeFilter()
   )
   const withUnknownVersion = filterChartStats(charts, '', attributes, {
+    ...createDefaultChartStatsAttributeFilter(),
     genres: null,
     versions: ['不明'],
   })
   const withGenre = filterChartStats(charts, '', attributes, {
+    ...createDefaultChartStatsAttributeFilter(),
     genres: ['POPS & ANIME'],
     versions: null,
   })

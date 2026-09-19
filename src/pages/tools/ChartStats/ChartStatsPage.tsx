@@ -118,6 +118,7 @@ const ChartStatsContent = (props: {
             genres={genreOptions()}
             versions={versionOptions()}
             disabled={attributesBySongId() === undefined}
+            showConstFilter={props.difficulty !== "WORLD'S END"}
           />
         </div>
         <div class="flex flex-wrap items-center gap-2">
