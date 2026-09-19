@@ -1,8 +1,8 @@
 import type { Component } from 'solid-js'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../components/common/filterStyles'
 import { TextRangeInput } from '../../../../components/common/RangeInput'
 import { sanitizeRangeInput } from '../../../../utils/rangeInput'
 import type { NumericRangeFilterConfig } from '../../constants/rangeFilters'
-import { FILTER_DIALOG_FIELD_INPUT_CLASS } from './styles'
 
 type NumericRangeSectionProps = {
   config: NumericRangeFilterConfig

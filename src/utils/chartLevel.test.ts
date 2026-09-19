@@ -3,8 +3,10 @@ import test from 'node:test'
 
 import {
   getChartLevelConstRange,
+  getChartLevelFilterBoundary,
   getChartLevelSortKey,
   isLowChartLevel,
+  toChartLevelFilterLabel,
   toChartLevelLabel,
 } from './chartLevel'
 
@@ -37,4 +39,19 @@ test('表示レベルを対応する譜面定数範囲へ変換する', () => {
   assert.deepEqual(getChartLevelConstRange('14'), { min: 14, max: 14.4 })
   assert.deepEqual(getChartLevelConstRange('14+'), { min: 14.5, max: 14.9 })
   assert.deepEqual(getChartLevelConstRange('16'), { min: 16, max: 16 })
+})
+
+test('フィルター用レベルは6以下をプラスなしで表す', () => {
+  // Given, When & Then
+  assert.equal(toChartLevelFilterLabel(6.9), '6')
+  assert.equal(toChartLevelFilterLabel(7.5), '7+')
+})
+
+test('フィルター用レベルの下限と上限を譜面定数へ変換する', () => {
+  // Given, When & Then
+  assert.equal(getChartLevelFilterBoundary('6', 'min'), 6)
+  assert.equal(getChartLevelFilterBoundary('6', 'max'), 6.9)
+  assert.equal(getChartLevelFilterBoundary('14+', 'min'), 14.5)
+  assert.equal(getChartLevelFilterBoundary('14+', 'max'), 14.9)
+  assert.equal(getChartLevelFilterBoundary('16', 'max'), 16)
 })

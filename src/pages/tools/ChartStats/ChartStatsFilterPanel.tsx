@@ -3,23 +3,31 @@ import { Funnel } from 'lucide-solid'
 import { createSignal, Show } from 'solid-js'
 import { AppButton, AppIconButton } from '../../../components/common/AppButton'
 import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
+import ChartConstRangeField from '../../../components/common/ChartConstRangeField'
 import { GenreMultiSelect, VersionMultiSelect } from '../../../components/common/DomainMultiSelect'
 import FilterResetDialog from '../../../components/common/FilterResetDialog'
 import FilterResetHoldIndicator from '../../../components/common/filterReset/FilterResetHoldIndicator'
 import { useFilterResetLongPress } from '../../../components/common/filterReset/useFilterResetLongPress'
+import { CHART_CONST_MAX, CHART_CONST_MIN } from '../../../constants/chart'
+import {
+  type ChartLevelLabel,
+  getChartLevelFilterBoundary,
+  toChartLevelFilterLabel,
+} from '../../../utils/chartLevel'
 import {
   type ChartStatsAttributeFilter,
   type ChartStatsVersionMeta,
   createDefaultChartStatsAttributeFilter,
   isChartStatsAttributeFilterActive,
 } from '../../../utils/chartStats'
+import { parseNumberInput, toInputValue } from '../../../utils/rangeInput'
 import { getShortVersionName } from '../../../utils/versionConverter'
 import { CHART_STATS_COPY } from './constants'
 
 type ChartStatsFilterPanelProps = {
   /** ダイアログと操作要素のID接頭辞 */
   idPrefix: string
-  /** 現在適用中のバージョン・ジャンル条件 */
+  /** 現在適用中のレベル・譜面定数・バージョン・ジャンル条件 */
   filters: ChartStatsAttributeFilter
   /** フィルター確定時の通知先 */
   onChange: (filters: ChartStatsAttributeFilter) => void
@@ -29,10 +37,12 @@ type ChartStatsFilterPanelProps = {
   versions: readonly ChartStatsVersionMeta[]
   /** 楽曲マスタ取得前など操作を無効化する場合はtrue */
   disabled?: boolean
+  /** レベル・譜面定数範囲を表示する場合はtrue */
+  showConstFilter: boolean
 }
 
 /**
- * レコード統計の曲名検索に隣接するバージョン・ジャンルのフィルターボタンとダイアログを表示する。
+ * レコード統計の曲名検索に隣接するフィルターボタンと条件編集ダイアログを表示する。
  *
  * @param props - 適用中条件、選択肢、更新通知、無効状態を含む表示設定。
  * @returns 検索欄に隣接するボタンとフィルターダイアログ。
@@ -40,6 +50,14 @@ type ChartStatsFilterPanelProps = {
 export const ChartStatsFilterPanel = (props: ChartStatsFilterPanelProps) => {
   const [open, setOpen] = createSignal(false)
   const [draft, setDraft] = createSignal<ChartStatsAttributeFilter>(props.filters)
+  const [constMinInput, setConstMinInput] = createSignal(toInputValue(props.filters.constRange.min))
+  const [constMaxInput, setConstMaxInput] = createSignal(toInputValue(props.filters.constRange.max))
+  const [constLevelMin, setConstLevelMin] = createSignal(
+    toChartLevelFilterLabel(props.filters.constRange.min)
+  )
+  const [constLevelMax, setConstLevelMax] = createSignal(
+    toChartLevelFilterLabel(props.filters.constRange.max)
+  )
   let triggerButton: HTMLButtonElement | undefined
 
   /**
@@ -49,7 +67,10 @@ export const ChartStatsFilterPanel = (props: ChartStatsFilterPanelProps) => {
    * @returns なし。
    */
   const handleOpenChange = (nextOpen: boolean): void => {
-    if (nextOpen) setDraft(props.filters)
+    if (nextOpen) {
+      setDraft(props.filters)
+      syncConstInputs(props.filters)
+    }
     setOpen(nextOpen)
   }
 
@@ -75,6 +96,84 @@ export const ChartStatsFilterPanel = (props: ChartStatsFilterPanelProps) => {
   }
 
   const versionNames = () => props.versions.map((version) => version.name)
+
+  /**
+   * 譜面定数範囲の表示値をフィルター状態に同期する。
+   *
+   * @param filter - 同期元のフィルター。
+   * @returns なし。
+   */
+  function syncConstInputs(filter: ChartStatsAttributeFilter): void {
+    setConstMinInput(toInputValue(filter.constRange.min))
+    setConstMaxInput(toInputValue(filter.constRange.max))
+    setConstLevelMin(toChartLevelFilterLabel(filter.constRange.min))
+    setConstLevelMax(toChartLevelFilterLabel(filter.constRange.max))
+  }
+
+  /**
+   * レベルと譜面定数の入力モードを切り替える。
+   *
+   * @param mode - 切り替え後の入力モード。
+   * @returns なし。
+   */
+  const handleConstFilterModeChange = (mode: 'level' | 'number'): void => {
+    if (mode === 'number') {
+      setConstMinInput(toInputValue(draft().constRange.min))
+      setConstMaxInput(toInputValue(draft().constRange.max))
+      update('constFilterMode', mode)
+      return
+    }
+    const minLevel = toChartLevelFilterLabel(draft().constRange.min)
+    const maxLevel = toChartLevelFilterLabel(draft().constRange.max)
+    setConstLevelMin(minLevel)
+    setConstLevelMax(maxLevel)
+    setDraft((current) => ({
+      ...current,
+      constFilterMode: mode,
+      constRange: {
+        min: getChartLevelFilterBoundary(minLevel, 'min'),
+        max: getChartLevelFilterBoundary(maxLevel, 'max'),
+      },
+    }))
+  }
+
+  /**
+   * 表示レベルを譜面定数範囲へ反映する。
+   *
+   * @param endpoint - 更新する範囲の端点。
+   * @param value - 選択した表示レベル。
+   * @returns なし。
+   */
+  const handleConstLevelChange = (endpoint: 'min' | 'max', value: string): void => {
+    const level = value as ChartLevelLabel
+    if (endpoint === 'min') setConstLevelMin(level)
+    else setConstLevelMax(level)
+    setDraft((current) => ({
+      ...current,
+      constRange: {
+        ...current.constRange,
+        [endpoint]: getChartLevelFilterBoundary(level, endpoint),
+      },
+    }))
+  }
+
+  /**
+   * 譜面定数の入力値を範囲の端点へ確定する。
+   *
+   * @param endpoint - 更新する範囲の端点。
+   * @param value - 入力欄の文字列。
+   * @returns なし。
+   */
+  const commitConstRange = (endpoint: 'min' | 'max', value: string): void => {
+    const fallback = endpoint === 'min' ? CHART_CONST_MIN : CHART_CONST_MAX
+    const nextValue = parseNumberInput(value) ?? fallback
+    if (endpoint === 'min') setConstMinInput(toInputValue(nextValue))
+    else setConstMaxInput(toInputValue(nextValue))
+    setDraft((current) => ({
+      ...current,
+      constRange: { ...current.constRange, [endpoint]: nextValue },
+    }))
+  }
 
   return (
     <Dialog open={open()} onOpenChange={handleOpenChange}>
@@ -120,12 +219,32 @@ export const ChartStatsFilterPanel = (props: ChartStatsFilterPanelProps) => {
           <div class="mb-4 flex shrink-0 items-center justify-between gap-2">
             <Dialog.Title class="text-lg font-bold">{CHART_STATS_COPY.filterTitle}</Dialog.Title>
             <FilterResetDialog
-              onReset={() => setDraft(createDefaultChartStatsAttributeFilter())}
+              onReset={() => {
+                const defaultFilter = createDefaultChartStatsAttributeFilter()
+                setDraft(defaultFilter)
+                syncConstInputs(defaultFilter)
+              }}
               showShortcutHint={false}
             />
           </div>
           <div class="min-h-0 flex-1 basis-0 overflow-y-auto">
             <div class="space-y-4">
+              <Show when={props.showConstFilter}>
+                <ChartConstRangeField
+                  idPrefix={props.idPrefix}
+                  constFilterMode={draft().constFilterMode}
+                  minValue={constMinInput()}
+                  maxValue={constMaxInput()}
+                  constLevelMin={constLevelMin()}
+                  constLevelMax={constLevelMax()}
+                  onMinInput={setConstMinInput}
+                  onMaxInput={setConstMaxInput}
+                  onMinCommit={(value) => commitConstRange('min', value)}
+                  onMaxCommit={(value) => commitConstRange('max', value)}
+                  onConstFilterModeChange={handleConstFilterModeChange}
+                  onConstLevelChange={handleConstLevelChange}
+                />
+              </Show>
               <GenreMultiSelect
                 options={toMultiSelectOptions(props.genres)}
                 selected={draft().genres ?? [...props.genres]}
