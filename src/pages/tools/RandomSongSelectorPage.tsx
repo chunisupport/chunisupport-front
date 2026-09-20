@@ -606,7 +606,7 @@ const RandomSongSelect = <T extends string>(props: {
 
 /**
  * ランダム選曲ツールページを表示する。
- * 曲数欄とお気に入り欄は上端を揃え、ログイン状態の補足表示による位置ずれを防ぐ。
+ * PCでは曲数入力とお気に入りチェック欄を下端基準で揃え、補足は別行に表示する。
  *
  * @returns 条件フォームとランダム選曲結果。
  */
@@ -1171,7 +1171,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
           <section class="rounded-lg border border-border bg-surface p-4 sm:p-6">
             <Show when={!isSongsLoading() && !versionsResponse.loading} fallback={<Loading />}>
               <form class="space-y-4" onSubmit={(event) => event.preventDefault()}>
-                <div class="grid items-start gap-4 sm:grid-cols-[8rem_minmax(0,1fr)]">
+                <div class="grid items-end gap-x-6 gap-y-2 sm:grid-cols-[8rem_minmax(0,1fr)]">
                   <div class="max-w-32">
                     <RandomSongTextField
                       id="random-song-count"
@@ -1181,7 +1181,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       onChange={setCount}
                     />
                   </div>
-                  <div class="pb-2">
+                  <div class="mt-2 flex min-h-10 items-center sm:mt-0">
                     <CheckboxField
                       id="random-song-favorite-only"
                       checked={favoriteOnly()}
@@ -1191,17 +1191,17 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       textVariant="large"
                       label={RANDOM_SONG_SELECTOR_COPY.favoriteOnlyLabel}
                     />
-                    <Show when={myFavoriteData()?.status === 'unauthenticated'}>
-                      <p class="mt-1 text-xs text-text-muted">
-                        {RANDOM_SONG_SELECTOR_COPY.recordUnavailableMessage}
-                      </p>
-                    </Show>
-                    <Show when={myFavoriteData()?.status === 'error'}>
-                      <p class="mt-1 text-xs text-danger">
-                        {RANDOM_SONG_SELECTOR_COPY.favoriteFetchErrorMessage}
-                      </p>
-                    </Show>
                   </div>
+                  <Show when={myFavoriteData()?.status === 'unauthenticated'}>
+                    <p class="text-xs text-text-muted sm:col-start-2">
+                      {RANDOM_SONG_SELECTOR_COPY.recordUnavailableMessage}
+                    </p>
+                  </Show>
+                  <Show when={myFavoriteData()?.status === 'error'}>
+                    <p class="text-xs text-danger sm:col-start-2">
+                      {RANDOM_SONG_SELECTOR_COPY.favoriteFetchErrorMessage}
+                    </p>
+                  </Show>
                 </div>
 
                 <div class="grid gap-4 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
