@@ -1,7 +1,20 @@
+import { HONOR_IMAGE_BASE_URL } from '../constants/honors'
 import type { AdminHonorDTO } from '../types/api'
 
 export type AdminHonorSortKey = 'id' | 'name' | 'type' | 'created-at' | 'image-url'
 export type AdminHonorSort = `${AdminHonorSortKey}-${'asc' | 'desc'}`
+
+/**
+ * APIの画像名または画像URLから公式画像へのリンクを作る。
+ *
+ * @param imageUrl - APIが返した画像名または画像URL。
+ * @returns 公式画像ディレクトリ内の画像URL。
+ */
+export const buildAdminHonorImageHref = (imageUrl: string): string => {
+  const imagePath = new URL(imageUrl, HONOR_IMAGE_BASE_URL).pathname
+  const imageName = imagePath.substring(imagePath.lastIndexOf('/') + 1)
+  return `${HONOR_IMAGE_BASE_URL}${imageName}`
+}
 
 /**
  * 列見出しを選択したときの次の並べ替え条件を返す。

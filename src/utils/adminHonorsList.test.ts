@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { AdminHonorDTO } from '../types/api'
 import {
+  buildAdminHonorImageHref,
   filterAndSortAdminHonors,
   formatAdminHonorCreatedAt,
   nextAdminHonorSort,
@@ -12,6 +13,17 @@ const honors: AdminHonorDTO[] = [
   { id: 5, name: '東方達人', type_name: 'normal', image_url: '', created_at: null },
   { id: 3, name: '別の称号', type_name: 'gold', image_url: '', created_at: null },
 ]
+
+test('画像名とフルURLから公式画像リンクを作る', () => {
+  assert.equal(
+    buildAdminHonorImageHref('honor image.png'),
+    'https://new.chunithm-net.com/chuni-mobile/html/mobile/img/honor%20image.png'
+  )
+  assert.equal(
+    buildAdminHonorImageHref('https://example.com/honors/sample.png?size=1'),
+    'https://new.chunithm-net.com/chuni-mobile/html/mobile/img/sample.png'
+  )
+})
 
 test('称号名の部分一致検索とクラス絞り込みを組み合わせられる', () => {
   const result = filterAndSortAdminHonors(honors, '東方', 'gold', 'id-desc')
