@@ -25,7 +25,7 @@ export const toLockedSongRequests = (keys: readonly string[]): OverPowerLockedSo
   keys.map((key) => {
     const [displayId, mode] = key.split(':')
     return {
-      display_id: displayId,
+      id: displayId,
       is_ultima: mode === 'ultima',
     }
   })
@@ -37,9 +37,9 @@ export const toLockedSongRequests = (keys: readonly string[]): OverPowerLockedSo
  * @returns is_ultimaを補完した保存payload。
  */
 const toRequest = (
-  item: Pick<PlayerLockedSongRequest, 'display_id' | 'is_ultima'>
+  item: Pick<PlayerLockedSongRequest, 'id' | 'is_ultima'>
 ): PlayerLockedSongRequest => ({
-  display_id: item.display_id,
+  id: item.id,
   is_ultima: item.is_ultima ?? false,
 })
 
@@ -54,11 +54,9 @@ export const buildLockedSongsBatchPayload = (
   base: PlayerLockedSongResponseItem[],
   edited: PlayerLockedSongRequest[]
 ): PlayerLockedSongsBatchRequest => {
-  const baseMap = new Map(
-    base.map((item) => [createLockedSongKey(item.display_id, item.is_ultima), item])
-  )
+  const baseMap = new Map(base.map((item) => [createLockedSongKey(item.id, item.is_ultima), item]))
   const editedMap = new Map(
-    edited.map((item) => [createLockedSongKey(item.display_id, item.is_ultima ?? false), item])
+    edited.map((item) => [createLockedSongKey(item.id, item.is_ultima ?? false), item])
   )
 
   const add = [...editedMap.entries()]

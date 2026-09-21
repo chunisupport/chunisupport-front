@@ -2,6 +2,7 @@ import {
   type CachedCourse,
   type CachedUserCourseRecord,
   CLIENT_CACHE_SCHEMA_VERSION,
+  COURSE_CACHE_SCHEMA_VERSION,
   db,
 } from '../lib/db/cacheDB'
 import type { CourseDTO, UserCourseRecordsDTO } from '../types/api'
@@ -36,13 +37,19 @@ export const readCachedCourses = async (
   const metadata = await db.cacheMetadata.get('courses')
   if (
     metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
+    metadata.courseSchemaVersion !== COURSE_CACHE_SCHEMA_VERSION ||
     metadata.coursesUpdatedAt !== coursesUpdatedAt
   ) {
     return null
   }
 
   const cachedCourses = await db.courses.toArray()
-  if (!cachedCourses.every((course) => Number.isInteger(course.sortOrder))) {
+  if (
+    !cachedCourses.every(
+      (course) =>
+        course.schemaVersion === COURSE_CACHE_SCHEMA_VERSION && Number.isInteger(course.sortOrder)
+    )
+  ) {
     return null
   }
 
@@ -65,8 +72,9 @@ export const replaceCachedCourses = async (
   const fetchedAt = new Date().toISOString()
   const entries = courses.map(
     (course, sortOrder): CachedCourse => ({
-      id: course.display_id,
+      id: course.id,
       sortOrder,
+      schemaVersion: COURSE_CACHE_SCHEMA_VERSION,
       data: course,
     })
   )
@@ -77,6 +85,7 @@ export const replaceCachedCourses = async (
     await db.cacheMetadata.put({
       key: 'courses',
       schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
+      courseSchemaVersion: COURSE_CACHE_SCHEMA_VERSION,
       coursesUpdatedAt,
       fetchedAt,
     })
@@ -95,6 +104,7 @@ export const readCachedUserCourseRecords = async (
   const metadata = await db.cacheMetadata.get('userCourseRecords')
   if (
     metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
+    metadata.courseSchemaVersion !== COURSE_CACHE_SCHEMA_VERSION ||
     metadata.username !== match.username ||
     metadata.userUpdatedAt !== match.userUpdatedAt
   ) {
@@ -105,7 +115,7 @@ export const readCachedUserCourseRecords = async (
   if (
     !entries.every(
       (entry) =>
-        entry.schemaVersion === CLIENT_CACHE_SCHEMA_VERSION &&
+        entry.schemaVersion === COURSE_CACHE_SCHEMA_VERSION &&
         entry.username === match.username &&
         entry.userUpdatedAt === match.userUpdatedAt &&
         Number.isInteger(entry.sortOrder)
@@ -139,11 +149,11 @@ export const replaceCachedUserCourseRecords = async (
   const playedRecords = toPlayedCourseRecords(response)
   const entries = playedRecords.courses.map(
     (course, sortOrder): CachedUserCourseRecord => ({
-      key: createUserCourseRecordKey(username, course.display_id),
+      key: createUserCourseRecordKey(username, course.id),
       username,
-      courseId: course.display_id,
+      courseId: course.id,
       sortOrder,
-      schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
+      schemaVersion: COURSE_CACHE_SCHEMA_VERSION,
       userUpdatedAt,
       fetchedAt,
       data: course,
@@ -156,6 +166,7 @@ export const replaceCachedUserCourseRecords = async (
     await db.cacheMetadata.put({
       key: 'userCourseRecords',
       schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
+      courseSchemaVersion: COURSE_CACHE_SCHEMA_VERSION,
       username,
       userUpdatedAt,
       fetchedAt,

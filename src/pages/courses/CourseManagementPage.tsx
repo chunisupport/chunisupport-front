@@ -163,7 +163,7 @@ const CourseFormDialog: Component<CourseFormDialogProps> = (props): JSX.Element 
                     {COURSE_MANAGEMENT_COPY.displayIdLabel}
                   </TextField.Label>
                   <TextField.Input
-                    value={props.course?.display_id ?? ''}
+                    value={props.course?.id ?? ''}
                     class={`${COURSE_INPUT_CLASS} font-mono text-sm`}
                   />
                 </TextField>
@@ -339,7 +339,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
     setFormError('')
     setSaving(true)
     try {
-      await updateCourse(course.display_id, request)
+      await updateCourse(course.id, request)
       showSuccessToast(COURSE_MANAGEMENT_COPY.editSuccess)
       closeForm()
       refresh()
@@ -360,7 +360,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
     if (!window.confirm(COURSE_MANAGEMENT_COPY.deleteConfirm)) return
 
     try {
-      await deleteCourseByDisplayId(course.display_id)
+      await deleteCourseByDisplayId(course.id)
       showSuccessToast(COURSE_MANAGEMENT_COPY.deleteSuccess)
       refresh()
     } catch (error) {
@@ -376,7 +376,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
    */
   const handleRestore = async (course: ManagedCourseDTO): Promise<void> => {
     try {
-      await restoreCourseByDisplayId(course.display_id)
+      await restoreCourseByDisplayId(course.id)
       showSuccessToast(COURSE_MANAGEMENT_COPY.restoreSuccess)
       refresh()
     } catch (error) {
@@ -480,9 +480,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
                           </Show>
                         </div>
                       </td>
-                      <td class="whitespace-nowrap px-3 py-2 font-mono text-xs">
-                        {course.display_id}
-                      </td>
+                      <td class="whitespace-nowrap px-3 py-2 font-mono text-xs">{course.id}</td>
                       <td class="whitespace-nowrap px-3 py-2 font-mono">{course.idx}</td>
                       <td class="px-3 py-2 font-sans">{course.name}</td>
                       <td class="whitespace-nowrap px-3 py-2">

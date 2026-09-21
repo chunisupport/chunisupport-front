@@ -617,7 +617,7 @@ test('未解禁曲設定はOVER POWER達成率の分母から差し引く', () =
       achievement_types: [],
       possessions: [],
     },
-    lockedSongs: [{ display_id: 'song-1', is_ultima: true }],
+    lockedSongs: [{ id: 'song-1', is_ultima: true }],
   })
 
   // Then

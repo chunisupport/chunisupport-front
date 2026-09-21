@@ -29,7 +29,7 @@ const buildLockedSongLookup = (lockedSongs: OverPowerLockedSong[]): LockedSongLo
   const ultimaLockedSongIds = new Set<string>()
   for (const lockedSong of lockedSongs) {
     const target = lockedSong.is_ultima ? ultimaLockedSongIds : lockedSongIds
-    target.add(lockedSong.display_id)
+    target.add(lockedSong.id)
   }
   return { lockedSongIds, ultimaLockedSongIds }
 }

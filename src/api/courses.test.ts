@@ -11,8 +11,7 @@ const loadCoursesApi = () => loadTestModule((cacheKey) => import(`./courses.ts?c
 test('編集者向けコースAPIは一覧取得と追加・更新・削除・復元のパスを呼び出す', async () => {
   // Given: コース管理APIが成功する。
   const createdCourse = {
-    id: 1,
-    display_id: '0123456789abcdef',
+    id: '0123456789abcdef',
     idx: '50020',
     name: 'CLASS I COURSE',
     class: '1',
@@ -50,7 +49,7 @@ test('編集者向けコースAPIは一覧取得と追加・更新・削除・�
   await deleteCourseByDisplayId('A/B C')
   await restoreCourseByDisplayId('A/B C')
 
-  // Then: 編集者向け一覧と display_id 付き更新パスを呼び出す。
+  // Then: 編集者向け一覧と id 付き更新パスを呼び出す。
   assert.deepEqual(
     calls.map((item) => `${item.init?.method ?? 'GET'} ${String(item.input)}`),
     [

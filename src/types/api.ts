@@ -898,7 +898,7 @@ export interface PlayerDataCourseRecordChange {
 /** コースマスタの表示に必要な情報 */
 export interface CourseDTO {
   /** コースの表示用ID */
-  display_id: string
+  id: string
   /** コースの公式インデックス */
   idx: string
   /** コースタイトル */
@@ -907,10 +907,8 @@ export interface CourseDTO {
   class: string
 }
 
-/** 編集者向けコースマスタ。削除済みを含み、内部IDと更新日時を返す */
+/** 編集者向けコースマスタ。削除済みを含み、更新日時を返す */
 export interface ManagedCourseDTO extends CourseDTO {
-  /** コースの内部ID。公開一覧では省略される場合がある */
-  id?: number
   /** 論理削除済みかどうか。false の場合は API が省略することがある */
   is_deleted?: boolean
   /** コースマスタの更新日時 */
@@ -1127,7 +1125,7 @@ export interface UserWorldsendSongRecordDTO {
 /** コースモード1件分のユーザーレコード */
 export interface CourseRecordDTO {
   /** コースの表示用ID */
-  display_id: string
+  id: string
   /** コースの公式インデックス */
   idx: string
   /** コースタイトル */
@@ -1153,7 +1151,7 @@ export interface UserCourseRecordsDTO {
 }
 
 export interface PlayerLockedSongResponseItem {
-  display_id: string
+  id: string
   title: string
   is_ultima: boolean
 }
@@ -1163,7 +1161,7 @@ export interface PlayerLockedSongsResponse {
 }
 
 export interface PlayerLockedSongRequest {
-  display_id: string
+  id: string
   is_ultima?: boolean
 }
 
@@ -1174,7 +1172,7 @@ export interface PlayerLockedSongsBatchRequest {
 
 /** ユーザーがお気に入りに登録した楽曲 */
 export interface PlayerFavoriteSongResponseItem {
-  display_id: string
+  id: string
   title: string
   jacket: string | null
   favorited_at: string
@@ -1187,7 +1185,7 @@ export interface PlayerFavoriteSongsResponse {
 
 /** お気に入り楽曲登録APIのリクエスト */
 export interface PlayerFavoriteSongRequest {
-  display_id: string
+  id: string
 }
 
 export interface UserProfileWithRecordsDTO {

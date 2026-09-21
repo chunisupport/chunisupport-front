@@ -9,20 +9,20 @@ import {
 
 const courses: ManagedCourseDTO[] = [
   {
-    display_id: 'bbbbbbbbbbbbbbbb',
+    id: 'bbbbbbbbbbbbbbbb',
     idx: '50002',
     name: 'CLASS II COURSE',
     class: '2',
   },
   {
-    display_id: 'aaaaaaaaaaaaaaaa',
+    id: 'aaaaaaaaaaaaaaaa',
     idx: '50010',
     name: 'INFINITY COURSE',
     class: 'inf',
     is_deleted: true,
   },
   {
-    display_id: 'cccccccccccccccc',
+    id: 'cccccccccccccccc',
     idx: '50001',
     name: 'CLASS I COURSE',
     class: '1',
@@ -52,7 +52,7 @@ test('sortManagedCoursesはidxを数値として昇順に並べること', () =>
   )
 })
 
-test('filterManagedCoursesはコース名・idx・display_idで絞り込むこと', () => {
+test('filterManagedCoursesはコース名・idx・idで絞り込むこと', () => {
   // Given: 複数フィールドにヒットする検索語。
 
   // When
@@ -63,15 +63,15 @@ test('filterManagedCoursesはコース名・idx・display_idで絞り込むこ�
 
   // Then
   assert.deepEqual(
-    byName.map((course) => course.display_id),
+    byName.map((course) => course.id),
     ['aaaaaaaaaaaaaaaa']
   )
   assert.deepEqual(
-    byIdx.map((course) => course.display_id),
+    byIdx.map((course) => course.id),
     ['bbbbbbbbbbbbbbbb']
   )
   assert.deepEqual(
-    byDisplayId.map((course) => course.display_id),
+    byDisplayId.map((course) => course.id),
     ['cccccccccccccccc']
   )
   assert.deepEqual(unmatched, [])

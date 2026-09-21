@@ -35,7 +35,7 @@ export type OverPowerAggregationTarget =
   | 'ALL'
 
 export type OverPowerLockedSong = {
-  display_id: string
+  id: string
   is_ultima: boolean
 }
 

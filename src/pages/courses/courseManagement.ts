@@ -11,7 +11,7 @@ export const isManagedCourseDeleted = (course: Pick<ManagedCourseDTO, 'is_delete
   course.is_deleted === true
 
 /**
- * 編集者向けコース一覧を idx、display_id の順で並べる。
+ * 編集者向けコース一覧を idx、id の順で並べる。
  *
  * @param courses - 並び替え対象のコース一覧。
  * @returns 並び替え後の新しい配列。
@@ -20,11 +20,11 @@ export const sortManagedCourses = (courses: readonly ManagedCourseDTO[]): Manage
   [...courses].sort(
     (left, right) =>
       left.idx.localeCompare(right.idx, 'ja', { numeric: true }) ||
-      left.display_id.localeCompare(right.display_id, 'ja')
+      left.id.localeCompare(right.id, 'ja')
   )
 
 /**
- * コース名・idx・display_id で編集者向けコース一覧を絞り込む。
+ * コース名・idx・id で編集者向けコース一覧を絞り込む。
  *
  * @param courses - 絞り込み対象のコース一覧。
  * @param query - 検索語。
@@ -40,8 +40,6 @@ export const filterManagedCourses = (
   }
 
   return courses.filter((course) =>
-    normalizeForSearch(`${course.display_id} ${course.idx} ${course.name}`).includes(
-      normalizedQuery
-    )
+    normalizeForSearch(`${course.id} ${course.idx} ${course.name}`).includes(normalizedQuery)
   )
 }

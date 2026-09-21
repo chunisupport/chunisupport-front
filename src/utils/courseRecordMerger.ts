@@ -11,7 +11,7 @@ export const toPlayedCourseRecords = (response: UserCourseRecordsDTO): PlayedCou
   courses: response.courses
     .filter((course) => course.is_played)
     .map((course) => ({
-      display_id: course.display_id,
+      id: course.id,
       score: course.score,
       is_clear: course.is_clear,
       combo_lamp: course.combo_lamp,
@@ -33,11 +33,11 @@ export const mergeCourseRecords = (
   records: PlayedCourseRecord[],
   updatedAt: string | null
 ): UserCourseRecordsDTO => {
-  const recordByCourseId = new Map(records.map((record) => [record.display_id, record]))
+  const recordByCourseId = new Map(records.map((record) => [record.id, record]))
 
   return {
     courses: courses.map((course): CourseRecordDTO => {
-      const record = recordByCourseId.get(course.display_id)
+      const record = recordByCourseId.get(course.id)
       return {
         ...course,
         is_played: Boolean(record),

@@ -57,7 +57,7 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
   const defaultFilter = createMemo(() =>
     buildDefaultSongSelectionFilter(genreOptions(), versionOptions())
   )
-  const originalIds = createMemo(() => new Set(props.favoriteSongs.map((item) => item.display_id)))
+  const originalIds = createMemo(() => new Set(props.favoriteSongs.map((item) => item.id)))
   const model = createSongSelectionDialogModel({
     open: () => props.open,
     selectedKeys: originalIds,

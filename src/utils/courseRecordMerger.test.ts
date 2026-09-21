@@ -4,15 +4,15 @@ import type { CourseDTO } from '../types/api.ts'
 import { mergeCourseRecords, newerCourseUpdatedAt } from './courseRecordMerger.ts'
 
 const courses: CourseDTO[] = [
-  { display_id: 'course-1', idx: '50001', name: 'COURSE 1', class: '1' },
-  { display_id: 'course-2', idx: '50002', name: 'COURSE 2', class: '2' },
+  { id: 'course-1', idx: '50001', name: 'COURSE 1', class: '1' },
+  { id: 'course-2', idx: '50002', name: 'COURSE 2', class: '2' },
 ]
 
 test('コースマスタへプレイ済みレコードを結合し、未プレイを補完すること', () => {
   // Given: 有効なコース2件と、片方だけのプレイ済みレコード。
   const records = [
     {
-      display_id: 'course-1',
+      id: 'course-1',
       score: 3_020_000,
       is_clear: true,
       combo_lamp: 'FULL COMBO' as const,
@@ -51,7 +51,7 @@ test('有効なマスタから削除されたコースレコードは表示結�
   // Given: 現行マスタに存在しない古いレコード。
   const records = [
     {
-      display_id: 'deleted-course',
+      id: 'deleted-course',
       score: 3_000_000,
       is_clear: true,
       combo_lamp: null,
@@ -64,7 +64,7 @@ test('有効なマスタから削除されたコースレコードは表示結�
 
   // Then: 現行マスタのコースだけが未プレイとして表示される。
   assert.deepEqual(
-    result.courses.map((course) => course.display_id),
+    result.courses.map((course) => course.id),
     ['course-1', 'course-2']
   )
   assert.ok(result.courses.every((course) => !course.is_played))

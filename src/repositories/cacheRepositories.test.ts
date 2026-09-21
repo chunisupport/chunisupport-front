@@ -5,6 +5,7 @@ import {
   type CachedCourse,
   type CachedSong,
   CLIENT_CACHE_SCHEMA_VERSION,
+  COURSE_CACHE_SCHEMA_VERSION,
   db,
   type UserApiResponse,
   type ViewSetting,
@@ -83,7 +84,7 @@ const worldsendSong: WorldsendSongDTO = {
 }
 
 const course: CourseDTO = {
-  display_id: 'course-1',
+  id: 'course-1',
   idx: '50001',
   name: 'CLASS I COURSE',
   class: '1',
@@ -220,21 +221,42 @@ test('コースマスタキャッシュは専用updated-atが一致する場合�
   assert.equal(mismatched, null)
 })
 
-test('コースマスタキャッシュは順序情報がない旧形式の場合は読み込まれないこと', async () => {
+test('コースマスタキャッシュは専用schemaVersionがない旧形式の場合は読み込まれないこと', async () => {
   // Given: 現行メタデータと旧形式のコースマスタを保存する。
   await db.cacheMetadata.put({
     key: 'courses',
     schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
+    courseSchemaVersion: COURSE_CACHE_SCHEMA_VERSION,
     coursesUpdatedAt: '2026-07-15T09:00:00Z',
     fetchedAt: '2026-07-15T09:00:00Z',
   })
-  await db.courses.put({ id: course.display_id, data: course } as CachedCourse)
+  await db.courses.put({ id: course.id, data: course } as CachedCourse)
 
   // When: キャッシュを読み込む。
   const cachedCourses = await readCachedCourses('2026-07-15T09:00:00Z')
 
-  // Then: 配列順を保証できないため利用しない。
+  // Then: 旧形式のコースキャッシュは利用しない。
   assert.equal(cachedCourses, null)
+})
+
+test('コースキャッシュの専用schemaVersion不一致は他のキャッシュを無効化しないこと', async () => {
+  // Given: コース、楽曲、画面設定を現行バージョンで保存する。
+  await replaceCachedCourses([course], '2026-07-15T09:00:00Z')
+  await replaceCachedSongs([song], '2026-07-15T09:00:00Z')
+  await saveStandardRecordColumnsSetting(['title'])
+  await db.cacheMetadata.update('courses', {
+    courseSchemaVersion: COURSE_CACHE_SCHEMA_VERSION - 1,
+  })
+
+  // When: コースだけ専用schemaVersionが古い状態で読み込む。
+  const cachedCourses = await readCachedCourses('2026-07-15T09:00:00Z')
+  const cachedSongs = await readCachedSongs('2026-07-15T09:00:00Z')
+  const columns = await readStandardRecordColumnsSetting()
+
+  // Then: コースだけ無効化し、楽曲と画面設定は利用できる。
+  assert.equal(cachedCourses, null)
+  assert.deepEqual(cachedSongs, [song])
+  assert.deepEqual(columns, ['title'])
 })
 
 test('コースレコードキャッシュはマスタ情報を除いてユーザー単位で保存されること', async () => {
@@ -246,13 +268,13 @@ test('コースレコードキャッシュはマスタ情報を除いてユー�
     username: 'alice',
     userUpdatedAt: 'user-1',
   })
-  const stored = await db.userCourseRecords.get(JSON.stringify(['alice', course.display_id]))
+  const stored = await db.userCourseRecords.get(JSON.stringify(['alice', course.id]))
 
   // Then: プレイ状態だけを復元し、名称などのマスタ情報は保存しない。
   assert.deepEqual(cached, {
     courses: [
       {
-        display_id: course.display_id,
+        id: course.id,
         score: 3_020_000,
         is_clear: true,
         combo_lamp: 'FULL COMBO',

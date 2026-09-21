@@ -28,6 +28,7 @@ API サーバーと DB の負荷が高くなった場合でも、画面表示の
 - キャッシュ判定には、既存 API の `updated-at` を使う。
 - `updated-at` 取得に失敗した場合、古いキャッシュは表示せず、通常どおり本 API を呼ぶ。
 - キャッシュデータにはアプリ内の `schemaVersion`（`CLIENT_CACHE_SCHEMA_VERSION`）を持たせ、フロント側のデータ構造変更時に古いキャッシュを破棄できるようにする。
+- コース関連キャッシュは `COURSE_CACHE_SCHEMA_VERSION` も持たせ、コースのデータ構造変更時だけ `courses` と `userCourseRecords` を破棄する。
 - `schemaVersion` 不一致時や Dexie の DB スキーマ移行で整合性が取りにくい場合は、IndexedDB 全体をクリアしてよい。
 - IndexedDB の読み込みや保存に失敗しても画面操作自体は壊さない。常に API 直呼び出しにフォールバックする。
 - ユーザー系キャッシュはログインユーザー本人のみ保存する。他人のユーザーページは API 直呼び出しにする。
@@ -61,8 +62,8 @@ API 側にはキャッシュ判定用の `updated-at` エンドポイントが�
 
 | 対象 | 保存粒度 | 更新判定 |
 | ---- | -------- | -------- |
-| 通常楽曲一覧 | 1曲単位（`display_id -> SongDTO`） | `songsUpdatedAt` |
-| WORLD'S END 楽曲一覧 | 1曲単位（`display_id -> WorldsendSongDTO`） | `songsUpdatedAt` |
+| 通常楽曲一覧 | 1曲単位（`id -> SongDTO`） | `songsUpdatedAt` |
+| WORLD'S END 楽曲一覧 | 1曲単位（`id -> WorldsendSongDTO`） | `songsUpdatedAt` |
 | コース一覧 | 1コース単位 | `coursesUpdatedAt` |
 | ログインユーザー本人のレーティング | `UserRatingDTO` 丸ごと | `userUpdatedAt` + `songsUpdatedAt` |
 | ログインユーザー本人の通常/WORLD'S ENDレコード | 1曲単位 | `userUpdatedAt` + `songsUpdatedAt` |
@@ -98,7 +99,7 @@ ChuniSupportCache
 
 `src/lib/db/cacheDB.ts` では、楽曲・コース・曲単位レコード・コースレコード・レーティング・画面設定・フレンド申請通知状態に対応する型を定義しています。
 
-現行の `CLIENT_CACHE_SCHEMA_VERSION` は `6` です。Dexie のDBバージョンとは別の値で、キャッシュデータの互換性判定に使います。
+現行の `CLIENT_CACHE_SCHEMA_VERSION` は `6`、`COURSE_CACHE_SCHEMA_VERSION` は `2` です。いずれも Dexie のDBバージョンとは別の値で、キャッシュデータの互換性判定に使います。コース関連の変更では、コース以外のキャッシュを保持するため `COURSE_CACHE_SCHEMA_VERSION` だけを更新します。
 
 ### IndexedDB に保存されるデータ例
 

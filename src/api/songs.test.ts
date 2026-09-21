@@ -159,7 +159,7 @@ test('コースマスタAPIはコース一覧を取得する', async () => {
     Response.json({
       courses: [
         {
-          display_id: '0123456789abcdef',
+          id: '0123456789abcdef',
           idx: '50020',
           name: 'CLASS I COURSE',
           class: '1',
