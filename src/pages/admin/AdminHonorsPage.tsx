@@ -8,22 +8,22 @@ import { Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { AppSelect, FormSelect } from '../../components/common/AppSelect'
 import { showSuccessToast } from '../../components/common/AppToast'
-import { PaginationNav } from '../../components/common/PaginationNav'
 import { SearchTextField } from '../../components/common/SearchTextField'
+import { SortableTableHeaderCell } from '../../components/common/SortableTableHeader'
 import { getHonorTypeClassName } from '../../constants/honors'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { AdminHonorDTO, HonorRequestDTO, MasterItemDTO } from '../../types/api'
 import {
   type AdminHonorSort,
+  type AdminHonorSortKey,
   filterAndSortAdminHonors,
   formatAdminHonorCreatedAt,
+  nextAdminHonorSort,
 } from '../../utils/adminHonorsList'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
   ADMIN_HONORS_ALL_TYPE_VALUE,
   ADMIN_HONORS_COPY,
-  ADMIN_HONORS_PAGE_SIZE,
-  ADMIN_HONORS_SORT_OPTIONS,
   HONOR_INPUT_LIMITS,
 } from './AdminHonorsPage.constants'
 
@@ -200,7 +200,6 @@ const HonorFormDialog: Component<HonorFormDialogProps> = (props) => {
 const AdminHonorsPage = () => {
   useDocumentTitle(ADMIN_HONORS_COPY.pageTitle)
 
-  let listRef: HTMLDivElement | undefined
   const [refreshKey, setRefreshKey] = createSignal(0)
   const [dialogMode, setDialogMode] = createSignal<'create' | 'edit' | null>(null)
   const [editingHonor, setEditingHonor] = createSignal<AdminHonorDTO | null>(null)
@@ -209,7 +208,6 @@ const AdminHonorsPage = () => {
   const [searchQuery, setSearchQuery] = createSignal('')
   const [selectedType, setSelectedType] = createSignal(ADMIN_HONORS_ALL_TYPE_VALUE)
   const [sort, setSort] = createSignal<AdminHonorSort>('id-desc')
-  const [page, setPage] = createSignal(1)
 
   const [honorsResponse] = createResource(() => refreshKey(), fetchAdminHonors)
   const [honorTypesResponse] = createResource(fetchHonorTypes)
@@ -230,64 +228,45 @@ const AdminHonorsPage = () => {
       sort()
     )
   )
-  const totalPages = createMemo(() =>
-    Math.max(1, Math.ceil(filteredHonors().length / ADMIN_HONORS_PAGE_SIZE))
-  )
-  const currentPage = createMemo(() => Math.min(page(), totalPages()))
-  const visibleHonors = createMemo(() =>
-    filteredHonors().slice(
-      (currentPage() - 1) * ADMIN_HONORS_PAGE_SIZE,
-      currentPage() * ADMIN_HONORS_PAGE_SIZE
-    )
-  )
-  const selectedSort = createMemo(
-    () => ADMIN_HONORS_SORT_OPTIONS.find((option) => option.value === sort()) ?? null
-  )
 
   /**
-   * 称号名検索を更新して先頭ページへ戻る。
+   * 称号名検索を更新する。
    *
    * @param value - 検索文字列。
    * @returns なし。
    */
   const handleSearchChange = (value: string): void => {
     setSearchQuery(value)
-    setPage(1)
   }
 
   /**
-   * クラス絞り込みを更新して先頭ページへ戻る。
+   * クラス絞り込みを更新する。
    *
    * @param value - 選択したクラス。
    * @returns なし。
    */
   const handleTypeChange = (value: HonorTypeFilterOption | null): void => {
     setSelectedType(value?.value ?? ADMIN_HONORS_ALL_TYPE_VALUE)
-    setPage(1)
   }
 
   /**
-   * 並べ替えを更新して先頭ページへ戻る。
+   * 選択した列の並べ替え方向を切り替える。
    *
-   * @param value - 選択した並べ替え条件。
+   * @param key - 並べ替える列。
    * @returns なし。
    */
-  const handleSortChange = (value: (typeof ADMIN_HONORS_SORT_OPTIONS)[number] | null): void => {
-    if (!value) return
-    setSort(value.value)
-    setPage(1)
+  const handleSortChange = (key: AdminHonorSortKey): void => {
+    setSort((current) => nextAdminHonorSort(current, key))
   }
 
   /**
-   * ページを切り替えて一覧の先頭へ移動する。
+   * 指定した列が現在の並べ替え対象か判定する。
    *
-   * @param nextPage - 移動先のページ番号。
-   * @returns なし。
+   * @param key - 判定する列。
+   * @returns 現在の並べ替え対象ならtrue。
    */
-  const handlePageChange = (nextPage: number): void => {
-    setPage(nextPage)
-    listRef?.scrollIntoView({ block: 'start' })
-  }
+  const isSortActive = (key: AdminHonorSortKey): boolean =>
+    sort() === `${key}-asc` || sort() === `${key}-desc`
 
   /**
    * 称号一覧を再取得する。
@@ -398,7 +377,7 @@ const AdminHonorsPage = () => {
         </AppButton>
       </div>
 
-      <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(10rem,12rem)_minmax(10rem,12rem)] sm:items-end">
+      <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(10rem,12rem)] sm:items-end">
         <SearchTextField
           ariaLabel={ADMIN_HONORS_COPY.searchLabel}
           label={ADMIN_HONORS_COPY.searchLabel}
@@ -416,45 +395,66 @@ const AdminHonorsPage = () => {
           onChange={handleTypeChange}
           formatLabel={(type) => type.label}
         />
-        <AppSelect<(typeof ADMIN_HONORS_SORT_OPTIONS)[number]>
-          label={ADMIN_HONORS_COPY.sortLabel}
-          options={[...ADMIN_HONORS_SORT_OPTIONS]}
-          optionValue="value"
-          optionTextValue="label"
-          value={selectedSort()}
-          onChange={handleSortChange}
-          formatLabel={(option) => option.label}
-        />
       </div>
 
       <Show when={!honorsResponse.loading} fallback={<Loading />}>
         <p class="text-sm text-text-muted" aria-live="polite">
           {ADMIN_HONORS_COPY.resultCount(filteredHonors().length, honors().length)}
         </p>
-        <div ref={listRef} class="overflow-x-auto rounded-lg border border-border bg-surface">
-          <table class="min-w-full text-sm">
+        <div class="overflow-x-auto rounded-lg border border-border bg-surface">
+          <table class="min-w-full text-center text-sm">
             <thead class="bg-surface-muted">
               <tr>
-                <th class="w-0 whitespace-nowrap px-3 py-2 text-left">
-                  {ADMIN_HONORS_COPY.idColumn}
+                <SortableTableHeaderCell
+                  label={ADMIN_HONORS_COPY.idColumn}
+                  active={isSortActive('id')}
+                  direction={sort().endsWith('-asc') ? 'asc' : 'desc'}
+                  onClick={() => handleSortChange('id')}
+                  thClass="w-0 whitespace-nowrap"
+                  buttonClass="justify-center px-3 py-2"
+                />
+                <SortableTableHeaderCell
+                  label={ADMIN_HONORS_COPY.honorLabel}
+                  active={isSortActive('name')}
+                  direction={sort().endsWith('-asc') ? 'asc' : 'desc'}
+                  onClick={() => handleSortChange('name')}
+                  buttonClass="justify-center px-3 py-2"
+                />
+                <SortableTableHeaderCell
+                  label={ADMIN_HONORS_COPY.typeLabel}
+                  active={isSortActive('type')}
+                  direction={sort().endsWith('-asc') ? 'asc' : 'desc'}
+                  onClick={() => handleSortChange('type')}
+                  buttonClass="justify-center px-3 py-2"
+                />
+                <SortableTableHeaderCell
+                  label={ADMIN_HONORS_COPY.createdAtColumn}
+                  active={isSortActive('created-at')}
+                  direction={sort().endsWith('-asc') ? 'asc' : 'desc'}
+                  onClick={() => handleSortChange('created-at')}
+                  thClass="whitespace-nowrap"
+                  buttonClass="justify-center px-3 py-2"
+                />
+                <SortableTableHeaderCell
+                  label={ADMIN_HONORS_COPY.imageUrlLabel}
+                  active={isSortActive('image-url')}
+                  direction={sort().endsWith('-asc') ? 'asc' : 'desc'}
+                  onClick={() => handleSortChange('image-url')}
+                  buttonClass="justify-center px-3 py-2"
+                />
+                <th scope="col" class="w-0 whitespace-nowrap px-3 py-2 text-center">
+                  {ADMIN_HONORS_COPY.actionColumn}
                 </th>
-                <th class="px-3 py-2 text-left">称号</th>
-                <th class="px-3 py-2 text-left">クラス</th>
-                <th class="whitespace-nowrap px-3 py-2 text-left">
-                  {ADMIN_HONORS_COPY.createdAtColumn}
-                </th>
-                <th class="px-3 py-2 text-left">image_url</th>
-                <th class="w-0 whitespace-nowrap px-3 py-2 text-left">操作</th>
               </tr>
             </thead>
             <tbody>
-              <For each={visibleHonors()}>
+              <For each={filteredHonors()}>
                 {(honor) => (
                   <tr class="border-t border-border">
                     <td class="whitespace-nowrap px-3 py-2 font-jost tabular-nums">{honor.id}</td>
                     <td class="px-3 py-2">
                       <span
-                        class={`user-honor-title m-0 ${getHonorTypeClassName(honor.type_name)}`}
+                        class={`user-honor-title mx-auto my-0 ${getHonorTypeClassName(honor.type_name)}`}
                       >
                         {honor.name}
                       </span>
@@ -487,16 +487,6 @@ const AdminHonorsPage = () => {
             {honors().length === 0 ? ADMIN_HONORS_COPY.emptyState : ADMIN_HONORS_COPY.noResults}
           </p>
         </Show>
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-sm text-text-muted">
-            {ADMIN_HONORS_COPY.pageSizeLabel(ADMIN_HONORS_PAGE_SIZE)}
-          </span>
-          <PaginationNav
-            currentPage={currentPage()}
-            totalPages={totalPages()}
-            onPageChange={handlePageChange}
-          />
-        </div>
       </Show>
 
       <HonorFormDialog
