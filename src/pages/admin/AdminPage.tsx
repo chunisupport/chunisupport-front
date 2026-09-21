@@ -23,7 +23,7 @@ const AdminBuildInfo = () => {
   })
 
   return (
-    <div class="mt-4 rounded-md border border-border bg-surface p-3 text-sm text-text-muted">
+    <div class="rounded-md border border-border bg-surface p-3 text-sm text-text-muted">
       <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
         <Show when={apiVersion()} keyed>
           {(version) => (
