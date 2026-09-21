@@ -138,7 +138,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
     () =>
       new Set(
         props.lockedSongs.map((lockedSong) =>
-          createLockedSongKey(lockedSong.display_id, lockedSong.is_ultima)
+          createLockedSongKey(lockedSong.id, lockedSong.is_ultima)
         )
       )
   )

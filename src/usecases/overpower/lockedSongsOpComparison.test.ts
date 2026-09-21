@@ -186,7 +186,7 @@ test('未解禁にすると計算値が減り公式値と不一致になるこ�
     songs,
     records,
     versions,
-    lockedSongs: [{ display_id: 'locked', is_ultima: false }],
+    lockedSongs: [{ id: 'locked', is_ultima: false }],
     officialOverPower: 155,
     officialOverPowerPercent: 91.17,
   })

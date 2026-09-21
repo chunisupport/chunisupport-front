@@ -14,6 +14,9 @@ import type { WorldsendFilterState, WorldsendRecordColumnId } from '../../types/
 /** IndexedDB に保存するキャッシュデータの現行スキーマバージョン */
 export const CLIENT_CACHE_SCHEMA_VERSION = 6
 
+/** コース関連キャッシュの現行スキーマバージョン */
+export const COURSE_CACHE_SCHEMA_VERSION = 2
+
 /** フロントエンドキャッシュ用 IndexedDB の DB 名 */
 export const CLIENT_CACHE_DB_NAME = 'ChuniSupportCache'
 
@@ -32,6 +35,7 @@ export type CacheMetadataKey =
 export type CacheMetadata = {
   key: CacheMetadataKey
   schemaVersion: number
+  courseSchemaVersion?: number
   songsUpdatedAt?: string | null
   coursesUpdatedAt?: string | null
   userUpdatedAt?: string | null
@@ -57,6 +61,7 @@ export type CachedWorldsendSong = {
 export type CachedCourse = {
   id: string
   sortOrder: number
+  schemaVersion: number
   data: CourseDTO
 }
 

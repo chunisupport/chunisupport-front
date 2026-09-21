@@ -172,13 +172,12 @@ const UserRecord: Component<Props> = (props) => {
   )
   const visibleColumns = createMemo(() => getVisibleColumns(visibleColumnIds()))
   const favoriteSongIds = createMemo<ReadonlySet<string>>(
-    () => new Set(favoriteSongs()?.items.map((item) => item.display_id) ?? [])
+    () => new Set(favoriteSongs()?.items.map((item) => item.id) ?? [])
   )
   const lockedSongKeys = createMemo<ReadonlySet<string>>(
     () =>
       new Set(
-        lockedSongs()?.items.map((item) => createLockedSongKey(item.display_id, item.is_ultima)) ??
-          []
+        lockedSongs()?.items.map((item) => createLockedSongKey(item.id, item.is_ultima)) ?? []
       )
   )
 
@@ -315,14 +314,14 @@ const UserRecord: Component<Props> = (props) => {
       throw new Error('お気に入り楽曲の読み込みが完了していません。')
     }
 
-    const currentIds = new Set(currentItems.map((item) => item.display_id))
+    const currentIds = new Set(currentItems.map((item) => item.id))
     const nextIds = new Set(nextDisplayIds)
     const deletedIds = [...currentIds].filter((id) => !nextIds.has(id))
     const addedIds = [...nextIds].filter((id) => !currentIds.has(id))
 
     try {
       await Promise.all(deletedIds.map(deleteMyFavoriteSong))
-      await Promise.all(addedIds.map((displayId) => addMyFavoriteSong({ display_id: displayId })))
+      await Promise.all(addedIds.map((id) => addMyFavoriteSong({ id })))
     } finally {
       await Promise.resolve(refetchFavoriteSongs()).catch(() => undefined)
     }

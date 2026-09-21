@@ -160,7 +160,7 @@ test('通常未解禁曲はOVER POWER目標の現在値と理論値から除外�
     versions: [],
     masterData: MASTER_DATA,
     attributes: { chart_target: 'OP_TARGET' },
-    lockedSongs: [{ display_id: 'locked', is_ultima: false }],
+    lockedSongs: [{ id: 'locked', is_ultima: false }],
   })
 
   // Then
@@ -205,7 +205,7 @@ test('ULTIMA未解禁はULTIMA譜面だけを除外し理論値を残譜面へ�
     versions: [],
     masterData: MASTER_DATA,
     attributes: { chart_target: 'OP_TARGET' },
-    lockedSongs: [{ display_id: 'song-a', is_ultima: true }],
+    lockedSongs: [{ id: 'song-a', is_ultima: true }],
   })
 
   // Then
@@ -237,7 +237,7 @@ test('MASTER指定の目標ではULTIMA未解禁でもMASTER譜面の理論値�
     versions: [],
     masterData: MASTER_DATA,
     attributes: { diff: [4] },
-    lockedSongs: [{ display_id: 'song-1', is_ultima: true }],
+    lockedSongs: [{ id: 'song-1', is_ultima: true }],
   })
 
   // Then
@@ -269,7 +269,7 @@ test('ULTIMA未解禁で理論OP対象が残譜面へ落ちた曲は定数条件
     versions: [],
     masterData: MASTER_DATA,
     attributes: { chart_target: 'OP_TARGET', const: { min: 15 } },
-    lockedSongs: [{ display_id: 'song-1', is_ultima: true }],
+    lockedSongs: [{ id: 'song-1', is_ultima: true }],
   })
 
   // Then

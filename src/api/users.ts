@@ -192,9 +192,7 @@ export const updateMyLockedSongsBatch = async (
 }
 
 export const deleteMyLockedSong = async (request: PlayerLockedSongRequest): Promise<void> => {
-  const url = new URL(
-    `${API_BASE_URL}/internal/me/locked-songs/${encodeURIComponent(request.display_id)}`
-  )
+  const url = new URL(`${API_BASE_URL}/internal/me/locked-songs/${encodeURIComponent(request.id)}`)
   url.searchParams.set('is_ultima', String(request.is_ultima ?? false))
 
   await fetchWithAuth(url, {

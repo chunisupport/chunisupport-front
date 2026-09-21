@@ -70,8 +70,8 @@ test('コースマスタとプレイ済みレコードを更新日時ごとに�
     if (url.endsWith('/internal/courses')) {
       return Response.json({
         courses: [
-          { display_id: 'course-1', idx: '50001', name: courseName, class: '1' },
-          { display_id: 'course-2', idx: '50002', name: 'COURSE 2', class: '2' },
+          { id: 'course-1', idx: '50001', name: courseName, class: '1' },
+          { id: 'course-2', idx: '50002', name: 'COURSE 2', class: '2' },
         ],
       })
     }
@@ -79,7 +79,7 @@ test('コースマスタとプレイ済みレコードを更新日時ごとに�
       return Response.json({
         courses: [
           {
-            display_id: 'course-1',
+            id: 'course-1',
             idx: '50001',
             name: courseName,
             class: '1',

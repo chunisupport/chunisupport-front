@@ -376,7 +376,7 @@ test('通常未解禁楽曲は曲単位と譜面単位の集計から除外す�
       createRecord({ id: 'available', difficulty: 'MASTER', overpower: 70, const: 13 }),
     ],
     versions,
-    [{ display_id: 'locked', is_ultima: false }]
+    [{ id: 'locked', is_ultima: false }]
   )
 
   assert.equal(summary.all.current, 70)
@@ -405,7 +405,7 @@ test('ULTIMA未解禁はULTIMA譜面だけを集計から除外する', () => {
       createRecord({ id: 'song-a', difficulty: 'ULTIMA', overpower: 92, const: 16 }),
     ],
     versions,
-    [{ display_id: 'song-a', is_ultima: true }]
+    [{ id: 'song-a', is_ultima: true }]
   )
 
   assert.equal(summary.all.current, 80)

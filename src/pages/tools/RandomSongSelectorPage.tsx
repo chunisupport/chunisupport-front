@@ -485,7 +485,7 @@ const fetchMyRandomSongFavoriteData = async (
 
     return {
       status: 'available',
-      favoriteSongIds: new Set(favoriteSongs.items.map((item) => item.display_id)),
+      favoriteSongIds: new Set(favoriteSongs.items.map((item) => item.id)),
     }
   } catch (error) {
     return isUnauthenticatedRandomSongError(error)
