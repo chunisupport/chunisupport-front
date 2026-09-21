@@ -87,12 +87,14 @@ export const StaffMenuPage = (props: StaffMenuPageProps) => {
   useDocumentTitle(props.pageTitle)
 
   return (
-    <div class="mx-auto w-full max-w-4xl p-6">
-      <h1 class="text-2xl font-semibold">{props.heading}</h1>
-      <p class="mt-2 text-sm text-text-muted">{props.description}</p>
+    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+      <div>
+        <h1 class="text-2xl font-semibold">{props.heading}</h1>
+        <p class="mt-2 text-sm text-text-muted">{props.description}</p>
+      </div>
       {props.supplementaryContent}
 
-      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+      <div class="grid gap-3 sm:grid-cols-2">
         <For each={props.links}>
           {(link) => (
             <SelectableCardLink
