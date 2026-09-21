@@ -87,7 +87,7 @@ type SongStatsChartsProps = {
   ownScore?: number
 }
 
-export type SongStatsTableView = 'averageScore' | 'scoreRank' | 'combo' | 'clear'
+export type SongStatsTableView = 'averageScore' | 'medianScore' | 'scoreRank' | 'combo' | 'clear'
 
 export type SongStatsTableViewOption = {
   label: string
@@ -128,6 +128,7 @@ const AVERAGE_SCORE_CHART_WITH_OWN_SCORE_ARIA_LABEL =
 /** 統計テーブルの表示カテゴリ選択肢 */
 export const TABLE_VIEW_OPTIONS: SongStatsTableViewOption[] = [
   { label: '平均スコア', value: 'averageScore' },
+  { label: '中央値スコア', value: 'medianScore' },
   { label: 'スコアランク', value: 'scoreRank' },
   { label: 'FC/AJ/AJC', value: 'combo' },
   { label: 'ハードランプ', value: 'clear' },
@@ -195,6 +196,29 @@ const getTableColumnDefinitions = (
           },
           getClass: (band) => {
             const difference = calculateDisplayedScoreDifference(ownScore, band.average_score)
+            return difference === undefined ? undefined : getScoreDifferenceClass(difference)
+          },
+        },
+      ]
+    case 'medianScore':
+      return [
+        {
+          label: '人数',
+          getValue: (band) => band.player_count.toLocaleString(),
+        },
+        {
+          label: '中央値スコア',
+          getValue: (band) =>
+            band.median_score === null ? '-' : formatAverageScore(band.median_score),
+        },
+        {
+          label: '自分との差',
+          getValue: (band) => {
+            const difference = calculateDisplayedScoreDifference(ownScore, band.median_score)
+            return difference === undefined ? '-' : formatScoreDifference(difference)
+          },
+          getClass: (band) => {
+            const difference = calculateDisplayedScoreDifference(ownScore, band.median_score)
             return difference === undefined ? undefined : getScoreDifferenceClass(difference)
           },
         },
