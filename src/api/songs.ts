@@ -161,10 +161,13 @@ export const fetchManagedSongs = async (): Promise<{ songs: ManagedSongDTO[] }> 
 /**
  * WORLD'S END 楽曲一覧を取得する。
  *
+ * @param options - ブラウザのHTTPキャッシュ利用方法。
  * @returns WORLD'S END 楽曲一覧レスポンス。
  */
-export const fetchWorldsendSongs = async (): Promise<{ songs: WorldsendSongDTO[] }> => {
-  const response = await fetchWithAuth(INTERNAL_WORLDSEND_SONGS_PATH)
+export const fetchWorldsendSongs = async (
+  options: Pick<RequestInit, 'cache'> = {}
+): Promise<{ songs: WorldsendSongDTO[] }> => {
+  const response = await fetchWithAuth(INTERNAL_WORLDSEND_SONGS_PATH, options)
 
   return response.json()
 }
