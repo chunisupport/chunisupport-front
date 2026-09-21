@@ -412,7 +412,7 @@ const AdminHonorsPage = () => {
                   active={isSortActive('id')}
                   direction={sort().endsWith('-asc') ? 'asc' : 'desc'}
                   onClick={() => handleSortChange('id')}
-                  thClass="w-0 whitespace-nowrap"
+                  thClass="w-0 whitespace-nowrap text-nowrap"
                   buttonClass="justify-center px-3 py-2"
                 />
                 <SortableTableHeaderCell
@@ -427,6 +427,7 @@ const AdminHonorsPage = () => {
                   active={isSortActive('type')}
                   direction={sort().endsWith('-asc') ? 'asc' : 'desc'}
                   onClick={() => handleSortChange('type')}
+                  thClass="whitespace-nowrap text-nowrap"
                   buttonClass="justify-center px-3 py-2"
                 />
                 <SortableTableHeaderCell
@@ -434,7 +435,7 @@ const AdminHonorsPage = () => {
                   active={isSortActive('created-at')}
                   direction={sort().endsWith('-asc') ? 'asc' : 'desc'}
                   onClick={() => handleSortChange('created-at')}
-                  thClass="whitespace-nowrap"
+                  thClass="whitespace-nowrap text-nowrap"
                   buttonClass="justify-center px-3 py-2"
                 />
                 <SortableTableHeaderCell
@@ -442,6 +443,7 @@ const AdminHonorsPage = () => {
                   active={isSortActive('image-url')}
                   direction={sort().endsWith('-asc') ? 'asc' : 'desc'}
                   onClick={() => handleSortChange('image-url')}
+                  thClass="whitespace-nowrap text-nowrap"
                   buttonClass="justify-center px-3 py-2"
                 />
                 <th scope="col" class="w-0 whitespace-nowrap px-3 py-2 text-center">
@@ -453,7 +455,9 @@ const AdminHonorsPage = () => {
               <For each={filteredHonors()}>
                 {(honor) => (
                   <tr class="border-t border-border">
-                    <td class="whitespace-nowrap px-3 py-2 font-jost tabular-nums">{honor.id}</td>
+                    <td class="whitespace-nowrap px-3 py-2 font-jost tabular-nums text-nowrap">
+                      {honor.id}
+                    </td>
                     <td class="px-3 py-2">
                       <span
                         class={`user-honor-title mx-auto my-0 ${getHonorTypeClassName(honor.type_name)}`}
@@ -461,13 +465,13 @@ const AdminHonorsPage = () => {
                         {honor.name}
                       </span>
                     </td>
-                    <td class="px-3 py-2">{honor.type_name}</td>
-                    <td class="whitespace-nowrap px-3 py-2 font-jost tabular-nums">
+                    <td class="whitespace-nowrap px-3 py-2 text-nowrap">{honor.type_name}</td>
+                    <td class="whitespace-nowrap px-3 py-2 font-jost tabular-nums text-nowrap">
                       <time datetime={honor.created_at ?? undefined}>
                         {formatAdminHonorCreatedAt(honor.created_at)}
                       </time>
                     </td>
-                    <td class="px-3 py-2 font-mono text-xs break-all">
+                    <td class="whitespace-nowrap px-3 py-2 font-mono text-xs text-nowrap">
                       <Show when={honor.image_url} fallback="-">
                         {(imageUrl) => (
                           <Link
