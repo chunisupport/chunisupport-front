@@ -1,6 +1,7 @@
 import { Dialog } from '@kobalte/core/dialog'
+import { Link } from '@kobalte/core/link'
 import { TextField } from '@kobalte/core/text-field'
-import { Pencil, Plus } from 'lucide-solid'
+import { ExternalLink, Pencil, Plus } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { createHonor, fetchAdminHonors, fetchHonorTypes, updateHonor } from '../../api/honors'
@@ -16,6 +17,7 @@ import type { AdminHonorDTO, HonorRequestDTO, MasterItemDTO } from '../../types/
 import {
   type AdminHonorSort,
   type AdminHonorSortKey,
+  buildAdminHonorImageHref,
   filterAndSortAdminHonors,
   formatAdminHonorCreatedAt,
   nextAdminHonorSort,
@@ -207,7 +209,7 @@ const AdminHonorsPage = () => {
   const [formErrorMessage, setFormErrorMessage] = createSignal('')
   const [searchQuery, setSearchQuery] = createSignal('')
   const [selectedType, setSelectedType] = createSignal(ADMIN_HONORS_ALL_TYPE_VALUE)
-  const [sort, setSort] = createSignal<AdminHonorSort>('id-desc')
+  const [sort, setSort] = createSignal<AdminHonorSort>('created-at-desc')
 
   const [honorsResponse] = createResource(() => refreshKey(), fetchAdminHonors)
   const [honorTypesResponse] = createResource(fetchHonorTypes)
@@ -465,7 +467,22 @@ const AdminHonorsPage = () => {
                         {formatAdminHonorCreatedAt(honor.created_at)}
                       </time>
                     </td>
-                    <td class="px-3 py-2 font-mono text-xs break-all">{honor.image_url || '-'}</td>
+                    <td class="px-3 py-2 font-mono text-xs break-all">
+                      <Show when={honor.image_url} fallback="-">
+                        {(imageUrl) => (
+                          <Link
+                            href={buildAdminHonorImageHref(imageUrl())}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={ADMIN_HONORS_COPY.imageLinkAriaLabel(imageUrl())}
+                            class="text-action-primary underline underline-offset-2 hover:text-action-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+                          >
+                            {imageUrl()}
+                            <ExternalLink class="ml-1 inline h-3.5 w-3.5" aria-hidden="true" />
+                          </Link>
+                        )}
+                      </Show>
+                    </td>
                     <td class="w-0 whitespace-nowrap px-3 py-2">
                       <AppIconButton
                         aria-label={`${honor.name}を編集`}

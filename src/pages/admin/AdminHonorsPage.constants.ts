@@ -9,6 +9,7 @@ export const ADMIN_HONORS_COPY = {
   honorLabel: '称号',
   typeLabel: 'クラス',
   imageUrlLabel: 'image_url',
+  imageLinkAriaLabel: (imageName: string) => `${imageName}を新しいタブで開く`,
   selectPlaceholder: '選択してください',
   cancelButton: 'キャンセル',
   createButtonLabel: '追加',
