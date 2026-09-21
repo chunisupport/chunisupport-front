@@ -42,11 +42,11 @@ import {
   CHART_SCATTER_TOOLTIP_CLASS,
   updateChartScatterTooltip,
 } from '../../utils/chartScatterTooltip'
+import { buildChartStatsAttributesBySongId } from '../../utils/chartStats'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { formatInteger } from '../../utils/numberFormat'
 import { clampNumericInput } from '../../utils/numberInput'
 import {
-  buildOnlineWeakChartAttributesBySongId,
   compareRecordsWithRatingBand,
   filterOnlineWeakChartEntries,
   filterOnlineWeakChartTableEntries,
@@ -568,7 +568,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
     const versions = versionsResource()?.versions
     if (!songs || !versions) return undefined
 
-    return buildOnlineWeakChartAttributesBySongId(songs, versions)
+    return buildChartStatsAttributesBySongId(songs, versions)
   })
   const targetDifficultyBySongId = createMemo(() =>
     buildTheoreticalOverPowerTargetDifficultyBySongId(songsResponse()?.songs ?? [])

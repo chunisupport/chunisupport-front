@@ -5,6 +5,7 @@ import {
   ChartNoAxesCombined,
   Dices,
   Gauge,
+  Globe,
   ListOrdered,
   Lock,
   ScanSearch,
@@ -79,7 +80,7 @@ import { useRememberAppMainScrollNavigationType } from './hooks/useAppMainScroll
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import { useRobotsMeta } from './hooks/useRobotsMeta'
 import NotFoundPage from './pages/NotFoundPage'
-import { getAuthenticatedUser } from './stores/authSession'
+import { authSession, getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
 import { resolveHomeView } from './usecases/auth/resolveHomeView'
 
@@ -333,8 +334,11 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Target class={iconClass} aria-hidden="true" />
     case 'chart':
       return <ChartNoAxesCombined class={iconClass} aria-hidden="true" />
+    case 'globe':
+      return <Globe class={iconClass} aria-hidden="true" />
     case 'distribution':
       return <ChartColumnStacked class={iconClass} aria-hidden="true" />
+
     case 'random':
       return <Dices class={iconClass} aria-hidden="true" />
     case 'ranking':
@@ -397,17 +401,15 @@ const ToolCardContent = (props: { tool: ToolLink }) => {
  */
 const ToolsPage = () => {
   useDocumentTitle('ツール')
+  const listedTools = createMemo(() =>
+    TOOL_LINKS.filter((tool) => isToolLinkListed(tool, authSession.user?.account_type))
+  )
+
   return (
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
       <h1 class="text-2xl font-semibold">ツール</h1>
       <div class="grid gap-3 sm:grid-cols-2">
-        <For
-          each={TOOL_LINKS.filter((tool) =>
-            isToolLinkListed(tool, getAuthenticatedUser()?.account_type)
-          )}
-        >
-          {(tool) => <ToolCardContent tool={tool} />}
-        </For>
+        <For each={listedTools()}>{(tool) => <ToolCardContent tool={tool} />}</For>
       </div>
     </div>
   )

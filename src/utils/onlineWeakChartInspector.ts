@@ -3,14 +3,13 @@ import {
   THEORETICAL_OVER_POWER_TARGET_FILTER,
 } from '../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
-import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
+import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
 import { formatChartConst } from './chartConstFormat'
 import { formatInteger } from './numberFormat'
 import { formatScoreDifference } from './scoreDifference'
 import { compareSongsByReading } from './songTitleSorting'
 import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
-import { resolveVersionNameByReleaseDate } from './versionConverter'
 
 /** 苦手譜面インスペクター Online で理論値OVER POWER対象を表す選択値 */
 export const ONLINE_WEAK_CHART_OP_TARGET_FILTER = THEORETICAL_OVER_POWER_TARGET_FILTER
@@ -55,27 +54,6 @@ export type OnlineWeakChartSongAttributes = {
   genre: string | null
   version: string
 }
-
-/**
- * 楽曲マスタとバージョン一覧から Online の属性フィルター用マップを生成する。
- *
- * @param songs - 属性を持つ楽曲一覧。
- * @param versions - リリース日からバージョン名を解決する一覧。
- * @returns 楽曲IDごとのジャンル・バージョン。
- */
-export const buildOnlineWeakChartAttributesBySongId = (
-  songs: readonly Pick<SongDTO, 'id' | 'genre' | 'release'>[],
-  versions: readonly Pick<VersionDTO, 'name' | 'released_at'>[]
-): Map<string, OnlineWeakChartSongAttributes> =>
-  new Map(
-    songs.map((song) => [
-      song.id,
-      {
-        genre: song.genre,
-        version: resolveVersionNameByReleaseDate(song.release, versions),
-      },
-    ])
-  )
 
 /** 苦手譜面インスペクター Online の比較表で利用できるソートキー */
 export type OnlineWeakChartSortKey =

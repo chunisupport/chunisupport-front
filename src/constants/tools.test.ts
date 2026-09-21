@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  CHART_STATS_PATH,
   LOCKED_SONG_DISCOVERY_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
-  WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
 import { getToolLink, isPublicToolLink, isToolLinkListed, TOOL_LINKS, type ToolLink } from './tools'
 
@@ -66,19 +66,32 @@ test('未解禁曲ディスカバーは ADMIN 限定ツールとして定義さ�
   assert.equal(isPublicToolLink(lockedSongDiscovery), false)
 })
 
-test('両方の苦手譜面インスペクターはログインユーザー向けの公開ツールとして定義されていること', () => {
+test('苦手譜面インスペクター Online はログインユーザー向けの公開ツールとして定義されていること', () => {
   // Given
+  const onlineWeakChartInspector = TOOL_LINKS.find(
+    (tool) => tool.href === ONLINE_WEAK_CHART_INSPECTOR_PATH
+  )
+
   // When / Then
-  for (const href of [WEAK_CHART_INSPECTOR_PATH, ONLINE_WEAK_CHART_INSPECTOR_PATH]) {
-    const tool = TOOL_LINKS.find((candidate) => candidate.href === href)
-    assert.ok(tool)
-    assert.equal(tool.adminOnly, undefined)
-    assert.equal(tool.icon, 'chart')
-    assert.equal(isPublicToolLink(tool), true)
-    assert.equal(isToolLinkListed(tool, undefined), true)
-    assert.equal(isToolLinkListed(tool, 'PLAYER'), true)
-    assert.equal(isToolLinkListed(tool, 'ADMIN'), true)
-  }
+  assert.ok(onlineWeakChartInspector)
+  assert.equal(onlineWeakChartInspector.adminOnly, undefined)
+  assert.equal(onlineWeakChartInspector.icon, 'globe')
+  assert.equal(isPublicToolLink(onlineWeakChartInspector), true)
+  assert.equal(isToolLinkListed(onlineWeakChartInspector, undefined), true)
+  assert.equal(isToolLinkListed(onlineWeakChartInspector, 'PLAYER'), true)
+})
+
+test('レコード統計は公開ツールとして定義されていること', () => {
+  // Given
+  const chartStats = TOOL_LINKS.find((tool) => tool.href === CHART_STATS_PATH)
+
+  // When / Then
+  assert.ok(chartStats)
+  assert.equal(isPublicToolLink(chartStats), true)
+  assert.equal(isToolLinkListed(chartStats, undefined), true)
+  assert.equal(isToolLinkListed(chartStats, 'PLAYER'), true)
+  assert.equal(isToolLinkListed(chartStats, 'ADMIN'), true)
+  assert.equal(chartStats.icon, 'distribution')
 })
 
 test('getToolLink はパスに対応するツール情報を返すこと', () => {
