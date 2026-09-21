@@ -1,12 +1,25 @@
 import type { AdminHonorDTO } from '../types/api'
 
-export type AdminHonorSort =
-  | 'id-desc'
-  | 'id-asc'
-  | 'name-asc'
-  | 'name-desc'
-  | 'created-at-desc'
-  | 'created-at-asc'
+export type AdminHonorSortKey = 'id' | 'name' | 'type' | 'created-at' | 'image-url'
+export type AdminHonorSort = `${AdminHonorSortKey}-${'asc' | 'desc'}`
+
+/**
+ * 列見出しを選択したときの次の並べ替え条件を返す。
+ *
+ * @param current - 現在の並べ替え条件。
+ * @param key - 選択した列。
+ * @returns 次の並べ替え条件。
+ */
+export const nextAdminHonorSort = (
+  current: AdminHonorSort,
+  key: AdminHonorSortKey
+): AdminHonorSort => {
+  const ascending: AdminHonorSort = `${key}-asc`
+  const descending: AdminHonorSort = `${key}-desc`
+  if (current === ascending) return descending
+  if (current === descending) return ascending
+  return key === 'id' || key === 'created-at' ? descending : ascending
+}
 
 const honorCreatedAtFormatter = new Intl.DateTimeFormat('ja-JP', {
   year: 'numeric',
@@ -89,6 +102,14 @@ export const filterAndSortAdminHonors = (
           return a.name.localeCompare(b.name, 'ja') || b.id - a.id
         case 'name-desc':
           return b.name.localeCompare(a.name, 'ja') || b.id - a.id
+        case 'type-asc':
+          return a.type_name.localeCompare(b.type_name, 'ja') || b.id - a.id
+        case 'type-desc':
+          return b.type_name.localeCompare(a.type_name, 'ja') || b.id - a.id
+        case 'image-url-asc':
+          return a.image_url.localeCompare(b.image_url, 'ja') || b.id - a.id
+        case 'image-url-desc':
+          return b.image_url.localeCompare(a.image_url, 'ja') || b.id - a.id
         case 'created-at-asc':
           return compareCreatedAt(a, b, 'asc')
         case 'created-at-desc':

@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { AdminHonorDTO } from '../types/api'
-import { filterAndSortAdminHonors, formatAdminHonorCreatedAt } from './adminHonorsList'
+import {
+  filterAndSortAdminHonors,
+  formatAdminHonorCreatedAt,
+  nextAdminHonorSort,
+} from './adminHonorsList'
 
 const honors: AdminHonorDTO[] = [
   { id: 2, name: '東方の称号', type_name: 'gold', image_url: '', created_at: null },
@@ -82,5 +86,38 @@ test('登録日時順はタイムゾーンを考慮し、日時がない称号�
   assert.deepEqual(
     filterAndSortAdminHonors(datedHonors, '', null, 'created-at-asc').map((honor) => honor.id),
     [5, 2, 3]
+  )
+})
+
+test('見出しをクリックすると列の初期方向を選び、同じ列では方向を切り替える', () => {
+  assert.equal(nextAdminHonorSort('id-desc', 'name'), 'name-asc')
+  assert.equal(nextAdminHonorSort('name-asc', 'name'), 'name-desc')
+  assert.equal(nextAdminHonorSort('name-desc', 'name'), 'name-asc')
+  assert.equal(nextAdminHonorSort('name-asc', 'created-at'), 'created-at-desc')
+  assert.equal(nextAdminHonorSort('name-asc', 'id'), 'id-desc')
+})
+
+test('クラスと画像URLでも昇順・降順に並べ替えられる', () => {
+  const values: AdminHonorDTO[] = [
+    { ...honors[0], type_name: 'silver', image_url: 'z.png' },
+    { ...honors[1], type_name: 'gold', image_url: 'a.png' },
+    { ...honors[2], type_name: 'normal', image_url: 'm.png' },
+  ]
+
+  assert.deepEqual(
+    filterAndSortAdminHonors(values, '', null, 'type-asc').map((honor) => honor.id),
+    [5, 3, 2]
+  )
+  assert.deepEqual(
+    filterAndSortAdminHonors(values, '', null, 'type-desc').map((honor) => honor.id),
+    [2, 3, 5]
+  )
+  assert.deepEqual(
+    filterAndSortAdminHonors(values, '', null, 'image-url-asc').map((honor) => honor.id),
+    [5, 3, 2]
+  )
+  assert.deepEqual(
+    filterAndSortAdminHonors(values, '', null, 'image-url-desc').map((honor) => honor.id),
+    [2, 3, 5]
   )
 })
