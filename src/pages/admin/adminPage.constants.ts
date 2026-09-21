@@ -18,7 +18,7 @@ export const ADMIN_PAGE_LINKS = [
   {
     href: ADMIN_DATA_COVERAGE_PATH,
     title: 'データ充足状況',
-    description: '譜面定数の判明状況を難易度・レベル別に確認します。',
+    description: '譜面定数・ノーツ数・NOTES DESIGNERの充足状況を確認します。',
     icon: 'coverage',
   },
   {

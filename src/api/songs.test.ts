@@ -79,6 +79,19 @@ test('全曲APIは指定されたHTTPキャッシュ設定を利用する', asyn
   assert.equal(calls[0]?.init?.cache, 'no-store')
 })
 
+test("WORLD'S END楽曲APIは指定されたHTTPキャッシュ設定を利用する", async () => {
+  // Given
+  const calls = installFetchRecorder(() => Response.json({ songs: [] }))
+  const { fetchWorldsendSongs } = await loadSongsApi()
+
+  // When
+  await fetchWorldsendSongs({ cache: 'no-store' })
+
+  // Then
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/worldsend-songs')
+  assert.equal(calls[0]?.init?.cache, 'no-store')
+})
+
 test('楽曲更新日時キャッシュは無効化後にAPIから最新値を再取得する', async () => {
   // Given: 初回の更新日時を取得してメモリへキャッシュする。
   const responseBodies = [
