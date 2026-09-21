@@ -6,13 +6,26 @@ import { createEffect, createMemo, createResource, createSignal, For, Show } fro
 import { createHonor, fetchAdminHonors, fetchHonorTypes, updateHonor } from '../../api/honors'
 import { Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
-import { FormSelect } from '../../components/common/AppSelect'
+import { AppSelect, FormSelect } from '../../components/common/AppSelect'
 import { showSuccessToast } from '../../components/common/AppToast'
+import { PaginationNav } from '../../components/common/PaginationNav'
+import { SearchTextField } from '../../components/common/SearchTextField'
 import { getHonorTypeClassName } from '../../constants/honors'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { AdminHonorDTO, HonorRequestDTO, MasterItemDTO } from '../../types/api'
+import {
+  type AdminHonorSort,
+  filterAndSortAdminHonors,
+  formatAdminHonorCreatedAt,
+} from '../../utils/adminHonorsList'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-import { ADMIN_HONORS_COPY, HONOR_INPUT_LIMITS } from './AdminHonorsPage.constants'
+import {
+  ADMIN_HONORS_ALL_TYPE_VALUE,
+  ADMIN_HONORS_COPY,
+  ADMIN_HONORS_PAGE_SIZE,
+  ADMIN_HONORS_SORT_OPTIONS,
+  HONOR_INPUT_LIMITS,
+} from './AdminHonorsPage.constants'
 
 type HonorFormDialogProps = {
   open: boolean
@@ -24,6 +37,8 @@ type HonorFormDialogProps = {
   onOpenChange: (open: boolean) => void
   onSubmit: (request: HonorRequestDTO) => void
 }
+
+type HonorTypeFilterOption = { value: string; label: string }
 
 /**
  * 称号フォーム内の入力系コントロールに適用する共通スタイル。
@@ -185,17 +200,94 @@ const HonorFormDialog: Component<HonorFormDialogProps> = (props) => {
 const AdminHonorsPage = () => {
   useDocumentTitle(ADMIN_HONORS_COPY.pageTitle)
 
+  let listRef: HTMLDivElement | undefined
   const [refreshKey, setRefreshKey] = createSignal(0)
   const [dialogMode, setDialogMode] = createSignal<'create' | 'edit' | null>(null)
   const [editingHonor, setEditingHonor] = createSignal<AdminHonorDTO | null>(null)
   const [saving, setSaving] = createSignal(false)
   const [formErrorMessage, setFormErrorMessage] = createSignal('')
+  const [searchQuery, setSearchQuery] = createSignal('')
+  const [selectedType, setSelectedType] = createSignal(ADMIN_HONORS_ALL_TYPE_VALUE)
+  const [sort, setSort] = createSignal<AdminHonorSort>('id-desc')
+  const [page, setPage] = createSignal(1)
 
   const [honorsResponse] = createResource(() => refreshKey(), fetchAdminHonors)
   const [honorTypesResponse] = createResource(fetchHonorTypes)
   const honors = createMemo(() => honorsResponse()?.honors ?? [])
   const honorTypes = createMemo(() => honorTypesResponse()?.honor_types ?? [])
-  const hasRows = createMemo(() => honors().length > 0)
+  const typeFilterOptions = createMemo<HonorTypeFilterOption[]>(() => [
+    { value: ADMIN_HONORS_ALL_TYPE_VALUE, label: ADMIN_HONORS_COPY.allTypes },
+    ...honorTypes().map((type) => ({ value: type.name, label: type.name })),
+  ])
+  const selectedTypeOption = createMemo(
+    () => typeFilterOptions().find((option) => option.value === selectedType()) ?? null
+  )
+  const filteredHonors = createMemo(() =>
+    filterAndSortAdminHonors(
+      honors(),
+      searchQuery(),
+      selectedType() === ADMIN_HONORS_ALL_TYPE_VALUE ? null : selectedType(),
+      sort()
+    )
+  )
+  const totalPages = createMemo(() =>
+    Math.max(1, Math.ceil(filteredHonors().length / ADMIN_HONORS_PAGE_SIZE))
+  )
+  const currentPage = createMemo(() => Math.min(page(), totalPages()))
+  const visibleHonors = createMemo(() =>
+    filteredHonors().slice(
+      (currentPage() - 1) * ADMIN_HONORS_PAGE_SIZE,
+      currentPage() * ADMIN_HONORS_PAGE_SIZE
+    )
+  )
+  const selectedSort = createMemo(
+    () => ADMIN_HONORS_SORT_OPTIONS.find((option) => option.value === sort()) ?? null
+  )
+
+  /**
+   * 称号名検索を更新して先頭ページへ戻る。
+   *
+   * @param value - 検索文字列。
+   * @returns なし。
+   */
+  const handleSearchChange = (value: string): void => {
+    setSearchQuery(value)
+    setPage(1)
+  }
+
+  /**
+   * クラス絞り込みを更新して先頭ページへ戻る。
+   *
+   * @param value - 選択したクラス。
+   * @returns なし。
+   */
+  const handleTypeChange = (value: HonorTypeFilterOption | null): void => {
+    setSelectedType(value?.value ?? ADMIN_HONORS_ALL_TYPE_VALUE)
+    setPage(1)
+  }
+
+  /**
+   * 並べ替えを更新して先頭ページへ戻る。
+   *
+   * @param value - 選択した並べ替え条件。
+   * @returns なし。
+   */
+  const handleSortChange = (value: (typeof ADMIN_HONORS_SORT_OPTIONS)[number] | null): void => {
+    if (!value) return
+    setSort(value.value)
+    setPage(1)
+  }
+
+  /**
+   * ページを切り替えて一覧の先頭へ移動する。
+   *
+   * @param nextPage - 移動先のページ番号。
+   * @returns なし。
+   */
+  const handlePageChange = (nextPage: number): void => {
+    setPage(nextPage)
+    listRef?.scrollIntoView({ block: 'start' })
+  }
 
   /**
    * 称号一覧を再取得する。
@@ -306,21 +398,74 @@ const AdminHonorsPage = () => {
         </AppButton>
       </div>
 
+      <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(10rem,12rem)_minmax(10rem,12rem)] sm:items-end">
+        <SearchTextField
+          ariaLabel={ADMIN_HONORS_COPY.searchLabel}
+          label={ADMIN_HONORS_COPY.searchLabel}
+          value={searchQuery()}
+          placeholder={ADMIN_HONORS_COPY.searchPlaceholder}
+          active={searchQuery().trim().length > 0}
+          onChange={handleSearchChange}
+        />
+        <AppSelect<HonorTypeFilterOption>
+          label={ADMIN_HONORS_COPY.typeLabel}
+          options={typeFilterOptions()}
+          optionValue="value"
+          optionTextValue="label"
+          value={selectedTypeOption()}
+          onChange={handleTypeChange}
+          formatLabel={(type) => type.label}
+        />
+        <AppSelect<(typeof ADMIN_HONORS_SORT_OPTIONS)[number]>
+          label={ADMIN_HONORS_COPY.sortLabel}
+          options={[...ADMIN_HONORS_SORT_OPTIONS]}
+          optionValue="value"
+          optionTextValue="label"
+          value={selectedSort()}
+          onChange={handleSortChange}
+          formatLabel={(option) => option.label}
+        />
+      </div>
+
       <Show when={!honorsResponse.loading} fallback={<Loading />}>
-        <div class="overflow-x-auto rounded-lg border border-border bg-surface">
+        <p class="text-sm text-text-muted" aria-live="polite">
+          {ADMIN_HONORS_COPY.resultCount(filteredHonors().length, honors().length)}
+        </p>
+        <div ref={listRef} class="overflow-x-auto rounded-lg border border-border bg-surface">
           <table class="min-w-full text-sm">
             <thead class="bg-surface-muted">
               <tr>
-                <th class="w-0 whitespace-nowrap px-3 py-2 text-left">操作</th>
+                <th class="w-0 whitespace-nowrap px-3 py-2 text-left">
+                  {ADMIN_HONORS_COPY.idColumn}
+                </th>
                 <th class="px-3 py-2 text-left">称号</th>
                 <th class="px-3 py-2 text-left">クラス</th>
+                <th class="whitespace-nowrap px-3 py-2 text-left">
+                  {ADMIN_HONORS_COPY.createdAtColumn}
+                </th>
                 <th class="px-3 py-2 text-left">image_url</th>
+                <th class="w-0 whitespace-nowrap px-3 py-2 text-left">操作</th>
               </tr>
             </thead>
             <tbody>
-              <For each={honors()}>
+              <For each={visibleHonors()}>
                 {(honor) => (
                   <tr class="border-t border-border">
+                    <td class="whitespace-nowrap px-3 py-2 font-jost tabular-nums">{honor.id}</td>
+                    <td class="px-3 py-2">
+                      <span
+                        class={`user-honor-title m-0 ${getHonorTypeClassName(honor.type_name)}`}
+                      >
+                        {honor.name}
+                      </span>
+                    </td>
+                    <td class="px-3 py-2">{honor.type_name}</td>
+                    <td class="whitespace-nowrap px-3 py-2 font-jost tabular-nums">
+                      <time datetime={honor.created_at ?? undefined}>
+                        {formatAdminHonorCreatedAt(honor.created_at)}
+                      </time>
+                    </td>
+                    <td class="px-3 py-2 font-mono text-xs break-all">{honor.image_url || '-'}</td>
                     <td class="w-0 whitespace-nowrap px-3 py-2">
                       <AppIconButton
                         aria-label={`${honor.name}を編集`}
@@ -330,15 +475,6 @@ const AdminHonorsPage = () => {
                         <Pencil class="h-4 w-4" aria-hidden="true" />
                       </AppIconButton>
                     </td>
-                    <td class="px-3 py-2">
-                      <span
-                        class={`user-honor-title m-0 ${getHonorTypeClassName(honor.type_name)}`}
-                      >
-                        {honor.name}
-                      </span>
-                    </td>
-                    <td class="px-3 py-2">{honor.type_name}</td>
-                    <td class="px-3 py-2 font-mono text-xs break-all">{honor.image_url || '-'}</td>
                   </tr>
                 )}
               </For>
@@ -346,9 +482,21 @@ const AdminHonorsPage = () => {
           </table>
         </div>
 
-        <Show when={!hasRows()}>
-          <p class="text-sm text-text-subtle">{ADMIN_HONORS_COPY.emptyState}</p>
+        <Show when={filteredHonors().length === 0}>
+          <p class="text-sm text-text-subtle">
+            {honors().length === 0 ? ADMIN_HONORS_COPY.emptyState : ADMIN_HONORS_COPY.noResults}
+          </p>
         </Show>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-sm text-text-muted">
+            {ADMIN_HONORS_COPY.pageSizeLabel(ADMIN_HONORS_PAGE_SIZE)}
+          </span>
+          <PaginationNav
+            currentPage={currentPage()}
+            totalPages={totalPages()}
+            onPageChange={handlePageChange}
+          />
+        </div>
       </Show>
 
       <HonorFormDialog
