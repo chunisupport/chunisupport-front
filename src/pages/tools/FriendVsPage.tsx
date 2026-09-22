@@ -21,7 +21,7 @@ import { friendComparisonQueryOptions } from '../../queries/friendComparisons'
 import { friendsQueryOptions } from '../../queries/friends'
 import { authSession } from '../../stores/authSession'
 import type { FriendScoreComparisonItemDTO, PlayerDataDifficulty } from '../../types/api'
-import { formatChartConst } from '../../utils/chartConstFormat'
+import { getConstDisplay } from '../../utils/constDisplay'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import type { FriendVsResultFilter, FriendVsSortKey } from '../../utils/friendVs'
 import { filterFriendVsItems, sortFriendVsItems } from '../../utils/friendVs'
@@ -37,16 +37,6 @@ import {
 } from './friendVs.constants'
 
 type SelectOption<T extends string> = { value: T; label: string }
-
-/**
- * プレイ状態に応じたスコア表記を返す。
- *
- * @param played - レコードが存在するか。
- * @param score - APIが返したスコア。
- * @returns 未プレイの区別を含む表示文言。
- */
-const formatComparisonScore = (played: boolean, score: number): string =>
-  played ? formatInteger(score) : FRIEND_VS_COPY.unplayed
 
 /**
  * スコア比較結果を仮想化テーブルで表示する。
@@ -147,58 +137,88 @@ const ComparisonTable = (props: {
               const item = createMemo(() => sortedItems()[virtualRow.index])
               return (
                 <Show when={item()} keyed>
-                  {(current) => (
-                    <tr
-                      class="absolute left-0 top-0 grid min-w-full border-t border-border hover:bg-surface-muted"
-                      style={{
-                        'grid-template-columns': FRIEND_VS_GRID_COLUMNS,
-                        transform: `translateY(${virtualRow.start - table.scrollMargin()}px)`,
-                      }}
-                      aria-rowindex={virtualRow.index + 2}
-                    >
-                      <th
-                        scope="row"
-                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} min-w-0 p-0 text-left font-medium`}
+                  {(current) => {
+                    const constDisplay = getConstDisplay(
+                      current.chart.const,
+                      current.chart.is_const_unknown
+                    )
+                    return (
+                      <tr
+                        class="absolute left-0 top-0 grid min-w-full border-t border-border hover:bg-surface-muted"
+                        style={{
+                          'grid-template-columns': FRIEND_VS_GRID_COLUMNS,
+                          transform: `translateY(${virtualRow.start - table.scrollMargin()}px)`,
+                        }}
+                        aria-rowindex={virtualRow.index + 2}
                       >
-                        <A
-                          href={buildSongDetailPath(current.song.id, props.difficulty)}
-                          class="flex h-full w-full min-w-0 items-center px-3 font-sans text-link hover:text-link-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
-                          title={current.song.title}
+                        <th
+                          scope="row"
+                          class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} min-w-0 p-0 text-left font-medium`}
                         >
-                          <span class="truncate">{current.song.title}</span>
-                        </A>
-                      </th>
-                      <td
-                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
-                      >
-                        {formatChartConst(current.chart.const)}
-                        <Show when={current.chart.is_const_unknown}>
-                          <span class="ml-1 font-sans text-xs text-text-muted">
-                            {FRIEND_VS_COPY.unknownConst}
+                          <A
+                            href={buildSongDetailPath(current.song.id, props.difficulty)}
+                            class="flex h-full w-full min-w-0 items-center px-3 font-sans text-link hover:text-link-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+                            title={current.song.title}
+                          >
+                            <span class="truncate">{current.song.title}</span>
+                          </A>
+                        </th>
+                        <td
+                          class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center overflow-hidden whitespace-nowrap px-1 text-center font-jost tabular-nums`}
+                        >
+                          <span class={`leading-none ${constDisplay.className}`}>
+                            {constDisplay.valueText}
+                            <Show when={constDisplay.markerText}>
+                              {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
+                            </Show>
                           </span>
-                        </Show>
-                      </td>
-                      <td
-                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center tabular-nums`}
-                      >
-                        <span class={current.self.is_played ? 'font-jost' : 'font-sans'}>
-                          {formatComparisonScore(current.self.is_played, current.self.score)}
-                        </span>
-                      </td>
-                      <td
-                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center tabular-nums`}
-                      >
-                        <span class={current.friend.is_played ? 'font-jost' : 'font-sans'}>
-                          {formatComparisonScore(current.friend.is_played, current.friend.score)}
-                        </span>
-                      </td>
-                      <td
-                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost font-semibold tabular-nums ${getScoreDifferenceClass(current.score_difference)}`}
-                      >
-                        {formatScoreDifference(current.score_difference)}
-                      </td>
-                    </tr>
-                  )}
+                        </td>
+                        <td
+                          class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center tabular-nums`}
+                        >
+                          <Show
+                            when={current.self.is_played}
+                            fallback={
+                              <span title={FRIEND_VS_COPY.unplayed}>
+                                <span aria-hidden="true">{FRIEND_VS_COPY.unplayedSymbol}</span>
+                                <span class="sr-only">{FRIEND_VS_COPY.unplayed}</span>
+                              </span>
+                            }
+                          >
+                            <span
+                              class={`font-jost ${current.result === 'SELF_WIN' ? 'font-bold text-action-primary' : ''}`}
+                            >
+                              {formatInteger(current.self.score)}
+                            </span>
+                          </Show>
+                        </td>
+                        <td
+                          class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center tabular-nums`}
+                        >
+                          <Show
+                            when={current.friend.is_played}
+                            fallback={
+                              <span title={FRIEND_VS_COPY.unplayed}>
+                                <span aria-hidden="true">{FRIEND_VS_COPY.unplayedSymbol}</span>
+                                <span class="sr-only">{FRIEND_VS_COPY.unplayed}</span>
+                              </span>
+                            }
+                          >
+                            <span
+                              class={`font-jost ${current.result === 'FRIEND_WIN' ? 'font-bold text-action-primary' : ''}`}
+                            >
+                              {formatInteger(current.friend.score)}
+                            </span>
+                          </Show>
+                        </td>
+                        <td
+                          class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost font-semibold tabular-nums ${getScoreDifferenceClass(current.score_difference)}`}
+                        >
+                          {formatScoreDifference(current.score_difference)}
+                        </td>
+                      </tr>
+                    )
+                  }}
                 </Show>
               )
             }}
@@ -328,10 +348,10 @@ const FriendVsPage = (): JSX.Element => {
                     </div>
                   }
                 >
-                  <Show when={comparison.data} keyed>
+                  <Show when={comparison.data}>
                     {(data) => (
                       <>
-                        <FriendVsSummary comparison={data} />
+                        <FriendVsSummary comparison={data()} />
                         <div class="flex flex-wrap items-end justify-between gap-3">
                           <h2 class="text-lg font-semibold">
                             {FRIEND_VS_COPY.scoreTable}{' '}

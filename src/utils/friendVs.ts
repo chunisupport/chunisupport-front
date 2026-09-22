@@ -37,7 +37,9 @@ export const filterFriendVsItems = (
   if (filter === 'ALL') return [...items]
   if (filter === 'BOTH_PLAYED')
     return items.filter((item) => item.self.is_played && item.friend.is_played)
-  return items.filter((item) => item.result === filter)
+  return items.filter(
+    (item) => item.result === filter && item.self.is_played && item.friend.is_played
+  )
 }
 
 /**

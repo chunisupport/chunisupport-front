@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { FriendScoreComparisonItemDTO } from '../types/api'
-import { filterFriendVsItems, sortFriendVsItems } from './friendVs'
+import { filterFriendVsItems, sortFriendVsItems, summarizeFriendVsMatches } from './friendVs'
 
 /**
  * スコア差とプレイ状態を指定した比較行を生成する。
@@ -40,7 +40,7 @@ const item = (
   result: difference > 0 ? 'SELF_WIN' : difference < 0 ? 'FRIEND_WIN' : 'DRAW',
 })
 
-test('未プレイの引き分けを保持し、両者プレイ済みだけを絞り込む', () => {
+test('未挑戦の同点を除き、双方が挑戦した譜面だけを絞り込む', () => {
   // Given: 両者未プレイ、片方だけ、両者プレイ済みを含む比較。
   const items = [
     item('unplayed', 0, false, false),
@@ -48,15 +48,36 @@ test('未プレイの引き分けを保持し、両者プレイ済みだけを�
     item('both', -100, true, true),
   ]
 
-  // When & Then: 引き分けと両者プレイ済みの意味を混同しない。
+  // When & Then: 未挑戦の同点は対戦結果に含めない。
   assert.deepEqual(
     filterFriendVsItems(items, 'DRAW').map((row) => row.song.id),
-    ['unplayed']
+    []
+  )
+  assert.deepEqual(
+    filterFriendVsItems(items, 'SELF_WIN').map((row) => row.song.id),
+    []
   )
   assert.deepEqual(
     filterFriendVsItems(items, 'BOTH_PLAYED').map((row) => row.song.id),
     ['both']
   )
+})
+
+test('双方が挑戦した譜面だけを対戦結果として数える', () => {
+  // Given: 双方未挑戦と片方のみ挑戦した譜面も含む。
+  const items = [
+    item('unplayed', 0, false, false),
+    item('selfOnly', 100, true, false),
+    item('selfWin', 100, true, true),
+    item('draw', 0, true, true),
+    item('friendWin', -100, true, true),
+  ]
+
+  // When: 対戦結果を集計する。
+  const summary = summarizeFriendVsMatches(items)
+
+  // Then: 未挑戦と片方だけの譜面は勝敗から除く。
+  assert.deepEqual(summary, { total: 3, selfWins: 1, draws: 1, friendWins: 1 })
 })
 
 test('各ヘッダーで昇順・降順に並び替え、解除時はAPI順に戻す', () => {

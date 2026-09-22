@@ -115,7 +115,7 @@ export const TOOL_LINKS: ToolLink[] = [
     title: 'フレンドVS',
     href: FRIEND_VS_PATH,
     icon: 'friendVs',
-    description: 'フレンドとスコアで勝負。譜面の勝敗や挑戦状況を見比べます。',
+    description: 'フレンドとスコアで勝負。',
   },
   {
     title: '譜面定数計算機',

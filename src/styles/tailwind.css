@@ -177,6 +177,11 @@
   --cs-color-weak-chart-point: rgb(22 163 74 / 45%);
   --cs-color-weak-chart-outlier: var(--color-blue-600);
 
+  --cs-color-friend-vs-both: var(--color-violet-500);
+  --cs-color-friend-vs-self: var(--color-cyan-500);
+  --cs-color-friend-vs-friend: var(--color-amber-500);
+  --cs-color-friend-vs-neither: var(--color-slate-400);
+
   /* ===== その他（オーバーレイ / 無効状態 / 入力フィールド / リンク） ===== */
   --cs-color-overlay: rgb(0 0 0 / 30%);
   --cs-color-disabled-bg: var(--color-gray-200);
