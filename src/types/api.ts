@@ -134,6 +134,8 @@ export type ErrorCode =
   | 'friendship_limit_exceeded'
   | 'friendship_conflict'
   | 'friend_request_not_found'
+  | 'friend_not_found'
+  | 'friend_score_comparison_unavailable'
   | 'favorite_song_limit_exceeded'
   // 入力検証
   | 'username_empty'
@@ -224,6 +226,8 @@ export const errorMessages: Record<ErrorCode, string> = {
   friendship_limit_exceeded: 'フレンド枠の上限に達しています',
   friendship_conflict: '既に申請中、またはフレンドになっています',
   friend_request_not_found: '対象のフレンド申請が見つかりません',
+  friend_not_found: '承認済みフレンドが見つかりません',
+  friend_score_comparison_unavailable: 'プレイヤーデータが未連携のため比較できません',
   favorite_song_limit_exceeded: 'お気に入り楽曲の上限件数に達しています',
   username_empty: 'ユーザーネームが空です',
   username_too_short: 'ユーザーネームは5文字以上である必要があります',
@@ -396,6 +400,105 @@ export interface FriendRankingEntryDTO {
   updated_at: string
   /** ログインユーザー自身の行か */
   is_self: boolean
+}
+
+/** フレンドスコア比較の勝敗 */
+export type FriendScoreComparisonResult = 'SELF_WIN' | 'DRAW' | 'FRIEND_WIN'
+
+/** フレンドスコア比較の対象ユーザー */
+export interface FriendScoreComparisonUserDTO {
+  /** ユーザー名 */
+  username: string
+  /** プレイヤー名 */
+  player_name: string
+}
+
+/** フレンドスコア比較の集計 */
+export interface FriendScoreComparisonSummaryDTO {
+  /** 対象難易度の全有効譜面数 */
+  total_charts: number
+  /** 自分の勝利数 */
+  self_wins: number
+  /** 引き分け数。両者未プレイを含む */
+  draws: number
+  /** フレンドの勝利数 */
+  friend_wins: number
+  /** 自分のプレイ済み数 */
+  self_played: number
+  /** フレンドのプレイ済み数 */
+  friend_played: number
+  /** 両者プレイ済み数 */
+  both_played: number
+  /** 自分だけプレイ済みの数 */
+  self_only_played: number
+  /** フレンドだけプレイ済みの数 */
+  friend_only_played: number
+  /** 両者未プレイ数 */
+  both_unplayed: number
+}
+
+/** フレンドスコア比較の1人分レコード。未プレイはスコア0、ランプと更新日時はnull */
+export interface FriendScoreComparisonRecordDTO {
+  /** レコードが存在するか */
+  is_played: boolean
+  /** 現在のベストスコア。未プレイは0 */
+  score: number
+  /** クリアランプ。未プレイまたはNONEはnull */
+  clear_lamp: PlayerRecordDTO['clear_lamp']
+  /** コンボランプ。未プレイまたはNONEはnull */
+  combo_lamp: PlayerRecordDTO['combo_lamp']
+  /** フルチェイン。未プレイまたはNONEはnull */
+  full_chain: PlayerRecordDTO['full_chain']
+  /** レコード更新日時。未プレイはnull */
+  updated_at: string | null
+}
+
+/** フレンドスコア比較の楽曲概要 */
+export interface FriendScoreComparisonSongDTO {
+  /** 楽曲表示ID */
+  id: string
+  /** 楽曲名 */
+  title: string
+  /** アーティスト名 */
+  artist: string
+}
+
+/** フレンドスコア比較の譜面概要 */
+export interface FriendScoreComparisonChartDTO {
+  /** 譜面定数 */
+  const: number
+  /** 譜面定数が推定値か */
+  is_const_unknown: boolean
+}
+
+/** フレンドスコア比較の1譜面 */
+export interface FriendScoreComparisonItemDTO {
+  /** 対象楽曲 */
+  song: FriendScoreComparisonSongDTO
+  /** 対象譜面 */
+  chart: FriendScoreComparisonChartDTO
+  /** 自分のレコード */
+  self: FriendScoreComparisonRecordDTO
+  /** フレンドのレコード */
+  friend: FriendScoreComparisonRecordDTO
+  /** 自分のスコアからフレンドのスコアを引いた値 */
+  score_difference: number
+  /** 勝敗 */
+  result: FriendScoreComparisonResult
+}
+
+/** 承認済みフレンドとの指定難易度スコア比較 */
+export interface FriendScoreComparisonResponseDTO {
+  /** 大文字の難易度 */
+  difficulty: PlayerDataDifficulty
+  /** 自分 */
+  self: FriendScoreComparisonUserDTO
+  /** フレンド */
+  friend: FriendScoreComparisonUserDTO
+  /** 勝敗とプレイ状態の集計 */
+  summary: FriendScoreComparisonSummaryDTO
+  /** マスタ順の比較行 */
+  items: FriendScoreComparisonItemDTO[]
 }
 
 /** 通常譜面のフレンドランキングレスポンス */

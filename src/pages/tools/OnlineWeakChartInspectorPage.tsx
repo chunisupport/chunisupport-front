@@ -26,6 +26,11 @@ import { createWindowVirtualTable } from '../../components/common/createWindowVi
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { GenreMultiSelect, VersionMultiSelect } from '../../components/common/DomainMultiSelect'
 import { getSortAriaValue, SortableHeaderButton } from '../../components/common/SortableTableHeader'
+import {
+  COMPACT_VIRTUAL_TABLE_CELL_CLASS,
+  COMPACT_VIRTUAL_TABLE_HEADER_CLASS,
+  COMPACT_VIRTUAL_TABLE_ROW_HEIGHT,
+} from '../../components/common/virtualTableStyles'
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_THEORETICAL_MAX } from '../../constants/chart'
 import { buildSongDetailPath, ONLINE_WEAK_CHART_INSPECTOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
@@ -248,16 +253,9 @@ const OnlineWeakChartScatter = (props: {
   )
 }
 
-/** 仮想化で使用する比較表の固定行高。 */
-const ONLINE_WEAK_CHART_TABLE_ROW_HEIGHT = 37
 /** 比較表の仮想行と見出しで共有する列構成。 */
 const ONLINE_WEAK_CHART_TABLE_GRID_TEMPLATE =
   'minmax(14rem, 1fr) 5.75rem 3rem 4.75rem 4.75rem 4.75rem'
-/** 比較表の見出しセルに共通適用するクラス。苦手譜面インスペクターの表見出しと高さと字を揃える。 */
-const ONLINE_WEAK_CHART_TABLE_HEADER_CLASS =
-  'flex min-h-8 items-center whitespace-nowrap bg-surface-muted font-medium text-text-muted'
-/** 比較表の仮想行セルに共通適用するクラス。 */
-const ONLINE_WEAK_CHART_TABLE_CELL_CLASS = 'flex h-[37px] items-center'
 
 type OnlineWeakChartTableProps = {
   /** 表示対象の比較結果。 */
@@ -292,7 +290,7 @@ const OnlineWeakChartTable = (props: OnlineWeakChartTableProps): JSX.Element => 
     HTMLTableRowElement
   >({
     rowCount: () => sortedEntries().length,
-    rowHeight: ONLINE_WEAK_CHART_TABLE_ROW_HEIGHT,
+    rowHeight: COMPACT_VIRTUAL_TABLE_ROW_HEIGHT,
     resetOnRowCountChange: true,
     layoutDeps: tableResetKey,
   })
@@ -396,42 +394,42 @@ const OnlineWeakChartTable = (props: OnlineWeakChartTableProps): JSX.Element => 
                 style={{ 'grid-template-columns': ONLINE_WEAK_CHART_TABLE_GRID_TEMPLATE }}
               >
                 <th
-                  class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-start px-3 text-left`}
+                  class={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} justify-start px-3 text-left`}
                   scope="col"
                   aria-sort={headerAriaSort('title')}
                 >
                   {header(ONLINE_WEAK_CHART_COPY.songTitle, 'title', 'start')}
                 </th>
                 <th
-                  class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
+                  class={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
                   scope="col"
                   aria-sort={headerAriaSort('difficulty')}
                 >
                   {header(ONLINE_WEAK_CHART_COPY.difficulty, 'difficulty')}
                 </th>
                 <th
-                  class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
+                  class={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
                   scope="col"
                   aria-sort={headerAriaSort('const')}
                 >
                   {header(ONLINE_WEAK_CHART_COPY.chartConst, 'const')}
                 </th>
                 <th
-                  class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
+                  class={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
                   scope="col"
                   aria-sort={headerAriaSort('score')}
                 >
                   {header(ONLINE_WEAK_CHART_COPY.ownScore, 'score')}
                 </th>
                 <th
-                  class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
+                  class={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
                   scope="col"
                   aria-sort={headerAriaSort('averageScore')}
                 >
                   {header(ONLINE_WEAK_CHART_COPY.averageScore, 'averageScore')}
                 </th>
                 <th
-                  class={`${ONLINE_WEAK_CHART_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
+                  class={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
                   scope="col"
                   aria-sort={headerAriaSort('difference')}
                 >
@@ -460,7 +458,7 @@ const OnlineWeakChartTable = (props: OnlineWeakChartTableProps): JSX.Element => 
                           aria-rowindex={virtualRow.index + 2}
                         >
                           <th
-                            class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} min-w-0 p-0 text-left font-medium`}
+                            class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} min-w-0 p-0 text-left font-medium`}
                             scope="row"
                           >
                             <A
@@ -475,27 +473,27 @@ const OnlineWeakChartTable = (props: OnlineWeakChartTableProps): JSX.Element => 
                             </A>
                           </th>
                           <td
-                            class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center`}
+                            class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center`}
                           >
                             <DifficultyBadge difficulty={currentEntry.record.difficulty} />
                           </td>
                           <td
-                            class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
+                            class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
                           >
                             {formatChartConst(currentEntry.record.const)}
                           </td>
                           <td
-                            class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
+                            class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
                           >
                             {formatInteger(currentEntry.record.score)}
                           </td>
                           <td
-                            class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
+                            class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
                           >
                             {formatInteger(Math.trunc(currentEntry.averageScore))}
                           </td>
                           <td
-                            class={`${ONLINE_WEAK_CHART_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums ${getScoreDifferenceClass(currentEntry.difference)}`}
+                            class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums ${getScoreDifferenceClass(currentEntry.difference)}`}
                           >
                             {formatScoreDifference(currentEntry.difference)}
                           </td>

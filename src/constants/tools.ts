@@ -6,6 +6,7 @@ import {
   CHART_CONSTANT_CALCULATOR_PATH,
   CHART_STATS_PATH,
   DASHBOARD_PATH,
+  FRIEND_VS_PATH,
   LOCKED_SONG_DISCOVERY_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
   RANDOM_SONG_SELECTOR_PATH,
@@ -27,6 +28,7 @@ export type ToolLinkIcon =
   | 'gauge'
   | 'list'
   | 'discover'
+  | 'friendVs'
 
 /**
  * 無効化されたツールカードに表示する状態ラベル。
@@ -108,6 +110,12 @@ export const TOOL_LINKS: ToolLink[] = [
     href: DASHBOARD_PATH,
     icon: 'chart',
     description: 'プレイ記録から達成状況と次に狙う譜面を確認できます。',
+  },
+  {
+    title: 'フレンドVS',
+    href: FRIEND_VS_PATH,
+    icon: 'friendVs',
+    description: 'フレンドとスコアで勝負。譜面の勝敗や挑戦状況を見比べます。',
   },
   {
     title: '譜面定数計算機',

@@ -9,6 +9,7 @@ import {
   ListOrdered,
   Lock,
   ScanSearch,
+  Swords,
   Target,
   Trophy,
 } from 'lucide-solid'
@@ -54,6 +55,7 @@ import {
   EDITOR_COURSES_PATH,
   EDITOR_PATH,
   EDITOR_SONGS_PATH,
+  FRIEND_VS_PATH,
   FRIENDS_PATH,
   LATEST_SCORE_UPDATE_PATH,
   LOCKED_SONG_DISCOVERY_PATH,
@@ -106,6 +108,7 @@ const WorldsendScoreHistory = lazy(
 
 const Settings = lazy(() => import('./pages/settings/Settings'))
 const FriendsPage = lazy(() => import('./pages/friends/FriendsPage'))
+const FriendVsPage = lazy(() => import('./pages/tools/FriendVsPage'))
 
 const RegisterScorePage = lazy(() => import('./pages/register-score/RegisterScorePage'))
 const LatestScoreUpdatePage = lazy(() => import('./pages/register-score/LatestScoreUpdatePage'))
@@ -349,6 +352,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <ListOrdered class={iconClass} aria-hidden="true" />
     case 'discover':
       return <ScanSearch class={iconClass} aria-hidden="true" />
+    case 'friendVs':
+      return <Swords class={iconClass} aria-hidden="true" />
   }
 }
 
@@ -690,6 +695,10 @@ const App = () => {
       />
       <Route path={REGISTER_SCORE_TEMP_PATH} component={withNavBar(GuardedRegisterScoreTempPage)} />
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />
+      <Route
+        path={FRIEND_VS_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(FriendVsPage)))}
+      />
       <Route
         path={CHART_CONSTANT_CALCULATOR_PATH}
         component={withNavBar(withRouteLoadBoundary(ChartConstantCalculatorPage))}

@@ -4,6 +4,7 @@ import {
   fetchWorldsendFriendRanking,
   type ScoreHistoryDifficulty,
 } from '../api/songs'
+import { friendComparisonQueryKeys } from './friendComparisons'
 import { FRIEND_QUERY_STALE_TIME_MS } from './friendQueryConstants'
 
 /** フレンドランキングqueryのkey factory。 */
@@ -58,16 +59,18 @@ export const worldsendFriendRankingQueryOptions = (username: string | null, disp
   })
 
 /**
- * 指定ユーザーの全フレンドランキングqueryを無効化する。
+ * 指定ユーザーのフレンドランキングとスコア比較queryを無効化する。
  *
  * @param queryClient - 更新対象のQueryClient。
  * @param username - キャッシュを無効化する認証ユーザー名。
  * @returns 表示中queryの再取得完了時に解決されるPromise。
  */
-export const invalidateFriendRankings = (
+export const invalidateFriendRankings = async (
   queryClient: QueryClient,
   username: string
-): Promise<void> =>
-  queryClient.invalidateQueries({
-    queryKey: friendRankingQueryKeys.user(username),
-  })
+): Promise<void> => {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: friendRankingQueryKeys.user(username) }),
+    queryClient.invalidateQueries({ queryKey: friendComparisonQueryKeys.user(username) }),
+  ])
+}
