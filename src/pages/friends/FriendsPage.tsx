@@ -13,12 +13,11 @@ import {
   deleteFriend,
   rejectFriendRequest,
 } from '../../api/friends'
-import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
+import { AppButton } from '../../components/common/AppButton'
 import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../../components/common/AppMenu'
 import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { Loading } from '../../components/Loading'
-import { buildFriendVsPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   type FriendshipMutationType,
@@ -345,14 +344,6 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
                 onReject={() => props.onReject(user)}
                 onCancel={() => props.onCancel(user)}
               />
-              <Show when={props.variant === 'friends'}>
-                <A
-                  href={buildFriendVsPath(user.username)}
-                  class={`${getAppButtonClass({ variant: 'secondary', size: 'sm', fullWidth: true })} mt-4`}
-                >
-                  {FRIENDS_COPY.friendVs}
-                </A>
-              </Show>
             </li>
           )
         }}

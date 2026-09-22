@@ -15,14 +15,6 @@ export const CHART_STATS_PATH = `${TOOLS_PATH}/chart-stats`
 export const FRIENDS_PATH = '/friends'
 /** フレンドとの譜面スコア比較画面のパス */
 export const FRIEND_VS_PATH = `${TOOLS_PATH}/friend-vs`
-/**
- * フレンドスコア比較画面へのリンクを生成する。
- *
- * @param username - 比較する承認済みフレンドのユーザー名。
- * @returns フレンド選択済みのツール画面URL。
- */
-export const buildFriendVsPath = (username: string): string =>
-  `${FRIEND_VS_PATH}?${new URLSearchParams({ friend: username }).toString()}`
 /** 通常楽曲一覧画面のパス */
 export const SONGS_PATH = '/songs'
 /** WORLD'S END楽曲一覧画面のパス */

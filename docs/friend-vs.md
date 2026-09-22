@@ -1,6 +1,6 @@
 # フレンドVS
 
-`/tools/friend-vs` では、ログインユーザーと承認済みフレンド1人の通常譜面スコアを比較する。フレンド画面の各カードにある「フレンドVS」から開くと相手を選択した状態になる。ツール一覧から開いた場合は相手を選択する。
+`/tools/friend-vs` では、ログインユーザーと承認済みフレンド1人の通常譜面スコアを比較する。ツール一覧から開いた場合は相手を選択する。
 
 難易度は `BASIC`、`ADVANCED`、`EXPERT`、`MASTER`、`ULTIMA` から1つ選び、初期値は `MASTER` とする。フレンドと難易度が選択されたとき、Firebase認証付きの `GET /internal/friend-comparisons/:username/charts/:difficulty` を呼び出す。
 

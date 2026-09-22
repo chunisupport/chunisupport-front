@@ -95,7 +95,6 @@ export const FRIENDS_COPY = {
   reject: '拒否',
   cancelRequest: '申請取り消し',
   remove: '解除',
-  friendVs: 'フレンドVS',
   levelLabel: 'Lv',
   ratingLabel: 'Rating',
   privateAccountLabel: '非公開アカウント',
