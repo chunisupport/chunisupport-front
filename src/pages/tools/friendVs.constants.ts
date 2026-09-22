@@ -1,5 +1,6 @@
-import type { PlayerDataDifficulty } from '../../types/api'
-import type { FriendVsResultFilter } from '../../utils/friendVs'
+import type { FriendScoreComparisonResult, PlayerDataDifficulty } from '../../types/api'
+import type { FriendVsResultFilter, FriendVsSortKey } from '../../utils/friendVs'
+import type { SortDirection } from '../../utils/sortingQuery'
 
 /** フレンドVS画面の表示文言。 */
 export const FRIEND_VS_COPY = {
@@ -32,6 +33,8 @@ export const FRIEND_VS_COPY = {
   unplayedSymbol: '—',
   scoreTable: 'スコア比較',
   scoreTableCaption: '譜面別の自分とフレンドのスコア、スコア差',
+  sortBy: '並び替え',
+  sortDirection: '順序',
   reload: '再読み込み',
 } as const
 
@@ -47,5 +50,40 @@ export const FRIEND_VS_RESULT_OPTIONS: readonly { value: FriendVsResultFilter; l
   { value: 'BOTH_PLAYED', label: 'ふたりとも挑戦' },
 ]
 
-/** テーブルの列幅。 */
+/** 自分視点の勝敗ラベル。 */
+export const FRIEND_VS_RESULT_LABELS: Record<FriendScoreComparisonResult, string> = {
+  SELF_WIN: FRIEND_VS_COPY.win,
+  DRAW: FRIEND_VS_COPY.draw,
+  FRIEND_WIN: FRIEND_VS_COPY.lose,
+}
+
+/** カード一覧の並び替え項目。 */
+export const FRIEND_VS_SORT_OPTIONS: readonly {
+  value: FriendVsSortKey | 'default'
+  label: string
+}[] = [
+  { value: 'default', label: '標準順' },
+  { value: 'title', label: '楽曲名' },
+  { value: 'const', label: FRIEND_VS_COPY.constant },
+  { value: 'selfScore', label: '自分のスコア' },
+  { value: 'friendScore', label: 'フレンドのスコア' },
+  { value: 'difference', label: FRIEND_VS_COPY.difference },
+]
+
+/** カード一覧の並び順。 */
+export const FRIEND_VS_SORT_DIRECTIONS: readonly { value: SortDirection; label: string }[] = [
+  { value: 'asc', label: '昇順' },
+  { value: 'desc', label: '降順' },
+]
+
+/** カードと次のカードの間隔を含む仮想リストの行高。 */
+export const FRIEND_VS_CARD_ROW_HEIGHT = 160
+
+/** 表示切り替えの選択肢。 */
+export const FRIEND_VS_VIEW_OPTIONS = [
+  { value: 'card', label: 'カード' },
+  { value: 'table', label: '表' },
+] as const
+
+/** 表の列幅。 */
 export const FRIEND_VS_GRID_COLUMNS = 'minmax(14rem,1fr) 5rem 8rem 8rem 7rem'
