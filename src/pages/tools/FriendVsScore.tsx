@@ -19,6 +19,11 @@ export const FriendVsScore = (props: {
   const record = () => props.item[props.side]
   /** @returns 表示する側が勝っているか。 */
   const winner = () => props.item.result === (props.side === 'self' ? 'SELF_WIN' : 'FRIEND_WIN')
+  /** @returns 表示サイズと勝敗に応じた文字の太さ。カードでは表より一段太くする。 */
+  const scoreWeight = () => {
+    if (props.size === 'card') return winner() ? 'font-extrabold' : 'font-medium'
+    return winner() ? 'font-bold' : ''
+  }
 
   return (
     <Show
@@ -34,7 +39,7 @@ export const FriendVsScore = (props: {
       }
     >
       <span
-        class={`tabular-nums ${props.size === 'card' ? 'font-oswald text-lg sm:text-xl' : 'font-jost'} ${winner() ? `font-bold ${FRIEND_VS_RESULT_TONES[props.item.result].text}` : ''}`}
+        class={`font-jost tabular-nums ${props.size === 'card' ? 'text-lg sm:text-xl' : ''} ${scoreWeight()} ${winner() ? FRIEND_VS_RESULT_TONES[props.item.result].text : ''}`}
       >
         {formatInteger(record().score)}
       </span>

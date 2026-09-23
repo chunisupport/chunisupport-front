@@ -1,12 +1,12 @@
 import { createEffect, createMemo, For } from 'solid-js'
 import { createWindowVirtualTable } from '../../../../components/common/createWindowVirtualTable'
 import type { VersionSummaryDTO, WorldsendSongDTO } from '../../../../types/api'
+import { getVirtualGridRowCount, getVirtualGridRowSlice } from '../../../../utils/virtualGrid'
 import {
   SONG_CARD_COLUMN_GAP_PX,
   SONG_CARD_GRID_OVERSCAN,
   SONG_CARD_ROW_HEIGHT_PX,
 } from '../../SongsCardList/constants'
-import { getSongCardRowCount, getSongCardRowSlice } from '../../SongsCardList/utils/songCardGrid'
 import WorldsendSongCard from './WorldsendSongCard'
 
 type WorldsendSongsCardGridProps = {
@@ -32,7 +32,7 @@ const WorldsendSongsCardGrid = (props: WorldsendSongsCardGridProps) => {
     HTMLDivElement,
     HTMLDivElement
   >({
-    rowCount: () => getSongCardRowCount(props.songs.length, props.columnCount),
+    rowCount: () => getVirtualGridRowCount(props.songs.length, props.columnCount),
     rowHeight: SONG_CARD_ROW_HEIGHT_PX,
     overscan: SONG_CARD_GRID_OVERSCAN,
     resetOnRowCountChange: false,
@@ -62,7 +62,7 @@ const WorldsendSongsCardGrid = (props: WorldsendSongsCardGridProps) => {
         <For each={virtualRows()}>
           {(virtualRow) => {
             const rowSongs = createMemo(() =>
-              getSongCardRowSlice(props.songs, virtualRow.index, props.columnCount)
+              getVirtualGridRowSlice(props.songs, virtualRow.index, props.columnCount)
             )
 
             return (

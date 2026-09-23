@@ -3,14 +3,20 @@ import type { Accessor, JSX } from 'solid-js'
 import { createEffect, createMemo, For, Show } from 'solid-js'
 import { AppSelect } from '../../components/common/AppSelect'
 import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
+import { RecordLampDots } from '../../components/common/record/RecordDisplayParts'
+import { createMediaQuery } from '../../hooks/createMediaQuery'
 import type { FriendComparisonDifficulty } from '../../types/api'
 import type { FriendVsItem, FriendVsSortKey } from '../../utils/friendVs'
 import { getFriendVsChartDisplay, getFriendVsSongPath } from '../../utils/friendVs'
 import { formatScoreDifference, getScoreDifferenceClass } from '../../utils/scoreDifference'
 import type { SortDirection } from '../../utils/sortingQuery'
+import { getVirtualGridRowCount, getVirtualGridRowSlice } from '../../utils/virtualGrid'
 import { FriendVsScore } from './FriendVsScore'
 import {
+  FRIEND_VS_CARD_COLUMN_GAP_PX,
   FRIEND_VS_CARD_ROW_HEIGHT,
+  FRIEND_VS_CARD_WIDE_COLUMN_COUNT,
+  FRIEND_VS_CARD_WIDE_MEDIA_QUERY,
   FRIEND_VS_COPY,
   FRIEND_VS_RESULT_LABELS,
   FRIEND_VS_RESULT_TONES,
@@ -19,10 +25,26 @@ import {
 } from './friendVs.constants'
 
 /**
+ * カード内の片側（自分またはフレンド）のスコアとランプを表示する。
+ *
+ * @param props - 比較行と表示する側。
+ * @returns 中央にそろえた見出し、スコア、ランプのドット。
+ */
+const FriendVsCardSide = (props: { item: FriendVsItem; side: 'self' | 'friend' }): JSX.Element => (
+  <div class="flex min-w-0 flex-col items-center">
+    <div class="font-sans text-xs text-text-muted">
+      {props.side === 'self' ? FRIEND_VS_COPY.selfScore : FRIEND_VS_COPY.friendScore}
+    </div>
+    <FriendVsScore item={props.item} side={props.side} size="card" />
+    <RecordLampDots record={props.item[props.side]} class="mt-1" />
+  </div>
+)
+
+/**
  * 楽曲ごとの自分とフレンドのスコアをカードで表示する。
  *
  * @param props - 比較行とリンク先の難易度。
- * @returns スコア差と勝者の強調を含むカード。
+ * @returns 全体が楽曲詳細へのリンクになった、スコア差と勝者の強調を含むカード。
  */
 const FriendVsCard = (props: {
   item: FriendVsItem
@@ -31,37 +53,30 @@ const FriendVsCard = (props: {
   const chartConst = createMemo(() => getFriendVsChartDisplay(props.item))
 
   return (
-    <article class="flex h-full flex-col rounded-lg border border-border bg-surface px-4 py-3 shadow-sm">
+    <A
+      href={getFriendVsSongPath(props.item, props.difficulty)}
+      class="group flex h-full flex-col rounded-lg border border-border bg-surface px-4 py-3 text-inherit shadow-sm transition-colors hover:bg-interactive-row-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+    >
       <div class="flex min-w-0 items-start gap-3">
-        <A
-          href={getFriendVsSongPath(props.item, props.difficulty)}
-          class="flex min-w-0 flex-1 flex-col font-sans text-link hover:text-link-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+        <span
+          class="min-w-0 flex-1 truncate font-sans font-semibold text-link group-hover:text-link-hover"
           title={props.item.song.title}
         >
-          <span class="truncate font-semibold">{props.item.song.title}</span>
-          <span class="truncate text-xs text-text-muted">{props.item.song.artist}</span>
-        </A>
-        <span class="shrink-0 rounded bg-surface-muted px-2 py-1 font-sans text-xs">
-          {props.difficulty === "WORLD'S END"
-            ? FRIEND_VS_COPY.worldsendLevel
-            : FRIEND_VS_COPY.constant}{' '}
-          <span
-            class={`${props.difficulty === "WORLD'S END" ? 'font-sans' : 'font-oswald'} font-semibold ${chartConst().className}`}
-          >
-            {chartConst().valueText}
-            <Show when={chartConst().markerText}>
-              {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
-            </Show>
-          </span>
+          {props.item.song.title}
+        </span>
+        <span
+          class={`shrink-0 rounded bg-surface-muted px-2 py-1 text-xs font-semibold ${props.difficulty === "WORLD'S END" ? 'font-sans' : 'font-jost'} ${chartConst().className}`}
+        >
+          {chartConst().valueText}
+          <Show when={chartConst().markerText}>
+            {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
+          </Show>
         </span>
       </div>
 
-      <div class="mt-auto grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-2 pt-3 text-center">
+      <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 pt-2 text-center">
+        <FriendVsCardSide item={props.item} side="self" />
         <div class="min-w-0">
-          <div class="font-sans text-xs text-text-muted">{FRIEND_VS_COPY.selfScore}</div>
-          <FriendVsScore item={props.item} side="self" size="card" />
-        </div>
-        <div class="min-w-0 px-1">
           <Show when={props.item.self.is_played && props.item.friend.is_played}>
             <div
               class={`font-sans text-xs font-bold tracking-wide ${FRIEND_VS_RESULT_TONES[props.item.result].text}`}
@@ -69,19 +84,15 @@ const FriendVsCard = (props: {
               {FRIEND_VS_RESULT_LABELS[props.item.result]}
             </div>
           </Show>
-          <div class="font-sans text-xs text-text-muted">{FRIEND_VS_COPY.difference}</div>
           <div
-            class={`font-oswald text-sm tabular-nums ${getScoreDifferenceClass(props.item.score_difference)}`}
+            class={`font-jost text-sm tabular-nums ${getScoreDifferenceClass(props.item.score_difference)}`}
           >
             {formatScoreDifference(props.item.score_difference)}
           </div>
         </div>
-        <div class="min-w-0">
-          <div class="font-sans text-xs text-text-muted">{FRIEND_VS_COPY.friendScore}</div>
-          <FriendVsScore item={props.item} side="friend" size="card" />
-        </div>
+        <FriendVsCardSide item={props.item} side="friend" />
       </div>
-    </article>
+    </A>
   )
 }
 
@@ -113,17 +124,20 @@ export const FriendVsCardList = (props: {
   const directionOption = () =>
     FRIEND_VS_SORT_DIRECTIONS.find((option) => option.value === props.sortDirection) ??
     FRIEND_VS_SORT_DIRECTIONS[0]
+  const isWide = createMediaQuery(FRIEND_VS_CARD_WIDE_MEDIA_QUERY)
+  /** @returns 画面幅に応じた1行あたりのカード枚数。 */
+  const columnCount = () => (isWide() ? FRIEND_VS_CARD_WIDE_COLUMN_COUNT : 1)
   const cards = createWindowVirtualTable<
     HTMLDivElement,
-    HTMLUListElement,
     HTMLDivElement,
-    HTMLLIElement
+    HTMLDivElement,
+    HTMLUListElement
   >({
-    rowCount: () => props.items.length,
+    rowCount: () => getVirtualGridRowCount(props.items.length, columnCount()),
     rowHeight: FRIEND_VS_CARD_ROW_HEIGHT,
     initialOffset: props.initialScrollOffset,
     resetOnRowCountChange: true,
-    layoutDeps: () => props.resetKey,
+    layoutDeps: () => [props.resetKey, columnCount()],
   })
 
   createEffect((previous?: string) => {
@@ -162,33 +176,40 @@ export const FriendVsCardList = (props: {
           />
         </Show>
       </div>
-      <ul
+      <div
         ref={cards.setTableBodyRef}
         class="relative mx-auto w-full max-w-3xl"
         style={{ height: `${cards.getTotalSize()}px` }}
       >
         <For each={cards.virtualRows()}>
           {(virtualRow) => {
-            const item = createMemo(() => props.items[virtualRow.index])
+            const rowItems = createMemo(() =>
+              getVirtualGridRowSlice(props.items, virtualRow.index, columnCount())
+            )
             return (
-              <Show when={item()} keyed>
-                {(current) => (
-                  <li
-                    class="absolute left-0 top-0 h-36 w-full"
-                    style={{
-                      transform: `translateY(${virtualRow.start - cards.scrollMargin()}px)`,
-                    }}
-                    aria-posinset={virtualRow.index + 1}
-                    aria-setsize={props.items.length}
-                  >
-                    <FriendVsCard item={current} difficulty={props.difficulty} />
-                  </li>
-                )}
-              </Show>
+              <ul
+                class="absolute left-0 top-0 grid h-30 w-full"
+                style={{
+                  'grid-template-columns': `repeat(${columnCount()}, minmax(0, 1fr))`,
+                  gap: `${FRIEND_VS_CARD_COLUMN_GAP_PX}px`,
+                  transform: `translateY(${virtualRow.start - cards.scrollMargin()}px)`,
+                }}
+              >
+                <For each={rowItems()}>
+                  {(item, column) => (
+                    <li
+                      aria-posinset={virtualRow.index * columnCount() + column() + 1}
+                      aria-setsize={props.items.length}
+                    >
+                      <FriendVsCard item={item} difficulty={props.difficulty} />
+                    </li>
+                  )}
+                </For>
+              </ul>
             )
           }}
         </For>
-      </ul>
+      </div>
     </div>
   )
 }

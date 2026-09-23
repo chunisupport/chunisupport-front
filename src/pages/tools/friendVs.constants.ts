@@ -11,7 +11,7 @@ import type { SortDirection } from '../../utils/sortingQuery'
 /** フレンドVS画面の表示文言。 */
 export const FRIEND_VS_COPY = {
   worldsend: "WORLD'S END",
-  worldsendLevel: '星・属性',
+  worldsendLevel: 'レベル',
   selectFriend: 'フレンド',
   openFriends: 'フレンド画面へ',
   selectDifficulty: '難易度',
@@ -98,7 +98,16 @@ export const FRIEND_VS_SORT_DIRECTIONS: readonly { value: SortDirection; label: 
 ]
 
 /** カードと次のカードの間隔を含む仮想リストの行高。 */
-export const FRIEND_VS_CARD_ROW_HEIGHT = 160
+export const FRIEND_VS_CARD_ROW_HEIGHT = 132
+
+/** カードを複数列で並べる画面幅（Tailwindのsmブレークポイント）。 */
+export const FRIEND_VS_CARD_WIDE_MEDIA_QUERY = '(min-width: 640px)'
+
+/** 複数列表示時の1行あたりのカード枚数。 */
+export const FRIEND_VS_CARD_WIDE_COLUMN_COUNT = 2
+
+/** カード同士の横方向の間隔（px）。 */
+export const FRIEND_VS_CARD_COLUMN_GAP_PX = 12
 
 /** 表の列幅。 */
 export const FRIEND_VS_GRID_COLUMNS = 'minmax(14rem,1fr) 5rem 8rem 8rem 7rem'
