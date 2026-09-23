@@ -6,6 +6,7 @@ import { createMemo, createSignal, onCleanup, Show } from 'solid-js'
 import { AppButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { CardTableViewToggle } from '../../components/common/CardTableViewToggle'
+import { CheckboxField } from '../../components/common/CheckboxField'
 import { Loading } from '../../components/Loading'
 import { FRIEND_VS_PATH, FRIENDS_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
@@ -55,6 +56,7 @@ const FriendVsPage = (): JSX.Element => {
   const [resultFilter, setResultFilter] = createSignal<SelectOption<FriendVsResultFilter>>(
     FRIEND_VS_RESULT_OPTIONS[0]
   )
+  const [excludeUnplayed, setExcludeUnplayed] = createSignal(false)
   const [viewMode, setViewMode] = createSignal<'card' | 'table'>('card')
   const [initialScrollOffset, setInitialScrollOffset] = createSignal(0)
   let restoreFrameId: number | undefined
@@ -65,12 +67,12 @@ const FriendVsPage = (): JSX.Element => {
     friendComparisonQueryOptions(username(), selectedFriend()?.username ?? null, difficulty())
   )
   const items = createMemo(() =>
-    filterFriendVsItems(comparison.data?.items ?? [], resultFilter().value)
+    filterFriendVsItems(comparison.data?.items ?? [], resultFilter().value, excludeUnplayed())
   )
   const sortedItems = createMemo(() => sortFriendVsItems(items(), sortKey(), sortDirection()))
   const resetKey = createMemo(
     () =>
-      `${selectedFriend()?.username ?? ''}|${difficulty()}|${resultFilter().value}|${sortKey() ?? ''}|${sortDirection() ?? ''}`
+      `${selectedFriend()?.username ?? ''}|${difficulty()}|${resultFilter().value}|${excludeUnplayed()}|${sortKey() ?? ''}|${sortDirection() ?? ''}`
   )
 
   /**
@@ -216,6 +218,13 @@ const FriendVsPage = (): JSX.Element => {
                             </span>
                           </h2>
                           <div class="flex flex-wrap items-end gap-2">
+                            <CheckboxField
+                              id="friend-vs-exclude-unplayed"
+                              class="h-[38px]"
+                              checked={excludeUnplayed()}
+                              onChange={setExcludeUnplayed}
+                              label={FRIEND_VS_COPY.excludeUnplayed}
+                            />
                             <AppSelect
                               options={[...FRIEND_VS_RESULT_OPTIONS]}
                               optionValue="value"

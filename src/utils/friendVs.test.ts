@@ -59,16 +59,20 @@ test('未挑戦の同点を除き、双方が挑戦した譜面だけを絞り�
 
   // When & Then: 未挑戦の同点は対戦結果に含めない。
   assert.deepEqual(
-    filterFriendVsItems(items, 'DRAW').map((row) => row.song.id),
+    filterFriendVsItems(items, 'DRAW', false).map((row) => row.song.id),
     []
   )
   assert.deepEqual(
-    filterFriendVsItems(items, 'SELF_WIN').map((row) => row.song.id),
+    filterFriendVsItems(items, 'SELF_WIN', false).map((row) => row.song.id),
     []
   )
   assert.deepEqual(
-    filterFriendVsItems(items, 'BOTH_PLAYED').map((row) => row.song.id),
+    filterFriendVsItems(items, 'ALL', true).map((row) => row.song.id),
     ['both']
+  )
+  assert.deepEqual(
+    filterFriendVsItems(items, 'ALL', false).map((row) => row.song.id),
+    ['unplayed', 'one', 'both']
   )
 })
 
@@ -150,7 +154,7 @@ test("WORLD'S ENDの星数・属性と楽曲リンクを使い、星数順に並
     ['known', 'missing']
   )
   assert.deepEqual(
-    filterFriendVsItems([missing, known], 'BOTH_PLAYED').map((row) => row.song.id),
+    filterFriendVsItems([missing, known], 'ALL', true).map((row) => row.song.id),
     ['known']
   )
 })

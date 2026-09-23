@@ -16,6 +16,7 @@ export const FRIEND_VS_COPY = {
   openFriends: 'フレンド画面へ',
   selectDifficulty: '難易度',
   selectResult: '勝敗',
+  excludeUnplayed: '未プレイ除外',
   noFriends: '比較できるフレンドがいません。',
   selectPrompt: '比較するフレンドを選択してください。',
   loadingFriends: 'フレンド一覧を読み込んでいます',
@@ -55,7 +56,6 @@ export const FRIEND_VS_RESULT_OPTIONS: readonly { value: FriendVsResultFilter; l
   { value: 'SELF_WIN', label: 'WIN' },
   { value: 'DRAW', label: 'DRAW' },
   { value: 'FRIEND_WIN', label: 'LOSE' },
-  { value: 'BOTH_PLAYED', label: 'ふたりとも挑戦' },
 ]
 
 /** 自分視点の勝敗ラベル。 */

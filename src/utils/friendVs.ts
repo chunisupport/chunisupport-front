@@ -44,7 +44,7 @@ export const getFriendVsChartDisplay = (item: FriendVsItem) => {
 }
 
 /** 比較表で使用できる表示条件。 */
-export type FriendVsResultFilter = 'ALL' | FriendScoreComparisonResult | 'BOTH_PLAYED'
+export type FriendVsResultFilter = 'ALL' | FriendScoreComparisonResult
 
 /** 比較表で並び替えられる列。 */
 export type FriendVsSortKey = 'title' | 'const' | 'selfScore' | 'friendScore' | 'difference'
@@ -69,18 +69,19 @@ export const summarizeFriendVsMatches = (items: readonly FriendVsItem[]) => {
  * 勝敗とプレイ状態で比較行を絞り込む。
  *
  * @param items - APIから受け取った比較行。
- * @param filter - 表示条件。
+ * @param filter - 勝敗の表示条件。勝敗を指定した場合は双方が挑戦した譜面だけを対象にする。
+ * @param excludeUnplayed - どちらかが未プレイの譜面を除外するか。
  * @returns 条件に一致する比較行。
  */
 export const filterFriendVsItems = (
   items: readonly FriendVsItem[],
-  filter: FriendVsResultFilter
+  filter: FriendVsResultFilter,
+  excludeUnplayed: boolean
 ): FriendVsItem[] => {
-  if (filter === 'ALL') return [...items]
-  if (filter === 'BOTH_PLAYED')
-    return items.filter((item) => item.self.is_played && item.friend.is_played)
+  if (filter === 'ALL' && !excludeUnplayed) return [...items]
   return items.filter(
-    (item) => item.result === filter && item.self.is_played && item.friend.is_played
+    (item) =>
+      (filter === 'ALL' || item.result === filter) && item.self.is_played && item.friend.is_played
   )
 }
 
