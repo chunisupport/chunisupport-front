@@ -1,6 +1,6 @@
 import { Swords } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createMemo, For, Show } from 'solid-js'
+import { createMemo, Show } from 'solid-js'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import type {
   FriendScoreComparisonResponseDTO,
@@ -11,10 +11,10 @@ import { formatInteger } from '../../utils/numberFormat'
 import { FRIEND_VS_COPY } from './friendVs.constants'
 
 /**
- * 双方が挑戦した譜面の勝敗と、全譜面の挑戦状況を表示する。
+ * 双方が挑戦した譜面の勝敗を表示する。
  *
  * @param props - 比較APIの譜面別結果と対戦者。
- * @returns 自分視点の WIN・DRAW・LOSE と挑戦状況。
+ * @returns 自分視点の WIN・DRAW・LOSE。
  */
 export const FriendVsSummary = (props: {
   comparison: FriendScoreComparisonResponseDTO | WorldsendFriendScoreComparisonResponseDTO
@@ -22,28 +22,6 @@ export const FriendVsSummary = (props: {
   /** @returns 通常譜面の難易度。WORLD'S ENDでは null。 */
   const standardDifficulty = () =>
     props.comparison.difficulty === "WORLD'S END" ? null : props.comparison.difficulty
-  const segments = createMemo(() => [
-    {
-      label: FRIEND_VS_COPY.bothChallenged,
-      value: props.comparison.summary.both_played,
-      colorClass: 'bg-[var(--cs-color-friend-vs-both)]',
-    },
-    {
-      label: FRIEND_VS_COPY.selfOnlyChallenged,
-      value: props.comparison.summary.self_only_played,
-      colorClass: 'bg-[var(--cs-color-friend-vs-self)]',
-    },
-    {
-      label: FRIEND_VS_COPY.friendOnlyChallenged,
-      value: props.comparison.summary.friend_only_played,
-      colorClass: 'bg-[var(--cs-color-friend-vs-friend)]',
-    },
-    {
-      label: FRIEND_VS_COPY.neitherChallenged,
-      value: props.comparison.summary.both_unplayed,
-      colorClass: 'bg-[var(--cs-color-friend-vs-neither)]',
-    },
-  ])
   const matches = createMemo(() => summarizeFriendVsMatches(props.comparison.items))
 
   return (
@@ -93,36 +71,6 @@ export const FriendVsSummary = (props: {
           </dd>
         </div>
       </dl>
-
-      <div class="border-t border-border bg-surface-muted px-4 py-4 sm:px-6">
-        <h3 class="font-sans text-sm font-semibold">{FRIEND_VS_COPY.challengeTitle}</h3>
-        <div
-          class="mt-3 flex h-2.5 overflow-hidden rounded-full bg-border-strong"
-          aria-hidden="true"
-        >
-          <For each={segments()}>
-            {(segment) => (
-              <span class={segment.colorClass} style={{ flex: `${segment.value} 0 0%` }} />
-            )}
-          </For>
-        </div>
-        <ul class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 font-sans text-xs sm:grid-cols-4">
-          <For each={segments()}>
-            {(segment) => (
-              <li class="flex min-w-0 items-center gap-2">
-                <span
-                  class={`h-2.5 w-2.5 shrink-0 rounded-full ${segment.colorClass}`}
-                  aria-hidden="true"
-                />
-                <span class="min-w-0">{segment.label}</span>
-                <span class="ml-auto font-jost font-semibold tabular-nums">
-                  {formatInteger(segment.value)}
-                </span>
-              </li>
-            )}
-          </For>
-        </ul>
-      </div>
     </section>
   )
 }
