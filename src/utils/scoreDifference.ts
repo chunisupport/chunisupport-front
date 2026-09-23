@@ -1,7 +1,9 @@
-const POSITIVE_SCORE_DIFFERENCE_CLASS = 'text-success'
+/** 正のスコア差へ適用する文字色クラス */
+export const POSITIVE_SCORE_DIFFERENCE_CLASS = 'text-success'
 /** 負のスコア差へ適用する専用の文字色クラス */
-const NEGATIVE_SCORE_DIFFERENCE_CLASS = 'text-score-difference-negative'
-const EQUAL_SCORE_DIFFERENCE_CLASS = 'text-text-muted'
+export const NEGATIVE_SCORE_DIFFERENCE_CLASS = 'text-score-difference-negative'
+/** 差がないときに適用する文字色クラス */
+export const EQUAL_SCORE_DIFFERENCE_CLASS = 'text-text-muted'
 
 /**
  * スコア差を符号付きの整数表示へ変換する。

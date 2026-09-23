@@ -166,20 +166,12 @@ export const FriendVsTable = (props: {
                         <td
                           class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center tabular-nums`}
                         >
-                          <FriendVsScore
-                            record={current.self}
-                            winner={current.result === 'SELF_WIN'}
-                            size="table"
-                          />
+                          <FriendVsScore item={current} side="self" size="table" />
                         </td>
                         <td
                           class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center tabular-nums`}
                         >
-                          <FriendVsScore
-                            record={current.friend}
-                            winner={current.result === 'FRIEND_WIN'}
-                            size="table"
-                          />
+                          <FriendVsScore item={current} side="friend" size="table" />
                         </td>
                         <td
                           class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost font-semibold tabular-nums ${getScoreDifferenceClass(current.score_difference)}`}

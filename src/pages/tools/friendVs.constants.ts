@@ -1,6 +1,11 @@
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import type { FriendComparisonDifficulty, FriendScoreComparisonResult } from '../../types/api'
 import type { FriendVsResultFilter, FriendVsSortKey } from '../../utils/friendVs'
+import {
+  EQUAL_SCORE_DIFFERENCE_CLASS,
+  NEGATIVE_SCORE_DIFFERENCE_CLASS,
+  POSITIVE_SCORE_DIFFERENCE_CLASS,
+} from '../../utils/scoreDifference'
 import type { SortDirection } from '../../utils/sortingQuery'
 
 /** フレンドVS画面の表示文言。 */
@@ -17,7 +22,6 @@ export const FRIEND_VS_COPY = {
   loadingComparison: 'スコアを比較しています',
   emptyCharts: '対象の譜面はありません。',
   resultTitle: '対戦結果',
-  you: '自分',
   matchedCharts: '対戦数',
   win: 'WIN',
   draw: 'DRAW',
@@ -59,6 +63,19 @@ export const FRIEND_VS_RESULT_LABELS: Record<FriendScoreComparisonResult, string
   SELF_WIN: FRIEND_VS_COPY.win,
   DRAW: FRIEND_VS_COPY.draw,
   FRIEND_WIN: FRIEND_VS_COPY.lose,
+}
+
+/**
+ * 自分視点の勝敗の色。スコア差の正負と同じ色にそろえ、
+ * テーマのアクセントカラーに左右されずWINとLOSEを見分けられるようにする。
+ */
+export const FRIEND_VS_RESULT_TONES: Record<
+  FriendScoreComparisonResult,
+  { text: string; bar: string }
+> = {
+  SELF_WIN: { text: POSITIVE_SCORE_DIFFERENCE_CLASS, bar: 'bg-success' },
+  DRAW: { text: EQUAL_SCORE_DIFFERENCE_CLASS, bar: 'bg-border-strong' },
+  FRIEND_WIN: { text: NEGATIVE_SCORE_DIFFERENCE_CLASS, bar: 'bg-score-difference-negative' },
 }
 
 /** カード一覧の並び替え項目。 */

@@ -13,6 +13,7 @@ import {
   FRIEND_VS_CARD_ROW_HEIGHT,
   FRIEND_VS_COPY,
   FRIEND_VS_RESULT_LABELS,
+  FRIEND_VS_RESULT_TONES,
   FRIEND_VS_SORT_DIRECTIONS,
   FRIEND_VS_SORT_OPTIONS,
 } from './friendVs.constants'
@@ -45,7 +46,7 @@ const FriendVsCard = (props: {
             ? FRIEND_VS_COPY.worldsendLevel
             : FRIEND_VS_COPY.constant}{' '}
           <span
-            class={`${props.difficulty === "WORLD'S END" ? 'font-sans' : 'font-jost'} font-semibold ${chartConst().className}`}
+            class={`${props.difficulty === "WORLD'S END" ? 'font-sans' : 'font-oswald'} font-semibold ${chartConst().className}`}
           >
             {chartConst().valueText}
             <Show when={chartConst().markerText}>
@@ -58,32 +59,26 @@ const FriendVsCard = (props: {
       <div class="mt-auto grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-2 pt-3 text-center">
         <div class="min-w-0">
           <div class="font-sans text-xs text-text-muted">{FRIEND_VS_COPY.selfScore}</div>
-          <FriendVsScore
-            record={props.item.self}
-            winner={props.item.result === 'SELF_WIN'}
-            size="card"
-          />
+          <FriendVsScore item={props.item} side="self" size="card" />
         </div>
         <div class="min-w-0 px-1">
           <Show when={props.item.self.is_played && props.item.friend.is_played}>
-            <div class="font-sans text-xs font-semibold text-text-muted">
+            <div
+              class={`font-sans text-xs font-bold tracking-wide ${FRIEND_VS_RESULT_TONES[props.item.result].text}`}
+            >
               {FRIEND_VS_RESULT_LABELS[props.item.result]}
             </div>
           </Show>
           <div class="font-sans text-xs text-text-muted">{FRIEND_VS_COPY.difference}</div>
           <div
-            class={`font-jost text-sm tabular-nums ${getScoreDifferenceClass(props.item.score_difference)}`}
+            class={`font-oswald text-sm tabular-nums ${getScoreDifferenceClass(props.item.score_difference)}`}
           >
             {formatScoreDifference(props.item.score_difference)}
           </div>
         </div>
         <div class="min-w-0">
           <div class="font-sans text-xs text-text-muted">{FRIEND_VS_COPY.friendScore}</div>
-          <FriendVsScore
-            record={props.item.friend}
-            winner={props.item.result === 'FRIEND_WIN'}
-            size="card"
-          />
+          <FriendVsScore item={props.item} side="friend" size="card" />
         </div>
       </div>
     </article>

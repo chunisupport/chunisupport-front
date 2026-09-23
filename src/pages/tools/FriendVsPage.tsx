@@ -138,8 +138,8 @@ const FriendVsPage = (): JSX.Element => {
         <Show
           when={!friends.isError}
           fallback={
-            <div class="rounded-lg border border-danger-border bg-danger-bg p-4 text-sm text-danger">
-              {toUserFriendlyErrorMessage(friends.error)}{' '}
+            <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger-border bg-danger-bg p-4 text-sm text-danger">
+              <span class="min-w-0">{toUserFriendlyErrorMessage(friends.error)}</span>
               <AppButton size="sm" onClick={() => friends.refetch()}>
                 {FRIEND_VS_COPY.reload}
               </AppButton>
@@ -196,8 +196,8 @@ const FriendVsPage = (): JSX.Element => {
                 <Show
                   when={!comparison.isError}
                   fallback={
-                    <div class="rounded-lg border border-danger-border bg-danger-bg p-4 text-sm text-danger">
-                      {toUserFriendlyErrorMessage(comparison.error)}{' '}
+                    <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger-border bg-danger-bg p-4 text-sm text-danger">
+                      <span class="min-w-0">{toUserFriendlyErrorMessage(comparison.error)}</span>
                       <AppButton size="sm" onClick={() => comparison.refetch()}>
                         {FRIEND_VS_COPY.reload}
                       </AppButton>
