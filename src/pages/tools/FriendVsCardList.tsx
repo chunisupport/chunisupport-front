@@ -1,12 +1,11 @@
 import { A } from '@solidjs/router'
-import type { JSX } from 'solid-js'
+import type { Accessor, JSX } from 'solid-js'
 import { createEffect, createMemo, For, Show } from 'solid-js'
 import { AppSelect } from '../../components/common/AppSelect'
 import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
-import { buildSongDetailPath } from '../../constants/routes'
-import type { FriendScoreComparisonItemDTO, PlayerDataDifficulty } from '../../types/api'
-import { getConstDisplay } from '../../utils/constDisplay'
-import type { FriendVsSortKey } from '../../utils/friendVs'
+import type { FriendComparisonDifficulty } from '../../types/api'
+import type { FriendVsItem, FriendVsSortKey } from '../../utils/friendVs'
+import { getFriendVsChartDisplay, getFriendVsSongPath } from '../../utils/friendVs'
 import { formatScoreDifference, getScoreDifferenceClass } from '../../utils/scoreDifference'
 import type { SortDirection } from '../../utils/sortingQuery'
 import { FriendVsScore } from './FriendVsScore'
@@ -25,18 +24,16 @@ import {
  * @returns スコア差と勝者の強調を含むカード。
  */
 const FriendVsCard = (props: {
-  item: FriendScoreComparisonItemDTO
-  difficulty: PlayerDataDifficulty
+  item: FriendVsItem
+  difficulty: FriendComparisonDifficulty
 }): JSX.Element => {
-  const chartConst = createMemo(() =>
-    getConstDisplay(props.item.chart.const, props.item.chart.is_const_unknown)
-  )
+  const chartConst = createMemo(() => getFriendVsChartDisplay(props.item))
 
   return (
     <article class="flex h-full flex-col rounded-lg border border-border bg-surface px-4 py-3 shadow-sm">
       <div class="flex min-w-0 items-start gap-3">
         <A
-          href={buildSongDetailPath(props.item.song.id, props.difficulty)}
+          href={getFriendVsSongPath(props.item, props.difficulty)}
           class="flex min-w-0 flex-1 flex-col font-sans text-link hover:text-link-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
           title={props.item.song.title}
         >
@@ -44,8 +41,12 @@ const FriendVsCard = (props: {
           <span class="truncate text-xs text-text-muted">{props.item.song.artist}</span>
         </A>
         <span class="shrink-0 rounded bg-surface-muted px-2 py-1 font-sans text-xs">
-          {FRIEND_VS_COPY.constant}{' '}
-          <span class={`font-jost font-semibold ${chartConst().className}`}>
+          {props.difficulty === "WORLD'S END"
+            ? FRIEND_VS_COPY.worldsendLevel
+            : FRIEND_VS_COPY.constant}{' '}
+          <span
+            class={`${props.difficulty === "WORLD'S END" ? 'font-sans' : 'font-jost'} font-semibold ${chartConst().className}`}
+          >
             {chartConst().valueText}
             <Show when={chartConst().markerText}>
               {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
@@ -92,20 +93,28 @@ const FriendVsCard = (props: {
 /**
  * 比較カードを並び替え可能な仮想リストとして表示する。
  *
- * @param props - 並び替え済みの比較行、難易度、並び替え操作、先頭復帰キー。
+ * @param props - 比較行、難易度、並び替え操作、先頭復帰キー、初期スクロール位置。
  * @returns 並び替え欄と仮想化したカード一覧。
  */
 export const FriendVsCardList = (props: {
-  items: FriendScoreComparisonItemDTO[]
-  difficulty: PlayerDataDifficulty
+  items: FriendVsItem[]
+  difficulty: FriendComparisonDifficulty
   resetKey: string
+  initialScrollOffset: Accessor<number>
   sortKey: FriendVsSortKey | null
   sortDirection: SortDirection | null
   onSortChange: (key: FriendVsSortKey | null, direction: SortDirection | null) => void
 }): JSX.Element => {
+  /** @returns WORLD'S ENDで星数用の見出しへ切り替えた並び替え候補。 */
+  const sortOptions = () =>
+    FRIEND_VS_SORT_OPTIONS.map((option) =>
+      option.value === 'const' && props.difficulty === "WORLD'S END"
+        ? { ...option, label: FRIEND_VS_COPY.worldsendLevel }
+        : option
+    )
   const sortOption = () =>
-    FRIEND_VS_SORT_OPTIONS.find((option) => option.value === (props.sortKey ?? 'default')) ??
-    FRIEND_VS_SORT_OPTIONS[0]
+    sortOptions().find((option) => option.value === (props.sortKey ?? 'default')) ??
+    sortOptions()[0]
   const directionOption = () =>
     FRIEND_VS_SORT_DIRECTIONS.find((option) => option.value === props.sortDirection) ??
     FRIEND_VS_SORT_DIRECTIONS[0]
@@ -117,6 +126,7 @@ export const FriendVsCardList = (props: {
   >({
     rowCount: () => props.items.length,
     rowHeight: FRIEND_VS_CARD_ROW_HEIGHT,
+    initialOffset: props.initialScrollOffset,
     resetOnRowCountChange: true,
     layoutDeps: () => props.resetKey,
   })
@@ -131,7 +141,7 @@ export const FriendVsCardList = (props: {
     <div ref={cards.setTableContainerRef} class="w-full">
       <div class="mb-3 flex flex-wrap items-end gap-2">
         <AppSelect
-          options={[...FRIEND_VS_SORT_OPTIONS]}
+          options={sortOptions()}
           optionValue="value"
           optionTextValue="label"
           value={sortOption()}

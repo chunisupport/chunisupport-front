@@ -2,19 +2,22 @@ import { A, useSearchParams } from '@solidjs/router'
 import { useQuery } from '@tanstack/solid-query'
 import { Swords } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createMemo, createSignal, Show } from 'solid-js'
+import { createMemo, createSignal, onCleanup, Show } from 'solid-js'
 import { AppButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
-import { SegmentedToggleGroup } from '../../components/common/AppTabs'
+import { CardTableViewToggle } from '../../components/common/CardTableViewToggle'
 import { Loading } from '../../components/Loading'
-import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import { FRIEND_VS_PATH, FRIENDS_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { friendComparisonQueryOptions } from '../../queries/friendComparisons'
 import { friendsQueryOptions } from '../../queries/friends'
 import { authSession } from '../../stores/authSession'
-import type { PlayerDataDifficulty } from '../../types/api'
+import type { FriendComparisonDifficulty } from '../../types/api'
+import {
+  getAppMainScrollTop,
+  restoreAppMainScrollOffset,
+} from '../../utils/appMainScrollRestoration'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import type { FriendVsResultFilter, FriendVsSortKey } from '../../utils/friendVs'
 import { filterFriendVsItems, sortFriendVsItems } from '../../utils/friendVs'
@@ -26,8 +29,8 @@ import { FriendVsTable } from './FriendVsTable'
 import {
   FRIEND_VS_COPY,
   FRIEND_VS_DEFAULT_DIFFICULTY,
+  FRIEND_VS_DIFFICULTY_OPTIONS,
   FRIEND_VS_RESULT_OPTIONS,
-  FRIEND_VS_VIEW_OPTIONS,
 } from './friendVs.constants'
 
 type SelectOption<T extends string> = { value: T; label: string }
@@ -46,13 +49,16 @@ const FriendVsPage = (): JSX.Element => {
   const selectedFriend = createMemo(
     () => friends.data?.find((friend) => friend.username === searchParams.friend) ?? null
   )
-  const [difficulty, setDifficulty] = createSignal<PlayerDataDifficulty>(
+  const [difficulty, setDifficulty] = createSignal<FriendComparisonDifficulty>(
     FRIEND_VS_DEFAULT_DIFFICULTY
   )
   const [resultFilter, setResultFilter] = createSignal<SelectOption<FriendVsResultFilter>>(
     FRIEND_VS_RESULT_OPTIONS[0]
   )
   const [viewMode, setViewMode] = createSignal<'card' | 'table'>('card')
+  const [initialScrollOffset, setInitialScrollOffset] = createSignal(0)
+  let restoreFrameId: number | undefined
+  let restoreSequence = 0
   const [sortKey, setSortKey] = createSignal<FriendVsSortKey | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
   const comparison = useQuery(() =>
@@ -78,6 +84,36 @@ const FriendVsPage = (): JSX.Element => {
     setSortKey(key)
     setSortDirection(direction)
   }
+
+  /**
+   * カードと表の切り替え前後で画面のスクロール位置を保つ。
+   *
+   * @returns なし。
+   */
+  const handleViewModeToggle = (): void => {
+    restoreSequence += 1
+    const currentSequence = restoreSequence
+    if (restoreFrameId !== undefined) cancelAnimationFrame(restoreFrameId)
+    const scrollTop = getAppMainScrollTop()
+
+    setInitialScrollOffset(scrollTop)
+    setViewMode(viewMode() === 'card' ? 'table' : 'card')
+
+    queueMicrotask(() => {
+      if (currentSequence !== restoreSequence) return
+      restoreAppMainScrollOffset(scrollTop)
+      restoreFrameId = requestAnimationFrame(() => {
+        if (currentSequence !== restoreSequence) return
+        restoreAppMainScrollOffset(scrollTop)
+        restoreFrameId = undefined
+      })
+    })
+  }
+
+  onCleanup(() => {
+    restoreSequence += 1
+    if (restoreFrameId !== undefined) cancelAnimationFrame(restoreFrameId)
+  })
 
   return (
     <div class="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
@@ -133,8 +169,8 @@ const FriendVsPage = (): JSX.Element => {
                 placeholder={FRIEND_VS_COPY.selectPrompt}
                 rootClass="font-sans"
               />
-              <AppSelect<PlayerDataDifficulty>
-                options={[...PLAYER_DATA_DIFFICULTIES]}
+              <AppSelect<FriendComparisonDifficulty>
+                options={[...FRIEND_VS_DIFFICULTY_OPTIONS]}
                 value={difficulty()}
                 onChange={(value) => value && setDifficulty(value)}
                 label={FRIEND_VS_COPY.selectDifficulty}
@@ -190,10 +226,9 @@ const FriendVsPage = (): JSX.Element => {
                               rootClass="w-40"
                               formatLabel={(value) => value.label}
                             />
-                            <SegmentedToggleGroup
-                              options={FRIEND_VS_VIEW_OPTIONS}
-                              value={viewMode()}
-                              onChange={setViewMode}
+                            <CardTableViewToggle
+                              viewMode={viewMode()}
+                              onClick={handleViewModeToggle}
                             />
                           </div>
                         </div>
@@ -212,6 +247,7 @@ const FriendVsPage = (): JSX.Element => {
                                 items={sortedItems()}
                                 difficulty={difficulty()}
                                 resetKey={resetKey()}
+                                initialScrollOffset={initialScrollOffset}
                                 sortKey={sortKey()}
                                 sortDirection={sortDirection()}
                                 onSortChange={handleSortChange}
@@ -222,6 +258,7 @@ const FriendVsPage = (): JSX.Element => {
                               items={sortedItems()}
                               difficulty={difficulty()}
                               resetKey={resetKey()}
+                              initialScrollOffset={initialScrollOffset}
                               sortKey={sortKey()}
                               sortDirection={sortDirection()}
                               onSortChange={handleSortChange}

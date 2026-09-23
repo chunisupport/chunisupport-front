@@ -1,8 +1,11 @@
 import { Swords } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createMemo, For } from 'solid-js'
+import { createMemo, For, Show } from 'solid-js'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
-import type { FriendScoreComparisonResponseDTO } from '../../types/api'
+import type {
+  FriendScoreComparisonResponseDTO,
+  WorldsendFriendScoreComparisonResponseDTO,
+} from '../../types/api'
 import { summarizeFriendVsMatches } from '../../utils/friendVs'
 import { formatInteger } from '../../utils/numberFormat'
 import { FRIEND_VS_COPY } from './friendVs.constants'
@@ -14,8 +17,11 @@ import { FRIEND_VS_COPY } from './friendVs.constants'
  * @returns 自分視点の WIN・DRAW・LOSE と挑戦状況。
  */
 export const FriendVsSummary = (props: {
-  comparison: FriendScoreComparisonResponseDTO
+  comparison: FriendScoreComparisonResponseDTO | WorldsendFriendScoreComparisonResponseDTO
 }): JSX.Element => {
+  /** @returns 通常譜面の難易度。WORLD'S ENDでは null。 */
+  const standardDifficulty = () =>
+    props.comparison.difficulty === "WORLD'S END" ? null : props.comparison.difficulty
   const segments = createMemo(() => [
     {
       label: FRIEND_VS_COPY.bothChallenged,
@@ -49,7 +55,12 @@ export const FriendVsSummary = (props: {
         <h2 id="friend-vs-result-title" class="text-lg font-semibold">
           {FRIEND_VS_COPY.resultTitle}
         </h2>
-        <DifficultyBadge difficulty={props.comparison.difficulty} />
+        <Show
+          when={standardDifficulty()}
+          fallback={<span class="font-sans text-sm font-semibold">WORLD'S END</span>}
+        >
+          {(difficulty) => <DifficultyBadge difficulty={difficulty()} />}
+        </Show>
       </div>
 
       <div class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 pt-4 font-sans text-sm sm:px-6">

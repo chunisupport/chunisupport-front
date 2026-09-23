@@ -17,9 +17,3 @@ export type SongListViewMode = 'card' | 'table'
 
 /** 楽曲一覧の初期表示形式 */
 export const DEFAULT_SONG_LIST_VIEW_MODE: SongListViewMode = 'card'
-
-/** 楽曲一覧の表示形式切り替えに使う文言 */
-export const SONG_LIST_VIEW_TOGGLE_COPY = {
-  toCard: 'カード表示に切り替え',
-  toTable: '表表示に切り替え',
-} as const

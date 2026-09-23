@@ -1,9 +1,12 @@
-import type { FriendScoreComparisonResult, PlayerDataDifficulty } from '../../types/api'
+import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
+import type { FriendComparisonDifficulty, FriendScoreComparisonResult } from '../../types/api'
 import type { FriendVsResultFilter, FriendVsSortKey } from '../../utils/friendVs'
 import type { SortDirection } from '../../utils/sortingQuery'
 
 /** フレンドVS画面の表示文言。 */
 export const FRIEND_VS_COPY = {
+  worldsend: "WORLD'S END",
+  worldsendLevel: '星・属性',
   selectFriend: 'フレンド',
   openFriends: 'フレンド画面へ',
   selectDifficulty: '難易度',
@@ -39,7 +42,13 @@ export const FRIEND_VS_COPY = {
 } as const
 
 /** 初期表示する難易度。 */
-export const FRIEND_VS_DEFAULT_DIFFICULTY: PlayerDataDifficulty = 'MASTER'
+export const FRIEND_VS_DEFAULT_DIFFICULTY: FriendComparisonDifficulty = 'MASTER'
+
+/** 難易度プルダウンに表示する通常譜面とWORLD'S END。 */
+export const FRIEND_VS_DIFFICULTY_OPTIONS: readonly FriendComparisonDifficulty[] = [
+  ...PLAYER_DATA_DIFFICULTIES,
+  FRIEND_VS_COPY.worldsend,
+]
 
 /** 勝敗フィルターの選択肢。 */
 export const FRIEND_VS_RESULT_OPTIONS: readonly { value: FriendVsResultFilter; label: string }[] = [
@@ -79,11 +88,8 @@ export const FRIEND_VS_SORT_DIRECTIONS: readonly { value: SortDirection; label: 
 /** カードと次のカードの間隔を含む仮想リストの行高。 */
 export const FRIEND_VS_CARD_ROW_HEIGHT = 160
 
-/** 表示切り替えの選択肢。 */
-export const FRIEND_VS_VIEW_OPTIONS = [
-  { value: 'card', label: 'カード' },
-  { value: 'table', label: '表' },
-] as const
-
 /** 表の列幅。 */
 export const FRIEND_VS_GRID_COLUMNS = 'minmax(14rem,1fr) 5rem 8rem 8rem 7rem'
+
+/** WORLD'S ENDの星数と属性を収める表の列幅。 */
+export const FRIEND_VS_WORLDSEND_GRID_COLUMNS = 'minmax(14rem,1fr) 8rem 8rem 8rem 7rem'

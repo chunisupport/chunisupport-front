@@ -1,5 +1,47 @@
-import type { FriendScoreComparisonItemDTO, FriendScoreComparisonResult } from '../types/api'
+import { buildSongDetailPath, buildWorldsendSongDetailPath } from '../constants/routes'
+import type {
+  FriendComparisonDifficulty,
+  FriendScoreComparisonItemDTO,
+  FriendScoreComparisonResult,
+  WorldsendFriendScoreComparisonItemDTO,
+} from '../types/api'
+import { getConstDisplay } from './constDisplay'
 import type { SortDirection } from './sortingQuery'
+
+/** 通常譜面またはWORLD'S END譜面の比較行。 */
+export type FriendVsItem = FriendScoreComparisonItemDTO | WorldsendFriendScoreComparisonItemDTO
+
+/**
+ * 譜面の種類に合わせて比較行の詳細画面パスを返す。
+ *
+ * @param item - 比較対象の譜面。
+ * @param difficulty - 選択中の難易度。
+ * @returns 譜面に対応する楽曲詳細パス。
+ */
+export const getFriendVsSongPath = (
+  item: FriendVsItem,
+  difficulty: FriendComparisonDifficulty
+): string =>
+  difficulty === "WORLD'S END"
+    ? buildWorldsendSongDetailPath(item.song.id)
+    : buildSongDetailPath(item.song.id, difficulty)
+
+/**
+ * 通常譜面の定数またはWORLD'S ENDの星数と属性を表示用に整形する。
+ *
+ * @param item - 表示する比較行。
+ * @returns 譜面レベルの文字列、補助マーカーとスタイル。
+ */
+export const getFriendVsChartDisplay = (item: FriendVsItem) => {
+  if ('const' in item.chart) {
+    return getConstDisplay(item.chart.const, item.chart.is_const_unknown)
+  }
+  return {
+    valueText: `${item.chart.level_star === null ? '★-' : `★${item.chart.level_star}`}${item.chart.attribute ? ` ${item.chart.attribute}` : ''}`,
+    markerText: null,
+    className: 'text-text',
+  }
+}
 
 /** 比較表で使用できる表示条件。 */
 export type FriendVsResultFilter = 'ALL' | FriendScoreComparisonResult | 'BOTH_PLAYED'
@@ -13,7 +55,7 @@ export type FriendVsSortKey = 'title' | 'const' | 'selfScore' | 'friendScore' | 
  * @param items - APIから受け取った比較行。
  * @returns 対戦譜面数と双方の勝ち数、同点数。
  */
-export const summarizeFriendVsMatches = (items: readonly FriendScoreComparisonItemDTO[]) => {
+export const summarizeFriendVsMatches = (items: readonly FriendVsItem[]) => {
   const matches = items.filter((item) => item.self.is_played && item.friend.is_played)
   return {
     total: matches.length,
@@ -31,9 +73,9 @@ export const summarizeFriendVsMatches = (items: readonly FriendScoreComparisonIt
  * @returns 条件に一致する比較行。
  */
 export const filterFriendVsItems = (
-  items: readonly FriendScoreComparisonItemDTO[],
+  items: readonly FriendVsItem[],
   filter: FriendVsResultFilter
-): FriendScoreComparisonItemDTO[] => {
+): FriendVsItem[] => {
   if (filter === 'ALL') return [...items]
   if (filter === 'BOTH_PLAYED')
     return items.filter((item) => item.self.is_played && item.friend.is_played)
@@ -51,16 +93,20 @@ export const filterFriendVsItems = (
  * @returns 並び替え済みの新しい配列。
  */
 export const sortFriendVsItems = (
-  items: readonly FriendScoreComparisonItemDTO[],
+  items: readonly FriendVsItem[],
   sortKey: FriendVsSortKey | null,
   direction: SortDirection | null
-): FriendScoreComparisonItemDTO[] => {
+): FriendVsItem[] => {
   if (!sortKey || !direction) return [...items]
 
   const multiplier = direction === 'asc' ? 1 : -1
   return [...items].sort((a, b) => {
     if (sortKey === 'title') return multiplier * a.song.title.localeCompare(b.song.title, 'ja-JP')
-    if (sortKey === 'const') return multiplier * (a.chart.const - b.chart.const)
+    if (sortKey === 'const') {
+      const aLevel = 'const' in a.chart ? a.chart.const : (a.chart.level_star ?? -1)
+      const bLevel = 'const' in b.chart ? b.chart.const : (b.chart.level_star ?? -1)
+      return multiplier * (aLevel - bLevel)
+    }
     if (sortKey === 'selfScore') return multiplier * (a.self.score - b.self.score)
     if (sortKey === 'friendScore') return multiplier * (a.friend.score - b.friend.score)
     return multiplier * (a.score_difference - b.score_difference)

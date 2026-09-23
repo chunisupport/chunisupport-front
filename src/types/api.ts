@@ -501,6 +501,30 @@ export interface FriendScoreComparisonResponseDTO {
   items: FriendScoreComparisonItemDTO[]
 }
 
+/** WORLD'S END譜面のフレンド比較用譜面概要 */
+export interface WorldsendFriendScoreComparisonChartDTO {
+  /** 星レベル。未設定の場合は null */
+  level_star: number | null
+  /** 譜面属性。未設定の場合は null */
+  attribute: string | null
+}
+
+/** フレンドVSで選択できる通常難易度またはWORLD'S END。 */
+export type FriendComparisonDifficulty = PlayerDataDifficulty | "WORLD'S END"
+
+/** WORLD'S END譜面のフレンド比較1行 */
+export interface WorldsendFriendScoreComparisonItemDTO
+  extends Omit<FriendScoreComparisonItemDTO, 'chart'> {
+  chart: WorldsendFriendScoreComparisonChartDTO
+}
+
+/** WORLD'S END譜面のフレンド比較レスポンス */
+export interface WorldsendFriendScoreComparisonResponseDTO
+  extends Omit<FriendScoreComparisonResponseDTO, 'difficulty' | 'items'> {
+  difficulty: "WORLD'S END"
+  items: WorldsendFriendScoreComparisonItemDTO[]
+}
+
 /** 通常譜面のフレンドランキングレスポンス */
 export interface FriendRankingResponseDTO {
   /** 対象楽曲 */

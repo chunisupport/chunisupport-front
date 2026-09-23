@@ -1,5 +1,5 @@
 import { A } from '@solidjs/router'
-import type { JSX } from 'solid-js'
+import type { Accessor, JSX } from 'solid-js'
 import { createEffect, createMemo, For, Show } from 'solid-js'
 import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
 import { getSortAriaValue, SortableHeaderButton } from '../../components/common/SortableTableHeader'
@@ -8,28 +8,35 @@ import {
   COMPACT_VIRTUAL_TABLE_HEADER_CLASS,
   COMPACT_VIRTUAL_TABLE_ROW_HEIGHT,
 } from '../../components/common/virtualTableStyles'
-import { buildSongDetailPath } from '../../constants/routes'
-import type { FriendScoreComparisonItemDTO, PlayerDataDifficulty } from '../../types/api'
-import { getConstDisplay } from '../../utils/constDisplay'
-import type { FriendVsSortKey } from '../../utils/friendVs'
+import type { FriendComparisonDifficulty } from '../../types/api'
+import type { FriendVsItem, FriendVsSortKey } from '../../utils/friendVs'
+import { getFriendVsChartDisplay, getFriendVsSongPath } from '../../utils/friendVs'
 import { formatScoreDifference, getScoreDifferenceClass } from '../../utils/scoreDifference'
 import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
 import { FriendVsScore } from './FriendVsScore'
-import { FRIEND_VS_COPY, FRIEND_VS_GRID_COLUMNS } from './friendVs.constants'
+import {
+  FRIEND_VS_COPY,
+  FRIEND_VS_GRID_COLUMNS,
+  FRIEND_VS_WORLDSEND_GRID_COLUMNS,
+} from './friendVs.constants'
 /**
  * スコア比較結果を仮想化テーブルで表示する。
  *
- * @param props - 並び替え済みの行、難易度、並び替え操作、先頭復帰キー。
+ * @param props - 比較行、難易度、並び替え操作、先頭復帰キー、初期スクロール位置。
  * @returns 譜面単位のスコア比較表。
  */
 export const FriendVsTable = (props: {
-  items: FriendScoreComparisonItemDTO[]
-  difficulty: PlayerDataDifficulty
+  items: FriendVsItem[]
+  difficulty: FriendComparisonDifficulty
   resetKey: string
+  initialScrollOffset: Accessor<number>
   sortKey: FriendVsSortKey | null
   sortDirection: SortDirection | null
   onSortChange: (key: FriendVsSortKey | null, direction: SortDirection | null) => void
 }): JSX.Element => {
+  /** @returns 譜面種別に合わせた表の列幅。 */
+  const gridColumns = () =>
+    props.difficulty === "WORLD'S END" ? FRIEND_VS_WORLDSEND_GRID_COLUMNS : FRIEND_VS_GRID_COLUMNS
   const table = createWindowVirtualTable<
     HTMLDivElement,
     HTMLTableSectionElement,
@@ -38,6 +45,7 @@ export const FriendVsTable = (props: {
   >({
     rowCount: () => props.items.length,
     rowHeight: COMPACT_VIRTUAL_TABLE_ROW_HEIGHT,
+    initialOffset: props.initialScrollOffset,
     resetOnRowCountChange: true,
     layoutDeps: () => props.resetKey,
   })
@@ -93,12 +101,20 @@ export const FriendVsTable = (props: {
       ref={table.setTableContainerRef}
       class="overflow-x-auto overflow-y-hidden rounded-lg border border-border bg-surface"
     >
-      <table class="block w-full min-w-[43rem] text-sm" aria-rowcount={props.items.length + 1}>
+      <table
+        class={`block w-full text-sm ${props.difficulty === "WORLD'S END" ? 'min-w-[46rem]' : 'min-w-[43rem]'}`}
+        aria-rowcount={props.items.length + 1}
+      >
         <caption class="sr-only">{FRIEND_VS_COPY.scoreTableCaption}</caption>
         <thead class="block">
-          <tr class="grid" style={{ 'grid-template-columns': FRIEND_VS_GRID_COLUMNS }}>
+          <tr class="grid" style={{ 'grid-template-columns': gridColumns() }}>
             {header(FRIEND_VS_COPY.song, 'title', 'start')}
-            {header(FRIEND_VS_COPY.constant, 'const')}
+            {header(
+              props.difficulty === "WORLD'S END"
+                ? FRIEND_VS_COPY.worldsendLevel
+                : FRIEND_VS_COPY.constant,
+              'const'
+            )}
             {header(FRIEND_VS_COPY.selfScore, 'selfScore')}
             {header(FRIEND_VS_COPY.friendScore, 'friendScore')}
             {header(FRIEND_VS_COPY.difference, 'difference')}
@@ -115,15 +131,12 @@ export const FriendVsTable = (props: {
               return (
                 <Show when={item()} keyed>
                   {(current) => {
-                    const constDisplay = getConstDisplay(
-                      current.chart.const,
-                      current.chart.is_const_unknown
-                    )
+                    const constDisplay = getFriendVsChartDisplay(current)
                     return (
                       <tr
                         class="absolute left-0 top-0 grid min-w-full border-t border-border hover:bg-surface-muted"
                         style={{
-                          'grid-template-columns': FRIEND_VS_GRID_COLUMNS,
+                          'grid-template-columns': gridColumns(),
                           transform: `translateY(${virtualRow.start - table.scrollMargin()}px)`,
                         }}
                         aria-rowindex={virtualRow.index + 2}
@@ -133,7 +146,7 @@ export const FriendVsTable = (props: {
                           class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} min-w-0 p-0 text-left font-medium`}
                         >
                           <A
-                            href={buildSongDetailPath(current.song.id, props.difficulty)}
+                            href={getFriendVsSongPath(current, props.difficulty)}
                             class="flex h-full w-full min-w-0 items-center px-3 font-sans text-link hover:text-link-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
                             title={current.song.title}
                           >
@@ -141,7 +154,7 @@ export const FriendVsTable = (props: {
                           </A>
                         </th>
                         <td
-                          class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center overflow-hidden whitespace-nowrap px-1 text-center font-jost tabular-nums`}
+                          class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center overflow-hidden whitespace-nowrap px-1 text-center tabular-nums ${props.difficulty === "WORLD'S END" ? 'font-sans' : 'font-jost'}`}
                         >
                           <span class={`leading-none ${constDisplay.className}`}>
                             {constDisplay.valueText}

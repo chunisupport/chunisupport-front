@@ -1,13 +1,20 @@
 import { queryOptions } from '@tanstack/solid-query'
-import { fetchFriendComparison } from '../api/friendComparisons'
-import type { PlayerDataDifficulty } from '../types/api'
+import { fetchFriendComparison, fetchWorldsendFriendComparison } from '../api/friendComparisons'
+import type {
+  FriendComparisonDifficulty,
+  FriendScoreComparisonResponseDTO,
+  WorldsendFriendScoreComparisonResponseDTO,
+} from '../types/api'
 import { FRIEND_QUERY_STALE_TIME_MS } from './friendQueryConstants'
 
 /** フレンドスコア比較のquery key。 */
 export const friendComparisonQueryKeys = {
   user: (username: string) => ['friend-comparisons', username] as const,
-  comparison: (username: string | null, friend: string | null, difficulty: PlayerDataDifficulty) =>
-    ['friend-comparisons', username, friend, difficulty] as const,
+  comparison: (
+    username: string | null,
+    friend: string | null,
+    difficulty: FriendComparisonDifficulty
+  ) => ['friend-comparisons', username, friend, difficulty] as const,
 }
 
 /**
@@ -21,11 +28,16 @@ export const friendComparisonQueryKeys = {
 export const friendComparisonQueryOptions = (
   username: string | null,
   friend: string | null,
-  difficulty: PlayerDataDifficulty
+  difficulty: FriendComparisonDifficulty
 ) =>
   queryOptions({
     queryKey: friendComparisonQueryKeys.comparison(username, friend, difficulty),
-    queryFn: ({ signal }) => fetchFriendComparison(friend ?? '', difficulty, signal),
+    queryFn: async ({
+      signal,
+    }): Promise<FriendScoreComparisonResponseDTO | WorldsendFriendScoreComparisonResponseDTO> =>
+      difficulty === "WORLD'S END"
+        ? await fetchWorldsendFriendComparison(friend ?? '', signal)
+        : await fetchFriendComparison(friend ?? '', difficulty, signal),
     enabled: Boolean(username && friend),
     staleTime: FRIEND_QUERY_STALE_TIME_MS,
   })

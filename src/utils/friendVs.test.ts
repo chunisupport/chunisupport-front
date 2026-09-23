@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { FriendScoreComparisonItemDTO } from '../types/api'
-import { filterFriendVsItems, sortFriendVsItems, summarizeFriendVsMatches } from './friendVs'
+import type {
+  FriendScoreComparisonItemDTO,
+  WorldsendFriendScoreComparisonItemDTO,
+} from '../types/api'
+import {
+  filterFriendVsItems,
+  getFriendVsChartDisplay,
+  getFriendVsSongPath,
+  sortFriendVsItems,
+  summarizeFriendVsMatches,
+} from './friendVs'
 
 /**
  * スコア差とプレイ状態を指定した比較行を生成する。
@@ -118,5 +127,30 @@ test('各ヘッダーで昇順・降順に並び替え、解除時はAPI順に�
   assert.deepEqual(
     items.map((row) => row.song.id),
     ['zeta', 'alpha', 'beta']
+  )
+})
+
+test("WORLD'S ENDの星数・属性と楽曲リンクを使い、星数順に並べる", () => {
+  // Given: 星数と属性が設定済み・未設定の比較行。
+  const missing: WorldsendFriendScoreComparisonItemDTO = {
+    ...item('missing', 0, false, false),
+    chart: { level_star: null, attribute: null },
+  }
+  const known: WorldsendFriendScoreComparisonItemDTO = {
+    ...item('known', 10, true, true),
+    chart: { level_star: 4, attribute: '蔵' },
+  }
+
+  // When & Then: 欠損値も表示し、WORLD'S END詳細へ遷移する。
+  assert.equal(getFriendVsChartDisplay(missing).valueText, '★-')
+  assert.equal(getFriendVsChartDisplay(known).valueText, '★4 蔵')
+  assert.equal(getFriendVsSongPath(known, "WORLD'S END"), '/songs/worldsend/known')
+  assert.deepEqual(
+    sortFriendVsItems([missing, known], 'const', 'desc').map((row) => row.song.id),
+    ['known', 'missing']
+  )
+  assert.deepEqual(
+    filterFriendVsItems([missing, known], 'BOTH_PLAYED').map((row) => row.song.id),
+    ['known']
   )
 })
