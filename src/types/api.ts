@@ -846,6 +846,10 @@ export interface FriendshipUserDTO {
   player_name: string | null
   /** 計算済みレーティング。プレイヤーデータ未連携の場合は null */
   rating: number | null
+  /** OVER POWER値。プレイヤーデータ未連携の場合は null */
+  overpower_value: number | null
+  /** ポゼッションID。`MasterDataDTO.possessions` の `id` に対応する。プレイヤーデータ未連携の場合は null */
+  possession_id: number | null
   /** 非公開アカウントかどうか */
   is_private: boolean
   /** 申請日時 */

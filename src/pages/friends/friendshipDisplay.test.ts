@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  buildFriendCardDisplay,
   formatFriendDateTime,
-  formatFriendPlayerLevel,
+  formatFriendOverPowerValue,
   formatFriendPlayerName,
-  formatFriendRating,
   shouldHideFriendProfile,
 } from './friendshipDisplay'
 
@@ -41,15 +41,26 @@ test('formatFriendDateTime: 正常なISO日時は日時文字列を返す', () =
   assert.notEqual(result, '-')
 })
 
-test('formatFriendRating: レーティングは小数点以下2桁で表示する', () => {
-  // Given: 小数点以下2桁未満のレーティング。
-  const rating = 15.2
+test('formatFriendOverPowerValue: OVER POWER値は小数点以下3桁で表示する', () => {
+  // Given: 小数点以下3桁未満のOVER POWER値。
+  const value = 31234.5
 
-  // When: フレンド画面用レーティングへ変換する。
-  const result = formatFriendRating(rating)
+  // When: フレンド画面用OVER POWER値へ変換する。
+  const result = formatFriendOverPowerValue(value)
 
-  // Then: 桁数が揃う。
-  assert.equal(result, '15.20')
+  // Then: プロフィールカードと同じ桁数に揃う。
+  assert.equal(result, '31234.500')
+})
+
+test('formatFriendOverPowerValue: プレイヤー未連携時はハイフンを返す', () => {
+  // Given: APIが返す未連携状態。
+  const value = null
+
+  // When: フレンド画面用OVER POWER値へ変換する。
+  const result = formatFriendOverPowerValue(value)
+
+  // Then: 未設定値は安全な代替表示になる。
+  assert.equal(result, '-')
 })
 
 test('formatFriendPlayerName: プレイヤー未連携時は未連携を返す', () => {
@@ -58,28 +69,6 @@ test('formatFriendPlayerName: プレイヤー未連携時は未連携を返す',
 
   // When: 表示用プレイヤー名へ変換する。
   const result = formatFriendPlayerName(playerName)
-
-  // Then: 未連携であることを短く表示する。
-  assert.equal(result, '未連携')
-})
-
-test('formatFriendPlayerLevel: プレイヤーレベルを文字列化する', () => {
-  // Given: APIが返すプレイヤーレベル。
-  const level = 42
-
-  // When: 表示用プレイヤーレベルへ変換する。
-  const result = formatFriendPlayerLevel(level)
-
-  // Then: レベル値が文字列で表示できる。
-  assert.equal(result, '42')
-})
-
-test('formatFriendPlayerLevel: プレイヤー未連携時は未連携を返す', () => {
-  // Given: APIが返す未連携状態。
-  const level = null
-
-  // When: 表示用プレイヤーレベルへ変換する。
-  const result = formatFriendPlayerLevel(level)
 
   // Then: 未連携であることを短く表示する。
   assert.equal(result, '未連携')
@@ -102,4 +91,47 @@ test('shouldHideFriendProfile: 公開ユーザーは未承認中でもプロフ�
   // When & Then: 送受信申請でもプロフィールを表示する。
   assert.equal(shouldHideFriendProfile('received', publicUser), false)
   assert.equal(shouldHideFriendProfile('sent', publicUser), false)
+})
+
+test('buildFriendCardDisplay: 公開ユーザーは各値を整形して表示する', () => {
+  // Given: プレイヤー連携済みのユーザー概要。
+  const user = { player_level: 42, player_name: 'PLAYER', rating: 17.25, overpower_value: 31234.5 }
+
+  // When: カード表示用の値を生成する。
+  const result = buildFriendCardDisplay(user, false)
+
+  // Then: プロフィールカードと同じ桁数で整形される。
+  assert.deepEqual(result, {
+    level: '42',
+    playerName: 'PLAYER',
+    rating: '17.2500',
+    overPower: '31234.500',
+  })
+})
+
+test('buildFriendCardDisplay: プレイヤー未連携時は未連携とハイフンを表示する', () => {
+  // Given: プレイヤー未連携のユーザー概要。
+  const user = { player_level: null, player_name: null, rating: null, overpower_value: null }
+
+  // When: カード表示用の値を生成する。
+  const result = buildFriendCardDisplay(user, false)
+
+  // Then: 名前は未連携、数値はハイフンになる。
+  assert.deepEqual(result, { level: '-', playerName: '未連携', rating: '-', overPower: '-' })
+})
+
+test('buildFriendCardDisplay: プロフィールを隠す場合は値があっても全項目を伏せ字にする', () => {
+  // Given: 値を持つユーザー概要。
+  const user = { player_level: 42, player_name: 'PLAYER', rating: 17.25, overpower_value: 31234.5 }
+
+  // When: 非表示指定でカード表示用の値を生成する。
+  const result = buildFriendCardDisplay(user, true)
+
+  // Then: すべて伏せ字になる。
+  assert.deepEqual(result, {
+    level: '***',
+    playerName: '＊＊＊＊＊＊＊＊',
+    rating: '****',
+    overPower: '****',
+  })
 })

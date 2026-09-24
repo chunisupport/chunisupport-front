@@ -169,7 +169,7 @@ const LAMP_DOT_PLACEHOLDER_CLASS = 'bg-surface-hover'
 
 /**
  * ハード・コンボ・FULL CHAINの3種類のランプを、バッジと同じ背景色の小さなドットで表示する。
- * ランプの重要度が低い画面で、文字を出さずに達成状況だけを示すために使う。
+ * ランプの重要度が低い画面で達成状況を示し、ホバー時に元のバッジラベルを表示する。
  *
  * @param props - 表示対象のランプ状態と追加クラス。
  * @returns 3つのドットを横並びにした要素。
@@ -200,9 +200,20 @@ export const RecordLampDots = (props: {
     <div class={`flex ${props.class ?? ''}`}>
       <span class="sr-only">{getRecordLampsAccessibleLabel(props.record)}</span>
       <div class="flex gap-1.5" aria-hidden="true">
-        <span class={`size-3 rounded-full ${hardClass()}`} />
-        <span class={`size-3 rounded-full ${comboClass()}`} />
-        <span class={`size-3 rounded-full ${fullChainClass()}`} />
+        <span
+          class={`size-3 rounded-full ${hardClass()}`}
+          title={getDefaultRecordHardLampLabel(props.record.clear_lamp) || undefined}
+        />
+        <span
+          class={`size-3 rounded-full ${comboClass()}`}
+          title={
+            getDefaultRecordLampLabel(props.record.combo_lamp, props.record.score) || undefined
+          }
+        />
+        <span
+          class={`size-3 rounded-full ${fullChainClass()}`}
+          title={getDefaultRecordFullChainLabel(props.record.full_chain) || undefined}
+        />
       </div>
     </div>
   )
