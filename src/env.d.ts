@@ -9,6 +9,7 @@ interface ImportMetaEnv {
   readonly PUBLIC_BOOKMARKLET_URL: string
   readonly PUBLIC_BOOKMARKLET_ENTRYPOINT: string
   readonly PUBLIC_CHUNITHM_JACKET_BASE_URL: string
+  readonly PUBLIC_WIKI_BASE_URL?: string
   readonly PUBLIC_FB_API_KEY: string
   readonly PUBLIC_FB_AUTH_DOMAIN: string
   readonly PUBLIC_FB_PROJECT_ID: string

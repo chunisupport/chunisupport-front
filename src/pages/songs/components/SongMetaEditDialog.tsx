@@ -27,6 +27,8 @@ type Props = {
   initialGenre: string | null
   initialBpm: number | null
   initialRelease: string | null
+  /** 編集前のWikiページタイトル */
+  initialWikiPageTitle: string | null
   requireGenre: boolean
   saving: boolean
   apiErrorMessage: string
@@ -86,11 +88,13 @@ const SongMetaEditDialog: Component<Props> = (props) => {
   const [genreName, setGenreName] = createSignal<string | null>(null)
   const [bpm, setBpm] = createSignal('')
   const [releasedAt, setReleasedAt] = createSignal('')
+  const [wikiPageTitle, setWikiPageTitle] = createSignal('')
   const [validationMessage, setValidationMessage] = createSignal('')
   const [initialValues, setInitialValues] = createSignal({
     genreName: null as string | null,
     bpm: '',
     releasedAt: '',
+    wikiPageTitle: '',
   })
 
   const selectedGenre = createMemo(
@@ -101,7 +105,8 @@ const SongMetaEditDialog: Component<Props> = (props) => {
     () =>
       genreName() !== initialValues().genreName ||
       bpm() !== initialValues().bpm ||
-      releasedAt() !== initialValues().releasedAt
+      releasedAt() !== initialValues().releasedAt ||
+      wikiPageTitle() !== initialValues().wikiPageTitle
   )
 
   createEffect(() => {
@@ -110,11 +115,13 @@ const SongMetaEditDialog: Component<Props> = (props) => {
       genreName: props.initialGenre,
       bpm: toInputValue(props.initialBpm),
       releasedAt: toDateInputValue(props.initialRelease),
+      wikiPageTitle: props.initialWikiPageTitle ?? '',
     }
     setInitialValues(values)
     setGenreName(values.genreName)
     setBpm(values.bpm)
     setReleasedAt(values.releasedAt)
+    setWikiPageTitle(values.wikiPageTitle)
     setValidationMessage('')
   })
 
@@ -132,6 +139,7 @@ const SongMetaEditDialog: Component<Props> = (props) => {
         genreName: genreName(),
         bpm: bpm(),
         releasedAt: releasedAt(),
+        wikiPageTitle: wikiPageTitle(),
       },
       props.requireGenre
     )
@@ -199,6 +207,13 @@ const SongMetaEditDialog: Component<Props> = (props) => {
                   class={SONG_EDIT_TEXT_INPUT_CLASS}
                   onInput={(event) => setReleasedAt(event.currentTarget.value)}
                 />
+              </TextField>
+
+              <TextField value={wikiPageTitle()} onChange={setWikiPageTitle}>
+                <TextField.Label class="mb-1 block text-sm text-text-muted">
+                  {SONG_EDIT_COPY.wikiPageTitleLabel}
+                </TextField.Label>
+                <TextField.Input class={SONG_EDIT_TEXT_INPUT_CLASS} />
               </TextField>
 
               <Show when={errorMessage()}>

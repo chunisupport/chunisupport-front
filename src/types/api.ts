@@ -273,6 +273,8 @@ export interface ChartDTO {
 export interface SongDTO {
   id: string
   title: string
+  /** Wikiのページタイトル。未設定の場合はnull。フィールド追加前のキャッシュでは省略される */
+  wiki_page_title?: string | null
   reading: string | null
   artist: string
   genre: string
@@ -1398,6 +1400,8 @@ export interface WorldsendChartDTO {
 export interface WorldsendSongDTO {
   id: string
   title: string
+  /** Wikiのページタイトル。未設定の場合はnull。フィールド追加前のキャッシュでは省略される */
+  wiki_page_title?: string | null
   reading: string | null
   artist: string
   genre: string | null
@@ -1434,6 +1438,8 @@ export interface CreateSongChartRequestDTO {
 export interface CreateSongRequestDTO {
   official_idx: string
   title: string
+  /** Wikiのページタイトル。省略時またはnullの場合は未設定。空文字は不可 */
+  wiki_page_title?: string | null
   reading?: string | null
   artist: string
   genre: string
@@ -1448,6 +1454,8 @@ export interface CreateSongRequestDTO {
 export interface UpdateSongRequestDTO {
   id: string
   title: string
+  /** Wikiのページタイトル。省略時は既存値を維持し、nullで削除する。空文字は不可 */
+  wiki_page_title?: string | null
   reading: string | null
   artist: string
   genre: string | null
@@ -1469,6 +1477,8 @@ export interface UpdateWorldsendChartRequestDTO {
 export interface CreateWorldsendSongRequestDTO {
   official_idx: string
   title: string
+  /** Wikiのページタイトル。省略時またはnullの場合は未設定。空文字は不可 */
+  wiki_page_title?: string | null
   reading?: string | null
   artist: string
   genre: string
@@ -1482,6 +1492,8 @@ export interface CreateWorldsendSongRequestDTO {
 export interface UpdateWorldsendSongRequestDTO {
   id: string
   title: string
+  /** Wikiのページタイトル。省略時は既存値を維持し、nullで削除する。空文字は不可 */
+  wiki_page_title?: string | null
   reading: string | null
   artist: string
   genre: string | null

@@ -90,7 +90,7 @@ test('parseOptionalNonNegativeInteger: 空欄をnull、不正値をinvalidにす
 
 test('parseSongMetaEditValues: 通常楽曲はジャンル必須でBPMとリリース日を正規化すること', () => {
   // Given
-  const input = { genreName: null, bpm: '198', releasedAt: '2025-06-19' }
+  const input = { genreName: null, bpm: '198', releasedAt: '2025-06-19', wikiPageTitle: ' Page ' }
 
   // When
   const missingGenre = parseSongMetaEditValues(input, true)
@@ -104,8 +104,37 @@ test('parseSongMetaEditValues: 通常楽曲はジャンル必須でBPMとリリ�
       genre: 'ORIGINAL',
       bpm: 198,
       releasedAt: '2025-06-19',
+      wikiPageTitle: 'Page',
     })
   }
+})
+
+test('parseSongMetaEditValues: 空白だけのWikiページタイトルはnullとして扱うこと', () => {
+  // Given: Wikiページタイトルを空欄にした入力。
+  const input = { genreName: null, bpm: '', releasedAt: '', wikiPageTitle: '   ' }
+
+  // When
+  const parsed = parseSongMetaEditValues(input, false)
+
+  // Then: APIへは空文字ではなくnullを送る。
+  assert.equal(parsed.ok, true)
+  if (parsed.ok) {
+    assert.equal(parsed.value.wikiPageTitle, null)
+  }
+})
+
+test('parseSongMetaEditValues: Wikiページタイトルは300文字まで許可すること', () => {
+  // Given: サロゲートペアを含む300文字と301文字のWikiページタイトル。
+  const base = { genreName: null, bpm: '', releasedAt: '' }
+  const maxTitle = '𠮷'.repeat(300)
+
+  // When
+  const accepted = parseSongMetaEditValues({ ...base, wikiPageTitle: maxTitle }, false)
+  const rejected = parseSongMetaEditValues({ ...base, wikiPageTitle: `${maxTitle}a` }, false)
+
+  // Then: 文字数はコードポイント単位で数える。
+  assert.equal(accepted.ok, true)
+  assert.equal(rejected.ok, false)
 })
 
 test('buildSongMetaUpdateRequest: 楽曲情報だけ更新し譜面は空マップ、is_newは現行値を維持すること', () => {
@@ -117,6 +146,7 @@ test('buildSongMetaUpdateRequest: 楽曲情報だけ更新し譜面は空マッ�
     genre: 'POPS & ANIME',
     bpm: 200,
     releasedAt: '2025-07-01',
+    wikiPageTitle: 'Wiki Page',
   })
 
   // Then
@@ -125,6 +155,7 @@ test('buildSongMetaUpdateRequest: 楽曲情報だけ更新し譜面は空マッ�
   assert.equal(request.genre, 'POPS & ANIME')
   assert.equal(request.bpm, 200)
   assert.equal(request.released_at, '2025-07-01')
+  assert.equal(request.wiki_page_title, 'Wiki Page')
   assert.equal(request.is_new, true)
   assert.deepEqual(request.charts, {})
 })
@@ -138,6 +169,7 @@ test('buildWorldsendSongMetaUpdateRequest: 譜面フィールドを載せない�
     genre: 'ORIGINAL',
     bpm: null,
     releasedAt: null,
+    wikiPageTitle: null,
   })
 
   // Then
@@ -145,6 +177,7 @@ test('buildWorldsendSongMetaUpdateRequest: 譜面フィールドを載せない�
   assert.equal(request.bpm, null)
   assert.equal(request.is_new, true)
   assert.equal(request.released_at, null)
+  assert.equal(request.wiki_page_title, null)
   assert.equal('charts' in request, false)
 })
 
@@ -198,6 +231,8 @@ test('buildChartMetaUpdateRequest: 楽曲フィールドは現行値、譜面は
   assert.equal(request.released_at, '2025-06-19')
   assert.equal(request.is_new, true)
   assert.equal(request.charts.MASTER?.notes_designer, '譜面ボーイズからの挑戦状')
+  // Wikiページタイトルは省略して既存値を維持させる
+  assert.equal('wiki_page_title' in request, false)
 })
 
 test('parseWorldsendChartMetaEditValues: レベル範囲外はエラー、空欄はnullにすること', () => {
@@ -241,6 +276,8 @@ test('buildWorldsendChartMetaUpdateRequest: WORLDSEND譜面だけを更新対象
   // Then
   assert.equal(request.genre, 'VARIETY')
   assert.equal(request.is_new, true)
+  // Wikiページタイトルは省略して既存値を維持させる
+  assert.equal('wiki_page_title' in request, false)
   assert.equal(request.released_at, '2024-01-15')
   assert.deepEqual(request.charts, {
     WORLDSEND: {

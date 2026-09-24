@@ -192,6 +192,7 @@ const SongDetail = () => {
           isSongLoading={songState.loading}
           title={song()?.title ?? '-'}
           artist={song()?.artist || '-'}
+          wikiPageTitle={song()?.wiki_page_title}
           onBack={handleBack}
           renderInfoCard={(currentSong) => (
             <SongInfoCard
