@@ -358,8 +358,8 @@ export const UserProfileView: Component<Props> = (props) => {
           rating={props.profile.rating}
           historyHref={buildUserStatsPagePath(props.username)}
           records={recordProfile()?.record.standard}
-          footer={<ProfileFriendAction username={props.username} playerName={playerInfo().name} />}
         />
+        <ProfileFriendAction username={props.username} playerName={playerInfo().name} />
       </div>
 
       <UnderlineTabs

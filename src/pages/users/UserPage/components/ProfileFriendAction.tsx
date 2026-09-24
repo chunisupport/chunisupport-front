@@ -28,13 +28,11 @@ import {
 import { toUserFriendlyErrorMessage } from '../../../../utils/errorMessage'
 import { resolveProfileFriendshipStatus } from '../../../../utils/profileFriendshipStatus'
 import {
-  PROFILE_FRIEND_ACTION_BUTTON_CLASS,
-  PROFILE_FRIEND_ACTION_BUTTON_LEADING_CLASS,
   PROFILE_FRIEND_ACTION_COPY,
-  PROFILE_FRIEND_ACTION_FOOTER_CLASS,
   PROFILE_FRIEND_DIALOG_COPY,
   type ProfileFriendDialogAction,
 } from './ProfileFriendAction.constants'
+import { USER_NAMEPLATE_WIDTH_CLASS } from './UserNameplate.constants'
 
 type ProfileFriendActionProps = {
   /** 表示中プロフィールのユーザー名 */
@@ -90,7 +88,7 @@ const ProfileFriendConfirmDialog: Component<ProfileFriendConfirmDialogProps> = (
           <AlertDialog.Title class="text-lg font-bold text-text">{copy()?.title}</AlertDialog.Title>
           <AlertDialog.Description class="mt-2 truncate font-sans text-sm text-text-muted">
             {props.playerName}
-            <span class="text-text-subtle"> @{props.username}</span>
+            <span class="text-text"> @{props.username}</span>
           </AlertDialog.Description>
           <Show when={props.errorMessage}>
             <p class="mt-3 text-sm text-danger" role="alert">
@@ -116,10 +114,10 @@ const ProfileFriendConfirmDialog: Component<ProfileFriendConfirmDialogProps> = (
 }
 
 /**
- * 他人のプロフィールカード下部に、関係に応じたフレンド操作を表示する。
+ * 他人のプロフィールカードの下に、カードと同じ幅の独立したフレンド操作ボタンを表示する。
  *
  * @param props - 表示中ユーザーのユーザー名とプレイヤー名。
- * @returns カードと同じ幅の操作ボタン。自分のプロフィールや未ログイン時は何も表示しない。
+ * @returns カードから離した操作ボタン。自分のプロフィールや未ログイン時は何も表示しない。
  */
 export const ProfileFriendAction: Component<ProfileFriendActionProps> = (props) => {
   const queryClient = useQueryClient()
@@ -345,71 +343,66 @@ export const ProfileFriendAction: Component<ProfileFriendActionProps> = (props) 
     ])
 
   return (
-    <Show when={showFriendAction()}>
-      <div class={PROFILE_FRIEND_ACTION_FOOTER_CLASS}>
-        <Show
-          when={hasStatusData()}
-          fallback={
-            <Show
-              when={statusError()}
-              fallback={
-                <AppButton
-                  fullWidth
-                  size="md"
-                  disabled
-                  class={PROFILE_FRIEND_ACTION_BUTTON_CLASS}
-                  aria-label={PROFILE_FRIEND_ACTION_COPY.loadingLabel}
-                >
-                  <span class="flex h-5 w-5 items-center justify-center">
-                    <Loading size="inline" ariaHidden />
-                  </span>
-                </AppButton>
-              }
-            >
-              {(error) => (
-                <div>
-                  <p class="px-3 py-2 text-sm text-danger" role="alert">
-                    {toUserFriendlyErrorMessage(error(), PROFILE_FRIEND_ACTION_COPY.failure)}
-                  </p>
+    <>
+      <Show when={showFriendAction()}>
+        <div class={`${USER_NAMEPLATE_WIDTH_CLASS} mb-2 flex flex-col gap-2`}>
+          <Show
+            when={hasStatusData()}
+            fallback={
+              <Show
+                when={statusError()}
+                fallback={
                   <AppButton
                     fullWidth
                     size="md"
-                    variant="surface"
-                    class={PROFILE_FRIEND_ACTION_BUTTON_CLASS}
-                    onClick={() => void retryStatus()}
+                    disabled
+                    aria-label={PROFILE_FRIEND_ACTION_COPY.loadingLabel}
                   >
-                    {PROFILE_FRIEND_ACTION_COPY.retry}
+                    <span class="flex h-5 w-5 items-center justify-center">
+                      <Loading size="inline" ariaHidden />
+                    </span>
                   </AppButton>
-                </div>
-              )}
-            </Show>
-          }
-        >
-          <For each={cardActions()}>
-            {(item, index) => {
-              const Icon = item.icon
+                }
+              >
+                {(error) => (
+                  <>
+                    <p class="text-sm text-danger" role="alert">
+                      {toUserFriendlyErrorMessage(error(), PROFILE_FRIEND_ACTION_COPY.failure)}
+                    </p>
+                    <AppButton
+                      fullWidth
+                      size="md"
+                      variant="surface"
+                      onClick={() => void retryStatus()}
+                    >
+                      {PROFILE_FRIEND_ACTION_COPY.retry}
+                    </AppButton>
+                  </>
+                )}
+              </Show>
+            }
+          >
+            <For each={cardActions()}>
+              {(item) => {
+                const Icon = item.icon
 
-              return (
-                <AppButton
-                  fullWidth
-                  size="md"
-                  variant={item.variant}
-                  class={
-                    index() === cardActions().length - 1
-                      ? PROFILE_FRIEND_ACTION_BUTTON_CLASS
-                      : PROFILE_FRIEND_ACTION_BUTTON_LEADING_CLASS
-                  }
-                  disabled={isMutating()}
-                  leftIcon={<Icon class="h-4 w-4" aria-hidden="true" />}
-                  onClick={() => openDialog(item.action)}
-                >
-                  {item.label}
-                </AppButton>
-              )
-            }}
-          </For>
-        </Show>
-      </div>
+                return (
+                  <AppButton
+                    fullWidth
+                    size="md"
+                    variant={item.variant}
+                    disabled={isMutating()}
+                    leftIcon={<Icon class="h-4 w-4" aria-hidden="true" />}
+                    onClick={() => openDialog(item.action)}
+                  >
+                    {item.label}
+                  </AppButton>
+                )
+              }}
+            </For>
+          </Show>
+        </div>
+      </Show>
       <ProfileFriendConfirmDialog
         action={pendingAction()}
         playerName={props.playerName}
@@ -419,6 +412,6 @@ export const ProfileFriendAction: Component<ProfileFriendActionProps> = (props) 
         onOpenChange={handleDialogOpenChange}
         onConfirm={() => void handleConfirm()}
       />
-    </Show>
+    </>
   )
 }

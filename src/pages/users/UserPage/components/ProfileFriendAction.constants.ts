@@ -32,17 +32,6 @@ export const PROFILE_FRIEND_ACTION_COPY = {
   failure: '操作に失敗しました。',
 } as const
 
-/** プロフィールカードの左右・下パディングを打ち消し、カードと同じ幅に揃える */
-export const PROFILE_FRIEND_ACTION_FOOTER_CLASS =
-  '-mx-3 -mb-3 mt-3 overflow-hidden rounded-b-md border-t border-border bg-surface text-text'
-
-/** カード幅いっぱいの操作ボタン。下端だけカードの角丸に合わせる */
-export const PROFILE_FRIEND_ACTION_BUTTON_CLASS =
-  'rounded-t-none! rounded-b-md! focus-visible:ring-inset'
-
-/** 複数ボタンの上段。カード幅を維持したまま下端の角丸を付けない */
-export const PROFILE_FRIEND_ACTION_BUTTON_LEADING_CLASS = 'rounded-none! focus-visible:ring-inset'
-
 /** 操作ごとの確認ダイアログ文言 */
 export const PROFILE_FRIEND_DIALOG_COPY: Record<
   ProfileFriendDialogAction,
