@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   findStandardSongBpm,
   findStandardSongReading,
+  findStandardSongWikiPageTitle,
   type StandardSongLookupItem,
 } from './standardSongLookup.ts'
 
@@ -11,6 +12,7 @@ const createSong = (overrides: Partial<StandardSongLookupItem> = {}): StandardSo
   artist: 'Team Grimoire vs Laur',
   bpm: 231,
   reading: 'グリーヴァスレディ',
+  wiki_page_title: 'Grievous Lady',
   ...overrides,
 })
 
@@ -126,6 +128,28 @@ test('一致するSTANDARD楽曲の読みが未設定ならvalueMissingになる
 
   // When
   const result = findStandardSongReading(songs, 'Grievous Lady', 'Team Grimoire vs Laur')
+
+  // Then
+  assert.deepEqual(result, { status: 'valueMissing' })
+})
+
+test('同じ曲名・アーティスト名のSTANDARD楽曲からWikiページタイトルを取得できること', () => {
+  // Given
+  const songs = [createSong({ wiki_page_title: '  Grievous Lady(CHUNITHM)  ' })]
+
+  // When
+  const result = findStandardSongWikiPageTitle(songs, 'Grievous Lady', 'Team Grimoire vs Laur')
+
+  // Then
+  assert.deepEqual(result, { status: 'found', value: 'Grievous Lady(CHUNITHM)' })
+})
+
+test('一致するSTANDARD楽曲のWikiページタイトルが未設定ならvalueMissingになること', () => {
+  // Given
+  const songs = [createSong({ wiki_page_title: null }), createSong({ wiki_page_title: undefined })]
+
+  // When
+  const result = findStandardSongWikiPageTitle(songs, 'Grievous Lady', 'Team Grimoire vs Laur')
 
   // Then
   assert.deepEqual(result, { status: 'valueMissing' })

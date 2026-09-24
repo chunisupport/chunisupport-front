@@ -7,6 +7,7 @@ import { SONG_EDIT_COPY } from '../songEditConstants'
 import {
   findStandardSongBpm,
   findStandardSongReading,
+  findStandardSongWikiPageTitle,
   type StandardSongLookupItem,
 } from '../utils/standardSongLookup'
 
@@ -34,8 +35,8 @@ type CopyFromStandardFieldProps =
     })
   | (CopyFromStandardFieldBaseProps & {
       /** STANDARDから取り込む項目 */
-      field: 'reading'
-      /** 取得した読みを入力欄へ反映する処理 */
+      field: 'reading' | 'wikiPageTitle'
+      /** 取得した読み・Wikiページタイトルを入力欄へ反映する処理 */
       onCopied: (value: string) => void
     })
 
@@ -47,16 +48,25 @@ type CopyFromStandardFieldProps =
  */
 const getCopyFromStandardCopy = (
   field: CopyFromStandardFieldProps['field']
-): { ariaLabel: string; valueMissingMessage: string } =>
-  field === 'bpm'
-    ? {
+): { ariaLabel: string; valueMissingMessage: string } => {
+  switch (field) {
+    case 'bpm':
+      return {
         ariaLabel: SONG_EDIT_COPY.copyBpmFromStandardAriaLabel,
         valueMissingMessage: SONG_EDIT_COPY.copyBpmFromStandardBpmMissing,
       }
-    : {
+    case 'reading':
+      return {
         ariaLabel: SONG_EDIT_COPY.copyReadingFromStandardAriaLabel,
         valueMissingMessage: SONG_EDIT_COPY.copyReadingFromStandardMissing,
       }
+    case 'wikiPageTitle':
+      return {
+        ariaLabel: SONG_EDIT_COPY.copyWikiPageTitleFromStandardAriaLabel,
+        valueMissingMessage: SONG_EDIT_COPY.copyWikiPageTitleFromStandardMissing,
+      }
+  }
+}
 
 /**
  * WORLD'S ENDの入力欄の右に、STANDARD楽曲から値を取り込むボタンを置く。
@@ -106,7 +116,9 @@ const CopyFromStandardField = (props: CopyFromStandardFieldProps): JSX.Element =
       return
     }
 
-    const result = findStandardSongReading(props.songs, props.title, props.artist)
+    const findValue =
+      props.field === 'reading' ? findStandardSongReading : findStandardSongWikiPageTitle
+    const result = findValue(props.songs, props.title, props.artist)
     if (result.status === 'found') {
       props.onCopied(result.value)
       return

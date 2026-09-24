@@ -1708,19 +1708,31 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         inputClass={`${managementInputClass} font-sans`}
                         onInput={(value) => updateWorldsendDraftField('artist', value)}
                       />
-                      <ManagementTextField
-                        class="col-span-2 text-sm"
-                        label={SONG_MANAGEMENT_FIELD_COPY.wikiPageTitle}
-                        value={currentDraft().wiki_page_title ?? ''}
-                        maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
-                        inputClass={`${managementInputClass} font-sans`}
-                        onInput={(value) =>
-                          updateWorldsendDraftField(
-                            'wiki_page_title',
-                            value.trim() === '' ? null : value
-                          )
+                      <CopyFromStandardField
+                        class="col-span-2"
+                        field="wikiPageTitle"
+                        songs={songs()}
+                        title={currentDraft().title}
+                        artist={currentDraft().artist}
+                        songsLoading={songsResponse.loading}
+                        onCopied={(wikiPageTitle) =>
+                          updateWorldsendDraftField('wiki_page_title', wikiPageTitle)
                         }
-                      />
+                      >
+                        <ManagementTextField
+                          class="text-sm"
+                          label={SONG_MANAGEMENT_FIELD_COPY.wikiPageTitle}
+                          value={currentDraft().wiki_page_title ?? ''}
+                          maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
+                          inputClass={`${managementInputClass} font-sans`}
+                          onInput={(value) =>
+                            updateWorldsendDraftField(
+                              'wiki_page_title',
+                              value.trim() === '' ? null : value
+                            )
+                          }
+                        />
+                      </CopyFromStandardField>
                       <GenreSelectField
                         label="ジャンル"
                         value={currentDraft().genre_id}
@@ -2096,18 +2108,29 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               inputClass={`${managementInputClass} font-sans`}
               onInput={(value) => updateCreateWorldsendDraftField('artist', value)}
             />
-            <ManagementTextField
-              label={SONG_MANAGEMENT_FIELD_COPY.wikiPageTitle}
-              value={createWorldsendDraft().wiki_page_title ?? ''}
-              maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
-              inputClass={`${managementInputClass} font-sans`}
-              onInput={(value) =>
-                updateCreateWorldsendDraftField(
-                  'wiki_page_title',
-                  value.trim() === '' ? null : value
-                )
+            <CopyFromStandardField
+              field="wikiPageTitle"
+              songs={songs()}
+              title={createWorldsendDraft().title}
+              artist={createWorldsendDraft().artist}
+              songsLoading={songsResponse.loading}
+              onCopied={(wikiPageTitle) =>
+                updateCreateWorldsendDraftField('wiki_page_title', wikiPageTitle)
               }
-            />
+            >
+              <ManagementTextField
+                label={SONG_MANAGEMENT_FIELD_COPY.wikiPageTitle}
+                value={createWorldsendDraft().wiki_page_title ?? ''}
+                maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
+                inputClass={`${managementInputClass} font-sans`}
+                onInput={(value) =>
+                  updateCreateWorldsendDraftField(
+                    'wiki_page_title',
+                    value.trim() === '' ? null : value
+                  )
+                }
+              />
+            </CopyFromStandardField>
             <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
               <GenreSelectField
                 label="ジャンル"

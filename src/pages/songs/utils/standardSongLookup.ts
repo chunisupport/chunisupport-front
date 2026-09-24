@@ -4,6 +4,7 @@ export type StandardSongLookupItem = {
   artist: string
   bpm: number | null
   reading: string | null
+  wiki_page_title?: string | null
   is_deleted?: boolean
 }
 
@@ -20,6 +21,17 @@ export type StandardSongLookupResult<T> =
  * @returns 前後空白を除いた照合キー。
  */
 const normalizeSongKey = (value: string): string => value.trim()
+
+/**
+ * 文字列項目の前後空白を除き、空文字を未設定として扱う。
+ *
+ * @param value - 楽曲の文字列項目。
+ * @returns 前後空白を除いた値。空または未設定なら null。
+ */
+const toTrimmedValueOrNull = (value: string | null | undefined): string | null => {
+  const trimmed = value?.trim() ?? ''
+  return trimmed === '' ? null : trimmed
+}
 
 /**
  * 同じ曲名・アーティスト名のSTANDARD楽曲から値を取得する。
@@ -91,7 +103,19 @@ export const findStandardSongReading = (
   title: string,
   artist: string
 ): StandardSongLookupResult<string> =>
-  findStandardSongValue(songs, title, artist, (song) => {
-    const reading = song.reading?.trim() ?? ''
-    return reading === '' ? null : reading
-  })
+  findStandardSongValue(songs, title, artist, (song) => toTrimmedValueOrNull(song.reading))
+
+/**
+ * 同じ曲名・アーティスト名のSTANDARD楽曲からWikiページタイトルを取得する。
+ *
+ * @param songs - 照合対象のSTANDARD楽曲一覧。
+ * @param title - WORLD'S END側の曲名。
+ * @param artist - WORLD'S END側のアーティスト名。
+ * @returns 照合結果。
+ */
+export const findStandardSongWikiPageTitle = (
+  songs: readonly StandardSongLookupItem[],
+  title: string,
+  artist: string
+): StandardSongLookupResult<string> =>
+  findStandardSongValue(songs, title, artist, (song) => toTrimmedValueOrNull(song.wiki_page_title))
