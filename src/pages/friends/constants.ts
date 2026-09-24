@@ -91,6 +91,7 @@ export const FRIENDS_COPY = {
   emptySent: '送信済みのフレンドリクエストはありません。',
   retry: '再読み込み',
   openFriendMenu: 'フレンドメニューを開く',
+  profileLinkSuffix: 'のプロフィールを表示',
   accept: '承認',
   reject: '拒否',
   cancelRequest: '申請取り消し',

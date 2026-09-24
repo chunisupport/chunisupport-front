@@ -343,16 +343,20 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
                   resolvePossessionName(user.possession_id ?? undefined, props.possessions)
                 )
           )
-          const playerNameClass =
-            'min-w-0 truncate text-center font-sans text-lg font-medium underline-offset-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
-
           return (
             <li class="flex flex-col rounded-md shadow-sm">
               <div
                 class={`friend-card user-nameplate relative flex flex-col rounded-t-md px-3 py-2.5 ${possessionClassName()}`}
               >
+                <Show when={!hidesProfile()}>
+                  <A
+                    href={buildFriendProfilePath(user.username)}
+                    aria-label={`${display().playerName}${FRIENDS_COPY.profileLinkSuffix}`}
+                    class="absolute inset-0 z-10 rounded-t-md transition-shadow hover:ring-2 hover:ring-inset hover:ring-focus-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+                  />
+                </Show>
                 <Show when={props.variant === 'friends'}>
-                  <div class="absolute right-1 top-1">
+                  <div class="absolute right-1 top-1 z-20">
                     <FriendMenuActions
                       busy={props.actionsDisabled}
                       onRemove={() => props.onRemove(user)}
@@ -378,23 +382,9 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
                     {FRIENDS_COPY.levelLabel} {display().level}
                   </span>
                   <div class="flex min-w-0 flex-1 justify-center">
-                    <Show
-                      when={!hidesProfile()}
-                      fallback={
-                        <span class={`${playerNameClass} text-text`}>{display().playerName}</span>
-                      }
-                    >
-                      <A
-                        href={buildFriendProfilePath(user.username)}
-                        class={`${playerNameClass} hover:underline ${
-                          possessionClassName()
-                            ? 'text-inherit'
-                            : 'text-action-primary hover:text-action-primary-hover'
-                        }`}
-                      >
-                        {display().playerName}
-                      </A>
-                    </Show>
+                    <span class="min-w-0 truncate text-center font-sans text-lg font-medium text-inherit">
+                      {display().playerName}
+                    </span>
                   </div>
                 </div>
                 <span class="user-nameplate-metric-secondary block min-w-0 truncate text-right font-sans text-xs">
