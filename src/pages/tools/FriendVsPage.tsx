@@ -232,7 +232,7 @@ const FriendVsPage = (): JSX.Element => {
                               value={resultFilter()}
                               onChange={(value) => value && setResultFilter(value)}
                               label={FRIEND_VS_COPY.selectResult}
-                              rootClass="w-40"
+                              rootClass="w-28"
                               formatLabel={(value) => value.label}
                             />
                             <CardTableViewToggle
