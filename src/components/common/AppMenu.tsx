@@ -1,6 +1,7 @@
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import type { ComponentProps, JSX } from 'solid-js'
 import { Show, splitProps } from 'solid-js'
+import { suppressNextClick } from '../../utils/suppressNextClick'
 import { NotificationDot } from './NotificationDot'
 
 type DropdownMenuTriggerProps = ComponentProps<typeof DropdownMenu.Trigger>
@@ -31,7 +32,7 @@ export type AppMenuContentProps = Omit<DropdownMenuContentProps, 'class'> & {
   class?: string
 }
 
-export type AppMenuItemProps = Omit<DropdownMenuItemProps, 'class' | 'children'> & {
+export type AppMenuItemProps = Omit<DropdownMenuItemProps, 'class' | 'children' | 'onPointerUp'> & {
   /** メニュー項目の表示ラベル */
   label: JSX.Element
   /** ラベル左側に表示するアイコン */
@@ -130,6 +131,9 @@ export const AppMenuContent = (props: AppMenuContentProps): JSX.Element => {
 /**
  * ドロップダウンメニューの項目を表示する。
  *
+ * Kobalte の Item は pointerup で選択を確定するため、タッチ操作では選択後に届く合成 click が
+ * 遷移先やメニュー背後の要素に当たってしまう。これを防ぐため、タッチ・ペンでの選択時は直後の click を捨てる。
+ *
  * @param props - 表示ラベル、アイコン、色調、Kobalte Item の属性。
  * @returns 共通スタイルを適用した DropdownMenu.Item。
  */
@@ -142,9 +146,22 @@ export const AppMenuItem = (props: AppMenuItemProps): JSX.Element => {
     'class',
   ])
 
+  /**
+   * タッチ・ペンで項目を選択した直後の合成 click を捨てる。
+   *
+   * @param event - 項目上で発生した pointerup イベント。
+   * @returns なし。
+   */
+  const handlePointerUp = (event: PointerEvent): void => {
+    if (event.pointerType !== 'mouse' && event.button === 0 && !itemProps.disabled) {
+      suppressNextClick()
+    }
+  }
+
   return (
     <DropdownMenu.Item
       {...itemProps}
+      onPointerUp={handlePointerUp}
       class={`relative ${APP_MENU_ITEM_BASE_CLASS} ${
         APP_MENU_ITEM_TONE_CLASS[local.tone ?? 'default']
       } ${local.class ?? ''}`}
