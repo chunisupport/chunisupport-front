@@ -3,7 +3,17 @@ import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/solid-query'
-import { Check, Copy, EllipsisVertical, Lock, RotateCw, UserMinus, UserPlus, X } from 'lucide-solid'
+import {
+  Check,
+  Copy,
+  EllipsisVertical,
+  Lock,
+  RotateCw,
+  Swords,
+  UserMinus,
+  UserPlus,
+  X,
+} from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -22,12 +32,13 @@ import {
   rejectFriendRequest,
 } from '../../api/friends'
 import { fetchPossessions } from '../../api/possessions'
-import { AppButton } from '../../components/common/AppButton'
+import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../../components/common/AppMenu'
 import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { Loading } from '../../components/Loading'
 import { getPossessionClassName } from '../../constants/possession'
+import { buildFriendVsPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   type FriendshipMutationType,
@@ -169,58 +180,66 @@ const FriendMenuActions = (props: { busy: boolean; onRemove: () => void }): JSX.
 )
 
 /**
- * フレンド申請カード下部の操作ボタン群を表示する。
+ * フレンドカード下部の操作ボタン群を表示する。
  *
- * @param props - 表示種別、操作状態、イベントハンドラー。
- * @returns 申請カード用の操作ボタン。
+ * @param props - 表示種別、フレンドVSへの遷移先、操作状態、イベントハンドラー。
+ * @returns 表示種別に応じたカード下部の操作ボタン。
  */
-const FriendRequestActions = (props: {
+const FriendCardActions = (props: {
   variant: FriendsTabValue
+  friendVsPath: string
   busy: boolean
   onAccept: () => void
   onReject: () => void
   onCancel: () => void
 }): JSX.Element => (
-  <Show when={props.variant !== 'friends'}>
-    <div class="flex flex-col gap-2 rounded-b-md border border-t-0 border-border bg-surface px-3 py-2.5">
-      <Show when={props.variant === 'received'}>
-        <div class="grid grid-cols-2 gap-2">
-          <AppButton
-            variant="primary"
-            size="sm"
-            fullWidth
-            leftIcon={<Check class="h-4 w-4" aria-hidden="true" />}
-            disabled={props.busy}
-            onClick={props.onAccept}
-          >
-            {FRIENDS_COPY.accept}
-          </AppButton>
-          <AppButton
-            variant="dangerOutline"
-            size="sm"
-            fullWidth
-            leftIcon={<X class="h-4 w-4" aria-hidden="true" />}
-            disabled={props.busy}
-            onClick={props.onReject}
-          >
-            {FRIENDS_COPY.reject}
-          </AppButton>
-        </div>
-      </Show>
-      <Show when={props.variant === 'sent'}>
+  <div class="flex flex-col gap-2 rounded-b-md border border-t-0 border-border bg-surface px-3 py-2.5">
+    <Show when={props.variant === 'friends'}>
+      <A
+        href={props.friendVsPath}
+        class={getAppButtonClass({ variant: 'surface', size: 'sm', fullWidth: true })}
+      >
+        <Swords class="h-4 w-4" aria-hidden="true" />
+        {FRIENDS_COPY.friendVs}
+      </A>
+    </Show>
+    <Show when={props.variant === 'received'}>
+      <div class="grid grid-cols-2 gap-2">
+        <AppButton
+          variant="primary"
+          size="sm"
+          fullWidth
+          leftIcon={<Check class="h-4 w-4" aria-hidden="true" />}
+          disabled={props.busy}
+          onClick={props.onAccept}
+        >
+          {FRIENDS_COPY.accept}
+        </AppButton>
         <AppButton
           variant="dangerOutline"
           size="sm"
           fullWidth
           leftIcon={<X class="h-4 w-4" aria-hidden="true" />}
           disabled={props.busy}
-          onClick={props.onCancel}
+          onClick={props.onReject}
         >
-          {FRIENDS_COPY.cancelRequest}
+          {FRIENDS_COPY.reject}
         </AppButton>
-      </Show>
-    </div>
-  </Show>
+      </div>
+    </Show>
+    <Show when={props.variant === 'sent'}>
+      <AppButton
+        variant="dangerOutline"
+        size="sm"
+        fullWidth
+        leftIcon={<X class="h-4 w-4" aria-hidden="true" />}
+        disabled={props.busy}
+        onClick={props.onCancel}
+      >
+        {FRIENDS_COPY.cancelRequest}
+      </AppButton>
+    </Show>
+  </div>
 )
 
 /**
@@ -330,9 +349,7 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
           return (
             <li class="flex flex-col rounded-md shadow-sm">
               <div
-                class={`friend-card user-nameplate relative flex flex-col px-3 py-2.5 ${
-                  props.variant === 'friends' ? 'rounded-md' : 'rounded-t-md'
-                } ${possessionClassName()}`}
+                class={`friend-card user-nameplate relative flex flex-col rounded-t-md px-3 py-2.5 ${possessionClassName()}`}
               >
                 <Show when={props.variant === 'friends'}>
                   <div class="absolute right-1 top-1">
@@ -386,8 +403,9 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
                 <hr class="my-1.5 border-t" />
                 <FriendMetrics display={display()} />
               </div>
-              <FriendRequestActions
+              <FriendCardActions
                 variant={props.variant}
+                friendVsPath={buildFriendVsPath(user.username)}
                 busy={props.actionsDisabled}
                 onAccept={() => props.onAccept(user)}
                 onReject={() => props.onReject(user)}

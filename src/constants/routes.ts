@@ -89,6 +89,15 @@ export const buildWorldsendSongDetailPath = (displayId: string): string =>
   `${WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}`
 
 /**
+ * 比較相手を指定したフレンドVS画面パスを生成する。
+ *
+ * @param friendUsername - 比較相手のユーザー名。
+ * @returns フレンド指定クエリを含むフレンドVS画面パス。
+ */
+export const buildFriendVsPath = (friendUsername: string): string =>
+  `${FRIEND_VS_PATH}?${new URLSearchParams({ friend: friendUsername }).toString()}`
+
+/**
  * 楽曲詳細から譜面詳細へ遷移した state か判定する。
  *
  * @param value - ルーター location state。

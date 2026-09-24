@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   buildAdminChartRankingPath,
   buildAdminWorldsendChartRankingPath,
+  buildFriendVsPath,
   buildSongChartDetailPath,
   buildSongDetailPath,
   buildWorldsendChartDetailPath,
@@ -10,6 +11,17 @@ import {
   CHART_DETAIL_FROM_SONG_DETAIL_STATE,
   isChartDetailFromSongDetailState,
 } from './routes'
+
+test('フレンドVSパスは比較相手のユーザー名をクエリにエンコードする', () => {
+  // Given
+  const friendUsername = 'iroha&test'
+
+  // When
+  const path = buildFriendVsPath(friendUsername)
+
+  // Then
+  assert.equal(path, '/tools/friend-vs?friend=iroha%26test')
+})
 
 test('管理者向け通常譜面ランキングパスは表示IDと難易度をエンコードする', () => {
   // Given: URL予約文字を含む表示IDと小文字の難易度。
