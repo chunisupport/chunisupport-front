@@ -182,7 +182,7 @@ const FriendRequestActions = (props: {
   onCancel: () => void
 }): JSX.Element => (
   <Show when={props.variant !== 'friends'}>
-    <div class="-mx-3 -mb-2.5 mt-3 flex flex-col gap-2 rounded-b-md border-t border-border bg-surface px-3 py-2.5">
+    <div class="flex flex-col gap-2 rounded-b-md border border-t-0 border-border bg-surface px-3 py-2.5">
       <Show when={props.variant === 'received'}>
         <div class="grid grid-cols-2 gap-2">
           <AppButton
@@ -328,60 +328,64 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
             'min-w-0 truncate text-center font-sans text-lg font-medium underline-offset-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
 
           return (
-            <li
-              class={`friend-card user-nameplate relative flex flex-col rounded-md px-3 py-2.5 shadow-sm ${possessionClassName()}`}
-            >
-              <Show when={props.variant === 'friends'}>
-                <div class="absolute right-1 top-1">
-                  <FriendMenuActions
-                    busy={props.actionsDisabled}
-                    onRemove={() => props.onRemove(user)}
-                  />
-                </div>
-              </Show>
-              <Show when={hidesProfile()}>
-                <span
-                  class="absolute right-2 top-2 text-text-muted"
-                  role="img"
-                  aria-label={FRIENDS_COPY.privateAccountLabel}
-                  title={FRIENDS_COPY.privateAccountLabel}
-                >
-                  <Lock class="h-4 w-4" aria-hidden="true" />
-                </span>
-              </Show>
+            <li class="flex flex-col rounded-md shadow-sm">
               <div
-                class={`flex min-w-0 items-end gap-2 ${
-                  props.variant === 'friends' || hidesProfile() ? 'pr-7' : ''
-                }`}
+                class={`friend-card user-nameplate relative flex flex-col px-3 py-2.5 ${
+                  props.variant === 'friends' ? 'rounded-md' : 'rounded-t-md'
+                } ${possessionClassName()}`}
               >
-                <span class="shrink-0 text-sm">
-                  {FRIENDS_COPY.levelLabel} {display().level}
-                </span>
-                <div class="flex min-w-0 flex-1 justify-center">
-                  <Show
-                    when={!hidesProfile()}
-                    fallback={
-                      <span class={`${playerNameClass} text-text`}>{display().playerName}</span>
-                    }
+                <Show when={props.variant === 'friends'}>
+                  <div class="absolute right-1 top-1">
+                    <FriendMenuActions
+                      busy={props.actionsDisabled}
+                      onRemove={() => props.onRemove(user)}
+                    />
+                  </div>
+                </Show>
+                <Show when={hidesProfile()}>
+                  <span
+                    class="absolute right-2 top-2 text-text-muted"
+                    role="img"
+                    aria-label={FRIENDS_COPY.privateAccountLabel}
+                    title={FRIENDS_COPY.privateAccountLabel}
                   >
-                    <A
-                      href={buildFriendProfilePath(user.username)}
-                      class={`${playerNameClass} hover:underline ${
-                        possessionClassName()
-                          ? 'text-inherit'
-                          : 'text-action-primary hover:text-action-primary-hover'
-                      }`}
+                    <Lock class="h-4 w-4" aria-hidden="true" />
+                  </span>
+                </Show>
+                <div
+                  class={`flex min-w-0 items-end gap-2 ${
+                    props.variant === 'friends' || hidesProfile() ? 'pr-7' : ''
+                  }`}
+                >
+                  <span class="shrink-0 text-sm">
+                    {FRIENDS_COPY.levelLabel} {display().level}
+                  </span>
+                  <div class="flex min-w-0 flex-1 justify-center">
+                    <Show
+                      when={!hidesProfile()}
+                      fallback={
+                        <span class={`${playerNameClass} text-text`}>{display().playerName}</span>
+                      }
                     >
-                      {display().playerName}
-                    </A>
-                  </Show>
+                      <A
+                        href={buildFriendProfilePath(user.username)}
+                        class={`${playerNameClass} hover:underline ${
+                          possessionClassName()
+                            ? 'text-inherit'
+                            : 'text-action-primary hover:text-action-primary-hover'
+                        }`}
+                      >
+                        {display().playerName}
+                      </A>
+                    </Show>
+                  </div>
                 </div>
+                <span class="user-nameplate-metric-secondary block min-w-0 truncate text-right font-sans text-xs">
+                  @{user.username}
+                </span>
+                <hr class="my-1.5 border-t" />
+                <FriendMetrics display={display()} />
               </div>
-              <span class="user-nameplate-metric-secondary block min-w-0 truncate text-right font-sans text-xs">
-                @{user.username}
-              </span>
-              <hr class="my-1.5 border-t" />
-              <FriendMetrics display={display()} />
               <FriendRequestActions
                 variant={props.variant}
                 busy={props.actionsDisabled}
@@ -787,7 +791,7 @@ const FriendsPage = () => {
               variant="ghost"
               size="sm"
               fullWidth
-              class={`mb-4 justify-between text-left transition-colors ${
+              class={`mb-2 justify-between text-left transition-colors ${
                 isOwnUsernameCopied()
                   ? 'bg-action-primary-muted text-action-primary'
                   : 'text-text-muted'

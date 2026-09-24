@@ -9,6 +9,7 @@ import {
   createResource,
   createSignal,
   For,
+  type JSX,
   onCleanup,
   onMount,
   Show,
@@ -57,6 +58,8 @@ type Props = {
   records?: readonly PlayerRecordDTO[]
   /** マスタ解決を省略して適用するポゼッション名。確認画面向け */
   possessionName?: PossessionName
+  /** カード下部に差し込む操作。未指定時は表示しない */
+  footer?: JSX.Element
 }
 
 type HonorTitleProps = {
@@ -222,7 +225,7 @@ const HonorTitle: Component<HonorTitleProps> = (props) => {
  * ユーザーの称号、レベル、指標とRATING・OVER POWER・OP%履歴への導線を表示する。
  * カード背景色はポゼッションに応じて切り替える。
  *
- * @param props - プレイヤー情報、称号、計算済みレーティング、通常譜面レコード、履歴ページのリンク先、確認用ポゼッション名。
+ * @param props - プレイヤー情報、称号、計算済みレーティング、通常譜面レコード、履歴ページのリンク先、確認用ポゼッション名、カード下部の操作。
  * @returns プロフィールカードの JSX 要素。
  */
 export const UserNameplate: Component<Props> = (props) => {
@@ -379,7 +382,7 @@ export const UserNameplate: Component<Props> = (props) => {
             </span>
           </dd>
         </div>
-        <div class="pr-20">
+        <div class="relative pr-20">
           <dt class="text-sm font-medium leading-tight">
             {USER_NAMEPLATE_METRIC_LABELS.overPower}
           </dt>
@@ -401,21 +404,22 @@ export const UserNameplate: Component<Props> = (props) => {
               </Show>
             </span>
           </dd>
+          <A
+            href={props.historyHref}
+            class={getAppButtonClass({
+              variant: 'surface',
+              size: 'xs',
+              shape: 'pill',
+              class: 'absolute right-0 bottom-0',
+            })}
+            aria-label={USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL}
+          >
+            <ChartColumnIncreasing class="h-4 w-4" aria-hidden="true" />
+            <span>{USER_NAMEPLATE_HISTORY_LINK_LABEL}</span>
+          </A>
         </div>
       </dl>
-      <A
-        href={props.historyHref}
-        class={getAppButtonClass({
-          variant: 'surface',
-          size: 'xs',
-          shape: 'pill',
-          class: 'absolute right-3 bottom-3',
-        })}
-        aria-label={USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL}
-      >
-        <ChartColumnIncreasing class="h-4 w-4" aria-hidden="true" />
-        <span>{USER_NAMEPLATE_HISTORY_LINK_LABEL}</span>
-      </A>
+      {props.footer}
     </div>
   )
 }
