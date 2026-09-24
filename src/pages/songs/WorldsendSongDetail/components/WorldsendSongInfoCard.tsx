@@ -181,10 +181,10 @@ const WorldsendSongInfoCard = (props: Props) => {
         requireGenre={false}
         saving={savingSong()}
         apiErrorMessage={songFormError()}
-        enableCopyBpmFromStandard
+        enableCopyFromStandard
         standardSongs={songsData.songsResponse()?.songs ?? []}
-        copyBpmTitle={props.song.title}
-        copyBpmArtist={props.song.artist}
+        copyTitle={props.song.title}
+        copyArtist={props.song.artist}
         standardSongsLoading={songsData.isSongsLoading()}
         onOpenChange={setSongDialogOpen}
         onSubmit={handleSongMetaSubmit}

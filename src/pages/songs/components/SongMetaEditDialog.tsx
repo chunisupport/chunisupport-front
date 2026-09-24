@@ -34,17 +34,39 @@ type Props = {
   apiErrorMessage: string
   onOpenChange: (open: boolean) => void
   onSubmit: (values: SongMetaEditValues) => void
-  /** STANDARD楽曲からBPMを取り込むボタンを表示するか */
-  enableCopyBpmFromStandard?: boolean
-  /** BPM取り込みに使うSTANDARD楽曲一覧 */
+  /** STANDARD楽曲からBPM・Wikiページタイトルを取り込むボタンを表示するか */
+  enableCopyFromStandard?: boolean
+  /** 取り込みに使うSTANDARD楽曲一覧 */
   standardSongs?: readonly StandardSongLookupItem[]
-  /** BPM取り込みに使う曲名 */
-  copyBpmTitle?: string
-  /** BPM取り込みに使うアーティスト名 */
-  copyBpmArtist?: string
+  /** 取り込みに使う曲名 */
+  copyTitle?: string
+  /** 取り込みに使うアーティスト名 */
+  copyArtist?: string
   /** STANDARD楽曲一覧の読み込み中かどうか */
   standardSongsLoading?: boolean
 }
+
+type WikiPageTitleTextFieldProps = {
+  /** 入力中のWikiページタイトル */
+  value: string
+  /** 入力値を反映する処理 */
+  onChange: (value: string) => void
+}
+
+/**
+ * 楽曲情報編集ダイアログのWikiページタイトル入力欄を描画する。
+ *
+ * @param props - 入力値と変更ハンドラ。
+ * @returns Wikiページタイトル用の Kobalte TextField。
+ */
+const WikiPageTitleTextField: Component<WikiPageTitleTextFieldProps> = (props) => (
+  <TextField value={props.value} onChange={props.onChange}>
+    <TextField.Label class="mb-1 block text-sm text-text-muted">
+      {SONG_EDIT_COPY.wikiPageTitleLabel}
+    </TextField.Label>
+    <TextField.Input class={SONG_EDIT_TEXT_INPUT_CLASS} />
+  </TextField>
+)
 
 type BpmTextFieldProps = {
   /** 入力中のBPM文字列 */
@@ -78,10 +100,10 @@ const BpmTextField: Component<BpmTextFieldProps> = (props) => (
 )
 
 /**
- * 楽曲情報（ジャンル、BPM、リリース日）を編集するダイアログを描画する。
- * WORLD'S ENDでは同じ曲名・アーティスト名のSTANDARD楽曲からBPMを取り込める。
+ * 楽曲情報（ジャンル、BPM、リリース日、Wikiページタイトル）を編集するダイアログを描画する。
+ * WORLD'S ENDでは同じ曲名・アーティスト名のSTANDARD楽曲からBPM・Wikiページタイトルを取り込める。
  *
- * @param props - 開閉状態、初期値、ジャンル候補、保存ハンドラ、BPM取り込み設定。
+ * @param props - 開閉状態、初期値、ジャンル候補、保存ハンドラ、STANDARD取り込み設定。
  * @returns 楽曲情報編集ダイアログ。
  */
 const SongMetaEditDialog: Component<Props> = (props) => {
@@ -179,14 +201,14 @@ const SongMetaEditDialog: Component<Props> = (props) => {
               />
 
               <Show
-                when={props.enableCopyBpmFromStandard}
+                when={props.enableCopyFromStandard}
                 fallback={<BpmTextField value={bpm()} onInput={setBpm} />}
               >
                 <CopyFromStandardField
                   field="bpm"
                   songs={props.standardSongs ?? []}
-                  title={props.copyBpmTitle ?? ''}
-                  artist={props.copyBpmArtist ?? ''}
+                  title={props.copyTitle ?? ''}
+                  artist={props.copyArtist ?? ''}
                   songsLoading={props.standardSongsLoading}
                   onCopied={(nextBpm) => {
                     setBpm(toInputValue(nextBpm))
@@ -209,12 +231,26 @@ const SongMetaEditDialog: Component<Props> = (props) => {
                 />
               </TextField>
 
-              <TextField value={wikiPageTitle()} onChange={setWikiPageTitle}>
-                <TextField.Label class="mb-1 block text-sm text-text-muted">
-                  {SONG_EDIT_COPY.wikiPageTitleLabel}
-                </TextField.Label>
-                <TextField.Input class={SONG_EDIT_TEXT_INPUT_CLASS} />
-              </TextField>
+              <Show
+                when={props.enableCopyFromStandard}
+                fallback={
+                  <WikiPageTitleTextField value={wikiPageTitle()} onChange={setWikiPageTitle} />
+                }
+              >
+                <CopyFromStandardField
+                  field="wikiPageTitle"
+                  songs={props.standardSongs ?? []}
+                  title={props.copyTitle ?? ''}
+                  artist={props.copyArtist ?? ''}
+                  songsLoading={props.standardSongsLoading}
+                  onCopied={(nextWikiPageTitle) => {
+                    setWikiPageTitle(nextWikiPageTitle)
+                    setValidationMessage('')
+                  }}
+                >
+                  <WikiPageTitleTextField value={wikiPageTitle()} onChange={setWikiPageTitle} />
+                </CopyFromStandardField>
+              </Show>
 
               <Show when={errorMessage()}>
                 <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
