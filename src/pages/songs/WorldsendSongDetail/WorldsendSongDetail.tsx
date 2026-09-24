@@ -135,6 +135,7 @@ const WorldsendSongDetail = () => {
           isSongLoading={songState.loading}
           title={titleMeta().title}
           artist={titleMeta().artist}
+          wikiPageTitle={song()?.wiki_page_title}
           onBack={handleBack}
           renderInfoCard={(currentSong) => (
             <WorldsendSongInfoCard

@@ -47,8 +47,13 @@ import type {
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import CopyFromStandardField from './components/CopyFromStandardField'
 import SongManagementFilterPanel from './components/SongManagementFilterPanel'
-import { SONG_DATA_REFRESH_ERROR_MESSAGE, SONG_MANAGEMENT_ACTION_COPY } from './constants'
+import {
+  SONG_DATA_REFRESH_ERROR_MESSAGE,
+  SONG_MANAGEMENT_ACTION_COPY,
+  SONG_MANAGEMENT_FIELD_COPY,
+} from './constants'
 import { buildSearchableItems, filterSearchableItems } from './searchHelpers'
+import { SONG_EDIT_INPUT_LIMITS } from './songEditConstants'
 import {
   createSongManagementFilters,
   filterManagedSongs,
@@ -79,6 +84,7 @@ type SongDraft = {
   id: string
   title: string
   reading: string | null
+  wiki_page_title: string | null
   artist: string
   genre_id: number | null
   bpm: number | null
@@ -93,6 +99,7 @@ type WorldsendDraft = {
   id: string
   title: string
   reading: string | null
+  wiki_page_title: string | null
   artist: string
   genre_id: number | null
   bpm: number | null
@@ -120,6 +127,7 @@ type CreateSongDraft = {
   official_idx: string
   title: string
   reading: string | null
+  wiki_page_title: string | null
   artist: string
   genre_id: number | null
   bpm: number | null
@@ -133,6 +141,7 @@ type CreateWorldsendDraft = {
   official_idx: string
   title: string
   reading: string | null
+  wiki_page_title: string | null
   artist: string
   genre_id: number | null
   bpm: number | null
@@ -256,6 +265,7 @@ const buildCreateSongDraft = (): CreateSongDraft => {
     official_idx: '',
     title: '',
     reading: null,
+    wiki_page_title: null,
     artist: '',
     genre_id: null,
     bpm: null,
@@ -311,6 +321,7 @@ const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
     official_idx: '',
     title: '',
     reading: null,
+    wiki_page_title: null,
     artist: '',
     genre_id: null,
     bpm: null,
@@ -425,6 +436,7 @@ const toSongDraft = (
     id: song.id,
     title: song.title,
     reading: song.reading ?? null,
+    wiki_page_title: song.wiki_page_title ?? null,
     artist: song.artist,
     genre_id: genres.find((genre) => genre.name === song.genre)?.id ?? null,
     bpm: song.bpm ?? null,
@@ -463,6 +475,7 @@ const toWorldsendDraft = (
     id: song.id,
     title: song.title,
     reading: song.reading ?? null,
+    wiki_page_title: song.wiki_page_title ?? null,
     artist: song.artist,
     genre_id: genres.find((genre) => genre.name === song.genre)?.id ?? null,
     bpm: song.bpm ?? null,
@@ -490,6 +503,7 @@ const hasSongDraftChanges = (current: SongDraft | null, initial: SongDraft | nul
   if (
     current.title !== initial.title ||
     current.reading !== initial.reading ||
+    current.wiki_page_title !== initial.wiki_page_title ||
     current.artist !== initial.artist ||
     current.genre_id !== initial.genre_id ||
     current.bpm !== initial.bpm ||
@@ -527,6 +541,7 @@ const hasWorldsendDraftChanges = (
   return (
     current.title !== initial.title ||
     current.reading !== initial.reading ||
+    current.wiki_page_title !== initial.wiki_page_title ||
     current.artist !== initial.artist ||
     current.genre_id !== initial.genre_id ||
     current.bpm !== initial.bpm ||
@@ -569,6 +584,7 @@ const applySongDraftToManagedSong = (
     ...song,
     title: draft.title,
     reading: toNullableTrimmedString(draft.reading),
+    wiki_page_title: toNullableTrimmedString(draft.wiki_page_title),
     artist: draft.artist,
     genre: genreName ?? song.genre,
     bpm: draft.bpm,
@@ -595,6 +611,7 @@ const applyWorldsendDraftToManagedSong = (
   ...song,
   title: draft.title,
   reading: toNullableTrimmedString(draft.reading),
+  wiki_page_title: toNullableTrimmedString(draft.wiki_page_title),
   artist: draft.artist,
   genre: genreName ?? song.genre,
   bpm: draft.bpm,
@@ -914,6 +931,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       id: current.id,
       title: current.title,
       reading: toNullableTrimmedString(current.reading),
+      wiki_page_title: toNullableTrimmedString(current.wiki_page_title),
       artist: current.artist,
       genre: md.genres.find((genre) => genre.id === current.genre_id)?.name ?? null,
       bpm: current.bpm,
@@ -1005,6 +1023,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       official_idx: current.official_idx.trim(),
       title: current.title.trim(),
       reading: toNullableTrimmedString(current.reading),
+      wiki_page_title: toNullableTrimmedString(current.wiki_page_title),
       artist: current.artist.trim(),
       genre: genreName,
       bpm: current.bpm,
@@ -1094,6 +1113,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       official_idx: current.official_idx.trim(),
       title: current.title.trim(),
       reading: toNullableTrimmedString(current.reading),
+      wiki_page_title: toNullableTrimmedString(current.wiki_page_title),
       artist: current.artist.trim(),
       genre: genreName,
       bpm: current.bpm,
@@ -1145,6 +1165,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
       id: current.id,
       title: current.title,
       reading: toNullableTrimmedString(current.reading),
+      wiki_page_title: toNullableTrimmedString(current.wiki_page_title),
       artist: current.artist,
       genre: md.genres.find((genre) => genre.id === current.genre_id)?.name ?? null,
       bpm: current.bpm,
@@ -1377,6 +1398,16 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         value={currentDraft().artist}
                         inputClass={`${managementInputClass} font-sans`}
                         onInput={(value) => updateDraftField('artist', value)}
+                      />
+                      <ManagementTextField
+                        class="col-span-2 text-sm"
+                        label={SONG_MANAGEMENT_FIELD_COPY.wikiPageTitle}
+                        value={currentDraft().wiki_page_title ?? ''}
+                        maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
+                        inputClass={`${managementInputClass} font-sans`}
+                        onInput={(value) =>
+                          updateDraftField('wiki_page_title', value.trim() === '' ? null : value)
+                        }
                       />
                       <GenreSelectField
                         label="ジャンル"
@@ -1677,6 +1708,19 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                         inputClass={`${managementInputClass} font-sans`}
                         onInput={(value) => updateWorldsendDraftField('artist', value)}
                       />
+                      <ManagementTextField
+                        class="col-span-2 text-sm"
+                        label={SONG_MANAGEMENT_FIELD_COPY.wikiPageTitle}
+                        value={currentDraft().wiki_page_title ?? ''}
+                        maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
+                        inputClass={`${managementInputClass} font-sans`}
+                        onInput={(value) =>
+                          updateWorldsendDraftField(
+                            'wiki_page_title',
+                            value.trim() === '' ? null : value
+                          )
+                        }
+                      />
                       <GenreSelectField
                         label="ジャンル"
                         value={currentDraft().genre_id}
@@ -1851,6 +1895,15 @@ const SongManagementPage = (props: SongManagementPageProps) => {
                 value={createSongDraft().artist}
                 inputClass={`${managementInputClass} font-sans`}
                 onInput={(value) => updateCreateSongDraftField('artist', value)}
+              />
+              <ManagementTextField
+                label={SONG_MANAGEMENT_FIELD_COPY.wikiPageTitle}
+                value={createSongDraft().wiki_page_title ?? ''}
+                maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
+                inputClass={`${managementInputClass} font-sans`}
+                onInput={(value) =>
+                  updateCreateSongDraftField('wiki_page_title', value.trim() === '' ? null : value)
+                }
               />
               <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
                 <GenreSelectField
@@ -2042,6 +2095,18 @@ const SongManagementPage = (props: SongManagementPageProps) => {
               value={createWorldsendDraft().artist}
               inputClass={`${managementInputClass} font-sans`}
               onInput={(value) => updateCreateWorldsendDraftField('artist', value)}
+            />
+            <ManagementTextField
+              label={SONG_MANAGEMENT_FIELD_COPY.wikiPageTitle}
+              value={createWorldsendDraft().wiki_page_title ?? ''}
+              maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
+              inputClass={`${managementInputClass} font-sans`}
+              onInput={(value) =>
+                updateCreateWorldsendDraftField(
+                  'wiki_page_title',
+                  value.trim() === '' ? null : value
+                )
+              }
             />
             <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
               <GenreSelectField

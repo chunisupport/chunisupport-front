@@ -3,9 +3,27 @@ import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/solid-query'
-import { Check, Copy, EllipsisVertical, Lock, RotateCw, UserMinus, UserPlus, X } from 'lucide-solid'
+import {
+  Check,
+  Copy,
+  EllipsisVertical,
+  Lock,
+  RotateCw,
+  Swords,
+  UserMinus,
+  UserPlus,
+  X,
+} from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  onCleanup,
+  Show,
+} from 'solid-js'
 import {
   acceptFriendRequest,
   cancelFriendRequest,
@@ -13,11 +31,14 @@ import {
   deleteFriend,
   rejectFriendRequest,
 } from '../../api/friends'
-import { AppButton } from '../../components/common/AppButton'
+import { fetchPossessions } from '../../api/possessions'
+import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../../components/common/AppMenu'
 import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { Loading } from '../../components/Loading'
+import { getPossessionClassName } from '../../constants/possession'
+import { buildFriendVsPath } from '../../constants/routes'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   type FriendshipMutationType,
@@ -33,8 +54,9 @@ import {
   setActiveFriendRequestNotificationUser,
   syncFriendRequestNotificationFromReceivedCount,
 } from '../../stores/friendRequestNotification'
-import type { FriendshipUserDTO } from '../../types/api'
+import type { FriendshipUserDTO, MasterItemDTO } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { resolvePossessionName } from '../../utils/possession'
 import {
   USERNAME_MIN_LENGTH,
   USERNAME_PATTERN,
@@ -52,9 +74,8 @@ import {
   resolveFriendsTabValue,
 } from './constants'
 import {
-  formatFriendPlayerLevel,
-  formatFriendPlayerName,
-  formatFriendRating,
+  buildFriendCardDisplay,
+  type FriendCardDisplay,
   shouldHideFriendProfile,
 } from './friendshipDisplay'
 
@@ -77,6 +98,8 @@ type FriendshipListProps = {
   variant: FriendsTabValue
   /** 表示するユーザー概要の一覧 */
   items: FriendshipUserDTO[]
+  /** ID順のポゼッションマスタ。未取得時は空配列 */
+  possessions: readonly MasterItemDTO[]
   /** 空状態で表示する文言 */
   emptyMessage: string
   /** 一覧内の操作を無効化するか */
@@ -89,6 +112,11 @@ type FriendshipListProps = {
   onRemove: (user: FriendshipUserDTO) => void
   /** 送信済み申請取り消し時の処理 */
   onCancel: (user: FriendshipUserDTO) => void
+}
+
+type FriendMetricsProps = {
+  /** 整形済みのカード表示値 */
+  display: FriendCardDisplay
 }
 
 type FriendConfirmDialogProps = {
@@ -152,58 +180,66 @@ const FriendMenuActions = (props: { busy: boolean; onRemove: () => void }): JSX.
 )
 
 /**
- * フレンド申請カード下部の操作ボタン群を表示する。
+ * フレンドカード下部の操作ボタン群を表示する。
  *
- * @param props - 表示種別、操作状態、イベントハンドラー。
- * @returns 申請カード用の操作ボタン。
+ * @param props - 表示種別、フレンドVSへの遷移先、操作状態、イベントハンドラー。
+ * @returns 表示種別に応じたカード下部の操作ボタン。
  */
-const FriendRequestActions = (props: {
+const FriendCardActions = (props: {
   variant: FriendsTabValue
+  friendVsPath: string
   busy: boolean
   onAccept: () => void
   onReject: () => void
   onCancel: () => void
 }): JSX.Element => (
-  <Show when={props.variant !== 'friends'}>
-    <div class="mt-4 flex w-full flex-col gap-2">
-      <Show when={props.variant === 'received'}>
-        <div class="grid grid-cols-2 gap-2">
-          <AppButton
-            variant="primary"
-            size="sm"
-            fullWidth
-            leftIcon={<Check class="h-4 w-4" aria-hidden="true" />}
-            disabled={props.busy}
-            onClick={props.onAccept}
-          >
-            {FRIENDS_COPY.accept}
-          </AppButton>
-          <AppButton
-            variant="dangerOutline"
-            size="sm"
-            fullWidth
-            leftIcon={<X class="h-4 w-4" aria-hidden="true" />}
-            disabled={props.busy}
-            onClick={props.onReject}
-          >
-            {FRIENDS_COPY.reject}
-          </AppButton>
-        </div>
-      </Show>
-      <Show when={props.variant === 'sent'}>
+  <div class="flex flex-col gap-2 rounded-b-md border border-t-0 border-border bg-surface px-3 py-2.5">
+    <Show when={props.variant === 'friends'}>
+      <A
+        href={props.friendVsPath}
+        class={getAppButtonClass({ variant: 'surface', size: 'sm', fullWidth: true })}
+      >
+        <Swords class="h-4 w-4" aria-hidden="true" />
+        {FRIENDS_COPY.friendVs}
+      </A>
+    </Show>
+    <Show when={props.variant === 'received'}>
+      <div class="grid grid-cols-2 gap-2">
+        <AppButton
+          variant="primary"
+          size="sm"
+          fullWidth
+          leftIcon={<Check class="h-4 w-4" aria-hidden="true" />}
+          disabled={props.busy}
+          onClick={props.onAccept}
+        >
+          {FRIENDS_COPY.accept}
+        </AppButton>
         <AppButton
           variant="dangerOutline"
           size="sm"
           fullWidth
           leftIcon={<X class="h-4 w-4" aria-hidden="true" />}
           disabled={props.busy}
-          onClick={props.onCancel}
+          onClick={props.onReject}
         >
-          {FRIENDS_COPY.cancelRequest}
+          {FRIENDS_COPY.reject}
         </AppButton>
-      </Show>
-    </div>
-  </Show>
+      </div>
+    </Show>
+    <Show when={props.variant === 'sent'}>
+      <AppButton
+        variant="dangerOutline"
+        size="sm"
+        fullWidth
+        leftIcon={<X class="h-4 w-4" aria-hidden="true" />}
+        disabled={props.busy}
+        onClick={props.onCancel}
+      >
+        {FRIENDS_COPY.cancelRequest}
+      </AppButton>
+    </Show>
+  </div>
 )
 
 /**
@@ -258,6 +294,29 @@ const FriendConfirmDialog = (props: FriendConfirmDialogProps): JSX.Element => {
 }
 
 /**
+ * フレンドカードにRATINGとOVER POWERを並べて表示する。
+ *
+ * @param props - 整形済みの表示値。
+ * @returns 指標の定義リスト。
+ */
+const FriendMetrics = (props: FriendMetricsProps): JSX.Element => (
+  <dl class="grid grid-cols-2 gap-x-2">
+    <div class="min-w-0">
+      <dt class="text-xs font-medium leading-tight">{FRIENDS_COPY.ratingLabel}</dt>
+      <dd class="truncate font-jost text-xl font-semibold leading-tight tracking-tight">
+        {props.display.rating}
+      </dd>
+    </div>
+    <div class="min-w-0">
+      <dt class="text-xs font-medium leading-tight">{FRIENDS_COPY.overPowerLabel}</dt>
+      <dd class="truncate font-jost text-xl font-semibold leading-tight tracking-tight">
+        {props.display.overPower}
+      </dd>
+    </div>
+  </dl>
+)
+
+/**
  * フレンドまたは申請ユーザーの一覧を表示する。
  *
  * @param props - 表示種別、ユーザー一覧、空状態文言、操作ハンドラー。
@@ -272,73 +331,71 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
       </p>
     }
   >
-    <ul class="grid justify-center gap-3 [grid-template-columns:repeat(auto-fit,15rem)]">
+    <ul class="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(100%,18rem),1fr))]">
       <For each={props.items}>
         {(user) => {
           const hidesProfile = createMemo(() => shouldHideFriendProfile(props.variant, user))
-          const playerNameClass =
-            'min-w-0 truncate text-xl font-bold underline-offset-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
-
+          const display = createMemo(() => buildFriendCardDisplay(user, hidesProfile()))
+          const possessionClassName = createMemo(() =>
+            hidesProfile()
+              ? ''
+              : getPossessionClassName(
+                  resolvePossessionName(user.possession_id ?? undefined, props.possessions)
+                )
+          )
           return (
-            <li class="relative flex min-w-60 flex-col rounded-lg border border-border bg-surface p-4">
-              <Show when={props.variant === 'friends'}>
-                <div class="absolute right-2 top-2">
-                  <FriendMenuActions
-                    busy={props.actionsDisabled}
-                    onRemove={() => props.onRemove(user)}
-                  />
-                </div>
-              </Show>
-              <div class="min-w-0">
-                <div class={`min-w-0 ${props.variant === 'friends' ? 'pr-8' : ''}`}>
-                  <div class="flex min-w-0 items-center gap-1">
-                    <Show
-                      when={!hidesProfile()}
-                      fallback={
-                        <span class={`${playerNameClass} font-sans text-text`}>
-                          @{user.username}
-                        </span>
-                      }
-                    >
-                      <A
-                        href={buildFriendProfilePath(user.username)}
-                        class={`${playerNameClass} text-action-primary hover:text-action-primary-hover hover:underline`}
-                      >
-                        {formatFriendPlayerName(user.player_name)}
-                      </A>
-                    </Show>
-                    <Show when={hidesProfile()}>
-                      <span
-                        class="shrink-0 text-text-muted"
-                        role="img"
-                        aria-label={FRIENDS_COPY.privateAccountLabel}
-                        title={FRIENDS_COPY.privateAccountLabel}
-                      >
-                        <Lock class="h-4 w-4" aria-hidden="true" />
-                      </span>
-                    </Show>
-                  </div>
-                  <Show when={!hidesProfile()}>
-                    <span class="mt-0.5 block min-w-0 truncate text-xs text-text-muted">
-                      @{user.username}
-                    </span>
-                  </Show>
-                </div>
+            <li class="flex flex-col rounded-md shadow-sm">
+              <div
+                class={`friend-card user-nameplate relative flex flex-col rounded-t-md px-3 py-2.5 ${possessionClassName()}`}
+              >
                 <Show when={!hidesProfile()}>
-                  <dl class="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
-                    <div>
-                      <dt class="text-text-subtle">{FRIENDS_COPY.levelLabel}</dt>
-                      <dd class="font-medium">{formatFriendPlayerLevel(user.player_level)}</dd>
-                    </div>
-                    <div>
-                      <dt class="text-text-subtle">{FRIENDS_COPY.ratingLabel}</dt>
-                      <dd class="font-medium">{formatFriendRating(user.rating)}</dd>
-                    </div>
-                  </dl>
+                  <A
+                    href={buildFriendProfilePath(user.username)}
+                    aria-label={`${display().playerName}${FRIENDS_COPY.profileLinkSuffix}`}
+                    class="absolute inset-0 z-10 rounded-t-md transition-shadow hover:ring-2 hover:ring-inset hover:ring-focus-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+                  />
                 </Show>
+                <Show when={props.variant === 'friends'}>
+                  <div class="absolute right-1 top-1 z-20">
+                    <FriendMenuActions
+                      busy={props.actionsDisabled}
+                      onRemove={() => props.onRemove(user)}
+                    />
+                  </div>
+                </Show>
+                <Show when={hidesProfile()}>
+                  <span
+                    class="absolute right-2 top-2 text-text-muted"
+                    role="img"
+                    aria-label={FRIENDS_COPY.privateAccountLabel}
+                    title={FRIENDS_COPY.privateAccountLabel}
+                  >
+                    <Lock class="h-4 w-4" aria-hidden="true" />
+                  </span>
+                </Show>
+                <div
+                  class={`flex min-w-0 items-end gap-2 ${
+                    props.variant === 'friends' || hidesProfile() ? 'pr-7' : ''
+                  }`}
+                >
+                  <span class="shrink-0 text-sm">
+                    {FRIENDS_COPY.levelLabel} {display().level}
+                  </span>
+                  <div class="flex min-w-0 flex-1 justify-center">
+                    <span class="min-w-0 truncate text-center font-sans text-lg font-medium text-inherit">
+                      {display().playerName}
+                    </span>
+                  </div>
+                </div>
+                <span class="user-nameplate-metric-secondary block min-w-0 truncate text-right font-sans text-xs">
+                  @{user.username}
+                </span>
+                <hr class="my-1.5 border-t" />
+                <FriendMetrics display={display()} />
               </div>
-              <FriendRequestActions
+              <FriendCardActions
                 variant={props.variant}
+                friendVsPath={buildFriendVsPath(user.username)}
                 busy={props.actionsDisabled}
                 onAccept={() => props.onAccept(user)}
                 onReject={() => props.onReject(user)}
@@ -379,6 +436,9 @@ const FriendsPage = () => {
     receivedFriendRequestsQueryOptions(ownUsername() || null)
   )
   const sentRequestsQuery = useQuery(() => sentFriendRequestsQueryOptions(ownUsername() || null))
+  const [possessions] = createResource(fetchPossessions)
+  /** カード背景に使うポゼッションマスタ。装飾用のため取得失敗時は空配列で既定色にする */
+  const possessionMaster = createMemo(() => (possessions.state === 'ready' ? possessions() : []))
 
   /**
    * フレンド操作成功を通知し、影響するqueryを無効化する。
@@ -739,7 +799,7 @@ const FriendsPage = () => {
               variant="ghost"
               size="sm"
               fullWidth
-              class={`mb-4 justify-between text-left transition-colors ${
+              class={`mb-2 justify-between text-left transition-colors ${
                 isOwnUsernameCopied()
                   ? 'bg-action-primary-muted text-action-primary'
                   : 'text-text-muted'
@@ -844,6 +904,7 @@ const FriendsPage = () => {
               <FriendshipList
                 variant="friends"
                 items={currentData().friends}
+                possessions={possessionMaster()}
                 emptyMessage={FRIENDS_COPY.emptyFriends}
                 actionsDisabled={operation() !== null}
                 onAccept={handleAccept}
@@ -856,6 +917,7 @@ const FriendsPage = () => {
               <FriendshipList
                 variant="received"
                 items={currentData().received}
+                possessions={possessionMaster()}
                 emptyMessage={FRIENDS_COPY.emptyReceived}
                 actionsDisabled={operation() !== null}
                 onAccept={handleAccept}
@@ -868,6 +930,7 @@ const FriendsPage = () => {
               <FriendshipList
                 variant="sent"
                 items={currentData().sent}
+                possessions={possessionMaster()}
                 emptyMessage={FRIENDS_COPY.emptySent}
                 actionsDisabled={operation() !== null}
                 onAccept={handleAccept}

@@ -177,6 +177,7 @@ const WorldsendSongInfoCard = (props: Props) => {
         initialGenre={props.song.genre}
         initialBpm={props.song.bpm}
         initialRelease={props.song.release}
+        initialWikiPageTitle={props.song.wiki_page_title ?? null}
         requireGenre={false}
         saving={savingSong()}
         apiErrorMessage={songFormError()}

@@ -40,6 +40,7 @@ import {
   USER_NAMEPLATE_METRIC_LABELS,
   USER_NAMEPLATE_UNKNOWN_CONST_HINT,
   USER_NAMEPLATE_UNKNOWN_CONST_MARKER,
+  USER_NAMEPLATE_WIDTH_CLASS,
 } from './UserNameplate.constants'
 
 const HONOR_ROTATION_INTERVAL_MS = 4000
@@ -311,7 +312,7 @@ export const UserNameplate: Component<Props> = (props) => {
 
   return (
     <div
-      class={`user-nameplate relative mb-2 mx-auto w-[min(380px,calc(100%-2rem))] rounded-md px-3 py-3 shadow-sm ${getPossessionClassName(
+      class={`user-nameplate relative mb-2 rounded-md px-3 py-3 shadow-sm ${USER_NAMEPLATE_WIDTH_CLASS} ${getPossessionClassName(
         possessionName()
       )}`}
       data-possession={possessionName()}

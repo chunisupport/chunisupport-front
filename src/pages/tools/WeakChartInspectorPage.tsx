@@ -229,6 +229,7 @@ const WeakChartDistributionChart = (props: {
         animation: false,
         interaction: { mode: 'nearest', intersect: true },
         plugins: {
+          legend: { display: false },
           tooltip: {
             enabled: false,
             external: ({ tooltip }) =>

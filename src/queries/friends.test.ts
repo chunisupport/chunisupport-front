@@ -71,12 +71,14 @@ test('フレンド操作ごとに必要なqueryだけを無効化対象にする
     ['friendships', 'alice', 'requests', 'received'],
     ['friendships', 'alice', 'friends'],
     ['friend-rankings', 'alice'],
+    ['friend-comparisons', 'alice'],
   ])
   assert.deepEqual(rejectKeys, [['friendships', 'alice', 'requests', 'received']])
   assert.deepEqual(cancelKeys, [['friendships', 'alice', 'requests', 'sent']])
   assert.deepEqual(removeKeys, [
     ['friendships', 'alice', 'friends'],
     ['friend-rankings', 'alice'],
+    ['friend-comparisons', 'alice'],
   ])
 })
 
@@ -98,15 +100,17 @@ test('mutation無効化は別ユーザーのキャッシュへ影響しない', 
   queryClient.clear()
 })
 
-test('認証ユーザー変更時は旧ユーザーの一覧とランキングだけを削除する', async () => {
+test('認証ユーザー変更時は旧ユーザーのフレンド関連キャッシュを削除する', async () => {
   // Given: aliceとbobのフレンド関連キャッシュ。
   const { clearFriendQueriesForUser, friendshipQueryKeys } = await loadFriendsQuery()
   const queryClient = createTestQueryClient()
   const aliceFriendsKey = friendshipQueryKeys.friends('alice')
   const aliceRankingKey = ['friend-rankings', 'alice', 'song', 'song-1', 'MASTER'] as const
+  const aliceComparisonKey = ['friend-comparisons', 'alice', 'frienduser', 'MASTER'] as const
   const bobFriendsKey = friendshipQueryKeys.friends('bob')
   queryClient.setQueryData(aliceFriendsKey, [])
   queryClient.setQueryData(aliceRankingKey, { ranking: [] })
+  queryClient.setQueryData(aliceComparisonKey, { items: [] })
   queryClient.setQueryData(bobFriendsKey, [])
 
   // When: aliceの認証依存queryを破棄する。
@@ -115,6 +119,7 @@ test('認証ユーザー変更時は旧ユーザーの一覧とランキング�
   // Then: aliceだけが削除される。
   assert.equal(queryClient.getQueryState(aliceFriendsKey), undefined)
   assert.equal(queryClient.getQueryState(aliceRankingKey), undefined)
+  assert.equal(queryClient.getQueryState(aliceComparisonKey), undefined)
   assert.notEqual(queryClient.getQueryState(bobFriendsKey), undefined)
   queryClient.clear()
 })

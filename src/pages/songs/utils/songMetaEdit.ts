@@ -20,12 +20,14 @@ export type SongMetaEditValues = {
   genre: string | null
   bpm: number | null
   releasedAt: string | null
+  wikiPageTitle: string | null
 }
 
 export type SongMetaEditFormInput = {
   genreName: string | null
   bpm: string
   releasedAt: string
+  wikiPageTitle: string
 }
 
 export type ChartMetaEditDraft = {
@@ -136,7 +138,7 @@ export const parseOptionalNonNegativeInteger = (value: string): number | null | 
 /**
  * 楽曲情報編集フォームの入力を更新リクエスト用の値へ正規化する。
  *
- * @param input - ジャンル、BPM、リリース日の入力値。
+ * @param input - ジャンル、BPM、リリース日、Wikiページタイトルの入力値。
  * @param requireGenre - ジャンル選択を必須にするか。
  * @returns 正規化済みの値、またはエラーメッセージ。
  */
@@ -158,12 +160,19 @@ export const parseSongMetaEditValues = (
     return { ok: false, message: SONG_EDIT_COPY.releaseInvalid }
   }
 
+  const wikiPageTitle = toNullableTrimmedString(input.wikiPageTitle)
+  // APIはUnicodeコードポイント単位で文字数を検証するため、サロゲートペアを1文字として数える
+  if (wikiPageTitle && [...wikiPageTitle].length > SONG_EDIT_INPUT_LIMITS.wikiPageTitle) {
+    return { ok: false, message: SONG_EDIT_COPY.wikiPageTitleTooLong }
+  }
+
   return {
     ok: true,
     value: {
       genre: input.genreName,
       bpm,
       releasedAt,
+      wikiPageTitle,
     },
   }
 }
@@ -172,7 +181,7 @@ export const parseSongMetaEditValues = (
  * 通常楽曲の楽曲情報だけを更新する PUT リクエストを組み立てる。
  *
  * @param song - 表示中の通常楽曲。
- * @param values - 編集後のジャンル、BPM、リリース日。
+ * @param values - 編集後のジャンル、BPM、リリース日、Wikiページタイトル。
  * @returns 譜面を変更しない通常楽曲更新リクエスト。
  */
 export const buildSongMetaUpdateRequest = (
@@ -186,6 +195,7 @@ export const buildSongMetaUpdateRequest = (
   genre: values.genre,
   bpm: values.bpm,
   released_at: values.releasedAt,
+  wiki_page_title: values.wikiPageTitle,
   jacket: song.jacket,
   is_new: song.is_new,
   charts: {},
@@ -195,7 +205,7 @@ export const buildSongMetaUpdateRequest = (
  * WORLD'S END 楽曲の楽曲情報だけを更新する PUT リクエストを組み立てる。
  *
  * @param song - 表示中の WORLD'S END 楽曲。
- * @param values - 編集後のジャンル、BPM、リリース日。
+ * @param values - 編集後のジャンル、BPM、リリース日、Wikiページタイトル。
  * @returns 譜面を変更しない WORLD'S END 楽曲更新リクエスト。
  */
 export const buildWorldsendSongMetaUpdateRequest = (
@@ -209,6 +219,7 @@ export const buildWorldsendSongMetaUpdateRequest = (
   genre: values.genre,
   bpm: values.bpm,
   released_at: values.releasedAt,
+  wiki_page_title: values.wikiPageTitle,
   jacket: song.jacket,
   is_new: song.is_new,
 })

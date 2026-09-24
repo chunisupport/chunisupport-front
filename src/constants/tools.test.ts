@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   CHART_STATS_PATH,
+  FRIEND_VS_PATH,
   LOCKED_SONG_DISCOVERY_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
@@ -64,6 +65,18 @@ test('未解禁曲ディスカバーは ADMIN 限定ツールとして定義さ�
   assert.ok(lockedSongDiscovery)
   assert.equal(lockedSongDiscovery.adminOnly, true)
   assert.equal(isPublicToolLink(lockedSongDiscovery), false)
+})
+
+test('フレンドVSは通常ユーザーにも表示するツールとして定義されていること', () => {
+  // Given
+  const friendVs = getToolLink(FRIEND_VS_PATH)
+
+  // When / Then
+  assert.equal(friendVs.adminOnly, undefined)
+  assert.equal(isPublicToolLink(friendVs), true)
+  assert.equal(isToolLinkListed(friendVs, undefined), true)
+  assert.equal(isToolLinkListed(friendVs, 'PLAYER'), true)
+  assert.equal(isToolLinkListed(friendVs, 'ADMIN'), true)
 })
 
 test('苦手譜面インスペクター Online はログインユーザー向けの公開ツールとして定義されていること', () => {

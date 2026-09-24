@@ -156,6 +156,70 @@ export const renderDefaultRecordFullChainBadge = (
 }
 
 /**
+ * 3種類のランプ状態をまとめた読み上げ文言を組み立てる。
+ *
+ * @param record - スコアと3種類のランプ状態。
+ * @returns ハード・コンボ・FULL CHAINの順に並べた読み上げ文言。
+ */
+const getRecordLampsAccessibleLabel = (record: DefaultRecordLampBadgesRecord): string =>
+  `ハードランプ ${record.clear_lamp ?? LAMP_NONE_ACCESSIBLE_LABEL}、コンボランプ ${getDefaultRecordLampAccessibleLabel(record.combo_lamp, record.score)}、FULL CHAIN ${record.full_chain ?? LAMP_NONE_ACCESSIBLE_LABEL}`
+
+/** ランプ未達成のドットに使う背景色クラス */
+const LAMP_DOT_PLACEHOLDER_CLASS = 'bg-surface-hover'
+
+/**
+ * ハード・コンボ・FULL CHAINの3種類のランプを、バッジと同じ背景色の小さなドットで表示する。
+ * ランプの重要度が低い画面で達成状況を示し、ホバー時に元のバッジラベルを表示する。
+ *
+ * @param props - 表示対象のランプ状態と追加クラス。
+ * @returns 3つのドットを横並びにした要素。
+ */
+export const RecordLampDots = (props: {
+  record: DefaultRecordLampBadgesRecord
+  class?: string
+}) => {
+  /** @returns ハードランプのドット色。 */
+  const hardClass = () => {
+    const lamp = props.record.clear_lamp
+    return lamp && lamp !== 'FAILED'
+      ? HARD_LAMP_BADGE_BACKGROUND_CLASS[lamp]
+      : LAMP_DOT_PLACEHOLDER_CLASS
+  }
+  /** @returns コンボランプのドット色。 */
+  const comboClass = () =>
+    props.record.combo_lamp
+      ? getComboLampBadgeClass(props.record.combo_lamp, props.record.score)
+      : LAMP_DOT_PLACEHOLDER_CLASS
+  /** @returns FULL CHAINのドット色。 */
+  const fullChainClass = () => {
+    const lamp = getDefaultRecordFullChainBadgeLamp(props.record.full_chain)
+    return lamp ? getComboLampBadgeClass(lamp, undefined) : LAMP_DOT_PLACEHOLDER_CLASS
+  }
+
+  return (
+    <div class={`flex ${props.class ?? ''}`}>
+      <span class="sr-only">{getRecordLampsAccessibleLabel(props.record)}</span>
+      <div class="flex gap-1.5" aria-hidden="true">
+        <span
+          class={`size-3 rounded-full ${hardClass()}`}
+          title={getDefaultRecordHardLampLabel(props.record.clear_lamp) || undefined}
+        />
+        <span
+          class={`size-3 rounded-full ${comboClass()}`}
+          title={
+            getDefaultRecordLampLabel(props.record.combo_lamp, props.record.score) || undefined
+          }
+        />
+        <span
+          class={`size-3 rounded-full ${fullChainClass()}`}
+          title={getDefaultRecordFullChainLabel(props.record.full_chain) || undefined}
+        />
+      </div>
+    </div>
+  )
+}
+
+/**
  * ハード・コンボ・FULL CHAINの3種類のランプバッジをまとめて表示する。
  *
  * @param props - 表示対象のランプ状態と追加クラス。
@@ -166,9 +230,7 @@ export const DefaultRecordLampBadges = (props: {
   class?: string
 }) => (
   <div class={`flex ${RECORD_LAMP_COLUMN_CLASS} ${props.class ?? ''}`}>
-    <span class="sr-only">
-      {`ハードランプ ${props.record.clear_lamp ?? LAMP_NONE_ACCESSIBLE_LABEL}、コンボランプ ${getDefaultRecordLampAccessibleLabel(props.record.combo_lamp, props.record.score)}、FULL CHAIN ${props.record.full_chain ?? LAMP_NONE_ACCESSIBLE_LABEL}`}
-    </span>
+    <span class="sr-only">{getRecordLampsAccessibleLabel(props.record)}</span>
     <div class="flex gap-2" aria-hidden="true">
       {renderDefaultRecordHardLampBadge(props.record.clear_lamp)}
       {renderDefaultRecordLampBadge(props.record.combo_lamp, {

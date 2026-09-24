@@ -1,5 +1,6 @@
 import { type QueryClient, type QueryKey, queryOptions } from '@tanstack/solid-query'
 import { fetchFriends, fetchReceivedFriendRequests, fetchSentFriendRequests } from '../api/friends'
+import { friendComparisonQueryKeys } from './friendComparisons'
 import { FRIEND_QUERY_STALE_TIME_MS } from './friendQueryConstants'
 import { friendRankingQueryKeys } from './friendRankings'
 
@@ -86,18 +87,19 @@ export const getFriendMutationInvalidationFilters = (
   const received = { queryKey: friendshipQueryKeys.received(username), exact: true }
   const sent = { queryKey: friendshipQueryKeys.sent(username), exact: true }
   const rankings = { queryKey: friendRankingQueryKeys.user(username) }
+  const comparisons = { queryKey: friendComparisonQueryKeys.user(username) }
 
   switch (operation) {
     case 'request':
       return [friends, received, sent, rankings]
     case 'accept':
-      return [received, friends, rankings]
+      return [received, friends, rankings, comparisons]
     case 'reject':
       return [received]
     case 'cancel':
       return [sent]
     case 'remove':
-      return [friends, rankings]
+      return [friends, rankings, comparisons]
   }
 }
 
@@ -135,6 +137,7 @@ export const clearFriendQueriesForUser = async (
   const queryKeys = [
     friendshipQueryKeys.user(username),
     friendRankingQueryKeys.user(username),
+    friendComparisonQueryKeys.user(username),
   ] as const
 
   await Promise.all(

@@ -1,12 +1,12 @@
 import { createEffect, createMemo, For } from 'solid-js'
 import { createWindowVirtualTable } from '../../../../components/common/createWindowVirtualTable'
 import type { SongDTO, VersionSummaryDTO } from '../../../../types/api'
+import { getVirtualGridRowCount, getVirtualGridRowSlice } from '../../../../utils/virtualGrid'
 import {
   SONG_CARD_COLUMN_GAP_PX,
   SONG_CARD_GRID_OVERSCAN,
   SONG_CARD_ROW_HEIGHT_PX,
 } from '../constants'
-import { getSongCardRowCount, getSongCardRowSlice } from '../utils/songCardGrid'
 import SongCard from './SongCard'
 
 type SongsCardGridProps = {
@@ -32,7 +32,7 @@ const SongsCardGrid = (props: SongsCardGridProps) => {
     HTMLDivElement,
     HTMLDivElement
   >({
-    rowCount: () => getSongCardRowCount(props.songs.length, props.columnCount),
+    rowCount: () => getVirtualGridRowCount(props.songs.length, props.columnCount),
     rowHeight: SONG_CARD_ROW_HEIGHT_PX,
     overscan: SONG_CARD_GRID_OVERSCAN,
     resetOnRowCountChange: false,
@@ -62,7 +62,7 @@ const SongsCardGrid = (props: SongsCardGridProps) => {
         <For each={virtualRows()}>
           {(virtualRow) => {
             const rowSongs = createMemo(() =>
-              getSongCardRowSlice(props.songs, virtualRow.index, props.columnCount)
+              getVirtualGridRowSlice(props.songs, virtualRow.index, props.columnCount)
             )
 
             return (

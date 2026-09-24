@@ -1,3 +1,6 @@
+/** プロフィールカードと、その下に置く独立した操作ボタンの幅 */
+export const USER_NAMEPLATE_WIDTH_CLASS = 'mx-auto w-[min(380px,calc(100%-2rem))]'
+
 /** プロフィールカードの指標表示で使用するラベル */
 export const USER_NAMEPLATE_METRIC_LABELS = {
   rating: 'RATING',

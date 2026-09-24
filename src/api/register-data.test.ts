@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
+import type { PlayerLatestUpdateResult } from '../types/api'
 
 /**
  * モジュール内定数をテストごとに再評価して登録API関数群を読み込む。
@@ -62,4 +63,37 @@ test('最新更新結果APIは未対応のスキーマバージョンを拒否�
 
   // Then: 不完全な結果を描画せず、呼び出し側へエラーとして通知する。
   await assert.rejects(fetchLatestPlayerDataUpdate, /保存済み更新結果の形式に対応していません。/)
+})
+
+test('更新履歴APIは認証付きで複数世代を取得する', async () => {
+  // Given: 新しい順の保存済み更新結果。
+  const calls = installFetchRecorder(() =>
+    Response.json([
+      { schema_version: 3, imported_at: '2026-09-24T00:00:00Z' },
+      { schema_version: 1, imported_at: '2026-09-23T00:00:00Z' },
+    ])
+  )
+
+  // When: 更新履歴を取得する。
+  const { fetchRecentPlayerDataUpdates } = await loadRegisterDataApi()
+  const results = await fetchRecentPlayerDataUpdates()
+
+  // Then: 本人用APIから順序を保った結果を返す。
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/me/player-data/updates')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Authorization'), 'Bearer test-token')
+  assert.deepEqual(
+    results.map((result: PlayerLatestUpdateResult) => result.schema_version),
+    [3, 1]
+  )
+})
+
+test('更新履歴APIは未対応の保存形式を拒否する', async () => {
+  // Given: 未対応の形式を含む履歴。
+  installFetchRecorder(() => Response.json([{ schema_version: 4 }]))
+
+  // When: 更新履歴を取得する。
+  const { fetchRecentPlayerDataUpdates } = await loadRegisterDataApi()
+
+  // Then: 画面に渡す前にエラーを返す。
+  await assert.rejects(fetchRecentPlayerDataUpdates, /保存済み更新結果の形式に対応していません。/)
 })

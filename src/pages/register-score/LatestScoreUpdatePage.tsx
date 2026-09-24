@@ -1,10 +1,14 @@
-import { createResource, Match, Show, Switch } from 'solid-js'
+import { createMemo, createResource, createSignal, Match, Show, Switch } from 'solid-js'
 
-import { fetchLatestPlayerDataUpdate } from '../../api/register-data'
+import { fetchRecentPlayerDataUpdates } from '../../api/register-data'
 import { LoadError, Loading } from '../../components'
+import { AppSelect } from '../../components/common/AppSelect'
 import {
+  formatPreviousScoreUpdateLabel,
   LATEST_SCORE_UPDATE_CHANGED_SONGS_EMPTY_MESSAGE,
   LATEST_SCORE_UPDATE_EMPTY_MESSAGE,
+  LATEST_SCORE_UPDATE_HISTORY_LABEL,
+  LATEST_SCORE_UPDATE_NEWEST_LABEL,
   LATEST_SCORE_UPDATE_TITLE,
 } from '../../constants/playerLatestUpdate'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -14,6 +18,7 @@ import {
   normalizePlayerDataResult,
   requestChangedSongMasters,
 } from '../../usecases/registerScoreCommit'
+import { formatPlayerMetricHistoryDateTime } from '../../utils/playerMetricHistory'
 import { RegisterScoreResultView } from './RegisterScoreResultView'
 import {
   resolveRegisterScoreChartLevel,
@@ -29,6 +34,7 @@ import {
  */
 const LatestScoreUpdatePage = () => {
   const songsData = useSongsData()
+  const [selectedIndex, setSelectedIndex] = createSignal(0)
 
   useDocumentTitle(LATEST_SCORE_UPDATE_TITLE)
 
@@ -38,31 +44,39 @@ const LatestScoreUpdatePage = () => {
    * @returns 表示用に正規化した最新更新結果とコースマスタ。未保存の場合はnull。
    */
   const loadLatestUpdate = async () => {
-    const latestUpdate = await fetchLatestPlayerDataUpdate()
-    if (latestUpdate === null) {
-      return null
+    const updates = await fetchRecentPlayerDataUpdates()
+    const results = updates.map(normalizePlayerDataResult)
+    for (const result of results) {
+      requestChangedSongMasters(result, {
+        ensureSongsLoaded: songsData.ensureSongsLoaded,
+        ensureWorldsendSongsLoaded: songsData.ensureWorldsendSongsLoaded,
+      })
     }
 
-    const result = normalizePlayerDataResult(latestUpdate)
-    requestChangedSongMasters(result, {
-      ensureSongsLoaded: songsData.ensureSongsLoaded,
-      ensureWorldsendSongsLoaded: songsData.ensureWorldsendSongsLoaded,
-    })
-
-    const courses = result.changes.some((change) => change.record_type === 'course')
+    const courses = results.some((result) =>
+      result.changes.some((change) => change.record_type === 'course')
+    )
       ? await fetchCoursesWithCache()
           .then((response) => response.courses)
           .catch(() => [])
       : []
 
-    return { result, courses }
+    return { updates, results, courses }
   }
 
   const [pageData] = createResource(loadLatestUpdate)
+  const historyOptions = createMemo(() =>
+    (pageData()?.updates ?? []).map((update, index) => ({
+      index,
+      label: `${index === 0 ? LATEST_SCORE_UPDATE_NEWEST_LABEL : formatPreviousScoreUpdateLabel(index)}${formatPlayerMetricHistoryDateTime(update.imported_at)}`,
+    }))
+  )
+  const selectedOption = createMemo(() => historyOptions()[selectedIndex()])
+  const selectedResult = createMemo(() => pageData()?.results[selectedIndex()])
 
   return (
     <main class="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
-      <Show when={pageData.state !== 'ready' || pageData() === null}>
+      <Show when={pageData.state !== 'ready' || pageData()?.results.length === 0}>
         <h1 class="text-2xl font-semibold">{LATEST_SCORE_UPDATE_TITLE}</h1>
       </Show>
 
@@ -75,41 +89,61 @@ const LatestScoreUpdatePage = () => {
             <Loading />
           </section>
         </Match>
-        <Match when={pageData() === null}>
+        <Match when={pageData()?.results.length === 0}>
           <p class="rounded-md border border-border bg-surface px-3 py-4 text-center text-sm text-text-muted">
             {LATEST_SCORE_UPDATE_EMPTY_MESSAGE}
           </p>
         </Match>
-        <Match when={pageData()}>
-          {(data) => (
-            <RegisterScoreResultView
-              pageTitle={LATEST_SCORE_UPDATE_TITLE}
-              result={data().result}
-              resolveSongTitle={(change) =>
-                resolveRegisterScoreSongTitle(
-                  change,
-                  songsData.songsResponse.latest?.songs ?? [],
-                  songsData.worldsendSongsResponse.latest?.songs ?? []
-                )
-              }
-              resolveChartLevel={(change) =>
-                resolveRegisterScoreChartLevel(
-                  change,
-                  songsData.songsResponse.latest?.songs ?? [],
-                  songsData.worldsendSongsResponse.latest?.songs ?? []
-                )
-              }
-              resolveSongSortValues={(change) =>
-                resolveRegisterScoreSongSortValues(
-                  change,
-                  songsData.songsResponse.latest?.songs ?? []
-                )
-              }
-              resolveCourseTitle={(change) =>
-                resolveRegisterScoreCourseTitle(change, data().courses)
-              }
-              changedSongsEmptyMessage={LATEST_SCORE_UPDATE_CHANGED_SONGS_EMPTY_MESSAGE}
-            />
+        <Match when={selectedResult()}>
+          {(result) => (
+            <>
+              <Show when={historyOptions().length > 1}>
+                <AppSelect
+                  rootClass="w-full max-w-sm"
+                  options={historyOptions()}
+                  optionValue="index"
+                  optionTextValue="label"
+                  value={selectedOption()}
+                  onChange={(option) => {
+                    if (option) setSelectedIndex(option.index)
+                  }}
+                  label={LATEST_SCORE_UPDATE_HISTORY_LABEL}
+                  formatLabel={(option) => option.label}
+                />
+              </Show>
+              <Show when={result()} keyed>
+                {(selectedResult) => (
+                  <RegisterScoreResultView
+                    pageTitle={LATEST_SCORE_UPDATE_TITLE}
+                    result={selectedResult}
+                    resolveSongTitle={(change) =>
+                      resolveRegisterScoreSongTitle(
+                        change,
+                        songsData.songsResponse.latest?.songs ?? [],
+                        songsData.worldsendSongsResponse.latest?.songs ?? []
+                      )
+                    }
+                    resolveChartLevel={(change) =>
+                      resolveRegisterScoreChartLevel(
+                        change,
+                        songsData.songsResponse.latest?.songs ?? [],
+                        songsData.worldsendSongsResponse.latest?.songs ?? []
+                      )
+                    }
+                    resolveSongSortValues={(change) =>
+                      resolveRegisterScoreSongSortValues(
+                        change,
+                        songsData.songsResponse.latest?.songs ?? []
+                      )
+                    }
+                    resolveCourseTitle={(change) =>
+                      resolveRegisterScoreCourseTitle(change, pageData()?.courses ?? [])
+                    }
+                    changedSongsEmptyMessage={LATEST_SCORE_UPDATE_CHANGED_SONGS_EMPTY_MESSAGE}
+                  />
+                )}
+              </Show>
+            </>
           )}
         </Match>
       </Switch>

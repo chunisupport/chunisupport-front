@@ -13,6 +13,8 @@ export const TOOLS_PATH = '/tools'
 export const CHART_STATS_PATH = `${TOOLS_PATH}/chart-stats`
 /** フレンド画面のパス */
 export const FRIENDS_PATH = '/friends'
+/** フレンドとの譜面スコア比較画面のパス */
+export const FRIEND_VS_PATH = `${TOOLS_PATH}/friend-vs`
 /** 通常楽曲一覧画面のパス */
 export const SONGS_PATH = '/songs'
 /** WORLD'S END楽曲一覧画面のパス */
@@ -85,6 +87,15 @@ export const buildSongDetailPath = (displayId: string, difficulty?: string): str
  */
 export const buildWorldsendSongDetailPath = (displayId: string): string =>
   `${WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}`
+
+/**
+ * 比較相手を指定したフレンドVS画面パスを生成する。
+ *
+ * @param friendUsername - 比較相手のユーザー名。
+ * @returns フレンド指定クエリを含むフレンドVS画面パス。
+ */
+export const buildFriendVsPath = (friendUsername: string): string =>
+  `${FRIEND_VS_PATH}?${new URLSearchParams({ friend: friendUsername }).toString()}`
 
 /**
  * 楽曲詳細から譜面詳細へ遷移した state か判定する。

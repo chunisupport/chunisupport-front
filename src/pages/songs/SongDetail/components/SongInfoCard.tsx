@@ -199,6 +199,7 @@ const SongInfoCard = (props: Props) => {
         initialGenre={props.song.genre}
         initialBpm={props.song.bpm}
         initialRelease={props.song.release}
+        initialWikiPageTitle={props.song.wiki_page_title ?? null}
         requireGenre
         saving={savingSong()}
         apiErrorMessage={songFormError()}

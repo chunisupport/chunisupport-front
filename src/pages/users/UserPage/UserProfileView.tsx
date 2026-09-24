@@ -28,6 +28,7 @@ import {
   type ProfilePageQuery,
 } from '../../../utils/userProfileRoute'
 import { scrollToUserProfileContent } from '../../../utils/userProfileScroll'
+import { ProfileFriendAction } from './components/ProfileFriendAction'
 import { RatingImagePreviewDialog } from './components/RatingImagePreviewDialog'
 import { UserNameplate } from './components/UserNameplate'
 import { UserRecordPlaceholderCard } from './components/UserRecordPlaceholderCard'
@@ -358,6 +359,7 @@ export const UserProfileView: Component<Props> = (props) => {
           historyHref={buildUserStatsPagePath(props.username)}
           records={recordProfile()?.record.standard}
         />
+        <ProfileFriendAction username={props.username} playerName={playerInfo().name} />
       </div>
 
       <UnderlineTabs

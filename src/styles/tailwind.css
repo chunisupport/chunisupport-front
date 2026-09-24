@@ -1545,6 +1545,14 @@
     color: var(--cs-color-possession-text-muted);
   }
 
+  /* フレンドカードはテーマ色のメニューや鍵アイコンを含むため、ポゼッション背景上では文字色トークンを差し替える */
+  .friend-card.user-nameplate--colored {
+    --cs-color-text: var(--cs-color-possession-text);
+    --cs-color-text-muted: var(--cs-color-possession-text-muted);
+    --cs-color-text-subtle: var(--cs-color-possession-text-muted);
+    --cs-color-surface-hover: var(--cs-color-possession-divider);
+  }
+
   .goal-card-progress-secondary {
     color: var(--color-text-subtle);
   }
