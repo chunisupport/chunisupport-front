@@ -1,7 +1,7 @@
 import * as Tabs from '@kobalte/core/tabs'
 import { ToggleGroup } from '@kobalte/core/toggle-group'
 import type { JSX } from 'solid-js'
-import { For } from 'solid-js'
+import { For, Index } from 'solid-js'
 import { NotificationDot } from './NotificationDot'
 
 export type AppTabOption<TValue extends string> = {
@@ -70,6 +70,8 @@ type AppSegmentedToggleGroupProps<TValue extends string> = {
   onChange: (value: TValue) => void
   /** ToggleGroupへ追加で適用するTailwindクラス */
   class?: string
+  /** ToggleGroup全体の用途を示すアクセシブルネーム */
+  ariaLabel?: string
   /** ToggleGroup.Itemへ追加で適用するTailwindクラス */
   itemClass?: string
 }
@@ -155,7 +157,9 @@ export const SegmentedTabs = <TValue extends string>(
 /**
  * タブと同じ外観の単一選択ToggleGroupを表示する。
  *
- * @param props - 選択肢、現在値、変更ハンドラ、追加クラス。
+ * @param props - 選択肢（通知ドット指定を含む）、現在値、変更ハンドラ、アクセシブルネーム、追加クラス。
+ * 通知ドットの更新で項目を作り直さないよう、選択肢は位置単位で描画する。
+ *
  * @returns Kobalte ToggleGroupを使った単一選択コントロール。
  */
 export const SegmentedToggleGroup = <TValue extends string>(
@@ -164,19 +168,21 @@ export const SegmentedToggleGroup = <TValue extends string>(
   <ToggleGroup
     value={props.value}
     onChange={(value) => typeof value === 'string' && value && props.onChange(value as TValue)}
+    aria-label={props.ariaLabel}
     class={`${SEGMENTED_TABS_LIST_CLASS} ${props.class ?? ''}`}
   >
-    <For each={props.options}>
+    <Index each={props.options}>
       {(option) => (
         <ToggleGroup.Item
-          value={option.value}
-          disabled={option.disabled}
+          value={option().value}
+          disabled={option().disabled}
           class={`${SEGMENTED_TOGGLE_ITEM_CLASS} ${props.itemClass ?? ''}`}
         >
-          {option.label}
+          {option().label}
+          <NotificationDot visible={option().hasNotificationDot === true} class="right-1 top-1" />
         </ToggleGroup.Item>
       )}
-    </For>
+    </Index>
   </ToggleGroup>
 )
 
