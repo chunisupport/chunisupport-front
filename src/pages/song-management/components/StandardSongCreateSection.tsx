@@ -39,8 +39,6 @@ type StandardSongCreateSectionProps = {
  */
 const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
   const draft = () => props.management.createDraft()
-  const updateField = props.management.updateCreateDraftField
-  const updateChart = props.management.updateCreateChart
 
   return (
     <section class="rounded-lg border border-border bg-surface p-4">
@@ -52,33 +50,37 @@ const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
             value={draft().official_idx}
             maxLength={SONG_MANAGEMENT_INPUT_LIMITS.officialIdx}
             placeholder={FIELD.officialIdxPlaceholder}
-            onInput={(value) => updateField('official_idx', value)}
+            onInput={(value) => props.management.updateCreateDraftField('official_idx', value)}
           />
           <ManagementTextField
             label={FIELD.title}
             value={draft().title}
             inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-            onInput={(value) => updateField('title', value)}
+            onInput={(value) => props.management.updateCreateDraftField('title', value)}
           />
           <ManagementTextField
             label={FIELD.reading}
             value={draft().reading ?? ''}
             maxLength={SONG_MANAGEMENT_INPUT_LIMITS.reading}
             inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-            onInput={(value) => updateField('reading', toOptionalTextInput(value))}
+            onInput={(value) =>
+              props.management.updateCreateDraftField('reading', toOptionalTextInput(value))
+            }
           />
           <ManagementTextField
             label={FIELD.artist}
             value={draft().artist}
             inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-            onInput={(value) => updateField('artist', value)}
+            onInput={(value) => props.management.updateCreateDraftField('artist', value)}
           />
           <ManagementTextField
             label={FIELD.wikiPageTitle}
             value={draft().wiki_page_title ?? ''}
             maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
             inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-            onInput={(value) => updateField('wiki_page_title', toOptionalTextInput(value))}
+            onInput={(value) =>
+              props.management.updateCreateDraftField('wiki_page_title', toOptionalTextInput(value))
+            }
           />
           <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
             <GenreSelectField
@@ -86,31 +88,37 @@ const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
               value={draft().genre_id}
               genres={props.genres}
               placeholder={FIELD.genreCreatePlaceholder}
-              onChange={(value) => updateField('genre_id', value)}
+              onChange={(value) => props.management.updateCreateDraftField('genre_id', value)}
             />
             <ManagementTextField
               label={FIELD.bpm}
               type="number"
               value={draft().bpm ?? ''}
-              onInput={(value) => updateField('bpm', toOptionalNumberInput(value))}
+              onInput={(value) =>
+                props.management.updateCreateDraftField('bpm', toOptionalNumberInput(value))
+              }
             />
             <ManagementTextField
               label={FIELD.releasedAt}
               type="date"
               value={toDateInputValue(draft().released_at)}
-              onInput={(value) => updateField('released_at', toOptionalTextInput(value))}
+              onInput={(value) =>
+                props.management.updateCreateDraftField('released_at', toOptionalTextInput(value))
+              }
             />
             <ManagementTextField
               label={FIELD.jacket}
               value={draft().jacket ?? ''}
-              onInput={(value) => updateField('jacket', toOptionalTextInput(value))}
+              onInput={(value) =>
+                props.management.updateCreateDraftField('jacket', toOptionalTextInput(value))
+              }
             />
             <div class="flex items-end py-2">
               <ManagementCheckbox
                 checked={draft().is_new === true}
                 ariaLabel={FIELD.isNew}
                 label={FIELD.isNew}
-                onChange={(checked) => updateField('is_new', checked)}
+                onChange={(checked) => props.management.updateCreateDraftField('is_new', checked)}
               />
             </div>
           </div>
@@ -136,7 +144,9 @@ const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
                       <ManagementCheckbox
                         checked={chart().enabled}
                         ariaLabel={`${chart().difficulty_name}を追加対象にする`}
-                        onChange={(checked) => updateChart(chartIndex, 'enabled', checked)}
+                        onChange={(checked) =>
+                          props.management.updateCreateChart(chartIndex, 'enabled', checked)
+                        }
                       />
                     </td>
                     <td class="px-3 py-2">{chart().difficulty_name}</td>
@@ -147,7 +157,11 @@ const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
                           inputMode="decimal"
                           value={chart().const}
                           onInput={(event) =>
-                            updateChart(chartIndex, 'const', event.currentTarget.value)
+                            props.management.updateCreateChart(
+                              chartIndex,
+                              'const',
+                              event.currentTarget.value
+                            )
                           }
                           class="w-20 rounded border border-border-strong px-2 py-1"
                         />
@@ -158,7 +172,13 @@ const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
                         checked={chart().is_const_unknown}
                         disabled={!chart().enabled}
                         ariaLabel={`${chart().difficulty_name}の定数未確定`}
-                        onChange={(checked) => updateChart(chartIndex, 'is_const_unknown', checked)}
+                        onChange={(checked) =>
+                          props.management.updateCreateChart(
+                            chartIndex,
+                            'is_const_unknown',
+                            checked
+                          )
+                        }
                       />
                     </td>
                     <td class="px-3 py-2">
@@ -167,7 +187,7 @@ const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
                           type="number"
                           value={chart().notes ?? ''}
                           onInput={(event) =>
-                            updateChart(
+                            props.management.updateCreateChart(
                               chartIndex,
                               'notes',
                               toOptionalNumberInput(event.currentTarget.value)
@@ -184,7 +204,7 @@ const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
                         <TextField.Input
                           value={chart().notes_designer ?? ''}
                           onInput={(event) =>
-                            updateChart(
+                            props.management.updateCreateChart(
                               chartIndex,
                               'notes_designer',
                               toOptionalTextInput(event.currentTarget.value)

@@ -322,6 +322,7 @@ export const createStandardSongManagement = (masterData: Accessor<MasterDataDTO 
 
   return {
     songs,
+    /** 管理一覧の取得中か。WORLD'S END の取り込みボタン制御に使う */
     songsLoading: () => songsResponse.loading,
     filteredSongs,
     searchQuery,

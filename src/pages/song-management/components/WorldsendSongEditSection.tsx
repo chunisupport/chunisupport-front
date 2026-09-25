@@ -1,6 +1,7 @@
 import { Show } from 'solid-js'
 import { Loading } from '../../../components'
 import CopyFromStandardField from '../../../components/common/CopyFromStandardField'
+import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
 import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
 import type { MasterItemDTO, VersionSummaryDTO } from '../../../types/api'
 import type { StandardSongLookupItem } from '../../../utils/standardSongLookup'
@@ -212,8 +213,8 @@ const WorldsendSongEditSection = (props: WorldsendSongEditSectionProps) => {
                       class="col-span-1 text-sm"
                       label={FIELD.level}
                       type="number"
-                      min="1"
-                      max="5"
+                      min={String(WORLDSEND_LEVEL_STAR_MIN)}
+                      max={String(WORLDSEND_LEVEL_STAR_MAX)}
                       value={currentDraft().level_star ?? ''}
                       onInput={(value) =>
                         props.management.updateDraftField(

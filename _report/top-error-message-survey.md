@@ -12,8 +12,8 @@
 | --- | --- | --- | --- |
 | フレンド | `/friends`, `/friends/receive`, `/friends/request` | `src/pages/friends/FriendsPage.tsx` | `ユーザー名のコピーに失敗しました。` / `操作に失敗しました。` / `toUserFriendlyErrorMessage(pageData.error)` の共通文言 |
 | ユーザー管理 | `/admin/users` | `src/pages/admin/AdminUsersPage.tsx` | `削除に失敗しました。` またはAPIエラーコード・HTTPステータス由来の共通文言 |
-| 楽曲管理（ADMIN） | `/admin/songs` | `src/pages/songs/SongManagementPage.tsx` | 下記「楽曲管理の固定エラー文言」を参照 |
-| 楽曲編集（EDITOR） | `/editor/songs` | `src/pages/songs/SongManagementPage.tsx` | 下記「楽曲管理の固定エラー文言」を参照 |
+| 楽曲管理（ADMIN） | `/admin/songs` | `src/pages/song-management/SongManagementPage.tsx` | 下記「楽曲管理の固定エラー文言」を参照 |
+| 楽曲編集（EDITOR） | `/editor/songs` | `src/pages/song-management/SongManagementPage.tsx` | 下記「楽曲管理の固定エラー文言」を参照 |
 | スコア登録（一時） | `/register-score-temp` | `src/pages/register-score-temp/RegisterScoreTempPage.tsx` | 下記「スコア登録（一時）の固定エラー文言」を参照 |
 | 称号管理 | `/admin/honors` | `src/pages/admin/AdminHonorsPage.tsx` | 上部エラー表示枠はあるが、現状 `errorMessage` に非空文言をセットする処理は見当たらない |
 

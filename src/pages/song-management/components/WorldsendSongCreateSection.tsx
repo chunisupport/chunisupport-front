@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-solid'
 import { AppButton } from '../../../components/common/AppButton'
 import CopyFromStandardField from '../../../components/common/CopyFromStandardField'
+import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
 import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
 import type { MasterItemDTO } from '../../../types/api'
 import type { StandardSongLookupItem } from '../../../utils/standardSongLookup'
@@ -42,7 +43,6 @@ type WorldsendSongCreateSectionProps = {
  */
 const WorldsendSongCreateSection = (props: WorldsendSongCreateSectionProps) => {
   const draft = () => props.management.createDraft()
-  const updateField = props.management.updateCreateDraftField
 
   return (
     <section class="rounded-lg border border-border bg-surface p-4">
@@ -53,13 +53,13 @@ const WorldsendSongCreateSection = (props: WorldsendSongCreateSectionProps) => {
           value={draft().official_idx}
           maxLength={SONG_MANAGEMENT_INPUT_LIMITS.officialIdx}
           placeholder={FIELD.officialIdxPlaceholder}
-          onInput={(value) => updateField('official_idx', value)}
+          onInput={(value) => props.management.updateCreateDraftField('official_idx', value)}
         />
         <ManagementTextField
           label={FIELD.title}
           value={draft().title}
           inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-          onInput={(value) => updateField('title', value)}
+          onInput={(value) => props.management.updateCreateDraftField('title', value)}
         />
         <CopyFromStandardField
           field="reading"
@@ -67,21 +67,23 @@ const WorldsendSongCreateSection = (props: WorldsendSongCreateSectionProps) => {
           title={draft().title}
           artist={draft().artist}
           songsLoading={props.standardSongsLoading}
-          onCopied={(reading) => updateField('reading', reading)}
+          onCopied={(reading) => props.management.updateCreateDraftField('reading', reading)}
         >
           <ManagementTextField
             label={FIELD.reading}
             value={draft().reading ?? ''}
             maxLength={SONG_MANAGEMENT_INPUT_LIMITS.reading}
             inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-            onInput={(value) => updateField('reading', toOptionalTextInput(value))}
+            onInput={(value) =>
+              props.management.updateCreateDraftField('reading', toOptionalTextInput(value))
+            }
           />
         </CopyFromStandardField>
         <ManagementTextField
           label={FIELD.artist}
           value={draft().artist}
           inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-          onInput={(value) => updateField('artist', value)}
+          onInput={(value) => props.management.updateCreateDraftField('artist', value)}
         />
         <CopyFromStandardField
           field="wikiPageTitle"
@@ -89,14 +91,18 @@ const WorldsendSongCreateSection = (props: WorldsendSongCreateSectionProps) => {
           title={draft().title}
           artist={draft().artist}
           songsLoading={props.standardSongsLoading}
-          onCopied={(wikiPageTitle) => updateField('wiki_page_title', wikiPageTitle)}
+          onCopied={(wikiPageTitle) =>
+            props.management.updateCreateDraftField('wiki_page_title', wikiPageTitle)
+          }
         >
           <ManagementTextField
             label={FIELD.wikiPageTitle}
             value={draft().wiki_page_title ?? ''}
             maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
             inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-            onInput={(value) => updateField('wiki_page_title', toOptionalTextInput(value))}
+            onInput={(value) =>
+              props.management.updateCreateDraftField('wiki_page_title', toOptionalTextInput(value))
+            }
           />
         </CopyFromStandardField>
         <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
@@ -105,7 +111,7 @@ const WorldsendSongCreateSection = (props: WorldsendSongCreateSectionProps) => {
             value={draft().genre_id}
             genres={props.genres}
             placeholder={FIELD.genreCreatePlaceholder}
-            onChange={(value) => updateField('genre_id', value)}
+            onChange={(value) => props.management.updateCreateDraftField('genre_id', value)}
           />
           <CopyFromStandardField
             field="bpm"
@@ -113,32 +119,38 @@ const WorldsendSongCreateSection = (props: WorldsendSongCreateSectionProps) => {
             title={draft().title}
             artist={draft().artist}
             songsLoading={props.standardSongsLoading}
-            onCopied={(bpm) => updateField('bpm', bpm)}
+            onCopied={(bpm) => props.management.updateCreateDraftField('bpm', bpm)}
           >
             <ManagementTextField
               label={FIELD.bpm}
               type="number"
               value={draft().bpm ?? ''}
-              onInput={(value) => updateField('bpm', toOptionalNumberInput(value))}
+              onInput={(value) =>
+                props.management.updateCreateDraftField('bpm', toOptionalNumberInput(value))
+              }
             />
           </CopyFromStandardField>
           <ManagementTextField
             label={FIELD.releasedAt}
             type="date"
             value={toDateInputValue(draft().released_at)}
-            onInput={(value) => updateField('released_at', toOptionalTextInput(value))}
+            onInput={(value) =>
+              props.management.updateCreateDraftField('released_at', toOptionalTextInput(value))
+            }
           />
           <ManagementTextField
             label={FIELD.jacket}
             value={draft().jacket ?? ''}
-            onInput={(value) => updateField('jacket', toOptionalTextInput(value))}
+            onInput={(value) =>
+              props.management.updateCreateDraftField('jacket', toOptionalTextInput(value))
+            }
           />
           <div class="flex items-end py-2">
             <ManagementCheckbox
               checked={draft().is_new === true}
               ariaLabel={FIELD.isNew}
               label={FIELD.isNew}
-              onChange={(checked) => updateField('is_new', checked)}
+              onChange={(checked) => props.management.updateCreateDraftField('is_new', checked)}
             />
           </div>
         </div>
@@ -146,29 +158,37 @@ const WorldsendSongCreateSection = (props: WorldsendSongCreateSectionProps) => {
           label={FIELD.attribute}
           value={draft().attribute ?? ''}
           inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-          onInput={(value) => updateField('attribute', toOptionalTextInput(value))}
+          onInput={(value) =>
+            props.management.updateCreateDraftField('attribute', toOptionalTextInput(value))
+          }
         />
         <ManagementTextField
           label={FIELD.level}
           type="number"
-          min="1"
-          max="5"
+          min={String(WORLDSEND_LEVEL_STAR_MIN)}
+          max={String(WORLDSEND_LEVEL_STAR_MAX)}
           value={draft().level_star ?? ''}
-          onInput={(value) => updateField('level_star', toOptionalNumberInput(value))}
+          onInput={(value) =>
+            props.management.updateCreateDraftField('level_star', toOptionalNumberInput(value))
+          }
         />
         <ManagementTextField
           label={FIELD.notes}
           type="number"
           min="0"
           value={draft().notes ?? ''}
-          onInput={(value) => updateField('notes', toOptionalNumberInput(value))}
+          onInput={(value) =>
+            props.management.updateCreateDraftField('notes', toOptionalNumberInput(value))
+          }
         />
         <ManagementTextField
           class="text-sm sm:col-span-2 lg:col-span-1"
           label={FIELD.notesDesigner}
           value={draft().notes_designer ?? ''}
           inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-          onInput={(value) => updateField('notes_designer', toOptionalTextInput(value))}
+          onInput={(value) =>
+            props.management.updateCreateDraftField('notes_designer', toOptionalTextInput(value))
+          }
         />
       </div>
 
