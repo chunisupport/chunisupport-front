@@ -57,22 +57,21 @@ test('official_idxが非数値の場合は同日の末尾に寄せる（降順�
   )
 })
 
-test('releaseが不正または未設定の曲は末尾へ寄せる（降順ソート時も）', async () => {
+test('releaseが不正または未設定の曲は先頭へ寄せる', async () => {
+  // Given: 日付あり・未設定・不正日付の楽曲
   const sortSongsByReleaseDescAndIdxDesc = await loadSortSongsByReleaseDescAndIdxDesc()
   const songs = [
     { title: '日付あり', release: '2024-01-01', official_idx: '2' },
     { title: '日付なし', release: null, official_idx: '1' },
-    { title: '不正日付', release: 'invalid', official_idx: '1' },
+    { title: '不正日付', release: 'invalid', official_idx: '3' },
   ]
 
+  // When
   const sorted = sortSongsByReleaseDescAndIdxDesc(songs)
 
-  assert.equal(sorted[0].title, '日付あり')
+  // Then: 日付がない曲同士は official_idx 降順で先頭に並ぶ
   assert.deepEqual(
-    sorted
-      .slice(1)
-      .map((song) => song.title)
-      .sort(),
-    ['不正日付', '日付なし']
+    sorted.map((song) => song.title),
+    ['不正日付', '日付なし', '日付あり']
   )
 })
