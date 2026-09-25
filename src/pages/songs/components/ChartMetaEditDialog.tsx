@@ -5,11 +5,11 @@ import { createEffect, createMemo, createSignal, Index, Show } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
+import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
 import type { PlayerDataDifficulty, SongDTO, UpdateChartRequestDTO } from '../../../types/api'
 import { normalizeChartConstRangeInput } from '../../../utils/rangeInput'
 import {
   SONG_EDIT_COPY,
-  SONG_EDIT_INPUT_LIMITS,
   SONG_EDIT_NUMBER_INPUT_CLASS,
   SONG_EDIT_TEXT_INPUT_CLASS,
 } from '../songEditConstants'

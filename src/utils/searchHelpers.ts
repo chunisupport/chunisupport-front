@@ -3,7 +3,7 @@ import {
   normalizeForReadingSearch,
   normalizeForSearch,
   normalizeQuery,
-} from '../../utils/searchUtils'
+} from './searchUtils'
 
 type SearchableItem<T> = {
   item: T

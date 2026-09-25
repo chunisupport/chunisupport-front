@@ -4,8 +4,10 @@ import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, Show } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
 import { FormSelect } from '../../../components/common/AppSelect'
+import CopyFromStandardField from '../../../components/common/CopyFromStandardField'
 import type { MasterItemDTO } from '../../../types/api'
 import { toInputValue } from '../../../utils/rangeInput'
+import type { StandardSongLookupItem } from '../../../utils/standardSongLookup'
 import {
   SONG_EDIT_COPY,
   SONG_EDIT_NUMBER_INPUT_CLASS,
@@ -17,8 +19,6 @@ import {
   type SongMetaEditValues,
   toDateInputValue,
 } from '../utils/songMetaEdit'
-import type { StandardSongLookupItem } from '../utils/standardSongLookup'
-import CopyFromStandardField from './CopyFromStandardField'
 import SongEditSaveButton from './SongEditSaveButton'
 
 type Props = {
