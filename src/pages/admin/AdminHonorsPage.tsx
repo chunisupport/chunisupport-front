@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { Dialog } from '@kobalte/core/dialog'
 import { Link } from '@kobalte/core/link'
 import { TextField } from '@kobalte/core/text-field'
@@ -489,7 +490,7 @@ const AdminHonorsPage = () => {
                     </td>
                     <td class="w-0 whitespace-nowrap px-3 py-2">
                       <AppIconButton
-                        aria-label={`${honor.name}を編集`}
+                        aria-label={t('common.editLabel', { name: honor.name })}
                         title={ADMIN_HONORS_COPY.editAction}
                         onClick={() => openEditDialog(honor)}
                       >

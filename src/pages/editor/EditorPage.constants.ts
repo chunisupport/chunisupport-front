@@ -1,34 +1,34 @@
+import { localizedCopy } from '../../i18n'
 import {
   ADMIN_DATA_COVERAGE_PATH,
   EDITOR_COURSES_PATH,
   EDITOR_SONGS_PATH,
 } from '../../constants/routes'
 
+/** 編集メニューの表示文言 */
+const EDITOR_TEXT = localizedCopy('editor')
+
 /** 編集メニュー画面に表示する文言 */
-export const EDITOR_PAGE_COPY = {
-  pageTitle: '編集',
-  heading: '編集メニュー',
-  description: '編集者向けのメニューです。',
-} as const
+export const EDITOR_PAGE_COPY = localizedCopy('editor.editorPageCopy')
 
 /** 編集メニューに表示する各画面へのリンク */
 export const EDITOR_PAGE_LINKS = [
   {
     href: ADMIN_DATA_COVERAGE_PATH,
-    title: 'データ充足状況',
-    description: '譜面定数・ノーツ数・NOTES DESIGNERの充足状況を確認します。',
+    title: EDITOR_TEXT.dataCoverageTitle,
+    description: EDITOR_TEXT.dataCoverageDescription,
     icon: 'coverage',
   },
   {
     href: EDITOR_SONGS_PATH,
-    title: '楽曲管理',
-    description: '楽曲一覧と楽曲情報を確認・編集します。',
+    title: EDITOR_TEXT.songsTitle,
+    description: EDITOR_TEXT.songsDescription,
     icon: 'songs',
   },
   {
     href: EDITOR_COURSES_PATH,
-    title: 'コース管理',
-    description: 'コース一覧とコース情報を確認・編集します。',
+    title: EDITOR_TEXT.coursesTitle,
+    description: EDITOR_TEXT.coursesDescription,
     icon: 'courses',
   },
 ] as const

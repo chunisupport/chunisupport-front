@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { A } from '@solidjs/router'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
@@ -7,9 +8,9 @@ const NotFoundPage = () => {
   return (
     <div class="mx-auto w-full max-w-3xl p-6 space-y-3">
       <h1 class="text-2xl font-semibold">404 Not Found</h1>
-      <p class="text-sm text-text-muted">お探しのページは見つかりませんでした。</p>
+      <p class="text-sm text-text-muted">{t('common.notFound')}</p>
       <A href="/" class="text-link hover:underline">
-        トップページへ戻る
+        {t('common.backToTop')}
       </A>
     </div>
   )

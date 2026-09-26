@@ -1,3 +1,4 @@
+import { localizedCopy } from '../../i18n'
 import type {
   ManagedSongDTO,
   ManagedWorldsendSongDTO,
@@ -5,6 +6,9 @@ import type {
   VersionSummaryDTO,
 } from '../../types/api'
 import { resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
+
+/** 楽曲管理フィルターの表示文言 */
+const SONG_MANAGEMENT_FILTERS_TEXT = localizedCopy('songManagement.filters')
 
 export type SongManagementMissingField = 'release' | 'bpm' | 'notes' | 'notesDesigner'
 
@@ -22,30 +26,15 @@ export type SongManagementFilters = {
   catalogOnly: boolean
 }
 
-export const SONG_MANAGEMENT_FILTER_LABELS = {
-  title: 'フィルター',
-  active: 'フィルター適用中',
-  holdReset: 'フィルター リセット',
-  cancel: 'キャンセル',
-  apply: '適用',
-  unselected: '未選択',
-  release: '追加日',
-  releaseMin: '追加日 開始',
-  releaseMax: '追加日 終了',
-  missingField: '欠落項目',
-  missingOnly: '欠落のみ表示',
-  catalogField: '収録状態',
-  catalogOnly: '楽曲のみ表示',
-  rangeError: '開始日は終了日以前にしてください。',
-} as const
+export const SONG_MANAGEMENT_FILTER_LABELS = localizedCopy('songManagement.filters.songManagementFilterLabels')
 
 export const SONG_MANAGEMENT_MISSING_FIELD_OPTIONS: readonly {
   value: SongManagementMissingField
   label: string
 }[] = [
-  { value: 'release', label: '追加日' },
+  { value: 'release', label: SONG_MANAGEMENT_FILTERS_TEXT.releaseLabel },
   { value: 'bpm', label: 'BPM' },
-  { value: 'notes', label: 'ノーツ数' },
+  { value: 'notes', label: SONG_MANAGEMENT_FILTERS_TEXT.notesLabel },
   { value: 'notesDesigner', label: 'NOTES DESIGNER' },
 ]
 
@@ -53,8 +42,8 @@ export const SONG_MANAGEMENT_CATALOG_STATE_OPTIONS: readonly {
   value: SongManagementCatalogState
   label: string
 }[] = [
-  { value: 'included', label: '収録中' },
-  { value: 'deleted', label: '削除済み' },
+  { value: 'included', label: SONG_MANAGEMENT_FILTERS_TEXT.includedLabel },
+  { value: 'deleted', label: SONG_MANAGEMENT_FILTERS_TEXT.deletedLabel },
 ]
 
 const REQUIRED_STANDARD_DIFFICULTIES = [

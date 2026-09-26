@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import {
   ADMIN_USER_LIST_PAGE_SIZE,
@@ -358,7 +359,10 @@ const AdminUsersPage = () => {
                               onChange={(permission) =>
                                 void handlePermissionChange(user.username, permission)
                               }
-                              label={`${user.username}の${ADMIN_USER_LIST_COPY.permissionLabel}`}
+                              label={t('admin.userPermissionLabel', {
+                                username: user.username,
+                                label: ADMIN_USER_LIST_COPY.permissionLabel,
+                              })}
                               labelVariant="srOnly"
                               formatLabel={formatAccountType}
                               disabled={

@@ -1,66 +1,22 @@
+import { localizedCopy } from '../../i18n'
 /**
  * スコア登録画面と更新差分レポートで表示する固定文言。
  *
  * 将来的なi18n対応のため、画面内の日本語・英語ラベルはこのファイルへ集約し、
  * コンポーネントやソートロジック内への直書きを避ける。
  */
-export const REGISTER_SCORE_COPY = {
-  ratingLabel: 'RATING',
-  overPowerLabel: 'OVER POWER',
-  overPowerPercentLabel: 'OP%',
-  overPowerPercentAccessibleLabel: 'OVER POWER達成率',
-  percentagePointUnit: 'pt',
-  percentagePointAccessibleUnit: 'パーセントポイント',
-  invalidToken: 'tokenが不正です。登録用URLを確認してください。',
-  fallbackError: '登録に失敗しました。',
-  reportTitle: '更新差分',
-  title: 'スコア登録',
-  processing: 'スコアデータを登録しています。',
-  changedSongsTitle: 'NEW RECORDS',
-  changedSongsEmpty: '今回更新された楽曲はありません。',
-  filteredChangedSongsEmpty: '表示対象の楽曲はありません。',
-  changedCoursesTitle: 'COURSE RECORDS',
-  totalHighScoreTitle: 'TOTAL HIGH SCORE',
-  recordStatsTitle: 'RECORD STATISTICS',
-  displaySettingsTitle: '表示設定',
-  hideLampOnlyChanges: 'ランプのみの更新を非表示',
-  songSortTitle: '楽曲カードの並び順',
-  songSortDirectionLabel: '楽曲カードの並び順の方向',
-  openImagePreview: '画像化・共有',
-  imagePreviewDialogTitle: 'プレビュー',
-  imagePreviewDialogDescription: '現在の表示設定で画像を作成します。',
-  preparingImagePreview: 'プレビューを準備中',
-  imagePreviewAlt: '更新差分の画像プレビュー',
-  imagePreviewError: 'プレビューの作成に失敗しました。',
-  retryImagePreview: '再試行',
-  closeImagePreview: '閉じる',
-  shareImage: '共有',
-  shareImageError: '共有に失敗しました。',
-  copySongTitleSuccess: '曲名をコピーしました。',
-  copySongTitleError: '曲名のコピーに失敗しました。',
-  excludeChangeFromImage: '画像から除外',
-  includeChangeInImage: '画像に含める',
-  hidePlayerLevel: 'レベルを非表示',
-  showPlayerLevel: 'レベルを表示',
-} as const
+export const REGISTER_SCORE_COPY = localizedCopy('registerScore.registerScoreCopy')
 
 /**
  * 楽曲カードの主ソート選択肢に表示するラベル。
  *
  * 将来的なi18n対応のため、ソートロジック内の直書きを避けてここで一元管理する。
  */
-export const REGISTER_SCORE_PRIMARY_SORT_LABELS = {
-  none: 'デフォルト',
-  level: 'レベル',
-  singleRating: '単曲レーティング',
-} as const
+export const REGISTER_SCORE_PRIMARY_SORT_LABELS = localizedCopy('registerScore.registerScorePrimarySortLabels')
 
 /**
  * 楽曲カードのソート方向選択肢に表示するラベル。
  *
  * 将来的なi18n対応のため、ソートロジック内の直書きを避けてここで一元管理する。
  */
-export const REGISTER_SCORE_SORT_DIRECTION_LABELS = {
-  asc: '昇順',
-  desc: '降順',
-} as const
+export const REGISTER_SCORE_SORT_DIRECTION_LABELS = localizedCopy('registerScore.registerScoreSortDirectionLabels')

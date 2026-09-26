@@ -8,22 +8,9 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
 import type { UserDTO } from '../../types/api'
-import {
-  createMaintenanceStaffRequiredError,
-  isInvalidTokenLoginError,
-  isMaintenanceModeLoginError,
-  isMaintenanceStaffRequiredError,
-  isUnregisteredLoginError,
-  normalizeRedirectParam,
-  resolveMaintenanceLoginDestination,
-} from '../../usecases/auth/loginFlow'
+import { createMaintenanceStaffRequiredError, isInvalidTokenLoginError, isMaintenanceModeLoginError, isMaintenanceStaffRequiredError, isUnregisteredLoginError, normalizeRedirectParam, resolveMaintenanceLoginDestination } from '../../usecases/auth/loginFlow'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-import {
-  MAINTENANCE_LOGIN_DESCRIPTION,
-  MAINTENANCE_LOGIN_ERROR_MESSAGE,
-  MAINTENANCE_LOGIN_INVALID_TOKEN_MESSAGE,
-  MAINTENANCE_LOGIN_SITE_NAME,
-} from './maintenanceLogin.constants'
+import { MAINTENANCE_LOGIN_COPY, MAINTENANCE_LOGIN_SITE_NAME } from './maintenanceLogin.constants'
 
 /**
  * スタッフとして許可できなかったFirebase認証とアプリ内セッションを破棄する。
@@ -80,7 +67,7 @@ const MaintenanceLoginPage = () => {
 
     if (isInvalidTokenLoginError(error)) {
       await clearRejectedStaffSession()
-      return MAINTENANCE_LOGIN_INVALID_TOKEN_MESSAGE
+      return MAINTENANCE_LOGIN_COPY.invalidToken
     }
 
     if (isMaintenanceModeLoginError(error) || isUnregisteredLoginError(error)) {
@@ -88,7 +75,7 @@ const MaintenanceLoginPage = () => {
       return MAINTENANCE_COPY.staffOnlyError
     }
 
-    return toUserFriendlyErrorMessage(error, MAINTENANCE_LOGIN_ERROR_MESSAGE)
+    return toUserFriendlyErrorMessage(error, MAINTENANCE_LOGIN_COPY.error)
   }
 
   useDocumentTitle(PAGE_TITLES.maintenanceLogin)
@@ -99,7 +86,7 @@ const MaintenanceLoginPage = () => {
         <div class="mb-6 text-center">
           <p class="mb-2 text-text-muted">{MAINTENANCE_LOGIN_SITE_NAME}</p>
           <h1 class="text-2xl font-semibold">{PAGE_TITLES.maintenanceLogin}</h1>
-          <p class="mt-2 text-sm text-text-muted">{MAINTENANCE_LOGIN_DESCRIPTION}</p>
+          <p class="mt-2 text-sm text-text-muted">{MAINTENANCE_LOGIN_COPY.description}</p>
         </div>
 
         <GoogleLoginForm onSuccess={handleLoginSuccess} onFailure={handleLoginFailure} />

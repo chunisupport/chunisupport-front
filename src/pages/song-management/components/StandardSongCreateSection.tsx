@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { TextField } from '@kobalte/core/text-field'
 import { Plus } from 'lucide-solid'
 import { Index } from 'solid-js'
@@ -143,7 +144,9 @@ const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
                     <td class="px-3 py-2">
                       <ManagementCheckbox
                         checked={chart().enabled}
-                        ariaLabel={`${chart().difficulty_name}を追加対象にする`}
+                        ariaLabel={t('songManagement.chart.addTarget', {
+                          difficulty: chart().difficulty_name,
+                        })}
                         onChange={(checked) =>
                           props.management.updateCreateChart(chartIndex, 'enabled', checked)
                         }
@@ -171,7 +174,9 @@ const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
                       <ManagementCheckbox
                         checked={chart().is_const_unknown}
                         disabled={!chart().enabled}
-                        ariaLabel={`${chart().difficulty_name}の定数未確定`}
+                        ariaLabel={t('songManagement.chart.constUnknown', {
+                          difficulty: chart().difficulty_name,
+                        })}
                         onChange={(checked) =>
                           props.management.updateCreateChart(
                             chartIndex,

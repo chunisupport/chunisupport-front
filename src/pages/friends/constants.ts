@@ -1,5 +1,9 @@
+import { localizedCopy } from '../../i18n'
 import type { AppTabOption } from '../../components/common/AppTabs'
 import { FRIENDS_PATH } from '../../constants/routes'
+
+/** フレンド画面の表示文言 */
+const FRIENDS_TEXT = localizedCopy('friends')
 
 export { PAGE_TITLES } from '../../constants/pageTitles'
 
@@ -21,9 +25,9 @@ export type FriendsTabValue = 'friends' | 'received' | 'sent'
 export const buildFriendsTabOptions = (
   hasPendingReceivedRequest: boolean
 ): readonly AppTabOption<FriendsTabValue>[] => [
-  { value: 'friends', label: 'フレンド' },
-  { value: 'received', label: '受付中', hasNotificationDot: hasPendingReceivedRequest },
-  { value: 'sent', label: '申請中' },
+  { value: 'friends', label: FRIENDS_TEXT.friendsLabel },
+  { value: 'received', label: FRIENDS_TEXT.receivedLabel, hasNotificationDot: hasPendingReceivedRequest },
+  { value: 'sent', label: FRIENDS_TEXT.sentLabel },
 ]
 
 /** フレンド画面タブに対応するURLパスセグメント */
@@ -66,53 +70,4 @@ export const resolveFriendsTabValue = (segment: string | undefined): FriendsTabV
 }
 
 /** フレンド画面で使う固定文言 */
-export const FRIENDS_COPY = {
-  requestFormTitle: 'フレンド申請',
-  usernameLabel: 'ユーザー名',
-  usernamePlaceholder: 'username',
-  ownUsernameLabel: 'あなたのユーザー名',
-  copyOwnUsername: 'ユーザー名をコピー',
-  copyOwnUsernameSuccess: 'ユーザー名をコピーしました。',
-  copyOwnUsernameFailure: 'ユーザー名のコピーに失敗しました。',
-  submitRequest: '申請',
-  submittingRequest: '申請中',
-  requestSuccess: 'フレンド申請を送信しました。',
-  cancelSuccess: 'フレンド申請を取り消しました。',
-  usernameRequired: '必須項目です。',
-  usernameInvalid: '5〜50文字の小文字英数字で入力してください。',
-  acceptSuccess: 'フレンド申請を承認しました。',
-  rejectSuccess: 'フレンド申請を拒否しました。',
-  removeSuccess: 'フレンドを解除しました。',
-  requestFailure: 'フレンド申請に失敗しました。',
-  operationFailure: '操作に失敗しました。',
-  loadingLabel: 'フレンド情報を読み込んでいます',
-  emptyFriends: 'フレンドはいません。',
-  emptyReceived: '受付中のフレンドリクエストはありません。',
-  emptySent: '送信済みのフレンドリクエストはありません。',
-  retry: '再読み込み',
-  openFriendMenu: 'フレンドメニューを開く',
-  profileLinkSuffix: 'のプロフィールを表示',
-  accept: '承認',
-  reject: '拒否',
-  cancelRequest: '申請取り消し',
-  remove: '解除',
-  friendVs: 'フレンドVS',
-  levelLabel: 'Lv.',
-  ratingLabel: 'RATING',
-  overPowerLabel: 'OVER POWER',
-  privateAccountLabel: '非公開アカウント',
-  playerNotLinked: '未連携',
-  rejectConfirm: 'このフレンド申請を拒否しますか？',
-  removeConfirm: 'このフレンドを解除しますか？',
-  confirmCancel: 'キャンセル',
-  confirmRejectTitle: '申請を拒否しますか？',
-  confirmRemoveTitle: 'フレンドを解除しますか？',
-  confirmRejectDescription: 'この申請を拒否します。この操作は取り消せません。',
-  confirmRemoveDescription: 'このフレンド関係を解除します。この操作は取り消せません。',
-  confirmingReject: '拒否中',
-  confirmingRemove: '解除中',
-  emptyValue: '-',
-  maskedValue: '****',
-  maskedLevel: '***',
-  maskedPlayerName: '＊＊＊＊＊＊＊＊',
-} as const
+export const FRIENDS_COPY = localizedCopy('friends.friendsCopy')

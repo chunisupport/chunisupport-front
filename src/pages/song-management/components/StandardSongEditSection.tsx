@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { TextField } from '@kobalte/core/text-field'
 import { Plus } from 'lucide-solid'
 import { Index, Show } from 'solid-js'
@@ -221,7 +222,9 @@ const StandardSongEditSection = (props: StandardSongEditSectionProps) => {
                               <td class="px-3 py-2">
                                 <ManagementCheckbox
                                   checked={chart().is_const_unknown}
-                                  ariaLabel={`${chart().difficulty_name}の定数未確定`}
+                                  ariaLabel={t('songManagement.chart.constUnknown', {
+                                    difficulty: chart().difficulty_name,
+                                  })}
                                   onChange={(checked) =>
                                     props.management.updateDraftChart(
                                       chart().difficulty_id,

@@ -1,3 +1,4 @@
+import { localizedCopy } from '../../i18n'
 import {
   ADMIN_COURSES_PATH,
   ADMIN_DATA_COVERAGE_PATH,
@@ -7,67 +8,66 @@ import {
   ADMIN_VERSIONS_PATH,
 } from '../../constants/routes'
 
+/** 管理メニューの表示文言 */
+const ADMIN_MENU_TEXT = localizedCopy('admin.menu')
+
 /** 管理メニュー画面に表示する文言 */
-export const ADMIN_PAGE_COPY = {
-  pageTitle: '管理',
-  heading: '管理ページ',
-  description: '管理者向けのメニューです。',
-} as const
+export const ADMIN_PAGE_COPY = localizedCopy('admin.menu.adminPageCopy')
 
 /** 管理メニューに表示する各管理画面へのリンク */
 export const ADMIN_PAGE_LINKS = [
   {
     href: ADMIN_DATA_COVERAGE_PATH,
-    title: 'データ充足状況',
-    description: '譜面定数・ノーツ数・NOTES DESIGNERの充足状況を確認します。',
+    title: ADMIN_MENU_TEXT.dataCoverageTitle,
+    description: ADMIN_MENU_TEXT.dataCoverageDescription,
     icon: 'coverage',
   },
   {
     href: ADMIN_MAINTENANCE_PATH,
-    title: 'メンテナンス管理',
-    description: 'メンテナンス状態と一般向けコメントを管理します。',
+    title: ADMIN_MENU_TEXT.maintenanceTitle,
+    description: ADMIN_MENU_TEXT.maintenanceDescription,
     icon: 'maintenance',
   },
   {
     href: '/admin/users',
-    title: 'ユーザー管理',
-    description: 'ユーザー一覧、検索、削除、復活を行います。',
+    title: ADMIN_MENU_TEXT.usersTitle,
+    description: ADMIN_MENU_TEXT.usersDescription,
     icon: 'users',
   },
   {
     href: '/admin/songs',
-    title: '楽曲管理',
-    description: '楽曲一覧、編集、削除、復活を行います。',
+    title: ADMIN_MENU_TEXT.songsTitle,
+    description: ADMIN_MENU_TEXT.songsDescription,
     icon: 'songs',
   },
   {
     href: ADMIN_COURSES_PATH,
-    title: 'コース管理',
-    description: 'コース一覧、編集、削除、復活を行います。',
+    title: ADMIN_MENU_TEXT.coursesTitle,
+    description: ADMIN_MENU_TEXT.coursesDescription,
     icon: 'courses',
   },
   {
     href: '/admin/honors',
-    title: '称号管理',
-    description: '称号一覧、クラス、画像URLを確認します。',
+    title: ADMIN_MENU_TEXT.honorsTitle,
+    description: ADMIN_MENU_TEXT.honorsDescription,
     icon: 'honors',
   },
   {
     href: ADMIN_VERSIONS_PATH,
-    title: 'バージョン管理',
-    description: 'バージョン名と稼働日を追加、修正、削除します。',
+    title: ADMIN_MENU_TEXT.versionsTitle,
+    description: ADMIN_MENU_TEXT.versionsDescription,
     icon: 'versions',
   },
   {
     href: ADMIN_SONG_BATCH_PATH,
-    title: '楽曲バッチ',
-    description: '楽曲データの取り込みを実行し、実行履歴を確認します。',
+    title: ADMIN_MENU_TEXT.songBatchTitle,
+    description: ADMIN_MENU_TEXT.songBatchDescription,
     icon: 'songBatch',
   },
   {
     href: ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH,
-    title: 'レーティング画像DOM',
-    description: '画像化前のベスト枠・新曲枠を確認します。',
+    title: ADMIN_MENU_TEXT.ratingImageDomTitle,
+    description: ADMIN_MENU_TEXT.ratingImageDomDescription,
     icon: 'ratingImage',
   },
 ] as const

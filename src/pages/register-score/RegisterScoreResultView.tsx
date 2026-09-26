@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { Button } from '@kobalte/core/button'
 import { Eye, EyeOff, Play } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
@@ -949,7 +950,7 @@ const RegisterScoreChangeRow = (props: {
                   ? 'text-action-primary transition-none'
                   : 'text-text transition-colors duration-700 motion-reduce:transition-none'
               }`}
-              aria-label={`「${props.songTitle}」をコピー`}
+              aria-label={t('registerScore.copySongTitle', { title: props.songTitle })}
               title={props.songTitle}
               onClick={handleCopySongTitle}
             >
