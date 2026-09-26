@@ -7,6 +7,7 @@ import { SelectableCardItem } from '../../components/common/SelectableCardButton
 import { CHART_CONSTANT_CALCULATOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { t } from '../../i18n'
 import {
   type ChartConstantLamp,
   calculateChartConstant,
@@ -113,7 +114,7 @@ const ChartConstantCalculatorPage = (): JSX.Element => {
     } catch (error) {
       return {
         result: null,
-        errorMessage: error instanceof Error ? error.message : '入力値を確認してください。',
+        errorMessage: error instanceof Error ? error.message : t('tools.common.checkInput'),
       }
     }
   })

@@ -1,8 +1,8 @@
-import { formatMessage, localizedCopy } from '../../../../../i18n'
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal } from 'solid-js'
 import { createMultiSelectOption } from '../../../../../components/common/DomainMultiSelect'
+import { formatMessage, localizedCopy } from '../../../../../i18n'
 import type {
   GoalAchievementType,
   GoalAttributes,

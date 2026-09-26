@@ -1,5 +1,5 @@
-import { UNKNOWN_VALUE_LABEL } from '../../constants/unknownValue'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
+import { UNKNOWN_VALUE_LABEL } from '../../constants/unknownValue'
 import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
 import { toChartLevelLabel } from '../../utils/chartLevel'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
@@ -59,7 +59,8 @@ export const buildOverPowerChartEntries = (
   for (const song of songs) {
     if (lockedLookup.lockedSongIds.has(song.id)) continue
     const resolvedVersion = resolveVersionNameByReleaseDate(song.release, versions)
-    const versionName = resolvedVersion === UNKNOWN_VALUE_LABEL ? null : getShortVersionName(resolvedVersion)
+    const versionName =
+      resolvedVersion === UNKNOWN_VALUE_LABEL ? null : getShortVersionName(resolvedVersion)
 
     for (const difficulty of OVER_POWER_DIFFICULTIES) {
       const chart = song.charts[difficulty]

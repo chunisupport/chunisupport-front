@@ -25,11 +25,7 @@ export const LOW_LEVEL_SUMMARY_LABEL = 'Lv.1-9+'
 
 /** OVER POWERサマリーの表示軸選択肢 */
 export const OVER_POWER_SUMMARY_OPTIONS: OverPowerSummaryOption[] = withLocalizedLabels(
-  [
-  { value: 'genres' },
-  { value: 'levels' },
-  { value: 'versions' },
-],
+  [{ value: 'genres' }, { value: 'levels' }, { value: 'versions' }],
   OVER_POWER_COPY_ROOT.summaryOptions
 )
 
@@ -53,10 +49,7 @@ export type LockedSongsPlayStatus = 'played' | 'unplayed'
 
 /** 未解禁楽曲設定ダイアログのプレイ状況フィルター選択肢 */
 export const LOCKED_SONG_PLAY_STATUS_OPTIONS = withLocalizedLabels(
-  [
-  { value: 'unplayed' },
-  { value: 'played' },
-] as const,
+  [{ value: 'unplayed' }, { value: 'played' }] as const,
   OVER_POWER_COPY_ROOT.playStatuses
 )
 

@@ -1,15 +1,42 @@
-import { formatMessage, localizedCopy } from '../../../../i18n'
-import { BarController, BarElement, CategoryScale, Chart, type ChartData, type ChartOptions, Legend, LinearScale, LineController, LineElement, type Plugin, PointElement, Tooltip } from 'chart.js'
+import {
+  BarController,
+  BarElement,
+  CategoryScale,
+  Chart,
+  type ChartData,
+  type ChartOptions,
+  Legend,
+  LinearScale,
+  LineController,
+  LineElement,
+  type Plugin,
+  PointElement,
+  Tooltip,
+} from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
+import { formatMessage, localizedCopy } from '../../../../i18n'
 import { accentPreference, themePreference } from '../../../../stores/themePreferences'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
 import { createChartStripePattern } from '../../../../utils/chartPattern'
-import { CHART_COLOR_FALLBACK, resolveChartColor, resolveChartPixelLength } from '../../../../utils/chartTheme'
-import { calculateDisplayedScoreDifference, formatScoreDifference, getScoreDifferenceClass } from '../../../../utils/scoreDifference'
+import {
+  CHART_COLOR_FALLBACK,
+  resolveChartColor,
+  resolveChartPixelLength,
+} from '../../../../utils/chartTheme'
+import {
+  calculateDisplayedScoreDifference,
+  formatScoreDifference,
+  getScoreDifferenceClass,
+} from '../../../../utils/scoreDifference'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { completeSongStatsRatingBands } from '../../../../utils/songStats'
 import { OWN_SCORE_COPY } from '../scoreHistory.constants'
-import { CLEAR_CHART_DATASET_DEFINITIONS, COMBO_CHART_DATASET_DEFINITIONS, RANK_CHART_DATASET_DEFINITIONS, type SongStatsChartStripePatternDefinition } from './songStatsChartDefinitions'
+import {
+  CLEAR_CHART_DATASET_DEFINITIONS,
+  COMBO_CHART_DATASET_DEFINITIONS,
+  RANK_CHART_DATASET_DEFINITIONS,
+  type SongStatsChartStripePatternDefinition,
+} from './songStatsChartDefinitions'
 import { isOwnBestAverageRatingBand } from './songStatsHighlight'
 
 /** 難易度別統計の表示文言 */
@@ -100,8 +127,7 @@ const OWN_SCORE_CHART_COLOR = '--cs-color-text'
 /** 平均・中央値グラフのアクセシブル名 */
 const AVERAGE_SCORE_CHART_ARIA_LABEL = SONG_STATS_COPY.averageChartAriaLabel
 /** 自分のスコア参照線を含む平均・中央値グラフのアクセシブル名 */
-const AVERAGE_SCORE_CHART_WITH_OWN_SCORE_ARIA_LABEL =
-  SONG_STATS_COPY.averageChartWithOwnAriaLabel
+const AVERAGE_SCORE_CHART_WITH_OWN_SCORE_ARIA_LABEL = SONG_STATS_COPY.averageChartWithOwnAriaLabel
 /** 統計テーブルの表示カテゴリ選択肢 */
 export const TABLE_VIEW_OPTIONS: SongStatsTableViewOption[] = [
   { label: SONG_STATS_COPY.averageScore, value: 'averageScore' },

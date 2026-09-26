@@ -4,7 +4,11 @@ import { createMemo, createResource, Show } from 'solid-js'
 import { fetchOwnWorldsendScoreHistory, fetchWorldsendSongByDisplayId } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import { WORLDSEND_SCORE_LABEL } from '../../../constants/chart'
-import { buildAdminWorldsendChartRankingPath, buildWorldsendSongDetailPath, isChartDetailFromSongDetailState } from '../../../constants/routes'
+import {
+  buildAdminWorldsendChartRankingPath,
+  buildWorldsendSongDetailPath,
+  isChartDetailFromSongDetailState,
+} from '../../../constants/routes'
 import { joinDocumentTitleParts } from '../../../constants/site'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { worldsendFriendRankingQueryOptions } from '../../../queries/friendRankings'

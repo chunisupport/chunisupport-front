@@ -1,6 +1,6 @@
-import { localizedCopy } from '../../../i18n'
 import type { ScoreHistoryDifficulty } from '../../../api/songs'
 import { PLAYER_DATA_DIFFICULTIES } from '../../../constants/difficulty'
+import { localizedCopy } from '../../../i18n'
 import type { PlayerDataDifficulty } from '../../../types/api'
 
 /** 通常譜面でスコア履歴を保持する難易度 */

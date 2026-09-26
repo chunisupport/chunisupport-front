@@ -1,21 +1,15 @@
 import { CHART_COPY } from '../../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
+import { localizedCopy } from '../../i18n'
 import {
   WEAK_CHART_OP_TARGET_FILTER,
   type WeakChartAggregationDifficulty,
 } from '../../utils/weakChartInspector'
 
 /** 苦手譜面インスペクターの画面表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
-export const WEAK_CHART_INSPECTOR_COPY = {
-  chartTitle: '譜面定数別スコア分布',
-  chartAccessibleLabel: '譜面定数ごとの獲得スコア散布図',
-  outlierTitle: '苦手かもしれない譜面',
-  highOutlierTitle: '得意かもしれない譜面',
-  emptyOutliers: '該当する譜面はありません。',
-  emptyRecords: '分析できるプレイ済み譜面がありません。',
-  tableCaption: '外れ値と判定された譜面',
-  highOutlierTableCaption: '上方向の外れ値と判定された譜面',
-} as const
+export const WEAK_CHART_INSPECTOR_COPY = localizedCopy(
+  'tools.weakChartInspector.weakChartInspectorCopy'
+)
 
 /** Chart.jsへ渡すCSSカスタムプロパティ名 */
 export const WEAK_CHART_INSPECTOR_COLORS = {
@@ -35,16 +29,9 @@ export const WEAK_CHART_SCORE_TICK_INTERVAL = 1000
 export const WEAK_CHART_MIN_WIDTH_CLASS = 'min-w-[44rem]'
 
 /** グラフ設定画面の表示文言 */
-export const WEAK_CHART_SETTINGS_COPY = {
-  title: 'グラフ設定',
-  displaySection: '表示の絞り込み',
-  aggregationSection: '集計対象の絞り込み',
-  scoreRangeLabel: 'スコア',
-  constRangeLabel: '譜面定数',
-  cancel: 'キャンセル',
-  reset: '初期値に戻す',
-  apply: '適用',
-} as const
+export const WEAK_CHART_SETTINGS_COPY = localizedCopy(
+  'tools.weakChartInspector.weakChartSettingsCopy'
+)
 
 /** グラフ軸設定（表示の絞り込み）の初期値 */
 export const WEAK_CHART_AXIS_SETTINGS_DEFAULT = {

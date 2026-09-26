@@ -38,6 +38,7 @@ import { WEAK_CHART_INSPECTOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { localizedCopy } from '../../i18n'
 import { accentPreference, themePreference } from '../../stores/themePreferences'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
@@ -75,6 +76,9 @@ import {
   WEAK_CHART_SCORE_TICK_INTERVAL,
   WEAK_CHART_SETTINGS_COPY,
 } from './weakChartInspector.constants'
+
+/** 苦手譜面インスペクター画面の表示文言 */
+const WEAK_CHART_PAGE_TEXT = localizedCopy('tools.weakChartInspector.page')
 
 Chart.register(ScatterController, LinearScale, PointElement, Tooltip)
 
@@ -207,14 +211,14 @@ const WeakChartDistributionChart = (props: {
       data: {
         datasets: [
           {
-            label: '獲得スコア',
+            label: WEAK_CHART_PAGE_TEXT.score,
             data: normalPoints,
             backgroundColor: pointColor,
             pointRadius: 3,
             pointHoverRadius: 5,
           },
           {
-            label: '外れ値',
+            label: WEAK_CHART_PAGE_TEXT.outlier,
             data: outlierPoints,
             backgroundColor: outlierColor,
             pointRadius: 5,
@@ -363,16 +367,16 @@ const OutlierTable = (props: OutlierTableProps): JSX.Element => {
             <thead class="bg-surface-muted text-left text-text-muted">
               <tr class="[&>*:first-child]:pl-2 [&>*:last-child]:pr-2">
                 <th scope="col" class="font-medium" aria-sort={headerAriaSort('title')}>
-                  {header('曲名', 'title', 'start')}
+                  {header(WEAK_CHART_PAGE_TEXT.title, 'title', 'start')}
                 </th>
                 <th scope="col" class="font-medium" aria-sort={headerAriaSort('difficulty')}>
-                  {header('難易度', 'difficulty')}
+                  {header(WEAK_CHART_PAGE_TEXT.difficulty, 'difficulty')}
                 </th>
                 <th scope="col" class="font-medium" aria-sort={headerAriaSort('const')}>
-                  {header('定数', 'const')}
+                  {header(WEAK_CHART_PAGE_TEXT.const, 'const')}
                 </th>
                 <th scope="col" class="font-medium" aria-sort={headerAriaSort('score')}>
-                  {header('スコア', 'score')}
+                  {header(WEAK_CHART_PAGE_TEXT.scoreColumn, 'score')}
                 </th>
               </tr>
             </thead>
@@ -602,7 +606,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
           <Show when={!data.loading && analysisRecords().length > 0}>
             <AppIconButton
               tone="ghost"
-              aria-label="グラフ設定を開く"
+              aria-label={WEAK_CHART_PAGE_TEXT.openSettings}
               onClick={openSettings}
               class="shrink-0"
             >
@@ -674,7 +678,9 @@ const WeakChartInspectorPage = (): JSX.Element => {
                       <div class="space-y-3">
                         {/* 難易度 */}
                         <div>
-                          <span class="mb-1 block text-sm font-medium text-text-muted">難易度</span>
+                          <span class="mb-1 block text-sm font-medium text-text-muted">
+                            {WEAK_CHART_PAGE_TEXT.difficulty}
+                          </span>
                           <div class="flex flex-col items-start gap-1">
                             <For each={WEAK_CHART_AGGREGATION_DIFFICULTY_OPTIONS}>
                               {(option) => (
@@ -710,7 +716,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
                               min={SCORE_MIN}
                               max={SCORE_THEORETICAL_MAX}
                               step={1}
-                              label="集計対象 スコア 最小"
+                              label={WEAK_CHART_PAGE_TEXT.targetScoreMin}
                               onChange={setEditAggScoreMin}
                             />
                             <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
@@ -721,7 +727,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
                               min={SCORE_MIN}
                               max={SCORE_THEORETICAL_MAX}
                               step={1}
-                              label="集計対象 スコア 最大"
+                              label={WEAK_CHART_PAGE_TEXT.targetScoreMax}
                               onChange={setEditAggScoreMax}
                             />
                           </div>
@@ -737,7 +743,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
                               min={CHART_CONST_MIN}
                               max={CHART_CONST_MAX}
                               step={0.1}
-                              label="集計対象 譜面定数 最小"
+                              label={WEAK_CHART_PAGE_TEXT.targetConstMin}
                               onChange={setEditAggConstMin}
                             />
                             <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
@@ -748,7 +754,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
                               min={CHART_CONST_MIN}
                               max={CHART_CONST_MAX}
                               step={0.1}
-                              label="集計対象 譜面定数 最大"
+                              label={WEAK_CHART_PAGE_TEXT.targetConstMax}
                               onChange={setEditAggConstMax}
                             />
                           </div>
@@ -778,7 +784,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
                                   min={SCORE_MIN}
                                   max={SCORE_THEORETICAL_MAX}
                                   step={1}
-                                  label="表示の絞り込み スコア 最小"
+                                  label={WEAK_CHART_PAGE_TEXT.displayScoreMin}
                                   onChange={setEditYMin}
                                 />
                                 <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
@@ -789,7 +795,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
                                   min={SCORE_MIN}
                                   max={SCORE_THEORETICAL_MAX}
                                   step={1}
-                                  label="表示の絞り込み スコア 最大"
+                                  label={WEAK_CHART_PAGE_TEXT.displayScoreMax}
                                   onChange={setEditYMax}
                                 />
                               </div>
@@ -805,7 +811,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
                                   min={CHART_CONST_MIN}
                                   max={CHART_CONST_MAX}
                                   step={0.1}
-                                  label="表示の絞り込み 譜面定数 最小"
+                                  label={WEAK_CHART_PAGE_TEXT.displayConstMin}
                                   onChange={setEditXMin}
                                 />
                                 <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
@@ -816,7 +822,7 @@ const WeakChartInspectorPage = (): JSX.Element => {
                                   min={CHART_CONST_MIN}
                                   max={CHART_CONST_MAX}
                                   step={0.1}
-                                  label="表示の絞り込み 譜面定数 最大"
+                                  label={WEAK_CHART_PAGE_TEXT.displayConstMax}
                                   onChange={setEditXMax}
                                 />
                               </div>

@@ -1,4 +1,3 @@
-import { t } from '../../../i18n'
 import { Collapsible } from '@kobalte/core/collapsible'
 import { Link2, ShieldCheck, Trophy } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -6,6 +5,7 @@ import { For } from 'solid-js'
 import { AppDisclosureTrigger } from '../../../components/common/AppDisclosureTrigger'
 import { AppTabContent, SegmentedTabs } from '../../../components/common/AppTabs'
 import { DistributionBar } from '../../../components/common/record/DistributionBar'
+import { t } from '../../../i18n'
 import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
 import type { DistributionMap, RecordStats } from '../utils/recordStats'
 import {
@@ -123,7 +123,9 @@ const DistributionRow: Component<{
       <span class={`${props.colorClass} h-2.5 w-2.5 shrink-0 rounded-full`} aria-hidden="true" />
       <span class="truncate">{props.label}</span>
     </div>
-    <span class="whitespace-nowrap text-right tabular-nums">{t('users.filterStats.count', { count: formatInteger(props.count) })}</span>
+    <span class="whitespace-nowrap text-right tabular-nums">
+      {t('users.filterStats.count', { count: formatInteger(props.count) })}
+    </span>
     <span class="whitespace-nowrap text-right tabular-nums text-text-muted">
       {formatTruncatedFixed(props.percent, 1)}%
     </span>

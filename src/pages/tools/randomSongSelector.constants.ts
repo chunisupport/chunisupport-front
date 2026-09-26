@@ -1,9 +1,13 @@
 import { CHART_COPY } from '../../constants/chart'
+import { localizedCopy } from '../../i18n'
 import type { PlayerDataDifficulty } from '../../types/api'
 import {
   RANDOM_SONG_OP_TARGET_FILTER,
   type RandomSongDifficultyFilter,
 } from '../../utils/randomSongSelector'
+
+/** ランダム選曲の表示文言 */
+const RANDOM_SONG_SELECTOR_TEXT = localizedCopy('tools.randomSongSelector')
 
 /**
  * ランダム選曲結果を保存する sessionStorage キー。
@@ -47,83 +51,81 @@ export const RANDOM_SONG_SELECTOR_DIFFICULTY_FILTER_LABELS = {
 /**
  * ランダム選曲ツールで使う短い入力項目ラベル。
  */
-export const RANDOM_SONG_SELECTOR_FIELD_LABELS = {
-  const: '定数',
-  score: 'スコア',
-  drawRate: '出やすさ',
-} as const
+export const RANDOM_SONG_SELECTOR_FIELD_LABELS = localizedCopy(
+  'tools.randomSongSelector.randomSongSelectorFieldLabels'
+)
 
 /**
  * ランダム選曲ツールの表示文言。タイトルと説明文はツール一覧の定義を参照すること。
  */
 export const RANDOM_SONG_SELECTOR_COPY = {
-  goalFilterLabel: '目標で絞る',
-  goalFilterDialogTitle: '目標で絞る',
-  goalFilterNoneLabel: '絞り込みなし',
-  goalFilterCancelLabel: 'キャンセル',
-  goalFilterApplyLabel: '適用',
-  goalFilterUnavailableMessage: 'ログイン時のみ保存済み目標を利用できます。',
-  goalFilterFetchErrorMessage: '目標を取得できませんでした。',
-  goalFilterRecordFetchErrorMessage: '目標の未達成状況を取得できませんでした。',
-  goalFilterEmptyMessage: '絞り込みに利用できる目標がありません。',
-  countLabel: '曲数',
-  difficultyLabel: '難易度',
-  favoriteOnlyLabel: 'お気に入りからランダム',
-  genreLabel: 'ジャンル',
-  versionLabel: 'バージョン',
-  minConstLabel: '定数 下限',
-  maxConstLabel: '定数 上限',
-  advancedSettingsLabel: '高度な設定',
-  recordFilterSettingsLabel: '自分のレコードで絞る',
+  goalFilterLabel: RANDOM_SONG_SELECTOR_TEXT.goalFilterLabel,
+  goalFilterDialogTitle: RANDOM_SONG_SELECTOR_TEXT.goalFilterDialogTitle,
+  goalFilterNoneLabel: RANDOM_SONG_SELECTOR_TEXT.goalFilterNoneLabel,
+  goalFilterCancelLabel: RANDOM_SONG_SELECTOR_TEXT.goalFilterCancelLabel,
+  goalFilterApplyLabel: RANDOM_SONG_SELECTOR_TEXT.goalFilterApplyLabel,
+  goalFilterUnavailableMessage: RANDOM_SONG_SELECTOR_TEXT.goalFilterUnavailableMessage,
+  goalFilterFetchErrorMessage: RANDOM_SONG_SELECTOR_TEXT.goalFilterFetchErrorMessage,
+  goalFilterRecordFetchErrorMessage: RANDOM_SONG_SELECTOR_TEXT.goalFilterRecordFetchErrorMessage,
+  goalFilterEmptyMessage: RANDOM_SONG_SELECTOR_TEXT.goalFilterEmptyMessage,
+  countLabel: RANDOM_SONG_SELECTOR_TEXT.countLabel,
+  difficultyLabel: RANDOM_SONG_SELECTOR_TEXT.difficultyLabel,
+  favoriteOnlyLabel: RANDOM_SONG_SELECTOR_TEXT.favoriteOnlyLabel,
+  genreLabel: RANDOM_SONG_SELECTOR_TEXT.genreLabel,
+  versionLabel: RANDOM_SONG_SELECTOR_TEXT.versionLabel,
+  minConstLabel: RANDOM_SONG_SELECTOR_TEXT.minConstLabel,
+  maxConstLabel: RANDOM_SONG_SELECTOR_TEXT.maxConstLabel,
+  advancedSettingsLabel: RANDOM_SONG_SELECTOR_TEXT.advancedSettingsLabel,
+  recordFilterSettingsLabel: RANDOM_SONG_SELECTOR_TEXT.recordFilterSettingsLabel,
   drawRateLabel: RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate,
-  drawRatePercentLabel: '確率',
+  drawRatePercentLabel: RANDOM_SONG_SELECTOR_TEXT.drawRatePercentLabel,
   invalidDrawRatePercentLabel: '-',
-  mixedWeightPlaceholder: '個別設定',
-  difficultyWeightLabel: '難易度別',
-  levelWeightLabel: 'レベル別',
-  constWeightLabel: '定数別',
-  recordVisibleLabel: 'レコードを表示',
-  playStatusLabel: 'プレイ状況',
-  lampLabel: 'ランプ',
-  minScoreLabel: 'スコア 下限',
-  maxScoreLabel: 'スコア 上限',
-  bestFrameLabel: 'ベスト枠',
-  recordUnavailableMessage: 'ログイン時のみ利用できます。',
-  recordFetchErrorMessage: 'レコード情報を取得できませんでした。',
-  favoriteFetchErrorMessage: 'お気に入り楽曲を取得できませんでした。',
-  drawButtonLabel: '選曲',
-  resetButtonLabel: 'クリア',
-  resetConfirmTitle: '条件を初期化しますか？',
-  resetConfirmDescription: '現在の絞り込みと選曲結果を初期状態に戻します。',
-  resetCancelLabel: 'キャンセル',
-  resetConfirmLabel: '初期化',
-  closeButtonLabel: '閉じる',
-  resultLabel: '選曲結果',
-  candidateCountLabel: '候補',
-  noCandidatesMessage: '条件に合う譜面はありません。',
-  noResultsMessage: '選曲すると結果が表示されます。',
-  invalidCountMessage: '曲数は1以上で入力してください。',
-  invalidConstRangeMessage: '定数の範囲を確認してください。',
-  invalidScoreRangeMessage: 'スコアの範囲を確認してください。',
-  invalidWeightMessage: '出やすさは0以上の数値で入力してください。',
+  mixedWeightPlaceholder: RANDOM_SONG_SELECTOR_TEXT.mixedWeightPlaceholder,
+  difficultyWeightLabel: RANDOM_SONG_SELECTOR_TEXT.difficultyWeightLabel,
+  levelWeightLabel: RANDOM_SONG_SELECTOR_TEXT.levelWeightLabel,
+  constWeightLabel: RANDOM_SONG_SELECTOR_TEXT.constWeightLabel,
+  recordVisibleLabel: RANDOM_SONG_SELECTOR_TEXT.recordVisibleLabel,
+  playStatusLabel: RANDOM_SONG_SELECTOR_TEXT.playStatusLabel,
+  lampLabel: RANDOM_SONG_SELECTOR_TEXT.lampLabel,
+  minScoreLabel: RANDOM_SONG_SELECTOR_TEXT.minScoreLabel,
+  maxScoreLabel: RANDOM_SONG_SELECTOR_TEXT.maxScoreLabel,
+  bestFrameLabel: RANDOM_SONG_SELECTOR_TEXT.bestFrameLabel,
+  recordUnavailableMessage: RANDOM_SONG_SELECTOR_TEXT.recordUnavailableMessage,
+  recordFetchErrorMessage: RANDOM_SONG_SELECTOR_TEXT.recordFetchErrorMessage,
+  favoriteFetchErrorMessage: RANDOM_SONG_SELECTOR_TEXT.favoriteFetchErrorMessage,
+  drawButtonLabel: RANDOM_SONG_SELECTOR_TEXT.drawButtonLabel,
+  resetButtonLabel: RANDOM_SONG_SELECTOR_TEXT.resetButtonLabel,
+  resetConfirmTitle: RANDOM_SONG_SELECTOR_TEXT.resetConfirmTitle,
+  resetConfirmDescription: RANDOM_SONG_SELECTOR_TEXT.resetConfirmDescription,
+  resetCancelLabel: RANDOM_SONG_SELECTOR_TEXT.resetCancelLabel,
+  resetConfirmLabel: RANDOM_SONG_SELECTOR_TEXT.resetConfirmLabel,
+  closeButtonLabel: RANDOM_SONG_SELECTOR_TEXT.closeButtonLabel,
+  resultLabel: RANDOM_SONG_SELECTOR_TEXT.resultLabel,
+  candidateCountLabel: RANDOM_SONG_SELECTOR_TEXT.candidateCountLabel,
+  noCandidatesMessage: RANDOM_SONG_SELECTOR_TEXT.noCandidatesMessage,
+  noResultsMessage: RANDOM_SONG_SELECTOR_TEXT.noResultsMessage,
+  invalidCountMessage: RANDOM_SONG_SELECTOR_TEXT.invalidCountMessage,
+  invalidConstRangeMessage: RANDOM_SONG_SELECTOR_TEXT.invalidConstRangeMessage,
+  invalidScoreRangeMessage: RANDOM_SONG_SELECTOR_TEXT.invalidScoreRangeMessage,
+  invalidWeightMessage: RANDOM_SONG_SELECTOR_TEXT.invalidWeightMessage,
 } as const
 
 /**
  * プレイ状況フィルターの選択肢。
  */
 export const RANDOM_SONG_PLAY_STATUS_OPTIONS = [
-  { value: 'all', label: 'すべて' },
-  { value: 'played', label: 'プレイ済み' },
-  { value: 'unplayed', label: '未プレイ' },
+  { value: 'all', label: RANDOM_SONG_SELECTOR_TEXT.allLabel },
+  { value: 'played', label: RANDOM_SONG_SELECTOR_TEXT.playedLabel },
+  { value: 'unplayed', label: RANDOM_SONG_SELECTOR_TEXT.unplayedLabel },
 ] as const
 
 /**
  * ベスト枠フィルターの選択肢。
  */
 export const RANDOM_SONG_BEST_FRAME_OPTIONS = [
-  { value: 'all', label: 'すべて' },
-  { value: 'only', label: 'ベスト枠のみ' },
-  { value: 'exclude', label: 'ベスト枠除外' },
+  { value: 'all', label: RANDOM_SONG_SELECTOR_TEXT.allLabel },
+  { value: 'only', label: RANDOM_SONG_SELECTOR_TEXT.onlyLabel },
+  { value: 'exclude', label: RANDOM_SONG_SELECTOR_TEXT.excludeLabel },
 ] as const
 
 /**
@@ -139,5 +141,5 @@ export const RANDOM_SONG_LAMP_OPTIONS = [
   { value: 'HARD', label: 'HARD' },
   { value: 'CLEAR', label: 'CLEAR' },
   { value: 'FAILED', label: 'FAILED' },
-  { value: 'NONE', label: '未プレイ' },
+  { value: 'NONE', label: RANDOM_SONG_SELECTOR_TEXT.noneLabel },
 ] as const

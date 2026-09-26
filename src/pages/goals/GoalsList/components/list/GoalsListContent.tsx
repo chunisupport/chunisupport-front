@@ -1,15 +1,39 @@
-import { t } from '../../../../../i18n'
 import { Collapsible } from '@kobalte/core/collapsible'
 import { ToggleGroup } from '@kobalte/core/toggle-group'
 import { Tooltip } from '@kobalte/core/tooltip'
-import { type CollisionDetector, closestCenter, DragDropProvider, type DragEvent, SortableProvider, useDragDropContext } from '@thisbeyond/solid-dnd'
-import { ChevronLeft, ChevronRight, ChevronsDown, ChevronsRight, GalleryHorizontal, LayoutList, Plus, Settings2 } from 'lucide-solid'
+import {
+  type CollisionDetector,
+  closestCenter,
+  DragDropProvider,
+  type DragEvent,
+  SortableProvider,
+  useDragDropContext,
+} from '@thisbeyond/solid-dnd'
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsDown,
+  ChevronsRight,
+  GalleryHorizontal,
+  LayoutList,
+  Plus,
+  Settings2,
+} from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import { AppIconButton } from '../../../../../components/common/AppButton'
 import { AppDisclosureTrigger } from '../../../../../components/common/AppDisclosureTrigger'
+import { t } from '../../../../../i18n'
 import type { GoalDTO } from '../../../../../types/api'
-import { GOALS_LIST_COPY, EMPTY_GOALS_MESSAGE, GOAL_GROUP_COPY, GOAL_GROUP_DISPLAY_MODE_COPY, GOALS_LIMIT, GOALS_LIMIT_REACHED_MESSAGE, type GoalGroupDisplayMode } from '../../constants'
+import {
+  EMPTY_GOALS_MESSAGE,
+  GOAL_GROUP_COPY,
+  GOAL_GROUP_DISPLAY_MODE_COPY,
+  GOALS_LIMIT,
+  GOALS_LIMIT_REACHED_MESSAGE,
+  GOALS_LIST_COPY,
+  type GoalGroupDisplayMode,
+} from '../../constants'
 import type { GoalGroupView } from '../../goalGroupsModel'
 import GoalCard from '../card/GoalCard'
 import { GoalCopyPlaceholder } from '../card/GoalCopyPlaceholder'
@@ -532,7 +556,9 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
             </AppIconButton>
             <div class="min-w-0 text-center" role="status" aria-live="polite" aria-atomic="true">
               <h2 class="truncate font-sans text-lg font-semibold">{props.groupView.name}</h2>
-              <p class="text-xs text-text-muted">{t('goals.list.count', { count: props.groupView.goals.length })}</p>
+              <p class="text-xs text-text-muted">
+                {t('goals.list.count', { count: props.groupView.goals.length })}
+              </p>
             </div>
             <AppIconButton
               aria-label={GOAL_GROUP_COPY.nextButtonLabel}

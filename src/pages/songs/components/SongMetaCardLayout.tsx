@@ -1,7 +1,7 @@
-import { t } from '../../../i18n'
 import { For, type JSX } from 'solid-js'
 import placeholderImageUrl from '../../../assets/placeholder.png'
 import { JacketImage } from '../../../components/common/JacketImage'
+import { t } from '../../../i18n'
 import { buildChunithmJacketUrl } from '../../../utils/jacket'
 
 export type SongMetaInfoItem = {

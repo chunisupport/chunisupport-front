@@ -1,4 +1,3 @@
-import { localizedCopy } from '../../../i18n'
 import {
   JUSTICE_COUNT_MAX,
   JUSTICE_COUNT_MIN,
@@ -7,6 +6,7 @@ import {
   SINGLE_RATING_MAX,
   SINGLE_RATING_MIN,
 } from '../../../constants/chart'
+import { localizedCopy } from '../../../i18n'
 
 /** 数値範囲フィルターの表示文言 */
 const RANGE_FILTER_TEXT = localizedCopy('users.rangeFilters')

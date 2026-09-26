@@ -1,7 +1,7 @@
-import { t } from '../../../../i18n'
 import type { Component } from 'solid-js'
 import { RANGE_INPUT_COPY, SelectRangeInput } from '../../../../components/common/RangeInput'
 import { WORLDSEND_LEVEL_STAR_OPTIONS } from '../../../../constants/chart'
+import { t } from '../../../../i18n'
 import { formatWorldsendLevelStar } from '../utils/filterDialog'
 
 const WORLDSEND_LEVEL_RANGE_TITLE = t('users.filter.level')

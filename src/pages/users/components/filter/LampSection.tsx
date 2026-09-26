@@ -1,6 +1,6 @@
-import { t } from '../../../../i18n'
 import { For } from 'solid-js'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
+import { t } from '../../../../i18n'
 
 type LampValue = string | null
 

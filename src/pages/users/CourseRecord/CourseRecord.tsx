@@ -7,7 +7,11 @@ import RecordDataTable from '../components/RecordDataTable'
 import { getCourseRecordColumnRenderer } from './columnRenderers'
 import { COURSE_RECORD_COLUMN_DEFINITIONS, type CourseRecordSortKey } from './columns'
 import { COURSE_RECORD_COPY } from './constants'
-import { type CourseRecordSortCondition, DEFAULT_COURSE_RECORD_SORT_CONDITION, sortCourseRecords } from './sorting'
+import {
+  type CourseRecordSortCondition,
+  DEFAULT_COURSE_RECORD_SORT_CONDITION,
+  sortCourseRecords,
+} from './sorting'
 
 type Props = {
   /** 表示対象のコースレコード */

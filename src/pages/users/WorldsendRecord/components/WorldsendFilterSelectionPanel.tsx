@@ -1,4 +1,3 @@
-import { t } from '../../../../i18n'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import { SCORE_MIN } from '../../../../constants/chart'
@@ -7,6 +6,7 @@ import {
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../../../constants/recordFilterOptions'
+import { t } from '../../../../i18n'
 import type { ChainLamp, ComboLampFilter, HardLamp } from '../../../../types/record'
 import {
   parseNumberInput,

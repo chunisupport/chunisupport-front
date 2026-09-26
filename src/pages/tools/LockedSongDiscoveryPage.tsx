@@ -23,6 +23,7 @@ import { LOCKED_SONG_DISCOVERY_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { t } from '../../i18n'
 import { saveStandardRecordFilterSetting } from '../../repositories/viewSettingsRepository'
 import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
@@ -657,7 +658,12 @@ const LockedSongDiscoveryPage: Component = () => {
                             variant="ghost"
                             fullWidth
                             class="justify-between gap-3 rounded-none px-4 py-2.5 text-left font-sans focus-visible:ring-inset"
-                            aria-label={`${cell.difficulty} ${cell.genre} / ${cell.version}の${LOCKED_SONG_DISCOVERY_COPY.openRecords}`}
+                            aria-label={t('tools.lockedSongDiscovery.cellAriaLabel', {
+                              difficulty: cell.difficulty,
+                              genre: cell.genre,
+                              version: cell.version,
+                              action: LOCKED_SONG_DISCOVERY_COPY.openRecords,
+                            })}
                             onClick={() => void handleOpenRecords(cell)}
                           >
                             <span class="min-w-0">

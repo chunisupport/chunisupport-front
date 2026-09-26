@@ -1,4 +1,3 @@
-import { t } from '../../../../../i18n'
 import { NumberField } from '@kobalte/core/number-field'
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
@@ -7,6 +6,7 @@ import { For, Show } from 'solid-js'
 import { FormSelect } from '../../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../../components/common/CheckboxField'
 import { getSelectableCardButtonClass } from '../../../../../components/common/SelectableCardButton'
+import { t } from '../../../../../i18n'
 
 interface GoalFilterCheckboxProps {
   label: string

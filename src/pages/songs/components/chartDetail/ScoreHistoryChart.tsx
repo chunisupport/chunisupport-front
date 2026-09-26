@@ -1,4 +1,14 @@
-import { Chart, type ChartData, type ChartOptions, Legend, LinearScale, LineController, LineElement, PointElement, Tooltip } from 'chart.js'
+import {
+  Chart,
+  type ChartData,
+  type ChartOptions,
+  Legend,
+  LinearScale,
+  LineController,
+  LineElement,
+  PointElement,
+  Tooltip,
+} from 'chart.js'
 import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js'
 import { accentPreference, themePreference } from '../../../../stores/themePreferences'
 import type { ScoreHistoryEntryDTO } from '../../../../types/api'
@@ -192,7 +202,9 @@ const ScoreHistoryChart = (props: Props) => {
       <Show
         when={props.entries.length > 0}
         fallback={
-          <div class="py-10 text-center text-sm text-text-muted">{CHART_DETAIL_COPY.historyEmpty}</div>
+          <div class="py-10 text-center text-sm text-text-muted">
+            {CHART_DETAIL_COPY.historyEmpty}
+          </div>
         }
       >
         <div class={CHART_HEIGHT_CLASS}>

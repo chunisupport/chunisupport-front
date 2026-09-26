@@ -1,7 +1,7 @@
-import { t } from '../../../i18n'
 import { useNavigate } from '@solidjs/router'
 import { createMemo, createResource } from 'solid-js'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
+import { t } from '../../../i18n'
 import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,

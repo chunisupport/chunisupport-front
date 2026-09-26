@@ -1,34 +1,71 @@
-import { formatMessage, t } from '../../../i18n'
 import { useLocation, useNavigate } from '@solidjs/router'
 import { ArrowLeftRight, ChartBarBig, LockKeyhole, LockKeyholeOpen, Table2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show, Suspense } from 'solid-js'
+import {
+  createMemo,
+  createResource,
+  createSignal,
+  ErrorBoundary,
+  onMount,
+  Show,
+  Suspense,
+} from 'solid-js'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
 import { AppButton } from '../../../components/common/AppButton'
 import { AppSelect } from '../../../components/common/AppSelect'
+import { formatMessage, t } from '../../../i18n'
 import { saveStandardRecordFilterSetting } from '../../../repositories/viewSettingsRepository'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
 import { publishStandardRecordFilter } from '../../../stores/standardRecordNavigation'
 import type { PlayerDTO, PlayerLockedSongRequest, UserRecordDTO } from '../../../types/api'
-import { buildOverPowerChartEntries, selectOverPowerChartEntries } from '../../../usecases/overpower/aggregation'
+import {
+  buildOverPowerChartEntries,
+  selectOverPowerChartEntries,
+} from '../../../usecases/overpower/aggregation'
 import { buildLockedSongsBatchPayload } from '../../../usecases/overpower/lockedSongsBatch'
 import { buildOverPowerSummary } from '../../../usecases/overpower/overpowerSummary'
 import { buildOverPowerRecordFilter } from '../../../usecases/overpower/recordNavigation'
-import type { OverPowerAggregationTarget, OverPowerSummaryRow } from '../../../usecases/overpower/types'
+import type {
+  OverPowerAggregationTarget,
+  OverPowerSummaryRow,
+} from '../../../usecases/overpower/types'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
-import { buildUserOverPowerPagePath, buildUserProfilePagePath, type OverPowerSubPage } from '../../../utils/userProfileRoute'
+import {
+  buildUserOverPowerPagePath,
+  buildUserProfilePagePath,
+  type OverPowerSubPage,
+} from '../../../utils/userProfileRoute'
 import { scrollToUserProfileContent } from '../../../utils/userProfileScroll'
 import LockedSongsDialog from './components/LockedSongsDialog'
 import LowLevelRowsToggle from './components/LowLevelRowsToggle'
 import { OverPowerSummaryGraph } from './components/OverPowerSummaryGraph'
 import { OverPowerSummaryTable } from './components/OverPowerSummaryTable'
-import { DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE, OVER_POWER_AGGREGATION_TARGET_OPTIONS, OVER_POWER_CONTROL_LABELS, OVER_POWER_COPY, OVER_POWER_SUMMARY_OPTIONS, overPowerRecordFilterDimensionBySummaryTab, overPowerSubPageBySummaryTab, overPowerSummaryTabBySubPage } from './constants'
-import type { OverPowerAggregationTargetOption, OverPowerGraphRow, OverPowerSummaryOption, OverPowerSummaryTab, OverPowerSummaryViewMode } from './types'
-import { buildChartRecordsBySummaryTab, buildGraphRows, type RecordsBySummaryTab } from './utils/graphRows'
+import {
+  DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE,
+  OVER_POWER_AGGREGATION_TARGET_OPTIONS,
+  OVER_POWER_CONTROL_LABELS,
+  OVER_POWER_COPY,
+  OVER_POWER_SUMMARY_OPTIONS,
+  overPowerRecordFilterDimensionBySummaryTab,
+  overPowerSubPageBySummaryTab,
+  overPowerSummaryTabBySubPage,
+} from './constants'
+import type {
+  OverPowerAggregationTargetOption,
+  OverPowerGraphRow,
+  OverPowerSummaryOption,
+  OverPowerSummaryTab,
+  OverPowerSummaryViewMode,
+} from './types'
+import {
+  buildChartRecordsBySummaryTab,
+  buildGraphRows,
+  type RecordsBySummaryTab,
+} from './utils/graphRows'
 
 type Props = {
   record: UserRecordDTO

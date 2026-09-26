@@ -1,4 +1,3 @@
-import { t } from '../../../../../i18n'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import { AppButton } from '../../../../../components/common/AppButton'
@@ -9,6 +8,7 @@ import {
 } from '../../../../../components/common/DomainMultiSelect'
 import { RANGE_INPUT_COPY, TextRangeInput } from '../../../../../components/common/RangeInput'
 import { CHART_COPY } from '../../../../../constants/chart'
+import { t } from '../../../../../i18n'
 import type { MasterDataDTO } from '../../../../../types/api'
 import { normalizeChartConstRangeInput } from '../../../../../utils/rangeInput'
 import { GOAL_FIELD_INPUT_CLASS, GoalFilterCheckbox } from './goalFormFields'
@@ -57,7 +57,9 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
     <div class="mb-3 flex items-center gap-3">
       <span class={GOAL_STEP_BADGE_CLASS}>2</span>
       <div>
-        <h2 class={GOAL_STEP_TITLE_CLASS}>{props.isRainbowGoal ? t('goals.form.targetSongs') : t('goals.form.targetCharts')}</h2>
+        <h2 class={GOAL_STEP_TITLE_CLASS}>
+          {props.isRainbowGoal ? t('goals.form.targetSongs') : t('goals.form.targetCharts')}
+        </h2>
         <p class={GOAL_STEP_DESCRIPTION_CLASS}>
           {props.isRainbowGoal
             ? t('goals.form.targetSongsDescription')

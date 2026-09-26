@@ -1,5 +1,5 @@
-import { localizedCopy } from '../../../i18n'
 import { getAppButtonClass } from '../../../components/common/AppButton'
+import { localizedCopy } from '../../../i18n'
 
 /**
  * 保存済みレコードフィルターダイアログで表示する文言。

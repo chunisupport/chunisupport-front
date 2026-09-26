@@ -1,10 +1,10 @@
-import { t } from '../../../i18n'
 import { ArrowUpDown } from 'lucide-solid'
 import { createMemo, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
 import { AppIconButton } from '../../../components/common/AppButton'
 import { useAppMainScrollRestoration } from '../../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { t } from '../../../i18n'
 import type { SortDirection } from '../../../utils/sortingQuery'
 import SongFilterPanel from '../components/SongFilterPanel'
 import SongListViewModeToggle from '../components/SongListViewModeToggle'
@@ -135,7 +135,9 @@ const SongsList = () => {
                   />
                 </Show>
               </div>
-              <p class="text-sm text-text-muted">{t('songs.list.count', { count: filteredSongs().length })}</p>
+              <p class="text-sm text-text-muted">
+                {t('songs.list.count', { count: filteredSongs().length })}
+              </p>
 
               <Show
                 when={isCardView()}

@@ -1,5 +1,5 @@
-import { UNKNOWN_VALUE_LABEL } from '../constants/unknownValue'
 import { CHART_CONST_MAX, CHART_CONST_MIN } from '../constants/chart'
+import { UNKNOWN_VALUE_LABEL } from '../constants/unknownValue'
 import { t } from '../i18n'
 import type {
   ChartStats,
@@ -347,7 +347,10 @@ export const filterChartStats = (
       return false
     }
     if (!attributesBySongId || (filter.genres === null && filter.versions === null)) return true
-    const attributes = attributesBySongId.get(chart.song_id) ?? { genre: null, version: UNKNOWN_VALUE_LABEL }
+    const attributes = attributesBySongId.get(chart.song_id) ?? {
+      genre: null,
+      version: UNKNOWN_VALUE_LABEL,
+    }
     if (
       filter.genres !== null &&
       (attributes.genre === null || !filter.genres.includes(attributes.genre))

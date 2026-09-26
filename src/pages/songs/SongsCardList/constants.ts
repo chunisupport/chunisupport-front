@@ -1,5 +1,5 @@
-import { localizedCopy } from '../../../i18n'
 import { DIFFICULTY_SHORT_NAME_MAP, PLAYER_DATA_DIFFICULTIES } from '../../../constants/difficulty'
+import { localizedCopy } from '../../../i18n'
 import type { SortDirection } from '../../../utils/sortingQuery'
 import type { SongChartDisplayMode } from '../SongsList/constants'
 import type { SongSortKey } from '../SongsList/utils/sorting'

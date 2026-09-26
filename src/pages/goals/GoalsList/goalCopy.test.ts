@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalDTO } from '../../../types/api'
-import { GOALS_LIST_COPY, GOAL_TITLE_MAX_LENGTH } from './constants'
+import { GOAL_TITLE_MAX_LENGTH, GOALS_LIST_COPY } from './constants'
 import { buildCopiedGoalTitle, buildGoalCopyRequest } from './goalCopy'
 
 /**

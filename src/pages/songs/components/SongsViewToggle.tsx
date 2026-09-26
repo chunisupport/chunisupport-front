@@ -1,7 +1,7 @@
-import { localizedCopy } from '../../../i18n'
 import { A, useLocation } from '@solidjs/router'
 import { createMemo } from 'solid-js'
 import { getAppButtonClass } from '../../../components/common/AppButton'
+import { localizedCopy } from '../../../i18n'
 
 /** 楽曲一覧切り替えの表示文言 */
 const SONGS_VIEW_TOGGLE_COPY = localizedCopy('songs.viewToggle')

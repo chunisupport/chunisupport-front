@@ -1,4 +1,3 @@
-import { t } from '../../../../i18n'
 import type { Component } from 'solid-js'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../components/common/filterStyles'
@@ -7,6 +6,7 @@ import {
   SelectRangeInput,
   TextRangeInput,
 } from '../../../../components/common/RangeInput'
+import { t } from '../../../../i18n'
 import { normalizeScoreRangeInput } from '../../../../utils/rangeInput'
 import { SCORE_RANKS } from '../../utils/scoreRank'
 

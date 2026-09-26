@@ -1,13 +1,15 @@
 import { localizedCopy, withLocalizedLabels } from '../../i18n'
 export const SETTINGS_SECTIONS = withLocalizedLabels(
   [
-  { id: 'appearance' },
-  { id: 'profile' },
-  { id: 'api' },
-  { id: 'data' },
-  { id: 'account' },
-] as const,
-  localizedCopy('settings.sections'), 'label', 'id'
+    { id: 'appearance' },
+    { id: 'profile' },
+    { id: 'api' },
+    { id: 'data' },
+    { id: 'account' },
+  ] as const,
+  localizedCopy('settings.sections'),
+  'label',
+  'id'
 )
 
 export type SettingsSectionId = (typeof SETTINGS_SECTIONS)[number]['id']

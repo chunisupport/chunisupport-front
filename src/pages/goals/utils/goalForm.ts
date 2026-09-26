@@ -93,7 +93,12 @@ export const formatGoalAttributesLabel = (
   }
 
   if (typeof attributes.const?.min === 'number' || typeof attributes.const?.max === 'number') {
-    parts.push(t('goals.summary.const', { min: attributes.const?.min ?? '-', max: attributes.const?.max ?? '-' }))
+    parts.push(
+      t('goals.summary.const', {
+        min: attributes.const?.min ?? '-',
+        max: attributes.const?.max ?? '-',
+      })
+    )
   }
 
   if (genreIds && genreIds.length > 0) {

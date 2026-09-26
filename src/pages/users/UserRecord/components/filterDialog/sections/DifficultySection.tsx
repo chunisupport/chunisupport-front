@@ -1,4 +1,3 @@
-import { t } from '../../../../../../i18n'
 import { Star } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
@@ -6,6 +5,7 @@ import { AppButton } from '../../../../../../components/common/AppButton'
 import { AppSelect } from '../../../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../../../components/common/CheckboxField'
 import { RECORD_FILTER_OPTIONS_COPY } from '../../../../../../constants/recordFilterOptions'
+import { t } from '../../../../../../i18n'
 import type { Difficulty, OpTargetType } from '../../../../../../types/recordFilter'
 
 type DifficultySectionProps = {

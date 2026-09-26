@@ -1,5 +1,5 @@
-import { t } from '../../../../../i18n'
 import type { Component } from 'solid-js'
+import { t } from '../../../../../i18n'
 import { GOAL_TITLE_MAX_LENGTH } from '../../constants'
 import { GoalTextField } from './goalFormFields'
 import {

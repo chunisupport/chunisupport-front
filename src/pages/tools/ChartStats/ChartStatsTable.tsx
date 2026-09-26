@@ -9,6 +9,7 @@ import {
   SortableHeaderButton,
 } from '../../../components/common/SortableTableHeader'
 import { buildSongDetailPath, buildWorldsendSongDetailPath } from '../../../constants/routes'
+import { t } from '../../../i18n'
 import type { ChartStats, ChartStatsDifficulty } from '../../../types/chartStats'
 import {
   buildChartStatsTableValues,
@@ -212,7 +213,7 @@ export const ChartStatsTable = (props: ChartStatsTableProps): JSX.Element => {
               aria-sort={headerAriaSort('title')}
             >
               <SortableHeaderButton
-                label="曲名"
+                label={t('tools.common.songTitle')}
                 active={sortKey() === 'title'}
                 direction={sortDirection()}
                 align="start"
@@ -326,14 +327,24 @@ export const ChartStatsTable = (props: ChartStatsTableProps): JSX.Element => {
                                 currentChart.player_count
                               ),
                             }}
-                            title={`${formatInteger(metric.count)}人 / ${formatChartStatsValue(
-                              metric.count,
-                              currentChart.player_count,
-                              'percent'
-                            )}`}
-                            aria-label={`${metric.label}: ${formatInteger(metric.count)}人 / ${formatInteger(
-                              currentChart.player_count
-                            )}人、${formatChartStatsValue(metric.count, currentChart.player_count, 'percent')}`}
+                            title={t('tools.common.metricTitle', {
+                              count: formatInteger(metric.count),
+                              percent: formatChartStatsValue(
+                                metric.count,
+                                currentChart.player_count,
+                                'percent'
+                              ),
+                            })}
+                            aria-label={t('tools.common.metricAriaLabel', {
+                              label: metric.label,
+                              count: formatInteger(metric.count),
+                              total: formatInteger(currentChart.player_count),
+                              percent: formatChartStatsValue(
+                                metric.count,
+                                currentChart.player_count,
+                                'percent'
+                              ),
+                            })}
                           >
                             <span class="truncate">
                               {formatChartStatsValue(

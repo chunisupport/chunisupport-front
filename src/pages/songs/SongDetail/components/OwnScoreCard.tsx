@@ -1,4 +1,3 @@
-import { formatMessage, t } from '../../../../i18n'
 import { A } from '@solidjs/router'
 import { ChevronRight } from 'lucide-solid'
 import { For, Show } from 'solid-js'
@@ -7,7 +6,12 @@ import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'
 import { DefaultRecordLampBadges } from '../../../../components/common/record/RecordDisplayParts'
 import { getDefaultRecordLampLabel } from '../../../../components/common/record/recordLampLabel'
 import { WORLDSEND_SCORE_LABEL } from '../../../../constants/chart'
-import { buildSongChartDetailPath, buildWorldsendChartDetailPath, CHART_DETAIL_FROM_SONG_DETAIL_STATE } from '../../../../constants/routes'
+import {
+  buildSongChartDetailPath,
+  buildWorldsendChartDetailPath,
+  CHART_DETAIL_FROM_SONG_DETAIL_STATE,
+} from '../../../../constants/routes'
+import { formatMessage, t } from '../../../../i18n'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../../../types/api'
 import WorldsendBadge from '../../components/WorldsendBadge'
 import { OWN_SCORE_COPY } from '../scoreHistory.constants'

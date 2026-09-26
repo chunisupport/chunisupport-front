@@ -1,10 +1,10 @@
-import { t } from '../../../../i18n'
 import {
   createRecordFilter,
   deleteRecordFilter,
   fetchRecordFilters,
   updateRecordFilter,
 } from '../../../../api/recordFilters'
+import { t } from '../../../../i18n'
 import type { RecordFilterDTO, RecordFilterRequest } from '../../../../types/api'
 import type { FilterState } from '../../../../types/recordFilter'
 import { migrateLegacyComboLampFilters } from '../../../../utils/comboLampFilter'

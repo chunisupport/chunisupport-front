@@ -1,4 +1,3 @@
-import { formatMessage } from '../../../i18n'
 import { A, useParams } from '@solidjs/router'
 import { ArrowLeft } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -6,6 +5,7 @@ import { createMemo, createResource, ErrorBoundary, Show } from 'solid-js'
 import { fetchUserProfileSummary, fetchUserRatingOpHistory } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { formatMessage } from '../../../i18n'
 import type {
   PlayerMetricHistoryEntryDTO,
   PlayerMetricHistoryResponseDTO,

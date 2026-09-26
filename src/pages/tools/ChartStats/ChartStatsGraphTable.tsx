@@ -16,6 +16,7 @@ import {
   SortIndicator,
 } from '../../../components/common/SortableTableHeader'
 import { buildSongDetailPath, buildWorldsendSongDetailPath } from '../../../constants/routes'
+import { t } from '../../../i18n'
 import type { ChartStats, ChartStatsDifficulty } from '../../../types/chartStats'
 import {
   buildChartStatsDistribution,
@@ -211,7 +212,7 @@ export const ChartStatsGraphTable = (props: ChartStatsGraphTableProps): JSX.Elem
               aria-sort={headerAriaSort('title')}
             >
               <SortableHeaderButton
-                label="曲名"
+                label={t('tools.common.songTitle')}
                 active={sortKey() === 'title'}
                 direction={sortDirection()}
                 align="start"
@@ -353,7 +354,12 @@ export const ChartStatsGraphTable = (props: ChartStatsGraphTableProps): JSX.Elem
                         <td class={`${TABLE_CELL_CLASS} px-3`}>
                           <span class="sr-only">
                             {distribution()
-                              .map((metric) => `${metric.label} ${formatInteger(metric.count)}人`)
+                              .map((metric) =>
+                                t('tools.common.metricPlayers', {
+                                  label: metric.label,
+                                  count: formatInteger(metric.count),
+                                })
+                              )
                               .join('、')}
                           </span>
                           <div class="w-full">

@@ -1,4 +1,3 @@
-import { WORLDSEND_SONG_CARD_COPY } from '../../WorldsendSongsCardList/constants'
 import { createMemo, For, Show } from 'solid-js'
 import { createWindowVirtualTable } from '../../../../components/common/createWindowVirtualTable'
 import { SortableTableHeaderCell } from '../../../../components/common/SortableTableHeader'
@@ -11,6 +10,7 @@ import {
   SongListGenreCell,
   SongListTitleCell,
 } from '../../components/SongListMetaCells'
+import { WORLDSEND_SONG_CARD_COPY } from '../../WorldsendSongsCardList/constants'
 import type { WorldsendSongSortKey } from '../utils/sorting'
 
 const ROW_HEIGHT = 37

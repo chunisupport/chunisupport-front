@@ -1,16 +1,33 @@
-import { formatMessage, localizedCopy } from '../../../../../i18n'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import { CheckboxField } from '../../../../../components/common/CheckboxField'
 import { SCORE_MIN } from '../../../../../constants/chart'
+import { formatMessage, localizedCopy } from '../../../../../i18n'
 import type { GoalAchievementType } from '../../../../../types/api'
-import { COMBO_LAMP_OPTIONS, type ComboLampGoalValue, FULL_CHAIN_OPTIONS, type FullChainGoalValue, HARD_LAMP_OPTIONS, type HardLampGoalValue } from '../../../../../utils/goalLamp'
+import {
+  COMBO_LAMP_OPTIONS,
+  type ComboLampGoalValue,
+  FULL_CHAIN_OPTIONS,
+  type FullChainGoalValue,
+  HARD_LAMP_OPTIONS,
+  type HardLampGoalValue,
+} from '../../../../../utils/goalLamp'
 import { MAX_SCORE, SCORE_RANK_MIN_SCORES, SCORE_RANKS_ASC } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { GOAL_FORM_COPY, RATING_GOAL_DECIMAL_PLACES, RATING_GOAL_MIN_VALUE } from './constants'
-import { GoalNumberField, GoalSelectField, type GoalSelectOption, GoalTargetModeRadioGroup } from './goalFormFields'
+import {
+  GoalNumberField,
+  GoalSelectField,
+  type GoalSelectOption,
+  GoalTargetModeRadioGroup,
+} from './goalFormFields'
 import { type RankGoalValue, THEORETICAL_RANK_GOAL } from './goalFormModel'
-import { GOAL_STEP_BADGE_CLASS, GOAL_STEP_DESCRIPTION_CLASS, GOAL_STEP_SECTION_CLASS, GOAL_STEP_TITLE_CLASS } from './goalFormStyles'
+import {
+  GOAL_STEP_BADGE_CLASS,
+  GOAL_STEP_DESCRIPTION_CLASS,
+  GOAL_STEP_SECTION_CLASS,
+  GOAL_STEP_TITLE_CLASS,
+} from './goalFormStyles'
 
 /** 目標フォームの表示文言 */
 const GOAL_FORM_TEXT = localizedCopy('goals.form')
@@ -198,7 +215,11 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
         <div class="block text-sm">
           <div class="space-y-3">
             <GoalTargetModeRadioGroup
-              label={props.achievementType === 'rainbow_count' ? GOAL_FORM_TEXT.targetSongCount : GOAL_FORM_TEXT.targetChartCount}
+              label={
+                props.achievementType === 'rainbow_count'
+                  ? GOAL_FORM_TEXT.targetSongCount
+                  : GOAL_FORM_TEXT.targetChartCount
+              }
               name="goal-count-mode"
               value={props.countMode}
               options={

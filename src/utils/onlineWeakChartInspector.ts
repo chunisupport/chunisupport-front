@@ -1,9 +1,9 @@
-import { UNKNOWN_VALUE_LABEL } from '../constants/unknownValue'
 import {
   MASTER_ULTIMA_DIFFICULTIES,
   THEORETICAL_OVER_POWER_TARGET_FILTER,
 } from '../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
+import { UNKNOWN_VALUE_LABEL } from '../constants/unknownValue'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
 import { formatChartConst } from './chartConstFormat'
@@ -139,7 +139,10 @@ export const filterOnlineWeakChartEntries = (
   }
 
   return filteredEntries.filter(({ record }) => {
-    const attributes = attributesBySongId.get(record.id) ?? { genre: null, version: UNKNOWN_VALUE_LABEL }
+    const attributes = attributesBySongId.get(record.id) ?? {
+      genre: null,
+      version: UNKNOWN_VALUE_LABEL,
+    }
     if (
       filter.genres !== null &&
       (attributes.genre === null || !filter.genres.includes(attributes.genre))

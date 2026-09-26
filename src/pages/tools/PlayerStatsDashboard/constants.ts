@@ -2,6 +2,7 @@ import {
   MASTER_ULTIMA_FILTER,
   THEORETICAL_OVER_POWER_TARGET_FILTER,
 } from '../../../constants/chart'
+import { localizedCopy } from '../../../i18n'
 import type {
   PlayerStatsAchievement,
   PlayerStatsCandidateTarget,
@@ -9,44 +10,11 @@ import type {
   PlayerStatsLevelAchievement,
 } from '../../../utils/playerStatsDashboard'
 
+/** ダッシュボードの表示文言 */
+const DASHBOARD_TEXT = localizedCopy('tools.dashboard')
+
 /** ダッシュボード画面の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
-export const PLAYER_STATS_COPY = {
-  overviewTitle: '現在地',
-  overviewCaption: '選択した難易度の主要な達成状況',
-  achievementTitle: '達成状況',
-  achievementRateSuffix: 'の達成率',
-  heatmapTitle: '達成率分布',
-  heatmapPercentToggle: '%表示',
-  levelCaption: '譜面定数から換算したレベル別の累計達成状況',
-  chartConstantCaption: '譜面定数別の累計達成状況',
-  milestoneTitle: '次のマイルストーン',
-  candidateTitle: '狙い目の譜面',
-  candidateEmpty: '現在の条件に候補譜面はありません',
-  totalCharts: '全譜面',
-  totalHighScore: 'トータルハイスコア',
-  averageScore: '平均スコア',
-  sss: 'SSS',
-  allJustice: 'ALL JUSTICE',
-  max: 'ALL JUSTICE CRITICAL',
-  achievementCountSuffix: '譜面',
-  justiceGapSuffix: ' J',
-  fullComboCandidate: 'FC',
-  milestoneRemainingPrefix: 'あと',
-  milestoneRemainingSuffix: '譜面',
-  milestoneTargetSuffix: '譜面まで',
-  milestoneComplete: '達成済み',
-  heatmapCountSeparator: '/',
-  filterButtonLabel: '集計対象を絞り込む',
-  filterButtonActiveLabel: '集計対象を絞り込む（条件変更あり）',
-  filterTitle: '集計対象フィルター',
-  difficultyLabel: '難易度',
-  genreLabel: 'ジャンル',
-  versionLabel: 'バージョン',
-  genrePlaceholder: 'ジャンルを選択',
-  versionPlaceholder: 'バージョンを選択',
-  cancel: 'キャンセル',
-  apply: '適用',
-} as const
+export const PLAYER_STATS_COPY = localizedCopy('tools.dashboard.playerStatsCopy')
 
 /** 難易度フィルター1件分の値と表示名 */
 export type PlayerStatsDifficultyOption = {
@@ -56,9 +24,9 @@ export type PlayerStatsDifficultyOption = {
 
 /** 統計画面の難易度選択肢 */
 export const PLAYER_STATS_DIFFICULTY_OPTIONS: PlayerStatsDifficultyOption[] = [
-  { value: 'ALL', label: '全難易度' },
+  { value: 'ALL', label: DASHBOARD_TEXT.allLabel },
   { value: MASTER_ULTIMA_FILTER, label: 'MASTER+ULTIMA' },
-  { value: THEORETICAL_OVER_POWER_TARGET_FILTER, label: 'OP対象' },
+  { value: THEORETICAL_OVER_POWER_TARGET_FILTER, label: DASHBOARD_TEXT.label },
   { value: 'BASIC', label: 'BASIC' },
   { value: 'ADVANCED', label: 'ADVANCED' },
   { value: 'EXPERT', label: 'EXPERT' },
@@ -84,8 +52,8 @@ export const PLAYER_STATS_ACHIEVEMENT_GROUP_OPTIONS = [
 
 /** 達成率分布の集計軸サブタブ */
 export const PLAYER_STATS_HEATMAP_AXIS_OPTIONS = [
-  { value: 'level', label: 'レベル別' },
-  { value: 'chartConstant', label: '譜面定数別' },
+  { value: 'level', label: DASHBOARD_TEXT.levelLabel },
+  { value: 'chartConstant', label: DASHBOARD_TEXT.chartConstantLabel },
 ] as const satisfies readonly { value: PlayerStatsHeatmapAxis; label: string }[]
 
 /** 達成状況タブごとの累計到達条件 */
@@ -99,24 +67,9 @@ export const PLAYER_STATS_ACHIEVEMENTS: Record<
 }
 
 /** 累計到達条件の表示名 */
-export const PLAYER_STATS_ACHIEVEMENT_LABEL: Record<PlayerStatsAchievement, string> = {
-  played: 'プレイ済み',
-  s: 'S',
-  sPlus: 'S+',
-  ss: 'SS',
-  ssPlus: 'SS+',
-  sss: 'SSS',
-  sssPlus: 'SSS+',
-  fc: 'FULL COMBO',
-  aj: 'ALL JUSTICE',
-  ajc: 'ALL JUSTICE CRITICAL',
-  max: 'MAX',
-  clear: 'CLEAR',
-  hard: 'HARD',
-  brave: 'BRAVE',
-  absolute: 'ABSOLUTE',
-  catastrophe: 'CATASTROPHY',
-}
+export const PLAYER_STATS_ACHIEVEMENT_LABEL: Record<PlayerStatsAchievement, string> = localizedCopy(
+  'tools.dashboard.playerStatsAchievementLabel'
+)
 
 /** 次のマイルストーンの表示選択肢 */
 export const PLAYER_STATS_MILESTONE_OPTIONS = [

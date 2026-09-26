@@ -37,14 +37,29 @@ export const RECORD_COLUMN_BASE_DEFINITIONS: Record<
     sortKey: 'title',
     align: 'start',
   },
-  difficulty: { id: 'difficulty', label: RECORD_COLUMN_TEXT.difficulty, width: '2.5rem', sortKey: 'difficulty' },
+  difficulty: {
+    id: 'difficulty',
+    label: RECORD_COLUMN_TEXT.difficulty,
+    width: '2.5rem',
+    sortKey: 'difficulty',
+  },
   const: { id: 'const', label: RECORD_COLUMN_TEXT.const, width: '2.5rem', sortKey: 'const' },
   score: { id: 'score', label: RECORD_COLUMN_TEXT.score, width: '4.4rem', sortKey: 'score' },
   rating: { id: 'rating', label: RECORD_COLUMN_TEXT.rating, width: '40px', sortKey: 'rating' },
   lamp: { id: 'lamp', label: 'AJ', width: '40px', sortKey: 'lamp' },
-  hardLamp: { id: 'hardLamp', label: RECORD_COLUMN_TEXT.hardLamp, width: '40px', sortKey: 'hardLamp' },
+  hardLamp: {
+    id: 'hardLamp',
+    label: RECORD_COLUMN_TEXT.hardLamp,
+    width: '40px',
+    sortKey: 'hardLamp',
+  },
   fullChain: { id: 'fullChain', label: 'FCH', width: '40px', sortKey: 'fullChain' },
-  justiceCount: { id: 'justiceCount', label: RECORD_COLUMN_TEXT.justiceCount, width: '2rem', sortKey: 'justiceCount' },
+  justiceCount: {
+    id: 'justiceCount',
+    label: RECORD_COLUMN_TEXT.justiceCount,
+    width: '2rem',
+    sortKey: 'justiceCount',
+  },
   overpower: { id: 'overpower', label: 'OP', width: '3rem', sortKey: 'overpower' },
   overpowerPercent: {
     id: 'overpowerPercent',
@@ -52,8 +67,18 @@ export const RECORD_COLUMN_BASE_DEFINITIONS: Record<
     width: '3rem',
     sortKey: 'overpowerPercent',
   },
-  updatedAt: { id: 'updatedAt', label: RECORD_COLUMN_TEXT.updatedAt, width: '4rem', sortKey: 'updatedAt' },
-  attribute: { id: 'attribute', label: RECORD_COLUMN_TEXT.attribute, width: '2.5rem', sortKey: 'attribute' },
+  updatedAt: {
+    id: 'updatedAt',
+    label: RECORD_COLUMN_TEXT.updatedAt,
+    width: '4rem',
+    sortKey: 'updatedAt',
+  },
+  attribute: {
+    id: 'attribute',
+    label: RECORD_COLUMN_TEXT.attribute,
+    width: '2.5rem',
+    sortKey: 'attribute',
+  },
   level: { id: 'level', label: RECORD_COLUMN_TEXT.level, width: '3.1rem', sortKey: 'level' },
 }
 

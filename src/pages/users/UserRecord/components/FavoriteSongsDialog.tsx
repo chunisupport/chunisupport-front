@@ -1,9 +1,9 @@
-import { t } from '../../../../i18n'
-import { UNKNOWN_VALUE_LABEL } from '../../../../constants/unknownValue'
 import { Button } from '@kobalte/core/button'
 import { Star } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo } from 'solid-js'
+import { UNKNOWN_VALUE_LABEL } from '../../../../constants/unknownValue'
+import { t } from '../../../../i18n'
 import type {
   MasterItemDTO,
   PlayerFavoriteSongResponseItem,
@@ -99,7 +99,9 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
       .filter(({ song, searchableText, searchableReading }) => {
         if (model.showSelectedOnly() && !model.draftKeys().has(song.id)) return false
         if (!currentFilters.genres.includes(song.genre)) return false
-        if (!currentFilters.versions.includes(songVersionById().get(song.id) ?? UNKNOWN_VALUE_LABEL))
+        if (
+          !currentFilters.versions.includes(songVersionById().get(song.id) ?? UNKNOWN_VALUE_LABEL)
+        )
           return false
         if (!normalizedQuery) return true
         return (
@@ -109,13 +111,12 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
       })
       .map(({ song }) => song)
   })
-  const selectionSummary = createMemo(
-    () =>
-      t('users.favorites.selectionSummary', {
-        selected: model.selectedCount(),
-        limit: FAVORITE_SONG_LIMIT,
-        shown: filteredSongs().length,
-      })
+  const selectionSummary = createMemo(() =>
+    t('users.favorites.selectionSummary', {
+      selected: model.selectedCount(),
+      limit: FAVORITE_SONG_LIMIT,
+      shown: filteredSongs().length,
+    })
   )
 
   /**

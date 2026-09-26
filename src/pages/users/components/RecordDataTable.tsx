@@ -1,4 +1,3 @@
-import { t } from '../../../i18n'
 import type { JSX } from 'solid-js'
 import { createEffect, createMemo, For, onCleanup, Show } from 'solid-js'
 import { createWindowVirtualTable } from '../../../components/common/createWindowVirtualTable'
@@ -13,6 +12,7 @@ import {
   getSortAriaValue,
   type SortDirection,
 } from '../../../components/common/SortableTableHeader'
+import { t } from '../../../i18n'
 import { getAppMainScrollTop } from '../../../utils/appMainScrollRestoration'
 import { createGridTemplateColumns } from '../utils/recordColumnDefinitions'
 import type { ColumnDefinitionBase } from '../utils/recordTableColumns'

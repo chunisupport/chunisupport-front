@@ -1,4 +1,3 @@
-import { t } from '../../../i18n'
 import { useSearchParams } from '@solidjs/router'
 import {
   createEffect,
@@ -10,10 +9,10 @@ import {
   Show,
   Suspense,
 } from 'solid-js'
-
 import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import { createHistoryViewState } from '../../../hooks/createHistoryViewState'
+import { t } from '../../../i18n'
 import {
   readWorldsendRecordColumnsSetting,
   saveWorldsendRecordColumnsSetting,

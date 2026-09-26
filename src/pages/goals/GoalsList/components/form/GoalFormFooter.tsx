@@ -1,7 +1,7 @@
-import { t } from '../../../../../i18n'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import { AppButton } from '../../../../../components/common/AppButton'
+import { t } from '../../../../../i18n'
 
 interface GoalFormFooterProps {
   errorMessage: string

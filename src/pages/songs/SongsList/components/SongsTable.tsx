@@ -1,4 +1,3 @@
-import { SONG_CARD_COPY } from '../../SongsCardList/constants'
 import { createMemo, For, Show } from 'solid-js'
 import { createWindowVirtualTable } from '../../../../components/common/createWindowVirtualTable'
 import { SortableTableHeaderCell } from '../../../../components/common/SortableTableHeader'
@@ -17,6 +16,7 @@ import {
   SongListGenreCell,
   SongListTitleCell,
 } from '../../components/SongListMetaCells'
+import { SONG_CARD_COPY } from '../../SongsCardList/constants'
 import {
   SONG_CHART_DISPLAY_LABELS,
   SONG_CHART_NOTES_EMPTY,

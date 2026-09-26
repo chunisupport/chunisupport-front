@@ -1,5 +1,5 @@
 import type { GoalCreateRequest, GoalDTO } from '../../../types/api'
-import { GOALS_LIST_COPY, GOAL_TITLE_MAX_LENGTH } from './constants'
+import { GOAL_TITLE_MAX_LENGTH, GOALS_LIST_COPY } from './constants'
 
 /**
  * Unicodeコードポイント単位の上限に収まる先頭部分を取得する。

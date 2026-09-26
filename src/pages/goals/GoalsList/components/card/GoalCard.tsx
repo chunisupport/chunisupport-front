@@ -1,12 +1,11 @@
-import { t } from '../../../../../i18n'
 import { Button } from '@kobalte/core/button'
 import { Collapsible } from '@kobalte/core/collapsible'
 import { createSortable } from '@thisbeyond/solid-dnd'
 import { ChevronRight, ExternalLink } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, onCleanup, Show } from 'solid-js'
-
 import { getAppIconButtonClass } from '../../../../../components/common/AppButton'
+import { t } from '../../../../../i18n'
 import type { GoalDTO } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { isGoalRecordNavigationEnabled } from '../../../utils/goalRecordFilter'

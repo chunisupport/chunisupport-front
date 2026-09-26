@@ -76,7 +76,10 @@ export const resolveGoalCardDisplayProgress = (
     percentPrefixText: invertPercentage ? REMAINING_PERCENTAGE_PREFIX : '',
     percentText: displayPercentText,
     ariaValueText: invertPercentage
-      ? t('goals.card.progressWithRemaining', { progress: progressValueText, percent: displayPercentText })
+      ? t('goals.card.progressWithRemaining', {
+          progress: progressValueText,
+          percent: displayPercentText,
+        })
       : t('goals.card.progress', { progress: progressValueText }),
     progressValue,
   }

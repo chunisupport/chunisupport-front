@@ -1,5 +1,5 @@
-import { t } from '../../../../i18n'
 import type { Component } from 'solid-js'
+import { t } from '../../../../i18n'
 import type { RecordSortCondition, RecordSortKey } from '../../../../types/recordFilter'
 import {
   type SortConditionColumnOption,

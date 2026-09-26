@@ -37,7 +37,13 @@ const createCourseRecordColumnDefinitions = (): CourseRecordColumnDefinition[] =
   const updatedAt = getRecordColumnBaseDefinition('updatedAt')
 
   return [
-    { ...title, id: 'title', label: COURSE_RECORD_TEXT.title, sortKey: 'title', defaultVisible: true },
+    {
+      ...title,
+      id: 'title',
+      label: COURSE_RECORD_TEXT.title,
+      sortKey: 'title',
+      defaultVisible: true,
+    },
     {
       ...difficulty,
       id: 'courseClass',
@@ -47,7 +53,13 @@ const createCourseRecordColumnDefinitions = (): CourseRecordColumnDefinition[] =
     },
     { ...score, id: 'score', sortKey: 'score', defaultVisible: true },
     { ...lamp, id: 'lamp', sortKey: 'lamp', defaultVisible: true },
-    { ...hardLamp, id: 'hardLamp', label: COURSE_RECORD_TEXT.clear, sortKey: 'hardLamp', defaultVisible: true },
+    {
+      ...hardLamp,
+      id: 'hardLamp',
+      label: COURSE_RECORD_TEXT.clear,
+      sortKey: 'hardLamp',
+      defaultVisible: true,
+    },
     { ...updatedAt, id: 'updatedAt', sortKey: 'updatedAt', defaultVisible: true },
   ]
 }

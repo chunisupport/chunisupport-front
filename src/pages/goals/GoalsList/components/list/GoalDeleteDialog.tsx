@@ -1,7 +1,7 @@
-import { t } from '../../../../../i18n'
 import { AlertDialog } from '@kobalte/core/alert-dialog'
 import type { Component } from 'solid-js'
 import { AppButton } from '../../../../../components/common/AppButton'
+import { t } from '../../../../../i18n'
 import type { GoalDTO } from '../../../../../types/api'
 
 interface GoalDeleteDialogProps {

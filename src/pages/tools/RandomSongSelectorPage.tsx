@@ -30,6 +30,7 @@ import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyl
 import { RANDOM_SONG_SELECTOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { t } from '../../i18n'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { GoalDTO, PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
@@ -555,7 +556,7 @@ const isRandomSongDifficultyFilterDisabled = (
  */
 const renderRandomSongRecordSummary = (record: PlayerRecordDTO | undefined): JSX.Element => {
   if (record?.is_played !== true) {
-    return <span class={RESULT_RECORD_LAMP_BADGE_CLASS.NONE}>未プレイ</span>
+    return <span class={RESULT_RECORD_LAMP_BADGE_CLASS.NONE}>{t('tools.common.unplayed')}</span>
   }
 
   const scoreRank = getScoreRank(record.score)
@@ -1582,7 +1583,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         <span class="font-medium tabular-nums text-text">
                           {filteredCandidates().length.toLocaleString('ja-JP')}
                         </span>
-                        曲
+                        {t('tools.common.songUnit')}
                       </p>
                       <AlertDialog>
                         <AlertDialog.Trigger

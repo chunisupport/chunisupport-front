@@ -1,4 +1,3 @@
-import { localizedCopy } from '../../../i18n'
 import { useLocation, useNavigate } from '@solidjs/router'
 import { ImageOff } from 'lucide-solid'
 import type { Accessor, Component, Resource } from 'solid-js'
@@ -12,6 +11,7 @@ import {
   createAppMainScrollOffsetRestoreEffect,
   useAppMainScrollRestoration,
 } from '../../../hooks/useAppMainScrollRestoration'
+import { localizedCopy } from '../../../i18n'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import {
   getAppMainScrollTop,

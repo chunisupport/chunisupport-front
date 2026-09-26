@@ -1,4 +1,3 @@
-import { localizedCopy, t } from '../../i18n'
 import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { useQueryClient } from '@tanstack/solid-query'
@@ -11,6 +10,7 @@ import AppearanceSettings from '../../components/common/AppearanceSettings'
 import { APPEARANCE_SETTINGS_COPY } from '../../components/common/AppearanceSettings.constants'
 import { AppSwitch } from '../../components/common/AppSwitch'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { localizedCopy, t } from '../../i18n'
 import { auth } from '../../lib/firebase'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
 import { authSession, clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
@@ -292,7 +292,9 @@ const Settings = () => {
                           <div class="flex justify-between gap-4 py-4">
                             <dt class="text-text-muted">{SETTINGS_COPY.linkStatus}</dt>
                             <dd class="font-medium text-text">
-                              {loadedSummary().profile.player ? SETTINGS_COPY.linked : SETTINGS_COPY.unlinked}
+                              {loadedSummary().profile.player
+                                ? SETTINGS_COPY.linked
+                                : SETTINGS_COPY.unlinked}
                             </dd>
                           </div>
                           <div class="flex justify-between gap-4 py-4">
@@ -351,7 +353,9 @@ const Settings = () => {
                         onChanged={handleUsernameChanged}
                       />
                       <div class="mt-10 border-t border-danger-border pt-6">
-                        <h3 class="font-semibold text-danger">{SETTINGS_COPY.deleteAccountTitle}</h3>
+                        <h3 class="font-semibold text-danger">
+                          {SETTINGS_COPY.deleteAccountTitle}
+                        </h3>
                         <p class="mt-1 text-sm text-text-muted">
                           {SETTINGS_COPY.deleteAccountDescription}
                         </p>

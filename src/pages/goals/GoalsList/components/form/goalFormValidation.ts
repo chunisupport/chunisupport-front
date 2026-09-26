@@ -1,12 +1,17 @@
-import { t } from '../../../../../i18n'
 import { SCORE_MIN } from '../../../../../constants/chart'
+import { t } from '../../../../../i18n'
 import type { GoalAchievementType } from '../../../../../types/api'
 import { truncateDecimal } from '../../../../../utils/numberFormat'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { GOAL_TITLE_MAX_LENGTH } from '../../constants'
 import { GOAL_FORM_COPY, RATING_GOAL_DECIMAL_PLACES, RATING_GOAL_MIN_VALUE } from './constants'
-import { canUseDynamicTotalTarget, getRankGoalScore, isCountAchievementType, type RankGoalValue } from './goalFormModel'
+import {
+  canUseDynamicTotalTarget,
+  getRankGoalScore,
+  isCountAchievementType,
+  type RankGoalValue,
+} from './goalFormModel'
 
 const MAX_OVERPOWER_PERCENT = 100
 const OVERPOWER_TARGET_DECIMAL_PLACES = 3
@@ -77,7 +82,10 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
       parsedRating < RATING_GOAL_MIN_VALUE ||
       !isWithinDecimalPlaces(parsedRating, RATING_GOAL_DECIMAL_PLACES))
   ) {
-    return t('goals.validation.ratingInvalid', { min: RATING_GOAL_MIN_VALUE, places: RATING_GOAL_DECIMAL_PLACES })
+    return t('goals.validation.ratingInvalid', {
+      min: RATING_GOAL_MIN_VALUE,
+      places: RATING_GOAL_DECIMAL_PLACES,
+    })
   }
   if (
     input.achievementType !== 'rainbow_count' &&
@@ -111,11 +119,25 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
       (requiresInteger && !Number.isInteger(parsedCount)) ||
       parsedCount < countMin
     ) {
-      return t('goals.validation.countMin', { label: input.countMode === 'percent' ? t('goals.validation.percentLabel') : t('goals.validation.countLabel'), min: countMin, kind: requiresInteger ? t('goals.validation.integer') : t('goals.validation.number') })
+      return t('goals.validation.countMin', {
+        label:
+          input.countMode === 'percent'
+            ? t('goals.validation.percentLabel')
+            : t('goals.validation.countLabel'),
+        min: countMin,
+        kind: requiresInteger ? t('goals.validation.integer') : t('goals.validation.number'),
+      })
     }
     const countMax = input.countMode === 'percent' ? MAX_OVERPOWER_PERCENT : input.allCount
     if (parsedCount > countMax) {
-      return t('goals.validation.countMax', { label: input.countMode === 'percent' ? t('goals.validation.percentLabel') : t('goals.validation.countLabel'), max: countMax.toLocaleString('ja-JP'), unit: input.countMode === 'percent' ? '%' : t('goals.validation.countUnit') })
+      return t('goals.validation.countMax', {
+        label:
+          input.countMode === 'percent'
+            ? t('goals.validation.percentLabel')
+            : t('goals.validation.countLabel'),
+        max: countMax.toLocaleString('ja-JP'),
+        unit: input.countMode === 'percent' ? '%' : t('goals.validation.countUnit'),
+      })
     }
   }
 
@@ -155,9 +177,13 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
         : input.theoreticalTotal
     : undefined
   if (dynamicTotalMax !== undefined && parsedTotal > dynamicTotalMax) {
-    return t('goals.validation.totalMax', { label: input.achievementType === 'total_score'
-        ? t('goals.validation.totalScoreTarget')
-        : t('goals.validation.overPowerTotalTarget'), max: dynamicTotalMax.toLocaleString('ja-JP') })
+    return t('goals.validation.totalMax', {
+      label:
+        input.achievementType === 'total_score'
+          ? t('goals.validation.totalScoreTarget')
+          : t('goals.validation.overPowerTotalTarget'),
+      max: dynamicTotalMax.toLocaleString('ja-JP'),
+    })
   }
 
   if (isCountType && input.countMode === 'number' && parsedCount <= 0) {

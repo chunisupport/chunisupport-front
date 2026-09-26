@@ -1,4 +1,3 @@
-import { localizedCopy, t } from '../../../i18n'
 import { Dialog } from '@kobalte/core/dialog'
 import { createEffect, createMemo, createSignal } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
@@ -6,6 +5,7 @@ import {
   AppMultiSelect,
   type AppMultiSelectOption,
 } from '../../../components/common/AppMultiSelect'
+import { localizedCopy, t } from '../../../i18n'
 import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
 
 /** 列設定ダイアログの表示文言 */

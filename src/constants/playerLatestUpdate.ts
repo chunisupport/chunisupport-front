@@ -1,4 +1,4 @@
-import { localizedCopy } from '../i18n'
+import { formatMessage, localizedCopy } from '../i18n'
 /** スコア更新履歴画面の表示文言 */
 export const LATEST_SCORE_UPDATE_COPY = localizedCopy('latestScoreUpdate')
 /** 新規保存される更新結果のスキーマバージョン */
@@ -18,4 +18,4 @@ export const SUPPORTED_LATEST_SCORE_UPDATE_SCHEMA_VERSIONS = [
  * @returns 過去世代の接頭辞。
  */
 export const formatPreviousScoreUpdateLabel = (generationsAgo: number): string =>
-  `${generationsAgo}件前・`
+  formatMessage(LATEST_SCORE_UPDATE_COPY.previousLabel, { count: generationsAgo })

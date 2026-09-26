@@ -1,5 +1,9 @@
+import { localizedCopy } from '../../../i18n'
 import type { ChartStatsDifficulty } from '../../../types/chartStats'
 import type { ChartStatsCategory } from '../../../utils/chartStats'
+
+/** レコード統計の表示文言 */
+const CHART_STATS_TEXT = localizedCopy('tools.chartStats')
 
 /** レコード統計ページの表示形式 */
 export type ChartStatsViewMode = 'graph' | 'table'
@@ -34,8 +38,8 @@ export const CHART_STATS_VIEW_OPTIONS: readonly {
   value: ChartStatsViewMode
   label: string
 }[] = [
-  { value: 'graph', label: 'グラフ' },
-  { value: 'table', label: '表' },
+  { value: 'graph', label: CHART_STATS_TEXT.graphLabel },
+  { value: 'table', label: CHART_STATS_TEXT.tableLabel },
 ]
 
 /** 集計カテゴリの選択肢 */
@@ -53,30 +57,9 @@ export const CHART_STATS_VALUE_OPTIONS: readonly {
   value: ChartStatsValueMode
   label: string
 }[] = [
-  { value: 'count', label: '人数' },
-  { value: 'percent', label: '割合' },
+  { value: 'count', label: CHART_STATS_TEXT.countLabel },
+  { value: 'percent', label: CHART_STATS_TEXT.percentLabel },
 ]
 
 /** レコード統計ページの表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
-export const CHART_STATS_COPY = {
-  generatedAt: '最終更新',
-  searchLabel: '曲名検索',
-  searchPlaceholder: '曲名で検索',
-  resultSuffix: '譜面',
-  level: '定数',
-  worldsendLevel: 'Lv./属性',
-  playerCount: '人数',
-  sortByMetric: 'の人数でソート',
-  sortAscending: '少ない順',
-  sortDescending: '多い順',
-  cumulative: '累積',
-  empty: '条件に一致する譜面がありません。',
-  graphTableCaption: '譜面ごとの達成状況を1行1グラフで示した表',
-  tableCaption: '譜面ごとの達成人数または達成率',
-  filterTitle: 'フィルター',
-  filterActive: 'フィルター適用中',
-  filterCancel: 'キャンセル',
-  filterApply: '適用',
-  filterUnselected: '未選択',
-  filterHoldReset: 'フィルター リセット',
-} as const
+export const CHART_STATS_COPY = localizedCopy('tools.chartStats.chartStatsCopy')

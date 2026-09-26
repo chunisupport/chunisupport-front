@@ -1,4 +1,3 @@
-import { t } from '../../../i18n'
 import { useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import {
@@ -20,6 +19,7 @@ import {
 } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
 import { createHistoryViewState } from '../../../hooks/createHistoryViewState'
+import { t } from '../../../i18n'
 import {
   readStandardRecordColumnsSetting,
   readStandardRecordFilterSetting,

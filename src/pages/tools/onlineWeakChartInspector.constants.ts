@@ -1,5 +1,6 @@
 import { CHART_COPY } from '../../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
+import { localizedCopy } from '../../i18n'
 import {
   ONLINE_WEAK_CHART_OP_TARGET_FILTER,
   ONLINE_WEAK_CHART_TABLE_FILTER,
@@ -8,37 +9,9 @@ import {
 } from '../../utils/onlineWeakChartInspector'
 
 /** 苦手譜面インスペクター Online の画面文言。タイトルと説明文はツール一覧の定義を参照すること。 */
-export const ONLINE_WEAK_CHART_COPY = {
-  ratingBand: '比較するレート帯',
-  difficulty: '難易度',
-  chartTitle: '平均スコアとの差',
-  chartLabel: '横軸が譜面定数、縦軸が自分のスコアから同レート帯の平均スコアを引いた値の散布図',
-  tableTitle: '平均との比較一覧',
-  tableCaption: '自分のスコアと同レート帯の平均スコアの比較',
-  tableFilterLabel: '比較結果の絞り込み',
-  tableFilterAll: 'すべて',
-  tableFilterAboveAverage: '平均以上',
-  tableFilterBelowAverage: '平均未満',
-  tableFilterEmpty: 'この条件に一致する譜面がありません。',
-  empty: '比較できるプレイ済み譜面がありません。',
-  ownScore: 'スコア',
-  averageScore: '平均',
-  difference: '点差',
-  settingsTitle: '表示・集計範囲',
-  settingsOpen: '表示・集計範囲を開く',
-  displayScoreRange: '表示スコア範囲',
-  filterUnselected: '未選択',
-  chartConstRange: '譜面定数',
-  chartConstMin: '譜面定数 最小',
-  chartConstMax: '譜面定数 最大',
-  reset: '初期値に戻す',
-  cancel: 'キャンセル',
-  apply: '適用',
-  lowerDataset: '平均より低い',
-  higherDataset: '平均以上',
-  songTitle: '曲名',
-  chartConst: '定数',
-} as const
+export const ONLINE_WEAK_CHART_COPY = localizedCopy(
+  'tools.onlineWeakChartInspector.onlineWeakChartCopy'
+)
 
 /** 苦手譜面インスペクター Online の比較表で選択できる平均との比較条件 */
 export const ONLINE_WEAK_CHART_TABLE_FILTER_OPTIONS: readonly {

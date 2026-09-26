@@ -1,8 +1,8 @@
-import { t } from '../../../../i18n'
 import {
   MultiSelectField,
   toMultiSelectOptions,
 } from '../../../../components/common/AppMultiSelect'
+import { t } from '../../../../i18n'
 
 type MultiSelectFilterSectionProps<T extends string | number | null> = {
   /** セクション見出し */

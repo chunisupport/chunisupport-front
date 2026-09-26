@@ -1,7 +1,10 @@
 import { createMemo, For, Show } from 'solid-js'
 import { DefaultRecordLampBadges } from '../../../../components/common/record/RecordDisplayParts'
 import type { ScoreHistoryEntryDTO, VersionSummaryDTO } from '../../../../types/api'
-import { buildScoreHistoryTableRows, formatScoreHistoryDateTime } from '../../../../utils/scoreHistory'
+import {
+  buildScoreHistoryTableRows,
+  formatScoreHistoryDateTime,
+} from '../../../../utils/scoreHistory'
 import { CHART_DETAIL_COPY, SCORE_HISTORY_TABLE_MIN_WIDTH_CLASS } from './constants'
 
 /**

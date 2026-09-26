@@ -1,11 +1,11 @@
-import { UNKNOWN_VALUE_LABEL } from '../../../../constants/unknownValue'
-import { formatMessage } from '../../../../i18n'
 import { Button } from '@kobalte/core/button'
 import { Check } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, Show } from 'solid-js'
 import { AppSelect } from '../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
+import { UNKNOWN_VALUE_LABEL } from '../../../../constants/unknownValue'
+import { formatMessage } from '../../../../i18n'
 import type {
   MasterItemDTO,
   PlayerLockedSongRequest,
@@ -39,7 +39,13 @@ import {
   sortSongSelectionCandidates,
 } from '../../components/songSelectionDialog'
 import { hasSameFilterValues } from '../../utils/filterValue'
-import { LOCKED_SONG_PLAY_STATUS_FILTER_COPY, LOCKED_SONG_PLAY_STATUS_OPTIONS, OVER_POWER_CONTROL_LABELS, OVER_POWER_COPY, type LockedSongsPlayStatus } from '../constants'
+import {
+  LOCKED_SONG_PLAY_STATUS_FILTER_COPY,
+  LOCKED_SONG_PLAY_STATUS_OPTIONS,
+  type LockedSongsPlayStatus,
+  OVER_POWER_CONTROL_LABELS,
+  OVER_POWER_COPY,
+} from '../constants'
 import { LockedSongsOpComparison } from './LockedSongsOpComparison'
 import { matchesLockedSongsPlayStatus } from './lockedSongsFilter'
 
@@ -232,12 +238,11 @@ const LockedSongsDialog: Component<Props> = (props) => {
       })
       .map(({ item }) => item)
   })
-  const selectionSummary = createMemo(
-    () =>
-      formatMessage(OVER_POWER_COPY.lockedSelectionSummary, {
-        selected: model.selectedCount(),
-        shown: filteredSongListItems().length,
-      })
+  const selectionSummary = createMemo(() =>
+    formatMessage(OVER_POWER_COPY.lockedSelectionSummary, {
+      selected: model.selectedCount(),
+      shown: filteredSongListItems().length,
+    })
   )
   const draftLockedSongs = createMemo(() => toLockedSongRequests([...model.draftKeys()]))
   const opComparison = createMemo(() =>

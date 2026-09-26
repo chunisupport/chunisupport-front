@@ -1,7 +1,7 @@
-import { localizedCopy } from '../../../../i18n'
 import { createMemo, createSignal, Show } from 'solid-js'
 import { Loading } from '../../../../components'
 import { AppSelect } from '../../../../components/common/AppSelect'
+import { localizedCopy } from '../../../../i18n'
 import type { RatingBandDTO, SongStatsResponseDTO } from '../../../../types/api'
 import SongStatsTable, {
   type SongStatsTableView,
@@ -39,8 +39,7 @@ type Props = {
 } & (SelectableDifficultyProps | ReadonlyDifficultyProps)
 
 /** 難易度別統計の補足説明文 */
-const SONG_STATS_DESCRIPTION =
-  SONG_STATS_COPY.description
+const SONG_STATS_DESCRIPTION = SONG_STATS_COPY.description
 
 /** 難易度別統計のSelect群を横並びにするコンテナクラス */
 const STATS_CONTROL_ROW_CLASS = 'grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center'

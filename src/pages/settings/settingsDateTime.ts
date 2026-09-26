@@ -6,7 +6,10 @@ import { t } from '../../i18n'
  * @param emptyLabel - 値がない場合に表示する文言。
  * @returns 日本語の日時表記、または値がない場合の文言。
  */
-export const formatSettingsDateTime = (value: string | null, emptyLabel = t('common.notRegistered')): string => {
+export const formatSettingsDateTime = (
+  value: string | null,
+  emptyLabel = t('common.notRegistered')
+): string => {
   if (!value) {
     return emptyLabel
   }

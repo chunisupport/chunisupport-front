@@ -8,7 +8,11 @@ import { LoadError, Loading } from '../../../../components'
 import { getAppButtonClass } from '../../../../components/common/AppButton'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
 import { authSession } from '../../../../stores/authSession'
-import type { FriendRankingEntryDTO, ScoreHistoryEntryDTO, WorldsendFriendRankingEntryDTO } from '../../../../types/api'
+import type {
+  FriendRankingEntryDTO,
+  ScoreHistoryEntryDTO,
+  WorldsendFriendRankingEntryDTO,
+} from '../../../../types/api'
 import { CHART_DETAIL_COPY, SCORE_HISTORY_MAX_ENTRIES_LABEL } from './constants'
 import FriendRankingTable from './FriendRankingTable'
 import ScoreHistoryChart from './ScoreHistoryChart'

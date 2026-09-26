@@ -17,15 +17,18 @@ export const API_TOKEN_PERMISSION_OPTIONS: readonly {
   description: string
 }[] = withLocalizedLabels(
   withLocalizedLabels(
-  [
-  {
-    value: 'read' },
-  {
-    value: 'read_write' },
-],
-  API_TOKEN_SETTINGS_COPY.permissions
-),
-  API_TOKEN_SETTINGS_COPY.permissionDescriptions, 'description'
+    [
+      {
+        value: 'read',
+      },
+      {
+        value: 'read_write',
+      },
+    ],
+    API_TOKEN_SETTINGS_COPY.permissions
+  ),
+  API_TOKEN_SETTINGS_COPY.permissionDescriptions,
+  'description'
 )
 
 /**
@@ -36,4 +39,3 @@ export const API_TOKEN_PERMISSION_OPTIONS: readonly {
  */
 export const formatApiTokenPermission = (permission: ApiTokenPermission): string =>
   API_TOKEN_PERMISSION_OPTIONS.find((option) => option.value === permission)?.label ?? permission
-

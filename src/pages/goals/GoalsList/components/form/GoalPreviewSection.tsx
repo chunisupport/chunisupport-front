@@ -1,5 +1,5 @@
-import { t } from '../../../../../i18n'
 import type { Component } from 'solid-js'
+import { t } from '../../../../../i18n'
 import type { GoalAchievementType } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { GoalCardProgress } from '../card/GoalCardProgress'

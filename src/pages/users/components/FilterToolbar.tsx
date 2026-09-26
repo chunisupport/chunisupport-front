@@ -1,4 +1,3 @@
-import { t } from '../../../i18n'
 import { Button } from '@kobalte/core/button'
 import { ArrowUpDown, Columns3, Funnel } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -7,6 +6,7 @@ import { AppIconButton } from '../../../components/common/AppButton'
 import FilterResetHoldIndicator from '../../../components/common/filterReset/FilterResetHoldIndicator'
 import { useFilterResetLongPress } from '../../../components/common/filterReset/useFilterResetLongPress'
 import { SearchTextField } from '../../../components/common/SearchTextField'
+import { t } from '../../../i18n'
 
 type FilterButtonTone = 'default' | 'active' | 'difficulty-only' | 'danger'
 

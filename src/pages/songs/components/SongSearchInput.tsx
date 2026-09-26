@@ -1,5 +1,5 @@
-import { localizedCopy } from '../../../i18n'
 import { SearchTextField } from '../../../components/common/SearchTextField'
+import { localizedCopy } from '../../../i18n'
 
 /** 楽曲検索欄の表示文言 */
 const SONG_SEARCH_COPY = localizedCopy('songs.search')

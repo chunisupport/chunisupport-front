@@ -16,21 +16,25 @@ export const DATA_TRANSFER_COUNT_ITEMS: readonly {
   label: string
 }[] = withLocalizedLabels(
   [
-  { key: 'records' },
-  { key: 'record_histories' },
-  { key: 'worldsend_records' },
-  { key: 'worldsend_record_histories' },
-  { key: 'metric_histories' },
-  { key: 'course_records' },
-  { key: 'honors' },
-  { key: 'favorite_songs' },
-  { key: 'locked_songs' },
-  { key: 'goal_groups' },
-  { key: 'goals' },
-  { key: 'record_filters' },
-],
-  DATA_TRANSFER_COPY.counts, 'label', 'key'
+    { key: 'records' },
+    { key: 'record_histories' },
+    { key: 'worldsend_records' },
+    { key: 'worldsend_record_histories' },
+    { key: 'metric_histories' },
+    { key: 'course_records' },
+    { key: 'honors' },
+    { key: 'favorite_songs' },
+    { key: 'locked_songs' },
+    { key: 'goal_groups' },
+    { key: 'goals' },
+    { key: 'record_filters' },
+  ],
+  DATA_TRANSFER_COPY.counts,
+  'label',
+  'key'
 )
 
 /** APIの移行阻害理由に対応する表示文言 */
-export const DATA_TRANSFER_BLOCKER_MESSAGES: Record<DataTransferBlocker, string> = localizedCopy('settings.dataTransfer.blockers')
+export const DATA_TRANSFER_BLOCKER_MESSAGES: Record<DataTransferBlocker, string> = localizedCopy(
+  'settings.dataTransfer.blockers'
+)

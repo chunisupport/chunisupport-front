@@ -1,4 +1,3 @@
-import { localizedCopy, t } from '../../../i18n'
 import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import { CircleSlash2, Funnel, ListChecks, LoaderCircle } from 'lucide-solid'
@@ -13,6 +12,7 @@ import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
 import { GenreMultiSelect, VersionMultiSelect } from '../../../components/common/DomainMultiSelect'
 import { SearchTextField } from '../../../components/common/SearchTextField'
 import Loading from '../../../components/Loading/Loading'
+import { localizedCopy, t } from '../../../i18n'
 import {
   SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
   SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS,

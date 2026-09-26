@@ -10,26 +10,14 @@ import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import { BORDER_CALCULATOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { localizedCopy, t } from '../../i18n'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { SongDTO } from '../../types/api'
 import { type BorderCalculatorResult, calculateBorder } from '../../utils/borderCalculator'
 import { buildSearchableItems, filterSearchableItems } from '../../utils/searchHelpers'
 
 /** ボーダー計算機の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
-const BORDER_CALCULATOR_COPY = {
-  songSearchLabel: '曲名',
-  songSearchPlaceholder: '曲名・アーティスト名で検索',
-  songCandidatesLabel: '検索候補',
-  difficultyLabel: '難易度',
-  notesLabel: 'ノーツ数',
-  targetScoreLabel: '目標スコア',
-  targetJusticeLabel: '目標JUSTICE数',
-  fullComboOnlyLabel: 'FULL COMBO指定（MISSを0に固定）',
-  unreachableMessage: '理論値を超えるため到達不能です。',
-  noCandidatesMessage: '条件に合う候補はありません。',
-  noSongCandidatesMessage: '該当する楽曲はありません。',
-  missingChartMessage: '選択した譜面のノーツ数が未登録です。ノーツ数を手入力してください。',
-} as const
+const BORDER_CALCULATOR_COPY = localizedCopy('tools.borderCalculator.borderCalculatorCopy')
 
 const DEFAULT_NOTES = '2500'
 const DEFAULT_TARGET_SCORE = '1007500'
@@ -416,7 +404,7 @@ const BorderCalculatorPage = (): JSX.Element => {
     } catch (error) {
       return {
         result: null,
-        errorMessage: error instanceof Error ? error.message : '入力値を確認してください。',
+        errorMessage: error instanceof Error ? error.message : t('tools.common.checkInput'),
       }
     }
   })
@@ -529,7 +517,7 @@ const BorderCalculatorPage = (): JSX.Element => {
 
           <section class="rounded-lg border border-border bg-surface p-4" aria-live="polite">
             <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h2 class="text-lg font-semibold">計算結果</h2>
+              <h2 class="text-lg font-semibold">{t('tools.common.result')}</h2>
             </div>
             <Show
               when={calculation().result}

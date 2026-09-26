@@ -1,4 +1,3 @@
-import { t } from '../../../i18n'
 import { useParams, useSearchParams } from '@solidjs/router'
 import { createEffect, createMemo, createResource, createSignal, on, Show, untrack } from 'solid-js'
 import { fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
@@ -8,6 +7,7 @@ import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import { joinDocumentTitleParts } from '../../../constants/site'
 import { SONG_MASTER_COPY } from '../../../constants/songMaster'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { t } from '../../../i18n'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
 import type { PlayerRecordDTO, SongDTO } from '../../../types/api'
@@ -183,7 +183,9 @@ const SongDetail = () => {
     }
   }
 
-  useDocumentTitle(() => joinDocumentTitleParts(song()?.title ?? t('songs.detail.song'), t('songs.detail.pageTitle')))
+  useDocumentTitle(() =>
+    joinDocumentTitleParts(song()?.title ?? t('songs.detail.song'), t('songs.detail.pageTitle'))
+  )
 
   return (
     <Show when={songState()?.type !== 'notFound'} fallback={<NotFoundPage />}>

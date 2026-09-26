@@ -1,4 +1,3 @@
-import { t } from '../../../../../i18n'
 import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
@@ -17,6 +16,7 @@ import {
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../../../../constants/recordFilterOptions'
+import { t } from '../../../../../i18n'
 import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
 import type { FilterState } from '../../../../../types/recordFilter'
 import {

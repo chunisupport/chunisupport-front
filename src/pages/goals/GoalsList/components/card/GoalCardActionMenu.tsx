@@ -1,4 +1,3 @@
-import { t } from '../../../../../i18n'
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { Copy, EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -7,6 +6,7 @@ import {
   AppMenuItem,
   AppMenuTrigger,
 } from '../../../../../components/common/AppMenu'
+import { t } from '../../../../../i18n'
 
 interface GoalCardActionMenuProps {
   onEdit: () => void

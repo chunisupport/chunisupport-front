@@ -1,5 +1,9 @@
 import { createSignal } from 'solid-js'
-import { type AppLocale, readLocalePreference, saveLocalePreference } from '../utils/localePreference'
+import {
+  type AppLocale,
+  readLocalePreference,
+  saveLocalePreference,
+} from '../utils/localePreference'
 
 export const [localePreference, setLocalePreferenceSignal] = createSignal<AppLocale>(
   readLocalePreference()

@@ -1,8 +1,8 @@
-import { t } from '../../../i18n'
 import { createMemo, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
 import { useAppMainScrollRestoration } from '../../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { t } from '../../../i18n'
 import type { SortDirection } from '../../../utils/sortingQuery'
 import SongFilterPanel from '../components/SongFilterPanel'
 import SongListViewModeToggle from '../components/SongListViewModeToggle'
@@ -13,7 +13,10 @@ import { songListViewMode } from '../songListViewMode'
 import { useWorldsendSongsListQuery } from '../useWorldsendSongsListQuery'
 import WorldsendSongCardSortControls from '../WorldsendSongsCardList/components/WorldsendSongCardSortControls'
 import WorldsendSongsCardGrid from '../WorldsendSongsCardList/components/WorldsendSongsCardGrid'
-import { WORLDSEND_SONG_CARD_COPY, WORLDSEND_SONG_CARD_DEFAULT_SORT_OPTION_ID } from '../WorldsendSongsCardList/constants'
+import {
+  WORLDSEND_SONG_CARD_COPY,
+  WORLDSEND_SONG_CARD_DEFAULT_SORT_OPTION_ID,
+} from '../WorldsendSongsCardList/constants'
 import { findWorldsendSongCardSortOption } from '../WorldsendSongsCardList/utils/worldsendSongCardSort'
 import WorldsendSongsTable from './components/WorldsendSongsTable'
 import { nextSortState, sortWorldsendSongs, type WorldsendSongSortKey } from './utils/sorting'
@@ -114,7 +117,9 @@ const WorldsendSongsList = () => {
                   />
                 </Show>
               </div>
-              <p class="text-sm text-text-muted">{t('songs.list.count', { count: filteredSongs().length })}</p>
+              <p class="text-sm text-text-muted">
+                {t('songs.list.count', { count: filteredSongs().length })}
+              </p>
 
               <Show
                 when={isCardView()}

@@ -1,20 +1,60 @@
-import { t } from '../../../i18n'
 import { useNavigate } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createEffect, createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  ErrorBoundary,
+  Show,
+} from 'solid-js'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import type { GoalCreateRequest, GoalDTO, GoalGroupDTO, GoalUpdateRequest } from '../../../types/api'
+import { t } from '../../../i18n'
+import type {
+  GoalCreateRequest,
+  GoalDTO,
+  GoalGroupDTO,
+  GoalUpdateRequest,
+} from '../../../types/api'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { GoalGroupsManageDialog } from './components/list/GoalGroupsManageDialog'
 import { GoalsListContent } from './components/list/GoalsListContent'
 import { GoalsListDialogs } from './components/list/GoalsListDialogs'
-import { buildGoalReorderAnnouncement, GOALS_LIST_COPY, GOAL_GROUP_COPY, GOALS_LIMIT, type GoalGroupDisplayMode } from './constants'
-import { buildGoalGroupViews, moveDeletedGroupGoalsToUngrouped, moveGoalGroup, orderGoalsByPersistedGroupOrder, resolveCyclicGoalGroupId, UNGROUPED_GOALS_LABEL } from './goalGroupsModel'
+import {
+  buildGoalReorderAnnouncement,
+  GOAL_GROUP_COPY,
+  GOALS_LIMIT,
+  GOALS_LIST_COPY,
+  type GoalGroupDisplayMode,
+} from './constants'
+import {
+  buildGoalGroupViews,
+  moveDeletedGroupGoalsToUngrouped,
+  moveGoalGroup,
+  orderGoalsByPersistedGroupOrder,
+  resolveCyclicGoalGroupId,
+  UNGROUPED_GOALS_LABEL,
+} from './goalGroupsModel'
 import { moveGoal } from './goalOrder'
 import { saveGoalRecordFilterAndBuildPath } from './goalsListNavigation'
-import { buildGoalsWithProgress, resolveDraftGoalProgress as resolveDraftGoalProgressFromData, resolveGoalAllCount, resolveGoalOverPowerChartMax } from './goalsListProgress'
-import { copyGoalRequest, createGoalGroupRequest, deleteGoalGroupRequest, deleteGoalRequest, fetchGoalsListData, reorderGoalGroupsRequest, reorderGoalsRequest, saveGoalRequest, updateGoalGroupRequest } from './goalsListResource'
+import {
+  buildGoalsWithProgress,
+  resolveDraftGoalProgress as resolveDraftGoalProgressFromData,
+  resolveGoalAllCount,
+  resolveGoalOverPowerChartMax,
+} from './goalsListProgress'
+import {
+  copyGoalRequest,
+  createGoalGroupRequest,
+  deleteGoalGroupRequest,
+  deleteGoalRequest,
+  fetchGoalsListData,
+  reorderGoalGroupsRequest,
+  reorderGoalsRequest,
+  saveGoalRequest,
+  updateGoalGroupRequest,
+} from './goalsListResource'
 
 const GoalsList: Component = () => {
   const navigate = useNavigate()
