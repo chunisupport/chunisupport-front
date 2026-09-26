@@ -1,3 +1,4 @@
+import { UNKNOWN_VALUE_LABEL } from '../../../../constants/unknownValue'
 import { hasSameFilterValues } from '../../utils/filterValue'
 import type { WorldsendFilterState } from '../types/filterTypes'
 
@@ -8,7 +9,7 @@ import type { WorldsendFilterState } from '../types/filterTypes'
  * @returns フィルター表示用の★レベル文字列。
  */
 export function formatWorldsendLevelStar(levelStar: number | null): string {
-  return levelStar === null ? '不明' : `★${levelStar}`
+  return levelStar === null ? UNKNOWN_VALUE_LABEL : `★${levelStar}`
 }
 
 /**
@@ -18,7 +19,7 @@ export function formatWorldsendLevelStar(levelStar: number | null): string {
  * @returns フィルター表示用の属性文字列。
  */
 export function formatWorldsendAttribute(attribute: string | null): string {
-  return attribute ?? '不明'
+  return attribute ?? UNKNOWN_VALUE_LABEL
 }
 
 /**

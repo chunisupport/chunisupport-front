@@ -1,3 +1,4 @@
+import { localizedCopy, t } from '../../../i18n'
 import { Dialog } from '@kobalte/core/dialog'
 import { createEffect, createMemo, createSignal } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
@@ -7,11 +8,14 @@ import {
 } from '../../../components/common/AppMultiSelect'
 import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
 
-const COLUMN_SETTINGS_TITLE = '列設定'
-const COLUMN_SETTINGS_DESCRIPTION = '表示する列を選択してください（1列以上必須）'
-const COLUMN_SETTINGS_PLACEHOLDER = '表示列を選択'
-const CANCEL_LABEL = 'キャンセル'
-const APPLY_LABEL = '適用'
+/** 列設定ダイアログの表示文言 */
+const COLUMN_SETTINGS_TEXT = localizedCopy('users.columnSettings')
+
+const COLUMN_SETTINGS_TITLE = t('common.columnSettings')
+const COLUMN_SETTINGS_DESCRIPTION = COLUMN_SETTINGS_TEXT.description
+const COLUMN_SETTINGS_PLACEHOLDER = COLUMN_SETTINGS_TEXT.placeholder
+const CANCEL_LABEL = t('common.cancel')
+const APPLY_LABEL = t('common.apply')
 
 type ColumnSettingsDialogBaseProps<TColumnId extends string, TSortKey extends string> = {
   open: boolean

@@ -1,3 +1,4 @@
+import { UNKNOWN_VALUE_LABEL } from '../constants/unknownValue'
 import {
   MASTER_ULTIMA_DIFFICULTIES,
   THEORETICAL_OVER_POWER_TARGET_FILTER,
@@ -138,7 +139,7 @@ export const filterOnlineWeakChartEntries = (
   }
 
   return filteredEntries.filter(({ record }) => {
-    const attributes = attributesBySongId.get(record.id) ?? { genre: null, version: '不明' }
+    const attributes = attributesBySongId.get(record.id) ?? { genre: null, version: UNKNOWN_VALUE_LABEL }
     if (
       filter.genres !== null &&
       (attributes.genre === null || !filter.genres.includes(attributes.genre))

@@ -1,3 +1,4 @@
+import { localizedCopy, t } from '../../../../i18n'
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
@@ -10,11 +11,14 @@ import type { EditingFilter } from '../../components/SavedRecordFiltersDialog'
 import SavedFiltersDialog from './filterDialog/dialogs/SavedFiltersDialog'
 import FilterSelectionPanel from './filterDialog/FilterSelectionPanel'
 
+/** フィルター関連の表示文言 */
+const FILTER_TEXT = localizedCopy('users.filter')
+
 /** フィルターダイアログで表示する文言 */
 const FILTER_DIALOG_TEXT = {
-  title: 'フィルター',
-  cancel: 'キャンセル',
-  apply: '適用',
+  title: FILTER_TEXT.title,
+  cancel: t('common.cancel'),
+  apply: FILTER_TEXT.apply,
 } as const
 
 interface FilterDialogProps {

@@ -1,3 +1,4 @@
+import { t } from '../../../../../../i18n'
 import { Star } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
@@ -42,34 +43,34 @@ type DifficultySectionProps = {
 const OP_TARGET_ONLY_CHECKBOX_ID = 'filter-op-target-only'
 
 /** OP対象種別Selectのラベル */
-const OP_TARGET_TYPE_SELECT_LABEL = 'OP対象の種別'
+const OP_TARGET_TYPE_SELECT_LABEL = t('users.filter.opTargetType')
 
 /** OP対象種別Selectの選択肢 */
 const OP_TARGET_TYPE_OPTIONS: OpTargetType[] = ['current', 'theoretical']
 
 /** OP対象種別の表示ラベル */
 const OP_TARGET_TYPE_LABELS: Readonly<Record<OpTargetType, string>> = {
-  current: '現在のOP対象',
-  theoretical: 'OP理論値対象',
+  current: t('users.filter.currentOpTarget'),
+  theoretical: t('users.filter.theoreticalOpTarget'),
 }
 
 /** OP対象種別Selectの後ろに表示する文言 */
-const OP_TARGET_ONLY_SUFFIX = 'の譜面のみ表示'
+const OP_TARGET_ONLY_SUFFIX = t('users.filter.opTargetOnlySuffix')
 
 /** OP対象フィルターのスクリーンリーダー用接頭辞 */
-const OP_TARGET_ONLY_SR_PREFIX = 'OP対象'
+const OP_TARGET_ONLY_SR_PREFIX = t('users.filter.opTargetSrPrefix')
 
 /** お気に入り楽曲フィルターのチェックボックスID */
 const FAVORITE_SONGS_ONLY_CHECKBOX_ID = 'filter-favorite-songs-only'
 
 /** お気に入り楽曲フィルターのラベル */
-const FAVORITE_SONGS_ONLY_LABEL = 'お気に入り楽曲のみ表示'
+const FAVORITE_SONGS_ONLY_LABEL = t('users.filter.favoritesOnly')
 
 /** 未解禁曲除外フィルターのチェックボックスID */
 const EXCLUDE_LOCKED_SONGS_CHECKBOX_ID = 'filter-exclude-locked-songs'
 
 /** お気に入り楽曲設定ボタンのラベル */
-const FAVORITE_SONGS_SETTINGS_LABEL = 'お気に入り楽曲設定'
+const FAVORITE_SONGS_SETTINGS_LABEL = t('users.filter.favoritesSettings')
 
 /**
  * OP対象種別をSelectへ表示する文言に変換する。
@@ -87,7 +88,7 @@ const formatOpTargetTypeLabel = (type: OpTargetType): string => OP_TARGET_TYPE_L
  */
 const DifficultySection: Component<DifficultySectionProps> = (props) => (
   <div>
-    <span class="block text-sm font-medium mb-1">難易度</span>
+    <span class="block text-sm font-medium mb-1">{t('users.filter.difficulty')}</span>
     <div class="flex flex-col gap-2">
       <For each={props.difficulties}>
         {(diff, index) => {

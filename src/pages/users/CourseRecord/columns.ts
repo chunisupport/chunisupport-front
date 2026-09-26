@@ -1,5 +1,9 @@
+import { localizedCopy } from '../../../i18n'
 import { getRecordColumnBaseDefinition } from '../utils/recordColumnDefinitions'
 import type { ColumnDefinitionBase } from '../utils/recordTableColumns'
+
+/** コースレコードの表示文言 */
+const COURSE_RECORD_TEXT = localizedCopy('users.courseRecord')
 
 /** コースレコード表で表示する列ID */
 export type CourseRecordColumnId =
@@ -33,17 +37,17 @@ const createCourseRecordColumnDefinitions = (): CourseRecordColumnDefinition[] =
   const updatedAt = getRecordColumnBaseDefinition('updatedAt')
 
   return [
-    { ...title, id: 'title', label: 'タイトル', sortKey: 'title', defaultVisible: true },
+    { ...title, id: 'title', label: COURSE_RECORD_TEXT.title, sortKey: 'title', defaultVisible: true },
     {
       ...difficulty,
       id: 'courseClass',
-      label: 'クラス',
+      label: COURSE_RECORD_TEXT.courseClass,
       sortKey: 'courseClass',
       defaultVisible: true,
     },
     { ...score, id: 'score', sortKey: 'score', defaultVisible: true },
     { ...lamp, id: 'lamp', sortKey: 'lamp', defaultVisible: true },
-    { ...hardLamp, id: 'hardLamp', label: 'クリア', sortKey: 'hardLamp', defaultVisible: true },
+    { ...hardLamp, id: 'hardLamp', label: COURSE_RECORD_TEXT.clear, sortKey: 'hardLamp', defaultVisible: true },
     { ...updatedAt, id: 'updatedAt', sortKey: 'updatedAt', defaultVisible: true },
   ]
 }

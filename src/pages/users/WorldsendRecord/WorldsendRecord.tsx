@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { useSearchParams } from '@solidjs/router'
 import {
   createEffect,
@@ -240,7 +241,10 @@ const WorldsendRecord = (props: Props) => {
               )}
 
               <p class="mb-2 text-sm text-text-muted">
-                全 {recordsWithSongMeta().length} 件中 {filteredRecords().length} 件を表示
+                {t('users.record.shownCount', {
+                  total: recordsWithSongMeta().length,
+                  shown: filteredRecords().length,
+                })}
               </p>
 
               <WorldsendRecordTable

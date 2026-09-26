@@ -1,3 +1,4 @@
+import { t } from '../../../../i18n'
 import { type Component, createMemo } from 'solid-js'
 import RecordDataTable from '../../components/RecordDataTable'
 import type { WorldsendRecordWithSongMeta } from '../types/filterTypes'
@@ -54,7 +55,7 @@ const WorldsendRecordTable: Component<WorldsendRecordTableProps> = (props) => {
       columns={visibleColumns()}
       sortKey={primarySort().key}
       sortDirection={primarySort().direction}
-      emptyMessage="WORLD'S END のレコードはありません。"
+      emptyMessage={t('users.record.worldsendEmpty')}
       getColumnRenderer={getWorldsendColumnRenderer}
       onSortChange={props.onSortChange}
     />

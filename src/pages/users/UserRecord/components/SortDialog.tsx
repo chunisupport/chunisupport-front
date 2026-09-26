@@ -1,3 +1,4 @@
+import { t } from '../../../../i18n'
 import type { Component } from 'solid-js'
 import type { RecordSortCondition, RecordSortKey } from '../../../../types/recordFilter'
 import {
@@ -34,7 +35,7 @@ const SortDialog: Component<SortDialogProps> = (props) => (
     sortConditions={props.sortConditions}
     defaultSortConditions={DEFAULT_RECORD_SORT_CONDITIONS}
     columnOptions={SORT_COLUMN_OPTIONS}
-    fixedLastConditionLabel="曲名（昇順）で固定"
+    fixedLastConditionLabel={t('users.filter.fixedLastSort')}
     normalizeSortConditions={normalizeRecordSortConditions}
     onApply={props.onApply}
   />

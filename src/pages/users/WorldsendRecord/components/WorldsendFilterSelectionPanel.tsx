@@ -1,3 +1,4 @@
+import { t } from '../../../../i18n'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import { SCORE_MIN } from '../../../../constants/chart'
@@ -171,7 +172,7 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
   return (
     <div class="scrollbar-none min-h-0 flex-1 space-y-4 overflow-y-auto">
       <MultiSelectFilterSection
-        title="属性"
+        title={t('users.filter.attribute')}
         options={props.defaultFilter.attributes}
         selected={props.filters.attributes}
         formatLabel={formatWorldsendAttribute}
@@ -266,7 +267,7 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
         }}
       />
       <LampSection
-        title="コンボランプ"
+        title={t('users.filter.comboLamp')}
         idPrefix="worldsend-combo-lamp"
         lamps={RECORD_COMBO_LAMP_OPTIONS}
         selected={props.filters.combo_lamp}
@@ -306,7 +307,7 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
         }
       />
       <LampSection
-        title="ハードランプ"
+        title={t('users.filter.hardLamp')}
         idPrefix="worldsend-hard-lamp"
         lamps={RECORD_HARD_LAMP_OPTIONS}
         selected={props.filters.hard_lamp}
@@ -330,7 +331,7 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
         }
       />
       <MultiSelectFilterSection
-        title="ジャンル"
+        title={t('common.genre')}
         options={props.defaultFilter.genres}
         selected={props.filters.genres}
         onChange={(selectedGenres) =>
@@ -338,7 +339,7 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
         }
       />
       <MultiSelectFilterSection
-        title="バージョン"
+        title={t('common.version')}
         options={props.defaultFilter.versions}
         selected={props.filters.versions}
         onChange={(selectedVersions) =>

@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import type { JSX } from 'solid-js'
 import { createEffect, createMemo, For, onCleanup, Show } from 'solid-js'
 import { createWindowVirtualTable } from '../../../components/common/createWindowVirtualTable'
@@ -44,7 +45,7 @@ type RecordDataTableProps<TRecord, TColumnId extends string, TSortKey extends st
 }
 
 /** 共通レコード表の既定アクセシブル名 */
-const DEFAULT_RECORD_TABLE_ARIA_LABEL = 'レコード一覧'
+const DEFAULT_RECORD_TABLE_ARIA_LABEL = t('users.record.tableAriaLabel')
 
 /**
  * レコード配列を仮想スクロール付きのデータテーブルとして表示する。

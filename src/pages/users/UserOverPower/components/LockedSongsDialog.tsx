@@ -1,3 +1,5 @@
+import { UNKNOWN_VALUE_LABEL } from '../../../../constants/unknownValue'
+import { formatMessage } from '../../../../i18n'
 import { Button } from '@kobalte/core/button'
 import { Check } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
@@ -37,11 +39,7 @@ import {
   sortSongSelectionCandidates,
 } from '../../components/songSelectionDialog'
 import { hasSameFilterValues } from '../../utils/filterValue'
-import {
-  LOCKED_SONG_PLAY_STATUS_FILTER_COPY,
-  LOCKED_SONG_PLAY_STATUS_OPTIONS,
-  type LockedSongsPlayStatus,
-} from '../constants'
+import { LOCKED_SONG_PLAY_STATUS_FILTER_COPY, LOCKED_SONG_PLAY_STATUS_OPTIONS, OVER_POWER_CONTROL_LABELS, OVER_POWER_COPY, type LockedSongsPlayStatus } from '../constants'
 import { LockedSongsOpComparison } from './LockedSongsOpComparison'
 import { matchesLockedSongsPlayStatus } from './lockedSongsFilter'
 
@@ -74,7 +72,6 @@ type LockedSongsFilter = {
 
 type LockedSongsPlayStatusOption = (typeof LOCKED_SONG_PLAY_STATUS_OPTIONS)[number]
 
-const LOCKED_SONG_DESCRIPTION = 'チェックした曲・譜面はOVER POWER計算対象から除外されます。'
 /** プレイ状況フィルターのチェックボックスを識別するID */
 const LOCKED_SONG_PLAY_STATUS_FILTER_ID = 'locked-song-filter-play-status'
 
@@ -149,7 +146,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
     isFilterReady: (filter) => filter.genres.length > 0 && filter.versions.length > 0,
     save: (keys) => props.onSaveLockedSongs(toLockedSongRequests(keys)),
     onSaved: () => props.onOpenChange(false),
-    saveErrorMessage: '未解禁楽曲設定の保存に失敗しました。',
+    saveErrorMessage: OVER_POWER_COPY.lockedSaveError,
   })
   const filterChanged = createMemo(() =>
     isLockedSongsFilterChanged(model.filters(), defaultFilter())
@@ -183,7 +180,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
   )
   const searchableSongListItems = createMemo(() =>
     songListItems().map((item) => {
-      const chartLabel = item.isUltima ? 'ultima' : '通常 譜面'
+      const chartLabel = item.isUltima ? 'ultima' : OVER_POWER_COPY.normalChart
       return {
         item,
         searchableText: normalizeForSearch(
@@ -225,7 +222,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
           return false
         }
         if (!currentFilters.genres.includes(item.song.genre)) return false
-        const version = songVersionNameById().get(item.song.id) ?? '不明'
+        const version = songVersionNameById().get(item.song.id) ?? UNKNOWN_VALUE_LABEL
         if (!currentFilters.versions.includes(version)) return false
         if (!normalizedQuery) return true
         return (
@@ -236,7 +233,11 @@ const LockedSongsDialog: Component<Props> = (props) => {
       .map(({ item }) => item)
   })
   const selectionSummary = createMemo(
-    () => `${model.selectedCount()}件選択中 / ${filteredSongListItems().length}件表示`
+    () =>
+      formatMessage(OVER_POWER_COPY.lockedSelectionSummary, {
+        selected: model.selectedCount(),
+        shown: filteredSongListItems().length,
+      })
   )
   const draftLockedSongs = createMemo(() => toLockedSongRequests([...model.draftKeys()]))
   const opComparison = createMemo(() =>
@@ -267,7 +268,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
           selected()
         )}`}
         aria-pressed={selected()}
-        aria-label={`${item.song.title} ${item.isUltima ? 'ULTIMA' : '通常'}の未解禁設定を切り替え`}
+        aria-label={formatMessage(OVER_POWER_COPY.lockedToggleAriaLabel, {
+          title: item.song.title,
+          chart: item.isUltima ? 'ULTIMA' : OVER_POWER_COPY.normal,
+        })}
         disabled={model.isSaving()}
         onClick={() => model.toggleDraftKey(key)}
       >
@@ -363,10 +367,10 @@ const LockedSongsDialog: Component<Props> = (props) => {
     <SongSelectionDialogBase
       open={props.open}
       onOpenChange={props.onOpenChange}
-      title="未解禁楽曲設定"
-      description={LOCKED_SONG_DESCRIPTION}
+      title={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
+      description={OVER_POWER_COPY.lockedDescription}
       headerExtra={<LockedSongsOpComparison comparison={opComparison} />}
-      searchAriaLabel="未解禁楽曲検索"
+      searchAriaLabel={OVER_POWER_COPY.lockedSearch}
       query={model.query}
       setQuery={model.setQuery}
       filterDialogOpen={model.filterDialogOpen}

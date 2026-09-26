@@ -1,3 +1,4 @@
+import { t } from '../../../../i18n'
 import type { Component } from 'solid-js'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../components/common/filterStyles'
@@ -10,10 +11,10 @@ import { normalizeScoreRangeInput } from '../../../../utils/rangeInput'
 import { SCORE_RANKS } from '../../utils/scoreRank'
 
 /** スコア範囲セクションの見出し */
-const SCORE_RANGE_TITLE = 'スコア'
+const SCORE_RANGE_TITLE = t('users.filter.score')
 
 /** スコアランク範囲セクションの見出し */
-const SCORE_RANK_RANGE_TITLE = 'スコアランク'
+const SCORE_RANK_RANGE_TITLE = t('users.filter.scoreRank')
 
 type ScoreSectionProps = {
   scoreFilterMode: 'number' | 'rank'
@@ -68,7 +69,8 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
       <SelectRangeInput
         title={SCORE_RANK_RANGE_TITLE}
         options={SCORE_RANKS}
-        placeholder="選択…"
+        formatLabel={(rank) => (rank === '0点' ? t('users.filter.zeroScore') : rank)}
+        placeholder={t('common.selectPlaceholder')}
         start={{
           value: props.scoreRankMin,
           label: `${SCORE_RANK_RANGE_TITLE} ${RANGE_INPUT_COPY.startSuffix}`,
@@ -88,7 +90,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
         onChange={(checked) => props.onScoreFilterModeChange(checked ? 'number' : 'rank')}
         class="flex items-center gap-2"
         textVariant="large"
-        label="数値で指定"
+        label={t('users.filter.useNumber')}
       />
     </div>
     <div class="mt-2">
@@ -98,7 +100,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
         onChange={(checked) => props.onExcludeNoPlayChange(checked)}
         class="flex items-center gap-2"
         textVariant="large"
-        label="未プレイ譜面を除外"
+        label={t('users.filter.excludeUnplayed')}
       />
     </div>
   </div>

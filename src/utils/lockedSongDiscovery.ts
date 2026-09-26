@@ -1,3 +1,4 @@
+import { UNKNOWN_VALUE_LABEL } from '../constants/unknownValue'
 import { t } from '../i18n'
 import type { PlayerRecordDTO, SongDTO } from '../types/api'
 import type { FilterState } from '../types/recordFilter'
@@ -13,7 +14,7 @@ export const OBSERVED_OVER_POWER_UNIT_MILLI = 10
 export const OBSERVED_PERCENT_UNIT_BASIS_POINTS = 1
 
 /** 収録バージョンを解決できない候補の表示名。 */
-const UNKNOWN_VERSION_LABEL = '不明'
+const UNKNOWN_VERSION_LABEL = UNKNOWN_VALUE_LABEL
 
 /** ジャンル別・バージョン別の筐体観測値。 */
 export type LockedSongObservation = {

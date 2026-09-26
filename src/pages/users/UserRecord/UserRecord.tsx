@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
 import {
@@ -311,7 +312,7 @@ const UserRecord: Component<Props> = (props) => {
   const handleSaveFavoriteSongs = async (nextDisplayIds: string[]): Promise<void> => {
     const currentItems = favoriteSongs()?.items
     if (!currentItems) {
-      throw new Error('お気に入り楽曲の読み込みが完了していません。')
+      throw new Error(t('users.record.favoritesNotLoaded'))
     }
 
     const currentIds = new Set(currentItems.map((item) => item.id))
@@ -370,7 +371,7 @@ const UserRecord: Component<Props> = (props) => {
               )}
 
               <p class="mb-2 text-sm text-text-muted">
-                全 {totalCount()} 件中 {filteredCount()} 件を表示
+                {t('users.record.shownCount', { total: totalCount(), shown: filteredCount() })}
               </p>
 
               {/* レコード一覧 */}
@@ -381,7 +382,7 @@ const UserRecord: Component<Props> = (props) => {
                 columns={visibleColumns()}
                 sortKey={primarySort()?.key ?? null}
                 sortDirection={primarySort()?.direction ?? null}
-                emptyMessage="データがありません"
+                emptyMessage={t('users.record.noData')}
                 resetDeps={filterStatsOpen()}
                 getColumnRenderer={getRecordColumnRenderer}
                 onSortChange={handleSortChange}

@@ -1,22 +1,8 @@
+import { localizedCopy } from '../../../i18n'
 import type { PlayerMetricHistoryMetric } from '../../../utils/playerMetricHistory'
 
 /** 公式指標履歴ページで表示する文言 */
-export const PLAYER_METRIC_HISTORY_COPY = {
-  pageTitle: 'レーティング・OVER POWER履歴',
-  documentTitle: 'レーティング・OVER POWER履歴',
-  backToProfile: 'プロフィールへ戻る',
-  emptyHistory: '履歴がありません',
-  tableTitle: '履歴一覧',
-  tableCaption: '公式RATING・公式OVER POWER・公式OP%の履歴',
-  collectedAt: '取得日時',
-  rating: 'RATING',
-  overPower: 'OVER POWER',
-  overPowerPercent: 'OP%',
-  missingValue: '-',
-  ratingChartAriaLabel: '公式RATING履歴の折れ線グラフ',
-  overPowerChartAriaLabel: '公式OVER POWER履歴の折れ線グラフ',
-  overPowerPercentChartAriaLabel: '公式OP%履歴の折れ線グラフ',
-} as const
+export const PLAYER_METRIC_HISTORY_COPY = localizedCopy('users.metricHistory')
 
 /** 公式指標履歴グラフの縦軸下限 */
 export const PLAYER_METRIC_HISTORY_AXIS_FLOOR = 0

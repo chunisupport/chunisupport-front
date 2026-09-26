@@ -1,3 +1,4 @@
+import { formatMessage } from '../../../i18n'
 import { A, useParams } from '@solidjs/router'
 import { ArrowLeft } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -99,7 +100,12 @@ const UserStatsPage: Component = () => {
   })
   const isNotFound = createMemo(() => currentState()?.type === 'notFound')
 
-  useDocumentTitle(() => `${params.username}さんの${PLAYER_METRIC_HISTORY_COPY.documentTitle}`)
+  useDocumentTitle(() =>
+    formatMessage(PLAYER_METRIC_HISTORY_COPY.userDocumentTitle, {
+      username: params.username,
+      title: PLAYER_METRIC_HISTORY_COPY.documentTitle,
+    })
+  )
 
   return (
     <ErrorBoundary

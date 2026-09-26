@@ -1,3 +1,4 @@
+import { UNKNOWN_VALUE_LABEL } from '../constants/unknownValue'
 import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../types/api'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter'
 
@@ -36,7 +37,7 @@ export function attachSongMetaToRecords(
       title: song?.title ?? record.title,
       artist: song?.artist ?? record.artist,
       reading: song?.reading ?? null,
-      genre: song?.genre ?? '不明',
+      genre: song?.genre ?? UNKNOWN_VALUE_LABEL,
       release,
       notes,
       release_version: getShortVersionName(resolveVersionNameByReleaseDate(release, versions)),

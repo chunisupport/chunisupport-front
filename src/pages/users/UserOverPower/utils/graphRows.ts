@@ -1,3 +1,4 @@
+import { UNKNOWN_VALUE_LABEL } from '../../../../constants/unknownValue'
 import type { PlayerRecordDTO } from '../../../../types/api'
 import type { OverPowerChartEntry } from '../../../../usecases/overpower/types'
 import { getScoreRank, MAX_SCORE } from '../../../../utils/scoreRank'
@@ -47,7 +48,7 @@ export const buildChartRecordsBySummaryTab = (
     addRecordToGroup(groups.all, 'all', entry.record)
     addRecordToGroup(groups.difficulties, entry.difficulty, entry.record)
     addRecordToGroup(groups.levels, entry.level, entry.record)
-    if (entry.song.genre && entry.song.genre !== '不明') {
+    if (entry.song.genre && entry.song.genre !== UNKNOWN_VALUE_LABEL) {
       addRecordToGroup(groups.genres, entry.song.genre, entry.record)
     }
     if (entry.versionName) {

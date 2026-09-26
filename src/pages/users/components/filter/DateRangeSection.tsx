@@ -1,3 +1,4 @@
+import { t } from '../../../../i18n'
 import type { Component } from 'solid-js'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../components/common/filterStyles'
 import { RangeControlRow } from '../../../../components/common/RangeInput'
@@ -25,7 +26,7 @@ type DateRangeSectionProps = {
  */
 const DateRangeSection: Component<DateRangeSectionProps> = (props) => (
   <div>
-    <div class="mb-1 text-sm font-medium">最終更新日</div>
+    <div class="mb-1 text-sm font-medium">{t('users.filter.lastUpdated')}</div>
     <RangeControlRow
       start={
         <input

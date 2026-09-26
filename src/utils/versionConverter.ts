@@ -1,3 +1,4 @@
+import { UNKNOWN_VALUE_LABEL } from '../constants/unknownValue'
 import type { VersionDTO, VersionSummaryDTO } from '../types/api'
 
 type VersionLike = Pick<VersionDTO, 'name' | 'released_at'> | VersionSummaryDTO
@@ -66,13 +67,13 @@ export function resolveVersionNameByReleaseDate(
   versions: readonly VersionLike[]
 ): string {
   if (!releaseDate) {
-    return '不明'
+    return UNKNOWN_VALUE_LABEL
   }
 
   const normalizedReleaseDate = releaseDate.slice(0, 10)
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/
   if (!dateRegex.test(normalizedReleaseDate)) {
-    return '不明'
+    return UNKNOWN_VALUE_LABEL
   }
 
   const sorted = [...versions].sort((a, b) => a.released_at.localeCompare(b.released_at, 'ja'))
@@ -85,5 +86,5 @@ export function resolveVersionNameByReleaseDate(
     }
   }
 
-  return candidate ?? '不明'
+  return candidate ?? UNKNOWN_VALUE_LABEL
 }

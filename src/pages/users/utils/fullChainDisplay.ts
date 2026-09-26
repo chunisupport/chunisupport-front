@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
 
 type FullChainLamp = PlayerRecordDTO['full_chain'] | WorldsendRecordDTO['full_chain']
@@ -13,6 +14,6 @@ const FULL_CHAIN_LAMP_LABELS: Record<NonNullable<FullChainLamp>, string> = {
  * @returns 画面表示用のFULL CHAINランプ名
  */
 export const formatFullChainLampLabel = (fullChain: FullChainLamp): string => {
-  if (fullChain === null) return 'なし'
+  if (fullChain === null) return t('common.none')
   return FULL_CHAIN_LAMP_LABELS[fullChain]
 }

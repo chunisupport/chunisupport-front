@@ -1,3 +1,4 @@
+import { localizedCopy, withLocalizedLabels } from '../../../i18n'
 import { OVER_POWER_MASTER_ULTIMA_TARGET } from '../../../usecases/overpower/constants'
 import type { OverPowerRecordFilterDimension } from '../../../usecases/overpower/recordNavigation'
 import type { OverPowerSubPage } from '../../../utils/userProfileRoute'
@@ -10,6 +11,12 @@ import type {
   OverPowerSummaryViewMode,
 } from './types'
 
+/** OVER POWER画面全体の表示文言 */
+const OVER_POWER_COPY_ROOT = localizedCopy('users.overPower')
+
+/** OVER POWER画面の表示文言 */
+export const OVER_POWER_COPY = localizedCopy('users.overPower.page')
+
 /** OVERPOWERサマリーを開いたときに最初に表示する表示形式 */
 export const DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE: OverPowerSummaryViewMode = 'graph'
 
@@ -17,78 +24,50 @@ export const DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE: OverPowerSummaryViewMode = 'g
 export const LOW_LEVEL_SUMMARY_LABEL = 'Lv.1-9+'
 
 /** OVER POWERサマリーの表示軸選択肢 */
-export const OVER_POWER_SUMMARY_OPTIONS: OverPowerSummaryOption[] = [
-  { value: 'genres', label: 'ジャンル' },
-  { value: 'levels', label: 'レベル' },
-  { value: 'versions', label: 'バージョン' },
-]
+export const OVER_POWER_SUMMARY_OPTIONS: OverPowerSummaryOption[] = withLocalizedLabels(
+  [
+  { value: 'genres' },
+  { value: 'levels' },
+  { value: 'versions' },
+],
+  OVER_POWER_COPY_ROOT.summaryOptions
+)
 
 /** OVER POWERサマリーの集計対象選択肢 */
 export const OVER_POWER_AGGREGATION_TARGET_OPTIONS: OverPowerAggregationTargetOption[] = [
-  { value: 'OP_TARGET', label: 'OVER POWER対象' },
+  { value: 'OP_TARGET', label: OVER_POWER_COPY_ROOT.aggregationTargets.opTarget },
   { value: 'BASIC', label: 'BASIC' },
   { value: 'ADVANCED', label: 'ADVANCED' },
   { value: 'EXPERT', label: 'EXPERT' },
   { value: 'MASTER', label: 'MASTER' },
   { value: 'ULTIMA', label: 'ULTIMA' },
   { value: OVER_POWER_MASTER_ULTIMA_TARGET, label: 'MASTER + ULTIMA' },
-  { value: 'ALL', label: '全難易度' },
+  { value: 'ALL', label: OVER_POWER_COPY_ROOT.aggregationTargets.all },
 ]
 
 /** OVER POWER集計画面で表示する達成率の小数点以下桁数 */
 export const OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES = 5
 
-/** 未解禁曲を集計対象から除外する操作の表示名 */
-export const OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL = '未解禁曲除外'
-
 /** 未解禁楽曲設定ダイアログのプレイ状況フィルター */
 export type LockedSongsPlayStatus = 'played' | 'unplayed'
 
 /** 未解禁楽曲設定ダイアログのプレイ状況フィルター選択肢 */
-export const LOCKED_SONG_PLAY_STATUS_OPTIONS = [
-  { value: 'unplayed', label: '未プレイ' },
-  { value: 'played', label: 'プレイ済み' },
-] as const
+export const LOCKED_SONG_PLAY_STATUS_OPTIONS = withLocalizedLabels(
+  [
+  { value: 'unplayed' },
+  { value: 'played' },
+] as const,
+  OVER_POWER_COPY_ROOT.playStatuses
+)
 
 /** 未解禁楽曲設定ダイアログのプレイ状況フィルター表示文言 */
-export const LOCKED_SONG_PLAY_STATUS_FILTER_COPY = {
-  label: 'プレイ状況',
-  suffix: 'のみ表示',
-  ariaLabel: 'プレイ状況フィルターを有効にする',
-} as const
-
-/** 通常レコードへのフィルター付き遷移に失敗したときの表示文言 */
-export const OVER_POWER_RECORD_NAVIGATION_ERROR_MESSAGE = 'レコードの表示に失敗しました。'
+export const LOCKED_SONG_PLAY_STATUS_FILTER_COPY = localizedCopy('users.overPower.playStatusFilter')
 
 /** 未解禁楽曲設定ダイアログで公式値と計算値を見比べる表示の文言 */
-export const LOCKED_SONGS_OP_COMPARISON_COPY = {
-  disclosureLabel: '公式値との照合',
-  official: '公式値',
-  calculated: '計算値',
-  kind: '種別',
-  overPower: 'OP',
-  overPowerPercent: 'OP%',
-  matched: '一致',
-  mismatched: '差異あり',
-  missingValue: '-',
-  guidance: {
-    overPowerHigher: 'プレイ済みの未解禁楽曲があります',
-    overPowerLower: 'プレイ済み・解禁済みの楽曲を未解禁に指定しています',
-    overPowerPercentHigher: '解禁済み楽曲を未解禁設定しています',
-    overPowerPercentLower: '未設定の未解禁曲があります',
-  },
-} as const
+export const LOCKED_SONGS_OP_COMPARISON_COPY = localizedCopy('users.overPower.opComparison')
 
 /** OVER POWER画面の操作ラベル */
-export const OVER_POWER_CONTROL_LABELS = {
-  aggregationTarget: '集計対象',
-  lockedSongs: '未解禁曲',
-  lockedSongsSettings: '未解禁楽曲設定',
-  songCount: '曲数',
-  chartCount: '譜面数',
-  graph: 'グラフ',
-  table: 'テーブル',
-} as const
+export const OVER_POWER_CONTROL_LABELS = localizedCopy('users.overPower.controls')
 
 /** URLサブページからOVER POWERサマリーの表示軸へ変換する対応表 */
 export const overPowerSummaryTabBySubPage: Record<OverPowerSubPage, OverPowerSummaryTab> = {

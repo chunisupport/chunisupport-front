@@ -1,3 +1,4 @@
+import { t } from '../../../../../i18n'
 import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
@@ -368,7 +369,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     <div class="scrollbar-none min-h-0 flex-1 space-y-4 overflow-y-auto">
       <Show when={props.editingFilterName != null}>
         <div>
-          <span class="block text-sm font-medium mb-1">フィルター名</span>
+          <span class="block text-sm font-medium mb-1">{t('users.filter.filterName')}</span>
           <TextField>
             <TextField.Input
               class={`${FILTER_DIALOG_FIELD_INPUT_CLASS} font-sans`}
@@ -539,7 +540,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         }}
       />
       <LampSection
-        title="コンボランプ"
+        title={t('users.filter.comboLamp')}
         idPrefix="combo-lamp"
         lamps={RECORD_COMBO_LAMP_OPTIONS}
         selected={props.filters.combo_lamp}
@@ -585,7 +586,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         }
       />
       <LampSection
-        title="ハードランプ"
+        title={t('users.filter.hardLamp')}
         idPrefix="hard-lamp"
         lamps={RECORD_HARD_LAMP_OPTIONS}
         selected={props.filters.hard_lamp}
@@ -612,10 +613,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         }
       />
       <MultiSelectFilterSection
-        title="ジャンル"
+        title={t('common.genre')}
         options={genres()}
         selected={props.filters.genres}
-        placeholder="ジャンルを選択"
+        placeholder={t('common.selectGenre')}
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
         onChange={(selectedGenres) =>
           props.setFilters((prev) => ({
@@ -625,10 +626,10 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         }
       />
       <MultiSelectFilterSection
-        title="バージョン"
+        title={t('common.version')}
         options={versions()}
         selected={props.filters.versions}
-        placeholder="バージョンを選択"
+        placeholder={t('common.selectVersion')}
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
         onChange={(selectedVersions) =>
           props.setFilters((prev) => ({

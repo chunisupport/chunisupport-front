@@ -1,3 +1,4 @@
+import { t } from '../../../../i18n'
 import {
   MultiSelectField,
   toMultiSelectOptions,
@@ -34,7 +35,7 @@ const MultiSelectFilterSection = <T extends string | number | null>(
     labelClass="text-text"
     options={toMultiSelectOptions(props.options, props.formatLabel)}
     selected={props.selected}
-    placeholder={props.placeholder ?? `${props.title}を選択`}
+    placeholder={props.placeholder ?? t('users.filter.selectTitle', { title: props.title })}
     contentZIndexClass={props.contentZIndexClass}
     onChange={props.onChange}
   />

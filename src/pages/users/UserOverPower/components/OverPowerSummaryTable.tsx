@@ -4,7 +4,7 @@ import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
-import { OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES } from '../constants'
+import { OVER_POWER_COPY, OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES } from '../constants'
 
 type Props = {
   rows: OverPowerSummaryRow[]
@@ -26,23 +26,23 @@ export const OverPowerSummaryTable: Component<Props> = (props) => (
   <section class="overflow-hidden rounded-lg border border-border bg-surface">
     <Show
       when={props.rows.length > 0}
-      fallback={<p class="px-3 py-4 text-sm text-text-subtle">表示できるデータがありません。</p>}
+      fallback={<p class="px-3 py-4 text-sm text-text-subtle">{OVER_POWER_COPY.noData}</p>}
     >
       <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
           <thead class="bg-surface-muted text-xs text-text-muted">
             <tr>
               <th class="w-full px-3 py-2 text-left font-medium" scope="col">
-                <span class="sr-only">項目</span>
+                <span class="sr-only">{OVER_POWER_COPY.item}</span>
               </th>
               <th class="whitespace-nowrap px-2 py-2 text-right font-medium" scope="col">
-                現在値
+                {OVER_POWER_COPY.current}
               </th>
               <th class="whitespace-nowrap px-2 py-2 text-right font-medium" scope="col">
-                理論値
+                {OVER_POWER_COPY.theoretical}
               </th>
               <th class="whitespace-nowrap px-2 py-2 text-right font-medium" scope="col">
-                達成率
+                {OVER_POWER_COPY.achievement}
               </th>
               <th class="whitespace-nowrap px-2 py-2 text-right font-medium" scope="col">
                 {props.countLabel}
@@ -64,7 +64,7 @@ export const OverPowerSummaryTable: Component<Props> = (props) => (
                     >
                       <span>{row.label}</span>
                       <Funnel class="h-4 w-4 shrink-0" aria-hidden="true" />
-                      <span class="sr-only">のレコードを表示</span>
+                      <span class="sr-only">{OVER_POWER_COPY.showRecordsSuffix}</span>
                     </Button>
                   </th>
                   <td class="whitespace-nowrap px-2 py-2 text-right tabular-nums">

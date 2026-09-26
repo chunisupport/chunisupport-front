@@ -1,3 +1,4 @@
+import { t } from '../../../../i18n'
 import {
   createRecordFilter,
   deleteRecordFilter,
@@ -19,8 +20,8 @@ const LEGACY_SAVED_FILTER_SCHEMA_VERSION_6 = 6
 const LEGACY_SAVED_FILTER_SCHEMA_VERSION_7 = 7
 const LEGACY_SAVED_FILTER_SCHEMA_VERSION_8 = 8
 const STANDARD_RECORD_FILTER_TYPE = 'standard'
-const INVALID_SCHEMA_MESSAGE = '古い形式のため無効です。'
-const INVALID_FILTER_MESSAGE = '保存値が壊れているため無効です。'
+const INVALID_SCHEMA_MESSAGE = t('users.record.invalidSchema')
+const INVALID_FILTER_MESSAGE = t('users.record.invalidFilter')
 
 export type SavedFilter = SavedRecordFilterItem<FilterState>
 

@@ -34,14 +34,7 @@ import {
   hasUnknownOverPowerChartConstants,
   hasUnknownOverPowerPercentChartConstants,
 } from '../../../../utils/unknownChartConstant'
-import {
-  USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL,
-  USER_NAMEPLATE_HISTORY_LINK_LABEL,
-  USER_NAMEPLATE_METRIC_LABELS,
-  USER_NAMEPLATE_UNKNOWN_CONST_HINT,
-  USER_NAMEPLATE_UNKNOWN_CONST_MARKER,
-  USER_NAMEPLATE_WIDTH_CLASS,
-} from './UserNameplate.constants'
+import { USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL, USER_NAMEPLATE_HISTORY_LINK_LABEL, USER_NAMEPLATE_METRIC_LABELS, USER_NAMEPLATE_TEXT, USER_NAMEPLATE_UNKNOWN_CONST_HINT, USER_NAMEPLATE_UNKNOWN_CONST_MARKER, USER_NAMEPLATE_WIDTH_CLASS } from './UserNameplate.constants'
 
 const HONOR_ROTATION_INTERVAL_MS = 4000
 const SCROLL_AMOUNT_CSS_VARIABLE = '--honor-title-scroll-amount'
@@ -331,7 +324,7 @@ export const UserNameplate: Component<Props> = (props) => {
             class="user-honor-toggle"
             aria-expanded={isHonorListExpanded()}
             aria-label={
-              isHonorListExpanded() ? '称号をローテーション表示に戻す' : '称号を縦に表示する'
+              isHonorListExpanded() ? USER_NAMEPLATE_TEXT.honorRotate : USER_NAMEPLATE_TEXT.honorVertical
             }
             onClick={toggleHonorDisplay}
           >

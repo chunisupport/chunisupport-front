@@ -1,3 +1,4 @@
+import { t } from '../../../../i18n'
 import type { Component } from 'solid-js'
 import {
   type SortConditionColumnOption,
@@ -37,7 +38,7 @@ const WorldsendSortDialog: Component<WorldsendSortDialogProps> = (props) => (
     sortConditions={props.sortConditions}
     defaultSortConditions={DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS}
     columnOptions={WORLDSEND_SORT_COLUMN_OPTIONS}
-    fixedLastConditionLabel="曲名（昇順）で固定"
+    fixedLastConditionLabel={t('users.filter.fixedLastSort')}
     normalizeSortConditions={normalizeWorldsendRecordSortConditions}
     onApply={props.onApply}
   />

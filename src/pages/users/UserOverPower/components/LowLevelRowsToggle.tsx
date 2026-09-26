@@ -1,7 +1,8 @@
+import { formatMessage } from '../../../../i18n'
 import { ChevronRight } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { AppButton } from '../../../../components/common/AppButton'
-import { LOW_LEVEL_SUMMARY_LABEL } from '../constants'
+import { LOW_LEVEL_SUMMARY_LABEL, OVER_POWER_COPY } from '../constants'
 
 type LowLevelRowsToggleProps = {
   expanded: boolean
@@ -23,7 +24,10 @@ const LowLevelRowsToggle: Component<LowLevelRowsToggleProps> = (props) => (
     class="group min-h-9 font-semibold focus-visible:ring-offset-2"
     aria-expanded={props.expanded}
     aria-controls="over-power-low-level-summary"
-    title={`${LOW_LEVEL_SUMMARY_LABEL}を${props.expanded ? '折りたたむ' : '展開'}`}
+    title={formatMessage(
+      props.expanded ? OVER_POWER_COPY.collapse : OVER_POWER_COPY.expand,
+      { label: LOW_LEVEL_SUMMARY_LABEL }
+    )}
     onClick={props.onClick}
   >
     <ChevronRight

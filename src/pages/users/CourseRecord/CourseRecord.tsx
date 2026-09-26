@@ -6,12 +6,8 @@ import { nextPrimarySortCondition } from '../../../utils/sortConditions'
 import RecordDataTable from '../components/RecordDataTable'
 import { getCourseRecordColumnRenderer } from './columnRenderers'
 import { COURSE_RECORD_COLUMN_DEFINITIONS, type CourseRecordSortKey } from './columns'
-import { COURSE_RECORD_EMPTY_MESSAGE, COURSE_RECORD_TABLE_ARIA_LABEL } from './constants'
-import {
-  type CourseRecordSortCondition,
-  DEFAULT_COURSE_RECORD_SORT_CONDITION,
-  sortCourseRecords,
-} from './sorting'
+import { COURSE_RECORD_COPY } from './constants'
+import { type CourseRecordSortCondition, DEFAULT_COURSE_RECORD_SORT_CONDITION, sortCourseRecords } from './sorting'
 
 type Props = {
   /** 表示対象のコースレコード */
@@ -55,8 +51,8 @@ const CourseRecord: Component<Props> = (props) => {
         columns={COURSE_RECORD_COLUMN_DEFINITIONS}
         sortKey={sortCondition().key}
         sortDirection={sortCondition().direction}
-        emptyMessage={COURSE_RECORD_EMPTY_MESSAGE}
-        ariaLabel={COURSE_RECORD_TABLE_ARIA_LABEL}
+        emptyMessage={COURSE_RECORD_COPY.empty}
+        ariaLabel={COURSE_RECORD_COPY.tableAriaLabel}
         getColumnRenderer={getCourseRecordColumnRenderer}
         onSortChange={handleSortChange}
       />

@@ -1,3 +1,5 @@
+import { t } from '../../../../i18n'
+import { UNKNOWN_VALUE_LABEL } from '../../../../constants/unknownValue'
 import { Button } from '@kobalte/core/button'
 import { Star } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
@@ -39,7 +41,7 @@ type Props = {
 }
 
 const FAVORITE_SONG_LIMIT = 100
-const FAVORITE_SONG_DESCRIPTION = `お気に入りは${FAVORITE_SONG_LIMIT}曲まで登録できます。`
+const FAVORITE_SONG_DESCRIPTION = t('users.favorites.description', { limit: FAVORITE_SONG_LIMIT })
 
 /**
  * お気に入り楽曲を検索・絞り込みして編集するダイアログ。
@@ -65,7 +67,7 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
     isFilterReady: (filter) => filter.genres.length > 0 && filter.versions.length > 0,
     save: (keys) => props.onSave(keys),
     onSaved: () => props.onOpenChange(false),
-    saveErrorMessage: 'お気に入り楽曲設定の保存に失敗しました。',
+    saveErrorMessage: t('users.favorites.saveError'),
     resetDraftOnError: true,
   })
   const filterChanged = createMemo(() =>
@@ -97,7 +99,7 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
       .filter(({ song, searchableText, searchableReading }) => {
         if (model.showSelectedOnly() && !model.draftKeys().has(song.id)) return false
         if (!currentFilters.genres.includes(song.genre)) return false
-        if (!currentFilters.versions.includes(songVersionById().get(song.id) ?? '不明'))
+        if (!currentFilters.versions.includes(songVersionById().get(song.id) ?? UNKNOWN_VALUE_LABEL))
           return false
         if (!normalizedQuery) return true
         return (
@@ -109,7 +111,11 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
   })
   const selectionSummary = createMemo(
     () =>
-      `${model.selectedCount()} / ${FAVORITE_SONG_LIMIT}曲選択中・${filteredSongs().length}曲表示`
+      t('users.favorites.selectionSummary', {
+        selected: model.selectedCount(),
+        limit: FAVORITE_SONG_LIMIT,
+        shown: filteredSongs().length,
+      })
   )
 
   /**
@@ -129,8 +135,12 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
           selected()
         )}`}
         aria-pressed={selected()}
-        aria-label={`${song.title}のお気に入り設定を切り替え`}
-        title={limitReached() ? `お気に入りは${FAVORITE_SONG_LIMIT}曲までです` : undefined}
+        aria-label={t('users.favorites.toggleAriaLabel', { title: song.title })}
+        title={
+          limitReached()
+            ? t('users.favorites.limitReached', { limit: FAVORITE_SONG_LIMIT })
+            : undefined
+        }
         disabled={model.isSaving() || limitReached()}
         onClick={() => model.toggleDraftKey(song.id, FAVORITE_SONG_LIMIT)}
       >
@@ -160,9 +170,9 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
     <SongSelectionDialogBase
       open={props.open}
       onOpenChange={props.onOpenChange}
-      title="お気に入り楽曲設定"
+      title={t('users.favorites.title')}
       description={FAVORITE_SONG_DESCRIPTION}
-      searchAriaLabel="お気に入り楽曲検索"
+      searchAriaLabel={t('users.favorites.search')}
       query={model.query}
       setQuery={model.setQuery}
       filterDialogOpen={model.filterDialogOpen}

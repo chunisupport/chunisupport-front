@@ -1,3 +1,4 @@
+import { UNKNOWN_VALUE_LABEL } from '../../constants/unknownValue'
 import type { MasterItemDTO, PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
 import { type ChartLevelLabel, getChartLevelSortKey, isLowChartLevel } from '../../utils/chartLevel'
 import { compareMasterItemNames, createMasterItemOrderMap } from '../../utils/masterData'
@@ -68,7 +69,7 @@ const buildGenreSummaries = (
   const groups = new Map<string, MutableSummary>()
   const genreOrderMap = createMasterItemOrderMap(genres)
   for (const entry of entries) {
-    if (!entry.song.genre || entry.song.genre === '不明') continue
+    if (!entry.song.genre || entry.song.genre === UNKNOWN_VALUE_LABEL) continue
     addToGroup(groups, entry.song.genre, entry.record?.overpower ?? 0, entry.maxOverPower)
   }
 

@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { Button } from '@kobalte/core/button'
 import { ArrowUpDown, Columns3, Funnel } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -68,7 +69,7 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
    * @returns フィルターボタンに付与するアクセシブル名。
    */
   const filterButtonLabel = () =>
-    filterButtonTone() === 'default' ? 'フィルター' : 'フィルター適用中'
+    filterButtonTone() === 'default' ? t('common.filter') : t('common.filterActive')
 
   return (
     <div class="flex items-center mb-2">
@@ -78,8 +79,8 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
         value={props.title}
         onChange={props.onTitleChange}
         active={Boolean(props.titleActive)}
-        ariaLabel="曲名・アーティスト名検索"
-        placeholder="曲名・アーティスト名で検索"
+        ariaLabel={t('users.toolbar.search')}
+        placeholder={t('common.searchSongArtist')}
       />
       <div class="-ml-px relative shrink-0">
         <Show when={filterResetLongPress.hintVisible()}>
@@ -108,16 +109,16 @@ const FilterToolbar: Component<FilterToolbarProps> = (props) => {
       <AppIconButton
         class="ml-2 h-9.5 w-9.5"
         onClick={props.onOpenSortSettings}
-        aria-label="ソート"
-        title="ソート"
+        aria-label={t('common.sort')}
+        title={t('common.sort')}
       >
         <ArrowUpDown size={24} aria-hidden="true" />
       </AppIconButton>
       <AppIconButton
         class="ml-2 h-9.5 w-9.5"
         onClick={props.onOpenColumnSettings}
-        aria-label="列設定"
-        title="列設定"
+        aria-label={t('common.columnSettings')}
+        title={t('common.columnSettings')}
       >
         <Columns3 size={24} />
       </AppIconButton>

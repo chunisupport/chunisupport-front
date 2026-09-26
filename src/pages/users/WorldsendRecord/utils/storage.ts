@@ -1,3 +1,4 @@
+import { t } from '../../../../i18n'
 import {
   createRecordFilter,
   deleteRecordFilter,
@@ -15,8 +16,8 @@ export const SAVED_WORLDSEND_FILTER_SCHEMA_VERSION = 4
 const LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION = 2
 const LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION_3 = 3
 const WORLDSEND_RECORD_FILTER_TYPE = 'worldsend'
-const INVALID_SCHEMA_MESSAGE = '古い形式のため無効です。'
-const INVALID_FILTER_MESSAGE = '保存値が壊れているため無効です。'
+const INVALID_SCHEMA_MESSAGE = t('users.record.invalidSchema')
+const INVALID_FILTER_MESSAGE = t('users.record.invalidFilter')
 
 export type SavedWorldsendFilter = SavedRecordFilterItem<WorldsendFilterState>
 

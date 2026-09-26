@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { Collapsible } from '@kobalte/core/collapsible'
 import { Link2, ShieldCheck, Trophy } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -16,6 +17,20 @@ import {
   rankOrder,
   UNPLAYED_DISTRIBUTION_KEY,
 } from '../utils/recordStats'
+
+/** 分布の集計キーのうち、表示時に翻訳するキー */
+const DISTRIBUTION_LABELS: Readonly<Record<string, () => string>> = {
+  [UNPLAYED_DISTRIBUTION_KEY]: () => t('users.filterStats.unplayed'),
+  なし: () => t('common.none'),
+}
+
+/**
+ * 分布の集計キーを表示用ラベルへ変換する。
+ *
+ * @param key - 分布の集計キー。
+ * @returns 表示用ラベル。
+ */
+const formatDistributionLabel = (key: string): string => DISTRIBUTION_LABELS[key]?.() ?? key
 
 type FilterStatsProps = {
   stats: RecordStats
@@ -108,7 +123,7 @@ const DistributionRow: Component<{
       <span class={`${props.colorClass} h-2.5 w-2.5 shrink-0 rounded-full`} aria-hidden="true" />
       <span class="truncate">{props.label}</span>
     </div>
-    <span class="whitespace-nowrap text-right tabular-nums">{formatInteger(props.count)}件</span>
+    <span class="whitespace-nowrap text-right tabular-nums">{t('users.filterStats.count', { count: formatInteger(props.count) })}</span>
     <span class="whitespace-nowrap text-right tabular-nums text-text-muted">
       {formatTruncatedFixed(props.percent, 1)}%
     </span>
@@ -139,7 +154,7 @@ const DistributionSection: Component<DistributionSectionConfig> = (props) => (
           key,
           percent: props.dist[key].percent,
           colorClass: props.colorMap[key],
-          title: key,
+          title: formatDistributionLabel(key),
           transparent: props.emptyBarKeys?.includes(key),
         }))}
       />
@@ -147,7 +162,7 @@ const DistributionSection: Component<DistributionSectionConfig> = (props) => (
         <For each={getVisibleDistributionKeys(props.dist, props.order)}>
           {(key) => (
             <DistributionRow
-              label={key}
+              label={formatDistributionLabel(key)}
               count={props.dist[key].count}
               percent={props.dist[key].percent}
               colorClass={props.colorMap[key]}
@@ -174,8 +189,10 @@ const FilterStats: Component<FilterStatsProps> = (props) => (
   >
     <AppDisclosureTrigger
       class="gap-1.5"
-      label="フィルター統計"
-      summary={`平均スコア: ${props.stats.scoreStats.avg.toLocaleString()}`}
+      label={t('users.filterStats.label')}
+      summary={t('users.filterStats.average', {
+        score: props.stats.scoreStats.avg.toLocaleString(),
+      })}
     />
 
     <Collapsible.Content>

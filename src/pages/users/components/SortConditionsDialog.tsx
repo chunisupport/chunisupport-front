@@ -1,3 +1,4 @@
+import { formatMessage, localizedCopy, t } from '../../../i18n'
 import { Dialog } from '@kobalte/core/dialog'
 import { createEffect, createMemo, createSignal, For } from 'solid-js'
 import { AppButton, getAppButtonClass } from '../../../components/common/AppButton'
@@ -6,6 +7,9 @@ import { AppTabContent, SegmentedTabs } from '../../../components/common/AppTabs
 import FilterResetDialog from '../../../components/common/FilterResetDialog'
 import type { SortCondition } from '../../../utils/sortConditions'
 import type { SortDirection } from '../../../utils/sortingQuery'
+
+/** ソートダイアログの表示文言 */
+const SORT_TEXT = localizedCopy('users.sort')
 
 export type { SortCondition } from '../../../utils/sortConditions'
 
@@ -35,16 +39,16 @@ type SortConditionsDialogProps<TSortKey extends string> = {
 
 /** ソート方向の選択肢 */
 const SORT_DIRECTION_OPTIONS: SortDirectionOption[] = [
-  { value: 'desc', label: '降順' },
-  { value: 'asc', label: '昇順' },
+  { value: 'desc', label: t('common.desc') },
+  { value: 'asc', label: t('common.asc') },
 ]
 
 /** 詳細ソート行の番号バッジ表示クラス */
 const SORT_CONDITION_BADGE_CLASS =
   'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-sm font-bold text-text-muted'
 const SORT_VIEW_TAB_OPTIONS = [
-  { value: 'standard', label: '通常' },
-  { value: 'detail', label: '詳細' },
+  { value: 'standard', label: SORT_TEXT.standard },
+  { value: 'detail', label: SORT_TEXT.detail },
 ] as const
 
 /**
@@ -54,7 +58,7 @@ const SORT_VIEW_TAB_OPTIONS = [
  * @returns 方向の表示名。
  */
 const getSortDirectionLabel = (direction: SortDirection): string =>
-  direction === 'asc' ? '昇順' : '降順'
+  direction === 'asc' ? t('common.asc') : t('common.desc')
 
 /**
  * ソート方向に対応する選択肢を取得する。
@@ -215,7 +219,7 @@ export function SortConditionsDialog<TSortKey extends string>(
             onChange={(option: SortConditionColumnOption<TSortKey> | null) => {
               if (option) updateDraftSortKey(rowIndex, option.value)
             }}
-            label={`第${rowIndex + 1}ソート 列`}
+            label={formatMessage(SORT_TEXT.columnLabel, { index: rowIndex + 1 })}
             labelVariant="srOnly"
             formatLabel={(option) => option.label}
           />
@@ -229,7 +233,10 @@ export function SortConditionsDialog<TSortKey extends string>(
             onChange={(option: SortDirectionOption | null) => {
               if (option) updateDraftSortDirection(rowIndex, option.value)
             }}
-            label={`第${rowIndex + 1}ソート ${getSortDirectionLabel(selectedDirection())}`}
+            label={formatMessage(SORT_TEXT.directionLabel, {
+              index: rowIndex + 1,
+              direction: getSortDirectionLabel(selectedDirection()),
+            })}
             labelVariant="srOnly"
             formatLabel={(option) => option.label}
           />
@@ -244,10 +251,10 @@ export function SortConditionsDialog<TSortKey extends string>(
         <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
         <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[80dvh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
           <div class="mb-4 flex shrink-0 items-center justify-between">
-            <Dialog.Title class="text-lg font-bold">ソート</Dialog.Title>
+            <Dialog.Title class="text-lg font-bold">{t('common.sort')}</Dialog.Title>
             <FilterResetDialog
-              triggerLabel="ソートをリセット"
-              title="ソートをリセットしますか？"
+              triggerLabel={SORT_TEXT.reset}
+              title={SORT_TEXT.resetTitle}
               onReset={resetSortConditions}
             />
           </div>
@@ -270,10 +277,10 @@ export function SortConditionsDialog<TSortKey extends string>(
 
           <div class="mt-6 flex shrink-0 justify-end gap-2">
             <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
-              閉じる
+              {t('common.close')}
             </Dialog.CloseButton>
             <AppButton variant="primary" onClick={applySortConditions}>
-              適用
+              {t('common.apply')}
             </AppButton>
           </div>
         </Dialog.Content>

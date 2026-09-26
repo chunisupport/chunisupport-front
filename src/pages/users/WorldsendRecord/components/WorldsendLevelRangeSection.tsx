@@ -1,9 +1,10 @@
+import { t } from '../../../../i18n'
 import type { Component } from 'solid-js'
 import { RANGE_INPUT_COPY, SelectRangeInput } from '../../../../components/common/RangeInput'
 import { WORLDSEND_LEVEL_STAR_OPTIONS } from '../../../../constants/chart'
 import { formatWorldsendLevelStar } from '../utils/filterDialog'
 
-const WORLDSEND_LEVEL_RANGE_TITLE = 'レベル'
+const WORLDSEND_LEVEL_RANGE_TITLE = t('users.filter.level')
 
 type WorldsendLevelRangeSectionProps = {
   minValue: number
@@ -22,7 +23,7 @@ const WorldsendLevelRangeSection: Component<WorldsendLevelRangeSectionProps> = (
     <SelectRangeInput<number>
       title={WORLDSEND_LEVEL_RANGE_TITLE}
       options={WORLDSEND_LEVEL_STAR_OPTIONS}
-      placeholder="選択…"
+      placeholder={t('common.selectPlaceholder')}
       formatLabel={formatWorldsendLevelStar}
       start={{
         value: props.minValue,

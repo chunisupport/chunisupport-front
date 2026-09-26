@@ -1,3 +1,4 @@
+import { localizedCopy } from '../../../i18n'
 import { useLocation, useNavigate } from '@solidjs/router'
 import { ImageOff } from 'lucide-solid'
 import type { Accessor, Component, Resource } from 'solid-js'
@@ -38,6 +39,9 @@ import type {
   UserPageRecordProfile,
 } from './UserPage'
 
+/** ユーザープロフィール画面の表示文言 */
+const USER_PROFILE_COPY = localizedCopy('users.profile')
+
 const UserRecord = lazy(() => import('../UserRecord'))
 const UserOverPower = lazy(() => import('../UserOverPower/UserOverPower'))
 const WorldsendRecord = lazy(() => import('../WorldsendRecord'))
@@ -52,19 +56,19 @@ type Props = {
   username: string
 }
 
-const BEST_CANDIDATE_HEADING = 'ベスト枠候補'
-const NEW_CANDIDATE_HEADING = '新曲枠候補'
-const JACKET_VISIBILITY_LABEL = 'ジャケット画像を非表示'
-const HIDE_JACKETS_LABEL = 'ジャケット画像を非表示'
-const SHOW_JACKETS_LABEL = 'ジャケット画像を表示'
+const BEST_CANDIDATE_HEADING = USER_PROFILE_COPY.bestCandidates
+const NEW_CANDIDATE_HEADING = USER_PROFILE_COPY.newCandidates
+const JACKET_VISIBILITY_LABEL = USER_PROFILE_COPY.hideJackets
+const HIDE_JACKETS_LABEL = USER_PROFILE_COPY.hideJackets
+const SHOW_JACKETS_LABEL = USER_PROFILE_COPY.showJackets
 const PAGE_TAB_OPTIONS = [
-  { value: 'rating', label: 'レーティング' },
-  { value: 'records', label: 'レコード' },
+  { value: 'rating', label: USER_PROFILE_COPY.ratingTab },
+  { value: 'records', label: USER_PROFILE_COPY.recordsTab },
   { value: 'overpower', label: 'OVER POWER' },
 ] as const
 const RATING_TAB_OPTIONS = [
-  { value: 'best', label: 'ベスト枠' },
-  { value: 'new', label: '新曲枠' },
+  { value: 'best', label: USER_PROFILE_COPY.best },
+  { value: 'new', label: USER_PROFILE_COPY.new },
 ] as const
 const RECORD_TAB_OPTIONS = [
   { value: 'standard', label: 'STANDARD' },

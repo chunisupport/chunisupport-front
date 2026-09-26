@@ -130,7 +130,17 @@
     "version": "バージョン",
     "selectVersion": "バージョンを選択",
     "notRegistered": "未登録",
-    "unknown": "不明"
+    "unknown": "不明",
+    "close": "閉じる",
+    "apply": "適用",
+    "save": "保存",
+    "sort": "ソート",
+    "columnSettings": "列設定",
+    "filter": "フィルター",
+    "filterActive": "フィルター適用中",
+    "searchSongArtist": "曲名・アーティスト名で検索",
+    "asc": "昇順",
+    "desc": "降順"
   },
   "errors": {
     "unexpected": "予期せぬエラーが発生しました。時間をおいて再度お試しください。",
@@ -777,6 +787,279 @@
       "pageTitle": "楽曲詳細",
       "worldsendSong": "WORLD'S END楽曲",
       "worldsendPageTitle": "WORLD'S END楽曲詳細"
+    }
+  },
+  "users": {
+    "overPower": {
+      "playStatusFilter": {
+        "label": "プレイ状況",
+        "suffix": "のみ表示",
+        "ariaLabel": "プレイ状況フィルターを有効にする"
+      },
+      "opComparison": {
+        "disclosureLabel": "公式値との照合",
+        "official": "公式値",
+        "calculated": "計算値",
+        "kind": "種別",
+        "overPower": "OP",
+        "overPowerPercent": "OP%",
+        "matched": "一致",
+        "mismatched": "差異あり",
+        "missingValue": "-",
+        "guidance": {
+          "overPowerHigher": "プレイ済みの未解禁楽曲があります",
+          "overPowerLower": "プレイ済み・解禁済みの楽曲を未解禁に指定しています",
+          "overPowerPercentHigher": "解禁済み楽曲を未解禁設定しています",
+          "overPowerPercentLower": "未設定の未解禁曲があります"
+        }
+      },
+      "controls": {
+        "aggregationTarget": "集計対象",
+        "lockedSongs": "未解禁曲",
+        "lockedSongsSettings": "未解禁楽曲設定",
+        "songCount": "曲数",
+        "chartCount": "譜面数",
+        "graph": "グラフ",
+        "table": "テーブル"
+      },
+      "page": {
+        "lockedSongExclusion": "未解禁曲除外",
+        "recordNavigationError": "レコードの表示に失敗しました。",
+        "switchView": "{{ mode }}表示に切り替え",
+        "noData": "表示できるデータがありません。",
+        "showRecordsSuffix": "のレコードを表示",
+        "item": "項目",
+        "current": "現在値",
+        "theoretical": "理論値",
+        "achievement": "達成率",
+        "collapse": "{{ label }}を折りたたむ",
+        "expand": "{{ label }}を展開",
+        "lockedDescription": "チェックした曲・譜面はOVER POWER計算対象から除外されます。",
+        "lockedSaveError": "未解禁楽曲設定の保存に失敗しました。",
+        "normalChart": "通常 譜面",
+        "lockedSelectionSummary": "{{ selected }}件選択中 / {{ shown }}件表示",
+        "normal": "通常",
+        "lockedToggleAriaLabel": "{{ title }} {{ chart }}の未解禁設定を切り替え",
+        "lockedSearch": "未解禁楽曲検索"
+      },
+      "summaryOptions": {
+        "genres": "ジャンル",
+        "levels": "レベル",
+        "versions": "バージョン"
+      },
+      "aggregationTargets": {
+        "opTarget": "OVER POWER対象",
+        "all": "全難易度"
+      },
+      "playStatuses": {
+        "unplayed": "未プレイ",
+        "played": "プレイ済み"
+      }
+    },
+    "profile": {
+      "bestCandidates": "ベスト枠候補",
+      "newCandidates": "新曲枠候補",
+      "hideJackets": "ジャケット画像を非表示",
+      "showJackets": "ジャケット画像を表示",
+      "ratingTab": "レーティング",
+      "recordsTab": "レコード",
+      "best": "ベスト枠",
+      "new": "新曲枠"
+    },
+    "ratingImage": {
+      "openPreview": "画像化",
+      "preparingPreview": "プレビューを準備中",
+      "dialogTitle": "プレビュー",
+      "dialogDescription": "長押しまたは右クリックで画像を保存できます。",
+      "versionLabel": "デザインバージョン",
+      "v2OptionsLegend": "表示設定",
+      "showLatestUpdateBadgeLabel": "ラベルを表示",
+      "applyPossessionLabel": "ポゼッションを反映",
+      "hidePlayerLevelLabel": "プレイヤーレベルを非表示",
+      "previewAlt": "ベスト枠と新曲枠の画像プレビュー",
+      "previewError": "プレビューの作成に失敗しました。",
+      "retryPreview": "再試行",
+      "bestHeading": "ベスト枠",
+      "newHeading": "新曲枠",
+      "emptyHonorSlot": "空き称号枠",
+      "jacketCopyright": "楽曲ジャケット画像の著作権は、すべて著作権保持者に帰属します。",
+      "unofficialDisclaimer": "この画像は非公式ツールによるものであり、株式会社セガ及びその関連会社とは一切関係ありません。",
+      "close": "閉じる",
+      "shareError": "共有に失敗しました。",
+      "share": "共有",
+      "emptySlot": "{{ slot }}番は空き枠"
+    },
+    "friendAction": {
+      "requestTitle": "フレンド申請を送信しますか？",
+      "cancelTitle": "フレンド申請を取り消しますか？",
+      "removeTitle": "フレンドを解除しますか？",
+      "acceptTitle": "フレンド申請を承認しますか？",
+      "rejectTitle": "フレンド申請を拒否しますか？",
+      "requestSuccess": "フレンド申請を送信しました。",
+      "cancelSuccess": "フレンド申請を取り消しました。",
+      "removeSuccess": "フレンドを解除しました。",
+      "acceptSuccess": "フレンド申請を承認しました。",
+      "rejectSuccess": "フレンド申請を拒否しました。",
+      "request": "フレンド申請",
+      "pending": "申請中",
+      "cancelConfirm": "申請取り消し",
+      "requestConfirm": "申請",
+      "removing": "解除中",
+      "remove": "解除",
+      "accepting": "承認中",
+      "accept": "承認",
+      "rejecting": "拒否中",
+      "reject": "拒否",
+      "cancel": "キャンセル",
+      "retry": "再読み込み",
+      "loadingLabel": "フレンド状態を読み込んでいます",
+      "failure": "操作に失敗しました。",
+      "sending": "送信中",
+      "cancelling": "取り消し中"
+    },
+    "nameplate": {
+      "historyLink": "履歴",
+      "historyLinkAriaLabel": "レーティング・OVER POWER履歴を見る",
+      "unknownConstHint": "定数未判明の譜面を計算に使用しています",
+      "honorRotate": "称号をローテーション表示に戻す",
+      "honorVertical": "称号を縦に表示する"
+    },
+    "record": {
+      "shownCount": "全 {{ total }} 件中 {{ shown }} 件を表示",
+      "noData": "データがありません",
+      "favoritesNotLoaded": "お気に入り楽曲の読み込みが完了していません。",
+      "invalidSchema": "古い形式のため無効です。",
+      "invalidFilter": "保存値が壊れているため無効です。",
+      "worldsendEmpty": "WORLD'S END のレコードはありません。",
+      "tableAriaLabel": "レコード一覧"
+    },
+    "favorites": {
+      "description": "お気に入りは{{ limit }}曲まで登録できます。",
+      "saveError": "お気に入り楽曲設定の保存に失敗しました。",
+      "selectionSummary": "{{ selected }} / {{ limit }}曲選択中・{{ shown }}曲表示",
+      "toggleAriaLabel": "{{ title }}のお気に入り設定を切り替え",
+      "limitReached": "お気に入りは{{ limit }}曲までです",
+      "title": "お気に入り楽曲設定",
+      "search": "お気に入り楽曲検索"
+    },
+    "filter": {
+      "title": "フィルター",
+      "apply": "適用",
+      "active": "フィルター適用中",
+      "filterName": "フィルター名",
+      "comboLamp": "コンボランプ",
+      "hardLamp": "ハードランプ",
+      "attribute": "属性",
+      "fixedLastSort": "曲名（昇順）で固定",
+      "difficulty": "難易度",
+      "opTargetType": "OP対象の種別",
+      "currentOpTarget": "現在のOP対象",
+      "theoreticalOpTarget": "OP理論値対象",
+      "opTargetOnlySuffix": "の譜面のみ表示",
+      "opTargetSrPrefix": "OP対象",
+      "favoritesOnly": "お気に入り楽曲のみ表示",
+      "favoritesSettings": "お気に入り楽曲設定",
+      "lastUpdated": "最終更新日",
+      "selectTitle": "{{ title }}を選択",
+      "score": "スコア",
+      "scoreRank": "スコアランク",
+      "useNumber": "数値で指定",
+      "excludeUnplayed": "未プレイ譜面を除外",
+      "level": "レベル",
+      "zeroScore": "0点"
+    },
+    "courseRecord": {
+      "title": "タイトル",
+      "courseClass": "クラス",
+      "clear": "クリア",
+      "empty": "コースレコードはありません。",
+      "tableAriaLabel": "コースモード（クラス認定）のレコード一覧"
+    },
+    "rangeFilters": {
+      "justiceMin": "JUSTICE数 ここから",
+      "justiceMax": "JUSTICE数 ここまで",
+      "justice": "JUSTICE数",
+      "overPowerMin": "OVER POWER ここから",
+      "overPowerMax": "OVER POWER ここまで",
+      "singleRatingMin": "単曲レート ここから",
+      "singleRatingMax": "単曲レート ここまで",
+      "singleRating": "単曲レート"
+    },
+    "columns": {
+      "title": "曲名",
+      "difficulty": "難易度",
+      "const": "定数",
+      "score": "スコア",
+      "rating": "レート",
+      "hardLamp": "ハード",
+      "justiceCount": "J数",
+      "updatedAt": "更新日",
+      "attribute": "属性",
+      "level": "レベル"
+    },
+    "sort": {
+      "standard": "通常",
+      "detail": "詳細",
+      "resetTitle": "ソートをリセットしますか？",
+      "reset": "ソートをリセット",
+      "columnLabel": "第{{ index }}ソート 列",
+      "directionLabel": "第{{ index }}ソート {{ direction }}"
+    },
+    "columnSettings": {
+      "description": "表示する列を選択してください（1列以上必須）",
+      "placeholder": "表示列を選択"
+    },
+    "filterStats": {
+      "label": "フィルター統計",
+      "average": "平均スコア: {{ score }}",
+      "count": "{{ count }}件",
+      "unplayed": "未プレイ"
+    },
+    "toolbar": {
+      "search": "曲名・アーティスト名検索"
+    },
+    "savedFilters": {
+      "openList": "呼出",
+      "saveNameTitle": "フィルター名",
+      "listTitle": "保存済みフィルター",
+      "empty": "保存された条件はありません",
+      "apply": "呼出",
+      "edit": "編集",
+      "save": "保存",
+      "delete": "フィルターを削除",
+      "deleteTitle": "フィルターを削除しますか？",
+      "deleteDescription": "削除した保存済みフィルターは元に戻せません。",
+      "cancel": "キャンセル",
+      "close": "戻る",
+      "login": "ログイン",
+      "loadingLabel": "保存済みフィルターを取得中",
+      "loadError": "保存済みフィルターの取得に失敗しました。",
+      "saveError": "フィルターの保存に失敗しました。",
+      "updateError": "フィルターの更新に失敗しました。",
+      "deleteError": "フィルターの削除に失敗しました。",
+      "payloadTooLarge": "フィルター条件が大きすぎるため保存できません。"
+    },
+    "songSelection": {
+      "selectedOnly": "選択済み楽曲のみ表示",
+      "empty": "該当する曲がありません",
+      "searchPlaceholder": "曲名・アーティストで検索..."
+    },
+    "metricHistory": {
+      "pageTitle": "レーティング・OVER POWER履歴",
+      "documentTitle": "レーティング・OVER POWER履歴",
+      "backToProfile": "プロフィールへ戻る",
+      "emptyHistory": "履歴がありません",
+      "tableTitle": "履歴一覧",
+      "tableCaption": "公式RATING・公式OVER POWER・公式OP%の履歴",
+      "collectedAt": "取得日時",
+      "rating": "RATING",
+      "overPower": "OVER POWER",
+      "overPowerPercent": "OP%",
+      "missingValue": "-",
+      "ratingChartAriaLabel": "公式RATING履歴の折れ線グラフ",
+      "overPowerChartAriaLabel": "公式OVER POWER履歴の折れ線グラフ",
+      "overPowerPercentChartAriaLabel": "公式OP%履歴の折れ線グラフ",
+      "userDocumentTitle": "{{ username }}さんの{{ title }}"
     }
   }
 }

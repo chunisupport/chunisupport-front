@@ -9,7 +9,7 @@ import {
   SCORE_RANK_BAR_CLASS,
 } from '../../../../components/common/record/recordStyleClasses'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
-import { OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES } from '../constants'
+import { OVER_POWER_COPY, OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES } from '../constants'
 import type {
   OverPowerBandCount,
   OverPowerComboBand,
@@ -114,7 +114,7 @@ export const OverPowerSummaryGraph: Component<Props> = (props) => (
       when={props.rows.length > 0}
       fallback={
         <p class="rounded-lg border border-border bg-surface px-3 py-4 text-sm text-text-subtle">
-          表示できるデータがありません。
+          {OVER_POWER_COPY.noData}
         </p>
       }
     >
@@ -133,7 +133,7 @@ export const OverPowerSummaryGraph: Component<Props> = (props) => (
                 >
                   <span>{row.summary.label}</span>
                   <Funnel class="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span class="sr-only">のレコードを表示</span>
+                  <span class="sr-only">{OVER_POWER_COPY.showRecordsSuffix}</span>
                 </Button>
               </h3>
               <p class="mt-2 text-lg font-bold tabular-nums text-text">

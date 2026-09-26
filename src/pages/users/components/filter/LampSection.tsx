@@ -1,3 +1,4 @@
+import { t } from '../../../../i18n'
 import { For } from 'solid-js'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
 
@@ -36,7 +37,7 @@ const LampSection = <TLamp extends LampValue = LampValue>(props: LampSectionProp
               }}
               class="flex items-center gap-2"
               textVariant="large"
-              label={props.formatLabel ? props.formatLabel(lamp) : (lamp ?? 'なし')}
+              label={props.formatLabel ? props.formatLabel(lamp) : (lamp ?? t('common.none'))}
             />
           )
         }}

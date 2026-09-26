@@ -1,3 +1,4 @@
+import { localizedCopy, t } from '../../../i18n'
 import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import { CircleSlash2, Funnel, ListChecks, LoaderCircle } from 'lucide-solid'
@@ -17,6 +18,9 @@ import {
   SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS,
   SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS,
 } from './songSelectionDialog'
+
+/** 楽曲選択ダイアログの表示文言 */
+const SONG_SELECTION_TEXT = localizedCopy('users.songSelection')
 
 /** 共通楽曲選択ダイアログへ渡す表示状態と画面固有の描画処理 */
 type SongSelectionDialogBaseProps<TItem, TFilter> = {
@@ -56,11 +60,11 @@ type SongSelectionDialogBaseProps<TItem, TFilter> = {
   onSave: () => Promise<void>
 }
 
-const FILTER_LABEL = 'フィルター'
-const FILTER_ACTIVE_LABEL = 'フィルター適用中'
-const FILTER_RESET_LABEL = 'リセット'
-const SELECTED_ONLY_LABEL = '選択済み楽曲のみ表示'
-const EMPTY_MESSAGE = '該当する曲がありません'
+const FILTER_LABEL = t('common.filter')
+const FILTER_ACTIVE_LABEL = t('common.filterActive')
+const FILTER_RESET_LABEL = t('common.reset')
+const SELECTED_ONLY_LABEL = SONG_SELECTION_TEXT.selectedOnly
+const EMPTY_MESSAGE = SONG_SELECTION_TEXT.empty
 
 /**
  * 楽曲選択画面で共通する全画面Dialog、検索、フィルター、一覧、保存操作を描画する。
@@ -95,7 +99,7 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
               active={props.query().trim().length > 0}
               onChange={props.setQuery}
               ariaLabel={props.searchAriaLabel}
-              placeholder="曲名・アーティストで検索..."
+              placeholder={SONG_SELECTION_TEXT.searchPlaceholder}
             />
             <Button
               type="button"
@@ -141,7 +145,7 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
                 <div
                   class="flex h-full min-h-32 items-center justify-center"
                   role="status"
-                  aria-label="読み込み中"
+                  aria-label={t('common.loading')}
                   aria-live="polite"
                   aria-busy="true"
                 >
@@ -202,11 +206,11 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
                   <div class="flex gap-2">
                     <Show when={props.showFilterCloseButton}>
                       <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
-                        閉じる
+                        {t('common.close')}
                       </Dialog.CloseButton>
                     </Show>
                     <Dialog.CloseButton class={getAppButtonClass({ variant: 'primary' })}>
-                      適用
+                      {t('common.apply')}
                     </Dialog.CloseButton>
                   </div>
                 </div>
@@ -220,7 +224,7 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
               onClick={() => props.onOpenChange(false)}
               disabled={props.isSaving()}
             >
-              キャンセル
+              {t('common.cancel')}
             </AppButton>
             <AppButton
               variant="primary"
@@ -231,7 +235,7 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
               <Show when={props.isSaving()}>
                 <LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />
               </Show>
-              保存
+              {t('common.save')}
             </AppButton>
           </div>
         </Dialog.Content>
