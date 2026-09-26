@@ -130,6 +130,7 @@ const createCopyView = (path: string): object => {
 /**
  * 辞書パス配下の文言をオブジェクトとして参照する。
  * 返り値のプロパティは参照するたびに現在の表示言語の文言を返す。
+ * 返り値は Proxy のため、オブジェクト自体を文字列化せず、必ずプロパティを参照すること。
  *
  * @example
  * const COPY = localizedCopy('settings.appearance')

@@ -7,6 +7,14 @@ export type AppLocale = (typeof APP_LOCALES)[number]
 /** 表示言語を保存するlocalStorageのキー */
 export const LOCALE_STORAGE_KEY = 'chunisupport-locale'
 
+/** 表示言語ごとの日付・数値書式用ロケール */
+const INTL_LOCALES: Record<AppLocale, string> = {
+  ja: 'ja-JP',
+  en: 'en-US',
+  'zh-TW': 'zh-TW',
+  ko: 'ko-KR',
+}
+
 /** 保存値やブラウザ設定から判定できない場合の表示言語 */
 export const DEFAULT_LOCALE: AppLocale = 'ja'
 
@@ -59,15 +67,23 @@ export const readLocalePreference = (): AppLocale => {
 /**
  * 表示言語をlocalStorageへ保存する。
  * @param locale 保存する表示言語
- * @returns なし
+ * @returns 保存できた場合は true
  */
-export const saveLocalePreference = (locale: AppLocale): void => {
+export const saveLocalePreference = (locale: AppLocale): boolean => {
   try {
     window.localStorage.setItem(LOCALE_STORAGE_KEY, locale)
+    return true
   } catch {
-    // 保存できない環境でも、現在の表示言語だけは反映できるようにする。
+    return false
   }
 }
+
+/**
+ * 表示言語に対応する日付・数値書式用のロケールを返す。
+ * @param locale 表示言語
+ * @returns Intl API に渡すロケール
+ */
+export const toIntlLocale = (locale: AppLocale): string => INTL_LOCALES[locale]
 
 /**
  * 表示言語をルート要素の lang 属性へ反映する。

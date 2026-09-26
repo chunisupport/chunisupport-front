@@ -1,4 +1,6 @@
+import { localePreference } from '../stores/localePreferences'
 import type { Announcement, AnnouncementCategory, AnnouncementFeed } from '../types/announcement'
+import { toIntlLocale } from './localePreference'
 
 const ANNOUNCEMENT_CATEGORIES = new Set<AnnouncementCategory>([
   'important',
@@ -108,13 +110,13 @@ export const parseAnnouncementFeed = (
 }
 
 /**
- * ISO日付を日本語の表示用日付へ整形する。
+ * ISO日付を表示言語の表示用日付へ整形する。
  *
  * @param publishedAt - YYYY-MM-DD形式の公開日。
- * @returns 日本時間に依存しない日本語の日付。
+ * @returns 日本時間に依存しない、表示言語の書式の日付。
  */
 export const formatAnnouncementDate = (publishedAt: string): string => {
-  return new Intl.DateTimeFormat('ja-JP', {
+  return new Intl.DateTimeFormat(toIntlLocale(localePreference()), {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

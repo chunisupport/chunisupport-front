@@ -362,7 +362,6 @@
     "opTarget": "OP対象（MAS+ULT）"
   },
   "developerApi": {
-    "menuLabel": "開発者向けAPI",
     "sectionTitle": "API・外部連携",
     "description": "ChuniSupportの楽曲情報やプレイデータを、Discord BotやWebアプリなどから利用できます。",
     "documentationLink": "APIドキュメントを見る"
@@ -469,7 +468,6 @@
         "milestoneTitle": "次のマイルストーン",
         "candidateTitle": "狙い目の譜面",
         "candidateEmpty": "現在の条件に候補譜面はありません",
-        "totalCharts": "全譜面",
         "totalHighScore": "トータルハイスコア",
         "averageScore": "平均スコア",
         "sss": "SSS",
@@ -800,7 +798,6 @@
       "checkInput": "入力値を確認してください。",
       "result": "計算結果",
       "songTitle": "曲名",
-      "playersCount": "{{ count }}人",
       "metricPlayers": "{{ label }} {{ count }}人",
       "metricTitle": "{{ count }}人 / {{ percent }}",
       "metricAriaLabel": "{{ label }}: {{ count }}人 / {{ total }}人、{{ percent }}",
@@ -1728,8 +1725,6 @@
       "overPowerLabel": "OVER POWER",
       "privateAccountLabel": "非公開アカウント",
       "playerNotLinked": "未連携",
-      "rejectConfirm": "このフレンド申請を拒否しますか？",
-      "removeConfirm": "このフレンドを解除しますか？",
       "confirmCancel": "キャンセル",
       "confirmRejectTitle": "申請を拒否しますか？",
       "confirmRemoveTitle": "フレンドを解除しますか？",

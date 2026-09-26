@@ -39,7 +39,7 @@
     "operation_failed": "操作失敗",
     "player_not_linked": "尚未連結玩家資料",
     "player_not_found": "找不到玩家",
-    "player_metric_history_not_found": "找不到 RATING・OVER POWER・OP% 歷史紀錄",
+    "player_metric_history_not_found": "找不到 RATING、OVER POWER、OP% 歷史紀錄",
     "data_transfer_player_not_found": "沒有可匯出的玩家資料",
     "data_transfer_invalid_file": "無法讀取所選的移轉檔案",
     "data_transfer_invalid_signature": "無法確認移轉檔案的簽章",
@@ -138,7 +138,7 @@
     "columnSettings": "欄位設定",
     "filter": "篩選",
     "filterActive": "已套用篩選",
-    "searchSongArtist": "以曲名・藝人搜尋",
+    "searchSongArtist": "以曲名、藝人搜尋",
     "asc": "升序",
     "desc": "降序",
     "backToTop": "返回首頁",
@@ -229,7 +229,7 @@
     "hintSuffix": "即可重設篩選與排序。",
     "trigger": "重設篩選",
     "title": "要重設篩選嗎？",
-    "holding": "重設篩選・排序"
+    "holding": "重設篩選、排序"
   },
   "recordLamps": {
     "accessibleLabel": "HARD 燈 {{ clear }}、連擊燈 {{ combo }}、FULL CHAIN {{ chain }}"
@@ -261,8 +261,8 @@
     "empty": "沒有已儲存的更新差異。",
     "changedSongsEmpty": "沒有更新的樂曲。",
     "history": "更新紀錄",
-    "newest": "最新・",
-    "previousLabel": "{{ count }} 次前・"
+    "newest": "最新、",
+    "previousLabel": "{{ count }} 次前、"
   },
   "maintenance": {
     "recheckButton": "重新確認狀態",
@@ -362,8 +362,7 @@
     "opTarget": "OP 對象（MAS+ULT）"
   },
   "developerApi": {
-    "menuLabel": "開發者 API",
-    "sectionTitle": "API・外部連動",
+    "sectionTitle": "API、外部連動",
     "description": "可從 Discord Bot 或網頁應用程式等使用 ChuniSupport 的樂曲資訊與遊玩資料。",
     "documentationLink": "查看 API 文件"
   },
@@ -381,7 +380,7 @@
     "links": {
       "chartStats": {
         "title": "紀錄統計",
-        "description": "從所有玩家的紀錄，確認各譜面的等級・連擊・通關狀況。"
+        "description": "從所有玩家的紀錄，確認各譜面的等級、連擊、通關狀況。"
       },
       "dashboard": {
         "title": "儀表板",
@@ -401,7 +400,7 @@
       },
       "weakChartInspector": {
         "title": "苦手譜面檢查器",
-        "description": "依譜面定數比較已遊玩的譜面，推測擅長・不擅長的譜面。"
+        "description": "依譜面定數比較已遊玩的譜面，推測擅長、不擅長的譜面。"
       },
       "onlineWeakChartInspector": {
         "title": "苦手譜面檢查器 Online",
@@ -417,14 +416,14 @@
       },
       "allSongBestFrame": {
         "title": "全曲最佳框",
-        "description": "從全曲・全譜面計算單曲 Rating 前 30 首・前 50 首。"
+        "description": "從全曲、全譜面計算單曲 Rating 前 30 首、前 50 首。"
       },
       "lockedSongDiscovery": {
         "title": "未解鎖樂曲探索",
         "description": "比對各分類的機台 OVER POWER，縮小未解鎖樂曲所在的範圍。"
       },
       "ratingTheoreticalChecker": {
-        "title": "最佳框・新曲框理論值檢查器",
+        "title": "最佳框、新曲框理論值檢查器",
         "description": "確認全譜面 SSS+ 時的理論值 Rating。"
       }
     },
@@ -469,7 +468,6 @@
         "milestoneTitle": "下一個里程碑",
         "candidateTitle": "推薦挑戰的譜面",
         "candidateEmpty": "目前條件下沒有候補譜面",
-        "totalCharts": "全譜面",
         "totalHighScore": "總最高分數",
         "averageScore": "平均分數",
         "sss": "SSS",
@@ -597,7 +595,7 @@
     },
     "lockedSongDiscovery": {
       "lockedSongDiscoveryCopy": {
-        "inputGuide": "只輸入與機台不同的分類（OP・OP% 可擇一）",
+        "inputGuide": "只輸入與機台不同的分類（OP、OP% 可擇一）",
         "dataLoading": "正在載入比對用資料",
         "calculated": "ChuniSupport 計算值",
         "categoryColumn": "分類",
@@ -665,8 +663,8 @@
         "ownScore": "分數",
         "averageScore": "平均",
         "difference": "分差",
-        "settingsTitle": "顯示・統計範圍",
-        "settingsOpen": "開啟顯示・統計範圍",
+        "settingsTitle": "顯示、統計範圍",
+        "settingsOpen": "開啟顯示、統計範圍",
         "displayScoreRange": "顯示分數範圍",
         "filterUnselected": "未選擇",
         "chartConstRange": "譜面定數",
@@ -783,7 +781,7 @@
     "borderCalculator": {
       "borderCalculatorCopy": {
         "songSearchLabel": "曲名",
-        "songSearchPlaceholder": "以曲名・藝人搜尋",
+        "songSearchPlaceholder": "以曲名、藝人搜尋",
         "songCandidatesLabel": "搜尋候補",
         "difficultyLabel": "難度",
         "notesLabel": "音符數",
@@ -800,7 +798,6 @@
       "checkInput": "請確認輸入值。",
       "result": "計算結果",
       "songTitle": "曲名",
-      "playersCount": "{{ count }} 人",
       "metricPlayers": "{{ label }} {{ count }} 人",
       "metricTitle": "{{ count }} 人 / {{ percent }}",
       "metricAriaLabel": "{{ label }}：{{ count }} 人 / {{ total }} 人，{{ percent }}",
@@ -902,7 +899,7 @@
       "unused": "未使用",
       "permissions": {
         "read": "讀取",
-        "read_write": "讀取・寫入"
+        "read_write": "讀取、寫入"
       },
       "permissionDescriptions": {
         "read": "僅可使用查詢類 API。",
@@ -925,7 +922,7 @@
       "fileLabel": "移轉檔案",
       "dropzone": "拖放 JSON 檔案",
       "chooseFile": "選擇檔案",
-      "fileDescription": "JSON 格式・最大 32 MiB",
+      "fileDescription": "JSON 格式、最大 32 MiB",
       "invalidFile": "請選擇 1 個 JSON 格式的移轉檔案。",
       "fileTooLarge": "移轉檔案請小於 32 MiB。",
       "validateButton": "確認內容",
@@ -947,7 +944,7 @@
         "record_histories": "一般分數紀錄",
         "worldsend_records": "WORLD'S END 紀錄",
         "worldsend_record_histories": "WORLD'S END 歷史",
-        "metric_histories": "RATING・OP 歷史",
+        "metric_histories": "RATING、OP 歷史",
         "course_records": "課程紀錄",
         "honors": "稱號",
         "favorite_songs": "最愛樂曲",
@@ -995,7 +992,7 @@
     "sections": {
       "appearance": "外觀",
       "profile": "個人資料",
-      "api": "API・外部連動",
+      "api": "API、外部連動",
       "data": "資料管理",
       "account": "帳號"
     }
@@ -1135,7 +1132,7 @@
       "count": "{{ count }} 首"
     },
     "stats": {
-      "averageMedian": "平均・中位數",
+      "averageMedian": "平均、中位數",
       "averageScore": "平均分數",
       "medianScore": "中位數分數",
       "averageChartAriaLabel": "依 Rating 區間的平均分數與中位數分數折線圖",
@@ -1161,7 +1158,7 @@
     },
     "search": {
       "label": "搜尋樂曲",
-      "placeholder": "以曲名・藝人搜尋"
+      "placeholder": "以曲名、藝人搜尋"
     },
     "viewToggle": {
       "label": "切換樂曲列表"
@@ -1218,7 +1215,7 @@
         "achievement": "達成率",
         "collapse": "收合{{ label }}",
         "expand": "展開{{ label }}",
-        "lockedDescription": "勾選的樂曲・譜面將從 OVER POWER 計算對象中排除。",
+        "lockedDescription": "勾選的樂曲、譜面將從 OVER POWER 計算對象中排除。",
         "lockedSaveError": "儲存未解鎖樂曲設定失敗。",
         "normalChart": "一般 譜面",
         "lockedSelectionSummary": "已選 {{ selected }} 筆 / 顯示 {{ shown }} 筆",
@@ -1303,7 +1300,7 @@
     },
     "nameplate": {
       "historyLink": "紀錄",
-      "historyLinkAriaLabel": "查看 Rating・OVER POWER 紀錄",
+      "historyLinkAriaLabel": "查看 Rating、OVER POWER 紀錄",
       "unknownConstHint": "計算中使用了定數未確定的譜面",
       "honorRotate": "將稱號恢復為輪播顯示",
       "honorVertical": "將稱號垂直顯示"
@@ -1320,7 +1317,7 @@
     "favorites": {
       "description": "最愛最多可登錄 {{ limit }} 首。",
       "saveError": "儲存最愛樂曲設定失敗。",
-      "selectionSummary": "已選 {{ selected }} / {{ limit }} 首・顯示 {{ shown }} 首",
+      "selectionSummary": "已選 {{ selected }} / {{ limit }} 首、顯示 {{ shown }} 首",
       "toggleAriaLabel": "切換{{ title }}的最愛設定",
       "limitReached": "最愛最多 {{ limit }} 首",
       "title": "最愛樂曲設定",
@@ -1339,7 +1336,7 @@
       "opTargetType": "OP 對象種類",
       "currentOpTarget": "目前的 OP 對象",
       "theoreticalOpTarget": "OP 理論值對象",
-      "opTargetOnlySuffix": "的譜面",
+      "opTargetOnlySuffix": "的譜面（僅顯示）",
       "opTargetSrPrefix": "OP 對象",
       "favoritesOnly": "僅顯示最愛樂曲",
       "favoritesSettings": "最愛樂曲設定",
@@ -1400,7 +1397,7 @@
       "unplayed": "未遊玩"
     },
     "toolbar": {
-      "search": "以曲名・藝人搜尋"
+      "search": "以曲名、藝人搜尋"
     },
     "savedFilters": {
       "openList": "讀取",
@@ -1426,15 +1423,15 @@
     "songSelection": {
       "selectedOnly": "僅顯示已選樂曲",
       "empty": "沒有符合的樂曲",
-      "searchPlaceholder": "以曲名・藝人搜尋..."
+      "searchPlaceholder": "以曲名、藝人搜尋..."
     },
     "metricHistory": {
-      "pageTitle": "Rating・OVER POWER 紀錄",
-      "documentTitle": "Rating・OVER POWER 紀錄",
+      "pageTitle": "Rating、OVER POWER 紀錄",
+      "documentTitle": "Rating、OVER POWER 紀錄",
       "backToProfile": "返回個人資料",
       "emptyHistory": "沒有紀錄",
       "tableTitle": "紀錄列表",
-      "tableCaption": "官方 RATING・官方 OVER POWER・官方 OP% 紀錄",
+      "tableCaption": "官方 RATING、官方 OVER POWER、官方 OP% 紀錄",
       "collectedAt": "取得時間",
       "rating": "RATING",
       "overPower": "OVER POWER",
@@ -1473,7 +1470,7 @@
       "totalMin": "合計/比例的目標值請輸入 0 以上。",
       "overPowerPercentMax": "OVER POWER 達成率請輸入 100% 以下。",
       "totalScoreInteger": "總分數的目標值與剩餘數請輸入整數。",
-      "overPowerDecimal": "OVER POWER 的目標值・剩餘數・比例請輸入至小數點第 {{ places }} 位以內。",
+      "overPowerDecimal": "OVER POWER 的目標值、剩餘數、比例請輸入至小數點第 {{ places }} 位以內。",
       "totalMax": "{{ label }}最多請輸入 {{ max }} 以下。",
       "percentLabel": "比例",
       "countLabel": "件數",
@@ -1638,7 +1635,7 @@
   },
   "courses": {
     "courseManagementCopy": {
-      "pageDescription": "確認・編輯課程列表、課程名稱與等級。",
+      "pageDescription": "確認、編輯課程列表、課程名稱與等級。",
       "createButton": "新增課程",
       "createDialogTitle": "新增課程",
       "editDialogTitle": "編輯課程",
@@ -1651,7 +1648,7 @@
       "statusLabel": "狀態",
       "actionsHeading": "操作",
       "classPlaceholder": "請選擇",
-      "searchPlaceholder": "以課程名稱・idx・id 搜尋",
+      "searchPlaceholder": "以課程名稱、idx、id 搜尋",
       "searchLabel": "搜尋課程",
       "cancelButton": "取消",
       "createSubmit": "新增",
@@ -1685,11 +1682,11 @@
       "description": "編輯者專用選單。"
     },
     "dataCoverageTitle": "資料完整度",
-    "dataCoverageDescription": "確認譜面定數・音符數・NOTES DESIGNER 的完整度。",
+    "dataCoverageDescription": "確認譜面定數、音符數、NOTES DESIGNER 的完整度。",
     "songsTitle": "樂曲管理",
-    "songsDescription": "確認・編輯樂曲列表與樂曲資訊。",
+    "songsDescription": "確認、編輯樂曲列表與樂曲資訊。",
     "coursesTitle": "課程管理",
-    "coursesDescription": "確認・編輯課程列表與課程資訊。"
+    "coursesDescription": "確認、編輯課程列表與課程資訊。"
   },
   "friends": {
     "friendsCopy": {
@@ -1728,8 +1725,6 @@
       "overPowerLabel": "OVER POWER",
       "privateAccountLabel": "非公開帳號",
       "playerNotLinked": "未連結",
-      "rejectConfirm": "要拒絕此好友申請嗎？",
-      "removeConfirm": "要解除此好友嗎？",
       "confirmCancel": "取消",
       "confirmRejectTitle": "要拒絕申請嗎？",
       "confirmRemoveTitle": "要解除好友嗎？",
@@ -1769,7 +1764,7 @@
       "hideLampOnlyChanges": "隱藏僅燈號的更新",
       "songSortTitle": "樂曲卡片排序",
       "songSortDirectionLabel": "樂曲卡片排序方向",
-      "openImagePreview": "產生圖片・分享",
+      "openImagePreview": "產生圖片、分享",
       "imagePreviewDialogTitle": "預覽",
       "imagePreviewDialogDescription": "以目前的顯示設定產生圖片。",
       "preparingImagePreview": "正在準備預覽",
@@ -1816,13 +1811,13 @@
       "addUltimaChart": "新增 ULTIMA 譜面"
     },
     "songManagementSectionCopy": {
-      "description": "依 API 規格：一般樂曲・WORLD'S END 皆支援新增・編輯・刪除・復原。",
+      "description": "依 API 規格：一般樂曲、WORLD'S END 皆支援新增、編輯、刪除、復原。",
       "standardEdit": "一般樂曲（編輯 / 刪除 / 復原）",
       "worldsendEdit": "WORLD'S END（編輯 / 刪除 / 復原）",
       "standardCreate": "新增一般樂曲",
       "worldsendCreate": "新增 WORLD'S END 樂曲",
       "worldsendEmpty": "沒有 WORLD'S END 樂曲。",
-      "searchPlaceholder": "以曲名・藝人搜尋"
+      "searchPlaceholder": "以曲名、藝人搜尋"
     },
     "songManagementFieldCopy": {
       "officialIdx": "官方 ID",
@@ -1855,9 +1850,9 @@
       "masterDataMissingForUltima": "主資料尚未取得，無法新增 ULTIMA 譜面。",
       "ultimaDifficultyMissing": "找不到 ULTIMA 難度的主資料。",
       "releaseInvalid": "發行日格式不正確，請重新輸入日期。",
-      "editableChartInvalid": "譜面的定數・音符數請輸入 0 以上。",
-      "createChartInvalid": "新增譜面的定數・音符數請輸入 0 以上。",
-      "requiredFieldsMissing": "官方 ID・標題・藝人為必填。",
+      "editableChartInvalid": "譜面的定數、音符數請輸入 0 以上。",
+      "createChartInvalid": "新增譜面的定數、音符數請輸入 0 以上。",
+      "requiredFieldsMissing": "官方 ID、標題、藝人為必填。",
       "officialIdxTooLong": "官方 ID 請輸入 10 字以內。",
       "genreRequired": "請選擇類別。",
       "bpmInvalid": "BPM 請輸入 0 以上。",
@@ -1918,7 +1913,7 @@
         "worldsendDifficulty": "WORLD'S END",
         "chartConstant": {
           "overallHeading": "譜面定數的整體完整率",
-          "matrixHeading": "依難度・等級",
+          "matrixHeading": "依難度、等級",
           "matrixCaption": "等級 10 以上各難度與等級的譜面定數完整狀況",
           "allLevelsRowAriaLabel": "等級 10 以上合計",
           "missingHeading": "未確定譜面",
@@ -2001,7 +1996,7 @@
         "privatePlayer": "此玩家為非公開。",
         "multipleMatches": "有多位使用者符合。",
         "loadingLabel": "載入中",
-        "previewLabel": "產生圖片前的最佳框・新曲框"
+        "previewLabel": "產生圖片前的最佳框、新曲框"
       }
     },
     "users": {
@@ -2155,7 +2150,7 @@
         "description": "管理員專用選單。"
       },
       "dataCoverageTitle": "資料完整度",
-      "dataCoverageDescription": "確認譜面定數・音符數・NOTES DESIGNER 的完整度。",
+      "dataCoverageDescription": "確認譜面定數、音符數、NOTES DESIGNER 的完整度。",
       "maintenanceTitle": "維護管理",
       "maintenanceDescription": "管理維護狀態與對外說明。",
       "usersTitle": "使用者管理",
@@ -2171,7 +2166,7 @@
       "songBatchTitle": "樂曲批次",
       "songBatchDescription": "執行樂曲資料匯入並確認執行紀錄。",
       "ratingImageDomTitle": "Rating 圖片 DOM",
-      "ratingImageDomDescription": "確認產生圖片前的最佳框・新曲框。"
+      "ratingImageDomDescription": "確認產生圖片前的最佳框、新曲框。"
     },
     "songBatch": {
       "songBatchModeLabels": {
@@ -2192,12 +2187,12 @@
       "songBatchConfirmationCopy": {
         "NORMAL": {
           "title": "要執行樂曲批次嗎？",
-          "description": "取得所有資料來源並更新樂曲・譜面資料。",
+          "description": "取得所有資料來源並更新樂曲、譜面資料。",
           "confirmButton": "執行"
         },
         "MAJOR_UPDATE": {
           "title": "要執行大型更新嗎？",
-          "description": "僅以官方資料與追加樂曲更新樂曲・譜面資料，並依官方等級將譜面定數設為不明。",
+          "description": "僅以官方資料與追加樂曲更新樂曲、譜面資料，並依官方等級將譜面定數設為不明。",
           "confirmButton": "執行大型更新"
         }
       },

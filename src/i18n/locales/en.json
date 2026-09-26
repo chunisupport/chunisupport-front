@@ -362,7 +362,6 @@
     "opTarget": "OP target (MAS+ULT)"
   },
   "developerApi": {
-    "menuLabel": "Developer API",
     "sectionTitle": "API & integrations",
     "description": "Use ChuniSupport song info and play data from Discord bots, web apps, and more.",
     "documentationLink": "View API documentation"
@@ -469,7 +468,6 @@
         "milestoneTitle": "Next milestones",
         "candidateTitle": "Charts to aim for",
         "candidateEmpty": "No candidate charts for the current conditions",
-        "totalCharts": "All charts",
         "totalHighScore": "Total high score",
         "averageScore": "Average score",
         "sss": "SSS",
@@ -480,7 +478,7 @@
         "fullComboCandidate": "FC",
         "milestoneRemainingPrefix": "",
         "milestoneRemainingSuffix": "charts to go",
-        "milestoneTargetSuffix": " charts target",
+        "milestoneTargetSuffix": " charts",
         "milestoneComplete": "Achieved",
         "heatmapCountSeparator": "/",
         "filterButtonLabel": "Narrow down targets",
@@ -800,7 +798,6 @@
       "checkInput": "Please check your input.",
       "result": "Result",
       "songTitle": "Title",
-      "playersCount": "{{ count }} players",
       "metricPlayers": "{{ label }} {{ count }} players",
       "metricTitle": "{{ count }} players / {{ percent }}",
       "metricAriaLabel": "{{ label }}: {{ count }} / {{ total }} players, {{ percent }}",
@@ -1728,8 +1725,6 @@
       "overPowerLabel": "OVER POWER",
       "privateAccountLabel": "Private account",
       "playerNotLinked": "Not linked",
-      "rejectConfirm": "Reject this friend request?",
-      "removeConfirm": "Remove this friend?",
       "confirmCancel": "Cancel",
       "confirmRejectTitle": "Reject the request?",
       "confirmRemoveTitle": "Remove this friend?",

@@ -12,7 +12,7 @@ import { normalizeGoalAttributeIds } from '../../../utils/goalAttributes'
 import { buildGoalVersionNameMap } from '../../../utils/goalVersion'
 
 /** 目標種別 (code) ごとの表示名 */
-export const GOAL_ACHIEVEMENT_TYPE_LABELS: Readonly<Record<GoalAchievementType, string>> =
+const GOAL_ACHIEVEMENT_TYPE_LABELS: Readonly<Record<GoalAchievementType, string>> =
   localizedCopy('goals.achievementTypes')
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
