@@ -17,6 +17,7 @@ import { startSongBatchJob } from '../../api/songBatch'
 import { Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
+import { showSuccessToast } from '../../components/common/AppToast'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { FILTER_DIALOG_FIELD_FOCUS_CLASS } from '../../components/common/filterStyles'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
@@ -186,11 +187,10 @@ const AdminSongBatchPage = (): JSX.Element => {
   }))
 
   const [mode, setMode] = createSignal<SongBatchMode>('NORMAL')
-  const [fillMissingReleaseDate, setFillMissingReleaseDate] = createSignal(false)
+  const [fillMissingReleaseDate, setFillMissingReleaseDate] = createSignal(true)
   const [confirmationOpen, setConfirmationOpen] = createSignal(false)
   const [confirmationInput, setConfirmationInput] = createSignal('')
   const [actionError, setActionError] = createSignal('')
-  const [actionSuccess, setActionSuccess] = createSignal('')
 
   const runningJob = createMemo(() => findRunningSongBatchJob(jobsQuery.data ?? []))
   // 実行中かどうか分からない間は実行させず、サーバー側の排他だけに頼らない
@@ -211,13 +211,12 @@ const AdminSongBatchPage = (): JSX.Element => {
     if (isRunDisabled()) return
 
     setActionError('')
-    setActionSuccess('')
     setConfirmationInput('')
     setConfirmationOpen(true)
   }
 
   /**
-   * 確認済みの実行条件でジョブの開始を一度だけ要求する。
+   * 確認済みの実行条件でジョブの開始を一度だけ要求する。成功時はトーストで通知する。
    *
    * @returns なし。
    */
@@ -229,7 +228,7 @@ const AdminSongBatchPage = (): JSX.Element => {
     startMutation.mutate(
       { mode: mode(), fill_missing_release_date: fillMissingReleaseDate() },
       {
-        onSuccess: () => setActionSuccess(ADMIN_SONG_BATCH_COPY.startSuccess),
+        onSuccess: () => showSuccessToast(ADMIN_SONG_BATCH_COPY.startSuccess),
         onError: (error) =>
           setActionError(toUserFriendlyErrorMessage(error, ADMIN_SONG_BATCH_COPY.startFailure)),
         onSettled: () => setConfirmationOpen(false),
@@ -286,7 +285,6 @@ const AdminSongBatchPage = (): JSX.Element => {
           onChange={setFillMissingReleaseDate}
           disabled={isRunDisabled()}
           label={ADMIN_SONG_BATCH_COPY.fillMissingReleaseDateLabel}
-          description={ADMIN_SONG_BATCH_COPY.fillMissingReleaseDateDescription}
         />
 
         <div class="mt-5 flex justify-end">
@@ -307,11 +305,6 @@ const AdminSongBatchPage = (): JSX.Element => {
         <Show when={actionError()}>
           <p class="mt-3 text-sm text-danger" role="alert">
             {actionError()}
-          </p>
-        </Show>
-        <Show when={actionSuccess()}>
-          <p class="mt-3 text-sm text-success" role="status">
-            {actionSuccess()}
           </p>
         </Show>
       </form>

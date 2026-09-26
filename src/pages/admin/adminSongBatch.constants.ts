@@ -7,7 +7,6 @@ export const ADMIN_SONG_BATCH_COPY = {
   runSection: '実行',
   modeLabel: '実行モード',
   fillMissingReleaseDateLabel: 'リリース日を補完',
-  fillMissingReleaseDateDescription: '日付が得られない新規楽曲に実行日を設定',
   runButton: '実行',
   runningButton: '実行中',
   historySection: '実行履歴',
