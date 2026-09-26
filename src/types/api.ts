@@ -60,6 +60,58 @@ export interface UpdateMaintenanceRequest {
   comment: string
 }
 
+/** 楽曲バッチの実行モード */
+export type SongBatchMode = 'NORMAL' | 'MAJOR_UPDATE'
+
+/** 楽曲バッチジョブの起動元 */
+export type SongBatchTrigger = 'CLI' | 'ADMIN'
+
+/** 楽曲バッチジョブの状態 */
+export type SongBatchJobStatus =
+  | 'RUNNING'
+  | 'SUCCEEDED'
+  | 'SUCCEEDED_WITH_WARNINGS'
+  | 'FAILED'
+  | 'INTERRUPTED'
+
+/** POST /internal/admin/song-batch/jobs に送信する実行条件 */
+export interface StartSongBatchJobRequest {
+  /** 実行モード */
+  mode: SongBatchMode
+  /** データソースから日付が得られない新規楽曲へ実行日を補完する場合は true */
+  fill_missing_release_date: boolean
+}
+
+/** 楽曲バッチジョブの状態 */
+export interface SongBatchJobDTO {
+  /** ジョブID（UUID） */
+  id: string
+  /** 実行モード */
+  mode: SongBatchMode
+  /** リリース日補完の有無 */
+  fill_missing_release_date: boolean
+  /** 起動元 */
+  trigger: SongBatchTrigger
+  /** 管理画面から実行したユーザー名。CLI 実行または要求者削除後は null */
+  requested_by: string | null
+  /** ジョブの状態 */
+  status: SongBatchJobStatus
+  /** 開始日時 */
+  started_at: string
+  /** 終了日時。実行中は null */
+  finished_at: string | null
+  /** 利用できず除外した補完データソースの件数 */
+  warning_count: number
+  /** 失敗理由。失敗以外は null */
+  error_message: string | null
+}
+
+/** GET /internal/admin/song-batch/jobs が返す実行履歴 */
+export interface SongBatchJobListDTO {
+  /** 開始日時の新しい順に並んだジョブ */
+  jobs: SongBatchJobDTO[]
+}
+
 /** APIが返すエラーコード */
 export type ErrorCode =
   // 汎用
@@ -155,6 +207,11 @@ export type ErrorCode =
   | 'version_name_conflict'
   | 'version_not_latest'
   | 'version_in_use'
+  // 楽曲バッチ
+  | 'song_batch_already_running'
+  | 'song_batch_job_not_found'
+  | 'invalid_song_batch_job_id'
+  | 'invalid_song_batch_mode'
   // その他
   | 'not_found'
   | 'method_not_allowed'
@@ -245,6 +302,10 @@ export const errorMessages: Record<ErrorCode, string> = {
   version_name_conflict: '同じバージョン名がすでに存在します',
   version_not_latest: '最新版以外のバージョンは削除できません',
   version_in_use: '対象バージョンの期間に楽曲があるため削除できません',
+  song_batch_already_running: '楽曲バッチが実行中です。終了してから再度実行してください',
+  song_batch_job_not_found: '対象の楽曲バッチジョブが見つかりません',
+  invalid_song_batch_job_id: '楽曲バッチジョブのIDが不正です',
+  invalid_song_batch_mode: '楽曲バッチの実行モードが不正です',
   not_found: 'リソースが見つかりません',
   method_not_allowed: '許可されていない操作です',
   unsupported_media_type: 'サポートされていないメディアタイプです',
