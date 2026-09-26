@@ -1,3 +1,4 @@
+import { t } from '../../../../../i18n'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import type { GoalAchievementType } from '../../../../../types/api'
@@ -29,7 +30,7 @@ type GoalCardProgressPercentageProps = Pick<
 /**
  * 反転表示時に現在値へ添える未達量ラベル。
  */
-const INVERT_PROGRESS_LABEL = '残り'
+const INVERT_PROGRESS_LABEL = t('goals.card.invertLabel')
 
 /**
  * 折りたたんだ目標カード向けに、設定を反映した割合だけを表示する。
@@ -108,7 +109,7 @@ export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
         class="h-2 w-full rounded appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-action-secondary [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-action-primary [&::-moz-progress-bar]:rounded [&::-moz-progress-bar]:bg-action-primary"
         value={displayProgress().progressValue}
         max={100}
-        aria-label={`${props.title} 進捗`}
+        aria-label={t('goals.card.progressAriaLabel', { title: props.title })}
         aria-valuetext={displayProgress().ariaValueText}
       />
     </div>

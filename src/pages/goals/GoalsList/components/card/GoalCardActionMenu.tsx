@@ -1,3 +1,4 @@
+import { t } from '../../../../../i18n'
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { Copy, EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
@@ -34,7 +35,7 @@ const stopDragActivation = (event: PointerEvent): void => {
 export const GoalCardActionMenu: Component<GoalCardActionMenuProps> = (props) => (
   <DropdownMenu gutter={4}>
     <AppMenuTrigger
-      label="メニューを開く"
+      label={t('goals.card.openMenu')}
       icon={<EllipsisVertical size={20} aria-hidden="true" />}
       disabled={props.disabled}
       class="cursor-pointer"
@@ -44,19 +45,19 @@ export const GoalCardActionMenu: Component<GoalCardActionMenuProps> = (props) =>
       <AppMenuContent variant="compact">
         <AppMenuItem
           icon={<Pencil size={16} aria-hidden="true" />}
-          label="編集"
+          label={t('goals.card.edit')}
           onSelect={props.onEdit}
         />
         <AppMenuItem
           icon={<Copy size={16} aria-hidden="true" />}
-          label="コピー"
+          label={t('goals.card.copy')}
           disabled={props.copyDisabled}
           class="data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50"
           onSelect={props.onCopy}
         />
         <AppMenuItem
           icon={<Trash2 size={16} aria-hidden="true" />}
-          label="削除"
+          label={t('goals.card.delete')}
           tone="danger"
           onSelect={props.onDelete}
         />

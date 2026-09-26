@@ -1,3 +1,4 @@
+import { t } from '../../../../../i18n'
 import type { Component } from 'solid-js'
 import { GOAL_TITLE_MAX_LENGTH } from '../../constants'
 import { GoalTextField } from './goalFormFields'
@@ -24,14 +25,14 @@ export const GoalTitleSection: Component<GoalTitleSectionProps> = (props) => (
     <div class="mb-3 flex items-center gap-3">
       <span class={GOAL_STEP_BADGE_CLASS}>1</span>
       <div>
-        <h2 class={GOAL_STEP_TITLE_CLASS}>タイトル</h2>
-        <p class={GOAL_STEP_DESCRIPTION_CLASS}>表示名を設定します。</p>
+        <h2 class={GOAL_STEP_TITLE_CLASS}>{t('goals.form.titleLabel')}</h2>
+        <p class={GOAL_STEP_DESCRIPTION_CLASS}>{t('goals.form.titleDescription')}</p>
       </div>
     </div>
 
     <GoalTextField
       label=""
-      ariaLabel="タイトル"
+      ariaLabel={t('goals.form.titleLabel')}
       value={props.title}
       maxLength={GOAL_TITLE_MAX_LENGTH}
       onChange={props.onTitleChange}

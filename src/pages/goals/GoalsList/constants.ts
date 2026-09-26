@@ -1,3 +1,7 @@
+import { formatMessage, localizedCopy } from '../../../i18n'
+
+/** 目標一覧の表示文言 */
+export const GOALS_LIST_COPY = localizedCopy('goals.list')
 /**
  * 目標一覧で作成できる目標数の上限。
  * APIの `goal_limit_exceeded` 判定と揃える。
@@ -12,28 +16,18 @@ export const GOAL_TITLE_MAX_LENGTH = 30
 /**
  * 複製した目標タイトルの末尾に付ける文言。
  */
-export const GOAL_COPY_TITLE_SUFFIX = '（コピー）'
-
 /**
  * 目標のコピーに失敗したときの既定エラーメッセージ。
  */
-export const GOAL_COPY_ERROR_MESSAGE = '目標のコピーに失敗しました。'
-
 /**
  * 目標コピー中のプレースホルダーを説明するアクセシブルラベル。
  */
-export const GOAL_COPY_LOADING_LABEL = '目標をコピー中'
-
 /**
  * 未達成レコード表示へ遷移できない場合の既定エラーメッセージ。
  */
-export const RECORD_NAVIGATION_ERROR_MESSAGE = '未達成レコードの表示に失敗しました。'
-
 /**
  * 目標の並び順保存に失敗したときの既定エラーメッセージ。
  */
-export const GOAL_REORDER_ERROR_MESSAGE = '並び順の保存に失敗しました。'
-
 /**
  * カード全体の並び替え操作を案内するアクセシブルラベルを作る。
  *
@@ -43,7 +37,7 @@ export const GOAL_REORDER_ERROR_MESSAGE = '並び順の保存に失敗しまし�
  * @returns ドラッグとキーボード操作を案内するラベル。
  */
 export const buildGoalDragLabel = (title: string, position: number, total: number): string =>
-  `${title}の並び替え、${total}件中${position}番目。ドラッグまたは上下矢印キーで移動`
+  formatMessage(GOALS_LIST_COPY.dragLabel, { title, total, position })
 
 /**
  * 並び替え結果のスクリーンリーダー通知を作る。
@@ -57,23 +51,17 @@ export const buildGoalReorderAnnouncement = (
   title: string,
   position: number,
   total: number
-): string => `${title}を${total}件中${position}番目に移動しました`
+): string => formatMessage(GOALS_LIST_COPY.reorderAnnouncement, { title, total, position })
 
 /**
  * 目標作成ボタンに表示するラベル。
  */
-export const ADD_GOAL_LABEL = '目標を追加'
-
 /**
  * 全目標カードを展開するボタンのラベル。
  */
-export const EXPAND_ALL_GOALS_LABEL = 'すべて開く'
-
 /**
  * 全目標カードを折りたたむボタンのラベル。
  */
-export const COLLAPSE_ALL_GOALS_LABEL = 'すべて閉じる'
-
 /**
  * 目標カードの開閉ボタンに付与するアクセシブルラベルを作る。
  *
@@ -82,51 +70,30 @@ export const COLLAPSE_ALL_GOALS_LABEL = 'すべて閉じる'
  * @returns 次に実行する開閉操作を表すラベル。
  */
 export const buildGoalDisclosureLabel = (title: string, open: boolean): string =>
-  `${title}を${open ? '閉じる' : '開く'}`
+  formatMessage(open ? GOALS_LIST_COPY.close : GOALS_LIST_COPY.open, { title })
 
 /**
  * 目標数が上限に達したときに表示するメッセージ。
  */
-export const GOALS_LIMIT_REACHED_MESSAGE = `目標は${GOALS_LIMIT}件まで作成できます。不要な目標を削除してください。`
+export const GOALS_LIMIT_REACHED_MESSAGE = formatMessage(GOALS_LIST_COPY.limitReached, {
+  limit: GOALS_LIMIT,
+})
 
 /**
  * 目標が未登録のときに表示するメッセージ。
  */
-export const EMPTY_GOALS_MESSAGE = `目標がありません。「${ADD_GOAL_LABEL}」から作成してください。`
+export const EMPTY_GOALS_MESSAGE = formatMessage(GOALS_LIST_COPY.empty, {
+  addGoal: GOALS_LIST_COPY.addGoal,
+})
 
 /** 目標グループ機能で画面表示する固定文言 */
-export const GOAL_GROUP_COPY = {
-  fieldLabel: 'グループ',
-  manageButtonLabel: '目標グループを管理',
-  previousButtonLabel: '前の目標グループ',
-  nextButtonLabel: '次の目標グループ',
-  manageDialogTitle: '目標グループを管理',
-  newNameLabel: '新しいグループ名',
-  nameLabel: 'グループ名',
-  sortableRoleDescription: '並び替え可能な目標グループ',
-  addAction: '追加',
-  emptyMessage: 'グループはありません。',
-  editCancelAction: '取消',
-  saveAction: '保存',
-  closeAction: '閉じる',
-  deleteDialogTitle: 'グループを削除しますか？',
-  cancelAction: 'キャンセル',
-  deleteAction: '削除する',
-  createError: 'グループの作成に失敗しました。',
-  updateError: 'グループ名の更新に失敗しました。',
-  deleteError: 'グループの削除に失敗しました。',
-  reorderError: 'グループの並び替えに失敗しました。',
-} as const
+export const GOAL_GROUP_COPY = localizedCopy('goals.groups')
 
 /** 目標グループ一覧で選択できる表示モード */
 export type GoalGroupDisplayMode = 'horizontal' | 'all'
 
 /** 目標グループ表示モード切り替えで使う固定文言 */
-export const GOAL_GROUP_DISPLAY_MODE_COPY = {
-  label: '目標グループの表示形式',
-  horizontal: '横切り替え',
-  all: '1画面',
-} as const
+export const GOAL_GROUP_DISPLAY_MODE_COPY = localizedCopy('goals.groupDisplayMode')
 
 /**
  * 目標グループ数が上限に達したときの文言を作る。
@@ -135,7 +102,7 @@ export const GOAL_GROUP_DISPLAY_MODE_COPY = {
  * @returns グループ数の上限を示す文言。
  */
 export const buildGoalGroupLimitMessage = (limit: number): string =>
-  `グループは${limit}件までです。`
+  formatMessage(GOAL_GROUP_COPY.limit, { limit })
 
 /**
  * 目標グループのドラッグ操作を案内するラベルを作る。
@@ -146,7 +113,7 @@ export const buildGoalGroupLimitMessage = (limit: number): string =>
  * @returns 並び替え操作用のラベル。
  */
 export const buildGoalGroupDragLabel = (name: string, position: number, total: number): string =>
-  `${name}を並び替え。${position}/${total}`
+  formatMessage(GOAL_GROUP_COPY.dragLabel, { name, position, total })
 
 /**
  * 目標グループの改名ボタン用ラベルを作る。
@@ -154,7 +121,8 @@ export const buildGoalGroupDragLabel = (name: string, position: number, total: n
  * @param name - グループ名。
  * @returns 改名操作用のラベル。
  */
-export const buildGoalGroupEditLabel = (name: string): string => `${name}を改名`
+export const buildGoalGroupEditLabel = (name: string): string =>
+  formatMessage(GOAL_GROUP_COPY.editLabel, { name })
 
 /**
  * 目標グループの削除ボタン用ラベルを作る。
@@ -162,7 +130,8 @@ export const buildGoalGroupEditLabel = (name: string): string => `${name}を改�
  * @param name - グループ名。
  * @returns 削除操作用のラベル。
  */
-export const buildGoalGroupDeleteLabel = (name: string): string => `${name}を削除`
+export const buildGoalGroupDeleteLabel = (name: string): string =>
+  formatMessage(GOAL_GROUP_COPY.deleteLabel, { name })
 
 /**
  * 目標グループ削除時の影響を説明する文言を作る。
@@ -171,7 +140,7 @@ export const buildGoalGroupDeleteLabel = (name: string): string => `${name}を�
  * @returns 未分類への移動を示す確認文言。
  */
 export const buildGoalGroupDeleteDescription = (name: string): string =>
-  `「${name}」内の目標は未分類の末尾へ移動します。`
+  formatMessage(GOAL_GROUP_COPY.deleteDescription, { name })
 
 /**
  * 目標グループ並び替え後の読み上げ文言を作る。
@@ -185,4 +154,4 @@ export const buildGoalGroupReorderAnnouncement = (
   name: string,
   position: number,
   total: number
-): string => `${name}を${total}件中${position}番目に移動しました`
+): string => formatMessage(GOAL_GROUP_COPY.reorderAnnouncement, { name, total, position })

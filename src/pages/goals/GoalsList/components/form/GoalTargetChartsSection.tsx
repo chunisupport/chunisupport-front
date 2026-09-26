@@ -1,3 +1,4 @@
+import { t } from '../../../../../i18n'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import { AppButton } from '../../../../../components/common/AppButton'
@@ -42,8 +43,8 @@ interface GoalTargetChartsSectionProps {
   onConstMaxChange: (value: string) => void
 }
 
-const TARGET_CHART_COUNT_LABEL = '対象数:'
-const GOAL_CHART_CONST_RANGE_TITLE = '譜面定数'
+const TARGET_CHART_COUNT_LABEL = t('goals.form.targetCount')
+const GOAL_CHART_CONST_RANGE_TITLE = t('goals.form.chartConst')
 
 /**
  * 目標フォームの対象譜面セクションを描画する。
@@ -56,11 +57,11 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
     <div class="mb-3 flex items-center gap-3">
       <span class={GOAL_STEP_BADGE_CLASS}>2</span>
       <div>
-        <h2 class={GOAL_STEP_TITLE_CLASS}>{props.isRainbowGoal ? '対象楽曲' : '対象譜面'}</h2>
+        <h2 class={GOAL_STEP_TITLE_CLASS}>{props.isRainbowGoal ? t('goals.form.targetSongs') : t('goals.form.targetCharts')}</h2>
         <p class={GOAL_STEP_DESCRIPTION_CLASS}>
           {props.isRainbowGoal
-            ? '進捗を計算する楽曲を絞り込みます。'
-            : '進捗を計算する譜面を絞り込みます。'}
+            ? t('goals.form.targetSongsDescription')
+            : t('goals.form.targetChartsDescription')}
         </p>
       </div>
     </div>
@@ -73,14 +74,14 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
         <Show when={!props.isRainbowGoal}>
           <fieldset class="block text-sm space-y-1">
             <div class="flex items-center justify-between">
-              <span class="block text-text-muted">難易度</span>
+              <span class="block text-text-muted">{t('goals.form.difficulty')}</span>
               <AppButton
                 variant="ghost"
                 size="xs"
                 class="text-action-primary hover:text-action-primary"
                 onClick={props.onClearDifficulty}
               >
-                クリア
+                {t('goals.form.clear')}
               </AppButton>
             </div>
             <div class="space-y-1 bg-surface rounded border border-border-strong px-3 py-2">
@@ -118,8 +119,8 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
           when={props.versionOptions.length > 0}
           fallback={
             <div class="space-y-1 text-sm">
-              <span class="block text-text-muted">バージョン</span>
-              <p class="text-sm text-text-subtle">バージョンを取得できませんでした。</p>
+              <span class="block text-text-muted">{t('goals.form.version')}</span>
+              <p class="text-sm text-text-subtle">{t('goals.form.versionLoadFailed')}</p>
             </div>
           }
         >

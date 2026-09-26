@@ -1,5 +1,5 @@
 import type { GoalCreateRequest, GoalDTO } from '../../../types/api'
-import { GOAL_COPY_TITLE_SUFFIX, GOAL_TITLE_MAX_LENGTH } from './constants'
+import { GOALS_LIST_COPY, GOAL_TITLE_MAX_LENGTH } from './constants'
 
 /**
  * Unicodeコードポイント単位の上限に収まる先頭部分を取得する。
@@ -18,8 +18,8 @@ const truncateByCodePoints = (value: string, maxLength: number): string =>
  * @returns 必要に応じて末尾を切り詰め、コピー表記を付けたタイトル。
  */
 export const buildCopiedGoalTitle = (title: string): string => {
-  const baseMaxLength = GOAL_TITLE_MAX_LENGTH - Array.from(GOAL_COPY_TITLE_SUFFIX).length
-  return `${truncateByCodePoints(title, baseMaxLength)}${GOAL_COPY_TITLE_SUFFIX}`
+  const baseMaxLength = GOAL_TITLE_MAX_LENGTH - Array.from(GOALS_LIST_COPY.copyTitleSuffix).length
+  return `${truncateByCodePoints(title, baseMaxLength)}${GOALS_LIST_COPY.copyTitleSuffix}`
 }
 
 /**

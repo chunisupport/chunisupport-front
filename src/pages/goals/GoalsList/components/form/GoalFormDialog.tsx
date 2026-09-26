@@ -1,3 +1,4 @@
+import { formatMessage, localizedCopy } from '../../../../../i18n'
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal } from 'solid-js'
@@ -81,19 +82,10 @@ interface GoalFormDialogProps {
   resolveDraftGoalProgress: (goal: GoalCreateRequest) => GoalProgressResult
 }
 
-const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = {
-  rank_count: '指定ランク以上を達成した譜面数を目標にします。',
-  score_count: '指定スコア以上を達成した譜面数を目標にします。',
-  rating_count: '指定単曲レートへ理論上到達可能な譜面の達成数を目標にします。',
-  avg_score: '対象譜面の平均スコアを目標にします。',
-  hardlamp_count: '指定ハードランプ以上を達成した譜面数を目標にします。',
-  combolamp_count: 'FULL COMBO / ALL JUSTICE の達成数を目標にします。',
-  fullchain_count: '指定したFULL CHAIN種別と一致する譜面数を目標にします。',
-  rainbow_count: '曲ごとにBASICからMASTER、存在する場合はULTIMAまでのAJ達成を数えます。',
-  total_score: '対象譜面のスコア合計を目標にします。',
-  overpower_value: '対象譜面のOVER POWER合計値を目標にします。',
-  overpower_percent: '対象譜面のOVER POWER達成率を目標にします。',
-} as const satisfies Record<GoalAchievementType, string>
+/** 目標フォームの表示文言 */
+const GOAL_FORM_TEXT = localizedCopy('goals.form')
+
+const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = localizedCopy('goals.form.typeDescriptions')
 
 const GOAL_ACHIEVEMENT_TYPES = [
   'rank_count',
@@ -176,7 +168,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       .map((item) => ({
         value: item.code,
         label: resolveGoalAchievementTypeLabel(item.code, {
-          locale: 'ja',
           fallbackLabel: item.label ?? item.name,
         }),
       }))
@@ -301,7 +292,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    */
   const targetCountText = (): string => {
     const currentType = achievementType()
-    const unit = currentType === 'rainbow_count' ? '曲' : '譜面'
+    const unit =
+      currentType === 'rainbow_count' ? GOAL_FORM_TEXT.songUnit : GOAL_FORM_TEXT.chartUnit
     return `${props
       .resolveAllCount(getDraftAttributes(), currentType, buildDraftAchievementParams(currentType))
       .toLocaleString('ja-JP')} ${unit}`
@@ -330,7 +322,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    *
    * @returns 入力済みタイトル、未入力の場合は仮タイトル。
    */
-  const previewTitle = (): string => title().trim() || '新しい目標'
+  const previewTitle = (): string => title().trim() || GOAL_FORM_TEXT.newGoal
 
   /**
    * プレビューカードに渡す進捗値を現在の入力内容から組み立てる。
@@ -358,14 +350,16 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    */
   const countLimitText = (): string =>
     countMode() === 'percent'
-      ? '100%以内'
-      : `${props
-          .resolveAllCount(
-            getDraftAttributes(),
-            achievementType(),
-            buildDraftAchievementParams(achievementType())
-          )
-          .toLocaleString('ja-JP')}件以内`
+      ? GOAL_FORM_TEXT.within100Percent
+      : formatMessage(GOAL_FORM_TEXT.countWithin, {
+          count: props
+            .resolveAllCount(
+              getDraftAttributes(),
+              achievementType(),
+              buildDraftAchievementParams(achievementType())
+            )
+            .toLocaleString('ja-JP'),
+        })
 
   /**
    * 目標値入力で指定できる上限を表示用に組み立てる。
@@ -374,8 +368,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    */
   const totalLimitText = (): string => {
     const currentType = achievementType()
-    if (currentType === 'overpower_percent' || totalMode() === 'percent') return '100%以内'
-    return `${getTheoreticalTotal(currentType).toLocaleString('ja-JP')}以内`
+    if (currentType === 'overpower_percent' || totalMode() === 'percent') {
+      return GOAL_FORM_TEXT.within100Percent
+    }
+    return formatMessage(GOAL_FORM_TEXT.valueWithin, {
+      value: getTheoreticalTotal(currentType).toLocaleString('ja-JP'),
+    })
   }
 
   /**
@@ -472,7 +470,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
         <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
         <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] select-none flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
           <Dialog.Title class="shrink-0 text-lg font-bold">
-            {props.mode === 'create' ? '目標を作成' : '目標を編集'}
+            {props.mode === 'create' ? GOAL_FORM_TEXT.createTitle : GOAL_FORM_TEXT.editTitle}
           </Dialog.Title>
 
           <div class="scrollbar-none mt-4 min-h-0 flex-1 basis-0 space-y-4 overflow-y-auto pr-1">

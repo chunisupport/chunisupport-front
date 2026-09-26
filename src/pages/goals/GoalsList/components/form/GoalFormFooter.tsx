@@ -1,3 +1,4 @@
+import { t } from '../../../../../i18n'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import { AppButton } from '../../../../../components/common/AppButton'
@@ -22,10 +23,10 @@ export const GoalFormFooter: Component<GoalFormFooterProps> = (props) => (
     </Show>
     <div class="flex shrink-0 justify-end gap-2">
       <AppButton onClick={props.onCancel} disabled={props.isSaving}>
-        キャンセル
+        {t('common.cancel')}
       </AppButton>
       <AppButton variant="primary" onClick={props.onSave} disabled={props.isSaving}>
-        {props.isSaving ? '保存中...' : '保存する'}
+        {props.isSaving ? t('goals.form.saving') : t('goals.form.save')}
       </AppButton>
     </div>
   </div>

@@ -1,8 +1,9 @@
+import { t } from '../../../i18n'
 import type { GoalDTO, GoalGroupDTO } from '../../../types/api'
 import type { GoalWithProgress } from './goalsListProgress'
 
 /** 未分類グループの表示名 */
-export const UNGROUPED_GOALS_LABEL = '未分類'
+export const UNGROUPED_GOALS_LABEL = t('goals.groups.ungrouped')
 /** 1ユーザーが作成できる目標グループ数 */
 export const GOAL_GROUPS_LIMIT = 20
 /** 目標グループ名の最大文字数 */
@@ -128,11 +129,11 @@ export const validateGoalGroupName = (
   editingGroupId?: number
 ): string => {
   const trimmed = name.trim()
-  if (trimmed.length === 0) return 'グループ名を入力してください。'
+  if (trimmed.length === 0) return t('goals.groups.nameRequired')
   if (Array.from(trimmed).length > GOAL_GROUP_NAME_MAX_LENGTH) {
-    return `グループ名は${GOAL_GROUP_NAME_MAX_LENGTH}文字以内で入力してください。`
+    return t('goals.groups.nameTooLong', { max: GOAL_GROUP_NAME_MAX_LENGTH })
   }
-  if (/\p{Cc}/u.test(trimmed)) return 'グループ名に制御文字は使用できません。'
+  if (/\p{Cc}/u.test(trimmed)) return t('goals.groups.nameControlChar')
   if (
     groups.some(
       (group) =>
@@ -140,7 +141,7 @@ export const validateGoalGroupName = (
         group.name.trim().toLocaleLowerCase() === trimmed.toLocaleLowerCase()
     )
   ) {
-    return '同じ名前の目標グループがすでに存在します。'
+    return t('goals.groups.nameConflict')
   }
   return ''
 }

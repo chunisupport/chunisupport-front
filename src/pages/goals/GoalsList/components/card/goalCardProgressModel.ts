@@ -1,3 +1,4 @@
+import { t } from '../../../../../i18n'
 import type { GoalAchievementType } from '../../../../../types/api'
 import { formatTruncatedFixed, truncateDecimal } from '../../../../../utils/numberFormat'
 import { formatOverPowerPercent } from '../../../../../utils/overPowerFormat'
@@ -17,7 +18,7 @@ export interface GoalCardDisplayProgress {
  */
 const OVER_POWER_VALUE_DECIMAL_PLACES = 3
 const OVER_POWER_PERCENT_DECIMAL_PLACES = 3
-const REMAINING_PERCENTAGE_PREFIX = 'あと'
+const REMAINING_PERCENTAGE_PREFIX = t('goals.card.remainingPrefix')
 
 /**
  * 目標進捗の数値を目標種別に合わせて表示用に整形する。
@@ -75,8 +76,8 @@ export const resolveGoalCardDisplayProgress = (
     percentPrefixText: invertPercentage ? REMAINING_PERCENTAGE_PREFIX : '',
     percentText: displayPercentText,
     ariaValueText: invertPercentage
-      ? `達成率 ${progressValueText}、${REMAINING_PERCENTAGE_PREFIX}${displayPercentText}`
-      : `達成率 ${progressValueText}`,
+      ? t('goals.card.progressWithRemaining', { progress: progressValueText, percent: displayPercentText })
+      : t('goals.card.progress', { progress: progressValueText }),
     progressValue,
   }
 }

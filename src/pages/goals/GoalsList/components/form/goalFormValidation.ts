@@ -1,20 +1,12 @@
+import { t } from '../../../../../i18n'
 import { SCORE_MIN } from '../../../../../constants/chart'
 import type { GoalAchievementType } from '../../../../../types/api'
 import { truncateDecimal } from '../../../../../utils/numberFormat'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { GOAL_TITLE_MAX_LENGTH } from '../../constants'
-import {
-  ERROR_MESSAGE_INVALID_COUNT_TARGET,
-  RATING_GOAL_DECIMAL_PLACES,
-  RATING_GOAL_MIN_VALUE,
-} from './constants'
-import {
-  canUseDynamicTotalTarget,
-  getRankGoalScore,
-  isCountAchievementType,
-  type RankGoalValue,
-} from './goalFormModel'
+import { GOAL_FORM_COPY, RATING_GOAL_DECIMAL_PLACES, RATING_GOAL_MIN_VALUE } from './constants'
+import { canUseDynamicTotalTarget, getRankGoalScore, isCountAchievementType, type RankGoalValue } from './goalFormModel'
 
 const MAX_OVERPOWER_PERCENT = 100
 const OVERPOWER_TARGET_DECIMAL_PLACES = 3
@@ -54,9 +46,9 @@ export const isWithinDecimalPlaces = (value: number, decimalPlaces: number): boo
  */
 export const validateGoalForm = (input: GoalFormValidationInput): string | undefined => {
   const trimmed = input.title.trim()
-  if (!trimmed) return 'タイトルを入力してください。'
+  if (!trimmed) return t('goals.validation.titleRequired')
   if (trimmed.length > GOAL_TITLE_MAX_LENGTH) {
-    return `タイトルは${GOAL_TITLE_MAX_LENGTH}文字以内で入力してください。`
+    return t('goals.validation.titleTooLong', { max: GOAL_TITLE_MAX_LENGTH })
   }
 
   const parsedScore =
@@ -76,7 +68,7 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
     ((typeof parsedConstMin === 'number' && !Number.isFinite(parsedConstMin)) ||
       (typeof parsedConstMax === 'number' && !Number.isFinite(parsedConstMax)))
   ) {
-    return '定数範囲が不正です。'
+    return t('goals.validation.constRangeInvalid')
   }
 
   if (
@@ -85,7 +77,7 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
       parsedRating < RATING_GOAL_MIN_VALUE ||
       !isWithinDecimalPlaces(parsedRating, RATING_GOAL_DECIMAL_PLACES))
   ) {
-    return `単曲レートは${RATING_GOAL_MIN_VALUE}以上、小数第${RATING_GOAL_DECIMAL_PLACES}位以内で入力してください。`
+    return t('goals.validation.ratingInvalid', { min: RATING_GOAL_MIN_VALUE, places: RATING_GOAL_DECIMAL_PLACES })
   }
   if (
     input.achievementType !== 'rainbow_count' &&
@@ -93,13 +85,13 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
     typeof parsedConstMax === 'number' &&
     parsedConstMin > parsedConstMax
   ) {
-    return '定数の最小値は最大値以下にしてください。'
+    return t('goals.validation.constMinMax')
   }
 
   if (input.allCount <= 0) {
     return input.achievementType === 'rainbow_count'
-      ? '条件に当てはまる楽曲がありません。条件を見直してください。'
-      : '条件に当てはまる譜面がありません。条件を見直してください。'
+      ? t('goals.validation.noSongs')
+      : t('goals.validation.noCharts')
   }
 
   if (
@@ -108,7 +100,7 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
       input.achievementType === 'avg_score') &&
     (!Number.isFinite(parsedScore) || parsedScore < SCORE_MIN || parsedScore > MAX_SCORE)
   ) {
-    return 'スコアは 0 ～ 1,010,000 の範囲で入力してください。'
+    return t('goals.validation.scoreRange')
   }
 
   if (isCountType && input.countMode !== 'all') {
@@ -119,13 +111,11 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
       (requiresInteger && !Number.isInteger(parsedCount)) ||
       parsedCount < countMin
     ) {
-      const inputLabel = input.countMode === 'percent' ? '割合' : '件数'
-      return `${inputLabel}は${countMin}以上の${requiresInteger ? '整数' : '数値'}で入力してください。`
+      return t('goals.validation.countMin', { label: input.countMode === 'percent' ? t('goals.validation.percentLabel') : t('goals.validation.countLabel'), min: countMin, kind: requiresInteger ? t('goals.validation.integer') : t('goals.validation.number') })
     }
     const countMax = input.countMode === 'percent' ? MAX_OVERPOWER_PERCENT : input.allCount
     if (parsedCount > countMax) {
-      const unit = input.countMode === 'percent' ? '%' : '件'
-      return `${input.countMode === 'percent' ? '割合' : '件数'}は${countMax.toLocaleString('ja-JP')}${unit}以内で入力してください。`
+      return t('goals.validation.countMax', { label: input.countMode === 'percent' ? t('goals.validation.percentLabel') : t('goals.validation.countLabel'), max: countMax.toLocaleString('ja-JP'), unit: input.countMode === 'percent' ? '%' : t('goals.validation.countUnit') })
     }
   }
 
@@ -134,11 +124,11 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
       (canUseDynamicTotalTarget(input.achievementType) && input.totalMode !== 'all')) &&
     (!Number.isFinite(parsedTotal) || parsedTotal < 0)
   ) {
-    return '合計/割合の目標値は0以上で入力してください。'
+    return t('goals.validation.totalMin')
   }
 
   if (input.achievementType === 'overpower_percent' && parsedTotal > MAX_OVERPOWER_PERCENT) {
-    return 'OVER POWER達成率は100%以下で入力してください。'
+    return t('goals.validation.overPowerPercentMax')
   }
 
   if (
@@ -146,7 +136,7 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
     (input.totalMode === 'number' || input.totalMode === 'remaining') &&
     !Number.isInteger(parsedTotal)
   ) {
-    return '総スコアの目標値と残数は整数で入力してください。'
+    return t('goals.validation.totalScoreInteger')
   }
 
   if (
@@ -154,7 +144,7 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
     input.totalMode !== 'all' &&
     !isWithinDecimalPlaces(parsedTotal, OVERPOWER_TARGET_DECIMAL_PLACES)
   ) {
-    return `OVER POWERの目標値・残数・割合は小数第${OVERPOWER_TARGET_DECIMAL_PLACES}位以内で入力してください。`
+    return t('goals.validation.overPowerDecimal', { places: OVERPOWER_TARGET_DECIMAL_PLACES })
   }
 
   const dynamicTotalMax = canUseDynamicTotalTarget(input.achievementType)
@@ -165,13 +155,13 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
         : input.theoreticalTotal
     : undefined
   if (dynamicTotalMax !== undefined && parsedTotal > dynamicTotalMax) {
-    const targetLabel =
-      input.achievementType === 'total_score' ? '総スコア目標' : 'OVER POWER合計目標'
-    return `${targetLabel}は最大 ${dynamicTotalMax.toLocaleString('ja-JP')} 以下で入力してください。`
+    return t('goals.validation.totalMax', { label: input.achievementType === 'total_score'
+        ? t('goals.validation.totalScoreTarget')
+        : t('goals.validation.overPowerTotalTarget'), max: dynamicTotalMax.toLocaleString('ja-JP') })
   }
 
   if (isCountType && input.countMode === 'number' && parsedCount <= 0) {
-    return ERROR_MESSAGE_INVALID_COUNT_TARGET
+    return GOAL_FORM_COPY.invalidCountTarget
   }
 
   return undefined

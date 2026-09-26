@@ -1,40 +1,15 @@
+import { t } from '../../../../../i18n'
 import { Collapsible } from '@kobalte/core/collapsible'
 import { ToggleGroup } from '@kobalte/core/toggle-group'
 import { Tooltip } from '@kobalte/core/tooltip'
-import {
-  type CollisionDetector,
-  closestCenter,
-  DragDropProvider,
-  type DragEvent,
-  SortableProvider,
-  useDragDropContext,
-} from '@thisbeyond/solid-dnd'
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsDown,
-  ChevronsRight,
-  GalleryHorizontal,
-  LayoutList,
-  Plus,
-  Settings2,
-} from 'lucide-solid'
+import { type CollisionDetector, closestCenter, DragDropProvider, type DragEvent, SortableProvider, useDragDropContext } from '@thisbeyond/solid-dnd'
+import { ChevronLeft, ChevronRight, ChevronsDown, ChevronsRight, GalleryHorizontal, LayoutList, Plus, Settings2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import { AppIconButton } from '../../../../../components/common/AppButton'
 import { AppDisclosureTrigger } from '../../../../../components/common/AppDisclosureTrigger'
 import type { GoalDTO } from '../../../../../types/api'
-import {
-  ADD_GOAL_LABEL,
-  COLLAPSE_ALL_GOALS_LABEL,
-  EMPTY_GOALS_MESSAGE,
-  EXPAND_ALL_GOALS_LABEL,
-  GOAL_GROUP_COPY,
-  GOAL_GROUP_DISPLAY_MODE_COPY,
-  GOALS_LIMIT,
-  GOALS_LIMIT_REACHED_MESSAGE,
-  type GoalGroupDisplayMode,
-} from '../../constants'
+import { GOALS_LIST_COPY, EMPTY_GOALS_MESSAGE, GOAL_GROUP_COPY, GOAL_GROUP_DISPLAY_MODE_COPY, GOALS_LIMIT, GOALS_LIMIT_REACHED_MESSAGE, type GoalGroupDisplayMode } from '../../constants'
 import type { GoalGroupView } from '../../goalGroupsModel'
 import GoalCard from '../card/GoalCard'
 import { GoalCopyPlaceholder } from '../card/GoalCopyPlaceholder'
@@ -492,9 +467,9 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
       <div ref={stickyHeaderRef} class="sticky top-0 z-20 space-y-4 bg-page-pattern pt-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 class="text-2xl font-semibold">目標</h1>
+            <h1 class="text-2xl font-semibold">{t('goals.page.title')}</h1>
             <p class="text-sm text-text-muted">
-              {props.goalsCount} / {GOALS_LIMIT}件
+              {t('goals.list.limitCount', { count: props.goalsCount, limit: GOALS_LIMIT })}
             </p>
           </div>
           <div class="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
@@ -504,7 +479,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
                   as={AppIconButton}
                   tone="ghost"
                   aria-label={
-                    areAllGoalsClosed() ? EXPAND_ALL_GOALS_LABEL : COLLAPSE_ALL_GOALS_LABEL
+                    areAllGoalsClosed() ? GOALS_LIST_COPY.expandAll : GOALS_LIST_COPY.collapseAll
                   }
                   disabled={props.isReordering}
                   onClick={handleToggleAll}
@@ -518,7 +493,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
                   <Tooltip.Content class="z-50 rounded-md border border-border-strong bg-surface-raised px-2 py-1 text-xs text-text shadow-lg">
-                    {areAllGoalsClosed() ? EXPAND_ALL_GOALS_LABEL : COLLAPSE_ALL_GOALS_LABEL}
+                    {areAllGoalsClosed() ? GOALS_LIST_COPY.expandAll : GOALS_LIST_COPY.collapseAll}
                   </Tooltip.Content>
                 </Tooltip.Portal>
               </Tooltip>
@@ -536,7 +511,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
               <Settings2 size={18} aria-hidden="true" />
             </AppIconButton>
             <AppIconButton
-              aria-label={ADD_GOAL_LABEL}
+              aria-label={GOALS_LIST_COPY.addGoal}
               tone="primary"
               disabled={props.isReordering || props.isCopying || props.goalsCount >= GOALS_LIMIT}
               onClick={props.onCreate}
@@ -557,7 +532,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
             </AppIconButton>
             <div class="min-w-0 text-center" role="status" aria-live="polite" aria-atomic="true">
               <h2 class="truncate font-sans text-lg font-semibold">{props.groupView.name}</h2>
-              <p class="text-xs text-text-muted">{props.groupView.goals.length}件</p>
+              <p class="text-xs text-text-muted">{t('goals.list.count', { count: props.groupView.goals.length })}</p>
             </div>
             <AppIconButton
               aria-label={GOAL_GROUP_COPY.nextButtonLabel}
@@ -606,7 +581,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
                         <AppDisclosureTrigger
                           variant="compact"
                           label={groupView.name}
-                          summary={`${groupView.goals.length}件`}
+                          summary={t('goals.list.count', { count: groupView.goals.length })}
                           class="border-b border-border pb-2"
                           labelClass="truncate font-sans text-lg font-semibold"
                         />

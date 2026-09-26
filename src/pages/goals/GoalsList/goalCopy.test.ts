@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalDTO } from '../../../types/api'
-import { GOAL_COPY_TITLE_SUFFIX, GOAL_TITLE_MAX_LENGTH } from './constants'
+import { GOALS_LIST_COPY, GOAL_TITLE_MAX_LENGTH } from './constants'
 import { buildCopiedGoalTitle, buildGoalCopyRequest } from './goalCopy'
 
 /**
@@ -32,7 +32,7 @@ test('短いタイトルにはコピー表記を追加する', () => {
   const result = buildCopiedGoalTitle(title)
 
   // Then: 元のタイトルを維持してコピー表記が付く。
-  assert.equal(result, `${title}${GOAL_COPY_TITLE_SUFFIX}`)
+  assert.equal(result, `${title}${GOALS_LIST_COPY.copyTitleSuffix}`)
 })
 
 test('長いタイトルは末尾を削ってコピー表記を含む上限内に収める', () => {
@@ -44,19 +44,19 @@ test('長いタイトルは末尾を削ってコピー表記を含む上限内�
 
   // Then: 上限を超えず、コピー表記で終わる。
   assert.equal(Array.from(result).length, GOAL_TITLE_MAX_LENGTH)
-  assert.equal(result.endsWith(GOAL_COPY_TITLE_SUFFIX), true)
+  assert.equal(result.endsWith(GOALS_LIST_COPY.copyTitleSuffix), true)
 })
 
 test('絵文字をUnicodeコードポイント単位で数えて必要な末尾だけを削る', () => {
   // Given: コピー表記を加えると上限を1文字超える絵文字タイトル。
-  const baseMaxLength = GOAL_TITLE_MAX_LENGTH - Array.from(GOAL_COPY_TITLE_SUFFIX).length
+  const baseMaxLength = GOAL_TITLE_MAX_LENGTH - Array.from(GOALS_LIST_COPY.copyTitleSuffix).length
   const title = '🎯'.repeat(baseMaxLength + 1)
 
   // When: 複製後のタイトルを作る。
   const result = buildCopiedGoalTitle(title)
 
   // Then: 絵文字を1文字として数え、上限に収まる数を維持する。
-  assert.equal(result, `${'🎯'.repeat(baseMaxLength)}${GOAL_COPY_TITLE_SUFFIX}`)
+  assert.equal(result, `${'🎯'.repeat(baseMaxLength)}${GOALS_LIST_COPY.copyTitleSuffix}`)
   assert.equal(Array.from(result).length, GOAL_TITLE_MAX_LENGTH)
 })
 
@@ -70,7 +70,7 @@ test('複製リクエストは同じグループと目標条件を引き継ぐ',
   // Then: 保存専用項目を除き、タイトル以外の設定を引き継ぐ。
   assert.deepEqual(result, {
     group_id: goal.group_id,
-    title: `${goal.title}${GOAL_COPY_TITLE_SUFFIX}`,
+    title: `${goal.title}${GOALS_LIST_COPY.copyTitleSuffix}`,
     achievement_type: goal.achievement_type,
     achievement_params: goal.achievement_params,
     attributes: goal.attributes,

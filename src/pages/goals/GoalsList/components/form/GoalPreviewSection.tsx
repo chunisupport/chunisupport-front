@@ -1,3 +1,4 @@
+import { t } from '../../../../../i18n'
 import type { Component } from 'solid-js'
 import type { GoalAchievementType } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
@@ -19,7 +20,7 @@ interface GoalPreviewSectionProps {
  */
 export const GoalPreviewSection: Component<GoalPreviewSectionProps> = (props) => (
   <>
-    <p class="mb-1 block text-text-muted text-sm">プレビュー</p>
+    <p class="mb-1 block text-text-muted text-sm">{t('goals.form.preview')}</p>
     <article
       class={`rounded-lg border p-4 shadow-sm ${
         props.progress.achieved

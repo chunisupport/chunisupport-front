@@ -1,3 +1,4 @@
+import { localizedCopy, t } from '../../../i18n'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -10,25 +11,12 @@ import type {
 import { normalizeGoalAttributeIds } from '../../../utils/goalAttributes'
 import { buildGoalVersionNameMap } from '../../../utils/goalVersion'
 
-// ID(code) -> 表示名の辞書。将来は言語キーを増やすだけでi18n対応できる
-export const GOAL_ACHIEVEMENT_TYPE_LABELS = {
-  ja: {
-    rank_count: 'ランク達成数',
-    score_count: 'スコア達成数',
-    rating_count: '単曲レート達成数',
-    avg_score: '平均スコア',
-    hardlamp_count: 'ハードランプ達成数',
-    combolamp_count: 'FC/AJ達成数',
-    fullchain_count: 'FULL CHAIN達成数',
-    rainbow_count: '虹枠 (曲毎AJ) 達成楽曲数',
-    total_score: 'トータルハイスコア',
-    overpower_value: 'OVER POWER',
-    overpower_percent: 'OVER POWER達成率',
-  } satisfies Record<GoalAchievementType, string>,
-}
+/** 目標種別 (code) ごとの表示名 */
+export const GOAL_ACHIEVEMENT_TYPE_LABELS: Readonly<Record<GoalAchievementType, string>> =
+  localizedCopy('goals.achievementTypes')
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
-const NO_TARGET_CHARTS_LABEL = '対象譜面なし'
+const NO_TARGET_CHARTS_LABEL = t('goals.summary.noTargetCharts')
 
 /**
  * 保存済み目標から作成・更新APIへ送信できるペイロードを作る。
@@ -46,17 +34,22 @@ export const buildGoalPayload = (goal: GoalDTO): GoalRequest => ({
   invert_percentage: goal.invert_percentage,
 })
 
+/**
+ * 目標種別の表示名を現在の表示言語で取得する。
+ *
+ * @param code - 目標種別のコード。
+ * @param options - 未知のコードに使う代替表示名。
+ * @returns 目標種別の表示名。
+ */
 export const resolveGoalAchievementTypeLabel = (
   code: string,
   options?: {
-    locale?: keyof typeof GOAL_ACHIEVEMENT_TYPE_LABELS
     fallbackLabel?: string
   }
-): string => {
-  const locale = options?.locale ?? 'ja'
-  const localized = GOAL_ACHIEVEMENT_TYPE_LABELS[locale] as Record<string, string>
-  return localized[code] ?? options?.fallbackLabel ?? code
-}
+): string =>
+  (GOAL_ACHIEVEMENT_TYPE_LABELS as Readonly<Record<string, string>>)[code] ??
+  options?.fallbackLabel ??
+  code
 
 export const formatGoalTypeLabel = (type: GoalAchievementType): string =>
   resolveGoalAchievementTypeLabel(type)
@@ -92,24 +85,24 @@ export const formatGoalAttributesLabel = (
   if (hasNoSelectedCharts) return NO_TARGET_CHARTS_LABEL
 
   if (attributes.chart_target === 'OP_TARGET') {
-    parts.push('対象: OP対象')
+    parts.push(t('goals.summary.opTarget'))
   }
 
   if (attributes.chart_target !== 'OP_TARGET' && diffIds && diffIds.length > 0) {
-    parts.push(`難易度: ${formatNames(diffIds, difficultyNameMap)}`)
+    parts.push(t('goals.summary.difficulty', { names: formatNames(diffIds, difficultyNameMap) }))
   }
 
   if (typeof attributes.const?.min === 'number' || typeof attributes.const?.max === 'number') {
-    parts.push(`定数: ${attributes.const?.min ?? '-'} ～ ${attributes.const?.max ?? '-'}`)
+    parts.push(t('goals.summary.const', { min: attributes.const?.min ?? '-', max: attributes.const?.max ?? '-' }))
   }
 
   if (genreIds && genreIds.length > 0) {
-    parts.push(`ジャンル: ${formatNames(genreIds, genreNameMap)}`)
+    parts.push(t('goals.summary.genre', { names: formatNames(genreIds, genreNameMap) }))
   }
 
   if (versionIds && versionIds.length > 0) {
-    parts.push(`バージョン: ${formatNames(versionIds, versionNameMap)}`)
+    parts.push(t('goals.summary.version', { names: formatNames(versionIds, versionNameMap) }))
   }
 
-  return parts.length > 0 ? parts.join(' / ') : '条件なし（全譜面）'
+  return parts.length > 0 ? parts.join(' / ') : t('goals.summary.noConditions')
 }

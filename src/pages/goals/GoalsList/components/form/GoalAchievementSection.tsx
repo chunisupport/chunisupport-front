@@ -1,39 +1,19 @@
+import { formatMessage, localizedCopy } from '../../../../../i18n'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import { CheckboxField } from '../../../../../components/common/CheckboxField'
 import { SCORE_MIN } from '../../../../../constants/chart'
 import type { GoalAchievementType } from '../../../../../types/api'
-import {
-  COMBO_LAMP_OPTIONS,
-  type ComboLampGoalValue,
-  FULL_CHAIN_OPTIONS,
-  type FullChainGoalValue,
-  HARD_LAMP_OPTIONS,
-  type HardLampGoalValue,
-} from '../../../../../utils/goalLamp'
+import { COMBO_LAMP_OPTIONS, type ComboLampGoalValue, FULL_CHAIN_OPTIONS, type FullChainGoalValue, HARD_LAMP_OPTIONS, type HardLampGoalValue } from '../../../../../utils/goalLamp'
 import { MAX_SCORE, SCORE_RANK_MIN_SCORES, SCORE_RANKS_ASC } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
-import {
-  LABEL_INVERT_PERCENTAGE,
-  LABEL_INVERT_VALUE,
-  RATING_GOAL_DECIMAL_PLACES,
-  RATING_GOAL_FIELD_LABEL,
-  RATING_GOAL_MIN_VALUE,
-  STEP3_DESCRIPTION,
-} from './constants'
-import {
-  GoalNumberField,
-  GoalSelectField,
-  type GoalSelectOption,
-  GoalTargetModeRadioGroup,
-} from './goalFormFields'
+import { GOAL_FORM_COPY, RATING_GOAL_DECIMAL_PLACES, RATING_GOAL_MIN_VALUE } from './constants'
+import { GoalNumberField, GoalSelectField, type GoalSelectOption, GoalTargetModeRadioGroup } from './goalFormFields'
 import { type RankGoalValue, THEORETICAL_RANK_GOAL } from './goalFormModel'
-import {
-  GOAL_STEP_BADGE_CLASS,
-  GOAL_STEP_DESCRIPTION_CLASS,
-  GOAL_STEP_SECTION_CLASS,
-  GOAL_STEP_TITLE_CLASS,
-} from './goalFormStyles'
+import { GOAL_STEP_BADGE_CLASS, GOAL_STEP_DESCRIPTION_CLASS, GOAL_STEP_SECTION_CLASS, GOAL_STEP_TITLE_CLASS } from './goalFormStyles'
+
+/** 目標フォームの表示文言 */
+const GOAL_FORM_TEXT = localizedCopy('goals.form')
 
 interface GoalAchievementSectionProps {
   achievementType: GoalAchievementType
@@ -74,21 +54,21 @@ interface GoalAchievementSectionProps {
 }
 
 const COUNT_MODE_OPTIONS: GoalSelectOption<GoalTargetMode>[] = [
-  { value: 'all', label: '条件に当てはまる譜面すべて' },
-  { value: 'number', label: '目標値を指定' },
-  { value: 'remaining', label: '最大値に対する残数' },
-  { value: 'percent', label: '最大値に対する割合' },
+  { value: 'all', label: GOAL_FORM_TEXT.allCharts },
+  { value: 'number', label: GOAL_FORM_TEXT.specifyValue },
+  { value: 'remaining', label: GOAL_FORM_TEXT.remainingFromMax },
+  { value: 'percent', label: GOAL_FORM_TEXT.percentOfMax },
 ]
 const RAINBOW_COUNT_MODE_OPTIONS: GoalSelectOption<GoalTargetMode>[] = [
-  { value: 'all', label: '条件に当てはまる楽曲すべて' },
+  { value: 'all', label: GOAL_FORM_TEXT.allSongs },
   ...COUNT_MODE_OPTIONS.slice(1),
 ]
 
 const TOTAL_MODE_OPTIONS: GoalSelectOption<GoalTargetMode>[] = [
-  { value: 'all', label: '理論値' },
-  { value: 'number', label: '目標値を指定' },
-  { value: 'remaining', label: '最大値に対する残数' },
-  { value: 'percent', label: '最大値に対する割合' },
+  { value: 'all', label: GOAL_FORM_TEXT.theoretical },
+  { value: 'number', label: GOAL_FORM_TEXT.specifyValue },
+  { value: 'remaining', label: GOAL_FORM_TEXT.remainingFromMax },
+  { value: 'percent', label: GOAL_FORM_TEXT.percentOfMax },
 ]
 
 const HARD_LAMP_SELECT_OPTIONS: GoalSelectOption<HardLampGoalValue>[] = HARD_LAMP_OPTIONS.map(
@@ -111,7 +91,9 @@ const SELECTABLE_SCORE_RANKS_DESC = [...SCORE_RANKS_ASC]
 const RANK_OPTIONS: GoalSelectOption<RankGoalValue>[] = [
   {
     value: THEORETICAL_RANK_GOAL,
-    label: `理論値（${MAX_SCORE.toLocaleString('ja-JP')}）`,
+    label: formatMessage(GOAL_FORM_TEXT.theoreticalWithScore, {
+      score: MAX_SCORE.toLocaleString('ja-JP'),
+    }),
   },
   ...SELECTABLE_SCORE_RANKS_DESC.map((scoreRank) => ({
     value: scoreRank,
@@ -130,15 +112,15 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
     <div class="mb-3 flex items-center gap-3">
       <span class={GOAL_STEP_BADGE_CLASS}>3</span>
       <div>
-        <h2 class={GOAL_STEP_TITLE_CLASS}>達成条件</h2>
-        <p class={GOAL_STEP_DESCRIPTION_CLASS}>{STEP3_DESCRIPTION}</p>
+        <h2 class={GOAL_STEP_TITLE_CLASS}>{GOAL_FORM_TEXT.achievementTitle}</h2>
+        <p class={GOAL_STEP_DESCRIPTION_CLASS}>{GOAL_FORM_COPY.step3Description}</p>
       </div>
     </div>
 
     <div class="space-y-4">
       <div class="space-y-1">
         <GoalSelectField
-          label="目標種別"
+          label={GOAL_FORM_TEXT.achievementType}
           value={props.achievementType}
           options={props.achievementTypeOptions}
           onChange={props.onAchievementTypeChange}
@@ -148,7 +130,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
 
       <Show when={props.achievementType === 'score_count' || props.achievementType === 'avg_score'}>
         <GoalNumberField
-          label="スコア目標"
+          label={GOAL_FORM_TEXT.scoreTarget}
           value={props.score}
           min={SCORE_MIN}
           max={MAX_SCORE}
@@ -158,7 +140,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
 
       <Show when={props.achievementType === 'rank_count'}>
         <GoalSelectField
-          label="ランク目標"
+          label={GOAL_FORM_TEXT.rankTarget}
           value={props.rank}
           options={RANK_OPTIONS}
           onChange={props.onRankChange}
@@ -167,7 +149,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
 
       <Show when={props.achievementType === 'rating_count'}>
         <GoalNumberField
-          label={RATING_GOAL_FIELD_LABEL}
+          label={GOAL_FORM_COPY.ratingField}
           value={props.rating}
           min={RATING_GOAL_MIN_VALUE}
           step={10 ** -RATING_GOAL_DECIMAL_PLACES}
@@ -177,7 +159,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
 
       <Show when={props.achievementType === 'hardlamp_count'}>
         <GoalSelectField
-          label="ハードランプ"
+          label={GOAL_FORM_TEXT.hardLamp}
           value={props.hardLamp}
           options={HARD_LAMP_SELECT_OPTIONS}
           onChange={props.onHardLampChange}
@@ -186,7 +168,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
 
       <Show when={props.achievementType === 'combolamp_count'}>
         <GoalSelectField
-          label="コンボランプ"
+          label={GOAL_FORM_TEXT.comboLamp}
           value={props.comboLamp}
           options={COMBO_LAMP_SELECT_OPTIONS}
           onChange={props.onComboLampChange}
@@ -216,7 +198,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
         <div class="block text-sm">
           <div class="space-y-3">
             <GoalTargetModeRadioGroup
-              label={props.achievementType === 'rainbow_count' ? '目標楽曲数' : '目標譜面数'}
+              label={props.achievementType === 'rainbow_count' ? GOAL_FORM_TEXT.targetSongCount : GOAL_FORM_TEXT.targetChartCount}
               name="goal-count-mode"
               value={props.countMode}
               options={
@@ -261,7 +243,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
               when={props.canUseDynamicTotalTarget(props.achievementType)}
               fallback={
                 <GoalNumberField
-                  label="目標値"
+                  label={GOAL_FORM_TEXT.targetValue}
                   value={props.total}
                   description={props.totalLimitText}
                   min={0}
@@ -272,7 +254,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
             >
               <div class="space-y-3">
                 <GoalTargetModeRadioGroup
-                  label="目標値"
+                  label={GOAL_FORM_TEXT.targetValue}
                   name="goal-total-mode"
                   value={props.totalMode}
                   options={TOTAL_MODE_OPTIONS}
@@ -303,18 +285,18 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
       </Show>
 
       <div class="block space-y-2 text-sm">
-        <p class="mb-1 block text-text-muted">表示形式</p>
+        <p class="mb-1 block text-text-muted">{GOAL_FORM_TEXT.displayFormat}</p>
         <CheckboxField
           class="relative flex items-center gap-2 text-sm text-text-muted"
           checked={props.invertValue}
           onChange={props.onInvertValueChange}
-          label={LABEL_INVERT_VALUE}
+          label={GOAL_FORM_COPY.invertValue}
         />
         <CheckboxField
           class="relative flex items-center gap-2 text-sm text-text-muted"
           checked={props.invertPercentage}
           onChange={props.onInvertPercentageChange}
-          label={LABEL_INVERT_PERCENTAGE}
+          label={GOAL_FORM_COPY.invertPercentage}
         />
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { t } from '../../../../../i18n'
 import { NumberField } from '@kobalte/core/number-field'
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
@@ -98,7 +99,7 @@ export const GoalTextField: Component<GoalTextFieldProps> = (props) => (
     <Show when={props.maxLength}>
       {(maxLength) => (
         <TextField.Description class="mt-1 text-xs text-text-subtle">
-          {maxLength()}文字以内
+          {t('goals.form.maxLength', { max: maxLength() })}
         </TextField.Description>
       )}
     </Show>
@@ -158,7 +159,7 @@ export const GoalSelectField = <TValue extends string>(props: GoalSelectFieldPro
           props.onChange(option.value)
         }
       }}
-      placeholder="選択..."
+      placeholder={t('goals.form.selectPlaceholder')}
       formatLabel={(option) => option.label}
     />
   )

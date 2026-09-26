@@ -1,61 +1,20 @@
+import { t } from '../../../i18n'
 import { useNavigate } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import {
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-  ErrorBoundary,
-  Show,
-} from 'solid-js'
+import { createEffect, createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import type {
-  GoalCreateRequest,
-  GoalDTO,
-  GoalGroupDTO,
-  GoalUpdateRequest,
-} from '../../../types/api'
+import type { GoalCreateRequest, GoalDTO, GoalGroupDTO, GoalUpdateRequest } from '../../../types/api'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { GoalGroupsManageDialog } from './components/list/GoalGroupsManageDialog'
 import { GoalsListContent } from './components/list/GoalsListContent'
 import { GoalsListDialogs } from './components/list/GoalsListDialogs'
-import {
-  buildGoalReorderAnnouncement,
-  GOAL_COPY_ERROR_MESSAGE,
-  GOAL_GROUP_COPY,
-  GOAL_REORDER_ERROR_MESSAGE,
-  GOALS_LIMIT,
-  type GoalGroupDisplayMode,
-  RECORD_NAVIGATION_ERROR_MESSAGE,
-} from './constants'
-import {
-  buildGoalGroupViews,
-  moveDeletedGroupGoalsToUngrouped,
-  moveGoalGroup,
-  orderGoalsByPersistedGroupOrder,
-  resolveCyclicGoalGroupId,
-  UNGROUPED_GOALS_LABEL,
-} from './goalGroupsModel'
+import { buildGoalReorderAnnouncement, GOALS_LIST_COPY, GOAL_GROUP_COPY, GOALS_LIMIT, type GoalGroupDisplayMode } from './constants'
+import { buildGoalGroupViews, moveDeletedGroupGoalsToUngrouped, moveGoalGroup, orderGoalsByPersistedGroupOrder, resolveCyclicGoalGroupId, UNGROUPED_GOALS_LABEL } from './goalGroupsModel'
 import { moveGoal } from './goalOrder'
 import { saveGoalRecordFilterAndBuildPath } from './goalsListNavigation'
-import {
-  buildGoalsWithProgress,
-  resolveDraftGoalProgress as resolveDraftGoalProgressFromData,
-  resolveGoalAllCount,
-  resolveGoalOverPowerChartMax,
-} from './goalsListProgress'
-import {
-  copyGoalRequest,
-  createGoalGroupRequest,
-  deleteGoalGroupRequest,
-  deleteGoalRequest,
-  fetchGoalsListData,
-  reorderGoalGroupsRequest,
-  reorderGoalsRequest,
-  saveGoalRequest,
-  updateGoalGroupRequest,
-} from './goalsListResource'
+import { buildGoalsWithProgress, resolveDraftGoalProgress as resolveDraftGoalProgressFromData, resolveGoalAllCount, resolveGoalOverPowerChartMax } from './goalsListProgress'
+import { copyGoalRequest, createGoalGroupRequest, deleteGoalGroupRequest, deleteGoalRequest, fetchGoalsListData, reorderGoalGroupsRequest, reorderGoalsRequest, saveGoalRequest, updateGoalGroupRequest } from './goalsListResource'
 
 const GoalsList: Component = () => {
   const navigate = useNavigate()
@@ -167,7 +126,7 @@ const GoalsList: Component = () => {
     return resolveDraftGoalProgressFromData(resource(), draftGoal)
   }
 
-  useDocumentTitle('目標')
+  useDocumentTitle(() => t('goals.page.title'))
 
   const openCreateDialog = () => {
     setEditingGoal(undefined)
@@ -210,7 +169,7 @@ const GoalsList: Component = () => {
         currentData ? { ...currentData, goals: [...currentData.goals, copiedGoal] } : currentData
       )
     } catch (error) {
-      setActionError(toUserFriendlyErrorMessage(error, GOAL_COPY_ERROR_MESSAGE))
+      setActionError(toUserFriendlyErrorMessage(error, GOALS_LIST_COPY.copyError))
     } finally {
       setCopyingGoal(undefined)
     }
@@ -237,7 +196,7 @@ const GoalsList: Component = () => {
       const path = await saveGoalRecordFilterAndBuildPath(data, goal)
       navigate(path)
     } catch (error) {
-      setActionError(toUserFriendlyErrorMessage(error, RECORD_NAVIGATION_ERROR_MESSAGE))
+      setActionError(toUserFriendlyErrorMessage(error, GOALS_LIST_COPY.recordNavigationError))
     }
   }
 
@@ -265,7 +224,7 @@ const GoalsList: Component = () => {
       setEditingGoal(undefined)
       setRefreshKey((prev) => prev + 1)
     } catch (error) {
-      setFormError(toUserFriendlyErrorMessage(error, '保存に失敗しました。'))
+      setFormError(toUserFriendlyErrorMessage(error, t('goals.page.saveFailed')))
     } finally {
       setIsSaving(false)
     }
@@ -283,7 +242,7 @@ const GoalsList: Component = () => {
       setDeletingGoal(undefined)
       setRefreshKey((prev) => prev + 1)
     } catch (error) {
-      setActionError(toUserFriendlyErrorMessage(error, '削除に失敗しました。'))
+      setActionError(toUserFriendlyErrorMessage(error, t('goals.page.deleteFailed')))
     } finally {
       setIsDeleting(false)
     }
@@ -331,7 +290,7 @@ const GoalsList: Component = () => {
     )
       .catch((error: unknown) => {
         setOrderedGoals(previousGoals)
-        setActionError(toUserFriendlyErrorMessage(error, GOAL_REORDER_ERROR_MESSAGE))
+        setActionError(toUserFriendlyErrorMessage(error, GOALS_LIST_COPY.reorderError))
       })
       .finally(() => {
         setIsReordering(false)
