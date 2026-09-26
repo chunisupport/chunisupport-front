@@ -2,14 +2,14 @@ import { Tooltip } from '@kobalte/core/tooltip'
 import { CornerDownLeft } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createEffect, createSignal, createUniqueId, Show } from 'solid-js'
-import { AppIconButton } from '../../../components/common/AppButton'
-import { SONG_EDIT_COPY } from '../songEditConstants'
 import {
   findStandardSongBpm,
   findStandardSongReading,
   findStandardSongWikiPageTitle,
   type StandardSongLookupItem,
-} from '../utils/standardSongLookup'
+} from '../../utils/standardSongLookup'
+import { AppIconButton } from './AppButton'
+import { COPY_FROM_STANDARD_COPY } from './CopyFromStandardField.constants'
 
 type CopyFromStandardFieldBaseProps = {
   /** グリッド配置などに使う追加クラス */
@@ -52,18 +52,18 @@ const getCopyFromStandardCopy = (
   switch (field) {
     case 'bpm':
       return {
-        ariaLabel: SONG_EDIT_COPY.copyBpmFromStandardAriaLabel,
-        valueMissingMessage: SONG_EDIT_COPY.copyBpmFromStandardBpmMissing,
+        ariaLabel: COPY_FROM_STANDARD_COPY.copyBpmFromStandardAriaLabel,
+        valueMissingMessage: COPY_FROM_STANDARD_COPY.copyBpmFromStandardBpmMissing,
       }
     case 'reading':
       return {
-        ariaLabel: SONG_EDIT_COPY.copyReadingFromStandardAriaLabel,
-        valueMissingMessage: SONG_EDIT_COPY.copyReadingFromStandardMissing,
+        ariaLabel: COPY_FROM_STANDARD_COPY.copyReadingFromStandardAriaLabel,
+        valueMissingMessage: COPY_FROM_STANDARD_COPY.copyReadingFromStandardMissing,
       }
     case 'wikiPageTitle':
       return {
-        ariaLabel: SONG_EDIT_COPY.copyWikiPageTitleFromStandardAriaLabel,
-        valueMissingMessage: SONG_EDIT_COPY.copyWikiPageTitleFromStandardMissing,
+        ariaLabel: COPY_FROM_STANDARD_COPY.copyWikiPageTitleFromStandardAriaLabel,
+        valueMissingMessage: COPY_FROM_STANDARD_COPY.copyWikiPageTitleFromStandardMissing,
       }
   }
 }
@@ -111,7 +111,7 @@ const CopyFromStandardField = (props: CopyFromStandardFieldProps): JSX.Element =
       setErrorMessage(
         result.status === 'valueMissing'
           ? copy().valueMissingMessage
-          : SONG_EDIT_COPY.copyFromStandardNotFound
+          : COPY_FROM_STANDARD_COPY.copyFromStandardNotFound
       )
       return
     }
@@ -126,7 +126,7 @@ const CopyFromStandardField = (props: CopyFromStandardFieldProps): JSX.Element =
     setErrorMessage(
       result.status === 'valueMissing'
         ? copy().valueMissingMessage
-        : SONG_EDIT_COPY.copyFromStandardNotFound
+        : COPY_FROM_STANDARD_COPY.copyFromStandardNotFound
     )
   }
 

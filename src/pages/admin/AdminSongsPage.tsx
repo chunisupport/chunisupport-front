@@ -1,4 +1,4 @@
-import SongManagementPage from '../songs/SongManagementPage'
+import SongManagementPage from '../song-management/SongManagementPage'
 
 /**
  * ADMIN向けの楽曲管理画面を表示する。

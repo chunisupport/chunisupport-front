@@ -1,4 +1,3 @@
-import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { Pencil, Plus, Trash2 } from 'lucide-solid'
@@ -7,6 +6,7 @@ import { createEffect, createMemo, createResource, createSignal, For, Show } fro
 import { createVersion, deleteVersion, fetchAdminVersions, renameVersion } from '../../api/versions'
 import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import { showSuccessToast } from '../../components/common/AppToast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { CreateVersionRequestDTO, VersionDTO } from '../../types/api'
@@ -198,38 +198,31 @@ const VersionFormDialog: Component<VersionFormDialogProps> = (props): JSX.Elemen
  * @returns 削除確認ダイアログ。
  */
 const VersionDeleteDialog: Component<VersionDeleteDialogProps> = (props): JSX.Element => (
-  <AlertDialog open={props.version !== null} onOpenChange={props.onOpenChange}>
-    <AlertDialog.Portal>
-      <AlertDialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-      <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
-        <AlertDialog.Title class="text-lg font-bold text-text">
-          {ADMIN_VERSIONS_COPY.deleteDialogTitle}
-        </AlertDialog.Title>
-        <AlertDialog.Description class="mt-2 text-sm text-text-muted">
-          {formatVersionDeleteTargetMessage(props.version?.name ?? '')}
-          {ADMIN_VERSIONS_COPY.deleteDialogDescription}
-        </AlertDialog.Description>
-
-        <Show when={props.errorMessage}>
-          <p
-            class="mt-4 rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger"
-            role="alert"
-          >
-            {props.errorMessage}
-          </p>
-        </Show>
-
-        <div class="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <AppButton disabled={props.deleting} onClick={() => props.onOpenChange(false)}>
-            {ADMIN_VERSIONS_COPY.cancelButton}
-          </AppButton>
-          <AppButton variant="danger" disabled={props.deleting} onClick={props.onConfirm}>
-            {props.deleting ? ADMIN_VERSIONS_COPY.deleting : ADMIN_VERSIONS_COPY.deleteSubmit}
-          </AppButton>
-        </div>
-      </AlertDialog.Content>
-    </AlertDialog.Portal>
-  </AlertDialog>
+  <AppConfirmDialog
+    open={props.version !== null}
+    onOpenChange={props.onOpenChange}
+    title={ADMIN_VERSIONS_COPY.deleteDialogTitle}
+    description={
+      <>
+        {formatVersionDeleteTargetMessage(props.version?.name ?? '')}
+        {ADMIN_VERSIONS_COPY.deleteDialogDescription}
+      </>
+    }
+    cancelLabel={ADMIN_VERSIONS_COPY.cancelButton}
+    confirmLabel={props.deleting ? ADMIN_VERSIONS_COPY.deleting : ADMIN_VERSIONS_COPY.deleteSubmit}
+    confirmVariant="danger"
+    pending={props.deleting}
+    onConfirm={props.onConfirm}
+  >
+    <Show when={props.errorMessage}>
+      <p
+        class="mt-4 rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger"
+        role="alert"
+      >
+        {props.errorMessage}
+      </p>
+    </Show>
+  </AppConfirmDialog>
 )
 
 /**

@@ -9,13 +9,6 @@ export const SONG_EDIT_COPY = {
   worldsendChartFormDescription: '属性、レベル、ノーツ数、ノーツデザイナーを編集します。',
   genreLabel: 'GENRE',
   bpmLabel: 'BPM',
-  copyBpmFromStandardAriaLabel: 'STANDARDからBPMを入力',
-  copyReadingFromStandardAriaLabel: 'STANDARDから読みを入力',
-  copyWikiPageTitleFromStandardAriaLabel: 'STANDARDからWikiページタイトルを入力',
-  copyFromStandardNotFound: '一致するSTANDARD楽曲が見つかりません。',
-  copyBpmFromStandardBpmMissing: '一致するSTANDARD楽曲にBPMがありません。',
-  copyReadingFromStandardMissing: '一致するSTANDARD楽曲に読みがありません。',
-  copyWikiPageTitleFromStandardMissing: '一致するSTANDARD楽曲にWikiページタイトルがありません。',
   releaseLabel: 'RELEASE',
   wikiPageTitleLabel: 'WIKI PAGE TITLE',
   constLabel: 'CONST',
@@ -40,12 +33,6 @@ export const SONG_EDIT_COPY = {
   notesDesignerTooLong: 'NOTES DESIGNERは100文字以下で入力してください。',
   wikiPageTitleTooLong: 'WIKI PAGE TITLEは300文字以下で入力してください。',
   levelInvalid: "WORLD'S ENDレベルは1〜5で入力してください。",
-} as const
-
-/** 楽曲詳細のマスタ編集フォームの入力上限 */
-export const SONG_EDIT_INPUT_LIMITS = {
-  notesDesigner: 100,
-  wikiPageTitle: 300,
 } as const
 
 /** 楽曲詳細のマスタ編集フォームで使うテキスト入力の共通スタイル */

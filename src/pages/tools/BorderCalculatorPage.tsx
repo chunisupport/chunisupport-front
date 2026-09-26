@@ -13,7 +13,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { SongDTO } from '../../types/api'
 import { type BorderCalculatorResult, calculateBorder } from '../../utils/borderCalculator'
-import { buildSearchableItems, filterSearchableItems } from '../songs/searchHelpers'
+import { buildSearchableItems, filterSearchableItems } from '../../utils/searchHelpers'
 
 /** ボーダー計算機の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 const BORDER_CALCULATOR_COPY = {

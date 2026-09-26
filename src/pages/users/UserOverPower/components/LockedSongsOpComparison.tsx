@@ -105,8 +105,8 @@ export const LockedSongsOpComparison: Component<Props> = (props) => {
         summaryClass={props.comparison().matched ? 'text-success' : 'text-warning'}
       />
       <Collapsible.Content>
-        <div class="flex min-w-0 flex-col items-center gap-2 border-t border-border p-3">
-          <div class="w-fit max-w-full rounded-md border border-border bg-surface-muted px-3 py-2">
+        <div class="flex min-w-0 flex-col items-center gap-2 border-t border-border p-2 sm:p-3">
+          <div class="w-fit max-w-full rounded-md border border-border bg-surface-muted px-2 py-2 sm:px-3">
             <table class="w-auto max-w-full border-collapse text-sm">
               <caption class="sr-only">
                 {`${LOCKED_SONGS_OP_COMPARISON_COPY.official} ${formatOfficialOverPowerDisplay(
@@ -120,13 +120,13 @@ export const LockedSongsOpComparison: Component<Props> = (props) => {
               </caption>
               <thead>
                 <tr class="font-sans text-xs text-text-muted">
-                  <th class="py-0.5 pr-3 text-left font-medium" scope="col">
+                  <th class="py-0.5 pr-1.5 text-left font-medium sm:pr-3" scope="col">
                     <span class="sr-only">{LOCKED_SONGS_OP_COMPARISON_COPY.kind}</span>
                   </th>
-                  <th class="py-0.5 px-3 text-center font-medium" scope="col">
+                  <th class="py-0.5 px-1.5 sm:px-3 text-center font-medium" scope="col">
                     {LOCKED_SONGS_OP_COMPARISON_COPY.overPower}
                   </th>
-                  <th class="py-0.5 px-3 text-center font-medium" scope="col">
+                  <th class="py-0.5 px-1.5 sm:px-3 text-center font-medium" scope="col">
                     {LOCKED_SONGS_OP_COMPARISON_COPY.overPowerPercent}
                   </th>
                 </tr>
@@ -134,34 +134,34 @@ export const LockedSongsOpComparison: Component<Props> = (props) => {
               <tbody>
                 <tr>
                   <th
-                    class="py-0.5 pr-3 text-left font-sans text-xs font-medium text-text-muted"
+                    class="whitespace-nowrap py-0.5 pr-1.5 text-left font-sans text-xs font-medium text-text-muted sm:pr-3"
                     scope="row"
                   >
                     {LOCKED_SONGS_OP_COMPARISON_COPY.official}
                   </th>
-                  <td class="py-0.5 px-3 text-left font-jost tabular-nums text-text">
+                  <td class="py-0.5 px-1.5 sm:px-3 text-left font-jost tabular-nums text-text">
                     {formatOfficialOverPowerDisplay(props.comparison().officialOverPower)}
                   </td>
-                  <td class="py-0.5 px-3 text-left font-jost tabular-nums text-text">
+                  <td class="py-0.5 px-1.5 sm:px-3 text-left font-jost tabular-nums text-text">
                     {officialPercentText()}
                   </td>
                 </tr>
                 <tr>
                   <th
-                    class="py-0.5 pr-3 text-left font-sans text-xs font-medium text-text-muted"
+                    class="whitespace-nowrap py-0.5 pr-1.5 text-left font-sans text-xs font-medium text-text-muted sm:pr-3"
                     scope="row"
                   >
                     {LOCKED_SONGS_OP_COMPARISON_COPY.calculated}
                   </th>
                   <td
-                    class={`py-0.5 px-3 text-left font-jost tabular-nums ${valueToneClass(
+                    class={`py-0.5 px-1.5 sm:px-3 text-left font-jost tabular-nums ${valueToneClass(
                       props.comparison().overPowerMatched
                     )}`}
                   >
                     {formatOverPowerValue(props.comparison().calculatedOverPower)}
                   </td>
                   <td
-                    class={`py-0.5 px-3 text-left font-jost tabular-nums ${valueToneClass(
+                    class={`py-0.5 px-1.5 sm:px-3 text-left font-jost tabular-nums ${valueToneClass(
                       props.comparison().percentMatched
                     )}`}
                   >
@@ -176,15 +176,15 @@ export const LockedSongsOpComparison: Component<Props> = (props) => {
               <Show when={!props.comparison().matched}>
                 <tfoot>
                   <tr class="text-warning">
-                    <th class="border-t border-border-strong py-0.5 pr-3" scope="row">
+                    <th class="border-t border-border-strong py-0.5 pr-1.5 sm:pr-3" scope="row">
                       <span class="sr-only">{LOCKED_SONGS_OP_COMPARISON_COPY.mismatched}</span>
                     </th>
-                    <td class="border-t border-border-strong py-0.5 px-3 text-left font-jost tabular-nums">
+                    <td class="border-t border-border-strong py-0.5 px-1.5 sm:px-3 text-left font-jost tabular-nums">
                       <Show when={!props.comparison().overPowerMatched}>
                         {overPowerDeltaText()}
                       </Show>
                     </td>
-                    <td class="border-t border-border-strong py-0.5 px-3 text-left font-jost tabular-nums">
+                    <td class="border-t border-border-strong py-0.5 px-1.5 sm:px-3 text-left font-jost tabular-nums">
                       <Show when={props.comparison().percentMatched === false}>
                         {percentDeltaText()}
                       </Show>

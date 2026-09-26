@@ -27,10 +27,6 @@ export const SONG_FILTER_LABELS = {
   rangeError: '下限は上限以下にしてください。',
 } as const
 
-/** 楽曲フィルタの範囲入力欄に適用する共通スタイル。 */
-export const SONG_FILTER_INPUT_CLASS =
-  'w-full min-w-0 rounded border border-border-strong bg-surface px-3 py-2 text-sm font-sans focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
-
 /**
  * 未指定の楽曲フィルタを生成する。
  * @returns 独立した初期フィルタ。

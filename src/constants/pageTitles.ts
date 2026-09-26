@@ -24,3 +24,6 @@ export const MAINTENANCE_LOGIN_PAGE_TITLE = 'スタッフログイン'
 
 /** ADMIN向けメンテナンス管理画面のタイトル */
 export const ADMIN_MAINTENANCE_PAGE_TITLE = 'メンテナンス管理'
+
+/** ADMIN向け楽曲バッチ管理画面のタイトル */
+export const ADMIN_SONG_BATCH_PAGE_TITLE = '楽曲バッチ'

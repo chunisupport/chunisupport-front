@@ -25,3 +25,7 @@ export const FILTER_DIALOG_SELECT_ITEM_CLASS =
  */
 export const FILTER_DIALOG_SELECT_CONTENT_CLASS =
   'z-60 max-h-90 overflow-y-auto rounded-md border border-border-strong bg-surface shadow-lg'
+
+/** 楽曲フィルタの範囲入力欄に適用する共通スタイル。 */
+export const SONG_FILTER_INPUT_CLASS =
+  'w-full min-w-0 rounded border border-border-strong bg-surface px-3 py-2 text-sm font-sans focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'

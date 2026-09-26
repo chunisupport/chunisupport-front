@@ -115,7 +115,7 @@ const createSongsStore = () => {
 /**
  * 楽曲一覧のデフォルト表示用に、楽曲配列をリリース日降順 + official_idx の数値降順でソートする。
  *
- * - リリース日が新しい順（降順）。リリース日が無効/未設定の曲は末尾へ寄せる。
+ * - リリース日が新しい順（降順）。リリース日が無効/未設定の曲は先頭へ寄せる。
  * - 同一リリース日内では official_idx を数値として降順。非数値の idx は数値より後ろ（末尾寄せ）。
  * - 最終タイブレークはタイトルの辞書順（昇順）。
  *
@@ -131,18 +131,20 @@ export const sortSongsByReleaseDescAndIdxDesc = <
     const parsedIdx = song.official_idx?.trim() ? Number(song.official_idx) : NaN
     const parsedRelease = Date.parse(song.release ?? '')
 
-    // 降順ソートのため、無効値は「最小値」相当の sentinel として扱い、末尾へ寄せる
+    // 降順ソートのため、無効な idx は「最小値」相当の sentinel として扱い末尾へ、
+    // 無効なリリース日は「最大値」相当の sentinel として扱い先頭へ寄せる
     return {
       song,
       idx: Number.isFinite(parsedIdx) ? parsedIdx : -1,
-      releaseTime: Number.isFinite(parsedRelease) ? parsedRelease : -1,
+      releaseTime: Number.isFinite(parsedRelease) ? parsedRelease : Number.POSITIVE_INFINITY,
     }
   })
 
   keyed.sort((left, right) => {
     // リリース日 降順（新しい順）
+    // Infinity 同士の減算は NaN になるため、等値判定を先に行う
     if (left.releaseTime !== right.releaseTime) {
-      return right.releaseTime - left.releaseTime
+      return right.releaseTime > left.releaseTime ? 1 : -1
     }
 
     // idx 数値降順（大きい順）。-1（無効）は数値より後ろ

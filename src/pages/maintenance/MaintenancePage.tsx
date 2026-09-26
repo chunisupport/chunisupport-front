@@ -5,7 +5,7 @@ import { MAINTENANCE_PAGE_COPY } from '../../constants/maintenance'
 import { MAINTENANCE_PAGE_TITLE } from '../../constants/pageTitles'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { availability } from '../../stores/availability'
-import { formatMaintenanceDateTime } from '../../utils/maintenanceDateTime'
+import { formatJstDateTime } from '../../utils/jstDateTime'
 
 /**
  * 一般利用者へメンテナンス状態と運営コメントを表示する。
@@ -27,9 +27,7 @@ const MaintenancePage = () => {
   const displayedComment = createMemo(
     () => maintenance()?.comment || MAINTENANCE_PAGE_COPY.defaultComment
   )
-  const displayedUpdatedAt = createMemo(() =>
-    formatMaintenanceDateTime(maintenance()?.updatedAt ?? null)
-  )
+  const displayedUpdatedAt = createMemo(() => formatJstDateTime(maintenance()?.updatedAt ?? null))
 
   return (
     <main

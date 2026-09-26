@@ -53,6 +53,8 @@ export const ADMIN_WORLDSEND_CHART_RANKING_PATH = `${ADMIN_PATH}/chart-rankings/
 export const ADMIN_MAINTENANCE_PATH = `${ADMIN_PATH}/maintenance`
 /** ADMIN向けバージョン管理画面のパス */
 export const ADMIN_VERSIONS_PATH = `${ADMIN_PATH}/versions`
+/** ADMIN向け楽曲バッチ管理画面のパス */
+export const ADMIN_SONG_BATCH_PATH = `${ADMIN_PATH}/song-batch`
 /** ADMIN向けコース管理画面のパス */
 export const ADMIN_COURSES_PATH = `${ADMIN_PATH}/courses`
 /** ADMIN向けレーティング画像DOM確認画面のパス */

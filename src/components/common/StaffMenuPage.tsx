@@ -2,6 +2,7 @@ import {
   Award,
   CalendarRange,
   ChartPie,
+  DatabaseZap,
   ImageDown,
   Music,
   Route,
@@ -22,6 +23,7 @@ export type StaffMenuLinkIcon =
   | 'courses'
   | 'honors'
   | 'versions'
+  | 'songBatch'
   | 'ratingImage'
 
 export type StaffMenuLink = {
@@ -72,6 +74,8 @@ const StaffMenuCardIcon = (props: { icon: StaffMenuLinkIcon }) => {
       return <Award class={STAFF_MENU_ICON_CLASS} aria-hidden="true" />
     case 'versions':
       return <CalendarRange class={STAFF_MENU_ICON_CLASS} aria-hidden="true" />
+    case 'songBatch':
+      return <DatabaseZap class={STAFF_MENU_ICON_CLASS} aria-hidden="true" />
     case 'ratingImage':
       return <ImageDown class={STAFF_MENU_ICON_CLASS} aria-hidden="true" />
   }

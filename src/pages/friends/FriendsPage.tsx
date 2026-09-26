@@ -1,4 +1,3 @@
-import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate, useParams } from '@solidjs/router'
@@ -33,6 +32,7 @@ import {
 } from '../../api/friends'
 import { fetchPossessions } from '../../api/possessions'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
+import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../../components/common/AppMenu'
 import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
@@ -255,7 +255,7 @@ const buildFriendProfilePath = (username: string): string =>
  * フレンド申請拒否またはフレンド解除の確認ダイアログを表示する。
  *
  * @param props - 確認対象の操作、操作状態、イベントハンドラー。
- * @returns Kobalte AlertDialog を使った確認ダイアログ。
+ * @returns 共通の確認ダイアログ。
  */
 const FriendConfirmDialog = (props: FriendConfirmDialogProps): JSX.Element => {
   const isReject = createMemo(() => props.action?.type === 'reject')
@@ -271,25 +271,17 @@ const FriendConfirmDialog = (props: FriendConfirmDialogProps): JSX.Element => {
   )
 
   return (
-    <AlertDialog open={props.action !== null} onOpenChange={props.onOpenChange}>
-      <AlertDialog.Portal>
-        <AlertDialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
-          <AlertDialog.Title class="text-lg font-bold">{title()}</AlertDialog.Title>
-          <AlertDialog.Description class="mt-2 text-sm text-text-muted">
-            {description()}
-          </AlertDialog.Description>
-          <div class="mt-5 flex justify-end gap-2">
-            <AppButton disabled={props.busy} onClick={() => props.onOpenChange(false)}>
-              {FRIENDS_COPY.confirmCancel}
-            </AppButton>
-            <AppButton variant="danger" disabled={props.busy} onClick={props.onConfirm}>
-              {props.busy ? busyLabel() : confirmLabel()}
-            </AppButton>
-          </div>
-        </AlertDialog.Content>
-      </AlertDialog.Portal>
-    </AlertDialog>
+    <AppConfirmDialog
+      open={props.action !== null}
+      onOpenChange={props.onOpenChange}
+      title={title()}
+      description={description()}
+      cancelLabel={FRIENDS_COPY.confirmCancel}
+      confirmLabel={props.busy ? busyLabel() : confirmLabel()}
+      confirmVariant="danger"
+      pending={props.busy}
+      onConfirm={props.onConfirm}
+    />
   )
 }
 
