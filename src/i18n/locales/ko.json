@@ -1,0 +1,24 @@
+{
+  "appearance": {
+    "sectionTitle": "외관",
+    "dialogDescription": "배경과 강조 색상을 선택합니다.",
+    "themeLabel": "배경",
+    "accentLabel": "강조 색상",
+    "languageLabel": "언어",
+    "themes": {
+      "light": "화이트",
+      "pastelOrange": "파스텔 오렌지",
+      "dark": "다크 그린",
+      "darkBlue": "다크 블루",
+      "black": "블랙"
+    },
+    "accents": {
+      "red": "레드",
+      "orange": "오렌지",
+      "yellow": "옐로",
+      "green": "그린",
+      "blue": "블루",
+      "violet": "바이올렛"
+    }
+  }
+}

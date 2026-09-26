@@ -1,14 +1,17 @@
 import type { JSX } from 'solid-js'
+import { localePreference, updateLocalePreference } from '../../stores/localePreferences'
 import {
   accentPreference,
   themePreference,
   updateAccentPreference,
   updateThemePreference,
 } from '../../stores/themePreferences'
+import type { AppLocale } from '../../utils/localePreference'
 import type { AccentPreference, ThemePreference } from '../../utils/themePreference'
 import {
   ACCENT_OPTIONS,
   APPEARANCE_SETTINGS_COPY,
+  LOCALE_OPTIONS,
   THEME_OPTIONS,
 } from './AppearanceSettings.constants'
 import { AppSelect } from './AppSelect'
@@ -24,6 +27,15 @@ const APPEARANCE_SELECT_LABEL_CLASS = 'font-semibold'
  */
 const formatThemeOptionLabel = (value: ThemePreference): string =>
   THEME_OPTIONS.find((option) => option.value === value)?.label ?? value
+
+/**
+ * 表示言語の選択値を表示ラベルへ変換する。
+ *
+ * @param value - 表示対象の表示言語。
+ * @returns 表示言語の表示ラベル。
+ */
+const formatLocaleOptionLabel = (value: AppLocale): string =>
+  LOCALE_OPTIONS.find((option) => option.value === value)?.label ?? value
 
 /**
  * アクセントカラーの選択肢定義を取得する。
@@ -64,10 +76,21 @@ const formatAccentOptionLabel = (value: AccentPreference): JSX.Element => {
 }
 
 /**
- * 背景テーマとアクセントカラーを独立して選択するUIを表示する。
+ * 表示言語・背景テーマ・アクセントカラーを独立して選択するUIを表示する。
  * @returns 外観設定のJSX要素
  */
 const AppearanceSettings = (): JSX.Element => {
+  /**
+   * Selectの選択値を表示言語として適用する。
+   * @param value 選択された表示言語
+   * @returns なし
+   */
+  const handleLocaleChange = (value: string | null): void => {
+    if (value !== null && LOCALE_OPTIONS.some((option) => option.value === value)) {
+      updateLocalePreference(value as AppLocale)
+    }
+  }
+
   /**
    * Selectの選択値を背景テーマとして適用する。
    * @param value 選択された背景テーマ
@@ -92,6 +115,18 @@ const AppearanceSettings = (): JSX.Element => {
 
   return (
     <div class="grid gap-6">
+      <AppSelect<AppLocale>
+        options={LOCALE_OPTIONS.map((option) => option.value)}
+        optionTextValue={formatLocaleOptionLabel}
+        value={localePreference()}
+        onChange={handleLocaleChange}
+        label={APPEARANCE_SETTINGS_COPY.languageLabel}
+        labelVariant="visible"
+        formatLabel={formatLocaleOptionLabel}
+        triggerClass={APPEARANCE_SELECT_TRIGGER_CLASS}
+        valueClass={APPEARANCE_SELECT_LABEL_CLASS}
+      />
+
       <AppSelect<ThemePreference>
         options={THEME_OPTIONS.map((option) => option.value)}
         optionTextValue={formatThemeOptionLabel}

@@ -1,0 +1,24 @@
+{
+  "appearance": {
+    "sectionTitle": "外觀",
+    "dialogDescription": "選擇背景與強調色。",
+    "themeLabel": "背景",
+    "accentLabel": "強調色",
+    "languageLabel": "語言",
+    "themes": {
+      "light": "白色",
+      "pastelOrange": "粉彩橘",
+      "dark": "深綠色",
+      "darkBlue": "深藍色",
+      "black": "黑色"
+    },
+    "accents": {
+      "red": "紅色",
+      "orange": "橘色",
+      "yellow": "黃色",
+      "green": "綠色",
+      "blue": "藍色",
+      "violet": "紫色"
+    }
+  }
+}

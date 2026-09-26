@@ -2,10 +2,13 @@ import './styles/tailwind.css'
 import { render } from 'solid-js/web'
 import App from './App'
 import { AppQueryProvider } from './components/AppQueryProvider'
+import { localePreference } from './stores/localePreferences'
+import { applyLocalePreference } from './utils/localePreference'
 import { applyInitialAccent, applyInitialTheme } from './utils/themePreference'
 
 applyInitialTheme()
 applyInitialAccent()
+applyLocalePreference(localePreference())
 
 const root = document.getElementById('root')
 if (root) {

@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@kobalte/core": "^0.13.11",
+    "@solid-primitives/i18n": "^2.2.1",
     "@solidjs/router": "^0.16.1",
     "@tanstack/solid-query": "^5.102.8",
     "@tanstack/solid-virtual": "^3.13.30",

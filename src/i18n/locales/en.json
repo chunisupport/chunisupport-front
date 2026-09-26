@@ -1,0 +1,24 @@
+{
+  "appearance": {
+    "sectionTitle": "Appearance",
+    "dialogDescription": "Choose a background and an accent color.",
+    "themeLabel": "Background",
+    "accentLabel": "Accent",
+    "languageLabel": "Language",
+    "themes": {
+      "light": "White",
+      "pastelOrange": "Pastel Orange",
+      "dark": "Dark Green",
+      "darkBlue": "Dark Blue",
+      "black": "Black"
+    },
+    "accents": {
+      "red": "Red",
+      "orange": "Orange",
+      "yellow": "Yellow",
+      "green": "Green",
+      "blue": "Blue",
+      "violet": "Violet"
+    }
+  }
+}

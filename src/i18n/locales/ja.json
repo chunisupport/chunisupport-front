@@ -1,0 +1,24 @@
+{
+  "appearance": {
+    "sectionTitle": "外観",
+    "dialogDescription": "背景とアクセントを選択します。",
+    "themeLabel": "背景",
+    "accentLabel": "アクセント",
+    "languageLabel": "言語",
+    "themes": {
+      "light": "ホワイト",
+      "pastelOrange": "パステルオレンジ",
+      "dark": "ダークグリーン",
+      "darkBlue": "ダークブルー",
+      "black": "ブラック"
+    },
+    "accents": {
+      "red": "レッド",
+      "orange": "オレンジ",
+      "yellow": "イエロー",
+      "green": "グリーン",
+      "blue": "ブルー",
+      "violet": "バイオレット"
+    }
+  }
+}
